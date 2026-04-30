@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maya · Mana Siyo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0d14; font-family: 'Jost', sans-serif; }
+
+  #maya-canvas {
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at 50% 30%, #1a1f35 0%, #0a0d14 70%);
+    overflow: hidden;
+  }
+
+  .cloud {
+    position: absolute; border-radius: 50%;
+    background: rgba(220, 225, 240, 0.04);
+    filter: blur(60px); animation: cloudDrift linear infinite; pointer-events: none;
+  }
+
+  @keyframes cloudDrift {
+    0%   { transform: translateX(0px)  translateY(0px); }
+    25%  { transform: translateX(30px) translateY(-15px); }
+    50%  { transform: translateX(60px) translateY(0px); }
+    75%  { transform: translateX(30px) translateY(15px); }
+    100% { transform: translateX(0px)  translateY(0px); }
+  }
+
+  #top-bar {
+    position: fixed; top: 0; left: 0; right: 0; height: 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; z-index: 100;
+  }
+
+  #item-count {
+    font-size: 10px; font-weight: 300;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(200, 210, 230, 0.35);
+    min-width: 220px;
+  }
+
+  #mana-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11px; font-weight: 300;
+    letter-spacing: 0.5em; text-transform: uppercase;
+    color: rgba(200, 210, 230, 0.18);
+    position: absolute; left: 50%; transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
+  #top-actions { display: flex; gap: 10px; align-items: center; }
+
+  .top-btn {
+    background: none; border-radius: 100px;
+    padding: 6px 14px; font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s;
+  }
+
+  #save-btn { border: 0.5px solid rgba(180,160,255,0.2); color: rgba(180,160,255,0.45); }
+  #save-btn:hover { border-color: rgba(180,160,255,0.5); color: rgba(180,160,255,0.9); }
+  #clear-btn { border: 0.5px solid rgba(255,255,255,0.08); color: rgba(200,210,230,0.3); }
+  #clear-btn:hover { border-color: rgba(255,255,255,0.2); color: rgba(200,210,230,0.65); }
+
+  #visualize-btn {
+    display: none;
+    position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%);
+    background: rgba(180,160,255,0.1);
+    border: 0.5px solid rgba(180,160,255,0.4); border-radius: 100px;
+    padding: 14px 34px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px; font-weight: 400; letter-spacing: 0.14em;
+    color: rgba(210,200,255,0.9);
+    cursor: pointer; transition: all 0.3s; z-index: 100;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    animation: fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  #visualize-btn:hover {
+    background: rgba(180,160,255,0.22);
+    border-color: rgba(180,160,255,0.7);
+  }
+
+  #voice-wrap {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0;
+    z-index: 100;
+  }
+
+  #voice-bar {
+    display: flex; align-items: center; gap: 7px;
+    background: rgba(255,255,255,0.03);
+    border: 0.5px solid rgba(255,255,255,0.08); border-radius: 100px;
+    padding: 8px 16px; cursor: pointer; transition: all 0.3s;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  }
+
+  #voice-bar:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.18); }
+  #voice-bar.listening { background: rgba(180,160,255,0.07); border-color: rgba(180,160,255,0.28); }
+
+  #voice-icon { display: flex; align-items: center; gap: 2px; }
+
+  .wave-bar { width: 1.5px; height: 6px; background: rgba(200,210,230,0.45); border-radius: 2px; }
+
+  #voice-bar.listening .wave-bar:nth-child(1) { animation: wave 0.8s ease infinite 0s; }
+  #voice-bar.listening .wave-bar:nth-child(2) { animation: wave 0.8s ease infinite 0.1s; }
+  #voice-bar.listening .wave-bar:nth-child(3) { animation: wave 0.8s ease infinite 0.2s; }
+  #voice-bar.listening .wave-bar:nth-child(4) { animation: wave 0.8s ease infinite 0.15s; }
+  #voice-bar.listening .wave-bar:nth-child(5) { animation: wave 0.8s ease infinite 0.05s; }
+
+  @keyframes wave {
+    0%, 100% { height: 3px; opacity: 0.35; }
+    50%       { height: 13px; opacity: 1; }
+  }
+
+  #voice-text {
+    font-size: 10px; font-weight: 300;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(200,210,230,0.4);
+  }
+
+  .item-card {
+    position: absolute;
+    background: rgba(255,255,255,0.04);
+    border: 0.5px solid rgba(255,255,255,0.08); border-radius: 12px;
+    padding: 14px 16px;
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    max-width: 180px;
+    animation: itemFadeIn 0.8s cubic-bezier(0.16,1,0.3,1) forwards;
+    cursor: grab; transition: border-color 0.2s, background 0.2s; user-select: none;
+  }
+
+  .item-card:active { cursor: grabbing; }
+  .item-card:hover  { border-color: rgba(255,255,255,0.18); background: rgba(255,255,255,0.07); }
+  .item-card.pinned { border-color: rgba(180,160,255,0.4); }
+
+  .item-card .delete-btn {
+    position: absolute; top: -8px; right: -8px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: rgba(220,80,80,0.7); border: none;
+    color: white; font-size: 11px; cursor: pointer;
+    display: none; align-items: center; justify-content: center;
+  }
+  .item-card:hover .delete-btn { display: flex; }
+
+  @keyframes itemFadeIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.94); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .item-tag { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(180,160,255,0.6); font-weight: 300; margin-bottom: 6px; }
+  .item-title { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 300; color: rgba(220,225,240,0.9); line-height: 1.3; margin-bottom: 4px; }
+  .item-detail { font-size: 10px; color: rgba(200,210,230,0.4); font-weight: 300; letter-spacing: 0.05em; }
+
+  #listening-ring { display: none; position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+  #listening-ring.active { display: block; }
+  #listening-ring::before {
+    content: ''; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%); width: 300px; height: 300px; border-radius: 50%;
+    border: 0.5px solid rgba(180,160,255,0.07); animation: ringPulse 3s ease infinite;
+  }
+  @keyframes ringPulse {
+    0%   { transform: translate(-50%,-50%) scale(0.8); opacity: 0; }
+    50%  { opacity: 1; }
+    100% { transform: translate(-50%,-50%) scale(1.5); opacity: 0; }
+  }
+
+  #toast {
+    position: fixed; bottom: 70px; left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: rgba(180,160,255,0.12); border: 0.5px solid rgba(180,160,255,0.2);
+    border-radius: 100px; padding: 7px 18px;
+    font-size: 10px; letter-spacing: 0.12em; color: rgba(200,190,255,0.7);
+    opacity: 0; transition: all 0.4s; pointer-events: none; white-space: nowrap; z-index: 300;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  #garment-modal {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(8,10,18,0.93);
+    backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+    align-items: center; justify-content: center; flex-direction: column; gap: 22px;
+  }
+  #garment-modal.open { display: flex; }
+
+  #garment-close {
+    position: absolute; top: 24px; right: 28px;
+    background: none; border: 0.5px solid rgba(255,255,255,0.08); border-radius: 100px;
+    padding: 6px 14px; font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(200,210,230,0.3); cursor: pointer; transition: all 0.2s;
+  }
+  #garment-close:hover { color: rgba(200,210,230,0.7); border-color: rgba(255,255,255,0.2); }
+
+  #garment-image-wrap {
+    width: 380px; max-width: 86vw; aspect-ratio: 3/4;
+    border: 0.5px solid rgba(255,255,255,0.08); border-radius: 16px; overflow: hidden;
+    position: relative; background: rgba(255,255,255,0.03);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  #garment-image { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.9s ease; }
+  #garment-image.loaded { opacity: 1; }
+
+  #garment-spinner {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  }
+
+  .spinner-ring {
+    width: 32px; height: 32px;
+    border: 0.5px solid rgba(180,160,255,0.15); border-top-color: rgba(180,160,255,0.65);
+    border-radius: 50%; animation: spin 1.2s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #spinner-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px; font-weight: 300; font-style: italic;
+    letter-spacing: 0.2em; color: rgba(200,190,255,0.35); text-transform: uppercase;
+  }
+
+  #garment-prompt-display {
+    max-width: 380px; text-align: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px; font-weight: 300; font-style: italic;
+    color: rgba(200,210,230,0.25); letter-spacing: 0.05em; line-height: 1.6; padding: 0 20px;
+  }
+
+  #garment-regen {
+    background: none; border: 0.5px solid rgba(180,160,255,0.2); border-radius: 100px;
+    padding: 7px 18px; font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(180,160,255,0.45); cursor: pointer; transition: all 0.2s;
+  }
+  #garment-regen:hover { border-color: rgba(180,160,255,0.5); color: rgba(180,160,255,0.9); }
+</style>
+</head>
+<body>
+
+<div id="maya-canvas">
+  <div class="cloud" style="width:700px;height:350px;top:0%;left:-15%;animation-duration:45s;"></div>
+  <div class="cloud" style="width:500px;height:250px;top:15%;right:-8%;animation-duration:58s;animation-delay:-12s;"></div>
+  <div class="cloud" style="width:600px;height:300px;top:40%;left:15%;animation-duration:50s;animation-delay:-22s;"></div>
+  <div class="cloud" style="width:400px;height:200px;bottom:20%;left:0%;animation-duration:65s;animation-delay:-18s;"></div>
+  <div class="cloud" style="width:550px;height:280px;bottom:5%;right:5%;animation-duration:42s;animation-delay:-8s;"></div>
+  <div class="cloud" style="width:300px;height:150px;top:60%;right:25%;animation-duration:70s;animation-delay:-30s;"></div>
+</div>
+
+<div id="listening-ring"></div>
+
+<div id="top-bar">
+  <div id="item-count">speak 5 references to visualize</div>
+  <div id="mana-logo">Mana Siyo · Maya</div>
+  <div id="top-actions">
+    <button class="top-btn" id="save-btn" onclick="saveSession()">Save session</button>
+    <button class="top-btn" id="clear-btn" onclick="clearAll()">Clear board</button>
+  </div>
+</div>
+
+<button id="visualize-btn" onclick="visualizeGarment()">Visualize Garment</button>
+
+<div id="voice-wrap">
+  <div id="voice-bar" onclick="toggleListening()">
+    <div id="voice-icon">
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+    </div>
+    <span id="voice-text">tap to listen</span>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="garment-modal">
+  <button id="garment-close" onclick="closeModal()">Close</button>
+  <div id="garment-image-wrap">
+    <img id="garment-image" alt="Generated garment" />
+    <div id="garment-spinner">
+      <div class="spinner-ring"></div>
+      <div id="spinner-text">rendering vision...</div>
+    </div>
+  </div>
+  <div id="garment-prompt-display"></div>
+  <button id="garment-regen" onclick="visualizeGarment()">Regenerate</button>
+</div>
+
+<script>
+  const FASHION_KNOWLEDGE = {
+    designers: ['Balenciaga','Rick Owens','Yohji Yamamoto','Comme des Garçons','Maison Margiela','Raf Simons','Ann Demeulemeester','Helmut Lang','Issey Miyake','Jil Sander','Prada','Bottega Veneta','Lemaire','The Row','Toteme','Acne Studios','Jacquemus','Dries Van Noten','Alexander McQueen','Vivienne Westwood','Giorgio Armani','Celine','Saint Laurent','Givenchy','Loewe','Valentino','Fendi','Burberry','Stella McCartney','Off-White','Fear of God'],
+    aesthetics: ['quiet luxury','dark academia','old money','minimalist','deconstructed','sculptural','utilitarian','avant-garde','androgynous','romantic','streetwear','grunge','bohemian','artisanal','couture','raw edge','draped','architectural','organic','fluid','preppy','coastal','maximalist','punk','ethereal'],
+    fabrics: ['silk charmeuse','Japanese denim','raw linen','cashmere','merino wool','organza','velvet','leather','neoprene','cotton poplin','gabardine','tweed','chiffon','crepe','muslin','brocade','jersey','satin','mesh','mohair','alpaca','shearling','suede','canvas','chambray'],
+    colors: ['ivory','ecru','midnight','slate','camel','blush','forest','burgundy','cobalt','rust','taupe','chalk','obsidian','sand','terracotta','sage','pewter','champagne','charcoal','oyster','mauve','moss','indigo','ochre','cream'],
+    silhouettes: ['oversized','tailored','draped','asymmetric','column','A-line','cocoon','relaxed','structured','fluid','layered','wrapped','boxy','elongated','fitted','cropped','voluminous','streamlined'],
+    moods: ['melancholic','editorial','cinematic','intimate','monastic','urban','ethereal','grounded','rebellious','serene','powerful','tender','understated','bold','contemplative','effortless'],
+    eras: ['70s bohemian','80s power dressing','90s minimalism','early 2000s','1950s couture','Victorian','1930s bias cut','60s mod','Belle Epoque','Art Deco'],
+    references: ['Helmut Newton photography','Steven Meisel editorial','Irving Penn portrait','Guy Bourdin campaign','Nan Goldin intimacy','Peter Lindbergh naturalism','Paolo Roversi light','Mario Testino energy','Cindy Sherman concept','Annie Leibovitz narrative']
+  };
+
+  let items = [], itemIdCounter = 0, isListening = false, recognition = null;
+
+  function extractFashionRefs(text) {
+    const refs = [], lower = text.toLowerCase(), seen = new Set();
+    Object.entries(FASHION_KNOWLEDGE).forEach(([category, list]) => {
+      list.forEach(item => {
+        const key = item.toLowerCase();
+        if (lower.includes(key) && !seen.has(key)) { seen.add(key); refs.push({ category, value: item }); }
+      });
+    });
+    if (refs.length === 0) {
+      const words = text.trim().split(/\s+/).filter(w => w.length > 2);
+      if (words.length >= 1) refs.push({ category: 'reference', value: words.slice(0, 4).join(' ') });
+    }
+    return refs;
+  }
+
+  function categoryLabel(cat) {
+    const map = { designers:'designer', aesthetics:'aesthetic', fabrics:'material', colors:'color', silhouettes:'silhouette', moods:'mood', eras:'era', references:'visual ref', reference:'client note' };
+    return map[cat] || cat;
+  }
+
+  function updateCount() {
+    const n = items.length;
+    const el = document.getElementById('item-count');
+    const btn = document.getElementById('visualize-btn');
+    if (n === 0)      el.textContent = 'speak 5 references to visualize';
+    else if (n < 5)   el.textContent = n + ' of 5  ·  ' + (5 - n) + ' more to unlock';
+    else if (n === 5) el.textContent = '5 references  ·  visualize unlocked';
+    else              el.textContent = n + ' references  ·  remove ' + (n - 5) + ' to visualize';
+    btn.style.display = n === 5 ? 'block' : 'none';
+  }
+
+  function placeItem(ref, delay) {
+    setTimeout(() => {
+      const canvas = document.getElementById('maya-canvas');
+      const x = 48 + Math.random() * Math.max(1, window.innerWidth - 276);
+      const y = 72 + Math.random() * Math.max(1, window.innerHeight - 280);
+      const card = document.createElement('div');
+      card.className = 'item-card'; card.style.left = x + 'px'; card.style.top = y + 'px';
+      const id = itemIdCounter++; card.dataset.id = id;
+      card.innerHTML =
+        '<button class="delete-btn" data-id="' + id + '">&#215;</button>' +
+        '<div class="item-tag">' + categoryLabel(ref.category) + '</div>' +
+        '<div class="item-title">' + ref.value + '</div>' +
+        '<div class="item-detail">tap to pin</div>';
+      card.querySelector('.delete-btn').addEventListener('click', function(e) {
+        e.stopPropagation(); removeItem(parseInt(this.dataset.id));
+      });
+      card.addEventListener('click', function(e) {
+        if (e.target.classList.contains('delete-btn')) return;
+        this.classList.toggle('pinned');
+        this.querySelector('.item-detail').textContent = this.classList.contains('pinned') ? 'pinned' : 'tap to pin';
+      });
+      makeDraggable(card);
+      canvas.appendChild(card);
+      items.push({ id, el: card, ref });
+      updateCount();
+    }, delay || 0);
+  }
+
+  function makeDraggable(el) {
+    let startX, startY, startLeft, startTop, dragging = false;
+    el.addEventListener('mousedown', function(e) {
+      if (e.target.classList.contains('delete-btn')) return;
+      dragging = true; startX = e.clientX; startY = e.clientY;
+      startLeft = parseInt(el.style.left) || 0; startTop = parseInt(el.style.top) || 0;
+      el.style.zIndex = 999;
+      function onMove(me) { if (!dragging) return; el.style.left = (startLeft + me.clientX - startX) + 'px'; el.style.top = (startTop + me.clientY - startY) + 'px'; }
+      function onUp() { dragging = false; el.style.zIndex = ''; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }
+      document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+    });
+  }
+
+  function removeItem(id) {
+    const idx = items.findIndex(i => i.id === id); if (idx === -1) return;
+    const el = items[idx].el;
+    el.style.opacity = '0'; el.style.transform = 'scale(0.9)'; el.style.transition = 'all 0.3s';
+    setTimeout(() => el.remove(), 300); items.splice(idx, 1); updateCount();
+  }
+
+  function clearAll() { items.forEach(i => i.el.remove()); items = []; updateCount(); }
+
+  function processText(text) {
+    if (!text.trim()) return;
+    extractFashionRefs(text).slice(0, 4).forEach((ref, i) => placeItem(ref, i * 220));
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function saveSession() {
+    if (items.length === 0) { showToast('Nothing to save yet'); return; }
+    const date = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const lines = ['MAYA SESSION · ' + date, ''];
+    items.forEach(i => lines.push('[' + categoryLabel(i.ref.category).toUpperCase() + '] ' + i.ref.value + (i.el.classList.contains('pinned') ? ' ★' : '')));
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/plain' }));
+    a.download = 'maya-session-' + Date.now() + '.txt'; a.click();
+    showToast('Session saved');
+  }
+
+  function buildGarmentPrompt() {
+    const groups = {};
+    items.forEach(i => { const cat = categoryLabel(i.ref.category); if (!groups[cat]) groups[cat] = []; groups[cat].push(i.ref.value); });
+    let parts = ['fashion editorial photograph, full body, single garment, neutral background, studio lighting, high fashion'];
+    if (groups['designer'])    parts.push('inspired by ' + groups['designer'].join(' and '));
+    if (groups['aesthetic'])   parts.push(groups['aesthetic'].join(', ') + ' aesthetic');
+    if (groups['material'])    parts.push('made from ' + groups['material'].join(' and '));
+    if (groups['color'])       parts.push('in ' + groups['color'].join(' and ') + ' tones');
+    if (groups['silhouette'])  parts.push(groups['silhouette'].join(', ') + ' silhouette');
+    if (groups['mood'])        parts.push(groups['mood'].join(', ') + ' mood');
+    if (groups['era'])         parts.push(groups['era'].join(', ') + ' influence');
+    if (groups['visual ref'])  parts.push('photographed in style of ' + groups['visual ref'].join(', '));
+    if (groups['client note']) parts.push(groups['client note'].join(', '));
+    parts.push('bespoke couture, intricate detail, Mana Siyo atelier');
+    return parts.join(', ');
+  }
+
+  function visualizeGarment() {
+    if (items.length !== 5) return;
+    const modal = document.getElementById('garment-modal');
+    const img = document.getElementById('garment-image');
+    const spinner = document.getElementById('garment-spinner');
+    const promptDisplay = document.getElementById('garment-prompt-display');
+    modal.classList.add('open');
+    img.classList.remove('loaded'); img.src = '';
+    spinner.style.display = 'flex';
+    promptDisplay.textContent = items.map(i => i.ref.value).join(' · ');
+    const prompt = buildGarmentPrompt();
+    const seed = Math.floor(Math.random() * 999999);
+    const url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?width=840&height=1120&seed=' + seed + '&nologo=true&enhance=true&model=flux';
+    img.onload = function() { spinner.style.display = 'none'; img.classList.add('loaded'); };
+    img.onerror = function() { spinner.style.display = 'none'; document.getElementById('spinner-text').textContent = 'try again'; };
+    img.src = url;
+  }
+
+  function closeModal() {
+    document.getElementById('garment-modal').classList.remove('open');
+    const img = document.getElementById('garment-image'); img.src = ''; img.classList.remove('loaded');
+  }
+
+  function toggleListening() { isListening ? stopListening() : startListening(); }
+
+  function startListening() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { showToast('Voice not supported in this browser'); return; }
+    recognition = new SR(); recognition.continuous = true; recognition.interimResults = true; recognition.lang = 'en-US';
+    recognition.onresult = function(event) {
+      let final = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) { if (event.results[i].isFinal) final += event.results[i][0].transcript; }
+      if (final.trim()) processText(final);
+    };
+    recognition.onerror = function() { stopListening(); };
+    recognition.onend = function() { if (isListening) recognition.start(); };
+    recognition.start();
+    isListening = true;
+    document.getElementById('voice-bar').classList.add('listening');
+    document.getElementById('voice-text').textContent = 'listening...';
+    document.getElementById('listening-ring').classList.add('active');
+  }
+
+  function stopListening() {
+    if (recognition) { try { recognition.stop(); } catch(e) {} recognition = null; }
+    isListening = false;
+    document.getElementById('voice-bar').classList.remove('listening');
+    document.getElementById('voice-text').textContent = 'tap to listen';
+    document.getElementById('listening-ring').classList.remove('active');
+  }
+
+  ['Rick Owens draped leather','ivory silk charmeuse','quiet luxury tailored','midnight velvet oversized','Helmut Newton editorial']
+    .forEach((s, i) => setTimeout(() => processText(s), 900 + i * 500));
+</script>
+</body>
+</html>
