@@ -12,12 +12,18 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0d14; font-family: 'Jost', sans-serif; color: rgba(220,225,240,0.85); }
+  /* v5.7: cosmic background everywhere via "birth of a star" image. */
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #000 url("UI%20references/birth%20of%20a%20star.png") center/cover no-repeat fixed;
+    font-family: 'Jost', sans-serif; color: rgba(220,225,240,0.88);
+  }
 
   /* ───────── canvas + clouds ───────── */
   #maya-canvas {
     position: fixed; inset: 0;
-    background: radial-gradient(ellipse at 50% 30%, #1a1f35 0%, #0a0d14 70%);
+    /* very subtle radial darkening on top of the cosmic so cards stay readable */
+    background: radial-gradient(ellipse at 50% 30%, rgba(10,13,20,0.45) 0%, rgba(10,13,20,0.78) 80%);
     overflow: hidden;
   }
   .cloud {
@@ -39,19 +45,34 @@
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 28px; z-index: 100;
   }
-  #item-count {
-    font-size: 10px; font-weight: 300;
-    letter-spacing: 0.2em; text-transform: uppercase;
-    color: rgba(200, 210, 230, 0.4);
-    min-width: 240px;
+  /* v5.11: top-left brand — just logo + MAYA on a single horizontal line.
+     Vertically centered against the hamburger on the right via top-bar's
+     align-items:center. No subtitle, no card-count (count moved into the
+     drawer near Settings). */
+  #top-left-brand {
+    display: flex; align-items: center; gap: 14px;
   }
-  #mana-logo {
+  #top-left-brand .maya-logo-mark.tiny {
+    width: 32px; height: 32px;
+    animation: none;
+    filter: none;
+    opacity: 0.55;
+  }
+  #top-left-brand .brand-title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 11px; font-weight: 300;
-    letter-spacing: 0.5em; text-transform: uppercase;
-    color: rgba(200, 210, 230, 0.18);
-    position: absolute; left: 50%; transform: translateX(-50%);
-    white-space: nowrap;
+    /* v5.12: smaller, tinted with the logo's bluish-white halo */
+    font-size: 22px; font-weight: 300;
+    letter-spacing: 0.26em;
+    color: rgba(230, 238, 255, 0.92);
+    line-height: 1;
+  }
+  /* The card-count line lives inside the drawer now (see .drawer-count). */
+  #item-count {
+    display: block;
+    font-family: 'Jost', sans-serif;
+    font-size: 9px; font-weight: 300;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(200, 210, 230, 0.55);
   }
   #top-actions { display: flex; gap: 10px; align-items: center; }
 
@@ -220,21 +241,36 @@
   #transcript-echo.show { opacity: 1; }
 
   /* ───────── item cards ───────── */
+  /* v5.7: glossy frosted-glass effect — soft outer ring + top-edge sheen +
+     subtle inner highlight, on top of the cosmic background. */
   .item-card {
     position: absolute;
-    background: rgba(255,255,255,0.04);
-    border: 0.5px solid rgba(255,255,255,0.08); border-radius: 10px;
-    /* v5.4: tightened padding — closer to the text, less empty room */
-    padding: 7px 11px 8px;
-    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-    max-width: 200px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 32%, rgba(255,255,255,0.04) 100%);
+    border: 0.5px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    /* v5.4: tightened padding — closer to the text, less empty room.
+       v5.7: tightened further (6/10 px) per feedback to compact further. */
+    padding: 6px 10px 7px;
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    max-width: 220px;
     animation: itemFadeIn 0.8s cubic-bezier(0.16,1,0.3,1) forwards;
-    cursor: grab; transition: border-color 0.2s, background 0.2s;
+    cursor: grab;
+    transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
     user-select: none;
     z-index: 5;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.06),
+      0 4px 22px rgba(0,0,0,0.32);
+  }
+  .item-card:hover {
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.12),
+      0 8px 28px rgba(0,0,0,0.42),
+      0 0 0 1px rgba(255,255,255,0.06);
   }
   .item-card:active { cursor: grabbing; }
-  .item-card:hover { border-color: rgba(255,255,255,0.18); background: rgba(255,255,255,0.07); }
   .item-card.pinned { border-color: rgba(180,160,255,0.45); }
 
   /* card variants by emphasis */
@@ -248,19 +284,19 @@
 
   /* Image card — clean rectangle, photo only by default; hover reveals title */
   .item-card.inspo {
-    width: 240px; max-width: 240px;
+    /* v5.7: width adapts to the image's native aspect ratio so portrait
+       and landscape uploads no longer have black letterbox bars. The card
+       itself sizes to whatever the image renders at, capped by max-width. */
+    width: auto;
+    max-width: 280px;
     padding: 0;
     background: rgba(255,255,255,0.06);
-    /* no overflow:hidden — keep the × delete button visible */
   }
   .item-card.inspo .inspo-thumb {
-    /* v5.6: keep the upload's native aspect ratio (was cover @160px height,
-       which cropped portrait/landscape uploads). max-height bounds tall
-       uploads so cards don't get absurdly long. */
-    display: block; width: 100%; height: auto;
-    max-height: 280px;
-    object-fit: contain;
-    background: #0a0d14;
+    display: block;
+    max-width: 280px;
+    max-height: 360px;
+    width: auto; height: auto;
     border-radius: 12px;
   }
   /* hide the kind tag entirely — it was just clutter */
@@ -687,30 +723,30 @@
   }
 
   /* ───────── corner sketcher (bottom-right "Maya is sketching..." pill) ───────── */
+  /* v5.12: corner sketcher matches the Visualize/Listen action-btn shape
+     (same padding, font size, line height) so the right-side pill aligns
+     with the bottom-center button height. */
   #corner-sketcher {
     position: fixed; bottom: 22px; right: 24px;
-    display: none; align-items: center; gap: 12px;
-    background: rgba(20,18,32,0.78);
+    display: none; align-items: center; gap: 9px;
+    background: rgba(180,160,255,0.08);
     border: 0.5px solid rgba(180,160,255,0.3);
     border-radius: 100px;
-    padding: 10px 18px 10px 14px;
+    padding: 7px 14px;
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     z-index: 150;
     animation: fadeUp 0.4s cubic-bezier(0.16,1,0.3,1) both;
   }
   #corner-sketcher.active { display: flex; }
-  #corner-sketcher .spinner-ring {
-    width: 14px; height: 14px;
-    border: 0.5px solid rgba(180,160,255,0.18);
-    border-top-color: rgba(180,160,255,0.75);
-    border-radius: 50%;
-    animation: spin 1.2s linear infinite;
+  #corner-sketcher .maya-logo-mark.small {
+    width: 18px; height: 18px;
+    /* keep the breath but at the smaller size — looks like a pulsing dot */
   }
   #corner-sketcher .sketcher-text {
     font-family: 'Cormorant Garamond', serif;
-    font-style: italic; font-size: 12px;
+    font-size: 12px; font-weight: 400;
     letter-spacing: 0.12em;
-    color: rgba(220,210,255,0.85);
+    color: rgba(210,200,255,0.88);
   }
 
   /* ───────── hero picker modal (choose final image for one-pager) ───────── */
@@ -770,12 +806,33 @@
     padding: 60px 26px 30px;
   }
   #notes-drawer.open { transform: translateX(0); }
-  /* v5.5: action row inside the drawer (Save · New · Clean · Fabrics). */
-  #notes-drawer .drawer-actions {
+  /* v5.7: drawer now flex-column so action row sticks to the bottom. */
+  #notes-drawer { display: flex; flex-direction: column; }
+  #notes-drawer #notes-drawer-content { flex: 1; min-height: 0; overflow-y: auto; }
+  /* v5.7: Fabrics button perched at the top of the drawer */
+  #notes-drawer .drawer-fabrics {
+    background: rgba(180,160,255,0.06);
+    border: 0.5px solid rgba(180,160,255,0.24);
+    border-radius: 100px;
+    padding: 10px 18px;
+    margin: 0 0 18px;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
+    letter-spacing: 0.24em; text-transform: uppercase;
+    color: rgba(210,200,255,0.85);
+    cursor: pointer; transition: all 0.2s;
+    width: 100%;
+  }
+  #notes-drawer .drawer-fabrics:hover {
+    border-color: rgba(180,160,255,0.6);
+    color: #fff;
+  }
+  /* v5.7: bottom action row (Save / New / Clean / Logout) */
+  #notes-drawer .drawer-actions-bottom {
     display: flex; gap: 6px; flex-wrap: wrap;
-    margin: 0 0 22px;
-    padding-bottom: 16px;
-    border-bottom: 0.5px solid rgba(255,255,255,0.06);
+    margin: 18px 0 0;
+    padding-top: 16px;
+    border-top: 0.5px solid rgba(255,255,255,0.06);
   }
   #notes-drawer .drawer-action {
     flex: 1; min-width: 64px;
@@ -814,6 +871,15 @@
     text-align: left; cursor: pointer; transition: color 0.2s;
   }
   #notes-drawer .drawer-settings-link:hover { color: rgba(220,225,240,0.9); }
+  /* v5.11: reference count inside the drawer (relocated from top-left). */
+  #notes-drawer .drawer-count {
+    font-family: 'Jost', sans-serif;
+    font-size: 9px; font-weight: 300;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(200,210,230,0.45);
+    padding: 12px 0 4px;
+    text-align: left;
+  }
   #notes-drawer .notes-close {
     position: absolute; top: 18px; right: 22px;
     background: none; border: none;
@@ -1136,6 +1202,28 @@
 
   /* (v5.4 Clean/Clear hover dropdown removed in v5.5 — replaced by the
      hamburger drawer's action row.) */
+
+  /* v5.12: floating manual-ref input — appears where Fromsa clicks on the
+     empty canvas, lets her type a single fashion term that Maya then
+     categorizes and places as a card. */
+  #manual-ref-input {
+    position: fixed; z-index: 60;
+    background: rgba(20,18,32,0.85);
+    border: 0.5px solid rgba(180,160,255,0.42);
+    border-radius: 100px;
+    padding: 8px 14px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px; font-style: italic;
+    color: rgba(225,215,255,0.95);
+    outline: none;
+    width: 200px;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+    animation: fadeUp 0.2s ease;
+  }
+  #manual-ref-input::placeholder {
+    color: rgba(200,210,230,0.42); font-style: italic;
+  }
   /* canvas-card fabric strip — small dots in the corner of inspo cards */
   .item-card .card-fabrics {
     position: absolute; bottom: 6px; right: 6px;
@@ -1149,85 +1237,104 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.4);
   }
 
-  /* v5.6: Maya logo — three-pointed star with halo. Inline SVG defined
-     once in body via &lt;symbol&gt;; referenced via <use href="#maya-logo">. */
+  /* v5.7: real Logo.png replaces the SVG approximation. PNG is square
+     (736x734) with transparency, so we just size + pulse it. */
   .maya-logo-mark {
     display: inline-block;
     width: 220px; height: 220px;
-    filter: drop-shadow(0 0 24px rgba(180,200,255,0.22));
+    object-fit: contain;
+    filter: drop-shadow(0 0 28px rgba(180,200,255,0.28));
     animation: maya-logo-pulse 2.6s ease-in-out infinite;
+    user-select: none; -webkit-user-drag: none;
   }
-  .maya-logo-mark.small { width: 32px; height: 32px; }
+  .maya-logo-mark.small { width: 30px; height: 30px; }
+  .maya-logo-mark.tiny  { width: 22px; height: 22px; filter: drop-shadow(0 0 6px rgba(180,200,255,0.4)); }
   @keyframes maya-logo-pulse {
     0%, 100% { transform: scale(0.93); opacity: 0.74; }
     50%      { transform: scale(1.05); opacity: 1; }
   }
 
-  /* v5.6: splash gate (logo + Maya wordmark + password). Fades out once
-     unlocked; localStorage flag keeps subsequent loads splash-free. */
+  /* v5.7: splash gate. Cosmic background bleeds through; logo + Maya wordmark
+     centered; name picker + password; logo zooms in on unlock. */
   #splash {
     position: fixed; inset: 0; z-index: 9000;
-    background: #000;
+    /* v5.10: opaque dark so the wordmark + form sit cleanly on a near-black
+       field; subtle cosmic shimmer underneath. */
+    background: rgba(0,0,0,0.92);
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
-    gap: 28px;
-    transition: opacity 0.6s ease;
+    gap: 14px;
+    text-align: center;
+    transition: opacity 0.6s ease, background 0.6s ease;
   }
   #splash.hide { opacity: 0; pointer-events: none; }
   #splash .wordmark {
     font-family: 'Cormorant Garamond', serif;
-    font-weight: 300; font-style: italic;
-    font-size: clamp(56px, 11vw, 132px);
-    color: rgba(245,245,255,0.94);
-    letter-spacing: 0.04em;
-    text-shadow: 0 0 36px rgba(180,200,255,0.25);
-    margin-top: -28px;
+    font-weight: 300;
+    font-size: clamp(72px, 14vw, 168px);
+    color: #ffffff;
+    letter-spacing: 0.22em;
+    text-shadow: 0 0 56px rgba(180,200,255,0.45);
+    margin: 0;
+  }
+  #splash .splash-subwordmark {
+    font-family: 'Jost', sans-serif;
+    font-size: 11px; font-weight: 300;
+    letter-spacing: 0.5em; text-transform: uppercase;
+    color: rgba(220,225,240,0.6);
+    margin-top: -4px;
   }
   #splash .splash-hint {
     font-family: 'Jost', sans-serif;
     font-size: 10px; font-weight: 300;
     letter-spacing: 0.32em; text-transform: uppercase;
-    color: rgba(200,210,230,0.4);
+    color: rgba(200,210,230,0.45);
     margin-top: 6px;
     animation: maya-logo-pulse 2.6s ease-in-out infinite;
   }
   #splash .splash-form {
-    display: none; flex-direction: column; align-items: stretch;
-    gap: 12px; width: 280px; max-width: 88vw;
-    margin-top: 18px;
+    display: none; flex-direction: column; align-items: center;
+    gap: 12px; width: 320px; max-width: 88vw;
+    margin-top: 14px;
   }
   #splash.form-open .splash-hint { display: none; }
   #splash.form-open .splash-form { display: flex; }
-  #splash .splash-form input {
+  /* v5.10: a single name text input + password input — clean, two boxes. */
+  #splash #splash-name,
+  #splash #splash-password {
     background: rgba(255,255,255,0.05);
-    border: 0.5px solid rgba(255,255,255,0.12);
-    border-radius: 6px;
-    padding: 12px 14px;
-    font-family: 'Jost', sans-serif;
-    font-size: 12px; letter-spacing: 0.06em;
-    color: rgba(235,238,250,0.95);
-    outline: none; transition: border-color 0.2s;
-  }
-  #splash .splash-form input:focus { border-color: rgba(180,160,255,0.6); }
-  #splash .splash-form input::placeholder {
-    color: rgba(200,210,230,0.35); letter-spacing: 0.08em;
-  }
-  #splash .splash-form button {
-    background: none; border: 0.5px solid rgba(180,160,255,0.4);
+    border: 0.5px solid rgba(255,255,255,0.14);
     border-radius: 100px;
-    padding: 9px 18px;
+    padding: 13px 18px;
+    font-family: 'Jost', sans-serif;
+    font-size: 12px; letter-spacing: 0.32em;
+    color: #fff;
+    outline: none; transition: border-color 0.2s;
+    text-align: center;
+    width: 100%;
+  }
+  #splash #splash-name:focus,
+  #splash #splash-password:focus { border-color: rgba(255,255,255,0.6); }
+  #splash #splash-name::placeholder,
+  #splash #splash-password::placeholder {
+    color: rgba(200,210,230,0.42); letter-spacing: 0.32em;
+  }
+  #splash .splash-enter {
+    background: none; border: 0.5px solid rgba(255,255,255,0.4);
+    border-radius: 100px;
+    padding: 10px 22px;
     font-family: 'Jost', sans-serif;
     font-size: 10px; font-weight: 300;
-    letter-spacing: 0.22em; text-transform: uppercase;
-    color: rgba(200,190,255,0.75);
+    letter-spacing: 0.32em; text-transform: uppercase;
+    color: rgba(255,255,255,0.85);
     cursor: pointer; transition: all 0.2s;
-    margin-top: 4px;
+    margin-top: 6px;
   }
-  #splash .splash-form button:hover {
-    border-color: rgba(180,160,255,0.75);
-    color: rgba(220,210,255,0.95);
+  #splash .splash-enter:hover {
+    border-color: #fff; color: #fff;
+    box-shadow: 0 0 24px rgba(180,200,255,0.2);
   }
-  #splash .splash-form .err {
+  #splash .err {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic; font-size: 12px;
     color: rgba(255,180,180,0.85);
@@ -1240,49 +1347,36 @@
     40%,80% { transform: translateX(6px); }
   }
   #splash.shake .splash-form { animation: maya-shake 0.4s ease-in-out; }
+  /* v5.10: dramatic zoom-in. Scale rides a keyframe (so it dominates the
+     motion) while opacity holds at 1 for the first 70% of the timeline
+     and only drops in the final 30%. Effect: the wordmark visibly RUSHES
+     toward the camera before dissolving, instead of fading in place. */
+  @keyframes maya-wordmark-rush {
+    0%   { transform: scale(1);   opacity: 1; }
+    70%  { transform: scale(3);   opacity: 1; }
+    100% { transform: scale(5.4); opacity: 0; }
+  }
+  #splash.unlocking .wordmark {
+    animation: maya-wordmark-rush 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  #splash.unlocking .splash-subwordmark,
+  #splash.unlocking .splash-hint,
+  #splash.unlocking .splash-form { opacity: 0; transition: opacity 0.25s; }
 </style>
 </head>
 <body>
 
-<!-- v5.6: Maya logo defined once as a reusable SVG symbol. Referenced by
-     id from the splash gate and the corner-sketcher. -->
-<svg width="0" height="0" style="position:absolute;visibility:hidden;overflow:hidden" aria-hidden="true">
-  <defs>
-    <radialGradient id="ml-halo" cx="50%" cy="50%" r="50%">
-      <stop offset="0%"   stop-color="rgb(220,232,255)" stop-opacity="0.45"/>
-      <stop offset="55%"  stop-color="rgb(140,180,255)" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="rgb(80,100,200)"  stop-opacity="0"/>
-    </radialGradient>
-    <filter id="ml-glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="0.9"/>
-    </filter>
-    <symbol id="maya-logo" viewBox="-50 -50 100 100">
-      <circle cx="0" cy="0" r="44" fill="url(#ml-halo)"/>
-      <g filter="url(#ml-glow)">
-        <path d="M 0,-32 C 7,-22 7,-9 0,0 C -7,-9 -7,-22 0,-32 Z" fill="white"/>
-        <path d="M 0,-32 C 7,-22 7,-9 0,0 C -7,-9 -7,-22 0,-32 Z" fill="white" transform="rotate(120)"/>
-        <path d="M 0,-32 C 7,-22 7,-9 0,0 C -7,-9 -7,-22 0,-32 Z" fill="white" transform="rotate(240)"/>
-      </g>
-      <g stroke="rgba(220,232,255,0.18)" stroke-width="0.35" fill="none">
-        <line x1="-34" y1="-30" x2="-4"  y2="-5"/>
-        <line x1=" 34" y1="-30" x2=" 4"  y2="-5"/>
-        <line x1="-28" y1=" 33" x2="-3"  y2=" 6"/>
-        <line x1=" 28" y1=" 33" x2=" 3"  y2=" 6"/>
-      </g>
-      <circle cx="0" cy="0" r="6" fill="black"/>
-    </symbol>
-  </defs>
-</svg>
-
-<!-- v5.6: splash gate. Shown on first visit (or after Logout); password unlocks. -->
+<!-- v5.8: splash gate. Logo removed (raster looks pixelated at large
+     size); just MAYA wordmark + 'by mana siyo' over a faded cosmic
+     overlay. Pick a name, then password (8088). Wordmark zooms on success. -->
 <div id="splash">
-  <svg class="maya-logo-mark"><use href="#maya-logo"/></svg>
-  <div class="wordmark">Maya</div>
+  <div class="wordmark">MAYA</div>
+  <div class="splash-subwordmark">by mana siyo</div>
   <div class="splash-hint">press anywhere to continue</div>
   <form class="splash-form" id="splash-form" onsubmit="event.preventDefault(); splashSubmit();">
-    <input type="text"     id="splash-designer" placeholder="In-house designer" autocomplete="off" />
-    <input type="password" id="splash-password" placeholder="Password" autocomplete="off" />
-    <button type="submit">Enter</button>
+    <input type="text"     id="splash-name"     placeholder="NAME?"     autocomplete="off" />
+    <input type="password" id="splash-password" placeholder="PASSWORD" autocomplete="off" />
+    <button type="submit" class="splash-enter">ENTER</button>
     <div class="err" id="splash-err"></div>
   </form>
 </div>
@@ -1301,13 +1395,15 @@
 
 <!-- top bar -->
 <div id="top-bar">
-  <div id="item-count">tap to listen · drop inspo · paste</div>
-  <div id="mana-logo">Mana Siyo · Maya</div>
+  <div id="top-left-brand">
+    <img class="maya-logo-mark tiny" src="UI%20references/Logo.png" alt="" />
+    <div class="brand-title">MAYA</div>
+  </div>
   <div id="top-actions">
     <!-- v5.5: single hamburger replaces Notes / Save / Clear / Cog. Opens
          the right-side drawer which is now the action hub: Save · New ·
          Clean · Fabrics, then the existing notes content, then Settings. -->
-    <button class="top-btn hamburger" id="hamburger-toggle" onclick="toggleNotesDrawer()" title="Menu — Save, New, Clean, Fabrics, Notes, Settings">
+    <button class="top-btn hamburger" id="hamburger-toggle" onclick="toggleNotesDrawer()" title="Menu: Save, New, Clean, Fabrics, Notes, Settings">
       <span class="hamburger-icon">
         <span></span><span></span><span></span>
       </span>
@@ -1348,25 +1444,28 @@
 
 <!-- bottom-right "Maya is sketching..." indicator (non-blocking) -->
 <div id="corner-sketcher">
-  <!-- v5.6: pulsing Maya logo replaces the generic spinner ring. -->
-  <svg class="maya-logo-mark small"><use href="#maya-logo"/></svg>
-  <div class="sketcher-text">Maya is sketching...</div>
+  <!-- v5.7: real logo PNG, pulsing. Text drops the "Maya" prefix
+       (we're already on the Maya page). -->
+  <img class="maya-logo-mark small" src="UI%20references/Logo.png" alt="" />
+  <div class="sketcher-text">rendering...</div>
 </div>
 
 <!-- designer-only side drawer with logistics (ideas, constraints, sourcing, notes) -->
 <div id="notes-drawer">
   <button class="notes-close" onclick="toggleNotesDrawer(false)">Close</button>
-  <!-- v5.5: action hub — Save · New · Clean · Fabrics on one compact row. -->
-  <div class="drawer-actions">
+  <!-- v5.7: Fabrics sits on top of the drawer (most-frequently-accessed). -->
+  <button class="drawer-fabrics" onclick="openFabricsDrawer()" title="In-house fabric inventory">Fabrics</button>
+  <div id="notes-drawer-content"></div>
+  <!-- v5.7: bottom action row — Save / New / Clean / Logout -->
+  <div class="drawer-actions-bottom">
     <button class="drawer-action violet" onclick="saveConsultation()" title="Preview one-pager then save to client folder">Save</button>
     <button class="drawer-action" onclick="newConsultation()" title="Start a fresh consultation">New</button>
     <button class="drawer-action" onclick="cleanReferences()" title="Remove ref cards (images stay)">Clean</button>
-    <button class="drawer-action" onclick="openFabricsDrawer()" title="In-house fabric inventory">Fabrics</button>
+    <button class="drawer-action" onclick="logoutMaya()" title="Log out. Splash + password again.">Logout</button>
   </div>
-  <div id="notes-drawer-content"></div>
-  <!-- Settings tucked at the bottom of the drawer (no more cog in top bar). -->
+  <!-- v5.11: reference count lives in the drawer now (was top-left). -->
+  <div class="drawer-count" id="item-count">tap to listen</div>
   <button class="drawer-settings-link" onclick="openSettings()" title="API key, model, advanced">Settings</button>
-  <button class="drawer-settings-link" onclick="splashLock()" title="Lock and require password again">Lock</button>
 </div>
 
 <!-- hero picker modal: choose the final image for the one-pager -->
@@ -1444,7 +1543,7 @@
   </div>
   <div id="viewer-version-nav">
     <button class="nav-arrow" id="viewer-prev" onclick="viewerStep(-1)" title="Previous version">&#8249;</button>
-    <span class="version-label" id="viewer-version-label">—</span>
+    <span class="version-label" id="viewer-version-label">·</span>
     <button class="nav-arrow" id="viewer-next" onclick="viewerStep(1)" title="Next version">&#8250;</button>
   </div>
   <div id="garment-prompt-display"></div>
@@ -1506,7 +1605,7 @@
       </button>
       <button class="mode-choose" onclick="chooseFabricMode('sourceable')">
         <div class="mode-choose-title">Sourceable</div>
-        <div class="mode-choose-desc">Imagine whatever fabric the design needs — to be sourced later.</div>
+        <div class="mode-choose-desc">Imagine whatever fabric the design needs. To be sourced later.</div>
       </button>
     </div>
   </div>
@@ -1519,7 +1618,7 @@
   <button class="modal-close" onclick="closeImageRefPicker()">Close</button>
   <div class="modal-card">
     <h2>Use an uploaded image as a visual reference?</h2>
-    <div class="modal-hint">Maya can use the actual image — its color, fabric, mood — alongside your fabric and verbal refs.</div>
+    <div class="modal-hint">Maya can use the actual image (color, fabric, mood) alongside your fabric and verbal refs.</div>
     <div class="fabric-pick-grid" id="image-ref-grid"></div>
     <div class="modal-actions">
       <button class="top-btn subtle" onclick="skipImageRef()">No, refs only</button>
@@ -1743,7 +1842,7 @@ function showError(msg) {
   // and not actionable for Fromsa; soften it to fashion-editor tone.
   const raw = (msg || '').toString();
   if (/safety system|content policy|violates|moderation|not allowed/i.test(raw)) {
-    showToast('Maya couldn\'t render this — the image filter caught some vocabulary. Try softer language or move forward without that ref.', true);
+    showToast('Couldn\'t render this. The image filter caught some vocabulary. Try softer language or move forward without that ref.', true);
     console.error('[Maya safety]', raw);
     return;
   }
@@ -2063,7 +2162,7 @@ function cleanReferences() {
     !(i.card.kind === 'inspo' && i.card.image)
   ).map(i => i.id);
   if (!toRemove.length) {
-    showToast('Nothing to clean — only image cards remain');
+    showToast('Nothing to clean. Only image cards remain.');
     return;
   }
   toRemove.forEach(id => removeItem(id));
@@ -2381,7 +2480,7 @@ function renderNotesPanel(s) {
        <div class="note-title">
          <span class="realism-dot realism-${i.realism}"></span>${escapeHtml(i.idea)}
        </div>
-       <div class="note-detail">${escapeHtml(i.realism.replace(/_/g, ' '))} — ${escapeHtml(i.reason || '')}</div>
+       <div class="note-detail">${escapeHtml(i.realism.replace(/_/g, ' '))} · ${escapeHtml(i.reason || '')}</div>
      </div>`
   ).join('');
   const globalParts = !s ? [] : [
@@ -2400,7 +2499,7 @@ function renderNotesPanel(s) {
 
   const all = inspirationsHtml + globalHtml;
   if (!all) {
-    host.innerHTML = '<div class="notes-empty">No notes yet — visualize, modify, and Maya will collect everything per inspiration here.</div>';
+    host.innerHTML = '<div class="notes-empty">No notes yet. Visualize, modify, and Maya will collect everything per inspiration here.</div>';
     toggle.classList.remove('has-notes');
   } else {
     host.innerHTML = all;
@@ -2442,32 +2541,35 @@ function toggleListening() {
   isListening ? stopListening() : startListening();
 }
 
+// v5.12: watchdog timestamp + interval. If onresult hasn't fired for 30s
+// while we believe we're listening, the SR engine probably stalled —
+// abort it so the onend → restart pipeline kicks in.
+let _lastVoiceTick = 0;
+let _voiceWatchdog = null;
+
 function startListening() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { showError('Voice not supported in this browser — try Chrome'); return; }
+  if (!SR) { showError('Voice not supported in this browser. Try Chrome.'); return; }
 
   liveTranscriptBuffer = '';
+  _lastVoiceTick = Date.now();
   recognition = new SR();
   recognition.continuous = true;
   recognition.interimResults = true;
   recognition.lang = 'en-US';
 
   recognition.onresult = ev => {
+    _lastVoiceTick = Date.now();
     let finalChunk = '', interim = '';
     for (let i = ev.resultIndex; i < ev.results.length; i++) {
       const t = ev.results[i][0].transcript;
       if (ev.results[i].isFinal) finalChunk += t + ' ';
       else interim += t;
     }
-    // accumulate transcript; the batch tick does smart filtering
     if (finalChunk) {
       liveTranscriptBuffer += finalChunk;
     }
-    // expose interim too — so the batch can still pick up words even if the
-    // browser hasn't finalized them yet (avoids the "words staying out there
-    // and not being picked up" issue).
     liveInterimBuffer = interim;
-    // faint live transcript echo above the voice bar
     const echo = document.getElementById('transcript-echo');
     const tail = (liveTranscriptBuffer + interim).slice(-220);
     echo.textContent = tail;
@@ -2481,7 +2583,7 @@ function startListening() {
   recognition.onerror = (ev) => {
     const err = ev && ev.error;
     if (err === 'not-allowed' || err === 'service-not-allowed') {
-      showError('Microphone access denied — re-enable in browser settings');
+      showError('Microphone access denied. Re-enable in browser settings.');
       stopListening();
       return;
     }
@@ -2510,6 +2612,20 @@ function startListening() {
   // v5.4: dedupe duplicate refs that the live batch placed on the canvas
   // (a topic mentioned twice in a few seconds shouldn't double up).
   startDedupeSweep();
+  // v5.12: voice watchdog. Chrome's Web Speech sometimes goes silent
+  // without firing onerror/onend (long sessions, audio device switching).
+  // Every 5s, check whether onresult has been quiet too long. If yes,
+  // forcibly abort — onend then runs the auto-restart we already have.
+  if (_voiceWatchdog) clearInterval(_voiceWatchdog);
+  _voiceWatchdog = setInterval(() => {
+    if (!isListening) return;
+    if (Date.now() - _lastVoiceTick > 30000) {
+      console.warn('[Maya speech] silent for 30s, rebuilding recognition');
+      _lastVoiceTick = Date.now();
+      try { recognition.abort(); } catch (_) {}
+      // onend will fire next tick and restart cleanly.
+    }
+  }, 5000);
 }
 
 function stopListening() {
@@ -2523,6 +2639,7 @@ function stopListening() {
   // Stop the 5s batch pulse
   stopLiveBatch();
   stopDedupeSweep();
+  if (_voiceWatchdog) { clearInterval(_voiceWatchdog); _voiceWatchdog = null; }
 
   // If the buffer is substantial, run the deep GPT-4o consultation pass
   // — this replaces the live cards with the full structured summary.
@@ -2841,7 +2958,7 @@ async function handleInspoUpload(file) {
   // from the image. Otherwise the image stays whole — and can be used as a
   // visual reference for Visualize via the image-ref picker.
   placeItem({ tag: 'inspo', title: niceName || 'reference', kind: 'inspo', image: dataUrl }, 0);
-  showToast('Inspo placed — hover the card and tap Dissect to extract refs');
+  showToast('Inspo placed. Hover the card and tap Dissect to extract refs.');
 }
 
 // v5.3: pixel-sample a representative color from an image so dissected refs
@@ -2878,7 +2995,7 @@ async function dissectInspo(id) {
   const it = items.find(i => i.id === id);
   if (!it || !it.card.image) return;
   if (it.card.dissected) {
-    showToast('Already dissected — tap Reverse to undo');
+    showToast('Already dissected. Tap Stack to absorb back.');
     return;
   }
   if (!getApiKey()) {
@@ -2896,21 +3013,48 @@ async function dissectInspo(id) {
       callOpenAIVision(it.card.image),
       sampleDominantColor(it.card.image)
     ]);
-    refs.forEach((r, i) => placeItem({
-      tag: r.tag, title: r.title,
-      // v5.3 tracking — lets stackDissectedRefs find these cards later
-      fromInspoId: id,
-      // v5.3 visual tie — refs from the same image share a hue
-      tint: tint || null
-    }, 200 + i * 180));
+    // v5.7: cross-canvas dedupe. Skip any ref whose title is similar to one
+    // ALREADY on the canvas (live cards or refs stacked into another image).
+    const seenLive = items.filter(i => i.el && !i.consumed).map(i => i.card.title);
+    const seenStacked = items.flatMap(i => Array.isArray(i.card.refs) ? i.card.refs.map(r => r.title) : []);
+    const seen = [...seenLive, ...seenStacked];
+    const fresh = refs.filter(r =>
+      !seen.some(t => titlesAreSimilar(t, r.title)) &&
+      !seen.some(t => false) // placeholder for any future cross-check
+    );
+    let placed = 0;
+    fresh.forEach((r, i) => {
+      placeItem({
+        tag: r.tag, title: r.title,
+        // v5.3 tracking — lets stackDissectedRefs find these cards later
+        fromInspoId: id,
+        // v5.3 visual tie — refs from the same image share a hue
+        tint: tint || null
+      }, 200 + i * 180);
+      placed++;
+    });
+    const skipped = refs.length - placed;
     it.card.dissected = true;
     it.card.dissectTint = tint || null;
+    // v5.8: source image card pulses in the same tint as its refs so the
+    // dissected family reads as a single unit on the canvas.
+    if (it.el && tint) {
+      it.card.tint = tint;
+      it.el.classList.add('tinted');
+      it.el.style.setProperty('--card-tint', tint);
+    }
     if (btn) {
       btn.classList.remove('busy');
       btn.textContent = 'Stack';
       btn.title = 'Stack the dissected refs back into the image';
     }
-    showToast(refs.length ? refs.length + ' refs from your inspo' : 'no new refs extracted');
+    showToast(
+      placed
+        ? (placed + ' refs from your inspo' + (skipped ? ' (' + skipped + ' already on canvas)' : ''))
+        : (refs.length
+            ? 'all ' + refs.length + ' refs were already on the canvas'
+            : 'no new refs extracted')
+    );
   } catch (e) {
     showError(e.message || 'Could not read the image');
     console.error('[Maya vision]', e);
@@ -2963,6 +3107,12 @@ function stackDissectedRefs(id) {
   // can do another extraction later if she wants.
   source.card.dissected = false;
   source.card.dissectTint = null;
+  // v5.8: stop the unison pulse on the source image (its refs are gone).
+  source.card.tint = null;
+  if (source.el) {
+    source.el.classList.remove('tinted');
+    source.el.style.removeProperty('--card-tint');
+  }
   const btn = source.el.querySelector('.dissect-btn');
   if (btn) {
     btn.textContent = 'Dissect';
@@ -3049,6 +3199,103 @@ window.addEventListener('drop', async e => {
 });
 
 // ════════════════════════════════════════════════════════════
+// v5.12: CLICK-ANYWHERE TO TYPE A REFERENCE
+// Click on empty canvas → small italic input appears at the click
+// position → type a single fashion term → Enter. Maya runs a quick
+// categorize pass and places the card (with cross-category dedupe via
+// placeItemUnique so 'baggy' as silhouette + 'baggy' as aesthetic
+// collapse to one).
+// ════════════════════════════════════════════════════════════
+let _manualRefInput = null;
+let _manualRefXY = null;
+
+document.getElementById('maya-canvas').addEventListener('click', e => {
+  // Only respond when the click landed on the canvas itself (not on an
+  // item-card, top-bar element, drawer, or button).
+  if (e.target.id !== 'maya-canvas' && !e.target.classList.contains('cloud')) return;
+  if (_manualRefInput) { _manualRefInput.remove(); _manualRefInput = null; }
+  _manualRefXY = { x: e.clientX, y: e.clientY };
+  const inp = document.createElement('input');
+  inp.id = 'manual-ref-input';
+  inp.placeholder = 'type a reference…';
+  inp.style.left = (e.clientX - 100) + 'px';
+  inp.style.top  = (e.clientY - 18)  + 'px';
+  inp.addEventListener('keydown', ev => {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      const text = inp.value.trim();
+      const xy = _manualRefXY;
+      inp.remove(); _manualRefInput = null; _manualRefXY = null;
+      if (text) addManualRef(text, xy);
+    } else if (ev.key === 'Escape') {
+      inp.remove(); _manualRefInput = null; _manualRefXY = null;
+    }
+  });
+  inp.addEventListener('blur', () => {
+    setTimeout(() => {
+      if (_manualRefInput === inp && !inp.value.trim()) {
+        inp.remove(); _manualRefInput = null; _manualRefXY = null;
+      }
+    }, 100);
+  });
+  document.body.appendChild(inp);
+  _manualRefInput = inp;
+  setTimeout(() => inp.focus(), 30);
+});
+
+// Tiny one-shot categorizer. Tries the local FASHION_KNOWLEDGE keyword
+// match first (zero cost); falls back to a single GPT-4o-mini call for
+// unknown terms (~$0.0002 per call). Returns { tag, title }.
+async function categorizeOneTerm(term) {
+  // 1) local keyword match — instant
+  const local = extractFashionRefs(term).slice(0, 1);
+  if (local.length) {
+    return { tag: moodboardCategoryLabel(local[0].category), title: local[0].value };
+  }
+  // 2) LLM fallback for novel terms
+  const key = getApiKey();
+  if (!key) return { tag: 'detail', title: term };
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content:
+            'You categorize a single fashion term into ONE of these tags: ' +
+            'designer, aesthetic, material, color, silhouette, era, visual ref, detail. ' +
+            'Return strict JSON: {"tag":"<one tag>","title":"<the term, lowercase, normalized>"}.' },
+          { role: 'user', content: term }
+        ]
+      })
+    });
+    if (!res.ok) return { tag: 'detail', title: term };
+    const data = await res.json();
+    const parsed = JSON.parse(data.choices?.[0]?.message?.content || '{}');
+    return {
+      tag:   (parsed.tag || 'detail').toLowerCase(),
+      title: (parsed.title || term).toString().trim()
+    };
+  } catch (_) {
+    return { tag: 'detail', title: term };
+  }
+}
+
+async function addManualRef(text, xy) {
+  const cat = await categorizeOneTerm(text);
+  // Cross-category dedupe — if 'baggy' already exists anywhere on canvas,
+  // skip rather than place a near-duplicate under a different tag.
+  if (items.some(i => titlesAreSimilar(i.card.title, cat.title))) {
+    showToast('"' + cat.title + '" is already on the canvas');
+    return;
+  }
+  // Place at the clicked position so the card lands where Fromsa pointed.
+  placeItemAt({ tag: cat.tag, title: cat.title }, xy.x - 80, xy.y - 18);
+}
+
+// ════════════════════════════════════════════════════════════
 // VISUALIZE GARMENT — OpenAI gpt-image-1 (replaces pollinations.ai)
 // ════════════════════════════════════════════════════════════
 function buildGarmentPrompt(opts = {}) {
@@ -3130,7 +3377,7 @@ function toggleVisualizeListen() {
 
 function startVisualizeListen() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { showError('Voice not supported in this browser — try Chrome'); return; }
+  if (!SR) { showError('Voice not supported in this browser. Try Chrome.'); return; }
   visualizeRecognition = new SR();
   visualizeRecognition.continuous = true;
   visualizeRecognition.interimResults = true;
@@ -3207,7 +3454,7 @@ async function applyModifications() {
   closeGarmentModal();
   const sketcher = document.getElementById('corner-sketcher');
   const sketcherText = sketcher.querySelector('.sketcher-text');
-  if (sketcherText) sketcherText.textContent = 'Maya is modifying...';
+  if (sketcherText) sketcherText.textContent = 'modifying...';
   sketcher.classList.add('active');
   // If the user × ed any chips in the viewer, treat them as features to REMOVE.
   const deselected = Array.from(viewerDeselected || []);
@@ -3221,14 +3468,21 @@ async function applyModifications() {
   const fabricCutClause = fabricsCut.length
     ? ` Also avoid these fabrics — they should not appear in the new image: ${fabricsCut.map(f => f.name).join('; ')}.`
     : '';
-  // Tight prompt: only the modifications, preserve everything else
+  // v5.12: tighter preservation prompt. Image-edit endpoint tends to drift
+  // on construction details (sewing lines, seam placement, dart positions,
+  // panel cuts) even when not asked to change them. Spell out exactly what
+  // must NOT move so the model has unambiguous instructions.
   const editPrompt =
-    `Apply ONLY these specific modifications to the garment in the image: ${mods.join('; ')}.` +
+    `Apply ONLY these specific modifications to the garment in the input image: ${mods.join('; ')}.` +
     removeClause + fabricCutClause +
-    ` PRESERVE everything else exactly as in the input image — same color, same fabric, ` +
-    `same silhouette where not modified, same model, same pose, same three-view composition ` +
-    `(side · front · back), same studio backdrop, same lighting. Do not change anything not ` +
-    `explicitly listed in the modifications or removals.`;
+    ` PRESERVE EVERYTHING ELSE pixel-for-pixel as in the input image. ` +
+    `Specifically preserve: the silhouette and overall garment shape, the seam placement, ` +
+    `the sewing lines and stitching, the panel cut lines, the dart and pleat positions, ` +
+    `the hem length and shape, the neckline and collar, the sleeve length and structure, ` +
+    `the fabric weave/sheen/drape/color (unless explicitly changed above), the model's identity, ` +
+    `pose, hair, skin tone, and stance, the three-view composition (side · front · back), the ` +
+    `studio backdrop, and the lighting. Do NOT redraw, re-imagine, or "improve" any element ` +
+    `that wasn't explicitly listed in the modifications or removals.`;
   try {
     const dataUrl = prevImage
       ? await callOpenAIImageEditSafe(prevImage, editPrompt, '1536x1024', 'medium')
@@ -3269,7 +3523,7 @@ async function applyModifications() {
     showError(e.message || 'Could not modify image');
   } finally {
     sketcher.classList.remove('active');
-    if (sketcherText) sketcherText.textContent = 'Maya is sketching...';
+    if (sketcherText) sketcherText.textContent = 'rendering...';
   }
 }
 
@@ -3288,6 +3542,19 @@ function openImageViewer(itemId) {
   viewerFabricsDeselected.clear();
   visualizeModifications = [];
   renderModificationsBar();
+  // v5.12: defensively reset Listen-button state when (re-)opening the
+  // viewer. Bug Fromsa hit: after a Modify the state could stay 'Stop'
+  // and the button stopped responding until she closed/reopened.
+  if (visualizeListening) {
+    try { stopVisualizeListen(); } catch (_) {}
+  }
+  visualizeListening = false;
+  if (visualizeRecognition) {
+    try { visualizeRecognition.stop(); } catch (_) {}
+    visualizeRecognition = null;
+  }
+  const listenBtn = document.getElementById('visualize-listen-btn');
+  if (listenBtn) listenBtn.textContent = 'Listen';
   renderViewerContent(item);
   document.getElementById('garment-modal').classList.add('open');
 }
@@ -3566,10 +3833,10 @@ async function _runVisualizeNow() {
   const sketcherText = sketcher.querySelector('.sketcher-text');
   if (sketcherText) {
     sketcherText.textContent = selectedImageReference
-      ? 'Maya is sketching from your reference…'
+      ? 'sketching from your reference…'
       : (selectedFabricsForVisualize
-          ? 'Maya is sketching in your fabric…'
-          : 'Maya is sketching...');
+          ? 'sketching in your fabric…'
+          : 'rendering...');
   }
   sketcher.classList.add('active');
   const basePrompt = buildGarmentPrompt({ fabrics: selectedFabricsForVisualize });
@@ -3875,7 +4142,7 @@ async function scanFabricsFolder(force = false) {
   console.log('[Maya v5.1] fabrics found:', found.length, found.map(f => f.fileName));
   showToast(found.length
     ? ('Found ' + found.length + ' swatch' + (found.length === 1 ? '' : 'es'))
-    : 'Folder is empty — drop swatch JPEGs in and Re-scan');
+    : 'Folder is empty. Drop swatch JPEGs in and Re-scan.');
 
   // Background-analyze any swatch that hasn't been read yet (serial,
   // to keep the rate-limit footprint small).
@@ -3998,7 +4265,7 @@ async function uploadFabricsFromInput(files) {
     }
   }
   showToast(copied
-    ? ('Uploaded ' + copied + ' swatch' + (copied === 1 ? '' : 'es') + ' — scanning…')
+    ? ('Uploaded ' + copied + ' swatch' + (copied === 1 ? '' : 'es') + ', scanning…')
     : 'No images uploaded');
   if (copied) await scanFabricsFolder(false);
 }
@@ -4030,7 +4297,7 @@ async function chooseFabricMode(mode) {
   // in-house
   if (!fabricsInventory.length) await scanFabricsFolder(false);
   if (!fabricsInventory.length) {
-    showError('No in-house fabrics yet — drop swatch photos into MAYA / Inhouse Fabrics, then try again.');
+    showError('No in-house fabrics yet. Drop swatch photos into MAYA / Inhouse Fabrics, then try again.');
     openFabricsDrawer();
     return;
   }
@@ -4113,7 +4380,7 @@ async function switchFabricForViewer() {
   }
   if (!fabricsInventory.length) await scanFabricsFolder(false);
   if (!fabricsInventory.length) {
-    showError('No in-house fabrics yet — drop swatch photos into MAYA / Inhouse Fabrics, then try again.');
+    showError('No in-house fabrics yet. Drop swatch photos into MAYA / Inhouse Fabrics, then try again.');
     openFabricsDrawer();
     return;
   }
@@ -4131,7 +4398,7 @@ async function runFabricSwitch(targetId, fabrics) {
   }
   const sketcher = document.getElementById('corner-sketcher');
   const sketcherText = sketcher.querySelector('.sketcher-text');
-  if (sketcherText) sketcherText.textContent = 'Maya is re-cutting in your fabric…';
+  if (sketcherText) sketcherText.textContent = 're-cutting in your fabric…';
   sketcher.classList.add('active');
 
   const fabricLines = fabrics.map(fabricToPromptLine);
@@ -4182,7 +4449,7 @@ async function runFabricSwitch(targetId, fabrics) {
     showError(e.message || 'Could not switch fabric');
   } finally {
     sketcher.classList.remove('active');
-    if (sketcherText) sketcherText.textContent = 'Maya is sketching...';
+    if (sketcherText) sketcherText.textContent = 'rendering...';
   }
 }
 
@@ -4290,24 +4557,48 @@ async function loadFolderHandle() {
   catch { return null; }
 }
 async function saveFolderHandle(h) {
-  try { await idb(s => s.put(h, 'maya-folder')); } catch {}
+  try {
+    if (h == null) await idb(s => s.delete('maya-folder'));
+    else           await idb(s => s.put(h, 'maya-folder'));
+  } catch {}
+}
+
+// v5.9: enforce that the save root is the MAYA folder. If the cached
+// handle was set to anywhere else (e.g. Desktop) at some earlier point,
+// clear it and re-prompt. Match by name (case-insensitive, accepts
+// 'MAYA' or 'Maya').
+function _isMayaFolder(handle) {
+  if (!handle || !handle.name) return false;
+  return /^maya$/i.test(handle.name);
 }
 
 async function getFolder() {
-  // try cached
+  // try cached, but reject if it isn't the MAYA folder
   if (folderHandle) {
-    if (await verifyPermission(folderHandle)) return folderHandle;
+    if (_isMayaFolder(folderHandle) && await verifyPermission(folderHandle)) {
+      return folderHandle;
+    }
+    folderHandle = null;
   }
   const cached = await loadFolderHandle();
   if (cached) {
-    folderHandle = cached;
-    if (await verifyPermission(folderHandle)) return folderHandle;
+    if (_isMayaFolder(cached) && await verifyPermission(cached)) {
+      folderHandle = cached;
+      return folderHandle;
+    }
+    // cached but wrong folder — purge it so we re-prompt cleanly.
+    try { await saveFolderHandle(null); } catch (_) {}
   }
   // ask
   if (!('showDirectoryPicker' in window)) {
     throw new Error('This browser does not support saving directly. Use Chrome, Edge, or Brave.');
   }
-  folderHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+  showToast('Pick the MAYA folder (Desktop / MAYA)', false);
+  const picked = await window.showDirectoryPicker({ mode: 'readwrite' });
+  if (!_isMayaFolder(picked)) {
+    throw new Error('Please pick the folder named "MAYA" so client saves land in MAYA / Clients / …');
+  }
+  folderHandle = picked;
   await saveFolderHandle(folderHandle);
   return folderHandle;
 }
@@ -4377,7 +4668,7 @@ async function doSave() {
       await writeBlob(dir, 'one-pager.pdf', pdfBlob);
     }
 
-    showToast('Saved to Clients/' + slug + '/' + today);
+    showToast('Saved to MAYA / Clients / ' + slug + ' / ' + today);
   } catch (e) {
     if (/(does not support|showDirectoryPicker)/.test(e.message)) {
       downloadBundle();
@@ -4455,7 +4746,7 @@ async function downloadBundle() {
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (e) { console.error('[Maya PDF fallback]', e); }
   }
-  showToast('Files downloaded — drop them into MAYA/Clients/' + slug + '/' + today + '/');
+  showToast('Files downloaded. Drop them into MAYA/Clients/' + slug + '/' + today + '/');
 }
 
 function download(filename, content, type) {
@@ -4690,13 +4981,13 @@ function buildPage1Html(summary, heroImageDataUrl) {
   <h1 style="font-family:'Cormorant Garamond',serif;font-weight:300;font-size:42px;letter-spacing:0.02em;text-align:center;margin:0 0 4px">${escapeHtml(name)}</h1>
   ${occasion ? `<div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px;color:#6c5ee0;text-align:center;margin-bottom:6px">${escapeHtml(occasion)}</div>` : ''}
   ${chipsRow}
-  <div style="margin-bottom:14px">
-    <div style="font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:#8a8478;margin-bottom:4px">The Person</div>
-    <p style="font-size:12px;line-height:1.65;color:#2a2a2e;margin:0">${escapeHtml(personPara)}</p>
+  <div style="margin-bottom:14px;text-align:center">
+    <div style="font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:#8a8478;margin-bottom:4px;text-align:center">The Person</div>
+    <p style="font-size:12px;line-height:1.65;color:#2a2a2e;margin:0;text-align:center">${escapeHtml(personPara)}</p>
   </div>
-  <div>
-    <div style="font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:#8a8478;margin-bottom:4px">The Vision</div>
-    <p style="font-size:12px;line-height:1.65;color:#2a2a2e;margin:0">${escapeHtml(visionPara)}</p>
+  <div style="text-align:center">
+    <div style="font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:#8a8478;margin-bottom:4px;text-align:center">The Vision</div>
+    <p style="font-size:12px;line-height:1.65;color:#2a2a2e;margin:0;text-align:center">${escapeHtml(visionPara)}</p>
   </div>
 </div>`;
 }
@@ -4900,24 +5191,43 @@ function seedMoodboard() {
 // until Logout. Cosmetic gate only (anyone reading view-source sees
 // the password), but enough to keep casual visitors out.
 // ════════════════════════════════════════════════════════════
-const SPLASH_UNLOCK_KEY = 'maya_unlocked';
-const SPLASH_DESIGNER_KEY = 'maya_designer';
-const SPLASH_PASSWORD = '8088';
+const SPLASH_UNLOCK_KEY  = 'maya_unlocked';
+const SPLASH_NAME_KEY    = 'maya_designer';
+const SPLASH_PASSWORD    = '8088';
+const SPLASH_ALLOWED_NAMES = ['Fromsa', 'April', 'Rosa'];
+
+// v5.10: case-insensitive name match. Returns the canonical name from
+// the allow-list (Fromsa/April/Rosa) or null.
+function _splashNormalizeName(input) {
+  const k = (input || '').trim().toLowerCase();
+  if (!k) return null;
+  for (const n of SPLASH_ALLOWED_NAMES) if (n.toLowerCase() === k) return n;
+  return null;
+}
 
 function splashOpenForm() {
   const s = document.getElementById('splash');
   if (!s || s.classList.contains('hide')) return;
   s.classList.add('form-open');
-  const inp = document.getElementById('splash-designer');
-  const prev = localStorage.getItem(SPLASH_DESIGNER_KEY) || '';
-  if (prev) inp.value = prev;
-  setTimeout(() => (prev ? document.getElementById('splash-password') : inp).focus(), 60);
+  // Pre-fill the last logged-in name so she can tab straight to password.
+  const last = localStorage.getItem(SPLASH_NAME_KEY);
+  const nameEl = document.getElementById('splash-name');
+  if (last && _splashNormalizeName(last)) nameEl.value = last;
+  setTimeout(() => (nameEl.value ? document.getElementById('splash-password') : nameEl).focus(), 60);
 }
 
 function splashSubmit() {
-  const designer = (document.getElementById('splash-designer').value || '').trim();
+  const nameEl = document.getElementById('splash-name');
   const password = document.getElementById('splash-password').value || '';
   const err = document.getElementById('splash-err');
+  const canonical = _splashNormalizeName(nameEl.value);
+  if (!canonical) {
+    err.textContent = 'Name not recognized';
+    const s = document.getElementById('splash');
+    s.classList.remove('shake'); void s.offsetWidth; s.classList.add('shake');
+    nameEl.focus();
+    return;
+  }
   if (password !== SPLASH_PASSWORD) {
     err.textContent = 'Not it. Try again.';
     const s = document.getElementById('splash');
@@ -4926,9 +5236,11 @@ function splashSubmit() {
     document.getElementById('splash-password').focus();
     return;
   }
-  if (designer) localStorage.setItem(SPLASH_DESIGNER_KEY, designer);
+  localStorage.setItem(SPLASH_NAME_KEY, canonical);
   localStorage.setItem(SPLASH_UNLOCK_KEY, 'true');
-  splashHide();
+  const s = document.getElementById('splash');
+  s.classList.add('unlocking');
+  setTimeout(() => splashHide(), 1100);
 }
 
 function splashHide() {
@@ -4938,38 +5250,44 @@ function splashHide() {
   setTimeout(() => { s.style.display = 'none'; }, 700);
 }
 
+// Logout — also exposed as splashLock for backwards-compat with the
+// drawer button. Wipes the unlock flag and re-shows the splash.
 function splashLock() {
   localStorage.removeItem(SPLASH_UNLOCK_KEY);
   toggleNotesDrawer(false);
   const s = document.getElementById('splash');
   if (!s) return;
   s.style.display = '';
-  // small reset so the form is hidden, hint is shown again
-  s.classList.remove('hide', 'form-open');
+  s.classList.remove('hide', 'form-open', 'unlocking');
+  document.getElementById('splash-name').value = '';
   document.getElementById('splash-password').value = '';
   document.getElementById('splash-err').textContent = '';
 }
+function logoutMaya() { splashLock(); }
 
-// Wire the splash on load. If already unlocked, hide it instantly so
-// there's no flash of black.
 (function initSplash() {
   const s = document.getElementById('splash');
   if (!s) return;
-  if (localStorage.getItem(SPLASH_UNLOCK_KEY) === 'true') {
-    s.style.display = 'none';
-    return;
-  }
-  // First click anywhere reveals the form; subsequent clicks inside the
-  // form don't re-trigger.
+  // v5.8: ALWAYS attach the listeners, even if currently unlocked. Otherwise
+  // the splash re-appearing after Logout has no click handler bound and the
+  // "press anywhere" hint does nothing.
   s.addEventListener('click', e => {
     if (s.classList.contains('form-open')) return;
     if (e.target.closest('.splash-form')) return;
     splashOpenForm();
   });
-  // Enter on the designer input jumps to password
-  document.getElementById('splash-designer').addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('splash-password').focus(); }
+  // Pressing Enter in the name field jumps to password (form submits otherwise).
+  const nameEl = document.getElementById('splash-name');
+  if (nameEl) nameEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('splash-password').focus();
+    }
   });
+  // After listeners are bound, decide whether to show or hide the splash.
+  if (localStorage.getItem(SPLASH_UNLOCK_KEY) === 'true') {
+    s.style.display = 'none';
+  }
 })();
 
 // ════════════════════════════════════════════════════════════
