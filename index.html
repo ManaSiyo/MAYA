@@ -4504,6 +4504,27 @@ async function _getHeadshotsFolder() {
   }
 }
 async function pickRandomHeadshot() {
+  // v0.13: public deploy — fetch from /assets/headshots/ via a manifest.
+  if (typeof MAYA_IS_PUBLIC !== 'undefined' && MAYA_IS_PUBLIC) {
+    try {
+      const manifest = await (await fetch('/assets/headshots/headshots.json')).json();
+      const list = Array.isArray(manifest.files) ? manifest.files : [];
+      if (!list.length) { showToast('No headshots configured.'); return null; }
+      const pick = list[Math.floor(Math.random() * list.length)];
+      const blob = await (await fetch('/assets/headshots/' + encodeURIComponent(pick))).blob();
+      return await new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result);
+        fr.onerror = () => reject(fr.error);
+        fr.readAsDataURL(blob);
+      });
+    } catch (e) {
+      console.warn('[Maya headshots assets]', e);
+      showToast('Could not load headshots.');
+      return null;
+    }
+  }
+  // Local (atelier) path — read from MAYA/Headshots/ via File System Access.
   const dir = await _getHeadshotsFolder();
   if (!dir) return null;
   const files = [];
@@ -7290,7 +7311,49 @@ async function analyzeFabricWithVision(dataUrl, hintName) {
   catch { return {}; }
 }
 
+// v0.13: public deploy — fabrics + headshots ship as static assets in the
+// repo under /assets/. Frontend fetches them from same-origin instead of
+// trying to read the visitor's local file system (which they don't have).
+async function scanFabricsFromAssets() {
+  // fabrics.json is the manifest — contains name + analysis for each swatch.
+  // The JPEGs live alongside at /assets/fabrics/<fileName>.
+  const manifestRes = await fetch('/assets/fabrics/fabrics.json');
+  if (!manifestRes.ok) throw new Error('no fabrics manifest');
+  const manifest = await manifestRes.json();
+  const items = Array.isArray(manifest.items) ? manifest.items : [];
+  const loaded = [];
+  for (const it of items) {
+    try {
+      const swatchRes = await fetch('/assets/fabrics/' + encodeURIComponent(it.fileName));
+      if (!swatchRes.ok) continue;
+      const blob = await swatchRes.blob();
+      const dataUrl = await new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result);
+        fr.onerror = () => reject(fr.error);
+        fr.readAsDataURL(blob);
+      });
+      loaded.push({ ...it, dataUrl });
+    } catch (e) {
+      console.warn('[Maya fabric asset load]', it.fileName, e);
+    }
+  }
+  fabricsInventory = loaded;
+  renderFabricsGrid();
+  console.log('[Maya v0.13] fabrics loaded from /assets:', loaded.length);
+}
+
 async function scanFabricsFolder(force = false) {
+  // v0.13: public deploy short-circuit — never tries the FS picker.
+  if (typeof MAYA_IS_PUBLIC !== 'undefined' && MAYA_IS_PUBLIC) {
+    try { await scanFabricsFromAssets(); return; }
+    catch (e) {
+      console.warn('[Maya fabrics assets]', e);
+      fabricsInventory = [];
+      renderFabricsGrid({ noFolder: true });
+      return;
+    }
+  }
   let dir;
   try { dir = await getFabricsFolder(); }
   catch (e) {
