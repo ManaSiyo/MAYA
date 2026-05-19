@@ -2615,7 +2615,7 @@
   <div class="signin-title">
     <div class="signin-wordmark">MAYA</div>
     <div class="signin-tag">Imagination, made.</div>
-    <div class="signin-sub">by Mana, CEO</div>
+    <div class="signin-sub">by Mana Siyo</div>
   </div>
   <div class="signin-bottom">
     <div id="g-signin-btn"></div>
@@ -6770,7 +6770,7 @@ async function callOpenAIImageEdit(prevDataUrl, prompt, size, quality, opts) {
   // edits. Drop-in API-compatible — same /v1/images/edits, same FormData
   // shape, same standard sizes. 2K (2560×1440) is also available if we
   // ever want to bump resolution.
-  form.append('model', 'gpt-image-1.5');
+  form.append('model', 'gpt-image-2');
   form.append('prompt', prompt);
   const inputList = Array.isArray(prevDataUrl) ? prevDataUrl : [prevDataUrl];
   let idx = 0;
@@ -6815,7 +6815,7 @@ async function callOpenAIImage(prompt, size, quality, opts) {
   const body = {
     // v9.11: gpt-image-2 — same model used by the /edits path. Reasoning-
     // capable, stronger identity carry across renders, 2K-ready.
-    model: 'gpt-image-1.5',
+    model: 'gpt-image-2',
     prompt: prompt,
     size: size || '1024x1536',
     quality: quality || getImageQuality() || 'medium',
