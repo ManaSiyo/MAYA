@@ -16,12 +16,13 @@
 //   - Rate limit is in-memory and best-effort; if you grow past one Edge instance
 //     you'll want Vercel KV or Upstash Redis instead.
 
-// v0.13.9: switched from Edge (25s timeout on Hobby) to Node.js
-// serverless (60s with explicit maxDuration). Image generation at high
-// quality with multiple anchors can take 30–50s — Edge's 25s ceiling
-// was returning 504 before OpenAI had time to finish.
+// Switched from Edge (25s timeout) to Node.js serverless with
+// maxDuration: 300 (Pro plan cap). Image generation at high quality with
+// multiple anchors can take 30–50s — Edge's 25s ceiling was returning
+// 504 before OpenAI had time to finish.
 export const config = {
-  runtime: 'edge',
+  runtime: 'nodejs',
+  maxDuration: 300,
 };
 
 export default async function handler(request) {
