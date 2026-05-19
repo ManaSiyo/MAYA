@@ -23,6 +23,10 @@
 <!-- v0.11: Google Sign-In gate. The library boots itself on load; we call
      google.accounts.id.initialize / renderButton once Maya's own DOMContentLoaded fires. -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<!-- v0.11: Vercel Web Analytics + Speed Insights — visitors, sessions,
+     average duration, real-user load times. Served same-origin by Vercel. -->
+<script defer src="/_vercel/insights/script.js"></script>
+<script defer src="/_vercel/speed-insights/script.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -3945,13 +3949,26 @@ async function submitFavorite() {
 
 // v10.7: extracted from old submitFavorite — runs after the inspo picker
 // (or directly if no inspos). Writes the Clients folder + fires thank-you.
+// v0.12: when running on the public domain, submissions stream to the
+// atelier's Google Drive via /api/submit instead of trying to write to
+// the visitor's local file system (they don't have a MAYA folder).
+const MAYA_IS_PUBLIC = (typeof location !== 'undefined') &&
+  location.hostname !== 'localhost' &&
+  location.hostname !== '127.0.0.1' &&
+  location.protocol !== 'file:';
+
 async function _doSubmitConfirmed() {
   const ty = document.getElementById('thankyou');
   if (ty) requestAnimationFrame(() => ty.classList.add('show'));
   try {
-    await doSave();
+    if (MAYA_IS_PUBLIC) {
+      await doSaveToCloud();
+    } else {
+      await doSave();
+    }
   } catch (e) {
     console.warn('[Maya submit]', e);
+    showError('Submit failed: ' + (e.message || 'unknown'));
   }
   if (!ty) return;
   let armed = false;
@@ -8082,6 +8099,148 @@ async function doSave() {
       showError(e.message || 'Save failed');
     }
   }
+}
+
+// ════════════════════════════════════════════════════════════
+// v0.12: doSaveToCloud — same materials as doSave(), but bundles
+// them into base64 calls against /api/submit, which writes everything
+// into the atelier's MAYA folder in Google Drive (one subfolder per
+// submission, named "<client>-<MM-DD-YYYY>"). Two-phase:
+//   1. POST { action: "init", client_name } → returns folder_id
+//   2. POST { action: "upload", folder_id, name, mime_type, data_b64 }
+//      for each file. Sequential to stay friendly to Vercel's body-size
+//      limits.
+// ════════════════════════════════════════════════════════════
+async function doSaveToCloud() {
+  const token = (typeof getGoogleIdToken === 'function') ? getGoogleIdToken() : null;
+  if (!token) throw new Error('Not signed in.');
+
+  const nameForFolder = currentClientName || (lastSummary && lastSummary.client && lastSummary.client.name) || 'client';
+  const slug = slugify(nameForFolder);
+
+  // 1) Create the per-submission folder up on Drive.
+  setStatus('uploading…');
+  const initRes = await fetch('/api/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ action: 'init', client_name: slug }),
+  });
+  if (!initRes.ok) {
+    const err = await initRes.json().catch(() => ({}));
+    throw new Error(err.detail || err.error || ('init ' + initRes.status));
+  }
+  const { folder_id, folder_name } = await initRes.json();
+
+  // Build the list of files we'll upload (same set as doSave writes).
+  const queue = [];
+
+  // moodboard.json — slim copy without base64 images.
+  const moodboardLite = items.map(i => {
+    const { image, ...rest } = i.card;
+    if (rest.fabrics && Array.isArray(rest.fabrics)) {
+      rest.fabrics = rest.fabrics.map(({ dataUrl, ...fr }) => fr);
+    }
+    return image ? { ...rest, image_in_pdf: true } : rest;
+  });
+  queue.push({
+    name: 'moodboard.json', mime_type: 'application/json',
+    data_b64: _utf8ToB64(JSON.stringify(moodboardLite, null, 2)),
+  });
+
+  // summary.json + transcript.txt
+  if (lastSummary) {
+    queue.push({
+      name: 'summary.json', mime_type: 'application/json',
+      data_b64: _utf8ToB64(JSON.stringify(lastSummary, null, 2)),
+    });
+    queue.push({
+      name: 'transcript.txt', mime_type: 'text/plain',
+      data_b64: _utf8ToB64(lastTranscript || '(no transcript captured)'),
+    });
+  } else if (lastTranscript) {
+    queue.push({
+      name: 'transcript.txt', mime_type: 'text/plain',
+      data_b64: _utf8ToB64(lastTranscript),
+    });
+  }
+
+  // one-pager.pdf + dream-garment.png
+  if (lastOnePagerImage) {
+    try {
+      const pdfBlob = await renderOnePagerPdfBlob();
+      queue.push({
+        name: 'one-pager.pdf', mime_type: 'application/pdf',
+        data_b64: await _blobToB64(pdfBlob),
+      });
+    } catch (e) { console.warn('[Maya cloud one-pager]', e); }
+    try {
+      const dgBlob = await (await fetch(lastOnePagerImage)).blob();
+      queue.push({
+        name: 'dream-garment.png', mime_type: 'image/png',
+        data_b64: await _blobToB64(dgBlob),
+      });
+    } catch (e) { console.warn('[Maya cloud dream-garment]', e); }
+  }
+
+  // Uploaded inspirations (flat names: "inspo-1.jpg" etc., grouped by prefix).
+  const uploadedInspo = items.filter(i =>
+    i.card.kind === 'inspo' && i.card.image && !i.card.inspirationId
+  );
+  let n = 0;
+  for (const it of uploadedInspo) {
+    n++;
+    try {
+      const blob = await (await fetch(it.card.image)).blob();
+      const ext  = (blob.type && blob.type.includes('png')) ? 'png' : 'jpg';
+      queue.push({
+        name: 'inspo-' + n + '.' + ext, mime_type: blob.type || 'image/jpeg',
+        data_b64: await _blobToB64(blob),
+      });
+    } catch (e) { console.warn('[Maya cloud inspo]', n, e); }
+  }
+
+  // 2) Upload each file sequentially.
+  let done = 0;
+  for (const f of queue) {
+    done++;
+    setStatus('uploading ' + done + ' / ' + queue.length);
+    const res = await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        action: 'upload',
+        folder_id,
+        name: f.name,
+        mime_type: f.mime_type,
+        data_b64: f.data_b64,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.warn('[Maya cloud upload]', f.name, err);
+      // Keep going — one bad file shouldn't kill the whole submit.
+    }
+  }
+  setStatus('');
+  showToast('Submitted — ' + folder_name);
+  return { folder_id, folder_name, total: queue.length };
+}
+
+function _utf8ToB64(str) {
+  // btoa can't handle non-Latin1 directly — round-trip via UTF-8 bytes.
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function _blobToB64(blob) {
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => {
+      const dataUrl = fr.result || '';
+      const comma = dataUrl.indexOf(',');
+      resolve(comma >= 0 ? dataUrl.slice(comma + 1) : '');
+    };
+    fr.onerror = () => reject(fr.error);
+    fr.readAsDataURL(blob);
+  });
 }
 
 // Build the two-page PDF and return it as a Blob (no download dialog)
