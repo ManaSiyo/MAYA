@@ -21,8 +21,7 @@
 // quality with multiple anchors can take 30–50s — Edge's 25s ceiling
 // was returning 504 before OpenAI had time to finish.
 export const config = {
-  runtime: 'nodejs',
-  maxDuration: 60,
+  runtime: 'edge',
 };
 
 export default async function handler(request) {
