@@ -17,12 +17,12 @@
 //     you'll want Vercel KV or Upstash Redis instead.
 
 // Switched from Edge (25s timeout) to Node.js serverless with
-// maxDuration: 300 (Pro plan cap). Image generation at high quality with
-// multiple anchors can take 30–50s — Edge's 25s ceiling was returning
-// 504 before OpenAI had time to finish.
+// maxDuration: 60 (Hobby plan cap). Image generation at high quality
+// with multiple anchors can take 30–50s — Edge's 25s ceiling was
+// returning 504 before OpenAI had time to finish.
 export const config = {
   runtime: 'nodejs',
-  maxDuration: 300,
+  maxDuration: 60,
 };
 
 export default async function handler(request) {
