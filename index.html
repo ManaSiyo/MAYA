@@ -2551,68 +2551,71 @@
      sees the OpenAI key.
      ──────────────────────────────────────────────────────────────────────── -->
 <style>
-  /* v0.13.5: borderless sign-in gate. No card, no frame. Title sits high-
-     center on the cosmic backdrop, Sign-in button anchored near the
-     bottom (same vertical position as Maya's Visualize button). */
+  /* v0.13.6: borderless sign-in gate.
+     MAYA is dead-center of the viewport (absolutely positioned).
+     The two subtitles sit just beneath it, tight spacing.
+     Sign-in button anchored near the bottom. */
   #signin-gate {
     position: fixed; inset: 0; z-index: 999999;
-    display: flex; flex-direction: column;
     background:
       linear-gradient(rgba(0,4,12,0.42), rgba(0,4,12,0.62)),
       #000 url("/assets/UI%20references/birth%20of%20a%20star.png") center/cover no-repeat;
     font-family: 'Cormorant Garamond', serif;
     color: rgba(245,250,255,0.95);
     transition: opacity 0.4s ease;
-    padding: 0;
   }
   #signin-gate.hidden { opacity: 0; pointer-events: none; }
-  /* Title block: large MAYA + sub + tagline, centered in the upper-mid region. */
+  /* Title block — dead center of the viewport. */
   #signin-gate .signin-title {
-    flex: 1;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 18px;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px;
     padding: 0 24px;
     text-align: center;
   }
   #signin-gate .signin-wordmark {
     font-family: 'Cormorant Garamond', serif;
-    font-weight: 300;
-    font-size: 96px;
+    font-weight: 600;
+    font-size: 104px;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     line-height: 1;
-    opacity: 0.95;
-  }
-  #signin-gate .signin-sub {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 11px; letter-spacing: 0.30em; text-transform: uppercase;
-    color: rgba(245,250,255,0.55);
+    margin-bottom: 6px;
   }
   #signin-gate .signin-tag {
     font-family: 'Cormorant Garamond', serif; font-style: italic;
-    font-size: 18px; line-height: 1.5;
+    font-size: 17px; line-height: 1.4;
     color: rgba(245,250,255,0.75);
-    max-width: 360px;
+    margin: 0;
   }
-  /* Bottom block: Sign-in button + fineprint, anchored low. */
+  #signin-gate .signin-sub {
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
+    color: rgba(245,250,255,0.45);
+    margin: 0;
+  }
+  /* Bottom block — sign-in button, anchored low. */
   #signin-gate .signin-bottom {
+    position: absolute;
+    bottom: 56px; left: 0; right: 0;
     display: flex; flex-direction: column; align-items: center;
-    gap: 12px;
-    padding: 0 24px 56px;
+    gap: 10px;
   }
-  #signin-gate #g-signin-btn { min-height: 44px; }
+  #signin-gate #g-signin-btn { min-height: 40px; }
   #signin-gate .signin-fineprint {
     font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
-    color: rgba(245,250,255,0.40);
-    text-align: center; max-width: 320px;
+    font-size: 9px; letter-spacing: 0.20em; text-transform: uppercase;
+    color: rgba(245,250,255,0.35);
+    text-align: center;
   }
 </style>
 <div id="signin-gate">
   <div class="signin-title">
     <div class="signin-wordmark">MAYA</div>
-    <div class="signin-sub">by Mana Siyo</div>
     <div class="signin-tag">Imagination, made.</div>
+    <div class="signin-sub">by Mana, CEO</div>
   </div>
   <div class="signin-bottom">
     <div id="g-signin-btn"></div>
@@ -2660,12 +2663,18 @@
   window.getMayaSignedInEmail = function () { return _googleEmail || null; };
 
   window.mayaSignOut = function () {
+    const emailForRevoke = _googleEmail;
     _googleIdToken = null;
     _googleEmail = null;
     localStorage.removeItem(MAYA_TOKEN_KEY);
     localStorage.removeItem(MAYA_EMAIL_KEY);
     if (window.google && google.accounts && google.accounts.id) {
+      // v0.13.6: actually revoke the Google grant so the next sign-in
+      // shows the chooser (instead of silently re-using the same account).
       google.accounts.id.disableAutoSelect();
+      if (emailForRevoke) {
+        try { google.accounts.id.revoke(emailForRevoke, () => {}); } catch (_) {}
+      }
     }
     _showGate();
     setTimeout(_renderGoogleButton, 50);
@@ -2881,8 +2890,7 @@
     <!-- v7.9: Settings + Logout share the bottom text-link row. -->
     <div class="drawer-meta-row">
       <button class="drawer-settings-link" onclick="openSettings()" title="Account &amp; preferences">Settings</button>
-      <button class="drawer-settings-link" onclick="openBackend()" title="Designer view — one-pager + pattern dissection">Back-end</button>
-      <button class="drawer-settings-link" onclick="logoutMaya()" title="Log out. Splash + password again.">Logout</button>
+      <button class="drawer-settings-link" onclick="mayaSignOut()" title="Sign out of Google and return to the Maya sign-in screen.">Logout</button>
     </div>
   </div>
 
@@ -6762,7 +6770,7 @@ async function callOpenAIImageEdit(prevDataUrl, prompt, size, quality, opts) {
   // edits. Drop-in API-compatible — same /v1/images/edits, same FormData
   // shape, same standard sizes. 2K (2560×1440) is also available if we
   // ever want to bump resolution.
-  form.append('model', 'gpt-image-2');
+  form.append('model', 'gpt-image-1.5');
   form.append('prompt', prompt);
   const inputList = Array.isArray(prevDataUrl) ? prevDataUrl : [prevDataUrl];
   let idx = 0;
@@ -6807,7 +6815,7 @@ async function callOpenAIImage(prompt, size, quality, opts) {
   const body = {
     // v9.11: gpt-image-2 — same model used by the /edits path. Reasoning-
     // capable, stronger identity carry across renders, 2K-ready.
-    model: 'gpt-image-2',
+    model: 'gpt-image-1.5',
     prompt: prompt,
     size: size || '1024x1536',
     quality: quality || getImageQuality() || 'medium',
