@@ -25,68 +25,133 @@ export const config = {
   maxDuration: 60,
 };
 
+// Bumped on every deploy that touches diagnostics. Echoed in X-Proxy-Version
+// header + every JSON body, so you can confirm in the browser console which
+// build of the proxy actually served a request.
+const PROXY_VERSION = 'v0.13.10-diagnostics';
+
 export default async function handler(request) {
-  const url = new URL(request.url);
-
-  // Health check — visit /api/openai/ping in a browser to confirm liveness.
-  if (url.pathname.endsWith('/ping')) {
-    return json({ ok: true, ts: Date.now() });
-  }
-
-  // CORS preflight
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders(request) });
-  }
-
-  // --- Auth gate ---------------------------------------------------------
-  let user;
+  let phase = 'init';
   try {
-    user = await requireGoogleUser(request);
+    // Detect a handler-signature mismatch up front. On Vercel's Node runtime
+    // a misconfigured function can receive (req, res) Node-style args instead
+    // of a Fetch Request — calling .headers.get on that would throw a cryptic
+    // TypeError. Surface it cleanly instead.
+    if (!request || typeof request?.headers?.get !== 'function') {
+      return json({
+        error: 'handler_signature_mismatch',
+        detail: 'Function received Node-style (req, res) args; expected Fetch Request. Runtime config likely wrong.',
+        request_type: typeof request,
+        proxy_version: PROXY_VERSION,
+      }, 500);
+    }
+
+    phase = 'parse-url';
+    const url = new URL(request.url);
+
+    // Health check — visit /api/openai/ping in a browser to confirm liveness.
+    if (url.pathname.endsWith('/ping')) {
+      return json({ ok: true, ts: Date.now(), proxy_version: PROXY_VERSION }, 200, request);
+    }
+
+    // CORS preflight
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { status: 204, headers: { ...corsHeaders(request), 'X-Proxy-Version': PROXY_VERSION } });
+    }
+
+    // --- Auth gate -------------------------------------------------------
+    phase = 'auth';
+    let user;
+    try {
+      user = await requireGoogleUser(request);
+    } catch (e) {
+      return json({ error: 'unauthorized', detail: e.message, proxy_version: PROXY_VERSION }, 401, request);
+    }
+
+    // --- Per-user rate limit (best-effort) -------------------------------
+    phase = 'rate-limit';
+    if (!isRateAllowed(user.email)) {
+      return json({ error: 'rate_limited', detail: 'Slow down — try again in a minute.', proxy_version: PROXY_VERSION }, 429, request);
+    }
+
+    // --- Build the upstream OpenAI request ------------------------------
+    // /api/openai/v1/chat/completions  ->  /v1/chat/completions
+    phase = 'build-upstream';
+    const openaiPath = url.pathname.replace(/^\/api\/openai/, '');
+    const upstream   = new URL('https://api.openai.com' + openaiPath + url.search);
+
+    const headers = new Headers(request.headers);
+    headers.set('Authorization', 'Bearer ' + process.env.OPENAI_API_KEY);
+    // Strip Vercel / proxy headers so OpenAI sees a clean request.
+    ['host', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-for',
+     'x-real-ip', 'x-vercel-id', 'x-vercel-deployment-url',
+     'x-vercel-forwarded-for', 'cf-connecting-ip', 'cf-ipcountry'
+    ].forEach(h => headers.delete(h));
+
+    const init = {
+      method: request.method,
+      headers,
+      body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body,
+      // Required for streaming bodies (multipart uploads / SSE).
+      duplex: 'half',
+    };
+
+    phase = 'fetch-upstream';
+    let upstreamRes;
+    try {
+      upstreamRes = await fetch(upstream.toString(), init);
+    } catch (e) {
+      return json({
+        error: 'upstream_unreachable',
+        detail: e.message,
+        cause: e.cause ? String(e.cause) : undefined,
+        proxy_version: PROXY_VERSION,
+      }, 502, request);
+    }
+
+    // If OpenAI returned a non-2xx, buffer the body and surface it in a JSON
+    // envelope so the browser console can see the actual upstream error
+    // message (status code, OpenAI error JSON, etc.) instead of an opaque 500.
+    if (!upstreamRes.ok) {
+      phase = 'read-upstream-error';
+      let upstreamBody = '';
+      try {
+        upstreamBody = await upstreamRes.text();
+      } catch (e) {
+        upstreamBody = '<failed to read upstream body: ' + e.message + '>';
+      }
+      return json({
+        error: 'upstream_error',
+        upstream_status: upstreamRes.status,
+        upstream_status_text: upstreamRes.statusText,
+        upstream_body: upstreamBody.slice(0, 4000),
+        upstream_url: upstream.toString(),
+        proxy_version: PROXY_VERSION,
+      }, upstreamRes.status, request);
+    }
+
+    // --- Forward OpenAI's success response back -------------------------
+    phase = 'forward-response';
+    const responseHeaders = new Headers(upstreamRes.headers);
+    Object.entries(corsHeaders(request)).forEach(([k, v]) => responseHeaders.set(k, v));
+    responseHeaders.set('X-Proxy-Version', PROXY_VERSION);
+
+    return new Response(upstreamRes.body, {
+      status: upstreamRes.status,
+      headers: responseHeaders,
+    });
   } catch (e) {
-    return json({ error: 'unauthorized', detail: e.message }, 401, request);
+    // Anything that escapes the per-phase handling above ends up here. The
+    // browser console will get a structured 500 with the phase + stack so we
+    // know exactly where the proxy crashed.
+    return json({
+      error: 'proxy_crashed',
+      phase,
+      message: e?.message || String(e),
+      stack: (e?.stack || '').split('\n').slice(0, 10).join('\n'),
+      proxy_version: PROXY_VERSION,
+    }, 500, request);
   }
-
-  // --- Per-user rate limit (best-effort) ---------------------------------
-  if (!isRateAllowed(user.email)) {
-    return json({ error: 'rate_limited', detail: 'Slow down — try again in a minute.' }, 429, request);
-  }
-
-  // --- Build the upstream OpenAI request --------------------------------
-  // /api/openai/v1/chat/completions  ->  /v1/chat/completions
-  const openaiPath = url.pathname.replace(/^\/api\/openai/, '');
-  const upstream   = new URL('https://api.openai.com' + openaiPath + url.search);
-
-  const headers = new Headers(request.headers);
-  headers.set('Authorization', 'Bearer ' + process.env.OPENAI_API_KEY);
-  // Strip Vercel / proxy headers so OpenAI sees a clean request.
-  ['host', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-for',
-   'x-real-ip', 'x-vercel-id', 'x-vercel-deployment-url',
-   'x-vercel-forwarded-for', 'cf-connecting-ip', 'cf-ipcountry'
-  ].forEach(h => headers.delete(h));
-
-  const init = {
-    method: request.method,
-    headers,
-    body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body,
-    // Required for streaming bodies (multipart uploads / SSE) on Edge.
-    duplex: 'half',
-  };
-
-  let upstreamRes;
-  try {
-    upstreamRes = await fetch(upstream.toString(), init);
-  } catch (e) {
-    return json({ error: 'upstream_unreachable', detail: e.message }, 502, request);
-  }
-
-  // Forward OpenAI's response back, with CORS headers attached.
-  const responseHeaders = new Headers(upstreamRes.headers);
-  Object.entries(corsHeaders(request)).forEach(([k, v]) => responseHeaders.set(k, v));
-
-  return new Response(upstreamRes.body, {
-    status: upstreamRes.status,
-    headers: responseHeaders,
-  });
 }
 
 // ─── Google ID token verification ─────────────────────────────────────────
@@ -189,6 +254,7 @@ function json(obj, status = 200, request) {
     status,
     headers: {
       'Content-Type': 'application/json',
+      'X-Proxy-Version': PROXY_VERSION,
       ...(request ? corsHeaders(request) : {}),
     },
   });
