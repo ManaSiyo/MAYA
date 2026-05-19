@@ -2399,6 +2399,10 @@
   }
   /* v9.7: form anchors to bottom-center (where the voice bar sits on the
      inspo page), not stacked under the wordmark. */
+  /* v0.13.4: legacy name+password splash is retired — Google Sign-In is
+     the only gate on the public deploy. Force-hide the entire #splash
+     element so it never shows even briefly on boot. */
+  #splash { display: none !important; }
   #splash .splash-form {
     display: none; flex-direction: column; align-items: center;
     gap: 10px; width: 320px; max-width: 88vw;
@@ -2547,61 +2551,72 @@
      sees the OpenAI key.
      ──────────────────────────────────────────────────────────────────────── -->
 <style>
+  /* v0.13.5: borderless sign-in gate. No card, no frame. Title sits high-
+     center on the cosmic backdrop, Sign-in button anchored near the
+     bottom (same vertical position as Maya's Visualize button). */
   #signin-gate {
     position: fixed; inset: 0; z-index: 999999;
-    display: flex; align-items: center; justify-content: center;
-    background: radial-gradient(ellipse at center, #0a1530 0%, #02050d 70%, #000 100%);
+    display: flex; flex-direction: column;
+    background:
+      linear-gradient(rgba(0,4,12,0.42), rgba(0,4,12,0.62)),
+      #000 url("/assets/UI%20references/birth%20of%20a%20star.png") center/cover no-repeat;
     font-family: 'Cormorant Garamond', serif;
     color: rgba(245,250,255,0.95);
     transition: opacity 0.4s ease;
+    padding: 0;
   }
   #signin-gate.hidden { opacity: 0; pointer-events: none; }
-  #signin-gate .signin-card {
-    display: flex; flex-direction: column; align-items: center; gap: 28px;
-    padding: 56px 64px;
-    background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 28px;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
-    box-shadow:
-      inset 0 1px 1px rgba(255,255,255,0.28),
-      inset 0 -1px 1px rgba(0,0,0,0.18),
-      0 8px 32px rgba(0,0,0,0.42);
+  /* Title block: large MAYA + sub + tagline, centered in the upper-mid region. */
+  #signin-gate .signin-title {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 18px;
+    padding: 0 24px;
+    text-align: center;
   }
   #signin-gate .signin-wordmark {
     font-family: 'Cormorant Garamond', serif;
-    font-weight: 300; font-style: italic;
-    font-size: 56px; letter-spacing: 0.02em;
-    line-height: 1; opacity: 0.95;
+    font-weight: 300;
+    font-size: 96px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    line-height: 1;
+    opacity: 0.95;
   }
   #signin-gate .signin-sub {
     font-family: 'Jost', sans-serif; font-weight: 300;
     font-size: 11px; letter-spacing: 0.30em; text-transform: uppercase;
     color: rgba(245,250,255,0.55);
-    text-align: center;
   }
   #signin-gate .signin-tag {
     font-family: 'Cormorant Garamond', serif; font-style: italic;
-    font-size: 16px; line-height: 1.5;
+    font-size: 18px; line-height: 1.5;
     color: rgba(245,250,255,0.75);
-    text-align: center; max-width: 320px;
+    max-width: 360px;
+  }
+  /* Bottom block: Sign-in button + fineprint, anchored low. */
+  #signin-gate .signin-bottom {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 12px;
+    padding: 0 24px 56px;
   }
   #signin-gate #g-signin-btn { min-height: 44px; }
   #signin-gate .signin-fineprint {
     font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; letter-spacing: 0.10em;
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
     color: rgba(245,250,255,0.40);
     text-align: center; max-width: 320px;
   }
 </style>
 <div id="signin-gate">
-  <div class="signin-card">
-    <div class="signin-wordmark">Maya</div>
+  <div class="signin-title">
+    <div class="signin-wordmark">MAYA</div>
     <div class="signin-sub">by Mana Siyo</div>
     <div class="signin-tag">Imagination, made.</div>
+  </div>
+  <div class="signin-bottom">
     <div id="g-signin-btn"></div>
-    <div class="signin-fineprint">Sign in with Google to begin a consultation.</div>
+    <div class="signin-fineprint">Sign in with Google to begin</div>
   </div>
 </div>
 <script>
