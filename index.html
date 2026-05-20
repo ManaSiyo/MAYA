@@ -3302,12 +3302,12 @@ function getApiKey() {
 function getModel()  { return localStorage.getItem(STORAGE_KEY_MODEL) || 'gpt-4.1'; }
 // v5.15: image quality preference (medium = fast/cheap; high = sharper, better face).
 // v9.9: default raised to 'high' — face consistency is paramount, and 'high'
-// resolves features (eyes, jawline, skin tone gradient) far better.
-// v10.20: default dropped back to 'medium'. Measured 'high' at 118s for
-// 1024x1536 — well over Vercel Hobby's 60s function cap, causing 504s in
-// prod. 'medium' clocks ~43s and fits the cap. Users who want 'high' can
-// still pick it in Settings (and accept the occasional 504).
+// resolves features (eyes, jawline, skin tone gradient) far better. Users can
+// still drop it back to medium in Settings.
 const STORAGE_KEY_IMG_QUALITY = 'maya_image_quality';
+// v0.13.10: default to medium so renders finish in ~15s and fit
+// inside the Edge runtime's 25s timeout. Users can still pick high in
+// Settings if they're willing to risk a 504.
 function getImageQuality() { return localStorage.getItem(STORAGE_KEY_IMG_QUALITY) || 'medium'; }
 
 // v0.11: Settings simplified for public deploy. No key, no model field —
@@ -3322,7 +3322,7 @@ function closeSettings() {
   document.getElementById('settings-modal').classList.remove('open');
 }
 function saveSettings() {
-  const qual = document.getElementById('quality-input').value || 'medium';
+  const qual = document.getElementById('quality-input').value || 'high';
   localStorage.setItem(STORAGE_KEY_IMG_QUALITY, qual);
   closeSettings();
   showToast('Saved');
@@ -6773,7 +6773,7 @@ async function callOpenAIImageEdit(prevDataUrl, prompt, size, quality, opts) {
   // edits. Drop-in API-compatible — same /v1/images/edits, same FormData
   // shape, same standard sizes. 2K (2560×1440) is also available if we
   // ever want to bump resolution.
-  form.append('model', 'gpt-image-2');
+  form.append('model', 'gpt-image-1.5');
   form.append('prompt', prompt);
   const inputList = Array.isArray(prevDataUrl) ? prevDataUrl : [prevDataUrl];
   let idx = 0;
@@ -6818,7 +6818,7 @@ async function callOpenAIImage(prompt, size, quality, opts) {
   const body = {
     // v9.11: gpt-image-2 — same model used by the /edits path. Reasoning-
     // capable, stronger identity carry across renders, 2K-ready.
-    model: 'gpt-image-2',
+    model: 'gpt-image-1.5',
     prompt: prompt,
     size: size || '1024x1536',
     quality: quality || getImageQuality() || 'medium',
