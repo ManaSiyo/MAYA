@@ -3302,10 +3302,13 @@ function getApiKey() {
 function getModel()  { return localStorage.getItem(STORAGE_KEY_MODEL) || 'gpt-4.1'; }
 // v5.15: image quality preference (medium = fast/cheap; high = sharper, better face).
 // v9.9: default raised to 'high' — face consistency is paramount, and 'high'
-// resolves features (eyes, jawline, skin tone gradient) far better. Users can
-// still drop it back to medium in Settings.
+// resolves features (eyes, jawline, skin tone gradient) far better.
+// v10.20: default dropped back to 'medium'. Measured 'high' at 118s for
+// 1024x1536 — well over Vercel Hobby's 60s function cap, causing 504s in
+// prod. 'medium' clocks ~43s and fits the cap. Users who want 'high' can
+// still pick it in Settings (and accept the occasional 504).
 const STORAGE_KEY_IMG_QUALITY = 'maya_image_quality';
-function getImageQuality() { return localStorage.getItem(STORAGE_KEY_IMG_QUALITY) || 'high'; }
+function getImageQuality() { return localStorage.getItem(STORAGE_KEY_IMG_QUALITY) || 'medium'; }
 
 // v0.11: Settings simplified for public deploy. No key, no model field —
 // model is fixed in code, key is server-side. Just account + quality.
@@ -3319,7 +3322,7 @@ function closeSettings() {
   document.getElementById('settings-modal').classList.remove('open');
 }
 function saveSettings() {
-  const qual = document.getElementById('quality-input').value || 'high';
+  const qual = document.getElementById('quality-input').value || 'medium';
   localStorage.setItem(STORAGE_KEY_IMG_QUALITY, qual);
   closeSettings();
   showToast('Saved');
