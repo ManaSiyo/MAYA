@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="11.0">
+<meta name="maya-version" content="11.1">
 <!-- Maya v9.2 — restored drawer Avatar UI (face circle + name + measurements
      form + Randomize + face photo upload) on top of v9.1. The closet SCREEN
      stays deleted; this only brings back the in-drawer sub-menu so designers
@@ -3253,6 +3253,11 @@
       Maya runs on the Mana Siyo atelier's OpenAI account. Your sessions live
       in this browser only and are never shared.
     </p>
+    <label for="model-input">Image model</label>
+    <select id="model-input" style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.12);border-radius:6px;padding:10px 12px;font-family:'Jost',sans-serif;font-size:12px;color:#fff;outline:none">
+      <option value="gpt-image-2">gpt-image-2 (latest — sharper, slower)</option>
+      <option value="gpt-image-1.5">gpt-image-1.5 (faster, lighter)</option>
+    </select>
     <label for="quality-input">Image quality</label>
     <select id="quality-input" style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.12);border-radius:6px;padding:10px 12px;font-family:'Jost',sans-serif;font-size:12px;color:#fff;outline:none">
       <option value="medium">Medium (faster, ~$0.04 / image)</option>
@@ -3586,11 +3591,17 @@ function getModel()  { return localStorage.getItem(STORAGE_KEY_MODEL) || 'gpt-4.
 const STORAGE_KEY_IMG_QUALITY = 'maya_image_quality';
 function getImageQuality() { return localStorage.getItem(STORAGE_KEY_IMG_QUALITY) || 'medium'; }
 
+// v11.1: image model preference. Choices: 'gpt-image-2' (default, latest),
+// 'gpt-image-1.5' (older, faster, lighter). User-selectable in Settings.
+const STORAGE_KEY_IMG_MODEL = 'maya_image_model';
+function getImageModel() { return localStorage.getItem(STORAGE_KEY_IMG_MODEL) || 'gpt-image-2'; }
+
 // v0.11: Settings simplified for public deploy. No key, no model field —
 // model is fixed in code, key is server-side. Just account + quality.
 function openSettings() {
   const emailEl = document.getElementById('settings-email');
   if (emailEl) emailEl.textContent = (typeof getMayaSignedInEmail === 'function' ? getMayaSignedInEmail() : '') || '—';
+  document.getElementById('model-input').value   = getImageModel();
   document.getElementById('quality-input').value = getImageQuality();
   document.getElementById('settings-modal').classList.add('open');
 }
@@ -3598,7 +3609,9 @@ function closeSettings() {
   document.getElementById('settings-modal').classList.remove('open');
 }
 function saveSettings() {
-  const qual = document.getElementById('quality-input').value || 'high';
+  const model = document.getElementById('model-input').value   || 'gpt-image-2';
+  const qual  = document.getElementById('quality-input').value || 'medium';
+  localStorage.setItem(STORAGE_KEY_IMG_MODEL,   model);
   localStorage.setItem(STORAGE_KEY_IMG_QUALITY, qual);
   closeSettings();
   showToast('Saved');
@@ -7214,7 +7227,7 @@ async function callOpenAIImageEdit(prevDataUrl, prompt, size, quality, opts) {
   // edits. Drop-in API-compatible — same /v1/images/edits, same FormData
   // shape, same standard sizes. 2K (2560×1440) is also available if we
   // ever want to bump resolution.
-  form.append('model', 'gpt-image-2');
+  form.append('model', getImageModel());
   form.append('prompt', prompt);
   const inputList = Array.isArray(prevDataUrl) ? prevDataUrl : [prevDataUrl];
   let idx = 0;
@@ -7263,7 +7276,7 @@ async function callOpenAIImage(prompt, size, quality, opts) {
   const body = {
     // v9.11: gpt-image-2 — same model used by the /edits path. Reasoning-
     // capable, stronger identity carry across renders, 2K-ready.
-    model: 'gpt-image-2',
+    model: getImageModel(),
     prompt: prompt,
     size: size || '1024x1536',
     quality: quality || getImageQuality() || 'medium',
