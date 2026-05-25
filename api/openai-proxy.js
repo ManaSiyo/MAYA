@@ -21,7 +21,8 @@
 // with multiple anchors can take 30–50s — Edge's 25s ceiling was
 // returning 504 before OpenAI had time to finish.
 export const config = {
-  runtime: 'edge',
+  runtime: 'nodejs',
+  maxDuration: 300,
 };
 
 // Bumped on every deploy that touches diagnostics. Echoed in X-Proxy-Version
