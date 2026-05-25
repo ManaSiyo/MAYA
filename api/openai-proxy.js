@@ -1,4 +1,4 @@
-// Maya — Vercel Edge Function (the OpenAI proxy).
+// Maya — Vercel Node.js Function (the OpenAI proxy).
 //
 // Place at: api/openai-proxy.js  in your repo root.
 //
@@ -10,33 +10,24 @@
 //   GOOGLE_CLIENT_ID   12345.apps.googleusercontent.com
 //   ALLOWED_EMAILS     comma-separated, or empty = any Google user
 //
-// Notes:
-//   - Edge runtime: fast cold starts, runs at the network edge, Web-Crypto only.
-//   - No npm dependencies needed; Web Crypto verifies the Google JWT in-place.
-//   - Rate limit is in-memory and best-effort; if you grow past one Edge instance
-//     you'll want Vercel KV or Upstash Redis instead.
+// v11.1: Runs on Node.js serverless (NOT Edge) so we get the 300s
+// timeout cap on Vercel Pro for long image renders. The body is
+// buffered to an ArrayBuffer before forwarding — passing the raw
+// ReadableStream via `duplex: 'half'` (the old Edge pattern) hangs
+// indefinitely on Vercel's Node.js fetch, causing every request to
+// time out at maxDuration. Buffering ~5MB requests adds <100ms and
+// works reliably.
 
-// Switched from Edge (25s timeout) to Node.js serverless with
-// maxDuration: 60 (Hobby plan cap). Image generation at high quality
-// with multiple anchors can take 30–50s — Edge's 25s ceiling was
-// returning 504 before OpenAI had time to finish.
 export const config = {
   runtime: 'nodejs',
   maxDuration: 300,
 };
 
-// Bumped on every deploy that touches diagnostics. Echoed in X-Proxy-Version
-// header + every JSON body, so you can confirm in the browser console which
-// build of the proxy actually served a request.
-const PROXY_VERSION = 'v0.13.10-diagnostics';
+const PROXY_VERSION = 'v0.14.0-nodejs-buffered';
 
 export default async function handler(request) {
   let phase = 'init';
   try {
-    // Detect a handler-signature mismatch up front. On Vercel's Node runtime
-    // a misconfigured function can receive (req, res) Node-style args instead
-    // of a Fetch Request — calling .headers.get on that would throw a cryptic
-    // TypeError. Surface it cleanly instead.
     if (!request || typeof request?.headers?.get !== 'function') {
       return json({
         error: 'handler_signature_mismatch',
@@ -49,17 +40,14 @@ export default async function handler(request) {
     phase = 'parse-url';
     const url = new URL(request.url);
 
-    // Health check — visit /api/openai/ping in a browser to confirm liveness.
     if (url.pathname.endsWith('/ping')) {
       return json({ ok: true, ts: Date.now(), proxy_version: PROXY_VERSION }, 200, request);
     }
 
-    // CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: { ...corsHeaders(request), 'X-Proxy-Version': PROXY_VERSION } });
     }
 
-    // --- Auth gate -------------------------------------------------------
     phase = 'auth';
     let user;
     try {
@@ -68,32 +56,39 @@ export default async function handler(request) {
       return json({ error: 'unauthorized', detail: e.message, proxy_version: PROXY_VERSION }, 401, request);
     }
 
-    // --- Per-user rate limit (best-effort) -------------------------------
     phase = 'rate-limit';
     if (!isRateAllowed(user.email)) {
       return json({ error: 'rate_limited', detail: 'Slow down — try again in a minute.', proxy_version: PROXY_VERSION }, 429, request);
     }
 
-    // --- Build the upstream OpenAI request ------------------------------
-    // /api/openai/v1/chat/completions  ->  /v1/chat/completions
     phase = 'build-upstream';
     const openaiPath = url.pathname.replace(/^\/api\/openai/, '');
     const upstream   = new URL('https://api.openai.com' + openaiPath + url.search);
 
     const headers = new Headers(request.headers);
     headers.set('Authorization', 'Bearer ' + process.env.OPENAI_API_KEY);
-    // Strip Vercel / proxy headers so OpenAI sees a clean request.
     ['host', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-for',
      'x-real-ip', 'x-vercel-id', 'x-vercel-deployment-url',
-     'x-vercel-forwarded-for', 'cf-connecting-ip', 'cf-ipcountry'
+     'x-vercel-forwarded-for', 'cf-connecting-ip', 'cf-ipcountry',
+     'content-length'  // recomputed from buffered body
     ].forEach(h => headers.delete(h));
+
+    // v11.1: buffer the body BEFORE forwarding. On Vercel Node.js runtime,
+    // streaming the raw ReadableStream (the old Edge pattern with
+    // duplex: 'half') hangs forever — every request times out at 300s.
+    // Reading the body fully into an ArrayBuffer works reliably and adds
+    // negligible latency for the body sizes Maya sends (compressed images,
+    // tens of KB to a few MB).
+    phase = 'buffer-body';
+    let body = undefined;
+    if (!['GET', 'HEAD'].includes(request.method)) {
+      body = await request.arrayBuffer();
+    }
 
     const init = {
       method: request.method,
       headers,
-      body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body,
-      // Required for streaming bodies (multipart uploads / SSE).
-      duplex: 'half',
+      body,
     };
 
     phase = 'fetch-upstream';
@@ -109,9 +104,6 @@ export default async function handler(request) {
       }, 502, request);
     }
 
-    // If OpenAI returned a non-2xx, buffer the body and surface it in a JSON
-    // envelope so the browser console can see the actual upstream error
-    // message (status code, OpenAI error JSON, etc.) instead of an opaque 500.
     if (!upstreamRes.ok) {
       phase = 'read-upstream-error';
       let upstreamBody = '';
@@ -130,7 +122,6 @@ export default async function handler(request) {
       }, upstreamRes.status, request);
     }
 
-    // --- Forward OpenAI's success response back -------------------------
     phase = 'forward-response';
     const responseHeaders = new Headers(upstreamRes.headers);
     Object.entries(corsHeaders(request)).forEach(([k, v]) => responseHeaders.set(k, v));
@@ -141,9 +132,6 @@ export default async function handler(request) {
       headers: responseHeaders,
     });
   } catch (e) {
-    // Anything that escapes the per-phase handling above ends up here. The
-    // browser console will get a structured 500 with the phase + stack so we
-    // know exactly where the proxy crashed.
     return json({
       error: 'proxy_crashed',
       phase,
@@ -221,7 +209,7 @@ async function verifyGoogleJwt(token, expectedAudience) {
 }
 
 // ─── Rate limit (in-memory per Edge instance) ─────────────────────────────
-const _rate = new Map();  // email -> [timestamps in last 60s]
+const _rate = new Map();
 const RATE_PER_MIN = 30;
 
 function isRateAllowed(email) {
@@ -236,7 +224,6 @@ function isRateAllowed(email) {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 function corsHeaders(request) {
-  // Allow our own domain + localhost for dev.
   const origin = request.headers.get('Origin') || '';
   const allowed = ['https://maya.manasiyo.com', 'http://localhost:3000'];
   const allowOrigin = allowed.includes(origin) ? origin : 'https://maya.manasiyo.com';
