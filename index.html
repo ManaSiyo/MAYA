@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="10.22">
+<meta name="maya-version" content="10.25">
 <!-- Maya v9.2 — restored drawer Avatar UI (face circle + name + measurements
      form + Randomize + face photo upload) on top of v9.1. The closet SCREEN
      stays deleted; this only brings back the in-drawer sub-menu so designers
@@ -63,7 +63,7 @@
   /* v5.7: cosmic background everywhere via "birth of a star" image. */
   html, body {
     width: 100%; height: 100%; overflow: hidden;
-    background: #000 url("/assets/uploads/ui/birth%20of%20a%20star.png") center/cover no-repeat fixed;
+    background: #000 url("/assets/UI%20references/birth%20of%20a%20star.png") center/cover no-repeat fixed;
     font-family: 'Jost', sans-serif; color: rgba(220,225,240,0.88);
   }
 
@@ -2342,8 +2342,9 @@
     position: fixed; left: 18px; top: 50%; transform: translateY(-50%);
     z-index: 110;
     display: flex; flex-direction: column; gap: 14px;
-    /* thin margins all around: 6px top/bottom, 7px left/right */
-    padding: 6px 7px;
+    /* v10.23: ~20% thinner — horizontal padding dropped 7→5, vertical 6→5,
+       so the pill hugs the dots tighter. */
+    padding: 5px 5px;
     /* liquid-glass pill — canon recipe */
     background: transparent;
     border: 0.5px solid rgba(255,255,255,0.22);
@@ -2597,7 +2598,7 @@
     position: fixed; inset: 0; z-index: 999999;
     background:
       linear-gradient(rgba(0,4,12,0.42), rgba(0,4,12,0.62)),
-      #000 url("/assets/uploads/ui/birth%20of%20a%20star.png") center/cover no-repeat;
+      #000 url("/assets/UI%20references/birth%20of%20a%20star.png") center/cover no-repeat;
     font-family: 'Cormorant Garamond', serif;
     color: rgba(245,250,255,0.95);
     transition: opacity 0.4s ease;
@@ -2842,7 +2843,7 @@
      Clicking the wordmark toggles to the other screen. -->
 <div id="top-bar">
   <div id="top-left-brand">
-    <img class="maya-logo-mark tiny" src="/assets/uploads/ui/Logo.png" alt="" />
+    <img class="maya-logo-mark tiny" src="/assets/UI%20references/Logo.png" alt="" />
     <div class="brand-text-wrap">
       <span class="brand-title" id="brand-title" onclick="brandTitleClick()" title="Click to organize canvas (Pinterest layout)">MAYA</span>
       <span class="brand-status" id="brand-status"></span>
@@ -4588,7 +4589,7 @@ async function _getHeadshotsFolder() {
   }
 }
 // v0.13.2: inline headshot filename list (matches what's uploaded under
-// /assets/uploads/headshots/ in the GitHub repo). Add new filenames here
+// /assets/Headshots/ in the GitHub repo). Add new filenames here
 // when you drop new portraits into the folder.
 const MAYA_PUBLIC_HEADSHOTS = [
   '1.png',
@@ -4605,12 +4606,12 @@ const MAYA_PUBLIC_HEADSHOTS = [
 ];
 
 async function pickRandomHeadshot() {
-  // v0.13: public deploy — fetch directly from /assets/uploads/headshots/.
+  // v0.13: public deploy — fetch directly from /assets/Headshots/.
   if (typeof MAYA_IS_PUBLIC !== 'undefined' && MAYA_IS_PUBLIC) {
     try {
       if (!MAYA_PUBLIC_HEADSHOTS.length) { showToast('No headshots configured.'); return null; }
       const pick = MAYA_PUBLIC_HEADSHOTS[Math.floor(Math.random() * MAYA_PUBLIC_HEADSHOTS.length)];
-      const blob = await (await fetch('/assets/uploads/headshots/' + encodeURIComponent(pick))).blob();
+      const blob = await (await fetch('/assets/Headshots/' + encodeURIComponent(pick))).blob();
       return await new Promise((resolve, reject) => {
         const fr = new FileReader();
         fr.onload = () => resolve(fr.result);
@@ -7495,8 +7496,8 @@ async function analyzeFabricWithVision(dataUrl, hintName) {
 // trying to read the visitor's local file system (which they don't have).
 async function scanFabricsFromAssets() {
   // fabrics.json is the manifest — contains name + analysis for each swatch.
-  // The JPEGs live alongside under /assets/uploads/fabrics/.
-  const FABRIC_BASE = '/assets/uploads/fabrics/';
+  // The JPEGs live alongside under /assets/Inhouse%20Fabrics/.
+  const FABRIC_BASE = '/assets/Inhouse%20Fabrics/';
   const manifestRes = await fetch(FABRIC_BASE + 'fabrics.json');
   if (!manifestRes.ok) throw new Error('no fabrics manifest');
   const manifest = await manifestRes.json();
