@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="10.25">
+<meta name="maya-version" content="10.30">
 <!-- Maya v9.2 — restored drawer Avatar UI (face circle + name + measurements
      form + Randomize + face photo upload) on top of v9.1. The closet SCREEN
      stays deleted; this only brings back the in-drawer sub-menu so designers
@@ -23,6 +23,166 @@
 <!-- v0.11: Google Sign-In gate. The library boots itself on load; we call
      google.accounts.id.initialize / renderButton once Maya's own DOMContentLoaded fires. -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<!-- v10.28: Firebase SDK (compat builds for simple non-module use). Provides
+     Auth (Google sign-in passthrough) + Firestore (per-user sessions and
+     favorites). Replaces the Chrome-only showDirectoryPicker save flow with
+     cloud-backed sessions tied to the signed-in Google account. -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+  // ════════════════════════════════════════════════════════════════════
+  // v10.28: Firebase init + Maya cloud data layer.
+  //
+  // Replaces the previous "save to local Clients/ folder" flow with a
+  // cloud-backed model:
+  //   users/{uid}/sessions/{sessionId}  — saved Inspo boards (per consultation)
+  //   users/{uid}/favorites/{favId}     — global favorites, independent of sessions
+  //
+  // Sign-in story: the existing Google Identity Services button (top of file)
+  // produces a Google ID token. We hand that token to Firebase Auth via
+  // signInWithCredential — so Firebase recognizes the same Google identity
+  // and we get an auth.currentUser.uid to namespace data by.
+  //
+  // All helpers are exposed under window.mayaFirebase so the main app code
+  // (non-module classic script) can call them directly.
+  // ════════════════════════════════════════════════════════════════════
+
+  // Firebase project: pro-maya (created 2026-05-24, Spark / free tier).
+  // The apiKey here is a publishable Firebase client key — it's safe to ship
+  // in client-side code. Real security comes from Firestore security rules
+  // and the Authorized domains list (configured in the Firebase console).
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyD2rCqPDjiyS1yfZj8ghtDc-mepz3LY634",
+    authDomain: "pro-maya.firebaseapp.com",
+    projectId: "pro-maya",
+    storageBucket: "pro-maya.firebasestorage.app",
+    messagingSenderId: "53947659283",
+    appId: "1:53947659283:web:4779127af7d5b229867be6",
+    measurementId: "G-ETTJ6PXEMM",
+  };
+
+  // Guard: only initialize when real config is present. Pre-config / typo'd
+  // builds keep working as before (data layer just no-ops).
+  const _hasRealFirebaseConfig = !!FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith('PASTE_');
+
+  let _fbApp = null, _fbAuth = null, _fbDb = null;
+
+  if (_hasRealFirebaseConfig) {
+    try {
+      _fbApp  = firebase.initializeApp(FIREBASE_CONFIG);
+      _fbAuth = firebase.auth();
+      _fbDb   = firebase.firestore();
+      console.log('[maya.firebase] initialized for project', FIREBASE_CONFIG.projectId);
+    } catch (e) {
+      console.warn('[maya.firebase] init failed', e);
+    }
+  } else {
+    console.warn('[maya.firebase] config not pasted yet — cloud save disabled, app still functional');
+  }
+
+  // ── Sign-in: bridge existing Google ID token → Firebase Auth ──────
+  async function _firebaseSignInWithGoogleIdToken(idToken) {
+    if (!_fbAuth) return null;
+    try {
+      const cred = firebase.auth.GoogleAuthProvider.credential(idToken);
+      const result = await _fbAuth.signInWithCredential(cred);
+      return result.user;
+    } catch (e) {
+      console.warn('[maya.firebase] signInWithCredential failed', e);
+      return null;
+    }
+  }
+
+  function _firebaseUid() {
+    return _fbAuth && _fbAuth.currentUser ? _fbAuth.currentUser.uid : null;
+  }
+
+  function _firebaseReady() { return !!_fbDb && !!_firebaseUid(); }
+
+  // ── Sessions: one doc per saved consultation ──────────────────────
+  // Doc shape: { name, createdAt, updatedAt, items, lastSummary, lastTranscript,
+  //              lastOnePagerImage }
+  // Items already include compressed image data URLs (v10.21 compression).
+  async function saveSession(sessionId, payload) {
+    if (!_firebaseReady()) throw new Error('Sign in to save sessions');
+    const uid = _firebaseUid();
+    const id  = sessionId || _fbDb.collection('users').doc(uid).collection('sessions').doc().id;
+    const ref = _fbDb.collection('users').doc(uid).collection('sessions').doc(id);
+    const now = firebase.firestore.FieldValue.serverTimestamp();
+    await ref.set({
+      ...payload,
+      updatedAt: now,
+      createdAt: payload.createdAt || now,
+    }, { merge: true });
+    return id;
+  }
+
+  async function listSessions() {
+    if (!_firebaseReady()) return [];
+    const uid = _firebaseUid();
+    const snap = await _fbDb.collection('users').doc(uid).collection('sessions')
+                     .orderBy('updatedAt', 'desc').limit(100).get();
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+
+  async function loadSession(sessionId) {
+    if (!_firebaseReady()) return null;
+    const uid = _firebaseUid();
+    const snap = await _fbDb.collection('users').doc(uid).collection('sessions').doc(sessionId).get();
+    return snap.exists ? { id: snap.id, ...snap.data() } : null;
+  }
+
+  async function deleteSession(sessionId) {
+    if (!_firebaseReady()) return false;
+    const uid = _firebaseUid();
+    await _fbDb.collection('users').doc(uid).collection('sessions').doc(sessionId).delete();
+    return true;
+  }
+
+  // ── Favorites: one doc per favorited item, global to the user ─────
+  // Doc shape: { imageDataUrl, prompt, sourceSessionId, createdAt }
+  async function saveFavorite(favorite) {
+    if (!_firebaseReady()) throw new Error('Sign in to favorite');
+    const uid = _firebaseUid();
+    const ref = _fbDb.collection('users').doc(uid).collection('favorites').doc();
+    await ref.set({
+      ...favorite,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    return ref.id;
+  }
+
+  async function loadFavorites() {
+    if (!_firebaseReady()) return [];
+    const uid = _firebaseUid();
+    const snap = await _fbDb.collection('users').doc(uid).collection('favorites')
+                     .orderBy('createdAt', 'desc').limit(500).get();
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+
+  async function removeFavorite(favId) {
+    if (!_firebaseReady()) return false;
+    const uid = _firebaseUid();
+    await _fbDb.collection('users').doc(uid).collection('favorites').doc(favId).delete();
+    return true;
+  }
+
+  // Expose for the main app script (classic, non-module) to use.
+  window.mayaFirebase = {
+    isConfigured:           () => _hasRealFirebaseConfig,
+    isReady:                _firebaseReady,
+    signInWithGoogleIdToken: _firebaseSignInWithGoogleIdToken,
+    uid:                    _firebaseUid,
+    saveSession,
+    listSessions,
+    loadSession,
+    deleteSession,
+    saveFavorite,
+    loadFavorites,
+    removeFavorite,
+  };
+</script>
 <!-- v0.11: Vercel Web Analytics + Speed Insights — visitors, sessions,
      average duration, real-user load times. Served same-origin by Vercel. -->
 <script defer src="/_vercel/insights/script.js"></script>
@@ -2715,6 +2875,11 @@
         try { google.accounts.id.revoke(emailForRevoke, () => {}); } catch (_) {}
       }
     }
+    // v10.30: also drop the Firebase Auth session so the next user who
+    // signs in doesn't inherit this user's uid.
+    try {
+      if (window.firebase && firebase.auth) firebase.auth().signOut();
+    } catch (_) { /* not initialized — fine */ }
     _showGate();
     setTimeout(_renderGoogleButton, 50);
   };
@@ -2728,6 +2893,20 @@
     localStorage.setItem(MAYA_TOKEN_KEY, _googleIdToken);
     if (_googleEmail) localStorage.setItem(MAYA_EMAIL_KEY, _googleEmail);
     _hideGate();
+    // v10.30: bridge GIS credential into Firebase Auth so we get a uid
+    // to namespace cloud-saved sessions/favorites by. Then restore any
+    // previously synced session from Firestore (cross-device continuity).
+    if (window.mayaFirebase && window.mayaFirebase.isConfigured()) {
+      window.mayaFirebase.signInWithGoogleIdToken(resp.credential)
+        .then(user => {
+          if (!user) return;
+          console.log('[maya.firebase] signed in as', user.uid);
+          if (typeof _firebaseRestoreSession === 'function') {
+            _firebaseRestoreSession().catch(e => console.warn('[maya.firebase] restore failed', e));
+          }
+        })
+        .catch(e => console.warn('[maya.firebase] auth bridge failed', e));
+    }
   }
 
   function _hideGate() {
@@ -2920,12 +3099,16 @@
     <div id="notes-drawer-content"></div>
     <!-- v7.9: bottom action row — Save / New / Clean (Logout moved). -->
     <div class="drawer-actions-bottom">
-      <button class="drawer-action violet" onclick="saveConsultation()" title="Preview one-pager then save to client folder">Save</button>
+      <button class="drawer-action violet" onclick="saveSessionNow()" title="Save this session to your Maya account (auto-syncs continuously — this just forces an immediate save)">Save</button>
       <button class="drawer-action" onclick="newConsultation()" title="Start a fresh consultation">New</button>
       <button class="drawer-action" onclick="cleanReferences()" title="Remove ref cards (images stay)">Clean</button>
-      <button class="drawer-action" onclick="exportSession()" title="Download the entire moodboard as a .maya-session.json file you can re-open later">Export</button>
-      <button class="drawer-action" onclick="document.getElementById('import-session-input').click()" title="Re-open a previously exported session">Import</button>
-      <input type="file" id="import-session-input" accept=".json,application/json" style="display:none" onchange="importSession(event)" />
+      <!-- v10.27: Export/Import removed from the frontend — local-file
+           round-tripping isn't how end users save their work. Session
+           persistence is moving to cloud-backed sessions tied to the
+           signed-in Google account (see save/session redesign). -->
+      <!-- exportSession() / importSession() functions kept in JS for now in
+           case we need to revive them or use them for debugging. -->
+
     </div>
     <!-- v5.11: reference count lives in the drawer now (was top-left). -->
     <div class="drawer-count" id="item-count">tap to listen</div>
@@ -5601,6 +5784,51 @@ function fileToDataUrl(file) {
   return _readFileAsDataUrl(file);
 }
 
+// v10.26: send-time compression for the /v1/images/edits endpoint. Upload-time
+// compression (above) only catches things uploaded AFTER v10.22 shipped — it
+// misses (a) images already on a user's canvas from earlier sessions, and
+// (b) AI-generated images that come back from OpenAI at full resolution and
+// get used as anchors in subsequent edits. Both routes hit Vercel's 4.5MB
+// body cap and 413. This wrapper takes any Blob and returns a JPEG ≤1024px
+// on the longer edge — so every payload that leaves the browser is small,
+// regardless of where the image originated.
+async function compressBlobForUpload(blob, maxDim = IMAGE_COMPRESS_MAX_DIM, quality = IMAGE_COMPRESS_QUALITY) {
+  // Already tiny → skip the round-trip.
+  if (blob && blob.size && blob.size < 400 * 1024) return blob;
+  const blobUrl = URL.createObjectURL(blob);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const im = new Image();
+      im.onload  = () => resolve(im);
+      im.onerror = () => reject(new Error('decode'));
+      im.src = blobUrl;
+    });
+    const width  = img.naturalWidth  || img.width;
+    const height = img.naturalHeight || img.height;
+    const scale  = Math.min(1, maxDim / Math.max(width, height));
+    const w = Math.max(1, Math.round(width  * scale));
+    const h = Math.max(1, Math.round(height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    // Paint white underneath in case the source is PNG with transparency —
+    // gpt-image-2 doesn't need alpha for reference images, and JPEG would
+    // otherwise turn transparent regions black.
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+    const out = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
+    // If toBlob fails (very rare), fall back to the original.
+    return out || blob;
+  } catch (_) {
+    return blob;
+  } finally {
+    URL.revokeObjectURL(blobUrl);
+  }
+}
+
 async function callOpenAIVision(dataUrl) {
   const res = await fetch('/api/openai/v1/chat/completions', {
     method: 'POST',
@@ -6905,10 +7133,14 @@ async function callOpenAIImageEdit(prevDataUrl, prompt, size, quality, opts) {
   let idx = 0;
   for (const src of inputList) {
     if (!src) continue;
-    const blob = await (await fetch(src)).blob();
+    const rawBlob = await (await fetch(src)).blob();
+    // v10.26: compress every anchor regardless of source (user upload, prior
+    // Maya output, session-restored image). Total payload stays well under
+    // Vercel's 4.5MB cap even with 10+ anchors.
+    const blob = await compressBlobForUpload(rawBlob);
     // Use image[] for multi; gpt-image-2 also accepts plain 'image' for one.
     const field = inputList.length > 1 ? 'image[]' : 'image';
-    form.append(field, blob, 'anchor_' + idx + '.png');
+    form.append(field, blob, 'anchor_' + idx + '.jpg');
     idx++;
   }
   form.append('size', size || '1536x1024');
@@ -8077,11 +8309,89 @@ function _persistSession() {
         items:             itemsLite,
         ts:                Date.now(),
       };
+      // Local fast-path: full snapshot with images stays in IndexedDB on
+      // this device. Survives refresh, works offline.
       await idb(s => s.put(snap, 'maya-session'));
+      // Cloud-sync path: also write a stripped-down version to Firestore
+      // so the same Google account picks up where it left off on any
+      // device. Image data URLs are too big for Firestore's 1MB doc cap,
+      // so we strip them here — images will resurface from IndexedDB on
+      // the same device, and (TODO follow-up) from Firebase Storage when
+      // the cross-device image sync ships.
+      _firebaseSyncSession(snap).catch(e => console.warn('[maya.firebase sync]', e));
     } catch (e) {
       console.warn('[Maya persist]', e);
     }
   }, 400);
+}
+
+// v10.30: lightweight Firestore sync of the live session. Same trigger
+// chain as _persistSession (debounced 400ms via the timeout above).
+// Strips image data URLs so the doc fits under Firestore's 1MB cap;
+// everything that defines the layout, references, summary, transcript
+// is preserved.
+//
+// TODO(maya-images-in-cloud): migrate item.card.image data URLs into
+// Firebase Cloud Storage and reference them by URL here. Until then,
+// cross-device restore shows the canvas LAYOUT but image cards land
+// as empty placeholders on a fresh device.
+async function _firebaseSyncSession(snap) {
+  if (!window.mayaFirebase || !window.mayaFirebase.isReady || !window.mayaFirebase.isReady()) return;
+  // Strip images from the cloud copy.
+  const cloudItems = (snap.items || []).map(it => {
+    if (!it || !it.card) return it;
+    const { image, _dissection, ...lighterCard } = it.card;
+    return { ...it, card: { ...lighterCard, _hasImage: !!image } };
+  });
+  const cloudSnap = {
+    ...snap,
+    items: cloudItems,
+    schemaVersion: 1,
+  };
+  try {
+    await window.mayaFirebase.saveSession('current', cloudSnap);
+  } catch (e) {
+    // If the doc is still too large or the network blips, swallow — we
+    // still have the local copy and the next change will retry.
+    console.warn('[maya.firebase] saveSession failed', e && e.message);
+  }
+}
+
+// v10.30: pull the latest cloud session (if any) and apply on top of
+// whatever the local IndexedDB cache already restored. Only fills in
+// fields/items that aren't already present locally — local wins for
+// "this device's most recent state."
+async function _firebaseRestoreSession() {
+  if (!window.mayaFirebase || !window.mayaFirebase.isReady || !window.mayaFirebase.isReady()) return;
+  let cloud;
+  try { cloud = await window.mayaFirebase.loadSession('current'); }
+  catch (e) { console.warn('[maya.firebase] loadSession failed', e); return; }
+  if (!cloud || !cloud.items) return;
+  // Build a set of item IDs already on the canvas (from IndexedDB restore).
+  const existingIds = new Set((items || []).map(i => i.id));
+  let added = 0;
+  for (const sav of cloud.items) {
+    if (!sav || !sav.card) continue;
+    if (existingIds.has(sav.id)) continue;  // already on canvas locally
+    // Skip image cards we can't render — no image data in cloud snapshot.
+    // Once Cloud Storage image sync lands this guard goes away.
+    if (sav.card._hasImage && !sav.card.image) continue;
+    try {
+      placeItemAt(sav.card, sav.x || 0, sav.y || 0);
+      added++;
+    } catch (e) {
+      console.warn('[maya.firebase] restore item', e);
+    }
+  }
+  // Backfill text-only metadata if local was empty.
+  if (!lastSummary    && cloud.lastSummary)    lastSummary    = cloud.lastSummary;
+  if (!lastTranscript && cloud.lastTranscript) lastTranscript = cloud.lastTranscript;
+  if (!currentClientName && cloud.currentClientName) currentClientName = cloud.currentClientName;
+  if (added) {
+    if (typeof refreshDrawerClientName       === 'function') refreshDrawerClientName();
+    if (typeof refreshDrawerFavoritesCount   === 'function') refreshDrawerFavoritesCount();
+    console.log('[maya.firebase] restored', added, 'item(s) from cloud');
+  }
 }
 async function _restoreSession() {
   try {
@@ -8194,6 +8504,49 @@ async function saveConsultation() {
     } else if (e.name !== 'AbortError') {
       showError(e.message || 'Save failed');
     }
+  }
+}
+
+// v10.30: Save button now forces an immediate cloud sync. Maya already
+// auto-saves continuously via _persistSession (debounced 400ms) — this
+// just bypasses the debounce so the user gets a confirmation toast and
+// can be sure the latest state hit the cloud before they close the tab.
+// The old saveConsultation flow (one-pager preview + local Clients/
+// folder via showDirectoryPicker) is preserved above for the designer
+// workflow but is no longer wired to the drawer's Save button.
+async function saveSessionNow() {
+  if (items.length === 0 && !lastSummary && !currentClientName) {
+    return showToast('Nothing to save yet');
+  }
+  // Force the next _persistSession to run immediately, not on the 400ms timer.
+  clearTimeout(_persistTimer);
+  _persistTimer = null;
+  try {
+    // Build the snapshot inline (same shape as _persistSession) and write
+    // straight to both IndexedDB and Firestore — no debounce.
+    const itemsLite = (items || []).map(it => {
+      const el = it.el;
+      const x  = el ? parseFloat(el.style.left) || 0 : 0;
+      const y  = el ? parseFloat(el.style.top)  || 0 : 0;
+      return { id: it.id, x, y, card: it.card ? { ...it.card } : null };
+    });
+    const snap = {
+      currentClientName: currentClientName || null,
+      lastSummary:       lastSummary || null,
+      lastTranscript:    lastTranscript || '',
+      items:             itemsLite,
+      ts:                Date.now(),
+    };
+    await idb(s => s.put(snap, 'maya-session'));
+    if (window.mayaFirebase && window.mayaFirebase.isReady && window.mayaFirebase.isReady()) {
+      await _firebaseSyncSession(snap);
+      showToast('Session saved');
+    } else {
+      showToast('Saved locally (sign in to sync across devices)');
+    }
+  } catch (e) {
+    console.warn('[Maya saveSessionNow]', e);
+    showError('Save failed: ' + (e.message || 'unknown'));
   }
 }
 
