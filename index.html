@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="10.19">
+<meta name="maya-version" content="10.22">
 <!-- Maya v9.2 — restored drawer Avatar UI (face circle + name + measurements
      form + Randomize + face photo upload) on top of v9.1. The closet SCREEN
      stays deleted; this only brings back the in-drawer sub-menu so designers
@@ -63,7 +63,7 @@
   /* v5.7: cosmic background everywhere via "birth of a star" image. */
   html, body {
     width: 100%; height: 100%; overflow: hidden;
-    background: #000 url("/assets/UI%20references/birth%20of%20a%20star.png") center/cover no-repeat fixed;
+    background: #000 url("/assets/uploads/ui/birth%20of%20a%20star.png") center/cover no-repeat fixed;
     font-family: 'Jost', sans-serif; color: rgba(220,225,240,0.88);
   }
 
@@ -718,6 +718,15 @@
   .realism-requires_pattern_modification { background: rgba(230,170,120,0.85); }
   .realism-not_realistic_yet { background: rgba(230,140,140,0.85); }
   .realism-needs_designer_decision { background: rgba(200,220,255,0.85); }
+
+  /* v10.21: section-tinted dots for note rows that lack a structured realism
+     level (non-negotiables, sourcing, designer notes, constraints). Same
+     5px round-dot rhythm as .realism-dot so the four sections read as one
+     visual family with the Design Ideas list. */
+  .section-non-negotiable { background: rgba(230,140,140,0.85); }
+  .section-sourcing       { background: rgba(230,190,120,0.85); }
+  .section-designer-note  { background: rgba(200,220,255,0.85); }
+  .section-constraint     { background: rgba(140,180,230,0.85); }
 
   /* listening ring */
   #listening-ring { display: none; position: absolute; inset: 0; pointer-events: none; z-index: 50; }
@@ -1480,13 +1489,16 @@
   }
   .face-thumb.empty { color: rgba(200,210,230,0.32); }
 
-  /* v10: client name input — canon capsule pill, white border, transparent. */
+  /* v10: client name input — canon capsule pill, white border, transparent.
+     v10.22: padding tightened on both axes (8/18 → 3/12) so the pill hugs
+     the name. Line-height also dropped from 1.5 → 1.2 to remove vertical
+     slack so the capsule feels close to the text. */
   #notes-drawer .drawer-client-big {
     width: 100%;
     background: transparent;
     border: 0.5px solid rgba(255,255,255,0.22);
     border-radius: 100px;
-    padding: 8px 18px;
+    padding: 3px 12px;
     margin: 0 0 10px;
     font-family: 'Cormorant Garamond', serif;
     font-size: 18px; font-weight: 300; font-style: italic;
@@ -1500,7 +1512,7 @@
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18);
     transition: border-color 0.2s, background 0.2s;
-    line-height: 1.5;
+    line-height: 1.2;
     -webkit-text-fill-color: rgba(245,250,255,0.95);
     caret-color: rgba(245,250,255,0.95);
   }
@@ -2321,14 +2333,36 @@
   body:not(.viewing-favorites) #dot-2 { opacity: 0.4; }
 
   /* v6.0.1: page indicator dots — left-middle, vertical (matches the
-     up/down navigation between inspo and favorites). */
+     up/down navigation between inspo and favorites).
+     v10.21: wrapped in the canon liquid-glass pill (same recipe as the
+     hamburger / Visualize / Listen pills) so it reads as "two screens here,
+     swipe up/down" instead of a stray pair of dots. Margins kept thin so the
+     pill stays close to the dots — it's a frame, not a button. */
   #page-indicator {
     position: fixed; left: 18px; top: 50%; transform: translateY(-50%);
     z-index: 110;
     display: flex; flex-direction: column; gap: 14px;
-    padding: 12px 6px;
+    /* thin margins all around: 6px top/bottom, 7px left/right */
+    padding: 6px 7px;
+    /* liquid-glass pill — canon recipe */
+    background: transparent;
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.28),
+      inset 0 -1px 0 rgba(0,0,0,0.18),
+      0 4px 16px rgba(0,0,0,0.22);
+    transition: border-color 0.25s, background 0.25s;
   }
-  /* v6.0.3: smaller (6px) and 10% dimmer. v10: canon border alpha 0.22. */
+  #page-indicator:hover {
+    border-color: rgba(255,255,255,0.42);
+    background: rgba(255,255,255,0.04);
+  }
+  /* v6.0.3: smaller (6px) and 10% dimmer. v10: canon border alpha 0.22.
+     v10.21: active dot brightened from 0.72 → 1.0 (~39% brighter) per
+     Fromsa — the swipe affordance was too easy to miss. */
   .page-dot {
     width: 6px; height: 6px; border-radius: 50%;
     border: 0.5px solid rgba(255,255,255,0.22);
@@ -2337,8 +2371,12 @@
     transition: all 0.25s;
     padding: 0;
   }
-  .page-dot:hover { background: rgba(255,255,255,0.26); }
-  .page-dot.active { background: rgba(255,255,255,0.72); border-color: transparent; }
+  .page-dot:hover { background: rgba(255,255,255,0.36); }
+  .page-dot.active {
+    background: rgba(255,255,255,1.0);
+    border-color: transparent;
+    box-shadow: 0 0 6px rgba(255,255,255,0.45);
+  }
 
   /* v9.7: splash gate — liquid glass over the cosmic backdrop.
      Background fades to glossy frost so the moodboard cosmos bleeds through.
@@ -2559,7 +2597,7 @@
     position: fixed; inset: 0; z-index: 999999;
     background:
       linear-gradient(rgba(0,4,12,0.42), rgba(0,4,12,0.62)),
-      #000 url("/assets/UI%20references/birth%20of%20a%20star.png") center/cover no-repeat;
+      #000 url("/assets/uploads/ui/birth%20of%20a%20star.png") center/cover no-repeat;
     font-family: 'Cormorant Garamond', serif;
     color: rgba(245,250,255,0.95);
     transition: opacity 0.4s ease;
@@ -2614,7 +2652,7 @@
 <div id="signin-gate">
   <div class="signin-title">
     <div class="signin-wordmark">MAYA</div>
-    <div class="signin-tag">Imagination, made.</div>
+    <div class="signin-tag">Wear your imagination.</div>
     <div class="signin-sub">by Mana Siyo</div>
   </div>
   <div class="signin-bottom">
@@ -2804,7 +2842,7 @@
      Clicking the wordmark toggles to the other screen. -->
 <div id="top-bar">
   <div id="top-left-brand">
-    <img class="maya-logo-mark tiny" src="/assets/UI%20references/Logo.png" alt="" />
+    <img class="maya-logo-mark tiny" src="/assets/uploads/ui/Logo.png" alt="" />
     <div class="brand-text-wrap">
       <span class="brand-title" id="brand-title" onclick="brandTitleClick()" title="Click to organize canvas (Pinterest layout)">MAYA</span>
       <span class="brand-status" id="brand-status"></span>
@@ -2870,7 +2908,7 @@
          name displays beside it (edited inside the sub-menu). -->
     <button class="drawer-avatar-button" id="drawer-avatar-button" onclick="openAvatarSubMenu()" title="Avatar — face, name, measurements">
       <div class="drawer-avatar-face" id="drawer-avatar-face"></div>
-      <span class="drawer-avatar-name" id="drawer-avatar-name">client</span>
+      <span class="drawer-avatar-name" id="drawer-avatar-name">name</span>
     </button>
 
     <!-- v10.10: Favorites button removed — that's its own screen now
@@ -2884,6 +2922,9 @@
       <button class="drawer-action violet" onclick="saveConsultation()" title="Preview one-pager then save to client folder">Save</button>
       <button class="drawer-action" onclick="newConsultation()" title="Start a fresh consultation">New</button>
       <button class="drawer-action" onclick="cleanReferences()" title="Remove ref cards (images stay)">Clean</button>
+      <button class="drawer-action" onclick="exportSession()" title="Download the entire moodboard as a .maya-session.json file you can re-open later">Export</button>
+      <button class="drawer-action" onclick="document.getElementById('import-session-input').click()" title="Re-open a previously exported session">Import</button>
+      <input type="file" id="import-session-input" accept=".json,application/json" style="display:none" onchange="importSession(event)" />
     </div>
     <!-- v5.11: reference count lives in the drawer now (was top-left). -->
     <div class="drawer-count" id="item-count">tap to listen</div>
@@ -2903,8 +2944,8 @@
     <div id="avatar-body"></div>
     <div class="drawer-actions-bottom">
       <!-- v7.4: Randomize — fills measurements with random values and picks
-           a random headshot from MAYA/Headshots/. v9.2: no closet render. -->
-      <button class="drawer-action" onclick="randomizeAvatar()" title="Random measurements + random headshot from MAYA/Headshots/">Randomize</button>
+           a random headshot from MAYA/uploads/headshots/. v9.2: no closet render. -->
+      <button class="drawer-action" onclick="randomizeAvatar()" title="Random measurements + random headshot from MAYA/uploads/headshots/">Randomize</button>
       <button class="drawer-action violet" onclick="saveAvatar()">Save</button>
     </div>
   </div>
@@ -2956,7 +2997,7 @@
 <div class="modal" id="client-name-modal">
   <div class="modal-card">
     <h2 id="client-name-modal-title">New consultation</h2>
-    <input type="text" id="client-name-input" placeholder="Client full name" autocomplete="off" style="margin-top:18px">
+    <input type="text" id="client-name-input" placeholder="Full name" autocomplete="off" style="margin-top:18px">
     <div class="modal-actions">
       <button class="top-btn subtle" onclick="cancelClientName()">Cancel</button>
       <button class="top-btn violet" id="client-name-modal-confirm" onclick="confirmClientName()">Begin</button>
@@ -4333,7 +4374,7 @@ function _renderAvatarBody() {
   // v7.9: name input lives inside the avatar sub-menu now.
   const nameSection =
     '<input class="drawer-client-big avatar-name-input" id="avatar-name-input" type="text" ' +
-      'placeholder="client" autocomplete="off" value="' + escapeHtml(name) + '" ' +
+      'placeholder="name" autocomplete="off" value="' + escapeHtml(name) + '" ' +
       'oninput="updateClientNameInline(this.value)" ' +
       'onkeydown="if(event.key===\'Enter\'){this.blur();}" />';
 
@@ -4461,8 +4502,8 @@ async function analyzeFacePhoto(dataUrl) {
 
 // ─────────────────────────────────────────────────────────────────────
 // v7.4 RANDOMIZE — fills random measurements + a random headshot from
-// MAYA/Headshots/. v9.2: closet render call removed; just refreshes the
-// sub-menu in place.
+// MAYA/uploads/headshots/. v9.2: closet render call removed; just refreshes
+// the sub-menu in place.
 // ─────────────────────────────────────────────────────────────────────
 const RANDOM_RANGES = {
   // Body
@@ -4516,22 +4557,39 @@ function _biasedRange(key, range, gender) {
 }
 
 let headshotsFolderHandle = null;
-async function _getHeadshotsFolder() {
-  if (headshotsFolderHandle) return headshotsFolderHandle;
+let uploadsFolderHandle = null;
+// v0.14: MAYA root now contains an `uploads/` subfolder that houses
+// `headshots/`, `fabrics/`, and `ui/`. _getUploadsFolder traverses
+// MAYA -> uploads once and caches the handle so the headshots and
+// fabrics accessors can share it.
+async function _getUploadsFolder() {
+  if (uploadsFolderHandle) return uploadsFolderHandle;
   let root;
   try { root = await getFolder(); } catch (_) { return null; }
   if (!root) return null;
   try {
-    headshotsFolderHandle = await root.getDirectoryHandle('Headshots', { create: true });
+    uploadsFolderHandle = await root.getDirectoryHandle('uploads', { create: true });
+    return uploadsFolderHandle;
+  } catch (e) {
+    console.warn('[Maya] could not open uploads folder', e);
+    return null;
+  }
+}
+async function _getHeadshotsFolder() {
+  if (headshotsFolderHandle) return headshotsFolderHandle;
+  const uploads = await _getUploadsFolder();
+  if (!uploads) return null;
+  try {
+    headshotsFolderHandle = await uploads.getDirectoryHandle('headshots', { create: true });
     return headshotsFolderHandle;
   } catch (e) {
-    console.warn('[Maya] could not open Headshots folder', e);
+    console.warn('[Maya] could not open headshots folder', e);
     return null;
   }
 }
 // v0.13.2: inline headshot filename list (matches what's uploaded under
-// /assets/Headshots/ in the GitHub repo). Add new filenames here when
-// you drop new portraits into the folder.
+// /assets/uploads/headshots/ in the GitHub repo). Add new filenames here
+// when you drop new portraits into the folder.
 const MAYA_PUBLIC_HEADSHOTS = [
   '1.png',
   'ChatGPT Image May 16, 2026, 09_05_16 PM (1).png',
@@ -4547,12 +4605,12 @@ const MAYA_PUBLIC_HEADSHOTS = [
 ];
 
 async function pickRandomHeadshot() {
-  // v0.13: public deploy — fetch directly from /assets/Headshots/.
+  // v0.13: public deploy — fetch directly from /assets/uploads/headshots/.
   if (typeof MAYA_IS_PUBLIC !== 'undefined' && MAYA_IS_PUBLIC) {
     try {
       if (!MAYA_PUBLIC_HEADSHOTS.length) { showToast('No headshots configured.'); return null; }
       const pick = MAYA_PUBLIC_HEADSHOTS[Math.floor(Math.random() * MAYA_PUBLIC_HEADSHOTS.length)];
-      const blob = await (await fetch('/assets/Headshots/' + encodeURIComponent(pick))).blob();
+      const blob = await (await fetch('/assets/uploads/headshots/' + encodeURIComponent(pick))).blob();
       return await new Promise((resolve, reject) => {
         const fr = new FileReader();
         fr.onload = () => resolve(fr.result);
@@ -4565,7 +4623,7 @@ async function pickRandomHeadshot() {
       return null;
     }
   }
-  // Local (atelier) path — read from MAYA/Headshots/ via File System Access.
+  // Local (atelier) path — read from MAYA/uploads/headshots/ via File System Access.
   const dir = await _getHeadshotsFolder();
   if (!dir) return null;
   const files = [];
@@ -4575,7 +4633,7 @@ async function pickRandomHeadshot() {
     files.push(handle);
   }
   if (!files.length) {
-    showToast('Drop some photos into MAYA / Headshots first.');
+    showToast('Drop some photos into MAYA / uploads / headshots first.');
     return null;
   }
   const pick = files[Math.floor(Math.random() * files.length)];
@@ -5170,8 +5228,18 @@ function renderNotesPanel(s) {
   }
 
   // ── Global logistics (collapsible, closed by default) ──
-  const simpleChips = (arr) => `<div class="note-tag-list">${(arr || []).map(t =>
-    `<span class="note-tag-item">${escapeHtml(t)}</span>`).join('')}</div>`;
+  // v10.21: every section in this drawer now uses the same .note-item rhythm
+  // as Design Ideas — bullet dot + Cormorant title — so Fabrics / Non-
+  // negotiables / Sourcing / Designer notes all read as one family instead
+  // of "rich design ideas" + "plain chip pills" stuck together. Each section
+  // gets a tinted dot so they're still distinguishable at a glance.
+  const sectionList = (arr, dotClass) => (arr || []).map(t =>
+    `<div class="note-item">
+       <div class="note-title">
+         <span class="realism-dot ${dotClass}"></span>${escapeHtml(t)}
+       </div>
+     </div>`
+  ).join('');
   const ideasList = (arr) => (arr || []).map(i =>
     `<div class="note-item">
        <div class="note-title">
@@ -5182,10 +5250,10 @@ function renderNotesPanel(s) {
   ).join('');
   const globalParts = !s ? [] : [
     s.design_ideas?.length    ? { title: 'Design ideas',    body: ideasList(s.design_ideas) }    : null,
-    s.constraints?.length     ? { title: 'Constraints',     body: simpleChips(s.constraints) }   : null,
-    s.non_negotiables?.length ? { title: 'Non-negotiables', body: simpleChips(s.non_negotiables) } : null,
-    s.sourcing_needs?.length  ? { title: 'Sourcing needs',  body: simpleChips(s.sourcing_needs) } : null,
-    s.designer_notes?.length  ? { title: 'Designer notes',  body: simpleChips(s.designer_notes) } : null,
+    s.constraints?.length     ? { title: 'Constraints',     body: sectionList(s.constraints, 'section-constraint') }       : null,
+    s.non_negotiables?.length ? { title: 'Non-negotiables', body: sectionList(s.non_negotiables, 'section-non-negotiable') } : null,
+    s.sourcing_needs?.length  ? { title: 'Sourcing needs',  body: sectionList(s.sourcing_needs, 'section-sourcing') }       : null,
+    s.designer_notes?.length  ? { title: 'Designer notes',  body: sectionList(s.designer_notes, 'section-designer-note') }  : null,
   ].filter(Boolean);
   const globalHtml = globalParts.map(p =>
     `<details class="global-block">
@@ -5466,13 +5534,70 @@ const VISION_SCHEMA = {
   required: ["references"]
 };
 
-function fileToDataUrl(file) {
+// v10.21: image inputs are compressed (max 1024px on longer edge, JPEG q=0.82)
+// before being turned into a data URL. The same compressed dataUrl is used on
+// the canvas AND sent to OpenAI's image edits endpoint. This fixes the 413
+// "payload too large" errors on multi-reference renders (Vercel caps request
+// bodies at 4.5MB) and makes drag perf snappy since the browser is now moving
+// 200–400KB blobs around instead of multi-MB originals. gpt-image-2 internally
+// downsamples to ~1024px anyway, so we lose no usable detail.
+const IMAGE_COMPRESS_MAX_DIM = 1024;
+const IMAGE_COMPRESS_QUALITY = 0.82;
+
+function _readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
     r.onload  = () => resolve(r.result);
-    r.onerror = () => reject(new Error('Could not read image'));
+    r.onerror = () => reject(new Error('Could not read file'));
     r.readAsDataURL(file);
   });
+}
+
+async function compressImageFile(file, maxDim = IMAGE_COMPRESS_MAX_DIM, quality = IMAGE_COMPRESS_QUALITY) {
+  // Use a blob URL (not a base64 data URL) to load the original — avoids
+  // duplicating a giant iPhone photo in memory just to read its pixels.
+  const blobUrl = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const im = new Image();
+      im.onload  = () => resolve(im);
+      im.onerror = () => reject(new Error('Could not decode image'));
+      im.src = blobUrl;
+    });
+    const width  = img.naturalWidth  || img.width;
+    const height = img.naturalHeight || img.height;
+    // If it's already a small JPEG, don't waste cycles re-encoding.
+    if (Math.max(width, height) <= maxDim
+        && file.type === 'image/jpeg'
+        && file.size < 500 * 1024) {
+      return await _readFileAsDataUrl(file);
+    }
+    const scale = Math.min(1, maxDim / Math.max(width, height));
+    const w = Math.max(1, Math.round(width  * scale));
+    const h = Math.max(1, Math.round(height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    // PNG → JPEG: paint white underneath so transparent pixels don't go black.
+    if (file.type === 'image/png') {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+    }
+    ctx.drawImage(img, 0, 0, w, h);
+    return canvas.toDataURL('image/jpeg', quality);
+  } finally {
+    URL.revokeObjectURL(blobUrl);
+  }
+}
+
+function fileToDataUrl(file) {
+  // Images get compressed; non-image inputs pass through unchanged.
+  if (file && file.type && file.type.startsWith('image/')) {
+    return compressImageFile(file).catch(() => _readFileAsDataUrl(file));
+  }
+  return _readFileAsDataUrl(file);
 }
 
 async function callOpenAIVision(dataUrl) {
@@ -7177,7 +7302,7 @@ document.addEventListener('keydown', e => {
 // V5 — IN-HOUSE FABRIC INVENTORY
 //
 // Fromsa drops square JPEGs (with a ruler underneath for scale)
-// into  ~/Desktop/MAYA/Inhouse Fabrics/.  Maya scans the folder,
+// into  ~/Desktop/MAYA/uploads/fabrics/.  Maya scans the folder,
 // runs GPT-4o vision once per new swatch to extract color / weave
 // / weight / texture / scale_cm, and caches the metadata to a
 // sidecar fabrics.json inside the same folder so we only pay for
@@ -7188,13 +7313,14 @@ document.addEventListener('keydown', e => {
 // fabric specs.  Sourceable → behavior identical to v4.
 // ════════════════════════════════════════════════════════════
 
-// Folder name is sometimes "Inhouse Fabrics" (current), sometimes
-// "in-house fabrics" — try every common spelling.
+// v0.14: canonical layout is MAYA/uploads/fabrics. Legacy candidates
+// remain in the list so users on older folder structures still resolve.
 const FABRIC_FOLDER_CANDIDATES = [
+  'fabrics',
   'Inhouse Fabrics', 'inhouse fabrics',
   'In-house Fabrics', 'in-house fabrics', 'In-House Fabrics',
   'In-house fabrics', 'In-House fabrics',
-  'Fabrics', 'fabrics'
+  'Fabrics'
 ];
 const FABRICS_CACHE_FILE = 'fabrics.json';
 const FABRICS_IDB_KEY = 'maya-fabrics-folder';
@@ -7221,10 +7347,21 @@ async function getFabricsFolder({ createIfMissing = false } = {}) {
     fabricsFolderHandle = cachedFab;
     if (await verifyPermission(fabricsFolderHandle)) return fabricsFolderHandle;
   }
-  // Derive from the root MAYA folder if available.
+  // Derive from the root MAYA folder if available. Canonical layout is
+  // MAYA/uploads/fabrics — look there first, then fall back to the legacy
+  // MAYA/<candidate> spellings so older setups still work.
   let root = null;
   try { root = await getFolder(); } catch (_) { /* picker cancelled or no FS API */ }
   if (root) {
+    // Preferred: MAYA/uploads/fabrics
+    try {
+      const uploads = await root.getDirectoryHandle('uploads');
+      const h = await uploads.getDirectoryHandle('fabrics');
+      fabricsFolderHandle = h;
+      await saveFabricsFolderHandle(h);
+      return h;
+    } catch (_) { /* fall through to legacy candidates */ }
+    // Legacy: MAYA/<old name>
     for (const candidate of FABRIC_FOLDER_CANDIDATES) {
       try {
         const h = await root.getDirectoryHandle(candidate);
@@ -7234,7 +7371,8 @@ async function getFabricsFolder({ createIfMissing = false } = {}) {
       } catch (_) { /* keep trying */ }
     }
     if (createIfMissing) {
-      fabricsFolderHandle = await root.getDirectoryHandle('Inhouse Fabrics', { create: true });
+      const uploads = await root.getDirectoryHandle('uploads', { create: true });
+      fabricsFolderHandle = await uploads.getDirectoryHandle('fabrics', { create: true });
       await saveFabricsFolderHandle(fabricsFolderHandle);
       return fabricsFolderHandle;
     }
@@ -7357,9 +7495,8 @@ async function analyzeFabricWithVision(dataUrl, hintName) {
 // trying to read the visitor's local file system (which they don't have).
 async function scanFabricsFromAssets() {
   // fabrics.json is the manifest — contains name + analysis for each swatch.
-  // The JPEGs live alongside under /assets/Inhouse Fabrics/.
-  // (Folder name has a space — URLs need %20 encoding.)
-  const FABRIC_BASE = '/assets/Inhouse%20Fabrics/';
+  // The JPEGs live alongside under /assets/uploads/fabrics/.
+  const FABRIC_BASE = '/assets/uploads/fabrics/';
   const manifestRes = await fetch(FABRIC_BASE + 'fabrics.json');
   if (!manifestRes.ok) throw new Error('no fabrics manifest');
   const manifest = await manifestRes.json();
@@ -7407,11 +7544,11 @@ async function scanFabricsFolder(force = false) {
   }
 
   if (!dir) {
-    // We couldn't auto-find an Inhouse Fabrics folder. Tell the user
-    // exactly what to do — don't fail silently.
+    // We couldn't auto-find a fabrics folder. Tell the user exactly what
+    // to do — don't fail silently.
     fabricsInventory = [];
     renderFabricsGrid({ noFolder: true });
-    showToast('Tap "Pick fabrics folder" to point Maya at MAYA / Inhouse Fabrics');
+    showToast('Tap "Pick fabrics folder" to point Maya at MAYA / uploads / fabrics');
     return;
   }
   showToast('Scanning fabrics folder…');
@@ -7505,9 +7642,9 @@ function renderFabricsGrid(opts = {}) {
             '<br><br>' +
             '<button class="top-btn violet" onclick="pickFabricsFolderDirect()" style="margin-top:6px">Pick fabrics folder</button>' +
             '<br><br>' +
-            'Point it at <span class="path">MAYA / Inhouse Fabrics</span>'
+            'Point it at <span class="path">MAYA / uploads / fabrics</span>'
           : 'Drop fabric swatch photos (JPEG / PNG) into ' +
-            '<span class="path">MAYA / Inhouse Fabrics</span>' +
+            '<span class="path">MAYA / uploads / fabrics</span>' +
             '<br><br>' +
             'Square photos with a ruler underneath for scale work best — Maya reads weave, color, weight, and drape from them.' +
             '<br><br>' +
@@ -7556,7 +7693,7 @@ function closeFabricsDrawer() {
   document.getElementById('fabrics-drawer').classList.remove('open');
 }
 
-// v5.3: copy uploaded JPEGs into the Inhouse Fabrics folder via createWritable,
+// v5.3: copy uploaded JPEGs into the uploads/fabrics folder via createWritable,
 // then trigger a re-scan. Saves Fromsa the step of dragging files in Finder.
 async function uploadFabricsFromInput(files) {
   if (!files || !files.length) return;
@@ -7611,7 +7748,7 @@ async function chooseFabricMode(mode) {
   // in-house
   if (!fabricsInventory.length) await scanFabricsFolder(false);
   if (!fabricsInventory.length) {
-    showError('No in-house fabrics yet. Drop swatch photos into MAYA / Inhouse Fabrics, then try again.');
+    showError('No in-house fabrics yet. Drop swatch photos into MAYA / uploads / fabrics, then try again.');
     openFabricsDrawer();
     return;
   }
@@ -7694,7 +7831,7 @@ async function switchFabricForViewer() {
   }
   if (!fabricsInventory.length) await scanFabricsFolder(false);
   if (!fabricsInventory.length) {
-    showError('No in-house fabrics yet. Drop swatch photos into MAYA / Inhouse Fabrics, then try again.');
+    showError('No in-house fabrics yet. Drop swatch photos into MAYA / uploads / fabrics, then try again.');
     openFabricsDrawer();
     return;
   }
@@ -8140,7 +8277,7 @@ async function doSave() {
       const { image, ...rest } = i.card;
       // v5: nested fabric records carry a base64 swatch thumb at runtime —
       // strip it before persisting so moodboard.json stays slim (the actual
-      // swatch JPEGs live in Inhouse Fabrics/).
+      // swatch JPEGs live in uploads/fabrics/).
       if (rest.fabrics && Array.isArray(rest.fabrics)) {
         rest.fabrics = rest.fabrics.map(({ dataUrl, ...fr }) => fr);
       }
@@ -8347,6 +8484,106 @@ function _blobToB64(blob) {
     fr.onerror = () => reject(fr.error);
     fr.readAsDataURL(blob);
   });
+}
+
+// ════════════════════════════════════════════════════════════
+// v0.14: Export / Import full session as a .maya-session.json file.
+// Lets you save the entire moodboard (cards, positions, visualized
+// images, transcript, summary, face photo, measurements) and re-open
+// it later on any browser. Survives device switches, browser refreshes,
+// even friends opening their own copy of the file.
+// ════════════════════════════════════════════════════════════
+function exportSession() {
+  try {
+    // Capture live DOM positions for every card on the canvas so the
+    // layout reappears EXACTLY where it sits today.
+    const itemsSnapshot = (items || []).map(it => {
+      const out = { id: it.id, card: { ...it.card } };
+      if (it.el && it.el.style) {
+        const left = parseFloat(it.el.style.left);
+        const top  = parseFloat(it.el.style.top);
+        if (!isNaN(left)) out.x = left;
+        if (!isNaN(top))  out.y = top;
+        const w = parseFloat(it.el.style.width);
+        const h = parseFloat(it.el.style.height);
+        if (!isNaN(w)) out.w = w;
+        if (!isNaN(h)) out.h = h;
+      }
+      return out;
+    });
+    const session = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      maya_version: 'v0.14',
+      currentClientName: currentClientName || null,
+      lastSummary: lastSummary || null,
+      lastTranscript: lastTranscript || null,
+      lastOnePagerImage: lastOnePagerImage || null,
+      items: itemsSnapshot,
+    };
+    const blob = new Blob([JSON.stringify(session, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const _d = new Date();
+    const stamp = String(_d.getMonth()+1).padStart(2,'0') + '-' +
+                  String(_d.getDate()).padStart(2,'0') + '-' +
+                  _d.getFullYear();
+    const name = slugify(currentClientName || (lastSummary && lastSummary.client && lastSummary.client.name) || 'session');
+    a.href = url;
+    a.download = 'maya-session-' + name + '-' + stamp + '.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+    showToast('Session exported');
+  } catch (e) {
+    console.warn('[Maya export]', e);
+    showError('Export failed: ' + (e.message || 'unknown'));
+  }
+}
+
+async function importSession(ev) {
+  const file = ev && ev.target && ev.target.files && ev.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const session = JSON.parse(text);
+    if (!session || typeof session !== 'object' || session.version !== 1) {
+      throw new Error('Not a Maya session file');
+    }
+    // Wipe the current canvas before loading new state so we don't pile up.
+    _doClear();
+    // Restore the simple globals.
+    currentClientName = session.currentClientName || null;
+    lastSummary       = session.lastSummary || null;
+    lastTranscript    = session.lastTranscript || '';
+    lastOnePagerImage = session.lastOnePagerImage || null;
+    // Re-place every card via the existing placement helper. Falls back
+    // to a fresh free spot when an original position wasn't captured.
+    const restored = Array.isArray(session.items) ? session.items : [];
+    for (const it of restored) {
+      const card = it && it.card;
+      if (!card) continue;
+      try {
+        if (typeof it.x === 'number' && typeof it.y === 'number') {
+          placeItemAt(card, it.x, it.y);
+        } else {
+          placeItem(card, 0);
+        }
+      } catch (e) {
+        console.warn('[Maya import card]', e);
+      }
+    }
+    refreshDrawerClientName && refreshDrawerClientName();
+    refreshDrawerFavoritesCount && refreshDrawerFavoritesCount();
+    _refreshLatestVision && _refreshLatestVision();
+    showToast('Session imported');
+  } catch (e) {
+    console.warn('[Maya import]', e);
+    showError('Import failed: ' + (e.message || 'unknown'));
+  } finally {
+    // Reset the input so the same file can be re-imported.
+    if (ev && ev.target) ev.target.value = '';
+  }
 }
 
 // Build the two-page PDF and return it as a Blob (no download dialog)
@@ -9190,9 +9427,36 @@ seedMoodboard();
 // v0.11: removed legacy auto-open Settings — the Google Sign-In gate
 // handles "you must be signed in" now, so we never open Settings on boot.
 
-// Try to silently restore folder handle (won't trigger picker; that
-// happens on first save click).
+// v0.14: silently restore folder handle on boot, then warm up the
+// permission on the FIRST user gesture. Folder access requires a
+// user-gesture to re-grant per session in Chrome — by warming on the
+// first natural click we avoid surprising the user later when they
+// hit Save. If the cached handle is missing or wrong, _warmFolder()
+// is a no-op; first Save still triggers the picker normally.
 loadFolderHandle().then(h => { if (h) folderHandle = h; }).catch(()=>{});
+
+(function _scheduleFolderWarmup() {
+  if (typeof MAYA_IS_PUBLIC !== 'undefined' && MAYA_IS_PUBLIC) return;
+  let armed = true;
+  const warm = async () => {
+    if (!armed) return;
+    armed = false;
+    window.removeEventListener('click',    warm, true);
+    window.removeEventListener('keydown',  warm, true);
+    window.removeEventListener('pointerdown', warm, true);
+    try {
+      const h = folderHandle || await loadFolderHandle();
+      if (!h || !_isMayaFolder(h)) return;
+      // Inside this user-gesture window, verifyPermission can call
+      // requestPermission without being rejected for lack-of-gesture.
+      const ok = await verifyPermission(h);
+      if (ok) folderHandle = h;
+    } catch (_) { /* user dismissed — try again on next Save */ }
+  };
+  window.addEventListener('click',       warm, true);
+  window.addEventListener('keydown',     warm, true);
+  window.addEventListener('pointerdown', warm, true);
+})();
 
 </script>
 </body>
