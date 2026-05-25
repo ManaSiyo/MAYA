@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="10.30">
+<meta name="maya-version" content="11.0">
 <!-- Maya v9.2 — restored drawer Avatar UI (face circle + name + measurements
      form + Randomize + face photo upload) on top of v9.1. The closet SCREEN
      stays deleted; this only brings back the in-drawer sub-menu so designers
@@ -30,6 +30,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<!-- v11.0: Cloud Storage for full cross-device image sync. -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
 <script>
   // ════════════════════════════════════════════════════════════════════
   // v10.28: Firebase init + Maya cloud data layer.
@@ -66,13 +68,14 @@
   // builds keep working as before (data layer just no-ops).
   const _hasRealFirebaseConfig = !!FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith('PASTE_');
 
-  let _fbApp = null, _fbAuth = null, _fbDb = null;
+  let _fbApp = null, _fbAuth = null, _fbDb = null, _fbStorage = null;
 
   if (_hasRealFirebaseConfig) {
     try {
-      _fbApp  = firebase.initializeApp(FIREBASE_CONFIG);
-      _fbAuth = firebase.auth();
-      _fbDb   = firebase.firestore();
+      _fbApp     = firebase.initializeApp(FIREBASE_CONFIG);
+      _fbAuth    = firebase.auth();
+      _fbDb      = firebase.firestore();
+      _fbStorage = firebase.storage();
       console.log('[maya.firebase] initialized for project', FIREBASE_CONFIG.projectId);
     } catch (e) {
       console.warn('[maya.firebase] init failed', e);
@@ -168,12 +171,40 @@
     return true;
   }
 
+  // ── Cloud Storage: per-item image upload/fetch ────────────────────
+  // v11.0: each canvas item with an image gets uploaded to:
+  //   users/{uid}/images/{itemId}.jpg
+  // Storage returns a downloadable URL. The Firestore session doc holds
+  // the URL (not the bytes), so the doc stays under 1MB and images
+  // truly survive cross-device.
+  async function uploadImage(itemId, dataUrl) {
+    if (!_fbStorage || !_firebaseReady()) throw new Error('storage not ready');
+    if (!itemId || !dataUrl) throw new Error('uploadImage: missing args');
+    const uid  = _firebaseUid();
+    const path = 'users/' + uid + '/images/' + itemId + '.jpg';
+    const ref  = _fbStorage.ref().child(path);
+    // dataUrl → Blob (so we can putBytes / putBlob)
+    const resp = await fetch(dataUrl);
+    const blob = await resp.blob();
+    const snap = await ref.put(blob, { contentType: blob.type || 'image/jpeg' });
+    return await snap.ref.getDownloadURL();
+  }
+
+  async function deleteImage(itemId) {
+    if (!_fbStorage || !_firebaseReady()) return false;
+    try {
+      const uid = _firebaseUid();
+      await _fbStorage.ref().child('users/' + uid + '/images/' + itemId + '.jpg').delete();
+      return true;
+    } catch (_) { return false; }
+  }
+
   // Expose for the main app script (classic, non-module) to use.
   window.mayaFirebase = {
-    isConfigured:           () => _hasRealFirebaseConfig,
-    isReady:                _firebaseReady,
+    isConfigured:            () => _hasRealFirebaseConfig,
+    isReady:                 _firebaseReady,
     signInWithGoogleIdToken: _firebaseSignInWithGoogleIdToken,
-    uid:                    _firebaseUid,
+    uid:                     _firebaseUid,
     saveSession,
     listSessions,
     loadSession,
@@ -181,6 +212,8 @@
     saveFavorite,
     loadFavorites,
     removeFavorite,
+    uploadImage,
+    deleteImage,
   };
 </script>
 <!-- v0.11: Vercel Web Analytics + Speed Insights — visitors, sessions,
@@ -2950,6 +2983,23 @@
   document.addEventListener('DOMContentLoaded', () => {
     if (_googleIdToken && _tokenIsValid(_googleIdToken)) {
       _hideGate();
+      // v10.31: re-establish Firebase Auth from the cached Google ID token on
+      // every page load. Without this, returning users (who hit _hideGate
+      // immediately and never go through _onGoogleCredential again) would
+      // skip Firebase auth entirely — cloud sync silently disabled, no
+      // cross-device restore. Fires the same auth+restore flow as a fresh
+      // sign-in does.
+      if (window.mayaFirebase && window.mayaFirebase.isConfigured()) {
+        window.mayaFirebase.signInWithGoogleIdToken(_googleIdToken)
+          .then(user => {
+            if (!user) return;
+            console.log('[maya.firebase] re-auth on reload as', user.uid);
+            if (typeof _firebaseRestoreSession === 'function') {
+              _firebaseRestoreSession().catch(e => console.warn('[maya.firebase] restore on reload failed', e));
+            }
+          })
+          .catch(e => console.warn('[maya.firebase] reload re-auth failed', e));
+      }
     } else {
       _showGate();
       _renderGoogleButton();
@@ -3525,14 +3575,15 @@ function getApiKey() {
   return (typeof getGoogleIdToken === 'function') ? (getGoogleIdToken() || '') : '';
 }
 function getModel()  { return localStorage.getItem(STORAGE_KEY_MODEL) || 'gpt-4.1'; }
-// v5.15: image quality preference (medium = fast/cheap; high = sharper, better face).
-// v9.9: default raised to 'high' — face consistency is paramount, and 'high'
-// resolves features (eyes, jawline, skin tone gradient) far better. Users can
-// still drop it back to medium in Settings.
+// Image quality preference (medium = fast/cheap; high = sharper, better face).
+// History: v5.15 introduced the toggle. v9.9 raised the default to 'high'
+// for face consistency. v0.13.10 reverted to 'medium' after measuring
+// gpt-image-2 'high' at ~118s wall-clock on 1024×1536 (blew past the
+// Vercel Hobby 60s function cap → 504s). v10.30 stayed on 'medium' — now
+// on Vercel Pro (300s function cap) we COULD revert to 'high', but the
+// 4x cost-per-image difference ($0.04 vs $0.17) isn't justified yet.
+// Current default: 'medium'. Users can opt into 'high' in Settings.
 const STORAGE_KEY_IMG_QUALITY = 'maya_image_quality';
-// v0.13.10: default to medium so renders finish in ~15s and fit
-// inside the Edge runtime's 25s timeout. Users can still pick high in
-// Settings if they're willing to risk a 504.
 function getImageQuality() { return localStorage.getItem(STORAGE_KEY_IMG_QUALITY) || 'medium'; }
 
 // v0.11: Settings simplified for public deploy. No key, no model field —
@@ -4333,24 +4384,60 @@ function _findLineageAnchor() {
 // simultaneously now. Each call pushes a label on start, pops on finish.
 // While anything is in flight the status reads either the most recent
 // label, or "<label> ×N" when N > 1 renders are stacked up.
-let _renderLabels = [];
+//
+// v10.32: each render now also records a start timestamp + an expected
+// duration (driven by current quality setting). A ticker updates the
+// status text every 400ms with "visualizing N%" — fake progress, but
+// honest about it (the OpenAI image API doesn't stream, so we estimate
+// based on elapsed time vs typical wall-clock for that quality). Caps
+// at 95% so we never show "100%" before the response actually lands.
+let _renderLabels = [];   // [{label, startedAt, expectedMs}]
+let _renderTick = null;
+
+// Wall-clock guesses per quality, derived from Yash's May-19 measurements
+// (gpt-image-2 'high' ~ 118s at 1024×1536; 'medium' ~ 43s).
+// Tuned slightly conservative so the bar moves smoothly to ~95% over the
+// typical render and doesn't snap from 30% → 100%.
+function _expectedRenderMs() {
+  const q = (typeof getImageQuality === 'function') ? getImageQuality() : 'medium';
+  return q === 'high' ? 90000 : 30000;
+}
+
 function pushRenderStatus(label) {
-  _renderLabels.push(label || 'rendering');
+  _renderLabels.push({
+    label:      label || 'rendering',
+    startedAt:  Date.now(),
+    expectedMs: _expectedRenderMs(),
+  });
+  if (!_renderTick) _renderTick = setInterval(_refreshRenderStatus, 400);
   _refreshRenderStatus();
 }
 function popRenderStatus() {
   _renderLabels.pop();
+  if (!_renderLabels.length && _renderTick) {
+    clearInterval(_renderTick);
+    _renderTick = null;
+  }
   _refreshRenderStatus();
 }
 function _refreshRenderStatus() {
   if (!_renderLabels.length) { setStatus(''); return; }
-  // Count by current label so "visualizing ×3" reads naturally even when
-  // a Modify run is mixed in alongside two Visualize runs.
-  const top = _renderLabels[_renderLabels.length - 1];
-  const sameCount = _renderLabels.filter(l => l === top).length;
+  const top    = _renderLabels[_renderLabels.length - 1];
+  const sameCount  = _renderLabels.filter(r => r.label === top.label).length;
   const otherCount = _renderLabels.length - sameCount;
-  let text = sameCount > 1 ? (top + ' ×' + sameCount) : top;
-  if (otherCount > 0) text += ' (+' + otherCount + ')';
+
+  // Show a progress % only when there's a single render in flight —
+  // a percentage for "visualizing ×3" doesn't tell the user anything
+  // useful (which one is it?). Multi-render reverts to the count form.
+  let text;
+  if (_renderLabels.length === 1) {
+    const elapsed = Date.now() - top.startedAt;
+    const pct = Math.min(95, Math.round((elapsed / top.expectedMs) * 100));
+    text = top.label + ' ' + pct + '%';
+  } else {
+    text = sameCount > 1 ? (top.label + ' ×' + sameCount) : top.label;
+    if (otherCount > 0) text += ' (+' + otherCount + ')';
+  }
   setStatus(text);
 }
 
@@ -7127,7 +7214,7 @@ async function callOpenAIImageEdit(prevDataUrl, prompt, size, quality, opts) {
   // edits. Drop-in API-compatible — same /v1/images/edits, same FormData
   // shape, same standard sizes. 2K (2560×1440) is also available if we
   // ever want to bump resolution.
-  form.append('model', 'gpt-image-1.5');
+  form.append('model', 'gpt-image-2');
   form.append('prompt', prompt);
   const inputList = Array.isArray(prevDataUrl) ? prevDataUrl : [prevDataUrl];
   let idx = 0;
@@ -7176,7 +7263,7 @@ async function callOpenAIImage(prompt, size, quality, opts) {
   const body = {
     // v9.11: gpt-image-2 — same model used by the /edits path. Reasoning-
     // capable, stronger identity carry across renders, 2K-ready.
-    model: 'gpt-image-1.5',
+    model: 'gpt-image-2',
     prompt: prompt,
     size: size || '1024x1536',
     quality: quality || getImageQuality() || 'medium',
@@ -8325,71 +8412,102 @@ function _persistSession() {
   }, 400);
 }
 
-// v10.30: lightweight Firestore sync of the live session. Same trigger
-// chain as _persistSession (debounced 400ms via the timeout above).
-// Strips image data URLs so the doc fits under Firestore's 1MB cap;
-// everything that defines the layout, references, summary, transcript
-// is preserved.
-//
-// TODO(maya-images-in-cloud): migrate item.card.image data URLs into
-// Firebase Cloud Storage and reference them by URL here. Until then,
-// cross-device restore shows the canvas LAYOUT but image cards land
-// as empty placeholders on a fresh device.
+// v11.0: full session sync with image upload to Cloud Storage.
+// Each item with an image data URL gets uploaded once to Storage at
+// users/{uid}/images/{itemId}.jpg. The Firestore session doc holds the
+// downloadable URL (not the raw bytes), so the doc stays small and
+// images truly survive cross-device. Items are flagged with
+// _uploadedToCloud after a successful upload so we don't re-upload the
+// same bytes on every sync — only first-time-after-creation or after
+// a change that resets the flag.
 async function _firebaseSyncSession(snap) {
+  if (!snap) return;
   if (!window.mayaFirebase || !window.mayaFirebase.isReady || !window.mayaFirebase.isReady()) return;
-  // Strip images from the cloud copy.
-  const cloudItems = (snap.items || []).map(it => {
-    if (!it || !it.card) return it;
-    const { image, _dissection, ...lighterCard } = it.card;
-    return { ...it, card: { ...lighterCard, _hasImage: !!image } };
-  });
+  // First pass: upload any images that haven't been uploaded yet.
+  const cloudItems = [];
+  for (const it of (snap.items || [])) {
+    if (!it || !it.card) { cloudItems.push(it); continue; }
+    const card = { ...it.card };
+    // Strip non-portable fields (DOM-only flags, dissection cache).
+    delete card._dissection;
+    delete card._dissectionPending;
+    // If this item has a data-URL image and we haven't uploaded it yet
+    // (or never have a URL for it), push the bytes to Storage now and
+    // replace the local item's image with the public URL so we won't
+    // re-upload next time.
+    if (card.image && card.image.startsWith('data:')) {
+      try {
+        const url = await window.mayaFirebase.uploadImage(it.id, card.image);
+        card.imageUrl = url;
+        // Mirror back onto the live item so subsequent syncs skip upload.
+        const liveItem = items.find(x => x.id === it.id);
+        if (liveItem) {
+          liveItem.card.imageUrl = url;
+          liveItem.card._uploadedToCloud = true;
+        }
+        // For the cloud copy, drop the raw bytes — URL is enough.
+        delete card.image;
+      } catch (e) {
+        // Upload failed (offline, quota, etc.) — keep going. We'll retry
+        // next sync. For the cloud copy, strip the bytes anyway so the
+        // doc doesn't blow past 1MB; the item will restore as
+        // image-missing on other devices until we get back online.
+        console.warn('[maya.firebase] image upload failed for', it.id, e && e.message);
+        delete card.image;
+        card._uploadPending = true;
+      }
+    } else if (card.image && !card.image.startsWith('data:')) {
+      // Already a URL (or restored from cloud). Don't touch.
+      card.imageUrl = card.imageUrl || card.image;
+      delete card.image;
+    }
+    cloudItems.push({ ...it, card });
+  }
   const cloudSnap = {
     ...snap,
     items: cloudItems,
-    schemaVersion: 1,
+    schemaVersion: 2,  // v11.0 bumps schema — items now use imageUrl, not embedded base64
   };
   try {
     await window.mayaFirebase.saveSession('current', cloudSnap);
   } catch (e) {
-    // If the doc is still too large or the network blips, swallow — we
-    // still have the local copy and the next change will retry.
     console.warn('[maya.firebase] saveSession failed', e && e.message);
   }
 }
 
-// v10.30: pull the latest cloud session (if any) and apply on top of
-// whatever the local IndexedDB cache already restored. Only fills in
-// fields/items that aren't already present locally — local wins for
-// "this device's most recent state."
+// v11.0: pull cloud session and rebuild any items the local IndexedDB
+// cache didn't already restore. Items with imageUrl (Cloud Storage)
+// are placed with that URL as their image source — browser fetches it
+// like any other image. Items with raw image data URLs (legacy v10
+// sessions) still work the old way.
 async function _firebaseRestoreSession() {
   if (!window.mayaFirebase || !window.mayaFirebase.isReady || !window.mayaFirebase.isReady()) return;
   let cloud;
   try { cloud = await window.mayaFirebase.loadSession('current'); }
   catch (e) { console.warn('[maya.firebase] loadSession failed', e); return; }
   if (!cloud || !cloud.items) return;
-  // Build a set of item IDs already on the canvas (from IndexedDB restore).
   const existingIds = new Set((items || []).map(i => i.id));
   let added = 0;
   for (const sav of cloud.items) {
     if (!sav || !sav.card) continue;
-    if (existingIds.has(sav.id)) continue;  // already on canvas locally
-    // Skip image cards we can't render — no image data in cloud snapshot.
-    // Once Cloud Storage image sync lands this guard goes away.
-    if (sav.card._hasImage && !sav.card.image) continue;
+    if (existingIds.has(sav.id)) continue;
+    const card = { ...sav.card };
+    // v11.0: if cloud has imageUrl (Storage), use it as the image source.
+    // The canvas's <img src> works equally well with data URLs and HTTPS URLs.
+    if (card.imageUrl && !card.image) card.image = card.imageUrl;
     try {
-      placeItemAt(sav.card, sav.x || 0, sav.y || 0);
+      placeItemAt(card, sav.x || 0, sav.y || 0);
       added++;
     } catch (e) {
       console.warn('[maya.firebase] restore item', e);
     }
   }
-  // Backfill text-only metadata if local was empty.
   if (!lastSummary    && cloud.lastSummary)    lastSummary    = cloud.lastSummary;
   if (!lastTranscript && cloud.lastTranscript) lastTranscript = cloud.lastTranscript;
   if (!currentClientName && cloud.currentClientName) currentClientName = cloud.currentClientName;
   if (added) {
-    if (typeof refreshDrawerClientName       === 'function') refreshDrawerClientName();
-    if (typeof refreshDrawerFavoritesCount   === 'function') refreshDrawerFavoritesCount();
+    if (typeof refreshDrawerClientName     === 'function') refreshDrawerClientName();
+    if (typeof refreshDrawerFavoritesCount === 'function') refreshDrawerFavoritesCount();
     console.log('[maya.firebase] restored', added, 'item(s) from cloud');
   }
 }
@@ -8492,20 +8610,11 @@ async function verifyPermission(handle) {
 // no picking a hero. Writes to MAYA/Saves/<name MM-DD-YYYY>/ so Fromsa
 // can come back and pick up the consultation later. Distinct from SUBMIT,
 // which produces the one-pager + Clients folder.
-async function saveConsultation() {
-  if (!lastSummary && items.length === 0 && !currentClientName) {
-    return showToast('Nothing to save yet');
-  }
-  try {
-    await doSessionSave();
-  } catch (e) {
-    if (/(does not support|showDirectoryPicker)/.test(e.message || '')) {
-      downloadBundle();
-    } else if (e.name !== 'AbortError') {
-      showError(e.message || 'Save failed');
-    }
-  }
-}
+// v11.0: saveConsultation removed. The Save button now calls saveSessionNow
+// (cloud-backed via Firebase). The old local-Clients-folder flow was a
+// designer-mode workflow that doesn't belong in the public frontend.
+// If we revive a designer-mode export later, it'll live in backend.html
+// where it belongs.
 
 // v10.30: Save button now forces an immediate cloud sync. Maya already
 // auto-saves continuously via _persistSession (debounced 400ms) — this
@@ -8840,105 +8949,10 @@ function _blobToB64(blob) {
   });
 }
 
-// ════════════════════════════════════════════════════════════
-// v0.14: Export / Import full session as a .maya-session.json file.
-// Lets you save the entire moodboard (cards, positions, visualized
-// images, transcript, summary, face photo, measurements) and re-open
-// it later on any browser. Survives device switches, browser refreshes,
-// even friends opening their own copy of the file.
-// ════════════════════════════════════════════════════════════
-function exportSession() {
-  try {
-    // Capture live DOM positions for every card on the canvas so the
-    // layout reappears EXACTLY where it sits today.
-    const itemsSnapshot = (items || []).map(it => {
-      const out = { id: it.id, card: { ...it.card } };
-      if (it.el && it.el.style) {
-        const left = parseFloat(it.el.style.left);
-        const top  = parseFloat(it.el.style.top);
-        if (!isNaN(left)) out.x = left;
-        if (!isNaN(top))  out.y = top;
-        const w = parseFloat(it.el.style.width);
-        const h = parseFloat(it.el.style.height);
-        if (!isNaN(w)) out.w = w;
-        if (!isNaN(h)) out.h = h;
-      }
-      return out;
-    });
-    const session = {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      maya_version: 'v0.14',
-      currentClientName: currentClientName || null,
-      lastSummary: lastSummary || null,
-      lastTranscript: lastTranscript || null,
-      lastOnePagerImage: lastOnePagerImage || null,
-      items: itemsSnapshot,
-    };
-    const blob = new Blob([JSON.stringify(session, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const _d = new Date();
-    const stamp = String(_d.getMonth()+1).padStart(2,'0') + '-' +
-                  String(_d.getDate()).padStart(2,'0') + '-' +
-                  _d.getFullYear();
-    const name = slugify(currentClientName || (lastSummary && lastSummary.client && lastSummary.client.name) || 'session');
-    a.href = url;
-    a.download = 'maya-session-' + name + '-' + stamp + '.json';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
-    showToast('Session exported');
-  } catch (e) {
-    console.warn('[Maya export]', e);
-    showError('Export failed: ' + (e.message || 'unknown'));
-  }
-}
-
-async function importSession(ev) {
-  const file = ev && ev.target && ev.target.files && ev.target.files[0];
-  if (!file) return;
-  try {
-    const text = await file.text();
-    const session = JSON.parse(text);
-    if (!session || typeof session !== 'object' || session.version !== 1) {
-      throw new Error('Not a Maya session file');
-    }
-    // Wipe the current canvas before loading new state so we don't pile up.
-    _doClear();
-    // Restore the simple globals.
-    currentClientName = session.currentClientName || null;
-    lastSummary       = session.lastSummary || null;
-    lastTranscript    = session.lastTranscript || '';
-    lastOnePagerImage = session.lastOnePagerImage || null;
-    // Re-place every card via the existing placement helper. Falls back
-    // to a fresh free spot when an original position wasn't captured.
-    const restored = Array.isArray(session.items) ? session.items : [];
-    for (const it of restored) {
-      const card = it && it.card;
-      if (!card) continue;
-      try {
-        if (typeof it.x === 'number' && typeof it.y === 'number') {
-          placeItemAt(card, it.x, it.y);
-        } else {
-          placeItem(card, 0);
-        }
-      } catch (e) {
-        console.warn('[Maya import card]', e);
-      }
-    }
-    refreshDrawerClientName && refreshDrawerClientName();
-    refreshDrawerFavoritesCount && refreshDrawerFavoritesCount();
-    _refreshLatestVision && _refreshLatestVision();
-    showToast('Session imported');
-  } catch (e) {
-    console.warn('[Maya import]', e);
-    showError('Import failed: ' + (e.message || 'unknown'));
-  } finally {
-    // Reset the input so the same file can be re-imported.
-    if (ev && ev.target) ev.target.value = '';
-  }
-}
+// v11.0: exportSession / importSession removed. Both were JSON-file
+// round-trip tools that v10.27 dropped from the UI. Session persistence
+// now happens automatically via _firebaseSyncSession (Firestore +
+// Cloud Storage). No replacement needed.
 
 // Build the two-page PDF and return it as a Blob (no download dialog)
 async function renderOnePagerPdfBlob() {
