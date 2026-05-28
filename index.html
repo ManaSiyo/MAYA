@@ -1148,14 +1148,30 @@
     min-width: 70px; text-align: center;
   }
 
-  /* selectable ref chips inside the viewer */
+  /* selectable ref chips inside the viewer
+     v11.4: capped at ~3 rows + horizontally generous (75 vw) so the chip
+     strip can't push the visualized image upward. Overflow scrolls inside
+     the strip itself — the image stays anchored. */
   #viewer-refs {
-    max-width: min(900px, 90vw);
+    width: 75vw;
+    max-width: 75vw;
     display: flex; flex-wrap: wrap; gap: 6px;
+    align-content: flex-start;
     justify-content: center;
-    margin: 6px auto 0;
-    padding: 0 18px;
+    margin: 8px auto 0;
+    padding: 4px 14px;
+    /* 3 chip rows × ~26px chip + 2 × 6px gap + a hair of padding. */
+    max-height: calc(3 * 26px + 2 * 6px + 8px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.22) transparent;
   }
+  #viewer-refs::-webkit-scrollbar { width: 6px; }
+  #viewer-refs::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.18); border-radius: 100px;
+  }
+  #viewer-refs::-webkit-scrollbar-track { background: transparent; }
   /* v10: viewer ref chip — canon glass pill. */
   .viewer-ref-chip {
     background: transparent;
@@ -1565,8 +1581,8 @@
   #notes-drawer .drawer-meta-row {
     display: flex; justify-content: center; gap: 22px;
     border-top: 0.5px solid rgba(255,255,255,0.06);
-    margin-top: 28px;
-    padding-top: 12px;
+    margin-top: 8px;
+    padding-top: 8px;
   }
   #notes-drawer .drawer-meta-row .drawer-settings-link {
     margin: 0; padding: 0;
@@ -1725,7 +1741,7 @@
   /* utility row of smaller pills below the big Client pill */
   #notes-drawer .drawer-top-row {
     display: flex; gap: 6px; flex-wrap: wrap;
-    margin: 0 0 18px;
+    margin: 0 0 6px;
   }
 
   /* v9.0: favorites-modal CSS, .meas-* / .face-* classes all deleted.
@@ -1857,8 +1873,8 @@
   /* v5.7: bottom action row (Save / New / Clean / Logout) */
   #notes-drawer .drawer-actions-bottom {
     display: flex; gap: 6px; flex-wrap: wrap;
-    margin: 18px 0 0;
-    padding-top: 16px;
+    margin: 6px 0 0;
+    padding-top: 8px;
     border-top: 0.5px solid rgba(255,255,255,0.06);
   }
   /* v7.2: bottom action row — liquid glass. */
@@ -1908,7 +1924,7 @@
     font-size: 10px; font-weight: 300;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
-    padding: 12px 0 4px;
+    padding: 15px 0 4px;
     text-align: center;
   }
   /* v7.2: × close button — liquid glass circle, floats above drawer. */
@@ -2093,10 +2109,21 @@
     display: flex; flex-direction: column;
   }
   #fabrics-drawer.open { transform: translateX(0); opacity: 1; }
+  /* v11.4: Back text-link, same styling as the avatar submenu back link. */
+  #fabrics-drawer .fabrics-back {
+    align-self: flex-start;
+    background: none; border: none;
+    padding: 18px 22px 0;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(245,250,255,0.85);
+    cursor: pointer; transition: color 0.2s;
+  }
+  #fabrics-drawer .fabrics-back:hover { color: rgba(255,255,255,1); }
   .fabrics-drawer-header {
     display: flex; align-items: flex-start; justify-content: space-between;
-    padding: 22px 22px 14px;
-    border-bottom: 0.25px solid rgba(255,255,255,0.06);
+    padding: 12px 22px 14px;
   }
   .fabrics-drawer-title {
     font-family: 'Cormorant Garamond', serif;
@@ -2357,6 +2384,15 @@
     0%, 100% { transform: scale(0.93); opacity: 0.74; }
     50%      { transform: scale(1.05); opacity: 1; }
   }
+  /* v11.4: bright halo on the wordmark mark as Visualize-bound cards land. */
+  .maya-logo-mark.absorbing {
+    animation: maya-logo-absorb 0.9s ease-out;
+  }
+  @keyframes maya-logo-absorb {
+    0%   { filter: drop-shadow(0 0 6px rgba(180,210,255,0.4)); transform: scale(1); }
+    35%  { filter: drop-shadow(0 0 22px rgba(220,235,255,0.95)); transform: scale(1.35); }
+    100% { filter: drop-shadow(0 0 6px rgba(180,210,255,0.4)); transform: scale(1); }
+  }
 
   /* v10.1: FAVORITES SCREEN — now a sibling section inside #screens,
      stacked beneath the inspo screen and snapped via native scroll-snap.
@@ -2475,14 +2511,19 @@
   #submit-btn { display: none; }
   #garment-modal[data-mode="submit"] #submit-btn { display: inline-block; }
 
-  /* v9.12: Submit button glow — same starlight family as the favorite-card
-     halo, but ~20% stronger across the board (alphas bumped 1.20×, radii
-     bumped ~1.2×). Same 3.2s pulse so it feels in-family. */
+  /* v11.4: Submit button matches the voice-bar pill (tap-to-listen / tap
+     to visualize) family — same dimensions, padding, border weight, glass.
+     The "send" cue is its own short-radius pulsing glow that sits *behind*
+     the pill (via ::after) so the pulse can be fast and bright without
+     ballooning the chip's footprint. */
   .viewer-submit-btn {
+    position: relative;
+    display: inline-flex; align-items: center; justify-content: center;
     background: transparent;
-    border: 0.5px solid rgba(235,245,255,0.72);
+    border: 0.5px solid rgba(255,255,255,0.32);
     border-radius: 100px;
-    padding: 14px 38px;
+    padding: 6px 22px;
+    min-width: 160px;
     font-family: 'Jost', sans-serif;
     font-size: 11px; font-weight: 300;
     letter-spacing: 0.15em; text-transform: uppercase;
@@ -2490,20 +2531,62 @@
     cursor: pointer;
     -webkit-backdrop-filter: blur(22px) saturate(180%);
             backdrop-filter: blur(22px) saturate(180%);
-    /* v10.6: Submit now wears the SAME starlight glow as the favorite
-       cards — shares maya-vision-pulse. No bespoke submit pulse. */
     box-shadow:
-      inset 0 1px 1px rgba(255,255,255,0.32),
-      inset 0 -1px 1px rgba(0,0,0,0.20),
-      0 0 18px 3px rgba(200,222,255,0.40),
-      0 0 38px 8px rgba(200,222,255,0.20),
-      0 8px 32px rgba(0,0,0,0.42);
-    animation: maya-vision-pulse 3.2s ease-in-out infinite;
-    transition: transform 0.2s ease, border-color 0.2s ease;
+      inset 0 1px 1px rgba(255,255,255,0.28),
+      inset 0 -1px 1px rgba(0,0,0,0.18),
+      0 4px 16px rgba(0,0,0,0.22);
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+  /* The starlight halo lives behind the pill — small radius, fast pulse,
+     never spills past the surrounding area. */
+  .viewer-submit-btn::after {
+    content: '';
+    position: absolute; inset: -2px;
+    border-radius: 100px;
+    pointer-events: none;
+    box-shadow:
+      0 0 8px 1px rgba(210,228,255,0.55),
+      0 0 14px 2px rgba(210,228,255,0.28);
+    animation: maya-submit-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes maya-submit-pulse {
+    0%, 100% {
+      box-shadow:
+        0 0 6px 1px rgba(210,228,255,0.40),
+        0 0 10px 1px rgba(210,228,255,0.18);
+    }
+    50% {
+      box-shadow:
+        0 0 10px 2px rgba(230,242,255,0.75),
+        0 0 18px 3px rgba(230,242,255,0.36);
+    }
   }
   .viewer-submit-btn:hover {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.55);
     transform: translateY(-1px);
-    border-color: rgba(245,250,255,0.92);
+  }
+
+  /* v11.4: tiny 2-line piece-summary that sits directly above Submit.
+     Only visible in data-mode="submit". Hidden by default; switched on in
+     submit mode (the -webkit-box display preserves the 2-line clamp). */
+  #viewer-piece-summary {
+    display: none;
+    max-width: min(640px, 75vw);
+    margin: 14px auto 6px;
+    padding: 0 14px;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.45;
+    color: rgba(245,250,255,0.85);
+    text-align: center;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  #garment-modal[data-mode="submit"] #viewer-piece-summary {
+    display: -webkit-box;
   }
   /* v10.11: photo fullscreen mode inside the garment viewer. Click the
      image → it expands edge-to-edge over the modal. Escape exits back to
@@ -2846,9 +2929,10 @@
   #thankyou .ty-title {
     font-family: 'Cormorant Garamond', serif;
     font-weight: 600;
-    font-size: clamp(64px, 12vw, 144px);
+    /* v11.4: shrunk to fit longer copy ("Sent to Mana Siyo"). */
+    font-size: clamp(42px, 7vw, 92px);
     color: #ffffff;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.18em;
     text-shadow:
       0 0 56px rgba(180,210,255,0.55),
       0 0 112px rgba(180,210,255,0.28);
@@ -2858,10 +2942,11 @@
     0%, 100% { text-shadow: 0 0 56px rgba(180,210,255,0.45), 0 0 112px rgba(180,210,255,0.22); }
     50%      { text-shadow: 0 0 80px rgba(180,210,255,0.70), 0 0 160px rgba(180,210,255,0.38); }
   }
+  /* v11.4: small Jost sub-eyebrow under the title. */
   #thankyou .ty-sub {
     font-family: 'Jost', sans-serif;
-    font-size: 11px; font-weight: 300;
-    letter-spacing: 0.5em; text-transform: uppercase;
+    font-size: 9px; font-weight: 300;
+    letter-spacing: 0.38em; text-transform: uppercase;
     color: rgba(220,225,240,0.6);
   }
 </style>
@@ -3188,9 +3273,10 @@
 </div>
 
 <!-- v9.13: thank-you overlay — full screen after Submit. Dismisses on any
-     click or keypress. No on-screen affordance — invisible dismiss. -->
+     click or keypress.
+     v11.4: auto-dismiss after 4s, new copy. -->
 <div id="thankyou">
-  <div class="ty-title">Thank You</div>
+  <div class="ty-title">Sent to Mana Siyo</div>
   <div class="ty-sub">saved to your Clients folder</div>
 </div>
 
@@ -3391,6 +3477,8 @@
   <div id="viewer-fabrics"></div>
   <div id="viewer-refs"></div>
   <div id="modifications-bar"></div>
+  <!-- v11.4: 2-line italic piece summary, only shown in submit mode. -->
+  <div id="viewer-piece-summary"></div>
   <div id="viewer-actions" style="display:flex;gap:18px;justify-content:center;flex-wrap:wrap">
     <!-- v10.3: state-aware Modify pill —
          default → "Modify" (click prompts for describe)
@@ -3427,8 +3515,11 @@
 <!-- v9.0: favorites-modal removed — Favorites is now a full screen
      (#favorites-screen above). -->
 
-<!-- v5: in-house fabrics drawer (top-bar Fabrics button) -->
+<!-- v5: in-house fabrics drawer (top-bar Fabrics button)
+     v11.4: small ← Back text link replaces the × close (matches avatar
+     submenu). Rescan button removed. Upload stays on the right side. -->
 <div id="fabrics-drawer">
+  <button class="fabrics-back" onclick="closeFabricsDrawer()" title="Back to menu" aria-label="Back">&#8592; Back</button>
   <div class="fabrics-drawer-header">
     <div>
       <div class="fabrics-drawer-title">In-house fabrics</div>
@@ -3437,8 +3528,6 @@
     <div class="fabrics-drawer-actions">
       <button class="top-btn subtle" onclick="document.getElementById('fabrics-upload-input').click()" title="Add swatch photos">Upload</button>
       <input type="file" id="fabrics-upload-input" accept="image/*" multiple style="display:none" />
-      <button class="top-btn subtle" onclick="scanFabricsFolder(true)" title="Re-scan the folder for newly added swatches">Re-scan</button>
-      <button class="top-btn cog" onclick="closeFabricsDrawer()" title="Close">×</button>
     </div>
   </div>
   <div class="fabrics-drawer-body" id="fabrics-drawer-body"></div>
@@ -4077,11 +4166,67 @@ function removeItem(id) {
   updateCount();
 }
 
+// v11.4: When Visualize is pressed we vacuum every card on the canvas into
+// the top-left logo over ~3 seconds, then splice them from items[]. This
+// "caches away" the design intent — anything the user says next lands on a
+// fresh canvas and won't bleed into the render that's coming back. The card
+// summaries we needed (titles, tags) are snapshotted by the caller before
+// this fires, so the new image still gets its refs cluster.
+function suckCardsIntoLogo() {
+  const logo = document.getElementById('top-left-brand');
+  let targetX = 24, targetY = 24;
+  if (logo) {
+    const r = logo.getBoundingClientRect();
+    targetX = r.left + r.width / 2;
+    targetY = r.top + r.height / 2;
+  }
+  const targets = items.filter(it => it.el);
+  if (!targets.length) return;
+  targets.forEach((it, idx) => {
+    const elRect = it.el.getBoundingClientRect();
+    const dx = targetX - (elRect.left + elRect.width / 2);
+    const dy = targetY - (elRect.top + elRect.height / 2);
+    const rot = (idx % 2 ? -1 : 1) * (8 + (idx % 5) * 3);
+    it.el.style.transition = 'transform 2.6s cubic-bezier(0.16,1,0.3,1), opacity 2.6s cubic-bezier(0.16,1,0.3,1), filter 2.6s ease';
+    it.el.style.willChange = 'transform, opacity, filter';
+    // small stagger so the cards don't all leave in lockstep
+    setTimeout(() => {
+      it.el.style.transform = `translate(${dx}px, ${dy}px) scale(0.04) rotate(${rot}deg)`;
+      it.el.style.opacity = '0';
+      it.el.style.filter = 'blur(2px)';
+      it.el.style.pointerEvents = 'none';
+    }, idx * 60);
+  });
+  // Logo "absorption" pulse — fires partway through, peaks as the cards land.
+  setTimeout(() => {
+    const mark = logo && logo.querySelector('.maya-logo-mark');
+    if (mark) {
+      mark.classList.add('absorbing');
+      setTimeout(() => mark.classList.remove('absorbing'), 900);
+    }
+  }, 1700);
+  // After the animation, splice them from items[] and drop the DOM nodes.
+  setTimeout(() => {
+    targets.forEach(it => {
+      if (it.el && it.el.parentNode) it.el.remove();
+      const idx = items.indexOf(it);
+      if (idx >= 0) items.splice(idx, 1);
+    });
+    updateCount();
+    // Save the now-empty live state. The saved session snapshot (from a
+    // prior Save) still holds the cards. The render about to arrive will
+    // place itself onto an empty canvas.
+    if (typeof _persistSession === 'function') _persistSession();
+  }, 2900);
+}
+
 // After a successful Visualize, every floating (non-image, non-consumed) card
 // gets absorbed into the most recent image card. Each ref's title becomes a
 // hover-only chip beneath that image. The floating cards animate toward the
 // image and fade out. Card data stays in `items` so save/PDF still has it,
 // just marked consumed so it doesn't feed the next prompt.
+// v11.4: with suckCardsIntoLogo now firing on press, this function usually
+// finds nothing to consume — it stays as a safety no-op for legacy paths.
 function consumeFloatingCards() {
   const targets = items.filter(i =>
     !i.consumed && !(i.card.kind === 'inspo' && i.card.image)
@@ -4334,10 +4479,33 @@ function _renderFavoritesScroller() {
 // v9.12: open the standard image viewer but in a stripped-down "submit"
 // mode — version nav, refs, mods bar, Listen/Modify/Switch all hidden;
 // only the floating × and a glowing Submit button remain.
+// v11.4: also drops a 2-line italic piece-summary just above Submit.
 function openFavoriteForSubmit(itemId) {
   openImageViewer(itemId);
   const modal = document.getElementById('garment-modal');
   if (modal) modal.dataset.mode = 'submit';
+  const sumEl = document.getElementById('viewer-piece-summary');
+  if (sumEl) {
+    const item = items.find(i => i.id === itemId);
+    sumEl.textContent = _buildPieceSummaryLine(item);
+  }
+}
+
+// v11.4: build a short 2-line description of the piece. Falls through these
+// signals in priority order: card.caption (set on render to dream_outcome),
+// lastSummary.dream_outcome, lastSummary._paragraphs.vision, or a default.
+function _buildPieceSummaryLine(item) {
+  const caption = item && item.card && item.card.caption;
+  const dream   = lastSummary && lastSummary.dream_outcome;
+  const para    = lastSummary && lastSummary._paragraphs && lastSummary._paragraphs.vision;
+  let txt = caption || dream || para || '';
+  txt = (txt || '').toString().trim();
+  if (!txt) return 'A dream garment, made just for them.';
+  // Hard cap so the clamp box never has to fight a 600-char monster.
+  if (txt.length > 220) txt = txt.slice(0, 217).trimEnd() + '…';
+  // Tail period if it doesn't already end in punctuation.
+  if (!/[.!?…]$/.test(txt)) txt += '.';
+  return txt;
 }
 async function submitFavorite() {
   // v10.7: Submit asks for top-3 inspo attachments BEFORE writing the
@@ -4387,17 +4555,24 @@ async function _doSubmitConfirmed() {
     showError('Submit failed: ' + (e.message || 'unknown'));
   }
   if (!ty) return;
-  let armed = false;
-  const dismiss = () => {
-    if (!armed) { armed = true; return; }
+  // v11.4: dismiss = ANY click / touch / Esc, OR auto after 4s.
+  // The previous "armed" two-stage thing was buggy — first click did nothing.
+  let dismissed = false;
+  let timer = null;
+  const dismiss = (e) => {
+    if (dismissed) return;
+    if (e && e.type === 'keydown' && e.key !== 'Escape' && e.key !== 'Enter' && e.key !== ' ') return;
+    dismissed = true;
+    if (timer) { clearTimeout(timer); timer = null; }
     ty.classList.remove('show');
     window.removeEventListener('click',      dismiss, true);
-    window.removeEventListener('keydown',    dismiss, true);
     window.removeEventListener('touchstart', dismiss, true);
+    window.removeEventListener('keydown',    dismiss, true);
   };
   window.addEventListener('click',      dismiss, true);
-  window.addEventListener('keydown',    dismiss, true);
   window.addEventListener('touchstart', dismiss, true);
+  window.addEventListener('keydown',    dismiss, true);
+  timer = setTimeout(dismiss, 4000);
 }
 
 // v10.2: ALL custom touch/wheel screen-switch + drawer-toggle handlers
@@ -7509,6 +7684,14 @@ async function _runVisualizeNow() {
   if (modsSnap.length) {
     prompt += '. Apply these client modifications: ' + modsSnap.join('; ');
   }
+  // v11.4: snapshot the prompt-driving cards BEFORE the suck animation
+  // vacuums them. These tag+title pairs become the refs cluster on the
+  // resulting render so the user can still see what fed it.
+  const cardsRefsSnap = items
+    .filter(i => !i.consumed && !(i.card.kind === 'inspo' && i.card.image))
+    .map(i => ({ tag: i.card.tag, title: i.card.title }));
+  // Fire the suck-into-logo ceremony. ~3s; runs in parallel with the API.
+  try { suckCardsIntoLogo(); } catch (_) {}
   try {
     // Three paths, all face-locked:
     //   path 1: face photo set                  → /edits on the face photo (face wins, refs are text hints)
@@ -7613,6 +7796,8 @@ async function _runVisualizeNow() {
             dataUrl: f.dataUrl  // runtime-only; stripped before persist
           }))
         : null,
+      // v11.4: refs come from the pre-suck snapshot, not the live canvas.
+      refs: cardsRefsSnap.length ? cardsRefsSnap : null,
       visualReferenceTitle: refsSnap[0] ? refsSnap[0].title : null
     }, 0);
     setTimeout(consumeFloatingCards, 400);
@@ -9201,30 +9386,55 @@ async function doSaveToCloud() {
   }
 
   // 2) Upload each file sequentially.
-  let done = 0;
+  // v11.4: track failures so the toast doesn't pretend everything worked.
+  let done = 0, ok = 0, failed = 0;
+  const failures = [];
   for (const f of queue) {
     done++;
     setStatus('uploading ' + done + ' / ' + queue.length);
-    const res = await fetch('/api/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({
-        action: 'upload',
-        folder_id,
-        name: f.name,
-        mime_type: f.mime_type,
-        data_b64: f.data_b64,
-      }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      console.warn('[Maya cloud upload]', f.name, err);
-      // Keep going — one bad file shouldn't kill the whole submit.
+    let res;
+    try {
+      res = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({
+          action: 'upload',
+          folder_id,
+          name: f.name,
+          mime_type: f.mime_type,
+          data_b64: f.data_b64,
+        }),
+      });
+    } catch (e) {
+      // Network / fetch error (e.g. body too large at Edge → 413).
+      failed++;
+      failures.push({ name: f.name, status: 0, detail: e && e.message || 'fetch failed' });
+      console.warn('[Maya cloud upload] network', f.name, e);
+      continue;
     }
+    if (!res.ok) {
+      failed++;
+      let detail = '';
+      try { detail = JSON.stringify(await res.json()).slice(0, 200); }
+      catch { try { detail = (await res.text()).slice(0, 200); } catch {} }
+      failures.push({ name: f.name, status: res.status, detail });
+      console.warn('[Maya cloud upload]', f.name, res.status, detail);
+      continue;
+    }
+    ok++;
   }
   setStatus('');
-  showToast('Submitted — ' + folder_name);
-  return { folder_id, folder_name, total: queue.length };
+  if (failed === 0) {
+    showToast('Submitted — ' + folder_name);
+  } else if (ok === 0) {
+    // Everything failed. Folder is in Drive but empty.
+    showError('Submit reached Drive but uploaded 0/' + queue.length + ' files. ' +
+              (failures[0] ? '(' + failures[0].status + ' ' + failures[0].detail + ')' : ''));
+  } else {
+    // Partial success — show counts so it's not invisible.
+    showToast('Submitted — ' + folder_name + ' (' + ok + '/' + queue.length + ' files, ' + failed + ' failed)');
+  }
+  return { folder_id, folder_name, total: queue.length, ok, failed, failures };
 }
 
 function _utf8ToB64(str) {
