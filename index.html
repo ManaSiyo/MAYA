@@ -1149,9 +1149,9 @@
   }
 
   /* selectable ref chips inside the viewer
-     v11.4: capped at ~3 rows + horizontally generous (75 vw) so the chip
-     strip can't push the visualized image upward. Overflow scrolls inside
-     the strip itself — the image stays anchored. */
+     v11.4: capped at ~3 rows + 75 vw wide so the chip strip can't push
+     the visualized image upward. Overflow scrolls inside the strip — the
+     image stays anchored where it is. */
   #viewer-refs {
     width: 75vw;
     max-width: 75vw;
@@ -1160,7 +1160,6 @@
     justify-content: center;
     margin: 8px auto 0;
     padding: 4px 14px;
-    /* 3 chip rows × ~26px chip + 2 × 6px gap + a hair of padding. */
     max-height: calc(3 * 26px + 2 * 6px + 8px);
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -2384,15 +2383,6 @@
     0%, 100% { transform: scale(0.93); opacity: 0.74; }
     50%      { transform: scale(1.05); opacity: 1; }
   }
-  /* v11.4: bright halo on the wordmark mark as Visualize-bound cards land. */
-  .maya-logo-mark.absorbing {
-    animation: maya-logo-absorb 0.9s ease-out;
-  }
-  @keyframes maya-logo-absorb {
-    0%   { filter: drop-shadow(0 0 6px rgba(180,210,255,0.4)); transform: scale(1); }
-    35%  { filter: drop-shadow(0 0 22px rgba(220,235,255,0.95)); transform: scale(1.35); }
-    100% { filter: drop-shadow(0 0 6px rgba(180,210,255,0.4)); transform: scale(1); }
-  }
 
   /* v10.1: FAVORITES SCREEN — now a sibling section inside #screens,
      stacked beneath the inspo screen and snapped via native scroll-snap.
@@ -2511,11 +2501,10 @@
   #submit-btn { display: none; }
   #garment-modal[data-mode="submit"] #submit-btn { display: inline-block; }
 
-  /* v11.4: Submit button matches the voice-bar pill (tap-to-listen / tap
-     to visualize) family — same dimensions, padding, border weight, glass.
-     The "send" cue is its own short-radius pulsing glow that sits *behind*
-     the pill (via ::after) so the pulse can be fast and bright without
-     ballooning the chip's footprint. */
+  /* v11.4/v11.6: Submit button matches the voice-bar pill (tap-to-listen /
+     tap-to-visualize) family — same dimensions, padding, border weight,
+     glass. The send-cue lives on a ::after pseudo so the pulse can be
+     fast and bright without ballooning the chip's footprint. */
   .viewer-submit-btn {
     position: relative;
     display: inline-flex; align-items: center; justify-content: center;
@@ -2537,8 +2526,7 @@
       0 4px 16px rgba(0,0,0,0.22);
     transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
   }
-  /* The starlight halo lives behind the pill — small radius, fast pulse,
-     never spills past the surrounding area. */
+  /* Halo lives behind the pill — small radius, fast pulse, never spills. */
   .viewer-submit-btn::after {
     content: '';
     position: absolute; inset: -2px;
@@ -2567,9 +2555,9 @@
     transform: translateY(-1px);
   }
 
-  /* v11.4: tiny 2-line piece-summary that sits directly above Submit.
-     Only visible in data-mode="submit". Hidden by default; switched on in
-     submit mode (the -webkit-box display preserves the 2-line clamp). */
+  /* v11.4/v11.6: 2-line italic Cormorant piece-summary above Submit.
+     Hidden by default; switched on in submit mode (the -webkit-box
+     display preserves the 2-line clamp). */
   #viewer-piece-summary {
     display: none;
     max-width: min(640px, 75vw);
@@ -2928,21 +2916,14 @@
   #thankyou.show { opacity: 1; pointer-events: auto; }
   #thankyou .ty-title {
     font-family: 'Cormorant Garamond', serif;
-    font-weight: 600;
-    /* v11.4: shrunk to fit longer copy ("Sent to Mana Siyo"). */
-    font-size: clamp(42px, 7vw, 92px);
+    /* v11.6: clean text — no glow, no breathing. Lighter weight so it
+       doesn't shout. Reads sharp against the blurred background. */
+    font-weight: 300;
+    font-size: clamp(64px, 11vw, 128px);
     color: #ffffff;
-    letter-spacing: 0.18em;
-    text-shadow:
-      0 0 56px rgba(180,210,255,0.55),
-      0 0 112px rgba(180,210,255,0.28);
-    animation: maya-ty-breathe 4s ease-in-out infinite;
+    letter-spacing: 0.16em;
+    text-shadow: none;
   }
-  @keyframes maya-ty-breathe {
-    0%, 100% { text-shadow: 0 0 56px rgba(180,210,255,0.45), 0 0 112px rgba(180,210,255,0.22); }
-    50%      { text-shadow: 0 0 80px rgba(180,210,255,0.70), 0 0 160px rgba(180,210,255,0.38); }
-  }
-  /* v11.4: small Jost sub-eyebrow under the title. */
   #thankyou .ty-sub {
     font-family: 'Jost', sans-serif;
     font-size: 9px; font-weight: 300;
@@ -3272,12 +3253,12 @@
   <button class="page-dot" id="dot-2" onclick="setScreen(1)" title="Favorites"></button>
 </div>
 
-<!-- v9.13: thank-you overlay — full screen after Submit. Dismisses on any
-     click or keypress.
-     v11.4: auto-dismiss after 4s, new copy. -->
+<!-- v9.13: thank-you overlay — full screen after Submit.
+     v11.6: title is "Thank you" (clean, no glow); subtitle "sent to Mana Siyo".
+     Dismisses on any click / touch / Esc / Enter / Space, or after 4 s. -->
 <div id="thankyou">
-  <div class="ty-title">Sent to Mana Siyo</div>
-  <div class="ty-sub">saved to your Clients folder</div>
+  <div class="ty-title">Thank you</div>
+  <div class="ty-sub">sent to Mana Siyo</div>
 </div>
 
 <!-- v5.8: splash gate. Logo removed (raster looks pixelated at large
@@ -3477,7 +3458,7 @@
   <div id="viewer-fabrics"></div>
   <div id="viewer-refs"></div>
   <div id="modifications-bar"></div>
-  <!-- v11.4: 2-line italic piece summary, only shown in submit mode. -->
+  <!-- v11.4/v11.6: 2-line italic piece summary, only shown in submit mode. -->
   <div id="viewer-piece-summary"></div>
   <div id="viewer-actions" style="display:flex;gap:18px;justify-content:center;flex-wrap:wrap">
     <!-- v10.3: state-aware Modify pill —
@@ -3516,18 +3497,16 @@
      (#favorites-screen above). -->
 
 <!-- v5: in-house fabrics drawer (top-bar Fabrics button)
-     v11.4: small ← Back text link replaces the × close (matches avatar
-     submenu). Rescan button removed. Upload stays on the right side. -->
+     v11.4: small ← Back text link replaces the × close. Rescan removed.
+     v11.9: Upload removed too. Fabrics is read-only — the in-house
+     library only. Client-brought fabric swatches go on the moodboard
+     instead, by drag-and-drop onto the canvas like any other inspo. -->
 <div id="fabrics-drawer">
   <button class="fabrics-back" onclick="closeFabricsDrawer()" title="Back to menu" aria-label="Back">&#8592; Back</button>
   <div class="fabrics-drawer-header">
     <div>
       <div class="fabrics-drawer-title">In-house fabrics</div>
       <div class="fabrics-drawer-sub" id="fabrics-drawer-sub">no swatches loaded yet</div>
-    </div>
-    <div class="fabrics-drawer-actions">
-      <button class="top-btn subtle" onclick="document.getElementById('fabrics-upload-input').click()" title="Add swatch photos">Upload</button>
-      <input type="file" id="fabrics-upload-input" accept="image/*" multiple style="display:none" />
     </div>
   </div>
   <div class="fabrics-drawer-body" id="fabrics-drawer-body"></div>
@@ -3816,7 +3795,19 @@ function showToast(msg, isError) {
   t.classList.toggle('error', !!isError);
   t.classList.add('show');
   clearTimeout(showToast._t);
-  showToast._t = setTimeout(() => t.classList.remove('show'), isError ? 4500 : 2500);
+  // v11.5/v11.6: errors stay 12 s (was 4.5 s) so they can be read. Tap to
+  // dismiss either kind immediately.
+  const dur = isError ? 12000 : 2500;
+  showToast._t = setTimeout(() => t.classList.remove('show'), dur);
+  if (!showToast._wired) {
+    t.style.cursor = 'pointer';
+    t.title = 'Tap to dismiss';
+    t.addEventListener('click', () => {
+      clearTimeout(showToast._t);
+      t.classList.remove('show');
+    });
+    showToast._wired = true;
+  }
 }
 function showError(msg) {
   // v5.4: friendlier framing when OpenAI's safety system rejects a request
@@ -4166,46 +4157,30 @@ function removeItem(id) {
   updateCount();
 }
 
-// v11.4: When Visualize is pressed we vacuum every card on the canvas into
-// the top-left logo over ~3 seconds, then splice them from items[]. This
-// "caches away" the design intent — anything the user says next lands on a
-// fresh canvas and won't bleed into the render that's coming back. The card
-// summaries we needed (titles, tags) are snapshotted by the caller before
-// this fires, so the new image still gets its refs cluster.
-function suckCardsIntoLogo() {
-  const logo = document.getElementById('top-left-brand');
-  let targetX = 24, targetY = 24;
-  if (logo) {
-    const r = logo.getBoundingClientRect();
-    targetX = r.left + r.width / 2;
-    targetY = r.top + r.height / 2;
-  }
-  const targets = items.filter(it => it.el);
+// v11.6: When Visualize is pressed, the floating text/reference cards
+// quietly fade out IN PLACE over ~2 s, then splice from items[]. Image
+// cards (uploaded inspo + Maya visions) are NOT touched — they stay
+// exactly where they are. This replaces the older suck-into-logo
+// ceremony that was inadvertently vacuuming image cards too.
+//
+// The card summaries we need (titles, tags) get snapshotted by the
+// caller BEFORE this fires, so the new render can still attach a refs
+// hover-cluster on its image card.
+function fadeOutFloatingCards() {
+  const targets = items.filter(it =>
+    it.el && !(it.card.kind === 'inspo' && it.card.image)
+  );
   if (!targets.length) return;
   targets.forEach((it, idx) => {
-    const elRect = it.el.getBoundingClientRect();
-    const dx = targetX - (elRect.left + elRect.width / 2);
-    const dy = targetY - (elRect.top + elRect.height / 2);
-    const rot = (idx % 2 ? -1 : 1) * (8 + (idx % 5) * 3);
-    it.el.style.transition = 'transform 2.6s cubic-bezier(0.16,1,0.3,1), opacity 2.6s cubic-bezier(0.16,1,0.3,1), filter 2.6s ease';
-    it.el.style.willChange = 'transform, opacity, filter';
-    // small stagger so the cards don't all leave in lockstep
+    it.el.style.transition = 'opacity 2.0s ease';
+    it.el.style.willChange = 'opacity';
+    // small stagger so the cards don't all disappear in lockstep
     setTimeout(() => {
-      it.el.style.transform = `translate(${dx}px, ${dy}px) scale(0.04) rotate(${rot}deg)`;
       it.el.style.opacity = '0';
-      it.el.style.filter = 'blur(2px)';
       it.el.style.pointerEvents = 'none';
-    }, idx * 60);
+    }, idx * 40);
   });
-  // Logo "absorption" pulse — fires partway through, peaks as the cards land.
-  setTimeout(() => {
-    const mark = logo && logo.querySelector('.maya-logo-mark');
-    if (mark) {
-      mark.classList.add('absorbing');
-      setTimeout(() => mark.classList.remove('absorbing'), 900);
-    }
-  }, 1700);
-  // After the animation, splice them from items[] and drop the DOM nodes.
+  // After the fade, splice them from items[] and drop the DOM nodes.
   setTimeout(() => {
     targets.forEach(it => {
       if (it.el && it.el.parentNode) it.el.remove();
@@ -4213,11 +4188,10 @@ function suckCardsIntoLogo() {
       if (idx >= 0) items.splice(idx, 1);
     });
     updateCount();
-    // Save the now-empty live state. The saved session snapshot (from a
-    // prior Save) still holds the cards. The render about to arrive will
-    // place itself onto an empty canvas.
+    // Persist the now-trimmed live state. Saved-session snapshots taken
+    // earlier still contain the cards verbatim.
     if (typeof _persistSession === 'function') _persistSession();
-  }, 2900);
+  }, 2200);
 }
 
 // After a successful Visualize, every floating (non-image, non-consumed) card
@@ -4225,8 +4199,8 @@ function suckCardsIntoLogo() {
 // hover-only chip beneath that image. The floating cards animate toward the
 // image and fade out. Card data stays in `items` so save/PDF still has it,
 // just marked consumed so it doesn't feed the next prompt.
-// v11.4: with suckCardsIntoLogo now firing on press, this function usually
-// finds nothing to consume — it stays as a safety no-op for legacy paths.
+// v11.6: with fadeOutFloatingCards firing on press, this function usually
+// finds nothing to consume — kept as a safety no-op for legacy paths.
 function consumeFloatingCards() {
   const targets = items.filter(i =>
     !i.consumed && !(i.card.kind === 'inspo' && i.card.image)
@@ -4479,7 +4453,7 @@ function _renderFavoritesScroller() {
 // v9.12: open the standard image viewer but in a stripped-down "submit"
 // mode — version nav, refs, mods bar, Listen/Modify/Switch all hidden;
 // only the floating × and a glowing Submit button remain.
-// v11.4: also drops a 2-line italic piece-summary just above Submit.
+// v11.4/v11.6: also drops a 2-line italic piece-summary just above Submit.
 function openFavoriteForSubmit(itemId) {
   openImageViewer(itemId);
   const modal = document.getElementById('garment-modal');
@@ -4491,9 +4465,10 @@ function openFavoriteForSubmit(itemId) {
   }
 }
 
-// v11.4: build a short 2-line description of the piece. Falls through these
-// signals in priority order: card.caption (set on render to dream_outcome),
-// lastSummary.dream_outcome, lastSummary._paragraphs.vision, or a default.
+// v11.4/v11.6: build a short 2-line description of the piece. Priority:
+// card.caption (set on render to dream_outcome), lastSummary.dream_outcome,
+// lastSummary._paragraphs.vision, then a default. Hard-capped at 220 chars
+// so the line-clamp box doesn't have to fight a wall of text.
 function _buildPieceSummaryLine(item) {
   const caption = item && item.card && item.card.caption;
   const dream   = lastSummary && lastSummary.dream_outcome;
@@ -4501,9 +4476,7 @@ function _buildPieceSummaryLine(item) {
   let txt = caption || dream || para || '';
   txt = (txt || '').toString().trim();
   if (!txt) return 'A dream garment, made just for them.';
-  // Hard cap so the clamp box never has to fight a 600-char monster.
   if (txt.length > 220) txt = txt.slice(0, 217).trimEnd() + '…';
-  // Tail period if it doesn't already end in punctuation.
   if (!/[.!?…]$/.test(txt)) txt += '.';
   return txt;
 }
@@ -4555,8 +4528,8 @@ async function _doSubmitConfirmed() {
     showError('Submit failed: ' + (e.message || 'unknown'));
   }
   if (!ty) return;
-  // v11.4: dismiss = ANY click / touch / Esc, OR auto after 4s.
-  // The previous "armed" two-stage thing was buggy — first click did nothing.
+  // v11.4/v11.6: dismiss on ANY click/touch/Esc/Enter/Space, or after 4s.
+  // The previous "armed" two-stage thing made the first tap a no-op — gone.
   let dismissed = false;
   let timer = null;
   const dismiss = (e) => {
@@ -7071,13 +7044,24 @@ function exitPhotoFullscreen() {
 
 function modifySecondary() {
   // v10.12: dispatch by stage.
-  //   listening → stop + apply modifications
+  //   listening → stop + (NEW v11.7) ask for refs → apply modifications
   //   prompt    → Switch fabric
   //   default   → toggle favorite
   if (_modifyStage === 'listening') {
     stopVisualizeListen();
     _setModifyStage('default');
-    applyModifications();   // closes the viewer; new render lands on canvas
+    // v11.7: capture every input applyModifications will need BEFORE we
+    // close the viewer modal (which clears viewerItemId + visualizeModifications).
+    // Then we ask for optional reference images — same picker as the first
+    // Visualize — and only then run the actual modify.
+    _pendingModify = {
+      targetId: viewerItemId,
+      mods: visualizeModifications.slice(),
+      deselected: new Set(viewerDeselected || []),
+      fabricsDeselected: new Set(viewerFabricsDeselected || []),
+    };
+    closeGarmentModal();
+    maybeAskModifyImageRef();
   } else if (_modifyStage === 'prompt') {
     _setModifyStage('default');
     switchFabricForViewer();
@@ -7094,6 +7078,59 @@ function _resetModifyStage() {
     try { stopVisualizeListen(); } catch (_) {}
   }
   _setModifyStage('default');
+}
+
+// v11.7: state carried between modifySecondary (listening branch) and
+// applyModifications, since the picker that runs in between would
+// otherwise lose viewerItemId / visualizeModifications when the viewer
+// modal closed. Also lets the picker resolve to the right continuation
+// (modify vs visualize).
+let _pendingModify     = null;
+let _imageRefAfterPick = null;   // null/'visualize' → _runVisualizeNow; 'modify' → applyModifications
+
+// v11.7: between describing changes and running the modify API call, ask
+// for optional reference images — same multi-select picker as the first
+// Visualize. If nothing on the canvas qualifies, skip the picker.
+async function maybeAskModifyImageRef() {
+  selectedImageReference  = null;
+  selectedImageReferences = [];
+  _imageRefPickedIdxes    = [];
+  // Candidates = any image card on the canvas other than the one being
+  // modified itself. Uploaded inspos AND previous Maya visions both
+  // qualify — either can carry a useful style cue into the next render.
+  const targetId = _pendingModify ? _pendingModify.targetId : null;
+  const candidates = items.filter(i =>
+    i.card.kind === 'inspo' && i.card.image && !i.consumed && i.id !== targetId
+  );
+  if (!candidates.length) {
+    await _applyModifyWithPendingState();
+    return;
+  }
+  _imageRefCandidates = candidates;
+  _imageRefAfterPick  = 'modify';
+  const grid = document.getElementById('image-ref-grid');
+  grid.innerHTML = candidates.map((it, idx) =>
+    '<div class="fabric-pick" data-idx="' + idx + '" onclick="pickImageRef(' + idx + ')">' +
+      '<div class="swatch" style="background-image:url(\'' + it.card.image + '\')"></div>' +
+      '<div class="label">' + escapeHtml(it.card.title || 'inspo') + '</div>' +
+      '<div class="order-badge"></div>' +
+    '</div>'
+  ).join('');
+  updateImageRefConfirm();
+  document.getElementById('image-ref-modal').classList.add('open');
+}
+
+// Restore the captured state into the globals that applyModifications
+// expects, then run the modify. closeGarmentModal had cleared them.
+async function _applyModifyWithPendingState() {
+  if (_pendingModify) {
+    viewerItemId            = _pendingModify.targetId;
+    visualizeModifications  = _pendingModify.mods.slice();
+    viewerDeselected        = _pendingModify.deselected;
+    viewerFabricsDeselected = _pendingModify.fabricsDeselected;
+    _pendingModify = null;
+  }
+  await applyModifications();
 }
 
 // Modify the image currently open in the viewer, in place.
@@ -7170,18 +7207,40 @@ async function applyModifications() {
     `that wasn't explicitly listed in the modifications or removals.` + FRAMING_MANDATE;
   try {
     // v9.9: anchor stack for Modify —
-    //   image[0] = previous render (the canvas this Modify is editing)
-    //   image[1] = client face photo (if any) — identity reference
-    // The face descriptor clause is appended too so the model has BOTH
-    // pixel and text anchors for identity.
+    //   image[0]   = previous render (the canvas this Modify is editing)
+    //   image[1]   = client face photo (if any) — identity reference
+    //   image[2+]  = v11.7: optional STYLE references the user picked in
+    //               the image-ref picker just before this call. Palette,
+    //               fabric, and mood only — never face or composition.
     const facePhotoMod = (lastSummary && lastSummary._face_photo) || null;
+    const refsSnapMod = (selectedImageReferences && selectedImageReferences.length)
+                          ? selectedImageReferences.slice()
+                          : (selectedImageReference ? [selectedImageReference] : []);
+    // v11.7: snapshot taken — clear the globals so they don't carry into
+    // the next Visualize.
+    selectedImageReference  = null;
+    selectedImageReferences = [];
     const modAnchors = prevImage ? [prevImage] : [];
     if (prevImage && facePhotoMod) modAnchors.push(facePhotoMod);
-    const modAnchorMap = facePhotoMod && prevImage
-      ? 'Image 1 is the current design — apply the modifications below to it. ' +
-        'Image 2 is the client\'s face — this is the ONLY face that may appear in the output; ' +
-        'preserve their identity precisely. '
-      : '';
+    for (const r of refsSnapMod) modAnchors.push(r.dataUrl);
+    // Anchor map describes what each image slot represents to the model.
+    let modAnchorMap = '';
+    if (prevImage) {
+      modAnchorMap = 'Image 1 is the current design — apply the modifications below to it. ';
+      let nextSlot = 2;
+      if (facePhotoMod) {
+        modAnchorMap += 'Image ' + nextSlot + ' is the client\'s face — this is the ONLY face that may appear in the output; ' +
+                        'preserve their identity precisely. ';
+        nextSlot++;
+      }
+      if (refsSnapMod.length === 1) {
+        modAnchorMap += 'Image ' + nextSlot + ' is a STYLE reference — borrow ONLY palette, fabric character, and mood; ' +
+                        'do NOT copy its garment, pose, or composition; IGNORE any faces shown. ';
+      } else if (refsSnapMod.length > 1) {
+        modAnchorMap += 'Images ' + nextSlot + '+ are STYLE references — borrow ONLY palette, fabric character, and mood; ' +
+                        'do NOT copy their garments, poses, or compositions; IGNORE any faces shown. ';
+      }
+    }
     // v10.12: every Modify call locks in measurements + face descriptors.
     const editPromptFull = modAnchorMap + editPrompt + buildMeasClause() + buildFaceDescriptorClause();
     const dataUrl = prevImage
@@ -7684,14 +7743,15 @@ async function _runVisualizeNow() {
   if (modsSnap.length) {
     prompt += '. Apply these client modifications: ' + modsSnap.join('; ');
   }
-  // v11.4: snapshot the prompt-driving cards BEFORE the suck animation
-  // vacuums them. These tag+title pairs become the refs cluster on the
-  // resulting render so the user can still see what fed it.
+  // v11.6: snapshot the prompt-driving cards (tag + title) BEFORE the
+  // fade animation removes them, so the resulting render still gets a
+  // refs hover-cluster showing what fed it.
   const cardsRefsSnap = items
     .filter(i => !i.consumed && !(i.card.kind === 'inspo' && i.card.image))
     .map(i => ({ tag: i.card.tag, title: i.card.title }));
-  // Fire the suck-into-logo ceremony. ~3s; runs in parallel with the API.
-  try { suckCardsIntoLogo(); } catch (_) {}
+  // Fire the quiet fade. ~2 s; runs in parallel with the API call below.
+  // Only non-image cards fade — image cards stay exactly where they are.
+  try { fadeOutFloatingCards(); } catch (_) {}
   try {
     // Three paths, all face-locked:
     //   path 1: face photo set                  → /edits on the face photo (face wins, refs are text hints)
@@ -7796,7 +7856,7 @@ async function _runVisualizeNow() {
             dataUrl: f.dataUrl  // runtime-only; stripped before persist
           }))
         : null,
-      // v11.4: refs come from the pre-suck snapshot, not the live canvas.
+      // v11.6: refs come from the pre-fade snapshot, not the live canvas.
       refs: cardsRefsSnap.length ? cardsRefsSnap : null,
       visualReferenceTitle: refsSnap[0] ? refsSnap[0].title : null
     }, 0);
@@ -7864,6 +7924,26 @@ document.addEventListener('keydown', e => {
   const gm = document.getElementById('garment-modal');
   if (gm && gm.classList.contains('open') && gm.dataset.photo === 'full') {
     exitPhotoFullscreen();
+    return;
+  }
+  // v11.8: 2a.5 — if voice listening is active in EITHER flow, Escape
+  // cancels the whole transcript and bails. Stays inside whatever view
+  // is currently open (viewer modal stays open, drawer stays open, etc.).
+  //
+  //   Modify (in-viewer) listen → stop, clear visualizeModifications,
+  //   reset stage to default so the buttons read Modify / Switch fabric.
+  //
+  //   Main voice bar listen → stop. Cards already placed on the canvas
+  //   stay (they're committed); only the in-progress capture is cancelled.
+  if (typeof visualizeListening !== 'undefined' && visualizeListening) {
+    try { stopVisualizeListen(); } catch (_) {}
+    visualizeModifications = [];
+    if (typeof renderModificationsBar === 'function') renderModificationsBar();
+    if (typeof _setModifyStage === 'function') _setModifyStage('default');
+    return;
+  }
+  if (typeof isListening !== 'undefined' && isListening) {
+    try { stopListening(); } catch (_) {}
     return;
   }
   // 2b. Open modal → run its closer
@@ -8329,39 +8409,11 @@ function closeFabricsDrawer() {
   document.getElementById('fabrics-drawer').classList.remove('open');
 }
 
-// v5.3: copy uploaded JPEGs into the uploads/fabrics folder via createWritable,
-// then trigger a re-scan. Saves Fromsa the step of dragging files in Finder.
-async function uploadFabricsFromInput(files) {
-  if (!files || !files.length) return;
-  let dir = await getFabricsFolder({ createIfMissing: true });
-  if (!dir) {
-    showError('Pick a fabrics folder first');
-    return;
-  }
-  let copied = 0;
-  for (const file of Array.from(files)) {
-    if (!/^image\//.test(file.type) && !/\.(jpe?g|png|webp)$/i.test(file.name)) continue;
-    try {
-      const fh = await dir.getFileHandle(file.name, { create: true });
-      const w  = await fh.createWritable();
-      await w.write(file);
-      await w.close();
-      copied++;
-    } catch (e) {
-      console.warn('[Maya fabric upload]', file.name, e);
-    }
-  }
-  showToast(copied
-    ? ('Uploaded ' + copied + ' swatch' + (copied === 1 ? '' : 'es') + ', scanning…')
-    : 'No images uploaded');
-  if (copied) await scanFabricsFolder(false);
-}
-
-// Wire the hidden file input (mirrors the inspo-file pattern elsewhere in the script).
-document.getElementById('fabrics-upload-input').addEventListener('change', e => {
-  uploadFabricsFromInput(e.target.files);
-  e.target.value = '';
-});
+// v11.9: uploadFabricsFromInput + its hidden #fabrics-upload-input listener
+// removed. The Fabrics drawer is read-only now — it shows the in-house
+// library only. Client-brought swatches go on the moodboard by drag-and-drop
+// onto the main canvas (handled by handleInspoUpload via the window 'drop'
+// listener), which is where references belong anyway.
 
 // ────────────────────────────────────────────────────────────
 // V5 — IN-HOUSE vs SOURCEABLE flow (Visualize gate)
@@ -8567,6 +8619,9 @@ async function maybeAskImageRef() {
   selectedImageReference = null;
   selectedImageReferences = [];
   _imageRefPickedIdxes = [];
+  // v11.7: ensure a stale 'modify' continuation from a cancelled flow
+  // doesn't route this Visualize picker to applyModifications by mistake.
+  _imageRefAfterPick = null;
   // Eligible candidates = any card with an image that is *not* a previously
   // Maya-generated vision being remixed (we leave those for Modify).
   const candidates = items.filter(i =>
@@ -8626,17 +8681,26 @@ async function confirmImageRef() {
   const refs = _imageRefPickedIdxes.map(i => _imageRefCandidates[i])
     .map(it => ({ dataUrl: it.card.image, title: it.card.title || 'inspo' }));
   // Keep the legacy single-ref var for backward-compat code paths; also
-  // expose the array. _runVisualizeNow consumes the array when present.
+  // expose the array. _runVisualizeNow / applyModifications consume the
+  // array when present.
   selectedImageReference = refs[0];
   selectedImageReferences = refs;
   closeImageRefPicker();
-  await _runVisualizeNow();
+  // v11.7: route to modify-apply if the picker was opened from modifySecondary.
+  const after = _imageRefAfterPick;
+  _imageRefAfterPick = null;
+  if (after === 'modify') await _applyModifyWithPendingState();
+  else                    await _runVisualizeNow();
 }
 async function skipImageRef() {
   selectedImageReference = null;
   selectedImageReferences = [];
   closeImageRefPicker();
-  await _runVisualizeNow();
+  // v11.7: same routing as confirmImageRef — skip is just empty refs.
+  const after = _imageRefAfterPick;
+  _imageRefAfterPick = null;
+  if (after === 'modify') await _applyModifyWithPendingState();
+  else                    await _runVisualizeNow();
 }
 
 // Compact one-line description of a fabric for the image prompt.
@@ -9386,7 +9450,8 @@ async function doSaveToCloud() {
   }
 
   // 2) Upload each file sequentially.
-  // v11.4: track failures so the toast doesn't pretend everything worked.
+  // v11.4/v11.6: track ok/failed so the toast tells the truth instead of
+  // pretending every file landed when in fact they all failed.
   let done = 0, ok = 0, failed = 0;
   const failures = [];
   for (const f of queue) {
@@ -9406,9 +9471,8 @@ async function doSaveToCloud() {
         }),
       });
     } catch (e) {
-      // Network / fetch error (e.g. body too large at Edge → 413).
       failed++;
-      failures.push({ name: f.name, status: 0, detail: e && e.message || 'fetch failed' });
+      failures.push({ name: f.name, status: 0, detail: (e && e.message) || 'fetch failed' });
       console.warn('[Maya cloud upload] network', f.name, e);
       continue;
     }
@@ -9427,11 +9491,9 @@ async function doSaveToCloud() {
   if (failed === 0) {
     showToast('Submitted — ' + folder_name);
   } else if (ok === 0) {
-    // Everything failed. Folder is in Drive but empty.
     showError('Submit reached Drive but uploaded 0/' + queue.length + ' files. ' +
               (failures[0] ? '(' + failures[0].status + ' ' + failures[0].detail + ')' : ''));
   } else {
-    // Partial success — show counts so it's not invisible.
     showToast('Submitted — ' + folder_name + ' (' + ok + '/' + queue.length + ' files, ' + failed + ' failed)');
   }
   return { folder_id, folder_name, total: queue.length, ok, failed, failures };
