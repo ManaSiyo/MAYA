@@ -1111,10 +1111,12 @@
   .modal-img.loaded { opacity: 1; }
   #garment-image { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; opacity: 0; transition: opacity 0.35s ease; }
   #garment-image.loaded { opacity: 1; }
-  /* version navigator inside the image viewer */
+  /* version navigator inside the image viewer.
+     v11.12: min-height down (was 22 px) so the visual baseline doesn't
+     leave dead space under the arrows. */
   #viewer-version-nav {
     display: flex; align-items: center; justify-content: center;
-    gap: 18px; margin-top: 4px; min-height: 22px;
+    gap: 18px; margin-top: 4px; min-height: 0;
   }
   /* v10: nav arrows canon-normalized — same recipe as round close ×. */
   #viewer-version-nav .nav-arrow {
@@ -1155,14 +1157,19 @@
   #viewer-refs {
     width: 75vw;
     max-width: 75vw;
-    display: flex; flex-wrap: wrap; gap: 5px;
+    display: flex; flex-wrap: wrap;
+    /* v11.12: tighter chip packing — 4 px between chips horizontally and
+       vertically. Was 5 px in v11.10. */
+    gap: 4px;
     align-content: flex-start;
     justify-content: center;
-    /* v11.10: tighter gap between the visualized image and the chip strip.
-       Was 8px above; halved. */
+    /* v11.12: match the gap that sits between the image and the version
+       picker (4 px top margin on #viewer-version-nav). Was 4 px in v11.10
+       too, but the v11.11 min-height: 22 px on the version-nav added a
+       perceived dead band — that's removed now, so this 4 px reads true. */
     margin: 4px auto 0;
-    padding: 2px 14px;
-    max-height: calc(3 * 24px + 2 * 5px + 6px);
+    padding: 0 14px;
+    max-height: calc(3 * 24px + 2 * 4px + 4px);
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
@@ -2650,17 +2657,33 @@
     border-color: rgba(235,245,255,0.55);
     animation: maya-vision-pulse 2.4s ease-in-out infinite;
   }
-  /* Small "← Back" text link, matches drawer-back styling. */
+  /* v11.12: × close — small circular glass button. Sits next to Submit.
+     Was a "← Back" text link in v11.10; the user reads it as a toggle-out
+     of modify mode, not a navigation step. */
   .modify-back-link {
-    background: none; border: none;
+    background: transparent;
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 50%;
+    width: 28px; height: 28px;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0;
     font-family: 'Jost', sans-serif;
-    font-size: 10px; font-weight: 300;
-    letter-spacing: 0.15em; text-transform: uppercase;
-    color: rgba(245,250,255,0.65);
-    cursor: pointer; padding: 4px 10px;
-    transition: color 0.2s;
+    font-size: 14px; line-height: 1;
+    color: rgba(245,250,255,0.85);
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+            backdrop-filter: blur(22px) saturate(180%);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,0.28),
+      inset 0 -1px 1px rgba(0,0,0,0.18),
+      0 4px 16px rgba(0,0,0,0.22);
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
   }
-  .modify-back-link:hover { color: rgba(255,255,255,1); }
+  .modify-back-link:hover {
+    color: rgba(255,255,255,1);
+    border-color: rgba(255,255,255,0.42);
+    background: rgba(255,255,255,0.04);
+  }
   @keyframes maya-listen-pulse {
     0%, 100% { box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
@@ -3523,10 +3546,12 @@
       <button class="modal-text-btn viewer-modify-btn" id="modify-switch-fabric" onclick="switchFabricForViewer()">Switch Fabric</button>
       <button class="modal-text-btn viewer-modify-btn" id="modify-add-ref"       onclick="modifyAddReference()">Add Reference</button>
     </div>
-    <!-- v11.10: modify mode row 2 — Submit (apply the mod) + small Back link. -->
+    <!-- v11.10: modify mode row 2 — Submit (apply the mod) + small X exit.
+         v11.12: ← Back replaced with × close — it's a toggle out of modify
+         mode, not a navigation step. -->
     <div class="viewer-row" id="viewer-row-modify-2">
       <button class="modal-text-btn viewer-modify-submit" id="modify-submit" onclick="modifySubmit()">Submit</button>
-      <button class="modify-back-link" id="modify-back" onclick="modifyBack()">&#8592; Back</button>
+      <button class="modify-back-link" id="modify-back" onclick="modifyBack()" aria-label="Close modify" title="Close modify (Esc)">&#215;</button>
     </div>
     <!-- v9.12: shown only when garment-modal[data-mode="submit"] — favorites click path -->
     <button class="modal-text-btn viewer-submit-btn" id="submit-btn" onclick="submitFavorite()">Submit</button>
@@ -9126,12 +9151,17 @@ async function _firebaseRestoreSession() {
       console.warn('[maya.firebase] restore item', e);
     }
   }
-  if (!lastSummary    && cloud.lastSummary)    lastSummary    = cloud.lastSummary;
+  const summaryNew = !lastSummary && !!cloud.lastSummary;
+  if (summaryNew) lastSummary = cloud.lastSummary;
   if (!lastTranscript && cloud.lastTranscript) lastTranscript = cloud.lastTranscript;
   if (!currentClientName && cloud.currentClientName) currentClientName = cloud.currentClientName;
-  if (added) {
-    if (typeof refreshDrawerClientName     === 'function') refreshDrawerClientName();
-      console.log('[maya.firebase] restored', added, 'item(s) from cloud');
+  if (added || summaryNew) {
+    if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
+    // v11.12: rerender the notes panel when a cloud-restored summary
+    // brings designer_notes / non_negotiables / constraints back. Without
+    // this the data lives in memory but the drawer stays empty.
+    if (summaryNew && typeof renderNotesPanel === 'function') renderNotesPanel(lastSummary);
+    console.log('[maya.firebase] restored', added, 'item(s) from cloud');
   }
 }
 async function _restoreSession() {
@@ -9161,7 +9191,18 @@ async function _restoreSession() {
     }
     // Refresh dependent UI.
     if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
-      console.log('[Maya] session restored from IndexedDB');
+    // v11.12: repopulate the drawer notes panel from the restored
+    // lastSummary so designer_notes, non_negotiables, constraints,
+    // design_ideas, sourcing_needs all come back with the session. The
+    // panel was silently empty before this — the data was in memory but
+    // never re-rendered on restore.
+    if (typeof renderNotesPanel === 'function') renderNotesPanel(lastSummary);
+    // v11.12: also attach the cached caption to image cards so the
+    // submit-mode piece-summary still has its source when re-opened.
+    if (lastSummary && lastSummary.dream_outcome && typeof attachCaptionToImages === 'function') {
+      try { attachCaptionToImages(lastSummary.dream_outcome); } catch (_) {}
+    }
+    console.log('[Maya] session restored from IndexedDB');
   } catch (e) {
     console.warn('[Maya restore]', e);
   }
