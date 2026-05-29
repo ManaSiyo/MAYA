@@ -1155,12 +1155,14 @@
   #viewer-refs {
     width: 75vw;
     max-width: 75vw;
-    display: flex; flex-wrap: wrap; gap: 6px;
+    display: flex; flex-wrap: wrap; gap: 5px;
     align-content: flex-start;
     justify-content: center;
-    margin: 8px auto 0;
-    padding: 4px 14px;
-    max-height: calc(3 * 26px + 2 * 6px + 8px);
+    /* v11.10: tighter gap between the visualized image and the chip strip.
+       Was 8px above; halved. */
+    margin: 4px auto 0;
+    padding: 2px 14px;
+    max-height: calc(3 * 24px + 2 * 5px + 6px);
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
@@ -1171,15 +1173,15 @@
     background: rgba(255,255,255,0.18); border-radius: 100px;
   }
   #viewer-refs::-webkit-scrollbar-track { background: transparent; }
-  /* v10: viewer ref chip — canon glass pill. */
+  /* v10: viewer ref chip — canon glass pill. v11.10: one notch smaller. */
   .viewer-ref-chip {
     background: transparent;
     border: 0.5px solid rgba(255,255,255,0.22);
     border-radius: 100px;
-    padding: 6px 14px;
+    padding: 5px 12px;
     font-family: 'Jost', sans-serif;
     font-weight: 300;
-    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     backdrop-filter: blur(22px) saturate(180%);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
@@ -1192,6 +1194,12 @@
   }
   .viewer-ref-chip.deselected {
     color: rgba(245,250,255,0.42);
+    /* v11.10: strike-through the chip text so the cancellation reads
+       instantly. The pulsing border below still flags it as a pending
+       action — the line confirms what's being cut. */
+    text-decoration: line-through;
+    text-decoration-color: rgba(245,250,255,0.55);
+    text-decoration-thickness: 0.6px;
     /* pulsing white border applied via .deselected keyframe below */
   }
   .viewer-ref-chip .chip-x {
@@ -1204,15 +1212,11 @@
   }
   .viewer-ref-chip .chip-x:hover { opacity: 1; }
 
-  /* horizontal modifications bullet list under the image */
+  /* v5.20: modifications subtitle stack — newest at the bottom, older
+     fades out. v11.11: removed dead first rule that was fully overridden
+     by this one. */
   #modifications-bar {
     max-width: min(900px, 90vw); margin: 0 auto;
-    display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: center;
-    padding: 4px 0 0; min-height: 14px;
-  }
-  #modifications-bar {
-    max-width: min(900px, 90vw); margin: 0 auto;
-    /* v5.20: vertical stack with newest at the bottom, older fading out */
     display: flex; flex-direction: column; align-items: center; gap: 4px;
     padding: 4px 0 0; min-height: 14px;
     max-height: 56px; overflow: hidden;
@@ -2308,6 +2312,10 @@
   .viewer-fabric-chip.deselected {
     background: rgba(255,255,255,0.02);
     color: rgba(220,225,240,0.55);
+    /* v11.10: strike-through matches the ref-chip treatment. */
+    text-decoration: line-through;
+    text-decoration-color: rgba(220,225,240,0.65);
+    text-decoration-thickness: 0.6px;
     animation: maya-pulse 1.6s ease-in-out infinite;
   }
   .viewer-ref-chip.deselected {
@@ -2609,10 +2617,50 @@
 
   /* v10.3: subtle breathing border on "Listening…" — same starlight family
      but quieter than the Submit hero pulse. */
-  .viewer-default-btn.is-listening {
+  .viewer-default-btn.is-listening,
+  .viewer-modify-btn.is-listening {
     border-color: rgba(245,250,255,0.55);
     animation: maya-listen-pulse 1.8s ease-in-out infinite;
   }
+
+  /* v11.10: viewer rows for the rebuilt Modify flow.
+     Row 1: Tap to Listen · Switch Fabric · Add Reference
+     Row 2: Submit  +  ← Back
+     All hidden by default; stage attribute on #garment-modal swaps which row is visible. */
+  .viewer-row {
+    display: flex; gap: 18px;
+    justify-content: center; align-items: center;
+    flex-wrap: wrap;
+  }
+  #viewer-row-modify-1, #viewer-row-modify-2 { display: none; }
+  #garment-modal[data-stage="modifying"] #viewer-row-default { display: none; }
+  #garment-modal[data-stage="modifying"] #viewer-row-modify-1,
+  #garment-modal[data-stage="modifying"] #viewer-row-modify-2 { display: flex; }
+  #viewer-row-modify-2 { gap: 22px; margin-top: 2px; }
+  /* In submit mode (favorites Submit), hide every Modify-mode chrome. */
+  #garment-modal[data-mode="submit"] #viewer-row-modify-1,
+  #garment-modal[data-mode="submit"] #viewer-row-modify-2,
+  #garment-modal[data-mode="submit"] #viewer-row-default { display: none !important; }
+
+  /* Modify-mode pills — same dimensions / glass as Default pills.
+     Inherits .modal-text-btn base; add modest spacing tweak. */
+  .viewer-modify-btn { min-width: 0; }
+  /* Apply-the-modify Submit pill — uses the same vision pulse as favorite hero. */
+  .viewer-modify-submit {
+    border-color: rgba(235,245,255,0.55);
+    animation: maya-vision-pulse 2.4s ease-in-out infinite;
+  }
+  /* Small "← Back" text link, matches drawer-back styling. */
+  .modify-back-link {
+    background: none; border: none;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(245,250,255,0.65);
+    cursor: pointer; padding: 4px 10px;
+    transition: color 0.2s;
+  }
+  .modify-back-link:hover { color: rgba(255,255,255,1); }
   @keyframes maya-listen-pulse {
     0%, 100% { box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
@@ -3460,16 +3508,26 @@
   <div id="modifications-bar"></div>
   <!-- v11.4/v11.6: 2-line italic piece summary, only shown in submit mode. -->
   <div id="viewer-piece-summary"></div>
-  <div id="viewer-actions" style="display:flex;gap:18px;justify-content:center;flex-wrap:wrap">
-    <!-- v10.3: state-aware Modify pill —
-         default → "Modify" (click prompts for describe)
-         prompt  → "Describe changes" (click starts listening)
-         listening → "Listening…" (pulsing; passive — click does nothing here) -->
-    <button class="modal-text-btn viewer-default-btn" id="modify-primary" onclick="modifyPrimary()">Modify</button>
-    <!-- v10.3: state-aware secondary pill —
-         default/prompt → "Switch fabric"
-         listening      → "Modify" (click stops listening + applies) -->
-    <button class="modal-text-btn viewer-default-btn" id="modify-secondary" onclick="modifySecondary()">Switch fabric</button>
+  <!-- v11.10: viewer-actions is a column now — default row stays as it was,
+       modify mode adds two new rows below (3-pill top, Submit + Back below).
+       Hidden states use data-stage on #garment-modal. -->
+  <div id="viewer-actions" style="display:flex;flex-direction:column;align-items:center;gap:6px">
+    <div class="viewer-row" id="viewer-row-default">
+      <!-- default state — Modify enters the modifying stage; Send to Favorites toggles heart. -->
+      <button class="modal-text-btn viewer-default-btn" id="modify-primary"   onclick="modifyPrimary()">Modify</button>
+      <button class="modal-text-btn viewer-default-btn" id="modify-secondary" onclick="modifySecondary()">Switch fabric</button>
+    </div>
+    <!-- v11.10: modify mode row 1 — Tap to Listen (toggle), Switch Fabric, Add Reference. -->
+    <div class="viewer-row" id="viewer-row-modify-1">
+      <button class="modal-text-btn viewer-modify-btn" id="modify-listen-toggle" onclick="modifyListenToggle()">Tap to Listen</button>
+      <button class="modal-text-btn viewer-modify-btn" id="modify-switch-fabric" onclick="switchFabricForViewer()">Switch Fabric</button>
+      <button class="modal-text-btn viewer-modify-btn" id="modify-add-ref"       onclick="modifyAddReference()">Add Reference</button>
+    </div>
+    <!-- v11.10: modify mode row 2 — Submit (apply the mod) + small Back link. -->
+    <div class="viewer-row" id="viewer-row-modify-2">
+      <button class="modal-text-btn viewer-modify-submit" id="modify-submit" onclick="modifySubmit()">Submit</button>
+      <button class="modify-back-link" id="modify-back" onclick="modifyBack()">&#8592; Back</button>
+    </div>
     <!-- v9.12: shown only when garment-modal[data-mode="submit"] — favorites click path -->
     <button class="modal-text-btn viewer-submit-btn" id="submit-btn" onclick="submitFavorite()">Submit</button>
   </div>
@@ -3549,10 +3607,15 @@
 <div class="modal" id="image-ref-modal">
   <button class="modal-close" onclick="closeImageRefPicker()">Close</button>
   <div class="modal-card">
-    <h2>Use an uploaded image as a visual reference?</h2>
-    <div class="modal-hint">Maya can use the actual image (color, fabric, mood) alongside your fabric and verbal refs.</div>
+    <h2 id="image-ref-title">Use an uploaded image as a visual reference?</h2>
+    <div class="modal-hint" id="image-ref-hint">Maya can use the actual image (color, fabric, mood) alongside your fabric and verbal refs.</div>
     <div class="fabric-pick-grid" id="image-ref-grid"></div>
+    <!-- v11.10: hidden file input for the in-modal "Upload new" button.
+         Available in every flow — uploaded image lands on the moodboard as
+         an inspo card AND gets auto-selected in this picker. -->
+    <input type="file" id="image-ref-upload-input" accept="image/*" style="display:none" />
     <div class="modal-actions">
+      <button class="top-btn subtle" onclick="document.getElementById('image-ref-upload-input').click()">Upload new</button>
       <button class="top-btn subtle" onclick="skipImageRef()">No, refs only</button>
       <button class="top-btn violet" id="image-ref-confirm" onclick="confirmImageRef()">Pick one to continue</button>
     </div>
@@ -4171,16 +4234,16 @@ function fadeOutFloatingCards() {
     it.el && !(it.card.kind === 'inspo' && it.card.image)
   );
   if (!targets.length) return;
+  // v11.10: slower, softer fade — 2.4 s opacity with an "ease-in-out" feel.
+  // Total animation window ≈ 2.6 s end-to-end including the per-card stagger.
   targets.forEach((it, idx) => {
-    it.el.style.transition = 'opacity 2.0s ease';
+    it.el.style.transition = 'opacity 2.4s cubic-bezier(0.4, 0, 0.2, 1)';
     it.el.style.willChange = 'opacity';
-    // small stagger so the cards don't all disappear in lockstep
     setTimeout(() => {
       it.el.style.opacity = '0';
       it.el.style.pointerEvents = 'none';
-    }, idx * 40);
+    }, idx * 30);
   });
-  // After the fade, splice them from items[] and drop the DOM nodes.
   setTimeout(() => {
     targets.forEach(it => {
       if (it.el && it.el.parentNode) it.el.remove();
@@ -4188,10 +4251,8 @@ function fadeOutFloatingCards() {
       if (idx >= 0) items.splice(idx, 1);
     });
     updateCount();
-    // Persist the now-trimmed live state. Saved-session snapshots taken
-    // earlier still contain the cards verbatim.
     if (typeof _persistSession === 'function') _persistSession();
-  }, 2200);
+  }, 2700);
 }
 
 // After a successful Visualize, every floating (non-image, non-consumed) card
@@ -4465,17 +4526,57 @@ function openFavoriteForSubmit(itemId) {
   }
 }
 
-// v11.4/v11.6: build a short 2-line description of the piece. Priority:
-// card.caption (set on render to dream_outcome), lastSummary.dream_outcome,
-// lastSummary._paragraphs.vision, then a default. Hard-capped at 220 chars
-// so the line-clamp box doesn't have to fight a wall of text.
+// v11.10: each favorite's caption is now built from THAT favorite's own
+// ref tags — what specifically fed this render — instead of the shared
+// `dream_outcome` paragraph (which produced near-identical captions
+// across multiple favorites and was full of em-dashes). Grouped by tag
+// type so the line reads like a curated tagline. Em-dashes are scrubbed
+// from any fallback path.
 function _buildPieceSummaryLine(item) {
-  const caption = item && item.card && item.card.caption;
+  if (!item || !item.card) return 'A dream garment, made just for them.';
+
+  const refs = (item.card.refs || []).filter(r => r && r.title);
+  if (refs.length >= 2) {
+    const byTag = {};
+    for (const r of refs) {
+      const k = (r.tag || 'detail').toLowerCase();
+      (byTag[k] = byTag[k] || []).push(r.title.toString().trim());
+    }
+    const pick = (...ks) => ks.flatMap(k => byTag[k] || []);
+    const aesthetic  = pick('aesthetic', 'mood');
+    const silhouette = pick('silhouette');
+    const detail     = pick('detail');
+    const material   = pick('material', 'fabric');
+    const color      = pick('color');
+    const era        = pick('era');
+
+    const parts = []
+      .concat(aesthetic.slice(0, 2))
+      .concat(silhouette.slice(0, 2))
+      .concat(detail.slice(0, 3))
+      .concat(material.slice(0, 2))
+      .concat(color.slice(0, 1))
+      .concat(era.slice(0, 1))
+      .filter(Boolean);
+
+    if (parts.length) {
+      let s = parts.join(', ');
+      // Capitalize first letter, normalize whitespace, strip em-dashes.
+      s = s.replace(/—/g, ',').replace(/,\s*,/g, ',').replace(/\s+/g, ' ').trim();
+      s = s.charAt(0).toUpperCase() + s.slice(1);
+      if (!/[.!?…]$/.test(s)) s += '.';
+      return s;
+    }
+  }
+
+  // Fallback chain — only used if the favorite has fewer than 2 ref tags
+  // (shouldn't happen for normal Maya visions). Em-dashes still stripped.
+  const caption = item.card.caption;
   const dream   = lastSummary && lastSummary.dream_outcome;
   const para    = lastSummary && lastSummary._paragraphs && lastSummary._paragraphs.vision;
-  let txt = caption || dream || para || '';
-  txt = (txt || '').toString().trim();
+  let txt = (caption || dream || para || '').toString().trim();
   if (!txt) return 'A dream garment, made just for them.';
+  txt = txt.replace(/—/g, ', ').replace(/,\s+,/g, ', ').replace(/\s+/g, ' ');
   if (txt.length > 220) txt = txt.slice(0, 217).trimEnd() + '…';
   if (!/[.!?…]$/.test(txt)) txt += '.';
   return txt;
@@ -4551,10 +4652,8 @@ async function _doSubmitConfirmed() {
 // v10.2: ALL custom touch/wheel screen-switch + drawer-toggle handlers
 // deleted. Both axes — vertical (screens) and horizontal (drawer) — are
 // pure native scroll-snap with GPU-paced momentum. The browser owns it.
-function _isInScrollableTarget(target) {
-  if (!target || !target.closest) return false;
-  return !!target.closest('.modal, #notes-drawer, #fabrics-drawer, .picker-grid, #notes-drawer-content');
-}
+// v11.11: _isInScrollableTarget helper removed — was unused after the
+// gesture handlers it served got deleted.
 
 // v10.2: All custom drawer-open/close gesture handlers deleted (~80 lines).
 // Native horizontal scroll-snap on #hscroll handles every gesture path —
@@ -5248,27 +5347,9 @@ function buildMeasurementsTwoColumnHtml(summary) {
 
 // v5.16: render EVERY measurement row, even empty ones, so the printed
 // one-pager reads as a clean template. Empty values render as a faint
-// dotted line where the designer can write in by hand later.
-function buildMeasurementsColumnHtml(summary) {
-  const m = (summary && summary._measurements) || {};
-  return MEASUREMENT_SCHEMA.map(group =>
-    '<div style="margin-bottom:8px">' +
-      '<div style="font-size:7px;letter-spacing:0.3em;text-transform:uppercase;color:#8a8478;padding-bottom:2px;border-bottom:0.25px solid #d6d0c2;margin-bottom:3px">' +
-        escapeHtml(group.section) +
-      '</div>' +
-      group.fields.map(([k, label]) => {
-        const v = m[k];
-        const valueCell = v
-          ? '<span style="font-weight:500;color:#2a2a2e">' + escapeHtml(String(v)) + '</span>'
-          : '<span style="color:#bbb6a8;letter-spacing:0.04em">····</span>';
-        return '<div style="display:flex;justify-content:space-between;font-size:8.5px;line-height:1.55;color:#2a2a2e">' +
-          '<span>' + escapeHtml(label) + '</span>' +
-          valueCell +
-        '</div>';
-      }).join('') +
-    '</div>'
-  ).join('');
-}
+// v11.11: buildMeasurementsColumnHtml removed — no callers. Was a sidebar
+// renderer for a long-retired one-pager layout. The current page-1 PDF
+// uses a single measurements row at the bottom (see buildPage1Html).
 
 // v5.19: keep the drawer's client input in sync with state. The pill is
 // now an editable <input> — placeholder reads 'client'; once Fromsa types,
@@ -5317,7 +5398,6 @@ function toggleFavorite(itemId) {
     const fb = it.el.querySelector('.fav-btn');
     if (fb) fb.classList.toggle('is-fav', it.card.favorited);
   }
-  refreshDrawerFavoritesCount();
   // v10.9: when a vision card is favorited, fire a one-shot construction
   // dissection via gpt-4.1 vision. Result is cached on card._dissection
   // and shown under the favorite card on hover. Re-renders the favorites
@@ -5394,12 +5474,11 @@ Rules:
 - "fabric_source": "in-house" if the fabric reads as a common atelier swatch (wool, linen, cotton), "sourceable" if it looks specialty (lurex, technical, embroidered).
 - Be conservative with hardware — only list what you can see.`;
 
-function refreshDrawerFavoritesCount() {
-  const btn = document.getElementById('drawer-favorites-btn');
-  if (!btn) return;
-  const n = items.filter(i => i.card.favorited).length;
-  btn.textContent = n ? ('Favorites · ' + n) : 'Favorites';
-}
+// v11.11: refreshDrawerFavoritesCount removed — its target element
+// (#drawer-favorites-btn) was retired when Favorites became a full
+// screen. The function was a 5-line if (!btn) return no-op, and the
+// surviving call sites are now guarded by typeof checks so removing it
+// here is a no-behavior-change cleanup.
 
 // v9.0: openFavoritesModal/closeFavoritesModal/scrollToFavorite all
 // removed — Favorites is now a full screen. Any lingering call sites
@@ -5840,7 +5919,6 @@ function toggleNotesDrawer(force) {
   if (d && target === 0) d.classList.remove('viewing-avatar');
   if (target > 0) {
     refreshDrawerClientName();
-    refreshDrawerFavoritesCount();
   }
 }
 
@@ -6376,6 +6454,48 @@ function placeItemUnique(card, delay) {
     !i.consumed && titlesAreSimilar(i.card.title, card.title)
   );
   if (!exists) placeItem(card, delay);
+}
+
+// v11.10: gate Visualize on the voice pipeline being idle. Called BEFORE
+// Visualize proceeds. Force-runs any tail-end transcript batch (the
+// background interval only fires while isListening; once listening is
+// stopped a final batch wouldn't fire on its own), then polls until
+// nothing is in flight and there's no unprocessed text waiting.
+async function _waitForVoicePipelineQuiet(opts = {}) {
+  const maxMs = opts.maxMs || 30000;   // safety ceiling so it can't hang
+  const start = Date.now();
+  // The interval guard requires isListening; bypass it for the flush.
+  const _wasFlag = isListening;
+  isListening = true;
+  // Push a status pill so the user sees we're waiting on something real.
+  pushRenderStatus('waiting');
+  try {
+    const havePending = () =>
+      batchInFlight ||
+      (liveTranscriptBuffer && liveTranscriptBuffer.length > lastProcessedLength + 5) ||
+      (liveInterimBuffer && liveInterimBuffer.trim().length > 0);
+    let lastSwap = 'waiting';
+    while (havePending() && (Date.now() - start) < maxMs) {
+      // If nothing is in flight but we have pending text, kick a batch.
+      if (!batchInFlight) {
+        // Best-effort: ignore failures, they'll be surfaced by the batch itself.
+        processLiveBatch().catch(() => {});
+      }
+      if (lastSwap === 'waiting') {
+        // After ~1 s of waiting flip the label to 'starting' so the user
+        // sees forward motion before the render itself kicks off.
+        if (Date.now() - start > 1000) {
+          popRenderStatus();
+          pushRenderStatus('starting');
+          lastSwap = 'starting';
+        }
+      }
+      await new Promise(r => setTimeout(r, 250));
+    }
+  } finally {
+    isListening = _wasFlag;
+    popRenderStatus();
+  }
 }
 
 async function processLiveBatch() {
@@ -6915,10 +7035,8 @@ function renderModificationsBar() {
   }).join('');
 }
 
-function toggleVisualizeListen() {
-  if (visualizeListening) stopVisualizeListen();
-  else startVisualizeListen();
-}
+// v11.11: toggleVisualizeListen removed — superseded by modifyListenToggle
+// which renders the new Tap-to-Listen pill state on the modify row.
 
 function startVisualizeListen() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -6959,8 +7077,9 @@ function startVisualizeListen() {
   visualizeRecognition.onend   = () => { if (visualizeListening) visualizeRecognition.start(); };
   visualizeRecognition.start();
   visualizeListening = true;
-  const btn = document.getElementById('visualize-listen-btn');
-  if (btn) btn.textContent = 'Stop';
+  // v11.11: dead #visualize-listen-btn lookup removed. The new toggle
+  // pill is updated by _refreshModifyListenToggle (called from
+  // modifyListenToggle and the cancel paths).
 }
 
 function stopVisualizeListen() {
@@ -6989,42 +7108,179 @@ function stopVisualizeListen() {
 // Click Switch fabric in default/prompt → switchFabricForViewer().
 // Open or close viewer → reset to default.
 // ════════════════════════════════════════════════════════════
+// v11.10: simplified state machine. Two stages now:
+//   default    → [Modify] [Send to Favorites] (original)
+//   modifying  → row 1: [Tap to Listen] [Switch Fabric] [Add Reference]
+//                row 2: [Submit] + [← Back]
+// Tap to Listen is a real toggle inside the modifying stage (start/stop),
+// not its own state. The old 'prompt' and 'listening' stages are gone.
 let _modifyStage = 'default';
 function _setModifyStage(stage) {
   _modifyStage = stage;
+  const modal = document.getElementById('garment-modal');
+  if (modal) {
+    if (stage === 'modifying') modal.dataset.stage = 'modifying';
+    else delete modal.dataset.stage;
+  }
+  // Default row labels — secondary becomes "Send / Remove from Favorites".
   const prim = document.getElementById('modify-primary');
   const sec  = document.getElementById('modify-secondary');
-  if (!prim || !sec) return;
-  prim.classList.remove('is-listening');
-  // v10.12: three-state secondary —
-  //   default   → Send to Favorites (toggle heart)
-  //   prompt    → Switch fabric (escape hatch from the modify flow)
-  //   listening → Modify (commits the spoken changes)
-  const item = (typeof viewerItemId !== 'undefined' && viewerItemId != null)
-    ? items.find(i => i.id === viewerItemId) : null;
-  const isFav = !!(item && item.card && item.card.favorited);
-  if (stage === 'default') {
+  if (prim && sec) {
+    prim.classList.remove('is-listening');
+    const item = (typeof viewerItemId !== 'undefined' && viewerItemId != null)
+      ? items.find(i => i.id === viewerItemId) : null;
+    const isFav = !!(item && item.card && item.card.favorited);
     prim.textContent = 'Modify';
     sec.textContent  = isFav ? 'Remove from Favorites' : 'Send to Favorites';
-  } else if (stage === 'prompt') {
-    prim.textContent = 'Describe changes';
-    sec.textContent  = 'Switch fabric';
-  } else if (stage === 'listening') {
-    prim.textContent = 'Listening…';
-    prim.classList.add('is-listening');
-    sec.textContent  = 'Modify';
   }
+  // Refresh the Tap-to-Listen toggle label to match the current listening state.
+  _refreshModifyListenToggle();
 }
+
+// v11.10: Modify pill → enter the modifying stage (3-pill row + Submit + Back).
 function modifyPrimary() {
-  if (_modifyStage === 'default') {
-    _setModifyStage('prompt');
-  } else if (_modifyStage === 'prompt') {
-    _setModifyStage('listening');
-    startVisualizeListen();
-  }
-  // In 'listening' state, the primary button is passive — user clicks
-  // the secondary "Modify" button to commit.
+  if (_modifyStage === 'default') _setModifyStage('modifying');
 }
+
+// v11.10: Tap-to-Listen toggle inside the modifying stage. Same UX as the
+// main moodboard voice bar — first tap starts, second tap stops. No separate
+// "Describe changes" intermediate state.
+function modifyListenToggle() {
+  if (visualizeListening) stopVisualizeListen();
+  else                    startVisualizeListen();
+  _refreshModifyListenToggle();
+}
+function _refreshModifyListenToggle() {
+  const btn = document.getElementById('modify-listen-toggle');
+  if (!btn) return;
+  if (visualizeListening) {
+    btn.textContent = 'Listening…';
+    btn.classList.add('is-listening');
+  } else {
+    btn.textContent = 'Tap to Listen';
+    btn.classList.remove('is-listening');
+  }
+}
+
+// v11.10: Submit (apply the modify). Captures state, closes viewer, then:
+//   - if refs were already staged via "Add Reference" → apply directly
+//   - otherwise → open the picker (legacy v11.7 behavior)
+function modifySubmit() {
+  // Stop any active listening so the in-flight transcript flushes into
+  // visualizeModifications before we snapshot it.
+  if (visualizeListening) {
+    try { stopVisualizeListen(); } catch (_) {}
+  }
+  _refreshModifyListenToggle();
+  _setModifyStage('default');
+  _pendingModify = {
+    targetId: viewerItemId,
+    mods: visualizeModifications.slice(),
+    deselected: new Set(viewerDeselected || []),
+    fabricsDeselected: new Set(viewerFabricsDeselected || []),
+  };
+  const hasStagedRefs = (selectedImageReferences && selectedImageReferences.length > 0);
+  closeGarmentModal();
+  if (hasStagedRefs) _applyModifyWithPendingState();
+  else               maybeAskModifyImageRef();
+}
+
+// v11.10: Back link — abandons the modify, returns to default state.
+// Clears any captured speech but leaves the viewer open. Re-tapping
+// Modify starts a fresh describe.
+function modifyBack() {
+  if (visualizeListening) {
+    try { stopVisualizeListen(); } catch (_) {}
+  }
+  visualizeModifications = [];
+  if (typeof renderModificationsBar === 'function') renderModificationsBar();
+  _setModifyStage('default');
+}
+
+// v11.10: "Add Reference" button inside the modifying stage.
+// Opens the same image-ref picker the first-time Visualize uses, but in a
+// 'modify-stage' continuation that DOESN'T auto-apply the modify. The
+// picker stages refs in selectedImageReferences and returns to the viewer;
+// modifySubmit will pick them up when the user hits Submit.
+// The "Upload new" button in the modal lets the user drop a brand-new
+// image — that image lands on the moodboard as an inspo card AND becomes
+// the most recent candidate in the picker grid.
+function modifyAddReference() {
+  selectedImageReference  = null;
+  selectedImageReferences = [];
+  _imageRefPickedIdxes    = [];
+  _imageRefAfterPick      = 'modify-stage';
+  const targetId = viewerItemId;
+  const candidates = items.filter(i =>
+    i.card.kind === 'inspo' && i.card.image && !i.consumed && i.id !== targetId
+  );
+  _imageRefCandidates = candidates;
+  const grid = document.getElementById('image-ref-grid');
+  if (grid) {
+    if (candidates.length) {
+      grid.innerHTML = candidates.map((it, idx) =>
+        '<div class="fabric-pick" data-idx="' + idx + '" onclick="pickImageRef(' + idx + ')">' +
+          '<div class="swatch" style="background-image:url(\'' + it.card.image + '\')"></div>' +
+          '<div class="label">' + escapeHtml(it.card.title || 'inspo') + '</div>' +
+          '<div class="order-badge"></div>' +
+        '</div>'
+      ).join('');
+    } else {
+      grid.innerHTML = '<div style="font-family:\'Cormorant Garamond\',serif;font-style:italic;color:rgba(245,250,255,0.55);padding:24px;text-align:center">Nothing on the canvas yet — tap "Upload new" to add one.</div>';
+    }
+  }
+  updateImageRefConfirm();
+  document.getElementById('image-ref-modal').classList.add('open');
+}
+
+// v11.10: handle the in-modal "Upload new" file picker. The chosen image
+// goes through handleInspoUpload (so it lands on the moodboard as a real
+// inspo card), then we re-populate the picker grid and auto-select it.
+(function _wireImageRefUpload() {
+  const inp = document.getElementById('image-ref-upload-input');
+  if (!inp) return;
+  inp.addEventListener('change', async e => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (!files.length) return;
+    for (const f of files) {
+      try { await handleInspoUpload(f); }
+      catch (err) { console.warn('[modifyAddReference upload]', err); }
+    }
+    // Re-build the picker grid so the new card shows AND gets auto-selected.
+    const targetId = viewerItemId;
+    const candidates = items.filter(i =>
+      i.card.kind === 'inspo' && i.card.image && !i.consumed && i.id !== targetId
+    );
+    _imageRefCandidates = candidates;
+    const grid = document.getElementById('image-ref-grid');
+    if (grid) {
+      grid.innerHTML = candidates.map((it, idx) =>
+        '<div class="fabric-pick" data-idx="' + idx + '" onclick="pickImageRef(' + idx + ')">' +
+          '<div class="swatch" style="background-image:url(\'' + it.card.image + '\')"></div>' +
+          '<div class="label">' + escapeHtml(it.card.title || 'inspo') + '</div>' +
+          '<div class="order-badge"></div>' +
+        '</div>'
+      ).join('');
+    }
+    // Auto-select the most-recently-uploaded (last in the candidates list).
+    if (candidates.length) {
+      const lastIdx = candidates.length - 1;
+      if (!_imageRefPickedIdxes.includes(lastIdx)) _imageRefPickedIdxes.push(lastIdx);
+      // Refresh the visual + confirm button state.
+      const nodes = document.querySelectorAll('#image-ref-grid .fabric-pick');
+      nodes.forEach((node, k) => {
+        const order = _imageRefPickedIdxes.indexOf(k);
+        if (order >= 0) {
+          node.classList.add('selected');
+          const badge = node.querySelector('.order-badge');
+          if (badge) badge.textContent = (order + 1);
+        }
+      });
+      updateImageRefConfirm();
+    }
+  });
+})();
 // v10.11: photo fullscreen — click image inside viewer → expand to fill
 // the screen. Click again or press Escape to exit (back one level).
 function enterPhotoFullscreen() {
@@ -7043,34 +7299,13 @@ function exitPhotoFullscreen() {
 }
 
 function modifySecondary() {
-  // v10.12: dispatch by stage.
-  //   listening → stop + (NEW v11.7) ask for refs → apply modifications
-  //   prompt    → Switch fabric
-  //   default   → toggle favorite
-  if (_modifyStage === 'listening') {
-    stopVisualizeListen();
-    _setModifyStage('default');
-    // v11.7: capture every input applyModifications will need BEFORE we
-    // close the viewer modal (which clears viewerItemId + visualizeModifications).
-    // Then we ask for optional reference images — same picker as the first
-    // Visualize — and only then run the actual modify.
-    _pendingModify = {
-      targetId: viewerItemId,
-      mods: visualizeModifications.slice(),
-      deselected: new Set(viewerDeselected || []),
-      fabricsDeselected: new Set(viewerFabricsDeselected || []),
-    };
-    closeGarmentModal();
-    maybeAskModifyImageRef();
-  } else if (_modifyStage === 'prompt') {
-    _setModifyStage('default');
-    switchFabricForViewer();
-  } else {
-    if (viewerItemId != null) {
-      toggleFavorite(viewerItemId);
-      // Refresh label so it reads "Remove from Favorites" if just hearted.
-      _setModifyStage(_modifyStage);
-    }
+  // v11.10: only the default-state branch is left. The secondary button
+  // in default state is "Send to Favorites" (or "Remove from Favorites").
+  // Switch Fabric and the modify-apply paths moved into their own pills
+  // in the modifying-stage row.
+  if (_modifyStage === 'default' && viewerItemId != null) {
+    toggleFavorite(viewerItemId);
+    _setModifyStage(_modifyStage);  // refresh label
   }
 }
 function _resetModifyStage() {
@@ -7673,6 +7908,11 @@ async function visualizeGarment() {
   if (isListening) {
     try { stopListening(); } catch (_) {}
   }
+  // v11.10: wait for any in-flight transcript work to finish before we
+  // proceed. There's a ~3 s gap between speaking the last word and seeing
+  // its cards appear (callLiveExtract runs as a batch). If Visualize fires
+  // mid-batch the prompt would miss whatever's still in flight.
+  await _waitForVoicePipelineQuiet();
   // v10.16: avatar safety check. If no face photo AND no measurements,
   // ask before proceeding. If either is set, that's enough — render goes.
   const facePhoto = (lastSummary && lastSummary._face_photo) || null;
@@ -8680,27 +8920,31 @@ async function confirmImageRef() {
   if (!_imageRefPickedIdxes.length) return;
   const refs = _imageRefPickedIdxes.map(i => _imageRefCandidates[i])
     .map(it => ({ dataUrl: it.card.image, title: it.card.title || 'inspo' }));
-  // Keep the legacy single-ref var for backward-compat code paths; also
-  // expose the array. _runVisualizeNow / applyModifications consume the
-  // array when present.
   selectedImageReference = refs[0];
   selectedImageReferences = refs;
   closeImageRefPicker();
-  // v11.7: route to modify-apply if the picker was opened from modifySecondary.
+  // v11.10: three continuations now —
+  //   'modify'       → close picker AND apply the modify (legacy modifySecondary path)
+  //   'modify-stage' → close picker but STAY in the viewer; refs are
+  //                    staged for the Submit press (Add Reference button path)
+  //   else (null/'visualize') → run the first-time Visualize
   const after = _imageRefAfterPick;
   _imageRefAfterPick = null;
-  if (after === 'modify') await _applyModifyWithPendingState();
-  else                    await _runVisualizeNow();
+  if (after === 'modify')            await _applyModifyWithPendingState();
+  else if (after === 'modify-stage') {
+    showToast(refs.length + ' reference' + (refs.length === 1 ? '' : 's') + ' staged');
+  }
+  else await _runVisualizeNow();
 }
 async function skipImageRef() {
   selectedImageReference = null;
   selectedImageReferences = [];
   closeImageRefPicker();
-  // v11.7: same routing as confirmImageRef — skip is just empty refs.
   const after = _imageRefAfterPick;
   _imageRefAfterPick = null;
-  if (after === 'modify') await _applyModifyWithPendingState();
-  else                    await _runVisualizeNow();
+  if (after === 'modify')            await _applyModifyWithPendingState();
+  else if (after === 'modify-stage') { /* stay in viewer, refs cleared */ }
+  else await _runVisualizeNow();
 }
 
 // Compact one-line description of a fabric for the image prompt.
@@ -8887,8 +9131,7 @@ async function _firebaseRestoreSession() {
   if (!currentClientName && cloud.currentClientName) currentClientName = cloud.currentClientName;
   if (added) {
     if (typeof refreshDrawerClientName     === 'function') refreshDrawerClientName();
-    if (typeof refreshDrawerFavoritesCount === 'function') refreshDrawerFavoritesCount();
-    console.log('[maya.firebase] restored', added, 'item(s) from cloud');
+      console.log('[maya.firebase] restored', added, 'item(s) from cloud');
   }
 }
 async function _restoreSession() {
@@ -8918,8 +9161,7 @@ async function _restoreSession() {
     }
     // Refresh dependent UI.
     if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
-    if (typeof refreshDrawerFavoritesCount === 'function') refreshDrawerFavoritesCount();
-    console.log('[Maya] session restored from IndexedDB');
+      console.log('[Maya] session restored from IndexedDB');
   } catch (e) {
     console.warn('[Maya restore]', e);
   }
@@ -9185,7 +9427,6 @@ async function loadSavedSessionById(id) {
   // Also overwrite the auto-save slot so close-and-reopen keeps THIS session.
   try { await idb(s => s.put(snap, 'maya-session')); } catch (_) {}
   if (typeof refreshDrawerClientName     === 'function') refreshDrawerClientName();
-  if (typeof refreshDrawerFavoritesCount === 'function') refreshDrawerFavoritesCount();
   showToast('Loaded: ' + (snap.currentClientName || 'session'));
   // Collapse the dropdown after picking.
   const block = document.querySelector('#notes-drawer .drawer-sessions');
@@ -9203,65 +9444,10 @@ async function deleteSavedSessionRow(id) {
   }
 }
 
-// v10.6: session save — pure snapshot. moodboard.json + summary.json +
-// transcript.txt + all card images + uploaded inspos. NO one-pager PDF
-// (that's Submit's job). Folder: MAYA/Saves/<slug MM-DD-YYYY>/.
-async function doSessionSave() {
-  const root    = await getFolder();
-  const saves   = await root.getDirectoryHandle('Saves', { create: true });
-  const _d      = new Date();
-  const today   = `${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}-${_d.getFullYear()}`;
-  const nameForFolder = currentClientName || lastSummary?.client?.name || 'session';
-  const slug    = slugify(nameForFolder);
-  const folderName = slug + ' ' + today;
-  const dir     = await saves.getDirectoryHandle(folderName, { create: true });
-
-  // moodboard.json — full canvas state with positions so it can be replayed.
-  const itemsLite = items.map(it => {
-    const el = it.el;
-    const x  = el ? parseFloat(el.style.left) || 0 : 0;
-    const y  = el ? parseFloat(el.style.top)  || 0 : 0;
-    const { image, ...rest } = it.card;
-    if (rest.fabrics && Array.isArray(rest.fabrics)) {
-      rest.fabrics = rest.fabrics.map(({ dataUrl, ...fr }) => fr);
-    }
-    return { id: it.id, x, y, card: image ? { ...rest, image } : rest };
-  });
-  await writeText(dir, 'moodboard.json', JSON.stringify(itemsLite, null, 2));
-
-  // summary.json + transcript when we have them.
-  if (lastSummary) {
-    await writeText(dir, 'summary.json',    JSON.stringify(lastSummary, null, 2));
-    await writeText(dir, 'transcript.txt',  lastTranscript || '(no transcript captured)');
-  } else if (lastTranscript) {
-    await writeText(dir, 'transcript.txt',  lastTranscript);
-  }
-
-  // Uploaded inspos as actual image files (mirrors the Clients save layout).
-  const uploadedInspo = items.filter(i =>
-    i.card.kind === 'inspo' && i.card.image && !i.card.inspirationId
-  );
-  if (uploadedInspo.length) {
-    const inspoDir = await dir.getDirectoryHandle('inspo', { create: true });
-    const usedNames = new Set();
-    for (const it of uploadedInspo) {
-      const base = (it.card.title || 'inspo').replace(/[^\w\s.-]/g, '').trim() || 'inspo';
-      let fileName = base.endsWith('.jpg') || base.endsWith('.png') ? base : (base + '.jpg');
-      let n = 1;
-      while (usedNames.has(fileName.toLowerCase())) {
-        const dot = fileName.lastIndexOf('.');
-        fileName = fileName.slice(0, dot) + ' (' + (++n) + ')' + fileName.slice(dot);
-      }
-      usedNames.add(fileName.toLowerCase());
-      try {
-        const blob = await (await fetch(it.card.image)).blob();
-        await writeBlob(inspoDir, fileName, blob);
-      } catch (e) { console.warn('[Maya save inspo]', fileName, e); }
-    }
-  }
-
-  showToast('Session saved to MAYA / Saves / ' + folderName);
-}
+// v11.11: doSessionSave (the old local MAYA/Saves/ folder writer) removed.
+// Session persistence is now IndexedDB-backed (idbSaveCurrentAsSession,
+// see Sessions ▾ drawer) plus the Firestore cross-device sync. The local
+// folder path was unused after v11.3.
 
 async function doSave() {
   try {
@@ -10312,20 +10498,9 @@ function splashLock() {
 // v10.7: logout = full reset. Wipe in-memory state AND the IndexedDB
 // session so login lands on a clean canvas. The disk-side MAYA/Saves/
 // snapshots stay (those are explicit archival saves, not session cache).
-function logoutMaya() {
-  try { _doClear(); } catch (_) {}
-  try { idb(s => s.delete('maya-session')); } catch (_) {}
-  // Force the canvas-empty state so onboarding hints show on next login.
-  document.body.classList.add('canvas-empty');
-  splashLock();
-}
-// v10.6: Back-end — separate HTML for the designer's perspective. Opens
-// backend.html in a new tab so the client-facing front-end stays put.
-// Backend reads the live IndexedDB session, so whichever consultation is
-// active here is the one the designer sees.
-function openBackend() {
-  window.open('backend.html', '_blank');
-}
+// v11.11: logoutMaya + openBackend removed — both were unused. The
+// active logout path is mayaSignOut (wired to drawer + settings).
+// backend.html is opened directly by the designer, not from this app.
 
 (function initSplash() {
   const s = document.getElementById('splash');
