@@ -4,8 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="11.13">
-<!-- v11.13 — (1) garment viewer: collapsed the faint-caption "void", tightened
+<meta name="maya-version" content="11.14">
+<!-- v11.14 — (1) session load: local IndexedDB session is now authoritative on
+     a returning device; cloud restore only hydrates a fresh device with no
+     local session. Stops cards duplicating/scattering across the screen and
+     resurrecting a cleared canvas. (2) On-card ×/stack/heart icons 40→30.
+     (3) Modify rows: tighter button gap, blue shade on the 3 secondary pills
+     for hierarchy, tight Submit glow (no wide spill), action rows pinned to
+     the bottom. (4) Add Reference picker: title 'Your uploaded inspirations'
+     (centered, no question), centered paragraph + select-multiple tip; buttons
+     Back / Upload / Submit-counter (off at 0, 'Submit N'). (5) Fabric picker
+     Cancel→Back (reopens the viewer); fabrics preloaded on boot so Switch
+     Fabric is instant. (6) Favorites hover: 1-sentence summary over a black
+     bottom gradient instead of construction tag chips.
+     v11.13 — (1) garment viewer: collapsed the faint-caption "void", tightened
      the modal to a single 12px rhythm, fabric chips ~20% larger. (2) Submit to
      Drive simplified per Fromsa: the folder now holds ONLY one-pager.pdf — the
      moodboard/summary/transcript JSON, dream-garment/inspo images, and the
@@ -697,13 +709,13 @@
      when the card is favorited. Soft starlight-pink tint to distinguish
      from the other accent buttons. */
   .item-card .fav-btn {
-    /* v11.13: enlarged to a 40x40 tap target. */
-    position: absolute; top: -12px; left: -12px;
-    width: 40px; height: 40px; border-radius: 50%;
+    /* v11.14: 30x30 tap target (was 40x40 in v11.13). */
+    position: absolute; top: -10px; left: -10px;
+    width: 30px; height: 30px; border-radius: 50%;
     background: rgba(255,255,255,0.06);
     border: 0.5px solid rgba(255,255,255,0.2);
     color: rgba(225,235,255,0.55);
-    font-size: 18px; line-height: 1;
+    font-size: 15px; line-height: 1;
     cursor: pointer; transition: all 0.2s;
     display: none; align-items: center; justify-content: center;
     padding: 0;
@@ -813,12 +825,12 @@
      the border (red for delete, white for stack/dissect), not from a
      solid fill. */
   .item-card .delete-btn {
-    /* v11.13: enlarged to a 40x40 tap target. */
-    position: absolute; top: -12px; right: -12px;
-    width: 40px; height: 40px; border-radius: 50%;
+    /* v11.14: 30x30 tap target (was 40x40 in v11.13). */
+    position: absolute; top: -10px; right: -10px;
+    width: 30px; height: 30px; border-radius: 50%;
     background: transparent;
     border: 0.5px solid rgba(255,140,140,0.55);
-    color: rgba(255,200,200,0.95); font-size: 20px; cursor: pointer;
+    color: rgba(255,200,200,0.95); font-size: 16px; cursor: pointer;
     display: none; align-items: center; justify-content: center;
     backdrop-filter: blur(22px) saturate(180%);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
@@ -830,12 +842,12 @@
   .item-card:hover .delete-btn { display: flex; }
   /* Stack button — only meaningful on image cards (inspo) */
   .item-card .stack-btn {
-    /* v11.13: enlarged to 40x40; shifted right so it clears the 40px delete. */
-    position: absolute; top: -12px; right: 40px;
-    width: 40px; height: 40px; border-radius: 50%;
+    /* v11.14: 30x30; shifted right so it clears the 30px delete. */
+    position: absolute; top: -10px; right: 30px;
+    width: 30px; height: 30px; border-radius: 50%;
     background: transparent;
     border: 0.5px solid rgba(255,255,255,0.22);
-    color: rgba(245,250,255,0.85); font-size: 18px; cursor: pointer;
+    color: rgba(245,250,255,0.85); font-size: 15px; cursor: pointer;
     display: none; align-items: center; justify-content: center;
     line-height: 1;
     backdrop-filter: blur(22px) saturate(180%);
@@ -849,9 +861,9 @@
   /* v5.1: Dissect button — only on UPLOADED inspo cards (not Maya visions).
      v10.2: canon pill chrome. */
   .item-card .dissect-btn {
-    /* v11.13: pushed right to clear the enlarged 40px stack/delete icons;
-       top nudged so the 20px pill centers on the same axis as the circles. */
-    position: absolute; top: -2px; right: 92px;
+    /* v11.14: pushed right to clear the 30px stack/delete icons; top nudged
+       so the 20px pill centers on the same axis as the circles. */
+    position: absolute; top: -5px; right: 70px;
     height: 20px; padding: 0 12px; border-radius: 100px;
     background: transparent;
     border: 0.5px solid rgba(255,255,255,0.22);
@@ -2670,19 +2682,48 @@
   #garment-modal[data-stage="modifying"] #viewer-row-default { display: none; }
   #garment-modal[data-stage="modifying"] #viewer-row-modify-1,
   #garment-modal[data-stage="modifying"] #viewer-row-modify-2 { display: flex; }
-  #viewer-row-modify-2 { gap: 22px; margin-top: 2px; }
+  #viewer-row-modify-2 { gap: 22px; margin-top: 10px; }
+  /* v11.14: tighter horizontal packing for the 3-pill modify row (was the
+     shared 18px .viewer-row gap). */
+  #viewer-row-modify-1 { gap: 8px; }
+  /* v11.14: in modify stage, drop the action rows to the bottom of the screen
+     so there's a clear gap between the ref tags (centered) and this row. */
+  #garment-modal[data-stage="modifying"] #viewer-actions {
+    position: fixed; left: 0; right: 0; bottom: 24px;
+    margin: 0; z-index: 4;
+  }
   /* In submit mode (favorites Submit), hide every Modify-mode chrome. */
   #garment-modal[data-mode="submit"] #viewer-row-modify-1,
   #garment-modal[data-mode="submit"] #viewer-row-modify-2,
   #garment-modal[data-mode="submit"] #viewer-row-default { display: none !important; }
 
-  /* Modify-mode pills — same dimensions / glass as Default pills.
-     Inherits .modal-text-btn base; add modest spacing tweak. */
-  .viewer-modify-btn { min-width: 0; }
-  /* Apply-the-modify Submit pill — uses the same vision pulse as favorite hero. */
+  /* v11.14: Modify-mode secondary pills get a blueish shade so they read as a
+     distinct group from the (glowing) Submit primary — the three used to look
+     identical. No glow here; glow lives only on Submit. */
+  .viewer-modify-btn {
+    min-width: 0;
+    background: rgba(120,160,255,0.12);
+    border-color: rgba(150,185,255,0.4);
+    color: rgba(226,236,255,0.92);
+  }
+  .viewer-modify-btn:hover {
+    background: rgba(120,160,255,0.2);
+    border-color: rgba(175,205,255,0.62);
+    color: #fff;
+  }
+  /* v11.14: apply-the-modify Submit keeps a glow, but a TIGHT one that hugs
+     the pill (the old shared maya-vision-pulse spilled far too wide). */
   .viewer-modify-submit {
-    border-color: rgba(235,245,255,0.55);
-    animation: maya-vision-pulse 2.4s ease-in-out infinite;
+    border-color: rgba(235,245,255,0.6);
+    animation: maya-submit-glow 2.4s ease-in-out infinite;
+  }
+  @keyframes maya-submit-glow {
+    0%, 100% { box-shadow:
+      inset 0 1px 1px rgba(255,255,255,0.3),
+      0 0 4px 0 rgba(205,225,255,0.42); }
+    50%      { box-shadow:
+      inset 0 1px 1px rgba(255,255,255,0.3),
+      0 0 7px 1px rgba(225,238,255,0.6); }
   }
   /* v11.12: × close — small circular glass button. Sits next to Submit.
      Was a "← Back" text link in v11.10; the user reads it as a toggle-out
@@ -2733,6 +2774,28 @@
   }
   /* v10: .fc-caption, .fc-tag (old absolute corner chip), #favorites-empty
      CSS removed — v9.4 stripped captions/tags from favorite cards. */
+
+  /* v11.14: favorites hover summary — a black gradient rising from the
+     bottom (~bottom fifth solid) with a one-sentence description of the
+     garment. Replaces the old construction tag chips. */
+  .favorite-card .fc-summary {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 30px 22px 18px;
+    background: linear-gradient(180deg,
+      rgba(0,0,0,0) 0%,
+      rgba(0,0,0,0.55) 45%,
+      rgba(0,0,0,0.9) 100%);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 15px; line-height: 1.4;
+    color: rgba(245,250,255,0.96);
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.28s ease;
+    pointer-events: none;
+  }
+  .favorite-card:hover .fc-summary { opacity: 1; }
 
   /* v10.9: construction dissection panel — hidden under the card, slides
      up on hover. Shows garment type, panels, complexity, fabric source. */
@@ -3658,18 +3721,23 @@
      gpt-image-2 via the /edits endpoint instead of pure text-to-image). -->
 <div class="modal" id="image-ref-modal">
   <button class="modal-close" onclick="closeImageRefPicker()">Close</button>
-  <div class="modal-card">
-    <h2 id="image-ref-title">Use an uploaded image as a visual reference?</h2>
-    <div class="modal-hint" id="image-ref-hint">Maya can use the actual image (color, fabric, mood) alongside your fabric and verbal refs.</div>
+  <div class="modal-card" style="text-align:center">
+    <!-- v11.14: title is a plain statement (centered), the question is gone. -->
+    <h2 id="image-ref-title">Your uploaded inspirations</h2>
+    <div class="modal-hint" id="image-ref-hint">Maya can use the actual image (color, fabric, mood) alongside your fabric and verbal references.</div>
+    <div style="font-family:'Jost',sans-serif;font-size:9px;font-weight:300;letter-spacing:0.18em;text-transform:uppercase;color:rgba(200,215,245,0.55);margin:4px 0 14px">Tap to select · you can pick multiple</div>
     <div class="fabric-pick-grid" id="image-ref-grid"></div>
-    <!-- v11.10: hidden file input for the in-modal "Upload new" button.
+    <!-- v11.10: hidden file input for the in-modal "Upload" button.
          Available in every flow — uploaded image lands on the moodboard as
          an inspo card AND gets auto-selected in this picker. -->
     <input type="file" id="image-ref-upload-input" accept="image/*" style="display:none" />
+    <!-- v11.14: Back (left) · Upload (center) · Submit counter (right). The
+         "No, refs only" button was folded into Back; "Use N images" became
+         the Submit counter. -->
     <div class="modal-actions">
-      <button class="top-btn subtle" onclick="document.getElementById('image-ref-upload-input').click()">Upload new</button>
-      <button class="top-btn subtle" onclick="skipImageRef()">No, refs only</button>
-      <button class="top-btn violet" id="image-ref-confirm" onclick="confirmImageRef()">Pick one to continue</button>
+      <button class="top-btn subtle" onclick="imageRefBack()">Back</button>
+      <button class="top-btn subtle" onclick="document.getElementById('image-ref-upload-input').click()">Upload</button>
+      <button class="top-btn violet" id="image-ref-confirm" onclick="confirmImageRef()">Submit</button>
     </div>
   </div>
 </div>
@@ -3682,7 +3750,7 @@
     <div class="modal-hint">Tap to select. One fabric for a single-fabric piece, several if Maya should combine them (primary, accent, lining…).</div>
     <div class="fabric-pick-grid" id="fabric-pick-grid"></div>
     <div class="modal-actions">
-      <button class="top-btn subtle" onclick="closeFabricPicker()">Cancel</button>
+      <button class="top-btn subtle" onclick="fabricPickerBack()">Back</button>
       <button class="top-btn violet" id="fabric-pick-confirm" onclick="confirmFabricPick()">Pick at least one</button>
     </div>
   </div>
@@ -4537,28 +4605,14 @@ function _renderFavoritesScroller() {
   // v9.12: click opens the garment-modal in "submit" mode (no Listen/Modify/
   // Switch — just a single glowing Submit button).
   wrap.innerHTML = favs.map(f => {
-    const d = f.card._dissection;
-    let dissectionHtml = '';
-    if (d) {
-      const tags = [];
-      if (d.garment_type)   tags.push(d.garment_type);
-      if (d.construction)   tags.push(d.construction);
-      if (d.panel_count)    tags.push(d.panel_count + ' panels');
-      if (d.complexity_tier)tags.push(d.complexity_tier);
-      if (d.fabric_type)    tags.push(d.fabric_type);
-      if (d.fabric_source)  tags.push(d.fabric_source);
-      dissectionHtml = '<div class="fc-dissection">' +
-        tags.map(t => '<span class="fc-tag">' + escapeHtml(t) + '</span>').join('') +
-        (Array.isArray(d.hardware) && d.hardware.length
-          ? '<div class="fc-hardware">Hardware: ' + d.hardware.map(escapeHtml).join(' · ') + '</div>'
-          : '') +
-        '</div>';
-    } else if (f.card._dissectionPending) {
-      dissectionHtml = '<div class="fc-dissection"><span class="fc-tag">analysing…</span></div>';
-    }
+    // v11.14: hover overlay is now a 1-sentence garment summary over a black
+    // gradient (was a row of construction tag chips). Summary reuses the same
+    // per-favorite line the submit-mode viewer shows.
+    const summary = (typeof _buildPieceSummaryLine === 'function')
+      ? _buildPieceSummaryLine(f) : '';
     return '<div class="favorite-card" data-id="' + f.id + '" onclick="openFavoriteForSubmit(' + f.id + ')">' +
       '<div class="fc-image" style="background-image:url(\'' + f.card.image + '\')"></div>' +
-      dissectionHtml +
+      '<div class="fc-summary">' + escapeHtml(summary) + '</div>' +
     '</div>';
   }).join('');
 }
@@ -8751,6 +8805,31 @@ function openFabricPicker() {
 function closeFabricPicker() {
   document.getElementById('fabric-picker-modal').classList.remove('open');
 }
+// v11.14: "Back" returns to the previous screen. Switch Fabric opens the
+// picker AFTER closing the garment viewer, so Back must reopen that viewer;
+// from the Visualize in-house flow there's nothing behind it, so it just
+// closes back to the moodboard.
+function fabricPickerBack() {
+  closeFabricPicker();
+  if (_fabricPickerMode === 'switch' && _switchFabricsTargetId != null
+      && typeof openImageViewer === 'function') {
+    openImageViewer(_switchFabricsTargetId);
+  }
+}
+// v11.14: warm the in-house fabric cache in the background on load so the
+// first Switch Fabric / in-house pick opens instantly instead of fetching
+// every swatch on demand. Public deploy only (assets path, no FS prompt).
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    try {
+      if ((!fabricsInventory || !fabricsInventory.length)
+          && typeof MAYA_IS_PUBLIC !== 'undefined' && MAYA_IS_PUBLIC
+          && typeof scanFabricsFromAssets === 'function') {
+        scanFabricsFromAssets().catch(e => console.warn('[Maya fabric preload]', e));
+      }
+    } catch (e) { console.warn('[Maya fabric preload]', e); }
+  }, 1200);
+});
 function toggleFabricPick(idx) {
   const i = _fabricPickerSelection.indexOf(idx);
   if (i >= 0) _fabricPickerSelection.splice(i, 1);
@@ -8938,6 +9017,18 @@ async function maybeAskImageRef() {
 function closeImageRefPicker() {
   document.getElementById('image-ref-modal').classList.remove('open');
 }
+// v11.14: "Back" in the inspirations picker. From the Add-Reference (modify
+// stage) path the garment viewer is still open underneath, so Back just
+// closes the picker and lands back on it. From the Visualize/modify paths
+// Back means "continue without image refs" (the old "No, refs only") so the
+// generation flow isn't dead-ended.
+function imageRefBack() {
+  if (_imageRefAfterPick === 'modify-stage') {
+    closeImageRefPicker();
+  } else {
+    skipImageRef();
+  }
+}
 // v5.15: multi-select. Tap toggles a card; first pick becomes primary
 // (Maya uses it as the /edits base), additional picks feed the prompt as
 // supporting style cues.
@@ -8962,9 +9053,9 @@ function updateImageRefConfirm() {
   const btn = document.getElementById('image-ref-confirm');
   if (!btn) return;
   const n = _imageRefPickedIdxes.length;
-  btn.textContent = !n ? 'Pick one (or several) to continue'
-                  : n === 1 ? 'Use this image as reference'
-                            : ('Use ' + n + ' images as reference');
+  // v11.14: Submit acts as the selection counter — off at 0, "Submit N" as
+  // images are picked.
+  btn.textContent = n ? ('Submit ' + n) : 'Submit';
   btn.disabled = !n;
   btn.style.opacity = n ? '1' : '0.5';
 }
@@ -9186,6 +9277,20 @@ function _itemSig(it) {
 // sessions) still work the old way.
 async function _firebaseRestoreSession() {
   if (!window.mayaFirebase || !window.mayaFirebase.isReady || !window.mayaFirebase.isReady()) return;
+  // v11.13: the local IndexedDB session is authoritative on any device the
+  // user has used before — it holds the exact last canvas (positions and
+  // all). If a local session exists we do NOT pull from cloud, because:
+  //   • cloud items carry Storage URLs while local items carry data URLs, so
+  //     content-signature dedupe can't match them → every image card was
+  //     getting re-added as a scattered duplicate ("cards populating the
+  //     whole screen"), and
+  //   • a cleared-then-saved canvas would be resurrected from a stale cloud doc.
+  // Cloud restore now only hydrates a FRESH device (no local session at all),
+  // which is the real cross-device case it was built for.
+  try {
+    const localSnap = await idb(s => s.get('maya-session'));
+    if (localSnap) { console.log('[maya.firebase] local session present — skipping cloud restore'); return; }
+  } catch (_) {}
   let cloud;
   try { cloud = await window.mayaFirebase.loadSession('current'); }
   catch (e) { console.warn('[maya.firebase] loadSession failed', e); return; }
