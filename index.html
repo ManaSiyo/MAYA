@@ -4,8 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="11.16">
-<!-- v11.16 — restore now SELF-HEALS: the local session is de-duped by content
+<meta name="maya-version" content="11.18">
+<!-- v11.17 — Runway ML 360 showcase: favoriting a piece pre-generates a 3-second
+     turntable video (front view → full rotation) via the new /api/runway proxy;
+     the clip is re-hosted in Firebase Storage, cached on the card, and swaps in
+     over the image on hover in the Favorites gallery. Self-disables until
+     RUNWAY_API_KEY is set (proxy returns 501 → frontend skips silently).
+     v11.16 — restore now SELF-HEALS: the local session is de-duped by content
      signature as it loads, so a session an earlier build had bloated with
      compounded cloud duplicates collapses to unique cards automatically and is
      re-saved clean (no manual wipe needed). Builds on the v11.15 persistence fix.
@@ -231,6 +236,20 @@
     } catch (_) { return false; }
   }
 
+  // v11.17: re-host a Runway showcase video (its URL is ephemeral) at
+  //   users/{uid}/videos/{itemId}.mp4
+  // so the favorite's 360 clip survives across sessions/devices. Accepts a
+  // Blob (already fetched from the Runway URL by the caller).
+  async function uploadVideo(itemId, blob) {
+    if (!_fbStorage || !_firebaseReady()) throw new Error('storage not ready');
+    if (!itemId || !blob) throw new Error('uploadVideo: missing args');
+    const uid  = _firebaseUid();
+    const path = 'users/' + uid + '/videos/' + itemId + '.mp4';
+    const ref  = _fbStorage.ref().child(path);
+    const snap = await ref.put(blob, { contentType: blob.type || 'video/mp4' });
+    return await snap.ref.getDownloadURL();
+  }
+
   // Expose for the main app script (classic, non-module) to use.
   window.mayaFirebase = {
     isConfigured:            () => _hasRealFirebaseConfig,
@@ -246,6 +265,7 @@
     removeFavorite,
     uploadImage,
     deleteImage,
+    uploadVideo,
   };
 </script>
 <!-- v0.11: Vercel Web Analytics + Speed Insights — visitors, sessions,
@@ -2817,6 +2837,36 @@
   }
   .favorite-card:hover .fc-summary { opacity: 1; }
 
+  /* v11.17: 360 showcase video — fades in over the image on hover, fills the
+     same box. Plays via JS hover handlers (muted/looping). */
+  .favorite-card .fc-video {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+  }
+  .favorite-card:hover .fc-video { opacity: 1; }
+  /* "rendering 360°…" badge while Runway is still generating the clip. */
+  .favorite-card .fc-rendering {
+    position: absolute; top: 12px; left: 12px;
+    font-family: 'Jost', sans-serif;
+    font-size: 9px; font-weight: 300;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(225,235,255,0.9);
+    background: rgba(0,0,0,0.45);
+    padding: 5px 11px; border-radius: 100px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    animation: maya-listen-pulse 1.8s ease-in-out infinite;
+  }
+  .favorite-card:hover .fc-rendering { opacity: 1; }
+
   /* v10.9: construction dissection panel — hidden under the card, slides
      up on hover. Shows garment type, panels, complexity, fabric source. */
   .favorite-card .fc-dissection {
@@ -4022,6 +4072,15 @@ function showError(msg) {
     console.error('[Maya safety]', raw);
     return;
   }
+  // v11.18: humanize the browser's raw network error. "Failed to fetch" /
+  // "Load failed" / "NetworkError" mean the request never reached the server
+  // (connection blip, or an oversized image request the browser dropped) —
+  // tell the user to retry instead of showing the cryptic string.
+  if (/failed to fetch|load failed|networkerror|network request failed|err_/i.test(raw)) {
+    showToast('Connection hiccup — that didn’t reach the server. Give it another tap.', true);
+    console.error('[Maya network]', raw);
+    return;
+  }
   showToast(raw, true);
   console.error('[Maya]', raw);
 }
@@ -4635,8 +4694,20 @@ function _renderFavoritesScroller() {
     // per-favorite line the submit-mode viewer shows.
     const summary = (typeof _buildPieceSummaryLine === 'function')
       ? _buildPieceSummaryLine(f) : '';
-    return '<div class="favorite-card" data-id="' + f.id + '" onclick="openFavoriteForSubmit(' + f.id + ')">' +
+    // v11.17: cached 360 showcase clip swaps in on hover; a "rendering" badge
+    // shows while Runway is still working.
+    const videoHtml = f.card.showcaseVideoUrl
+      ? '<video class="fc-video" src="' + f.card.showcaseVideoUrl + '" muted loop playsinline preload="metadata"></video>'
+      : '';
+    const pendingHtml = (!f.card.showcaseVideoUrl && f.card._showcasePending)
+      ? '<div class="fc-rendering">rendering 360°…</div>'
+      : '';
+    return '<div class="favorite-card" data-id="' + f.id + '" ' +
+      'onmouseenter="_favHoverIn(this)" onmouseleave="_favHoverOut(this)" ' +
+      'onclick="openFavoriteForSubmit(' + f.id + ')">' +
       '<div class="fc-image" style="background-image:url(\'' + f.card.image + '\')"></div>' +
+      videoHtml +
+      pendingHtml +
       '<div class="fc-summary">' + escapeHtml(summary) + '</div>' +
     '</div>';
   }).join('');
@@ -4671,33 +4742,48 @@ function _buildPieceSummaryLine(item) {
     const byTag = {};
     for (const r of refs) {
       const k = (r.tag || 'detail').toLowerCase();
-      (byTag[k] = byTag[k] || []).push(r.title.toString().trim());
+      (byTag[k] = byTag[k] || []).push(r.title.toString().trim().toLowerCase());
     }
     const pick = (...ks) => ks.flatMap(k => byTag[k] || []);
     const aesthetic  = pick('aesthetic', 'mood');
     const silhouette = pick('silhouette');
+    const garment    = pick('garment', 'piece', 'type');
     const detail     = pick('detail');
     const material   = pick('material', 'fabric');
     const color      = pick('color');
     const era        = pick('era');
+    const designer   = pick('designer');
 
-    const parts = []
-      .concat(aesthetic.slice(0, 2))
-      .concat(silhouette.slice(0, 2))
-      .concat(detail.slice(0, 3))
-      .concat(material.slice(0, 2))
-      .concat(color.slice(0, 1))
-      .concat(era.slice(0, 1))
-      .filter(Boolean);
+    // v11.18: compose a flowing sentence instead of a comma list. Join a
+    // short list as "a, b and c".
+    const andList = (arr) => {
+      const a = arr.filter(Boolean);
+      if (a.length <= 1) return a[0] || '';
+      if (a.length === 2) return a[0] + ' and ' + a[1];
+      return a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+    };
 
-    if (parts.length) {
-      let s = parts.join(', ');
-      // Capitalize first letter, normalize whitespace, strip em-dashes.
-      s = s.replace(/—/g, ',').replace(/,\s*,/g, ',').replace(/\s+/g, ' ').trim();
-      s = s.charAt(0).toUpperCase() + s.slice(1);
-      if (!/[.!?…]$/.test(s)) s += '.';
-      return s;
-    }
+    const adjectives = aesthetic.slice(0, 2);                 // "cosmic, edgy"
+    const nouns      = (silhouette.concat(garment)).slice(0, 2); // "three-piece suit and trench coat"
+    const noun       = nouns.length ? andList(nouns) : 'piece';
+    const fabricColor = [color[0], material[0]].filter(Boolean).join(' '); // "black velvet"
+    const details    = detail.slice(0, 3);
+
+    // a / an based on the first spoken word.
+    const lead = (adjectives[0] || noun || 'piece');
+    const article = /^[aeiou]/i.test(lead) ? 'An' : 'A';
+
+    let s = article;
+    if (adjectives.length) s += ' ' + adjectives.join(', ');
+    s += ' ' + noun;
+    if (fabricColor) s += ' in ' + fabricColor;
+    if (details.length) s += ', with ' + andList(details);
+    if (era.length) s += ', ' + era[0] + ' in spirit';
+    if (designer.length) s += ', à la ' + designer[0].replace(/\b\w/g, c => c.toUpperCase());
+    s = s.replace(/—/g, ' ').replace(/\s+/g, ' ').trim();
+    s = s.charAt(0).toUpperCase() + s.slice(1);
+    if (!/[.!?…]$/.test(s)) s += '.';
+    return s;
   }
 
   // Fallback chain — only used if the favorite has fewer than 2 ref tags
@@ -5539,7 +5625,120 @@ function toggleFavorite(itemId) {
       if (typeof _persistSession === 'function') _persistSession();
     }).catch(e => console.warn('[Maya dissect]', e));
   }
+  // v11.17: pre-generate the 3-second 360 showcase video the moment a piece is
+  // favorited, so the favorites screen plays instantly on hover. Generated once
+  // per favorite, cached on the card forever. Self-disables silently if the
+  // Runway proxy isn't configured (501) — safe to ship before the key exists.
+  if (it.card.favorited && it.card.image
+      && !it.card.showcaseVideoUrl && !it.card._showcasePending
+      && typeof _generateShowcaseVideo === 'function') {
+    _generateShowcaseVideo(it);
+  }
   if (typeof _persistSession === 'function') _persistSession();
+}
+
+// ════════════════════════════════════════════════════════════
+// v11.17: Runway ML 360 showcase video for favorites.
+// On favorite → crop the front (center) view from the 3-view sheet → ask the
+// /api/runway proxy to render a 3s turntable → poll → re-host in Firebase
+// Storage → cache the URL on the card. Favorites hover swaps image↔video.
+// ════════════════════════════════════════════════════════════
+const SHOWCASE_DURATION = 3;            // seconds (cheap: 3 * 5 credits = $0.15)
+const SHOWCASE_RATIO    = '1280:720';   // landscape, fits the favorites box
+
+async function _generateShowcaseVideo(it) {
+  if (!it || !it.card || it.card._showcasePending || it.card.showcaseVideoUrl) return;
+  const token = (typeof getGoogleIdToken === 'function') ? getGoogleIdToken() : null;
+  if (!token) return;
+  it.card._showcasePending = true;
+  if (currentScreen === 1 && typeof _renderFavoritesScroller === 'function') _renderFavoritesScroller();
+  try {
+    const frontB64 = await _cropFrontView(it.card.image);
+    // 1) submit the generation task
+    const genRes = await fetch('/api/runway', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ action: 'generate', image_b64: frontB64, duration: SHOWCASE_DURATION, ratio: SHOWCASE_RATIO }),
+    });
+    if (genRes.status === 501) { it.card._showcasePending = false; return; } // not configured — quiet skip
+    if (!genRes.ok) {
+      console.warn('[Maya showcase] generate', genRes.status, await genRes.text().catch(() => ''));
+      it.card._showcasePending = false; return;
+    }
+    const { task_id } = await genRes.json();
+    if (!task_id) { it.card._showcasePending = false; return; }
+    // 2) poll until the clip is ready (≈ up to 4 min)
+    let videoUrl = null;
+    for (let attempt = 0; attempt < 40; attempt++) {
+      await new Promise(r => setTimeout(r, 6000));
+      let st;
+      try {
+        const sres = await fetch('/api/runway', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ action: 'status', task_id }),
+        });
+        st = await sres.json();
+      } catch (_) { continue; }
+      if (st.status === 'SUCCEEDED' && st.video_url) { videoUrl = st.video_url; break; }
+      if (st.status === 'FAILED' || st.status === 'CANCELED') break;
+    }
+    if (!videoUrl) {
+      it.card._showcasePending = false;
+      if (currentScreen === 1 && typeof _renderFavoritesScroller === 'function') _renderFavoritesScroller();
+      return;
+    }
+    // 3) re-host (Runway URLs expire); fall back to the raw URL if upload fails
+    let finalUrl = videoUrl;
+    try {
+      if (window.mayaFirebase && window.mayaFirebase.uploadVideo) {
+        const blob = await (await fetch(videoUrl)).blob();
+        const key  = (it.card.inspirationId || it.id) + '-' + (it.card.version || 1);
+        finalUrl   = await window.mayaFirebase.uploadVideo(key, blob);
+      }
+    } catch (e) { console.warn('[Maya showcase] rehost', e && e.message); }
+    it.card.showcaseVideoUrl = finalUrl;
+    it.card._showcasePending = false;
+    if (typeof _persistSession === 'function') _persistSession();
+    if (currentScreen === 1 && typeof _renderFavoritesScroller === 'function') _renderFavoritesScroller();
+  } catch (e) {
+    console.warn('[Maya showcase] error', e && e.message);
+    it.card._showcasePending = false;
+  }
+}
+
+// Crop the middle (front) third of the 3-view sheet → small JPEG dataURL.
+function _cropFrontView(imageUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+        const colW = w / 3;                 // 3 equal columns; middle = front view
+        const sx = colW, sy = 0, sw = colW, sh = h;
+        const maxW = 640;                   // small box → keep the payload light
+        const scale = Math.min(1, maxW / sw);
+        const cw = Math.max(1, Math.round(sw * scale)), ch = Math.max(1, Math.round(sh * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = cw; canvas.height = ch;
+        canvas.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, cw, ch);
+        resolve(canvas.toDataURL('image/jpeg', 0.9));
+      } catch (e) { reject(e); }
+    };
+    img.onerror = () => reject(new Error('showcase crop: image load failed'));
+    img.src = imageUrl;
+  });
+}
+
+// Favorites hover handlers — play the cached clip on enter, reset on leave.
+function _favHoverIn(card) {
+  const v = card && card.querySelector('.fc-video');
+  if (v) { try { v.currentTime = 0; const p = v.play(); if (p && p.catch) p.catch(() => {}); } catch (_) {} }
+}
+function _favHoverOut(card) {
+  const v = card && card.querySelector('.fc-video');
+  if (v) { try { v.pause(); v.currentTime = 0; } catch (_) {} }
 }
 
 // v10.9: ask gpt-4.1 to dissect a favorited vision into construction
@@ -9179,11 +9378,9 @@ function _persistSession() {
         const el = it.el;
         const x  = parseFloat(el.style.left) || 0;
         const y  = parseFloat(el.style.top)  || 0;
-        return {
-          id: it.id,
-          x, y,
-          card: { ...it.card },
-        };
+        const card = { ...it.card };
+        delete card._showcasePending;  // v11.17: transient render flag, never persist
+        return { id: it.id, x, y, card };
       });
       const snap = {
         currentClientName: currentClientName || null,
