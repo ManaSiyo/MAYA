@@ -4,8 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="11.14">
-<!-- v11.14 — (1) session load: local IndexedDB session is now authoritative on
+<meta name="maya-version" content="11.15">
+<!-- v11.15 — (1) Clean/delete now persists: removeItem() writes to IndexedDB,
+     so cleaning the canvas (or deleting a card) survives a refresh instead of
+     the old session "coming back". (2) Modify stage anchors content to the top
+     so the image + ref tags no longer drop down and overlap the bottom action
+     row. (3) Submit endpoint (api/submit.js) rewritten to upload as the
+     atelier's own Google account via an OAuth refresh token — fixes the 403
+     "service accounts have no storage quota". Needs GOOGLE_OAUTH_CLIENT_ID/
+     _SECRET/_REFRESH_TOKEN env vars (see submit.js header).
+     v11.14 — (1) session load: local IndexedDB session is now authoritative on
      a returning device; cloud restore only hydrates a fresh device with no
      local session. Stops cards duplicating/scattering across the screen and
      resurrecting a cleared canvas. (2) On-card ×/stack/heart icons 40→30.
@@ -2686,8 +2694,16 @@
   /* v11.14: tighter horizontal packing for the 3-pill modify row (was the
      shared 18px .viewer-row gap). */
   #viewer-row-modify-1 { gap: 8px; }
-  /* v11.14: in modify stage, drop the action rows to the bottom of the screen
-     so there's a clear gap between the ref tags (centered) and this row. */
+  /* v11.15: in modify stage, anchor the modal content to the TOP. With the
+     action rows pulled out of flow (fixed, below), justify-content:center was
+     re-centering the shorter remaining stack — pushing the image + ref tags
+     DOWN so they overlapped the action row. flex-start keeps the image and
+     tags pinned up top; the empty space (and the action row) sit at the bottom. */
+  #garment-modal[data-stage="modifying"] {
+    justify-content: flex-start;
+  }
+  /* action rows drop to the bottom of the screen so there's a clear gap
+     between the ref tags (top) and this row. */
   #garment-modal[data-stage="modifying"] #viewer-actions {
     position: fixed; left: 0; right: 0; bottom: 24px;
     margin: 0; z-index: 4;
@@ -4338,6 +4354,11 @@ function removeItem(id) {
   if (it.pill) it.pill.remove();
   items.splice(idx, 1);
   updateCount();
+  // v11.15: persist after removal. Without this, deleting a card OR using
+  // Clean (which loops removeItem over the ref cards) never wrote the change
+  // to IndexedDB, so a refresh restored the pre-delete session — the whole
+  // moodboard appeared to "come back". Debounced, so the Clean loop coalesces.
+  if (typeof _persistSession === 'function') _persistSession();
 }
 
 // v11.6: When Visualize is pressed, the floating text/reference cards
