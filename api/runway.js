@@ -72,7 +72,7 @@ export default async function handler(req, res) {
     const payload = {
       model:       MODEL,
       promptImage: dataUri,
-      promptText:  body.prompt || 'The model slowly rotates a full 360-degree turntable to show the garment from every angle. Clean seamless studio backdrop, soft even lighting, camera holds steady, smooth continuous rotation.',
+      promptText:  body.prompt || 'The model walks into frame, performs a slow full 360-degree turn to reveal the garment from every angle, then walks back out of frame. Seamless studio backdrop, soft even studio lighting held constant, camera locked off, smooth natural runway motion.',
       ratio:       body.ratio || '1280:720',
       duration:    Number(body.duration) || 5,   // seconds; Gen-4 Turbo classic = 5 or 10. 3 used if the account supports flexible durations.
     };
