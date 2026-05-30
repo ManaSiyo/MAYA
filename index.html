@@ -4,8 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="11.22">
-<!-- v11.19 — garment viewer overhaul: the action row (Modify / Send to Favorites
+<meta name="maya-version" content="11.23">
+<!-- v11.23 — sessions: Save overwrites a same-named session (no duplicates),
+     notes update live on it. Fabrics drawer scrim removed (main screen no longer
+     fades). Google sign-in narrower (200). Attributes toggle sits tight under the
+     version nav (empty fabrics row collapses). Can favorite the version you
+     navigated to (version-step exits submit mode). Hover ref cards hidden on the
+     moodboard (live under Attributes now). Vision glow slower + staggered +
+     will-change (smoother, no stutter); favorites glow staggered independently.
+     Favorites are vertical cards showing the cropped FRONT view; hover plays the
+     video, click opens the 3-view. Favorites Submit button lower (bottom:22px),
+     narrower, reduced glow.
+     v11.19 — garment viewer overhaul: the action row (Modify / Send to Favorites
      AND the modify rows) is now FIXED at bottom:22px, matching the moodboard's
      Tap-to-Listen bar exactly and never moving between states; default buttons
      get the blue modify shade and sit closer together. Image capped at 48vh and
@@ -714,7 +724,9 @@
       inset 0 -1px 1px rgba(0,0,0,0.22),
       0 0 8px 1px rgba(200,222,255,0.55),
       0 0 14px 2px rgba(200,222,255,0.30);
-    animation: maya-vision-pulse 3.2s ease-in-out infinite;
+    /* v11.23: slower pulse + GPU hint so the glow animates smoothly (no stutter). */
+    animation: maya-vision-pulse 4.2s ease-in-out infinite;
+    will-change: box-shadow;
   }
   .item-card.is-vision.is-latest:hover {
     border-color: rgba(235,245,255,0.95);
@@ -1055,12 +1067,15 @@
      version nav and the chip group. Collapse the decorative caption, drop the
      empty mod-bar, zero the per-row margins, and run one consistent gap so
      image → nav → chips → actions stack tightly with equal spacing. */
-  #garment-modal { gap: 12px; }
+  #garment-modal { gap: 8px; }
   #garment-modal #garment-prompt-display { display: none; }
   #garment-modal #viewer-version-nav { margin-top: 0; }
   #garment-modal #viewer-fabrics { margin: 0 auto; }
   #garment-modal #viewer-refs { margin: 0 auto; }
   #garment-modal #modifications-bar:empty { display: none; }
+  /* v11.23: collapse the empty fabrics row so the Attributes toggle sits right
+     under the version selector instead of floating far below it. */
+  #garment-modal #viewer-fabrics:empty { display: none; }
   /* v10: .modal-close now carries the canon pill chrome. */
   .modal-close {
     position: absolute; top: 22px; right: 24px;
@@ -1482,7 +1497,9 @@
     pointer-events: none;
     z-index: 12;
   }
-  .item-card.inspo:hover .inspo-refs { opacity: 1; }
+  /* v11.23: hover ref cluster hidden on the moodboard — the refs live under
+     "Attributes" inside the image viewer now, so the canvas stays clean. */
+  .item-card.inspo:hover .inspo-refs { opacity: 0; }
   /* v10.2: canon glass pill. Was opaque dark + blue-tinted border. */
   .ref-chip {
     background: transparent;
@@ -2202,17 +2219,8 @@
   /* v10.10: fabrics drawer sized identically to the notes drawer so it
      fits exactly inside the hamburger pane. Same top/right/bottom inset,
      same width (360px instead of 420px), same gradient shell. */
-  /* v11.22: the fabrics drawer uses the exact same glass as the hamburger
-     drawer, but it floats over the busy canvas, so its backdrop blur picked up
-     the moodboard cards and read differently. This scrim dims+blurs the canvas
-     behind it when open, so the drawer reads against a clean dark backdrop —
-     matching the hamburger, which sits over plain cosmos. */
-  body:has(#fabrics-drawer.open)::after {
-    content: ''; position: fixed; inset: 0; z-index: 199;
-    background: rgba(8,10,18,0.42);
-    -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
-    pointer-events: none;
-  }
+  /* v11.23: scrim removed — the main screen must NOT fade when Fabrics opens.
+     The drawer keeps the same glass recipe as the hamburger drawer. */
   #fabrics-drawer {
     position: fixed;
     top: 60px; right: 18px; bottom: 22px;
@@ -2600,8 +2608,9 @@
   .favorite-card {
     flex: 0 0 auto;
     scroll-snap-align: center;
-    width: 384px;
-    max-height: 70vh;
+    /* v11.23: vertical (portrait) favorite cards showing the cropped FRONT view. */
+    width: 264px;
+    max-height: 78vh;
     border-radius: 16px;
     overflow: hidden;
     background: transparent;
@@ -2614,13 +2623,20 @@
       0 0 18px 3px rgba(200,222,255,0.40),
       0 0 38px 8px rgba(200,222,255,0.20),
       0 8px 32px rgba(0,0,0,0.42);
-    animation: maya-vision-pulse 3.2s ease-in-out infinite;
+    /* v11.23: slower pulse + will-change for smoother glow; staggered per-card
+       below so they don't all breathe in lockstep. */
+    animation: maya-vision-pulse 3.8s ease-in-out infinite;
+    will-change: box-shadow;
     display: flex; flex-direction: column;
     position: relative;
     cursor: pointer;
     transition: transform 0.25s ease;
   }
   .favorite-card:hover { transform: translateY(-4px); }
+  /* v11.23: stagger the glow into 3 phases so favorites pulse independently. */
+  .favorite-card:nth-child(3n+1) { animation-delay: -0.6s; }
+  .favorite-card:nth-child(3n+2) { animation-delay: -1.8s; }
+  .favorite-card:nth-child(3n)   { animation-delay: -3.0s; }
 
   /* v9.12: Submit-mode viewer — strip every chrome element except the
      floating × and the Submit button. Triggered by data-mode="submit" on
@@ -2647,8 +2663,9 @@
     background: transparent;
     border: 0.5px solid rgba(255,255,255,0.32);
     border-radius: 100px;
-    padding: 6px 22px;
-    min-width: 160px;
+    /* v11.23: narrower. */
+    padding: 6px 18px;
+    min-width: 120px;
     font-family: 'Jost', sans-serif;
     font-size: 11px; font-weight: 300;
     letter-spacing: 0.15em; text-transform: uppercase;
@@ -2669,21 +2686,16 @@
     border-radius: 100px;
     pointer-events: none;
     box-shadow:
-      0 0 8px 1px rgba(210,228,255,0.55),
-      0 0 14px 2px rgba(210,228,255,0.28);
-    animation: maya-submit-pulse 1.6s ease-in-out infinite;
+      0 0 5px 0 rgba(210,228,255,0.30);
+    animation: maya-submit-pulse 2.6s ease-in-out infinite;
   }
   @keyframes maya-submit-pulse {
-    0%, 100% {
-      box-shadow:
-        0 0 6px 1px rgba(210,228,255,0.40),
-        0 0 10px 1px rgba(210,228,255,0.18);
-    }
-    50% {
-      box-shadow:
-        0 0 10px 2px rgba(230,242,255,0.75),
-        0 0 18px 3px rgba(230,242,255,0.36);
-    }
+    0%, 100% { box-shadow: 0 0 3px 0 rgba(210,228,255,0.22); }
+    50%      { box-shadow: 0 0 6px 1px rgba(215,232,255,0.40); }
+  }
+  /* v11.23: favorites Submit mode drops the button to the Tap-to-Listen height. */
+  #garment-modal[data-mode="submit"] #viewer-actions {
+    position: fixed; left: 0; right: 0; bottom: 22px; margin: 0; z-index: 4;
   }
   .viewer-submit-btn:hover {
     background: rgba(255,255,255,0.04);
@@ -2908,8 +2920,14 @@
      with the favorite cards now. */
   .favorite-card .fc-image {
     width: 100%;
-    aspect-ratio: 3 / 2;
-    background-size: cover; background-position: center;
+    /* v11.23: portrait, a touch long. */
+    aspect-ratio: 26 / 42;
+    /* Isolate the FRONT (middle) panel of the 3-view sheet: scale the image to
+       3x box width so each of the 3 panels == one box width, then center on the
+       middle one. */
+    background-size: 300% auto;
+    background-position: center center;
+    background-repeat: no-repeat;
   }
   /* v10: .fc-caption, .fc-tag (old absolute corner chip), #favorites-empty
      CSS removed — v9.4 stripped captions/tags from favorite cards. */
@@ -3466,7 +3484,7 @@
       el.innerHTML = '';
       google.accounts.id.renderButton(el, {
         theme: 'outline', size: 'large', text: 'signin_with',
-        shape: 'pill', logo_alignment: 'left', width: 240,
+        shape: 'pill', logo_alignment: 'left', width: 200,
       });
     }
   }
@@ -8102,7 +8120,16 @@ function viewerStep(delta) {
   viewerItemId = siblings[targetIdx].id;
   viewerDeselected.clear();   // fresh deselection state per version
   viewerFabricsDeselected.clear();
+  // v11.23: stepping to a sibling version exits favorites "submit" mode so the
+  // Modify / Send-to-Favorites row is available — you can favorite the version
+  // you navigated to, even if you opened from the favorites screen.
+  const _m = document.getElementById('garment-modal');
+  if (_m && _m.dataset.mode === 'submit') {
+    delete _m.dataset.mode;
+    if (typeof _setModifyStage === 'function') _setModifyStage('default');
+  }
   renderViewerContent(siblings[targetIdx]);
+  if (typeof _setModifyStage === 'function') _setModifyStage(_modifyStage || 'default');
 }
 
 // Render the card's refs as chips; clicking × marks them as "deselected"
@@ -9897,18 +9924,27 @@ async function idbSaveCurrentAsSession(name) {
     items:             itemsLite,
     ts:                Date.now(),
   };
-  const id = 'sess_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
+  const list = await idbListSavedSessions();
+  const wanted = (name || currentClientName || 'Untitled');
+  const norm = wanted.trim().toLowerCase();
+  // v11.23: overwrite a same-named session in place instead of creating a
+  // duplicate. Save just re-snapshots the current canvas + lastSummary
+  // (designer notes, non-negotiables, constraints, ideas) onto that session.
+  const existing = list.find(m => (m.name || '').trim().toLowerCase() === norm);
+  const id = existing ? existing.id
+                      : ('sess_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6));
   const meta = {
     id,
-    name: name || currentClientName || 'Untitled',
-    createdAt: snap.ts,
+    name: wanted,
+    createdAt: existing ? (existing.createdAt || snap.ts) : snap.ts,
+    updatedAt: snap.ts,
     twoWord: _twoWordFromItems(items),
     cardCount: itemsLite.length,
   };
   await idb(s => s.put(snap, 'maya-session-' + id));
-  const list = await idbListSavedSessions();
-  list.unshift(meta);  // newest first
-  await idb(s => s.put(list, 'maya-sessions-index'));
+  const next = list.filter(m => m.id !== id);
+  next.unshift(meta);  // newest first; moved to top on overwrite
+  await idb(s => s.put(next, 'maya-sessions-index'));
   return meta;
 }
 
