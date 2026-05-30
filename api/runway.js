@@ -72,7 +72,7 @@ export default async function handler(req, res) {
     const payload = {
       model:       MODEL,
       promptImage: dataUri,
-      promptText:  body.prompt || 'The model walks into frame, performs a slow full 360-degree turn to reveal the garment from every angle, then walks back out of frame. Seamless studio backdrop, soft even studio lighting held constant, camera locked off, smooth natural runway motion.',
+      promptText:  body.prompt || 'The model stays in one place and slowly rotates on the spot: starting facing the camera front-on, turning to a side profile, continuing around to show the back, then rotating back to face the camera front-on again — one smooth continuous turntable that loops seamlessly. The model does NOT walk and does NOT move toward or away from the camera. Camera is locked off, no zoom, no pan. Seamless studio backdrop, soft even studio lighting held perfectly constant throughout.',
       ratio:       body.ratio || '1280:720',
       duration:    Number(body.duration) || 5,   // seconds; Gen-4 Turbo classic = 5 or 10. 3 used if the account supports flexible durations.
     };
