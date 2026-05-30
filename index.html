@@ -4,8 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="11.15">
-<!-- v11.15 — (1) Clean/delete now persists: removeItem() writes to IndexedDB,
+<meta name="maya-version" content="11.16">
+<!-- v11.16 — restore now SELF-HEALS: the local session is de-duped by content
+     signature as it loads, so a session an earlier build had bloated with
+     compounded cloud duplicates collapses to unique cards automatically and is
+     re-saved clean (no manual wipe needed). Builds on the v11.15 persistence fix.
+     v11.15 — (1) Clean/delete now persists: removeItem() writes to IndexedDB,
      so cleaning the canvas (or deleting a card) survives a refresh instead of
      the old session "coming back". (2) Modify stage anchors content to the top
      so the image + ref tags no longer drop down and overlap the bottom action
@@ -9359,23 +9363,35 @@ async function _restoreSession() {
     if (snap.lastSummary)       lastSummary       = snap.lastSummary;
     if (snap.lastTranscript)    lastTranscript    = snap.lastTranscript;
     // Replay items onto the canvas (calls placeItemAt → creates DOM).
+    let _restoreDropped = 0;
     if (Array.isArray(snap.items)) {
       // Wait one tick so #maya-canvas exists in the DOM.
       await new Promise(r => requestAnimationFrame(r));
       const canvas = document.getElementById('maya-canvas');
       if (canvas) {
+        // v11.16: SELF-HEAL — dedupe the saved items by content signature
+        // before placing. An earlier build compounded cloud duplicates into
+        // the saved session on every page load (each reload roughly doubled
+        // the cards), so a long-lived session could carry hundreds of dupes.
+        // Collapsing them here means a bloated session loads clean instead of
+        // needing a manual wipe; we then re-persist the cleaned set below so
+        // the stored session shrinks back to reality.
+        const seen = new Set();
         for (const sav of snap.items) {
           if (!sav || !sav.card) continue;
+          const sig = _itemSig(sav);
+          if (seen.has(sig)) { _restoreDropped++; continue; }
+          seen.add(sig);
           try {
             // placeItemAt re-creates the DOM element AND adds the item to
-            // the `items` array. We just need to fire it for each saved card.
-            // v11.13: guarded — a missing/(0,0) coord goes to findFreeSpot
-            // instead of piling in the top-left corner.
+            // the `items` array. v11.13: guarded — a missing/(0,0) coord goes
+            // to findFreeSpot instead of piling in the top-left corner.
             _restorePlace(sav);
           } catch (e) {
             console.warn('[Maya restore item]', e);
           }
         }
+        if (_restoreDropped) console.log('[Maya] restore collapsed', _restoreDropped, 'duplicate card(s)');
       }
     }
     // Refresh dependent UI.
@@ -9392,6 +9408,10 @@ async function _restoreSession() {
       try { attachCaptionToImages(lastSummary.dream_outcome); } catch (_) {}
     }
     console.log('[Maya] session restored from IndexedDB');
+    // v11.16: if duplicates were collapsed, write the cleaned canvas back so
+    // the stored session (local + cloud) shrinks to the de-duped reality and
+    // doesn't keep reloading a bloated pile.
+    if (_restoreDropped && typeof _persistSession === 'function') _persistSession();
   } catch (e) {
     console.warn('[Maya restore]', e);
   }
