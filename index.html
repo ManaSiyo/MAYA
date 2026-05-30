@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="11.26">
+<meta name="maya-version" content="11.27">
 <!-- v11.23 — sessions: Save overwrites a same-named session (no duplicates),
      notes update live on it. Fabrics drawer scrim removed (main screen no longer
      fades). Google sign-in narrower (200). Attributes toggle sits tight under the
@@ -4929,10 +4929,12 @@ function _renderFavoritesScroller() {
       ? _buildPieceSummaryLine(f) : '';
     // v11.17: cached 360 showcase clip swaps in on hover; a "rendering" badge
     // shows while Runway is still working.
-    const videoHtml = f.card.showcaseVideoUrl
+    // v11.27: while SHOWCASE_VIDEO_ENABLED is off, never render the hover video
+    // or the rendering badge — favorites are still cards only.
+    const videoHtml = (SHOWCASE_VIDEO_ENABLED && f.card.showcaseVideoUrl)
       ? '<video class="fc-video" src="' + f.card.showcaseVideoUrl + '" muted loop playsinline preload="metadata"></video>'
       : '';
-    const pendingHtml = (!f.card.showcaseVideoUrl && f.card._showcasePending)
+    const pendingHtml = (SHOWCASE_VIDEO_ENABLED && !f.card.showcaseVideoUrl && f.card._showcasePending)
       ? '<div class="fc-rendering">rendering 360°…</div>'
       : '';
     return '<div class="favorite-card" data-id="' + f.id + '" ' +
@@ -5960,7 +5962,8 @@ function toggleFavorite(itemId) {
   // favorited, so the favorites screen plays instantly on hover. Generated once
   // per favorite, cached on the card forever. Self-disables silently if the
   // Runway proxy isn't configured (501) — safe to ship before the key exists.
-  if (it.card.favorited && it.card.image
+  if (SHOWCASE_VIDEO_ENABLED
+      && it.card.favorited && it.card.image
       && !it.card.showcaseVideoUrl && !it.card._showcasePending
       && typeof _generateShowcaseVideo === 'function') {
     _generateShowcaseVideo(it);
@@ -5974,6 +5977,11 @@ function toggleFavorite(itemId) {
 // /api/runway proxy to render a 3s turntable → poll → re-host in Firebase
 // Storage → cache the URL on the card. Favorites hover swaps image↔video.
 // ════════════════════════════════════════════════════════════
+// v11.27: MASTER SWITCH for the favorites showcase video. OFF for now —
+// Runway Gen-4 Turbo can't hold the face / neck through a full turn, so we
+// ship the still front-crop cards instead. Flip to true to bring the hover
+// video back (all the generation + hover-swap code below stays intact).
+const SHOWCASE_VIDEO_ENABLED = false;
 const SHOWCASE_DURATION = 3;            // seconds (cheap: 3 * 5 credits = $0.15)
 const SHOWCASE_RATIO    = '1280:720';   // landscape, fits the favorites box
 const SHOWCASE_PROMPT   = 'The model stays in one place and slowly rotates on the spot: starting facing the camera front-on, turning to a side profile, continuing around to show the back, then rotating back to face the camera front-on again — one smooth continuous turntable that loops seamlessly. The model does NOT walk and does NOT move toward or away from the camera. Camera is locked off, no zoom, no pan. Seamless studio backdrop, soft even studio lighting held perfectly constant throughout.';
