@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="11.21">
+<meta name="maya-version" content="11.22">
 <!-- v11.19 — garment viewer overhaul: the action row (Modify / Send to Favorites
      AND the modify rows) is now FIXED at bottom:22px, matching the moodboard's
      Tap-to-Listen bar exactly and never moving between states; default buttons
@@ -761,6 +761,8 @@
     font-size: 13px; line-height: 1;
     cursor: pointer; transition: all 0.2s;
     display: none; align-items: center; justify-content: center;
+    /* v11.22: bubbly rounded heart (SVG) instead of the pointy ♥ glyph. */
+    /* heart-svg sizing below. */
     padding: 0;
   }
   .item-card:hover .fav-btn { display: flex; }
@@ -772,6 +774,7 @@
     color: #ff97b6;
     box-shadow: 0 0 10px rgba(255,160,200,0.25);
   }
+  .item-card .fav-btn .heart-svg { width: 13px; height: 13px; display: block; }
 
   /* v5.15: resize handle for inspo image cards. Bottom-right corner,
      drag to scale the card width. */
@@ -1485,10 +1488,12 @@
     background: transparent;
     border: 0.5px solid rgba(255,255,255,0.22);
     border-radius: 100px;
-    padding: 4px 12px;
+    /* v11.22: smaller + italic — the refs stacked under the image read as a
+       quiet annotation, not loud chips. */
+    padding: 3px 9px;
     font-family: 'Jost', sans-serif;
-    font-size: 10px; font-weight: 300;
-    letter-spacing: 0.15em; text-transform: uppercase;
+    font-size: 8px; font-weight: 300; font-style: italic;
+    letter-spacing: 0.12em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     white-space: nowrap;
     backdrop-filter: blur(22px) saturate(180%);
@@ -1901,7 +1906,8 @@
     -webkit-backdrop-filter: blur(20px) saturate(180%);
   }
   #notes-drawer .session-item {
-    padding: 10px 14px;
+    position: relative;
+    padding: 10px 30px 10px 14px;
     border-bottom: 0.5px solid rgba(255,255,255,0.06);
     cursor: pointer;
     transition: background 0.15s;
@@ -1928,17 +1934,24 @@
     text-transform: uppercase;
     color: rgba(200,210,230,0.55);
   }
+  /* v11.22: × pinned to the top-right corner as a round bubble, shown on hover. */
   #notes-drawer .session-item-delete {
-    align-self: flex-end;
-    margin-top: -18px;
-    background: transparent;
-    border: none;
-    color: rgba(230,180,180,0.4);
-    font-size: 11px;
-    cursor: pointer;
-    padding: 0 4px;
+    position: absolute; top: 8px; right: 8px;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.06);
+    border: 0.5px solid rgba(255,255,255,0.2);
+    color: rgba(235,190,190,0.85);
+    font-size: 13px; line-height: 1;
+    cursor: pointer; padding: 0;
+    opacity: 0; transition: opacity 0.15s, color 0.15s, border-color 0.15s, background 0.15s;
   }
-  #notes-drawer .session-item-delete:hover { color: rgba(230,140,140,0.9); }
+  #notes-drawer .session-item:hover .session-item-delete { opacity: 1; }
+  #notes-drawer .session-item-delete:hover {
+    color: #ff97b6;
+    border-color: rgba(255,160,200,0.55);
+    background: rgba(255,160,200,0.14);
+  }
   #notes-drawer .sessions-empty {
     padding: 14px;
     font-family: 'Cormorant Garamond', serif;
@@ -2189,6 +2202,17 @@
   /* v10.10: fabrics drawer sized identically to the notes drawer so it
      fits exactly inside the hamburger pane. Same top/right/bottom inset,
      same width (360px instead of 420px), same gradient shell. */
+  /* v11.22: the fabrics drawer uses the exact same glass as the hamburger
+     drawer, but it floats over the busy canvas, so its backdrop blur picked up
+     the moodboard cards and read differently. This scrim dims+blurs the canvas
+     behind it when open, so the drawer reads against a clean dark backdrop —
+     matching the hamburger, which sits over plain cosmos. */
+  body:has(#fabrics-drawer.open)::after {
+    content: ''; position: fixed; inset: 0; z-index: 199;
+    background: rgba(8,10,18,0.42);
+    -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+    pointer-events: none;
+  }
   #fabrics-drawer {
     position: fixed;
     top: 60px; right: 18px; bottom: 22px;
@@ -2471,8 +2495,8 @@
     display: flex; gap: 3px; pointer-events: none;
   }
   .item-card .card-fabric-dot {
-    /* v11.21: 25x25 to match the other card icons. */
-    width: 25px; height: 25px; border-radius: 50%;
+    /* v11.22: 20x20 (slightly smaller than the action icons). */
+    width: 20px; height: 20px; border-radius: 50%;
     background-size: cover; background-position: center;
     background-color: rgba(0,0,0,0.4);
     border: 1px solid rgba(255,255,255,0.6);
@@ -3222,19 +3246,19 @@
   #thankyou.show { opacity: 1; pointer-events: auto; }
   #thankyou .ty-title {
     font-family: 'Cormorant Garamond', serif;
-    /* v11.6: clean text — no glow, no breathing. Lighter weight so it
-       doesn't shout. Reads sharp against the blurred background. */
-    font-weight: 300;
-    font-size: clamp(64px, 11vw, 128px);
+    /* v11.22: "Submitted to Maya" — bold. Size eased down since the line is
+       longer than the old "Thank you". */
+    font-weight: 600;
+    font-size: clamp(44px, 8vw, 92px);
     color: #ffffff;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.1em;
     text-shadow: none;
   }
   #thankyou .ty-sub {
     font-family: 'Jost', sans-serif;
-    font-size: 9px; font-weight: 300;
+    font-size: 10px; font-weight: 300;
     letter-spacing: 0.38em; text-transform: uppercase;
-    color: rgba(220,225,240,0.6);
+    color: rgba(220,225,240,0.7);
   }
 </style>
 </head>
@@ -3442,7 +3466,7 @@
       el.innerHTML = '';
       google.accounts.id.renderButton(el, {
         theme: 'outline', size: 'large', text: 'signin_with',
-        shape: 'pill', logo_alignment: 'left', width: 260,
+        shape: 'pill', logo_alignment: 'left', width: 240,
       });
     }
   }
@@ -3563,8 +3587,8 @@
      v11.6: title is "Thank you" (clean, no glow); subtitle "sent to Mana Siyo".
      Dismisses on any click / touch / Esc / Enter / Space, or after 4 s. -->
 <div id="thankyou">
-  <div class="ty-title">Thank you</div>
-  <div class="ty-sub">sent to Mana Siyo</div>
+  <div class="ty-title">Submitted to Maya</div>
+  <div class="ty-sub">thank you</div>
 </div>
 
 <!-- v5.8: splash gate. Logo removed (raster looks pixelated at large
@@ -4324,7 +4348,7 @@ function _placeItemInternal(card, delay, fixedPos) {
       ? '<div class="resize-handle" data-id="' + id + '" title="Drag to resize"></div>'
       : '';
     // v5.15: heart button on every card (top-left). Fills when favorited.
-    const favBtnHtml = '<button class="fav-btn' + (card.favorited ? ' is-fav' : '') + '" data-id="' + id + '" title="Favorite">&#x2665;</button>';
+    const favBtnHtml = '<button class="fav-btn' + (card.favorited ? ' is-fav' : '') + '" data-id="' + id + '" title="Favorite"><svg class="heart-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"/></svg></button>';
 
     el.innerHTML =
       stackBtnHtml +
@@ -4822,6 +4846,14 @@ function openFavoriteForSubmit(itemId) {
 // across multiple favorites and was full of em-dashes). Grouped by tag
 // type so the line reads like a curated tagline. Em-dashes are scrubbed
 // from any fallback path.
+// v11.22: clamp any summary to 15 words max.
+function _cap15Words(s) {
+  const words = (s || '').toString().trim().split(/\s+/);
+  if (words.length <= 15) return s;
+  let out = words.slice(0, 15).join(' ').replace(/[,;:]$/, '');
+  if (!/[.!?…]$/.test(out)) out += '…';
+  return out;
+}
 function _buildPieceSummaryLine(item) {
   if (!item || !item.card) return 'A dream garment, made just for them.';
 
@@ -4871,7 +4903,7 @@ function _buildPieceSummaryLine(item) {
     s = s.replace(/—/g, ' ').replace(/\s+/g, ' ').trim();
     s = s.charAt(0).toUpperCase() + s.slice(1);
     if (!/[.!?…]$/.test(s)) s += '.';
-    return s;
+    return _cap15Words(s);
   }
 
   // Fallback chain — only used if the favorite has fewer than 2 ref tags
@@ -4951,7 +4983,7 @@ async function _doSubmitConfirmed() {
   window.addEventListener('click',      dismiss, true);
   window.addEventListener('touchstart', dismiss, true);
   window.addEventListener('keydown',    dismiss, true);
-  timer = setTimeout(dismiss, 4000);
+  timer = setTimeout(dismiss, 2000);  // v11.22: 2s auto-dismiss (was 4s)
 }
 
 // v10.2: ALL custom touch/wheel screen-switch + drawer-toggle handlers
@@ -5736,7 +5768,7 @@ function toggleFavorite(itemId) {
 // ════════════════════════════════════════════════════════════
 const SHOWCASE_DURATION = 3;            // seconds (cheap: 3 * 5 credits = $0.15)
 const SHOWCASE_RATIO    = '1280:720';   // landscape, fits the favorites box
-const SHOWCASE_PROMPT   = 'The model walks into frame, performs a slow full 360-degree turn to reveal the garment from every angle, then walks back out of frame. Seamless studio backdrop, soft even studio lighting held constant, camera locked off, smooth natural runway motion.';
+const SHOWCASE_PROMPT   = 'The model stays in one place and slowly rotates on the spot: starting facing the camera front-on, turning to a side profile, continuing around to show the back, then rotating back to face the camera front-on again — one smooth continuous turntable that loops seamlessly. The model does NOT walk and does NOT move toward or away from the camera. Camera is locked off, no zoom, no pan. Seamless studio backdrop, soft even studio lighting held perfectly constant throughout.';
 
 async function _generateShowcaseVideo(it) {
   if (!it || !it.card || it.card._showcasePending || it.card.showcaseVideoUrl) return;
@@ -9989,6 +10021,14 @@ async function loadSavedSessionById(id) {
   // Also overwrite the auto-save slot so close-and-reopen keeps THIS session.
   try { await idb(s => s.put(snap, 'maya-session')); } catch (_) {}
   if (typeof refreshDrawerClientName     === 'function') refreshDrawerClientName();
+  // v11.22: re-render the notes panel for the loaded session — designer_notes,
+  // non_negotiables, constraints, design_ideas, sourcing_needs all live on
+  // lastSummary and were saved with the session, but switching sessions left
+  // the panel showing the previous one (or empty). Now it refreshes.
+  if (typeof renderNotesPanel === 'function') renderNotesPanel(lastSummary);
+  if (lastSummary && lastSummary.dream_outcome && typeof attachCaptionToImages === 'function') {
+    try { attachCaptionToImages(lastSummary.dream_outcome); } catch (_) {}
+  }
   showToast('Loaded: ' + (snap.currentClientName || 'session'));
   // Collapse the dropdown after picking.
   const block = document.querySelector('#notes-drawer .drawer-sessions');
