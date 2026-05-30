@@ -4,8 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="11.18">
-<!-- v11.17 — Runway ML 360 showcase: favoriting a piece pre-generates a 3-second
+<meta name="maya-version" content="11.19">
+<!-- v11.19 — garment viewer overhaul: the action row (Modify / Send to Favorites
+     AND the modify rows) is now FIXED at bottom:22px, matching the moodboard's
+     Tap-to-Listen bar exactly and never moving between states; default buttons
+     get the blue modify shade and sit closer together. Image capped at 48vh and
+     top-anchored so the middle holds the chips. Ref tags collapsed behind an
+     "Attributes" toggle (fixes them being pushed off-screen + cleaner UI).
+     Fabric chips ~20% smaller. Image-ref picker left button reads "None" on a
+     first-render Visualize and "Back" in the modify flow. Runway showcase prompt
+     = walk in → 360 → walk out, constant studio light.
+     v11.18 — favorites summary reads as a flowing sentence; cryptic "Failed to
+     fetch" network errors now show a friendly retry message.
+     v11.17 — Runway ML 360 showcase: favoriting a piece pre-generates a 3-second
      turntable video (front view → full rotation) via the new /api/runway proxy;
      the clip is re-hosted in Firebase Storage, cached on the card, and swaps in
      over the image on hover in the Favorites gallery. Self-disables until
@@ -2350,14 +2361,13 @@
   }
   /* v10: viewer fabric chip — canon glass pill (swatch hugs left). */
   .viewer-fabric-chip {
-    display: flex; align-items: center; gap: 8px;
-    /* v11.13: ~20% larger than the ref chips so the fabric driving the cut
-       reads as the heavier sibling in the same chip group. */
-    padding: 5px 16px 5px 5px; border-radius: 100px;
+    display: flex; align-items: center; gap: 6px;
+    /* v11.18: ~20% smaller than before. */
+    padding: 4px 13px 4px 4px; border-radius: 100px;
     background: transparent;
     border: 0.5px solid rgba(255,255,255,0.22);
     font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+    font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     backdrop-filter: blur(22px) saturate(180%);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
@@ -2368,7 +2378,7 @@
     transition: all 0.2s;
   }
   .viewer-fabric-chip .swatch {
-    width: 32px; height: 32px; border-radius: 50%;
+    width: 26px; height: 26px; border-radius: 50%;
     background-size: cover; background-position: center;
     background-color: rgba(255,255,255,0.05);
     border: 0.5px solid rgba(255,255,255,0.22);
@@ -2718,20 +2728,64 @@
   /* v11.14: tighter horizontal packing for the 3-pill modify row (was the
      shared 18px .viewer-row gap). */
   #viewer-row-modify-1 { gap: 8px; }
-  /* v11.15: in modify stage, anchor the modal content to the TOP. With the
-     action rows pulled out of flow (fixed, below), justify-content:center was
-     re-centering the shorter remaining stack — pushing the image + ref tags
-     DOWN so they overlapped the action row. flex-start keeps the image and
-     tags pinned up top; the empty space (and the action row) sit at the bottom. */
-  #garment-modal[data-stage="modifying"] {
+  /* v11.18: BOTH the default and modify stages anchor content to the top and
+     pin the action row to a FIXED spot at the bottom — so the Modify / Send-to-
+     Favorites row sits at the exact same height as the moodboard's Tap-to-Listen
+     bar and never moves between states. The image is capped so the middle space
+     holds the fabric chips + collapsible Attributes. (Submit/favorites mode and
+     photo-fullscreen keep their own layouts.) */
+  #garment-modal:not([data-mode="submit"]):not([data-photo="full"]) {
     justify-content: flex-start;
+    padding-top: 34px;
   }
-  /* action rows drop to the bottom of the screen so there's a clear gap
-     between the ref tags (top) and this row. */
-  #garment-modal[data-stage="modifying"] #viewer-actions {
-    position: fixed; left: 0; right: 0; bottom: 24px;
+  #garment-modal:not([data-mode="submit"]):not([data-photo="full"]) #garment-image-wrap,
+  #garment-modal:not([data-mode="submit"]):not([data-photo="full"]) #garment-image-wrap #garment-image {
+    max-height: 48vh;
+  }
+  #garment-modal:not([data-mode="submit"]):not([data-photo="full"]) #viewer-actions {
+    /* bottom:22px matches #voice-wrap exactly so the row sits at the same
+       height as the moodboard's Tap-to-Listen bar. */
+    position: fixed; left: 0; right: 0; bottom: 22px;
     margin: 0; z-index: 4;
   }
+  /* v11.18: default-state buttons share the blue modify shade, sit close
+     together, and live in the same fixed bottom row. */
+  .viewer-default-btn {
+    background: rgba(120,160,255,0.12);
+    border-color: rgba(150,185,255,0.4);
+    color: rgba(226,236,255,0.92);
+  }
+  .viewer-default-btn:hover {
+    background: rgba(120,160,255,0.2);
+    border-color: rgba(175,205,255,0.62);
+    color: #fff;
+  }
+  #viewer-row-default { gap: 6px; }
+  /* v11.18: collapsible "Attributes" — ref tags hide behind a toggle pill.
+     Collapsed by default; opens when #garment-modal gets .attrs-open. */
+  .attributes-toggle {
+    background: transparent;
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
+    padding: 5px 16px;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(245,250,255,0.85); cursor: pointer;
+    margin: 0 auto;
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,0.28),
+      inset 0 -1px 1px rgba(0,0,0,0.18),
+      0 4px 16px rgba(0,0,0,0.22);
+    transition: all 0.2s;
+  }
+  .attributes-toggle:hover { border-color: rgba(255,255,255,0.42); background: rgba(255,255,255,0.04); color: #fff; }
+  .attributes-toggle .attr-caret { display: inline-block; opacity: 0.7; transition: transform 0.2s; }
+  #garment-modal.attrs-open .attributes-toggle .attr-caret { transform: rotate(180deg); }
+  #garment-modal:not(.attrs-open) #viewer-refs { display: none; }
+  #garment-modal[data-mode="submit"] .attributes-toggle,
+  #garment-modal[data-photo="full"] .attributes-toggle { display: none !important; }
   /* In submit mode (favorites Submit), hide every Modify-mode chrome. */
   #garment-modal[data-mode="submit"] #viewer-row-modify-1,
   #garment-modal[data-mode="submit"] #viewer-row-modify-2,
@@ -3687,6 +3741,10 @@
   </div>
   <div id="garment-prompt-display"></div>
   <div id="viewer-fabrics"></div>
+  <!-- v11.18: the ref tags are now collapsed behind an "Attributes" toggle for
+       a cleaner viewer. The toggle is shown by renderViewerRefs only when refs
+       exist; #viewer-refs is hidden until #garment-modal has .attrs-open. -->
+  <button id="attributes-toggle" class="attributes-toggle" type="button" onclick="toggleAttributes()" style="display:none">Attributes <span class="attr-caret">&#9662;</span></button>
   <div id="viewer-refs"></div>
   <div id="modifications-bar"></div>
   <!-- v11.4/v11.6: 2-line italic piece summary, only shown in submit mode. -->
@@ -3805,7 +3863,7 @@
          "No, refs only" button was folded into Back; "Use N images" became
          the Submit counter. -->
     <div class="modal-actions">
-      <button class="top-btn subtle" onclick="imageRefBack()">Back</button>
+      <button class="top-btn subtle" id="image-ref-back-btn" onclick="imageRefBack()">Back</button>
       <button class="top-btn subtle" onclick="document.getElementById('image-ref-upload-input').click()">Upload</button>
       <button class="top-btn violet" id="image-ref-confirm" onclick="confirmImageRef()">Submit</button>
     </div>
@@ -5645,6 +5703,7 @@ function toggleFavorite(itemId) {
 // ════════════════════════════════════════════════════════════
 const SHOWCASE_DURATION = 3;            // seconds (cheap: 3 * 5 credits = $0.15)
 const SHOWCASE_RATIO    = '1280:720';   // landscape, fits the favorites box
+const SHOWCASE_PROMPT   = 'The model walks into frame, performs a slow full 360-degree turn to reveal the garment from every angle, then walks back out of frame. Seamless studio backdrop, soft even studio lighting held constant, camera locked off, smooth natural runway motion.';
 
 async function _generateShowcaseVideo(it) {
   if (!it || !it.card || it.card._showcasePending || it.card.showcaseVideoUrl) return;
@@ -5658,7 +5717,7 @@ async function _generateShowcaseVideo(it) {
     const genRes = await fetch('/api/runway', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ action: 'generate', image_b64: frontB64, duration: SHOWCASE_DURATION, ratio: SHOWCASE_RATIO }),
+      body: JSON.stringify({ action: 'generate', image_b64: frontB64, prompt: SHOWCASE_PROMPT, duration: SHOWCASE_DURATION, ratio: SHOWCASE_RATIO }),
     });
     if (genRes.status === 501) { it.card._showcasePending = false; return; } // not configured — quiet skip
     if (!genRes.ok) {
@@ -7897,6 +7956,9 @@ function renderViewerContent(item) {
   img.onload = () => img.classList.add('loaded');
   img.src = item.card.image;
   promptDisplay.textContent = item.card.caption || '';
+  // v11.18: every (re)open lands with Attributes collapsed for a clean viewer.
+  const modal = document.getElementById('garment-modal');
+  if (modal) modal.classList.remove('attrs-open');
   renderViewerVersionNav(item);
   renderViewerFabrics(item);
   renderViewerRefs(item);
@@ -7975,10 +8037,18 @@ function viewerStep(delta) {
 
 // Render the card's refs as chips; clicking × marks them as "deselected"
 // (struck through). Deselected chips are excluded from the next Modify.
+// v11.18: collapsible Attributes toggle.
+function toggleAttributes() {
+  const m = document.getElementById('garment-modal');
+  if (m) m.classList.toggle('attrs-open');
+}
 function renderViewerRefs(item) {
   const host = document.getElementById('viewer-refs');
   if (!host) return;
   const refs = item.card.refs || [];
+  // v11.18: show the "Attributes" toggle only when this card has ref tags.
+  const toggle = document.getElementById('attributes-toggle');
+  if (toggle) toggle.style.display = refs.length ? 'inline-flex' : 'none';
   if (!refs.length) { host.innerHTML = ''; return; }
   host.innerHTML = refs.map((r, idx) =>
     `<span class="viewer-ref-chip" data-idx="${idx}">
@@ -9282,6 +9352,16 @@ function updateImageRefConfirm() {
   btn.textContent = n ? ('Submit ' + n) : 'Submit';
   btn.disabled = !n;
   btn.style.opacity = n ? '1' : '0.5';
+  _syncImageRefBackLabel();
+}
+// v11.18: the left button means different things in the two flows. In the
+// modify flow it's a "Back" (return to the viewer / proceed without new refs);
+// on a first-render Visualize it's "None" — render WITHOUT any reference, since
+// there was no logical way to skip before. Same handler (imageRefBack), two labels.
+function _syncImageRefBackLabel() {
+  const b = document.getElementById('image-ref-back-btn');
+  if (!b) return;
+  b.textContent = (_imageRefAfterPick === 'modify-stage' || _imageRefAfterPick === 'modify') ? 'Back' : 'None';
 }
 async function confirmImageRef() {
   if (!_imageRefPickedIdxes.length) return;
