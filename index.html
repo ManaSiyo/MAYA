@@ -4,8 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="11.3">
-<!-- Maya v9.2 — restored drawer Avatar UI (face circle + name + measurements
+<meta name="maya-version" content="11.13">
+<!-- v11.13 — (1) garment viewer: collapsed the faint-caption "void", tightened
+     the modal to a single 12px rhythm, fabric chips ~20% larger. (2) Submit to
+     Drive simplified per Fromsa: the folder now holds ONLY one-pager.pdf — the
+     moodboard/summary/transcript JSON, dream-garment/inspo images, and the
+     shared ?submission= session link were all removed. (3) Session restore:
+     missing/(0,0) coords route to findFreeSpot instead of piling top-left;
+     cloud restore dedupes by content so it can't re-add duplicates after load.
+     (4) On-card ×/stack/heart icons enlarged to 40x40 (right cluster re-spaced).
+     Maya v9.2 — restored drawer Avatar UI (face circle + name + measurements
      form + Randomize + face photo upload) on top of v9.1. The closet SCREEN
      stays deleted; this only brings back the in-drawer sub-menu so designers
      can capture client identity (face photo, measurements) without the closet.
@@ -689,12 +697,13 @@
      when the card is favorited. Soft starlight-pink tint to distinguish
      from the other accent buttons. */
   .item-card .fav-btn {
-    position: absolute; top: -8px; left: -8px;
-    width: 22px; height: 22px; border-radius: 50%;
+    /* v11.13: enlarged to a 40x40 tap target. */
+    position: absolute; top: -12px; left: -12px;
+    width: 40px; height: 40px; border-radius: 50%;
     background: rgba(255,255,255,0.06);
     border: 0.5px solid rgba(255,255,255,0.2);
     color: rgba(225,235,255,0.55);
-    font-size: 12px; line-height: 1;
+    font-size: 18px; line-height: 1;
     cursor: pointer; transition: all 0.2s;
     display: none; align-items: center; justify-content: center;
     padding: 0;
@@ -804,11 +813,12 @@
      the border (red for delete, white for stack/dissect), not from a
      solid fill. */
   .item-card .delete-btn {
-    position: absolute; top: -8px; right: -8px;
-    width: 20px; height: 20px; border-radius: 50%;
+    /* v11.13: enlarged to a 40x40 tap target. */
+    position: absolute; top: -12px; right: -12px;
+    width: 40px; height: 40px; border-radius: 50%;
     background: transparent;
     border: 0.5px solid rgba(255,140,140,0.55);
-    color: rgba(255,200,200,0.95); font-size: 11px; cursor: pointer;
+    color: rgba(255,200,200,0.95); font-size: 20px; cursor: pointer;
     display: none; align-items: center; justify-content: center;
     backdrop-filter: blur(22px) saturate(180%);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
@@ -820,11 +830,12 @@
   .item-card:hover .delete-btn { display: flex; }
   /* Stack button — only meaningful on image cards (inspo) */
   .item-card .stack-btn {
-    position: absolute; top: -8px; right: 16px;
-    width: 20px; height: 20px; border-radius: 50%;
+    /* v11.13: enlarged to 40x40; shifted right so it clears the 40px delete. */
+    position: absolute; top: -12px; right: 40px;
+    width: 40px; height: 40px; border-radius: 50%;
     background: transparent;
     border: 0.5px solid rgba(255,255,255,0.22);
-    color: rgba(245,250,255,0.85); font-size: 11px; cursor: pointer;
+    color: rgba(245,250,255,0.85); font-size: 18px; cursor: pointer;
     display: none; align-items: center; justify-content: center;
     line-height: 1;
     backdrop-filter: blur(22px) saturate(180%);
@@ -838,7 +849,9 @@
   /* v5.1: Dissect button — only on UPLOADED inspo cards (not Maya visions).
      v10.2: canon pill chrome. */
   .item-card .dissect-btn {
-    position: absolute; top: -8px; right: 40px;
+    /* v11.13: pushed right to clear the enlarged 40px stack/delete icons;
+       top nudged so the 20px pill centers on the same axis as the circles. */
+    position: absolute; top: -2px; right: 92px;
     height: 20px; padding: 0 12px; border-radius: 100px;
     background: transparent;
     border: 0.5px solid rgba(255,255,255,0.22);
@@ -977,6 +990,18 @@
     visibility: visible;
     transition: opacity 0.22s ease, visibility 0s linear 0s;
   }
+  /* v11.13: garment viewer — tighten vertical rhythm. The 18px .modal gap,
+     the faint 30%-opacity caption block, the empty fabrics row and the
+     min-height modifications-bar together read as a dead "void" between the
+     version nav and the chip group. Collapse the decorative caption, drop the
+     empty mod-bar, zero the per-row margins, and run one consistent gap so
+     image → nav → chips → actions stack tightly with equal spacing. */
+  #garment-modal { gap: 12px; }
+  #garment-modal #garment-prompt-display { display: none; }
+  #garment-modal #viewer-version-nav { margin-top: 0; }
+  #garment-modal #viewer-fabrics { margin: 0 auto; }
+  #garment-modal #viewer-refs { margin: 0 auto; }
+  #garment-modal #modifications-bar:empty { display: none; }
   /* v10: .modal-close now carries the canon pill chrome. */
   .modal-close {
     position: absolute; top: 22px; right: 24px;
@@ -2282,11 +2307,13 @@
   /* v10: viewer fabric chip — canon glass pill (swatch hugs left). */
   .viewer-fabric-chip {
     display: flex; align-items: center; gap: 8px;
-    padding: 4px 14px 4px 4px; border-radius: 100px;
+    /* v11.13: ~20% larger than the ref chips so the fabric driving the cut
+       reads as the heavier sibling in the same chip group. */
+    padding: 5px 16px 5px 5px; border-radius: 100px;
     background: transparent;
     border: 0.5px solid rgba(255,255,255,0.22);
     font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     backdrop-filter: blur(22px) saturate(180%);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
@@ -2297,7 +2324,7 @@
     transition: all 0.2s;
   }
   .viewer-fabric-chip .swatch {
-    width: 28px; height: 28px; border-radius: 50%;
+    width: 32px; height: 32px; border-radius: 50%;
     background-size: cover; background-position: center;
     background-color: rgba(255,255,255,0.05);
     border: 0.5px solid rgba(255,255,255,0.22);
@@ -9028,14 +9055,18 @@ function _persistSession() {
       // v10.6: read REAL coordinates off the DOM element — items don't
       // carry it.x/it.y, the placement only sets el.style.left/top. Without
       // this every restored card piled up at (0,0).
-      const itemsLite = (items || []).map(it => {
+      // v11.13: only persist items that are actually on the canvas. Every
+      // live card has a DOM element; an el-less item is an orphan (e.g. a
+      // consumed ref that lingered in items[]) and was getting saved at
+      // (0,0), then resurrected as a stray top-left card on the next load.
+      const itemsLite = (items || []).filter(it => it && it.el && it.card).map(it => {
         const el = it.el;
-        const x  = el ? parseFloat(el.style.left) || 0 : 0;
-        const y  = el ? parseFloat(el.style.top)  || 0 : 0;
+        const x  = parseFloat(el.style.left) || 0;
+        const y  = parseFloat(el.style.top)  || 0;
         return {
           id: it.id,
           x, y,
-          card: it.card ? { ...it.card } : null,
+          card: { ...it.card },
         };
       });
       const snap = {
@@ -9124,6 +9155,30 @@ async function _firebaseSyncSession(snap) {
   }
 }
 
+// v11.13: shared restore-placement guard. The app never places a card at
+// (0,0) — findFreeSpot floors at x>=60, y>=110 — so a saved (0,0) (or a
+// missing/NaN coordinate) is always a phantom from a card that had no DOM
+// element when the snapshot was taken. Route those through findFreeSpot
+// instead of dumping them in the top-left corner.
+function _restorePlace(sav) {
+  const x = Number(sav.x), y = Number(sav.y);
+  if (Number.isFinite(x) && Number.isFinite(y) && !(x === 0 && y === 0)) {
+    placeItemAt(sav.card, x, y);
+  } else {
+    placeItem(sav.card, 0);
+  }
+}
+
+// v11.13: stable content signature for a saved/live item. Used to dedupe a
+// cloud restore against what the local IndexedDB restore already placed —
+// item ids are reassigned on restore (itemIdCounter++), so the old id-based
+// dedupe silently failed and re-added every card as a top-left duplicate.
+function _itemSig(it) {
+  const c = it && it.card ? it.card : {};
+  const img = (c.image || c.imageUrl || '');
+  return [c.kind || '', c.tag || '', c.title || '', img.slice(-48)].join('|');
+}
+
 // v11.0: pull cloud session and rebuild any items the local IndexedDB
 // cache didn't already restore. Items with imageUrl (Cloud Storage)
 // are placed with that URL as their image source — browser fetches it
@@ -9135,17 +9190,23 @@ async function _firebaseRestoreSession() {
   try { cloud = await window.mayaFirebase.loadSession('current'); }
   catch (e) { console.warn('[maya.firebase] loadSession failed', e); return; }
   if (!cloud || !cloud.items) return;
-  const existingIds = new Set((items || []).map(i => i.id));
+  // v11.13: dedupe by content signature, not id. Local restore already
+  // reassigned fresh ids, so cloud sav.id never matches a live id — the old
+  // check let every cloud card through as a duplicate (and `sav.x || 0`
+  // stacked the position-less ones in the top-left). Signature dedupe means
+  // cloud only fills in genuinely-missing cards (true cross-device case).
+  const have = new Set((items || []).map(_itemSig));
   let added = 0;
   for (const sav of cloud.items) {
     if (!sav || !sav.card) continue;
-    if (existingIds.has(sav.id)) continue;
     const card = { ...sav.card };
     // v11.0: if cloud has imageUrl (Storage), use it as the image source.
     // The canvas's <img src> works equally well with data URLs and HTTPS URLs.
     if (card.imageUrl && !card.image) card.image = card.imageUrl;
+    if (have.has(_itemSig({ card }))) continue;
     try {
-      placeItemAt(card, sav.x || 0, sav.y || 0);
+      _restorePlace({ card, x: sav.x, y: sav.y });
+      have.add(_itemSig({ card }));
       added++;
     } catch (e) {
       console.warn('[maya.firebase] restore item', e);
@@ -9182,7 +9243,9 @@ async function _restoreSession() {
           try {
             // placeItemAt re-creates the DOM element AND adds the item to
             // the `items` array. We just need to fire it for each saved card.
-            placeItemAt(sav.card, sav.x || 0, sav.y || 0);
+            // v11.13: guarded — a missing/(0,0) coord goes to findFreeSpot
+            // instead of piling in the top-left corner.
+            _restorePlace(sav);
           } catch (e) {
             console.warn('[Maya restore item]', e);
           }
@@ -9458,11 +9521,8 @@ async function loadSavedSessionById(id) {
   for (const sav of (snap.items || [])) {
     if (!sav || !sav.card) continue;
     try {
-      if (typeof sav.x === 'number' && typeof sav.y === 'number') {
-        placeItemAt(sav.card, sav.x, sav.y);
-      } else {
-        placeItem(sav.card, 0);
-      }
+      // v11.13: shared guard — also treats (0,0) as "no position".
+      _restorePlace(sav);
     } catch (e) { console.warn('[Maya load session item]', e); }
   }
   // Also overwrite the auto-save slot so close-and-reopen keeps THIS session.
@@ -9608,40 +9668,12 @@ async function doSaveToCloud() {
   }
   const { folder_id, folder_name } = await initRes.json();
 
-  // Build the list of files we'll upload (same set as doSave writes).
+  // v11.13: per Fromsa — for now the submission folder holds ONLY the
+  // one-pager PDF. The moodboard/summary/transcript JSON, the
+  // dream-garment + inspo images, and the shared-session ?submission= link
+  // were all dropped. The one-pager already carries the design details we
+  // need to monitor a submission from the get-go.
   const queue = [];
-
-  // moodboard.json — slim copy without base64 images.
-  const moodboardLite = items.map(i => {
-    const { image, ...rest } = i.card;
-    if (rest.fabrics && Array.isArray(rest.fabrics)) {
-      rest.fabrics = rest.fabrics.map(({ dataUrl, ...fr }) => fr);
-    }
-    return image ? { ...rest, image_in_pdf: true } : rest;
-  });
-  queue.push({
-    name: 'moodboard.json', mime_type: 'application/json',
-    data_b64: _utf8ToB64(JSON.stringify(moodboardLite, null, 2)),
-  });
-
-  // summary.json + transcript.txt
-  if (lastSummary) {
-    queue.push({
-      name: 'summary.json', mime_type: 'application/json',
-      data_b64: _utf8ToB64(JSON.stringify(lastSummary, null, 2)),
-    });
-    queue.push({
-      name: 'transcript.txt', mime_type: 'text/plain',
-      data_b64: _utf8ToB64(lastTranscript || '(no transcript captured)'),
-    });
-  } else if (lastTranscript) {
-    queue.push({
-      name: 'transcript.txt', mime_type: 'text/plain',
-      data_b64: _utf8ToB64(lastTranscript),
-    });
-  }
-
-  // one-pager.pdf + dream-garment.png
   if (lastOnePagerImage) {
     try {
       const pdfBlob = await renderOnePagerPdfBlob();
@@ -9650,30 +9682,6 @@ async function doSaveToCloud() {
         data_b64: await _blobToB64(pdfBlob),
       });
     } catch (e) { console.warn('[Maya cloud one-pager]', e); }
-    try {
-      const dgBlob = await (await fetch(lastOnePagerImage)).blob();
-      queue.push({
-        name: 'dream-garment.png', mime_type: 'image/png',
-        data_b64: await _blobToB64(dgBlob),
-      });
-    } catch (e) { console.warn('[Maya cloud dream-garment]', e); }
-  }
-
-  // Uploaded inspirations (flat names: "inspo-1.jpg" etc., grouped by prefix).
-  const uploadedInspo = items.filter(i =>
-    i.card.kind === 'inspo' && i.card.image && !i.card.inspirationId
-  );
-  let n = 0;
-  for (const it of uploadedInspo) {
-    n++;
-    try {
-      const blob = await (await fetch(it.card.image)).blob();
-      const ext  = (blob.type && blob.type.includes('png')) ? 'png' : 'jpg';
-      queue.push({
-        name: 'inspo-' + n + '.' + ext, mime_type: blob.type || 'image/jpeg',
-        data_b64: await _blobToB64(blob),
-      });
-    } catch (e) { console.warn('[Maya cloud inspo]', n, e); }
   }
 
   // 2) Upload each file sequentially.
@@ -9768,9 +9776,11 @@ async function renderOnePagerPdfBlob() {
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
   const pageW = pdf.internal.pageSize.getWidth();
   const pageH = pdf.internal.pageSize.getHeight();
-  pdf.addImage(page1.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, pageW, pageH);
+  // v11.13: 0.86 (was 0.92) keeps the 2-page PDF well under Vercel's 4.5 MB
+  // upload cap while staying crisp at 3× canvas scale.
+  pdf.addImage(page1.toDataURL('image/jpeg', 0.86), 'JPEG', 0, 0, pageW, pageH);
   pdf.addPage();
-  pdf.addImage(page2.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, pageW, pageH);
+  pdf.addImage(page2.toDataURL('image/jpeg', 0.86), 'JPEG', 0, 0, pageW, pageH);
   return pdf.output('blob');
 }
 
