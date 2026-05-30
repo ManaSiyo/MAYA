@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="11.23">
+<meta name="maya-version" content="11.26">
 <!-- v11.23 — sessions: Save overwrites a same-named session (no duplicates),
      notes update live on it. Fabrics drawer scrim removed (main screen no longer
      fades). Google sign-in narrower (200). Attributes toggle sits tight under the
@@ -295,6 +295,42 @@
 <script defer src="/_vercel/speed-insights/script.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* v11.24: global scrollbar theme — the default white/chunky bar (notably in
+     the hamburger drawer) was out of place. Thin, dark, translucent, matches
+     the glass family. Firefox via scrollbar-width/color; WebKit via ::-webkit. */
+  /* v11.25: thin + dark, blends into the cosmic background. No track fill. */
+  * { scrollbar-width: thin; scrollbar-color: rgba(150,175,225,0.28) transparent; }
+  *::-webkit-scrollbar { width: 5px; height: 5px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background: rgba(150,175,225,0.28);
+    border-radius: 100px;
+  }
+  *::-webkit-scrollbar-thumb:hover { background: rgba(180,205,255,0.45); }
+  *::-webkit-scrollbar-corner { background: transparent; }
+  /* belt-and-suspenders for the drawers (some WebKit builds ignore the * rule
+     on overflow containers): force the same thin dark thumb. */
+  #notes-drawer, #notes-drawer *, #fabrics-drawer, #fabrics-drawer * {
+    scrollbar-width: thin; scrollbar-color: rgba(150,175,225,0.28) transparent;
+  }
+  #notes-drawer::-webkit-scrollbar, #notes-drawer *::-webkit-scrollbar,
+  #fabrics-drawer::-webkit-scrollbar, #fabrics-drawer *::-webkit-scrollbar { width: 5px; height: 5px; }
+  #notes-drawer::-webkit-scrollbar-thumb, #notes-drawer *::-webkit-scrollbar-thumb,
+  #fabrics-drawer::-webkit-scrollbar-thumb, #fabrics-drawer *::-webkit-scrollbar-thumb {
+    background: rgba(150,175,225,0.28); border-radius: 100px;
+  }
+  #notes-drawer::-webkit-scrollbar-track, #notes-drawer *::-webkit-scrollbar-track,
+  #fabrics-drawer::-webkit-scrollbar-track, #fabrics-drawer *::-webkit-scrollbar-track { background: transparent; }
+
+  /* v11.24: GPU compositing hints so animated surfaces (cards, glow pulses,
+     drawer slide) run on their own layer = smooth at the display's full refresh
+     rate (60Hz, or 120Hz on ProMotion) with no stutter. */
+  .item-card, .favorite-card, #notes-drawer, #fabrics-drawer,
+  .viewer-submit-btn, #voice-bar {
+    -webkit-backface-visibility: hidden; backface-visibility: hidden;
+    transform: translateZ(0);
+  }
 
   /* v9.1: tunable transition speeds — single source of truth for screen
      slide-up + canvas fade. Try:
@@ -1657,17 +1693,64 @@
   /* v7.9: avatar identity button at the top of the drawer — circular
      face thumb + name. Clicking opens the avatar sub-menu. Replaces the
      old "client" text input and the "Avatar" pill in one step. */
-  #notes-drawer .drawer-avatar-button {
+  /* v11.25: avatar row holds the identity button + a switcher caret. */
+  #notes-drawer .drawer-avatar-row {
     width: 100%;
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; margin: 0 0 4px;
+  }
+  #notes-drawer .drawer-avatar-button {
     display: flex; align-items: center; justify-content: center;
     gap: 12px;
     padding: 6px 10px;
-    margin: 0 0 14px;
     background: transparent; border: none;
     cursor: pointer;
     transition: opacity 0.2s;
   }
   #notes-drawer .drawer-avatar-button:hover { opacity: 0.85; }
+  #notes-drawer .drawer-avatar-caret {
+    background: transparent; border: none;
+    color: rgba(200,215,245,0.7); cursor: pointer;
+    font-size: 12px; line-height: 1; padding: 4px;
+    transition: transform 0.2s, color 0.2s;
+  }
+  #notes-drawer .drawer-avatar-caret:hover { color: #fff; }
+  /* v11.25: avatar switcher — client roster. */
+  #notes-drawer .drawer-avatar-switcher {
+    margin: 0 0 14px;
+    border: 0.5px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.02);
+  }
+  #notes-drawer .avatar-switch-row {
+    width: 100%; display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; background: transparent; border: none;
+    border-bottom: 0.5px solid rgba(255,255,255,0.06);
+    color: rgba(235,243,255,0.9); cursor: pointer;
+    font-family: 'Cormorant Garamond', serif; font-size: 14px; font-style: italic;
+    transition: background 0.15s; text-align: left;
+  }
+  #notes-drawer .avatar-switch-row:last-child { border-bottom: none; }
+  #notes-drawer .avatar-switch-row:hover { background: rgba(180,205,255,0.08); }
+  #notes-drawer .avatar-switch-face {
+    width: 28px; height: 28px; border-radius: 50%;
+    background-size: cover; background-position: center;
+    background-color: rgba(255,255,255,0.05);
+    border: 0.5px solid rgba(255,255,255,0.22); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(220,232,255,0.32);
+  }
+  #notes-drawer .avatar-switch-new {
+    font-family: 'Jost', sans-serif; font-style: normal;
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(200,215,245,0.7); justify-content: center;
+  }
+  #notes-drawer .avatar-switch-empty {
+    padding: 14px; text-align: center;
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 12px; color: rgba(200,210,230,0.5);
+  }
   #notes-drawer .drawer-avatar-face {
     width: 72px; height: 72px;
     border-radius: 50%;
@@ -2608,9 +2691,10 @@
   .favorite-card {
     flex: 0 0 auto;
     scroll-snap-align: center;
-    /* v11.23: vertical (portrait) favorite cards showing the cropped FRONT view. */
-    width: 264px;
-    max-height: 78vh;
+    /* v11.25: vertical favorite cards, a touch wider; image aspect meets the
+       512×1024 panel halfway so head+feet aren't clipped. */
+    width: 280px;
+    max-height: 82vh;
     border-radius: 16px;
     overflow: hidden;
     background: transparent;
@@ -2920,11 +3004,13 @@
      with the favorite cards now. */
   .favorite-card .fc-image {
     width: 100%;
-    /* v11.23: portrait, a touch long. */
-    aspect-ratio: 26 / 42;
-    /* Isolate the FRONT (middle) panel of the 3-view sheet: scale the image to
-       3x box width so each of the 3 panels == one box width, then center on the
-       middle one. */
+    /* v11.25: aspect 27/50 (0.54) sits between the card's old shape and the
+       512×1024 panel's 0.5 — "meets halfway" so the front figure shows head to
+       feet with only a sliver of crop. */
+    aspect-ratio: 27 / 50;
+    /* Isolate the FRONT (middle) panel: scale the sheet to 3x card width so each
+       of the 3 panels == one card width, centered on the middle one. With the
+       seamless backdrop there are no panel lines to reveal at the edges. */
     background-size: 300% auto;
     background-position: center center;
     background-repeat: no-repeat;
@@ -3646,17 +3732,24 @@
     <!-- v7.9: avatar identity button replaces both the client text input
          AND the Avatar pill. Clicking the face opens the avatar sub-menu;
          name displays beside it (edited inside the sub-menu). -->
-    <button class="drawer-avatar-button" id="drawer-avatar-button" onclick="openAvatarSubMenu()" title="Avatar — face, name, measurements">
-      <div class="drawer-avatar-face" id="drawer-avatar-face"></div>
-      <span class="drawer-avatar-name" id="drawer-avatar-name">name</span>
-    </button>
+    <!-- v11.25: avatar identity row. The face circle + name open the avatar
+         sub-menu (edit face/measurements). The caret opens the avatar SWITCHER
+         (a library of saved clients) so you can change avatar any time. -->
+    <div class="drawer-avatar-row">
+      <button class="drawer-avatar-button" id="drawer-avatar-button" onclick="openAvatarSubMenu()" title="Avatar — face, name, measurements">
+        <div class="drawer-avatar-face" id="drawer-avatar-face"></div>
+        <span class="drawer-avatar-name" id="drawer-avatar-name">name</span>
+      </button>
+      <button class="drawer-avatar-caret" id="drawer-avatar-caret" onclick="toggleAvatarSwitcher()" title="Switch avatar / client">&#9662;</button>
+    </div>
+    <div class="drawer-avatar-switcher" id="drawer-avatar-switcher" style="display:none"></div>
 
     <!-- v11.3: Sessions dropdown at top — the "drawer of past sessions".
          Replaces the Fabrics pill that lived here in v10.x. Click the
          toggle to expand the list; click any session row to load it. -->
     <div class="drawer-sessions">
       <button class="drawer-sessions-toggle" onclick="toggleSessionsDropdown()" title="Saved sessions — click to browse, click a row to open">
-        <span class="sessions-label">Sessions</span>
+        <span class="sessions-label">Projects</span>
         <span class="sessions-caret" id="sessions-caret">&#9662;</span>
       </button>
       <div class="drawer-sessions-list" id="drawer-sessions-list" style="display:none">
@@ -3746,8 +3839,9 @@
 <!-- client-name modal (opened on Clear) -->
 <div class="modal" id="client-name-modal">
   <div class="modal-card">
-    <h2 id="client-name-modal-title">New consultation</h2>
-    <input type="text" id="client-name-input" placeholder="Session name" autocomplete="off" style="margin-top:18px">
+    <h2 id="client-name-modal-title">Name this project</h2>
+    <div class="modal-hint" id="client-name-modal-hint">What's this project about? You'll find it later under Projects.</div>
+    <input type="text" id="client-name-input" placeholder="e.g. Winter gala gown" autocomplete="off" style="margin-top:14px">
     <div class="modal-actions">
       <button class="top-btn subtle" onclick="cancelClientName()">Cancel</button>
       <button class="top-btn violet" id="client-name-modal-confirm" onclick="confirmClientName()">Begin</button>
@@ -3914,8 +4008,8 @@
   <button class="modal-close" onclick="closeImageRefPicker()">Close</button>
   <div class="modal-card" style="text-align:center">
     <!-- v11.14: title is a plain statement (centered), the question is gone. -->
-    <h2 id="image-ref-title">Your uploaded inspirations</h2>
-    <div class="modal-hint" id="image-ref-hint">Maya can use the actual image (color, fabric, mood) alongside your fabric and verbal references.</div>
+    <h2 id="image-ref-title">Use an inspiration as reference?</h2>
+    <div class="modal-hint" id="image-ref-hint">Optional — pick an image for Maya to pull color, fabric and mood from, or choose None.</div>
     <div style="font-family:'Jost',sans-serif;font-size:9px;font-weight:300;letter-spacing:0.18em;text-transform:uppercase;color:rgba(200,215,245,0.55);margin:4px 0 14px">Tap to select · you can pick multiple</div>
     <div class="fabric-pick-grid" id="image-ref-grid"></div>
     <!-- v11.10: hidden file input for the in-modal "Upload" button.
@@ -4711,7 +4805,16 @@ function cleanReferences() {
 // v5.5: New — start a fresh consultation (= existing clearAll, which opens
 // the client-name modal). Kept as an alias so the drawer button name maps
 // cleanly to user intent.
-function newConsultation() { clearAll(); }
+// v11.25: New = a blank canvas for the SAME client. Clears items/favorites/
+// notes but keeps the avatar (handled in _doClear) and does NOT prompt for a
+// name upfront — the project name is asked at Save time instead.
+function newConsultation() {
+  _doClear();
+  currentClientName = null;          // project label resets; avatar name stays
+  if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
+  if (typeof _renderAvatarBody === 'function') _renderAvatarBody();
+  showToast('New project — canvas cleared');
+}
 
 // ════════════════════════════════════════════════════════════
 // v10.1: 2-SCREEN NAVIGATION — native scroll-snap.
@@ -5031,11 +5134,11 @@ function setStatus(text) {
 // prompt. Locks the output to a three-panel atelier reference sheet
 // with FULL BODY in every panel. Crops are a hard failure.
 const FRAMING_MANDATE =
-  ' FRAMING — NON-NEGOTIABLE: render a single horizontal canvas divided into THREE equal vertical panels.' +
-  ' LEFT panel = SIDE view. CENTER panel = FRONT view (dominant hero). RIGHT panel = BACK view.' +
-  ' FULL BODY in every panel: the entire model from the top of the head to the soles of the feet MUST be inside the frame.' +
-  ' Never crop at ankles, wrists, or above the head. Same model, same pose category (relaxed standing), same height across all three panels.' +
-  ' Plain clean studio backdrop, soft even lighting, fashion editorial photography. No text, no labels, no captions, no measurement marks.';
+  ' FRAMING — NON-NEGOTIABLE: one continuous horizontal photograph of the SAME model standing THREE times across a single seamless studio set — SIDE view on the left, FRONT view in the center (dominant hero), BACK view on the right.' +
+  ' ONE unbroken backdrop and ONE continuous floor run edge to edge behind and beneath all three figures — NO panel dividers, NO seams, NO borders, NO vertical lines or gutters separating the figures, NO collage or grid look. It must read as three people photographed together in the same room, lit identically.' +
+  ' FULL BODY for each figure: the entire model from the top of the head to the soles of the feet MUST be inside the frame, with even margin above the head and below the feet — never crop at ankles, wrists, or above the head.' +
+  ' Same model, same pose category (relaxed standing), same height for all three.' +
+  ' Plain clean seamless studio backdrop, soft even lighting, fashion editorial photography. No text, no labels, no captions, no measurement marks.';
 
 // v10.12: measurements clause — the same body proportions get injected
 // into every render prompt that goes to the image API. Without this the
@@ -5421,12 +5524,97 @@ function saveAvatar() {
     else delete lastSummary._measurements[inp.dataset.key];
   });
   const n = Object.keys(lastSummary._measurements).length;
+  // v11.25: persist this avatar into the avatar LIBRARY so it can be switched
+  // to from any project.
+  _saveCurrentAvatarToLibrary();
   // v10.4: persist to IndexedDB so measurements survive reload.
   if (typeof _persistSession === 'function') _persistSession();
   showToast(n + ' measurement' + (n === 1 ? '' : 's') + ' saved');
   closeAvatarSubMenu();
   toggleNotesDrawer(false);
   refreshDrawerClientName();
+}
+
+// ════════════════════════════════════════════════════════════
+// v11.25: AVATAR LIBRARY — a roster of clients (face + measurements + name)
+// that persists across projects. Stored in IndexedDB under 'maya-avatars'.
+// The caret beside the avatar opens a switcher to change client any time.
+// ════════════════════════════════════════════════════════════
+let _avatarSwitcherOpen = false;
+function _avatarIdentity() {
+  if (!lastSummary) return null;
+  const name = lastSummary.client && lastSummary.client.name;
+  if (!name && !lastSummary._face_photo && !lastSummary._measurements) return null;
+  return {
+    name: name || 'client',
+    face: lastSummary._face_photo || null,
+    descriptors: lastSummary._face_descriptors || null,
+    measurements: lastSummary._measurements || null,
+  };
+}
+async function _loadAvatarLibrary() {
+  try { return (await idb(s => s.get('maya-avatars'))) || []; }
+  catch (_) { return []; }
+}
+async function _saveCurrentAvatarToLibrary() {
+  const id = _avatarIdentity();
+  if (!id || !id.name || id.name === 'client') return;  // need a real name to file it
+  try {
+    const lib = await _loadAvatarLibrary();
+    const key = id.name.trim().toLowerCase();
+    const rec = { id: key, ...id, updatedAt: Date.now() };
+    const next = lib.filter(a => a.id !== key);
+    next.unshift(rec);
+    await idb(s => s.put(next, 'maya-avatars'));
+  } catch (e) { console.warn('[Maya avatar lib]', e); }
+}
+async function toggleAvatarSwitcher() {
+  const panel = document.getElementById('drawer-avatar-switcher');
+  const caret = document.getElementById('drawer-avatar-caret');
+  if (!panel) return;
+  _avatarSwitcherOpen = !_avatarSwitcherOpen;
+  if (caret) caret.style.transform = _avatarSwitcherOpen ? 'rotate(180deg)' : '';
+  if (!_avatarSwitcherOpen) { panel.style.display = 'none'; return; }
+  const lib = await _loadAvatarLibrary();
+  const rows = lib.map(a =>
+    '<button class="avatar-switch-row" onclick="switchAvatar(\'' + escapeHtml(a.id) + '\')">' +
+      (a.face ? '<span class="avatar-switch-face" style="background-image:url(\'' + a.face + '\')"></span>'
+              : '<span class="avatar-switch-face empty">·</span>') +
+      '<span class="avatar-switch-name">' + escapeHtml(a.name) + '</span>' +
+    '</button>'
+  ).join('');
+  panel.innerHTML = (rows || '<div class="avatar-switch-empty">No saved clients yet. Set a name + face, then Save.</div>') +
+    '<button class="avatar-switch-row avatar-switch-new" onclick="newAvatar()">+ New client</button>';
+  panel.style.display = 'block';
+}
+async function switchAvatar(id) {
+  const lib = await _loadAvatarLibrary();
+  const a = lib.find(x => x.id === id);
+  if (!a) return;
+  // Switching client = a fresh blank project for that client.
+  _doClear();
+  lastSummary = {
+    client: { name: a.name },
+    _face_photo: a.face || null,
+    _face_descriptors: a.descriptors || null,
+    _measurements: a.measurements || null,
+  };
+  currentClientName = null;  // project label resets; avatar identity is a.name
+  refreshDrawerClientName();
+  if (typeof _renderAvatarBody === 'function') _renderAvatarBody();
+  if (typeof _persistSession === 'function') _persistSession();
+  toggleAvatarSwitcher();
+  showToast('Switched to ' + a.name);
+}
+function newAvatar() {
+  _doClear();
+  lastSummary = null;          // brand-new identity — blank face/measurements
+  currentClientName = null;
+  refreshDrawerClientName();
+  if (typeof _renderAvatarBody === 'function') _renderAvatarBody();
+  toggleAvatarSwitcher();
+  openAvatarSubMenu();         // jump straight into setting up the new client
+  showToast('New client — add a name, face & measurements');
 }
 // Helper for face-photo handlers — re-render whichever Avatar UI is active.
 function _refreshActiveAvatarView() {
@@ -5714,9 +5902,11 @@ function buildMeasurementsTwoColumnHtml(summary) {
 // her text appears. No 'Client:' prefix, no popup.
 function refreshDrawerClientName() {
   // v9.2: drawer top is the avatar identity button — face circle + name.
+  // v11.25: the label is the PERSON'S name (avatar identity), which persists
+  // across projects — prefer it over the project label.
   const face = document.getElementById('drawer-avatar-face');
   const nameEl = document.getElementById('drawer-avatar-name');
-  const n = currentClientName || (lastSummary && lastSummary.client && lastSummary.client.name);
+  const n = (lastSummary && lastSummary.client && lastSummary.client.name) || currentClientName;
   if (nameEl) nameEl.textContent = n || 'client';
   if (face) {
     const photo = (lastSummary && lastSummary._face_photo) || null;
@@ -5993,7 +6183,18 @@ function _doClear() {
     if (i.el) i.el.remove();
   });
   items = [];
-  lastSummary = null;
+  // v11.25: the AVATAR (face photo, measurements, descriptors + the client's
+  // own name) persists across New — a new project is a blank canvas for the
+  // SAME client, not a new person. Carry those fields onto a fresh summary
+  // instead of nulling lastSummary outright.
+  const _keepAvatar = lastSummary ? {
+    _face_photo:       lastSummary._face_photo || null,
+    _face_descriptors: lastSummary._face_descriptors || null,
+    _measurements:     lastSummary._measurements || null,
+    client:            (lastSummary.client && lastSummary.client.name) ? { name: lastSummary.client.name } : null,
+  } : null;
+  lastSummary = (_keepAvatar && (_keepAvatar._face_photo || _keepAvatar._measurements || _keepAvatar._face_descriptors || _keepAvatar.client))
+    ? _keepAvatar : null;
   lastTranscript = '';
   liveTranscriptBuffer = '';
   liveInterimBuffer = '';
@@ -7418,7 +7619,7 @@ function buildGarmentPrompt(opts = {}) {
   // Three-view atelier reference sheet (side · front · back) — the
   // standard tech-pack layout a designer/seamstress can cut from.
   const parts = [
-    'Atelier garment reference sheet on a single horizontal frame divided into three equal vertical panels: the SAME single garment worn by the SAME model shown three times across the frame — SIDE view on the LEFT panel, FRONT view CENTERED in the MIDDLE panel as the dominant hero view, BACK view on the RIGHT panel. Same pose category (relaxed standing) in each panel, full body, identical plain studio backdrop and even soft studio lighting across all three panels, fashion editorial photography, consistent garment proportions across all three views, no text, no labels, no captions'
+    'One continuous horizontal editorial photograph of the SAME model wearing the SAME single garment, standing THREE times across one seamless studio set — SIDE view on the left, FRONT view centered as the dominant hero, BACK view on the right. ONE unbroken backdrop and ONE continuous floor running edge to edge behind and beneath all three figures: NO panel dividers, NO seams, NO borders, NO vertical lines or gutters between the figures, NOT a collage or grid — it should read as three people photographed together in one room under identical soft even lighting. Full body for each figure with margin above the head and below the feet, relaxed standing pose, consistent garment proportions across all three, no text, no labels, no captions'
   ];
   const designers  = get('designer');
   const aesthetics = get('aesthetic', 'mood');   // unified
@@ -7467,10 +7668,11 @@ function buildGarmentPrompt(opts = {}) {
     parts.push('model approximately ' + heightIn + ' inches tall (match exactly)');
   }
   parts.push(
-    'three-view atelier reference sheet showing the SAME garment from three angles: ' +
+    'one continuous seamless photograph showing the SAME garment from three angles: ' +
     'side · front · back, on the SAME model with the SAME face, hair, skin tone, and ' +
-    'stance. The three views must show identical construction — same silhouette, same ' +
-    'seams, same details, same fabric. Do not vary the garment between views'
+    'stance, all sharing ONE unbroken backdrop and floor with NO dividing lines, seams, ' +
+    'or borders between the figures. The three views must show identical construction — ' +
+    'same silhouette, same seams, same details, same fabric. Do not vary the garment between views'
   );
   // v5.23: default undergarment rule. Render ONLY the specific garment(s)
   // discussed in the consultation. The rest of the model wears plain black
@@ -7651,10 +7853,12 @@ function modifySubmit() {
     deselected: new Set(viewerDeselected || []),
     fabricsDeselected: new Set(viewerFabricsDeselected || []),
   };
-  const hasStagedRefs = (selectedImageReferences && selectedImageReferences.length > 0);
   closeGarmentModal();
-  if (hasStagedRefs) _applyModifyWithPendingState();
-  else               maybeAskModifyImageRef();
+  // v11.24: a verbal-only modify (Tap to Listen → describe → Submit) applies
+  // DIRECTLY. We no longer pop the image-ref picker here — adding a reference is
+  // the explicit job of the "Add Reference" button, which stages refs ahead of
+  // time. Asking for a ref on every Submit was the bug.
+  _applyModifyWithPendingState();
 }
 
 // v11.10: Back link — abandons the modify, returns to default state.
@@ -9979,7 +10183,7 @@ async function saveSessionNow() {
   if (!currentClientName) {
     const title = document.getElementById('client-name-modal-title');
     const btn   = document.getElementById('client-name-modal-confirm');
-    if (title) title.textContent = 'Name this session';
+    if (title) title.textContent = 'Name this project';
     if (btn)   btn.textContent   = 'Save';
     document.getElementById('client-name-input').value = '';
     document.getElementById('client-name-modal').classList.add('open');
