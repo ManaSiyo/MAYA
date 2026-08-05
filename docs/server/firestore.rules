@@ -1,0 +1,37 @@
+rules_version = '2';
+// MAYA — v12 sealed-bin schema + legacy paths. Deleted means deleted:
+// tombstones are permanent and block all future writes to that project.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      match /sessions/{sessionId} {        // legacy boards + 'current' autosave
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+      match /favorites/{favId} {           // legacy favorites collection
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+      match /projects/{projectId} {        // v12 sealed bins
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow write: if request.auth != null && request.auth.uid == uid
+          && !exists(/databases/$(database)/documents/users/$(uid)/projectTombstones/$(projectId));
+      }
+      match /projectTombstones/{projectId} {
+        allow read, create: if request.auth != null && request.auth.uid == uid;
+        allow update, delete: if false;    // permanent — the dead stay dead
+      }
+      match /settings/{docId} {            // v12.4 per-account drafts (prompting engine)
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // v12.4 prompting engine — the shared words MAYA draws with.
+    // Everyone signed in can read them; only the atelier can change them.
+    match /config/{docId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.auth.token.email in ['fromsa@manasiyo.com', 'worldofsiyo@gmail.com'];
+    }
+  }
+}

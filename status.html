@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAYA Systems Map</title>
+<link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
+<link rel="icon" href="/aesthetics/ui/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="/aesthetics/ui/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#070a14;--panel:rgba(255,255,255,0.045);--line:rgba(255,255,255,0.22);
+    --ink:#eef2ff;--dim:rgba(238,242,255,0.55);--faint:rgba(238,242,255,0.35);
+    --grp:rgba(245,250,255,0.82);
+    --green:#4ade80;--amber:#fbbf24;--blue:rgba(245,250,255,0.85);--violet:rgba(245,250,255,0.7);--rose:#fda4af}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#000 url('/aesthetics/ui/birth-of-a-star.png') center / cover no-repeat fixed;
+       color:var(--ink);font-family:'Cormorant Garamond',Georgia,serif;padding:92px 28px 60px;min-height:100vh}
+  .wrap{max-width:1000px;margin:0 auto;text-align:center}
+
+  /* Top bar, mirrors the MAYA app exactly: logo left, wordmark, hamburger right */
+  #top-bar{position:fixed;top:0;left:0;right:0;height:60px;z-index:200;
+           display:flex;align-items:center;justify-content:space-between;padding:0 28px;
+           pointer-events:none}
+  #top-bar > *{pointer-events:auto}
+  #top-left-brand{display:flex;align-items:center;gap:10px;margin-left:-8px}
+  #top-left-brand .maya-logo-mark{width:52px;height:52px;object-fit:contain;opacity:0.92;
+    user-select:none;-webkit-user-drag:none}
+  #top-left-brand .brand-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;
+    letter-spacing:0.22em;color:rgba(255,255,255,0.9);text-transform:uppercase}
+  .top-btn{background:transparent;border:0.5px solid rgba(255,255,255,0.22);border-radius:100px;
+    padding:6px 14px;font-family:'Jost',sans-serif;font-size:10px;font-weight:300;
+    letter-spacing:0.15em;text-transform:uppercase;color:rgba(245,250,255,0.85);
+    cursor:pointer;transition:all .2s;
+    backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18)}
+  .top-btn:hover{border-color:rgba(255,255,255,0.42);color:rgba(245,250,255,1)}
+  .top-btn.hamburger{width:32px;height:28px;padding:0;display:flex;align-items:center;justify-content:center}
+  .hamburger-icon{display:inline-flex;flex-direction:column;gap:3px;width:14px}
+  .hamburger-icon span{display:block;height:1px;width:100%;background:currentColor;border-radius:1px}
+
+  /* Drawer: vault + behind the scenes links live here now */
+  #drawer{position:fixed;top:64px;right:16px;width:320px;max-height:calc(100vh - 90px);overflow:auto;
+          z-index:210;border:0.5px solid var(--line);border-radius:20px;padding:18px;
+          background:rgba(8,12,26,0.82);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
+          display:none}
+  #drawer.open{display:block}
+  #drawer h3{font-family:'Jost',sans-serif;font-weight:400;font-size:10px;letter-spacing:0.24em;
+             text-transform:uppercase;color:var(--grp);margin:14px 0 8px}
+  #drawer h3:first-child{margin-top:0}
+  #drawer a{text-align:left;display:block;text-decoration:none;color:var(--ink);font-size:14.5px;padding:7px 10px;
+            border-radius:10px;transition:background .2s}
+  #drawer a:hover{background:rgba(255,255,255,0.07)}
+  #drawer a small{display:block;font-family:'Jost',sans-serif;font-size:10px;color:var(--dim)}
+
+  .status-bar{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;margin:6px 0 8px;
+              border:0.5px solid var(--line);border-radius:16px;padding:13px 18px;background:rgba(10,16,34,0.55);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%)}
+  .status-item{display:flex;align-items:center;gap:8px;font-family:'Jost',Verdana,sans-serif;font-size:11px;
+               letter-spacing:0.1em;text-transform:uppercase;color:var(--dim)}
+  .sdot{width:6px;height:6px;border-radius:50%;background:var(--faint);transition:all .3s}
+  .sdot.ok{background:var(--green);box-shadow:0 0 6px rgba(74,222,128,0.5)}
+  .sdot.bad{background:var(--rose);box-shadow:0 0 6px rgba(253,164,175,0.5)}
+  .sdot.wait{background:var(--amber);animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:0.4}}
+  
+  #checked-at{text-align:center;font-family:'Jost',Verdana,sans-serif;font-size:10px;color:var(--faint);margin:6px 0 20px 4px}
+
+  h2.grp{font-size:11.5px;letter-spacing:0.26em;text-transform:uppercase;color:var(--grp);
+         font-family:'Jost',Verdana,sans-serif;font-weight:300;margin:26px 0 12px;
+         display:flex;align-items:baseline;gap:14px;justify-content:center}
+  h2.grp .aside{font-size:9.5px;letter-spacing:0.12em;color:var(--faint);text-transform:none}
+  h2.grp a{color:var(--blue);text-decoration:none;font-size:9.5px;letter-spacing:0.14em}
+
+  /* Latest submissions strip: 25vh tall, newest on the left, flows sideways */
+  #subs-strip{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;
+              height:25vh;min-height:190px;scrollbar-width:thin}
+  .sub-tile{position:relative;flex:0 0 auto;height:100%;aspect-ratio:3/4;border-radius:22px;overflow:hidden;
+            border:0.5px solid rgba(255,255,255,0.28);background:rgba(10,16,34,0.55);text-decoration:none;color:var(--ink);
+            box-shadow:0 0 34px rgba(180,200,255,0.22), inset 0 1px 0 rgba(255,255,255,0.12);
+            transition:border-color .2s, transform .2s, box-shadow .2s}
+  .sub-tile:hover{border-color:rgba(255,255,255,0.55);transform:translateY(-2px);box-shadow:0 0 48px rgba(180,200,255,0.34), inset 0 1px 0 rgba(255,255,255,0.12)}
+  .sub-tile.fresh{border-color:rgba(74,222,128,0.55)}
+  .sub-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top;opacity:0.92}
+  .sub-tile .veil{position:absolute;inset:auto 0 0 0;padding:26px 12px 10px;
+                  background:linear-gradient(transparent, rgba(0,4,12,0.88))}
+  .sub-tile .nm{font-size:15px;line-height:1.2}
+  .sub-tile .tm{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-top:3px}
+  .sub-tile .badge{position:absolute;top:10px;left:10px;font-family:'Jost',sans-serif;font-size:8.5px;
+                   letter-spacing:0.16em;text-transform:uppercase;color:#0b1408;background:var(--green);
+                   border-radius:20px;padding:3px 9px}
+  .sub-tile.more{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;
+                 font-family:'Jost',sans-serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dim)}
+  #subs-note-inline{font-family:'Jost',sans-serif;font-size:11px;color:var(--dim);
+                    border:0.5px dashed var(--line);border-radius:12px;padding:12px 14px;line-height:1.7}
+
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:6px}
+  .tile{border:0.5px solid var(--line);border-radius:13px;background:rgba(10,16,34,0.55);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18);padding:13px 15px}
+  .tile .k{font-family:'Jost',Verdana,sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--faint)}
+  .tile .v{font-size:26px;margin-top:5px}
+  .tile.live .v{color:var(--green)}
+  #traffic-note{font-family:'Jost',Verdana,sans-serif;font-size:10.5px;color:var(--dim);line-height:1.7;
+    border:0.5px dashed var(--line);border-radius:12px;padding:11px 14px}
+  #traffic-note.hidden,#traffic-tiles.hidden{display:none}
+  #gsi-slot{margin-top:8px}
+  pre.cmd{text-align:left;font-family:Menlo,monospace;font-size:10.5px;color:var(--ink);background:rgba(255,255,255,0.06);
+          border:0.5px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:10px;
+          white-space:pre-wrap;word-break:break-all;user-select:all}
+
+  /* Prompting engine */
+  .pe-panel{border:0.5px solid var(--line);border-radius:16px;background:rgba(10,16,34,0.55);
+            backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+            padding:12px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18)}
+  .pe-field label{text-align:center;display:block;font-family:'Jost',Verdana,sans-serif;font-size:9px;font-weight:300;
+                  letter-spacing:0.18em;text-transform:uppercase;color:var(--faint);margin-bottom:7px}
+  .pe-field textarea{text-align:left;width:100%;min-height:44px;height:44px;resize:vertical;color:var(--ink);
+      font-family:'Cormorant Garamond',Georgia,serif;font-size:13.5px;line-height:1.45;
+      background:transparent;border:0.5px solid rgba(255,255,255,0.16);border-radius:10px;padding:7px 10px;
+      outline:none;transition:border-color .25s}
+  .pe-field textarea:focus{border-color:rgba(255,255,255,0.42)}
+  .pe-row{grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  #pe-state{font-family:'Jost',Verdana,sans-serif;font-size:10px;letter-spacing:0.1em;color:var(--faint)}
+  .pe-live{border:0.5px solid var(--line);border-radius:16px;background:rgba(6,10,22,0.6);padding:16px 18px;margin-bottom:6px}
+  .pe-live h4{font-family:'Jost',sans-serif;font-weight:300;font-size:9.5px;letter-spacing:0.2em;
+              text-transform:uppercase;color:var(--grp);margin-bottom:9px}
+  .pe-live p{font-size:13.5px;line-height:1.65;color:var(--dim);margin-bottom:10px}
+  .pe-live p b{color:var(--ink);font-weight:500}
+  .pe-live pre{text-align:left;font-family:Menlo,monospace;font-size:10px;line-height:1.65;color:rgba(238,242,255,0.72);
+               white-space:pre-wrap;background:rgba(255,255,255,0.045);border:0.5px solid var(--line);
+               border-radius:10px;padding:11px 13px;margin-bottom:10px}
+
+  /* Architecture */
+  .arch{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .arch .col{border:0.5px solid var(--line);border-radius:16px;background:rgba(10,16,34,0.55);padding:16px 18px}
+  .arch h4{font-family:'Jost',sans-serif;font-weight:300;font-size:10px;letter-spacing:0.24em;
+           text-transform:uppercase;color:var(--grp);margin-bottom:10px}
+  .arch .it{text-align:center;border-bottom:0.5px solid rgba(255,255,255,0.08);padding:7px 0;font-size:14px}
+  .arch .it:last-child{border-bottom:0}
+  .arch .it small{display:block;font-family:'Jost',sans-serif;font-size:10px;color:var(--dim);line-height:1.5}
+  .arch-deploy{grid-column:1/-1;font-family:'Jost',sans-serif;font-size:10.5px;color:var(--dim);line-height:1.9;
+               border:0.5px dashed var(--line);border-radius:12px;padding:11px 15px}
+  .arch-deploy code{font-family:Menlo,monospace;font-size:10px;color:var(--ink)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+  .grid.doors{grid-template-columns:repeat(2,1fr);gap:14px}
+  .grid.doors .card b{font-size:19px}
+  .grid.doors .card p{font-size:12.5px}
+  .grid.doors a.card{padding:20px 18px;border-radius:16px}
+  a.card{display:block;text-decoration:none;color:var(--ink);border:0.5px solid var(--line);
+         border-radius:13px;padding:14px 15px;background:rgba(10,16,34,0.55);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+         box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18);transition:border-color .2s}
+  a.card:hover{border-color:rgba(255,255,255,0.5)}
+  .card b{display:block;font-size:15px;margin-bottom:3px}
+  .card p{font-size:11.5px;color:var(--dim);line-height:1.4}
+  .card .go{font-family:'Jost',Verdana,sans-serif;font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;
+            color:var(--blue);margin-top:8px;display:block}
+  .warn{margin-top:22px;border:0.5px solid rgba(253,164,175,0.3);border-radius:12px;padding:11px 15px;
+        font-size:12px;color:var(--rose);background:rgba(253,164,175,0.06)}
+  .money{margin-top:14px;font-size:12px;color:var(--dim);line-height:1.8}
+  .money b{color:var(--ink)}
+  @media (max-width: 640px) {
+    body{padding:84px 14px 40px}
+    #top-bar{padding:0 12px}
+    #top-left-brand .maya-logo-mark{width:40px;height:40px}
+    #top-left-brand .brand-title{font-size:15px}
+    .status-bar{gap:10px;padding:12px 14px}
+    #recheck{margin-left:0;width:100%}
+    .grid{grid-template-columns:1fr 1fr}
+    .grid.doors{grid-template-columns:1fr}
+    .tiles{grid-template-columns:1fr 1fr}
+    .pe-panel{grid-template-columns:1fr}
+    .arch{grid-template-columns:1fr}
+    a.card{min-width:0}
+    .card b{font-size:14px}
+    .card .go{word-break:break-all}
+  }
+</style>
+</head>
+<body>
+
+<div id="top-bar">
+  <div id="top-left-brand">
+    <img class="maya-logo-mark" src="/aesthetics/ui/logo-208.png" alt="" onclick="location.reload()" style="cursor:pointer" title="Tap to refresh" />
+    <span class="brand-title">Systems Map</span>
+  </div>
+  <button class="top-btn hamburger" onclick="document.getElementById('drawer').classList.toggle('open')" title="Menu">
+    <span class="hamburger-icon"><span></span><span></span><span></span></span>
+  </button>
+</div>
+
+<div id="drawer">
+  <h3>The vault, where data physically lives</h3>
+  <a href="https://console.firebase.google.com/project/pro-maya/firestore/databases/-default-/data/~2Fusers" target="_blank">Boards and projects<small>Firestore. Delete a collection here to truly destroy it.</small></a>
+  <a href="https://console.firebase.google.com/project/pro-maya/storage/pro-maya.firebasestorage.app/files/~2Fusers" target="_blank">Pictures<small>Storage. Every uploaded and generated image.</small></a>
+  <a href="https://drive.google.com/drive/folders/1ZEgQi3BpYDlNMsIMK553dLQs0kKiga35" target="_blank">Client PDFs<small>The Drive submissions folder.</small></a>
+  <h3>Behind the scenes</h3>
+  <a href="https://console.firebase.google.com/project/pro-maya/hosting/sites/pro-maya" target="_blank">Hosting<small>Deploys, one click rollback.</small></a>
+  <a href="https://console.cloud.google.com/run/detail/us-west1/maya-api/logs?project=pro-maya" target="_blank">API logs<small>Every request, every real error.</small></a>
+  <a href="https://console.cloud.google.com/run/detail/us-west1/maya-api/revisions?project=pro-maya" target="_blank">Keys and settings<small>API keys, environment.</small></a>
+  <a href="https://console.cloud.google.com/billing/018BFD-6096F2-A2094E/credits?project=pro-maya" target="_blank">Credits<small>Balance and burn.</small></a>
+  <a href="https://manasiyo.com/design" target="_blank">Design Studio<small>The Wix page that sends visitors in.</small></a>
+</div>
+
+<div class="wrap">
+
+  <div class="status-bar">
+    <div class="status-item"><span class="sdot wait" id="d-site"></span>Site</div>
+    <div class="status-item"><span class="sdot wait" id="d-api"></span>API</div>
+    <div class="status-item"><span class="sdot wait" id="d-assets"></span>Images</div>
+    <div class="status-item"><span class="sdot wait" id="d-backup"></span>Backup</div>
+    <button id="recheck" class="top-btn" onclick="runChecks()">Check now</button>
+  </div>
+  <div id="checked-at">checking&#8230;</div>
+  <div class="grid doors" style="grid-template-columns:repeat(3,1fr);margin:14px 0 6px">
+    <a class="card" href="/backend.html"><b>Backend</b><span class="go">Open &rarr;</span></a>
+    <a class="card" href="https://maya.manasiyo.com" target="_blank"><b>MAYA</b><span class="go">Open &rarr;</span></a>
+    <a class="card" href="https://manasiyo.com" target="_blank"><b>Manasiyo.com</b><span class="go">Open &rarr;</span></a>
+  </div>
+
+
+  <div id="signin-panel" class="status-bar" style="margin-top:0">
+    <span style="font-size:14.5px;color:var(--dim)">Sign in once and everything unlocks: submissions, traffic, and the prompting engine.</span>
+    <span id="gsi-slot" style="margin:0 0 0 auto"></span>
+  </div>
+
+  <h2 class="grp">Latest submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span>
+    <a class="aside" href="https://drive.google.com/drive/folders/1ZEgQi3BpYDlNMsIMK553dLQs0kKiga35" target="_blank">Open Drive folder &rarr;</a></h2>
+  <div id="subs-strip" style="display:none"></div>
+  <div id="subs-note-inline">Waiting for the one sign in at the top of the page.</div>
+
+  <h2 class="grp">Traffic, this website</h2>
+  <div id="traffic-tiles" class="tiles hidden"></div>
+  <div id="traffic-note">checking&#8230;</div>
+
+  <h2 class="grp">Operating Room Beta</h2>
+  <div class="grid doors" style="grid-template-columns:1fr;max-width:420px;margin:0 auto 6px">
+    <a class="card" href="/aesthetics/operations-beta/" target="_blank"><b>Operating Room Beta</b><span class="go">Open &rarr;</span></a>
+  </div>
+
+  <h2 class="grp">Prompting engine</h2>
+  <div class="pe-live">
+    <h4>Fixed, baked into every render (not editable here)</h4>
+    <p>Every image MAYA generates is built from four layers: the <b>design specification</b> from the consultation,
+       the <b>client's body</b>, the <b>client's face</b>, and the <b>framing mandate</b> below. Your three fields
+       further down are appended on top as atelier directions.</p>
+    <pre id="pe-framing">FRAMING, NON NEGOTIABLE: one continuous horizontal photograph of the SAME model standing THREE times across a single seamless studio set, SIDE view on the left, FRONT view in the center (dominant hero), BACK view on the right. ONE unbroken backdrop and ONE continuous floor run edge to edge behind and beneath all three figures. NO panel dividers, NO seams, NO borders, NO collage or grid look. FULL BODY for each figure, head to soles inside the frame. Same model, same pose category, same height for all three. Plain clean seamless studio backdrop, soft even lighting, fashion editorial photography. No text, no labels, no captions, no measurement marks.</pre>
+    <p><b>The body layer:</b> when measurements are captured in the avatar drawer, the prompt adds
+       "The model has these proportions: approximately H inches tall, S inch shoulders, C inch chest, W inch waist, H inch hips."
+       If a measurement was never typed in, it is not sent, and the image model guesses. That is why a 6 foot 6 character
+       can come out short: image models treat height as a weak suggestion unless the rest of the prompt reinforces it.
+       Writing something like "an unusually tall model, long legs, elongated proportions" in The Character field below
+       pushes it much harder than the number alone.</p>
+    <p><b>The face layer:</b> gender presentation, age range, skin tone, face shape, eyes and hair are extracted once
+       from the face photo and repeated verbatim in every render so the person stays the same across views.</p>
+    <p><b>Your three fields:</b> saved here, stored in Firestore, read by the live app at sign in, and appended to
+       every render as "CHARACTER atelier direction", "BACKGROUND atelier direction", "STYLE atelier direction".</p>
+  </div>
+  <h4 style="font-family:'Jost',sans-serif;font-weight:300;font-size:9.5px;letter-spacing:0.2em;text-transform:uppercase;color:var(--grp);margin:14px 0 8px">Modifiable, appended to every render</h4>
+  <div class="pe-panel">
+    <div class="pe-field"><label for="pe-character">The character</label>
+      <textarea id="pe-character" placeholder="How the person wearing the design is described&#8230;"></textarea></div>
+    <div class="pe-field"><label for="pe-background">The background</label>
+      <textarea id="pe-background" placeholder="The world behind them&#8230;"></textarea></div>
+    <div class="pe-field"><label for="pe-style">The style</label>
+      <textarea id="pe-style" placeholder="Lens, light, finish, the rendering style&#8230;"></textarea></div>
+    <div class="pe-row" style="justify-content:center"><button id="pe-save" class="top-btn" onclick="savePrompting()">Save to the live app</button><span id="pe-state">waiting for the one sign in at the top of the page</span></div>
+  </div>
+
+  <h2 class="grp" id="architecture">Architecture, local and online</h2>
+  <div class="arch">
+    <div class="col">
+      <h4>Your Mac, Desktop/MAYA</h4>
+      <div class="it">index.html, status.html, backend.html<small>The three pages. Published copies are what the world sees.</small></div>
+      <div class="it">aesthetics/<small>ui, fabrics, headshots, the operations engine. All published on deploy.</small></div>
+      <div class="it">docs/<small>Never published. Operating room R&amp;D, the server source, the deploy config.</small></div>
+    </div>
+    <div class="col">
+      <h4>Google, project pro-maya</h4>
+      <div class="it">Firebase Hosting<small>Serves the last deployed snapshot at maya.manasiyo.com.</small></div>
+      <div class="it">Cloud Run, maya-api<small>OpenAI proxy, Drive submit, admin feeds. Keys live here.</small></div>
+      <div class="it">Firestore + Storage + Drive<small>Sessions, projects, images, client PDFs. Lives only online.</small></div>
+    </div>
+    <div class="arch-deploy">
+      Publish the site: <code>cd ~/Desktop/MAYA/docs &amp;&amp; firebase deploy --only hosting</code>
+      &nbsp;&nbsp;Publish the server: <code>cd ~/Desktop/MAYA/docs/server &amp;&amp; gcloud run deploy maya-api --source . --region us-west1 --project pro-maya</code>
+    </div>
+  </div>
+
+  <div class="warn">Never delete the Google project <b>maya-496803</b>, it holds MAYA's sign-in keys.</div>
+  <div class="money">Runs on Google credits, AI by OpenAI, main site and DNS on Wix, health check every morning, emails only on failure</div>
+</div>
+
+<script>
+function setDot(id,s){document.getElementById(id).className='sdot '+s}
+function probeImage(url){return new Promise(res=>{const i=new Image();const t=setTimeout(()=>res(false),8000);
+  i.onload=()=>{clearTimeout(t);res(true)};i.onerror=()=>{clearTimeout(t);res(false)};i.src=url+'?cb='+Date.now()})}
+async function runChecks(){
+  ['d-site','d-api','d-assets','d-backup'].forEach(id=>setDot(id,'wait'));
+  document.getElementById('checked-at').textContent='checking…';
+  const [site,assets,backup]=await Promise.all([
+    probeImage('https://maya.manasiyo.com/aesthetics/ui/logo.png'),
+    probeImage('https://maya.manasiyo.com/aesthetics/fabrics/Red%20Royal.JPG'),
+    probeImage('https://pro-maya.web.app/aesthetics/ui/logo.png')]);
+  let api=false;
+  try{const r=await fetch('https://maya.manasiyo.com/api/healthz?cb='+Date.now());api=r.ok&&(await r.json()).ok===true}catch(e){}
+  setDot('d-site',site?'ok':'bad');setDot('d-api',api?'ok':'bad');
+  setDot('d-assets',assets?'ok':'bad');setDot('d-backup',backup?'ok':'bad');
+  document.getElementById('checked-at').textContent='last checked '+new Date().toLocaleString()+
+    ((site&&api&&assets&&backup)?', all systems go':', something needs attention');
+}
+runChecks();
+</script>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+const _CLIENT_ID = '90396949475-7cen4909qftr8hf4la86nuhus38isid1.apps.googleusercontent.com';
+let _idTok = null;
+function _note(html) {
+  const n = document.getElementById('traffic-note');
+  n.classList.remove('hidden'); n.innerHTML = html;
+}
+function _showSignin(show) {
+  const p = document.getElementById('signin-panel');
+  if (p) p.style.display = show ? '' : 'none';
+}
+function _gisBoot() {
+  if (!window.google || !google.accounts || !google.accounts.id) return setTimeout(_gisBoot, 250);
+  google.accounts.id.initialize({ client_id: _CLIENT_ID, callback: r => {
+    if (r && r.credential) { _idTok = r.credential; _showSignin(false); loadTraffic(); loadSubmissions(); _fbBridge(r.credential); }
+  }, auto_select: true });
+  google.accounts.id.prompt();
+  _renderGsiBtn();
+}
+function _renderGsiBtn() {
+  const slot = document.getElementById('gsi-slot');
+  if (slot && window.google && google.accounts && google.accounts.id) {
+    google.accounts.id.renderButton(slot, { theme: 'filled_black', size: 'medium', shape: 'pill' });
+  }
+}
+const RUN_CMD = 'gcloud services enable analyticsdata.googleapis.com analyticsadmin.googleapis.com --project pro-maya &amp;&amp; cd ~/Desktop/MAYA/docs/server &amp;&amp; gcloud run deploy maya-api --source . --region us-west1 --project pro-maya';
+function _cmdBlock(label) {
+  return label + '<pre class="cmd">' + RUN_CMD + '</pre>' +
+    '<span style="color:var(--faint)">Paste that into Terminal on the Mac once, traffic and submissions both switch on, no other steps.</span>';
+}
+function _expired() {
+  _idTok = null;
+  _showSignin(true);
+  _note('Your sign in expired, sign in once above and everything comes back.');
+  _renderGsiBtn();
+  try { google.accounts.id.prompt(); } catch (_) {}
+}
+function _subsNote(html) {
+  const n = document.getElementById('subs-note-inline');
+  n.style.display = ''; n.innerHTML = html;
+}
+async function loadSubmissions() {
+  const strip = document.getElementById('subs-strip');
+  if (!_idTok) { _subsNote('Waiting for the one sign in at the top of the page.'); return; }
+  let r;
+  try { r = await fetch('/api/admin/submissions?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + _idTok }, cache: 'no-store' }); }
+  catch (_) { _subsNote('The request was blocked before reaching the API. An ad blocker extension may be interfering, try pausing it for this site.'); return; }
+  if (r.status === 404) { _subsNote(_cmdBlock('<b>FEED PENDING, one command switches it on:</b>')); return; }
+  if (r.status === 401) { _expired(); return; }
+  if (r.status === 403) { _subsNote('This Google account is not on the admin list.'); return; }
+  if (!r.ok) return;
+  const data = await r.json();
+  document.getElementById('subs-note-inline').style.display = 'none';
+  strip.style.display = '';
+  document.getElementById('subs-count').textContent = data.total ? data.total + ' total' : '';
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const when = iso => { const d = new Date(iso), ago = Date.now() - d.getTime();
+    if (ago < 3600000) return Math.max(1, Math.round(ago/60000)) + ' min ago';
+    if (ago < 86400000) return Math.round(ago/3600000) + ' h ago';
+    return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); };
+  // Newest first: API already returns createdTime desc, so the latest lands leftmost.
+  strip.innerHTML = (data.folders || []).map(f => {
+    const isNew = Date.now() - new Date(f.createdTime).getTime() < 86400000;
+    const anyImg = (f.files || []).find(x => /^image\//i.test(x.mime || ''));
+    const pdf = (f.files || []).find(x => /pdf/i.test(x.mime || '') || /\.pdf$/i.test(x.name || ''));
+    const thumbId = (anyImg && anyImg.id) || (pdf && pdf.id) || '';
+    const img = thumbId ? '<img loading="lazy" src="https://drive.google.com/thumbnail?id=' + esc(thumbId) + '&sz=w480" alt="" onerror="this.remove()">' : '';
+    return '<a class="sub-tile' + (isNew ? ' fresh' : '') + '" href="/backend.html?submission=' + encodeURIComponent(f.id) + '&name=' + encodeURIComponent(f.name) + '" title="Open in the Backend">' +
+      img + (isNew ? '<span class="badge">New</span>' : '') +
+      '<span class="veil"><span class="nm">' + esc(f.name) + '</span><span class="tm">' + when(f.createdTime) + '</span></span></a>';
+  }).join('') +
+  '<a class="sub-tile more" href="https://drive.google.com/drive/folders/1ZEgQi3BpYDlNMsIMK553dLQs0kKiga35" target="_blank" rel="noopener">All submissions in Drive</a>';
+  if (!(data.folders || []).length) {
+    strip.style.display = 'none';
+    _subsNote('No submissions yet, they appear here the moment one lands.');
+  }
+}
+async function loadTraffic() {
+  const tiles = document.getElementById('traffic-tiles');
+  if (!_idTok) { _note('Waiting for the one sign in at the top of the page.'); return; }
+  let r;
+  try { r = await fetch('/api/admin/analytics?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + _idTok }, cache: 'no-store' }); }
+  catch (_) { _note('Could not reach the API.'); return; }
+  if (r.status === 404) { _note(_cmdBlock('<b>TRAFFIC PENDING, one command switches it on:</b>')); return; }
+  if (r.status === 401) { _expired(); return; }
+  if (r.status === 403) { _note('This Google account is not on the admin list.'); return; }
+  if (!r.ok) { _note('Traffic unavailable right now (' + r.status + ').'); return; }
+  const d = await r.json();
+  if (!d.ok) {
+    _note('<b>Connect Google Analytics (one time):</b> Google Analytics &#8594; Admin &#8594; Property access management &#8594; add <b>'
+      + (d.saEmail || 'the Cloud Run service account') + '</b> as Viewer. Numbers appear a minute later.');
+    return;
+  }
+  const t = d.ranges || {};
+  tiles.innerHTML =
+    '<div class="tile live"><div class="k">&#9679; live now</div><div class="v">' + d.live + '</div></div>' +
+    '<div class="tile"><div class="k">today</div><div class="v">' + ((t.today || {}).users || 0) + '</div></div>' +
+    '<div class="tile"><div class="k">7 days</div><div class="v">' + ((t.d7 || {}).users || 0) + '</div></div>' +
+    '<div class="tile"><div class="k">28 days</div><div class="v">' + ((t.d28 || {}).users || 0) + '</div></div>';
+  tiles.classList.remove('hidden');
+  document.getElementById('traffic-note').classList.add('hidden');
+}
+// Prompting engine. Live copy: Firestore config/prompting, the app reads it at boot.
+// If the vault rules deny the shared doc, falls back to a per-account draft at
+// users/{uid}/settings/prompting so nothing typed here is lost.
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyD2rCqPDjiyS1yfZj8ghtDc-mepz3LY634",
+  authDomain: "pro-maya.firebaseapp.com",
+  projectId: "pro-maya",
+  storageBucket: "pro-maya.firebasestorage.app",
+  messagingSenderId: "53947659283",
+  appId: "1:53947659283:web:4779127af7d5b229867be6",
+};
+let _fbUser = null;
+function _peState(t) { const el = document.getElementById('pe-state'); if (el) el.textContent = t; }
+function _fbBridge(idToken) {
+  try {
+    if (!window.firebase || !firebase.auth) return;
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    const cred = firebase.auth.GoogleAuthProvider.credential(idToken);
+    firebase.auth().signInWithCredential(cred)
+      .then(u => { _fbUser = u.user; loadPrompting(); })
+      .catch(() => { _peState('could not link to the vault, sign in again'); });
+  } catch (_) {}
+}
+function _peRefs() {
+  const db = firebase.firestore();
+  return { live: db.collection('config').doc('prompting'),
+           draft: db.collection('users').doc(_fbUser.uid).collection('settings').doc('prompting') };
+}
+async function loadPrompting() {
+  if (!_fbUser) return;
+  const { live, draft } = _peRefs();
+  let d = null, from = '';
+  try { const snap = await live.get(); if (snap.exists) { d = snap.data(); from = 'live'; } } catch (_) {}
+  if (!d) { try { const snap = await draft.get(); if (snap.exists) { d = snap.data(); from = 'draft'; } } catch (_) {} }
+  ['character', 'background', 'style'].forEach(k => {
+    const el = document.getElementById('pe-' + k);
+    if (el && d && typeof d[k] === 'string') el.value = d[k];
+  });
+  _peState(from === 'live' ? 'live, the app reads these words' :
+           from === 'draft' ? 'draft saved on this account' :
+           'nothing saved yet: MAYA currently draws with only the baked layers above, write here to add words');
+}
+async function savePrompting() {
+  if (!_fbUser) { _peState('sign in above first'); return; }
+  const body = {
+    character: document.getElementById('pe-character').value.trim(),
+    background: document.getElementById('pe-background').value.trim(),
+    style: document.getElementById('pe-style').value.trim(),
+    updatedAt: new Date().toISOString(),
+    updatedBy: _fbUser.email || ''
+  };
+  _peState('saving…');
+  const { live, draft } = _peRefs();
+  try { await live.set(body); _peState('saved, live, the app reads these words'); return; } catch (_) {}
+  try { await draft.set(body); _peState('saved as a draft, goes live once the vault rules allow it'); }
+  catch (e) { _peState('could not save (' + ((e && e.code) || 'error') + ')'); }
+}
+_gisBoot();
+loadSubmissions();
+setInterval(() => { if (_idTok) { loadTraffic(); loadSubmissions(); } }, 60000);
+</script>
+</body>
+</html>

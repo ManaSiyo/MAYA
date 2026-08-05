@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<!--
+  MAYA · OPERATING ROOM  (RAG sandbox)
+  =====================================
+  Standalone research sandbox for the grounded pattern pipeline. Does NOT
+  touch backend.html. Mirrors the live Operating Room's pattern window, but
+  the right side now holds TWO pattern attempts:
+
+     WINDOW 1 · RAW       the current hallucination prompt (= backend.html)
+     WINDOW 2 · GROUNDED  multi-modal hybrid RAG over Pattern Book.pdf
+
+  Pipeline (Window 2):
+     1. VISION   gpt-4.1 classifies the garment + reads visible construction.
+     2. ROUTE    garment type -> Pattern Book chapter (chapter-map).
+     3. RULES    deterministic panel grammar (panel count, symmetry, bands).
+     4. RETRIEVE text-embedding-3-small + cosine over the routed chapter's
+                 chunks (embedded once, cached in IndexedDB).
+     5. COMPOSE  hard rules + retrieved guidance -> grounded prompt.
+     6. GENERATE gpt-image-2 edit on the hero image.
+
+  Shares the OpenAI key with backend.html (localStorage 'maya_openai_key').
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>/* v12.5: embedded inside backend.html, outer page owns the banner + hamburger */
+if (self !== top) document.documentElement.classList.add('embedded');
+window.addEventListener('message', function(e){ if (e && e.data && e.data.maya === 'ops-drawer') { try { toggleDrawer(true); } catch(_) {} } });</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAYA · Operating Room</title>
+<script src="kb/kb.js"></script>
+<!-- test images embedded as data URLs → loads on a plain double-click (file://), no fetch/server needed -->
+<script src="tests-data.js"></script>
+<!-- raster→vector tracer for the Trace → SVG button (MIT, single file) -->
+<script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
+<style>
+  /* ── MAYA canon (Aesthetics.pdf · V3), bone-white over cosmos, 0.5px hairline,
+     100px capsules, blur(22px). No blue chrome, no gradient fills. ── */
+  :root{
+    --ink:rgba(245,250,255,0.95); --dim:rgba(245,250,255,0.6); --faint:rgba(245,250,255,0.4);
+    --accent:rgba(245,250,255,0.98);           /* emphasis = brighter white, never blue */
+    --good:#5acf6e; --bad:#e5616e; --warn:#d9b48c;   /* status colours from the backend sibling */
+    --hair:rgba(255,255,255,0.22); --hair-hi:rgba(255,255,255,0.42);
+    --edge:rgba(255,255,255,0.22); --edge-2:rgba(255,255,255,0.42);
+    --glass:transparent; --glass-2:rgba(255,255,255,0.02);
+    --hover:rgba(255,255,255,0.04);
+    --paper:#fafaf6;
+    --pill-shadow: inset 0 1px 1px rgba(255,255,255,0.28), inset 0 -1px 1px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.22);
+  }
+  *{box-sizing:border-box}
+  /* no visible scrollbars anywhere, scrolling still works, chrome disappears */
+  *{scrollbar-width:none;-ms-overflow-style:none}
+  *::-webkit-scrollbar{width:0;height:0;display:none}
+  html,body{margin:0;min-height:100%}
+  body{
+    background:#000 url("/aesthetics/ui/birth-of-a-star.png") center/cover no-repeat fixed;
+    color:var(--ink); font-family:'Jost',sans-serif; font-weight:300; font-size:13px; line-height:1.6;
+    min-height:100%;
+  }
+  .wrap{max-width:1320px;margin:0 auto;padding:24px 28px 64px}
+  header.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .brand{display:flex;align-items:baseline;gap:14px}
+  .brand h1{font-family:'Cormorant Garamond',serif;font-size:24px;letter-spacing:.22em;font-weight:500;margin:0;color:rgba(255,255,255,0.92)}
+  .brand .sub{font-size:9px;letter-spacing:.32em;color:var(--faint);text-transform:uppercase}
+  .room-title{text-align:center;margin:18px 0 24px}
+  .room-title .ct{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:26px;letter-spacing:.18em;
+    text-transform:uppercase;color:rgba(255,255,255,0.92)}
+  .room-title .cs{display:block;margin-top:4px;font-size:9px;letter-spacing:.42em;text-transform:uppercase;color:var(--faint)}
+  .icon-btn{width:38px;height:38px;border-radius:50%;border:0.5px solid var(--hair);
+    background:transparent;color:var(--ink);cursor:pointer;font-size:15px;
+    backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+    box-shadow:var(--pill-shadow);transition:all .2s}
+  .icon-btn:hover{border-color:var(--hair-hi);background:var(--hover)}
+  /* Front End hamburger, capsule glass pill (copied from .top-btn), not a circle */
+  .icon-btn.hamburger{width:32px;height:28px;border-radius:100px;padding:0;display:flex;align-items:center;justify-content:center;
+    box-shadow:inset 0 1px 1px rgba(255,255,255,0.28),inset 0 -1px 1px rgba(0,0,0,0.18),0 4px 16px rgba(0,0,0,0.22)}
+  .hamburger-icon{display:inline-flex;flex-direction:column;gap:3px;width:14px}
+  .hamburger-icon span{display:block;height:1px;width:100%;background:currentColor;border-radius:1px}
+  /* plan button, same capsule glass as the hamburger, same height */
+  .plan-btn{height:28px;padding:0 14px;display:inline-flex;align-items:center}
+
+  /* pills, every interactive surface */
+  .pill{border:0.5px solid var(--hair);background:transparent;color:rgba(245,250,255,0.85);
+    border-radius:100px;padding:6px 14px;font-family:'Jost',sans-serif;font-weight:300;
+    font-size:10px;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:all .2s;
+    backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+    box-shadow:var(--pill-shadow)}
+  .pill:hover{border-color:var(--hair-hi);background:var(--hover);color:#fff}
+  .pill.active{background:var(--hover);color:#fff;border-color:rgba(255,255,255,0.55)}
+
+  /* layout: 34/66 like the op room */
+  .cols{display:grid;grid-template-columns:34% 1fr;gap:20px;align-items:stretch}
+  .panel{border:0.5px solid var(--hair);border-radius:20px;background:rgba(255,255,255,0.02);
+    backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+    box-shadow:inset 0 1px 1px rgba(255,255,255,0.10);padding:16px}
+  .col-head{display:flex;justify-content:center;margin-bottom:12px}
+
+  /* left: dream garment */
+  .hero-frame{aspect-ratio:3/4;border-radius:16px;border:0.5px solid var(--hair);
+    background:rgba(0,0,0,0.32);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+  .hero-frame img{width:100%;height:100%;object-fit:contain}
+  .hero-empty{color:var(--faint);font-size:12px;text-align:center;padding:30px;line-height:1.8}
+  .left-actions{display:flex;gap:8px;margin-top:14px;justify-content:center;flex-wrap:wrap}
+
+  /* pattern-logic card, the canonical piece logic, under the dream garment */
+  .logic{margin-top:16px;border-top:0.25px solid rgba(255,255,255,0.18);padding-top:14px}
+  .logic-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .logic-head .lt{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:rgba(245,250,255,0.8)}
+  .logic-head .lty{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
+  .logic-sub{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);text-align:center;margin-bottom:10px}
+  .logic-chips{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-bottom:10px}
+  .logic textarea{width:100%;background:transparent;border:0.5px solid var(--hair);border-radius:14px;
+    padding:10px 12px;color:rgba(245,250,255,0.92);font-family:ui-monospace,Menlo,monospace;font-size:10.5px;line-height:1.7;resize:vertical;min-height:96px;display:none}
+  .logic.editing textarea{display:block}
+  .logic.editing .logic-chips{display:none}
+  .logic-actions{display:flex;gap:8px;justify-content:center;margin-top:10px}
+
+  /* right: dual pattern windows */
+  .pattern-head{display:flex;justify-content:flex-start;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+  .pill.sm{padding:5px 12px;font-size:9.5px;letter-spacing:.12em}
+  .pattern-stage{position:relative;border-radius:16px;overflow:hidden;border:0.5px solid var(--hair);
+    background:rgba(0,0,0,0.32); min-height:520px;display:flex;align-items:flex-end;justify-content:flex-start}
+  /* images anchor to the BOTTOM-LEFT corner = the grid origin (0,0) */
+  .pattern-stage img{max-width:100%;max-height:560px;object-fit:contain;object-position:left bottom;display:none}
+  /* interactive pan/zoom viewer for a traced SVG, baked into the Draft tab */
+  .trace-view{position:absolute;inset:0;z-index:6;background:#0a0c12;display:flex;flex-direction:column}
+  .trace-view.off{display:none}
+  .trace-toolbar{display:flex;gap:8px;padding:8px 10px;align-items:center;flex-wrap:wrap;
+    border-bottom:0.5px solid var(--hair);background:rgba(0,0,0,.35)}
+  .trace-toolbar .tlabel{margin-left:auto;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  .trace-canvas{flex:1;overflow:hidden;cursor:grab;touch-action:none}
+  .trace-canvas.grabbing{cursor:grabbing}
+  .trace-canvas svg{width:100%;height:100%;display:block}
+  .stage-empty{color:var(--faint);font-size:12px;text-align:center;padding:40px;max-width:440px;line-height:1.9;margin:auto}
+  .stage-badge{position:absolute;top:12px;left:14px;z-index:5;font-family:'Jost',sans-serif;font-size:9px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--dim);background:rgba(0,0,0,.4);border:0.5px solid var(--hair);
+    border-radius:100px;padding:5px 12px;backdrop-filter:blur(22px) saturate(180%)}
+  /* Front End-style panel motion when swiping/switching tabs */
+  @keyframes panelIn{ from{ opacity:0; transform:translateX(var(--slide-from,20px)); } to{ opacity:1; transform:none; } }
+  .pattern-stage.rolling > img, .pattern-stage.rolling > .trace-view:not(.off){
+    animation:panelIn .36s cubic-bezier(0.22,1,0.36,1); }
+  /* test-folder header control, Section role (Cormorant 300), centered */
+  .head-select{appearance:none;-webkit-appearance:none;text-align:center;text-align-last:center;
+    background:transparent;border:0.5px solid var(--hair);color:var(--ink);border-radius:100px;padding:5px 12px;
+    font-family:'Jost',sans-serif;font-weight:300;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;
+    backdrop-filter:blur(22px) saturate(180%)}
+  .head-select:hover{border-color:var(--hair-hi);background:rgba(255,255,255,.04)}
+  /* primary action = a canon pill (no blue chrome) */
+  .pill.primary{border-color:var(--hair-hi)}
+  /* view dropdown follows the Pill role: Jost 300 · 10px · 0.15em · UPPER */
+  .pill-select{appearance:none;text-align:center;text-align-last:center;background:transparent;border:0.5px solid var(--hair);
+    color:var(--ink);border-radius:100px;padding:6px 14px;font-family:'Jost',sans-serif;font-weight:300;font-size:10px;
+    letter-spacing:.15em;text-transform:uppercase;cursor:pointer;backdrop-filter:blur(22px) saturate(180%)}
+  /* accuracy readout, green, right side of the tab row */
+  .acc-inline{margin-left:auto;align-self:center;color:var(--good);
+    font-family:'Jost',sans-serif;font-weight:400;font-size:11px;letter-spacing:.06em;white-space:nowrap}
+  .acc-inline i{font-style:normal;color:rgba(90,207,110,.6);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase}
+  .stage-badge.grounded,.stage-badge.raw{color:var(--ink);border-color:var(--hair)}
+  .right-actions{display:flex;gap:8px;margin-top:14px;justify-content:center;flex-wrap:wrap}
+
+  .spinner{width:16px;height:16px;border:1.5px solid var(--hair);border-top-color:rgba(255,255,255,0.85);
+    border-radius:50%;display:inline-block;animation:spin 1s linear infinite;vertical-align:-3px;margin-right:8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* trace panel */
+  .trace{margin-top:20px}
+  .trace-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+  .trace-card{border:0.5px solid var(--hair);border-radius:14px;background:rgba(255,255,255,0.02);padding:13px 14px}
+  .trace-card .k{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin-bottom:7px;text-align:center}
+  .trace-card .v{font-size:12px;color:var(--ink);line-height:1.55;word-break:break-word;text-align:center}
+  .tag{display:inline-block;border:0.5px solid var(--hair);border-radius:100px;padding:2px 9px;
+    margin:2px 3px;font-size:10px;color:var(--dim)}
+  .panel-row{font-size:11.5px;color:var(--ink);padding:3px 0;border-bottom:0.25px solid rgba(255,255,255,.08);text-align:center}
+  .panel-row .q{color:var(--accent)}
+  details.chunks,details.promptbox{margin-top:12px;border:0.5px solid var(--hair);border-radius:14px;background:rgba(255,255,255,0.02);padding:10px 16px}
+  details.chunks summary,details.promptbox summary{cursor:pointer;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);text-align:center}
+  .chunk{border-left:0.5px solid var(--hair);padding:6px 0 6px 12px;margin:10px 0;font-size:11.5px;color:var(--dim);line-height:1.6}
+  .chunk b{color:var(--accent);font-weight:400}
+  details.promptbox pre{white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:var(--dim);line-height:1.6;margin:10px 0 0}
+
+  /* iteration strip */
+  .iters{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
+  .iter{flex:1;min-width:180px;border:0.5px solid var(--hair);border-radius:14px;background:rgba(255,255,255,0.02);padding:11px;cursor:pointer;transition:all .2s}
+  .iter:hover{border-color:var(--hair-hi)}
+  .iter.active{border-color:rgba(255,255,255,0.55)}
+  .iter .ihead{display:flex;justify-content:space-between;align-items:center;font-family:'Jost',sans-serif;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  .iter .verdict{font-size:9px;letter-spacing:.06em;padding:2px 8px;border-radius:100px;border:0.5px solid var(--hair)}
+  .iter .verdict.pass{color:var(--good);border-color:rgba(90,207,110,.4)}
+  .iter .verdict.fix{color:var(--bad);border-color:rgba(229,97,110,.4)}
+  .iter img{width:100%;height:96px;object-fit:contain;object-position:left bottom;background:rgba(0,0,0,0.32);border-radius:8px}
+  .iter .fixes{margin-top:8px;font-size:11px;color:var(--dim);line-height:1.55}
+  .iter .fixes li{margin-left:14px;margin-bottom:3px}
+  .iter .cite{color:var(--accent);font-weight:400}
+  .iter .src{margin-top:8px;font-size:9.5px;color:var(--faint);line-height:1.5;border-top:0.25px solid rgba(255,255,255,.08);padding-top:6px}
+  .iter .src b{color:var(--dim);font-weight:400}
+
+  /* live critique console */
+  .live{margin-top:14px;border:0.5px solid var(--hair);border-radius:14px;background:rgba(0,0,0,0.32);overflow:hidden;display:none;
+    backdrop-filter:blur(22px) saturate(180%)}
+  .live.on{display:block}
+  .live .lh{display:flex;align-items:center;gap:9px;padding:10px 16px;border-bottom:0.5px solid var(--hair);
+    font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+  .live .dot{width:6px;height:6px;border-radius:50%;background:var(--good);box-shadow:0 0 8px var(--good);animation:pulse 1.1s infinite}
+  @keyframes pulse{50%{opacity:.3}}
+  .live .lstatus{margin-left:auto;color:var(--ink);text-transform:none;letter-spacing:.02em;font-size:10.5px}
+  .live pre{margin:0;padding:12px 16px;max-height:200px;overflow:auto;white-space:pre-wrap;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;line-height:1.55;color:rgba(245,250,255,0.78)}
+
+  /* ── drawer model: fixed overlay that slides in from the right.
+     (was horizontal scroll-snap, unreliable with a mouse on wide monitors) ── */
+  #hscroll{display:block}
+  .hpane-main{width:auto}
+  .hpane-drawer{position:fixed;top:0;right:0;bottom:0;width:378px;z-index:40;
+    transform:translateX(105%);transition:transform .45s cubic-bezier(0.22,1,0.36,1);
+    pointer-events:none}
+  .hpane-drawer.open{transform:none;pointer-events:auto}
+  /* the drawer is a floating glass panel inside its pane (top 60 · right 18 · bottom 22) */
+  .drawer{position:absolute;top:60px;right:18px;bottom:22px;left:0;width:auto;border-radius:18px;
+    background:linear-gradient(180deg,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0.03) 25%,rgba(255,255,255,0.02) 65%,rgba(255,255,255,0.07) 100%),rgba(6,8,16,0.45);
+    border:0.5px solid var(--hair);padding:22px 22px 28px;overflow-y:auto;
+    backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);
+    box-shadow:inset 0 1px 1px rgba(255,255,255,0.30),0 4px 28px rgba(0,0,0,0.4)}
+  .drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .drawer-head h3{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:18px;letter-spacing:.18em;
+    text-transform:uppercase;color:rgba(245,250,255,0.95);margin:0}
+  .sec{margin-top:8px;padding-top:14px;border-top:0.25px solid rgba(255,255,255,0.18)}
+  .sec:first-of-type{border-top:none;padding-top:0}
+  .sec-title{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:.32em;text-transform:uppercase;
+    color:var(--faint);margin-bottom:10px;text-align:center}
+  .drawer label{display:block;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12px;
+    color:rgba(245,250,255,0.65);margin:0 0 6px}
+  .drawer input{width:100%;background:transparent;border:0.5px solid var(--hair);border-radius:100px;
+    padding:8px 14px;color:rgba(245,250,255,0.95);font-family:ui-monospace,'SF Mono',monospace;font-size:10.5px}
+  .drawer input:focus{outline:none;border-color:rgba(255,255,255,0.55)}
+  .row2{display:flex;gap:10px}
+  .row2>div{flex:1}
+  .kb-status{font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:.04em;color:var(--dim);margin-top:8px;line-height:1.65;text-align:center}
+  .bar{height:4px;border-radius:100px;background:rgba(255,255,255,0.06);overflow:hidden;margin-top:8px}
+  .bar i{display:block;height:100%;width:0;background:rgba(255,255,255,0.7);transition:.2s}
+  .pillrow{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+
+  /* toast */
+  #toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(140%);
+    background:rgba(8,10,20,0.96);border:0.5px solid var(--hair-hi);border-radius:100px;padding:11px 22px;
+    font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.04em;z-index:60;transition:.3s;max-width:80vw;text-align:center;
+    backdrop-filter:blur(22px) saturate(180%);box-shadow:var(--pill-shadow)}
+  #toast.show{transform:translateX(-50%) translateY(0)}
+
+  /* v12.5: when embedded in backend.html the outer MAYA banner and outer
+     hamburger are the only branding, hide the inner duplicates. The Plan
+     chip stays (it still opens the drawer with settings + plan switch). */
+  html.embedded .top .brand{visibility:hidden}
+  html.embedded .icon-btn.hamburger{display:none}
+  html.embedded .pill.sm.plan-btn{display:none}
+</style>
+</head>
+<body>
+<!-- Front End drawer model: horizontal scroll-snap with a main pane + a drawer pane.
+     Swiping left (or the hamburger) snaps to the drawer, native, momentum, same as the Front End. -->
+<div id="hscroll">
+<div class="hpane hpane-main">
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>MAYA</h1><span class="sub">Mana Siyo</span></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="pill sm plan-btn" id="plan-btn" onclick="toggleDrawer(true)" title="Switch plan in the menu">Plan A</button>
+      <button class="icon-btn hamburger" onclick="toggleDrawer(true)" title="Menu">
+        <span class="hamburger-icon"><span></span><span></span><span></span></span>
+      </button>
+    </div>
+  </header>
+  <div class="room-title"><span class="ct">Operating Room</span><span class="cs" id="room-sub">Plan A · Grounded Pattern Pipeline</span></div>
+
+  <div id="plan-a-view">
+  <div class="cols">
+    <!-- LEFT: dream garment -->
+    <div class="panel">
+      <div class="col-head">
+        <select id="test-picker" class="head-select" onchange="onPickTest(this.value)" title="choose a test"></select>
+      </div>
+      <div class="hero-frame" id="hero-frame">
+        <div class="hero-empty" id="hero-empty">
+          Pick a test up top, choose a view, then press <b>Start</b>.<br><br>
+          <span style="color:var(--faint)">Or Upload your own image to run it directly.</span>
+        </div>
+        <img id="hero-img" alt="garment">
+      </div>
+      <div class="left-actions">
+        <select id="test-view" class="pill-select" onchange="showView(this.value)" title="which view to show / use">
+          <option value="front">Front</option>
+          <option value="side">Side</option>
+          <option value="back">Back</option>
+          <option value="answer">Answer</option>
+        </select>
+        <span class="pill primary" id="start-test" onclick="startTest()">Start</span>
+        <span class="pill" onclick="document.getElementById('file').click()">Upload</span>
+      </div>
+      <input type="file" id="file" accept="image/*" style="display:none" onchange="onFile(event)">
+    </div>
+
+    <!-- RIGHT: dual pattern windows -->
+    <div class="panel">
+      <div class="pattern-head" id="pass-pills"></div>
+      <div class="pattern-stage" id="stage">
+        <span class="stage-badge raw" id="badge-rd" style="display:none">Redrawn · the answer (GPT-redrawn target)</span>
+        <span class="stage-badge grounded" id="badge-grounded">Grounded · book + measurements</span>
+        <div class="stage-empty" id="stage-empty">
+          <b>Redrawn</b> is the answer, redrawn clean by GPT, the target we score against.<br><br>
+          <b>Grounded</b> pulls the Pattern Book + your measurements and refines over Mark One → Mark Two; the green % is the conservative grade, the LOWER of its score vs the redrawn answer and vs the raw CLO answer (median of 3 grader samples). The book critique, not the answer, picks the best pass.<br><br>
+          <b>SVG</b> vectorises the grounded pattern. Press <b>Start</b> to run.
+        </div>
+        <img id="img-rd" alt="answer pattern">
+        <img id="img-grounded" alt="grounded pattern">
+        <div class="trace-view off" id="trace-view"></div>
+      </div>
+      <div class="right-actions">
+        <span class="pill" id="export-svg" onclick="exportSVG()">Export SVG</span>
+      </div>
+      <div class="live" id="live">
+        <div class="lh"><span class="dot"></span> Pipeline · live <span class="lstatus" id="live-status">idle</span></div>
+        <pre id="live-log"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRACE -->
+  <div class="trace panel">
+    <div class="col-head"><span class="pill active">Retrieval Trace</span></div>
+    <div class="trace-grid">
+      <div class="trace-card"><div class="k">1 · Vision · garment</div><div class="v" id="t-type">,</div></div>
+      <div class="trace-card"><div class="k">2 · Routed chapter</div><div class="v" id="t-chapter">,</div></div>
+      <div class="trace-card"><div class="k">3 · Panel grammar</div><div class="v" id="t-panels">,</div></div>
+      <div class="trace-card"><div class="k">Symmetry / fixes</div><div class="v" id="t-fixes">,</div></div>
+    </div>
+    <details class="chunks"><summary>4 · Retrieved book passages (top-k)</summary><div id="t-chunks">Run a grounded pass to populate.</div></details>
+    <details class="promptbox"><summary>5 · Composed grounded prompt</summary><pre id="t-prompt">,</pre></details>
+  </div>
+  </div><!-- /plan-a-view -->
+
+  <!-- PLAN B · CLO route, placeholder dashboard, methodology lands here -->
+  <div id="plan-b-view" style="display:none">
+    <div class="panel" style="min-height:420px;display:flex;align-items:center;justify-content:center">
+      <div class="stage-empty" style="max-width:520px">
+        <b>Plan B · CLO Route</b><br><br>
+        The simpler path: instead of asking a model to draw geometry, Maya matches the photo
+        to the closest garment in the CLO library, then grades that proven pattern to the
+        client's measurements.<br><br>
+        <span style="color:var(--faint)">Dashboard in build, switch back to Plan A in the menu (≡).</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /hpane-main -->
+
+<!-- SETTINGS · drawer pane (Front End scroll-snap swipe drawer) -->
+<div class="hpane hpane-drawer">
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <h3>Settings</h3>
+    <button class="pill sm" onclick="toggleDrawer(false)">Close</button>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Plan</div>
+    <div class="pillrow">
+      <span class="pill sm" data-plan="A" onclick="setPlan('A')">Plan A · Photo → Pattern</span>
+      <span class="pill sm" data-plan="B" onclick="setPlan('B')">Plan B · CLO Route</span>
+    </div>
+    <div class="kb-status">A generates the pattern from the photo. B matches the photo to the CLO library and grades it.</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Key</div>
+    <label>OpenAI key</label>
+    <input id="api-key" type="password" placeholder="sk-…" oninput="saveKey()">
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Measurements · inches</div>
+    <div class="row2">
+      <div><label>Waist</label><input id="m-waist" type="number" min="0" step="0.25" placeholder="30" oninput="saveMeasures()"></div>
+      <div><label>Hip</label><input id="m-hip" type="number" min="0" step="0.25" placeholder="40" oninput="saveMeasures()"></div>
+    </div>
+    <div class="row2" style="margin-top:10px">
+      <div><label>Crotch length</label><input id="m-crotch" type="number" min="0" step="0.25" placeholder="27" oninput="saveMeasures()"></div>
+      <div><label>Inseam</label><input id="m-inseam" type="number" min="0" step="0.25" placeholder="30" oninput="saveMeasures()"></div>
+    </div>
+    <div class="row2" style="margin-top:10px">
+      <div><label>Pant length</label><input id="m-length" type="number" min="0" step="0.25" placeholder="40" oninput="saveMeasures()"></div>
+      <div></div>
+    </div>
+    <div class="kb-status" id="dim-derived">Enter measurements for the derived dimensions.</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Pattern Logic</div>
+    <div class="logic" id="logic">
+      <div class="logic-head"><span class="lt">the unique shapes every render must have</span><span class="lty" id="logic-type">pants</span></div>
+      <div class="logic-chips" id="logic-chips"></div>
+      <textarea id="logic-edit" spellcheck="false" placeholder="front leg x2&#10;back leg x2&#10;waistband x1"></textarea>
+      <div class="logic-actions">
+        <span class="pill sm" id="logic-edit-btn" onclick="editLogic()">Edit</span>
+        <span class="pill sm" id="logic-save-btn" onclick="saveLogic()" style="display:none">Save</span>
+        <span class="pill sm" id="logic-reset-btn" onclick="resetLogic()">Reset</span>
+        <span class="pill sm" id="logic-lock-btn" onclick="toggleLogicLock()" title="Ignore user-edited logic, cut-list from the book grammar only, for credible eval runs">Test lock</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Raster quality</div>
+    <div class="pillrow">
+      <span class="pill sm" data-q="low" onclick="setQuality('low')">low</span>
+      <span class="pill sm" data-q="medium" onclick="setQuality('medium')">medium</span>
+      <span class="pill sm" data-q="high" onclick="setQuality('high')">high</span>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Knowledge base</div>
+    <div class="kb-status" id="kb-status">,</div>
+    <div class="bar"><i id="kb-bar"></i></div>
+    <div class="pillrow" style="margin-top:12px">
+      <span class="pill sm" onclick="buildEmbeddings()">Build</span>
+      <span class="pill sm" onclick="clearEmbeddings()">Clear</span>
+    </div>
+  </div>
+</div>
+
+</div><!-- /hpane-drawer -->
+</div><!-- /hscroll -->
+
+<div id="toast"></div>
+
+<script>
+/* ============================ state & helpers ============================ */
+const KEY_NAME = 'maya_openai_key';
+const Q_NAME   = 'maya_pattern_quality';
+const MW_NAME  = 'maya_measure_waist';
+const ML_NAME  = 'maya_measure_length';
+const MH_NAME  = 'maya_measure_hip';
+const MC_NAME  = 'maya_measure_crotch';
+const MI_NAME  = 'maya_measure_inseam';
+const GROUNDED_PASSES = 2;             // Mark One + Mark Two (refine passes)
+const LOGIC_PREFIX = 'maya_logic_';   // + garment type
+const WB_UNDERLAP = 1.5;   // waistband closure underlap (in)
+const WB_DEPTH    = 1.5;   // finished waistband depth (in)
+const YOKE_DEPTH  = 3;     // back yoke height (in)
+const KB = { chunks: window.MAYA_KB_CHUNKS?.chunks || [], grammar: window.MAYA_KB_GRAMMAR || {types:{}},
+             chapters: window.MAYA_KB_CHAPTERS || {} };
+let HERO = null;                 // dataURL of the loaded garment
+let EMB = null;                  // { count, dim, vecs: Float32Array(count*dim) }  L2-normalised
+let LAST = { type:null, garment:null };
+let RUN = 0;                     // run id, stale async work (scores, passes) checks this before writing
+let RUNNING = false;             // re-entry guard for Start / Upload
+
+const $ = id => document.getElementById(id);
+function getKey(){ try{ return localStorage.getItem(KEY_NAME)||''; }catch{ return ''; } }
+function getQuality(){ try{ return localStorage.getItem(Q_NAME)||'medium'; }catch{ return 'medium'; } }
+
+/* ---- measurements & derived dimensions ---- */
+function num(v){ const n=parseFloat(v); return isFinite(n)&&n>0 ? n : null; }
+function getMeasures(){
+  try{ return {
+    waist:num(localStorage.getItem(MW_NAME)), length:num(localStorage.getItem(ML_NAME)),
+    hip:num(localStorage.getItem(MH_NAME)), crotch:num(localStorage.getItem(MC_NAME)),
+    inseam:num(localStorage.getItem(MI_NAME)) };
+  } catch{ return {waist:null,length:null,hip:null,crotch:null,inseam:null}; }
+}
+function saveMeasures(){
+  try{
+    localStorage.setItem(MW_NAME, $('m-waist').value); localStorage.setItem(ML_NAME, $('m-length').value);
+    localStorage.setItem(MH_NAME, $('m-hip').value);   localStorage.setItem(MC_NAME, $('m-crotch').value);
+    localStorage.setItem(MI_NAME, $('m-inseam').value);
+  }catch{}
+  renderDimDerived();
+}
+function syncMeasures(){ const m=getMeasures();
+  if(m.waist!=null)$('m-waist').value=m.waist; if(m.length!=null)$('m-length').value=m.length;
+  if(m.hip!=null)$('m-hip').value=m.hip; if(m.crotch!=null)$('m-crotch').value=m.crotch; if(m.inseam!=null)$('m-inseam').value=m.inseam;
+  renderDimDerived();
+}
+
+// PANT MEASUREMENT MODEL (Fromsa's, grounded in Ch.26):
+//  waist, hip, crotch length, inseam, pant length.
+//  pant length (Y) = waistband + yoke + pant-panel stacked vertically.
+//  crotch length = yoke + back panel + waistband (along centre-back).
+//  rise (crotch depth) = pant length − inseam.
+//  book quarter split (p.662): front waist W/4+1/4, back W/4−1/4; front hip H/4−1/4, back H/4+1/4.
+function computeDims(){
+  const m=getMeasures();
+  if(m.waist==null && m.length==null && m.hip==null) return null;
+  const d={ waist:m.waist, length:m.length, hip:m.hip, crotch:m.crotch, inseam:m.inseam };
+  if(m.waist!=null){
+    d.frontWaist=m.waist/4+0.25; d.backWaist=m.waist/4-0.25;
+    d.waistbandLen=m.waist+WB_UNDERLAP; d.waistbandDepth=WB_DEPTH;
+  }
+  if(m.hip!=null){ d.frontHip=m.hip/4-0.25; d.backHip=m.hip/4+0.25; }
+  d.yokeDepth=YOKE_DEPTH;
+  if(m.length!=null){
+    if(m.inseam!=null) d.rise=Math.max(6, m.length-m.inseam);   // rise = outseam − inseam
+    d.frontPanelH=m.length-WB_DEPTH;                            // front: band + panel
+    d.backPanelH=m.length-WB_DEPTH-YOKE_DEPTH;                  // back: band + yoke + panel
+  }
+  return d;
+}
+function fmt(n){ return (Math.round(n*100)/100).toString(); }
+function renderDimDerived(){
+  const d=computeDims(); const el=$('dim-derived'); if(!el) return;
+  if(!d){ el.innerHTML='Enter measurements to see the derived pattern dimensions.'; return; }
+  const bits=[];
+  if(d.waist!=null) bits.push(`waistband ${fmt(d.waistbandLen)}in (waist ${fmt(d.waist)}+${WB_UNDERLAP})`);
+  if(d.hip!=null) bits.push(`front/back hip ${fmt(d.frontHip)}/${fmt(d.backHip)}in`);
+  if(d.length!=null) bits.push(`pant length ${fmt(d.length)} = band ${WB_DEPTH}+yoke ${YOKE_DEPTH}+panel ${fmt(d.backPanelH)}`);
+  if(d.rise!=null) bits.push(`rise ${fmt(d.rise)}in (length−inseam)`);
+  el.innerHTML = bits.join('<br>') || 'Enter a waist for derived dimensions.';
+}
+
+// topstitch highlight: if the garment is topstitched, draw those lines in colour
+function topstitchNote(g){
+  const blob=((g&&g.attributes||[]).join(' ')+' '+(g&&g.visible_seams||[]).join(' ')+' '+(g&&g.thread_notes||'')+' '+(g&&g.closure||'')).toLowerCase();
+  if(/top\s*-?\s*stitch|topstitch|contrast stitch|contrast thread/.test(blob))
+    return `\nTOPSTITCHING: this garment is topstitched, draw EVERY topstitched seam and detail line in RED (#d23b3b) as a fine dashed line, clearly distinct from the dark-grey structural cut outlines, so the topstitching reads at a glance.\n`;
+  return '';
+}
+
+// dimension block injected into prompts so the model draws to scale
+function buildDimensionBlock(typeKey){
+  const d=computeDims(); if(!d) return '';
+  let s=`\nTARGET DIMENSIONS, draw every panel TRUE TO THESE on the 1-inch grid (origin BOTTOM-LEFT):\n`;
+  if(d.waist!=null){
+    s+=`• WAISTBAND = ${fmt(d.waistbandLen)} in long (waist ${fmt(d.waist)} + ${WB_UNDERLAP} underlap) × ${fmt(d.waistbandDepth)} in deep, lay it FLAT and FLUSH along the bottom-left so its length reads on the grid. Longest, thinnest strip.\n`;
+    if(typeKey==='pants'||typeKey==='skirt')
+      s+=`• Front waist ≈ ${fmt(d.frontWaist)} in, back waist ≈ ${fmt(d.backWaist)} in (W/4 ± 1/4); back leg WIDER than front.\n`;
+  }
+  if(d.hip!=null) s+=`• Front hip ≈ ${fmt(d.frontHip)} in, back hip ≈ ${fmt(d.backHip)} in (H/4 ∓ 1/4).\n`;
+  if(d.length!=null) s+=`• Pant length ${fmt(d.length)} in tall = waistband ${WB_DEPTH} + yoke ${YOKE_DEPTH} + leg panel ${fmt(d.backPanelH)} (stacked Y).\n`;
+  if(d.inseam!=null) s+=`• Inseam ${fmt(d.inseam)} in (inner-leg seam); rise ${d.rise!=null?fmt(d.rise):'length−inseam'} in.\n`;
+  if(d.crotch!=null) s+=`• Crotch length ${fmt(d.crotch)} in = yoke + back panel + waistband along centre-back.\n`;
+  return s;
+}
+/* ── PATTERN LOGIC ── the canonical unique shapes for a garment type, user-editable,
+   applied to EVERY render (the cut-list authority). Pants seed = Fromsa's 7 shapes. */
+let LOGIC_TYPE = 'pants';
+const LOGIC_SEEDS = {
+  pants: [
+    {label:'FRONT LEG', qty:2}, {label:'BACK LEG', qty:2}, {label:'WAISTBAND', qty:1},
+    {label:'BACK YOKE', qty:1}, {label:'FRONT POCKET BAG', qty:2},
+    {label:'BACK POCKET FACING', qty:2}, {label:'COIN POCKET', qty:1}
+  ]
+};
+function seedLogic(type){
+  if(LOGIC_SEEDS[type]) return LOGIC_SEEDS[type].map(x=>({...x}));
+  const g=KB.grammar.types[type];
+  if(g){ const l=g.panels.map(p=>({label:p.label,qty:p.qty})); (g.components||[]).forEach(c=>l.push({label:c.label,qty:c.qty||1})); return l; }
+  return [];
+}
+function parseLogic(text){
+  return text.split('\n').map(s=>s.trim()).filter(Boolean).map(line=>{
+    const m=line.match(/^(.*?)[\s·]*[x×]\s*(\d+)\s*$/i);
+    return m ? {label:m[1].trim().toUpperCase(), qty:parseInt(m[2])||1} : {label:line.toUpperCase(), qty:1};
+  });
+}
+function logicToText(list){ return list.map(p=>`${p.label.toLowerCase()} x${p.qty}`).join('\n'); }
+function getLogic(type){
+  try{ const raw=localStorage.getItem(LOGIC_PREFIX+type); if(raw) return JSON.parse(raw); }catch{}
+  return seedLogic(type);
+}
+function setLogic(type,list){ try{ localStorage.setItem(LOGIC_PREFIX+type, JSON.stringify(list)); }catch{} }
+function renderLogic(){
+  const list=getLogic(LOGIC_TYPE);
+  if(!$('logic-type')) return;
+  $('logic-type').textContent=LOGIC_TYPE+(logicLocked()?' · locked':'');
+  if($('logic-lock-btn')) $('logic-lock-btn').classList.toggle('active', logicLocked());
+  $('logic-chips').innerHTML = list.map(p=>`<span class="tag">${p.label.toLowerCase()} ×${p.qty}</span>`).join('');
+  $('logic-edit').value = logicToText(list);
+}
+function editLogic(){ $('logic').classList.add('editing'); $('logic-edit-btn').style.display='none'; $('logic-save-btn').style.display=''; }
+function saveLogic(){
+  setLogic(LOGIC_TYPE, parseLogic($('logic-edit').value));
+  LAST.bestGrounded=null; LAST.bestHero=null;              // piece set changed, the carried best is stale
+  $('logic').classList.remove('editing'); $('logic-edit-btn').style.display=''; $('logic-save-btn').style.display='none';
+  renderLogic();
+  LAST.cutlist=buildCutList(LAST.garment,LAST.garmentGram);   // re-lock from new logic
+  toast('Pattern logic saved, applied to every render.');
+}
+function resetLogic(){
+  try{ localStorage.removeItem(LOGIC_PREFIX+LOGIC_TYPE); }catch{}
+  LAST.bestGrounded=null; LAST.bestHero=null;              // piece set changed, the carried best is stale
+  $('logic').classList.remove('editing'); $('logic-edit-btn').style.display=''; $('logic-save-btn').style.display='none';
+  renderLogic(); LAST.cutlist=buildCutList(LAST.garment,LAST.garmentGram);
+  toast('Pattern logic reset to default.');
+}
+
+/* ── TEST LOCK ── forces the cut-list to the book grammar (no user-edited prior),
+   so eval runs measure what the pipeline generalises, not what Fromsa taught it. */
+const LOCK_NAME='maya_logic_locked';
+function logicLocked(){ try{ return localStorage.getItem(LOCK_NAME)==='1'; }catch{ return false; } }
+function toggleLogicLock(){
+  try{ localStorage.setItem(LOCK_NAME, logicLocked()?'0':'1'); }catch{}
+  LAST.bestGrounded=null; LAST.bestHero=null;              // authority changed, the carried best is stale
+  renderLogic();
+  if(LAST.garment||LAST.garmentGram){ LAST.cutlist=buildCutList(LAST.garment,LAST.garmentGram); renderGrammar(LAST.garmentGram, LAST.type); }
+  toast(logicLocked()
+    ? 'TEST LOCK ON, cut-list comes from the book grammar only; your Pattern Logic is ignored so eval runs carry no human prior.'
+    : 'Test lock off, your Pattern Logic is the cut-list authority again.');
+}
+
+function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),3200); }
+
+function toggleDrawer(force){
+  const d=document.querySelector('.hpane-drawer'); if(!d) return;
+  const open = force===true ? true : force===false ? false : !d.classList.contains('open');
+  d.classList.toggle('open', open);
+  if(open) refreshKbStatus();
+}
+// click outside the drawer (and not on the hamburger) closes it; Escape too
+document.addEventListener('pointerdown',(e)=>{
+  const d=document.querySelector('.hpane-drawer');
+  if(!d || !d.classList.contains('open')) return;
+  if(d.contains(e.target) || e.target.closest('.hamburger')) return;
+  toggleDrawer(false);
+});
+document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') toggleDrawer(false); });
+/* ---- plan switcher · Plan A = photo → pattern (this dashboard), Plan B = CLO route ---- */
+const PLAN_NAME='maya_plan';
+const PLAN_SUBS={ A:'Plan A · Grounded Pattern Pipeline', B:'Plan B · CLO Route' };
+function getPlan(){ try{ return localStorage.getItem(PLAN_NAME)||'A'; }catch{ return 'A'; } }
+function setPlan(p){ try{ localStorage.setItem(PLAN_NAME,p); }catch{} syncPlan(); toggleDrawer(false); }
+function syncPlan(){
+  const p=getPlan();
+  document.querySelectorAll('[data-plan]').forEach(el=>el.classList.toggle('active',el.dataset.plan===p));
+  if($('plan-btn')) $('plan-btn').textContent='Plan '+p;
+  if($('room-sub')) $('room-sub').textContent=PLAN_SUBS[p]||PLAN_SUBS.A;
+  if($('plan-a-view')) $('plan-a-view').style.display = p==='A' ? '' : 'none';
+  if($('plan-b-view')) $('plan-b-view').style.display = p==='B' ? '' : 'none';
+}
+
+function saveKey(){ try{ localStorage.setItem(KEY_NAME, $('api-key').value.trim()); }catch{} }
+function setQuality(q){ try{ localStorage.setItem(Q_NAME,q); }catch{} syncQuality(); }
+function syncQuality(){ const q=getQuality(); document.querySelectorAll('[data-q]').forEach(el=>el.classList.toggle('active',el.dataset.q===q)); }
+
+window.addEventListener('DOMContentLoaded',()=>{
+  $('api-key').value = getKey(); syncQuality(); syncMeasures(); renderLogic(); syncPlan();
+  applyView();
+  initTests();                                // hardcoded test paths, loads with zero navigation
+  openDB().then(loadEmbCache).then(()=>refreshKbStatus());
+});
+// Tab switching is via the pills; the drawer is a fixed overlay (hamburger / click-away / Escape).
+
+/* ============================ image loading ============================ */
+function onFile(e){
+  const f=e.target.files[0]; if(!f) return;
+  if(RUNNING){ toast('A run is already going, let it finish.'); return; }
+  const r=new FileReader();
+  r.onload=async()=>{
+    setHero(r.result);
+    RUN++; ANSWER=null; RD=null; RD_IS_RAW=false; RD_PROMISE=null; TRACE=null; _tv=null; PASSES=[]; BEST_IDX=0;
+    LAST.bestGrounded=null; LAST.bestHero=null;                     // uploaded image has no answer key or carry-over
+    $('img-grounded').removeAttribute('src'); $('img-rd').removeAttribute('src');
+    if(!getKey()){ toast('Add your OpenAI key in Settings (≡).'); toggleDrawer(true); return; }
+    RUNNING=true;
+    try{ await runGrounded(); }   // upload → run grounded immediately
+    finally{ RUNNING=false; }
+  };
+  r.readAsDataURL(f);
+}
+// show a garment on the hero frame (session-only, tests reload from tests-data.js anyway)
+function setHero(dataUrl){
+  HERO=dataUrl;
+  $('hero-img').src=HERO; $('hero-img').style.display='block';
+  $('hero-empty').style.display='none';
+}
+
+/* ============================ three-panel view: raw · grounded · svg ============================ */
+let CUR = {kind:'grounded', idx:0};
+let ANSWER = null;    // dataURL of the test's answer pattern (Answer.png)
+
+const MARK_WORDS=['One','Two','Three','Four','Five'];
+function markLabel(i){ return 'Mark '+(MARK_WORDS[i]||(i+1)); }
+function renderPassPills(){
+  const host=$('pass-pills'); if(!host) return;
+  let h=`<button class="pill sm ${CUR.kind==='rd'?'active':''}" onclick="viewRD()" title="Redrawn, the answer we score against">Redrawn</button>`;
+  if(PASSES.length>1){
+    PASSES.forEach((p,i)=>{ const act=(CUR.kind==='grounded'&&CUR.idx===i)?'active':'';
+      h+=`<button class="pill sm ${act}" onclick="viewGrounded(${i})">${markLabel(i)}</button>`; });
+  } else {
+    h+=`<button class="pill sm ${CUR.kind==='grounded'?'active':''}" onclick="viewGrounded()">Mark One</button>`;
+  }
+  h+=`<button class="pill sm ${CUR.kind==='svg'?'active':''}" onclick="viewSVG()">SVG</button>`;
+  // accuracy readout (green) for the grounded pass on stage, right side of the row
+  const a = (CUR.kind==='grounded' && PASSES.length) ? PASSES[Math.min(CUR.idx,PASSES.length-1)].acc : null;
+  if(a){ const f=v=>v==null?'…':v+'%';
+    h+=`<span class="acc-inline">${f(a.design)} <i>design</i> · ${f(a.measure)} <i>measure</i></span>`; }
+  host.innerHTML=h;
+}
+function _roll(prevKind,nextKind){
+  const order=['rd','grounded','svg'], st=$('stage'); if(!st) return;
+  st.style.setProperty('--slide-from', ((order.indexOf(nextKind)>=order.indexOf(prevKind)?1:-1)*22)+'px');
+  st.classList.remove('rolling'); void st.offsetWidth; st.classList.add('rolling');
+}
+function view(k){ const prev=CUR.kind; CUR={kind:k, idx:CUR.idx||0}; applyView(); _roll(prev,k); }
+function viewRD(){ view('rd'); }
+function viewSVG(){ view('svg'); }
+function viewGrounded(idx){ const prev=CUR.kind;
+  CUR={kind:'grounded', idx:(idx==null ? (PASSES.length?PASSES.length-1:0) : idx)}; applyView(); _roll(prev,'grounded'); }
+
+function applyView(){
+  const rd=CUR.kind==='rd', grounded=CUR.kind==='grounded', svg=CUR.kind==='svg';
+  let pass=null;
+  if(grounded && PASSES.length){ pass=PASSES[Math.min(CUR.idx,PASSES.length-1)]; if(pass) $('img-grounded').src=pass.img; }
+  if(rd && (RD||ANSWER)) $('img-rd').src=RD||ANSWER;
+  $('img-rd').style.display       = rd && $('img-rd').src ? 'block':'none';
+  $('img-grounded').style.display = grounded && $('img-grounded').src ? 'block':'none';
+  $('badge-rd').style.display       = rd?'block':'none';
+  $('badge-grounded').style.display = grounded?'block':'none';
+  if(grounded) $('badge-grounded').textContent = markLabel(pass?CUR.idx:0)+' · grounded'+(pass&&pass.badge?' · '+pass.badge:'');
+  // SVG panel: vector-trace the grounded pass currently on stage
+  if(svg){
+    if(!TRACE && $('img-grounded').src) buildSVGfromGrounded();
+    $('trace-view').classList.toggle('off', !TRACE);
+    if(TRACE) mountTrace();
+  } else { $('trace-view').classList.add('off'); }
+  const anyImg = (rd && $('img-rd').src) || (grounded && $('img-grounded').src) || (svg && (TRACE || $('img-grounded').src));
+  $('stage-empty').style.display = anyImg ? 'none':'block';
+  renderPassPills();
+}
+
+/* ============================ test harness · embedded images (no fetch, no server) ============================ */
+/* Test images live in tests-data.js as data URLs (window.MAYA_TESTS), so everything loads on a plain
+   double-click (file://) with no fetch, no folder picker, no server. */
+const TESTS = window.MAYA_TESTS || {};
+let ACTIVE_TEST = null;   // current test key
+let FILES = {};           // { front, side, back, answer } → data URLs
+let RD = null;            // GPT-redrawn clean answer (data URL), the scoring target
+let RD_IS_RAW = false;    // true = the redraw failed and RD is the RAW CLO screenshot (grader must be told)
+let RD_PROMISE = null;    // pending redraw, runs in parallel with the pipeline; scoring awaits it
+
+function shortLabel(name){ const m=name.match(/^(test\s*\d+)/i); return m?m[1].replace(/\s+/,' '):name; }
+
+function initTests(){
+  const p=$('test-picker'); if(!p) return;
+  const names=Object.keys(TESTS);
+  if(!names.length){ p.innerHTML='<option>no tests</option>'; return; }
+  p.innerHTML=names.map(n=>`<option value="${n.replace(/"/g,'&quot;')}">${shortLabel(n)}</option>`).join('');
+  p.value=names[0]; pickTest(names[0]);
+}
+function onPickTest(val){ pickTest(val); }
+function pickTest(name){
+  ACTIVE_TEST=name; FILES=TESTS[name]||{};
+  if($('test-view')) $('test-view').value='front';
+  showView('front');
+}
+// Show one of the test's images on the left; non-answer views also become the pipeline input.
+function showView(which){
+  if(!ACTIVE_TEST) return;
+  const data=FILES[which]; if(!data){ toast('No "'+which+'" image in this test.'); return; }
+  $('hero-img').src=data; $('hero-img').style.display='block'; $('hero-empty').style.display='none';
+  if(which!=='answer') HERO=data;
+}
+// Start → redraw the answer (RD), then Raw, then Grounded (scored vs RD). Answer/RD shown left for side-by-side.
+async function startTest(){
+  if(RUNNING){ toast('A run is already going, let it finish.'); return; }
+  if(!ACTIVE_TEST){ toast('Pick a test first.'); return; }
+  if(!getKey()){ toast('Add your OpenAI key in Settings (≡).'); toggleDrawer(true); return; }
+  if(!EMB){ toast('Building embeddings first…'); await buildEmbeddings(); if(!EMB) return; }
+  RUNNING=true; RUN++;
+  const btn=$('start-test'); const orig=btn.textContent; btn.innerHTML='<span class="spinner"></span>Running…';
+  try{
+    // pipeline input = whatever view is picked on the left (answer isn't an input, falls back to front)
+    const pick=$('test-view').value;
+    HERO = (pick!=='answer' && FILES[pick]) ? FILES[pick] : FILES.front;
+    ANSWER = FILES.answer || null;
+    liveOpen('test loaded');
+    liveLine(`${shortLabel(ACTIVE_TEST)} · input: ${pick==='answer'?'front':pick}${ANSWER?' · answer loaded':' · no answer'}`);
+    TRACE=null; _tv=null; PASSES=[]; RD=null; RD_IS_RAW=false;
+    $('img-rd').removeAttribute('src'); $('img-grounded').removeAttribute('src');
+    RD_PROMISE = runRD();   // 1 · redraw the answer (frozen per test), runs IN PARALLEL with the pipeline; scoring awaits it
+    await runGrounded();    // 2 · book + measurements, refined over Mark One → Mark Two, scored vs both answers
+    await RD_PROMISE.catch(()=>{});
+    // the left frame stays on whatever view the user picked, the redrawn answer never hijacks it
+  }catch(e){ toast('Start failed: '+e.message); console.error(e); liveLine('Start failed: '+e.message); }
+  finally{ btn.textContent=orig; RUNNING=false; }
+}
+
+/* ---------- RD · GPT redraws the answer into a clean flat pattern (the scoring target) ---------- */
+function hashStr(s){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h+s.charCodeAt(i))|0; } return (h>>>0).toString(36); }
+function rdCacheKey(){ return 'rd_'+(ACTIVE_TEST||'upload')+'_'+hashStr(ANSWER.slice(0,4096)+':'+ANSWER.length); }
+
+async function runRD(){
+  if(!ANSWER){ liveLine('No answer image, skipping the redraw.'); return; }
+  const myRun=RUN;
+  // FROZEN TARGET, reuse the cached redraw for this exact test+answer so scores are
+  // comparable across runs (and an image call is saved). KB "Clear" wipes it too.
+  try{
+    if(!DB) await openDB();
+    const cached = await dbGet(rdCacheKey());
+    if(cached){
+      if(myRun!==RUN) return;
+      RD=cached; RD_IS_RAW=false;
+      $('img-rd').src=RD; applyView();
+      liveLine('Redrawn answer loaded from cache, frozen scoring target, comparable across runs.');
+      return;
+    }
+  }catch{}
+  view('rd'); liveStatus('redrawing the answer…');
+  try{
+    const prompt =
+      'This image is a CLO3D screenshot that contains a 2D SEWING PATTERN (and may also show a 3D garment). '+
+      'Redraw ONLY the flat pattern pieces as a clean technical flat: warm-white paper (#fafaf6), each piece a clean '+
+      'closed dark-grey outline (1-1.5px), a centered dashed grainline, triangular notches at seam pairs, a small '+
+      'uppercase label per piece, laid flat on a 1-inch grid like a marker sheet. Ignore the 3D garment entirely. '+
+      'No body, no shading, no 3D, just the clean flat pattern.';
+    const out = await gptImageEdit(ANSWER, prompt);
+    if(myRun!==RUN) return;                       // a newer run took over, drop this result
+    RD = out; RD_IS_RAW=false;
+    try{ await dbPut(rdCacheKey(), RD); }catch{}
+    $('img-rd').src=RD; applyView();
+    liveLine('Redrawn answer ready + frozen for this test, future runs score against this exact target.');
+  }catch(e){ if(myRun!==RUN) return; RD=ANSWER; RD_IS_RAW=true; $('img-rd').src=RD;
+    liveLine('Redraw failed, scoring against the RAW CLO answer (the grader is told it is a raw screenshot): '+e.message); }
+}
+
+/* ---------- GROUNDED (book + measurements, refined over 2 passes) ---------- */
+let PASSES = [];   // [{ img, badge, acc:{design,measure}, critDefects }], Grounded 1..2
+let BEST_IDX = 0;  // index of the pass the answer-free book critique likes best
+
+async function runGrounded(){
+  if(!HERO){ toast('Load an image first.'); return; }
+  if(!EMB){ toast('Build embeddings first (Settings ≡).'); toggleDrawer(true); return; }
+  const myRun=RUN;
+  PASSES=[]; BEST_IDX=0; viewGrounded(0); liveOpen('grounding…');
+  try{
+    // 1 · VISION, classify + read construction
+    liveStatus('reading garment…');
+    const g = await classifyGarment(HERO);
+    if(myRun!==RUN) return;
+    LAST.garment=g;
+    const typeKey = resolveType(g.type);
+    LAST.type=typeKey; LOGIC_TYPE=typeKey; renderLogic();
+    $('t-type').innerHTML = `<b style="color:var(--accent)">${g.type}</b>${g.subtype?' · '+g.subtype:''}<br>`+
+      `<span style="color:var(--dim)">${(g.attributes||[]).slice(0,6).join(' · ')||''}</span>`;
+
+    // 2 · ROUTE
+    const grammar = KB.grammar.types[typeKey];
+    const route = KB.chapters[typeKey] || (grammar?[{ch:grammar.chapter,title:'(chapter '+grammar.chapter+')'}]:[]);
+    $('t-chapter').innerHTML = route.length
+      ? route.map(r=>`Ch.${r.ch}, ${r.title}`).join('<br>')
+      : '<span style="color:var(--warn)">adaptive fallback (no named chapter)</span>';
+
+    // 3 · RULES
+    const gram = grammar || null;
+    LAST.garmentGram = gram;
+    LAST.cutlist = buildCutList(g, gram);
+    liveLine('Cut-list authority: '+(LAST.cutlistSource||'…')+'.');
+    renderGrammar(gram, typeKey);
+
+    // 4 · RETRIEVE
+    const query = buildQuery(g, typeKey, gram);
+    const qvec = await embedTexts([query]).then(v=>v[0]);
+    const hits = retrieve(qvec, typeKey, 5);
+    renderChunks(hits);
+
+    // 5 · COMPOSE base grounded prompt
+    const basePrompt = composeGroundedPrompt(g, typeKey, gram, hits);
+    $('t-prompt').textContent = basePrompt;
+
+    // 6 · MARK ONE, base grounded, or CONTINUE from the previous run's best pass of this same input
+    let img;
+    if(LAST.bestGrounded && LAST.bestHero===HERO){
+      liveLine('Continuing from the previous run\u2019s best pass, refining, not restarting.');
+      img = LAST.bestGrounded;
+      PASSES=[{ img, badge:'carried · best of previous run', acc:null }];
+    } else {
+      liveStatus('drawing Mark One…');
+      img = await gptImageEdit(HERO, basePrompt);
+      if(myRun!==RUN) return;
+      PASSES=[{ img, badge:'base grounded', acc:null }];
+    }
+    viewGrounded(0);
+    if(ANSWER) scoreGrounded(PASSES[0]);     // fire-and-forget; HUD updates when done
+
+    // 7 · MARK TWO+, critique against the book, then redraw to fix
+    for(let p=2; p<=GROUNDED_PASSES; p++){
+      const mk=markLabel(p-1);
+      liveStatus(`${mk}: reading the book…`);
+      const cq = critiqueQuery(g, typeKey, gram);
+      const cqvec = await embedTexts([cq]).then(v=>v[0]);
+      if(myRun!==RUN) return;
+      const bookHits = retrieveBlended(cqvec, typeKey, 8);
+      liveStatus(`${mk}: critiquing…`);
+      const crit = await critiquePattern(img, HERO, typeKey, gram, g, bookHits, mk);
+      if(myRun!==RUN) return;
+      if(crit.ok){ PASSES[PASSES.length-1].critDefects=0; liveLine(`Passed the book critique after ${p-1} pass(es).`); break; }
+      if(!crit.fixes.length && !crit.defects.length){
+        liveLine('Critique came back unusable (no defects, no fixes), skipping the redraw, keeping '+markLabel(p-2)+'.');
+        break;                                // don't burn an image call fixing nothing
+      }
+      PASSES[PASSES.length-1].critDefects=crit.defects.length;   // book defect count, the ANSWER-FREE quality signal
+      liveStatus(`${mk}: redrawing to fix…`);
+      const refinePrompt = composeRefinePrompt(basePrompt, crit, gram);
+      img = await gptImageEdit(img, refinePrompt);
+      if(myRun!==RUN) return;
+      PASSES.push({ img, badge:'refined from book critique', acc:null });
+      viewGrounded(PASSES.length-1);
+      if(ANSWER) scoreGrounded(PASSES[PASSES.length-1]);
+    }
+
+    // 8 · PICK THE BEST PASS, judged ONLY by the answer-free book critique. Using the
+    // vs-answer scores here would leak the answer into the pipeline; the book verdict is clean.
+    if(PASSES.length>1 && PASSES[PASSES.length-1].critDefects==null){
+      const fin=PASSES[PASSES.length-1];
+      liveStatus('verifying the final pass against the book…');
+      try{
+        const vq = critiqueQuery(g, typeKey, gram);
+        const vqvec = await embedTexts([vq]).then(v=>v[0]);
+        if(myRun!==RUN) return;
+        const vHits = retrieveBlended(vqvec, typeKey, 8);
+        const vc = await critiquePattern(fin.img, HERO, typeKey, gram, g, vHits, markLabel(PASSES.length-1)+' · verify');
+        if(myRun!==RUN) return;
+        fin.critDefects = vc.ok ? 0 : vc.defects.length;
+      }catch(e){ liveLine('Verify critique failed, keeping the newest pass by default: '+e.message); }
+    }
+    let bestIdx = PASSES.length-1;
+    if(PASSES.length>1){
+      const a=PASSES[0].critDefects, b=PASSES[PASSES.length-1].critDefects;
+      if(a!=null && b!=null){
+        if(b>a){ bestIdx=0;
+          PASSES[PASSES.length-1].badge+=' · regressed vs book';
+          liveLine(`Book verdict: ${markLabel(PASSES.length-1)} has ${b} defect(s) vs Mark One\u2019s ${a}, keeping Mark One as best.`);
+        } else {
+          liveLine(`Book verdict: ${markLabel(PASSES.length-1)} ${b} defect(s) vs Mark One ${a}, the newest pass stands.`);
+        }
+      }
+    }
+    BEST_IDX=bestIdx;
+    PASSES[bestIdx].badge+=' · best';
+    LAST.bestGrounded=PASSES[bestIdx].img; LAST.bestHero=HERO;   // the next run of this same input continues from here
+    viewGrounded(bestIdx);
+    liveStatus('done');
+    TRACE=null; buildSVGfromGrounded(PASSES[bestIdx].img);   // SVG follows the BEST pass, not blindly the latest
+  }catch(e){ toast('Grounded failed: '+e.message); console.error(e); liveLine('Grounded failed: '+e.message); }
+}
+
+/* ---------- ACCURACY · vision grades a grounded pass vs BOTH answers ----------
+   HUD score = vs the redrawn answer (clean target). A second grade vs the RAW CLO
+   answer is logged alongside, if the two diverge hard, the redraw is distorting
+   the target and the HUD number can't be trusted. Breaks the circularity. */
+async function gradePair(target, candidate, targetNote){
+  // rubric vocabulary comes from the LOCKED CUT-LIST (answer-free), not a hardcoded pants list
+  const cut = LAST.cutlist;
+  const pieceVocab = (cut && cut.length)
+    ? cut.map(p=>p.label.toLowerCase()+'×'+p.qty).join(', ')
+    : 'the panels expected for this garment type';
+  // the candidate is drafted to the DESIGNER'S measurements, grade MEASURE against those
+  // numbers (readable off the 1-inch grid), not against the answer garment's unknown size
+  const d = computeDims();
+  let dimNote='';
+  if(d){
+    dimNote='\nTARGET MEASUREMENTS the CANDIDATE was drafted to (inches, read them off the 1-inch grid in the CANDIDATE, origin bottom-left):';
+    if(d.waistbandLen!=null) dimNote+='\n- waistband ≈ '+fmt(d.waistbandLen)+' in long × '+fmt(d.waistbandDepth)+' in deep';
+    if(d.frontWaist!=null)  dimNote+='\n- front waist ≈ '+fmt(d.frontWaist)+' in, back waist ≈ '+fmt(d.backWaist)+' in (back wider)';
+    if(d.frontHip!=null)    dimNote+='\n- front hip ≈ '+fmt(d.frontHip)+' in, back hip ≈ '+fmt(d.backHip)+' in';
+    if(d.length!=null)      dimNote+='\n- pant length ≈ '+fmt(d.length)+' in tall';
+    if(d.inseam!=null)      dimNote+='\n- inseam ≈ '+fmt(d.inseam)+' in, rise ≈ '+(d.rise!=null?fmt(d.rise):'length−inseam')+' in';
+    dimNote+='\nWhere the ANSWER\'s proportions conflict with these numbers, the NUMBERS win for the MEASUREMENT grade, the answer garment may have been drafted to different measurements.';
+  }
+  const sys =
+    'You are a STRICT senior patternmaker grading an AI-generated sewing pattern (CANDIDATE) against the correct answer (ANSWER). '+
+    'ANSWER is '+targetNote+'. CANDIDATE is a flat pattern drawing. '+
+    'Grade two things independently and harshly, do NOT be generous, most first attempts are poor:\n'+
+    '• DESIGN accuracy: do the pieces match in COUNT, shape, and which panels exist (expected piece set: '+pieceVocab+')? '+
+    'Wrong count or missing/extra pieces = well below 50.\n'+
+    '• MEASUREMENT accuracy: do the proportions and seam lengths match the target measurements'+(d?' listed below':'')+' and the answer\'s relative proportions (leg length vs width, waistband length, rise, hip)? '+
+    'If you cannot verify a dimension, score it low, do not assume.\n'+
+    'Anchor: identical=100, right pieces but wrong proportions≈50, vaguely garment-shaped≈20, unrelated≈0.'+
+    dimNote+'\n'+
+    'Return STRICT JSON only: {"design": <int 0-100>, "measure": <int 0-100>}.';
+  const body={ model:'gpt-4.1', temperature:0, response_format:{type:'json_object'}, messages:[
+    {role:'system', content:sys},
+    {role:'user', content:[
+      {type:'text', text:'ANSWER (the correct pattern):'}, {type:'image_url', image_url:{url:target}},
+      {type:'text', text:'CANDIDATE (the AI pattern to grade):'}, {type:'image_url', image_url:{url:candidate}}
+    ]}
+  ]};
+  const res=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+getKey()},body:JSON.stringify(body)});
+  if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||('score '+res.status)); }
+  const o=JSON.parse((await res.json()).choices[0].message.content);
+  const clamp=v=>v==null?null:Math.max(0,Math.min(100,Math.round(v)));
+  return { design:clamp(o.design), measure:clamp(o.measure) };
+}
+// median-of-3 grading, vision grades are jittery; three samples + per-axis median stabilises the number
+async function gradeMedian(target, candidate, note){
+  const rs = await Promise.allSettled([0,1,2].map(()=>gradePair(target, candidate, note)));
+  const ok = rs.filter(r=>r.status==='fulfilled').map(r=>r.value);
+  if(!ok.length) throw new Error((rs[0].reason&&rs[0].reason.message)||'all grade samples failed');
+  const med=k=>{ const v=ok.map(o=>o[k]).filter(x=>x!=null).sort((a,b)=>a-b); return v.length?v[Math.floor(v.length/2)]:null; };
+  return { design:med('design'), measure:med('measure'), samples:ok.length };
+}
+async function scoreGrounded(pass){
+  if(RD_PROMISE){ try{ await RD_PROMISE; }catch{} }   // the redraw runs in parallel, wait for it before picking the target
+  const TARGET = RD || ANSWER;
+  if(!TARGET || !pass) return;
+  const myRun=RUN, mk=markLabel(Math.max(0,PASSES.indexOf(pass)));
+  pass.acc={design:null, measure:null};
+  if(CUR.kind==='grounded' && PASSES[CUR.idx]===pass) renderPassPills();
+  try{
+    const RAW_NOTE='a CLO3D screenshot containing the correct flat pattern (ignore any 3D garment in it)';
+    const cleanNote = RD_IS_RAW ? RAW_NOTE : 'a clean redrawn flat pattern';   // never mislabel the target
+    const vsClean = await gradeMedian(TARGET, pass.img, cleanNote);
+    if(myRun!==RUN) return;                        // a newer run owns the HUD now
+    pass.accClean=vsClean;
+    let acc=vsClean;
+    let line=`${mk}, vs ${RD_IS_RAW?'RAW answer (redraw failed)':'redrawn'}: design ${vsClean.design}% · measure ${vsClean.measure}% (median of ${vsClean.samples})`;
+    if(RD && ANSWER && RD!==ANSWER){               // second opinion vs the raw CLO answer
+      try{
+        const vsRaw = await gradeMedian(ANSWER, pass.img, RAW_NOTE);
+        if(myRun!==RUN) return;
+        pass.accRaw=vsRaw;
+        line+=` · vs raw answer: ${vsRaw.design}%/${vsRaw.measure}%`;
+        const gap=Math.abs((vsClean.design??0)-(vsRaw.design??0));
+        if(gap>=20) line+=`  ⚠ ${gap}pt gap, the redraw may be distorting the target`;
+        // HUD = the CONSERVATIVE grade: same-model style bias inflates the vs-redrawn number,
+        // so the green % shows the lower of the two on each axis
+        const lo=(a,b)=>a==null?b:b==null?a:Math.min(a,b);
+        acc={design:lo(vsClean.design,vsRaw.design), measure:lo(vsClean.measure,vsRaw.measure), samples:vsClean.samples};
+        line+=' · HUD = lower of the two';
+      }catch(e){ line+=' · raw-answer grade failed: '+e.message; }
+    }
+    pass.acc=acc;
+    liveLine(line);
+  }catch(e){ if(myRun===RUN){ pass.acc={design:null, measure:null}; liveLine('Scoring failed: '+e.message); } }
+  if(myRun===RUN && CUR.kind==='grounded' && PASSES[CUR.idx]===pass) renderPassPills();
+}
+
+/* ---------- SVG · vectorise the grounded pattern (image + math) ---------- */
+function buildSVGfromGrounded(src){
+  if(typeof ImageTracer==='undefined'){ liveLine('Tracer not loaded, SVG unavailable.'); return; }
+  src = src || (PASSES[BEST_IDX] && PASSES[BEST_IDX].img) || ($('img-grounded') && $('img-grounded').src);
+  if(!src) return;
+  const imgEl=new Image();
+  const make=()=>{
+    let imgd;
+    try{ const c=document.createElement('canvas'); c.width=imgEl.naturalWidth; c.height=imgEl.naturalHeight;
+      const ctx=c.getContext('2d'); ctx.drawImage(imgEl,0,0); imgd=ctx.getImageData(0,0,c.width,c.height); }
+    catch(e){ liveLine('SVG trace blocked (cross-origin).'); return; }
+    const preset=(ImageTracer.optionpresets&&ImageTracer.optionpresets['detailed'])||{};
+    const opts=Object.assign({},preset,{numberofcolors:4,pathomit:8,ltres:1,qtres:1,blurradius:0,linefilter:true,roundcoords:1});
+    let svg; try{ svg=ImageTracer.imagedataToSVG(imgd,opts); }catch(e){ liveLine('Trace failed: '+e.message); return; }
+    TRACE={ svg, label:'grounded · best pass' };
+    if(CUR.kind==='svg'){ $('trace-view').classList.remove('off'); mountTrace(); }
+  };
+  let done=false; const runOnce=()=>{ if(done) return; done=true; make(); };
+  imgEl.addEventListener('load', runOnce, {once:true});
+  imgEl.src=src;
+  if(imgEl.complete && imgEl.naturalWidth) runOnce();
+}
+
+/* ============================ export current stage view → SVG ============================
+   Serialises EXACTLY what is on the stage right now into one self-contained .svg file:
+   the visible pattern image (raw or grounded, embedded as a PNG data-URI), the deterministic
+   vector draft, plus whichever grid / arrow overlays are currently switched on. */
+function exportSVG(){
+  // Prefer the true-vector trace of the grounded pattern; otherwise build it now.
+  if(!TRACE && $('img-grounded') && $('img-grounded').src) buildSVGfromGrounded();
+  if(TRACE && TRACE.svg){
+    const blob=new Blob([TRACE.svg],{type:'image/svg+xml'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    const stamp=new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
+    a.download=`maya-grounded-svg-${stamp}.svg`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+    toast('Exported the grounded SVG.');
+    return;
+  }
+  toast(PASSES.length ? 'Tracing the pattern, press Export again in a moment.' : 'Run a grounded pass first, nothing to export yet.');
+}
+
+/* ============================ trace current Raw/Grounded → TRUE vector SVG ============================
+
+/* ============================ pannable / zoomable trace viewer (in the Draft tab) ============================ */
+let TRACE = null;          // { svg:string, label:string }
+let _tv = null;            // live viewer state { svgEl, w, h, vb, dragging, sx, sy }
+
+function mountTrace(){
+  const host=$('trace-view'); if(!host||!TRACE) return;
+  host.innerHTML =
+    `<div class="trace-toolbar">
+       <span class="pill sm" onclick="traceZoom(1.25)">Zoom +</span>
+       <span class="pill sm" onclick="traceZoom(0.8)">Zoom −</span>
+       <span class="pill sm" onclick="traceFit()">Fit</span>
+       <span class="pill sm" onclick="downloadTrace()">Download SVG</span>
+       <span class="pill sm" onclick="clearTrace()">Back to pattern</span>
+       <span class="tlabel">traced · ${TRACE.label}</span>
+     </div>
+     <div class="trace-canvas" id="trace-canvas"></div>`;
+  const canvas=host.querySelector('#trace-canvas');
+  const doc=new DOMParser().parseFromString(TRACE.svg,'image/svg+xml');
+  const svg=doc.documentElement;
+  let w=parseFloat(svg.getAttribute('width'))||0, h=parseFloat(svg.getAttribute('height'))||0;
+  if((!w||!h) && svg.getAttribute('viewBox')){ const p=svg.getAttribute('viewBox').split(/[ ,]+/).map(Number); w=p[2]; h=p[3]; }
+  w=w||1000; h=h||1000;
+  svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+  svg.setAttribute('width','100%'); svg.setAttribute('height','100%');
+  const node=document.importNode(svg,true);
+  canvas.appendChild(node);
+  _tv={ svgEl:node, w, h, vb:{x:0,y:0,w,h}, dragging:false, sx:0, sy:0 };
+  applyTraceVB();
+  attachTraceHandlers(canvas);
+}
+function applyTraceVB(){ if(!_tv) return; const v=_tv.vb; _tv.svgEl.setAttribute('viewBox',`${v.x} ${v.y} ${v.w} ${v.h}`); }
+function traceZoom(f, cx, cy){
+  if(!_tv) return;
+  const cv=$('trace-canvas'), r=cv.getBoundingClientRect();
+  const px = cx==null ? _tv.vb.x+_tv.vb.w/2 : _tv.vb.x + (cx-r.left)/r.width*_tv.vb.w;
+  const py = cy==null ? _tv.vb.y+_tv.vb.h/2 : _tv.vb.y + (cy-r.top )/r.height*_tv.vb.h;
+  const nw=_tv.vb.w/f, nh=_tv.vb.h/f;                 // f>1 zooms in
+  _tv.vb.x = px - (px-_tv.vb.x)*(nw/_tv.vb.w);
+  _tv.vb.y = py - (py-_tv.vb.y)*(nh/_tv.vb.h);
+  _tv.vb.w = nw; _tv.vb.h = nh;
+  applyTraceVB();
+}
+function traceFit(){ if(!_tv) return; _tv.vb={x:0,y:0,w:_tv.w,h:_tv.h}; applyTraceVB(); }
+function attachTraceHandlers(cv){
+  cv.onwheel=(e)=>{ e.preventDefault(); traceZoom(e.deltaY<0?1.1:1/1.1, e.clientX, e.clientY); };
+  cv.onpointerdown=(e)=>{ if(!_tv) return; _tv.dragging=true; _tv.sx=e.clientX; _tv.sy=e.clientY;
+    cv.classList.add('grabbing'); cv.setPointerCapture(e.pointerId); };
+  cv.onpointermove=(e)=>{ if(!_tv||!_tv.dragging) return; const r=cv.getBoundingClientRect();
+    _tv.vb.x -= (e.clientX-_tv.sx)/r.width *_tv.vb.w;
+    _tv.vb.y -= (e.clientY-_tv.sy)/r.height*_tv.vb.h;
+    _tv.sx=e.clientX; _tv.sy=e.clientY; applyTraceVB(); };
+  cv.onpointerup=(e)=>{ if(!_tv) return; _tv.dragging=false; cv.classList.remove('grabbing'); };
+  cv.onpointercancel=cv.onpointerup;
+}
+function downloadTrace(){
+  if(!TRACE) return;
+  const blob=new Blob([TRACE.svg],{type:'image/svg+xml'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  const stamp=new Date().toISOString().slice(0,16).replace(/[:T]/g,'-');
+  a.download=`maya-${TRACE.label}-traced-${stamp}.svg`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  toast('Downloaded the traced SVG.');
+}
+// leave the SVG viewer → back to the grounded pattern (the trace stays cached for the SVG tab)
+function clearTrace(){ view('grounded'); }
+
+
+/* ---- live critique console ---- */
+function liveOpen(status){ $('live').classList.add('on'); $('live-status').textContent=status||''; }
+function liveStatus(s){ $('live-status').textContent=s; }
+function liveLog(line, replace){ const el=$('live-log'); if(replace) el.textContent=line; else el.textContent+=line; el.scrollTop=el.scrollHeight; }
+function liveLine(line){ liveLog((($('live-log').textContent && !$('live-log').textContent.endsWith('\n'))?'\n':'')+line+'\n'); }
+
+/* ---- streaming chat: shows the model's answer as it generates ---- */
+async function streamChat(messages, onDelta){
+  const res = await fetch('https://api.openai.com/v1/chat/completions',{
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+getKey()},
+    body:JSON.stringify({ model:'gpt-4.1', stream:true, response_format:{type:'json_object'}, messages })
+  });
+  if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||('critique '+res.status)); }
+  const reader=res.body.getReader(); const dec=new TextDecoder(); let buf='', full='';
+  while(true){
+    const {done,value}=await reader.read(); if(done) break;
+    buf+=dec.decode(value,{stream:true});
+    const lines=buf.split('\n'); buf=lines.pop();
+    for(const ln of lines){
+      const t=ln.trim(); if(!t.startsWith('data:')) continue;
+      const data=t.slice(5).trim(); if(data==='[DONE]') continue;
+      try{ const j=JSON.parse(data); const d=j.choices?.[0]?.delta?.content; if(d){ full+=d; onDelta&&onDelta(d,full); } }catch{}
+    }
+  }
+  return full;
+}
+
+/* ---- critique retrieval: pull HOW-TO-CONSTRUCT passages from the book ---- */
+function critiqueQuery(g, typeKey, gram){
+  // bias toward drafting/construction AND cross-cutting fundamentals so the
+  // critique can cite seam-allowance / grainline / notch / dart / trueing rules
+  // wherever they live in the book, not just the garment's own chapter.
+  const bits=[ g.subtype||g.type,
+    'how to draft and construct the pattern: foundation, panels, front and back,',
+    'crotch rise inseam outseam dart intake, waistband, hip distribution,',
+    'seam allowance, grainline placement, notches, trueing and blending seams,',
+    'balance lines, number of pattern pieces, professional pattern accuracy' ];
+  if(gram) bits.push(gram.summary);
+  return bits.join(' ');
+}
+
+/* ---- critique: judge the draft ONLY against the retrieved BOOK passages ---- */
+function critiquePrompt(typeKey, gram, g, bookHits){
+  const book = bookHits.map(h=>`[Ch.${h.ch} p.${h.page}] ${h.text.trim()}`).join('\n\n');
+  const cut = LAST.cutlist;
+  const panelChecklist = cut
+    ? `\nLOCKED PIECE SET, the correct pattern has EXACTLY ${cutListTotal(cut)} pieces: ` +
+      cut.map(p=>`${p.label}×${p.qty}${p.mirror?'(pair)':''}`).join(', ') +
+      `. If the draft shows a different count, a missing piece, an extra piece, or one piece SPLIT into two (e.g. a back yoke drawn as left+right), that is a defect; say so explicitly and cite the book on the correct piece set.`
+    : '';
+  const d=computeDims();
+  const dimCheck = d ? `\nDIMENSION CHECK (the designer entered real measurements, verify the draft against them on the 1-inch grid; origin bottom-left):`+
+    (d.waist!=null?`\n - finished waist ${fmt(d.waist)}in → waistband strip must read ~${fmt(d.waistbandLen)}in long × ${fmt(d.waistbandDepth)}in deep`:'')+
+    (d.frontWaist!=null?`\n - front waist ~${fmt(d.frontWaist)}in, back waist ~${fmt(d.backWaist)}in (back wider)`:'')+
+    (d.length!=null?`\n - leg/panel length ~${fmt(d.length)}in tall`:'')+
+    `\n If a dimension is clearly off relative to the grid, that is a defect.` : '';
+  return `You are Maya's MASTER patternmaker doing a brutally strict QA review. Your ONLY source of truth is the BOOK PASSAGES below, drawn from "Patternmaking for Fashion Design" (Joseph-Armstrong). Do NOT invent rules from general knowledge, every defect you raise MUST be justified by something in these passages, and you MUST cite the page.
+
+BOOK PASSAGES (the authority on how this garment is constructed):
+"""
+${book}
+"""${panelChecklist}${dimCheck}
+
+The FIRST image is the reference garment. The SECOND image is a draft 2D sewing pattern made for it. Judge the draft against what the BOOK says correct construction is.
+
+Output STRICT JSON:
+{
+  "ok": <boolean>,
+  "panels_seen": <integer panels visible in the draft>,
+  "verdict": "<one tight sentence on overall fidelity to the book>",
+  "defects": [
+    { "issue": "concrete, visible problem with the draft",
+      "book_basis": "what the book says it SHOULD be (paraphrase the passage)",
+      "page": <book page number you are citing> }
+  ],
+  "fixes": ["one imperative redraw instruction per defect"],
+  "annotations": [
+    { "x": <0..1 normalised X of the problem area in the draft image>,
+      "y": <0..1 normalised Y, 0=top>,
+      "dir": "up"|"down"|"left"|"right",
+      "label": "≤4-word tag, e.g. 'yoke doubled'" }
+  ]
+}
+
+STRINGENCY, this must be production-perfect, not 'good enough':
+- Set "ok": true ONLY if the draft is flawless against the book on EVERY count, panel count, front/back distinction and relative width, symmetry, crotch/rise curve, waistband length & depth, dart placement, seam pairing, grainline on every panel, notches, and clean professional linework. If you are even slightly unsure, "ok" is false.
+- A draft that merely 'looks plausible' or 'is close' is NOT ok. Hold it to the book.
+- Be specific and visible: only raise defects you can actually see in the draft image, but measure them against the book passages above.
+- If the book passages don't cover something, do not fabricate a defect for it.`;
+}
+
+async function critiquePattern(draftImg, refImg, typeKey, gram, g, bookHits, passLabel){
+  liveLine(`── ${passLabel}: critiquing draft against ${bookHits.length} book passage(s) ──`);
+  liveStatus('reading the book…');
+  const full = await streamChat(
+    [{role:'system',content:critiquePrompt(typeKey,gram,g,bookHits)},
+     {role:'user',content:[
+       {type:'text',text:'FIRST = reference garment. SECOND = generated draft pattern. Critique the draft strictly against the book passages.'},
+       {type:'image_url',image_url:{url:refImg}},
+       {type:'image_url',image_url:{url:draftImg}}]}],
+    (delta)=>liveLog(delta)
+  );
+  liveLog('\n');
+  let c; try{ c=JSON.parse(full); }catch{ c={ok:false,defects:[],fixes:[],verdict:'(unparseable critique)'}; }
+  c.defects=c.defects||[]; c.fixes=c.fixes||[]; c.annotations=c.annotations||[]; c.sources=bookHits.map(h=>({ch:h.ch,page:h.page,score:h.score}));
+  return c;
+}
+
+/* ---- compose the corrective edit prompt for the next pass ---- */
+function composeRefinePrompt(basePrompt, crit, gram){
+  let P = `You are REVISING a 2D sewing pattern to FIX specific, confirmed mistakes. The image is the current draft.\n\n`+
+    `Fix EVERY issue listed below DECISIVELY: if a panel's shape, proportion, curve, or size is wrong, REDRAW that panel correctly, do not just nudge it. `+
+    `Keep the panels that are already correct, and keep the exact locked piece set (same number of pieces, never split or merge). `+
+    `Each pass MUST visibly improve on the previous one; a timid, near-identical redraw is a failure. Prefer a clearly more correct pattern over a safe one.\n\n`;
+  P += `TARGETED FIXES (apply only these):\n`;
+  if(crit.fixes.length){
+    crit.fixes.forEach((f,i)=>{
+      const d=crit.defects[i];
+      const cite = d && d.page ? ` [book p.${d.page}: ${d.book_basis||''}]` : '';
+      P+=`• ${f}${cite}\n`;
+    });
+  } else {
+    crit.defects.forEach(d=>P+=`• ${d.issue||d}${d.page?` [book p.${d.page}]`:''}\n`);
+  }
+  if(gram){   // keep the base construction rules in scope, fixes must stay inside them
+    P += `\nCONSTRUCTION RULES (unchanged from the base draft, every fix must stay inside them):\n• ${gram.summary}\n`;
+    if(gram.common_hallucinations?.length) P += `• AVOID these common errors: ${gram.common_hallucinations.join(' ')}\n`;
+  }
+  const cut = LAST.cutlist;
+  if(cut){
+    P += `\nLOCKED PIECE SET, the pattern MUST contain EXACTLY these ${cutListTotal(cut)} pieces, no more and no fewer:\n`+
+         cutListLines(cut)+`\n`+
+         `CRITICAL: keep the SAME pieces as the previous draft. Do NOT add a piece, do NOT remove a piece, and do NOT split one piece into two `+
+         `(e.g. never turn a single BACK YOKE into "yoke left" + "yoke right"). Fix each flagged mistake IN PLACE on the existing piece.\n`+
+         `Symmetry: ${LAST.garmentGram?LAST.garmentGram.symmetry:'bilateral'}.\n`;
+  }
+  P += buildDimensionBlock(LAST.type);
+  P += topstitchNote(LAST.garment);
+
+  P += `\nKeep the same drawing style: warm-white paper (#fafaf6), clean dark-grey panel outlines (1.0-1.5px), `+
+       `centered dashed grainline arrow on every panel, triangular notches at seam pairs, faint seam-allowance `+
+       `offset, small uppercase panel labels, flat marker-sheet layout on a 1 inch × 1 inch grid with the origin `+
+       `at the BOTTOM-LEFT corner and inch numbers along the bottom and left edges. No model, no body, no shading, `+
+       `no text other than panel labels and grid numbers.`;
+  return P;
+}
+
+/* ============================ pipeline steps ============================ */
+const CLASSIFY_PROMPT =
+`You are Maya's pattern analyst. Look at this garment image and output STRICT JSON:
+{
+  "type": "pants" | "skirt" | "shirt" | "jacket" | "coat" | "bodice" | "dress" | "<best label>",
+  "subtype": "wide-leg jeans" | "a-line skirt" | "notch-lapel blazer" | "...",
+  "attributes": ["mid-rise","5-pocket","topstitched","wide-leg","cuffed", "..."],
+  "visible_seams": ["outseam","inseam","center-front fly","back yoke","princess","center-back","..."],
+  "closure": "fly + button" | "center-back zip" | "button placket" | "...",
+  "symmetry": "bilateral",
+  "panel_estimate": <integer best guess of distinct fabric panels>
+}
+Read ONLY what you can actually see. Be specific about seams and closures, they drive the panel count.`;
+
+async function classifyGarment(img){
+  const res = await fetch('https://api.openai.com/v1/chat/completions',{
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+getKey()},
+    body:JSON.stringify({ model:'gpt-4.1', response_format:{type:'json_object'},
+      messages:[{role:'system',content:CLASSIFY_PROMPT},
+        {role:'user',content:[{type:'text',text:'Classify this garment. Output the JSON.'},
+          {type:'image_url',image_url:{url:img}}]}] })
+  });
+  if(!res.ok) throw new Error('vision '+res.status);
+  const d=await res.json();
+  return JSON.parse(d.choices[0].message.content);
+}
+
+// map the free-text type onto a grammar key via the match-word tables
+function resolveType(t){
+  const s=(t||'').toLowerCase();
+  for(const [key,def] of Object.entries(KB.grammar.types)){
+    if(key===s) return key;
+    if((def.match||[]).some(m=>s.includes(m)||m.includes(s))) return key;
+  }
+  // light alias fallbacks
+  if(/dress|gown/.test(s)) return 'bodice';
+  if(/top|blouse|tee|tshirt|t-shirt/.test(s)) return 'shirt';
+  return s || 'unknown';
+}
+
+function buildQuery(g, typeKey, gram){
+  const bits=[ g.type, g.subtype, (g.attributes||[]).join(' '), (g.visible_seams||[]).join(' '), g.closure ];
+  if(gram) bits.push(gram.summary);
+  bits.push('panel draft construction seam allowance grainline');
+  return bits.filter(Boolean).join(' . ');
+}
+
+/* ---- retrieval: cosine over cached vectors, with a soft ROUTING BOOST.
+   No hard chapter lock, the whole book is eligible, so cross-cutting
+   construction knowledge (seam allowance, grainline, notches, darts, trueing,
+   balance lines) surfaces from the foundational chapters too, not only the
+   garment's own chapter. The boost just nudges the routed chapter + the
+   _core fundamentals up the ranking when they're close. ---- */
+const ROUTE_BOOST = 0.06;   // garment's own chapter
+const CORE_BOOST  = 0.035;  // cross-cutting fundamentals (Ch.1-4 etc.)
+function retrieve(qvec, typeKey, k){
+  if(!EMB) return [];
+  const dim=EMB.dim, V=EMB.vecs, n=EMB.count;
+  let qn=0; for(let i=0;i<dim;i++) qn+=qvec[i]*qvec[i]; qn=Math.sqrt(qn)||1;
+  const q=new Float32Array(dim); for(let i=0;i<dim;i++) q[i]=qvec[i]/qn;
+  const scored=[];
+  for(let i=0;i<n;i++){
+    const off=i*dim; let dot=0;
+    for(let d=0;d<dim;d++) dot+=q[d]*V[off+d];
+    const types=KB.chunks[i].types||[];
+    let rank=dot;
+    if(types.includes(typeKey)) rank+=ROUTE_BOOST;
+    else if(types.includes('_core')) rank+=CORE_BOOST;
+    scored.push([rank,dot,i]);
+  }
+  scored.sort((a,b)=>b[0]-a[0]);
+  return scored.slice(0,k).map(([rank,dot,i])=>({score:dot, rank, ...KB.chunks[i]}));
+}
+
+/* ---- blended retrieval for the critique: GUARANTEES coverage from both the
+   garment's own chapter AND the cross-cutting fundamentals, so the critique
+   always cites garment-specific construction + general rules (seam allowance,
+   grainline, darts, trueing) from wherever they live in the book. ---- */
+function retrieveBlended(qvec, typeKey, total){
+  if(!EMB) return [];
+  const dim=EMB.dim, V=EMB.vecs, n=EMB.count;
+  let qn=0; for(let i=0;i<dim;i++) qn+=qvec[i]*qvec[i]; qn=Math.sqrt(qn)||1;
+  const q=new Float32Array(dim); for(let i=0;i<dim;i++) q[i]=qvec[i]/qn;
+  const all=[];
+  for(let i=0;i<n;i++){
+    const off=i*dim; let dot=0; for(let d=0;d<dim;d++) dot+=q[d]*V[off+d];
+    all.push({dot,i,isGarment:(KB.chunks[i].types||[]).includes(typeKey)});
+  }
+  all.sort((a,b)=>b.dot-a.dot);
+  const garment=all.filter(x=>x.isGarment), other=all.filter(x=>!x.isGarment);
+  const nG = garment.length ? Math.min(garment.length, Math.ceil(total*0.55)) : 0;
+  const picks=[]; const seen=new Set();
+  for(const x of garment.slice(0,nG)){ picks.push(x); seen.add(x.i); }       // garment chapter
+  for(const x of other){ if(picks.length>=total) break; if(!seen.has(x.i)){ picks.push(x); seen.add(x.i); } } // fundamentals / other chapters
+  for(const x of garment.slice(nG)){ if(picks.length>=total) break; if(!seen.has(x.i)){ picks.push(x); seen.add(x.i); } } // top up if 'other' was thin
+  picks.sort((a,b)=>b.dot-a.dot);
+  return picks.slice(0,total).map(x=>({score:x.dot, ...KB.chunks[x.i]}));
+}
+
+/* ---- compose the grounded prompt: HARD rules + retrieved guidance ---- */
+// LOCKED CUT-LIST, the one canonical piece set for this garment, computed ONCE
+// per run (stored on LAST.cutlist) and passed UNCHANGED to every pass so the
+// model can't drift (e.g. splitting one back yoke into left+right between passes).
+function buildCutList(g, gram){
+  // AUTHORITY = Pattern Logic (user-owned, per garment type). Grammar is only a fallback ,
+  // unless TEST LOCK is on, which forces the book grammar so eval runs carry no human prior.
+  const type = LAST.type || LOGIC_TYPE;
+  if(logicLocked()){
+    LAST.cutlistSource='book grammar (test lock)';
+    if(!gram) return null;
+    return gram.panels.map(p=>({label:p.label, qty:p.qty, mirror:!!p.mirror, note:p.note||''}));
+  }
+  const logic = getLogic(type);
+  if(logic && logic.length){
+    LAST.cutlistSource='Pattern Logic (user-owned)';
+    return logic.map(p=>({label:p.label, qty:p.qty, mirror:(p.qty||1)>1, note:''}));
+  }
+  LAST.cutlistSource='book grammar (fallback)';
+  if(!gram) return null;
+  return gram.panels.map(p=>({label:p.label, qty:p.qty, mirror:!!p.mirror, note:p.note||''}));
+}
+function cutListLines(list){
+  return list.map(p=>`   - ${p.label} ×${p.qty}${p.mirror?' (mirror pair, ONE pattern piece cut twice)':''}${p.note?', '+p.note:''}`).join('\n');
+}
+function cutListTotal(list){ return list.reduce((a,p)=>a+(p.qty||1),0); }
+
+function composeGroundedPrompt(g, typeKey, gram, hits){
+  let P = `Generate a 2D SEWING PATTERN technical drawing (flat marker-sheet look) for this `+
+          `${g.subtype||g.type}. Reproduce the panels accurately from the reference image AND from `+
+          `the construction rules below.\n\n`;
+
+  const cut = LAST.cutlist || buildCutList(g, gram);
+  if(gram){
+    P += `CONSTRUCTION RULES, these are HARD constraints, follow them exactly:\n`;
+    P += `• ${gram.summary}\n`;
+    P += `• Draw EXACTLY this PIECE SET, ${cutListTotal(cut)} pieces total, no more, no fewer (label each, true-to-fabric relative sizes):\n`;
+    P += cutListLines(cut) + `\n`;
+    P += `• Do NOT split a single piece into two, do NOT duplicate, do NOT invent extra pieces. A piece cut as a mirror pair is still ONE pattern shape.\n`;
+    P += `• Symmetry: ${gram.symmetry}. `+
+         (gram.symmetry==='bilateral'?'Left and right are mirror images, never draw a single lopsided panel for a paired piece.\n':'\n');
+    if(gram.common_hallucinations?.length){
+      P += `• AVOID these common errors: ${gram.common_hallucinations.join(' ')}\n`;
+    }
+  } else {
+    P += `CONSTRUCTION RULES (adaptive, no named chapter, reason from principles):\n`;
+    (KB.grammar.adaptive_fallback?.principles||[]).forEach(pr=>P+=`• ${pr}\n`);
+  }
+
+  if(hits.length){
+    P += `\nREFERENCE GUIDANCE from Patternmaking for Fashion Design (use for proportion & detail, do not copy text into the drawing):\n`;
+    hits.slice(0,3).forEach(h=>{ P += `• [Ch.${h.ch} p${h.page}] ${h.text.slice(0,240).trim()}…\n`; });
+  }
+
+  P += buildDimensionBlock(typeKey);
+  P += topstitchNote(g);
+
+  P += `\nDRAWING STYLE: warm-white paper (#fafaf6); each panel a clean closed dark-grey outline `+
+       `(1.0-1.5px); centered dashed grainline arrow on every panel; triangular notches at seam pairs; `+
+       `faint seam-allowance offset inside each cut edge; small uppercase panel label. `+
+       `Draw on a 1 INCH × 1 INCH measurement GRID with the ORIGIN at the BOTTOM-LEFT corner of the sheet; `+
+       `number the grid axes in inches along the bottom and left edges, and lay the panels flat against this grid `+
+       `like a marker sheet so every dimension can be read off it. No model, no body, no mannequin, no shading, `+
+       `no rendering, no text other than the panel labels and the grid numbers.`;
+  return P;
+}
+
+/* ---- gpt-image-2 edit ---- */
+async function gptImageEdit(img, prompt){
+  const form=new FormData();
+  form.append('model','gpt-image-2');
+  form.append('prompt',prompt);
+  const blob=await(await fetch(img)).blob();
+  form.append('image',blob,'hero.png');
+  form.append('size','1536x1024');
+  form.append('quality',getQuality());
+  form.append('n','1');
+  const res=await fetch('https://api.openai.com/v1/images/edits',{method:'POST',headers:{'Authorization':'Bearer '+getKey()},body:form});
+  if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||('image '+res.status)); }
+  const d=await res.json(); const it=d.data&&d.data[0];
+  if(it?.b64_json) return 'data:image/png;base64,'+it.b64_json;
+  if(it?.url) return it.url;
+  throw new Error('no image returned');
+}
+
+/* ============================ trace rendering ============================ */
+function renderGrammar(gram, typeKey){
+  // trace card #3 now mirrors the Pattern Logic (the cut-list authority), not the raw grammar
+  const cut = LAST.cutlist || buildCutList(LAST.garment, gram);
+  if(cut && cut.length){
+    $('t-panels').innerHTML = cut.map(p=>
+      `<div class="panel-row"><span class="q">×${p.qty}</span> ${p.label}${p.mirror?' ⇆':''}</div>`).join('')+
+      `<div class="panel-row" style="color:var(--faint);border:none">from ${LAST.cutlistSource||'Pattern Logic'} · ${cutListTotal(cut)} pcs</div>`;
+  } else {
+    $('t-panels').innerHTML='<span style="color:var(--warn)">adaptive, derived from first principles</span>';
+  }
+  const sym = gram?gram.symmetry:'bilateral';
+  $('t-fixes').innerHTML = `<b style="color:var(--good)">${sym}</b><br>`+
+    ((gram&&gram.common_hallucinations)||[]).slice(0,3).map(h=>`<span class="tag">${h.replace(/\.$/,'')}</span>`).join('');
+}
+function renderChunks(hits){
+  if(!hits.length){ $('t-chunks').textContent='No chunks (build embeddings).'; return; }
+  $('t-chunks').innerHTML = hits.map(h=>
+    `<div class="chunk"><b>Ch.${h.ch} · p${h.page} · sim ${h.score.toFixed(3)}</b><br>${h.text.slice(0,300).trim()}…</div>`).join('');
+}
+
+/* ============================ embeddings: build + cache ============================ */
+let DB=null;
+function openDB(){ return new Promise((res,rej)=>{
+  const r=indexedDB.open('maya_oproom',1);
+  r.onupgradeneeded=()=>{ r.result.createObjectStore('emb'); };
+  r.onsuccess=()=>{ DB=r.result; res(DB); }; r.onerror=()=>rej(r.error);
+}); }
+function dbPut(k,v){ return new Promise((res,rej)=>{ const t=DB.transaction('emb','readwrite'); t.objectStore('emb').put(v,k); t.oncomplete=()=>res(); t.onerror=()=>rej(t.error); }); }
+function dbGet(k){ return new Promise((res,rej)=>{ const t=DB.transaction('emb','readonly'); const q=t.objectStore('emb').get(k); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); }); }
+function dbDel(k){ return new Promise((res)=>{ const t=DB.transaction('emb','readwrite'); t.objectStore('emb').delete(k); t.oncomplete=()=>res(); }); }
+
+async function loadEmbCache(){
+  try{
+    const rec=await dbGet('vecs_v1');
+    if(rec && rec.count===KB.chunks.length){ EMB={count:rec.count,dim:rec.dim,vecs:new Float32Array(rec.buf)}; }
+  }catch(e){ console.warn(e); }
+}
+
+async function embedTexts(texts){
+  const res=await fetch('https://api.openai.com/v1/embeddings',{
+    method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+getKey()},
+    body:JSON.stringify({model:'text-embedding-3-small',input:texts})});
+  if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||('embed '+res.status)); }
+  const d=await res.json();
+  return d.data.map(x=>Float32Array.from(x.embedding));
+}
+
+async function buildEmbeddings(){
+  if(!getKey()){ toast('Add your OpenAI key first.'); return; }
+  const chunks=KB.chunks; const dim=1536; const total=chunks.length;
+  const vecs=new Float32Array(total*dim);
+  const B=128;
+  $('kb-status').textContent=`Embedding ${total} passages…`;
+  try{
+    for(let i=0;i<total;i+=B){
+      const batch=chunks.slice(i,i+B).map(c=>c.text);
+      const out=await embedTexts(batch);
+      for(let j=0;j<out.length;j++){
+        const v=out[j]; let nrm=0; for(let d=0;d<dim;d++) nrm+=v[d]*v[d]; nrm=Math.sqrt(nrm)||1;
+        const off=(i+j)*dim; for(let d=0;d<dim;d++) vecs[off+d]=v[d]/nrm;   // store normalised
+      }
+      const pct=Math.min(100,Math.round((i+B)/total*100));
+      $('kb-bar').style.width=pct+'%'; $('kb-status').textContent=`Embedding… ${Math.min(i+B,total)}/${total}`;
+    }
+    EMB={count:total,dim,vecs};
+    await dbPut('vecs_v1',{count:total,dim,buf:vecs.buffer});
+    $('kb-bar').style.width='100%'; toast('Knowledge base embedded & cached.');
+    refreshKbStatus();
+  }catch(e){ $('kb-status').textContent='Failed: '+e.message; toast('Embedding failed: '+e.message); }
+}
+async function clearEmbeddings(){
+  await new Promise(res=>{ const t=DB.transaction('emb','readwrite'); t.objectStore('emb').clear(); t.oncomplete=()=>res(); t.onerror=()=>res(); });
+  EMB=null; $('kb-bar').style.width='0'; refreshKbStatus();
+  toast('Cache cleared, embeddings AND frozen redrawn answers.');
+}
+
+function refreshKbStatus(){
+  const n=KB.chunks.length, types=Object.keys(KB.grammar.types||{}).length;
+  $('kb-status').innerHTML = `${n} passages · ${types} grammar types loaded.<br>`+
+    (EMB ? `<span style="color:var(--good)">Embeddings cached (${EMB.count}).</span>`
+         : `<span style="color:var(--warn)">Not embedded yet, press build.</span>`);
+  if(EMB) $('kb-bar').style.width='100%';
+}
+</script>
+</body>
+</html>

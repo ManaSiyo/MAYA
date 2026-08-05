@@ -1,0 +1,53 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "docs/**",
+      "_to_delete/**"
+    ],
+    "redirects": [
+      { "source": "/favicon.ico", "destination": "/aesthetics/ui/favicon.ico", "type": 301 },
+      { "source": "/favicon.png", "destination": "/aesthetics/ui/favicon.png", "type": 301 },
+      { "source": "/apple-touch-icon.png", "destination": "/aesthetics/ui/apple-touch-icon.png", "type": 301 },
+      { "source": "/operations{,/**}", "destination": "/aesthetics/operations/", "type": 301 },
+      { "source": "/backend-room{,/**}", "destination": "/backend.html", "type": 301 },
+      { "source": "/admin.html", "destination": "/status.html", "type": 301 }
+    ],
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "run": {
+          "serviceId": "maya-api",
+          "region": "us-west1"
+        }
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache" }
+        ]
+      },
+      {
+        "source": "/aesthetics/{fabrics,headshots,ui}/**",
+        "headers": [
+          { "key": "Cache-Control", "value": "public, max-age=604800" }
+        ]
+      }
+    ]
+  },
+  "firestore": {
+    "rules": "docs/server/firestore.rules"
+  },
+  "storage": {
+    "rules": "docs/server/storage.rules"
+  }
+}
