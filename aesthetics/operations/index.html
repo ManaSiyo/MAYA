@@ -252,6 +252,8 @@ window.addEventListener('message', function(e){ if (e && e.data && e.data.maya =
   html.embedded .top .brand{visibility:hidden}
   html.embedded .icon-btn.hamburger{display:none}
   html.embedded .pill.sm.plan-btn{display:none}
+  /* one background for the whole Backend: when embedded the outer page owns it */
+  html.embedded body{background:#0000 !important}
 </style>
 </head>
 <body>

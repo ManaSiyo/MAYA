@@ -27,7 +27,8 @@
   }
 }
 </script>
-<title>MAYA · Backend</title>
+<title>MAYA · Brief</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;0,600;1,300&family=Jost:wght@300;400&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -115,7 +116,7 @@
     position: fixed; inset: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    /* v12.6: free flowing scroll, background stays fixed, content flows up */
+    scroll-snap-type: y proximity; /* flows freely, rests aligned, no dead zones */
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
     scrollbar-width: none;
@@ -134,6 +135,7 @@
     padding: 72px 40px 32px;
     transform: translate3d(0,0,0);
     overflow: hidden;
+    scroll-snap-align: start;
   }
 
   /* ───────── screen 1, one-pager horizontal ─────────
@@ -1393,7 +1395,7 @@
 <div id="top-bar">
   <div id="brand" style="display:flex;align-items:center;gap:10px;margin-left:-8px">
     <img src="/aesthetics/ui/logo-208.png" alt="" style="width:44px;height:44px;object-fit:contain;opacity:0.92;-webkit-user-drag:none" />
-    MAYA <span class="sub" id="brand-sub">Backend</span>
+    MAYA <span class="sub" id="brand-sub">Brief</span>
     <span class="status-pill" id="dissect-status" style="display:none">Dissecting…</span>
   </div>
   <div id="top-actions">
@@ -1431,7 +1433,7 @@
           <div class="fab-head">
             <div class="fab-head-left">
               <div class="fab-head-label">Fabric</div>
-              <div class="fab-head-fabric" id="fab-head-fabric">,</div>
+              <div class="fab-head-fabric" id="fab-head-fabric">…</div>
             </div>
             <div class="fab-source-toggle">
               <button class="fab-src-pill" id="fab-src-sourceable" onclick="setFabricSourceOverride('sourceable')">Sourceable</button>
@@ -1454,11 +1456,11 @@
         <div class="op-hero" id="op-hero-name" style="font-size:36px">Client</div>
         <div class="op-section">
           <div class="op-eyebrow">Biography</div>
-          <p class="op-text italic" id="op-biography">,</p>
+          <p class="op-text italic" id="op-biography">…</p>
         </div>
         <div class="op-section">
           <div class="op-eyebrow">Vision</div>
-          <p class="op-text" id="op-vision">,</p>
+          <p class="op-text" id="op-vision">…</p>
         </div>
         <div class="op-section" id="op-chips-section" style="display:none">
           <div class="op-eyebrow">Direction</div>
@@ -1570,15 +1572,15 @@
           <div class="op-pattern-page" data-page="3">
             <div class="info-grid" id="info-grid">
               <div class="info-eyebrow">Operation summary</div>
-              <div class="info-label">Active piece</div>            <div class="info-value" id="info-piece">,</div>
-              <div class="info-label">Pattern</div>                 <div class="info-value" id="info-pattern">,</div>
-              <div class="info-label">Sheet X (width)</div>         <div class="info-value" id="info-sheet-x">,</div>
-              <div class="info-label">Sheet Y (length)</div>        <div class="info-value" id="info-sheet-y">,</div>
-              <div class="info-label">Spacing</div>                 <div class="info-value" id="info-spacing">,</div>
+              <div class="info-label">Active piece</div>            <div class="info-value" id="info-piece">…</div>
+              <div class="info-label">Pattern</div>                 <div class="info-value" id="info-pattern">…</div>
+              <div class="info-label">Sheet X (width)</div>         <div class="info-value" id="info-sheet-x">…</div>
+              <div class="info-label">Sheet Y (length)</div>        <div class="info-value" id="info-sheet-y">…</div>
+              <div class="info-label">Spacing</div>                 <div class="info-value" id="info-spacing">…</div>
               <div class="info-label">Panels loaded</div>           <div class="info-value" id="info-panel-count">0</div>
-              <div class="info-label">Panels placed</div>           <div class="info-value" id="info-placed">,</div>
-              <div class="info-label">Fabric used</div>             <div class="info-value" id="info-util">,</div>
-              <div class="info-label">Used sheet length</div>       <div class="info-value" id="info-length">,</div>
+              <div class="info-label">Panels placed</div>           <div class="info-value" id="info-placed">…</div>
+              <div class="info-label">Fabric used</div>             <div class="info-value" id="info-util">…</div>
+              <div class="info-label">Used sheet length</div>       <div class="info-value" id="info-length">…</div>
             </div>
           </div>
         </div>
@@ -1793,21 +1795,103 @@ function goToScreen(n) {
 //   Brief (0) → "<client> · Brief"
 //   Operating Room (1) → "<client> · Operating Room"
 let _currentScreen = 0;
-const SCREEN_LABELS = ['Backend', 'Operating Room'];
-// v12.6: arriving from a Systems Map submission card: show who, jump to the Operating Room.
+const SCREEN_LABELS = ['Brief', 'Operating Room'];
+// v12.8: arriving from a Systems Map submission card. Instant paint from the
+// URL params, then the full brief (summary.json + garment) loads from Drive
+// through the admin API and fires the complete render + auto dissect.
 (function () {
   try {
     const p = new URLSearchParams(location.search);
     const nm = p.get('name');
-    if (nm) {
-      window._openedSubmission = { id: p.get('submission') || '', name: nm };
-      document.addEventListener('DOMContentLoaded', function () {
-        const sub = document.querySelector('#brand .sub');
-        if (sub) sub.textContent = nm + ' · Backend';
-      });
-    }
+    if (!nm) return;
+    const dm = nm.match(/^(.*?)-(\d{2})-(\d{2})-(\d{4})\s*$/);
+    const raw = (dm ? dm[1] : nm).trim();
+    const pretty = raw.charAt(0).toUpperCase() + raw.slice(1);
+    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const dateCap = dm ? (MONTHS[Math.max(0, Math.min(11, parseInt(dm[2],10)-1))] + ' ' + parseInt(dm[3],10)) : '';
+    window._openedSubmission = { id: p.get('submission') || '', name: pretty, img: p.get('img') || '' };
+    document.addEventListener('DOMContentLoaded', function () {
+      const sub = document.querySelector('#brand .sub');
+      if (sub) sub.textContent = pretty + ' · Brief';
+      const heroName = document.getElementById('op-hero-name');
+      if (heroName) {
+        heroName.textContent = pretty;
+        if (dateCap) heroName.insertAdjacentHTML('afterend',
+          '<div style="font-family:\'Jost\',sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(238,242,255,0.4);margin-top:4px">' + dateCap + '</div>');
+      }
+      const imgId = window._openedSubmission.img;
+      const frame = document.getElementById('op-image-frame');
+      if (imgId && frame) {
+        frame.innerHTML = '<img src="https://drive.google.com/thumbnail?id=' + encodeURIComponent(imgId) +
+          '&sz=w1600" alt="" style="width:100%;height:100%;object-fit:contain" />';
+      }
+      _subAuthBoot();
+    });
   } catch (_) {}
 })();
+
+// ── Silent admin sign-in (shares the Systems Map's cached token) ──
+const _SUB_CLIENT_ID = '90396949475-7cen4909qftr8hf4la86nuhus38isid1.apps.googleusercontent.com';
+function _subCachedTok() {
+  try {
+    const t = localStorage.getItem('maya_admin_tok');
+    if (!t) return null;
+    const pl = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return (pl.exp * 1000 - Date.now() > 120000) ? t : null;
+  } catch (_) { return null; }
+}
+function _subAuthBoot() {
+  if (!window._openedSubmission || !window._openedSubmission.id) return;
+  const cached = _subCachedTok();
+  if (cached) return void _loadSubmission(cached);
+  const tryGsi = () => {
+    if (!window.google || !google.accounts || !google.accounts.id) return void setTimeout(tryGsi, 300);
+    google.accounts.id.initialize({ client_id: _SUB_CLIENT_ID, auto_select: true, use_fedcm_for_prompt: true,
+      callback: r => { if (r && r.credential) {
+        try { localStorage.setItem('maya_admin_tok', r.credential); } catch (_) {}
+        _loadSubmission(r.credential);
+      } } });
+    google.accounts.id.prompt();
+  };
+  tryGsi();
+}
+async function _loadSubmission(tok) {
+  try {
+    const sid = window._openedSubmission.id;
+    const r = await fetch('/api/admin/submissions?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + tok }, cache: 'no-store' });
+    if (!r.ok) return void console.warn('[submission] list', r.status);
+    const data = await r.json();
+    const folder = (data.folders || []).find(f => f.id === sid);
+    if (!folder) return void console.warn('[submission] folder not in feed');
+    const files = folder.files || [];
+    const sumFile = files.find(f => /summary\.json$/i.test(f.name || ''));
+    const imgFile = files.find(f => /dream-garment/i.test(f.name || '')) || files.find(f => /^image\//i.test(f.mime || ''));
+    let summary = null, heroImage = null;
+    if (sumFile) {
+      try { summary = await (await fetch('/api/admin/subfile?id=' + encodeURIComponent(sumFile.id), { headers: { 'Authorization': 'Bearer ' + tok } })).json(); } catch (_) {}
+    }
+    if (imgFile) {
+      try {
+        const blob = await (await fetch('/api/admin/subfile?id=' + encodeURIComponent(imgFile.id), { headers: { 'Authorization': 'Bearer ' + tok } })).blob();
+        heroImage = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
+      } catch (_) {}
+    }
+    if (!summary && !heroImage) return;
+    const snap = {
+      currentClientName: (summary && summary.client && summary.client.name) || window._openedSubmission.name,
+      lastSummary: summary || {},
+      items: [],
+      heroImage,
+      ts: new Date(folder.createdTime || Date.now()).getTime(),
+    };
+    window.lastSummary = snap.lastSummary;
+    window._currentSnap = snap;
+    render(snap);
+    const gate = document.getElementById('upload-gate');
+    if (gate) gate.classList.add('hidden');
+    document.body.classList.add('loaded');
+  } catch (e) { console.warn('[submission] load', e); }
+}
 
 function _updateBrandSub() {
   const brandSub = document.querySelector('#brand .sub');
@@ -3740,6 +3824,20 @@ function _fabCardHtml(c) {
 let _inhouseCache = null;
 async function _loadInhouseFabrics(){
   if(_inhouseCache) return _inhouseCache;
+  // v12.8: on the live site the swatches are static assets, no local folder needed.
+  try{
+    const manifestRes = await fetch('/aesthetics/fabrics/fabrics.json');
+    if (manifestRes.ok) {
+      const meta = await manifestRes.json();
+      const out = (meta.items || []).map(m => ({
+        merchant:'In-house · atelier', title: m.name || m.fileName,
+        price:'in stock', etaDays:0, color: m.color || '',
+        img: '/aesthetics/fabrics/' + encodeURIComponent(m.fileName),
+        url:'#', _inhouse:true, weave:m.weave||'', weight:m.weight||'',
+      }));
+      if (out.length) { _inhouseCache = out; return out; }
+    }
+  }catch(_){ /* fall through to the local folder flow */ }
   try{
     const maya = await getMayaFolder();
     if(!maya) return [];

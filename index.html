@@ -11374,6 +11374,32 @@ async function doSaveToCloud() {
     throw new Error('Could not build the one-pager PDF (' + ((e && e.message) || 'render failed') + '). Nothing was submitted, please try again.');
   }
 
+  // v12.7: the dream garment itself rides along as dream-garment.png, the
+  // Systems Map and the Backend brief show THIS, the one-pager stays as an
+  // internal file for future use.
+  try {
+    if (typeof lastOnePagerImage === 'string' && lastOnePagerImage.startsWith('data:')) {
+      const m = lastOnePagerImage.match(/^data:(image\/[a-z+]+);base64,(.+)$/s);
+      if (m) queue.push({ name: 'dream-garment.png', mime_type: m[1], data_b64: m[2] });
+    }
+  } catch (e) { console.warn('[Maya cloud garment]', e); }
+
+  // v12.8: compact summary.json rides along, the Backend brief reads it
+  // (biography, vision, chips, measurements). Heavy image fields stripped.
+  try {
+    if (lastSummary && typeof lastSummary === 'object') {
+      const slim = {};
+      for (const k of Object.keys(lastSummary)) {
+        const v = lastSummary[k];
+        if (typeof v === 'string' && v.startsWith('data:')) continue;
+        if (k === '_face_photo') continue;
+        slim[k] = v;
+      }
+      queue.push({ name: 'summary.json', mime_type: 'application/json',
+                   data_b64: btoa(unescape(encodeURIComponent(JSON.stringify(slim)))) });
+    }
+  } catch (e) { console.warn('[Maya cloud summary]', e); }
+
   // 1) Create the per-submission folder up on Drive.
   setStatus('uploading…');
   const initRes = await fetch('/api/submit', {

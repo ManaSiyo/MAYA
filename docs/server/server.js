@@ -521,6 +521,35 @@ app.get('/api/admin/submissions', async (req, res) => {
   }
 });
 
+// GET /api/admin/subfile?id=<fileId> — stream one submission file's content
+// (summary.json, dream-garment.png) to the Backend page. Admin-gated. v12.8.
+app.get('/api/admin/subfile', async (req, res) => {
+  try { await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
+  const id = String(req.query.id || '');
+  if (!/^[\w-]{10,80}$/.test(id)) return res.status(400).json({ error: 'bad_id' });
+  try {
+    const accessToken = await getDriveAccessToken();
+    const metaR = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?fields=id,name,mimeType,size', {
+      headers: { 'Authorization': 'Bearer ' + accessToken },
+    });
+    if (!metaR.ok) return res.status(404).json({ error: 'not_found' });
+    const meta = await metaR.json();
+    if (Number(meta.size || 0) > 15 * 1024 * 1024) return res.status(413).json({ error: 'too_large' });
+    const r = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media', {
+      headers: { 'Authorization': 'Bearer ' + accessToken },
+    });
+    if (!r.ok) return res.status(502).json({ error: 'drive_' + r.status });
+    const buf = Buffer.from(await r.arrayBuffer());
+    res.setHeader('Content-Type', meta.mimeType || 'application/octet-stream');
+    res.setHeader('Cache-Control', 'private, max-age=300');
+    res.end(buf);
+  } catch (e) {
+    console.error('[admin] subfile failed,', e.message);
+    res.status(500).json({ error: 'subfile_failed', detail: e.message });
+  }
+});
+
 // ── Google Analytics (GA4 Data API) via the Cloud Run service account ──────
 async function gaMeta(path) {
   const r = await fetch('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/' + path, {

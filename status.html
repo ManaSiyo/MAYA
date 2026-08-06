@@ -76,17 +76,18 @@
   /* Latest submissions strip: 25vh tall, newest on the left, flows sideways */
   #subs-strip{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;
               height:25vh;min-height:190px;scrollbar-width:thin}
-  .sub-tile{position:relative;flex:0 0 auto;height:100%;aspect-ratio:3/4;border-radius:22px;overflow:hidden;
-            border:0.5px solid rgba(255,255,255,0.28);background:rgba(10,16,34,0.55);text-decoration:none;color:var(--ink);
+  .sub-tile{position:relative;flex:0 0 auto;height:100%;aspect-ratio:3/2;border-radius:22px;overflow:hidden;
+            border:0.5px solid rgba(255,255,255,0.28);background:rgba(4,7,16,0.75);text-decoration:none;color:var(--ink);
             box-shadow:0 0 34px rgba(180,200,255,0.22), inset 0 1px 0 rgba(255,255,255,0.12);
             transition:border-color .2s, transform .2s, box-shadow .2s}
   .sub-tile:hover{border-color:rgba(255,255,255,0.55);transform:translateY(-2px);box-shadow:0 0 48px rgba(180,200,255,0.34), inset 0 1px 0 rgba(255,255,255,0.12)}
   .sub-tile.fresh{border-color:rgba(74,222,128,0.55)}
-  .sub-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top;opacity:0.92}
-  .sub-tile .veil{position:absolute;inset:auto 0 0 0;padding:26px 12px 10px;
-                  background:linear-gradient(transparent, rgba(0,4,12,0.88))}
-  .sub-tile .nm{font-size:15px;line-height:1.2}
-  .sub-tile .tm{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-top:3px}
+  .sub-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0.95}
+  .sub-tile .veil{position:absolute;inset:auto 0 0 0;padding:22px 12px 8px;text-align:center;
+                  background:linear-gradient(transparent, rgba(0,4,12,0.85))}
+  .sub-tile .nm{display:block;font-size:15px;line-height:1.2;opacity:0;transition:opacity .25s}
+  .sub-tile:hover .nm{opacity:1}
+  .sub-tile .tm{display:block;font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--dim);margin-top:2px}
   .sub-tile .badge{position:absolute;top:10px;left:10px;font-family:'Jost',sans-serif;font-size:8.5px;
                    letter-spacing:0.16em;text-transform:uppercase;color:#0b1408;background:var(--green);
                    border-radius:20px;padding:3px 9px}
@@ -328,13 +329,23 @@ function _showSignin(show) {
   const p = document.getElementById('signin-panel');
   if (p) p.style.display = show ? '' : 'none';
 }
+function _cacheTok(t) { try { localStorage.setItem('maya_admin_tok', t); } catch (_) {} }
+function _cachedTok() {
+  try {
+    const t = localStorage.getItem('maya_admin_tok');
+    if (!t) return null;
+    const p = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return (p.exp * 1000 - Date.now() > 120000) ? t : null;
+  } catch (_) { return null; }
+}
 function _gisBoot() {
+  const cached = _cachedTok();
+  if (cached && !_idTok) { _idTok = cached; _showSignin(false); loadTraffic(); loadSubmissions(); _fbBridge(cached); }
   if (!window.google || !google.accounts || !google.accounts.id) return setTimeout(_gisBoot, 250);
   google.accounts.id.initialize({ client_id: _CLIENT_ID, callback: r => {
-    if (r && r.credential) { _idTok = r.credential; _showSignin(false); loadTraffic(); loadSubmissions(); _fbBridge(r.credential); }
-  }, auto_select: true });
-  google.accounts.id.prompt();
-  _renderGsiBtn();
+    if (r && r.credential) { _idTok = r.credential; _cacheTok(r.credential); _showSignin(false); loadTraffic(); loadSubmissions(); _fbBridge(r.credential); }
+  }, auto_select: true, use_fedcm_for_prompt: true });
+  if (!_idTok) { google.accounts.id.prompt(); _renderGsiBtn(); }
 }
 function _renderGsiBtn() {
   const slot = document.getElementById('gsi-slot');
@@ -349,6 +360,7 @@ function _cmdBlock(label) {
 }
 function _expired() {
   _idTok = null;
+  try { localStorage.removeItem('maya_admin_tok'); } catch (_) {}
   _showSignin(true);
   _note('Your sign in expired, sign in once above and everything comes back.');
   _renderGsiBtn();
@@ -373,20 +385,21 @@ async function loadSubmissions() {
   strip.style.display = '';
   document.getElementById('subs-count').textContent = data.total ? data.total + ' total' : '';
   const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const when = iso => { const d = new Date(iso), ago = Date.now() - d.getTime();
-    if (ago < 3600000) return Math.max(1, Math.round(ago/60000)) + ' min ago';
-    if (ago < 86400000) return Math.round(ago/3600000) + ' h ago';
-    return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); };
+  const when = iso => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const prettyName = n => { const m = String(n).match(/^(.*?)-\d{2}-\d{2}-\d{4}\s*$/); const r = (m ? m[1] : String(n)).trim();
+    return r.charAt(0).toUpperCase() + r.slice(1); };
   // Newest first: API already returns createdTime desc, so the latest lands leftmost.
   strip.innerHTML = (data.folders || []).map(f => {
     const isNew = Date.now() - new Date(f.createdTime).getTime() < 86400000;
+    const dream = (f.files || []).find(x => /dream-garment/i.test(x.name || ''));
     const anyImg = (f.files || []).find(x => /^image\//i.test(x.mime || ''));
-    const pdf = (f.files || []).find(x => /pdf/i.test(x.mime || '') || /\.pdf$/i.test(x.name || ''));
-    const thumbId = (anyImg && anyImg.id) || (pdf && pdf.id) || '';
-    const img = thumbId ? '<img loading="lazy" src="https://drive.google.com/thumbnail?id=' + esc(thumbId) + '&sz=w480" alt="" onerror="this.remove()">' : '';
-    return '<a class="sub-tile' + (isNew ? ' fresh' : '') + '" href="/backend.html?submission=' + encodeURIComponent(f.id) + '&name=' + encodeURIComponent(f.name) + '" title="Open in the Backend">' +
+    const thumbId = (dream && dream.id) || (anyImg && anyImg.id) || '';
+    const img = thumbId
+      ? '<img loading="lazy" src="https://drive.google.com/thumbnail?id=' + esc(thumbId) + '&sz=w480" alt="" onerror="this.remove()">'
+      : '<img src="/aesthetics/ui/logo-208.png" alt="" style="position:absolute;inset:0;margin:auto;width:60px;height:60px;object-fit:contain;opacity:0.22">';
+    return '<a class="sub-tile' + (isNew ? ' fresh' : '') + '" target="_blank" rel="noopener" href="/backend.html?submission=' + encodeURIComponent(f.id) + '&name=' + encodeURIComponent(f.name) + (thumbId ? '&img=' + encodeURIComponent(thumbId) : '') + '" title="Open the Brief">' +
       img + (isNew ? '<span class="badge">New</span>' : '') +
-      '<span class="veil"><span class="nm">' + esc(f.name) + '</span><span class="tm">' + when(f.createdTime) + '</span></span></a>';
+      '<span class="veil"><span class="nm">' + esc(prettyName(f.name)) + '</span><span class="tm">' + when(f.createdTime) + '</span></span></a>';
   }).join('') +
   '<a class="sub-tile more" href="https://drive.google.com/drive/folders/1ZEgQi3BpYDlNMsIMK553dLQs0kKiga35" target="_blank" rel="noopener">All submissions in Drive</a>';
   if (!(data.folders || []).length) {
