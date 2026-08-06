@@ -1,0 +1,53 @@
+MAYA HISTORY
+Plain talk, newest entry on top. Say "update the history" in any chat and
+Claude adds a new dated entry here. This file replaces the old README.
+
+─────────────────────────────────────────────
+
+AUGUST 5, 2026, EVENING
+
+Where we are: the whole pipeline works end to end for the first time. A
+client submits in MAYA, the submission shows up as a garment bubble on the
+Systems Map, clicking it opens the Brief in a new tab with the biography,
+vision, measurements and fabric sourcing filled in, the garment gets
+dissected into pieces automatically, and the pieces land in the Operating
+Room below where Start runs the pattern pipeline on them.
+
+What happened today, in order: audited the whole project fresh, reorganized
+the folder (three HTMLs at the root, aesthetics for everything visual, docs
+for everything else), fixed all the broken backgrounds and icons, redesigned
+the Systems Map to match the MAYA look, renamed everything to Brief and
+Operating Room, removed all dashes, fixed the dead Google Drive key so
+submissions work again, migrated to this MAYA-new folder under git, and set
+up automatic server deploys.
+
+How publishing works now, remember this part:
+  ONE ACTION: press "Push origin" in GitHub Desktop. Google then deploys
+  BOTH the website and the server by itself, takes about 4 minutes.
+  "Deploy MAYA.command" in docs still works as a backup for the website
+  only, but you should never need it.
+
+What each root file is:
+  index.html    the live MAYA app clients use
+  status.html   the Systems Map
+  backend.html  the Brief plus Operating Room, the atelier's workroom
+  operations.html  the standalone Operating Room (the beta for experiments),
+                reachable from the Operating Room Beta door on the Systems Map
+  cloudbuild.yaml  the ONE technical file that must stay at the top: Google
+                reads it on every GitHub push and deploys the website AND the
+                server, moving it breaks the automatic deploys
+  aesthetics/   everything visual: ui, fabrics, headshots, the Operating
+                Room engine the backend embeds
+  docs/         everything else: firebase.json (the deploy borrows it for a
+                minute then puts it back), Deploy MAYA.command, the server
+                source, pattern R&D (operating-room folder), Vision.pdf,
+                Strategy-A.md, and _to_delete which is the trash can, empty
+                it any time
+
+Still on the list for next sessions:
+  Fabric search that actually shops: show a piece photo, get real matching
+  purchasable fabric (needs a small server upgrade).
+  Front, back and side renders for each dissected piece.
+  Operating Room polish so it fully mirrors the old backend behavior with
+  the new grounded logic.
+  Old empty test submissions in Drive can be deleted by hand.

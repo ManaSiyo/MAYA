@@ -25,7 +25,20 @@
 <meta charset="utf-8">
 <script>/* v12.5: embedded inside backend.html, outer page owns the banner + hamburger */
 if (self !== top) document.documentElement.classList.add('embedded');
-window.addEventListener('message', function(e){ if (e && e.data && e.data.maya === 'ops-drawer') { try { toggleDrawer(true); } catch(_) {} } });</script>
+window.addEventListener('message', function(e){
+  if (!e || !e.data) return;
+  if (e.data.maya === 'ops-drawer') { try { toggleDrawer(true); } catch(_) {} }
+  if (e.data.maya === 'ops-pieces' && Array.isArray(e.data.pieces)) {
+    try {
+      var incoming = e.data.pieces.filter(function(p){ return p && p.image; });
+      if (!incoming.length) return;
+      var T = window.MAYA_TESTS = window.MAYA_TESTS || {};
+      Object.keys(T).forEach(function(k){ delete T[k]; });
+      incoming.forEach(function(p){ T[p.name || 'Piece'] = { front: p.image }; });
+      if (typeof initTests === 'function') setTimeout(initTests, 50);
+    } catch(err) { console.warn('[ops pieces]', err); }
+  }
+});</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MAYA · Operating Room</title>
 <script src="kb/kb.js"></script>
@@ -252,6 +265,7 @@ window.addEventListener('message', function(e){ if (e && e.data && e.data.maya =
   html.embedded .top .brand{visibility:hidden}
   html.embedded .icon-btn.hamburger{display:none}
   html.embedded .pill.sm.plan-btn{display:none}
+  html.embedded .pill[onclick*="file"]{display:none}
   /* one background for the whole Backend: when embedded the outer page owns it */
   html.embedded body{background:#0000 !important}
 </style>
@@ -732,7 +746,7 @@ function applyView(){
 /* ============================ test harness · embedded images (no fetch, no server) ============================ */
 /* Test images live in tests-data.js as data URLs (window.MAYA_TESTS), so everything loads on a plain
    double-click (file://) with no fetch, no folder picker, no server. */
-const TESTS = window.MAYA_TESTS || {};
+window.MAYA_TESTS = window.MAYA_TESTS || {}; const TESTS = window.MAYA_TESTS;
 let ACTIVE_TEST = null;   // current test key
 let FILES = {};           // { front, side, back, answer } → data URLs
 let RD = null;            // GPT-redrawn clean answer (data URL), the scoring target

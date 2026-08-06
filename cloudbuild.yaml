@@ -1,0 +1,37 @@
+# MAYA, the one build. Google reads this on every GitHub push and deploys
+# BOTH the server (Cloud Run) and the website (Firebase Hosting). This file
+# replaces the old root Dockerfile and the manual Deploy MAYA.command.
+steps:
+  - id: Build server
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - '-t'
+      - 'us-west1-docker.pkg.dev/pro-maya/cloud-run-source-deploy/maya-api:$COMMIT_SHA'
+      - docs/server
+  - id: Push image
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - 'us-west1-docker.pkg.dev/pro-maya/cloud-run-source-deploy/maya-api:$COMMIT_SHA'
+  - id: Deploy server
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - maya-api
+      - '--image'
+      - 'us-west1-docker.pkg.dev/pro-maya/cloud-run-source-deploy/maya-api:$COMMIT_SHA'
+      - '--region'
+      - us-west1
+      - '--quiet'
+  - id: Deploy website
+    name: node:20
+    entrypoint: bash
+    args:
+      - '-c'
+      - 'cp docs/firebase.json ./firebase.json && npx -y firebase-tools@latest deploy --only hosting --project pro-maya --non-interactive'
+timeout: 1200s
+options:
+  logging: CLOUD_LOGGING_ONLY

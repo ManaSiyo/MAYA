@@ -2393,6 +2393,7 @@ function render(snap) {
             pregeneratePatterns(heroSrc, d.pieces);
             await renderAllPieces(heroSrc, d.pieces);
             renderDissection({ card: cardWithImg }); // re-render so swiper picks up _image
+            _postPiecesToOps(d.pieces);
           }
         })
         .catch(e => {
@@ -2406,9 +2407,11 @@ function render(snap) {
         pregeneratePatterns(heroSrc, cardForDissect._dissection.pieces);
         renderAllPieces(heroSrc, cardForDissect._dissection.pieces).then(() => {
           renderDissection({ card: cardWithImg });
+          _postPiecesToOps(cardForDissect._dissection.pieces);
         });
       } else if (getApiKey()) {
         pregeneratePatterns(heroSrc, cardForDissect._dissection.pieces);
+        _postPiecesToOps(cardForDissect._dissection.pieces);
       }
     }
   } else {
@@ -2416,6 +2419,17 @@ function render(snap) {
   }
 }
 
+
+// v12.9: hand the dissected, rendered pieces to the embedded Operating Room.
+function _postPiecesToOps(pieces) {
+  try {
+    const fr = document.getElementById('operations-embed');
+    if (!fr || !fr.contentWindow || !Array.isArray(pieces)) return;
+    const out = pieces.filter(p => p && !p.skip && p._image)
+      .map(p => ({ name: p.name || p.label || 'Piece', image: p._image }));
+    if (out.length) fr.contentWindow.postMessage({ maya: 'ops-pieces', pieces: out }, '*');
+  } catch (_) {}
+}
 // ──── v10.13: auto-dissect on upload ────
 // If the loaded vision card doesn't already carry a _dissection field
 // (older folders, or one saved before dissection completed), fire the
@@ -3806,9 +3820,10 @@ function _fabCardHtml(c) {
   const arrive = 'Arrives ' + _addBusinessDays(c.etaDays);
   _lastCardsByUrl[c.url]=c;
   const fav = !!_favs[c.url];
+  const fallback = c.swatch || ('linear-gradient(135deg, rgba(120,140,190,0.45), rgba(30,40,70,0.9))');
   const swatch = c.img
-    ? '<div class="fab-swatch"><img loading="lazy" src="' + c.img + '" alt="" onerror="this.style.display=&quot;none&quot;"></div>'
-    : '<div class="fab-swatch" style="background:' + c.swatch + '"></div>';
+    ? '<div class="fab-swatch" style="background:' + fallback + '"><img loading="lazy" src="' + c.img + '" alt="" onerror="this.style.display=&quot;none&quot;"></div>'
+    : '<div class="fab-swatch" style="background:' + fallback + '"></div>';
   return '<a class="fab-card" href="' + c.url + '" target="_blank" rel="noopener noreferrer" title="' + escapeHtml(c.merchant + ', ' + c.title) + '">' +
     '<span class="fab-heart' + (fav?' on':'') + '" onclick="toggleFavorite(event,&quot;' + encodeURIComponent(c.url) + '&quot;)" title="Favorite">' +'<svg class="heart-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"/></svg>' +'</span>' +
     swatch +
