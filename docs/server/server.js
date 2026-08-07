@@ -535,7 +535,7 @@ app.get('/api/admin/subfile', async (req, res) => {
     });
     if (!metaR.ok) return res.status(404).json({ error: 'not_found' });
     const meta = await metaR.json();
-    if (Number(meta.size || 0) > 15 * 1024 * 1024) return res.status(413).json({ error: 'too_large' });
+    if (Number(meta.size || 0) > 30 * 1024 * 1024) return res.status(413).json({ error: 'too_large' });
     const r = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media', {
       headers: { 'Authorization': 'Bearer ' + accessToken },
     });
@@ -547,6 +547,55 @@ app.get('/api/admin/subfile', async (req, res) => {
   } catch (e) {
     console.error('[admin] subfile failed,', e.message);
     res.status(500).json({ error: 'subfile_failed', detail: e.message });
+  }
+});
+
+// POST /api/admin/savepieces — save the dissection (with rendered piece
+// images and patterns) as pieces.json inside the submission's Drive folder.
+// The Brief loads it on the next open instead of re-dissecting and
+// re-rendering, so a submission only ever costs API credits once.
+app.post('/api/admin/savepieces', express.json({ limit: '30mb' }), async (req, res) => {
+  try { await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
+  const folderId = String((req.body || {}).folderId || '');
+  const data = (req.body || {}).data;
+  if (!/^[\w-]{10,80}$/.test(folderId) || !data) return res.status(400).json({ error: 'bad_request' });
+  try {
+    const accessToken = await getDriveAccessToken();
+    const existing = await driveList(accessToken, {
+      q: "'" + folderId + "' in parents and name = 'pieces.json' and trashed = false",
+      pageSize: '1',
+      fields: 'files(id)',
+    });
+    const body = JSON.stringify(data);
+    let r;
+    if (existing.length) {
+      r = await fetch('https://www.googleapis.com/upload/drive/v3/files/' + existing[0].id + '?uploadType=media', {
+        method: 'PATCH',
+        headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+        body,
+      });
+    } else {
+      const boundary = 'mayapieces' + Date.now();
+      const multipart =
+        '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' +
+        JSON.stringify({ name: 'pieces.json', parents: [folderId] }) + '\r\n' +
+        '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + body + '\r\n' +
+        '--' + boundary + '--';
+      r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'multipart/related; boundary=' + boundary },
+        body: multipart,
+      });
+    }
+    if (!r.ok) return res.status(502).json({ error: 'drive_' + r.status, detail: (await r.text()).slice(0, 200) });
+    const out = await r.json();
+    _subsCache = { ts: 0, body: null };
+    console.log('[admin] pieces.json saved for folder', folderId, Math.round(body.length / 1024) + 'kb');
+    res.json({ ok: true, id: out.id });
+  } catch (e) {
+    console.error('[admin] savepieces failed,', e.message);
+    res.status(500).json({ error: 'savepieces_failed', detail: e.message });
   }
 });
 

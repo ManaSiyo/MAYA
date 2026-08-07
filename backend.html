@@ -341,7 +341,7 @@
     letter-spacing: 0.02em;
   }
 
-  /* ───────── screen 2, Operating Room ─────────
+  /* ───────── screen 2, Operations Room ─────────
      Eyebrow header, then a 30/70 grid: figure on the left, piece cards
      on the right. */
   #screen-operating {
@@ -1408,10 +1408,10 @@
 
 <!-- v0.13: page indicator now wrapped in a pill case (see #page-indicator
      CSS). Screen 1 = "Brief" (a.k.a. Briefing window / Client window).
-     Screen 2 = "Operating Room" (a.k.a. Client screen). -->
+     Screen 2 = "Operations Room" (a.k.a. Client screen). -->
 <div id="page-indicator">
   <button class="page-dot active" id="dot-1" onclick="goToScreen(0)" title="Brief"></button>
-  <button class="page-dot" id="dot-2" onclick="goToScreen(1)" title="Operating Room"></button>
+  <button class="page-dot" id="dot-2" onclick="goToScreen(1)" title="Operations Room"></button>
 </div>
 
 <div id="screens">
@@ -1446,7 +1446,7 @@
         </div>
         <!-- v10.14: piece swiper. Pills are the only nav, no Dissect
              button. Dissection auto-fires on upload; pills appear as
-             soon as the LLM returns. Scroll down to reach Operating Room. -->
+             soon as the LLM returns. Scroll down to reach Operations Room. -->
         <div class="piece-swiper" id="piece-swiper" style="display:none">
           <div class="piece-pills" id="piece-pills"></div>
         </div>
@@ -1477,7 +1477,7 @@
     </div>
   </section>
 
-  <!-- v0.10: Operating Room, 30/70.
+  <!-- v0.10: Operations Room, 30/70.
        Item Window (left, 30%): the currently-active piece image. Swipe
        horizontally to flip pieces; single pill below shows the piece name
        and its text updates as the swipe lands.
@@ -1485,12 +1485,12 @@
        pages, Pattern and Nest. Single pill below shows which page is
        active. Dissect + Nest buttons under that. -->
   <section class="screen" id="screen-operating" data-screen="1" style="position:relative">
-  <!-- v12.4: the real OPERATIONS ROOM lives here now, the old Operating Room
+  <!-- v12.4: the real OPERATIONS ROOM lives here now, the old Operations Room
        (the early attempt) is preserved below, hidden, in case it is ever wanted. -->
-  <iframe id="operations-embed" src="/aesthetics/operations/" title="Operating Room"
+  <iframe id="operations-embed" src="/aesthetics/operations/" title="Operations Room"
           style="position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent"></iframe>
   <div id="legacy-operating-room" style="display:none">
-    <div class="op-room-eyebrow">Operating Room</div>
+    <div class="op-room-eyebrow">Operations Room</div>
     <div class="op-room-grid">
 
       <!-- v0.18: LEFT column, two pills on top (3D / Rendered toggle),
@@ -1617,7 +1617,7 @@
 <div id="clients-drawer">
   <button class="notes-close" onclick="toggleClientsDrawer(false)" title="Close" aria-label="Close">&#215;</button>
   <div class="drawer-title">Clients</div>
-  <button class="pill sm" style="margin:6px 0 10px" onclick="try{document.getElementById('operations-embed').contentWindow.postMessage({maya:'ops-drawer'},'*')}catch(_){};toggleClientsDrawer(false)">Operating Room settings</button>
+  <button class="pill sm" style="margin:6px 0 10px" onclick="try{document.getElementById('operations-embed').contentWindow.postMessage({maya:'ops-drawer'},'*')}catch(_){};toggleClientsDrawer(false)">Operations Room settings</button>
   <div class="drawer-sub" id="clients-count">no clients yet</div>
   <div class="clients-list" id="clients-list"></div>
 
@@ -1793,9 +1793,9 @@ function goToScreen(n) {
 
 // v0.16: track current screen index + sync dot indicator + sync brand sub.
 //   Brief (0) → "<client> · Brief"
-//   Operating Room (1) → "<client> · Operating Room"
+//   Operations Room (1) → "<client> · Operations Room"
 let _currentScreen = 0;
-const SCREEN_LABELS = ['Brief', 'Operating Room'];
+const SCREEN_LABELS = ['Brief', 'Operations Room'];
 // v12.8: arriving from a Systems Map submission card. Instant paint from the
 // URL params, then the full brief (summary.json + garment) loads from Drive
 // through the admin API and fires the complete render + auto dissect.
@@ -1874,6 +1874,16 @@ async function _loadSubmission(tok) {
       try {
         const blob = await (await fetch('/api/admin/subfile?id=' + encodeURIComponent(imgFile.id), { headers: { 'Authorization': 'Bearer ' + tok } })).blob();
         heroImage = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
+      } catch (_) {}
+    }
+    // v0.35: a saved pieces.json means this submission was already dissected
+    // and rendered once. Load it so nothing is paid for twice.
+    window._cachedPieces = null;
+    const pcsFile = files.find(f => /^pieces\.json$/i.test(f.name || ''));
+    if (pcsFile) {
+      try {
+        const pj = await (await fetch('/api/admin/subfile?id=' + encodeURIComponent(pcsFile.id) + '&v=' + (pcsFile.size || 0), { headers: { 'Authorization': 'Bearer ' + tok } })).json();
+        if (pj && Array.isArray(pj.pieces)) window._cachedPieces = pj;
       } catch (_) {}
     }
     if (!summary && !heroImage) return;
@@ -2372,6 +2382,12 @@ function render(snap) {
     // v0.9: op-submitted text element removed.
     const cardForDissect = (submittedVision && submittedVision.card) || { image: heroSrc };
     const cardWithImg = { ...cardForDissect, image: heroSrc };
+    // v0.35: reuse the pieces saved in the submission's Drive folder, if any.
+    // The dissection, piece images and patterns arrive prebuilt, zero API spend.
+    if (!cardForDissect._dissection && window._cachedPieces && Array.isArray(window._cachedPieces.pieces)) {
+      cardForDissect._dissection = window._cachedPieces;
+      cardWithImg._dissection = window._cachedPieces;
+    }
     renderDissection({ card: cardWithImg });
 
     // v10.13: if there's no _dissection on the card, fire the LLM call
@@ -2390,10 +2406,13 @@ function render(snap) {
             // v0.33: kick off 2D pattern generation in PARALLEL with the
             // piece renders, patterns depend only on the hero image +
             // dissection, never on the 3D mesh, so they need not wait.
-            pregeneratePatterns(heroSrc, d.pieces);
+            const patternsDone = pregeneratePatterns(heroSrc, d.pieces);
             await renderAllPieces(heroSrc, d.pieces);
             renderDissection({ card: cardWithImg }); // re-render so swiper picks up _image
             _postPiecesToOps(d.pieces);
+            // v0.35: persist so this submission never pays for dissection again.
+            _savePiecesToDrive(d);
+            if (patternsDone && patternsDone.then) patternsDone.then(() => _savePiecesToDrive(d));
           }
         })
         .catch(e => {
@@ -2404,14 +2423,20 @@ function render(snap) {
       // v0.6: cached dissection, see if any pieces still need rendering.
       const needsRender = cardForDissect._dissection.pieces.some(p => !p.skip && !p._image);
       if (needsRender && getApiKey()) {
-        pregeneratePatterns(heroSrc, cardForDissect._dissection.pieces);
+        const patternsDone = pregeneratePatterns(heroSrc, cardForDissect._dissection.pieces);
         renderAllPieces(heroSrc, cardForDissect._dissection.pieces).then(() => {
           renderDissection({ card: cardWithImg });
           _postPiecesToOps(cardForDissect._dissection.pieces);
+          _savePiecesToDrive(cardForDissect._dissection);
+          if (patternsDone && patternsDone.then) patternsDone.then(() => _savePiecesToDrive(cardForDissect._dissection));
         });
-      } else if (getApiKey()) {
-        pregeneratePatterns(heroSrc, cardForDissect._dissection.pieces);
+      } else {
+        // Everything prebuilt (or no key): pieces go straight to the
+        // Operations Room. Any patterns still missing fill in quietly and
+        // resave, only when a key is present.
+        const patternsDone = getApiKey() ? pregeneratePatterns(heroSrc, cardForDissect._dissection.pieces) : null;
         _postPiecesToOps(cardForDissect._dissection.pieces);
+        if (patternsDone && patternsDone.then) patternsDone.then(() => _savePiecesToDrive(cardForDissect._dissection));
       }
     }
   } else {
@@ -2420,9 +2445,35 @@ function render(snap) {
 }
 
 
-// v12.9: hand the dissected, rendered pieces to the embedded Operating Room.
+// v0.35: persist the dissection (piece images and patterns included) to the
+// submission's Drive folder as pieces.json. The next open of this submission
+// loads it instead of paying for dissection, renders and patterns again.
+function _savePiecesToDrive(dissection) {
+  try {
+    const sid = window._openedSubmission && window._openedSubmission.id;
+    const tok = _subCachedTok();
+    if (!sid || !tok || !dissection || !Array.isArray(dissection.pieces)) return;
+    const clean = JSON.parse(JSON.stringify(dissection, (k, v) =>
+      (k === '_patternPending' || k === '_virtual') ? undefined : v));
+    let body = JSON.stringify({ folderId: sid, data: clean });
+    if (body.length > 27 * 1024 * 1024) {
+      // Too heavy for one file: drop the patterns, keep the piece images.
+      (clean.pieces || []).forEach(p => { delete p._pattern; });
+      body = JSON.stringify({ folderId: sid, data: clean });
+    }
+    fetch('/api/admin/savepieces', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body,
+    }).then(r => console.log('[pieces save]', r.status))
+      .catch(e => console.warn('[pieces save]', e));
+  } catch (e) { console.warn('[pieces save]', e); }
+}
+
+// v12.9: hand the dissected, rendered pieces to the embedded Operations Room.
 function _postPiecesToOps(pieces) {
   try {
+    if (Array.isArray(pieces)) window._lastOpsPieces = pieces;
     const fr = document.getElementById('operations-embed');
     if (!fr || !fr.contentWindow || !Array.isArray(pieces)) return;
     const out = pieces.filter(p => p && !p.skip && p._image)
@@ -2430,6 +2481,14 @@ function _postPiecesToOps(pieces) {
     if (out.length) fr.contentWindow.postMessage({ maya: 'ops-pieces', pieces: out }, '*');
   } catch (_) {}
 }
+// v0.35: cached pieces can be ready before the embedded Operations Room has
+// finished loading. Re-post once the iframe says it is alive.
+document.addEventListener('DOMContentLoaded', () => {
+  const fr = document.getElementById('operations-embed');
+  if (fr) fr.addEventListener('load', () => {
+    setTimeout(() => { if (window._lastOpsPieces) _postPiecesToOps(window._lastOpsPieces); }, 400);
+  });
+});
 // ──── v10.13: auto-dissect on upload ────
 // If the loaded vision card doesn't already carry a _dissection field
 // (older folders, or one saved before dissection completed), fire the
@@ -2584,10 +2643,10 @@ async function renderPiece(heroImage, piece) {
 // Op Room pattern window picks it up instantly when opened. Safe to call
 // repeatedly, skips pieces that already have (or are generating) a pattern.
 function pregeneratePatterns(heroImage, pieces) {
-  if (!heroImage || !pieces || !pieces.length || !getApiKey()) return;
-  pieces.filter(p => p && !p.skip && !p._pattern && !p._patternPending).forEach(p => {
+  if (!heroImage || !pieces || !pieces.length || !getApiKey()) return null;
+  const jobs = pieces.filter(p => p && !p.skip && !p._pattern && !p._patternPending).map(p => {
     p._patternPending = true;
-    generatePattern(heroImage, p)
+    return generatePattern(heroImage, p)
       .then(pat => {
         p._pattern = pat;
         // If this piece is the one currently shown in the Op Room, paint it.
@@ -2602,6 +2661,8 @@ function pregeneratePatterns(heroImage, pieces) {
       .catch(e => console.warn('[Backend pattern pregen]', p.name, e))
       .finally(() => { p._patternPending = false; });
   });
+  // Null when nothing was missing, so callers don't resave for no reason.
+  return jobs.length ? Promise.allSettled(jobs) : null;
 }
 
 async function renderAllPieces(heroImage, pieces) {
@@ -2786,7 +2847,7 @@ function renderDissection(visionItem) {
     }
   }
 
-  // Operating-room piece cards. One per garment item. Skip pieces (base
+  // Operations Room piece cards. One per garment item. Skip pieces (base
   // layer) render at half opacity with "Base layer, not part of build"
   // so the designer still sees what's underneath.
   // v0.9: pieces-col removed (Op Room redesign). Guard so legacy DOM

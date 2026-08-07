@@ -38,6 +38,9 @@
     box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18)}
   .top-btn:hover{border-color:rgba(255,255,255,0.42);color:rgba(245,250,255,1)}
   .top-btn.hamburger{width:32px;height:28px;padding:0;display:flex;align-items:center;justify-content:center}
+  /* Lights live in the top bar, same line as the wordmark */
+  #top-lights{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;gap:14px;
+              align-items:center;cursor:pointer}
   .hamburger-icon{display:inline-flex;flex-direction:column;gap:3px;width:14px}
   .hamburger-icon span{display:block;height:1px;width:100%;background:currentColor;border-radius:1px}
 
@@ -74,7 +77,8 @@
   h2.grp a{color:var(--blue);text-decoration:none;font-size:9.5px;letter-spacing:0.14em}
 
   /* Latest submissions strip: 25vh tall, newest on the left, flows sideways */
-  #subs-strip{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;
+  #subs-strip{display:flex;gap:12px;overflow-x:auto;padding:0 28px 10px;
+              width:100vw;margin-left:calc(50% - 50vw);
               height:25vh;min-height:190px;scrollbar-width:none}
   #subs-strip::-webkit-scrollbar{display:none}
   .sub-tile{position:relative;flex:0 0 auto;height:100%;aspect-ratio:3/2;border-radius:22px;overflow:hidden;
@@ -98,9 +102,9 @@
 
   .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:6px}
   .tile{border:0.5px solid var(--line);border-radius:13px;background:rgba(10,16,34,0.55);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
-        box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18);padding:13px 15px}
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18);padding:7px 15px}
   .tile .k{font-family:'Jost',Verdana,sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--faint)}
-  .tile .v{font-size:26px;margin-top:5px}
+  .tile .v{font-size:24px;margin-top:2px}
   .tile.live .v{color:var(--green)}
   #traffic-note{font-family:'Jost',Verdana,sans-serif;font-size:10.5px;color:var(--dim);line-height:1.7;
     border:0.5px dashed var(--line);border-radius:12px;padding:11px 14px}
@@ -109,6 +113,23 @@
   pre.cmd{text-align:left;font-family:Menlo,monospace;font-size:10.5px;color:var(--ink);background:rgba(255,255,255,0.06);
           border:0.5px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:10px;
           white-space:pre-wrap;word-break:break-all;user-select:all}
+
+  /* Collapsible sections: the heading is the handle, tap to open */
+  details.fold{margin:14px 0 8px}
+  details.fold summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+  details.fold summary::-webkit-details-marker{display:none}
+  details.fold summary h2.grp{margin:0}
+  details.fold summary::after{content:'\25BE';font-family:'Jost',sans-serif;font-size:11px;color:var(--faint);transition:transform .2s}
+  details.fold[open] summary::after{transform:rotate(180deg)}
+  details.fold .fold-body{margin-top:10px}
+  .changelog{border:0.5px solid var(--line);border-radius:16px;background:rgba(10,16,34,0.55);
+             backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+             box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18);
+             padding:12px 18px;text-align:center}
+  .chg{padding:7px 0;font-size:14px;color:var(--dim);line-height:1.5;border-bottom:0.5px solid rgba(255,255,255,0.07)}
+  .chg:last-child{border-bottom:0}
+  .chg b{color:var(--ink);font-weight:500;margin-right:8px;font-family:'Jost',sans-serif;font-size:9.5px;
+         letter-spacing:0.14em;text-transform:uppercase}
 
   /* Prompting engine */
   .pe-panel{border:0.5px solid var(--line);border-radius:16px;background:rgba(10,16,34,0.55);
@@ -145,10 +166,11 @@
   .arch-deploy code{font-family:Menlo,monospace;font-size:10px;color:var(--ink)}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
-  .grid.doors{grid-template-columns:repeat(2,1fr);gap:14px}
-  .grid.doors .card b{font-size:19px}
+  .grid.doors{grid-template-columns:repeat(2,1fr);gap:12px}
+  .grid.doors .card b{font-size:19px;display:inline;margin:0}
   .grid.doors .card p{font-size:12.5px}
-  .grid.doors a.card{padding:20px 18px;border-radius:16px}
+  .grid.doors a.card{padding:10px 18px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:10px}
+  .grid.doors .card .go{display:inline;margin:0;font-size:13px;letter-spacing:0}
   a.card{display:block;text-decoration:none;color:var(--ink);border:0.5px solid var(--line);
          border-radius:13px;padding:14px 15px;background:rgba(10,16,34,0.55);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
          box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18);transition:border-color .2s}
@@ -167,7 +189,8 @@
     #top-left-brand .maya-logo-mark{width:40px;height:40px}
     #top-left-brand .brand-title{font-size:15px}
     .status-bar{gap:10px;padding:12px 14px}
-    #recheck{margin-left:0;width:100%}
+    #top-lights{gap:9px}
+    #top-lights .lgt-lbl{display:none}
     .grid{grid-template-columns:1fr 1fr}
     .grid.doors{grid-template-columns:1fr}
     .tiles{grid-template-columns:1fr 1fr}
@@ -185,6 +208,12 @@
   <div id="top-left-brand">
     <img class="maya-logo-mark" src="/aesthetics/ui/logo-208.png" alt="" onclick="location.reload()" style="cursor:pointer" title="Tap to refresh" />
     <span class="brand-title">Systems Map</span>
+  </div>
+  <div id="top-lights" onclick="runChecks()" title="Tap to check again">
+    <span class="status-item"><span class="sdot wait" id="d-site"></span><span class="lgt-lbl">Site</span></span>
+    <span class="status-item"><span class="sdot wait" id="d-api"></span><span class="lgt-lbl">API</span></span>
+    <span class="status-item"><span class="sdot wait" id="d-assets"></span><span class="lgt-lbl">Images</span></span>
+    <span class="status-item"><span class="sdot wait" id="d-backup"></span><span class="lgt-lbl">Backup</span></span>
   </div>
   <button class="top-btn hamburger" onclick="document.getElementById('drawer').classList.toggle('open')" title="Menu">
     <span class="hamburger-icon"><span></span><span></span><span></span></span>
@@ -206,18 +235,11 @@
 
 <div class="wrap">
 
-  <div class="status-bar">
-    <div class="status-item"><span class="sdot wait" id="d-site"></span>Site</div>
-    <div class="status-item"><span class="sdot wait" id="d-api"></span>API</div>
-    <div class="status-item"><span class="sdot wait" id="d-assets"></span>Images</div>
-    <div class="status-item"><span class="sdot wait" id="d-backup"></span>Backup</div>
-    <button id="recheck" class="top-btn" onclick="runChecks()">Check now</button>
-  </div>
   <div id="checked-at">checking&#8230;</div>
   <div class="grid doors" style="grid-template-columns:repeat(3,1fr);margin:8px 0 2px">
-    <a class="card" href="/backend.html"><b>Backend</b><span class="go">Open &rarr;</span></a>
-    <a class="card" href="https://maya.manasiyo.com" target="_blank"><b>MAYA</b><span class="go">Open &rarr;</span></a>
-    <a class="card" href="https://manasiyo.com" target="_blank"><b>Manasiyo.com</b><span class="go">Open &rarr;</span></a>
+    <a class="card" href="/backend.html"><b>Backend</b><span class="go">&rarr;</span></a>
+    <a class="card" href="https://maya.manasiyo.com" target="_blank"><b>MAYA</b><span class="go">&rarr;</span></a>
+    <a class="card" href="https://manasiyo.com" target="_blank"><b>Manasiyo.com</b><span class="go">&rarr;</span></a>
   </div>
 
 
@@ -235,12 +257,13 @@
   <div id="traffic-tiles" class="tiles hidden"></div>
   <div id="traffic-note">checking&#8230;</div>
 
-  <h2 class="grp">Operating Room Beta</h2>
-  <div class="grid doors" style="grid-template-columns:1fr;max-width:420px;margin:0 auto 6px">
-    <a class="card" href="/operations.html" target="_blank"><b>Operating Room Beta</b><span class="go">Open &rarr;</span></a>
+  <div class="grid doors" style="grid-template-columns:1fr;max-width:420px;margin:14px auto 6px">
+    <a class="card" href="/operations.html" target="_blank"><b>Operations Room Beta</b><span class="go">&rarr;</span></a>
   </div>
 
-  <h2 class="grp">Prompting engine</h2>
+  <details class="fold" id="pe-fold">
+  <summary><h2 class="grp">MAYA Prompting Engine</h2></summary>
+  <div class="fold-body">
   <div class="pe-live">
     <h4>Fixed, baked into every render (not editable here)</h4>
     <p>Every image MAYA generates is built from four layers: the <b>design specification</b> from the consultation,
@@ -268,14 +291,30 @@
       <textarea id="pe-style" placeholder="Lens, light, finish, the rendering style&#8230;"></textarea></div>
     <div class="pe-row" style="justify-content:center"><button id="pe-save" class="top-btn" onclick="savePrompting()">Save to the live app</button><span id="pe-state">waiting for the one sign in at the top of the page</span></div>
   </div>
+  </div>
+  </details>
+
+  <details class="fold" id="changes-fold">
+  <summary><h2 class="grp">Recent changes, what has shipped</h2></summary>
+  <div class="fold-body changelog">
+    <div class="chg"><b>Aug 6</b>Each submission is dissected once and the pieces are saved to its Drive folder, reopening a client costs no API credits.</div>
+    <div class="chg"><b>Aug 6</b>Operations Room is the new name, in the Brief, on this map, and in the beta.</div>
+    <div class="chg"><b>Aug 6</b>Systems Map slimmed: one line doors, lights in the top bar, submissions flow edge to edge, prompting engine and this list fold away.</div>
+    <div class="chg"><b>Aug 5</b>One push publishing: Push origin in GitHub Desktop deploys the website and the server together, about 4 minutes.</div>
+    <div class="chg"><b>Aug 5</b>Clicking a submission opens the Brief with biography, vision and measurements filled, then it dissects itself into pieces that feed the Operations Room.</div>
+    <div class="chg"><b>Aug 5</b>Systems Map redesigned to the MAYA look, one sign in unlocks submissions, traffic and prompting.</div>
+    <div class="chg"><b>Aug 5</b>Google Drive key renewed, client submissions land again.</div>
+    <div class="chg"><b>Aug 5</b>Folder reorganized: three pages at the root, aesthetics for everything visual, docs for everything else.</div>
+  </div>
+  </details>
 
   <h2 class="grp" id="architecture">Architecture, local and online</h2>
   <div class="arch">
     <div class="col">
-      <h4>Your Mac, Desktop/MAYA</h4>
+      <h4>Your Mac, Desktop/MAYA-new</h4>
       <div class="it">index.html, status.html, backend.html<small>The three pages. Published copies are what the world sees.</small></div>
       <div class="it">aesthetics/<small>ui, fabrics, headshots, the operations engine. All published on deploy.</small></div>
-      <div class="it">docs/<small>Never published. Operating room R&amp;D, the server source, the deploy config.</small></div>
+      <div class="it">docs/<small>Never published. Operations Room R&amp;D, the server source, the deploy config.</small></div>
     </div>
     <div class="col">
       <h4>Google, project pro-maya</h4>
@@ -284,8 +323,8 @@
       <div class="it">Firestore + Storage + Drive<small>Sessions, projects, images, client PDFs. Lives only online.</small></div>
     </div>
     <div class="arch-deploy">
-      Publish the site: <code>cd ~/Desktop/MAYA/docs &amp;&amp; firebase deploy --only hosting</code>
-      &nbsp;&nbsp;Publish the server: <code>cd ~/Desktop/MAYA/docs/server &amp;&amp; gcloud run deploy maya-api --source . --region us-west1 --project pro-maya</code>
+      Publishing is one action: press <code>Push origin</code> in GitHub Desktop.
+      Google then builds and deploys the website and the server by itself, about 4 minutes.
     </div>
   </div>
 
@@ -389,20 +428,20 @@ async function loadSubmissions() {
   const prettyName = n => { const m = String(n).match(/^(.*?)-\d{2}-\d{2}-\d{4}\s*$/); const r = (m ? m[1] : String(n)).trim();
     return r.charAt(0).toUpperCase() + r.slice(1); };
   // Newest first: API already returns createdTime desc, so the latest lands leftmost.
-  strip.innerHTML = (data.folders || []).map(f => {
-    const isNew = false;
+  // Folders with no image (dead cards) are not shown at all.
+  const visible = (data.folders || []).map(f => {
     const dream = (f.files || []).find(x => /dream-garment/i.test(x.name || ''));
     const anyImg = (f.files || []).find(x => /^image\//i.test(x.mime || ''));
-    const thumbId = (dream && dream.id) || (anyImg && anyImg.id) || '';
-    const img = thumbId
-      ? '<img loading="lazy" src="https://drive.google.com/thumbnail?id=' + esc(thumbId) + '&sz=w480" alt="" onerror="this.remove()">'
-      : '<img src="/aesthetics/ui/logo-208.png" alt="" style="position:absolute;inset:0;margin:auto;width:40px;height:40px;object-fit:contain;opacity:0.18">';
-    return '<a class="sub-tile' + (isNew ? ' fresh' : '') + '" target="_blank" rel="noopener" href="/backend.html?submission=' + encodeURIComponent(f.id) + '&name=' + encodeURIComponent(f.name) + (thumbId ? '&img=' + encodeURIComponent(thumbId) : '') + '" title="Open the Brief">' +
-      img + '' +
+    return { f, thumbId: (dream && dream.id) || (anyImg && anyImg.id) || '' };
+  }).filter(x => x.thumbId);
+  strip.innerHTML = visible.map(({ f, thumbId }) => {
+    const img = '<img loading="lazy" src="https://drive.google.com/thumbnail?id=' + esc(thumbId) + '&sz=w480" alt="" onerror="this.remove()">';
+    return '<a class="sub-tile" target="_blank" rel="noopener" href="/backend.html?submission=' + encodeURIComponent(f.id) + '&name=' + encodeURIComponent(f.name) + '&img=' + encodeURIComponent(thumbId) + '" title="Open the Brief">' +
+      img +
       '<span class="veil"><span class="nm">' + esc(prettyName(f.name)) + '</span><span class="tm">' + when(f.createdTime) + '</span></span></a>';
   }).join('') +
   '<a class="sub-tile more" href="https://drive.google.com/drive/folders/1ZEgQi3BpYDlNMsIMK553dLQs0kKiga35" target="_blank" rel="noopener">All submissions in Drive</a>';
-  if (!(data.folders || []).length) {
+  if (!visible.length) {
     strip.style.display = 'none';
     _subsNote('No submissions yet, they appear here the moment one lands.');
   }
