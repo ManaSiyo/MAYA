@@ -1,10 +1,15 @@
 # MAYA, the one build. Google reads this on every GitHub push and deploys
 # BOTH the server (Cloud Run) and the website (Firebase Hosting). This file
 # replaces the old root Dockerfile and the manual Deploy MAYA.command.
-# v12.5: the Firestore and Storage rules deploy with the site now. They used to
-# be checked into the folder but never published, so production could be running
-# rules nobody had seen in months. The firebase-tools version is pinned so a
-# deploy is reproducible.
+# v12.5: the Firestore and Storage rules deploy too. They used to be checked
+# into the folder but never published, so production could be running rules
+# nobody had seen in months.
+#
+# The website and the rules are SEPARATE steps on purpose. When they were one
+# command, a rules problem took the whole website down with it: the server
+# shipped, the site did not, and the two halves of MAYA ran out of step with
+# each other. Now the site always ships first, and a rules failure is loud but
+# harmless to what is already live.
 steps:
   - id: Build server
     name: gcr.io/cloud-builders/docker
@@ -35,7 +40,13 @@ steps:
     entrypoint: bash
     args:
       - '-c'
-      - 'cp docs/firebase.json ./firebase.json && npx -y firebase-tools@13.29.1 deploy --only hosting,firestore:rules,storage --project pro-maya --non-interactive'
+      - 'cp docs/firebase.json ./firebase.json && npx -y firebase-tools@latest deploy --only hosting --project pro-maya --non-interactive'
+  - id: Deploy rules
+    name: node:20
+    entrypoint: bash
+    args:
+      - '-c'
+      - 'cp docs/firebase.json ./firebase.json && npx -y firebase-tools@latest deploy --only firestore:rules,storage --project pro-maya --non-interactive'
 timeout: 1200s
 options:
   logging: CLOUD_LOGGING_ONLY

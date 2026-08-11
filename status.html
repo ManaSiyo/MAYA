@@ -297,6 +297,12 @@
   <details class="fold" id="changes-fold">
   <summary><h2 class="grp">Recent changes, what has shipped</h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 11</b>Saving is fixed. There is one save path, it goes to the cloud, and it only says Saved when it truly saved. Naming a project used to keep it in the browser alone, which is how a client could be saved and then not be there.</div>
+    <div class="chg"><b>Aug 11</b>New really means new project. It closes the one you are in first, so nothing already saved is ever written over. Same when you switch client.</div>
+    <div class="chg"><b>Aug 11</b>Nothing is kept on the Mac any more. Projects, pictures and the client roster all live online, so any device shows the same work and a refresh brings the last project back.</div>
+    <div class="chg"><b>Aug 11</b>The API keys left the browser. The Brief and the Operations Room call MAYA's own server, which holds them; your Google sign in is what authorises the call.</div>
+    <div class="chg"><b>Aug 11</b>Faster: submissions upload together instead of one after another, the project list reads a small index, and new submissions appear here within seconds.</div>
+    <div class="chg"><b>Aug 11</b>The self destruct link is gone, a stranger could send a client a link that erased their whole account. Uploads are limited to the files MAYA itself writes, and the Firestore and Storage rules now publish with every deploy.</div>
     <div class="chg"><b>Aug 6</b>Each submission is dissected once and the pieces are saved to its Drive folder, reopening a client costs no API credits.</div>
     <div class="chg"><b>Aug 6</b>Operations Room is the new name, in the Brief, on this map, and in the beta.</div>
     <div class="chg"><b>Aug 6</b>Systems Map slimmed: one line doors, lights in the top bar, submissions flow edge to edge, prompting engine and this list fold away.</div>
@@ -413,7 +419,7 @@ async function loadSubmissions() {
   const strip = document.getElementById('subs-strip');
   if (!_idTok) { _subsNote('Waiting for the one sign in at the top of the page.'); return; }
   let r;
-  try { r = await fetch('/api/admin/submissions?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + _idTok }, cache: 'no-store' }); }
+  try { r = await fetch('/api/admin/submissions?fresh=1&t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + _idTok }, cache: 'no-store' }); }
   catch (_) { _subsNote('The request was blocked before reaching the API. An ad blocker extension may be interfering, try pausing it for this site.'); return; }
   if (r.status === 404) { _subsNote(_cmdBlock('<b>FEED PENDING, one command switches it on:</b>')); return; }
   if (r.status === 401) { _expired(); return; }
@@ -428,16 +434,23 @@ async function loadSubmissions() {
   const prettyName = n => { const m = String(n).match(/^(.*?)-\d{2}-\d{2}-\d{4}\s*$/); const r = (m ? m[1] : String(n)).trim();
     return r.charAt(0).toUpperCase() + r.slice(1); };
   // Newest first: API already returns createdTime desc, so the latest lands leftmost.
-  // Folders with no image (dead cards) are not shown at all.
+  // Old folders with no picture are dead cards and stay hidden. A submission
+  // that landed in the last few minutes always shows, even before its picture
+  // has finished uploading, otherwise a fresh submission looks like it never
+  // arrived.
+  const FRESH_MS = 10 * 60 * 1000;
   const visible = (data.folders || []).map(f => {
     const dream = (f.files || []).find(x => /dream-garment/i.test(x.name || ''));
     const anyImg = (f.files || []).find(x => /^image\//i.test(x.mime || ''));
-    return { f, thumbId: (dream && dream.id) || (anyImg && anyImg.id) || '' };
-  }).filter(x => x.thumbId);
-  strip.innerHTML = visible.map(({ f, thumbId }) => {
-    const img = '<img loading="lazy" src="https://drive.google.com/thumbnail?id=' + esc(thumbId) + '&sz=w480" alt="" onerror="this.remove()">';
-    return '<a class="sub-tile" target="_blank" rel="noopener" href="/backend.html?submission=' + encodeURIComponent(f.id) + '&name=' + encodeURIComponent(f.name) + '&img=' + encodeURIComponent(thumbId) + '" title="Open the Brief">' +
-      img +
+    const fresh = (Date.now() - new Date(f.createdTime || 0).getTime()) < FRESH_MS;
+    return { f, fresh, thumbId: (dream && dream.id) || (anyImg && anyImg.id) || '' };
+  }).filter(x => x.thumbId || x.fresh);
+  strip.innerHTML = visible.map(({ f, thumbId, fresh }) => {
+    const img = thumbId
+      ? '<img loading="lazy" src="https://drive.google.com/thumbnail?id=' + esc(thumbId) + '&sz=w480" alt="" onerror="this.remove()">'
+      : '<img src="/aesthetics/ui/logo-208.png" alt="" style="position:absolute;inset:0;margin:auto;width:44px;height:44px;object-fit:contain;opacity:0.3">';
+    return '<a class="sub-tile" target="_blank" rel="noopener" href="/backend.html?submission=' + encodeURIComponent(f.id) + '&name=' + encodeURIComponent(f.name) + (thumbId ? '&img=' + encodeURIComponent(thumbId) : '') + '" title="Open the Brief">' +
+      img + (fresh && !thumbId ? '<span class="badge">arriving</span>' : '') +
       '<span class="veil"><span class="nm">' + esc(prettyName(f.name)) + '</span><span class="tm">' + when(f.createdTime) + '</span></span></a>';
   }).join('') +
   '<a class="sub-tile more" href="https://drive.google.com/drive/folders/1ZEgQi3BpYDlNMsIMK553dLQs0kKiga35" target="_blank" rel="noopener">All submissions in Drive</a>';
@@ -446,6 +459,14 @@ async function loadSubmissions() {
     _subsNote('No submissions yet, they appear here the moment one lands.');
   }
 }
+// v12.5: the strip refreshes itself, so a submission that lands while the map
+// is open appears without a reload. Also refreshes the moment the tab is
+// looked at again.
+setInterval(() => { if (_idTok && document.visibilityState === 'visible') loadSubmissions(); }, 20000);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && _idTok) { loadSubmissions(); runChecks(); }
+});
+
 async function loadTraffic() {
   const tiles = document.getElementById('traffic-tiles');
   if (!_idTok) { _note('Waiting for the one sign in at the top of the page.'); return; }

@@ -281,6 +281,7 @@ app.post('/api/submit', requireAuthHeader, express.json({ limit: '30mb' }), asyn
     const subName = `${clientName}-${stamp}`;
     try {
       const subId = await driveCreateFolder(accessToken, subName, rootFolderId);
+      _subsCache = { ts: 0, body: null };     // v12.5: show up on the Systems Map immediately
       console.log('[submit] init OK — "' + subName + '" (' + subId + ')');
       return res.json({ ok: true, folder_id: subId, folder_name: subName });
     } catch (e) {
@@ -294,13 +295,10 @@ app.post('/api/submit', requireAuthHeader, express.json({ limit: '30mb' }), asyn
     if (!body.name || !body.data_b64) return res.status(400).json({ error: 'no_file' });
     // v11.49 (Codex M8): the target folder must be a DIRECT CHILD of the MAYA
     // submissions root — no uploads into the root itself or anywhere else.
+    // v12.5: cached, so a submission's files no longer each pay for their own
+    // round trip to Drive just to re-confirm the same folder.
     try {
-      const meta = await fetch('https://www.googleapis.com/drive/v3/files/' +
-        encodeURIComponent(body.folder_id) + '?fields=parents', {
-        headers: { 'Authorization': 'Bearer ' + accessToken },
-      });
-      const pj = meta.ok ? await meta.json() : null;
-      if (!pj || !Array.isArray(pj.parents) || !pj.parents.includes(rootFolderId)) {
+      if (!(await isSubmissionFolder(accessToken, body.folder_id)) || body.folder_id === rootFolderId) {
         console.warn('[submit] blocked upload to non-submission folder', body.folder_id, 'by', user.email);
         return res.status(403).json({ error: 'folder_not_allowed' });
       }
@@ -325,6 +323,7 @@ app.post('/api/submit', requireAuthHeader, express.json({ limit: '30mb' }), asyn
     if (bytes.length > 25 * 1024 * 1024) return res.status(413).json({ error: 'too_large' });
     try {
       const info = await driveUploadFile(accessToken, safeName, body.folder_id, mime, bytes);
+      _subsCache = { ts: 0, body: null };     // v12.5: the picture is there now, let the map see it
       console.log('[submit] upload OK — "' + info.name + '" (' + info.id + ')');
       return res.json({ ok: true, file_id: info.id, name: info.name });
     } catch (e) {
@@ -624,7 +623,9 @@ app.get('/api/admin/submissions', async (req, res) => {
   try { user = await requireAdmin(req); }
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
   // v11.48: 30s cache — two open dashboards shouldn't double Drive traffic.
-  if (_subsCache.body && Date.now() - _subsCache.ts < 30000) {
+  // v12.5: 8 seconds, not 30. A submission that just landed used to sit
+  // invisible on the Systems Map for up to half a minute.
+  if (!req.query.fresh && _subsCache.body && Date.now() - _subsCache.ts < 8000) {
     return res.json(_subsCache.body);
   }
   try {

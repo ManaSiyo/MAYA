@@ -11016,8 +11016,10 @@ const projectStore = {
     let rows = null;
     try {
       const d = await this._idxDoc().get();
-      const m = (d.exists && (d.data() || {}).items) || null;
-      if (m) rows = Object.keys(m).map(id => ({ id, ...m[id], isProject: true }));
+      const v = d.exists ? (d.data() || {}) : {};
+      // Only an index that was built from a full pass over the projects can be
+      // trusted. Anything else is a partial index written by a single save.
+      if (v.rebuiltAtMs && v.items) rows = Object.keys(v.items).map(id => ({ id, ...v.items[id], isProject: true }));
     } catch (_) {}
     if (!rows) rows = await this._rebuildIndex();
     const dead = await this._tombSet();
@@ -11025,6 +11027,22 @@ const projectStore = {
     rows.sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
     this._idxCache = rows; this._idxTs = Date.now();
     return rows;
+  },
+
+  // A full pass over the real projects, in the background. The drawer paints
+  // instantly from the index, then calls this; if the truth differs, it
+  // repaints. So a drifted index can never hide a project for long.
+  async reconcile() {
+    if (!this.ready()) return null;
+    try {
+      const fresh = await this._rebuildIndex();
+      const dead = await this._tombSet();
+      const rows = fresh.filter(r => !dead.has(r.id))
+        .sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
+      const before = (this._idxCache || []).map(r => r.id).join(',');
+      this._idxCache = rows; this._idxTs = Date.now();
+      return before === rows.map(r => r.id).join(',') ? null : rows;
+    } catch (_) { return null; }
   },
 
   async _rebuildIndex() {
@@ -11037,19 +11055,21 @@ const projectStore = {
                       createdAt: v.createdAtMs || 0, cardCount: (v.items || []).length,
                       twoWord: v.twoWord || '' };
     });
-    try { await this._idxDoc().set({ items, rebuiltAtMs: Date.now() }); } catch (_) {}
+    try { await this._idxDoc().set({ items, rebuiltAtMs: Date.now(), count: Object.keys(items).length }); } catch (_) {}
     return Object.keys(items).map(id => ({ id, ...items[id], isProject: true }));
   },
 
   async _touchIndex(id, row) {
     this._idxTs = 0;
+    const patch = {};
+    patch['items.' + id] = row ? row : firebase.firestore.FieldValue.delete();
     try {
-      const patch = {};
-      if (row) patch['items.' + id] = row;
-      else patch['items.' + id] = firebase.firestore.FieldValue.delete();
-      await this._idxDoc().set({ items: {} }, { merge: true });
       await this._idxDoc().update(patch);
-    } catch (_) {}
+    } catch (_) {
+      // No index yet, or it was never fully built. Build it properly rather
+      // than leaving behind a one entry index the list would then believe.
+      try { await this._rebuildIndex(); } catch (_) {}
+    }
   },
 
   async _tombSet() {
@@ -11395,9 +11415,27 @@ async function _renderSessionsDropdown() {
   } catch (e) { console.warn('[maya sessions]', e && e.message); }
   if (!sessions.length) {
     list.innerHTML = '<div class="sessions-empty">No projects yet. Start working and MAYA keeps it for you.</div>';
-    return;
+  } else {
+    list.innerHTML = _sessionRows(sessions);
   }
-  list.innerHTML = sessions.map(s => {
+  // Verify against the real projects in the background and repaint if the
+  // quick index was out of date. Costs nothing the designer has to wait for.
+  if (!_reconcileInFlight) {
+    _reconcileInFlight = true;
+    projectStore.reconcile()
+      .then(fresh => {
+        if (fresh && document.getElementById('drawer-sessions-list')) {
+          document.getElementById('drawer-sessions-list').innerHTML =
+            fresh.length ? _sessionRows(fresh)
+                         : '<div class="sessions-empty">No projects yet. Start working and MAYA keeps it for you.</div>';
+        }
+      })
+      .finally(() => { _reconcileInFlight = false; });
+  }
+}
+let _reconcileInFlight = false;
+function _sessionRows(sessions) {
+  return sessions.map(s => {
     const label = (s.twoWord && s.twoWord.length) ? s.twoWord : 'untitled';
     const dateStr = _formatSessionDate(s.createdAt);
     return `
@@ -11623,14 +11661,17 @@ async function doSaveToCloud() {
   // 2) Upload each file sequentially.
   // v11.4/v11.6: track ok/failed so the toast tells the truth instead of
   // pretending every file landed when in fact they all failed.
-  let done = 0, ok = 0, failed = 0;
+  // v12.5 SPEED: the files used to go up strictly one after another, each one
+  // waiting for the whole round trip of the one before it. They do not depend
+  // on each other, so submitting now takes about as long as the single
+  // slowest file instead of all of them added together.
+  let ok = 0, failed = 0;
   const failures = [];
-  for (const f of queue) {
-    done++;
-    setStatus('uploading ' + done + ' / ' + queue.length);
-    let res;
+  let landed = 0;
+  setStatus('uploading 0 / ' + queue.length);
+  const results = await Promise.all(queue.map(async f => {
     try {
-      res = await fetch('/api/submit', {
+      const res = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({
@@ -11641,22 +11682,25 @@ async function doSaveToCloud() {
           data_b64: f.data_b64,
         }),
       });
+      landed++;
+      setStatus('uploading ' + landed + ' / ' + queue.length);
+      if (!res.ok) {
+        let detail = '';
+        try { detail = JSON.stringify(await res.json()).slice(0, 200); }
+        catch { try { detail = (await res.text()).slice(0, 200); } catch {} }
+        console.warn('[Maya cloud upload]', f.name, res.status, detail);
+        return { ok: false, failure: { name: f.name, status: res.status, detail } };
+      }
+      return { ok: true };
     } catch (e) {
-      failed++;
-      failures.push({ name: f.name, status: 0, detail: (e && e.message) || 'fetch failed' });
+      landed++;
       console.warn('[Maya cloud upload] network', f.name, e);
-      continue;
+      return { ok: false, failure: { name: f.name, status: 0, detail: (e && e.message) || 'fetch failed' } };
     }
-    if (!res.ok) {
-      failed++;
-      let detail = '';
-      try { detail = JSON.stringify(await res.json()).slice(0, 200); }
-      catch { try { detail = (await res.text()).slice(0, 200); } catch {} }
-      failures.push({ name: f.name, status: res.status, detail });
-      console.warn('[Maya cloud upload]', f.name, res.status, detail);
-      continue;
-    }
-    ok++;
+  }));
+  for (const r of results) {
+    if (r.ok) ok++;
+    else { failed++; failures.push(r.failure); }
   }
   setStatus('');
   if (failed === 0) {
