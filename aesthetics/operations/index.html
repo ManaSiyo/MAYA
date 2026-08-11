@@ -18,7 +18,7 @@
      5. COMPOSE  hard rules + retrieved guidance -> grounded prompt.
      6. GENERATE gpt-image-2 edit on the hero image.
 
-  Shares the OpenAI key with backend.html (localStorage 'maya_openai_key').
+  The OpenAI key lives on MAYA's server; this page sends the Google sign in token.
 -->
 <html lang="en">
 <head>
@@ -27,6 +27,9 @@
 if (self !== top) document.documentElement.classList.add('embedded');
 window.addEventListener('message', function(e){
   if (!e || !e.data) return;
+  // v12.5: only MAYA's own pages may drive this room. Without this any
+  // website could open it and swap in its own image as the pipeline input.
+  try { if (e.origin && e.origin !== location.origin) return; } catch (_) { return; }
   if (e.data.maya === 'ops-drawer') { try { toggleDrawer(true); } catch(_) {} }
   if (e.data.maya === 'ops-pieces' && Array.isArray(e.data.pieces)) {
     try {
@@ -388,8 +391,7 @@ window.addEventListener('message', function(e){
 
   <div class="sec">
     <div class="sec-title">Key</div>
-    <label>OpenAI key</label>
-    <input id="api-key" type="password" placeholder="sk-…" oninput="saveKey()">
+    <div class="kb-status">Held on MAYA's server. Your Google sign in authorises every call, nothing is stored in this browser.</div>
   </div>
 
   <div class="sec">
@@ -451,7 +453,6 @@ window.addEventListener('message', function(e){
 
 <script>
 /* ============================ state & helpers ============================ */
-const KEY_NAME = 'maya_openai_key';
 const Q_NAME   = 'maya_pattern_quality';
 const MW_NAME  = 'maya_measure_waist';
 const ML_NAME  = 'maya_measure_length';
@@ -472,7 +473,10 @@ let RUN = 0;                     // run id, stale async work (scores, passes) ch
 let RUNNING = false;             // re-entry guard for Start / Upload
 
 const $ = id => document.getElementById(id);
-function getKey(){ try{ return localStorage.getItem(KEY_NAME)||''; }catch{ return ''; } }
+// v12.5: NO KEYS IN THE BROWSER. Calls go to MAYA's own server, which holds
+// the OpenAI key; this returns the Google sign in token that authorises them.
+function getKey(){ try{ return localStorage.getItem('maya_admin_tok')||''; }catch{ return ''; } }
+function saveKey(){ /* v12.5: retired, there is no key to type in any more */ }
 function getQuality(){ try{ return localStorage.getItem(Q_NAME)||'medium'; }catch{ return 'medium'; } }
 
 /* ---- measurements & derived dimensions ---- */
@@ -653,12 +657,12 @@ function syncPlan(){
   if($('plan-b-view')) $('plan-b-view').style.display = p==='B' ? '' : 'none';
 }
 
-function saveKey(){ try{ localStorage.setItem(KEY_NAME, $('api-key').value.trim()); }catch{} }
+
 function setQuality(q){ try{ localStorage.setItem(Q_NAME,q); }catch{} syncQuality(); }
 function syncQuality(){ const q=getQuality(); document.querySelectorAll('[data-q]').forEach(el=>el.classList.toggle('active',el.dataset.q===q)); }
 
 window.addEventListener('DOMContentLoaded',()=>{
-  $('api-key').value = getKey(); syncQuality(); syncMeasures(); renderLogic(); syncPlan();
+  syncQuality(); syncMeasures(); renderLogic(); syncPlan();
   applyView();
   initTests();                                // hardcoded test paths, loads with zero navigation
   openDB().then(loadEmbCache).then(()=>refreshKbStatus());
@@ -675,7 +679,7 @@ function onFile(e){
     RUN++; ANSWER=null; RD=null; RD_IS_RAW=false; RD_PROMISE=null; TRACE=null; _tv=null; PASSES=[]; BEST_IDX=0;
     LAST.bestGrounded=null; LAST.bestHero=null;                     // uploaded image has no answer key or carry-over
     $('img-grounded').removeAttribute('src'); $('img-rd').removeAttribute('src');
-    if(!getKey()){ toast('Add your OpenAI key in Settings (≡).'); toggleDrawer(true); return; }
+    if(!getKey()){ toast('Sign in on the Systems Map first, then reload this page.'); return; }
     RUNNING=true;
     try{ await runGrounded(); }   // upload → run grounded immediately
     finally{ RUNNING=false; }
@@ -779,7 +783,7 @@ function showView(which){
 async function startTest(){
   if(RUNNING){ toast('A run is already going, let it finish.'); return; }
   if(!ACTIVE_TEST){ toast('Pick a test first.'); return; }
-  if(!getKey()){ toast('Add your OpenAI key in Settings (≡).'); toggleDrawer(true); return; }
+  if(!getKey()){ toast('Sign in on the Systems Map first, then reload this page.'); return; }
   if(!EMB){ toast('Building embeddings first…'); await buildEmbeddings(); if(!EMB) return; }
   RUNNING=true; RUN++;
   const btn=$('start-test'); const orig=btn.textContent; btn.innerHTML='<span class="spinner"></span>Running…';
@@ -1000,7 +1004,7 @@ async function gradePair(target, candidate, targetNote){
       {type:'text', text:'CANDIDATE (the AI pattern to grade):'}, {type:'image_url', image_url:{url:candidate}}
     ]}
   ]};
-  const res=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+getKey()},body:JSON.stringify(body)});
+  const res=await fetch('/api/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+getKey()},body:JSON.stringify(body)});
   if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||('score '+res.status)); }
   const o=JSON.parse((await res.json()).choices[0].message.content);
   const clamp=v=>v==null?null:Math.max(0,Math.min(100,Math.round(v)));
@@ -1171,7 +1175,7 @@ function liveLine(line){ liveLog((($('live-log').textContent && !$('live-log').t
 
 /* ---- streaming chat: shows the model's answer as it generates ---- */
 async function streamChat(messages, onDelta){
-  const res = await fetch('https://api.openai.com/v1/chat/completions',{
+  const res = await fetch('/api/openai/v1/chat/completions',{
     method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+getKey()},
     body:JSON.stringify({ model:'gpt-4.1', stream:true, response_format:{type:'json_object'}, messages })
   });
@@ -1325,7 +1329,7 @@ const CLASSIFY_PROMPT =
 Read ONLY what you can actually see. Be specific about seams and closures, they drive the panel count.`;
 
 async function classifyGarment(img){
-  const res = await fetch('https://api.openai.com/v1/chat/completions',{
+  const res = await fetch('/api/openai/v1/chat/completions',{
     method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+getKey()},
     body:JSON.stringify({ model:'gpt-4.1', response_format:{type:'json_object'},
       messages:[{role:'system',content:CLASSIFY_PROMPT},
@@ -1486,7 +1490,7 @@ async function gptImageEdit(img, prompt){
   form.append('size','1536x1024');
   form.append('quality',getQuality());
   form.append('n','1');
-  const res=await fetch('https://api.openai.com/v1/images/edits',{method:'POST',headers:{'Authorization':'Bearer '+getKey()},body:form});
+  const res=await fetch('/api/openai/v1/images/edits',{method:'POST',headers:{'Authorization':'Bearer '+getKey()},body:form});
   if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||('image '+res.status)); }
   const d=await res.json(); const it=d.data&&d.data[0];
   if(it?.b64_json) return 'data:image/png;base64,'+it.b64_json;
@@ -1534,7 +1538,7 @@ async function loadEmbCache(){
 }
 
 async function embedTexts(texts){
-  const res=await fetch('https://api.openai.com/v1/embeddings',{
+  const res=await fetch('/api/openai/v1/embeddings',{
     method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+getKey()},
     body:JSON.stringify({model:'text-embedding-3-small',input:texts})});
   if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||('embed '+res.status)); }
@@ -1543,7 +1547,7 @@ async function embedTexts(texts){
 }
 
 async function buildEmbeddings(){
-  if(!getKey()){ toast('Add your OpenAI key first.'); return; }
+  if(!getKey()){ toast('Sign in on the Systems Map first.'); return; }
   const chunks=KB.chunks; const dim=1536; const total=chunks.length;
   const vecs=new Float32Array(total*dim);
   const B=128;

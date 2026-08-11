@@ -1675,16 +1675,15 @@
     <div class="settings-section">
       <div class="settings-section-title">API keys</div>
       <div class="key-row">
-        <label for="settings-openai-key">OpenAI key, LLM dissect + image renders</label>
-        <input id="settings-openai-key" type="password" autocomplete="off" spellcheck="false"
-               oninput="onSettingsKeyChange('openai', this.value)" placeholder="sk-…">
-        <div class="key-status empty" id="settings-openai-status">no key set</div>
+        <label>OpenAI, LLM dissect and image renders</label>
+        <div class="key-status empty" id="settings-openai-status">checking&#8230;</div>
       </div>
       <div class="key-row">
-        <label for="settings-fal-key">fal.ai key, Rodin image-to-3D</label>
-        <input id="settings-fal-key" type="password" autocomplete="off" spellcheck="false"
-               oninput="onSettingsKeyChange('fal', this.value)" placeholder="key_id:key_secret">
-        <div class="key-status empty" id="settings-fal-status">no key set</div>
+        <label>fal.ai, Rodin image to 3D</label>
+        <div class="key-status empty" id="settings-fal-status">checking&#8230;</div>
+      </div>
+      <div class="key-row">
+        <label style="opacity:0.6">Both keys live on MAYA's server. Your Google sign in authorises every call, nothing is kept in this browser.</label>
       </div>
     </div>
 
@@ -2547,10 +2546,16 @@ SUIT-SPECIFIC RULES (v0.27 enhancement):
 - Complexity tier is "avant-garde" when the construction is non-standard (asymmetry, draped panels, exposed seams, unusual closures). Otherwise "standard".
 - Be conservative with hardware, only list what you can see.`;
 
+// v12.5: NO KEYS IN THE BROWSER. The atelier's OpenAI key used to sit in
+// localStorage on this origin and every call went straight to OpenAI with it,
+// so anything that could run script on this page could take it. Calls now go
+// to MAYA's own server, which holds the key, and this returns the Google sign
+// in token that authorises them.
 function getApiKey() {
-  // Same key name Maya uses (STORAGE_KEY_API = 'maya_openai_key').
-  try { return localStorage.getItem('maya_openai_key') || ''; }
-  catch { return ''; }
+  try {
+    if (typeof _subCachedTok === 'function') { const t = _subCachedTok(); if (t) return t; }
+    return localStorage.getItem('maya_admin_tok') || '';
+  } catch (_) { return ''; }
 }
 
 function setDissectStatus(on) {
@@ -2561,7 +2566,7 @@ function setDissectStatus(on) {
 async function dissectImage(imageDataUrl) {
   const key = getApiKey();
   if (!key) return null;
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+  const res = await fetch('/api/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
     body: JSON.stringify({
@@ -2618,7 +2623,7 @@ async function renderPiece(heroImage, piece) {
   form.append('size', '1536x1024');
   form.append('quality', 'medium');
   form.append('n', '1');
-  const res = await fetch('https://api.openai.com/v1/images/edits', {
+  const res = await fetch('/api/openai/v1/images/edits', {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + key },
     body: form
@@ -2964,7 +2969,7 @@ async function generatePattern(heroImage, piece) {
   form.append('size', '1536x1024');
   form.append('quality', getPatternQuality());   // v0.26: from Settings
   form.append('n', '1');
-  const res = await fetch('https://api.openai.com/v1/images/edits', {
+  const res = await fetch('/api/openai/v1/images/edits', {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + key },
     body: form
@@ -3319,8 +3324,8 @@ function tryAgainVector() {
 //   Result: GLB URL is cached on piece._mesh. Repeat clicks are instant
 //   and free. ~$0.40 per first generation.
 // ════════════════════════════════════════════════════════════════
-const FAL_RODIN_BASE  = 'https://queue.fal.run/fal-ai/hyper3d/rodin';
-const FAL_STORAGE_INIT = 'https://rest.alpha.fal.ai/storage/upload/initiate';
+const FAL_RODIN_BASE  = '/api/fal/fal-ai/hyper3d/rodin';
+const FAL_STORAGE_INIT = '/api/falstorage/storage/upload/initiate';
 
 // v0.19: convert a "data:image/png;base64,..." URI to a Blob.
 function _dataUriToBlob(dataUri) {
@@ -3339,7 +3344,7 @@ async function _uploadToFalStorage(blob, key, fileName) {
   const initRes = await fetch(FAL_STORAGE_INIT, {
     method: 'POST',
     headers: {
-      'Authorization': 'Key ' + key,
+      'Authorization': 'Bearer ' + key,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -3373,26 +3378,26 @@ async function _uploadToFalStorage(blob, key, fileName) {
 // How fal works for this flow (4 HTTPS round trips):
 //
 //   STEP 1 · UPLOAD the piece image to fal's storage.
-//     POST https://rest.alpha.fal.ai/storage/upload/initiate
+//     POST /api/falstorage/storage/upload/initiate
 //          body: { content_type, file_name }     auth: Key <key_id:key_secret>
 //     ← { upload_url, file_url }
 //     PUT <upload_url>  body: <png bytes>        ← S3 signed URL
 //     We keep file_url (https://v3b.fal.media/files/…) for the next step.
 //
 //   STEP 2 · SUBMIT a job to fal's queue.
-//     POST https://queue.fal.run/fal-ai/hyper3d/rodin    (the model)
+//     POST /api/fal/fal-ai/hyper3d/rodin    (the model)
 //          body: { input_image_urls: [file_url], geometry_file_format: 'glb', … }
 //     ← { request_id }
 //
 //   STEP 3 · POLL the job status until COMPLETED. (Note: the requests
 //   endpoint uses owner/alias only, NO /rodin suffix here.)
-//     GET https://queue.fal.run/fal-ai/hyper3d/requests/<id>/status
+//     GET /api/fal/fal-ai/hyper3d/requests/<id>/status
 //     ← { status: 'IN_QUEUE' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' }
 //     Rodin runs on fal's GPU farm during this window (~30-90 s on the
 //     Regular tier; longer if the queue is busy).
 //
 //   STEP 4 · FETCH the result.
-//     GET https://queue.fal.run/fal-ai/hyper3d/requests/<id>
+//     GET /api/fal/fal-ai/hyper3d/requests/<id>
 //     ← { model_mesh: { url: 'https://…glb' }, textures: [...] }
 //     The GLB URL feeds Three.js's GLTFLoader to swap the four-plane
 //     turntable for the real photoreal mesh.
@@ -3414,15 +3419,15 @@ function _falKeyLooksValid(key) {
   return parts.length === 2 && parts[0].length >= 8 && parts[1].length >= 16;
 }
 
-const FAL_STORAGE_INIT_URL = 'https://rest.alpha.fal.ai/storage/upload/initiate';
+const FAL_STORAGE_INIT_URL = '/api/falstorage/storage/upload/initiate';
 // v0.22: fal endpoint IDs are <owner>/<alias>/<path>. The full ID
 // (with path = 'rodin') goes on the SUBMIT, but the queue's
 // status / result / cancel endpoints use just <owner>/<alias>. This
 // was the root-cause bug behind "rendering not working", polling
 // the wrong URL returned 405 forever. Verified by reading the
 // official @fal-ai/client source.
-const FAL_QUEUE_SUBMIT     = 'https://queue.fal.run/fal-ai/hyper3d/rodin';
-const FAL_QUEUE_REQUESTS   = 'https://queue.fal.run/fal-ai/hyper3d/requests';
+const FAL_QUEUE_SUBMIT     = '/api/fal/fal-ai/hyper3d/rodin';
+const FAL_QUEUE_REQUESTS   = '/api/fal/fal-ai/hyper3d/requests';
 // Legacy alias kept so any older code path that references it doesn't break.
 const FAL_QUEUE_BASE       = FAL_QUEUE_SUBMIT;
 
@@ -3497,7 +3502,7 @@ function _buildRodinPrompt(piece) {
 async function _uploadBlobToFalStorage(blob, key, name) {
   const initRes = await fetch(FAL_STORAGE_INIT_URL, {
     method: 'POST',
-    headers: { 'Authorization': 'Key ' + key, 'Content-Type': 'application/json' },
+    headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
     body: JSON.stringify({ content_type: blob.type || 'image/png', file_name: name }),
   });
   if (!initRes.ok) {
@@ -3553,7 +3558,7 @@ async function _renderTo3D_manual(piece, key, src, setStatus) {
   setStatus('Sending to Rodin…');
   const submitRes = await fetch(FAL_QUEUE_SUBMIT, {
     method: 'POST',
-    headers: { 'Authorization': 'Key ' + key, 'Content-Type': 'application/json' },
+    headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       input_image_urls: viewUrls,
       condition_mode: 'concat',
@@ -3582,7 +3587,7 @@ async function _renderTo3D_manual(piece, key, src, setStatus) {
   while (true) {
     await new Promise(r => setTimeout(r, 2000));
     elapsed += 2;
-    const sRes = await fetch(statusUrl, { headers: { 'Authorization': 'Key ' + key } });
+    const sRes = await fetch(statusUrl, { headers: { 'Authorization': 'Bearer ' + key } });
     if (!sRes.ok) {
       const body = await sRes.text().catch(() => '');
       throw new Error('status poll ' + sRes.status + ' · ' + body.slice(0, 200));
@@ -3600,7 +3605,7 @@ async function _renderTo3D_manual(piece, key, src, setStatus) {
 
   // 4) Fetch result
   setStatus('Loading mesh…');
-  const rRes = await fetch(resultUrl, { headers: { 'Authorization': 'Key ' + key } });
+  const rRes = await fetch(resultUrl, { headers: { 'Authorization': 'Bearer ' + key } });
   if (!rRes.ok) {
     const body = await rRes.text().catch(() => '');
     throw new Error('result fetch ' + rRes.status + ' · ' + body.slice(0, 200));
@@ -3626,13 +3631,10 @@ async function renderTo3D() {
     _sync3DPills();
     return;
   }
+  // v12.5: the key lives on the server; this is the Google sign in token.
   const key = getFalKey();
   if (!key) {
-    showBackendToast('Add your fal.ai API key in Settings (hamburger → Settings).');
-    return;
-  }
-  if (!_falKeyLooksValid(key)) {
-    showBackendToast('fal.ai key format looks wrong, should be "<key_id>:<key_secret>" (with a colon). Re-paste it in Settings.');
+    showBackendToast('Sign in on the Systems Map first, then reload this page.');
     return;
   }
   const src = piece._image;
@@ -4829,12 +4831,7 @@ function openBackendSettings() {
   // Make sure the drawer itself is open first.
   if (typeof toggleClientsDrawer === 'function') toggleClientsDrawer(true);
   // Populate the two key inputs from localStorage.
-  const oai = (function(){ try { return localStorage.getItem('maya_openai_key') || ''; } catch(_) { return ''; } })();
-  const fkey = getFalKey();
-  const oaiInp = document.getElementById('settings-openai-key');
-  const falInp = document.getElementById('settings-fal-key');
-  if (oaiInp) oaiInp.value = oai;
-  if (falInp) falInp.value = fkey;
+  // v12.5: nothing to populate, the keys are not in this browser any more.
   // Version string from the meta tag.
   const verEl = document.getElementById('settings-info-version');
   if (verEl) {
@@ -4842,8 +4839,8 @@ function openBackendSettings() {
     verEl.textContent = m ? ('v' + m.getAttribute('content')) : '…';
   }
   // Initial status badges.
-  _renderKeyStatus('openai', oai ? 'unchecked' : 'empty');
-  _renderKeyStatus('fal',    fkey ? 'unchecked' : 'empty');
+  _renderKeyStatus('openai', 'unchecked');
+  _renderKeyStatus('fal',    'unchecked');
   // v0.26: paint the quality-toggle active states.
   _syncQualityPills();
   panel.classList.add('open');
@@ -4867,48 +4864,41 @@ function _renderKeyStatus(which, state, text) {
   else                     { el.classList.add('empty'); el.textContent = 'no key set'; }
 }
 
-// Save key on every keystroke, debounce-validate when typing pauses.
-const _keyValidateTimers = { openai: null, fal: null };
-function onSettingsKeyChange(which, value) {
-  const v = (value || '').trim();
-  const storageKey = which === 'openai' ? 'maya_openai_key' : 'maya_fal_key';
-  try { localStorage.setItem(storageKey, v); } catch (_) {}
-  _renderKeyStatus(which, v ? 'unchecked' : 'empty');
-  clearTimeout(_keyValidateTimers[which]);
-  _keyValidateTimers[which] = setTimeout(() => {
-    if (which === 'openai') {
-      _validateOpenAIKey(v).then(ok => _renderKeyStatus('openai', ok ? 'ok' : 'bad'));
-    } else {
-      if (!_falKeyLooksValid(v)) {
-        _renderKeyStatus('fal', 'bad', '✗ wrong format · expect key_id:key_secret');
-        return;
-      }
-      _validateFalKey(v).then(ok => _renderKeyStatus('fal', ok ? 'ok' : 'bad'));
-    }
-  }, 700);
-}
+// v12.5: retired. There is no key field to type into any more.
+function onSettingsKeyChange() {}
 
+// v12.5: asks MAYA's own server whether each key is configured there. The
+// browser never sees a key, only whether the call would work.
 async function _revalidateBothKeys() {
-  const oai = (function(){ try { return localStorage.getItem('maya_openai_key') || ''; } catch(_) { return ''; } })();
-  const fkey = getFalKey();
-  if (oai) {
-    const ok = await _validateOpenAIKey(oai);
-    _renderKeyStatus('openai', ok ? 'ok' : 'bad');
+  const tok = getApiKey();
+  if (!tok) {
+    _renderKeyStatus('openai', 'empty', 'sign in on the Systems Map first');
+    _renderKeyStatus('fal', 'empty', 'sign in on the Systems Map first');
+    return;
   }
-  if (fkey) {
-    if (!_falKeyLooksValid(fkey)) {
-      _renderKeyStatus('fal', 'bad', '✗ wrong format · expect key_id:key_secret');
-    } else {
-      const ok = await _validateFalKey(fkey);
-      _renderKeyStatus('fal', ok ? 'ok' : 'bad');
-    }
-  }
+  try {
+    const r = await fetch('/api/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+      body: JSON.stringify({ model: 'gpt-4.1', max_tokens: 1, messages: [{ role: 'user', content: 'hi' }] }),
+    });
+    _renderKeyStatus('openai', r.ok ? 'ok' : 'bad',
+      r.ok ? '\u2713 live on the server' : (r.status === 401 ? '\u2717 sign in expired' : '\u2717 server says ' + r.status));
+  } catch (_) { _renderKeyStatus('openai', 'bad', '\u2717 could not reach the server'); }
+  try {
+    const r = await fetch('/api/fal/fal-ai/hyper3d/requests/statuscheck/status', {
+      headers: { 'Authorization': 'Bearer ' + tok },
+    });
+    if (r.status === 501) _renderKeyStatus('fal', 'empty', 'not set on the server yet');
+    else if (r.status === 401) _renderKeyStatus('fal', 'bad', '\u2717 sign in expired');
+    else _renderKeyStatus('fal', 'ok', '\u2713 live on the server');
+  } catch (_) { _renderKeyStatus('fal', 'bad', '\u2717 could not reach the server'); }
 }
 
 async function _validateOpenAIKey(key) {
   if (!key) return null;
   try {
-    const res = await fetch('https://api.openai.com/v1/models', {
+    const res = await fetch('/api/openai/v1/models', {
       method: 'GET',
       headers: { 'Authorization': 'Bearer ' + key },
     });
@@ -4923,18 +4913,17 @@ async function _validateFalKey(key) {
   // model schema OR a 422 (which still proves the key was accepted).
   // 401 means the key was rejected; anything else means it's at least valid.
   try {
-    const res = await fetch('https://queue.fal.run/fal-ai/hyper3d/requests/__validate__/status', {
+    const res = await fetch('/api/fal/fal-ai/hyper3d/requests/__validate__/status', {
       method: 'GET',
-      headers: { 'Authorization': 'Key ' + key },
+      headers: { 'Authorization': 'Bearer ' + key },
     });
     return res.status !== 401 && res.status !== 403;
   } catch (e) { console.warn('[validate fal]', e); return false; }
 }
 
-function getFalKey() {
-  try { return localStorage.getItem('maya_fal_key') || ''; }
-  catch { return ''; }
-}
+// v12.5: the fal key lives on MAYA's server. This returns the Google sign in
+// token that authorises the proxied call.
+function getFalKey() { return getApiKey(); }
 
 // ─── v0.26: quality settings (Rodin + OpenAI pattern raster) ───
 // Stored in localStorage. Defaults tuned for SPEED on the first try:

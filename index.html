@@ -3895,7 +3895,7 @@
   <div class="prompt-display" id="onepager-prompt-display"></div>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
     <button class="modal-text-btn violet" onclick="closeOnePagerModal(); openHeroPicker(items.filter(i => i.card.kind === 'inspo' && i.card.image))">Pick different image</button>
-    <button class="modal-text-btn violet" onclick="saveFromPreview()">Save to folder</button>
+    <button class="modal-text-btn violet" onclick="saveFromPreview()">Save to Drive</button>
     <button class="modal-text-btn violet" onclick="downloadOnePager()">Download PDF</button>
   </div>
 </div>
@@ -4719,6 +4719,11 @@ function removeItem(id) {
         window.mayaFirebase.isReady && window.mayaFirebase.isReady()) {
       window.mayaFirebase.deleteImage(it.card._imgId).catch(() => {});
     }
+    // v12.5: v12 projects store pictures at card.storagePath, which nothing
+    // ever deleted. Removing a card left its photograph online forever.
+    if (it.card && it.card.storagePath && typeof projectStore !== 'undefined') {
+      projectStore.deleteAsset(it.card.storagePath);
+    }
   } catch (_) {}
   // v11.15: persist after removal so a refresh doesn't restore the pre-delete
   // session. Debounced, so the Clean loop coalesces.
@@ -4888,11 +4893,24 @@ function cleanReferences() {
 // v11.25: New = a blank canvas for the SAME client. Clears items/favorites/
 // notes but keeps the avatar (handled in _doClear) and does NOT prompt for a
 // name upfront, the project name is asked at Save time instead.
-function newConsultation() {
-  _doClear();
+// v12.5: New now genuinely means NEW PROJECT. It lets go of the project that
+// is open before clearing the canvas. Previously it cleared the board while
+// still holding the open project, and the very next autosave wrote the blank
+// canvas, and then the next client's work, straight over the old project.
+// Everything saved before New stays exactly as it was.
+async function newConsultation() {
+  try {
+    if (typeof projectStore !== 'undefined' && projectStore.currentId && projectStore._dirty) {
+      await projectStore.save().catch(() => {});     // land any pending edit in the OLD project first
+    }
+  } catch (_) {}
+  if (typeof projectStore !== 'undefined') projectStore.detach();
+  _activeSessionId = null;
+  await _hydrate(async () => { _doClear(); });
   currentClientName = null;          // project label resets; avatar name stays
   if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
   if (typeof _renderAvatarBody === 'function') _renderAvatarBody();
+  if (typeof _renderSessionsDropdown === 'function') _renderSessionsDropdown();
   showToast('New project, canvas cleared');
 }
 
@@ -5396,7 +5414,17 @@ let _promptCfg = null;
       return void setTimeout(_bootPromptCfg, 1500);
     }
     firebase.auth().onAuthStateChanged(u => {
-      if (!u) { _promptCfg = null; return; }
+      if (!u) {
+        _promptCfg = null;
+        // v12.5: signed out, or switched accounts. Let go of everything in
+        // memory so nothing of this designer's can be written into the next
+        // person's account on a shared Mac.
+        try { if (typeof projectStore !== 'undefined' && projectStore.currentId) projectStore.teardown(); } catch (_) {}
+        _cloudBooted = false;
+        return;
+      }
+      // v12.5: signed in, bring this account's most recent project back.
+      try { if (typeof _cloudBoot === 'function') _cloudBoot(); } catch (_) {}
       firebase.firestore().collection('config').doc('prompting').get()
         .then(snap => { if (snap.exists) _promptCfg = snap.data(); })
         .catch(() => {});
@@ -5696,6 +5724,9 @@ async function onFacePhotoSelected(ev) {
     });
     if (!lastSummary) lastSummary = { client: { name: currentClientName || null } };
     lastSummary._face_photo = dataUrl;
+    // v12.5: new bytes, so the copy in Storage is stale. Clearing these forces
+    // a fresh upload; without it the OLD face came back on every other device.
+    delete lastSummary._face_photo_url; delete lastSummary._face_photo_path;
     if (typeof _persistSession === 'function') _persistSession();
     showToast('Face reference saved');
     _refreshActiveAvatarView();
@@ -5828,20 +5859,50 @@ function _avatarIdentity() {
     measurements: lastSummary._measurements || null,
   };
 }
+// v12.5: the client roster lives in the cloud, not on this machine. It used to
+// sit in this browser's database, so every client's name, measurements and FACE
+// PHOTO accumulated on whichever Mac was used, stayed there after sign out, and
+// was invisible from any other device.
+function _avatarsDoc() {
+  return firebase.firestore().collection('users').doc(projectStore._uid())
+           .collection('settings').doc('avatars');
+}
+let _avatarLibCache = null;
 async function _loadAvatarLibrary() {
-  try { return (await idb(s => s.get('maya-avatars'))) || []; }
-  catch (_) { return []; }
+  if (typeof projectStore === 'undefined' || !projectStore.ready()) return _avatarLibCache || [];
+  if (_avatarLibCache) return _avatarLibCache;
+  try {
+    const d = await _avatarsDoc().get();
+    _avatarLibCache = (d.exists && Array.isArray((d.data() || {}).list)) ? d.data().list : [];
+  } catch (_) { _avatarLibCache = []; }
+  return _avatarLibCache;
 }
 async function _saveCurrentAvatarToLibrary() {
   const id = _avatarIdentity();
   if (!id || !id.name || id.name === 'client') return;  // need a real name to file it
+  if (typeof projectStore === 'undefined' || !projectStore.ready()) return;
   try {
+    // The face is stored by address, never as raw bytes, so this document stays
+    // small and the roster can hold as many clients as the atelier has.
+    const face = id.face;
+    let faceRef = (typeof face === 'string' && face.startsWith('http')) ? face : null;
+    if (!faceRef && typeof face === 'string' && face.startsWith('data:')) {
+      if (lastSummary && lastSummary._face_photo_url) faceRef = lastSummary._face_photo_url;
+      else if (projectStore.currentId) {
+        try {
+          const up = await projectStore.uploadImage(face, projectStore.currentId);
+          faceRef = up.url;
+          if (lastSummary) { lastSummary._face_photo_url = up.url; lastSummary._face_photo_path = up.path; }
+        } catch (_) {}
+      }
+    }
     const lib = await _loadAvatarLibrary();
     const key = id.name.trim().toLowerCase();
-    const rec = { id: key, ...id, updatedAt: Date.now() };
+    const rec = JSON.parse(JSON.stringify({ id: key, ...id, face: faceRef || null, updatedAt: Date.now() }));
     const next = lib.filter(a => a.id !== key);
     next.unshift(rec);
-    await idb(s => s.put(next, 'maya-avatars'));
+    _avatarLibCache = next;
+    await _avatarsDoc().set({ list: next, updatedAtMs: Date.now() });
   } catch (e) { console.warn('[Maya avatar lib]', e); }
 }
 async function toggleAvatarSwitcher() {
@@ -5868,7 +5929,13 @@ async function switchAvatar(id) {
   const a = lib.find(x => x.id === id);
   if (!a) return;
   // Switching client = a fresh blank project for that client.
-  _doClear();
+  // v12.5: let go of the open project FIRST. This used to clear the canvas
+  // while still holding it, and the next autosave wrote the empty board over
+  // the previous client's project and renamed it untitled.
+  if (projectStore.currentId && projectStore._dirty) await projectStore.save().catch(() => {});
+  projectStore.detach();
+  _activeSessionId = null;
+  await _hydrate(async () => { _doClear(); });
   lastSummary = {
     client: { name: a.name },
     _face_photo: a.face || null,
@@ -5882,8 +5949,12 @@ async function switchAvatar(id) {
   toggleAvatarSwitcher();
   showToast('Switched to ' + a.name);
 }
-function newAvatar() {
-  _doClear();
+async function newAvatar() {
+  // v12.5: same as switchAvatar, release the open project before clearing.
+  if (projectStore.currentId && projectStore._dirty) await projectStore.save().catch(() => {});
+  projectStore.detach();
+  _activeSessionId = null;
+  await _hydrate(async () => { _doClear(); });
   lastSummary = null;          // brand-new identity, blank face/measurements
   currentClientName = null;
   refreshDrawerClientName();
@@ -6113,6 +6184,9 @@ async function randomizeAvatar() {
     const dataUrl = await pickRandomHeadshot();
     if (dataUrl) {
       lastSummary._face_photo = dataUrl;
+    // v12.5: new bytes, so the copy in Storage is stale. Clearing these forces
+    // a fresh upload; without it the OLD face came back on every other device.
+    delete lastSummary._face_photo_url; delete lastSummary._face_photo_path;
       lastSummary._face_descriptors = null;
       analyzeFacePhoto(dataUrl)
         .then(d => { if (lastSummary) lastSummary._face_descriptors = d; })
@@ -6473,6 +6547,8 @@ function _doClear() {
   // instead of nulling lastSummary outright.
   const _keepAvatar = lastSummary ? {
     _face_photo:       lastSummary._face_photo || null,
+    _face_photo_url:   lastSummary._face_photo_url || null,
+    _face_photo_path:  lastSummary._face_photo_path || null,
     _face_descriptors: lastSummary._face_descriptors || null,
     _measurements:     lastSummary._measurements || null,
     client:            (lastSummary.client && lastSummary.client.name) ? { name: lastSummary.client.name } : null,
@@ -6539,16 +6615,12 @@ function confirmClientName() {
   if (_pendingAfterName === '__save__') {
     _pendingAfterName = null;
     refreshDrawerClientName();
-    if (!name) { showToast('Save cancelled, session needs a name'); return; }
-    idbSaveCurrentAsSession(name)
-      .then(meta => {
-        showToast('Saved: ' + meta.name);
-        _renderSessionsDropdown();
-      })
-      .catch(e => {
-        console.warn('[Maya save after name]', e);
-        showError('Save failed: ' + (e.message || 'unknown'));
-      });
+    if (!name) { showToast('Save cancelled, the project needs a name'); return; }
+    // v12.5: THIS is the path that lost work. Naming a project from the Save
+    // button used to write it to this browser only and announce "Saved", so
+    // the project existed nowhere else and was gone from every other device
+    // and from the next clean load. It now goes through the one cloud save.
+    saveSessionNow();
     return;
   }
   if (_clientNameMode === 'edit') {
@@ -6559,10 +6631,15 @@ function confirmClientName() {
     }
     refreshDrawerClientName();
     showToast(name ? 'Renamed to ' + name : 'Name cleared');
+    // v12.5: a rename is a real change, push it so the name matches everywhere.
+    if (typeof projectStore !== 'undefined' && projectStore.currentId) {
+      projectStore.autoName = null;
+      projectStore.queueSave();
+    }
   } else {
     _doClear();
     refreshDrawerClientName();
-    if (name) showToast('New session · ' + name);
+    if (name) showToast('New project · ' + name);
     else showToast('Canvas cleared');
   }
   _clientNameMode = 'new';
@@ -10081,7 +10158,30 @@ let _persistTimer = null;
 let _autosaveDirty = false;
 let _autosaveFallbackName = null;
 let _autosaveFallbackId = null;
+// ── v12.5 CUTOVER ──────────────────────────────────────────────────────────
+// Projects in the cloud are now the ONLY place work is written. No IndexedDB
+// copy, no shared 'current' slot, no legacy sessions doc. One account, many
+// projects, each project holding everything on its screen.
+//
+// _hydrating: while a project is being rebuilt on the canvas (opening one, a
+// realtime update from another device, boot restore) every placement used to
+// schedule a save, which wrote the half-built board back over the good one and
+// ping-ponged revisions between two open devices. Nothing persists while true.
+let _hydrating = false;
+let _creatingBin = false;
+function _autoProjectName() {
+  try { return 'Untitled ' + _autosaveStamp(); } catch (_) { return 'Untitled'; }
+}
+async function _hydrate(fn) {
+  _hydrating = true;
+  try { return await fn(); }
+  finally {
+    _hydrating = false;
+    clearTimeout(_persistTimer);          // drop anything the rebuild queued
+  }
+}
 function _persistSession() {
+  if (_hydrating) return;
   _autosaveDirty = true;
   clearTimeout(_persistTimer);
   _persistTimer = setTimeout(() => { _persistNow(); }, 400);
@@ -10106,54 +10206,21 @@ window.addEventListener('pagehide', () => { clearTimeout(_persistTimer); _persis
 let _persistInFlight = false;
 let _persistAgain = false;
 async function _persistNow() {
-    // v12: sealed-bin projects bypass the whole legacy persistence pipeline.
-    if (typeof projectStore !== 'undefined' && projectStore.currentId) {
-      projectStore.queueSave();
-      return;
-    }
-    if (_persistInFlight) { _persistAgain = true; return; }
-    _persistInFlight = true;
-    try {
-      // Strip runtime-only fields from items (DOM refs, transient flags).
-      // Card images are base64 strings, kept so renders survive reload.
-      // v10.6: read REAL coordinates off the DOM element, items don't
-      // carry it.x/it.y, the placement only sets el.style.left/top. Without
-      // this every restored card piled up at (0,0).
-      // v11.13: only persist items that are actually on the canvas. Every
-      // live card has a DOM element; an el-less item is an orphan (e.g. a
-      // consumed ref that lingered in items[]) and was getting saved at
-      // (0,0), then resurrected as a stray top-left card on the next load.
-      const itemsLite = (items || []).filter(it => it && it.el && it.card).map(it => {
-        const el = it.el;
-        const x  = parseFloat(el.style.left) || 0;
-        const y  = parseFloat(el.style.top)  || 0;
-        const card = { ...it.card };
-        delete card._showcasePending;  // v11.17: transient render flag, never persist
-        return { id: it.id, x, y, card };
-      });
-      const snap = {
-        currentClientName: currentClientName || null,
-        lastSummary:       lastSummary || null,
-        lastTranscript:    lastTranscript || '',
-        items:             itemsLite,
-        ts:                Date.now(),
-      };
-      // Local fast-path: full snapshot with images stays in IndexedDB on
-      // this device. Survives refresh, works offline.
-      await idb(s => s.put(snap, 'maya-session'));
-      // Cloud-sync path: also write a stripped-down version to Firestore
-      // so the same Google account picks up where it left off on any
-      // device. Image data URLs are too big for Firestore's 1MB doc cap,
-      // so we strip them here, images will resurface from IndexedDB on
-      // the same device, and (TODO follow-up) from Firebase Storage when
-      // the cross-device image sync ships.
-      _firebaseSyncSession(snap).catch(e => console.warn('[maya.firebase sync]', e));
-    } catch (e) {
-      console.warn('[Maya persist]', e);
-    } finally {
-      _persistInFlight = false;
-      if (_persistAgain) { _persistAgain = false; _persistNow(); }  // v11.32: run the change that queued while we were saving
-    }
+    // v12.5: cloud projects are the only writable store. Nothing is written to
+    // this device, ever. If the designer is signed out there is nothing to
+    // write to, so the canvas simply stays unsaved until they sign in.
+    if (_hydrating) return;
+    if (typeof projectStore === 'undefined' || !projectStore.ready()) return;
+    if (projectStore.currentId) { projectStore.queueSave(); return; }
+    // No project open yet. The moment there is real content, open one so the
+    // work is in the cloud from its first second. It gets its real name later,
+    // when the designer presses Save.
+    const hasContent = (Array.isArray(items) && items.length) || lastSummary || currentClientName;
+    if (!hasContent || _creatingBin) return;
+    _creatingBin = true;
+    try { await projectStore.createAuto(); }
+    catch (e) { console.warn('[maya persist] could not open a project', e && e.message); }
+    finally { _creatingBin = false; }
 }
 
 // v11.0: full session sync with image upload to Cloud Storage.
@@ -10342,13 +10409,19 @@ async function _freshStartWipe() {
   const db = firebase.firestore();
   const status = (m) => { console.log('[fresh-start]', m); showToast(m); };
   try {
+    // v12.5: count what really went. The rules keep tombstones and the retired
+    // legacy stores permanently, and this used to announce it had cleared them.
+    const leftovers = [];
     for (const colName of ['sessions', 'projects', 'projectTombstones', 'favorites']) {
       try {
         const q = await db.collection('users').doc(uid).collection(colName).get();
-        for (const d of q.docs) { try { await d.ref.delete(); } catch (_) {} }
-        status('cleared ' + colName + ' (' + q.size + ')');
-      } catch (_) {}
+        let gone = 0;
+        for (const d of q.docs) { try { await d.ref.delete(); gone++; } catch (_) {} }
+        status('cleared ' + colName + ' (' + gone + ' of ' + q.size + ')');
+        if (gone < q.size) leftovers.push(colName + ' (' + (q.size - gone) + ' kept by the rules)');
+      } catch (_) { leftovers.push(colName + ' (unreadable)'); }
     }
+    try { await db.collection('users').doc(uid).collection('settings').doc('avatars').delete(); } catch (_) {}
     async function rmTree(ref, depth) {
       if (depth > 6) return 0;
       let n = 0;
@@ -10363,15 +10436,20 @@ async function _freshStartWipe() {
     status('deleted ' + nFiles + ' pictures');
     try { indexedDB.deleteDatabase('maya-fs'); } catch (_) {}
     try { localStorage.clear(); } catch (_) {}
-    alert('Fresh start complete for ' + (user.email || 'this account') + '. The page will reload clean.');
+    alert('Fresh start for ' + (user.email || 'this account') + ': projects and pictures erased.' +
+          (leftovers.length ? '\n\nNot erased: ' + leftovers.join(', ') + '.' : '') +
+          '\n\nThe page will reload clean.');
   } catch (e) {
     alert('Wipe hit an error: ' + (e && e.message) + ', tell Claude.');
   }
   location.href = '/';
 }
-if (location.search.indexOf('fresh-start') !== -1) {
-  document.addEventListener('DOMContentLoaded', () => setTimeout(_freshStartWipe, 1500));
-}
+// v12.5: the URL trigger is GONE. Anyone could send a client a link ending in
+// ?fresh-start and one OK click erased that client's entire account, and it
+// even waited and fired after sign in. The wipe is still here, but it can only
+// be started deliberately, from the console or the Systems Map, by calling
+// mayaFreshStart().
+window.mayaFreshStart = _freshStartWipe;
 
 // v12.1 (Codex deploy 6): RETIRED. Backfill let any device's old local
   // copy re-upload projects you had deleted, the resurrection engine.
@@ -10451,79 +10529,112 @@ async function _firebaseRestoreSession() {
 let _restoreBaseline = null;
 let _localRestoreResolve;
 const _localRestoreDone = new Promise(r => { _localRestoreResolve = r; });
+// v12.5: nothing is restored from this device any more, because nothing is
+// written to it. The canvas comes back from the cloud, in _cloudBoot below,
+// as soon as Google sign in resolves. This function now only clears out the
+// old local copies left over from before the cutover.
 async function _restoreSession() {
   try {
-    // v12.3 FRESH WORLD: one-time local reset, pre-fresh scratch never loads.
-    try {
-      if (localStorage.getItem('maya-epoch') !== '2') {
-        await idb(st => st.put(null, 'maya-session'));
-        await idb(st => st.put([], 'maya-sessions-index'));
-        localStorage.setItem('maya-epoch', '2');
-      }
-    } catch (_) {}
-    const snap = await idb(s => s.get('maya-session'));
-    if (!snap) return;
-    if (snap.currentClientName) currentClientName = snap.currentClientName;
-    if (snap.lastSummary)       lastSummary       = snap.lastSummary;
-    if (snap.lastTranscript)    lastTranscript    = snap.lastTranscript;
-    // Replay items onto the canvas (calls placeItemAt → creates DOM).
-    let _restoreDropped = 0;
-    if (Array.isArray(snap.items)) {
-      // Wait one tick so #maya-canvas exists in the DOM.
-      await new Promise(r => requestAnimationFrame(r));
-      const canvas = document.getElementById('maya-canvas');
-      if (canvas) {
-        // v11.16: SELF-HEAL, dedupe the saved items by content signature
-        // before placing. An earlier build compounded cloud duplicates into
-        // the saved session on every page load (each reload roughly doubled
-        // the cards), so a long-lived session could carry hundreds of dupes.
-        // Collapsing them here means a bloated session loads clean instead of
-        // needing a manual wipe; we then re-persist the cleaned set below so
-        // the stored session shrinks back to reality.
-        const seen = new Set();
-        for (const sav of snap.items) {
-          if (!sav || !sav.card) continue;
-          const sig = _itemSig(sav);
-          if (seen.has(sig)) { _restoreDropped++; continue; }
-          seen.add(sig);
-          try {
-            // placeItemAt re-creates the DOM element AND adds the item to
-            // the `items` array. v11.13: guarded, a missing/(0,0) coord goes
-            // to findFreeSpot instead of piling in the top-left corner.
-            _restorePlace(sav);
-          } catch (e) {
-            console.warn('[Maya restore item]', e);
-          }
-        }
-        if (_restoreDropped) console.log('[Maya] restore collapsed', _restoreDropped, 'duplicate card(s)');
-      }
-    }
-    // Refresh dependent UI.
-    if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
-    // v11.12: repopulate the drawer notes panel from the restored
-    // lastSummary so designer_notes, non_negotiables, constraints,
-    // design_ideas, sourcing_needs all come back with the session. The
-    // panel was silently empty before this, the data was in memory but
-    // never re-rendered on restore.
-    if (typeof renderNotesPanel === 'function') renderNotesPanel(lastSummary);
-    // v11.12: also attach the cached caption to image cards so the
-    // submit-mode piece-summary still has its source when re-opened.
-    if (lastSummary && lastSummary.dream_outcome && typeof attachCaptionToImages === 'function') {
-      try { attachCaptionToImages(lastSummary.dream_outcome); } catch (_) {}
-    }
-    console.log('[Maya] session restored from IndexedDB');
-    // v11.16: if duplicates were collapsed, write the cleaned canvas back so
-    // the stored session (local + cloud) shrinks to the de-duped reality and
-    // doesn't keep reloading a bloated pile.
-    if (_restoreDropped && typeof _persistSession === 'function') _persistSession();
+    await idb(st => st.put(null, 'maya-session'));
+    await idb(st => st.put([], 'maya-sessions-index'));
+    try { localStorage.setItem('maya-epoch', '3'); } catch (_) {}
+  } catch (_) {}
+  try { _restoreBaseline = new Set(); } catch (_) {}
+  _localRestoreResolve();
+}
+
+// ── v12.5 CLOUD BOOT ───────────────────────────────────────────────────────
+// One account, many projects. On load, the project this designer touched most
+// recently opens itself, on any device, with everything that was on its screen.
+// Runs once per page load, after Firebase auth resolves.
+let _cloudBooted = false;
+async function _cloudBoot() {
+  if (_cloudBooted) return;
+  if (typeof projectStore === 'undefined' || !projectStore.ready()) return;
+  _cloudBooted = true;
+  try {
+    await _rescueLegacyProjects();          // one time, brings pre-cutover work across
+    const rows = await projectStore.list(true);
+    if (!rows.length) return;
+    if (projectStore.currentId) return;     // something already opened while we waited
+    // v12.5: the same test _persistNow uses, so a name typed or a word dictated
+    // during boot counts as real work and is never cleared by the restore.
+    const busy = () => (Array.isArray(items) && items.length) || lastSummary ||
+                       currentClientName || lastTranscript || projectStore.currentId;
+    if (busy()) return;
+    const target = rows[0].id;
+    const doc = await projectStore._col().doc(target).get();   // fetch BEFORE checking again
+    if (!doc.exists) return;
+    if (busy()) return;                     // checked again right before the canvas is touched
+    await projectStore.open(target);
+    if (typeof _renderSessionsDropdown === 'function') _renderSessionsDropdown();
   } catch (e) {
-    console.warn('[Maya restore]', e);
-  } finally {
-    // v11.32: snapshot what local restore placed, and release the cloud path.
-    try { _restoreBaseline = new Set((items || []).map(_itemSig)); } catch (_) { _restoreBaseline = new Set(); }
-    _localRestoreResolve();
+    console.warn('[maya cloud boot]', e && e.message);
   }
 }
+
+// ── v12.5 ONE TIME RESCUE ──────────────────────────────────────────────────
+// Everything saved before the cutover lived in users/{uid}/sessions. Those are
+// copied across into real projects once, so no client's work is left behind in
+// the old system, then the old system is never written to again.
+async function _rescueLegacyProjects() {
+  if (!projectStore.ready()) return;
+  const flagRef = firebase.firestore().collection('users').doc(projectStore._uid())
+                    .collection('settings').doc('migration');
+  try {
+    const flag = await flagRef.get();
+    if (flag.exists && (flag.data() || {}).v12_5) return;
+  } catch (_) { return; }
+  let moved = 0, failed = 0;
+  try {
+    const col = firebase.firestore().collection('users').doc(projectStore._uid()).collection('sessions');
+    const q = await col.get();
+    const dead = await projectStore._tombSet();
+    for (const d of q.docs) {
+      const id = d.id;
+      if (id === 'current' || id === '__tombstones__') continue;
+      if (dead.has(id)) continue;
+      const v = d.data() || {};
+      const legacyItems = Array.isArray(v.items) ? v.items : [];
+      if (!legacyItems.length && !v.lastSummary && !v.name && !v.currentClientName) continue;
+      const pid = projectStore._newId();
+      const cleaned = legacyItems.filter(s => s && s.card).map(s => {
+        const card = { ...s.card };
+        if (card.image && String(card.image).startsWith('data:')) delete card.image;  // legacy base64, keep the doc small
+        delete card._dissection; delete card._dissectionPending; delete card._showcasePending;
+        return JSON.parse(JSON.stringify({ id: s.id, x: s.x || 0, y: s.y || 0, card }));
+      });
+      const sum = v.lastSummary ? JSON.parse(JSON.stringify(v.lastSummary)) : null;
+      if (sum && typeof sum._face_photo === 'string' && sum._face_photo.startsWith('data:')) delete sum._face_photo;
+      const when = v.updatedAtMs || v.createdAtMs || Date.now();
+      try {
+      await projectStore._col().doc(pid).set({
+        name: v.name || v.currentClientName || 'Recovered project',
+        items: cleaned,
+        lastSummary: sum,
+        lastTranscript: v.lastTranscript || '',
+        twoWord: v.twoWord || '',
+        revision: 1, epoch: 2,
+        updatedAtMs: when, createdAtMs: v.createdAtMs || when,
+        schema: 'v12', recoveredFrom: id,
+      });
+      moved++;
+      } catch (e) { failed++; console.warn('[maya rescue] could not move', id, e && e.message); }
+      // v12.5: one bad old project must not abort the rest. Each is moved on
+      // its own, and the pass is only marked done when every one came across.
+    }
+  } catch (e) { failed++; console.warn('[maya rescue]', e && e.message); }
+  if (failed) {
+    console.warn('[maya rescue]', failed, 'project(s) could not be moved, will retry next load');
+  } else {
+    try { await flagRef.set({ v12_5: true, movedCount: moved, atMs: Date.now() }, { merge: true }); } catch (_) {}
+  }
+  if (moved) {
+    try { await projectStore._rebuildIndex(); } catch (_) {}
+    showToast('Recovered ' + moved + ' earlier project' + (moved === 1 ? '' : 's'));
+  }
+}
+
 // v11.2: auto-restore on page load is RE-ENABLED. Pinterest-style, close
 // the tab, reopen Maya, your last canvas state comes back from IndexedDB
 // (instant, local, no network). The v10.19 decision to start fresh every
@@ -10545,7 +10656,7 @@ if (document.readyState === 'loading') {
 // same-named entry, so we don't pile up duplicates). Works for new/unnamed
 // projects too via a stable fallback name.
 // ════════════════════════════════════════════════════════════
-const _AUTOSAVE_INTERVAL_MS = 60000;  // every minute
+const _AUTOSAVE_INTERVAL_MS = 20000;  // v12.5: a tighter backstop, saves already fire ~1s after each edit
 
 function _autosaveStamp() {
   const d = new Date();
@@ -10570,47 +10681,24 @@ function _flashAutosaved() {
   }, 1800);
 }
 
+// v12.5: the autosave backstop. The real save runs ~1s after each edit
+// (projectStore.queueSave); this only catches a save that failed or a change
+// the debounce missed. It NO LONGER writes a second, legacy copy of every
+// project into users/{uid}/sessions, which is what quietly produced two
+// diverging versions of the same client.
 async function _autosaveTick() {
-  // Nothing changed since the last autosave → skip (don't churn IndexedDB/cloud).
-  if (!_autosaveDirty) return;
-  // Don't create empty sessions: need at least a card, a summary, or a name.
-  const hasContent = (Array.isArray(items) && items.length) || lastSummary || currentClientName;
-  if (!hasContent) return;
+  if (_hydrating) return;
+  if (typeof projectStore === 'undefined' || !projectStore.currentId) return;
+  if (!projectStore._dirty) return;
   try {
-    // Prefer the real client name; fall back to a stable "Untitled …" so an
-    // unnamed project still autosaves to one stable entry (not a new one/min).
-    let name = currentClientName;
-    if (!name) {
-      if (!_autosaveFallbackName) _autosaveFallbackName = 'Untitled ' + _autosaveStamp();
-      name = _autosaveFallbackName;
-    }
-    const meta = await idbSaveCurrentAsSession(name);
-    if (!currentClientName) {
-      // Still unnamed, remember which entry we own so we can clean it up later.
-      _autosaveFallbackId = meta.id;
-    } else if (_autosaveFallbackId &&
-               (_autosaveFallbackName || '').trim().toLowerCase() !== name.trim().toLowerCase()) {
-      // The project just earned a real name, migrate: drop the old "Untitled"
-      // autosave entry so the dropdown doesn't keep an orphan.
-      try { await idbDeleteSavedSession(_autosaveFallbackId); } catch (_) {}
-      try { if (window.mayaFirebase && window.mayaFirebase.deleteSession) window.mayaFirebase.deleteSession(_autosaveFallbackId); } catch (_) {}
-      _autosaveFallbackId = null;
-      _autosaveFallbackName = null;
-    }
-    _autosaveDirty = false;  // clear only after a successful write
-    if (typeof _renderSessionsDropdown === 'function') _renderSessionsDropdown();
+    const res = await projectStore.save();
+    if (!res || !res.written) return;            // v12.5: never flash Autosaved on a non write
+    _autosaveDirty = false;
     _flashAutosaved();
-    // Mirror the Save button's cloud path so autosaves sync cross-device too.
-    if (window.mayaFirebase && window.mayaFirebase.isReady && window.mayaFirebase.isReady()) {
-      const snap = await idbLoadSavedSession(meta.id);
-      if (snap) {
-        _firebaseSyncSession(snap).catch(() => {});          // 'current' autosave doc
-        _syncSavedSessionToCloud(meta, snap).catch(() => {}); // named project doc (v11.34)
-      }
-    }
+    if (typeof _renderSessionsDropdown === 'function') _renderSessionsDropdown();
   } catch (e) {
-    // Leave _autosaveDirty = true so the next tick retries.
-    console.warn('[Maya autosave]', e);
+    console.warn('[Maya autosave]', e && e.message);
+    _notifySyncOffline && _notifySyncOffline();
   }
 }
 
@@ -10790,7 +10878,7 @@ async function saveSessionNow() {
   if (items.length === 0 && !lastSummary && !currentClientName) {
     return showToast('Nothing to save yet');
   }
-  // If no session name yet, ask for one before saving.
+  // If no project name yet, ask for one before saving.
   if (!currentClientName) {
     const title = document.getElementById('client-name-modal-title');
     const btn   = document.getElementById('client-name-modal-confirm');
@@ -10799,44 +10887,41 @@ async function saveSessionNow() {
     document.getElementById('client-name-input').value = '';
     document.getElementById('client-name-modal').classList.add('open');
     setTimeout(() => document.getElementById('client-name-input').focus(), 100);
-    // _pendingAfterName tells confirmClientName what to do next:
     _pendingAfterName = '__save__';
     return;
   }
-  // v12: sealed-bin routing (Codex deploy 3)
+  // v12.5: one path, the cloud. Save either succeeds or says so out loud. It
+  // used to fall back to writing only to this device and still report Saved,
+  // which is how a client's project could be reported saved and then not be
+  // anywhere the next morning.
+  if (typeof projectStore === 'undefined' || !projectStore.ready()) {
+    showError('Not signed in, so there is nowhere to save. Sign in and press Save again.');
+    return;
+  }
+  const btn = document.getElementById('save-session-btn');
+  const wasLabel = btn ? btn.textContent : null;
+  if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
   try {
-    if (typeof projectStore !== 'undefined' && projectStore.ready()) {
-      if (projectStore.currentId) {
-        await projectStore.save();
-        showToast('Saved: ' + (currentClientName || 'project'));
-        _renderSessionsDropdown();
-        return;
-      }
-      const isLegacyOpen = _activeSessionId && String(_activeSessionId).indexOf('sess_') === 0;
-      if (!isLegacyOpen) {
-        await projectStore.createFromCanvas(currentClientName);
-        showToast('Saved: ' + (currentClientName || 'project'));
-        _renderSessionsDropdown();
-        return;
-      }
+    let res;
+    if (projectStore.currentId) {
+      projectStore.autoName = null;              // it has a real name now
+      res = await projectStore.save();
+    } else {
+      await projectStore.createFromCanvas(currentClientName);
+      res = { written: true };
     }
-  } catch (e) { console.warn('[projectStore] save fell back to legacy', e && e.message); }
-  try {
-    const meta = await idbSaveCurrentAsSession(currentClientName);
-    _activeSessionId = meta.id;  // v11.44
-    showToast('Saved: ' + meta.name);
+    // v12.5: "Saved" is only ever said when Firestore actually took the write.
+    if (res && res.written) showToast('Saved: ' + (currentClientName || 'project'));
+    else if (res && res.reason === 'stale') showToast('Reloaded the newer copy from your other device');
+    else if (res && res.reason === 'deleted') showError('That project was deleted, press New and save again.');
+    else showError('Nothing was saved, your work is still on this screen. Try again.');
     _renderSessionsDropdown();
-    // Also try cloud sync (will silently no-op if Firebase Auth not ready).
-    if (window.mayaFirebase && window.mayaFirebase.isReady && window.mayaFirebase.isReady()) {
-      const snap = await idbLoadSavedSession(meta.id);
-      if (snap) {
-        _firebaseSyncSession(snap).catch(() => {});          // 'current' autosave doc
-        _syncSavedSessionToCloud(meta, snap).catch(() => {}); // named project doc (v11.34)
-      }
-    }
   } catch (e) {
     console.warn('[Maya saveSessionNow]', e);
-    showError('Save failed: ' + (e.message || 'unknown'));
+    showError('Save failed, your work is still on this screen. ' +
+              (navigator.onLine === false ? 'You are offline.' : (e && e.message) || 'Try again in a moment.'));
+  } finally {
+    if (btn) { btn.textContent = wasLabel || 'Save'; btn.disabled = false; }
   }
 }
 
@@ -10906,171 +10991,329 @@ async function _deleteProjectImages(id, snap) {
 const projectStore = {
   currentId: null,
   revision: 0,
+  autoName: null,
   _chain: Promise.resolve(),
   _unsub: null,
   _dirty: false,
   _t: null,
+  _idxCache: null,
+  _idxTs: 0,
 
   _uid() { try { return (firebase.auth().currentUser || {}).uid || null; } catch (_) { return null; } },
   ready() { return !!this._uid(); },
   _col() { return firebase.firestore().collection('users').doc(this._uid()).collection('projects'); },
   _tombs() { return firebase.firestore().collection('users').doc(this._uid()).collection('projectTombstones'); },
+  _idxDoc() { return firebase.firestore().collection('users').doc(this._uid()).collection('settings').doc('projectIndex'); },
+  displayName() { return currentClientName || this.autoName || 'untitled'; },
 
-  async list() {
+  // ── Project list ─────────────────────────────────────────────────────────
+  // v12.5 SPEED: the list used to download every project document in full,
+  // every card and every summary, just to draw a row of names. It now reads a
+  // single index document. The full scan only runs once, to build the index.
+  async list(force) {
     if (!this.ready()) return [];
-    const q = await this._col().get();
-    const out = [];
-    q.forEach(d => {
-      const v = d.data() || {};
-      if ((v.epoch || 1) < 2) return;   // v12.3: pre-fresh-world bins stay buried
-      out.push({ id: d.id, name: v.name || 'untitled', updatedAt: v.updatedAtMs || 0,
-                 createdAt: v.createdAtMs || 0, cardCount: (v.items || []).length,
-                 twoWord: v.twoWord || '', isProject: true });
-    });
-    return out;
+    if (!force && this._idxCache && Date.now() - this._idxTs < 4000) return this._idxCache;
+    let rows = null;
+    try {
+      const d = await this._idxDoc().get();
+      const m = (d.exists && (d.data() || {}).items) || null;
+      if (m) rows = Object.keys(m).map(id => ({ id, ...m[id], isProject: true }));
+    } catch (_) {}
+    if (!rows) rows = await this._rebuildIndex();
+    const dead = await this._tombSet();
+    rows = rows.filter(r => !dead.has(r.id));
+    rows.sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
+    this._idxCache = rows; this._idxTs = Date.now();
+    return rows;
   },
 
-  async uploadImage(dataUrl) {
+  async _rebuildIndex() {
+    const q = await this._col().get();
+    const items = {};
+    q.forEach(d => {
+      const v = d.data() || {};
+      if ((v.epoch || 1) < 2) return;
+      items[d.id] = { name: v.name || 'untitled', updatedAt: v.updatedAtMs || 0,
+                      createdAt: v.createdAtMs || 0, cardCount: (v.items || []).length,
+                      twoWord: v.twoWord || '' };
+    });
+    try { await this._idxDoc().set({ items, rebuiltAtMs: Date.now() }); } catch (_) {}
+    return Object.keys(items).map(id => ({ id, ...items[id], isProject: true }));
+  },
+
+  async _touchIndex(id, row) {
+    this._idxTs = 0;
+    try {
+      const patch = {};
+      if (row) patch['items.' + id] = row;
+      else patch['items.' + id] = firebase.firestore.FieldValue.delete();
+      await this._idxDoc().set({ items: {} }, { merge: true });
+      await this._idxDoc().update(patch);
+    } catch (_) {}
+  },
+
+  async _tombSet() {
+    try {
+      const q = await this._tombs().get();
+      const s = new Set(); q.forEach(d => s.add(d.id)); return s;
+    } catch (_) { return new Set(); }
+  },
+
+  // ── Storage ──────────────────────────────────────────────────────────────
+  // v12.5: the project id is passed in, never read from this.currentId. When
+  // the designer switched projects mid-upload the old code wrote project A's
+  // photographs into project B's folder, where nothing ever referenced them.
+  async uploadImage(dataUrl, projectId) {
     const assetId = 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-    const path = 'users/' + this._uid() + '/projects/' + this.currentId + '/images/' + assetId + '.jpg';
+    const path = 'users/' + this._uid() + '/projects/' + projectId + '/images/' + assetId + '.jpg';
     const blob = await (await fetch(dataUrl)).blob();
     const ref = firebase.storage().ref(path);
     await ref.put(blob, { contentType: blob.type || 'image/jpeg', cacheControl: 'public,max-age=31536000,immutable' });
     return { url: await ref.getDownloadURL(), path };
   },
 
-  async _snapshotForCloud() {
+  async deleteAsset(path) {
+    if (!path) return;
+    try { await firebase.storage().ref(path).delete(); } catch (_) {}
+  },
+
+  // Build the cloud copy of the board. Throws if any picture fails to upload,
+  // a project is never committed with a photograph silently missing from it.
+  async _snapshotForCloud(projectId) {
     const out = [];
     for (const it of (items || [])) {
+      if (!it || !it.card) continue;
       const el = it.el;
-      const card = { ...(it.card || {}) };
-      delete card._dissection; delete card._dissectionPending;
+      const card = { ...it.card };
+      delete card._dissection; delete card._dissectionPending; delete card._showcasePending;
       if (card.image && String(card.image).startsWith('data:')) {
-        try {
-          const up = await this.uploadImage(card.image);
+        // Already uploaded on an earlier save and unchanged since? Reuse it.
+        if (card.storagePath && card._uploadedToCloud && card.imageUrl) {
+          delete card.image;
+        } else {
+          const up = await this.uploadImage(card.image, projectId);   // throws on failure
           card.imageUrl = up.url; card.storagePath = up.path;
           it.card.imageUrl = up.url; it.card.storagePath = up.path; it.card._uploadedToCloud = true;
           delete card.image;
-        } catch (e) { delete card.image; card._uploadPending = true; }
+        }
       } else if (card.image) {
         card.imageUrl = card.imageUrl || card.image;
         delete card.image;
       }
+      delete card._uploadPending;
       if (Array.isArray(card.fabrics)) card.fabrics = card.fabrics.map(fb => { const { dataUrl, ...rest } = fb || {}; return rest; });
       out.push({ id: it.id, x: el ? parseFloat(el.style.left) || 0 : 0, y: el ? parseFloat(el.style.top) || 0 : 0, card });
     }
     return out;
   },
 
+  // v12.5: the face photograph used to be written into the project document as
+  // raw base64. A phone photo is several megabytes, Firestore refuses any
+  // document over one, so EVERY save for that client failed from then on while
+  // the screen still said Saved. It now lives in Storage like every other
+  // picture and the document carries only its address.
+  async _summaryForCloud(projectId) {
+    if (!lastSummary) return null;
+    const clone = JSON.parse(JSON.stringify(lastSummary));
+    const face = clone._face_photo;
+    const mine = '/projects/' + projectId + '/';
+    const haveHere = lastSummary._face_photo_path && lastSummary._face_photo_path.indexOf(mine) !== -1;
+    if (typeof face === 'string' && face.startsWith('data:')) {
+      if (haveHere && lastSummary._face_photo_url) {
+        clone._face_photo = lastSummary._face_photo_url;
+      } else {
+        const up = await this.uploadImage(face, projectId);            // throws on failure
+        clone._face_photo = up.url;
+        clone._face_photo_url = up.url; clone._face_photo_path = up.path;
+        lastSummary._face_photo_url = up.url; lastSummary._face_photo_path = up.path;
+      }
+    } else if (typeof face === 'string' && face.startsWith('http') && !haveHere) {
+      // v12.5: this face was uploaded under a DIFFERENT project (carried across
+      // by New or by switching client). Copy it into this project, otherwise
+      // deleting the other project would blank this client's face here.
+      try {
+        const up = await this.uploadImage(face, projectId);
+        clone._face_photo = up.url;
+        clone._face_photo_url = up.url; clone._face_photo_path = up.path;
+        lastSummary._face_photo_url = up.url; lastSummary._face_photo_path = up.path;
+      } catch (_) { /* keep the shared URL rather than lose the face entirely */ }
+    }
+    // Anything else oversized that slipped in (a stray base64 field) is dropped
+    // rather than allowed to break the whole save.
+    const strip = (o) => {
+      if (!o || typeof o !== 'object') return;
+      for (const k of Object.keys(o)) {
+        const v = o[k];
+        if (typeof v === 'string' && v.startsWith('data:') && v.length > 51200) delete o[k];
+        else if (v && typeof v === 'object') strip(v);
+      }
+    };
+    strip(clone);
+    return clone;
+  },
+
+  // ── Save ─────────────────────────────────────────────────────────────────
+  // v12.5: this REJECTS when a save fails. It used to swallow every error and
+  // resolve, so the Save button reported success on work that never left the
+  // browser. Callers show the real outcome now.
+  // v12.5: save() returns { written: true } only when Firestore actually took
+  // the write. Anything else is reported honestly to the caller.
+  //
+  // The promise chain is kept ALIVE no matter what happens. An earlier shape
+  // re-threw into this._chain, which left the chain permanently rejected: one
+  // network wobble and every later save in that session was skipped in silence
+  // while the designer kept working. The chain now always settles clean and
+  // the error travels only to the caller.
   save() {
-    if (!this.currentId || !this.ready()) return Promise.resolve();
+    if (!this.currentId || !this.ready()) return Promise.resolve({ written: false, reason: 'no-project' });
     const myId = this.currentId;
-    this._chain = this._chain.then(async () => {
-      if (this.currentId !== myId) return;                 // switched bins, stale write dropped
+    const run = this._chain.then(() => this._commit(myId));
+    this._chain = run.then(() => {}, () => {});
+    return run;
+  },
+
+  async _commit(myId) {
+    {
+      if (this.currentId !== myId) return { written: false, reason: 'switched' };
       const tomb = await this._tombs().doc(myId).get();
-      if (tomb.exists) { this.detach(); return; }          // deleted, the dead stay dead
-      const snapItems = await this._snapshotForCloud();
-      if (this.currentId !== myId) return;
+      if (tomb.exists) { this.detach(); return { written: false, reason: 'deleted' }; }
+      const snapItems  = await this._snapshotForCloud(myId);
+      const cloudSum   = await this._summaryForCloud(myId);
+      if (this.currentId !== myId) return { written: false, reason: 'switched' };
       const docRef = this._col().doc(myId);
       const base = this.revision;
-      await firebase.firestore().runTransaction(async tx => {
+      const name = this.displayName();
+      const twoWord = _twoWordFromItems(items);
+      let createdAtMs = Date.now();
+      try {
+        await firebase.firestore().runTransaction(async tx => {
         const cur = await tx.get(docRef);
         const rev = (cur.data() || {}).revision || 0;
         if (cur.exists && rev !== base) throw new Error('stale-revision');
+        createdAtMs = (cur.data() || {}).createdAtMs || Date.now();
         tx.set(docRef, {
-          name: currentClientName || 'untitled',
+          name,
+          // v12.5: round-trip through JSON so undefined values are dropped.
+          // Firestore refuses a whole document over a single undefined field,
+          // and a fabric or reference card missing one optional key was enough
+          // to make every save of that project fail.
           items: JSON.parse(JSON.stringify(snapItems)),
-          lastSummary: lastSummary ? JSON.parse(JSON.stringify(lastSummary)) : null,
+          lastSummary: cloudSum ? JSON.parse(JSON.stringify(cloudSum)) : null,
           lastTranscript: lastTranscript || '',
-          twoWord: _twoWordFromItems(items),
+          twoWord,
           revision: base + 1,
           epoch: 2,
           updatedAtMs: Date.now(),
-          createdAtMs: (cur.data() || {}).createdAtMs || Date.now(),
+          createdAtMs,
           schema: 'v12',
         });
-      });
+        });
+      } catch (e) {
+        if (String((e && e.message) || e).indexOf('stale-revision') !== -1) {
+          // Another device wrote first. Reload from the cloud and tell the
+          // designer plainly, this is NOT a successful save.
+          showToast('This project changed on another device, reloading it');
+          await this.open(myId).catch(() => {});
+          return { written: false, reason: 'stale' };
+        }
+        throw e;
+      }
       this.revision = base + 1;
       this._dirty = false;
-    }).catch(e => {
-      if (String(e && e.message).indexOf('stale-revision') !== -1) {
-        showToast('This project changed on another device, reloading');
-        this.open(myId).catch(() => {});
-      } else {
-        console.warn('[projectStore] save failed', e && e.message);
-      }
-    });
-    return this._chain;
+      this._touchIndex(myId, { name, updatedAt: Date.now(), createdAt: createdAtMs,
+                               cardCount: snapItems.length, twoWord });
+      return { written: true };
+    }
   },
 
   queueSave() {
     this._dirty = true;
     clearTimeout(this._t);
-    this._t = setTimeout(() => this.save(), 1200);
+    this._t = setTimeout(() => { this.save().catch(() => {}); }, 900);
   },
 
+  // ── Open ─────────────────────────────────────────────────────────────────
   async open(id) {
+    const dead = await this._tombs().doc(id).get();
+    if (dead.exists) { showToast('That project was deleted'); return false; }
     const doc = await this._col().doc(id).get();
     if (!doc.exists) { showToast('That project no longer exists'); return false; }
     const v = doc.data() || {};
     this.detach();
-    _doClear();
-    currentClientName = v.name || null;
-    lastSummary = v.lastSummary || null;
-    lastTranscript = v.lastTranscript || '';
-    for (const sav of (v.items || [])) {
-      if (!sav || !sav.card) continue;
-      if (sav.card.imageUrl && !sav.card.image) sav.card.image = sav.card.imageUrl;
-      try { _restorePlace(sav); } catch (_) {}
-    }
+    await _hydrate(async () => {
+      _doClear();
+      currentClientName = v.name || null;
+      lastSummary = v.lastSummary || null;
+      lastTranscript = v.lastTranscript || '';
+      for (const sav of (v.items || [])) {
+        if (!sav || !sav.card) continue;
+        if (sav.card.imageUrl && !sav.card.image) sav.card.image = sav.card.imageUrl;
+        try { _restorePlace(sav); } catch (_) {}
+      }
+    });
     this.currentId = id;
     this.revision = v.revision || 0;
+    this.autoName = null;
     _activeSessionId = id;
     if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
     if (typeof renderNotesPanel === 'function') renderNotesPanel(lastSummary);
+    if (typeof _renderAvatarBody === 'function') { try { _renderAvatarBody(); } catch (_) {} }
     this._watch(id);
-    showToast('Loaded: ' + (v.name || 'project'));
     return true;
   },
 
+  // ── Live updates from the designer's other devices ───────────────────────
   _watch(id) {
     try {
       this._unsub = this._col().doc(id).onSnapshot(doc => {
         if (this.currentId !== id) return;
         if (!doc.exists) {                                  // deleted on another device
-          this.detach(); _doClear(); currentClientName = null;
-          if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
-          showToast('This project was deleted on another device');
+          this.detach();
+          _hydrate(async () => { _doClear(); }).then(() => {
+            currentClientName = null;
+            if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
+            showToast('This project was deleted on another device');
+          });
           return;
         }
         const v = doc.data() || {};
-        if ((v.revision || 0) > this.revision && !this._dirty) {
-          this.revision = v.revision || 0;
+        if ((v.revision || 0) <= this.revision || this._dirty) return;
+        this.revision = v.revision || 0;
+        _hydrate(async () => {
           _doClear();
-          currentClientName = v.name || currentClientName;
-          lastSummary = v.lastSummary || lastSummary;
+          currentClientName = v.name || null;
+          lastSummary = v.lastSummary || null;            // v12.5: can now be cleared, not just replaced
+          lastTranscript = v.lastTranscript || '';
           for (const sav of (v.items || [])) {
             if (!sav || !sav.card) continue;
             if (sav.card.imageUrl && !sav.card.image) sav.card.image = sav.card.imageUrl;
             try { _restorePlace(sav); } catch (_) {}
           }
-          this.currentId = id;                              // _doClear detached us, reattach state
+        }).then(() => {
+          this.currentId = id;                            // _doClear must not orphan us
           if (typeof renderNotesPanel === 'function') renderNotesPanel(lastSummary);
-        }
+          if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
+          if (typeof _renderAvatarBody === 'function') { try { _renderAvatarBody(); } catch (_) {} }
+        });
       });
     } catch (_) {}
   },
 
   detach() {
     try { if (this._unsub) this._unsub(); } catch (_) {}
-    this._unsub = null; this.currentId = null; this.revision = 0; this._dirty = false;
+    this._unsub = null; this.currentId = null; this.revision = 0;
+    this._dirty = false; this.autoName = null;
     clearTimeout(this._t);
   },
 
+  // ── Create ───────────────────────────────────────────────────────────────
+  _newId() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); },
+
+  // Named by the designer, from the Save flow.
   async createFromCanvas(name) {
-    const id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const id = this._newId();
     this.detach();
-    this.currentId = id; this.revision = 0;
+    this.currentId = id; this.revision = 0; this.autoName = null;
     currentClientName = name || currentClientName || 'Untitled';
     await this.save();
     _activeSessionId = id;
@@ -11078,54 +11321,88 @@ const projectStore = {
     return id;
   },
 
+  // Opened automatically the moment there is work on the canvas, so nothing
+  // ever lives only in the browser. Keeps currentClientName null so the Save
+  // button still asks for a real name.
+  async createAuto() {
+    const id = this._newId();
+    this.detach();
+    this.currentId = id; this.revision = 0;
+    this.autoName = _autoProjectName();
+    await this.save();
+    _activeSessionId = id;
+    this._watch(id);
+    return id;
+  },
+
+  // ── Delete ───────────────────────────────────────────────────────────────
+  // v12.5: the document is deleted FIRST. The old order wrote the tombstone
+  // first, and the rules refuse any write to a project that already has one,
+  // so the delete was denied and the project stayed alive while the screen
+  // said it was gone everywhere.
   async remove(id) {
-    await this._tombs().doc(id).set({ deletedAtMs: Date.now() });   // 1) permanent tombstone FIRST
-    try { await this._col().doc(id).delete(); } catch (_) {}        // 2) doc, listeners clear other devices
-    try {                                                           // 3) pictures, best-effort
+    let paths = [];
+    try {
+      const d = await this._col().doc(id).get();
+      const v = d.exists ? (d.data() || {}) : {};
+      paths = (v.items || []).map(s => s && s.card && s.card.storagePath).filter(Boolean);
+      const fp = v.lastSummary && v.lastSummary._face_photo_path;
+      if (fp) paths.push(fp);
+    } catch (_) {}
+    await this._col().doc(id).delete();                              // 1) gone, listeners clear other devices
+    try { await this._tombs().doc(id).set({ deletedAtMs: Date.now() }); } catch (_) {}  // 2) never comes back
+    for (const p of paths) await this.deleteAsset(p);                // 3) its pictures
+    try {                                                            // 4) sweep anything left behind
       const dir = firebase.storage().ref('users/' + this._uid() + '/projects/' + id + '/images');
       const ls = await dir.listAll();
       for (const f of ls.items) { try { await f.delete(); } catch (_) {} }
     } catch (_) {}
+    await this._touchIndex(id, null);
     if (this.currentId === id) {
-      this.detach(); _doClear(); currentClientName = null;
+      this.detach();
+      await _hydrate(async () => { _doClear(); });
+      currentClientName = null;
       if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
     }
     if (_activeSessionId === id) _activeSessionId = null;
+  },
+
+  // ── Teardown, on sign out or account switch ──────────────────────────────
+  // v12.5: signing out used to leave the listener, the project id and the whole
+  // board in memory. The next person to sign in on the same Mac had the
+  // previous designer's project written into THEIR account on the first edit.
+  async teardown() {
+    this.detach();
+    this._idxCache = null; this._idxTs = 0;
+    try { _avatarLibCache = null; } catch (_) {}
+    _activeSessionId = null;
+    await _hydrate(async () => { _doClear(); });
+    currentClientName = null;
+    lastSummary = null;
+    lastTranscript = '';
+    if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
+    if (typeof renderNotesPanel === 'function') renderNotesPanel(null);
   },
 };
 async function _renderSessionsDropdown() {
   const list = document.getElementById('drawer-sessions-list');
   if (!list) return;
-  // v12.1 (Codex M1): the list shows CLOUD TRUTH ONLY, device-local copies
-  // no longer appear, so a stale laptop copy can't shadow the real project.
-  let merged = [];
+  // v12.5: ONE source of truth, this account's cloud projects. No device-local
+  // copies, no legacy sessions, nothing that can shadow the real project.
+  let sessions = [];
   try {
-    if (window.mayaFirebase && window.mayaFirebase.isReady && window.mayaFirebase.isReady()
-        && window.mayaFirebase.listSessions) {
-      merged = await window.mayaFirebase.listSessions();
-    }
-  } catch (e) { console.warn('[maya sessions] cloud list', e && e.message); }
-  try {
-    if (typeof projectStore !== 'undefined' && projectStore.ready()) {
-      const projs = await projectStore.list();
-      const have = new Set(merged.map(m => m.id));
-      for (const pr of projs) if (!have.has(pr.id)) merged.push(pr);
-    }
-  } catch (_) {}
-  merged.sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
-  const _tomb = await _getTombstones();   // v11.55
-  const sessions = merged.filter(m => m.id !== '__tombstones__' && !_tomb.has(m.id));
-  sessions.length !== merged.length && merged.forEach(m => { if (_tomb.has(m.id)) idbDeleteSavedSession(m.id).catch(() => {}); });
+    if (typeof projectStore !== 'undefined' && projectStore.ready()) sessions = await projectStore.list();
+  } catch (e) { console.warn('[maya sessions]', e && e.message); }
   if (!sessions.length) {
-    list.innerHTML = '<div class="sessions-empty">No saved sessions yet. Press Save to keep this one.</div>';
+    list.innerHTML = '<div class="sessions-empty">No projects yet. Start working and MAYA keeps it for you.</div>';
     return;
   }
   list.innerHTML = sessions.map(s => {
     const label = (s.twoWord && s.twoWord.length) ? s.twoWord : 'untitled';
     const dateStr = _formatSessionDate(s.createdAt);
     return `
-      <div class="session-item${s.id === _activeSessionId ? ' active' : ''}" data-id="${escapeHtml(s.id)}" onclick="loadSavedSessionById('${escapeHtml(s.id)}')" title="${escapeHtml(s.name || 'session')}">
-        <button class="session-item-delete" onclick="event.stopPropagation();deleteSavedSessionRow('${escapeHtml(s.id)}')" title="Delete this saved session">&#215;</button>
+      <div class="session-item${s.id === _activeSessionId ? ' active' : ''}" data-id="${escapeHtml(s.id)}" onclick="loadSavedSessionById('${escapeHtml(s.id)}')" title="${escapeHtml(s.name || 'project')}">
+        <button class="session-item-delete" onclick="event.stopPropagation();deleteSavedSessionRow('${escapeHtml(s.id)}')" title="Delete this project">&#215;</button>
         <div class="session-item-title">${escapeHtml(s.name || 'untitled')}</div>
         <div class="session-item-meta">${dateStr}${label ? ' · ' + escapeHtml(label) : ''}</div>
       </div>`;
@@ -11133,105 +11410,35 @@ async function _renderSessionsDropdown() {
 }
 
 async function loadSavedSessionById(id) {
-  // v12: sealed bins load from their own document, nothing else.
-  if (typeof projectStore !== 'undefined' && String(id).charAt(0) === 'p' && String(id).indexOf('sess_') !== 0) {
-    await projectStore.open(id);
-    const block = document.querySelector('#notes-drawer .drawer-sessions');
-    const list  = document.getElementById('drawer-sessions-list');
-    if (block) block.classList.remove('open');
-    if (list)  list.style.display = 'none';
-    _renderSessionsDropdown();
-    return;
+  // v12.5: everything is a cloud project now. Legacy ids that survived the
+  // rescue pass are gone from the list, so there is nothing else to try.
+  const ok = await projectStore.open(id).catch(e => {
+    console.warn('[maya open]', e && e.message);
+    showError('Could not open that project. ' + ((e && e.message) || ''));
+    return false;
+  });
+  if (ok) {
+    showToast('Loaded: ' + (currentClientName || 'project'));
+    if (lastSummary && lastSummary.dream_outcome && typeof attachCaptionToImages === 'function') {
+      try { attachCaptionToImages(lastSummary.dream_outcome); } catch (_) {}
+    }
   }
-  if (typeof projectStore !== 'undefined') projectStore.detach();  // leaving bin-land for legacy
-  // v12.1 (Codex M1): CLOUD FIRST, what you open is what the cloud holds.
-  // The device-local copy is only a fallback if the cloud copy is missing.
-  let snap = null;
-  if (window.mayaFirebase && window.mayaFirebase.isReady && window.mayaFirebase.isReady()) {
-    try {
-      const cloud = await window.mayaFirebase.loadSession(id);
-      if (cloud && Array.isArray(cloud.items)) {
-        snap = {
-          currentClientName: cloud.currentClientName || cloud.name || null,
-          lastSummary:       cloud.lastSummary || null,
-          lastTranscript:    cloud.lastTranscript || '',
-          items:             cloud.items,
-          ts:                cloud.updatedAtMs || cloud.createdAtMs || Date.now(),
-        };
-      }
-    } catch (e) { console.warn('[maya sessions] cloud load', e && e.message); }
-  }
-  if (!snap) snap = await idbLoadSavedSession(id);   // cloud copy missing, local fallback
-  if (!snap) { showToast('That session could not be loaded'); return; }
-  // Wipe the current canvas, replace with the saved snapshot.
-  _doClear();
-  currentClientName = snap.currentClientName || null;
-  lastSummary       = snap.lastSummary || null;
-  lastTranscript    = snap.lastTranscript || '';
-  // Replay items.
-  await new Promise(r => requestAnimationFrame(r));
-  for (const sav of (snap.items || [])) {
-    if (!sav || !sav.card) continue;
-    // v11.34: cloud-stored projects carry imageUrl (Storage), not base64.
-    if (sav.card.imageUrl && !sav.card.image) sav.card.image = sav.card.imageUrl;
-    // v11.36: skip ghosts (failed-upload image cards with no bytes and no URL).
-    if (sav.card._uploadPending && !sav.card.image) continue;
-    try {
-      // v11.13: shared guard, also treats (0,0) as "no position".
-      _restorePlace(sav);
-    } catch (e) { console.warn('[Maya load session item]', e); }
-  }
-  // Also overwrite the auto-save slot so close-and-reopen keeps THIS session.
-  try { await idb(s => s.put(snap, 'maya-session')); } catch (_) {}
-  if (typeof refreshDrawerClientName     === 'function') refreshDrawerClientName();
-  // v11.22: re-render the notes panel for the loaded session, designer_notes,
-  // non_negotiables, constraints, design_ideas, sourcing_needs all live on
-  // lastSummary and were saved with the session, but switching sessions left
-  // the panel showing the previous one (or empty). Now it refreshes.
-  if (typeof renderNotesPanel === 'function') renderNotesPanel(lastSummary);
-  if (lastSummary && lastSummary.dream_outcome && typeof attachCaptionToImages === 'function') {
-    try { attachCaptionToImages(lastSummary.dream_outcome); } catch (_) {}
-  }
-  _activeSessionId = id;  // v11.44: highlight this project in the list
-  showToast('Loaded: ' + (snap.currentClientName || 'session'));
-  // Collapse the dropdown after picking.
   const block = document.querySelector('#notes-drawer .drawer-sessions');
   const list  = document.getElementById('drawer-sessions-list');
   if (block) block.classList.remove('open');
   if (list)  list.style.display = 'none';
+  _renderSessionsDropdown();
 }
 
 async function deleteSavedSessionRow(id) {
   if (!confirm('Delete this project permanently, everywhere? This cannot be undone.')) return;
-  // v12: sealed bins, tombstone first, every device clears instantly.
-  if (typeof projectStore !== 'undefined' && String(id).charAt(0) === 'p' && String(id).indexOf('sess_') !== 0) {
+  try {
     await projectStore.remove(id);
     showToast('Project deleted everywhere');
-    _renderSessionsDropdown();
-    return;
+  } catch (e) {
+    console.warn('[maya delete]', e && e.message);
+    showError('Could not delete that project. ' + ((e && e.message) || ''));
   }
-  // v11.55: grab the snapshot FIRST (for its picture list), then erase all of it.
-  let snap = null;
-  try { snap = await idbLoadSavedSession(id); } catch (_) {}
-  if (!snap) { try { snap = await window.mayaFirebase.loadSession(id); } catch (_) {} }
-  const nImgs = await _deleteProjectImages(id, snap);
-  await idbDeleteSavedSession(id).catch(() => {});
-  try { if (window.mayaFirebase && window.mayaFirebase.deleteSession) await window.mayaFirebase.deleteSession(id); } catch (_) {}
-  await _addTombstone(id);
-  // v12 (Codex C2): deleting the project that's ON SCREEN must clear the
-  // screen and both autosave slots, otherwise it re-saves itself back to life.
-  if (_activeSessionId === id) {
-    _activeSessionId = null;
-    _doClear();
-    currentClientName = null;
-    lastSummary = null;
-    lastTranscript = '';
-    try { await idb(st => st.put(null, 'maya-session')); } catch (_) {}
-    try { window.mayaFirebase.saveSession('current', { items: [], ts: Date.now(), schemaVersion: 2 }); } catch (_) {}
-    if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
-    if (typeof renderNotesPanel === 'function') renderNotesPanel(null);
-  }
-  showToast('Project deleted everywhere' + (nImgs ? ' (' + nImgs + ' pictures purged)' : ''));
   _renderSessionsDropdown();
 }
 
@@ -11736,8 +11943,17 @@ function skipFavoriteInspo() {
 
 // Save button inside the one-pager preview modal: writes the folder (JSON +
 // PDF + transcript) and then closes the preview.
+// v12.5: this wrote the folder onto whichever Mac was in front of the designer
+// via the browser folder picker. Everything MAYA keeps is online now, so it
+// goes to the atelier's Drive, the same place Submit sends it.
 async function saveFromPreview() {
-  await doSave();
+  try {
+    const r = await doSaveToCloud();
+    if (r && r.ok > 0) showToast('Saved to Drive');
+    else showError('Nothing was saved to Drive, try again.');
+  } catch (e) {
+    showError('Save to Drive failed: ' + ((e && e.message) || 'unknown'));
+  }
   closeOnePagerModal();
 }
 

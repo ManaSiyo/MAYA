@@ -1,6 +1,10 @@
 # MAYA, the one build. Google reads this on every GitHub push and deploys
 # BOTH the server (Cloud Run) and the website (Firebase Hosting). This file
 # replaces the old root Dockerfile and the manual Deploy MAYA.command.
+# v12.5: the Firestore and Storage rules deploy with the site now. They used to
+# be checked into the folder but never published, so production could be running
+# rules nobody had seen in months. The firebase-tools version is pinned so a
+# deploy is reproducible.
 steps:
   - id: Build server
     name: gcr.io/cloud-builders/docker
@@ -31,7 +35,7 @@ steps:
     entrypoint: bash
     args:
       - '-c'
-      - 'cp docs/firebase.json ./firebase.json && npx -y firebase-tools@latest deploy --only hosting --project pro-maya --non-interactive'
+      - 'cp docs/firebase.json ./firebase.json && npx -y firebase-tools@13.29.1 deploy --only hosting,firestore:rules,storage --project pro-maya --non-interactive'
 timeout: 1200s
 options:
   logging: CLOUD_LOGGING_ONLY

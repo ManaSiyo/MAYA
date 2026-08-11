@@ -61,6 +61,13 @@ function _healthz(_req, res) {
 app.get('/healthz', _healthz);
 app.get('/api/healthz', _healthz);
 
+// Admin allow list, needed by the rate limiter and every /api/admin route.
+// If ADMIN_EMAILS is set (even to empty) it is authoritative.
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS !== undefined
+  ? process.env.ADMIN_EMAILS
+  : 'fromsa@manasiyo.com,worldofsiyo@gmail.com')
+  .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+
 // ═══════════════════════════════════════════════════════════════════════════
 // v11.32: simple per-user rate limiter — the cost guardrail for a FREE public
 // launch. In-memory sliding window keyed by the Google user id (sub). This is
@@ -71,15 +78,24 @@ app.get('/api/healthz', _healthz);
 // ═══════════════════════════════════════════════════════════════════════════
 const RL_PER_MIN = Number(process.env.RL_PER_MIN || 20);
 const RL_PER_DAY = Number(process.env.RL_PER_DAY || 600);
+// v12.5: the atelier's own accounts get a much higher ceiling. The Brief and
+// the Operations Room now go through this proxy instead of holding the key in
+// the browser, and dissecting one garment fires a burst of parallel renders
+// that would trip a client-sized limit within seconds.
+const RL_ADMIN_PER_MIN = Number(process.env.RL_ADMIN_PER_MIN || 120);
+const RL_ADMIN_PER_DAY = Number(process.env.RL_ADMIN_PER_DAY || 6000);
 const _rl = new Map();  // sub -> { min:[ts...], day:[ts...] }
-function rateLimit(sub) {
+function rateLimit(sub, email) {
+  const isAdmin = !!email && ADMIN_EMAILS.includes(String(email).toLowerCase());
+  const perMin = isAdmin ? RL_ADMIN_PER_MIN : RL_PER_MIN;
+  const perDay = isAdmin ? RL_ADMIN_PER_DAY : RL_PER_DAY;
   const now = Date.now();
   let b = _rl.get(sub);
   if (!b) { b = { min: [], day: [] }; _rl.set(sub, b); }
   b.min = b.min.filter(t => now - t < 60_000);
   b.day = b.day.filter(t => now - t < 86_400_000);
-  if (b.min.length >= RL_PER_MIN) return { ok: false, scope: 'minute', retry: 60 };
-  if (b.day.length >= RL_PER_DAY) return { ok: false, scope: 'day', retry: 3600 };
+  if (b.min.length >= perMin) return { ok: false, scope: 'minute', retry: 60 };
+  if (b.day.length >= perDay) return { ok: false, scope: 'day', retry: 3600 };
   b.min.push(now); b.day.push(now);
   return { ok: true };
 }
@@ -98,6 +114,7 @@ const OPENAI_ALLOWED = new Set([
   'v1/images/generations',
   'v1/images/edits',
   'v1/audio/transcriptions',
+  'v1/embeddings',            // v12.5: the Operations Room knowledge base
 ]);
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -173,7 +190,7 @@ app.all(/^\/api\/openai\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', li
   }
 
   // v11.32: per-user rate limit (cost guardrail for the free launch).
-  const rl = rateLimit(user.sub);
+  const rl = rateLimit(user.sub, user.email);
   if (!rl.ok) {
     console.warn('[openai] rate-limited', user.email, 'scope=' + rl.scope);
     res.setHeader('Retry-After', String(rl.retry));
@@ -236,7 +253,7 @@ app.post('/api/submit', requireAuthHeader, express.json({ limit: '30mb' }), asyn
 
   // v11.49 (Codex M8): submissions share the per-user rate limiter — no more
   // unlimited folder creation / uploads from a single account.
-  const rlS = rateLimit(user.sub);
+  const rlS = rateLimit(user.sub, user.email);
   if (!rlS.ok) {
     console.warn('[submit] rate-limited', user.email, 'scope=' + rlS.scope);
     return res.status(429).json({ error: 'rate_limited', scope: rlS.scope });
@@ -290,10 +307,24 @@ app.post('/api/submit', requireAuthHeader, express.json({ limit: '30mb' }), asyn
     } catch (e) {
       return res.status(500).json({ error: 'folder_check_failed', detail: e.message });
     }
+    // v12.5: only the files MAYA itself writes, with the types it writes them
+    // as. Before this any signed in Google account could upload a file of any
+    // name and any type into the atelier's Drive.
+    const ALLOWED_UPLOADS = /^(one-pager\.(png|jpg|jpeg|pdf)|dream-garment\.(png|jpg|jpeg)|summary\.json|pieces\.json|moodboard\.json|hero\.(png|jpg|jpeg)|face\.(png|jpg|jpeg))$/i;
+    const safeName = String(body.name || '').trim();
+    if (!ALLOWED_UPLOADS.test(safeName)) {
+      console.warn('[submit] blocked filename', safeName, 'by', user.email);
+      return res.status(403).json({ error: 'filename_not_allowed', detail: safeName });
+    }
+    const ALLOWED_MIME = new Set(['image/png', 'image/jpeg', 'image/jpg', 'application/json', 'application/pdf', 'text/json']);
     const bytes = b64ToBytes(body.data_b64);
     const mime  = body.mime_type || 'application/octet-stream';
+    if (!ALLOWED_MIME.has(String(mime).toLowerCase().split(';')[0].trim())) {
+      return res.status(403).json({ error: 'mime_not_allowed', detail: mime });
+    }
+    if (bytes.length > 25 * 1024 * 1024) return res.status(413).json({ error: 'too_large' });
     try {
-      const info = await driveUploadFile(accessToken, body.name, body.folder_id, mime, bytes);
+      const info = await driveUploadFile(accessToken, safeName, body.folder_id, mime, bytes);
       console.log('[submit] upload OK — "' + info.name + '" (' + info.id + ')');
       return res.json({ ok: true, file_id: info.id, name: info.name });
     } catch (e) {
@@ -374,8 +405,16 @@ app.post('/api/runway', requireAuthHeader, express.json({ limit: '30mb' }), asyn
   const apiKey = process.env.RUNWAY_API_KEY;
   if (!apiKey) return res.status(501).json({ error: 'runway_not_configured' });
 
-  try { await requireGoogleUser(req); }
+  let rwUser;
+  try { rwUser = await requireGoogleUser(req); }
   catch (e) { return res.status(401).json({ error: 'unauthorized', detail: e.message }); }
+  // v12.5: video generation is the most expensive call MAYA can make and it
+  // was the one route with no rate limit at all.
+  const rlR = rateLimit(rwUser.sub, rwUser.email);
+  if (!rlR.ok) {
+    res.setHeader('Retry-After', String(rlR.retry));
+    return res.status(429).json({ error: 'rate_limited', scope: rlR.scope });
+  }
 
   const body = req.body || {};
 
@@ -387,8 +426,8 @@ app.post('/api/runway', requireAuthHeader, express.json({ limit: '30mb' }), asyn
       model:       RUNWAY_MODEL,
       promptImage: dataUri,
       promptText:  body.prompt || 'The model stays in one place and slowly rotates on the spot: starting facing the camera front-on, turning to a side profile, continuing around to show the back, then rotating back to face the camera front-on again — one smooth continuous turntable that loops seamlessly. The model does NOT walk and does NOT move toward or away from the camera. Camera is locked off, no zoom, no pan. Seamless studio backdrop, soft even studio lighting held perfectly constant throughout.',
-      ratio:       body.ratio || '1280:720',
-      duration:    Number(body.duration) || 5,
+      ratio:       ['1280:720', '720:1280', '1104:832', '832:1104', '960:960'].includes(body.ratio) ? body.ratio : '1280:720',
+      duration:    [5, 10].includes(Number(body.duration)) ? Number(body.duration) : 5,
     };
     try {
       const r = await fetch(RUNWAY_BASE + '/v1/image_to_video', {
@@ -442,6 +481,89 @@ app.post('/api/runway', requireAuthHeader, express.json({ limit: '30mb' }), asyn
 
 
 // ═══════════════════════════════════════════════════════════════════════════
+// v12.5: /api/fal/* — fal.ai (Hyper3D Rodin) proxy. Same shape as the OpenAI
+// proxy: the browser sends its Google ID token, the server swaps in the real
+// key. This exists so the Brief and the Operations Room stop holding the
+// atelier's fal key in localStorage where any script on the page could read it.
+// Dormant (501) until FAL_API_KEY is set on the service.
+// ═══════════════════════════════════════════════════════════════════════════
+const FAL_ALLOWED = [
+  /^fal-ai\/hyper3d\/rodin$/,
+  /^fal-ai\/hyper3d\/requests\/[\w-]{1,80}$/,
+  /^fal-ai\/hyper3d\/requests\/[\w-]{1,80}\/status$/,
+];
+app.all(/^\/api\/fal\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', limit: '30mb' }), async (req, res) => {
+  const falKey = process.env.FAL_API_KEY;
+  if (!falKey) return res.status(501).json({ error: 'fal_not_configured' });
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized', detail: e.message }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) {
+    res.setHeader('Retry-After', String(rl.retry));
+    return res.status(429).json({ error: 'rate_limited', scope: rl.scope });
+  }
+  const upstreamPath = req.path.replace(/^\/api\/fal\//, '');
+  if (upstreamPath.includes('..') || /%2e/i.test(upstreamPath)) return res.status(400).json({ error: 'bad_path' });
+  if (!FAL_ALLOWED.some(rx => rx.test(upstreamPath))) {
+    return res.status(403).json({ error: 'endpoint_not_allowed', detail: upstreamPath });
+  }
+  const headers = { 'Authorization': 'Key ' + falKey };
+  if (req.headers['content-type']) headers['Content-Type'] = req.headers['content-type'];
+  try {
+    const qs = req.originalUrl.indexOf('?') !== -1 ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
+    const upstream = await fetch('https://queue.fal.run/' + upstreamPath + qs, {
+      method: req.method,
+      headers,
+      body: (req.method === 'GET' || req.method === 'HEAD') ? undefined
+            : (req.body && req.body.length ? req.body : undefined),
+    });
+    const buf = Buffer.from(await upstream.arrayBuffer());
+    if (!upstream.ok) console.error('[fal]', upstream.status, upstreamPath, 'user=' + user.email, '—', buf.toString('utf8').slice(0, 400));
+    res.status(upstream.status);
+    const ct = upstream.headers.get('content-type');
+    if (ct) res.setHeader('Content-Type', ct);
+    return res.send(buf);
+  } catch (e) {
+    console.error('[fal] proxy exception', upstreamPath, '—', e.message);
+    return res.status(502).json({ error: 'fal_proxy_failed', detail: e.message });
+  }
+});
+
+// v12.5: /api/falstorage/* — fal.ai's upload host, same proxy treatment. The
+// Brief has to hand fal a picture before Rodin can turn it into a mesh; that
+// call used to go straight from the browser to fal carrying the designer's
+// Google token as if it were a fal key.
+app.all(/^\/api\/falstorage\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', limit: '30mb' }), async (req, res) => {
+  const falKey = process.env.FAL_API_KEY;
+  if (!falKey) return res.status(501).json({ error: 'fal_not_configured' });
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized', detail: e.message }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited', scope: rl.scope }); }
+  const upstreamPath = req.path.replace(/^\/api\/falstorage\//, '');
+  if (upstreamPath.includes('..') || /%2e/i.test(upstreamPath)) return res.status(400).json({ error: 'bad_path' });
+  if (!/^storage\/upload\/initiate$/.test(upstreamPath)) return res.status(403).json({ error: 'endpoint_not_allowed', detail: upstreamPath });
+  const headers = { 'Authorization': 'Key ' + falKey };
+  if (req.headers['content-type']) headers['Content-Type'] = req.headers['content-type'];
+  try {
+    const upstream = await fetch('https://rest.alpha.fal.ai/' + upstreamPath, {
+      method: req.method, headers,
+      body: (req.method === 'GET' || req.method === 'HEAD') ? undefined : (req.body && req.body.length ? req.body : undefined),
+    });
+    const buf = Buffer.from(await upstream.arrayBuffer());
+    if (!upstream.ok) console.error('[falstorage]', upstream.status, '—', buf.toString('utf8').slice(0, 300));
+    res.status(upstream.status);
+    const ct = upstream.headers.get('content-type');
+    if (ct) res.setHeader('Content-Type', ct);
+    return res.send(buf);
+  } catch (e) {
+    return res.status(502).json({ error: 'fal_storage_proxy_failed', detail: e.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
 // v11.43: /api/admin/* — MAYA Backend dashboard endpoints.
 // Gated to ADMIN_EMAILS (env override, comma-separated). The dashboard page
 // lives at https://maya.manasiyo.com/admin.html and polls these.
@@ -449,10 +571,6 @@ app.post('/api/runway', requireAuthHeader, express.json({ limit: '30mb' }), asyn
 // v11.49 (Codex M10): the baked-in pair is only the DEFAULT — if the env var
 // is set (even to empty), it is authoritative, so an operator can disable all
 // admin access by clearing it.
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS !== undefined
-  ? process.env.ADMIN_EMAILS
-  : 'fromsa@manasiyo.com,worldofsiyo@gmail.com')
-  .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
 
 let _subsCache = { ts: 0, body: null };
 
@@ -464,6 +582,30 @@ async function requireAdmin(req) {
     throw e;
   }
   return user;
+}
+
+// v12.5: true only for the MAYA submissions folder itself or one of its direct
+// children. Every admin read and write is confined to this subtree.
+const _folderParentCache = new Map();
+async function isSubmissionFolder(accessToken, folderId) {
+  const root = process.env.DRIVE_FOLDER_ID;
+  if (!root || !folderId) return false;
+  if (folderId === root) return true;
+  const hit = _folderParentCache.get(folderId);
+  if (hit && Date.now() - hit.ts < 600000) return hit.ok;
+  let ok = false;
+  try {
+    const r = await fetch('https://www.googleapis.com/drive/v3/files/' +
+      encodeURIComponent(folderId) + '?fields=parents', {
+      headers: { 'Authorization': 'Bearer ' + accessToken },
+    });
+    if (r.ok) {
+      const j = await r.json();
+      ok = Array.isArray(j.parents) && j.parents.includes(root);
+    }
+  } catch (_) {}
+  _folderParentCache.set(folderId, { ok, ts: Date.now() });
+  return ok;
 }
 
 async function driveList(accessToken, params) {
@@ -530,12 +672,18 @@ app.get('/api/admin/subfile', async (req, res) => {
   if (!/^[\w-]{10,80}$/.test(id)) return res.status(400).json({ error: 'bad_id' });
   try {
     const accessToken = await getDriveAccessToken();
-    const metaR = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?fields=id,name,mimeType,size', {
+    const metaR = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?fields=id,name,mimeType,size,parents', {
       headers: { 'Authorization': 'Bearer ' + accessToken },
     });
     if (!metaR.ok) return res.status(404).json({ error: 'not_found' });
     const meta = await metaR.json();
     if (Number(meta.size || 0) > 30 * 1024 * 1024) return res.status(413).json({ error: 'too_large' });
+    // v12.5: the file must sit inside a MAYA submission folder. Before this a
+    // stolen admin token could read any file in the atelier's entire Drive.
+    const parents = Array.isArray(meta.parents) ? meta.parents : [];
+    let inside = false;
+    for (const p of parents) { if (await isSubmissionFolder(accessToken, p)) { inside = true; break; } }
+    if (!inside) return res.status(403).json({ error: 'file_not_allowed' });
     const r = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media', {
       headers: { 'Authorization': 'Bearer ' + accessToken },
     });
@@ -554,7 +702,7 @@ app.get('/api/admin/subfile', async (req, res) => {
 // images and patterns) as pieces.json inside the submission's Drive folder.
 // The Brief loads it on the next open instead of re-dissecting and
 // re-rendering, so a submission only ever costs API credits once.
-app.post('/api/admin/savepieces', express.json({ limit: '30mb' }), async (req, res) => {
+app.post('/api/admin/savepieces', requireAuthHeader, express.json({ limit: '30mb' }), async (req, res) => {
   try { await requireAdmin(req); }
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
   const folderId = String((req.body || {}).folderId || '');
@@ -562,6 +710,11 @@ app.post('/api/admin/savepieces', express.json({ limit: '30mb' }), async (req, r
   if (!/^[\w-]{10,80}$/.test(folderId) || !data) return res.status(400).json({ error: 'bad_request' });
   try {
     const accessToken = await getDriveAccessToken();
+    // v12.5: only ever write inside a MAYA submission folder. Without this the
+    // endpoint could write anywhere in the atelier's whole Drive.
+    if (!(await isSubmissionFolder(accessToken, folderId))) {
+      return res.status(403).json({ error: 'folder_not_allowed' });
+    }
     const existing = await driveList(accessToken, {
       q: "'" + folderId + "' in parents and name = 'pieces.json' and trashed = false",
       pageSize: '1',

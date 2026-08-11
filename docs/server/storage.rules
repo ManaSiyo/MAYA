@@ -1,8 +1,19 @@
 rules_version = '2';
+// MAYA v12.5. Every picture a designer or client uploads lives under their own
+// uid and nowhere else. Nothing is stored on anyone's machine.
 service firebase.storage {
   match /b/{bucket}/o {
     match /users/{uid}/{allPaths=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+      // v12.5: a size and type ceiling. The old rule allowed a signed in
+      // account to upload files of unlimited size and any type into its own
+      // folder, which the atelier pays for.
+      allow write: if request.auth != null && request.auth.uid == uid
+        && request.resource.size < 25 * 1024 * 1024
+        && (request.resource.contentType.matches('image/.*')
+            || request.resource.contentType.matches('video/.*')
+            || request.resource.contentType == 'application/json');
     }
   }
 }
