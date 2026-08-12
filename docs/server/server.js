@@ -67,7 +67,7 @@ app.get('/api/healthz', _healthz);
 // If ADMIN_EMAILS is set (even to empty) it is authoritative.
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS !== undefined
   ? process.env.ADMIN_EMAILS
-  : 'fromsa@manasiyo.com,worldofsiyo@gmail.com')
+  : 'fromsa@manasiyo.com,worldofsiyo@gmail.com,prasheeth@step-6.com')
   .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
 
 // ═══════════════════════════════════════════════════════════════════════════
