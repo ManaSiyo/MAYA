@@ -751,6 +751,7 @@ function applyView(){
 /* Test images live in tests-data.js as data URLs (window.MAYA_TESTS), so everything loads on a plain
    double-click (file://) with no fetch, no folder picker, no server. */
 window.MAYA_TESTS = window.MAYA_TESTS || {}; const TESTS = window.MAYA_TESTS;
+const EMBEDDED = (function(){ try { return self !== top; } catch(_) { return false; } })();
 let ACTIVE_TEST = null;   // current test key
 let FILES = {};           // { front, side, back, answer } → data URLs
 let RD = null;            // GPT-redrawn clean answer (data URL), the scoring target
@@ -761,8 +762,18 @@ function shortLabel(name){ const m=name.match(/^(test\s*\d+)/i); return m?m[1].r
 
 function initTests(){
   const p=$('test-picker'); if(!p) return;
-  const names=Object.keys(TESTS);
-  if(!names.length){ p.innerHTML='<option>no tests</option>'; return; }
+  // v0.37: the built in sample garments (the placeholder trousers) no longer
+  // load themselves. When this room is embedded in a client's Brief it waits
+  // for that client's real pieces; the samples are only a fallback for the
+  // standalone beta page.
+  const names=Object.keys(TESTS).filter(n => !EMBEDDED || !/^test\s*\d+/i.test(n));
+  if(!names.length){
+    p.innerHTML='<option>waiting for pieces…</option>';
+    if($('hero-img')) $('hero-img').style.display='none';
+    if($('hero-empty')) { $('hero-empty').style.display=''; $('hero-empty').textContent='Press Dissect in the Brief above to load this client\u2019s pieces.'; }
+    ACTIVE_TEST=null; FILES={}; HERO=null;
+    return;
+  }
   p.innerHTML=names.map(n=>`<option value="${n.replace(/"/g,'&quot;')}">${shortLabel(n)}</option>`).join('');
   p.value=names[0]; pickTest(names[0]);
 }

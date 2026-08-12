@@ -3723,6 +3723,7 @@
     <!-- v7.9: Settings + Logout share the bottom text-link row. -->
     <div class="drawer-meta-row">
       <button class="drawer-settings-link" onclick="openSettings()" title="Account &amp; preferences">Settings</button>
+      <button class="drawer-settings-link" onclick="openTip()" title="MAYA is free. If it was useful, you can support the atelier.">Tip</button>
       <button class="drawer-settings-link" onclick="mayaSignOut()" title="Sign out of Google and return to the Maya sign-in screen.">Logout</button>
     </div>
   </div>
@@ -10634,6 +10635,76 @@ async function _rescueLegacyProjects() {
     showToast('Recovered ' + moved + ' earlier project' + (moved === 1 ? '' : 's'));
   }
 }
+
+// ── v12.6: TIP. MAYA is free and stays free. This is the only place money
+// changes hands inside the tool, it is entirely optional, and it exists mostly
+// to prove the payment path works end to end.
+function openTip() {
+  let el = document.getElementById('tip-modal');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'tip-modal';
+    el.className = 'modal';
+    el.innerHTML =
+      '<div class="modal-card" style="max-width:420px;text-align:center">' +
+        '<div style="font-family:\'Cormorant Garamond\',serif;font-size:26px;margin-bottom:6px">Tip Mana Siyo</div>' +
+        '<div style="font-family:\'Jost\',sans-serif;font-size:12px;line-height:1.7;color:rgba(238,242,255,0.6);margin-bottom:18px">' +
+          'MAYA is free and always will be. If it helped you imagine something, you can support the atelier that built it.' +
+        '</div>' +
+        '<div id="tip-amounts" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px">' +
+          [1,5,20,50].map(function (a, i) {
+            return '<button class="pill' + (i === 1 ? ' active' : '') + '" data-amt="' + a + '" onclick="_pickTip(' + a + ')">$' + a + '</button>';
+          }).join('') +
+        '</div>' +
+        '<div id="tip-state" style="font-family:\'Jost\',sans-serif;font-size:11px;color:rgba(238,242,255,0.45);min-height:16px;margin-bottom:14px"></div>' +
+        '<div style="display:flex;gap:12px;justify-content:center">' +
+          '<button class="modal-text-btn violet" onclick="_sendTip()">Continue</button>' +
+          '<button class="modal-text-btn" onclick="document.getElementById(\'tip-modal\').classList.remove(\'open\')">Not now</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(el);
+  }
+  window._tipAmount = window._tipAmount || 5;
+  _pickTip(window._tipAmount);
+  el.classList.add('open');
+}
+function _pickTip(a) {
+  window._tipAmount = a;
+  document.querySelectorAll('#tip-amounts .pill').forEach(function (b) {
+    b.classList.toggle('active', Number(b.dataset.amt) === a);
+  });
+}
+async function _sendTip() {
+  const state = document.getElementById('tip-state');
+  const token = (typeof getGoogleIdToken === 'function') ? getGoogleIdToken() : null;
+  if (!token) { if (state) state.textContent = 'Sign in first, then try again.'; return; }
+  if (state) state.textContent = 'Opening a secure checkout…';
+  try {
+    const r = await fetch('/api/tip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ amount: window._tipAmount || 5 }),
+    });
+    const j = await r.json().catch(function () { return {}; });
+    if (r.status === 501) { if (state) state.textContent = 'Tipping is not switched on yet.'; return; }
+    if (!r.ok || !j.url) { if (state) state.textContent = 'Could not start checkout. ' + ((j && j.detail) || ''); return; }
+    location.href = j.url;                 // Stripe hosts the card form, MAYA never sees a card
+  } catch (e) {
+    if (state) state.textContent = 'Could not reach the payment service.';
+  }
+}
+// Coming back from Stripe.
+(function () {
+  try {
+    const p = new URLSearchParams(location.search);
+    if (p.get('tip') === 'thanks') {
+      setTimeout(function () { if (typeof showToast === 'function') showToast('Thank you. That genuinely helps.'); }, 800);
+      history.replaceState({}, '', location.pathname);
+    } else if (p.get('tip') === 'cancelled') {
+      history.replaceState({}, '', location.pathname);
+    }
+  } catch (_) {}
+})();
 
 // v11.2: auto-restore on page load is RE-ENABLED. Pinterest-style, close
 // the tab, reopen Maya, your last canvas state comes back from IndexedDB

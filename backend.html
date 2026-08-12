@@ -267,6 +267,14 @@
   .piece-pills {
     display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
   }
+  /* v0.37: the Dissect pill, the one deliberate spend on this screen */
+  .piece-pill.dissect-start {
+    border-color: rgba(255,255,255,0.55);
+    color: rgba(255,255,255,1);
+    background: rgba(255,255,255,0.08);
+  }
+  .piece-pill.dissect-start:hover { background: rgba(255,255,255,0.14); }
+  .piece-pill.dissect-start.busy { opacity: 0.55; cursor: wait; }
   .piece-pill {
     background: transparent;
     border: 0.5px solid rgba(255,255,255,0.22);
@@ -1444,9 +1452,10 @@
           </div>
           <div class="fab-grid" id="fab-list"></div>
         </div>
-        <!-- v10.14: piece swiper. Pills are the only nav, no Dissect
-             button. Dissection auto-fires on upload; pills appear as
-             soon as the LLM returns. Scroll down to reach Operations Room. -->
+        <!-- v0.37: dissection no longer fires by itself. Opening a client
+             used to spend on six image calls before anyone asked for
+             anything. The Dissect pill sits beside Full view and starts it
+             deliberately; once a client is dissected it never runs again. -->
         <div class="piece-swiper" id="piece-swiper" style="display:none">
           <div class="piece-pills" id="piece-pills"></div>
         </div>
@@ -2389,53 +2398,27 @@ function render(snap) {
     }
     renderDissection({ card: cardWithImg });
 
-    // v10.13: if there's no _dissection on the card, fire the LLM call
-    // now. The image is already on screen, designer can scroll while we
-    // wait. Status pill in the top bar reads "Dissecting…" until it lands.
-    if (!cardForDissect._dissection && getApiKey()) {
-      setDissectStatus(true);
-      dissectImage(heroSrc)
-        .then(async d => {
-          cardWithImg._dissection = d;
+    // ── v0.37: NOTHING FIRES BY ITSELF ────────────────────────────────
+    // Opening a client used to dissect, then render every piece, then draw a
+    // pattern for every piece, automatically, roughly six image calls before
+    // anyone asked for anything. And it did it again on every reopen.
+    // Now: if this client was dissected before, the saved work is painted
+    // straight from their folder and nothing is generated. If they were not,
+    // the Dissect pill waits to be pressed.
+    window._dissectTarget = { card: cardWithImg, hero: heroSrc };
+    if (cardForDissect._dissection && Array.isArray(cardForDissect._dissection.pieces)) {
+      const ps = cardForDissect._dissection.pieces;
+      _postPiecesToOps(ps);
+      // Fill in only what is genuinely missing, one piece at a time, never
+      // the whole set. A piece that already has its picture is left alone.
+      const missing = ps.filter(p => p && !p.skip && !p._image);
+      if (missing.length && getApiKey()) {
+        setDissectStatus(true, 'Finishing ' + missing.length + ' piece' + (missing.length === 1 ? '' : 's') + '…');
+        renderAllPieces(heroSrc, missing).then(() => {
           renderDissection({ card: cardWithImg });
-          setDissectStatus(false);
-          // v0.6: after dissection lands, render each non-skip piece in
-          // isolation (gpt-image-1.5, parallel). Pills update on completion.
-          if (d && Array.isArray(d.pieces) && d.pieces.length) {
-            // v0.33: kick off 2D pattern generation in PARALLEL with the
-            // piece renders, patterns depend only on the hero image +
-            // dissection, never on the 3D mesh, so they need not wait.
-            const patternsDone = pregeneratePatterns(heroSrc, d.pieces);
-            await renderAllPieces(heroSrc, d.pieces);
-            renderDissection({ card: cardWithImg }); // re-render so swiper picks up _image
-            _postPiecesToOps(d.pieces);
-            // v0.35: persist so this submission never pays for dissection again.
-            _savePiecesToDrive(d);
-            if (patternsDone && patternsDone.then) patternsDone.then(() => _savePiecesToDrive(d));
-          }
-        })
-        .catch(e => {
-          console.warn('[Backend dissect]', e);
-          setDissectStatus(false);
-        });
-    } else if (cardForDissect._dissection && Array.isArray(cardForDissect._dissection.pieces)) {
-      // v0.6: cached dissection, see if any pieces still need rendering.
-      const needsRender = cardForDissect._dissection.pieces.some(p => !p.skip && !p._image);
-      if (needsRender && getApiKey()) {
-        const patternsDone = pregeneratePatterns(heroSrc, cardForDissect._dissection.pieces);
-        renderAllPieces(heroSrc, cardForDissect._dissection.pieces).then(() => {
-          renderDissection({ card: cardWithImg });
-          _postPiecesToOps(cardForDissect._dissection.pieces);
+          _postPiecesToOps(ps);
           _savePiecesToDrive(cardForDissect._dissection);
-          if (patternsDone && patternsDone.then) patternsDone.then(() => _savePiecesToDrive(cardForDissect._dissection));
-        });
-      } else {
-        // Everything prebuilt (or no key): pieces go straight to the
-        // Operations Room. Any patterns still missing fill in quietly and
-        // resave, only when a key is present.
-        const patternsDone = getApiKey() ? pregeneratePatterns(heroSrc, cardForDissect._dissection.pieces) : null;
-        _postPiecesToOps(cardForDissect._dissection.pieces);
-        if (patternsDone && patternsDone.then) patternsDone.then(() => _savePiecesToDrive(cardForDissect._dissection));
+        }).finally(() => setDissectStatus(false));
       }
     }
   } else {
@@ -2447,26 +2430,70 @@ function render(snap) {
 // v0.35: persist the dissection (piece images and patterns included) to the
 // submission's Drive folder as pieces.json. The next open of this submission
 // loads it instead of paying for dissection, renders and patterns again.
-function _savePiecesToDrive(dissection) {
+// v0.37: shrink a data URL before it is stored. The pieces come back as large
+// PNGs; as JPEG at 82 percent they are a fraction of the size, which is the
+// difference between this file saving reliably and quietly failing, which is
+// why work was being regenerated.
+function _shrinkDataUrl(dataUrl, maxW) {
+  return new Promise(resolve => {
+    try {
+      if (typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image')) return resolve(dataUrl);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const scale = Math.min(1, (maxW || 1280) / (img.width || 1));
+          const c = document.createElement('canvas');
+          c.width = Math.round((img.width || 1) * scale);
+          c.height = Math.round((img.height || 1) * scale);
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          resolve(c.toDataURL('image/jpeg', 0.82));
+        } catch (_) { resolve(dataUrl); }
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    } catch (_) { resolve(dataUrl); }
+  });
+}
+
+let _savingPieces = false;
+async function _savePiecesToDrive(dissection) {
   try {
     const sid = window._openedSubmission && window._openedSubmission.id;
     const tok = _subCachedTok();
     if (!sid || !tok || !dissection || !Array.isArray(dissection.pieces)) return;
+    if (_savingPieces) return;
+    _savingPieces = true;
     const clean = JSON.parse(JSON.stringify(dissection, (k, v) =>
       (k === '_patternPending' || k === '_virtual') ? undefined : v));
+    for (const p of (clean.pieces || [])) {
+      if (p._image)   p._image   = await _shrinkDataUrl(p._image, 1280);
+      if (p._pattern) p._pattern = await _shrinkDataUrl(p._pattern, 1600);
+    }
     let body = JSON.stringify({ folderId: sid, data: clean });
     if (body.length > 27 * 1024 * 1024) {
-      // Too heavy for one file: drop the patterns, keep the piece images.
       (clean.pieces || []).forEach(p => { delete p._pattern; });
       body = JSON.stringify({ folderId: sid, data: clean });
     }
-    fetch('/api/admin/savepieces', {
+    const r = await fetch('/api/admin/savepieces', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
       body,
-    }).then(r => console.log('[pieces save]', r.status))
-      .catch(e => console.warn('[pieces save]', e));
-  } catch (e) { console.warn('[pieces save]', e); }
+    });
+    if (!r.ok) {
+      const d = await r.text().catch(() => '');
+      console.warn('[pieces save]', r.status, d.slice(0, 200));
+      // Say it out loud. A silent failure here is what made the same client
+      // get dissected and rendered over and over.
+      showBackendToast('Could not save this dissection (' + r.status + '), it may run again next time.');
+    } else {
+      console.log('[pieces save] ok,', Math.round(body.length / 1024) + 'kb');
+    }
+  } catch (e) {
+    console.warn('[pieces save]', e);
+    showBackendToast('Could not save this dissection, it may run again next time.');
+  } finally {
+    _savingPieces = false;
+  }
 }
 
 // v12.9: hand the dissected, rendered pieces to the embedded Operations Room.
@@ -2558,9 +2585,43 @@ function getApiKey() {
   } catch (_) { return ''; }
 }
 
-function setDissectStatus(on) {
+function setDissectStatus(on, label) {
   const el = document.getElementById('dissect-status');
-  if (el) el.style.display = on ? 'inline-flex' : 'none';
+  if (!el) return;
+  if (label) el.textContent = label;
+  el.style.display = on ? 'inline-flex' : 'none';
+}
+
+// ── v0.37: Dissect, pressed on purpose ──────────────────────────────────────
+// This is the only thing in the Brief that spends money on its own initiative,
+// and it only runs when the pill is pressed. It runs ONCE per client: the
+// result, including every rendered piece, is written back to that client's
+// Drive folder, so reopening them costs nothing and the pill never returns.
+async function beginDissection() {
+  const t = window._dissectTarget;
+  if (!t || !t.hero) return showBackendToast('No garment loaded yet.');
+  if (!getApiKey()) return showBackendToast('Sign in on the Systems Map first, then reload.');
+  const pill = document.getElementById('dissect-start-pill');
+  if (pill) { pill.classList.add('busy'); pill.textContent = 'Dissecting…'; pill.disabled = true; }
+  setDissectStatus(true, 'Dissecting…');
+  try {
+    const d = await dissectImage(t.hero);
+    if (!d || !Array.isArray(d.pieces) || !d.pieces.length) throw new Error('nothing came back');
+    t.card._dissection = d;
+    renderDissection({ card: t.card });          // pills appear, Dissect disappears
+    setDissectStatus(true, 'Rendering pieces…');
+    await renderAllPieces(t.hero, d.pieces);
+    renderDissection({ card: t.card });          // repaint with the piece pictures
+    _postPiecesToOps(d.pieces);
+    await _savePiecesToDrive(d);                 // saved to this client, once, forever
+    showBackendToast('Dissected and saved. This client will not be charged again.');
+  } catch (e) {
+    console.warn('[dissect]', e);
+    showBackendToast('Dissection failed: ' + ((e && e.message) || 'try again'));
+    if (pill) { pill.classList.remove('busy'); pill.textContent = 'Dissect'; pill.disabled = false; }
+  } finally {
+    setDissectStatus(false, 'Dissecting…');
+  }
 }
 
 async function dissectImage(imageDataUrl) {
@@ -2829,6 +2890,9 @@ function renderDissection(visionItem) {
   // the same list. Skip pieces (base layer) appear as muted cards in the
   // operating room but are NOT in the swiper pills.
   const pieces       = inferPieces(visionItem.card);
+  const hasDissection = !!(visionItem.card && visionItem.card._dissection &&
+                           Array.isArray(visionItem.card._dissection.pieces) &&
+                           visionItem.card._dissection.pieces.length);
   const swipeable    = pieces.filter(p => !p.skip);
   const swiperPieces = [
     { name: 'Full view', skip: false, _virtual: true },
@@ -2844,6 +2908,10 @@ function renderDissection(visionItem) {
       const cls = 'piece-pill' + (i === 0 ? ' active' : '');
       return '<button class="' + cls + '" onclick="setActivePiece(' + i + ')">' + escapeHtml(p.name) + '</button>';
     }).join('') +
+      // v0.37: Dissect sits right beside Full view. It is only here when this
+      // client has never been dissected, and it removes itself the moment it
+      // is pressed, so the spend is always something you chose.
+      (hasDissection ? '' : '<button class="piece-pill dissect-start" id="dissect-start-pill" onclick="beginDissection()">Dissect</button>') +
       '<button class="piece-pill" id="fab-tab-pill" onclick="showBriefFabrics()">Fabrics</button>';
     const frame = document.getElementById('op-image-frame');
     if (frame && !frame.dataset.swipeWired) {
@@ -3078,9 +3146,17 @@ function _syncOpRoom() {
   if (_3dMode !== 'cube') { _3dMode = 'cube'; _sync3DPills(); }
 
   // Auto-fire pattern dissection for the active GARMENT piece only.
+  // v0.37: a pattern is drawn the first time you actually open this piece,
+  // not for every piece the moment a client is opened.
   if (isGarmentPiece && !piece._pattern && !piece._patternPending && getApiKey()) {
     piece._patternPending = true;
     dissectActivePieceForPattern()
+      .then(() => {
+        // v0.37: save it the moment it exists, so this pattern is only ever
+        // paid for once, however many times the piece is opened again.
+        const t = window._dissectTarget;
+        if (t && t.card && t.card._dissection) _savePiecesToDrive(t.card._dissection);
+      })
       .catch(() => {})
       .finally(() => { piece._patternPending = false; });
   }

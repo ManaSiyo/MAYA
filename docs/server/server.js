@@ -19,6 +19,8 @@
 //   GOOGLE_OAUTH_REFRESH_TOKEN  — refresh token for the atelier Drive account
 //   DRIVE_FOLDER_ID             — MAYA folder id in Drive
 //   RUNWAY_API_KEY              — optional; absent → /api/runway returns 501
+//   FAL_API_KEY                 — optional; absent → /api/fal/* returns 501
+//   STRIPE_SECRET_KEY           — optional; absent → /api/tip returns 501
 // ═══════════════════════════════════════════════════════════════════════════
 
 import express from 'express';
@@ -76,8 +78,12 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS !== undefined
 // durable per-user daily cap (Firestore/Redis) is the follow-up when traffic
 // justifies it. Tunable via env: RL_PER_MIN (default 20), RL_PER_DAY (600).
 // ═══════════════════════════════════════════════════════════════════════════
+// v12.5: 600 a day meant one account could spend about $39 of image credit in a
+// single day. 50 is more than anyone designing a real garment will ever reach,
+// and caps the worst case at a few dollars. This is a fair use ceiling, not a
+// paywall; MAYA stays free.
 const RL_PER_MIN = Number(process.env.RL_PER_MIN || 20);
-const RL_PER_DAY = Number(process.env.RL_PER_DAY || 600);
+const RL_PER_DAY = Number(process.env.RL_PER_DAY || 50);
 // v12.5: the atelier's own accounts get a much higher ceiling. The Brief and
 // the Operations Room now go through this proxy instead of holding the key in
 // the browser, and dissecting one garment fires a burst of parallel renders
@@ -478,6 +484,63 @@ app.post('/api/runway', requireAuthHeader, express.json({ limit: '30mb' }), asyn
   return res.status(400).json({ error: 'unknown_action', detail: 'expected action: generate|status' });
 });
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+// v12.6: /api/tip — Stripe. The first money pipe through MAYA.
+//
+// Deliberately the smallest possible real payment: a tip to the atelier, any
+// amount from $1. It proves the whole path (browser to Stripe to a receipt)
+// without deciding anything about pricing, and without putting a charge in
+// front of a client. Everything else in MAYA stays free.
+//
+// Uses Stripe's REST API directly over fetch, so there is no npm dependency to
+// install or keep updated. Dormant (501) until STRIPE_SECRET_KEY is set.
+//   STRIPE_SECRET_KEY — from the Stripe dashboard, server side only
+// ═══════════════════════════════════════════════════════════════════════════
+app.post('/api/tip', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
+  const sk = process.env.STRIPE_SECRET_KEY;
+  if (!sk) return res.status(501).json({ error: 'stripe_not_configured' });
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized', detail: e.message }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+
+  // Whole dollars, $1 to $500. Anything outside that is a mistake or mischief.
+  const dollars = Math.round(Number((req.body || {}).amount || 0));
+  if (!Number.isFinite(dollars) || dollars < 1 || dollars > 500) {
+    return res.status(400).json({ error: 'bad_amount', detail: 'between 1 and 500' });
+  }
+  const origin = ALLOWED_ORIGINS.includes(req.headers.origin) ? req.headers.origin : 'https://maya.manasiyo.com';
+  const form = new URLSearchParams();
+  form.set('mode', 'payment');
+  form.set('success_url', origin + '/?tip=thanks');
+  form.set('cancel_url', origin + '/?tip=cancelled');
+  form.set('customer_email', user.email || '');
+  form.set('client_reference_id', user.sub);
+  form.set('line_items[0][quantity]', '1');
+  form.set('line_items[0][price_data][currency]', 'usd');
+  form.set('line_items[0][price_data][unit_amount]', String(dollars * 100));
+  form.set('line_items[0][price_data][product_data][name]', 'Tip Mana Siyo');
+  form.set('line_items[0][price_data][product_data][description]', 'Supports MAYA, which stays free for everyone.');
+  try {
+    const r = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + sk, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: form,
+    });
+    const j = await r.json();
+    if (!r.ok) {
+      console.error('[tip] stripe', r.status, JSON.stringify(j).slice(0, 300));
+      return res.status(502).json({ error: 'stripe_failed', detail: (j.error && j.error.message) || r.status });
+    }
+    console.log('[tip] $' + dollars, 'session for', user.email);
+    return res.json({ ok: true, url: j.url });
+  } catch (e) {
+    console.error('[tip] exception', e.message);
+    return res.status(502).json({ error: 'stripe_exception', detail: e.message });
+  }
+});
 
 // ═══════════════════════════════════════════════════════════════════════════
 // v12.5: /api/fal/* — fal.ai (Hyper3D Rodin) proxy. Same shape as the OpenAI
