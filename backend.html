@@ -5077,6 +5077,17 @@ const state = {
   animHandle: null,
 };
 
+// True only when the 3D frame is actually within the window.
+function _viewerOnScreen(el) {
+  try {
+    const r = el.getBoundingClientRect();
+    return r.bottom > 0 && r.top < (window.innerHeight || 0) && r.width > 0;
+  } catch (_) { return true; }
+}
+window.addEventListener('scroll', function () {
+  if (state && state.resume) state.resume();
+}, { passive: true, capture: true });
+
 function ensureViewer() {
   if (state.renderer) return state;
   const frame = document.getElementById('op-room-3d');
@@ -5119,12 +5130,18 @@ function ensureViewer() {
   });
   state.resizeObs.observe(frame);
 
+  // v12.7: this drew sixty frames a second forever, including while the 3D
+  // panel was scrolled off screen or the tab was in the background. It now
+  // stops whenever nobody is looking at it, which is most of the time.
   const tick = () => {
+    if (document.hidden || !_viewerOnScreen(frame)) { state.animHandle = null; return; }
     state.animHandle = requestAnimationFrame(tick);
     controls.update();
     renderer.render(scene, camera);
   };
+  state.resume = () => { if (!state.animHandle && !document.hidden) tick(); };
   tick();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) state.resume(); });
   return state;
 }
 

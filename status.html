@@ -445,6 +445,9 @@ async function loadSubmissions() {
     const fresh = (Date.now() - new Date(f.createdTime || 0).getTime()) < FRESH_MS;
     return { f, fresh, thumbId: (dream && dream.id) || (anyImg && anyImg.id) || '' };
   }).filter(x => x.thumbId || x.fresh);
+  const stripSig = visible.map(x => x.f.id + ':' + (x.thumbId || '')).join(',');
+  if (strip.dataset.sig === stripSig) return;      // nothing new, leave it alone
+  strip.dataset.sig = stripSig;
   strip.innerHTML = visible.map(({ f, thumbId, fresh }) => {
     const img = thumbId
       ? '<img loading="lazy" src="https://drive.google.com/thumbnail?id=' + esc(thumbId) + '&sz=w480" alt="" onerror="this.remove()">'
@@ -462,7 +465,12 @@ async function loadSubmissions() {
 // v12.5: the strip refreshes itself, so a submission that lands while the map
 // is open appears without a reload. Also refreshes the moment the tab is
 // looked at again.
-setInterval(() => { if (_idTok && document.visibilityState === 'visible') loadSubmissions(); }, 20000);
+// v12.7: one timer, not two, and it only runs while you are looking at the
+// page. The strip also refuses to repaint when nothing has changed, because
+// rewriting it restarts every image download and makes the page flash.
+setInterval(() => {
+  if (_idTok && document.visibilityState === 'visible') loadSubmissions();
+}, 45000);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && _idTok) { loadSubmissions(); runChecks(); }
 });
@@ -484,6 +492,9 @@ async function loadTraffic() {
     return;
   }
   const t = d.ranges || {};
+  const tSig = [d.live, (t.today||{}).users, (t.d7||{}).users, (t.d28||{}).users].join(',');
+  if (tiles.dataset.sig === tSig) { tiles.classList.remove('hidden'); return; }
+  tiles.dataset.sig = tSig;
   tiles.innerHTML =
     '<div class="tile live"><div class="k">&#9679; live now</div><div class="v">' + d.live + '</div></div>' +
     '<div class="tile"><div class="k">today</div><div class="v">' + ((t.today || {}).users || 0) + '</div></div>' +
@@ -551,7 +562,7 @@ async function savePrompting() {
 }
 _gisBoot();
 loadSubmissions();
-setInterval(() => { if (_idTok) { loadTraffic(); loadSubmissions(); } }, 60000);
+setInterval(() => { if (_idTok && document.visibilityState === 'visible') loadTraffic(); }, 120000);
 </script>
 </body>
 </html>
