@@ -18,6 +18,57 @@ Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
 ─────────────────────────────────────────────
 
+AUGUST 13, 2026, 4:10 PM
+
+[x] Projects shareable with a link. BUILT in v13.7: Share button in the
+    drawer copies a /?share=TOKEN link. Recipient signs in with Google
+    as normal, confirms, and the project is COPIED into their account,
+    every picture and the face re-uploaded as their own. Deleting on
+    either side never touches the other. Share name falls back: project
+    name, then client name, then the sharer. No live co-editing.
+[x] Projects are self-contained now: the client's face photo is copied
+    INTO each project on save, so a project carries everything it needs
+    to be shared. The avatar roster keeps its own copy for the client
+    list.
+[x] No dead floating images ever: deleting a card or a whole project now
+    takes its community wall post down first. Each account's hearts make
+    that account's own wall posts, so my delete never touches the copy
+    someone saved and hearted themselves.
+[x] Fixed while mapping the data for sharing: deleting a project could
+    wrongly delete the client's face photo from the SHARED avatars
+    folder, blanking the face in every other project of that client
+    (audit finding 4). A guard now protects the shared folder.
+
+AUGUST 13, 2026, 3:58 PM
+
+[x] Every push that ships a new version must force a sign out on both
+    the MAYA app and the Systems Map, so an update is unmistakable.
+    Done in v13.6: open tabs already signed out via the update watchdog;
+    now a fresh load after a deploy signs out too, on both pages. The
+    Systems Map now carries the same version number as the app, and the
+    regression test fails if the two ever drift apart.
+
+AUGUST 13, 2026, 3:03 PM
+
+Bugs I notice:
+[x] Systems Map still shows no submissions. Root cause: the Drive
+    refresh token on Cloud Run was expired (invalid_grant). FIXED 3:55
+    PM: fresh token minted under In production status, deployed,
+    verified live: 7 submissions listed, deep health all green. Full
+    story in fixes.txt. The map also said "waiting for sign in" instead
+    of the real error; that lie is fixed in v13.5.
+[x] Community board shows nothing. Diagnosed: not Drive, not rules. The
+    pipeline passes a full self test. The wall is empty because hearts
+    publish only at the moment of hearting, and all existing hearts
+    predate the wall. Re-heart any vision and it appears.
+
+Changes I want:
+[x] Delete the "Never delete the Google project" text.
+[x] Put the collapsible sections (Recent changes, prompting engine,
+    architecture) at the bottom of the screen.
+[x] Door cards (Backend, MAYA, Manasiyo.com, Operations Room Beta):
+    remove the arrows, keep every door's text the same font size.
+
 AUGUST 13, 2026, 2:35 PM
 
 Documentation:
@@ -25,9 +76,9 @@ Documentation:
     date and time, kept in the folder as text.
 
 Bugs I notice:
-[ ] Systems Map shows no submissions, says "Waiting for the one sign in
+[x] Systems Map shows no submissions, says "Waiting for the one sign in
     at the top of the page."
-[ ] Drive problem, apparently the cause of the above.
+[x] Drive problem, apparently the cause of the above.
 [x] Dragging cards looks glitchy: the card pops, goes invisible for a
     moment, comes back when I let go.
 [x] Card layering is wrong: whatever I click last should come to the top

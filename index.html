@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.4">
+<meta name="maya-version" content="13.7">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -3648,6 +3648,21 @@
   // Google; we check expiry on every getter and re-show the gate when stale.
   const MAYA_TOKEN_KEY = 'maya_google_token';
   const MAYA_EMAIL_KEY = 'maya_google_email';
+  // v13.6: every deploy signs everyone out on their NEXT LOAD as well. The
+  // update watchdog already signs out tabs that are open when a new version
+  // ships; this covers the fresh visit. Fromsa's rule: a new version must be
+  // unmistakable, and being asked to sign in again is the signal.
+  try {
+    const _vNow = (document.querySelector('meta[name="maya-version"]') || {}).content || '';
+    const _vSeen = localStorage.getItem('maya_seen_version_app');
+    if (_vSeen && _vNow && _vSeen !== _vNow) {
+      localStorage.removeItem(MAYA_TOKEN_KEY);
+      localStorage.removeItem(MAYA_EMAIL_KEY);
+      try { if (window.firebase && firebase.auth) firebase.auth().signOut(); } catch (_) {}
+      console.log('[maya] version changed ' + _vSeen + ' -> ' + _vNow + ', signed out on load');
+    }
+    if (_vNow) localStorage.setItem('maya_seen_version_app', _vNow);
+  } catch (_) {}
   let _googleIdToken = localStorage.getItem(MAYA_TOKEN_KEY) || null;
   let _googleEmail   = localStorage.getItem(MAYA_EMAIL_KEY) || null;
 
@@ -3954,6 +3969,7 @@
     <!-- v11.3: Fabrics moved down below the references content. -->
     <div class="drawer-top-row">
       <button class="drawer-fabrics" onclick="openFabricsDrawer()" title="In-house fabric inventory">Fabrics</button>
+      <button class="drawer-fabrics" onclick="shareCurrentProject()" title="Copy a link that lets anyone save their own copy of this project">Share</button>
     </div>
     <!-- v7.9: bottom action row, Save / New / Clean. v11.3: Save now
          commits a named session snapshot to the Sessions library;
@@ -5078,6 +5094,15 @@ function removeItem(id) {
   _fade(el);
   _fade(pill);
   updateCount();
+  // v13.7: no dead floating images EVER, per Fromsa. If this card is on the
+  // community wall, its post comes down with it. Only THIS account's post is
+  // touched; anyone who saved a copy and hearted it owns their own post.
+  try {
+    if (typeof communityBoard !== 'undefined' && it.card &&
+        (it.card._communityId || (it.card.favorited && (it.card.image || it.card.imageUrl)))) {
+      communityBoard.unpublish(it);
+    }
+  } catch (_) {}
   // v11.29: clean up the item's Storage image too, deleteImage existed but
   // was never called, so users/{uid}/images/ grew forever. Fire-and-forget;
   // a failure just leaves an orphan (same as before).
@@ -10731,6 +10756,128 @@ function closeFabricsDrawer() {
 let _fabricsTab = 'house';
 let myFabrics = null;   // null = not loaded yet; [] = loaded, empty
 
+// ────────────────────────────────────────────────────────────
+// v13.7: SHARED PROJECTS. Share writes a FROZEN SNAPSHOT of the open
+// project to shares/{token}; the link is /?share=TOKEN. The recipient signs
+// in as normal, confirms, and the project is COPIED into their account:
+// every picture is fetched and re-uploaded as theirs, so nothing they have
+// depends on the sharer. Deleting on either side never touches the other.
+// ────────────────────────────────────────────────────────────
+async function shareCurrentProject() {
+  try {
+    if (typeof projectStore === 'undefined' || !projectStore.ready() || !projectStore.currentId) {
+      showError('Nothing to share yet, put something on the board first.');
+      return;
+    }
+    showToast('Preparing the share link…');
+    const flushed = await projectStore.flush();
+    if (flushed === false) { showError('Could not save the project first, so no link was made. Check your connection and try again.'); return; }
+    const doc = await projectStore._col().doc(projectStore.currentId).get();
+    if (!doc.exists) { showError('Could not read the project to share it.'); return; }
+    const v = doc.data() || {};
+    // Name rule: project name, else the client's name, else the sharer.
+    const shareName = (currentClientName && String(currentClientName).trim())
+      || (v.name && !/^Untitled\b/.test(String(v.name)) ? v.name : '')
+      || ((typeof _googleEmail === 'string' && _googleEmail) ? _googleEmail.split('@')[0] : 'A MAYA project');
+    const items = JSON.parse(JSON.stringify(v.items || []));
+    for (const it of items) {
+      if (it && it.card) { delete it.card._communityId; delete it.card._imgId; }
+    }
+    const token = 'sh_' + Date.now().toString(36) +
+      Array.from(crypto.getRandomValues(new Uint8Array(9))).map(b => (b % 36).toString(36)).join('');
+    await firebase.firestore().collection('shares').doc(token).set({
+      ownerUid: projectStore._uid(),
+      name: String(shareName).slice(0, 80),
+      items,
+      lastSummary: v.lastSummary || null,
+      notes: v.notes || null,
+      ts: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    const link = location.origin + '/?share=' + token;
+    let copied = false;
+    try { await navigator.clipboard.writeText(link); copied = true; } catch (_) {}
+    if (copied) showToast('Share link copied. Anyone who opens it can save their own copy.');
+    else prompt('Copy this share link:', link);
+  } catch (e) {
+    console.warn('[share]', e);
+    showError('Could not create the share link: ' + ((e && e.message) || 'try again'));
+  }
+}
+
+async function _urlToDataUrl(u) {
+  const b = await (await fetch(u)).blob();
+  return await new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(fr.result); fr.onerror = () => rej(fr.error);
+    fr.readAsDataURL(b);
+  });
+}
+
+// Boot path: /?share=TOKEN. Waits for sign in, then offers the copy.
+function _maybeOpenShare() {
+  const token = new URLSearchParams(location.search).get('share');
+  if (!token || !/^sh_[a-z0-9]{6,60}$/.test(token)) return;
+  let tries = 0;
+  const tick = async () => {
+    let user = null;
+    try { user = firebase.auth().currentUser; } catch (_) {}
+    if (!user || typeof projectStore === 'undefined' || !projectStore.ready()) {
+      if (++tries < 240) return void setTimeout(tick, 1000);   // waits for the sign in
+      return;
+    }
+    try {
+      const d = await firebase.firestore().collection('shares').doc(token).get();
+      if (!d.exists) { showError('This share link is no longer active.'); return; }
+      const s = d.data() || {};
+      if (!confirm('Save a copy of "' + (s.name || 'this project') + '" to your projects?\n\nIt becomes YOUR project, with its own pictures. Nothing links back.')) return;
+      showToast('Copying "' + (s.name || 'project') + '" to your account…');
+      // Every picture becomes a data url, so the normal save pipeline
+      // uploads a fresh copy under THIS account. No borrowed addresses.
+      const items = JSON.parse(JSON.stringify(s.items || []));
+      for (const it of items) {
+        const c = it && it.card; if (!c) continue;
+        delete c._communityId; delete c.storagePath; delete c._uploadedToCloud; delete c._imgId;
+        const src = c.imageUrl || c.image;
+        if (src && String(src).startsWith('http')) {
+          try { c.image = await _urlToDataUrl(src); delete c.imageUrl; }
+          catch (_) { /* keep the address rather than lose the card */ }
+        }
+      }
+      const sum = s.lastSummary ? JSON.parse(JSON.stringify(s.lastSummary)) : null;
+      if (sum && typeof sum._face_photo === 'string' && sum._face_photo.startsWith('http')) {
+        try { sum._face_photo = await _urlToDataUrl(sum._face_photo); } catch (_) {}
+        delete sum._face_photo_url; delete sum._face_photo_path;
+      }
+      await projectStore.flush();
+      projectStore.detach();
+      await _hydrate(async () => { _doClear(); });
+      lastSummary = sum;
+      if (s.notes) { try { const n = document.getElementById('notes-area'); if (n) n.value = s.notes; } catch (_) {} }
+      await _hydrate(async () => { _paintItems(items); });
+      // Card mounting is deferred (placement runs on timeouts), and the save
+      // only snapshots cards that are actually on the canvas. Wait for them.
+      const _want = items.filter(x => x && x.card).length;
+      for (let w = 0; w < 100; w++) {
+        const mounted = (window.items || []).filter(i => i && i.el).length;
+        if (mounted >= _want) break;
+        await new Promise(r => setTimeout(r, 100));
+      }
+      currentClientName = s.name || null;
+      await projectStore.createFromCanvas(s.name || null);
+      if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
+      if (typeof _renderSessionsDropdown === 'function') _renderSessionsDropdown();
+      showToast('"' + (s.name || 'Project') + '" is now yours, saved to your projects.');
+      try { history.replaceState(null, '', location.pathname); } catch (_) {}
+    } catch (e) {
+      console.warn('[share open]', e);
+      showError('Could not open the shared project: ' + ((e && e.message) || 'try again'));
+    }
+  };
+  tick();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _maybeOpenShare);
+else _maybeOpenShare();
+
 function openUploadChooser() {
   const m = document.getElementById('upload-choose-modal');
   if (m) m.classList.add('open');
@@ -12484,8 +12631,12 @@ const projectStore = {
     // v13.0: the shared avatars folder counts as a good home too. Without this
     // the face was copied back into the project on the next save, which undid
     // the whole point of storing it somewhere a project delete cannot reach.
+    // v13.7: projects are SELF-CONTAINED, per Fromsa (shareability). The face
+    // is copied into every project's own folder on save, so a project carries
+    // everything it needs and deleting one project never touches another.
+    // The avatar roster keeps its own separate copy for the client list.
     const p = lastSummary._face_photo_path || '';
-    const haveHere = !!p && (p.indexOf(mine) !== -1 || p.indexOf('/projects/avatars/') !== -1);
+    const haveHere = !!p && p.indexOf(mine) !== -1;
     if (typeof face === 'string' && face.startsWith('data:')) {
       if (haveHere && lastSummary._face_photo_url) {
         clone._face_photo = lastSummary._face_photo_url;
@@ -12495,11 +12646,12 @@ const projectStore = {
         clone._face_photo_url = up.url; clone._face_photo_path = up.path;
         lastSummary._face_photo_url = up.url; lastSummary._face_photo_path = up.path;
       }
-    } else if (typeof face === 'string' && face.startsWith('http') && !haveHere &&
-               face.indexOf('%2Favatars%2F') === -1 && face.indexOf('/avatars/') === -1) {
+    } else if (typeof face === 'string' && face.startsWith('http') && !haveHere) {
       // v12.5: this face was uploaded under a DIFFERENT project (carried across
       // by New or by switching client). Copy it into this project, otherwise
       // deleting the other project would blank this client's face here.
+      // v13.7: faces from the shared avatars folder are copied in too, so the
+      // project owns its picture outright and is shareable as one piece.
       try {
         const up = await this.uploadImage(face, projectId);
         clone._face_photo = up.url;
@@ -12832,8 +12984,25 @@ const projectStore = {
       const d = await this._col().doc(id).get();
       const v = d.exists ? (d.data() || {}) : {};
       paths = (v.items || []).map(s => s && s.card && s.card.storagePath).filter(Boolean);
+      // v13.6: NEVER delete a face that lives in the shared avatars folder.
+      // That folder exists precisely so a project delete cannot reach the
+      // client's face (one client, many projects). Only a face stored inside
+      // THIS project's own folder goes down with the project.
       const fp = v.lastSummary && v.lastSummary._face_photo_path;
-      if (fp) paths.push(fp);
+      if (fp && String(fp).indexOf('/projects/avatars/') === -1) paths.push(fp);
+      // v13.7: no dead floating images EVER. Any card of this project that
+      // sits on the community wall comes down before its picture dies.
+      for (const s of (v.items || [])) {
+        const cid = s && s.card && s.card._communityId;
+        if (!cid) continue;
+        try {
+          const cref = firebase.firestore().collection('community').doc(cid);
+          const cd = await cref.get();
+          const sp = (cd.exists && (cd.data() || {}).storagePath) || '';
+          try { await cref.delete(); } catch (_) {}
+          if (sp) { try { await firebase.storage().ref(sp).delete(); } catch (_) {} }
+        } catch (_) {}
+      }
     } catch (_) {}
     await this._col().doc(id).delete();                              // 1) gone, listeners clear other devices. Throws if it fails.
     let tombOk = true;

@@ -10,25 +10,58 @@ done, how it was verified, and whether it is FIXED, OPEN, or RECURRED.
 
 ─────────────────────────────────────────────
 
-AUGUST 13, 2026, AFTERNOON. STATUS: OPEN.
+AUGUST 13, 2026, AFTERNOON. STATUS: FIXED, 3:55 PM.
 
-Symptom: Systems Map shows the Drive light red, "Drive not answering,
-submissions will not land." Signed out shallow check, so the source of
-truth is the server's own /api/healthz reporting configured.drive false.
+Symptom: Systems Map Drive light red, no submissions listed, community
+wall empty (the wall turned out to be unrelated, see below).
 
-What that means: the live maya-api service on Cloud Run is missing
-GOOGLE_OAUTH_REFRESH_TOKEN or DRIVE_FOLDER_ID from its environment right
-now. Not expired, absent. The code in this folder is not the problem and
-no push will fix it.
+Root cause, confirmed at 3:05 PM by calling /api/admin/submissions with
+Fromsa's own signed in session: the env vars ARE set (healthz reports
+drive configured), but Google answers the token exchange with
+  oauth refresh 400 invalid_grant: "Token has been expired or revoked."
+The GOOGLE_OAUTH_REFRESH_TOKEN on Cloud Run is dead.
 
-Same symptom as August 5. Cause of the recurrence not yet known.
-Suspects: traffic rolled back to an old Cloud Run revision from before
-the Aug 5 fix, or the variables were lost during a redeploy.
+Why it keeps dying: if the OAuth consent screen for the pro-maya web
+client is in Testing publishing status, Google expires every refresh
+token after 7 days. The token was renewed August 5. August 5 plus 7 days
+is August 12. It died on schedule. It will die every week until the app
+is published to Production.
 
-Next step: Cloud Run console, maya-api, serving revision, Variables tab.
-Confirm which variables are present and which revision traffic is on.
-Fix is re-adding the missing variable in Edit and deploy new revision.
-When done, update this entry with what was actually found.
+The fix, two parts, both in Fromsa's hands (credentials):
+1. PERMANENT: console.cloud.google.com, APIs and Services, OAuth consent
+   screen, project pro-maya. If Publishing status says Testing, press
+   Publish app. This stops the weekly expiry.
+2. NOW: mint a fresh refresh token for the atelier Drive account (same
+   procedure as August 5, see docs/server/MIGRATION-RUNBOOK.md), then
+   Cloud Run, maya-api, Edit and deploy new revision, replace
+   GOOGLE_OAUTH_REFRESH_TOKEN with the new value, deploy.
+What was actually done, 3:40 to 3:55 PM: confirmed the OAuth app was
+already In production (so the weekly expiry only applied to tokens
+minted earlier, under Testing). Retrieved the server's real client pair
+from the Cloud Run environment variables (the first client edited in
+the Auth console turned out to be the sign in client, not the Drive
+one). Minted a fresh refresh token in the OAuth Playground using that
+pair with the full drive scope, signed in as the atelier Drive account,
+pasted it into GOOGLE_OAUTH_REFRESH_TOKEN, deployed a new revision.
+
+Verified immediately from Fromsa's signed in session:
+/api/admin/submissions answered 200 with 7 submissions, and
+/api/healthz/deep answered ok true, drive true. Tokens minted under In
+production status do not expire on a clock; this should not recur
+weekly. If it EVER recurs, check first whether someone pressed Back to
+testing on the Audience page, or changed the atelier account password
+(that revokes refresh tokens).
+
+Also fixed in code (v13.5): the Systems Map used to show "waiting for
+the one sign in" when this failure happened. It now prints the real
+error, so next week cannot masquerade as a sign in problem.
+
+Separately confirmed the same afternoon: the community wall is NOT a
+Drive or rules problem. A full pipeline self test (Storage upload,
+Firestore create, read back, delete) passed from Fromsa's own session.
+The wall is empty because publishing only happens at the moment a heart
+is toggled, and every existing heart predates the wall. Re-heart any
+vision and it publishes.
 
 ─────────────────────────────────────────────
 

@@ -4,6 +4,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
+<meta name="maya-version" content="13.7">
+<!-- v13.6: keep this number in step with index.html's maya-version.
+     A version change signs the map out on load, per Fromsa: every deploy
+     must be unmistakable. The regression test asserts the two match. -->
+<script>
+try {
+  const _vNow = (document.querySelector('meta[name="maya-version"]') || {}).content || '';
+  const _vSeen = localStorage.getItem('maya_seen_version_map');
+  if (_vSeen && _vSeen !== _vNow) {
+    localStorage.removeItem('maya_admin_tok');
+    console.log('[map] version changed ' + _vSeen + ' -> ' + _vNow + ', signed out on load');
+  }
+  localStorage.setItem('maya_seen_version_map', _vNow);
+} catch (_) {}
+</script>
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
 <link rel="icon" href="/aesthetics/ui/favicon.ico" sizes="32x32">
 <link rel="apple-touch-icon" href="/aesthetics/ui/apple-touch-icon.png">
@@ -161,6 +176,11 @@
                border-radius:10px;padding:11px 13px;margin-bottom:10px}
 
   /* Architecture */
+  /* v13.5: the fold sections and the credits line live at the BOTTOM of the
+     screen, per Fromsa. The wrap is a full-height column and the footer is
+     pushed down by the space above it. */
+  .wrap{min-height:100vh;display:flex;flex-direction:column}
+  .map-footer{margin-top:auto;padding-top:34px}
   .arch{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .arch .col{border:0.5px solid var(--line);border-radius:16px;background:rgba(10,16,34,0.55);padding:16px 18px}
   .arch h4{font-family:'Jost',sans-serif;font-weight:300;font-size:10px;letter-spacing:0.24em;
@@ -245,9 +265,9 @@
 
   <div id="checked-at">checking&#8230;</div>
   <div class="grid doors" style="grid-template-columns:repeat(3,1fr);margin:8px 0 2px">
-    <a class="card" href="/backend.html"><b>Backend</b><span class="go">&rarr;</span></a>
-    <a class="card" href="https://maya.manasiyo.com" target="_blank"><b>MAYA</b><span class="go">&rarr;</span></a>
-    <a class="card" href="https://manasiyo.com" target="_blank"><b>Manasiyo.com</b><span class="go">&rarr;</span></a>
+    <a class="card" href="/backend.html"><b>Backend</b></a>
+    <a class="card" href="https://maya.manasiyo.com" target="_blank"><b>MAYA</b></a>
+    <a class="card" href="https://manasiyo.com" target="_blank"><b>Manasiyo.com</b></a>
   </div>
 
 
@@ -266,12 +286,14 @@
   <div id="traffic-note">checking&#8230;</div>
 
   <div class="grid doors" style="grid-template-columns:1fr;max-width:420px;margin:14px auto 6px">
-    <a class="card" href="/operations.html" target="_blank"><b>Operations Room Beta</b><span class="go">&rarr;</span></a>
+    <a class="card" href="/operations.html" target="_blank"><b>Operations Room Beta</b></a>
   </div>
 
-  <details class="fold" id="changes-fold" data-latest="2026-08-13e">
+  <div class="map-footer">
+  <details class="fold" id="changes-fold" data-latest="2026-08-13f">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 13</b>Projects are shareable. Press Share in the drawer and the link is copied; whoever opens it signs in as usual and saves their OWN copy, pictures and face included. Deleting on either side never touches the other. Projects now carry their own face photo too, and taking a card or a project down also takes its community wall post down, so nothing dead ever floats on the wall.</div>
     <div class="chg"><b>Aug 13</b>Cards behave. Dragging no longer blinks the card invisible, whatever you touch last comes to the top and stays there, stacks put the NEWEST version in front, sit 30 percent tighter, the stack button now unstacks too, and a stacked group drags as one piece.</div>
     <div class="chg"><b>Aug 13</b>Fabrics grew two tabs: Mana Siyo fabrics, the atelier library, and My fabrics, your own uploads. Photograph a fabric with your phone, upload it, and it follows your account into every new project. The upload button now asks: inspo, or my fabric?</div>
     <div class="chg"><b>Aug 13</b>The community wall. Swipe up from the moodboard for everyone's hearted visions, drifting past on their own. Favorites are still one swipe down. Anything you heart now appears on the wall, and taking the heart back takes it down again.</div>
@@ -357,8 +379,8 @@
   </div>
   </details>
 
-  <div class="warn">Never delete the Google project <b>maya-496803</b>, it holds MAYA's sign-in keys.</div>
   <div class="money">Runs on Google credits, AI by OpenAI, main site and DNS on Wix, health check every morning, emails only on failure</div>
+  </div><!-- /map-footer -->
 </div>
 
 <script>
@@ -559,7 +581,18 @@ async function loadSubmissions() {
   if (r.status === 404) { _subsNote(_cmdBlock('<b>FEED PENDING, one command switches it on:</b>')); return; }
   if (r.status === 401) { _expired(); return; }
   if (r.status === 403) { _subsNote('This Google account is not on the admin list.'); return; }
-  if (!r.ok) return;
+  if (!r.ok) {
+    // v13.5: say what the server actually said. A 500 here used to leave the
+    // default "waiting for sign in" note on screen, pointing at the wrong fault.
+    let j = {}; try { j = await r.json(); } catch (_) {}
+    const d = String(j.detail || '');
+    if (/invalid_grant|expired or revoked|oauth/i.test(d)) {
+      _subsNote('Drive is not answering: the server\'s Drive authorisation has expired or been revoked. Submissions will not land until the refresh token is renewed on Cloud Run. See fixes.txt.');
+    } else {
+      _subsNote('The server could not list submissions (' + r.status + (j.error ? ', ' + j.error : '') + '). Not a sign in problem.');
+    }
+    return;
+  }
   const data = await r.json();
   document.getElementById('subs-count').textContent = data.total ? data.total + ' total' : '';
   const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));

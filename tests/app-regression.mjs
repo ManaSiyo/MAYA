@@ -46,11 +46,14 @@ const r = await pg.evaluate(() => {
   out.screens = document.getElementById('screens').children.length;
   // eval, not window[f]: let/const globals (projectStore) don't land on window.
   out.fnsMissing = ['bringCardToFront', '_groupOf', 'setFabricsTab', 'loadMyFabrics',
-    'uploadMyFabricFiles', 'openUploadChooser', 'stackInspirationImages', 'projectStore']
+    'uploadMyFabricFiles', 'openUploadChooser', 'stackInspirationImages', 'projectStore',
+    'shareCurrentProject', '_maybeOpenShare', '_urlToDataUrl']
     .filter(f => { try { return (0, eval)('typeof ' + f) === 'undefined'; } catch (_) { return true; } });
   out.tabs = !!document.getElementById('fabrics-tab-house') && !!document.getElementById('fabrics-tab-mine');
   out.uploadText = (document.querySelector('.upload-link') || {}).textContent || '';
   out.chooser = !!document.getElementById('upload-choose-modal');
+  out.shareBtn = [...document.querySelectorAll('#notes-drawer button')]
+    .some(b => b.textContent.trim() === 'Share');
   // Aug 13: stack behavior. Latest version on top, 15px steps, toggle
   // unstack restores positions, flags set for whole-stack dragging.
   const mk = (id, v, x) => { const el = document.createElement('div');
@@ -80,6 +83,7 @@ ok('all v13.4 functions defined (' + (r.fnsMissing.join(',') || 'none missing') 
 ok('fabrics tabs present (Mana Siyo / My fabrics)', r.tabs);
 ok('upload button reads "+ upload"', r.uploadText.trim() === '+ upload');
 ok('upload chooser exists', r.chooser);
+ok('Share button lives in the drawer', r.shareBtn);
 ok('stack puts the LATEST version on top', r.stackLatestOnTop);
 ok('stack offsets are 15px (30 percent tighter)', r.stackStep === 15);
 ok('stacked flags set (whole stack drags as one)', r.stackFlags);
@@ -91,10 +95,40 @@ await pg.waitForTimeout(1500);
 const s = await pg.evaluate(() => ({
   order: [...document.querySelectorAll('details.fold')].map(d => d.id).join(','),
   archFold: (document.getElementById('arch-fold') || {}).tagName === 'DETAILS',
-  errsFree: true,
+  arrows: document.querySelectorAll('.card .go').length,
+  warnBanner: !!document.querySelector('.warn'),
+  footerFolds: document.querySelectorAll('.map-footer details.fold').length,
+  doorSizes: new Set([...document.querySelectorAll('.grid.doors .card b')]
+    .map(el => getComputedStyle(el).fontSize)).size,
 }));
 ok('Systems Map order: changes, prompting, architecture', s.order === 'changes-fold,pe-fold,arch-fold');
 ok('Architecture is collapsible', s.archFold);
+ok('door cards have no arrows', s.arrows === 0);
+ok('"Never delete" banner removed', !s.warnBanner);
+ok('folds live in the bottom footer', s.footerFolds === 3);
+ok('all door texts share one font size', s.doorSizes === 1);
+
+// Aug 13: every deploy signs both pages out on next load, and the two
+// pages must carry the SAME version number or the map's logout never fires.
+const mapVer = await pg.evaluate(() =>
+  (document.querySelector('meta[name="maya-version"]') || {}).content || 'missing');
+ok('index and map carry the same maya-version (' + r.version + ')', mapVer === r.version);
+await pg.evaluate(() => {
+  localStorage.setItem('maya_admin_tok', 'FAKE.TOKEN.x');
+  localStorage.setItem('maya_seen_version_map', '0.0');
+});
+await pg.reload({ waitUntil: 'domcontentloaded' });
+const mapLoggedOut = await pg.evaluate(() => localStorage.getItem('maya_admin_tok') === null);
+ok('map: version change clears the cached sign in', mapLoggedOut);
+await pg.goto('http://127.0.0.1:8899/index.html', { waitUntil: 'domcontentloaded' });
+await pg.evaluate(() => {
+  localStorage.setItem('maya_google_token', 'FAKE.TOKEN.x');
+  localStorage.setItem('maya_seen_version_app', '0.0');
+});
+await pg.reload({ waitUntil: 'domcontentloaded' });
+await pg.waitForTimeout(1500);
+const appLoggedOut = await pg.evaluate(() => localStorage.getItem('maya_google_token') === null);
+ok('app: version change clears the cached sign in', appLoggedOut);
 
 await browser.close(); srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
