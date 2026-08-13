@@ -1,8 +1,50 @@
 MAYA HISTORY
 Plain talk, newest entry on top. Say "update the history" in any chat and
-Claude adds a new dated entry here. This file replaces the old README.
+Claude adds a new dated entry here.
+
+For the full technical picture, read README.md at the root of this folder
+first. It is written for an assistant starting a fresh conversation with no
+memory: architecture, deploys, data model, every bug and its cause, and how
+to work with Fromsa. This file is the story; README.md is the manual.
 
 ─────────────────────────────────────────────
+
+AUGUST 11 TO 13, 2026
+
+Where we are: MAYA is at v13.3. Saving is trustworthy, the app is fast, the
+Systems Map tells the truth, dissection costs credits once instead of every
+time, Stripe is live, and there is a community wall.
+
+The thing that started it: a client's project was saved and then was not
+there. The cause was found. Naming a project from the Save box wrote to the
+browser's own storage only, while the screen said "Saved". Everything about
+the save system was rebuilt on top of that: one save path, cloud only,
+"New" genuinely means a new project, and a project is never left without
+first confirming it was written.
+
+What else got fixed, in Fromsa's words rather than mine: twenty four copies
+of the same card, the same fabric appearing over and over, a heart that
+never worked, an X button that did nothing on stacked cards, the screen
+refreshing itself every five seconds, dragging that lagged behind the
+cursor, being asked to sign in while already signed in, and submissions
+that would not appear on the Systems Map.
+
+New in these three days: the Systems Map redesign (one line doors, lights in
+the top bar, submissions running the full width, collapsible prompting
+engine, a Recent changes list with a green dot when it has not been read),
+Operating Room renamed Operations Room everywhere, a deliberate Begin
+Dissection button whose result is saved forever, a third admin account, a
+Stripe tip button, and the community wall.
+
+The community wall: swipe up from the moodboard instead of down. Everyone's
+hearted visions drift past sideways, forever, with no seam. Favorites are
+still one swipe below. Hearting a vision now publishes it, which is worth
+deciding on deliberately at some point.
+
+Also new: tests/smoke.mjs, the first automated test this project has ever
+had. It boots the real server and checks every route. It exists because a
+single line written in the wrong order in the server would have made every
+AI call hang forever, and nothing but booting it would have found that.
 
 AUGUST 5, 2026, EVENING
 
