@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.7">
+<meta name="maya-version" content="13.8">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -80,6 +80,13 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- v13.8: SPEED. Warm the connections MAYA always uses, so the first save,
+     the first sign in, and the first picture load skip the TLS handshake. -->
+<link rel="preconnect" href="https://firestore.googleapis.com">
+<link rel="preconnect" href="https://firebasestorage.googleapis.com">
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com">
+<link rel="preconnect" href="https://accounts.google.com">
+<link rel="preconnect" href="https://www.gstatic.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
 <!-- Two-page PDF generation -->
 <!-- v11.29: html2canvas + jspdf moved out of the head, they lazy-load via
@@ -694,8 +701,9 @@
     color: rgba(200,210,230,0.3);
     cursor: pointer; transition: color 0.2s;
   }
-  /* v13.4: the upload button reads a touch wider per Fromsa. */
-  .upload-link { letter-spacing: 0.26em; padding: 0 10px; }
+  /* v13.4: the upload button reads a touch wider per Fromsa.
+     v13.8: wider again, and a size up, so it can actually be seen. */
+  .upload-link { letter-spacing: 0.32em; padding: 2px 20px; font-size: 10px; }
   /* v13.4: the upload chooser. Snappy on purpose: 0.12s, no drift. */
   #upload-choose-modal {
     position: fixed; inset: 0; z-index: 1200;
@@ -731,6 +739,40 @@
     transition: color 0.12s, border-color 0.12s, background 0.12s;
   }
   .upload-choose-btn:hover { color: #fff; border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); }
+  /* v13.8: the share link popup */
+  #share-link-modal {
+    position: fixed; inset: 0; z-index: 1200;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(4,6,12,0.5);
+    opacity: 0; pointer-events: none; transition: opacity 0.12s ease;
+  }
+  #share-link-modal.open { opacity: 1; pointer-events: auto; }
+  #share-link-modal .share-card {
+    width: min(440px, 92vw);
+    padding: 20px 22px;
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 16px;
+    background: rgba(10,14,24,0.9);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    display: flex; flex-direction: column; gap: 12px; text-align: center;
+  }
+  #share-link-modal .share-title {
+    font-family: 'Jost', sans-serif; font-size: 11px; font-weight: 300;
+    letter-spacing: 0.22em; text-transform: uppercase; color: rgba(240,244,252,0.95);
+  }
+  #share-link-modal .share-link-input {
+    width: 100%; box-sizing: border-box;
+    background: rgba(255,255,255,0.05);
+    border: 0.5px solid rgba(255,255,255,0.18); border-radius: 10px;
+    padding: 9px 11px; color: rgba(230,236,248,0.95);
+    font-family: Menlo, monospace; font-size: 11px;
+  }
+  #share-link-modal .share-row { display: flex; gap: 10px; justify-content: center; }
+  #share-link-modal .share-note {
+    font-family: 'Jost', sans-serif; font-size: 10px; font-weight: 300;
+    letter-spacing: 0.06em; color: rgba(200,210,230,0.55); line-height: 1.6;
+  }
   .input-link:hover { color: rgba(220,225,240,0.7); }
   /* v10: .input-link .sep removed, no <span class="sep"> ever rendered. */
 
@@ -5910,6 +5952,19 @@ const communityBoard = {
   async enter() {
     this._startDrift();
     this.render();                 // whatever is already cached, instantly
+    // v13.8: the wall REFLECTS favorites. Any hearted card on the open board
+    // with no wall post yet (hearted before the wall existed, or while
+    // offline) is published the moment the wall is looked at.
+    try {
+      let backfilled = 0;
+      for (const it of (window.items || [])) {
+        if (it && it.card && it.card.favorited &&
+            (it.card.image || it.card.imageUrl) && !it.card._communityId) {
+          this.publish(it); backfilled++;
+        }
+      }
+      if (backfilled && typeof _persistSession === 'function') _persistSession();
+    } catch (_) {}
     await this.load();
     this.render();
   },
@@ -7412,7 +7467,13 @@ Rules:
 // existing titlesAreSimilar / normalizeTitle pair, no API call). Image
 // cards and consumed cards are never touched.
 let _dedupeIntervalId = null;
+let _dedupeSig = '';
 function dedupeSweep() {
+  // v13.8: SPEED. Skip the O(n squared) title comparison entirely when the
+  // board has not changed since the last sweep (which is most ticks).
+  const sig = items.length + ':' + itemIdCounter;
+  if (sig === _dedupeSig) return;
+  _dedupeSig = sig;
   const sorted = items.slice().sort((a, b) => a.id - b.id);
   const seen = [];
   const toRemove = [];
@@ -10772,14 +10833,16 @@ async function shareCurrentProject() {
     showToast('Preparing the share link…');
     const flushed = await projectStore.flush();
     if (flushed === false) { showError('Could not save the project first, so no link was made. Check your connection and try again.'); return; }
-    const doc = await projectStore._col().doc(projectStore.currentId).get();
-    if (!doc.exists) { showError('Could not read the project to share it.'); return; }
-    const v = doc.data() || {};
+    // v13.8: SPEED. The snapshot is taken from the board in memory (the flush
+    // above already uploaded every picture), instead of downloading the whole
+    // project document back from the cloud just to re-read what we have.
+    const pid = projectStore.currentId;
+    const snapItems = await projectStore._snapshotForCloud(pid);
+    const cloudSum = await projectStore._summaryForCloud(pid);
     // Name rule: project name, else the client's name, else the sharer.
     const shareName = (currentClientName && String(currentClientName).trim())
-      || (v.name && !/^Untitled\b/.test(String(v.name)) ? v.name : '')
       || ((typeof _googleEmail === 'string' && _googleEmail) ? _googleEmail.split('@')[0] : 'A MAYA project');
-    const items = JSON.parse(JSON.stringify(v.items || []));
+    const items = JSON.parse(JSON.stringify(snapItems || []));
     for (const it of items) {
       if (it && it.card) { delete it.card._communityId; delete it.card._imgId; }
     }
@@ -10789,19 +10852,53 @@ async function shareCurrentProject() {
       ownerUid: projectStore._uid(),
       name: String(shareName).slice(0, 80),
       items,
-      lastSummary: v.lastSummary || null,
-      notes: v.notes || null,
+      lastSummary: cloudSum || null,
+      notes: lastTranscript || null,
       ts: firebase.firestore.FieldValue.serverTimestamp(),
     });
+    // Mark the project as shared in the index, so the projects list says so.
+    try { await projectStore._idxDoc().update({ ['items.' + pid + '.shared']: true }); } catch (_) {}
+    projectStore._idxTs = 0;
     const link = location.origin + '/?share=' + token;
     let copied = false;
     try { await navigator.clipboard.writeText(link); copied = true; } catch (_) {}
-    if (copied) showToast('Share link copied. Anyone who opens it can save their own copy.');
-    else prompt('Copy this share link:', link);
+    _showShareModal(link, shareName, copied);
   } catch (e) {
     console.warn('[share]', e);
     showError('Could not create the share link: ' + ((e && e.message) || 'try again'));
   }
+}
+
+// v13.8: the share popup. The link is shown, already copied when the browser
+// allowed it, with one big Copy button so there is never any doubt.
+function _showShareModal(link, name, alreadyCopied) {
+  let m = document.getElementById('share-link-modal');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'share-link-modal';
+    m.innerHTML =
+      '<div class="share-card">' +
+        '<div class="share-title"></div>' +
+        '<input class="share-link-input" readonly onclick="this.select()">' +
+        '<div class="share-row">' +
+          '<button class="upload-choose-btn" id="share-copy-btn">Copy link</button>' +
+          '<button class="upload-choose-btn" onclick="document.getElementById(\'share-link-modal\').classList.remove(\'open\')">Done</button>' +
+        '</div>' +
+        '<div class="share-note">Anyone who opens it signs in with Google and saves their own copy. Nothing links back to yours.</div>' +
+      '</div>';
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+    document.body.appendChild(m);
+  }
+  m.querySelector('.share-title').textContent = 'Share "' + (name || 'this project') + '"';
+  const inp = m.querySelector('.share-link-input');
+  inp.value = link;
+  const btn = m.querySelector('#share-copy-btn');
+  btn.textContent = alreadyCopied ? 'Copied' : 'Copy link';
+  btn.onclick = async () => {
+    try { await navigator.clipboard.writeText(link); btn.textContent = 'Copied'; }
+    catch (_) { inp.select(); document.execCommand && document.execCommand('copy'); btn.textContent = 'Copied'; }
+  };
+  m.classList.add('open');
 }
 
 async function _urlToDataUrl(u) {
@@ -12544,7 +12641,10 @@ const projectStore = {
   async _touchIndex(id, row) {
     this._idxTs = 0;
     const patch = {};
-    patch['items.' + id] = row ? row : firebase.firestore.FieldValue.delete();
+    // v13.8: write the row FIELD BY FIELD so flags other code put on the row
+    // (like shared) survive every save instead of being wiped by it.
+    if (row) { for (const k in row) patch['items.' + id + '.' + k] = row[k]; }
+    else patch['items.' + id] = firebase.firestore.FieldValue.delete();
     try {
       await this._idxDoc().update(patch);
     } catch (_) {
@@ -12696,8 +12796,16 @@ const projectStore = {
   async _commit(myId) {
     {
       if (this.currentId !== myId) return { written: false, reason: 'switched' };
-      const tomb = await this._tombs().doc(myId).get();
-      if (tomb.exists) { this.detach(); return { written: false, reason: 'deleted' }; }
+      // v13.8: SPEED. This tombstone check was a full network round trip
+      // before EVERY save. A tombstone can never be removed once written
+      // (the rules forbid it), so the network is asked once per project per
+      // page load; after that the answer cannot change from "absent".
+      if (!this._tombChecked) this._tombChecked = {};
+      if (!this._tombChecked[myId]) {
+        const tomb = await this._tombs().doc(myId).get();
+        if (tomb.exists) { this.detach(); return { written: false, reason: 'deleted' }; }
+        this._tombChecked[myId] = true;
+      }
       const snapItems  = await this._snapshotForCloud(myId);
       const cloudSum   = await this._summaryForCloud(myId);
       if (this.currentId !== myId) return { written: false, reason: 'switched' };
@@ -13088,7 +13196,7 @@ function _sessionRows(sessions) {
       <div class="session-item${s.id === _activeSessionId ? ' active' : ''}" data-id="${escapeHtml(s.id)}" onclick="loadSavedSessionById('${escapeHtml(s.id)}')" title="${escapeHtml(s.name || 'project')}">
         <button class="session-item-delete" onclick="event.stopPropagation();deleteSavedSessionRow('${escapeHtml(s.id)}')" title="Delete this project">&#215;</button>
         <div class="session-item-title">${escapeHtml(s.name || 'untitled')}</div>
-        <div class="session-item-meta">${dateStr}${label ? ' · ' + escapeHtml(label) : ''}</div>
+        <div class="session-item-meta">${s.shared ? 'Shared · ' : ''}${dateStr}${label ? ' · ' + escapeHtml(label) : ''}</div>
       </div>`;
   }).join('');
 }

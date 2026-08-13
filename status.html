@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.7">
+<meta name="maya-version" content="13.8">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -43,7 +43,7 @@ try {
   #top-left-brand{display:flex;align-items:center;gap:10px;margin-left:-8px}
   #top-left-brand .maya-logo-mark{width:52px;height:52px;object-fit:contain;opacity:0.92;
     user-select:none;-webkit-user-drag:none}
-  #top-left-brand .brand-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;
+  #top-left-brand .brand-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;
     letter-spacing:0.22em;color:rgba(255,255,255,0.9);text-transform:uppercase}
   .top-btn{background:transparent;border:0.5px solid rgba(255,255,255,0.22);border-radius:100px;
     padding:6px 14px;font-family:'Jost',sans-serif;font-size:10px;font-weight:300;
@@ -83,18 +83,18 @@ try {
   .sdot.wait{background:var(--amber);animation:pulse 1s infinite}
   @keyframes pulse{50%{opacity:0.4}}
   
-  #checked-at{text-align:center;font-family:'Jost',Verdana,sans-serif;font-size:10px;color:var(--faint);margin:4px 0 10px 4px}
+  #checked-at{text-align:center;font-family:'Jost',Verdana,sans-serif;font-size:10px;letter-spacing:0.08em;color:rgba(238,242,255,0.75);margin:4px 0 10px 4px}
 
   h2.grp{font-size:11.5px;letter-spacing:0.26em;text-transform:uppercase;color:var(--grp);
          font-family:'Jost',Verdana,sans-serif;font-weight:300;margin:14px 0 8px;
          display:flex;align-items:baseline;gap:14px;justify-content:center}
-  h2.grp .aside{font-size:9.5px;letter-spacing:0.12em;color:var(--faint);text-transform:none}
-  h2.grp a{color:var(--blue);text-decoration:none;font-size:9.5px;letter-spacing:0.14em}
+  h2.grp .aside{font-size:9.5px;letter-spacing:0.12em;color:rgba(238,242,255,0.75);text-transform:none}
+  h2.grp a{color:rgba(238,242,255,0.9);text-decoration:none;font-size:9.5px;letter-spacing:0.14em}
 
   /* Latest submissions strip: 25vh tall, newest on the left, flows sideways */
   #subs-strip{display:flex;gap:12px;overflow-x:auto;padding:0 28px 10px;
               width:100vw;margin-left:calc(50% - 50vw);
-              height:25vh;min-height:190px;scrollbar-width:none}
+              height:30vh;min-height:230px;scrollbar-width:none}
   #subs-strip::-webkit-scrollbar{display:none}
   .sub-tile{position:relative;flex:0 0 auto;height:100%;aspect-ratio:3/2;border-radius:22px;overflow:hidden;
             border:0.5px solid rgba(255,255,255,0.28);background:rgba(4,7,16,0.75);text-decoration:none;color:var(--ink);
@@ -116,10 +116,12 @@ try {
                     border:0.5px dashed var(--line);border-radius:12px;padding:12px 14px;line-height:1.7}
 
   .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:6px}
-  .tile{border:0.5px solid var(--line);border-radius:13px;background:rgba(10,16,34,0.55);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
-        box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18);padding:7px 15px}
-  .tile .k{font-family:'Jost',Verdana,sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--faint)}
-  .tile .v{font-size:24px;margin-top:2px}
+  /* v13.8: way thinner per Fromsa, one line per tile. */
+  .tile{border:0.5px solid var(--line);border-radius:100px;background:rgba(10,16,34,0.55);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+        box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18);padding:5px 14px;
+        display:flex;align-items:baseline;justify-content:center;gap:8px}
+  .tile .k{font-family:'Jost',Verdana,sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim)}
+  .tile .v{font-size:16px}
   .tile.live .v{color:var(--green)}
   #traffic-note{font-family:'Jost',Verdana,sans-serif;font-size:10.5px;color:var(--dim);line-height:1.7;
     border:0.5px dashed var(--line);border-radius:12px;padding:11px 14px}
@@ -194,7 +196,7 @@ try {
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
   .grid.doors{grid-template-columns:repeat(2,1fr);gap:12px}
-  .grid.doors .card b{font-size:19px;display:inline;margin:0}
+  .grid.doors .card b{font-size:19px;font-weight:400;display:inline;margin:0}
   .grid.doors .card p{font-size:12.5px}
   .grid.doors a.card{padding:10px 18px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:10px}
   .grid.doors .card .go{display:inline;margin:0;font-size:13px;letter-spacing:0}
@@ -202,7 +204,7 @@ try {
          border-radius:13px;padding:14px 15px;background:rgba(10,16,34,0.55);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
          box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18);transition:border-color .2s}
   a.card:hover{border-color:rgba(255,255,255,0.5)}
-  .card b{display:block;font-size:15px;margin-bottom:3px}
+  .card b{display:block;font-size:15px;font-weight:400;margin-bottom:3px}
   .card p{font-size:11.5px;color:var(--dim);line-height:1.4}
   .card .go{font-family:'Jost',Verdana,sans-serif;font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;
             color:var(--blue);margin-top:8px;display:block}
@@ -265,7 +267,7 @@ try {
 
   <div id="checked-at">checking&#8230;</div>
   <div class="grid doors" style="grid-template-columns:repeat(3,1fr);margin:8px 0 2px">
-    <a class="card" href="/backend.html"><b>Backend</b></a>
+    <a class="card" href="/operations.html" target="_blank"><b>Operations Room Beta</b></a>
     <a class="card" href="https://maya.manasiyo.com" target="_blank"><b>MAYA</b></a>
     <a class="card" href="https://manasiyo.com" target="_blank"><b>Manasiyo.com</b></a>
   </div>
@@ -285,14 +287,12 @@ try {
   <div id="traffic-tiles" class="tiles hidden"></div>
   <div id="traffic-note">checking&#8230;</div>
 
-  <div class="grid doors" style="grid-template-columns:1fr;max-width:420px;margin:14px auto 6px">
-    <a class="card" href="/operations.html" target="_blank"><b>Operations Room Beta</b></a>
-  </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-13f">
+  <details class="fold" id="changes-fold" data-latest="2026-08-13g">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 13</b>Faster everywhere: saves skip a needless round trip, sharing builds from memory, and the app warms its connections before you need them. Share now shows a popup with the link and a Copy button, shared projects say Shared in the projects list, the wall picks up hearted pieces that never got posted, and this map slimmed down: thinner traffic tiles, calmer type, one door to the Operations Room Beta.</div>
     <div class="chg"><b>Aug 13</b>Projects are shareable. Press Share in the drawer and the link is copied; whoever opens it signs in as usual and saves their OWN copy, pictures and face included. Deleting on either side never touches the other. Projects now carry their own face photo too, and taking a card or a project down also takes its community wall post down, so nothing dead ever floats on the wall.</div>
     <div class="chg"><b>Aug 13</b>Cards behave. Dragging no longer blinks the card invisible, whatever you touch last comes to the top and stays there, stacks put the NEWEST version in front, sit 30 percent tighter, the stack button now unstacks too, and a stacked group drags as one piece.</div>
     <div class="chg"><b>Aug 13</b>Fabrics grew two tabs: Mana Siyo fabrics, the atelier library, and My fabrics, your own uploads. Photograph a fabric with your phone, upload it, and it follows your account into every new project. The upload button now asks: inspo, or my fabric?</div>
@@ -637,7 +637,7 @@ async function loadSubmissions() {
       img + (fresh && !thumbId ? '<span class="badge">arriving</span>' : '') +
       '<span class="veil"><span class="nm">' + esc(prettyName(f.name)) + '</span><span class="tm">' + when(f.createdTime) + '</span></span></a>';
   }).join('') +
-  '<a class="sub-tile more" href="https://drive.google.com/drive/folders/1ZEgQi3BpYDlNMsIMK553dLQs0kKiga35" target="_blank" rel="noopener">All submissions in Drive</a>';
+  '';
   _paintThumbs();
 }
 

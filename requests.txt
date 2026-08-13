@@ -18,6 +18,28 @@ Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
 ─────────────────────────────────────────────
 
+AUGUST 13, 2026, 4:32 PM
+
+[x] Speed boost across everything: saves skip the tombstone round trip
+    after the first check, the duplicate sweep skips unchanged boards,
+    sharing snapshots from memory instead of re downloading the project,
+    and the app pre warms its Google connections at load.
+[x] Share shows a popup with the link, a Copy button, and confirmation
+    that it is already copied. Sharing is faster too.
+[x] Projects list says "Shared" left of the date on shared projects.
+[x] Systems Map: traffic tiles way thinner, one line each.
+[x] Systems Map: calmer type, titles not bold (door names, page title).
+[x] Systems Map: Backend door replaced by Operations Room Beta (the
+    submissions themselves open the Brief), standalone beta door removed.
+[x] Submissions strip taller so tiles do not read cropped.
+[x] The empty "All submissions in Drive" tile removed, Open Drive folder
+    already exists by the heading.
+[x] "Open Drive folder" and "last checked" lines pop more now.
+[x] Upload button wider again and a size up.
+[x] Community wall now reflects favorites: entering the wall publishes
+    any hearted card that never got its post (hearts from before the
+    wall existed, or made offline).
+
 AUGUST 13, 2026, 4:10 PM
 
 [x] Projects shareable with a link. BUILT in v13.7: Share button in the
