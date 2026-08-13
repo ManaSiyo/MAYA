@@ -1857,27 +1857,38 @@ function _subScheduleRenew() {
     const p = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
     const wait = Math.max(30000, p.exp * 1000 - Date.now() - 5 * 60 * 1000);
     clearTimeout(window._subRenewT);
+    window._subRenewTries = window._subRenewTries || 0;
     window._subRenewT = setTimeout(() => {
       try { if (window.google && google.accounts && google.accounts.id) google.accounts.id.prompt(); } catch (_) {}
-      setTimeout(_subScheduleRenew, 60000);
+      // v12.9: three attempts, then stop, rather than popping the sign in
+      // bubble every minute for the rest of the day.
+      if (++window._subRenewTries <= 3) setTimeout(_subScheduleRenew, 60000);
     }, wait);
   } catch (_) {}
 }
 function _subAuthBoot() {
   if (!window._openedSubmission || !window._openedSubmission.id) return;
   const cached = _subCachedTok();
-  if (cached) { _subScheduleRenew(); return void _loadSubmission(cached); }
+  // v12.9: ALWAYS set Google's sign in library up, even when a cached token
+  // means we can load immediately. It used to return here, so the library was
+  // never initialised and the renewal five minutes before expiry had nothing
+  // to talk to. That is why the Brief still went dead after an hour.
+  let _gisTries = 0;
   const tryGsi = () => {
-    if (!window.google || !google.accounts || !google.accounts.id) return void setTimeout(tryGsi, 300);
+    if (!window.google || !google.accounts || !google.accounts.id) {
+      if (++_gisTries > 40) return;
+      return void setTimeout(tryGsi, 300);
+    }
     google.accounts.id.initialize({ client_id: _SUB_CLIENT_ID, auto_select: true, use_fedcm_for_prompt: true,
       callback: r => { if (r && r.credential) {
         try { localStorage.setItem('maya_admin_tok', r.credential); } catch (_) {}
         _subScheduleRenew();
         _loadSubmission(r.credential);
       } } });
-    google.accounts.id.prompt();
+    if (!_subCachedTok()) google.accounts.id.prompt();
   };
   tryGsi();
+  if (cached) { _subScheduleRenew(); _loadSubmission(cached); }
 }
 async function _loadSubmission(tok) {
   try {

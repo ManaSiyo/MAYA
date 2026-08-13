@@ -301,14 +301,15 @@
   </div>
   </details>
 
-  <details class="fold" id="changes-fold" data-latest="2026-08-13">
+  <details class="fold" id="changes-fold" data-latest="2026-08-13b">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 13</b>A second reviewer went through everything and found more. Work is now saved before you leave a project, closing the tab saves immediately instead of queuing, a render that finishes after you switch client no longer lands in the wrong project, deleting a card only removes its picture once the change is safely stored, and a failed render gives you your references back.</div>
     <div class="chg"><b>Aug 13</b>The page no longer refreshes itself. A picture that failed to load was retrying forever, hiding and re showing its card every couple of seconds, and MAYA was also reacting to its own saves as though someone else had made them.</div>
     <div class="chg"><b>Aug 13</b>Dragging follows your cursor properly. Cards were animating their position on every mouse move, so they always trailed slightly behind.</div>
     <div class="chg"><b>Aug 13</b>Sign in renews itself. A Google sign in lasts an hour and nothing was refreshing it, which is why this page asked you to sign in again while you were already signed in.</div>
     <div class="chg"><b>Aug 13</b>Dissect is a button now. Opening a client used to spend on six image calls before you asked for anything, and it repeated on every reopen. It runs once, on purpose, and is saved forever.</div>
-    <div class="chg"><b>Aug 13</b>Fifty renders a day per person, and the API keys moved out of the browser onto MAYA's own server.</div>
+    <div class="chg"><b>Aug 13</b>About fifty API calls a day per person, with images counting more than text, and the API keys moved out of the browser onto MAYA's own server.</div>
     <div class="chg"><b>Aug 11</b>Saving is fixed. There is one save path, it goes to the cloud, and it only says Saved when it truly saved. Naming a project used to keep it in the browser alone, which is how a client could be saved and then not be there.</div>
     <div class="chg"><b>Aug 11</b>New really means new project. It closes the one you are in first, so nothing already saved is ever written over. Same when you switch client.</div>
     <div class="chg"><b>Aug 11</b>Nothing is kept on the Mac any more. Projects, pictures and the client roster all live online, so any device shows the same work and a refresh brings the last project back.</div>
@@ -381,12 +382,20 @@ async function runChecks(){
     probeImage('https://maya.manasiyo.com/aesthetics/ui/logo.png'),
     probeImage('https://maya.manasiyo.com/aesthetics/fabrics/Red%20Royal.JPG'),
     probeImage('https://pro-maya.web.app/aesthetics/ui/logo.png')]);
-  let api=false;
-  try{const r=await fetch('https://maya.manasiyo.com/api/healthz?cb='+Date.now());api=r.ok&&(await r.json()).ok===true}catch(e){}
+  // v12.9: the deep check. The old one went green whenever the server answered,
+  // even with no OpenAI key and dead Drive authorisation, so every light could
+  // be green while nothing actually worked.
+  let api=false, apiWhy='';
+  try{
+    const r=await fetch('https://maya.manasiyo.com/api/healthz/deep?cb='+Date.now());
+    const j=await r.json();
+    api=r.ok&&j.ok===true;
+    if(!api) apiWhy=(!j.openai?'no OpenAI key':'')+(!j.drive?(j.openai?'':', ')+'Drive not answering':'');
+  }catch(e){apiWhy='unreachable'}
   setDot('d-site',site?'ok':'bad');setDot('d-api',api?'ok':'bad');
   setDot('d-assets',assets?'ok':'bad');setDot('d-backup',backup?'ok':'bad');
   document.getElementById('checked-at').textContent='last checked '+new Date().toLocaleString()+
-    ((site&&api&&assets&&backup)?', all systems go':', something needs attention');
+    ((site&&api&&assets&&backup)?', all systems go':', something needs attention'+(apiWhy?' ('+apiWhy+')':''));
 }
 runChecks();
 </script>
@@ -426,6 +435,7 @@ function _tokExpiryMs(t) {
   } catch (_) { return 0; }
 }
 let _renewTimer = null;
+let _gisTries = 0;
 function _scheduleRenew(tok) {
   clearTimeout(_renewTimer);
   const exp = _tokExpiryMs(tok);
@@ -435,6 +445,7 @@ function _scheduleRenew(tok) {
   const wait = Math.max(30000, exp - Date.now() - 5 * 60 * 1000);
   _renewTimer = setTimeout(_renewNow, wait);
 }
+let _renewTries = 0;
 function _renewNow() {
   try {
     if (window.google && google.accounts && google.accounts.id) {
@@ -442,9 +453,13 @@ function _renewNow() {
     }
   } catch (_) {}
   clearTimeout(_renewTimer);
-  _renewTimer = setTimeout(_renewNow, 5 * 60 * 1000);   // keep trying quietly
+  // v12.9: give up after three tries. If the Google session really is gone,
+  // retrying forever just popped the sign in bubble every five minutes.
+  if (++_renewTries <= 3) _renewTimer = setTimeout(_renewNow, 5 * 60 * 1000);
 }
 function _adoptToken(t, firstLoad) {
+  if (t === _idTok) return;          // v12.9: the same token twice is not news
+  _renewTries = 0;
   _idTok = t;
   _cacheTok(t);
   _showSignin(false);
@@ -454,7 +469,12 @@ function _adoptToken(t, firstLoad) {
 function _gisBoot() {
   const cached = _cachedTok();
   if (cached && !_idTok) _adoptToken(cached, true);
-  if (!window.google || !google.accounts || !google.accounts.id) return setTimeout(_gisBoot, 250);
+  if (!window.google || !google.accounts || !google.accounts.id) {
+    // v12.9: forty tries, ten seconds. Then stop and say so, rather than
+    // spinning silently forever when the script is blocked.
+    if (++_gisTries > 40) { _subsNote('Google sign in could not load. An ad blocker may be blocking accounts.google.com.'); return; }
+    return setTimeout(_gisBoot, 250);
+  }
   google.accounts.id.initialize({ client_id: _CLIENT_ID, callback: r => {
     if (r && r.credential) _adoptToken(r.credential);
   }, auto_select: true, use_fedcm_for_prompt: true });
@@ -510,8 +530,6 @@ async function loadSubmissions() {
   if (r.status === 403) { _subsNote('This Google account is not on the admin list.'); return; }
   if (!r.ok) return;
   const data = await r.json();
-  document.getElementById('subs-note-inline').style.display = 'none';
-  strip.style.display = '';
   document.getElementById('subs-count').textContent = data.total ? data.total + ' total' : '';
   const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const when = iso => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
@@ -529,6 +547,18 @@ async function loadSubmissions() {
     const fresh = (Date.now() - new Date(f.createdTime || 0).getTime()) < FRESH_MS;
     return { f, fresh, thumbId: (dream && dream.id) || (anyImg && anyImg.id) || '' };
   }).filter(x => x.thumbId || x.fresh);
+  // v12.9: decide the empty state BEFORE touching visibility. These two lines
+  // used to run above the signature check, so on the second poll they revealed
+  // an empty strip and hid the explanation, and the early return meant the
+  // empty state never got a chance to put it back.
+  if (!visible.length) {
+    strip.style.display = 'none';
+    strip.dataset.sig = '';
+    _subsNote('No submissions yet, they appear here the moment one lands.');
+    return;
+  }
+  document.getElementById('subs-note-inline').style.display = 'none';
+  strip.style.display = '';
   const stripSig = visible.map(x => x.f.id + ':' + (x.thumbId || '')).join(',');
   if (strip.dataset.sig === stripSig) return;      // nothing new, leave it alone
   strip.dataset.sig = stripSig;
@@ -541,10 +571,6 @@ async function loadSubmissions() {
       '<span class="veil"><span class="nm">' + esc(prettyName(f.name)) + '</span><span class="tm">' + when(f.createdTime) + '</span></span></a>';
   }).join('') +
   '<a class="sub-tile more" href="https://drive.google.com/drive/folders/1ZEgQi3BpYDlNMsIMK553dLQs0kKiga35" target="_blank" rel="noopener">All submissions in Drive</a>';
-  if (!visible.length) {
-    strip.style.display = 'none';
-    _subsNote('No submissions yet, they appear here the moment one lands.');
-  }
 }
 // v12.5: the strip refreshes itself, so a submission that lands while the map
 // is open appears without a reload. Also refreshes the moment the tab is

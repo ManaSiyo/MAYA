@@ -56,10 +56,37 @@ app.use((req, res, next) => {
 // anything else) can read it from any origin. Returns no secrets. Also
 // mounted at /api/healthz so it's reachable through the Firebase Hosting
 // /api/** rewrite on maya.manasiyo.com.
+// v12.9: this used to answer ok as long as the server was running, so every
+// light on the Systems Map could be green while the OpenAI key was missing and
+// the Drive authorisation was dead. It now reports what is actually configured
+// and, on /api/healthz?deep=1, whether Drive really answers.
 function _healthz(_req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.json({ ok: true, service: 'maya-api', ts: new Date().toISOString() });
+  res.json({
+    ok: true, service: 'maya-api', ts: new Date().toISOString(),
+    configured: {
+      openai: !!process.env.OPENAI_API_KEY,
+      drive:  !!(process.env.GOOGLE_OAUTH_REFRESH_TOKEN && process.env.DRIVE_FOLDER_ID),
+      fal:    !!process.env.FAL_API_KEY,
+      stripe: !!process.env.STRIPE_SECRET_KEY,
+    },
+  });
 }
+app.get('/api/healthz/deep', async (_req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  const out = { ok: true, openai: !!process.env.OPENAI_API_KEY, drive: false, detail: '' };
+  try {
+    const tok = await getDriveAccessToken();
+    const r = await fetch('https://www.googleapis.com/drive/v3/files/' +
+      encodeURIComponent(process.env.DRIVE_FOLDER_ID || '') + '?fields=id', {
+      headers: { 'Authorization': 'Bearer ' + tok },
+    });
+    out.drive = r.ok;
+    if (!r.ok) out.detail = 'drive ' + r.status;
+  } catch (e) { out.detail = (e && e.message) || 'drive check failed'; }
+  out.ok = out.openai && out.drive;
+  res.json(out);
+});
 app.get('/healthz', _healthz);
 app.get('/api/healthz', _healthz);
 
@@ -91,7 +118,8 @@ const RL_PER_DAY = Number(process.env.RL_PER_DAY || 50);
 const RL_ADMIN_PER_MIN = Number(process.env.RL_ADMIN_PER_MIN || 120);
 const RL_ADMIN_PER_DAY = Number(process.env.RL_ADMIN_PER_DAY || 6000);
 const _rl = new Map();  // sub -> { min:[ts...], day:[ts...] }
-function rateLimit(sub, email) {
+function rateLimit(sub, email, weight) {
+  const w = Math.max(1, Number(weight) || 1);
   const isAdmin = !!email && ADMIN_EMAILS.includes(String(email).toLowerCase());
   const perMin = isAdmin ? RL_ADMIN_PER_MIN : RL_PER_MIN;
   const perDay = isAdmin ? RL_ADMIN_PER_DAY : RL_PER_DAY;
@@ -100,9 +128,9 @@ function rateLimit(sub, email) {
   if (!b) { b = { min: [], day: [] }; _rl.set(sub, b); }
   b.min = b.min.filter(t => now - t < 60_000);
   b.day = b.day.filter(t => now - t < 86_400_000);
-  if (b.min.length >= perMin) return { ok: false, scope: 'minute', retry: 60 };
-  if (b.day.length >= perDay) return { ok: false, scope: 'day', retry: 3600 };
-  b.min.push(now); b.day.push(now);
+  if (b.min.length + w > perMin) return { ok: false, scope: 'minute', retry: 60 };
+  if (b.day.length + w > perDay) return { ok: false, scope: 'day', retry: 3600 };
+  for (let i = 0; i < w; i++) { b.min.push(now); b.day.push(now); }
   return { ok: true };
 }
 // Occasionally drop idle users so the map can't grow unbounded.
@@ -196,7 +224,8 @@ app.all(/^\/api\/openai\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', li
   }
 
   // v11.32: per-user rate limit (cost guardrail for the free launch).
-  const rl = rateLimit(user.sub, user.email);
+  const isImage = /^v1\/images\//.test(upstreamPath);
+  const rl = rateLimit(user.sub, user.email, isImage ? 4 : 1);
   if (!rl.ok) {
     console.warn('[openai] rate-limited', user.email, 'scope=' + rl.scope);
     res.setHeader('Retry-After', String(rl.retry));
@@ -208,6 +237,10 @@ app.all(/^\/api\/openai\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', li
   if (!openaiKey) return res.status(500).json({ error: 'openai_not_configured' });
 
   const upstreamPath = req.path.replace(/^\/api\/openai\//, '');   // e.g. v1/chat/completions
+  // v12.9: weight the cost. A high quality image is roughly thirty times a
+  // chat call, and the old counter treated them identically, so the daily
+  // ceiling meant very different amounts of money depending on what was asked
+  // for. Images now cost more of the allowance than text does.
   // v11.32: reject path-traversal (…/../fine_tuning normalizes past the v1
   // guard once fetch() builds the URL) and only allow the endpoints the app
   // actually calls — the proxied key can't be pointed at anything else.
@@ -218,6 +251,18 @@ app.all(/^\/api\/openai\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', li
     return res.status(403).json({ error: 'endpoint_not_allowed', detail: upstreamPath });
   }
 
+  // v12.9: bound what can actually be asked for. Before this a signed in user
+  // could send any body at all through the allowed paths, including sixteen
+  // images at the highest quality in one call.
+  if (isImage && /json/i.test(req.headers['content-type'] || '')) {
+    try {
+      const body = JSON.parse(Buffer.from(req.body || '').toString('utf8') || '{}');
+      if (Number(body.n) > 2) return res.status(400).json({ error: 'too_many_images', detail: 'n must be 2 or fewer' });
+      if (!ADMIN_EMAILS.includes((user.email || '').toLowerCase()) && body.quality === 'high') {
+        return res.status(403).json({ error: 'quality_not_allowed', detail: 'high quality is atelier only' });
+      }
+    } catch (_) { /* not JSON, the multipart path is capped by size instead */ }
+  }
   const headers = { 'Authorization': 'Bearer ' + openaiKey };
   if (req.headers['content-type']) headers['Content-Type'] = req.headers['content-type'];
 

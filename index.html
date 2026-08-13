@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="12.7">
+<meta name="maya-version" content="13.0">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -4337,7 +4337,10 @@ function _imgBroken(imgEl) {
 }
 
 function updateCount() {
-  const n = items.length;
+  // v12.9: only cards actually on the canvas. Consumed references linger in
+  // the list with no element, so the count read high and a visually empty
+  // board never showed its opening hints again.
+  const n = items.filter(i => i && i.el && !i._removing).length;
   // v10.5: toggle the onboarding-hints visibility based on canvas state.
   document.body.classList.toggle('canvas-empty', n === 0);
   const el = document.getElementById('item-count');
@@ -4408,16 +4411,24 @@ function findFreeSpot(cardW, cardH, isImage) {
 
 // Variant of placeItem that drops the card at a specific x/y (used when a
 // "Modify" generates a new image we want layered next to the original).
-function placeItemAt(card, x, y) {
-  _placeItemInternal(card, 0, { x, y });
+function placeItemAt(card, x, y, isRestore) {
+  _placeItemInternal(card, 0, { x, y }, isRestore);
 }
 
-function placeItem(card, delay) {
-  _placeItemInternal(card, delay, null);
+function placeItem(card, delay, isRestore) {
+  _placeItemInternal(card, delay, null, isRestore);
 }
 
-function _placeItemInternal(card, delay, fixedPos) {
+function _placeItemInternal(card, delay, fixedPos, isRestore) {
+  // v12.9: cards are placed on a timer. If the canvas is cleared while some
+  // are still waiting, they used to land anyway, on top of whatever replaced
+  // them. Two paints could therefore interleave into a doubled board. Each
+  // placement now remembers which board it belongs to and gives up if that
+  // board is gone.
+  const _ep = _boardEpoch;
   setTimeout(() => {
+    if (typeof _clearPendingTitle === 'function' && card && card.title) _clearPendingTitle(card.title);
+    if (_ep !== _boardEpoch) return;
     const canvas = document.getElementById('maya-canvas');
     const isImage = card.kind === 'inspo' && card.image;
     const cardW = isImage ? 240 : 200;
@@ -4592,6 +4603,9 @@ function _placeItemInternal(card, delay, fixedPos) {
           if (resizeMoved > 5) {
             el._wasDragged = true;
             requestAnimationFrame(() => { el._wasDragged = false; });
+            // v12.9: a resize was never saved, so the card was back to its old
+            // size on the next open.
+            if (typeof _persistSession === 'function') _persistSession();
           }
         }
         resizeHandle.addEventListener('pointermove', onMove);
@@ -4602,7 +4616,8 @@ function _placeItemInternal(card, delay, fixedPos) {
     el.addEventListener('click', e => {
       // v8.1: bail if the click is actually the end of a drag.
       if (el._wasDragged) return;
-      if (e.target.classList.contains('delete-btn')) return;
+      // v12.9: same reason as the drag guard, the controls contain icons.
+      if (e.target.closest('.delete-btn,.fav-btn,.stack-btn,.dissect-btn,.resize-handle')) return;
       // image cards open the viewer (so you can Listen + Modify with ChatGPT);
       // text cards just toggle pin
       if (card.kind === 'inspo' && card.image) {
@@ -4618,7 +4633,10 @@ function _placeItemInternal(card, delay, fixedPos) {
     // v8.2: only the most recently placed vision keeps the glow.
     _refreshLatestVision();
     // v10.4: persist the moodboard so a reload doesn't wipe it.
-    if (typeof _persistSession === 'function') _persistSession();
+    // v12.9: except for a card that came from the cloud a second ago. Painting
+    // a restored project used to write it straight back, which every other
+    // device then received as a change and rebuilt itself from.
+    if (!isRestore && typeof _persistSession === 'function') _persistSession();
   }, delay || 0);
 }
 
@@ -4634,15 +4652,15 @@ function makeDraggable(el) {
     // card stuck at z-index 999 with orphaned move listeners.
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     if (!e.isPrimary) return;
-    if (e.target.classList.contains('delete-btn')) return;
-    if (e.target.classList.contains('dissect-btn')) return;
-    if (e.target.classList.contains('stack-btn')) return;
-    if (e.target.classList.contains('resize-handle')) return;
-    if (e.target.classList.contains('fav-btn')) return;
+    if (e.target.closest('.delete-btn,.dissect-btn,.stack-btn,.resize-handle,.fav-btn')) return;
+    // v12.9: closest, not classList. The heart is a button with an SVG inside
+    // it, so most of the heart is the SVG, the old test missed, and pressing
+    // it started a drag and then opened the picture instead of favouriting.
     dragging = true; startX = e.clientX; startY = e.clientY;
     startLeft = parseInt(el.style.left) || 0; startTop = parseInt(el.style.top) || 0;
     moved = 0;
     el.classList.add('dragging');           // v12.7: nothing animates mid drag
+    el._stackZ = el.style.zIndex;
     el.style.zIndex = 999;
     // v11.36: TWO drag engines, picked by pointer type. Desktop mouse keeps
     // the original direct left/top writes (Fromsa: desktop drag was already
@@ -4669,7 +4687,8 @@ function makeDraggable(el) {
       }
     }
     function onUp(ue) {
-      dragging = false; el.style.zIndex = '';
+      dragging = false;
+      el.style.zIndex = el._stackZ || '';   // v12.9: keep stack order after a drag
       el.classList.remove('dragging');
       if (_raf) { cancelAnimationFrame(_raf); _raf = 0; }
       if (_touchDrag) {
@@ -4722,6 +4741,7 @@ function removeItem(id) {
   const el = it.el, pill = it.pill;
   items.splice(idx, 1);
   // v11.21: ...but the DOM element fades out over 1s instead of popping away.
+  it._removing = true;   // v12.9: never save a card that is on its way out
   const _fade = (node) => {
     if (!node) return;
     node.style.transition = 'opacity 1s ease, transform 1s ease';
@@ -4742,10 +4762,14 @@ function removeItem(id) {
         window.mayaFirebase.isReady && window.mayaFirebase.isReady()) {
       window.mayaFirebase.deleteImage(it.card._imgId).catch(() => {});
     }
-    // v12.5: v12 projects store pictures at card.storagePath, which nothing
-    // ever deleted. Removing a card left its photograph online forever.
-    if (it.card && it.card.storagePath && typeof projectStore !== 'undefined') {
-      projectStore.deleteAsset(it.card.storagePath);
+    // v12.9: the picture is only deleted AFTER the project has been written
+    // without it. Deleting first meant a failed write left the project
+    // pointing at a picture that was already gone.
+    const _gonePath = it.card && it.card.storagePath;
+    if (_gonePath && typeof projectStore !== 'undefined') {
+      projectStore.save()
+        .then(res => { if (res && res.written) projectStore.deleteAsset(_gonePath); })
+        .catch(() => { /* keep the picture, the card may come back */ });
     }
   } catch (_) {}
   // v11.15: persist after removal so a refresh doesn't restore the pre-delete
@@ -4762,6 +4786,18 @@ function removeItem(id) {
 // The card summaries we need (titles, tags) get snapshotted by the
 // caller BEFORE this fires, so the new render can still attach a refs
 // hover-cluster on its image card.
+// v12.9: remember what a fade removed, so a Visualize that fails can put the
+// references back instead of leaving the designer with nothing at all.
+let _lastFaded = [];
+function restoreFadedCards() {
+  if (!_lastFaded.length) return;
+  const back = _lastFaded.slice();
+  _lastFaded = [];
+  for (const sav of back) {
+    try { _restorePlace(sav); } catch (_) {}
+  }
+  showToast('Your references are back, nothing was lost');
+}
 function fadeOutFloatingCards() {
   const targets = items.filter(it =>
     it.el && !(it.card.kind === 'inspo' && it.card.image)
@@ -4770,6 +4806,10 @@ function fadeOutFloatingCards() {
   // v11.10: slower, softer fade, 2.4 s opacity with an "ease-in-out" feel.
   // Total animation window ≈ 2.6 s end-to-end including the per-card stagger.
   targets.forEach((it, idx) => {
+    // v12.9: mark them gone straight away. They stay on screen for another
+    // 2.7 seconds while they fade, and a save landing in that window used to
+    // write them back to the cloud, so they reappeared on the next open.
+    it._removing = true;
     it.el.style.transition = 'opacity 2.4s cubic-bezier(0.4, 0, 0.2, 1)';
     it.el.style.willChange = 'opacity';
     setTimeout(() => {
@@ -4778,6 +4818,12 @@ function fadeOutFloatingCards() {
     }, idx * 30);
   });
   setTimeout(() => {
+    _lastFaded = targets.map(it => ({
+      id: it.id,
+      x: it.el ? parseFloat(it.el.style.left) || 0 : 0,
+      y: it.el ? parseFloat(it.el.style.top) || 0 : 0,
+      card: { ...it.card },
+    }));
     targets.forEach(it => {
       if (it.el && it.el.parentNode) it.el.remove();
       const idx = items.indexOf(it);
@@ -4865,7 +4911,6 @@ function stackInspirationImages(itemId) {
       !i.card.inspirationId && i.el
     );
     siblings = [ref, ...others];
-    siblings.forEach(s => { s.card.uploadStackHead = ref.id; });
   }
   if (siblings.length < 2) return;
   const base = siblings[0];
@@ -4875,9 +4920,14 @@ function stackInspirationImages(itemId) {
     sib.el.style.transition = 'left 0.45s cubic-bezier(0.16,1,0.3,1), top 0.45s cubic-bezier(0.16,1,0.3,1)';
     sib.el.style.left = (baseX + idx * 22) + 'px';
     sib.el.style.top  = (baseY - idx * 22) + 'px';
-    sib.el.style.zIndex = idx + 1;
+    // v12.9: the FIRST card sits on top. It used to be the last, which put
+    // every card's X and stack buttons underneath the card in front of it,
+    // so on a stack those buttons simply did not respond.
+    sib.el.style.zIndex = 100 - idx;
     setTimeout(() => { sib.el.style.transition = ''; }, 480);
   });
+  // v12.9: arranging the board is a real change, keep it.
+  if (typeof _persistSession === 'function') _persistSession();
 }
 
 function renderRefsClusterOn(cardEl, refs) {
@@ -4922,11 +4972,7 @@ function cleanReferences() {
 // canvas, and then the next client's work, straight over the old project.
 // Everything saved before New stays exactly as it was.
 async function newConsultation() {
-  try {
-    if (typeof projectStore !== 'undefined' && projectStore.currentId && projectStore._dirty) {
-      await projectStore.save().catch(() => {});     // land any pending edit in the OLD project first
-    }
-  } catch (_) {}
+  try { if (typeof projectStore !== 'undefined') await projectStore.flush(); } catch (_) {}
   if (typeof projectStore !== 'undefined') projectStore.detach();
   _activeSessionId = null;
   await _hydrate(async () => { _doClear(); });
@@ -5397,7 +5443,12 @@ async function _doSubmitConfirmed() {
       // v11.29: success now requires at least one file to have actually
       // landed. doSaveToCloud also throws before creating the folder if the
       // PDF can't be rendered, so "empty folder + success overlay" is gone.
-      _submitOk = !!(r && r.ok > 0);
+      // v12.9: every file has to land. One of three arriving used to show the
+      // thank you screen, so a submission could be celebrated with no one pager.
+      _submitOk = !!(r && r.failed === 0 && r.ok === r.total);
+      if (r && r.failed > 0) {
+        showError('Only ' + r.ok + ' of ' + r.total + ' files reached Drive. Nothing was lost here, press Submit again.');
+      }
     } else {
       await doSave();
       _submitOk = true;
@@ -5958,11 +6009,13 @@ async function _saveCurrentAvatarToLibrary() {
     let faceRef = (typeof face === 'string' && face.startsWith('http')) ? face : null;
     if (!faceRef && typeof face === 'string' && face.startsWith('data:')) {
       if (lastSummary && lastSummary._face_photo_url) faceRef = lastSummary._face_photo_url;
-      else if (projectStore.currentId) {
+      else if (projectStore.ready()) {
+        // v12.9: a client's face belongs to the CLIENT, not to whichever
+        // project happened to be open. It used to live inside that project's
+        // folder, so deleting the project broke that client's face everywhere.
         try {
-          const up = await projectStore.uploadImage(face, projectStore.currentId);
+          const up = await projectStore.uploadImage(face, 'avatars');
           faceRef = up.url;
-          if (lastSummary) { lastSummary._face_photo_url = up.url; lastSummary._face_photo_path = up.path; }
         } catch (_) {}
       }
     }
@@ -6002,7 +6055,7 @@ async function switchAvatar(id) {
   // v12.5: let go of the open project FIRST. This used to clear the canvas
   // while still holding it, and the next autosave wrote the empty board over
   // the previous client's project and renamed it untitled.
-  if (projectStore.currentId && projectStore._dirty) await projectStore.save().catch(() => {});
+  await projectStore.flush();
   projectStore.detach();
   _activeSessionId = null;
   await _hydrate(async () => { _doClear(); });
@@ -6021,7 +6074,7 @@ async function switchAvatar(id) {
 }
 async function newAvatar() {
   // v12.5: same as switchAvatar, release the open project before clearing.
-  if (projectStore.currentId && projectStore._dirty) await projectStore.save().catch(() => {});
+  await projectStore.flush();
   projectStore.detach();
   _activeSessionId = null;
   await _hydrate(async () => { _doClear(); });
@@ -6045,6 +6098,7 @@ function _refreshActiveAvatarView() {
 // image-generation prompt consumes them yet. Harmless to keep ,
 // analyzeFacePhoto just sits on lastSummary._face_descriptors.
 async function analyzeFacePhoto(dataUrl) {
+  const _ctx = _opContext();
   const res = await fetch('/api/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -6617,6 +6671,7 @@ function clearAll(silent) {
 let _boardEpoch = 0;  // v11.49 (Codex M4): bumped on every clear/project switch
 function _doClear() {
   _boardEpoch++;
+  try { _pendingTitles.length = 0; } catch (_) {}
   items.forEach(i => {
     if (i.el) i.el.remove();
   });
@@ -6801,6 +6856,7 @@ function processMoodboardText(text) {
 // CONSULTATION MODE, GPT-4o structured extraction
 // ════════════════════════════════════════════════════════════
 async function processConsultation(transcript) {
+  const _ctx = _opContext();
   if (!transcript || !transcript.trim()) return;
   if (!getApiKey()) { showError('Session expired, please sign in again'); if (typeof _showGate==='function') _showGate(); return; }
 
@@ -6822,6 +6878,8 @@ async function processConsultation(transcript) {
       if (summary[k] == null) summary[k] = old[k];
     });
     lastSummary = summary;
+    // v12.9: do not paint one client's consultation into another's project.
+    if (!_opStillValid(_ctx)) return;
     placeConsultationCards(summary);   // uses placeItemUnique under the hood
     renderNotesPanel(summary);
     if (summary.dream_outcome) {
@@ -7604,10 +7662,23 @@ function placeItemUnique(card, delay) {
   // for the next visualization. Without this, the canvas refuses "pants"
   // after a "pants" was visualized into vN.
   if (!normalizeTitle(card.title)) return;
-  const exists = items.some(i =>
-    !i.consumed && titlesAreSimilar(i.card.title, card.title)
-  );
-  if (!exists) placeItem(card, delay);
+  // v12.9: THIS is why fabrics repeated. Cards are placed on a delay, up to
+  // several seconds for a long batch, but the "do we already have this?" test
+  // ran immediately, so every card in a batch checked against a board that
+  // none of them had landed on yet. Two similar fabrics in one consultation
+  // both got through, and the deep pass duplicated the live pass wholesale.
+  // Cards now claim their title the moment they are queued.
+  const exists = items.some(i => !i.consumed && titlesAreSimilar(i.card.title, card.title)) ||
+                 _pendingTitles.some(t => titlesAreSimilar(t, card.title));
+  if (exists) return;
+  _pendingTitles.push(card.title);
+  placeItem(card, delay);
+}
+// Titles queued for placement but not yet on the canvas.
+const _pendingTitles = [];
+function _clearPendingTitle(t) {
+  const i = _pendingTitles.indexOf(t);
+  if (i !== -1) _pendingTitles.splice(i, 1);
 }
 
 // v11.10: gate Visualize on the voice pipeline being idle. Called BEFORE
@@ -7754,6 +7825,7 @@ async function sampleDominantColor(dataUrl, alpha = 0.7) {
 // visually clear which refs came from which image) and carry a fromInspoId
 // so stackDissectedRefs can pull them back into the image.
 async function dissectInspo(id) {
+  const _ctx = _opContext();
   const it = items.find(i => i.id === id);
   if (!it || !it.card.image) return;
   if (it.card.dissected) {
@@ -7777,6 +7849,10 @@ async function dissectInspo(id) {
     ]);
     // v5.7: cross-canvas dedupe. Skip any ref whose title is similar to one
     // ALREADY on the canvas (live cards or refs stacked into another image).
+    // v12.9: the dissection can take a while. If the designer left this
+    // project meanwhile, the card this belongs to is gone and applying the
+    // result would attach it to whatever card now holds that number.
+    if (!_opStillValid(_ctx) || !items.includes(it)) return;
     const seenLive = items.filter(i => i.el && !i.consumed).map(i => i.card.title);
     const seenStacked = items.flatMap(i => Array.isArray(i.card.refs) ? i.card.refs.map(r => r.title) : []);
     const seen = [...seenLive, ...seenStacked];
@@ -7913,6 +7989,9 @@ const pasteDrop = document.getElementById('paste-drop');
   e.preventDefault(); pasteDrop.classList.remove('drag-over');
 }));
 pasteDrop.addEventListener('drop', async e => {
+  // v12.9: stop the drop here. It used to bubble up to the whole-window drop
+  // handler as well, so one dropped picture became two cards.
+  e.stopPropagation();
   const f = e.dataTransfer.files[0]; if (f) await handlePasteFile(f);
 });
 
@@ -9133,6 +9212,7 @@ function _continueVisualize() {
 // Fromsa has picked sourceable (selectedFabricsForVisualize = null) or
 // in-house with one or more fabrics (selectedFabricsForVisualize = [...]).
 async function _runVisualizeNow() {
+  const _ctx = _opContext();   // v12.9: which client's project this render belongs to
   const myBoardEpoch = _boardEpoch;  // v11.49: which project this render belongs to
   // v9.8: SNAPSHOT every input synchronously into local consts, then reset
   // the global selection state immediately. After this point the function
@@ -9261,6 +9341,13 @@ async function _runVisualizeNow() {
       console.warn('[maya] render finished after a project switch, discarded to protect the new board');
       return;
     }
+    // v12.9: the render is finished, but is the designer still in the project
+    // that asked for it? If not, keep the picture out of the wrong client's
+    // board and say so rather than silently misfiling it.
+    if (!_opStillValid(_ctx)) {
+      showToast('That render finished after you moved on, so it was not added here');
+      return;
+    }
     const inspirationId = 'insp_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
     placeItem({
       tag: 'inspo', title: 'v1', kind: 'inspo', image: dataUrl,
@@ -9279,9 +9366,15 @@ async function _runVisualizeNow() {
       refs: cardsRefsSnap.length ? cardsRefsSnap : null,
       visualReferenceTitle: refsSnap[0] ? refsSnap[0].title : null
     }, 0);
+    // (guarded above: nothing is placed if the designer moved to another project)
     setTimeout(consumeFloatingCards, 400);
+    _lastFaded = [];                       // it worked, the references are spent
   } catch (e) {
-    showError(e.message || 'Could not generate image');
+    // v12.9: the references were faded off the canvas before the render ran.
+    // If the render fails, the designer used to be left with no references and
+    // no picture, and had to describe everything again. Put them back.
+    try { restoreFadedCards(); } catch (_) {}
+    showError((e.message || 'Could not generate image') + '. Your references are still here, try again.');
   } finally {
     popRenderStatus();
   }
@@ -10299,25 +10392,31 @@ function _persistSession() {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
     clearTimeout(_persistTimer);
-    _persistNow();
+    _persistNow(true);            // v12.9: save NOW, do not queue. The tab may not come back.
   }
 });
 // v11.32: iOS Safari sometimes kills the tab without ever firing
 // visibilitychange, pagehide is the reliable last-gasp save on that path.
-window.addEventListener('pagehide', () => { clearTimeout(_persistTimer); _persistNow(); });
+window.addEventListener('pagehide', () => { clearTimeout(_persistTimer); _persistNow(true); });
 
 // v11.32: guard against two _persistNow runs overlapping (a debounced run
 // already in flight when the tab hides), that raced two saveSession writes
 // and could double-upload images. Serialize them.
 let _persistInFlight = false;
 let _persistAgain = false;
-async function _persistNow() {
+let _flushNow = false;
+async function _persistNow(flush) {
+    _flushNow = !!flush;
     // v12.5: cloud projects are the only writable store. Nothing is written to
     // this device, ever. If the designer is signed out there is nothing to
     // write to, so the canvas simply stays unsaved until they sign in.
     if (_hydrating) return;
     if (typeof projectStore === 'undefined' || !projectStore.ready()) return;
-    if (projectStore.currentId) { projectStore.queueSave(); return; }
+    if (projectStore.currentId) {
+    if (_flushNow) { clearTimeout(projectStore._t); return void projectStore.save().catch(() => {}); }
+    projectStore.queueSave();
+    return;
+  }
     // No project open yet. The moment there is real content, open one so the
     // work is in the cloud from its first second. It gets its real name later,
     // when the designer presses Save.
@@ -10598,9 +10697,9 @@ function _restorePlace(sav) {
     // at least partially visible.
     x = Math.max(window.innerWidth < 640 ? 28 : 8,  Math.min(x, window.innerWidth  - 120));
     y = Math.max(70, Math.min(y, window.innerHeight - 150));
-    placeItemAt(sav.card, x, y);
+    placeItemAt(sav.card, x, y, true);
   } else {
-    placeItem(sav.card, 0);
+    placeItem(sav.card, 0, true);
   }
 }
 
@@ -10608,6 +10707,70 @@ function _restorePlace(sav) {
 // cloud restore against what the local IndexedDB restore already placed ,
 // item ids are reassigned on restore (itemIdCounter++), so the old id-based
 // dedupe silently failed and re-added every card as a top-left duplicate.
+// v12.9: what makes a card the same card. Ids are reassigned on every restore,
+// so identity has to come from the content.
+function _cardSig(c) {
+  if (!c) return '';
+  const img = String(c.image || c.imageUrl || '');
+  return [c.kind || '', c.tag || '', c.title || '', c.inspirationId || '', img.slice(-64)].join('|');
+}
+// v12.9: identity is not enough to decide whether a project changed. Two cards
+// can be the same card and still differ in ways that matter: favourited,
+// resized, recaptioned, refabricked. This is the fuller comparison used by the
+// cross device check, so a heart tapped on a phone is not treated as no change
+// and then written over by the laptop.
+function _cardState(c) {
+  if (!c) return '';
+  return [
+    _cardSig(c),
+    c.favorited ? 1 : 0,
+    c.width || 0,
+    c.caption || '',
+    c.dissected ? 1 : 0,
+    (c.refs || []).length,
+    (c.fabrics || []).map(f => (f && (f.name || f.title)) || '').join(','),
+    c.showcaseVideoUrl || '',
+  ].join('#');
+}
+
+// v12.9: a stamp of which project and which board an operation started on.
+// Long operations (a render, a modify, a dissect) can take a minute, and the
+// designer may have moved on. Anything that finishes late checks this before
+// touching the canvas, so a result can never land in the wrong client's project.
+function _opContext() {
+  return {
+    project: (typeof projectStore !== 'undefined' && projectStore.currentId) || null,
+    epoch: _boardEpoch,
+    uid: (typeof projectStore !== 'undefined' && projectStore.ready()) ? projectStore._uid() : null,
+  };
+}
+function _opStillValid(ctx) {
+  if (!ctx) return true;
+  if (ctx.epoch !== _boardEpoch) return false;
+  const now = _opContext();
+  return now.project === ctx.project && now.uid === ctx.uid;
+}
+
+// v12.9: the one place cards are painted onto the canvas from stored data.
+// It refuses to draw the same card twice and skips ghosts (a card whose
+// picture failed to upload and has no image at all), and it reports how many
+// it dropped so the caller can save the tidied version back.
+let _lastPaintDropped = 0;
+function _paintItems(list) {
+  _lastPaintDropped = 0;
+  const seen = new Set();
+  for (const sav of (list || [])) {
+    if (!sav || !sav.card) continue;
+    if (sav.card.imageUrl && !sav.card.image) sav.card.image = sav.card.imageUrl;
+    if (sav.card._uploadPending && !sav.card.image) { _lastPaintDropped++; continue; }
+    const sig = _cardSig(sav.card);
+    if (sig && seen.has(sig)) { _lastPaintDropped++; continue; }
+    if (sig) seen.add(sig);
+    try { _restorePlace(sav); } catch (e) { console.warn('[maya restore card]', e); }
+  }
+  return _lastPaintDropped;
+}
+
 function _itemSig(it) {
   const c = it && it.card ? it.card : {};
   const img = (c.image || c.imageUrl || '');
@@ -11172,6 +11335,7 @@ const projectStore = {
   currentId: null,
   revision: 0,
   _lastWrote: 0,
+  _openSeq: 0,
   autoName: null,
   _chain: Promise.resolve(),
   _unsub: null,
@@ -11282,8 +11446,17 @@ const projectStore = {
   // a project is never committed with a photograph silently missing from it.
   async _snapshotForCloud(projectId) {
     const out = [];
+    // v12.9: only cards that are actually ON the canvas. An item with no
+    // element is an orphan, usually a reference that was consumed into an
+    // image. These were being saved, then restored as real cards, then saved
+    // again, which is how one render became twenty four copies of itself.
+    const seen = new Set();
     for (const it of (items || [])) {
-      if (!it || !it.card) continue;
+      if (!it || !it.card || !it.el || it._removing) continue;
+      // And never write the same card twice, whatever the ids say.
+      const sig = _cardSig(it.card);
+      if (sig && seen.has(sig)) continue;
+      if (sig) seen.add(sig);
       const el = it.el;
       const card = { ...it.card };
       delete card._dissection; delete card._dissectionPending; delete card._showcasePending;
@@ -11385,6 +11558,23 @@ const projectStore = {
       const base = this.revision;
       const name = this.displayName();
       const twoWord = _twoWordFromItems(items);
+      // v12.9: Firestore refuses a document over one megabyte and there was no
+      // check at all, so a big project simply stopped saving without a word.
+      // Measure first, and if it is close, drop the transcript (the least
+      // valuable part, and it is in the summary anyway) rather than lose
+      // everything.
+      let payloadItems = snapItems;
+      let payloadNotes = lastTranscript || '';
+      const _size = () => JSON.stringify({ items: payloadItems, lastSummary: cloudSum, lastTranscript: payloadNotes }).length;
+      if (_size() > 900000) {
+        payloadNotes = '';
+        if (_size() > 900000) {
+          const e = new Error('This project is too large to save. Remove a few cards and try again.');
+          e.tooBig = true;
+          throw e;
+        }
+        console.warn('[projectStore] transcript dropped to fit the size limit');
+      }
       let createdAtMs = Date.now();
       try {
         await firebase.firestore().runTransaction(async tx => {
@@ -11398,9 +11588,9 @@ const projectStore = {
           // Firestore refuses a whole document over a single undefined field,
           // and a fabric or reference card missing one optional key was enough
           // to make every save of that project fail.
-          items: JSON.parse(JSON.stringify(snapItems)),
+          items: JSON.parse(JSON.stringify(payloadItems)),
           lastSummary: cloudSum ? JSON.parse(JSON.stringify(cloudSum)) : null,
-          lastTranscript: lastTranscript || '',
+          lastTranscript: payloadNotes,
           twoWord,
           revision: base + 1,
           epoch: 2,
@@ -11423,7 +11613,7 @@ const projectStore = {
       this._lastWrote = base + 1;
       this._dirty = false;
       this._touchIndex(myId, { name, updatedAt: Date.now(), createdAt: createdAtMs,
-                               cardCount: snapItems.length, twoWord });
+                               cardCount: payloadItems.length, twoWord });
       return { written: true };
     }
   },
@@ -11438,9 +11628,16 @@ const projectStore = {
 
   // ── Open ─────────────────────────────────────────────────────────────────
   async open(id) {
+    // v12.9: two opens raced (a double tap in the list, or an open arriving
+    // while the boot restore was still running) produced two paints of two
+    // projects onto one canvas. Only the newest open is allowed to finish.
+    await this.flush();                      // v12.9: never lose the project you are leaving
+    const _my = ++this._openSeq;
     const dead = await this._tombs().doc(id).get();
+    if (_my !== this._openSeq) return false;
     if (dead.exists) { showToast('That project was deleted'); return false; }
     const doc = await this._col().doc(id).get();
+    if (_my !== this._openSeq) return false;
     if (!doc.exists) { showToast('That project no longer exists'); return false; }
     const v = doc.data() || {};
     this.detach();
@@ -11449,15 +11646,18 @@ const projectStore = {
       currentClientName = v.name || null;
       lastSummary = v.lastSummary || null;
       lastTranscript = v.lastTranscript || '';
-      for (const sav of (v.items || [])) {
-        if (!sav || !sav.card) continue;
-        if (sav.card.imageUrl && !sav.card.image) sav.card.image = sav.card.imageUrl;
-        try { _restorePlace(sav); } catch (_) {}
-      }
+      _paintItems(v.items);
     });
     this.currentId = id;
     this.revision = v.revision || 0;
     this.autoName = null;
+    // If the stored project carried duplicates, the canvas is now clean but
+    // the document is not. Write the clean version back once.
+    if (_lastPaintDropped > 0) {
+      console.log('[maya] cleaned', _lastPaintDropped, 'duplicate card(s) out of this project');
+      showToast('Tidied ' + _lastPaintDropped + ' duplicate card' + (_lastPaintDropped === 1 ? '' : 's'));
+      setTimeout(() => { this.queueSave(); }, 400);
+    }
     _activeSessionId = id;
     if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
     if (typeof renderNotesPanel === 'function') renderNotesPanel(lastSummary);
@@ -11469,17 +11669,19 @@ const projectStore = {
   // ── Live updates from the designer's other devices ───────────────────────
   // A signature of what is on the canvas right now. Used to tell a real change
   // from an echo of something this browser just did.
+  // v12.9: no card ids in here. Ids are handed out fresh on every restore, so
+  // two devices could never produce a matching signature and each kept
+  // rebuilding itself from the other's write.
   _sig(list) {
     try {
       return (list || []).map(s => {
         const c = (s && s.card) || {};
-        return [s.id, Math.round(s.x || 0), Math.round(s.y || 0),
-                c.kind || '', c.title || '', String(c.imageUrl || c.image || '').slice(-40)].join('~');
+        return [_cardState(c), Math.round((s.x || 0) / 8), Math.round((s.y || 0) / 8)].join('~');
       }).sort().join('|');
     } catch (_) { return ''; }
   },
   _liveSig() {
-    return this._sig((items || []).filter(it => it && it.el && it.card).map(it => ({
+    return this._sig((items || []).filter(it => it && it.el && it.card && !it._removing).map(it => ({
       id: it.id,
       x: parseFloat(it.el.style.left) || 0,
       y: parseFloat(it.el.style.top) || 0,
@@ -11489,6 +11691,8 @@ const projectStore = {
 
   _watch(id) {
     try {
+      // v12.9: drop any listener already running before starting another.
+      try { if (this._unsub) this._unsub(); } catch (_) {}
       this._unsub = this._col().doc(id).onSnapshot(doc => {
         if (this.currentId !== id) return;
         // v12.7: THE REFRESH BUG. This listener had no idea which writes were
@@ -11514,7 +11718,11 @@ const projectStore = {
         // Even a genuine remote revision is usually identical to what is
         // already on screen. Adopt the number, leave the canvas alone. Only a
         // real difference is worth rebuilding for.
-        if (this._sig(v.items) === this._liveSig()) { this.revision = rev; return; }
+        const sameBoard = this._sig(v.items) === this._liveSig();
+        const sameNotes = JSON.stringify(v.lastSummary || null) === JSON.stringify(lastSummary || null) &&
+                          (v.lastTranscript || '') === (lastTranscript || '') &&
+                          (v.name || null) === (currentClientName || null);
+        if (sameBoard && sameNotes) { this.revision = rev; return; }
         console.log('[maya] rebuilding canvas from revision', rev, '(a real change from elsewhere)');
         this.revision = rev;
         _hydrate(async () => {
@@ -11522,11 +11730,7 @@ const projectStore = {
           currentClientName = v.name || null;
           lastSummary = v.lastSummary || null;            // v12.5: can now be cleared, not just replaced
           lastTranscript = v.lastTranscript || '';
-          for (const sav of (v.items || [])) {
-            if (!sav || !sav.card) continue;
-            if (sav.card.imageUrl && !sav.card.image) sav.card.image = sav.card.imageUrl;
-            try { _restorePlace(sav); } catch (_) {}
-          }
+          _paintItems(v.items);
         }).then(() => {
           this.currentId = id;                            // _doClear must not orphan us
           if (typeof renderNotesPanel === 'function') renderNotesPanel(lastSummary);
@@ -11535,6 +11739,16 @@ const projectStore = {
         });
       });
     } catch (_) {}
+  },
+
+  // v12.9: land anything still waiting before letting go of a project. Every
+  // way out of a project goes through here, so this is the one barrier.
+  async flush() {
+    if (!this.currentId || !this.ready()) return;
+    if (!this._dirty) return;
+    clearTimeout(this._t);
+    try { await this.save(); }
+    catch (e) { console.warn('[projectStore] could not flush before leaving', e && e.message); }
   },
 
   detach() {
@@ -11579,6 +11793,8 @@ const projectStore = {
   // so the delete was denied and the project stayed alive while the screen
   // said it was gone everywhere.
   async remove(id) {
+    // v12.9: reports what actually happened. This used to say "deleted
+    // everywhere" even when the delete itself had failed.
     let paths = [];
     try {
       const d = await this._col().doc(id).get();
@@ -11587,8 +11803,10 @@ const projectStore = {
       const fp = v.lastSummary && v.lastSummary._face_photo_path;
       if (fp) paths.push(fp);
     } catch (_) {}
-    await this._col().doc(id).delete();                              // 1) gone, listeners clear other devices
-    try { await this._tombs().doc(id).set({ deletedAtMs: Date.now() }); } catch (_) {}  // 2) never comes back
+    await this._col().doc(id).delete();                              // 1) gone, listeners clear other devices. Throws if it fails.
+    let tombOk = true;
+    try { await this._tombs().doc(id).set({ deletedAtMs: Date.now() }); }   // 2) never comes back
+    catch (_) { tombOk = false; }
     for (const p of paths) await this.deleteAsset(p);                // 3) its pictures
     try {                                                            // 4) sweep anything left behind
       const dir = firebase.storage().ref('users/' + this._uid() + '/projects/' + id + '/images');
@@ -11603,6 +11821,7 @@ const projectStore = {
       if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
     }
     if (_activeSessionId === id) _activeSessionId = null;
+    return { ok: true, tombOk };
   },
 
   // ── Teardown, on sign out or account switch ──────────────────────────────
@@ -11610,6 +11829,7 @@ const projectStore = {
   // board in memory. The next person to sign in on the same Mac had the
   // previous designer's project written into THEIR account on the first edit.
   async teardown() {
+    await this.flush();                      // v12.9: signing out must not drop work either
     this.detach();
     this._idxCache = null; this._idxTs = 0;
     try { _avatarLibCache = null; } catch (_) {}
@@ -11695,8 +11915,10 @@ async function loadSavedSessionById(id) {
 async function deleteSavedSessionRow(id) {
   if (!confirm('Delete this project permanently, everywhere? This cannot be undone.')) return;
   try {
-    await projectStore.remove(id);
-    showToast('Project deleted everywhere');
+    const res = await projectStore.remove(id);
+    showToast(res && res.tombOk
+      ? 'Project deleted everywhere'
+      : 'Project deleted, but it may reappear on another device. Delete it there too.');
   } catch (e) {
     console.warn('[maya delete]', e && e.message);
     showError('Could not delete that project. ' + ((e && e.message) || ''));
