@@ -1848,15 +1848,31 @@ function _subCachedTok() {
     return (pl.exp * 1000 - Date.now() > 120000) ? t : null;
   } catch (_) { return null; }
 }
+// v12.8: keep the sign in alive here too. It lasts an hour, and when it
+// lapsed the Brief quietly stopped being able to load anything.
+function _subScheduleRenew() {
+  try {
+    const t = _subCachedTok();
+    if (!t) return;
+    const p = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    const wait = Math.max(30000, p.exp * 1000 - Date.now() - 5 * 60 * 1000);
+    clearTimeout(window._subRenewT);
+    window._subRenewT = setTimeout(() => {
+      try { if (window.google && google.accounts && google.accounts.id) google.accounts.id.prompt(); } catch (_) {}
+      setTimeout(_subScheduleRenew, 60000);
+    }, wait);
+  } catch (_) {}
+}
 function _subAuthBoot() {
   if (!window._openedSubmission || !window._openedSubmission.id) return;
   const cached = _subCachedTok();
-  if (cached) return void _loadSubmission(cached);
+  if (cached) { _subScheduleRenew(); return void _loadSubmission(cached); }
   const tryGsi = () => {
     if (!window.google || !google.accounts || !google.accounts.id) return void setTimeout(tryGsi, 300);
     google.accounts.id.initialize({ client_id: _SUB_CLIENT_ID, auto_select: true, use_fedcm_for_prompt: true,
       callback: r => { if (r && r.credential) {
         try { localStorage.setItem('maya_admin_tok', r.credential); } catch (_) {}
+        _subScheduleRenew();
         _loadSubmission(r.credential);
       } } });
     google.accounts.id.prompt();

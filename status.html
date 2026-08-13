@@ -120,6 +120,13 @@
   details.fold summary::-webkit-details-marker{display:none}
   details.fold summary h2.grp{margin:0}
   details.fold summary::after{content:'\25BE';font-family:'Jost',sans-serif;font-size:11px;color:var(--faint);transition:transform .2s}
+  /* A small green light when something has shipped that you have not read yet.
+     It goes out the moment the section is opened. */
+  .new-dot{width:7px;height:7px;border-radius:50%;background:var(--green);
+           box-shadow:0 0 10px rgba(74,222,128,0.85);display:none;flex:0 0 auto;
+           animation:newpulse 2.4s ease-in-out infinite}
+  details.fold.unseen summary .new-dot{display:inline-block}
+  @keyframes newpulse{50%{opacity:0.45;box-shadow:0 0 4px rgba(74,222,128,0.5)}}
   details.fold[open] summary::after{transform:rotate(180deg)}
   details.fold .fold-body{margin-top:10px}
   .changelog{border:0.5px solid var(--line);border-radius:16px;background:rgba(10,16,34,0.55);
@@ -294,9 +301,14 @@
   </div>
   </details>
 
-  <details class="fold" id="changes-fold">
-  <summary><h2 class="grp">Recent changes, what has shipped</h2></summary>
+  <details class="fold" id="changes-fold" data-latest="2026-08-13">
+  <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 13</b>The page no longer refreshes itself. A picture that failed to load was retrying forever, hiding and re showing its card every couple of seconds, and MAYA was also reacting to its own saves as though someone else had made them.</div>
+    <div class="chg"><b>Aug 13</b>Dragging follows your cursor properly. Cards were animating their position on every mouse move, so they always trailed slightly behind.</div>
+    <div class="chg"><b>Aug 13</b>Sign in renews itself. A Google sign in lasts an hour and nothing was refreshing it, which is why this page asked you to sign in again while you were already signed in.</div>
+    <div class="chg"><b>Aug 13</b>Dissect is a button now. Opening a client used to spend on six image calls before you asked for anything, and it repeated on every reopen. It runs once, on purpose, and is saved forever.</div>
+    <div class="chg"><b>Aug 13</b>Fifty renders a day per person, and the API keys moved out of the browser onto MAYA's own server.</div>
     <div class="chg"><b>Aug 11</b>Saving is fixed. There is one save path, it goes to the cloud, and it only says Saved when it truly saved. Naming a project used to keep it in the browser alone, which is how a client could be saved and then not be there.</div>
     <div class="chg"><b>Aug 11</b>New really means new project. It closes the one you are in first, so nothing already saved is ever written over. Same when you switch client.</div>
     <div class="chg"><b>Aug 11</b>Nothing is kept on the Mac any more. Projects, pictures and the client roster all live online, so any device shows the same work and a refresh brings the last project back.</div>
@@ -339,6 +351,26 @@
 </div>
 
 <script>
+// v12.8: light the green dot when the newest entry has not been read on this
+// device, and put it out the moment the section is opened.
+(function _changesDot(){
+  function wire(){
+    const f = document.getElementById('changes-fold');
+    if (!f) return setTimeout(wire, 300);
+    const latest = f.getAttribute('data-latest') || '';
+    let seen = '';
+    try { seen = localStorage.getItem('maya_changes_seen') || ''; } catch (_) {}
+    if (seen !== latest) f.classList.add('unseen');
+    f.addEventListener('toggle', function(){
+      if (!f.open) return;
+      f.classList.remove('unseen');
+      try { localStorage.setItem('maya_changes_seen', latest); } catch (_) {}
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
+  else wire();
+})();
+
 function setDot(id,s){document.getElementById(id).className='sdot '+s}
 function probeImage(url){return new Promise(res=>{const i=new Image();const t=setTimeout(()=>res(false),8000);
   i.onload=()=>{clearTimeout(t);res(true)};i.onerror=()=>{clearTimeout(t);res(false)};i.src=url+'?cb='+Date.now()})}
@@ -383,14 +415,51 @@ function _cachedTok() {
     return (p.exp * 1000 - Date.now() > 120000) ? t : null;
   } catch (_) { return null; }
 }
+// v12.8: A Google sign in lasts one hour and nothing was renewing it. After an
+// hour the page simply started saying "sign in" again, even though you were
+// signed in to Google the whole time. It now renews itself quietly before the
+// hour is up, so you should never be asked twice in a day.
+function _tokExpiryMs(t) {
+  try {
+    const p = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return p.exp * 1000;
+  } catch (_) { return 0; }
+}
+let _renewTimer = null;
+function _scheduleRenew(tok) {
+  clearTimeout(_renewTimer);
+  const exp = _tokExpiryMs(tok);
+  if (!exp) return;
+  // Five minutes before it lapses, ask Google for a fresh one. Because
+  // auto_select is on and the browser is already signed in, this is silent.
+  const wait = Math.max(30000, exp - Date.now() - 5 * 60 * 1000);
+  _renewTimer = setTimeout(_renewNow, wait);
+}
+function _renewNow() {
+  try {
+    if (window.google && google.accounts && google.accounts.id) {
+      google.accounts.id.prompt();     // silent while the Google session is alive
+    }
+  } catch (_) {}
+  clearTimeout(_renewTimer);
+  _renewTimer = setTimeout(_renewNow, 5 * 60 * 1000);   // keep trying quietly
+}
+function _adoptToken(t, firstLoad) {
+  _idTok = t;
+  _cacheTok(t);
+  _showSignin(false);
+  _scheduleRenew(t);
+  loadTraffic(); loadSubmissions(); _fbBridge(t);
+}
 function _gisBoot() {
   const cached = _cachedTok();
-  if (cached && !_idTok) { _idTok = cached; _showSignin(false); loadTraffic(); loadSubmissions(); _fbBridge(cached); }
+  if (cached && !_idTok) _adoptToken(cached, true);
   if (!window.google || !google.accounts || !google.accounts.id) return setTimeout(_gisBoot, 250);
   google.accounts.id.initialize({ client_id: _CLIENT_ID, callback: r => {
-    if (r && r.credential) { _idTok = r.credential; _cacheTok(r.credential); _showSignin(false); loadTraffic(); loadSubmissions(); _fbBridge(r.credential); }
+    if (r && r.credential) _adoptToken(r.credential);
   }, auto_select: true, use_fedcm_for_prompt: true });
   if (!_idTok) { google.accounts.id.prompt(); _renderGsiBtn(); }
+  else _scheduleRenew(_idTok);
 }
 function _renderGsiBtn() {
   const slot = document.getElementById('gsi-slot');
@@ -403,13 +472,22 @@ function _cmdBlock(label) {
   return label + '<pre class="cmd">' + RUN_CMD + '</pre>' +
     '<span style="color:var(--faint)">Paste that into Terminal on the Mac once, traffic and submissions both switch on, no other steps.</span>';
 }
+let _expiredAt = 0;
 function _expired() {
   _idTok = null;
   try { localStorage.removeItem('maya_admin_tok'); } catch (_) {}
-  _showSignin(true);
-  _note('Your sign in expired, sign in once above and everything comes back.');
-  _renderGsiBtn();
-  try { google.accounts.id.prompt(); } catch (_) {}
+  // v12.8: try to renew silently FIRST, and only trouble you if that fails.
+  // The submissions already on screen stay where they are rather than being
+  // replaced by a sign in message.
+  _renewNow();
+  if (Date.now() - _expiredAt < 60000) return;   // never nag more than once a minute
+  _expiredAt = Date.now();
+  setTimeout(() => {
+    if (_idTok) return;                          // the silent renewal worked
+    _showSignin(true);
+    _note('Your sign in expired, sign in once above and everything comes back.');
+    _renderGsiBtn();
+  }, 2500);
 }
 function _subsNote(html) {
   const n = document.getElementById('subs-note-inline');
@@ -417,7 +495,13 @@ function _subsNote(html) {
 }
 async function loadSubmissions() {
   const strip = document.getElementById('subs-strip');
-  if (!_idTok) { _subsNote('Waiting for the one sign in at the top of the page.'); return; }
+  if (!_idTok) {
+    // v12.8: if submissions are already on screen, leave them there. A lapsed
+    // token is being renewed in the background and wiping the strip made it
+    // look as though the latest submission had vanished.
+    if (!strip || !strip.children.length) _subsNote('Waiting for the one sign in at the top of the page.');
+    return;
+  }
   let r;
   try { r = await fetch('/api/admin/submissions?fresh=1&t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + _idTok }, cache: 'no-store' }); }
   catch (_) { _subsNote('The request was blocked before reaching the API. An ad blocker extension may be interfering, try pausing it for this site.'); return; }
