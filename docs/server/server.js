@@ -72,18 +72,26 @@ function _healthz(_req, res) {
     },
   });
 }
-app.get('/api/healthz/deep', async (_req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+// v13.0: admin only, time limited, and it never echoes Google's raw error text
+// (which can contain client identifiers). Open to the world it was a free way
+// to make the atelier's Drive authorisation refresh on demand.
+app.get('/api/healthz/deep', requireAuthHeader, async (req, res) => {
+  try { await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
   const out = { ok: true, openai: !!process.env.OPENAI_API_KEY, drive: false, detail: '' };
   try {
     const tok = await getDriveAccessToken();
     const r = await fetch('https://www.googleapis.com/drive/v3/files/' +
       encodeURIComponent(process.env.DRIVE_FOLDER_ID || '') + '?fields=id', {
       headers: { 'Authorization': 'Bearer ' + tok },
+      signal: AbortSignal.timeout(5000),
     });
     out.drive = r.ok;
-    if (!r.ok) out.detail = 'drive ' + r.status;
-  } catch (e) { out.detail = (e && e.message) || 'drive check failed'; }
+    if (!r.ok) out.detail = 'drive_' + r.status;
+  } catch (e) {
+    console.error('[healthz deep]', (e && e.message) || e);
+    out.detail = 'drive_auth';
+  }
   out.ok = out.openai && out.drive;
   res.json(out);
 });
@@ -223,19 +231,6 @@ app.all(/^\/api\/openai\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', li
     return res.status(401).json({ error: 'unauthorized', detail: e.message });
   }
 
-  // v11.32: per-user rate limit (cost guardrail for the free launch).
-  const isImage = /^v1\/images\//.test(upstreamPath);
-  const rl = rateLimit(user.sub, user.email, isImage ? 4 : 1);
-  if (!rl.ok) {
-    console.warn('[openai] rate-limited', user.email, 'scope=' + rl.scope);
-    res.setHeader('Retry-After', String(rl.retry));
-    return res.status(429).json({ error: 'rate_limited', scope: rl.scope,
-      detail: 'Too many requests — please wait a moment and try again.' });
-  }
-
-  const openaiKey = process.env.OPENAI_API_KEY;
-  if (!openaiKey) return res.status(500).json({ error: 'openai_not_configured' });
-
   const upstreamPath = req.path.replace(/^\/api\/openai\//, '');   // e.g. v1/chat/completions
   // v12.9: weight the cost. A high quality image is roughly thirty times a
   // chat call, and the old counter treated them identically, so the daily
@@ -251,17 +246,49 @@ app.all(/^\/api\/openai\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', li
     return res.status(403).json({ error: 'endpoint_not_allowed', detail: upstreamPath });
   }
 
+  // v13.0: the allowance is charged only AFTER the path is known to be valid,
+  // so a rejected call no longer eats into someone's day. Images count for
+  // more than text because they cost far more.
+  const isImage = /^v1\/images\//.test(upstreamPath);
+  const rl = rateLimit(user.sub, user.email, isImage ? 4 : 1);
+  if (!rl.ok) {
+    console.warn('[openai] rate-limited', user.email, 'scope=' + rl.scope);
+    res.setHeader('Retry-After', String(rl.retry));
+    return res.status(429).json({ error: 'rate_limited', scope: rl.scope,
+      detail: 'Too many requests, please wait a moment and try again.' });
+  }
+
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (!openaiKey) return res.status(500).json({ error: 'openai_not_configured' });
+
   // v12.9: bound what can actually be asked for. Before this a signed in user
   // could send any body at all through the allowed paths, including sixteen
   // images at the highest quality in one call.
-  if (isImage && /json/i.test(req.headers['content-type'] || '')) {
-    try {
-      const body = JSON.parse(Buffer.from(req.body || '').toString('utf8') || '{}');
-      if (Number(body.n) > 2) return res.status(400).json({ error: 'too_many_images', detail: 'n must be 2 or fewer' });
-      if (!ADMIN_EMAILS.includes((user.email || '').toLowerCase()) && body.quality === 'high') {
+  if (isImage) {
+    const _isAdmin = ADMIN_EMAILS.includes((user.email || '').toLowerCase());
+    const ct = req.headers['content-type'] || '';
+    if (/json/i.test(ct) && req.body && req.body.length < 1000000) {
+      try {
+        const body = JSON.parse(req.body.toString('utf8') || '{}');
+        if (Number(body.n) > 2) return res.status(400).json({ error: 'too_many_images', detail: 'n must be 2 or fewer' });
+        if (!_isAdmin && body.quality === 'high') {
+          return res.status(403).json({ error: 'quality_not_allowed', detail: 'high quality is atelier only' });
+        }
+      } catch (_) { /* not JSON after all, fall through to the multipart check */ }
+    } else if (/multipart/i.test(ct) && req.body) {
+      // v13.0: the edits endpoint is multipart and is the EXPENSIVE one, and
+      // it was not being checked at all. Read just the small form fields.
+      const head = req.body.subarray(0, Math.min(req.body.length, 65536)).toString('latin1');
+      const field = (nm) => {
+        const m = head.match(new RegExp('name="' + nm + '"\\r?\\n\\r?\\n([^\\r\\n]{0,40})'));
+        return m ? m[1].trim() : null;
+      };
+      const n = Number(field('n'));
+      if (Number.isFinite(n) && n > 2) return res.status(400).json({ error: 'too_many_images', detail: 'n must be 2 or fewer' });
+      if (!_isAdmin && field('quality') === 'high') {
         return res.status(403).json({ error: 'quality_not_allowed', detail: 'high quality is atelier only' });
       }
-    } catch (_) { /* not JSON, the multipart path is capped by size instead */ }
+    }
   }
   const headers = { 'Authorization': 'Bearer ' + openaiKey };
   if (req.headers['content-type']) headers['Content-Type'] = req.headers['content-type'];
@@ -769,6 +796,65 @@ app.get('/api/admin/submissions', async (req, res) => {
   } catch (e) {
     console.error('[admin] submissions failed —', e.message);
     res.status(500).json({ error: 'submissions_failed', detail: e.message });
+  }
+});
+
+// GET /api/admin/subthumb?id=<fileId>&w=480 — Drive's own thumbnail for one
+// submission picture, streamed through us. v13.3. The Systems Map used to
+// point its <img> straight at drive.google.com/thumbnail, which only renders
+// for files shared publicly, so every private submission drew an empty tile
+// and the strip looked broken. Same submission-folder check as subfile, plus
+// a half hour memory cache so a strip that repaints does not re-hit Drive.
+const _thumbCache = new Map();
+app.get('/api/admin/subthumb', async (req, res) => {
+  try { await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
+  const id = String(req.query.id || '');
+  if (!/^[\w-]{10,80}$/.test(id)) return res.status(400).json({ error: 'bad_id' });
+  const w = Math.min(1024, Math.max(80, parseInt(req.query.w, 10) || 480));
+  const key = id + ':' + w;
+  const hit = _thumbCache.get(key);
+  if (hit && Date.now() - hit.ts < 30 * 60 * 1000) {
+    res.setHeader('Content-Type', hit.type);
+    res.setHeader('Cache-Control', 'private, max-age=1800');
+    return res.end(hit.buf);
+  }
+  try {
+    const accessToken = await getDriveAccessToken();
+    const metaR = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?fields=id,mimeType,size,thumbnailLink,parents', {
+      headers: { 'Authorization': 'Bearer ' + accessToken },
+    });
+    if (!metaR.ok) return res.status(404).json({ error: 'not_found' });
+    const meta = await metaR.json();
+    const parents = Array.isArray(meta.parents) ? meta.parents : [];
+    let inside = false;
+    for (const p of parents) { if (await isSubmissionFolder(accessToken, p)) { inside = true; break; } }
+    if (!inside) return res.status(403).json({ error: 'file_not_allowed' });
+    let buf = null, type = 'image/jpeg';
+    if (meta.thumbnailLink) {
+      const tl = String(meta.thumbnailLink).replace(/=[sw]\d+(-h\d+)?$/, '=s' + w);
+      const tr = await fetch(tl, { headers: { 'Authorization': 'Bearer ' + accessToken } });
+      if (tr.ok) { buf = Buffer.from(await tr.arrayBuffer()); type = tr.headers.get('content-type') || 'image/jpeg'; }
+    }
+    if (!buf) {
+      // No Drive thumbnail yet (it can lag a fresh upload). Fall back to the
+      // original, but never stream something enormous into a 200px tile.
+      if (Number(meta.size || 0) > 12 * 1024 * 1024) return res.status(404).json({ error: 'no_thumb' });
+      const r = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media', {
+        headers: { 'Authorization': 'Bearer ' + accessToken },
+      });
+      if (!r.ok) return res.status(502).json({ error: 'drive_' + r.status });
+      buf = Buffer.from(await r.arrayBuffer());
+      type = meta.mimeType || 'image/jpeg';
+    }
+    if (_thumbCache.size > 200) _thumbCache.clear();
+    _thumbCache.set(key, { ts: Date.now(), buf, type });
+    res.setHeader('Content-Type', type);
+    res.setHeader('Cache-Control', 'private, max-age=1800');
+    res.end(buf);
+  } catch (e) {
+    console.error('[admin] subthumb failed,', e.message);
+    res.status(500).json({ error: 'subthumb_failed', detail: e.message });
   }
 });
 

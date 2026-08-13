@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.0">
+<meta name="maya-version" content="13.3">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -418,7 +418,7 @@
     will-change: scroll-position;
   }
   #screens::-webkit-scrollbar { display: none; }
-  #screen-inspo, #screen-favorites {
+  #screen-community, #screen-inspo, #screen-favorites {
     position: relative;
     height: 100vh; min-height: 100vh; width: 100%;
     scroll-snap-align: start;
@@ -999,6 +999,29 @@
   .item-card.tinted .item-tag { color: var(--card-tint, rgba(200,220,255,0.65)); }
   /* v12.7: absolute stillness while dragging */
   .item-card.dragging, .item-card.dragging * { transition: none !important; animation: none !important; }
+
+  /* v13.1: the tip amounts. These were using a class that does not exist here,
+     so they rendered as plain white browser buttons sitting on the glass. */
+  .tip-amt {
+    background: transparent;
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
+    padding: 9px 20px;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 12px; letter-spacing: 0.12em;
+    color: rgba(245,250,255,0.85);
+    cursor: pointer;
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.22), inset 0 -1px 1px rgba(0,0,0,0.18);
+    transition: border-color .2s, background .2s, color .2s;
+  }
+  .tip-amt:hover { border-color: rgba(255,255,255,0.45); color: #fff; }
+  .tip-amt.chosen {
+    border-color: rgba(255,255,255,0.75);
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+  }
   .item-card.tinted {
     box-shadow: 0 0 0 1px var(--card-tint, transparent);
     /* v12.7: was running forever on every tinted card. A pulsing box shadow
@@ -2702,6 +2725,139 @@
   #favorites-scroller::-webkit-scrollbar { height: 8px; }
   #favorites-scroller::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.22); border-radius: 4px; }
 
+  /* ───────── v13.3: THE COMMUNITY WALL ─────────
+     Screen 0. Same glass language as favorites, one size smaller, and it
+     drifts left on its own forever. No scroll-snap here on purpose: snap
+     fights the drift and makes it stutter. */
+  #screen-community {
+    z-index: 1;
+    background: transparent;
+    overflow: hidden;
+  }
+  #community-scroller {
+    position: absolute; inset: 0;
+    display: flex;
+    align-items: center;
+    gap: 34px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 60px 70px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+  #community-scroller::-webkit-scrollbar { display: none; }
+  #community-empty {
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px; padding: 22px 22px 24px;
+    border-radius: 16px;
+    background: transparent;
+    border: 0.5px solid rgba(255,255,255,0.22);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+            backdrop-filter: blur(22px) saturate(180%);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,0.28),
+      inset 0 -1px 1px rgba(0,0,0,0.18),
+      0 4px 16px rgba(0,0,0,0.22);
+    text-align: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  body.viewing-community:not(.has-community) #community-empty { opacity: 1; }
+  #community-empty .hint-eyebrow {
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: rgba(245,250,255,0.55); margin-bottom: 10px;
+  }
+  #community-empty .hint-body {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-weight: 300;
+    font-size: 14px; line-height: 1.5;
+    color: rgba(245,250,255,0.85);
+  }
+  .community-card {
+    flex: 0 0 auto;
+    width: 236px;
+    max-height: 76vh;
+    border-radius: 16px;
+    overflow: hidden;
+    background: transparent;
+    border: 0.5px solid rgba(220,232,255,0.42);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+            backdrop-filter: blur(22px) saturate(180%);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,0.28),
+      inset 0 -1px 1px rgba(0,0,0,0.18),
+      0 0 14px 2px rgba(200,222,255,0.26),
+      0 8px 28px rgba(0,0,0,0.40);
+    display: flex; flex-direction: column;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .community-card:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,0.32),
+      inset 0 -1px 1px rgba(0,0,0,0.20),
+      0 0 20px 4px rgba(200,222,255,0.42),
+      0 10px 34px rgba(0,0,0,0.46);
+  }
+  .community-card .cc-image { overflow: hidden; flex: 1 1 auto; min-height: 0; }
+  .community-card img.cc-img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+    aspect-ratio: 3 / 4;
+  }
+  .community-card .cc-meta {
+    padding: 9px 12px 11px;
+    display: flex; flex-direction: column; gap: 3px;
+    background: linear-gradient(to top, rgba(4,8,20,0.55), rgba(4,8,20,0));
+  }
+  .community-card .cc-author {
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 9.5px; letter-spacing: 0.26em; text-transform: uppercase;
+    color: rgba(245,250,255,0.62);
+  }
+  .community-card .cc-summary {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-weight: 300;
+    font-size: 12px; line-height: 1.35;
+    color: rgba(245,250,255,0.82);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  #community-lightbox {
+    position: fixed; inset: 0; z-index: 4000;
+    display: none;
+    align-items: center; justify-content: center;
+    flex-direction: column; gap: 14px;
+    background: rgba(3,6,16,0.86);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+    cursor: zoom-out;
+    padding: 40px;
+  }
+  #community-lightbox.open { display: flex; }
+  #community-lightbox img {
+    max-width: min(92vw, 900px); max-height: 78vh;
+    object-fit: contain;
+    border-radius: 14px;
+    border: 0.5px solid rgba(220,232,255,0.42);
+    box-shadow: 0 0 30px 6px rgba(200,222,255,0.20), 0 14px 44px rgba(0,0,0,0.5);
+  }
+  #community-lightbox .cl-meta {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-weight: 300;
+    font-size: 15px; line-height: 1.5;
+    color: rgba(245,250,255,0.82);
+    max-width: 640px; text-align: center;
+  }
+  @media (max-width: 640px) {
+    #community-scroller { padding: 48px 26px; gap: 22px; }
+    .community-card { width: 198px; max-height: 70vh; }
+  }
+
   /* v9.5: 20% smaller (480 → 384). Glass + soft starlight glow added ,
      matches the .is-vision halo from the inspo page.
      v9.12: cursor + hover lift, since cards now open the submit-mode viewer. */
@@ -3140,11 +3296,10 @@
     color: rgba(245,250,255,0.72);
   }
 
-  /* v9.0: page indicator dot states reflect which screen is in view */
-  body.viewing-favorites #dot-1 { opacity: 0.4; }
-  body.viewing-favorites #dot-1.active { opacity: 0.4; }
-  body.viewing-favorites #dot-2 { opacity: 1; }
-  body:not(.viewing-favorites) #dot-2 { opacity: 0.4; }
+  /* v13.3: page indicator dot states, three screens. The .active class is
+     set by _syncScreenUI; opacity follows it and nothing else. */
+  #page-indicator .page-dot { opacity: 0.4; }
+  #page-indicator .page-dot.active { opacity: 1; }
 
   /* v6.0.1: page indicator dots, left-middle, vertical (matches the
      up/down navigation between inspo and favorites).
@@ -3320,7 +3475,7 @@
          LARGE viewport (URL bar collapsed), so pane bottoms (and the drawer
          inside the drawer pane) sat below the visible screen: the "cropped
          at the bottom" bug. dvh tracks the real visible height. */
-      #screen-inspo, #screen-favorites { height: 100dvh; min-height: 100dvh; }
+      #screen-community, #screen-inspo, #screen-favorites { height: 100dvh; min-height: 100dvh; }
       .hpane { height: 100dvh; }
     }
   }
@@ -3462,7 +3617,11 @@
   };
   window.getMayaSignedInEmail = function () { return _googleEmail || null; };
 
-  window.mayaSignOut = function () {
+  window.mayaSignOut = async function () {
+    // v13.0: save FIRST, while there is still an account to save as. The flush
+    // in teardown() could never work: by the time it runs Firebase has already
+    // cleared the user, so it returned immediately and the last edit was lost.
+    try { if (typeof projectStore !== 'undefined') await projectStore.flush(); } catch (_) {}
     const emailForRevoke = _googleEmail;
     _googleIdToken = null;
     _googleEmail = null;
@@ -3583,7 +3742,17 @@
 <div id="hscroll">
   <div class="hpane hpane-main">
     <div id="screens">
-      <section id="screen-inspo" data-screen="0">
+      <!-- v13.3: THE COMMUNITY WALL, screen 0, above the moodboard.
+           Swipe up from the canvas to reach it, swipe down for favorites.
+           Everyone's hearted visions, drifting left forever. -->
+      <section id="screen-community" data-screen="0">
+        <div id="community-scroller"></div>
+        <div id="community-empty">
+          <div class="hint-eyebrow">Community</div>
+          <div class="hint-body">Every vision anyone hearts lands here. Heart one of yours and it joins the wall.</div>
+        </div>
+      </section>
+      <section id="screen-inspo" data-screen="1">
         <!-- canvas + clouds -->
         <div id="maya-canvas"></div>
         <!-- v10.5: top-bar moved BACK to body level (sticky). Wordmark text
@@ -3599,7 +3768,7 @@
           </div>
           <div class="hint-card">
             <div class="hint-eyebrow">Favorites</div>
-            <div class="hint-body">Swipe down to see your favorites, hearted visions land there.</div>
+            <div class="hint-body">Swipe down for your favorites, swipe up for the community wall. Anything you heart lands in both.</div>
           </div>
         </div>
         <div id="transcript-echo"></div>
@@ -3624,7 +3793,7 @@
           </div>
         </div>
       </section>
-      <section id="screen-favorites" data-screen="1">
+      <section id="screen-favorites" data-screen="2">
         <div id="favorites-scroller"></div>
       </section>
 
@@ -3655,10 +3824,11 @@
   </div>
 </div>
 
-<!-- v9.0: 2-dot page indicator, inspo / favorites -->
+<!-- v13.3: 3-dot page indicator, community / inspo / favorites -->
 <div id="page-indicator">
-  <button class="page-dot active" id="dot-1" onclick="setScreen(0)" title="Inspo"></button>
-  <button class="page-dot" id="dot-2" onclick="setScreen(1)" title="Favorites"></button>
+  <button class="page-dot" id="dot-1" onclick="setScreen(0)" title="Community"></button>
+  <button class="page-dot active" id="dot-2" onclick="setScreen(1)" title="Inspo"></button>
+  <button class="page-dot" id="dot-3" onclick="setScreen(2)" title="Favorites"></button>
 </div>
 
 <!-- v9.13: thank-you overlay, full screen after Submit.
@@ -4758,18 +4928,22 @@ function removeItem(id) {
   try {
     // v11.44: delete by the item's own unique _imgId only. Legacy bare-id
     // paths can be shared by other sessions/favorites, leave those alone.
+    // v13.1: queued like everything else. This one was still deleted the moment
+    // you pressed X, so a save that then failed left the project pointing at a
+    // picture that was already gone.
     if (it.card && it.card._imgId && window.mayaFirebase &&
         window.mayaFirebase.isReady && window.mayaFirebase.isReady()) {
-      window.mayaFirebase.deleteImage(it.card._imgId).catch(() => {});
+      _pendingLegacyDeletes.push({ id: it.card._imgId, project: (typeof projectStore !== 'undefined' && projectStore.currentId) || null });
     }
     // v12.9: the picture is only deleted AFTER the project has been written
     // without it. Deleting first meant a failed write left the project
     // pointing at a picture that was already gone.
     const _gonePath = it.card && it.card.storagePath;
     if (_gonePath && typeof projectStore !== 'undefined') {
-      projectStore.save()
-        .then(res => { if (res && res.written) projectStore.deleteAsset(_gonePath); })
-        .catch(() => { /* keep the picture, the card may come back */ });
+      // v13.0: queue it. The picture is deleted after the NEXT successful save,
+      // which is the one that records the card as gone. Saving here directly
+      // meant removing ten cards fired ten full saves in a row.
+      _pendingAssetDeletes.push({ path: _gonePath, project: projectStore.currentId });
     }
   } catch (_) {}
   // v11.15: persist after removal so a refresh doesn't restore the pre-delete
@@ -4789,6 +4963,31 @@ function removeItem(id) {
 // v12.9: remember what a fade removed, so a Visualize that fails can put the
 // references back instead of leaving the designer with nothing at all.
 let _lastFaded = [];
+// Pictures whose card has gone, waiting for the save that makes that official.
+const _pendingAssetDeletes = [];
+const _pendingLegacyDeletes = [];
+// v13.1: a picture is only deleted when the project it belonged to has just
+// been written without it. Entries belonging to any other project are left
+// alone, so opening a second project can no longer destroy the first one's
+// images, and a save that fails leaves everything intact.
+function _drainAssetDeletes(projectId, stillReferenced) {
+  const keep = [];
+  const gone = _pendingAssetDeletes.splice(0, _pendingAssetDeletes.length);
+  for (const e of gone) {
+    if (!e || e.project !== projectId) { keep.push(e); continue; }
+    if (stillReferenced && stillReferenced.has(e.path)) { keep.push(e); continue; }
+    try { projectStore.deleteAsset(e.path); } catch (_) {}
+  }
+  for (const e of keep) if (e) _pendingAssetDeletes.push(e);
+
+  const keepL = [];
+  const goneL = _pendingLegacyDeletes.splice(0, _pendingLegacyDeletes.length);
+  for (const e of goneL) {
+    if (!e || e.project !== projectId) { keepL.push(e); continue; }
+    try { if (window.mayaFirebase && window.mayaFirebase.deleteImage) window.mayaFirebase.deleteImage(e.id).catch(() => {}); } catch (_) {}
+  }
+  for (const e of keepL) if (e) _pendingLegacyDeletes.push(e);
+}
 function restoreFadedCards() {
   if (!_lastFaded.length) return;
   const back = _lastFaded.slice();
@@ -4991,9 +5190,12 @@ async function newConsultation() {
 // set on the container). An IntersectionObserver keeps the page-dot +
 // body class in sync with whichever section is in view.
 // ════════════════════════════════════════════════════════════
-let currentScreen = 0; // 0=inspo, 1=favorites (closet removed in v11.50, redundant with favorites)
+// v13.3: three screens now. 0=community (above), 1=inspo/moodboard (home),
+// 2=favorites (below). The moodboard is still what MAYA opens on, so this
+// starts at 1 and the boot code scrolls there before the first paint.
+let currentScreen = 1;
 function setScreen(n) {
-  n = Math.max(0, Math.min(1, n));
+  n = Math.max(0, Math.min(2, n));
   const host = document.getElementById('screens');
   if (!host) return;
   // v11.30: visualViewport height tracks the real visible area on mobile
@@ -5007,7 +5209,8 @@ function _syncScreenUI(n) {
   // rebuild restarting every image download mid animation.
   if (n === currentScreen) return;
   currentScreen = n;
-  document.body.classList.toggle('viewing-favorites', n === 1);
+  document.body.classList.toggle('viewing-favorites', n === 2);
+  document.body.classList.toggle('viewing-community', n === 0);
 
   // v11.33: kill the floating "type a reference…" input on screen change, on
   // mobile a tap spawns it, and swiping to favorites stranded it over screen 2.
@@ -5016,21 +5219,22 @@ function _syncScreenUI(n) {
     const dot = document.getElementById('dot-' + i);
     if (dot) dot.classList.toggle('active', n === (i - 1));
   }
-  if (n === 1) _renderFavoritesScroller();
+  if (n === 2) _renderFavoritesScroller();
+  if (n === 0 && typeof communityBoard !== 'undefined') communityBoard.enter();
   // v10.5/10.6: wordmark text follows the active screen. Crossfade, and
   // FAVORITES gets a smaller font-size so its width matches MAYA visually.
   const brand = document.getElementById('brand-title');
   if (brand) {
-    const next = n === 1 ? 'FAVORITES' : 'MAYA';
+    const next = n === 0 ? 'COMMUNITY' : (n === 2 ? 'FAVORITES' : 'MAYA');
     if (brand.textContent !== next) {
       brand.classList.add('swapping');
       setTimeout(() => {
         brand.textContent = next;
-        brand.classList.toggle('is-favorites', n >= 1);
+        brand.classList.toggle('is-favorites', n !== 1);
         brand.classList.remove('swapping');
       }, 220);
     } else {
-      brand.classList.toggle('is-favorites', n >= 1);
+      brand.classList.toggle('is-favorites', n !== 1);
     }
   }
 }
@@ -5038,7 +5242,7 @@ function _syncScreenUI(n) {
 // the inspo screen. On favorites the click is a no-op, swipe is the only
 // way to switch screens, per Fromsa's direction.
 function brandTitleClick() {
-  if (currentScreen === 0 && typeof pinterestLayout === 'function') {
+  if (currentScreen === 1 && typeof pinterestLayout === 'function') {
     pinterestLayout();
   }
 }
@@ -5084,7 +5288,7 @@ async function _checkForUpdate() {
       _updateReloading = true;
       console.log('[maya] new version deployed (' + m[1] + '), signing out & refreshing');
       try { if (typeof showToast === 'function') showToast('MAYA updated, refreshing'); } catch (_) {}
-      try { if (window.mayaSignOut) window.mayaSignOut(); } catch (_) {}
+      try { if (window.mayaSignOut) await window.mayaSignOut(); } catch (_) {}
       setTimeout(() => location.reload(), 900);
     }
   } catch (_) { /* offline, try again later */ }
@@ -5104,6 +5308,28 @@ document.addEventListener('visibilitychange', () => {
 function _bootScreenObserver() {
   const host = document.getElementById('screens');
   if (!host) return;
+  // v13.3: the community wall is section 0, so scrollTop 0 is now the wall,
+  // not the moodboard. Land on the moodboard before anything is painted, and
+  // hold it there for a couple of frames while layout settles.
+  if (!host.dataset.homed) {
+    host.dataset.homed = '1';
+    const home = () => {
+      const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+      host.scrollTop = vh;
+    };
+    home();
+    requestAnimationFrame(home);
+    setTimeout(home, 60);
+    setTimeout(home, 260);
+    let _rt = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(_rt);
+      _rt = setTimeout(() => {
+        const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+        host.scrollTop = currentScreen * vh;
+      }, 180);
+    }, { passive: true });
+  }
   const sections = host.querySelectorAll('section[data-screen]');
   const io = new IntersectionObserver((entries) => {
     let best = null;
@@ -5209,6 +5435,272 @@ function _favImgBroken(imgEl, itemId) {
     }
   }).catch(e => _glog('fav#' + itemId + ' kept hidden (HEAD check failed: ' + (e && e.message || '?') + ')'));
 }
+// ════════════════════════════════════════════════════════════
+// v13.3: THE COMMUNITY WALL.
+// Hearting a vision publishes it to a shared collection; un-hearting takes
+// it straight back down. The wall drifts left forever and never ends: the
+// list is painted twice and the scroll position wraps at the halfway mark,
+// so there is no seam and no snap back.
+//
+// On pictures: a render that has already been saved lives in Firebase
+// Storage and its download URL carries its own access token, so any signed
+// in account can display it directly, no copy needed. A render that has not
+// been saved yet is still a data: URL, so that one gets shrunk to 900px and
+// uploaded to community/{uid}/, which everyone can read and only the owner
+// can write.
+// ════════════════════════════════════════════════════════════
+const communityBoard = {
+  posts: [],
+  _loadedAt: 0,
+  _loading: null,
+  _raf: null,
+  _pos: 0,
+  _period: 0,
+  _copies: 2,
+  _copy: '',
+  _paused: false,
+  _resumeT: null,
+  _inflight: {},
+  _wired: false,
+
+  _uid() { try { return (firebase.auth().currentUser || {}).uid || null; } catch (_) { return null; } },
+  _col() { return firebase.firestore().collection('community'); },
+  _author() {
+    try {
+      const u = firebase.auth().currentUser || {};
+      const n = String(u.displayName || u.email || '').trim();
+      return n.split(/[\s@.]+/)[0] || 'someone';
+    } catch (_) { return 'someone'; }
+  },
+
+  // The same picture from the same account always lands on the same document,
+  // so hearting, un-hearting and hearting again never doubles the wall.
+  // Once a picture has been published its document id is remembered ON the
+  // card, and the card is saved with the project. Without that the id would
+  // be recomputed from the picture's address, and that address changes the
+  // first time the project is saved (a data: picture becomes a Storage link),
+  // so taking the heart back a day later would have deleted nothing and left
+  // the vision on the wall forever.
+  _postId(card) {
+    if (card && card._communityId) return card._communityId;
+    const seed = (this._uid() || 'anon') + '|' + String((card && (card.image || card.imageUrl)) || '').slice(-96);
+    let h1 = 0x811c9dc5, h2 = 0x01000193;
+    for (let i = 0; i < seed.length; i++) {
+      h1 = ((h1 ^ seed.charCodeAt(i)) >>> 0);
+      h1 = (Math.imul(h1, 0x01000193) >>> 0);
+      h2 = ((h2 + seed.charCodeAt(i) * (i + 7)) >>> 0);
+    }
+    return 'p' + h1.toString(36) + h2.toString(36);
+  },
+
+  async _imageForPost(card, postId) {
+    const src = String((card && (card.image || card.imageUrl)) || '');
+    if (!src) return null;
+    if (!src.startsWith('data:')) return { url: src, path: '' };   // already public
+    let small = src;
+    try { small = (await _shrinkFace(src, 900)) || src; } catch (_) {}
+    const path = 'community/' + this._uid() + '/' + postId + '.jpg';
+    const blob = await (await fetch(small)).blob();
+    const ref = firebase.storage().ref(path);
+    await ref.put(blob, { contentType: 'image/jpeg', cacheControl: 'public,max-age=31536000,immutable' });
+    return { url: await ref.getDownloadURL(), path };
+  },
+
+  async publish(item) {
+    const card = item && item.card;
+    if (!card || !(card.image || card.imageUrl) || !this._uid()) return;
+    const postId = this._postId(card);
+    if (this._inflight[postId]) return;
+    this._inflight[postId] = 1;
+    card._communityId = postId;
+    try {
+      const img = await this._imageForPost(card, postId);
+      if (!img || !img.url) return;
+      let summary = '';
+      try { summary = String(_buildPieceSummaryLine(item) || '').slice(0, 220); } catch (_) {}
+      await this._col().doc(postId).set({
+        uid: this._uid(),
+        author: this._author(),
+        imageUrl: img.url,
+        storagePath: img.path || '',
+        summary: summary,
+        ts: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      this._loadedAt = 0;
+      if (currentScreen === 0) this.enter();
+    } catch (e) {
+      console.warn('[Maya community] publish', e);
+    } finally {
+      delete this._inflight[postId];
+    }
+  },
+
+  async unpublish(item) {
+    const card = item && item.card;
+    if (!card || !this._uid()) return;
+    const postId = this._postId(card);
+    try {
+      let path = '';
+      try {
+        const d = await this._col().doc(postId).get();
+        path = (d.exists && (d.data() || {}).storagePath) || '';
+      } catch (_) {}
+      try { await this._col().doc(postId).delete(); } catch (_) {}
+      if (path) { try { await firebase.storage().ref(path).delete(); } catch (_) {} }
+      delete card._communityId;
+      this.posts = this.posts.filter(p => p.id !== postId);
+      this._loadedAt = 0;
+      if (currentScreen === 0) this.render();
+    } catch (e) { console.warn('[Maya community] unpublish', e); }
+  },
+
+  async load(force) {
+    if (!this._uid()) return this.posts;
+    if (this._loading) return this._loading;
+    if (!force && this._loadedAt && Date.now() - this._loadedAt < 60000) return this.posts;
+    this._loading = (async () => {
+      try {
+        const q = await this._col().orderBy('ts', 'desc').limit(80).get();
+        const out = [];
+        q.forEach(d => {
+          const v = d.data() || {};
+          if (v.imageUrl) out.push({ id: d.id, uid: v.uid || '', author: v.author || 'someone', imageUrl: v.imageUrl, summary: v.summary || '' });
+        });
+        this.posts = out;
+        this._loadedAt = Date.now();
+      } catch (e) { console.warn('[Maya community] load', e); }
+      finally { this._loading = null; }
+      return this.posts;
+    })();
+    return this._loading;
+  },
+
+  render() {
+    const wrap = document.getElementById('community-scroller');
+    if (!wrap) return;
+    const posts = this.posts;
+    document.body.classList.toggle('has-community', posts.length > 0);
+    const sig = posts.map(p => p.id).join(',');
+    if (wrap.dataset.sig === sig) return;      // never rebuild an unchanged wall
+    wrap.dataset.sig = sig;
+    if (!posts.length) { wrap.innerHTML = ''; return; }
+    const mine = this._uid();
+    const one = (p) =>
+      '<div class="community-card" data-id="' + escapeHtml(p.id) + '" onclick="communityBoard.openPost(\'' + escapeHtml(p.id) + '\')">' +
+        '<div class="cc-image"><img class="cc-img" src="' + escapeHtml(p.imageUrl) + '" alt="" loading="lazy" onerror="communityBoard.broken(this)"/></div>' +
+        '<div class="cc-meta">' +
+          '<span class="cc-author">' + escapeHtml(p.author) + (p.uid && p.uid === mine ? ' &middot; yours' : '') + '</span>' +
+          (p.summary ? '<span class="cc-summary">' + escapeHtml(p.summary) + '</span>' : '') +
+        '</div>' +
+      '</div>';
+    // The list is painted more than once so the drift can wrap with no seam.
+    // Two copies is the minimum; on a wide screen with few posts even two is
+    // not enough to scroll a whole copy's width, so more get added until it is.
+    this._copy = posts.map(one).join('');
+    wrap.innerHTML = this._copy + this._copy;
+    wrap.scrollLeft = 0;
+    this._pos = 0;
+    this._period = 0;
+    this._copies = 2;
+    this._wire(wrap);
+    requestAnimationFrame(() => this._measure());
+  },
+
+  // The wrap distance is the gap between the first card of one copy and the
+  // first card of the next. Measured, not calculated: the scroller's own left
+  // and right padding are not symmetric with the gaps between cards, so half
+  // the scroll width is close but not exact, and "close" shows as a twitch
+  // every time the wall comes round.
+  _measure() {
+    const el = document.getElementById('community-scroller');
+    const n = this.posts.length;
+    if (!el || !n) return;
+    let guard = 0;
+    while (guard++ < 10) {
+      const kids = el.children;
+      if (kids.length < n + 1) break;
+      this._period = Math.round(kids[n].offsetLeft - kids[0].offsetLeft);
+      if (this._period <= 0) break;
+      if (el.scrollWidth - el.clientWidth >= this._period + 20) break;
+      el.insertAdjacentHTML('beforeend', this._copy);   // still too short to wrap
+      this._copies++;
+    }
+  },
+
+  _wire(wrap) {
+    if (this._wired) return;
+    this._wired = true;
+    const hold = () => { this._paused = true; clearTimeout(this._resumeT); };
+    const release = (ms) => {
+      clearTimeout(this._resumeT);
+      this._resumeT = setTimeout(() => { this._paused = false; }, ms || 0);
+    };
+    // pointerover/out bubble, so this catches the pointer landing on a card
+    // as well as on the strip itself. The short release delay stops the wall
+    // from lurching every time the cursor crosses the gap between two cards.
+    wrap.addEventListener('pointerover', hold);
+    wrap.addEventListener('pointerout', () => release(220));
+    wrap.addEventListener('pointerdown', hold);
+    wrap.addEventListener('touchstart', hold, { passive: true });
+    wrap.addEventListener('touchend', () => release(2500), { passive: true });
+    window.addEventListener('pointerup', () => release(1200));
+  },
+
+  // Browsers round scrollLeft to whole pixels, so reading it back and adding
+  // a fraction of a pixel each frame moves nothing at all, forever. The true
+  // position is kept here as a float and written out; the reading is only
+  // consulted to notice that the designer has scrolled the wall by hand.
+  _startDrift() {
+    if (this._raf) return;
+    const SPEED = 26;                 // pixels per second, paced by the clock
+    let last = 0;
+    const step = (now) => {
+      this._raf = requestAnimationFrame(step);
+      const dt = Math.min(50, last ? now - last : 16);
+      last = now;
+      if (currentScreen !== 0 || document.hidden || this._paused) return;
+      const el = document.getElementById('community-scroller');
+      if (!el || !this.posts.length) return;
+      if (!this._period) { this._measure(); return; }
+      const period = this._period;
+      if (el.scrollWidth - el.clientWidth < period + 4) return;   // cannot wrap yet
+      if (Math.abs(this._pos - el.scrollLeft) > 2) this._pos = el.scrollLeft;  // scrolled by hand
+      this._pos += SPEED * dt / 1000;
+      if (this._pos >= period) this._pos -= period;
+      else if (this._pos < 0) this._pos += period;
+      el.scrollLeft = this._pos;
+    };
+    this._raf = requestAnimationFrame(step);
+  },
+
+  async enter() {
+    this._startDrift();
+    this.render();                 // whatever is already cached, instantly
+    await this.load();
+    this.render();
+  },
+
+  openPost(id) {
+    const p = this.posts.find(x => x.id === id);
+    if (!p) return;
+    let ov = document.getElementById('community-lightbox');
+    if (!ov) {
+      ov = document.createElement('div');
+      ov.id = 'community-lightbox';
+      ov.addEventListener('click', () => ov.classList.remove('open'));
+      document.body.appendChild(ov);
+    }
+    ov.innerHTML =
+      '<img src="' + escapeHtml(p.imageUrl) + '" alt=""/>' +
+      '<div class="cl-meta">' + escapeHtml(p.author) + (p.summary ? ' &middot; ' + escapeHtml(p.summary) : '') + '</div>';
+    ov.classList.add('open');
+  },
+
+  broken(img) {
+    try { const c = img.closest('.community-card'); if (c) c.style.display = 'none'; } catch (_) {}
+  },
+};
+
 function _renderFavoritesScroller() {
   const wrap = document.getElementById('favorites-scroller');
   if (!wrap) return;
@@ -5525,6 +6017,7 @@ let _promptCfg = null;
       return void setTimeout(_bootPromptCfg, 1500);
     }
     firebase.auth().onAuthStateChanged(u => {
+      _authSeq++;                        // v13.1: a different account, or none
       if (!u) {
         _promptCfg = null;
         // v12.5: signed out, or switched accounts. Let go of everything in
@@ -5841,7 +6334,9 @@ async function onFacePhotoSelected(ev) {
     // v12.7: shrink it first. A phone photo is several megabytes of text, and
     // every save deep copied the whole thing on the main thread, which is the
     // stall you feel a second after letting go of a card.
+    const _faceCtx = _opContext();      // v13.0: whose face is this?
     _shrinkFace(dataUrl).then(small => {
+      if (!_opStillValid(_faceCtx)) return;   // a different client is open now
       if (small && lastSummary) {
         lastSummary._face_photo = small;
         if (typeof _refreshActiveAvatarView === 'function') _refreshActiveAvatarView();
@@ -5852,8 +6347,9 @@ async function onFacePhotoSelected(ev) {
     showToast('Face reference saved');
     _refreshActiveAvatarView();
     // v9.2: still cache face descriptors for future use. No closet refresh.
-    analyzeFacePhoto(dataUrl)
-      .then(d => {
+    analyzeFacePhoto(dataUrl).then(d => {
+        // v13.0: do not write one client's face onto another's project
+        if (!_opStillValid(_faceCtx)) return;
         if (lastSummary) lastSummary._face_descriptors = d;
         // v10.4: persist so we don't re-call gpt-4.1 on next reload.
         if (typeof _persistSession === 'function') _persistSession();
@@ -6016,6 +6512,9 @@ async function _saveCurrentAvatarToLibrary() {
         try {
           const up = await projectStore.uploadImage(face, 'avatars');
           faceRef = up.url;
+          // Point the open project at the same shared copy rather than making
+          // a second one inside the project on the next save.
+          if (lastSummary) { lastSummary._face_photo_url = up.url; lastSummary._face_photo_path = up.path; }
         } catch (_) {}
       }
     }
@@ -6314,7 +6813,9 @@ async function randomizeAvatar() {
     // v12.7: shrink it first. A phone photo is several megabytes of text, and
     // every save deep copied the whole thing on the main thread, which is the
     // stall you feel a second after letting go of a card.
+    const _faceCtx = _opContext();      // v13.0: whose face is this?
     _shrinkFace(dataUrl).then(small => {
+      if (!_opStillValid(_faceCtx)) return;   // a different client is open now
       if (small && lastSummary) {
         lastSummary._face_photo = small;
         if (typeof _refreshActiveAvatarView === 'function') _refreshActiveAvatarView();
@@ -6322,8 +6823,11 @@ async function randomizeAvatar() {
       }
     });
       lastSummary._face_descriptors = null;
-      analyzeFacePhoto(dataUrl)
-        .then(d => { if (lastSummary) lastSummary._face_descriptors = d; })
+      analyzeFacePhoto(dataUrl).then(d => {
+          // v13.0: do not write one client's face onto another's project
+          if (!_opStillValid(_faceCtx)) return;
+          if (lastSummary) lastSummary._face_descriptors = d;
+        })
         .catch(e => console.warn('[Maya face analysis]', e));
     }
   } catch (e) {
@@ -6436,7 +6940,7 @@ function toggleFavorite(itemId) {
   // scroller so the new dissection appears there too.
   if (it.card.favorited && it.card.image && !it.card._dissection) {
     _dissectFavorite(it).then(() => {
-      if (currentScreen === 1) _renderFavoritesScroller();
+      if (currentScreen === 2) _renderFavoritesScroller();
       if (typeof _persistSession === 'function') _persistSession();
     }).catch(e => console.warn('[Maya dissect]', e));
   }
@@ -6450,6 +6954,15 @@ function toggleFavorite(itemId) {
       && typeof _generateShowcaseVideo === 'function') {
     _generateShowcaseVideo(it);
   }
+  // v13.3: a heart publishes the vision to the community wall; taking the
+  // heart back takes it straight down again. Fire and forget, a wall that is
+  // slow to update must never make the heart itself feel slow.
+  try {
+    if (typeof communityBoard !== 'undefined' && (it.card.image || it.card.imageUrl)) {
+      if (it.card.favorited) communityBoard.publish(it);
+      else communityBoard.unpublish(it);
+    }
+  } catch (e) { console.warn('[Maya community] heart', e); }
   if (typeof _persistSession === 'function') _persistSession();
 }
 
@@ -6473,7 +6986,7 @@ async function _generateShowcaseVideo(it) {
   const token = (typeof getGoogleIdToken === 'function') ? getGoogleIdToken() : null;
   if (!token) return;
   it.card._showcasePending = true;
-  if (currentScreen === 1 && typeof _renderFavoritesScroller === 'function') _renderFavoritesScroller();
+  if (currentScreen === 2 && typeof _renderFavoritesScroller === 'function') _renderFavoritesScroller();
   try {
     const frontB64 = await _cropFrontView(it.card.image);
     // 1) submit the generation task
@@ -6507,7 +7020,7 @@ async function _generateShowcaseVideo(it) {
     }
     if (!videoUrl) {
       it.card._showcasePending = false;
-      if (currentScreen === 1 && typeof _renderFavoritesScroller === 'function') _renderFavoritesScroller();
+      if (currentScreen === 2 && typeof _renderFavoritesScroller === 'function') _renderFavoritesScroller();
       return;
     }
     // 3) re-host (Runway URLs expire); fall back to the raw URL if upload fails
@@ -6522,7 +7035,7 @@ async function _generateShowcaseVideo(it) {
     it.card.showcaseVideoUrl = finalUrl;
     it.card._showcasePending = false;
     if (typeof _persistSession === 'function') _persistSession();
-    if (currentScreen === 1 && typeof _renderFavoritesScroller === 'function') _renderFavoritesScroller();
+    if (currentScreen === 2 && typeof _renderFavoritesScroller === 'function') _renderFavoritesScroller();
   } catch (e) {
     console.warn('[Maya showcase] error', e && e.message);
     it.card._showcasePending = false;
@@ -6672,6 +7185,7 @@ let _boardEpoch = 0;  // v11.49 (Codex M4): bumped on every clear/project switch
 function _doClear() {
   _boardEpoch++;
   try { _pendingTitles.length = 0; } catch (_) {}
+  try { _lastFaded = []; } catch (_) {}   // v13.0: never restore one project's references into another
   items.forEach(i => {
     if (i.el) i.el.remove();
   });
@@ -6877,9 +7391,16 @@ async function processConsultation(transcript) {
     Object.keys(old).filter(k => k.startsWith('_')).forEach(k => {
       if (summary[k] == null) summary[k] = old[k];
     });
+    // v13.0: check BEFORE anything is applied. The guard used to sit after
+    // this line, so a consultation that finished late still overwrote the
+    // notes of whichever client was open by then. It also returned without
+    // stopping the thinking indicator, which then span forever.
+    if (!_opStillValid(_ctx)) {
+      setThinking(false);
+      showToast('That consultation finished after you moved on, so it was not applied here');
+      return;
+    }
     lastSummary = summary;
-    // v12.9: do not paint one client's consultation into another's project.
-    if (!_opStillValid(_ctx)) return;
     placeConsultationCards(summary);   // uses placeItemUnique under the hood
     renderNotesPanel(summary);
     if (summary.dream_outcome) {
@@ -7899,6 +8420,14 @@ async function dissectInspo(id) {
     if (btn) { btn.classList.remove('busy'); btn.textContent = 'Dissect'; }
   } finally {
     setThinking(false);
+    // v13.0: always put the button and the status line back, not just on the
+    // paths that happened to succeed.
+    try {
+      const b = it.el && it.el.querySelector('.dissect-btn');
+      if (b) { b.classList.remove('busy'); b.textContent = it.card.dissected ? 'Stack' : 'Dissect'; }
+      const vt = document.getElementById('voice-text');
+      if (vt && /reading the image/.test(vt.textContent || '')) vt.textContent = '';
+    } catch (_) {}
   }
 }
 
@@ -9345,6 +9874,7 @@ async function _runVisualizeNow() {
     // that asked for it? If not, keep the picture out of the wrong client's
     // board and say so rather than silently misfiling it.
     if (!_opStillValid(_ctx)) {
+      _lastFaded = [];                       // v13.0: they belong to the other project
       showToast('That render finished after you moved on, so it was not added here');
       return;
     }
@@ -9486,8 +10016,11 @@ document.addEventListener('keydown', e => {
     toggleNotesDrawer(false);
     return;
   }
-  // 5. On favorites → back to inspo
-  if (currentScreen > 0) { setScreen(currentScreen - 1); return; }
+  // 5. Community lightbox open → close it
+  const _clb = document.getElementById('community-lightbox');
+  if (_clb && _clb.classList.contains('open')) { _clb.classList.remove('open'); return; }
+  // 6. v13.3: anywhere but the moodboard → back to the moodboard
+  if (currentScreen !== 1) { setScreen(1); return; }
 });
 
 // v10.3: swipe left/right between versions inside the garment-modal viewer.
@@ -10413,7 +10946,14 @@ async function _persistNow(flush) {
     if (_hydrating) return;
     if (typeof projectStore === 'undefined' || !projectStore.ready()) return;
     if (projectStore.currentId) {
-    if (_flushNow) { clearTimeout(projectStore._t); return void projectStore.save().catch(() => {}); }
+    // v13.0: only if there is genuinely something to write. This fired a full
+    // save every time the phone was backgrounded, even when nothing changed,
+    // pushing a pointless revision to every other device.
+    if (_flushNow) {
+      if (!projectStore._dirty) return;
+      clearTimeout(projectStore._t);
+      return void projectStore.save().catch(() => {});
+    }
     projectStore.queueSave();
     return;
   }
@@ -10711,7 +11251,11 @@ function _restorePlace(sav) {
 // so identity has to come from the content.
 function _cardSig(c) {
   if (!c) return '';
-  const img = String(c.image || c.imageUrl || '');
+  // v13.0: prefer the stored address. A card rendered in this session keeps
+  // BOTH its raw picture and its address, while the stored copy only has the
+  // address, so preferring the raw picture made the two sides disagree about
+  // identical content and the canvas rebuilt on every remote change.
+  const img = String(c.imageUrl || c.image || '');
   return [c.kind || '', c.tag || '', c.title || '', c.inspirationId || '', img.slice(-64)].join('|');
 }
 // v12.9: identity is not enough to decide whether a project changed. Two cards
@@ -10737,17 +11281,27 @@ function _cardState(c) {
 // Long operations (a render, a modify, a dissect) can take a minute, and the
 // designer may have moved on. Anything that finishes late checks this before
 // touching the canvas, so a result can never land in the wrong client's project.
+let _authSeq = 0;                      // bumped every time the signed in account changes
 function _opContext() {
   return {
     project: (typeof projectStore !== 'undefined' && projectStore.currentId) || null,
     epoch: _boardEpoch,
+    auth: _authSeq,
     uid: (typeof projectStore !== 'undefined' && projectStore.ready()) ? projectStore._uid() : null,
   };
 }
 function _opStillValid(ctx) {
   if (!ctx) return true;
+  // The canvas was cleared: New, a project opened, a client switched, a sign
+  // out. Whatever this result belongs to, it is not what is on screen.
   if (ctx.epoch !== _boardEpoch) return false;
+  // v13.1: the account changed while this was running. This is the case that
+  // "accept anything that started without a project" used to let through.
+  if (ctx.auth !== _authSeq) return false;
   const now = _opContext();
+  // A project that did not exist when the work started and does now is the
+  // SAME project being born, not a switch, so this is still its work.
+  if (!ctx.project) return !ctx.uid || now.uid === ctx.uid;
   return now.project === ctx.project && now.uid === ctx.uid;
 }
 
@@ -10917,11 +11471,11 @@ function openTip() {
       '<div class="modal-card" style="max-width:420px;text-align:center">' +
         '<div style="font-family:\'Cormorant Garamond\',serif;font-size:26px;margin-bottom:6px">Tip Mana Siyo</div>' +
         '<div style="font-family:\'Jost\',sans-serif;font-size:12px;line-height:1.7;color:rgba(238,242,255,0.6);margin-bottom:18px">' +
-          'MAYA is free and always will be. If it helped you imagine something, you can support the atelier that built it.' +
+          'MAYA is free and always will be. This is a gift to the atelier, not a purchase, it buys you nothing and unlocks nothing.' +
         '</div>' +
         '<div id="tip-amounts" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px">' +
-          [1,5,20,50].map(function (a, i) {
-            return '<button class="pill' + (i === 1 ? ' active' : '') + '" data-amt="' + a + '" onclick="_pickTip(' + a + ')">$' + a + '</button>';
+          [1,5,20,50].map(function (a) {
+            return '<button class="tip-amt" data-amt="' + a + '" onclick="_pickTip(' + a + ')">$' + a + '</button>';
           }).join('') +
         '</div>' +
         '<div id="tip-state" style="font-family:\'Jost\',sans-serif;font-size:11px;color:rgba(238,242,255,0.45);min-height:16px;margin-bottom:14px"></div>' +
@@ -10938,8 +11492,8 @@ function openTip() {
 }
 function _pickTip(a) {
   window._tipAmount = a;
-  document.querySelectorAll('#tip-amounts .pill').forEach(function (b) {
-    b.classList.toggle('active', Number(b.dataset.amt) === a);
+  document.querySelectorAll('#tip-amounts .tip-amt').forEach(function (b) {
+    b.classList.toggle('chosen', Number(b.dataset.amt) === a);
   });
 }
 async function _sendTip() {
@@ -11336,6 +11890,8 @@ const projectStore = {
   revision: 0,
   _lastWrote: 0,
   _openSeq: 0,
+  _flushing: false,
+  _flushP: null,
   autoName: null,
   _chain: Promise.resolve(),
   _unsub: null,
@@ -11491,7 +12047,11 @@ const projectStore = {
     const clone = JSON.parse(JSON.stringify(lastSummary));
     const face = clone._face_photo;
     const mine = '/projects/' + projectId + '/';
-    const haveHere = lastSummary._face_photo_path && lastSummary._face_photo_path.indexOf(mine) !== -1;
+    // v13.0: the shared avatars folder counts as a good home too. Without this
+    // the face was copied back into the project on the next save, which undid
+    // the whole point of storing it somewhere a project delete cannot reach.
+    const p = lastSummary._face_photo_path || '';
+    const haveHere = !!p && (p.indexOf(mine) !== -1 || p.indexOf('/projects/avatars/') !== -1);
     if (typeof face === 'string' && face.startsWith('data:')) {
       if (haveHere && lastSummary._face_photo_url) {
         clone._face_photo = lastSummary._face_photo_url;
@@ -11501,7 +12061,8 @@ const projectStore = {
         clone._face_photo_url = up.url; clone._face_photo_path = up.path;
         lastSummary._face_photo_url = up.url; lastSummary._face_photo_path = up.path;
       }
-    } else if (typeof face === 'string' && face.startsWith('http') && !haveHere) {
+    } else if (typeof face === 'string' && face.startsWith('http') && !haveHere &&
+               face.indexOf('%2Favatars%2F') === -1 && face.indexOf('/avatars/') === -1) {
       // v12.5: this face was uploaded under a DIFFERENT project (carried across
       // by New or by switching client). Copy it into this project, otherwise
       // deleting the other project would blank this client's face here.
@@ -11601,8 +12162,14 @@ const projectStore = {
         });
       } catch (e) {
         if (String((e && e.message) || e).indexOf('stale-revision') !== -1) {
-          // Another device wrote first. Reload from the cloud and tell the
-          // designer plainly, this is NOT a successful save.
+          // Another device wrote first.
+          // v13.0: clear the dirty flag before doing anything else. Without
+          // this, a flush that loses the race called open(), which flushed
+          // again, which saved again, which lost again, forever. And when we
+          // are on our way OUT of this project there is nothing to reload
+          // into, so just stop.
+          this._dirty = false;
+          if (this._flushing) return { written: false, reason: 'stale' };
           showToast('This project changed on another device, reloading it');
           await this.open(myId).catch(() => {});
           return { written: false, reason: 'stale' };
@@ -11612,6 +12179,12 @@ const projectStore = {
       this.revision = base + 1;
       this._lastWrote = base + 1;
       this._dirty = false;
+      // v13.0: the project is now stored without those cards, so their
+      // pictures can safely go.
+      try {
+        const _written = new Set((payloadItems || []).map(x => x && x.card && x.card.storagePath).filter(Boolean));
+        _drainAssetDeletes(myId, _written);
+      } catch (_) {}
       this._touchIndex(myId, { name, updatedAt: Date.now(), createdAt: createdAtMs,
                                cardCount: payloadItems.length, twoWord });
       return { written: true };
@@ -11631,8 +12204,18 @@ const projectStore = {
     // v12.9: two opens raced (a double tap in the list, or an open arriving
     // while the boot restore was still running) produced two paints of two
     // projects onto one canvas. Only the newest open is allowed to finish.
-    await this.flush();                      // v12.9: never lose the project you are leaving
+    // v13.0: claim the turn FIRST, then flush. Claiming after the flush meant a
+    // second tap could take a lower number than the first and win, so tapping
+    // one project could open a different one.
     const _my = ++this._openSeq;
+    const _saved = await this.flush();       // never lose the project you are leaving
+    if (_my !== this._openSeq) return false;
+    // v13.1: if the project you are leaving could not be saved, say so and let
+    // the designer decide, rather than quietly navigating away from work that
+    // exists nowhere but this screen.
+    if (_saved === false) {
+      if (!confirm('The project you are in could not be saved just now, probably a connection problem.\n\nOpen the other project anyway and lose those last changes?')) return false;
+    }
     const dead = await this._tombs().doc(id).get();
     if (_my !== this._openSeq) return false;
     if (dead.exists) { showToast('That project was deleted'); return false; }
@@ -11746,9 +12329,24 @@ const projectStore = {
   async flush() {
     if (!this.currentId || !this.ready()) return;
     if (!this._dirty) return;
-    clearTimeout(this._t);
-    try { await this.save(); }
-    catch (e) { console.warn('[projectStore] could not flush before leaving', e && e.message); }
+    // v13.0: a second caller WAITS for the flush already running instead of
+    // sailing past it. Returning early made this barrier no barrier at all:
+    // the canvas could be cleared while the save was still reading it.
+    if (this._flushing) return this._flushP;
+    this._flushing = true;
+    this._flushP = (async () => {
+      clearTimeout(this._t);
+      try {
+        const res = await this.save();
+        return !!(res && (res.written || res.reason === 'stale' || res.reason === 'deleted'));
+      } catch (e) {
+        // v13.1: report it. This used to swallow the error and let the
+        // designer navigate away, so "never lose work" was not true.
+        console.warn('[projectStore] could not flush before leaving', e && e.message);
+        return false;
+      } finally { this._flushing = false; }
+    })();
+    return this._flushP;
   },
 
   detach() {
@@ -11829,7 +12427,8 @@ const projectStore = {
   // board in memory. The next person to sign in on the same Mac had the
   // previous designer's project written into THEIR account on the first edit.
   async teardown() {
-    await this.flush();                      // v12.9: signing out must not drop work either
+    // (the save happens in mayaSignOut, before the account is dropped; by the
+    //  time this runs there is no signed in user left to save as)
     this.detach();
     this._idxCache = null; this._idxTs = 0;
     try { _avatarLibCache = null; } catch (_) {}

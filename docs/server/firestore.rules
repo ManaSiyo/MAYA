@@ -40,6 +40,29 @@ service cloud.firestore {
       }
     }
 
+    // v13.3 THE COMMUNITY WALL. One flat public collection: every signed in
+    // account reads it, but a post can only be created by the account whose
+    // uid is in it, and only that account (or the atelier) can take it down.
+    // A post is never editable, so nobody can swap the picture under a
+    // document somebody else is looking at.
+    match /community/{postId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imageUrl.size() < 2000
+        && request.resource.data.author is string
+        && request.resource.data.author.size() < 60
+        && request.resource.data.summary is string
+        && request.resource.data.summary.size() < 400;
+      allow update: if request.auth != null
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if request.auth != null
+        && (resource.data.uid == request.auth.uid
+            || request.auth.token.email in ['fromsa@manasiyo.com', 'worldofsiyo@gmail.com', 'prasheeth@step-6.com']);
+    }
+
     // v12.4 prompting engine, the shared words MAYA draws with. Every signed in
     // client reads these because their renders are built from them; only the
     // atelier can change them.

@@ -1,0 +1,61 @@
+// MAYA smoke test. The first automated check this project has ever had.
+//
+//   cd docs/server && npm install && node ../../tests/smoke.mjs
+//
+// It boots the real server and hits every route. It cannot prove the app is
+// correct, but it catches the class of mistake that took the whole thing down
+// on 13 August 2026: a variable used one line before it was declared, which
+// made every single AI call hang forever instead of answering.
+import assert from 'node:assert';
+
+process.env.GOOGLE_CLIENT_ID = 'smoke-test.apps.googleusercontent.com';
+process.env.PORT = process.env.PORT || '8791';
+const BASE = 'http://127.0.0.1:' + process.env.PORT;
+
+await import(new URL('../docs/server/server.js', import.meta.url).href);
+await new Promise(r => setTimeout(r, 700));
+
+let failed = 0;
+async function check(name, run, expect) {
+  try {
+    const res = await Promise.race([
+      run(),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('no response in 6s')), 6000)),
+    ]);
+    assert.strictEqual(res.status, expect, 'expected ' + expect + ', got ' + res.status);
+    console.log('  ok   ' + name);
+  } catch (e) {
+    failed++;
+    console.log('  FAIL ' + name + '  ' + e.message);
+  }
+}
+
+const post = (p, o = {}) => () => fetch(BASE + p, { method: 'POST', ...o });
+const get  = (p, o = {}) => () => fetch(BASE + p, o);
+const AUTH = { headers: { Authorization: 'Bearer not-a-real-token' } };
+
+console.log('\nMAYA smoke test\n');
+await check('healthz answers',                    get('/api/healthz'), 200);
+await check('subthumb rejects a bad token',        get('/api/admin/subthumb?id=1a2b3c4d5e6f7g', AUTH), 401);
+await check('healthz reports what is configured', async () => {
+  const r = await fetch(BASE + '/api/healthz');
+  const j = await r.json();
+  assert.ok(j.configured && typeof j.configured.openai === 'boolean', 'no configured block');
+  return r;
+}, 200);
+await check('deep healthz needs a sign in',       get('/api/healthz/deep'), 401);
+await check('openai needs a token',               post('/api/openai/v1/chat/completions'), 401);
+await check('openai rejects a bad token',         post('/api/openai/v1/chat/completions', AUTH), 401);
+await check('openai answers, does not hang',      post('/api/openai/v1/images/generations', AUTH), 401);
+await check('submit needs a token',               post('/api/submit'), 401);
+await check('admin submissions need a token',     get('/api/admin/submissions'), 401);
+await check('admin subfile needs a token',        get('/api/admin/subfile?id=abcdefghijkl'), 401);
+await check('savepieces needs a token',           post('/api/admin/savepieces'), 401);
+await check('analytics needs a token',            get('/api/admin/analytics'), 401);
+await check('runway is dormant',                  post('/api/runway', AUTH), 501);
+await check('fal is dormant',                     post('/api/fal/fal-ai/hyper3d/rodin', AUTH), 501);
+await check('fal storage is dormant',             post('/api/falstorage/storage/upload/initiate', AUTH), 501);
+await check('tip is dormant until a key is set',  post('/api/tip', { ...AUTH, headers: { ...AUTH.headers, 'Content-Type': 'application/json' }, body: '{"amount":5}' }), 501);
+
+console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
+process.exit(failed ? 1 : 0);

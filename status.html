@@ -220,6 +220,7 @@
     <span class="status-item"><span class="sdot wait" id="d-site"></span><span class="lgt-lbl">Site</span></span>
     <span class="status-item"><span class="sdot wait" id="d-api"></span><span class="lgt-lbl">API</span></span>
     <span class="status-item"><span class="sdot wait" id="d-assets"></span><span class="lgt-lbl">Images</span></span>
+    <span class="status-item"><span class="sdot wait" id="d-drive"></span><span class="lgt-lbl">Drive</span></span>
     <span class="status-item"><span class="sdot wait" id="d-backup"></span><span class="lgt-lbl">Backup</span></span>
   </div>
   <button class="top-btn hamburger" onclick="document.getElementById('drawer').classList.toggle('open')" title="Menu">
@@ -301,9 +302,12 @@
   </div>
   </details>
 
-  <details class="fold" id="changes-fold" data-latest="2026-08-13b">
+  <details class="fold" id="changes-fold" data-latest="2026-08-13d">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 13</b>The community wall. Swipe up from the moodboard for everyone's hearted visions, drifting past on their own. Favorites are still one swipe down. Anything you heart now appears on the wall, and taking the heart back takes it down again.</div>
+    <div class="chg"><b>Aug 13</b>Submission pictures show up here again. The tiles used to point straight at Google Drive, which only draws a picture for files shared with the whole world, so every private submission left an empty square. They now come through MAYA's own server with your sign in.</div>
+    <div class="chg"><b>Aug 13</b>Self checked the day's own work and caught a mistake that would have taken MAYA down completely: one line of the server used a value before it existed, which would have made every AI call hang forever. Also added the first automated test this project has ever had, which catches exactly that.</div>
     <div class="chg"><b>Aug 13</b>A second reviewer went through everything and found more. Work is now saved before you leave a project, closing the tab saves immediately instead of queuing, a render that finishes after you switch client no longer lands in the wrong project, deleting a card only removes its picture once the change is safely stored, and a failed render gives you your references back.</div>
     <div class="chg"><b>Aug 13</b>The page no longer refreshes itself. A picture that failed to load was retrying forever, hiding and re showing its card every couple of seconds, and MAYA was also reacting to its own saves as though someone else had made them.</div>
     <div class="chg"><b>Aug 13</b>Dragging follows your cursor properly. Cards were animating their position on every mouse move, so they always trailed slightly behind.</div>
@@ -376,7 +380,7 @@ function setDot(id,s){document.getElementById(id).className='sdot '+s}
 function probeImage(url){return new Promise(res=>{const i=new Image();const t=setTimeout(()=>res(false),8000);
   i.onload=()=>{clearTimeout(t);res(true)};i.onerror=()=>{clearTimeout(t);res(false)};i.src=url+'?cb='+Date.now()})}
 async function runChecks(){
-  ['d-site','d-api','d-assets','d-backup'].forEach(id=>setDot(id,'wait'));
+  ['d-site','d-api','d-assets','d-drive','d-backup'].forEach(id=>setDot(id,'wait'));
   document.getElementById('checked-at').textContent='checking…';
   const [site,assets,backup]=await Promise.all([
     probeImage('https://maya.manasiyo.com/aesthetics/ui/logo.png'),
@@ -385,17 +389,35 @@ async function runChecks(){
   // v12.9: the deep check. The old one went green whenever the server answered,
   // even with no OpenAI key and dead Drive authorisation, so every light could
   // be green while nothing actually worked.
-  let api=false, apiWhy='';
+  let api=false, apiWhy='', drive=null;
   try{
-    const r=await fetch('https://maya.manasiyo.com/api/healthz/deep?cb='+Date.now());
-    const j=await r.json();
-    api=r.ok&&j.ok===true;
-    if(!api) apiWhy=(!j.openai?'no OpenAI key':'')+(!j.drive?(j.openai?'':', ')+'Drive not answering':'');
+    // v13.0: the deep check is admin only now, so send the sign in with it.
+    // Without a sign in, fall back to the plain liveness check.
+    if(_idTok){
+      const r=await fetch('https://maya.manasiyo.com/api/healthz/deep?cb='+Date.now(),
+        {headers:{'Authorization':'Bearer '+_idTok}});
+      const j=await r.json().catch(()=>({}));
+      // v13.1: the API light means the API. Drive is a separate thing with its
+      // own light, and letting a Drive problem turn this one red sent you
+      // hunting the wrong fault.
+      api=r.ok&&j.openai===true;
+      drive=r.ok?(j.drive===true):null;
+      if(!api&&r.ok) apiWhy='no OpenAI key on the server';
+      else if(!api) apiWhy='could not check';
+    } else {
+      const r=await fetch('https://maya.manasiyo.com/api/healthz?cb='+Date.now());
+      const j=await r.json().catch(()=>({}));
+      api=r.ok&&j.ok===true;
+      drive=(j.configured&&typeof j.configured.drive==='boolean')?j.configured.drive:null;
+      if(api) apiWhy='';
+    }
   }catch(e){apiWhy='unreachable'}
   setDot('d-site',site?'ok':'bad');setDot('d-api',api?'ok':'bad');
   setDot('d-assets',assets?'ok':'bad');setDot('d-backup',backup?'ok':'bad');
+  setDot('d-drive', drive===null?'wait':(drive?'ok':'bad'));
   document.getElementById('checked-at').textContent='last checked '+new Date().toLocaleString()+
-    ((site&&api&&assets&&backup)?', all systems go':', something needs attention'+(apiWhy?' ('+apiWhy+')':''));
+    ((site&&api&&assets&&backup&&drive!==false)?', all systems go'
+      :', something needs attention'+(apiWhy?' ('+apiWhy+')':'')+(drive===false?' (Drive not answering, submissions will not land)':''));
 }
 runChecks();
 </script>
@@ -499,9 +521,12 @@ function _expired() {
   // v12.8: try to renew silently FIRST, and only trouble you if that fails.
   // The submissions already on screen stay where they are rather than being
   // replaced by a sign in message.
-  _renewNow();
-  if (Date.now() - _expiredAt < 60000) return;   // never nag more than once a minute
+  // v13.0: the once-a-minute guard comes FIRST. Traffic and submissions both
+  // hit a 401 at the same moment, so a single lapse used to fire two renewal
+  // attempts and spend two of the three tries instantly.
+  if (Date.now() - _expiredAt < 60000) return;
   _expiredAt = Date.now();
+  _renewNow();
   setTimeout(() => {
     if (_idTok) return;                          // the silent renewal worked
     _showSignin(true);
@@ -563,14 +588,43 @@ async function loadSubmissions() {
   if (strip.dataset.sig === stripSig) return;      // nothing new, leave it alone
   strip.dataset.sig = stripSig;
   strip.innerHTML = visible.map(({ f, thumbId, fresh }) => {
+    // v13.3: the tile picture comes through our own API now, carrying the
+    // admin token in a header. drive.google.com/thumbnail only renders files
+    // that are shared publicly, so private submissions drew empty tiles.
     const img = thumbId
-      ? '<img loading="lazy" src="https://drive.google.com/thumbnail?id=' + esc(thumbId) + '&sz=w480" alt="" onerror="this.remove()">'
+      ? '<img loading="lazy" data-thumb="' + esc(thumbId) + '" alt="" onerror="this.remove()">'
       : '<img src="/aesthetics/ui/logo-208.png" alt="" style="position:absolute;inset:0;margin:auto;width:44px;height:44px;object-fit:contain;opacity:0.3">';
     return '<a class="sub-tile" target="_blank" rel="noopener" href="/backend.html?submission=' + encodeURIComponent(f.id) + '&name=' + encodeURIComponent(f.name) + (thumbId ? '&img=' + encodeURIComponent(thumbId) : '') + '" title="Open the Brief">' +
       img + (fresh && !thumbId ? '<span class="badge">arriving</span>' : '') +
       '<span class="veil"><span class="nm">' + esc(prettyName(f.name)) + '</span><span class="tm">' + when(f.createdTime) + '</span></span></a>';
   }).join('') +
   '<a class="sub-tile more" href="https://drive.google.com/drive/folders/1ZEgQi3BpYDlNMsIMK553dLQs0kKiga35" target="_blank" rel="noopener">All submissions in Drive</a>';
+  _paintThumbs();
+}
+
+// v13.3: pull each tile picture with the admin token and hand the <img> a
+// blob. Blob URLs are kept per file id, so a repaint reuses the picture that
+// is already downloaded instead of fetching it again.
+const _thumbUrls = new Map();
+async function _paintThumbs() {
+  const nodes = Array.from(document.querySelectorAll('#subs-strip img[data-thumb]'));
+  for (const n of nodes) {
+    const id = n.dataset.thumb;
+    if (!id || n.dataset.done) continue;
+    n.dataset.done = '1';
+    const cached = _thumbUrls.get(id);
+    if (cached) { n.src = cached; continue; }
+    if (!_idTok) return;
+    try {
+      const r = await fetch('/api/admin/subthumb?id=' + encodeURIComponent(id) + '&w=480',
+        { headers: { 'Authorization': 'Bearer ' + _idTok } });
+      if (r.status === 401) { _expired(); return; }
+      if (!r.ok) { n.remove(); continue; }
+      const u = URL.createObjectURL(await r.blob());
+      _thumbUrls.set(id, u);
+      n.src = u;
+    } catch (_) { try { n.remove(); } catch (_) {} }
+  }
 }
 // v12.5: the strip refreshes itself, so a submission that lands while the map
 // is open appears without a reload. Also refreshes the moment the tab is
