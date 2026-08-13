@@ -269,6 +269,37 @@
     <a class="card" href="/operations.html" target="_blank"><b>Operations Room Beta</b><span class="go">&rarr;</span></a>
   </div>
 
+  <details class="fold" id="changes-fold" data-latest="2026-08-13e">
+  <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
+  <div class="fold-body changelog">
+    <div class="chg"><b>Aug 13</b>Cards behave. Dragging no longer blinks the card invisible, whatever you touch last comes to the top and stays there, stacks put the NEWEST version in front, sit 30 percent tighter, the stack button now unstacks too, and a stacked group drags as one piece.</div>
+    <div class="chg"><b>Aug 13</b>Fabrics grew two tabs: Mana Siyo fabrics, the atelier library, and My fabrics, your own uploads. Photograph a fabric with your phone, upload it, and it follows your account into every new project. The upload button now asks: inspo, or my fabric?</div>
+    <div class="chg"><b>Aug 13</b>The community wall. Swipe up from the moodboard for everyone's hearted visions, drifting past on their own. Favorites are still one swipe down. Anything you heart now appears on the wall, and taking the heart back takes it down again.</div>
+    <div class="chg"><b>Aug 13</b>Submission pictures show up here again. The tiles used to point straight at Google Drive, which only draws a picture for files shared with the whole world, so every private submission left an empty square. They now come through MAYA's own server with your sign in.</div>
+    <div class="chg"><b>Aug 13</b>Self checked the day's own work and caught a mistake that would have taken MAYA down completely: one line of the server used a value before it existed, which would have made every AI call hang forever. Also added the first automated test this project has ever had, which catches exactly that.</div>
+    <div class="chg"><b>Aug 13</b>A second reviewer went through everything and found more. Work is now saved before you leave a project, closing the tab saves immediately instead of queuing, a render that finishes after you switch client no longer lands in the wrong project, deleting a card only removes its picture once the change is safely stored, and a failed render gives you your references back.</div>
+    <div class="chg"><b>Aug 13</b>The page no longer refreshes itself. A picture that failed to load was retrying forever, hiding and re showing its card every couple of seconds, and MAYA was also reacting to its own saves as though someone else had made them.</div>
+    <div class="chg"><b>Aug 13</b>Dragging follows your cursor properly. Cards were animating their position on every mouse move, so they always trailed slightly behind.</div>
+    <div class="chg"><b>Aug 13</b>Sign in renews itself. A Google sign in lasts an hour and nothing was refreshing it, which is why this page asked you to sign in again while you were already signed in.</div>
+    <div class="chg"><b>Aug 13</b>Dissect is a button now. Opening a client used to spend on six image calls before you asked for anything, and it repeated on every reopen. It runs once, on purpose, and is saved forever.</div>
+    <div class="chg"><b>Aug 13</b>About fifty API calls a day per person, with images counting more than text, and the API keys moved out of the browser onto MAYA's own server.</div>
+    <div class="chg"><b>Aug 11</b>Saving is fixed. There is one save path, it goes to the cloud, and it only says Saved when it truly saved. Naming a project used to keep it in the browser alone, which is how a client could be saved and then not be there.</div>
+    <div class="chg"><b>Aug 11</b>New really means new project. It closes the one you are in first, so nothing already saved is ever written over. Same when you switch client.</div>
+    <div class="chg"><b>Aug 11</b>Nothing is kept on the Mac any more. Projects, pictures and the client roster all live online, so any device shows the same work and a refresh brings the last project back.</div>
+    <div class="chg"><b>Aug 11</b>The API keys left the browser. The Brief and the Operations Room call MAYA's own server, which holds them; your Google sign in is what authorises the call.</div>
+    <div class="chg"><b>Aug 11</b>Faster: submissions upload together instead of one after another, the project list reads a small index, and new submissions appear here within seconds.</div>
+    <div class="chg"><b>Aug 11</b>The self destruct link is gone, a stranger could send a client a link that erased their whole account. Uploads are limited to the files MAYA itself writes, and the Firestore and Storage rules now publish with every deploy.</div>
+    <div class="chg"><b>Aug 6</b>Each submission is dissected once and the pieces are saved to its Drive folder, reopening a client costs no API credits.</div>
+    <div class="chg"><b>Aug 6</b>Operations Room is the new name, in the Brief, on this map, and in the beta.</div>
+    <div class="chg"><b>Aug 6</b>Systems Map slimmed: one line doors, lights in the top bar, submissions flow edge to edge, prompting engine and this list fold away.</div>
+    <div class="chg"><b>Aug 5</b>One push publishing: Push origin in GitHub Desktop deploys the website and the server together, about 4 minutes.</div>
+    <div class="chg"><b>Aug 5</b>Clicking a submission opens the Brief with biography, vision and measurements filled, then it dissects itself into pieces that feed the Operations Room.</div>
+    <div class="chg"><b>Aug 5</b>Systems Map redesigned to the MAYA look, one sign in unlocks submissions, traffic and prompting.</div>
+    <div class="chg"><b>Aug 5</b>Google Drive key renewed, client submissions land again.</div>
+    <div class="chg"><b>Aug 5</b>Folder reorganized: three pages at the root, aesthetics for everything visual, docs for everything else.</div>
+  </div>
+  </details>
+
   <details class="fold" id="pe-fold">
   <summary><h2 class="grp">MAYA Prompting Engine</h2></summary>
   <div class="fold-body">
@@ -302,36 +333,9 @@
   </div>
   </details>
 
-  <details class="fold" id="changes-fold" data-latest="2026-08-13d">
-  <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
-  <div class="fold-body changelog">
-    <div class="chg"><b>Aug 13</b>The community wall. Swipe up from the moodboard for everyone's hearted visions, drifting past on their own. Favorites are still one swipe down. Anything you heart now appears on the wall, and taking the heart back takes it down again.</div>
-    <div class="chg"><b>Aug 13</b>Submission pictures show up here again. The tiles used to point straight at Google Drive, which only draws a picture for files shared with the whole world, so every private submission left an empty square. They now come through MAYA's own server with your sign in.</div>
-    <div class="chg"><b>Aug 13</b>Self checked the day's own work and caught a mistake that would have taken MAYA down completely: one line of the server used a value before it existed, which would have made every AI call hang forever. Also added the first automated test this project has ever had, which catches exactly that.</div>
-    <div class="chg"><b>Aug 13</b>A second reviewer went through everything and found more. Work is now saved before you leave a project, closing the tab saves immediately instead of queuing, a render that finishes after you switch client no longer lands in the wrong project, deleting a card only removes its picture once the change is safely stored, and a failed render gives you your references back.</div>
-    <div class="chg"><b>Aug 13</b>The page no longer refreshes itself. A picture that failed to load was retrying forever, hiding and re showing its card every couple of seconds, and MAYA was also reacting to its own saves as though someone else had made them.</div>
-    <div class="chg"><b>Aug 13</b>Dragging follows your cursor properly. Cards were animating their position on every mouse move, so they always trailed slightly behind.</div>
-    <div class="chg"><b>Aug 13</b>Sign in renews itself. A Google sign in lasts an hour and nothing was refreshing it, which is why this page asked you to sign in again while you were already signed in.</div>
-    <div class="chg"><b>Aug 13</b>Dissect is a button now. Opening a client used to spend on six image calls before you asked for anything, and it repeated on every reopen. It runs once, on purpose, and is saved forever.</div>
-    <div class="chg"><b>Aug 13</b>About fifty API calls a day per person, with images counting more than text, and the API keys moved out of the browser onto MAYA's own server.</div>
-    <div class="chg"><b>Aug 11</b>Saving is fixed. There is one save path, it goes to the cloud, and it only says Saved when it truly saved. Naming a project used to keep it in the browser alone, which is how a client could be saved and then not be there.</div>
-    <div class="chg"><b>Aug 11</b>New really means new project. It closes the one you are in first, so nothing already saved is ever written over. Same when you switch client.</div>
-    <div class="chg"><b>Aug 11</b>Nothing is kept on the Mac any more. Projects, pictures and the client roster all live online, so any device shows the same work and a refresh brings the last project back.</div>
-    <div class="chg"><b>Aug 11</b>The API keys left the browser. The Brief and the Operations Room call MAYA's own server, which holds them; your Google sign in is what authorises the call.</div>
-    <div class="chg"><b>Aug 11</b>Faster: submissions upload together instead of one after another, the project list reads a small index, and new submissions appear here within seconds.</div>
-    <div class="chg"><b>Aug 11</b>The self destruct link is gone, a stranger could send a client a link that erased their whole account. Uploads are limited to the files MAYA itself writes, and the Firestore and Storage rules now publish with every deploy.</div>
-    <div class="chg"><b>Aug 6</b>Each submission is dissected once and the pieces are saved to its Drive folder, reopening a client costs no API credits.</div>
-    <div class="chg"><b>Aug 6</b>Operations Room is the new name, in the Brief, on this map, and in the beta.</div>
-    <div class="chg"><b>Aug 6</b>Systems Map slimmed: one line doors, lights in the top bar, submissions flow edge to edge, prompting engine and this list fold away.</div>
-    <div class="chg"><b>Aug 5</b>One push publishing: Push origin in GitHub Desktop deploys the website and the server together, about 4 minutes.</div>
-    <div class="chg"><b>Aug 5</b>Clicking a submission opens the Brief with biography, vision and measurements filled, then it dissects itself into pieces that feed the Operations Room.</div>
-    <div class="chg"><b>Aug 5</b>Systems Map redesigned to the MAYA look, one sign in unlocks submissions, traffic and prompting.</div>
-    <div class="chg"><b>Aug 5</b>Google Drive key renewed, client submissions land again.</div>
-    <div class="chg"><b>Aug 5</b>Folder reorganized: three pages at the root, aesthetics for everything visual, docs for everything else.</div>
-  </div>
-  </details>
-
-  <h2 class="grp" id="architecture">Architecture, local and online</h2>
+  <details class="fold" id="arch-fold">
+  <summary><h2 class="grp" id="architecture">Architecture, local and online</h2></summary>
+  <div class="fold-body">
   <div class="arch">
     <div class="col">
       <h4>Your Mac, Desktop/MAYA-new</h4>
@@ -350,6 +354,8 @@
       Google then builds and deploys the website and the server by itself, about 4 minutes.
     </div>
   </div>
+  </div>
+  </details>
 
   <div class="warn">Never delete the Google project <b>maya-496803</b>, it holds MAYA's sign-in keys.</div>
   <div class="money">Runs on Google credits, AI by OpenAI, main site and DNS on Wix, health check every morning, emails only on failure</div>

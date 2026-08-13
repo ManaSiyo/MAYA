@@ -6,9 +6,12 @@ then `history.txt` for the older narrative.
 
 Owner: Fromsa, founder of Mana Siyo.
 Live site: https://maya.manasiyo.com
+Also read: `history.txt` (the story), `fixes.txt` (fix attempts, especially
+ones outside git), `requests.txt` (Fromsa's own asks and noticed bugs, with
+status marks; re-verify its entries every session).
 Google project: `pro-maya`
 Repo: `ManaSiyo/MAYA` on GitHub, working folder `~/Desktop/MAYA-new`
-Current version: **13.3** (the number lives in a `maya-version` meta tag in
+Current version: **13.4** (the number lives in a `maya-version` meta tag in
 `index.html`, and the running site's number is the fastest way to tell whether
 a push has landed).
 
@@ -298,7 +301,13 @@ server. That is why `tests/smoke.mjs` exists.
 
 ```
 cd docs/server && npm install && node ../../tests/smoke.mjs
+node tests/app-regression.mjs      # from the repo root, needs Playwright
 ```
+
+`app-regression.mjs` boots index.html and status.html headlessly and asserts
+every behavior Fromsa has signed off in `requests.txt` (stacking, layering,
+fabric tabs, fold order). Add an assertion whenever a request is completed.
+Run BOTH before telling Fromsa to push.
 
 Boots the real server and asserts status codes on 16 routes. It cannot prove
 the app is correct but it catches the class of mistake above. **Run it before

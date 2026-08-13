@@ -1,0 +1,63 @@
+MAYA REQUESTS
+Fromsa's own log. What HE asked for and what HE noticed, in his words,
+simplified, with date and time. Not what Claude did (that trail lives in
+commits and fixes.txt). Say "log the request" in any chat and Claude adds
+the entry from the prompt just given. Newest on top.
+
+How the four text files divide the work:
+  README.md     the manual. Architecture, deploys, data, how to work here.
+  history.txt   the story. What happened, in narrative, dated.
+  fixes.txt     fix attempts, especially ones outside git (Cloud Run,
+                Google console, credentials). Symptom, cause, action, status.
+  requests.txt  this file. Fromsa's requests and the bugs he notices, so
+                every ask can be checked later: done or not, and whether a
+                fixed thing broke again.
+
+Each entry: date and time of the prompt, then the asks as short lines.
+Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
+
+─────────────────────────────────────────────
+
+AUGUST 13, 2026, 2:35 PM
+
+Documentation:
+[x] Create this file: my personal log of requests and noticed bugs, with
+    date and time, kept in the folder as text.
+
+Bugs I notice:
+[ ] Systems Map shows no submissions, says "Waiting for the one sign in
+    at the top of the page."
+[ ] Drive problem, apparently the cause of the above.
+[x] Dragging cards looks glitchy: the card pops, goes invisible for a
+    moment, comes back when I let go.
+[x] Card layering is wrong: whatever I click last should come to the top
+    and stay there. Right now some cards act stuck on a bottom layer even
+    after I click them.
+[x] Version stack order is backwards: pressing stack puts version 1 in
+    front. The LATEST version should be on top.
+
+Changes I want:
+[x] Stacked cards should sit about 30 percent closer together than now.
+[x] The stack button should toggle: press again to unstack.
+[x] Dragging any card of a stacked group should drag the whole stack.
+[x] Fabric drawer: when I swipe the drawer away, the fabrics panel should
+    go with it. Right now it stays on screen.
+[x] Rename "In-house fabrics" to "Mana Siyo fabrics." Add a second tab in
+    the same aesthetics: "My fabrics," the client's own uploads.
+[x] Clients can photograph fabrics with their phone and upload them. Their
+    fabrics live in their own personal drawer, per account, not per
+    project, so a new project can reach fabrics from before. The personal
+    folder holds avatars and fabrics; the project holds everything on its
+    screen (moodboard, references, saves).
+[x] "UPLOAD INSPO" becomes just "UPLOAD," about 20 percent wider. Pressing
+    it asks, snappily: inspo, or my fabric?
+[x] Systems Map: Architecture (local and online) becomes a dropdown like
+    Recent changes.
+[x] Systems Map order: Recent changes first, MAYA prompting engine second,
+    Architecture third, all collapsible.
+
+Process:
+[x] After the changes, run a full audit and the smoke test so nothing that
+    was fixed reappears as a new bug. Keep an internal loop: every request
+    here gets re-checked in later sessions, and a fixed item that breaks
+    again gets marked [!] with a new entry.

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.3">
+<meta name="maya-version" content="13.4">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -694,6 +694,43 @@
     color: rgba(200,210,230,0.3);
     cursor: pointer; transition: color 0.2s;
   }
+  /* v13.4: the upload button reads a touch wider per Fromsa. */
+  .upload-link { letter-spacing: 0.26em; padding: 0 10px; }
+  /* v13.4: the upload chooser. Snappy on purpose: 0.12s, no drift. */
+  #upload-choose-modal {
+    position: fixed; inset: 0; z-index: 1200;
+    display: flex; align-items: flex-end; justify-content: center;
+    padding-bottom: 120px;
+    background: rgba(4,6,12,0.45);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.12s ease;
+  }
+  #upload-choose-modal.open { opacity: 1; pointer-events: auto; }
+  .upload-choose-card {
+    display: flex; gap: 10px;
+    padding: 14px 16px;
+    border: 0.5px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
+    background: rgba(10,14,24,0.85);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    transform: translateY(6px);
+    transition: transform 0.12s ease;
+  }
+  #upload-choose-modal.open .upload-choose-card { transform: translateY(0); }
+  .upload-choose-btn {
+    background: none;
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 999px;
+    padding: 9px 18px;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(225,232,245,0.85);
+    cursor: pointer;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
+  }
+  .upload-choose-btn:hover { color: #fff; border-color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.05); }
   .input-link:hover { color: rgba(220,225,240,0.7); }
   /* v10: .input-link .sep removed, no <span class="sep"> ever rendered. */
 
@@ -2394,6 +2431,29 @@
     color: rgba(200,210,230,0.4); margin-top: 5px;
   }
   .fabrics-drawer-actions { display: flex; gap: 8px; align-items: center; }
+  /* v13.4: fabric tabs, same language as the rest of the drawer. */
+  .fabrics-tabs {
+    display: flex; gap: 6px; padding: 0 18px 10px;
+  }
+  .fabrics-tab {
+    background: none;
+    border: 0.5px solid rgba(255,255,255,0.16);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-family: 'Jost', sans-serif;
+    font-size: 9px; font-weight: 300;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: rgba(200,210,230,0.5);
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .fabrics-tab:hover { color: rgba(235,240,250,0.85); border-color: rgba(255,255,255,0.3); }
+  .fabrics-tab.active {
+    color: rgba(240,244,252,0.95);
+    border-color: rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.05);
+  }
+  .myfabrics-upload-row { display: flex; justify-content: center; padding: 4px 0 14px; }
   .fabrics-drawer-body { flex: 1; overflow-y: auto; padding: 16px 18px 30px; }
   .fabrics-empty {
     font-family: 'Cormorant Garamond', serif; font-style: italic;
@@ -3775,7 +3835,10 @@
         <div id="listening-ring"></div>
         <div id="voice-wrap">
           <div id="secondary-row">
-            <button class="input-link" onclick="document.getElementById('inspo-file').click()">+ upload inspo</button>
+            <!-- v13.4: "+ upload inspo" became "+ upload", a touch wider, and
+                 it now asks: inspo, or my fabric? Fabrics go to the client's
+                 personal drawer (My fabrics), not the moodboard. -->
+            <button class="input-link upload-link" onclick="openUploadChooser()">+ upload</button>
             <input type="file" id="inspo-file" accept="image/*,audio/*,.txt,.mp3,.wav,.m4a" multiple style="display:none">
           </div>
           <div id="voice-row">
@@ -4095,11 +4158,27 @@
   <button class="fabrics-back" onclick="closeFabricsDrawer()" title="Back to menu" aria-label="Back">&#8592; Back</button>
   <div class="fabrics-drawer-header">
     <div>
-      <div class="fabrics-drawer-title">In-house fabrics</div>
+      <div class="fabrics-drawer-title" id="fabrics-drawer-title">Mana Siyo fabrics</div>
       <div class="fabrics-drawer-sub" id="fabrics-drawer-sub">no swatches loaded yet</div>
     </div>
   </div>
+  <!-- v13.4: two tabs. Mana Siyo fabrics = the atelier's in-house library.
+       My fabrics = this client's own uploads, kept on their account so every
+       new project can reach them. -->
+  <div class="fabrics-tabs">
+    <button class="fabrics-tab active" id="fabrics-tab-house" onclick="setFabricsTab('house')">Mana Siyo fabrics</button>
+    <button class="fabrics-tab" id="fabrics-tab-mine" onclick="setFabricsTab('mine')">My fabrics</button>
+  </div>
   <div class="fabrics-drawer-body" id="fabrics-drawer-body"></div>
+  <input type="file" id="myfabric-file" accept="image/*" multiple style="display:none">
+</div>
+
+<!-- v13.4: upload chooser, opened by the + upload button. -->
+<div id="upload-choose-modal" onclick="if(event.target===this)closeUploadChooser()">
+  <div class="upload-choose-card">
+    <button class="upload-choose-btn" onclick="closeUploadChooser();document.getElementById('inspo-file').click()">Inspo</button>
+    <button class="upload-choose-btn" onclick="closeUploadChooser();document.getElementById('myfabric-file').click()">My fabric</button>
+  </div>
 </div>
 
 <!-- v10.16: avatar safety check, fires before Visualize if no face photo
@@ -4618,6 +4697,23 @@ function _placeItemInternal(card, delay, fixedPos, isRestore) {
                    (isVision ? ' is-vision' : '');
     el.style.left = x + 'px'; el.style.top = y + 'px';
     if (card.tint) el.style.setProperty('--card-tint', card.tint);
+    // v13.4: persistent layering. A card that was brought to the front stays
+    // there across saves and reloads. Restore its z, and keep the global
+    // counter above every restored value so the next click still wins.
+    if (card.z) {
+      el.style.zIndex = card.z;
+      if (typeof _zCounter !== 'undefined' && card.z > _zCounter) _zCounter = card.z;
+    }
+    // v13.4: the entry fade runs ONCE. The .dragging class sets
+    // animation:none, and removing that class at drag end RESTARTED the
+    // 0.8s entry fade from opacity 0, so the card blinked invisible and
+    // faded back in after every drag. After the fade has played, take the
+    // animation off the element for good so class churn can't replay it.
+    el.addEventListener('animationend', function _entryDone(ev) {
+      if (ev.animationName !== 'itemFadeIn') return;
+      el.style.animation = 'none';
+      el.removeEventListener('animationend', _entryDone);
+    });
     const id = itemIdCounter++; el.dataset.id = id;
 
     const tagInner = card.realism
@@ -4658,7 +4754,7 @@ function _placeItemInternal(card, delay, fixedPos, isRestore) {
       : '';
 
     const stackBtnHtml = (card.kind === 'inspo' && card.image)
-      ? '<button class="stack-btn" data-id="' + id + '" title="Stack versions">&#x29C9;</button>'
+      ? '<button class="stack-btn" data-id="' + id + '" title="Stack / unstack versions">&#x29C9;</button>'
       : '';
     // v5.1: dissect button, only on uploaded inspo cards (Maya's own
     // visions have an inspirationId and are skipped).
@@ -4810,6 +4906,36 @@ function _placeItemInternal(card, delay, fixedPos, isRestore) {
   }, delay || 0);
 }
 
+// v13.4: persistent click-to-front layering. Whatever the user touches last
+// comes to the top and STAYS there, written onto the card so a reload keeps
+// the order. Stacked groups rise together, keeping their internal order.
+let _zCounter = 200;
+function _groupOf(card) {
+  // A card's stack group: same inspirationId for visions, or the whole
+  // uploaded-inspo family for uploads, but only when currently stacked.
+  if (!card || !card.stacked) return null;
+  const members = items.filter(i => i.el && i.card && i.card.stacked &&
+    i.card.kind === 'inspo' && i.card.image &&
+    (card.inspirationId ? i.card.inspirationId === card.inspirationId
+                        : !i.card.inspirationId));
+  return members.length > 1 ? members : null;
+}
+function bringCardToFront(el, card) {
+  const group = _groupOf(card);
+  if (group) {
+    // Preserve the group's internal top-to-bottom order while lifting the
+    // whole stack above everything else.
+    const ordered = group.slice().sort((a, b) =>
+      (parseInt(a.el.style.zIndex) || 0) - (parseInt(b.el.style.zIndex) || 0));
+    ordered.forEach(m => {
+      m.card.z = ++_zCounter;
+      m.el.style.zIndex = m.card.z;
+    });
+  } else if (card) {
+    card.z = ++_zCounter;
+    el.style.zIndex = card.z;
+  }
+}
 // v11.30: pointer events instead of mouse events, identical on desktop,
 // and card dragging now works with a finger on touch screens. touch-action
 // is set on .item-card in the mobile CSS so a drag doesn't fight the
@@ -4830,8 +4956,20 @@ function makeDraggable(el) {
     startLeft = parseInt(el.style.left) || 0; startTop = parseInt(el.style.top) || 0;
     moved = 0;
     el.classList.add('dragging');           // v12.7: nothing animates mid drag
-    el._stackZ = el.style.zIndex;
-    el.style.zIndex = 999;
+    // v13.4: if the entry fade is still playing when the card is grabbed,
+    // finish it instantly, so removing .dragging later cannot replay it.
+    el.style.animation = 'none';
+    // v13.4: touching a card brings it (or its whole stack) to the front,
+    // permanently. Replaces the old temporary z:999 that was put back after
+    // the drag, which is why some cards felt stuck on a bottom layer.
+    const _it = items.find(i => i.el === el);
+    const _card = _it && _it.card;
+    bringCardToFront(el, _card);
+    // v13.4: dragging one member of a stacked group drags the whole stack.
+    const _group = _groupOf(_card);
+    const _groupStarts = _group ? _group.map(m => ({
+      m, left: parseInt(m.el.style.left) || 0, top: parseInt(m.el.style.top) || 0
+    })) : null;
     // v11.36: TWO drag engines, picked by pointer type. Desktop mouse keeps
     // the original direct left/top writes (Fromsa: desktop drag was already
     // right, do not touch it). Touch gets the v11.33 GPU-composited
@@ -4849,7 +4987,13 @@ function makeDraggable(el) {
       if (!dragging) return;
       _curDx = me.clientX - startX; _curDy = me.clientY - startY;
       moved = Math.max(moved, Math.abs(_curDx) + Math.abs(_curDy));
-      if (_touchDrag) {
+      if (_groupStarts) {
+        // v13.4: the whole stack follows the pointer as one unit.
+        for (const g of _groupStarts) {
+          g.m.el.style.left = (g.left + _curDx) + 'px';
+          g.m.el.style.top  = (g.top  + _curDy) + 'px';
+        }
+      } else if (_touchDrag) {
         if (!_raf) _raf = requestAnimationFrame(_paint);
       } else {
         el.style.left = (startLeft + _curDx) + 'px';
@@ -4858,17 +5002,25 @@ function makeDraggable(el) {
     }
     function onUp(ue) {
       dragging = false;
-      el.style.zIndex = el._stackZ || '';   // v12.9: keep stack order after a drag
+      // v13.4: the card KEEPS its brought-to-front z. The old line here put
+      // the pre-drag z back, which is why layering never stuck.
       el.classList.remove('dragging');
       if (_raf) { cancelAnimationFrame(_raf); _raf = 0; }
-      if (_touchDrag) {
+      if (_touchDrag && !_groupStarts) {
         // Commit the final spot to left/top and drop the temporary transform
         // so persistence (which reads style.left/top) records the position.
         el.style.transform = _baseTransform;
         el.style.willChange = '';
       }
-      el.style.left = (startLeft + _curDx) + 'px';
-      el.style.top  = (startTop  + _curDy) + 'px';
+      if (_groupStarts) {
+        for (const g of _groupStarts) {
+          g.m.el.style.left = (g.left + _curDx) + 'px';
+          g.m.el.style.top  = (g.top  + _curDy) + 'px';
+        }
+      } else {
+        el.style.left = (startLeft + _curDx) + 'px';
+        el.style.top  = (startTop  + _curDy) + 'px';
+      }
       try { el.releasePointerCapture(ue.pointerId); } catch (_) {}
       el.removeEventListener('pointermove', onMove);
       el.removeEventListener('pointerup', onUp);
@@ -4881,6 +5033,10 @@ function makeDraggable(el) {
         // v11.32: a pure reposition is a real edit, persist it so the new
         // spot survives reload / cross-device instead of only being saved
         // when some other change happens to fire.
+        if (typeof _persistSession === 'function') _persistSession();
+      } else {
+        // v13.4: even a plain tap changed the layering (card came to the
+        // front), and layering persists now, so save that too.
         if (typeof _persistSession === 'function') _persistSession();
       }
     }
@@ -5090,40 +5246,86 @@ function consumeFloatingCards() {
 // Re-stack every image card that belongs to the same inspiration as the
 // one the user clicked Stack on. The oldest sibling stays put; the rest
 // animate toward it with the same +22/-22 offset pattern Modify uses.
+// v13.4: reworked per Fromsa, Aug 13.
+//   1. The LATEST version sits on top and in front, not version 1.
+//   2. Offsets are 30 percent tighter (22px became 15px).
+//   3. The stack button TOGGLES: press again to unstack, cards return to
+//      where they were before stacking.
+//   4. While stacked, dragging any member drags the whole stack (handled in
+//      makeDraggable via card.stacked + _groupOf).
 function stackInspirationImages(itemId) {
   const ref = items.find(i => i.id === itemId);
   if (!ref || !ref.el) return;
   let siblings;
   if (ref.card.inspirationId) {
-    // Maya vision: stack all versions of the same inspiration.
+    // Maya vision: stack all versions of the same inspiration,
+    // NEWEST FIRST, so the latest version is the one on top.
     const inspId = ref.card.inspirationId;
     siblings = items.filter(i =>
       i.card.kind === 'inspo' && i.card.image &&
       i.card.inspirationId === inspId && i.el
-    ).sort((a, b) => a.id - b.id);
+    ).sort((a, b) => b.id - a.id);
   } else {
-    // v5.15: uploaded inspo, stack ALL other uploaded inspos under THIS
-    // one. v5.18: also tag every member with uploadStackHead = ref.id so
-    // pinterestLayout can preserve the group as one unit.
+    // v5.15: uploaded inspo, stack ALL other uploaded inspos under THIS one.
     const others = items.filter(i =>
       i !== ref && i.card.kind === 'inspo' && i.card.image &&
       !i.card.inspirationId && i.el
-    );
+    ).sort((a, b) => b.id - a.id);
     siblings = [ref, ...others];
   }
   if (siblings.length < 2) return;
+
+  // Toggle: if this group is already stacked, unstack it back to the spots
+  // the cards held before stacking.
+  if (siblings.every(s => s.card.stacked)) {
+    siblings.forEach((sib, idx) => {
+      sib.el.style.transition = 'left 0.45s cubic-bezier(0.16,1,0.3,1), top 0.45s cubic-bezier(0.16,1,0.3,1)';
+      const home = sib.card.stackHome;
+      if (home && typeof home.x === 'number' && typeof home.y === 'number') {
+        sib.el.style.left = home.x + 'px';
+        sib.el.style.top  = home.y + 'px';
+      } else if (idx > 0) {
+        // No remembered spot (stacked by Organize): fan out to free space,
+        // the top card stays where it is.
+        const w = sib.el.offsetWidth || 240, h = sib.el.offsetHeight || 160;
+        const spot = findFreeSpot(w, h, true);
+        sib.el.style.left = spot.x + 'px';
+        sib.el.style.top  = spot.y + 'px';
+      }
+      delete sib.card.stacked;
+      delete sib.card.stackHome;
+      setTimeout(() => { sib.el.style.transition = ''; }, 480);
+    });
+    if (typeof _persistSession === 'function') _persistSession();
+    return;
+  }
+
+  // Stack: newest stays put on top, older versions fan in behind it,
+  // 15px per step (30 percent tighter than the old 22px).
   const base = siblings[0];
   const baseX = parseInt(base.el.style.left) || 0;
   const baseY = parseInt(base.el.style.top)  || 0;
+  const STEP = 15;
   siblings.forEach((sib, idx) => {
+    // Remember where each card was, so unstack can put it back.
+    sib.card.stackHome = {
+      x: parseInt(sib.el.style.left) || 0,
+      y: parseInt(sib.el.style.top) || 0
+    };
+    sib.card.stacked = true;
     sib.el.style.transition = 'left 0.45s cubic-bezier(0.16,1,0.3,1), top 0.45s cubic-bezier(0.16,1,0.3,1)';
-    sib.el.style.left = (baseX + idx * 22) + 'px';
-    sib.el.style.top  = (baseY - idx * 22) + 'px';
-    // v12.9: the FIRST card sits on top. It used to be the last, which put
-    // every card's X and stack buttons underneath the card in front of it,
-    // so on a stack those buttons simply did not respond.
-    sib.el.style.zIndex = 100 - idx;
+    sib.el.style.left = (baseX + idx * STEP) + 'px';
+    sib.el.style.top  = (baseY - idx * STEP) + 'px';
     setTimeout(() => { sib.el.style.transition = ''; }, 480);
+  });
+  // Newest on top, descending behind, and the whole stack above everything
+  // else on the board (fresh block from the global layer counter). The top
+  // card is the one whose X / stack buttons stay reachable.
+  const top = ++_zCounter + siblings.length;
+  _zCounter = top;
+  siblings.forEach((sib, idx) => {
+    sib.card.z = top - idx;
+    sib.el.style.zIndex = sib.card.z;
   });
   // v12.9: arranging the board is a real change, keep it.
   if (typeof _persistSession === 'function') _persistSession();
@@ -5357,9 +5559,16 @@ function _bootScreenObserver() {
   // drawer-open state (used by older CSS rules + escape-to-close logic).
   const hscroll = document.getElementById('hscroll');
   if (hscroll) {
+    let _drawerWasOpen = false;
     const updateDrawerState = () => {
       const open = hscroll.scrollLeft > (hscroll.scrollWidth - hscroll.clientWidth) / 2;
       document.body.classList.toggle('drawer-open', open);
+      // v13.4: swiping the drawer away also puts the fabrics panel away.
+      // It used to stay floating on screen after the drawer was gone.
+      if (_drawerWasOpen && !open && typeof closeFabricsDrawer === 'function') {
+        closeFabricsDrawer();
+      }
+      _drawerWasOpen = open;
     };
     hscroll.addEventListener('scroll', updateDrawerState, { passive: true });
     updateDrawerState();
@@ -6226,6 +6435,11 @@ function pinterestLayout() {
     it.el.style.transition = 'left 0.55s cubic-bezier(0.16,1,0.3,1), top 0.55s cubic-bezier(0.16,1,0.3,1)';
     it.el.style.left = x + 'px';
     it.el.style.top  = y + 'px';
+    // v13.4: Organize is a fresh layout, so layering resets too, otherwise
+    // previously-fronted cards would keep floating over the new grid.
+    delete it.card.z;
+    delete it.card.stacked;
+    delete it.card.stackHome;
     it.el.style.zIndex = 5;
     // Advance EVERY column the card spans so future placements don't
     // overlap underneath a wide card.
@@ -6235,22 +6449,41 @@ function pinterestLayout() {
     setTimeout(() => { if (it.el) it.el.style.transition = ''; }, 580);
 
     // v5.22: only Maya visions re-stack. Uploaded inspos sit free.
+    // v13.4: newest version behind the top card first, 15px steps (30
+    // percent tighter), z assigned as a proper stack (latest on top,
+    // never 0 or negative like the old 4-idx which pushed deep stacks
+    // underneath the canvas), and the group is marked stacked so it drags
+    // as one unit and the stack button can unstack it.
     let siblings = [];
     if (it.card.inspirationId) {
       siblings = items.filter(s =>
         s.el && !s.consumed && s !== it &&
         s.card.kind === 'inspo' && s.card.image &&
         s.card.inspirationId === it.card.inspirationId
-      ).sort((a, b) => a.id - b.id);
+      ).sort((a, b) => b.id - a.id);
     }
-    siblings.forEach((sib, idx) => {
-      sib.el.style.transition = 'left 0.55s cubic-bezier(0.16,1,0.3,1), top 0.55s cubic-bezier(0.16,1,0.3,1)';
-      sib.el.style.left = (x + (idx + 1) * 22) + 'px';
-      sib.el.style.top  = (y - (idx + 1) * 22) + 'px';
-      sib.el.style.zIndex = 4 - (idx + 1);
-      setTimeout(() => { if (sib.el) sib.el.style.transition = ''; }, 580);
-    });
+    if (siblings.length) {
+      const topZ = ++_zCounter + siblings.length + 1;
+      _zCounter = topZ;
+      it.card.z = topZ;
+      it.el.style.zIndex = topZ;
+      it.card.stacked = true;
+      delete it.card.stackHome;   // Organize invalidates pre-stack homes;
+                                  // unstack fans out via findFreeSpot instead.
+      siblings.forEach((sib, idx) => {
+        sib.el.style.transition = 'left 0.55s cubic-bezier(0.16,1,0.3,1), top 0.55s cubic-bezier(0.16,1,0.3,1)';
+        const sx = x + (idx + 1) * 15, sy = y - (idx + 1) * 15;
+        sib.el.style.left = sx + 'px';
+        sib.el.style.top  = sy + 'px';
+        sib.card.z = topZ - (idx + 1);
+        sib.el.style.zIndex = sib.card.z;
+        sib.card.stacked = true;
+        delete sib.card.stackHome;
+        setTimeout(() => { if (sib.el) sib.el.style.transition = ''; }, 580);
+      });
+    }
   });
+  if (typeof _persistSession === 'function') _persistSession();
   showToast('Organized · ' + toPlace.length + ' on canvas');
 }
 
@@ -9256,6 +9489,12 @@ async function applyModifications() {
       fabricMode: original?.card.fabricMode || null,
       fabrics: original?.card.fabrics ? original.card.fabrics.map(f => ({ ...f })) : null
     };
+    // v13.4: a new version always lands ON TOP of its group, even when the
+    // group was brought to the front or is currently stacked.
+    if (original && original.card && (original.card.z || original.card.stacked)) {
+      newCard.z = ++_zCounter;
+      if (original.card.stacked) newCard.stacked = true;
+    }
     if (original && original.el) {
       const r = original.el.getBoundingClientRect();
       placeItemAt(newCard, r.left + 22, Math.max(110, r.top - 22));
@@ -9963,6 +10202,12 @@ const _modalClosers = {
 //   6. Otherwise → no-op
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
+  // v13.4: 0. Upload chooser → close it first, it sits above everything.
+  const _uc = document.getElementById('upload-choose-modal');
+  if (_uc && _uc.classList.contains('open')) {
+    _uc.classList.remove('open');
+    return;
+  }
   // 1. Thank-you overlay
   const ty = document.getElementById('thankyou');
   if (ty && ty.classList.contains('show')) {
@@ -10391,6 +10636,14 @@ async function persistFabricsCache() {
 function updateFabricsDrawerSub() {
   const el = document.getElementById('fabrics-drawer-sub');
   if (!el) return;
+  // v13.4: the sub line follows the active tab.
+  if (typeof _fabricsTab !== 'undefined' && _fabricsTab === 'mine') {
+    const m = Array.isArray(myFabrics) ? myFabrics.length : 0;
+    el.textContent = myFabrics === null ? 'loading…'
+                   : !m ? 'no fabrics of yours yet'
+                        : (m + ' fabric' + (m === 1 ? '' : 's') + ' of yours');
+    return;
+  }
   const n = fabricsInventory.length;
   const pending = fabricsInventory.filter(f => !f.analyzed).length;
   el.textContent = !n ? 'no swatches loaded yet'
@@ -10401,6 +10654,9 @@ function updateFabricsDrawerSub() {
 function renderFabricsGrid(opts = {}) {
   const body = document.getElementById('fabrics-drawer-body');
   if (!body) return;
+  // v13.4: never paint the house grid over the My fabrics tab (the house
+  // scan finishes async and used to win the race).
+  if (typeof _fabricsTab !== 'undefined' && _fabricsTab === 'mine') return;
   updateFabricsDrawerSub();
   if (!fabricsInventory.length) {
     const needsPicker = opts.noFolder || !fabricsFolderHandle;
@@ -10453,13 +10709,186 @@ function renameFabric(idx, newName) {
   persistFabricsCache();
 }
 
-async function openFabricsDrawer() {
+async function openFabricsDrawer(tab) {
   document.getElementById('fabrics-drawer').classList.add('open');
+  if (tab) return setFabricsTab(tab);
+  if (_fabricsTab === 'mine') return setFabricsTab('mine');
   if (!fabricsInventory.length) await scanFabricsFolder(false);
   else renderFabricsGrid();
 }
 function closeFabricsDrawer() {
   document.getElementById('fabrics-drawer').classList.remove('open');
+}
+
+// ────────────────────────────────────────────────────────────
+// v13.4: MY FABRICS, the client's own uploads. Per ACCOUNT, not per
+// project: pictures live in Storage under users/{uid}/fabrics/ and the
+// index lives at users/{uid}/settings/fabrics, so a brand new project can
+// reach every fabric the client ever uploaded. This is the client's
+// personal drawer: avatars (settings/avatars) + fabrics (settings/fabrics)
+// belong to the account; the project keeps only what is on its screen.
+// ────────────────────────────────────────────────────────────
+let _fabricsTab = 'house';
+let myFabrics = null;   // null = not loaded yet; [] = loaded, empty
+
+function openUploadChooser() {
+  const m = document.getElementById('upload-choose-modal');
+  if (m) m.classList.add('open');
+}
+function closeUploadChooser() {
+  const m = document.getElementById('upload-choose-modal');
+  if (m) m.classList.remove('open');
+}
+document.getElementById('myfabric-file').addEventListener('change', async e => {
+  const files = Array.from(e.target.files || []);   // copy BEFORE clearing
+  e.target.value = '';
+  if (files.length) await uploadMyFabricFiles(files);
+});
+
+function setFabricsTab(tab) {
+  _fabricsTab = tab === 'mine' ? 'mine' : 'house';
+  const h = document.getElementById('fabrics-tab-house');
+  const m = document.getElementById('fabrics-tab-mine');
+  if (h) h.classList.toggle('active', _fabricsTab === 'house');
+  if (m) m.classList.toggle('active', _fabricsTab === 'mine');
+  const t = document.getElementById('fabrics-drawer-title');
+  if (t) t.textContent = _fabricsTab === 'mine' ? 'My fabrics' : 'Mana Siyo fabrics';
+  if (_fabricsTab === 'mine') {
+    renderMyFabricsGrid();
+    if (myFabrics === null) loadMyFabrics().then(renderMyFabricsGrid);
+  } else {
+    if (!fabricsInventory.length) scanFabricsFolder(false);
+    else renderFabricsGrid();
+  }
+}
+
+function _myFabricsDocRef() {
+  try {
+    const uid = (firebase.auth().currentUser || {}).uid;
+    if (!uid) return null;
+    return firebase.firestore().collection('users').doc(uid)
+      .collection('settings').doc('fabrics');
+  } catch (_) { return null; }
+}
+
+async function loadMyFabrics() {
+  const ref = _myFabricsDocRef();
+  if (!ref) { myFabrics = []; return myFabrics; }
+  try {
+    const d = await ref.get();
+    myFabrics = (d.exists && Array.isArray(d.data().items)) ? d.data().items : [];
+  } catch (e) {
+    console.warn('[my fabrics] load', e);
+    myFabrics = [];
+  }
+  return myFabrics;
+}
+
+async function _saveMyFabricsIndex() {
+  const ref = _myFabricsDocRef();
+  if (!ref) return false;
+  try { await ref.set({ items: myFabrics || [] }); return true; }
+  catch (e) { console.warn('[my fabrics] save', e); return false; }
+}
+
+async function uploadMyFabricFiles(files) {
+  const uid = (firebase.auth().currentUser || {}).uid;
+  if (!uid) { showError('Sign in first, then your fabrics can be saved to your account.'); return; }
+  const list = Array.from(files || []).filter(f => f.type.startsWith('image/'));
+  if (!list.length) return;
+  if (myFabrics === null) await loadMyFabrics();
+  openFabricsDrawer('mine');
+  for (const file of list) {
+    try {
+      showToast('Uploading ' + (file.name || 'fabric') + '…');
+      const dataUrl = await fileToThumbDataUrl(file, 1024);
+      const id = 'myfab_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      const path = 'users/' + uid + '/fabrics/' + id + '.jpg';
+      const ref = firebase.storage().ref(path);
+      await ref.putString(dataUrl, 'data_url', { contentType: 'image/jpeg' });
+      const url = await ref.getDownloadURL();
+      const entry = { id, path, url, name: fabricNameFromFilename(file.name || 'My fabric'), ts: Date.now() };
+      myFabrics.unshift(entry);
+      renderMyFabricsGrid();
+      const ok = await _saveMyFabricsIndex();
+      if (!ok) showError('Could not save the fabric index, this upload may not survive a reload.');
+      // Same reading the house swatches get: colour, weave, weight.
+      analyzeFabricWithVision(dataUrl, entry.name).then(async specs => {
+        Object.assign(entry, specs || {}, { analyzed: true });
+        renderMyFabricsGrid();
+        await _saveMyFabricsIndex();
+      }).catch(() => {});
+    } catch (e) {
+      console.warn('[my fabrics] upload', e);
+      showError('Could not upload ' + (file.name || 'that fabric') + '.');
+    }
+  }
+}
+
+function renameMyFabric(idx, newName) {
+  if (!myFabrics || !myFabrics[idx]) return;
+  const t = (newName || '').trim();
+  if (!t) return;
+  myFabrics[idx].name = t;
+  _saveMyFabricsIndex();
+}
+
+async function removeMyFabric(idx) {
+  if (!myFabrics || !myFabrics[idx]) return;
+  const f = myFabrics[idx];
+  myFabrics.splice(idx, 1);
+  renderMyFabricsGrid();
+  if (f.path) { try { await firebase.storage().ref(f.path).delete(); } catch (_) {} }
+  _saveMyFabricsIndex();
+}
+
+function placeMyFabricOnBoard(idx) {
+  if (!myFabrics || !myFabrics[idx]) return;
+  const f = myFabrics[idx];
+  placeItem({ tag: 'inspo', title: f.name || 'My fabric', kind: 'inspo', image: f.url });
+  showToast((f.name || 'Fabric') + ' added to the board');
+}
+
+function renderMyFabricsGrid() {
+  const body = document.getElementById('fabrics-drawer-body');
+  if (!body || _fabricsTab !== 'mine') return;
+  updateFabricsDrawerSub();
+  const uploadRow =
+    '<div class="myfabrics-upload-row">' +
+      '<button class="top-btn violet" onclick="document.getElementById(\'myfabric-file\').click()">Upload a fabric</button>' +
+    '</div>';
+  if (myFabrics === null) {
+    body.innerHTML = uploadRow + '<div class="fabrics-empty">Loading your fabrics…</div>';
+    return;
+  }
+  if (!myFabrics.length) {
+    body.innerHTML = uploadRow +
+      '<div class="fabrics-empty">No fabrics of yours yet.' +
+      '<br><br>Photograph a fabric with your phone and upload it. It stays on your account, so every new project can use it.</div>';
+    return;
+  }
+  body.innerHTML = uploadRow +
+    '<div class="fabrics-grid">' +
+    myFabrics.map((f, idx) =>
+      '<div class="fabric-card" data-idx="' + idx + '">' +
+        '<div class="fabric-swatch" style="background-image:url(\'' + f.url + '\')" ' +
+             'onclick="placeMyFabricOnBoard(' + idx + ')" title="Add to the board"></div>' +
+        '<div class="fabric-meta">' +
+          '<input class="fabric-name-input" value="' + escapeHtml(f.name || '') + '" ' +
+                 'onchange="renameMyFabric(' + idx + ', this.value)" ' +
+                 'aria-label="Fabric name" />' +
+          '<div class="fabric-spec">' +
+            (f.analyzed
+              ? [f.color, f.weave, f.weight].filter(Boolean).map(escapeHtml).join('<span class="dot">·</span>')
+              : '<span class="fabric-analyzing">yours</span>'
+            ) +
+          '</div>' +
+        '</div>' +
+        '<button class="fabrics-back" style="position:static;padding:2px 6px" ' +
+                'onclick="removeMyFabric(' + idx + ')" title="Remove" aria-label="Remove">&times;</button>' +
+      '</div>'
+    ).join('') +
+    '</div>';
 }
 
 // v11.9: uploadFabricsFromInput + its hidden #fabrics-upload-input listener
@@ -10674,6 +11103,11 @@ async function runFabricSwitch(targetId, fabrics) {
         dataUrl: f.dataUrl  // runtime-only; stripped before persist
       }))
     };
+    // v13.4: same rule as Modify, the new version lands on top of its group.
+    if (original.card && (original.card.z || original.card.stacked)) {
+      newCard.z = ++_zCounter;
+      if (original.card.stacked) newCard.stacked = true;
+    }
     if (original.el) {
       const r = original.el.getBoundingClientRect();
       placeItemAt(newCard, r.left + 22, Math.max(110, r.top - 22));

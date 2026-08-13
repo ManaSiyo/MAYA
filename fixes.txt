@@ -1,0 +1,76 @@
+MAYA FIXES LOG
+Plain talk, newest on top. Every fix ATTEMPT goes here, especially the ones
+that never touch git: Cloud Run environment variables, Google console
+settings, OAuth credentials, DNS, billing. Code fixes leave a trail in
+commits and in README section 8; these do not, which is why this file
+exists. Say "log the fix" in any chat and Claude adds an entry.
+
+Each entry: the date, the symptom, the cause if known, exactly what was
+done, how it was verified, and whether it is FIXED, OPEN, or RECURRED.
+
+─────────────────────────────────────────────
+
+AUGUST 13, 2026, AFTERNOON. STATUS: OPEN.
+
+Symptom: Systems Map shows the Drive light red, "Drive not answering,
+submissions will not land." Signed out shallow check, so the source of
+truth is the server's own /api/healthz reporting configured.drive false.
+
+What that means: the live maya-api service on Cloud Run is missing
+GOOGLE_OAUTH_REFRESH_TOKEN or DRIVE_FOLDER_ID from its environment right
+now. Not expired, absent. The code in this folder is not the problem and
+no push will fix it.
+
+Same symptom as August 5. Cause of the recurrence not yet known.
+Suspects: traffic rolled back to an old Cloud Run revision from before
+the Aug 5 fix, or the variables were lost during a redeploy.
+
+Next step: Cloud Run console, maya-api, serving revision, Variables tab.
+Confirm which variables are present and which revision traffic is on.
+Fix is re-adding the missing variable in Edit and deploy new revision.
+When done, update this entry with what was actually found.
+
+─────────────────────────────────────────────
+
+AUGUST 5, 2026. STATUS: FIXED, THEN RECURRED AUG 13.
+
+Symptom: submissions did not land in Drive, "dead Google Drive key" in
+the history entry from that day.
+
+What was done: not recorded at the time, this file did not exist yet.
+Best reconstruction: the Drive OAuth credentials were set or re-set on
+the maya-api Cloud Run service, per the procedure in
+docs/server/MIGRATION-RUNBOOK.md (gcloud run services update
+--set-env-vars with OPENAI_API_KEY, GOOGLE_CLIENT_ID, the three
+GOOGLE_OAUTH values, and DRIVE_FOLDER_ID).
+
+Lesson that created this file: one sentence in history.txt was the whole
+record, so when the same thing broke again there was nothing to compare
+against.
+
+─────────────────────────────────────────────
+
+AUGUST 13, 2026, MORNING. STATUS: FIXED.
+
+Symptom: every AI call would have hung forever until a 504.
+
+Cause: in docs/server/server.js, isImage was written one line before
+upstreamPath was declared, a temporal dead zone throw on every OpenAI
+call, invisible until the server was actually booted.
+
+What was done: line order fixed, and tests/smoke.mjs was created so the
+server is always booted and all 16 routes checked before any push.
+Verified: smoke test passes, all 16 checks.
+
+─────────────────────────────────────────────
+
+KNOWN OPEN ITEMS THAT BELONG TO THIS LOG WHEN TOUCHED
+
+The rules deploy step (step 5 of cloudbuild.yaml) has never been
+confirmed green in front of an assistant. If the community wall ever
+loads empty with a permission error, check the Cloud Build history for
+that step first, then log what was found here.
+
+The full code audit of August 13 lives in its own report (16 findings,
+delivered in chat). As findings get fixed, each fix is a commit, and any
+infrastructure side of it gets an entry here.

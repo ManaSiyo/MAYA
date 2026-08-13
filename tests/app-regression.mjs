@@ -1,0 +1,101 @@
+// MAYA app regression test. Companion to smoke.mjs (which covers the server).
+// Boots the real pages headlessly and asserts the behaviors Fromsa has asked
+// for stay true, so a fixed thing failing again is caught BEFORE a push.
+// Add an assertion here every time an entry in requests.txt is completed.
+//
+//   node tests/app-regression.mjs        (run from the repo root)
+//
+// Needs Playwright + Chromium. Claude runs this in its workspace as part of
+// the pre-push loop: smoke.mjs, then this, then the push is prepared.
+import { chromium } from 'playwright';
+import http from 'node:http';
+import { readFileSync, existsSync } from 'node:fs';
+import { join, extname, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json' };
+const srv = http.createServer((req, res) => {
+  let p = decodeURIComponent(req.url.split('?')[0]);
+  if (p.endsWith('/')) p += 'index.html';
+  const f = join(ROOT, p);
+  if (existsSync(f) && !f.includes('..')) {
+    res.setHeader('Content-Type', MIME[extname(f)] || 'application/octet-stream');
+    res.end(readFileSync(f));
+  } else { res.statusCode = 404; res.end('nf'); }
+});
+await new Promise(r => srv.listen(8899, r));
+
+let failed = 0;
+const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name); if (!cond) failed++; };
+
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium' });
+const pg = await browser.newPage();
+const errs = [];
+pg.on('pageerror', e => errs.push(String(e).split('\n')[0]));
+// External CDNs are stubbed out; the page must still boot without them.
+await pg.route('**/*', rt => rt.request().url().startsWith('http://127.0.0.1:8899') ? rt.continue() : rt.abort());
+
+console.log('\nMAYA app regression\n');
+await pg.goto('http://127.0.0.1:8899/index.html', { waitUntil: 'domcontentloaded' });
+await pg.waitForTimeout(2500);
+
+const r = await pg.evaluate(() => {
+  const out = {};
+  out.version = document.querySelector('meta[name="maya-version"]').content;
+  out.screens = document.getElementById('screens').children.length;
+  // eval, not window[f]: let/const globals (projectStore) don't land on window.
+  out.fnsMissing = ['bringCardToFront', '_groupOf', 'setFabricsTab', 'loadMyFabrics',
+    'uploadMyFabricFiles', 'openUploadChooser', 'stackInspirationImages', 'projectStore']
+    .filter(f => { try { return (0, eval)('typeof ' + f) === 'undefined'; } catch (_) { return true; } });
+  out.tabs = !!document.getElementById('fabrics-tab-house') && !!document.getElementById('fabrics-tab-mine');
+  out.uploadText = (document.querySelector('.upload-link') || {}).textContent || '';
+  out.chooser = !!document.getElementById('upload-choose-modal');
+  // Aug 13: stack behavior. Latest version on top, 15px steps, toggle
+  // unstack restores positions, flags set for whole-stack dragging.
+  const mk = (id, v, x) => { const el = document.createElement('div');
+    el.style.left = x + 'px'; el.style.top = '300px'; document.body.appendChild(el);
+    const card = { kind: 'inspo', image: 'x', inspirationId: 'rt', version: v };
+    items.push({ id, el, card }); return items[items.length - 1]; };
+  const a = mk(9101, 1, 100), b = mk(9102, 2, 160), c = mk(9103, 3, 220);
+  stackInspirationImages(9103);
+  const z = m => parseInt(m.el.style.zIndex) || 0;
+  out.stackLatestOnTop = z(c) > z(b) && z(b) > z(a);
+  out.stackStep = Math.abs(parseInt(b.el.style.left) - parseInt(c.el.style.left));
+  out.stackFlags = !!(a.card.stacked && b.card.stacked && c.card.stacked);
+  stackInspirationImages(9103);
+  out.unstackRestores = !a.card.stacked && parseInt(a.el.style.left) === 100;
+  // Aug 13: entry-fade flicker guard. Simulated drag class churn must not
+  // leave a card with a live entry animation.
+  const probe = document.createElement('div'); probe.className = 'item-card';
+  document.body.appendChild(probe);
+  probe.style.animation = 'none';                     // what pointerdown does
+  probe.classList.add('dragging'); probe.classList.remove('dragging');
+  out.noFadeReplay = getComputedStyle(probe).animationName === 'none';
+  return out;
+});
+ok('page boots with zero runtime errors', errs.length === 0);
+ok('three vertical screens', r.screens === 3);
+ok('all v13.4 functions defined (' + (r.fnsMissing.join(',') || 'none missing') + ')', r.fnsMissing.length === 0);
+ok('fabrics tabs present (Mana Siyo / My fabrics)', r.tabs);
+ok('upload button reads "+ upload"', r.uploadText.trim() === '+ upload');
+ok('upload chooser exists', r.chooser);
+ok('stack puts the LATEST version on top', r.stackLatestOnTop);
+ok('stack offsets are 15px (30 percent tighter)', r.stackStep === 15);
+ok('stacked flags set (whole stack drags as one)', r.stackFlags);
+ok('stack button toggles, positions restored', r.unstackRestores);
+ok('drag class churn cannot replay the entry fade', r.noFadeReplay);
+
+await pg.goto('http://127.0.0.1:8899/status.html', { waitUntil: 'domcontentloaded' });
+await pg.waitForTimeout(1500);
+const s = await pg.evaluate(() => ({
+  order: [...document.querySelectorAll('details.fold')].map(d => d.id).join(','),
+  archFold: (document.getElementById('arch-fold') || {}).tagName === 'DETAILS',
+  errsFree: true,
+}));
+ok('Systems Map order: changes, prompting, architecture', s.order === 'changes-fold,pe-fold,arch-fold');
+ok('Architecture is collapsible', s.archFold);
+
+await browser.close(); srv.close();
+console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
+process.exit(failed ? 1 : 0);
