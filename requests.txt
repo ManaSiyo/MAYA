@@ -18,6 +18,28 @@ Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
 ─────────────────────────────────────────────
 
+AUGUST 13, 2026, 5:35 PM
+
+[x] Stacks fan the right way now: the LATEST version sits top right and
+    each older version steps down-left behind it.
+[x] "8 swatches loaded" line under the fabrics title deleted.
+[x] Deleted and consumed cards no longer appear in the "Choose your
+    favorite inspo image" picker before submitting; only cards actually
+    on the board with a working picture are offered, and a tile whose
+    picture fails to load removes itself.
+
+AUGUST 13, 2026, 5:23 PM
+
+[!] Community wall empty again on v13.8. Diagnosed live: the wall code
+    works, but the open project had zero cards, and the v13.8 backfill
+    only covered the OPEN board. Fixed in v13.9: once per visit the wall
+    sweeps ALL projects on the account and posts every hearted piece.
+    Post ids are deterministic so the sweep can never duplicate.
+[x] Submissions take too long to appear on the map: poll was every 45
+    seconds, now every 15 while the page is visible.
+[x] Submission tiles slightly cropped vertically: strip taller again.
+[x] White hue behind the submission row: the glow is dark now.
+
 AUGUST 13, 2026, 4:32 PM
 
 [x] Speed boost across everything: saves skip the tombstone round trip

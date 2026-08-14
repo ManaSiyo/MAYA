@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.8">
+<meta name="maya-version" content="13.10">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -94,13 +94,13 @@ try {
   /* Latest submissions strip: 25vh tall, newest on the left, flows sideways */
   #subs-strip{display:flex;gap:12px;overflow-x:auto;padding:0 28px 10px;
               width:100vw;margin-left:calc(50% - 50vw);
-              height:30vh;min-height:230px;scrollbar-width:none}
+              height:34vh;min-height:260px;scrollbar-width:none}
   #subs-strip::-webkit-scrollbar{display:none}
   .sub-tile{position:relative;flex:0 0 auto;height:100%;aspect-ratio:3/2;border-radius:22px;overflow:hidden;
             border:0.5px solid rgba(255,255,255,0.28);background:rgba(4,7,16,0.75);text-decoration:none;color:var(--ink);
-            box-shadow:0 0 34px rgba(180,200,255,0.22), inset 0 1px 0 rgba(255,255,255,0.12);
+            box-shadow:0 10px 34px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12);
             transition:border-color .2s, transform .2s, box-shadow .2s}
-  .sub-tile:hover{border-color:rgba(255,255,255,0.55);transform:translateY(-2px);box-shadow:0 0 48px rgba(180,200,255,0.34), inset 0 1px 0 rgba(255,255,255,0.12)}
+  .sub-tile:hover{border-color:rgba(255,255,255,0.55);transform:translateY(-2px);box-shadow:0 14px 48px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.12)}
   .sub-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0.95}
   .sub-tile .veil{position:absolute;inset:auto 0 0 0;padding:18px 10px 7px;text-align:center;
                   background:linear-gradient(transparent, rgba(0,4,12,0.85));opacity:0;transition:opacity .25s}
@@ -289,9 +289,10 @@ try {
 
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-13g">
+  <details class="fold" id="changes-fold" data-latest="2026-08-13h">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 13</b>The wall finds every heart. Once per visit MAYA sweeps ALL your projects and posts any hearted piece that never made it up, not just the board you have open. Submissions appear on this map within seconds now, the tiles got taller so nothing crops, and the glow behind them went dark.</div>
     <div class="chg"><b>Aug 13</b>Faster everywhere: saves skip a needless round trip, sharing builds from memory, and the app warms its connections before you need them. Share now shows a popup with the link and a Copy button, shared projects say Shared in the projects list, the wall picks up hearted pieces that never got posted, and this map slimmed down: thinner traffic tiles, calmer type, one door to the Operations Room Beta.</div>
     <div class="chg"><b>Aug 13</b>Projects are shareable. Press Share in the drawer and the link is copied; whoever opens it signs in as usual and saves their OWN copy, pictures and face included. Deleting on either side never touches the other. Projects now carry their own face photo too, and taking a card or a project down also takes its community wall post down, so nothing dead ever floats on the wall.</div>
     <div class="chg"><b>Aug 13</b>Cards behave. Dragging no longer blinks the card invisible, whatever you touch last comes to the top and stays there, stacks put the NEWEST version in front, sit 30 percent tighter, the stack button now unstacks too, and a stacked group drags as one piece.</div>
@@ -671,9 +672,11 @@ async function _paintThumbs() {
 // v12.7: one timer, not two, and it only runs while you are looking at the
 // page. The strip also refuses to repaint when nothing has changed, because
 // rewriting it restarts every image download and makes the page flash.
+// v13.9: 15 seconds, not 45. A submission that just landed should not sit
+// invisible for most of a minute while everyone stares at the map.
 setInterval(() => {
   if (_idTok && document.visibilityState === 'visible') loadSubmissions();
-}, 45000);
+}, 15000);
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && _idTok) { loadSubmissions(); runChecks(); }
 });

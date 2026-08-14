@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.8">
+<meta name="maya-version" content="13.10">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -4217,7 +4217,6 @@
   <div class="fabrics-drawer-header">
     <div>
       <div class="fabrics-drawer-title" id="fabrics-drawer-title">Mana Siyo fabrics</div>
-      <div class="fabrics-drawer-sub" id="fabrics-drawer-sub">no swatches loaded yet</div>
     </div>
   </div>
   <!-- v13.4: two tabs. Mana Siyo fabrics = the atelier's in-house library.
@@ -5381,8 +5380,10 @@ function stackInspirationImages(itemId) {
     };
     sib.card.stacked = true;
     sib.el.style.transition = 'left 0.45s cubic-bezier(0.16,1,0.3,1), top 0.45s cubic-bezier(0.16,1,0.3,1)';
-    sib.el.style.left = (baseX + idx * STEP) + 'px';
-    sib.el.style.top  = (baseY - idx * STEP) + 'px';
+    // v13.10: the newest stays put as the TOP RIGHT of the stack; each
+    // older version steps down and to the left behind it.
+    sib.el.style.left = (baseX - idx * STEP) + 'px';
+    sib.el.style.top  = (baseY + idx * STEP) + 'px';
     setTimeout(() => { sib.el.style.transition = ''; }, 480);
   });
   // Newest on top, descending behind, and the whole stack above everything
@@ -5965,6 +5966,36 @@ const communityBoard = {
       }
       if (backfilled && typeof _persistSession === 'function') _persistSession();
     } catch (_) {}
+    // v13.9: and not just the open board. Once per page load, EVERY project
+    // of this account is swept: any hearted card anywhere gets its wall post.
+    // Post ids are deterministic (uid + picture address), so re-running can
+    // never create duplicates, and un-hearting later still finds its post.
+    if (!this._sweepDone && typeof projectStore !== 'undefined' && projectStore.ready()) {
+      this._sweepDone = true;
+      (async () => {
+        try {
+          const qs = await projectStore._col().get();
+          const seenPosts = new Set();
+          const toPublish = [];
+          qs.forEach(d => {
+            if (d.id === '__tombstones__') return;
+            const v = d.data() || {};
+            for (const sv of (v.items || [])) {
+              const c = sv && sv.card;
+              if (!c || !c.favorited) continue;
+              const src = c.imageUrl || c.image;
+              if (!src || !String(src).startsWith('http')) continue;
+              const pid = this._postId(c);
+              if (seenPosts.has(pid)) continue;
+              seenPosts.add(pid);
+              toPublish.push({ card: { ...c } });
+            }
+          });
+          for (const item of toPublish) await this.publish(item);
+          if (toPublish.length) console.log('[wall] swept', toPublish.length, 'hearted pieces from all projects');
+        } catch (e) { console.warn('[wall sweep]', e); }
+      })();
+    }
     await this.load();
     this.render();
   },
@@ -6188,8 +6219,12 @@ async function submitFavorite() {
   closeGarmentModal();
   lastOnePagerImage = item.card.image;   // implicit hero
 
+  // v13.10: only cards that are actually ON the board right now, with a
+  // picture that exists. Deleted and consumed cards used to sneak in here
+  // as blank tiles.
   const uploadedInspo = items.filter(i =>
-    i.card.kind === 'inspo' && i.card.image && !i.card.inspirationId
+    i.el && !i.consumed && !i._removing &&
+    i.card.kind === 'inspo' && (i.card.image || i.card.imageUrl) && !i.card.inspirationId
   );
   if (uploadedInspo.length > 0) {
     _afterInspoPick = () => _doSubmitConfirmed();
@@ -6552,7 +6587,7 @@ function pinterestLayout() {
                                   // unstack fans out via findFreeSpot instead.
       siblings.forEach((sib, idx) => {
         sib.el.style.transition = 'left 0.55s cubic-bezier(0.16,1,0.3,1), top 0.55s cubic-bezier(0.16,1,0.3,1)';
-        const sx = x + (idx + 1) * 15, sy = y - (idx + 1) * 15;
+        const sx = x - (idx + 1) * 15, sy = y + (idx + 1) * 15;   // v13.10: latest top right
         sib.el.style.left = sx + 'px';
         sib.el.style.top  = sy + 'px';
         sib.card.z = topZ - (idx + 1);
@@ -13644,8 +13679,10 @@ function chooseHeroImage(dataUrl) {
   lastOnePagerImage = dataUrl;
   // v5.18: after picking the dream garment, prompt for up to 3 favorite
   // inspos (if any uploaded inspo exist). The preview opens after that.
+  // v13.10: same guard as the Submit path, no dead or deleted cards.
   const uploadedInspo = items.filter(i =>
-    i.card.kind === 'inspo' && i.card.image && !i.card.inspirationId
+    i.el && !i.consumed && !i._removing &&
+    i.card.kind === 'inspo' && (i.card.image || i.card.imageUrl) && !i.card.inspirationId
   );
   if (uploadedInspo.length) {
     openFavoriteInspoPicker(uploadedInspo);
@@ -13682,7 +13719,8 @@ function openFavoriteInspoPicker(uploadedInspo) {
   const grid = document.getElementById('favorite-inspo-grid');
   grid.innerHTML = uploadedInspo.map((it, idx) =>
     '<div class="picker-thumb" data-id="' + it.id + '" onclick="toggleFavoriteInspo(' + it.id + ')">' +
-      '<img src="' + it.card.image + '" alt="">' +
+      '<img src="' + (it.card.image || it.card.imageUrl) + '" alt="" ' +
+        'onerror="var t=this.closest(\'.picker-thumb\'); if(t) t.style.display=\'none\'">' +
       '<div class="picker-label">' + escapeHtml(it.card.title || ('Inspo ' + (idx + 1))) + '</div>' +
       '<div class="picker-badge"></div>' +
     '</div>'
