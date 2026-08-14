@@ -16,6 +16,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const INDEX_SOURCE = readFileSync(join(ROOT, 'index.html'), 'utf8');
 const RULES_SOURCE = readFileSync(join(ROOT, 'docs/server/firestore.rules'), 'utf8');
+const FAVORITE_PULSE_SOURCE = INDEX_SOURCE.slice(
+  INDEX_SOURCE.indexOf('@keyframes maya-favorite-pulse'),
+  INDEX_SOURCE.indexOf('@keyframes maya-favorite-pulse') + 500,
+);
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json' };
 const srv = http.createServer((req, res) => {
   let p = decodeURIComponent(req.url.split('?')[0]);
@@ -68,6 +72,16 @@ const r = await pg.evaluate(async () => {
     .some(b => b.textContent.trim() === 'Share');
   // Aug 13: the community wall. Three rows, visions only, one garment once.
   out.wallRows = document.querySelectorAll('#community-scroller .community-row').length;
+  const wallProbe = document.createElement('div');
+  wallProbe.className = 'community-card';
+  wallProbe.innerHTML = '<div class="cc-meta">details</div>';
+  document.body.appendChild(wallProbe);
+  const wallStyle = getComputedStyle(wallProbe);
+  const metaStyle = getComputedStyle(wallProbe.querySelector('.cc-meta'));
+  out.wallMatchesInspo = wallStyle.borderRadius === '12px' &&
+    !wallStyle.boxShadow.includes('38px') && metaStyle.position === 'absolute' && metaStyle.opacity === '0';
+  wallProbe.remove();
+  out.wallMovesLeftToRight = communityBoard._startDrift.toString().includes('[-26, -21, -31]');
   out.visionGate = [
     communityBoard._isVision({ kind: 'inspo', image: 'x', inspirationId: 'a' }) === true,
     communityBoard._isVision({ kind: 'inspo', image: 'x' }) === false,          // upload
@@ -139,6 +153,8 @@ ok('upload button reads "+ upload"', r.uploadText.trim() === '+ upload');
 ok('upload chooser exists', r.chooser);
 ok('Share button lives in the drawer', r.shareBtn);
 ok('community wall has three rows', r.wallRows === 3);
+ok('community cards use quiet inspo glass with hover-only info', r.wallMatchesInspo);
+ok('community rows move left to right', r.wallMovesLeftToRight);
 ok('only generated visions reach the wall', r.visionGate);
 ok('the same garment fingerprints the same across accounts', r.fpMatches);
 ok('different versions stay different visions', r.fpDiffers);
@@ -154,6 +170,9 @@ ok('project deletion batches wall posts before Storage cleanup',
   INDEX_SOURCE.indexOf('communityDocs.forEach(ref => batch.delete(ref))') < INDEX_SOURCE.indexOf('this._cleanupDeletedAssets(id, paths)'));
 ok('share rules bound the item list and schema',
   RULES_SOURCE.includes('request.resource.data.items.size() <= 200') && RULES_SOURCE.includes("request.resource.data.schema == 'v13.15'"));
+ok('Favorites animates opacity, not box-shadow',
+  INDEX_SOURCE.includes('body.viewing-favorites .favorite-card::after') &&
+  INDEX_SOURCE.includes('will-change: opacity') && !FAVORITE_PULSE_SOURCE.includes('box-shadow'));
 ok('stack puts the LATEST version on top', r.stackLatestOnTop);
 ok('stack offsets are 15px (30 percent tighter)', r.stackStep === 15);
 ok('stacked flags set (whole stack drags as one)', r.stackFlags);

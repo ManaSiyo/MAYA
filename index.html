@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.16">
+<meta name="maya-version" content="13.17">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -2829,15 +2829,15 @@
 
   /* ───────── v13.3: THE COMMUNITY WALL ─────────
      Screen 0. Same glass language as favorites, one size smaller, and it
-     drifts left on its own forever. No scroll-snap here on purpose: snap
+     drifts horizontally on its own forever. No scroll-snap here on purpose: snap
      fights the drift and makes it stutter. */
   #screen-community {
     z-index: 1;
     background: transparent;
     overflow: hidden;
   }
-  /* v13.11: the wall is three rows now, each one its own horizontal strip
-     drifting right to left. The outer element only stacks them. */
+  /* The wall is three rows, each one its own horizontal strip. The outer
+     element only stacks them. v13.17 moves the cards left to right. */
   #community-scroller {
     position: absolute; inset: 0;
     display: flex; flex-direction: column;
@@ -2890,50 +2890,56 @@
     font-size: 14px; line-height: 1.5;
     color: rgba(245,250,255,0.85);
   }
-  /* v13.11: the card carries the WHOLE three view render, never cropped,
-     and wears the same glass as a favorite card. About a third larger. */
+  /* v13.17: the card carries the WHOLE three-view render, never cropped,
+     but otherwise uses the same quiet glass as an inspiration image card.
+     Metadata is an overlay revealed only on hover/focus. */
   .community-card {
     flex: 0 0 auto;
     width: 320px;
-    border-radius: 16px;
+    border-radius: 12px;
     overflow: hidden;
-    background: transparent;
-    border: 0.5px solid rgba(220,232,255,0.55);
+    background: rgba(255,255,255,0.06);
+    border: 0.5px solid rgba(255,255,255,0.22);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
             backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
-      inset 0 1px 1px rgba(255,255,255,0.32),
-      inset 0 -1px 1px rgba(0,0,0,0.20),
-      0 0 18px 3px rgba(200,222,255,0.40),
-      0 0 38px 8px rgba(200,222,255,0.20),
-      0 8px 32px rgba(0,0,0,0.42);
-    display: flex; flex-direction: column;
+      inset 0 1px 1px rgba(255,255,255,0.28),
+      inset 0 -1px 1px rgba(0,0,0,0.18),
+      0 4px 16px rgba(0,0,0,0.22);
     position: relative;
     cursor: pointer;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    transition: transform 0.25s ease, border-color 0.2s, background 0.2s, box-shadow 0.2s;
   }
-  .community-card:hover {
+  .community-card:hover, .community-card:focus-visible {
     transform: translateY(-4px);
+    outline: none;
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.42);
     box-shadow:
-      inset 0 1px 1px rgba(255,255,255,0.32),
-      inset 0 -1px 1px rgba(0,0,0,0.20),
-      0 0 20px 4px rgba(200,222,255,0.42),
-      0 10px 34px rgba(0,0,0,0.46);
+      inset 0 1px 2px rgba(255,255,255,0.40),
+      inset 0 -1px 1px rgba(0,0,0,0.22),
+      0 8px 28px rgba(0,0,0,0.32);
   }
-  .community-card .cc-image { overflow: hidden; flex: 0 0 auto; }
+  .community-card .cc-image { overflow: hidden; border-radius: inherit; }
   .community-card img.cc-img {
     width: 100%; height: auto;
     /* CONTAIN, not cover: the three view sheet arrives whole, side, front
        and back, exactly as it was rendered. */
     object-fit: contain; display: block;
     aspect-ratio: 3 / 2;
-    background: rgba(4,8,20,0.35);
+    background: transparent;
   }
   .community-card .cc-meta {
-    padding: 9px 12px 11px;
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 30px 16px 14px;
     display: flex; flex-direction: column; gap: 3px;
-    background: linear-gradient(to top, rgba(4,8,20,0.55), rgba(4,8,20,0));
+    background: linear-gradient(to top, rgba(0,0,0,0.82), rgba(0,0,0,0));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease;
   }
+  .community-card:hover .cc-meta,
+  .community-card:focus-visible .cc-meta { opacity: 1; }
   .community-card .cc-author {
     font-family: 'Jost', sans-serif; font-weight: 300;
     font-size: 9.5px; letter-spacing: 0.26em; text-transform: uppercase;
@@ -2981,28 +2987,17 @@
   /* v9.5: 20% smaller (480 → 384). Glass + soft starlight glow added ,
      matches the .is-vision halo from the inspo page.
      v9.12: cursor + hover lift, since cards now open the submit-mode viewer. */
-  /* v13.13: favorites breathe with their OWN pulse, calmer than the board's.
-     Halo reach down ~15%, slower, smoother curve, and the black depth shadow
-     never leaves so nothing pops between frames. maya-vision-pulse untouched. */
-  body.viewing-favorites .favorite-card {
+  /* v13.17: the halo itself stays still. Only the opacity of a clipped light
+     layer breathes, which is compositor-friendly and cannot resize or jitter. */
+  body.viewing-favorites .favorite-card::after {
     animation: maya-favorite-pulse 4.6s cubic-bezier(.45, 0, .55, 1) infinite;
   }
   @keyframes maya-favorite-pulse {
-    0%, 100% { box-shadow:
-      inset 0 1px 1px rgba(255,255,255,0.32),
-      inset 0 -1px 1px rgba(0,0,0,0.20),
-      0 0 7px 1px rgba(200,222,255,0.40),
-      0 0 11.9px 2.1px rgba(200,222,255,0.20),
-      0 8px 32px rgba(0,0,0,0.42); }
-    50% { box-shadow:
-      inset 0 1px 1px rgba(255,255,255,0.32),
-      inset 0 -1px 1px rgba(0,0,0,0.20),
-      0 0 9px 1.7px rgba(220,232,255,0.55),
-      0 0 13.6px 2.55px rgba(220,232,255,0.28),
-      0 8px 32px rgba(0,0,0,0.42); }
+    0%, 100% { opacity: 0.28; }
+    50% { opacity: 0.72; }
   }
   @media (prefers-reduced-motion: reduce) {
-    body.viewing-favorites .favorite-card { animation: none; }
+    body.viewing-favorites .favorite-card::after { animation: none; opacity: 0.45; }
   }
   .favorite-card {
     flex: 0 0 auto;
@@ -3020,26 +3015,30 @@
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.32),
       inset 0 -1px 1px rgba(0,0,0,0.20),
-      0 0 18px 3px rgba(200,222,255,0.40),
-      0 0 38px 8px rgba(200,222,255,0.20),
+      0 0 9px 1.7px rgba(220,232,255,0.42),
+      0 0 13.6px 2.55px rgba(220,232,255,0.22),
       0 8px 32px rgba(0,0,0,0.42);
-    /* v11.23: slower pulse + will-change for smoother glow; staggered per-card
-       below so they don't all breathe in lockstep. */
-    /* v12.7: only pulses while the favourites screen is actually on screen */
-    animation: none;
-    will-change: box-shadow;
     display: flex; flex-direction: column;
     position: relative;
     cursor: pointer;
     transition: transform 0.25s ease;
   }
+  .favorite-card::after {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 18px 2px rgba(220,232,255,0.36);
+    opacity: 0.28;
+    pointer-events: none;
+    will-change: opacity;
+  }
   .favorite-card:hover { transform: translateY(-4px); }
   .favorite-card .fc-image { overflow: hidden; }
   .favorite-card img.fc-img { width: 100%; height: 100%; object-fit: cover; display: block; }
   /* v11.23: stagger the glow into 3 phases so favorites pulse independently. */
-  .favorite-card:nth-child(3n+1) { animation-delay: -0.6s; }
-  .favorite-card:nth-child(3n+2) { animation-delay: -1.8s; }
-  .favorite-card:nth-child(3n)   { animation-delay: -3.0s; }
+  .favorite-card:nth-child(3n+1)::after { animation-delay: -0.6s; }
+  .favorite-card:nth-child(3n+2)::after { animation-delay: -1.8s; }
+  .favorite-card:nth-child(3n)::after   { animation-delay: -3.0s; }
 
   /* v9.12: Submit-mode viewer, strip every chrome element except the
      floating × and the Submit button. Triggered by data-mode="submit" on
@@ -6032,7 +6031,7 @@ const communityBoard = {
     // break out of the quoted string. Clicks are delegated in _wireRow and
     // read the id from the data attribute, which is plain text, not code.
     const one = (p) =>
-      '<div class="community-card" data-id="' + escapeHtml(p.id) + '">' +
+      '<div class="community-card" data-id="' + escapeHtml(p.id) + '" role="button" tabindex="0" aria-label="Open community design by ' + escapeHtml(p.author) + '">' +
         '<div class="cc-image"><img class="cc-img" src="' + escapeHtml(p.imageUrl) + '" alt="" loading="lazy" onerror="communityBoard.broken(this)"/></div>' +
         '<div class="cc-meta">' +
           '<span class="cc-author">' + escapeHtml(p.author) + (p.uid && p.uid === mine ? ' &middot; yours' : '') + '</span>' +
@@ -6090,6 +6089,13 @@ const communityBoard = {
       const c = e.target.closest('.community-card');
       if (c && c.dataset.id) this.openPost(c.dataset.id);
     });
+    wrap.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const c = e.target.closest('.community-card');
+      if (!c || !c.dataset.id) return;
+      e.preventDefault();
+      this.openPost(c.dataset.id);
+    });
     const hold = () => { this._paused = true; clearTimeout(this._resumeT); };
     const release = (ms) => {
       clearTimeout(this._resumeT);
@@ -6097,6 +6103,8 @@ const communityBoard = {
     };
     wrap.addEventListener('pointerover', hold);
     wrap.addEventListener('pointerout', () => release(220));
+    wrap.addEventListener('focusin', hold);
+    wrap.addEventListener('focusout', () => release(220));
     wrap.addEventListener('pointerdown', hold);
     wrap.addEventListener('touchstart', hold, { passive: true });
     wrap.addEventListener('touchend', () => release(2500), { passive: true });
@@ -6110,11 +6118,11 @@ const communityBoard = {
   // a fraction of a pixel each frame moves nothing at all, forever. The true
   // position is kept here as a float and written out; the reading is only
   // consulted to notice that the designer has scrolled the wall by hand.
-  // v13.11: one drift loop paces all three rows. Their speeds differ a little
+  // One drift loop paces all three rows. Their speeds differ a little
   // so the wall breathes instead of marching in step.
   _startDrift() {
     if (this._raf) return;
-    const SPEEDS = [26, 21, 31];      // pixels per second, paced by the clock
+    const SPEEDS = [-26, -21, -31];   // left-to-right, pixels per second
     let last = 0;
     const step = (now) => {
       this._raf = requestAnimationFrame(step);

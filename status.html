@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.16">
+<meta name="maya-version" content="13.17">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -289,9 +289,10 @@ try {
 
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-14b">
+  <details class="fold" id="changes-fold" data-latest="2026-08-14c">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 14</b>The community wall now looks and behaves like the inspiration cards: the same quiet glass, no white glow columns, details only on hover or keyboard focus, and three smooth rows flowing left to right. Favorites keep a smaller fixed halo and breathe by opacity only, so the glow no longer jitters or changes size.</div>
     <div class="chg"><b>Aug 14</b>Sealed projects, sealed accounts. A render, an upload or a fabric that finishes after you switch projects or accounts is dropped instead of landing on the wrong board. Deleting a project is one atomic act that also sweeps its wall posts and share links. A failed save now STOPS sign out, New, and switching until you say otherwise, a lost save race says so plainly, and the app never again claims work was saved on this device. Plus a pile of dead legacy code removed, including the broken fresh start command, which works again.</div>
     <div class="chg"><b>Aug 14</b>Hardened. A hostile community post or shared project can no longer smuggle code into the page: picture addresses are validated everywhere, click handling left the markup, and share links can no longer be enumerated by other accounts, only the exact token opens one. Deleting a project now also revokes its share links. And the favorites got their own calmer glow.</div>
     <div class="chg"><b>Aug 13</b>The community wall grew up. Three rows drifting right to left, cards a third larger carrying the whole three view render instead of a cropped square, and one garment appears once: if a shared project is hearted by two people, only the original goes up. Only MAYA's own visions reach the wall, never uploaded inspo or fabric photographs, and it refreshes quietly in the background without the page ever jumping.</div>
