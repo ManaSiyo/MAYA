@@ -3,7 +3,8 @@ Plain talk, newest on top. Every fix ATTEMPT goes here, especially the ones
 that never touch git: Cloud Run environment variables, Google console
 settings, OAuth credentials, DNS, billing. Code fixes leave a trail in
 commits and in README section 8; these do not, which is why this file
-exists. Say "log the fix" in any chat and Claude adds an entry.
+exists. Say "log the fix" in any Claude or Codex chat and the assistant adds
+an entry.
 
 Each entry: the date, the symptom, the cause if known, exactly what was
 done, how it was verified, and whether it is FIXED, OPEN, or RECURRED.

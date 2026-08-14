@@ -1,3 +1,8 @@
+# Archived: MAYA v12.9 review notes
+
+This document is historical. Claude and Codex should use `docs/AI-HANDOFF.md`
+for the current shared handoff.
+
 # MAYA v12.9, what was just fixed
 For the second reviewer. Everything below is already done, so please spend your
 time elsewhere. Files: index.html (the app), status.html (Systems Map),

@@ -1,6 +1,6 @@
 MAYA HISTORY
-Plain talk, newest entry on top. Say "update the history" in any chat and
-Claude adds a new dated entry here.
+Plain talk, newest entry on top. Say "update the history" in any Claude or
+Codex chat and the assistant adds a new dated entry here.
 
 For the full technical picture, read README.md at the root of this folder
 first. It is written for an assistant starting a fresh conversation with no

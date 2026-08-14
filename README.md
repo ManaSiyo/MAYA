@@ -2,16 +2,18 @@
 
 The whole system, written for a fresh conversation. If you are an assistant
 picking this up with no memory of what came before, read this file first and
-then `history.txt` for the older narrative.
+then `docs/AI-HANDOFF.md` for the current task and `history.txt` for the older
+narrative.
 
 Owner: Fromsa, founder of Mana Siyo.
 Live site: https://maya.manasiyo.com
-Also read: `history.txt` (the story), `fixes.txt` (fix attempts, especially
+Also read: `docs/AI-HANDOFF.md` (the current Claude/Codex handoff),
+`history.txt` (the story), `fixes.txt` (fix attempts, especially
 ones outside git), `requests.txt` (Fromsa's own asks and noticed bugs, with
 status marks; re-verify its entries every session).
 Google project: `pro-maya`
 Repo: `ManaSiyo/MAYA` on GitHub, working folder `~/Desktop/MAYA-new`
-Current version: **13.4** (the number lives in a `maya-version` meta tag in
+Current version: **13.10** (the number lives in a `maya-version` meta tag in
 `index.html`, and the running site's number is the fastest way to tell whether
 a push has landed).
 
@@ -352,10 +354,10 @@ These are not preferences, they are conditions.
 - **Keep replies short.** He has said "I'm not reading this, what's the next
   step?" Lead with the answer.
 - **No em dashes or en dashes in anything that appears on the site.**
-- He pushes; you do not have his git credentials. Prepare the commit, hand him
-  the command.
-- He runs OpenAI Codex reviews in parallel and pastes the findings. Treat them
-  as a real second reviewer, not a threat.
+- Claude and Codex may both edit this repository. Use `docs/AI-HANDOFF.md` and
+  Git commits as shared memory; never depend on private chat history alone.
+- Push only when Fromsa explicitly asks. He may push through GitHub Desktop, or
+  an assistant may push when specifically instructed and after validation.
 - **Verify every edit landed.** A Python edit block once ended in `print`
   instead of writing the file, and a parameter was declared on callers but
   never added to the function. Codex caught it. Grep after every edit.
