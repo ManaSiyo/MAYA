@@ -18,6 +18,75 @@ Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
 ─────────────────────────────────────────────
 
+AUGUST 14, 2026, 10:30 AM
+
+[x] Full Codex audit executed in one version, v13.14, per Fromsa: "do all
+    the priorities yourself, plus the cosmetic ones, I push."
+    Priority one (security): wall XSS closed, picture gate everywhere,
+    shares token-only with revocation. Priority two (isolation): renders,
+    fabric switches and uploads that outlive their project are dropped;
+    My Fabrics keyed to the account and cleared on sign in and out;
+    favorites strip cleared on every board clear. Priority three
+    (deletion and saving): project delete is one atomic batch that also
+    sweeps wall posts and share links; wall publish and unpublish run
+    serialized per card with the heart rechecked; a failed save STOPS
+    sign out, New, switching and share import; a lost save race is named
+    plainly; the false "saved on this device" message is gone. Cosmetic:
+    dedicated calmer favorites glow to the Codex spec. Cleanup: ten dead
+    legacy functions removed and the broken mayaFreshStart command fixed
+    by the removal.
+    NOT done, on purpose: merging the two Operations Room files (they are
+    intentionally separate since Aug 13, beta is the test bench), removing
+    backend.html's hidden legacy room (patterns still render into it, it
+    needs rewiring first), and the full conflict dialog for stale saves
+    (honest toast for now).
+
+AUGUST 14, 2026, 9:55 AM
+
+[x] Pulled in the Codex handoff protocol: CLAUDE.md and AGENTS.md at the
+    root, docs/AI-HANDOFF.md as the shared current-task file, commit
+    convention [Agent][v13.xx], one category per commit, Fromsa pushes.
+[x] Consolidated conversation record: requests.txt stays MY log (dated),
+    fixes.txt the incident log, docs/AI-HANDOFF.md the agents' current
+    state with agent and date marked on completed work. Three files, one
+    system, no duplicate history file.
+[x] Codex audit priority one built as [Claude][v13.12]: community XSS
+    closed (no inline handlers, ids validated), shared-project XSS closed
+    (every picture address gated to https or inline image), share links
+    no longer enumerable (token-only reads), and deleting a project now
+    revokes its share links.
+[x] Favorites got their own calmer glow as [Claude][v13.13], exactly to
+    the Codex spec, board pulse untouched, reduced-motion respected.
+[ ] Codex audit priorities two (project isolation) and three (deletion
+    and saving) are next, starting v13.14.
+
+AUGUST 13, 2026, 6:40 PM
+
+Community wall, rebuilt in v13.11:
+[x] Kill the duplicates, show only the original. Each heart writes its own
+    post, so a shared project hearted by two people made two. Every post
+    now carries a fingerprint of the GARMENT (its inspiration id and
+    version, which survive a share copy), and the wall shows the earliest
+    post of each garment: the original.
+[x] Only actually generated visions go up. Uploaded inspo, fabric photos
+    and Pinterest screenshots never reach the wall, in the heart, the
+    backfill and the all-projects sweep.
+[x] Cards carry the whole horizontal three view render, uncropped, not a
+    cropped front view like the favorites strip.
+[x] Cards about a third larger, and wearing the same glass as a favorite
+    card.
+[x] Three rows instead of one, drifting right to left at slightly
+    different speeds. Fewer rows while the wall is young so a handful of
+    visions is not spread thin.
+[x] The repeated look is gone: a row only loops when one copy of it
+    already runs past the edge of the screen. Padding short rows with
+    copies is what put the same garments across the wall five times.
+[x] Background refresh, never a screen refresh: the wall re reads every 30
+    seconds while it is on screen and repaints only if something changed,
+    keeping every row exactly where it was.
+[x] Everything hearted across all projects reaches it (the v13.9 sweep,
+    now vision only and fingerprint deduped).
+
 AUGUST 13, 2026, 5:35 PM
 
 [x] Stacks fan the right way now: the LATEST version sits top right and

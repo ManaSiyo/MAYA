@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.10">
+<meta name="maya-version" content="13.14">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -289,9 +289,12 @@ try {
 
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-13h">
+  <details class="fold" id="changes-fold" data-latest="2026-08-14b">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 14</b>Sealed projects, sealed accounts. A render, an upload or a fabric that finishes after you switch projects or accounts is dropped instead of landing on the wrong board. Deleting a project is one atomic act that also sweeps its wall posts and share links. A failed save now STOPS sign out, New, and switching until you say otherwise, a lost save race says so plainly, and the app never again claims work was saved on this device. Plus a pile of dead legacy code removed, including the broken fresh start command, which works again.</div>
+    <div class="chg"><b>Aug 14</b>Hardened. A hostile community post or shared project can no longer smuggle code into the page: picture addresses are validated everywhere, click handling left the markup, and share links can no longer be enumerated by other accounts, only the exact token opens one. Deleting a project now also revokes its share links. And the favorites got their own calmer glow.</div>
+    <div class="chg"><b>Aug 13</b>The community wall grew up. Three rows drifting right to left, cards a third larger carrying the whole three view render instead of a cropped square, and one garment appears once: if a shared project is hearted by two people, only the original goes up. Only MAYA's own visions reach the wall, never uploaded inspo or fabric photographs, and it refreshes quietly in the background without the page ever jumping.</div>
     <div class="chg"><b>Aug 13</b>The wall finds every heart. Once per visit MAYA sweeps ALL your projects and posts any hearted piece that never made it up, not just the board you have open. Submissions appear on this map within seconds now, the tiles got taller so nothing crops, and the glow behind them went dark.</div>
     <div class="chg"><b>Aug 13</b>Faster everywhere: saves skip a needless round trip, sharing builds from memory, and the app warms its connections before you need them. Share now shows a popup with the link and a Copy button, shared projects say Shared in the projects list, the wall picks up hearted pieces that never got posted, and this map slimmed down: thinner traffic tiles, calmer type, one door to the Operations Room Beta.</div>
     <div class="chg"><b>Aug 13</b>Projects are shareable. Press Share in the drawer and the link is copied; whoever opens it signs in as usual and saves their OWN copy, pictures and face included. Deleting on either side never touches the other. Projects now carry their own face photo too, and taking a card or a project down also takes its community wall post down, so nothing dead ever floats on the wall.</div>

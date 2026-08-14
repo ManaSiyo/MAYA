@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.10">
+<meta name="maya-version" content="13.14">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -2836,18 +2836,30 @@
     background: transparent;
     overflow: hidden;
   }
+  /* v13.11: the wall is three rows now, each one its own horizontal strip
+     drifting right to left. The outer element only stacks them. */
   #community-scroller {
     position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: stretch; justify-content: center;
+    gap: 18px;
+    padding: 54px 0;
+    overflow: hidden;
+  }
+  .community-row {
     display: flex;
     align-items: center;
-    gap: 34px;
+    gap: 30px;
+    padding: 0 60px;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 60px 70px;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
+    flex: 1 1 0; min-height: 0;
   }
+  .community-row:empty { display: none; }
+  .community-row::-webkit-scrollbar { display: none; }
   #community-scroller::-webkit-scrollbar { display: none; }
   #community-empty {
     position: absolute; left: 50%; top: 50%;
@@ -2878,21 +2890,23 @@
     font-size: 14px; line-height: 1.5;
     color: rgba(245,250,255,0.85);
   }
+  /* v13.11: the card carries the WHOLE three view render, never cropped,
+     and wears the same glass as a favorite card. About a third larger. */
   .community-card {
     flex: 0 0 auto;
-    width: 236px;
-    max-height: 76vh;
+    width: 320px;
     border-radius: 16px;
     overflow: hidden;
     background: transparent;
-    border: 0.5px solid rgba(220,232,255,0.42);
+    border: 0.5px solid rgba(220,232,255,0.55);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
             backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
-      inset 0 1px 1px rgba(255,255,255,0.28),
-      inset 0 -1px 1px rgba(0,0,0,0.18),
-      0 0 14px 2px rgba(200,222,255,0.26),
-      0 8px 28px rgba(0,0,0,0.40);
+      inset 0 1px 1px rgba(255,255,255,0.32),
+      inset 0 -1px 1px rgba(0,0,0,0.20),
+      0 0 18px 3px rgba(200,222,255,0.40),
+      0 0 38px 8px rgba(200,222,255,0.20),
+      0 8px 32px rgba(0,0,0,0.42);
     display: flex; flex-direction: column;
     position: relative;
     cursor: pointer;
@@ -2906,11 +2920,14 @@
       0 0 20px 4px rgba(200,222,255,0.42),
       0 10px 34px rgba(0,0,0,0.46);
   }
-  .community-card .cc-image { overflow: hidden; flex: 1 1 auto; min-height: 0; }
+  .community-card .cc-image { overflow: hidden; flex: 0 0 auto; }
   .community-card img.cc-img {
-    width: 100%; height: 100%;
-    object-fit: cover; display: block;
-    aspect-ratio: 3 / 4;
+    width: 100%; height: auto;
+    /* CONTAIN, not cover: the three view sheet arrives whole, side, front
+       and back, exactly as it was rendered. */
+    object-fit: contain; display: block;
+    aspect-ratio: 3 / 2;
+    background: rgba(4,8,20,0.35);
   }
   .community-card .cc-meta {
     padding: 9px 12px 11px;
@@ -2956,14 +2973,37 @@
     max-width: 640px; text-align: center;
   }
   @media (max-width: 640px) {
-    #community-scroller { padding: 48px 26px; gap: 22px; }
-    .community-card { width: 198px; max-height: 70vh; }
+    #community-scroller { padding: 44px 0; gap: 12px; }
+    .community-row { padding: 0 22px; gap: 18px; }
+    .community-card { width: 250px; }
   }
 
   /* v9.5: 20% smaller (480 → 384). Glass + soft starlight glow added ,
      matches the .is-vision halo from the inspo page.
      v9.12: cursor + hover lift, since cards now open the submit-mode viewer. */
-  body.viewing-favorites .favorite-card { animation: maya-vision-pulse 3.8s ease-in-out infinite; }
+  /* v13.13: favorites breathe with their OWN pulse, calmer than the board's.
+     Halo reach down ~15%, slower, smoother curve, and the black depth shadow
+     never leaves so nothing pops between frames. maya-vision-pulse untouched. */
+  body.viewing-favorites .favorite-card {
+    animation: maya-favorite-pulse 4.6s cubic-bezier(.45, 0, .55, 1) infinite;
+  }
+  @keyframes maya-favorite-pulse {
+    0%, 100% { box-shadow:
+      inset 0 1px 1px rgba(255,255,255,0.32),
+      inset 0 -1px 1px rgba(0,0,0,0.20),
+      0 0 7px 1px rgba(200,222,255,0.40),
+      0 0 11.9px 2.1px rgba(200,222,255,0.20),
+      0 8px 32px rgba(0,0,0,0.42); }
+    50% { box-shadow:
+      inset 0 1px 1px rgba(255,255,255,0.32),
+      inset 0 -1px 1px rgba(0,0,0,0.20),
+      0 0 9px 1.7px rgba(220,232,255,0.55),
+      0 0 13.6px 2.55px rgba(220,232,255,0.28),
+      0 8px 32px rgba(0,0,0,0.42); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body.viewing-favorites .favorite-card { animation: none; }
+  }
   .favorite-card {
     flex: 0 0 auto;
     scroll-snap-align: center;
@@ -3738,8 +3778,15 @@
     // v13.0: save FIRST, while there is still an account to save as. The flush
     // in teardown() could never work: by the time it runs Firebase has already
     // cleared the user, so it returned immediately and the last edit was lost.
-    try { if (typeof projectStore !== 'undefined') await projectStore.flush(); } catch (_) {}
+    // v13.14: a failed save STOPS the sign out, unless the user insists.
+    try {
+      if (typeof projectStore !== 'undefined') {
+        const ok = await projectStore.flush();
+        if (ok === false && !confirm('Your latest changes could not be saved. Sign out anyway and lose them?')) return;
+      }
+    } catch (_) {}
     const emailForRevoke = _googleEmail;
+    try { if (typeof _resetMyFabrics === 'function') _resetMyFabrics(); } catch (_) {}   // v13.14
     _googleIdToken = null;
     _googleEmail = null;
     localStorage.removeItem(MAYA_TOKEN_KEY);
@@ -3765,6 +3812,7 @@
     if (!resp || !resp.credential) return;
     if (!_tokenIsValid(resp.credential)) return;
     _googleIdToken = resp.credential;
+    try { if (typeof _resetMyFabrics === 'function') _resetMyFabrics(); } catch (_) {}   // v13.14
     const payload = _decodeJwtPayload(resp.credential);
     _googleEmail = (payload && payload.email) || null;
     localStorage.setItem(MAYA_TOKEN_KEY, _googleIdToken);
@@ -3863,7 +3911,12 @@
            Swipe up from the canvas to reach it, swipe down for favorites.
            Everyone's hearted visions, drifting left forever. -->
       <section id="screen-community" data-screen="0">
-        <div id="community-scroller"></div>
+        <!-- v13.11: three rows. Each drifts right to left on its own. -->
+        <div id="community-scroller">
+          <div class="community-row" data-row="0"></div>
+          <div class="community-row" data-row="1"></div>
+          <div class="community-row" data-row="2"></div>
+        </div>
         <div id="community-empty">
           <div class="hint-eyebrow">Community</div>
           <div class="hint-body">Every vision anyone hearts lands here. Heart one of yours and it joins the wall.</div>
@@ -4777,8 +4830,11 @@ function _placeItemInternal(card, delay, fixedPos, isRestore) {
       ? '<span class="realism-dot realism-' + card.realism + '"></span>' + escapeHtml(card.tag)
       : escapeHtml(card.tag);
 
-    const imgHtml = card.image
-      ? '<img class="inspo-thumb" src="' + card.image + '" alt="" onerror="_imgBroken(this)">'
+    // v13.12 SECURITY: validated and escaped. card.image can come from a
+    // shared project, which is another account's data.
+    const _src = _safeImgSrc(card.image);
+    const imgHtml = _src
+      ? '<img class="inspo-thumb" src="' + escapeHtml(_src) + '" alt="" onerror="_imgBroken(this)">'
       : '';
 
     // v8.1: dedupe repeated word stems in the caption so phrases like
@@ -5441,7 +5497,13 @@ function cleanReferences() {
 // canvas, and then the next client's work, straight over the old project.
 // Everything saved before New stays exactly as it was.
 async function newConsultation() {
-  try { if (typeof projectStore !== 'undefined') await projectStore.flush(); } catch (_) {}
+  // v13.14: a failed save STOPS New. "New" must never cost the old project.
+  try {
+    if (typeof projectStore !== 'undefined') {
+      const ok = await projectStore.flush();
+      if (ok === false && !confirm('Your latest changes could not be saved. Start a new project anyway and lose them?')) return;
+    }
+  } catch (_) {}
   if (typeof projectStore !== 'undefined') projectStore.detach();
   _activeSessionId = null;
   await _hydrate(async () => { _doClear(); });
@@ -5783,16 +5845,61 @@ const communityBoard = {
     return { url: await ref.getDownloadURL(), path };
   },
 
-  async publish(item) {
+  // v13.11: the CONTENT fingerprint. A shared project is copied picture by
+  // picture, so the same garment ends up at a different address in every
+  // account. The inspiration id and version travel with the copy, so they
+  // identify the garment itself, and the wall can show it once: the
+  // ORIGINAL, the earliest post of it, whoever hearted it first.
+  _fp(card) {
+    if (!card) return '';
+    if (card.inspirationId) return 'i:' + card.inspirationId + '|v' + (card.version || 1);
+    return 'u:' + String(card.imageUrl || card.image || '').slice(-72);
+  },
+
+  // v13.11: the wall is a wall of VISIONS. Only what MAYA generated goes up,
+  // never an uploaded inspo, a fabric photograph or a Pinterest screenshot.
+  _isVision(card) {
+    return !!(card && card.kind === 'inspo' && card.inspirationId &&
+              (card.image || card.imageUrl));
+  },
+
+  // v13.14: heart, unheart, heart again in two seconds used to race: the
+  // publish's upload could finish AFTER the unpublish and leave a ghost
+  // picture in Storage. Every card's wall operations now run one at a time,
+  // in order, on a per-post chain.
+  _queue(postId, op) {
+    if (!this._chains) this._chains = {};
+    const prev = this._chains[postId] || Promise.resolve();
+    const next = prev.then(op, op);
+    this._chains[postId] = next.finally(() => {
+      if (this._chains[postId] === next) delete this._chains[postId];
+    });
+    return next;
+  },
+
+  publish(item) {
     const card = item && item.card;
-    if (!card || !(card.image || card.imageUrl) || !this._uid()) return;
+    if (!card || !(card.image || card.imageUrl) || !this._uid()) return Promise.resolve();
+    if (!this._isVision(card)) return Promise.resolve();
     const postId = this._postId(card);
-    if (this._inflight[postId]) return;
-    this._inflight[postId] = 1;
+    return this._queue(postId, () => this._publishNow(item, postId));
+  },
+
+  async _publishNow(item, postId) {
+    const card = item && item.card;
+    if (!card || !this._uid()) return;
+    // v13.14: the heart may already be gone by the time our turn comes.
+    if (card.favorited === false) return;
     card._communityId = postId;
     try {
       const img = await this._imageForPost(card, postId);
       if (!img || !img.url) return;
+      // v13.14: recheck after the upload too; unhearting mid upload must not
+      // leave the fresh copy floating in Storage.
+      if (card.favorited === false) {
+        if (img.path) { try { await firebase.storage().ref(img.path).delete(); } catch (_) {} }
+        return;
+      }
       let summary = '';
       try { summary = String(_buildPieceSummaryLine(item) || '').slice(0, 220); } catch (_) {}
       await this._col().doc(postId).set({
@@ -5801,21 +5908,31 @@ const communityBoard = {
         imageUrl: img.url,
         storagePath: img.path || '',
         summary: summary,
+        fp: this._fp(card),                 // v13.11: identifies the garment
+        // v13.14: durable ownership, so deleting the project can find every
+        // post it made even if a card lost its _communityId along the way.
+        pid: (typeof projectStore !== 'undefined' && projectStore.currentId) || '',
         ts: firebase.firestore.FieldValue.serverTimestamp(),
       });
       this._loadedAt = 0;
       if (currentScreen === 0) this.enter();
     } catch (e) {
       console.warn('[Maya community] publish', e);
-    } finally {
-      delete this._inflight[postId];
     }
   },
 
-  async unpublish(item) {
+  unpublish(item) {
+    const card = item && item.card;
+    if (!card || !this._uid()) return Promise.resolve();
+    const postId = this._postId(card);
+    return this._queue(postId, () => this._unpublishNow(item, postId));
+  },
+
+  async _unpublishNow(item, postId) {
     const card = item && item.card;
     if (!card || !this._uid()) return;
-    const postId = this._postId(card);
+    // v13.14: re-hearted while waiting in line: the post should stay up.
+    if (card.favorited === true && card._communityId === postId) return;
     try {
       let path = '';
       try {
@@ -5837,12 +5954,31 @@ const communityBoard = {
     if (!force && this._loadedAt && Date.now() - this._loadedAt < 60000) return this.posts;
     this._loading = (async () => {
       try {
-        const q = await this._col().orderBy('ts', 'desc').limit(80).get();
-        const out = [];
+        const q = await this._col().orderBy('ts', 'desc').limit(120).get();
+        // v13.11: one garment, one card. Two accounts can heart the same
+        // vision (a shared project copies it), and each heart writes its own
+        // post. The wall shows the ORIGINAL, the earliest of them.
+        const byFp = new Map();
         q.forEach(d => {
           const v = d.data() || {};
-          if (v.imageUrl) out.push({ id: d.id, uid: v.uid || '', author: v.author || 'someone', imageUrl: v.imageUrl, summary: v.summary || '' });
+          if (!v.imageUrl) return;
+          // v13.12 SECURITY: a post must have a sane id and a picture that is
+          // https or an inline image. Anything else never enters memory.
+          if (!/^[\w-]{4,120}$/.test(d.id)) return;
+          if (!/^(https:\/\/|data:image\/)/.test(String(v.imageUrl))) return;
+          const post = {
+            id: d.id, uid: v.uid || '', author: v.author || 'someone',
+            imageUrl: v.imageUrl, summary: v.summary || '',
+            fp: v.fp || ('u:' + String(v.imageUrl).slice(-72)),
+            ms: (v.ts && v.ts.toMillis) ? v.ts.toMillis() : Infinity,
+          };
+          const seen = byFp.get(post.fp);
+          // A post still waiting for its server timestamp sorts last, so it
+          // can never displace the original that is already up.
+          if (!seen || post.ms < seen.ms) byFp.set(post.fp, post);
         });
+        const out = Array.from(byFp.values())
+          .sort((a, b) => (b.ms === Infinity ? 0 : b.ms) - (a.ms === Infinity ? 0 : a.ms));
         this.posts = out;
         this._loadedAt = Date.now();
       } catch (e) { console.warn('[Maya community] load', e); }
@@ -5853,99 +5989,126 @@ const communityBoard = {
   },
 
   render() {
-    const wrap = document.getElementById('community-scroller');
-    if (!wrap) return;
+    const host = document.getElementById('community-scroller');
+    if (!host) return;
     const posts = this.posts;
     document.body.classList.toggle('has-community', posts.length > 0);
     const sig = posts.map(p => p.id).join(',');
-    if (wrap.dataset.sig === sig) return;      // never rebuild an unchanged wall
-    wrap.dataset.sig = sig;
-    if (!posts.length) { wrap.innerHTML = ''; return; }
+    if (host.dataset.sig === sig) return;      // never rebuild an unchanged wall
+    // v13.11: a repaint keeps every row exactly where it was. Rebuilding used
+    // to snap the wall back to the start and re download every picture, which
+    // read as a page refresh. The refresh is silent now.
+    const rowsEls = Array.from(host.querySelectorAll('.community-row'));
+    const keepPos = rowsEls.map(r => r.scrollLeft);
+    host.dataset.sig = sig;
+    if (!posts.length) { rowsEls.forEach(r => { r.innerHTML = ''; }); return; }
     const mine = this._uid();
+    // v13.12 SECURITY: no inline onclick. HTML entities decode BEFORE the
+    // JavaScript inside an attribute runs, so a hostile document id could
+    // break out of the quoted string. Clicks are delegated in _wireRow and
+    // read the id from the data attribute, which is plain text, not code.
     const one = (p) =>
-      '<div class="community-card" data-id="' + escapeHtml(p.id) + '" onclick="communityBoard.openPost(\'' + escapeHtml(p.id) + '\')">' +
+      '<div class="community-card" data-id="' + escapeHtml(p.id) + '">' +
         '<div class="cc-image"><img class="cc-img" src="' + escapeHtml(p.imageUrl) + '" alt="" loading="lazy" onerror="communityBoard.broken(this)"/></div>' +
         '<div class="cc-meta">' +
           '<span class="cc-author">' + escapeHtml(p.author) + (p.uid && p.uid === mine ? ' &middot; yours' : '') + '</span>' +
           (p.summary ? '<span class="cc-summary">' + escapeHtml(p.summary) + '</span>' : '') +
         '</div>' +
       '</div>';
-    // The list is painted more than once so the drift can wrap with no seam.
-    // Two copies is the minimum; on a wide screen with few posts even two is
-    // not enough to scroll a whole copy's width, so more get added until it is.
-    this._copy = posts.map(one).join('');
-    wrap.innerHTML = this._copy + this._copy;
-    wrap.scrollLeft = 0;
-    this._pos = 0;
-    this._period = 0;
-    this._copies = 2;
-    this._wire(wrap);
+    // Three rows once there is enough to fill them; fewer while the wall is
+    // young, so a handful of visions never gets spread thin.
+    const nRows = posts.length >= 9 ? 3 : posts.length >= 5 ? 2 : 1;
+    this._rows = [];
+    rowsEls.forEach((rowEl, i) => {
+      if (i >= nRows) { rowEl.innerHTML = ''; return; }
+      const mineRow = posts.filter((_, idx) => idx % nRows === i);
+      rowEl.innerHTML = mineRow.map(one).join('');
+      rowEl.dataset.count = mineRow.length;
+      this._rows.push({ el: rowEl, n: mineRow.length, copy: rowEl.innerHTML, period: 0, pos: keepPos[i] || 0, copies: 1 });
+      this._wireRow(rowEl);
+    });
     requestAnimationFrame(() => this._measure());
   },
 
-  // The wrap distance is the gap between the first card of one copy and the
-  // first card of the next. Measured, not calculated: the scroller's own left
-  // and right padding are not symmetric with the gaps between cards, so half
-  // the scroll width is close but not exact, and "close" shows as a twitch
-  // every time the wall comes round.
+  // A row only loops when ONE copy of it already runs past the edge of the
+  // screen. Below that it simply sits there: padding a short row with copies
+  // is what put the same three garments across the wall five times over.
   _measure() {
-    const el = document.getElementById('community-scroller');
-    const n = this.posts.length;
-    if (!el || !n) return;
-    let guard = 0;
-    while (guard++ < 10) {
-      const kids = el.children;
-      if (kids.length < n + 1) break;
-      this._period = Math.round(kids[n].offsetLeft - kids[0].offsetLeft);
-      if (this._period <= 0) break;
-      if (el.scrollWidth - el.clientWidth >= this._period + 20) break;
-      el.insertAdjacentHTML('beforeend', this._copy);   // still too short to wrap
-      this._copies++;
+    for (const row of (this._rows || [])) {
+      const el = row.el;
+      if (!el || !row.n) continue;
+      let guard = 0;
+      row.period = 0;
+      if (el.scrollWidth - el.clientWidth < 40) continue;   // fits, no drift
+      while (guard++ < 8) {
+        if (row.copies === 1) {
+          el.insertAdjacentHTML('beforeend', row.copy);     // second copy, for the wrap
+          row.copies = 2;
+          continue;
+        }
+        const kids = el.children;
+        if (kids.length < row.n + 1) break;
+        row.period = Math.round(kids[row.n].offsetLeft - kids[0].offsetLeft);
+        if (row.period <= 0) break;
+        if (el.scrollWidth - el.clientWidth >= row.period + 20) break;
+        el.insertAdjacentHTML('beforeend', row.copy);
+        row.copies++;
+      }
+      if (row.pos) el.scrollLeft = row.pos;
     }
   },
 
-  _wire(wrap) {
-    if (this._wired) return;
-    this._wired = true;
+  _wireRow(wrap) {
+    if (wrap._ccWired) return;
+    wrap._ccWired = true;
+    // v13.12 SECURITY: delegated click, replaces the inline onclick.
+    wrap.addEventListener('click', (e) => {
+      const c = e.target.closest('.community-card');
+      if (c && c.dataset.id) this.openPost(c.dataset.id);
+    });
     const hold = () => { this._paused = true; clearTimeout(this._resumeT); };
     const release = (ms) => {
       clearTimeout(this._resumeT);
       this._resumeT = setTimeout(() => { this._paused = false; }, ms || 0);
     };
-    // pointerover/out bubble, so this catches the pointer landing on a card
-    // as well as on the strip itself. The short release delay stops the wall
-    // from lurching every time the cursor crosses the gap between two cards.
     wrap.addEventListener('pointerover', hold);
     wrap.addEventListener('pointerout', () => release(220));
     wrap.addEventListener('pointerdown', hold);
     wrap.addEventListener('touchstart', hold, { passive: true });
     wrap.addEventListener('touchend', () => release(2500), { passive: true });
-    window.addEventListener('pointerup', () => release(1200));
+    if (!this._wired) {
+      this._wired = true;
+      window.addEventListener('pointerup', () => release(1200));
+    }
   },
 
   // Browsers round scrollLeft to whole pixels, so reading it back and adding
   // a fraction of a pixel each frame moves nothing at all, forever. The true
   // position is kept here as a float and written out; the reading is only
   // consulted to notice that the designer has scrolled the wall by hand.
+  // v13.11: one drift loop paces all three rows. Their speeds differ a little
+  // so the wall breathes instead of marching in step.
   _startDrift() {
     if (this._raf) return;
-    const SPEED = 26;                 // pixels per second, paced by the clock
+    const SPEEDS = [26, 21, 31];      // pixels per second, paced by the clock
     let last = 0;
     const step = (now) => {
       this._raf = requestAnimationFrame(step);
       const dt = Math.min(50, last ? now - last : 16);
       last = now;
       if (currentScreen !== 0 || document.hidden || this._paused) return;
-      const el = document.getElementById('community-scroller');
-      if (!el || !this.posts.length) return;
-      if (!this._period) { this._measure(); return; }
-      const period = this._period;
-      if (el.scrollWidth - el.clientWidth < period + 4) return;   // cannot wrap yet
-      if (Math.abs(this._pos - el.scrollLeft) > 2) this._pos = el.scrollLeft;  // scrolled by hand
-      this._pos += SPEED * dt / 1000;
-      if (this._pos >= period) this._pos -= period;
-      else if (this._pos < 0) this._pos += period;
-      el.scrollLeft = this._pos;
+      const rows = this._rows || [];
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i], el = row.el;
+        if (!el || !row.n) continue;
+        if (!row.period) continue;                                  // not long enough to loop
+        if (el.scrollWidth - el.clientWidth < row.period + 4) continue;
+        if (Math.abs(row.pos - el.scrollLeft) > 2) row.pos = el.scrollLeft;   // scrolled by hand
+        row.pos += (SPEEDS[i % SPEEDS.length]) * dt / 1000;
+        if (row.pos >= row.period) row.pos -= row.period;
+        else if (row.pos < 0) row.pos += row.period;
+        el.scrollLeft = row.pos;
+      }
     };
     this._raf = requestAnimationFrame(step);
   },
@@ -5960,7 +6123,7 @@ const communityBoard = {
       let backfilled = 0;
       for (const it of (window.items || [])) {
         if (it && it.card && it.card.favorited &&
-            (it.card.image || it.card.imageUrl) && !it.card._communityId) {
+            this._isVision(it.card) && !it.card._communityId) {
           this.publish(it); backfilled++;
         }
       }
@@ -5983,18 +6146,38 @@ const communityBoard = {
             for (const sv of (v.items || [])) {
               const c = sv && sv.card;
               if (!c || !c.favorited) continue;
+              if (!this._isVision(c)) continue;      // visions only
               const src = c.imageUrl || c.image;
               if (!src || !String(src).startsWith('http')) continue;
+              // One post per GARMENT, not per copy of it: a project that was
+              // shared and saved again holds the same vision twice.
+              const fp = this._fp(c);
               const pid = this._postId(c);
-              if (seenPosts.has(pid)) continue;
-              seenPosts.add(pid);
+              if (seenPosts.has(pid) || seenPosts.has(fp)) continue;
+              seenPosts.add(pid); seenPosts.add(fp);
               toPublish.push({ card: { ...c } });
             }
           });
           for (const item of toPublish) await this.publish(item);
-          if (toPublish.length) console.log('[wall] swept', toPublish.length, 'hearted pieces from all projects');
+          if (toPublish.length) {
+            console.log('[wall] swept', toPublish.length, 'hearted visions from all projects');
+            await this.load(true);
+            this.render();
+          }
         } catch (e) { console.warn('[wall sweep]', e); }
       })();
+    }
+    // v13.11: a quiet heartbeat. While the wall is on screen it re reads the
+    // collection every half minute and repaints ONLY if something actually
+    // changed, keeping every row where it was. Nothing flashes, nothing
+    // reloads, new visions simply arrive.
+    if (!this._beat) {
+      this._beat = setInterval(async () => {
+        if (currentScreen !== 0 || document.hidden) return;
+        const before = this.posts.map(p => p.id).join(',');
+        await this.load(true);
+        if (this.posts.map(p => p.id).join(',') !== before) this.render();
+      }, 30000);
     }
     await this.load();
     this.render();
@@ -6902,7 +7085,10 @@ async function switchAvatar(id) {
   // v12.5: let go of the open project FIRST. This used to clear the canvas
   // while still holding it, and the next autosave wrote the empty board over
   // the previous client's project and renamed it untitled.
-  await projectStore.flush();
+  {
+    const ok = await projectStore.flush();   // v13.14: a failed save stops the switch
+    if (ok === false && !confirm('Your latest changes could not be saved. Switch anyway and lose them?')) return;
+  }
   projectStore.detach();
   _activeSessionId = null;
   await _hydrate(async () => { _doClear(); });
@@ -6921,7 +7107,10 @@ async function switchAvatar(id) {
 }
 async function newAvatar() {
   // v12.5: same as switchAvatar, release the open project before clearing.
-  await projectStore.flush();
+  {
+    const ok = await projectStore.flush();   // v13.14: a failed save stops the switch
+    if (ok === false && !confirm('Your latest changes could not be saved. Switch anyway and lose them?')) return;
+  }
   projectStore.detach();
   _activeSessionId = null;
   await _hydrate(async () => { _doClear(); });
@@ -7537,6 +7726,14 @@ function clearAll(silent) {
 
 let _boardEpoch = 0;  // v11.49 (Codex M4): bumped on every clear/project switch
 function _doClear() {
+  // v13.14: the favorites strip is part of the board. A cleared board, a
+  // switched project or a switched account must never show the previous
+  // owner's favorites for even a frame.
+  try {
+    const fs = document.getElementById('favorites-scroller');
+    if (fs) { fs.innerHTML = ''; fs.dataset.sig = ''; }
+    document.body.classList.remove('has-favorites');
+  } catch (_) {}
   _boardEpoch++;
   try { _pendingTitles.length = 0; } catch (_) {}
   try { _lastFaded = []; } catch (_) {}   // v13.0: never restore one project's references into another
@@ -8647,6 +8844,7 @@ function stopLiveBatch() {
 }
 
 async function handleInspoUpload(file) {
+  const _uctx = _opContext();   // v13.14: uploads belong to the project that started them
   if (!getApiKey()) { showError('Session expired, please sign in again'); if (typeof _showGate==='function') _showGate(); return; }
   const looksLikeImage = file.type.startsWith('image/') ||
     /\.(png|jpe?g|webp|gif|heic|heif|bmp|tiff?)$/i.test(file.name);
@@ -8665,6 +8863,10 @@ async function handleInspoUpload(file) {
   // hovers and taps "Dissect" if she wants Maya to extract vocabulary refs
   // from the image. Otherwise the image stays whole, and can be used as a
   // visual reference for Visualize via the image-ref picker.
+  // v13.14: reading a big photo takes real time; if the project, board or
+  // account changed while the file was being read, this card belongs to a
+  // board that no longer exists. Drop it.
+  if (!_opStillValid(_uctx)) { console.warn('[upload] project changed mid read, card dropped'); return; }
   placeItem({ tag: 'inspo', title: niceName || 'reference', kind: 'inspo', image: dataUrl }, 0);
   showToast('Inspo placed. Hover the card and tap Dissect to extract refs.');
 }
@@ -9478,6 +9680,7 @@ async function _applyModifyWithPendingState() {
 // Closes the viewer, runs the sketch in the corner, updates the original
 // canvas card's image when finished, no fullscreen takeover.
 async function applyModifications() {
+  const _mctx = _opContext();   // v13.14: which project asked for this render
   const deselectedCount = (viewerDeselected || new Set()).size;
   // v5.17: also accept fabric-only deselections so Fromsa can × a fabric
   // chip and tap Modify without typing or × ing a ref.
@@ -9610,6 +9813,10 @@ async function applyModifications() {
       fabricMode: original?.card.fabricMode || null,
       fabrics: original?.card.fabrics ? original.card.fabrics.map(f => ({ ...f })) : null
     };
+    // v13.14: the render came back, but is this still the same project, the
+    // same board, the same account? If not, the money is spent either way,
+    // but the picture must NOT land on someone else's board.
+    if (!_opStillValid(_mctx)) { console.warn('[modify] project changed mid render, result dropped'); return; }
     // v13.4: a new version always lands ON TOP of its group, even when the
     // group was brought to the front or is currently stacked.
     if (original && original.card && (original.card.z || original.card.stacked)) {
@@ -9698,7 +9905,7 @@ function renderViewerFabrics(item) {
   if (!fabrics.length) { host.innerHTML = ''; return; }
   host.innerHTML = fabrics.map((f, idx) => {
     const swatch = f.dataUrl
-      ? '<div class="swatch" style="background-image:url(\'' + f.dataUrl + '\')"></div>'
+      ? '<div class="swatch" style="background-image:url(\'' + escapeHtml(_safeImgSrc(f.dataUrl)) + '\')"></div>'
       : '<div class="swatch"></div>';
     const isOut = viewerFabricsDeselected.has(f.id || f.fileName || f.name);
     return '<div class="viewer-fabric-chip' + (isOut ? ' deselected' : '') + '" data-idx="' + idx + '"' +
@@ -10805,7 +11012,7 @@ function renderFabricsGrid(opts = {}) {
     '<div class="fabrics-grid">' +
     fabricsInventory.map((f, idx) =>
       '<div class="fabric-card" data-idx="' + idx + '">' +
-        '<div class="fabric-swatch" style="background-image:url(\'' + f.dataUrl + '\')"></div>' +
+        '<div class="fabric-swatch" style="background-image:url(\'' + escapeHtml(_safeImgSrc(f.dataUrl)) + '\')"></div>' +
         '<div class="fabric-meta">' +
           '<input class="fabric-name-input" value="' + escapeHtml(f.name || '') + '" ' +
                  'onchange="renameFabric(' + idx + ', this.value)" ' +
@@ -10885,6 +11092,7 @@ async function shareCurrentProject() {
       Array.from(crypto.getRandomValues(new Uint8Array(9))).map(b => (b % 36).toString(36)).join('');
     await firebase.firestore().collection('shares').doc(token).set({
       ownerUid: projectStore._uid(),
+      pid: pid,                       // v13.12: so deleting the project revokes its shares
       name: String(shareName).slice(0, 80),
       items,
       lastSummary: cloudSum || null,
@@ -10969,6 +11177,11 @@ function _maybeOpenShare() {
       for (const it of items) {
         const c = it && it.card; if (!c) continue;
         delete c._communityId; delete c.storagePath; delete c._uploadedToCloud; delete c._imgId;
+        // v13.12 SECURITY: a share document is another account's data. Kill
+        // any picture address that is not https or an inline image BEFORE it
+        // can reach the board.
+        if (c.image && !_safeImgSrc(c.image)) delete c.image;
+        if (c.imageUrl && !_safeImgSrc(c.imageUrl)) delete c.imageUrl;
         const src = c.imageUrl || c.image;
         if (src && String(src).startsWith('http')) {
           try { c.image = await _urlToDataUrl(src); delete c.imageUrl; }
@@ -10980,7 +11193,8 @@ function _maybeOpenShare() {
         try { sum._face_photo = await _urlToDataUrl(sum._face_photo); } catch (_) {}
         delete sum._face_photo_url; delete sum._face_photo_path;
       }
-      await projectStore.flush();
+      const okFlush = await projectStore.flush();
+      if (okFlush === false && !confirm('Your latest changes could not be saved. Import the shared project anyway and lose them?')) return;
       projectStore.detach();
       await _hydrate(async () => { _doClear(); });
       lastSummary = sum;
@@ -11050,15 +11264,30 @@ function _myFabricsDocRef() {
   } catch (_) { return null; }
 }
 
+let _myFabricsUid = null;   // v13.14: whose fabrics are in memory
+function _resetMyFabrics() {
+  // v13.14: called on every sign in and sign out. One account's fabric
+  // drawer must never appear under another account's name.
+  myFabrics = null;
+  _myFabricsUid = null;
+  _fabricsTab = 'house';
+  try { renderMyFabricsGrid(); } catch (_) {}
+}
 async function loadMyFabrics() {
+  const uid = (firebase.auth().currentUser || {}).uid || null;
   const ref = _myFabricsDocRef();
-  if (!ref) { myFabrics = []; return myFabrics; }
+  if (!ref || !uid) { myFabrics = []; _myFabricsUid = uid; return myFabrics; }
   try {
     const d = await ref.get();
+    // v13.14: the account may have changed while the read was in flight.
+    const nowUid = (firebase.auth().currentUser || {}).uid || null;
+    if (nowUid !== uid) return myFabrics;
     myFabrics = (d.exists && Array.isArray(d.data().items)) ? d.data().items : [];
+    _myFabricsUid = uid;
   } catch (e) {
     console.warn('[my fabrics] load', e);
     myFabrics = [];
+    _myFabricsUid = uid;
   }
   return myFabrics;
 }
@@ -11073,6 +11302,9 @@ async function _saveMyFabricsIndex() {
 async function uploadMyFabricFiles(files) {
   const uid = (firebase.auth().currentUser || {}).uid;
   if (!uid) { showError('Sign in first, then your fabrics can be saved to your account.'); return; }
+  // v13.14: every late step below re-checks that THIS account is still the
+  // signed in one before it touches memory or the database.
+  const _stillMe = () => ((firebase.auth().currentUser || {}).uid) === uid;
   const list = Array.from(files || []).filter(f => f.type.startsWith('image/'));
   if (!list.length) return;
   if (myFabrics === null) await loadMyFabrics();
@@ -11086,6 +11318,7 @@ async function uploadMyFabricFiles(files) {
       const ref = firebase.storage().ref(path);
       await ref.putString(dataUrl, 'data_url', { contentType: 'image/jpeg' });
       const url = await ref.getDownloadURL();
+      if (!_stillMe()) { try { await ref.delete(); } catch (_) {} return; }   // v13.14
       const entry = { id, path, url, name: fabricNameFromFilename(file.name || 'My fabric'), ts: Date.now() };
       myFabrics.unshift(entry);
       renderMyFabricsGrid();
@@ -11093,6 +11326,7 @@ async function uploadMyFabricFiles(files) {
       if (!ok) showError('Could not save the fabric index, this upload may not survive a reload.');
       // Same reading the house swatches get: colour, weave, weight.
       analyzeFabricWithVision(dataUrl, entry.name).then(async specs => {
+        if (!_stillMe()) return;   // v13.14: analysis outlived the account
         Object.assign(entry, specs || {}, { analyzed: true });
         renderMyFabricsGrid();
         await _saveMyFabricsIndex();
@@ -11150,7 +11384,7 @@ function renderMyFabricsGrid() {
     '<div class="fabrics-grid">' +
     myFabrics.map((f, idx) =>
       '<div class="fabric-card" data-idx="' + idx + '">' +
-        '<div class="fabric-swatch" style="background-image:url(\'' + f.url + '\')" ' +
+        '<div class="fabric-swatch" style="background-image:url(\'' + escapeHtml(_safeImgSrc(f.url)) + '\')" ' +
              'onclick="placeMyFabricOnBoard(' + idx + ')" title="Add to the board"></div>' +
         '<div class="fabric-meta">' +
           '<input class="fabric-name-input" value="' + escapeHtml(f.name || '') + '" ' +
@@ -11209,7 +11443,7 @@ function openFabricPicker() {
   const grid = document.getElementById('fabric-pick-grid');
   grid.innerHTML = fabricsInventory.map((f, idx) =>
     '<div class="fabric-pick" data-idx="' + idx + '" onclick="toggleFabricPick(' + idx + ')">' +
-      '<div class="swatch" style="background-image:url(\'' + f.dataUrl + '\')"></div>' +
+      '<div class="swatch" style="background-image:url(\'' + escapeHtml(_safeImgSrc(f.dataUrl)) + '\')"></div>' +
       '<div class="label">' + escapeHtml(f.name) + '</div>' +
       '<div class="order-badge"></div>' +
     '</div>'
@@ -11295,6 +11529,7 @@ async function confirmFabricPick() {
 // "preserve everything except fabric" prompt. The result lands as v(N+1)
 // in the same inspiration, so version history stays grouped.
 async function switchFabricForViewer() {
+  const _fctx = _opContext();   // v13.14: same guard as Modify
   if (!viewerItemId) return;
   const it = items.find(i => i.id === viewerItemId);
   if (!it || !it.card.image) return;
@@ -11382,6 +11617,8 @@ async function runFabricSwitch(targetId, fabrics) {
         dataUrl: f.dataUrl  // runtime-only; stripped before persist
       }))
     };
+    // v13.14: a fabric switch that outlived its project dies here, unplaced.
+    if (!_opStillValid(_fctx)) { console.warn('[fabric switch] project changed mid render, result dropped'); return; }
     // v13.4: same rule as Modify, the new version lands on top of its group.
     if (original.card && (original.card.z || original.card.stacked)) {
       newCard.z = ++_zCounter;
@@ -11644,6 +11881,15 @@ document.addEventListener('visibilitychange', () => {
 // v11.32: iOS Safari sometimes kills the tab without ever firing
 // visibilitychange, pagehide is the reliable last-gasp save on that path.
 window.addEventListener('pagehide', () => { clearTimeout(_persistTimer); _persistNow(true); });
+// v13.14: while there are unsaved changes, closing the tab asks first. The
+// last gasp save above usually wins the race, but on a dead connection it
+// cannot, and silently losing the work would break the honest save rule.
+window.addEventListener('beforeunload', (e) => {
+  try {
+    const pendingEdit = !!_persistTimer || (typeof projectStore !== 'undefined' && projectStore._dirty);
+    if (pendingEdit && navigator.onLine === false) { e.preventDefault(); e.returnValue = ''; }
+  } catch (_) {}
+});
 
 // v11.32: guard against two _persistNow runs overlapping (a debounced run
 // already in flight when the tab hides), that raced two saveSession writes
@@ -11704,94 +11950,11 @@ async function _persistNow(flush) {
 // churned the main thread on each drag-end and made desktop drag feel janky
 // whenever cloud sync was down.
 let _imgUploadFailStreak = 0;
-async function _cloudifyItemsForFirestore(itemsArr, uploadPrefix) {
-  const cloudItems = [];
-  for (const it of (itemsArr || [])) {
-    if (!it || !it.card) { cloudItems.push(it); continue; }
-    const card = { ...it.card };
-    // Strip non-portable fields (DOM-only flags, dissection cache).
-    delete card._dissection;
-    delete card._dissectionPending;
-    // If this item has a data-URL image and we haven't uploaded it yet
-    // (or never have a URL for it), push the bytes to Storage now and
-    // replace the local item's image with the public URL so we won't
-    // re-upload next time.
-    if (card.image && card.image.startsWith('data:') && card._uploadedToCloud && card.imageUrl) {
-      // v11.29: already uploaded on a previous sync, reuse the stored URL
-      // and skip the re-upload entirely. (Previously this flag was set but
-      // never checked, so every edit re-uploaded every image.)
-      delete card.image;
-    } else if (card.image && card.image.startsWith('data:') && _imgUploadFailStreak >= 3) {
-      // Breaker open: skip the doomed attempt entirely; retry next page load.
-      delete card.image;
-      card._uploadPending = true;
-    } else if (card.image && card.image.startsWith('data:')) {
-      try {
-        // v11.44: 'current'-doc uploads get a PERSISTENT unique image id.
-        // Bare per-page-load integer ids collided across sessions: a new
-        // board's card 3 overwrote (and its removal deleted) the previous
-        // board's 3.jpg, which is how older projects/favorites lost their
-        // pictures. New uploads can never collide; legacy URLs untouched.
-        let upId;
-        if (uploadPrefix) {
-          upId = uploadPrefix + '-' + it.id;
-        } else {
-          // v11.49 (Codex M2): snapshots are detached copies, mirror the id
-          // onto the LIVE card too, or deletion GC never finds it.
-          const liveIt = (typeof items !== 'undefined') ? items.find(x => x.id === it.id) : null;
-          let gid = (liveIt && liveIt.card._imgId) || it.card._imgId;
-          if (!gid) gid = 'im' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-          if (liveIt && !liveIt.card._imgId) liveIt.card._imgId = gid;
-          it.card._imgId = gid;
-          card._imgId = gid;
-          upId = gid;
-        }
-        const url = await window.mayaFirebase.uploadImage(upId, card.image);
-        card.imageUrl = url;
-        // Mirror back onto the live item so subsequent syncs skip upload.
-        // NEVER mirror on prefixed (named-project) uploads: a backfilled OLD
-        // session's item id can collide with an unrelated LIVE item's id, and
-        // mirroring would stamp the wrong image URL onto that live card.
-        const liveItem = uploadPrefix ? null : items.find(x => x.id === it.id);
-        if (liveItem) {
-          liveItem.card.imageUrl = url;
-          liveItem.card._uploadedToCloud = true;
-          if (card._imgId && !liveItem.card._imgId) liveItem.card._imgId = card._imgId;  // v11.49
-        }
-        _imgUploadFailStreak = 0;  // v11.36: a success closes the breaker
-        // For the cloud copy, drop the raw bytes, URL is enough.
-        delete card.image;
-      } catch (e) {
-        // Upload failed (offline, quota, etc.), keep going. We'll retry
-        // next sync. For the cloud copy, strip the bytes anyway so the
-        // doc doesn't blow past 1MB; the item will restore as
-        // image-missing on other devices until we get back online.
-        console.warn('[maya.firebase] image upload failed for', it.id, e && e.message);
-        _imgUploadFailStreak++;  // v11.36
-        _notifySyncOffline(e);
-        delete card.image;
-        card._uploadPending = true;
-      }
-    } else if (card.image && !card.image.startsWith('data:')) {
-      // Already a URL (or restored from cloud). Don't touch.
-      card.imageUrl = card.imageUrl || card.image;
-      delete card.image;
-    }
-    cloudItems.push({ ...it, card });
-  }
-  return cloudItems;
-}
 
 // v11.49 (Codex M1): cloud writes are serialized through a chain, and any
 // snapshot that has been superseded by a newer one is DROPPED, a slow image
 // upload can no longer finish late and resurrect a deleted card.
 let _syncSeq = 0, _syncChain = Promise.resolve();
-async function _firebaseSyncSession(snap) {
-  // v12.1 (Codex deploy 5): RETIRED. The shared 'current' autosave doc was
-  // the bleed point between projects (C1). Unsaved scratch stays on this
-  // device; named saves and sealed bins are the only cloud writes.
-  return;
-}
 
 
 // v11.38: Firestore rejects docs >1MB and undefined values with
@@ -11829,36 +11992,15 @@ function _sanitizeCloudSnap(cloudSnap) {
 
 // v11.34: mirror a named project to its own Firestore doc (same shape as the
 // 'current' doc) so the Projects list works across devices.
-async function _syncSavedSessionToCloud(meta, snap) {
-  if (!meta || !snap) return;
-  if (!window.mayaFirebase || !window.mayaFirebase.isReady || !window.mayaFirebase.isReady()) return;
-  const cloudItems = await _cloudifyItemsForFirestore(snap.items, meta.id);
-  try {
-    await window.mayaFirebase.saveSession(meta.id, _sanitizeCloudSnap({
-      ...snap,
-      items: cloudItems,
-      name: meta.name || snap.currentClientName || 'untitled',
-      twoWord: meta.twoWord || '',
-      cardCount: meta.cardCount || cloudItems.length,
-      createdAtMs: meta.createdAt || snap.ts || null,
-      updatedAtMs: meta.updatedAt || snap.ts || null,
-      schemaVersion: 3,  // v11.39: bump forces one-time re-sync of every project under the fixed (sanitized) pipeline
-    }));
-  } catch (e) {
-    console.warn('[maya.firebase] project sync failed', meta.id, e && e.message);
-    _notifySyncOffline(e);
-  }
-}
 
 // v11.34: once per page load, push every project saved locally on THIS device
 // up to Firestore (if the cloud copy is missing or older). This is what makes
 // desktop projects appear on the phone, the desktop uploads them the next
 // time it opens MAYA, and the phone's Projects list reads the cloud.
 let _sessionsBackfillDone = false;
-async function _backfillSessionsToCloud() {
-  // ═══ v12.2: FRESH START, open /?fresh-start signed in, press OK once, and
-// EVERYTHING this account owns is erased: legacy boards, sealed-bin projects,
-// tombstones, every picture in Storage, and all local copies on this device.
+// v13.14 CLEANUP: the retired backfill wrapper is gone. The fresh start
+// wipe had been accidentally pasted INSIDE it, which made the documented
+// mayaFreshStart() console command a ReferenceError. It is top level now.
 async function _freshStartWipe() {
   const user = firebase.auth().currentUser;
   if (!user) { setTimeout(_freshStartWipe, 800); return; }   // wait for sign-in
@@ -11902,17 +12044,7 @@ async function _freshStartWipe() {
   }
   location.href = '/';
 }
-// v12.5: the URL trigger is GONE. Anyone could send a client a link ending in
-// ?fresh-start and one OK click erased that client's entire account, and it
-// even waited and fired after sign in. The wipe is still here, but it can only
-// be started deliberately, from the console or the Systems Map, by calling
-// mayaFreshStart().
 window.mayaFreshStart = _freshStartWipe;
-
-// v12.1 (Codex deploy 6): RETIRED. Backfill let any device's old local
-  // copy re-upload projects you had deleted, the resurrection engine.
-  return;
-}
 
 
 // v11.29: one-time visible warning when cloud sync fails (rules/billing/
@@ -11925,8 +12057,11 @@ function _notifySyncOffline(err) {
   // v11.37: name the real failure in the toast, 'storage/unauthorized',
   // 'permission-denied', etc., so a screenshot diagnoses the backend.
   const code = err && (err.code || err.name) ? String(err.code || err.name) : '';
-  const msg  = code ? ('Cloud sync error: ' + code + ', work is saved on this device only')
-                    : 'Cloud sync is offline, your work is saved on this device only';
+  // v13.14: MAYA is cloud only. Nothing is saved on the device, and the old
+  // wording claimed otherwise, which is exactly the kind of lie the save
+  // system was rebuilt to never tell.
+  const msg  = code ? ('Cloud sync error: ' + code + '. Your latest changes are NOT saved yet, keep this tab open.')
+                    : 'Cloud sync is offline. Your latest changes are NOT saved yet, keep this tab open and check your connection.';
   try { console.warn('[maya.sync] first failure this load:', code, err && err.message); } catch (_) {}
   try { showToast(msg); } catch (_) {}
 }
@@ -12412,76 +12547,9 @@ function _formatSessionDate(ts) {
   return `${m}/${day}/${yr}`;
 }
 
-async function idbListSavedSessions() {
-  try {
-    const index = await idb(s => s.get('maya-sessions-index'));
-    return Array.isArray(index) ? index : [];
-  } catch (e) {
-    console.warn('[Maya sessions list]', e);
-    return [];
-  }
-}
 
-async function idbSaveCurrentAsSession(name) {
-  // Snapshot the current canvas exactly the same shape _persistSession uses.
-  const itemsLite = (items || []).map(it => {
-    const el = it.el;
-    const x  = el ? parseFloat(el.style.left) || 0 : 0;
-    const y  = el ? parseFloat(el.style.top)  || 0 : 0;
-    return { id: it.id, x, y, card: it.card ? { ...it.card } : null };
-  });
-  const snap = {
-    currentClientName: name || currentClientName || null,
-    lastSummary:       lastSummary || null,
-    lastTranscript:    lastTranscript || '',
-    items:             itemsLite,
-    ts:                Date.now(),
-  };
-  const list = await idbListSavedSessions();
-  const wanted = (name || currentClientName || 'Untitled');
-  const norm = wanted.trim().toLowerCase();
-  // v11.23: overwrite a same-named session in place instead of creating a
-  // duplicate. Save just re-snapshots the current canvas + lastSummary
-  // (designer notes, non-negotiables, constraints, ideas) onto that session.
-  const existing = list.find(m => (m.name || '').trim().toLowerCase() === norm);
-  const id = existing ? existing.id
-                      : ('sess_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6));
-  const meta = {
-    id,
-    name: wanted,
-    createdAt: existing ? (existing.createdAt || snap.ts) : snap.ts,
-    updatedAt: snap.ts,
-    twoWord: _twoWordFromItems(items),
-    cardCount: itemsLite.length,
-  };
-  await idb(s => s.put(snap, 'maya-session-' + id));
-  const next = list.filter(m => m.id !== id);
-  next.unshift(meta);  // newest first; moved to top on overwrite
-  await idb(s => s.put(next, 'maya-sessions-index'));
-  return meta;
-}
 
-async function idbLoadSavedSession(id) {
-  try {
-    return await idb(s => s.get('maya-session-' + id));
-  } catch (e) {
-    console.warn('[Maya sessions load]', e);
-    return null;
-  }
-}
 
-async function idbDeleteSavedSession(id) {
-  try {
-    await idb(s => s.delete('maya-session-' + id));
-    const list = await idbListSavedSessions();
-    const next = list.filter(x => x.id !== id);
-    await idb(s => s.put(next, 'maya-sessions-index'));
-    return true;
-  } catch (e) {
-    console.warn('[Maya sessions delete]', e);
-    return false;
-  }
-}
 
 // ── Save button: commit current canvas as a named session ────────
 async function saveSessionNow() {
@@ -12556,38 +12624,6 @@ let _activeSessionId = null;  // v11.44: which saved project is open now
 // copy, and never backfills the project to the cloud again. Its Storage
 // pictures are deleted too (only ones namespaced to that project, shared
 // legacy files are left alone so other boards can't be damaged).
-async function _getTombstones() {
-  try {
-    if (!window.mayaFirebase || !window.mayaFirebase.isReady || !window.mayaFirebase.isReady()) return new Set();
-    const doc = await window.mayaFirebase.loadSession('__tombstones__');
-    return new Set((doc && doc.ids) || []);
-  } catch (_) { return new Set(); }
-}
-async function _addTombstone(id) {
-  try {
-    const doc = await window.mayaFirebase.loadSession('__tombstones__').catch(() => null);
-    const ids = Array.from(new Set([...((doc && doc.ids) || []), id])).slice(-300);
-    await window.mayaFirebase.saveSession('__tombstones__', { ids, updatedAtMs: Date.now() });
-  } catch (_) {}
-}
-async function _deleteProjectImages(id, snap) {
-  try {
-    if (!snap || !window.firebase || !firebase.storage) return 0;
-    let n = 0;
-    for (const sv of (snap.items || [])) {
-      const c = sv && sv.card; if (!c) continue;
-      const u = c.imageUrl || (c.image && !String(c.image).startsWith('data:') ? c.image : null);
-      if (!u) continue;
-      const m = String(u).match(/\/o\/([^?]+)/);
-      if (!m) continue;
-      const path = decodeURIComponent(m[1]);
-      const fname = path.split('/').pop() || '';
-      if (!fname.startsWith(id + '-')) continue;   // only THIS project's namespaced files
-      try { await firebase.storage().ref(path).delete(); n++; } catch (_) {}
-    }
-    return n;
-  } catch (_) { return 0; }
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // v12: PROJECT STORE, sealed bins (Codex target architecture).
@@ -12899,7 +12935,10 @@ const projectStore = {
           // into, so just stop.
           this._dirty = false;
           if (this._flushing) return { written: false, reason: 'stale' };
-          showToast('This project changed on another device, reloading it');
+          // v13.14: a stale write is a CONFLICT, not a success. The remote
+          // version wins and the board reloads to match, but the user is told
+          // plainly that their very last change here lost the race.
+          showToast('Another device saved a newer version. The board reloaded to match it; your last change here may need redoing.');
           await this.open(myId).catch(() => {});
           return { written: false, reason: 'stale' };
         }
@@ -13043,6 +13082,7 @@ const projectStore = {
           lastSummary = v.lastSummary || null;            // v12.5: can now be cleared, not just replaced
           lastTranscript = v.lastTranscript || '';
           _paintItems(v.items);
+          try { if (typeof _renderFavoritesScroller === 'function') _renderFavoritesScroller(); } catch (_) {}   // v13.14
         }).then(() => {
           this.currentId = id;                            // _doClear must not orphan us
           if (typeof renderNotesPanel === 'function') renderNotesPanel(lastSummary);
@@ -13135,6 +13175,18 @@ const projectStore = {
       if (fp && String(fp).indexOf('/projects/avatars/') === -1) paths.push(fp);
       // v13.7: no dead floating images EVER. Any card of this project that
       // sits on the community wall comes down before its picture dies.
+      // v13.14: two passes. First the durable way: every post that RECORDS
+      // this project as its home. Then the card way, for old posts written
+      // before the pid field existed.
+      try {
+        const mine = await firebase.firestore().collection('community')
+          .where('uid', '==', this._uid()).where('pid', '==', id).get();
+        for (const cd of mine.docs) {
+          const sp = (cd.data() || {}).storagePath || '';
+          try { await cd.ref.delete(); } catch (_) {}
+          if (sp) { try { await firebase.storage().ref(sp).delete(); } catch (_) {} }
+        }
+      } catch (_) {}
       for (const s of (v.items || [])) {
         const cid = s && s.card && s.card._communityId;
         if (!cid) continue;
@@ -13147,15 +13199,32 @@ const projectStore = {
         } catch (_) {}
       }
     } catch (_) {}
-    await this._col().doc(id).delete();                              // 1) gone, listeners clear other devices. Throws if it fails.
+    // v13.14: ONE atomic batch. The old order (delete, then tombstone) could
+    // be interrupted between the two, leaving a deleted project that another
+    // device's stale autosave could resurrect. Now they land together or not
+    // at all. Storage cleanup follows after, it is reclaimable garbage.
     let tombOk = true;
-    try { await this._tombs().doc(id).set({ deletedAtMs: Date.now() }); }   // 2) never comes back
-    catch (_) { tombOk = false; }
+    try {
+      const b = firebase.firestore().batch();
+      b.delete(this._col().doc(id));
+      b.set(this._tombs().doc(id), { deletedAtMs: Date.now() });
+      await b.commit();                     // throws if it fails, caller sees it
+    } catch (e) {
+      // The batch refused (offline, rules). Nothing was deleted; say so.
+      throw e;
+    }
     for (const p of paths) await this.deleteAsset(p);                // 3) its pictures
     try {                                                            // 4) sweep anything left behind
       const dir = firebase.storage().ref('users/' + this._uid() + '/projects/' + id + '/images');
       const ls = await dir.listAll();
       for (const f of ls.items) { try { await f.delete(); } catch (_) {} }
+    } catch (_) {}
+    // v13.12 SECURITY: deleting a project revokes every share of it. The
+    // share snapshot holds the project's pictures; it must not outlive them.
+    try {
+      const sh = await firebase.firestore().collection('shares')
+        .where('ownerUid', '==', this._uid()).where('pid', '==', id).get();
+      for (const d of sh.docs) { try { await d.ref.delete(); } catch (_) {} }
     } catch (_) {}
     await this._touchIndex(id, null);
     if (this.currentId === id) {
@@ -13719,7 +13788,7 @@ function openFavoriteInspoPicker(uploadedInspo) {
   const grid = document.getElementById('favorite-inspo-grid');
   grid.innerHTML = uploadedInspo.map((it, idx) =>
     '<div class="picker-thumb" data-id="' + it.id + '" onclick="toggleFavoriteInspo(' + it.id + ')">' +
-      '<img src="' + (it.card.image || it.card.imageUrl) + '" alt="" ' +
+      '<img src="' + escapeHtml(_safeImgSrc(it.card.image || it.card.imageUrl)) + '" alt="" ' +
         'onerror="var t=this.closest(\'.picker-thumb\'); if(t) t.style.display=\'none\'">' +
       '<div class="picker-label">' + escapeHtml(it.card.title || ('Inspo ' + (idx + 1))) + '</div>' +
       '<div class="picker-badge"></div>' +
@@ -14214,6 +14283,14 @@ async function downloadOnePager() {
 // ════════════════════════════════════════════════════════════
 // utils
 // ════════════════════════════════════════════════════════════
+// v13.12 SECURITY: the one gate for every picture address that reaches the
+// DOM through markup. Cards can arrive from a SHARED project, which is data
+// another account wrote; only https and inline images pass, anything else
+// (javascript:, blob tricks, whatever) becomes an empty string.
+function _safeImgSrc(u) {
+  u = String(u == null ? '' : u);
+  return /^(https:\/\/|data:image\/)/.test(u) ? u : '';
+}
 function escapeHtml(s) {
   if (s == null) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');

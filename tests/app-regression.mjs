@@ -54,6 +54,26 @@ const r = await pg.evaluate(() => {
   out.chooser = !!document.getElementById('upload-choose-modal');
   out.shareBtn = [...document.querySelectorAll('#notes-drawer button')]
     .some(b => b.textContent.trim() === 'Share');
+  // Aug 13: the community wall. Three rows, visions only, one garment once.
+  out.wallRows = document.querySelectorAll('#community-scroller .community-row').length;
+  out.visionGate = [
+    communityBoard._isVision({ kind: 'inspo', image: 'x', inspirationId: 'a' }) === true,
+    communityBoard._isVision({ kind: 'inspo', image: 'x' }) === false,          // upload
+    communityBoard._isVision({ kind: 'text', inspirationId: 'a' }) === false,
+  ].every(Boolean);
+  // The same garment copied into another account keeps its inspiration id,
+  // so both hearts fingerprint identically and the wall shows one.
+  out.fpMatches = communityBoard._fp({ inspirationId: 'g1', version: 2, imageUrl: 'https://a/one.jpg' }) ===
+                  communityBoard._fp({ inspirationId: 'g1', version: 2, imageUrl: 'https://b/two.jpg' });
+  out.fpDiffers = communityBoard._fp({ inspirationId: 'g1', version: 1 }) !==
+                  communityBoard._fp({ inspirationId: 'g1', version: 2 });
+  // Aug 14 security: the picture gate and the death of inline handlers.
+  out.imgGate = _safeImgSrc('javascript:alert(1)') === '' &&
+                _safeImgSrc('vbscript:x') === '' &&
+                _safeImgSrc('https://x/y.jpg') === 'https://x/y.jpg' &&
+                _safeImgSrc('data:image/jpeg;base64,abc') !== '' &&
+                _safeImgSrc('data:text/html;base64,abc') === '';
+  out.noInlineWallClicks = !document.body.innerHTML.includes('communityBoard.openPost(\'');
   // Aug 13: stack behavior. Latest version on top, 15px steps, toggle
   // unstack restores positions, flags set for whole-stack dragging.
   const mk = (id, v, x) => { const el = document.createElement('div');
@@ -84,6 +104,12 @@ ok('fabrics tabs present (Mana Siyo / My fabrics)', r.tabs);
 ok('upload button reads "+ upload"', r.uploadText.trim() === '+ upload');
 ok('upload chooser exists', r.chooser);
 ok('Share button lives in the drawer', r.shareBtn);
+ok('community wall has three rows', r.wallRows === 3);
+ok('only generated visions reach the wall', r.visionGate);
+ok('the same garment fingerprints the same across accounts', r.fpMatches);
+ok('different versions stay different visions', r.fpDiffers);
+ok('picture gate blocks non https, non image addresses', r.imgGate);
+ok('wall cards carry no inline click handlers', r.noInlineWallClicks);
 ok('stack puts the LATEST version on top', r.stackLatestOnTop);
 ok('stack offsets are 15px (30 percent tighter)', r.stackStep === 15);
 ok('stacked flags set (whole stack drags as one)', r.stackFlags);

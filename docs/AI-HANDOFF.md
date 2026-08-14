@@ -5,17 +5,18 @@ and replace stale task details instead of turning it into another history log.
 
 ## Current repository state
 
-- Product version: `13.10`
+- Product version: `13.14`
 - Production branch: `maya-v2`
-- Starting commit for this handoff: `8085235`
 - Local working folder used by Fromsa: `~/Desktop/MAYA-new`
 - Deployment: a GitHub push triggers Cloud Build, Cloud Run, Firebase Hosting,
   and Firebase rules deployment.
+- Commit convention: `[Claude][v13.xx] Description` / `[Codex][v13.xx]
+  Description`. One category per commit. Fromsa is the only one who pushes.
 
 ## Continuity map
 
 - `README.md`: stable architecture, data model, deployment, and operating rules.
-- `requests.txt`: Fromsa's requests and noticed bugs, newest first.
+- `requests.txt`: Fromsa's requests and noticed bugs, newest first, timestamped.
 - `fixes.txt`: incidents and changes that may not exist in Git history.
 - `history.txt`: concise product narrative and shipped milestones.
 - `docs/AI-HANDOFF.md`: only the current task and the exact next step.
@@ -23,45 +24,84 @@ and replace stale task details instead of turning it into another history log.
 
 ## Current direction
 
-- Claude and Codex should be interchangeable. Neither agent should rely on a
-  private conversation as the only record of a decision.
-- Git commits are the authority for code. This file explains unfinished work,
-  validation, and intent that a commit cannot show by itself.
-- Do not let two agents edit `index.html` concurrently. Finish or commit one
-  agent's work before the other continues.
-- Do not push partial work. The deployment trigger currently accepts every
-  branch pattern, so a push may reach production.
+- Claude and Codex are interchangeable. The repository, not chat memory, is
+  the shared record. Do not let both agents edit `index.html` concurrently.
+- Do not push partial work; every branch pattern deploys to production.
+- Tests before any handoff: `tests/smoke.mjs` (server, 16 routes) and
+  `tests/app-regression.mjs` (both pages, needs Playwright).
 
-## Next safe work
+## Next safe work (from the Codex audit of Aug 14, in order)
 
-1. Give the Favorites screen a dedicated, calmer glow animation. Do not modify
-   the shared board-card pulse. Reduce the halo expansion by approximately 15%
-   and avoid continuously repainting large multi-layer shadows if practical.
-2. Consolidate the duplicate Operations Room files only after verifying the
-   standalone Beta route and the Backend iframe still receive the same data.
-3. Remove confirmed no-caller session functions separately from migration and
-   legacy Storage cleanup code. Migration code needs evidence before deletion.
+1. Project isolation: `_opContext()` / `_opStillValid()` around Modify,
+   Switch Fabric, uploads, and voice extraction; key the My Fabrics cache by
+   UID and clear it on every auth transition; clear the favorites scroller on
+   board and auth clears.
+2. Deletion and saving: durable ownerUid/projectId on community docs and
+   project-scoped cleanup queries; serialize publish/unpublish per card;
+   tombstone plus delete in one batch; stop Sign out / New / switch / share
+   import when `flush()` returns false; treat stale revisions as conflicts;
+   fix the false "saved on this device" message.
+3. Cleanup (only after the above): duplicate Operations files, hidden legacy
+   Operations Room in backend.html, confirmed no-caller functions. Do NOT
+   delete `_rescueLegacyProjects()` or legacy Storage cleanup yet.
 
 ## Latest completed work
 
-- Objective: make Claude and Codex interchangeable without relying on chat
-  history.
-- Completed: added root instructions for both agents, created this neutral
-  handoff, marked the old Codex handoff as archived, corrected the documented
-  product version, and excluded internal memory files from Firebase Hosting.
-- Runtime files changed: none.
-- Validation: Firebase configuration parsed successfully and `git diff --check`
-  passed.
-- Exact next edit: implement and visually verify the dedicated Favorites glow
-  described above without changing `maya-vision-pulse`.
+- [Claude] Aug 14, 10:30 AM: everything below ships together as v13.14 at
+  Fromsa's request (single push, he commits). Wall rebuild (v13.11),
+  security batch (v13.12), favorites glow (v13.13), and the full audit
+  priorities two and three plus cleanup (v13.14):
+  - Isolation: `_opContext`/`_opStillValid` now guard Modify, Switch
+    Fabric, and inspo uploads; My Fabrics cache keyed by UID with resets on
+    both auth transitions and still-me checks after every await; favorites
+    scroller cleared in `_doClear` and re-rendered after hydration.
+  - Deletion/saving: community posts carry durable `uid`+`pid` and project
+    delete sweeps them by query (plus the old card path); publish/unpublish
+    serialized per post with `favorited` rechecked and orphan uploads
+    deleted; project delete = one Firestore batch (doc delete + tombstone)
+    then Storage GC; `flush() === false` now blocks sign out, New, avatar
+    switch and share import behind a confirm; stale revision toast tells
+    the truth; "saved on this device" wording replaced everywhere; a
+    beforeunload guard warns when closing with unsaved work while offline.
+  - Cleanup: ten confirmed no-caller legacy functions deleted
+    (idb session cluster, `_syncSavedSessionToCloud`,
+    `_cloudifyItemsForFirestore`, `_firebaseSyncSession`, tombstone-ledger
+    trio); `_freshStartWipe`/`window.mayaFreshStart` unwrapped to top level,
+    fixing the documented console command.
+  - Deliberately NOT done: Operations file consolidation (Fromsa keeps the
+    beta separate by design), backend.html hidden legacy room removal
+    (patterns render into it; rewire first), full reload/duplicate/cancel
+    conflict UI (honest toast shipped instead).
+- Validation: 13 script blocks parse clean; app regression 30 checks green;
+  server smoke 16 green; runtime-verified mayaFreshStart defined and dead
+  functions absent.
+- Exact next step: backend.html pattern window rewiring so the hidden
+  legacy room can be removed, then the conflict dialog.
 
-## Handoff template
+## Previous completed work
 
-Replace this section when a task is left unfinished:
-
-- Objective:
-- Last completed step:
-- Files changed:
-- Tests run and results:
-- Known risk or uncertainty:
-- Exact next command or edit:
+- [Claude] Aug 14: three commits prepared and verified, awaiting Fromsa's
+  pull of `4278925` and per-batch commits:
+  1. `[Claude][v13.11]` Community wall rebuilt: three drifting rows, whole
+     three-view renders uncropped, one-third larger, one garment shown once
+     (fingerprint dedupe by inspirationId+version keeps the ORIGINAL when a
+     shared copy is hearted by another account), visions only on the wall,
+     silent 30s background refresh that never moves the rows.
+  2. `[Claude][v13.12]` Security, per the Codex audit priority one: inline
+     onclick removed from wall cards (delegated listeners, id validation),
+     `_safeImgSrc()` gate on every picture address that reaches markup
+     (board cards, fabric grids, pickers, share import), shares collection
+     locked to GET-by-token (list denied except owner's own), shares carry
+     `pid` and are revoked when their project is deleted.
+  3. `[Claude][v13.13]` Dedicated `maya-favorite-pulse`: 4.6s,
+     cubic-bezier(.45,0,.55,1), halo reach reduced ~15% (16px→13.6px,
+     3px→2.55px spread), constant black depth shadow, reduced-motion
+     disables it. `maya-vision-pulse` untouched. The opacity-layer halo
+     variant Codex suggested is deferred; keyframed shadows kept for now.
+- Validation: 13 inline script blocks parse clean; app regression suite all
+  green (28 checks, including new security assertions: picture gate and no
+  inline wall handlers); server smoke all 16 green.
+- Known risk: none open in the delivered batches; audit priorities two and
+  three are untouched and listed above.
+- Exact next step: after these three commits land, start isolation work
+  (item 1 above) as `[Claude][v13.14]`.
