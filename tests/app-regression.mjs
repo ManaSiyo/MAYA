@@ -11,9 +11,11 @@ import { chromium } from 'playwright';
 import http from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, extname, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const INDEX_SOURCE = readFileSync(join(ROOT, 'index.html'), 'utf8');
+const RULES_SOURCE = readFileSync(join(ROOT, 'docs/server/firestore.rules'), 'utf8');
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json' };
 const srv = http.createServer((req, res) => {
   let p = decodeURIComponent(req.url.split('?')[0]);
@@ -24,7 +26,17 @@ const srv = http.createServer((req, res) => {
     res.end(readFileSync(f));
   } else { res.statusCode = 404; res.end('nf'); }
 });
-await new Promise(r => srv.listen(8899, r));
+let served = true;
+try {
+  await new Promise((resolve, reject) => {
+    srv.once('error', reject);
+    srv.listen(8899, '127.0.0.1', resolve);
+  });
+} catch (error) {
+  if (!error || error.code !== 'EPERM') throw error;
+  served = false;
+}
+const PAGE_ROOT = served ? 'http://127.0.0.1:8899/' : pathToFileURL(ROOT + '/').href;
 
 let failed = 0;
 const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name); if (!cond) failed++; };
@@ -34,13 +46,13 @@ const pg = await browser.newPage();
 const errs = [];
 pg.on('pageerror', e => errs.push(String(e).split('\n')[0]));
 // External CDNs are stubbed out; the page must still boot without them.
-await pg.route('**/*', rt => rt.request().url().startsWith('http://127.0.0.1:8899') ? rt.continue() : rt.abort());
+await pg.route('**/*', rt => rt.request().url().startsWith(PAGE_ROOT) ? rt.continue() : rt.abort());
 
 console.log('\nMAYA app regression\n');
-await pg.goto('http://127.0.0.1:8899/index.html', { waitUntil: 'domcontentloaded' });
+await pg.goto(PAGE_ROOT + 'index.html', { waitUntil: 'domcontentloaded' });
 await pg.waitForTimeout(2500);
 
-const r = await pg.evaluate(() => {
+const r = await pg.evaluate(async () => {
   const out = {};
   out.version = document.querySelector('meta[name="maya-version"]').content;
   out.screens = document.getElementById('screens').children.length;
@@ -72,8 +84,30 @@ const r = await pg.evaluate(() => {
                 _safeImgSrc('vbscript:x') === '' &&
                 _safeImgSrc('https://x/y.jpg') === 'https://x/y.jpg' &&
                 _safeImgSrc('data:image/jpeg;base64,abc') !== '' &&
+                _safeImgSrc('data:image/svg+xml,<svg></svg>') === '' &&
                 _safeImgSrc('data:text/html;base64,abc') === '';
   out.noInlineWallClicks = !document.body.innerHTML.includes('communityBoard.openPost(\'');
+  const hostile = _sanitizeSharedItem({ x: 9e9, y: -4, card: {
+    kind: 'inspo', image: 'https://example.com/look.jpg',
+    realism: '\"><img src=x onerror=alert(1)>',
+    fabrics: [{ name: 'silk', dataUrl: "https://x/y');color:red" }],
+    refs: Array.from({ length: 80 }, (_, i) => ({ title: 'r' + i })),
+  }});
+  out.shareSanitized = hostile && hostile.x === 10000 && hostile.y === 0 &&
+    !hostile.card.realism && hostile.card.refs.length === 50 &&
+    !hostile.card.fabrics[0].dataUrl;
+  out.fabricSwitchCarriesContext = runFabricSwitch.length === 3 &&
+    runFabricSwitch.toString().includes('_opStillValid(ctx)');
+  out.voiceCarriesContext = processLiveBatch.toString().includes('const ctx = _opContext()') &&
+    processLiveBatch.toString().includes('_opStillValid(ctx)');
+  const oldSave = projectStore.save, oldReady = projectStore.ready;
+  const oldId = projectStore.currentId, oldDirty = projectStore._dirty;
+  projectStore.currentId = 'regression-project'; projectStore._dirty = true;
+  projectStore.ready = () => true;
+  projectStore.save = async () => ({ written: false, reason: 'stale' });
+  out.staleFlushBlocked = (await projectStore.flush()) === false;
+  projectStore.save = oldSave; projectStore.ready = oldReady;
+  projectStore.currentId = oldId; projectStore._dirty = oldDirty;
   // Aug 13: stack behavior. Latest version on top, 15px steps, toggle
   // unstack restores positions, flags set for whole-stack dragging.
   const mk = (id, v, x) => { const el = document.createElement('div');
@@ -110,13 +144,23 @@ ok('the same garment fingerprints the same across accounts', r.fpMatches);
 ok('different versions stay different visions', r.fpDiffers);
 ok('picture gate blocks non https, non image addresses', r.imgGate);
 ok('wall cards carry no inline click handlers', r.noInlineWallClicks);
+ok('hostile shared cards are bounded and stripped', r.shareSanitized);
+ok('Switch Fabric carries the initiating project context', r.fabricSwitchCarriesContext);
+ok('voice extraction carries the initiating project context', r.voiceCarriesContext);
+ok('stale revision blocks a destructive flush', r.staleFlushBlocked);
+ok('community posts use the captured project id', INDEX_SOURCE.includes('pid: projectId'));
+ok('update watchdog respects a cancelled sign out', INDEX_SOURCE.includes('canReload = (await window.mayaSignOut()) !== false'));
+ok('project deletion batches wall posts before Storage cleanup',
+  INDEX_SOURCE.indexOf('communityDocs.forEach(ref => batch.delete(ref))') < INDEX_SOURCE.indexOf('this._cleanupDeletedAssets(id, paths)'));
+ok('share rules bound the item list and schema',
+  RULES_SOURCE.includes('request.resource.data.items.size() <= 200') && RULES_SOURCE.includes("request.resource.data.schema == 'v13.15'"));
 ok('stack puts the LATEST version on top', r.stackLatestOnTop);
 ok('stack offsets are 15px (30 percent tighter)', r.stackStep === 15);
 ok('stacked flags set (whole stack drags as one)', r.stackFlags);
 ok('stack button toggles, positions restored', r.unstackRestores);
 ok('drag class churn cannot replay the entry fade', r.noFadeReplay);
 
-await pg.goto('http://127.0.0.1:8899/status.html', { waitUntil: 'domcontentloaded' });
+await pg.goto(PAGE_ROOT + 'status.html', { waitUntil: 'domcontentloaded' });
 await pg.waitForTimeout(1500);
 const s = await pg.evaluate(() => ({
   order: [...document.querySelectorAll('details.fold')].map(d => d.id).join(','),
@@ -146,7 +190,7 @@ await pg.evaluate(() => {
 await pg.reload({ waitUntil: 'domcontentloaded' });
 const mapLoggedOut = await pg.evaluate(() => localStorage.getItem('maya_admin_tok') === null);
 ok('map: version change clears the cached sign in', mapLoggedOut);
-await pg.goto('http://127.0.0.1:8899/index.html', { waitUntil: 'domcontentloaded' });
+await pg.goto(PAGE_ROOT + 'index.html', { waitUntil: 'domcontentloaded' });
 await pg.evaluate(() => {
   localStorage.setItem('maya_google_token', 'FAKE.TOKEN.x');
   localStorage.setItem('maya_seen_version_app', '0.0');
@@ -156,6 +200,6 @@ await pg.waitForTimeout(1500);
 const appLoggedOut = await pg.evaluate(() => localStorage.getItem('maya_google_token') === null);
 ok('app: version change clears the cached sign in', appLoggedOut);
 
-await browser.close(); srv.close();
+await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

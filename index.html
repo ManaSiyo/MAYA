@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.14">
+<meta name="maya-version" content="13.15">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -3782,7 +3782,7 @@
     try {
       if (typeof projectStore !== 'undefined') {
         const ok = await projectStore.flush();
-        if (ok === false && !confirm('Your latest changes could not be saved. Sign out anyway and lose them?')) return;
+        if (ok === false && !confirm('Your latest changes could not be saved. Sign out anyway and lose them?')) return false;
       }
     } catch (_) {}
     const emailForRevoke = _googleEmail;
@@ -3806,6 +3806,7 @@
     } catch (_) { /* not initialized, fine */ }
     _showGate();
     setTimeout(_renderGoogleButton, 50);
+    return true;
   };
 
   function _onGoogleCredential(resp) {
@@ -4525,6 +4526,7 @@ let _imageRefCandidates = [];           // populated when the modal opens
 // (default 'visualize'), or from the viewer's Switch-fabric button ('switch').
 let _fabricPickerMode = 'visualize';
 let _switchFabricsTargetId = null;
+let _switchFabricsContext = null;
 
 // ════════════════════════════════════════════════════════════
 // settings
@@ -4826,8 +4828,9 @@ function _placeItemInternal(card, delay, fixedPos, isRestore) {
     });
     const id = itemIdCounter++; el.dataset.id = id;
 
-    const tagInner = card.realism
-      ? '<span class="realism-dot realism-' + card.realism + '"></span>' + escapeHtml(card.tag)
+    const realism = _safeRealism(card.realism);
+    const tagInner = realism
+      ? '<span class="realism-dot realism-' + realism + '"></span>' + escapeHtml(card.tag)
       : escapeHtml(card.tag);
 
     // v13.12 SECURITY: validated and escaped. card.image can come from a
@@ -4856,12 +4859,12 @@ function _placeItemInternal(card, delay, fixedPos, isRestore) {
     // v5.2/v11.51: swatch dots, only fabrics that still HAVE their image.
     // (dataUrl is runtime-only and stripped on save, so restored sessions
     // used to render empty grey rings. No image → no dot.)
-    const _fabDots = Array.isArray(card.fabrics) ? card.fabrics.filter(fb => fb && fb.dataUrl) : [];
+    const _fabDots = Array.isArray(card.fabrics) ? card.fabrics.filter(fb => fb && _safeImgSrc(fb.dataUrl)) : [];
     const cardFabricsHtml = _fabDots.length
       ? '<div class="card-fabrics">' +
           _fabDots.slice(0, 4).map(f => {
             const tip = [f.name, f.color, f.weave].filter(Boolean).join(' · ');
-            return '<span class="card-fabric-dot" style="background-image:url(\'' + f.dataUrl + '\')" title="' + escapeHtml(tip) + '"></span>';
+            return '<span class="card-fabric-dot" style="background-image:url(\'' + escapeHtml(_safeImgSrc(f.dataUrl)) + '\')" title="' + escapeHtml(tip) + '"></span>';
           }).join('') +
         '</div>'
       : '';
@@ -5617,10 +5620,16 @@ async function _checkForUpdate() {
         setTimeout(_checkForUpdate, 60000);
         return;
       }
-      _updateReloading = true;
       console.log('[maya] new version deployed (' + m[1] + '), signing out & refreshing');
+      let canReload = true;
+      try { if (window.mayaSignOut) canReload = (await window.mayaSignOut()) !== false; } catch (_) { canReload = false; }
+      if (!canReload) {
+        try { if (typeof showToast === 'function') showToast('MAYA updated, but refresh is waiting until your changes are saved'); } catch (_) {}
+        setTimeout(_checkForUpdate, 60000);
+        return;
+      }
+      _updateReloading = true;
       try { if (typeof showToast === 'function') showToast('MAYA updated, refreshing'); } catch (_) {}
-      try { if (window.mayaSignOut) await window.mayaSignOut(); } catch (_) {}
       setTimeout(() => location.reload(), 900);
     }
   } catch (_) { /* offline, try again later */ }
@@ -5820,9 +5829,9 @@ const communityBoard = {
   // first time the project is saved (a data: picture becomes a Storage link),
   // so taking the heart back a day later would have deleted nothing and left
   // the vision on the wall forever.
-  _postId(card) {
+  _postId(card, uid) {
     if (card && card._communityId) return card._communityId;
-    const seed = (this._uid() || 'anon') + '|' + String((card && (card.image || card.imageUrl)) || '').slice(-96);
+    const seed = (uid || this._uid() || 'anon') + '|' + String((card && (card.image || card.imageUrl)) || '').slice(-96);
     let h1 = 0x811c9dc5, h2 = 0x01000193;
     for (let i = 0; i < seed.length; i++) {
       h1 = ((h1 ^ seed.charCodeAt(i)) >>> 0);
@@ -5832,13 +5841,13 @@ const communityBoard = {
     return 'p' + h1.toString(36) + h2.toString(36);
   },
 
-  async _imageForPost(card, postId) {
-    const src = String((card && (card.image || card.imageUrl)) || '');
+  async _imageForPost(card, postId, uid) {
+    const src = _safeImgSrc(card && (card.image || card.imageUrl));
     if (!src) return null;
     if (!src.startsWith('data:')) return { url: src, path: '' };   // already public
     let small = src;
     try { small = (await _shrinkFace(src, 900)) || src; } catch (_) {}
-    const path = 'community/' + this._uid() + '/' + postId + '.jpg';
+    const path = 'community/' + uid + '/' + postId + '.jpg';
     const blob = await (await fetch(small)).blob();
     const ref = firebase.storage().ref(path);
     await ref.put(blob, { contentType: 'image/jpeg', cacheControl: 'public,max-age=31536000,immutable' });
@@ -5871,39 +5880,53 @@ const communityBoard = {
     if (!this._chains) this._chains = {};
     const prev = this._chains[postId] || Promise.resolve();
     const next = prev.then(op, op);
-    this._chains[postId] = next.finally(() => {
-      if (this._chains[postId] === next) delete this._chains[postId];
+    const tracked = next.finally(() => {
+      if (this._chains[postId] === tracked) delete this._chains[postId];
     });
-    return next;
+    this._chains[postId] = tracked;
+    return tracked;
   },
 
-  publish(item) {
+  async publish(item, projectId) {
     const card = item && item.card;
-    if (!card || !(card.image || card.imageUrl) || !this._uid()) return Promise.resolve();
-    if (!this._isVision(card)) return Promise.resolve();
-    const postId = this._postId(card);
-    return this._queue(postId, () => this._publishNow(item, postId));
+    const uid = this._uid();
+    if (!card || !(card.image || card.imageUrl) || !uid || !this._isVision(card)) return;
+    const ctx = _opContext();
+    let pid = projectId || ((typeof projectStore !== 'undefined' && projectStore.currentId) || '');
+    // A brand-new board gets its project id asynchronously. Never publish a
+    // post into a shared/empty slot; wait briefly for that sealed bin to exist.
+    if (!pid && typeof projectStore !== 'undefined' && projectStore.ready()) {
+      try { if (typeof _persistSession === 'function') _persistSession(); } catch (_) {}
+      for (let n = 0; n < 50 && !pid; n++) {
+        if (card.favorited === false || this._uid() !== uid || !_opStillValid(ctx)) return;
+        await new Promise(resolve => setTimeout(resolve, 100));
+        pid = projectStore.currentId || '';
+      }
+    }
+    if (!pid || card.favorited === false || this._uid() !== uid || !_opStillValid(ctx)) return;
+    const postId = this._postId(card, uid);
+    return this._queue(uid + ':' + postId, () => this._publishNow(item, postId, pid, uid));
   },
 
-  async _publishNow(item, postId) {
+  async _publishNow(item, postId, projectId, uid) {
     const card = item && item.card;
-    if (!card || !this._uid()) return;
+    if (!card || !uid || this._uid() !== uid || !projectId) return;
     // v13.14: the heart may already be gone by the time our turn comes.
     if (card.favorited === false) return;
     card._communityId = postId;
     try {
-      const img = await this._imageForPost(card, postId);
+      const img = await this._imageForPost(card, postId, uid);
       if (!img || !img.url) return;
       // v13.14: recheck after the upload too; unhearting mid upload must not
       // leave the fresh copy floating in Storage.
-      if (card.favorited === false) {
+      if (card.favorited === false || this._uid() !== uid) {
         if (img.path) { try { await firebase.storage().ref(img.path).delete(); } catch (_) {} }
         return;
       }
       let summary = '';
       try { summary = String(_buildPieceSummaryLine(item) || '').slice(0, 220); } catch (_) {}
       await this._col().doc(postId).set({
-        uid: this._uid(),
+        uid,
         author: this._author(),
         imageUrl: img.url,
         storagePath: img.path || '',
@@ -5911,7 +5934,7 @@ const communityBoard = {
         fp: this._fp(card),                 // v13.11: identifies the garment
         // v13.14: durable ownership, so deleting the project can find every
         // post it made even if a card lost its _communityId along the way.
-        pid: (typeof projectStore !== 'undefined' && projectStore.currentId) || '',
+        pid: projectId,
         ts: firebase.firestore.FieldValue.serverTimestamp(),
       });
       this._loadedAt = 0;
@@ -5924,8 +5947,9 @@ const communityBoard = {
   unpublish(item) {
     const card = item && item.card;
     if (!card || !this._uid()) return Promise.resolve();
-    const postId = this._postId(card);
-    return this._queue(postId, () => this._unpublishNow(item, postId));
+    const uid = this._uid();
+    const postId = this._postId(card, uid);
+    return this._queue(uid + ':' + postId, () => this._unpublishNow(item, postId));
   },
 
   async _unpublishNow(item, postId) {
@@ -6155,10 +6179,10 @@ const communityBoard = {
               const pid = this._postId(c);
               if (seenPosts.has(pid) || seenPosts.has(fp)) continue;
               seenPosts.add(pid); seenPosts.add(fp);
-              toPublish.push({ card: { ...c } });
+              toPublish.push({ item: { card: { ...c } }, projectId: d.id });
             }
           });
-          for (const item of toPublish) await this.publish(item);
+          for (const queued of toPublish) await this.publish(queued.item, queued.projectId);
           if (toPublish.length) {
             console.log('[wall] swept', toPublish.length, 'hearted visions from all projects');
             await this.load(true);
@@ -8113,14 +8137,15 @@ function renderNotesPanel(s) {
        </div>
      </div>`
   ).join('');
-  const ideasList = (arr) => (arr || []).map(i =>
-    `<div class="note-item">
+  const ideasList = (arr) => (arr || []).map(i => {
+    const realism = _safeRealism(i && i.realism);
+    return `<div class="note-item">
        <div class="note-title">
-         <span class="realism-dot realism-${i.realism}"></span>${escapeHtml(i.idea)}
+         ${realism ? `<span class="realism-dot realism-${realism}"></span>` : ''}${escapeHtml(i && i.idea)}
        </div>
-       <div class="note-detail">${escapeHtml(i.realism.replace(/_/g, ' '))} · ${escapeHtml(i.reason || '')}</div>
-     </div>`
-  ).join('');
+       <div class="note-detail">${escapeHtml(realism.replace(/_/g, ' '))} · ${escapeHtml((i && i.reason) || '')}</div>
+     </div>`;
+  }).join('');
   // v11.45: Fromsa's five, same order, same Design-Ideas dropdown style,
   // for every project. Constraints + non-negotiables merged into one list.
   const _constraintsAll = [ ...((s && s.constraints) || []), ...((s && s.non_negotiables) || []) ];
@@ -8797,6 +8822,7 @@ async function _waitForVoicePipelineQuiet(opts = {}) {
 
 async function processLiveBatch() {
   if (batchInFlight || !isListening || !getApiKey()) return;
+  const ctx = _opContext();
   // include the trailing interim text so words don't get stuck in limbo
   // waiting for the browser to mark them isFinal.
   const finalNew  = liveTranscriptBuffer.slice(lastProcessedLength).trim();
@@ -8809,6 +8835,10 @@ async function processLiveBatch() {
 
   try {
     const refs = await callLiveExtract(newPortion);
+    if (!_opStillValid(ctx) || !isListening) {
+      console.warn('[Maya live extract] project changed mid batch, result dropped');
+      return;
+    }
     lastProcessedLength = consumeUpTo;
     // v5.23: belt + suspenders dedupe. The LLM is instructed not to repeat,
     // but if it slips up we filter again locally before placement, AND we
@@ -8828,7 +8858,7 @@ async function processLiveBatch() {
     if (typeof dedupeSweep === 'function') setTimeout(dedupeSweep, 250);
   } catch (e) {
     console.error('[Maya live extract]', e);
-    lastProcessedLength = consumeUpTo;
+    if (_opStillValid(ctx)) lastProcessedLength = consumeUpTo;
   } finally {
     batchInFlight = false;
   }
@@ -11097,6 +11127,7 @@ async function shareCurrentProject() {
       items,
       lastSummary: cloudSum || null,
       notes: lastTranscript || null,
+      schema: 'v13.15',
       ts: firebase.firestore.FieldValue.serverTimestamp(),
     });
     // Mark the project as shared in the index, so the projects list says so.
@@ -11145,12 +11176,68 @@ function _showShareModal(link, name, alreadyCopied) {
 }
 
 async function _urlToDataUrl(u) {
-  const b = await (await fetch(u)).blob();
+  const response = await fetch(u, { cache: 'no-store' });
+  if (!response.ok) throw new Error('picture download failed (' + response.status + ')');
+  const b = await response.blob();
+  if (!/^image\/(?:jpeg|png|webp|gif)$/i.test(b.type || '')) throw new Error('shared file was not a supported picture');
   return await new Promise((res, rej) => {
     const fr = new FileReader();
     fr.onload = () => res(fr.result); fr.onerror = () => rej(fr.error);
     fr.readAsDataURL(b);
   });
+}
+
+function _shareText(value, max) {
+  return String(value == null ? '' : value).slice(0, max || 500);
+}
+function _sanitizeSharedValue(value, depth) {
+  if (depth > 8 || value == null) return null;
+  if (typeof value === 'string') return value.slice(0, 20000);
+  if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+  if (typeof value === 'boolean') return value;
+  if (Array.isArray(value)) return value.slice(0, 100).map(v => _sanitizeSharedValue(v, depth + 1));
+  if (typeof value !== 'object') return null;
+  const out = {};
+  Object.keys(value).slice(0, 100).forEach(key => { out[key] = _sanitizeSharedValue(value[key], depth + 1); });
+  return out;
+}
+function _sanitizeSharedItem(raw) {
+  const source = raw && raw.card && typeof raw.card === 'object' ? raw.card : null;
+  if (!source) return null;
+  const card = {};
+  ['kind', 'tag', 'title', 'detail', 'caption', 'tint', 'fabricMode', 'inspirationId'].forEach(key => {
+    if (source[key] != null) card[key] = _shareText(source[key], key === 'caption' ? 2000 : 300);
+  });
+  const realism = _safeRealism(source.realism);
+  if (realism) card.realism = realism;
+  ['favorited', 'dissected', 'stacked'].forEach(key => { if (typeof source[key] === 'boolean') card[key] = source[key]; });
+  ['version', 'width', 'height', 'z'].forEach(key => {
+    const n = Number(source[key]);
+    if (Number.isFinite(n)) card[key] = Math.max(0, Math.min(key === 'z' ? 100000 : 4000, Math.round(n)));
+  });
+  const image = _safeImgSrc(source.imageUrl || source.image);
+  if ((source.imageUrl || source.image) && !image) return null;
+  if (image) card.image = image;
+  if (Array.isArray(source.refs)) {
+    card.refs = source.refs.slice(0, 50).filter(ref => ref && typeof ref === 'object').map(ref => ({
+      tag: _shareText(ref.tag, 80), title: _shareText(ref.title, 300),
+    })).filter(ref => ref.title);
+  }
+  if (Array.isArray(source.fabrics)) {
+    const fields = ['id', 'fileName', 'name', 'color', 'weave', 'weight', 'texture', 'scale_cm', 'best_for'];
+    card.fabrics = source.fabrics.slice(0, 20).filter(fabric => fabric && typeof fabric === 'object').map(fabric => {
+      const out = {};
+      fields.forEach(key => { if (fabric[key] != null) out[key] = _shareText(fabric[key], 300); });
+      const dataUrl = _safeImgSrc(fabric.dataUrl);
+      if (dataUrl && dataUrl.startsWith('data:')) out.dataUrl = dataUrl;
+      return out;
+    });
+  }
+  return {
+    x: Math.max(0, Math.min(10000, Number(raw.x) || 0)),
+    y: Math.max(0, Math.min(10000, Number(raw.y) || 0)),
+    card,
+  };
 }
 
 // Boot path: /?share=TOKEN. Waits for sign in, then offers the copy.
@@ -11173,24 +11260,16 @@ function _maybeOpenShare() {
       showToast('Copying "' + (s.name || 'project') + '" to your account…');
       // Every picture becomes a data url, so the normal save pipeline
       // uploads a fresh copy under THIS account. No borrowed addresses.
-      const items = JSON.parse(JSON.stringify(s.items || []));
+      if (!Array.isArray(s.items) || s.items.length > 200) throw new Error('The shared project is too large or malformed.');
+      const items = s.items.map(_sanitizeSharedItem).filter(Boolean);
       for (const it of items) {
         const c = it && it.card; if (!c) continue;
-        delete c._communityId; delete c.storagePath; delete c._uploadedToCloud; delete c._imgId;
-        // v13.12 SECURITY: a share document is another account's data. Kill
-        // any picture address that is not https or an inline image BEFORE it
-        // can reach the board.
-        if (c.image && !_safeImgSrc(c.image)) delete c.image;
-        if (c.imageUrl && !_safeImgSrc(c.imageUrl)) delete c.imageUrl;
-        const src = c.imageUrl || c.image;
-        if (src && String(src).startsWith('http')) {
-          try { c.image = await _urlToDataUrl(src); delete c.imageUrl; }
-          catch (_) { /* keep the address rather than lose the card */ }
-        }
+        const src = c.image;
+        if (src && String(src).startsWith('https://')) c.image = await _urlToDataUrl(src);
       }
-      const sum = s.lastSummary ? JSON.parse(JSON.stringify(s.lastSummary)) : null;
+      const sum = s.lastSummary ? _sanitizeSharedValue(s.lastSummary, 0) : null;
       if (sum && typeof sum._face_photo === 'string' && sum._face_photo.startsWith('http')) {
-        try { sum._face_photo = await _urlToDataUrl(sum._face_photo); } catch (_) {}
+        sum._face_photo = await _urlToDataUrl(_safeImgSrc(sum._face_photo));
         delete sum._face_photo_url; delete sum._face_photo_path;
       }
       const okFlush = await projectStore.flush();
@@ -11198,7 +11277,7 @@ function _maybeOpenShare() {
       projectStore.detach();
       await _hydrate(async () => { _doClear(); });
       lastSummary = sum;
-      if (s.notes) { try { const n = document.getElementById('notes-area'); if (n) n.value = s.notes; } catch (_) {} }
+      if (s.notes) { try { const n = document.getElementById('notes-area'); if (n) n.value = _shareText(s.notes, 50000); } catch (_) {} }
       await _hydrate(async () => { _paintItems(items); });
       // Card mounting is deferred (placement runs on timeouts), and the save
       // only snapshots cards that are actually on the canvas. Wait for them.
@@ -11286,16 +11365,23 @@ async function loadMyFabrics() {
     _myFabricsUid = uid;
   } catch (e) {
     console.warn('[my fabrics] load', e);
+    const nowUid = (firebase.auth().currentUser || {}).uid || null;
+    if (nowUid !== uid) return myFabrics;
     myFabrics = [];
     _myFabricsUid = uid;
   }
   return myFabrics;
 }
 
-async function _saveMyFabricsIndex() {
-  const ref = _myFabricsDocRef();
-  if (!ref) return false;
-  try { await ref.set({ items: myFabrics || [] }); return true; }
+async function _saveMyFabricsIndex(expectedUid) {
+  const uid = (firebase.auth().currentUser || {}).uid || null;
+  if (!uid || (expectedUid && expectedUid !== uid) || _myFabricsUid !== uid) return false;
+  const ref = firebase.firestore().collection('users').doc(uid).collection('settings').doc('fabrics');
+  const snapshot = JSON.parse(JSON.stringify(myFabrics || []));
+  try {
+    await ref.set({ items: snapshot });
+    return ((firebase.auth().currentUser || {}).uid || null) === uid;
+  }
   catch (e) { console.warn('[my fabrics] save', e); return false; }
 }
 
@@ -11322,14 +11408,14 @@ async function uploadMyFabricFiles(files) {
       const entry = { id, path, url, name: fabricNameFromFilename(file.name || 'My fabric'), ts: Date.now() };
       myFabrics.unshift(entry);
       renderMyFabricsGrid();
-      const ok = await _saveMyFabricsIndex();
+      const ok = await _saveMyFabricsIndex(uid);
       if (!ok) showError('Could not save the fabric index, this upload may not survive a reload.');
       // Same reading the house swatches get: colour, weave, weight.
       analyzeFabricWithVision(dataUrl, entry.name).then(async specs => {
         if (!_stillMe()) return;   // v13.14: analysis outlived the account
         Object.assign(entry, specs || {}, { analyzed: true });
         renderMyFabricsGrid();
-        await _saveMyFabricsIndex();
+        await _saveMyFabricsIndex(uid);
       }).catch(() => {});
     } catch (e) {
       console.warn('[my fabrics] upload', e);
@@ -11338,21 +11424,38 @@ async function uploadMyFabricFiles(files) {
   }
 }
 
-function renameMyFabric(idx, newName) {
+async function renameMyFabric(idx, newName) {
   if (!myFabrics || !myFabrics[idx]) return;
+  const uid = (firebase.auth().currentUser || {}).uid || null;
+  if (!uid || _myFabricsUid !== uid) return;
   const t = (newName || '').trim();
   if (!t) return;
+  const previous = myFabrics[idx].name;
   myFabrics[idx].name = t;
-  _saveMyFabricsIndex();
+  if (!(await _saveMyFabricsIndex(uid))) {
+    if (myFabrics[idx]) myFabrics[idx].name = previous;
+    renderMyFabricsGrid();
+    showError('Could not rename that fabric. Nothing changed online.');
+  }
 }
 
 async function removeMyFabric(idx) {
   if (!myFabrics || !myFabrics[idx]) return;
+  const uid = (firebase.auth().currentUser || {}).uid || null;
+  if (!uid || _myFabricsUid !== uid) return;
   const f = myFabrics[idx];
   myFabrics.splice(idx, 1);
   renderMyFabricsGrid();
-  if (f.path) { try { await firebase.storage().ref(f.path).delete(); } catch (_) {} }
-  _saveMyFabricsIndex();
+  if (!(await _saveMyFabricsIndex(uid))) {
+    myFabrics.splice(idx, 0, f);
+    renderMyFabricsGrid();
+    showError('Could not remove that fabric. Nothing changed online.');
+    return;
+  }
+  if (f.path) {
+    try { await firebase.storage().ref(f.path).delete(); }
+    catch (e) { console.warn('[my fabrics] orphan cleanup', e); }
+  }
 }
 
 function placeMyFabricOnBoard(idx) {
@@ -11514,8 +11617,10 @@ async function confirmFabricPick() {
   if (_fabricPickerMode === 'switch') {
     _fabricPickerMode = 'visualize';
     const tid = _switchFabricsTargetId;
+    const ctx = _switchFabricsContext;
     _switchFabricsTargetId = null;
-    await runFabricSwitch(tid, picked);
+    _switchFabricsContext = null;
+    await runFabricSwitch(tid, picked, ctx);
     return;
   }
   selectedFabricsForVisualize = picked;
@@ -11529,7 +11634,6 @@ async function confirmFabricPick() {
 // "preserve everything except fabric" prompt. The result lands as v(N+1)
 // in the same inspiration, so version history stays grouped.
 async function switchFabricForViewer() {
-  const _fctx = _opContext();   // v13.14: same guard as Modify
   if (!viewerItemId) return;
   const it = items.find(i => i.id === viewerItemId);
   if (!it || !it.card.image) return;
@@ -11546,11 +11650,14 @@ async function switchFabricForViewer() {
   }
   _fabricPickerMode = 'switch';
   _switchFabricsTargetId = viewerItemId;
+  _switchFabricsContext = _opContext();
   closeGarmentModal();
   openFabricPicker();
 }
 
-async function runFabricSwitch(targetId, fabrics) {
+async function runFabricSwitch(targetId, fabrics, context) {
+  const ctx = context || _opContext();
+  if (!_opStillValid(ctx)) return;
   const original = items.find(i => i.id === targetId);
   if (!original || !original.card.image) {
     showError('Original image no longer on canvas');
@@ -11618,7 +11725,7 @@ async function runFabricSwitch(targetId, fabrics) {
       }))
     };
     // v13.14: a fabric switch that outlived its project dies here, unplaced.
-    if (!_opStillValid(_fctx)) { console.warn('[fabric switch] project changed mid render, result dropped'); return; }
+    if (!_opStillValid(ctx)) { console.warn('[fabric switch] project changed mid render, result dropped'); return; }
     // v13.4: same rule as Modify, the new version lands on top of its group.
     if (original.card && (original.card.z || original.card.stacked)) {
       newCard.z = ++_zCounter;
@@ -12590,7 +12697,7 @@ async function saveSessionNow() {
     }
     // v12.5: "Saved" is only ever said when Firestore actually took the write.
     if (res && res.written) showToast('Saved: ' + (currentClientName || 'project'));
-    else if (res && res.reason === 'stale') showToast('Reloaded the newer copy from your other device');
+    else if (res && res.reason === 'stale') showError('Another device saved this project first. Your changes are still on this screen and were NOT overwritten; reload only after deciding which copy to keep.');
     else if (res && res.reason === 'deleted') showError('That project was deleted, press New and save again.');
     else showError('Nothing was saved, your work is still on this screen. Try again.');
     _renderSessionsDropdown();
@@ -12728,7 +12835,15 @@ const projectStore = {
   async _tombSet() {
     try {
       const q = await this._tombs().get();
-      const s = new Set(); q.forEach(d => s.add(d.id)); return s;
+      const s = new Set();
+      q.forEach(d => {
+        s.add(d.id);
+        const value = d.data() || {};
+        if (!value.cleanupComplete && Array.isArray(value.cleanupPaths) && value.cleanupPaths.length) {
+          this._cleanupDeletedAssets(d.id, value.cleanupPaths).catch(() => {});
+        }
+      });
+      return s;
     } catch (_) { return new Set(); }
   },
 
@@ -12746,8 +12861,45 @@ const projectStore = {
   },
 
   async deleteAsset(path) {
-    if (!path) return;
-    try { await firebase.storage().ref(path).delete(); } catch (_) {}
+    if (!path) return true;
+    try { await firebase.storage().ref(path).delete(); return true; }
+    catch (e) {
+      if (e && e.code === 'storage/object-not-found') return true;
+      console.warn('[projectStore] asset delete failed', path, e && e.code);
+      return false;
+    }
+  },
+
+  _ownedDeletePaths(projectId, paths) {
+    const uid = this._uid();
+    const projectPrefix = 'users/' + uid + '/projects/' + projectId + '/';
+    const communityPrefix = 'community/' + uid + '/';
+    return Array.from(new Set((paths || []).map(String).filter(path =>
+      path.startsWith(projectPrefix) || path.startsWith(communityPrefix)
+    ))).slice(0, 450);
+  },
+
+  async _cleanupDeletedAssets(projectId, paths) {
+    const owned = this._ownedDeletePaths(projectId, paths);
+    let complete = true;
+    for (const path of owned) {
+      if (!(await this.deleteAsset(path))) complete = false;
+    }
+    try {
+      const dir = firebase.storage().ref('users/' + this._uid() + '/projects/' + projectId + '/images');
+      const list = await dir.listAll();
+      for (const file of list.items) {
+        if (!(await this.deleteAsset(file.fullPath))) complete = false;
+      }
+    } catch (e) {
+      if (!e || e.code !== 'storage/object-not-found') complete = false;
+    }
+    if (complete) {
+      try {
+        await this._tombs().doc(projectId).update({ cleanupComplete: true, cleanedAtMs: Date.now() });
+      } catch (e) { complete = false; }
+    }
+    return complete;
   },
 
   // Build the cloud copy of the board. Throws if any picture fails to upload,
@@ -12933,13 +13085,11 @@ const projectStore = {
           // again, which saved again, which lost again, forever. And when we
           // are on our way OUT of this project there is nothing to reload
           // into, so just stop.
-          this._dirty = false;
-          if (this._flushing) return { written: false, reason: 'stale' };
-          // v13.14: a stale write is a CONFLICT, not a success. The remote
-          // version wins and the board reloads to match, but the user is told
-          // plainly that their very last change here lost the race.
-          showToast('Another device saved a newer version. The board reloaded to match it; your last change here may need redoing.');
-          await this.open(myId).catch(() => {});
+          this._dirty = true;
+          // A conflict must never quietly become a successful exit. Keep the
+          // local board intact and dirty; the caller blocks navigation until
+          // the designer explicitly chooses to discard it.
+          showError('Another device saved a newer version. Your changes are still on this screen and are NOT saved yet.');
           return { written: false, reason: 'stale' };
         }
         throw e;
@@ -13107,7 +13257,7 @@ const projectStore = {
       clearTimeout(this._t);
       try {
         const res = await this.save();
-        return !!(res && (res.written || res.reason === 'stale' || res.reason === 'deleted'));
+        return !!(res && (res.written || res.reason === 'deleted'));
       } catch (e) {
         // v13.1: report it. This used to swallow the error and let the
         // designer navigate away, so "never lose work" was not true.
@@ -13160,72 +13310,55 @@ const projectStore = {
   // so the delete was denied and the project stayed alive while the screen
   // said it was gone everywhere.
   async remove(id) {
-    // v12.9: reports what actually happened. This used to say "deleted
-    // everywhere" even when the delete itself had failed.
-    let paths = [];
-    try {
-      const d = await this._col().doc(id).get();
-      const v = d.exists ? (d.data() || {}) : {};
-      paths = (v.items || []).map(s => s && s.card && s.card.storagePath).filter(Boolean);
-      // v13.6: NEVER delete a face that lives in the shared avatars folder.
-      // That folder exists precisely so a project delete cannot reach the
-      // client's face (one client, many projects). Only a face stored inside
-      // THIS project's own folder goes down with the project.
-      const fp = v.lastSummary && v.lastSummary._face_photo_path;
-      if (fp && String(fp).indexOf('/projects/avatars/') === -1) paths.push(fp);
-      // v13.7: no dead floating images EVER. Any card of this project that
-      // sits on the community wall comes down before its picture dies.
-      // v13.14: two passes. First the durable way: every post that RECORDS
-      // this project as its home. Then the card way, for old posts written
-      // before the pid field existed.
-      try {
-        const mine = await firebase.firestore().collection('community')
-          .where('uid', '==', this._uid()).where('pid', '==', id).get();
-        for (const cd of mine.docs) {
-          const sp = (cd.data() || {}).storagePath || '';
-          try { await cd.ref.delete(); } catch (_) {}
-          if (sp) { try { await firebase.storage().ref(sp).delete(); } catch (_) {} }
-        }
-      } catch (_) {}
-      for (const s of (v.items || [])) {
-        const cid = s && s.card && s.card._communityId;
-        if (!cid) continue;
-        try {
-          const cref = firebase.firestore().collection('community').doc(cid);
-          const cd = await cref.get();
-          const sp = (cd.exists && (cd.data() || {}).storagePath) || '';
-          try { await cref.delete(); } catch (_) {}
-          if (sp) { try { await firebase.storage().ref(sp).delete(); } catch (_) {} }
-        } catch (_) {}
+    const uid = this._uid();
+    if (!uid || !/^[\w-]{2,120}$/.test(String(id))) throw new Error('invalid project');
+    const projectRef = this._col().doc(id);
+    const projectSnap = await projectRef.get();
+    const value = projectSnap.exists ? (projectSnap.data() || {}) : {};
+    let paths = (value.items || []).map(saved => saved && saved.card && saved.card.storagePath).filter(Boolean);
+    const facePath = value.lastSummary && value.lastSummary._face_photo_path;
+    if (facePath && String(facePath).indexOf('/projects/avatars/') === -1) paths.push(facePath);
+
+    // Resolve every dependent Firestore document BEFORE changing anything.
+    // The project, tombstone, wall posts and share links then change together.
+    const communityDocs = new Map();
+    const mine = await firebase.firestore().collection('community').where('uid', '==', uid).get();
+    mine.forEach(doc => {
+      const post = doc.data() || {};
+      if (post.pid !== id) return;
+      communityDocs.set(doc.id, doc.ref);
+      if (post.storagePath) paths.push(post.storagePath);
+    });
+    for (const saved of (value.items || [])) {
+      const communityId = saved && saved.card && saved.card._communityId;
+      if (!communityId || communityDocs.has(communityId)) continue;
+      const ref = firebase.firestore().collection('community').doc(communityId);
+      const doc = await ref.get();
+      const post = doc.exists ? (doc.data() || {}) : {};
+      if (doc.exists && post.uid === uid) {
+        communityDocs.set(doc.id, ref);
+        if (post.storagePath) paths.push(post.storagePath);
       }
-    } catch (_) {}
-    // v13.14: ONE atomic batch. The old order (delete, then tombstone) could
-    // be interrupted between the two, leaving a deleted project that another
-    // device's stale autosave could resurrect. Now they land together or not
-    // at all. Storage cleanup follows after, it is reclaimable garbage.
-    let tombOk = true;
-    try {
-      const b = firebase.firestore().batch();
-      b.delete(this._col().doc(id));
-      b.set(this._tombs().doc(id), { deletedAtMs: Date.now() });
-      await b.commit();                     // throws if it fails, caller sees it
-    } catch (e) {
-      // The batch refused (offline, rules). Nothing was deleted; say so.
-      throw e;
     }
-    for (const p of paths) await this.deleteAsset(p);                // 3) its pictures
-    try {                                                            // 4) sweep anything left behind
-      const dir = firebase.storage().ref('users/' + this._uid() + '/projects/' + id + '/images');
-      const ls = await dir.listAll();
-      for (const f of ls.items) { try { await f.delete(); } catch (_) {} }
-    } catch (_) {}
-    // v13.12 SECURITY: deleting a project revokes every share of it. The
-    // share snapshot holds the project's pictures; it must not outlive them.
-    try {
-      const sh = await firebase.firestore().collection('shares')
-        .where('ownerUid', '==', this._uid()).where('pid', '==', id).get();
-      for (const d of sh.docs) { try { await d.ref.delete(); } catch (_) {} }
-    } catch (_) {}
+    const shareDocs = [];
+    const shares = await firebase.firestore().collection('shares').where('ownerUid', '==', uid).get();
+    shares.forEach(doc => { if ((doc.data() || {}).pid === id) shareDocs.push(doc.ref); });
+
+    const dependentCount = communityDocs.size + shareDocs.length;
+    if (dependentCount > 450) throw new Error('This project has too many linked wall/share records to delete safely in one operation.');
+    paths = this._ownedDeletePaths(id, paths);
+    const batch = firebase.firestore().batch();
+    batch.delete(projectRef);
+    batch.set(this._tombs().doc(id), {
+      deletedAtMs: Date.now(), cleanupPaths: paths, cleanupComplete: false,
+    });
+    communityDocs.forEach(ref => batch.delete(ref));
+    shareDocs.forEach(ref => batch.delete(ref));
+    await batch.commit();
+
+    // Storage is not transactional with Firestore. Its retry list lives on the
+    // permanent tombstone, so an offline deletion resumes on the next load.
+    const cleanupOk = await this._cleanupDeletedAssets(id, paths);
     await this._touchIndex(id, null);
     if (this.currentId === id) {
       this.detach();
@@ -13234,7 +13367,7 @@ const projectStore = {
       if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
     }
     if (_activeSessionId === id) _activeSessionId = null;
-    return { ok: true, tombOk };
+    return { ok: true, tombOk: true, cleanupOk };
   },
 
   // ── Teardown, on sign out or account switch ──────────────────────────────
@@ -13330,9 +13463,9 @@ async function deleteSavedSessionRow(id) {
   if (!confirm('Delete this project permanently, everywhere? This cannot be undone.')) return;
   try {
     const res = await projectStore.remove(id);
-    showToast(res && res.tombOk
+    showToast(res && res.cleanupOk
       ? 'Project deleted everywhere'
-      : 'Project deleted, but it may reappear on another device. Delete it there too.');
+      : 'Project deleted everywhere. Picture cleanup will finish automatically when the connection returns.');
   } catch (e) {
     console.warn('[maya delete]', e && e.message);
     showError('Could not delete that project. ' + ((e && e.message) || ''));
@@ -14158,8 +14291,9 @@ function buildPage2Html(summary, moodboardItems) {
 
   const inhouseRow = (f) => {
     const specBits = [f.color, f.weave, f.weight].filter(Boolean).map(escapeHtml).join(' &middot; ');
-    const swatch = f.dataUrl
-      ? `<div style="width:42px;height:42px;border-radius:6px;background-image:url('${f.dataUrl}');background-size:cover;background-position:center;border:0.5px solid rgba(255,255,255,0.22);flex-shrink:0"></div>`
+    const swatchSrc = _safeImgSrc(f.dataUrl);
+    const swatch = swatchSrc
+      ? `<div style="width:42px;height:42px;border-radius:6px;background-image:url('${escapeHtml(swatchSrc)}');background-size:cover;background-position:center;border:0.5px solid rgba(255,255,255,0.22);flex-shrink:0"></div>`
       : `<div style="width:42px;height:42px;border-radius:6px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.22);flex-shrink:0"></div>`;
     return `<div style="display:flex;align-items:center;gap:14px;padding:8px 0;${ROW_BORDER}">
       ${swatch}
@@ -14289,7 +14423,20 @@ async function downloadOnePager() {
 // (javascript:, blob tricks, whatever) becomes an empty string.
 function _safeImgSrc(u) {
   u = String(u == null ? '' : u);
-  return /^(https:\/\/|data:image\/)/.test(u) ? u : '';
+  if (/^data:image\/(?:jpeg|png|webp|gif);base64,[a-z0-9+/=\s]+$/i.test(u)) return u;
+  if (u.length > 5000) return '';
+  try {
+    const parsed = new URL(u);
+    return parsed.protocol === 'https:' && !parsed.username && !parsed.password ? parsed.href : '';
+  } catch (_) { return ''; }
+}
+function _safeRealism(value) {
+  const realism = String(value == null ? '' : value);
+  return new Set([
+    'easy', 'possible_but_slow', 'requires_sourcing',
+    'requires_pattern_modification', 'not_realistic_yet',
+    'needs_designer_decision',
+  ]).has(realism) ? realism : '';
 }
 function escapeHtml(s) {
   if (s == null) return '';

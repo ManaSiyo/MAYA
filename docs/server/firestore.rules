@@ -33,7 +33,14 @@ service cloud.firestore {
       }
       match /projectTombstones/{projectId} {
         allow read, create: if request.auth != null && request.auth.uid == uid;
-        allow update, delete: if false;    // permanent, the dead stay dead
+        // The tombstone itself is permanent. The owner may only mark its
+        // immutable Storage cleanup list complete after retrying offline deletes.
+        allow update: if request.auth != null && request.auth.uid == uid
+          && request.resource.data.deletedAtMs == resource.data.deletedAtMs
+          && request.resource.data.cleanupPaths == resource.data.cleanupPaths
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['cleanupComplete', 'cleanedAtMs']);
+        allow delete: if false;    // permanent, the dead stay dead
       }
       match /settings/{docId} {            // project index, migration flag, per account drafts
         allow read, write: if request.auth != null && request.auth.uid == uid;
@@ -49,12 +56,22 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow create: if request.auth != null
         && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'uid', 'author', 'imageUrl', 'storagePath', 'summary', 'fp', 'pid', 'ts'
+        ])
         && request.resource.data.imageUrl is string
         && request.resource.data.imageUrl.size() < 2000
         && request.resource.data.author is string
         && request.resource.data.author.size() < 60
         && request.resource.data.summary is string
-        && request.resource.data.summary.size() < 400;
+        && request.resource.data.summary.size() < 400
+        && request.resource.data.pid is string
+        && request.resource.data.pid.size() > 1
+        && request.resource.data.pid.size() < 121
+        && request.resource.data.fp is string
+        && request.resource.data.fp.size() < 400
+        && request.resource.data.storagePath is string
+        && request.resource.data.storagePath.size() < 500;
       allow update: if request.auth != null
         && resource.data.uid == request.auth.uid
         && request.resource.data.uid == request.auth.uid;
@@ -76,10 +93,20 @@ service cloud.firestore {
         && resource.data.ownerUid == request.auth.uid;
       allow create: if request.auth != null
         && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'ownerUid', 'pid', 'name', 'items', 'lastSummary', 'notes', 'schema', 'ts'
+        ])
         && request.resource.data.name is string
-        && request.resource.data.name.size() < 100
+        && request.resource.data.name.size() < 81
         && request.resource.data.pid is string
-        && request.resource.data.pid.size() < 80;
+        && request.resource.data.pid.size() > 1
+        && request.resource.data.pid.size() < 121
+        && request.resource.data.items is list
+        && request.resource.data.items.size() <= 200
+        && (request.resource.data.lastSummary == null || request.resource.data.lastSummary is map)
+        && (request.resource.data.notes == null
+          || (request.resource.data.notes is string && request.resource.data.notes.size() <= 50000))
+        && request.resource.data.schema == 'v13.15';
       allow update: if false;
       allow delete: if request.auth != null
         && resource.data.ownerUid == request.auth.uid;
