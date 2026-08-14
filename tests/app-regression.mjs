@@ -62,7 +62,7 @@ const r = await pg.evaluate(async () => {
   out.screens = document.getElementById('screens').children.length;
   // eval, not window[f]: let/const globals (projectStore) don't land on window.
   out.fnsMissing = ['bringCardToFront', '_groupOf', 'setFabricsTab', 'loadMyFabrics',
-    'uploadMyFabricFiles', 'openUploadChooser', 'stackInspirationImages', 'projectStore',
+    'uploadMyFabricFiles', '_drainMyFabricCleanup', 'openUploadChooser', 'stackInspirationImages', 'projectStore',
     'shareCurrentProject', '_maybeOpenShare', '_urlToDataUrl']
     .filter(f => { try { return (0, eval)('typeof ' + f) === 'undefined'; } catch (_) { return true; } });
   out.tabs = !!document.getElementById('fabrics-tab-house') && !!document.getElementById('fabrics-tab-mine');
@@ -147,7 +147,7 @@ const r = await pg.evaluate(async () => {
 });
 ok('page boots with zero runtime errors', errs.length === 0);
 ok('three vertical screens', r.screens === 3);
-ok('all v13.4 functions defined (' + (r.fnsMissing.join(',') || 'none missing') + ')', r.fnsMissing.length === 0);
+ok('all core functions defined (' + (r.fnsMissing.join(',') || 'none missing') + ')', r.fnsMissing.length === 0);
 ok('fabrics tabs present (Mana Siyo / My fabrics)', r.tabs);
 ok('upload button reads "+ upload"', r.uploadText.trim() === '+ upload');
 ok('upload chooser exists', r.chooser);
@@ -167,9 +167,17 @@ ok('stale revision blocks a destructive flush', r.staleFlushBlocked);
 ok('community posts use the captured project id', INDEX_SOURCE.includes('pid: projectId'));
 ok('update watchdog respects a cancelled sign out', INDEX_SOURCE.includes('canReload = (await window.mayaSignOut()) !== false'));
 ok('project deletion batches wall posts before Storage cleanup',
-  INDEX_SOURCE.indexOf('communityDocs.forEach(ref => batch.delete(ref))') < INDEX_SOURCE.indexOf('this._cleanupDeletedAssets(id, paths)'));
+  INDEX_SOURCE.indexOf('communityDocs.forEach(ref => batch.delete(ref))') < INDEX_SOURCE.indexOf('this._cleanupDeletedAssets(id, paths, uid)'));
+ok('Storage cleanup is pinned to the deleting account',
+  INDEX_SOURCE.includes('this._cleanupDeletedAssets(id, paths, uid)') &&
+  INDEX_SOURCE.includes("firebase.storage().ref('users/' + uid + '/projects/' + projectId + '/images')"));
 ok('share rules bound the item list and schema',
   RULES_SOURCE.includes('request.resource.data.items.size() <= 200') && RULES_SOURCE.includes("request.resource.data.schema == 'v13.15'"));
+ok('wall updates cannot move a post between projects',
+  RULES_SOURCE.includes('request.resource.data.pid == resource.data.pid'));
+ok('My Fabrics deletion survives failed Storage cleanup',
+  INDEX_SOURCE.includes('cleanupPaths: _myFabricCleanupPaths.slice(0, 100)') &&
+  INDEX_SOURCE.includes('if (f.path) await _drainMyFabricCleanup(uid)'));
 ok('Favorites animates opacity, not box-shadow',
   INDEX_SOURCE.includes('body.viewing-favorites .favorite-card::after') &&
   INDEX_SOURCE.includes('will-change: opacity') && !FAVORITE_PULSE_SOURCE.includes('box-shadow'));

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.17">
+<meta name="maya-version" content="13.18">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -5785,7 +5785,7 @@ function _favImgBroken(imgEl, itemId) {
 // ════════════════════════════════════════════════════════════
 // v13.3: THE COMMUNITY WALL.
 // Hearting a vision publishes it to a shared collection; un-hearting takes
-// it straight back down. The wall drifts left forever and never ends: the
+// it straight back down. The wall drifts sideways forever and never ends: the
 // list is painted twice and the scroll position wraps at the halfway mark,
 // so there is no seam and no snap back.
 //
@@ -11096,6 +11096,9 @@ function closeFabricsDrawer() {
 // ────────────────────────────────────────────────────────────
 let _fabricsTab = 'house';
 let myFabrics = null;   // null = not loaded yet; [] = loaded, empty
+let _myFabricCleanupPaths = [];
+let _myFabricCleanupInFlight = false;
+let _myFabricsEpoch = 0;
 
 // ────────────────────────────────────────────────────────────
 // v13.7: SHARED PROJECTS. Share writes a FROZEN SNAPSHOT of the open
@@ -11357,6 +11360,8 @@ function _resetMyFabrics() {
   // drawer must never appear under another account's name.
   myFabrics = null;
   _myFabricsUid = null;
+  _myFabricCleanupPaths = [];
+  _myFabricsEpoch++;
   _fabricsTab = 'house';
   try { renderMyFabricsGrid(); } catch (_) {}
 }
@@ -11369,8 +11374,11 @@ async function loadMyFabrics() {
     // v13.14: the account may have changed while the read was in flight.
     const nowUid = (firebase.auth().currentUser || {}).uid || null;
     if (nowUid !== uid) return myFabrics;
-    myFabrics = (d.exists && Array.isArray(d.data().items)) ? d.data().items : [];
+    const value = d.exists ? (d.data() || {}) : {};
+    myFabrics = Array.isArray(value.items) ? value.items : [];
+    _myFabricCleanupPaths = Array.isArray(value.cleanupPaths) ? value.cleanupPaths.map(String).slice(0, 100) : [];
     _myFabricsUid = uid;
+    if (_myFabricCleanupPaths.length) _drainMyFabricCleanup(uid).catch(() => {});
   } catch (e) {
     console.warn('[my fabrics] load', e);
     const nowUid = (firebase.auth().currentUser || {}).uid || null;
@@ -11387,10 +11395,45 @@ async function _saveMyFabricsIndex(expectedUid) {
   const ref = firebase.firestore().collection('users').doc(uid).collection('settings').doc('fabrics');
   const snapshot = JSON.parse(JSON.stringify(myFabrics || []));
   try {
-    await ref.set({ items: snapshot });
+    await ref.set({ items: snapshot, cleanupPaths: _myFabricCleanupPaths.slice(0, 100) });
     return ((firebase.auth().currentUser || {}).uid || null) === uid;
   }
   catch (e) { console.warn('[my fabrics] save', e); return false; }
+}
+
+async function _drainMyFabricCleanup(expectedUid) {
+  const uid = (firebase.auth().currentUser || {}).uid || null;
+  if (_myFabricCleanupInFlight || !uid || uid !== expectedUid || _myFabricsUid !== uid) return false;
+  const epoch = _myFabricsEpoch;
+  _myFabricCleanupInFlight = true;
+  try {
+    const prefix = 'users/' + uid + '/fabrics/';
+    let previous = '';
+    while (true) {
+      const pending = Array.from(new Set(_myFabricCleanupPaths.filter(path => String(path).startsWith(prefix))));
+      if (!pending.length) break;
+      const signature = pending.join('\n');
+      if (signature === previous) break;
+      previous = signature;
+      const keep = [];
+      for (const path of pending) {
+        try { await firebase.storage().ref(path).delete(); }
+        catch (e) { if (!e || e.code !== 'storage/object-not-found') keep.push(path); }
+      }
+      if (((firebase.auth().currentUser || {}).uid || null) !== uid || _myFabricsUid !== uid || _myFabricsEpoch !== epoch) return false;
+      const addedMeanwhile = _myFabricCleanupPaths.filter(path => !pending.includes(path));
+      _myFabricCleanupPaths = Array.from(new Set([...addedMeanwhile, ...keep])).slice(0, 100);
+      if (!(await _saveMyFabricsIndex(uid))) return false;
+    }
+    return _myFabricCleanupPaths.length === 0;
+  } finally {
+    _myFabricCleanupInFlight = false;
+    const currentUid = (firebase.auth().currentUser || {}).uid || null;
+    if (currentUid && _myFabricsUid === currentUid && _myFabricCleanupPaths.length &&
+        (currentUid !== uid || _myFabricsEpoch !== epoch)) {
+      setTimeout(() => _drainMyFabricCleanup(currentUid).catch(() => {}), 0);
+    }
+  }
 }
 
 async function uploadMyFabricFiles(files) {
@@ -11453,17 +11496,16 @@ async function removeMyFabric(idx) {
   if (!uid || _myFabricsUid !== uid) return;
   const f = myFabrics[idx];
   myFabrics.splice(idx, 1);
+  if (f.path) _myFabricCleanupPaths = Array.from(new Set([..._myFabricCleanupPaths, f.path])).slice(0, 100);
   renderMyFabricsGrid();
   if (!(await _saveMyFabricsIndex(uid))) {
     myFabrics.splice(idx, 0, f);
+    _myFabricCleanupPaths = _myFabricCleanupPaths.filter(path => path !== f.path);
     renderMyFabricsGrid();
     showError('Could not remove that fabric. Nothing changed online.');
     return;
   }
-  if (f.path) {
-    try { await firebase.storage().ref(f.path).delete(); }
-    catch (e) { console.warn('[my fabrics] orphan cleanup', e); }
-  }
+  if (f.path) await _drainMyFabricCleanup(uid);
 }
 
 function placeMyFabricOnBoard(idx) {
@@ -12841,6 +12883,7 @@ const projectStore = {
   },
 
   async _tombSet() {
+    const uid = this._uid();
     try {
       const q = await this._tombs().get();
       const s = new Set();
@@ -12848,10 +12891,10 @@ const projectStore = {
         s.add(d.id);
         const value = d.data() || {};
         if (!value.cleanupComplete && Array.isArray(value.cleanupPaths) && value.cleanupPaths.length) {
-          this._cleanupDeletedAssets(d.id, value.cleanupPaths).catch(() => {});
+          this._cleanupDeletedAssets(d.id, value.cleanupPaths, uid).catch(() => {});
         }
       });
-      return s;
+      return this._uid() === uid ? s : new Set();
     } catch (_) { return new Set(); }
   },
 
@@ -12878,8 +12921,8 @@ const projectStore = {
     }
   },
 
-  _ownedDeletePaths(projectId, paths) {
-    const uid = this._uid();
+  _ownedDeletePaths(projectId, paths, expectedUid) {
+    const uid = expectedUid || this._uid();
     const projectPrefix = 'users/' + uid + '/projects/' + projectId + '/';
     const communityPrefix = 'community/' + uid + '/';
     return Array.from(new Set((paths || []).map(String).filter(path =>
@@ -12887,16 +12930,21 @@ const projectStore = {
     ))).slice(0, 450);
   },
 
-  async _cleanupDeletedAssets(projectId, paths) {
-    const owned = this._ownedDeletePaths(projectId, paths);
+  async _cleanupDeletedAssets(projectId, paths, expectedUid) {
+    const uid = expectedUid || this._uid();
+    if (!uid || this._uid() !== uid) return false;
+    const owned = this._ownedDeletePaths(projectId, paths, uid);
     let complete = true;
     for (const path of owned) {
+      if (this._uid() !== uid) return false;
       if (!(await this.deleteAsset(path))) complete = false;
     }
     try {
-      const dir = firebase.storage().ref('users/' + this._uid() + '/projects/' + projectId + '/images');
+      if (this._uid() !== uid) return false;
+      const dir = firebase.storage().ref('users/' + uid + '/projects/' + projectId + '/images');
       const list = await dir.listAll();
       for (const file of list.items) {
+        if (this._uid() !== uid) return false;
         if (!(await this.deleteAsset(file.fullPath))) complete = false;
       }
     } catch (e) {
@@ -12904,6 +12952,7 @@ const projectStore = {
     }
     if (complete) {
       try {
+        if (this._uid() !== uid) return false;
         await this._tombs().doc(projectId).update({ cleanupComplete: true, cleanedAtMs: Date.now() });
       } catch (e) { complete = false; }
     }
@@ -13354,7 +13403,7 @@ const projectStore = {
 
     const dependentCount = communityDocs.size + shareDocs.length;
     if (dependentCount > 450) throw new Error('This project has too many linked wall/share records to delete safely in one operation.');
-    paths = this._ownedDeletePaths(id, paths);
+    paths = this._ownedDeletePaths(id, paths, uid);
     const batch = firebase.firestore().batch();
     batch.delete(projectRef);
     batch.set(this._tombs().doc(id), {
@@ -13366,7 +13415,7 @@ const projectStore = {
 
     // Storage is not transactional with Firestore. Its retry list lives on the
     // permanent tombstone, so an offline deletion resumes on the next load.
-    const cleanupOk = await this._cleanupDeletedAssets(id, paths);
+    const cleanupOk = await this._cleanupDeletedAssets(id, paths, uid);
     await this._touchIndex(id, null);
     if (this.currentId === id) {
       this.detach();

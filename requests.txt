@@ -16,6 +16,16 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 14, 2026, AFTERNOON
+
+[x] Codex took over after Claude credits ran out and prepared one safe push.
+[x] Systems Map refresh races and false public Drive-green state fixed.
+[x] Community cards match Inspiration: 30 percent larger than the old wall,
+    no white column glow, details only on hover/focus, rows flow left to right.
+[x] Favorites halo is 15 percent smaller and animates smoothly by opacity.
+[x] Deletion cleanup is durable for projects and My Fabrics; wall posts cannot
+    be reassigned between projects by an update.
+
 ─────────────────────────────────────────────
 
 AUGUST 14, 2026, 10:30 AM

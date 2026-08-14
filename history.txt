@@ -15,6 +15,15 @@ Where we are: MAYA is at v13.3. Saving is trustworthy, the app is fast, the
 Systems Map tells the truth, dissection costs credits once instead of every
 time, Stripe is live, and there is a community wall.
 
+AUGUST 14, 2026, AFTERNOON
+
+Codex completed the second-eye release, v13.15 through v13.18. The practical
+change is simple: project deletion is one cloud act and picture cleanup keeps
+retrying instead of becoming a ghost; the Systems Map can no longer confuse
+"configured" with "working" or let an old refresh win. The Community wall now
+uses the Inspiration-card language, without white glow columns, and Favorites
+breathes through a smaller fixed halo rather than a resizing shadow.
+
 The thing that started it: a client's project was saved and then was not
 there. The cause was found. Naming a project from the Save box wrote to the
 browser's own storage only, while the screen said "Saved". Everything about

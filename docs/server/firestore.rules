@@ -74,7 +74,21 @@ service cloud.firestore {
         && request.resource.data.storagePath.size() < 500;
       allow update: if request.auth != null
         && resource.data.uid == request.auth.uid
-        && request.resource.data.uid == request.auth.uid;
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.pid == resource.data.pid
+        && request.resource.data.keys().hasOnly([
+          'uid', 'author', 'imageUrl', 'storagePath', 'summary', 'fp', 'pid', 'ts'
+        ])
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imageUrl.size() < 2000
+        && request.resource.data.author is string
+        && request.resource.data.author.size() < 60
+        && request.resource.data.summary is string
+        && request.resource.data.summary.size() < 400
+        && request.resource.data.fp is string
+        && request.resource.data.fp.size() < 400
+        && request.resource.data.storagePath is string
+        && request.resource.data.storagePath.size() < 500;
       allow delete: if request.auth != null
         && (resource.data.uid == request.auth.uid
             || request.auth.token.email in ['fromsa@manasiyo.com', 'worldofsiyo@gmail.com', 'prasheeth@step-6.com']);

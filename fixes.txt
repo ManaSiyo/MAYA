@@ -11,6 +11,24 @@ done, how it was verified, and whether it is FIXED, OPEN, or RECURRED.
 
 ─────────────────────────────────────────────
 
+AUGUST 14, 2026, AFTERNOON. STATUS: FIXED IN v13.15-v13.18.
+
+Symptom: Systems Map could claim all green while Drive had not been checked,
+older refreshes could overwrite newer results, and rapid account/project work
+could leave ghost wall pictures or deleted Storage objects behind.
+
+Cause: public health treated "configured" as "working"; async status requests
+had no generation guard; project deletion discarded its Storage retry list;
+My Fabrics removed its cloud index before a one-shot Storage delete; wall
+updates could keep valid ownership while changing their project id.
+
+Fix: timed and sequenced status checks plus immediate deep health after sign
+in; atomic project/tombstone/wall/share deletion; durable project and fabric
+cleanup queues; immutable wall uid/pid on update. Community and favorites
+visual changes are covered in the browser regression assertions.
+
+─────────────────────────────────────────────
+
 AUGUST 13, 2026, AFTERNOON. STATUS: FIXED, 3:55 PM.
 
 Symptom: Systems Map Drive light red, no submissions listed, community
