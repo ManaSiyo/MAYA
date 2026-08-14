@@ -170,6 +170,9 @@ const s = await pg.evaluate(() => ({
   footerFolds: document.querySelectorAll('.map-footer details.fold').length,
   doorSizes: new Set([...document.querySelectorAll('.grid.doors .card b')]
     .map(el => getComputedStyle(el).fontSize)).size,
+  healthUsesTimeouts: runChecks.toString().includes('_statusFetch'),
+  thumbnailsParallel: _paintThumbs.toString().includes('Promise.all'),
+  tokenRefreshesHealth: _adoptToken.toString().includes('runChecks()'),
 }));
 ok('Systems Map order: changes, prompting, architecture', s.order === 'changes-fold,pe-fold,arch-fold');
 ok('Architecture is collapsible', s.archFold);
@@ -177,6 +180,9 @@ ok('door cards have no arrows', s.arrows === 0);
 ok('"Never delete" banner removed', !s.warnBanner);
 ok('folds live in the bottom footer', s.footerFolds === 3);
 ok('all door texts share one font size', s.doorSizes === 1);
+ok('Systems Map checks have request timeouts', s.healthUsesTimeouts);
+ok('submission thumbnails load in parallel', s.thumbnailsParallel);
+ok('sign in immediately refreshes deep health', s.tokenRefreshesHealth);
 
 // Aug 13: every deploy signs both pages out on next load, and the two
 // pages must carry the SAME version number or the map's logout never fires.

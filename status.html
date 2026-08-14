@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.15">
+<meta name="maya-version" content="13.16">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -409,9 +409,18 @@ try {
 })();
 
 function setDot(id,s){document.getElementById(id).className='sdot '+s}
+let _idTok = null;
+let _healthSeq = 0;
+async function _statusFetch(url, options, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs || 10000);
+  try { return await fetch(url, { ...(options || {}), signal: controller.signal }); }
+  finally { clearTimeout(timer); }
+}
 function probeImage(url){return new Promise(res=>{const i=new Image();const t=setTimeout(()=>res(false),8000);
   i.onload=()=>{clearTimeout(t);res(true)};i.onerror=()=>{clearTimeout(t);res(false)};i.src=url+'?cb='+Date.now()})}
 async function runChecks(){
+  const checkSeq = ++_healthSeq;
   ['d-site','d-api','d-assets','d-drive','d-backup'].forEach(id=>setDot(id,'wait'));
   document.getElementById('checked-at').textContent='checking…';
   const [site,assets,backup]=await Promise.all([
@@ -426,7 +435,7 @@ async function runChecks(){
     // v13.0: the deep check is admin only now, so send the sign in with it.
     // Without a sign in, fall back to the plain liveness check.
     if(_idTok){
-      const r=await fetch('https://maya.manasiyo.com/api/healthz/deep?cb='+Date.now(),
+      const r=await _statusFetch('/api/healthz/deep?cb='+Date.now(),
         {headers:{'Authorization':'Bearer '+_idTok}});
       const j=await r.json().catch(()=>({}));
       // v13.1: the API light means the API. Drive is a separate thing with its
@@ -437,19 +446,26 @@ async function runChecks(){
       if(!api&&r.ok) apiWhy='no OpenAI key on the server';
       else if(!api) apiWhy='could not check';
     } else {
-      const r=await fetch('https://maya.manasiyo.com/api/healthz?cb='+Date.now());
+      const r=await _statusFetch('/api/healthz?cb='+Date.now());
       const j=await r.json().catch(()=>({}));
       api=r.ok&&j.ok===true;
-      drive=(j.configured&&typeof j.configured.drive==='boolean')?j.configured.drive:null;
+      // Configuration is not health. A present refresh token can still be
+      // expired; only the signed-in deep check is allowed to turn Drive green.
+      drive=(j.configured&&j.configured.drive===false)?false:null;
       if(api) apiWhy='';
     }
   }catch(e){apiWhy='unreachable'}
+  if (checkSeq !== _healthSeq) return;
   setDot('d-site',site?'ok':'bad');setDot('d-api',api?'ok':'bad');
   setDot('d-assets',assets?'ok':'bad');setDot('d-backup',backup?'ok':'bad');
   setDot('d-drive', drive===null?'wait':(drive?'ok':'bad'));
-  document.getElementById('checked-at').textContent='last checked '+new Date().toLocaleString()+
-    ((site&&api&&assets&&backup&&drive!==false)?', all systems go'
-      :', something needs attention'+(apiWhy?' ('+apiWhy+')':'')+(drive===false?' (Drive not answering, submissions will not land)':''));
+  const publicOnly = !_idTok && site && api && assets && backup && drive===null;
+  let suffix = '';
+  if (publicOnly) suffix = ', public systems go; sign in for the real Drive check';
+  else if (site&&api&&assets&&backup&&drive===true) suffix = ', all systems go';
+  else suffix = ', something needs attention'+(apiWhy?' ('+apiWhy+')':'')+
+    (drive===false?' (Drive not answering, submissions will not land)':'');
+  document.getElementById('checked-at').textContent='last checked '+new Date().toLocaleString()+suffix;
 }
 runChecks();
 </script>
@@ -460,7 +476,6 @@ runChecks();
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
 const _CLIENT_ID = '90396949475-7cen4909qftr8hf4la86nuhus38isid1.apps.googleusercontent.com';
-let _idTok = null;
 function _note(html) {
   const n = document.getElementById('traffic-note');
   n.classList.remove('hidden'); n.innerHTML = html;
@@ -518,7 +533,7 @@ function _adoptToken(t, firstLoad) {
   _cacheTok(t);
   _showSignin(false);
   _scheduleRenew(t);
-  loadTraffic(); loadSubmissions(); _fbBridge(t);
+  runChecks(); loadTraffic(); loadSubmissions(); _fbBridge(t);
 }
 function _gisBoot() {
   const cached = _cachedTok();
@@ -550,6 +565,7 @@ let _expiredAt = 0;
 function _expired() {
   _idTok = null;
   try { localStorage.removeItem('maya_admin_tok'); } catch (_) {}
+  runChecks();
   // v12.8: try to renew silently FIRST, and only trouble you if that fails.
   // The submissions already on screen stay where they are rather than being
   // replaced by a sign in message.
@@ -570,7 +586,9 @@ function _subsNote(html) {
   const n = document.getElementById('subs-note-inline');
   n.style.display = ''; n.innerHTML = html;
 }
+let _subsSeq = 0;
 async function loadSubmissions() {
+  const requestSeq = ++_subsSeq;
   const strip = document.getElementById('subs-strip');
   if (!_idTok) {
     // v12.8: if submissions are already on screen, leave them there. A lapsed
@@ -580,8 +598,12 @@ async function loadSubmissions() {
     return;
   }
   let r;
-  try { r = await fetch('/api/admin/submissions?fresh=1&t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + _idTok }, cache: 'no-store' }); }
-  catch (_) { _subsNote('The request was blocked before reaching the API. An ad blocker extension may be interfering, try pausing it for this site.'); return; }
+  try { r = await _statusFetch('/api/admin/submissions?fresh=1&t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + _idTok }, cache: 'no-store' }); }
+  catch (_) {
+    if (requestSeq !== _subsSeq) return;
+    _subsNote('The request was blocked or timed out before the API answered. Check the connection or pause blockers for this site.'); return;
+  }
+  if (requestSeq !== _subsSeq) return;
   if (r.status === 404) { _subsNote(_cmdBlock('<b>FEED PENDING, one command switches it on:</b>')); return; }
   if (r.status === 401) { _expired(); return; }
   if (r.status === 403) { _subsNote('This Google account is not on the admin list.'); return; }
@@ -597,7 +619,10 @@ async function loadSubmissions() {
     }
     return;
   }
-  const data = await r.json();
+  let data;
+  try { data = await r.json(); }
+  catch (_) { _subsNote('The submissions response was incomplete. It will retry automatically.'); return; }
+  if (requestSeq !== _subsSeq) return;
   document.getElementById('subs-count').textContent = data.total ? data.total + ' total' : '';
   const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const when = iso => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
@@ -651,23 +676,24 @@ async function loadSubmissions() {
 const _thumbUrls = new Map();
 async function _paintThumbs() {
   const nodes = Array.from(document.querySelectorAll('#subs-strip img[data-thumb]'));
-  for (const n of nodes) {
+  const token = _idTok;
+  await Promise.all(nodes.map(async n => {
     const id = n.dataset.thumb;
-    if (!id || n.dataset.done) continue;
+    if (!id || n.dataset.done) return;
     n.dataset.done = '1';
     const cached = _thumbUrls.get(id);
-    if (cached) { n.src = cached; continue; }
-    if (!_idTok) return;
+    if (cached) { n.src = cached; return; }
+    if (!token) return;
     try {
-      const r = await fetch('/api/admin/subthumb?id=' + encodeURIComponent(id) + '&w=480',
-        { headers: { 'Authorization': 'Bearer ' + _idTok } });
+      const r = await _statusFetch('/api/admin/subthumb?id=' + encodeURIComponent(id) + '&w=480',
+        { headers: { 'Authorization': 'Bearer ' + token } });
       if (r.status === 401) { _expired(); return; }
-      if (!r.ok) { n.remove(); continue; }
+      if (!r.ok) { n.remove(); return; }
       const u = URL.createObjectURL(await r.blob());
       _thumbUrls.set(id, u);
       n.src = u;
     } catch (_) { try { n.remove(); } catch (_) {} }
-  }
+  }));
 }
 // v12.5: the strip refreshes itself, so a submission that lands while the map
 // is open appears without a reload. Also refreshes the moment the tab is
@@ -684,17 +710,23 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && _idTok) { loadSubmissions(); runChecks(); }
 });
 
+let _trafficSeq = 0;
 async function loadTraffic() {
+  const requestSeq = ++_trafficSeq;
   const tiles = document.getElementById('traffic-tiles');
   if (!_idTok) { _note('Waiting for the one sign in at the top of the page.'); return; }
   let r;
-  try { r = await fetch('/api/admin/analytics?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + _idTok }, cache: 'no-store' }); }
-  catch (_) { _note('Could not reach the API.'); return; }
+  try { r = await _statusFetch('/api/admin/analytics?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + _idTok }, cache: 'no-store' }); }
+  catch (_) { if (requestSeq === _trafficSeq) _note('Could not reach the API before the request timed out.'); return; }
+  if (requestSeq !== _trafficSeq) return;
   if (r.status === 404) { _note(_cmdBlock('<b>TRAFFIC PENDING, one command switches it on:</b>')); return; }
   if (r.status === 401) { _expired(); return; }
   if (r.status === 403) { _note('This Google account is not on the admin list.'); return; }
   if (!r.ok) { _note('Traffic unavailable right now (' + r.status + ').'); return; }
-  const d = await r.json();
+  let d;
+  try { d = await r.json(); }
+  catch (_) { _note('Traffic returned an incomplete response. It will retry automatically.'); return; }
+  if (requestSeq !== _trafficSeq) return;
   if (!d.ok) {
     _note('<b>Connect Google Analytics (one time):</b> Google Analytics &#8594; Admin &#8594; Property access management &#8594; add <b>'
       + (d.saEmail || 'the Cloud Run service account') + '</b> as Viewer. Numbers appear a minute later.');
