@@ -83,9 +83,11 @@ const r = await pg.evaluate(async () => {
   wallProbe.remove();
   out.wallMovesLeftToRight = communityBoard._startDrift.toString().includes('[-26, -21, -31]');
   out.visionGate = [
-    communityBoard._isVision({ kind: 'inspo', image: 'x', inspirationId: 'a' }) === true,
+    communityBoard._isVision({ kind: 'inspo', image: 'x', inspirationId: 'insp_a1', version: 1, generatedBy: 'gpt-image-2' }) === true,
+    communityBoard._isVision({ kind: 'inspo', image: 'x', inspirationId: 'insp_a1', version: 1, generatedBy: 'gpt-image-1.5' }) === false,
+    communityBoard._isVision({ kind: 'inspo', image: 'x', inspirationId: 'insp_legacy1', version: 1 }) === true,
     communityBoard._isVision({ kind: 'inspo', image: 'x' }) === false,          // upload
-    communityBoard._isVision({ kind: 'text', inspirationId: 'a' }) === false,
+    communityBoard._isVision({ kind: 'text', inspirationId: 'insp_a1', version: 1, generatedBy: 'gpt-image-2' }) === false,
   ].every(Boolean);
   // The same garment copied into another account keeps its inspiration id,
   // so both hearts fingerprint identically and the wall shows one.
@@ -175,6 +177,12 @@ ok('share rules bound the item list and schema',
   RULES_SOURCE.includes('request.resource.data.items.size() <= 200') && RULES_SOURCE.includes("request.resource.data.schema == 'v13.15'"));
 ok('wall updates cannot move a post between projects',
   RULES_SOURCE.includes('request.resource.data.pid == resource.data.pid'));
+ok('new wall posts require GPT Image 2 provenance',
+  RULES_SOURCE.includes("request.resource.data.model == 'gpt-image-2'") &&
+  INDEX_SOURCE.includes("model: card.generatedBy || 'gpt-image-2'"));
+ok('community uses a live listener instead of polling',
+  communityBoard._listen.toString().includes('onSnapshot') &&
+  !communityBoard.enter.toString().includes('setInterval'));
 ok('My Fabrics deletion survives failed Storage cleanup',
   INDEX_SOURCE.includes('cleanupPaths: _myFabricCleanupPaths.slice(0, 100)') &&
   INDEX_SOURCE.includes('if (f.path) await _drainMyFabricCleanup(uid)'));

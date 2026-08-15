@@ -57,8 +57,9 @@ service cloud.firestore {
       allow create: if request.auth != null
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.keys().hasOnly([
-          'uid', 'author', 'imageUrl', 'storagePath', 'summary', 'fp', 'pid', 'ts'
+          'uid', 'author', 'imageUrl', 'storagePath', 'summary', 'fp', 'pid', 'model', 'ts'
         ])
+        && request.resource.data.model == 'gpt-image-2'
         && request.resource.data.imageUrl is string
         && request.resource.data.imageUrl.size() < 2000
         && request.resource.data.author is string
@@ -77,8 +78,9 @@ service cloud.firestore {
         && request.resource.data.uid == resource.data.uid
         && request.resource.data.pid == resource.data.pid
         && request.resource.data.keys().hasOnly([
-          'uid', 'author', 'imageUrl', 'storagePath', 'summary', 'fp', 'pid', 'ts'
+          'uid', 'author', 'imageUrl', 'storagePath', 'summary', 'fp', 'pid', 'model', 'ts'
         ])
+        && request.resource.data.model == 'gpt-image-2'
         && request.resource.data.imageUrl is string
         && request.resource.data.imageUrl.size() < 2000
         && request.resource.data.author is string

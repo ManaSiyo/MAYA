@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.19">
+<meta name="maya-version" content="13.20">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -5809,6 +5809,9 @@ const communityBoard = {
   _resumeT: null,
   _inflight: {},
   _wired: false,
+  _unsub: null,
+  _listenerUid: null,
+  _listenReady: null,
 
   _uid() { try { return (firebase.auth().currentUser || {}).uid || null; } catch (_) { return null; } },
   _col() { return firebase.firestore().collection('community'); },
@@ -5864,11 +5867,14 @@ const communityBoard = {
     return 'u:' + String(card.imageUrl || card.image || '').slice(-72);
   },
 
-  // v13.11: the wall is a wall of VISIONS. Only what MAYA generated goes up,
-  // never an uploaded inspo, a fabric photograph or a Pinterest screenshot.
+  // v13.20: only GPT Image 2 output belongs on the wall. Older genuine MAYA
+  // renders predate generatedBy, so their strict insp_* provenance remains a
+  // migration fallback. An explicit different model always stays private.
   _isVision(card) {
-    return !!(card && card.kind === 'inspo' && card.inspirationId &&
-              (card.image || card.imageUrl));
+    if (!card || card.kind !== 'inspo' || !(card.image || card.imageUrl)) return false;
+    if (card.generatedBy) return card.generatedBy === 'gpt-image-2';
+    return /^insp_[a-z0-9]+$/i.test(String(card.inspirationId || '')) &&
+      Number.isFinite(Number(card.version));
   },
 
   // v13.14: heart, unheart, heart again in two seconds used to race: the
@@ -5931,6 +5937,7 @@ const communityBoard = {
         storagePath: img.path || '',
         summary: summary,
         fp: this._fp(card),                 // v13.11: identifies the garment
+        model: card.generatedBy || 'gpt-image-2',
         // v13.14: durable ownership, so deleting the project can find every
         // post it made even if a card lost its _communityId along the way.
         pid: projectId,
@@ -5971,6 +5978,36 @@ const communityBoard = {
     } catch (e) { console.warn('[Maya community] unpublish', e); }
   },
 
+  _applySnapshot(q) {
+    // v13.11: one garment, one card. Two accounts can heart the same
+    // vision (a shared project copies it), and each heart writes its own
+    // post. The wall shows the ORIGINAL, the earliest of them.
+    const byFp = new Map();
+    q.forEach(d => {
+      const v = d.data() || {};
+      if (!v.imageUrl) return;
+      // Explicitly reject every non-GPT Image 2 post. Legacy generated posts
+      // are recognizable by their inspiration fingerprint; uploaded images
+      // use a u: fingerprint and stay off the wall.
+      if (v.model && v.model !== 'gpt-image-2') return;
+      if (!v.model && !/^i:insp_[a-z0-9]+\|v\d+$/i.test(String(v.fp || ''))) return;
+      if (!/^[\w-]{4,120}$/.test(d.id)) return;
+      if (!/^(https:\/\/|data:image\/)/.test(String(v.imageUrl))) return;
+      const post = {
+        id: d.id, uid: v.uid || '', author: v.author || 'someone',
+        imageUrl: v.imageUrl, summary: v.summary || '', model: v.model || 'gpt-image-2',
+        fp: v.fp || ('u:' + String(v.imageUrl).slice(-72)),
+        ms: (v.ts && v.ts.toMillis) ? v.ts.toMillis() : Infinity,
+      };
+      const seen = byFp.get(post.fp);
+      if (!seen || post.ms < seen.ms) byFp.set(post.fp, post);
+    });
+    this.posts = Array.from(byFp.values())
+      .sort((a, b) => (b.ms === Infinity ? 0 : b.ms) - (a.ms === Infinity ? 0 : a.ms));
+    this._loadedAt = Date.now();
+    return this.posts;
+  },
+
   async load(force) {
     if (!this._uid()) return this.posts;
     if (this._loading) return this._loading;
@@ -5978,32 +6015,7 @@ const communityBoard = {
     this._loading = (async () => {
       try {
         const q = await this._col().orderBy('ts', 'desc').limit(120).get();
-        // v13.11: one garment, one card. Two accounts can heart the same
-        // vision (a shared project copies it), and each heart writes its own
-        // post. The wall shows the ORIGINAL, the earliest of them.
-        const byFp = new Map();
-        q.forEach(d => {
-          const v = d.data() || {};
-          if (!v.imageUrl) return;
-          // v13.12 SECURITY: a post must have a sane id and a picture that is
-          // https or an inline image. Anything else never enters memory.
-          if (!/^[\w-]{4,120}$/.test(d.id)) return;
-          if (!/^(https:\/\/|data:image\/)/.test(String(v.imageUrl))) return;
-          const post = {
-            id: d.id, uid: v.uid || '', author: v.author || 'someone',
-            imageUrl: v.imageUrl, summary: v.summary || '',
-            fp: v.fp || ('u:' + String(v.imageUrl).slice(-72)),
-            ms: (v.ts && v.ts.toMillis) ? v.ts.toMillis() : Infinity,
-          };
-          const seen = byFp.get(post.fp);
-          // A post still waiting for its server timestamp sorts last, so it
-          // can never displace the original that is already up.
-          if (!seen || post.ms < seen.ms) byFp.set(post.fp, post);
-        });
-        const out = Array.from(byFp.values())
-          .sort((a, b) => (b.ms === Infinity ? 0 : b.ms) - (a.ms === Infinity ? 0 : a.ms));
-        this.posts = out;
-        this._loadedAt = Date.now();
+        this._applySnapshot(q);
       } catch (e) { console.warn('[Maya community] load', e); }
       finally { this._loading = null; }
       return this.posts;
@@ -6011,12 +6023,39 @@ const communityBoard = {
     return this._loading;
   },
 
+  _listen() {
+    const uid = this._uid();
+    if (!uid) return Promise.resolve(this.posts);
+    if (this._unsub && this._listenerUid === uid) {
+      return this._listenReady || Promise.resolve(this.posts);
+    }
+    if (this._unsub) { try { this._unsub(); } catch (_) {} }
+    this._listenerUid = uid;
+    this._listenReady = new Promise(resolve => {
+      let first = true;
+      this._unsub = this._col().orderBy('ts', 'desc').limit(120).onSnapshot(q => {
+        this._applySnapshot(q);
+        this.render();
+        if (first) { first = false; resolve(this.posts); }
+      }, e => {
+        console.warn('[Maya community] live listener', e);
+        this._unsub = null;
+        this._listenerUid = null;
+        if (first) { first = false; resolve(this.load(true)); }
+      });
+    });
+    return this._listenReady;
+  },
+
   render() {
     const host = document.getElementById('community-scroller');
     if (!host) return;
     const posts = this.posts;
     document.body.classList.toggle('has-community', posts.length > 0);
-    const sig = posts.map(p => p.id).join(',');
+    // The id can stay the same while a newly cloudified image URL or summary
+    // changes. Include visible content so an updated document cannot leave a
+    // stale picture on screen.
+    const sig = posts.map(p => [p.id,p.imageUrl,p.author,p.summary].join('|')).join(',');
     if (host.dataset.sig === sig) return;      // never rebuild an unchanged wall
     // v13.11: a repaint keeps every row exactly where it was. Rebuilding used
     // to snap the wall back to the start and re download every picture, which
@@ -6148,6 +6187,7 @@ const communityBoard = {
   async enter() {
     this._startDrift();
     this.render();                 // whatever is already cached, instantly
+    const listening = this._listen();
     // v13.8: the wall REFLECTS favorites. Any hearted card on the open board
     // with no wall post yet (hearted before the wall existed, or while
     // offline) is published the moment the wall is looked at.
@@ -6193,25 +6233,14 @@ const communityBoard = {
           for (const queued of toPublish) await this.publish(queued.item, queued.projectId);
           if (toPublish.length) {
             console.log('[wall] swept', toPublish.length, 'hearted visions from all projects');
-            await this.load(true);
-            this.render();
           }
         } catch (e) { console.warn('[wall sweep]', e); }
       })();
     }
-    // v13.11: a quiet heartbeat. While the wall is on screen it re reads the
-    // collection every half minute and repaints ONLY if something actually
-    // changed, keeping every row where it was. Nothing flashes, nothing
-    // reloads, new visions simply arrive.
-    if (!this._beat) {
-      this._beat = setInterval(async () => {
-        if (currentScreen !== 0 || document.hidden) return;
-        const before = this.posts.map(p => p.id).join(',');
-        await this.load(true);
-        if (this.posts.map(p => p.id).join(',') !== before) this.render();
-      }, 30000);
-    }
-    await this.load();
+    // Firestore sends one initial snapshot and then only changed documents.
+    // The old 30-second heartbeat re-read up to 120 documents in every open
+    // browser forever, even when nothing changed.
+    await listening;
     this.render();
   },
 
@@ -9719,6 +9748,7 @@ async function _applyModifyWithPendingState() {
 // canvas card's image when finished, no fullscreen takeover.
 async function applyModifications() {
   const _mctx = _opContext();   // v13.14: which project asked for this render
+  const generatedBy = getImageModel();
   const deselectedCount = (viewerDeselected || new Set()).size;
   // v5.17: also accept fabric-only deselections so Fromsa can × a fabric
   // chip and tap Modify without typing or × ing a ref.
@@ -9826,11 +9856,11 @@ async function applyModifications() {
     // v10.12: every Modify call locks in measurements + face descriptors.
     const editPromptFull = modAnchorMap + editPrompt + buildMeasClause() + buildFaceDescriptorClause();
     const dataUrl = prevImage
-      ? await callOpenAIImageEditSafe(modAnchors.length > 1 ? modAnchors : modAnchors[0], editPromptFull, '1536x1024')
+      ? await callOpenAIImageEditSafe(modAnchors.length > 1 ? modAnchors : modAnchors[0], editPromptFull, '1536x1024', null, { model: generatedBy })
       // v5: inherit the in-house fabric(s) from the parent inspiration so a
       // generation-mode modify doesn't accidentally swap in a hypothetical fabric.
       // v5.4: respect the user's deselected fabric chips.
-      : await callOpenAIImageSafe(buildGarmentPrompt({ fabrics: fabricsKept.length ? fabricsKept : null }) + '. Modifications: ' + mods.join('; ') + buildMeasClause() + buildFaceDescriptorClause(), '1536x1024');
+      : await callOpenAIImageSafe(buildGarmentPrompt({ fabrics: fabricsKept.length ? fabricsKept : null }) + '. Modifications: ' + mods.join('; ') + buildMeasClause() + buildFaceDescriptorClause(), '1536x1024', null, { model: generatedBy });
     // Update the originating card on the canvas in place
     // A modification stays in the same inspiration as the original, it's just
     // a new version of the same idea, not a new concept. New card layered on top
@@ -9844,7 +9874,7 @@ async function applyModifications() {
     const version = siblingCount + 1;
     const newCard = {
       tag: 'inspo', title: 'v' + version, kind: 'inspo', image: dataUrl,
-      inspirationId, version,
+      inspirationId, version, generatedBy,
       caption: original?.card.caption || lastSummary?.dream_outcome || null,
       refs: original?.card.refs ? original.card.refs.slice() : null,
       // v5: inspiration's fabric grounding carries through every version
@@ -10191,7 +10221,7 @@ async function callOpenAIImageEdit(prevDataUrl, prompt, size, quality, opts) {
   // edits. Drop-in API-compatible, same /v1/images/edits, same FormData
   // shape, same standard sizes. 2K (2560×1440) is also available if we
   // ever want to bump resolution.
-  form.append('model', getImageModel());
+  form.append('model', (opts && opts.model) || getImageModel());
   form.append('prompt', prompt);
   const inputList = Array.isArray(prevDataUrl) ? prevDataUrl : [prevDataUrl];
   let idx = 0;
@@ -10250,7 +10280,7 @@ async function callOpenAIImage(prompt, size, quality, opts) {
   const body = {
     // v9.11: gpt-image-2, same model used by the /edits path. Reasoning-
     // capable, stronger identity carry across renders, 2K-ready.
-    model: getImageModel(),
+    model: (opts && opts.model) || getImageModel(),
     prompt: prompt,
     size: size || '1024x1536',
     quality: quality || getImageQuality() || 'medium',
@@ -10347,6 +10377,7 @@ function _continueVisualize() {
 // in-house with one or more fabrics (selectedFabricsForVisualize = [...]).
 async function _runVisualizeNow() {
   const _ctx = _opContext();   // v12.9: which client's project this render belongs to
+  const generatedBy = getImageModel();
   const myBoardEpoch = _boardEpoch;  // v11.49: which project this render belongs to
   // v9.8: SNAPSHOT every input synchronously into local consts, then reset
   // the global selection state immediately. After this point the function
@@ -10435,7 +10466,7 @@ async function _runVisualizeNow() {
         'NEVER substitute, blend, or replace the client\'s face with anyone else. ' +
         'Wearing the following design: ' +
         prompt + measClause + faceDescClause + styleHint + FRAMING_MANDATE + _promptTuning();
-      dataUrl = await callOpenAIImageEditSafe(anchors, facePrompt, '1536x1024');
+      dataUrl = await callOpenAIImageEditSafe(anchors, facePrompt, '1536x1024', null, { model: generatedBy });
     } else if (refsSnap.length) {
       const primary = refsSnap[0];
       const extraClause = refsSnap.length > 1
@@ -10459,7 +10490,7 @@ async function _runVisualizeNow() {
             'Do NOT preserve any human face, hair, or identity from the reference, generate a fresh, ' +
             'generic model whose face does NOT match anyone visible in the reference image.') +
         ' Following this specification: ' + prompt + extraClause + measClause + faceDescClause + FRAMING_MANDATE + _promptTuning();
-      dataUrl = await callOpenAIImageEditSafe(anchors.length > 1 ? anchors : anchors[0], styleRefPrompt, '1536x1024');
+      dataUrl = await callOpenAIImageEditSafe(anchors.length > 1 ? anchors : anchors[0], styleRefPrompt, '1536x1024', null, { model: generatedBy });
     } else if (lineageAnchor) {
       // v9.9: no face photo, no refs, but we have a previous render in the
       // same client lineage, use it as an /edits anchor for identity carry.
@@ -10467,9 +10498,9 @@ async function _runVisualizeNow() {
         'Image 1 is a previous render whose model identity must be preserved across this new render, ' +
         'same face, hair, skin tone, body type, height. Re-dress the SAME person in the following NEW design: ' +
         prompt + measClause + faceDescClause + FRAMING_MANDATE + _promptTuning();
-      dataUrl = await callOpenAIImageEditSafe(lineageAnchor, lineagePrompt, '1536x1024');
+      dataUrl = await callOpenAIImageEditSafe(lineageAnchor, lineagePrompt, '1536x1024', null, { model: generatedBy });
     } else {
-      dataUrl = await callOpenAIImageSafe(prompt + measClause + faceDescClause + FRAMING_MANDATE + _promptTuning(), '1536x1024');
+      dataUrl = await callOpenAIImageSafe(prompt + measClause + faceDescClause + FRAMING_MANDATE + _promptTuning(), '1536x1024', null, { model: generatedBy });
     }
     if (myBoardEpoch !== _boardEpoch) {
       console.warn('[maya] render finished after a project switch, discarded to protect the new board');
@@ -10486,7 +10517,7 @@ async function _runVisualizeNow() {
     const inspirationId = 'insp_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
     placeItem({
       tag: 'inspo', title: 'v1', kind: 'inspo', image: dataUrl,
-      inspirationId, version: 1,
+      inspirationId, version: 1, generatedBy,
       caption: lastSummary?.dream_outcome || null,
       fabricMode: fabricsSnap ? 'inhouse' : 'sourceable',
       fabrics: fabricsSnap
@@ -11216,7 +11247,7 @@ function _sanitizeSharedItem(raw) {
   const source = raw && raw.card && typeof raw.card === 'object' ? raw.card : null;
   if (!source) return null;
   const card = {};
-  ['kind', 'tag', 'title', 'detail', 'caption', 'tint', 'fabricMode', 'inspirationId'].forEach(key => {
+  ['kind', 'tag', 'title', 'detail', 'caption', 'tint', 'fabricMode', 'inspirationId', 'generatedBy'].forEach(key => {
     if (source[key] != null) card[key] = _shareText(source[key], key === 'caption' ? 2000 : 300);
   });
   const realism = _safeRealism(source.realism);
@@ -11707,6 +11738,7 @@ async function switchFabricForViewer() {
 
 async function runFabricSwitch(targetId, fabrics, context) {
   const ctx = context || _opContext();
+  const generatedBy = getImageModel();
   if (!_opStillValid(ctx)) return;
   const original = items.find(i => i.id === targetId);
   if (!original || !original.card.image) {
@@ -11753,7 +11785,9 @@ async function runFabricSwitch(targetId, fabrics, context) {
     const dataUrl = await callOpenAIImageEditSafe(
       rcAnchors.length > 1 ? rcAnchors : rcAnchors[0],
       editPromptFull,
-      '1536x1024'
+      '1536x1024',
+      null,
+      { model: generatedBy }
     );
     const inspirationId = original.card.inspirationId
       || ('insp_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5));
@@ -11763,7 +11797,7 @@ async function runFabricSwitch(targetId, fabrics, context) {
     const version = siblingCount + 1;
     const newCard = {
       tag: 'inspo', title: 'v' + version, kind: 'inspo', image: dataUrl,
-      inspirationId, version,
+      inspirationId, version, generatedBy,
       caption: original.card.caption || lastSummary?.dream_outcome || null,
       refs: original.card.refs ? original.card.refs.slice() : null,
       fabricMode: 'inhouse',
