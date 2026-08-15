@@ -11,6 +11,34 @@ done, how it was verified, and whether it is FIXED, OPEN, or RECURRED.
 
 ─────────────────────────────────────────────
 
+AUGUST 14, 2026, NIGHT. STATUS: FIXED IN v13.19-v13.23; DRIVE CREDENTIAL MUST
+STILL BE VERIFIED AFTER DEPLOY.
+
+Symptom: Systems Map appeared missing or slow, Latest Submissions reported that
+Drive was not answering, Community could retain stale/ghost cards, and project
+work performed during a sign-out/sign-in boundary could theoretically land in
+the next account.
+
+Cause: status waited on serial image probes before starting API health; Drive
+requests had no hard provider timeout and rebuilt too many folder details on
+every refresh; Community polled and keyed repaint only by post id; generation
+provenance was inferred from card shape; queued project saves resolved the
+Firebase uid at commit time instead of capturing the initiating account.
+
+Fix: parallel health checks, bounded Drive calls and short submissions cache;
+realtime Community listener, URL-aware repaint, actual image-model provenance
+and gpt-image-2-only client/rules gates; all project reads/writes/uploads pinned
+to their starting uid with serialized auth teardown and awaited Firebase
+sign-out. Fabric assets are lazy, OpenAI responses stream, all Drive operations
+have bounded waits, and deep health tells a timeout from rejected credentials.
+
+Operational truth: an OAuth `invalid_grant` cannot be fixed in source. If the
+signed-in deep health result is red after v13.23 deploys, renew
+`GOOGLE_OAUTH_REFRESH_TOKEN` on Cloud Run using the production Drive OAuth
+client and record that owner-run action here.
+
+─────────────────────────────────────────────
+
 AUGUST 14, 2026, AFTERNOON. STATUS: FIXED IN v13.15-v13.18.
 
 Symptom: Systems Map could claim all green while Drive had not been checked,

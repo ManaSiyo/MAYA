@@ -178,7 +178,8 @@ ok('Storage cleanup is pinned to the deleting account',
 ok('queued project saves are pinned to their starting account',
   projectStore.save.toString().includes('this.ownerUid') &&
   projectStore._commit.toString().includes("reason: 'auth-changed'") &&
-  projectStore.uploadImage.toString().includes("this._uid() !== uid"));
+  projectStore.uploadImage.toString().includes("this._uid() !== uid") &&
+  INDEX_SOURCE.includes('await firebase.auth().signOut()'));
 ok('legacy recovery is idempotent and deletion blocks its source',
   INDEX_SOURCE.includes('dead.has(id) || recovered.has(id)') &&
   INDEX_SOURCE.includes("batch.set(this._tombs().doc(legacySource)"));
@@ -204,6 +205,10 @@ ok('OpenAI proxy bounds input, time, and response memory',
   SERVER_SOURCE.includes("limit: '24mb'") &&
   SERVER_SOURCE.includes('AbortSignal.timeout(285000)') &&
   SERVER_SOURCE.includes('Readable.fromWeb(upstream.body)'));
+ok('Drive operations time out and deep health distinguishes the cause',
+  SERVER_SOURCE.includes("timedOut ? 'drive_timeout'") &&
+  SERVER_SOURCE.includes('signal: AbortSignal.timeout(60000)') &&
+  SERVER_SOURCE.includes("throw new Error('drive folder ' + r.status)"));
 ok('only maya-v2 may deploy production',
   BUILD_SOURCE.includes('test "$BRANCH_NAME" = "maya-v2"'));
 ok('My Fabrics deletion survives failed Storage cleanup',

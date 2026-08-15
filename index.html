@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.22">
+<meta name="maya-version" content="13.23">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -3801,7 +3801,7 @@
     // v10.30: also drop the Firebase Auth session so the next user who
     // signs in doesn't inherit this user's uid.
     try {
-      if (window.firebase && firebase.auth) firebase.auth().signOut();
+      if (window.firebase && firebase.auth) await firebase.auth().signOut();
     } catch (_) { /* not initialized, fine */ }
     _showGate();
     setTimeout(_renderGoogleButton, 50);

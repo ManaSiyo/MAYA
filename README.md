@@ -13,7 +13,7 @@ ones outside git), `requests.txt` (Fromsa's own asks and noticed bugs, with
 status marks; re-verify its entries every session).
 Google project: `pro-maya`
 Repo: `ManaSiyo/MAYA` on GitHub, working folder `~/Desktop/MAYA-new`
-Current version: **13.22** (the number lives in a `maya-version` meta tag in
+Current version: **13.23** (the number lives in a `maya-version` meta tag in
 `index.html`, and the running site's number is the fastest way to tell whether
 a push has landed).
 
@@ -69,16 +69,17 @@ separate horizontal scroll-snap pane, not an overlay.
 
 ## 3. How a deploy happens
 
-**One action: push origin.** Google reads `cloudbuild.yaml` at the repo root on
-every push and runs five steps, taking about four minutes:
+**One action: push `maya-v2` to origin.** Google reads `cloudbuild.yaml` at the
+repo root and runs six steps, taking about four minutes:
 
-1. Build server (Docker, from `docs/server`)
-2. Push image
-3. Deploy server to Cloud Run (`maya-api`, region `us-west1`)
-4. Deploy website (Firebase Hosting, `--only hosting`)
-5. Deploy rules (`--only firestore:rules,storage`)
+1. Refuse the build unless the branch is exactly `maya-v2`
+2. Build server (Docker, from `docs/server`)
+3. Push image
+4. Deploy server to Cloud Run (`maya-api`, region `us-west1`)
+5. Deploy website (Firebase Hosting, `--only hosting`)
+6. Deploy rules (`--only firestore:rules,storage`)
 
-Steps 4 and 5 are deliberately separate. When they were one command a rules
+Steps 5 and 6 are deliberately separate. When they were one command a rules
 problem took the whole website down with it. Now the site always ships first
 and a rules failure is loud but harmless to what is already live.
 
@@ -94,9 +95,10 @@ curl -s https://maya.manasiyo.com/api/healthz
 `/api/healthz` is public and reports `configured: {openai, drive, fal, stripe}`.
 `/api/healthz/deep` is admin gated and actually pings each dependency.
 
-The Cloud Build trigger reads the root `cloudbuild.yaml` (Autodetected) with
-branch regex `.*`. `docs/Deploy MAYA.command` still works as a website-only
-backup but should never be needed.
+The Cloud Build trigger still reads the root `cloudbuild.yaml` (Autodetected)
+with branch regex `.*`, but the first build step now blocks every branch except
+`maya-v2`. `docs/Deploy MAYA.command` still works as a website-only backup but
+should never be needed.
 
 ---
 

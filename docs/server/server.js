@@ -91,7 +91,10 @@ app.get('/api/healthz/deep', requireAuthHeader, async (req, res) => {
     if (!r.ok) out.detail = 'drive_' + r.status;
   } catch (e) {
     console.error('[healthz deep]', (e && e.message) || e);
-    out.detail = 'drive_auth';
+    const message = String((e && e.message) || e || '');
+    const timedOut = e && (e.name === 'TimeoutError' || e.name === 'AbortError');
+    out.detail = timedOut ? 'drive_timeout' :
+      (/oauth refresh|invalid_grant|expired|revoked/i.test(message) ? 'drive_auth' : 'drive_error');
   }
   out.ok = out.openai && out.drive;
   res.json(out);
@@ -452,6 +455,7 @@ async function driveCreateFolder(accessToken, name, parentId) {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] }),
+    signal: AbortSignal.timeout(15000),
   });
   if (!r.ok) throw new Error('folder create ' + r.status + ': ' + (await r.text()));
   return (await r.json()).id;
@@ -473,6 +477,7 @@ async function driveUploadFile(accessToken, name, parentId, mimeType, dataBytes)
       'Content-Length': String(body.length),
     },
     body,
+    signal: AbortSignal.timeout(60000),
   });
   if (!r.ok) throw new Error('upload ' + r.status + ': ' + (await r.text()));
   return await r.json();
@@ -740,17 +745,17 @@ async function isSubmissionFolder(accessToken, folderId) {
   if (folderId === root) return true;
   const hit = _folderParentCache.get(folderId);
   if (hit && Date.now() - hit.ts < 600000) return hit.ok;
+  const r = await fetch('https://www.googleapis.com/drive/v3/files/' +
+    encodeURIComponent(folderId) + '?fields=parents', {
+    headers: { 'Authorization': 'Bearer ' + accessToken },
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!r.ok && r.status !== 404) throw new Error('drive folder ' + r.status);
   let ok = false;
-  try {
-    const r = await fetch('https://www.googleapis.com/drive/v3/files/' +
-      encodeURIComponent(folderId) + '?fields=parents', {
-      headers: { 'Authorization': 'Bearer ' + accessToken },
-    });
-    if (r.ok) {
-      const j = await r.json();
-      ok = Array.isArray(j.parents) && j.parents.includes(root);
-    }
-  } catch (_) {}
+  if (r.ok) {
+    const j = await r.json();
+    ok = Array.isArray(j.parents) && j.parents.includes(root);
+  }
   _folderParentCache.set(folderId, { ok, ts: Date.now() });
   return ok;
 }
@@ -843,6 +848,7 @@ app.get('/api/admin/subthumb', async (req, res) => {
     const accessToken = await getDriveAccessToken();
     const metaR = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?fields=id,mimeType,size,thumbnailLink,parents', {
       headers: { 'Authorization': 'Bearer ' + accessToken },
+      signal: AbortSignal.timeout(10000),
     });
     if (!metaR.ok) return res.status(404).json({ error: 'not_found' });
     const meta = await metaR.json();
@@ -853,7 +859,10 @@ app.get('/api/admin/subthumb', async (req, res) => {
     let buf = null, type = 'image/jpeg';
     if (meta.thumbnailLink) {
       const tl = String(meta.thumbnailLink).replace(/=[sw]\d+(-h\d+)?$/, '=s' + w);
-      const tr = await fetch(tl, { headers: { 'Authorization': 'Bearer ' + accessToken } });
+      const tr = await fetch(tl, {
+        headers: { 'Authorization': 'Bearer ' + accessToken },
+        signal: AbortSignal.timeout(15000),
+      });
       if (tr.ok) { buf = Buffer.from(await tr.arrayBuffer()); type = tr.headers.get('content-type') || 'image/jpeg'; }
     }
     if (!buf) {
@@ -862,6 +871,7 @@ app.get('/api/admin/subthumb', async (req, res) => {
       if (Number(meta.size || 0) > 12 * 1024 * 1024) return res.status(404).json({ error: 'no_thumb' });
       const r = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media', {
         headers: { 'Authorization': 'Bearer ' + accessToken },
+        signal: AbortSignal.timeout(30000),
       });
       if (!r.ok) return res.status(502).json({ error: 'drive_' + r.status });
       buf = Buffer.from(await r.arrayBuffer());
@@ -889,6 +899,7 @@ app.get('/api/admin/subfile', async (req, res) => {
     const accessToken = await getDriveAccessToken();
     const metaR = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?fields=id,name,mimeType,size,parents', {
       headers: { 'Authorization': 'Bearer ' + accessToken },
+      signal: AbortSignal.timeout(10000),
     });
     if (!metaR.ok) return res.status(404).json({ error: 'not_found' });
     const meta = await metaR.json();
@@ -901,6 +912,7 @@ app.get('/api/admin/subfile', async (req, res) => {
     if (!inside) return res.status(403).json({ error: 'file_not_allowed' });
     const r = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media', {
       headers: { 'Authorization': 'Bearer ' + accessToken },
+      signal: AbortSignal.timeout(30000),
     });
     if (!r.ok) return res.status(502).json({ error: 'drive_' + r.status });
     const buf = Buffer.from(await r.arrayBuffer());
@@ -942,6 +954,7 @@ app.post('/api/admin/savepieces', requireAuthHeader, express.json({ limit: '30mb
         method: 'PATCH',
         headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
         body,
+        signal: AbortSignal.timeout(30000),
       });
     } else {
       const boundary = 'mayapieces' + Date.now();
@@ -954,6 +967,7 @@ app.post('/api/admin/savepieces', requireAuthHeader, express.json({ limit: '30mb
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'multipart/related; boundary=' + boundary },
         body: multipart,
+        signal: AbortSignal.timeout(30000),
       });
     }
     if (!r.ok) return res.status(502).json({ error: 'drive_' + r.status, detail: (await r.text()).slice(0, 200) });

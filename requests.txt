@@ -16,6 +16,24 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 14, 2026, NIGHT
+
+[x] Audit the current code before changing it, strengthen account/project
+    isolation, Community provenance, Systems Map responsiveness, and startup.
+[x] Keep visual work reversible and grouped: Systems Map-only polish lives in
+    one scoped stylesheet; the now-approved Community layout stays unchanged.
+[x] Community accepts only cards generated with gpt-image-2; uploaded/favorited
+    inspiration and explicit other-model cards are filtered and rules reject
+    ordinary-client writes without the required model marker.
+[x] Diagnose Systems Map and Latest Submissions: status races and expensive
+    uncached Drive fanout fixed; Drive credentials remain an owner-run Cloud Run
+    operation if deep health reports an expired or revoked OAuth token.
+[x] Audit first-1,000-user readiness and unit economics. Result: controlled beta
+    ready after deploy verification; not ready for an unbounded public launch
+    until durable quotas, cost budgets, App Check, and generation backpressure.
+[ ] Measure exact Firebase Storage and Drive usage from signed-in consoles; the
+    public/local code cannot truthfully calculate Fromsa's current account use.
+
 AUGUST 14, 2026, AFTERNOON
 
 [x] Codex took over after Claude credits ran out and prepared one safe push.

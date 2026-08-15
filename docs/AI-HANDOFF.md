@@ -5,11 +5,12 @@ and replace stale task details instead of turning it into another history log.
 
 ## Current repository state
 
-- Product version: `13.18`
+- Product version: `13.23`
 - Production branch: `maya-v2`
 - Local working folder used by Fromsa: `~/Desktop/MAYA-new`
-- Deployment: a GitHub push triggers Cloud Build, Cloud Run, Firebase Hosting,
-  and Firebase rules deployment.
+- Codex release clone: `MAYA-codex-release` in the current Codex workspace.
+- Deployment: pushes may trigger Cloud Build, but `cloudbuild.yaml` now refuses
+  production deployment unless `BRANCH_NAME` is exactly `maya-v2`.
 - Commit convention: `[Claude][v13.xx] Description` / `[Codex][v13.xx]
   Description`. One category per commit. Push only when Fromsa explicitly asks.
 
@@ -26,34 +27,67 @@ and replace stale task details instead of turning it into another history log.
 
 - Claude and Codex are interchangeable. The repository, not chat memory, is
   the shared record. Do not let both agents edit `index.html` concurrently.
-- Do not push partial work; every branch pattern deploys to production.
-- Tests before any handoff: `tests/smoke.mjs` (server, 16 routes) and
-  `tests/app-regression.mjs` (both pages, needs Playwright).
+- Keep `maya-v2` as the only release branch. Agent work branches are safe from
+  production deployment only because the build guard now rejects them.
+- Tests before any handoff: server syntax/static checks, inline-script parsing,
+  `tests/smoke.mjs` when dependencies and sockets are available, and
+  `tests/app-regression.mjs` when Chromium can launch.
 
 ## Next safe work
 
-1. Verify Cloud Build deployed v13.18 and the Firestore rules step is green.
-2. Run the browser regression in an environment that permits Chromium launch.
-3. Rewire the backend pattern window before removing its hidden legacy room.
+1. Verify Cloud Build deployed v13.23 and the Firestore rules step is green.
+2. Sign into Systems Map and confirm `/api/healthz/deep` plus Latest
+   Submissions. If Drive is red, renew the Cloud Run OAuth refresh token; code
+   now exposes the sanitized provider reason but cannot repair credentials.
+3. Before a public launch, replace per-instance memory rate limits with a
+   durable per-uid quota and add a generation queue/backpressure path.
+4. Run both runtime suites from `~/Desktop/MAYA-new`, where dependencies and a
+   permitted Chromium runtime are available.
 
 ## Latest completed work
 
-- [Codex] Aug 14, v13.15-v13.18: closed the second-eye regressions left in
-  v13.14. Hostile wall/share values are sanitized; late voice, fabric and
-  community operations keep their initiating account/project; stale saves
-  block destructive navigation; sign-out cancellation blocks update reloads.
-- Project deletion now batches the project, permanent tombstone, wall posts
-  and share links atomically. Storage paths remain on the tombstone until
-  cleanup succeeds. My Fabrics keeps the same durable cleanup queue.
-- Systems Map checks use timeouts and request generations, signed-in token
-  changes immediately rerun deep health, and thumbnails load in parallel.
-- Community cards now match inspiration: quiet glass, no white column glow,
-  hover/focus metadata, 320px cards and three left-to-right rows. Favorites
-  animate only halo opacity with about 15 percent less reach.
-- Validation available in the Codex sandbox: all inline scripts and server
-  JavaScript parse, JSON/config files parse, static regressions pass, and the
-  diff is clean. Full Playwright is blocked by the Chromium sandbox; server
-  smoke cannot run in the isolated clone because Express is not installed.
+- [Codex] Aug 14, v13.19-v13.23: Systems Map public/API/image checks now run in
+  parallel; Drive token and listing calls time out; the admin submissions feed
+  uses a short cache and bounded detail fanout; failure text names the safe
+  provider reason instead of pretending sign-in is missing.
+- Community publishing records the actual generation model, rules accept only
+  `gpt-image-2`, explicit uploads/other models are hidden, a realtime listener
+  replaces polling, and changed URLs repaint instead of leaving ghost cards.
+  This is app-level provenance only: a hostile Firebase client can still lie
+  about `model`; cryptographic trust requires server-side publishing.
+- The whole fabric library no longer downloads at startup. The OpenAI proxy
+  rejects bodies above 24 MB and streams successful output instead of buffering
+  it. A Cloud Build guard blocks production deploys from non-release branches.
+- Critical sealed-bin fix: every queued project write, image upload, snapshot,
+  tombstone and index mutation is pinned to the uid that started it. Auth
+  transitions serialize teardown before new-account boot. Remote equality now
+  includes all visible card fields and exact positions, so a newer cloud board
+  is not mistaken for the same state. Legacy recovered sessions are scanned and
+  permanently tombstoned when their migrated project is deleted.
+- Sign-out now waits for Firebase Auth to finish before rendering another sign
+  in, every Drive read/write has a bounded wait, and deep health distinguishes
+  a slow provider from revoked authorization.
+- Reversible Systems Map typography/tap-target cleanup lives only in
+  `aesthetics/ui/status-v13.19.css`; Community layout was not restyled again.
+- Validation available in the Codex sandbox: server and inline JavaScript parse,
+  JSON/config plus the source-level regression assertions pass, and diffs are
+  clean. The full `tests/app-regression.mjs` runtime is blocked by the Chromium
+  sandbox; server smoke is blocked because Express is unavailable and socket
+  binding is denied.
+
+## Open launch risks
+
+- Rate limiting is process memory, so every Cloud Run instance and restart gets
+  a fresh counter. This is not a cost boundary for 1,000 public users.
+- Drive is one OAuth account and one folder: it remains an operational single
+  point of failure and its exact usage is not visible without signed-in metrics.
+- Each project and the project index are single Firestore documents with a
+  1 MiB ceiling. Concurrent edits are safely rejected but have no Reload cloud
+  / Save as copy resolution UI.
+- Community loads up to 120 documents per fresh session. Budget and App Check
+  enforcement are required before broad anonymous acquisition.
+- Legacy session/IndexedDB migration code remains intentionally. Measure
+  migration completion before deleting the estimated 700-1,200 legacy lines.
 
 ## Previous completed work
 
