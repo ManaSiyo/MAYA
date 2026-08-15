@@ -11,6 +11,14 @@
 # each other. Now the site always ships first, and a rules failure is loud but
 # harmless to what is already live.
 steps:
+  # The GitHub trigger currently watches every branch. Refuse to deploy a
+  # Claude/Codex work branch to production; only maya-v2 is the release line.
+  - id: Guard production branch
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    args:
+      - '-ceu'
+      - 'test "$BRANCH_NAME" = "maya-v2" || { echo "Refusing production deploy from $BRANCH_NAME"; exit 1; }'
   - id: Build server
     name: gcr.io/cloud-builders/docker
     args:

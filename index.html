@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.20">
+<meta name="maya-version" content="13.21">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -10912,26 +10912,17 @@ async function scanFabricsFromAssets() {
   if (!manifestRes.ok) throw new Error('no fabrics manifest');
   const manifest = await manifestRes.json();
   const items = Array.isArray(manifest.items) ? manifest.items : [];
-  const loaded = [];
-  for (const it of items) {
-    try {
-      const swatchRes = await fetch(FABRIC_BASE + encodeURIComponent(it.fileName));
-      if (!swatchRes.ok) continue;
-      const blob = await swatchRes.blob();
-      const dataUrl = await new Promise((resolve, reject) => {
-        const fr = new FileReader();
-        fr.onload = () => resolve(fr.result);
-        fr.onerror = () => reject(fr.error);
-        fr.readAsDataURL(blob);
-      });
-      loaded.push({ ...it, dataUrl });
-    } catch (e) {
-      console.warn('[Maya fabric asset load]', it.fileName, e);
-    }
-  }
-  fabricsInventory = loaded;
+  // v13.21: keep static swatches as URLs. The old loader downloaded every
+  // full-resolution JPEG and converted all of them to base64 before showing
+  // anything, adding roughly 23 MB of network and memory to every app visit.
+  // The browser now fetches a swatch only when the fabric UI actually paints
+  // it; OpenAI edit calls can fetch the same URL when a selected swatch is used.
+  fabricsInventory = items.filter(it => it && it.fileName).map(it => ({
+    ...it,
+    dataUrl: new URL(FABRIC_BASE + encodeURIComponent(it.fileName), window.location.origin).href,
+  }));
   renderFabricsGrid();
-  console.log('[Maya v0.13] fabrics loaded from /assets:', loaded.length);
+  console.log('[Maya] fabric manifest loaded:', fabricsInventory.length);
 }
 
 async function scanFabricsFolder(force = false) {
@@ -11649,20 +11640,9 @@ function fabricPickerBack() {
     openImageViewer(_switchFabricsTargetId);
   }
 }
-// v11.14: warm the in-house fabric cache in the background on load so the
-// first Switch Fabric / in-house pick opens instantly instead of fetching
-// every swatch on demand. Public deploy only (assets path, no FS prompt).
-document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => {
-    try {
-      if ((!fabricsInventory || !fabricsInventory.length)
-          && typeof MAYA_IS_PUBLIC !== 'undefined' && MAYA_IS_PUBLIC
-          && typeof scanFabricsFromAssets === 'function') {
-        scanFabricsFromAssets().catch(e => console.warn('[Maya fabric preload]', e));
-      }
-    } catch (e) { console.warn('[Maya fabric preload]', e); }
-  }, 1200);
-});
+// v13.21: no startup prewarm. The manifest is loaded lazily by the existing
+// drawer and Switch Fabric paths, so visitors who never use fabrics do not pay
+// for that feature during the first paint.
 function toggleFabricPick(idx) {
   const i = _fabricPickerSelection.indexOf(idx);
   if (i >= 0) _fabricPickerSelection.splice(i, 1);

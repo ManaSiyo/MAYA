@@ -13,7 +13,7 @@ ones outside git), `requests.txt` (Fromsa's own asks and noticed bugs, with
 status marks; re-verify its entries every session).
 Google project: `pro-maya`
 Repo: `ManaSiyo/MAYA` on GitHub, working folder `~/Desktop/MAYA-new`
-Current version: **13.20** (the number lives in a `maya-version` meta tag in
+Current version: **13.21** (the number lives in a `maya-version` meta tag in
 `index.html`, and the running site's number is the fastest way to tell whether
 a push has landed).
 

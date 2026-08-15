@@ -16,6 +16,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const INDEX_SOURCE = readFileSync(join(ROOT, 'index.html'), 'utf8');
 const RULES_SOURCE = readFileSync(join(ROOT, 'docs/server/firestore.rules'), 'utf8');
+const SERVER_SOURCE = readFileSync(join(ROOT, 'docs/server/server.js'), 'utf8');
+const BUILD_SOURCE = readFileSync(join(ROOT, 'cloudbuild.yaml'), 'utf8');
 const FAVORITE_PULSE_SOURCE = INDEX_SOURCE.slice(
   INDEX_SOURCE.indexOf('@keyframes maya-favorite-pulse'),
   INDEX_SOURCE.indexOf('@keyframes maya-favorite-pulse') + 500,
@@ -183,6 +185,16 @@ ok('new wall posts require GPT Image 2 provenance',
 ok('community uses a live listener instead of polling',
   communityBoard._listen.toString().includes('onSnapshot') &&
   !communityBoard.enter.toString().includes('setInterval'));
+ok('fabric library is lazy and URL-backed',
+  !INDEX_SOURCE.includes('[Maya fabric preload]') &&
+  scanFabricsFromAssets.toString().includes('window.location.origin') &&
+  !scanFabricsFromAssets.toString().includes('FileReader'));
+ok('OpenAI proxy bounds input, time, and response memory',
+  SERVER_SOURCE.includes("limit: '24mb'") &&
+  SERVER_SOURCE.includes('AbortSignal.timeout(285000)') &&
+  SERVER_SOURCE.includes('Readable.fromWeb(upstream.body)'));
+ok('only maya-v2 may deploy production',
+  BUILD_SOURCE.includes('test "$BRANCH_NAME" = "maya-v2"'));
 ok('My Fabrics deletion survives failed Storage cleanup',
   INDEX_SOURCE.includes('cleanupPaths: _myFabricCleanupPaths.slice(0, 100)') &&
   INDEX_SOURCE.includes('if (f.path) await _drainMyFabricCleanup(uid)'));

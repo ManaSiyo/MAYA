@@ -25,6 +25,7 @@
 
 import express from 'express';
 import crypto from 'node:crypto';
+import { Readable } from 'node:stream';
 
 const app = express();
 app.disable('x-powered-by');
@@ -223,7 +224,7 @@ function requireAuthHeader(req, res, next) {
   next();
 }
 
-app.all(/^\/api\/openai\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', limit: '50mb' }), async (req, res) => {
+app.all(/^\/api\/openai\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', limit: '24mb' }), async (req, res) => {
   let user;
   try { user = await requireGoogleUser(req); }
   catch (e) {
@@ -299,16 +300,27 @@ app.all(/^\/api\/openai\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', li
       headers,
       body: (req.method === 'GET' || req.method === 'HEAD') ? undefined
             : (req.body && req.body.length ? req.body : undefined),
+      signal: AbortSignal.timeout(285000),
     });
-    const buf = Buffer.from(await upstream.arrayBuffer());
-    if (!upstream.ok) {
-      console.error('[openai]', upstream.status, upstreamPath, 'user=' + user.email,
-                    '—', buf.toString('utf8').slice(0, 600));
-    }
-    res.status(upstream.status);
     const ct = upstream.headers.get('content-type');
     if (ct) res.setHeader('Content-Type', ct);
-    return res.send(buf);
+    if (!upstream.ok) {
+      const buf = Buffer.from(await upstream.arrayBuffer());
+      console.error('[openai]', upstream.status, upstreamPath, 'user=' + user.email,
+                    '—', buf.toString('utf8').slice(0, 600));
+      return res.status(upstream.status).send(buf);
+    }
+    res.status(upstream.status);
+    // v13.21: do not hold a complete image response in Cloud Run memory.
+    // Successful responses flow to the browser as they arrive; errors remain
+    // buffered briefly above so their useful diagnostics can be logged.
+    if (!upstream.body) return res.end();
+    const stream = Readable.fromWeb(upstream.body);
+    stream.on('error', error => {
+      console.error('[openai] response stream', upstreamPath, '—', error.message);
+      res.destroy(error);
+    });
+    return stream.pipe(res);
   } catch (e) {
     console.error('[openai] proxy exception', upstreamPath, '—', e.message);
     return res.status(502).json({ error: 'openai_proxy_failed', detail: e.message });
