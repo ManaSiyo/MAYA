@@ -427,6 +427,7 @@ async function getDriveAccessToken() {
       client_id: clientId, client_secret: clientSecret,
       refresh_token: refreshToken, grant_type: 'refresh_token',
     }),
+    signal: AbortSignal.timeout(8000),
   });
   if (!r.ok) throw new Error('oauth refresh ' + r.status + ': ' + (await r.text()));
   const data = await r.json();
@@ -746,6 +747,7 @@ async function driveList(accessToken, params) {
   const qs = new URLSearchParams(params);
   const r = await fetch('https://www.googleapis.com/drive/v3/files?' + qs.toString(), {
     headers: { 'Authorization': 'Bearer ' + accessToken },
+    signal: AbortSignal.timeout(10000),
   });
   if (!r.ok) throw new Error('drive list ' + r.status + ': ' + (await r.text()).slice(0, 300));
   return (await r.json()).files || [];
@@ -757,10 +759,10 @@ app.get('/api/admin/submissions', async (req, res) => {
   let user;
   try { user = await requireAdmin(req); }
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
-  // v11.48: 30s cache — two open dashboards shouldn't double Drive traffic.
-  // v12.5: 8 seconds, not 30. A submission that just landed used to sit
-  // invisible on the Systems Map for up to half a minute.
-  if (!req.query.fresh && _subsCache.body && Date.now() - _subsCache.ts < 8000) {
+  // v13.19: submission writes invalidate this cache immediately. Reads can
+  // therefore share a 15-second result instead of forcing dozens of Drive
+  // requests from every open Systems Map tab.
+  if (_subsCache.body && Date.now() - _subsCache.ts < 15000) {
     return res.json(_subsCache.body);
   }
   try {
@@ -773,7 +775,9 @@ app.get('/api/admin/submissions', async (req, res) => {
       pageSize: '100',
       fields: 'files(id,name,createdTime)',
     });
-    const detailed = await Promise.all(folders.slice(0, 40).map(async f => {
+    // Only the newest cards are rendered. Listing files in forty folders made
+    // one dashboard refresh fan out into forty-one Drive API calls.
+    const detailed = await Promise.all(folders.slice(0, 16).map(async f => {
       const files = await driveList(accessToken, {
         q: "'" + f.id + "' in parents and trashed = false",
         orderBy: 'createdTime',
@@ -795,7 +799,11 @@ app.get('/api/admin/submissions', async (req, res) => {
     res.json(payload);
   } catch (e) {
     console.error('[admin] submissions failed —', e.message);
-    res.status(500).json({ error: 'submissions_failed', detail: e.message });
+    const timedOut = e && (e.name === 'TimeoutError' || e.name === 'AbortError');
+    const authFailed = /oauth refresh|invalid_grant|expired|revoked/i.test(String(e && e.message));
+    res.status(500).json({ error: 'submissions_failed',
+      code: timedOut ? 'drive_timeout' : (authFailed ? 'drive_auth' : 'drive_error'),
+      detail: timedOut ? 'Drive timed out' : (authFailed ? 'Drive authorization rejected' : 'Drive request failed') });
   }
 });
 

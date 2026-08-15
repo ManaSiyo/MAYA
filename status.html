@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.18">
+<meta name="maya-version" content="13.19">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -230,8 +230,12 @@ try {
     .card .go{word-break:break-all}
   }
 </style>
+<!-- v13.19: removable Systems Map-only polish. Keeping this outside the
+     single-file app makes the visual pass easy to revert without touching
+     health, authentication, or submission logic. -->
+<link rel="stylesheet" href="/aesthetics/ui/status-v13.19.css">
 </head>
-<body>
+<body class="systems-map">
 
 <div id="top-bar">
   <div id="top-left-brand">
@@ -425,38 +429,40 @@ async function runChecks(){
   const checkSeq = ++_healthSeq;
   ['d-site','d-api','d-assets','d-drive','d-backup'].forEach(id=>setDot(id,'wait'));
   document.getElementById('checked-at').textContent='checking…';
-  const [site,assets,backup]=await Promise.all([
+  const assetChecks = Promise.all([
     probeImage('https://maya.manasiyo.com/aesthetics/ui/logo.png'),
     probeImage('https://maya.manasiyo.com/aesthetics/fabrics/Red%20Royal.JPG'),
     probeImage('https://pro-maya.web.app/aesthetics/ui/logo.png')]);
-  // v12.9: the deep check. The old one went green whenever the server answered,
-  // even with no OpenAI key and dead Drive authorisation, so every light could
-  // be green while nothing actually worked.
-  let api=false, apiWhy='', drive=null;
-  try{
-    // v13.0: the deep check is admin only now, so send the sign in with it.
-    // Without a sign in, fall back to the plain liveness check.
-    if(_idTok){
-      const r=await _statusFetch('/api/healthz/deep?cb='+Date.now(),
-        {headers:{'Authorization':'Bearer '+_idTok}});
-      const j=await r.json().catch(()=>({}));
-      // v13.1: the API light means the API. Drive is a separate thing with its
-      // own light, and letting a Drive problem turn this one red sent you
-      // hunting the wrong fault.
-      api=r.ok&&j.openai===true;
-      drive=r.ok?(j.drive===true):null;
-      if(!api&&r.ok) apiWhy='no OpenAI key on the server';
-      else if(!api) apiWhy='could not check';
-    } else {
-      const r=await _statusFetch('/api/healthz?cb='+Date.now());
-      const j=await r.json().catch(()=>({}));
-      api=r.ok&&j.ok===true;
-      // Configuration is not health. A present refresh token can still be
-      // expired; only the signed-in deep check is allowed to turn Drive green.
-      drive=(j.configured&&j.configured.drive===false)?false:null;
-      if(api) apiWhy='';
-    }
-  }catch(e){apiWhy='unreachable'}
+  // v13.19: API and image probes run together. The old sequence could hold the
+  // entire map in "checking" for up to eight seconds before it even contacted
+  // Cloud Run, which looked like the Systems Map itself had failed.
+  const healthCheck = (async () => {
+    let api=false, apiWhy='', drive=null, driveWhy='';
+    try{
+      if(_idTok){
+        const r=await _statusFetch('/api/healthz/deep?cb='+Date.now(),
+          {headers:{'Authorization':'Bearer '+_idTok}});
+        const j=await r.json().catch(()=>({}));
+        api=r.ok&&j.openai===true;
+        drive=r.ok?(j.drive===true):null;
+        if(!api&&r.ok) apiWhy='no OpenAI key on the server';
+        else if(!api) apiWhy='could not check';
+        if(drive===false){
+          const reasons={drive_auth:'Drive authorization rejected',drive_timeout:'Drive check timed out',
+            drive_403:'Drive permission denied',drive_404:'Drive folder not found'};
+          driveWhy=reasons[j.detail]||'Drive not answering';
+        }
+      } else {
+        const r=await _statusFetch('/api/healthz?cb='+Date.now());
+        const j=await r.json().catch(()=>({}));
+        api=r.ok&&j.ok===true;
+        drive=(j.configured&&j.configured.drive===false)?false:null;
+      }
+    }catch(e){apiWhy='unreachable'}
+    return {api,apiWhy,drive,driveWhy};
+  })();
+  const [[site,assets,backup],health]=await Promise.all([assetChecks,healthCheck]);
+  const {api,apiWhy,drive,driveWhy}=health;
   if (checkSeq !== _healthSeq) return;
   setDot('d-site',site?'ok':'bad');setDot('d-api',api?'ok':'bad');
   setDot('d-assets',assets?'ok':'bad');setDot('d-backup',backup?'ok':'bad');
@@ -466,7 +472,7 @@ async function runChecks(){
   if (publicOnly) suffix = ', public systems go; sign in for the real Drive check';
   else if (site&&api&&assets&&backup&&drive===true) suffix = ', all systems go';
   else suffix = ', something needs attention'+(apiWhy?' ('+apiWhy+')':'')+
-    (drive===false?' (Drive not answering, submissions will not land)':'');
+    (drive===false?' ('+(driveWhy||'Drive not answering')+', submissions will not land)':'');
   document.getElementById('checked-at').textContent='last checked '+new Date().toLocaleString()+suffix;
 }
 runChecks();
@@ -600,7 +606,7 @@ async function loadSubmissions() {
     return;
   }
   let r;
-  try { r = await _statusFetch('/api/admin/submissions?fresh=1&t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + _idTok }, cache: 'no-store' }); }
+  try { r = await _statusFetch('/api/admin/submissions?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + _idTok }, cache: 'no-store' }); }
   catch (_) {
     if (requestSeq !== _subsSeq) return;
     _subsNote('The request was blocked or timed out before the API answered. Check the connection or pause blockers for this site.'); return;
@@ -614,8 +620,10 @@ async function loadSubmissions() {
     // default "waiting for sign in" note on screen, pointing at the wrong fault.
     let j = {}; try { j = await r.json(); } catch (_) {}
     const d = String(j.detail || '');
-    if (/invalid_grant|expired or revoked|oauth/i.test(d)) {
+    if (j.code === 'drive_auth' || /invalid_grant|expired or revoked|oauth/i.test(d)) {
       _subsNote('Drive is not answering: the server\'s Drive authorisation has expired or been revoked. Submissions will not land until the refresh token is renewed on Cloud Run. See fixes.txt.');
+    } else if (j.code === 'drive_timeout') {
+      _subsNote('Drive took too long to answer. Nothing was deleted; the map will retry automatically.');
     } else {
       _subsNote('The server could not list submissions (' + r.status + (j.error ? ', ' + j.error : '') + '). Not a sign in problem.');
     }
