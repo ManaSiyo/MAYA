@@ -9,6 +9,9 @@ and replace stale task details instead of turning it into another history log.
 - Production branch: `maya-v2`
 - Local working folder used by Fromsa: `~/Desktop/MAYA-new`
 - Codex release clone: `MAYA-codex-release` in the current Codex workspace.
+- Release status: v13.23 commits are local, not pushed. Both fetch and push
+  failed because the Codex sandbox could not resolve `github.com`; production
+  is still the previous version until GitHub Desktop pushes this release clone.
 - Deployment: pushes may trigger Cloud Build, but `cloudbuild.yaml` now refuses
   production deployment unless `BRANCH_NAME` is exactly `maya-v2`.
 - Commit convention: `[Claude][v13.xx] Description` / `[Codex][v13.xx]
@@ -35,7 +38,9 @@ and replace stale task details instead of turning it into another history log.
 
 ## Next safe work
 
-1. Verify Cloud Build deployed v13.23 and the Firestore rules step is green.
+1. In GitHub Desktop, add/open this `MAYA-codex-release` clone and click **Push
+   origin** on `maya-v2`; do not make another commit. Then verify Cloud Build
+   deployed v13.23 and the Firebase rules step is green.
 2. Sign into Systems Map and confirm `/api/healthz/deep` plus Latest
    Submissions. If Drive is red, renew the Cloud Run OAuth refresh token; code
    now exposes the sanitized provider reason but cannot repair credentials.

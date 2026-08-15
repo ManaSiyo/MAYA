@@ -31,6 +31,8 @@ AUGUST 14, 2026, NIGHT
 [x] Audit first-1,000-user readiness and unit economics. Result: controlled beta
     ready after deploy verification; not ready for an unbounded public launch
     until durable quotas, cost budgets, App Check, and generation backpressure.
+[ ] Push v13.23 from GitHub Desktop. Codex committed the release, but its
+    sandbox could not resolve github.com, so nothing reached production yet.
 [ ] Measure exact Firebase Storage and Drive usage from signed-in consoles; the
     public/local code cannot truthfully calculate Fromsa's current account use.
 

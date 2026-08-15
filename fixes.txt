@@ -11,8 +11,8 @@ done, how it was verified, and whether it is FIXED, OPEN, or RECURRED.
 
 ─────────────────────────────────────────────
 
-AUGUST 14, 2026, NIGHT. STATUS: FIXED IN v13.19-v13.23; DRIVE CREDENTIAL MUST
-STILL BE VERIFIED AFTER DEPLOY.
+AUGUST 14, 2026, NIGHT. STATUS: FIXED IN CODE v13.19-v13.23, NOT YET DEPLOYED;
+DRIVE CREDENTIAL MUST STILL BE VERIFIED AFTER DEPLOY.
 
 Symptom: Systems Map appeared missing or slow, Latest Submissions reported that
 Drive was not answering, Community could retain stale/ghost cards, and project

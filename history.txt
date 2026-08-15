@@ -9,29 +9,6 @@ to work with Fromsa. This file is the story; README.md is the manual.
 
 ─────────────────────────────────────────────
 
-AUGUST 14, 2026, NIGHT
-
-The v13.19-v13.23 launch-hardening pass found one failure that was more serious
-than the visible Drive complaint: a save queued under one account could ask for
-the current uid later, after sign-in had changed. Every project operation is now
-pinned to the account that began it, and account teardown completes before the
-next account starts. This closes the sealed-bin boundary at its most dangerous
-race.
-
-Systems Map now starts health work in parallel and explains a real Drive
-failure; Drive calls are timed and the submissions feed is cached. Community
-stopped polling, repaints changed pictures, and publishes only cards marked with
-the model that actually generated them. MAYA also stopped downloading the whole
-fabric library at startup, the image proxy streams successful responses, and
-only `maya-v2` is allowed through the production build.
-
-This makes MAYA suitable for a controlled beta, not an unbounded thousand-user
-launch. Durable quotas, cost controls, App Check, generation backpressure, and
-a replacement for Drive as the sole submission store remain the next scale
-line.
-
-─────────────────────────────────────────────
-
 AUGUST 11 TO 13, 2026
 
 Where we are: MAYA is at v13.3. Saving is trustworthy, the app is fast, the
