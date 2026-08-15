@@ -175,6 +175,17 @@ ok('project deletion batches wall posts before Storage cleanup',
 ok('Storage cleanup is pinned to the deleting account',
   INDEX_SOURCE.includes('this._cleanupDeletedAssets(id, paths, uid)') &&
   INDEX_SOURCE.includes("firebase.storage().ref('users/' + uid + '/projects/' + projectId + '/images')"));
+ok('queued project saves are pinned to their starting account',
+  projectStore.save.toString().includes('this.ownerUid') &&
+  projectStore._commit.toString().includes("reason: 'auth-changed'") &&
+  projectStore.uploadImage.toString().includes("this._uid() !== uid"));
+ok('legacy recovery is idempotent and deletion blocks its source',
+  INDEX_SOURCE.includes('dead.has(id) || recovered.has(id)') &&
+  INDEX_SOURCE.includes("batch.set(this._tombs().doc(legacySource)"));
+ok('remote equality covers complete visible card state',
+  _cardState.toString().includes('c.height') &&
+  _cardState.toString().includes('c.stacked') &&
+  projectStore._sig.toString().includes('Math.round(s.x || 0)'));
 ok('share rules bound the item list and schema',
   RULES_SOURCE.includes('request.resource.data.items.size() <= 200') && RULES_SOURCE.includes("request.resource.data.schema == 'v13.15'"));
 ok('wall updates cannot move a post between projects',

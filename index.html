@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.21">
+<meta name="maya-version" content="13.22">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -6579,27 +6579,39 @@ const FRAMING_MANDATE =
 // Loaded once per sign-in; absent or unreadable doc means no extra clauses,
 // exactly the behavior every version before 12.4 had.
 let _promptCfg = null;
+let _firebaseAuthTransition = Promise.resolve();
+let _firebaseAuthUid = null;
 (function _bootPromptCfg() {
   try {
     if (!window.firebase || !firebase.apps || !firebase.apps.length || !firebase.auth || !firebase.firestore) {
       return void setTimeout(_bootPromptCfg, 1500);
     }
     firebase.auth().onAuthStateChanged(u => {
-      _authSeq++;                        // v13.1: a different account, or none
-      if (!u) {
-        _promptCfg = null;
-        // v12.5: signed out, or switched accounts. Let go of everything in
-        // memory so nothing of this designer's can be written into the next
-        // person's account on a shared Mac.
-        try { if (typeof projectStore !== 'undefined' && projectStore.currentId) projectStore.teardown(); } catch (_) {}
-        _cloudBooted = false;
-        return;
-      }
-      // v12.5: signed in, bring this account's most recent project back.
-      try { if (typeof _cloudBoot === 'function') _cloudBoot(); } catch (_) {}
-      firebase.firestore().collection('config').doc('prompting').get()
-        .then(snap => { if (snap.exists) _promptCfg = snap.data(); })
-        .catch(() => {});
+      const nextUid = u ? u.uid : null;
+      const previousUid = _firebaseAuthUid;
+      const transitionSeq = ++_authSeq;
+      _firebaseAuthUid = nextUid;
+      // v13.22: Firebase can report sign-out and the next sign-in close
+      // together. Serialize teardown before boot so an old account cannot
+      // clear the new account's freshly restored board after it appears.
+      _firebaseAuthTransition = _firebaseAuthTransition.then(async () => {
+        if (!nextUid || (previousUid && previousUid !== nextUid)) {
+          _promptCfg = null;
+          try {
+            if (typeof projectStore !== 'undefined') await projectStore.teardown();
+          } catch (_) {}
+          _cloudBooted = false;
+        }
+        if (!nextUid) return;
+        const currentUid = ((firebase.auth().currentUser || {}).uid || null);
+        if (transitionSeq !== _authSeq || currentUid !== nextUid) return;
+        try { if (typeof _cloudBoot === 'function') await _cloudBoot(); } catch (_) {}
+        if (transitionSeq !== _authSeq) return;
+        try {
+          const snap = await firebase.firestore().collection('config').doc('prompting').get();
+          if (transitionSeq === _authSeq && snap.exists) _promptCfg = snap.data();
+        } catch (_) {}
+      }).catch(e => console.warn('[maya auth transition]', e && e.message));
     });
   } catch (_) {}
 })();
@@ -12288,10 +12300,19 @@ function _cardState(c) {
     _cardSig(c),
     c.favorited ? 1 : 0,
     c.width || 0,
+    c.height || 0,
+    c.z || 0,
+    c.stacked ? 1 : 0,
+    c.tint || '',
+    c.detail || '',
     c.caption || '',
     c.dissected ? 1 : 0,
-    (c.refs || []).length,
-    (c.fabrics || []).map(f => (f && (f.name || f.title)) || '').join(','),
+    c.fabricMode || '',
+    JSON.stringify(c.refs || []),
+    JSON.stringify((c.fabrics || []).map(f => f ? {
+      id: f.id || '', name: f.name || '', color: f.color || '', weave: f.weave || '',
+      weight: f.weight || '', texture: f.texture || '', best_for: f.best_for || '',
+    } : null)),
     c.showcaseVideoUrl || '',
   ].join('#');
 }
@@ -12432,10 +12453,19 @@ async function _rescueLegacyProjects() {
     const col = firebase.firestore().collection('users').doc(projectStore._uid()).collection('sessions');
     const q = await col.get();
     const dead = await projectStore._tombSet();
+    // A partial migration may have copied some sessions before one later
+    // session failed. Remember those copies so retrying cannot create another
+    // project for the same legacy source.
+    const recovered = new Set();
+    const existing = await projectStore._col().get();
+    existing.forEach(doc => {
+      const source = (doc.data() || {}).recoveredFrom;
+      if (source) recovered.add(String(source));
+    });
     for (const d of q.docs) {
       const id = d.id;
       if (id === 'current' || id === '__tombstones__') continue;
-      if (dead.has(id)) continue;
+      if (dead.has(id) || recovered.has(id)) continue;
       const v = d.data() || {};
       const legacyItems = Array.isArray(v.items) ? v.items : [];
       if (!legacyItems.length && !v.lastSummary && !v.name && !v.currentClientName) continue;
@@ -12460,6 +12490,7 @@ async function _rescueLegacyProjects() {
         updatedAtMs: when, createdAtMs: v.createdAtMs || when,
         schema: 'v12', recoveredFrom: id,
       });
+      recovered.add(id);
       moved++;
       } catch (e) { failed++; console.warn('[maya rescue] could not move', id, e && e.message); }
       // v12.5: one bad old project must not abort the rest. Each is moved on
@@ -12807,6 +12838,7 @@ let _activeSessionId = null;  // v11.44: which saved project is open now
 // ═══════════════════════════════════════════════════════════════════════════
 const projectStore = {
   currentId: null,
+  ownerUid: null,
   revision: 0,
   _lastWrote: 0,
   _openSeq: 0,
@@ -12880,7 +12912,9 @@ const projectStore = {
     return Object.keys(items).map(id => ({ id, ...items[id], isProject: true }));
   },
 
-  async _touchIndex(id, row) {
+  async _touchIndex(id, row, expectedUid) {
+    const uid = expectedUid || this._uid();
+    if (!uid || this._uid() !== uid) return;
     this._idxTs = 0;
     const patch = {};
     // v13.8: write the row FIELD BY FIELD so flags other code put on the row
@@ -12888,11 +12922,12 @@ const projectStore = {
     if (row) { for (const k in row) patch['items.' + id + '.' + k] = row[k]; }
     else patch['items.' + id] = firebase.firestore.FieldValue.delete();
     try {
-      await this._idxDoc().update(patch);
+      await firebase.firestore().collection('users').doc(uid)
+        .collection('settings').doc('projectIndex').update(patch);
     } catch (_) {
       // No index yet, or it was never fully built. Build it properly rather
       // than leaving behind a one entry index the list would then believe.
-      try { await this._rebuildIndex(); } catch (_) {}
+      if (this._uid() === uid) { try { await this._rebuildIndex(); } catch (_) {} }
     }
   },
 
@@ -12916,12 +12951,19 @@ const projectStore = {
   // v12.5: the project id is passed in, never read from this.currentId. When
   // the designer switched projects mid-upload the old code wrote project A's
   // photographs into project B's folder, where nothing ever referenced them.
-  async uploadImage(dataUrl, projectId) {
+  async uploadImage(dataUrl, projectId, expectedUid) {
+    const uid = expectedUid || this._uid();
+    if (!uid || this._uid() !== uid) throw new Error('auth-changed');
     const assetId = 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-    const path = 'users/' + this._uid() + '/projects/' + projectId + '/images/' + assetId + '.jpg';
+    const path = 'users/' + uid + '/projects/' + projectId + '/images/' + assetId + '.jpg';
     const blob = await (await fetch(dataUrl)).blob();
+    if (this._uid() !== uid) throw new Error('auth-changed');
     const ref = firebase.storage().ref(path);
     await ref.put(blob, { contentType: blob.type || 'image/jpeg', cacheControl: 'public,max-age=31536000,immutable' });
+    if (this._uid() !== uid) {
+      try { await ref.delete(); } catch (_) {}
+      throw new Error('auth-changed');
+    }
     return { url: await ref.getDownloadURL(), path };
   },
 
@@ -12975,7 +13017,7 @@ const projectStore = {
 
   // Build the cloud copy of the board. Throws if any picture fails to upload,
   // a project is never committed with a photograph silently missing from it.
-  async _snapshotForCloud(projectId) {
+  async _snapshotForCloud(projectId, expectedUid) {
     const out = [];
     // v12.9: only cards that are actually ON the canvas. An item with no
     // element is an orphan, usually a reference that was consumed into an
@@ -12996,7 +13038,7 @@ const projectStore = {
         if (card.storagePath && card._uploadedToCloud && card.imageUrl) {
           delete card.image;
         } else {
-          const up = await this.uploadImage(card.image, projectId);   // throws on failure
+          const up = await this.uploadImage(card.image, projectId, expectedUid);   // throws on failure
           card.imageUrl = up.url; card.storagePath = up.path;
           it.card.imageUrl = up.url; it.card.storagePath = up.path; it.card._uploadedToCloud = true;
           delete card.image;
@@ -13017,7 +13059,7 @@ const projectStore = {
   // document over one, so EVERY save for that client failed from then on while
   // the screen still said Saved. It now lives in Storage like every other
   // picture and the document carries only its address.
-  async _summaryForCloud(projectId) {
+  async _summaryForCloud(projectId, expectedUid) {
     if (!lastSummary) return null;
     const clone = JSON.parse(JSON.stringify(lastSummary));
     const face = clone._face_photo;
@@ -13035,7 +13077,7 @@ const projectStore = {
       if (haveHere && lastSummary._face_photo_url) {
         clone._face_photo = lastSummary._face_photo_url;
       } else {
-        const up = await this.uploadImage(face, projectId);            // throws on failure
+        const up = await this.uploadImage(face, projectId, expectedUid);            // throws on failure
         clone._face_photo = up.url;
         clone._face_photo_url = up.url; clone._face_photo_path = up.path;
         lastSummary._face_photo_url = up.url; lastSummary._face_photo_path = up.path;
@@ -13047,7 +13089,7 @@ const projectStore = {
       // v13.7: faces from the shared avatars folder are copied in too, so the
       // project owns its picture outright and is shareable as one piece.
       try {
-        const up = await this.uploadImage(face, projectId);
+        const up = await this.uploadImage(face, projectId, expectedUid);
         clone._face_photo = up.url;
         clone._face_photo_url = up.url; clone._face_photo_path = up.path;
         lastSummary._face_photo_url = up.url; lastSummary._face_photo_path = up.path;
@@ -13082,28 +13124,35 @@ const projectStore = {
   save() {
     if (!this.currentId || !this.ready()) return Promise.resolve({ written: false, reason: 'no-project' });
     const myId = this.currentId;
-    const run = this._chain.then(() => this._commit(myId));
+    const expectedUid = this.ownerUid;
+    const run = this._chain.then(() => this._commit(myId, expectedUid));
     this._chain = run.then(() => {}, () => {});
     return run;
   },
 
-  async _commit(myId) {
+  async _commit(myId, expectedUid) {
     {
+      if (!expectedUid || this.ownerUid !== expectedUid || this._uid() !== expectedUid) {
+        return { written: false, reason: 'auth-changed' };
+      }
       if (this.currentId !== myId) return { written: false, reason: 'switched' };
       // v13.8: SPEED. This tombstone check was a full network round trip
       // before EVERY save. A tombstone can never be removed once written
       // (the rules forbid it), so the network is asked once per project per
       // page load; after that the answer cannot change from "absent".
       if (!this._tombChecked) this._tombChecked = {};
-      if (!this._tombChecked[myId]) {
-        const tomb = await this._tombs().doc(myId).get();
+      const tombKey = expectedUid + ':' + myId;
+      if (!this._tombChecked[tombKey]) {
+        const tomb = await firebase.firestore().collection('users').doc(expectedUid)
+          .collection('projectTombstones').doc(myId).get();
         if (tomb.exists) { this.detach(); return { written: false, reason: 'deleted' }; }
-        this._tombChecked[myId] = true;
+        this._tombChecked[tombKey] = true;
       }
-      const snapItems  = await this._snapshotForCloud(myId);
-      const cloudSum   = await this._summaryForCloud(myId);
+      const snapItems  = await this._snapshotForCloud(myId, expectedUid);
+      const cloudSum   = await this._summaryForCloud(myId, expectedUid);
+      if (this._uid() !== expectedUid) return { written: false, reason: 'auth-changed' };
       if (this.currentId !== myId) return { written: false, reason: 'switched' };
-      const docRef = this._col().doc(myId);
+      const docRef = firebase.firestore().collection('users').doc(expectedUid).collection('projects').doc(myId);
       const base = this.revision;
       const name = this.displayName();
       const twoWord = _twoWordFromItems(items);
@@ -13165,6 +13214,12 @@ const projectStore = {
         }
         throw e;
       }
+      // The write may have finished at the same instant an account/project
+      // transition began. It is safely stored under expectedUid, but no
+      // follow-up metadata may touch whichever account is current now.
+      if (this._uid() !== expectedUid || this.ownerUid !== expectedUid || this.currentId !== myId) {
+        return { written: true, reason: 'saved-before-context-change' };
+      }
       this.revision = base + 1;
       this._lastWrote = base + 1;
       this._dirty = false;
@@ -13175,7 +13230,7 @@ const projectStore = {
         _drainAssetDeletes(myId, _written);
       } catch (_) {}
       this._touchIndex(myId, { name, updatedAt: Date.now(), createdAt: createdAtMs,
-                               cardCount: payloadItems.length, twoWord });
+                               cardCount: payloadItems.length, twoWord }, expectedUid);
       return { written: true };
     }
   },
@@ -13196,6 +13251,8 @@ const projectStore = {
     // v13.0: claim the turn FIRST, then flush. Claiming after the flush meant a
     // second tap could take a lower number than the first and win, so tapping
     // one project could open a different one.
+    const expectedUid = this._uid();
+    if (!expectedUid) return false;
     const _my = ++this._openSeq;
     const _saved = await this.flush();       // never lose the project you are leaving
     if (_my !== this._openSeq) return false;
@@ -13205,11 +13262,12 @@ const projectStore = {
     if (_saved === false) {
       if (!confirm('The project you are in could not be saved just now, probably a connection problem.\n\nOpen the other project anyway and lose those last changes?')) return false;
     }
-    const dead = await this._tombs().doc(id).get();
+    const userRoot = firebase.firestore().collection('users').doc(expectedUid);
+    const dead = await userRoot.collection('projectTombstones').doc(id).get();
     if (_my !== this._openSeq) return false;
     if (dead.exists) { showToast('That project was deleted'); return false; }
-    const doc = await this._col().doc(id).get();
-    if (_my !== this._openSeq) return false;
+    const doc = await userRoot.collection('projects').doc(id).get();
+    if (_my !== this._openSeq || this._uid() !== expectedUid) return false;
     if (!doc.exists) { showToast('That project no longer exists'); return false; }
     const v = doc.data() || {};
     this.detach();
@@ -13221,6 +13279,7 @@ const projectStore = {
       _paintItems(v.items);
     });
     this.currentId = id;
+    this.ownerUid = expectedUid;
     this.revision = v.revision || 0;
     this.autoName = null;
     // If the stored project carried duplicates, the canvas is now clean but
@@ -13248,7 +13307,7 @@ const projectStore = {
     try {
       return (list || []).map(s => {
         const c = (s && s.card) || {};
-        return [_cardState(c), Math.round((s.x || 0) / 8), Math.round((s.y || 0) / 8)].join('~');
+        return [_cardState(c), Math.round(s.x || 0), Math.round(s.y || 0)].join('~');
       }).sort().join('|');
     } catch (_) { return ''; }
   },
@@ -13341,7 +13400,7 @@ const projectStore = {
 
   detach() {
     try { if (this._unsub) this._unsub(); } catch (_) {}
-    this._unsub = null; this.currentId = null; this.revision = 0; this._lastWrote = 0;
+    this._unsub = null; this.currentId = null; this.ownerUid = null; this.revision = 0; this._lastWrote = 0;
     this._dirty = false; this.autoName = null;
     clearTimeout(this._t);
   },
@@ -13353,7 +13412,7 @@ const projectStore = {
   async createFromCanvas(name) {
     const id = this._newId();
     this.detach();
-    this.currentId = id; this.revision = 0; this.autoName = null;
+    this.currentId = id; this.ownerUid = this._uid(); this.revision = 0; this.autoName = null;
     currentClientName = name || currentClientName || 'Untitled';
     await this.save();
     _activeSessionId = id;
@@ -13367,7 +13426,7 @@ const projectStore = {
   async createAuto() {
     const id = this._newId();
     this.detach();
-    this.currentId = id; this.revision = 0;
+    this.currentId = id; this.ownerUid = this._uid(); this.revision = 0;
     this.autoName = _autoProjectName();
     await this.save();
     _activeSessionId = id;
@@ -13386,6 +13445,7 @@ const projectStore = {
     const projectRef = this._col().doc(id);
     const projectSnap = await projectRef.get();
     const value = projectSnap.exists ? (projectSnap.data() || {}) : {};
+    const legacySource = typeof value.recoveredFrom === 'string' ? value.recoveredFrom : '';
     let paths = (value.items || []).map(saved => saved && saved.card && saved.card.storagePath).filter(Boolean);
     const facePath = value.lastSummary && value.lastSummary._face_photo_path;
     if (facePath && String(facePath).indexOf('/projects/avatars/') === -1) paths.push(facePath);
@@ -13423,6 +13483,14 @@ const projectStore = {
     batch.set(this._tombs().doc(id), {
       deletedAtMs: Date.now(), cleanupPaths: paths, cleanupComplete: false,
     });
+    // If this was rescued from the retired sessions collection, permanently
+    // block that source too. Otherwise a lost migration flag could copy the
+    // deleted project back under a new id on a later load.
+    if (legacySource && legacySource !== id) {
+      batch.set(this._tombs().doc(legacySource), {
+        deletedAtMs: Date.now(), cleanupPaths: [], cleanupComplete: true,
+      });
+    }
     communityDocs.forEach(ref => batch.delete(ref));
     shareDocs.forEach(ref => batch.delete(ref));
     await batch.commit();
@@ -13430,7 +13498,7 @@ const projectStore = {
     // Storage is not transactional with Firestore. Its retry list lives on the
     // permanent tombstone, so an offline deletion resumes on the next load.
     const cleanupOk = await this._cleanupDeletedAssets(id, paths, uid);
-    await this._touchIndex(id, null);
+    await this._touchIndex(id, null, uid);
     if (this.currentId === id) {
       this.detach();
       await _hydrate(async () => { _doClear(); });
@@ -13449,7 +13517,7 @@ const projectStore = {
     // (the save happens in mayaSignOut, before the account is dropped; by the
     //  time this runs there is no signed in user left to save as)
     this.detach();
-    this._idxCache = null; this._idxTs = 0;
+    this._idxCache = null; this._idxTs = 0; this._tombChecked = {};
     try { _avatarLibCache = null; } catch (_) {}
     _activeSessionId = null;
     await _hydrate(async () => { _doClear(); });
