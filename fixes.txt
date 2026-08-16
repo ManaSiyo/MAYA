@@ -11,6 +11,44 @@ done, how it was verified, and whether it is FIXED, OPEN, or RECURRED.
 
 ─────────────────────────────────────────────
 
+AUGUST 16, 2026, MORNING. STATUS: OPEN, WAITING ON FROMSA. RECURRED.
+
+Symptom: Systems Map says "something needs attention (Drive authorization
+rejected, submissions will not land)" and Latest Submissions is empty. This is
+the second death of the same credential: it was renewed August 13 at 3:55 PM
+and it was dead again by August 16.
+
+What was ruled out today: the map code is fine (v13.23 is live, the page loads,
+every other light is green), and the deploy did not overwrite anything, because
+cloudbuild.yaml sets no environment variables at all. The server is simply being
+told no by Google when it exchanges the refresh token.
+
+Why a token minted "In production" can still die in three days: the token is
+revoked, not expired. The usual causes, in order of likelihood: the OAuth
+consent screen was moved back to Testing, or the app is unverified and using
+sensitive Drive scopes, or the atelier Google account's password was changed, or
+too many tokens were minted for the same client and account so Google revoked
+the oldest ones, or someone removed MAYA under the account's third party access.
+
+What Fromsa must do, in this order:
+1. Check the consent screen status and audience for project pro-maya.
+   https://console.cloud.google.com/auth/audience?project=pro-maya
+   If it says Testing, press Publish app. Testing kills a token every 7 days.
+2. Check that MAYA still has access under the atelier account.
+   https://myaccount.google.com/connections
+3. Mint a fresh refresh token in the OAuth Playground with the SERVER's client
+   pair (the one in Cloud Run, not the sign-in client), full drive scope,
+   signed in as the atelier Drive account. https://developers.google.com/oauthplayground
+4. Put it into GOOGLE_OAUTH_REFRESH_TOKEN and deploy a new revision.
+   https://console.cloud.google.com/run/detail/us-west1/maya-api/revisions?project=pro-maya
+5. Reload the Systems Map, signed in, and confirm Drive turns green and the
+   submissions appear. Then log the result here.
+
+Until then the site works, generation works, and only Drive submissions are
+blocked.
+
+─────────────────────────────────────────────
+
 AUGUST 14, 2026, NIGHT. STATUS: FIXED IN CODE v13.19-v13.23, NOT YET DEPLOYED;
 DRIVE CREDENTIAL MUST STILL BE VERIFIED AFTER DEPLOY.
 

@@ -16,6 +16,31 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 16, 2026, MORNING
+
+[x] Final audit before handing the work to Codex. Everything checked: both
+    pages parse, the browser regression suite runs end to end and passes, the
+    server smoke test passes all 16, and the live site is confirmed serving
+    the pushed version.
+[x] "Is GitHub working or not?" It is. One repository, one branch. The Desktop
+    folder, the Codex folder and GitHub are all the same commit, the working
+    tree is clean, and v13.23 is live on maya.manasiyo.com. The duplicate
+    clone that caused the confusion is gone from the picture.
+[!] Systems Map acting up. The map itself is healthy; DRIVE is red again.
+    Google has revoked the server's Drive refresh token a second time, three
+    days after it was renewed. No code can fix this, it is a credential.
+    Steps are in fixes.txt, dated today.
+[x] Community wall must match the inspiration page exactly, cards a little
+    larger, information only on hover, no white glow column between the
+    cards. Done in v13.24: the white plate behind each picture is gone (that
+    was the column), the card now wears the same glass and starlight edge as
+    a favorite, and each frame takes its own picture's shape so nothing can
+    ever be letterboxed into a lit box again. Details still appear on hover
+    or keyboard focus only.
+[x] Hand off to Codex properly: docs/AI-HANDOFF.md is now the one live file
+    both agents read and update. Same repository, same branch, one agent at a
+    time, Fromsa pushes.
+
 AUGUST 14, 2026, NIGHT
 
 [x] Audit the current code before changing it, strengthen account/project

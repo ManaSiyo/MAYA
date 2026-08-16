@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.23">
+<meta name="maya-version" content="13.24">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -293,9 +293,10 @@ try {
 
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-14d">
+  <details class="fold" id="changes-fold" data-latest="2026-08-16a">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 16</b>The white columns are gone from the community wall. A wall card is now a favorite card lying down: transparent glass, the same starlight edge, and the frame takes each picture's own shape, so a render that is not exactly wide can never sit inside a lit box. Names and notes still appear only on hover, exactly like the inspiration cards.</div>
     <div class="chg"><b>Aug 14</b>Deleted really stays deleted. Project removal now takes the project, tombstone, wall posts and share links down in one cloud operation, then keeps a durable retry list until every picture is gone. My Fabrics uses the same rule: the drawer changes only after its online index saves, and failed picture cleanup resumes automatically.</div>
     <div class="chg"><b>Aug 14</b>The community wall now looks and behaves like the inspiration cards: the same quiet glass, no white glow columns, details only on hover or keyboard focus, and three smooth rows flowing left to right. Favorites keep a smaller fixed halo and breathe by opacity only, so the glow no longer jitters or changes size.</div>
     <div class="chg"><b>Aug 14</b>Sealed projects, sealed accounts. A render, an upload or a fabric that finishes after you switch projects or accounts is dropped instead of landing on the wrong board. Deleting a project is one atomic act that also sweeps its wall posts and share links. A failed save now STOPS sign out, New, and switching until you say otherwise, a lost save race says so plainly, and the app never again claims work was saved on this device. Plus a pile of dead legacy code removed, including the broken fresh start command, which works again.</div>

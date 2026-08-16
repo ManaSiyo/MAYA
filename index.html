@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.23">
+<meta name="maya-version" content="13.24">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -2893,40 +2893,44 @@
   /* v13.17: the card carries the WHOLE three-view render, never cropped,
      but otherwise uses the same quiet glass as an inspiration image card.
      Metadata is an overlay revealed only on hover/focus. */
+  /* v13.24: a wall card is a favorite card lying down. Same transparent
+     glass, same starlight border and halo, nothing white behind the
+     picture. The 6% white plate v13.17 used read as a lit column between
+     the pictures whenever a render did not fill its frame. */
   .community-card {
     flex: 0 0 auto;
     width: 320px;
-    border-radius: 12px;
+    border-radius: 16px;
     overflow: hidden;
-    background: rgba(255,255,255,0.06);
-    border: 0.5px solid rgba(255,255,255,0.22);
+    background: transparent;
+    border: 0.5px solid rgba(220,232,255,0.55);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
             backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
-      inset 0 1px 1px rgba(255,255,255,0.28),
-      inset 0 -1px 1px rgba(0,0,0,0.18),
-      0 4px 16px rgba(0,0,0,0.22);
+      inset 0 1px 1px rgba(255,255,255,0.32),
+      inset 0 -1px 1px rgba(0,0,0,0.20),
+      0 0 9px 1.7px rgba(220,232,255,0.42),
+      0 0 13.6px 2.55px rgba(220,232,255,0.22),
+      0 8px 32px rgba(0,0,0,0.42);
     position: relative;
     cursor: pointer;
-    transition: transform 0.25s ease, border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    transition: transform 0.25s ease, border-color 0.2s, box-shadow 0.2s;
   }
   .community-card:hover, .community-card:focus-visible {
     transform: translateY(-4px);
     outline: none;
-    background: rgba(255,255,255,0.04);
-    border-color: rgba(255,255,255,0.42);
-    box-shadow:
-      inset 0 1px 2px rgba(255,255,255,0.40),
-      inset 0 -1px 1px rgba(0,0,0,0.22),
-      0 8px 28px rgba(0,0,0,0.32);
+    border-color: rgba(220,232,255,0.75);
   }
   .community-card .cc-image { overflow: hidden; border-radius: inherit; }
   .community-card img.cc-img {
     width: 100%; height: auto;
     /* CONTAIN, not cover: the three view sheet arrives whole, side, front
-       and back, exactly as it was rendered. */
+       and back, exactly as it was rendered.
+       v13.24: the frame takes the PICTURE's own shape the moment it loads
+       (--cc-ar), so contain never has empty space to letterbox. 3/2 is only
+       the placeholder that reserves room while it downloads. */
     object-fit: contain; display: block;
-    aspect-ratio: 3 / 2;
+    aspect-ratio: var(--cc-ar, 3 / 2);
     background: transparent;
   }
   .community-card .cc-meta {
@@ -6071,7 +6075,7 @@ const communityBoard = {
     // read the id from the data attribute, which is plain text, not code.
     const one = (p) =>
       '<div class="community-card" data-id="' + escapeHtml(p.id) + '" role="button" tabindex="0" aria-label="Open community design by ' + escapeHtml(p.author) + '">' +
-        '<div class="cc-image"><img class="cc-img" src="' + escapeHtml(p.imageUrl) + '" alt="" loading="lazy" onerror="communityBoard.broken(this)"/></div>' +
+        '<div class="cc-image"><img class="cc-img" src="' + escapeHtml(p.imageUrl) + '" alt="" loading="lazy" onload="communityBoard.fit(this)" onerror="communityBoard.broken(this)"/></div>' +
         '<div class="cc-meta">' +
           '<span class="cc-author">' + escapeHtml(p.author) + (p.uid && p.uid === mine ? ' &middot; yours' : '') + '</span>' +
           (p.summary ? '<span class="cc-summary">' + escapeHtml(p.summary) + '</span>' : '') +
@@ -6262,6 +6266,16 @@ const communityBoard = {
 
   broken(img) {
     try { const c = img.closest('.community-card'); if (c) c.style.display = 'none'; } catch (_) {}
+  },
+
+  // v13.24: give the frame the picture's own proportions, so a vertical or
+  // square render never sits inside a wider box with lit glass either side.
+  fit(img) {
+    try {
+      const c = img.closest('.community-card');
+      if (!c || !img.naturalWidth || !img.naturalHeight) return;
+      c.style.setProperty('--cc-ar', img.naturalWidth + ' / ' + img.naturalHeight);
+    } catch (_) {}
   },
 };
 

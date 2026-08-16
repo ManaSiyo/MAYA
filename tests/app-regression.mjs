@@ -80,8 +80,22 @@ const r = await pg.evaluate(async () => {
   document.body.appendChild(wallProbe);
   const wallStyle = getComputedStyle(wallProbe);
   const metaStyle = getComputedStyle(wallProbe.querySelector('.cc-meta'));
-  out.wallMatchesInspo = wallStyle.borderRadius === '12px' &&
+  // v13.24: a wall card is a favorite card lying down. NOTHING white behind
+  // the picture (that plate was the lit column Fromsa saw), the same 16px
+  // starlight glass as a favorite, and details only on hover or focus.
+  out.wallMatchesInspo = wallStyle.borderRadius === '16px' &&
+    wallStyle.backgroundColor === 'rgba(0, 0, 0, 0)' &&
     !wallStyle.boxShadow.includes('38px') && metaStyle.position === 'absolute' && metaStyle.opacity === '0';
+  const wallImg = document.createElement('img');
+  wallImg.className = 'cc-img';
+  wallProbe.appendChild(wallImg);
+  // The frame follows the picture's own shape once it loads, so contain has
+  // no empty space to letterbox. 3/2 is only the placeholder.
+  const arProbe = getComputedStyle(wallImg).aspectRatio;
+  out.wallTakesPictureShape = (arProbe === '3 / 2' || arProbe === 'auto 3 / 2') &&
+    typeof communityBoard.fit === 'function';
+  wallProbe.style.setProperty('--cc-ar', '2 / 3');
+  out.wallShapeOverrides = getComputedStyle(wallImg).aspectRatio.includes('2 / 3');
   wallProbe.remove();
   out.wallMovesLeftToRight = communityBoard._startDrift.toString().includes('[-26, -21, -31]');
   out.visionGate = [
@@ -158,6 +172,8 @@ ok('upload chooser exists', r.chooser);
 ok('Share button lives in the drawer', r.shareBtn);
 ok('community wall has three rows', r.wallRows === 3);
 ok('community cards use quiet inspo glass with hover-only info', r.wallMatchesInspo);
+ok('wall frames take each picture\'s own shape (no lit columns)', r.wallTakesPictureShape);
+ok('a taller picture reshapes its own frame', r.wallShapeOverrides);
 ok('community rows move left to right', r.wallMovesLeftToRight);
 ok('only generated visions reach the wall', r.visionGate);
 ok('the same garment fingerprints the same across accounts', r.fpMatches);
@@ -175,18 +191,29 @@ ok('project deletion batches wall posts before Storage cleanup',
 ok('Storage cleanup is pinned to the deleting account',
   INDEX_SOURCE.includes('this._cleanupDeletedAssets(id, paths, uid)') &&
   INDEX_SOURCE.includes("firebase.storage().ref('users/' + uid + '/projects/' + projectId + '/images')"));
+// v13.24 FIX: these four used to read projectStore, _cardState, communityBoard
+// and scanFabricsFromAssets straight from Node, where they do not exist. The
+// suite died with a ReferenceError before reaching the stack and Systems Map
+// checks, so "static assertions pass" was never true of the whole file. Page
+// globals must be read INSIDE the page.
+const p = await pg.evaluate(() => ({
+  savesPinned: projectStore.save.toString().includes('this.ownerUid') &&
+    projectStore._commit.toString().includes("reason: 'auth-changed'") &&
+    projectStore.uploadImage.toString().includes('this._uid() !== uid'),
+  cardStateComplete: _cardState.toString().includes('c.height') &&
+    _cardState.toString().includes('c.stacked') &&
+    projectStore._sig.toString().includes('Math.round(s.x || 0)'),
+  liveListener: communityBoard._listen.toString().includes('onSnapshot') &&
+    !communityBoard.enter.toString().includes('setInterval'),
+  fabricsLazy: scanFabricsFromAssets.toString().includes('window.location.origin') &&
+    !scanFabricsFromAssets.toString().includes('FileReader'),
+}));
 ok('queued project saves are pinned to their starting account',
-  projectStore.save.toString().includes('this.ownerUid') &&
-  projectStore._commit.toString().includes("reason: 'auth-changed'") &&
-  projectStore.uploadImage.toString().includes("this._uid() !== uid") &&
-  INDEX_SOURCE.includes('await firebase.auth().signOut()'));
+  p.savesPinned && INDEX_SOURCE.includes('await firebase.auth().signOut()'));
 ok('legacy recovery is idempotent and deletion blocks its source',
   INDEX_SOURCE.includes('dead.has(id) || recovered.has(id)') &&
   INDEX_SOURCE.includes("batch.set(this._tombs().doc(legacySource)"));
-ok('remote equality covers complete visible card state',
-  _cardState.toString().includes('c.height') &&
-  _cardState.toString().includes('c.stacked') &&
-  projectStore._sig.toString().includes('Math.round(s.x || 0)'));
+ok('remote equality covers complete visible card state', p.cardStateComplete);
 ok('share rules bound the item list and schema',
   RULES_SOURCE.includes('request.resource.data.items.size() <= 200') && RULES_SOURCE.includes("request.resource.data.schema == 'v13.15'"));
 ok('wall updates cannot move a post between projects',
@@ -194,13 +221,9 @@ ok('wall updates cannot move a post between projects',
 ok('new wall posts require GPT Image 2 provenance',
   RULES_SOURCE.includes("request.resource.data.model == 'gpt-image-2'") &&
   INDEX_SOURCE.includes("model: card.generatedBy || 'gpt-image-2'"));
-ok('community uses a live listener instead of polling',
-  communityBoard._listen.toString().includes('onSnapshot') &&
-  !communityBoard.enter.toString().includes('setInterval'));
+ok('community uses a live listener instead of polling', p.liveListener);
 ok('fabric library is lazy and URL-backed',
-  !INDEX_SOURCE.includes('[Maya fabric preload]') &&
-  scanFabricsFromAssets.toString().includes('window.location.origin') &&
-  !scanFabricsFromAssets.toString().includes('FileReader'));
+  !INDEX_SOURCE.includes('[Maya fabric preload]') && p.fabricsLazy);
 ok('OpenAI proxy bounds input, time, and response memory',
   SERVER_SOURCE.includes("limit: '24mb'") &&
   SERVER_SOURCE.includes('AbortSignal.timeout(285000)') &&
