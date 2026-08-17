@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.24">
+<meta name="maya-version" content="13.25">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -293,9 +293,10 @@ try {
 
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-16a">
+  <details class="fold" id="changes-fold" data-latest="2026-08-16b">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 16</b>A deploy check anyone can open: maya.manasiyo.com/verify.html says in one line whether the live site is the version that was pushed, whether the wall shipped as intended, and, borrowing this map's sign in, whether Google still accepts the Drive authorisation. No terminal, no installing anything, works on a phone.</div>
     <div class="chg"><b>Aug 16</b>The white columns are gone from the community wall. A wall card is now a favorite card lying down: transparent glass, the same starlight edge, and the frame takes each picture's own shape, so a render that is not exactly wide can never sit inside a lit box. Names and notes still appear only on hover, exactly like the inspiration cards.</div>
     <div class="chg"><b>Aug 14</b>Deleted really stays deleted. Project removal now takes the project, tombstone, wall posts and share links down in one cloud operation, then keeps a durable retry list until every picture is gone. My Fabrics uses the same rule: the drawer changes only after its online index saves, and failed picture cleanup resumes automatically.</div>
     <div class="chg"><b>Aug 14</b>The community wall now looks and behaves like the inspiration cards: the same quiet glass, no white glow columns, details only on hover or keyboard focus, and three smooth rows flowing left to right. Favorites keep a smaller fixed halo and breathe by opacity only, so the glow no longer jitters or changes size.</div>

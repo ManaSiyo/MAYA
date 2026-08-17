@@ -30,8 +30,8 @@ If this file disagrees with chat memory, this file is right.
 
 ## Where things stand, August 16 2026
 
-- Live and verified in the browser: **v13.24 pending push; v13.23 confirmed
-  serving** on maya.manasiyo.com and on the Systems Map.
+- Live and verified: **v13.24 confirmed serving** on maya.manasiyo.com and on
+  the Systems Map. **v13.25 is committed and waiting for Fromsa's push.**
 - Git: `~/Desktop/MAYA-new`, `origin/maya-v2` and GitHub were identical at
   `ba825c5` with a clean tree before this handoff. GitHub is working. The
   Codex sandbox cannot resolve github.com; that is a sandbox limit, not a
@@ -43,6 +43,30 @@ If this file disagrees with chat memory, this file is right.
   the second time (renewed Aug 13, dead again by Aug 16). Submissions do not
   land. This is not a code fault and no agent can repair it. The numbered
   steps with links are in `fixes.txt`, entry of August 16.
+
+## Where each test can actually run, corrected August 16
+
+This was wrong in every earlier handoff and it is why regressions shipped.
+
+- `tests/app-regression.mjs` (browser): runs ONLY in Claude's cloud container.
+  Codex has no Chromium and cannot bind a socket. **Fromsa's Mac has no Node at
+  all**, so it has never run there either. Do not claim it passed unless it
+  printed "all passed"; a crash mid-file used to hide every later check.
+- `tests/smoke.mjs` (server): Claude's container, after `npm install` in
+  `docs/server`.
+- `tests/verify-live.mjs` (deploy): needs the internet, so neither agent
+  sandbox can run it. It also needs Node, which Fromsa does not have.
+- **`/verify.html` (deploy, no install): the one Fromsa can actually use.** It
+  is a page ON the site, so it reads the live files and the live API, and it
+  borrows the Systems Map sign in from same-origin localStorage to ask deep
+  health whether Drive is truly authorised. Open maya.manasiyo.com/verify.html
+  after any push. Works on a phone.
+
+## v13.25 (Claude): the deploy check
+
+- `/verify.html` added, `verify-live.mjs` kept for whoever has Node, and three
+  assertions guard the page: it ships, it asks the real Drive question, and it
+  never renders the borrowed token.
 
 ## v13.24, this handoff's work (Claude)
 
@@ -74,8 +98,8 @@ If this file disagrees with chat memory, this file is right.
 
 ## Next work, in order
 
-1. Push v13.24 from GitHub Desktop, then confirm the app and the Systems Map
-   both sign out on the next load and both report 13.24.
+1. Push v13.25 from GitHub Desktop, then open maya.manasiyo.com/verify.html
+   and press "Watch for a new deploy". That page replaces guessing.
 2. Renew the Drive credential (`fixes.txt`, August 16) and log the result.
 3. Durable per-uid quotas to replace the per-instance memory rate limit, plus
    generation backpressure. This is the last thing standing between the

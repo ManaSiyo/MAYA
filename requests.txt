@@ -16,6 +16,25 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 16, 2026, NIGHT
+
+[x] "Test whatever is pushed out, without me checking the Systems Map." Done
+    two ways. I read the live deployed files and the live API directly and
+    confirmed v13.24 shipped whole, wall fix included, server healthy. Then,
+    because your Mac turned out to have no Node installed at all, I built a
+    check that needs nothing: maya.manasiyo.com/verify.html. It asks the
+    server itself, and it borrows the Systems Map sign in to tell you whether
+    Google still accepts the Drive authorisation. One glance, works on a
+    phone, ships in v13.25.
+[x] Rated launch readiness honestly: 8.5 out of 10 for your own consultations
+    and invited clients, 4.5 out of 10 for opening it to the public today.
+    What separates them is money visibility, failure visibility and
+    provenance, not fragility. Order of work is in docs/AI-HANDOFF.md.
+[x] Recorded the real reason regressions slipped: the browser suite could only
+    ever run in one of the three places we work, and a crash mid-file used to
+    hide every check after it. Corrected, and the truth about where each test
+    can run is now written in the handoff instead of assumed.
+
 AUGUST 16, 2026, MORNING
 
 [x] Final audit before handing the work to Codex. Everything checked: both

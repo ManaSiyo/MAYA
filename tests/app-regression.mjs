@@ -292,6 +292,18 @@ await pg.waitForTimeout(1500);
 const appLoggedOut = await pg.evaluate(() => localStorage.getItem('maya_google_token') === null);
 ok('app: version change clears the cached sign in', appLoggedOut);
 
+// v13.25: the deploy check page. Fromsa's Mac has no Node, so /verify.html is
+// the only verifier he can actually run. It must exist, must ask deep health
+// with the borrowed Systems Map token, and must never render that token.
+const VERIFY_SOURCE = existsSync(join(ROOT, 'verify.html'))
+  ? readFileSync(join(ROOT, 'verify.html'), 'utf8') : '';
+ok('deploy check page ships', VERIFY_SOURCE.includes('MAYA Deploy Check'));
+ok('deploy check asks the real Drive question',
+  VERIFY_SOURCE.includes("localStorage.getItem('maya_admin_tok')") &&
+  VERIFY_SOURCE.includes('/api/healthz/deep'));
+ok('deploy check never prints the sign in token',
+  !/textContent\s*=\s*tok/.test(VERIFY_SOURCE) && !VERIFY_SOURCE.includes('innerHTML = tok'));
+
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);
