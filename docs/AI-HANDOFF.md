@@ -30,8 +30,8 @@ If this file disagrees with chat memory, this file is right.
 
 ## Where things stand, August 16 2026
 
-- Live and verified: **v13.24 confirmed serving** on maya.manasiyo.com and on
-  the Systems Map. **v13.25 is committed and waiting for Fromsa's push.**
+- Live and verified: **v13.25 confirmed serving** on maya.manasiyo.com and on
+  the Systems Map. **v13.26 is committed and waiting for Fromsa's push.**
 - Git: `~/Desktop/MAYA-new`, `origin/maya-v2` and GitHub were identical at
   `ba825c5` with a clean tree before this handoff. GitHub is working. The
   Codex sandbox cannot resolve github.com; that is a sandbox limit, not a
@@ -61,6 +61,24 @@ This was wrong in every earlier handoff and it is why regressions shipped.
   borrows the Systems Map sign in from same-origin localStorage to ask deep
   health whether Drive is truly authorised. Open maya.manasiyo.com/verify.html
   after any push. Works on a phone.
+
+## v13.26 (Claude): renders were broken for every saved project
+
+- Reading a card's picture threw "Failed to fetch": the pictures live in
+  Firebase Storage, the bucket sends no CORS headers, so script cannot read
+  bytes the browser will happily draw. Visualize and Modify need those bytes as
+  the gpt-image-2 anchor, so every render on a saved project died and the toast
+  said "connection hiccup". This was NOT the server: chat answered in 1.1s and
+  images in 38s through the live proxy during the diagnosis.
+- Fix: `blobFromPicture()` is the single reader. Direct first, then back through
+  the new same-origin `/api/imgproxy` (sign in required, MAYA storage hosts
+  only, `redirect: 'error'`, image or video only, 25 MB cap). Four call sites
+  converted: render anchors, video save, one pager, pieces upload.
+- A bucket CORS rule is still worth setting once so the direct path works; the
+  exact Cloud Shell command is in `fixes.txt`, August 17. The proxy means MAYA
+  never depends on it.
+- Systems Map now says SUBMISSIONS, not Drive, and its failure text describes
+  what happened to the submissions rather than naming Google plumbing.
 
 ## v13.25 (Claude): the deploy check
 

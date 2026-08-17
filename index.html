@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.25">
+<meta name="maya-version" content="13.26">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -7651,7 +7651,7 @@ async function _generateShowcaseVideo(it) {
     let finalUrl = videoUrl;
     try {
       if (window.mayaFirebase && window.mayaFirebase.uploadVideo) {
-        const blob = await (await fetch(videoUrl)).blob();
+        const blob = await blobFromPicture(videoUrl);
         const key  = (it.card.inspirationId || it.id) + '-' + (it.card.version || 1);
         finalUrl   = await window.mayaFirebase.uploadVideo(key, blob);
       }
@@ -8608,6 +8608,35 @@ function fileToDataUrl(file) {
 // body cap and 413. This wrapper takes any Blob and returns a JPEG ≤1024px
 // on the longer edge, so every payload that leaves the browser is small,
 // regardless of where the image originated.
+// v13.26: read one of MAYA's own pictures as bytes, wherever it lives.
+// A data URL reads directly. A Firebase Storage address does NOT: the browser
+// draws it in an <img> but refuses to let script read it without CORS headers
+// on the bucket, and the bucket had none, so every Visualize and Modify on a
+// saved project failed with "Failed to fetch" and the app blamed the
+// connection. Try direct, then come back through MAYA's own server, which is
+// same origin and has no such rule. Whichever works, the render proceeds.
+async function blobFromPicture(src) {
+  if (!src) throw new Error('no picture');
+  if (src.startsWith('data:') || src.startsWith('blob:') || src.startsWith('/')) {
+    return await (await fetch(src)).blob();
+  }
+  try {
+    return await (await fetch(src)).blob();
+  } catch (direct) {
+    const key = getApiKey();
+    if (!key) throw direct;
+    const r = await fetch('/api/imgproxy?u=' + encodeURIComponent(src), {
+      headers: { 'Authorization': 'Bearer ' + key },
+    });
+    if (!r.ok) {
+      console.error('[Maya picture] proxy ' + r.status + ' for', src.slice(0, 120));
+      throw new Error('Could not read that picture. Try again in a moment.');
+    }
+    console.warn('[Maya picture] read through the server, the bucket still has no CORS rule');
+    return await r.blob();
+  }
+}
+
 async function compressBlobForUpload(blob, maxDim = IMAGE_COMPRESS_MAX_DIM, quality = IMAGE_COMPRESS_QUALITY) {
   // Already tiny → skip the round-trip.
   if (blob && blob.size && blob.size < 400 * 1024) return blob;
@@ -10253,7 +10282,7 @@ async function callOpenAIImageEdit(prevDataUrl, prompt, size, quality, opts) {
   let idx = 0;
   for (const src of inputList) {
     if (!src) continue;
-    const rawBlob = await (await fetch(src)).blob();
+    const rawBlob = await blobFromPicture(src);
     // v10.26: compress every anchor regardless of source (user upload, prior
     // Maya output, session-restored image). Total payload stays well under
     // Vercel's 4.5MB cap even with 10+ anchors.
@@ -13675,7 +13704,7 @@ async function doSave() {
       // v10.15: write the chosen vision as `dream-garment.png` so the
       // back-end loads it by name. Clear naming over the older hero.png.
       try {
-        const dgBlob = await (await fetch(lastOnePagerImage)).blob();
+        const dgBlob = await blobFromPicture(lastOnePagerImage);
         await writeBlob(dir, 'dream-garment.png', dgBlob);
       } catch (e) { console.warn('[Maya dream-garment.png]', e); }
     }
@@ -13699,7 +13728,7 @@ async function doSave() {
         }
         usedNames.add(fileName.toLowerCase());
         try {
-          const blob = await (await fetch(it.card.image)).blob();
+          const blob = await blobFromPicture(it.card.image);
           await writeBlob(inspoDir, fileName, blob);
         } catch (e) {
           console.warn('[Maya save inspo]', fileName, e);

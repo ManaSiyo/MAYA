@@ -11,6 +11,50 @@ done, how it was verified, and whether it is FIXED, OPEN, or RECURRED.
 
 ─────────────────────────────────────────────
 
+AUGUST 17, 2026, MORNING. STATUS: FIXED IN CODE v13.26. ONE OPTIONAL OWNER
+STEP LEFT (BUCKET RULE).
+
+Symptom: pressing Visualize did nothing but show "connection hiccup, that
+didn't reach the server". The server was fine: a chat call answered in 1.1
+seconds and an image call answered in 38 seconds, both through the live proxy,
+tested from Fromsa's own signed in browser.
+
+Root cause, proved in the same browser: reading a card's own picture threw
+"TypeError: Failed to fetch". The picture lives at
+firebasestorage.googleapis.com and the bucket sends no CORS headers, so the
+browser allows an <img> to DRAW it but forbids script from READING its bytes.
+Visualize and Modify must read the bytes, because gpt-image-2 takes the prior
+picture as an anchor. MAYA's error text then honestly reported a network
+failure, which read to a human as a connection problem.
+
+Fix in code, v13.26: one helper, blobFromPicture(), is now the only way MAYA
+reads a picture's bytes. It tries the address directly, and if the browser
+refuses it comes back through a new same origin endpoint on MAYA's own server,
+/api/imgproxy, which requires sign in, only accepts MAYA's own storage hosts,
+follows no redirects, refuses anything that is not an image or video, and caps
+the size at 25 MB. Four call sites now use it: the render anchors, the video
+save, the one pager and the pieces upload.
+
+Optional but worth doing once, and it is not something an assistant can do
+because it is Fromsa's console. Give the bucket a CORS rule so the browser can
+read pictures directly and the proxy stays a fallback:
+1. Open Cloud Shell, which needs nothing installed.
+   https://console.cloud.google.com/cloudshell/open?project=pro-maya
+2. Paste these three lines, all at once, and press Return:
+
+cat > /tmp/cors.json <<'EOF'
+[{"origin":["https://maya.manasiyo.com","https://pro-maya.web.app"],"method":["GET","HEAD"],"responseHeader":["Content-Type"],"maxAgeSeconds":3600}]
+EOF
+gcloud storage buckets update gs://pro-maya.firebasestorage.app --cors-file=/tmp/cors.json
+
+3. It prints "Updating gs://..." and finishes. Nothing restarts, nothing
+   deploys, and no existing picture changes.
+Verified after the deploy: press Visualize on a saved project. If it renders,
+this is closed. The browser console says once, quietly, when a picture had to
+come through the server instead.
+
+─────────────────────────────────────────────
+
 AUGUST 16, 2026, MORNING. STATUS: OPEN, WAITING ON FROMSA. RECURRED.
 
 Symptom: Systems Map says "something needs attention (Drive authorization

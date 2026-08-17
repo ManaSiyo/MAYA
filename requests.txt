@@ -16,6 +16,27 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 17, 2026, MORNING
+
+[!] "Image generation is not working, it says connection hiccup." FOUND, and it
+    was not the connection. Since projects live in the cloud, a card's picture
+    is an address, not the picture. The browser will DRAW such a picture but
+    refuses to let MAYA read its bytes back unless the storage bucket says it
+    may, and the bucket never said so. Visualize and Modify need those bytes,
+    because the previous picture is the anchor for the new one. So every render
+    on a saved project failed, and the honest network message came out as
+    "connection hiccup". Fixed in v13.26: MAYA reads its own pictures through
+    its own server whenever the browser refuses, so this can never stop a
+    render again. Setting the bucket rule is still worth doing once, and it is
+    one command, in fixes.txt dated today.
+[x] "It should not say Drive any more." Done. The light on the Systems Map now
+    reads SUBMISSIONS, and when something is wrong it says what is wrong with
+    the submissions instead of naming Google plumbing. The Google words stay
+    where engineers need them, in fixes.txt.
+[ ] Latest Submissions still empty, and this one is not code: the folder is
+    refusing the server until the authorisation is renewed. Steps with links
+    are in fixes.txt, August 16. Nothing else on the map is red.
+
 AUGUST 16, 2026, NIGHT
 
 [x] "Test whatever is pushed out, without me checking the Systems Map." Done

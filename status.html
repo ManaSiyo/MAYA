@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.25">
+<meta name="maya-version" content="13.26">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -246,7 +246,7 @@ try {
     <span class="status-item"><span class="sdot wait" id="d-site"></span><span class="lgt-lbl">Site</span></span>
     <span class="status-item"><span class="sdot wait" id="d-api"></span><span class="lgt-lbl">API</span></span>
     <span class="status-item"><span class="sdot wait" id="d-assets"></span><span class="lgt-lbl">Images</span></span>
-    <span class="status-item"><span class="sdot wait" id="d-drive"></span><span class="lgt-lbl">Drive</span></span>
+    <span class="status-item"><span class="sdot wait" id="d-drive"></span><span class="lgt-lbl">Submissions</span></span>
     <span class="status-item"><span class="sdot wait" id="d-backup"></span><span class="lgt-lbl">Backup</span></span>
   </div>
   <button class="top-btn hamburger" onclick="document.getElementById('drawer').classList.toggle('open')" title="Menu">
@@ -258,7 +258,7 @@ try {
   <h3>The vault, where data physically lives</h3>
   <a href="https://console.firebase.google.com/project/pro-maya/firestore/databases/-default-/data/~2Fusers" target="_blank">Boards and projects<small>Firestore. Delete a collection here to truly destroy it.</small></a>
   <a href="https://console.firebase.google.com/project/pro-maya/storage/pro-maya.firebasestorage.app/files/~2Fusers" target="_blank">Pictures<small>Storage. Every uploaded and generated image.</small></a>
-  <a href="https://drive.google.com/drive/folders/1ZEgQi3BpYDlNMsIMK553dLQs0kKiga35" target="_blank">Client PDFs<small>The Drive submissions folder.</small></a>
+  <a href="https://drive.google.com/drive/folders/1ZEgQi3BpYDlNMsIMK553dLQs0kKiga35" target="_blank">Client PDFs<small>Where submissions are filed.</small></a>
   <h3>Behind the scenes</h3>
   <a href="https://console.firebase.google.com/project/pro-maya/hosting/sites/pro-maya" target="_blank">Hosting<small>Deploys, one click rollback.</small></a>
   <a href="https://console.cloud.google.com/run/detail/us-west1/maya-api/logs?project=pro-maya" target="_blank">API logs<small>Every request, every real error.</small></a>
@@ -283,7 +283,7 @@ try {
   </div>
 
   <h2 class="grp">Latest submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span>
-    <a class="aside" href="https://drive.google.com/drive/folders/1ZEgQi3BpYDlNMsIMK553dLQs0kKiga35" target="_blank">Open Drive folder &rarr;</a></h2>
+    <a class="aside" href="https://drive.google.com/drive/folders/1ZEgQi3BpYDlNMsIMK553dLQs0kKiga35" target="_blank">Open submissions folder &rarr;</a></h2>
   <div id="subs-strip" style="display:none"></div>
   <div id="subs-note-inline">Waiting for the one sign in at the top of the page.</div>
 
@@ -293,9 +293,11 @@ try {
 
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-16b">
+  <details class="fold" id="changes-fold" data-latest="2026-08-17a">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 17</b>Visualize and Modify work again on saved projects. Since projects moved to the cloud, a card's picture is an address rather than the picture itself, and the browser will draw such a picture but refuses to let MAYA read it back unless the storage bucket says it may. The bucket never said so, so every render on a saved project died and the app blamed the connection. MAYA now reads its own pictures through its own server when the browser will not, so a render can never be stopped by that setting again.</div>
+    <div class="chg"><b>Aug 17</b>This map says Submissions where it used to say Drive, and when something is wrong it says what is wrong with your submissions instead of naming Google plumbing.</div>
     <div class="chg"><b>Aug 16</b>A deploy check anyone can open: maya.manasiyo.com/verify.html says in one line whether the live site is the version that was pushed, whether the wall shipped as intended, and, borrowing this map's sign in, whether Google still accepts the Drive authorisation. No terminal, no installing anything, works on a phone.</div>
     <div class="chg"><b>Aug 16</b>The white columns are gone from the community wall. A wall card is now a favorite card lying down: transparent glass, the same starlight edge, and the frame takes each picture's own shape, so a render that is not exactly wide can never sit inside a lit box. Names and notes still appear only on hover, exactly like the inspiration cards.</div>
     <div class="chg"><b>Aug 14</b>Deleted really stays deleted. Project removal now takes the project, tombstone, wall posts and share links down in one cloud operation, then keeps a durable retry list until every picture is gone. My Fabrics uses the same rule: the drawer changes only after its online index saves, and failed picture cleanup resumes automatically.</div>
@@ -450,9 +452,13 @@ async function runChecks(){
         if(!api&&r.ok) apiWhy='no OpenAI key on the server';
         else if(!api) apiWhy='could not check';
         if(drive===false){
-          const reasons={drive_auth:'Drive authorization rejected',drive_timeout:'Drive check timed out',
-            drive_403:'Drive permission denied',drive_404:'Drive folder not found'};
-          driveWhy=reasons[j.detail]||'Drive not answering';
+          // v13.26: Fromsa reads this line, not a Google engineer. Say what is
+          // happening to HIS submissions; the technical name lives in fixes.txt.
+          const reasons={drive_auth:'the submissions folder is refusing the server',
+            drive_timeout:'the submissions folder did not answer in time',
+            drive_403:'the server is not allowed into the submissions folder',
+            drive_404:'the submissions folder cannot be found'};
+          driveWhy=reasons[j.detail]||'the submissions folder is not answering';
         }
       } else {
         const r=await _statusFetch('/api/healthz?cb='+Date.now());
@@ -471,10 +477,10 @@ async function runChecks(){
   setDot('d-drive', drive===null?'wait':(drive?'ok':'bad'));
   const publicOnly = !_idTok && site && api && assets && backup && drive===null;
   let suffix = '';
-  if (publicOnly) suffix = ', public systems go; sign in for the real Drive check';
+  if (publicOnly) suffix = ', public systems go; sign in to check submissions';
   else if (site&&api&&assets&&backup&&drive===true) suffix = ', all systems go';
   else suffix = ', something needs attention'+(apiWhy?' ('+apiWhy+')':'')+
-    (drive===false?' ('+(driveWhy||'Drive not answering')+', submissions will not land)':'');
+    (drive===false?' ('+(driveWhy||'the submissions folder is not answering')+', new submissions will not land)':'');
   document.getElementById('checked-at').textContent='last checked '+new Date().toLocaleString()+suffix;
 }
 runChecks();
@@ -623,9 +629,9 @@ async function loadSubmissions() {
     let j = {}; try { j = await r.json(); } catch (_) {}
     const d = String(j.detail || '');
     if (j.code === 'drive_auth' || /invalid_grant|expired or revoked|oauth/i.test(d)) {
-      _subsNote('Drive is not answering: the server\'s Drive authorisation has expired or been revoked. Submissions will not land until the refresh token is renewed on Cloud Run. See fixes.txt.');
+      _subsNote('Submissions cannot be reached: the folder they live in is refusing the server, so new ones will not land and past ones cannot be listed. This is an authorisation Fromsa renews, step by step in fixes.txt, dated Aug 16.');
     } else if (j.code === 'drive_timeout') {
-      _subsNote('Drive took too long to answer. Nothing was deleted; the map will retry automatically.');
+      _subsNote('The submissions folder took too long to answer. Nothing was lost; the map keeps retrying.');
     } else {
       _subsNote('The server could not list submissions (' + r.status + (j.error ? ', ' + j.error : '') + '). Not a sign in problem.');
     }

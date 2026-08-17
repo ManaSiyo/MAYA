@@ -770,6 +770,68 @@ async function driveList(accessToken, params) {
   return (await r.json()).files || [];
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// GET /api/imgproxy?u=<picture address> — v13.26. Read one of MAYA's own
+// stored pictures back through this server, same origin.
+//
+// Why this exists: since projects moved to the cloud, a card's picture is a
+// Firebase Storage address, not a data URL. The browser will happily DRAW a
+// cross origin picture in an <img>, but it refuses to let JavaScript READ the
+// bytes unless the bucket returns CORS headers. Visualize and Modify have to
+// read the bytes, because gpt-image-2 takes the previous picture as an anchor.
+// The bucket had no CORS rule, so every render on a saved project died with
+// "Failed to fetch" and the app said "connection hiccup".
+//
+// Setting CORS on the bucket is still the right permanent fix. This endpoint
+// means MAYA never depends on that setting being right: the browser tries the
+// picture directly first, and falls back through here.
+//
+// Only MAYA's own storage hosts, only for a signed in user, rate limited,
+// size capped, and never a redirect follower to somewhere else.
+// ═══════════════════════════════════════════════════════════════════════════
+const IMGPROXY_HOSTS = new Set([
+  'firebasestorage.googleapis.com',
+  'storage.googleapis.com',
+  'pro-maya.firebasestorage.app',
+  'pro-maya.appspot.com',
+]);
+const IMGPROXY_MAX = 25 * 1024 * 1024;
+app.get('/api/imgproxy', requireAuthHeader, async (req, res) => {
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized', detail: e.message }); }
+  const rlI = rateLimit(user.sub, user.email);
+  if (!rlI.ok) return res.status(429).json({ error: 'rate_limited', scope: rlI.scope });
+
+  let target;
+  try { target = new URL(String(req.query.u || '')); }
+  catch (_) { return res.status(400).json({ error: 'bad_url' }); }
+  if (target.protocol !== 'https:' || !IMGPROXY_HOSTS.has(target.hostname)) {
+    console.warn('[imgproxy] refused host', target.hostname, 'for', user.email);
+    return res.status(403).json({ error: 'host_not_allowed' });
+  }
+
+  try {
+    const r = await fetch(target.toString(), {
+      redirect: 'error',                       // no hopping to another host
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!r.ok) return res.status(r.status === 404 ? 404 : 502).json({ error: 'upstream_' + r.status });
+    const type = r.headers.get('content-type') || 'application/octet-stream';
+    if (!/^image\/|^video\//.test(type)) return res.status(415).json({ error: 'not_a_picture' });
+    const len = Number(r.headers.get('content-length') || 0);
+    if (len && len > IMGPROXY_MAX) return res.status(413).json({ error: 'too_large' });
+    res.setHeader('Content-Type', type);
+    res.setHeader('Cache-Control', 'private, max-age=3600');
+    const buf = Buffer.from(await r.arrayBuffer());
+    if (buf.length > IMGPROXY_MAX) return res.status(413).json({ error: 'too_large' });
+    res.end(buf);
+  } catch (e) {
+    console.error('[imgproxy] failed,', e.message);
+    res.status(502).json({ error: 'fetch_failed', detail: e.message });
+  }
+});
+
 // GET /api/admin/submissions — every submission folder in Drive, newest first,
 // with the files inside each. Powers the live feed on the Backend page.
 app.get('/api/admin/submissions', async (req, res) => {

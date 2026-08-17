@@ -257,9 +257,13 @@ const s = await pg.evaluate(() => ({
   doorSizes: new Set([...document.querySelectorAll('.grid.doors .card b')]
     .map(el => getComputedStyle(el).fontSize)).size,
   healthUsesTimeouts: runChecks.toString().includes('_statusFetch'),
+  lights: [...document.querySelectorAll('.lgt-lbl')].map(e => e.textContent).join(','),
   thumbnailsParallel: _paintThumbs.toString().includes('Promise.all'),
   tokenRefreshesHealth: _adoptToken.toString().includes('runChecks()'),
 }));
+// v13.26: the map speaks about SUBMISSIONS, not Google plumbing.
+ok('the map light reads Submissions', s.lights.includes('Submissions') && !s.lights.includes('Drive'));
+
 ok('Systems Map order: changes, prompting, architecture', s.order === 'changes-fold,pe-fold,arch-fold');
 ok('Architecture is collapsible', s.archFold);
 ok('door cards have no arrows', s.arrows === 0);
@@ -291,6 +295,30 @@ await pg.reload({ waitUntil: 'domcontentloaded' });
 await pg.waitForTimeout(1500);
 const appLoggedOut = await pg.evaluate(() => localStorage.getItem('maya_google_token') === null);
 ok('app: version change clears the cached sign in', appLoggedOut);
+
+// v13.26: the picture-read fix. A saved project's card picture is a Storage
+// address; the browser draws it but will not let script read it without CORS on
+// the bucket, which is why every Visualize died as "connection hiccup". Every
+// place that reads a picture's bytes must go through blobFromPicture, and the
+// server must offer the same-origin fallback, host-locked.
+// The only two raw reads left in the file are the helper's own two branches.
+const RAW_PICTURE_READS = INDEX_SOURCE.split('await (await fetch(src)).blob()').length - 1;
+ok('every stored picture is read through the one helper',
+  INDEX_SOURCE.includes('async function blobFromPicture(src)') &&
+  INDEX_SOURCE.includes('const rawBlob = await blobFromPicture(src);') &&
+  RAW_PICTURE_READS === 2 &&
+  !INDEX_SOURCE.includes('await (await fetch(it.card.image)).blob()') &&
+  !INDEX_SOURCE.includes('await (await fetch(videoUrl)).blob()') &&
+  !INDEX_SOURCE.includes('await (await fetch(lastOnePagerImage)).blob()'));
+ok('the helper falls back to MAYA\'s own server',
+  INDEX_SOURCE.includes("'/api/imgproxy?u=' + encodeURIComponent(src)"));
+ok('the picture proxy is signed in, host locked and size capped',
+  SERVER_SOURCE.includes("app.get('/api/imgproxy', requireAuthHeader") &&
+  SERVER_SOURCE.includes('IMGPROXY_HOSTS.has(target.hostname)') &&
+  SERVER_SOURCE.includes("redirect: 'error'") &&
+  SERVER_SOURCE.includes('IMGPROXY_MAX'));
+ok('the proxy refuses anything that is not a picture',
+  SERVER_SOURCE.includes("!/^image\\/|^video\\//.test(type)"));
 
 // v13.25: the deploy check page. Fromsa's Mac has no Node, so /verify.html is
 // the only verifier he can actually run. It must exist, must ask deep health
