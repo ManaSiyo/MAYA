@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.27">
+<meta name="maya-version" content="13.28">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -126,6 +126,30 @@ try {
   #traffic-note{font-family:'Jost',Verdana,sans-serif;font-size:10.5px;color:var(--dim);line-height:1.7;
     border:0.5px dashed var(--line);border-radius:12px;padding:11px 14px}
   #traffic-note.hidden,#traffic-tiles.hidden{display:none}
+  /* v13.28: the credit ring. Left aligned so it sits under the LIVE NOW tile,
+     which is where Fromsa asked for it. */
+  #credit-row{display:flex;align-items:center;gap:14px;margin:10px 0 6px;
+    justify-content:flex-start;text-align:left}
+  #credit-row.hidden{display:none}
+  #credit-ring{position:relative;width:84px;height:84px;flex:0 0 84px}
+  #credit-ring svg{width:84px;height:84px;transform:rotate(-90deg)}
+  #credit-ring circle{fill:none;stroke-width:3;stroke-linecap:round}
+  #credit-ring .cr-track{stroke:rgba(255,255,255,0.12)}
+  #credit-ring .cr-arc{stroke:var(--green);stroke-dasharray:226.2;stroke-dashoffset:226.2;
+    transition:stroke-dashoffset 1s cubic-bezier(.45,0,.55,1), stroke .4s;
+    filter:drop-shadow(0 0 4px rgba(74,222,128,0.45))}
+  #credit-ring.warn .cr-arc{stroke:var(--amber);filter:drop-shadow(0 0 4px rgba(251,191,36,0.45))}
+  #credit-ring.low .cr-arc{stroke:var(--rose);filter:drop-shadow(0 0 4px rgba(253,164,175,0.5))}
+  #credit-ring .cr-mid{position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:0}
+  #credit-ring .cr-pct{font-size:19px;line-height:1;color:var(--ink)}
+  #credit-ring .cr-unit{font-family:'Jost',Verdana,sans-serif;font-size:7.5px;letter-spacing:0.2em;
+    text-transform:uppercase;color:var(--faint);margin-top:2px}
+  #credit-side .cr-lbl{font-family:'Jost',Verdana,sans-serif;font-size:9px;letter-spacing:0.16em;
+    text-transform:uppercase;color:var(--dim)}
+  #credit-side .cr-amt{font-size:15px;color:var(--ink);margin-top:2px}
+  #credit-side .cr-sub{font-family:'Jost',Verdana,sans-serif;font-size:8.5px;letter-spacing:0.14em;
+    text-transform:uppercase;color:var(--faint);margin-top:2px}
   #gsi-slot{margin-top:8px}
   pre.cmd{text-align:left;font-family:Menlo,monospace;font-size:10.5px;color:var(--ink);background:rgba(255,255,255,0.06);
           border:0.5px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:10px;
@@ -291,11 +315,29 @@ try {
   <div id="traffic-tiles" class="tiles hidden"></div>
   <div id="traffic-note">checking&#8230;</div>
 
+  <!-- v13.28: the credit meter, under LIVE NOW. OpenAI will not tell an
+       application key what the balance is, so MAYA counts its own calls. -->
+  <div id="credit-row" class="hidden">
+    <div id="credit-ring" title="Estimated. MAYA counts every call it makes, because OpenAI only reveals a real balance to an organisation admin key.">
+      <svg viewBox="0 0 84 84" aria-hidden="true">
+        <circle class="cr-track" cx="42" cy="42" r="36"></circle>
+        <circle class="cr-arc" cx="42" cy="42" r="36"></circle>
+      </svg>
+      <div class="cr-mid"><span class="cr-pct">&#8212;</span><span class="cr-unit">left</span></div>
+    </div>
+    <div id="credit-side">
+      <div class="cr-lbl">API credit, this month</div>
+      <div class="cr-amt">&#8212;</div>
+      <div class="cr-sub">estimated</div>
+    </div>
+  </div>
+
 
   <div class="map-footer">
   <details class="fold" id="changes-fold" data-latest="2026-08-17b">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 17</b>A credit meter on this map, under LIVE NOW: a ring showing how much of the month's API budget is left, the amount in dollars, and how many calls it took. It is an estimate on purpose. OpenAI only reveals a real balance to an organisation admin key, which should never sit on a web server, so MAYA prices its own calls as it makes them. Set the budget with MONTHLY_BUDGET_USD and the ring follows it.</div>
     <div class="chg"><b>Aug 17</b>Submissions live inside MAYA now. They used to be filed into a Google Drive folder that MAYA reached with an authorisation Google revoked twice in four days, and each time every submission stopped landing with no fix available in the code. They are now written straight into MAYA's own storage by the server itself, with the identity it already runs as. Nothing to renew, nothing to expire, and this map lists them from there. Submissions filed before today stay in the old Drive folder and are still in Drive if you need them.</div>
     <div class="chg"><b>Aug 17</b>Visualize and Modify work again on saved projects. Since projects moved to the cloud, a card's picture is an address rather than the picture itself, and the browser will draw such a picture but refuses to let MAYA read it back unless the storage bucket says it may. The bucket never said so, so every render on a saved project died and the app blamed the connection. MAYA now reads its own pictures through its own server when the browser will not, so a render can never be stopped by that setting again.</div>
     <div class="chg"><b>Aug 17</b>This map says Submissions where it used to say Drive, and when something is wrong it says what is wrong with your submissions instead of naming Google plumbing.</div>
@@ -551,7 +593,7 @@ function _adoptToken(t, firstLoad) {
   _cacheTok(t);
   _showSignin(false);
   _scheduleRenew(t);
-  runChecks(); loadTraffic(); loadSubmissions(); _fbBridge(t);
+  runChecks(); loadTraffic(); loadSubmissions(); loadCredit(); _fbBridge(t);
 }
 function _gisBoot() {
   const cached = _cachedTok();
@@ -727,8 +769,12 @@ async function _paintThumbs() {
 setInterval(() => {
   if (_idTok && document.visibilityState === 'visible') loadSubmissions();
 }, 15000);
+// The meter moves in cents, not seconds: once a minute is plenty.
+setInterval(() => {
+  if (_idTok && document.visibilityState === 'visible') loadCredit();
+}, 60000);
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && _idTok) { loadSubmissions(); runChecks(); }
+  if (document.visibilityState === 'visible' && _idTok) { loadSubmissions(); runChecks(); loadCredit(); }
 });
 
 let _trafficSeq = 0;
@@ -765,6 +811,43 @@ async function loadTraffic() {
   tiles.classList.remove('hidden');
   document.getElementById('traffic-note').classList.add('hidden');
 }
+// ── v13.28: the credit meter ───────────────────────────────────────────────
+// The circle shows how much of the month's budget is left. The number is an
+// estimate on purpose: OpenAI only reveals a real balance to an organisation
+// admin key, which has no business living on a web server, so MAYA prices its
+// own calls as they go. Set the budget with MONTHLY_BUDGET_USD on Cloud Run.
+const CR_CIRCUMFERENCE = 2 * Math.PI * 36;      // r=36 in the svg above
+let _creditSeq = 0;
+async function loadCredit() {
+  const seq = ++_creditSeq;
+  const row = document.getElementById('credit-row');
+  if (!row || !_idTok) return;
+  let r;
+  try {
+    r = await _statusFetch('/api/admin/spend', { headers: { 'Authorization': 'Bearer ' + _idTok } });
+  } catch (_) { return; }
+  if (seq !== _creditSeq) return;
+  if (r.status === 401) { _expired(); return; }
+  if (!r.ok) return;                             // quiet: a gauge never shouts
+  let d;
+  try { d = await r.json(); } catch (_) { return; }
+  if (seq !== _creditSeq || !d || d.ok !== true) return;
+  const ring = document.getElementById('credit-ring');
+  const arc  = ring.querySelector('.cr-arc');
+  const pct  = (typeof d.pctLeft === 'number') ? d.pctLeft : null;
+  ring.classList.toggle('warn', pct !== null && pct <= 40 && pct > 15);
+  ring.classList.toggle('low',  pct !== null && pct <= 15);
+  arc.style.strokeDasharray  = CR_CIRCUMFERENCE.toFixed(1);
+  arc.style.strokeDashoffset = (CR_CIRCUMFERENCE * (1 - (pct === null ? 0 : pct) / 100)).toFixed(1);
+  ring.querySelector('.cr-pct').textContent = pct === null ? '\u2014' : pct + '%';
+  const side = document.getElementById('credit-side');
+  side.querySelector('.cr-amt').textContent =
+    '$' + d.remainingUsd.toFixed(2) + ' of $' + Number(d.budgetUsd).toFixed(0);
+  side.querySelector('.cr-sub').textContent =
+    'estimated, $' + d.spentUsd.toFixed(2) + ' spent, ' + d.calls + ' call' + (d.calls === 1 ? '' : 's');
+  row.classList.remove('hidden');
+}
+
 // Prompting engine. Live copy: Firestore config/prompting, the app reads it at boot.
 // If the vault rules deny the shared doc, falls back to a per-account draft at
 // users/{uid}/settings/prompting so nothing typed here is lost.

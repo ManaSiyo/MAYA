@@ -16,6 +16,21 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 17, 2026, AFTERNOON
+
+[x] "A circular design of API credits left from OpenAI on the Systems Map,
+    under LIVE NOW." Built in v13.28: a ring under the traffic tiles showing
+    how much of the month's budget is left, the dollars beside it, and how
+    many calls it took.
+    One honest caveat, said plainly on the page itself: this is an ESTIMATE,
+    not a bank balance. OpenAI only reveals a real balance to an organisation
+    admin key, and that kind of key has no business living on a web server. So
+    MAYA prices its own calls as it makes them: a high quality render costs
+    the most, medium and low a fraction of it, a chat call a cent, and the
+    month's total is kept in MAYA's own storage. Set the ceiling with
+    MONTHLY_BUDGET_USD on Cloud Run (it defaults to 50) and the ring follows
+    it. The ring turns amber under 40 percent and rose under 15.
+
 AUGUST 17, 2026, MIDDAY
 
 [x] "Firebase storage is the official storage from now on, no need to send it

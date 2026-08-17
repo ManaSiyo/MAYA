@@ -264,10 +264,55 @@ const s = await pg.evaluate(() => ({
     .map(el => getComputedStyle(el).fontSize)).size,
   healthUsesTimeouts: runChecks.toString().includes('_statusFetch'),
   lights: [...document.querySelectorAll('.lgt-lbl')].map(e => e.textContent).join(','),
+  // v13.28: the credit ring. It must exist, stay hidden until there are
+  // numbers, and paint the right arc for a given percentage.
+  creditHiddenAtRest: document.getElementById('credit-row').classList.contains('hidden'),
   thumbnailsParallel: _paintThumbs.toString().includes('Promise.all'),
   tokenRefreshesHealth: _adoptToken.toString().includes('runChecks()'),
 }));
 // v13.26: the map speaks about SUBMISSIONS, not Google plumbing.
+// v13.28: the credit meter. The ring paints from pctLeft, sits under LIVE NOW,
+// and never claims to be a real balance.
+const credit = await pg.evaluate(async () => {
+  (0, eval)("_idTok = 'fake'");
+  (0, eval)("_statusFetch = async () => ({ok:true,status:200,json:async()=>({ok:true,estimated:true," +
+    "month:'2026-08',spentUsd:7.31,budgetUsd:50,remainingUsd:42.69,pctLeft:85,calls:96,images:34})})");
+  await loadCredit();
+  const ring = document.getElementById('credit-ring');
+  const arc = ring.querySelector('.cr-arc');
+  // The tiles are empty in a headless boot, so stand one up: a hidden row has
+  // no geometry to line the ring up against.
+  const tiles = document.getElementById('traffic-tiles');
+  tiles.innerHTML = '<div class="tile live"><div class="k">live now</div><div class="v">1</div></div>';
+  tiles.classList.remove('hidden');
+  return {
+    shown: !document.getElementById('credit-row').classList.contains('hidden'),
+    pct: ring.querySelector('.cr-pct').textContent,
+    amount: document.querySelector('#credit-side .cr-amt').textContent,
+    sub: document.querySelector('#credit-side .cr-sub').textContent,
+    offset: Number(arc.style.strokeDashoffset),
+    circumference: Number(arc.style.strokeDasharray),
+    leftAligned: Math.abs(ring.getBoundingClientRect().left - tiles.getBoundingClientRect().left) < 2,
+  };
+});
+ok('the credit ring stays hidden until there are numbers', s.creditHiddenAtRest);
+ok('the credit ring paints the right arc for 85 percent',
+  credit.shown && credit.pct === '85%' &&
+  Math.abs(credit.offset - credit.circumference * 0.15) < 1);
+ok('the credit ring shows the money and says estimated',
+  credit.amount === '$42.69 of $50' && credit.sub.startsWith('estimated,'));
+ok('the credit ring sits under the LIVE NOW tile', credit.leftAligned);
+ok('the meter is admin only and counts every successful call',
+  SERVER_SOURCE.includes("app.get('/api/admin/spend'") &&
+  SERVER_SOURCE.includes('await requireAdmin(req)') &&
+  SERVER_SOURCE.includes('noteSpend(upstreamPath, req)'));
+ok('each instance owns its own tally object, so none overwrite the others',
+  SERVER_SOURCE.includes("METRICS_PREFIX + _spend.month + '/' + INSTANCE_ID") &&
+  SERVER_SOURCE.includes("n.endsWith('/' + INSTANCE_ID + '.json')"));
+ok('an image costs more of the budget than a chat call',
+  SERVER_SOURCE.includes('OPENAI_PRICE_IMAGE') && SERVER_SOURCE.includes('PRICE_IMAGE * 0.25') &&
+  SERVER_SOURCE.includes('MONTHLY_BUDGET_USD'));
+
 ok('the map light reads Submissions', s.lights.includes('Submissions') && !s.lights.includes('Drive'));
 
 ok('Systems Map order: changes, prompting, architecture', s.order === 'changes-fold,pe-fold,arch-fold');

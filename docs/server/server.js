@@ -322,6 +322,9 @@ app.all(/^\/api\/openai\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', li
       return res.status(upstream.status).send(buf);
     }
     res.status(upstream.status);
+    // v13.28: the meter. MAYA counts its own spending here, because OpenAI
+    // will not tell an application key what the balance is.
+    noteSpend(upstreamPath, req);
     // v13.21: do not hold a complete image response in Cloud Run memory.
     // Successful responses flow to the browser as they arrive; errors remain
     // buffered briefly above so their useful diagnostics can be logged.
@@ -499,6 +502,145 @@ async function gcsListSubmissions() {
   if (!r.ok) throw new Error('storage list ' + r.status + ': ' + (await r.text()).slice(0, 300));
   return (await r.json()).items || [];
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE CREDIT METER, v13.28. What MAYA has spent at OpenAI this month.
+//
+// OpenAI does not expose an account balance to an application key: only an
+// organisation admin key can read billing, and that key has no business living
+// on a web server. So MAYA counts its own calls. Every successful call through
+// the proxy adds its estimated price, and the Systems Map shows the month
+// against a budget.
+//
+// Prices are estimates, tunable without a deploy through env vars, and the map
+// says "estimated" out loud rather than pretending to be a bank statement.
+//
+// Each Cloud Run instance owns ONE object, metrics/spend/<YYYY-MM>/<id>.json,
+// so instances never overwrite each other and the total is their sum.
+// ═══════════════════════════════════════════════════════════════════════════
+const PRICE_IMAGE = Number(process.env.OPENAI_PRICE_IMAGE || 0.19);
+const PRICE_CHAT  = Number(process.env.OPENAI_PRICE_CHAT  || 0.01);
+const PRICE_AUDIO = Number(process.env.OPENAI_PRICE_AUDIO || 0.006);
+const MONTHLY_BUDGET_USD = Number(process.env.MONTHLY_BUDGET_USD || 50);
+const METRICS_PREFIX = 'metrics/spend/';
+const INSTANCE_ID = crypto.randomBytes(4).toString('hex');
+
+const _spend = { month: '', usd: 0, calls: 0, images: 0, dirty: false, flushing: false, lastFlush: 0 };
+function monthKey(d) {
+  const t = d || new Date();
+  return t.getUTCFullYear() + '-' + String(t.getUTCMonth() + 1).padStart(2, '0');
+}
+function priceOf(path, req) {
+  if (/images\/(generations|edits)/.test(path)) {
+    // MAYA always asks for one picture at a time; quality changes the price.
+    const raw = req && req.body && req.body.length ? req.body.toString('latin1').slice(0, 4000) : '';
+    if (/name="quality"[\s\S]{0,40}?\blow\b/.test(raw) || /"quality"\s*:\s*"low"/.test(raw)) return PRICE_IMAGE * 0.25;
+    if (/name="quality"[\s\S]{0,40}?\bmedium\b/.test(raw) || /"quality"\s*:\s*"medium"/.test(raw)) return PRICE_IMAGE * 0.5;
+    return PRICE_IMAGE;
+  }
+  if (/audio\/(transcriptions|translations|speech)/.test(path)) return PRICE_AUDIO;
+  return PRICE_CHAT;
+}
+function noteSpend(path, req) {
+  try {
+    const m = monthKey();
+    if (_spend.month !== m) { _spend.month = m; _spend.usd = 0; _spend.calls = 0; _spend.images = 0; }
+    const price = priceOf(path, req);
+    _spend.usd += price;
+    _spend.calls += 1;
+    if (/images\//.test(path)) _spend.images += 1;
+    _spend.dirty = true;
+    // Written at most once a minute: a gauge does not need to be a ledger, and
+    // a storage write per render would be its own small bill.
+    if (Date.now() - _spend.lastFlush > 60000) flushSpend();
+  } catch (e) { console.error('[meter] note failed,', e.message); }
+}
+async function flushSpend() {
+  if (_spend.flushing || !_spend.dirty) return;
+  _spend.flushing = true;
+  const snapshot = { usd: Number(_spend.usd.toFixed(4)), calls: _spend.calls, images: _spend.images,
+                     month: _spend.month, instance: INSTANCE_ID, updatedAtMs: Date.now() };
+  try {
+    await gcsPut(METRICS_PREFIX + _spend.month + '/' + INSTANCE_ID + '.json',
+      Buffer.from(JSON.stringify(snapshot), 'utf8'), 'application/json');
+    _spend.dirty = false;
+    _spend.lastFlush = Date.now();
+  } catch (e) {
+    console.error('[meter] flush failed,', e.message);
+    _spend.lastFlush = Date.now();        // do not hammer a failing bucket
+  } finally { _spend.flushing = false; }
+}
+// A restart must not lose the month, so the tally is read back once at boot.
+let _meterBooted = false;
+async function bootMeter() {
+  if (_meterBooted) return;
+  _meterBooted = true;
+  try {
+    const own = await gcsGet(METRICS_PREFIX + monthKey() + '/' + INSTANCE_ID + '.json');
+    if (own.ok) {
+      const j = JSON.parse(own.buf.toString('utf8'));
+      if (j && j.month === monthKey()) {
+        _spend.month = j.month; _spend.usd = Number(j.usd) || 0;
+        _spend.calls = Number(j.calls) || 0; _spend.images = Number(j.images) || 0;
+      }
+    }
+  } catch (_) {}
+}
+
+// GET /api/admin/spend — the month's estimated OpenAI spend, every instance
+// summed, plus this instance's unwritten remainder so the gauge never lags.
+// The other instances' totals are cached; this instance's own tally is added
+// live on every request, so the gauge reacts to Fromsa's own next render
+// instead of waiting for a cache to lapse.
+let _spendCache = { ts: 0, month: '', usd: 0, calls: 0, images: 0 };
+app.get('/api/admin/spend', async (req, res) => {
+  try { await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
+  const month = monthKey();
+  try {
+    if (_spendCache.month !== month || Date.now() - _spendCache.ts > 20000) {
+      const tok = await serviceToken(STORAGE_SCOPE);
+      const qs = new URLSearchParams({ prefix: METRICS_PREFIX + month + '/', maxResults: '200',
+                                       fields: 'items(name)' });
+      const list = await fetch('https://storage.googleapis.com/storage/v1/b/' +
+        encodeURIComponent(SUBMISSIONS_BUCKET) + '/o?' + qs.toString(), {
+        headers: { 'Authorization': 'Bearer ' + tok }, signal: AbortSignal.timeout(10000),
+      });
+      if (!list.ok) throw new Error('metrics list ' + list.status);
+      const names = ((await list.json()).items || []).map(i => i.name);
+      let usd = 0, calls = 0, images = 0;
+      await Promise.all(names.map(async n => {
+        if (n.endsWith('/' + INSTANCE_ID + '.json')) return;      // counted live below
+        const o = await gcsGet(n).catch(() => ({ ok: false }));
+        if (!o.ok) return;
+        try {
+          const j = JSON.parse(o.buf.toString('utf8'));
+          usd += Number(j.usd) || 0; calls += Number(j.calls) || 0; images += Number(j.images) || 0;
+        } catch (_) {}
+      }));
+      _spendCache = { ts: Date.now(), month, usd, calls, images };
+    }
+    const mine = _spend.month === month ? _spend : { usd: 0, calls: 0, images: 0 };
+    const usd = _spendCache.usd + mine.usd;
+    const budget = MONTHLY_BUDGET_USD;
+    res.json({
+      ok: true, estimated: true, month,
+      spentUsd: Number(usd.toFixed(2)),
+      budgetUsd: budget,
+      remainingUsd: Number(Math.max(0, budget - usd).toFixed(2)),
+      pctLeft: budget > 0 ? Math.max(0, Math.min(100, Math.round((1 - usd / budget) * 100))) : null,
+      calls: _spendCache.calls + mine.calls,
+      images: _spendCache.images + mine.images,
+      prices: { image: PRICE_IMAGE, chat: PRICE_CHAT, audio: PRICE_AUDIO },
+      ts: new Date().toISOString(),
+    });
+    // Written after answering, so the gauge is never waiting on a storage write.
+    flushSpend().catch(() => {});
+  } catch (e) {
+    console.error('[meter] read failed,', e.message);
+    res.status(500).json({ error: 'spend_failed', detail: 'the meter could not be read' });
+  }
+});
 
 async function gcsGet(path) {
   const tok = await serviceToken(STORAGE_SCOPE);
@@ -1048,4 +1190,8 @@ app.get('/api/admin/analytics', async (req, res) => {
 });
 
 const port = process.env.PORT || 8080;
-app.listen(port, () => console.log('[maya-api] listening on', port));
+app.listen(port, () => {
+  console.log('[maya-api] listening on', port);
+  // v13.28: pick the credit meter's month back up after a restart.
+  bootMeter().catch(() => {});
+});

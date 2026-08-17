@@ -30,8 +30,9 @@ If this file disagrees with chat memory, this file is right.
 
 ## Where things stand, August 16 2026
 
-- Live and verified: **v13.25 confirmed serving** on maya.manasiyo.com and on
-  the Systems Map. **v13.26 is committed and waiting for Fromsa's push.**
+- Live and verified: **v13.27 confirmed working** (submissions land and list
+  from MAYA's own bucket, renders work). **v13.28 is committed and waiting for
+  Fromsa's push.**
 - Git: `~/Desktop/MAYA-new`, `origin/maya-v2` and GitHub were identical at
   `ba825c5` with a clean tree before this handoff. GitHub is working. The
   Codex sandbox cannot resolve github.com; that is a sandbox limit, not a
@@ -65,6 +66,24 @@ This was wrong in every earlier handoff and it is why regressions shipped.
   borrows the Systems Map sign in from same-origin localStorage to ask deep
   health whether Drive is truly authorised. Open maya.manasiyo.com/verify.html
   after any push. Works on a phone.
+
+## v13.28 (Claude): the credit meter
+
+- `/api/admin/spend` (admin only) answers the month's ESTIMATED OpenAI spend
+  against `MONTHLY_BUDGET_USD` (default 50). The Systems Map draws it as a ring
+  under the LIVE NOW tile, amber under 40 percent, rose under 15.
+- Why estimated: OpenAI exposes a real balance only to an organisation admin
+  key, which must never live on a web server. So `noteSpend()` prices every
+  successful proxy call (`OPENAI_PRICE_IMAGE` 0.19 default, x0.5 medium, x0.25
+  low, `OPENAI_PRICE_CHAT` 0.01, `OPENAI_PRICE_AUDIO` 0.006). The page says
+  "estimated" out loud; never present it as billing truth.
+- Each Cloud Run instance owns ONE object,
+  `metrics/spend/<YYYY-MM>/<instanceId>.json`, flushed at most once a minute, so
+  instances cannot overwrite each other. The endpoint sums the others (20s
+  cache) and adds this instance's live tally, so the gauge reacts immediately.
+  `bootMeter()` reads the instance's own object back after a restart.
+- If a real balance is ever wanted, that is an admin key on Cloud Run and the
+  OpenAI Costs API. Fromsa has not asked for that and it is a security call.
 
 ## v13.27 (Claude): submissions live in MAYA, not in Drive
 
