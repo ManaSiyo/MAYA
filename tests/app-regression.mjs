@@ -18,6 +18,9 @@ const INDEX_SOURCE = readFileSync(join(ROOT, 'index.html'), 'utf8');
 const RULES_SOURCE = readFileSync(join(ROOT, 'docs/server/firestore.rules'), 'utf8');
 const SERVER_SOURCE = readFileSync(join(ROOT, 'docs/server/server.js'), 'utf8');
 const BUILD_SOURCE = readFileSync(join(ROOT, 'cloudbuild.yaml'), 'utf8');
+const MAP_SOURCE = readFileSync(join(ROOT, 'status.html'), 'utf8');
+const BACKEND_SOURCE = existsSync(join(ROOT, 'backend.html'))
+  ? readFileSync(join(ROOT, 'backend.html'), 'utf8') : '';
 const FAVORITE_PULSE_SOURCE = INDEX_SOURCE.slice(
   INDEX_SOURCE.indexOf('@keyframes maya-favorite-pulse'),
   INDEX_SOURCE.indexOf('@keyframes maya-favorite-pulse') + 500,
@@ -228,10 +231,13 @@ ok('OpenAI proxy bounds input, time, and response memory',
   SERVER_SOURCE.includes("limit: '24mb'") &&
   SERVER_SOURCE.includes('AbortSignal.timeout(285000)') &&
   SERVER_SOURCE.includes('Readable.fromWeb(upstream.body)'));
-ok('Drive operations time out and deep health distinguishes the cause',
-  SERVER_SOURCE.includes("timedOut ? 'drive_timeout'") &&
+// v13.27 replaces the Drive-era version of this check: every call into the
+// submission store is time bounded, and deep health names which way it failed.
+ok('submission store calls time out and deep health names the cause',
+  SERVER_SOURCE.includes("timedOut ? 'submissions_timeout'") &&
   SERVER_SOURCE.includes('signal: AbortSignal.timeout(60000)') &&
-  SERVER_SOURCE.includes("throw new Error('drive folder ' + r.status)"));
+  SERVER_SOURCE.includes('signal: AbortSignal.timeout(15000)') &&
+  SERVER_SOURCE.includes("out.detail = 'submissions_' + r.status"));
 ok('only maya-v2 may deploy production',
   BUILD_SOURCE.includes('test "$BRANCH_NAME" = "maya-v2"'));
 ok('My Fabrics deletion survives failed Storage cleanup',
@@ -295,6 +301,33 @@ await pg.reload({ waitUntil: 'domcontentloaded' });
 await pg.waitForTimeout(1500);
 const appLoggedOut = await pg.evaluate(() => localStorage.getItem('maya_google_token') === null);
 ok('app: version change clears the cached sign in', appLoggedOut);
+
+// v13.27: submissions moved out of Google Drive into MAYA's own bucket. No
+// OAuth refresh token anywhere in the server, one prefix per submission, and
+// every read path locked to a file directly inside a submission.
+ok('no OAuth refresh token remains in the server',
+  !SERVER_SOURCE.includes('GOOGLE_OAUTH_REFRESH_TOKEN') &&
+  !SERVER_SOURCE.includes('getDriveAccessToken') &&
+  !SERVER_SOURCE.includes('DRIVE_FOLDER_ID'));
+ok('the submission store is MAYA\'s own bucket, reached with the service identity',
+  SERVER_SOURCE.includes("const SUB_PREFIX = 'submissions/'") &&
+  SERVER_SOURCE.includes('serviceToken(STORAGE_SCOPE)') &&
+  SERVER_SOURCE.includes('metadata.google.internal'));
+ok('a submission read cannot escape its own submission',
+  SERVER_SOURCE.includes('function idToPath(id)') &&
+  SERVER_SOURCE.includes("!p.startsWith(SUB_PREFIX) || p.includes('..')") &&
+  SERVER_SOURCE.includes('rest.length !== 2'));
+ok('the whole feed is one storage request, not one per submission',
+  SERVER_SOURCE.includes('async function gcsListSubmissions()') &&
+  SERVER_SOURCE.includes("maxResults: '1000'"));
+ok('deep health asks the submission store, and says so',
+  SERVER_SOURCE.includes('submissions: false, drive: false') &&
+  SERVER_SOURCE.includes('out.ok = out.openai && out.submissions'));
+ok('the map reads the new health field and stops linking to Drive',
+  MAP_SOURCE.includes('(j.submissions===true)||(j.drive===true)') &&
+  !MAP_SOURCE.includes('drive.google.com'));
+ok('the Brief no longer paints from a public Drive thumbnail',
+  !BACKEND_SOURCE.includes('drive.google.com/thumbnail'));
 
 // v13.26: the picture-read fix. A saved project's card picture is a Storage
 // address; the browser draws it but will not let script read it without CORS on

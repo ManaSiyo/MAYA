@@ -11,6 +11,54 @@ done, how it was verified, and whether it is FIXED, OPEN, or RECURRED.
 
 ─────────────────────────────────────────────
 
+AUGUST 17, 2026, MIDDAY. STATUS: FIXED PERMANENTLY IN v13.27, PENDING DEPLOY.
+
+Symptom: for the third time, Latest Submissions empty and the light red. Deep
+health said drive_auth and /api/admin/submissions answered 500 with "Drive
+authorization rejected".
+
+Decision, Fromsa's: stop depending on Google Drive. Firebase Storage is the
+official store from now on.
+
+What was done: the submission path was rebuilt onto MAYA's own bucket.
+  - The server asks the Cloud Run metadata server for a token for its OWN
+    service account, scope devstorage.read_write. Nothing to renew, nothing a
+    human can revoke by clicking, no seven day clock.
+  - One submission is one prefix: submissions/<client>-MM-DD-YYYY-<6 hex>/.
+    Opening a submission writes submission.json (client name, who, when);
+    each file is one object beside it.
+  - The whole feed is now ONE storage list request, grouped in memory, instead
+    of Drive's one call per folder.
+  - Reads go through /api/admin/subthumb and /api/admin/subfile, where the id
+    IS the object path, url safe, and is refused unless it names a file
+    directly inside a submission. An admin token cannot read anything else in
+    the bucket.
+  - Deep health now asks the bucket, and reports submissions true or false with
+    submissions_timeout / submissions_error / submissions_<status>.
+  - GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET,
+    GOOGLE_OAUTH_REFRESH_TOKEN and DRIVE_FOLDER_ID are no longer read by any
+    line of the server. They can be deleted from Cloud Run whenever convenient;
+    leaving them costs nothing.
+  - Optional env: SUBMISSIONS_BUCKET, default pro-maya.firebasestorage.app.
+
+How it was verified before the push: the whole store was driven end to end
+against a local stand in for Google (metadata server plus storage API): opening
+a submission, uploading a picture and a summary, the feed grouping them with
+the client's real name in the shape every screen already parses, the thumbnail
+and the file read, saving pieces.json, and deep health green. Every refusal was
+exercised too: a traversal folder id, a filename outside the allow list, and an
+attempt to read users/abc/secret.json through the file endpoint, all blocked.
+Both suites pass, including seven new assertions.
+
+If the light is still red after this deploys, the cause is not a credential.
+It is IAM: the Cloud Run service account needs Storage Object Admin on the
+bucket. Grant it here, then reload the map.
+https://console.cloud.google.com/iam-admin/iam?project=pro-maya
+
+Old submissions: still in Drive, untouched. Nothing was copied or deleted.
+
+─────────────────────────────────────────────
+
 AUGUST 17, 2026, MORNING. STATUS: FIXED IN CODE v13.26. ONE OPTIONAL OWNER
 STEP LEFT (BUCKET RULE).
 

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.26">
+<meta name="maya-version" content="13.27">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -258,7 +258,7 @@ try {
   <h3>The vault, where data physically lives</h3>
   <a href="https://console.firebase.google.com/project/pro-maya/firestore/databases/-default-/data/~2Fusers" target="_blank">Boards and projects<small>Firestore. Delete a collection here to truly destroy it.</small></a>
   <a href="https://console.firebase.google.com/project/pro-maya/storage/pro-maya.firebasestorage.app/files/~2Fusers" target="_blank">Pictures<small>Storage. Every uploaded and generated image.</small></a>
-  <a href="https://drive.google.com/drive/folders/1ZEgQi3BpYDlNMsIMK553dLQs0kKiga35" target="_blank">Client PDFs<small>Where submissions are filed.</small></a>
+  <a href="/operations.html">Submissions<small>Every client submission, in MAYA itself.</small></a>
   <h3>Behind the scenes</h3>
   <a href="https://console.firebase.google.com/project/pro-maya/hosting/sites/pro-maya" target="_blank">Hosting<small>Deploys, one click rollback.</small></a>
   <a href="https://console.cloud.google.com/run/detail/us-west1/maya-api/logs?project=pro-maya" target="_blank">API logs<small>Every request, every real error.</small></a>
@@ -283,7 +283,7 @@ try {
   </div>
 
   <h2 class="grp">Latest submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span>
-    <a class="aside" href="https://drive.google.com/drive/folders/1ZEgQi3BpYDlNMsIMK553dLQs0kKiga35" target="_blank">Open submissions folder &rarr;</a></h2>
+    <a class="aside" href="/operations.html">Open the Operations Room &rarr;</a></h2>
   <div id="subs-strip" style="display:none"></div>
   <div id="subs-note-inline">Waiting for the one sign in at the top of the page.</div>
 
@@ -293,9 +293,10 @@ try {
 
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-17a">
+  <details class="fold" id="changes-fold" data-latest="2026-08-17b">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 17</b>Submissions live inside MAYA now. They used to be filed into a Google Drive folder that MAYA reached with an authorisation Google revoked twice in four days, and each time every submission stopped landing with no fix available in the code. They are now written straight into MAYA's own storage by the server itself, with the identity it already runs as. Nothing to renew, nothing to expire, and this map lists them from there. Submissions filed before today stay in the old Drive folder and are still in Drive if you need them.</div>
     <div class="chg"><b>Aug 17</b>Visualize and Modify work again on saved projects. Since projects moved to the cloud, a card's picture is an address rather than the picture itself, and the browser will draw such a picture but refuses to let MAYA read it back unless the storage bucket says it may. The bucket never said so, so every render on a saved project died and the app blamed the connection. MAYA now reads its own pictures through its own server when the browser will not, so a render can never be stopped by that setting again.</div>
     <div class="chg"><b>Aug 17</b>This map says Submissions where it used to say Drive, and when something is wrong it says what is wrong with your submissions instead of naming Google plumbing.</div>
     <div class="chg"><b>Aug 16</b>A deploy check anyone can open: maya.manasiyo.com/verify.html says in one line whether the live site is the version that was pushed, whether the wall shipped as intended, and, borrowing this map's sign in, whether Google still accepts the Drive authorisation. No terminal, no installing anything, works on a phone.</div>
@@ -448,23 +449,24 @@ async function runChecks(){
           {headers:{'Authorization':'Bearer '+_idTok}});
         const j=await r.json().catch(()=>({}));
         api=r.ok&&j.openai===true;
-        drive=r.ok?(j.drive===true):null;
+        drive=r.ok?((j.submissions===true)||(j.drive===true)):null;
         if(!api&&r.ok) apiWhy='no OpenAI key on the server';
         else if(!api) apiWhy='could not check';
         if(drive===false){
           // v13.26: Fromsa reads this line, not a Google engineer. Say what is
           // happening to HIS submissions; the technical name lives in fixes.txt.
-          const reasons={drive_auth:'the submissions folder is refusing the server',
-            drive_timeout:'the submissions folder did not answer in time',
-            drive_403:'the server is not allowed into the submissions folder',
-            drive_404:'the submissions folder cannot be found'};
+          const reasons={submissions_timeout:'the submission store did not answer in time',
+            submissions_error:'the submission store could not be reached',
+            submissions_403:'MAYA is not allowed into its own submission store',
+            submissions_404:'the submission store cannot be found',
+            drive_auth:'the old Drive authorisation is still being used somewhere'};
           driveWhy=reasons[j.detail]||'the submissions folder is not answering';
         }
       } else {
         const r=await _statusFetch('/api/healthz?cb='+Date.now());
         const j=await r.json().catch(()=>({}));
         api=r.ok&&j.ok===true;
-        drive=(j.configured&&j.configured.drive===false)?false:null;
+        drive=(j.configured&&(j.configured.submissions===false||j.configured.drive===false))?false:null;
       }
     }catch(e){apiWhy='unreachable'}
     return {api,apiWhy,drive,driveWhy};
@@ -675,8 +677,9 @@ async function loadSubmissions() {
   strip.dataset.sig = stripSig;
   strip.innerHTML = visible.map(({ f, thumbId, fresh }) => {
     // v13.3: the tile picture comes through our own API now, carrying the
-    // admin token in a header. drive.google.com/thumbnail only renders files
-    // that are shared publicly, so private submissions drew empty tiles.
+    // admin token in a header. The old public Google thumbnail address only
+    // rendered files shared with the world, so private submissions drew empty
+    // tiles. v13.27: the picture now comes out of MAYA's own store.
     const img = thumbId
       ? '<img loading="lazy" data-thumb="' + esc(thumbId) + '" alt="" onerror="this.remove()">'
       : '<img src="/aesthetics/ui/logo-208.png" alt="" style="position:absolute;inset:0;margin:auto;width:44px;height:44px;object-fit:contain;opacity:0.3">';

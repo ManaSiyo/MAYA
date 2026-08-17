@@ -16,6 +16,20 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 17, 2026, MIDDAY
+
+[x] "Firebase storage is the official storage from now on, no need to send it
+    to Google Drive." Done, v13.27. Submissions are written into MAYA's own
+    Cloud Storage bucket by the server itself, using the identity Cloud Run
+    already runs as. There is no refresh token, no consent screen and no human
+    step anywhere in the path, so the failure that hit twice in four days
+    cannot happen again. The Systems Map lists submissions from there, the
+    Brief reads their files from there, and the dissection is saved there.
+    Every trace of Drive is out of the server.
+    One thing to know: submissions filed BEFORE today still sit in the old
+    Drive folder. They are not lost, they are just not listed in MAYA. Say the
+    word and they can be copied across.
+
 AUGUST 17, 2026, MORNING
 
 [!] "Image generation is not working, it says connection hiccup." FOUND, and it

@@ -1827,11 +1827,28 @@ const SCREEN_LABELS = ['Brief', 'Operations Room'];
         if (dateCap) heroName.insertAdjacentHTML('afterend',
           '<div style="font-family:\'Jost\',sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(238,242,255,0.4);margin-top:4px">' + dateCap + '</div>');
       }
+      // v13.27: submissions live in MAYA's own store, not Drive, and the
+      // picture is read with the admin sign in rather than a public Drive
+      // thumbnail address (which never rendered private files anyway). The
+      // full brief replaces this first paint moments later.
       const imgId = window._openedSubmission.img;
       const frame = document.getElementById('op-image-frame');
       if (imgId && frame) {
-        frame.innerHTML = '<img src="https://drive.google.com/thumbnail?id=' + encodeURIComponent(imgId) +
-          '&sz=w1600" alt="" style="width:100%;height:100%;object-fit:contain" />';
+        const tok = localStorage.getItem('maya_admin_tok') || localStorage.getItem('maya_google_token');
+        if (tok) {
+          fetch('/api/admin/subthumb?id=' + encodeURIComponent(imgId) + '&w=1600',
+                { headers: { 'Authorization': 'Bearer ' + tok } })
+            .then(r => r.ok ? r.blob() : Promise.reject(new Error('thumb ' + r.status)))
+            .then(b => {
+              const im = document.createElement('img');
+              im.src = URL.createObjectURL(b);
+              im.alt = '';
+              im.style.cssText = 'width:100%;height:100%;object-fit:contain';
+              frame.innerHTML = '';
+              frame.appendChild(im);
+            })
+            .catch(() => {});
+        }
       }
       _subAuthBoot();
     });

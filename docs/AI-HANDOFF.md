@@ -39,10 +39,14 @@ If this file disagrees with chat memory, this file is right.
 - Cloud Build deploys on every push to `maya-v2` and refuses every other
   branch. Server, hosting and rules are separate steps. It sets NO
   environment variables, so a deploy can never overwrite a credential.
-- **DRIVE IS RED.** Google has revoked the server's Drive refresh token for
-  the second time (renewed Aug 13, dead again by Aug 16). Submissions do not
-  land. This is not a code fault and no agent can repair it. The numbered
-  steps with links are in `fixes.txt`, entry of August 16.
+- **Google Drive is gone from MAYA.** v13.27 moves submissions into MAYA's own
+  Cloud Storage bucket, written by the server's own service account. The
+  OAuth refresh token that died twice in four days is no longer read anywhere.
+  If submissions are still red after v13.27 deploys, it is IAM, not a
+  credential: the Cloud Run service account needs Storage Object Admin on
+  `pro-maya.firebasestorage.app`. Submissions filed before Aug 17 remain in the
+  old Drive folder and are NOT listed in MAYA; copying them across is optional
+  work nobody has done.
 
 ## Where each test can actually run, corrected August 16
 
@@ -61,6 +65,25 @@ This was wrong in every earlier handoff and it is why regressions shipped.
   borrows the Systems Map sign in from same-origin localStorage to ask deep
   health whether Drive is truly authorised. Open maya.manasiyo.com/verify.html
   after any push. Works on a phone.
+
+## v13.27 (Claude): submissions live in MAYA, not in Drive
+
+- `submissions/<client>-MM-DD-YYYY-<6 hex>/` in `SUBMISSIONS_BUCKET` (default
+  `pro-maya.firebasestorage.app`). `submission.json` marks the submission and
+  carries the client's name; each file is an object beside it.
+- Token comes from the Cloud Run metadata server (`serviceToken(scope)`), same
+  pattern the analytics feed already used. No new dependency, no OAuth.
+- The feed is ONE list request grouped in memory. `pathToId`/`idToPath` make the
+  object path the file id and refuse anything that is not a file directly inside
+  a submission, so `subthumb`/`subfile` cannot read the rest of the bucket.
+- The feed's `name` keeps the `<client>-MM-DD-YYYY` shape on purpose: the map
+  strips the date for its label and the Brief parses it for the caption.
+- Deep health checks the bucket and reports `submissions`; `drive` is mirrored
+  for one version so a cached page still reads something. The map prefers
+  `submissions`.
+- Verified against a local stand-in for the metadata and storage APIs: open,
+  upload, feed shape, thumb, file, savepieces, deep health, plus traversal,
+  filename and cross-prefix read all refused.
 
 ## v13.26 (Claude): renders were broken for every saved project
 
@@ -118,7 +141,10 @@ This was wrong in every earlier handoff and it is why regressions shipped.
 
 1. Push v13.25 from GitHub Desktop, then open maya.manasiyo.com/verify.html
    and press "Watch for a new deploy". That page replaces guessing.
-2. Renew the Drive credential (`fixes.txt`, August 16) and log the result.
+2. After v13.27 deploys, confirm SUBMISSIONS is green by making one real
+   submission. If red, grant the Cloud Run service account Storage Object Admin
+   (`fixes.txt`, August 17 midday). Optional: copy pre-Aug-17 submissions out of
+   the old Drive folder into the new store.
 3. Durable per-uid quotas to replace the per-instance memory rate limit, plus
    generation backpressure. This is the last thing standing between the
    controlled beta and a public launch.

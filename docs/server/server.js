@@ -3,7 +3,10 @@
 //
 //   /api/openai/*   → authenticated passthrough to api.openai.com
 //                     (JSON *and* multipart — images/edits, audio/transcriptions)
-//   /api/submit     → Google Drive submission (init folder / upload one-pager)
+//   /api/submit     → submission store (open a submission / upload its files)
+//                     v13.27: MAYA's OWN Cloud Storage bucket, written with the
+//                     service account this server already runs as. No Google
+//                     Drive, no OAuth refresh token, nothing that expires.
 //   /api/runway     → Runway ML image-to-video proxy (dormant until key set)
 //   /healthz        → unauthenticated liveness probe
 //
@@ -14,10 +17,9 @@
 // Required env vars (set via `gcloud run deploy/services update`):
 //   OPENAI_API_KEY              — OpenAI secret key (server-side only)
 //   GOOGLE_CLIENT_ID            — Google Sign-In client id (ID-token audience)
-//   GOOGLE_OAUTH_CLIENT_ID      — OAuth web client id   (Drive uploads)
-//   GOOGLE_OAUTH_CLIENT_SECRET  — OAuth client secret   (Drive uploads)
-//   GOOGLE_OAUTH_REFRESH_TOKEN  — refresh token for the atelier Drive account
-//   DRIVE_FOLDER_ID             — MAYA folder id in Drive
+//   SUBMISSIONS_BUCKET          — optional; defaults to MAYA's own Firebase
+//                                 Storage bucket. Submissions live under the
+//                                 submissions/ prefix inside it.
 //   RUNWAY_API_KEY              — optional; absent → /api/runway returns 501
 //   FAL_API_KEY                 — optional; absent → /api/fal/* returns 501
 //   STRIPE_SECRET_KEY           — optional; absent → /api/tip returns 501
@@ -59,15 +61,18 @@ app.use((req, res, next) => {
 // /api/** rewrite on maya.manasiyo.com.
 // v12.9: this used to answer ok as long as the server was running, so every
 // light on the Systems Map could be green while the OpenAI key was missing and
-// the Drive authorisation was dead. It now reports what is actually configured
-// and, on /api/healthz?deep=1, whether Drive really answers.
+// the submission store was unreachable. It now reports what is configured and,
+// on /api/healthz/deep, whether the store really answers.
 function _healthz(_req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.json({
     ok: true, service: 'maya-api', ts: new Date().toISOString(),
     configured: {
       openai: !!process.env.OPENAI_API_KEY,
-      drive:  !!(process.env.GOOGLE_OAUTH_REFRESH_TOKEN && process.env.DRIVE_FOLDER_ID),
+      // v13.27: submissions live in MAYA's own bucket now. `drive` is kept as
+      // a mirror for one version so an old cached page still reads something.
+      submissions: !!SUBMISSIONS_BUCKET,
+      drive:  !!SUBMISSIONS_BUCKET,
       fal:    !!process.env.FAL_API_KEY,
       stripe: !!process.env.STRIPE_SECRET_KEY,
     },
@@ -75,28 +80,31 @@ function _healthz(_req, res) {
 }
 // v13.0: admin only, time limited, and it never echoes Google's raw error text
 // (which can contain client identifiers). Open to the world it was a free way
-// to make the atelier's Drive authorisation refresh on demand.
+// to make the atelier's storage authorisation refresh on demand.
 app.get('/api/healthz/deep', requireAuthHeader, async (req, res) => {
   try { await requireAdmin(req); }
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
-  const out = { ok: true, openai: !!process.env.OPENAI_API_KEY, drive: false, detail: '' };
+  const out = { ok: true, openai: !!process.env.OPENAI_API_KEY,
+                submissions: false, drive: false, detail: '' };
   try {
-    const tok = await getDriveAccessToken();
-    const r = await fetch('https://www.googleapis.com/drive/v3/files/' +
-      encodeURIComponent(process.env.DRIVE_FOLDER_ID || '') + '?fields=id', {
+    // v13.27: can this server actually reach the bucket its submissions live
+    // in. The old check asked Google Drive whether an OAuth refresh token was
+    // still alive, which is the thing that kept dying every few days.
+    const tok = await serviceToken('https://www.googleapis.com/auth/devstorage.read_write');
+    const r = await fetch('https://storage.googleapis.com/storage/v1/b/' +
+      encodeURIComponent(SUBMISSIONS_BUCKET) + '?fields=name', {
       headers: { 'Authorization': 'Bearer ' + tok },
       signal: AbortSignal.timeout(5000),
     });
-    out.drive = r.ok;
-    if (!r.ok) out.detail = 'drive_' + r.status;
+    out.submissions = r.ok;
+    if (!r.ok) out.detail = 'submissions_' + r.status;
   } catch (e) {
     console.error('[healthz deep]', (e && e.message) || e);
-    const message = String((e && e.message) || e || '');
     const timedOut = e && (e.name === 'TimeoutError' || e.name === 'AbortError');
-    out.detail = timedOut ? 'drive_timeout' :
-      (/oauth refresh|invalid_grant|expired|revoked/i.test(message) ? 'drive_auth' : 'drive_error');
+    out.detail = timedOut ? 'submissions_timeout' : 'submissions_error';
   }
-  out.ok = out.openai && out.drive;
+  out.drive = out.submissions;
+  out.ok = out.openai && out.submissions;
   res.json(out);
 });
 app.get('/healthz', _healthz);
@@ -331,7 +339,7 @@ app.all(/^\/api\/openai\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', li
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// /api/submit — Google Drive submission (ported 1:1 from api/submit.js v11.15,
+// /api/submit — one submission: open it, then upload its files (v13.27 writes
 // refresh-token OAuth so files are owned by the atelier account).
 // ═══════════════════════════════════════════════════════════════════════════
 app.post('/api/submit', requireAuthHeader, express.json({ limit: '30mb' }), async (req, res) => {
@@ -352,55 +360,46 @@ app.post('/api/submit', requireAuthHeader, express.json({ limit: '30mb' }), asyn
     return res.status(429).json({ error: 'rate_limited', scope: rlS.scope });
   }
 
-  let accessToken;
-  try { accessToken = await getDriveAccessToken(); }
-  catch (e) {
-    console.error('[submit] 500 oauth_auth_failed for', user.email, '—', e.message);
-    return res.status(500).json({ error: 'oauth_auth_failed', detail: e.message });
-  }
-
-  const rootFolderId = process.env.DRIVE_FOLDER_ID;
-  if (!rootFolderId) {
-    console.error('[submit] 500 no_drive_folder_id — DRIVE_FOLDER_ID env var not set');
-    return res.status(500).json({ error: 'no_drive_folder_id' });
-  }
-  console.log('[submit] action=' + body.action, 'user=' + user.email, 'rootFolder=' + rootFolderId);
+  // v13.27: no OAuth, no Drive. This server writes into MAYA's own bucket
+  // with the identity Cloud Run already gave it, which cannot expire or be
+  // revoked by a human clicking something in a console.
+  console.log('[submit] action=' + body.action, 'user=' + user.email, 'bucket=' + SUBMISSIONS_BUCKET);
 
   if (body.action === 'init') {
+    // The submission id IS its folder: readable, sortable, and unguessable at
+    // the end so two clients with one name on one day cannot collide.
     const clientName = (body.client_name || 'client').toString().trim().slice(0, 60) || 'client';
+    const safeClient = clientName.replace(/[^A-Za-z0-9 _-]+/g, ' ').replace(/\s+/g, ' ').trim() || 'client';
     const d = new Date();
     const stamp = String(d.getMonth() + 1).padStart(2, '0') + '-' +
                   String(d.getDate()).padStart(2, '0') + '-' + d.getFullYear();
-    const subName = `${clientName}-${stamp}`;
+    const subId = (safeClient + '-' + stamp + '-' + crypto.randomBytes(3).toString('hex')).replace(/ /g, '_');
     try {
-      const subId = await driveCreateFolder(accessToken, subName, rootFolderId);
-      _subsCache = { ts: 0, body: null };     // v12.5: show up on the Systems Map immediately
-      console.log('[submit] init OK — "' + subName + '" (' + subId + ')');
-      return res.json({ ok: true, folder_id: subId, folder_name: subName });
+      // A marker object so the submission exists the moment it is opened, even
+      // if the designer never uploads a file. It also carries the real name.
+      await gcsPut(SUB_PREFIX + subId + '/submission.json', Buffer.from(JSON.stringify({
+        client: clientName, openedAtMs: Date.now(), openedBy: user.email, schema: 'v13.27',
+      }), 'utf8'), 'application/json');
+      _subsCache = { ts: 0, body: null };     // show up on the Systems Map immediately
+      console.log('[submit] init OK —', subId);
+      return res.json({ ok: true, folder_id: subId, folder_name: safeClient + '-' + stamp });
     } catch (e) {
-      console.error('[submit] 500 folder_create_failed under', rootFolderId, '—', e.message);
-      return res.status(500).json({ error: 'folder_create_failed', detail: e.message });
+      console.error('[submit] 500 submission_open_failed —', e.message);
+      return res.status(500).json({ error: 'submission_open_failed', detail: e.message });
     }
   }
 
   if (body.action === 'upload') {
     if (!body.folder_id) return res.status(400).json({ error: 'no_folder_id' });
     if (!body.name || !body.data_b64) return res.status(400).json({ error: 'no_file' });
-    // v11.49 (Codex M8): the target folder must be a DIRECT CHILD of the MAYA
-    // submissions root — no uploads into the root itself or anywhere else.
-    // v12.5: cached, so a submission's files no longer each pay for their own
-    // round trip to Drive just to re-confirm the same folder.
-    try {
-      if (!(await isSubmissionFolder(accessToken, body.folder_id)) || body.folder_id === rootFolderId) {
-        console.warn('[submit] blocked upload to non-submission folder', body.folder_id, 'by', user.email);
-        return res.status(403).json({ error: 'folder_not_allowed' });
-      }
-    } catch (e) {
-      return res.status(500).json({ error: 'folder_check_failed', detail: e.message });
+    const subId = String(body.folder_id);
+    // One flat namespace, one shape. No slashes, no dots, no traversal, so a
+    // caller can only ever write inside one submission of its own.
+    if (!SUB_ID.test(subId)) {
+      console.warn('[submit] blocked folder id', subId, 'by', user.email);
+      return res.status(403).json({ error: 'folder_not_allowed' });
     }
-    // v12.5: only the files MAYA itself writes, with the types it writes them
-    // as. Before this any signed in Google account could upload a file of any
-    // name and any type into the atelier's Drive.
+    // Only the files MAYA itself writes, with the types it writes them as.
     const ALLOWED_UPLOADS = /^(one-pager\.(png|jpg|jpeg|pdf)|dream-garment\.(png|jpg|jpeg)|summary\.json|pieces\.json|moodboard\.json|hero\.(png|jpg|jpeg)|face\.(png|jpg|jpeg))$/i;
     const safeName = String(body.name || '').trim();
     if (!ALLOWED_UPLOADS.test(safeName)) {
@@ -415,10 +414,11 @@ app.post('/api/submit', requireAuthHeader, express.json({ limit: '30mb' }), asyn
     }
     if (bytes.length > 25 * 1024 * 1024) return res.status(413).json({ error: 'too_large' });
     try {
-      const info = await driveUploadFile(accessToken, safeName, body.folder_id, mime, bytes);
-      _subsCache = { ts: 0, body: null };     // v12.5: the picture is there now, let the map see it
-      console.log('[submit] upload OK — "' + info.name + '" (' + info.id + ')');
-      return res.json({ ok: true, file_id: info.id, name: info.name });
+      const path = SUB_PREFIX + subId + '/' + safeName;
+      await gcsPut(path, bytes, mime);
+      _subsCache = { ts: 0, body: null };
+      console.log('[submit] upload OK —', path, Math.round(bytes.length / 1024) + 'kb');
+      return res.json({ ok: true, file_id: pathToId(path), name: safeName });
     } catch (e) {
       console.error('[submit] 500 upload_failed for "' + body.name + '" —', e.message);
       return res.status(500).json({ error: 'upload_failed', detail: e.message });
@@ -428,59 +428,91 @@ app.post('/api/submit', requireAuthHeader, express.json({ limit: '30mb' }), asyn
   return res.status(400).json({ error: 'unknown_action', detail: 'expected action: init|upload' });
 });
 
-async function getDriveAccessToken() {
-  const clientId     = process.env.GOOGLE_OAUTH_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
-  const refreshToken = process.env.GOOGLE_OAUTH_REFRESH_TOKEN;
-  if (!clientId || !clientSecret || !refreshToken) {
-    throw new Error('missing GOOGLE_OAUTH_CLIENT_ID / _CLIENT_SECRET / _REFRESH_TOKEN');
-  }
-  const r = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: clientId, client_secret: clientSecret,
-      refresh_token: refreshToken, grant_type: 'refresh_token',
-    }),
-    signal: AbortSignal.timeout(8000),
-  });
-  if (!r.ok) throw new Error('oauth refresh ' + r.status + ': ' + (await r.text()));
-  const data = await r.json();
-  if (!data.access_token) throw new Error('no access_token in refresh response');
-  return data.access_token;
+// ═══════════════════════════════════════════════════════════════════════════
+// THE SUBMISSION STORE, v13.27. Google Drive is gone.
+//
+// Submissions used to live in one atelier Drive folder reached with an OAuth
+// refresh token. That token was revoked twice in four days and each time every
+// submission stopped landing, with no fix available in code. Submissions now
+// live in MAYA's own Cloud Storage bucket, written with the service account
+// Cloud Run runs as. There is no token to expire, no consent screen, no human
+// step. One submission is one prefix: submissions/<id>/<file>.
+//
+// No new dependency: the storage JSON API is called directly with a token from
+// the metadata server, exactly as the analytics feed already does.
+// ═══════════════════════════════════════════════════════════════════════════
+const SUBMISSIONS_BUCKET = process.env.SUBMISSIONS_BUCKET || 'pro-maya.firebasestorage.app';
+const SUB_PREFIX = 'submissions/';
+const SUB_ID = /^[A-Za-z0-9_-]{3,120}$/;
+
+let _svcTok = { key: '', token: '', exp: 0 };
+async function serviceToken(scope) {
+  if (_svcTok.key === scope && _svcTok.token && Date.now() < _svcTok.exp - 60000) return _svcTok.token;
+  const r = await fetch('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token?scopes=' +
+    encodeURIComponent(scope), { headers: { 'Metadata-Flavor': 'Google' }, signal: AbortSignal.timeout(5000) });
+  if (!r.ok) throw new Error('metadata token ' + r.status);
+  const j = await r.json();
+  if (!j.access_token) throw new Error('no access_token from metadata');
+  _svcTok = { key: scope, token: j.access_token, exp: Date.now() + (Number(j.expires_in || 3000) * 1000) };
+  return _svcTok.token;
+}
+const STORAGE_SCOPE = 'https://www.googleapis.com/auth/devstorage.read_write';
+
+// A picture is one object; its id in every MAYA screen is its path, url safe.
+function pathToId(path) { return Buffer.from(path, 'utf8').toString('base64url'); }
+function idToPath(id) {
+  let p = '';
+  try { p = Buffer.from(String(id), 'base64url').toString('utf8'); } catch (_) { return null; }
+  // It must be a file inside a submission. Nothing else is readable, ever.
+  if (!p.startsWith(SUB_PREFIX) || p.includes('..')) return null;
+  const rest = p.slice(SUB_PREFIX.length).split('/');
+  if (rest.length !== 2 || !SUB_ID.test(rest[0]) || !/^[\w.-]{3,80}$/.test(rest[1])) return null;
+  return p;
 }
 
-async function driveCreateFolder(accessToken, name, parentId) {
-  const r = await fetch('https://www.googleapis.com/drive/v3/files', {
+async function gcsPut(path, bytes, contentType) {
+  const tok = await serviceToken(STORAGE_SCOPE);
+  const r = await fetch('https://storage.googleapis.com/upload/storage/v1/b/' +
+    encodeURIComponent(SUBMISSIONS_BUCKET) + '/o?uploadType=media&name=' + encodeURIComponent(path), {
     method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] }),
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!r.ok) throw new Error('folder create ' + r.status + ': ' + (await r.text()));
-  return (await r.json()).id;
-}
-
-async function driveUploadFile(accessToken, name, parentId, mimeType, dataBytes) {
-  const boundary = '----maya' + Math.random().toString(36).slice(2);
-  const head = Buffer.from(
-    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
-    JSON.stringify({ name, parents: [parentId] }) + `\r\n` +
-    `--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`, 'utf8');
-  const tail = Buffer.from(`\r\n--${boundary}--`, 'utf8');
-  const body = Buffer.concat([head, Buffer.from(dataBytes), tail]);
-  const r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-    method: 'POST',
-    headers: {
-      'Authorization': 'Bearer ' + accessToken,
-      'Content-Type': `multipart/related; boundary=${boundary}`,
-      'Content-Length': String(body.length),
-    },
-    body,
+    headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': contentType || 'application/octet-stream' },
+    body: bytes,
     signal: AbortSignal.timeout(60000),
   });
-  if (!r.ok) throw new Error('upload ' + r.status + ': ' + (await r.text()));
+  if (!r.ok) throw new Error('storage put ' + r.status + ': ' + (await r.text()).slice(0, 300));
   return await r.json();
+}
+
+async function gcsListSubmissions() {
+  // ONE request for the whole feed: every object under submissions/, grouped in
+  // memory. The Drive version fanned out into forty calls per refresh.
+  const tok = await serviceToken(STORAGE_SCOPE);
+  const qs = new URLSearchParams({
+    prefix: SUB_PREFIX, maxResults: '1000',
+    fields: 'items(name,size,contentType,timeCreated),nextPageToken',
+  });
+  const r = await fetch('https://storage.googleapis.com/storage/v1/b/' +
+    encodeURIComponent(SUBMISSIONS_BUCKET) + '/o?' + qs.toString(), {
+    headers: { 'Authorization': 'Bearer ' + tok },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!r.ok) throw new Error('storage list ' + r.status + ': ' + (await r.text()).slice(0, 300));
+  return (await r.json()).items || [];
+}
+
+async function gcsGet(path) {
+  const tok = await serviceToken(STORAGE_SCOPE);
+  const r = await fetch('https://storage.googleapis.com/storage/v1/b/' +
+    encodeURIComponent(SUBMISSIONS_BUCKET) + '/o/' + encodeURIComponent(path) + '?alt=media', {
+    headers: { 'Authorization': 'Bearer ' + tok },
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!r.ok) return { ok: false, status: r.status };
+  return {
+    ok: true,
+    type: r.headers.get('content-type') || 'application/octet-stream',
+    buf: Buffer.from(await r.arrayBuffer()),
+  };
 }
 
 function b64ToBytes(s) {
@@ -736,40 +768,6 @@ async function requireAdmin(req) {
   return user;
 }
 
-// v12.5: true only for the MAYA submissions folder itself or one of its direct
-// children. Every admin read and write is confined to this subtree.
-const _folderParentCache = new Map();
-async function isSubmissionFolder(accessToken, folderId) {
-  const root = process.env.DRIVE_FOLDER_ID;
-  if (!root || !folderId) return false;
-  if (folderId === root) return true;
-  const hit = _folderParentCache.get(folderId);
-  if (hit && Date.now() - hit.ts < 600000) return hit.ok;
-  const r = await fetch('https://www.googleapis.com/drive/v3/files/' +
-    encodeURIComponent(folderId) + '?fields=parents', {
-    headers: { 'Authorization': 'Bearer ' + accessToken },
-    signal: AbortSignal.timeout(10000),
-  });
-  if (!r.ok && r.status !== 404) throw new Error('drive folder ' + r.status);
-  let ok = false;
-  if (r.ok) {
-    const j = await r.json();
-    ok = Array.isArray(j.parents) && j.parents.includes(root);
-  }
-  _folderParentCache.set(folderId, { ok, ts: Date.now() });
-  return ok;
-}
-
-async function driveList(accessToken, params) {
-  const qs = new URLSearchParams(params);
-  const r = await fetch('https://www.googleapis.com/drive/v3/files?' + qs.toString(), {
-    headers: { 'Authorization': 'Bearer ' + accessToken },
-    signal: AbortSignal.timeout(10000),
-  });
-  if (!r.ok) throw new Error('drive list ' + r.status + ': ' + (await r.text()).slice(0, 300));
-  return (await r.json()).files || [];
-}
-
 // ═══════════════════════════════════════════════════════════════════════════
 // GET /api/imgproxy?u=<picture address> — v13.26. Read one of MAYA's own
 // stored pictures back through this server, same origin.
@@ -832,211 +830,137 @@ app.get('/api/imgproxy', requireAuthHeader, async (req, res) => {
   }
 });
 
-// GET /api/admin/submissions — every submission folder in Drive, newest first,
-// with the files inside each. Powers the live feed on the Backend page.
+// GET /api/admin/submissions — every submission in MAYA's own store, newest
+// first, with its files. Powers the Systems Map strip and the Brief.
 app.get('/api/admin/submissions', async (req, res) => {
   let user;
   try { user = await requireAdmin(req); }
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
-  // v13.19: submission writes invalidate this cache immediately. Reads can
-  // therefore share a 15-second result instead of forcing dozens of Drive
-  // requests from every open Systems Map tab.
   if (_subsCache.body && Date.now() - _subsCache.ts < 15000) {
     return res.json(_subsCache.body);
   }
   try {
-    const accessToken = await getDriveAccessToken();
-    const root = process.env.DRIVE_FOLDER_ID;
-    if (!root) return res.status(500).json({ error: 'no_drive_folder_id' });
-    const folders = await driveList(accessToken, {
-      q: "'" + root + "' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
-      orderBy: 'createdTime desc',
-      pageSize: '100',
-      fields: 'files(id,name,createdTime)',
-    });
-    // Only the newest cards are rendered. Listing files in forty folders made
-    // one dashboard refresh fan out into forty-one Drive API calls.
-    const detailed = await Promise.all(folders.slice(0, 16).map(async f => {
-      const files = await driveList(accessToken, {
-        q: "'" + f.id + "' in parents and trashed = false",
-        orderBy: 'createdTime',
-        pageSize: '25',
-        fields: 'files(id,name,mimeType,size,createdTime,webViewLink)',
-      }).catch(() => []);
-      return {
-        id: f.id, name: f.name, createdTime: f.createdTime,
-        url: 'https://drive.google.com/drive/folders/' + f.id,
-        files: files.map(x => ({
-          id: x.id, name: x.name, mime: x.mimeType, size: Number(x.size || 0),
-          createdTime: x.createdTime, url: x.webViewLink || ('https://drive.google.com/file/d/' + x.id),
-        })),
-      };
+    // v13.27: one list of MAYA's own bucket, grouped here. Newest first, by the
+    // oldest file in each submission, which is when the submission was opened.
+    const items = await gcsListSubmissions();
+    const byId = new Map();
+    for (const it of items) {
+      const rest = String(it.name || '').slice(SUB_PREFIX.length).split('/');
+      if (rest.length !== 2 || !rest[1]) continue;                  // not a submission file
+      const id = rest[0];
+      if (!SUB_ID.test(id)) continue;
+      if (!byId.has(id)) byId.set(id, { id, name: id, createdTime: it.timeCreated, files: [] });
+      const sub = byId.get(id);
+      if (it.timeCreated && it.timeCreated < sub.createdTime) sub.createdTime = it.timeCreated;
+      // submission.json is MAYA's own marker, not a file the atelier browses.
+      if (rest[1] === 'submission.json') { sub.marker = it.name; continue; }
+      sub.files.push({
+        id: pathToId(it.name), name: rest[1], mime: it.contentType || '',
+        size: Number(it.size || 0), createdTime: it.timeCreated,
+        url: '/api/admin/subfile?id=' + pathToId(it.name),
+      });
+    }
+    const folders = [...byId.values()]
+      .sort((a, b) => String(b.createdTime || '').localeCompare(String(a.createdTime || '')));
+    // The client's real name lives in the marker; read it only for the cards
+    // that are actually rendered, so a long history costs nothing.
+    await Promise.all(folders.slice(0, 16).map(async f => {
+      if (!f.marker) return;
+      const m = await gcsGet(f.marker).catch(() => ({ ok: false }));
+      if (!m.ok) return;
+      try {
+        const j = JSON.parse(m.buf.toString('utf8'));
+        // Keep the shape every screen already parses: <client>-MM-DD-YYYY. The
+        // Systems Map strips the date for its label and the Brief reads it for
+        // the caption, so inventing a new shape would blank both.
+        const dm = f.id.match(/-(\d{2}-\d{2}-\d{4})-[0-9a-f]{6}$/);
+        if (j && j.client) f.name = String(j.client).slice(0, 60) + (dm ? '-' + dm[1] : '');
+      } catch (_) {}
     }));
-    console.log('[admin] submissions OK for', user.email, '—', folders.length, 'folders');
-    const payload = { ok: true, total: folders.length, folders: detailed, ts: new Date().toISOString() };
+    for (const f of folders) delete f.marker;
+    console.log('[admin] submissions OK for', user.email, '—', folders.length, 'submissions');
+    const payload = { ok: true, total: folders.length, folders: folders.slice(0, 40),
+      store: 'maya-storage', ts: new Date().toISOString() };
     _subsCache = { ts: Date.now(), body: payload };
     res.json(payload);
   } catch (e) {
     console.error('[admin] submissions failed —', e.message);
     const timedOut = e && (e.name === 'TimeoutError' || e.name === 'AbortError');
-    const authFailed = /oauth refresh|invalid_grant|expired|revoked/i.test(String(e && e.message));
     res.status(500).json({ error: 'submissions_failed',
-      code: timedOut ? 'drive_timeout' : (authFailed ? 'drive_auth' : 'drive_error'),
-      detail: timedOut ? 'Drive timed out' : (authFailed ? 'Drive authorization rejected' : 'Drive request failed') });
+      code: timedOut ? 'submissions_timeout' : 'submissions_error',
+      detail: timedOut ? 'the submission store timed out' : 'the submission store could not be read' });
   }
 });
 
-// GET /api/admin/subthumb?id=<fileId>&w=480 — Drive's own thumbnail for one
-// submission picture, streamed through us. v13.3. The Systems Map used to
-// point its <img> straight at drive.google.com/thumbnail, which only renders
-// for files shared publicly, so every private submission drew an empty tile
-// and the strip looked broken. Same submission-folder check as subfile, plus
-// a half hour memory cache so a strip that repaints does not re-hit Drive.
+// GET /api/admin/subthumb?id=<file>&w=480 and /api/admin/subfile?id=<file>
+// v13.27: both read one object out of MAYA's own bucket. The id IS the object
+// path, url safe, and idToPath refuses anything that is not a file directly
+// inside one submission, so an admin token cannot read the rest of the bucket.
+// The thumb route keeps a half hour memory cache because the Systems Map strip
+// repaints often; w is accepted and ignored, the tiles scale in CSS.
 const _thumbCache = new Map();
 app.get('/api/admin/subthumb', async (req, res) => {
   try { await requireAdmin(req); }
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
-  const id = String(req.query.id || '');
-  if (!/^[\w-]{10,80}$/.test(id)) return res.status(400).json({ error: 'bad_id' });
-  const w = Math.min(1024, Math.max(80, parseInt(req.query.w, 10) || 480));
-  const key = id + ':' + w;
-  const hit = _thumbCache.get(key);
+  const path = idToPath(req.query.id);
+  if (!path) return res.status(400).json({ error: 'bad_id' });
+  const hit = _thumbCache.get(path);
   if (hit && Date.now() - hit.ts < 30 * 60 * 1000) {
     res.setHeader('Content-Type', hit.type);
     res.setHeader('Cache-Control', 'private, max-age=1800');
     return res.end(hit.buf);
   }
   try {
-    const accessToken = await getDriveAccessToken();
-    const metaR = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?fields=id,mimeType,size,thumbnailLink,parents', {
-      headers: { 'Authorization': 'Bearer ' + accessToken },
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!metaR.ok) return res.status(404).json({ error: 'not_found' });
-    const meta = await metaR.json();
-    const parents = Array.isArray(meta.parents) ? meta.parents : [];
-    let inside = false;
-    for (const p of parents) { if (await isSubmissionFolder(accessToken, p)) { inside = true; break; } }
-    if (!inside) return res.status(403).json({ error: 'file_not_allowed' });
-    let buf = null, type = 'image/jpeg';
-    if (meta.thumbnailLink) {
-      const tl = String(meta.thumbnailLink).replace(/=[sw]\d+(-h\d+)?$/, '=s' + w);
-      const tr = await fetch(tl, {
-        headers: { 'Authorization': 'Bearer ' + accessToken },
-        signal: AbortSignal.timeout(15000),
-      });
-      if (tr.ok) { buf = Buffer.from(await tr.arrayBuffer()); type = tr.headers.get('content-type') || 'image/jpeg'; }
-    }
-    if (!buf) {
-      // No Drive thumbnail yet (it can lag a fresh upload). Fall back to the
-      // original, but never stream something enormous into a 200px tile.
-      if (Number(meta.size || 0) > 12 * 1024 * 1024) return res.status(404).json({ error: 'no_thumb' });
-      const r = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media', {
-        headers: { 'Authorization': 'Bearer ' + accessToken },
-        signal: AbortSignal.timeout(30000),
-      });
-      if (!r.ok) return res.status(502).json({ error: 'drive_' + r.status });
-      buf = Buffer.from(await r.arrayBuffer());
-      type = meta.mimeType || 'image/jpeg';
-    }
+    const o = await gcsGet(path);
+    if (!o.ok) return res.status(o.status === 404 ? 404 : 502).json({ error: 'not_found' });
+    if (!/^image\//.test(o.type)) return res.status(415).json({ error: 'not_a_picture' });
+    if (o.buf.length > 12 * 1024 * 1024) return res.status(413).json({ error: 'too_large' });
     if (_thumbCache.size > 200) _thumbCache.clear();
-    _thumbCache.set(key, { ts: Date.now(), buf, type });
-    res.setHeader('Content-Type', type);
+    _thumbCache.set(path, { ts: Date.now(), buf: o.buf, type: o.type });
+    res.setHeader('Content-Type', o.type);
     res.setHeader('Cache-Control', 'private, max-age=1800');
-    res.end(buf);
+    res.end(o.buf);
   } catch (e) {
     console.error('[admin] subthumb failed,', e.message);
     res.status(500).json({ error: 'subthumb_failed', detail: e.message });
   }
 });
 
-// GET /api/admin/subfile?id=<fileId> — stream one submission file's content
-// (summary.json, dream-garment.png) to the Backend page. Admin-gated. v12.8.
 app.get('/api/admin/subfile', async (req, res) => {
   try { await requireAdmin(req); }
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
-  const id = String(req.query.id || '');
-  if (!/^[\w-]{10,80}$/.test(id)) return res.status(400).json({ error: 'bad_id' });
+  const path = idToPath(req.query.id);
+  if (!path) return res.status(400).json({ error: 'bad_id' });
   try {
-    const accessToken = await getDriveAccessToken();
-    const metaR = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?fields=id,name,mimeType,size,parents', {
-      headers: { 'Authorization': 'Bearer ' + accessToken },
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!metaR.ok) return res.status(404).json({ error: 'not_found' });
-    const meta = await metaR.json();
-    if (Number(meta.size || 0) > 30 * 1024 * 1024) return res.status(413).json({ error: 'too_large' });
-    // v12.5: the file must sit inside a MAYA submission folder. Before this a
-    // stolen admin token could read any file in the atelier's entire Drive.
-    const parents = Array.isArray(meta.parents) ? meta.parents : [];
-    let inside = false;
-    for (const p of parents) { if (await isSubmissionFolder(accessToken, p)) { inside = true; break; } }
-    if (!inside) return res.status(403).json({ error: 'file_not_allowed' });
-    const r = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media', {
-      headers: { 'Authorization': 'Bearer ' + accessToken },
-      signal: AbortSignal.timeout(30000),
-    });
-    if (!r.ok) return res.status(502).json({ error: 'drive_' + r.status });
-    const buf = Buffer.from(await r.arrayBuffer());
-    res.setHeader('Content-Type', meta.mimeType || 'application/octet-stream');
+    const o = await gcsGet(path);
+    if (!o.ok) return res.status(o.status === 404 ? 404 : 502).json({ error: 'not_found' });
+    if (o.buf.length > 30 * 1024 * 1024) return res.status(413).json({ error: 'too_large' });
+    res.setHeader('Content-Type', o.type);
     res.setHeader('Cache-Control', 'private, max-age=300');
-    res.end(buf);
+    res.end(o.buf);
   } catch (e) {
     console.error('[admin] subfile failed,', e.message);
     res.status(500).json({ error: 'subfile_failed', detail: e.message });
   }
 });
 
-// POST /api/admin/savepieces — save the dissection (with rendered piece
-// images and patterns) as pieces.json inside the submission's Drive folder.
-// The Brief loads it on the next open instead of re-dissecting and
-// re-rendering, so a submission only ever costs API credits once.
+// POST /api/admin/savepieces — save the dissection (rendered pieces and
+// patterns) as pieces.json inside the submission, so the Brief loads it next
+// time instead of paying for the dissection again. v13.27: MAYA's own bucket.
 app.post('/api/admin/savepieces', requireAuthHeader, express.json({ limit: '30mb' }), async (req, res) => {
   try { await requireAdmin(req); }
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
-  const folderId = String((req.body || {}).folderId || '');
+  const subId = String((req.body || {}).folderId || '');
   const data = (req.body || {}).data;
-  if (!/^[\w-]{10,80}$/.test(folderId) || !data) return res.status(400).json({ error: 'bad_request' });
+  if (!SUB_ID.test(subId) || !data) return res.status(400).json({ error: 'bad_request' });
   try {
-    const accessToken = await getDriveAccessToken();
-    // v12.5: only ever write inside a MAYA submission folder. Without this the
-    // endpoint could write anywhere in the atelier's whole Drive.
-    if (!(await isSubmissionFolder(accessToken, folderId))) {
-      return res.status(403).json({ error: 'folder_not_allowed' });
-    }
-    const existing = await driveList(accessToken, {
-      q: "'" + folderId + "' in parents and name = 'pieces.json' and trashed = false",
-      pageSize: '1',
-      fields: 'files(id)',
-    });
-    const body = JSON.stringify(data);
-    let r;
-    if (existing.length) {
-      r = await fetch('https://www.googleapis.com/upload/drive/v3/files/' + existing[0].id + '?uploadType=media', {
-        method: 'PATCH',
-        headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
-        body,
-        signal: AbortSignal.timeout(30000),
-      });
-    } else {
-      const boundary = 'mayapieces' + Date.now();
-      const multipart =
-        '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' +
-        JSON.stringify({ name: 'pieces.json', parents: [folderId] }) + '\r\n' +
-        '--' + boundary + '\r\nContent-Type: application/json\r\n\r\n' + body + '\r\n' +
-        '--' + boundary + '--';
-      r = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'multipart/related; boundary=' + boundary },
-        body: multipart,
-        signal: AbortSignal.timeout(30000),
-      });
-    }
-    if (!r.ok) return res.status(502).json({ error: 'drive_' + r.status, detail: (await r.text()).slice(0, 200) });
-    const out = await r.json();
+    const body = Buffer.from(JSON.stringify(data), 'utf8');
+    if (body.length > 25 * 1024 * 1024) return res.status(413).json({ error: 'too_large' });
+    const path = SUB_PREFIX + subId + '/pieces.json';
+    await gcsPut(path, body, 'application/json');   // one object, overwrite in place
     _subsCache = { ts: 0, body: null };
-    console.log('[admin] pieces.json saved for folder', folderId, Math.round(body.length / 1024) + 'kb');
-    res.json({ ok: true, id: out.id });
+    console.log('[admin] pieces.json saved for', subId, Math.round(body.length / 1024) + 'kb');
+    res.json({ ok: true, id: pathToId(path) });
   } catch (e) {
     console.error('[admin] savepieces failed,', e.message);
     res.status(500).json({ error: 'savepieces_failed', detail: e.message });
