@@ -275,6 +275,21 @@ const s = await pg.evaluate(() => ({
   tokenRefreshesHealth: _adoptToken.toString().includes('runChecks()'),
 }));
 // v13.26: the map speaks about SUBMISSIONS, not Google plumbing.
+// v13.32: the privacy policy. It has to exist, be reachable BEFORE anyone
+// signs in, and keep saying the things that are legally load bearing.
+const PRIVACY_SOURCE = existsSync(join(ROOT, 'privacy.html'))
+  ? readFileSync(join(ROOT, 'privacy.html'), 'utf8') : '';
+ok('the privacy policy ships as a page', PRIVACY_SOURCE.includes('<h1>Privacy policy</h1>'));
+ok('the policy still names the sensitive things',
+  ['face photograph', 'community wall', 'OpenAI', 'Pinterest', 'Measurements', 'Deleting things']
+    .every(t => PRIVACY_SOURCE.includes(t)));
+ok('the policy still says how to be erased and how to reach a human',
+  PRIVACY_SOURCE.includes('mailto:worldofsiyo@gmail.com') &&
+  PRIVACY_SOURCE.includes('erased'));
+ok('it is reachable before signing in, and from the drawer',
+  INDEX_SOURCE.includes('href="/privacy.html"') &&
+  INDEX_SOURCE.split('href="/privacy.html"').length - 1 >= 2);
+
 // v13.31: pictures from elsewhere, and Pinterest.
 ok('a picture can be fetched from any site, but never from inside the network',
   SERVER_SOURCE.includes("app.get('/api/fetchpic'") &&

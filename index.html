@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.31">
+<meta name="maya-version" content="13.32">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -3785,6 +3785,10 @@
   <div class="signin-bottom">
     <div id="g-signin-btn"></div>
     <div class="signin-fineprint">Sign in with Google to begin</div>
+    <div class="signin-fineprint" style="margin-top:6px">
+      <a href="/privacy.html" target="_blank" rel="noopener"
+         style="color:rgba(238,242,255,0.55);text-decoration:none;border-bottom:0.5px solid rgba(238,242,255,0.25)">Privacy</a>
+    </div>
   </div>
 </div>
 <script>
@@ -4152,6 +4156,8 @@
       <button class="drawer-settings-link" onclick="openSettings()" title="Account &amp; preferences">Settings</button>
       <button class="drawer-settings-link" onclick="openTip()" title="MAYA is free. If it was useful, you can support the atelier.">Tip</button>
       <button class="drawer-settings-link" onclick="mayaSignOut()" title="Sign out of Google and return to the Maya sign-in screen.">Logout</button>
+      <!-- v13.32: reachable without hunting for it. -->
+      <a class="drawer-settings-link" href="/privacy.html" target="_blank" rel="noopener" title="What MAYA keeps, what is public, how to have it deleted">Privacy</a>
     </div>
   </div>
 
