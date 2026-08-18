@@ -1,7 +1,7 @@
 // MAYA app regression test. Companion to smoke.mjs (which covers the server).
 // Boots the real pages headlessly and asserts the behaviors Fromsa has asked
 // for stay true, so a fixed thing failing again is caught BEFORE a push.
-// Add an assertion here every time an entry in requests.txt is completed.
+// Add an assertion here every time an entry in docs/requests.txt is completed.
 //
 //   node tests/app-regression.mjs        (run from the repo root)
 //
@@ -275,6 +275,26 @@ const s = await pg.evaluate(() => ({
   tokenRefreshesHealth: _adoptToken.toString().includes('runChecks()'),
 }));
 // v13.26: the map speaks about SUBMISSIONS, not Google plumbing.
+// v13.30: the folder layout. The repo root IS the published website, so the
+// served pages must be at the root and the notes must NOT be, and the hosting
+// ignore list has to match. A tidy that breaks the deploy is not a tidy.
+ok('the served pages are at the repository root',
+  ['index.html', 'status.html', 'backend.html', 'operations.html', 'verify.html']
+    .every(f => existsSync(join(ROOT, f))));
+ok('the notes moved into docs and are not at the root',
+  existsSync(join(ROOT, 'docs/README.md')) && existsSync(join(ROOT, 'docs/requests.txt')) &&
+  existsSync(join(ROOT, 'docs/fixes.txt')) && existsSync(join(ROOT, 'docs/history.txt')) &&
+  !existsSync(join(ROOT, 'README.md')) && !existsSync(join(ROOT, 'requests.txt')));
+ok('the build still finds what it needs at the root',
+  existsSync(join(ROOT, 'cloudbuild.yaml')) && existsSync(join(ROOT, 'CLAUDE.md')) &&
+  existsSync(join(ROOT, 'AGENTS.md')) && existsSync(join(ROOT, 'tests')));
+ok('hosting publishes the pages and hides everything else', (() => {
+  const cfg = JSON.parse(readFileSync(join(ROOT, 'docs/firebase.json'), 'utf8'));
+  const ig = cfg.hosting.ignore;
+  return cfg.hosting.public === '.' && ig.includes('docs/**') && ig.includes('tests/**') &&
+    ig.includes('**/.*') && !ig.some(p => /^(index|status|backend|operations|verify)\.html$/.test(p));
+})());
+
 // v13.29: the share fix Fromsa's friend hit. A share must carry COPIES of its
 // pictures, readable by whoever opens the link, and one unreadable picture must
 // not kill the whole import.

@@ -5,24 +5,44 @@
       "firebase.json",
       "AGENTS.md",
       "CLAUDE.md",
-      "README.md",
-      "history.txt",
-      "requests.txt",
-      "fixes.txt",
       "cloudbuild.yaml",
       "tests/**",
+      "docs/**",
       "**/.*",
       "**/node_modules/**",
-      "docs/**",
       "_to_delete/**"
     ],
     "redirects": [
-      { "source": "/favicon.ico", "destination": "/aesthetics/ui/favicon.ico", "type": 301 },
-      { "source": "/favicon.png", "destination": "/aesthetics/ui/favicon.png", "type": 301 },
-      { "source": "/apple-touch-icon.png", "destination": "/aesthetics/ui/apple-touch-icon.png", "type": 301 },
-      { "source": "/operations{,/**}", "destination": "/aesthetics/operations/", "type": 301 },
-      { "source": "/backend-room{,/**}", "destination": "/backend.html", "type": 301 },
-      { "source": "/admin.html", "destination": "/status.html", "type": 301 }
+      {
+        "source": "/favicon.ico",
+        "destination": "/aesthetics/ui/favicon.ico",
+        "type": 301
+      },
+      {
+        "source": "/favicon.png",
+        "destination": "/aesthetics/ui/favicon.png",
+        "type": 301
+      },
+      {
+        "source": "/apple-touch-icon.png",
+        "destination": "/aesthetics/ui/apple-touch-icon.png",
+        "type": 301
+      },
+      {
+        "source": "/operations{,/**}",
+        "destination": "/aesthetics/operations/",
+        "type": 301
+      },
+      {
+        "source": "/backend-room{,/**}",
+        "destination": "/backend.html",
+        "type": 301
+      },
+      {
+        "source": "/admin.html",
+        "destination": "/status.html",
+        "type": 301
+      }
     ],
     "rewrites": [
       {
@@ -41,16 +61,31 @@
       {
         "source": "**",
         "headers": [
-          { "key": "Cache-Control", "value": "no-cache" },
-          { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-          { "key": "X-Content-Type-Options", "value": "nosniff" },
-          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "SAMEORIGIN"
+          },
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          }
         ]
       },
       {
         "source": "/aesthetics/{fabrics,headshots,ui}/**",
         "headers": [
-          { "key": "Cache-Control", "value": "public, max-age=604800" }
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=604800"
+          }
         ]
       }
     ]

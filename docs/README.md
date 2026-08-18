@@ -2,15 +2,20 @@
 
 The whole system, written for a fresh conversation. If you are an assistant
 picking this up with no memory of what came before, read this file first and
-then `docs/AI-HANDOFF.md` for the current task and `history.txt` for the older
+then `AI-HANDOFF.md` for the current task and `history.txt` for the older
 narrative.
 
 Owner: Fromsa, founder of Mana Siyo.
 Live site: https://maya.manasiyo.com
-Also read: `docs/AI-HANDOFF.md` (the current Claude/Codex handoff),
-`history.txt` (the story), `fixes.txt` (fix attempts, especially
-ones outside git), `requests.txt` (Fromsa's own asks and noticed bugs, with
-status marks; re-verify its entries every session).
+Also read, all beside this file in `docs/`: `AI-HANDOFF.md` (the current
+Claude/Codex handoff), `history.txt` (the story), `fixes.txt` (fix attempts,
+especially ones outside git), `requests.txt` (Fromsa's own asks and noticed
+bugs, with status marks; re-verify its entries every session).
+
+v13.30: the repository root is the published website, so the root now holds
+only the served pages (`index.html`, `status.html`, `backend.html`,
+`operations.html`, `verify.html`, `aesthetics/`), the build file, `tests/`, and
+the two agent contracts. Every note, the server and the rules live in `docs/`.
 Google project: `pro-maya`
 Repo: `ManaSiyo/MAYA` on GitHub, working folder `~/Desktop/MAYA-new`
 Current version: **13.23** (the number lives in a `maya-version` meta tag in

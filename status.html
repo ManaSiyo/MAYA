@@ -512,7 +512,7 @@ async function runChecks(){
         else if(!api) apiWhy='could not check';
         if(drive===false){
           // v13.26: Fromsa reads this line, not a Google engineer. Say what is
-          // happening to HIS submissions; the technical name lives in fixes.txt.
+          // happening to HIS submissions; the technical name lives in docs/fixes.txt.
           const reasons={submissions_timeout:'the submission store did not answer in time',
             submissions_error:'the submission store could not be reached',
             submissions_403:'MAYA is not allowed into its own submission store',
@@ -689,7 +689,7 @@ async function loadSubmissions() {
     let j = {}; try { j = await r.json(); } catch (_) {}
     const d = String(j.detail || '');
     if (j.code === 'drive_auth' || /invalid_grant|expired or revoked|oauth/i.test(d)) {
-      _subsNote('Submissions cannot be reached: the folder they live in is refusing the server, so new ones will not land and past ones cannot be listed. This is an authorisation Fromsa renews, step by step in fixes.txt, dated Aug 16.');
+      _subsNote('Submissions cannot be reached: the folder they live in is refusing the server, so new ones will not land and past ones cannot be listed. This is an authorisation Fromsa renews, step by step in docs/fixes.txt, dated Aug 16.');
     } else if (j.code === 'drive_timeout') {
       _subsNote('The submissions folder took too long to answer. Nothing was lost; the map keeps retrying.');
     } else {

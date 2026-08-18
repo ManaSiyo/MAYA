@@ -16,6 +16,32 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 18, 2026, THE FOLDER (v13.30)
+
+[x] "Clean up MAYA-new, all I need to see is the four screens." Done, and the
+    important thing first: THAT FOLDER IS THE WEBSITE. Firebase Hosting
+    publishes the repository root, so index.html, status.html, backend.html,
+    operations.html, verify.html and aesthetics/ are literally the live pages.
+    Renaming or moving one of them by hand changes the site on the next push,
+    and deleting .git would cut the folder off from GitHub. So the tidy was
+    done as code, with the references updated in the same commit.
+    The root now holds: the five served pages, aesthetics/, cloudbuild.yaml
+    (Cloud Build reads it there), tests/ (the suite finds the repo from its own
+    folder), CLAUDE.md and AGENTS.md (each agent looks for its contract at the
+    root), and the three dot files git and Firebase need.
+    Moved into docs/: README.md, requests.txt, fixes.txt, history.txt. Moved
+    into docs/archive/: the retired Codex handoff and the old Deploy MAYA
+    command, which Cloud Build replaced.
+    Deleted: the .firebase local cache and every .DS_Store, which are now
+    untracked for good so they stop appearing as changes in GitHub Desktop.
+[x] Four new assertions guard the layout, so a future tidy cannot quietly break
+    the deploy: the served pages must be at the root, the notes must be in
+    docs/, the build files must still be where the build looks, and the hosting
+    ignore list must still publish the pages and hide everything else.
+[ ] Two folders named _to_delete (one at the root, one in docs/) hold the junk I
+    am not allowed to delete from here. Both are ignored by git and by the
+    website. Empty them from Finder whenever you like.
+
 AUGUST 18, 2026, LAUNCH PASS (v13.29)
 
 [!] "My friend could not open the project I shared." FOUND. A share handed over
