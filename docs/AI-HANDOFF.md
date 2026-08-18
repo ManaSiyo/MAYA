@@ -67,6 +67,31 @@ This was wrong in every earlier handoff and it is why regressions shipped.
   health whether Drive is truly authorised. Open maya.manasiyo.com/verify.html
   after any push. Works on a phone.
 
+## v13.31 (Claude): Pinterest, and pictures from anywhere
+
+- `/api/fetchpic?u=` fetches any public https picture server side (a browser
+  cannot read cross-origin bytes). SSRF is the risk, so DNS is resolved first
+  and refused on private, loopback, link-local or CGNAT addresses (the metadata
+  server is 169.254.169.254), no redirects are followed, the answer must be an
+  image, 20 MB cap, signed in and rate limited.
+- Pinterest OAuth lives entirely in the server: `PINTEREST_APP_ID`,
+  `PINTEREST_APP_SECRET`, optional `PINTEREST_REDIRECT_URI` and
+  `PINTEREST_SCOPES`. Endpoints: status, start, callback, boards, pins,
+  disconnect. State is an HMAC of uid plus timestamp, compared with
+  `timingSafeEqual` and expired after 20 minutes. Tokens live per MAYA account
+  at `pinterest/<uid>.json` in the bucket and refresh automatically; a dead
+  refresh forgets the connection and the screen asks to reconnect.
+- The client shows the Pinterest button ONLY when status.configured is true.
+  Board grid, then pin grid, six selectable, imported through
+  `importPictureFromUrl()` so every picture is copied into the project.
+- Pinterest access tiers: a new app is Trial (its own account and listed
+  testers only). Standard access, needed for clients, requires Pinterest to
+  review a video of this flow. The code is done; that approval is not code.
+- Verified against a local stand-in for Pinterest and storage: status before
+  and after, the authorize URL, boards, pins (largest image chosen, pins with
+  no picture dropped), a forged state refused, a traversal board id refused,
+  disconnect, and status returning to not connected.
+
 ## v13.29 (Claude): the launch pass
 
 - **The share bug**: a share stored the sharer's own picture addresses, which

@@ -275,6 +275,37 @@ const s = await pg.evaluate(() => ({
   tokenRefreshesHealth: _adoptToken.toString().includes('runChecks()'),
 }));
 // v13.26: the map speaks about SUBMISSIONS, not Google plumbing.
+// v13.31: pictures from elsewhere, and Pinterest.
+ok('a picture can be fetched from any site, but never from inside the network',
+  SERVER_SOURCE.includes("app.get('/api/fetchpic'") &&
+  SERVER_SOURCE.includes('function isPrivateAddress(ip)') &&
+  SERVER_SOURCE.includes('await dns.lookup(target.hostname') &&
+  SERVER_SOURCE.includes("redirect: 'error'") &&
+  SERVER_SOURCE.includes("p[0] === 169 && p[1] === 254"));
+ok('the fetched picture must actually be a picture, and bounded',
+  SERVER_SOURCE.includes('FETCHPIC_MAX') && SERVER_SOURCE.includes("!/^image\\//.test(type)"));
+ok('Pinterest is server side only: the browser never sees the secret',
+  SERVER_SOURCE.includes('PINTEREST_APP_SECRET') && SERVER_SOURCE.includes('pinBasic()') &&
+  !INDEX_SOURCE.includes('PINTEREST_APP_SECRET') && !INDEX_SOURCE.includes('api.pinterest.com/v5/oauth'));
+ok('the Pinterest callback trusts a signed state, not a query parameter',
+  SERVER_SOURCE.includes('function pinState(uid)') &&
+  SERVER_SOURCE.includes('crypto.timingSafeEqual') &&
+  SERVER_SOURCE.includes("20 * 60 * 1000"));
+ok('a Pinterest token is stored per account and can be forgotten',
+  SERVER_SOURCE.includes("const PIN_PREFIX     = 'pinterest/'") &&
+  SERVER_SOURCE.includes('async function pinForget(uid)') &&
+  SERVER_SOURCE.includes("app.post('/api/pinterest/disconnect'"));
+ok('the Pinterest button hides itself when the server has no app',
+  INDEX_SOURCE.includes('async function _pinRevealButton()') &&
+  INDEX_SOURCE.includes("btn.style.display = s.configured ? '' : 'none'"));
+ok('a Pinterest import is capped at six and goes through the same copy path',
+  INDEX_SOURCE.includes('const PIN_PICK_MAX = 6;') &&
+  INDEX_SOURCE.includes('await importPictureFromUrl(p.url, p.alt)'));
+ok('pasted and dragged links import as inspo, six at a time',
+  INDEX_SOURCE.includes('const LINK_IMPORT_MAX = 6;') &&
+  INDEX_SOURCE.includes("_linksFromText(dropped)") &&
+  INDEX_SOURCE.includes("e.dataTransfer.getData('text/uri-list')"));
+
 // v13.30: the folder layout. The repo root IS the published website, so the
 // served pages must be at the root and the notes must NOT be, and the hosting
 // ignore list has to match. A tidy that breaks the deploy is not a tidy.

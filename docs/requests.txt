@@ -16,6 +16,35 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 18, 2026, PINTEREST (v13.31)
+
+[x] "Let the user log into Pinterest and choose a board, an image, or a
+    collection, and import it straight into MAYA as reference images." Built.
+    Upload now offers Pinterest: sign in with your own Pinterest account, your
+    boards appear, tap one, tap up to six pictures, and they land on the
+    moodboard as inspo cards, copied into the project so they can never go
+    dead. They work as references for Visualize like any other picture.
+    Where the secrets live: nowhere near the browser. MAYA's own server does
+    the sign in, holds the Pinterest token, and this screen only ever sees
+    board names and picture addresses.
+[x] Also built on the way: "From a link". Copy a picture's address from
+    anywhere, paste up to six, they come in. Dragging a picture straight from
+    another browser tab onto the board works now too. Both go through MAYA's
+    server, because a browser is not allowed to read a picture it did not
+    serve.
+
+    TWO THINGS ONLY FROMSA CAN DO, and Pinterest is strict about both:
+    1. Create the app at developers.pinterest.com (a Pinterest BUSINESS
+       account is required), set the redirect to
+       https://maya.manasiyo.com/api/pinterest/callback, then put
+       PINTEREST_APP_ID and PINTEREST_APP_SECRET on Cloud Run. Until those
+       exist the Pinterest button does not appear at all.
+    2. A new Pinterest app has TRIAL access: it works for the app's own
+       account and the testers listed on it, nobody else. To open it to
+       clients, Pinterest wants a video of this exact sign in flow and grants
+       Standard access after review. So this ships working for the atelier and
+       becomes public when they say yes.
+
 AUGUST 18, 2026, THE FOLDER (v13.30)
 
 [x] "Clean up MAYA-new, all I need to see is the four screens." Done, and the

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.29">
+<meta name="maya-version" content="13.31">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -340,6 +340,8 @@ try {
   <details class="fold" id="changes-fold" data-latest="2026-08-17b">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 18</b>Pictures can come from anywhere on the web now. Copy a picture's address from Pinterest or a lookbook, choose "From a link" under upload, paste up to six, and they land as inspo cards. Dragging a picture straight from another tab onto the board works too. MAYA fetches them through its own server, because a browser is not allowed to read a picture it did not serve, and each one is copied into the project so it can never go dead.</div>
+    <div class="chg"><b>Aug 18</b>Pinterest. Sign in with your Pinterest account, browse your own boards, pick up to six pictures and they land on the moodboard as inspiration, copied into the project so they can never go dead. MAYA's server holds the connection, so the app secret and your Pinterest token never touch the browser. There is also "From a link" for pictures anywhere else on the web, and dragging a picture straight from another tab onto the board now works.</div>
     <div class="chg"><b>Aug 18</b>Sharing a project actually works for the person you send it to. A share used to hand over the addresses of your own pictures, which only you are allowed to open, so the link arrived and then failed. Every picture is now copied into the share itself, and those copies are deleted when the project is. Share also moved onto each project in the list, so you can send one without opening it.</div>
     <div class="chg"><b>Aug 18</b>The wall rolls properly: the top row drifts right, the middle comes back left, the bottom follows the top. Submission cards no longer clip when you hover them, the lights answer faster, and a submission that is still arriving is checked every few seconds instead of every fifteen.</div>
     <div class="chg"><b>Aug 18</b>Fewer words everywhere. Notes are one place now, Design notes, with only the parts that have something in them. Save is gone because everything saves itself. Deleting a project says "Project deleted", not a sentence that sounds like it reached into other people's accounts.</div>
@@ -512,7 +514,7 @@ async function runChecks(){
         else if(!api) apiWhy='could not check';
         if(drive===false){
           // v13.26: Fromsa reads this line, not a Google engineer. Say what is
-          // happening to HIS submissions; the technical name lives in docs/fixes.txt.
+          // happening to HIS submissions; the technical name lives in fixes.txt.
           const reasons={submissions_timeout:'the submission store did not answer in time',
             submissions_error:'the submission store could not be reached',
             submissions_403:'MAYA is not allowed into its own submission store',
@@ -689,7 +691,7 @@ async function loadSubmissions() {
     let j = {}; try { j = await r.json(); } catch (_) {}
     const d = String(j.detail || '');
     if (j.code === 'drive_auth' || /invalid_grant|expired or revoked|oauth/i.test(d)) {
-      _subsNote('Submissions cannot be reached: the folder they live in is refusing the server, so new ones will not land and past ones cannot be listed. This is an authorisation Fromsa renews, step by step in docs/fixes.txt, dated Aug 16.');
+      _subsNote('Submissions cannot be reached: the folder they live in is refusing the server, so new ones will not land and past ones cannot be listed. This is an authorisation Fromsa renews, step by step in fixes.txt, dated Aug 16.');
     } else if (j.code === 'drive_timeout') {
       _subsNote('The submissions folder took too long to answer. Nothing was lost; the map keeps retrying.');
     } else {

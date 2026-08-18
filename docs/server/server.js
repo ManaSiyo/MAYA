@@ -28,6 +28,7 @@
 import express from 'express';
 import crypto from 'node:crypto';
 import { Readable } from 'node:stream';
+import dns from 'node:dns/promises';
 
 const app = express();
 app.disable('x-powered-by');
@@ -1019,6 +1020,325 @@ app.get('/api/imgproxy', requireAuthHeader, async (req, res) => {
     console.error('[imgproxy] failed,', e.message);
     res.status(502).json({ error: 'fetch_failed', detail: e.message });
   }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GET /api/fetchpic?u=<picture address> — v13.31. Bring a picture from
+// ANYWHERE on the web onto a MAYA board.
+//
+// The browser cannot read the bytes of a picture it did not serve, so pasting
+// or dragging an image address from Pinterest, a lookbook or a shop page used
+// to be impossible. This reads it server side and hands it back.
+//
+// A server that fetches any address a user names is a classic hole: point it
+// at 169.254.169.254 and it reads Google's metadata, which holds this server's
+// own identity. So the host is resolved FIRST and refused if it lands on a
+// private, loopback or link local address, no redirect is followed, the answer
+// must be an image, and it is capped.
+// ═══════════════════════════════════════════════════════════════════════════
+const FETCHPIC_MAX = 20 * 1024 * 1024;
+function isPrivateAddress(ip) {
+  if (!ip) return true;
+  const v = String(ip);
+  if (v === '::1' || v === '0.0.0.0' || v.startsWith('fe80:') || v.startsWith('fc') || v.startsWith('fd')) return true;
+  const p = v.split('.').map(Number);
+  if (p.length !== 4 || p.some(n => Number.isNaN(n))) return v.includes(':') ? false : true;
+  if (p[0] === 10 || p[0] === 127 || p[0] === 0) return true;
+  if (p[0] === 169 && p[1] === 254) return true;                 // link local, the metadata server
+  if (p[0] === 172 && p[1] >= 16 && p[1] <= 31) return true;
+  if (p[0] === 192 && p[1] === 168) return true;
+  if (p[0] === 100 && p[1] >= 64 && p[1] <= 127) return true;    // carrier grade NAT
+  return false;
+}
+
+app.get('/api/fetchpic', requireAuthHeader, async (req, res) => {
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized', detail: e.message }); }
+  const rlF = rateLimit(user.sub, user.email);
+  if (!rlF.ok) return res.status(429).json({ error: 'rate_limited', scope: rlF.scope });
+
+  let target;
+  try { target = new URL(String(req.query.u || '')); }
+  catch (_) { return res.status(400).json({ error: 'bad_url' }); }
+  if (target.protocol !== 'https:') return res.status(400).json({ error: 'https_only' });
+  if (/^\[?(?:\d{1,3}\.){3}\d{1,3}\]?$/.test(target.hostname) || target.hostname.endsWith('.internal')) {
+    return res.status(403).json({ error: 'host_not_allowed' });
+  }
+  try {
+    const addrs = await dns.lookup(target.hostname, { all: true });
+    if (!addrs.length || addrs.some(a => isPrivateAddress(a.address))) {
+      console.warn('[fetchpic] refused private host', target.hostname, 'for', user.email);
+      return res.status(403).json({ error: 'host_not_allowed' });
+    }
+  } catch (_) { return res.status(400).json({ error: 'host_unknown' }); }
+
+  try {
+    const r = await fetch(target.toString(), {
+      redirect: 'error',
+      headers: { 'Accept': 'image/*', 'User-Agent': 'MAYA/13.31 (+https://maya.manasiyo.com)' },
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!r.ok) return res.status(r.status === 404 ? 404 : 502).json({ error: 'upstream_' + r.status });
+    const type = r.headers.get('content-type') || '';
+    if (!/^image\//.test(type)) return res.status(415).json({ error: 'not_a_picture' });
+    const len = Number(r.headers.get('content-length') || 0);
+    if (len && len > FETCHPIC_MAX) return res.status(413).json({ error: 'too_large' });
+    const buf = Buffer.from(await r.arrayBuffer());
+    if (buf.length > FETCHPIC_MAX) return res.status(413).json({ error: 'too_large' });
+    res.setHeader('Content-Type', type.split(';')[0].trim());
+    res.setHeader('Cache-Control', 'private, max-age=600');
+    res.end(buf);
+  } catch (e) {
+    console.error('[fetchpic] failed,', e.message);
+    res.status(502).json({ error: 'fetch_failed', detail: 'that address did not give a picture' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PINTEREST, v13.31. Sign in with Pinterest, browse your own boards, pick
+// pictures, and they land on the MAYA board as inspiration.
+//
+// The secret half of this lives here and only here. The browser never sees the
+// app secret or the Pinterest token: it asks this server for a sign-in link,
+// Pinterest sends the person back to /api/pinterest/callback, and the tokens
+// are kept server side, one small file per MAYA account, in MAYA's own bucket.
+//
+// Dormant until PINTEREST_APP_ID and PINTEREST_APP_SECRET are set on Cloud
+// Run. Until then /status answers configured:false and the app hides the
+// button, so nobody is offered something that cannot work.
+//
+// Pinterest access tiers matter: a new app is Trial, which works for the app's
+// own account and its listed testers. Everyone else needs Standard access,
+// which Pinterest grants after reviewing a video of this exact flow.
+// ═══════════════════════════════════════════════════════════════════════════
+const PIN_APP_ID     = process.env.PINTEREST_APP_ID || '';
+const PIN_APP_SECRET = process.env.PINTEREST_APP_SECRET || '';
+const PIN_REDIRECT   = process.env.PINTEREST_REDIRECT_URI ||
+                       'https://maya.manasiyo.com/api/pinterest/callback';
+const PIN_SCOPES     = process.env.PINTEREST_SCOPES || 'boards:read,pins:read,user_accounts:read';
+const PIN_API        = 'https://api.pinterest.com/v5';
+const PIN_PREFIX     = 'pinterest/';
+const pinConfigured  = () => !!(PIN_APP_ID && PIN_APP_SECRET);
+const pinBasic = () => 'Basic ' + Buffer.from(PIN_APP_ID + ':' + PIN_APP_SECRET).toString('base64');
+
+// The state carries the MAYA account through Pinterest and back, signed so a
+// stranger cannot hand us a callback for somebody else's account.
+function pinState(uid) {
+  const body = uid + '.' + Date.now();
+  const mac = crypto.createHmac('sha256', PIN_APP_SECRET).update(body).digest('base64url').slice(0, 32);
+  return Buffer.from(body + '.' + mac, 'utf8').toString('base64url');
+}
+function pinReadState(state) {
+  let raw = '';
+  try { raw = Buffer.from(String(state || ''), 'base64url').toString('utf8'); } catch (_) { return null; }
+  const parts = raw.split('.');
+  if (parts.length !== 3) return null;
+  const [uid, ts, mac] = parts;
+  const want = crypto.createHmac('sha256', PIN_APP_SECRET).update(uid + '.' + ts).digest('base64url').slice(0, 32);
+  if (mac.length !== want.length || !crypto.timingSafeEqual(Buffer.from(mac), Buffer.from(want))) return null;
+  if (Date.now() - Number(ts) > 20 * 60 * 1000) return null;      // a sign in takes minutes, not hours
+  return uid;
+}
+
+const pinPath = (uid) => PIN_PREFIX + uid + '.json';
+async function pinLoad(uid) {
+  const o = await gcsGet(pinPath(uid)).catch(() => ({ ok: false }));
+  if (!o.ok) return null;
+  try { return JSON.parse(o.buf.toString('utf8')); } catch (_) { return null; }
+}
+async function pinSave(uid, tok) {
+  await gcsPut(pinPath(uid), Buffer.from(JSON.stringify(tok), 'utf8'), 'application/json');
+}
+async function pinForget(uid) {
+  const tok = await serviceToken(STORAGE_SCOPE);
+  await fetch('https://storage.googleapis.com/storage/v1/b/' + encodeURIComponent(SUBMISSIONS_BUCKET) +
+    '/o/' + encodeURIComponent(pinPath(uid)), {
+    method: 'DELETE', headers: { 'Authorization': 'Bearer ' + tok }, signal: AbortSignal.timeout(10000),
+  }).catch(() => {});
+}
+
+// Every Pinterest call goes through here, so a token that aged out is renewed
+// once and the caller never sees it.
+async function pinFetch(uid, path, retry) {
+  const stored = await pinLoad(uid);
+  if (!stored || !stored.access_token) { const e = new Error('not connected'); e.code = 'not_connected'; throw e; }
+  if (stored.expiresAtMs && Date.now() > stored.expiresAtMs - 60000 && stored.refresh_token && !retry) {
+    const fresh = await pinRefresh(uid, stored);
+    if (!fresh) { const e = new Error('reconnect'); e.code = 'reconnect'; throw e; }
+  }
+  const use = retry ? stored : (await pinLoad(uid)) || stored;
+  const r = await fetch(PIN_API + path, {
+    headers: { 'Authorization': 'Bearer ' + use.access_token },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (r.status === 401 && !retry && use.refresh_token) {
+    const fresh = await pinRefresh(uid, use);
+    if (fresh) return pinFetch(uid, path, true);
+    const e = new Error('reconnect'); e.code = 'reconnect'; throw e;
+  }
+  if (!r.ok) {
+    const e = new Error('pinterest ' + r.status + ': ' + (await r.text()).slice(0, 200));
+    e.code = r.status === 403 ? 'not_allowed' : 'pinterest_error';
+    throw e;
+  }
+  return await r.json();
+}
+async function pinRefresh(uid, stored) {
+  try {
+    const r = await fetch(PIN_API + '/oauth/token', {
+      method: 'POST',
+      headers: { 'Authorization': pinBasic(), 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: stored.refresh_token }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!r.ok) { console.error('[pinterest] refresh ' + r.status); await pinForget(uid); return null; }
+    const j = await r.json();
+    const next = {
+      access_token: j.access_token,
+      refresh_token: j.refresh_token || stored.refresh_token,
+      expiresAtMs: Date.now() + (Number(j.expires_in || 2592000) * 1000),
+      connectedAtMs: stored.connectedAtMs || Date.now(),
+    };
+    await pinSave(uid, next);
+    return next;
+  } catch (e) { console.error('[pinterest] refresh failed,', e.message); return null; }
+}
+
+app.get('/api/pinterest/status', requireAuthHeader, async (req, res) => {
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized' }); }
+  if (!pinConfigured()) return res.json({ ok: true, configured: false, connected: false });
+  const stored = await pinLoad(user.sub);
+  res.json({ ok: true, configured: true, connected: !!(stored && stored.access_token),
+             connectedAtMs: (stored && stored.connectedAtMs) || null });
+});
+
+app.get('/api/pinterest/start', requireAuthHeader, async (req, res) => {
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized' }); }
+  if (!pinConfigured()) return res.status(501).json({ error: 'not_configured' });
+  const qs = new URLSearchParams({
+    client_id: PIN_APP_ID, redirect_uri: PIN_REDIRECT, response_type: 'code',
+    scope: PIN_SCOPES, state: pinState(user.sub),
+  });
+  res.json({ ok: true, url: 'https://www.pinterest.com/oauth/?' + qs.toString() });
+});
+
+// Pinterest sends the person here. No MAYA sign in on this request: the signed
+// state is what says which account is connecting.
+app.get('/api/pinterest/callback', async (req, res) => {
+  const done = (msg, ok) => {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.end('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Pinterest</title></head>' +
+      '<body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;' +
+      'background:#05070f;color:#eef3ff;font-family:-apple-system,system-ui,sans-serif;font-weight:300">' +
+      '<div style="text-align:center"><div style="font-size:15px;letter-spacing:0.04em"></div></div>' +
+      '<script>document.querySelector("div div").textContent=' + JSON.stringify(msg) + ';' +
+      'try{window.opener&&window.opener.postMessage({maya:"pinterest",ok:' + (ok ? 'true' : 'false') +
+      '},window.location.origin);}catch(e){}' +
+      'setTimeout(function(){window.close();},' + (ok ? '900' : '2600') + ');<\/script></body></html>');
+  };
+  if (!pinConfigured()) return done('Pinterest is not set up on this server.', false);
+  const uid = pinReadState(req.query.state);
+  if (!uid) return done('That sign in expired. Try again from MAYA.', false);
+  if (!req.query.code) return done('Pinterest did not send a code back.', false);
+  try {
+    const r = await fetch(PIN_API + '/oauth/token', {
+      method: 'POST',
+      headers: { 'Authorization': pinBasic(), 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: String(req.query.code),
+        redirect_uri: PIN_REDIRECT,
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!r.ok) {
+      console.error('[pinterest] token exchange ' + r.status, (await r.text()).slice(0, 200));
+      return done('Pinterest refused the sign in.', false);
+    }
+    const j = await r.json();
+    if (!j.access_token) return done('Pinterest sent no token.', false);
+    await pinSave(uid, {
+      access_token: j.access_token,
+      refresh_token: j.refresh_token || '',
+      expiresAtMs: Date.now() + (Number(j.expires_in || 2592000) * 1000),
+      connectedAtMs: Date.now(),
+    });
+    console.log('[pinterest] connected for', uid.slice(0, 6) + '…');
+    done('Connected. You can close this.', true);
+  } catch (e) {
+    console.error('[pinterest] callback failed,', e.message);
+    done('Could not finish the sign in.', false);
+  }
+});
+
+app.post('/api/pinterest/disconnect', requireAuthHeader, express.json({ limit: '4kb' }), async (req, res) => {
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized' }); }
+  await pinForget(user.sub);
+  res.json({ ok: true });
+});
+
+const pinErr = (res, e) => {
+  const code = (e && e.code) || 'pinterest_error';
+  console.error('[pinterest]', (e && e.message) || e);
+  const status = code === 'not_connected' || code === 'reconnect' ? 401 : (code === 'not_allowed' ? 403 : 502);
+  res.status(status).json({ error: code });
+};
+
+app.get('/api/pinterest/boards', requireAuthHeader, async (req, res) => {
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized' }); }
+  if (!pinConfigured()) return res.status(501).json({ error: 'not_configured' });
+  try {
+    const j = await pinFetch(user.sub, '/boards?page_size=50');
+    const boards = (j.items || []).map(b => ({
+      id: String(b.id), name: String(b.name || 'board').slice(0, 80),
+      pins: Number(b.pin_count || 0),
+      cover: (b.media && (b.media.image_cover_url || b.media.pin_thumbnail_urls?.[0])) || '',
+    }));
+    res.json({ ok: true, boards });
+  } catch (e) { pinErr(res, e); }
+});
+
+app.get('/api/pinterest/pins', requireAuthHeader, async (req, res) => {
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized' }); }
+  if (!pinConfigured()) return res.status(501).json({ error: 'not_configured' });
+  const board = String(req.query.board || '');
+  if (!/^[\w-]{1,64}$/.test(board)) return res.status(400).json({ error: 'bad_board' });
+  const bookmark = String(req.query.bookmark || '');
+  try {
+    const qs = new URLSearchParams({ page_size: '48' });
+    if (bookmark) qs.set('bookmark', bookmark);
+    const j = await pinFetch(user.sub, '/boards/' + board + '/pins?' + qs.toString());
+    // The picture comes in several sizes under media.images; take the biggest
+    // one Pinterest offers, whatever they happen to call it this year.
+    const biggest = (images) => {
+      if (!images || typeof images !== 'object') return '';
+      let best = '', bestW = -1;
+      for (const [key, val] of Object.entries(images)) {
+        const url = val && val.url;
+        if (!url) continue;
+        const w = key === 'originals' ? 99999 : Number((val.width) || (String(key).split('x')[0]) || 0);
+        if (w > bestW) { bestW = w; best = url; }
+      }
+      return best;
+    };
+    const pins = (j.items || []).map(p => ({
+      id: String(p.id),
+      url: biggest(p.media && p.media.images) || '',
+      alt: String(p.alt_text || p.title || '').slice(0, 120),
+    })).filter(p => p.url);
+    res.json({ ok: true, pins, bookmark: j.bookmark || null });
+  } catch (e) { pinErr(res, e); }
 });
 
 // GET /api/admin/submissions — every submission in MAYA's own store, newest

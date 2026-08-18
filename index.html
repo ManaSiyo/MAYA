@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.29">
+<meta name="maya-version" content="13.31">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -705,6 +705,38 @@
      v13.8: wider again, and a size up, so it can actually be seen. */
   .upload-link { letter-spacing: 0.32em; padding: 2px 20px; font-size: 10px; }
   /* v13.4: the upload chooser. Snappy on purpose: 0.12s, no drift. */
+  /* v13.31: Pinterest picker. Board tiles, then picture tiles with a tick. */
+  .pin-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: 10px; max-height: 52vh; overflow-y: auto; padding: 2px;
+  }
+  .pin-grid.pics { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+  .pin-tile, .pin-pic {
+    position: relative; display: flex; flex-direction: column; gap: 4px;
+    padding: 0; border-radius: 12px; overflow: hidden; cursor: pointer;
+    border: 0.5px solid rgba(255,255,255,0.22); background: transparent;
+    color: rgba(238,243,255,0.86); text-align: left;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .pin-tile:hover, .pin-pic:hover { border-color: rgba(220,232,255,0.6); transform: translateY(-2px); }
+  .pin-tile img { width: 100%; height: 96px; object-fit: cover; display: block; }
+  .pin-tile .pin-blank { display: block; width: 100%; height: 96px; background: rgba(255,255,255,0.05); }
+  .pin-tile-name {
+    font-family: 'Cormorant Garamond', serif; font-size: 13px; padding: 0 8px;
+  }
+  .pin-tile-count {
+    font-family: 'Jost', sans-serif; font-size: 8.5px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: rgba(238,243,255,0.42); padding: 0 8px 8px;
+  }
+  .pin-pic img { width: 100%; height: 104px; object-fit: cover; display: block; }
+  .pin-pic .pin-check {
+    position: absolute; top: 6px; right: 6px; width: 18px; height: 18px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: #05070f; background: rgba(255,255,255,0.9);
+    opacity: 0; transform: scale(0.8); transition: opacity 0.15s, transform 0.15s;
+  }
+  .pin-pic.picked { border-color: rgba(220,232,255,0.9); }
+  .pin-pic.picked .pin-check { opacity: 1; transform: scale(1); }
   #upload-choose-modal {
     position: fixed; inset: 0; z-index: 1200;
     display: flex; align-items: flex-end; justify-content: center;
@@ -4327,6 +4359,46 @@
   <div class="upload-choose-card">
     <button class="upload-choose-btn" onclick="closeUploadChooser();document.getElementById('inspo-file').click()">Inspo</button>
     <button class="upload-choose-btn" onclick="closeUploadChooser();document.getElementById('myfabric-file').click()">My fabric</button>
+    <!-- v13.31: pictures that live somewhere else on the web. -->
+    <button class="upload-choose-btn" id="upload-choose-pinterest" style="display:none"
+            onclick="closeUploadChooser();openPinterest()">Pinterest</button>
+    <button class="upload-choose-btn" onclick="closeUploadChooser();openLinkImport()">From a link</button>
+  </div>
+</div>
+
+<!-- v13.31: Pinterest. Sign in, pick a board, pick pictures, they land on
+     the board as inspiration and are copied into the project. -->
+<div class="modal" id="pinterest-modal">
+  <button class="modal-close" onclick="closePinterest()">Close</button>
+  <div class="modal-card" style="text-align:center;max-width:760px">
+    <h2 style="text-align:center" id="pin-title">Pinterest</h2>
+    <div class="modal-hint" style="text-align:center" id="pin-hint">Checking…</div>
+    <div id="pin-body" style="margin-top:14px"></div>
+    <div class="modal-actions" style="justify-content:center;gap:12px" id="pin-actions"></div>
+  </div>
+</div>
+
+<!-- v13.31: bring pictures in by address. Copy a picture's address from
+     Pinterest or anywhere else, paste, and MAYA fetches it through its own
+     server, because a browser is not allowed to read a picture it did not
+     serve. Six at a time. -->
+<div class="modal" id="link-import-modal">
+  <button class="modal-close" onclick="closeLinkImport()">Close</button>
+  <div class="modal-card" style="text-align:center">
+    <h2 style="text-align:center">Pictures from a link</h2>
+    <div class="modal-hint" style="text-align:center">Paste picture addresses, one per line. Up to six.</div>
+    <textarea id="link-import-box" rows="5" spellcheck="false"
+      placeholder="https://i.pinimg.com/originals/....jpg"
+      style="width:100%;margin-top:12px;padding:10px 12px;border-radius:12px;
+             border:0.5px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.04);
+             color:#eef3ff;font-family:Menlo,monospace;font-size:11.5px;line-height:1.6;
+             resize:vertical;outline:none"></textarea>
+    <div class="modal-hint" style="text-align:center;margin-top:8px;font-size:11px">
+      On Pinterest: right click a pin, Copy image address. Dragging a picture straight onto the board works too.
+    </div>
+    <div class="modal-actions" style="justify-content:center;gap:12px">
+      <button class="top-btn" id="link-import-go" onclick="runLinkImport()">Bring them in</button>
+    </div>
   </div>
 </div>
 
@@ -9032,6 +9104,280 @@ async function handleInspoUpload(file) {
   showToast('Placed. Hover it and tap Dissect.');
 }
 
+// ════════════════════════════════════════════════════════════
+// v13.31: PINTEREST
+// Sign in with Pinterest, browse your own boards, pick pictures, and they land
+// on the board as inspiration. The app secret and the Pinterest token never
+// come near this browser: MAYA's own server holds them and this screen only
+// ever sees board names and picture addresses.
+// The button hides itself unless the server says Pinterest is set up, so
+// nobody is offered a door that cannot open.
+// ════════════════════════════════════════════════════════════
+const PIN_PICK_MAX = 6;                 // per Fromsa: six at a time
+let _pinPicked = new Set();
+
+async function _pinApi(path, opts) {
+  const key = getApiKey();
+  if (!key) throw new Error('signed out');
+  const r = await fetch(path, {
+    ...(opts || {}),
+    headers: { 'Authorization': 'Bearer ' + key, ...((opts && opts.headers) || {}) },
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(j.error || ('http ' + r.status)); e.code = j.error; throw e; }
+  return j;
+}
+
+// Shown only when the server has the Pinterest app configured.
+async function _pinRevealButton() {
+  const btn = document.getElementById('upload-choose-pinterest');
+  if (!btn || !getApiKey()) return;
+  try {
+    const s = await _pinApi('/api/pinterest/status');
+    btn.style.display = s.configured ? '' : 'none';
+  } catch (_) { btn.style.display = 'none'; }
+}
+
+function closePinterest() {
+  const m = document.getElementById('pinterest-modal');
+  if (m) m.classList.remove('open');
+}
+function _pinPaint(hint, bodyHtml, actionsHtml) {
+  document.getElementById('pin-hint').textContent = hint;
+  document.getElementById('pin-body').innerHTML = bodyHtml || '';
+  document.getElementById('pin-actions').innerHTML = actionsHtml || '';
+}
+
+async function openPinterest() {
+  const m = document.getElementById('pinterest-modal');
+  if (!m) return;
+  m.classList.add('open');
+  document.getElementById('pin-title').textContent = 'Pinterest';
+  _pinPaint('Checking…', '', '');
+  let s;
+  try { s = await _pinApi('/api/pinterest/status'); }
+  catch (e) { _pinPaint('Could not reach MAYA just now.', '', ''); return; }
+  if (!s.configured) {
+    _pinPaint('Pinterest is not set up on this server yet.', '', '');
+    return;
+  }
+  if (!s.connected) return _pinShowConnect();
+  return _pinShowBoards();
+}
+
+function _pinShowConnect() {
+  _pinPaint('Sign in with Pinterest to bring pictures from your own boards.', '',
+    '<button class="top-btn" onclick="_pinConnect()">Connect Pinterest</button>');
+}
+
+// The popup does the sign in and tells this window when it is done.
+function _pinConnect() {
+  _pinApi('/api/pinterest/start').then(({ url }) => {
+    const w = window.open(url, 'maya-pinterest', 'width=560,height=720');
+    if (!w) { showError('Allow popups for MAYA, then press Connect again.'); return; }
+    _pinPaint('Waiting for Pinterest…', '', '');
+    const onMsg = (e) => {
+      if (e.origin !== location.origin || !e.data || e.data.maya !== 'pinterest') return;
+      window.removeEventListener('message', onMsg);
+      if (e.data.ok) _pinShowBoards();
+      else _pinPaint('That sign in did not finish.', '',
+        '<button class="top-btn" onclick="_pinConnect()">Try again</button>');
+    };
+    window.addEventListener('message', onMsg);
+  }).catch(() => showError('Could not start the Pinterest sign in.'));
+}
+
+async function _pinShowBoards() {
+  document.getElementById('pin-title').textContent = 'Your boards';
+  _pinPaint('Loading your boards…', '', '');
+  let j;
+  try { j = await _pinApi('/api/pinterest/boards'); }
+  catch (e) {
+    if (e.code === 'not_connected' || e.code === 'reconnect') return _pinShowConnect();
+    if (e.code === 'not_allowed') {
+      _pinPaint('Pinterest has not opened this app to your account yet.', '', '');
+      return;
+    }
+    _pinPaint('Pinterest did not answer. Try again in a moment.', '', '');
+    return;
+  }
+  if (!j.boards.length) {
+    _pinPaint('No boards on that Pinterest account.', '',
+      '<button class="top-btn" onclick="_pinDisconnect()">Use another account</button>');
+    return;
+  }
+  const cards = j.boards.map(b =>
+    '<button class="pin-tile" onclick="_pinShowPins(\'' + escapeHtml(b.id) + '\',\'' +
+      escapeHtml(String(b.name).replace(/'/g, '')) + '\')">' +
+      (b.cover ? '<img src="' + _safeImgSrc(b.cover) + '" alt="" loading="lazy">' : '<span class="pin-blank"></span>') +
+      '<span class="pin-tile-name">' + escapeHtml(b.name) + '</span>' +
+      '<span class="pin-tile-count">' + b.pins + ' pin' + (b.pins === 1 ? '' : 's') + '</span>' +
+    '</button>').join('');
+  _pinPaint('Pick a board.', '<div class="pin-grid">' + cards + '</div>',
+    '<button class="top-btn" onclick="_pinDisconnect()">Disconnect</button>');
+}
+
+async function _pinShowPins(boardId, boardName) {
+  document.getElementById('pin-title').textContent = boardName || 'Board';
+  _pinPaint('Loading pictures…', '', '');
+  _pinPicked = new Set();
+  let j;
+  try { j = await _pinApi('/api/pinterest/pins?board=' + encodeURIComponent(boardId)); }
+  catch (e) {
+    if (e.code === 'not_connected' || e.code === 'reconnect') return _pinShowConnect();
+    _pinPaint('Could not read that board.', '',
+      '<button class="top-btn" onclick="_pinShowBoards()">Back to boards</button>');
+    return;
+  }
+  if (!j.pins.length) {
+    _pinPaint('Nothing on that board yet.', '',
+      '<button class="top-btn" onclick="_pinShowBoards()">Back to boards</button>');
+    return;
+  }
+  const tiles = j.pins.map(p =>
+    '<button class="pin-pic" data-url="' + escapeHtml(p.url) + '" data-alt="' + escapeHtml(p.alt || '') + '"' +
+      ' onclick="_pinToggle(this)"><img src="' + _safeImgSrc(p.url) + '" alt="" loading="lazy">' +
+      '<span class="pin-check">&#10003;</span></button>').join('');
+  _pinPaint('Choose up to ' + PIN_PICK_MAX + '.', '<div class="pin-grid pics">' + tiles + '</div>',
+    '<button class="top-btn" onclick="_pinShowBoards()">Boards</button>' +
+    '<button class="top-btn" id="pin-import-btn" onclick="_pinImport()" disabled>Bring them in</button>');
+}
+
+function _pinToggle(el) {
+  const url = el.dataset.url;
+  if (_pinPicked.has(url)) { _pinPicked.delete(url); el.classList.remove('picked'); }
+  else {
+    if (_pinPicked.size >= PIN_PICK_MAX) { showToast('Up to ' + PIN_PICK_MAX + '.'); return; }
+    _pinPicked.add(url); el.classList.add('picked');
+  }
+  const btn = document.getElementById('pin-import-btn');
+  if (btn) {
+    btn.disabled = _pinPicked.size === 0;
+    btn.textContent = _pinPicked.size ? 'Bring in ' + _pinPicked.size : 'Bring them in';
+  }
+}
+
+async function _pinImport() {
+  const picked = [...document.querySelectorAll('.pin-pic.picked')]
+    .map(el => ({ url: el.dataset.url, alt: el.dataset.alt })).slice(0, PIN_PICK_MAX);
+  if (!picked.length) return;
+  const btn = document.getElementById('pin-import-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Bringing them in…'; }
+  let done = 0;
+  for (const p of picked) {
+    // Same road as any other picture from the web: MAYA's own server fetches
+    // it, and the copy that lands belongs to this project.
+    try { if (await importPictureFromUrl(p.url, p.alt)) done++; }
+    catch (e) { console.warn('[pinterest] import failed,', (e && e.message) || e); }
+  }
+  closePinterest();
+  if (done) showToast(done + ' picture' + (done === 1 ? '' : 's') + ' placed.');
+  else showError('Those pictures could not be brought in.');
+}
+
+async function _pinDisconnect() {
+  try { await _pinApi('/api/pinterest/disconnect', { method: 'POST', body: '{}',
+        headers: { 'Content-Type': 'application/json' } }); } catch (_) {}
+  _pinShowConnect();
+}
+
+// ════════════════════════════════════════════════════════════
+// v13.31: PICTURES FROM A LINK
+// A browser may DRAW a picture from another site but not read its bytes, and
+// MAYA needs the bytes: to place the card, to copy the picture into the
+// project so it can never go dead, and to hand it to gpt-image-2 as an anchor.
+// So the address goes to MAYA's own server, which fetches it and hands back
+// the picture. Six at a time, per Fromsa.
+// ════════════════════════════════════════════════════════════
+const LINK_IMPORT_MAX = 6;
+
+function openLinkImport() {
+  const m = document.getElementById('link-import-modal');
+  if (!m) return;
+  const box = document.getElementById('link-import-box');
+  if (box) { box.value = ''; }
+  m.classList.add('open');
+  setTimeout(() => { try { box.focus(); } catch (_) {} }, 60);
+}
+function closeLinkImport() {
+  const m = document.getElementById('link-import-modal');
+  if (m) m.classList.remove('open');
+}
+
+// Pull addresses out of whatever was pasted: a list, a paragraph, one line.
+function _linksFromText(text) {
+  const found = String(text || '').match(/https?:\/\/[^\s"'<>)\]]+/gi) || [];
+  const seen = new Set();
+  const out = [];
+  for (const raw of found) {
+    const u = raw.replace(/[.,;]+$/, '');
+    if (seen.has(u)) continue;
+    seen.add(u);
+    out.push(u);
+  }
+  return out;
+}
+
+// One address in, one inspo card out. The picture arrives as a data url, so
+// the normal save uploads MAYA's own copy: no borrowed addresses on a board.
+async function importPictureFromUrl(url, label) {
+  const ctx = _opContext();
+  const key = getApiKey();
+  if (!key) throw new Error('signed out');
+  const r = await fetch('/api/fetchpic?u=' + encodeURIComponent(url), {
+    headers: { 'Authorization': 'Bearer ' + key },
+  });
+  if (!r.ok) {
+    const why = r.status === 415 ? 'that address is not a picture'
+      : r.status === 413 ? 'that picture is too large'
+      : r.status === 404 ? 'that picture is gone'
+      : 'could not reach it';
+    throw new Error(why);
+  }
+  const blob = await r.blob();
+  const small = await compressBlobForUpload(blob, 1600, 0.9);
+  const dataUrl = await new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(fr.result); fr.onerror = () => rej(fr.error);
+    fr.readAsDataURL(small);
+  });
+  if (!_opStillValid(ctx)) { console.warn('[link import] project changed, card dropped'); return false; }
+  let name = label || '';
+  if (!name) {
+    try { name = decodeURIComponent(new URL(url).pathname.split('/').pop() || '').replace(/\.[^/.]+$/, '').replace(/[-_]+/g, ' ').slice(0, 40); }
+    catch (_) {}
+  }
+  placeItem({ tag: 'inspo', title: name || 'reference', kind: 'inspo', image: dataUrl }, 0);
+  return true;
+}
+
+async function runLinkImport() {
+  const box = document.getElementById('link-import-box');
+  const btn = document.getElementById('link-import-go');
+  const links = _linksFromText(box && box.value);
+  if (!links.length) { showError('Paste at least one picture address.'); return; }
+  const take = links.slice(0, LINK_IMPORT_MAX);
+  const extra = links.length - take.length;
+  if (btn) { btn.disabled = true; btn.textContent = 'Bringing them in…'; }
+  let done = 0;
+  const failed = [];
+  // One at a time: six parallel downloads through one server, on a phone, is
+  // how you get three of them timing out and no idea which.
+  for (const u of take) {
+    try { if (await importPictureFromUrl(u)) done++; }
+    catch (e) { failed.push((e && e.message) || 'failed'); }
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Bring them in'; }
+  closeLinkImport();
+  if (done && !failed.length) {
+    showToast(done + ' picture' + (done === 1 ? '' : 's') + ' placed.' + (extra ? ' First six only.' : ''));
+  } else if (done) {
+    showToast(done + ' placed, ' + failed.length + ' did not work.');
+  } else {
+    showError('None of those worked: ' + failed[0] + '.');
+  }
+}
+
 // v5.3: pixel-sample a representative color from an image so dissected refs
 // can share a tint with their source image. 32×32 downscale, average all
 // non-near-black pixels (background shadows shouldn't drive the tint).
@@ -9255,7 +9601,10 @@ async function handlePasteFile(f) {
 const dropHint = document.getElementById('canvas-drop-hint');
 let dragDepth = 0;
 window.addEventListener('dragenter', e => {
-  if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files')) {
+  // v13.31: a picture dragged from another tab arrives as an ADDRESS, not a
+  // file, so the hint has to appear for those too.
+  if (e.dataTransfer && Array.from(e.dataTransfer.types)
+        .some(t => t === 'Files' || t === 'text/uri-list' || t === 'text/plain')) {
     e.preventDefault();
     dragDepth++;
     dropHint.classList.add('show');
@@ -9273,7 +9622,21 @@ window.addEventListener('drop', async e => {
   // v5.14: accept multiple dropped files. Images run in parallel,
   // audio/text sequentially.
   const files = Array.from(e.dataTransfer.files || []);
-  if (!files.length) return;
+  if (!files.length) {
+    // v13.31: nothing was dropped as a file, so it was dragged from another
+    // site. Chrome hands over the picture's address; MAYA fetches it.
+    let dropped = '';
+    try { dropped = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain') || ''; }
+    catch (_) {}
+    const links = _linksFromText(dropped).slice(0, LINK_IMPORT_MAX);
+    if (!links.length) return;
+    showToast('Fetching…');
+    let ok = 0;
+    for (const u of links) { try { if (await importPictureFromUrl(u)) ok++; } catch (_) {} }
+    if (ok) showToast(ok + ' picture' + (ok === 1 ? '' : 's') + ' placed.');
+    else showError('That link did not give a picture.');
+    return;
+  }
   const images = files.filter(f => f.type.startsWith('image/'));
   await Promise.all(images.map(f => handleInspoUpload(f)));
   for (const f of files) {
@@ -11505,6 +11868,9 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 else _maybeOpenShare();
 
 function openUploadChooser() {
+  // v13.31: ask the server whether Pinterest is set up, so the button is only
+  // ever there when it can actually work.
+  try { _pinRevealButton(); } catch (_) {}
   const m = document.getElementById('upload-choose-modal');
   if (m) m.classList.add('open');
 }
