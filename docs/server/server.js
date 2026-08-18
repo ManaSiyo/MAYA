@@ -522,6 +522,45 @@ const PRICE_IMAGE = Number(process.env.OPENAI_PRICE_IMAGE || 0.19);
 const PRICE_CHAT  = Number(process.env.OPENAI_PRICE_CHAT  || 0.01);
 const PRICE_AUDIO = Number(process.env.OPENAI_PRICE_AUDIO || 0.006);
 const MONTHLY_BUDGET_USD = Number(process.env.MONTHLY_BUDGET_USD || 50);
+// v13.29: what Fromsa actually loaded into OpenAI. When set, the ring counts
+// down from THIS instead of an invented budget.
+const OPENAI_CREDIT_USD = Number(process.env.OPENAI_CREDIT_USD || 0);
+// v13.29: the only way to get REAL numbers out of OpenAI is an organisation
+// admin key (sk-admin-...), which can read the Costs API. It is optional: set
+// it and the meter reports measured spend, leave it and the meter estimates.
+// It is read here and never leaves the server.
+const OPENAI_ADMIN_KEY = process.env.OPENAI_ADMIN_KEY || '';
+let _realCost = { ts: 0, month: '', usd: null, error: '' };
+async function openAiRealSpend(month) {
+  if (!OPENAI_ADMIN_KEY) return null;
+  if (_realCost.month === month && _realCost.usd !== null && Date.now() - _realCost.ts < 15 * 60 * 1000) {
+    return _realCost.usd;                                  // costs update slowly; 15 min is plenty
+  }
+  const start = Math.floor(Date.parse(month + '-01T00:00:00Z') / 1000);
+  try {
+    let usd = 0, page = null, guard = 0;
+    do {
+      const qs = new URLSearchParams({ start_time: String(start), bucket_width: '1d', limit: '31' });
+      if (page) qs.set('page', page);
+      const r = await fetch('https://api.openai.com/v1/organization/costs?' + qs.toString(), {
+        headers: { 'Authorization': 'Bearer ' + OPENAI_ADMIN_KEY },
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!r.ok) throw new Error('costs ' + r.status);
+      const j = await r.json();
+      for (const b of (j.data || [])) {
+        for (const res of (b.results || [])) usd += Number((res.amount && res.amount.value) || 0);
+      }
+      page = j.has_more ? j.next_page : null;
+    } while (page && ++guard < 12);
+    _realCost = { ts: Date.now(), month, usd: Number(usd.toFixed(4)), error: '' };
+    return _realCost.usd;
+  } catch (e) {
+    console.error('[meter] real cost read failed,', e.message);
+    _realCost = { ts: Date.now(), month, usd: null, error: String(e.message).slice(0, 80) };
+    return null;
+  }
+}
 const METRICS_PREFIX = 'metrics/spend/';
 const INSTANCE_ID = crypto.randomBytes(4).toString('hex');
 
@@ -621,11 +660,21 @@ app.get('/api/admin/spend', async (req, res) => {
       _spendCache = { ts: Date.now(), month, usd, calls, images };
     }
     const mine = _spend.month === month ? _spend : { usd: 0, calls: 0, images: 0 };
-    const usd = _spendCache.usd + mine.usd;
-    const budget = MONTHLY_BUDGET_USD;
+    const counted = _spendCache.usd + mine.usd;
+    // Real if OpenAI itself told us, estimated if MAYA had to price its own
+    // calls. The page says which, always.
+    const real = await openAiRealSpend(month);
+    const usd = (real === null) ? counted : real;
+    // Counting down from the money actually loaded beats an invented budget.
+    const budget = OPENAI_CREDIT_USD > 0 ? OPENAI_CREDIT_USD : MONTHLY_BUDGET_USD;
     res.json({
-      ok: true, estimated: true, month,
+      ok: true,
+      estimated: real === null,
+      source: real === null ? (OPENAI_ADMIN_KEY ? 'estimate, OpenAI did not answer' : 'estimate') : 'openai',
+      basis: OPENAI_CREDIT_USD > 0 ? 'credit' : 'budget',
+      month,
       spentUsd: Number(usd.toFixed(2)),
+      countedUsd: Number(counted.toFixed(2)),
       budgetUsd: budget,
       remainingUsd: Number(Math.max(0, budget - usd).toFixed(2)),
       pctLeft: budget > 0 ? Math.max(0, Math.min(100, Math.round((1 - usd / budget) * 100))) : null,

@@ -16,6 +16,38 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 18, 2026, LAUNCH PASS (v13.29)
+
+[!] "My friend could not open the project I shared." FOUND. A share handed over
+    the addresses of MY OWN pictures, and only I am allowed to read those, so
+    the friend's browser got 403 Forbidden and the copy failed. Fixed: a share
+    now COPIES every picture into a folder belonging to the share itself, which
+    anyone signed in may read, and those copies are deleted when the project is.
+    One picture that still cannot be read now drops that picture instead of
+    killing the whole import.
+[x] Share moved onto the project itself. Every row in Projects has a share
+    glyph left of the ×, so a project can be sent without opening it. The old
+    drawer-wide Share button is gone.
+[x] Fabrics is now as wide as Projects. Save is deleted: everything saves
+    itself the moment it lands, so a Save button only invited doubt.
+[x] Notes are one place: Design notes. Design ideas, aesthetics, constraints,
+    sourcing and anything said out loud fall under it, and a part with nothing
+    in it is not shown at all.
+[x] "Project deleted everywhere" is now "Project deleted". Verbiage cut across
+    the whole app: the inspo picker reads "Choose your favorite / Up to three",
+    the share note reads "Whoever opens it saves their own copy. Yours stays
+    yours", and forty other lines got shorter.
+[x] Community wall rolls properly: top row to the right, middle back to the
+    left, bottom to the right.
+[x] Systems Map: submission cards no longer clip when hovered, the lights paint
+    one by one as each answer lands instead of waiting for the slowest, and a
+    submission that is still arriving is re-checked every 5 seconds.
+[x] The credit ring can now be REAL. Set OPENAI_ADMIN_KEY (an sk-admin key) and
+    it reads OpenAI's own Costs API and says "measured"; set OPENAI_CREDIT_USD
+    to what was loaded (10) and the ring counts down from that. Without the
+    admin key it still estimates, and says "estimated" so the two can never be
+    confused.
+
 AUGUST 17, 2026, AFTERNOON
 
 [x] "A circular design of API credits left from OpenAI on the Systems Map,

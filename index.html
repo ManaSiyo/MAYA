@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.28">
+<meta name="maya-version" content="13.29">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -2170,6 +2170,39 @@
     border-color: rgba(255,160,200,0.55);
     background: rgba(255,160,200,0.14);
   }
+  /* v13.29: Share sits left of the ×, same bubble, the iPhone glyph. Sharing
+     belongs to a project, so it lives on the project. */
+  #notes-drawer .session-item-share {
+    position: absolute; top: 8px; right: 34px;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.06);
+    border: 0.5px solid rgba(255,255,255,0.2);
+    color: rgba(215,230,255,0.9);
+    cursor: pointer; padding: 0;
+    opacity: 0; transition: opacity 0.15s, color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  #notes-drawer .session-item-share svg {
+    width: 12px; height: 12px; fill: none; stroke: currentColor;
+    stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+  }
+  #notes-drawer .session-item:hover .session-item-share { opacity: 1; }
+  #notes-drawer .session-item-share:hover {
+    color: #fff;
+    border-color: rgba(220,232,255,0.6);
+    background: rgba(220,232,255,0.16);
+  }
+  /* Fabrics matches the Projects pill above it. */
+  #notes-drawer .drawer-fabrics.wide { width: 100%; }
+  /* One Design notes home, its parts labelled inside. */
+  #notes-drawer .note-group { margin: 2px 0 10px; }
+  #notes-drawer .note-group:last-child { margin-bottom: 2px; }
+  #notes-drawer .note-group-title {
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 8.5px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: rgba(200,210,230,0.5);
+    margin: 10px 0 4px;
+  }
   #notes-drawer .sessions-empty {
     padding: 14px;
     font-family: 'Cormorant Garamond', serif;
@@ -3785,7 +3818,7 @@
     try {
       if (typeof projectStore !== 'undefined') {
         const ok = await projectStore.flush();
-        if (ok === false && !confirm('Your latest changes could not be saved. Sign out anyway and lose them?')) return false;
+        if (ok === false && !confirm('Your last changes are not saved. Sign out anyway?')) return false;
       }
     } catch (_) {}
     const emailForRevoke = _googleEmail;
@@ -4061,22 +4094,24 @@
         <span class="sessions-caret" id="sessions-caret">&#9662;</span>
       </button>
       <div class="drawer-sessions-list" id="drawer-sessions-list" style="display:none">
-        <div class="sessions-empty" id="sessions-empty-hint">No saved sessions yet. Press Save to keep this one.</div>
+        <div class="sessions-empty" id="sessions-empty-hint">No projects yet.</div>
       </div>
     </div>
     <div id="notes-drawer-content"></div>
     <!-- v11.3: Fabrics moved down below the references content. -->
+    <!-- v13.29: Share moved onto each project row, where it belongs. Fabrics
+         gets the whole width, matching the Projects pill above it. -->
     <div class="drawer-top-row">
-      <button class="drawer-fabrics" onclick="openFabricsDrawer()" title="In-house fabric inventory">Fabrics</button>
-      <button class="drawer-fabrics" onclick="shareCurrentProject()" title="Copy a link that lets anyone save their own copy of this project">Share</button>
+      <button class="drawer-fabrics wide" onclick="openFabricsDrawer()" title="Fabrics">Fabrics</button>
     </div>
     <!-- v7.9: bottom action row, Save / New / Clean. v11.3: Save now
          commits a named session snapshot to the Sessions library;
          auto-save (every 400ms) keeps running as the safety net. -->
+    <!-- v13.29: Save is gone. Everything saves itself the moment it lands, so
+         a Save button only ever invited doubt about whether it had. -->
     <div class="drawer-actions-bottom">
-      <button id="save-session-btn" class="drawer-action violet" onclick="saveSessionNow()" title="Save the current canvas as a session you can return to later">Save</button>
-      <button class="drawer-action" onclick="newConsultation()" title="Start a fresh session">New</button>
-      <button class="drawer-action" onclick="cleanReferences()" title="Remove ref cards (images stay)">Clean</button>
+      <button class="drawer-action" onclick="newConsultation()" title="Start a new project">New</button>
+      <button class="drawer-action" onclick="cleanReferences()" title="Clear the reference cards, pictures stay">Clean</button>
     </div>
     <!-- v5.11: reference count lives in the drawer now (was top-left). -->
     <div class="drawer-count" id="item-count">tap to listen</div>
@@ -4118,8 +4153,8 @@
 <div class="modal" id="favorite-inspo-modal">
   <button class="modal-close icon" onclick="closeFavoriteInspoPicker()" title="Close (Esc)" aria-label="Close">&#215;</button>
   <div class="modal-card" style="text-align:center">
-    <h2 style="text-align:center">Choose your favorite inspo image</h2>
-    <div class="modal-hint" style="text-align:center">Select up to three.</div>
+    <h2 style="text-align:center">Choose your favorite</h2>
+    <div class="modal-hint" style="text-align:center">Up to three.</div>
     <div class="picker-grid" id="favorite-inspo-grid"></div>
     <div class="modal-actions" style="justify-content:center">
       <button class="top-btn subtle" onclick="skipFavoriteInspo()">Skip</button>
@@ -5279,7 +5314,7 @@ function restoreFadedCards() {
   for (const sav of back) {
     try { _restorePlace(sav); } catch (_) {}
   }
-  showToast('Your references are back, nothing was lost');
+  showToast('References restored.');
 }
 function fadeOutFloatingCards() {
   const targets = items.filter(it =>
@@ -5484,7 +5519,7 @@ function cleanReferences() {
     !(i.card.kind === 'inspo' && i.card.image)
   ).map(i => i.id);
   if (!toRemove.length) {
-    showToast('Nothing to clean. Only image cards remain.');
+    showToast('Nothing to clean.');
     return;
   }
   toRemove.forEach(id => removeItem(id));
@@ -5507,7 +5542,7 @@ async function newConsultation() {
   try {
     if (typeof projectStore !== 'undefined') {
       const ok = await projectStore.flush();
-      if (ok === false && !confirm('Your latest changes could not be saved. Start a new project anyway and lose them?')) return;
+      if (ok === false && !confirm('Your last changes are not saved. Start a new project anyway?')) return;
     }
   } catch (_) {}
   if (typeof projectStore !== 'undefined') projectStore.detach();
@@ -5517,7 +5552,7 @@ async function newConsultation() {
   if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
   if (typeof _renderAvatarBody === 'function') _renderAvatarBody();
   if (typeof _renderSessionsDropdown === 'function') _renderSessionsDropdown();
-  showToast('New project, canvas cleared');
+  showToast('New project.');
 }
 
 // ════════════════════════════════════════════════════════════
@@ -5627,12 +5662,12 @@ async function _checkForUpdate() {
       let canReload = true;
       try { if (window.mayaSignOut) canReload = (await window.mayaSignOut()) !== false; } catch (_) { canReload = false; }
       if (!canReload) {
-        try { if (typeof showToast === 'function') showToast('MAYA updated, but refresh is waiting until your changes are saved'); } catch (_) {}
+        try { if (typeof showToast === 'function') showToast('Update ready. Refreshing once your work is saved.'); } catch (_) {}
         setTimeout(_checkForUpdate, 60000);
         return;
       }
       _updateReloading = true;
-      try { if (typeof showToast === 'function') showToast('MAYA updated, refreshing'); } catch (_) {}
+      try { if (typeof showToast === 'function') showToast('Updating…'); } catch (_) {}
       setTimeout(() => location.reload(), 900);
     }
   } catch (_) { /* offline, try again later */ }
@@ -6165,7 +6200,10 @@ const communityBoard = {
   // so the wall breathes instead of marching in step.
   _startDrift() {
     if (this._raf) return;
-    const SPEEDS = [-26, -21, -31];   // left-to-right, pixels per second
+    // v13.29: alternating rows, per Fromsa. Top drifts one way, the middle
+    // comes back the other, the bottom follows the top. Negative scrollLeft
+    // movement carries the cards to the RIGHT.
+    const SPEEDS = [-26, 21, -31];    // right, left, right
     let last = 0;
     const step = (now) => {
       this._raf = requestAnimationFrame(step);
@@ -6934,7 +6972,7 @@ async function onFacePhotoSelected(ev) {
   ev.target.value = '';
   if (!file) return;
   if (!file.type.startsWith('image/')) {
-    showError('Please pick an image file.');
+    showError('Pick an image file.');
     return;
   }
   try {
@@ -6962,7 +7000,7 @@ async function onFacePhotoSelected(ev) {
       }
     });
     if (typeof _persistSession === 'function') _persistSession();
-    showToast('Face reference saved');
+    showToast('Face saved.');
     _refreshActiveAvatarView();
     // v9.2: still cache face descriptors for future use. No closet refresh.
     analyzeFacePhoto(dataUrl).then(d => {
@@ -6975,7 +7013,7 @@ async function onFacePhotoSelected(ev) {
       })
       .catch(e => console.warn('[Maya face analysis]', e));
   } catch (e) {
-    showError('Could not read that image');
+    showError('Could not read that image.');
     console.error('[Maya face upload]', e);
   }
 }
@@ -6988,7 +7026,7 @@ function clearFacePhoto() {
     lastSummary._face_descriptors = null;
   }
   if (typeof _persistSession === 'function') _persistSession();
-  showToast('Face reference removed');
+  showToast('Face removed.');
   _refreshActiveAvatarView();
 }
 
@@ -7174,7 +7212,7 @@ async function switchAvatar(id) {
   // the previous client's project and renamed it untitled.
   {
     const ok = await projectStore.flush();   // v13.14: a failed save stops the switch
-    if (ok === false && !confirm('Your latest changes could not be saved. Switch anyway and lose them?')) return;
+    if (ok === false && !confirm('Your last changes are not saved. Switch anyway?')) return;
   }
   projectStore.detach();
   _activeSessionId = null;
@@ -7196,7 +7234,7 @@ async function newAvatar() {
   // v12.5: same as switchAvatar, release the open project before clearing.
   {
     const ok = await projectStore.flush();   // v13.14: a failed save stops the switch
-    if (ok === false && !confirm('Your latest changes could not be saved. Switch anyway and lose them?')) return;
+    if (ok === false && !confirm('Your last changes are not saved. Switch anyway?')) return;
   }
   projectStore.detach();
   _activeSessionId = null;
@@ -7207,7 +7245,7 @@ async function newAvatar() {
   if (typeof _renderAvatarBody === 'function') _renderAvatarBody();
   toggleAvatarSwitcher();
   openAvatarSubMenu();         // jump straight into setting up the new client
-  showToast('New client, add a name, face & measurements');
+  showToast('New client. Add a name and a face.');
 }
 // Helper for face-photo handlers, re-render whichever Avatar UI is active.
 function _refreshActiveAvatarView() {
@@ -7458,7 +7496,7 @@ async function randomizeAvatar() {
     console.warn('[Maya randomize]', e);
   }
   _refreshActiveAvatarView();
-  showToast('Randomized, review and save');
+  showToast('Randomized.');
 }
 
 // v5.19: two-column measurements layout for the one-pager, X-axis on
@@ -8010,7 +8048,7 @@ function processMoodboardText(text) {
 async function processConsultation(transcript) {
   const _ctx = _opContext();
   if (!transcript || !transcript.trim()) return;
-  if (!getApiKey()) { showError('Session expired, please sign in again'); if (typeof _showGate==='function') _showGate(); return; }
+  if (!getApiKey()) { showError('Session expired. Sign in again.'); if (typeof _showGate==='function') _showGate(); return; }
 
   // MERGE, don't wipe. The live extraction has already placed cards while the
   // user was talking; the deep pass should only ADD what's missing. Image
@@ -8035,7 +8073,7 @@ async function processConsultation(transcript) {
     // stopping the thinking indicator, which then span forever.
     if (!_opStillValid(_ctx)) {
       setThinking(false);
-      showToast('That consultation finished after you moved on, so it was not applied here');
+      showToast('That consultation finished after you moved on.');
       return;
     }
     lastSummary = summary;
@@ -8052,7 +8090,7 @@ async function processConsultation(transcript) {
     generateOnePagerParagraphs(summary).catch(e => console.error('[Maya paragraphs bg]', e));
     setThinking(false);
     updateCount();
-    showToast('Consultation extracted');
+    showToast('Consultation read.');
   } catch (e) {
     setThinking(false);
     updateCount();
@@ -8212,26 +8250,27 @@ function renderNotesPanel(s) {
   // v11.45: Fromsa's five, same order, same Design-Ideas dropdown style,
   // for every project. Constraints + non-negotiables merged into one list.
   const _constraintsAll = [ ...((s && s.constraints) || []), ...((s && s.non_negotiables) || []) ];
-  const globalParts = [
-    { title: 'Aesthetics',     body: aestheticsBody },
+  // v13.29, per Fromsa: ONE heading, Design notes. Everything MAYA hears about
+  // the garment falls under it, in this order, and a part that has nothing in
+  // it is not shown at all. No empty categories sitting there because the
+  // structure says they should exist.
+  const parts = [
     { title: 'Design ideas',   body: (s && s.design_ideas && s.design_ideas.length)     ? ideasList(s.design_ideas)                              : '' },
-    { title: 'Notes',          body: (s && s.designer_notes && s.designer_notes.length) ? sectionList(s.designer_notes, 'section-designer-note') : '' },
+    { title: 'Aesthetics',     body: aestheticsBody },
     { title: 'Constraints',    body: _constraintsAll.length                             ? sectionList(_constraintsAll, 'section-constraint')     : '' },
-    { title: 'Sourcing needs', body: (s && s.sourcing_needs && s.sourcing_needs.length) ? sectionList(s.sourcing_needs, 'section-sourcing')      : '' },
-  ];
-  const globalHtml = globalParts.map(p =>
-    `<details class="global-block">
-       <summary>${escapeHtml(p.title)}</summary>
-       ${p.body || '<div class="notes-empty" style="padding:8px 0 10px">&#8230; nothing captured yet</div>'}
-     </details>`
-  ).join('');
+    { title: 'Sourcing',       body: (s && s.sourcing_needs && s.sourcing_needs.length) ? sectionList(s.sourcing_needs, 'section-sourcing')      : '' },
+    { title: 'Said out loud',  body: (s && s.designer_notes && s.designer_notes.length) ? sectionList(s.designer_notes, 'section-designer-note') : '' },
+  ].filter(p => p.body);
 
-  const all = globalHtml;
-  if (!all) {
-    host.innerHTML = '<div class="notes-empty">No notes yet. Visualize, modify, and Maya will collect everything per inspiration here.</div>';
+  if (!parts.length) {
+    host.innerHTML = '<div class="notes-empty">Nothing yet. Talk, and what Maya hears lands here.</div>';
     toggle.classList.remove('has-notes');
   } else {
-    host.innerHTML = all;
+    host.innerHTML =
+      `<details class="global-block" open>
+         <summary>Design notes</summary>
+         ${parts.map(p => `<div class="note-group"><div class="note-group-title">${escapeHtml(p.title)}</div>${p.body}</div>`).join('')}
+       </details>`;
     toggle.classList.add('has-notes');
   }
 }
@@ -8367,7 +8406,7 @@ function startListening() {
   recognition.onerror = (ev) => {
     const err = ev && ev.error;
     if (err === 'not-allowed' || err === 'service-not-allowed') {
-      showError('Microphone access denied. Re-enable in browser settings.');
+      showError('Microphone blocked. Allow it in the browser settings.');
       stopListening();
       return;
     }
@@ -8434,7 +8473,7 @@ function stopListening() {
 
 // ─── audio file → Whisper ───
 async function transcribeAudio(file) {
-  if (!getApiKey()) { showError('Session expired, please sign in again'); if (typeof _showGate==='function') _showGate(); return; }
+  if (!getApiKey()) { showError('Session expired. Sign in again.'); if (typeof _showGate==='function') _showGate(); return; }
   setThinking(true);
   document.getElementById('voice-text').textContent = 'transcribing audio...';
   try {
@@ -8484,7 +8523,7 @@ async function handleUpload(file) {
     if (text.trim().length > 150) return processConsultation(text);
     return processMoodboardText(text);
   }
-  showError('Maya accepts images, .txt, or audio files');
+  showError('Images, .txt or audio only.');
 }
 
 // Enter inside the client-name modal confirms
@@ -8967,10 +9006,10 @@ function stopLiveBatch() {
 
 async function handleInspoUpload(file) {
   const _uctx = _opContext();   // v13.14: uploads belong to the project that started them
-  if (!getApiKey()) { showError('Session expired, please sign in again'); if (typeof _showGate==='function') _showGate(); return; }
+  if (!getApiKey()) { showError('Session expired. Sign in again.'); if (typeof _showGate==='function') _showGate(); return; }
   const looksLikeImage = file.type.startsWith('image/') ||
     /\.(png|jpe?g|webp|gif|heic|heif|bmp|tiff?)$/i.test(file.name);
-  if (!looksLikeImage) { showError('Please upload an image (PNG, JPG, WebP)'); return; }
+  if (!looksLikeImage) { showError('Images only: PNG, JPG or WebP.'); return; }
 
   // 1. Place the image on the canvas IMMEDIATELY as an "inspo" card ,
   //    so the upload feels live, like the voice transcript.
@@ -8990,7 +9029,7 @@ async function handleInspoUpload(file) {
   // board that no longer exists. Drop it.
   if (!_opStillValid(_uctx)) { console.warn('[upload] project changed mid read, card dropped'); return; }
   placeItem({ tag: 'inspo', title: niceName || 'reference', kind: 'inspo', image: dataUrl }, 0);
-  showToast('Inspo placed. Hover the card and tap Dissect to extract refs.');
+  showToast('Placed. Hover it and tap Dissect.');
 }
 
 // v5.3: pixel-sample a representative color from an image so dissected refs
@@ -9028,11 +9067,11 @@ async function dissectInspo(id) {
   const it = items.find(i => i.id === id);
   if (!it || !it.card.image) return;
   if (it.card.dissected) {
-    showToast('Already dissected. Tap Stack to absorb back.');
+    showToast('Already dissected. Tap Stack to fold it back.');
     return;
   }
   if (!getApiKey()) {
-    showError('Session expired, please sign in again');
+    showError('Session expired. Sign in again.');
     if (typeof _showGate==='function') _showGate();
     return;
   }
@@ -9246,7 +9285,7 @@ window.addEventListener('drop', async e => {
       if (text.trim().length > 150) await processConsultation(text);
       else processMoodboardText(text);
     } else {
-      showError('Maya accepts images, .txt, or audio files');
+      showError('Images, .txt or audio only.');
     }
   }
 });
@@ -9809,11 +9848,11 @@ async function applyModifications() {
   // chip and tap Modify without typing or × ing a ref.
   const fabricDeselectedCount = (viewerFabricsDeselected || new Set()).size;
   if (!visualizeModifications.length && !deselectedCount && !fabricDeselectedCount) {
-    showError('Say what to change, or × out a chip / fabric to remove it.');
+    showError('Say what to change, or × a chip to remove it.');
     return;
   }
   if (!getApiKey()) {
-    showError('Session expired, please sign in again');
+    showError('Session expired. Sign in again.');
     if (typeof _showGate==='function') _showGate();
     return;
   }
@@ -10186,7 +10225,7 @@ async function callOpenAIImageSafe(prompt, size, quality, opts) {
     return await callOpenAIImage(prompt, size, quality, opts);
   } catch (e) {
     if (!isSafetyRejection(e)) throw e;
-    showToast('Softened the prompt and retried');
+    showToast('Softened the wording and retried.');
     const softened = await rewriteForSafety(prompt);
     return await callOpenAIImage(softened, size, quality, opts);
   }
@@ -10255,7 +10294,7 @@ async function callOpenAIImageEditSafe(prevDataUrl, prompt, size, quality, opts)
     return await callOpenAIImageEdit(baseArg, prompt, size, quality, opts);
   } catch (e) {
     if (!isSafetyRejection(e)) throw e;
-    showToast('Softened the prompt and retried');
+    showToast('Softened the wording and retried.');
     const softened = await rewriteForSafety(prompt);
     return await callOpenAIImageEdit(baseArg, softened, size, quality, opts);
   }
@@ -10371,7 +10410,7 @@ async function callOpenAIImage(prompt, size, quality, opts) {
 async function visualizeGarment() {
   if (items.length < 2) return;
   if (!getApiKey()) {
-    showError('Session expired, please sign in again');
+    showError('Session expired. Sign in again.');
     if (typeof _showGate==='function') _showGate();
     return;
   }
@@ -10566,7 +10605,7 @@ async function _runVisualizeNow() {
     // board and say so rather than silently misfiling it.
     if (!_opStillValid(_ctx)) {
       _lastFaded = [];                       // v13.0: they belong to the other project
-      showToast('That render finished after you moved on, so it was not added here');
+      showToast('That render finished after you moved on.');
       return;
     }
     const inspirationId = 'insp_' + Date.now().toString(36) + Math.random().toString(36).slice(2,5);
@@ -11184,15 +11223,42 @@ let _myFabricsEpoch = 0;
 // every picture is fetched and re-uploaded as theirs, so nothing they have
 // depends on the sharer. Deleting on either side never touches the other.
 // ────────────────────────────────────────────────────────────
+// v13.29: Share now belongs to a PROJECT, not to whatever happens to be open.
+// The row in the projects list carries it, so a project can be shared without
+// opening it and losing your place.
+async function shareProjectById(id) {
+  if (typeof projectStore === 'undefined' || !projectStore.ready()) {
+    showError('Sign in to share a project.');
+    return;
+  }
+  if (!id || id === projectStore.currentId) return shareCurrentProject();
+  try {
+    showToast('Making the link…');
+    const uid = projectStore._uid();
+    const doc = await firebase.firestore().collection('users').doc(uid)
+      .collection('projects').doc(id).get();
+    if (!doc.exists) { showError('That project no longer exists.'); return; }
+    const v = doc.data() || {};
+    const name = (v.name && String(v.name).trim()) ||
+      ((typeof _googleEmail === 'string' && _googleEmail) ? _googleEmail.split('@')[0] : 'A MAYA project');
+    await _publishShare(id, JSON.parse(JSON.stringify(v.items || [])),
+      v.lastSummary ? JSON.parse(JSON.stringify(v.lastSummary)) : null,
+      v.lastTranscript || null, name);
+  } catch (e) {
+    console.warn('[share]', e);
+    showError('Could not make the link. ' + ((e && e.message) || 'Try again.'));
+  }
+}
+
 async function shareCurrentProject() {
   try {
     if (typeof projectStore === 'undefined' || !projectStore.ready() || !projectStore.currentId) {
-      showError('Nothing to share yet, put something on the board first.');
+      showError('Put something on the board first.');
       return;
     }
-    showToast('Preparing the share link…');
+    showToast('Making the link…');
     const flushed = await projectStore.flush();
-    if (flushed === false) { showError('Could not save the project first, so no link was made. Check your connection and try again.'); return; }
+    if (flushed === false) { showError('Could not save first, so no link was made. Check the connection.'); return; }
     // v13.8: SPEED. The snapshot is taken from the board in memory (the flush
     // above already uploaded every picture), instead of downloading the whole
     // project document back from the cloud just to re-read what we have.
@@ -11202,32 +11268,70 @@ async function shareCurrentProject() {
     // Name rule: project name, else the client's name, else the sharer.
     const shareName = (currentClientName && String(currentClientName).trim())
       || ((typeof _googleEmail === 'string' && _googleEmail) ? _googleEmail.split('@')[0] : 'A MAYA project');
-    const items = JSON.parse(JSON.stringify(snapItems || []));
+    await _publishShare(pid, JSON.parse(JSON.stringify(snapItems || [])), cloudSum || null,
+      lastTranscript || null, shareName);
+  } catch (e) {
+    console.warn('[share]', e);
+    showError('Could not make the link. ' + ((e && e.message) || 'Try again.'));
+  }
+}
+
+// One place that builds a share: copy the pictures somewhere the recipient is
+// allowed to read, write the snapshot, show the link.
+async function _publishShare(pid, items, cloudSum, notes, shareName) {
+  {
     for (const it of items) {
       if (it && it.card) { delete it.card._communityId; delete it.card._imgId; }
     }
     const token = 'sh_' + Date.now().toString(36) +
       Array.from(crypto.getRandomValues(new Uint8Array(9))).map(b => (b % 36).toString(36)).join('');
+
+    // v13.29 THE SHARE FIX. A share used to hand over the addresses of the
+    // sharer's OWN pictures, which only the sharer is allowed to read, so the
+    // person opening the link got 403 Forbidden and the copy failed. Every
+    // picture is now copied into a folder that belongs to the share itself,
+    // readable by anyone signed in, and deleted when the share is revoked.
+    const _uid = projectStore._uid();
+    const pidForShare = pid;
+    const _shareDir = 'shares/' + _uid + '/' + token + '/';
+    let _copied = 0;
+    const _publish = async (src, key) => {
+      if (!src || !String(src).startsWith('http')) return src;
+      const blob = await blobFromPicture(src);
+      const small = await compressBlobForUpload(blob, 1600, 0.9);
+      const ref = firebase.storage().ref(_shareDir + key + '.jpg');
+      await ref.put(small, { contentType: 'image/jpeg', cacheControl: 'public,max-age=31536000,immutable' });
+      _copied++;
+      return await ref.getDownloadURL();
+    };
+    for (let i = 0; i < items.length; i++) {
+      const c = items[i] && items[i].card;
+      if (!c || !c.image) continue;
+      try { c.image = await _publish(c.image, 'i' + i); }
+      catch (e) { console.warn('[share] picture ' + i + ' not copied,', e && e.message); delete c.image; }
+    }
+    if (cloudSum && typeof cloudSum._face_photo === 'string') {
+      try { cloudSum._face_photo = await _publish(cloudSum._face_photo, 'face'); }
+      catch (_) { delete cloudSum._face_photo; }
+    }
     await firebase.firestore().collection('shares').doc(token).set({
-      ownerUid: projectStore._uid(),
-      pid: pid,                       // v13.12: so deleting the project revokes its shares
+      ownerUid: _uid,
+      pid: pidForShare,               // v13.12: so deleting the project revokes its shares
       name: String(shareName).slice(0, 80),
       items,
       lastSummary: cloudSum || null,
-      notes: lastTranscript || null,
+      notes: notes || null,
       schema: 'v13.15',
       ts: firebase.firestore.FieldValue.serverTimestamp(),
     });
     // Mark the project as shared in the index, so the projects list says so.
-    try { await projectStore._idxDoc().update({ ['items.' + pid + '.shared']: true }); } catch (_) {}
+    try { await projectStore._idxDoc().update({ ['items.' + pidForShare + '.shared']: true }); } catch (_) {}
     projectStore._idxTs = 0;
     const link = location.origin + '/?share=' + token;
     let copied = false;
     try { await navigator.clipboard.writeText(link); copied = true; } catch (_) {}
     _showShareModal(link, shareName, copied);
-  } catch (e) {
-    console.warn('[share]', e);
-    showError('Could not create the share link: ' + ((e && e.message) || 'try again'));
+    if (typeof _renderSessionsDropdown === 'function') _renderSessionsDropdown();
   }
 }
 
@@ -11246,7 +11350,7 @@ function _showShareModal(link, name, alreadyCopied) {
           '<button class="upload-choose-btn" id="share-copy-btn">Copy link</button>' +
           '<button class="upload-choose-btn" onclick="document.getElementById(\'share-link-modal\').classList.remove(\'open\')">Done</button>' +
         '</div>' +
-        '<div class="share-note">Anyone who opens it signs in with Google and saves their own copy. Nothing links back to yours.</div>' +
+        '<div class="share-note">Whoever opens it saves their own copy. Yours stays yours.</div>' +
       '</div>';
     m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
     document.body.appendChild(m);
@@ -11344,24 +11448,31 @@ function _maybeOpenShare() {
       const d = await firebase.firestore().collection('shares').doc(token).get();
       if (!d.exists) { showError('This share link is no longer active.'); return; }
       const s = d.data() || {};
-      if (!confirm('Save a copy of "' + (s.name || 'this project') + '" to your projects?\n\nIt becomes YOUR project, with its own pictures. Nothing links back.')) return;
-      showToast('Copying "' + (s.name || 'project') + '" to your account…');
+      if (!confirm('Save "' + (s.name || 'this project') + '" to your projects?\n\nIt becomes yours, with its own pictures.')) return;
+      showToast('Saving "' + (s.name || 'project') + '" to your projects…');
       // Every picture becomes a data url, so the normal save pipeline
       // uploads a fresh copy under THIS account. No borrowed addresses.
       if (!Array.isArray(s.items) || s.items.length > 200) throw new Error('The shared project is too large or malformed.');
       const items = s.items.map(_sanitizeSharedItem).filter(Boolean);
+      // v13.29: a picture that cannot be copied drops that ONE picture. Before
+      // this, a single unreadable address ended the whole import with an error,
+      // which is what Fromsa's friend hit.
+      let _missed = 0;
       for (const it of items) {
         const c = it && it.card; if (!c) continue;
         const src = c.image;
-        if (src && String(src).startsWith('https://')) c.image = await _urlToDataUrl(src);
+        if (!src || !String(src).startsWith('https://')) continue;
+        try { c.image = await _urlToDataUrl(src); }
+        catch (e) { console.warn('[share open] picture skipped,', e && e.message); delete c.image; _missed++; }
       }
       const sum = s.lastSummary ? _sanitizeSharedValue(s.lastSummary, 0) : null;
       if (sum && typeof sum._face_photo === 'string' && sum._face_photo.startsWith('http')) {
-        sum._face_photo = await _urlToDataUrl(_safeImgSrc(sum._face_photo));
+        try { sum._face_photo = await _urlToDataUrl(_safeImgSrc(sum._face_photo)); }
+        catch (_) { delete sum._face_photo; }
         delete sum._face_photo_url; delete sum._face_photo_path;
       }
       const okFlush = await projectStore.flush();
-      if (okFlush === false && !confirm('Your latest changes could not be saved. Import the shared project anyway and lose them?')) return;
+      if (okFlush === false && !confirm('Your last changes are not saved. Open the shared project anyway?')) return;
       projectStore.detach();
       await _hydrate(async () => { _doClear(); });
       lastSummary = sum;
@@ -11379,7 +11490,9 @@ function _maybeOpenShare() {
       await projectStore.createFromCanvas(s.name || null);
       if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
       if (typeof _renderSessionsDropdown === 'function') _renderSessionsDropdown();
-      showToast('"' + (s.name || 'Project') + '" is now yours, saved to your projects.');
+      showToast(_missed
+        ? '"' + (s.name || 'Project') + '" saved. ' + _missed + ' picture' + (_missed === 1 ? '' : 's') + ' could not be copied.'
+        : '"' + (s.name || 'Project') + '" is yours now.');
       try { history.replaceState(null, '', location.pathname); } catch (_) {}
     } catch (e) {
       console.warn('[share open]', e);
@@ -11754,7 +11867,7 @@ async function switchFabricForViewer() {
   const it = items.find(i => i.id === viewerItemId);
   if (!it || !it.card.image) return;
   if (!getApiKey()) {
-    showError('Session expired, please sign in again');
+    showError('Session expired. Sign in again.');
     if (typeof _showGate==='function') _showGate();
     return;
   }
@@ -11777,7 +11890,7 @@ async function runFabricSwitch(targetId, fabrics, context) {
   if (!_opStillValid(ctx)) return;
   const original = items.find(i => i.id === targetId);
   if (!original || !original.card.image) {
-    showError('Original image no longer on canvas');
+    showError('That picture is no longer on the board.');
     return;
   }
   pushRenderStatus('re-cutting');
@@ -12836,8 +12949,8 @@ async function saveSessionNow() {
     // v12.5: "Saved" is only ever said when Firestore actually took the write.
     if (res && res.written) showToast('Saved: ' + (currentClientName || 'project'));
     else if (res && res.reason === 'stale') showError('Another device saved this project first. Your changes are still on this screen and were NOT overwritten; reload only after deciding which copy to keep.');
-    else if (res && res.reason === 'deleted') showError('That project was deleted, press New and save again.');
-    else showError('Nothing was saved, your work is still on this screen. Try again.');
+    else if (res && res.reason === 'deleted') showError('That project was deleted. Press New.');
+    else showError('Not saved. Your work is still here, try again.');
     _renderSessionsDropdown();
   } catch (e) {
     console.warn('[Maya saveSessionNow]', e);
@@ -13024,8 +13137,10 @@ const projectStore = {
     const uid = expectedUid || this._uid();
     const projectPrefix = 'users/' + uid + '/projects/' + projectId + '/';
     const communityPrefix = 'community/' + uid + '/';
+    const sharePrefix = 'shares/' + uid + '/';        // v13.29: share copies
     return Array.from(new Set((paths || []).map(String).filter(path =>
-      path.startsWith(projectPrefix) || path.startsWith(communityPrefix)
+      path.startsWith(projectPrefix) || path.startsWith(communityPrefix) ||
+      path.startsWith(sharePrefix)
     ))).slice(0, 450);
   },
 
@@ -13036,6 +13151,14 @@ const projectStore = {
     let complete = true;
     for (const path of owned) {
       if (this._uid() !== uid) return false;
+      // v13.29: a path ending in / is a share's folder of copied pictures.
+      if (path.endsWith('/')) {
+        try {
+          const dir = await firebase.storage().ref(path).listAll();
+          for (const f of dir.items) { if (!(await this.deleteAsset(f.fullPath))) complete = false; }
+        } catch (e) { if (!e || e.code !== 'storage/object-not-found') complete = false; }
+        continue;
+      }
       if (!(await this.deleteAsset(path))) complete = false;
     }
     try {
@@ -13252,7 +13375,7 @@ const projectStore = {
           // A conflict must never quietly become a successful exit. Keep the
           // local board intact and dirty; the caller blocks navigation until
           // the designer explicitly chooses to discard it.
-          showError('Another device saved a newer version. Your changes are still on this screen and are NOT saved yet.');
+          showError('Another device saved a newer version. Your changes are here, not saved yet.');
           return { written: false, reason: 'stale' };
         }
         throw e;
@@ -13303,15 +13426,15 @@ const projectStore = {
     // the designer decide, rather than quietly navigating away from work that
     // exists nowhere but this screen.
     if (_saved === false) {
-      if (!confirm('The project you are in could not be saved just now, probably a connection problem.\n\nOpen the other project anyway and lose those last changes?')) return false;
+      if (!confirm('This project is not saved yet. Open the other one anyway?')) return false;
     }
     const userRoot = firebase.firestore().collection('users').doc(expectedUid);
     const dead = await userRoot.collection('projectTombstones').doc(id).get();
     if (_my !== this._openSeq) return false;
-    if (dead.exists) { showToast('That project was deleted'); return false; }
+    if (dead.exists) { showToast('That project was deleted.'); return false; }
     const doc = await userRoot.collection('projects').doc(id).get();
     if (_my !== this._openSeq || this._uid() !== expectedUid) return false;
-    if (!doc.exists) { showToast('That project no longer exists'); return false; }
+    if (!doc.exists) { showToast('That project is gone.'); return false; }
     const v = doc.data() || {};
     this.detach();
     await _hydrate(async () => {
@@ -13381,7 +13504,7 @@ const projectStore = {
           _hydrate(async () => { _doClear(); }).then(() => {
             currentClientName = null;
             if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
-            showToast('This project was deleted on another device');
+            showToast('Deleted on another device.')
           });
           return;
         }
@@ -13515,8 +13638,14 @@ const projectStore = {
       }
     }
     const shareDocs = [];
+    const shareTokens = [];
     const shares = await firebase.firestore().collection('shares').where('ownerUid', '==', uid).get();
-    shares.forEach(doc => { if ((doc.data() || {}).pid === id) shareDocs.push(doc.ref); });
+    shares.forEach(doc => {
+      if ((doc.data() || {}).pid !== id) return;
+      shareDocs.push(doc.ref);
+      shareTokens.push(doc.id);     // v13.29: its copied pictures die with it
+    });
+    for (const t of shareTokens) paths.push('shares/' + uid + '/' + t + '/');
 
     const dependentCount = communityDocs.size + shareDocs.length;
     if (dependentCount > 450) throw new Error('This project has too many linked wall/share records to delete safely in one operation.');
@@ -13581,7 +13710,7 @@ async function _renderSessionsDropdown() {
     if (typeof projectStore !== 'undefined' && projectStore.ready()) sessions = await projectStore.list();
   } catch (e) { console.warn('[maya sessions]', e && e.message); }
   if (!sessions.length) {
-    list.innerHTML = '<div class="sessions-empty">No projects yet. Start working and MAYA keeps it for you.</div>';
+    list.innerHTML = '<div class="sessions-empty">No projects yet.</div>';
   } else {
     list.innerHTML = _sessionRows(sessions);
   }
@@ -13599,7 +13728,7 @@ async function _renderSessionsDropdown() {
         if (fresh && document.getElementById('drawer-sessions-list')) {
           document.getElementById('drawer-sessions-list').innerHTML =
             fresh.length ? _sessionRows(fresh)
-                         : '<div class="sessions-empty">No projects yet. Start working and MAYA keeps it for you.</div>';
+                         : '<div class="sessions-empty">No projects yet.</div>';
         }
       })
       .finally(() => { _reconcileInFlight = false; });
@@ -13613,6 +13742,9 @@ function _sessionRows(sessions) {
     const dateStr = _formatSessionDate(s.createdAt);
     return `
       <div class="session-item${s.id === _activeSessionId ? ' active' : ''}" data-id="${escapeHtml(s.id)}" onclick="loadSavedSessionById('${escapeHtml(s.id)}')" title="${escapeHtml(s.name || 'project')}">
+        <button class="session-item-share" onclick="event.stopPropagation();shareProjectById('${escapeHtml(s.id)}')" title="Share this project" aria-label="Share this project">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 L12 15" /><path d="M8.4 7.1 L12 3.5 L15.6 7.1" /><path d="M6.5 11.5 L5 11.5 L5 20 L19 20 L19 11.5 L17.5 11.5" /></svg>
+        </button>
         <button class="session-item-delete" onclick="event.stopPropagation();deleteSavedSessionRow('${escapeHtml(s.id)}')" title="Delete this project">&#215;</button>
         <div class="session-item-title">${escapeHtml(s.name || 'untitled')}</div>
         <div class="session-item-meta">${s.shared ? 'Shared · ' : ''}${dateStr}${label ? ' · ' + escapeHtml(label) : ''}</div>
@@ -13629,7 +13761,7 @@ async function loadSavedSessionById(id) {
     return false;
   });
   if (ok) {
-    showToast('Loaded: ' + (currentClientName || 'project'));
+    showToast('Opened ' + (currentClientName || 'project') + '.');
     if (lastSummary && lastSummary.dream_outcome && typeof attachCaptionToImages === 'function') {
       try { attachCaptionToImages(lastSummary.dream_outcome); } catch (_) {}
     }
@@ -13642,12 +13774,12 @@ async function loadSavedSessionById(id) {
 }
 
 async function deleteSavedSessionRow(id) {
-  if (!confirm('Delete this project permanently, everywhere? This cannot be undone.')) return;
+  if (!confirm('Delete this project? This cannot be undone.')) return;
   try {
     const res = await projectStore.remove(id);
     showToast(res && res.cleanupOk
-      ? 'Project deleted everywhere'
-      : 'Project deleted everywhere. Picture cleanup will finish automatically when the connection returns.');
+      ? 'Project deleted'
+      : 'Project deleted. Its pictures finish clearing when the connection returns.');
   } catch (e) {
     console.warn('[maya delete]', e && e.message);
     showError('Could not delete that project. ' + ((e && e.message) || ''));

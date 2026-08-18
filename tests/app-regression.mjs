@@ -19,6 +19,8 @@ const RULES_SOURCE = readFileSync(join(ROOT, 'docs/server/firestore.rules'), 'ut
 const SERVER_SOURCE = readFileSync(join(ROOT, 'docs/server/server.js'), 'utf8');
 const BUILD_SOURCE = readFileSync(join(ROOT, 'cloudbuild.yaml'), 'utf8');
 const MAP_SOURCE = readFileSync(join(ROOT, 'status.html'), 'utf8');
+const STORAGE_RULES = existsSync(join(ROOT, 'docs/server/storage.rules'))
+  ? readFileSync(join(ROOT, 'docs/server/storage.rules'), 'utf8') : '';
 const BACKEND_SOURCE = existsSync(join(ROOT, 'backend.html'))
   ? readFileSync(join(ROOT, 'backend.html'), 'utf8') : '';
 const FAVORITE_PULSE_SOURCE = INDEX_SOURCE.slice(
@@ -73,7 +75,8 @@ const r = await pg.evaluate(async () => {
   out.tabs = !!document.getElementById('fabrics-tab-house') && !!document.getElementById('fabrics-tab-mine');
   out.uploadText = (document.querySelector('.upload-link') || {}).textContent || '';
   out.chooser = !!document.getElementById('upload-choose-modal');
-  out.shareBtn = [...document.querySelectorAll('#notes-drawer button')]
+  // v13.29: Share left the drawer and lives on each project row instead.
+  out.shareBtn = ![...document.querySelectorAll('#notes-drawer button')]
     .some(b => b.textContent.trim() === 'Share');
   // Aug 13: the community wall. Three rows, visions only, one garment once.
   out.wallRows = document.querySelectorAll('#community-scroller .community-row').length;
@@ -100,7 +103,8 @@ const r = await pg.evaluate(async () => {
   wallProbe.style.setProperty('--cc-ar', '2 / 3');
   out.wallShapeOverrides = getComputedStyle(wallImg).aspectRatio.includes('2 / 3');
   wallProbe.remove();
-  out.wallMovesLeftToRight = communityBoard._startDrift.toString().includes('[-26, -21, -31]');
+  // v13.29: top row right, middle left, bottom right.
+  out.wallMovesLeftToRight = communityBoard._startDrift.toString().includes('[-26, 21, -31]');
   out.visionGate = [
     communityBoard._isVision({ kind: 'inspo', image: 'x', inspirationId: 'insp_a1', version: 1, generatedBy: 'gpt-image-2' }) === true,
     communityBoard._isVision({ kind: 'inspo', image: 'x', inspirationId: 'insp_a1', version: 1, generatedBy: 'gpt-image-1.5' }) === false,
@@ -172,12 +176,12 @@ ok('all core functions defined (' + (r.fnsMissing.join(',') || 'none missing') +
 ok('fabrics tabs present (Mana Siyo / My fabrics)', r.tabs);
 ok('upload button reads "+ upload"', r.uploadText.trim() === '+ upload');
 ok('upload chooser exists', r.chooser);
-ok('Share button lives in the drawer', r.shareBtn);
+ok('Share is no longer a drawer-wide button', r.shareBtn);
 ok('community wall has three rows', r.wallRows === 3);
 ok('community cards use quiet inspo glass with hover-only info', r.wallMatchesInspo);
 ok('wall frames take each picture\'s own shape (no lit columns)', r.wallTakesPictureShape);
 ok('a taller picture reshapes its own frame', r.wallShapeOverrides);
-ok('community rows move left to right', r.wallMovesLeftToRight);
+ok('the wall rows alternate direction', r.wallMovesLeftToRight);
 ok('only generated visions reach the wall', r.visionGate);
 ok('the same garment fingerprints the same across accounts', r.fpMatches);
 ok('different versions stay different visions', r.fpDiffers);
@@ -271,6 +275,52 @@ const s = await pg.evaluate(() => ({
   tokenRefreshesHealth: _adoptToken.toString().includes('runChecks()'),
 }));
 // v13.26: the map speaks about SUBMISSIONS, not Google plumbing.
+// v13.29: the share fix Fromsa's friend hit. A share must carry COPIES of its
+// pictures, readable by whoever opens the link, and one unreadable picture must
+// not kill the whole import.
+ok('a share copies its pictures somewhere the recipient may read',
+  INDEX_SOURCE.includes("const _shareDir = 'shares/' + _uid + '/' + token + '/'") &&
+  INDEX_SOURCE.includes('const _publish = async (src, key)') &&
+  STORAGE_RULES.includes('match /shares/{uid}/{token}/{allPaths=**}') &&
+  /match \/shares\/\{uid\}[\s\S]{0,200}?allow read: if request\.auth != null;/.test(STORAGE_RULES));
+ok('one unreadable picture drops that picture, not the import',
+  INDEX_SOURCE.includes('let _missed = 0;') &&
+  INDEX_SOURCE.includes("console.warn('[share open] picture skipped,'"));
+ok('revoking a share takes its copied pictures with it',
+  INDEX_SOURCE.includes("paths.push('shares/' + uid + '/' + t + '/')") &&
+  INDEX_SOURCE.includes("const sharePrefix = 'shares/' + uid + '/'"));
+ok('Share belongs to a project, not to whatever is open',
+  INDEX_SOURCE.includes('async function shareProjectById(id)') &&
+  INDEX_SOURCE.includes('class="session-item-share"') &&
+  !INDEX_SOURCE.includes('onclick="shareCurrentProject()"'));
+ok('Save is gone and Fabrics has the full width',
+  !INDEX_SOURCE.includes('id="save-session-btn" class=') &&
+  INDEX_SOURCE.includes('class="drawer-fabrics wide"'));
+ok('notes are one Design notes home with no empty parts',
+  INDEX_SOURCE.includes('<summary>Design notes</summary>') &&
+  INDEX_SOURCE.includes('].filter(p => p.body);') &&
+  !INDEX_SOURCE.includes('nothing captured yet'));
+ok('the wall rolls right, left, right',
+  INDEX_SOURCE.includes('const SPEEDS = [-26, 21, -31];'));
+ok('deleting a project no longer says "everywhere"',
+  !INDEX_SOURCE.includes('Project deleted everywhere') &&
+  INDEX_SOURCE.includes("'Project deleted'"));
+ok('the copy is short where Fromsa reads it most',
+  INDEX_SOURCE.includes('>Choose your favorite</h2>') &&
+  INDEX_SOURCE.includes('>Up to three.</div>') &&
+  !INDEX_SOURCE.includes('Select up to three.'));
+ok('the meter can report REAL OpenAI spend when an admin key is set',
+  SERVER_SOURCE.includes('OPENAI_ADMIN_KEY') &&
+  SERVER_SOURCE.includes('/v1/organization/costs?') &&
+  SERVER_SOURCE.includes('OPENAI_CREDIT_USD') &&
+  SERVER_SOURCE.includes("estimated: real === null"));
+ok('the map says whether the number was measured or estimated',
+  MAP_SOURCE.includes("(d.estimated ? 'estimated' : 'measured')"));
+ok('submission cards cannot clip on hover',
+  MAP_SOURCE.includes('#subs-strip{display:flex;gap:12px;overflow-x:auto;padding:10px 28px 12px;') &&
+  MAP_SOURCE.includes('.sub-tile:hover{border-color:rgba(255,255,255,0.55);transform:scale(1.012)'));
+ok('lights paint as each answer lands', MAP_SOURCE.includes("setDot('d-assets', a[0] && a[1] ? 'ok' : 'bad')"));
+
 // v13.28: the credit meter. The ring paints from pctLeft, sits under LIVE NOW,
 // and never claims to be a real balance.
 const credit = await pg.evaluate(async () => {
@@ -299,8 +349,8 @@ ok('the credit ring stays hidden until there are numbers', s.creditHiddenAtRest)
 ok('the credit ring paints the right arc for 85 percent',
   credit.shown && credit.pct === '85%' &&
   Math.abs(credit.offset - credit.circumference * 0.15) < 1);
-ok('the credit ring shows the money and says estimated',
-  credit.amount === '$42.69 of $50' && credit.sub.startsWith('estimated,'));
+ok('the credit ring shows the money and names its source',
+  credit.amount === '$42.69 of $50.00' && credit.sub.startsWith('estimated,'));
 ok('the credit ring sits under the LIVE NOW tile', credit.leftAligned);
 ok('the meter is admin only and counts every successful call',
   SERVER_SOURCE.includes("app.get('/api/admin/spend'") &&

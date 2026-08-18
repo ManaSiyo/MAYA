@@ -67,6 +67,30 @@ This was wrong in every earlier handoff and it is why regressions shipped.
   health whether Drive is truly authorised. Open maya.manasiyo.com/verify.html
   after any push. Works on a phone.
 
+## v13.29 (Claude): the launch pass
+
+- **The share bug**: a share stored the sharer's own picture addresses, which
+  Storage rules let only the sharer read, so a recipient got 403 and the import
+  died. `_publishShare()` now copies every picture to
+  `shares/<ownerUid>/<token>/i<n>.jpg` (new `storage.rules` block: read by any
+  signed-in user, write/delete only by the owner) and the snapshot points there.
+  Import skips an unreadable picture instead of aborting. Deleting a project
+  queues `shares/<uid>/<token>/` for cleanup; paths ending in `/` are treated as
+  folders by `_cleanupDeletedAssets`.
+- `shareProjectById(id)` shares a project WITHOUT opening it, from its stored
+  document. The row glyph calls it; the drawer-wide Share button is gone.
+- Save button removed (autosave is the only saver), Fabrics full width, notes
+  collapsed into one `Design notes` block with empty parts omitted.
+- Copy pass: ~45 user-facing strings shortened. "Project deleted everywhere"
+  was frightening and is now "Project deleted".
+- Wall rows alternate: `SPEEDS = [-26, 21, -31]`.
+- Map: strip padding + scale-on-hover (no clipping), per-check dot painting,
+  4s image probes, 7s fetch timeout, 5s poll while something is arriving.
+- Credit meter can be REAL: `OPENAI_ADMIN_KEY` → OpenAI Costs API
+  (`/v1/organization/costs`, 15 min cache) and `OPENAI_CREDIT_USD` → count down
+  from the money actually loaded. Falls back to the estimate, and the page
+  always says which one it is showing.
+
 ## v13.28 (Claude): the credit meter
 
 - `/api/admin/spend` (admin only) answers the month's ESTIMATED OpenAI spend

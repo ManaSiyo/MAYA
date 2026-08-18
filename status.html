@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.28">
+<meta name="maya-version" content="13.29">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -92,7 +92,10 @@ try {
   h2.grp a{color:rgba(238,242,255,0.9);text-decoration:none;font-size:9.5px;letter-spacing:0.14em}
 
   /* Latest submissions strip: 25vh tall, newest on the left, flows sideways */
-  #subs-strip{display:flex;gap:12px;overflow-x:auto;padding:0 28px 10px;
+  /* v13.29: the strip used to start flush against the heading, so a tile that
+     lifts on hover had its top shaved off. Room above, and the lift is a scale
+     from the tile's own centre rather than a rise into the edge. */
+  #subs-strip{display:flex;gap:12px;overflow-x:auto;padding:10px 28px 12px;
               width:100vw;margin-left:calc(50% - 50vw);
               height:34vh;min-height:260px;scrollbar-width:none}
   #subs-strip::-webkit-scrollbar{display:none}
@@ -100,7 +103,7 @@ try {
             border:0.5px solid rgba(255,255,255,0.28);background:rgba(4,7,16,0.75);text-decoration:none;color:var(--ink);
             box-shadow:0 10px 34px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12);
             transition:border-color .2s, transform .2s, box-shadow .2s}
-  .sub-tile:hover{border-color:rgba(255,255,255,0.55);transform:translateY(-2px);box-shadow:0 14px 48px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.12)}
+  .sub-tile:hover{border-color:rgba(255,255,255,0.55);transform:scale(1.012);box-shadow:0 14px 48px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.12)}
   .sub-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0.95}
   .sub-tile .veil{position:absolute;inset:auto 0 0 0;padding:18px 10px 7px;text-align:center;
                   background:linear-gradient(transparent, rgba(0,4,12,0.85));opacity:0;transition:opacity .25s}
@@ -318,7 +321,7 @@ try {
   <!-- v13.28: the credit meter, under LIVE NOW. OpenAI will not tell an
        application key what the balance is, so MAYA counts its own calls. -->
   <div id="credit-row" class="hidden">
-    <div id="credit-ring" title="Estimated. MAYA counts every call it makes, because OpenAI only reveals a real balance to an organisation admin key.">
+    <div id="credit-ring" title="Measured from OpenAI when an admin key is set, otherwise MAYA\u2019s own count of what it spent.">
       <svg viewBox="0 0 84 84" aria-hidden="true">
         <circle class="cr-track" cx="42" cy="42" r="36"></circle>
         <circle class="cr-arc" cx="42" cy="42" r="36"></circle>
@@ -337,6 +340,9 @@ try {
   <details class="fold" id="changes-fold" data-latest="2026-08-17b">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 18</b>Sharing a project actually works for the person you send it to. A share used to hand over the addresses of your own pictures, which only you are allowed to open, so the link arrived and then failed. Every picture is now copied into the share itself, and those copies are deleted when the project is. Share also moved onto each project in the list, so you can send one without opening it.</div>
+    <div class="chg"><b>Aug 18</b>The wall rolls properly: the top row drifts right, the middle comes back left, the bottom follows the top. Submission cards no longer clip when you hover them, the lights answer faster, and a submission that is still arriving is checked every few seconds instead of every fifteen.</div>
+    <div class="chg"><b>Aug 18</b>Fewer words everywhere. Notes are one place now, Design notes, with only the parts that have something in them. Save is gone because everything saves itself. Deleting a project says "Project deleted", not a sentence that sounds like it reached into other people's accounts.</div>
     <div class="chg"><b>Aug 17</b>A credit meter on this map, under LIVE NOW: a ring showing how much of the month's API budget is left, the amount in dollars, and how many calls it took. It is an estimate on purpose. OpenAI only reveals a real balance to an organisation admin key, which should never sit on a web server, so MAYA prices its own calls as it makes them. Set the budget with MONTHLY_BUDGET_USD and the ring follows it.</div>
     <div class="chg"><b>Aug 17</b>Submissions live inside MAYA now. They used to be filed into a Google Drive folder that MAYA reached with an authorisation Google revoked twice in four days, and each time every submission stopped landing with no fix available in the code. They are now written straight into MAYA's own storage by the server itself, with the identity it already runs as. Nothing to renew, nothing to expire, and this map lists them from there. Submissions filed before today stay in the old Drive folder and are still in Drive if you need them.</div>
     <div class="chg"><b>Aug 17</b>Visualize and Modify work again on saved projects. Since projects moved to the cloud, a card's picture is an address rather than the picture itself, and the browser will draw such a picture but refuses to let MAYA read it back unless the storage bucket says it may. The bucket never said so, so every render on a saved project died and the app blamed the connection. MAYA now reads its own pictures through its own server when the browser will not, so a render can never be stopped by that setting again.</div>
@@ -466,12 +472,15 @@ let _idTok = null;
 let _healthSeq = 0;
 async function _statusFetch(url, options, timeoutMs) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs || 10000);
+  const timer = setTimeout(() => controller.abort(), timeoutMs || 7000);
   try { return await fetch(url, { ...(options || {}), signal: controller.signal }); }
   finally { clearTimeout(timer); }
 }
-function probeImage(url){return new Promise(res=>{const i=new Image();const t=setTimeout(()=>res(false),8000);
-  i.onload=()=>{clearTimeout(t);res(true)};i.onerror=()=>{clearTimeout(t);res(false)};i.src=url+'?cb='+Date.now()})}
+// v13.29: a picture probe answers in well under a second on a healthy site, so
+// waiting eight is just a slow light. Four, and the URL no longer busts the
+// cache, so a repeat check is instant instead of a fresh download.
+function probeImage(url){return new Promise(res=>{const i=new Image();const t=setTimeout(()=>res(false),4000);
+  i.onload=()=>{clearTimeout(t);res(true)};i.onerror=()=>{clearTimeout(t);res(false)};i.src=url})}
 async function runChecks(){
   const checkSeq = ++_healthSeq;
   ['d-site','d-api','d-assets','d-drive','d-backup'].forEach(id=>setDot(id,'wait'));
@@ -480,6 +489,13 @@ async function runChecks(){
     probeImage('https://maya.manasiyo.com/aesthetics/ui/logo.png'),
     probeImage('https://maya.manasiyo.com/aesthetics/fabrics/Red%20Royal.JPG'),
     probeImage('https://pro-maya.web.app/aesthetics/ui/logo.png')]);
+  // v13.29: light each dot as ITS answer lands. Waiting for the slowest check
+  // to paint them all together is why the row sat amber for seconds.
+  assetChecks.then(a => { if (checkSeq === _healthSeq) {
+    setDot('d-assets', a[0] && a[1] ? 'ok' : 'bad');
+    setDot('d-backup', a[2] ? 'ok' : 'bad');
+    setDot('d-site', a[0] ? 'ok' : 'bad');
+  } }).catch(() => {});
   // v13.19: API and image probes run together. The old sequence could hold the
   // entire map in "checking" for up to eight seconds before it even contacted
   // Cloud Run, which looked like the Systems Map itself had failed.
@@ -766,9 +782,16 @@ async function _paintThumbs() {
 // rewriting it restarts every image download and makes the page flash.
 // v13.9: 15 seconds, not 45. A submission that just landed should not sit
 // invisible for most of a minute while everyone stares at the map.
+// v13.29: while something is still arriving (a submission whose picture has not
+// landed yet) the strip checks every 5 seconds instead of 15, then settles back.
+let _subsQuick = 0;
 setInterval(() => {
-  if (_idTok && document.visibilityState === 'visible') loadSubmissions();
-}, 15000);
+  if (!_idTok || document.visibilityState !== 'visible') return;
+  const arriving = !!document.querySelector('#subs-strip .badge');
+  if (arriving) { loadSubmissions(); _subsQuick = Date.now(); return; }
+  if (Date.now() - _subsQuick < 60000) return;      // just settled, no double poll
+  loadSubmissions();
+}, 5000);
 // The meter moves in cents, not seconds: once a minute is plenty.
 setInterval(() => {
   if (_idTok && document.visibilityState === 'visible') loadCredit();
@@ -842,9 +865,14 @@ async function loadCredit() {
   ring.querySelector('.cr-pct').textContent = pct === null ? '\u2014' : pct + '%';
   const side = document.getElementById('credit-side');
   side.querySelector('.cr-amt').textContent =
-    '$' + d.remainingUsd.toFixed(2) + ' of $' + Number(d.budgetUsd).toFixed(0);
+    '$' + d.remainingUsd.toFixed(2) + ' of $' + Number(d.budgetUsd).toFixed(2);
+  // v13.29: say where the number came from. "measured" means OpenAI's own
+  // costs; "estimated" means MAYA priced its own calls because no admin key
+  // is set. Never let the two look the same.
   side.querySelector('.cr-sub').textContent =
-    'estimated, $' + d.spentUsd.toFixed(2) + ' spent, ' + d.calls + ' call' + (d.calls === 1 ? '' : 's');
+    (d.estimated ? 'estimated' : 'measured') + ', $' + d.spentUsd.toFixed(2) + ' used';
+  const lbl = side.querySelector('.cr-lbl');
+  if (lbl) lbl.textContent = d.basis === 'credit' ? 'OpenAI credit left' : 'API credit, this month';
   row.classList.remove('hidden');
 }
 
