@@ -310,9 +310,10 @@ ok('a Pinterest token is stored per account and can be forgotten',
   SERVER_SOURCE.includes("const PIN_PREFIX     = 'pinterest/'") &&
   SERVER_SOURCE.includes('async function pinForget(uid)') &&
   SERVER_SOURCE.includes("app.post('/api/pinterest/disconnect'"));
-ok('the Pinterest button hides itself when the server has no app',
+ok('the Pinterest door is always there, and falls back to pasted addresses',
   INDEX_SOURCE.includes('async function _pinRevealButton()') &&
-  INDEX_SOURCE.includes("btn.style.display = s.configured ? '' : 'none'"));
+  !INDEX_SOURCE.includes('>From a link<') &&
+  INDEX_SOURCE.includes("closePinterest();openLinkImport()"));
 ok('a Pinterest import is capped at six and goes through the same copy path',
   INDEX_SOURCE.includes('const PIN_PICK_MAX = 6;') &&
   INDEX_SOURCE.includes('await importPictureFromUrl(p.url, p.alt)'));
@@ -431,7 +432,8 @@ ok('an image costs more of the budget than a chat call',
 
 ok('the map light reads Submissions', s.lights.includes('Submissions') && !s.lights.includes('Drive'));
 
-ok('Systems Map order: changes, prompting, architecture', s.order === 'changes-fold,pe-fold,arch-fold');
+ok('Systems Map order: traffic, changes, prompting, architecture',
+  s.order === 'traffic-fold,changes-fold,pe-fold,arch-fold');
 ok('Architecture is collapsible', s.archFold);
 ok('door cards have no arrows', s.arrows === 0);
 ok('"Never delete" banner removed', !s.warnBanner);
@@ -525,6 +527,57 @@ ok('deploy check asks the real Drive question',
   VERIFY_SOURCE.includes('/api/healthz/deep'));
 ok('deploy check never prints the sign in token',
   !/textContent\s*=\s*tok/.test(VERIFY_SOURCE) && !VERIFY_SOURCE.includes('innerHTML = tok'));
+
+
+// ── v13.33, Aug 19 ─────────────────────────────────────────────────────────
+ok('the wall drifts with a transform, not the scroll position',
+  INDEX_SOURCE.includes('.community-track {') &&
+  INDEX_SOURCE.includes("row.track.style.transform = 'translate3d('") &&
+  !INDEX_SOURCE.includes('el.scrollLeft = row.pos;'));
+ok('a short row loops too, so the third row is never still',
+  INDEX_SOURCE.includes('track.scrollWidth >= el.clientWidth + row.period + 20') &&
+  !INDEX_SOURCE.includes('if (el.scrollWidth - el.clientWidth < 40) continue;'));
+ok('Settings is gone from the drawer, Tip, Logout and Privacy stay',
+  !INDEX_SOURCE.includes('title="Account &amp; preferences">Settings<') &&
+  INDEX_SOURCE.includes('onclick="openTip()"') &&
+  INDEX_SOURCE.includes('onclick="mayaSignOut()"') &&
+  INDEX_SOURCE.includes('href="/privacy.html"'));
+ok('Design notes opens by default', INDEX_SOURCE.includes('<details class="global-block" open>'));
+ok('the upload button is brighter and the chooser sits lower',
+  INDEX_SOURCE.includes('color: rgba(200,210,230,0.36)') &&
+  INDEX_SOURCE.includes('padding-bottom: 92px;'));
+ok('the share popup says Copy to clipboard and really copies',
+  INDEX_SOURCE.includes('>Copy to clipboard<') &&
+  INDEX_SOURCE.includes('function _copyToClipboard(text)') &&
+  INDEX_SOURCE.includes("document.execCommand && document.execCommand('copy')"));
+ok('Escape closes the share popup and the fabrics drawer',
+  INDEX_SOURCE.includes("if (_share && _share.classList.contains('open')) { closeShareModal(); return; }") &&
+  INDEX_SOURCE.includes("_fd.classList.contains('open') && typeof closeFabricsDrawer === 'function'"));
+ok('a submission always carries its picture, whatever form it is in',
+  INDEX_SOURCE.includes('async function _dreamGarmentBytes(src)') &&
+  INDEX_SOURCE.includes('const dg = await _dreamGarmentBytes(lastOnePagerImage);') &&
+  INDEX_SOURCE.includes('_sendSubmissionFile(token, folder_id, f)'));
+ok('the map stops saying arriving once the picture clearly is not coming',
+  MAP_SOURCE.includes('const ARRIVING_MS = 3 * 60 * 1000;') &&
+  MAP_SOURCE.includes("'no picture'") &&
+  MAP_SOURCE.includes(".badge:not(.stale)"));
+ok('the map headlines live now and unique users',
+  MAP_SOURCE.includes('function _paintHeadTiles(d)') &&
+  MAP_SOURCE.includes('>users<') &&
+  MAP_SOURCE.includes('id="traffic-fold"'));
+ok('the map hamburger links the privacy policy',
+  MAP_SOURCE.includes('<a href="/privacy.html" target="_blank">Privacy policy'));
+ok('unique accounts are counted by MAYA itself',
+  SERVER_SOURCE.includes("const USERS_PREFIX = 'metrics/users/'") &&
+  SERVER_SOURCE.includes('function noteUser(sub)') &&
+  SERVER_SOURCE.includes('async function countUsers()') &&
+  SERVER_SOURCE.includes('accounts: accounts || null'));
+ok('the credit ring counts from the day the money was loaded',
+  SERVER_SOURCE.includes('OPENAI_CREDIT_SINCE') &&
+  SERVER_SOURCE.includes('async function openAiCostSince(startSec)') &&
+  SERVER_SOURCE.includes('fundedUsd') &&
+  SERVER_SOURCE.includes('needs.push(') &&
+  MAP_SOURCE.includes("id=\"credit-needs\""));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.32">
+<meta name="maya-version" content="13.33">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -703,7 +703,10 @@
   }
   /* v13.4: the upload button reads a touch wider per Fromsa.
      v13.8: wider again, and a size up, so it can actually be seen. */
-  .upload-link { letter-spacing: 0.32em; padding: 2px 20px; font-size: 10px; }
+  /* v13.33: 20% brighter, per Fromsa. 0.3 -> 0.36 at rest, 0.8 -> 0.96 lit. */
+  .upload-link { letter-spacing: 0.32em; padding: 2px 20px; font-size: 10px;
+                 color: rgba(200,210,230,0.36); }
+  .upload-link:hover { color: rgba(226,234,250,0.96); }
   /* v13.4: the upload chooser. Snappy on purpose: 0.12s, no drift. */
   /* v13.31: Pinterest picker. Board tiles, then picture tiles with a tick. */
   .pin-grid {
@@ -740,7 +743,7 @@
   #upload-choose-modal {
     position: fixed; inset: 0; z-index: 1200;
     display: flex; align-items: flex-end; justify-content: center;
-    padding-bottom: 120px;
+    padding-bottom: 92px;                 /* v13.33: sits lower, per Fromsa */
     background: rgba(4,6,12,0.45);
     opacity: 0; pointer-events: none;
     transition: opacity 0.12s ease;
@@ -2912,16 +2915,28 @@
     overflow: hidden;
   }
   .community-row {
-    display: flex;
-    align-items: center;
-    gap: 30px;
-    padding: 0 60px;
+    display: block;
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
     flex: 1 1 0; min-height: 0;
+  }
+  /* v13.33: the drift moves THIS, with a transform, not the scroll position.
+     A transform is handed to the compositor and lands on fractions of a
+     pixel, so the wall glides instead of stepping. The row around it still
+     scrolls by hand exactly as before. */
+  .community-track {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    padding: 0 60px;
+    height: 100%;
+    width: max-content;
+    will-change: transform;
+    transform: translate3d(0,0,0);
+    backface-visibility: hidden;
   }
   .community-row:empty { display: none; }
   .community-row::-webkit-scrollbar { display: none; }
@@ -3049,7 +3064,7 @@
   }
   @media (max-width: 640px) {
     #community-scroller { padding: 44px 0; gap: 12px; }
-    .community-row { padding: 0 22px; gap: 18px; }
+    .community-track { padding: 0 22px; gap: 18px; }
     .community-card { width: 250px; }
   }
 
@@ -3765,6 +3780,21 @@
     /* lighter GPU load: soften the heaviest glass effects */
     .modal { backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
   }
+  /* v13.33: on a phone the finger needs a bigger target than the eye needs a
+     bigger label. Nothing here changes a type size, only the area you can hit,
+     which is where the mobile version was weakest. */
+  @media (max-width: 640px) and (pointer: coarse) {
+    #notes-drawer .drawer-meta-row { gap: 14px; }
+    #notes-drawer .drawer-meta-row .drawer-settings-link { padding: 12px 8px; }
+    .drawer-action, .drawer-fabrics, .drawer-sessions-toggle { min-height: 40px; }
+    .input-link, .upload-link { padding: 10px 14px; }
+    .upload-choose-btn { padding: 13px 18px; }
+    .top-btn.hamburger { width: 40px; height: 36px; }
+    #notes-drawer .notes-close { width: 40px; height: 40px; }
+    .fabrics-tab { padding: 10px 12px; }
+    .drawer-avatar-caret { min-height: 40px; }
+    .modal-close { min-height: 40px; padding: 10px 14px; }
+  }
   /* touch devices (any width): hover-gated controls must be visible,
      and cards own their gestures so drag doesn't fight scroll-snap */
   @media (hover: none) {
@@ -4153,7 +4183,7 @@
     <div class="drawer-count" id="item-count">tap to listen</div>
     <!-- v7.9: Settings + Logout share the bottom text-link row. -->
     <div class="drawer-meta-row">
-      <button class="drawer-settings-link" onclick="openSettings()" title="Account &amp; preferences">Settings</button>
+      <!-- v13.33: Settings removed. Nothing in it changes day to day. -->
       <button class="drawer-settings-link" onclick="openTip()" title="MAYA is free. If it was useful, you can support the atelier.">Tip</button>
       <button class="drawer-settings-link" onclick="mayaSignOut()" title="Sign out of Google and return to the Maya sign-in screen.">Logout</button>
       <!-- v13.32: reachable without hunting for it. -->
@@ -4365,10 +4395,11 @@
   <div class="upload-choose-card">
     <button class="upload-choose-btn" onclick="closeUploadChooser();document.getElementById('inspo-file').click()">Inspo</button>
     <button class="upload-choose-btn" onclick="closeUploadChooser();document.getElementById('myfabric-file').click()">My fabric</button>
-    <!-- v13.31: pictures that live somewhere else on the web. -->
-    <button class="upload-choose-btn" id="upload-choose-pinterest" style="display:none"
+    <!-- v13.33: one door for pictures that live elsewhere, and it says
+         Pinterest. If the Pinterest app is not reachable, the panel behind it
+         still takes a pasted address, so nothing is lost. -->
+    <button class="upload-choose-btn" id="upload-choose-pinterest"
             onclick="closeUploadChooser();openPinterest()">Pinterest</button>
-    <button class="upload-choose-btn" onclick="closeUploadChooser();openLinkImport()">From a link</button>
   </div>
 </div>
 
@@ -6178,7 +6209,7 @@ const communityBoard = {
     // to snap the wall back to the start and re download every picture, which
     // read as a page refresh. The refresh is silent now.
     const rowsEls = Array.from(host.querySelectorAll('.community-row'));
-    const keepPos = rowsEls.map(r => r.scrollLeft);
+    const keepPos = (this._rows || []).map(r => r.pos || 0);
     host.dataset.sig = sig;
     if (!posts.length) { rowsEls.forEach(r => { r.innerHTML = ''; }); return; }
     const mine = this._uid();
@@ -6201,39 +6232,49 @@ const communityBoard = {
     rowsEls.forEach((rowEl, i) => {
       if (i >= nRows) { rowEl.innerHTML = ''; return; }
       const mineRow = posts.filter((_, idx) => idx % nRows === i);
-      rowEl.innerHTML = mineRow.map(one).join('');
+      const cards = mineRow.map(one).join('');
+      rowEl.innerHTML = '<div class="community-track">' + cards + '</div>';
       rowEl.dataset.count = mineRow.length;
-      this._rows.push({ el: rowEl, n: mineRow.length, copy: rowEl.innerHTML, period: 0, pos: keepPos[i] || 0, copies: 1 });
+      this._rows.push({ el: rowEl, track: rowEl.firstElementChild, n: mineRow.length,
+                        copy: cards, period: 0, pos: keepPos[i] || 0, copies: 1 });
       this._wireRow(rowEl);
     });
     requestAnimationFrame(() => this._measure());
   },
 
-  // A row only loops when ONE copy of it already runs past the edge of the
-  // screen. Below that it simply sits there: padding a short row with copies
-  // is what put the same three garments across the wall five times over.
+  // v13.33: every row loops, including a short one. A row that does not
+  // reach the edge of the screen on its own is repeated until it does, so
+  // the bottom row drifts like the two above it instead of sitting still.
+  // One extra copy past the minimum keeps the right hand edge covered while
+  // the track slides, so a hand scroll to the very end never finds a gap.
   _measure() {
     for (const row of (this._rows || [])) {
-      const el = row.el;
-      if (!el || !row.n) continue;
+      const el = row.el, track = row.track;
+      if (!el || !track || !row.n) continue;
       let guard = 0;
       row.period = 0;
-      if (el.scrollWidth - el.clientWidth < 40) continue;   // fits, no drift
-      while (guard++ < 8) {
+      while (guard++ < 12) {
         if (row.copies === 1) {
-          el.insertAdjacentHTML('beforeend', row.copy);     // second copy, for the wrap
+          track.insertAdjacentHTML('beforeend', row.copy);   // second copy, for the wrap
           row.copies = 2;
           continue;
         }
-        const kids = el.children;
+        const kids = track.children;
         if (kids.length < row.n + 1) break;
         row.period = Math.round(kids[row.n].offsetLeft - kids[0].offsetLeft);
         if (row.period <= 0) break;
-        if (el.scrollWidth - el.clientWidth >= row.period + 20) break;
-        el.insertAdjacentHTML('beforeend', row.copy);
+        if (track.scrollWidth >= el.clientWidth + row.period + 20) break;
+        track.insertAdjacentHTML('beforeend', row.copy);
         row.copies++;
       }
-      if (row.pos) el.scrollLeft = row.pos;
+      if (row.period > 0) {
+        track.insertAdjacentHTML('beforeend', row.copy);
+        row.copies++;
+        if (row.pos >= row.period) row.pos = row.pos % row.period;
+        track.style.transform = 'translate3d(' + (-row.pos) + 'px,0,0)';
+      } else {
+        track.style.transform = 'translate3d(0,0,0)';
+      }
     }
   },
 
@@ -6270,17 +6311,16 @@ const communityBoard = {
     }
   },
 
-  // Browsers round scrollLeft to whole pixels, so reading it back and adding
-  // a fraction of a pixel each frame moves nothing at all, forever. The true
-  // position is kept here as a float and written out; the reading is only
-  // consulted to notice that the designer has scrolled the wall by hand.
-  // One drift loop paces all three rows. Their speeds differ a little
-  // so the wall breathes instead of marching in step.
+  // v13.33: the drift writes a transform, never scrollLeft. Reading and
+  // writing the scroll position every frame forced a layout pass and landed
+  // on whole pixels, which is what made the wall stutter at these speeds.
+  // A transform accepts fractions and rides the compositor.
+  // One loop paces all three rows. Their speeds differ a little so the wall
+  // breathes instead of marching in step.
   _startDrift() {
     if (this._raf) return;
     // v13.29: alternating rows, per Fromsa. Top drifts one way, the middle
-    // comes back the other, the bottom follows the top. Negative scrollLeft
-    // movement carries the cards to the RIGHT.
+    // comes back the other, the bottom follows the top.
     const SPEEDS = [-26, 21, -31];    // right, left, right
     let last = 0;
     const step = (now) => {
@@ -6290,15 +6330,12 @@ const communityBoard = {
       if (currentScreen !== 0 || document.hidden || this._paused) return;
       const rows = this._rows || [];
       for (let i = 0; i < rows.length; i++) {
-        const row = rows[i], el = row.el;
-        if (!el || !row.n) continue;
-        if (!row.period) continue;                                  // not long enough to loop
-        if (el.scrollWidth - el.clientWidth < row.period + 4) continue;
-        if (Math.abs(row.pos - el.scrollLeft) > 2) row.pos = el.scrollLeft;   // scrolled by hand
+        const row = rows[i];
+        if (!row.track || !row.n || !row.period) continue;
         row.pos += (SPEEDS[i % SPEEDS.length]) * dt / 1000;
         if (row.pos >= row.period) row.pos -= row.period;
         else if (row.pos < 0) row.pos += row.period;
-        el.scrollLeft = row.pos;
+        row.track.style.transform = 'translate3d(' + (-row.pos).toFixed(2) + 'px,0,0)';
       }
     };
     this._raf = requestAnimationFrame(step);
@@ -9134,14 +9171,11 @@ async function _pinApi(path, opts) {
   return j;
 }
 
-// Shown only when the server has the Pinterest app configured.
+// v13.33: the button is always there. What it opens depends on whether the
+// Pinterest app answers; either way the designer gets a way in.
 async function _pinRevealButton() {
   const btn = document.getElementById('upload-choose-pinterest');
-  if (!btn || !getApiKey()) return;
-  try {
-    const s = await _pinApi('/api/pinterest/status');
-    btn.style.display = s.configured ? '' : 'none';
-  } catch (_) { btn.style.display = 'none'; }
+  if (btn) btn.style.display = '';
 }
 
 function closePinterest() {
@@ -9162,9 +9196,14 @@ async function openPinterest() {
   _pinPaint('Checking…', '', '');
   let s;
   try { s = await _pinApi('/api/pinterest/status'); }
-  catch (e) { _pinPaint('Could not reach MAYA just now.', '', ''); return; }
+  catch (e) {
+    _pinPaint('Could not reach Pinterest just now. Paste picture addresses instead, up to six.', '',
+      '<button class="top-btn" onclick="closePinterest();openLinkImport()">Paste addresses</button>');
+    return;
+  }
   if (!s.configured) {
-    _pinPaint('Pinterest is not set up on this server yet.', '', '');
+    _pinPaint('Pinterest sign in is not live yet. Paste picture addresses instead, up to six.', '',
+      '<button class="top-btn" onclick="closePinterest();openLinkImport()">Paste addresses</button>');
     return;
   }
   if (!s.connected) return _pinShowConnect();
@@ -11068,6 +11107,14 @@ document.addEventListener('keydown', e => {
     _uc.classList.remove('open');
     return;
   }
+  // v13.33: the popups that are not .modal, topmost first, so Escape goes
+  // back one level from ANY panel on screen and never stalls.
+  const _share = document.getElementById('share-link-modal');
+  if (_share && _share.classList.contains('open')) { closeShareModal(); return; }
+  const _tip = document.getElementById('tip-modal');
+  if (_tip && _tip.classList.contains('open')) { _tip.classList.remove('open'); return; }
+  const _clbTop = document.getElementById('community-lightbox');
+  if (_clbTop && _clbTop.classList.contains('open')) { _clbTop.classList.remove('open'); return; }
   // 1. Thank-you overlay
   const ty = document.getElementById('thankyou');
   if (ty && ty.classList.contains('show')) {
@@ -11107,6 +11154,12 @@ document.addEventListener('keydown', e => {
     const closer = _modalClosers[open.id];
     if (closer) closer();
     else open.classList.remove('open');
+    return;
+  }
+  // v13.33: 2c. Fabrics drawer sits over the notes drawer.
+  const _fd = document.getElementById('fabrics-drawer');
+  if (_fd && _fd.classList.contains('open') && typeof closeFabricsDrawer === 'function') {
+    closeFabricsDrawer();
     return;
   }
   // 3. Avatar sub-menu inside the drawer
@@ -11704,8 +11757,33 @@ async function _publishShare(pid, items, cloudSum, notes, shareName) {
   }
 }
 
-// v13.8: the share popup. The link is shown, already copied when the browser
-// allowed it, with one big Copy button so there is never any doubt.
+// v13.8: the share popup. The link is shown, with one button that copies it.
+// v13.33: plainer words, and the copy is proved before the button claims it
+// worked. Clipboard permission can be refused; when it is, the text is
+// selected instead and the button says so rather than lying.
+function _copyToClipboard(text) {
+  return (async () => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (_) {}
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      const ok = document.execCommand && document.execCommand('copy');
+      document.body.removeChild(ta);
+      return !!ok;
+    } catch (_) { return false; }
+  })();
+}
+
 function _showShareModal(link, name, alreadyCopied) {
   let m = document.getElementById('share-link-modal');
   if (!m) {
@@ -11716,24 +11794,37 @@ function _showShareModal(link, name, alreadyCopied) {
         '<div class="share-title"></div>' +
         '<input class="share-link-input" readonly onclick="this.select()">' +
         '<div class="share-row">' +
-          '<button class="upload-choose-btn" id="share-copy-btn">Copy link</button>' +
-          '<button class="upload-choose-btn" onclick="document.getElementById(\'share-link-modal\').classList.remove(\'open\')">Done</button>' +
+          '<button class="upload-choose-btn" id="share-copy-btn">Copy to clipboard</button>' +
+          '<button class="upload-choose-btn" onclick="closeShareModal()">Done</button>' +
         '</div>' +
-        '<div class="share-note">Whoever opens it saves their own copy. Yours stays yours.</div>' +
+        '<div class="share-note">Anyone with this link can open the project and keep their own copy. Yours is untouched.</div>' +
       '</div>';
-    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+    m.addEventListener('click', e => { if (e.target === m) closeShareModal(); });
     document.body.appendChild(m);
   }
   m.querySelector('.share-title').textContent = 'Share "' + (name || 'this project') + '"';
   const inp = m.querySelector('.share-link-input');
   inp.value = link;
   const btn = m.querySelector('#share-copy-btn');
-  btn.textContent = alreadyCopied ? 'Copied' : 'Copy link';
+  let resetT = null;
+  const say = (word) => {
+    btn.textContent = word;
+    clearTimeout(resetT);
+    resetT = setTimeout(() => { btn.textContent = 'Copy to clipboard'; }, 2200);
+  };
+  btn.textContent = 'Copy to clipboard';
+  if (alreadyCopied) say('Copied');
   btn.onclick = async () => {
-    try { await navigator.clipboard.writeText(link); btn.textContent = 'Copied'; }
-    catch (_) { inp.select(); document.execCommand && document.execCommand('copy'); btn.textContent = 'Copied'; }
+    const ok = await _copyToClipboard(link);
+    if (ok) say('Copied');
+    else { inp.focus(); inp.select(); say('Press Cmd C'); }
   };
   m.classList.add('open');
+}
+
+function closeShareModal() {
+  const m = document.getElementById('share-link-modal');
+  if (m) m.classList.remove('open');
 }
 
 async function _urlToDataUrl(u) {
@@ -14262,6 +14353,34 @@ async function doSave() {
 //      for each file. Sequential to stay friendly to Vercel's body-size
 //      limits.
 // ════════════════════════════════════════════════════════════
+// v13.33: one upload attempt, reported honestly.
+async function _sendSubmissionFile(token, folder_id, f) {
+  try {
+    const res = await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        action: 'upload',
+        folder_id,
+        name: f.name,
+        mime_type: f.mime_type,
+        data_b64: f.data_b64,
+      }),
+    });
+    if (!res.ok) {
+      let detail = '';
+      try { detail = JSON.stringify(await res.json()).slice(0, 200); }
+      catch { try { detail = (await res.text()).slice(0, 200); } catch {} }
+      console.warn('[Maya cloud upload]', f.name, res.status, detail);
+      return { ok: false, failure: { name: f.name, status: res.status, detail } };
+    }
+    return { ok: true };
+  } catch (e) {
+    console.warn('[Maya cloud upload] network', f.name, e);
+    return { ok: false, failure: { name: f.name, status: 0, detail: (e && e.message) || 'fetch failed' } };
+  }
+}
+
 async function doSaveToCloud() {
   const token = (typeof getGoogleIdToken === 'function') ? getGoogleIdToken() : null;
   if (!token) throw new Error('Not signed in.');
@@ -14301,11 +14420,19 @@ async function doSaveToCloud() {
   // v12.7: the dream garment itself rides along as dream-garment.png, the
   // Systems Map and the Backend brief show THIS, the one-pager stays as an
   // internal file for future use.
+  //
+  // v13.33: THIS is why submissions sat on "arriving" forever. The picture was
+  // only attached when it was still a data url. The moment a vision had been
+  // saved it became an https address in MAYA's own store, this test failed
+  // silently, and the submission went up with no picture at all, so the map
+  // had nothing to show and said "arriving" until the tile aged out. The
+  // bytes are now fetched whatever form the picture is in, and anything that
+  // is not already png or jpeg is re-encoded, because the store only accepts
+  // those two.
   try {
-    if (typeof lastOnePagerImage === 'string' && lastOnePagerImage.startsWith('data:')) {
-      const m = lastOnePagerImage.match(/^data:(image\/[a-z+]+);base64,(.+)$/s);
-      if (m) queue.push({ name: 'dream-garment.png', mime_type: m[1], data_b64: m[2] });
-    }
+    const dg = await _dreamGarmentBytes(lastOnePagerImage);
+    if (dg) queue.push({ name: dg.name, mime_type: dg.mime, data_b64: dg.b64 });
+    else console.warn('[Maya cloud garment] no picture to attach');
   } catch (e) { console.warn('[Maya cloud garment]', e); }
 
   // v12.8: compact summary.json rides along, the Backend brief reads it
@@ -14348,44 +14475,30 @@ async function doSaveToCloud() {
   const failures = [];
   let landed = 0;
   setStatus('uploading 0 / ' + queue.length);
+  // v13.33: one retry per file. A single hiccup on the picture used to leave
+  // the submission on the map with nothing to show.
   const results = await Promise.all(queue.map(async f => {
-    try {
-      const res = await fetch('/api/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({
-          action: 'upload',
-          folder_id,
-          name: f.name,
-          mime_type: f.mime_type,
-          data_b64: f.data_b64,
-        }),
-      });
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const out = await _sendSubmissionFile(token, folder_id, f);
+      if (out.ok) { landed++; setStatus('uploading ' + landed + ' / ' + queue.length); return out; }
+      if (attempt === 0 && (out.failure.status === 0 || out.failure.status >= 500 || out.failure.status === 429)) {
+        await new Promise(r => setTimeout(r, 1200));
+        continue;
+      }
       landed++;
       setStatus('uploading ' + landed + ' / ' + queue.length);
-      if (!res.ok) {
-        let detail = '';
-        try { detail = JSON.stringify(await res.json()).slice(0, 200); }
-        catch { try { detail = (await res.text()).slice(0, 200); } catch {} }
-        console.warn('[Maya cloud upload]', f.name, res.status, detail);
-        return { ok: false, failure: { name: f.name, status: res.status, detail } };
-      }
-      return { ok: true };
-    } catch (e) {
-      landed++;
-      console.warn('[Maya cloud upload] network', f.name, e);
-      return { ok: false, failure: { name: f.name, status: 0, detail: (e && e.message) || 'fetch failed' } };
+      return out;
     }
   }));
   for (const r of results) {
-    if (r.ok) ok++;
-    else { failed++; failures.push(r.failure); }
+    if (r && r.ok) ok++;
+    else { failed++; failures.push((r && r.failure) || { name: '?', status: 0, detail: 'no result' }); }
   }
   setStatus('');
   if (failed === 0) {
     showToast('Submitted, ' + folder_name);
   } else if (ok === 0) {
-    showError('Submit reached Drive but uploaded 0/' + queue.length + ' files. ' +
+    showError('The submission opened but no files landed (0/' + queue.length + '). ' +
               (failures[0] ? '(' + failures[0].status + ' ' + failures[0].detail + ')' : ''));
   } else {
     showToast('Submitted, ' + folder_name + ' (' + ok + '/' + queue.length + ' files, ' + failed + ' failed)');
@@ -14397,6 +14510,40 @@ function _utf8ToB64(str) {
   // btoa can't handle non-Latin1 directly, round-trip via UTF-8 bytes.
   return btoa(unescape(encodeURIComponent(str)));
 }
+// v13.33: the chosen vision, in a form the submission store accepts, no
+// matter where the picture currently lives.
+async function _dreamGarmentBytes(src) {
+  if (!src || typeof src !== 'string') return null;
+  const asPngOrJpeg = async (blob) => {
+    const type = String(blob.type || '').toLowerCase();
+    if (type === 'image/png')  return { name: 'dream-garment.png', mime: 'image/png',  b64: await _blobToB64(blob) };
+    if (type === 'image/jpeg' || type === 'image/jpg')
+      return { name: 'dream-garment.jpg', mime: 'image/jpeg', b64: await _blobToB64(blob) };
+    // webp, avif, anything else: redraw it as a jpeg.
+    const url = URL.createObjectURL(blob);
+    try {
+      const img = await new Promise((res, rej) => {
+        const i = new Image();
+        i.onload = () => res(i); i.onerror = () => rej(new Error('picture would not decode'));
+        i.src = url;
+      });
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      c.getContext('2d').drawImage(img, 0, 0);
+      const jpg = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
+      if (!jpg) throw new Error('re-encode failed');
+      return { name: 'dream-garment.jpg', mime: 'image/jpeg', b64: await _blobToB64(jpg) };
+    } finally { URL.revokeObjectURL(url); }
+  };
+  if (src.startsWith('data:')) {
+    const m = src.match(/^data:(image\/[a-z+]+);base64,(.+)$/s);
+    if (m && /^image\/png$/i.test(m[1]))  return { name: 'dream-garment.png', mime: 'image/png',  b64: m[2] };
+    if (m && /^image\/jpe?g$/i.test(m[1])) return { name: 'dream-garment.jpg', mime: 'image/jpeg', b64: m[2] };
+  }
+  const blob = await blobFromPicture(src);
+  return await asPngOrJpeg(blob);
+}
+
 function _blobToB64(blob) {
   return new Promise((resolve, reject) => {
     const fr = new FileReader();

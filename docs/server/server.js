@@ -213,7 +213,59 @@ async function requireGoogleUser(req) {
   if (!m) throw new Error('missing Bearer token');
   const payload = await verifyGoogleJwt(m[1], process.env.GOOGLE_CLIENT_ID);
   if (!payload.email_verified) throw new Error('email not verified');
+  noteUser(payload.sub);
   return { email: payload.email, sub: payload.sub };
+}
+
+// ── v13.33: HOW MANY PEOPLE HAVE ACTUALLY USED MAYA ────────────────────────
+// Analytics counts browsers. This counts accounts: one tiny object per Google
+// account that has ever reached the API, named by a one way hash of the
+// account id, so the count is exact and no address is stored. Written once per
+// account per instance, never on the request path (fire and forget).
+const USERS_PREFIX = 'metrics/users/';
+const _seenUsers = new Set();
+function noteUser(sub) {
+  try {
+    if (!sub || _seenUsers.has(sub)) return;
+    _seenUsers.add(sub);
+    if (_seenUsers.size > 20000) _seenUsers.clear();
+    const id = crypto.createHash('sha256').update(String(sub)).digest('hex').slice(0, 24);
+    gcsGet(USERS_PREFIX + id + '.json').then(o => {
+      if (o.ok) return;                       // already counted on an earlier day
+      return gcsPut(USERS_PREFIX + id + '.json',
+        Buffer.from(JSON.stringify({ firstSeenMs: Date.now() }), 'utf8'), 'application/json');
+    }).catch(() => {});
+  } catch (_) {}
+}
+// The count, cached for a minute. Returns the total and how many are new in
+// the last 7 and 28 days, read from when each object was created.
+let _usersCache = { ts: 0, total: 0, d7: 0, d28: 0 };
+async function countUsers() {
+  if (Date.now() - _usersCache.ts < 60000) return _usersCache;
+  const tok = await serviceToken(STORAGE_SCOPE);
+  let total = 0, d7 = 0, d28 = 0, page = '', guard = 0;
+  const now = Date.now();
+  do {
+    const qs = new URLSearchParams({ prefix: USERS_PREFIX, maxResults: '1000',
+                                     fields: 'items(name,timeCreated),nextPageToken' });
+    if (page) qs.set('pageToken', page);
+    const r = await fetch('https://storage.googleapis.com/storage/v1/b/' +
+      encodeURIComponent(SUBMISSIONS_BUCKET) + '/o?' + qs.toString(), {
+      headers: { 'Authorization': 'Bearer ' + tok }, signal: AbortSignal.timeout(10000),
+    });
+    if (!r.ok) throw new Error('users list ' + r.status);
+    const j = await r.json();
+    for (const it of (j.items || [])) {
+      total++;
+      const t = Date.parse(it.timeCreated || '');
+      if (!Number.isFinite(t)) continue;
+      if (now - t < 7 * 86400000) d7++;
+      if (now - t < 28 * 86400000) d28++;
+    }
+    page = j.nextPageToken || '';
+  } while (page && ++guard < 10);
+  _usersCache = { ts: Date.now(), total, d7, d28 };
+  return _usersCache;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -531,17 +583,28 @@ const OPENAI_CREDIT_USD = Number(process.env.OPENAI_CREDIT_USD || 0);
 // it and the meter reports measured spend, leave it and the meter estimates.
 // It is read here and never leaves the server.
 const OPENAI_ADMIN_KEY = process.env.OPENAI_ADMIN_KEY || '';
-let _realCost = { ts: 0, month: '', usd: null, error: '' };
-async function openAiRealSpend(month) {
+// v13.33: the day the money was loaded, YYYY-MM-DD. The ring counts what has
+// been spent SINCE this day against OPENAI_CREDIT_USD, which is the only
+// honest reading of "how much of what I put in is left". Without it the meter
+// falls back to the calendar month, which flatters the number every 1st.
+const OPENAI_CREDIT_SINCE = String(process.env.OPENAI_CREDIT_SINCE || '').trim();
+function creditStartMs() {
+  const t = Date.parse(OPENAI_CREDIT_SINCE + 'T00:00:00Z');
+  return Number.isFinite(t) ? t : 0;
+}
+// OpenAI's own costs, from a moment to now. Cached, because the Costs API is
+// slow to move and rate limited.
+let _realCost = { ts: 0, key: '', usd: null, error: '' };
+async function openAiCostSince(startSec) {
   if (!OPENAI_ADMIN_KEY) return null;
-  if (_realCost.month === month && _realCost.usd !== null && Date.now() - _realCost.ts < 15 * 60 * 1000) {
+  const key = String(startSec);
+  if (_realCost.key === key && _realCost.usd !== null && Date.now() - _realCost.ts < 15 * 60 * 1000) {
     return _realCost.usd;                                  // costs update slowly; 15 min is plenty
   }
-  const start = Math.floor(Date.parse(month + '-01T00:00:00Z') / 1000);
   try {
     let usd = 0, page = null, guard = 0;
     do {
-      const qs = new URLSearchParams({ start_time: String(start), bucket_width: '1d', limit: '31' });
+      const qs = new URLSearchParams({ start_time: String(startSec), bucket_width: '1d', limit: '31' });
       if (page) qs.set('page', page);
       const r = await fetch('https://api.openai.com/v1/organization/costs?' + qs.toString(), {
         headers: { 'Authorization': 'Bearer ' + OPENAI_ADMIN_KEY },
@@ -553,12 +616,12 @@ async function openAiRealSpend(month) {
         for (const res of (b.results || [])) usd += Number((res.amount && res.amount.value) || 0);
       }
       page = j.has_more ? j.next_page : null;
-    } while (page && ++guard < 12);
-    _realCost = { ts: Date.now(), month, usd: Number(usd.toFixed(4)), error: '' };
+    } while (page && ++guard < 24);
+    _realCost = { ts: Date.now(), key, usd: Number(usd.toFixed(4)), error: '' };
     return _realCost.usd;
   } catch (e) {
     console.error('[meter] real cost read failed,', e.message);
-    _realCost = { ts: Date.now(), month, usd: null, error: String(e.message).slice(0, 80) };
+    _realCost = { ts: Date.now(), key, usd: null, error: String(e.message).slice(0, 80) };
     return null;
   }
 }
@@ -632,22 +695,31 @@ async function bootMeter() {
 // The other instances' totals are cached; this instance's own tally is added
 // live on every request, so the gauge reacts to Fromsa's own next render
 // instead of waiting for a cache to lapse.
-let _spendCache = { ts: 0, month: '', usd: 0, calls: 0, images: 0 };
+// v13.33: the tally is kept per month per instance, and the ring may need to
+// look further back than this month, so every month from the funding day
+// forward is summed.
+let _spendCache = { ts: 0, from: '', usd: 0, calls: 0, images: 0 };
 app.get('/api/admin/spend', async (req, res) => {
   try { await requireAdmin(req); }
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
   const month = monthKey();
+  const startMs = creditStartMs();
+  const fromMonth = startMs ? monthKey(new Date(startMs)) : month;
   try {
-    if (_spendCache.month !== month || Date.now() - _spendCache.ts > 20000) {
+    if (_spendCache.from !== fromMonth || Date.now() - _spendCache.ts > 20000) {
       const tok = await serviceToken(STORAGE_SCOPE);
-      const qs = new URLSearchParams({ prefix: METRICS_PREFIX + month + '/', maxResults: '200',
+      const qs = new URLSearchParams({ prefix: METRICS_PREFIX, maxResults: '500',
                                        fields: 'items(name)' });
       const list = await fetch('https://storage.googleapis.com/storage/v1/b/' +
         encodeURIComponent(SUBMISSIONS_BUCKET) + '/o?' + qs.toString(), {
         headers: { 'Authorization': 'Bearer ' + tok }, signal: AbortSignal.timeout(10000),
       });
       if (!list.ok) throw new Error('metrics list ' + list.status);
-      const names = ((await list.json()).items || []).map(i => i.name);
+      const names = ((await list.json()).items || []).map(i => i.name)
+        .filter(n => {
+          const m = String(n).slice(METRICS_PREFIX.length).split('/')[0];
+          return /^\d{4}-\d{2}$/.test(m) && m >= fromMonth;
+        });
       let usd = 0, calls = 0, images = 0;
       await Promise.all(names.map(async n => {
         if (n.endsWith('/' + INSTANCE_ID + '.json')) return;      // counted live below
@@ -658,27 +730,37 @@ app.get('/api/admin/spend', async (req, res) => {
           usd += Number(j.usd) || 0; calls += Number(j.calls) || 0; images += Number(j.images) || 0;
         } catch (_) {}
       }));
-      _spendCache = { ts: Date.now(), month, usd, calls, images };
+      _spendCache = { ts: Date.now(), from: fromMonth, usd, calls, images };
     }
-    const mine = _spend.month === month ? _spend : { usd: 0, calls: 0, images: 0 };
+    const mine = _spend.month >= fromMonth ? _spend : { usd: 0, calls: 0, images: 0 };
     const counted = _spendCache.usd + mine.usd;
-    // Real if OpenAI itself told us, estimated if MAYA had to price its own
-    // calls. The page says which, always.
-    const real = await openAiRealSpend(month);
+    // Measured if OpenAI itself told us, estimated if MAYA had to price its
+    // own calls. The page says which, always.
+    const sinceSec = Math.floor((startMs || Date.parse(month + '-01T00:00:00Z')) / 1000);
+    const real = await openAiCostSince(sinceSec);
     const usd = (real === null) ? counted : real;
     // Counting down from the money actually loaded beats an invented budget.
-    const budget = OPENAI_CREDIT_USD > 0 ? OPENAI_CREDIT_USD : MONTHLY_BUDGET_USD;
+    const funded = OPENAI_CREDIT_USD > 0 ? OPENAI_CREDIT_USD : MONTHLY_BUDGET_USD;
+    // What is still missing before this number can be trusted, in plain words.
+    const needs = [];
+    if (!(OPENAI_CREDIT_USD > 0)) needs.push('OPENAI_CREDIT_USD, the amount you funded');
+    if (!OPENAI_CREDIT_SINCE)     needs.push('OPENAI_CREDIT_SINCE, the day you funded it');
+    if (!OPENAI_ADMIN_KEY)        needs.push('OPENAI_ADMIN_KEY, so the figure is OpenAI\u2019s own');
     res.json({
       ok: true,
       estimated: real === null,
       source: real === null ? (OPENAI_ADMIN_KEY ? 'estimate, OpenAI did not answer' : 'estimate') : 'openai',
       basis: OPENAI_CREDIT_USD > 0 ? 'credit' : 'budget',
+      exact: real !== null && OPENAI_CREDIT_USD > 0 && !!OPENAI_CREDIT_SINCE,
+      needs,
       month,
+      since: OPENAI_CREDIT_SINCE || (month + '-01'),
       spentUsd: Number(usd.toFixed(2)),
       countedUsd: Number(counted.toFixed(2)),
-      budgetUsd: budget,
-      remainingUsd: Number(Math.max(0, budget - usd).toFixed(2)),
-      pctLeft: budget > 0 ? Math.max(0, Math.min(100, Math.round((1 - usd / budget) * 100))) : null,
+      budgetUsd: funded,
+      fundedUsd: funded,
+      remainingUsd: Number(Math.max(0, funded - usd).toFixed(2)),
+      pctLeft: funded > 0 ? Math.max(0, Math.min(100, Math.round((1 - usd / funded) * 100))) : null,
       calls: _spendCache.calls + mine.calls,
       images: _spendCache.images + mine.images,
       prices: { image: PRICE_IMAGE, chat: PRICE_CHAT, audio: PRICE_AUDIO },
@@ -1501,6 +1583,10 @@ app.get('/api/admin/analytics', async (req, res) => {
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
   let saEmail = null;
   try { saEmail = await (await gaMeta('email')).text(); } catch (_) {}
+  // v13.33: unique accounts, counted by MAYA itself. This does not depend on
+  // Analytics being connected, so the headline number is always there.
+  let accounts = null;
+  try { accounts = await countUsers(); } catch (e) { console.warn('[admin] user count —', e.message); }
   try {
     const token = await gaToken();
     // v11.49 (Codex M11): explicit property pin wins over "first visible".
@@ -1551,10 +1637,11 @@ app.get('/api/admin/analytics', async (req, res) => {
       name: r2.dimensionValues[0].value, users: Number(r2.metricValues[0].value || 0),
     }));
     res.json({ ok: true, live: liveRow ? Number(liveRow.metricValues[0].value || 0) : 0,
-               ranges, countries, property: _gaProp.id, ts: new Date().toISOString() });
+               ranges, countries, accounts: accounts || null,
+               property: _gaProp.id, ts: new Date().toISOString() });
   } catch (e) {
     console.warn('[admin] analytics unavailable —', e.message);
-    res.json({ ok: false, reason: e.message, saEmail });
+    res.json({ ok: false, reason: e.message, saEmail, accounts: accounts || null });
   }
 });
 

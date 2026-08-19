@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.32">
+<meta name="maya-version" content="13.33">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -113,6 +113,8 @@ try {
   .sub-tile .badge{position:absolute;top:10px;left:10px;font-family:'Jost',sans-serif;font-size:8.5px;
                    letter-spacing:0.16em;text-transform:uppercase;color:#0b1408;background:var(--green);
                    border-radius:20px;padding:3px 9px}
+  /* v13.33: a picture that never landed is not still arriving. */
+  .sub-tile .badge.stale{background:rgba(255,196,120,0.92);color:#241503}
   .sub-tile.more{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;
                  font-family:'Jost',sans-serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dim)}
   #subs-note-inline{font-family:'Jost',sans-serif;font-size:11px;color:var(--dim);
@@ -134,6 +136,8 @@ try {
   #credit-row{display:flex;align-items:center;gap:14px;margin:10px 0 6px;
     justify-content:flex-start;text-align:left}
   #credit-row.hidden{display:none}
+  #credit-side .cr-needs{font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.06em;
+    color:var(--faint);margin-top:3px;line-height:1.6}
   #credit-ring{position:relative;width:84px;height:84px;flex:0 0 84px}
   #credit-ring svg{width:84px;height:84px;transform:rotate(-90deg)}
   #credit-ring circle{fill:none;stroke-width:3;stroke-linecap:round}
@@ -292,6 +296,8 @@ try {
   <a href="https://console.cloud.google.com/run/detail/us-west1/maya-api/revisions?project=pro-maya" target="_blank">Keys and settings<small>API keys, environment.</small></a>
   <a href="https://console.cloud.google.com/billing/018BFD-6096F2-A2094E/credits?project=pro-maya" target="_blank">Credits<small>Balance and burn.</small></a>
   <a href="https://manasiyo.com/design" target="_blank">Design Studio<small>The Wix page that sends visitors in.</small></a>
+  <h3>What MAYA promises</h3>
+  <a href="/privacy.html" target="_blank">Privacy policy<small>What MAYA keeps, what is public, how to have it deleted.</small></a>
 </div>
 
 <div class="wrap">
@@ -314,9 +320,17 @@ try {
   <div id="subs-strip" style="display:none"></div>
   <div id="subs-note-inline">Waiting for the one sign in at the top of the page.</div>
 
-  <h2 class="grp">Traffic, this website</h2>
-  <div id="traffic-tiles" class="tiles hidden"></div>
-  <div id="traffic-note">checking&#8230;</div>
+  <!-- v13.33: the two numbers that matter sit out here. Everything with a
+       date range folds away, the same way Recent changes does. -->
+  <h2 class="grp">Who is here</h2>
+  <div id="head-tiles" class="tiles hidden"></div>
+  <details class="fold" id="traffic-fold">
+    <summary><h2 class="grp">Traffic, by date range</h2></summary>
+    <div class="fold-body">
+      <div id="traffic-tiles" class="tiles hidden"></div>
+      <div id="traffic-note">checking&#8230;</div>
+    </div>
+  </details>
 
   <!-- v13.28: the credit meter, under LIVE NOW. OpenAI will not tell an
        application key what the balance is, so MAYA counts its own calls. -->
@@ -332,14 +346,20 @@ try {
       <div class="cr-lbl">API credit, this month</div>
       <div class="cr-amt">&#8212;</div>
       <div class="cr-sub">estimated</div>
+      <div class="cr-needs" id="credit-needs" style="display:none"></div>
     </div>
   </div>
 
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-17b">
+  <details class="fold" id="changes-fold" data-latest="2026-08-19">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 19</b>The wall glides instead of stepping: the rows now move with a transform handed to the graphics card rather than by rewriting the scroll position every frame, and a short row repeats itself until it is long enough to loop, so the bottom row drifts like the two above it.</div>
+    <div class="chg"><b>Aug 19</b>Submissions carry their picture again. A vision that had already been saved was an address rather than raw bytes, the attachment step quietly skipped it, and the submission arrived with nothing to show, which is why tiles here sat on "arriving". The bytes are fetched whatever form the picture is in, each file gets one retry, and a submission whose picture never lands now says so instead of pretending it is still on its way.</div>
+    <div class="chg"><b>Aug 19</b>This map leads with the two numbers that matter: who is on the site right now, and how many separate Google accounts have ever signed in to MAYA, counted by MAYA itself so it is exact and survives an Analytics outage. Today, seven days and twenty eight days fold away underneath.</div>
+    <div class="chg"><b>Aug 19</b>The credit ring counts from the day the money was loaded rather than from the first of the month, reports what OpenAI itself says when an admin key is set, and says out loud what is still missing before the percentage can be trusted.</div>
+    <div class="chg"><b>Aug 19</b>In MAYA: Settings has left the menu, Design notes opens on its own, the upload button is brighter, the upload panel sits lower, "From a link" is now Pinterest, the share popup says Copy to clipboard and actually copies, and Escape steps back out of any panel on screen.</div>
     <div class="chg"><b>Aug 18</b>Pictures can come from anywhere on the web now. Copy a picture's address from Pinterest or a lookbook, choose "From a link" under upload, paste up to six, and they land as inspo cards. Dragging a picture straight from another tab onto the board works too. MAYA fetches them through its own server, because a browser is not allowed to read a picture it did not serve, and each one is copied into the project so it can never go dead.</div>
     <div class="chg"><b>Aug 18</b>MAYA has a privacy policy: maya.manasiyo.com/privacy.html, linked from the sign in screen and the drawer. It says in plain words what MAYA keeps, that face photographs are the most sensitive thing in it, what becomes public when you heart something, who else sees your data, and how to have any of it deleted.</div>
     <div class="chg"><b>Aug 18</b>Pinterest. Sign in with your Pinterest account, browse your own boards, pick up to six pictures and they land on the moodboard as inspiration, copied into the project so they can never go dead. MAYA's server holds the connection, so the app secret and your Pinterest token never touch the browser. There is also "From a link" for pictures anywhere else on the web, and dragging a picture straight from another tab onto the board now works.</div>
@@ -714,13 +734,21 @@ async function loadSubmissions() {
   // that landed in the last few minutes always shows, even before its picture
   // has finished uploading, otherwise a fresh submission looks like it never
   // arrived.
-  const FRESH_MS = 10 * 60 * 1000;
+  // v13.33: three states, never one that sticks. A submission opened in the
+  // last three minutes with no picture yet is ARRIVING. Past that it is not
+  // arriving any more, it is a submission whose picture never landed, and the
+  // tile says so and stays for a day so it can be opened and looked at. Older
+  // pictureless submissions drop off, as before.
+  const ARRIVING_MS = 3 * 60 * 1000;
+  const KEEP_MS = 24 * 60 * 60 * 1000;
   const visible = (data.folders || []).map(f => {
     const dream = (f.files || []).find(x => /dream-garment/i.test(x.name || ''));
     const anyImg = (f.files || []).find(x => /^image\//i.test(x.mime || ''));
-    const fresh = (Date.now() - new Date(f.createdTime || 0).getTime()) < FRESH_MS;
-    return { f, fresh, thumbId: (dream && dream.id) || (anyImg && anyImg.id) || '' };
-  }).filter(x => x.thumbId || x.fresh);
+    const ageMs = Date.now() - new Date(f.createdTime || 0).getTime();
+    const thumbId = (dream && dream.id) || (anyImg && anyImg.id) || '';
+    const state = thumbId ? '' : (ageMs < ARRIVING_MS ? 'arriving' : 'no picture');
+    return { f, state, keep: !!thumbId || ageMs < KEEP_MS, thumbId };
+  }).filter(x => x.keep);
   // v12.9: decide the empty state BEFORE touching visibility. These two lines
   // used to run above the signature check, so on the second poll they revealed
   // an empty strip and hid the explanation, and the early return meant the
@@ -733,10 +761,10 @@ async function loadSubmissions() {
   }
   document.getElementById('subs-note-inline').style.display = 'none';
   strip.style.display = '';
-  const stripSig = visible.map(x => x.f.id + ':' + (x.thumbId || '')).join(',');
+  const stripSig = visible.map(x => x.f.id + ':' + (x.thumbId || x.state)).join(',');
   if (strip.dataset.sig === stripSig) return;      // nothing new, leave it alone
   strip.dataset.sig = stripSig;
-  strip.innerHTML = visible.map(({ f, thumbId, fresh }) => {
+  strip.innerHTML = visible.map(({ f, thumbId, state }) => {
     // v13.3: the tile picture comes through our own API now, carrying the
     // admin token in a header. The old public Google thumbnail address only
     // rendered files shared with the world, so private submissions drew empty
@@ -745,7 +773,7 @@ async function loadSubmissions() {
       ? '<img loading="lazy" data-thumb="' + esc(thumbId) + '" alt="" onerror="this.remove()">'
       : '<img src="/aesthetics/ui/logo-208.png" alt="" style="position:absolute;inset:0;margin:auto;width:44px;height:44px;object-fit:contain;opacity:0.3">';
     return '<a class="sub-tile" target="_blank" rel="noopener" href="/backend.html?submission=' + encodeURIComponent(f.id) + '&name=' + encodeURIComponent(f.name) + (thumbId ? '&img=' + encodeURIComponent(thumbId) : '') + '" title="Open the Brief">' +
-      img + (fresh && !thumbId ? '<span class="badge">arriving</span>' : '') +
+      img + (state ? '<span class="badge' + (state === 'arriving' ? '' : ' stale') + '">' + state + '</span>' : '') +
       '<span class="veil"><span class="nm">' + esc(prettyName(f.name)) + '</span><span class="tm">' + when(f.createdTime) + '</span></span></a>';
   }).join('') +
   '';
@@ -790,7 +818,7 @@ async function _paintThumbs() {
 let _subsQuick = 0;
 setInterval(() => {
   if (!_idTok || document.visibilityState !== 'visible') return;
-  const arriving = !!document.querySelector('#subs-strip .badge');
+  const arriving = !!document.querySelector('#subs-strip .badge:not(.stale)');
   if (arriving) { loadSubmissions(); _subsQuick = Date.now(); return; }
   if (Date.now() - _subsQuick < 60000) return;      // just settled, no double poll
   loadSubmissions();
@@ -820,6 +848,7 @@ async function loadTraffic() {
   try { d = await r.json(); }
   catch (_) { _note('Traffic returned an incomplete response. It will retry automatically.'); return; }
   if (requestSeq !== _trafficSeq) return;
+  _paintHeadTiles(d);
   if (!d.ok) {
     _note('<b>Connect Google Analytics (one time):</b> Google Analytics &#8594; Admin &#8594; Property access management &#8594; add <b>'
       + (d.saEmail || 'the Cloud Run service account') + '</b> as Viewer. Numbers appear a minute later.');
@@ -830,12 +859,33 @@ async function loadTraffic() {
   if (tiles.dataset.sig === tSig) { tiles.classList.remove('hidden'); return; }
   tiles.dataset.sig = tSig;
   tiles.innerHTML =
-    '<div class="tile live"><div class="k">&#9679; live now</div><div class="v">' + d.live + '</div></div>' +
     '<div class="tile"><div class="k">today</div><div class="v">' + ((t.today || {}).users || 0) + '</div></div>' +
     '<div class="tile"><div class="k">7 days</div><div class="v">' + ((t.d7 || {}).users || 0) + '</div></div>' +
     '<div class="tile"><div class="k">28 days</div><div class="v">' + ((t.d28 || {}).users || 0) + '</div></div>';
   tiles.classList.remove('hidden');
   document.getElementById('traffic-note').classList.add('hidden');
+}
+
+// v13.33: the headline. LIVE NOW is browsers on the site this minute; USERS is
+// how many separate Google accounts have ever signed in to MAYA, counted by
+// MAYA itself rather than by Analytics, so it is exact and it survives an
+// Analytics outage.
+function _paintHeadTiles(d) {
+  const head = document.getElementById('head-tiles');
+  if (!head || !d) return;
+  const acc = d.accounts || null;
+  const live = (typeof d.live === 'number') ? d.live : null;
+  const sig = [live, acc && acc.total, acc && acc.d28].join(',');
+  if (head.dataset.sig === sig) { head.classList.remove('hidden'); return; }
+  head.dataset.sig = sig;
+  head.innerHTML =
+    '<div class="tile live" title="People on the site right now, from Analytics"><div class="k">&#9679; live now</div>' +
+      '<div class="v">' + (live === null ? '&#8212;' : live) + '</div></div>' +
+    '<div class="tile" title="Separate Google accounts that have signed in to MAYA"><div class="k">users</div>' +
+      '<div class="v">' + (acc ? acc.total : '&#8212;') + '</div></div>' +
+    '<div class="tile" title="Accounts that signed in for the first time in the last 28 days"><div class="k">new, 28 days</div>' +
+      '<div class="v">' + (acc ? acc.d28 : '&#8212;') + '</div></div>';
+  head.classList.remove('hidden');
 }
 // ── v13.28: the credit meter ───────────────────────────────────────────────
 // The circle shows how much of the month's budget is left. The number is an
@@ -872,10 +922,27 @@ async function loadCredit() {
   // v13.29: say where the number came from. "measured" means OpenAI's own
   // costs; "estimated" means MAYA priced its own calls because no admin key
   // is set. Never let the two look the same.
+  const sinceLabel = (() => {
+    try {
+      const dt = new Date((d.since || '') + 'T00:00:00Z');
+      return isNaN(dt) ? '' : ' since ' + dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
+    } catch (_) { return ''; }
+  })();
   side.querySelector('.cr-sub').textContent =
-    (d.estimated ? 'estimated' : 'measured') + ', $' + d.spentUsd.toFixed(2) + ' used';
+    (d.estimated ? 'estimated' : 'measured') + ', $' + d.spentUsd.toFixed(2) + ' used' + sinceLabel;
   const lbl = side.querySelector('.cr-lbl');
   if (lbl) lbl.textContent = d.basis === 'credit' ? 'OpenAI credit left' : 'API credit, this month';
+  // v13.33: if the ring cannot be exact yet, say exactly what is missing
+  // rather than showing a confident percentage of an invented budget.
+  const needs = document.getElementById('credit-needs');
+  if (needs) {
+    if (d.exact) { needs.style.display = 'none'; needs.textContent = ''; }
+    else {
+      needs.style.display = '';
+      needs.innerHTML = 'Not exact yet. Set on the API: ' +
+        (d.needs || []).map(n => '<b>' + String(n).split(',')[0] + '</b>').join(', ') + '.';
+    }
+  }
   row.classList.remove('hidden');
 }
 
