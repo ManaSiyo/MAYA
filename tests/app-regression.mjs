@@ -299,9 +299,9 @@ ok('the policy still names the sensitive things',
 ok('the policy still says how to be erased and how to reach a human',
   PRIVACY_SOURCE.includes('mailto:worldofsiyo@gmail.com') &&
   PRIVACY_SOURCE.includes('erased'));
-ok('it is reachable before signing in, and from the drawer',
+ok('privacy is reachable before signing in; the drawer listens instead',
   INDEX_SOURCE.includes('href="/privacy.html"') &&
-  INDEX_SOURCE.split('href="/privacy.html"').length - 1 >= 2);
+  INDEX_SOURCE.includes('onclick="openFeedback()"'));
 
 // v13.31: pictures from elsewhere, and Pinterest.
 ok('a picture can be fetched from any site, but never from inside the network',
@@ -323,10 +323,11 @@ ok('a Pinterest token is stored per account and can be forgotten',
   SERVER_SOURCE.includes("const PIN_PREFIX     = 'pinterest/'") &&
   SERVER_SOURCE.includes('async function pinForget(uid)') &&
   SERVER_SOURCE.includes("app.post('/api/pinterest/disconnect'"));
-ok('the Pinterest door is always there, and falls back to pasted addresses',
-  INDEX_SOURCE.includes('async function _pinRevealButton()') &&
+ok('one Pinterest implementation, the drawer, with a paste fallback',
+  !INDEX_SOURCE.includes('id="pinterest-modal"') &&
+  !INDEX_SOURCE.includes('function openPinterest()') &&
   !INDEX_SOURCE.includes('>From a link<') &&
-  INDEX_SOURCE.includes("closePinterest();openLinkImport()"));
+  INDEX_SOURCE.includes("closePinterestDrawer();openLinkImport()"));
 ok('a Pinterest import is capped at six and goes through the same copy path',
   INDEX_SOURCE.includes('const PIN_PICK_MAX = 6;') &&
   INDEX_SOURCE.includes('await importPictureFromUrl(p.url, p.alt)'));
@@ -670,6 +671,41 @@ ok('the handoff lives where both agents look',
   existsSync(join(ROOT, 'AGENTS.md')) && existsSync(join(ROOT, 'CLAUDE.md')) &&
   readFileSync(join(ROOT, 'AGENTS.md'), 'utf8').includes('frontend/index.html') &&
   readFileSync(join(ROOT, 'AGENTS.md'), 'utf8').includes('backend/status.html'));
+
+
+// ── v13.41, the launch hardening pass ──────────────────────────────────────
+ok('feedback: spoken or typed, filed into MAYA\'s own store',
+  INDEX_SOURCE.includes('id="feedback-modal"') &&
+  INDEX_SOURCE.includes('function feedbackListenToggle()') &&
+  INDEX_SOURCE.includes("fetch('/api/feedback'") &&
+  SERVER_SOURCE.includes("app.post('/api/feedback'") &&
+  SERVER_SOURCE.includes("const FEEDBACK_PREFIX = 'feedback/'") &&
+  SERVER_SOURCE.includes("app.get('/api/admin/feedback'"));
+ok('feedback is rate limited and size capped',
+  SERVER_SOURCE.includes("express.json({ limit: '16kb' }), async (req, res) => {\n  let user;\n  try { user = await requireGoogleUser(req); }") ||
+  (SERVER_SOURCE.includes('.trim().slice(0, 4000)') && SERVER_SOURCE.includes("empty_feedback")));
+ok('Escape closes feedback like any other panel',
+  INDEX_SOURCE.includes("'feedback-modal':        () => closeFeedback(),"));
+ok('a submission can only be written by whoever opened it',
+  SERVER_SOURCE.includes('async function subOwner(subId)') &&
+  SERVER_SOURCE.includes("res.status(403).json({ error: 'not_your_submission' })") &&
+  SERVER_SOURCE.includes('_subOwners.set(subId, user.email);'));
+ok('Pinterest import runs two at a time and reports honestly',
+  INDEX_SOURCE.includes('await Promise.all([worker(), worker()])') &&
+  INDEX_SOURCE.includes("'Bringing in ' + (landed + failed) + ' of '") &&
+  INDEX_SOURCE.includes("' placed, ' + failed + ' did not arrive.'"));
+ok('the hamburger has a 44px target and says what it opens',
+  INDEX_SOURCE.includes('.top-btn.hamburger::after') &&
+  INDEX_SOURCE.includes('aria-controls="notes-drawer"') &&
+  INDEX_SOURCE.includes("hb.setAttribute('aria-expanded'"));
+ok('reduce motion means the wall holds still',
+  INDEX_SOURCE.includes("matchMedia('(prefers-reduced-motion: reduce)')"));
+ok('no customer-facing words say Drive any more',
+  !INDEX_SOURCE.includes('>Save to Drive<') &&
+  !INDEX_SOURCE.includes("reached Drive") &&
+  !INDEX_SOURCE.includes("Saved to Drive"));
+ok('the server does not advertise its framework',
+  SERVER_SOURCE.includes("app.disable('x-powered-by')"));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

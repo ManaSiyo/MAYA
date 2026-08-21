@@ -51,6 +51,13 @@ If this file disagrees with chat memory, this file is right.
 
 ## Where things stand, August 21 2026
 
+- FEEDBACK exists as of v13.41: the app drawer's Privacy slot became Feedback
+  (Privacy stays on the sign in screen and the map). Spoken or typed, POSTed
+  to `/api/feedback`, stored at `feedback/` in the bucket, listed at
+  `/api/admin/feedback` (admin only, newest 50). Rate limited, 4000 chars.
+- SECURITY as of v13.41: a submission can only be written by the account that
+  opened it (`subOwner()` reads the init marker, cached). The legacy Pinterest
+  modal is deleted; the drawer is the only implementation.
 - Live line: `maya-v2`. v13.37 is pushed. Committed and waiting for Fromsa's push: **v13.36**
   (notes per vision, one tap changes, avatar and project menus, the Pinterest
   drawer) and **v13.37** (the folder reorganisation below).

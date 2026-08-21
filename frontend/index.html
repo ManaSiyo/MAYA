@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.40">
+<meta name="maya-version" content="13.41">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -569,6 +569,11 @@
     width: 32px; height: 28px; padding: 0;
     display: flex; align-items: center; justify-content: center;
     position: relative;
+  }
+  /* v13.41: the visible pill is unchanged; the finger gets a 44px target. */
+  .top-btn.hamburger::after {
+    content: ''; position: absolute; left: 50%; top: 50%;
+    width: 44px; height: 44px; transform: translate(-50%, -50%);
   }
   .hamburger-icon {
     display: inline-flex; flex-direction: column; gap: 3px;
@@ -4238,7 +4243,10 @@
     </div>
   </div>
   <div id="top-actions">
-    <button class="top-btn hamburger" id="hamburger-toggle" onclick="toggleNotesDrawer()" title="Menu">
+    <!-- v13.41: the icon stays small, the finger gets 44px. aria says what it
+         opens and whether it is open; toggleNotesDrawer keeps aria-expanded true. -->
+    <button class="top-btn hamburger" id="hamburger-toggle" onclick="toggleNotesDrawer()" title="Menu"
+            aria-label="Menu" aria-controls="notes-drawer" aria-expanded="false">
       <span class="hamburger-icon"><span></span><span></span><span></span></span>
       <span class="notes-dot" id="hamburger-dot"></span>
     </button>
@@ -4330,7 +4338,9 @@
       <button class="drawer-settings-link" onclick="openTip()" title="MAYA is free. If it was useful, you can support the atelier.">Tip</button>
       <button class="drawer-settings-link" onclick="mayaSignOut()" title="Sign out of Google and return to the Maya sign-in screen.">Logout</button>
       <!-- v13.32: reachable without hunting for it. -->
-      <a class="drawer-settings-link" href="/privacy.html" target="_blank" rel="noopener" title="What MAYA keeps, what is public, how to have it deleted">Privacy</a>
+      <!-- v13.41: Privacy lives on the sign in screen and the Systems Map.
+           This slot listens instead: problems, ideas, wishes, spoken or typed. -->
+      <button class="drawer-settings-link" onclick="openFeedback()" title="Problems, ideas, wishes. Speak or type, MAYA passes it straight to the atelier.">Feedback</button>
     </div>
   </div>
 
@@ -4504,7 +4514,7 @@
   <div class="prompt-display" id="onepager-prompt-display"></div>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
     <button class="modal-text-btn violet" onclick="closeOnePagerModal(); openHeroPicker(items.filter(i => i.card.kind === 'inspo' && i.card.image))">Pick different image</button>
-    <button class="modal-text-btn violet" onclick="saveFromPreview()">Save to Drive</button>
+    <button class="modal-text-btn violet" onclick="saveFromPreview()">Submit to Mana Siyo</button>
     <button class="modal-text-btn violet" onclick="downloadOnePager()">Download PDF</button>
   </div>
 </div>
@@ -4564,13 +4574,24 @@
 
 <!-- v13.31: Pinterest. Sign in, pick a board, pick pictures, they land on
      the board as inspiration and are copied into the project. -->
-<div class="modal" id="pinterest-modal">
-  <button class="modal-close" onclick="closePinterest()">Close</button>
-  <div class="modal-card" style="text-align:center;max-width:760px">
-    <h2 style="text-align:center" id="pin-title">Pinterest</h2>
-    <div class="modal-hint" style="text-align:center" id="pin-hint">Checking…</div>
-    <div id="pin-body" style="margin-top:14px"></div>
-    <div class="modal-actions" style="justify-content:center;gap:12px" id="pin-actions"></div>
+<!-- v13.41: FEEDBACK. Problems, suggestions and ideas, spoken or typed.
+     Tap to listen borrows the same speech engine the moodboard uses, lands the
+     words in the box, and Submit files it into MAYA's own store. -->
+<div class="modal" id="feedback-modal">
+  <button class="modal-close" onclick="closeFeedback()">Close</button>
+  <div class="modal-card" style="text-align:center;max-width:520px">
+    <h2 style="text-align:center">Feedback</h2>
+    <div class="modal-hint" style="text-align:center">Suggestions and ideas for MAYA. Speak or type, it reaches a human.</div>
+    <textarea id="feedback-box" rows="6" placeholder="What should MAYA do better?"
+      style="width:100%;margin-top:14px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.2);
+             border-radius:14px;padding:12px 14px;color:#eef2ff;font-family:'Cormorant Garamond',serif;
+             font-size:15px;line-height:1.6;resize:vertical"></textarea>
+    <div id="feedback-state" style="font-family:'Jost',sans-serif;font-size:10px;letter-spacing:0.08em;
+         color:rgba(238,242,255,0.5);min-height:16px;margin-top:8px"></div>
+    <div class="modal-actions" style="justify-content:center;gap:12px">
+      <button class="modal-text-btn" id="feedback-listen" onclick="feedbackListenToggle()">Tap to Listen</button>
+      <button class="modal-text-btn" id="feedback-send" onclick="submitFeedback()">Submit</button>
+    </div>
   </div>
 </div>
 
@@ -6478,6 +6499,9 @@ const communityBoard = {
   // breathes instead of marching in step.
   _startDrift() {
     if (this._raf) return;
+    // v13.41: an OS-level "reduce motion" request wins. The wall simply holds
+    // still; hand scrolling keeps working.
+    try { if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch (_) {}
     // v13.29: alternating rows, per Fromsa. Top drifts one way, the middle
     // comes back the other, the bottom follows the top.
     const SPEEDS = [-26, 21, -31];    // right, left, right
@@ -6833,7 +6857,7 @@ async function _doSubmitConfirmed() {
       // thank you screen, so a submission could be celebrated with no one pager.
       _submitOk = !!(r && r.failed === 0 && r.ok === r.total);
       if (r && r.failed > 0) {
-        showError('Only ' + r.ok + ' of ' + r.total + ' files reached Drive. Nothing was lost here, press Submit again.');
+        showError('Only ' + r.ok + ' of ' + r.total + ' files reached MAYA. Nothing was lost here, press Submit again.');
       }
     } else {
       await doSave();
@@ -8561,6 +8585,11 @@ function toggleNotesDrawer(force) {
   else if (force === false) target = 0;
   else                       target = isOpen ? 0 : (hscroll.scrollWidth - hscroll.clientWidth);
   hscroll.scrollTo({ left: target, behavior: 'smooth' });
+  // v13.41: the button that opens the drawer says whether it is open.
+  try {
+    const hb = document.getElementById('hamburger-toggle');
+    if (hb) hb.setAttribute('aria-expanded', target > 0 ? 'true' : 'false');
+  } catch (_) {}
   // Reset avatar sub-menu view when closing (matches v8 behavior).
   const d = document.getElementById('notes-drawer');
   if (d && target === 0) d.classList.remove('viewing-avatar');
@@ -9512,116 +9541,6 @@ async function _pinDrawerPins(boardId, boardName) {
   _pinSetFoot(true);
 }
 
-function closePinterest() {
-  const m = document.getElementById('pinterest-modal');
-  if (m) m.classList.remove('open');
-}
-function _pinPaint(hint, bodyHtml, actionsHtml) {
-  document.getElementById('pin-hint').textContent = hint;
-  document.getElementById('pin-body').innerHTML = bodyHtml || '';
-  document.getElementById('pin-actions').innerHTML = actionsHtml || '';
-}
-
-async function openPinterest() {
-  const m = document.getElementById('pinterest-modal');
-  if (!m) return;
-  m.classList.add('open');
-  document.getElementById('pin-title').textContent = 'Pinterest';
-  _pinPaint('Checking…', '', '');
-  let s;
-  try { s = await _pinApi('/api/pinterest/status'); }
-  catch (e) {
-    _pinPaint('Could not reach Pinterest just now. Paste picture addresses instead, up to six.', '',
-      '<button class="top-btn" onclick="closePinterest();openLinkImport()">Paste addresses</button>');
-    return;
-  }
-  if (!s.configured) {
-    _pinPaint('Pinterest sign in is not live yet. Paste picture addresses instead, up to six.', '',
-      '<button class="top-btn" onclick="closePinterest();openLinkImport()">Paste addresses</button>');
-    return;
-  }
-  if (!s.connected) return _pinShowConnect();
-  return _pinShowBoards();
-}
-
-function _pinShowConnect() {
-  _pinPaint('Sign in with Pinterest to bring pictures from your own boards.', '',
-    '<button class="top-btn" onclick="_pinConnect()">Connect Pinterest</button>');
-}
-
-// The popup does the sign in and tells this window when it is done.
-function _pinConnect() {
-  _pinApi('/api/pinterest/start').then(({ url }) => {
-    const w = window.open(url, 'maya-pinterest', 'width=560,height=720');
-    if (!w) { showError('Allow popups for MAYA, then press Connect again.'); return; }
-    _pinPaint('Waiting for Pinterest…', '', '');
-    const onMsg = (e) => {
-      if (e.origin !== location.origin || !e.data || e.data.maya !== 'pinterest') return;
-      window.removeEventListener('message', onMsg);
-      if (e.data.ok) _pinShowBoards();
-      else _pinPaint('That sign in did not finish.', '',
-        '<button class="top-btn" onclick="_pinConnect()">Try again</button>');
-    };
-    window.addEventListener('message', onMsg);
-  }).catch(() => showError('Could not start the Pinterest sign in.'));
-}
-
-async function _pinShowBoards() {
-  document.getElementById('pin-title').textContent = 'Your boards';
-  _pinPaint('Loading your boards…', '', '');
-  let j;
-  try { j = await _pinApi('/api/pinterest/boards'); }
-  catch (e) {
-    if (e.code === 'not_connected' || e.code === 'reconnect') return _pinShowConnect();
-    if (e.code === 'not_allowed') {
-      _pinPaint('Pinterest has not opened this app to your account yet.', '', '');
-      return;
-    }
-    _pinPaint('Pinterest did not answer. Try again in a moment.', '', '');
-    return;
-  }
-  if (!j.boards.length) {
-    _pinPaint('No boards on that Pinterest account.', '',
-      '<button class="top-btn" onclick="_pinDisconnect()">Use another account</button>');
-    return;
-  }
-  const cards = j.boards.map(b =>
-    '<button class="pin-tile" onclick="_pinShowPins(\'' + escapeHtml(b.id) + '\',\'' +
-      escapeHtml(String(b.name).replace(/'/g, '')) + '\')">' +
-      (b.cover ? '<img src="' + _safeImgSrc(b.cover) + '" alt="" loading="lazy">' : '<span class="pin-blank"></span>') +
-      '<span class="pin-tile-name">' + escapeHtml(b.name) + '</span>' +
-      '<span class="pin-tile-count">' + b.pins + ' pin' + (b.pins === 1 ? '' : 's') + '</span>' +
-    '</button>').join('');
-  _pinPaint('Pick a board.', '<div class="pin-grid">' + cards + '</div>',
-    '<button class="top-btn" onclick="_pinDisconnect()">Disconnect</button>');
-}
-
-async function _pinShowPins(boardId, boardName) {
-  document.getElementById('pin-title').textContent = boardName || 'Board';
-  _pinPaint('Loading pictures…', '', '');
-  _pinPicked = new Set();
-  let j;
-  try { j = await _pinApi('/api/pinterest/pins?board=' + encodeURIComponent(boardId)); }
-  catch (e) {
-    if (e.code === 'not_connected' || e.code === 'reconnect') return _pinShowConnect();
-    _pinPaint('Could not read that board.', '',
-      '<button class="top-btn" onclick="_pinShowBoards()">Back to boards</button>');
-    return;
-  }
-  if (!j.pins.length) {
-    _pinPaint('Nothing on that board yet.', '',
-      '<button class="top-btn" onclick="_pinShowBoards()">Back to boards</button>');
-    return;
-  }
-  const tiles = j.pins.map(p =>
-    '<button class="pin-pic" data-url="' + escapeHtml(p.url) + '" data-alt="' + escapeHtml(p.alt || '') + '"' +
-      ' onclick="_pinToggle(this)"><img src="' + _safeImgSrc(p.url) + '" alt="" loading="lazy">' +
-      '<span class="pin-check">&#10003;</span></button>').join('');
-  _pinPaint('Choose up to ' + PIN_PICK_MAX + '.', '<div class="pin-grid pics">' + tiles + '</div>',
-    '<button class="top-btn" onclick="_pinShowBoards()">Boards</button>' +
-    '<button class="top-btn" id="pin-import-btn" onclick="_pinImport()" disabled>Bring them in</button>');
-}
-
 function _pinToggle(el) {
   const url = el.dataset.url;
   if (_pinPicked.has(url)) { _pinPicked.delete(url); el.classList.remove('picked'); }
@@ -9636,29 +9555,128 @@ function _pinToggle(el) {
   }
 }
 
+// v13.41: two at a time, with honest progress. One after another felt stuck
+// on a slow connection; all six at once hammered the proxy. The ones that
+// landed stay, and the report says exactly how many did not.
 async function _pinImport() {
   const picked = [...document.querySelectorAll('.pin-pic.picked')]
     .map(el => ({ url: el.dataset.url, alt: el.dataset.alt })).slice(0, PIN_PICK_MAX);
   if (!picked.length) return;
   const btn = document.getElementById('pin-import-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Bringing them in…'; }
-  let done = 0;
-  for (const p of picked) {
-    // Same road as any other picture from the web: MAYA's own server fetches
-    // it, and the copy that lands belongs to this project.
-    try { if (await importPictureFromUrl(p.url, p.alt)) done++; }
-    catch (e) { console.warn('[pinterest] import failed,', (e && e.message) || e); }
-  }
-  closePinterest();
+  let landed = 0, failed = 0;
+  const say = () => { if (btn) btn.textContent = 'Bringing in ' + (landed + failed) + ' of ' + picked.length + '\u2026'; };
+  if (btn) { btn.disabled = true; say(); }
+  const queue = picked.slice();
+  const worker = async () => {
+    for (;;) {
+      const p = queue.shift();
+      if (!p) return;
+      // Same road as any other picture from the web: MAYA's own server
+      // fetches it, and the copy that lands belongs to this project.
+      try { (await importPictureFromUrl(p.url, p.alt)) ? landed++ : failed++; }
+      catch (e) { failed++; console.warn('[pinterest] import failed,', (e && e.message) || e); }
+      say();
+    }
+  };
+  await Promise.all([worker(), worker()]);
   closePinterestDrawer();
-  if (done) showToast(done + ' picture' + (done === 1 ? '' : 's') + ' placed.');
+  if (btn) { btn.disabled = false; btn.textContent = 'Bring them in'; }
+  if (landed && !failed) showToast(landed + ' picture' + (landed === 1 ? '' : 's') + ' placed.');
+  else if (landed) showToast(landed + ' placed, ' + failed + ' did not arrive.');
   else showError('Those pictures could not be brought in.');
 }
 
 async function _pinDisconnect() {
   try { await _pinApi('/api/pinterest/disconnect', { method: 'POST', body: '{}',
         headers: { 'Content-Type': 'application/json' } }); } catch (_) {}
-  _pinShowConnect();
+  _pinDrawerConnect();
+}
+
+// ════════════════════════════════════════════════════════════
+// v13.41: FEEDBACK.
+// MAYA should always be listening, and not only about garments. This is the
+// straight line from anyone using it to the atelier: speak or type, Submit,
+// and the note lands in MAYA's own store with the account it came from.
+// ════════════════════════════════════════════════════════════
+let _fbRec = null;
+let _fbListening = false;
+
+function openFeedback() {
+  const m = document.getElementById('feedback-modal');
+  if (!m) return;
+  toggleNotesDrawer(false);
+  document.getElementById('feedback-state').textContent = '';
+  m.classList.add('open');
+  setTimeout(() => { try { document.getElementById('feedback-box').focus(); } catch (_) {} }, 80);
+}
+function closeFeedback() {
+  _fbStopListen();
+  const m = document.getElementById('feedback-modal');
+  if (m) m.classList.remove('open');
+}
+function _fbStopListen() {
+  _fbListening = false;
+  if (_fbRec) { try { _fbRec.stop(); } catch (_) {} _fbRec = null; }
+  const b = document.getElementById('feedback-listen');
+  if (b) { b.textContent = 'Tap to Listen'; b.classList.remove('is-listening'); }
+}
+function feedbackListenToggle() {
+  if (_fbListening) { _fbStopListen(); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showToast('This browser cannot listen. Typing works.'); return; }
+  const box = document.getElementById('feedback-box');
+  const btn = document.getElementById('feedback-listen');
+  const base = box.value ? box.value.replace(/\s+$/, '') + ' ' : '';
+  _fbRec = new SR();
+  _fbRec.continuous = true;
+  _fbRec.interimResults = true;
+  _fbRec.lang = 'en-US';
+  _fbRec.onresult = (e) => {
+    let done = '', interim = '';
+    for (let i = 0; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) done += t + ' ';
+      else interim += t;
+    }
+    box.value = (base + done + interim).slice(0, 4000);
+  };
+  _fbRec.onend = () => { if (_fbListening) { try { _fbRec.start(); } catch (_) { _fbStopListen(); } } };
+  _fbRec.onerror = (e) => {
+    if (e && (e.error === 'not-allowed' || e.error === 'service-not-allowed')) {
+      _fbStopListen();
+      showToast('Microphone was refused. Typing works.');
+    }
+  };
+  try { _fbRec.start(); } catch (_) { _fbRec = null; return; }
+  _fbListening = true;
+  if (btn) { btn.textContent = 'Listening\u2026 tap to stop'; btn.classList.add('is-listening'); }
+}
+async function submitFeedback() {
+  _fbStopListen();
+  const box = document.getElementById('feedback-box');
+  const st = document.getElementById('feedback-state');
+  const send = document.getElementById('feedback-send');
+  const text = (box.value || '').trim();
+  if (text.length < 3) { st.textContent = 'Say or type a little more first.'; return; }
+  const key = getApiKey();
+  if (!key) { st.textContent = 'Sign in again, then send it.'; return; }
+  send.disabled = true;
+  st.textContent = 'Sending\u2026';
+  try {
+    const ver = (document.querySelector('meta[name="maya-version"]') || {}).content || '';
+    const r = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ text, page: 'app', version: ver }),
+    });
+    if (!r.ok) throw new Error('http ' + r.status);
+    box.value = '';
+    st.textContent = '';
+    closeFeedback();
+    showToast('Thank you. It reached the atelier.');
+  } catch (e) {
+    st.textContent = 'That did not send. It is kept in the box, try again in a moment.';
+  } finally { send.disabled = false; }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -11512,6 +11530,7 @@ const _modalClosers = {
   'hero-picker-modal':     () => closeHeroPicker(),
   'onepager-modal':        () => closeOnePagerModal(),
   'avatar-check-modal':    () => closeAvatarCheck(),
+  'feedback-modal':        () => closeFeedback(),
 };
 // v10.6: universal "Escape = back one level", checked in priority order:
 //   1. Thank-you overlay visible → dismiss it
@@ -15255,10 +15274,10 @@ function skipFavoriteInspo() {
 async function saveFromPreview() {
   try {
     const r = await doSaveToCloud();
-    if (r && r.ok > 0) showToast('Saved to Drive');
-    else showError('Nothing was saved to Drive, try again.');
+    if (r && r.ok > 0) showToast('Submitted to Mana Siyo');
+    else showError('The submission did not land, try again.');
   } catch (e) {
-    showError('Save to Drive failed: ' + ((e && e.message) || 'unknown'));
+    showError('The submission failed: ' + ((e && e.message) || 'unknown'));
   }
   closeOnePagerModal();
 }

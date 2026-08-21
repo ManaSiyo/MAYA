@@ -437,6 +437,7 @@ app.post('/api/submit', requireAuthHeader, express.json({ limit: '30mb' }), asyn
         client: clientName, openedAtMs: Date.now(), openedBy: user.email, schema: 'v13.27',
       }), 'utf8'), 'application/json');
       _subsCache = { ts: 0, body: null };     // show up on the Systems Map immediately
+      _subOwners.set(subId, user.email);
       console.log('[submit] init OK —', subId);
       return res.json({ ok: true, folder_id: subId, folder_name: safeClient + '-' + stamp });
     } catch (e) {
@@ -454,6 +455,15 @@ app.post('/api/submit', requireAuthHeader, express.json({ limit: '30mb' }), asyn
     if (!SUB_ID.test(subId)) {
       console.warn('[submit] blocked folder id', subId, 'by', user.email);
       return res.status(403).json({ error: 'folder_not_allowed' });
+    }
+    // v13.41 SECURITY: a submission belongs to whoever opened it. Any signed
+    // in account used to be able to overwrite files in any submission it
+    // could name; now the marker written at init is the lock, checked here
+    // and remembered so one submission costs one read, not one per file.
+    const owner = await subOwner(subId);
+    if (owner && owner !== user.email) {
+      console.warn('[submit] blocked cross-account upload into', subId, 'by', user.email);
+      return res.status(403).json({ error: 'not_your_submission' });
     }
     // Only the files MAYA itself writes, with the types it writes them as.
     const ALLOWED_UPLOADS = /^(one-pager\.(png|jpg|jpeg|pdf)|dream-garment\.(png|jpg|jpeg)|summary\.json|pieces\.json|moodboard\.json|hero\.(png|jpg|jpeg)|face\.(png|jpg|jpeg))$/i;
@@ -500,6 +510,20 @@ app.post('/api/submit', requireAuthHeader, express.json({ limit: '30mb' }), asyn
 const SUBMISSIONS_BUCKET = process.env.SUBMISSIONS_BUCKET || 'pro-maya.firebasestorage.app';
 const SUB_PREFIX = 'submissions/';
 const SUB_ID = /^[A-Za-z0-9_-]{3,120}$/;
+// v13.41: who opened each submission, remembered so the ownership check on
+// every upload costs one storage read per submission, not per file. Bounded.
+const _subOwners = new Map();
+async function subOwner(subId) {
+  if (_subOwners.has(subId)) return _subOwners.get(subId);
+  let owner = null;
+  try {
+    const m = await gcsGet(SUB_PREFIX + subId + '/submission.json');
+    if (m.ok) owner = String((JSON.parse(m.buf.toString('utf8')) || {}).openedBy || '') || null;
+  } catch (_) {}
+  if (_subOwners.size > 5000) _subOwners.clear();
+  _subOwners.set(subId, owner);
+  return owner;
+}
 
 let _svcTok = { key: '', token: '', exp: 0 };
 async function serviceToken(scope) {
@@ -797,6 +821,63 @@ app.get('/api/admin/spend', async (req, res) => {
   } catch (e) {
     console.error('[meter] read failed,', e.message);
     res.status(500).json({ error: 'spend_failed', detail: 'the meter could not be read' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// v13.41 — FEEDBACK. Problems, ideas and wishes, straight from inside MAYA.
+// One object per note, in MAYA's own bucket, so nothing depends on a third
+// party and nothing can be lost between a user's mouth and Fromsa's eyes.
+// Admin-listed at /api/admin/feedback, newest first.
+// ═══════════════════════════════════════════════════════════════════════════
+const FEEDBACK_PREFIX = 'feedback/';
+app.post('/api/feedback', requireAuthHeader, express.json({ limit: '16kb' }), async (req, res) => {
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized', detail: e.message }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) return res.status(429).json({ error: 'rate_limited', scope: rl.scope });
+  const text = String((req.body || {}).text || '').trim().slice(0, 4000);
+  if (text.length < 3) return res.status(400).json({ error: 'empty_feedback' });
+  const id = new Date().toISOString().replace(/[:.]/g, '-') + '-' + crypto.randomBytes(3).toString('hex');
+  try {
+    await gcsPut(FEEDBACK_PREFIX + id + '.json', Buffer.from(JSON.stringify({
+      text,
+      email: user.email,
+      page: String((req.body || {}).page || '').slice(0, 40),
+      version: String((req.body || {}).version || '').slice(0, 12),
+      ua: String(req.headers['user-agent'] || '').slice(0, 200),
+      ts: new Date().toISOString(),
+    }), 'utf8'), 'application/json');
+    console.log('[feedback] from', user.email, '—', text.slice(0, 80));
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('[feedback] write failed —', e.message);
+    return res.status(500).json({ error: 'feedback_failed' });
+  }
+});
+
+app.get('/api/admin/feedback', async (req, res) => {
+  try { await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
+  try {
+    const tok = await serviceToken(STORAGE_SCOPE);
+    const qs = new URLSearchParams({ prefix: FEEDBACK_PREFIX, maxResults: '1000', fields: 'items(name)' });
+    const r = await fetch('https://storage.googleapis.com/storage/v1/b/' +
+      encodeURIComponent(SUBMISSIONS_BUCKET) + '/o?' + qs.toString(), {
+      headers: { 'Authorization': 'Bearer ' + tok }, signal: AbortSignal.timeout(10000),
+    });
+    if (!r.ok) throw new Error('list ' + r.status);
+    const names = ((await r.json()).items || []).map(i => i.name).sort().reverse().slice(0, 50);
+    const notes = (await Promise.all(names.map(async n => {
+      const o = await gcsGet(n).catch(() => ({ ok: false }));
+      if (!o.ok) return null;
+      try { return JSON.parse(o.buf.toString('utf8')); } catch (_) { return null; }
+    }))).filter(Boolean);
+    res.json({ ok: true, total: names.length, notes });
+  } catch (e) {
+    console.error('[admin] feedback list failed —', e.message);
+    res.status(500).json({ error: 'feedback_list_failed' });
   }
 });
 

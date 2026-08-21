@@ -48,6 +48,8 @@ await check('openai needs a token',               post('/api/openai/v1/chat/comp
 await check('openai rejects a bad token',         post('/api/openai/v1/chat/completions', AUTH), 401);
 await check('openai answers, does not hang',      post('/api/openai/v1/images/generations', AUTH), 401);
 await check('submit needs a token',               post('/api/submit'), 401);
+await check('feedback needs a token',             post('/api/feedback'), 401);
+await check('admin feedback needs a token',       get('/api/admin/feedback'), 401);
 await check('admin submissions need a token',     get('/api/admin/submissions'), 401);
 await check('admin subfile needs a token',        get('/api/admin/subfile?id=abcdefghijkl'), 401);
 await check('savepieces needs a token',           post('/api/admin/savepieces'), 401);

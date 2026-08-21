@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.40">
+<meta name="maya-version" content="13.41">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -318,9 +318,11 @@ try {
   <div id="traffic-note">checking&#8230;</div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-21e">
+  <details class="fold" id="changes-fold" data-latest="2026-08-21f">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 21</b>MAYA listens about itself now. Feedback lives in the menu where Privacy used to be, since Privacy already lives on the sign in screen and this map: speak or type a problem, an idea or a wish, press Submit, and it lands in MAYA's own store with the account it came from. There is a private list of every note at /api/admin/feedback.</div>
+    <div class="chg"><b>Aug 21</b>The launch hardening pass. A submission can now only be written by the account that opened it, which closes the one real hole in the submission store. The second Pinterest implementation is deleted, so there is exactly one sign in, one retry and one import flow. Pinterest brings pictures in two at a time and reports honestly which arrived. The menu button answers a finger with a full size target and tells assistive tech what it opens. An OS level reduce motion request holds the community wall still. And no words on screen say Drive any more, because Drive is gone.</div>
     <div class="chg"><b>Aug 21</b>Pinterest works, and it reads like Pinterest: the pins are twice as tall, two across, vertical the way the medium is. Both drawers now carry one header line, Back small on the left and the name centred, with the two pills directly under it. No arrow, no subtitle, no heading repeating a pill.</div>
     <div class="chg"><b>Aug 21</b>This map says one thing at a time. The lights ride the same line as the wordmark and scroll away with the page. Users and traffic is one row of five: users, live now, today, seven days, twenty eight days, and nothing hangs below it. The API credit ring is gone: it could not be accurate without being told what was funded, and a gauge that has to be explained is worse than no gauge. Marketing keeps its own door at the top.</div>
     <div class="chg"><b>Aug 21</b>Design notes read like design notes again. The column beside a vision uses the same type, the same hairlines and the same grouping the drawer used to: notes, design ideas for this version, aesthetics and constraints, what it is cut in. The picture is centred as it was.</div>
