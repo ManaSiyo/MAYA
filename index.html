@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.35">
+<meta name="maya-version" content="13.36">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -316,7 +316,8 @@
   *::-webkit-scrollbar-corner { background: transparent; }
   /* belt-and-suspenders for the drawers (some WebKit builds ignore the * rule
      on overflow containers): force the same thin dark thumb. */
-  #notes-drawer, #notes-drawer *, #fabrics-drawer, #fabrics-drawer * {
+  #notes-drawer, #notes-drawer *, #fabrics-drawer, #fabrics-drawer *,
+  #pinterest-drawer, #pinterest-drawer * {
     scrollbar-width: thin; scrollbar-color: rgba(150,175,225,0.28) transparent;
   }
   #notes-drawer::-webkit-scrollbar, #notes-drawer *::-webkit-scrollbar,
@@ -1898,6 +1899,19 @@
     font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(200,215,245,0.7); justify-content: center;
   }
+  /* v13.36: the same "+ New" row the avatar dropdown has, in Projects. */
+  #notes-drawer .session-item-new {
+    display: block; width: 100%;
+    background: none; border: none; border-top: 0.5px solid rgba(255,255,255,0.08);
+    padding: 12px 10px; cursor: pointer;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(200,215,245,0.7); text-align: center;
+    transition: color 0.15s, background 0.15s;
+  }
+  #notes-drawer .session-item-new:hover {
+    color: rgba(255,255,255,0.95); background: rgba(255,255,255,0.04);
+  }
   #notes-drawer .avatar-switch-empty {
     padding: 14px; text-align: center;
     font-family: 'Cormorant Garamond', serif; font-style: italic;
@@ -2101,6 +2115,7 @@
     color: rgba(255,255,255,1);
   }
   /* utility row of smaller pills below the big Client pill */
+  /* v13.36: two pills across, Fabrics and Pinterest. */
   #notes-drawer .drawer-top-row {
     display: flex; gap: 6px; flex-wrap: wrap;
     margin: 0 0 6px;
@@ -2322,6 +2337,8 @@
     text-align: center; cursor: pointer; transition: color 0.2s;
   }
   #notes-drawer .drawer-settings-link:hover { color: rgba(255,255,255,1); }
+  /* v13.36: no underline on the Privacy link, it is a menu item like the rest. */
+  #notes-drawer a.drawer-settings-link { text-decoration: none; }
   /* v6.8: reference count, same font, centered. v10: canon white. */
   #notes-drawer .drawer-count {
     font-family: 'Jost', sans-serif;
@@ -2490,7 +2507,7 @@
      same width (360px instead of 420px), same gradient shell. */
   /* v11.23: scrim removed, the main screen must NOT fade when Fabrics opens.
      The drawer keeps the same glass recipe as the hamburger drawer. */
-  #fabrics-drawer {
+  #fabrics-drawer, #pinterest-drawer {
     position: fixed;
     top: 60px; right: 18px; bottom: 22px;
     width: 360px; max-width: calc(100vw - 36px);
@@ -2514,9 +2531,9 @@
     transition: transform 0.42s cubic-bezier(0.16,1,0.3,1), opacity 0.42s ease;
     display: flex; flex-direction: column;
   }
-  #fabrics-drawer.open { transform: translateX(0); opacity: 1; }
+  #fabrics-drawer.open, #pinterest-drawer.open { transform: translateX(0); opacity: 1; }
   /* v11.4: Back text-link, same styling as the avatar submenu back link. */
-  #fabrics-drawer .fabrics-back {
+  #fabrics-drawer .fabrics-back, #pinterest-drawer .fabrics-back {
     align-self: flex-start;
     background: none; border: none;
     padding: 18px 22px 0;
@@ -2526,7 +2543,34 @@
     color: rgba(245,250,255,0.85);
     cursor: pointer; transition: color 0.2s;
   }
-  #fabrics-drawer .fabrics-back:hover { color: rgba(255,255,255,1); }
+  #fabrics-drawer .fabrics-back:hover,
+  #pinterest-drawer .fabrics-back:hover { color: rgba(255,255,255,1); }
+  /* v13.36: the drawer's own footer, where the import button lives. */
+  .pin-drawer-foot {
+    display: flex; justify-content: center; padding: 0 18px 16px;
+  }
+  .pin-drawer-foot .drawer-fabrics {
+    flex: 1; background: transparent;
+    border: 0.5px solid rgba(255,255,255,0.22); border-radius: 100px;
+    padding: 9px 14px; font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(245,250,255,0.85); cursor: pointer; transition: all 0.2s;
+  }
+  .pin-drawer-foot .drawer-fabrics:disabled { opacity: 0.4; cursor: default; }
+  .pin-drawer-foot .drawer-fabrics:hover:not(:disabled) { border-color: rgba(255,255,255,0.5); }
+  #pinterest-drawer .pin-grid { max-height: none; }
+  #pinterest-drawer .pin-note {
+    font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14px;
+    line-height: 1.6; color: rgba(230,238,255,0.7); text-align: center; padding: 10px 4px 16px;
+  }
+  #pinterest-drawer .pin-cta {
+    display: block; margin: 0 auto; background: transparent;
+    border: 0.5px solid rgba(255,255,255,0.24); border-radius: 100px;
+    padding: 9px 18px; font-family: 'Jost', sans-serif; font-size: 10px;
+    letter-spacing: 0.16em; text-transform: uppercase; color: rgba(245,250,255,0.88);
+    cursor: pointer;
+  }
+  #pinterest-drawer .pin-cta:hover { border-color: rgba(255,255,255,0.5); }
   .fabrics-drawer-header {
     display: flex; align-items: flex-start; justify-content: space-between;
     padding: 12px 22px 14px;
@@ -3241,6 +3285,57 @@
     z-index: 310;
   }
 
+  /* v13.36: the heart on the picture, opposite the close. */
+  .viewer-heart {
+    position: absolute; top: 22px; left: 22px; z-index: 310;
+    width: 34px; height: 34px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(8,12,24,0.45); border: 0.5px solid rgba(255,255,255,0.28);
+    border-radius: 50%; cursor: pointer;
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    transition: border-color 0.2s, transform 0.2s, background 0.2s;
+  }
+  .viewer-heart:hover { border-color: rgba(255,255,255,0.6); transform: scale(1.06); }
+  .viewer-heart svg { width: 17px; height: 17px; fill: none;
+    stroke: rgba(245,250,255,0.85); stroke-width: 1.4; stroke-linejoin: round; }
+  .viewer-heart.on svg { fill: rgba(253,164,175,0.92); stroke: rgba(253,164,175,0.95); }
+  #garment-modal[data-photo="full"] .viewer-heart { display: none; }
+
+  /* v13.36: the notes column. It sits in the empty space to the left of the
+     picture, which is why the picture shifts right on a wide screen. Below
+     that width there is no empty space to use, so it folds under the picture
+     instead of covering it. */
+  #viewer-notes {
+    position: fixed; left: 26px; top: 96px; width: 244px;
+    max-height: 64vh; overflow-y: auto; z-index: 5;
+    text-align: left; display: none;
+    scrollbar-width: none;
+  }
+  #viewer-notes::-webkit-scrollbar { display: none; }
+  #garment-modal.open:not([data-photo="full"]):not([data-mode="submit"]) #viewer-notes { display: block; }
+  #garment-modal[data-mode="submit"].open:not([data-photo="full"]) #viewer-notes { display: block; }
+  #viewer-notes .vn-head {
+    font-family: 'Jost', sans-serif; font-size: 9px; font-weight: 300;
+    letter-spacing: 0.28em; text-transform: uppercase;
+    color: rgba(200,210,230,0.45); margin-bottom: 10px;
+  }
+  #viewer-notes .vn-group { margin-bottom: 14px; }
+  #viewer-notes .vn-title {
+    font-family: 'Jost', sans-serif; font-size: 8.5px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: rgba(200,210,230,0.4); margin-bottom: 4px;
+  }
+  #viewer-notes .vn-body {
+    font-family: 'Cormorant Garamond', serif; font-size: 14px; line-height: 1.55;
+    color: rgba(238,244,255,0.86);
+  }
+  #viewer-notes .vn-body.italic { font-style: italic; }
+  #viewer-notes .vn-line { margin-bottom: 4px; }
+  #viewer-notes .vn-line::before { content: '\2022'; color: rgba(200,215,245,0.5); margin-right: 7px; }
+  @media (min-width: 1180px) {
+    #garment-modal:not([data-photo="full"]) #garment-image-wrap { margin-left: 210px; }
+  }
+  @media (max-width: 1179px) { #viewer-notes { display: none !important; } }
+
   /* v10.3: subtle breathing border on "Listening…", same starlight family
      but quieter than the Submit hero pulse. */
   .viewer-default-btn.is-listening,
@@ -3258,11 +3353,15 @@
     justify-content: center; align-items: center;
     flex-wrap: wrap;
   }
-  #viewer-row-modify-1, #viewer-row-modify-2 { display: none; }
-  #garment-modal[data-stage="modifying"] #viewer-row-default { display: none; }
-  #garment-modal[data-stage="modifying"] #viewer-row-modify-1,
-  #garment-modal[data-stage="modifying"] #viewer-row-modify-2 { display: flex; }
-  #viewer-row-modify-2 { gap: 22px; margin-top: 10px; }
+  /* v13.36: the three are always there. Submit joins them, above, the moment
+     there is something to submit, and leaves when there is not. */
+  #viewer-row-modify-1 { display: flex; }
+  #viewer-row-modify-2 { display: none; gap: 22px; margin-bottom: 4px; }
+  #garment-modal.can-submit #viewer-row-modify-2 { display: flex; }
+  /* The three are there when a favorite is open too. Only the atelier's own
+     Submit steps aside while a change is waiting, so two buttons never both
+     say Submit. */
+  #garment-modal[data-mode="submit"].can-submit #submit-btn { display: none; }
   /* v11.14: tighter horizontal packing for the 3-pill modify row (was the
      shared 18px .viewer-row gap). */
   #viewer-row-modify-1 { gap: 8px; }
@@ -3327,12 +3426,9 @@
   .attributes-toggle .attr-caret { display: inline-block; opacity: 0.7; transition: transform 0.2s; }
   #garment-modal.attrs-open .attributes-toggle .attr-caret { transform: rotate(180deg); }
   #garment-modal:not(.attrs-open) #viewer-refs { display: none; }
-  #garment-modal[data-mode="submit"] .attributes-toggle,
   #garment-modal[data-photo="full"] .attributes-toggle { display: none !important; }
-  /* In submit mode (favorites Submit), hide every Modify-mode chrome. */
-  #garment-modal[data-mode="submit"] #viewer-row-modify-1,
-  #garment-modal[data-mode="submit"] #viewer-row-modify-2,
-  #garment-modal[data-mode="submit"] #viewer-row-default { display: none !important; }
+  /* v13.36: the three ways to change a vision are there in submit mode too.
+     A favorite is still a garment you may want to say something about. */
 
   /* v11.14: Modify-mode secondary pills get a blueish shade so they read as a
      distinct group from the (glowing) Submit primary, the three used to look
@@ -4167,20 +4263,18 @@
     <!-- v11.3: Fabrics moved down below the references content. -->
     <!-- v13.29: Share moved onto each project row, where it belongs. Fabrics
          gets the whole width, matching the Projects pill above it. -->
+    <!-- v13.36: the two libraries a design pulls from, side by side, at the
+         bottom of the drawer. New and Clean are gone: New lives inside the
+         Projects dropdown where new projects belong, and nothing needs a
+         Clean button once every card can be removed on its own. -->
     <div class="drawer-top-row">
-      <button class="drawer-fabrics wide" onclick="openFabricsDrawer()" title="Fabrics">Fabrics</button>
+      <button class="drawer-fabrics" onclick="openFabricsDrawer()" title="Fabrics">Fabrics</button>
+      <button class="drawer-fabrics" onclick="openPinterestDrawer()" title="Your Pinterest saves and boards">Pinterest</button>
     </div>
-    <!-- v7.9: bottom action row, Save / New / Clean. v11.3: Save now
-         commits a named session snapshot to the Sessions library;
-         auto-save (every 400ms) keeps running as the safety net. -->
-    <!-- v13.29: Save is gone. Everything saves itself the moment it lands, so
-         a Save button only ever invited doubt about whether it had. -->
-    <div class="drawer-actions-bottom">
-      <button class="drawer-action" onclick="newConsultation()" title="Start a new project">New</button>
-      <button class="drawer-action" onclick="cleanReferences()" title="Clear the reference cards, pictures stay">Clean</button>
-    </div>
-    <!-- v5.11: reference count lives in the drawer now (was top-left). -->
-    <div class="drawer-count" id="item-count">tap to listen</div>
+    <!-- v13.36: the card count is gone from the drawer, it said nothing you
+         could not see on the board. The element stays, hidden, because the
+         canvas still writes its state here. -->
+    <div class="drawer-count" id="item-count" style="display:none">tap to listen</div>
     <!-- v7.9: Settings + Logout share the bottom text-link row. -->
     <div class="drawer-meta-row">
       <!-- v13.33: Settings removed. Nothing in it changes day to day. -->
@@ -4295,9 +4389,18 @@
 
 <!-- garment modal (image viewer + modify) -->
 <div class="modal" id="garment-modal">
+  <!-- v13.36: what MAYA understands about THIS picture, beside it. Notes used
+       to be one pile for a whole project, which said nothing about the vision
+       actually on screen. Every version carries its own. -->
+  <div id="viewer-notes"></div>
   <div id="garment-image-wrap">
     <!-- v5.22: × icon now hugs the image's top-right corner, not the screen. -->
     <button class="viewer-close" onclick="closeGarmentModal()" title="Close (Esc)" aria-label="Close">&#215;</button>
+    <!-- v13.36: the heart lives on the picture, opposite the close. One tap
+         keeps it, one tap lets it go. No pill at the bottom of the screen. -->
+    <button class="viewer-heart" id="viewer-heart" onclick="viewerToggleHeart()" title="Keep in favorites" aria-label="Favorite">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5 C12 20.5 3.5 15.2 3.5 9.4 A4.6 4.6 0 0 1 12 6.8 A4.6 4.6 0 0 1 20.5 9.4 C20.5 15.2 12 20.5 12 20.5 Z"/></svg>
+    </button>
     <img id="garment-image" alt="Generated garment" onclick="enterPhotoFullscreen()" style="cursor: zoom-in" />
     <div id="garment-spinner">
       <div class="spinner-ring"></div>
@@ -4323,23 +4426,16 @@
        modify mode adds two new rows below (3-pill top, Submit + Back below).
        Hidden states use data-stage on #garment-modal. -->
   <div id="viewer-actions" style="display:flex;flex-direction:column;align-items:center;gap:6px">
-    <div class="viewer-row" id="viewer-row-default">
-      <!-- default state, Modify enters the modifying stage; Send to Favorites toggles heart. -->
-      <button class="modal-text-btn viewer-default-btn" id="modify-primary"   onclick="modifyPrimary()">Modify</button>
-      <button class="modal-text-btn viewer-default-btn" id="modify-secondary" onclick="modifySecondary()">Switch fabric</button>
+    <!-- v13.36: Submit appears ABOVE the three, and only once there is
+         something to submit. Nothing to press twice to get here. -->
+    <div class="viewer-row" id="viewer-row-modify-2">
+      <button class="modal-text-btn viewer-modify-submit" id="modify-submit" onclick="modifySubmit()">Submit</button>
     </div>
-    <!-- v11.10: modify mode row 1, Tap to Listen (toggle), Switch Fabric, Add Reference. -->
+    <!-- v13.36: the three ways to change a vision, always here, one tap each. -->
     <div class="viewer-row" id="viewer-row-modify-1">
       <button class="modal-text-btn viewer-modify-btn" id="modify-listen-toggle" onclick="modifyListenToggle()">Tap to Listen</button>
       <button class="modal-text-btn viewer-modify-btn" id="modify-switch-fabric" onclick="switchFabricForViewer()">Switch Fabric</button>
       <button class="modal-text-btn viewer-modify-btn" id="modify-add-ref"       onclick="modifyAddReference()">Add Reference</button>
-    </div>
-    <!-- v11.10: modify mode row 2, Submit (apply the mod) + small X exit.
-         v11.12: ← Back replaced with × close, it's a toggle out of modify
-         mode, not a navigation step. -->
-    <div class="viewer-row" id="viewer-row-modify-2">
-      <button class="modal-text-btn viewer-modify-submit" id="modify-submit" onclick="modifySubmit()">Submit</button>
-      <button class="modify-back-link" id="modify-back" onclick="modifyBack()" aria-label="Close modify" title="Close modify (Esc)">&#215;</button>
     </div>
     <!-- v9.12: shown only when garment-modal[data-mode="submit"], favorites click path -->
     <button class="modal-text-btn viewer-submit-btn" id="submit-btn" onclick="submitFavorite()">Submit</button>
@@ -4390,6 +4486,27 @@
   <input type="file" id="myfabric-file" accept="image/*" multiple style="display:none">
 </div>
 
+<!-- v13.36: Pinterest, in the same drawer language as Fabrics. First tab is
+     everything the account has saved, newest first. Second tab is the boards,
+     for when the save you want lives in one. -->
+<div id="pinterest-drawer">
+  <button class="fabrics-back" onclick="closePinterestDrawer()" title="Back to menu" aria-label="Back">&#8592; Back</button>
+  <div class="fabrics-drawer-header">
+    <div>
+      <div class="fabrics-drawer-title" id="pin-drawer-title">Pinterest</div>
+      <div class="fabrics-drawer-sub" id="pin-drawer-sub"></div>
+    </div>
+  </div>
+  <div class="fabrics-tabs" id="pin-tabs" style="display:none">
+    <button class="fabrics-tab active" id="pin-tab-all" onclick="setPinterestTab('all')">All saves</button>
+    <button class="fabrics-tab" id="pin-tab-boards" onclick="setPinterestTab('boards')">Boards</button>
+  </div>
+  <div class="fabrics-drawer-body" id="pinterest-drawer-body"></div>
+  <div class="pin-drawer-foot" id="pin-drawer-foot" style="display:none">
+    <button class="drawer-fabrics" id="pin-import-btn" onclick="_pinImport()" disabled>Bring them in</button>
+  </div>
+</div>
+
 <!-- v13.4: upload chooser, opened by the + upload button. -->
 <div id="upload-choose-modal" onclick="if(event.target===this)closeUploadChooser()">
   <div class="upload-choose-card">
@@ -4399,7 +4516,7 @@
          Pinterest. If the Pinterest app is not reachable, the panel behind it
          still takes a pasted address, so nothing is lost. -->
     <button class="upload-choose-btn" id="upload-choose-pinterest"
-            onclick="closeUploadChooser();openPinterest()">Pinterest</button>
+            onclick="closeUploadChooser();openPinterestDrawer()">Pinterest</button>
   </div>
 </div>
 
@@ -7313,8 +7430,8 @@ async function toggleAvatarSwitcher() {
       '<span class="avatar-switch-name">' + escapeHtml(a.name) + '</span>' +
     '</button>'
   ).join('');
-  panel.innerHTML = (rows || '<div class="avatar-switch-empty">No saved clients yet. Set a name + face, then Save.</div>') +
-    '<button class="avatar-switch-row avatar-switch-new" onclick="newAvatar()">+ New client</button>';
+  panel.innerHTML = (rows || '<div class="avatar-switch-empty">No saved avatars yet. Set a name and a face, then Save.</div>') +
+    '<button class="avatar-switch-row avatar-switch-new" onclick="newAvatar()">+ New avatar</button>';
   panel.style.display = 'block';
 }
 async function switchAvatar(id) {
@@ -7360,7 +7477,7 @@ async function newAvatar() {
   if (typeof _renderAvatarBody === 'function') _renderAvatarBody();
   toggleAvatarSwitcher();
   openAvatarSubMenu();         // jump straight into setting up the new client
-  showToast('New client. Add a name and a face.');
+  showToast('New avatar. Add a name and a face.');
 }
 // Helper for face-photo handlers, re-render whichever Avatar UI is active.
 function _refreshActiveAvatarView() {
@@ -8378,14 +8495,13 @@ function renderNotesPanel(s) {
   ].filter(p => p.body);
 
   if (!parts.length) {
-    host.innerHTML = '<div class="notes-empty">Nothing yet. Talk, and what Maya hears lands here.</div>';
+    host.innerHTML = '';
     toggle.classList.remove('has-notes');
   } else {
-    host.innerHTML =
-      `<details class="global-block" open>
-         <summary>Design notes</summary>
-         ${parts.map(p => `<div class="note-group"><div class="note-group-title">${escapeHtml(p.title)}</div>${p.body}</div>`).join('')}
-       </details>`;
+    // v13.36: notes moved onto each vision, where a note can actually mean
+    // something. The drawer keeps only the dot that says there is something
+    // to read; the reading happens beside the picture.
+    host.innerHTML = '';
     toggle.classList.add('has-notes');
   }
 }
@@ -9178,6 +9294,155 @@ async function _pinRevealButton() {
   if (btn) btn.style.display = '';
 }
 
+// ════════════════════════════════════════════════════════════
+// v13.36: THE PINTEREST DRAWER.
+// Same glass, same behaviour and the same place on screen as Fabrics, because
+// it is the same kind of thing: a library you pull pictures out of. Two tabs.
+// All saves is everything on the account, newest first, which is what a person
+// means by "my Pinterest". Boards is for when the picture lives in one.
+// Picking is the same as anywhere else in MAYA: tap, tap, tap, then bring them
+// in, and each one is copied into the project so it can never go dead.
+// ════════════════════════════════════════════════════════════
+let _pinTab = 'all';
+let _pinBoardName = '';
+
+function openPinterestDrawer() {
+  const d = document.getElementById('pinterest-drawer');
+  if (!d) return;
+  d.classList.add('open');
+  _pinPicked = new Set();
+  _pinSetFoot(false);
+  _pinBody('<div class="pin-note">Looking at your Pinterest\u2026</div>');
+  _pinDrawerBoot();
+}
+function closePinterestDrawer() {
+  const d = document.getElementById('pinterest-drawer');
+  if (d) d.classList.remove('open');
+}
+function _pinBody(html) {
+  const b = document.getElementById('pinterest-drawer-body');
+  if (b) b.innerHTML = html;
+}
+function _pinSub(t) {
+  const el = document.getElementById('pin-drawer-sub');
+  if (el) el.textContent = t || '';
+}
+function _pinSetFoot(show) {
+  const f = document.getElementById('pin-drawer-foot');
+  if (f) f.style.display = show ? 'flex' : 'none';
+  const btn = document.getElementById('pin-import-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Bring them in'; }
+}
+function _pinTabsVisible(show) {
+  const t = document.getElementById('pin-tabs');
+  if (t) t.style.display = show ? 'flex' : 'none';
+}
+
+async function _pinDrawerBoot() {
+  _pinTabsVisible(false);
+  let st;
+  try { st = await _pinApi('/api/pinterest/status'); }
+  catch (_) {
+    _pinSub('');
+    _pinBody('<div class="pin-note">Could not reach Pinterest just now. You can still paste picture addresses, up to six.</div>' +
+      '<button class="pin-cta" onclick="closePinterestDrawer();openLinkImport()">Paste addresses</button>');
+    return;
+  }
+  if (!st.configured) {
+    _pinSub('');
+    _pinBody('<div class="pin-note">Pinterest sign in is not live on this server yet. Paste picture addresses instead, up to six.</div>' +
+      '<button class="pin-cta" onclick="closePinterestDrawer();openLinkImport()">Paste addresses</button>');
+    return;
+  }
+  if (!st.connected) return _pinDrawerConnect();
+  _pinTabsVisible(true);
+  setPinterestTab(_pinTab || 'all');
+}
+
+function _pinDrawerConnect() {
+  _pinSub('');
+  _pinBody('<div class="pin-note">Sign in with Pinterest and everything you have saved shows up here.</div>' +
+    '<button class="pin-cta" onclick="_pinDrawerSignIn()">Connect Pinterest</button>');
+}
+function _pinDrawerSignIn() {
+  _pinApi('/api/pinterest/start').then(({ url }) => {
+    const w = window.open(url, 'maya-pinterest', 'width=560,height=720');
+    if (!w) { showError('Allow popups for MAYA, then press Connect again.'); return; }
+    _pinBody('<div class="pin-note">Waiting for Pinterest\u2026</div>');
+    const onMsg = (e) => {
+      if (e.origin !== location.origin || !e.data || e.data.maya !== 'pinterest') return;
+      window.removeEventListener('message', onMsg);
+      if (e.data.ok) { _pinTabsVisible(true); setPinterestTab('all'); }
+      else _pinBody('<div class="pin-note">That sign in did not finish.</div>' +
+        '<button class="pin-cta" onclick="_pinDrawerSignIn()">Try again</button>');
+    };
+    window.addEventListener('message', onMsg);
+  }).catch(() => showError('Could not start the Pinterest sign in.'));
+}
+
+function setPinterestTab(tab) {
+  _pinTab = tab;
+  const a = document.getElementById('pin-tab-all');
+  const b = document.getElementById('pin-tab-boards');
+  if (a) a.classList.toggle('active', tab === 'all');
+  if (b) b.classList.toggle('active', tab === 'boards');
+  if (tab === 'boards') return _pinDrawerBoards();
+  return _pinDrawerPins('', '');
+}
+
+async function _pinDrawerBoards() {
+  _pinSub('your boards');
+  _pinSetFoot(false);
+  _pinBody('<div class="pin-note">Loading your boards\u2026</div>');
+  let j;
+  try { j = await _pinApi('/api/pinterest/boards'); }
+  catch (e) {
+    if (e.code === 'not_connected' || e.code === 'reconnect') return _pinDrawerConnect();
+    if (e.code === 'not_allowed') {
+      _pinBody('<div class="pin-note">Pinterest has not opened this app to your account yet.</div>');
+      return;
+    }
+    _pinBody('<div class="pin-note">Pinterest did not answer. Try again in a moment.</div>');
+    return;
+  }
+  if (!j.boards.length) {
+    _pinBody('<div class="pin-note">No boards on that Pinterest account.</div>');
+    return;
+  }
+  _pinBody('<div class="pin-grid">' + j.boards.map(b =>
+    '<button class="pin-tile" onclick="_pinDrawerPins(\'' + escapeHtml(b.id) + '\',\'' +
+      escapeHtml(String(b.name).replace(/[\'\\]/g, '')) + '\')">' +
+      (b.cover ? '<img src="' + _safeImgSrc(b.cover) + '" alt="" loading="lazy">' : '<span class="pin-blank"></span>') +
+      '<span class="pin-tile-name">' + escapeHtml(b.name) + '</span>' +
+      '<span class="pin-tile-count">' + b.pins + ' pin' + (b.pins === 1 ? '' : 's') + '</span>' +
+    '</button>').join('') + '</div>');
+}
+
+async function _pinDrawerPins(boardId, boardName) {
+  _pinBoardName = boardName || '';
+  _pinPicked = new Set();
+  _pinSetFoot(false);
+  _pinSub(boardName ? boardName : 'everything you have saved');
+  _pinBody('<div class="pin-note">Loading pictures\u2026</div>');
+  let j;
+  try {
+    j = await _pinApi('/api/pinterest/pins' + (boardId ? '?board=' + encodeURIComponent(boardId) : ''));
+  } catch (e) {
+    if (e.code === 'not_connected' || e.code === 'reconnect') return _pinDrawerConnect();
+    _pinBody('<div class="pin-note">Could not read that.</div>');
+    return;
+  }
+  if (!j.pins.length) {
+    _pinBody('<div class="pin-note">' + (boardId ? 'Nothing on that board yet.' : 'Nothing saved on that account yet.') + '</div>');
+    return;
+  }
+  _pinBody('<div class="pin-grid pics">' + j.pins.map(p =>
+    '<button class="pin-pic" data-url="' + escapeHtml(p.url) + '" data-alt="' + escapeHtml(p.alt || '') + '"' +
+      ' onclick="_pinToggle(this)"><img src="' + _safeImgSrc(p.url) + '" alt="" loading="lazy">' +
+      '<span class="pin-check">&#10003;</span></button>').join('') + '</div>');
+  _pinSetFoot(true);
+}
+
 function closePinterest() {
   const m = document.getElementById('pinterest-modal');
   if (m) m.classList.remove('open');
@@ -9316,6 +9581,7 @@ async function _pinImport() {
     catch (e) { console.warn('[pinterest] import failed,', (e && e.message) || e); }
   }
   closePinterest();
+  closePinterestDrawer();
   if (done) showToast(done + ' picture' + (done === 1 ? '' : 's') + ' placed.');
   else showError('Those pictures could not be brought in.');
 }
@@ -9915,6 +10181,7 @@ let visualizeRecognition = null;
 // model still gets the full instruction set on Modify.
 function renderModificationsBar() {
   const bar = document.getElementById('modifications-bar');
+  if (typeof _refreshSubmitReady === 'function') _refreshSubmitReady();
   if (!bar) return;
   const recent = visualizeModifications.slice(-2);
   bar.innerHTML = recent.map((m, i) => {
@@ -10020,19 +10287,41 @@ function _setModifyStage(stage) {
     if (stage === 'modifying') modal.dataset.stage = 'modifying';
     else delete modal.dataset.stage;
   }
-  // Default row labels, secondary becomes "Send / Remove from Favorites".
-  const prim = document.getElementById('modify-primary');
-  const sec  = document.getElementById('modify-secondary');
-  if (prim && sec) {
-    prim.classList.remove('is-listening');
-    const item = (typeof viewerItemId !== 'undefined' && viewerItemId != null)
-      ? items.find(i => i.id === viewerItemId) : null;
-    const isFav = !!(item && item.card && item.card.favorited);
-    prim.textContent = 'Modify';
-    sec.textContent  = isFav ? 'Remove from Favorites' : 'Send to Favorites';
-  }
-  // Refresh the Tap-to-Listen toggle label to match the current listening state.
+  // v13.36: there is no Modify step and no favorites pill any more. The three
+  // ways to change a vision are always on screen, the heart lives on the
+  // picture, and Submit shows itself when there is something to submit.
   _refreshModifyListenToggle();
+  _refreshViewerHeart();
+  _refreshSubmitReady();
+}
+
+// v13.36: the heart on the picture. Filled means kept.
+function _refreshViewerHeart() {
+  const btn = document.getElementById('viewer-heart');
+  if (!btn) return;
+  const item = (typeof viewerItemId !== 'undefined' && viewerItemId != null)
+    ? items.find(i => i.id === viewerItemId) : null;
+  const on = !!(item && item.card && item.card.favorited);
+  btn.classList.toggle('on', on);
+  btn.title = on ? 'Remove from favorites' : 'Keep in favorites';
+}
+function viewerToggleHeart() {
+  if (viewerItemId == null) return;
+  toggleFavorite(viewerItemId);
+  _refreshViewerHeart();
+}
+
+// v13.36: Submit appears only once something has been said, or a reference
+// picked. A fabric switch runs on its own, so it never waits here.
+function _refreshSubmitReady() {
+  const modal = document.getElementById('garment-modal');
+  if (!modal) return;
+  const spoken = (typeof visualizeModifications !== 'undefined' && visualizeModifications.length > 0);
+  const picked = (typeof selectedImageReferences !== 'undefined' &&
+                  Array.isArray(selectedImageReferences) && selectedImageReferences.length > 0);
+  modal.classList.toggle('can-submit', !!(spoken || picked));
+  const btn = document.getElementById('modify-submit');
+  if (btn) btn.textContent = (modal.dataset.mode === 'submit') ? 'Apply changes' : 'Submit';
 }
 
 // v11.10: Modify pill → enter the modifying stage (3-pill row + Submit + Back).
@@ -10378,6 +10667,8 @@ async function applyModifications() {
       tag: 'inspo', title: 'v' + version, kind: 'inspo', image: dataUrl,
       inspirationId, version, generatedBy,
       caption: original?.card.caption || lastSummary?.dream_outcome || null,
+      // v13.36: what was asked of THIS version, so its notes are its own.
+      mods: Array.isArray(mods) ? mods.slice(0, 12) : null,
       refs: original?.card.refs ? original.card.refs.slice() : null,
       // v5: inspiration's fabric grounding carries through every version
       fabricMode: original?.card.fabricMode || null,
@@ -10462,6 +10753,9 @@ function renderViewerContent(item) {
   renderViewerVersionNav(item);
   renderViewerFabrics(item);
   renderViewerRefs(item);
+  renderViewerNotes(item);
+  _refreshViewerHeart();
+  _refreshSubmitReady();
 }
 
 // v5.2/v5.4: show the fabric(s) that drove this vision so Fromsa can SEE
@@ -10542,6 +10836,58 @@ function viewerStep(delta) {
   }
   renderViewerContent(siblings[targetIdx]);
   if (typeof _setModifyStage === 'function') _setModifyStage(_modifyStage || 'default');
+}
+
+// ════════════════════════════════════════════════════════════
+// v13.36: NOTES, PER VISION.
+// Design notes used to be one pile for a whole project, which said nothing
+// about the picture actually on screen: a moodboard holds many visions and
+// each version of each vision is its own garment. These notes belong to THIS
+// picture. They sit in the empty space beside it, and they change as you step
+// between versions.
+// ════════════════════════════════════════════════════════════
+function renderViewerNotes(item) {
+  const host = document.getElementById('viewer-notes');
+  if (!host) return;
+  const c = (item && item.card) || {};
+  const groups = [];
+  if (c.caption) {
+    groups.push({ t: 'The vision', b: '<div class="vn-body italic">' + escapeHtml(c.caption) + '</div>' });
+  }
+  if (Array.isArray(c.mods) && c.mods.length) {
+    groups.push({ t: 'Asked for, this version',
+      b: '<div class="vn-body">' + c.mods.slice(-6).map(m =>
+           '<div class="vn-line">' + escapeHtml(m) + '</div>').join('') + '</div>' });
+  }
+  const refs = Array.isArray(c.refs) ? c.refs : [];
+  if (refs.length) {
+    // Same grouping the old panel used: one line per kind of note.
+    const byTag = new Map();
+    refs.forEach(r => {
+      const tag = (r && r.tag) ? String(r.tag) : 'note';
+      if (!byTag.has(tag)) byTag.set(tag, []);
+      byTag.get(tag).push(r.title || '');
+    });
+    const lines = [...byTag.entries()].map(([tag, list]) =>
+      '<div class="vn-line">' + escapeHtml(tag.replace(/_/g, ' ')) + ': ' +
+      escapeHtml(list.filter(Boolean).slice(0, 6).join(', ')) + '</div>').join('');
+    groups.push({ t: 'What it was drawn from', b: '<div class="vn-body">' + lines + '</div>' });
+  }
+  const fabrics = Array.isArray(c.fabrics) ? c.fabrics : [];
+  if (fabrics.length) {
+    groups.push({ t: 'Cut in',
+      b: '<div class="vn-body">' + escapeHtml(fabrics.map(f =>
+           [f.name, f.color, f.weave].filter(Boolean).join(' ')).join(' · ')) + '</div>' });
+  }
+  if (!groups.length) {
+    host.innerHTML = '<div class="vn-head">This vision</div>' +
+      '<div class="vn-body italic" style="color:rgba(200,210,230,0.5)">Nothing written about this one yet. ' +
+      'Tap to listen and say what you want changed.</div>';
+    return;
+  }
+  host.innerHTML = '<div class="vn-head">This vision' +
+    (c.version ? ', v' + c.version : '') + '</div>' +
+    groups.map(g => '<div class="vn-group"><div class="vn-title">' + escapeHtml(g.t) + '</div>' + g.b + '</div>').join('');
 }
 
 // Render the card's refs as chips; clicking × marks them as "deselected"
@@ -11156,6 +11502,9 @@ document.addEventListener('keydown', e => {
     else open.classList.remove('open');
     return;
   }
+  // v13.36: the Pinterest drawer sits in the same place as Fabrics.
+  const _pd = document.getElementById('pinterest-drawer');
+  if (_pd && _pd.classList.contains('open')) { closePinterestDrawer(); return; }
   // v13.33: 2c. Fabrics drawer sits over the notes drawer.
   const _fd = document.getElementById('fabrics-drawer');
   if (_fd && _fd.classList.contains('open') && typeof closeFabricsDrawer === 'function') {
@@ -12544,6 +12893,7 @@ async function confirmImageRef() {
   _imageRefAfterPick = null;
   if (after === 'modify')            await _applyModifyWithPendingState();
   else if (after === 'modify-stage') {
+    if (typeof _refreshSubmitReady === 'function') _refreshSubmitReady();
     showToast(refs.length + ' reference' + (refs.length === 1 ? '' : 's') + ' staged');
   }
   else await _runVisualizeNow();
@@ -14173,7 +14523,7 @@ async function _renderSessionsDropdown() {
     if (typeof projectStore !== 'undefined' && projectStore.ready()) sessions = await projectStore.list();
   } catch (e) { console.warn('[maya sessions]', e && e.message); }
   if (!sessions.length) {
-    list.innerHTML = '<div class="sessions-empty">No projects yet.</div>';
+    list.innerHTML = '<div class="sessions-empty">No projects yet.</div>' + _NEW_PROJECT_ROW;
   } else {
     list.innerHTML = _sessionRows(sessions);
   }
@@ -14191,7 +14541,7 @@ async function _renderSessionsDropdown() {
         if (fresh && document.getElementById('drawer-sessions-list')) {
           document.getElementById('drawer-sessions-list').innerHTML =
             fresh.length ? _sessionRows(fresh)
-                         : '<div class="sessions-empty">No projects yet.</div>';
+                         : '<div class="sessions-empty">No projects yet.</div>' + _NEW_PROJECT_ROW;
         }
       })
       .finally(() => { _reconcileInFlight = false; });
@@ -14199,7 +14549,15 @@ async function _renderSessionsDropdown() {
 }
 let _reconcileInFlight = false;
 let _lastReconcileAt = 0;
+// v13.36: the Projects dropdown ends the way the avatar dropdown does, with
+// the row that makes a new one. That is where New belongs, so the drawer no
+// longer needs a New button of its own.
+const _NEW_PROJECT_ROW =
+  '<button class="session-item session-item-new" onclick="newConsultation()" title="Start a new project">+ New project</button>';
 function _sessionRows(sessions) {
+  return _projectRows(sessions) + _NEW_PROJECT_ROW;
+}
+function _projectRows(sessions) {
   return sessions.map(s => {
     const label = (s.twoWord && s.twoWord.length) ? s.twoWord : 'untitled';
     const dateStr = _formatSessionDate(s.createdAt);

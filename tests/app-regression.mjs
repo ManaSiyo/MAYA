@@ -360,12 +360,16 @@ ok('Share belongs to a project, not to whatever is open',
   INDEX_SOURCE.includes('async function shareProjectById(id)') &&
   INDEX_SOURCE.includes('class="session-item-share"') &&
   !INDEX_SOURCE.includes('onclick="shareCurrentProject()"'));
-ok('Save is gone and Fabrics has the full width',
+ok('Save, New and Clean are gone; Fabrics and Pinterest share the row',
   !INDEX_SOURCE.includes('id="save-session-btn" class=') &&
-  INDEX_SOURCE.includes('class="drawer-fabrics wide"'));
-ok('notes are one Design notes home with no empty parts',
-  INDEX_SOURCE.includes('<summary>Design notes</summary>') &&
-  INDEX_SOURCE.includes('].filter(p => p.body);') &&
+  !INDEX_SOURCE.includes('onclick="cleanReferences()"') &&
+  !INDEX_SOURCE.includes('title="Start a new project">New<') &&
+  INDEX_SOURCE.includes('onclick="openFabricsDrawer()"') &&
+  INDEX_SOURCE.includes('onclick="openPinterestDrawer()"'));
+ok('notes belong to the vision on screen, not to the drawer',
+  INDEX_SOURCE.includes('function renderViewerNotes(item)') &&
+  INDEX_SOURCE.includes('renderViewerNotes(item);') &&
+  !INDEX_SOURCE.includes('<summary>Design notes</summary>') &&
   !INDEX_SOURCE.includes('nothing captured yet'));
 ok('the wall rolls right, left, right',
   INDEX_SOURCE.includes('const SPEEDS = [-26, 21, -31];'));
@@ -544,7 +548,35 @@ ok('Settings is gone from the drawer, Tip, Logout and Privacy stay',
   INDEX_SOURCE.includes('onclick="openTip()"') &&
   INDEX_SOURCE.includes('onclick="mayaSignOut()"') &&
   INDEX_SOURCE.includes('href="/privacy.html"'));
-ok('Design notes opens by default', INDEX_SOURCE.includes('<details class="global-block" open>'));
+ok('the notes column carries this version, and only this version',
+  INDEX_SOURCE.includes("groups.push({ t: 'Asked for, this version'") &&
+  INDEX_SOURCE.includes('id="viewer-notes"') &&
+  INDEX_SOURCE.includes('mods: Array.isArray(mods) ? mods.slice(0, 12) : null,'));
+
+// ── v13.36, Aug 21 ─────────────────────────────────────────────────────────
+ok('the drawer says avatar, and projects make their own new one',
+  INDEX_SOURCE.includes('+ New avatar') && !INDEX_SOURCE.includes('+ New client') &&
+  INDEX_SOURCE.includes('session-item-new') && INDEX_SOURCE.includes('_NEW_PROJECT_ROW'));
+ok('the card count and the privacy underline are gone',
+  INDEX_SOURCE.includes('id="item-count" style="display:none"') &&
+  INDEX_SOURCE.includes('#notes-drawer a.drawer-settings-link { text-decoration: none; }'));
+ok('the heart lives on the picture, the favorites pill does not exist',
+  INDEX_SOURCE.includes('class="viewer-heart"') &&
+  INDEX_SOURCE.includes('function viewerToggleHeart()') &&
+  !INDEX_SOURCE.includes('id="modify-primary"') &&
+  !INDEX_SOURCE.includes("sec.textContent  = isFav ? 'Remove from Favorites'"));
+ok('the three ways to change a vision are one tap, Submit appears above them',
+  INDEX_SOURCE.includes('function _refreshSubmitReady()') &&
+  INDEX_SOURCE.includes('#garment-modal.can-submit #viewer-row-modify-2 { display: flex; }') &&
+  INDEX_SOURCE.indexOf('id="viewer-row-modify-2"') < INDEX_SOURCE.indexOf('id="viewer-row-modify-1"'));
+ok('Pinterest is a drawer in the same language as Fabrics',
+  INDEX_SOURCE.includes('id="pinterest-drawer"') &&
+  INDEX_SOURCE.includes('function setPinterestTab(tab)') &&
+  INDEX_SOURCE.includes('>All saves<') && INDEX_SOURCE.includes('>Boards<') &&
+  INDEX_SOURCE.includes('openPinterestDrawer()'));
+ok('all saves means every pin on the account, not just one board',
+  SERVER_SOURCE.includes("const path = board ? ('/boards/' + board + '/pins?'") &&
+  SERVER_SOURCE.includes("('/pins?' + qs.toString())"));
 ok('the upload button is brighter and the chooser sits lower',
   INDEX_SOURCE.includes('color: rgba(200,210,230,0.36)') &&
   INDEX_SOURCE.includes('padding-bottom: 92px;'));

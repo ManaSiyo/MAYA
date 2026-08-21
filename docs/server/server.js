@@ -1453,13 +1453,17 @@ app.get('/api/pinterest/pins', requireAuthHeader, async (req, res) => {
   try { user = await requireGoogleUser(req); }
   catch (e) { return res.status(401).json({ error: 'unauthorized' }); }
   if (!pinConfigured()) return res.status(501).json({ error: 'not_configured' });
+  // v13.36: no board means everything the account has saved, newest first,
+  // which is what "all saves" means to a person looking at Pinterest.
   const board = String(req.query.board || '');
-  if (!/^[\w-]{1,64}$/.test(board)) return res.status(400).json({ error: 'bad_board' });
+  if (board && !/^[\w-]{1,64}$/.test(board)) return res.status(400).json({ error: 'bad_board' });
   const bookmark = String(req.query.bookmark || '');
   try {
     const qs = new URLSearchParams({ page_size: '48' });
     if (bookmark) qs.set('bookmark', bookmark);
-    const j = await pinFetch(user.sub, '/boards/' + board + '/pins?' + qs.toString());
+    const path = board ? ('/boards/' + board + '/pins?' + qs.toString())
+                       : ('/pins?' + qs.toString());
+    const j = await pinFetch(user.sub, path);
     // The picture comes in several sizes under media.images; take the biggest
     // one Pinterest offers, whatever they happen to call it this year.
     const biggest = (images) => {
