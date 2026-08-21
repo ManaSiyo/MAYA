@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.34">
+<meta name="maya-version" content="13.35">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -54,8 +54,8 @@ try {
   .top-btn:hover{border-color:rgba(255,255,255,0.42);color:rgba(245,250,255,1)}
   .top-btn.hamburger{width:32px;height:28px;padding:0;display:flex;align-items:center;justify-content:center}
   /* Lights live in the top bar, same line as the wordmark */
-  #top-lights{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;gap:14px;
-              align-items:center;cursor:pointer}
+  #top-lights{display:flex;gap:18px;align-items:center;justify-content:center;cursor:pointer;
+              margin:0 0 8px;flex-wrap:wrap}
   .hamburger-icon{display:inline-flex;flex-direction:column;gap:3px;width:14px}
   .hamburger-icon span{display:block;height:1px;width:100%;background:currentColor;border-radius:1px}
 
@@ -289,15 +289,11 @@ try {
 
 <div id="top-bar">
   <div id="top-left-brand">
-    <img class="maya-logo-mark" src="/aesthetics/ui/logo-208.png" alt="" onclick="location.reload()" style="cursor:pointer" title="Tap to refresh" />
-    <span class="brand-title">Systems Map</span>
-  </div>
-  <div id="top-lights" onclick="runChecks()" title="Tap to check again">
-    <span class="status-item"><span class="sdot wait" id="d-site"></span><span class="lgt-lbl">Site</span></span>
-    <span class="status-item"><span class="sdot wait" id="d-api"></span><span class="lgt-lbl">API</span></span>
-    <span class="status-item"><span class="sdot wait" id="d-assets"></span><span class="lgt-lbl">Images</span></span>
-    <span class="status-item"><span class="sdot wait" id="d-drive"></span><span class="lgt-lbl">Submissions</span></span>
-    <span class="status-item"><span class="sdot wait" id="d-backup"></span><span class="lgt-lbl">Backup</span></span>
+    <!-- v13.35: the logo is the way home, everywhere in MAYA's back rooms. -->
+    <a href="/status.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit" title="Systems Map">
+      <img class="maya-logo-mark" src="/aesthetics/ui/logo-208.png" alt="" style="cursor:pointer" />
+      <span class="brand-title">Systems Map</span>
+    </a>
   </div>
   <button class="top-btn hamburger" onclick="document.getElementById('drawer').classList.toggle('open')" title="Menu">
     <span class="hamburger-icon"><span></span><span></span><span></span></span>
@@ -321,6 +317,15 @@ try {
 
 <div class="wrap">
 
+  <!-- v13.35: the lights scroll with the page now. Only the logo, the wordmark
+       and the menu stay pinned, per Fromsa. -->
+  <div id="top-lights" onclick="runChecks()" title="Tap to check again">
+    <span class="status-item"><span class="sdot wait" id="d-site"></span><span class="lgt-lbl">Site</span></span>
+    <span class="status-item"><span class="sdot wait" id="d-api"></span><span class="lgt-lbl">API</span></span>
+    <span class="status-item"><span class="sdot wait" id="d-assets"></span><span class="lgt-lbl">Images</span></span>
+    <span class="status-item"><span class="sdot wait" id="d-drive"></span><span class="lgt-lbl">Submissions</span></span>
+    <span class="status-item"><span class="sdot wait" id="d-backup"></span><span class="lgt-lbl">Backup</span></span>
+  </div>
   <div id="checked-at">checking&#8230;</div>
   <div class="grid doors" style="grid-template-columns:repeat(4,1fr);margin:8px 0 2px">
     <a class="card" href="/operations.html" target="_blank"><b>Operations Room Beta</b></a>
@@ -341,15 +346,20 @@ try {
   <div id="subs-strip" style="display:none"></div>
   <div id="subs-note-inline">Waiting for the one sign in at the top of the page.</div>
 
-  <!-- v13.33: the two numbers that matter sit out here. Everything with a
-       date range folds away, the same way Recent changes does. -->
-  <h2 class="grp">Who is here</h2>
+  <!-- v13.35: one heading, Users, and the four numbers that answer it.
+       Everything with a longer horizon, and everything about how people found
+       MAYA, lives in the one fold underneath. -->
+  <h2 class="grp">Users</h2>
   <div id="head-tiles" class="tiles hidden"></div>
-  <details class="fold" id="traffic-fold">
-    <summary><h2 class="grp">Traffic, by date range</h2></summary>
+  <details class="fold" id="traffic-fold" ontoggle="if(this.open)loadMarketing()">
+    <summary><h2 class="grp">Traffic and marketing</h2></summary>
     <div class="fold-body">
       <div id="traffic-tiles" class="tiles hidden"></div>
       <div id="traffic-note">checking&#8230;</div>
+      <div id="mkt-tiles" class="tiles hidden" style="margin-top:10px"></div>
+      <div id="mkt-note" style="font-family:'Jost',sans-serif;font-size:10.5px;color:var(--dim);
+        border:0.5px dashed var(--line);border-radius:12px;padding:11px 14px;line-height:1.7;margin-top:10px">
+        Marketing loads when this opens. <a href="/marketing.html" style="color:var(--ink)">The whole picture</a>.</div>
     </div>
   </details>
 
@@ -372,17 +382,6 @@ try {
   </div>
 
 
-  <!-- v13.34: marketing in one line, and the door to the whole page. Loaded
-       only when it is opened, so the map costs nothing extra to look at. -->
-  <details class="fold" id="marketing-fold" ontoggle="if(this.open)loadMarketing()">
-    <summary><h2 class="grp">Marketing, manasiyo.com <a class="aside" href="/marketing.html">Open marketing &rarr;</a></h2></summary>
-    <div class="fold-body">
-      <div id="mkt-tiles" class="tiles hidden"></div>
-      <div id="mkt-note" style="font-family:'Jost',sans-serif;font-size:10.5px;color:var(--dim);
-        border:0.5px dashed var(--line);border-radius:12px;padding:11px 14px;line-height:1.7">loading&#8230;</div>
-    </div>
-  </details>
-
   <!-- v13.34: the one fact OpenAI will not tell a program: what you last put in.
        Told here, once, and MAYA does the arithmetic from OpenAI's own costs. -->
   <div id="topup" onclick="if(event.target===this)closeTopUp()">
@@ -401,9 +400,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-20">
+  <details class="fold" id="changes-fold" data-latest="2026-08-20b">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 20</b>This map reads in one pass now. The lights scroll away with the page instead of hanging over it, only the logo, the wordmark and the menu stay pinned, the logo is the way home from every back room, one heading called Users carries live now, users, today and the week, and traffic and marketing share a single fold underneath.</div>
     <div class="chg"><b>Aug 20</b>Marketing is the fourth door on this map. It opens a page in the same hand as the Systems Map: who is arriving at manasiyo.com, every day for four weeks, where they came from with Google and Facebook named, what they read, and what the ad accounts spent. Anything not connected yet says so instead of showing a number that is not real.</div>
     <div class="chg"><b>Aug 20</b>The credit ring tells the truth about money. OpenAI publishes what has been spent but never a balance, so MAYA now asks once what you last put in, subtracts OpenAI's own costs since that day, and shows the dollars left with the ring as that share. Correct it any time from the map itself, no console.</div>
     <div class="chg"><b>Aug 19</b>The wall glides instead of stepping: the rows now move with a transform handed to the graphics card rather than by rewriting the scroll position every frame, and a short row repeats itself until it is long enough to loop, so the bottom row drifts like the two above it.</div>
@@ -684,6 +684,8 @@ function _adoptToken(t, firstLoad) {
   _showSignin(false);
   _scheduleRenew(t);
   runChecks(); loadTraffic(); loadSubmissions(); loadCredit(); _fbBridge(t);
+  // v13.35: if the fold was already open when the sign in landed, fill it.
+  try { const f = document.getElementById('traffic-fold'); if (f && f.open) loadMarketing(); } catch (_) {}
 }
 function _gisBoot() {
   const cached = _cachedTok();
@@ -910,34 +912,38 @@ async function loadTraffic() {
   if (tiles.dataset.sig === tSig) { tiles.classList.remove('hidden'); return; }
   tiles.dataset.sig = tSig;
   tiles.innerHTML =
-    '<div class="tile"><div class="k">today</div><div class="v">' + ((t.today || {}).users || 0) + '</div></div>' +
-    '<div class="tile"><div class="k">7 days</div><div class="v">' + ((t.d7 || {}).users || 0) + '</div></div>' +
-    '<div class="tile"><div class="k">28 days</div><div class="v">' + ((t.d28 || {}).users || 0) + '</div></div>';
+    '<div class="tile"><div class="k">28 days</div><div class="v">' + ((t.d28 || {}).users || 0) + '</div></div>' +
+    '<div class="tile"><div class="k">page views, 28 days</div><div class="v">' + ((t.d28 || {}).views || 0) + '</div></div>';
   tiles.classList.remove('hidden');
   document.getElementById('traffic-note').classList.add('hidden');
 }
 
-// v13.33: the headline. LIVE NOW is browsers on the site this minute; USERS is
-// how many separate Google accounts have ever signed in to MAYA, counted by
-// MAYA itself rather than by Analytics, so it is exact and it survives an
-// Analytics outage.
+// v13.35: one row, four numbers, under one heading: Users. LIVE NOW is
+// browsers on the site this minute, from Analytics. USERS is how many separate
+// Google accounts have ever signed in to MAYA, counted by MAYA itself so it is
+// exact and survives an Analytics outage. Then today, then the week.
 function _paintHeadTiles(d) {
   const head = document.getElementById('head-tiles');
   if (!head || !d) return;
   const acc = d.accounts || null;
+  const t = d.ranges || {};
   const live = (typeof d.live === 'number') ? d.live : null;
-  const sig = [live, acc && acc.total, acc && acc.d28].join(',');
+  const em = '&#8212;';
+  const sig = [live, acc && acc.total, (t.today || {}).users, (t.d7 || {}).users].join(',');
   if (head.dataset.sig === sig) { head.classList.remove('hidden'); return; }
   head.dataset.sig = sig;
   head.innerHTML =
-    '<div class="tile live" title="People on the site right now, from Analytics"><div class="k">&#9679; live now</div>' +
-      '<div class="v">' + (live === null ? '&#8212;' : live) + '</div></div>' +
+    '<div class="tile live" title="People on the site right now"><div class="k">&#9679; live now</div>' +
+      '<div class="v">' + (live === null ? em : live) + '</div></div>' +
     '<div class="tile" title="Separate Google accounts that have signed in to MAYA"><div class="k">users</div>' +
-      '<div class="v">' + (acc ? acc.total : '&#8212;') + '</div></div>' +
-    '<div class="tile" title="Accounts that signed in for the first time in the last 28 days"><div class="k">new, 28 days</div>' +
-      '<div class="v">' + (acc ? acc.d28 : '&#8212;') + '</div></div>';
+      '<div class="v">' + (acc ? acc.total : em) + '</div></div>' +
+    '<div class="tile"><div class="k">today</div><div class="v">' +
+      (t.today ? (t.today.users || 0) : em) + '</div></div>' +
+    '<div class="tile"><div class="k">7 days</div><div class="v">' +
+      (t.d7 ? (t.d7.users || 0) : em) + '</div></div>';
   head.classList.remove('hidden');
 }
+
 // ── v13.28: the credit meter ───────────────────────────────────────────────
 // The circle shows how much of the month's budget is left. The number is an
 // estimate on purpose: OpenAI only reveals a real balance to an organisation

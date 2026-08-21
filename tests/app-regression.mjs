@@ -434,8 +434,8 @@ ok('an image costs more of the budget than a chat call',
 
 ok('the map light reads Submissions', s.lights.includes('Submissions') && !s.lights.includes('Drive'));
 
-ok('Systems Map order: traffic, marketing, changes, prompting, architecture',
-  s.order === 'traffic-fold,marketing-fold,changes-fold,pe-fold,arch-fold');
+ok('Systems Map order: traffic and marketing, changes, prompting, architecture',
+  s.order === 'traffic-fold,changes-fold,pe-fold,arch-fold');
 ok('Architecture is collapsible', s.archFold);
 ok('door cards have no arrows', s.arrows === 0);
 ok('"Never delete" banner removed', !s.warnBanner);
@@ -598,9 +598,24 @@ ok('marketing reads Analytics, Meta and Google Ads separately',
   SERVER_SOURCE.includes('async function metaInsights()') &&
   SERVER_SOURCE.includes('async function googleAdsInsights()') &&
   SERVER_SOURCE.includes('MARKETING_GA_PROPERTY_ID'));
-ok('the map carries a marketing glance that loads only when opened',
-  MAP_SOURCE.includes('id="marketing-fold"') && MAP_SOURCE.includes('async function loadMarketing()') &&
+ok('traffic and marketing share one fold, loaded only when opened',
+  !MAP_SOURCE.includes('id="marketing-fold"') &&
+  MAP_SOURCE.includes('<h2 class="grp">Traffic and marketing</h2>') &&
+  MAP_SOURCE.includes('async function loadMarketing()') &&
   MAP_SOURCE.includes('if(this.open)loadMarketing()'));
+
+// ── v13.35, Aug 20 ─────────────────────────────────────────────────────────
+ok('only the logo, the wordmark and the menu are pinned',
+  MAP_SOURCE.includes('#top-lights{display:flex') &&
+  !/id="top-bar"[\s\S]{0,900}id="top-lights"/.test(MAP_SOURCE));
+ok('the logo goes home to the Systems Map',
+  MAP_SOURCE.includes('<a href="/status.html"') &&
+  MKT_SOURCE.includes('<a href="/status.html"') &&
+  BACKEND_SOURCE.includes('<a href="/status.html"'));
+ok('one heading, Users, with four numbers under it',
+  MAP_SOURCE.includes('<h2 class="grp">Users</h2>') &&
+  !MAP_SOURCE.includes('Who is here') &&
+  MAP_SOURCE.includes(">users<") && MAP_SOURCE.includes('>today<') && MAP_SOURCE.includes('>7 days<'));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Marketing</title>
-<meta name="maya-version" content="13.34">
+<meta name="maya-version" content="13.35">
 <script>
 try {
   const _vNow = (document.querySelector('meta[name="maya-version"]') || {}).content || '';
@@ -100,8 +100,11 @@ try {
 
 <div id="top-bar">
   <div id="top-left-brand">
-    <img src="/aesthetics/ui/logo-208.png" alt="">
-    <span class="brand-title">Marketing</span>
+    <!-- v13.35: home is the Systems Map, from every back room. -->
+    <a href="/status.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit" title="Back to the Systems Map">
+      <img src="/aesthetics/ui/logo-208.png" alt="">
+      <span class="brand-title">Marketing</span>
+    </a>
   </div>
   <button class="top-btn hamburger" onclick="document.getElementById('drawer').classList.toggle('open')" title="Menu">
     <span class="hamburger-icon"><span></span><span></span><span></span></span>
