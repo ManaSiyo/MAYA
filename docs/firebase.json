@@ -53,8 +53,32 @@
         }
       },
       {
+        "source": "/status.html",
+        "destination": "/backend/status.html"
+      },
+      {
+        "source": "/marketing.html",
+        "destination": "/backend/marketing.html"
+      },
+      {
+        "source": "/operations.html",
+        "destination": "/backend/operations.html"
+      },
+      {
+        "source": "/backend.html",
+        "destination": "/backend/backend.html"
+      },
+      {
+        "source": "/privacy.html",
+        "destination": "/backend/privacy.html"
+      },
+      {
+        "source": "/verify.html",
+        "destination": "/backend/verify.html"
+      },
+      {
         "source": "**",
-        "destination": "/index.html"
+        "destination": "/frontend/index.html"
       }
     ],
     "headers": [

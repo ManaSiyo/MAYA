@@ -30,18 +30,47 @@ Before handing off:
 3. Update `docs/requests.txt` for owner-visible requests, `docs/fixes.txt` for operational
    incidents, and `docs/history.txt` only for meaningful shipped milestones.
 
-## Where things live (v13.30)
+## Where things live (v13.37)
 
-The repository root IS the published website: Firebase Hosting serves it with
-`public: "."`. So the root holds only what the web serves plus what the build
-needs, and everything an agent reads lives in `docs/`.
+Firebase Hosting still serves this repository with `public: "."`, but the
+pages no longer sit loose at the root. `docs/firebase.json` maps every old
+address onto its new file, so every URL that ever worked still works.
 
-- Served pages at the root: `index.html`, `status.html`, `backend.html`,
-  `operations.html`, `verify.html`, and `aesthetics/`.
-- `docs/`: `README.md`, `AI-HANDOFF.md`, `requests.txt`, `fixes.txt`,
-  `history.txt`, `server/` (Cloud Run + rules), `firebase.json`, `archive/`.
-- Root also keeps `cloudbuild.yaml` (Cloud Build reads it there), `tests/`
-  (the suite resolves the repo root from its own folder), and these two
-  contracts, which each agent looks for at the root.
-- Never move or rename a served page without changing `docs/firebase.json` and
-  the links in the other pages. Never touch `.git`.
+```
+frontend/index.html        the app            → served at /
+backend/status.html        Systems Map        → /status.html
+backend/marketing.html     Marketing          → /marketing.html
+backend/operations.html    Operations Room    → /operations.html
+backend/backend.html       the Brief          → /backend.html
+backend/privacy.html       privacy policy     → /privacy.html
+backend/verify.html        deploy check       → /verify.html
+aesthetics/                every picture the site serves, at the root
+docs/                      everything an agent reads, nothing the web serves
+docs/server/               Cloud Run: server.js, Dockerfile, rules
+docs/firebase.json         the hosting map. Moving a page starts HERE.
+cloudbuild.yaml            Cloud Build reads it at the root, leave it there
+tests/                     the suite resolves the repo root from its own folder
+AGENTS.md / CLAUDE.md      this contract, one text under two names
+```
+
+- `aesthetics/` CANNOT move into `docs/`: `docs/**` is in the hosting ignore
+  list, so the pictures would stop deploying and every page would lose its
+  background and logo.
+- Never move or rename a served page without editing the rewrites in
+  `docs/firebase.json` in the SAME commit, and never touch `.git` or
+  `.firebaserc`.
+
+## The handoff is part of the change, not a chore afterwards
+
+Every commit that changes behaviour updates, in the same commit:
+
+1. This file, if the layout, the rules or the tooling changed.
+2. `docs/AI-HANDOFF.md`: what changed, what was verified, what is still open,
+   and the exact next step. It is a state file, not a log; replace stale lines.
+3. `docs/requests.txt` for a request Fromsa made, `docs/fixes.txt` for an
+   incident, `docs/history.txt` only for a shipped milestone.
+4. `tests/app-regression.mjs`: one assertion per completed request. A change
+   with no assertion is a regression waiting to happen.
+
+`AGENTS.md` and `CLAUDE.md` are the same text under two names, because Codex
+reads one and Claude reads the other. Change one, copy it to the other.

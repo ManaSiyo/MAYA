@@ -28,6 +28,35 @@ If this file disagrees with chat memory, this file is right.
    `tests/app-regression.mjs`. That is the whole anti-regression system.
 7. Anything Fromsa reads on screen: no em dashes, no en dashes.
 
+## Where things stand, August 21 2026
+
+- Live line: `maya-v2`. Committed and waiting for Fromsa's push: **v13.36**
+  (notes per vision, one tap changes, avatar and project menus, the Pinterest
+  drawer) and **v13.37** (the folder reorganisation below).
+- **The folder changed in v13.37.** Pages are no longer loose at the root:
+  `frontend/index.html`, and `backend/` holds status, marketing, operations,
+  backend and privacy plus verify. Every old URL still answers, because
+  `docs/firebase.json` rewrites each one onto its new file and the catch-all
+  now points at `/frontend/index.html`. If a page 404s after a deploy, the
+  rewrite list is the first place to look. `aesthetics/` stays at the root on
+  purpose: `docs/**` is ignored by Hosting, so pictures inside it would never
+  deploy.
+- Tests: 138 checks in `tests/app-regression.mjs`, all passing, including a
+  check that every old address still maps to a file that exists.
+- Pinterest: the app is approved for **Trial** access (email Aug 18). The
+  drawer is built and falls back to pasted addresses until
+  `PINTEREST_APP_ID` and `PINTEREST_APP_SECRET` are set on Cloud Run. Standard
+  access needs a screen recording of the OAuth flow, submitted from the
+  Pinterest developer console. Nobody has recorded it yet.
+- Credit meter: `/api/admin/credit` stores the last top up (amount + date) in
+  `metrics/credit.json`; the ring counts down from it using OpenAI's Costs API
+  when `OPENAI_ADMIN_KEY` is set, and MAYA's own estimate when it is not.
+  OpenAI has no balance endpoint; do not go looking for one again.
+- Marketing: `/api/admin/marketing` reads Analytics with the Cloud Run
+  identity, Meta with `META_ADS_TOKEN` + `META_AD_ACCOUNT_ID`, Google Ads with
+  the five `GOOGLE_ADS_*` values. Each half reports itself not connected
+  rather than inventing a number.
+
 ## Where things stand, August 16 2026
 
 - Live and verified: **v13.27 confirmed working** (submissions land and list

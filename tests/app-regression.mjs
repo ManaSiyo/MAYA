@@ -14,15 +14,29 @@ import { join, extname, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const INDEX_SOURCE = readFileSync(join(ROOT, 'index.html'), 'utf8');
+// v13.37: the folder was reorganised. One place says where every file is, so
+// a move only ever needs editing here.
+const AT = {
+  index:     'frontend/index.html',
+  status:    'backend/status.html',
+  backend:   'backend/backend.html',
+  marketing: 'backend/marketing.html',
+  privacy:   'backend/privacy.html',
+  verify:    'backend/verify.html',
+  server:    'docs/server/server.js',
+  build:     'cloudbuild.yaml',
+  hosting:   'docs/firebase.json',
+};
+const INDEX_SOURCE = readFileSync(join(ROOT, AT.index), 'utf8');
 const RULES_SOURCE = readFileSync(join(ROOT, 'docs/server/firestore.rules'), 'utf8');
-const SERVER_SOURCE = readFileSync(join(ROOT, 'docs/server/server.js'), 'utf8');
+const SERVER_SOURCE = readFileSync(join(ROOT, AT.server), 'utf8');
 const BUILD_SOURCE = readFileSync(join(ROOT, 'cloudbuild.yaml'), 'utf8');
-const MAP_SOURCE = readFileSync(join(ROOT, 'status.html'), 'utf8');
+const MAP_SOURCE = readFileSync(join(ROOT, AT.status), 'utf8');
 const STORAGE_RULES = existsSync(join(ROOT, 'docs/server/storage.rules'))
   ? readFileSync(join(ROOT, 'docs/server/storage.rules'), 'utf8') : '';
-const BACKEND_SOURCE = existsSync(join(ROOT, 'backend.html'))
-  ? readFileSync(join(ROOT, 'backend.html'), 'utf8') : '';
+const BACKEND_SOURCE = existsSync(join(ROOT, AT.backend))
+  ? readFileSync(join(ROOT, AT.backend), 'utf8') : '';
+const HOSTING = JSON.parse(readFileSync(join(ROOT, AT.hosting), 'utf8'));
 const FAVORITE_PULSE_SOURCE = INDEX_SOURCE.slice(
   INDEX_SOURCE.indexOf('@keyframes maya-favorite-pulse'),
   INDEX_SOURCE.indexOf('@keyframes maya-favorite-pulse') + 500,
@@ -60,7 +74,7 @@ pg.on('pageerror', e => errs.push(String(e).split('\n')[0]));
 await pg.route('**/*', rt => rt.request().url().startsWith(PAGE_ROOT) ? rt.continue() : rt.abort());
 
 console.log('\nMAYA app regression\n');
-await pg.goto(PAGE_ROOT + 'index.html', { waitUntil: 'domcontentloaded' });
+await pg.goto(PAGE_ROOT + AT.index, { waitUntil: 'domcontentloaded' });
 await pg.waitForTimeout(2500);
 
 const r = await pg.evaluate(async () => {
@@ -256,7 +270,7 @@ ok('stacked flags set (whole stack drags as one)', r.stackFlags);
 ok('stack button toggles, positions restored', r.unstackRestores);
 ok('drag class churn cannot replay the entry fade', r.noFadeReplay);
 
-await pg.goto(PAGE_ROOT + 'status.html', { waitUntil: 'domcontentloaded' });
+await pg.goto(PAGE_ROOT + AT.status, { waitUntil: 'domcontentloaded' });
 await pg.waitForTimeout(1500);
 const s = await pg.evaluate(() => ({
   order: [...document.querySelectorAll('details.fold')].map(d => d.id).join(','),
@@ -277,8 +291,8 @@ const s = await pg.evaluate(() => ({
 // v13.26: the map speaks about SUBMISSIONS, not Google plumbing.
 // v13.32: the privacy policy. It has to exist, be reachable BEFORE anyone
 // signs in, and keep saying the things that are legally load bearing.
-const PRIVACY_SOURCE = existsSync(join(ROOT, 'privacy.html'))
-  ? readFileSync(join(ROOT, 'privacy.html'), 'utf8') : '';
+const PRIVACY_SOURCE = existsSync(join(ROOT, AT.privacy))
+  ? readFileSync(join(ROOT, AT.privacy), 'utf8') : '';
 ok('the privacy policy ships as a page', PRIVACY_SOURCE.includes('<h1>Privacy policy</h1>'));
 ok('the policy still names the sensitive things',
   ['face photograph', 'community wall', 'OpenAI', 'Pinterest', 'Measurements', 'Deleting things']
@@ -325,8 +339,8 @@ ok('pasted and dragged links import as inspo, six at a time',
 // v13.30: the folder layout. The repo root IS the published website, so the
 // served pages must be at the root and the notes must NOT be, and the hosting
 // ignore list has to match. A tidy that breaks the deploy is not a tidy.
-ok('the served pages are at the repository root',
-  ['index.html', 'status.html', 'backend.html', 'operations.html', 'verify.html']
+ok('every served page exists where the hosting map says it does',
+  [AT.index, AT.status, AT.backend, AT.marketing, AT.privacy, AT.verify, 'backend/operations.html']
     .every(f => existsSync(join(ROOT, f))));
 ok('the notes moved into docs and are not at the root',
   existsSync(join(ROOT, 'docs/README.md')) && existsSync(join(ROOT, 'docs/requests.txt')) &&
@@ -461,7 +475,7 @@ await pg.evaluate(() => {
 await pg.reload({ waitUntil: 'domcontentloaded' });
 const mapLoggedOut = await pg.evaluate(() => localStorage.getItem('maya_admin_tok') === null);
 ok('map: version change clears the cached sign in', mapLoggedOut);
-await pg.goto(PAGE_ROOT + 'index.html', { waitUntil: 'domcontentloaded' });
+await pg.goto(PAGE_ROOT + AT.index, { waitUntil: 'domcontentloaded' });
 await pg.evaluate(() => {
   localStorage.setItem('maya_google_token', 'FAKE.TOKEN.x');
   localStorage.setItem('maya_seen_version_app', '0.0');
@@ -525,8 +539,8 @@ ok('the proxy refuses anything that is not a picture',
 // v13.25: the deploy check page. Fromsa's Mac has no Node, so /verify.html is
 // the only verifier he can actually run. It must exist, must ask deep health
 // with the borrowed Systems Map token, and must never render that token.
-const VERIFY_SOURCE = existsSync(join(ROOT, 'verify.html'))
-  ? readFileSync(join(ROOT, 'verify.html'), 'utf8') : '';
+const VERIFY_SOURCE = existsSync(join(ROOT, AT.verify))
+  ? readFileSync(join(ROOT, AT.verify), 'utf8') : '';
 ok('deploy check page ships', VERIFY_SOURCE.includes('MAYA Deploy Check'));
 ok('deploy check asks the real Drive question',
   VERIFY_SOURCE.includes("localStorage.getItem('maya_admin_tok')") &&
@@ -615,8 +629,8 @@ ok('the credit ring counts from the day the money was loaded',
   MAP_SOURCE.includes('id="topup"'));
 
 // ── v13.34, Aug 20 ─────────────────────────────────────────────────────────
-const MKT_SOURCE = existsSync(join(ROOT, 'marketing.html'))
-  ? readFileSync(join(ROOT, 'marketing.html'), 'utf8') : '';
+const MKT_SOURCE = existsSync(join(ROOT, AT.marketing))
+  ? readFileSync(join(ROOT, AT.marketing), 'utf8') : '';
 ok('the fourth door is Marketing', MAP_SOURCE.includes('href="/marketing.html"') &&
   MAP_SOURCE.includes('grid-template-columns:repeat(4,1fr)'));
 ok('the marketing page ships and signs in like the map',
@@ -648,6 +662,31 @@ ok('one heading, Users, with four numbers under it',
   MAP_SOURCE.includes('<h2 class="grp">Users</h2>') &&
   !MAP_SOURCE.includes('Who is here') &&
   MAP_SOURCE.includes(">users<") && MAP_SOURCE.includes('>today<') && MAP_SOURCE.includes('>7 days<'));
+
+
+// ── v13.37, the folder ─────────────────────────────────────────────────────
+// A tidy folder that breaks the website is not tidy. Every page that had a URL
+// before must still answer on that URL, which is what these check.
+const _rw = (HOSTING.hosting.rewrites || []);
+const _dest = (src) => (_rw.find(r => r.source === src) || {}).destination;
+ok('every page still answers on the address it always had',
+  _dest('/status.html') === '/backend/status.html' &&
+  _dest('/marketing.html') === '/backend/marketing.html' &&
+  _dest('/operations.html') === '/backend/operations.html' &&
+  _dest('/backend.html') === '/backend/backend.html' &&
+  _dest('/privacy.html') === '/backend/privacy.html' &&
+  _dest('/verify.html') === '/backend/verify.html');
+ok('the app is still what the front door serves',
+  (_rw[_rw.length - 1] || {}).source === '**' &&
+  (_rw[_rw.length - 1] || {}).destination === '/frontend/index.html');
+ok('the API rewrite still comes first', (_rw[0] || {}).source === '/api/**' && !!(_rw[0] || {}).run);
+ok('pictures still deploy: aesthetics is not inside the ignored folder',
+  existsSync(join(ROOT, 'aesthetics')) &&
+  !(HOSTING.hosting.ignore || []).some(g => g === 'aesthetics/**'));
+ok('the handoff lives where both agents look',
+  existsSync(join(ROOT, 'AGENTS.md')) && existsSync(join(ROOT, 'CLAUDE.md')) &&
+  readFileSync(join(ROOT, 'AGENTS.md'), 'utf8').includes('frontend/index.html') &&
+  readFileSync(join(ROOT, 'AGENTS.md'), 'utf8').includes('backend/status.html'));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
