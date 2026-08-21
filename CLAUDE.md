@@ -48,6 +48,7 @@ aesthetics/                every picture the site serves, at the root
 docs/                      everything an agent reads, nothing the web serves
 docs/server/               Cloud Run: server.js, Dockerfile, rules
 docs/firebase.json         the hosting map. Moving a page starts HERE.
+robots.txt                 a real file, so a crawler is not handed the app
 cloudbuild.yaml            Cloud Build reads it at the root, leave it there
 tests/                     the suite resolves the repo root from its own folder
 AGENTS.md / CLAUDE.md      this contract, one text under two names

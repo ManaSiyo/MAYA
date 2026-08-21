@@ -1,0 +1,14 @@
+# MAYA is an application, not a library of pages. This file exists mostly so
+# that a crawler, a link preview or an audit tool asking for /robots.txt gets
+# a small answer instead of the whole app: without it the catch-all rewrite
+# hands over a 700KB page and the request times out.
+User-agent: *
+Allow: /$
+Allow: /privacy.html
+Disallow: /api/
+Disallow: /backend/
+Disallow: /status.html
+Disallow: /marketing.html
+Disallow: /operations.html
+Disallow: /backend.html
+Disallow: /verify.html

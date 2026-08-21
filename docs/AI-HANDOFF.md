@@ -28,9 +28,30 @@ If this file disagrees with chat memory, this file is right.
    `tests/app-regression.mjs`. That is the whole anti-regression system.
 7. Anything Fromsa reads on screen: no em dashes, no en dashes.
 
+## If you are auditing this, start here
+
+1. `AGENTS.md` for the layout and the rules. The folder changed on Aug 21:
+   `frontend/index.html`, `backend/*.html`, `aesthetics/` at the root,
+   everything else in `docs/`.
+2. `docs/firebase.json` is the hosting map. Every old address is rewritten
+   onto its new file, and the catch-all serves `frontend/index.html`. If a
+   page 404s, this file is the first thing to read.
+3. `tests/app-regression.mjs` is the contract, 140 checks. It runs only where
+   there is Chromium and a free socket: `node tests/app-regression.mjs` from
+   the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
+   only check Fromsa can run himself, because his Mac has no Node.
+4. `docs/server/server.js` is the whole API. Look for: the submission store in
+   MAYA's own bucket, the credit meter (`/api/admin/spend`, `/api/admin/credit`),
+   marketing (`/api/admin/marketing`), Pinterest OAuth, `/api/fetchpic` with
+   its SSRF guard, and the per-user rate limiter.
+5. Known open risks, unchanged: no client side error reporting; the rate
+   limiter is per Cloud Run instance and resets on restart; community
+   provenance is app level only; submissions filed before Aug 17 are still in
+   the old Drive folder.
+
 ## Where things stand, August 21 2026
 
-- Live line: `maya-v2`. Committed and waiting for Fromsa's push: **v13.36**
+- Live line: `maya-v2`. v13.37 is pushed. Committed and waiting for Fromsa's push: **v13.36**
   (notes per vision, one tap changes, avatar and project menus, the Pinterest
   drawer) and **v13.37** (the folder reorganisation below).
 - **The folder changed in v13.37.** Pages are no longer loose at the root:

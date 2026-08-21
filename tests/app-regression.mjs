@@ -683,6 +683,14 @@ ok('the API rewrite still comes first', (_rw[0] || {}).source === '/api/**' && !
 ok('pictures still deploy: aesthetics is not inside the ignored folder',
   existsSync(join(ROOT, 'aesthetics')) &&
   !(HOSTING.hosting.ignore || []).some(g => g === 'aesthetics/**'));
+ok('robots.txt is a real file, so nothing asks the app for it',
+  existsSync(join(ROOT, 'robots.txt')) &&
+  readFileSync(join(ROOT, 'robots.txt'), 'utf8').length < 2000 &&
+  readFileSync(join(ROOT, 'robots.txt'), 'utf8').includes('User-agent'));
+ok('aesthetics holds only what the web serves',
+  !existsSync(join(ROOT, 'aesthetics/Aesthetics.pdf')) &&
+  !existsSync(join(ROOT, 'aesthetics/one-pager-preview.html')) &&
+  existsSync(join(ROOT, 'aesthetics/ui/status-v13.19.css')));
 ok('the handoff lives where both agents look',
   existsSync(join(ROOT, 'AGENTS.md')) && existsSync(join(ROOT, 'CLAUDE.md')) &&
   readFileSync(join(ROOT, 'AGENTS.md'), 'utf8').includes('frontend/index.html') &&

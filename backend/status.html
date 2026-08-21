@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.37">
+<meta name="maya-version" content="13.38">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -400,9 +400,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-21b">
+  <details class="fold" id="changes-fold" data-latest="2026-08-21c">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 21</b>MAYA answers a crawler properly. Anything asking for robots.txt used to be handed the whole 700KB app, because every unknown address falls through to it, so link previews and audit tools timed out on the site. There is a real robots.txt now. The pictures folder holds only pictures the web actually serves, and the leftover delete pile moved out of docs.</div>
     <div class="chg"><b>Aug 21</b>The folder was reorganised: the app lives in frontend, the back rooms in backend, the pictures stay where the web can reach them, and everything an agent reads is in docs. Every address that ever worked still works, because the hosting map now points each one at its new file. The handoff file is updated in the same commit as the change from now on, so whichever assistant picks the work up next reads the truth.</div>
     <div class="chg"><b>Aug 21</b>Notes belong to the vision on screen. A moodboard holds many garments and every version of every garment is its own thing, so one pile of notes for a whole project told you nothing about the picture you were looking at. Each vision now carries what it is, what was asked of that version, what it was drawn from and what it is cut in, beside the picture, changing as you step between versions.</div>
     <div class="chg"><b>Aug 21</b>The viewer lost its two step. Tap to listen, Switch fabric and Add reference are on screen the moment a garment opens, one tap each, and Submit appears above them only once there is something to submit. The heart moved onto the picture, opposite the close, so keeping a garment is one tap and no pill at the bottom of the screen says it for you.</div>
