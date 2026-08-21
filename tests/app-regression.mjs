@@ -299,9 +299,9 @@ ok('the policy still names the sensitive things',
 ok('the policy still says how to be erased and how to reach a human',
   PRIVACY_SOURCE.includes('mailto:worldofsiyo@gmail.com') &&
   PRIVACY_SOURCE.includes('erased'));
-ok('privacy is reachable before signing in; the drawer listens instead',
-  INDEX_SOURCE.includes('href="/privacy.html"') &&
-  INDEX_SOURCE.includes('onclick="openFeedback()"'));
+ok('the app listens for feedback; privacy lives on Admin and its own page',
+  INDEX_SOURCE.includes('onclick="openFeedback()"') &&
+  MAP_SOURCE.includes('href="/privacy.html"'));
 
 // v13.31: pictures from elsewhere, and Pinterest.
 ok('a picture can be fetched from any site, but never from inside the network',
@@ -419,8 +419,8 @@ ok('an image costs more of the budget than a chat call',
 
 ok('the map light reads Submissions', s.lights.includes('Submissions') && !s.lights.includes('Drive'));
 
-ok('Systems Map folds: changes, prompting, architecture',
-  s.order === 'changes-fold,pe-fold,arch-fold');
+ok('Admin folds: users, changes, prompting, architecture',
+  s.order === 'users-fold,changes-fold,pe-fold,arch-fold');
 ok('Architecture is collapsible', s.archFold);
 ok('door cards have no arrows', s.arrows === 0);
 ok('"Never delete" banner removed', !s.warnBanner);
@@ -524,11 +524,11 @@ ok('the wall drifts with a transform, not the scroll position',
 ok('a short row loops too, so the third row is never still',
   INDEX_SOURCE.includes('track.scrollWidth >= el.clientWidth + row.period + 20') &&
   !INDEX_SOURCE.includes('if (el.scrollWidth - el.clientWidth < 40) continue;'));
-ok('Settings is gone from the drawer, Tip, Logout and Privacy stay',
+ok('Settings is gone from the drawer; Tip, Logout and Feedback stay',
   !INDEX_SOURCE.includes('title="Account &amp; preferences">Settings<') &&
   INDEX_SOURCE.includes('onclick="openTip()"') &&
   INDEX_SOURCE.includes('onclick="mayaSignOut()"') &&
-  INDEX_SOURCE.includes('href="/privacy.html"'));
+  INDEX_SOURCE.includes('>Feedback</button>'));
 ok('the notes column carries this version, in the drawer\'s own hand',
   INDEX_SOURCE.includes("groups.push({ t: 'Design ideas, this version'") &&
   INDEX_SOURCE.includes('id="viewer-notes"') &&
@@ -583,8 +583,36 @@ ok('Escape closes the share popup and the fabrics drawer',
   INDEX_SOURCE.includes("_fd.classList.contains('open') && typeof closeFabricsDrawer === 'function'"));
 ok('a submission always carries its picture, whatever form it is in',
   INDEX_SOURCE.includes('async function _dreamGarmentBytes(src)') &&
-  INDEX_SOURCE.includes('const dg = await _dreamGarmentBytes(lastOnePagerImage);') &&
+  INDEX_SOURCE.includes('const dg = await dgPromise;') &&
   INDEX_SOURCE.includes('_sendSubmissionFile(token, folder_id, f)'));
+
+// ── v13.42, Aug 21 ─────────────────────────────────────────────────────────
+ok('the map is called Admin and drops its ceremony',
+  MAP_SOURCE.includes('<span class="brand-title">Admin</span>') &&
+  !MAP_SOURCE.includes('id="checked-at"></div>') &&
+  !MAP_SOURCE.includes('Open the Operations Room &rarr;') &&
+  !MAP_SOURCE.includes('Runs on Google credits'));
+ok('users and traffic folds, in place, open by default',
+  MAP_SOURCE.includes('<details class="fold" id="users-fold" open>'));
+ok('submitting opens the folder while the PDF renders',
+  INDEX_SOURCE.includes('const initPromise = fetch(\'/api/submit\'') &&
+  INDEX_SOURCE.includes('const dgPromise = _dreamGarmentBytes(lastOnePagerImage)') &&
+  INDEX_SOURCE.includes('} = await initPromise;'));
+ok('hovering holds one wall row, the other two keep drifting',
+  INDEX_SOURCE.includes('r.paused = true') &&
+  INDEX_SOURCE.includes('|| row.paused) continue;'));
+ok('the heart mirrors the close on the picture',
+  INDEX_SOURCE.includes('position: absolute; top: -14px; left: -14px; z-index: 310;'));
+ok('note categories lead, values sit under them, silhouette first',
+  INDEX_SOURCE.includes("const ORDER = ['silhouette', 'color', 'colour', 'aesthetic', 'detail', 'material', 'fabric', 'era', 'designer'];") &&
+  INDEX_SOURCE.includes('.sort((a, b) => rank(a[0]) - rank(b[0]))'));
+ok('a restored project finds its fabric swatches again',
+  INDEX_SOURCE.includes('function fabricSwatchUrl(f)') &&
+  INDEX_SOURCE.includes("return '/aesthetics/fabrics/' + encodeURIComponent(f.fileName)") &&
+  INDEX_SOURCE.includes('fabricSwatchUrl(fb)'));
+ok('the sign in screen is just the sign in',
+  !/signin-bottom[\s\S]{0,600}privacy\.html/.test(INDEX_SOURCE) &&
+  INDEX_SOURCE.includes('bottom: 34px; left: 0; right: 0;'));
 ok('the map stops saying arriving once the picture clearly is not coming',
   MAP_SOURCE.includes('const ARRIVING_MS = 3 * 60 * 1000;') &&
   MAP_SOURCE.includes("'no picture'") &&

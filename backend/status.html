@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.41">
+<title>MAYA Admin</title>
+<meta name="maya-version" content="13.42">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -255,9 +255,9 @@ try {
 <div id="top-bar">
   <div id="top-left-brand">
     <!-- v13.35: the logo is the way home, everywhere in MAYA's back rooms. -->
-    <a href="/status.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit" title="Systems Map">
+    <a href="/status.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit" title="Admin">
       <img class="maya-logo-mark" src="/aesthetics/ui/logo-208.png" alt="" style="cursor:pointer" />
-      <span class="brand-title">Systems Map</span>
+      <span class="brand-title">Admin</span>
     </a>
   </div>
   <button class="top-btn hamburger" onclick="document.getElementById('drawer').classList.toggle('open')" title="Menu">
@@ -291,7 +291,6 @@ try {
     <span class="status-item"><span class="sdot wait" id="d-drive"></span><span class="lgt-lbl">Submissions</span></span>
     <span class="status-item"><span class="sdot wait" id="d-backup"></span><span class="lgt-lbl">Backup</span></span>
   </div>
-  <div id="checked-at">checking&#8230;</div>
   <div class="grid doors" style="grid-template-columns:repeat(4,1fr);margin:8px 0 2px">
     <a class="card" href="/operations.html" target="_blank"><b>Operations Room Beta</b></a>
     <a class="card" href="https://maya.manasiyo.com" target="_blank"><b>MAYA</b></a>
@@ -306,21 +305,22 @@ try {
     <span id="gsi-slot" style="margin:0 0 0 auto"></span>
   </div>
 
-  <h2 class="grp">Latest submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span>
-    <a class="aside" href="/operations.html">Open the Operations Room &rarr;</a></h2>
+  <h2 class="grp">Latest submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span></h2>
   <div id="subs-strip" style="display:none"></div>
   <div id="subs-note-inline">Waiting for the one sign in at the top of the page.</div>
 
   <!-- v13.39: one row, five numbers, and nothing underneath. Users first,
        because that is the number that matters, then the site's own traffic. -->
-  <h2 class="grp">Users and traffic</h2>
-  <div id="head-tiles" class="tiles hidden"></div>
-  <div id="traffic-note">checking&#8230;</div>
+  <details class="fold" id="users-fold" open>
+    <summary><h2 class="grp">Users and traffic</h2></summary>
+    <div class="fold-body"><div id="head-tiles" class="tiles hidden"></div></div>
+  </details>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-21f">
+  <details class="fold" id="changes-fold" data-latest="2026-08-21g">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 21</b>This page is called Admin now, and it stopped clearing its throat: the last-checked line, the empty checking box, the Operations Room aside and the credits footer are gone. Users and traffic folds away like everything else, staying right where it is. In MAYA, submitting is faster because the folder opens and the picture is fetched while the one-pager renders, resting a cursor on the wall holds only that row while the other two keep drifting, the heart mirrors the close on the picture, note categories lead with what MAYA heard underneath, restored projects find their fabric swatches again, and the sign in screen is just the sign in.</div>
     <div class="chg"><b>Aug 21</b>MAYA listens about itself now. Feedback lives in the menu where Privacy used to be, since Privacy already lives on the sign in screen and this map: speak or type a problem, an idea or a wish, press Submit, and it lands in MAYA's own store with the account it came from. There is a private list of every note at /api/admin/feedback.</div>
     <div class="chg"><b>Aug 21</b>The launch hardening pass. A submission can now only be written by the account that opened it, which closes the one real hole in the submission store. The second Pinterest implementation is deleted, so there is exactly one sign in, one retry and one import flow. Pinterest brings pictures in two at a time and reports honestly which arrived. The menu button answers a finger with a full size target and tells assistive tech what it opens. An OS level reduce motion request holds the community wall still. And no words on screen say Drive any more, because Drive is gone.</div>
     <div class="chg"><b>Aug 21</b>Pinterest works, and it reads like Pinterest: the pins are twice as tall, two across, vertical the way the medium is. Both drawers now carry one header line, Back small on the left and the name centred, with the two pills directly under it. No arrow, no subtitle, no heading repeating a pill.</div>
@@ -445,7 +445,6 @@ try {
   </div>
   </details>
 
-  <div class="money">Runs on Google credits, AI by OpenAI, main site and DNS on Wix, health check every morning, emails only on failure</div>
   </div><!-- /map-footer -->
 </div>
 
@@ -487,7 +486,7 @@ function probeImage(url){return new Promise(res=>{const i=new Image();const t=se
 async function runChecks(){
   const checkSeq = ++_healthSeq;
   ['d-site','d-api','d-assets','d-drive','d-backup'].forEach(id=>setDot(id,'wait'));
-  document.getElementById('checked-at').textContent='checking…';
+  { const _ca = document.getElementById('checked-at'); if (_ca) _ca.textContent = ''; }
   const assetChecks = Promise.all([
     probeImage('https://maya.manasiyo.com/aesthetics/ui/logo.png'),
     probeImage('https://maya.manasiyo.com/aesthetics/fabrics/Red%20Royal.JPG'),
@@ -544,7 +543,7 @@ async function runChecks(){
   else if (site&&api&&assets&&backup&&drive===true) suffix = ', all systems go';
   else suffix = ', something needs attention'+(apiWhy?' ('+apiWhy+')':'')+
     (drive===false?' ('+(driveWhy||'the submissions folder is not answering')+', new submissions will not land)':'');
-  document.getElementById('checked-at').textContent='last checked '+new Date().toLocaleString()+suffix;
+  // v13.42: the last-checked line is gone; the lights say it.
 }
 runChecks();
 </script>
@@ -555,9 +554,12 @@ runChecks();
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
 const _CLIENT_ID = '90396949475-7cen4909qftr8hf4la86nuhus38isid1.apps.googleusercontent.com';
+// v13.42: the setup box under the numbers is gone. What it used to say goes
+// to the console, where whoever is wiring things up actually looks.
 function _note(html) {
+  try { console.log('[map]', String(html).replace(/<[^>]+>/g, ' ')); } catch (_) {}
   const n = document.getElementById('traffic-note');
-  n.classList.remove('hidden'); n.innerHTML = html;
+  if (n) { n.classList.add('hidden'); }
 }
 function _showSignin(show) {
   const p = document.getElementById('signin-panel');
@@ -842,7 +844,7 @@ async function loadTraffic() {
     '<div class="tile"><div class="k">28 days</div><div class="v">' + ((t.d28 || {}).users || 0) + '</div></div>' +
     '<div class="tile"><div class="k">page views, 28 days</div><div class="v">' + ((t.d28 || {}).views || 0) + '</div></div>';
   tiles.classList.remove('hidden');
-  document.getElementById('traffic-note').classList.add('hidden');
+  { const _tn = document.getElementById('traffic-note'); if (_tn) _tn.classList.add('hidden'); }
 }
 
 // v13.35: one row, four numbers, under one heading: Users. LIVE NOW is

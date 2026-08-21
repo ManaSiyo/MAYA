@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.41">
+<meta name="maya-version" content="13.42">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -1806,7 +1806,7 @@
      positioning the drawer absolutely within its pane. */
   #notes-drawer {
     position: absolute;
-    top: 60px; right: 18px; bottom: 22px; left: 0;
+    top: 56px; right: 18px; bottom: 14px; left: 0;   /* v13.42: a touch taller */
     background:
       linear-gradient(180deg,
         rgba(255,255,255,0.10) 0%,
@@ -3316,9 +3316,11 @@
   }
 
   /* v13.36: the heart on the picture, opposite the close. */
+  /* v13.42: the exact mirror of the close. Same 30px circle, same corner
+     offset, opposite side, so the two read as a pair on the picture. */
   .viewer-heart {
-    position: absolute; top: 22px; left: 22px; z-index: 310;
-    width: 34px; height: 34px; padding: 0;
+    position: absolute; top: -14px; left: -14px; z-index: 310;
+    width: 30px; height: 30px; padding: 0;
     display: flex; align-items: center; justify-content: center;
     background: rgba(8,12,24,0.45); border: 0.5px solid rgba(255,255,255,0.28);
     border-radius: 50%; cursor: pointer;
@@ -3326,7 +3328,7 @@
     transition: border-color 0.2s, transform 0.2s, background 0.2s;
   }
   .viewer-heart:hover { border-color: rgba(255,255,255,0.6); transform: scale(1.06); }
-  .viewer-heart svg { width: 17px; height: 17px; fill: none;
+  .viewer-heart svg { width: 15px; height: 15px; fill: none;
     stroke: rgba(245,250,255,0.85); stroke-width: 1.4; stroke-linejoin: round; }
   .viewer-heart.on svg { fill: rgba(253,164,175,0.92); stroke: rgba(253,164,175,0.95); }
   #garment-modal[data-photo="full"] .viewer-heart { display: none; }
@@ -3827,7 +3829,7 @@
   /* Bottom block, sign-in button, anchored low. */
   #signin-gate .signin-bottom {
     position: absolute;
-    bottom: 56px; left: 0; right: 0;
+    bottom: 34px; left: 0; right: 0;   /* v13.42: lower, per Fromsa */
     display: flex; flex-direction: column; align-items: center;
     gap: 10px;
   }
@@ -3886,6 +3888,7 @@
                  -webkit-backdrop-filter: blur(12px) saturate(160%); }
     /* viewer close button stays fully on-screen */
     #garment-image-wrap .viewer-close { top: 6px; right: 6px; }
+    #garment-image-wrap .viewer-heart { top: 6px; left: 6px; }
     .image-wrap { max-width: 92vw; }
     .image-wrap.wide { width: 92vw; }
     /* viewer image gets the full width it deserves */
@@ -3965,10 +3968,6 @@
   <div class="signin-bottom">
     <div id="g-signin-btn"></div>
     <div class="signin-fineprint">Sign in with Google to begin</div>
-    <div class="signin-fineprint" style="margin-top:6px">
-      <a href="/privacy.html" target="_blank" rel="noopener"
-         style="color:rgba(238,242,255,0.55);text-decoration:none;border-bottom:0.5px solid rgba(238,242,255,0.25)">Privacy</a>
-    </div>
   </div>
 </div>
 <script>
@@ -4841,6 +4840,24 @@ let folderHandle = null;
 let isThinking = false;
 // v5, in-house fabric inventory
 let fabricsFolderHandle = null;
+// v13.42: a card's fabric keeps its name and file forever, but its picture
+// is runtime-only and stripped on save, which is why restored projects lost
+// their swatch dots. This finds the picture again from what DID survive:
+// house fabrics live on the site by file name, a designer's own fabrics live
+// in their account library by id.
+function fabricSwatchUrl(f) {
+  if (!f) return '';
+  const direct = _safeImgSrc(f.dataUrl || '');
+  if (direct) return direct;
+  if (f.fileName) return '/aesthetics/fabrics/' + encodeURIComponent(f.fileName);
+  const mine = (typeof myFabrics !== 'undefined' && Array.isArray(myFabrics))
+    ? myFabrics.find(m => m && ((f.id && m.id === f.id) || (f.name && m.name === f.name))) : null;
+  if (mine) return _safeImgSrc(mine.url || mine.dataUrl || '');
+  const house = (typeof fabricsInventory !== 'undefined' ? fabricsInventory : [])
+    .find(h => h && ((f.id && h.id === f.id) || (f.name && h.name === f.name)));
+  if (house) return _safeImgSrc(house.dataUrl || '');
+  return '';
+}
 let fabricsInventory = [];            // [{id, fileName, name, dataUrl, color, weave, weight, texture, scale_cm, best_for, analyzed, lastModified}]
 let selectedFabricsForVisualize = null; // null = sourceable; array of fabric objects = in-house
 let _fabricPickerSelection = [];        // indices, in pick-order
@@ -5186,12 +5203,14 @@ function _placeItemInternal(card, delay, fixedPos, isRestore) {
     // v5.2/v11.51: swatch dots, only fabrics that still HAVE their image.
     // (dataUrl is runtime-only and stripped on save, so restored sessions
     // used to render empty grey rings. No image → no dot.)
-    const _fabDots = Array.isArray(card.fabrics) ? card.fabrics.filter(fb => fb && _safeImgSrc(fb.dataUrl)) : [];
+    // v13.42: the dot comes back on restored projects, resolved by name/file.
+    const _fabDots = Array.isArray(card.fabrics)
+      ? card.fabrics.map(fb => ({ f: fb, u: fabricSwatchUrl(fb) })).filter(x => x.u) : [];
     const cardFabricsHtml = _fabDots.length
       ? '<div class="card-fabrics">' +
-          _fabDots.slice(0, 4).map(f => {
+          _fabDots.slice(0, 4).map(({ f, u }) => {
             const tip = [f.name, f.color, f.weave].filter(Boolean).join(' · ');
-            return '<span class="card-fabric-dot" style="background-image:url(\'' + escapeHtml(_safeImgSrc(f.dataUrl)) + '\')" title="' + escapeHtml(tip) + '"></span>';
+            return '<span class="card-fabric-dot" style="background-image:url(\'' + escapeHtml(u) + '\')" title="' + escapeHtml(tip) + '"></span>';
           }).join('') +
         '</div>'
       : '';
@@ -6473,10 +6492,15 @@ const communityBoard = {
       e.preventDefault();
       this.openPost(c.dataset.id);
     });
-    const hold = () => { this._paused = true; clearTimeout(this._resumeT); };
+    // v13.42: hovering holds ONLY this row. The other two keep drifting, so
+    // the wall never reads as frozen just because a cursor is resting on it.
+    const mine = () => (this._rows || []).find(r => r.el === wrap);
+    const hold = () => { const r = mine(); if (r) { r.paused = true; clearTimeout(r._resumeT); } };
     const release = (ms) => {
-      clearTimeout(this._resumeT);
-      this._resumeT = setTimeout(() => { this._paused = false; }, ms || 0);
+      const r = mine();
+      if (!r) return;
+      clearTimeout(r._resumeT);
+      r._resumeT = setTimeout(() => { r.paused = false; }, ms || 0);
     };
     wrap.addEventListener('pointerover', hold);
     wrap.addEventListener('pointerout', () => release(220));
@@ -6487,7 +6511,8 @@ const communityBoard = {
     wrap.addEventListener('touchend', () => release(2500), { passive: true });
     if (!this._wired) {
       this._wired = true;
-      window.addEventListener('pointerup', () => release(1200));
+      window.addEventListener('pointerup', () => { (this._rows || []).forEach(r => {
+        clearTimeout(r._resumeT); r._resumeT = setTimeout(() => { r.paused = false; }, 1200); }); });
     }
   },
 
@@ -6514,7 +6539,7 @@ const communityBoard = {
       const rows = this._rows || [];
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
-        if (!row.track || !row.n || !row.period) continue;
+        if (!row.track || !row.n || !row.period || row.paused) continue;
         row.pos += (SPEEDS[i % SPEEDS.length]) * dt / 1000;
         if (row.pos >= row.period) row.pos -= row.period;
         else if (row.pos < 0) row.pos += row.period;
@@ -10855,8 +10880,9 @@ function renderViewerFabrics(item) {
   const fabrics = Array.isArray(item?.card?.fabrics) ? item.card.fabrics : [];
   if (!fabrics.length) { host.innerHTML = ''; return; }
   host.innerHTML = fabrics.map((f, idx) => {
-    const swatch = f.dataUrl
-      ? '<div class="swatch" style="background-image:url(\'' + escapeHtml(_safeImgSrc(f.dataUrl)) + '\')"></div>'
+    const _su = fabricSwatchUrl(f);
+    const swatch = _su
+      ? '<div class="swatch" style="background-image:url(\'' + escapeHtml(_su) + '\')"></div>'
       : '<div class="swatch"></div>';
     const isOut = viewerFabricsDeselected.has(f.id || f.fileName || f.name);
     return '<div class="viewer-fabric-chip' + (isOut ? ' deselected' : '') + '" data-idx="' + idx + '"' +
@@ -10953,17 +10979,22 @@ function renderViewerNotes(item) {
   }
   const refs = Array.isArray(c.refs) ? c.refs : [];
   if (refs.length) {
-    // Aesthetics, constraints, silhouette, colour: whatever MAYA heard, under
-    // the name it heard it as.
+    // v13.42: the category is the title, what MAYA heard sits under it, the
+    // way the drawer always read. Silhouette first, because the shape is the
+    // garment; then colour, aesthetic, detail; designer and era after.
+    const ORDER = ['silhouette', 'color', 'colour', 'aesthetic', 'detail', 'material', 'fabric', 'era', 'designer'];
     const byTag = new Map();
     refs.forEach(r => {
-      const tag = (r && r.tag) ? String(r.tag).replace(/_/g, ' ') : 'note';
+      const tag = (r && r.tag) ? String(r.tag).replace(/_/g, ' ').toLowerCase() : 'note';
       if (!byTag.has(tag)) byTag.set(tag, []);
       if (r && r.title) byTag.get(tag).push(r.title);
     });
+    const rank = (t) => { const i = ORDER.indexOf(t); return i === -1 ? ORDER.length : i; };
+    const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
     const body = [...byTag.entries()]
       .filter(([, list]) => list.length)
-      .map(([tag, list]) => item_(list.slice(0, 6).join(', '), tag))
+      .sort((a, b) => rank(a[0]) - rank(b[0]))
+      .map(([tag, list]) => item_(cap(tag), list.slice(0, 6).join(', ')))
       .join('');
     if (body) groups.push({ t: 'Aesthetics and constraints', b: body });
   }
@@ -14840,6 +14871,22 @@ async function doSaveToCloud() {
   const nameForFolder = currentClientName || (lastSummary && lastSummary.client && lastSummary.client.name) || 'client';
   const slug = slugify(nameForFolder);
 
+  // v13.42 SPEED: the submission folder is opened WHILE the one-pager renders,
+  // not after. The init needs nothing but the name, and rendering the PDF is
+  // the slowest single step, so running them together removes a whole wait.
+  const initPromise = fetch('/api/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ action: 'init', client_name: slug }),
+  }).then(async r => {
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.detail || err.error || ('init ' + r.status));
+    }
+    return r.json();
+  });
+  initPromise.catch(() => {});   // judged once it is awaited below
+
   // v11.13: per Fromsa, for now the submission folder holds ONLY the
   // one-pager PDF. The moodboard/summary/transcript JSON, the
   // dream-garment + inspo images, and the shared-session ?submission= link
@@ -14857,6 +14904,10 @@ async function doSaveToCloud() {
     throw new Error('The one-pager has not been generated yet, open your favorite’s one-pager first, then submit.');
   }
   const queue = [];
+  // v13.42 SPEED: the picture's bytes are fetched while the PDF renders too.
+  const dgPromise = _dreamGarmentBytes(lastOnePagerImage).catch(e => {
+    console.warn('[Maya cloud garment]', e); return null;
+  });
   try {
     const pdfBlob = await renderOnePagerPdfBlob();
     queue.push({
@@ -14881,11 +14932,11 @@ async function doSaveToCloud() {
   // bytes are now fetched whatever form the picture is in, and anything that
   // is not already png or jpeg is re-encoded, because the store only accepts
   // those two.
-  try {
-    const dg = await _dreamGarmentBytes(lastOnePagerImage);
+  {
+    const dg = await dgPromise;
     if (dg) queue.push({ name: dg.name, mime_type: dg.mime, data_b64: dg.b64 });
     else console.warn('[Maya cloud garment] no picture to attach');
-  } catch (e) { console.warn('[Maya cloud garment]', e); }
+  }
 
   // v12.8: compact summary.json rides along, the Backend brief reads it
   // (biography, vision, chips, measurements). Heavy image fields stripped.
@@ -14903,18 +14954,9 @@ async function doSaveToCloud() {
     }
   } catch (e) { console.warn('[Maya cloud summary]', e); }
 
-  // 1) Create the per-submission folder up on Drive.
+  // 1) The folder was opening while the PDF rendered; collect it.
   setStatus('uploading…');
-  const initRes = await fetch('/api/submit', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-    body: JSON.stringify({ action: 'init', client_name: slug }),
-  });
-  if (!initRes.ok) {
-    const err = await initRes.json().catch(() => ({}));
-    throw new Error(err.detail || err.error || ('init ' + initRes.status));
-  }
-  const { folder_id, folder_name } = await initRes.json();
+  const { folder_id, folder_name } = await initPromise;
 
   // 2) Upload each file sequentially.
   // v11.4/v11.6: track ok/failed so the toast tells the truth instead of
