@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAYA Marketing</title>
+<meta name="maya-version" content="13.34">
+<script>
+try {
+  const _vNow = (document.querySelector('meta[name="maya-version"]') || {}).content || '';
+  const _vSeen = localStorage.getItem('maya_seen_version_mkt');
+  if (_vSeen && _vSeen !== _vNow) localStorage.removeItem('maya_admin_tok');
+  localStorage.setItem('maya_seen_version_mkt', _vNow);
+} catch (_) {}
+</script>
+<link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#070a14;--line:rgba(255,255,255,0.22);--ink:#eef2ff;
+    --dim:rgba(238,242,255,0.55);--faint:rgba(238,242,255,0.35);--grp:rgba(245,250,255,0.82);
+    --green:#4ade80;--amber:#fbbf24;--blue:rgba(245,250,255,0.85)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#000 url('/aesthetics/ui/birth-of-a-star.png') center / cover no-repeat fixed;
+       color:var(--ink);font-family:'Cormorant Garamond',Georgia,serif;padding:80px 28px 40px;min-height:100vh}
+  .wrap{max-width:1000px;margin:0 auto;text-align:center}
+  #top-bar{position:fixed;top:0;left:0;right:0;height:60px;z-index:200;display:flex;align-items:center;
+    justify-content:space-between;padding:0 28px;pointer-events:none}
+  #top-bar > *{pointer-events:auto}
+  #top-left-brand{display:flex;align-items:center;gap:10px;margin-left:-8px}
+  #top-left-brand img{width:52px;height:52px;object-fit:contain;opacity:0.92}
+  .brand-title{font-family:'Cormorant Garamond',serif;font-size:20px;letter-spacing:0.22em;
+    color:rgba(255,255,255,0.9);text-transform:uppercase}
+  .top-btn{background:transparent;border:0.5px solid var(--line);border-radius:100px;padding:6px 14px;
+    font-family:'Jost',sans-serif;font-size:10px;font-weight:300;letter-spacing:0.15em;
+    text-transform:uppercase;color:var(--blue);cursor:pointer;transition:all .2s;
+    backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%)}
+  .top-btn:hover{border-color:rgba(255,255,255,0.42)}
+  .top-btn.hamburger{width:32px;height:28px;padding:0;display:flex;align-items:center;justify-content:center}
+  .hamburger-icon{display:inline-flex;flex-direction:column;gap:3px;width:14px}
+  .hamburger-icon span{display:block;height:1px;width:100%;background:currentColor;border-radius:1px}
+  #drawer{position:fixed;top:60px;right:18px;width:290px;z-index:190;padding:14px;border-radius:18px;
+    border:0.5px solid var(--line);background:rgba(8,12,26,0.92);
+    backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
+    display:none;text-align:left}
+  #drawer.open{display:block}
+  #drawer h3{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.24em;text-transform:uppercase;
+    color:var(--faint);margin:8px 6px 6px}
+  #drawer a{display:block;padding:8px 10px;border-radius:12px;text-decoration:none;color:var(--ink);
+    font-size:15px;line-height:1.25}
+  #drawer a small{display:block;font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.1em;
+    color:var(--faint);margin-top:2px}
+  #drawer a:hover{background:rgba(255,255,255,0.05)}
+  h2.grp{font-size:11.5px;letter-spacing:0.26em;text-transform:uppercase;color:var(--grp);
+    font-family:'Jost',sans-serif;font-weight:300;margin:22px 0 8px}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:6px}
+  .tile{border:0.5px solid var(--line);border-radius:100px;background:rgba(10,16,34,0.55);
+    backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+    padding:6px 14px;display:flex;align-items:baseline;justify-content:center;gap:8px}
+  .tile .k{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim)}
+  .tile .v{font-size:16px}
+  .tile.live .v{color:var(--green)}
+  .panel{border:0.5px solid var(--line);border-radius:18px;background:rgba(8,12,26,0.55);
+    backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+    padding:16px 18px;text-align:left}
+  .note{font-family:'Jost',sans-serif;font-size:10.5px;color:var(--dim);line-height:1.8;
+    border:0.5px dashed var(--line);border-radius:14px;padding:12px 14px;text-align:left}
+  .note b{color:var(--ink);font-weight:400}
+  .note code{font-family:ui-monospace,Menlo,monospace;font-size:10px;color:var(--amber)}
+  table{width:100%;border-collapse:collapse;font-family:'Jost',sans-serif;font-size:11px;color:var(--ink)}
+  th{font-size:8.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--faint);
+     font-weight:300;text-align:left;padding:6px 8px}
+  td{padding:7px 8px;border-top:0.5px solid rgba(255,255,255,0.07)}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .src-tag{display:inline-block;padding:2px 8px;border-radius:100px;font-size:8.5px;letter-spacing:0.14em;
+    text-transform:uppercase;border:0.5px solid var(--line);color:var(--dim);margin-left:8px}
+  .src-tag.paid{color:var(--amber);border-color:rgba(251,191,36,0.4)}
+  .bars{display:flex;align-items:flex-end;gap:3px;height:110px;padding:8px 2px 0}
+  .bar{flex:1 1 0;background:linear-gradient(to top,rgba(120,170,255,0.75),rgba(190,215,255,0.35));
+    border-radius:3px 3px 0 0;min-height:2px;position:relative}
+  .bar:hover{background:linear-gradient(to top,rgba(160,200,255,0.95),rgba(220,235,255,0.6))}
+  .bars-axis{display:flex;justify-content:space-between;font-family:'Jost',sans-serif;font-size:8.5px;
+    letter-spacing:0.12em;color:var(--faint);margin-top:6px}
+  .money{font-family:'Cormorant Garamond',serif;font-size:26px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:760px){ .grid2{grid-template-columns:1fr} body{padding:76px 14px 30px} }
+  .status-bar{border:0.5px solid var(--line);border-radius:100px;padding:10px 18px;display:flex;
+    align-items:center;gap:14px;background:rgba(10,16,34,0.5);margin:6px 0 10px}
+  details.fold{margin:16px 0 8px}
+  details.fold summary{list-style:none;cursor:pointer}
+  details.fold summary::-webkit-details-marker{display:none}
+  details.fold summary h2.grp{margin:0}
+  details.fold summary::after{content:'\25BE';font-family:'Jost',sans-serif;font-size:11px;color:var(--faint)}
+  #checked-at{font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.16em;color:var(--faint);
+    text-transform:uppercase;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<div id="top-bar">
+  <div id="top-left-brand">
+    <img src="/aesthetics/ui/logo-208.png" alt="">
+    <span class="brand-title">Marketing</span>
+  </div>
+  <button class="top-btn hamburger" onclick="document.getElementById('drawer').classList.toggle('open')" title="Menu">
+    <span class="hamburger-icon"><span></span><span></span><span></span></span>
+  </button>
+</div>
+
+<div id="drawer">
+  <h3>Where this comes from</h3>
+  <a href="https://analytics.google.com/" target="_blank">Google Analytics<small>The property behind these numbers.</small></a>
+  <a href="https://ads.google.com/" target="_blank">Google Ads<small>Search and shopping campaigns.</small></a>
+  <a href="https://adsmanager.facebook.com/" target="_blank">Meta Ads Manager<small>Facebook and Instagram.</small></a>
+  <h3>The rest of MAYA</h3>
+  <a href="/status.html">Systems Map<small>Health, submissions, credit.</small></a>
+  <a href="/operations.html">Operations Room Beta<small>Every client submission.</small></a>
+  <a href="https://maya.manasiyo.com" target="_blank">MAYA<small>The app itself.</small></a>
+  <a href="https://manasiyo.com" target="_blank">Manasiyo.com<small>The site these visitors land on.</small></a>
+  <a href="/privacy.html" target="_blank">Privacy policy<small>What MAYA keeps.</small></a>
+</div>
+
+<div class="wrap">
+  <div id="checked-at">loading&#8230;</div>
+
+  <div id="signin-panel" class="status-bar">
+    <span style="font-size:14.5px;color:var(--dim)">Sign in once and the marketing numbers unlock.</span>
+    <span id="gsi-slot" style="margin:0 0 0 auto"></span>
+  </div>
+
+  <h2 class="grp">Manasiyo.com, who is arriving</h2>
+  <div id="site-tiles" class="tiles"></div>
+  <div id="site-note" class="note" style="display:none"></div>
+
+  <h2 class="grp">Every day, the last four weeks</h2>
+  <div class="panel">
+    <div class="bars" id="daily-bars"></div>
+    <div class="bars-axis"><span id="daily-from">&#8212;</span><span id="daily-to">&#8212;</span></div>
+  </div>
+
+  <h2 class="grp">Where they came from</h2>
+  <div class="panel"><table id="sources-table"><tbody></tbody></table></div>
+
+  <h2 class="grp">What they read</h2>
+  <div class="panel"><table id="pages-table"><tbody></tbody></table></div>
+
+  <h2 class="grp">Paid</h2>
+  <div class="grid2">
+    <div class="panel" id="google-ads-panel">Google Ads&#8230;</div>
+    <div class="panel" id="meta-ads-panel">Meta Ads&#8230;</div>
+  </div>
+
+  <details class="fold" id="connect-fold">
+    <summary><h2 class="grp">Connecting what is missing</h2></summary>
+    <div class="note" style="margin-top:10px">
+      <b>Analytics for manasiyo.com.</b> Google Analytics &#8594; Admin &#8594; Property access management &#8594;
+      add <span id="sa-email">the Cloud Run service account</span> as Viewer. Numbers appear a minute later.
+      If more than one property is shared, pin the right one with <code>MARKETING_GA_PROPERTY_ID</code>.
+      <br><br>
+      <b>Meta ads.</b> A long lived access token and the ad account number, set as
+      <code>META_ADS_TOKEN</code> and <code>META_AD_ACCOUNT_ID</code> on the API. The token is a credential:
+      paste it yourself, in the Cloud Run console.
+      <br><br>
+      <b>Google ads.</b> Needs a developer token from Google, which is applied for and takes a few days, plus
+      an OAuth client. Set <code>GOOGLE_ADS_DEVELOPER_TOKEN</code>, <code>GOOGLE_ADS_CLIENT_ID</code>,
+      <code>GOOGLE_ADS_CLIENT_SECRET</code>, <code>GOOGLE_ADS_REFRESH_TOKEN</code> and
+      <code>GOOGLE_ADS_CUSTOMER_ID</code>. Until then this page says not connected rather than inventing numbers.
+    </div>
+  </details>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+const _CLIENT_ID = '90396949475-7cen4909qftr8hf4la86nuhus38isid1.apps.googleusercontent.com';
+let _idTok = null, _gisTries = 0, _renewTimer = null;
+function _showSignin(show) { document.getElementById('signin-panel').style.display = show ? 'flex' : 'none'; }
+function _cacheTok(t) { try { localStorage.setItem('maya_admin_tok', t); } catch (_) {} }
+function _cachedTok() {
+  try {
+    const t = localStorage.getItem('maya_admin_tok');
+    if (!t) return null;
+    const p = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return (p.exp * 1000 - Date.now() > 120000) ? t : null;
+  } catch (_) { return null; }
+}
+function _tokExpiryMs(t) {
+  try { return JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).exp * 1000; }
+  catch (_) { return 0; }
+}
+function _scheduleRenew(tok) {
+  clearTimeout(_renewTimer);
+  const exp = _tokExpiryMs(tok);
+  if (!exp) return;
+  _renewTimer = setTimeout(() => {
+    try { if (window.google && google.accounts) google.accounts.id.prompt(); } catch (_) {}
+  }, Math.max(30000, exp - Date.now() - 5 * 60 * 1000));
+}
+function _adopt(t) {
+  if (t === _idTok) return;
+  _idTok = t; _cacheTok(t); _showSignin(false); _scheduleRenew(t); load();
+}
+function _gisBoot() {
+  const cached = _cachedTok();
+  if (cached && !_idTok) _adopt(cached);
+  if (!window.google || !google.accounts || !google.accounts.id) {
+    if (++_gisTries > 40) return;
+    return setTimeout(_gisBoot, 250);
+  }
+  google.accounts.id.initialize({ client_id: _CLIENT_ID,
+    callback: r => { if (r && r.credential) _adopt(r.credential); },
+    auto_select: true, use_fedcm_for_prompt: true });
+  if (!_idTok) {
+    google.accounts.id.prompt();
+    const slot = document.getElementById('gsi-slot');
+    if (slot) google.accounts.id.renderButton(slot, { theme: 'filled_black', size: 'medium', shape: 'pill' });
+  }
+}
+_gisBoot();
+
+const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const n0 = v => Number(v || 0).toLocaleString();
+const usd = v => '$' + Number(v || 0).toFixed(2);
+function tile(k, v, live) {
+  return '<div class="tile' + (live ? ' live' : '') + '"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>';
+}
+// Google and Facebook are the two Fromsa asked to see called out by name.
+function label(src, med) {
+  const s = (src || '').toLowerCase(), m = (med || '').toLowerCase();
+  let name = src || '(unknown)';
+  if (/google/.test(s)) name = 'Google';
+  else if (/facebook|fb|meta/.test(s)) name = 'Facebook';
+  else if (/instagram|ig/.test(s)) name = 'Instagram';
+  else if (/pinterest/.test(s)) name = 'Pinterest';
+  else if (s === '(direct)') name = 'Direct';
+  const paid = /cpc|ppc|paid/.test(m);
+  const tag = m ? '<span class="src-tag' + (paid ? ' paid' : '') + '">' + esc(paid ? 'paid' : m) + '</span>' : '';
+  return esc(name) + tag;
+}
+
+async function load() {
+  if (!_idTok) return;
+  let r;
+  try {
+    r = await fetch('/api/admin/marketing?t=' + Date.now(),
+      { headers: { 'Authorization': 'Bearer ' + _idTok }, cache: 'no-store' });
+  } catch (_) { document.getElementById('checked-at').textContent = 'could not reach the API'; return; }
+  if (r.status === 401) { _idTok = null; try { localStorage.removeItem('maya_admin_tok'); } catch (_) {} _showSignin(true); return; }
+  if (r.status === 403) { document.getElementById('checked-at').textContent = 'this account is not on the admin list'; return; }
+  if (!r.ok) { document.getElementById('checked-at').textContent = 'marketing data unavailable (' + r.status + ')'; return; }
+  const d = await r.json();
+  document.getElementById('checked-at').textContent =
+    'last checked ' + new Date(d.ts).toLocaleString() + (d.analytics && d.analytics.propertyName ? ', ' + d.analytics.propertyName : '');
+  if (d.saEmail) document.getElementById('sa-email').textContent = d.saEmail;
+  paintSite(d.analytics || {});
+  paintAds('google-ads-panel', 'Google Ads', d.googleAds || {}, 'conversions');
+  paintAds('meta-ads-panel', 'Meta Ads', d.meta || {}, 'results');
+}
+
+function paintSite(a) {
+  const tiles = document.getElementById('site-tiles');
+  const note = document.getElementById('site-note');
+  if (!a.connected) {
+    tiles.innerHTML = '';
+    note.style.display = '';
+    note.innerHTML = '<b>Analytics is not reading manasiyo.com yet.</b> ' + esc(a.why || '') +
+      ' Open the fold at the bottom of this page for the one step that fixes it.';
+    return;
+  }
+  note.style.display = 'none';
+  const R = a.ranges || {};
+  tiles.innerHTML =
+    tile('&#9679; live now', n0(a.live), true) +
+    tile('today', n0((R.today || {}).users)) +
+    tile('7 days', n0((R.d7 || {}).users)) +
+    tile('28 days', n0((R.d28 || {}).users));
+  const daily = a.daily || [];
+  const max = Math.max(1, ...daily.map(x => x.users));
+  document.getElementById('daily-bars').innerHTML = daily.map(x =>
+    '<div class="bar" style="height:' + Math.max(2, Math.round(x.users / max * 100)) + '%" title="' +
+    esc(x.date) + ': ' + n0(x.users) + '"></div>').join('');
+  const pretty = s => s && s.length === 8 ? (s.slice(4, 6) + '/' + s.slice(6, 8)) : s;
+  document.getElementById('daily-from').textContent = daily.length ? pretty(daily[0].date) : '';
+  document.getElementById('daily-to').textContent = daily.length ? pretty(daily[daily.length - 1].date) : '';
+  const st = document.querySelector('#sources-table tbody');
+  st.innerHTML = '<tr><th>Source</th><th class="num">Visits</th><th class="num">People</th></tr>' +
+    (a.sources || []).map(s => '<tr><td>' + label(s.source, s.medium) + '</td><td class="num">' +
+      n0(s.sessions) + '</td><td class="num">' + n0(s.users) + '</td></tr>').join('');
+  const pt = document.querySelector('#pages-table tbody');
+  pt.innerHTML = '<tr><th>Page</th><th class="num">Views</th></tr>' +
+    (a.pages || []).map(p => '<tr><td>' + esc(p.path) + '</td><td class="num">' + n0(p.views) + '</td></tr>').join('');
+}
+
+function paintAds(id, name, d, resultWord) {
+  const el = document.getElementById(id);
+  if (!d.connected) {
+    el.innerHTML = '<div style="font-size:19px;margin-bottom:6px">' + name + '</div>' +
+      '<div style="font-family:\'Jost\',sans-serif;font-size:10.5px;color:var(--dim);line-height:1.8">' +
+      'Not connected. ' + esc(d.why || '') + '</div>';
+    return;
+  }
+  const w = d.d7 || {};
+  el.innerHTML = '<div style="font-size:19px;margin-bottom:2px">' + name + '</div>' +
+    '<div style="font-family:\'Jost\',sans-serif;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--faint);margin-bottom:8px">last 7 days</div>' +
+    '<div class="money">' + usd(w.spend) + '</div>' +
+    '<table style="margin-top:8px"><tbody>' +
+      '<tr><td>Impressions</td><td class="num">' + n0(w.impressions) + '</td></tr>' +
+      (w.reach !== undefined ? '<tr><td>Reach</td><td class="num">' + n0(w.reach) + '</td></tr>' : '') +
+      '<tr><td>Clicks</td><td class="num">' + n0(w.clicks) + '</td></tr>' +
+      '<tr><td>' + resultWord.charAt(0).toUpperCase() + resultWord.slice(1) + '</td><td class="num">' +
+        n0(w[resultWord] !== undefined ? w[resultWord] : w.results) + '</td></tr>' +
+      '<tr><td>Cost per click</td><td class="num">' +
+        usd(w.clicks ? (w.spend / w.clicks) : 0) + '</td></tr>' +
+    '</tbody></table>';
+}
+
+setInterval(() => { if (_idTok && document.visibilityState === 'visible') load(); }, 180000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.getElementById('drawer').classList.remove('open');
+});
+</script>
+</body>
+</html>

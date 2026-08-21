@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.33">
+<meta name="maya-version" content="13.34">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -136,8 +136,27 @@ try {
   #credit-row{display:flex;align-items:center;gap:14px;margin:10px 0 6px;
     justify-content:flex-start;text-align:left}
   #credit-row.hidden{display:none}
-  #credit-side .cr-needs{font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.06em;
-    color:var(--faint);margin-top:3px;line-height:1.6}
+  #credit-side .cr-edit{margin-top:5px;background:none;border:0.5px solid var(--line);border-radius:100px;
+    padding:4px 12px;font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.16em;
+    text-transform:uppercase;color:var(--dim);cursor:pointer;transition:color .2s,border-color .2s}
+  #credit-side .cr-edit:hover{color:var(--ink);border-color:rgba(255,255,255,0.4)}
+  #topup{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;
+    background:rgba(2,5,14,0.72);backdrop-filter:blur(10px)}
+  #topup.open{display:flex}
+  #topup .tu-card{border:0.5px solid var(--line);border-radius:20px;background:rgba(8,13,30,0.94);
+    padding:26px 28px;width:min(360px,92vw);text-align:center}
+  #topup h4{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:22px;margin:0 0 4px}
+  #topup p{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:0.1em;color:var(--dim);
+    line-height:1.7;margin:0 0 16px}
+  #topup input{width:100%;background:rgba(255,255,255,0.04);border:0.5px solid var(--line);
+    border-radius:100px;padding:10px 16px;color:var(--ink);font-family:'Jost',sans-serif;font-size:12px;
+    margin-bottom:10px;text-align:center}
+  #topup .tu-row{display:flex;gap:10px;justify-content:center;margin-top:6px}
+  #topup button{background:none;border:0.5px solid var(--line);border-radius:100px;padding:9px 18px;
+    font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;
+    color:var(--ink);cursor:pointer}
+  #topup button:hover{border-color:rgba(255,255,255,0.45)}
+  #tu-state{font-family:'Jost',sans-serif;font-size:9.5px;color:var(--dim);min-height:14px;margin-top:8px}
   #credit-ring{position:relative;width:84px;height:84px;flex:0 0 84px}
   #credit-ring svg{width:84px;height:84px;transform:rotate(-90deg)}
   #credit-ring circle{fill:none;stroke-width:3;stroke-linecap:round}
@@ -303,10 +322,12 @@ try {
 <div class="wrap">
 
   <div id="checked-at">checking&#8230;</div>
-  <div class="grid doors" style="grid-template-columns:repeat(3,1fr);margin:8px 0 2px">
+  <div class="grid doors" style="grid-template-columns:repeat(4,1fr);margin:8px 0 2px">
     <a class="card" href="/operations.html" target="_blank"><b>Operations Room Beta</b></a>
     <a class="card" href="https://maya.manasiyo.com" target="_blank"><b>MAYA</b></a>
     <a class="card" href="https://manasiyo.com" target="_blank"><b>Manasiyo.com</b></a>
+    <!-- v13.34: the fourth door. Everything that brings people in. -->
+    <a class="card" href="/marketing.html" target="_blank"><b>Marketing</b></a>
   </div>
 
 
@@ -343,18 +364,48 @@ try {
       <div class="cr-mid"><span class="cr-pct">&#8212;</span><span class="cr-unit">left</span></div>
     </div>
     <div id="credit-side">
-      <div class="cr-lbl">API credit, this month</div>
+      <div class="cr-lbl">API credits, this month</div>
       <div class="cr-amt">&#8212;</div>
       <div class="cr-sub">estimated</div>
-      <div class="cr-needs" id="credit-needs" style="display:none"></div>
+      <button class="cr-edit" id="credit-edit" onclick="openTopUp()">Top up</button>
     </div>
   </div>
 
 
+  <!-- v13.34: marketing in one line, and the door to the whole page. Loaded
+       only when it is opened, so the map costs nothing extra to look at. -->
+  <details class="fold" id="marketing-fold" ontoggle="if(this.open)loadMarketing()">
+    <summary><h2 class="grp">Marketing, manasiyo.com <a class="aside" href="/marketing.html">Open marketing &rarr;</a></h2></summary>
+    <div class="fold-body">
+      <div id="mkt-tiles" class="tiles hidden"></div>
+      <div id="mkt-note" style="font-family:'Jost',sans-serif;font-size:10.5px;color:var(--dim);
+        border:0.5px dashed var(--line);border-radius:12px;padding:11px 14px;line-height:1.7">loading&#8230;</div>
+    </div>
+  </details>
+
+  <!-- v13.34: the one fact OpenAI will not tell a program: what you last put in.
+       Told here, once, and MAYA does the arithmetic from OpenAI's own costs. -->
+  <div id="topup" onclick="if(event.target===this)closeTopUp()">
+    <div class="tu-card">
+      <h4>Last top up</h4>
+      <p>OpenAI does not publish a balance to a program, only what has been spent.
+         Tell MAYA what you added and when, and the ring counts down from it.</p>
+      <input id="tu-amt" type="number" min="1" step="0.01" placeholder="Amount, for example 10">
+      <input id="tu-date" type="date">
+      <div class="tu-row">
+        <button onclick="saveTopUp()">Save</button>
+        <button onclick="closeTopUp()">Cancel</button>
+      </div>
+      <div id="tu-state"></div>
+    </div>
+  </div>
+
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-19">
+  <details class="fold" id="changes-fold" data-latest="2026-08-20">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 20</b>Marketing is the fourth door on this map. It opens a page in the same hand as the Systems Map: who is arriving at manasiyo.com, every day for four weeks, where they came from with Google and Facebook named, what they read, and what the ad accounts spent. Anything not connected yet says so instead of showing a number that is not real.</div>
+    <div class="chg"><b>Aug 20</b>The credit ring tells the truth about money. OpenAI publishes what has been spent but never a balance, so MAYA now asks once what you last put in, subtracts OpenAI's own costs since that day, and shows the dollars left with the ring as that share. Correct it any time from the map itself, no console.</div>
     <div class="chg"><b>Aug 19</b>The wall glides instead of stepping: the rows now move with a transform handed to the graphics card rather than by rewriting the scroll position every frame, and a short row repeats itself until it is long enough to loop, so the bottom row drifts like the two above it.</div>
     <div class="chg"><b>Aug 19</b>Submissions carry their picture again. A vision that had already been saved was an address rather than raw bytes, the attachment step quietly skipped it, and the submission arrived with nothing to show, which is why tiles here sat on "arriving". The bytes are fetched whatever form the picture is in, each file gets one retry, and a submission whose picture never lands now says so instead of pretending it is still on its way.</div>
     <div class="chg"><b>Aug 19</b>This map leads with the two numbers that matter: who is on the site right now, and how many separate Google accounts have ever signed in to MAYA, counted by MAYA itself so it is exact and survives an Analytics outage. Today, seven days and twenty eight days fold away underneath.</div>
@@ -918,7 +969,7 @@ async function loadCredit() {
   ring.querySelector('.cr-pct').textContent = pct === null ? '\u2014' : pct + '%';
   const side = document.getElementById('credit-side');
   side.querySelector('.cr-amt').textContent =
-    '$' + d.remainingUsd.toFixed(2) + ' of $' + Number(d.budgetUsd).toFixed(2);
+    '$' + d.remainingUsd.toFixed(2) + ' left of $' + Number(d.fundedUsd || d.budgetUsd).toFixed(2);
   // v13.29: say where the number came from. "measured" means OpenAI's own
   // costs; "estimated" means MAYA priced its own calls because no admin key
   // is set. Never let the two look the same.
@@ -928,23 +979,90 @@ async function loadCredit() {
       return isNaN(dt) ? '' : ' since ' + dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
     } catch (_) { return ''; }
   })();
-  side.querySelector('.cr-sub').textContent =
-    (d.estimated ? 'estimated' : 'measured') + ', $' + d.spentUsd.toFixed(2) + ' used' + sinceLabel;
+  side.querySelector('.cr-sub').textContent = d.estimated
+    ? ('estimated by MAYA, $' + d.spentUsd.toFixed(2) + ' used' + sinceLabel)
+    : ('from OpenAI, $' + d.spentUsd.toFixed(2) + ' used' + sinceLabel);
   const lbl = side.querySelector('.cr-lbl');
-  if (lbl) lbl.textContent = d.basis === 'credit' ? 'OpenAI credit left' : 'API credit, this month';
-  // v13.33: if the ring cannot be exact yet, say exactly what is missing
-  // rather than showing a confident percentage of an invented budget.
-  const needs = document.getElementById('credit-needs');
-  if (needs) {
-    if (d.exact) { needs.style.display = 'none'; needs.textContent = ''; }
-    else {
-      needs.style.display = '';
-      needs.innerHTML = 'Not exact yet. Set on the API: ' +
-        (d.needs || []).map(n => '<b>' + String(n).split(',')[0] + '</b>').join(', ') + '.';
-    }
-  }
+  if (lbl) lbl.textContent = 'API credits, this month';
+  // v13.34: one line under the amount, and a button to correct the one fact
+  // OpenAI will not hand over. No console instructions on the page.
+  const edit = document.getElementById('credit-edit');
+  if (edit) edit.textContent = d.hasTopUp ? 'Top up' : 'Tell MAYA your top up';
   row.classList.remove('hidden');
 }
+
+// ── v13.34: marketing, the one line version ────────────────────────────────
+// The whole picture lives on /marketing.html. This is the glance: how many
+// people reached manasiyo.com in four weeks, and how many of them came from
+// Google and from Facebook.
+let _mktLoaded = false;
+async function loadMarketing() {
+  if (_mktLoaded || !_idTok) return;
+  const note = document.getElementById('mkt-note');
+  const tiles = document.getElementById('mkt-tiles');
+  let r;
+  try { r = await _statusFetch('/api/admin/marketing?t=' + Date.now(),
+    { headers: { 'Authorization': 'Bearer ' + _idTok }, cache: 'no-store' }, 20000); }
+  catch (_) { note.textContent = 'The marketing numbers did not answer in time.'; return; }
+  if (r.status === 401) { _expired(); return; }
+  if (!r.ok) { note.textContent = 'Marketing unavailable right now (' + r.status + ').'; return; }
+  let d;
+  try { d = await r.json(); } catch (_) { note.textContent = 'Incomplete response.'; return; }
+  const a = d.analytics || {};
+  if (!a.connected) {
+    note.innerHTML = '<b>Analytics is not reading manasiyo.com yet.</b> Open marketing for the one step that fixes it.';
+    return;
+  }
+  const sum = (re) => (a.sources || []).filter(s => re.test(String(s.source || '')))
+    .reduce((n, s) => n + Number(s.sessions || 0), 0);
+  const T = (k, v) => '<div class="tile"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>';
+  tiles.innerHTML =
+    T('visitors, 28 days', ((a.ranges || {}).d28 || {}).users || 0) +
+    T('from google', sum(/google/i)) +
+    T('from facebook', sum(/facebook|instagram|meta/i)) +
+    T('paid, 7 days', (d.meta && d.meta.connected ? '$' + Number(d.meta.d7.spend || 0).toFixed(0) : '\u2014'));
+  tiles.classList.remove('hidden');
+  note.style.display = 'none';
+  _mktLoaded = true;
+}
+
+// ── v13.34: the top up dialog ──────────────────────────────────────────────
+function openTopUp() {
+  const m = document.getElementById('topup');
+  if (!m) return;
+  document.getElementById('tu-state').textContent = '';
+  m.classList.add('open');
+  _statusFetch('/api/admin/credit', { headers: { 'Authorization': 'Bearer ' + _idTok } })
+    .then(r => r.json()).then(d => {
+      if (!d || !d.ok) return;
+      if (d.usd) document.getElementById('tu-amt').value = d.usd;
+      document.getElementById('tu-date').value = d.since || new Date().toISOString().slice(0, 10);
+    }).catch(() => {});
+}
+function closeTopUp() {
+  const m = document.getElementById('topup');
+  if (m) m.classList.remove('open');
+}
+async function saveTopUp() {
+  const usd = Number(document.getElementById('tu-amt').value);
+  const since = document.getElementById('tu-date').value;
+  const st = document.getElementById('tu-state');
+  if (!(usd > 0))  { st.textContent = 'An amount, please.'; return; }
+  if (!since)      { st.textContent = 'And the day you added it.'; return; }
+  st.textContent = 'Saving\u2026';
+  try {
+    const r = await _statusFetch('/api/admin/credit', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usd, since }),
+    });
+    if (r.status === 401) { _expired(); return; }
+    if (!r.ok) { st.textContent = 'That did not save. Check the amount and the date.'; return; }
+    st.textContent = 'Saved.';
+    setTimeout(() => { closeTopUp(); loadCredit(); }, 500);
+  } catch (_) { st.textContent = 'Could not reach the API.'; }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTopUp(); });
 
 // Prompting engine. Live copy: Firestore config/prompting, the app reads it at boot.
 // If the vault rules deny the shared doc, falls back to a per-account draft at

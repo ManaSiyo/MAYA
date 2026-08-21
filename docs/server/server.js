@@ -588,8 +588,31 @@ const OPENAI_ADMIN_KEY = process.env.OPENAI_ADMIN_KEY || '';
 // honest reading of "how much of what I put in is left". Without it the meter
 // falls back to the calendar month, which flatters the number every 1st.
 const OPENAI_CREDIT_SINCE = String(process.env.OPENAI_CREDIT_SINCE || '').trim();
-function creditStartMs() {
-  const t = Date.parse(OPENAI_CREDIT_SINCE + 'T00:00:00Z');
+// v13.34: OpenAI has no endpoint that returns a balance. Its own staff say so:
+// costs are readable, the remaining prepaid balance is not. So the only honest
+// way to show "$4.69 left" is (what you added) minus (what OpenAI says you have
+// spent since you added it). The top up is recorded once, from the Systems Map
+// itself, and lives in MAYA's own store so no console visit is ever needed.
+const CREDIT_DOC = 'metrics/credit.json';
+let _topUp = { ts: 0, usd: 0, since: '' };
+async function readTopUp() {
+  if (Date.now() - _topUp.ts < 30000) return _topUp;
+  let out = { usd: 0, since: '' };
+  try {
+    const o = await gcsGet(CREDIT_DOC);
+    if (o.ok) {
+      const j = JSON.parse(o.buf.toString('utf8'));
+      out = { usd: Number(j.usd) || 0, since: String(j.since || '').slice(0, 10) };
+    }
+  } catch (_) {}
+  // Env vars still win if they are set, so an existing deploy does not change.
+  if (OPENAI_CREDIT_USD > 0) out.usd = OPENAI_CREDIT_USD;
+  if (OPENAI_CREDIT_SINCE)   out.since = OPENAI_CREDIT_SINCE;
+  _topUp = { ts: Date.now(), usd: out.usd, since: out.since };
+  return _topUp;
+}
+function creditStartMs(sinceStr) {
+  const t = Date.parse(String(sinceStr || OPENAI_CREDIT_SINCE) + 'T00:00:00Z');
   return Number.isFinite(t) ? t : 0;
 }
 // OpenAI's own costs, from a moment to now. Cached, because the Costs API is
@@ -703,7 +726,8 @@ app.get('/api/admin/spend', async (req, res) => {
   try { await requireAdmin(req); }
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
   const month = monthKey();
-  const startMs = creditStartMs();
+  const top = await readTopUp();
+  const startMs = creditStartMs(top.since);
   const fromMonth = startMs ? monthKey(new Date(startMs)) : month;
   try {
     if (_spendCache.from !== fromMonth || Date.now() - _spendCache.ts > 20000) {
@@ -740,21 +764,23 @@ app.get('/api/admin/spend', async (req, res) => {
     const real = await openAiCostSince(sinceSec);
     const usd = (real === null) ? counted : real;
     // Counting down from the money actually loaded beats an invented budget.
-    const funded = OPENAI_CREDIT_USD > 0 ? OPENAI_CREDIT_USD : MONTHLY_BUDGET_USD;
+    const funded = top.usd > 0 ? top.usd : MONTHLY_BUDGET_USD;
     // What is still missing before this number can be trusted, in plain words.
     const needs = [];
-    if (!(OPENAI_CREDIT_USD > 0)) needs.push('OPENAI_CREDIT_USD, the amount you funded');
-    if (!OPENAI_CREDIT_SINCE)     needs.push('OPENAI_CREDIT_SINCE, the day you funded it');
-    if (!OPENAI_ADMIN_KEY)        needs.push('OPENAI_ADMIN_KEY, so the figure is OpenAI\u2019s own');
+    if (!(top.usd > 0))    needs.push('the amount of your last top up');
+    if (!top.since)        needs.push('the day you topped up');
+    if (!OPENAI_ADMIN_KEY) needs.push('an OpenAI admin key, so the figure is OpenAI\u2019s own');
     res.json({
       ok: true,
       estimated: real === null,
       source: real === null ? (OPENAI_ADMIN_KEY ? 'estimate, OpenAI did not answer' : 'estimate') : 'openai',
-      basis: OPENAI_CREDIT_USD > 0 ? 'credit' : 'budget',
-      exact: real !== null && OPENAI_CREDIT_USD > 0 && !!OPENAI_CREDIT_SINCE,
+      basis: top.usd > 0 ? 'credit' : 'budget',
+      exact: real !== null && top.usd > 0 && !!top.since,
+      hasTopUp: top.usd > 0,
+      adminKey: !!OPENAI_ADMIN_KEY,
       needs,
       month,
-      since: OPENAI_CREDIT_SINCE || (month + '-01'),
+      since: top.since || (month + '-01'),
       spentUsd: Number(usd.toFixed(2)),
       countedUsd: Number(counted.toFixed(2)),
       budgetUsd: funded,
@@ -771,6 +797,39 @@ app.get('/api/admin/spend', async (req, res) => {
   } catch (e) {
     console.error('[meter] read failed,', e.message);
     res.status(500).json({ error: 'spend_failed', detail: 'the meter could not be read' });
+  }
+});
+
+// GET/POST /api/admin/credit — the last top up, told once from the Systems Map.
+// Nothing sensitive: an amount and a date. Admin only, like every /admin route.
+app.get('/api/admin/credit', async (req, res) => {
+  try { await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
+  const t = await readTopUp();
+  res.json({ ok: true, usd: t.usd, since: t.since, locked: OPENAI_CREDIT_USD > 0 || !!OPENAI_CREDIT_SINCE });
+});
+app.post('/api/admin/credit', requireAuthHeader, express.json({ limit: '4kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
+  const usd = Number((req.body || {}).usd);
+  const since = String((req.body || {}).since || '').slice(0, 10);
+  if (!(usd > 0) || usd > 100000) return res.status(400).json({ error: 'bad_amount' });
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(since) || !Number.isFinite(Date.parse(since + 'T00:00:00Z'))) {
+    return res.status(400).json({ error: 'bad_date' });
+  }
+  try {
+    await gcsPut(CREDIT_DOC, Buffer.from(JSON.stringify({
+      usd: Number(usd.toFixed(2)), since, setBy: user.email, setAtMs: Date.now(),
+    }), 'utf8'), 'application/json');
+    _topUp = { ts: 0, usd: 0, since: '' };          // read it back fresh
+    _realCost = { ts: 0, key: '', usd: null, error: '' };
+    _spendCache = { ts: 0, from: '', usd: 0, calls: 0, images: 0 };
+    console.log('[meter] top up recorded by', user.email, '—', usd, since);
+    res.json({ ok: true, usd, since });
+  } catch (e) {
+    console.error('[meter] top up write failed,', e.message);
+    res.status(500).json({ error: 'save_failed' });
   }
 });
 
@@ -1643,6 +1702,183 @@ app.get('/api/admin/analytics', async (req, res) => {
     console.warn('[admin] analytics unavailable —', e.message);
     res.json({ ok: false, reason: e.message, saEmail, accounts: accounts || null });
   }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// v13.34 — MARKETING. Everything that brings people to Mana Siyo, in one place.
+//
+// Three sources, each independent, each honest about whether it is connected:
+//
+//   Analytics   the manasiyo.com property, read with the service account this
+//               server already runs as. Traffic, where it came from, which
+//               pages, day by day. Google and Facebook show up here as
+//               sources whether or not the ad accounts are connected.
+//   Meta ads    the Marketing API, with a long lived token. Spend, reach,
+//               clicks, results.
+//   Google ads  the Google Ads API needs a developer token, which is applied
+//               for and approved by Google. Reported as not connected until
+//               the four values are set, never faked.
+//
+// Nothing here writes anything. It is a read only window.
+// ═══════════════════════════════════════════════════════════════════════════
+const META_TOKEN   = process.env.META_ADS_TOKEN || '';
+const META_ACCOUNT = String(process.env.META_AD_ACCOUNT_ID || '').replace(/^act_/, '');
+const GADS = {
+  dev:    process.env.GOOGLE_ADS_DEVELOPER_TOKEN || '',
+  id:     process.env.GOOGLE_ADS_CLIENT_ID || '',
+  secret: process.env.GOOGLE_ADS_CLIENT_SECRET || '',
+  refresh: process.env.GOOGLE_ADS_REFRESH_TOKEN || '',
+  customer: String(process.env.GOOGLE_ADS_CUSTOMER_ID || '').replace(/-/g, ''),
+  login:  String(process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || '').replace(/-/g, ''),
+};
+
+let _mktProp = { id: null, name: '', ts: 0 };
+async function marketingProperty(token) {
+  const pinned = process.env.MARKETING_GA_PROPERTY_ID;
+  if (pinned) return { id: 'properties/' + String(pinned).replace(/^properties\//, ''), name: 'pinned' };
+  if (_mktProp.id && Date.now() - _mktProp.ts < 3600000) return _mktProp;
+  const r = await fetch('https://analyticsadmin.googleapis.com/v1beta/accountSummaries', {
+    headers: { 'Authorization': 'Bearer ' + token }, signal: AbortSignal.timeout(12000),
+  });
+  if (!r.ok) throw new Error('ga admin ' + r.status);
+  const all = ((await r.json()).accountSummaries || []).flatMap(a => a.propertySummaries || []);
+  // The site property, by name. Falls back to the only one there is.
+  const hit = all.find(p => /mana\s*siyo|manasiyo/i.test(p.displayName || '')) || all[0];
+  if (!hit) throw new Error('no Analytics property is shared with this server yet');
+  _mktProp = { id: hit.property, name: hit.displayName || '', ts: Date.now() };
+  return _mktProp;
+}
+
+async function metaInsights() {
+  if (!META_TOKEN || !META_ACCOUNT) {
+    return { connected: false, why: 'no token set' };
+  }
+  const q = (preset) => 'https://graph.facebook.com/v21.0/act_' + encodeURIComponent(META_ACCOUNT) +
+    '/insights?date_preset=' + preset +
+    '&fields=spend,impressions,reach,clicks,ctr,cpc,actions' +
+    '&access_token=' + encodeURIComponent(META_TOKEN);
+  try {
+    const [w, m] = await Promise.all([
+      fetch(q('last_7d'),  { signal: AbortSignal.timeout(12000) }).then(r => r.json()),
+      fetch(q('last_30d'), { signal: AbortSignal.timeout(12000) }).then(r => r.json()),
+    ]);
+    if (w.error) throw new Error(w.error.message || 'meta error');
+    const one = (j) => {
+      const d = (j.data || [])[0] || {};
+      const acts = (d.actions || []);
+      const pick = (t) => Number((acts.find(a => a.action_type === t) || {}).value || 0);
+      return {
+        spend: Number(d.spend || 0), impressions: Number(d.impressions || 0),
+        reach: Number(d.reach || 0), clicks: Number(d.clicks || 0),
+        ctr: Number(d.ctr || 0), cpc: Number(d.cpc || 0),
+        results: pick('link_click') || pick('landing_page_view') || pick('offsite_conversion'),
+      };
+    };
+    return { connected: true, account: META_ACCOUNT, d7: one(w), d30: one(m) };
+  } catch (e) {
+    return { connected: false, why: String(e.message).slice(0, 120) };
+  }
+}
+
+async function googleAdsInsights() {
+  const missing = Object.entries(GADS).filter(([k, v]) => k !== 'login' && !v).map(([k]) => k);
+  if (missing.length) return { connected: false, why: 'missing: ' + missing.join(', ') };
+  try {
+    const tr = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ client_id: GADS.id, client_secret: GADS.secret,
+        refresh_token: GADS.refresh, grant_type: 'refresh_token' }),
+      signal: AbortSignal.timeout(12000),
+    });
+    const tj = await tr.json();
+    if (!tr.ok) throw new Error(tj.error_description || tj.error || 'token refused');
+    const hdr = { 'Authorization': 'Bearer ' + tj.access_token, 'developer-token': GADS.dev,
+                  'Content-Type': 'application/json' };
+    if (GADS.login) hdr['login-customer-id'] = GADS.login;
+    const gaql = 'SELECT metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions ' +
+                 'FROM customer WHERE segments.date DURING LAST_7_DAYS';
+    const r = await fetch('https://googleads.googleapis.com/v18/customers/' + GADS.customer + '/googleAds:search', {
+      method: 'POST', headers: hdr, body: JSON.stringify({ query: gaql }),
+      signal: AbortSignal.timeout(15000),
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error((j.error && j.error.message) || ('ads ' + r.status));
+    let cost = 0, impressions = 0, clicks = 0, conversions = 0;
+    for (const row of (j.results || [])) {
+      const m = row.metrics || {};
+      cost += Number(m.costMicros || 0) / 1e6;
+      impressions += Number(m.impressions || 0);
+      clicks += Number(m.clicks || 0);
+      conversions += Number(m.conversions || 0);
+    }
+    return { connected: true, customer: GADS.customer, d7: { spend: cost, impressions, clicks, conversions } };
+  } catch (e) {
+    return { connected: false, why: String(e.message).slice(0, 160) };
+  }
+}
+
+app.get('/api/admin/marketing', async (req, res) => {
+  try { await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
+  let saEmail = null;
+  try { saEmail = await (await gaMeta('email')).text(); } catch (_) {}
+  const out = { ok: true, saEmail, ts: new Date().toISOString() };
+  // ── Analytics ──
+  try {
+    const token = await gaToken();
+    const prop = await marketingProperty(token);
+    const hdr = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+    const base = 'https://analyticsdata.googleapis.com/v1beta/' + prop.id;
+    const post = (body) => fetch(base + ':runReport', { method: 'POST', headers: hdr,
+      body: JSON.stringify(body), signal: AbortSignal.timeout(15000) })
+      .then(async r => { const j = await r.json(); if (!r.ok) throw new Error((j.error && j.error.message) || ('ga ' + r.status)); return j; });
+    const [ranges, daily, sources, pages, live] = await Promise.all([
+      post({ dateRanges: [{ startDate: 'today', endDate: 'today', name: 'today' },
+                          { startDate: '7daysAgo', endDate: 'today', name: 'd7' },
+                          { startDate: '28daysAgo', endDate: 'today', name: 'd28' }],
+             metrics: [{ name: 'activeUsers' }, { name: 'sessions' }, { name: 'screenPageViews' }] }),
+      post({ dateRanges: [{ startDate: '27daysAgo', endDate: 'today' }],
+             dimensions: [{ name: 'date' }], metrics: [{ name: 'activeUsers' }],
+             orderBys: [{ dimension: { dimensionName: 'date' } }] }),
+      post({ dateRanges: [{ startDate: '28daysAgo', endDate: 'today' }],
+             dimensions: [{ name: 'sessionSource' }, { name: 'sessionMedium' }],
+             metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
+             orderBys: [{ metric: { metricName: 'sessions' }, desc: true }], limit: '12' }),
+      post({ dateRanges: [{ startDate: '28daysAgo', endDate: 'today' }],
+             dimensions: [{ name: 'pagePath' }], metrics: [{ name: 'screenPageViews' }],
+             orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }], limit: '8' }),
+      fetch(base + ':runRealtimeReport', { method: 'POST', headers: hdr,
+        body: JSON.stringify({ metrics: [{ name: 'activeUsers' }] }), signal: AbortSignal.timeout(12000) })
+        .then(r => r.ok ? r.json() : { rows: [] }).catch(() => ({ rows: [] })),
+    ]);
+    const R = { today: {}, d7: {}, d28: {} };
+    for (const row of (ranges.rows || [])) {
+      const k = row.dimensionValues[0].value;
+      if (!R[k]) continue;
+      R[k] = { users: Number(row.metricValues[0].value || 0),
+               sessions: Number(row.metricValues[1].value || 0),
+               views: Number(row.metricValues[2].value || 0) };
+    }
+    out.analytics = {
+      connected: true,
+      property: prop.id, propertyName: prop.name,
+      live: Number((((live.rows || [])[0] || {}).metricValues || [{}])[0].value || 0),
+      ranges: R,
+      daily: (daily.rows || []).map(r => ({ date: r.dimensionValues[0].value,
+                                            users: Number(r.metricValues[0].value || 0) })),
+      sources: (sources.rows || []).map(r => ({
+        source: r.dimensionValues[0].value, medium: r.dimensionValues[1].value,
+        sessions: Number(r.metricValues[0].value || 0), users: Number(r.metricValues[1].value || 0) })),
+      pages: (pages.rows || []).map(r => ({ path: r.dimensionValues[0].value,
+                                            views: Number(r.metricValues[0].value || 0) })),
+    };
+  } catch (e) {
+    out.analytics = { connected: false, why: String(e.message).slice(0, 200) };
+  }
+  const [meta, gads] = await Promise.all([metaInsights(), googleAdsInsights()]);
+  out.meta = meta;
+  out.googleAds = gads;
+  res.json(out);
 });
 
 const port = process.env.PORT || 8080;

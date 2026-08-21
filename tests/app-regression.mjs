@@ -381,8 +381,9 @@ ok('the meter can report REAL OpenAI spend when an admin key is set',
   SERVER_SOURCE.includes('/v1/organization/costs?') &&
   SERVER_SOURCE.includes('OPENAI_CREDIT_USD') &&
   SERVER_SOURCE.includes("estimated: real === null"));
-ok('the map says whether the number was measured or estimated',
-  MAP_SOURCE.includes("(d.estimated ? 'estimated' : 'measured')"));
+ok('the map says whether the number came from OpenAI or from MAYA',
+  MAP_SOURCE.includes("d.estimated") && MAP_SOURCE.includes("'from OpenAI, $'") &&
+  MAP_SOURCE.includes("'estimated by MAYA, $'"));
 ok('submission cards cannot clip on hover',
   MAP_SOURCE.includes('#subs-strip{display:flex;gap:12px;overflow-x:auto;padding:10px 28px 12px;') &&
   MAP_SOURCE.includes('.sub-tile:hover{border-color:rgba(255,255,255,0.55);transform:scale(1.012)'));
@@ -392,8 +393,9 @@ ok('lights paint as each answer lands', MAP_SOURCE.includes("setDot('d-assets', 
 // and never claims to be a real balance.
 const credit = await pg.evaluate(async () => {
   (0, eval)("_idTok = 'fake'");
-  (0, eval)("_statusFetch = async () => ({ok:true,status:200,json:async()=>({ok:true,estimated:true," +
-    "month:'2026-08',spentUsd:7.31,budgetUsd:50,remainingUsd:42.69,pctLeft:85,calls:96,images:34})})");
+  (0, eval)("_statusFetch = async () => ({ok:true,status:200,json:async()=>({ok:true,estimated:false," +
+    "month:'2026-08',since:'2026-08-14',hasTopUp:true,spentUsd:5.31,budgetUsd:10,fundedUsd:10," +
+    "remainingUsd:4.69,pctLeft:47,calls:96,images:34})})");
   await loadCredit();
   const ring = document.getElementById('credit-ring');
   const arc = ring.querySelector('.cr-arc');
@@ -413,11 +415,11 @@ const credit = await pg.evaluate(async () => {
   };
 });
 ok('the credit ring stays hidden until there are numbers', s.creditHiddenAtRest);
-ok('the credit ring paints the right arc for 85 percent',
-  credit.shown && credit.pct === '85%' &&
-  Math.abs(credit.offset - credit.circumference * 0.15) < 1);
-ok('the credit ring shows the money and names its source',
-  credit.amount === '$42.69 of $50.00' && credit.sub.startsWith('estimated,'));
+ok('the credit ring paints the right arc for 47 percent',
+  credit.shown && credit.pct === '47%' &&
+  Math.abs(credit.offset - credit.circumference * 0.53) < 1);
+ok('the credit ring shows the money left and names its source',
+  credit.amount === '$4.69 left of $10.00' && credit.sub.startsWith('from OpenAI,'));
 ok('the credit ring sits under the LIVE NOW tile', credit.leftAligned);
 ok('the meter is admin only and counts every successful call',
   SERVER_SOURCE.includes("app.get('/api/admin/spend'") &&
@@ -432,8 +434,8 @@ ok('an image costs more of the budget than a chat call',
 
 ok('the map light reads Submissions', s.lights.includes('Submissions') && !s.lights.includes('Drive'));
 
-ok('Systems Map order: traffic, changes, prompting, architecture',
-  s.order === 'traffic-fold,changes-fold,pe-fold,arch-fold');
+ok('Systems Map order: traffic, marketing, changes, prompting, architecture',
+  s.order === 'traffic-fold,marketing-fold,changes-fold,pe-fold,arch-fold');
 ok('Architecture is collapsible', s.archFold);
 ok('door cards have no arrows', s.arrows === 0);
 ok('"Never delete" banner removed', !s.warnBanner);
@@ -573,11 +575,32 @@ ok('unique accounts are counted by MAYA itself',
   SERVER_SOURCE.includes('async function countUsers()') &&
   SERVER_SOURCE.includes('accounts: accounts || null'));
 ok('the credit ring counts from the day the money was loaded',
-  SERVER_SOURCE.includes('OPENAI_CREDIT_SINCE') &&
   SERVER_SOURCE.includes('async function openAiCostSince(startSec)') &&
   SERVER_SOURCE.includes('fundedUsd') &&
-  SERVER_SOURCE.includes('needs.push(') &&
-  MAP_SOURCE.includes("id=\"credit-needs\""));
+  SERVER_SOURCE.includes("const CREDIT_DOC = 'metrics/credit.json'") &&
+  SERVER_SOURCE.includes("app.post('/api/admin/credit'") &&
+  MAP_SOURCE.includes('function saveTopUp()') &&
+  MAP_SOURCE.includes('id="topup"'));
+
+// ── v13.34, Aug 20 ─────────────────────────────────────────────────────────
+const MKT_SOURCE = existsSync(join(ROOT, 'marketing.html'))
+  ? readFileSync(join(ROOT, 'marketing.html'), 'utf8') : '';
+ok('the fourth door is Marketing', MAP_SOURCE.includes('href="/marketing.html"') &&
+  MAP_SOURCE.includes('grid-template-columns:repeat(4,1fr)'));
+ok('the marketing page ships and signs in like the map',
+  MKT_SOURCE.includes('MAYA Marketing') &&
+  MKT_SOURCE.includes("localStorage.getItem('maya_admin_tok')") &&
+  MKT_SOURCE.includes('/api/admin/marketing'));
+ok('the marketing page never invents an ad number',
+  MKT_SOURCE.includes("'Not connected. '") && MKT_SOURCE.includes('function paintAds('));
+ok('marketing reads Analytics, Meta and Google Ads separately',
+  SERVER_SOURCE.includes("app.get('/api/admin/marketing'") &&
+  SERVER_SOURCE.includes('async function metaInsights()') &&
+  SERVER_SOURCE.includes('async function googleAdsInsights()') &&
+  SERVER_SOURCE.includes('MARKETING_GA_PROPERTY_ID'));
+ok('the map carries a marketing glance that loads only when opened',
+  MAP_SOURCE.includes('id="marketing-fold"') && MAP_SOURCE.includes('async function loadMarketing()') &&
+  MAP_SOURCE.includes('if(this.open)loadMarketing()'));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
