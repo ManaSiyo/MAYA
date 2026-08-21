@@ -1352,7 +1352,11 @@ app.get('/api/pinterest/status', requireAuthHeader, async (req, res) => {
   catch (e) { return res.status(401).json({ error: 'unauthorized' }); }
   if (!pinConfigured()) return res.json({ ok: true, configured: false, connected: false });
   const stored = await pinLoad(user.sub);
+  // v13.39: the address MAYA will ask Pinterest to come back to. Not a secret,
+  // and the single most common reason a sign in dies is that this exact string
+  // is not listed in the Pinterest app, so the app can show it.
   res.json({ ok: true, configured: true, connected: !!(stored && stored.access_token),
+             redirect: PIN_REDIRECT,
              connectedAtMs: (stored && stored.connectedAtMs) || null });
 });
 

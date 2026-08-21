@@ -64,15 +64,19 @@ If this file disagrees with chat memory, this file is right.
   deploy.
 - Tests: 138 checks in `tests/app-regression.mjs`, all passing, including a
   check that every old address still maps to a file that exists.
-- Pinterest: the app is approved for **Trial** access (email Aug 18). The
-  drawer is built and falls back to pasted addresses until
-  `PINTEREST_APP_ID` and `PINTEREST_APP_SECRET` are set on Cloud Run. Standard
+- Pinterest: app id and secret ARE set on Cloud Run. The sign in currently
+  fails with Pinterest's own 400, "this application has not registered a
+  redirect URI": `https://maya.manasiyo.com/api/pinterest/callback` must be
+  added in the Pinterest app under Manage, Configure. The drawer now names
+  that address when a sign in dies. Trial access approved Aug 18. Standard
   access needs a screen recording of the OAuth flow, submitted from the
   Pinterest developer console. Nobody has recorded it yet.
-- Credit meter: `/api/admin/credit` stores the last top up (amount + date) in
-  `metrics/credit.json`; the ring counts down from it using OpenAI's Costs API
-  when `OPENAI_ADMIN_KEY` is set, and MAYA's own estimate when it is not.
-  OpenAI has no balance endpoint; do not go looking for one again.
+- Credit meter: the RING WAS REMOVED from the Systems Map in v13.39. Fromsa
+  does not want a gauge that needs explaining. The server side still works and
+  is still there: `/api/admin/spend` and `/api/admin/credit` (last top up in
+  `metrics/credit.json`, OpenAI Costs API when `OPENAI_ADMIN_KEY` is set).
+  OpenAI has no balance endpoint; do not go looking for one again, and do not
+  put the ring back without being asked.
 - Marketing: `/api/admin/marketing` reads Analytics with the Cloud Run
   identity, Meta with `META_ADS_TOKEN` + `META_AD_ACCOUNT_ID`, Google Ads with
   the five `GOOGLE_ADS_*` values. Each half reports itself not connected

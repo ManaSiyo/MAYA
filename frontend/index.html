@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.38">
+<meta name="maya-version" content="13.39">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -1899,19 +1899,17 @@
     font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(200,215,245,0.7); justify-content: center;
   }
-  /* v13.36: the same "+ New" row the avatar dropdown has, in Projects. */
+  /* v13.39: the same row, in the same colours, as "+ New avatar". */
   #notes-drawer .session-item-new {
-    display: block; width: 100%;
-    background: none; border: none; border-top: 0.5px solid rgba(255,255,255,0.08);
-    padding: 12px 10px; cursor: pointer;
-    font-family: 'Jost', sans-serif;
+    width: 100%; display: flex; align-items: center; justify-content: center;
+    padding: 8px 12px; background: transparent; border: none;
+    border-top: 0.5px solid rgba(255,255,255,0.06);
+    font-family: 'Jost', sans-serif; font-style: normal;
     font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
-    color: rgba(200,215,245,0.7); text-align: center;
-    transition: color 0.15s, background 0.15s;
+    color: rgba(200,215,245,0.7); cursor: pointer;
+    transition: background 0.15s;
   }
-  #notes-drawer .session-item-new:hover {
-    color: rgba(255,255,255,0.95); background: rgba(255,255,255,0.04);
-  }
+  #notes-drawer .session-item-new:hover { background: rgba(180,205,255,0.08); }
   #notes-drawer .avatar-switch-empty {
     padding: 14px; text-align: center;
     font-family: 'Cormorant Garamond', serif; font-style: italic;
@@ -2571,6 +2569,12 @@
     cursor: pointer;
   }
   #pinterest-drawer .pin-cta:hover { border-color: rgba(255,255,255,0.5); }
+  #pinterest-drawer .pin-redirect {
+    font-family: ui-monospace, Menlo, monospace; font-size: 10px; line-height: 1.6;
+    color: rgba(245,250,255,0.9); background: rgba(255,255,255,0.04);
+    border: 0.5px solid rgba(255,255,255,0.16); border-radius: 10px;
+    padding: 9px 10px; margin: 0 0 14px; word-break: break-all; text-align: center;
+  }
   .fabrics-drawer-header {
     display: flex; align-items: flex-start; justify-content: space-between;
     padding: 12px 22px 14px;
@@ -2587,7 +2591,7 @@
   .fabrics-drawer-actions { display: flex; gap: 8px; align-items: center; }
   /* v13.4: fabric tabs, same language as the rest of the drawer. */
   .fabrics-tabs {
-    display: flex; gap: 6px; padding: 0 18px 10px;
+    display: flex; gap: 6px; padding: 10px 18px 10px;
   }
   .fabrics-tab {
     background: none;
@@ -3306,35 +3310,59 @@
      that width there is no empty space to use, so it folds under the picture
      instead of covering it. */
   #viewer-notes {
-    position: fixed; left: 26px; top: 96px; width: 244px;
-    max-height: 64vh; overflow-y: auto; z-index: 5;
+    position: fixed; left: 26px; top: 104px;
+    width: min(250px, calc(15vw - 20px));
+    max-height: 66vh; overflow-y: auto; z-index: 5;
     text-align: left; display: none;
     scrollbar-width: none;
   }
   #viewer-notes::-webkit-scrollbar { display: none; }
-  #garment-modal.open:not([data-photo="full"]):not([data-mode="submit"]) #viewer-notes { display: block; }
-  #garment-modal[data-mode="submit"].open:not([data-photo="full"]) #viewer-notes { display: block; }
+  #garment-modal.open:not([data-photo="full"]) #viewer-notes { display: block; }
+  /* Same type, same rhythm, same hairlines as the notes that used to live in
+     the drawer. Only the home changed. */
   #viewer-notes .vn-head {
-    font-family: 'Jost', sans-serif; font-size: 9px; font-weight: 300;
-    letter-spacing: 0.28em; text-transform: uppercase;
-    color: rgba(200,210,230,0.45); margin-bottom: 10px;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 9.5px; letter-spacing: 0.28em; text-transform: uppercase;
+    color: rgba(245,250,255,0.85);
+    padding-bottom: 10px; margin-bottom: 4px;
+    border-bottom: 0.5px solid rgba(255,255,255,0.08);
   }
-  #viewer-notes .vn-group { margin-bottom: 14px; }
-  #viewer-notes .vn-title {
-    font-family: 'Jost', sans-serif; font-size: 8.5px; letter-spacing: 0.2em;
-    text-transform: uppercase; color: rgba(200,210,230,0.4); margin-bottom: 4px;
+  #viewer-notes .note-group { margin: 2px 0 10px; }
+  #viewer-notes .note-group:last-child { margin-bottom: 2px; }
+  #viewer-notes .note-group-title {
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 8.5px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: rgba(200,210,230,0.5);
+    margin: 12px 0 4px;
   }
-  #viewer-notes .vn-body {
-    font-family: 'Cormorant Garamond', serif; font-size: 14px; line-height: 1.55;
-    color: rgba(238,244,255,0.86);
+  #viewer-notes .note-item {
+    padding: 9px 0;
+    border-bottom: 0.25px solid rgba(255,255,255,0.06);
+    font-size: 12px; font-weight: 300; line-height: 1.55;
+    color: rgba(220,225,240,0.88);
   }
-  #viewer-notes .vn-body.italic { font-style: italic; }
-  #viewer-notes .vn-line { margin-bottom: 4px; }
-  #viewer-notes .vn-line::before { content: '\2022'; color: rgba(200,215,245,0.5); margin-right: 7px; }
-  @media (min-width: 1180px) {
-    #garment-modal:not([data-photo="full"]) #garment-image-wrap { margin-left: 210px; }
+  #viewer-notes .note-item:last-child { border-bottom: none; }
+  #viewer-notes .note-item .note-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px; line-height: 1.35;
+    color: rgba(225,230,245,0.94);
+    margin-bottom: 3px;
   }
-  @media (max-width: 1179px) { #viewer-notes { display: none !important; } }
+  #viewer-notes .note-item .note-detail {
+    font-style: italic; color: rgba(200,210,230,0.55); font-size: 11px;
+  }
+  #viewer-notes .vn-caption {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 14px; line-height: 1.55; color: rgba(238,244,255,0.86);
+  }
+  #viewer-notes .notes-empty {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 13px;
+    color: rgba(200,210,230,0.4); padding: 22px 0; text-align: center;
+  }
+  /* v13.39: the picture is centred, as it was. The notes live in the margin
+     the picture leaves behind, so they only appear when there is one. */
+  @media (max-width: 1279px) { #viewer-notes { display: none !important; } }
 
   /* v10.3: subtle breathing border on "Listening…", same starlight family
      but quieter than the Submit hero pulse. */
@@ -4470,11 +4498,8 @@
      instead, by drag-and-drop onto the canvas like any other inspo. -->
 <div id="fabrics-drawer">
   <button class="fabrics-back" onclick="closeFabricsDrawer()" title="Back to menu" aria-label="Back">&#8592; Back</button>
-  <div class="fabrics-drawer-header">
-    <div>
-      <div class="fabrics-drawer-title" id="fabrics-drawer-title">Mana Siyo fabrics</div>
-    </div>
-  </div>
+  <!-- v13.39: the title said what the first pill already says. Gone, and the
+       pills move up into its place. -->
   <!-- v13.4: two tabs. Mana Siyo fabrics = the atelier's in-house library.
        My fabrics = this client's own uploads, kept on their account so every
        new project can reach them. -->
@@ -9368,16 +9393,41 @@ function _pinDrawerSignIn() {
   _pinApi('/api/pinterest/start').then(({ url }) => {
     const w = window.open(url, 'maya-pinterest', 'width=560,height=720');
     if (!w) { showError('Allow popups for MAYA, then press Connect again.'); return; }
-    _pinBody('<div class="pin-note">Waiting for Pinterest\u2026</div>');
+    _pinBody('<div class="pin-note">Waiting for Pinterest\u2026</div>' +
+      '<button class="pin-cta" onclick="_pinDrawerConnect()">Cancel</button>');
+    let done = false;
+    const finish = (ok) => {
+      if (done) return;
+      done = true;
+      clearInterval(watch);
+      clearTimeout(bail);
+      window.removeEventListener('message', onMsg);
+      if (ok) { _pinTabsVisible(true); setPinterestTab('all'); }
+      else _pinSignInFailed();
+    };
     const onMsg = (e) => {
       if (e.origin !== location.origin || !e.data || e.data.maya !== 'pinterest') return;
-      window.removeEventListener('message', onMsg);
-      if (e.data.ok) { _pinTabsVisible(true); setPinterestTab('all'); }
-      else _pinBody('<div class="pin-note">That sign in did not finish.</div>' +
-        '<button class="pin-cta" onclick="_pinDrawerSignIn()">Try again</button>');
+      finish(!!e.data.ok);
     };
     window.addEventListener('message', onMsg);
+    // v13.39: a sign in that dies on Pinterest's side closes its window and
+    // says nothing. Watch for that, and never wait forever.
+    const watch = setInterval(() => { try { if (w.closed) finish(false); } catch (_) {} }, 700);
+    const bail = setTimeout(() => finish(false), 120000);
   }).catch(() => showError('Could not start the Pinterest sign in.'));
+}
+
+// The failure that actually happens, named. Pinterest refuses with "this
+// application has not registered a redirect URI" until the exact address MAYA
+// sends is listed in the app, so show that address rather than a shrug.
+async function _pinSignInFailed() {
+  let redirect = 'https://maya.manasiyo.com/api/pinterest/callback';
+  try { const st = await _pinApi('/api/pinterest/status'); if (st && st.redirect) redirect = st.redirect; }
+  catch (_) {}
+  _pinBody('<div class="pin-note">That sign in did not finish. If Pinterest said it has no redirect address ' +
+    'registered, this exact address has to be listed in your Pinterest app, under Manage then Configure:</div>' +
+    '<div class="pin-redirect">' + escapeHtml(redirect) + '</div>' +
+    '<button class="pin-cta" onclick="_pinDrawerSignIn()">Try again</button>');
 }
 
 function setPinterestTab(tab) {
@@ -10850,44 +10900,50 @@ function renderViewerNotes(item) {
   const host = document.getElementById('viewer-notes');
   if (!host) return;
   const c = (item && item.card) || {};
+  // The same shape the drawer used: a group per kind of note, one item per
+  // line, a title and a quieter detail under it. Nothing invented, nothing
+  // shown that this picture does not actually have.
+  const item_ = (title, detail) =>
+    '<div class="note-item"><div class="note-title">' + escapeHtml(title) + '</div>' +
+    (detail ? '<div class="note-detail">' + escapeHtml(detail) + '</div>' : '') + '</div>';
   const groups = [];
   if (c.caption) {
-    groups.push({ t: 'The vision', b: '<div class="vn-body italic">' + escapeHtml(c.caption) + '</div>' });
+    groups.push({ t: 'Notes', b: '<div class="vn-caption">' + escapeHtml(c.caption) + '</div>' });
   }
   if (Array.isArray(c.mods) && c.mods.length) {
-    groups.push({ t: 'Asked for, this version',
-      b: '<div class="vn-body">' + c.mods.slice(-6).map(m =>
-           '<div class="vn-line">' + escapeHtml(m) + '</div>').join('') + '</div>' });
+    groups.push({ t: 'Design ideas, this version',
+                  b: c.mods.slice(-6).map(m => item_(m, '')).join('') });
   }
   const refs = Array.isArray(c.refs) ? c.refs : [];
   if (refs.length) {
-    // Same grouping the old panel used: one line per kind of note.
+    // Aesthetics, constraints, silhouette, colour: whatever MAYA heard, under
+    // the name it heard it as.
     const byTag = new Map();
     refs.forEach(r => {
-      const tag = (r && r.tag) ? String(r.tag) : 'note';
+      const tag = (r && r.tag) ? String(r.tag).replace(/_/g, ' ') : 'note';
       if (!byTag.has(tag)) byTag.set(tag, []);
-      byTag.get(tag).push(r.title || '');
+      if (r && r.title) byTag.get(tag).push(r.title);
     });
-    const lines = [...byTag.entries()].map(([tag, list]) =>
-      '<div class="vn-line">' + escapeHtml(tag.replace(/_/g, ' ')) + ': ' +
-      escapeHtml(list.filter(Boolean).slice(0, 6).join(', ')) + '</div>').join('');
-    groups.push({ t: 'What it was drawn from', b: '<div class="vn-body">' + lines + '</div>' });
+    const body = [...byTag.entries()]
+      .filter(([, list]) => list.length)
+      .map(([tag, list]) => item_(list.slice(0, 6).join(', '), tag))
+      .join('');
+    if (body) groups.push({ t: 'Aesthetics and constraints', b: body });
   }
   const fabrics = Array.isArray(c.fabrics) ? c.fabrics : [];
   if (fabrics.length) {
     groups.push({ t: 'Cut in',
-      b: '<div class="vn-body">' + escapeHtml(fabrics.map(f =>
-           [f.name, f.color, f.weave].filter(Boolean).join(' ')).join(' · ')) + '</div>' });
+      b: fabrics.map(f => item_(f.name || 'fabric',
+           [f.color, f.weave, f.weight].filter(Boolean).join(' \u00b7 '))).join('') });
   }
+  const head = '<div class="vn-head">Design notes' + (c.version ? ', v' + c.version : '') + '</div>';
   if (!groups.length) {
-    host.innerHTML = '<div class="vn-head">This vision</div>' +
-      '<div class="vn-body italic" style="color:rgba(200,210,230,0.5)">Nothing written about this one yet. ' +
-      'Tap to listen and say what you want changed.</div>';
+    host.innerHTML = head +
+      '<div class="notes-empty">Nothing written about this one yet. Tap to listen and say what you want changed.</div>';
     return;
   }
-  host.innerHTML = '<div class="vn-head">This vision' +
-    (c.version ? ', v' + c.version : '') + '</div>' +
-    groups.map(g => '<div class="vn-group"><div class="vn-title">' + escapeHtml(g.t) + '</div>' + g.b + '</div>').join('');
+  host.innerHTML = head + groups.map(g =>
+    '<div class="note-group"><div class="note-group-title">' + escapeHtml(g.t) + '</div>' + g.b + '</div>').join('');
 }
 
 // Render the card's refs as chips; clicking × marks them as "deselected"

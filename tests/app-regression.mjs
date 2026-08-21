@@ -282,9 +282,8 @@ const s = await pg.evaluate(() => ({
     .map(el => getComputedStyle(el).fontSize)).size,
   healthUsesTimeouts: runChecks.toString().includes('_statusFetch'),
   lights: [...document.querySelectorAll('.lgt-lbl')].map(e => e.textContent).join(','),
-  // v13.28: the credit ring. It must exist, stay hidden until there are
-  // numbers, and paint the right arc for a given percentage.
-  creditHiddenAtRest: document.getElementById('credit-row').classList.contains('hidden'),
+  // v13.39: the ring is gone. What matters is the one row of five.
+  headTiles: (document.getElementById('head-tiles') || {}).id === 'head-tiles',
   thumbnailsParallel: _paintThumbs.toString().includes('Promise.all'),
   tokenRefreshesHealth: _adoptToken.toString().includes('runChecks()'),
 }));
@@ -399,46 +398,13 @@ ok('the meter can report REAL OpenAI spend when an admin key is set',
   SERVER_SOURCE.includes('/v1/organization/costs?') &&
   SERVER_SOURCE.includes('OPENAI_CREDIT_USD') &&
   SERVER_SOURCE.includes("estimated: real === null"));
-ok('the map says whether the number came from OpenAI or from MAYA',
-  MAP_SOURCE.includes("d.estimated") && MAP_SOURCE.includes("'from OpenAI, $'") &&
-  MAP_SOURCE.includes("'estimated by MAYA, $'"));
+ok('the map no longer shows a percentage it cannot stand behind',
+  !MAP_SOURCE.includes("'from OpenAI, $'") && !MAP_SOURCE.includes('cr-pct'));
 ok('submission cards cannot clip on hover',
   MAP_SOURCE.includes('#subs-strip{display:flex;gap:12px;overflow-x:auto;padding:10px 28px 12px;') &&
   MAP_SOURCE.includes('.sub-tile:hover{border-color:rgba(255,255,255,0.55);transform:scale(1.012)'));
 ok('lights paint as each answer lands', MAP_SOURCE.includes("setDot('d-assets', a[0] && a[1] ? 'ok' : 'bad')"));
 
-// v13.28: the credit meter. The ring paints from pctLeft, sits under LIVE NOW,
-// and never claims to be a real balance.
-const credit = await pg.evaluate(async () => {
-  (0, eval)("_idTok = 'fake'");
-  (0, eval)("_statusFetch = async () => ({ok:true,status:200,json:async()=>({ok:true,estimated:false," +
-    "month:'2026-08',since:'2026-08-14',hasTopUp:true,spentUsd:5.31,budgetUsd:10,fundedUsd:10," +
-    "remainingUsd:4.69,pctLeft:47,calls:96,images:34})})");
-  await loadCredit();
-  const ring = document.getElementById('credit-ring');
-  const arc = ring.querySelector('.cr-arc');
-  // The tiles are empty in a headless boot, so stand one up: a hidden row has
-  // no geometry to line the ring up against.
-  const tiles = document.getElementById('traffic-tiles');
-  tiles.innerHTML = '<div class="tile live"><div class="k">live now</div><div class="v">1</div></div>';
-  tiles.classList.remove('hidden');
-  return {
-    shown: !document.getElementById('credit-row').classList.contains('hidden'),
-    pct: ring.querySelector('.cr-pct').textContent,
-    amount: document.querySelector('#credit-side .cr-amt').textContent,
-    sub: document.querySelector('#credit-side .cr-sub').textContent,
-    offset: Number(arc.style.strokeDashoffset),
-    circumference: Number(arc.style.strokeDasharray),
-    leftAligned: Math.abs(ring.getBoundingClientRect().left - tiles.getBoundingClientRect().left) < 2,
-  };
-});
-ok('the credit ring stays hidden until there are numbers', s.creditHiddenAtRest);
-ok('the credit ring paints the right arc for 47 percent',
-  credit.shown && credit.pct === '47%' &&
-  Math.abs(credit.offset - credit.circumference * 0.53) < 1);
-ok('the credit ring shows the money left and names its source',
-  credit.amount === '$4.69 left of $10.00' && credit.sub.startsWith('from OpenAI,'));
-ok('the credit ring sits under the LIVE NOW tile', credit.leftAligned);
 ok('the meter is admin only and counts every successful call',
   SERVER_SOURCE.includes("app.get('/api/admin/spend'") &&
   SERVER_SOURCE.includes('await requireAdmin(req)') &&
@@ -452,8 +418,8 @@ ok('an image costs more of the budget than a chat call',
 
 ok('the map light reads Submissions', s.lights.includes('Submissions') && !s.lights.includes('Drive'));
 
-ok('Systems Map order: traffic and marketing, changes, prompting, architecture',
-  s.order === 'traffic-fold,changes-fold,pe-fold,arch-fold');
+ok('Systems Map folds: changes, prompting, architecture',
+  s.order === 'changes-fold,pe-fold,arch-fold');
 ok('Architecture is collapsible', s.archFold);
 ok('door cards have no arrows', s.arrows === 0);
 ok('"Never delete" banner removed', !s.warnBanner);
@@ -562,10 +528,23 @@ ok('Settings is gone from the drawer, Tip, Logout and Privacy stay',
   INDEX_SOURCE.includes('onclick="openTip()"') &&
   INDEX_SOURCE.includes('onclick="mayaSignOut()"') &&
   INDEX_SOURCE.includes('href="/privacy.html"'));
-ok('the notes column carries this version, and only this version',
-  INDEX_SOURCE.includes("groups.push({ t: 'Asked for, this version'") &&
+ok('the notes column carries this version, in the drawer\'s own hand',
+  INDEX_SOURCE.includes("groups.push({ t: 'Design ideas, this version'") &&
   INDEX_SOURCE.includes('id="viewer-notes"') &&
+  INDEX_SOURCE.includes('#viewer-notes .note-group-title {') &&
   INDEX_SOURCE.includes('mods: Array.isArray(mods) ? mods.slice(0, 12) : null,'));
+ok('the picture is centred again, the notes take the margin',
+  !INDEX_SOURCE.includes('#garment-image-wrap { margin-left: 210px; }') &&
+  INDEX_SOURCE.includes('width: min(250px, calc(15vw - 20px));'));
+ok('a Pinterest sign in that dies says what to fix',
+  INDEX_SOURCE.includes('async function _pinSignInFailed()') &&
+  INDEX_SOURCE.includes('if (w.closed) finish(false)') &&
+  SERVER_SOURCE.includes('redirect: PIN_REDIRECT,'));
+ok('New project wears the same clothes as New avatar',
+  INDEX_SOURCE.includes('#notes-drawer .session-item-new:hover { background: rgba(180,205,255,0.08); }'));
+ok('the fabrics drawer leads with its two pills',
+  !INDEX_SOURCE.includes('id="fabrics-drawer-title"') &&
+  INDEX_SOURCE.includes('id="fabrics-tab-house"'));
 
 // ── v13.36, Aug 21 ─────────────────────────────────────────────────────────
 ok('the drawer says avatar, and projects make their own new one',
@@ -609,10 +588,11 @@ ok('the map stops saying arriving once the picture clearly is not coming',
   MAP_SOURCE.includes('const ARRIVING_MS = 3 * 60 * 1000;') &&
   MAP_SOURCE.includes("'no picture'") &&
   MAP_SOURCE.includes(".badge:not(.stale)"));
-ok('the map headlines live now and unique users',
+ok('one row, five numbers, users first',
   MAP_SOURCE.includes('function _paintHeadTiles(d)') &&
-  MAP_SOURCE.includes('>users<') &&
-  MAP_SOURCE.includes('id="traffic-fold"'));
+  MAP_SOURCE.includes('<h2 class="grp">Users and traffic</h2>') &&
+  MAP_SOURCE.indexOf('<div class="k">users</div>') < MAP_SOURCE.indexOf('&#9679; live now</div>') &&
+  MAP_SOURCE.includes('>7 days<') && MAP_SOURCE.includes('>28 days<'));
 ok('the map hamburger links the privacy policy',
   MAP_SOURCE.includes('<a href="/privacy.html" target="_blank">Privacy policy'));
 ok('unique accounts are counted by MAYA itself',
@@ -620,13 +600,10 @@ ok('unique accounts are counted by MAYA itself',
   SERVER_SOURCE.includes('function noteUser(sub)') &&
   SERVER_SOURCE.includes('async function countUsers()') &&
   SERVER_SOURCE.includes('accounts: accounts || null'));
-ok('the credit ring counts from the day the money was loaded',
+ok('the credit meter stays on the server, off the map',
   SERVER_SOURCE.includes('async function openAiCostSince(startSec)') &&
-  SERVER_SOURCE.includes('fundedUsd') &&
-  SERVER_SOURCE.includes("const CREDIT_DOC = 'metrics/credit.json'") &&
   SERVER_SOURCE.includes("app.post('/api/admin/credit'") &&
-  MAP_SOURCE.includes('function saveTopUp()') &&
-  MAP_SOURCE.includes('id="topup"'));
+  !MAP_SOURCE.includes('id="credit-row"') && !MAP_SOURCE.includes('id="topup"'));
 
 // ── v13.34, Aug 20 ─────────────────────────────────────────────────────────
 const MKT_SOURCE = existsSync(join(ROOT, AT.marketing))
@@ -644,24 +621,22 @@ ok('marketing reads Analytics, Meta and Google Ads separately',
   SERVER_SOURCE.includes('async function metaInsights()') &&
   SERVER_SOURCE.includes('async function googleAdsInsights()') &&
   SERVER_SOURCE.includes('MARKETING_GA_PROPERTY_ID'));
-ok('traffic and marketing share one fold, loaded only when opened',
-  !MAP_SOURCE.includes('id="marketing-fold"') &&
-  MAP_SOURCE.includes('<h2 class="grp">Traffic and marketing</h2>') &&
-  MAP_SOURCE.includes('async function loadMarketing()') &&
-  MAP_SOURCE.includes('if(this.open)loadMarketing()'));
+ok('nothing hangs below the row of five',
+  !MAP_SOURCE.includes('id="marketing-fold"') && !MAP_SOURCE.includes('id="traffic-fold"') &&
+  !MAP_SOURCE.includes('id="mkt-tiles"'));
 
 // ── v13.35, Aug 20 ─────────────────────────────────────────────────────────
-ok('only the logo, the wordmark and the menu are pinned',
+ok('the lights ride the wordmark line and scroll away with the page',
   MAP_SOURCE.includes('#top-lights{display:flex') &&
+  MAP_SOURCE.includes('margin:-58px 0 30px') &&
   !/id="top-bar"[\s\S]{0,900}id="top-lights"/.test(MAP_SOURCE));
 ok('the logo goes home to the Systems Map',
   MAP_SOURCE.includes('<a href="/status.html"') &&
   MKT_SOURCE.includes('<a href="/status.html"') &&
   BACKEND_SOURCE.includes('<a href="/status.html"'));
-ok('one heading, Users, with four numbers under it',
-  MAP_SOURCE.includes('<h2 class="grp">Users</h2>') &&
-  !MAP_SOURCE.includes('Who is here') &&
-  MAP_SOURCE.includes(">users<") && MAP_SOURCE.includes('>today<') && MAP_SOURCE.includes('>7 days<'));
+ok('one heading over the whole row',
+  MAP_SOURCE.includes('<h2 class="grp">Users and traffic</h2>') &&
+  !MAP_SOURCE.includes('Who is here') && MAP_SOURCE.includes('>today<'));
 
 
 // ── v13.37, the folder ─────────────────────────────────────────────────────

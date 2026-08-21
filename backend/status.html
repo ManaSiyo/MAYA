@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.38">
+<meta name="maya-version" content="13.39">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -54,8 +54,10 @@ try {
   .top-btn:hover{border-color:rgba(255,255,255,0.42);color:rgba(245,250,255,1)}
   .top-btn.hamburger{width:32px;height:28px;padding:0;display:flex;align-items:center;justify-content:center}
   /* Lights live in the top bar, same line as the wordmark */
+  /* v13.39: the lights sit on the SAME line as the wordmark, but they live in
+     the page, not in the fixed bar, so they scroll away and the bar does not. */
   #top-lights{display:flex;gap:18px;align-items:center;justify-content:center;cursor:pointer;
-              margin:0 0 8px;flex-wrap:wrap}
+              margin:-58px 0 30px;height:28px;flex-wrap:wrap;position:relative;z-index:5}
   .hamburger-icon{display:inline-flex;flex-direction:column;gap:3px;width:14px}
   .hamburger-icon span{display:block;height:1px;width:100%;background:currentColor;border-radius:1px}
 
@@ -131,50 +133,13 @@ try {
   #traffic-note{font-family:'Jost',Verdana,sans-serif;font-size:10.5px;color:var(--dim);line-height:1.7;
     border:0.5px dashed var(--line);border-radius:12px;padding:11px 14px}
   #traffic-note.hidden,#traffic-tiles.hidden{display:none}
-  /* v13.28: the credit ring. Left aligned so it sits under the LIVE NOW tile,
-     which is where Fromsa asked for it. */
-  #credit-row{display:flex;align-items:center;gap:14px;margin:10px 0 6px;
-    justify-content:flex-start;text-align:left}
-  #credit-row.hidden{display:none}
-  #credit-side .cr-edit{margin-top:5px;background:none;border:0.5px solid var(--line);border-radius:100px;
-    padding:4px 12px;font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.16em;
-    text-transform:uppercase;color:var(--dim);cursor:pointer;transition:color .2s,border-color .2s}
-  #credit-side .cr-edit:hover{color:var(--ink);border-color:rgba(255,255,255,0.4)}
-  #topup{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;
-    background:rgba(2,5,14,0.72);backdrop-filter:blur(10px)}
-  #topup.open{display:flex}
-  #topup .tu-card{border:0.5px solid var(--line);border-radius:20px;background:rgba(8,13,30,0.94);
-    padding:26px 28px;width:min(360px,92vw);text-align:center}
-  #topup h4{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:22px;margin:0 0 4px}
-  #topup p{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:0.1em;color:var(--dim);
-    line-height:1.7;margin:0 0 16px}
-  #topup input{width:100%;background:rgba(255,255,255,0.04);border:0.5px solid var(--line);
-    border-radius:100px;padding:10px 16px;color:var(--ink);font-family:'Jost',sans-serif;font-size:12px;
-    margin-bottom:10px;text-align:center}
-  #topup .tu-row{display:flex;gap:10px;justify-content:center;margin-top:6px}
-  #topup button{background:none;border:0.5px solid var(--line);border-radius:100px;padding:9px 18px;
     font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;
     color:var(--ink);cursor:pointer}
-  #topup button:hover{border-color:rgba(255,255,255,0.45)}
-  #tu-state{font-family:'Jost',sans-serif;font-size:9.5px;color:var(--dim);min-height:14px;margin-top:8px}
-  #credit-ring{position:relative;width:84px;height:84px;flex:0 0 84px}
-  #credit-ring svg{width:84px;height:84px;transform:rotate(-90deg)}
-  #credit-ring circle{fill:none;stroke-width:3;stroke-linecap:round}
-  #credit-ring .cr-track{stroke:rgba(255,255,255,0.12)}
-  #credit-ring .cr-arc{stroke:var(--green);stroke-dasharray:226.2;stroke-dashoffset:226.2;
     transition:stroke-dashoffset 1s cubic-bezier(.45,0,.55,1), stroke .4s;
     filter:drop-shadow(0 0 4px rgba(74,222,128,0.45))}
-  #credit-ring.warn .cr-arc{stroke:var(--amber);filter:drop-shadow(0 0 4px rgba(251,191,36,0.45))}
-  #credit-ring.low .cr-arc{stroke:var(--rose);filter:drop-shadow(0 0 4px rgba(253,164,175,0.5))}
-  #credit-ring .cr-mid{position:absolute;inset:0;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:0}
-  #credit-ring .cr-pct{font-size:19px;line-height:1;color:var(--ink)}
-  #credit-ring .cr-unit{font-family:'Jost',Verdana,sans-serif;font-size:7.5px;letter-spacing:0.2em;
     text-transform:uppercase;color:var(--faint);margin-top:2px}
-  #credit-side .cr-lbl{font-family:'Jost',Verdana,sans-serif;font-size:9px;letter-spacing:0.16em;
     text-transform:uppercase;color:var(--dim)}
-  #credit-side .cr-amt{font-size:15px;color:var(--ink);margin-top:2px}
-  #credit-side .cr-sub{font-family:'Jost',Verdana,sans-serif;font-size:8.5px;letter-spacing:0.14em;
     text-transform:uppercase;color:var(--faint);margin-top:2px}
   #gsi-slot{margin-top:8px}
   pre.cmd{text-align:left;font-family:Menlo,monospace;font-size:10.5px;color:var(--ink);background:rgba(255,255,255,0.06);
@@ -346,63 +311,18 @@ try {
   <div id="subs-strip" style="display:none"></div>
   <div id="subs-note-inline">Waiting for the one sign in at the top of the page.</div>
 
-  <!-- v13.35: one heading, Users, and the four numbers that answer it.
-       Everything with a longer horizon, and everything about how people found
-       MAYA, lives in the one fold underneath. -->
-  <h2 class="grp">Users</h2>
+  <!-- v13.39: one row, five numbers, and nothing underneath. Users first,
+       because that is the number that matters, then the site's own traffic. -->
+  <h2 class="grp">Users and traffic</h2>
   <div id="head-tiles" class="tiles hidden"></div>
-  <details class="fold" id="traffic-fold" ontoggle="if(this.open)loadMarketing()">
-    <summary><h2 class="grp">Traffic and marketing</h2></summary>
-    <div class="fold-body">
-      <div id="traffic-tiles" class="tiles hidden"></div>
-      <div id="traffic-note">checking&#8230;</div>
-      <div id="mkt-tiles" class="tiles hidden" style="margin-top:10px"></div>
-      <div id="mkt-note" style="font-family:'Jost',sans-serif;font-size:10.5px;color:var(--dim);
-        border:0.5px dashed var(--line);border-radius:12px;padding:11px 14px;line-height:1.7;margin-top:10px">
-        Marketing loads when this opens. <a href="/marketing.html" style="color:var(--ink)">The whole picture</a>.</div>
-    </div>
-  </details>
-
-  <!-- v13.28: the credit meter, under LIVE NOW. OpenAI will not tell an
-       application key what the balance is, so MAYA counts its own calls. -->
-  <div id="credit-row" class="hidden">
-    <div id="credit-ring" title="Measured from OpenAI when an admin key is set, otherwise MAYA\u2019s own count of what it spent.">
-      <svg viewBox="0 0 84 84" aria-hidden="true">
-        <circle class="cr-track" cx="42" cy="42" r="36"></circle>
-        <circle class="cr-arc" cx="42" cy="42" r="36"></circle>
-      </svg>
-      <div class="cr-mid"><span class="cr-pct">&#8212;</span><span class="cr-unit">left</span></div>
-    </div>
-    <div id="credit-side">
-      <div class="cr-lbl">API credits, this month</div>
-      <div class="cr-amt">&#8212;</div>
-      <div class="cr-sub">estimated</div>
-      <button class="cr-edit" id="credit-edit" onclick="openTopUp()">Top up</button>
-    </div>
-  </div>
-
-
-  <!-- v13.34: the one fact OpenAI will not tell a program: what you last put in.
-       Told here, once, and MAYA does the arithmetic from OpenAI's own costs. -->
-  <div id="topup" onclick="if(event.target===this)closeTopUp()">
-    <div class="tu-card">
-      <h4>Last top up</h4>
-      <p>OpenAI does not publish a balance to a program, only what has been spent.
-         Tell MAYA what you added and when, and the ring counts down from it.</p>
-      <input id="tu-amt" type="number" min="1" step="0.01" placeholder="Amount, for example 10">
-      <input id="tu-date" type="date">
-      <div class="tu-row">
-        <button onclick="saveTopUp()">Save</button>
-        <button onclick="closeTopUp()">Cancel</button>
-      </div>
-      <div id="tu-state"></div>
-    </div>
-  </div>
+  <div id="traffic-note">checking&#8230;</div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-21c">
+  <details class="fold" id="changes-fold" data-latest="2026-08-21d">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 21</b>This map says one thing at a time. The lights ride the same line as the wordmark and scroll away with the page. Users and traffic is one row of five: users, live now, today, seven days, twenty eight days, and nothing hangs below it. The API credit ring is gone: it could not be accurate without being told what was funded, and a gauge that has to be explained is worse than no gauge. Marketing keeps its own door at the top.</div>
+    <div class="chg"><b>Aug 21</b>Design notes read like design notes again. The column beside a vision uses the same type, the same hairlines and the same grouping the drawer used to: notes, design ideas for this version, aesthetics and constraints, what it is cut in. The picture is centred as it was.</div>
     <div class="chg"><b>Aug 21</b>MAYA answers a crawler properly. Anything asking for robots.txt used to be handed the whole 700KB app, because every unknown address falls through to it, so link previews and audit tools timed out on the site. There is a real robots.txt now. The pictures folder holds only pictures the web actually serves, and the leftover delete pile moved out of docs.</div>
     <div class="chg"><b>Aug 21</b>The folder was reorganised: the app lives in frontend, the back rooms in backend, the pictures stay where the web can reach them, and everything an agent reads is in docs. Every address that ever worked still works, because the hosting map now points each one at its new file. The handoff file is updated in the same commit as the change from now on, so whichever assistant picks the work up next reads the truth.</div>
     <div class="chg"><b>Aug 21</b>Notes belong to the vision on screen. A moodboard holds many garments and every version of every garment is its own thing, so one pile of notes for a whole project told you nothing about the picture you were looking at. Each vision now carries what it is, what was asked of that version, what it was drawn from and what it is cut in, beside the picture, changing as you step between versions.</div>
@@ -689,9 +609,7 @@ function _adoptToken(t, firstLoad) {
   _cacheTok(t);
   _showSignin(false);
   _scheduleRenew(t);
-  runChecks(); loadTraffic(); loadSubmissions(); loadCredit(); _fbBridge(t);
-  // v13.35: if the fold was already open when the sign in landed, fill it.
-  try { const f = document.getElementById('traffic-fold'); if (f && f.open) loadMarketing(); } catch (_) {}
+  runChecks(); loadTraffic(); loadSubmissions(); _fbBridge(t);
 }
 function _gisBoot() {
   const cached = _cachedTok();
@@ -884,10 +802,10 @@ setInterval(() => {
 }, 5000);
 // The meter moves in cents, not seconds: once a minute is plenty.
 setInterval(() => {
-  if (_idTok && document.visibilityState === 'visible') loadCredit();
+  if (_idTok && document.visibilityState === 'visible') loadTraffic();
 }, 60000);
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && _idTok) { loadSubmissions(); runChecks(); loadCredit(); }
+  if (document.visibilityState === 'visible' && _idTok) { loadSubmissions(); runChecks(); }
 });
 
 let _trafficSeq = 0;
@@ -935,146 +853,20 @@ function _paintHeadTiles(d) {
   const t = d.ranges || {};
   const live = (typeof d.live === 'number') ? d.live : null;
   const em = '&#8212;';
-  const sig = [live, acc && acc.total, (t.today || {}).users, (t.d7 || {}).users].join(',');
+  const n = (r) => (t[r] ? (t[r].users || 0) : em);
+  const sig = [acc && acc.total, live, n('today'), n('d7'), n('d28')].join(',');
   if (head.dataset.sig === sig) { head.classList.remove('hidden'); return; }
   head.dataset.sig = sig;
   head.innerHTML =
-    '<div class="tile live" title="People on the site right now"><div class="k">&#9679; live now</div>' +
-      '<div class="v">' + (live === null ? em : live) + '</div></div>' +
     '<div class="tile" title="Separate Google accounts that have signed in to MAYA"><div class="k">users</div>' +
       '<div class="v">' + (acc ? acc.total : em) + '</div></div>' +
-    '<div class="tile"><div class="k">today</div><div class="v">' +
-      (t.today ? (t.today.users || 0) : em) + '</div></div>' +
-    '<div class="tile"><div class="k">7 days</div><div class="v">' +
-      (t.d7 ? (t.d7.users || 0) : em) + '</div></div>';
+    '<div class="tile live" title="People on the site right now"><div class="k">&#9679; live now</div>' +
+      '<div class="v">' + (live === null ? em : live) + '</div></div>' +
+    '<div class="tile"><div class="k">today</div><div class="v">' + n('today') + '</div></div>' +
+    '<div class="tile"><div class="k">7 days</div><div class="v">' + n('d7') + '</div></div>' +
+    '<div class="tile"><div class="k">28 days</div><div class="v">' + n('d28') + '</div></div>';
   head.classList.remove('hidden');
 }
-
-// ── v13.28: the credit meter ───────────────────────────────────────────────
-// The circle shows how much of the month's budget is left. The number is an
-// estimate on purpose: OpenAI only reveals a real balance to an organisation
-// admin key, which has no business living on a web server, so MAYA prices its
-// own calls as they go. Set the budget with MONTHLY_BUDGET_USD on Cloud Run.
-const CR_CIRCUMFERENCE = 2 * Math.PI * 36;      // r=36 in the svg above
-let _creditSeq = 0;
-async function loadCredit() {
-  const seq = ++_creditSeq;
-  const row = document.getElementById('credit-row');
-  if (!row || !_idTok) return;
-  let r;
-  try {
-    r = await _statusFetch('/api/admin/spend', { headers: { 'Authorization': 'Bearer ' + _idTok } });
-  } catch (_) { return; }
-  if (seq !== _creditSeq) return;
-  if (r.status === 401) { _expired(); return; }
-  if (!r.ok) return;                             // quiet: a gauge never shouts
-  let d;
-  try { d = await r.json(); } catch (_) { return; }
-  if (seq !== _creditSeq || !d || d.ok !== true) return;
-  const ring = document.getElementById('credit-ring');
-  const arc  = ring.querySelector('.cr-arc');
-  const pct  = (typeof d.pctLeft === 'number') ? d.pctLeft : null;
-  ring.classList.toggle('warn', pct !== null && pct <= 40 && pct > 15);
-  ring.classList.toggle('low',  pct !== null && pct <= 15);
-  arc.style.strokeDasharray  = CR_CIRCUMFERENCE.toFixed(1);
-  arc.style.strokeDashoffset = (CR_CIRCUMFERENCE * (1 - (pct === null ? 0 : pct) / 100)).toFixed(1);
-  ring.querySelector('.cr-pct').textContent = pct === null ? '\u2014' : pct + '%';
-  const side = document.getElementById('credit-side');
-  side.querySelector('.cr-amt').textContent =
-    '$' + d.remainingUsd.toFixed(2) + ' left of $' + Number(d.fundedUsd || d.budgetUsd).toFixed(2);
-  // v13.29: say where the number came from. "measured" means OpenAI's own
-  // costs; "estimated" means MAYA priced its own calls because no admin key
-  // is set. Never let the two look the same.
-  const sinceLabel = (() => {
-    try {
-      const dt = new Date((d.since || '') + 'T00:00:00Z');
-      return isNaN(dt) ? '' : ' since ' + dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
-    } catch (_) { return ''; }
-  })();
-  side.querySelector('.cr-sub').textContent = d.estimated
-    ? ('estimated by MAYA, $' + d.spentUsd.toFixed(2) + ' used' + sinceLabel)
-    : ('from OpenAI, $' + d.spentUsd.toFixed(2) + ' used' + sinceLabel);
-  const lbl = side.querySelector('.cr-lbl');
-  if (lbl) lbl.textContent = 'API credits, this month';
-  // v13.34: one line under the amount, and a button to correct the one fact
-  // OpenAI will not hand over. No console instructions on the page.
-  const edit = document.getElementById('credit-edit');
-  if (edit) edit.textContent = d.hasTopUp ? 'Top up' : 'Tell MAYA your top up';
-  row.classList.remove('hidden');
-}
-
-// ── v13.34: marketing, the one line version ────────────────────────────────
-// The whole picture lives on /marketing.html. This is the glance: how many
-// people reached manasiyo.com in four weeks, and how many of them came from
-// Google and from Facebook.
-let _mktLoaded = false;
-async function loadMarketing() {
-  if (_mktLoaded || !_idTok) return;
-  const note = document.getElementById('mkt-note');
-  const tiles = document.getElementById('mkt-tiles');
-  let r;
-  try { r = await _statusFetch('/api/admin/marketing?t=' + Date.now(),
-    { headers: { 'Authorization': 'Bearer ' + _idTok }, cache: 'no-store' }, 20000); }
-  catch (_) { note.textContent = 'The marketing numbers did not answer in time.'; return; }
-  if (r.status === 401) { _expired(); return; }
-  if (!r.ok) { note.textContent = 'Marketing unavailable right now (' + r.status + ').'; return; }
-  let d;
-  try { d = await r.json(); } catch (_) { note.textContent = 'Incomplete response.'; return; }
-  const a = d.analytics || {};
-  if (!a.connected) {
-    note.innerHTML = '<b>Analytics is not reading manasiyo.com yet.</b> Open marketing for the one step that fixes it.';
-    return;
-  }
-  const sum = (re) => (a.sources || []).filter(s => re.test(String(s.source || '')))
-    .reduce((n, s) => n + Number(s.sessions || 0), 0);
-  const T = (k, v) => '<div class="tile"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>';
-  tiles.innerHTML =
-    T('visitors, 28 days', ((a.ranges || {}).d28 || {}).users || 0) +
-    T('from google', sum(/google/i)) +
-    T('from facebook', sum(/facebook|instagram|meta/i)) +
-    T('paid, 7 days', (d.meta && d.meta.connected ? '$' + Number(d.meta.d7.spend || 0).toFixed(0) : '\u2014'));
-  tiles.classList.remove('hidden');
-  note.style.display = 'none';
-  _mktLoaded = true;
-}
-
-// ── v13.34: the top up dialog ──────────────────────────────────────────────
-function openTopUp() {
-  const m = document.getElementById('topup');
-  if (!m) return;
-  document.getElementById('tu-state').textContent = '';
-  m.classList.add('open');
-  _statusFetch('/api/admin/credit', { headers: { 'Authorization': 'Bearer ' + _idTok } })
-    .then(r => r.json()).then(d => {
-      if (!d || !d.ok) return;
-      if (d.usd) document.getElementById('tu-amt').value = d.usd;
-      document.getElementById('tu-date').value = d.since || new Date().toISOString().slice(0, 10);
-    }).catch(() => {});
-}
-function closeTopUp() {
-  const m = document.getElementById('topup');
-  if (m) m.classList.remove('open');
-}
-async function saveTopUp() {
-  const usd = Number(document.getElementById('tu-amt').value);
-  const since = document.getElementById('tu-date').value;
-  const st = document.getElementById('tu-state');
-  if (!(usd > 0))  { st.textContent = 'An amount, please.'; return; }
-  if (!since)      { st.textContent = 'And the day you added it.'; return; }
-  st.textContent = 'Saving\u2026';
-  try {
-    const r = await _statusFetch('/api/admin/credit', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usd, since }),
-    });
-    if (r.status === 401) { _expired(); return; }
-    if (!r.ok) { st.textContent = 'That did not save. Check the amount and the date.'; return; }
-    st.textContent = 'Saved.';
-    setTimeout(() => { closeTopUp(); loadCredit(); }, 500);
-  } catch (_) { st.textContent = 'Could not reach the API.'; }
-}
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTopUp(); });
 
 // Prompting engine. Live copy: Firestore config/prompting, the app reads it at boot.
 // If the vault rules deny the shared doc, falls back to a per-account draft at
