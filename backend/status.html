@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Systems Map</title>
-<meta name="maya-version" content="13.39">
+<meta name="maya-version" content="13.40">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -318,9 +318,10 @@ try {
   <div id="traffic-note">checking&#8230;</div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-21d">
+  <details class="fold" id="changes-fold" data-latest="2026-08-21e">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 21</b>Pinterest works, and it reads like Pinterest: the pins are twice as tall, two across, vertical the way the medium is. Both drawers now carry one header line, Back small on the left and the name centred, with the two pills directly under it. No arrow, no subtitle, no heading repeating a pill.</div>
     <div class="chg"><b>Aug 21</b>This map says one thing at a time. The lights ride the same line as the wordmark and scroll away with the page. Users and traffic is one row of five: users, live now, today, seven days, twenty eight days, and nothing hangs below it. The API credit ring is gone: it could not be accurate without being told what was funded, and a gauge that has to be explained is worse than no gauge. Marketing keeps its own door at the top.</div>
     <div class="chg"><b>Aug 21</b>Design notes read like design notes again. The column beside a vision uses the same type, the same hairlines and the same grouping the drawer used to: notes, design ideas for this version, aesthetics and constraints, what it is cut in. The picture is centred as it was.</div>
     <div class="chg"><b>Aug 21</b>MAYA answers a crawler properly. Anything asking for robots.txt used to be handed the whole 700KB app, because every unknown address falls through to it, so link previews and audit tools timed out on the site. There is a real robots.txt now. The pictures folder holds only pictures the web actually serves, and the leftover delete pile moved out of docs.</div>

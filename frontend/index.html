@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.39">
+<meta name="maya-version" content="13.40">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -714,7 +714,7 @@
     display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
     gap: 10px; max-height: 52vh; overflow-y: auto; padding: 2px;
   }
-  .pin-grid.pics { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+  .pin-grid.pics { grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); gap: 12px; }
   .pin-tile, .pin-pic {
     position: relative; display: flex; flex-direction: column; gap: 4px;
     padding: 0; border-radius: 12px; overflow: hidden; cursor: pointer;
@@ -723,8 +723,8 @@
     transition: border-color 0.2s, transform 0.2s;
   }
   .pin-tile:hover, .pin-pic:hover { border-color: rgba(220,232,255,0.6); transform: translateY(-2px); }
-  .pin-tile img { width: 100%; height: 96px; object-fit: cover; display: block; }
-  .pin-tile .pin-blank { display: block; width: 100%; height: 96px; background: rgba(255,255,255,0.05); }
+  .pin-tile img { width: 100%; height: 132px; object-fit: cover; display: block; }
+  .pin-tile .pin-blank { display: block; width: 100%; height: 132px; background: rgba(255,255,255,0.05); }
   .pin-tile-name {
     font-family: 'Cormorant Garamond', serif; font-size: 13px; padding: 0 8px;
   }
@@ -732,7 +732,9 @@
     font-family: 'Jost', sans-serif; font-size: 8.5px; letter-spacing: 0.16em;
     text-transform: uppercase; color: rgba(238,243,255,0.42); padding: 0 8px 8px;
   }
-  .pin-pic img { width: 100%; height: 104px; object-fit: cover; display: block; }
+  /* v13.40: Pinterest is a vertical medium. The tiles read like pins now,
+     roughly twice as tall as they were, two across in the drawer. */
+  .pin-pic img { width: 100%; height: 200px; object-fit: cover; display: block; }
   .pin-pic .pin-check {
     position: absolute; top: 6px; right: 6px; width: 18px; height: 18px;
     border-radius: 50%; display: flex; align-items: center; justify-content: center;
@@ -2531,6 +2533,25 @@
   }
   #fabrics-drawer.open, #pinterest-drawer.open { transform: translateX(0); opacity: 1; }
   /* v11.4: Back text-link, same styling as the avatar submenu back link. */
+  /* v13.40: one header row. Back is pinned to the left edge, the title (or the
+     pills, in the fabrics drawer) sits centred in the row. */
+  .drawer-head {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    padding: 16px 18px 6px; min-height: 44px;
+  }
+  .drawer-head .fabrics-back {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    padding: 4px 4px !important; font-size: 9px !important; letter-spacing: 0.18em;
+    color: rgba(200,210,230,0.55) !important;
+  }
+  .drawer-head .fabrics-back:hover { color: rgba(255,255,255,0.95) !important; }
+  .drawer-head-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px; font-weight: 400; letter-spacing: 0.06em;
+    color: rgba(230,240,255,0.92); text-align: center;
+  }
+  .fabrics-tabs.centred { justify-content: center; padding-top: 2px; }
+  .drawer-head .fabrics-tabs { padding: 0; }
   #fabrics-drawer .fabrics-back, #pinterest-drawer .fabrics-back {
     align-self: flex-start;
     background: none; border: none;
@@ -4497,15 +4518,14 @@
      library only. Client-brought fabric swatches go on the moodboard
      instead, by drag-and-drop onto the canvas like any other inspo. -->
 <div id="fabrics-drawer">
-  <button class="fabrics-back" onclick="closeFabricsDrawer()" title="Back to menu" aria-label="Back">&#8592; Back</button>
-  <!-- v13.39: the title said what the first pill already says. Gone, and the
-       pills move up into its place. -->
-  <!-- v13.4: two tabs. Mana Siyo fabrics = the atelier's in-house library.
-       My fabrics = this client's own uploads, kept on their account so every
-       new project can reach them. -->
-  <div class="fabrics-tabs">
-    <button class="fabrics-tab active" id="fabrics-tab-house" onclick="setFabricsTab('house')">Mana Siyo fabrics</button>
-    <button class="fabrics-tab" id="fabrics-tab-mine" onclick="setFabricsTab('mine')">My fabrics</button>
+  <!-- v13.40: Back sits to the left of what it goes back from, and the two
+       pills carry the naming. No arrow, no heading repeating a pill. -->
+  <div class="drawer-head">
+    <button class="fabrics-back" onclick="closeFabricsDrawer()" title="Back to menu" aria-label="Back">Back</button>
+    <div class="fabrics-tabs">
+      <button class="fabrics-tab active" id="fabrics-tab-house" onclick="setFabricsTab('house')">Mana Siyo fabrics</button>
+      <button class="fabrics-tab" id="fabrics-tab-mine" onclick="setFabricsTab('mine')">My fabrics</button>
+    </div>
   </div>
   <div class="fabrics-drawer-body" id="fabrics-drawer-body"></div>
   <input type="file" id="myfabric-file" accept="image/*" multiple style="display:none">
@@ -4515,14 +4535,11 @@
      everything the account has saved, newest first. Second tab is the boards,
      for when the save you want lives in one. -->
 <div id="pinterest-drawer">
-  <button class="fabrics-back" onclick="closePinterestDrawer()" title="Back to menu" aria-label="Back">&#8592; Back</button>
-  <div class="fabrics-drawer-header">
-    <div>
-      <div class="fabrics-drawer-title" id="pin-drawer-title">Pinterest</div>
-      <div class="fabrics-drawer-sub" id="pin-drawer-sub"></div>
-    </div>
+  <div class="drawer-head">
+    <button class="fabrics-back" onclick="closePinterestDrawer()" title="Back to menu" aria-label="Back">Back</button>
+    <div class="drawer-head-title" id="pin-drawer-title">Pinterest</div>
   </div>
-  <div class="fabrics-tabs" id="pin-tabs" style="display:none">
+  <div class="fabrics-tabs centred" id="pin-tabs" style="display:none">
     <button class="fabrics-tab active" id="pin-tab-all" onclick="setPinterestTab('all')">All saves</button>
     <button class="fabrics-tab" id="pin-tab-boards" onclick="setPinterestTab('boards')">Boards</button>
   </div>
@@ -9348,9 +9365,11 @@ function _pinBody(html) {
   const b = document.getElementById('pinterest-drawer-body');
   if (b) b.innerHTML = html;
 }
+// v13.40: the subtitle line is gone. The board name still belongs somewhere,
+// so it becomes the title when a board is open.
 function _pinSub(t) {
-  const el = document.getElementById('pin-drawer-sub');
-  if (el) el.textContent = t || '';
+  const el = document.getElementById('pin-drawer-title');
+  if (el) el.textContent = t && t !== 'everything you have saved' ? t : 'Pinterest';
 }
 function _pinSetFoot(show) {
   const f = document.getElementById('pin-drawer-foot');
@@ -9441,7 +9460,7 @@ function setPinterestTab(tab) {
 }
 
 async function _pinDrawerBoards() {
-  _pinSub('your boards');
+  _pinSub('');
   _pinSetFoot(false);
   _pinBody('<div class="pin-note">Loading your boards\u2026</div>');
   let j;
