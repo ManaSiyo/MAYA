@@ -640,10 +640,12 @@ const MKT_SOURCE = existsSync(join(ROOT, AT.marketing))
   ? readFileSync(join(ROOT, AT.marketing), 'utf8') : '';
 // v13.44: the doors dropped their pills and grid; a centered flex row now.
 // v13.45: three doors in Fromsa's order, the back rooms behind MAYA's hover.
-ok('the doors read Mana, Marketing, MAYA, in that order',
+// v13.46: everything in caps, per Fromsa.
+ok('the doors read MANA SIYO, MARKETING, MAYA, in that order, in caps',
   MAP_SOURCE.includes('.grid.doors{display:flex;justify-content:center') &&
-  MAP_SOURCE.indexOf('<b>Mana</b>') < MAP_SOURCE.indexOf('<b>Marketing</b>') &&
-  MAP_SOURCE.indexOf('<b>Marketing</b>') < MAP_SOURCE.indexOf('<b>MAYA</b>'));
+  MAP_SOURCE.indexOf('<b>MANA SIYO</b>') > -1 &&
+  MAP_SOURCE.indexOf('<b>MANA SIYO</b>') < MAP_SOURCE.indexOf('<b>MARKETING</b>') &&
+  MAP_SOURCE.indexOf('<b>MARKETING</b>') < MAP_SOURCE.indexOf('<b>MAYA</b>'));
 ok('the marketing page ships and signs in like the map',
   MKT_SOURCE.includes('MAYA Marketing') &&
   MKT_SOURCE.includes("localStorage.getItem('maya_admin_tok')") &&
@@ -763,8 +765,10 @@ ok('staged things wear chips beside Submit',
 ok('the picker numbers sit on their own ground',
   INDEX_SOURCE.includes('background: rgba(6,10,20,0.85);'));
 // v13.45: the button no longer hides; it rides out with the drawer.
-ok('the drawer button rides out with the drawer instead of hiding',
-  INDEX_SOURCE.includes('body.drawer-open #hamburger-toggle { transform: translateX(-360px); }'));
+// v13.46: anchored, not transitioned: its transform is written from the
+// live scroll offset every frame, glued to the drawer's edge.
+ok('the drawer button is anchored to the drawer, written per frame',
+  INDEX_SOURCE.includes("hb.style.transform = 'translateX(' + (-Math.max(0, hscroll.scrollLeft - 18)) + 'px)'"));
 ok('note categories fill from the fabric when the words are missing',
   INDEX_SOURCE.includes("byTag.set('color', [fb0.color])") &&
   INDEX_SOURCE.includes('class="vn-dot"'));
@@ -794,9 +798,9 @@ ok('design note values are crossable pills, one column, attributes folded in',
 ok('the button says Visualize, and a picked picture says Use this reference',
   INDEX_SOURCE.includes("'Apply changes' : 'Visualize'") &&
   INDEX_SOURCE.includes("'Use this reference'"));
-ok('the Admin doors are plain words, Mana among them',
+ok('the Admin doors are plain words, MANA SIYO among them',
   MAP_SOURCE.includes('.grid.doors .card{border:0;background:none') &&
-  MAP_SOURCE.includes('<b>Mana</b>') &&
+  MAP_SOURCE.includes('<b>MANA SIYO</b>') &&
   !MAP_SOURCE.includes('a.card{display:block'));
 ok('the Admin drawer runs full height and answers a mouse drag',
   MAP_SOURCE.includes('#drawer{position:fixed;top:10px;right:10px;bottom:10px') &&
@@ -805,10 +809,21 @@ ok('the Admin drawer runs full height and answers a mouse drag',
 // with the drawer on every page and stays visible, and a click anywhere
 // outside the drawer closes it.
 ok('the hamburger slides out with the drawer on every page',
-  INDEX_SOURCE.includes('body.drawer-open #hamburger-toggle { transform: translateX(') &&
+  INDEX_SOURCE.includes("hb.style.transform = 'translateX(") &&
   MAP_SOURCE.includes('body.drawer-open .top-btn.hamburger{transform:translateX(') &&
   BACKEND_SOURCE.includes('body.drawer-open #top-actions .top-btn.hamburger { transform: translateX(') &&
   (!OPS_SOURCE || OPS_SOURCE.includes('body.drawer-open header .icon-btn.hamburger{transform:translateX(')));
+// ── v13.46 ─────────────────────────────────────────────────────────────────
+ok('the pill and each drawer share one duration and curve, anchored not chasing',
+  MAP_SOURCE.includes('transition:transform .42s cubic-bezier(0.16,1,0.3,1)') &&
+  MAP_SOURCE.includes('transform:translateX(calc(100% + 20px))') &&
+  BACKEND_SOURCE.includes('transition: transform 0.42s cubic-bezier(0.16,1,0.3,1)'));
+ok('the Backend drawer slides open first and fills after',
+  /async function openClientsDrawer\(\) \{[\s\S]{0,400}classList\.add\('open'\)[\s\S]{0,400}getMayaFolder/.test(BACKEND_SOURCE));
+ok('Fabrics and Pinterest run the same full height as the main drawer',
+  /#fabrics-drawer, #pinterest-drawer \{[\s\S]{0,200}top: 10px; right: 18px; bottom: 10px;/.test(INDEX_SOURCE));
+ok('Back in Fabrics or Pinterest keeps the main drawer open',
+  INDEX_SOURCE.includes("'#notes-drawer, #hamburger-toggle, #fabrics-drawer, #pinterest-drawer, #feedback-modal'"));
 ok('a click anywhere outside the drawer closes it, on every page',
   /pointerdown[\s\S]{0,400}toggleNotesDrawer\(false\)/.test(INDEX_SOURCE) &&
   /pointerdown[\s\S]{0,400}toggleDrawer\(false\)/.test(MAP_SOURCE) &&

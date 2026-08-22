@@ -16,6 +16,20 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 22, 2026, ANCHORED (v13.46)
+
+[x] "The pill should be stuck to the invisible drawer, anchored on it, not
+    chasing it." In MAYA the pill's position is now written from the
+    drawer's own motion every frame; on Admin and the Backend the drawer
+    glides with exactly the pill's timing.
+[x] "Pinterest and Fabrics are still not the full screen of the new drawer
+    length." Both now run top 10 to bottom 10, same as the main drawer.
+[x] "Clicking Back on Fabrics sometimes hides the main drawer. Back should
+    just take me back." Back only closes its own panel now; the main
+    drawer stays open behind it.
+[x] "On Admin, call it MANA SIYO, and Marketing in caps too." The doors
+    read MANA SIYO, MARKETING, MAYA.
+
 AUGUST 22, 2026, DRAWERS AND MOBILE (v13.45)
 
 [x] "The hamburger menu pill doesn't disappear, it slides towards the left

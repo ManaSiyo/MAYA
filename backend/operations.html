@@ -97,7 +97,9 @@ window.addEventListener('message', function(e){
      has no header pill, so there the drawer keeps a small burger of its
      own; standalone hides it. */
   body.drawer-open header .icon-btn.hamburger{transform:translateX(-360px)}
-  header .icon-btn.hamburger{transition:transform .45s cubic-bezier(0.16,1,0.3,1)}
+  /* v13.46: same duration and curve as the drawer pane, so the pill is
+     anchored to the drawer's edge rather than chasing it. */
+  header .icon-btn.hamburger{transition:transform .45s cubic-bezier(0.22,1,0.36,1)}
   @media (max-width: 640px){ body.drawer-open header .icon-btn.hamburger{transform:none} }
   html:not(.embedded) .drawer .drawer-burger{visibility:hidden}
   .drawer .drawer-burger{opacity:.85}

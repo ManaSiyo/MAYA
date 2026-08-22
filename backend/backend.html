@@ -1229,7 +1229,9 @@
      at right 10; pill resting ~28 from the right edge). The same pill
      closes the drawer, and so does a click anywhere outside it. */
   body.drawer-open #top-actions .top-btn.hamburger { transform: translateX(-352px); }
-  #top-actions .top-btn.hamburger { transition: transform 0.45s cubic-bezier(0.16,1,0.3,1); }
+  /* v13.46: exactly the drawer's own duration and curve, so the pill is
+     anchored to the drawer's edge rather than chasing it. */
+  #top-actions .top-btn.hamburger { transition: transform 0.42s cubic-bezier(0.16,1,0.3,1); }
   @media (max-width: 640px) {
     body.drawer-open #top-actions .top-btn.hamburger { transform: none; }
   }
@@ -2198,6 +2200,9 @@ async function listClients() {
 
 async function openClientsDrawer() {
   const drawer = document.getElementById('clients-drawer');
+  // v13.46: slide open FIRST, then fill. The open used to wait for the
+  // submissions fetch, so the drawer lagged behind the sliding pill.
+  if (drawer) drawer.classList.add('open');
   const listEl = document.getElementById('clients-list');
   const countEl = document.getElementById('clients-count');
   // v0.26: detect whether the MAYA folder has been granted yet. If it
@@ -2257,7 +2262,6 @@ async function openClientsDrawer() {
       }).join('');
     }
   }
-  drawer.classList.add('open');
 }
 
 // v13.45: a click anywhere outside the drawer closes it.

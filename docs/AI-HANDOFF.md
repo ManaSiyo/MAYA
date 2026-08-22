@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 182 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 186 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -67,6 +67,36 @@ ad panels (impressions, clicks, spend, last 7 days) through Windsor. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.46 (Claude): anchored, full height, in caps
+
+- MAYA's pill is ANCHORED to the drawer, not transitioned after it: its
+  transform is written from `hscroll.scrollLeft` on every scroll frame
+  inside `updateDrawerState` (`translateX(-max(0, scrollLeft - 18))`), so
+  it is glued to the drawer's edge through the native scroll physics. The
+  CSS class transform + transition from v13.45 is deleted; do not put a
+  transform transition back on `#hamburger-toggle`, that is exactly the
+  "chasing" Fromsa reported. Phones (<=640px) keep the pill parked.
+- Admin's drawer now SLIDES (translateX + opacity, 0.42s
+  cubic-bezier(0.16,1,0.3,1)) instead of popping display:none/block, and
+  the pill uses the identical duration and curve, so the two move as one.
+  Backend's pill matches its drawer's 0.42s too, and `openClientsDrawer`
+  adds `.open` FIRST and fills after; it used to await the submissions
+  fetch before opening, which made the drawer lag the pill. Operations
+  Room pill curve matches its pane (0.22,1,0.36,1).
+- Fabrics and Pinterest drawers are the same full height as the main
+  drawer (top 10 / bottom 10; on phones top 64, matching #notes-drawer).
+  The click-outside-closes handler EXCLUDES `#fabrics-drawer`,
+  `#pinterest-drawer` and `#feedback-modal`: Back in those panels was
+  being treated as an outside click and closed the main drawer under
+  them. Back now only closes its own panel. Swiping the main drawer away
+  still closes Fabrics AND Pinterest with it.
+- Admin doors, in caps per Fromsa: MANA SIYO, MARKETING, MAYA.
+- Versions: metas 13.46; changelog 2026-08-22c; 186 regression checks +
+  18 smoke checks pass. Verified headlessly: pill transform tracks
+  scrollLeft (0 at rest, -360 at full open), fabrics drawer computes
+  top/bottom 10px, Admin drawer opens to transform:none opacity:1, doors
+  read MANA SIYO / MARKETING / MAYA.
 
 ## v13.45 (Claude): the hamburger rides with the drawer
 
@@ -153,9 +183,9 @@ The fabric sourcing revamp shipped in v13.44; see that section below.
 - SECURITY as of v13.41: a submission can only be written by the account that
   opened it (`subOwner()` reads the init marker, cached). The legacy Pinterest
   modal is deleted; the drawer is the only implementation.
-- Live line: `maya-v2`. v13.44 is pushed and live. **v13.45 is committed and
-  waiting for Fromsa's push** (the hamburger rides with the drawer, click
-  outside closes, three doors, mobile pinch resize).
+- Live line: `maya-v2`. v13.45 is pushed and live. **v13.46 is committed and
+  waiting for Fromsa's push** (the anchored pill, sliding Admin drawer, full
+  height Fabrics and Pinterest, doors in caps).
 - **The folder changed in v13.37.** Pages are no longer loose at the root:
   `frontend/index.html`, and `backend/` holds status, marketing, operations,
   backend and privacy plus verify. Every old URL still answers, because
@@ -164,7 +194,7 @@ The fabric sourcing revamp shipped in v13.44; see that section below.
   rewrite list is the first place to look. `aesthetics/` stays at the root on
   purpose: `docs/**` is ignored by Hosting, so pictures inside it would never
   deploy.
-- Tests: 182 checks in `tests/app-regression.mjs`, all passing, including a
+- Tests: 186 checks in `tests/app-regression.mjs`, all passing, including a
   check that every old address still maps to a file that exists.
 - Pinterest: app id and secret ARE set on Cloud Run. The sign in currently
   fails with Pinterest's own 400, "this application has not registered a

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.45">
+<meta name="maya-version" content="13.46">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -572,17 +572,13 @@
   }
   /* v13.43: while the drawer is open the button fades away and the drawer
      keeps that corner. Escape and swiping still close. */
-  /* v13.45: the hamburger never disappears. It rides OUT with the drawer,
-     sliding left until it hangs just outside the drawer's left edge, and
-     the same pill closes it. Drawer pane is 378px (360 + 18 margin), so
-     the pill travels 360px from its resting spot. */
-  body.drawer-open #hamburger-toggle { transform: translateX(-360px); }
-  #hamburger-toggle { transition: transform 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.25s; }
-  @media (max-width: 640px) {
-    /* on a phone the drawer is full width below the top bar; the pill
-       stays put and still closes it. */
-    body.drawer-open #hamburger-toggle { transform: none; }
-  }
+  /* v13.46: the hamburger never disappears, and it is ANCHORED to the
+     drawer: its transform is written from the live scroll offset every
+     frame (see updateDrawerState), so it is glued to the drawer's left
+     edge with no transition lag. No CSS transition on transform here on
+     purpose; the scroll itself is the animation. On phones the pill stays
+     put (the drawer is full width below the top bar). */
+  #hamburger-toggle { transition: opacity 0.25s; will-change: transform; }
   /* v13.41: the visible pill is unchanged; the finger gets a 44px target. */
   .top-btn.hamburger::after {
     content: ''; position: absolute; left: 50%; top: 50%;
@@ -2505,7 +2501,8 @@
      The drawer keeps the same glass recipe as the hamburger drawer. */
   #fabrics-drawer, #pinterest-drawer {
     position: fixed;
-    top: 60px; right: 18px; bottom: 22px;
+    /* v13.46: same full height as the main drawer, top 10 to bottom 10. */
+    top: 10px; right: 18px; bottom: 10px;
     width: 360px; max-width: calc(100vw - 36px);
     background:
       linear-gradient(180deg,
@@ -3924,6 +3921,10 @@
     /* v11.33/34: drawer sits fully below the 60px top bar (logo/hamburger
        were overlapping its corners), roomier padding, and the bottom edge
        respects the iPhone home-indicator safe area. */
+    /* v13.46: Fabrics and Pinterest match the main drawer on phones too. */
+    #fabrics-drawer, #pinterest-drawer { top: 64px; right: 12px; left: 12px;
+                    width: auto; max-width: none;
+                    bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
     #notes-drawer { top: 64px; right: 12px; left: 12px;
                     bottom: calc(12px + env(safe-area-inset-bottom, 0px));
                     padding: 18px 16px 16px; border-radius: 20px; }
@@ -6154,6 +6155,16 @@ function _bootScreenObserver() {
     const updateDrawerState = () => {
       const open = hscroll.scrollLeft > (hscroll.scrollWidth - hscroll.clientWidth) / 2;
       document.body.classList.toggle('drawer-open', open);
+      // v13.46: the pill is ANCHORED to the drawer's edge. Its position is
+      // written from the live scroll offset every frame, so it moves with
+      // the drawer, glued to it, never chasing it through a CSS delay.
+      try {
+        const hb = document.getElementById('hamburger-toggle');
+        if (hb) {
+          if (window.innerWidth <= 640) hb.style.transform = '';
+          else hb.style.transform = 'translateX(' + (-Math.max(0, hscroll.scrollLeft - 18)) + 'px)';
+        }
+      } catch (_) {}
       // v13.43: the button that opened the drawer steps aside while it is
       // open; the drawer owns that corner. aria stays truthful for readers.
       try {
@@ -6164,6 +6175,8 @@ function _bootScreenObserver() {
       // It used to stay floating on screen after the drawer was gone.
       if (_drawerWasOpen && !open && typeof closeFabricsDrawer === 'function') {
         closeFabricsDrawer();
+        // v13.46: Pinterest floats the same way; it goes away with the drawer too.
+        if (typeof closePinterestDrawer === 'function') closePinterestDrawer();
       }
       _drawerWasOpen = open;
     };
@@ -8710,10 +8723,14 @@ function renderNotesPanel(s) {
 }
 
 // v13.45: a click anywhere OUTSIDE the drawer closes it, like Escape.
+// v13.46: the panels that OPEN FROM the drawer do not count as outside.
+// Back in Fabrics or Pinterest was closing the main drawer underneath it;
+// now Back only closes its own panel and the drawer is still there.
 document.addEventListener('pointerdown', (e) => {
   if (!document.body.classList.contains('drawer-open')) return;
   const t = e.target;
-  if (t && t.closest && (t.closest('#notes-drawer') || t.closest('#hamburger-toggle'))) return;
+  if (t && t.closest && t.closest(
+    '#notes-drawer, #hamburger-toggle, #fabrics-drawer, #pinterest-drawer, #feedback-modal')) return;
   toggleNotesDrawer(false);
 }, true);
 

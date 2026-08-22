@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.45">
+<meta name="maya-version" content="13.46">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -68,14 +68,19 @@ try {
   #drawer{position:fixed;top:10px;right:10px;bottom:10px;width:320px;overflow:auto;
           z-index:210;border:0.5px solid var(--line);border-radius:20px;padding:18px;
           background:rgba(8,12,26,0.82);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
-          display:none}
-  #drawer.open{display:block}
+          /* v13.46: the drawer SLIDES in, same duration and curve as the
+             hamburger pill, so the two move as one piece. */
+          transform:translateX(calc(100% + 20px));opacity:0;pointer-events:none;
+          transition:transform .42s cubic-bezier(0.16,1,0.3,1),opacity .42s ease}
+  #drawer.open{transform:none;opacity:1;pointer-events:auto}
   /* v13.45: the hamburger never disappears. It slides left with the drawer
      and comes to rest hanging just outside the drawer's left edge (drawer:
      320 wide at right 10, pill resting ~28 from the right edge). The same
      pill closes it, and so does a click anywhere outside. */
   body.drawer-open .top-btn.hamburger{transform:translateX(-322px)}
-  .top-btn.hamburger{transition:transform .45s cubic-bezier(0.16,1,0.3,1)}
+  /* v13.46: exactly the drawer's duration and curve, so the pill is
+     anchored to the drawer's edge rather than chasing it. */
+  .top-btn.hamburger{transition:transform .42s cubic-bezier(0.16,1,0.3,1)}
   @media (max-width: 640px){ body.drawer-open .top-btn.hamburger{transform:none} }
   #drawer h3{font-family:'Jost',sans-serif;font-weight:400;font-size:10px;letter-spacing:0.24em;
              text-transform:uppercase;color:var(--grp);margin:14px 0 8px}
@@ -320,8 +325,9 @@ try {
        Hovering MAYA reveals the two back rooms, Operations Room Beta and
        the Playground, as small chips to its right. -->
   <div class="grid doors" style="margin:8px 0 2px">
-    <a class="card" href="https://manasiyo.com" target="_blank"><b>Mana</b></a>
-    <a class="card" href="/marketing.html" target="_blank"><b>Marketing</b></a>
+    <!-- v13.46: everything in caps, per Fromsa: MANA SIYO, MARKETING, MAYA. -->
+    <a class="card" href="https://manasiyo.com" target="_blank"><b>MANA SIYO</b></a>
+    <a class="card" href="/marketing.html" target="_blank"><b>MARKETING</b></a>
     <span class="card card-maya" role="link" tabindex="0"
           onclick="window.open('https://maya.manasiyo.com','_blank')"
           onkeydown="if(event.key==='Enter')window.open('https://maya.manasiyo.com','_blank')"><b>MAYA</b>
@@ -351,9 +357,10 @@ try {
   </details>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-22b">
+  <details class="fold" id="changes-fold" data-latest="2026-08-22c">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 22</b>The pill is anchored now, not chasing. In MAYA its position is written from the drawer's own motion every frame, so the two are glued together, and on this page and the Backend the drawer glides with exactly the pill's timing, one piece. Fabrics and Pinterest stand the same full height as the main drawer, and Back in either one only steps back: the main drawer stays. The doors say it properly: MANA SIYO, MARKETING, MAYA.</div>
     <div class="chg"><b>Aug 22</b>The hamburger rides with the drawer now. Open it and the pill slides left with the panel, coming to rest just outside the drawer's edge, still there, still one tap to close. A click anywhere else on the screen closes the drawer too, here, in MAYA, in the Backend and in Marketing. The doors read Mana, Marketing, MAYA, and resting on MAYA reveals the two back rooms, Operations Room Beta and the Playground. On a phone the cards start a little smaller, the words sit a little smaller, and a two finger pinch on any card resizes it, saved like any other change.</div>
     <div class="chg"><b>Aug 22</b>The viewer's notes and attributes are one column now: every value in the design notes is a small pill you can cross off, exactly the way attributes worked, so what you keep and what you drop reads in one place. The button that fires it all says Visualize, and picking a picture says Use this reference. On this page the four doors dropped their pills and stand as plain words, a size up and closer together, with Mana as the third; the drawer runs the full height and answers a mouse drag as well as a finger, and the hamburger rides over with it, sitting in the drawer's own corner, here, in MAYA, in the Backend and in the Operations Room. The Backend calls itself Backend in the corner and its drawer says Submissions, because that is what they are. Marketing draws both ad networks on one Google style chart, clicks, impressions or cost per click, with a campaign table underneath that says honestly whether each one delivered. And fabric sourcing looks across the world: four columns to a page, swiped sideways, Mood in New York through Tokyo, Antwerp and Sydney, working straight from the full view without waiting for a dissection, with the in-house library warmed early so it opens instantly.</div>
     <div class="chg"><b>Aug 21</b>Nothing renders until Submit. Switch fabric and Add reference now STAGE: each choice becomes a small circle beside Submit, the spoken changes sit under it, and one Submit fires everything as one render, one price. The picker opens over the viewer, so Back is just Back and listening keeps listening. Pinterest pictures stopped wearing their file hash as a name. On Admin: hover Users and it answers who, by account and last seen; the drawer opens to a swipe; the MAYA door reveals the Playground, a private copy for trying things; and Marketing stops asking for a second sign in. One key from Windsor can now feed both ad panels with impressions, clicks and spend.</div>
