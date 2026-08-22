@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.44">
+<meta name="maya-version" content="13.45">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -572,8 +572,17 @@
   }
   /* v13.43: while the drawer is open the button fades away and the drawer
      keeps that corner. Escape and swiping still close. */
-  body.drawer-open #hamburger-toggle { opacity: 0; pointer-events: none; transition: opacity 0.25s; }
-  #hamburger-toggle { transition: opacity 0.25s; }
+  /* v13.45: the hamburger never disappears. It rides OUT with the drawer,
+     sliding left until it hangs just outside the drawer's left edge, and
+     the same pill closes it. Drawer pane is 378px (360 + 18 margin), so
+     the pill travels 360px from its resting spot. */
+  body.drawer-open #hamburger-toggle { transform: translateX(-360px); }
+  #hamburger-toggle { transition: transform 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.25s; }
+  @media (max-width: 640px) {
+    /* on a phone the drawer is full width below the top bar; the pill
+       stays put and still closes it. */
+    body.drawer-open #hamburger-toggle { transform: none; }
+  }
   /* v13.41: the visible pill is unchanged; the finger gets a 44px target. */
   .top-btn.hamburger::after {
     content: ''; position: absolute; left: 50%; top: 50%;
@@ -2359,21 +2368,8 @@
     text-align: center;
   }
   /* v7.2: × close button, liquid glass circle, floats above drawer. */
-  /* v13.44: the drawer runs the full height, so the old floating x above it
-     had nowhere to live. The hamburger slides over with the drawer instead:
-     the top bar one fades (body.drawer-open), and this one, in the drawer's
-     top-left corner, closes it. */
-  #notes-drawer .notes-close {
-    position: absolute; top: 12px; left: 12px;
-    width: 32px; height: 28px; padding: 0;
-    background: transparent; border: 0;
-    color: rgba(245,250,255,0.85);
-    cursor: pointer; opacity: 0.85;
-    display: flex; align-items: center; justify-content: center;
-    transition: opacity 0.2s;
-    z-index: 5;
-  }
-  #notes-drawer .notes-close:hover { opacity: 1; color: rgba(255,255,255,1); }
+  /* v13.45: the drawer carries no button of its own. The top bar hamburger
+     slides out with it (see #hamburger-toggle above) and closes it. */
   #notes-drawer h3 {
     font-family: 'Cormorant Garamond', serif;
     font-weight: 300; font-size: 11px;
@@ -3930,9 +3926,16 @@
     #favorites-scroller { padding: 24px 14px calc(24px + env(safe-area-inset-bottom)); }
     .favorite-card { width: min(80vw, 300px); }
     /* v11.39: cards a touch smaller per Fromsa, and kept clear of the
-       page-dot pill on the left. */
-    .item-card, .item-card.inspo { max-width: min(240px, calc(100vw - 48px)); }
-    .item-card.inspo .inspo-thumb { max-width: min(240px, calc(100vw - 48px)); max-height: 300px; }
+       page-dot pill on the left. v13.45: smaller again, and a pinch with
+       two fingers resizes any card (see the pinch block in makeDraggable). */
+    .item-card, .item-card.inspo { max-width: min(200px, calc(100vw - 48px)); }
+    .item-card.inspo .inspo-thumb { max-width: min(200px, calc(100vw - 48px)); max-height: 260px; }
+    /* v13.45: type steps down a notch on a phone. */
+    .item-title { font-size: 13px; }
+    .item-card.inspo .item-title { font-size: 11px; }
+    .item-detail { font-size: 9px; }
+    #notes-drawer a, #notes-drawer button.drawer-link { font-size: 13.5px; }
+    .top-btn { font-size: 9px; }
     /* lighter glass on phones, blur is the priciest effect on mobile GPUs;
        this is the single biggest smoothness win per frame. */
     .item-card { backdrop-filter: blur(12px) saturate(160%);
@@ -3994,7 +3997,6 @@
     .input-link, .upload-link { padding: 10px 14px; }
     .upload-choose-btn { padding: 13px 18px; }
     .top-btn.hamburger { width: 40px; height: 36px; }
-    #notes-drawer .notes-close { width: 40px; height: 40px; }
     .fabrics-tab { padding: 10px 12px; }
     .drawer-avatar-caret { min-height: 40px; }
     .modal-close { min-height: 40px; padding: 10px 14px; }
@@ -4335,9 +4337,9 @@
 
 <!-- designer-only side drawer with logistics (ideas, constraints, sourcing, notes) -->
 <div id="notes-drawer">
-  <button class="notes-close" onclick="toggleNotesDrawer(false)" title="Close (Esc)" aria-label="Close menu">
-    <span class="hamburger-icon"><span></span><span></span><span></span></span>
-  </button>
+  <!-- v13.45: no button inside the drawer any more. The top bar hamburger
+       slides out with the drawer and closes it; Esc and a click anywhere
+       outside do the same. -->
 
   <!-- v9.2: two-level drawer restored, main menu + Avatar sub-menu. -->
   <div id="drawer-main">
@@ -5507,6 +5509,7 @@ function makeDraggable(el) {
     try { el.setPointerCapture(e.pointerId); } catch (_) {}
     function onMove(me) {
       if (!dragging) return;
+      if (el._pinching) return;   // v13.45: two fingers means resize, not drag
       _curDx = me.clientX - startX; _curDy = me.clientY - startY;
       moved = Math.max(moved, Math.abs(_curDx) + Math.abs(_curDy));
       if (_groupStarts) {
@@ -5566,6 +5569,43 @@ function makeDraggable(el) {
     el.addEventListener('pointerup', onUp);
     el.addEventListener('pointercancel', onUp);
   });
+
+  // v13.45: pinch a card with two fingers to resize it, phones and tablets.
+  // Same clamps and the same persistence as the corner resize handle.
+  if (el.classList.contains('item-card')) {
+    let pinchD0 = 0, pinchW0 = 0;
+    const dist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    el.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 2) return;
+      e.preventDefault();
+      el._pinching = true;
+      pinchD0 = dist(e.touches);
+      pinchW0 = el.getBoundingClientRect().width;
+    }, { passive: false });
+    el.addEventListener('touchmove', (e) => {
+      if (!el._pinching || e.touches.length !== 2 || !pinchD0) return;
+      e.preventDefault();
+      const maxW = Math.min(560, window.innerWidth - 28);
+      const w = Math.max(120, Math.min(maxW, pinchW0 * dist(e.touches) / pinchD0));
+      el.style.width = w + 'px';
+      el.style.maxWidth = w + 'px';
+      const img = el.querySelector('.inspo-thumb');
+      if (img) { img.style.width = '100%'; img.style.maxWidth = w + 'px'; img.style.maxHeight = 'none'; }
+      const it = items.find(i => i.el === el);
+      if (it) it.card.width = w;
+    }, { passive: false });
+    const endPinch = (e) => {
+      if (!el._pinching) return;
+      if (e.touches && e.touches.length >= 2) return;
+      el._pinching = false; pinchD0 = 0;
+      // swallow the tap that ends the gesture so the viewer does not open
+      el._wasDragged = true;
+      requestAnimationFrame(() => { el._wasDragged = false; });
+      if (typeof _persistSession === 'function') _persistSession();
+    };
+    el.addEventListener('touchend', endPinch);
+    el.addEventListener('touchcancel', endPinch);
+  }
 }
 
 // v8.2: keep the glow on the single most-recent visualized card only.
@@ -8662,6 +8702,14 @@ function renderNotesPanel(s) {
     toggle.classList.add('has-notes');
   }
 }
+
+// v13.45: a click anywhere OUTSIDE the drawer closes it, like Escape.
+document.addEventListener('pointerdown', (e) => {
+  if (!document.body.classList.contains('drawer-open')) return;
+  const t = e.target;
+  if (t && t.closest && (t.closest('#notes-drawer') || t.closest('#hamburger-toggle'))) return;
+  toggleNotesDrawer(false);
+}, true);
 
 function toggleNotesDrawer(force) {
   // v10.2: drawer opens/closes by scrolling the horizontal #hscroll

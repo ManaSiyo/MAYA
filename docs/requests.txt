@@ -16,6 +16,21 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 22, 2026, DRAWERS AND MOBILE (v13.45)
+
+[x] "The hamburger menu pill doesn't disappear, it slides towards the left
+    with the drawer and stays on the left, outside the drawer, hanging
+    out." The pill rides out with the drawer on MAYA, Admin, Backend and
+    the Operations Room, and the same pill closes it.
+[x] "If I click anywhere outside the drawer, it should hide the drawer,
+    even on Admin." A click anywhere outside closes it, everywhere.
+[x] "Order: Mana, Marketing, Maya, with Operations Room Beta and
+    Playground on the Maya hover. Three things on top." Done.
+[x] "Double check the mobile version. Cards a little smaller, text a
+    little smaller, and I should be able to pinch and resize the cards
+    with my fingers." Cards and type step down on phones, and a two
+    finger pinch resizes any card, saved like the corner handle.
+
 AUGUST 22, 2026, THE v13.44 BATCH
 
 [x] "Attributes and design notes can be combined, values as crossable pills

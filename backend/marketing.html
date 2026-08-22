@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Marketing</title>
-<meta name="maya-version" content="13.44">
+<meta name="maya-version" content="13.45">
 <script>
 // v13.43: this page NEVER clears the shared sign in. Admin owns the deploy
 // sign-out; marketing clearing it too was why the page kept asking again.
@@ -441,6 +441,14 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') document.getElementById('drawer').classList.remove('open');
 });
+// v13.45: a click anywhere outside the drawer closes it, like everywhere.
+document.addEventListener('pointerdown', e => {
+  const d = document.getElementById('drawer');
+  if (!d || !d.classList.contains('open')) return;
+  const t = e.target;
+  if (t && t.closest && (t.closest('#drawer') || t.closest('.top-btn.hamburger'))) return;
+  d.classList.remove('open');
+}, true);
 </script>
 </body>
 </html>

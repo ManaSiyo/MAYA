@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 178 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 182 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -67,6 +67,33 @@ ad panels (impressions, clicks, spend, last 7 days) through Windsor. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.45 (Claude): the hamburger rides with the drawer
+
+- The drawer's own inner hamburger from v13.44 is GONE everywhere, per
+  Fromsa: the top bar pill never disappears now, it slides LEFT with the
+  drawer (transition on transform) and rests hanging just outside the
+  drawer's left edge; the same pill closes it. Travel distances are fixed
+  px, measured from the right edge, so they hold at any viewport: MAYA
+  -360px, Admin -322px, Backend -352px, Operations Room -360px. On phones
+  (max-width 640px) the transform is cancelled, the drawer is full width
+  below the top bar, and the pill stays put.
+- A click (pointerdown, capture phase) anywhere OUTSIDE the drawer closes
+  it, on MAYA, Admin, Backend and Marketing; the Operations Room already
+  had this.
+- Admin doors: THREE now, in his order: Mana, Marketing, MAYA. Hovering
+  MAYA reveals `.pg-chips`, two chips to its right: operations room beta
+  (/operations.html) and playground (/playground.html).
+- Mobile: cards start smaller (max-width 200px, thumb max-height 260) and
+  type steps down a notch (.item-title 13px, inspo title 11px, drawer
+  links 13.5px). A TWO FINGER PINCH on any card resizes it: touch handlers
+  inside `makeDraggable` (guarded by `el._pinching`, which the drag onMove
+  respects), same 120..560px clamps and the same `_persistSession()` as
+  the corner handle.
+- Versions: metas are 13.45; changelog entry 2026-08-22b; 182 regression
+  checks + 18 smoke checks all pass. Verified with headless screenshots:
+  pill rides out and back, click-outside closes, chips show on hover,
+  mobile drawer full width with the pill still visible.
 
 ## v13.44 (Claude): one column of pills, plain doors, the world's fabric
 
@@ -126,10 +153,9 @@ The fabric sourcing revamp shipped in v13.44; see that section below.
 - SECURITY as of v13.41: a submission can only be written by the account that
   opened it (`subOwner()` reads the init marker, cached). The legacy Pinterest
   modal is deleted; the drawer is the only implementation.
-- Live line: `maya-v2`. v13.43 is pushed and live. **v13.44 is committed and
-  waiting for Fromsa's push** (the pills-in-notes viewer, plain Admin doors,
-  full-height drawers, the combined marketing chart, worldwide fabric
-  sourcing).
+- Live line: `maya-v2`. v13.44 is pushed and live. **v13.45 is committed and
+  waiting for Fromsa's push** (the hamburger rides with the drawer, click
+  outside closes, three doors, mobile pinch resize).
 - **The folder changed in v13.37.** Pages are no longer loose at the root:
   `frontend/index.html`, and `backend/` holds status, marketing, operations,
   backend and privacy plus verify. Every old URL still answers, because
@@ -138,7 +164,7 @@ The fabric sourcing revamp shipped in v13.44; see that section below.
   rewrite list is the first place to look. `aesthetics/` stays at the root on
   purpose: `docs/**` is ignored by Hosting, so pictures inside it would never
   deploy.
-- Tests: 178 checks in `tests/app-regression.mjs`, all passing, including a
+- Tests: 182 checks in `tests/app-regression.mjs`, all passing, including a
   check that every old address still maps to a file that exists.
 - Pinterest: app id and secret ARE set on Cloud Run. The sign in currently
   fails with Pinterest's own 400, "this application has not registered a

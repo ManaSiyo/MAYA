@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.44">
+<meta name="maya-version" content="13.45">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -70,15 +70,16 @@ try {
           background:rgba(8,12,26,0.82);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
           display:none}
   #drawer.open{display:block}
-  #drawer .drawer-burger{position:sticky;top:0;float:left;margin:-4px 8px 4px -4px;
-    width:32px;height:28px;display:flex;align-items:center;justify-content:center;
-    background:none;border:0;color:var(--ink);cursor:pointer;opacity:0.85}
-  #drawer .drawer-burger:hover{opacity:1}
-  body.drawer-open .top-btn.hamburger{opacity:0;pointer-events:none}
-  .top-btn.hamburger{transition:opacity .2s}
+  /* v13.45: the hamburger never disappears. It slides left with the drawer
+     and comes to rest hanging just outside the drawer's left edge (drawer:
+     320 wide at right 10, pill resting ~28 from the right edge). The same
+     pill closes it, and so does a click anywhere outside. */
+  body.drawer-open .top-btn.hamburger{transform:translateX(-322px)}
+  .top-btn.hamburger{transition:transform .45s cubic-bezier(0.16,1,0.3,1)}
+  @media (max-width: 640px){ body.drawer-open .top-btn.hamburger{transform:none} }
   #drawer h3{font-family:'Jost',sans-serif;font-weight:400;font-size:10px;letter-spacing:0.24em;
-             text-transform:uppercase;color:var(--grp);margin:14px 0 8px;clear:left}
-  #drawer h3:first-child{margin-top:0;clear:none;padding-top:5px}
+             text-transform:uppercase;color:var(--grp);margin:14px 0 8px}
+  #drawer h3:first-child{margin-top:0}
   #drawer a{text-align:left;display:block;text-decoration:none;color:var(--ink);font-size:14.5px;padding:7px 10px;
             border-radius:10px;transition:background .2s}
   #drawer a:hover{background:rgba(255,255,255,0.07)}
@@ -239,14 +240,16 @@ try {
     text-decoration:none;color:var(--ink);opacity:0.9;transition:opacity .2s;cursor:pointer}
   .grid.doors .card:hover{opacity:1}
   .grid.doors .card b{font-size:20px;font-weight:400;display:inline;margin:0}
-  /* v13.43: hovering MAYA reveals the playground, Fromsa's private copy. */
+  /* v13.45: hovering MAYA reveals the two back rooms, the Operations Room
+     Beta and the Playground, as chips hanging to its right. */
   .card-maya{position:relative}
-  .card-maya .pg-chip{position:absolute;left:100%;margin-left:10px;top:50%;transform:translateY(-50%);
-    font-family:'Jost',sans-serif;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;
+  .card-maya .pg-chips{position:absolute;left:100%;margin-left:10px;top:50%;transform:translateY(-50%);
+    display:flex;gap:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s}
+  .card-maya:hover .pg-chips,.card-maya:focus .pg-chips{opacity:1;pointer-events:auto}
+  .pg-chip{font-family:'Jost',sans-serif;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;
     color:var(--dim);border:0.5px solid var(--line);border-radius:100px;padding:3px 9px;
-    text-decoration:none;opacity:0;transition:opacity .2s}
-  .card-maya:hover .pg-chip{opacity:1}
-  .card-maya .pg-chip:hover{color:var(--ink);border-color:rgba(255,255,255,0.45)}
+    text-decoration:none}
+  .pg-chip:hover{color:var(--ink);border-color:rgba(255,255,255,0.45)}
   .warn{margin-top:22px;border:0.5px solid rgba(253,164,175,0.3);border-radius:12px;padding:11px 15px;
         font-size:12px;color:var(--rose);background:rgba(253,164,175,0.06)}
   .money{margin-top:14px;font-size:12px;color:var(--dim);line-height:1.8}
@@ -288,10 +291,6 @@ try {
 </div>
 
 <div id="drawer">
-  <!-- v13.44: the hamburger slides over with the drawer. -->
-  <button class="drawer-burger" onclick="toggleDrawer()" title="Close menu">
-    <span class="hamburger-icon"><span></span><span></span><span></span></span>
-  </button>
   <h3>The vault, where data physically lives</h3>
   <a href="https://console.firebase.google.com/project/pro-maya/firestore/databases/-default-/data/~2Fusers" target="_blank">Boards and projects<small>Firestore. Delete a collection here to truly destroy it.</small></a>
   <a href="https://console.firebase.google.com/project/pro-maya/storage/pro-maya.firebasestorage.app/files/~2Fusers" target="_blank">Pictures<small>Storage. Every uploaded and generated image.</small></a>
@@ -317,16 +316,21 @@ try {
     <span class="status-item"><span class="sdot wait" id="d-drive"></span><span class="lgt-lbl">Submissions</span></span>
     <span class="status-item"><span class="sdot wait" id="d-backup"></span><span class="lgt-lbl">Backup</span></span>
   </div>
+  <!-- v13.45: three doors, in Fromsa's order: Mana, Marketing, MAYA.
+       Hovering MAYA reveals the two back rooms, Operations Room Beta and
+       the Playground, as small chips to its right. -->
   <div class="grid doors" style="margin:8px 0 2px">
-    <a class="card" href="/operations.html" target="_blank"><b>Operations Room Beta</b></a>
+    <a class="card" href="https://manasiyo.com" target="_blank"><b>Mana</b></a>
+    <a class="card" href="/marketing.html" target="_blank"><b>Marketing</b></a>
     <span class="card card-maya" role="link" tabindex="0"
           onclick="window.open('https://maya.manasiyo.com','_blank')"
           onkeydown="if(event.key==='Enter')window.open('https://maya.manasiyo.com','_blank')"><b>MAYA</b>
-      <a class="pg-chip" href="/playground.html" target="_blank"
-         onclick="event.stopPropagation()" title="Your private copy for trying new things. The live app never sees it.">playground</a></span>
-    <a class="card" href="https://manasiyo.com" target="_blank"><b>Mana</b></a>
-    <!-- v13.34: the fourth door. Everything that brings people in. -->
-    <a class="card" href="/marketing.html" target="_blank"><b>Marketing</b></a>
+      <span class="pg-chips">
+        <a class="pg-chip" href="/operations.html" target="_blank"
+           onclick="event.stopPropagation()" title="The test bench.">operations room beta</a>
+        <a class="pg-chip" href="/playground.html" target="_blank"
+           onclick="event.stopPropagation()" title="Your private copy for trying new things. The live app never sees it.">playground</a>
+      </span></span>
   </div>
 
 
@@ -347,9 +351,10 @@ try {
   </details>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-22a">
+  <details class="fold" id="changes-fold" data-latest="2026-08-22b">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 22</b>The hamburger rides with the drawer now. Open it and the pill slides left with the panel, coming to rest just outside the drawer's edge, still there, still one tap to close. A click anywhere else on the screen closes the drawer too, here, in MAYA, in the Backend and in Marketing. The doors read Mana, Marketing, MAYA, and resting on MAYA reveals the two back rooms, Operations Room Beta and the Playground. On a phone the cards start a little smaller, the words sit a little smaller, and a two finger pinch on any card resizes it, saved like any other change.</div>
     <div class="chg"><b>Aug 22</b>The viewer's notes and attributes are one column now: every value in the design notes is a small pill you can cross off, exactly the way attributes worked, so what you keep and what you drop reads in one place. The button that fires it all says Visualize, and picking a picture says Use this reference. On this page the four doors dropped their pills and stand as plain words, a size up and closer together, with Mana as the third; the drawer runs the full height and answers a mouse drag as well as a finger, and the hamburger rides over with it, sitting in the drawer's own corner, here, in MAYA, in the Backend and in the Operations Room. The Backend calls itself Backend in the corner and its drawer says Submissions, because that is what they are. Marketing draws both ad networks on one Google style chart, clicks, impressions or cost per click, with a campaign table underneath that says honestly whether each one delivered. And fabric sourcing looks across the world: four columns to a page, swiped sideways, Mood in New York through Tokyo, Antwerp and Sydney, working straight from the full view without waiting for a dissection, with the in-house library warmed early so it opens instantly.</div>
     <div class="chg"><b>Aug 21</b>Nothing renders until Submit. Switch fabric and Add reference now STAGE: each choice becomes a small circle beside Submit, the spoken changes sit under it, and one Submit fires everything as one render, one price. The picker opens over the viewer, so Back is just Back and listening keeps listening. Pinterest pictures stopped wearing their file hash as a name. On Admin: hover Users and it answers who, by account and last seen; the drawer opens to a swipe; the MAYA door reveals the Playground, a private copy for trying things; and Marketing stops asking for a second sign in. One key from Windsor can now feed both ad panels with impressions, clicks and spend.</div>
     <div class="chg"><b>Aug 21</b>This page is called Admin now, and it stopped clearing its throat: the last-checked line, the empty checking box, the Operations Room aside and the credits footer are gone. Users and traffic folds away like everything else, staying right where it is. In MAYA, submitting is faster because the folder opens and the picture is fetched while the one-pager renders, resting a cursor on the wall holds only that row while the other two keep drifting, the heart mirrors the close on the picture, note categories lead with what MAYA heard underneath, restored projects find their fabric swatches again, and the sign in screen is just the sign in.</div>
@@ -504,6 +509,14 @@ try {
 // v13.43: the drawer answers a swipe, like MAYA. Start within an inch of the
 // right edge, pull left, it opens; swipe right anywhere on it, it closes.
 // v13.44: works with a mouse drag too, so it behaves the same on desktop.
+// v13.45: a click anywhere outside the drawer closes it.
+document.addEventListener('pointerdown', (e) => {
+  const drawer = document.getElementById('drawer');
+  if (!drawer || !drawer.classList.contains('open')) return;
+  const t = e.target;
+  if (t && t.closest && (t.closest('#drawer') || t.closest('.top-btn.hamburger'))) return;
+  toggleDrawer(false);
+}, true);
 function toggleDrawer(force) {
   const drawer = document.getElementById('drawer');
   if (!drawer) return;

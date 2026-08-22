@@ -1224,19 +1224,15 @@
     display: flex; flex-direction: column;
   }
   #clients-drawer.open { transform: translateX(0); opacity: 1; }
-  /* v13.44: the hamburger slides over with the drawer and sits in its
-     top-left corner. The top bar one fades while the drawer is open. */
-  #clients-drawer .drawer-burger {
-    position: absolute; top: 12px; left: 12px;
-    width: 32px; height: 28px; padding: 0;
-    background: transparent; border: 0;
-    color: rgba(245,250,255,0.85);
-    cursor: pointer; opacity: 0.85;
-    display: flex; align-items: center; justify-content: center;
+  /* v13.45: the hamburger never disappears. It slides left with the drawer
+     and rests hanging just outside the drawer's left edge (drawer 360 wide
+     at right 10; pill resting ~28 from the right edge). The same pill
+     closes the drawer, and so does a click anywhere outside it. */
+  body.drawer-open #top-actions .top-btn.hamburger { transform: translateX(-352px); }
+  #top-actions .top-btn.hamburger { transition: transform 0.45s cubic-bezier(0.16,1,0.3,1); }
+  @media (max-width: 640px) {
+    body.drawer-open #top-actions .top-btn.hamburger { transform: none; }
   }
-  #clients-drawer .drawer-burger:hover { opacity: 1; }
-  body.drawer-open #top-actions .top-btn.hamburger { opacity: 0; pointer-events: none; }
-  #top-actions .top-btn.hamburger { transition: opacity 0.2s; }
   #clients-drawer .drawer-title {
     font-family: 'Cormorant Garamond', serif;
     font-weight: 300;
@@ -1640,9 +1636,8 @@
      download) lives in this drawer as its own section, so the Op Room can
      stay focused on Item · 3D · Pattern. -->
 <div id="clients-drawer">
-  <button class="drawer-burger" onclick="toggleClientsDrawer(false)" title="Close menu" aria-label="Close menu">
-    <span class="hamburger-icon"><span></span><span></span><span></span></span>
-  </button>
+  <!-- v13.45: no button inside the drawer. The top bar hamburger slides out
+       with it and closes it; a click anywhere outside closes it too. -->
   <div class="drawer-title">Submissions</div>
   <!-- v13.43: the old settings pill, folder picker and nest configuration
        left this drawer. The nest inputs stay in the DOM, hidden, because the
@@ -2265,6 +2260,14 @@ async function openClientsDrawer() {
   drawer.classList.add('open');
 }
 
+// v13.45: a click anywhere outside the drawer closes it.
+document.addEventListener('pointerdown', (e) => {
+  const drawer = document.getElementById('clients-drawer');
+  if (!drawer || !drawer.classList.contains('open')) return;
+  const t = e.target;
+  if (t && t.closest && (t.closest('#clients-drawer') || t.closest('#top-actions .top-btn.hamburger'))) return;
+  toggleClientsDrawer(false);
+}, true);
 function toggleClientsDrawer(force) {
   const drawer = document.getElementById('clients-drawer');
   if (!drawer) return;

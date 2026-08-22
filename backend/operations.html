@@ -92,10 +92,14 @@ window.addEventListener('message', function(e){
     box-shadow:inset 0 1px 1px rgba(255,255,255,0.28),inset 0 -1px 1px rgba(0,0,0,0.18),0 4px 16px rgba(0,0,0,0.22)}
   .hamburger-icon{display:inline-flex;flex-direction:column;gap:3px;width:14px}
   .hamburger-icon span{display:block;height:1px;width:100%;background:currentColor;border-radius:1px}
-  /* v13.44: while the drawer is open, the top bar hamburger yields to the
-     drawer's own, which sits in the drawer's top-left corner. */
-  body.drawer-open header .icon-btn.hamburger{opacity:0;pointer-events:none}
-  header .icon-btn.hamburger{transition:opacity .2s}
+  /* v13.45: the hamburger never disappears. It slides left with the drawer
+     and rests hanging just outside the drawer's left edge. Embedded mode
+     has no header pill, so there the drawer keeps a small burger of its
+     own; standalone hides it. */
+  body.drawer-open header .icon-btn.hamburger{transform:translateX(-360px)}
+  header .icon-btn.hamburger{transition:transform .45s cubic-bezier(0.16,1,0.3,1)}
+  @media (max-width: 640px){ body.drawer-open header .icon-btn.hamburger{transform:none} }
+  html:not(.embedded) .drawer .drawer-burger{visibility:hidden}
   .drawer .drawer-burger{opacity:.85}
   .drawer .drawer-burger:hover{opacity:1}
   /* plan button, same capsule glass as the hamburger, same height */

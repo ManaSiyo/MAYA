@@ -639,8 +639,11 @@ ok('the credit meter stays on the server, off the map',
 const MKT_SOURCE = existsSync(join(ROOT, AT.marketing))
   ? readFileSync(join(ROOT, AT.marketing), 'utf8') : '';
 // v13.44: the doors dropped their pills and grid; a centered flex row now.
-ok('the fourth door is Marketing', MAP_SOURCE.includes('href="/marketing.html"') &&
-  MAP_SOURCE.includes('.grid.doors{display:flex;justify-content:center'));
+// v13.45: three doors in Fromsa's order, the back rooms behind MAYA's hover.
+ok('the doors read Mana, Marketing, MAYA, in that order',
+  MAP_SOURCE.includes('.grid.doors{display:flex;justify-content:center') &&
+  MAP_SOURCE.indexOf('<b>Mana</b>') < MAP_SOURCE.indexOf('<b>Marketing</b>') &&
+  MAP_SOURCE.indexOf('<b>Marketing</b>') < MAP_SOURCE.indexOf('<b>MAYA</b>'));
 ok('the marketing page ships and signs in like the map',
   MKT_SOURCE.includes('MAYA Marketing') &&
   MKT_SOURCE.includes("localStorage.getItem('maya_admin_tok')") &&
@@ -759,8 +762,9 @@ ok('staged things wear chips beside Submit',
   INDEX_SOURCE.includes('_unstageFabric(') && INDEX_SOURCE.includes('_unstageRef('));
 ok('the picker numbers sit on their own ground',
   INDEX_SOURCE.includes('background: rgba(6,10,20,0.85);'));
-ok('the drawer button steps aside while the drawer is open',
-  INDEX_SOURCE.includes('body.drawer-open #hamburger-toggle { opacity: 0;'));
+// v13.45: the button no longer hides; it rides out with the drawer.
+ok('the drawer button rides out with the drawer instead of hiding',
+  INDEX_SOURCE.includes('body.drawer-open #hamburger-toggle { transform: translateX(-360px); }'));
 ok('note categories fill from the fabric when the words are missing',
   INDEX_SOURCE.includes("byTag.set('color', [fb0.color])") &&
   INDEX_SOURCE.includes('class="vn-dot"'));
@@ -797,12 +801,30 @@ ok('the Admin doors are plain words, Mana among them',
 ok('the Admin drawer runs full height and answers a mouse drag',
   MAP_SOURCE.includes('#drawer{position:fixed;top:10px;right:10px;bottom:10px') &&
   /mousedown[\s\S]{0,200}begin\(e\.clientX/.test(MAP_SOURCE));
-ok('every drawer carries its own hamburger in its top-left corner',
-  INDEX_SOURCE.includes('.notes-close') &&
-  /class="notes-close"[\s\S]{0,200}hamburger-icon/.test(INDEX_SOURCE) &&
-  MAP_SOURCE.includes('drawer-burger') &&
-  BACKEND_SOURCE.includes('drawer-burger') &&
-  (!OPS_SOURCE || OPS_SOURCE.includes('drawer-burger')));
+// v13.45: no button inside the drawer any more; the top bar pill slides out
+// with the drawer on every page and stays visible, and a click anywhere
+// outside the drawer closes it.
+ok('the hamburger slides out with the drawer on every page',
+  INDEX_SOURCE.includes('body.drawer-open #hamburger-toggle { transform: translateX(') &&
+  MAP_SOURCE.includes('body.drawer-open .top-btn.hamburger{transform:translateX(') &&
+  BACKEND_SOURCE.includes('body.drawer-open #top-actions .top-btn.hamburger { transform: translateX(') &&
+  (!OPS_SOURCE || OPS_SOURCE.includes('body.drawer-open header .icon-btn.hamburger{transform:translateX(')));
+ok('a click anywhere outside the drawer closes it, on every page',
+  /pointerdown[\s\S]{0,400}toggleNotesDrawer\(false\)/.test(INDEX_SOURCE) &&
+  /pointerdown[\s\S]{0,400}toggleDrawer\(false\)/.test(MAP_SOURCE) &&
+  /pointerdown[\s\S]{0,500}toggleClientsDrawer\(false\)/.test(BACKEND_SOURCE) &&
+  /pointerdown[\s\S]{0,400}classList\.remove\('open'\)/.test(MKT_SOURCE));
+ok('MAYA hover on Admin reveals both back rooms',
+  MAP_SOURCE.includes('pg-chips') &&
+  /pg-chip" href="\/operations\.html"/.test(MAP_SOURCE) &&
+  /pg-chip" href="\/playground\.html"/.test(MAP_SOURCE));
+ok('a two finger pinch resizes a card on a phone',
+  INDEX_SOURCE.includes("e.touches.length !== 2") &&
+  INDEX_SOURCE.includes('el._pinching = true;') &&
+  /pinchW0 \* dist\(e\.touches\) \/ pinchD0/.test(INDEX_SOURCE));
+ok('phones get smaller cards and smaller type',
+  INDEX_SOURCE.includes('max-width: min(200px, calc(100vw - 48px))') &&
+  /max-width: 640px[\s\S]{0,3000}\.item-title \{ font-size: 13px; \}/.test(INDEX_SOURCE));
 ok('the Backend calls itself Backend and its drawer says Submissions',
   BACKEND_SOURCE.includes('Backend</a>') &&
   BACKEND_SOURCE.includes('<div class="drawer-title">Submissions</div>') &&
