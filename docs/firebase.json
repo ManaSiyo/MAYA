@@ -53,6 +53,10 @@
         }
       },
       {
+        "source": "/playground.html",
+        "destination": "/playground/index.html"
+      },
+      {
         "source": "/status.html",
         "destination": "/backend/status.html"
       },

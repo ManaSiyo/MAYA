@@ -49,6 +49,27 @@ If this file disagrees with chat memory, this file is right.
    provenance is app level only; submissions filed before Aug 17 are still in
    the old Drive folder.
 
+## The playground rule, August 21
+
+`playground/index.html` (served at /playground.html, linked from the MAYA door
+on Admin on hover) is Fromsa's private staging copy. Experimental features go
+there FIRST; `frontend/index.html` changes only when he approves a promotion.
+It shares the live sign in and data, so destructive experiments still need
+care. Keep the small amber Playground badge so the two are never confused.
+
+Admin access: ADMIN_EMAILS defaults to fromsa@manasiyo.com and
+worldofsiyo@gmail.com only, overridable by env. /api/admin/users lists named
+accounts (email + last seen) for the Users hover; markers at metrics/users/
+carry email since v13.43, older ones are anonymous.
+
+Marketing: WINDSOR_API_KEY on Cloud Run makes /api/admin/marketing fill both
+ad panels (impressions, clicks, spend, last 7 days) through Windsor. Direct
+META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
+
+Still owed on the fabric sourcing revamp (the Brief's Sourceable tab):
+worldwide sources, better cards, real links. Not started; scoped for its own
+pass.
+
 ## Where things stand, August 21 2026
 
 - FEEDBACK exists as of v13.41: the app drawer's Privacy slot became Feedback

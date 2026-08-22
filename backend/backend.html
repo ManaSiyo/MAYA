@@ -1405,7 +1405,7 @@
     <!-- v13.35: the logo is the way back to the Systems Map. -->
     <a href="/status.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit" title="Back to Admin">
       <img src="/aesthetics/ui/logo-208.png" alt="" style="width:44px;height:44px;object-fit:contain;opacity:0.92;-webkit-user-drag:none" />
-      MAYA</a> <span class="sub" id="brand-sub">Brief</span>
+      MAYA</a> <span class="sub" id="brand-sub">Backend</span>
     <span class="status-pill" id="dissect-status" style="display:none">Dissecting…</span>
   </div>
   <div id="top-actions">
@@ -1628,14 +1628,16 @@
 <div id="clients-drawer">
   <button class="notes-close" onclick="toggleClientsDrawer(false)" title="Close" aria-label="Close">&#215;</button>
   <div class="drawer-title">Clients</div>
-  <button class="pill sm" style="margin:6px 0 10px" onclick="try{document.getElementById('operations-embed').contentWindow.postMessage({maya:'ops-drawer'},'*')}catch(_){};toggleClientsDrawer(false)">Operations Room settings</button>
+  <!-- v13.43: the old settings pill, folder picker and nest configuration
+       left this drawer. The nest inputs stay in the DOM, hidden, because the
+       nest code still reads them; the drawer shows only what a person uses. -->
   <div class="drawer-sub" id="clients-count">no clients yet</div>
   <div class="clients-list" id="clients-list"></div>
 
   <!-- v0.13: nest config, X / Y dimensions + inches/millimeters toggle.
        Defaults: 55in × 35in, 0.2in spacing. Internally we always store
        cm; the inputs show whatever unit is selected. -->
-  <div class="drawer-section" id="drawer-nest-config">
+  <div class="drawer-section" id="drawer-nest-config" style="display:none">
     <div class="drawer-section-title">Nest configuration</div>
     <div class="drawer-nest-fields">
       <div class="nest-field">
@@ -2200,13 +2202,36 @@ async function openClientsDrawer() {
   }
   if (listEl) {
     if (!cached) {
-      // No folder granted, show a single capsule that triggers the
-      // picker. Matches the .client-item visual so it blends in.
-      listEl.innerHTML =
-        '<button class="client-item" onclick="grantMayaFolder()">' +
-          '<span>Choose MAYA folder</span>' +
-          '<span class="client-date">grant once, remembered after</span>' +
-        '</button>';
+      // v13.43: no local folder means the clients come from MAYA itself.
+      // The old "choose a folder" capsule confused everyone; submissions
+      // live in the cloud now, listed with the same admin sign in.
+      listEl.innerHTML = '<div class="client-date" style="padding:8px 4px">loading submissions&#8230;</div>';
+      try {
+        const tok = localStorage.getItem('maya_admin_tok') || '';
+        const r = await fetch('/api/admin/submissions?t=' + Date.now(),
+          { headers: { 'Authorization': 'Bearer ' + tok }, cache: 'no-store' });
+        if (r.ok) {
+          const data = await r.json();
+          const folders = (data.folders || []).slice(0, 24);
+          if (countEl) countEl.textContent = folders.length === 1 ? '1 client' : folders.length + ' clients';
+          listEl.innerHTML = folders.map(f => {
+            const m = String(f.name || '').match(/^(.*?)[-\s](\d{2}-\d{2}-\d{4})/);
+            const nm = m ? m[1].replace(/_/g, ' ') : (f.name || 'client');
+            const dt = m ? m[2] : '';
+            const img = (f.files || []).find(x => /dream-garment/i.test(x.name || ''));
+            const href = '/backend.html?submission=' + encodeURIComponent(f.id) +
+              '&name=' + encodeURIComponent(f.name || '') +
+              (img ? '&img=' + encodeURIComponent(img.id) : '');
+            return '<button class="client-item" onclick="location.href=\'' + href.replace(/'/g, '') + '\'">' +
+              '<span>' + nm.replace(/[&<>]/g, ' ') + '</span>' +
+              '<span class="client-date">' + dt + '</span></button>';
+          }).join('') || '<div class="client-date" style="padding:8px 4px">no submissions yet</div>';
+        } else {
+          listEl.innerHTML = '<div class="client-date" style="padding:8px 4px">sign in on Admin first, then reopen</div>';
+        }
+      } catch (_) {
+        listEl.innerHTML = '<div class="client-date" style="padding:8px 4px">could not reach MAYA</div>';
+      }
     } else {
       listEl.innerHTML = clients.map(c => {
         // "jaja 05-18-2026" → name "Jaja" + date "05-18-2026"

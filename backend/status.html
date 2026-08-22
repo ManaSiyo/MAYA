@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.42">
+<meta name="maya-version" content="13.43">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -130,6 +130,17 @@ try {
   .tile .k{font-family:'Jost',Verdana,sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim)}
   .tile .v{font-size:16px}
   .tile.live .v{color:var(--green)}
+  #users-pop{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);
+    min-width:250px;max-width:320px;z-index:40;display:none;text-align:left;
+    border:0.5px solid var(--line);border-radius:14px;background:rgba(8,13,30,0.96);
+    backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);
+    padding:10px 12px;box-shadow:0 12px 40px rgba(0,0,0,0.5)}
+  #users-pop .up-row{display:flex;justify-content:space-between;gap:14px;
+    font-family:'Jost',sans-serif;font-size:10.5px;letter-spacing:0.04em;color:var(--ink);
+    padding:4px 2px;border-bottom:0.25px solid rgba(255,255,255,0.06)}
+  #users-pop .up-row:last-child{border-bottom:none}
+  #users-pop .up-when{color:var(--faint);white-space:nowrap}
+  #users-pop .dim{color:var(--dim)}
   #traffic-note{font-family:'Jost',Verdana,sans-serif;font-size:10.5px;color:var(--dim);line-height:1.7;
     border:0.5px dashed var(--line);border-radius:12px;padding:11px 14px}
   #traffic-note.hidden,#traffic-tiles.hidden{display:none}
@@ -214,6 +225,14 @@ try {
   .grid.doors .card b{font-size:19px;font-weight:400;display:inline;margin:0}
   .grid.doors .card p{font-size:12.5px}
   .grid.doors a.card{padding:10px 18px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:10px}
+  /* v13.43: hovering MAYA reveals the playground, Fromsa's private copy. */
+  .card-maya{position:relative}
+  .card-maya .pg-chip{position:absolute;right:10px;top:50%;transform:translateY(-50%);
+    font-family:'Jost',sans-serif;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;
+    color:var(--dim);border:0.5px solid var(--line);border-radius:100px;padding:3px 9px;
+    text-decoration:none;opacity:0;transition:opacity .2s}
+  .card-maya:hover .pg-chip{opacity:1}
+  .card-maya .pg-chip:hover{color:var(--ink);border-color:rgba(255,255,255,0.45)}
   .grid.doors .card .go{display:inline;margin:0;font-size:13px;letter-spacing:0}
   a.card{display:block;text-decoration:none;color:var(--ink);border:0.5px solid var(--line);
          border-radius:13px;padding:14px 15px;background:rgba(10,16,34,0.55);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
@@ -293,7 +312,11 @@ try {
   </div>
   <div class="grid doors" style="grid-template-columns:repeat(4,1fr);margin:8px 0 2px">
     <a class="card" href="/operations.html" target="_blank"><b>Operations Room Beta</b></a>
-    <a class="card" href="https://maya.manasiyo.com" target="_blank"><b>MAYA</b></a>
+    <span class="card card-maya" role="link" tabindex="0" style="cursor:pointer"
+          onclick="window.open('https://maya.manasiyo.com','_blank')"
+          onkeydown="if(event.key==='Enter')window.open('https://maya.manasiyo.com','_blank')"><b>MAYA</b>
+      <a class="pg-chip" href="/playground.html" target="_blank"
+         onclick="event.stopPropagation()" title="Your private copy for trying new things. The live app never sees it.">playground</a></span>
     <a class="card" href="https://manasiyo.com" target="_blank"><b>Manasiyo.com</b></a>
     <!-- v13.34: the fourth door. Everything that brings people in. -->
     <a class="card" href="/marketing.html" target="_blank"><b>Marketing</b></a>
@@ -317,9 +340,10 @@ try {
   </details>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-21g">
+  <details class="fold" id="changes-fold" data-latest="2026-08-21h">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 21</b>Nothing renders until Submit. Switch fabric and Add reference now STAGE: each choice becomes a small circle beside Submit, the spoken changes sit under it, and one Submit fires everything as one render, one price. The picker opens over the viewer, so Back is just Back and listening keeps listening. Pinterest pictures stopped wearing their file hash as a name. On Admin: hover Users and it answers who, by account and last seen; the drawer opens to a swipe; the MAYA door reveals the Playground, a private copy for trying things; and Marketing stops asking for a second sign in. One key from Windsor can now feed both ad panels with impressions, clicks and spend.</div>
     <div class="chg"><b>Aug 21</b>This page is called Admin now, and it stopped clearing its throat: the last-checked line, the empty checking box, the Operations Room aside and the credits footer are gone. Users and traffic folds away like everything else, staying right where it is. In MAYA, submitting is faster because the folder opens and the picture is fetched while the one-pager renders, resting a cursor on the wall holds only that row while the other two keep drifting, the heart mirrors the close on the picture, note categories lead with what MAYA heard underneath, restored projects find their fabric swatches again, and the sign in screen is just the sign in.</div>
     <div class="chg"><b>Aug 21</b>MAYA listens about itself now. Feedback lives in the menu where Privacy used to be, since Privacy already lives on the sign in screen and this map: speak or type a problem, an idea or a wish, press Submit, and it lands in MAYA's own store with the account it came from. There is a private list of every note at /api/admin/feedback.</div>
     <div class="chg"><b>Aug 21</b>The launch hardening pass. A submission can now only be written by the account that opened it, which closes the one real hole in the submission store. The second Pinterest implementation is deleted, so there is exactly one sign in, one retry and one import flow. Pinterest brings pictures in two at a time and reports honestly which arrived. The menu button answers a finger with a full size target and tells assistive tech what it opens. An OS level reduce motion request holds the community wall still. And no words on screen say Drive any more, because Drive is gone.</div>
@@ -469,6 +493,28 @@ try {
   else wire();
 })();
 
+// v13.43: the drawer answers a swipe, like MAYA. Start within an inch of the
+// right edge, pull left, it opens; swipe right anywhere on it, it closes.
+(function _wireDrawerSwipe() {
+  let sx = null, sy = null, fromEdge = false;
+  document.addEventListener('touchstart', (e) => {
+    const t = e.touches && e.touches[0];
+    if (!t) return;
+    sx = t.clientX; sy = t.clientY;
+    fromEdge = (window.innerWidth - t.clientX) < 90;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    const t = e.changedTouches && e.changedTouches[0];
+    if (!t || sx == null) return;
+    const dx = t.clientX - sx, dy = t.clientY - sy;
+    sx = null;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+    const drawer = document.getElementById('drawer');
+    if (!drawer) return;
+    if (dx < 0 && fromEdge) drawer.classList.add('open');
+    else if (dx > 0 && drawer.classList.contains('open')) drawer.classList.remove('open');
+  }, { passive: true });
+})();
 function setDot(id,s){document.getElementById(id).className='sdot '+s}
 let _idTok = null;
 let _healthSeq = 0;
@@ -863,7 +909,7 @@ function _paintHeadTiles(d) {
   if (head.dataset.sig === sig) { head.classList.remove('hidden'); return; }
   head.dataset.sig = sig;
   head.innerHTML =
-    '<div class="tile" title="Separate Google accounts that have signed in to MAYA"><div class="k">users</div>' +
+    '<div class="tile" id="users-tile" title="Separate Google accounts that have signed in to MAYA"><div class="k">users</div>' +
       '<div class="v">' + (acc ? acc.total : em) + '</div></div>' +
     '<div class="tile live" title="People on the site right now"><div class="k">&#9679; live now</div>' +
       '<div class="v">' + (live === null ? em : live) + '</div></div>' +
@@ -871,6 +917,51 @@ function _paintHeadTiles(d) {
     '<div class="tile"><div class="k">7 days</div><div class="v">' + n('d7') + '</div></div>' +
     '<div class="tile"><div class="k">28 days</div><div class="v">' + n('d28') + '</div></div>';
   head.classList.remove('hidden');
+  _wireUsersPop();
+}
+
+// v13.43: hovering USERS answers who. Fetched once a minute at most,
+// admin-eyes only, painted as a quiet list under the tile.
+let _usersPopAt = 0, _usersPopData = null;
+function _wireUsersPop() {
+  const tile = document.getElementById('users-tile');
+  if (!tile || tile._popWired) return;
+  tile._popWired = true;
+  tile.style.position = 'relative';
+  tile.addEventListener('mouseenter', async () => {
+    let pop = document.getElementById('users-pop');
+    if (!pop) {
+      pop = document.createElement('div');
+      pop.id = 'users-pop';
+      tile.appendChild(pop);
+    }
+    pop.style.display = 'block';
+    if (!_usersPopData || Date.now() - _usersPopAt > 60000) {
+      pop.innerHTML = '<div class="up-row dim">looking&#8230;</div>';
+      try {
+        const r = await _statusFetch('/api/admin/users', { headers: { 'Authorization': 'Bearer ' + _idTok } });
+        if (r.ok) { _usersPopData = await r.json(); _usersPopAt = Date.now(); }
+      } catch (_) {}
+    }
+    const d = _usersPopData;
+    if (!d || !d.ok) { pop.innerHTML = '<div class="up-row dim">could not read the list</div>'; return; }
+    const when = (ms) => {
+      if (!ms) return '';
+      const m = Math.round((Date.now() - ms) / 60000);
+      if (m < 2) return 'now';
+      if (m < 60) return m + 'm ago';
+      const h = Math.round(m / 60);
+      return h < 48 ? h + 'h ago' : Math.round(h / 24) + 'd ago';
+    };
+    pop.innerHTML = (d.users || []).slice(0, 12).map(u =>
+      '<div class="up-row"><span>' + (u.email ? u.email.replace(/[&<>]/g, '') : '<i>before names were kept</i>') +
+      '</span><span class="up-when">' + when(u.lastSeenMs) + '</span></div>').join('') ||
+      '<div class="up-row dim">nobody yet</div>';
+  });
+  tile.addEventListener('mouseleave', () => {
+    const pop = document.getElementById('users-pop');
+    if (pop) pop.style.display = 'none';
+  });
 }
 
 // Prompting engine. Live copy: Firestore config/prompting, the app reads it at boot.

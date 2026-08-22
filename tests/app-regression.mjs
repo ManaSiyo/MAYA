@@ -149,7 +149,7 @@ const r = await pg.evaluate(async () => {
   out.shareSanitized = hostile && hostile.x === 10000 && hostile.y === 0 &&
     !hostile.card.realism && hostile.card.refs.length === 50 &&
     !hostile.card.fabrics[0].dataUrl;
-  out.fabricSwitchCarriesContext = runFabricSwitch.length === 3 &&
+  out.fabricSwitchCarriesContext = runFabricSwitch.length === 4 &&
     runFabricSwitch.toString().includes('_opStillValid(ctx)');
   out.voiceCarriesContext = processLiveBatch.toString().includes('const ctx = _opContext()') &&
     processLiveBatch.toString().includes('_opStillValid(ctx)');
@@ -626,7 +626,7 @@ ok('the map hamburger links the privacy policy',
   MAP_SOURCE.includes('<a href="/privacy.html" target="_blank">Privacy policy'));
 ok('unique accounts are counted by MAYA itself',
   SERVER_SOURCE.includes("const USERS_PREFIX = 'metrics/users/'") &&
-  SERVER_SOURCE.includes('function noteUser(sub)') &&
+  SERVER_SOURCE.includes('function noteUser(sub, email)') &&
   SERVER_SOURCE.includes('async function countUsers()') &&
   SERVER_SOURCE.includes('accounts: accounts || null'));
 ok('the credit meter stays on the server, off the map',
@@ -684,6 +684,10 @@ ok('the app is still what the front door serves',
   (_rw[_rw.length - 1] || {}).source === '**' &&
   (_rw[_rw.length - 1] || {}).destination === '/frontend/index.html');
 ok('the API rewrite still comes first', (_rw[0] || {}).source === '/api/**' && !!(_rw[0] || {}).run);
+ok('the playground is its own copy behind its own address',
+  _dest('/playground.html') === '/playground/index.html' &&
+  existsSync(join(ROOT, 'playground/index.html')) &&
+  readFileSync(join(ROOT, 'playground/index.html'), 'utf8').includes('>Playground</div>'));
 ok('pictures still deploy: aesthetics is not inside the ignored folder',
   existsSync(join(ROOT, 'aesthetics')) &&
   !(HOSTING.hosting.ignore || []).some(g => g === 'aesthetics/**'));
@@ -734,6 +738,44 @@ ok('no customer-facing words say Drive any more',
   !INDEX_SOURCE.includes("Saved to Drive"));
 ok('the server does not advertise its framework',
   SERVER_SOURCE.includes("app.disable('x-powered-by')"));
+
+
+// ── v13.43 ─────────────────────────────────────────────────────────────────
+ok('an imported pin never wears its hash as a name',
+  INDEX_SOURCE.includes('const looksLikeCode = (t)') &&
+  INDEX_SOURCE.includes("? 'Pinterest' : 'Reference'"));
+ok('switch fabric stages instead of rendering',
+  INDEX_SOURCE.includes("_fabricPickerMode = 'stage';") &&
+  !/switchFabricForViewer[\s\S]{0,900}closeGarmentModal\(\)/.test(INDEX_SOURCE) &&
+  INDEX_SOURCE.includes('let _stagedFabrics = null;'));
+ok('one Submit fires the staged fabric and the spoken changes together',
+  INDEX_SOURCE.includes('runFabricSwitch(tid, fabrics, ctx, mods)') &&
+  INDEX_SOURCE.includes('async function runFabricSwitch(targetId, fabrics, context, extraMods)'));
+ok('staged things wear chips beside Submit',
+  INDEX_SOURCE.includes('id="staged-chips"') &&
+  INDEX_SOURCE.includes('function _refreshStagedChips()') &&
+  INDEX_SOURCE.includes('_unstageFabric(') && INDEX_SOURCE.includes('_unstageRef('));
+ok('the picker numbers sit on their own ground',
+  INDEX_SOURCE.includes('background: rgba(6,10,20,0.85);'));
+ok('the drawer button steps aside while the drawer is open',
+  INDEX_SOURCE.includes('body.drawer-open #hamburger-toggle { opacity: 0;'));
+ok('note categories fill from the fabric when the words are missing',
+  INDEX_SOURCE.includes("byTag.set('color', [fb0.color])") &&
+  INDEX_SOURCE.includes('class="vn-dot"'));
+ok('Admin answers WHO on hover, from named markers',
+  MAP_SOURCE.includes('function _wireUsersPop()') &&
+  MAP_SOURCE.includes('/api/admin/users') &&
+  SERVER_SOURCE.includes("app.get('/api/admin/users'") &&
+  SERVER_SOURCE.includes('doc.lastSeenMs = Date.now();'));
+ok('Admin opens to a swipe like MAYA does',
+  MAP_SOURCE.includes('_wireDrawerSwipe'));
+ok('marketing never clears the shared sign in on a deploy',
+  !/maya_seen_version_mkt[\s\S]{0,200}removeItem/.test(MKT_SOURCE));
+ok('Windsor can feed both ad panels through one key',
+  SERVER_SOURCE.includes('async function windsorInsights()') &&
+  SERVER_SOURCE.includes("via: 'windsor'"));
+ok('two admins, and only two, unless the env says otherwise',
+  SERVER_SOURCE.includes("'fromsa@manasiyo.com,worldofsiyo@gmail.com')"));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

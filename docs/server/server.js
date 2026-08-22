@@ -115,7 +115,7 @@ app.get('/api/healthz', _healthz);
 // If ADMIN_EMAILS is set (even to empty) it is authoritative.
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS !== undefined
   ? process.env.ADMIN_EMAILS
-  : 'fromsa@manasiyo.com,worldofsiyo@gmail.com,prasheeth@step-6.com')
+  : 'fromsa@manasiyo.com,worldofsiyo@gmail.com')   // v13.43: two admins, per Fromsa
   .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -213,7 +213,7 @@ async function requireGoogleUser(req) {
   if (!m) throw new Error('missing Bearer token');
   const payload = await verifyGoogleJwt(m[1], process.env.GOOGLE_CLIENT_ID);
   if (!payload.email_verified) throw new Error('email not verified');
-  noteUser(payload.sub);
+  noteUser(payload.sub, payload.email);
   return { email: payload.email, sub: payload.sub };
 }
 
@@ -223,17 +223,26 @@ async function requireGoogleUser(req) {
 // account id, so the count is exact and no address is stored. Written once per
 // account per instance, never on the request path (fire and forget).
 const USERS_PREFIX = 'metrics/users/';
-const _seenUsers = new Set();
-function noteUser(sub) {
+// v13.43: the marker now carries the account's address and when it was last
+// seen, so Admin can answer WHO, not only how many. Refreshed at most every
+// half hour per instance, off the request path, admin-eyes only.
+const _seenUsers = new Map();   // sub -> last write ms
+function noteUser(sub, email) {
   try {
-    if (!sub || _seenUsers.has(sub)) return;
-    _seenUsers.add(sub);
+    if (!sub) return;
+    const last = _seenUsers.get(sub) || 0;
+    if (Date.now() - last < 30 * 60 * 1000) return;
+    _seenUsers.set(sub, Date.now());
     if (_seenUsers.size > 20000) _seenUsers.clear();
     const id = crypto.createHash('sha256').update(String(sub)).digest('hex').slice(0, 24);
     gcsGet(USERS_PREFIX + id + '.json').then(o => {
-      if (o.ok) return;                       // already counted on an earlier day
+      let doc = { firstSeenMs: Date.now() };
+      if (o.ok) { try { doc = JSON.parse(o.buf.toString('utf8')) || doc; } catch (_) {} }
+      doc.email = String(email || doc.email || '').slice(0, 120);
+      doc.lastSeenMs = Date.now();
+      if (!doc.firstSeenMs) doc.firstSeenMs = Date.now();
       return gcsPut(USERS_PREFIX + id + '.json',
-        Buffer.from(JSON.stringify({ firstSeenMs: Date.now() }), 'utf8'), 'application/json');
+        Buffer.from(JSON.stringify(doc), 'utf8'), 'application/json');
     }).catch(() => {});
   } catch (_) {}
 }
@@ -854,6 +863,36 @@ app.post('/api/feedback', requireAuthHeader, express.json({ limit: '16kb' }), as
   } catch (e) {
     console.error('[feedback] write failed —', e.message);
     return res.status(500).json({ error: 'feedback_failed' });
+  }
+});
+
+// GET /api/admin/users — who has signed in, newest activity first. Powers the
+// hover on the Users tile. Accounts counted before names were kept show blank.
+app.get('/api/admin/users', async (req, res) => {
+  try { await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
+  try {
+    const tok = await serviceToken(STORAGE_SCOPE);
+    const qs = new URLSearchParams({ prefix: USERS_PREFIX, maxResults: '1000', fields: 'items(name,timeCreated)' });
+    const r = await fetch('https://storage.googleapis.com/storage/v1/b/' +
+      encodeURIComponent(SUBMISSIONS_BUCKET) + '/o?' + qs.toString(), {
+      headers: { 'Authorization': 'Bearer ' + tok }, signal: AbortSignal.timeout(10000),
+    });
+    if (!r.ok) throw new Error('list ' + r.status);
+    const items = ((await r.json()).items || []);
+    const docs = (await Promise.all(items.slice(0, 200).map(async it => {
+      const o = await gcsGet(it.name).catch(() => ({ ok: false }));
+      if (!o.ok) return null;
+      try {
+        const j = JSON.parse(o.buf.toString('utf8')) || {};
+        return { email: j.email || '', firstSeenMs: j.firstSeenMs || Date.parse(it.timeCreated || '') || 0,
+                 lastSeenMs: j.lastSeenMs || j.firstSeenMs || 0 };
+      } catch (_) { return null; }
+    }))).filter(Boolean).sort((a, b) => b.lastSeenMs - a.lastSeenMs);
+    res.json({ ok: true, total: items.length, users: docs.slice(0, 50) });
+  } catch (e) {
+    console.error('[admin] users list failed —', e.message);
+    res.status(500).json({ error: 'users_failed' });
   }
 });
 
@@ -1906,6 +1945,44 @@ async function googleAdsInsights() {
   }
 }
 
+// v13.43: Windsor. One key, and it relays what Google Ads and Meta already
+// know: impressions, clicks, spend, by day. Set WINDSOR_API_KEY on Cloud Run
+// and both ad panels fill from it without any per-platform credentials here.
+const WINDSOR_KEY = process.env.WINDSOR_API_KEY || '';
+async function windsorInsights() {
+  if (!WINDSOR_KEY) return { connected: false, why: 'no WINDSOR_API_KEY set' };
+  try {
+    const qs = new URLSearchParams({
+      api_key: WINDSOR_KEY, date_preset: 'last_7d',
+      fields: 'source,date,impressions,clicks,spend',
+    });
+    const r = await fetch('https://connectors.windsor.ai/all?' + qs.toString(),
+      { signal: AbortSignal.timeout(20000) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error((j && j.message) || ('windsor ' + r.status));
+    const rows = Array.isArray(j.data) ? j.data : [];
+    const bySource = {};
+    for (const row of rows) {
+      const src = String(row.source || 'unknown').toLowerCase();
+      if (!bySource[src]) bySource[src] = { impressions: 0, clicks: 0, spend: 0, daily: {} };
+      const b = bySource[src];
+      b.impressions += Number(row.impressions || 0);
+      b.clicks += Number(row.clicks || 0);
+      b.spend += Number(row.spend || 0);
+      const d = String(row.date || '').slice(0, 10);
+      if (d) {
+        if (!b.daily[d]) b.daily[d] = { impressions: 0, clicks: 0, spend: 0 };
+        b.daily[d].impressions += Number(row.impressions || 0);
+        b.daily[d].clicks += Number(row.clicks || 0);
+        b.daily[d].spend += Number(row.spend || 0);
+      }
+    }
+    return { connected: true, sources: bySource };
+  } catch (e) {
+    return { connected: false, why: String(e.message).slice(0, 160) };
+  }
+}
+
 app.get('/api/admin/marketing', async (req, res) => {
   try { await requireAdmin(req); }
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
@@ -1964,9 +2041,28 @@ app.get('/api/admin/marketing', async (req, res) => {
   } catch (e) {
     out.analytics = { connected: false, why: String(e.message).slice(0, 200) };
   }
-  const [meta, gads] = await Promise.all([metaInsights(), googleAdsInsights()]);
+  const [meta, gads, windsor] = await Promise.all([metaInsights(), googleAdsInsights(), windsorInsights()]);
   out.meta = meta;
   out.googleAds = gads;
+  out.windsor = windsor;
+  // Windsor fills whichever ad panel has no direct credentials of its own.
+  if (windsor.connected) {
+    const w = windsor.sources || {};
+    const pick = (keys) => {
+      for (const k of keys) if (w[k]) return w[k];
+      return null;
+    };
+    if (!gads.connected) {
+      const g = pick(['google_ads', 'googleads', 'google']);
+      if (g) out.googleAds = { connected: true, via: 'windsor',
+        d7: { spend: g.spend, impressions: g.impressions, clicks: g.clicks, conversions: 0 } };
+    }
+    if (!meta.connected) {
+      const f = pick(['facebook', 'meta', 'facebook_ads']);
+      if (f) out.meta = { connected: true, via: 'windsor',
+        d7: { spend: f.spend, impressions: f.impressions, reach: 0, clicks: f.clicks, ctr: 0, cpc: 0, results: 0 } };
+    }
+  }
   res.json(out);
 });
 
