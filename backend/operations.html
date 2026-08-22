@@ -92,6 +92,12 @@ window.addEventListener('message', function(e){
     box-shadow:inset 0 1px 1px rgba(255,255,255,0.28),inset 0 -1px 1px rgba(0,0,0,0.18),0 4px 16px rgba(0,0,0,0.22)}
   .hamburger-icon{display:inline-flex;flex-direction:column;gap:3px;width:14px}
   .hamburger-icon span{display:block;height:1px;width:100%;background:currentColor;border-radius:1px}
+  /* v13.44: while the drawer is open, the top bar hamburger yields to the
+     drawer's own, which sits in the drawer's top-left corner. */
+  body.drawer-open header .icon-btn.hamburger{opacity:0;pointer-events:none}
+  header .icon-btn.hamburger{transition:opacity .2s}
+  .drawer .drawer-burger{opacity:.85}
+  .drawer .drawer-burger:hover{opacity:1}
   /* plan button, same capsule glass as the hamburger, same height */
   .plan-btn{height:28px;padding:0 14px;display:inline-flex;align-items:center}
 
@@ -231,7 +237,8 @@ window.addEventListener('message', function(e){
     pointer-events:none}
   .hpane-drawer.open{transform:none;pointer-events:auto}
   /* the drawer is a floating glass panel inside its pane (top 60 · right 18 · bottom 22) */
-  .drawer{position:absolute;top:60px;right:18px;bottom:22px;left:0;width:auto;border-radius:18px;
+  /* v13.44: full height, like every drawer in MAYA now. */
+  .drawer{position:absolute;top:10px;right:10px;bottom:10px;left:0;width:auto;border-radius:18px;
     background:linear-gradient(180deg,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0.03) 25%,rgba(255,255,255,0.02) 65%,rgba(255,255,255,0.07) 100%),rgba(6,8,16,0.45);
     border:0.5px solid var(--hair);padding:22px 22px 28px;overflow-y:auto;
     backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);
@@ -266,7 +273,8 @@ window.addEventListener('message', function(e){
      hamburger are the only branding, hide the inner duplicates. The Plan
      chip stays (it still opens the drawer with settings + plan switch). */
   html.embedded .top .brand{visibility:hidden}
-  html.embedded .icon-btn.hamburger{display:none}
+  /* v13.44: only the top bar duplicate hides; the drawer's own hamburger stays. */
+  html.embedded header .icon-btn.hamburger{display:none}
   html.embedded .pill.sm.plan-btn{display:none}
   html.embedded .pill[onclick*="file"]{display:none}
   /* one background for the whole Backend: when embedded the outer page owns it */
@@ -376,8 +384,12 @@ window.addEventListener('message', function(e){
 <div class="hpane hpane-drawer">
 <div class="drawer" id="drawer">
   <div class="drawer-head">
+    <!-- v13.44: the hamburger slides over with the drawer, top-left corner. -->
+    <button class="icon-btn hamburger drawer-burger" onclick="toggleDrawer(false)" title="Close menu" aria-label="Close menu" style="border:0;background:none;box-shadow:none">
+      <span class="hamburger-icon"><span></span><span></span><span></span></span>
+    </button>
     <h3>Settings</h3>
-    <button class="pill sm" onclick="toggleDrawer(false)">Close</button>
+    <span style="width:32px"></span>
   </div>
 
   <div class="sec">
@@ -633,6 +645,8 @@ function toggleDrawer(force){
   const d=document.querySelector('.hpane-drawer'); if(!d) return;
   const open = force===true ? true : force===false ? false : !d.classList.contains('open');
   d.classList.toggle('open', open);
+  // v13.44: the top bar hamburger fades while the drawer's own takes over.
+  document.body.classList.toggle('drawer-open', open);
   if(open) refreshKbStatus();
 }
 // click outside the drawer (and not on the hamburger) closes it; Escape too

@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 140 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 178 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -66,9 +66,56 @@ Marketing: WINDSOR_API_KEY on Cloud Run makes /api/admin/marketing fill both
 ad panels (impressions, clicks, spend, last 7 days) through Windsor. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
-Still owed on the fabric sourcing revamp (the Brief's Sourceable tab):
-worldwide sources, better cards, real links. Not started; scoped for its own
-pass.
+The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.44 (Claude): one column of pills, plain doors, the world's fabric
+
+- Viewer: the Attributes list merged INTO Design Notes. Every value under
+  "Aesthetics and constraints" is a `.vn-pill` chip with a cross; crossing
+  one toggles the same `viewerDeselected` set the old attributes panel used,
+  so the render prompt logic is untouched. On wide screens (min-width
+  1280px) the old attributes toggle and #viewer-refs are hidden; the notes
+  column is the one place. The mid-row button says **Visualize** ("Apply
+  changes" when edits are staged), and the reference picker confirm says
+  "Use this reference" / "Use N references" in staging mode.
+- Drawers, everywhere: full height (top 10 / bottom 10), and the drawer
+  carries its OWN hamburger in its top-left corner while the top bar one
+  fades (`body.drawer-open`). Applied to MAYA (`.notes-close` is now that
+  hamburger), Admin (#drawer), the Backend clients drawer, and the
+  Operations Room (whose embedded-mode CSS now hides only the header
+  hamburger, `html.embedded header .icon-btn.hamburger`, so the drawer's
+  own button survives embedding).
+- Admin: the four doors are plain words, no pills (Fromsa liked the
+  accidentally unstyled MAYA door and asked for all four to match): flex
+  row, centered, 20px, gap 34, "Manasiyo.com" renamed **Mana**. The
+  playground chip now hangs to the RIGHT of the MAYA word (left:100%).
+  `_wireDrawerSwipe` answers mousedown/mouseup drags as well as touch, so
+  the swipe works on desktop.
+- Backend: top-left brand says **Backend** (the brand-sub span is gone),
+  the drawer is titled **Submissions**, and every count string says
+  submissions, not clients.
+- Marketing is one dashboard: `#ad-chart` (inline SVG, a polyline per
+  network, Google #8ab4f8 / Meta #81c995, metric chips for Clicks,
+  Impressions, Cost per click) plus `#campaigns-table` (status by actual
+  delivery, campaign, network, impressions, clicks, CTR, CPC). Fed by
+  `out.adCombined` from the server: `windsorInsights()` now requests
+  `source,date,campaign,impressions,clicks,spend` (falls back to the old
+  field list if campaign is refused) and returns `campaigns` plus the
+  per-source daily series. The old two summary panels remain below.
+- Fabric sourcing looks worldwide: `WORLD_MERCHANTS` in backend.html (Mood
+  New York, The Fabric Store NZ, Blackbird Vancouver, Merchant & Mills,
+  Tessuti Sydney, Miss Matatabi Tokyo, The Fabric Sales Antwerp,
+  Stonemountain Berkeley, Etsy, Amazon), each a real search URL for the
+  exact fabric string. The wall is `.fab-page` pages of 12 (4 columns x 3
+  rows, scroll-snap swipe, dot indicators). Search cards say "varies"
+  because only a listing can state its own price; curated picks keep their
+  verified listed prices. Live per-listing pricing would need a server-side
+  fetch and is NOT built. Sourcing now works from the FULL VIEW without
+  dissection (`_buildFullViewCards()`, color-ranked against the garment
+  picture). The in-house library is prefetched ~1.2s after boot and its
+  first 16 swatches warmed, so the In-house tab opens instantly.
+- Versions: index/status/marketing metas are 13.44; Admin changelog has the
+  Aug 22 entry; 178 regression checks + 18 smoke checks all pass.
 
 ## Where things stand, August 21 2026
 
@@ -79,9 +126,10 @@ pass.
 - SECURITY as of v13.41: a submission can only be written by the account that
   opened it (`subOwner()` reads the init marker, cached). The legacy Pinterest
   modal is deleted; the drawer is the only implementation.
-- Live line: `maya-v2`. v13.37 is pushed. Committed and waiting for Fromsa's push: **v13.36**
-  (notes per vision, one tap changes, avatar and project menus, the Pinterest
-  drawer) and **v13.37** (the folder reorganisation below).
+- Live line: `maya-v2`. v13.43 is pushed and live. **v13.44 is committed and
+  waiting for Fromsa's push** (the pills-in-notes viewer, plain Admin doors,
+  full-height drawers, the combined marketing chart, worldwide fabric
+  sourcing).
 - **The folder changed in v13.37.** Pages are no longer loose at the root:
   `frontend/index.html`, and `backend/` holds status, marketing, operations,
   backend and privacy plus verify. Every old URL still answers, because
@@ -90,7 +138,7 @@ pass.
   rewrite list is the first place to look. `aesthetics/` stays at the root on
   purpose: `docs/**` is ignored by Hosting, so pictures inside it would never
   deploy.
-- Tests: 138 checks in `tests/app-regression.mjs`, all passing, including a
+- Tests: 178 checks in `tests/app-regression.mjs`, all passing, including a
   check that every old address still maps to a file that exists.
 - Pinterest: app id and secret ARE set on Cloud Run. The sign in currently
   fails with Pinterest's own 400, "this application has not registered a

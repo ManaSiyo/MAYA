@@ -21,6 +21,7 @@ const AT = {
   status:    'backend/status.html',
   backend:   'backend/backend.html',
   marketing: 'backend/marketing.html',
+  operations:'backend/operations.html',
   privacy:   'backend/privacy.html',
   verify:    'backend/verify.html',
   server:    'docs/server/server.js',
@@ -637,8 +638,9 @@ ok('the credit meter stays on the server, off the map',
 // ── v13.34, Aug 20 ─────────────────────────────────────────────────────────
 const MKT_SOURCE = existsSync(join(ROOT, AT.marketing))
   ? readFileSync(join(ROOT, AT.marketing), 'utf8') : '';
+// v13.44: the doors dropped their pills and grid; a centered flex row now.
 ok('the fourth door is Marketing', MAP_SOURCE.includes('href="/marketing.html"') &&
-  MAP_SOURCE.includes('grid-template-columns:repeat(4,1fr)'));
+  MAP_SOURCE.includes('.grid.doors{display:flex;justify-content:center'));
 ok('the marketing page ships and signs in like the map',
   MKT_SOURCE.includes('MAYA Marketing') &&
   MKT_SOURCE.includes("localStorage.getItem('maya_admin_tok')") &&
@@ -776,6 +778,48 @@ ok('Windsor can feed both ad panels through one key',
   SERVER_SOURCE.includes("via: 'windsor'"));
 ok('two admins, and only two, unless the env says otherwise',
   SERVER_SOURCE.includes("'fromsa@manasiyo.com,worldofsiyo@gmail.com')"));
+
+// ── v13.44 ─────────────────────────────────────────────────────────────────
+const OPS_SOURCE = existsSync(join(ROOT, AT.operations))
+  ? readFileSync(join(ROOT, AT.operations), 'utf8') : '';
+ok('design note values are crossable pills, one column, attributes folded in',
+  INDEX_SOURCE.includes("class=\"vn-pill") &&
+  INDEX_SOURCE.includes('vn-pill-x') &&
+  INDEX_SOURCE.includes('viewerDeselected') &&
+  /min-width:\s*1280px[\s\S]{0,300}attributes-toggle[\s\S]{0,200}display:\s*none/.test(INDEX_SOURCE));
+ok('the button says Visualize, and a picked picture says Use this reference',
+  INDEX_SOURCE.includes("'Apply changes' : 'Visualize'") &&
+  INDEX_SOURCE.includes("'Use this reference'"));
+ok('the Admin doors are plain words, Mana among them',
+  MAP_SOURCE.includes('.grid.doors .card{border:0;background:none') &&
+  MAP_SOURCE.includes('<b>Mana</b>') &&
+  !MAP_SOURCE.includes('a.card{display:block'));
+ok('the Admin drawer runs full height and answers a mouse drag',
+  MAP_SOURCE.includes('#drawer{position:fixed;top:10px;right:10px;bottom:10px') &&
+  /mousedown[\s\S]{0,200}begin\(e\.clientX/.test(MAP_SOURCE));
+ok('every drawer carries its own hamburger in its top-left corner',
+  INDEX_SOURCE.includes('.notes-close') &&
+  /class="notes-close"[\s\S]{0,200}hamburger-icon/.test(INDEX_SOURCE) &&
+  MAP_SOURCE.includes('drawer-burger') &&
+  BACKEND_SOURCE.includes('drawer-burger') &&
+  (!OPS_SOURCE || OPS_SOURCE.includes('drawer-burger')));
+ok('the Backend calls itself Backend and its drawer says Submissions',
+  BACKEND_SOURCE.includes('Backend</a>') &&
+  BACKEND_SOURCE.includes('<div class="drawer-title">Submissions</div>') &&
+  !BACKEND_SOURCE.includes('<div class="drawer-title">Clients</div>') &&
+  BACKEND_SOURCE.includes("'no submissions yet'"));
+ok('marketing draws both networks on one chart with a campaign table',
+  MKT_SOURCE.includes('id="ad-chart"') &&
+  MKT_SOURCE.includes('function paintAdCombined()') &&
+  MKT_SOURCE.includes('id="campaigns-table"') &&
+  SERVER_SOURCE.includes('out.adCombined') &&
+  SERVER_SOURCE.includes("'source,date,campaign,impressions,clicks,spend'"));
+ok('fabric sourcing looks across the world, four wide, swiped sideways',
+  BACKEND_SOURCE.includes('const WORLD_MERCHANTS') &&
+  BACKEND_SOURCE.includes('repeat(4, 1fr)') &&
+  BACKEND_SOURCE.includes('scroll-snap-type: x mandatory') &&
+  BACKEND_SOURCE.includes('function _buildFullViewCards()') &&
+  BACKEND_SOURCE.includes('_loadInhouseFabrics().then(items =>'));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

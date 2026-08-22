@@ -612,16 +612,33 @@
     color: #0b0e16; background: rgba(245,250,255,0.92);
     border-color: rgba(245,250,255,0.92);
   }
-  /* Responsive grid fills the frame; 2-3 columns by width. Scrollable. */
+  /* v13.44: the sourcing wall. Four columns, three rows to a page, and the
+     pages swipe sideways with scroll snap, like the app's screens. */
   .fab-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 16px; overflow-y: auto; align-content: start;
+    display: flex; overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x mandatory;
     flex: 1; min-height: 0;
-    /* top/left breathing room so the half-out hearts never clip */
     padding: 12px 4px 4px 12px;
+    -webkit-overflow-scrolling: touch;
   }
-  .fab-grid::-webkit-scrollbar { width: 4px; }
+  .fab-grid::-webkit-scrollbar { height: 4px; }
   .fab-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 4px; }
+  .fab-page {
+    flex: 0 0 100%; min-width: 100%;
+    scroll-snap-align: start;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 14px; align-content: start;
+    padding-right: 12px; box-sizing: border-box;
+  }
+  @media (max-width: 900px) { .fab-page { grid-template-columns: repeat(2, 1fr); } }
+  .fab-page-dots {
+    display: flex; justify-content: center; gap: 6px; padding-top: 8px; flex-shrink: 0;
+  }
+  .fab-page-dots .fpd {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(255,255,255,0.22); transition: background .2s;
+  }
+  .fab-page-dots .fpd.on { background: rgba(255,255,255,0.75); }
   .fab-card { display: block; text-decoration: none; }
   .fab-card { position: relative; }
   .fab-icon-btn {
@@ -1180,7 +1197,8 @@
   /* ───────── v10.15: clients drawer (matches Maya's hamburger drawer) ───────── */
   #clients-drawer {
     position: fixed;
-    top: 60px; right: 18px; bottom: 22px;
+    /* v13.44: full height, like every drawer in MAYA now. */
+    top: 10px; right: 10px; bottom: 10px;
     width: 360px; max-width: calc(100vw - 36px);
     background:
       linear-gradient(180deg,
@@ -1206,24 +1224,19 @@
     display: flex; flex-direction: column;
   }
   #clients-drawer.open { transform: translateX(0); opacity: 1; }
-  #clients-drawer .notes-close {
-    position: absolute; top: -34px; right: 0;
-    width: 28px; height: 28px; padding: 0;
-    background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 50%;
-    font-family: 'Jost', sans-serif;
-    font-size: 14px; line-height: 1; letter-spacing: 0;
+  /* v13.44: the hamburger slides over with the drawer and sits in its
+     top-left corner. The top bar one fades while the drawer is open. */
+  #clients-drawer .drawer-burger {
+    position: absolute; top: 12px; left: 12px;
+    width: 32px; height: 28px; padding: 0;
+    background: transparent; border: 0;
     color: rgba(245,250,255,0.85);
-    cursor: pointer;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
-    box-shadow:
-      inset 0 1px 1px rgba(255,255,255,0.28),
-      inset 0 -1px 1px rgba(0,0,0,0.18),
-      0 4px 16px rgba(0,0,0,0.22);
+    cursor: pointer; opacity: 0.85;
     display: flex; align-items: center; justify-content: center;
   }
+  #clients-drawer .drawer-burger:hover { opacity: 1; }
+  body.drawer-open #top-actions .top-btn.hamburger { opacity: 0; pointer-events: none; }
+  #top-actions .top-btn.hamburger { transition: opacity 0.2s; }
   #clients-drawer .drawer-title {
     font-family: 'Cormorant Garamond', serif;
     font-weight: 300;
@@ -1405,12 +1418,12 @@
     <!-- v13.35: the logo is the way back to the Systems Map. -->
     <a href="/status.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit" title="Back to Admin">
       <img src="/aesthetics/ui/logo-208.png" alt="" style="width:44px;height:44px;object-fit:contain;opacity:0.92;-webkit-user-drag:none" />
-      MAYA</a> <span class="sub" id="brand-sub">Backend</span>
+      Backend</a>
     <span class="status-pill" id="dissect-status" style="display:none">Dissecting…</span>
   </div>
   <div id="top-actions">
     <!-- v10.15: hamburger drawer toggle, same as Maya. -->
-    <button class="top-btn hamburger" onclick="toggleClientsDrawer()" title="Clients menu">
+    <button class="top-btn hamburger" onclick="toggleClientsDrawer()" title="Submissions menu" aria-expanded="false" aria-controls="clients-drawer">
       <span class="hamburger-icon"><span></span><span></span><span></span></span>
     </button>
   </div>
@@ -1453,6 +1466,7 @@
             </div>
           </div>
           <div class="fab-grid" id="fab-list"></div>
+          <div class="fab-page-dots" id="fab-page-dots"></div>
         </div>
         <!-- v0.37: dissection no longer fires by itself. Opening a client
              used to spend on six image calls before anyone asked for
@@ -1626,12 +1640,14 @@
      download) lives in this drawer as its own section, so the Op Room can
      stay focused on Item · 3D · Pattern. -->
 <div id="clients-drawer">
-  <button class="notes-close" onclick="toggleClientsDrawer(false)" title="Close" aria-label="Close">&#215;</button>
-  <div class="drawer-title">Clients</div>
+  <button class="drawer-burger" onclick="toggleClientsDrawer(false)" title="Close menu" aria-label="Close menu">
+    <span class="hamburger-icon"><span></span><span></span><span></span></span>
+  </button>
+  <div class="drawer-title">Submissions</div>
   <!-- v13.43: the old settings pill, folder picker and nest configuration
        left this drawer. The nest inputs stay in the DOM, hidden, because the
        nest code still reads them; the drawer shows only what a person uses. -->
-  <div class="drawer-sub" id="clients-count">no clients yet</div>
+  <div class="drawer-sub" id="clients-count">no submissions yet</div>
   <div class="clients-list" id="clients-list"></div>
 
   <!-- v0.13: nest config, X / Y dimensions + inches/millimeters toggle.
@@ -2196,9 +2212,9 @@ async function openClientsDrawer() {
   const clients = await listClients();
   if (countEl) {
     if (!cached)               countEl.textContent = 'pick the MAYA folder';
-    else if (clients.length === 0) countEl.textContent = 'no clients yet';
-    else if (clients.length === 1) countEl.textContent = '1 client';
-    else                       countEl.textContent = clients.length + ' clients';
+    else if (clients.length === 0) countEl.textContent = 'no submissions yet';
+    else if (clients.length === 1) countEl.textContent = '1 submission';
+    else                       countEl.textContent = clients.length + ' submissions';
   }
   if (listEl) {
     if (!cached) {
@@ -2213,7 +2229,7 @@ async function openClientsDrawer() {
         if (r.ok) {
           const data = await r.json();
           const folders = (data.folders || []).slice(0, 24);
-          if (countEl) countEl.textContent = folders.length === 1 ? '1 client' : folders.length + ' clients';
+          if (countEl) countEl.textContent = folders.length === 1 ? '1 submission' : folders.length + ' submissions';
           listEl.innerHTML = folders.map(f => {
             const m = String(f.name || '').match(/^(.*?)[-\s](\d{2}-\d{2}-\d{4})/);
             const nm = m ? m[1].replace(/_/g, ' ') : (f.name || 'client');
@@ -2254,6 +2270,9 @@ function toggleClientsDrawer(force) {
   if (!drawer) return;
   const isOpen = drawer.classList.contains('open');
   const wantOpen = (force === undefined) ? !isOpen : !!force;
+  document.body.classList.toggle('drawer-open', wantOpen);
+  const burger = document.querySelector('#top-actions .top-btn.hamburger');
+  if (burger) burger.setAttribute('aria-expanded', wantOpen ? 'true' : 'false');
   if (wantOpen) openClientsDrawer();
   else {
     drawer.classList.remove('open');
@@ -4007,23 +4026,60 @@ function toggleFavorite(ev, url){
 }
 let _lastCardsByUrl={};
 
+// v13.44: the world, not just three shops. Each merchant search lands on a
+// real results page for the exact fabric string; the prices shown on search
+// cards say "varies" because only the listing itself can speak for its
+// price. Curated picks keep the listed price they were verified at.
+const WORLD_MERCHANTS = [
+  { name:'Mood Fabrics', place:'New York',  eta:5,  q:t=>'https://www.moodfabrics.com/search?q='+t },
+  { name:'The Fabric Store', place:'New Zealand', eta:10, q:t=>'https://thefabricstore.com/search?q='+t },
+  { name:'Blackbird Fabrics', place:'Vancouver', eta:7, q:t=>'https://www.blackbirdfabrics.com/search?q='+t },
+  { name:'Merchant & Mills', place:'England', eta:9, q:t=>'https://merchantandmills.com/search?q='+t },
+  { name:'Tessuti Fabrics', place:'Sydney', eta:11, q:t=>'https://www.tessuti.com.au/search?q='+t },
+  { name:'Miss Matatabi', place:'Tokyo', eta:9, q:t=>'https://shop.missmatatabi.com/search?q='+t },
+  { name:'The Fabric Sales', place:'Antwerp, designer deadstock', eta:8, q:t=>'https://www.thefabricsales.com/search?q='+t },
+  { name:'Stonemountain & Daughter', place:'Berkeley', eta:4, q:t=>'https://stonemountainfabric.com/search?q='+t },
+  { name:'Etsy', place:'artisan, worldwide', eta:8, q:t=>'https://www.etsy.com/search?q='+t+'%20fabric%20by%20the%20yard' },
+  { name:'Amazon', place:'fastest', eta:2, q:t=>'https://www.amazon.com/s?k='+t+'%20fabric%20by%20the%20yard' },
+];
 function _buildFabricCards(fabricStr) {
   const fam  = _fabFamily(fabricStr);
   const term = encodeURIComponent((fabricStr || 'apparel fabric').trim());
-  // Every card gets an image: product picks already carry one; the Etsy/
-  // Amazon catch-alls borrow the family's first product photo so the grid
+  // Every card gets an image: product picks already carry one; merchant
+  // search cards borrow the family's first product photo so the grid
   // never shows a blank tile.
   const famImg = (fam.picks.find(p=>p.img)||{}).img || null;
   const cards = (fam.picks || []).map(p => Object.assign({ swatch: fam.swatch }, p));
-  cards.push({ merchant:'Etsy', title:'Artisan & deadstock match', price:'varies', etaDays:8, color:(fabricStr||''),
-    url:'https://www.etsy.com/search?q=' + term + '%20fabric%20by%20the%20yard', swatch: fam.swatch, img: famImg });
-  cards.push({ merchant:'Amazon', title:'Fast & budget yardage', price:'$8-$25', etaDays:2, color:(fabricStr||''),
-    url:'https://www.amazon.com/s?k=' + term + '%20fabric%20by%20the%20yard', swatch: fam.swatch, img: famImg });
+  for (const m of WORLD_MERCHANTS) {
+    cards.push({ merchant: m.name + ' · ' + m.place, title: (fabricStr || 'Apparel fabric') + ', matches',
+      price:'varies', etaDays: m.eta, color:(fabricStr||''),
+      url: m.q(term), swatch: fam.swatch, img: famImg, _search:true });
+  }
   // Color-aware ranking: 50% text-family relevance (product picks first),
   // 50% color closeness to the sampled garment image.
   cards.forEach((c,i)=>{ c._base = 1 - i/cards.length; c._color = _colorScore(c); c._score = 0.5*c._base + 0.5*c._color; });
   cards.sort((a,b)=> b._score - a._score);
-  return cards.slice(0, 12);
+  return cards.slice(0, 24);
+}
+// v13.44: sourcing works straight from the full view. No dissection means
+// no exact fabric string, so the wall shows the best of every family,
+// color-ranked against the garment picture itself.
+function _buildFullViewCards() {
+  const cards = [];
+  for (const fam of FABRIC_FAMILIES) {
+    for (const p of (fam.picks || []).slice(0, 3)) {
+      cards.push(Object.assign({ swatch: fam.swatch }, p));
+    }
+  }
+  const term = encodeURIComponent('apparel fabric by the yard');
+  for (const m of WORLD_MERCHANTS.slice(0, 6)) {
+    cards.push({ merchant: m.name + ' · ' + m.place, title:'Browse the whole shop',
+      price:'varies', etaDays: m.eta, url: m.q(term),
+      swatch:'linear-gradient(135deg,#3a3f4a,#6a7280)', _search:true });
+  }
+  cards.forEach((c,i)=>{ c._base = 1 - i/cards.length; c._color = _colorScore(c); c._score = 0.35*c._base + 0.65*c._color; });
+  cards.sort((a,b)=> b._score - a._score);
+  return cards.slice(0, 24);
 }
 
 function _fabCardHtml(c) {
@@ -4109,7 +4165,7 @@ function refreshFabricSourcing(){
   _inhouseCache=null;         // re-read the in-house folder
   _lastCardsByUrl={};
   const listEl=document.getElementById('fab-list');
-  if(listEl){ listEl.style.display='grid'; listEl.innerHTML='<div class="fab-empty-msg">Re-scanning…</div>'; }
+  if(listEl){ listEl.style.display='flex'; listEl.innerHTML='<div class="fab-page"><div class="fab-empty-msg">Re-scanning…</div></div>'; }
   setTimeout(()=>{ _sampleGarmentColor(()=>renderFabricsPage()); }, 280);
 }
 
@@ -4138,10 +4194,26 @@ function showBriefFabrics() {
 function _renderFabCards(cards){
   const listEl=document.getElementById('fab-list');
   if(!listEl) return;
-  listEl.style.display='grid';
-  listEl.innerHTML = cards.length
-    ? cards.map(_fabCardHtml).join('')
-    : '<div class="fab-empty-msg">Nothing here yet.</div>';
+  const dots=document.getElementById('fab-page-dots');
+  listEl.style.display='flex';
+  if(!cards.length){
+    listEl.innerHTML='<div class="fab-page"><div class="fab-empty-msg">Nothing here yet.</div></div>';
+    if(dots) dots.innerHTML='';
+    return;
+  }
+  // v13.44: pages of twelve, 4 wide by 3 deep, swiped sideways.
+  const PER=12, pages=[];
+  for(let i=0;i<cards.length;i+=PER) pages.push(cards.slice(i,i+PER));
+  listEl.innerHTML = pages.map(p=>'<div class="fab-page">'+p.map(_fabCardHtml).join('')+'</div>').join('');
+  listEl.scrollLeft=0;
+  if(dots){
+    dots.innerHTML = pages.length>1
+      ? pages.map((_,i)=>'<span class="fpd'+(i===0?' on':'')+'"></span>').join('') : '';
+    listEl.onscroll = ()=>{
+      const idx=Math.round(listEl.scrollLeft/Math.max(1,listEl.clientWidth));
+      dots.querySelectorAll('.fpd').forEach((d,i)=>d.classList.toggle('on',i===idx));
+    };
+  }
 }
 
 function renderFabricsPage() {
@@ -4164,8 +4236,8 @@ function renderFabricsPage() {
     return;
   }
   if (source === 'in-house') {
-    listEl.style.display='grid';
-    listEl.innerHTML='<div class="fab-empty-msg">Loading in-house library…</div>';
+    listEl.style.display='flex';
+    listEl.innerHTML='<div class="fab-page"><div class="fab-empty-msg">Loading in-house library…</div></div>';
     _loadInhouseFabrics().then(items=>{
       // color-rank the in-house swatches against the garment too
       items.forEach(it=>{ it._color=_colorScore(it); });
@@ -4175,9 +4247,11 @@ function renderFabricsPage() {
     return;
   }
   // sourceable
+  // v13.44: no dissection needed. Without an exact fabric string the wall
+  // still fills, ranked by the garment picture's own color.
   if (!fabricStr) {
-    listEl.style.display='grid';
-    listEl.innerHTML='<div class="fab-empty-msg">Sourcing appears once the item is identified.</div>';
+    if (fabEl) fabEl.textContent = 'From the full view';
+    _renderFabCards(_buildFullViewCards());
     return;
   }
   const cards = _buildFabricCards(fabricStr);
@@ -5116,6 +5190,19 @@ function backendLogout() {
   // Hard reload so the upload gate shows fresh.
   location.reload();
 }
+
+// v13.44: warm the in-house library early, so the In-house tab is instant:
+// the manifest is fetched and the first sixteen swatches enter the browser
+// cache while the designer is still reading the brief.
+setTimeout(() => {
+  try {
+    _loadInhouseFabrics().then(items => {
+      (items || []).slice(0, 16).forEach(it => {
+        if (it.img && !String(it.img).startsWith('data:')) { const im = new Image(); im.src = it.img; }
+      });
+    }).catch(() => {});
+  } catch (_) {}
+}, 1200);
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', _bootBackend);

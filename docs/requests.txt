@@ -16,6 +16,36 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 22, 2026, THE v13.44 BATCH
+
+[x] "Attributes and design notes can be combined, values as crossable pills
+    exactly how attributes work." One column now; every value is a pill with
+    a cross, wired to the same deselection the attributes panel used.
+[x] "Use this fabric, and also Use this reference." The picker says it.
+[x] "Submit should say Visualize." It does; Apply changes when edits staged.
+[x] "The MAYA door has no pill. Apply that to all of them, font 1px higher,
+    closer spacing, and Manasiyo.com just says Mana." All four doors are
+    plain words in a centered row.
+[x] "The swipe drawer has not been applied to Admin." It answers a mouse
+    drag now, not just touch.
+[x] "The drawer should take the full vertical space, with the hamburger in
+    the drawer's own top-left corner, on MAYA, Admin, Backend and the
+    Operations Room." Done on all four.
+[x] "The backend should literally say Backend top-left, and Submissions,
+    not Clients." Renamed everywhere it shows.
+[x] "Combine the marketing dashboard: one graph like Google's with lines
+    from both sources, and a table per campaign with status, impressions,
+    clicks, CTR, CPC." One SVG chart with metric chips plus the campaign
+    table, both fed by Windsor.
+[x] "Fabric sourcing worldwide: 4 columns, 3 rows, swipeable, high res
+    pictures, accurate prices, working from the full view without
+    dissection, and in-house fabrics loading faster." Ten merchants across
+    the world, paged 4x3 with a sideways swipe, full-view sourcing without
+    dissection, in-house library prefetched at boot. Search cards say
+    "varies" because only a listing can state its own price.
+[ ] Playground: "good idea but we are not going to actually use it for
+    now." It stays as is, behind the MAYA door hover.
+
 AUGUST 18, 2026, PINTEREST (v13.31)
 
 [x] "Let the user log into Pinterest and choose a board, an image, or a

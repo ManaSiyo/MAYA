@@ -1952,32 +1952,56 @@ const WINDSOR_KEY = process.env.WINDSOR_API_KEY || '';
 async function windsorInsights() {
   if (!WINDSOR_KEY) return { connected: false, why: 'no WINDSOR_API_KEY set' };
   try {
-    const qs = new URLSearchParams({
-      api_key: WINDSOR_KEY, date_preset: 'last_7d',
-      fields: 'source,date,impressions,clicks,spend',
-    });
-    const r = await fetch('https://connectors.windsor.ai/all?' + qs.toString(),
-      { signal: AbortSignal.timeout(20000) });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error((j && j.message) || ('windsor ' + r.status));
-    const rows = Array.isArray(j.data) ? j.data : [];
+    // v13.44: campaign comes along too, so Marketing can show a Google Ads
+    // style table: one row per campaign, per source, with CTR and CPC.
+    const fetchRows = async (fields) => {
+      const qs = new URLSearchParams({
+        api_key: WINDSOR_KEY, date_preset: 'last_7d', fields,
+      });
+      const r = await fetch('https://connectors.windsor.ai/all?' + qs.toString(),
+        { signal: AbortSignal.timeout(20000) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error((j && j.message) || ('windsor ' + r.status));
+      return Array.isArray(j.data) ? j.data : [];
+    };
+    let rows;
+    try { rows = await fetchRows('source,date,campaign,impressions,clicks,spend'); }
+    catch (_) { rows = await fetchRows('source,date,impressions,clicks,spend'); }
     const bySource = {};
+    const byCampaign = {};
     for (const row of rows) {
       const src = String(row.source || 'unknown').toLowerCase();
       if (!bySource[src]) bySource[src] = { impressions: 0, clicks: 0, spend: 0, daily: {} };
       const b = bySource[src];
-      b.impressions += Number(row.impressions || 0);
-      b.clicks += Number(row.clicks || 0);
-      b.spend += Number(row.spend || 0);
+      const imp = Number(row.impressions || 0);
+      const clk = Number(row.clicks || 0);
+      const spd = Number(row.spend || 0);
+      b.impressions += imp;
+      b.clicks += clk;
+      b.spend += spd;
       const d = String(row.date || '').slice(0, 10);
       if (d) {
         if (!b.daily[d]) b.daily[d] = { impressions: 0, clicks: 0, spend: 0 };
-        b.daily[d].impressions += Number(row.impressions || 0);
-        b.daily[d].clicks += Number(row.clicks || 0);
-        b.daily[d].spend += Number(row.spend || 0);
+        b.daily[d].impressions += imp;
+        b.daily[d].clicks += clk;
+        b.daily[d].spend += spd;
+      }
+      const camp = String(row.campaign || '').trim();
+      if (camp) {
+        const key = src + ' ' + camp;
+        if (!byCampaign[key]) byCampaign[key] = { source: src, campaign: camp,
+          impressions: 0, clicks: 0, spend: 0, lastDate: '' };
+        const c = byCampaign[key];
+        c.impressions += imp; c.clicks += clk; c.spend += spd;
+        if (d > c.lastDate) c.lastDate = d;
       }
     }
-    return { connected: true, sources: bySource };
+    const campaigns = Object.values(byCampaign)
+      .sort((a, b) => b.impressions - a.impressions)
+      .map(c => ({ ...c,
+        ctr: c.impressions ? c.clicks / c.impressions : 0,
+        cpc: c.clicks ? c.spend / c.clicks : 0 }));
+    return { connected: true, sources: bySource, campaigns };
   } catch (e) {
     return { connected: false, why: String(e.message).slice(0, 160) };
   }
@@ -2062,6 +2086,24 @@ app.get('/api/admin/marketing', async (req, res) => {
       if (f) out.meta = { connected: true, via: 'windsor',
         d7: { spend: f.spend, impressions: f.impressions, reach: 0, clicks: f.clicks, ctr: 0, cpc: 0, results: 0 } };
     }
+    // v13.44: one combined view for the Marketing page: a Google Ads style
+    // chart (a line per source) and a campaign table, both from Windsor.
+    const g = pick(['google_ads', 'googleads', 'google']);
+    const f2 = pick(['facebook', 'meta', 'facebook_ads']);
+    const dayset = new Set();
+    for (const s of [g, f2]) if (s) for (const d of Object.keys(s.daily || {})) dayset.add(d);
+    const days = Array.from(dayset).sort();
+    const seriesOf = (s) => days.map(d => {
+      const v = (s && s.daily && s.daily[d]) || { impressions: 0, clicks: 0, spend: 0 };
+      return { date: d, impressions: v.impressions, clicks: v.clicks, spend: v.spend,
+               cpc: v.clicks ? v.spend / v.clicks : 0 };
+    });
+    out.adCombined = {
+      connected: true, days,
+      google: g ? seriesOf(g) : null,
+      meta: f2 ? seriesOf(f2) : null,
+      campaigns: windsor.campaigns || [],
+    };
   }
   res.json(out);
 });

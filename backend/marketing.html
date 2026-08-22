@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Marketing</title>
-<meta name="maya-version" content="13.43">
+<meta name="maya-version" content="13.44">
 <script>
 // v13.43: this page NEVER clears the shared sign in. Admin owns the deploy
 // sign-out; marketing clearing it too was why the page kept asking again.
@@ -94,6 +94,22 @@ try {
   details.fold summary::after{content:'\25BE';font-family:'Jost',sans-serif;font-size:11px;color:var(--faint)}
   #checked-at{font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.16em;color:var(--faint);
     text-transform:uppercase;margin-bottom:10px}
+  /* v13.44: the paid section is one dashboard now, drawn the way Google Ads
+     draws its own: metric chips, one chart, a line per source, then the
+     campaign table underneath. */
+  .metric-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .metric-chip{font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--dim);border:0.5px solid var(--line);border-radius:100px;padding:5px 13px;
+    background:transparent;cursor:pointer;transition:all .2s}
+  .metric-chip:hover{color:var(--ink)}
+  .metric-chip.on{color:var(--ink);border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.06)}
+  .chart-legend{display:flex;gap:18px;font-family:'Jost',sans-serif;font-size:9.5px;
+    letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin:10px 2px 0}
+  .chart-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+  #ad-chart{width:100%;height:190px;display:block}
+  .status-word{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase}
+  .status-word.on{color:var(--green)}
+  .status-word.off{color:var(--faint)}
 </style>
 </head>
 <body>
@@ -148,8 +164,26 @@ try {
   <h2 class="grp">What they read</h2>
   <div class="panel"><table id="pages-table"><tbody></tbody></table></div>
 
-  <h2 class="grp">Paid</h2>
-  <div class="grid2">
+  <h2 class="grp">Paid, both networks together</h2>
+  <div class="panel" id="ad-combined-panel">
+    <div class="metric-chips" id="metric-chips">
+      <button class="metric-chip on" data-m="clicks" onclick="setAdMetric('clicks')">Clicks</button>
+      <button class="metric-chip" data-m="impressions" onclick="setAdMetric('impressions')">Impressions</button>
+      <button class="metric-chip" data-m="cpc" onclick="setAdMetric('cpc')">Cost per click</button>
+    </div>
+    <svg id="ad-chart" viewBox="0 0 700 190" preserveAspectRatio="none"></svg>
+    <div class="bars-axis"><span id="ad-from">&#8212;</span><span id="ad-to">&#8212;</span></div>
+    <div class="chart-legend">
+      <span><span class="dot" style="background:#8ab4f8"></span>Google Ads</span>
+      <span><span class="dot" style="background:#81c995"></span>Meta Ads</span>
+    </div>
+    <div id="ad-combined-note" class="note" style="display:none;margin-top:10px"></div>
+  </div>
+
+  <h2 class="grp">Campaigns, last 7 days</h2>
+  <div class="panel"><table id="campaigns-table"><tbody></tbody></table></div>
+
+  <div class="grid2" style="margin-top:12px">
     <div class="panel" id="google-ads-panel">Google Ads&#8230;</div>
     <div class="panel" id="meta-ads-panel">Meta Ads&#8230;</div>
   </div>
@@ -256,8 +290,93 @@ async function load() {
     'last checked ' + new Date(d.ts).toLocaleString() + (d.analytics && d.analytics.propertyName ? ', ' + d.analytics.propertyName : '');
   if (d.saEmail) document.getElementById('sa-email').textContent = d.saEmail;
   paintSite(d.analytics || {});
+  _adData = d.adCombined || null;
+  _windsorWhy = (d.windsor && d.windsor.why) || '';
+  paintAdCombined();
+  paintCampaigns();
   paintAds('google-ads-panel', 'Google Ads', d.googleAds || {}, 'conversions');
   paintAds('meta-ads-panel', 'Meta Ads', d.meta || {}, 'results');
+}
+
+// v13.44: the combined chart. One SVG, a line per network, and the metric
+// chips decide what the lines mean. All of it comes from Windsor.
+let _adData = null, _adMetric = 'clicks', _windsorWhy = '';
+function setAdMetric(m) {
+  _adMetric = m;
+  document.querySelectorAll('.metric-chip').forEach(c =>
+    c.classList.toggle('on', c.getAttribute('data-m') === m));
+  paintAdCombined();
+}
+function paintAdCombined() {
+  const svg = document.getElementById('ad-chart');
+  const note = document.getElementById('ad-combined-note');
+  if (!svg) return;
+  const d = _adData;
+  if (!d || !d.connected || !(d.days || []).length) {
+    svg.innerHTML = '';
+    note.style.display = '';
+    note.innerHTML = '<b>No combined ad data yet.</b> ' +
+      esc(_windsorWhy || 'Windsor has nothing for the last 7 days.') +
+      ' Set <code>WINDSOR_API_KEY</code> on the API and both networks appear here.';
+    document.getElementById('ad-from').textContent = '';
+    document.getElementById('ad-to').textContent = '';
+    return;
+  }
+  note.style.display = 'none';
+  const W = 700, H = 190, PAD = 8;
+  const days = d.days;
+  const val = (row) => _adMetric === 'cpc' ? row.cpc : row[_adMetric];
+  const seriesList = [
+    { pts: d.google, color: '#8ab4f8' },
+    { pts: d.meta, color: '#81c995' },
+  ].filter(s => Array.isArray(s.pts) && s.pts.length);
+  const max = Math.max(0.0001, ...seriesList.flatMap(s => s.pts.map(val)));
+  const x = (i) => days.length < 2 ? W / 2 : PAD + i * (W - PAD * 2) / (days.length - 1);
+  const y = (v) => H - PAD - (v / max) * (H - PAD * 2);
+  let out = '';
+  // faint horizontal guides, like the Ads chart
+  for (let g = 1; g <= 3; g++) {
+    const gy = PAD + g * (H - PAD * 2) / 4;
+    out += '<line x1="0" y1="' + gy + '" x2="' + W + '" y2="' + gy +
+      '" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>';
+  }
+  for (const s of seriesList) {
+    const pts = s.pts.map((r, i) => x(i).toFixed(1) + ',' + y(val(r)).toFixed(1)).join(' ');
+    out += '<polyline points="' + pts + '" fill="none" stroke="' + s.color +
+      '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    out += s.pts.map((r, i) =>
+      '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(val(r)).toFixed(1) + '" r="2.6" fill="' + s.color + '">' +
+      '<title>' + esc(r.date) + ': ' + (_adMetric === 'cpc' ? usd(val(r)) : n0(val(r))) + '</title></circle>').join('');
+  }
+  svg.innerHTML = out;
+  const pretty = (s) => s && s.length >= 10 ? (s.slice(5, 7) + '/' + s.slice(8, 10)) : s;
+  document.getElementById('ad-from').textContent = pretty(days[0]);
+  document.getElementById('ad-to').textContent = pretty(days[days.length - 1]);
+}
+function paintCampaigns() {
+  const tb = document.querySelector('#campaigns-table tbody');
+  if (!tb) return;
+  const rows = (_adData && _adData.campaigns) || [];
+  if (!rows.length) {
+    tb.innerHTML = '<tr><td style="color:var(--dim)">No campaigns reported for the last 7 days.</td></tr>';
+    return;
+  }
+  const srcName = (s) => /google/.test(s) ? 'Google' : /facebook|meta/.test(s) ? 'Meta' : s;
+  // Status is honest: it says whether the campaign actually delivered
+  // impressions inside the window, which is all the feed can prove.
+  tb.innerHTML = '<tr><th>Status</th><th>Campaign</th><th>Network</th>' +
+    '<th class="num">Impressions</th><th class="num">Clicks</th><th class="num">CTR</th><th class="num">CPC</th></tr>' +
+    rows.map(c => {
+      const on = Number(c.impressions) > 0;
+      return '<tr><td><span class="status-word ' + (on ? 'on' : 'off') + '">' +
+        (on ? '&#9679; delivering' : '&#9675; no delivery') + '</span></td>' +
+        '<td>' + esc(c.campaign) + '</td>' +
+        '<td>' + esc(srcName(String(c.source || ''))) + '</td>' +
+        '<td class="num">' + n0(c.impressions) + '</td>' +
+        '<td class="num">' + n0(c.clicks) + '</td>' +
+        '<td class="num">' + (c.impressions ? (100 * c.clicks / c.impressions).toFixed(2) + '%' : '0%') + '</td>' +
+        '<td class="num">' + usd(c.cpc) + '</td></tr>';
+    }).join('');
 }
 
 function paintSite(a) {
