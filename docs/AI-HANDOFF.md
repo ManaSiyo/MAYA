@@ -68,6 +68,40 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.51 (Codex): the garment chooses from the live shelf
+
+- `/api/rank-fabric` is admin-only and vision-led. It receives the garment
+  picture, the dissection's fabric string, hex, fiber, weave, weight, stretch,
+  sheen and texture, plus up to 12 real retailer thumbnails. `gpt-4.1` sees
+  the garment first and every product picture after it, then returns a 0 to
+  100 score and a short reason based on visible color, texture, weave, sheen,
+  print and apparent drape. The server normalizes and validates the result.
+- The Brief still paints static sourcing cards instantly. It retrieves the
+  real merchant pool, asks for visual ranking only when product thumbnails
+  exist, and replaces the first page only after a complete ranked response.
+  Retailer failure, missing images, invalid model output and network failure
+  all leave the static wall untouched.
+- Ranked cards show the real product image, title, merchant, original price
+  and currency, match score and visual reason. The heading says "Closest
+  visual matches" and nothing claims an exact match.
+- Tests: `tests/fabric-sourcing.mjs` covers ranking success, partial retailer
+  failure, missing thumbnails and ranking fallback. Smoke covers an
+  unauthorized ranking request. Browser regression guards the request data,
+  visible fields, wording and static-first fallback.
+- Validation before commit: focused sourcing tests 5 of 5; server smoke 20 of
+  20; `node --check` clean for both server modules; all inline scripts parse in
+  the app, Admin, Backend, Marketing and Playground; `git diff --check` clean.
+  The full browser regression was attempted with a freshly installed Chromium
+  but this Codex macOS sandbox denied Chromium's Mach rendezvous port before
+  the suite could start. This is the same environment limit already recorded
+  below, not a failing assertion. Its five new source-level conditions were
+  evaluated independently and all returned true.
+- Open risk: the first production ranking call still needs live verification,
+  because local tests deliberately use no OpenAI key and no merchant network.
+  Exact next step: Fromsa reviews and pushes the unpushed v13.51 commit, waits
+  for Cloud Build, opens one real submission, chooses Fabrics, and confirms the
+  first page changes from static cards to scored closest visual matches.
+
 ## v13.50 (Claude): the live merchant window
 
 - THE DISSECTION SPEAKS FABRIC: the prompt now also returns "fabric_spec"
@@ -319,9 +353,9 @@ Verified live on Aug 22 through Fromsa's signed-in admin session:
 - SECURITY as of v13.41: a submission can only be written by the account that
   opened it (`subOwner()` reads the init marker, cached). The legacy Pinterest
   modal is deleted; the drawer is the only implementation.
-- Live line: `maya-v2`. v13.48 is pushed and live. **v13.49 and v13.50 are
-  committed and waiting for Fromsa's push** (fabric_hex; the sourcing study;
-  the live merchant window and the fabric_spec dissection).
+- Live line: `maya-v2`. v13.48 is pushed and live. **v13.49 through v13.51 are
+  committed and waiting for Fromsa's push** (fabric color and traits, the
+  live merchant window, then garment-to-thumbnail visual ranking).
 - **The folder changed in v13.37.** Pages are no longer loose at the root:
   `frontend/index.html`, and `backend/` holds status, marketing, operations,
   backend and privacy plus verify. Every old URL still answers, because
@@ -330,8 +364,10 @@ Verified live on Aug 22 through Fromsa's signed-in admin session:
   rewrite list is the first place to look. `aesthetics/` stays at the root on
   purpose: `docs/**` is ignored by Hosting, so pictures inside it would never
   deploy.
-- Tests: 202 checks in `tests/app-regression.mjs`, all passing, including a
-  check that every old address still maps to a file that exists.
+- Tests: 207 checks in `tests/app-regression.mjs`; the last complete browser
+  run passed all 202 pre-v13.51 checks, and v13.51 adds five source assertions
+  for vision-led sourcing. The suite still checks that every old address maps
+  to a file that exists.
 - Pinterest: app id and secret ARE set on Cloud Run. The sign in currently
   fails with Pinterest's own 400, "this application has not registered a
   redirect URI": `https://maya.manasiyo.com/api/pinterest/callback` must be

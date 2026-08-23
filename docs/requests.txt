@@ -16,6 +16,20 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 22, 2026, VISION-LED FABRIC SOURCING (v13.51)
+
+[x] "Match ChatGPT's fabric-sourcing experience: use the garment image and
+    inferred traits, retrieve real purchasable inventory, visually rank the
+    closest products, explain each choice, and keep static cards only as the
+    graceful fallback." Done. The real retailer pool is compared picture by
+    picture against the garment by the vision model. Ranked cards show the
+    real image, title, price, merchant, score and a short visual reason under
+    the honest heading "Closest visual matches." Retailer, thumbnail and
+    ranking failures leave the fast static wall standing.
+[x] Guard ranking success, retailer failure, missing images, unauthorized
+    requests and the static fallback with focused tests and the regression
+    suite.
+
 AUGUST 22, 2026, ALL OF THEM NOW (v13.50)
 
 [x] "Do the next build and the live merchant in parallel, and draft the

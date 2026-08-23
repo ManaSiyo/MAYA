@@ -29,6 +29,11 @@ import express from 'express';
 import crypto from 'node:crypto';
 import { Readable } from 'node:stream';
 import dns from 'node:dns/promises';
+import {
+  applyVisualRankings,
+  buildVisualRankingRequest,
+  collectRetailerResults,
+} from './fabric-sourcing.js';
 
 const app = express();
 app.disable('x-powered-by');
@@ -1791,8 +1796,7 @@ app.get('/api/source-fabric', async (req, res) => {
       }));
     } catch (e) { return { _miss: m.name, why: String(e.message).slice(0, 80) }; }
   }));
-  const products = [], misses = [];
-  for (const r of results) { if (Array.isArray(r)) products.push(...r); else misses.push(r); }
+  const { products, misses } = collectRetailerResults(results);
   const body = { ok: true, q, products: products.slice(0, 60), misses,
     fetchedAt: new Date().toISOString() };
   _sourceCache.set(key, { ts: Date.now(), body });
@@ -1801,6 +1805,58 @@ app.get('/api/source-fabric', async (req, res) => {
       JSON.stringify(body), 'application/json').catch(() => {});
   } catch (_) {}
   res.json(body);
+});
+
+// ── v13.51: /api/rank-fabric, garment-to-swatch visual ranking ─────────────
+// Retrieval and ranking stay separate on purpose. The retailer window can
+// fail without spending a vision call, and the Brief can keep its immediate
+// static cards whenever either stage fails. Only products with real thumbnail
+// images enter the comparison. The model sees the garment first, then each
+// retailer image alongside the fabric traits inferred during dissection.
+app.post('/api/rank-fabric', requireAuthHeader, express.json({ limit: '8mb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  if (!process.env.OPENAI_API_KEY) return res.status(503).json({ error: 'ranking_unavailable' });
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) {
+    res.setHeader('Retry-After', String(rl.retry));
+    return res.status(429).json({ error: 'rate_limited', scope: rl.scope });
+  }
+
+  let ranking;
+  try {
+    ranking = buildVisualRankingRequest({
+      garmentImage: (req.body || {}).garment_image,
+      traits: (req.body || {}).traits,
+      products: (req.body || {}).products,
+    });
+  } catch (e) {
+    return res.status(e.status || 400).json({ error: e.message || 'bad_ranking_request' });
+  }
+
+  try {
+    const upstream = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(ranking.requestBody),
+      signal: AbortSignal.timeout(60000),
+    });
+    const body = await upstream.json().catch(() => ({}));
+    if (!upstream.ok) {
+      console.error('[fabric-rank]', upstream.status, 'user=' + user.email);
+      return res.status(502).json({ error: 'ranking_failed' });
+    }
+    const matches = applyVisualRankings(body, ranking.candidates);
+    noteSpend('v1/chat/completions', req);
+    return res.json({ ok: true, label: 'closest visual matches', matches });
+  } catch (e) {
+    console.error('[fabric-rank] failed,', e.message);
+    return res.status(e.status || 502).json({ error: 'ranking_failed' });
+  }
 });
 
 // ── Google Analytics (GA4 Data API) via the Cloud Run service account ──────

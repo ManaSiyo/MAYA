@@ -31,6 +31,8 @@ const AT = {
 const INDEX_SOURCE = readFileSync(join(ROOT, AT.index), 'utf8');
 const RULES_SOURCE = readFileSync(join(ROOT, 'docs/server/firestore.rules'), 'utf8');
 const SERVER_SOURCE = readFileSync(join(ROOT, AT.server), 'utf8');
+const FABRIC_SOURCE = readFileSync(join(ROOT, 'docs/server/fabric-sourcing.js'), 'utf8');
+const SERVER_DOCKER = readFileSync(join(ROOT, 'docs/server/Dockerfile'), 'utf8');
 const BUILD_SOURCE = readFileSync(join(ROOT, 'cloudbuild.yaml'), 'utf8');
 const MAP_SOURCE = readFileSync(join(ROOT, AT.status), 'utf8');
 const STORAGE_RULES = existsSync(join(ROOT, 'docs/server/storage.rules'))
@@ -895,6 +897,34 @@ ok('the dissection speaks the full material sentence',
   BACKEND_SOURCE.includes('"fabric_spec"') &&
   BACKEND_SOURCE.includes('weight_gsm') &&
   BACKEND_SOURCE.includes('function _sourcingQuery('));
+// ── v13.51: vision-led fabric sourcing ────────────────────────────────────
+ok('the garment and inferred traits drive thumbnail ranking',
+  SERVER_SOURCE.includes("app.post('/api/rank-fabric'") &&
+  SERVER_SOURCE.includes('buildVisualRankingRequest') &&
+  SERVER_DOCKER.includes('COPY fabric-sourcing.js ./') &&
+  FABRIC_SOURCE.includes("detail: 'high'") &&
+  FABRIC_SOURCE.includes('visible color, texture, weave, sheen, print') &&
+  BACKEND_SOURCE.includes('garment_image: garmentImage') &&
+  BACKEND_SOURCE.includes('fiber: spec.fiber'));
+ok('ranked retailer cards show every promised buying detail',
+  BACKEND_SOURCE.includes('class="fab-match-score"') &&
+  BACKEND_SOURCE.includes('class="fab-reason"') &&
+  BACKEND_SOURCE.includes('matchScore: p.matchScore') &&
+  BACKEND_SOURCE.includes('reason: p.reason') &&
+  BACKEND_SOURCE.includes("price: p.price ?") &&
+  BACKEND_SOURCE.includes('img: p.image'));
+ok('fabric results are called closest visual matches, never exact matches',
+  BACKEND_SOURCE.includes("'Closest visual matches'") &&
+  SERVER_SOURCE.includes("label: 'closest visual matches'") &&
+  !/exact matches/i.test(BACKEND_SOURCE));
+ok('ranking failures leave the immediate static cards standing',
+  /_renderFabCards\(cards\)[\s\S]{0,300}_fetchLiveSourcing/.test(BACKEND_SOURCE) &&
+  BACKEND_SOURCE.includes("if (!r.ok) return;                    // static wall stands") &&
+  BACKEND_SOURCE.includes("if (!matches.length) return;            // the static wall stands"));
+ok('only real retailer thumbnails enter visual comparison',
+  FABRIC_SOURCE.includes("filter(product => product.image && product.url && product.title)") &&
+  FABRIC_SOURCE.includes("error.status = 422") &&
+  FABRIC_SOURCE.includes("missing_candidate_images"));
 ok('a click anywhere outside the drawer closes it, on every page',
   /pointerdown[\s\S]{0,400}toggleNotesDrawer\(false\)/.test(INDEX_SOURCE) &&
   /pointerdown[\s\S]{0,400}toggleDrawer\(false\)/.test(MAP_SOURCE) &&

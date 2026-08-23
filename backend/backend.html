@@ -701,6 +701,13 @@
     position: absolute; inset: 0; width: 100%; height: 100%;
     object-fit: cover; display: block;
   }
+  .fab-match-score {
+    position: absolute; top: 7px; right: 7px; z-index: 2;
+    padding: 3px 7px; border-radius: 100px;
+    font-family: 'Jost', sans-serif; font-size: 10px; letter-spacing: 0.04em;
+    color: #0b0e16; background: rgba(245,250,255,0.9);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+  }
   .fab-card:hover .fab-swatch { border-color: rgba(255,255,255,0.5); }
   .fab-card-body { padding: 6px 2px 0; flex-shrink: 0; }
   .fab-title {
@@ -726,6 +733,12 @@
     font-family: 'Jost', sans-serif; font-weight: 300;
     font-size: 10px; letter-spacing: 0.05em;
     color: rgba(245,250,255,0.5); margin-top: 2px;
+  }
+  .fab-reason {
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 10px; line-height: 1.2; margin-top: 2px;
+    color: rgba(245,250,255,0.68);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .fab-empty-msg {
     grid-column: 1 / -1; text-align: center; padding: 30px 10px;
@@ -1468,7 +1481,7 @@
         <div class="brief-fabrics" id="brief-fabrics" style="display:none">
           <div class="fab-head">
             <div class="fab-head-left">
-              <div class="fab-head-label">Fabric</div>
+              <div class="fab-head-label" id="fab-head-label">Fabric</div>
               <div class="fab-head-fabric" id="fab-head-fabric">…</div>
             </div>
             <div class="fab-source-toggle">
@@ -4152,8 +4165,11 @@ function _fabCardHtml(c) {
   _lastCardsByUrl[c.url]=c;
   const fav = !!_favs[c.url];
   const fallback = c.swatch || ('linear-gradient(135deg, rgba(120,140,190,0.45), rgba(30,40,70,0.9))');
+  const score = Number.isFinite(Number(c.matchScore))
+    ? '<span class="fab-match-score">' + Math.round(Number(c.matchScore)) + '% match</span>' : '';
+  const reason = c.reason ? '<div class="fab-reason">' + escapeHtml(c.reason) + '</div>' : '';
   const swatch = c.img
-    ? '<div class="fab-swatch" style="background:' + fallback + '"><img loading="lazy" src="' + c.img + '" alt="" onerror="this.style.display=&quot;none&quot;"></div>'
+    ? '<div class="fab-swatch" style="background:' + fallback + '">' + score + '<img loading="lazy" src="' + c.img + '" alt="" onerror="this.style.display=&quot;none&quot;"></div>'
     : '<div class="fab-swatch" style="background:' + fallback + '"></div>';
   return '<a class="fab-card" href="' + c.url + '" target="_blank" rel="noopener noreferrer" title="' + escapeHtml(c.merchant + ', ' + c.title) + '">' +
     '<span class="fab-heart' + (fav?' on':'') + '" onclick="toggleFavorite(event,&quot;' + encodeURIComponent(c.url) + '&quot;)" title="Favorite">' +'<svg class="heart-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"/></svg>' +'</span>' +
@@ -4162,7 +4178,7 @@ function _fabCardHtml(c) {
       '<div class="fab-title">' + escapeHtml(c.title) + '</div>' +
       '<div class="fab-meta-line"><span class="fab-mch">' + escapeHtml(c.merchant) + '</span>' +
         '<span class="fab-price">' + escapeHtml(c.price) + '</span></div>' +
-      '<div class="fab-arrive">' + escapeHtml(arrive) + '</div>' +
+      '<div class="fab-arrive">' + escapeHtml(arrive) + '</div>' + reason +
     '</div></a>';
 }
 
@@ -4228,6 +4244,8 @@ function refreshFabricSourcing(){
   _garmentAvgSrc=null;        // force a fresh color sample
   _garmentAvgRgb=null;
   _inhouseCache=null;         // re-read the in-house folder
+  Object.keys(_liveSourceCache).forEach(k=>delete _liveSourceCache[k]);
+  Object.keys(_visualRankCache).forEach(k=>delete _visualRankCache[k]);
   _lastCardsByUrl={};
   const listEl=document.getElementById('fab-list');
   if(listEl){ listEl.style.display='flex'; listEl.innerHTML='<div class="fab-page"><div class="fab-empty-msg">Re-scanning…</div></div>'; }
@@ -4284,6 +4302,7 @@ function _renderFabCards(cards){
 function renderFabricsPage() {
   const listEl = document.getElementById('fab-list');
   const fabEl  = document.getElementById('fab-head-fabric');
+  const labelEl = document.getElementById('fab-head-label');
   if (!listEl) return;
 
   const piece = _fabActivePiece();
@@ -4291,6 +4310,7 @@ function renderFabricsPage() {
   if (fabEl) fabEl.textContent = fabricStr || '…';
 
   const source = _fabricSourceOverride || 'sourceable';
+  if (labelEl) labelEl.textContent = source === 'sourceable' ? 'Closest visual matches' : 'Fabric';
   const ids={sourceable:'fab-src-sourceable','in-house':'fab-src-inhouse',favorites:'fab-src-favorites'};
   Object.keys(ids).forEach(k=>{
     const el=document.getElementById(ids[k]); if(el) el.classList.toggle('active', source===k);
@@ -4333,6 +4353,7 @@ function renderFabricsPage() {
 // real titles, real prices in their own currency, real photos, and open
 // the actual listing. Failures leave the static wall untouched.
 const _liveSourceCache = {};
+const _visualRankCache = {};
 function _sourcingQuery(piece, fabricStr) {
   // The dissected spec makes a better shop query than the raw sentence:
   // "crimson wool twill" finds shelves; "gothic ode in crimson" does not.
@@ -4350,38 +4371,66 @@ function _sourcingQuery(piece, fabricStr) {
 async function _fetchLiveSourcing(fabricStr, piece) {
   const q = _sourcingQuery(piece, fabricStr);
   if (!q) return;
-  const paint = (products) => {
+  const paint = (matches) => {
     // still on the Sourceable tab, same fabric? then repaint.
     if ((_fabricSourceOverride || 'sourceable') !== 'sourceable') return;
     const now = _fabActivePiece();
     const nowStr = (now && now.fabric) || '';
     if (fabricStr !== 'apparel fabric' && nowStr && nowStr !== fabricStr) return;
-    const target = _targetFabricRgb(fabricStr === 'apparel fabric' ? '' : fabricStr);
-    const live = products.map(p => ({
+    const live = matches.map(p => ({
       merchant: p.merchant + ' · ' + p.place,
       title: p.title,
       price: p.price ? (p.price + ' ' + (p.currency || '')) : 'see listing',
       etaDays: p.etaDays || 7,
       color: p.title,
-      url: p.url, img: p.image, _live: true,
+      url: p.url, img: p.image, matchScore: p.matchScore,
+      reason: p.reason, _live: true,
     }));
-    live.forEach(c => { c._color = _colorScore(c, target); });
-    live.sort((a, b) => b._color - a._color);
     const staticCards = (fabricStr === 'apparel fabric')
       ? _buildFullViewCards() : _buildFabricCards(fabricStr);
     _renderFabCards(live.concat(staticCards).slice(0, 24));
   };
-  if (_liveSourceCache[q]) { paint(_liveSourceCache[q]); return; }
   try {
     const tok = localStorage.getItem('maya_admin_tok') || '';
-    const r = await fetch('/api/source-fabric?q=' + encodeURIComponent(q),
-      { headers: { 'Authorization': 'Bearer ' + tok }, cache: 'no-store' });
-    if (!r.ok) return;                      // static wall stands
-    const j = await r.json();
-    const products = (j && j.products) || [];
+    let products = _liveSourceCache[q];
+    if (!products) {
+      const r = await fetch('/api/source-fabric?q=' + encodeURIComponent(q),
+        { headers: { 'Authorization': 'Bearer ' + tok }, cache: 'no-store' });
+      if (!r.ok) return;                    // static wall stands
+      const j = await r.json();
+      products = (j && j.products) || [];
+      if (products.length) _liveSourceCache[q] = products;
+    }
     if (!products.length) return;
-    _liveSourceCache[q] = products;
-    paint(products);
+    const garmentImage = (piece && piece._image) || (_pieceState && _pieceState.heroImage) || '';
+    const spec = (piece && piece.fabric_spec) || {};
+    const rankKey = [q, piece && piece.name, piece && piece.fabric_hex,
+      garmentImage.length, garmentImage.slice(-40)].join('|');
+    if (!_visualRankCache[rankKey]) {
+      _visualRankCache[rankKey] = fetch('/api/rank-fabric', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          garment_image: garmentImage,
+          traits: {
+            fabric: fabricStr === 'apparel fabric' ? '' : fabricStr,
+            color: (piece && piece.fabric_hex) || '',
+            fiber: spec.fiber || '', weave: spec.weave || '',
+            weight_gsm: spec.weight_gsm || 0, stretch: spec.stretch || '',
+            sheen: spec.sheen || '', texture: spec.texture || '',
+          },
+          products,
+        }),
+        cache: 'no-store',
+      }).then(async r => {
+        if (!r.ok) return [];
+        const j = await r.json();
+        return (j && j.matches) || [];
+      }).catch(() => []);
+    }
+    const matches = await _visualRankCache[rankKey];
+    if (!matches.length) return;            // the static wall stands
+    paint(matches);
   } catch (_) { /* the static wall stands */ }
 }
 
