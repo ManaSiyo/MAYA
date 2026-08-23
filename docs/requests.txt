@@ -16,6 +16,19 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 22, 2026, HEX AND THE SOURCING STUDY (v13.49)
+
+[x] "Apply number one." The dissection now returns each fabric's exact
+    color as a hex read from the image itself, and sourcing trusts it
+    first.
+[x] "Research where the best retail fabrics are found online, no MOQ, 2
+    to 3 yards, worldwide, and the Korean site with the videos." The
+    study is docs/fabric-sourcing-study.md. The Korean site is SwatchOn:
+    20,000+ fabrics, 1 yard minimum, video swatches.
+[ ] Next fabrics pass, when asked: live merchant search on the server
+    with caching, then a SERP API for breadth, then visual matching once
+    a catalog exists.
+
 AUGUST 22, 2026, WIX, AXES, AND THE WALL (v13.48)
 
 [x] "Remove the last checked line; MAYA who is arriving is not related to

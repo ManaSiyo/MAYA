@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 197 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 199 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -67,6 +67,27 @@ ad panels (impressions, clicks, spend, last 7 days) through Windsor. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.49 (Claude): the model that sees the picture names the color
+
+- The dissection prompt (backend.html, DISSECTION_SYSTEM_PROMPT) now asks
+  gpt-4.1 for a "fabric_hex" per piece: the dominant fabric color READ
+  FROM THE IMAGE, six digit hex. `_targetFabricRgb()` trusts it first,
+  the fabric string's color word second, the sampled picture last. Old
+  saved dissections have no fabric_hex and fall through gracefully; a
+  re-dissection picks it up.
+- docs/fabric-sourcing-study.md is the worldwide RETAIL sourcing study
+  (no MOQ, 2 to 3 yards must be a normal order; wholesale is out).
+  Headlines: SwatchOn (Seoul, 20,000+ fabrics, 1 yard MOQ, video
+  swatches, no public API but a partner program: the best catalog fit,
+  worth a partnership email), Amazon (PA-API is gated behind Associates
+  sales, so links or a SERP API first), Etsy Open API v3 (free,
+  approachable, real listings with pictures and prices: the easiest true
+  integration), and roughly twenty curated Shopify garment fabric shops
+  across the US, Canada, UK, Europe, Asia Pacific. Build order stays:
+  hex (done) -> live merchant search server side (/api/source-fabric,
+  cached) -> SERP API breadth -> CLIP visual matching once a catalog
+  exists. Read the study before building the next fabrics pass.
 
 ## v13.48 (Claude): Wix visitors, chart axes, the wall back in its frame
 
@@ -272,10 +293,9 @@ Verified live on Aug 22 through Fromsa's signed-in admin session:
 - SECURITY as of v13.41: a submission can only be written by the account that
   opened it (`subOwner()` reads the init marker, cached). The legacy Pinterest
   modal is deleted; the drawer is the only implementation.
-- Live line: `maya-v2`. v13.47 is pushed and live (WINDSOR_API_KEY is set on
-  Cloud Run; the paid chart works in production). **v13.48 is committed and
-  waiting for Fromsa's push** (Wix visitors on Marketing, chart axes and the
-  All three chip, the fabric wall back inside its frame, color-true cards).
+- Live line: `maya-v2`. v13.48 is pushed and live. **v13.49 is committed and
+  waiting for Fromsa's push** (the dissection returns fabric_hex read from
+  the image; the sourcing study is in docs/fabric-sourcing-study.md).
 - **The folder changed in v13.37.** Pages are no longer loose at the root:
   `frontend/index.html`, and `backend/` holds status, marketing, operations,
   backend and privacy plus verify. Every old URL still answers, because
@@ -284,7 +304,7 @@ Verified live on Aug 22 through Fromsa's signed-in admin session:
   rewrite list is the first place to look. `aesthetics/` stays at the root on
   purpose: `docs/**` is ignored by Hosting, so pictures inside it would never
   deploy.
-- Tests: 197 checks in `tests/app-regression.mjs`, all passing, including a
+- Tests: 199 checks in `tests/app-regression.mjs`, all passing, including a
   check that every old address still maps to a file that exists.
 - Pinterest: app id and secret ARE set on Cloud Run. The sign in currently
   fails with Pinterest's own 400, "this application has not registered a

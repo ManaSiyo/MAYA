@@ -872,6 +872,14 @@ ok('a sourcing card wears the color the client asked for',
   BACKEND_SOURCE.includes('function _targetFabricRgb(') &&
   BACKEND_SOURCE.includes('function _tintSwatch(') &&
   BACKEND_SOURCE.includes('swatch: searchSwatch, _search:true'));
+// ── v13.49: the model that sees the picture names the color ────────────────
+ok('the dissection returns each fabric color as a hex read from the image',
+  BACKEND_SOURCE.includes('"fabric_hex"') &&
+  BACKEND_SOURCE.includes('function _hexToRgb(') &&
+  BACKEND_SOURCE.includes('_hexToRgb(piece.fabric_hex)'));
+ok('the sourcing study lives in docs',
+  existsSync(join(ROOT, 'docs/fabric-sourcing-study.md')) &&
+  readFileSync(join(ROOT, 'docs/fabric-sourcing-study.md'), 'utf8').includes('SWATCHON'));
 ok('a click anywhere outside the drawer closes it, on every page',
   /pointerdown[\s\S]{0,400}toggleNotesDrawer\(false\)/.test(INDEX_SOURCE) &&
   /pointerdown[\s\S]{0,400}toggleDrawer\(false\)/.test(MAP_SOURCE) &&
