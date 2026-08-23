@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.51">
+<meta name="maya-version" content="13.52">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -4486,8 +4486,7 @@
     </p>
     <label for="model-input">Image model</label>
     <select id="model-input" style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.12);border-radius:6px;padding:10px 12px;font-family:'Jost',sans-serif;font-size:12px;color:#fff;outline:none">
-      <option value="gpt-image-2">gpt-image-2 (latest, sharper, slower)</option>
-      <option value="gpt-image-1.5">gpt-image-1.5 (faster, lighter)</option>
+      <option value="gpt-image-2">gpt-image-2</option>
     </select>
     <label for="quality-input">Image quality</label>
     <select id="quality-input" style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.12);border-radius:6px;padding:10px 12px;font-family:'Jost',sans-serif;font-size:12px;color:#fff;outline:none">
@@ -4960,10 +4959,14 @@ const STORAGE_KEY_IMG_QUALITY = 'maya_image_quality';
 // gpt-image-2 at medium, the same picture Fromsa sees.
 function getImageQuality() { return 'medium'; }
 
-// v11.1: image model preference. Choices: 'gpt-image-2' (default, latest),
-// 'gpt-image-1.5' (older, faster, lighter). User-selectable in Settings.
+// v13.52: one supported image model. Clear an older stored choice so a
+// returning browser cannot keep asking the server for a retired model.
 const STORAGE_KEY_IMG_MODEL = 'maya_image_model';
-function getImageModel() { return localStorage.getItem(STORAGE_KEY_IMG_MODEL) || 'gpt-image-2'; }
+function getImageModel() {
+  const stored = localStorage.getItem(STORAGE_KEY_IMG_MODEL);
+  if (stored && stored !== 'gpt-image-2') localStorage.removeItem(STORAGE_KEY_IMG_MODEL);
+  return 'gpt-image-2';
+}
 
 // v0.11: Settings simplified for public deploy. No key, no model field ,
 // model is fixed in code, key is server-side. Just account + quality.
@@ -11381,7 +11384,7 @@ async function callOpenAIImageEdit(prevDataUrl, prompt, size, quality, opts) {
   // edits. Drop-in API-compatible, same /v1/images/edits, same FormData
   // shape, same standard sizes. 2K (2560×1440) is also available if we
   // ever want to bump resolution.
-  form.append('model', (opts && opts.model) || getImageModel());
+  form.append('model', getImageModel());
   form.append('prompt', prompt);
   const inputList = Array.isArray(prevDataUrl) ? prevDataUrl : [prevDataUrl];
   let idx = 0;
@@ -11440,7 +11443,7 @@ async function callOpenAIImage(prompt, size, quality, opts) {
   const body = {
     // v9.11: gpt-image-2, same model used by the /edits path. Reasoning-
     // capable, stronger identity carry across renders, 2K-ready.
-    model: (opts && opts.model) || getImageModel(),
+    model: getImageModel(),
     prompt: prompt,
     size: size || '1024x1536',
     quality: quality || getImageQuality() || 'medium',

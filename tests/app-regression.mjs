@@ -24,6 +24,7 @@ const AT = {
   operations:'backend/operations.html',
   privacy:   'backend/privacy.html',
   verify:    'backend/verify.html',
+  playground:'playground/index.html',
   server:    'docs/server/server.js',
   build:     'cloudbuild.yaml',
   hosting:   'docs/firebase.json',
@@ -32,6 +33,7 @@ const INDEX_SOURCE = readFileSync(join(ROOT, AT.index), 'utf8');
 const RULES_SOURCE = readFileSync(join(ROOT, 'docs/server/firestore.rules'), 'utf8');
 const SERVER_SOURCE = readFileSync(join(ROOT, AT.server), 'utf8');
 const FABRIC_SOURCE = readFileSync(join(ROOT, 'docs/server/fabric-sourcing.js'), 'utf8');
+const AI_ROUTER_SOURCE = readFileSync(join(ROOT, 'docs/server/ai-router.js'), 'utf8');
 const SERVER_DOCKER = readFileSync(join(ROOT, 'docs/server/Dockerfile'), 'utf8');
 const BUILD_SOURCE = readFileSync(join(ROOT, 'cloudbuild.yaml'), 'utf8');
 const MAP_SOURCE = readFileSync(join(ROOT, AT.status), 'utf8');
@@ -39,6 +41,8 @@ const STORAGE_RULES = existsSync(join(ROOT, 'docs/server/storage.rules'))
   ? readFileSync(join(ROOT, 'docs/server/storage.rules'), 'utf8') : '';
 const BACKEND_SOURCE = existsSync(join(ROOT, AT.backend))
   ? readFileSync(join(ROOT, AT.backend), 'utf8') : '';
+const PLAYGROUND_SOURCE = existsSync(join(ROOT, AT.playground))
+  ? readFileSync(join(ROOT, AT.playground), 'utf8') : '';
 const HOSTING = JSON.parse(readFileSync(join(ROOT, AT.hosting), 'utf8'));
 const FAVORITE_PULSE_SOURCE = INDEX_SOURCE.slice(
   INDEX_SOURCE.indexOf('@keyframes maya-favorite-pulse'),
@@ -925,6 +929,31 @@ ok('only real retailer thumbnails enter visual comparison',
   FABRIC_SOURCE.includes("filter(product => product.image && product.url && product.title)") &&
   FABRIC_SOURCE.includes("error.status = 422") &&
   FABRIC_SOURCE.includes("missing_candidate_images"));
+// ── v13.52: provider-neutral routing foundation + one image model ──────────
+ok('fabric ranking uses the task router without changing its live route',
+  SERVER_SOURCE.includes("aiTaskRouter.run('fabric.visual_rank'") &&
+  AI_ROUTER_SOURCE.includes("'fabric.visual_rank': freezeTask") &&
+  AI_ROUTER_SOURCE.includes("provider: 'openai'") &&
+  AI_ROUTER_SOURCE.includes("model: 'gpt-4.1'") &&
+  AI_ROUTER_SOURCE.includes("timeoutMs: 60_000") &&
+  SERVER_DOCKER.includes('COPY ai-router.js ./'));
+ok('AI route telemetry records metadata only and the build gates its contracts',
+  AI_ROUTER_SOURCE.includes("event: 'ai.route.attempt'") &&
+  AI_ROUTER_SOURCE.includes('Telemetry is diagnostic only') &&
+  AI_ROUTER_SOURCE.includes('never the potentially sensitive input') &&
+  BUILD_SOURCE.includes('node tests/ai-routing.mjs') &&
+  BUILD_SOURCE.includes('node tests/fabric-sourcing.mjs'));
+ok('GPT Image 1.5 is retired from every active image path and picker',
+  !INDEX_SOURCE.includes('gpt-image-1.5') &&
+  !PLAYGROUND_SOURCE.includes('gpt-image-1.5') &&
+  !BACKEND_SOURCE.includes('gpt-image-1.5') &&
+  BACKEND_SOURCE.includes("form.append('model', 'gpt-image-2')") &&
+  INDEX_SOURCE.includes("stored !== 'gpt-image-2'") &&
+  PLAYGROUND_SOURCE.includes("stored !== 'gpt-image-2'"));
+ok('piece render quality, size and parallel behavior stayed unchanged',
+  /async function renderPiece[\s\S]{0,3000}form\.append\('size', '1536x1024'\)[\s\S]{0,120}form\.append\('quality', 'medium'\)/.test(BACKEND_SOURCE) &&
+  BACKEND_SOURCE.includes('const promises = targets.map(p =>') &&
+  BACKEND_SOURCE.includes('await Promise.all(promises)'));
 ok('a click anywhere outside the drawer closes it, on every page',
   /pointerdown[\s\S]{0,400}toggleNotesDrawer\(false\)/.test(INDEX_SOURCE) &&
   /pointerdown[\s\S]{0,400}toggleDrawer\(false\)/.test(MAP_SOURCE) &&

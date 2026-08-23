@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 202 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 211 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -68,39 +68,49 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
-## v13.51 (Codex): the garment chooses from the live shelf
+## v13.52 (Codex): routing foundation and one image model
 
-- `/api/rank-fabric` is admin-only and vision-led. It receives the garment
-  picture, the dissection's fabric string, hex, fiber, weave, weight, stretch,
-  sheen and texture, plus up to 12 real retailer thumbnails. `gpt-4.1` sees
-  the garment first and every product picture after it, then returns a 0 to
-  100 score and a short reason based on visible color, texture, weave, sheen,
-  print and apparent drape. The server normalizes and validates the result.
-- The Brief still paints static sourcing cards instantly. It retrieves the
-  real merchant pool, asks for visual ranking only when product thumbnails
-  exist, and replaces the first page only after a complete ranked response.
-  Retailer failure, missing images, invalid model output and network failure
-  all leave the static wall untouched.
-- Ranked cards show the real product image, title, merchant, original price
-  and currency, match score and visual reason. The heading says "Closest
-  visual matches" and nothing claims an exact match.
-- Tests: `tests/fabric-sourcing.mjs` covers ranking success, partial retailer
-  failure, missing thumbnails and ranking fallback. Smoke covers an
-  unauthorized ranking request. Browser regression guards the request data,
-  visible fields, wording and static-first fallback.
-- Validation before commit: focused sourcing tests 5 of 5; server smoke 20 of
-  20; `node --check` clean for both server modules; all inline scripts parse in
-  the app, Admin, Backend, Marketing and Playground; `git diff --check` clean.
-  The full browser regression was attempted with a freshly installed Chromium
-  but this Codex macOS sandbox denied Chromium's Mach rendezvous port before
-  the suite could start. This is the same environment limit already recorded
-  below, not a failing assertion. Its five new source-level conditions were
-  evaluated independently and all returned true.
-- Open risk: the first production ranking call still needs live verification,
-  because local tests deliberately use no OpenAI key and no merchant network.
-  Exact next step: Fromsa reviews and pushes the unpushed v13.51 commit, waits
-  for Cloud Build, opens one real submission, chooses Fabrics, and confirms the
-  first page changes from static cards to scored closest visual matches.
+- `docs/server/ai-router.js` is the provider-neutral task registry, router,
+  safe telemetry emitter and evaluation harness. It logs only task/route,
+  timing, outcome, safe error category and numeric usage. Prompts, pictures,
+  outputs, transcripts, measurements, retailer records, account identity and
+  project identity never enter telemetry or evaluation summaries.
+- `fabric.visual_rank` is the first exercised task. It still has exactly one
+  route: OpenAI `gpt-4.1`, `v1/chat/completions`, 60 second ceiling. The
+  admin-only `/api/rank-fabric` request, validation, response and static-first
+  fallback are unchanged from v13.51. No parallel model call and no live
+  cross-provider fallback were added.
+- The router can later use a second route only for a timeout, transport error,
+  provider overload/server error or invalid structured response. It never
+  falls through on a safety refusal, cancellation, client error, auth error or
+  missing configuration. The Cloud Build gate now runs routing and fabric
+  contract tests before building the server image.
+- GPT Image 1.5 has no active path or picker. The app, Playground, Backend
+  piece renders, pattern rasters and stored model preference now converge on
+  `gpt-image-2`. Existing medium quality, 1024x1536 client generations,
+  1536x1024 piece renders, reference anchors and parallel piece rendering are
+  unchanged.
+- `docs/MAYA-AI-ARCHITECTURE.md` is the canonical boundary and staged route
+  map. MAYA is Most Advanced Yet Acceptable, the explainable intelligence
+  layer. Mana Siyo is the human-verified CLO, SVG, LightBurn, laser cut and sew
+  workflow. No generated pattern is silently called production ready.
+- Validation before commit: `tests/ai-routing.mjs` 7 of 7 and
+  `tests/fabric-sourcing.mjs` 5 of 5; `node --check` clean for
+  `ai-router.js`, `fabric-sourcing.js` and `server.js`; v13.52's four new
+  regression conditions passed independently; executable inline scripts parse
+  in the app, Playground, Backend, Admin and Marketing; version tags agree;
+  `git diff --check` clean. The full app regression cannot start on this
+  machine because Playwright is not installed, and server smoke cannot start
+  because Express is not installed. No dependency was installed for this
+  slice. The preceding v13.51 commit ran smoke 20 of 20 and independently
+  validated its browser conditions.
+- No Vertex/Gemini credential, API, IAM, deployment or cloud setting changed.
+  No production call was made. The next implementation stages remain: task-
+  by-task OpenAI tier evaluation; owner-configured Gemini vision canaries after
+  approval; normalized catalog/embedding retrieval; and versioned production
+  memory for real Mana Siyo corrections. Exact next step: Fromsa reviews this
+  unpushed v13.52 commit, then presses Push if approved. Cloud Build will rerun
+  the routing and fabric contracts before the server image is built.
 
 ## v13.50 (Claude): the live merchant window
 

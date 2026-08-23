@@ -34,6 +34,56 @@ import {
   buildVisualRankingRequest,
   collectRetailerResults,
 } from './fabric-sourcing.js';
+import {
+  AI_TASKS,
+  AiRouteError,
+  createConsoleAiTelemetry,
+  createTaskRouter,
+} from './ai-router.js';
+
+function openAiFailureCategory(status, body) {
+  const code = String(body?.error?.code || body?.error?.type || '').toLowerCase();
+  if (/safety|policy|moderation/.test(code)) return 'safety';
+  if (status >= 500) return 'provider_5xx';
+  if (status === 408 || status === 409 || status === 429) return 'provider_overloaded';
+  if (status === 401 || status === 403) return 'provider_auth';
+  return 'provider_4xx';
+}
+
+const aiTaskRouter = createTaskRouter({
+  tasks: AI_TASKS,
+  providers: {
+    openai: {
+      async execute({ route, input, signal }) {
+        const key = process.env.OPENAI_API_KEY;
+        if (!key) {
+          throw new AiRouteError('OpenAI is not configured', {
+            category: 'provider_config', provider: 'openai',
+          });
+        }
+        const upstream = await fetch('https://api.openai.com/' + route.endpoint, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ...(input.body || {}), model: route.model }),
+          signal,
+        });
+        const body = await upstream.json().catch(() => ({}));
+        if (!upstream.ok) {
+          throw new AiRouteError('OpenAI task failed', {
+            category: openAiFailureCategory(upstream.status, body),
+            provider: 'openai',
+            status: upstream.status,
+          });
+        }
+        return body;
+      },
+    },
+  },
+  telemetry: createConsoleAiTelemetry(),
+});
 
 const app = express();
 app.disable('x-powered-by');
@@ -1836,26 +1886,19 @@ app.post('/api/rank-fabric', requireAuthHeader, express.json({ limit: '8mb' }), 
   }
 
   try {
-    const upstream = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(ranking.requestBody),
-      signal: AbortSignal.timeout(60000),
+    const routed = await aiTaskRouter.run('fabric.visual_rank', {
+      body: ranking.requestBody,
+    }, {
+      requestId: req.headers['x-request-id'] || crypto.randomUUID(),
+      validate: body => applyVisualRankings(body, ranking.candidates),
     });
-    const body = await upstream.json().catch(() => ({}));
-    if (!upstream.ok) {
-      console.error('[fabric-rank]', upstream.status, 'user=' + user.email);
-      return res.status(502).json({ error: 'ranking_failed' });
-    }
-    const matches = applyVisualRankings(body, ranking.candidates);
+    const matches = routed.output;
     noteSpend('v1/chat/completions', req);
     return res.json({ ok: true, label: 'closest visual matches', matches });
   } catch (e) {
-    console.error('[fabric-rank] failed,', e.message);
-    return res.status(e.status || 502).json({ error: 'ranking_failed' });
+    console.error('[fabric-rank] failed request=' + (e.requestId || 'unknown') +
+      ' category=' + (e.category || 'unknown'));
+    return res.status(502).json({ error: 'ranking_failed' });
   }
 });
 

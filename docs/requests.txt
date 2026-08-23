@@ -16,6 +16,23 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 22, 2026, MODEL ROUTING FOUNDATION (v13.52)
+
+[x] "Start the model upgrade with the foundation only: provider-neutral task
+    routing, evals and safe telemetry, without changing the live model route
+    or configuring Google Cloud." Done. The existing admin fabric rank is the
+    first exercised task, still OpenAI gpt-4.1 with the same 60 second ceiling,
+    response and static fallback. Route tests cover success, transient
+    fallback, timeout, invalid output, safety refusal and telemetry privacy.
+[x] "Retire GPT Image 1.5 in favor of GPT Image 2 without changing quality,
+    size or the rest of image behavior." Done. Piece renders, the app and the
+    playground now have one supported image model; old browser preferences are
+    cleared and medium quality, existing sizes, anchors and parallel piece
+    rendering stay unchanged.
+[x] Preserve the Mana Siyo manufacturing context and write the missing MAYA
+    AI architecture down in the repository. Done in
+    docs/MAYA-AI-ARCHITECTURE.md.
+
 AUGUST 22, 2026, VISION-LED FABRIC SOURCING (v13.51)
 
 [x] "Match ChatGPT's fabric-sourcing experience: use the garment image and

@@ -6,5 +6,6 @@ COPY package.json ./
 RUN npm install --omit=dev
 COPY server.js ./
 COPY fabric-sourcing.js ./
+COPY ai-router.js ./
 EXPOSE 8080
 CMD ["node", "server.js"]

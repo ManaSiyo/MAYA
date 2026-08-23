@@ -10,28 +10,30 @@ Live site: https://maya.manasiyo.com
 Also read, all beside this file in `docs/`: `AI-HANDOFF.md` (the current
 Claude/Codex handoff), `history.txt` (the story), `fixes.txt` (fix attempts,
 especially ones outside git), `requests.txt` (Fromsa's own asks and noticed
-bugs, with status marks; re-verify its entries every session).
+bugs, with status marks; re-verify its entries every session), and
+`MAYA-AI-ARCHITECTURE.md` (the provider-neutral intelligence and production
+boundary).
 
-v13.30: the repository root is the published website, so the root now holds
-only the served pages (`index.html`, `status.html`, `backend.html`,
-`operations.html`, `verify.html`, `aesthetics/`), the build file, `tests/`, and
-the two agent contracts. Every note, the server and the rules live in `docs/`.
+v13.37: Firebase still publishes from the repository root, but the app lives
+in `frontend/`, the back rooms live in `backend/`, pictures stay in
+`aesthetics/`, and `docs/firebase.json` maps every old URL to its current file.
+Every note, the server and the rules live in `docs/`.
 Google project: `pro-maya`
 Repo: `ManaSiyo/MAYA` on GitHub, working folder `~/Desktop/MAYA-new`
-Current version: **13.23** (the number lives in a `maya-version` meta tag in
-`index.html`, and the running site's number is the fastest way to tell whether
+Current version: **13.52** (the number lives in a `maya-version` meta tag in
+`frontend/index.html`, and the running site's number is the fastest way to tell whether
 a push has landed).
 
 ---
 
 ## 1. What MAYA is
 
-MAYA is a fashion consultation tool. A client talks to it, MAYA turns the
-conversation into a moodboard and then into rendered garment visions. The
-client hearts what they love and submits it to Mana Siyo. On the atelier side
-the submission becomes a Brief, the garment is dissected into its constituent
-pieces, and the pieces go into the Operations Room where the pattern pipeline
-runs on them.
+MAYA means Most Advanced Yet Acceptable. It is Mana Siyo's intelligence layer:
+a client talks to it, MAYA turns the conversation into a moodboard and then
+into rendered garment visions, explainable construction, real fabric options
+and a pattern-ready production brief. Mana Siyo remains the physical workflow:
+consultation, Pinterest and tape measurements, CLO base asset and pattern
+modification, SVG export, LightBurn review, laser cutting and sewing.
 
 MAYA is free and stays free. Fromsa is firm on this: the Canva and Fortnite
 model, the core tool costs nothing and money comes later from enhancement, not
@@ -97,8 +99,9 @@ curl -s https://maya.manasiyo.com/ | grep -o 'maya-version" content="[0-9.]*"'
 curl -s https://maya.manasiyo.com/api/healthz
 ```
 
-`/api/healthz` is public and reports `configured: {openai, drive, fal, stripe}`.
-`/api/healthz/deep` is admin gated and actually pings each dependency.
+`/api/healthz` is public and reports
+`configured: {openai, submissions, fal, stripe}`. `/api/healthz/deep` is admin
+gated and verifies that the submission bucket answers.
 
 The Cloud Build trigger still reads the root `cloudbuild.yaml` (Autodetected)
 with branch regex `.*`, but the first build step now blocks every branch except
@@ -119,10 +122,12 @@ Firebase Hosting rewrites `/api/**` to it, so the browser only ever talks to
 |---|---|
 | `/api/healthz`, `/api/healthz/deep` | health, the second is admin gated with a 5s timeout |
 | `/api/openai/*` | proxy to OpenAI, allowlisted paths only |
+| `/api/source-fabric` | admin-only real retailer inventory search |
+| `/api/rank-fabric` | admin-only garment-to-thumbnail visual ranking through the task router |
 | `/api/fal/*`, `/api/falstorage/*` | fal.ai proxy, dormant, no key set |
 | `/api/runway` | Runway proxy, dormant on purpose |
-| `/api/submit` | client submission into Drive, filename allowlist |
-| `/api/admin/submissions` | the Drive feed behind the Systems Map strip |
+| `/api/submit` | client submission into MAYA's Storage bucket, filename allowlist |
+| `/api/admin/submissions` | the submission feed behind the Systems Map strip |
 | `/api/admin/subfile` | stream one submission file (Brief) |
 | `/api/admin/subthumb` | thumbnail for one submission picture (added v13.3) |
 | `/api/admin/savepieces` | write `pieces.json` so a dissection is never repeated |
@@ -133,14 +138,12 @@ Firebase Hosting rewrites `/api/**` to it, so the browser only ever talks to
 
 ```
 OPENAI_API_KEY          STRIPE_SECRET_KEY       FAL_API_KEY (unset)
-DRIVE_FOLDER_ID         RUNWAY_API_KEY (unset)  GA_PROPERTY_ID
-GOOGLE_CLIENT_ID        GOOGLE_OAUTH_CLIENT_ID  GOOGLE_OAUTH_CLIENT_SECRET
-GOOGLE_OAUTH_REFRESH_TOKEN
+SUBMISSIONS_BUCKET      RUNWAY_API_KEY (unset)  GOOGLE_CLIENT_ID
 ADMIN_EMAILS            RL_PER_DAY / RL_PER_MIN / RL_ADMIN_PER_DAY / RL_ADMIN_PER_MIN
 ```
 
 Admin emails default in code to
-`fromsa@manasiyo.com, worldofsiyo@gmail.com, prasheeth@step-6.com`.
+`fromsa@manasiyo.com, worldofsiyo@gmail.com`.
 Rate limit is 50 calls per person per day, images counting as 4, admins 6000.
 
 **Auth** is Google Identity Services. Client id
@@ -310,6 +313,8 @@ server. That is why `tests/smoke.mjs` exists.
 
 ```
 cd docs/server && npm install && node ../../tests/smoke.mjs
+node tests/ai-routing.mjs       # provider routing, safe telemetry, evals
+node tests/fabric-sourcing.mjs  # retailer ranking and fallback contracts
 node tests/app-regression.mjs      # from the repo root, needs Playwright
 ```
 

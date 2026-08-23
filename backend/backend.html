@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="maya-backend-version" content="0.26">
+<meta name="maya-backend-version" content="0.27">
 <!-- v0.14: ImageTracer.js (public domain) for in-browser raster→SVG vectorization. -->
 <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
 <!-- v0.24: fal.ai SDK REMOVED. We call fal's REST endpoints directly:
@@ -1558,7 +1558,7 @@
           <div class="process-overlay">
             <div class="po-eyebrow">3D · how it's made</div>
             <div class="po-title" id="po-3d-title">Three.js four-plane turntable (cube)</div>
-            <div class="po-detail" id="po-3d-detail">The three-view atelier sheet from gpt-image-1.5 is sliced into four UV-mapped planes around a vertical axis. Drag to orbit. Press "Render in 3D" to swap this placeholder for a real photoreal mesh from fal.ai's Hyper3D Rodin.</div>
+            <div class="po-detail" id="po-3d-detail">The three-view atelier sheet from gpt-image-2 is sliced into four UV-mapped planes around a vertical axis. Drag to orbit. Press "Render in 3D" to swap this placeholder for a real photoreal mesh from fal.ai's Hyper3D Rodin.</div>
             <div class="po-meta" id="po-3d-meta">Library: Three.js · v0.160 · OrbitControls · GLTFLoader for the real mesh</div>
           </div>
         </div>
@@ -1783,7 +1783,7 @@
       <div class="info-row"><span class="lbl">App</span> <span class="val">Mana Siyo · Maya · Designer view</span></div>
       <div class="info-row"><span class="lbl">Image-to-3D</span> <span class="val">fal.ai · Hyper3D Rodin</span></div>
       <div class="info-row"><span class="lbl">LLM dissect</span> <span class="val">OpenAI · GPT-4.1</span></div>
-      <div class="info-row"><span class="lbl">Piece renders</span> <span class="val">OpenAI · gpt-image-1.5</span></div>
+      <div class="info-row"><span class="lbl">Piece renders</span> <span class="val">OpenAI · gpt-image-2</span></div>
       <div class="info-row"><span class="lbl">Pattern raster</span> <span class="val">OpenAI · gpt-image-2</span></div>
       <div class="info-row"><span class="lbl">Vectorizer</span> <span class="val">ImageTracer.js · 1.2.6</span></div>
       <div class="info-row"><span class="lbl">3D viewer</span> <span class="val">Three.js · 0.160</span></div>
@@ -2780,7 +2780,8 @@ async function dissectImage(imageDataUrl) {
 // The dream-garment hero is the visual anchor (fabric, color, silhouette,
 // construction). Output: just the piece, floating against the cosmic
 // backdrop. Three-view product shot so the designer can read front /
-// side / back of the garment itself. gpt-image-1.5 for speed.
+// side / back of the garment itself. GPT Image 2 is the one supported image
+// model across MAYA, so piece renders and client visions share provenance.
 async function renderPiece(heroImage, piece) {
   const key = getApiKey();
   if (!key) return null;
@@ -2806,7 +2807,7 @@ async function renderPiece(heroImage, piece) {
     'the garment keys cleanly to transparent. The garment is the only thing visible. ' +
     'No text, no labels, no captions, no measurements, no rulers.';
   const form = new FormData();
-  form.append('model', 'gpt-image-1.5');
+  form.append('model', 'gpt-image-2');
   form.append('prompt', prompt);
   const blob = await (await fetch(heroImage)).blob();
   form.append('image', blob, 'hero.png');
@@ -2831,7 +2832,7 @@ async function renderPiece(heroImage, piece) {
 }
 
 // v0.6: fire per-piece renders in parallel after dissection. Each piece
-// gets its own gpt-image-1.5 call. Results land on piece._image so the
+// gets its own gpt-image-2 call. Results land on piece._image so the
 // pill swiper can flip between them without re-rendering.
 // v0.33: generate the flat 2D pattern for each real garment piece up front,
 // in parallel, decoupled from the 3D render. Caches on piece._pattern; the
@@ -3426,7 +3427,7 @@ function _sync3DPills() {
     if (meta)   meta.textContent   = 'API: fal.ai · model: fal-ai/hyper3d/rodin · ~$0.40 per generation · cached on piece._mesh after';
   } else {
     if (title)  title.textContent  = 'Three.js four-plane turntable (cube)';
-    if (detail) detail.textContent = 'The three-view atelier sheet from gpt-image-1.5 is sliced into four UV-mapped planes around a vertical axis. Drag to orbit. Press "Render in 3D" to swap this placeholder for a real photoreal mesh from fal.ai\'s Hyper3D Rodin.';
+    if (detail) detail.textContent = 'The three-view atelier sheet from gpt-image-2 is sliced into four UV-mapped planes around a vertical axis. Drag to orbit. Press "Render in 3D" to swap this placeholder for a real photoreal mesh from fal.ai\'s Hyper3D Rodin.';
     if (meta)   meta.textContent   = 'Library: Three.js · v0.160 · OrbitControls · GLTFLoader for the real mesh';
   }
 }
@@ -3515,7 +3516,7 @@ function tryAgainVector() {
 // v0.19: "Render in 3D", wired to fal.ai's Hyper3D Rodin endpoint.
 //
 //   The v0.17 implementation was sending piece._image (a data: URI from
-//   gpt-image-1.5) directly to Rodin. Fal's Rodin model accepts HTTPS
+//   gpt-image-2) directly to Rodin. Fal's Rodin model accepts HTTPS
 //   URLs, not data URIs, so the submit would either reject with 422 or
 //   silently produce nothing. v0.19 fixes the bug by FIRST uploading the
 //   image to fal.storage and using the returned https://v3.fal.media URL.
@@ -3644,7 +3645,7 @@ const FAL_QUEUE_BASE       = FAL_QUEUE_SUBMIT;
 // images + condition_mode: 'concat' tells Rodin "these are 3 views of
 // ONE object." Reconstructs a single garment mesh.
 // v0.26: slice + chroma-key the black void to alpha=0 in a single pass.
-// gpt-image-1.5 renders pieces on pure-black backgrounds; without the
+// gpt-image-2 renders pieces on pure-black backgrounds; without the
 // alpha pass, Rodin bakes that black into the mesh texture and the
 // rendered garment looks "melted" into the void. Threshold 28 catches
 // dark JPEG noise too.
