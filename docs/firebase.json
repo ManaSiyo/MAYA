@@ -77,6 +77,10 @@
         "destination": "/backend/privacy.html"
       },
       {
+        "source": "/terms.html",
+        "destination": "/backend/terms.html"
+      },
+      {
         "source": "/verify.html",
         "destination": "/backend/verify.html"
       },

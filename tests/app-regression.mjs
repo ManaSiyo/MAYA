@@ -617,9 +617,12 @@ ok('a restored project finds its fabric swatches again',
   INDEX_SOURCE.includes('function fabricSwatchUrl(f)') &&
   INDEX_SOURCE.includes("return '/aesthetics/fabrics/' + encodeURIComponent(f.fileName)") &&
   INDEX_SOURCE.includes('fabricSwatchUrl(fb)'));
-ok('the sign in screen is just the sign in',
-  !/signin-bottom[\s\S]{0,600}privacy\.html/.test(INDEX_SOURCE) &&
-  INDEX_SOURCE.includes('bottom: 34px; left: 0; right: 0;'));
+// v13.57 supersedes "just the sign in": Fromsa asked for the terms AT the
+// door. The screen stays spare: one consent line, the button, one line of
+// fineprint, nothing else.
+ok('the sign in screen is the sign in plus one consent line',
+  INDEX_SOURCE.includes('bottom: 34px; left: 0; right: 0;') &&
+  /signin-bottom[\s\S]{0,900}terms\.html/.test(INDEX_SOURCE));
 ok('the map stops saying arriving once the picture clearly is not coming',
   MAP_SOURCE.includes('const ARRIVING_MS = 3 * 60 * 1000;') &&
   MAP_SOURCE.includes("'no picture'") &&
@@ -1107,6 +1110,30 @@ ok('manasiyo.com shows its Wix extras: forms and clicks to contact',
   SERVER_SOURCE.includes('TOTAL_FORMS_SUBMITTED') &&
   SERVER_SOURCE.includes('CLICKS_TO_CONTACT') &&
   MKT_SOURCE.includes("tile('forms, 28 days'"));
+// ── v13.57: terms at the door, a truthful wall, a complete Users count ─────
+const TERMS_SOURCE = existsSync(join(ROOT, 'backend/terms.html'))
+  ? readFileSync(join(ROOT, 'backend/terms.html'), 'utf8') : '';
+const FIREBASE_JSON = readFileSync(join(ROOT, 'docs/firebase.json'), 'utf8');
+ok('the terms ship as a page, succinct, and the wall rule is in them',
+  TERMS_SOURCE.includes('<h1>Terms of service</h1>') &&
+  TERMS_SOURCE.includes('community wall') &&
+  TERMS_SOURCE.includes('Take the heart away and the post comes down') &&
+  TERMS_SOURCE.includes('California') &&
+  FIREBASE_JSON.includes('"/terms.html"'));
+ok('a new account agrees to the terms before the sign in button wakes',
+  INDEX_SOURCE.includes('id="tos-check"') &&
+  INDEX_SOURCE.includes('needs-consent #g-signin-btn') &&
+  INDEX_SOURCE.includes("MAYA_TOS_KEY = 'maya_tos_accepted'") &&
+  INDEX_SOURCE.includes('href="/terms.html"') &&
+  PLAYGROUND_SOURCE.includes('id="tos-check"'));
+ok('unhearting sweeps every post this account made for that garment',
+  INDEX_SOURCE.includes("where('uid', '==', uid).where('fp', '==', fp)") &&
+  /_unpublishNow[\s\S]{0,2500}where\('fp', '==', fp\)/.test(INDEX_SOURCE));
+ok('every sign in says hello so the Users count is complete',
+  SERVER_SOURCE.includes("app.post('/api/hello'") &&
+  SERVER_SOURCE.includes('tosVersion') &&
+  INDEX_SOURCE.includes('function _sayHello()') &&
+  INDEX_SOURCE.includes("fetch('/api/hello'"));
 ok('deterministic warnings exist and never depend on a model call',
   SERVER_SOURCE.includes('function computeMarketingWarnings(') &&
   SERVER_SOURCE.includes('is enabled but has served nothing since') &&

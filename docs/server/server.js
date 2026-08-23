@@ -576,6 +576,35 @@ app.all(/^\/api\/openai\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', li
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
+// v13.57: /api/hello — one quiet call per session from the app after sign
+// in. It exists so the Users count on Admin counts EVERY account that signs
+// in: before this, an account was only counted when its work reached the
+// API, so people who signed in and browsed were invisible (the store held 2
+// markers while Analytics saw dozens of people). It also records which
+// terms version the account agreed to, on the same marker.
+// ═══════════════════════════════════════════════════════════════════════════
+app.post('/api/hello', requireAuthHeader, express.json({ limit: '4kb' }), async (req, res) => {
+  let user;
+  try { user = await requireGoogleUser(req); }   // noteUser fires inside
+  catch (e) { return res.status(401).json({ error: 'unauthorized' }); }
+  const tos = String(((req.body || {}).tos) || '').slice(0, 24);
+  if (tos && /^[\d-]+$/.test(tos)) {
+    const id = crypto.createHash('sha256').update(String(user.sub)).digest('hex').slice(0, 24);
+    gcsGet(USERS_PREFIX + id + '.json').then(o => {
+      let doc = { firstSeenMs: Date.now() };
+      if (o.ok) { try { doc = JSON.parse(o.buf.toString('utf8')) || doc; } catch (_) {} }
+      if (doc.tosVersion === tos) return;
+      doc.email = String(user.email || doc.email || '').slice(0, 120);
+      doc.tosVersion = tos;
+      doc.tosAcceptedMs = Date.now();
+      return gcsPut(USERS_PREFIX + id + '.json',
+        Buffer.from(JSON.stringify(doc), 'utf8'), 'application/json');
+    }).catch(() => {});
+  }
+  res.status(204).end();
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
 // /api/submit — one submission: open it, then upload its files (v13.27 writes
 // refresh-token OAuth so files are owned by the atelier account).
 // ═══════════════════════════════════════════════════════════════════════════

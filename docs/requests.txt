@@ -16,6 +16,29 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 23, 2026, TERMS, WALL, USERS (v13.57)
+
+[x] "During sign in for new users, let them read and agree to the terms
+    and conditions; succinct, lawful, clear, especially about the
+    Community Wall." Done: /terms.html, one short page; the wall rule is
+    its own section; the sign in button sleeps until the box is ticked;
+    agreement is remembered and recorded with the account.
+[x] "When someone unfavorites something on the Community Wall it should
+    be gone; the wall must reflect what is favorited." Done: unhearting
+    now also sweeps any older post this account ever made for that same
+    garment, so no ghost can linger.
+[x] "On the admin side we do not have only two users; make sure that is
+    correct." He was right: only accounts whose work reached the API were
+    being counted (the store really held 2 markers). The app now says one
+    quiet hello at every sign in, so every account counts from this
+    version forward; the missed history cannot be reconstructed.
+[x] "Users and traffic on Admin is MAYA, not manasiyo.com, correct?"
+    Correct: Admin is MAYA only; manasiyo.com lives on Marketing.
+[x] "Playground drawer not working, links broken?" Checked the code end
+    to end (local browser test: drawer opens, closes, projects listed)
+    and found no fault; the live file is identical to the app plus the
+    badge. If it misbehaves again, note which link and it gets hunted.
+
 AUGUST 23, 2026, THE TICKER AND THE FOLDS (v13.56)
 
 [x] "Make Today a marquee between the hamburger and Marketing, reading

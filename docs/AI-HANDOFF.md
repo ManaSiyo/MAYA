@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 239 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 243 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -67,6 +67,40 @@ campaign table, warnings, ticker) through Windsor, per connector. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.57 (Claude): terms at the door, a truthful wall, a complete count
+
+- TERMS: backend/terms.html (served at /terms.html; the rewrite is in
+  docs/firebase.json, same commit). Succinct and plain: account, content
+  ownership, the community wall rule stated in full (a heart publishes the
+  render with the first name; unheart takes it down; uploads and face
+  photos never appear), renders are visualizations not promises, orders
+  are agreed with the atelier, acceptable use, as-is disclaimer, $100
+  liability cap, California law. Privacy page links to it and back.
+- CONSENT AT SIGN IN: the gate shows one consent line (checkbox + Terms +
+  Privacy links); the Google button sleeps at 0.25 opacity until agreed
+  (#signin-gate.needs-consent). Agreement is remembered per browser
+  (maya_tos_accepted = version date) so nobody is asked twice; a future
+  terms change bumps MAYA_TOS_VERSION and the gate asks again.
+- WALL MIRRORS HEARTS: _unpublishNow now also sweeps every post THIS
+  account made for the garment's fingerprint (where uid==me and fp==fp,
+  limit 10, deletes doc + storagePath). Ghost posts from older id schemes
+  can no longer survive an unheart. Rules already permit it (own-uid
+  delete, signed-in read).
+- COMPLETE USERS COUNT: new POST /api/hello (requireGoogleUser inside, so
+  noteUser marks the account) called once per session by the app after
+  sign in, fire and forget, sessionStorage guarded. Before this only
+  accounts whose work reached the API were counted: the store held 2
+  markers while GA saw dozens of people; that was Fromsa's "we have more
+  than two users", and he was right. It also records tosVersion +
+  tosAcceptedMs on the user marker. History cannot be reconstructed: the
+  count is complete from this version forward, which Admin's changelog
+  says out loud.
+- PLAYGROUND: checked end to end locally (Playwright: hamburger toggle
+  opens the drawer pane to full scroll, body class flips, closes clean;
+  every inline script parses; live file byte-identical to frontend plus
+  the badge). No fault found in the page itself; if a specific link
+  misbehaves for Fromsa again, ask WHICH link before changing code.
 
 ## v13.56 (Claude): the ticker, the folds, one drawer family
 

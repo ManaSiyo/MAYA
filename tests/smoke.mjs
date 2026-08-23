@@ -58,6 +58,7 @@ await check('fabric sourcing needs a token',      get('/api/source-fabric?q=wool
 await check('fabric ranking needs a token',       post('/api/rank-fabric', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
 await check('fabric visualizing needs a token',   post('/api/visualize-fabric', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
 await check('marketing brief needs a token',      post('/api/admin/marketing-brief', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
+await check('hello needs a token',                post('/api/hello', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
 await check('openai refuses a model off the list', async () => {
   // v13.53: even with a syntactically valid Bearer, an unknown model must be
   // turned away. The bad token dies first with 401 here (no Google upstream
