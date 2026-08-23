@@ -16,6 +16,27 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 22, 2026, WIX, AXES, AND THE WALL (v13.48)
+
+[x] "Remove the last checked line; MAYA who is arriving is not related to
+    marketing." Both gone from Marketing.
+[x] "I want analytics absorbed from the website as well; I have the Wix
+    API." Wired: manasiyo.com visitors now come straight from Wix's own
+    Analytics API, the same numbers the Wix dashboard shows. One step
+    remains, Fromsa's own: set WIX_API_KEY on the maya-api service.
+[x] "The x axis and y axis are not defined; add them subtly, and one more
+    pill that combines all three." Every day is named under the chart, the
+    gridline values sit quietly on the left, and the All three chip draws
+    clicks, impressions and cost per click at once.
+[x] "Fabrics UI got messed up: half the screen, stretches the canvas,
+    cannot scroll." Fixed: the wall is back to four columns by three rows
+    inside exactly the full view frame's footprint, pages swiped sideways,
+    and nothing can stretch the page any more.
+[x] "The color of the recommended fabric is not even close." Fixed: the
+    color word in the dissected fabric now leads (crimson means crimson),
+    search cards wear that color instead of a borrowed navy photo, and
+    color truth outranks catalog order.
+
 AUGUST 22, 2026, THE NUMBERS AUDIT (v13.47)
 
 [x] "Is the admin analytics working or not, and why? 14 people came from

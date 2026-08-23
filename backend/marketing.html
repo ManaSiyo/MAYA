@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Marketing</title>
-<meta name="maya-version" content="13.47">
+<meta name="maya-version" content="13.48">
 <script>
 // v13.43: this page NEVER clears the shared sign in. Admin owns the deploy
 // sign-out; marketing clearing it too was why the page kept asking again.
@@ -107,6 +107,20 @@ try {
     letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin:10px 2px 0}
   .chart-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
   #ad-chart{width:100%;height:190px;display:block}
+  /* v13.48: subtle axes. The y labels ride the gridlines; the x row names
+     every day under the chart. */
+  #ad-ylabels span{position:absolute;left:4px;transform:translateY(-50%);
+    font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.08em;color:var(--faint);
+    background:rgba(8,12,26,0.55);padding:0 4px;border-radius:6px;pointer-events:none}
+  #ad-xaxis{justify-content:space-between}
+  #ad-xaxis span{flex:1;text-align:center}
+  #ad-xaxis span:first-child{text-align:left}
+  #ad-xaxis span:last-child{text-align:right}
+  #ad-yaxis-word{font-size:8.5px;color:var(--faint);letter-spacing:0.1em}
+  .chart-legend .lg-line{display:inline-block;width:16px;height:0;border-top:2px solid var(--dim);
+    margin-right:6px;vertical-align:middle}
+  .chart-legend .lg-line.thin{border-top-width:1px;opacity:0.6}
+  .chart-legend .lg-line.dash{border-top-style:dashed}
   .status-word{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase}
   .status-word.on{color:var(--green)}
   .status-word.off{color:var(--faint)}
@@ -148,28 +162,29 @@ try {
     <span id="gsi-slot" style="margin:0 0 0 auto"></span>
   </div>
 
-  <!-- v13.47: honest heading. It names the property actually being read;
-       today that is MAYA's own Analytics, because manasiyo.com has no
-       property shared with the server yet (the fold below says how). -->
-  <h2 class="grp" id="arriving-head">Who is arriving</h2>
-  <div id="site-tiles" class="tiles"></div>
-  <div id="site-note" class="note" style="display:none"></div>
-  <div id="property-note" class="note" style="display:none;margin-top:8px"></div>
+  <!-- v13.48: the site's OWN numbers, straight from Wix. MAYA's traffic
+       lives on Admin where it belongs; this page is manasiyo.com and ads. -->
+  <h2 class="grp">Manasiyo.com, who is arriving</h2>
+  <div id="wix-tiles" class="tiles"></div>
+  <div id="wix-note" class="note" style="display:none"></div>
 
-  <!-- v13.47: paid moved to the top, per Fromsa; the four week bar graph is
-       gone (it repeated the tiles). -->
   <h2 class="grp">Paid, both networks together</h2>
   <div class="panel" id="ad-combined-panel">
     <div class="metric-chips" id="metric-chips">
       <button class="metric-chip on" data-m="clicks" onclick="setAdMetric('clicks')">Clicks</button>
       <button class="metric-chip" data-m="impressions" onclick="setAdMetric('impressions')">Impressions</button>
       <button class="metric-chip" data-m="cpc" onclick="setAdMetric('cpc')">Cost per click</button>
+      <button class="metric-chip" data-m="all" onclick="setAdMetric('all')" title="Clicks, impressions and cost per click at once, each line scaled to its own peak">All three</button>
     </div>
-    <svg id="ad-chart" viewBox="0 0 700 190" preserveAspectRatio="none"></svg>
-    <div class="bars-axis"><span id="ad-from">&#8212;</span><span id="ad-to">&#8212;</span></div>
-    <div class="chart-legend">
+    <div style="position:relative">
+      <svg id="ad-chart" viewBox="0 0 700 190" preserveAspectRatio="none"></svg>
+      <div id="ad-ylabels"></div>
+    </div>
+    <div class="bars-axis" id="ad-xaxis"></div>
+    <div class="chart-legend" id="ad-legend">
       <span><span class="dot" style="background:#8ab4f8"></span>Google Ads</span>
       <span><span class="dot" style="background:#81c995"></span>Meta Ads</span>
+      <span id="ad-yaxis-word" style="margin-left:auto"></span>
     </div>
     <div id="ad-combined-note" class="note" style="display:none;margin-top:10px"></div>
   </div>
@@ -182,22 +197,24 @@ try {
     <div class="panel" id="meta-ads-panel">Meta Ads&#8230;</div>
   </div>
 
-  <h2 class="grp">Where they came from</h2>
+  <h2 class="grp">MAYA, where its visitors came from</h2>
   <div class="panel"><table id="sources-table"><tbody></tbody></table></div>
 
-  <h2 class="grp">What they read</h2>
+  <h2 class="grp">MAYA, what they read</h2>
   <div class="panel"><table id="pages-table"><tbody></tbody></table></div>
 
   <details class="fold" id="connect-fold">
     <summary><h2 class="grp">Connecting what is missing</h2></summary>
     <div class="note" style="margin-top:10px">
-      <b>Analytics for manasiyo.com (the Wix site).</b> The Wix dashboard's visitor count lives inside
-      Wix and cannot be read from here. To see those visitors on this page: create a GA4 property at
-      analytics.google.com for manasiyo.com, connect its Measurement ID in Wix (Settings &#8594;
-      Marketing integrations &#8594; Google Analytics), then in Google Analytics &#8594; Admin &#8594;
-      Property access management add <span id="sa-email">the Cloud Run service account</span> as Viewer.
-      This page then picks the manasiyo.com property by name automatically; if it ever picks wrong, pin
-      it with <code>MARKETING_GA_PROPERTY_ID</code>.
+      <b>Manasiyo.com visitors, from Wix itself.</b> Make an API key at manage.wix.com/account/api-keys
+      (permission: Site Analytics, or All site permissions), then set it as <code>WIX_API_KEY</code> on
+      the maya-api service in Cloud Run. The key is a credential: paste it yourself, in the Cloud Run
+      console. The site is already pinned in the server; override with <code>WIX_SITE_ID</code> only if
+      the site ever changes. A minute after the deploy, the tiles above fill with the same numbers the
+      Wix dashboard shows.
+      <br><br>
+      <b>The two MAYA tables below them</b> read MAYA's own Analytics with the Cloud Run identity
+      (<span id="sa-email">the service account</span> is already a Viewer on pro-maya).
       <br><br>
       <b>Windsor, for the paid chart above.</b> One key fills Google Ads and Meta together: windsor.ai
       &#8594; API Keys &#8594; copy the key &#8594; set it as <code>WINDSOR_API_KEY</code> on the
@@ -294,9 +311,11 @@ async function load() {
   if (r.status === 403) { document.getElementById('checked-at').textContent = 'this account is not on the admin list'; return; }
   if (!r.ok) { document.getElementById('checked-at').textContent = 'marketing data unavailable (' + r.status + ')'; return; }
   const d = await r.json();
-  document.getElementById('checked-at').textContent =
-    'last checked ' + new Date(d.ts).toLocaleString() + (d.analytics && d.analytics.propertyName ? ', ' + d.analytics.propertyName : '');
+  // v13.48: the last-checked line is gone, per Fromsa. The element stays
+  // only as a mouth for errors.
+  document.getElementById('checked-at').textContent = '';
   if (d.saEmail) document.getElementById('sa-email').textContent = d.saEmail;
+  paintWix(d.wixSite || {});
   paintSite(d.analytics || {});
   _adData = d.adCombined || null;
   _windsorWhy = (d.windsor && d.windsor.why) || '';
@@ -318,48 +337,94 @@ function setAdMetric(m) {
 function paintAdCombined() {
   const svg = document.getElementById('ad-chart');
   const note = document.getElementById('ad-combined-note');
+  const ylab = document.getElementById('ad-ylabels');
+  const xaxis = document.getElementById('ad-xaxis');
+  const yword = document.getElementById('ad-yaxis-word');
   if (!svg) return;
   const d = _adData;
   if (!d || !d.connected || !(d.days || []).length) {
-    svg.innerHTML = '';
+    svg.innerHTML = ''; if (ylab) ylab.innerHTML = ''; if (xaxis) xaxis.innerHTML = '';
+    if (yword) yword.textContent = '';
     note.style.display = '';
     note.innerHTML = '<b>No combined ad data yet.</b> ' +
       esc(_windsorWhy || 'Windsor has nothing for the last 7 days.') +
       ' Set <code>WINDSOR_API_KEY</code> on the API and both networks appear here.';
-    document.getElementById('ad-from').textContent = '';
-    document.getElementById('ad-to').textContent = '';
     return;
   }
   note.style.display = 'none';
   const W = 700, H = 190, PAD = 8;
   const days = d.days;
-  const val = (row) => _adMetric === 'cpc' ? row.cpc : row[_adMetric];
-  const seriesList = [
+  const nets = [
     { pts: d.google, color: '#8ab4f8' },
     { pts: d.meta, color: '#81c995' },
   ].filter(s => Array.isArray(s.pts) && s.pts.length);
-  const max = Math.max(0.0001, ...seriesList.flatMap(s => s.pts.map(val)));
   const x = (i) => days.length < 2 ? W / 2 : PAD + i * (W - PAD * 2) / (days.length - 1);
-  const y = (v) => H - PAD - (v / max) * (H - PAD * 2);
+  const yOf = (v, max) => H - PAD - (v / max) * (H - PAD * 2);
+  const fmt = (m, v) => m === 'cpc' ? usd(v) : n0(Math.round(v));
   let out = '';
-  // faint horizontal guides, like the Ads chart
   for (let g = 1; g <= 3; g++) {
     const gy = PAD + g * (H - PAD * 2) / 4;
     out += '<line x1="0" y1="' + gy + '" x2="' + W + '" y2="' + gy +
       '" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>';
   }
-  for (const s of seriesList) {
-    const pts = s.pts.map((r, i) => x(i).toFixed(1) + ',' + y(val(r)).toFixed(1)).join(' ');
-    out += '<polyline points="' + pts + '" fill="none" stroke="' + s.color +
-      '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
-    out += s.pts.map((r, i) =>
-      '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(val(r)).toFixed(1) + '" r="2.6" fill="' + s.color + '">' +
-      '<title>' + esc(r.date) + ': ' + (_adMetric === 'cpc' ? usd(val(r)) : n0(val(r))) + '</title></circle>').join('');
+  const drawSeries = (pts, color, metric, max, style) => {
+    const line = pts.map((r, i) => x(i).toFixed(1) + ',' + yOf(metric === 'cpc' ? r.cpc : r[metric], max).toFixed(1)).join(' ');
+    out += '<polyline points="' + line + '" fill="none" stroke="' + color + '"' +
+      ' stroke-width="' + style.w + '"' + (style.dash ? ' stroke-dasharray="5 5"' : '') +
+      (style.op ? ' stroke-opacity="' + style.op + '"' : '') +
+      ' stroke-linejoin="round" stroke-linecap="round"/>';
+    if (style.dots) out += pts.map((r, i) => {
+      const v = metric === 'cpc' ? r.cpc : r[metric];
+      return '<circle cx="' + x(i).toFixed(1) + '" cy="' + yOf(v, max).toFixed(1) + '" r="2.6" fill="' + color + '">' +
+        '<title>' + esc(r.date) + ' ' + metric + ': ' + fmt(metric, v) + '</title></circle>';
+    }).join('');
+  };
+  if (_adMetric === 'all') {
+    // v13.48: all three at once. Each METRIC is scaled to its own peak
+    // across both networks, so the shapes compare; the legend says which
+    // line weight is which.
+    for (const metric of ['impressions', 'clicks', 'cpc']) {
+      const max = Math.max(0.0001, ...nets.flatMap(s => s.pts.map(r => metric === 'cpc' ? r.cpc : r[metric])));
+      const style = metric === 'clicks' ? { w: 2, dots: true }
+        : metric === 'impressions' ? { w: 1.2, op: 0.55 }
+        : { w: 1.5, dash: true, op: 0.85 };
+      for (const s of nets) drawSeries(s.pts, s.color, metric, max, style);
+    }
+    if (ylab) ylab.innerHTML = '';
+    if (yword) yword.textContent = 'each line scaled to its own peak';
+  } else {
+    const max = Math.max(0.0001, ...nets.flatMap(s => s.pts.map(r => _adMetric === 'cpc' ? r.cpc : r[_adMetric])));
+    for (const s of nets) drawSeries(s.pts, s.color, _adMetric, max, { w: 2, dots: true });
+    // y axis: the gridline values, quiet, riding the lines they mark.
+    if (ylab) {
+      let marks = '';
+      for (let g = 1; g <= 3; g++) {
+        const frac = 1 - g / 4;
+        const py = PAD + g * (H - PAD * 2) / 4;
+        marks += '<span style="top:' + py + 'px">' + fmt(_adMetric, max * frac) + '</span>';
+      }
+      ylab.innerHTML = marks;
+    }
+    if (yword) yword.textContent = _adMetric === 'cpc' ? 'dollars per click, per day' : _adMetric + ' per day';
   }
   svg.innerHTML = out;
   const pretty = (s) => s && s.length >= 10 ? (s.slice(5, 7) + '/' + s.slice(8, 10)) : s;
-  document.getElementById('ad-from').textContent = pretty(days[0]);
-  document.getElementById('ad-to').textContent = pretty(days[days.length - 1]);
+  if (xaxis) xaxis.innerHTML = days.map(dd => '<span>' + esc(pretty(dd)) + '</span>').join('');
+  // the second legend row: line styles, only when all three are drawn
+  const legend = document.getElementById('ad-legend');
+  let styleRow = document.getElementById('ad-style-legend');
+  if (_adMetric === 'all') {
+    if (!styleRow && legend) {
+      styleRow = document.createElement('div');
+      styleRow.id = 'ad-style-legend';
+      styleRow.className = 'chart-legend';
+      legend.after(styleRow);
+    }
+    if (styleRow) styleRow.innerHTML =
+      '<span><span class="lg-line"></span>clicks</span>' +
+      '<span><span class="lg-line thin"></span>impressions</span>' +
+      '<span><span class="lg-line dash"></span>cost per click</span>';
+  } else if (styleRow) styleRow.remove();
 }
 function paintCampaigns() {
   const tb = document.querySelector('#campaigns-table tbody');
@@ -387,37 +452,33 @@ function paintCampaigns() {
     }).join('');
 }
 
-function paintSite(a) {
-  const tiles = document.getElementById('site-tiles');
-  const note = document.getElementById('site-note');
-  if (!a.connected) {
+// v13.48: manasiyo.com's own numbers, straight from Wix. This is what the
+// Wix dashboard shows, on this page.
+function paintWix(w) {
+  const tiles = document.getElementById('wix-tiles');
+  const note = document.getElementById('wix-note');
+  if (!tiles) return;
+  if (!w.connected) {
     tiles.innerHTML = '';
     note.style.display = '';
-    note.innerHTML = '<b>Analytics is not reading manasiyo.com yet.</b> ' + esc(a.why || '') +
-      ' Open the fold at the bottom of this page for the one step that fixes it.';
+    note.innerHTML = '<b>Wix is not connected yet.</b> ' + esc(w.why || '') +
+      ' Set <code>WIX_API_KEY</code> on the API (the fold at the bottom says how) and ' +
+      'the manasiyo.com visitors appear here, the same numbers as the Wix dashboard.';
     return;
   }
   note.style.display = 'none';
-  // v13.47: say honestly WHOSE numbers these are. Today the only property
-  // shared with the server is MAYA's own, so the tiles are MAYA visitors.
-  const isMaya = /pro-maya/i.test(a.propertyName || '');
-  const head = document.getElementById('arriving-head');
-  if (head) head.textContent = isMaya ? 'MAYA, who is arriving' : 'Manasiyo.com, who is arriving';
-  const pn = document.getElementById('property-note');
-  if (pn) {
-    if (isMaya) {
-      pn.style.display = '';
-      pn.innerHTML = 'These are visitors to <b>maya.manasiyo.com</b> itself. The manasiyo.com site has no ' +
-        'Analytics property shared with this server yet, so its visitors cannot appear here. ' +
-        'The fold at the bottom says how to connect it.';
-    } else { pn.style.display = 'none'; }
-  }
-  const R = a.ranges || {};
   tiles.innerHTML =
-    tile('&#9679; live now', n0(a.live), true) +
-    tile('today', n0((R.today || {}).users)) +
-    tile('7 days', n0((R.d7 || {}).users)) +
-    tile('28 days', n0((R.d28 || {}).users));
+    tile('today', n0((w.today || {}).visitors)) +
+    tile('7 days', n0((w.d7 || {}).visitors)) +
+    tile('28 days', n0((w.d28 || {}).visitors)) +
+    tile('visits, 28 days', n0((w.d28 || {}).sessions));
+}
+
+// The two tables below come from MAYA's own Analytics: where MAYA's
+// visitors arrive from, and what they open. The manasiyo.com tiles above
+// come from Wix.
+function paintSite(a) {
+  if (!a.connected) return;
   const st = document.querySelector('#sources-table tbody');
   st.innerHTML = '<tr><th>Source</th><th class="num">Visits</th><th class="num">People</th></tr>' +
     (a.sources || []).map(s => '<tr><td>' + label(s.source, s.medium) + '</td><td class="num">' +

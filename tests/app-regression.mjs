@@ -834,16 +834,44 @@ ok('every traffic pill says what it counts on hover',
   MAP_SOURCE.includes('Visitors who never sign in are counted in the traffic numbers, not here'));
 ok('an unnamed user row says it will take a name at next sign in',
   MAP_SOURCE.includes('earlier account, named at its next sign in'));
-ok('marketing names whose traffic it shows and how to connect the site',
-  MKT_SOURCE.includes("isMaya ? 'MAYA, who is arriving'") &&
-  MKT_SOURCE.includes('id="property-note"') &&
-  MKT_SOURCE.includes('MARKETING_GA_PROPERTY_ID') &&
+// v13.48: superseded. Manasiyo.com numbers now come from Wix directly and
+// the MAYA tables say whose they are; see the v13.48 block below.
+ok('marketing names whose traffic it shows',
+  MKT_SOURCE.includes('Manasiyo.com, who is arriving') &&
+  MKT_SOURCE.includes('MAYA, what they read') &&
   MKT_SOURCE.includes('WINDSOR_API_KEY'));
 ok('paid sits at the top of marketing and the four week bars are gone',
-  MKT_SOURCE.indexOf('Paid, both networks together') < MKT_SOURCE.indexOf('Where they came from') &&
+  MKT_SOURCE.indexOf('Paid, both networks together') < MKT_SOURCE.indexOf('MAYA, where its visitors came from') &&
+  MKT_SOURCE.indexOf('Paid, both networks together') > -1 &&
   !MKT_SOURCE.includes('id="daily-bars"'));
 ok('sharing the site property alone is enough for marketing to pick it',
   SERVER_SOURCE.includes("all.find(p => !/pro-maya/i.test(p.displayName || ''))"));
+// ── v13.48: marketing is marketing, the wall fits its frame ────────────────
+ok('manasiyo.com visitors come straight from Wix',
+  SERVER_SOURCE.includes('async function wixInsights()') &&
+  SERVER_SOURCE.includes('analytics/v2/site-analytics/data') &&
+  SERVER_SOURCE.includes('out.wixSite = wixSite;') &&
+  MKT_SOURCE.includes('function paintWix(') &&
+  MKT_SOURCE.includes('id="wix-tiles"') &&
+  MKT_SOURCE.includes('WIX_API_KEY'));
+ok('the last checked line and the MAYA arrival tiles left marketing',
+  !MKT_SOURCE.includes("'last checked '") &&
+  !MKT_SOURCE.includes('id="site-tiles"') &&
+  MKT_SOURCE.includes('MAYA, where its visitors came from'));
+ok('the paid chart has axes and an All three chip',
+  MKT_SOURCE.includes('data-m="all"') &&
+  MKT_SOURCE.includes('id="ad-ylabels"') &&
+  MKT_SOURCE.includes('id="ad-xaxis"') &&
+  MKT_SOURCE.includes('each line scaled to its own peak'));
+ok('the fabric wall fits its frame and cannot stretch the canvas',
+  BACKEND_SOURCE.includes('grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr)') &&
+  BACKEND_SOURCE.includes('grid-template-rows: repeat(3, minmax(0, 1fr))') &&
+  BACKEND_SOURCE.includes('height: 70vh; max-height: 70vh; min-width: 0;'));
+ok('a sourcing card wears the color the client asked for',
+  BACKEND_SOURCE.includes("'crimson':[153,27,42]") &&
+  BACKEND_SOURCE.includes('function _targetFabricRgb(') &&
+  BACKEND_SOURCE.includes('function _tintSwatch(') &&
+  BACKEND_SOURCE.includes('swatch: searchSwatch, _search:true'));
 ok('a click anywhere outside the drawer closes it, on every page',
   /pointerdown[\s\S]{0,400}toggleNotesDrawer\(false\)/.test(INDEX_SOURCE) &&
   /pointerdown[\s\S]{0,400}toggleDrawer\(false\)/.test(MAP_SOURCE) &&
@@ -873,7 +901,7 @@ ok('marketing draws both networks on one chart with a campaign table',
   SERVER_SOURCE.includes("'source,date,campaign,impressions,clicks,spend'"));
 ok('fabric sourcing looks across the world, four wide, swiped sideways',
   BACKEND_SOURCE.includes('const WORLD_MERCHANTS') &&
-  BACKEND_SOURCE.includes('repeat(4, 1fr)') &&
+  BACKEND_SOURCE.includes('repeat(4, minmax(0, 1fr))') &&
   BACKEND_SOURCE.includes('scroll-snap-type: x mandatory') &&
   BACKEND_SOURCE.includes('function _buildFullViewCards()') &&
   BACKEND_SOURCE.includes('_loadInhouseFabrics().then(items =>'));

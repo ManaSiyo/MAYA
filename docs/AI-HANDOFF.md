@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 192 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 197 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -67,6 +67,55 @@ ad panels (impressions, clicks, spend, last 7 days) through Windsor. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.48 (Claude): Wix visitors, chart axes, the wall back in its frame
+
+- MANASIYO.COM VISITORS COME FROM WIX ITSELF now: `wixInsights()` in
+  server.js reads GET https://www.wixapis.com/analytics/v2/site-analytics/data
+  (query params dateRange.startDate/endDate + measurementTypes
+  TOTAL_SESSIONS and TOTAL_UNIQUE_VISITORS; a GET with a BODY is refused,
+  use query params). Auth: `Authorization: <WIX_API_KEY>` +
+  `wix-site-id: <WIX_SITE_ID>`; the site id defaults to the live Mana Siyo
+  site a4ad1a21-d8dc-4986-8ac2-9db20fbf366f (the second Wix site,
+  "Mana Siyo (2/22/26)", is empty; verified live on Aug 22: 141 unique
+  visitors in 7 days, 30 on Aug 20). Wix keeps 62 days of data; never ask
+  for more. Needs WIX_API_KEY on Cloud Run (account API key with Site
+  Analytics permission); Fromsa pastes it himself.
+- Marketing page: the last checked line is gone (the element remains as an
+  error mouth only), MAYA's arrival tiles left the page, and the top
+  section is "Manasiyo.com, who is arriving" fed by `out.wixSite`. The two
+  GA tables stayed but say whose they are: "MAYA, where its visitors came
+  from" and "MAYA, what they read".
+- Paid chart: subtle axes. Every day is named under the chart (#ad-xaxis),
+  the gridline values ride the left edge as HTML overlays (#ad-ylabels;
+  works because preserveAspectRatio=none maps viewBox height 1:1 to the
+  fixed 190px, so vertical pixel positions line up; do NOT put text inside
+  this stretched SVG, it distorts). A fourth chip, "All three", draws
+  clicks (solid, dotted markers), impressions (thin, 55%) and cost per
+  click (dashed) at once, each metric scaled to its own peak across both
+  networks, with a second legend row for the line styles.
+- THE FABRIC WALL FITS ITS FRAME AGAIN. The v13.44 pager let long nowrap
+  card titles blow the layout: grid columns default to min-content, so the
+  wall stretched the whole .op-row sideways and the square-aspect swatches
+  overflowed an unscrollable panel. Fixes, all CSS: .op-row columns are
+  minmax(0, 1.2fr)/minmax(0, 0.8fr); .brief-fabrics is height:70vh (the
+  full view frame's own scale) with min-width:0; .fab-page is
+  grid-template-columns/rows repeat(4/3, minmax(0,1fr)) at height:100%;
+  .fab-card is a min-width:0 column; .fab-swatch dropped its aspect-ratio
+  and flexes to the row. 12 cards always fit exactly; pages swipe.
+- COLOR-TRUE SOURCING. "Crimson wool suiting" was shown in navy: crimson
+  meant nothing to _COLOR_RGB and search cards borrowed the family's first
+  product photo. Now ~20 more color words exist (crimson, scarlet, maroon,
+  wine, teal, mustard...), `_targetFabricRgb()` takes the color from the
+  dissected fabric STRING first (sampled image as fallback), merchant
+  search cards wear a `_tintSwatch()` gradient of that color and never a
+  borrowed photo, and when the wanted color is known the ranking weights
+  flip to 0.35 relevance / 0.65 color so a navy pick cannot outrank a
+  crimson search. Curated picks keep their real photos and real prices.
+- Verified headlessly: 14 fake cards render as a 4x3 page inside an
+  830x665 panel with a second page and dots, no sideways document scroll;
+  the chart draws axes in clicks mode and three styled line pairs in All
+  three mode. 197 regression checks + 18 smoke checks pass.
 
 ## v13.47 (Claude): the numbers audit. READ THIS BEFORE TOUCHING ANALYTICS
 
@@ -223,9 +272,10 @@ Verified live on Aug 22 through Fromsa's signed-in admin session:
 - SECURITY as of v13.41: a submission can only be written by the account that
   opened it (`subOwner()` reads the init marker, cached). The legacy Pinterest
   modal is deleted; the drawer is the only implementation.
-- Live line: `maya-v2`. v13.46 is pushed and live. **v13.47 is committed and
-  waiting for Fromsa's push** (the numbers audit: honest labels, paid chart
-  on top of Marketing, reachable door chips).
+- Live line: `maya-v2`. v13.47 is pushed and live (WINDSOR_API_KEY is set on
+  Cloud Run; the paid chart works in production). **v13.48 is committed and
+  waiting for Fromsa's push** (Wix visitors on Marketing, chart axes and the
+  All three chip, the fabric wall back inside its frame, color-true cards).
 - **The folder changed in v13.37.** Pages are no longer loose at the root:
   `frontend/index.html`, and `backend/` holds status, marketing, operations,
   backend and privacy plus verify. Every old URL still answers, because
@@ -234,7 +284,7 @@ Verified live on Aug 22 through Fromsa's signed-in admin session:
   rewrite list is the first place to look. `aesthetics/` stays at the root on
   purpose: `docs/**` is ignored by Hosting, so pictures inside it would never
   deploy.
-- Tests: 192 checks in `tests/app-regression.mjs`, all passing, including a
+- Tests: 197 checks in `tests/app-regression.mjs`, all passing, including a
   check that every old address still maps to a file that exists.
 - Pinterest: app id and secret ARE set on Cloud Run. The sign in currently
   fails with Pinterest's own 400, "this application has not registered a

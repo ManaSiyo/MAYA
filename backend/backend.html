@@ -166,7 +166,9 @@
   }
   .op-row {
     display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
+    /* v13.48: minmax(0,...) so wide content inside a column (the fabric
+       wall's card titles) can never stretch the whole canvas sideways. */
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
     gap: 36px;
     flex: 1;
     min-height: 0;
@@ -570,7 +572,10 @@
 
   /* ───────── v0.31: Fabrics sourcing, lives in the Brief, clean glass frame ───────── */
   .brief-fabrics {
-    width: 100%; max-height: 70vh; box-sizing: border-box;
+    /* v13.48: the wall lives in EXACTLY the full view frame's footprint:
+       same width, same 70vh, definite height so the 4x3 page can size its
+       rows to fit instead of blowing the panel up. */
+    width: 100%; height: 70vh; max-height: 70vh; min-width: 0; box-sizing: border-box;
     padding: 16px;
     display: flex; flex-direction: column; gap: 14px;
     background: rgba(255,255,255,0.02);
@@ -624,13 +629,19 @@
   .fab-grid::-webkit-scrollbar { height: 4px; }
   .fab-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 4px; }
   .fab-page {
-    flex: 0 0 100%; min-width: 100%;
+    flex: 0 0 100%; min-width: 100%; max-width: 100%;
+    height: 100%;
     scroll-snap-align: start;
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 14px; align-content: start;
+    /* v13.48: minmax(0,1fr) both ways: columns can never grow past the
+       frame because of a long title, and the three rows always FIT the
+       frame's height, so nothing overflows and nothing needs scrolling. */
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-rows: repeat(3, minmax(0, 1fr));
+    gap: 12px;
     padding-right: 12px; box-sizing: border-box;
   }
-  @media (max-width: 900px) { .fab-page { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 900px) { .fab-page { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(6, minmax(0, 1fr)); } }
   .fab-page-dots {
     display: flex; justify-content: center; gap: 6px; padding-top: 8px; flex-shrink: 0;
   }
@@ -639,8 +650,10 @@
     background: rgba(255,255,255,0.22); transition: background .2s;
   }
   .fab-page-dots .fpd.on { background: rgba(255,255,255,0.75); }
-  .fab-card { display: block; text-decoration: none; }
-  .fab-card { position: relative; }
+  /* v13.48: the card is a column that fits its grid cell: picture takes
+     what is left after the caption, never the other way round. */
+  .fab-card { display: flex; flex-direction: column; text-decoration: none;
+              position: relative; min-width: 0; min-height: 0; }
   .fab-icon-btn {
     font-family: 'Jost', sans-serif; font-size: 15px; line-height: 1;
     width: 30px; height: 30px; border-radius: 100px; cursor: pointer;
@@ -677,7 +690,9 @@
   /* Color-match dot annotation on the meta line. */
   /* Real product photo, square-cropped. No hover overlay. */
   .fab-swatch {
-    position: relative; width: 100%; aspect-ratio: 1 / 1;
+    /* v13.48: no fixed aspect any more; the picture fills whatever height
+       the row gives it, so 4 columns by 3 rows always fit the frame. */
+    position: relative; width: 100%; flex: 1; min-height: 0;
     border-radius: 12px; overflow: hidden;
     background-size: cover; background-position: center;
     border: 0.5px solid rgba(255,255,255,0.18);
@@ -687,7 +702,7 @@
     object-fit: cover; display: block;
   }
   .fab-card:hover .fab-swatch { border-color: rgba(255,255,255,0.5); }
-  .fab-card-body { padding: 8px 2px 0; }
+  .fab-card-body { padding: 6px 2px 0; flex-shrink: 0; }
   .fab-title {
     font-family: 'Cormorant Garamond', serif; font-size: 14px; line-height: 1.2;
     color: rgba(245,250,255,0.92);
@@ -3972,6 +3987,13 @@ const _COLOR_RGB = {
   'antique white':[228,224,210],'bright white':[245,247,250],'ivory':[235,231,214],
   'red':[150,40,46],'burgundy':[88,28,40],'green':[60,96,64],'orange':[200,110,40],
   'beige':[200,188,160],'brown':[90,66,48],'tan':[180,150,110],
+  // v13.48: the words a dissection actually uses. Crimson wool suiting was
+  // being shown in navy because crimson meant nothing here.
+  'crimson':[153,27,42],'scarlet':[176,32,38],'maroon':[96,26,34],'wine':[100,30,48],
+  'rust':[164,78,38],'gold':[190,150,60],'silver':[176,180,188],'cream':[238,230,206],
+  'khaki':[150,140,100],'olive':[100,102,58],'teal':[38,108,110],'emerald':[36,120,84],
+  'lavender':[168,152,200],'pink':[214,140,164],'magenta':[172,50,120],
+  'purple':[104,62,140],'violet':[122,80,164],'yellow':[208,180,70],'mustard':[196,158,52],
 };
 function _colorToRgb(name){
   const t=(name||'').toLowerCase().trim();
@@ -4008,12 +4030,15 @@ function _sampleGarmentColor(cb){
   img.src=src;
 }
 function _rgbDist(a,b){ return Math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2); }
-// 0..1 closeness of a card's color to the garment's sampled color.
-function _colorScore(card){
-  if(!_garmentAvgRgb) return 0.5;          // no sample → neutral
+// 0..1 closeness of a card's color to the wanted color: the dissected
+// fabric string's own color word when there is one, else the sampled
+// garment picture. v13.48: callers can pass the target explicitly.
+function _colorScore(card, target){
+  const want = target || _garmentAvgRgb;
+  if(!want) return 0.5;                     // nothing to compare to → neutral
   const rgb=_colorToRgb(card.color);
   if(!rgb) return 0.4;                      // unknown color → slight penalty
-  const dist=_rgbDist(rgb,_garmentAvgRgb);  // 0..~441
+  const dist=_rgbDist(rgb,want);            // 0..~441
   return Math.max(0, 1 - dist/300);
 }
 
@@ -4049,22 +4074,42 @@ const WORLD_MERCHANTS = [
   { name:'Etsy', place:'artisan, worldwide', eta:8, q:t=>'https://www.etsy.com/search?q='+t+'%20fabric%20by%20the%20yard' },
   { name:'Amazon', place:'fastest', eta:2, q:t=>'https://www.amazon.com/s?k='+t+'%20fabric%20by%20the%20yard' },
 ];
+// v13.48: the color the client is actually asking for. The dissected fabric
+// STRING is the first authority (crimson wool suiting means crimson), the
+// sampled garment picture is the fallback.
+function _targetFabricRgb(fabricStr) {
+  return _colorToRgb(fabricStr) || _garmentAvgRgb || null;
+}
+function _tintSwatch(rgb) {
+  if (!rgb) return null;
+  const lift = (v, k) => Math.max(0, Math.min(255, Math.round(v * k)));
+  const a = 'rgb(' + lift(rgb[0], 1.18) + ',' + lift(rgb[1], 1.18) + ',' + lift(rgb[2], 1.18) + ')';
+  const b = 'rgb(' + lift(rgb[0], 0.62) + ',' + lift(rgb[1], 0.62) + ',' + lift(rgb[2], 0.62) + ')';
+  return 'linear-gradient(135deg,' + a + ',' + b + ')';
+}
 function _buildFabricCards(fabricStr) {
   const fam  = _fabFamily(fabricStr);
   const term = encodeURIComponent((fabricStr || 'apparel fabric').trim());
-  // Every card gets an image: product picks already carry one; merchant
-  // search cards borrow the family's first product photo so the grid
-  // never shows a blank tile.
-  const famImg = (fam.picks.find(p=>p.img)||{}).img || null;
+  const target = _targetFabricRgb(fabricStr);
+  // v13.48: a merchant SEARCH card no longer borrows a product photo (a
+  // navy wool wearing a crimson caption was a lie). It wears a swatch in
+  // the fabric's own color, so the wall reads true at a glance.
+  const searchSwatch = _tintSwatch(target) || fam.swatch;
   const cards = (fam.picks || []).map(p => Object.assign({ swatch: fam.swatch }, p));
   for (const m of WORLD_MERCHANTS) {
     cards.push({ merchant: m.name + ' · ' + m.place, title: (fabricStr || 'Apparel fabric') + ', matches',
       price:'varies', etaDays: m.eta, color:(fabricStr||''),
-      url: m.q(term), swatch: fam.swatch, img: famImg, _search:true });
+      url: m.q(term), swatch: searchSwatch, _search:true });
   }
-  // Color-aware ranking: 50% text-family relevance (product picks first),
-  // 50% color closeness to the sampled garment image.
-  cards.forEach((c,i)=>{ c._base = 1 - i/cards.length; c._color = _colorScore(c); c._score = 0.5*c._base + 0.5*c._color; });
+  // Ranking: when the asked-for color is KNOWN, color truth dominates
+  // (0.35 relevance, 0.65 color), so a navy pick cannot outrank a crimson
+  // search for a crimson garment. Without a known color, relevance leads.
+  const wc = target ? 0.65 : 0.5;
+  cards.forEach((c,i)=>{
+    c._base = 1 - i/cards.length;
+    c._color = c._search ? 1 : _colorScore(c, target);
+    c._score = (1-wc)*c._base + wc*c._color;
+  });
   cards.sort((a,b)=> b._score - a._score);
   return cards.slice(0, 24);
 }

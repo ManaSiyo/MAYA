@@ -1954,6 +1954,43 @@ async function googleAdsInsights() {
 // know: impressions, clicks, spend, by day. Set WINDSOR_API_KEY on Cloud Run
 // and both ad panels fill from it without any per-platform credentials here.
 const WINDSOR_KEY = process.env.WINDSOR_API_KEY || '';
+
+// v13.48: manasiyo.com's own visitors, from Wix itself. The Wix dashboard's
+// numbers come from this same Analytics Data API, so the marketing page can
+// finally show the site's real traffic. Needs WIX_API_KEY (account API key
+// with Site Analytics permission); the site id is pinned to the live
+// Mana Siyo site and only needs WIX_SITE_ID if that ever changes.
+const WIX_KEY = process.env.WIX_API_KEY || '';
+const WIX_SITE = process.env.WIX_SITE_ID || 'a4ad1a21-d8dc-4986-8ac2-9db20fbf366f';
+async function wixInsights() {
+  if (!WIX_KEY) return { connected: false, why: 'no WIX_API_KEY set' };
+  try {
+    const day = (n) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
+    const qs = 'dateRange.startDate=' + day(27) + '&dateRange.endDate=' + day(0) +
+      '&measurementTypes=TOTAL_SESSIONS&measurementTypes=TOTAL_UNIQUE_VISITORS';
+    const r = await fetch('https://www.wixapis.com/analytics/v2/site-analytics/data?' + qs, {
+      headers: { 'Authorization': WIX_KEY, 'wix-site-id': WIX_SITE },
+      signal: AbortSignal.timeout(12000),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error((j && j.message) || ('wix ' + r.status));
+    const byType = {};
+    for (const row of (j.data || [])) byType[row.type] = row;
+    const uv = byType.TOTAL_UNIQUE_VISITORS || { values: [], total: 0 };
+    const ss = byType.TOTAL_SESSIONS || { values: [], total: 0 };
+    const today = day(0);
+    const last7 = (uv.values || []).slice(-7).reduce((a, v) => a + Number(v.value || 0), 0);
+    return {
+      connected: true,
+      daily: (uv.values || []).map(v => ({ date: v.date, visitors: Number(v.value || 0) })),
+      today: { visitors: Number(((uv.values || []).find(v => v.date === today) || {}).value || 0) },
+      d7: { visitors: last7 },
+      d28: { visitors: Number(uv.total || 0), sessions: Number(ss.total || 0) },
+    };
+  } catch (e) {
+    return { connected: false, why: String(e.message).slice(0, 160) };
+  }
+}
 async function windsorInsights() {
   if (!WINDSOR_KEY) return { connected: false, why: 'no WINDSOR_API_KEY set' };
   try {
@@ -2070,7 +2107,8 @@ app.get('/api/admin/marketing', async (req, res) => {
   } catch (e) {
     out.analytics = { connected: false, why: String(e.message).slice(0, 200) };
   }
-  const [meta, gads, windsor] = await Promise.all([metaInsights(), googleAdsInsights(), windsorInsights()]);
+  const [meta, gads, windsor, wixSite] = await Promise.all([metaInsights(), googleAdsInsights(), windsorInsights(), wixInsights()]);
+  out.wixSite = wixSite;
   out.meta = meta;
   out.googleAds = gads;
   out.windsor = windsor;
