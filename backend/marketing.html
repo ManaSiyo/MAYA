@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Marketing</title>
-<meta name="maya-version" content="13.54">
+<meta name="maya-version" content="13.55">
 <script>
 // v13.43: this page NEVER clears the shared sign in. Admin owns the deploy
 // sign-out; marketing clearing it too was why the page kept asking again.
@@ -137,9 +137,11 @@ try {
   #ad-tip .tip-date{color:var(--faint);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px}
   #ad-tip .tip-row{display:flex;align-items:center;gap:6px;margin-top:2px}
   #ad-tip .tip-row .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
-  /* v13.54: leads list. */
-  #leads-table td{font-size:14.5px}
-  #leads-table .lead-when{color:var(--faint);font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.08em}
+  /* v13.54: leads list. v13.55: the notes column, clipped to three lines. */
+  #leads-table td{font-size:14.5px;vertical-align:top}
+  #leads-table .lead-when{color:var(--faint);font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.08em;margin-top:2px}
+  #leads-table .lead-note{font-family:'Cormorant Garamond',serif;font-size:14px;line-height:1.45;color:var(--dim);
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .chart-legend{display:flex;gap:18px;font-family:'Jost',sans-serif;font-size:9.5px;
     letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin:10px 2px 0}
   .chart-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
@@ -214,11 +216,6 @@ try {
     <div id="summary-body"></div>
   </details>
 
-  <!-- v13.54: the row the dashboard exists for. -->
-  <h2 class="grp">The money, in one row</h2>
-  <div id="money-tiles" class="tiles"></div>
-  <div id="money-note" class="note" style="display:none"></div>
-
   <!-- v13.48: the site's OWN numbers, straight from Wix. MAYA's traffic
        lives on Admin where it belongs; this page is manasiyo.com and ads. -->
   <h2 class="grp">Manasiyo.com, who is arriving</h2>
@@ -232,7 +229,7 @@ try {
       <button class="metric-chip" data-m="impressions" onclick="setAdMetric('impressions')">Impressions</button>
       <button class="metric-chip" data-m="cpc" onclick="setAdMetric('cpc')" title="Dollars per link click, on both networks">Cost per click</button>
       <button class="metric-chip" data-m="all" onclick="setAdMetric('all')" title="Link clicks, impressions and cost per click at once, each line scaled to its own peak">All three</button>
-      <span style="margin-left:auto;display:inline-flex;gap:6px" id="range-chips">
+      <span style="margin-left:auto;display:inline-flex;gap:3px" id="range-chips">
         <button class="range-chip" data-r="D" onclick="setAdRange('D')" title="Today against yesterday">D</button>
         <button class="range-chip on" data-r="W" onclick="setAdRange('W')" title="Last 7 days">W</button>
         <button class="range-chip" data-r="M" onclick="setAdRange('M')" title="Last 30 days">M</button>
@@ -284,16 +281,10 @@ try {
       <b>The two MAYA tables below them</b> read MAYA's own Analytics with the Cloud Run identity
       (<span id="sa-email">the service account</span> is already a Viewer on pro-maya).
       <br><br>
-      <b>Leads, from the site's own forms.</b> The lead count reads Wix Forms directly with the same
-      <code>WIX_API_KEY</code>. If the money row says leads are not connected, the key was made with only
-      the Site Analytics permission: make a new key at manage.wix.com/account/api-keys with All site
-      permissions (or add Forms read), then replace <code>WIX_API_KEY</code> on Cloud Run yourself.
-      <br><br>
-      <b>Revenue, from the order book.</b> Share the admin spreadsheet with
-      <span class="sa-email-slot">the service account</span> as Viewer, then set
-      <code>REVENUE_SHEET_ID</code> (the long id in the sheet's URL) on Cloud Run. Tab ranges default to
-      Batch 1 and Batch 2; override with <code>REVENUE_SHEET_RANGES</code> if the tabs are renamed. In a
-      hurry, <code>REVENUE_MTD</code> and <code>REVENUE_ORDERS</code> set the numbers by hand instead.
+      <b>Leads, from the site's own forms.</b> The lead list reads Wix Forms directly with the same
+      <code>WIX_API_KEY</code>. If it ever says not connected, the key was made with only the Site
+      Analytics permission: make a new key at manage.wix.com/account/api-keys with All site permissions
+      (or add Forms read), then replace <code>WIX_API_KEY</code> on Cloud Run yourself.
       <br><br>
       <b>Windsor, for the paid chart above.</b> One key fills Google Ads and Meta together: windsor.ai
       &#8594; API Keys &#8594; copy the key &#8594; set it as <code>WINDSOR_API_KEY</code> on the
@@ -402,38 +393,9 @@ async function load() {
   paintCampaigns();
   paintAds('google-ads-panel', 'Google Ads', d.googleAds || {}, 'google');
   paintAds('meta-ads-panel', 'Meta Ads', d.meta || {}, 'meta');
-  paintMoney(d);
   paintLeads(d.leads || {});
   paintSummary(d);
   fetchBrief(d);
-}
-
-// ── v13.54: the money row. Spend, leads, cost per lead, revenue, AOV. ──
-function paintMoney(d) {
-  const tiles = document.getElementById('money-tiles');
-  const note = document.getElementById('money-note');
-  if (!tiles) return;
-  const g = (d.googleAds && d.googleAds.d7) || {};
-  const f = (d.meta && d.meta.d7) || {};
-  const spend = Number(g.spend || 0) + Number(f.spend || 0);
-  const leads = d.leads || {};
-  const rev = d.revenue || {};
-  tiles.innerHTML =
-    tile('spend, 7 days', usd(spend)) +
-    tile('leads, 7 days', leads.connected ? n0(leads.d7) : '&#8212;') +
-    tile('cost per lead', d.costPerLead != null ? usd(d.costPerLead) : '&#8212;') +
-    tile('revenue, order book', rev.connected ? usd(rev.total) : '&#8212;') +
-    tile('average order', rev.connected && rev.orders ? usd(rev.aov) : '&#8212;');
-  const why = [];
-  if (!leads.connected) why.push('<b>Leads.</b> ' + esc(leads.why || '') +
-    ' The Wix API key needs the Forms read permission (regenerate it with All site permissions at manage.wix.com/account/api-keys, then update <code>WIX_API_KEY</code> on Cloud Run).');
-  if (!rev.connected) why.push('<b>Revenue.</b> ' + esc(rev.why || '') +
-    ' Share the order spreadsheet with <span id="sa-email2">the service account</span> as Viewer and set <code>REVENUE_SHEET_ID</code> on Cloud Run; or set <code>REVENUE_MTD</code> and <code>REVENUE_ORDERS</code> by hand.');
-  note.style.display = why.length ? '' : 'none';
-  note.innerHTML = why.join('<br><br>');
-  const sa2 = document.getElementById('sa-email2');
-  const sa1 = document.getElementById('sa-email');
-  if (sa2 && sa1) sa2.textContent = sa1.textContent;
 }
 
 // ── v13.54: the lead list. The submissions the spend actually produced. ──
@@ -442,7 +404,8 @@ function paintLeads(l) {
   const note = document.getElementById('leads-note');
   if (!tb) return;
   if (!l.connected) {
-    tb.innerHTML = '<tr><td style="color:var(--dim)">Not connected: the money row above says what is missing.</td></tr>';
+    tb.innerHTML = '<tr><td style="color:var(--dim)">Not connected. ' + esc(l.why || '') +
+      ' The Wix API key needs the Forms read permission.</td></tr>';
     note.style.display = 'none';
     return;
   }
@@ -454,10 +417,14 @@ function paintLeads(l) {
     const t = new Date(ts), days = Math.floor((Date.now() - t) / 86400000);
     return days === 0 ? 'today' : days === 1 ? 'yesterday' : days + ' days ago';
   };
-  tb.innerHTML = '<tr><th>Who</th><th>Reach them</th><th class="num">When</th></tr>' +
-    l.list.map(x => '<tr><td>' + esc(x.name) + '</td>' +
+  // v13.55: the third column is their NOTES, what they actually wrote on the
+  // form, because that is what tells you who they are. The date rides small
+  // under the name.
+  tb.innerHTML = '<tr><th>Who</th><th>Reach them</th><th>Notes</th></tr>' +
+    l.list.map(x => '<tr><td style="white-space:nowrap">' + esc(x.name) +
+      '<div class="lead-when">' + esc(when(x.ts)) + '</div></td>' +
       '<td>' + esc(x.email || x.phone || '') + '</td>' +
-      '<td class="num lead-when">' + esc(when(x.ts)) + '</td></tr>').join('');
+      '<td class="lead-note" title="' + esc(x.note || '') + '">' + esc(x.note || '') + '</td></tr>').join('');
 }
 
 // ── v13.54: the one-minute summary. The deterministic warnings render at

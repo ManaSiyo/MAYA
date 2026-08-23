@@ -16,6 +16,23 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 23, 2026, TRIM MARKETING (v13.55)
+
+[x] "Cancel everything about revenue. Remove the money in one row. That
+    was just my bad." Done: revenue code, envs, tiles and notes all
+    removed; a test now fails if revenue ever reappears there.
+[x] "Windsor got disconnected, what happened?" Checked live through his
+    own session minutes later: Windsor was connected and the chart was
+    drawing; the alarming text was the revenue setup note. Also hardened
+    so one network's feed failing never blanks the other.
+[x] "Leads, newest first, is good, but instead of When I would like
+    notes." Done: the third column is the client's own words from the
+    form; the date sits small under the name.
+[x] "D, W, M: make them a little closer, spacing-wise." Done.
+[x] "What do you mean Wix API? I thought we did that last night." We did:
+    the key set on Aug 22 already covers Forms, leads verified connected.
+    Nothing to do.
+
 AUGUST 23, 2026, MARKETING V2, THE INTELLIGENCE LAYER (v13.54)
 
 [x] (Pasted handoff spec "marketing.html v2".) "Bug fixes first": Meta
@@ -40,10 +57,8 @@ AUGUST 23, 2026, MARKETING V2, THE INTELLIGENCE LAYER (v13.54)
     numbers only (never lead names), degrades to warnings alone. Done.
 [x] "Hamburger menu" grouped and completed. Done.
 [ ] Voice (spec 5.2): deferred on purpose, text first. Next slice.
-[ ] Owner steps: share the order spreadsheet with the Cloud Run service
-    account (Viewer) and set REVENUE_SHEET_ID; if the money row says
-    leads are not connected, regenerate the Wix API key with All site
-    permissions and replace WIX_API_KEY on Cloud Run.
+[x] (Withdrawn next morning: revenue cancelled in v13.55, no owner steps
+    remain; the Wix key already covered Forms so leads needed nothing.)
 
 AUGUST 23, 2026, EVERY UPGRADE (v13.53)
 

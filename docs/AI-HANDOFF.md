@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 229 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 232 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -68,6 +68,28 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.55 (Claude): revenue cancelled, notes on the leads, steadier Windsor
+
+- REVENUE IS GONE, on Fromsa's direct request ("cancel everything about
+  revenue... that was just my bad"). sheetRevenue(), every REVENUE_* env,
+  the money row and its note were all removed; a regression assertion now
+  FAILS if the word revenue reappears in server.js or marketing.html. Do
+  not rebuild it without a fresh ask.
+- Windsor was NOT disconnected: verified live through Fromsa's session
+  right after his report (windsor.connected true, chart drawing, both
+  panels via windsor, brief answering). What he saw was the revenue
+  "not connected" note reading like a failure. Still hardened: the two
+  connector fetches are now independent, so one failing never blanks the
+  other; only both failing reports disconnected, with both reasons named.
+- Leads list: the When column became NOTES, the client's own words from
+  the form (server picks the longest free-text answer, 400 chars, skips
+  emails/phones); the date sits small under the name. Wix key question
+  answered: the key he set on Aug 22 already covers Forms, leads were
+  verified connected live (d7=2 at check time), no key work needed.
+- D / W / M chips sit closer (gap 3px).
+- costPerLead stays in the payload (it is leads + spend, not revenue) and
+  still feeds the hourly brief; nothing on screen shows it for now.
+
 ## v13.54 (Claude): Marketing v2, the intelligence layer
 
 Built from Fromsa's pasted handoff spec ("marketing.html v2"). Build order
@@ -94,15 +116,10 @@ text layer is answering well.
   Wix account: 20 real submissions returned. If the Cloud Run key was made
   analytics-only, leads report why and the page shows the fix (regenerate
   key with All site permissions). No pixel was added, per spec.
-- REVENUE (spec 2): sheetRevenue() batchGets REVENUE_SHEET_RANGES (default
-  'Batch 1!A1:H300,Batch 2!A1:H300') from REVENUE_SHEET_ID with the service
-  identity (spreadsheets.readonly), 1h cache; a row counts as an order when
-  its last numeric cell parses as a price; REVENUE_MTD/REVENUE_ORDERS are
-  the manual override. NEEDS OWNER SETUP: share the sheet with the service
-  account + set REVENUE_SHEET_ID (the fold on the page says how). Until
-  then the money row shows a dash, never a guess.
-- MONEY ROW: spend 7d, leads 7d, out.costPerLead = (google+meta spend)/leads,
-  revenue total, AOV. Lead list (12 newest) under the panels.
+- REVENUE (spec 2): built here, then CANCELLED and fully removed in
+  v13.55 on Fromsa's request. See the v13.55 section above.
+- out.costPerLead = (google+meta spend)/leads stays in the payload for the
+  brief. Lead list (12 newest) under the panels.
 - WARNINGS (spec 4): computeMarketingWarnings(), deterministic, no model:
   enabled ad group silent since date X (Windsor only reports days WITH
   delivery, so a never-served group is invisible; a served-then-silent one

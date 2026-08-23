@@ -2401,8 +2401,16 @@ async function wixLeads() {
       const v = s.submissions || {};
       const name = [field(v, /^first[_-]?name/i), field(v, /^last[_-]?name/i)]
         .filter(Boolean).join(' ') || field(v, /^name/i) || 'Unnamed';
+      // v13.55: the note is what they actually wrote: the longest free-text
+      // answer on the form, the "what are you picturing" in their own words.
+      let note = '';
+      for (const k of Object.keys(v)) {
+        const t = typeof v[k] === 'string' ? v[k].trim() : '';
+        if (t.length > note.length && t.length > 20 && !/@/.test(t.slice(0, 40)) && !/^\+?[\d\s()-]+$/.test(t)) note = t;
+      }
       return { ts: s.createdDate,
-               name, email: field(v, /^e?mail/i), phone: field(v, /^phone|^tel/i) };
+               name, email: field(v, /^e?mail/i), phone: field(v, /^phone|^tel/i),
+               note: note.slice(0, 400) };
     });
     const now = Date.now();
     const within = (ms) => leads.filter(l => now - new Date(l.ts).getTime() < ms).length;
@@ -2411,58 +2419,6 @@ async function wixLeads() {
       lastLeadTs: leads.length ? leads[0].ts : null,
       list: leads.slice(0, 12) };
     _leadsCache = { ts: Date.now(), data };
-    return data;
-  } catch (e) {
-    return { connected: false, why: String(e.message).slice(0, 200) };
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// v13.54: revenue, from the order book. The admin spreadsheet is the only
-// place revenue exists; this reads just the order rows through the Sheets
-// API with the Cloud Run identity. Share the sheet with the service account
-// (Viewer) and set REVENUE_SHEET_ID; adjust REVENUE_SHEET_RANGES only if
-// the tab names ever change. A row counts as an order when its last numeric
-// cell parses as a price. REVENUE_MTD / REVENUE_ORDERS override everything,
-// because a stale but present figure beats a perfect absent one.
-// ═══════════════════════════════════════════════════════════════════════════
-const REVENUE_SHEET = process.env.REVENUE_SHEET_ID || '';
-const REVENUE_RANGES = (process.env.REVENUE_SHEET_RANGES || 'Batch 1!A1:H300,Batch 2!A1:H300')
-  .split(',').map(s => s.trim()).filter(Boolean);
-let _revCache = { ts: 0, data: null };
-async function sheetRevenue() {
-  const manual = Number(process.env.REVENUE_MTD || 0);
-  if (manual > 0) {
-    const orders = Number(process.env.REVENUE_ORDERS || 0);
-    return { connected: true, manual: true, total: manual, orders,
-             aov: orders ? manual / orders : 0 };
-  }
-  if (!REVENUE_SHEET) return { connected: false, why: 'no REVENUE_SHEET_ID set' };
-  if (_revCache.data && Date.now() - _revCache.ts < 3600000) return _revCache.data;
-  try {
-    const tok = await serviceToken('https://www.googleapis.com/auth/spreadsheets.readonly');
-    const qs = REVENUE_RANGES.map(r => 'ranges=' + encodeURIComponent(r)).join('&');
-    const r = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' +
-      encodeURIComponent(REVENUE_SHEET) + '/values:batchGet?' + qs, {
-      headers: { 'Authorization': 'Bearer ' + tok }, signal: AbortSignal.timeout(12000),
-    });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error((j.error && j.error.message) || ('sheets ' + r.status));
-    let total = 0, orders = 0;
-    for (const range of (j.valueRanges || [])) {
-      for (const row of (range.values || [])) {
-        if (!Array.isArray(row) || !row.length) continue;
-        if (row.some(c => /price|revenue|total/i.test(String(c)))) continue;   // header
-        let price = NaN;
-        for (const cell of row) {
-          const n = Number(String(cell).replace(/[$,\s]/g, ''));
-          if (Number.isFinite(n) && n > 0) price = n;    // last numeric wins: the price column sits after the order number
-        }
-        if (Number.isFinite(price) && price > 0) { total += price; orders += 1; }
-      }
-    }
-    const data = { connected: true, total, orders, aov: orders ? total / orders : 0 };
-    _revCache = { ts: Date.now(), data };
     return data;
   } catch (e) {
     return { connected: false, why: String(e.message).slice(0, 200) };
@@ -2489,14 +2445,26 @@ async function windsorInsights() {
   };
   const num = v => Number(v || 0);
   try {
-    const [gRows, fRows, fAgg] = await Promise.all([
-      fetchRows('google_ads', 'date,campaign,campaign_status,ad_group_name,ad_group_status,impressions,clicks,spend'),
-      fetchRows('facebook', 'date,campaign,impressions,clicks,link_clicks,spend'),
+    // v13.55: one connector having a bad moment must never blank the other.
+    // Each is fetched independently; only when BOTH fail is Windsor called
+    // disconnected, and the reasons are named.
+    const [gRes, fRes, fAgg] = await Promise.all([
+      fetchRows('google_ads', 'date,campaign,campaign_status,ad_group_name,ad_group_status,impressions,clicks,spend')
+        .catch(e => e),
+      fetchRows('facebook', 'date,campaign,impressions,clicks,link_clicks,spend')
+        .catch(e => e),
       // No date dimension: Windsor then returns the connector's own 7 day
       // aggregate, where reach and frequency are truly deduplicated.
       fetchRows('facebook', 'spend,impressions,clicks,link_clicks,reach,frequency', 'last_7d')
         .then(rows => rows[0] || null).catch(() => null),
     ]);
+    const gErr = gRes instanceof Error ? gRes : null;
+    const fErr = fRes instanceof Error ? fRes : null;
+    if (gErr && fErr) {
+      return { connected: false, why: String(gErr.message + '; ' + fErr.message).slice(0, 160) };
+    }
+    const gRows = gErr ? [] : gRes;
+    const fRows = fErr ? [] : fRes;
     const mkSource = () => ({ impressions: 0, clicks: 0, linkClicks: 0, spend: 0, daily: {} });
     const bySource = { google_ads: mkSource(), facebook: mkSource() };
     const byCampaign = {};
@@ -2620,14 +2588,13 @@ app.get('/api/admin/marketing', async (req, res) => {
   } catch (e) {
     out.analytics = { connected: false, why: String(e.message).slice(0, 200) };
   }
-  const [meta, gads, windsor, wixSite, leads, revenue] = await Promise.all([
-    metaInsights(), googleAdsInsights(), windsorInsights(), wixInsights(), wixLeads(), sheetRevenue()]);
+  const [meta, gads, windsor, wixSite, leads] = await Promise.all([
+    metaInsights(), googleAdsInsights(), windsorInsights(), wixInsights(), wixLeads()]);
   out.wixSite = wixSite;
   out.meta = meta;
   out.googleAds = gads;
   out.windsor = windsor;
   out.leads = leads;
-  out.revenue = revenue;
   // Windsor fills whichever ad panel has no direct credentials of its own.
   if (windsor.connected) {
     const w = windsor.sources || {};

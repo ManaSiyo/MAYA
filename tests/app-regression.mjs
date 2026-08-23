@@ -1055,12 +1055,22 @@ ok('leads come from the Wix form record itself, no pixel, no Gmail parsing',
   SERVER_SOURCE.includes('out.leads = leads') &&
   MKT_SOURCE.includes('function paintLeads(') &&
   MKT_SOURCE.includes('id="leads-table"'));
-ok('the money row: spend, leads, cost per lead, revenue, average order',
+// v13.55: revenue was cancelled by Fromsa; nothing on the page or the
+// server may mention it, and no money row exists.
+ok('revenue is gone entirely, and cost per lead still feeds the brief',
   SERVER_SOURCE.includes('out.costPerLead') &&
-  SERVER_SOURCE.includes('async function sheetRevenue()') &&
-  SERVER_SOURCE.includes('REVENUE_SHEET_ID') &&
-  MKT_SOURCE.includes('function paintMoney(') &&
-  MKT_SOURCE.includes("tile('cost per lead'"));
+  !/revenue/i.test(SERVER_SOURCE) &&
+  !/revenue|paintMoney|money-tiles/i.test(MKT_SOURCE));
+ok('the lead list shows their notes, what they actually wrote',
+  SERVER_SOURCE.includes('note: note.slice(0, 400)') &&
+  MKT_SOURCE.includes('<th>Notes</th>') &&
+  MKT_SOURCE.includes('class="lead-note"') &&
+  !MKT_SOURCE.includes('<th class="num">When</th>'));
+ok('one Windsor connector failing never blanks the other',
+  SERVER_SOURCE.includes('const gErr = gRes instanceof Error') &&
+  SERVER_SOURCE.includes('if (gErr && fErr)'));
+ok('the D W M chips sit close together',
+  MKT_SOURCE.includes('display:inline-flex;gap:3px" id="range-chips"'));
 ok('deterministic warnings exist and never depend on a model call',
   SERVER_SOURCE.includes('function computeMarketingWarnings(') &&
   SERVER_SOURCE.includes('is enabled but has served nothing since') &&
