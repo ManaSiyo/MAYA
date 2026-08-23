@@ -56,6 +56,17 @@ await check('savepieces needs a token',           post('/api/admin/savepieces'),
 await check('analytics needs a token',            get('/api/admin/analytics'), 401);
 await check('fabric sourcing needs a token',      get('/api/source-fabric?q=wool'), 401);
 await check('fabric ranking needs a token',       post('/api/rank-fabric', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
+await check('fabric visualizing needs a token',   post('/api/visualize-fabric', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
+await check('openai refuses a model off the list', async () => {
+  // v13.53: even with a syntactically valid Bearer, an unknown model must be
+  // turned away. The bad token dies first with 401 here (no Google upstream
+  // in the smoke run), so this asserts the route still answers, not hangs.
+  return fetch(BASE + '/api/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer not-a-real-token', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'gpt-99-experimental', messages: [] }),
+  });
+}, 401);
 await check('runway is dormant',                  post('/api/runway', AUTH), 501);
 await check('fal is dormant',                     post('/api/fal/fal-ai/hyper3d/rodin', AUTH), 501);
 await check('fal storage is dormant',             post('/api/falstorage/storage/upload/initiate', AUTH), 501);

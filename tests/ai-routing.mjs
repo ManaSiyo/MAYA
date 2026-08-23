@@ -31,10 +31,16 @@ const tasksWith = routes => ({
 
 console.log('\nMAYA AI routing test\n');
 
-await test('live fabric ranking keeps the exact v13.51 route', async () => {
+await test('live fabric ranking rides the tier env with the proven fallback', async () => {
+  // v13.53: the primary route follows RANK_MODEL / MODEL_TERRA (default
+  // gpt-5.6-terra) and the proven previous model stays registered behind it.
   const task = AI_TASKS['fabric.visual_rank'];
-  assert.equal(task.routes.length, 1);
+  const expected = process.env.RANK_MODEL || process.env.MODEL_TERRA || 'gpt-5.6-terra';
+  assert.equal(task.routes.length, 2);
   assert.deepEqual(task.routes[0], {
+    provider: 'openai', model: expected, endpoint: 'v1/chat/completions', timeoutMs: 60_000,
+  });
+  assert.deepEqual(task.routes[1], {
     provider: 'openai', model: 'gpt-4.1', endpoint: 'v1/chat/completions', timeoutMs: 60_000,
   });
 });

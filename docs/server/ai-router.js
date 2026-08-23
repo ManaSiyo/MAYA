@@ -18,12 +18,20 @@ const freezeTask = task => Object.freeze({
 // v13.52 begins with one exercised task and the exact v13.51 route. More
 // tasks join this registry only when their current behavior is covered by an
 // eval and the browser no longer chooses their provider or model directly.
+// v13.53: the route follows the tier env vars, with the proven previous
+// model kept as the registered fallback route.
+const RANK_MODEL = process.env.RANK_MODEL || process.env.MODEL_TERRA || 'gpt-5.6-terra';
 export const AI_TASKS = Object.freeze({
   'fabric.visual_rank': freezeTask({
-    version: '1',
+    version: '2',
     mode: 'background',
     dataClass: 'private-project-image',
     routes: [{
+      provider: 'openai',
+      model: RANK_MODEL,
+      endpoint: 'v1/chat/completions',
+      timeoutMs: 60_000,
+    }, {
       provider: 'openai',
       model: 'gpt-4.1',
       endpoint: 'v1/chat/completions',

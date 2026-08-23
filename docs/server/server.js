@@ -228,6 +228,30 @@ const OPENAI_ALLOWED = new Set([
 ]);
 
 // ═══════════════════════════════════════════════════════════════════════════
+// v13.53: the tier map. The browser still says gpt-4.1 or gpt-4o-mini, and
+// the server quietly upgrades those names to the current tier models, so a
+// model change is an env var change (instant rollback), never a client edit.
+// Anything not named below is refused — the proxied key can no longer be
+// pointed at arbitrary models by editing localStorage.
+//   Terra: everyday reasoning and vision.   Luna: short cheap utility.
+//   Sol: streamed expert pattern critique (Operations Room asks by name).
+// ═══════════════════════════════════════════════════════════════════════════
+const MODEL_TERRA = process.env.MODEL_TERRA || 'gpt-5.6-terra';
+const MODEL_LUNA  = process.env.MODEL_LUNA  || 'gpt-5.6-luna';
+const MODEL_SOL   = process.env.MODEL_SOL   || 'gpt-5.6-sol';
+const MODEL_UPGRADES = Object.freeze({
+  'gpt-4.1':     MODEL_TERRA,
+  'gpt-4o-mini': MODEL_LUNA,
+});
+const MODEL_ALLOWED = new Set([
+  MODEL_TERRA, MODEL_LUNA, MODEL_SOL,
+  'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.6-sol',
+  'gpt-image-2',              // renders ARE the product, untouched
+  'whisper-1',                // transcription, untouched
+  'text-embedding-3-small',   // pattern book retrieval, untouched
+]);
+
+// ═══════════════════════════════════════════════════════════════════════════
 // Google ID-token verification (same JWKS check the Vercel functions used)
 // ═══════════════════════════════════════════════════════════════════════════
 let _googleKeysCache = { keys: null, exp: 0 };
@@ -419,17 +443,87 @@ app.all(/^\/api\/openai\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', li
       }
     }
   }
+  // ═══ v13.53: model allowlist + tier map, applied to the actual body ═══
+  // JSON bodies (chat, embeddings, image generations) are parsed once here;
+  // a legacy name is upgraded to its tier model, an allowed name passes, and
+  // anything else is refused before a single byte reaches OpenAI.
+  let bodyBuf = (req.method === 'GET' || req.method === 'HEAD') ? undefined
+              : (req.body && req.body.length ? req.body : undefined);
+  let sentModel = '', originalModel = '', fallbackBuf = null, streamRequested = false;
+  const ctIn = req.headers['content-type'] || '';
+  if (bodyBuf && /json/i.test(ctIn) && bodyBuf.length < 2000000) {
+    let parsed = null;
+    try { parsed = JSON.parse(bodyBuf.toString('utf8')); } catch (_) {}
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      streamRequested = parsed.stream === true;
+      const asked = String(parsed.model || '');
+      if (asked) {
+        if (MODEL_UPGRADES[asked]) {
+          originalModel = asked;
+          parsed.model = MODEL_UPGRADES[asked];
+          sentModel = parsed.model;
+          bodyBuf = Buffer.from(JSON.stringify(parsed), 'utf8');
+          // The safety net: if the upgraded model is refused upstream, this
+          // exact body with the original model goes out once instead.
+          parsed.model = asked;
+          fallbackBuf = Buffer.from(JSON.stringify(parsed), 'utf8');
+        } else if (MODEL_ALLOWED.has(asked)) {
+          sentModel = asked;
+        } else {
+          console.warn('[ai] model_not_allowed', asked, upstreamPath, 'user=' + user.email);
+          return res.status(403).json({ error: 'model_not_allowed', detail: asked });
+        }
+      }
+    }
+  } else if (bodyBuf && /multipart/i.test(ctIn)) {
+    // Audio and image edits arrive as multipart; read just the model field
+    // from the head and hold the same line. No rewriting here — the only
+    // legitimate multipart models are already on the allowlist.
+    const head = bodyBuf.subarray(0, Math.min(bodyBuf.length, 65536)).toString('latin1');
+    const m = head.match(/name="model"\r?\n\r?\n([^\r\n]{0,60})/);
+    if (m) {
+      const asked = m[1].trim();
+      if (!MODEL_ALLOWED.has(asked)) {
+        console.warn('[ai] model_not_allowed (multipart)', asked, upstreamPath, 'user=' + user.email);
+        return res.status(403).json({ error: 'model_not_allowed', detail: asked });
+      }
+      sentModel = asked;
+    }
+  }
+
   const headers = { 'Authorization': 'Bearer ' + openaiKey };
   if (req.headers['content-type']) headers['Content-Type'] = req.headers['content-type'];
 
+  const doUpstream = (buf) => fetch('https://api.openai.com/' + upstreamPath, {
+    method: req.method,
+    headers,
+    body: (req.method === 'GET' || req.method === 'HEAD') ? undefined
+          : (buf && buf.length ? buf : undefined),
+    signal: AbortSignal.timeout(285000),
+  });
+
+  const t0 = Date.now();
   try {
-    const upstream = await fetch('https://api.openai.com/' + upstreamPath, {
-      method: req.method,
-      headers,
-      body: (req.method === 'GET' || req.method === 'HEAD') ? undefined
-            : (req.body && req.body.length ? req.body : undefined),
-      signal: AbortSignal.timeout(285000),
-    });
+    let upstream = await doUpstream(bodyBuf);
+    // v13.53 safety net: an upgraded model the account cannot use yet must
+    // never break the product. On a model-shaped 400/404, the ORIGINAL model
+    // is retried once and the miss is logged loudly for the changelog.
+    if (!upstream.ok && fallbackBuf && (upstream.status === 400 || upstream.status === 404)) {
+      const errBuf = Buffer.from(await upstream.arrayBuffer());
+      const errTxt = errBuf.toString('utf8').slice(0, 600);
+      if (/model/i.test(errTxt) &&
+          /(not\s?found|does not exist|unknown|invalid|no access|not supported|denied)/i.test(errTxt)) {
+        console.warn('[ai] tier fallback', sentModel, '→', originalModel, upstreamPath, '—', errTxt.slice(0, 200));
+        sentModel = originalModel;
+        originalModel = '';
+        upstream = await doUpstream(fallbackBuf);
+      } else {
+        const ctErr = upstream.headers.get('content-type');
+        if (ctErr) res.setHeader('Content-Type', ctErr);
+        console.error('[openai]', upstream.status, upstreamPath, 'user=' + user.email, '—', errTxt);
+        return res.status(upstream.status).send(errBuf);
+      }
+    }
     const ct = upstream.headers.get('content-type');
     if (ct) res.setHeader('Content-Type', ct);
     if (!upstream.ok) {
@@ -442,6 +536,29 @@ app.all(/^\/api\/openai\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', li
     // v13.28: the meter. MAYA counts its own spending here, because OpenAI
     // will not tell an application key what the balance is.
     noteSpend(upstreamPath, req);
+    // v13.53: one structured line per AI call. For small non-streamed JSON
+    // answers (chat, embeddings) the real token usage is read from the body;
+    // streamed and binary responses log without it and keep flowing.
+    const wantUsage = sentModel && !streamRequested && /json/i.test(ct || '') &&
+                      /^v1\/(chat\/completions|embeddings)$/.test(upstreamPath);
+    if (wantUsage) {
+      const outBuf = Buffer.from(await upstream.arrayBuffer());
+      try {
+        const j = JSON.parse(outBuf.toString('utf8'));
+        const u = j.usage || {};
+        console.log('[ai]', JSON.stringify({ path: upstreamPath, model: sentModel,
+          from: originalModel || undefined, ms: Date.now() - t0,
+          tokens_in: u.prompt_tokens ?? u.input_tokens ?? 0,
+          tokens_out: u.completion_tokens ?? u.output_tokens ?? 0,
+          user: user.email }));
+      } catch (_) {}
+      return res.end(outBuf);
+    }
+    if (sentModel) {
+      console.log('[ai]', JSON.stringify({ path: upstreamPath, model: sentModel,
+        from: originalModel || undefined, ms: Date.now() - t0, streamed: true,
+        user: user.email }));
+    }
     // v13.21: do not hold a complete image response in Cloud Run memory.
     // Successful responses flow to the browser as they arrive; errors remain
     // buffered briefly above so their useful diagnostics can be logged.
@@ -1899,6 +2016,94 @@ app.post('/api/rank-fabric', requireAuthHeader, express.json({ limit: '8mb' }), 
     console.error('[fabric-rank] failed request=' + (e.requestId || 'unknown') +
       ' category=' + (e.category || 'unknown'));
     return res.status(502).json({ error: 'ranking_failed' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// v13.53: Nano Banana. POST /api/visualize-fabric renders a GENERATED
+// illustration for a fabric card that has no real photograph, using Google's
+// image model on Vertex AI inside this same Google Cloud project, so the
+// request never leaves Google's network. Atelier only, image-weighted on the
+// allowance. The answer is always labeled GENERATED: it is an illustration
+// of the dissected traits, never a photograph of purchasable fabric, and it
+// must never be presented as sourcing truth.
+// Requires the Vertex AI API (aiplatform.googleapis.com) enabled on the
+// project; until then the endpoint answers 503 vertex_not_enabled.
+// ═══════════════════════════════════════════════════════════════════════════
+const NANO_BANANA_MODEL = process.env.NANO_BANANA_MODEL || 'gemini-3.1-flash-image';
+const VERTEX_LOCATION = process.env.VERTEX_LOCATION || 'us-central1';
+let _vertexProject = '';
+async function vertexProject() {
+  if (_vertexProject) return _vertexProject;
+  if (process.env.VERTEX_PROJECT) return (_vertexProject = process.env.VERTEX_PROJECT);
+  const r = await fetch('http://metadata.google.internal/computeMetadata/v1/project/project-id', {
+    headers: { 'Metadata-Flavor': 'Google' }, signal: AbortSignal.timeout(5000) });
+  if (!r.ok) throw new Error('metadata project ' + r.status);
+  _vertexProject = (await r.text()).trim();
+  return _vertexProject;
+}
+
+app.post('/api/visualize-fabric', requireAuthHeader, express.json({ limit: '1mb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email, 4);   // priced like an image, because it is one
+  if (!rl.ok) {
+    res.setHeader('Retry-After', String(rl.retry));
+    return res.status(429).json({ error: 'rate_limited', scope: rl.scope });
+  }
+
+  const f = (req.body || {}).fabric || {};
+  const clean = (v, n) => String(v || '').replace(/[^\w\s#.,%-]/g, '').slice(0, n).trim();
+  const bits = [clean(f.color, 40), clean(f.fiber, 60), clean(f.weave, 60)].filter(Boolean);
+  if (!bits.length) return res.status(400).json({ error: 'missing_fabric_traits' });
+  const extra = [clean(f.texture, 60), f.sheen ? clean(f.sheen, 24) + ' sheen' : '',
+                 Number(f.weight_gsm) > 0 ? Math.round(Number(f.weight_gsm)) + ' gsm weight class' : '']
+                .filter(Boolean).join(', ');
+  const hex = /^#[0-9a-fA-F]{6}$/.test(String(f.hex || '')) ? String(f.hex) : '';
+  const prompt = 'A flat, evenly lit macro photograph style illustration of a single fabric swatch filling the whole frame: '
+    + bits.join(' ') + (extra ? ', ' + extra : '') + (hex ? '. The dominant color is exactly ' + hex + '.' : '.')
+    + ' Show the weave texture clearly. No garments, no hands, no props, no text.';
+
+  try {
+    const [tok, project] = await Promise.all([
+      serviceToken('https://www.googleapis.com/auth/cloud-platform'), vertexProject(),
+    ]);
+    const url = 'https://' + VERTEX_LOCATION + '-aiplatform.googleapis.com/v1/projects/' + project +
+      '/locations/' + VERTEX_LOCATION + '/publishers/google/models/' + NANO_BANANA_MODEL + ':generateContent';
+    const t0 = Date.now();
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { responseModalities: ['IMAGE'] },
+      }),
+      signal: AbortSignal.timeout(60000),
+    });
+    if (!r.ok) {
+      const txt = (await r.text()).slice(0, 600);
+      console.error('[visualize] vertex', r.status, '—', txt);
+      if (r.status === 403 && /aiplatform|SERVICE_DISABLED|has not been used/i.test(txt)) {
+        return res.status(503).json({ error: 'vertex_not_enabled',
+          detail: 'Enable the Vertex AI API (aiplatform.googleapis.com) on this Google Cloud project, then try again.' });
+      }
+      if (r.status === 404) {
+        return res.status(503).json({ error: 'vertex_model_unavailable', detail: NANO_BANANA_MODEL });
+      }
+      return res.status(502).json({ error: 'visualize_failed' });
+    }
+    const j = await r.json();
+    const parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
+    const img = parts.find(p => p.inlineData && /^image\//.test(p.inlineData.mimeType || ''));
+    if (!img || !img.inlineData.data) return res.status(502).json({ error: 'no_image_returned' });
+    console.log('[ai]', JSON.stringify({ path: 'vertex:' + NANO_BANANA_MODEL, model: NANO_BANANA_MODEL,
+      ms: Date.now() - t0, user: user.email }));
+    return res.json({ ok: true, label: 'GENERATED',
+      image: 'data:' + img.inlineData.mimeType + ';base64,' + img.inlineData.data });
+  } catch (e) {
+    console.error('[visualize] exception —', e.message);
+    return res.status(502).json({ error: 'visualize_failed', detail: e.message });
   }
 });
 

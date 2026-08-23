@@ -16,6 +16,26 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 23, 2026, EVERY UPGRADE (v13.53)
+
+[x] "Proceed with the next steps. Major changes are: upgrading every model
+    to what was recommended. Updating the privacy. Nano Banana as well, as
+    we discussed. All, everything, every upgrade." Done. The server upgrades
+    gpt-4.1 to GPT 5.6 Terra and gpt-4o-mini to Luna at the proxy, the
+    Operations Room judge and pattern loop speak with Sol, and a model that
+    is refused upstream falls back once to the proven one, so nothing can
+    break. The proxy now refuses any model not on MAYA's own allowlist,
+    which closes the hole both review memos ranked first. Every AI call
+    logs its real token usage. The privacy page says plainly who does the
+    thinking. Nano Banana visualizes gradient-only fabric cards through
+    Vertex AI inside our own project, labeled Generated.
+[ ] Owner step for Nano Banana: enable the Vertex AI API
+    (aiplatform.googleapis.com) on the pro-maya project. Until then the
+    Visualize chip answers "Not enabled yet" and everything else works.
+[ ] Deferred on purpose: the Gemini shadow evaluation for ranking and
+    dissection waits for the eval suite, so a promotion is evidence, not
+    fashion.
+
 AUGUST 22, 2026, MODEL ROUTING FOUNDATION (v13.52)
 
 [x] "Start the model upgrade with the foundation only: provider-neutral task

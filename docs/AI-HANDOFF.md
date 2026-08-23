@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 211 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 220 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -67,6 +67,56 @@ ad panels (impressions, clicks, spend, last 7 days) through Windsor. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.53 (Claude): the tier upgrade, the allowlist, privacy, Nano Banana
+
+- THE PROXY DECIDES THE MODEL NOW. `/api/openai/*` parses JSON bodies:
+  `gpt-4.1` is upgraded to `MODEL_TERRA` (default `gpt-5.6-terra`),
+  `gpt-4o-mini` to `MODEL_LUNA` (default `gpt-5.6-luna`), the `gpt-5.6-*`
+  names pass, `gpt-image-2` / `whisper-1` / `text-embedding-3-small` pass
+  unchanged, and ANY other model answers 403 `model_not_allowed` (multipart
+  model fields are checked too). This closes the localStorage `getModel()`
+  hole named as the top risk in both review memos. The client pages still
+  say the legacy names on purpose: rollback is env only
+  (`MODEL_TERRA=gpt-4.1`, `MODEL_LUNA=gpt-4o-mini`), no client edit.
+- SAFETY NET: if the upgraded model comes back as a model-shaped 400/404
+  (not found, no access, not supported), the proxy retries ONCE with the
+  original model and logs `[ai] tier fallback`. A missing GPT 5.6
+  entitlement therefore degrades to exactly v13.52 behavior, silently.
+- STRUCTURED SPEND: every proxied AI call now logs one `[ai]` JSON line:
+  path, model actually used, mapped-from, ms, and for non-streamed chat and
+  embeddings the REAL prompt/completion tokens from the response body.
+- Operations Room: the pattern critique judge and the streamed pattern loop
+  ask for `gpt-5.6-sol` by name (Sol = streamed expert pattern critique
+  only, per the agreed plan). classifyGarment stays on the mapped name.
+- Fabric ranking: `fabric-sourcing.js` model is `RANK_MODEL || MODEL_TERRA
+  || gpt-5.6-terra`; the ai-router `fabric.visual_rank` task (version 2) has
+  that as its primary route and the proven `gpt-4.1` as its registered
+  fallback route.
+- NANO BANANA: POST `/api/visualize-fabric` (requireAdmin, image-weighted
+  rate limit) asks `NANO_BANANA_MODEL` (default `gemini-3.1-flash-image`)
+  on Vertex AI in `VERTEX_LOCATION` (default `us-central1`) via the Cloud
+  Run service identity (metadata token, cloud-platform scope; project id
+  from the metadata server or `VERTEX_PROJECT`). It illustrates a dissected
+  fabric spec; the answer is always `label: GENERATED`. In backend.html,
+  gradient-only sourcing cards wear a Visualize chip; the result replaces
+  the gradient and wears a Generated badge, and the card still opens the
+  merchant's real search. NEEDS OWNER SETUP: enable `aiplatform.googleapis.com`
+  on the project, else the endpoint answers 503 `vertex_not_enabled` and the
+  chip says "Not enabled yet" (that state is handled, not an error).
+- Privacy page: new dateline Aug 23; the OpenAI paragraph now says plainly
+  that consultation words, transcripts, measurements, reference pictures,
+  fabric photographs and the face photograph go to OpenAI's API; a Google AI
+  paragraph covers Vertex fabric imagery, generated-and-labeled, inside our
+  own project.
+- HONESTLY DEFERRED: the Gemini 3.7 Flash shadow evaluation for ranking and
+  dissection is NOT in this slice. It waits for the eval suite
+  (tests/eval/), per the architecture memo. No other Google surface exists.
+- Env summary (all optional): MODEL_TERRA, MODEL_LUNA, MODEL_SOL,
+  RANK_MODEL, NANO_BANANA_MODEL, VERTEX_LOCATION, VERTEX_PROJECT.
+- Do not put a model allowlist bypass back; do not let the browser name a
+  model that is not on MODEL_ALLOWED; do not present a Visualize picture as
+  a merchant photograph.
 
 ## v13.52 (Codex): routing foundation and one image model
 
@@ -108,9 +158,9 @@ The fabric sourcing revamp shipped in v13.44; see that section below.
   No production call was made. The next implementation stages remain: task-
   by-task OpenAI tier evaluation; owner-configured Gemini vision canaries after
   approval; normalized catalog/embedding retrieval; and versioned production
-  memory for real Mana Siyo corrections. Exact next step: Fromsa reviews this
-  unpushed v13.52 commit, then presses Push if approved. Cloud Build will rerun
-  the routing and fabric contracts before the server image is built.
+  memory for real Mana Siyo corrections. Claude verified this slice on the
+  Mac (all four suites green) and committed it on Codex's behalf as 57f9cea;
+  v13.53 builds directly on it.
 
 ## v13.50 (Claude): the live merchant window
 

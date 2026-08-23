@@ -987,6 +987,52 @@ ok('fabric sourcing looks across the world, four wide, swiped sideways',
   BACKEND_SOURCE.includes('scroll-snap-type: x mandatory') &&
   BACKEND_SOURCE.includes('function _buildFullViewCards()') &&
   BACKEND_SOURCE.includes('_loadInhouseFabrics().then(items =>'));
+// ── v13.53: the tier upgrade, guarded, with Nano Banana ────────────────────
+ok('the proxy holds a model allowlist and upgrades legacy names by tier',
+  SERVER_SOURCE.includes('const MODEL_UPGRADES') &&
+  SERVER_SOURCE.includes('const MODEL_ALLOWED') &&
+  SERVER_SOURCE.includes("process.env.MODEL_TERRA || 'gpt-5.6-terra'") &&
+  SERVER_SOURCE.includes("process.env.MODEL_LUNA  || 'gpt-5.6-luna'") &&
+  SERVER_SOURCE.includes("'gpt-4.1':     MODEL_TERRA") &&
+  SERVER_SOURCE.includes("'gpt-4o-mini': MODEL_LUNA") &&
+  SERVER_SOURCE.includes("error: 'model_not_allowed'"));
+ok('an upgraded model that fails upstream falls back to the proven one, once',
+  SERVER_SOURCE.includes('fallbackBuf') &&
+  SERVER_SOURCE.includes("'[ai] tier fallback'") &&
+  /if \(!upstream\.ok && fallbackBuf && \(upstream\.status === 400 \|\| upstream\.status === 404\)\)/.test(SERVER_SOURCE));
+ok('every AI call writes one structured line with real token usage',
+  SERVER_SOURCE.includes("console.log('[ai]', JSON.stringify({ path: upstreamPath, model: sentModel") &&
+  SERVER_SOURCE.includes('u.prompt_tokens ?? u.input_tokens') &&
+  SERVER_SOURCE.includes('u.completion_tokens ?? u.output_tokens'));
+ok('renders, transcription and embeddings kept their specialized models',
+  SERVER_SOURCE.includes("'gpt-image-2'") &&
+  SERVER_SOURCE.includes("'whisper-1'") &&
+  SERVER_SOURCE.includes("'text-embedding-3-small'"));
+ok('the Operations Room judge and pattern loop speak with Sol',
+  (!OPS_SOURCE || (
+    /model:'gpt-5\.6-sol', temperature:0/.test(OPS_SOURCE) &&
+    /model:'gpt-5\.6-sol', stream:true/.test(OPS_SOURCE) &&
+    OPS_SOURCE.includes("model:'text-embedding-3-small'"))));
+ok('the ranking model rides the tier env instead of a hardcoded name',
+  FABRIC_SOURCE.includes("process.env.RANK_MODEL || process.env.MODEL_TERRA || 'gpt-5.6-terra'") &&
+  AI_ROUTER_SOURCE.includes('const RANK_MODEL') &&
+  AI_ROUTER_SOURCE.includes('model: RANK_MODEL'));
+ok('the privacy page says who does the thinking and what they receive',
+  PRIVACY_SOURCE.includes('OpenAI does MAYA') &&
+  PRIVACY_SOURCE.includes('the measurements you add') &&
+  PRIVACY_SOURCE.includes('<b>Google AI.</b>') &&
+  PRIVACY_SOURCE.includes('generated illustration'));
+ok('Nano Banana visualizes traits inside our own cloud, admin only, labeled',
+  SERVER_SOURCE.includes("app.post('/api/visualize-fabric'") &&
+  SERVER_SOURCE.includes('NANO_BANANA_MODEL') &&
+  SERVER_SOURCE.includes('aiplatform.googleapis.com') &&
+  SERVER_SOURCE.includes("label: 'GENERATED'") &&
+  /visualize-fabric', requireAuthHeader[\s\S]{0,200}requireAdmin/.test(SERVER_SOURCE));
+ok('a gradient-only fabric card offers Visualize and wears Generated after',
+  BACKEND_SOURCE.includes('class="fab-visualize"') &&
+  BACKEND_SOURCE.includes('function visualizeFabricCard(') &&
+  BACKEND_SOURCE.includes("lbl.textContent = 'Generated'") &&
+  BACKEND_SOURCE.includes("'/api/visualize-fabric'"));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

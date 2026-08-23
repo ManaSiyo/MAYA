@@ -709,6 +709,23 @@
     box-shadow: 0 2px 10px rgba(0,0,0,0.25);
   }
   .fab-card:hover .fab-swatch { border-color: rgba(255,255,255,0.5); }
+  /* v13.53: a gradient-only card can ask Nano Banana for an illustration. */
+  .fab-visualize {
+    position: absolute; bottom: 7px; right: 7px; z-index: 2;
+    padding: 3px 8px; border-radius: 100px; cursor: pointer;
+    font-family: 'Jost', sans-serif; font-size: 10px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: rgba(245,250,255,0.85);
+    background: rgba(10,14,26,0.72); border: 0.5px solid rgba(255,255,255,0.28);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  }
+  .fab-visualize:hover { color: #fff; border-color: rgba(255,255,255,0.55); }
+  .fab-gen-label {
+    position: absolute; bottom: 7px; left: 7px; z-index: 2;
+    padding: 2px 7px; border-radius: 100px;
+    font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: rgba(245,250,255,0.9);
+    background: rgba(10,14,26,0.75); border: 0.5px solid rgba(255,255,255,0.3);
+  }
   .fab-card-body { padding: 6px 2px 0; flex-shrink: 0; }
   .fab-title {
     font-family: 'Cormorant Garamond', serif; font-size: 14px; line-height: 1.2;
@@ -4169,9 +4186,14 @@ function _fabCardHtml(c) {
   const score = Number.isFinite(Number(c.matchScore))
     ? '<span class="fab-match-score">' + Math.round(Number(c.matchScore)) + '% match</span>' : '';
   const reason = c.reason ? '<div class="fab-reason">' + escapeHtml(c.reason) + '</div>' : '';
+  // v13.53: a card with no real photograph offers Visualize, a Nano Banana
+  // illustration of the dissected traits. The result is always labeled
+  // GENERATED because it is an illustration, never the merchant's fabric.
+  const vis = (!c.img && !c._inhouse)
+    ? '<span class="fab-visualize" onclick="visualizeFabricCard(event,&quot;' + encodeURIComponent(c.url) + '&quot;)">Visualize</span>' : '';
   const swatch = c.img
     ? '<div class="fab-swatch" style="background:' + fallback + '">' + score + '<img loading="lazy" src="' + c.img + '" alt="" onerror="this.style.display=&quot;none&quot;"></div>'
-    : '<div class="fab-swatch" style="background:' + fallback + '"></div>';
+    : '<div class="fab-swatch" style="background:' + fallback + '">' + vis + '</div>';
   return '<a class="fab-card" href="' + c.url + '" target="_blank" rel="noopener noreferrer" title="' + escapeHtml(c.merchant + ', ' + c.title) + '">' +
     '<span class="fab-heart' + (fav?' on':'') + '" onclick="toggleFavorite(event,&quot;' + encodeURIComponent(c.url) + '&quot;)" title="Favorite">' +'<svg class="heart-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"/></svg>' +'</span>' +
     swatch +
@@ -4433,6 +4455,62 @@ async function _fetchLiveSourcing(fabricStr, piece) {
     if (!matches.length) return;            // the static wall stands
     paint(matches);
   } catch (_) { /* the static wall stands */ }
+}
+
+// ── v13.53: Nano Banana fabric visualization ──────────────────────────
+// A gradient-only card carries no real photograph. Visualize asks MAYA's
+// server to illustrate the dissected traits with Google's image model.
+// The picture is decoration for the eye, labeled GENERATED, and the card
+// still opens the merchant's real search; it is never sourcing truth.
+const _visualizeCache = {};
+async function visualizeFabricCard(ev, encUrl) {
+  ev.preventDefault(); ev.stopPropagation();
+  const chip = ev.target;
+  const card = chip.closest('.fab-card');
+  const sw = card && card.querySelector('.fab-swatch');
+  if (!sw || chip.dataset.busy) return;
+  const piece = _fabActivePiece();
+  const spec = (piece && piece.fabric_spec) || {};
+  const c = _lastCardsByUrl[decodeURIComponent(encUrl)] || {};
+  const fabric = {
+    color: (c.color || (piece && piece.fabric) || '').toString().slice(0, 40),
+    hex: (piece && piece.fabric_hex) || '',
+    fiber: spec.fiber || '', weave: spec.weave || '',
+    texture: spec.texture || '', sheen: spec.sheen || '',
+    weight_gsm: spec.weight_gsm || 0,
+  };
+  if (!fabric.color && !fabric.fiber && !fabric.weave) {
+    chip.textContent = 'Dissect first'; setTimeout(() => { chip.textContent = 'Visualize'; }, 1800);
+    return;
+  }
+  const key = JSON.stringify(fabric);
+  const apply = (img) => {
+    sw.style.background = '#0b0e16 url(' + img + ') center / cover no-repeat';
+    chip.remove();
+    if (!sw.querySelector('.fab-gen-label')) {
+      const lbl = document.createElement('span');
+      lbl.className = 'fab-gen-label'; lbl.textContent = 'Generated';
+      sw.appendChild(lbl);
+    }
+  };
+  if (_visualizeCache[key]) { apply(_visualizeCache[key]); return; }
+  chip.dataset.busy = '1'; chip.textContent = 'Weaving';
+  try {
+    const tok = localStorage.getItem('maya_admin_tok') || '';
+    const r = await fetch('/api/visualize-fabric', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fabric }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && j.image) { _visualizeCache[key] = j.image; apply(j.image); return; }
+    chip.textContent = (j.error === 'vertex_not_enabled') ? 'Not enabled yet' : 'Try again';
+  } catch (_) {
+    chip.textContent = 'Try again';
+  } finally {
+    delete chip.dataset.busy;
+    if (chip.isConnected) setTimeout(() => { if (chip.isConnected) chip.textContent = 'Visualize'; }, 2200);
+  }
 }
 
 function setPatternPage(page) {

@@ -102,7 +102,10 @@ export function buildVisualRankingRequest({ garmentImage, traits, products }) {
   return {
     candidates,
     requestBody: {
-      model: 'gpt-4.1',
+      // v13.53: the ranking model rides the tier map. RANK_MODEL overrides
+      // it alone; otherwise it follows MODEL_TERRA like every other everyday
+      // vision task. An env change is the whole rollback.
+      model: process.env.RANK_MODEL || process.env.MODEL_TERRA || 'gpt-5.6-terra',
       messages: [
         { role: 'system', content:
           'You are a fabric sourcing vision specialist. Compare the target garment fabric with every retailer thumbnail. Rank by visible color, texture, weave, sheen, print, and apparent weight or drape. Use the inferred traits only as supporting evidence. These are closest visual matches, never exact matches. Return strict JSON: {"rankings":[{"id":"fabric-1","score":87,"reason":"Similar muted color and softly brushed twill surface"}]}. Score 0 to 100. Include every candidate once. Reasons must be specific and no more than 14 words.' },

@@ -33,12 +33,32 @@ Every private result and cache key remains sealed by account and project.
 Public retailer catalog records may be shared, but client images, faces,
 transcripts, measurements and decisions may not cross those boundaries.
 
-## Live model roles at v13.52
+## Live model roles at v13.53
 
-- Consultation, descriptors, garment/fabric vision and pattern critique:
-  OpenAI `gpt-4.1` unless the individual call is explicitly pinned otherwise.
-- Fast live extraction, one-term fallback and safety rewrite: OpenAI
-  `gpt-4o-mini`.
+v13.53 is the tier upgrade. The server, not the browser, decides the model:
+the `/api/openai/*` proxy parses each JSON body, upgrades the legacy names by
+tier, refuses any model not on its allowlist, and writes one structured
+`[ai]` log line per call with the model actually used and real token usage.
+
+Tier env vars on Cloud Run (all optional, defaults shown):
+
+- `MODEL_TERRA` = `gpt-5.6-terra`. Everyday reasoning and vision. Every call
+  site that says `gpt-4.1` is upgraded to this at the proxy.
+- `MODEL_LUNA` = `gpt-5.6-luna`. Short cheap utility. Every call site that
+  says `gpt-4o-mini` is upgraded to this at the proxy.
+- `MODEL_SOL` = `gpt-5.6-sol`. Deep tier. Not mapped from any legacy name;
+  the Operations Room judge and pattern loop ask for `gpt-5.6-sol` by name.
+- `RANK_MODEL` overrides the fabric ranking model alone; otherwise it follows
+  `MODEL_TERRA`.
+
+Rollback is an env change: set `MODEL_TERRA=gpt-4.1` and
+`MODEL_LUNA=gpt-4o-mini` and the system is exactly v13.52 again. There is
+also an automatic safety net: if the upgraded model is refused upstream with
+a model-shaped 400/404, the proxy retries once with the original model and
+logs `[ai] tier fallback`.
+
+Unchanged specialized models:
+
 - Garment generation, editing, Backend piece renders and pattern rasters:
   OpenAI `gpt-image-2`, medium quality at the existing sizes. GPT Image 1.5
   has no active path or picker.
@@ -49,13 +69,22 @@ transcripts, measurements and decisions may not cross those boundaries.
   dormant without their existing server-side keys.
 - Fabric retailer retrieval: no LLM. Six retailer feeds answer in parallel;
   failures are optional and the static fabric wall paints first.
-- Fabric visual ranking: the existing admin-only `/api/rank-fabric` contract
-  is the first task exercised through the router. Its only v13.52 route is
-  still OpenAI `gpt-4.1`, with the same 60 second ceiling, request body,
-  validation, response and static fallback as v13.51.
 
-No Gemini or Vertex route, credential, API enablement, IAM change or cloud
-configuration is part of v13.52.
+Fabric visual ranking (`/api/rank-fabric`, admin only) rides the tier env as
+its primary route with the proven `gpt-4.1` registered as the router
+fallback. Same 60 second ceiling, request body, validation, response and
+static fallback as v13.51.
+
+First Google surface, v13.53: `/api/visualize-fabric` (admin only) asks
+`NANO_BANANA_MODEL` (default `gemini-3.1-flash-image`) on Vertex AI, in
+`VERTEX_LOCATION` (default `us-central1`), inside this same Google Cloud
+project via the Cloud Run service identity, to illustrate a dissected fabric
+for a sourcing card that has no real photograph. The answer is always labeled
+GENERATED and is never sourcing truth. It requires the owner to enable
+`aiplatform.googleapis.com` on the project; until then the endpoint answers
+503 `vertex_not_enabled` and the wall simply keeps its gradient. The Gemini
+shadow evaluation for ranking and dissection is deliberately NOT part of
+v13.53; it waits for the eval suite.
 
 ## Task router contract
 

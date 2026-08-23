@@ -10,7 +10,8 @@
      WINDOW 2 · GROUNDED  multi-modal hybrid RAG over Pattern Book.pdf
 
   Pipeline (Window 2):
-     1. VISION   gpt-4.1 classifies the garment + reads visible construction.
+     1. VISION   gpt-4.1 classifies the garment + reads visible construction
+                 (the server upgrades that name to the current Terra tier).
      2. ROUTE    garment type -> Pattern Book chapter (chapter-map).
      3. RULES    deterministic panel grammar (panel count, symmetry, bands).
      4. RETRIEVE text-embedding-3-small + cosine over the routed chapter's
@@ -1028,7 +1029,10 @@ async function gradePair(target, candidate, targetNote){
     'Anchor: identical=100, right pieces but wrong proportions≈50, vaguely garment-shaped≈20, unrelated≈0.'+
     dimNote+'\n'+
     'Return STRICT JSON only: {"design": <int 0-100>, "measure": <int 0-100>}.';
-  const body={ model:'gpt-4.1', temperature:0, response_format:{type:'json_object'}, messages:[
+  /* v13.53: the judge runs on Sol, the deep tier. Expert pattern critique is
+     exactly the work Sol exists for; everything else on this page stays on
+     the legacy names the server upgrades itself. */
+  const body={ model:'gpt-5.6-sol', temperature:0, response_format:{type:'json_object'}, messages:[
     {role:'system', content:sys},
     {role:'user', content:[
       {type:'text', text:'ANSWER (the correct pattern):'}, {type:'image_url', image_url:{url:target}},
@@ -1208,7 +1212,7 @@ function liveLine(line){ liveLog((($('live-log').textContent && !$('live-log').t
 async function streamChat(messages, onDelta){
   const res = await fetch('/api/openai/v1/chat/completions',{
     method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+getKey()},
-    body:JSON.stringify({ model:'gpt-4.1', stream:true, response_format:{type:'json_object'}, messages })
+    body:JSON.stringify({ model:'gpt-5.6-sol', stream:true, response_format:{type:'json_object'}, messages })
   });
   if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||('critique '+res.status)); }
   const reader=res.body.getReader(); const dec=new TextDecoder(); let buf='', full='';

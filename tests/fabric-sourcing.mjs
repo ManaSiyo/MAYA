@@ -68,6 +68,14 @@ test('all missing candidate images trigger the fallback condition', () => {
   }), error => error.status === 422 && error.message === 'missing_candidate_images');
 });
 
+test('the ranking request model follows the tier env vars', () => {
+  // v13.53: no hardcoded model. RANK_MODEL wins, then MODEL_TERRA, then the
+  // Terra default, so a model change is an env change and nothing else.
+  const built = buildVisualRankingRequest({ garmentImage, traits: {}, products });
+  const expected = process.env.RANK_MODEL || process.env.MODEL_TERRA || 'gpt-5.6-terra';
+  assert.equal(built.requestBody.model, expected);
+});
+
 test('an invalid model response triggers the fallback condition', () => {
   const built = buildVisualRankingRequest({ garmentImage, traits: {}, products });
   assert.throws(() => applyVisualRankings({ choices: [] }, built.candidates),
