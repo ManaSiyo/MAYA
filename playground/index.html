@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.59">
+<meta name="maya-version" content="13.60">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -1941,6 +1941,49 @@
     flex-shrink: 0;
     backdrop-filter: blur(12px);
   }
+  /* v13.60 PLAYGROUND: the tabs drawer. */
+  #notes-drawer .drawer-tabs { display: flex; gap: 6px; margin: 0 0 12px; }
+  #notes-drawer .drawer-tab { flex: 1 1 0; height: 30px; border-radius: 12px 12px 6px 6px;
+    border: 0.5px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.03);
+    color: rgba(238,242,255,0.55); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 9px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    transition: background .2s, color .2s, border-color .2s; overflow: hidden; }
+  #notes-drawer .drawer-tab:hover { color: rgba(238,242,255,0.9); }
+  #notes-drawer .drawer-tab.on { background: rgba(255,255,255,0.10);
+    border-color: rgba(255,255,255,0.5); color: #eef2ff; }
+  #notes-drawer .drawer-tab img, #notes-drawer .drawer-tab .pg-tab-face {
+    width: 18px; height: 18px; border-radius: 50%; object-fit: cover; flex: none;
+    background-size: cover; background-position: center;
+    border: 0.5px solid rgba(255,255,255,0.3); display: block; }
+  #notes-drawer .drawer-tab svg { width: 15px; height: 15px; flex: none; display: block; }
+  #notes-drawer #pg-project-pill { width: 100%; padding: 7px 12px; margin: 0 0 12px;
+    border: 0.5px solid rgba(255,255,255,0.28); border-radius: 100px; cursor: pointer;
+    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 10px;
+    letter-spacing: 0.2em; text-transform: uppercase; color: rgba(238,242,255,0.85);
+    text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #notes-drawer #pg-project-pill:hover { border-color: rgba(255,255,255,0.5); }
+  #notes-drawer .pg-avatar-row { display: flex; align-items: center; gap: 12px; margin: 2px 0 12px; }
+  #notes-drawer .pg-avatar-hit { background: none; border: none; padding: 0; cursor: pointer; flex: none; }
+  #notes-drawer .pg-avatar-row .drawer-avatar-face { width: 60px; height: 60px; }
+  #notes-drawer .pg-avatar-side { flex: 1; min-width: 0; text-align: left; }
+  #notes-drawer .pg-avatar-side .drawer-avatar-name { display: block; font-family: 'Cormorant Garamond', serif;
+    font-size: 19px; color: rgba(245,250,255,0.95); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #notes-drawer .pg-avatar-actions { display: flex; gap: 8px; margin-top: 5px;
+    opacity: 0; transition: opacity .25s; }
+  #notes-drawer .pg-avatar-row:hover .pg-avatar-actions { opacity: 1; }
+  #notes-drawer .pg-fold { margin: 2px 0 10px; }
+  #notes-drawer .pg-fold summary { list-style: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 9.5px;
+    letter-spacing: 0.22em; text-transform: uppercase; color: rgba(238,242,255,0.6);
+    padding: 7px 0; border-top: 0.5px solid rgba(255,255,255,0.08);
+    border-bottom: 0.5px solid rgba(255,255,255,0.08); }
+  #notes-drawer .pg-fold summary::-webkit-details-marker { display: none; }
+  #notes-drawer .pg-fold summary::after { content: '\25BE'; font-size: 10px; color: rgba(238,242,255,0.4); }
+  #notes-drawer .pg-fold:not([open]) summary::after { transform: rotate(-90deg); }
+  #notes-drawer #pg-meas-host { max-height: 46vh; overflow-y: auto; padding-top: 8px; }
   /* v13.58 PLAYGROUND: the circles row at the top of the drawer. */
   #notes-drawer .drawer-circles { display: flex; align-items: center; gap: 10px; margin: 2px 0 12px; }
   #notes-drawer .drawer-circle { width: 32px; height: 32px; border-radius: 50%; padding: 0; overflow: hidden;
@@ -4522,22 +4565,37 @@
     <!-- v11.25: avatar identity row. The face circle + name open the avatar
          sub-menu (edit face/measurements). The caret opens the avatar SWITCHER
          (a library of saved clients) so you can change avatar any time. -->
-    <!-- v13.58 PLAYGROUND: the drawer's three doors as circles, the size of
-         the hamburger pill. Hover says only the name: Avatar, Fabrics,
-         Pinterest. The caret still switches clients; the client's name
-         lives inside the avatar view now. -->
-    <div class="drawer-circles">
-      <button class="drawer-circle" id="drawer-avatar-button" onclick="openAvatarSubMenu()" title="Avatar">
-        <div class="drawer-avatar-face" id="drawer-avatar-face"></div>
+    <!-- v13.60 PLAYGROUND: the drawer is TABS now, Chrome style: three
+         tabs the height of the hamburger pill riding the drawer's top row,
+         click between them. Avatar is the default view; Fabrics and
+         Pinterest open their own panels. Under Avatar: the open project on
+         top, the face bigger with the name at its side (Replace and Remove
+         appear on hover), the Projects dropdown beneath, and the
+         measurements folded below that. -->
+    <div class="drawer-tabs">
+      <button class="drawer-tab on" id="pg-tab-avatar" onclick="pgTab('avatar')" title="Avatar">
+        <span class="pg-tab-face empty"></span><span class="pg-tab-word">Avatar</span>
       </button>
-      <button class="drawer-circle" onclick="openFabricsDrawer()" title="Fabrics">
-        <img src="/aesthetics/fabrics/Orange%20Cheetah.JPG" alt="">
+      <button class="drawer-tab" id="pg-tab-fabrics" onclick="pgTab('fabrics')" title="Fabrics">
+        <img src="/aesthetics/fabrics/Orange%20Cheetah.JPG" alt=""><span class="pg-tab-word">Fabrics</span>
       </button>
-      <button class="drawer-circle drawer-circle-pin" onclick="openPinterestDrawer()" title="Pinterest">
-        <svg viewBox="0 0 24 24" fill="#e60023" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.08 3.16 9.42 7.63 11.17-.11-.95-.2-2.4.04-3.44.22-.93 1.4-5.94 1.4-5.94s-.36-.71-.36-1.77c0-1.66.96-2.9 2.16-2.9 1.02 0 1.51.77 1.51 1.68 0 1.03-.65 2.56-.99 3.98-.28 1.19.6 2.16 1.77 2.16 2.13 0 3.77-2.25 3.77-5.49 0-2.87-2.06-4.88-5.01-4.88-3.41 0-5.42 2.56-5.42 5.21 0 1.03.4 2.14.89 2.74.1.12.11.22.08.34l-.33 1.36c-.05.22-.17.27-.4.16-1.5-.7-2.43-2.89-2.43-4.65 0-3.78 2.75-7.26 7.93-7.26 4.16 0 7.4 2.97 7.4 6.93 0 4.14-2.61 7.47-6.23 7.47-1.22 0-2.36-.63-2.75-1.38l-.75 2.85c-.27 1.04-1 2.35-1.49 3.15 1.12.35 2.31.53 3.54.53 6.63 0 12-5.37 12-12S18.63 0 12 0z"/></svg>
+      <button class="drawer-tab" id="pg-tab-pinterest" onclick="pgTab('pinterest')" title="Pinterest">
+        <svg viewBox="0 0 24 24" fill="#e60023" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.08 3.16 9.42 7.63 11.17-.11-.95-.2-2.4.04-3.44.22-.93 1.4-5.94 1.4-5.94s-.36-.71-.36-1.77c0-1.66.96-2.9 2.16-2.9 1.02 0 1.51.77 1.51 1.68 0 1.03-.65 2.56-.99 3.98-.28 1.19.6 2.16 1.77 2.16 2.13 0 3.77-2.25 3.77-5.49 0-2.87-2.06-4.88-5.01-4.88-3.41 0-5.42 2.56-5.42 5.21 0 1.03.4 2.14.89 2.74.1.12.11.22.08.34l-.33 1.36c-.05.22-.17.27-.4.16-1.5-.7-2.43-2.89-2.43-4.65 0-3.78 2.75-7.26 7.93-7.26 4.16 0 7.4 2.97 7.4 6.93 0 4.14-2.61 7.47-6.23 7.47-1.22 0-2.36-.63-2.75-1.38l-.75 2.85c-.27 1.04-1 2.35-1.49 3.15 1.12.35 2.31.53 3.54.53 6.63 0 12-5.37 12-12S18.63 0 12 0z"/></svg><span class="pg-tab-word">Pinterest</span>
       </button>
+    </div>
+    <div id="pg-project-pill" onclick="toggleSessionsDropdown()" title="The open project; click for the list">Projects</div>
+    <div class="pg-avatar-row" id="pg-avatar-row">
+      <button class="pg-avatar-hit" id="drawer-avatar-button" onclick="openAvatarSubMenu()" title="Avatar">
+        <div class="drawer-avatar-face empty" id="drawer-avatar-face"></div>
+      </button>
+      <div class="pg-avatar-side">
+        <span class="drawer-avatar-name" id="drawer-avatar-name">name</span>
+        <div class="pg-avatar-actions">
+          <button class="drawer-action" onclick="pgReplaceFace()">Replace</button>
+          <button class="drawer-action" onclick="pgRemoveFace()">Remove</button>
+        </div>
+      </div>
       <button class="drawer-avatar-caret" id="drawer-avatar-caret" onclick="toggleAvatarSwitcher()" title="Switch avatar / client">&#9662;</button>
-      <span class="drawer-avatar-name" id="drawer-avatar-name" style="display:none">name</span>
     </div>
     <div class="drawer-avatar-switcher" id="drawer-avatar-switcher" style="display:none"></div>
 
@@ -4553,6 +4611,10 @@
         <div class="sessions-empty" id="sessions-empty-hint">No projects yet.</div>
       </div>
     </div>
+    <details class="pg-fold" id="pg-meas">
+      <summary>Measurements</summary>
+      <div id="pg-meas-host"></div>
+    </details>
     <div id="notes-drawer-content"></div>
     <!-- v11.3: Fabrics moved down below the references content. -->
     <!-- v13.29: Share moved onto each project row, where it belongs. Fabrics
@@ -16296,6 +16358,119 @@ loadFolderHandle().then(h => { if (h) folderHandle = h; }).catch(()=>{});
   window.addEventListener('pointerdown', warm, true);
 })();
 
+</script>
+<script>
+// ═══ v13.60 PLAYGROUND: tabs drawer wiring. This block adapts the app's own
+// avatar machinery to the tabbed layout; nothing in the shared code changed.
+(function () {
+  // The measurements body and its Randomize/Save row move from the old
+  // avatar subview into the fold under the avatar row.
+  try {
+    const host = document.getElementById('pg-meas-host');
+    const body = document.getElementById('avatar-body');
+    const actions = document.querySelector('#drawer-avatar .drawer-actions-bottom');
+    if (host && body) host.appendChild(body);
+    if (host && actions) host.appendChild(actions);
+    const av = document.getElementById('drawer-avatar');
+    if (av) av.style.display = 'none';
+  } catch (e) { console.warn('[pg tabs] mount', e); }
+})();
+function pgTabMark(which) {
+  document.querySelectorAll('.drawer-tab').forEach(t =>
+    t.classList.toggle('on', t.id === 'pg-tab-' + which));
+}
+function pgTab(which) {
+  // Close the other panels FIRST: their Back wrappers reset the mark to
+  // Avatar, so the mark for this tab must be written after.
+  if (which === 'avatar') {
+    try { if (typeof closeFabricsDrawer === 'function') closeFabricsDrawer(); } catch (_) {}
+    try { if (typeof closePinterestDrawer === 'function') closePinterestDrawer(); } catch (_) {}
+    try { _renderAvatarBody(); } catch (_) {}
+    pgTabMark('avatar');
+  } else if (which === 'fabrics') {
+    try { if (typeof closePinterestDrawer === 'function') closePinterestDrawer(); } catch (_) {}
+    openFabricsDrawer();
+    pgTabMark('fabrics');
+  } else {
+    try { if (typeof closeFabricsDrawer === 'function') closeFabricsDrawer(); } catch (_) {}
+    openPinterestDrawer();
+    pgTabMark('pinterest');
+  }
+}
+// The panels' own Back returns the tabs to Avatar.
+if (typeof closeFabricsDrawer === 'function') {
+  const _pgCF = closeFabricsDrawer;
+  closeFabricsDrawer = function () { _pgCF.apply(this, arguments); pgTabMark('avatar'); };
+}
+if (typeof closePinterestDrawer === 'function') {
+  const _pgCP = closePinterestDrawer;
+  closePinterestDrawer = function () { _pgCP.apply(this, arguments); pgTabMark('avatar'); };
+}
+// Avatar view IS the drawer now: opening the avatar opens the fold.
+openAvatarSubMenu = function () {
+  toggleNotesDrawer(true);
+  try { _renderAvatarBody(); } catch (_) {}
+  const d = document.getElementById('pg-meas');
+  if (d) { d.open = true; d.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+};
+closeAvatarSubMenu = function () {
+  const d = document.getElementById('pg-meas');
+  if (d) d.open = false;
+};
+function pgReplaceFace() {
+  try { _renderAvatarBody(); } catch (_) {}
+  const i = document.getElementById('face-photo-input-avatar');
+  if (i) i.click();
+}
+function pgRemoveFace() {
+  try { if (typeof clearFacePhoto === 'function') clearFacePhoto(); } catch (_) {}
+  try { refreshDrawerClientName(); } catch (_) {}
+}
+// The avatar tab's little face mirrors the big one.
+if (typeof refreshDrawerClientName === 'function') {
+  const _pgRefresh = refreshDrawerClientName;
+  refreshDrawerClientName = function () {
+    _pgRefresh.apply(this, arguments);
+    try {
+      const face = document.getElementById('drawer-avatar-face');
+      const tab = document.querySelector('#pg-tab-avatar .pg-tab-face');
+      if (face && tab) {
+        tab.style.backgroundImage = face.style.backgroundImage;
+        tab.classList.toggle('empty', face.classList.contains('empty'));
+      }
+    } catch (_) {}
+  };
+}
+// The pill on top carries the OPEN project's name.
+function pgUpdatePill() {
+  const pill = document.getElementById('pg-project-pill');
+  if (!pill) return;
+  const act = document.querySelector('#drawer-sessions-list .session-item.active');
+  pill.textContent = act ? (act.getAttribute('title') || 'Project') : 'Projects';
+}
+if (typeof _renderSessionsDropdown === 'function') {
+  const _pgSessions = _renderSessionsDropdown;
+  _renderSessionsDropdown = async function () {
+    await _pgSessions.apply(this, arguments);
+    pgUpdatePill();
+  };
+}
+// Opening the drawer lands on the Avatar tab, freshly painted.
+if (typeof toggleNotesDrawer === 'function') {
+  const _pgToggle = toggleNotesDrawer;
+  toggleNotesDrawer = function (force) {
+    const hs = document.getElementById('hscroll');
+    const wasClosed = hs ? hs.scrollLeft < 10 : true;
+    _pgToggle.apply(this, arguments);
+    const opening = force === true || (force === undefined && wasClosed);
+    if (opening) {
+      pgTabMark('avatar');
+      try { _renderAvatarBody(); } catch (_) {}
+      try { refreshDrawerClientName(); } catch (_) {}
+      try { _renderSessionsDropdown(); } catch (_) {}
+    }
+  };
+}
 </script>
 </body>
 </html>

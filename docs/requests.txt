@@ -16,6 +16,17 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 23, 2026, THE PLAYGROUND TABS (v13.60)
+
+[x] "Make the drawer circles Chrome-style tabs, the height of the
+    hamburger pill, in the same row: Avatar, Fabrics, Pinterest." Done,
+    on the playground only.
+[x] "Avatar tab: the project's name in a pill on top where Micheal was,
+    a bigger circle with the name at its right, Replace and Remove only
+    on hover, the projects dropdown below the avatar, measurements
+    collapsible, and only Tip, Log out, Feedback at the bottom, pushed
+    lower." Done.
+
 AUGUST 23, 2026, MARKETING AESTHETICS (v13.59)
 
 [x] "The dropdown arrow should be beside the title, not underneath." Done

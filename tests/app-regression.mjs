@@ -1164,15 +1164,23 @@ ok('every sign in says hello so the Users count is complete',
 // ── v13.58: BACKEND in caps, the circles drawer staged on the playground ───
 ok('the Backend corner speaks in caps',
   /#brand \{[\s\S]{0,260}text-transform: uppercase/.test(BACKEND_SOURCE));
-ok('the playground stages the circles drawer: avatar, fabrics, Pinterest',
-  PLAYGROUND_SOURCE.includes('class="drawer-circles"') &&
+// v13.60: the circles grew into Chrome-style TABS, still playground only.
+ok('the playground stages the tabs drawer: avatar, fabrics, Pinterest',
+  PLAYGROUND_SOURCE.includes('class="drawer-tabs"') &&
   PLAYGROUND_SOURCE.includes('Orange%20Cheetah.JPG') &&
-  PLAYGROUND_SOURCE.includes('drawer-circle-pin') &&
-  PLAYGROUND_SOURCE.includes('title="Avatar"') &&
+  PLAYGROUND_SOURCE.includes('id="pg-tab-pinterest"') &&
+  PLAYGROUND_SOURCE.includes('function pgTab(') &&
   !PLAYGROUND_SOURCE.includes('class="drawer-top-row"') &&
   /drawer-meta-row \{[\s\S]{0,300}margin-top: auto/.test(PLAYGROUND_SOURCE) &&
   // the main app keeps its current drawer until Fromsa promotes the design
   INDEX_SOURCE.includes('class="drawer-top-row"'));
+ok('the playground avatar tab: project on top, face beside name, hover actions, folded measurements',
+  PLAYGROUND_SOURCE.includes('id="pg-project-pill"') &&
+  PLAYGROUND_SOURCE.includes('class="pg-avatar-row"') &&
+  PLAYGROUND_SOURCE.includes('pg-avatar-row:hover .pg-avatar-actions') &&
+  PLAYGROUND_SOURCE.includes('id="pg-meas"') &&
+  PLAYGROUND_SOURCE.includes("host.appendChild(body)") &&
+  PLAYGROUND_SOURCE.includes('pgUpdatePill'));
 ok('deterministic warnings exist and never depend on a model call',
   SERVER_SOURCE.includes('function computeMarketingWarnings(') &&
   SERVER_SOURCE.includes('is enabled but has served nothing since') &&

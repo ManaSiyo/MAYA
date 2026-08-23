@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 249 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 251 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -56,9 +56,10 @@ on Admin on hover) is Fromsa's private staging copy. Experimental features go
 there FIRST; `frontend/index.html` changes only when he approves a promotion.
 It shares the live sign in and data, so destructive experiments still need
 care. Keep the small amber Playground badge so the two are never confused.
-Since v13.58 the playground DIVERGES from frontend (the circles drawer is
-staged there); never regenerate it as frontend plus badge without
-re-applying the blocks marked "v13.58 PLAYGROUND".
+Since v13.58 the playground DIVERGES from frontend (first the circles
+drawer, since v13.60 the tabs drawer is staged there); never regenerate it
+as frontend plus badge without re-applying the blocks marked
+"v13.58 PLAYGROUND" and "v13.60 PLAYGROUND".
 
 Admin access: ADMIN_EMAILS defaults to fromsa@manasiyo.com and
 worldofsiyo@gmail.com only, overridable by env. /api/admin/users lists named
@@ -70,6 +71,38 @@ campaign table, warnings, ticker) through Windsor, per connector. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.60 (Claude): the playground tabs drawer
+
+- STAGED ON THE PLAYGROUND ONLY (the playground rule). The v13.58 circles
+  became three Chrome-style TABS in one row at the drawer's top, each the
+  hamburger pill's height (30px, radius 12px 12px 6px 6px): Avatar (the
+  face, default on open), Fabrics (the Orange Cheetah swatch), Pinterest
+  (the logo). Clicking a tab closes the other panels FIRST, then marks
+  itself .on; the close wrappers reset the mark to Avatar, so the order
+  matters (marking before closing let a wrapper immediately unmark, the
+  one bug found in testing).
+- AVATAR TAB LAYOUT: the open project's name sits in a pill on TOP
+  (#pg-project-pill, tap opens the projects dropdown), then a bigger
+  60px face with the client's name at its right (Replace / Remove appear
+  only on hover), the projects dropdown below, then Measurements as a
+  collapsible fold (#pg-meas). Tip / Log out / Feedback alone at the
+  bottom, pushed down with margin-top auto.
+- HOW IT IS WIRED: a "v13.60 PLAYGROUND" script before </body> moves the
+  existing #avatar-body and .drawer-actions-bottom into the new homes at
+  mount and then WRAPS the frontend functions by reassigning their names
+  (openAvatarSubMenu, closeAvatarSubMenu, toggleNotesDrawer,
+  refreshDrawerClientName, closeFabricsDrawer, closePinterestDrawer,
+  _renderSessionsDropdown). Function-name bindings are reassignable, so
+  the shared frontend code is untouched; regenerating the playground from
+  frontend loses ALL of this unless both PLAYGROUND blocks are reapplied.
+  pgUpdatePill reads the active .session-item's title for the pill.
+- VERIFIED with a local Playwright probe (serve the repo, page.evaluate
+  the functions directly; the sign-in gate eats real clicks): tabs
+  render, avatar body renders in place, measurements fold opens and
+  closes, fabrics tab marks itself and hands back to avatar, no page
+  errors. Full regression green (251 checks). frontend/index.html keeps
+  its old drawer on purpose until Fromsa promotes the design.
 
 ## v13.59 (Claude): marketing aesthetics, one paid fold, D W M everywhere
 
