@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 199 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 202 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -67,6 +67,32 @@ ad panels (impressions, clicks, spend, last 7 days) through Windsor. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.50 (Claude): the live merchant window
+
+- THE DISSECTION SPEAKS FABRIC: the prompt now also returns "fabric_spec"
+  per piece: fiber, weave, weight_gsm, stretch, sheen, texture, all read
+  from the image by the same gpt-4.1 call. `_sourcingQuery()` builds the
+  shop query from it (color word + fiber + weave beats the raw sentence).
+- `/api/source-fabric?q=` (server.js, requireAdmin): queries six retail
+  merchants' public Shopify suggest feeds in parallel
+  (moodfabrics, blackbirdfabrics, shop.missmatatabi, thefabricsales,
+  thefabricstore, tessuti.com.au; Mood/Blackbird/Matatabi/FabricSales
+  verified answering on Aug 22), 6s timeout each, failures skipped, top 60
+  normalized products {merchant, place, etaDays, currency, title, price,
+  url, image}. In-memory cache 24h per query. EVERY answer is also seeded
+  to catalog/queries/<slug>.json in the bucket: that is the growing corpus
+  future CLIP visual matching will search; do not delete catalog/.
+- Client (backend.html): the static wall paints instantly, then
+  `_fetchLiveSourcing()` fetches once per fabric per session and repaints
+  with live products first (color-ranked against the dissected hex),
+  static cards filling the rest. Any failure leaves the static wall
+  untouched. Live prices show with their own currency code; no invented
+  conversion.
+- SwatchOn: the partnership letter is DRAFTED in Fromsa's Gmail
+  (to support@swatchon.com, asking for the partnerships/API team), waiting
+  for him to review and send. Do not send mail on his behalf.
+- 202 regression checks + 19 smoke checks (source-fabric 401 covered).
 
 ## v13.49 (Claude): the model that sees the picture names the color
 
@@ -293,9 +319,9 @@ Verified live on Aug 22 through Fromsa's signed-in admin session:
 - SECURITY as of v13.41: a submission can only be written by the account that
   opened it (`subOwner()` reads the init marker, cached). The legacy Pinterest
   modal is deleted; the drawer is the only implementation.
-- Live line: `maya-v2`. v13.48 is pushed and live. **v13.49 is committed and
-  waiting for Fromsa's push** (the dissection returns fabric_hex read from
-  the image; the sourcing study is in docs/fabric-sourcing-study.md).
+- Live line: `maya-v2`. v13.48 is pushed and live. **v13.49 and v13.50 are
+  committed and waiting for Fromsa's push** (fabric_hex; the sourcing study;
+  the live merchant window and the fabric_spec dissection).
 - **The folder changed in v13.37.** Pages are no longer loose at the root:
   `frontend/index.html`, and `backend/` holds status, marketing, operations,
   backend and privacy plus verify. Every old URL still answers, because
@@ -304,7 +330,7 @@ Verified live on Aug 22 through Fromsa's signed-in admin session:
   rewrite list is the first place to look. `aesthetics/` stays at the root on
   purpose: `docs/**` is ignored by Hosting, so pictures inside it would never
   deploy.
-- Tests: 199 checks in `tests/app-regression.mjs`, all passing, including a
+- Tests: 202 checks in `tests/app-regression.mjs`, all passing, including a
   check that every old address still maps to a file that exists.
 - Pinterest: app id and secret ARE set on Cloud Run. The sign in currently
   fails with Pinterest's own 400, "this application has not registered a

@@ -1747,6 +1747,62 @@ app.post('/api/admin/savepieces', requireAuthHeader, express.json({ limit: '30mb
   }
 });
 
+// ── v13.50: /api/source-fabric, the live merchant window ───────────────────
+// The Brief asks with the dissected fabric string; this endpoint asks a
+// handful of retail fabric merchants' own public Shopify search feeds, in
+// parallel, and returns real products with real prices and pictures. A
+// merchant that fails to answer is skipped, never fatal. Results are cached
+// for a day per query, and every answer is also seeded into catalog/ in the
+// bucket: the corpus that future visual matching will search.
+const SOURCE_MERCHANTS = [
+  { name: 'Mood Fabrics', place: 'New York', host: 'https://www.moodfabrics.com', eta: 5, currency: 'USD' },
+  { name: 'Blackbird Fabrics', place: 'Vancouver', host: 'https://www.blackbirdfabrics.com', eta: 7, currency: 'CAD' },
+  { name: 'Miss Matatabi', place: 'Tokyo', host: 'https://shop.missmatatabi.com', eta: 9, currency: 'JPY' },
+  { name: 'The Fabric Sales', place: 'Antwerp', host: 'https://thefabricsales.com', eta: 8, currency: 'EUR' },
+  { name: 'The Fabric Store', place: 'New Zealand', host: 'https://thefabricstore.com', eta: 10, currency: 'USD' },
+  { name: 'Tessuti Fabrics', place: 'Sydney', host: 'https://www.tessuti.com.au', eta: 11, currency: 'AUD' },
+];
+const _sourceCache = new Map();
+app.get('/api/source-fabric', async (req, res) => {
+  try { await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const q = String(req.query.q || '').trim().slice(0, 120);
+  if (!q) return res.status(400).json({ error: 'missing_q' });
+  const key = q.toLowerCase();
+  const hit = _sourceCache.get(key);
+  if (hit && Date.now() - hit.ts < 24 * 3600 * 1000) return res.json(hit.body);
+  const enc = encodeURIComponent(q);
+  const results = await Promise.all(SOURCE_MERCHANTS.map(async (m) => {
+    try {
+      const r = await fetch(m.host + '/search/suggest.json?q=' + enc +
+        '&resources%5Btype%5D=product&resources%5Blimit%5D=6', {
+        headers: { 'User-Agent': 'MAYA fabric sourcing (maya.manasiyo.com)' },
+        signal: AbortSignal.timeout(6000),
+      });
+      if (!r.ok) throw new Error('http ' + r.status);
+      const j = await r.json();
+      const ps = (((j || {}).resources || {}).results || {}).products || [];
+      return ps.filter(p => p && p.available !== false).map(p => ({
+        merchant: m.name, place: m.place, etaDays: m.eta, currency: m.currency,
+        title: String(p.title || '').slice(0, 140),
+        price: p.price != null ? String(p.price) : '',
+        url: /^https?:/.test(p.url || '') ? p.url : (m.host + (p.url || '')),
+        image: (p.featured_image && p.featured_image.url) || p.image || '',
+      }));
+    } catch (e) { return { _miss: m.name, why: String(e.message).slice(0, 80) }; }
+  }));
+  const products = [], misses = [];
+  for (const r of results) { if (Array.isArray(r)) products.push(...r); else misses.push(r); }
+  const body = { ok: true, q, products: products.slice(0, 60), misses,
+    fetchedAt: new Date().toISOString() };
+  _sourceCache.set(key, { ts: Date.now(), body });
+  try {
+    gcsPut('catalog/queries/' + key.replace(/[^a-z0-9]+/g, '-').slice(0, 60) + '.json',
+      JSON.stringify(body), 'application/json').catch(() => {});
+  } catch (_) {}
+  res.json(body);
+});
+
 // ── Google Analytics (GA4 Data API) via the Cloud Run service account ──────
 async function gaMeta(path) {
   const r = await fetch('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/' + path, {

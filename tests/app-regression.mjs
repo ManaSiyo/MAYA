@@ -880,6 +880,21 @@ ok('the dissection returns each fabric color as a hex read from the image',
 ok('the sourcing study lives in docs',
   existsSync(join(ROOT, 'docs/fabric-sourcing-study.md')) &&
   readFileSync(join(ROOT, 'docs/fabric-sourcing-study.md'), 'utf8').includes('SWATCHON'));
+// ── v13.50: the live merchant window ───────────────────────────────────────
+ok('the server asks real merchants and seeds the catalog',
+  SERVER_SOURCE.includes("app.get('/api/source-fabric'") &&
+  SERVER_SOURCE.includes('const SOURCE_MERCHANTS') &&
+  SERVER_SOURCE.includes('search/suggest.json') &&
+  SERVER_SOURCE.includes("gcsPut('catalog/queries/"));
+ok('the wall paints instantly and live products replace its front',
+  BACKEND_SOURCE.includes('function _fetchLiveSourcing(') &&
+  BACKEND_SOURCE.includes('/api/source-fabric?q=') &&
+  BACKEND_SOURCE.includes('live.concat(staticCards)') &&
+  BACKEND_SOURCE.includes('the static wall stands'));
+ok('the dissection speaks the full material sentence',
+  BACKEND_SOURCE.includes('"fabric_spec"') &&
+  BACKEND_SOURCE.includes('weight_gsm') &&
+  BACKEND_SOURCE.includes('function _sourcingQuery('));
 ok('a click anywhere outside the drawer closes it, on every page',
   /pointerdown[\s\S]{0,400}toggleNotesDrawer\(false\)/.test(INDEX_SOURCE) &&
   /pointerdown[\s\S]{0,400}toggleDrawer\(false\)/.test(MAP_SOURCE) &&

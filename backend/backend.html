@@ -2653,6 +2653,7 @@ Output JSON shape:
       "category": "outerwear" | "top" | "bottom" | "dress" | "accessory" | "base",
       "fabric": "metallic-treated leather",
       "fabric_hex": "#8a8f98",
+      "fabric_spec": { "fiber": "leather", "weave": "smooth grain", "weight_gsm": 480, "stretch": "none", "sheen": "high", "texture": "metallic-treated" },
       "note": "single-breasted, sharply peaked lapels, side dart shaping",
       "panels": 8,
       "skip": false,
@@ -2684,6 +2685,7 @@ SUIT-SPECIFIC RULES (v0.27 enhancement):
 - "fabric" describes that specific piece's material (the same image may have one piece in leather and another in silk).
 - "fabric_source": "in-house" if the fabric reads as a common atelier swatch (wool, linen, cotton, denim), "sourceable" if specialty (lurex, technical, embroidered, treated leather).
 - "fabric_hex": the DOMINANT color of that piece's fabric as you actually see it in the image, as a six digit hex like "#991b2a". Read it from the picture, not from the fabric's name.
+- "fabric_spec": the material sentence, spoken like a fabric buyer: "fiber" (wool, silk, cotton, linen, leather, polyester blend...), "weave" (twill, satin, plain, jersey knit, rib knit...), "weight_gsm" (your best integer estimate of grams per square meter from how the cloth drapes and holds shape), "stretch" ("none" | "slight" | "high"), "sheen" ("matte" | "slight" | "high"), "texture" (one or two words: brushed, crisp, slubbed, boucle, coated...). Every field filled from what you SEE.
 - Complexity tier is "avant-garde" when the construction is non-standard (asymmetry, draped panels, exposed seams, unusual closures). Otherwise "standard".
 - Be conservative with hardware, only list what you can see.`;
 
@@ -4315,10 +4317,72 @@ function renderFabricsPage() {
   if (!fabricStr) {
     if (fabEl) fabEl.textContent = 'From the full view';
     _renderFabCards(_buildFullViewCards());
+    _fetchLiveSourcing('apparel fabric', null);
     return;
   }
   const cards = _buildFabricCards(fabricStr);
   _renderFabCards(cards);
+  // v13.50: then the REAL shelves. The static wall paints instantly; the
+  // live merchant answers replace the front of it when they arrive.
+  _fetchLiveSourcing(fabricStr, piece);
+}
+
+// ── v13.50: live merchant sourcing ────────────────────────────────────
+// One request to MAYA's own server, which asks the merchants' public
+// product feeds in parallel and caches for a day. Live products carry
+// real titles, real prices in their own currency, real photos, and open
+// the actual listing. Failures leave the static wall untouched.
+const _liveSourceCache = {};
+function _sourcingQuery(piece, fabricStr) {
+  // The dissected spec makes a better shop query than the raw sentence:
+  // "crimson wool twill" finds shelves; "gothic ode in crimson" does not.
+  const spec = piece && piece.fabric_spec;
+  const colorWord = (function () {
+    const t = (fabricStr || '').toLowerCase();
+    for (const k in _COLOR_RGB) { if (k.length > 3 && t.includes(k)) return k; }
+    return '';
+  })();
+  if (spec && spec.fiber) {
+    return [colorWord, spec.fiber, spec.weave].filter(Boolean).join(' ').trim();
+  }
+  return fabricStr;
+}
+async function _fetchLiveSourcing(fabricStr, piece) {
+  const q = _sourcingQuery(piece, fabricStr);
+  if (!q) return;
+  const paint = (products) => {
+    // still on the Sourceable tab, same fabric? then repaint.
+    if ((_fabricSourceOverride || 'sourceable') !== 'sourceable') return;
+    const now = _fabActivePiece();
+    const nowStr = (now && now.fabric) || '';
+    if (fabricStr !== 'apparel fabric' && nowStr && nowStr !== fabricStr) return;
+    const target = _targetFabricRgb(fabricStr === 'apparel fabric' ? '' : fabricStr);
+    const live = products.map(p => ({
+      merchant: p.merchant + ' · ' + p.place,
+      title: p.title,
+      price: p.price ? (p.price + ' ' + (p.currency || '')) : 'see listing',
+      etaDays: p.etaDays || 7,
+      color: p.title,
+      url: p.url, img: p.image, _live: true,
+    }));
+    live.forEach(c => { c._color = _colorScore(c, target); });
+    live.sort((a, b) => b._color - a._color);
+    const staticCards = (fabricStr === 'apparel fabric')
+      ? _buildFullViewCards() : _buildFabricCards(fabricStr);
+    _renderFabCards(live.concat(staticCards).slice(0, 24));
+  };
+  if (_liveSourceCache[q]) { paint(_liveSourceCache[q]); return; }
+  try {
+    const tok = localStorage.getItem('maya_admin_tok') || '';
+    const r = await fetch('/api/source-fabric?q=' + encodeURIComponent(q),
+      { headers: { 'Authorization': 'Bearer ' + tok }, cache: 'no-store' });
+    if (!r.ok) return;                      // static wall stands
+    const j = await r.json();
+    const products = (j && j.products) || [];
+    if (!products.length) return;
+    _liveSourceCache[q] = products;
+    paint(products);
+  } catch (_) { /* the static wall stands */ }
 }
 
 function setPatternPage(page) {

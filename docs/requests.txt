@@ -16,6 +16,17 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 22, 2026, ALL OF THEM NOW (v13.50)
+
+[x] "Do the next build and the live merchant in parallel, and draft the
+    SwatchOn email. Let's do all of them now." Done in one pass: the
+    dissection returns the full material sentence, the server asks six
+    real merchants and the wall shows their actual products and prices,
+    and the SwatchOn letter sits in Gmail drafts ready to send.
+[x] Visual matching, answered: it needs a catalog to search before it can
+    search one. The live window now SEEDS that catalog with every query,
+    so number four started today too, quietly.
+
 AUGUST 22, 2026, HEX AND THE SOURCING STUDY (v13.49)
 
 [x] "Apply number one." The dissection now returns each fabric's exact

@@ -54,6 +54,7 @@ await check('admin submissions need a token',     get('/api/admin/submissions'),
 await check('admin subfile needs a token',        get('/api/admin/subfile?id=abcdefghijkl'), 401);
 await check('savepieces needs a token',           post('/api/admin/savepieces'), 401);
 await check('analytics needs a token',            get('/api/admin/analytics'), 401);
+await check('fabric sourcing needs a token',      get('/api/source-fabric?q=wool'), 401);
 await check('runway is dormant',                  post('/api/runway', AUTH), 501);
 await check('fal is dormant',                     post('/api/fal/fal-ai/hyper3d/rodin', AUTH), 501);
 await check('fal storage is dormant',             post('/api/falstorage/storage/upload/initiate', AUTH), 501);
