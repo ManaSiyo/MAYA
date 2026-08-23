@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.57">
+<meta name="maya-version" content="13.58">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -3877,26 +3877,73 @@
     display: flex; flex-direction: column; align-items: center;
     gap: 10px;
   }
-  #signin-gate #g-signin-btn { min-height: 40px; transition: opacity 0.3s; }
-  /* v13.57: until the terms are agreed to, the button waits, visibly. */
-  #signin-gate.needs-consent #g-signin-btn { opacity: 0.25; pointer-events: none; }
-  #signin-gate .signin-consent {
-    display: flex; align-items: center; gap: 8px; cursor: pointer;
+  #signin-gate #g-signin-btn { min-height: 40px; }
+  /* v13.58: the terms popup. First sign in only; Agree wakes at the end of
+     the text. Same glass as everything else. */
+  #tos-modal {
+    position: fixed; inset: 0; z-index: 4000;
+    background: rgba(2,4,10,0.66);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  #tos-modal.open { display: flex; }
+  #tos-modal .tos-sheet {
+    width: min(620px, 94vw); max-height: min(78vh, 720px);
+    display: flex; flex-direction: column;
+    border: 0.5px solid rgba(255,255,255,0.22); border-radius: 22px;
+    background: rgba(8,12,26,0.92);
+    backdrop-filter: blur(26px) saturate(180%); -webkit-backdrop-filter: blur(26px) saturate(180%);
+    box-shadow: 0 18px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.10);
+    padding: 26px 26px 20px;
+  }
+  #tos-modal .tos-head {
     font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
-    color: rgba(245,250,255,0.6); max-width: 320px; text-align: left; line-height: 1.7;
+    font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
+    color: rgba(245,250,255,0.85); margin-bottom: 4px;
   }
-  #signin-gate .signin-consent a { color: rgba(190,214,255,0.95); }
-  #signin-gate .signin-consent input {
-    appearance: none; -webkit-appearance: none; flex: none;
-    width: 15px; height: 15px; border: 0.5px solid rgba(255,255,255,0.45);
-    border-radius: 5px; background: transparent; cursor: pointer; position: relative;
+  #tos-modal .tos-sub {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 14px; color: rgba(238,242,255,0.5); margin-bottom: 14px;
   }
-  #signin-gate .signin-consent input:checked { background: rgba(245,250,255,0.9); }
-  #signin-gate .signin-consent input:checked::after {
-    content: '\2713'; position: absolute; inset: 0; color: #0b0e16;
-    font-size: 11px; line-height: 14px; text-align: center;
+  #tos-modal .tos-scroll {
+    flex: 1; min-height: 0; overflow-y: auto; padding-right: 12px;
+    font-family: 'Cormorant Garamond', serif; font-size: 15.5px; line-height: 1.65;
+    color: rgba(238,242,255,0.86); text-align: left;
   }
+  #tos-modal .tos-scroll h3 {
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: rgba(245,250,255,0.75); margin: 16px 0 6px;
+  }
+  #tos-modal .tos-scroll h3:first-child { margin-top: 0; }
+  #tos-modal .tos-scroll p { margin-bottom: 10px; }
+  #tos-modal .tos-scroll p b { color: #fff; font-weight: 400; }
+  #tos-modal .tos-scroll a { color: rgba(190,214,255,0.95); }
+  #tos-modal .tos-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin-top: 16px; padding-top: 14px;
+    border-top: 0.5px solid rgba(255,255,255,0.12);
+  }
+  #tos-modal .tos-agree {
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase;
+    padding: 9px 22px; border-radius: 100px; cursor: pointer;
+    border: 0.5px solid rgba(255,255,255,0.5);
+    background: rgba(245,250,255,0.92); color: #0b0e16;
+    transition: opacity 0.25s;
+  }
+  #tos-modal .tos-agree:disabled {
+    opacity: 0.3; cursor: default;
+    background: transparent; color: rgba(245,250,255,0.7);
+  }
+  #tos-modal .tos-decline {
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 8px 14px; border-radius: 100px; cursor: pointer;
+    border: 0.5px solid rgba(255,255,255,0.2); background: transparent;
+    color: rgba(238,242,255,0.5);
+  }
+  #tos-modal .tos-decline:hover { color: rgba(238,242,255,0.85); }
   #signin-gate .signin-fineprint {
     font-family: 'Jost', sans-serif; font-weight: 300;
     font-size: 9px; letter-spacing: 0.20em; text-transform: uppercase;
@@ -4039,16 +4086,43 @@
     <div class="signin-sub">by Mana Siyo</div>
   </div>
   <div class="signin-bottom">
-    <!-- v13.57: new accounts read and agree before the button appears. The
-         terms are one short page; the wall rule (a heart publishes, taking
-         it back unpublishes) is stated where people can actually read it. -->
-    <label class="signin-consent" id="signin-consent">
-      <input type="checkbox" id="tos-check" onchange="_tosChanged(this.checked)">
-      <span>I agree to the <a href="/terms.html" target="_blank" rel="noopener">Terms</a> and the
-      <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a></span>
-    </label>
     <div id="g-signin-btn"></div>
     <div class="signin-fineprint">Sign in with Google to begin</div>
+  </div>
+</div>
+
+<!-- v13.58: the terms open AS A POPUP the first time an account signs in.
+     Reading position gates the button: Agree wakes only once the text has
+     been scrolled to its end. Accepted once per browser, recorded with the
+     account, asked again only if the terms themselves change. -->
+<div id="tos-modal" style="display:none">
+  <div class="tos-sheet">
+    <div class="tos-head">Terms of service</div>
+    <div class="tos-sub">Mana Siyo. Effective August 23, 2026. Scroll to the end to agree.</div>
+    <div class="tos-scroll" id="tos-scroll">
+      <h3>What MAYA is</h3>
+      <p>MAYA is a design tool by Mana Siyo. You describe a garment, MAYA renders visions of it, and if you submit a design, Mana Siyo can make the real garment. By using MAYA you agree to these terms and to the <a href="/privacy.html" target="_blank" rel="noopener">privacy policy</a>.</p>
+      <h3>Your account</h3>
+      <p>You sign in with a Google account and you are responsible for what happens under it. You must be 16 or older. We can suspend an account that breaks these terms or abuses the service.</p>
+      <h3>Your content</h3>
+      <p>What you make and upload stays yours. You give Mana Siyo the permission needed to store it, process it, show it back to you, and produce the garment you ask for. You must have the right to anything you upload, and the permission of any real person whose photograph you attach.</p>
+      <h3>The community wall</h3>
+      <p><b>This is the one rule to actually read.</b> When you heart a garment MAYA generated, that picture is published to the community wall, where every signed in MAYA user can see it, with your first name and the garment's one line description. Take the heart away and the post comes down. Only garments MAYA rendered are ever published: your uploaded pictures, fabric photographs and face photographs never appear on the wall.</p>
+      <h3>Renders and orders</h3>
+      <p>MAYA's pictures are visualizations, not photographs and not promises: the sewn garment is made by people and can differ from a render. Submitting a design starts a conversation with the atelier; prices, fit sessions and delivery are agreed there, not in the app. Tips are voluntary and processed by Stripe.</p>
+      <h3>Acceptable use</h3>
+      <p>Do not use MAYA to make unlawful, hateful or sexually explicit imagery of real people, to infringe someone's rights, to harvest data, or to probe or overload the service. We can remove content and close accounts over this.</p>
+      <h3>The service, honestly</h3>
+      <p>MAYA is provided as it is, without warranties. It is a young service; features change and sometimes things break. To the extent the law allows, Mana Siyo's liability for any claim about the app is limited to one hundred dollars. Nothing here limits liability that cannot lawfully be limited.</p>
+      <h3>Changes and law</h3>
+      <p>If these terms change in a way that matters, MAYA will ask you to agree again at sign in. These terms are governed by the laws of California, and disputes belong in the courts of San Francisco.</p>
+      <h3>Contact</h3>
+      <p>Mana Siyo, worldofsiyo@gmail.com. The full text always lives at <a href="/terms.html" target="_blank" rel="noopener">maya.manasiyo.com/terms.html</a>.</p>
+    </div>
+    <div class="tos-foot">
+      <button class="tos-decline" onclick="_tosDecline()" title="Sign out and come back another time">Not now</button>
+      <button class="tos-agree" id="tos-agree" onclick="_tosAgree()" disabled>Scroll to the end</button>
+    </div>
   </div>
 </div>
 <script>
@@ -4151,7 +4225,7 @@
     localStorage.setItem(MAYA_TOKEN_KEY, _googleIdToken);
     if (_googleEmail) localStorage.setItem(MAYA_EMAIL_KEY, _googleEmail);
     _hideGate();
-    _sayHello();   // v13.57: count this account and record the agreed terms
+    _maybeShowTerms();   // v13.58: first sign in meets the terms popup; hello follows agreement
     // v10.30: bridge GIS credential into Firebase Auth so we get a uid
     // to namespace cloud-saved sessions/favorites by. Then restore any
     // previously synced session from Firestore (cross-device continuity).
@@ -4172,26 +4246,45 @@
     const g = document.getElementById('signin-gate');
     if (g) g.classList.add('hidden');
   }
-  // v13.57: the terms. A new account agrees before the Google button wakes;
-  // an account that already agreed on this browser is not asked twice.
+  // v13.58: the terms open as a POPUP after the first sign in. Scrolling to
+  // the end of the text wakes the Agree button; agreement is remembered per
+  // browser and recorded with the account, and the popup never returns
+  // unless the terms version changes.
   const MAYA_TOS_KEY = 'maya_tos_accepted';
   const MAYA_TOS_VERSION = '2026-08-23';
-  function _tosChanged(checked) {
-    const g = document.getElementById('signin-gate');
-    if (checked) { try { localStorage.setItem(MAYA_TOS_KEY, MAYA_TOS_VERSION); } catch (_) {} }
-    else { try { localStorage.removeItem(MAYA_TOS_KEY); } catch (_) {} }
-    if (g) g.classList.toggle('needs-consent', !checked);
+  function _tosAccepted() {
+    try { return localStorage.getItem(MAYA_TOS_KEY) === MAYA_TOS_VERSION; } catch (_) { return false; }
+  }
+  function _maybeShowTerms() {
+    if (_tosAccepted()) { _sayHello(); return; }
+    const m = document.getElementById('tos-modal');
+    const sc = document.getElementById('tos-scroll');
+    const btn = document.getElementById('tos-agree');
+    if (!m || !sc || !btn) { _sayHello(); return; }
+    m.classList.add('open'); m.style.display = '';
+    const arm = () => {
+      if (sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 12) {
+        btn.disabled = false; btn.textContent = 'I agree';
+        sc.removeEventListener('scroll', arm);
+      }
+    };
+    sc.addEventListener('scroll', arm, { passive: true });
+    arm();   // a tall window may already show the whole text
+  }
+  function _tosAgree() {
+    try { localStorage.setItem(MAYA_TOS_KEY, MAYA_TOS_VERSION); } catch (_) {}
+    const m = document.getElementById('tos-modal');
+    if (m) { m.classList.remove('open'); m.style.display = 'none'; }
+    _sayHello();
+  }
+  function _tosDecline() {
+    const m = document.getElementById('tos-modal');
+    if (m) { m.classList.remove('open'); m.style.display = 'none'; }
+    try { if (typeof mayaSignOut === 'function') mayaSignOut(); } catch (_) {}
   }
   function _showGate() {
     const g = document.getElementById('signin-gate');
     if (g) g.classList.remove('hidden');
-    let agreed = false;
-    try { agreed = !!localStorage.getItem(MAYA_TOS_KEY); } catch (_) {}
-    const box = document.getElementById('tos-check');
-    if (box) box.checked = agreed;
-    const row = document.getElementById('signin-consent');
-    if (row && agreed) row.style.display = 'none';   // already agreed here; no nagging
-    if (g) g.classList.toggle('needs-consent', !agreed);
   }
   // v13.57: one quiet hello per session, so Admin's Users number counts
   // every account that signs in, not only the ones whose work reaches the
@@ -4241,7 +4334,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     if (_googleIdToken && _tokenIsValid(_googleIdToken)) {
       _hideGate();
-      _sayHello();   // v13.57: returning accounts count too
+      _maybeShowTerms();   // v13.58: returning accounts that never agreed meet it too
       // v10.31: re-establish Firebase Auth from the cached Google ID token on
       // every page load. Without this, returning users (who hit _hideGate
       // immediately and never go through _onGoogleCredential again) would

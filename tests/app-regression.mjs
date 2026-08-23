@@ -617,12 +617,11 @@ ok('a restored project finds its fabric swatches again',
   INDEX_SOURCE.includes('function fabricSwatchUrl(f)') &&
   INDEX_SOURCE.includes("return '/aesthetics/fabrics/' + encodeURIComponent(f.fileName)") &&
   INDEX_SOURCE.includes('fabricSwatchUrl(fb)'));
-// v13.57 supersedes "just the sign in": Fromsa asked for the terms AT the
-// door. The screen stays spare: one consent line, the button, one line of
-// fineprint, nothing else.
-ok('the sign in screen is the sign in plus one consent line',
+// v13.58: the sign in screen is spare again; the terms wait BEHIND it as a
+// popup, exactly as asked the second time.
+ok('the sign in screen is just the sign in; the terms wait behind it',
   INDEX_SOURCE.includes('bottom: 34px; left: 0; right: 0;') &&
-  /signin-bottom[\s\S]{0,900}terms\.html/.test(INDEX_SOURCE));
+  !/signin-bottom[\s\S]{0,600}terms\.html/.test(INDEX_SOURCE));
 ok('the map stops saying arriving once the picture clearly is not coming',
   MAP_SOURCE.includes('const ARRIVING_MS = 3 * 60 * 1000;') &&
   MAP_SOURCE.includes("'no picture'") &&
@@ -1120,12 +1119,15 @@ ok('the terms ship as a page, succinct, and the wall rule is in them',
   TERMS_SOURCE.includes('Take the heart away and the post comes down') &&
   TERMS_SOURCE.includes('California') &&
   FIREBASE_JSON.includes('"/terms.html"'));
-ok('a new account agrees to the terms before the sign in button wakes',
-  INDEX_SOURCE.includes('id="tos-check"') &&
-  INDEX_SOURCE.includes('needs-consent #g-signin-btn') &&
+// v13.58: the checkbox became a popup, per Fromsa: sign in first, then the
+// terms open on screen, and Agree wakes only at the end of the text.
+ok('the terms open as a popup and Agree wakes at the end of the text',
+  INDEX_SOURCE.includes('id="tos-modal"') &&
+  INDEX_SOURCE.includes('function _maybeShowTerms()') &&
+  INDEX_SOURCE.includes('sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 12') &&
   INDEX_SOURCE.includes("MAYA_TOS_KEY = 'maya_tos_accepted'") &&
   INDEX_SOURCE.includes('href="/terms.html"') &&
-  PLAYGROUND_SOURCE.includes('id="tos-check"'));
+  PLAYGROUND_SOURCE.includes('id="tos-modal"'));
 ok('unhearting sweeps every post this account made for that garment',
   INDEX_SOURCE.includes("where('uid', '==', uid).where('fp', '==', fp)") &&
   /_unpublishNow[\s\S]{0,2500}where\('fp', '==', fp\)/.test(INDEX_SOURCE));
@@ -1134,6 +1136,18 @@ ok('every sign in says hello so the Users count is complete',
   SERVER_SOURCE.includes('tosVersion') &&
   INDEX_SOURCE.includes('function _sayHello()') &&
   INDEX_SOURCE.includes("fetch('/api/hello'"));
+// ── v13.58: BACKEND in caps, the circles drawer staged on the playground ───
+ok('the Backend corner speaks in caps',
+  /#brand \{[\s\S]{0,260}text-transform: uppercase/.test(BACKEND_SOURCE));
+ok('the playground stages the circles drawer: avatar, fabrics, Pinterest',
+  PLAYGROUND_SOURCE.includes('class="drawer-circles"') &&
+  PLAYGROUND_SOURCE.includes('Orange%20Cheetah.JPG') &&
+  PLAYGROUND_SOURCE.includes('drawer-circle-pin') &&
+  PLAYGROUND_SOURCE.includes('title="Avatar"') &&
+  !PLAYGROUND_SOURCE.includes('class="drawer-top-row"') &&
+  /drawer-meta-row \{[\s\S]{0,300}margin-top: auto/.test(PLAYGROUND_SOURCE) &&
+  // the main app keeps its current drawer until Fromsa promotes the design
+  INDEX_SOURCE.includes('class="drawer-top-row"'));
 ok('deterministic warnings exist and never depend on a model call',
   SERVER_SOURCE.includes('function computeMarketingWarnings(') &&
   SERVER_SOURCE.includes('is enabled but has served nothing since') &&

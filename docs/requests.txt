@@ -16,6 +16,21 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 23, 2026, THE POPUP, THE CAPS, THE CIRCLES (v13.58)
+
+[x] "Terms should open as a pop up after sign in, scroll all the way down
+    to accept, one time." Done: the checkbox is gone; the terms open over
+    the app on first sign in and Agree wakes at the end of the text.
+[x] "Backend should be all caps." Done: BACKEND.
+[x] "The playground drawer redesign: three small circles at the top,
+    avatar face, cheetah fabric, Pinterest logo, hover says just the
+    name; projects underneath; measurements inside the avatar view; only
+    Tip, Logout, Feedback at the bottom, a little lower." Staged on the
+    Playground, per the playground rule; the app keeps its drawer until
+    the design is approved. (Note: v13.56 and v13.57 were not pushed yet
+    when this feedback came, which is why the earlier marketing drawer
+    and caps changes were not visible.)
+
 AUGUST 23, 2026, TERMS, WALL, USERS (v13.57)
 
 [x] "During sign in for new users, let them read and agree to the terms

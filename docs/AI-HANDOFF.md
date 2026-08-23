@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 243 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 245 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -56,6 +56,9 @@ on Admin on hover) is Fromsa's private staging copy. Experimental features go
 there FIRST; `frontend/index.html` changes only when he approves a promotion.
 It shares the live sign in and data, so destructive experiments still need
 care. Keep the small amber Playground badge so the two are never confused.
+Since v13.58 the playground DIVERGES from frontend (the circles drawer is
+staged there); never regenerate it as frontend plus badge without
+re-applying the blocks marked "v13.58 PLAYGROUND".
 
 Admin access: ADMIN_EMAILS defaults to fromsa@manasiyo.com and
 worldofsiyo@gmail.com only, overridable by env. /api/admin/users lists named
@@ -68,6 +71,34 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.58 (Claude): the terms popup, BACKEND caps, circles on the playground
+
+- TERMS AS A POPUP (supersedes v13.57's checkbox, per Fromsa): sign in
+  first, then #tos-modal opens over the app with the full terms text.
+  Agree is disabled and reads "Scroll to the end" until the text has been
+  scrolled to its bottom (12px tolerance; a tall window that already shows
+  everything arms immediately). Accept stores maya_tos_accepted and fires
+  /api/hello; "Not now" signs out. One time per browser; a future terms
+  change bumps MAYA_TOS_VERSION in index.html AND the modal/terms.html
+  text together. The modal body duplicates backend/terms.html on purpose
+  (no iframe): edit BOTH when the terms change.
+- BACKEND caps: #brand in backend.html is text-transform uppercase.
+- PLAYGROUND CIRCLES (staged on the playground ONLY, per the playground
+  rule; the app keeps its current drawer until Fromsa promotes it): the
+  drawer's avatar row and the bottom Fabrics/Pinterest buttons became
+  three hamburger-sized circles at the top: Avatar (the face, opens the
+  avatar view with name + measurements), Fabrics (the Orange Cheetah
+  in-house swatch, opens the fabrics drawer), Pinterest (the Pinterest
+  glyph, opens the Pinterest drawer). Hover titles are one word each. The
+  client-switch caret stays at the row's right; the name span is hidden
+  but kept (JS still writes it). Tip / Logout / Feedback ride the drawer's
+  floor (margin-top auto). IMPORTANT: playground/index.html now DIVERGES
+  from frontend/index.html. Do NOT regenerate it as frontend + badge; the
+  circles patch must be re-applied (the v13.58 blocks are marked
+  "v13.58 PLAYGROUND" in the file). Verified end to end with a local
+  browser run: circles render, drawer opens/closes, avatar view opens,
+  terms modal arms only at the end of the text.
+
 ## v13.57 (Claude): terms at the door, a truthful wall, a complete count
 
 - TERMS: backend/terms.html (served at /terms.html; the rewrite is in
@@ -77,11 +108,7 @@ The fabric sourcing revamp shipped in v13.44; see that section below.
   photos never appear), renders are visualizations not promises, orders
   are agreed with the atelier, acceptable use, as-is disclaimer, $100
   liability cap, California law. Privacy page links to it and back.
-- CONSENT AT SIGN IN: the gate shows one consent line (checkbox + Terms +
-  Privacy links); the Google button sleeps at 0.25 opacity until agreed
-  (#signin-gate.needs-consent). Agreement is remembered per browser
-  (maya_tos_accepted = version date) so nobody is asked twice; a future
-  terms change bumps MAYA_TOS_VERSION and the gate asks again.
+- CONSENT AT SIGN IN: replaced by the v13.58 popup above.
 - WALL MIRRORS HEARTS: _unpublishNow now also sweeps every post THIS
   account made for the garment's fingerprint (where uid==me and fp==fp,
   limit 10, deletes doc + storagePath). Ghost posts from older id schemes
