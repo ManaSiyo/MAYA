@@ -48,6 +48,8 @@ window.addEventListener('message', function(e){
 <script src="/aesthetics/operations/kb/kb.js"></script>
 <!-- test images embedded as data URLs → loads on a plain double-click (file://), no fetch/server needed -->
 <script src="/aesthetics/operations/tests-data.js"></script>
+<!-- Plan B: the CLO reference manifest, empty until real projects are listed -->
+<script src="/aesthetics/operations/clo-library.js"></script>
 <!-- raster→vector tracer for the Trace → SVG button (MIT, single file) -->
 <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
 <style>
@@ -97,11 +99,11 @@ window.addEventListener('message', function(e){
      and rests hanging just outside the drawer's left edge. Embedded mode
      has no header pill, so there the drawer keeps a small burger of its
      own; standalone hides it. */
-  body.drawer-open header .icon-btn.hamburger{transform:translateX(-360px)}
-  /* v13.46: same duration and curve as the drawer pane, so the pill is
-     anchored to the drawer's edge rather than chasing it. */
-  header .icon-btn.hamburger{transition:transform .45s cubic-bezier(0.22,1,0.36,1)}
-  @media (max-width: 640px){ body.drawer-open header .icon-btn.hamburger{transform:none} }
+  /* v13.61: the offset is computed in toggleDrawer from the live layout
+     (the header is width constrained, so a fixed -360px landed the pill far
+     from the drawer on wide screens). Same duration and curve as the whole
+     drawer family. */
+  header .icon-btn.hamburger{transition:transform .42s cubic-bezier(0.16,1,0.3,1)}
   html:not(.embedded) .drawer .drawer-burger{visibility:hidden}
   .drawer .drawer-burger{opacity:.85}
   .drawer .drawer-burger:hover{opacity:1}
@@ -202,7 +204,14 @@ window.addEventListener('message', function(e){
   .panel-row{font-size:11.5px;color:var(--ink);padding:3px 0;border-bottom:0.25px solid rgba(255,255,255,.08);text-align:center}
   .panel-row .q{color:var(--accent)}
   details.chunks,details.promptbox{margin-top:12px;border:0.5px solid var(--hair);border-radius:14px;background:rgba(255,255,255,0.02);padding:10px 16px}
-  details.chunks summary,details.promptbox summary{cursor:pointer;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);text-align:center}
+  /* v13.61: fold summaries join the family, arrow beside the title, sideways when closed */
+  details.chunks summary,details.promptbox summary{cursor:pointer;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);
+    display:flex;align-items:center;justify-content:center;gap:8px;list-style:none}
+  details.chunks summary::-webkit-details-marker,details.promptbox summary::-webkit-details-marker{display:none}
+  details.chunks summary::after,details.promptbox summary::after{content:'';width:6px;height:6px;flex:none;
+    border-right:1px solid var(--faint);border-bottom:1px solid var(--faint);
+    transform:rotate(45deg) translateY(-1px);transition:transform .25s}
+  details.chunks:not([open]) summary::after,details.promptbox:not([open]) summary::after{transform:rotate(-45deg)}
   .chunk{border-left:0.5px solid var(--hair);padding:6px 0 6px 12px;margin:10px 0;font-size:11.5px;color:var(--dim);line-height:1.6}
   .chunk b{color:var(--accent);font-weight:400}
   details.promptbox pre{white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:var(--dim);line-height:1.6;margin:10px 0 0}
@@ -240,7 +249,7 @@ window.addEventListener('message', function(e){
   #hscroll{display:block}
   .hpane-main{width:auto}
   .hpane-drawer{position:fixed;top:0;right:0;bottom:0;width:378px;z-index:40;
-    transform:translateX(105%);transition:transform .45s cubic-bezier(0.22,1,0.36,1);
+    transform:translateX(105%);transition:transform .42s cubic-bezier(0.16,1,0.3,1);
     pointer-events:none}
   .hpane-drawer.open{transform:none;pointer-events:auto}
   /* the drawer is a floating glass panel inside its pane (top 60 · right 18 · bottom 22) */
@@ -361,27 +370,43 @@ window.addEventListener('message', function(e){
   <div class="trace panel">
     <div class="col-head"><span class="pill active">Retrieval Trace</span></div>
     <div class="trace-grid">
-      <div class="trace-card"><div class="k">1 · Vision · garment</div><div class="v" id="t-type">,</div></div>
-      <div class="trace-card"><div class="k">2 · Routed chapter</div><div class="v" id="t-chapter">,</div></div>
-      <div class="trace-card"><div class="k">3 · Panel grammar</div><div class="v" id="t-panels">,</div></div>
-      <div class="trace-card"><div class="k">Symmetry / fixes</div><div class="v" id="t-fixes">,</div></div>
+      <div class="trace-card"><div class="k">1 · Vision · garment</div><div class="v" id="t-type">&#8230;</div></div>
+      <div class="trace-card"><div class="k">2 · Routed chapter</div><div class="v" id="t-chapter">&#8230;</div></div>
+      <div class="trace-card"><div class="k">3 · Panel grammar</div><div class="v" id="t-panels">&#8230;</div></div>
+      <div class="trace-card"><div class="k">Symmetry / fixes</div><div class="v" id="t-fixes">&#8230;</div></div>
     </div>
     <details class="chunks"><summary>4 · Retrieved book passages (top-k)</summary><div id="t-chunks">Run a grounded pass to populate.</div></details>
-    <details class="promptbox"><summary>5 · Composed grounded prompt</summary><pre id="t-prompt">,</pre></details>
+    <details class="promptbox"><summary>5 · Composed grounded prompt</summary><pre id="t-prompt">&#8230;</pre></details>
   </div>
   </div><!-- /plan-a-view -->
 
-  <!-- PLAN B · CLO route, placeholder dashboard, methodology lands here -->
+  <!-- PLAN B · CLO route: same two-panel layout as Plan A, photo left, closest CLO reference right -->
   <div id="plan-b-view" style="display:none">
-    <div class="panel" style="min-height:420px;display:flex;align-items:center;justify-content:center">
-      <div class="stage-empty" style="max-width:520px">
-        <b>Plan B · CLO Route</b><br><br>
-        The simpler path: instead of asking a model to draw geometry, Maya matches the photo
-        to the closest garment in the CLO library, then grades that proven pattern to the
-        client's measurements.<br><br>
-        <span style="color:var(--faint)">Dashboard in build, switch back to Plan A in the menu (≡).</span>
+  <div class="cols">
+    <!-- LEFT: the same photo Plan A holds -->
+    <div class="panel">
+      <div class="col-head"><span class="pill active">Client photo</span></div>
+      <div class="hero-frame">
+        <div class="hero-empty" id="hero-empty-b">
+          Pick a test or Upload in Plan A; the photo carries over here.
+        </div>
+        <img id="hero-img-b" alt="garment">
+      </div>
+      <div class="left-actions">
+        <span class="pill primary" onclick="startCloMatch()">Find closest CLO</span>
       </div>
     </div>
+    <!-- RIGHT: the closest proven CLO reference -->
+    <div class="panel">
+      <div class="col-head"><span class="pill active">Closest CLO reference</span></div>
+      <div class="stage-empty" id="clo-result" style="min-height:320px">
+        The CLO route: instead of asking a model to draw geometry, Maya matches the
+        photo to the closest proven garment in the CLO library, then grades that
+        pattern to the client's measurements.<br><br>
+        Press <b>Find closest CLO</b> to run the match.
+      </div>
+    </div>
+  </div>
   </div>
 </div>
 
@@ -654,8 +679,24 @@ function toggleDrawer(force){
   d.classList.toggle('open', open);
   // v13.44: the top bar hamburger fades while the drawer's own takes over.
   document.body.classList.toggle('drawer-open', open);
+  _placeHamburger(open);
   if(open) refreshKbStatus();
 }
+/* v13.61: the pill rests just outside the drawer's left edge, computed from
+   the live layout. The header is width constrained, so a fixed offset landed
+   the pill far from the drawer on wide screens. Measure only while the pill
+   is untransformed (it always is when the drawer is closed). */
+function _placeHamburger(open){
+  const pill=document.querySelector('header .icon-btn.hamburger'); if(!pill) return;
+  if(!open || window.innerWidth<=640){ pill.style.transform=''; return; }
+  const had=pill.style.transform; pill.style.transform='';
+  const r=pill.getBoundingClientRect();
+  const drawerLeft=window.innerWidth-378;             // .hpane-drawer left edge (inner panel starts at its left:0)
+  const shift=Math.min(0,(drawerLeft-8)-r.right);     // 8px breath between pill and glass
+  pill.style.transform=had; // restore before the frame paints, then set the target
+  requestAnimationFrame(()=>{ pill.style.transform='translateX('+shift+'px)'; });
+}
+window.addEventListener('resize',()=>{ if(document.body.classList.contains('drawer-open')) _placeHamburger(true); });
 // click outside the drawer (and not on the hamburger) closes it; Escape too
 document.addEventListener('pointerdown',(e)=>{
   const d=document.querySelector('.hpane-drawer');
@@ -676,6 +717,56 @@ function syncPlan(){
   if($('room-sub')) $('room-sub').textContent=PLAN_SUBS[p]||PLAN_SUBS.A;
   if($('plan-a-view')) $('plan-a-view').style.display = p==='A' ? '' : 'none';
   if($('plan-b-view')) $('plan-b-view').style.display = p==='B' ? '' : 'none';
+  if(p==='B') _syncPlanB();
+}
+
+/* ---- v13.61 · Plan B, the CLO route ---- */
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// Plan B borrows whatever photo Plan A is holding.
+function _syncPlanB(){
+  const a=$('hero-img'), b=$('hero-img-b'), e=$('hero-empty-b');
+  if(!b) return;
+  if(a && a.src && a.style.display!=='none'){ b.src=a.src; b.style.display='block'; if(e) e.style.display='none'; }
+  else { b.removeAttribute('src'); b.style.display='none'; if(e) e.style.display=''; }
+}
+
+// Classify the photo, then rank the CLO library: grammar type match 3 points,
+// each tag seen in the garment 1 point. Top three, or the honest truth that
+// the library has nothing close yet.
+async function startCloMatch(){
+  const img=$('hero-img-b'), out=$('clo-result');
+  if(!img || !img.src || img.style.display==='none'){ toast('Load a photo in Plan A first: pick a test or Upload.'); return; }
+  const lib=Array.isArray(window.CLO_LIBRARY)?window.CLO_LIBRARY:[];
+  out.innerHTML='Reading the garment&#8230;';
+  let g;
+  try{ g=await classifyGarment(img.src); }
+  catch(e){ out.innerHTML='Vision failed: '+esc(e&&e.message||e)+'<br><br>Check the key in the menu, then try again.'; return; }
+  const typeKey=resolveType(g.type);
+  const words=[g.type,g.subtype].concat(g.attributes||[],g.visible_seams||[],[g.closure])
+    .filter(Boolean).map(s=>String(s).toLowerCase());
+  const head='<div style="text-align:left;font-size:12px;line-height:1.9;color:var(--dim)">'
+    +'Seen: <b style="color:var(--ink);font-weight:400">'+esc(g.type||'?')+'</b>'
+    +(g.subtype?' · '+esc(g.subtype):'')+' &rarr; grammar <b style="color:var(--accent);font-weight:400">'+esc(typeKey)+'</b><br><br>';
+  if(!lib.length){
+    out.innerHTML=head+'The CLO library is empty so far. Add entries to <b>aesthetics/operations/clo-library.js</b> (the format is documented in the file) and this panel ranks them against the photo.</div>';
+    return;
+  }
+  const ranked=lib.map(item=>{
+    let score=0;
+    if((item.types||[]).indexOf(typeKey)>=0) score+=3;
+    (item.tags||[]).forEach(tag=>{ const t=String(tag).toLowerCase(); if(words.some(w=>w.indexOf(t)>=0||t.indexOf(w)>=0)) score+=1; });
+    return {item,score};
+  }).sort((x,y)=>y.score-x.score).slice(0,3).filter(r=>r.score>0);
+  if(!ranked.length){
+    out.innerHTML=head+'No CLO reference matches this garment yet ('+lib.length+' on file). Add one whose types or tags cover it to clo-library.js.</div>';
+    return;
+  }
+  out.innerHTML=head+ranked.map((r,i)=>
+    '<div class="panel-row" style="text-align:left"><span class="q">'+(i+1)+'</span> &nbsp;'
+    +esc(r.item.name||r.item.id)+' &nbsp;<span style="color:var(--faint)">match '+r.score
+    +(r.item.file?' · '+esc(r.item.file):'')+'</span></div>'
+  ).join('')+'</div>';
 }
 
 

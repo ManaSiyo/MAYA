@@ -823,7 +823,8 @@ ok('the hamburger slides out with the drawer on every page',
   INDEX_SOURCE.includes("hb.style.transform = 'translateX(") &&
   MAP_SOURCE.includes('body.drawer-open .top-btn.hamburger{transform:translateX(') &&
   BACKEND_SOURCE.includes('body.drawer-open #top-actions .top-btn.hamburger { transform: translateX(') &&
-  (!OPS_SOURCE || OPS_SOURCE.includes('body.drawer-open header .icon-btn.hamburger{transform:translateX(')));
+  // v13.61: ops computes the offset live instead of a fixed translateX
+  (!OPS_SOURCE || OPS_SOURCE.includes('function _placeHamburger(')));
 // ── v13.46 ─────────────────────────────────────────────────────────────────
 ok('the pill and each drawer share one duration and curve, anchored not chasing',
   MAP_SOURCE.includes('transition:transform .42s cubic-bezier(0.16,1,0.3,1)') &&
@@ -1181,6 +1182,27 @@ ok('the playground avatar tab: project on top, face beside name, hover actions, 
   PLAYGROUND_SOURCE.includes('id="pg-meas"') &&
   PLAYGROUND_SOURCE.includes("host.appendChild(body)") &&
   PLAYGROUND_SOURCE.includes('pgUpdatePill'));
+// ── v13.61 · Operations Room joins the family ─────────────────────────────
+ok('ops: the hamburger offset is computed from the live layout, family curve everywhere',
+  !OPS_SOURCE || (
+    OPS_SOURCE.includes('function _placeHamburger(') &&
+    !OPS_SOURCE.includes('transform:translateX(-360px)') &&
+    OPS_SOURCE.split('transition:transform .42s cubic-bezier(0.16,1,0.3,1)').length >= 3));
+ok('ops: the trace waits with ellipses, and its folds carry arrows beside the title',
+  !OPS_SOURCE || (
+    OPS_SOURCE.includes('id="t-type">&#8230;<') &&
+    OPS_SOURCE.includes('id="t-prompt">&#8230;<') &&
+    !/id="t-(?:type|chapter|panels|fixes)">,</.test(OPS_SOURCE) &&
+    OPS_SOURCE.includes('details.chunks:not([open]) summary::after')));
+ok('ops: Plan B mirrors Plan A, photo left, closest CLO reference right, honest empty library',
+  !OPS_SOURCE || (
+    OPS_SOURCE.includes('id="hero-img-b"') &&
+    OPS_SOURCE.includes('function _syncPlanB(') &&
+    OPS_SOURCE.includes('function startCloMatch(') &&
+    OPS_SOURCE.includes('/aesthetics/operations/clo-library.js') &&
+    OPS_SOURCE.includes('The CLO library is empty') &&
+    existsSync(join(ROOT, 'aesthetics/operations/clo-library.js')) &&
+    readFileSync(join(ROOT, 'aesthetics/operations/clo-library.js'), 'utf8').includes('window.CLO_LIBRARY')));
 ok('deterministic warnings exist and never depend on a model call',
   SERVER_SOURCE.includes('function computeMarketingWarnings(') &&
   SERVER_SOURCE.includes('is enabled but has served nothing since') &&

@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 251 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 253 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -72,6 +72,36 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.61 (Claude): the Operations Room joins the family
+
+- HAMBURGER OFFSET IS COMPUTED NOW: _placeHamburger() in operations.html
+  measures the pill's natural rect on open and translates it to rest 8px
+  outside the drawer's left edge (window.innerWidth - 378 - 8). The old
+  fixed -360px overshot by ~140px on wide screens because the header is
+  width constrained. Recomputed on resize while open, cleared on close,
+  skipped at or under 640px. Curves aligned to the family everywhere:
+  .42s cubic-bezier(0.16,1,0.3,1) on .hpane-drawer and the pill.
+- TRACE PLACEHOLDERS: the four trace cards and the composed-prompt pre
+  held literal commas before a run; they hold an ellipsis (&#8230;) now.
+  The chunks/promptbox fold summaries are family folds: default marker
+  gone, arrow beside the title via ::after, sideways when closed.
+- PLAN B IS A REAL ROOM: plan-b-view rebuilt as the same .cols two-panel
+  layout as Plan A. Left panel holds #hero-img-b / #hero-empty-b, synced
+  from Plan A's #hero-img by _syncPlanB() (called from syncPlan when the
+  plan is B). Right panel is #clo-result: startCloMatch() runs
+  classifyGarment on the photo, resolves the grammar type, and ranks
+  window.CLO_LIBRARY (type match 3 points, each seen tag 1 point), top
+  three or an honest empty state. The manifest is NEW
+  aesthetics/operations/clo-library.js (window.CLO_LIBRARY = [], entry
+  format documented in the file: {id,name,types,tags,file}); it ships
+  empty until Fromsa lists real CLO projects, and the panel says so
+  instead of inventing matches. A small esc() helper was added
+  (operations.html had none).
+- Verified with a local Playwright probe: pill rect lands exactly at the
+  drawer edge on a 1600px window and resets on close, ellipses render,
+  Plan B shows/syncs the photo, empty-library and one-match paths both
+  render, no page errors. Regression 253 checks green.
+
 ## v13.60 (Claude): the playground tabs drawer
 
 - STAGED ON THE PLAYGROUND ONLY (the playground rule). The v13.58 circles
@@ -101,7 +131,7 @@ The fabric sourcing revamp shipped in v13.44; see that section below.
   the functions directly; the sign-in gate eats real clicks): tabs
   render, avatar body renders in place, measurements fold opens and
   closes, fabrics tab marks itself and hands back to avatar, no page
-  errors. Full regression green (251 checks). frontend/index.html keeps
+  errors. Full regression green (250 checks then, 253 with the v13.61 additions). frontend/index.html keeps
   its old drawer on purpose until Fromsa promotes the design.
 
 ## v13.59 (Claude): marketing aesthetics, one paid fold, D W M everywhere

@@ -16,6 +16,24 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 23, 2026, THE OPERATIONS ROOM ITSELF (v13.61)
+
+[x] "In Operations Room beta the hamburger menu is so far out; make the
+    family of the drawers the same across it." Done: the offset is
+    computed from the live layout now and the curve matches every other
+    drawer.
+[x] "There is some odd pill at the bottom of the screen; fix that." Done:
+    those were the trace folds' summaries and comma placeholders; the
+    folds match the family (arrow beside the title) and the commas are
+    ellipses.
+[x] "Plan B, the CLO route, should have the same aesthetics as Plan A,
+    photo on the left and the result on the right, and it should source
+    CLO files and find the closest CLO reference." Done: Plan B is the
+    same two-panel room, the photo carries over from Plan A, and Find
+    closest CLO reads the garment and ranks aesthetics/operations/
+    clo-library.js, which is empty until real CLO projects are listed
+    (the panel says so honestly).
+
 AUGUST 23, 2026, THE PLAYGROUND TABS (v13.60)
 
 [x] "Make the drawer circles Chrome-style tabs, the height of the
