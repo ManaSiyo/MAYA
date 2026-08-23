@@ -2246,9 +2246,11 @@ async function metaInsights() {
   if (!META_TOKEN || !META_ACCOUNT) {
     return { connected: false, why: 'no token set' };
   }
+  // v13.54: inline_link_clicks is the number comparable to Google's clicks;
+  // "clicks" counts every interaction, likes and profile taps included.
   const q = (preset) => 'https://graph.facebook.com/v21.0/act_' + encodeURIComponent(META_ACCOUNT) +
     '/insights?date_preset=' + preset +
-    '&fields=spend,impressions,reach,clicks,ctr,cpc,actions' +
+    '&fields=spend,impressions,reach,frequency,clicks,inline_link_clicks,cost_per_inline_link_click,ctr,cpc,actions' +
     '&access_token=' + encodeURIComponent(META_TOKEN);
   try {
     const [w, m] = await Promise.all([
@@ -2262,7 +2264,10 @@ async function metaInsights() {
       const pick = (t) => Number((acts.find(a => a.action_type === t) || {}).value || 0);
       return {
         spend: Number(d.spend || 0), impressions: Number(d.impressions || 0),
-        reach: Number(d.reach || 0), clicks: Number(d.clicks || 0),
+        reach: Number(d.reach || 0), frequency: Number(d.frequency || 0),
+        clicks: Number(d.clicks || 0),
+        linkClicks: Number(d.inline_link_clicks || 0) || pick('link_click'),
+        costPerLinkClick: Number(d.cost_per_inline_link_click || 0),
         ctr: Number(d.ctr || 0), cpc: Number(d.cpc || 0),
         results: pick('link_click') || pick('landing_page_view') || pick('offsite_conversion'),
       };
@@ -2351,59 +2356,207 @@ async function wixInsights() {
     return { connected: false, why: String(e.message).slice(0, 160) };
   }
 }
+// ═══════════════════════════════════════════════════════════════════════════
+// v13.54: leads, from the Wix form record itself. Every submission on
+// manasiyo.com is already stored by Wix Forms; this reads that canonical
+// record with the same key the analytics use. No tracking pixel, no consent
+// banner, no Gmail parsing: the API record IS what the notification email
+// is written from, and it includes ad blocked visitors. If the key lacks
+// the Forms permission, the page says so instead of showing zeros.
+// ═══════════════════════════════════════════════════════════════════════════
+const LEADS_NAMESPACE = process.env.WIX_FORMS_NAMESPACE || 'wix.form_app.form';
+let _leadsCache = { ts: 0, data: null };
+async function wixLeads() {
+  if (!WIX_KEY) return { connected: false, why: 'no WIX_API_KEY set' };
+  if (_leadsCache.data && Date.now() - _leadsCache.ts < 10 * 60 * 1000) return _leadsCache.data;
+  try {
+    const sinceMs = Date.now() - 28 * 86400000;
+    const subs = [];
+    let cursor = null, guard = 0, done = false;
+    do {
+      const body = cursor
+        ? { query: { cursorPaging: { limit: 100, cursor } } }
+        : { query: { filter: { namespace: LEADS_NAMESPACE },
+                     sort: [{ fieldName: 'createdDate', order: 'DESC' }],
+                     cursorPaging: { limit: 100 } } };
+      const r = await fetch('https://www.wixapis.com/forms/v4/submissions/namespace/query', {
+        method: 'POST',
+        headers: { 'Authorization': WIX_KEY, 'wix-site-id': WIX_SITE, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body), signal: AbortSignal.timeout(12000),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error((j && j.message) || ('wix forms ' + r.status));
+      for (const s of (j.submissions || [])) {
+        if (new Date(s.createdDate).getTime() < sinceMs) { done = true; break; }
+        subs.push(s);
+      }
+      cursor = (!done && j.metadata && j.metadata.hasNext && j.metadata.cursors && j.metadata.cursors.next)
+        ? j.metadata.cursors.next : null;
+    } while (cursor && ++guard < 5);
+    const field = (obj, re) => {
+      for (const k of Object.keys(obj || {})) if (re.test(k)) return String(obj[k] || '').trim();
+      return '';
+    };
+    const leads = subs.map(s => {
+      const v = s.submissions || {};
+      const name = [field(v, /^first[_-]?name/i), field(v, /^last[_-]?name/i)]
+        .filter(Boolean).join(' ') || field(v, /^name/i) || 'Unnamed';
+      return { ts: s.createdDate,
+               name, email: field(v, /^e?mail/i), phone: field(v, /^phone|^tel/i) };
+    });
+    const now = Date.now();
+    const within = (ms) => leads.filter(l => now - new Date(l.ts).getTime() < ms).length;
+    const data = { connected: true,
+      today: within(86400000), d7: within(7 * 86400000), d28: leads.length,
+      lastLeadTs: leads.length ? leads[0].ts : null,
+      list: leads.slice(0, 12) };
+    _leadsCache = { ts: Date.now(), data };
+    return data;
+  } catch (e) {
+    return { connected: false, why: String(e.message).slice(0, 200) };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// v13.54: revenue, from the order book. The admin spreadsheet is the only
+// place revenue exists; this reads just the order rows through the Sheets
+// API with the Cloud Run identity. Share the sheet with the service account
+// (Viewer) and set REVENUE_SHEET_ID; adjust REVENUE_SHEET_RANGES only if
+// the tab names ever change. A row counts as an order when its last numeric
+// cell parses as a price. REVENUE_MTD / REVENUE_ORDERS override everything,
+// because a stale but present figure beats a perfect absent one.
+// ═══════════════════════════════════════════════════════════════════════════
+const REVENUE_SHEET = process.env.REVENUE_SHEET_ID || '';
+const REVENUE_RANGES = (process.env.REVENUE_SHEET_RANGES || 'Batch 1!A1:H300,Batch 2!A1:H300')
+  .split(',').map(s => s.trim()).filter(Boolean);
+let _revCache = { ts: 0, data: null };
+async function sheetRevenue() {
+  const manual = Number(process.env.REVENUE_MTD || 0);
+  if (manual > 0) {
+    const orders = Number(process.env.REVENUE_ORDERS || 0);
+    return { connected: true, manual: true, total: manual, orders,
+             aov: orders ? manual / orders : 0 };
+  }
+  if (!REVENUE_SHEET) return { connected: false, why: 'no REVENUE_SHEET_ID set' };
+  if (_revCache.data && Date.now() - _revCache.ts < 3600000) return _revCache.data;
+  try {
+    const tok = await serviceToken('https://www.googleapis.com/auth/spreadsheets.readonly');
+    const qs = REVENUE_RANGES.map(r => 'ranges=' + encodeURIComponent(r)).join('&');
+    const r = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' +
+      encodeURIComponent(REVENUE_SHEET) + '/values:batchGet?' + qs, {
+      headers: { 'Authorization': 'Bearer ' + tok }, signal: AbortSignal.timeout(12000),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error((j.error && j.error.message) || ('sheets ' + r.status));
+    let total = 0, orders = 0;
+    for (const range of (j.valueRanges || [])) {
+      for (const row of (range.values || [])) {
+        if (!Array.isArray(row) || !row.length) continue;
+        if (row.some(c => /price|revenue|total/i.test(String(c)))) continue;   // header
+        let price = NaN;
+        for (const cell of row) {
+          const n = Number(String(cell).replace(/[$,\s]/g, ''));
+          if (Number.isFinite(n) && n > 0) price = n;    // last numeric wins: the price column sits after the order number
+        }
+        if (Number.isFinite(price) && price > 0) { total += price; orders += 1; }
+      }
+    }
+    const data = { connected: true, total, orders, aov: orders ? total / orders : 0 };
+    _revCache = { ts: Date.now(), data };
+    return data;
+  } catch (e) {
+    return { connected: false, why: String(e.message).slice(0, 200) };
+  }
+}
+
+// v13.54: each network is asked in its own words, because the shared /all
+// feed flattened them into lies. Meta's "clicks" counts every interaction,
+// likes and profile taps included; only link_clicks is comparable to
+// Google's clicks. And Meta's reach deduplicates people, so it can only be
+// read from an aggregate row, never summed across days. Thirty days come
+// back so the chart can show D, W or M without another request.
 async function windsorInsights() {
   if (!WINDSOR_KEY) return { connected: false, why: 'no WINDSOR_API_KEY set' };
+  const fetchRows = async (connector, fields, preset) => {
+    const qs = new URLSearchParams({
+      api_key: WINDSOR_KEY, date_preset: preset || 'last_30d', fields,
+    });
+    const r = await fetch('https://connectors.windsor.ai/' + connector + '?' + qs.toString(),
+      { signal: AbortSignal.timeout(20000) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error((j && j.message) || ('windsor ' + connector + ' ' + r.status));
+    return Array.isArray(j.data) ? j.data : [];
+  };
+  const num = v => Number(v || 0);
   try {
-    // v13.44: campaign comes along too, so Marketing can show a Google Ads
-    // style table: one row per campaign, per source, with CTR and CPC.
-    const fetchRows = async (fields) => {
-      const qs = new URLSearchParams({
-        api_key: WINDSOR_KEY, date_preset: 'last_7d', fields,
-      });
-      const r = await fetch('https://connectors.windsor.ai/all?' + qs.toString(),
-        { signal: AbortSignal.timeout(20000) });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error((j && j.message) || ('windsor ' + r.status));
-      return Array.isArray(j.data) ? j.data : [];
-    };
-    let rows;
-    try { rows = await fetchRows('source,date,campaign,impressions,clicks,spend'); }
-    catch (_) { rows = await fetchRows('source,date,impressions,clicks,spend'); }
-    const bySource = {};
+    const [gRows, fRows, fAgg] = await Promise.all([
+      fetchRows('google_ads', 'date,campaign,campaign_status,ad_group_name,ad_group_status,impressions,clicks,spend'),
+      fetchRows('facebook', 'date,campaign,impressions,clicks,link_clicks,spend'),
+      // No date dimension: Windsor then returns the connector's own 7 day
+      // aggregate, where reach and frequency are truly deduplicated.
+      fetchRows('facebook', 'spend,impressions,clicks,link_clicks,reach,frequency', 'last_7d')
+        .then(rows => rows[0] || null).catch(() => null),
+    ]);
+    const mkSource = () => ({ impressions: 0, clicks: 0, linkClicks: 0, spend: 0, daily: {} });
+    const bySource = { google_ads: mkSource(), facebook: mkSource() };
     const byCampaign = {};
-    for (const row of rows) {
-      const src = String(row.source || 'unknown').toLowerCase();
-      if (!bySource[src]) bySource[src] = { impressions: 0, clicks: 0, spend: 0, daily: {} };
+    const byAdGroup = {};
+    const d7cut = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+    const addRow = (src, row) => {
       const b = bySource[src];
-      const imp = Number(row.impressions || 0);
-      const clk = Number(row.clicks || 0);
-      const spd = Number(row.spend || 0);
-      b.impressions += imp;
-      b.clicks += clk;
-      b.spend += spd;
       const d = String(row.date || '').slice(0, 10);
+      const imp = num(row.impressions), clk = num(row.clicks),
+            lnk = src === 'facebook' ? num(row.link_clicks) : num(row.clicks),
+            spd = num(row.spend);
       if (d) {
-        if (!b.daily[d]) b.daily[d] = { impressions: 0, clicks: 0, spend: 0 };
-        b.daily[d].impressions += imp;
-        b.daily[d].clicks += clk;
-        b.daily[d].spend += spd;
+        if (!b.daily[d]) b.daily[d] = { impressions: 0, clicks: 0, linkClicks: 0, spend: 0 };
+        const dd = b.daily[d];
+        dd.impressions += imp; dd.clicks += clk; dd.linkClicks += lnk; dd.spend += spd;
       }
+      // The headline aggregates stay the LAST 7 DAYS, as the panels promise.
+      if (d >= d7cut) { b.impressions += imp; b.clicks += clk; b.linkClicks += lnk; b.spend += spd; }
       const camp = String(row.campaign || '').trim();
-      if (camp) {
-        const key = src + ' ' + camp;
+      if (camp && d >= d7cut) {
+        const key = src + ' | ' + camp;
         if (!byCampaign[key]) byCampaign[key] = { source: src, campaign: camp,
-          impressions: 0, clicks: 0, spend: 0, lastDate: '' };
+          status: '', impressions: 0, clicks: 0, spend: 0, lastDate: '' };
         const c = byCampaign[key];
         c.impressions += imp; c.clicks += clk; c.spend += spd;
+        if (String(row.campaign_status || '')) c.status = String(row.campaign_status);
         if (d > c.lastDate) c.lastDate = d;
       }
+      // v13.54: ad groups, for the deterministic warnings. Windsor only
+      // reports days WITH traffic, so an enabled group that stops serving
+      // shows as a disappearance: enabled, seen before, silent since.
+      const ag = String(row.ad_group_name || '').trim();
+      if (ag) {
+        if (!byAdGroup[ag]) byAdGroup[ag] = { name: ag, status: '', lastImpressionDate: '', impressions7: 0 };
+        const g = byAdGroup[ag];
+        if (String(row.ad_group_status || '')) g.status = String(row.ad_group_status);
+        if (imp > 0 && d > g.lastImpressionDate) g.lastImpressionDate = d;
+        if (d >= d7cut) g.impressions7 += imp;
+      }
+    };
+    for (const row of gRows) addRow('google_ads', row);
+    for (const row of fRows) addRow('facebook', row);
+    if (fAgg) {
+      const f = bySource.facebook;
+      f.reach = num(fAgg.reach);
+      f.frequency = num(fAgg.frequency);
+      // Trust the connector's own 7 day totals over the daily sum when both
+      // exist; they are the numbers Ads Manager itself shows.
+      f.impressions = num(fAgg.impressions) || f.impressions;
+      f.clicks = num(fAgg.clicks) || f.clicks;
+      f.linkClicks = num(fAgg.link_clicks) || f.linkClicks;
+      f.spend = num(fAgg.spend) || f.spend;
     }
     const campaigns = Object.values(byCampaign)
       .sort((a, b) => b.impressions - a.impressions)
       .map(c => ({ ...c,
         ctr: c.impressions ? c.clicks / c.impressions : 0,
         cpc: c.clicks ? c.spend / c.clicks : 0 }));
-    return { connected: true, sources: bySource, campaigns };
+    return { connected: true, sources: bySource, campaigns,
+             adGroups: Object.values(byAdGroup) };
   } catch (e) {
     return { connected: false, why: String(e.message).slice(0, 160) };
   }
@@ -2467,39 +2620,54 @@ app.get('/api/admin/marketing', async (req, res) => {
   } catch (e) {
     out.analytics = { connected: false, why: String(e.message).slice(0, 200) };
   }
-  const [meta, gads, windsor, wixSite] = await Promise.all([metaInsights(), googleAdsInsights(), windsorInsights(), wixInsights()]);
+  const [meta, gads, windsor, wixSite, leads, revenue] = await Promise.all([
+    metaInsights(), googleAdsInsights(), windsorInsights(), wixInsights(), wixLeads(), sheetRevenue()]);
   out.wixSite = wixSite;
   out.meta = meta;
   out.googleAds = gads;
   out.windsor = windsor;
+  out.leads = leads;
+  out.revenue = revenue;
   // Windsor fills whichever ad panel has no direct credentials of its own.
   if (windsor.connected) {
     const w = windsor.sources || {};
     const pick = (keys) => {
-      for (const k of keys) if (w[k]) return w[k];
+      for (const k of keys) if (w[k] && (w[k].impressions || w[k].spend || Object.keys(w[k].daily || {}).length)) return w[k];
       return null;
     };
+    // v13.54: link clicks are the comparable number. Google's clicks ARE
+    // link clicks; Meta's clicks count every interaction, so both are sent
+    // and the page labels them honestly. Meta's reach and frequency come
+    // from the connector's own deduplicated aggregate. Google conversions
+    // are null because no conversion tracking is configured on the account:
+    // absence, not failure, and the page says which.
     if (!gads.connected) {
       const g = pick(['google_ads', 'googleads', 'google']);
       if (g) out.googleAds = { connected: true, via: 'windsor',
-        d7: { spend: g.spend, impressions: g.impressions, clicks: g.clicks, conversions: 0 } };
+        d7: { spend: g.spend, impressions: g.impressions, clicks: g.clicks,
+              linkClicks: g.linkClicks, conversions: null } };
     }
     if (!meta.connected) {
       const f = pick(['facebook', 'meta', 'facebook_ads']);
       if (f) out.meta = { connected: true, via: 'windsor',
-        d7: { spend: f.spend, impressions: f.impressions, reach: 0, clicks: f.clicks, ctr: 0, cpc: 0, results: 0 } };
+        d7: { spend: f.spend, impressions: f.impressions, reach: f.reach || 0,
+              clicks: f.clicks, linkClicks: f.linkClicks || 0,
+              frequency: f.frequency || 0 } };
     }
     // v13.44: one combined view for the Marketing page: a Google Ads style
     // chart (a line per source) and a campaign table, both from Windsor.
+    // v13.54: thirty days of points; the page slices D, W or M itself, and
+    // cost per click means cost per LINK click on both networks.
     const g = pick(['google_ads', 'googleads', 'google']);
     const f2 = pick(['facebook', 'meta', 'facebook_ads']);
     const dayset = new Set();
     for (const s of [g, f2]) if (s) for (const d of Object.keys(s.daily || {})) dayset.add(d);
     const days = Array.from(dayset).sort();
     const seriesOf = (s) => days.map(d => {
-      const v = (s && s.daily && s.daily[d]) || { impressions: 0, clicks: 0, spend: 0 };
-      return { date: d, impressions: v.impressions, clicks: v.clicks, spend: v.spend,
-               cpc: v.clicks ? v.spend / v.clicks : 0 };
+      const v = (s && s.daily && s.daily[d]) || { impressions: 0, clicks: 0, linkClicks: 0, spend: 0 };
+      return { date: d, impressions: v.impressions, clicks: v.clicks,
+               linkClicks: v.linkClicks, spend: v.spend,
+               cpc: v.linkClicks ? v.spend / v.linkClicks : 0 };
     });
     out.adCombined = {
       connected: true, days,
@@ -2508,7 +2676,142 @@ app.get('/api/admin/marketing', async (req, res) => {
       campaigns: windsor.campaigns || [],
     };
   }
+  // v13.54: cost per lead, the row the whole dashboard exists for.
+  const spend7 = (((out.googleAds || {}).d7 || {}).spend || 0) + (((out.meta || {}).d7 || {}).spend || 0);
+  out.costPerLead = (leads.connected && leads.d7 > 0) ? spend7 / leads.d7 : null;
+  out.warnings = computeMarketingWarnings(out, windsor);
   res.json(out);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// v13.54: the deterministic warnings. These never depend on a model call:
+// each is a plain condition over the numbers already on the page. The Suits
+// and Tailoring ad group ran four days at zero impressions and nothing on
+// the page surfaced it; this is the section that exists to prevent that.
+// The Windsor feed only reports days WITH delivery, so a group that never
+// served at all is invisible to it; what IS detectable, and is checked, is
+// an enabled group or campaign that served before and has gone silent.
+// The Google Ads promotional credit balance is not readable through any
+// connected API, so no credit warning is computed rather than a guessed one.
+// ═══════════════════════════════════════════════════════════════════════════
+function computeMarketingWarnings(out, windsor) {
+  const W = [];
+  const usd2 = v => '$' + Number(v || 0).toFixed(2);
+  try {
+    const days = (out.adCombined && out.adCombined.days) || [];
+    const lastDay = days[days.length - 1] || '';
+    if (windsor && windsor.connected) {
+      for (const g of (windsor.adGroups || [])) {
+        if (String(g.status).toUpperCase() === 'ENABLED' && g.lastImpressionDate && lastDay &&
+            g.lastImpressionDate < lastDay) {
+          W.push({ severity: 'red', text: 'Ad group "' + g.name +
+            '" is enabled but has served nothing since ' + g.lastImpressionDate + '.' });
+        }
+      }
+      for (const c of (windsor.campaigns || [])) {
+        if (String(c.status).toUpperCase() === 'ENABLED' && c.lastDate && lastDay && c.lastDate < lastDay) {
+          W.push({ severity: 'red', text: 'Campaign "' + c.campaign +
+            '" is enabled but spent nothing after ' + c.lastDate + '.' });
+        }
+      }
+    }
+    const nets = [['Google', (out.adCombined || {}).google], ['Meta', (out.adCombined || {}).meta]];
+    for (const [name, pts] of nets) {
+      if (!Array.isArray(pts) || !pts.length) continue;
+      const a = pts[pts.length - 2], b = pts[pts.length - 1];
+      if (a && b && a.cpc > 0 && b.linkClicks >= 3 && b.cpc > a.cpc * 1.5) {
+        W.push({ severity: 'red', text: name + ' cost per link click jumped from ' +
+          usd2(a.cpc) + ' to ' + usd2(b.cpc) + ' day over day.' });
+      }
+      if (pts.length >= 14) {
+        const sum = (arr, k) => arr.reduce((t, r) => t + Number(r[k] || 0), 0);
+        const cur = pts.slice(-7), prev = pts.slice(-14, -7);
+        const ctrCur = sum(cur, 'impressions') ? sum(cur, 'linkClicks') / sum(cur, 'impressions') : 0;
+        const ctrPrev = sum(prev, 'impressions') ? sum(prev, 'linkClicks') / sum(prev, 'impressions') : 0;
+        if (ctrPrev > 0 && ctrCur < ctrPrev * 0.7) {
+          W.push({ severity: 'amber', text: name + ' link CTR is down ' +
+            Math.round(100 * (1 - ctrCur / ctrPrev)) + '% week over week.' });
+        }
+      }
+    }
+    const freq = Number((((out.meta || {}).d7 || {}).frequency) || 0);
+    if (freq > 3) {
+      W.push({ severity: 'amber', text: 'Meta frequency is ' + freq.toFixed(1) +
+        ': the same people are seeing the ads more than three times a week.' });
+    }
+    if (out.leads && out.leads.connected && out.leads.d7 === 0) {
+      W.push({ severity: 'amber', text: 'No form submissions in the last 7 days' +
+        (out.leads.lastLeadTs ? ' (last one ' + String(out.leads.lastLeadTs).slice(0, 10) + ')' : '') + '.' });
+    }
+  } catch (e) {
+    console.error('[marketing] warnings failed —', e.message);
+  }
+  return W;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// v13.54: the hourly brief. The page POSTs the numbers it just painted; the
+// model reads ONLY numbers (the lead list is stripped before the call) and
+// returns structured JSON so severity colors are data, never parsed prose.
+// Cached for an hour. On any failure the endpoint fails plainly and the
+// page renders the deterministic warnings alone: never a guess.
+// ═══════════════════════════════════════════════════════════════════════════
+let _briefCache = { key: '', data: null };
+app.post('/api/admin/marketing-brief', requireAuthHeader, express.json({ limit: '256kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  const hourKey = new Date().toISOString().slice(0, 13);
+  if (_briefCache.key === hourKey && _briefCache.data) return res.json(_briefCache.data);
+  if (!process.env.OPENAI_API_KEY) return res.status(503).json({ error: 'brief_unavailable' });
+  const d = (req.body && req.body.data) || {};
+  if (d.leads) d.leads = { today: d.leads.today, d7: d.leads.d7, d28: d.leads.d28 };   // numbers only, never names
+  delete d.saEmail;
+  const askModel = async (model) => fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model, temperature: 0.2, response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content:
+          'You are reviewing a marketing dashboard for a custom fashion studio in San Francisco. ' +
+          'You receive today\'s data with recent history and precomputed warnings. Return strict JSON: ' +
+          '{"headline": one sentence on what changed that matters, ' +
+          '"observations": [up to three, each {"text": specific and using the numbers, "severity": "green"|"amber"|"red"}], ' +
+          '"action": exactly one recommended next action, one sentence}. ' +
+          'Be specific and use the numbers. Do not speculate beyond the data. ' +
+          'If nothing meaningful changed, say so in the headline and return fewer observations.' },
+        { role: 'user', content: JSON.stringify(d).slice(0, 24000) },
+      ],
+    }),
+    signal: AbortSignal.timeout(45000),
+  });
+  try {
+    let r = await askModel(process.env.MODEL_TERRA || 'gpt-5.6-terra');
+    if (!r.ok && (r.status === 400 || r.status === 404)) {
+      const errTxt = await r.text();
+      if (/model/i.test(errTxt)) r = await askModel('gpt-4.1');
+      else throw new Error(errTxt.slice(0, 200));
+    }
+    if (!r.ok) throw new Error('openai ' + r.status);
+    const j = await r.json();
+    const parsed = JSON.parse(((j.choices || [])[0] || {}).message?.content || '{}');
+    const sev = s => ['green', 'amber', 'red'].includes(s) ? s : 'amber';
+    const data = { ok: true, ts: new Date().toISOString(),
+      headline: String(parsed.headline || '').slice(0, 300),
+      observations: (Array.isArray(parsed.observations) ? parsed.observations : []).slice(0, 3)
+        .map(o => ({ text: String((o && o.text) || '').slice(0, 300), severity: sev(o && o.severity) })),
+      action: String(parsed.action || '').slice(0, 300) };
+    if (!data.headline) throw new Error('empty brief');
+    noteSpend('v1/chat/completions', req);
+    _briefCache = { key: hourKey, data };
+    return res.json(data);
+  } catch (e) {
+    console.error('[marketing-brief] failed —', String(e.message).slice(0, 200));
+    return res.status(502).json({ error: 'brief_failed' });
+  }
 });
 
 const port = process.env.PORT || 8080;

@@ -16,6 +16,35 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 23, 2026, MARKETING V2, THE INTELLIGENCE LAYER (v13.54)
+
+[x] (Pasted handoff spec "marketing.html v2".) "Bug fixes first": Meta
+    link clicks instead of all interactions, reach no longer 0,
+    conversions say not configured. Done, each verified against Windsor's
+    own numbers (27 link clicks / 53 interactions / reach 928).
+[x] "Lead counting via Gmail (replaces the pixel dependency)." Done via a
+    better door: the Wix Forms API record itself, which is what the
+    notification email is written from. Same key as analytics, no pixel,
+    no new consent. Leads tile, cost per lead, and the list newest first.
+[x] "Revenue from the admin Google Sheet," three numbers only. Code done;
+    needs the sheet shared with the service account and REVENUE_SHEET_ID
+    set (manual REVENUE_MTD fallback exists). See below.
+[x] "Chart: D / W / M toggle and hover readout." Done, choice remembered,
+    tooltip follows the cursor and works on touch.
+[x] "Today's summary drop-down" with deterministic warnings that never
+    depend on the AI. Done; the ad-group-gone-silent check is the Suits
+    and Tailoring failure class. Google credit balance is not readable
+    from any connected API, so that one warning does not exist yet rather
+    than being guessed.
+[x] "Intelligence layer" text analysis: hourly cached, structured JSON,
+    numbers only (never lead names), degrades to warnings alone. Done.
+[x] "Hamburger menu" grouped and completed. Done.
+[ ] Voice (spec 5.2): deferred on purpose, text first. Next slice.
+[ ] Owner steps: share the order spreadsheet with the Cloud Run service
+    account (Viewer) and set REVENUE_SHEET_ID; if the money row says
+    leads are not connected, regenerate the Wix API key with All site
+    permissions and replace WIX_API_KEY on Cloud Run.
+
 AUGUST 23, 2026, EVERY UPGRADE (v13.53)
 
 [x] "Proceed with the next steps. Major changes are: upgrading every model

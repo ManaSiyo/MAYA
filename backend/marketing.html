@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Marketing</title>
-<meta name="maya-version" content="13.53">
+<meta name="maya-version" content="13.54">
 <script>
 // v13.43: this page NEVER clears the shared sign in. Admin owns the deploy
 // sign-out; marketing clearing it too was why the page kept asking again.
@@ -41,6 +41,7 @@ try {
   .hamburger-icon{display:inline-flex;flex-direction:column;gap:3px;width:14px}
   .hamburger-icon span{display:block;height:1px;width:100%;background:currentColor;border-radius:1px}
   #drawer{position:fixed;top:60px;right:18px;width:290px;z-index:190;padding:14px;border-radius:18px;
+    max-height:calc(100vh - 84px);overflow-y:auto;
     border:0.5px solid var(--line);background:rgba(8,12,26,0.92);
     backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
     display:none;text-align:left}
@@ -103,6 +104,42 @@ try {
     background:transparent;cursor:pointer;transition:all .2s}
   .metric-chip:hover{color:var(--ink)}
   .metric-chip.on{color:var(--ink);border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.06)}
+  /* v13.54: the D / W / M range toggle, a smaller cousin of the metric chip. */
+  .range-chip{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.1em;
+    padding:4px 9px;border:0.5px solid var(--line);border-radius:100px;background:transparent;
+    color:var(--dim);cursor:pointer;transition:all .2s}
+  .range-chip:hover{color:var(--ink)}
+  .range-chip.on{color:var(--ink);border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.06)}
+  /* v13.54: the one-minute summary strip. */
+  #summary-fold{margin-bottom:14px;text-align:left}
+  #summary-fold summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;
+    padding:10px 16px;border:0.5px solid var(--line);border-radius:100px;
+    background:rgba(10,14,26,0.5);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+  #summary-fold summary::-webkit-details-marker{display:none}
+  #summary-fold summary .sum-title{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:0.22em;
+    text-transform:uppercase;color:var(--grp)}
+  #summary-fold summary .sum-peek{font-size:14.5px;color:var(--dim);white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis;flex:1}
+  #summary-body{padding:14px 18px 6px}
+  .sum-line{display:flex;gap:10px;align-items:baseline;font-size:15.5px;color:var(--ink);margin-bottom:8px}
+  .sum-dot{width:8px;height:8px;border-radius:50%;flex:none;position:relative;top:-1px}
+  .sum-dot.green{background:var(--green)}
+  .sum-dot.amber{background:var(--amber)}
+  .sum-dot.red{background:#f87171}
+  .sum-headline{font-size:17px;margin-bottom:10px}
+  .sum-action{font-size:15px;color:var(--dim);font-style:italic;margin:10px 0 8px}
+  /* v13.54: the chart hover layer. */
+  #ad-tip{position:absolute;top:8px;pointer-events:none;display:none;z-index:5;
+    padding:8px 11px;border-radius:12px;border:0.5px solid var(--line);
+    background:rgba(8,12,26,0.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    font-family:'Jost',sans-serif;font-size:10.5px;letter-spacing:0.04em;color:var(--ink);
+    text-align:left;white-space:nowrap}
+  #ad-tip .tip-date{color:var(--faint);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px}
+  #ad-tip .tip-row{display:flex;align-items:center;gap:6px;margin-top:2px}
+  #ad-tip .tip-row .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+  /* v13.54: leads list. */
+  #leads-table td{font-size:14.5px}
+  #leads-table .lead-when{color:var(--faint);font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.08em}
   .chart-legend{display:flex;gap:18px;font-family:'Jost',sans-serif;font-size:9.5px;
     letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin:10px 2px 0}
   .chart-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
@@ -142,15 +179,19 @@ try {
 </div>
 
 <div id="drawer">
-  <h3>Where this comes from</h3>
+  <h3>MAYA</h3>
+  <a href="/status.html">Admin<small>Health, submissions, users, systems map.</small></a>
+  <a href="/marketing.html">Marketing<small>This page.</small></a>
+  <a href="/operations.html">Operations Room Beta<small>Every client submission.</small></a>
+  <a href="https://maya.manasiyo.com" target="_blank">MAYA<small>The app itself.</small></a>
+  <a href="/playground.html">Playground<small>The private staging copy.</small></a>
+  <h3>Outside tools</h3>
+  <a href="https://manasiyo.com" target="_blank">Manasiyo.com<small>The site these visitors land on.</small></a>
   <a href="https://analytics.google.com/" target="_blank">Google Analytics<small>The property behind these numbers.</small></a>
   <a href="https://ads.google.com/" target="_blank">Google Ads<small>Search and shopping campaigns.</small></a>
   <a href="https://adsmanager.facebook.com/" target="_blank">Meta Ads Manager<small>Facebook and Instagram.</small></a>
-  <h3>The rest of MAYA</h3>
-  <a href="/status.html">Admin<small>Health, submissions, users.</small></a>
-  <a href="/operations.html">Operations Room Beta<small>Every client submission.</small></a>
-  <a href="https://maya.manasiyo.com" target="_blank">MAYA<small>The app itself.</small></a>
-  <a href="https://manasiyo.com" target="_blank">Manasiyo.com<small>The site these visitors land on.</small></a>
+  <a href="https://manage.wix.com/" target="_blank">Wix dashboard<small>Manasiyo.com itself: forms, pages, analytics.</small></a>
+  <h3>Legal</h3>
   <a href="/privacy.html" target="_blank">Privacy policy<small>What MAYA keeps.</small></a>
 </div>
 
@@ -162,6 +203,22 @@ try {
     <span id="gsi-slot" style="margin:0 0 0 auto"></span>
   </div>
 
+  <!-- v13.54: the one-minute read. A single strip: what changed, colored
+       observations, one next action. The warnings underneath are computed
+       deterministically on the server and never depend on the AI. -->
+  <details class="fold" id="summary-fold">
+    <summary>
+      <span class="sum-title">Today</span>
+      <span class="sum-peek" id="sum-peek">loading the summary&#8230;</span>
+    </summary>
+    <div id="summary-body"></div>
+  </details>
+
+  <!-- v13.54: the row the dashboard exists for. -->
+  <h2 class="grp">The money, in one row</h2>
+  <div id="money-tiles" class="tiles"></div>
+  <div id="money-note" class="note" style="display:none"></div>
+
   <!-- v13.48: the site's OWN numbers, straight from Wix. MAYA's traffic
        lives on Admin where it belongs; this page is manasiyo.com and ads. -->
   <h2 class="grp">Manasiyo.com, who is arriving</h2>
@@ -171,14 +228,20 @@ try {
   <h2 class="grp">Paid, both networks together</h2>
   <div class="panel" id="ad-combined-panel">
     <div class="metric-chips" id="metric-chips">
-      <button class="metric-chip on" data-m="clicks" onclick="setAdMetric('clicks')">Clicks</button>
+      <button class="metric-chip on" data-m="clicks" onclick="setAdMetric('clicks')" title="Link clicks: people who actually left for the site. Meta's all-interactions number lives on its panel below.">Link clicks</button>
       <button class="metric-chip" data-m="impressions" onclick="setAdMetric('impressions')">Impressions</button>
-      <button class="metric-chip" data-m="cpc" onclick="setAdMetric('cpc')">Cost per click</button>
-      <button class="metric-chip" data-m="all" onclick="setAdMetric('all')" title="Clicks, impressions and cost per click at once, each line scaled to its own peak">All three</button>
+      <button class="metric-chip" data-m="cpc" onclick="setAdMetric('cpc')" title="Dollars per link click, on both networks">Cost per click</button>
+      <button class="metric-chip" data-m="all" onclick="setAdMetric('all')" title="Link clicks, impressions and cost per click at once, each line scaled to its own peak">All three</button>
+      <span style="margin-left:auto;display:inline-flex;gap:6px" id="range-chips">
+        <button class="range-chip" data-r="D" onclick="setAdRange('D')" title="Today against yesterday">D</button>
+        <button class="range-chip on" data-r="W" onclick="setAdRange('W')" title="Last 7 days">W</button>
+        <button class="range-chip" data-r="M" onclick="setAdRange('M')" title="Last 30 days">M</button>
+      </span>
     </div>
-    <div style="position:relative">
+    <div style="position:relative" id="ad-chart-wrap">
       <svg id="ad-chart" viewBox="0 0 700 190" preserveAspectRatio="none"></svg>
       <div id="ad-ylabels"></div>
+      <div id="ad-tip"></div>
     </div>
     <div class="bars-axis" id="ad-xaxis"></div>
     <div class="chart-legend" id="ad-legend">
@@ -196,6 +259,11 @@ try {
     <div class="panel" id="google-ads-panel">Google Ads&#8230;</div>
     <div class="panel" id="meta-ads-panel">Meta Ads&#8230;</div>
   </div>
+
+  <!-- v13.54: the people the spend actually produced. -->
+  <h2 class="grp">Leads, newest first</h2>
+  <div class="panel"><table id="leads-table"><tbody></tbody></table></div>
+  <div id="leads-note" class="note" style="display:none"></div>
 
   <h2 class="grp">MAYA, where its visitors came from</h2>
   <div class="panel"><table id="sources-table"><tbody></tbody></table></div>
@@ -215,6 +283,17 @@ try {
       <br><br>
       <b>The two MAYA tables below them</b> read MAYA's own Analytics with the Cloud Run identity
       (<span id="sa-email">the service account</span> is already a Viewer on pro-maya).
+      <br><br>
+      <b>Leads, from the site's own forms.</b> The lead count reads Wix Forms directly with the same
+      <code>WIX_API_KEY</code>. If the money row says leads are not connected, the key was made with only
+      the Site Analytics permission: make a new key at manage.wix.com/account/api-keys with All site
+      permissions (or add Forms read), then replace <code>WIX_API_KEY</code> on Cloud Run yourself.
+      <br><br>
+      <b>Revenue, from the order book.</b> Share the admin spreadsheet with
+      <span class="sa-email-slot">the service account</span> as Viewer, then set
+      <code>REVENUE_SHEET_ID</code> (the long id in the sheet's URL) on Cloud Run. Tab ranges default to
+      Batch 1 and Batch 2; override with <code>REVENUE_SHEET_RANGES</code> if the tabs are renamed. In a
+      hurry, <code>REVENUE_MTD</code> and <code>REVENUE_ORDERS</code> set the numbers by hand instead.
       <br><br>
       <b>Windsor, for the paid chart above.</b> One key fills Google Ads and Meta together: windsor.ai
       &#8594; API Keys &#8594; copy the key &#8594; set it as <code>WINDSOR_API_KEY</code> on the
@@ -321,18 +400,150 @@ async function load() {
   _windsorWhy = (d.windsor && d.windsor.why) || '';
   paintAdCombined();
   paintCampaigns();
-  paintAds('google-ads-panel', 'Google Ads', d.googleAds || {}, 'conversions');
-  paintAds('meta-ads-panel', 'Meta Ads', d.meta || {}, 'results');
+  paintAds('google-ads-panel', 'Google Ads', d.googleAds || {}, 'google');
+  paintAds('meta-ads-panel', 'Meta Ads', d.meta || {}, 'meta');
+  paintMoney(d);
+  paintLeads(d.leads || {});
+  paintSummary(d);
+  fetchBrief(d);
+}
+
+// ── v13.54: the money row. Spend, leads, cost per lead, revenue, AOV. ──
+function paintMoney(d) {
+  const tiles = document.getElementById('money-tiles');
+  const note = document.getElementById('money-note');
+  if (!tiles) return;
+  const g = (d.googleAds && d.googleAds.d7) || {};
+  const f = (d.meta && d.meta.d7) || {};
+  const spend = Number(g.spend || 0) + Number(f.spend || 0);
+  const leads = d.leads || {};
+  const rev = d.revenue || {};
+  tiles.innerHTML =
+    tile('spend, 7 days', usd(spend)) +
+    tile('leads, 7 days', leads.connected ? n0(leads.d7) : '&#8212;') +
+    tile('cost per lead', d.costPerLead != null ? usd(d.costPerLead) : '&#8212;') +
+    tile('revenue, order book', rev.connected ? usd(rev.total) : '&#8212;') +
+    tile('average order', rev.connected && rev.orders ? usd(rev.aov) : '&#8212;');
+  const why = [];
+  if (!leads.connected) why.push('<b>Leads.</b> ' + esc(leads.why || '') +
+    ' The Wix API key needs the Forms read permission (regenerate it with All site permissions at manage.wix.com/account/api-keys, then update <code>WIX_API_KEY</code> on Cloud Run).');
+  if (!rev.connected) why.push('<b>Revenue.</b> ' + esc(rev.why || '') +
+    ' Share the order spreadsheet with <span id="sa-email2">the service account</span> as Viewer and set <code>REVENUE_SHEET_ID</code> on Cloud Run; or set <code>REVENUE_MTD</code> and <code>REVENUE_ORDERS</code> by hand.');
+  note.style.display = why.length ? '' : 'none';
+  note.innerHTML = why.join('<br><br>');
+  const sa2 = document.getElementById('sa-email2');
+  const sa1 = document.getElementById('sa-email');
+  if (sa2 && sa1) sa2.textContent = sa1.textContent;
+}
+
+// ── v13.54: the lead list. The submissions the spend actually produced. ──
+function paintLeads(l) {
+  const tb = document.querySelector('#leads-table tbody');
+  const note = document.getElementById('leads-note');
+  if (!tb) return;
+  if (!l.connected) {
+    tb.innerHTML = '<tr><td style="color:var(--dim)">Not connected: the money row above says what is missing.</td></tr>';
+    note.style.display = 'none';
+    return;
+  }
+  if (!(l.list || []).length) {
+    tb.innerHTML = '<tr><td style="color:var(--dim)">No form submissions in the last 28 days.</td></tr>';
+    return;
+  }
+  const when = ts => {
+    const t = new Date(ts), days = Math.floor((Date.now() - t) / 86400000);
+    return days === 0 ? 'today' : days === 1 ? 'yesterday' : days + ' days ago';
+  };
+  tb.innerHTML = '<tr><th>Who</th><th>Reach them</th><th class="num">When</th></tr>' +
+    l.list.map(x => '<tr><td>' + esc(x.name) + '</td>' +
+      '<td>' + esc(x.email || x.phone || '') + '</td>' +
+      '<td class="num lead-when">' + esc(when(x.ts)) + '</td></tr>').join('');
+}
+
+// ── v13.54: the one-minute summary. The deterministic warnings render at
+// once; the AI headline joins them when (and only when) the brief answers. ──
+let _brief = null, _briefHour = '';
+function paintSummary(d) {
+  const body = document.getElementById('summary-body');
+  const peek = document.getElementById('sum-peek');
+  if (!body) return;
+  const warnings = d.warnings || [];
+  let html = '';
+  if (_brief && _brief.ok) {
+    html += '<div class="sum-headline">' + esc(_brief.headline) + '</div>';
+    for (const o of (_brief.observations || [])) {
+      html += '<div class="sum-line"><span class="sum-dot ' + esc(o.severity) + '"></span><span>' + esc(o.text) + '</span></div>';
+    }
+  }
+  for (const w of warnings) {
+    html += '<div class="sum-line"><span class="sum-dot ' + esc(w.severity) + '"></span><span>' + esc(w.text) + '</span></div>';
+  }
+  if (_brief && _brief.ok && _brief.action) {
+    html += '<div class="sum-action">Next: ' + esc(_brief.action) + '</div>';
+  }
+  if (!html) html = '<div class="sum-line"><span class="sum-dot green"></span><span>Nothing is on fire: no warning conditions triggered today.</span></div>';
+  body.innerHTML = html;
+  if (peek) {
+    const reds = warnings.filter(w => w.severity === 'red').length;
+    const ambers = warnings.filter(w => w.severity === 'amber').length;
+    peek.textContent = (_brief && _brief.ok && _brief.headline) ? _brief.headline
+      : reds ? reds + ' red warning' + (reds > 1 ? 's' : '') + (ambers ? ', ' + ambers + ' amber' : '')
+      : ambers ? ambers + ' amber warning' + (ambers > 1 ? 's' : '')
+      : 'quiet: nothing needs you today';
+  }
+}
+async function fetchBrief(d) {
+  const hour = new Date().toISOString().slice(0, 13);
+  if (_briefHour === hour && _brief) return;   // the server caches too; be polite
+  try {
+    const payload = { ...d };
+    delete payload.analytics; delete payload.saEmail;
+    if (payload.leads) payload.leads = { today: payload.leads.today, d7: payload.leads.d7, d28: payload.leads.d28 };
+    const r = await fetch('/api/admin/marketing-brief', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: payload }),
+    });
+    if (!r.ok) return;                          // deterministic warnings stand alone
+    _brief = await r.json();
+    _briefHour = hour;
+    paintSummary(d);
+  } catch (_) { /* the warnings already rendered */ }
 }
 
 // v13.44: the combined chart. One SVG, a line per network, and the metric
 // chips decide what the lines mean. All of it comes from Windsor.
+// v13.54: clicks mean LINK clicks on both networks; D / W / M picks the
+// window (the server always sends 30 days); a proper hover layer replaces
+// the slow native tooltips.
 let _adData = null, _adMetric = 'clicks', _windsorWhy = '';
+let _adRange = 'W';
+try { _adRange = localStorage.getItem('maya_mkt_range') || 'W'; } catch (_) {}
+if (!['D', 'W', 'M'].includes(_adRange)) _adRange = 'W';
+let _hoverState = null;
 function setAdMetric(m) {
   _adMetric = m;
   document.querySelectorAll('.metric-chip').forEach(c =>
     c.classList.toggle('on', c.getAttribute('data-m') === m));
   paintAdCombined();
+}
+function setAdRange(r) {
+  _adRange = r;
+  try { localStorage.setItem('maya_mkt_range', r); } catch (_) {}
+  document.querySelectorAll('.range-chip').forEach(c =>
+    c.classList.toggle('on', c.getAttribute('data-r') === r));
+  paintAdCombined();
+}
+function _syncRangeChips() {
+  document.querySelectorAll('.range-chip').forEach(c =>
+    c.classList.toggle('on', c.getAttribute('data-r') === _adRange));
+}
+_syncRangeChips();
+// The comparable number: link clicks wherever the network reports them.
+function metricVal(r, m) {
+  if (m === 'cpc') return r.cpc;
+  if (m === 'clicks') return (r.linkClicks != null ? r.linkClicks : r.clicks);
+  return r[m];
 }
 function paintAdCombined() {
   const svg = document.getElementById('ad-chart');
@@ -353,11 +564,15 @@ function paintAdCombined() {
   }
   note.style.display = 'none';
   const W = 700, H = 190, PAD = 8;
-  const days = d.days;
+  // v13.54: the range decides how many of the 30 days are on screen.
+  const keep = _adRange === 'M' ? 30 : _adRange === 'D' ? 2 : 7;
+  const from = Math.max(0, d.days.length - keep);
+  const days = d.days.slice(from);
   const nets = [
-    { pts: d.google, color: '#8ab4f8' },
-    { pts: d.meta, color: '#81c995' },
-  ].filter(s => Array.isArray(s.pts) && s.pts.length);
+    { name: 'Google', pts: d.google, color: '#8ab4f8' },
+    { name: 'Meta', pts: d.meta, color: '#81c995' },
+  ].filter(s => Array.isArray(s.pts) && s.pts.length)
+   .map(s => ({ ...s, pts: s.pts.slice(from) }));
   const x = (i) => days.length < 2 ? W / 2 : PAD + i * (W - PAD * 2) / (days.length - 1);
   const yOf = (v, max) => H - PAD - (v / max) * (H - PAD * 2);
   const fmt = (m, v) => m === 'cpc' ? usd(v) : n0(Math.round(v));
@@ -367,24 +582,24 @@ function paintAdCombined() {
     out += '<line x1="0" y1="' + gy + '" x2="' + W + '" y2="' + gy +
       '" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>';
   }
+  const maxima = {};
   const drawSeries = (pts, color, metric, max, style) => {
-    const line = pts.map((r, i) => x(i).toFixed(1) + ',' + yOf(metric === 'cpc' ? r.cpc : r[metric], max).toFixed(1)).join(' ');
+    const line = pts.map((r, i) => x(i).toFixed(1) + ',' + yOf(metricVal(r, metric), max).toFixed(1)).join(' ');
     out += '<polyline points="' + line + '" fill="none" stroke="' + color + '"' +
       ' stroke-width="' + style.w + '"' + (style.dash ? ' stroke-dasharray="5 5"' : '') +
       (style.op ? ' stroke-opacity="' + style.op + '"' : '') +
       ' stroke-linejoin="round" stroke-linecap="round"/>';
-    if (style.dots) out += pts.map((r, i) => {
-      const v = metric === 'cpc' ? r.cpc : r[metric];
-      return '<circle cx="' + x(i).toFixed(1) + '" cy="' + yOf(v, max).toFixed(1) + '" r="2.6" fill="' + color + '">' +
-        '<title>' + esc(r.date) + ' ' + metric + ': ' + fmt(metric, v) + '</title></circle>';
-    }).join('');
+    if (style.dots) out += pts.map((r, i) =>
+      '<circle cx="' + x(i).toFixed(1) + '" cy="' + yOf(metricVal(r, metric), max).toFixed(1) +
+      '" r="2.6" fill="' + color + '"/>').join('');
   };
   if (_adMetric === 'all') {
     // v13.48: all three at once. Each METRIC is scaled to its own peak
     // across both networks, so the shapes compare; the legend says which
     // line weight is which.
     for (const metric of ['impressions', 'clicks', 'cpc']) {
-      const max = Math.max(0.0001, ...nets.flatMap(s => s.pts.map(r => metric === 'cpc' ? r.cpc : r[metric])));
+      const max = Math.max(0.0001, ...nets.flatMap(s => s.pts.map(r => metricVal(r, metric))));
+      maxima[metric] = max;
       const style = metric === 'clicks' ? { w: 2, dots: true }
         : metric === 'impressions' ? { w: 1.2, op: 0.55 }
         : { w: 1.5, dash: true, op: 0.85 };
@@ -393,7 +608,8 @@ function paintAdCombined() {
     if (ylab) ylab.innerHTML = '';
     if (yword) yword.textContent = 'each line scaled to its own peak';
   } else {
-    const max = Math.max(0.0001, ...nets.flatMap(s => s.pts.map(r => _adMetric === 'cpc' ? r.cpc : r[_adMetric])));
+    const max = Math.max(0.0001, ...nets.flatMap(s => s.pts.map(r => metricVal(r, _adMetric))));
+    maxima[_adMetric] = max;
     for (const s of nets) drawSeries(s.pts, s.color, _adMetric, max, { w: 2, dots: true });
     // y axis: the gridline values, quiet, riding the lines they mark.
     if (ylab) {
@@ -405,11 +621,17 @@ function paintAdCombined() {
       }
       ylab.innerHTML = marks;
     }
-    if (yword) yword.textContent = _adMetric === 'cpc' ? 'dollars per click, per day' : _adMetric + ' per day';
+    if (yword) yword.textContent = _adMetric === 'cpc' ? 'dollars per link click, per day' :
+      _adMetric === 'clicks' ? 'link clicks per day' : _adMetric + ' per day';
   }
+  out += '<g id="ad-hover-g"></g>';
   svg.innerHTML = out;
+  _hoverState = { days, nets, maxima, x, yOf, W, H };
   const pretty = (s) => s && s.length >= 10 ? (s.slice(5, 7) + '/' + s.slice(8, 10)) : s;
-  if (xaxis) xaxis.innerHTML = days.map(dd => '<span>' + esc(pretty(dd)) + '</span>').join('');
+  // A month of labels cannot all fit; name every few days instead.
+  const step = days.length > 16 ? 4 : days.length > 9 ? 2 : 1;
+  if (xaxis) xaxis.innerHTML = days.map((dd, i) =>
+    '<span>' + (i % step === 0 || i === days.length - 1 ? esc(pretty(dd)) : '') + '</span>').join('');
   // the second legend row: line styles, only when all three are drawn
   const legend = document.getElementById('ad-legend');
   let styleRow = document.getElementById('ad-style-legend');
@@ -426,6 +648,59 @@ function paintAdCombined() {
       '<span><span class="lg-line dash"></span>cost per click</span>';
   } else if (styleRow) styleRow.remove();
 }
+// v13.54: the hover layer. One pointer handler over the chart computes the
+// nearest day, draws a guide line and enlarged dots in the SVG, and floats
+// a tooltip that follows the cursor and clamps to the panel edges. The same
+// handler serves touch.
+(function bindChartHover() {
+  const wrap = document.getElementById('ad-chart-wrap');
+  const tip = document.getElementById('ad-tip');
+  if (!wrap || !tip) return;
+  const clear = () => {
+    tip.style.display = 'none';
+    const g = document.getElementById('ad-hover-g');
+    if (g) g.innerHTML = '';
+  };
+  const show = (clientX) => {
+    const st = _hoverState;
+    const g = document.getElementById('ad-hover-g');
+    if (!st || !g || !st.days.length) return clear();
+    const rect = wrap.getBoundingClientRect();
+    const fx = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
+    const i = Math.round(fx * (st.days.length - 1));
+    const gx = st.x(i);
+    let overlay = '<line x1="' + gx.toFixed(1) + '" y1="0" x2="' + gx.toFixed(1) + '" y2="' + st.H +
+      '" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>';
+    const metrics = _adMetric === 'all' ? ['impressions', 'clicks', 'cpc'] : [_adMetric];
+    const fmtV = (m, v) => m === 'cpc' ? usd(v) : n0(Math.round(v));
+    let rows = '';
+    for (const s of st.nets) {
+      const r = s.pts[i];
+      if (!r) continue;
+      for (const m of metrics) {
+        overlay += '<circle cx="' + gx.toFixed(1) + '" cy="' +
+          st.yOf(metricVal(r, m), st.maxima[m] || 1).toFixed(1) +
+          '" r="4.5" fill="' + s.color + '" stroke="rgba(0,0,0,0.5)" stroke-width="1"/>';
+      }
+      const words = metrics.map(m =>
+        fmtV(m, metricVal(r, m)) + (m === 'cpc' ? ' per link click' : ' ' + (m === 'clicks' ? 'link clicks' : m))).join(' &#183; ');
+      rows += '<div class="tip-row"><span class="dot" style="background:' + s.color + '"></span>' +
+        esc(s.name) + '&nbsp; ' + words + '</div>';
+    }
+    g.innerHTML = overlay;
+    tip.innerHTML = '<div class="tip-date">' + esc(st.days[i]) + '</div>' + rows;
+    tip.style.display = 'block';
+    const px = fx * rect.width;
+    const tw = tip.offsetWidth || 140;
+    tip.style.left = Math.min(Math.max(px - tw / 2, 4), rect.width - tw - 4) + 'px';
+  };
+  wrap.addEventListener('mousemove', e => show(e.clientX));
+  wrap.addEventListener('mouseleave', clear);
+  wrap.addEventListener('touchstart', e => { if (e.touches[0]) show(e.touches[0].clientX); }, { passive: true });
+  wrap.addEventListener('touchmove', e => { if (e.touches[0]) show(e.touches[0].clientX); }, { passive: true });
+  wrap.addEventListener('touchend', clear);
+})();
+
 function paintCampaigns() {
   const tb = document.querySelector('#campaigns-table tbody');
   if (!tb) return;
@@ -488,7 +763,12 @@ function paintSite(a) {
     (a.pages || []).map(p => '<tr><td>' + esc(p.path) + '</td><td class="num">' + n0(p.views) + '</td></tr>').join('');
 }
 
-function paintAds(id, name, d, resultWord) {
+// v13.54: the two panels compare the same thing now. "Link clicks" means a
+// person who actually left for the site: Google's clicks already are link
+// clicks, and Meta's clicks (every interaction, likes and profile taps
+// included) show separately as "All interactions" so they can never dress
+// up as traffic again. Cost per link click is the honest price on both.
+function paintAds(id, name, d, kind) {
   const el = document.getElementById(id);
   if (!d.connected) {
     el.innerHTML = '<div style="font-size:19px;margin-bottom:6px">' + name + '</div>' +
@@ -497,18 +777,27 @@ function paintAds(id, name, d, resultWord) {
     return;
   }
   const w = d.d7 || {};
+  const linkClicks = w.linkClicks != null ? w.linkClicks : w.clicks;
+  let rows =
+    '<tr><td>Impressions</td><td class="num">' + n0(w.impressions) + '</td></tr>';
+  if (kind === 'meta') {
+    rows +=
+      '<tr><td>Reach</td><td class="num">' + n0(w.reach) + '</td></tr>' +
+      '<tr><td>Link clicks</td><td class="num">' + n0(linkClicks) + '</td></tr>' +
+      '<tr><td>All interactions</td><td class="num">' + n0(w.clicks) + '</td></tr>' +
+      (w.frequency ? '<tr><td>Frequency</td><td class="num">' + Number(w.frequency).toFixed(1) + '</td></tr>' : '');
+  } else {
+    rows +=
+      '<tr><td>Link clicks</td><td class="num">' + n0(linkClicks) + '</td></tr>' +
+      '<tr><td>Conversions</td><td class="num">' +
+        (w.conversions == null ? '<span style="color:var(--faint)">not configured</span>' : n0(w.conversions)) + '</td></tr>';
+  }
+  rows += '<tr><td>Cost per link click</td><td class="num">' +
+    usd(linkClicks ? (w.spend / linkClicks) : 0) + '</td></tr>';
   el.innerHTML = '<div style="font-size:19px;margin-bottom:2px">' + name + '</div>' +
     '<div style="font-family:\'Jost\',sans-serif;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--faint);margin-bottom:8px">last 7 days</div>' +
     '<div class="money">' + usd(w.spend) + '</div>' +
-    '<table style="margin-top:8px"><tbody>' +
-      '<tr><td>Impressions</td><td class="num">' + n0(w.impressions) + '</td></tr>' +
-      (w.reach !== undefined ? '<tr><td>Reach</td><td class="num">' + n0(w.reach) + '</td></tr>' : '') +
-      '<tr><td>Clicks</td><td class="num">' + n0(w.clicks) + '</td></tr>' +
-      '<tr><td>' + resultWord.charAt(0).toUpperCase() + resultWord.slice(1) + '</td><td class="num">' +
-        n0(w[resultWord] !== undefined ? w[resultWord] : w.results) + '</td></tr>' +
-      '<tr><td>Cost per click</td><td class="num">' +
-        usd(w.clicks ? (w.spend / w.clicks) : 0) + '</td></tr>' +
-    '</tbody></table>';
+    '<table style="margin-top:8px"><tbody>' + rows + '</tbody></table>';
 }
 
 setInterval(() => { if (_idTok && document.visibilityState === 'visible') load(); }, 180000);

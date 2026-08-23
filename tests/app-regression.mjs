@@ -980,7 +980,9 @@ ok('marketing draws both networks on one chart with a campaign table',
   MKT_SOURCE.includes('function paintAdCombined()') &&
   MKT_SOURCE.includes('id="campaigns-table"') &&
   SERVER_SOURCE.includes('out.adCombined') &&
-  SERVER_SOURCE.includes("'source,date,campaign,impressions,clicks,spend'"));
+  // v13.54: each network is asked in its own words now, not through /all.
+  SERVER_SOURCE.includes("'date,campaign,campaign_status,ad_group_name,ad_group_status,impressions,clicks,spend'") &&
+  SERVER_SOURCE.includes("'date,campaign,impressions,clicks,link_clicks,spend'"));
 ok('fabric sourcing looks across the world, four wide, swiped sideways',
   BACKEND_SOURCE.includes('const WORLD_MERCHANTS') &&
   BACKEND_SOURCE.includes('repeat(4, minmax(0, 1fr))') &&
@@ -1033,6 +1035,57 @@ ok('a gradient-only fabric card offers Visualize and wears Generated after',
   BACKEND_SOURCE.includes('function visualizeFabricCard(') &&
   BACKEND_SOURCE.includes("lbl.textContent = 'Generated'") &&
   BACKEND_SOURCE.includes("'/api/visualize-fabric'"));
+// ── v13.54: marketing tells the truth and counts what matters ──────────────
+ok('Meta and Google compare link clicks, never all interactions',
+  SERVER_SOURCE.includes('inline_link_clicks') &&
+  SERVER_SOURCE.includes('link_clicks') &&
+  MKT_SOURCE.includes('>Link clicks<') &&
+  MKT_SOURCE.includes('All interactions') &&
+  MKT_SOURCE.includes('Cost per link click'));
+ok('Meta reach and frequency come from the deduplicated aggregate, never 0',
+  SERVER_SOURCE.includes("'spend,impressions,clicks,link_clicks,reach,frequency'") &&
+  SERVER_SOURCE.includes('reach: f.reach || 0') &&
+  !SERVER_SOURCE.includes('reach: 0,'));
+ok('Google conversions say not configured instead of implying failure',
+  SERVER_SOURCE.includes('conversions: null') &&
+  MKT_SOURCE.includes('not configured'));
+ok('leads come from the Wix form record itself, no pixel, no Gmail parsing',
+  SERVER_SOURCE.includes('async function wixLeads()') &&
+  SERVER_SOURCE.includes('forms/v4/submissions/namespace/query') &&
+  SERVER_SOURCE.includes('out.leads = leads') &&
+  MKT_SOURCE.includes('function paintLeads(') &&
+  MKT_SOURCE.includes('id="leads-table"'));
+ok('the money row: spend, leads, cost per lead, revenue, average order',
+  SERVER_SOURCE.includes('out.costPerLead') &&
+  SERVER_SOURCE.includes('async function sheetRevenue()') &&
+  SERVER_SOURCE.includes('REVENUE_SHEET_ID') &&
+  MKT_SOURCE.includes('function paintMoney(') &&
+  MKT_SOURCE.includes("tile('cost per lead'"));
+ok('deterministic warnings exist and never depend on a model call',
+  SERVER_SOURCE.includes('function computeMarketingWarnings(') &&
+  SERVER_SOURCE.includes('is enabled but has served nothing since') &&
+  SERVER_SOURCE.includes('cost per link click jumped') &&
+  SERVER_SOURCE.includes('week over week') &&
+  SERVER_SOURCE.includes('Meta frequency is'));
+ok('the one-minute summary strip renders warnings even when the AI is down',
+  MKT_SOURCE.includes('id="summary-fold"') &&
+  MKT_SOURCE.includes('function paintSummary(') &&
+  /if \(!r\.ok\) return;\s+\/\/ deterministic warnings stand alone/.test(MKT_SOURCE) &&
+  SERVER_SOURCE.includes("app.post('/api/admin/marketing-brief'") &&
+  SERVER_SOURCE.includes('never names'));
+ok('the chart has D W M ranges that survive a reload, and a real hover',
+  MKT_SOURCE.includes('class="range-chip"') &&
+  MKT_SOURCE.includes("localStorage.setItem('maya_mkt_range'") &&
+  MKT_SOURCE.includes('function bindChartHover()') &&
+  MKT_SOURCE.includes("id=\"ad-tip\"") &&
+  MKT_SOURCE.includes('touchmove') &&
+  !/<title>[^<]*<\/title><\/circle>/.test(MKT_SOURCE));
+ok('the marketing menu holds MAYA pages, outside tools and legal, grouped',
+  MKT_SOURCE.includes('<h3>MAYA</h3>') &&
+  MKT_SOURCE.includes('<h3>Outside tools</h3>') &&
+  MKT_SOURCE.includes('<h3>Legal</h3>') &&
+  MKT_SOURCE.includes('https://manage.wix.com/') &&
+  MKT_SOURCE.includes('/playground.html'));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

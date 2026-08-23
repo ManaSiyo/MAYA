@@ -75,6 +75,12 @@ its primary route with the proven `gpt-4.1` registered as the router
 fallback. Same 60 second ceiling, request body, validation, response and
 static fallback as v13.51.
 
+New AI call site, v13.54: POST `/api/admin/marketing-brief` (admin only)
+summarizes the marketing numbers once an hour on `MODEL_TERRA` (one-shot
+`gpt-4.1` fallback on a model-shaped error), returns structured JSON, and
+receives numbers only: lead names and emails are stripped server-side
+before the call. On failure the page's deterministic warnings stand alone.
+
 First Google surface, v13.53: `/api/visualize-fabric` (admin only) asks
 `NANO_BANANA_MODEL` (default `gemini-3.1-flash-image`) on Vertex AI, in
 `VERTEX_LOCATION` (default `us-central1`), inside this same Google Cloud

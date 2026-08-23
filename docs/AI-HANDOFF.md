@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 220 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 229 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -67,6 +67,73 @@ ad panels (impressions, clicks, spend, last 7 days) through Windsor. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.54 (Claude): Marketing v2, the intelligence layer
+
+Built from Fromsa's pasted handoff spec ("marketing.html v2"). Build order
+followed the spec: truth first, then leads, revenue, warnings, chart, AI,
+menu. Voice (spec 5.2) is DEFERRED on purpose: text first, voice when the
+text layer is answering well.
+
+- TRUTH FIXES (spec 0): windsorInsights() now asks each connector in its own
+  words instead of the flattening /all feed. Meta link_clicks (27, $2.12)
+  and Google clicks are the comparable pair; Meta's every-interaction
+  "clicks" (53, $1.08) shows separately as "All interactions". Meta reach
+  and frequency come from a no-date-dimension aggregate call (Windsor then
+  returns the connector's own deduplicated totals: reach 928 verified),
+  fixing the hardcoded reach: 0. Google conversions are null + "not
+  configured" on screen: absence, not failure. Direct metaInsights() also
+  requests inline_link_clicks / cost_per_inline_link_click / frequency for
+  whenever META_ADS_TOKEN is set.
+- LEADS (spec 1, better source): wixLeads() reads the canonical Wix Forms
+  record (POST forms/v4/submissions/namespace/query, same WIX_API_KEY +
+  wix-site-id headers as analytics, namespace wix.form_app.form, 10 min
+  cache, 28d window by pagination, names/emails parsed from the field-id
+  keys). NOT Gmail parsing: the API record is what the notification email
+  is written from, and needs no new OAuth. VERIFIED live through Fromsa's
+  Wix account: 20 real submissions returned. If the Cloud Run key was made
+  analytics-only, leads report why and the page shows the fix (regenerate
+  key with All site permissions). No pixel was added, per spec.
+- REVENUE (spec 2): sheetRevenue() batchGets REVENUE_SHEET_RANGES (default
+  'Batch 1!A1:H300,Batch 2!A1:H300') from REVENUE_SHEET_ID with the service
+  identity (spreadsheets.readonly), 1h cache; a row counts as an order when
+  its last numeric cell parses as a price; REVENUE_MTD/REVENUE_ORDERS are
+  the manual override. NEEDS OWNER SETUP: share the sheet with the service
+  account + set REVENUE_SHEET_ID (the fold on the page says how). Until
+  then the money row shows a dash, never a guess.
+- MONEY ROW: spend 7d, leads 7d, out.costPerLead = (google+meta spend)/leads,
+  revenue total, AOV. Lead list (12 newest) under the panels.
+- WARNINGS (spec 4): computeMarketingWarnings(), deterministic, no model:
+  enabled ad group silent since date X (Windsor only reports days WITH
+  delivery, so a never-served group is invisible; a served-then-silent one
+  is caught: this is the Suits and Tailoring failure class), enabled
+  campaign spending nothing, CPC-per-link-click +50% DoD, link CTR -30%
+  WoW (14d dailies), Meta frequency > 3, no leads in 7d. Google Ads credit
+  balance is NOT readable via any connected API: no credit warning is
+  computed rather than a guessed one (documented gap).
+- SUMMARY STRIP + AI (spec 4+5.1): collapsed "Today" strip at the top;
+  deterministic warnings render immediately; POST /api/admin/marketing-brief
+  (requireAdmin, 1h server cache keyed by UTC hour, MODEL_TERRA with a
+  one-shot gpt-4.1 fallback on model-shaped errors, response_format
+  json_object → {headline, observations[{text,severity}], action}) adds the
+  hourly reading. Lead names/emails are stripped before the model sees the
+  payload: numbers only, never names. On any failure the strip shows the
+  warnings alone.
+- CHART (spec 3): D / W / M range chips (localStorage maya_mkt_range),
+  server always sends 30 days and the page slices; D = today vs yesterday
+  (Windsor has no hourly). Native <title> tooltips replaced by a hover
+  layer: guide line, enlarged dots, floating clamped tooltip, touchstart/
+  touchmove served by the same handler. "Clicks" chip now means link clicks
+  on both networks; chart cpc = spend/linkClicks per day.
+- MENU (spec 6): grouped MAYA / Outside tools / Legal, with Marketing,
+  Playground, Wix dashboard added; drawer scrolls (max-height).
+- Campaign key separator in windsorInsights was a literal NUL byte ('\\0')
+  hiding in the old code (made grep call server.js binary); now ' | '.
+- Env summary (new, all optional): REVENUE_SHEET_ID, REVENUE_SHEET_RANGES,
+  REVENUE_MTD, REVENUE_ORDERS, WIX_FORMS_NAMESPACE.
+- Do not point the panels back at Windsor /all; do not sum daily reach; do
+  not let the brief endpoint receive lead names; do not compute a Google
+  credit warning without a real balance source.
 
 ## v13.53 (Claude): the tier upgrade, the allowlist, privacy, Nano Banana
 
