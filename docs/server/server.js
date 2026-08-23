@@ -1871,7 +1871,12 @@ async function marketingProperty(token) {
   if (!r.ok) throw new Error('ga admin ' + r.status);
   const all = ((await r.json()).accountSummaries || []).flatMap(a => a.propertySummaries || []);
   // The site property, by name. Falls back to the only one there is.
-  const hit = all.find(p => /mana\s*siyo|manasiyo/i.test(p.displayName || '')) || all[0];
+  // v13.47: prefer the site's property by name; failing that, any property
+  // that is NOT MAYA's own (pro-maya), so sharing the manasiyo.com property
+  // is enough by itself; failing that, whatever there is.
+  const hit = all.find(p => /mana\s*siyo|manasiyo/i.test(p.displayName || ''))
+    || all.find(p => !/pro-maya/i.test(p.displayName || ''))
+    || all[0];
   if (!hit) throw new Error('no Analytics property is shared with this server yet');
   _mktProp = { id: hit.property, name: hit.displayName || '', ts: Date.now() };
   return _mktProp;

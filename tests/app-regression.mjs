@@ -824,6 +824,26 @@ ok('Fabrics and Pinterest run the same full height as the main drawer',
   /#fabrics-drawer, #pinterest-drawer \{[\s\S]{0,200}top: 10px; right: 18px; bottom: 10px;/.test(INDEX_SOURCE));
 ok('Back in Fabrics or Pinterest keeps the main drawer open',
   INDEX_SOURCE.includes("'#notes-drawer, #hamburger-toggle, #fabrics-drawer, #pinterest-drawer, #feedback-modal'"));
+// ── v13.47, the numbers audit ──────────────────────────────────────────────
+ok('the MAYA door chips can actually be reached and clicked',
+  MAP_SOURCE.includes('padding-left:10px') &&
+  MAP_SOURCE.includes('transition:opacity .18s ease .4s') &&
+  MAP_SOURCE.includes('.card-maya .pg-chips:hover'));
+ok('every traffic pill says what it counts on hover',
+  MAP_SOURCE.includes('signed in or not, from Analytics') &&
+  MAP_SOURCE.includes('Visitors who never sign in are counted in the traffic numbers, not here'));
+ok('an unnamed user row says it will take a name at next sign in',
+  MAP_SOURCE.includes('earlier account, named at its next sign in'));
+ok('marketing names whose traffic it shows and how to connect the site',
+  MKT_SOURCE.includes("isMaya ? 'MAYA, who is arriving'") &&
+  MKT_SOURCE.includes('id="property-note"') &&
+  MKT_SOURCE.includes('MARKETING_GA_PROPERTY_ID') &&
+  MKT_SOURCE.includes('WINDSOR_API_KEY'));
+ok('paid sits at the top of marketing and the four week bars are gone',
+  MKT_SOURCE.indexOf('Paid, both networks together') < MKT_SOURCE.indexOf('Where they came from') &&
+  !MKT_SOURCE.includes('id="daily-bars"'));
+ok('sharing the site property alone is enough for marketing to pick it',
+  SERVER_SOURCE.includes("all.find(p => !/pro-maya/i.test(p.displayName || ''))"));
 ok('a click anywhere outside the drawer closes it, on every page',
   /pointerdown[\s\S]{0,400}toggleNotesDrawer\(false\)/.test(INDEX_SOURCE) &&
   /pointerdown[\s\S]{0,400}toggleDrawer\(false\)/.test(MAP_SOURCE) &&

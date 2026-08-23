@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.46">
+<meta name="maya-version" content="13.47">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -248,9 +248,14 @@ try {
   /* v13.45: hovering MAYA reveals the two back rooms, the Operations Room
      Beta and the Playground, as chips hanging to its right. */
   .card-maya{position:relative}
-  .card-maya .pg-chips{position:absolute;left:100%;margin-left:10px;top:50%;transform:translateY(-50%);
-    display:flex;gap:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s}
-  .card-maya:hover .pg-chips,.card-maya:focus .pg-chips{opacity:1;pointer-events:auto}
+  /* v13.47: the gap between MAYA and its chips is INSIDE the chip strip
+     (padding, not margin), and the strip lingers a moment after the cursor
+     leaves, so the chips can actually be reached and clicked. */
+  .card-maya .pg-chips{position:absolute;left:100%;top:50%;transform:translateY(-50%);
+    display:flex;gap:6px;white-space:nowrap;padding-left:10px;
+    opacity:0;pointer-events:none;transition:opacity .18s ease .4s}
+  .card-maya:hover .pg-chips,.card-maya:focus .pg-chips,.card-maya .pg-chips:hover{
+    opacity:1;pointer-events:auto;transition-delay:0s}
   .pg-chip{font-family:'Jost',sans-serif;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;
     color:var(--dim);border:0.5px solid var(--line);border-radius:100px;padding:3px 9px;
     text-decoration:none}
@@ -357,9 +362,10 @@ try {
   </details>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-22c">
+  <details class="fold" id="changes-fold" data-latest="2026-08-22d">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 22</b>The numbers audit. Everything on this page IS working: live now, today, 7 days and 28 days are MAYA's own visitors from Analytics, signed in or not, and each pill now says so when you rest on it. Users counts Google accounts that signed in to MAYA, which is why it can be 2 while visitors are 24; the unnamed row takes its name the next time that account signs in. Marketing says honestly whose traffic it shows: MAYA's, because manasiyo.com has no Analytics property shared yet, and the fold at the bottom of Marketing says exactly how to change that. On Marketing the paid chart moved to the top, the four week bar graph that repeated the tiles is gone, and the chips beside MAYA hold still long enough to be clicked.</div>
     <div class="chg"><b>Aug 22</b>The pill is anchored now, not chasing. In MAYA its position is written from the drawer's own motion every frame, so the two are glued together, and on this page and the Backend the drawer glides with exactly the pill's timing, one piece. Fabrics and Pinterest stand the same full height as the main drawer, and Back in either one only steps back: the main drawer stays. The doors say it properly: MANA SIYO, MARKETING, MAYA.</div>
     <div class="chg"><b>Aug 22</b>The hamburger rides with the drawer now. Open it and the pill slides left with the panel, coming to rest just outside the drawer's edge, still there, still one tap to close. A click anywhere else on the screen closes the drawer too, here, in MAYA, in the Backend and in Marketing. The doors read Mana, Marketing, MAYA, and resting on MAYA reveals the two back rooms, Operations Room Beta and the Playground. On a phone the cards start a little smaller, the words sit a little smaller, and a two finger pinch on any card resizes it, saved like any other change.</div>
     <div class="chg"><b>Aug 22</b>The viewer's notes and attributes are one column now: every value in the design notes is a small pill you can cross off, exactly the way attributes worked, so what you keep and what you drop reads in one place. The button that fires it all says Visualize, and picking a picture says Use this reference. On this page the four doors dropped their pills and stand as plain words, a size up and closer together, with Mana as the third; the drawer runs the full height and answers a mouse drag as well as a finger, and the hamburger rides over with it, sitting in the drawer's own corner, here, in MAYA, in the Backend and in the Operations Room. The Backend calls itself Backend in the corner and its drawer says Submissions, because that is what they are. Marketing draws both ad networks on one Google style chart, clicks, impressions or cost per click, with a campaign table underneath that says honestly whether each one delivered. And fabric sourcing looks across the world: four columns to a page, swiped sideways, Mood in New York through Tokyo, Antwerp and Sydney, working straight from the full view without waiting for a dissection, with the in-house library warmed early so it opens instantly.</div>
@@ -958,13 +964,13 @@ function _paintHeadTiles(d) {
   if (head.dataset.sig === sig) { head.classList.remove('hidden'); return; }
   head.dataset.sig = sig;
   head.innerHTML =
-    '<div class="tile" id="users-tile" title="Separate Google accounts that have signed in to MAYA"><div class="k">users</div>' +
+    '<div class="tile" id="users-tile" title="Separate Google accounts that have signed in to MAYA. Visitors who never sign in are counted in the traffic numbers, not here."><div class="k">users</div>' +
       '<div class="v">' + (acc ? acc.total : em) + '</div></div>' +
-    '<div class="tile live" title="People on the site right now"><div class="k">&#9679; live now</div>' +
+    '<div class="tile live" title="Browsers on maya.manasiyo.com this minute, from Analytics"><div class="k">&#9679; live now</div>' +
       '<div class="v">' + (live === null ? em : live) + '</div></div>' +
-    '<div class="tile"><div class="k">today</div><div class="v">' + n('today') + '</div></div>' +
-    '<div class="tile"><div class="k">7 days</div><div class="v">' + n('d7') + '</div></div>' +
-    '<div class="tile"><div class="k">28 days</div><div class="v">' + n('d28') + '</div></div>';
+    '<div class="tile" title="People who opened MAYA today, signed in or not, from Analytics"><div class="k">today</div><div class="v">' + n('today') + '</div></div>' +
+    '<div class="tile" title="People who opened MAYA in the last 7 days, from Analytics"><div class="k">7 days</div><div class="v">' + n('d7') + '</div></div>' +
+    '<div class="tile" title="People who opened MAYA in the last 28 days, from Analytics"><div class="k">28 days</div><div class="v">' + n('d28') + '</div></div>';
   head.classList.remove('hidden');
   _wireUsersPop();
 }
@@ -1003,7 +1009,7 @@ function _wireUsersPop() {
       return h < 48 ? h + 'h ago' : Math.round(h / 24) + 'd ago';
     };
     pop.innerHTML = (d.users || []).slice(0, 12).map(u =>
-      '<div class="up-row"><span>' + (u.email ? u.email.replace(/[&<>]/g, '') : '<i>before names were kept</i>') +
+      '<div class="up-row"><span>' + (u.email ? u.email.replace(/[&<>]/g, '') : '<i>earlier account, named at its next sign in</i>') +
       '</span><span class="up-when">' + when(u.lastSeenMs) + '</span></div>').join('') ||
       '<div class="up-row dim">nobody yet</div>';
   });

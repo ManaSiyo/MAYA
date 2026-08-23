@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Marketing</title>
-<meta name="maya-version" content="13.46">
+<meta name="maya-version" content="13.47">
 <script>
 // v13.43: this page NEVER clears the shared sign in. Admin owns the deploy
 // sign-out; marketing clearing it too was why the page kept asking again.
@@ -148,22 +148,16 @@ try {
     <span id="gsi-slot" style="margin:0 0 0 auto"></span>
   </div>
 
-  <h2 class="grp">Manasiyo.com, who is arriving</h2>
+  <!-- v13.47: honest heading. It names the property actually being read;
+       today that is MAYA's own Analytics, because manasiyo.com has no
+       property shared with the server yet (the fold below says how). -->
+  <h2 class="grp" id="arriving-head">Who is arriving</h2>
   <div id="site-tiles" class="tiles"></div>
   <div id="site-note" class="note" style="display:none"></div>
+  <div id="property-note" class="note" style="display:none;margin-top:8px"></div>
 
-  <h2 class="grp">Every day, the last four weeks</h2>
-  <div class="panel">
-    <div class="bars" id="daily-bars"></div>
-    <div class="bars-axis"><span id="daily-from">&#8212;</span><span id="daily-to">&#8212;</span></div>
-  </div>
-
-  <h2 class="grp">Where they came from</h2>
-  <div class="panel"><table id="sources-table"><tbody></tbody></table></div>
-
-  <h2 class="grp">What they read</h2>
-  <div class="panel"><table id="pages-table"><tbody></tbody></table></div>
-
+  <!-- v13.47: paid moved to the top, per Fromsa; the four week bar graph is
+       gone (it repeated the tiles). -->
   <h2 class="grp">Paid, both networks together</h2>
   <div class="panel" id="ad-combined-panel">
     <div class="metric-chips" id="metric-chips">
@@ -188,12 +182,26 @@ try {
     <div class="panel" id="meta-ads-panel">Meta Ads&#8230;</div>
   </div>
 
+  <h2 class="grp">Where they came from</h2>
+  <div class="panel"><table id="sources-table"><tbody></tbody></table></div>
+
+  <h2 class="grp">What they read</h2>
+  <div class="panel"><table id="pages-table"><tbody></tbody></table></div>
+
   <details class="fold" id="connect-fold">
     <summary><h2 class="grp">Connecting what is missing</h2></summary>
     <div class="note" style="margin-top:10px">
-      <b>Analytics for manasiyo.com.</b> Google Analytics &#8594; Admin &#8594; Property access management &#8594;
-      add <span id="sa-email">the Cloud Run service account</span> as Viewer. Numbers appear a minute later.
-      If more than one property is shared, pin the right one with <code>MARKETING_GA_PROPERTY_ID</code>.
+      <b>Analytics for manasiyo.com (the Wix site).</b> The Wix dashboard's visitor count lives inside
+      Wix and cannot be read from here. To see those visitors on this page: create a GA4 property at
+      analytics.google.com for manasiyo.com, connect its Measurement ID in Wix (Settings &#8594;
+      Marketing integrations &#8594; Google Analytics), then in Google Analytics &#8594; Admin &#8594;
+      Property access management add <span id="sa-email">the Cloud Run service account</span> as Viewer.
+      This page then picks the manasiyo.com property by name automatically; if it ever picks wrong, pin
+      it with <code>MARKETING_GA_PROPERTY_ID</code>.
+      <br><br>
+      <b>Windsor, for the paid chart above.</b> One key fills Google Ads and Meta together: windsor.ai
+      &#8594; API Keys &#8594; copy the key &#8594; set it as <code>WINDSOR_API_KEY</code> on the
+      maya-api service in Cloud Run. The key is a credential: paste it yourself, in the Cloud Run console.
       <br><br>
       <b>Meta ads.</b> A long lived access token and the ad account number, set as
       <code>META_ADS_TOKEN</code> and <code>META_AD_ACCOUNT_ID</code> on the API. The token is a credential:
@@ -390,20 +398,26 @@ function paintSite(a) {
     return;
   }
   note.style.display = 'none';
+  // v13.47: say honestly WHOSE numbers these are. Today the only property
+  // shared with the server is MAYA's own, so the tiles are MAYA visitors.
+  const isMaya = /pro-maya/i.test(a.propertyName || '');
+  const head = document.getElementById('arriving-head');
+  if (head) head.textContent = isMaya ? 'MAYA, who is arriving' : 'Manasiyo.com, who is arriving';
+  const pn = document.getElementById('property-note');
+  if (pn) {
+    if (isMaya) {
+      pn.style.display = '';
+      pn.innerHTML = 'These are visitors to <b>maya.manasiyo.com</b> itself. The manasiyo.com site has no ' +
+        'Analytics property shared with this server yet, so its visitors cannot appear here. ' +
+        'The fold at the bottom says how to connect it.';
+    } else { pn.style.display = 'none'; }
+  }
   const R = a.ranges || {};
   tiles.innerHTML =
     tile('&#9679; live now', n0(a.live), true) +
     tile('today', n0((R.today || {}).users)) +
     tile('7 days', n0((R.d7 || {}).users)) +
     tile('28 days', n0((R.d28 || {}).users));
-  const daily = a.daily || [];
-  const max = Math.max(1, ...daily.map(x => x.users));
-  document.getElementById('daily-bars').innerHTML = daily.map(x =>
-    '<div class="bar" style="height:' + Math.max(2, Math.round(x.users / max * 100)) + '%" title="' +
-    esc(x.date) + ': ' + n0(x.users) + '"></div>').join('');
-  const pretty = s => s && s.length === 8 ? (s.slice(4, 6) + '/' + s.slice(6, 8)) : s;
-  document.getElementById('daily-from').textContent = daily.length ? pretty(daily[0].date) : '';
-  document.getElementById('daily-to').textContent = daily.length ? pretty(daily[daily.length - 1].date) : '';
   const st = document.querySelector('#sources-table tbody');
   st.innerHTML = '<tr><th>Source</th><th class="num">Visits</th><th class="num">People</th></tr>' +
     (a.sources || []).map(s => '<tr><td>' + label(s.source, s.medium) + '</td><td class="num">' +

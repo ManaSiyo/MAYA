@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 186 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 192 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -67,6 +67,46 @@ ad panels (impressions, clicks, spend, last 7 days) through Windsor. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.47 (Claude): the numbers audit. READ THIS BEFORE TOUCHING ANALYTICS
+
+Verified live on Aug 22 through Fromsa's signed-in admin session:
+
+- /api/admin/analytics AND /api/admin/marketing both read GA property
+  **properties/538681159, displayName "pro-maya"**: MAYA's own Firebase
+  Analytics (G-ETTJ6PXEMM in index.html). It is the ONLY property shared
+  with the Cloud Run service account
+  (53947659283-compute@developer.gserviceaccount.com). So the Admin tiles
+  (live/today/7d/28d) are MAYA visitors and are WORKING; on Aug 22 they
+  read 1 live, 1 today, 24 in 7d, 46 in 28d.
+- The 14-people-a-day Fromsa sees for manasiyo.com is Wix's own internal
+  analytics. The Wix site has NO GA4 property, so those visitors cannot
+  reach any page here until one exists. The Marketing fold now carries the
+  exact steps (create GA4 property, connect Measurement ID in Wix, add the
+  service account as Viewer). `marketingProperty()` now prefers any
+  property that is not pro-maya, so sharing the new property is enough by
+  itself; MARKETING_GA_PROPERTY_ID pins it only if the pick is ever wrong.
+- USERS = Google accounts that signed in to MAYA (metrics/users/ markers),
+  which is why it reads 2 while visitors read 24: visitors who never sign
+  in are in the traffic pills, not in Users. Each traffic pill now says
+  what it counts in its hover title. The anonymous "before names were
+  kept" row is a pre-v13.43 marker; noteUser fills its email the next
+  time that account signs in, and its label now says so.
+- Windsor: Fromsa's Windsor account (worldofsiyo@gmail.com, Trial) HAS
+  google_ads (Mana Siyo 780-624-2945), facebook (Mana Siyo Ads), GA4
+  pro-maya, instagram and google_my_business connected, and last-7-day
+  spend/impressions/clicks data flows for both ad networks (verified via
+  the Windsor API on Aug 22). The ONLY missing piece for the paid chart is
+  WINDSOR_API_KEY on the maya-api Cloud Run service. Never handle the key;
+  Fromsa pastes it himself.
+- Marketing page: the paid section (combined chart + campaigns) moved to
+  the TOP under the visitor tiles; the four week daily bar graph is
+  deleted (it repeated the tiles); the "who is arriving" heading names the
+  property actually read (MAYA vs Manasiyo.com) and, while it is pro-maya,
+  a note explains why the Wix site's visitors are absent.
+- Admin: the MAYA door chips (operations room beta, playground) are
+  reachable now: the hover gap is inside the chip strip (padding-left, not
+  margin) and the strip lingers 0.4s before hiding.
 
 ## v13.46 (Claude): anchored, full height, in caps
 
@@ -183,9 +223,9 @@ The fabric sourcing revamp shipped in v13.44; see that section below.
 - SECURITY as of v13.41: a submission can only be written by the account that
   opened it (`subOwner()` reads the init marker, cached). The legacy Pinterest
   modal is deleted; the drawer is the only implementation.
-- Live line: `maya-v2`. v13.45 is pushed and live. **v13.46 is committed and
-  waiting for Fromsa's push** (the anchored pill, sliding Admin drawer, full
-  height Fabrics and Pinterest, doors in caps).
+- Live line: `maya-v2`. v13.46 is pushed and live. **v13.47 is committed and
+  waiting for Fromsa's push** (the numbers audit: honest labels, paid chart
+  on top of Marketing, reachable door chips).
 - **The folder changed in v13.37.** Pages are no longer loose at the root:
   `frontend/index.html`, and `backend/` holds status, marketing, operations,
   backend and privacy plus verify. Every old URL still answers, because
@@ -194,7 +234,7 @@ The fabric sourcing revamp shipped in v13.44; see that section below.
   rewrite list is the first place to look. `aesthetics/` stays at the root on
   purpose: `docs/**` is ignored by Hosting, so pictures inside it would never
   deploy.
-- Tests: 186 checks in `tests/app-regression.mjs`, all passing, including a
+- Tests: 192 checks in `tests/app-regression.mjs`, all passing, including a
   check that every old address still maps to a file that exists.
 - Pinterest: app id and secret ARE set on Cloud Run. The sign in currently
   fails with Pinterest's own 400, "this application has not registered a

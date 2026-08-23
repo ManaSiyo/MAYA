@@ -16,6 +16,27 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 22, 2026, THE NUMBERS AUDIT (v13.47)
+
+[x] "Is the admin analytics working or not, and why? 14 people came from
+    the Mana Siyo website but users still says 2 and one row says before
+    names were kept." Audited live: the traffic pills ARE working and
+    count MAYA visitors from Analytics (24 in the last 7 days). Users
+    counts Google sign-ins only, so visitors who never sign in are not in
+    it; each pill now explains itself on hover. The unnamed row is an
+    account from before names were kept; it takes its name at its next
+    sign in and now says so. The 14 people are Wix's own counter for
+    manasiyo.com, which has no Analytics property yet; the Marketing fold
+    now carries the exact steps to connect it.
+[x] "When I hover on MAYA to reach operations room or playground, they
+    hide before I can click." The chips hold still and stay reachable.
+[x] "The first marketing graph looks redundant; put paid both networks at
+    the top." The four week bars are gone; the paid chart and campaign
+    table sit right under the visitor tiles.
+[ ] Windsor: everything on the Windsor side is connected and flowing
+    (Google Ads + Meta verified). One step remains, Fromsa's own:
+    set WINDSOR_API_KEY on the maya-api Cloud Run service.
+
 AUGUST 22, 2026, ANCHORED (v13.46)
 
 [x] "The pill should be stuck to the invisible drawer, anchored on it, not
