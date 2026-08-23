@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 245 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 249 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -70,6 +70,35 @@ campaign table, warnings, ticker) through Windsor, per connector. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.59 (Claude): marketing aesthetics, one paid fold, D W M everywhere
+
+- FOLD ARROWS ride beside the titles now (summary is flex, gap 8px), and
+  a closed fold's arrow points sideways.
+- FOUR PILLS, one row: live now (MAYA only; Wix has no live feed, the
+  tooltip says so), today, 7 days, 28 days. Each pairs manasiyo.com in
+  white with MAYA in the logo's light blue (#a9c9ff), a thin bar between.
+  The visits / forms / clicks-to-contact tiles left on request (the
+  server still fetches those Wix measurement types; only the tiles went).
+- WIX JUMP: a small circled arrow at the visitors section's top right
+  opens Fromsa's Wix Analytics highlights dashboard in a new tab (URL he
+  supplied, pinned to site a4ad1a21).
+- AD CAMPAIGNS: one fold for the whole paid story, campaigns table FIRST,
+  chart under it. D / W / M moved to the top of the fold with a range
+  word ("last 7 days" etc.) and now steer the TABLE too: the server ships
+  raw campaign days (windsor.campaignDaily, capped 400 rows; stripped
+  from the brief payload) and the page aggregates whichever window is on.
+  The old campaigns-fold and its heading are gone; adCombined.campaigns
+  (7d rollup) stays for the brief and as a fallback.
+- SETUP FOLD REMOVED: "Connecting what is missing" left the page; all of
+  it was connected, and the optional direct Meta/Google token recipe
+  lives here instead: META_ADS_TOKEN + META_AD_ACCOUNT_ID, or
+  GOOGLE_ADS_DEVELOPER_TOKEN/CLIENT_ID/CLIENT_SECRET/REFRESH_TOKEN/
+  CUSTOMER_ID on Cloud Run; Windsor covers both meanwhile. The Wix key
+  fold text also lives on only in this file.
+- TICKER starts mid story: the line is doubled and the keyframes slide
+  half its width (translateX 0 to -50%), so words are on screen at once
+  and the loop is seamless; pace a touch faster (chars / 4.5, min 20s).
 
 ## v13.58 (Claude): the terms popup, BACKEND caps, circles on the playground
 

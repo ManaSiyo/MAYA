@@ -2503,6 +2503,9 @@ async function windsorInsights() {
     const mkSource = () => ({ impressions: 0, clicks: 0, linkClicks: 0, spend: 0, daily: {} });
     const bySource = { google_ads: mkSource(), facebook: mkSource() };
     const byCampaign = {};
+    // v13.59: the campaign table answers D / W / M like the chart, so every
+    // campaign day ships raw and the page aggregates whichever window is on.
+    const campaignDaily = [];
     const byAdGroup = {};
     const d7cut = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
     const addRow = (src, row) => {
@@ -2519,6 +2522,11 @@ async function windsorInsights() {
       // The headline aggregates stay the LAST 7 DAYS, as the panels promise.
       if (d >= d7cut) { b.impressions += imp; b.clicks += clk; b.linkClicks += lnk; b.spend += spd; }
       const camp = String(row.campaign || '').trim();
+      if (camp && d && campaignDaily.length < 400) {
+        campaignDaily.push({ source: src, campaign: camp,
+          status: String(row.campaign_status || ''), date: d,
+          impressions: imp, clicks: clk, linkClicks: lnk, spend: spd });
+      }
       if (camp && d >= d7cut) {
         const key = src + ' | ' + camp;
         if (!byCampaign[key]) byCampaign[key] = { source: src, campaign: camp,
@@ -2559,7 +2567,7 @@ async function windsorInsights() {
       .map(c => ({ ...c,
         ctr: c.impressions ? c.clicks / c.impressions : 0,
         cpc: c.clicks ? c.spend / c.clicks : 0 }));
-    return { connected: true, sources: bySource, campaigns,
+    return { connected: true, sources: bySource, campaigns, campaignDaily,
              adGroups: Object.values(byAdGroup) };
   } catch (e) {
     return { connected: false, why: String(e.message).slice(0, 160) };
@@ -2677,6 +2685,7 @@ app.get('/api/admin/marketing', async (req, res) => {
       google: g ? seriesOf(g) : null,
       meta: f2 ? seriesOf(f2) : null,
       campaigns: windsor.campaigns || [],
+      campaignDaily: windsor.campaignDaily || [],
     };
   }
   // v13.54: cost per lead, the row the whole dashboard exists for.
@@ -2772,6 +2781,7 @@ app.post('/api/admin/marketing-brief', requireAuthHeader, express.json({ limit: 
   const d = (req.body && req.body.data) || {};
   if (d.leads) d.leads = { today: d.leads.today, d7: d.leads.d7, d28: d.leads.d28 };   // numbers only, never names
   delete d.saEmail;
+  if (d.adCombined) delete d.adCombined.campaignDaily;   // v13.59: the 7d rollup is enough for the brief
   const askModel = async (model) => fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY, 'Content-Type': 'application/json' },

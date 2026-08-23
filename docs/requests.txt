@@ -16,6 +16,24 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 23, 2026, MARKETING AESTHETICS (v13.59)
+
+[x] "The dropdown arrow should be beside the title, not underneath." Done
+    on every fold.
+[x] "Combine the pills into one row: live now, today, 7 days, 28 days;
+    manasiyo | MAYA with a vertical bar, MAYA in the logo's light blue;
+    drop the Wix forms and clicks to contact tiles." Done.
+[x] "A clickable arrow at the top right that takes me straight to my Wix
+    Analytics dashboard." Done, using the link he pasted.
+[x] "Combine ads and campaigns into one collapsible called Ad Campaigns,
+    campaigns first, chart under; D W M should change the campaign
+    numbers too." Done: the range steers the table and the chart alike.
+[x] "Double check the Connecting what is missing mess; if not necessary,
+    remove it." Removed: everything it asked for is connected; the
+    optional token recipes moved to docs/AI-HANDOFF.md.
+[x] "The marquee should start from halfway, and a bit faster." Done: it
+    begins mid story, seamless loop, slightly quicker.
+
 AUGUST 23, 2026, THE POPUP, THE CAPS, THE CIRCLES (v13.58)
 
 [x] "Terms should open as a pop up after sign in, scroll all the way down

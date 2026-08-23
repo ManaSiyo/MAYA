@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Marketing</title>
-<meta name="maya-version" content="13.58">
+<meta name="maya-version" content="13.59">
 <script>
 // v13.43: this page NEVER clears the shared sign in. Admin owns the deploy
 // sign-out; marketing clearing it too was why the page kept asking again.
@@ -96,11 +96,22 @@ try {
   @media (max-width:760px){ .grid2{grid-template-columns:1fr} body{padding:76px 14px 30px} }
   .status-bar{border:0.5px solid var(--line);border-radius:100px;padding:10px 18px;display:flex;
     align-items:center;gap:14px;background:rgba(10,16,34,0.5);margin:6px 0 10px}
-  details.fold{margin:16px 0 8px}
-  details.fold summary{list-style:none;cursor:pointer}
+  details.fold{margin:16px 0 8px;position:relative}
+  details.fold summary{list-style:none;cursor:pointer;
+    /* v13.59: the arrow rides BESIDE the title, not under it. */
+    display:flex;align-items:center;justify-content:center;gap:8px}
   details.fold summary::-webkit-details-marker{display:none}
   details.fold summary h2.grp{margin:0}
-  details.fold summary::after{content:'\25BE';font-family:'Jost',sans-serif;font-size:11px;color:var(--faint)}
+  details.fold summary::after{content:'\25BE';font-family:'Jost',sans-serif;font-size:11px;color:var(--faint);
+    transition:transform .2s}
+  details.fold:not([open]) summary::after{transform:rotate(-90deg)}
+  /* v13.59: the jump to the Wix Analytics dashboard, top right of the section. */
+  .wix-jump{position:absolute;top:-2px;right:2px;z-index:2;
+    font-family:'Jost',sans-serif;font-size:13px;text-decoration:none;
+    color:var(--dim);border:0.5px solid var(--line);border-radius:100px;
+    width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+    transition:all .2s}
+  .wix-jump:hover{color:var(--ink);border-color:rgba(255,255,255,0.5)}
   #checked-at{font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.16em;color:var(--faint);
     text-transform:uppercase;margin-bottom:10px}
   /* v13.44: the paid section is one dashboard now, drawn the way Google Ads
@@ -123,20 +134,25 @@ try {
      the same Jost small caps the labels wear. */
   #ticker{flex:1;min-width:0;overflow:hidden;margin:0 26px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
     mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
-  #ticker-inner{display:inline-block;white-space:nowrap;padding-left:100%;
+  /* v13.59: the line is doubled and slides half its width, so it starts
+     mid-story with words already on screen, seamless, and a touch faster. */
+  #ticker-inner{display:inline-block;white-space:nowrap;
     font-family:'Jost',sans-serif;font-weight:300;font-size:10px;letter-spacing:0.18em;
     text-transform:uppercase;color:var(--blue);line-height:28px;
-    animation:tickerslide 38s linear infinite;will-change:transform}
+    animation:tickerslide 34s linear infinite;will-change:transform}
   #ticker:hover #ticker-inner{animation-play-state:paused}
   #ticker-inner .tk-sep{color:var(--faint);margin:0 14px}
   #ticker-inner .tk-red{color:#f87171}
   #ticker-inner .tk-amber{color:var(--amber)}
-  @keyframes tickerslide{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+  @keyframes tickerslide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
   @media (max-width:760px){ #ticker{display:none} }
-  /* v13.56: the pair pills: manasiyo.com's number, then MAYA's. */
-  .tile .v .pair-b{color:var(--dim)}
+  /* v13.56: the pair pills. v13.59: manasiyo.com in white, MAYA in the
+     light blue of the logo's edges, a thin bar between them. */
+  .tile .v .pair-b{color:#a9c9ff}
+  .tile .v .pair-bar{color:var(--faint);margin:0 6px;font-weight:300}
   .pair-legend{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;
     color:var(--faint);margin:2px 0 6px}
+  .pair-legend .lg-maya{color:#a9c9ff}
   /* v13.54: the chart hover layer. */
   #ad-tip{position:absolute;top:8px;pointer-events:none;display:none;z-index:5;
     padding:8px 11px;border-radius:12px;border:0.5px solid var(--line);
@@ -220,25 +236,32 @@ try {
        manasiyo.com first, then MAYA, same window. -->
   <details class="fold" id="visitors-fold" open>
     <summary><h2 class="grp">Manasiyo.com &#183; MAYA</h2></summary>
-    <div class="pair-legend">each pill: manasiyo.com first, then maya</div>
+    <a class="wix-jump" href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/analytics/highlights?referralInfo=sidebar"
+       target="_blank" rel="noopener noreferrer" title="Open the Wix Analytics dashboard">&#8599;</a>
+    <div class="pair-legend">manasiyo.com <span style="margin:0 4px">|</span> <span class="lg-maya">maya</span></div>
     <div id="wix-tiles" class="tiles"></div>
-    <div id="wix-extra" class="tiles" style="margin-top:6px"></div>
     <div id="wix-note" class="note" style="display:none"></div>
   </details>
 
+  <!-- v13.59: one fold for the whole paid story: the campaigns first, the
+       chart under them, and D / W / M steering both. -->
   <details class="fold" id="ads-fold" open>
-  <summary><h2 class="grp">Ads</h2></summary>
+  <summary><h2 class="grp">Ad campaigns</h2></summary>
+  <div class="metric-chips" style="margin:10px 0 8px">
+    <span id="range-word" style="font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--faint);align-self:center">last 7 days</span>
+    <span style="margin-left:auto;display:inline-flex;gap:3px" id="range-chips">
+      <button class="range-chip" data-r="D" onclick="setAdRange('D')" title="Today against yesterday">D</button>
+      <button class="range-chip on" data-r="W" onclick="setAdRange('W')" title="Last 7 days">W</button>
+      <button class="range-chip" data-r="M" onclick="setAdRange('M')" title="Last 30 days">M</button>
+    </span>
+  </div>
+  <div class="panel" style="margin-bottom:12px"><table id="campaigns-table"><tbody></tbody></table></div>
   <div class="panel" id="ad-combined-panel">
     <div class="metric-chips" id="metric-chips">
       <button class="metric-chip on" data-m="clicks" onclick="setAdMetric('clicks')" title="Link clicks: people who actually left for the site. Meta's all-interactions number lives on its panel below.">Link clicks</button>
       <button class="metric-chip" data-m="impressions" onclick="setAdMetric('impressions')">Impressions</button>
       <button class="metric-chip" data-m="cpc" onclick="setAdMetric('cpc')" title="Dollars per link click, on both networks">Cost per click</button>
       <button class="metric-chip" data-m="all" onclick="setAdMetric('all')" title="Link clicks, impressions and cost per click at once, each line scaled to its own peak">All three</button>
-      <span style="margin-left:auto;display:inline-flex;gap:3px" id="range-chips">
-        <button class="range-chip" data-r="D" onclick="setAdRange('D')" title="Today against yesterday">D</button>
-        <button class="range-chip on" data-r="W" onclick="setAdRange('W')" title="Last 7 days">W</button>
-        <button class="range-chip" data-r="M" onclick="setAdRange('M')" title="Last 30 days">M</button>
-      </span>
     </div>
     <div style="position:relative" id="ad-chart-wrap">
       <svg id="ad-chart" viewBox="0 0 700 190" preserveAspectRatio="none"></svg>
@@ -253,11 +276,6 @@ try {
     </div>
     <div id="ad-combined-note" class="note" style="display:none;margin-top:10px"></div>
   </div>
-  </details>
-
-  <details class="fold" id="campaigns-fold" open>
-    <summary><h2 class="grp">Campaigns, last 7 days</h2></summary>
-    <div class="panel"><table id="campaigns-table"><tbody></tbody></table></div>
   </details>
 
   <!-- v13.54: the people the spend actually produced. -->
@@ -276,38 +294,10 @@ try {
     opens that door, the two sites will merge here.</div>
   </details>
 
-  <details class="fold" id="connect-fold">
-    <summary><h2 class="grp">Connecting what is missing</h2></summary>
-    <div class="note" style="margin-top:10px">
-      <b>Manasiyo.com visitors, from Wix itself.</b> Make an API key at manage.wix.com/account/api-keys
-      (permission: Site Analytics, or All site permissions), then set it as <code>WIX_API_KEY</code> on
-      the maya-api service in Cloud Run. The key is a credential: paste it yourself, in the Cloud Run
-      console. The site is already pinned in the server; override with <code>WIX_SITE_ID</code> only if
-      the site ever changes. A minute after the deploy, the tiles above fill with the same numbers the
-      Wix dashboard shows.
-      <br><br>
-      <b>The two MAYA tables below them</b> read MAYA's own Analytics with the Cloud Run identity
-      (<span id="sa-email">the service account</span> is already a Viewer on pro-maya).
-      <br><br>
-      <b>Leads, from the site's own forms.</b> The lead list reads Wix Forms directly with the same
-      <code>WIX_API_KEY</code>. If it ever says not connected, the key was made with only the Site
-      Analytics permission: make a new key at manage.wix.com/account/api-keys with All site permissions
-      (or add Forms read), then replace <code>WIX_API_KEY</code> on Cloud Run yourself.
-      <br><br>
-      <b>Windsor, for the paid chart above.</b> One key fills Google Ads and Meta together: windsor.ai
-      &#8594; API Keys &#8594; copy the key &#8594; set it as <code>WINDSOR_API_KEY</code> on the
-      maya-api service in Cloud Run. The key is a credential: paste it yourself, in the Cloud Run console.
-      <br><br>
-      <b>Meta ads.</b> A long lived access token and the ad account number, set as
-      <code>META_ADS_TOKEN</code> and <code>META_AD_ACCOUNT_ID</code> on the API. The token is a credential:
-      paste it yourself, in the Cloud Run console.
-      <br><br>
-      <b>Google ads.</b> Needs a developer token from Google, which is applied for and takes a few days, plus
-      an OAuth client. Set <code>GOOGLE_ADS_DEVELOPER_TOKEN</code>, <code>GOOGLE_ADS_CLIENT_ID</code>,
-      <code>GOOGLE_ADS_CLIENT_SECRET</code>, <code>GOOGLE_ADS_REFRESH_TOKEN</code> and
-      <code>GOOGLE_ADS_CUSTOMER_ID</code>. Until then this page says not connected rather than inventing numbers.
-    </div>
-  </details>
+  <!-- v13.59: the setup instructions fold left the page. Everything it
+       asked for is connected (Wix, Windsor, Forms); the optional direct
+       Meta/Google tokens it described are covered by Windsor and live in
+       docs/AI-HANDOFF.md for whoever ever needs them. -->
 </div>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -392,7 +382,8 @@ async function load() {
   // v13.48: the last-checked line is gone, per Fromsa. The element stays
   // only as a mouth for errors.
   document.getElementById('checked-at').textContent = '';
-  if (d.saEmail) document.getElementById('sa-email').textContent = d.saEmail;
+  const _sa = document.getElementById('sa-email');
+  if (_sa && d.saEmail) _sa.textContent = d.saEmail;
   paintVisitors(d);
   paintSite(d.analytics || {});
   _adData = d.adCombined || null;
@@ -467,10 +458,14 @@ function buildTicker(d) {
   }
   if (_brief && _brief.ok && _brief.action) bits.push('next: ' + compact(_brief.action));
   if (!bits.length) bits.push('quiet: nothing needs you today');
-  el.innerHTML = bits.join(sep);
-  // Longer lines walk at the same pace instead of sprinting.
-  const words = el.textContent.length;
-  el.style.animationDuration = Math.max(24, Math.min(90, Math.round(words / 4))) + 's';
+  // v13.59: the line rides twice in a row and slides half its width, so it
+  // begins mid-story with words already on screen and loops seamlessly.
+  const line = bits.join(sep) + sep;
+  el.innerHTML = line + line;
+  // Longer lines walk at the same pace instead of sprinting; a touch
+  // brisker than before, per Fromsa.
+  const chars = el.textContent.length / 2;
+  el.style.animationDuration = Math.max(20, Math.min(80, Math.round(chars / 4.5))) + 's';
 }
 async function fetchBrief(d) {
   const hour = new Date().toISOString().slice(0, 13);
@@ -512,11 +507,17 @@ function setAdRange(r) {
   try { localStorage.setItem('maya_mkt_range', r); } catch (_) {}
   document.querySelectorAll('.range-chip').forEach(c =>
     c.classList.toggle('on', c.getAttribute('data-r') === r));
+  // v13.59: one window for the whole fold: the word, the table, the chart.
+  const word = document.getElementById('range-word');
+  if (word) word.textContent = r === 'M' ? 'last 30 days' : r === 'D' ? 'today and yesterday' : 'last 7 days';
+  paintCampaigns();
   paintAdCombined();
 }
 function _syncRangeChips() {
   document.querySelectorAll('.range-chip').forEach(c =>
     c.classList.toggle('on', c.getAttribute('data-r') === _adRange));
+  const word = document.getElementById('range-word');
+  if (word) word.textContent = _adRange === 'M' ? 'last 30 days' : _adRange === 'D' ? 'today and yesterday' : 'last 7 days';
 }
 _syncRangeChips();
 // The comparable number: link clicks wherever the network reports them.
@@ -684,9 +685,32 @@ function paintAdCombined() {
 function paintCampaigns() {
   const tb = document.querySelector('#campaigns-table tbody');
   if (!tb) return;
-  const rows = (_adData && _adData.campaigns) || [];
+  // v13.59: the table obeys D / W / M like the chart. The raw campaign days
+  // come along in campaignDaily; the window is aggregated right here.
+  let rows = [];
+  const daily = (_adData && _adData.campaignDaily) || [];
+  if (daily.length) {
+    const keep = _adRange === 'M' ? 30 : _adRange === 'D' ? 2 : 7;
+    const cut = new Date(Date.now() - keep * 86400000).toISOString().slice(0, 10);
+    const byKey = {};
+    for (const r of daily) {
+      if (r.date < cut) continue;
+      const k = r.source + ' | ' + r.campaign;
+      if (!byKey[k]) byKey[k] = { source: r.source, campaign: r.campaign, status: '',
+        impressions: 0, clicks: 0, linkClicks: 0, spend: 0 };
+      const c = byKey[k];
+      c.impressions += Number(r.impressions || 0);
+      c.clicks += Number(r.clicks || 0);
+      c.linkClicks += Number(r.linkClicks || 0);
+      c.spend += Number(r.spend || 0);
+      if (r.status) c.status = r.status;
+    }
+    rows = Object.values(byKey).sort((a, b) => b.impressions - a.impressions);
+  } else {
+    rows = (_adData && _adData.campaigns) || [];
+  }
   if (!rows.length) {
-    tb.innerHTML = '<tr><td style="color:var(--dim)">No campaigns reported for the last 7 days.</td></tr>';
+    tb.innerHTML = '<tr><td style="color:var(--dim)">No campaigns reported for this window.</td></tr>';
     return;
   }
   const srcName = (s) => /google/.test(s) ? 'Google' : /facebook|meta/.test(s) ? 'Meta' : s;
@@ -715,33 +739,34 @@ function paintCampaigns() {
 // number (from Wix) with MAYA's (from its own Analytics), same window.
 // Wix publishes a day at a time, so its today figure does not exist until
 // the day ends; the pill says so instead of pretending zero.
+// v13.59: FOUR pills in one row, live now leading. Each pairs manasiyo.com
+// (white) with MAYA (the light blue of the logo's edges), a thin bar
+// between. Wix has no live feed and no today until the day ends; those
+// halves say so quietly instead of pretending.
 function paintVisitors(d) {
   const w = d.wixSite || {};
   const a = ((d.analytics || {}).ranges) || {};
+  const live = (d.analytics || {}).live;
   const tiles = document.getElementById('wix-tiles');
-  const extra = document.getElementById('wix-extra');
   const note = document.getElementById('wix-note');
   if (!tiles) return;
   if (!w.connected) {
     tiles.innerHTML = '';
     note.style.display = '';
     note.innerHTML = '<b>Wix is not connected yet.</b> ' + esc(w.why || '') +
-      ' Set <code>WIX_API_KEY</code> on the API (the fold at the bottom says how) and ' +
-      'the manasiyo.com visitors appear here, the same numbers as the Wix dashboard.';
+      ' Set <code>WIX_API_KEY</code> on the API and the manasiyo.com visitors ' +
+      'appear here, the same numbers as the Wix dashboard.';
     return;
   }
   note.style.display = 'none';
   const pair = (wix, maya) =>
     (wix == null ? '<span title="Wix publishes manasiyo.com a day at a time; today lands tonight">&#8230;</span>' : n0(wix)) +
-    ' <span class="pair-b">&#183; ' + n0(maya || 0) + '</span>';
+    '<span class="pair-bar">|</span><span class="pair-b">' + n0(maya || 0) + '</span>';
   tiles.innerHTML =
+    tile('live now', '<span class="pair-b" title="MAYA, right now; Wix has no live feed">' + n0(live || 0) + '</span>') +
     tile('today', pair((w.today || {}).visitors, (a.today || {}).users)) +
     tile('7 days', pair((w.d7 || {}).visitors, (a.d7 || {}).users)) +
     tile('28 days', pair((w.d28 || {}).visitors, (a.d28 || {}).users));
-  if (extra) extra.innerHTML =
-    tile('visits, 28 days', n0((w.d28 || {}).sessions)) +
-    (w.d28 && w.d28.forms != null ? tile('forms, 28 days', n0(w.d28.forms)) : '') +
-    (w.d28 && w.d28.contacts != null ? tile('clicks to contact', n0(w.d28.contacts)) : '');
 }
 
 // Sources: how people reached MAYA, from its own Analytics. A source that

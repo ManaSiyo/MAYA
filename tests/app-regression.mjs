@@ -1082,9 +1082,14 @@ ok('the today ticker marquees in the top bar, in Jost, no raw dates',
   /#ticker-inner\{[^}]*font-family:'Jost'/.test(MKT_SOURCE.replace(/\n\s*/g, '')) &&
   MKT_SOURCE.includes("replace(/cost per link click/ig, 'CPL')") &&
   MKT_SOURCE.includes('vs yesterday'));
-ok('every marketing section folds: visitors, ads, campaigns, leads, sources',
-  ['visitors-fold', 'ads-fold', 'campaigns-fold', 'leads-fold', 'sources-fold']
-    .every(id => MKT_SOURCE.includes('id="' + id + '" open')));
+// v13.59: campaigns merged INTO the ads fold ("Ad campaigns"), so four
+// folds remain and each summary wears its arrow beside the title.
+ok('every marketing section folds: visitors, ad campaigns, leads, sources',
+  ['visitors-fold', 'ads-fold', 'leads-fold', 'sources-fold']
+    .every(id => MKT_SOURCE.includes('id="' + id + '" open')) &&
+  !MKT_SOURCE.includes('campaigns-fold') &&
+  MKT_SOURCE.includes('Ad campaigns') &&
+  /summary\{list-style:none;cursor:pointer;\s*\/\* v13\.59[\s\S]{0,120}display:flex/.test(MKT_SOURCE));
 ok('the visitor pills pair manasiyo.com with MAYA and never fake a zero today',
   MKT_SOURCE.includes('function paintVisitors(') &&
   MKT_SOURCE.includes('pair-legend') &&
@@ -1105,10 +1110,30 @@ ok('what they read is gone and sources that read as sites open as sites',
   !MKT_SOURCE.includes('what they read') &&
   !MKT_SOURCE.includes('pages-table') &&
   MKT_SOURCE.includes("'<a href=\"https://' + esc(src)"));
-ok('manasiyo.com shows its Wix extras: forms and clicks to contact',
-  SERVER_SOURCE.includes('TOTAL_FORMS_SUBMITTED') &&
-  SERVER_SOURCE.includes('CLICKS_TO_CONTACT') &&
-  MKT_SOURCE.includes("tile('forms, 28 days'"));
+// v13.59: the extra Wix tiles left on request; four pills, one row, each
+// pairing manasiyo.com (white) with MAYA (the logo's light blue).
+ok('four pills, live now first, manasiyo white and MAYA in the logo blue',
+  MKT_SOURCE.includes("tile('live now'") &&
+  MKT_SOURCE.includes('pair-bar') &&
+  MKT_SOURCE.includes('.pair-b{color:#a9c9ff}') &&
+  !MKT_SOURCE.includes("tile('forms, 28 days'") &&
+  !MKT_SOURCE.includes("tile('visits, 28 days'"));
+ok('an arrow jumps from the visitors section to the Wix Analytics dashboard',
+  MKT_SOURCE.includes('class="wix-jump"') &&
+  MKT_SOURCE.includes('manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/analytics/highlights'));
+ok('D W M steer the campaign table too, from the raw campaign days',
+  SERVER_SOURCE.includes('const campaignDaily = []') &&
+  SERVER_SOURCE.includes('campaignDaily: windsor.campaignDaily') &&
+  MKT_SOURCE.includes('_adData.campaignDaily') &&
+  MKT_SOURCE.includes('id="range-word"') &&
+  /setAdRange[\s\S]{0,700}paintCampaigns\(\);/.test(MKT_SOURCE));
+ok('the ticker starts mid story and loops seamlessly',
+  MKT_SOURCE.includes('el.innerHTML = line + line') &&
+  MKT_SOURCE.includes('to{transform:translateX(-50%)}') &&
+  !MKT_SOURCE.includes('padding-left:100%'));
+ok('the connecting fold is gone; its one living instruction moved to the note',
+  !MKT_SOURCE.includes('Connecting what is missing') &&
+  MKT_SOURCE.includes('WINDSOR_API_KEY'));
 // ── v13.57: terms at the door, a truthful wall, a complete Users count ─────
 const TERMS_SOURCE = existsSync(join(ROOT, 'backend/terms.html'))
   ? readFileSync(join(ROOT, 'backend/terms.html'), 'utf8') : '';
