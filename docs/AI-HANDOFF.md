@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 232 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 239 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -62,11 +62,44 @@ worldofsiyo@gmail.com only, overridable by env. /api/admin/users lists named
 accounts (email + last seen) for the Users hover; markers at metrics/users/
 carry email since v13.43, older ones are anonymous.
 
-Marketing: WINDSOR_API_KEY on Cloud Run makes /api/admin/marketing fill both
-ad panels (impressions, clicks, spend, last 7 days) through Windsor. Direct
+Marketing: WINDSOR_API_KEY on Cloud Run feeds /api/admin/marketing (chart,
+campaign table, warnings, ticker) through Windsor, per connector. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.56 (Claude): the ticker, the folds, one drawer family
+
+- TICKER: the Today strip became a marquee in the top bar between the
+  wordmark and the hamburger (#ticker / buildTicker in marketing.html).
+  Jost small caps, var(--blue), scrolls continuously, pauses on hover,
+  hidden under 760px. Content: AI headline (when the hourly brief answers),
+  every deterministic warning colored red/amber, week spend + link clicks,
+  per network CPL, leads this week/month, cost per lead, one next action.
+  Wording rules: relative words (today, yesterday, this week, vs
+  yesterday), CPL not cost per link click, raw dates rewritten to mm/dd.
+- FOLDS: visitors, Ads (renamed from "Paid, both networks together"),
+  campaigns, leads and sources are all <details class="fold" open>.
+- COMBINED PILLS: "Manasiyo.com · MAYA" pills pair both properties per
+  window (wix first, then MAYA GA users; legend line says the order). Wix
+  publishes a day at a time, so wixSite.today.visitors is NULL until the
+  day exists (verified against the API: Aug 23 absent while 21/22 present)
+  and the pill shows "…" with a tooltip, never a fake 0. Extra Wix tiles:
+  visits, forms submitted, clicks to contact (new measurement types).
+- CAMPAIGN TABLE: new Cost column (7d spend per campaign, replacing the
+  two deleted network panels), clicks column is Link clicks on both
+  networks (windsorInsights accumulates linkClicks per campaign), CPC =
+  spend / link clicks. paintAds and the two panels are REMOVED; the server
+  still computes each network's d7 (warnings, brief and ticker read them).
+- DRAWER FAMILY: marketing's dropdown became the sliding drawer with the
+  riding hamburger (same .42s cubic-bezier(0.16,1,0.3,1) as Admin/app);
+  Admin's pill moved 2px closer to the drawer edge (-320px), Marketing
+  rests at -290px. Escape and click-outside now call toggleDrawer(false).
+- What-they-read is gone. Sources say "Sources of traffic, MAYA", site
+  shaped sources are links, and the note explains checkout.stripe.com
+  (returns from a Stripe tip payment). Wix has NO per-source breakdown in
+  its Data API; its Semantic Model API could open that later (deferred,
+  noted on the page).
 
 ## v13.55 (Claude): revenue cancelled, notes on the leads, steadier Windsor
 

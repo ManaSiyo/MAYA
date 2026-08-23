@@ -16,6 +16,27 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 23, 2026, THE TICKER AND THE FOLDS (v13.56)
+
+[x] "Make Today a marquee between the hamburger and Marketing, reading
+    like news, in the label font, succinct, CPL not cost per link click,
+    say today and yesterday instead of dates." Done.
+[x] "Combine Manasiyo.com and MAYA into one set of pills showing both
+    numbers; today is not zero, check Wix." Done; checked against Wix
+    directly: Wix publishes a day at a time and today's row does not
+    exist until tonight, so the pill now says it is on its way instead
+    of showing a zero that was never true.
+[x] "Call it Ads, make everything collapsible, add a Cost column to
+    campaigns and remove the two big network boxes." Done.
+[x] "Kill what they read; make sources clickable; what is
+    checkout.stripe.com?" Done; it means someone came back to MAYA from a
+    Stripe payment page, a tip. The sources note says so on the page.
+[x] "Same drawer and hamburger swipe everywhere; pill a pixel or two
+    closer." Marketing now slides like Admin and the app; Admin's pill
+    moved 2px closer.
+[ ] Wix per-source traffic for manasiyo.com: the Data API has no source
+    breakdown; the Semantic Model API might. Next slice if wanted.
+
 AUGUST 23, 2026, TRIM MARKETING (v13.55)
 
 [x] "Cancel everything about revenue. Remove the money in one row. That

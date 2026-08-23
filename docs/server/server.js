@@ -2332,7 +2332,8 @@ async function wixInsights() {
   try {
     const day = (n) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
     const qs = 'dateRange.startDate=' + day(27) + '&dateRange.endDate=' + day(0) +
-      '&measurementTypes=TOTAL_SESSIONS&measurementTypes=TOTAL_UNIQUE_VISITORS';
+      '&measurementTypes=TOTAL_SESSIONS&measurementTypes=TOTAL_UNIQUE_VISITORS' +
+      '&measurementTypes=TOTAL_FORMS_SUBMITTED&measurementTypes=CLICKS_TO_CONTACT';
     const r = await fetch('https://www.wixapis.com/analytics/v2/site-analytics/data?' + qs, {
       headers: { 'Authorization': WIX_KEY, 'wix-site-id': WIX_SITE },
       signal: AbortSignal.timeout(12000),
@@ -2345,12 +2346,17 @@ async function wixInsights() {
     const ss = byType.TOTAL_SESSIONS || { values: [], total: 0 };
     const today = day(0);
     const last7 = (uv.values || []).slice(-7).reduce((a, v) => a + Number(v.value || 0), 0);
+    // v13.56: Wix publishes a day at a time; until today's row EXISTS the
+    // count is unknown, not zero. null says so and the page words it.
+    const todayRow = (uv.values || []).find(v => v.date === today);
     return {
       connected: true,
       daily: (uv.values || []).map(v => ({ date: v.date, visitors: Number(v.value || 0) })),
-      today: { visitors: Number(((uv.values || []).find(v => v.date === today) || {}).value || 0) },
+      today: { visitors: todayRow ? Number(todayRow.value || 0) : null },
       d7: { visitors: last7 },
-      d28: { visitors: Number(uv.total || 0), sessions: Number(ss.total || 0) },
+      d28: { visitors: Number(uv.total || 0), sessions: Number(ss.total || 0),
+             forms: byType.TOTAL_FORMS_SUBMITTED ? Number(byType.TOTAL_FORMS_SUBMITTED.total || 0) : null,
+             contacts: byType.CLICKS_TO_CONTACT ? Number(byType.CLICKS_TO_CONTACT.total || 0) : null },
     };
   } catch (e) {
     return { connected: false, why: String(e.message).slice(0, 160) };
@@ -2487,9 +2493,10 @@ async function windsorInsights() {
       if (camp && d >= d7cut) {
         const key = src + ' | ' + camp;
         if (!byCampaign[key]) byCampaign[key] = { source: src, campaign: camp,
-          status: '', impressions: 0, clicks: 0, spend: 0, lastDate: '' };
+          status: '', impressions: 0, clicks: 0, linkClicks: 0, spend: 0, lastDate: '' };
         const c = byCampaign[key];
-        c.impressions += imp; c.clicks += clk; c.spend += spd;
+        // v13.56: the campaign table speaks link clicks too, both networks.
+        c.impressions += imp; c.clicks += clk; c.linkClicks += lnk; c.spend += spd;
         if (String(row.campaign_status || '')) c.status = String(row.campaign_status);
         if (d > c.lastDate) c.lastDate = d;
       }

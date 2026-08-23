@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.55">
+<meta name="maya-version" content="13.56">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -77,7 +77,8 @@ try {
      and comes to rest hanging just outside the drawer's left edge (drawer:
      320 wide at right 10, pill resting ~28 from the right edge). The same
      pill closes it, and so does a click anywhere outside. */
-  body.drawer-open .top-btn.hamburger{transform:translateX(-322px)}
+  /* v13.56: a couple of pixels closer to the drawer's edge, per Fromsa. */
+  body.drawer-open .top-btn.hamburger{transform:translateX(-320px)}
   /* v13.46: exactly the drawer's duration and curve, so the pill is
      anchored to the drawer's edge rather than chasing it. */
   .top-btn.hamburger{transition:transform .42s cubic-bezier(0.16,1,0.3,1)}
@@ -362,9 +363,10 @@ try {
   </details>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-23c">
+  <details class="fold" id="changes-fold" data-latest="2026-08-23d">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 23</b>Marketing reads itself out now. The day is a quiet ticker walking across the top bar, in the same small type as every label: the headline, each warning in its color, spend and link clicks for the week, cost per lead, one next action, in plain words like today and yesterday, never a raw date. Every section folds: manasiyo.com and MAYA share one row of pills, each holding both numbers side by side, and a today that Wix has not published yet says it is on its way instead of pretending zero. The two ad panels are gone; their numbers live in the campaign table now, which gained a Cost column and speaks link clicks on both networks. The ads section is called Ads. What they read left the page, the sources say honestly they are MAYA's, and a source that reads as a site opens as one. And the menu became the same drawer as everywhere else: it slides in, the hamburger rides over and rests at its edge, one tap or a click anywhere closes it, one family across every page.</div>
     <div class="chg"><b>Aug 23</b>Marketing, trimmed to what matters. Revenue left the page entirely, on request, along with the money row that carried it. The lead list traded its date column for the client's own notes, the words they typed into the form, with the date resting small under each name, because what someone wrote tells you who they are better than when they wrote it. The D, W and M buttons sit closer together. And the paid chart grew steadier underneath: if one ad network's feed has a bad moment, the other still draws, and only when both are silent does the page say so.</div>
     <div class="chg"><b>Aug 23</b>Marketing tells the truth now, and it watches. The two ad panels compare the same thing at last: link clicks, people who actually left for the site, on both networks, with Meta's every-interaction number set apart as All interactions so it can never dress up as traffic again. Reach comes from the deduplicated count instead of rendering zero, and Google conversions say not configured instead of implying failure. A new money row carries the whole point of the page: spend, leads, cost per lead, revenue from the order book, average order. Leads are counted from the Wix form record itself, the same record the notification emails are written from, no pixel and no consent banner, with the newest names listed below the panels. A one-minute summary strip sits at the top: plain warnings computed from the numbers themselves, an enabled ad group gone silent, a cost spike, a fading CTR, ads shown to the same people too often, and once an hour an AI reading of the day with one recommended next action; when the AI is unreachable the warnings stand alone, never a guess. The paid chart answers D, W or M, remembers the choice, and finally has a real hover: a guide line, the dots grown, and a tooltip naming both networks' numbers for the day under the cursor, on a phone too. The menu grew into a proper directory: MAYA's pages, the outside tools, and legal, in that order.</div>
     <div class="chg"><b>Aug 23</b>MAYA thinks on the new generation now. Every everyday call rides GPT 5.6 Terra, the quick utility work rides Luna, and the Operations Room judge speaks with Sol, the deep tier, because expert pattern critique is exactly what it exists for. The upgrade lives on the server, not in the browser: the pages still ask in the old names and MAYA translates, so a model change is one setting and a rollback is the same setting back, and if a new model is ever refused upstream the call quietly runs on the proven one instead of failing. The same door now checks every model by name and turns away anything not on MAYA's own list, which closes the last way a curious visitor could point MAYA's key somewhere it never goes. Each AI call writes one measured line, which model, how long, how many tokens, so spending is finally counted in truth rather than estimates. The privacy page now says plainly who does the thinking and what they receive. And on the fabric wall, a card that has no real photograph offers Visualize: Google's image model inside MAYA's own cloud project illustrates the dissected fiber, weave and exact color, labeled Generated, a picture for the eye while the card still opens the merchant's real shelves.</div>

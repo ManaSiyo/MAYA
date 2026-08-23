@@ -657,7 +657,10 @@ ok('the marketing page ships and signs in like the map',
   MKT_SOURCE.includes("localStorage.getItem('maya_admin_tok')") &&
   MKT_SOURCE.includes('/api/admin/marketing'));
 ok('the marketing page never invents an ad number',
-  MKT_SOURCE.includes("'Not connected. '") && MKT_SOURCE.includes('function paintAds('));
+  // v13.56: the panels are gone; honesty lives in the chart note and the
+  // null conversions that can never paint as a fake zero.
+  MKT_SOURCE.includes('No combined ad data yet') &&
+  SERVER_SOURCE.includes('conversions: null'));
 ok('marketing reads Analytics, Meta and Google Ads separately',
   SERVER_SOURCE.includes("app.get('/api/admin/marketing'") &&
   SERVER_SOURCE.includes('async function metaInsights()') &&
@@ -843,12 +846,14 @@ ok('an unnamed user row says it will take a name at next sign in',
 // v13.48: superseded. Manasiyo.com numbers now come from Wix directly and
 // the MAYA tables say whose they are; see the v13.48 block below.
 ok('marketing names whose traffic it shows',
-  MKT_SOURCE.includes('Manasiyo.com, who is arriving') &&
-  MKT_SOURCE.includes('MAYA, what they read') &&
+  // v13.56: one combined section for both properties, and the sources say
+  // they are MAYA's own.
+  MKT_SOURCE.includes('Manasiyo.com &#183; MAYA') &&
+  MKT_SOURCE.includes('Sources of traffic, MAYA') &&
   MKT_SOURCE.includes('WINDSOR_API_KEY'));
-ok('paid sits at the top of marketing and the four week bars are gone',
-  MKT_SOURCE.indexOf('Paid, both networks together') < MKT_SOURCE.indexOf('MAYA, where its visitors came from') &&
-  MKT_SOURCE.indexOf('Paid, both networks together') > -1 &&
+ok('ads sit above the sources and the four week bars are gone',
+  MKT_SOURCE.indexOf('id="ads-fold"') > -1 &&
+  MKT_SOURCE.indexOf('id="ads-fold"') < MKT_SOURCE.indexOf('id="sources-fold"') &&
   !MKT_SOURCE.includes('id="daily-bars"'));
 ok('sharing the site property alone is enough for marketing to pick it',
   SERVER_SOURCE.includes("all.find(p => !/pro-maya/i.test(p.displayName || ''))"));
@@ -857,13 +862,12 @@ ok('manasiyo.com visitors come straight from Wix',
   SERVER_SOURCE.includes('async function wixInsights()') &&
   SERVER_SOURCE.includes('analytics/v2/site-analytics/data') &&
   SERVER_SOURCE.includes('out.wixSite = wixSite;') &&
-  MKT_SOURCE.includes('function paintWix(') &&
+  MKT_SOURCE.includes('function paintVisitors(') &&
   MKT_SOURCE.includes('id="wix-tiles"') &&
   MKT_SOURCE.includes('WIX_API_KEY'));
 ok('the last checked line and the MAYA arrival tiles left marketing',
   !MKT_SOURCE.includes("'last checked '") &&
-  !MKT_SOURCE.includes('id="site-tiles"') &&
-  MKT_SOURCE.includes('MAYA, where its visitors came from'));
+  !MKT_SOURCE.includes('id="site-tiles"'));
 ok('the paid chart has axes and an All three chip',
   MKT_SOURCE.includes('data-m="all"') &&
   MKT_SOURCE.includes('id="ad-ylabels"') &&
@@ -958,7 +962,7 @@ ok('a click anywhere outside the drawer closes it, on every page',
   /pointerdown[\s\S]{0,400}toggleNotesDrawer\(false\)/.test(INDEX_SOURCE) &&
   /pointerdown[\s\S]{0,400}toggleDrawer\(false\)/.test(MAP_SOURCE) &&
   /pointerdown[\s\S]{0,500}toggleClientsDrawer\(false\)/.test(BACKEND_SOURCE) &&
-  /pointerdown[\s\S]{0,400}classList\.remove\('open'\)/.test(MKT_SOURCE));
+  /pointerdown[\s\S]{0,400}toggleDrawer\(false\)/.test(MKT_SOURCE));
 ok('MAYA hover on Admin reveals both back rooms',
   MAP_SOURCE.includes('pg-chips') &&
   /pg-chip" href="\/operations\.html"/.test(MAP_SOURCE) &&
@@ -1040,15 +1044,13 @@ ok('Meta and Google compare link clicks, never all interactions',
   SERVER_SOURCE.includes('inline_link_clicks') &&
   SERVER_SOURCE.includes('link_clicks') &&
   MKT_SOURCE.includes('>Link clicks<') &&
-  MKT_SOURCE.includes('All interactions') &&
-  MKT_SOURCE.includes('Cost per link click'));
+  SERVER_SOURCE.includes('linkClicks: g.linkClicks'));
 ok('Meta reach and frequency come from the deduplicated aggregate, never 0',
   SERVER_SOURCE.includes("'spend,impressions,clicks,link_clicks,reach,frequency'") &&
   SERVER_SOURCE.includes('reach: f.reach || 0') &&
   !SERVER_SOURCE.includes('reach: 0,'));
-ok('Google conversions say not configured instead of implying failure',
-  SERVER_SOURCE.includes('conversions: null') &&
-  MKT_SOURCE.includes('not configured'));
+ok('Google conversions are absence, never a fake zero',
+  SERVER_SOURCE.includes('conversions: null'));
 ok('leads come from the Wix form record itself, no pixel, no Gmail parsing',
   SERVER_SOURCE.includes('async function wixLeads()') &&
   SERVER_SOURCE.includes('forms/v4/submissions/namespace/query') &&
@@ -1071,15 +1073,49 @@ ok('one Windsor connector failing never blanks the other',
   SERVER_SOURCE.includes('if (gErr && fErr)'));
 ok('the D W M chips sit close together',
   MKT_SOURCE.includes('display:inline-flex;gap:3px" id="range-chips"'));
+// ── v13.56: marketing reads itself out and folds away ──────────────────────
+ok('the today ticker marquees in the top bar, in Jost, no raw dates',
+  MKT_SOURCE.includes('id="ticker-inner"') &&
+  MKT_SOURCE.includes('@keyframes tickerslide') &&
+  /#ticker-inner\{[^}]*font-family:'Jost'/.test(MKT_SOURCE.replace(/\n\s*/g, '')) &&
+  MKT_SOURCE.includes("replace(/cost per link click/ig, 'CPL')") &&
+  MKT_SOURCE.includes('vs yesterday'));
+ok('every marketing section folds: visitors, ads, campaigns, leads, sources',
+  ['visitors-fold', 'ads-fold', 'campaigns-fold', 'leads-fold', 'sources-fold']
+    .every(id => MKT_SOURCE.includes('id="' + id + '" open')));
+ok('the visitor pills pair manasiyo.com with MAYA and never fake a zero today',
+  MKT_SOURCE.includes('function paintVisitors(') &&
+  MKT_SOURCE.includes('pair-legend') &&
+  SERVER_SOURCE.includes('todayRow ? Number(todayRow.value || 0) : null') &&
+  MKT_SOURCE.includes('today lands tonight'));
+ok('the campaign table carries cost and link clicks; the two panels are gone',
+  MKT_SOURCE.includes('<th class="num">Cost</th>') &&
+  SERVER_SOURCE.includes('c.linkClicks += lnk') &&
+  !MKT_SOURCE.includes('google-ads-panel') &&
+  !MKT_SOURCE.includes('meta-ads-panel'));
+ok('the marketing drawer slides and the hamburger rides with it, one family',
+  MKT_SOURCE.includes('transform:translateX(calc(100% + 20px))') &&
+  MKT_SOURCE.includes('cubic-bezier(0.16,1,0.3,1)') &&
+  MKT_SOURCE.includes('body.drawer-open .top-btn.hamburger{transform:translateX(-290px)}') &&
+  MKT_SOURCE.includes('function toggleDrawer(') &&
+  MAP_SOURCE.includes('translateX(-320px)'));
+ok('what they read is gone and sources that read as sites open as sites',
+  !MKT_SOURCE.includes('what they read') &&
+  !MKT_SOURCE.includes('pages-table') &&
+  MKT_SOURCE.includes("'<a href=\"https://' + esc(src)"));
+ok('manasiyo.com shows its Wix extras: forms and clicks to contact',
+  SERVER_SOURCE.includes('TOTAL_FORMS_SUBMITTED') &&
+  SERVER_SOURCE.includes('CLICKS_TO_CONTACT') &&
+  MKT_SOURCE.includes("tile('forms, 28 days'"));
 ok('deterministic warnings exist and never depend on a model call',
   SERVER_SOURCE.includes('function computeMarketingWarnings(') &&
   SERVER_SOURCE.includes('is enabled but has served nothing since') &&
   SERVER_SOURCE.includes('cost per link click jumped') &&
   SERVER_SOURCE.includes('week over week') &&
   SERVER_SOURCE.includes('Meta frequency is'));
-ok('the one-minute summary strip renders warnings even when the AI is down',
-  MKT_SOURCE.includes('id="summary-fold"') &&
-  MKT_SOURCE.includes('function paintSummary(') &&
+ok('the ticker renders the warnings even when the AI is down',
+  MKT_SOURCE.includes('id="ticker"') &&
+  MKT_SOURCE.includes('function buildTicker(') &&
   /if \(!r\.ok\) return;\s+\/\/ deterministic warnings stand alone/.test(MKT_SOURCE) &&
   SERVER_SOURCE.includes("app.post('/api/admin/marketing-brief'") &&
   SERVER_SOURCE.includes('never names'));

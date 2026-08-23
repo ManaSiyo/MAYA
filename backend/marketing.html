@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Marketing</title>
-<meta name="maya-version" content="13.55">
+<meta name="maya-version" content="13.56">
 <script>
 // v13.43: this page NEVER clears the shared sign in. Admin owns the deploy
 // sign-out; marketing clearing it too was why the page kept asking again.
@@ -40,12 +40,20 @@ try {
   .top-btn.hamburger{width:32px;height:28px;padding:0;display:flex;align-items:center;justify-content:center}
   .hamburger-icon{display:inline-flex;flex-direction:column;gap:3px;width:14px}
   .hamburger-icon span{display:block;height:1px;width:100%;background:currentColor;border-radius:1px}
-  #drawer{position:fixed;top:60px;right:18px;width:290px;z-index:190;padding:14px;border-radius:18px;
-    max-height:calc(100vh - 84px);overflow-y:auto;
-    border:0.5px solid var(--line);background:rgba(8,12,26,0.92);
+  /* v13.56: the drawer slides in from the right and the hamburger rides
+     with it, resting just outside the drawer's edge. Same duration and
+     curve as Admin and the MAYA app, one family. */
+  #drawer{position:fixed;top:10px;right:10px;bottom:10px;width:290px;z-index:210;padding:14px;border-radius:20px;
+    overflow-y:auto;
+    border:0.5px solid var(--line);background:rgba(8,12,26,0.88);
     backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
-    display:none;text-align:left}
-  #drawer.open{display:block}
+    transform:translateX(calc(100% + 20px));opacity:0;pointer-events:none;
+    transition:transform .42s cubic-bezier(0.16,1,0.3,1),opacity .42s ease;
+    text-align:left}
+  #drawer.open{transform:none;opacity:1;pointer-events:auto}
+  .top-btn.hamburger{transition:transform .42s cubic-bezier(0.16,1,0.3,1)}
+  body.drawer-open .top-btn.hamburger{transform:translateX(-290px)}
+  @media (max-width:640px){ body.drawer-open .top-btn.hamburger{transform:none} }
   #drawer h3{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.24em;text-transform:uppercase;
     color:var(--faint);margin:8px 6px 6px}
   #drawer a{display:block;padding:8px 10px;border-radius:12px;text-decoration:none;color:var(--ink);
@@ -110,24 +118,25 @@ try {
     color:var(--dim);cursor:pointer;transition:all .2s}
   .range-chip:hover{color:var(--ink)}
   .range-chip.on{color:var(--ink);border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.06)}
-  /* v13.54: the one-minute summary strip. */
-  #summary-fold{margin-bottom:14px;text-align:left}
-  #summary-fold summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;
-    padding:10px 16px;border:0.5px solid var(--line);border-radius:100px;
-    background:rgba(10,14,26,0.5);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-  #summary-fold summary::-webkit-details-marker{display:none}
-  #summary-fold summary .sum-title{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:0.22em;
-    text-transform:uppercase;color:var(--grp)}
-  #summary-fold summary .sum-peek{font-size:14.5px;color:var(--dim);white-space:nowrap;overflow:hidden;
-    text-overflow:ellipsis;flex:1}
-  #summary-body{padding:14px 18px 6px}
-  .sum-line{display:flex;gap:10px;align-items:baseline;font-size:15.5px;color:var(--ink);margin-bottom:8px}
-  .sum-dot{width:8px;height:8px;border-radius:50%;flex:none;position:relative;top:-1px}
-  .sum-dot.green{background:var(--green)}
-  .sum-dot.amber{background:var(--amber)}
-  .sum-dot.red{background:#f87171}
-  .sum-headline{font-size:17px;margin-bottom:10px}
-  .sum-action{font-size:15px;color:var(--dim);font-style:italic;margin:10px 0 8px}
+  /* v13.56: the today ticker. A quiet marquee riding the top bar between
+     the wordmark and the hamburger, reading the day like a news line, in
+     the same Jost small caps the labels wear. */
+  #ticker{flex:1;min-width:0;overflow:hidden;margin:0 26px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
+    mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+  #ticker-inner{display:inline-block;white-space:nowrap;padding-left:100%;
+    font-family:'Jost',sans-serif;font-weight:300;font-size:10px;letter-spacing:0.18em;
+    text-transform:uppercase;color:var(--blue);line-height:28px;
+    animation:tickerslide 38s linear infinite;will-change:transform}
+  #ticker:hover #ticker-inner{animation-play-state:paused}
+  #ticker-inner .tk-sep{color:var(--faint);margin:0 14px}
+  #ticker-inner .tk-red{color:#f87171}
+  #ticker-inner .tk-amber{color:var(--amber)}
+  @keyframes tickerslide{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+  @media (max-width:760px){ #ticker{display:none} }
+  /* v13.56: the pair pills: manasiyo.com's number, then MAYA's. */
+  .tile .v .pair-b{color:var(--dim)}
+  .pair-legend{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--faint);margin:2px 0 6px}
   /* v13.54: the chart hover layer. */
   #ad-tip{position:absolute;top:8px;pointer-events:none;display:none;z-index:5;
     padding:8px 11px;border-radius:12px;border:0.5px solid var(--line);
@@ -175,7 +184,9 @@ try {
       <span class="brand-title">Marketing</span>
     </a>
   </div>
-  <button class="top-btn hamburger" onclick="document.getElementById('drawer').classList.toggle('open')" title="Menu">
+  <!-- v13.56: the day reads itself out between the wordmark and the menu. -->
+  <div id="ticker" aria-label="Today, in one line"><span id="ticker-inner">The numbers are on their way.</span></div>
+  <button class="top-btn hamburger" onclick="toggleDrawer()" title="Menu" aria-expanded="false" aria-controls="drawer">
     <span class="hamburger-icon"><span></span><span></span><span></span></span>
   </button>
 </div>
@@ -205,24 +216,18 @@ try {
     <span id="gsi-slot" style="margin:0 0 0 auto"></span>
   </div>
 
-  <!-- v13.54: the one-minute read. A single strip: what changed, colored
-       observations, one next action. The warnings underneath are computed
-       deterministically on the server and never depend on the AI. -->
-  <details class="fold" id="summary-fold">
-    <summary>
-      <span class="sum-title">Today</span>
-      <span class="sum-peek" id="sum-peek">loading the summary&#8230;</span>
-    </summary>
-    <div id="summary-body"></div>
+  <!-- v13.56: one section for both properties. Each pill holds two numbers:
+       manasiyo.com first, then MAYA, same window. -->
+  <details class="fold" id="visitors-fold" open>
+    <summary><h2 class="grp">Manasiyo.com &#183; MAYA</h2></summary>
+    <div class="pair-legend">each pill: manasiyo.com first, then maya</div>
+    <div id="wix-tiles" class="tiles"></div>
+    <div id="wix-extra" class="tiles" style="margin-top:6px"></div>
+    <div id="wix-note" class="note" style="display:none"></div>
   </details>
 
-  <!-- v13.48: the site's OWN numbers, straight from Wix. MAYA's traffic
-       lives on Admin where it belongs; this page is manasiyo.com and ads. -->
-  <h2 class="grp">Manasiyo.com, who is arriving</h2>
-  <div id="wix-tiles" class="tiles"></div>
-  <div id="wix-note" class="note" style="display:none"></div>
-
-  <h2 class="grp">Paid, both networks together</h2>
+  <details class="fold" id="ads-fold" open>
+  <summary><h2 class="grp">Ads</h2></summary>
   <div class="panel" id="ad-combined-panel">
     <div class="metric-chips" id="metric-chips">
       <button class="metric-chip on" data-m="clicks" onclick="setAdMetric('clicks')" title="Link clicks: people who actually left for the site. Meta's all-interactions number lives on its panel below.">Link clicks</button>
@@ -248,25 +253,28 @@ try {
     </div>
     <div id="ad-combined-note" class="note" style="display:none;margin-top:10px"></div>
   </div>
+  </details>
 
-  <h2 class="grp">Campaigns, last 7 days</h2>
-  <div class="panel"><table id="campaigns-table"><tbody></tbody></table></div>
-
-  <div class="grid2" style="margin-top:12px">
-    <div class="panel" id="google-ads-panel">Google Ads&#8230;</div>
-    <div class="panel" id="meta-ads-panel">Meta Ads&#8230;</div>
-  </div>
+  <details class="fold" id="campaigns-fold" open>
+    <summary><h2 class="grp">Campaigns, last 7 days</h2></summary>
+    <div class="panel"><table id="campaigns-table"><tbody></tbody></table></div>
+  </details>
 
   <!-- v13.54: the people the spend actually produced. -->
-  <h2 class="grp">Leads, newest first</h2>
-  <div class="panel"><table id="leads-table"><tbody></tbody></table></div>
-  <div id="leads-note" class="note" style="display:none"></div>
+  <details class="fold" id="leads-fold" open>
+    <summary><h2 class="grp">Leads, newest first</h2></summary>
+    <div class="panel"><table id="leads-table"><tbody></tbody></table></div>
+    <div id="leads-note" class="note" style="display:none"></div>
+  </details>
 
-  <h2 class="grp">MAYA, where its visitors came from</h2>
-  <div class="panel"><table id="sources-table"><tbody></tbody></table></div>
-
-  <h2 class="grp">MAYA, what they read</h2>
-  <div class="panel"><table id="pages-table"><tbody></tbody></table></div>
+  <details class="fold" id="sources-fold" open>
+    <summary><h2 class="grp">Sources of traffic, MAYA</h2></summary>
+    <div class="panel"><table id="sources-table"><tbody></tbody></table></div>
+    <div class="note" style="margin-top:8px">These are how people reached MAYA itself, from its own
+    Analytics. checkout.stripe.com means someone came back from a Stripe payment page, a tip. Wix does
+    not share a per source breakdown for manasiyo.com through its API; when its Semantic Model API
+    opens that door, the two sites will merge here.</div>
+  </details>
 
   <details class="fold" id="connect-fold">
     <summary><h2 class="grp">Connecting what is missing</h2></summary>
@@ -385,16 +393,14 @@ async function load() {
   // only as a mouth for errors.
   document.getElementById('checked-at').textContent = '';
   if (d.saEmail) document.getElementById('sa-email').textContent = d.saEmail;
-  paintWix(d.wixSite || {});
+  paintVisitors(d);
   paintSite(d.analytics || {});
   _adData = d.adCombined || null;
   _windsorWhy = (d.windsor && d.windsor.why) || '';
   paintAdCombined();
   paintCampaigns();
-  paintAds('google-ads-panel', 'Google Ads', d.googleAds || {}, 'google');
-  paintAds('meta-ads-panel', 'Meta Ads', d.meta || {}, 'meta');
   paintLeads(d.leads || {});
-  paintSummary(d);
+  buildTicker(d);
   fetchBrief(d);
 }
 
@@ -427,37 +433,44 @@ function paintLeads(l) {
       '<td class="lead-note" title="' + esc(x.note || '') + '">' + esc(x.note || '') + '</td></tr>').join('');
 }
 
-// ── v13.54: the one-minute summary. The deterministic warnings render at
-// once; the AI headline joins them when (and only when) the brief answers. ──
+// ── v13.56: the ticker. The day reads itself out as one moving line in the
+// top bar: the AI headline when it has answered, every warning, the numbers
+// that matter, in relative words (today, yesterday, this week), never raw
+// dates, always abbreviated the second time. Deterministic parts render at
+// once; the AI line joins when the brief answers. ──
 let _brief = null, _briefHour = '';
-function paintSummary(d) {
-  const body = document.getElementById('summary-body');
-  const peek = document.getElementById('sum-peek');
-  if (!body) return;
-  const warnings = d.warnings || [];
-  let html = '';
-  if (_brief && _brief.ok) {
-    html += '<div class="sum-headline">' + esc(_brief.headline) + '</div>';
-    for (const o of (_brief.observations || [])) {
-      html += '<div class="sum-line"><span class="sum-dot ' + esc(o.severity) + '"></span><span>' + esc(o.text) + '</span></div>';
-    }
+function buildTicker(d) {
+  const el = document.getElementById('ticker-inner');
+  if (!el) return;
+  const sep = '<span class="tk-sep">&#183;</span>';
+  const bits = [];
+  const compact = t => esc(String(t || '')
+    .replace(/cost per link click/ig, 'CPL')
+    .replace(/day over day/ig, 'vs yesterday')
+    .replace(/week over week/ig, 'vs last week')
+    .replace(/\b20\d\d-(\d\d)-(\d\d)\b/g, (m, mo, dd) => mo + '/' + dd));
+  if (_brief && _brief.ok && _brief.headline) bits.push(compact(_brief.headline));
+  for (const w of (d.warnings || [])) {
+    bits.push('<span class="tk-' + (w.severity === 'red' ? 'red' : 'amber') + '">' + compact(w.text) + '</span>');
   }
-  for (const w of warnings) {
-    html += '<div class="sum-line"><span class="sum-dot ' + esc(w.severity) + '"></span><span>' + esc(w.text) + '</span></div>';
+  const g = (d.googleAds && d.googleAds.d7) || {};
+  const f = (d.meta && d.meta.d7) || {};
+  const gL = Number(g.linkClicks != null ? g.linkClicks : g.clicks || 0);
+  const fL = Number(f.linkClicks || 0);
+  const spend = Number(g.spend || 0) + Number(f.spend || 0);
+  if (spend) bits.push('this week ' + usd(spend) + ' spent, ' + n0(gL + fL) + ' link clicks');
+  if (g.spend) bits.push('Google CPL ' + usd(gL ? g.spend / gL : 0));
+  if (f.spend) bits.push('Meta CPL ' + usd(fL ? f.spend / fL : 0));
+  if (d.leads && d.leads.connected) {
+    bits.push(n0(d.leads.d7) + ' lead' + (d.leads.d7 === 1 ? '' : 's') + ' this week, ' + n0(d.leads.d28) + ' this month');
+    if (d.costPerLead != null) bits.push('cost per lead ' + usd(d.costPerLead));
   }
-  if (_brief && _brief.ok && _brief.action) {
-    html += '<div class="sum-action">Next: ' + esc(_brief.action) + '</div>';
-  }
-  if (!html) html = '<div class="sum-line"><span class="sum-dot green"></span><span>Nothing is on fire: no warning conditions triggered today.</span></div>';
-  body.innerHTML = html;
-  if (peek) {
-    const reds = warnings.filter(w => w.severity === 'red').length;
-    const ambers = warnings.filter(w => w.severity === 'amber').length;
-    peek.textContent = (_brief && _brief.ok && _brief.headline) ? _brief.headline
-      : reds ? reds + ' red warning' + (reds > 1 ? 's' : '') + (ambers ? ', ' + ambers + ' amber' : '')
-      : ambers ? ambers + ' amber warning' + (ambers > 1 ? 's' : '')
-      : 'quiet: nothing needs you today';
-  }
+  if (_brief && _brief.ok && _brief.action) bits.push('next: ' + compact(_brief.action));
+  if (!bits.length) bits.push('quiet: nothing needs you today');
+  el.innerHTML = bits.join(sep);
+  // Longer lines walk at the same pace instead of sprinting.
+  const words = el.textContent.length;
+  el.style.animationDuration = Math.max(24, Math.min(90, Math.round(words / 4))) + 's';
 }
 async function fetchBrief(d) {
   const hour = new Date().toISOString().slice(0, 13);
@@ -474,7 +487,7 @@ async function fetchBrief(d) {
     if (!r.ok) return;                          // deterministic warnings stand alone
     _brief = await r.json();
     _briefHour = hour;
-    paintSummary(d);
+    buildTicker(d);
   } catch (_) { /* the warnings already rendered */ }
 }
 
@@ -679,25 +692,34 @@ function paintCampaigns() {
   const srcName = (s) => /google/.test(s) ? 'Google' : /facebook|meta/.test(s) ? 'Meta' : s;
   // Status is honest: it says whether the campaign actually delivered
   // impressions inside the window, which is all the feed can prove.
+  // v13.56: the Cost column carries what the two big panels used to say,
+  // and clicks mean LINK clicks on both networks here too.
   tb.innerHTML = '<tr><th>Status</th><th>Campaign</th><th>Network</th>' +
-    '<th class="num">Impressions</th><th class="num">Clicks</th><th class="num">CTR</th><th class="num">CPC</th></tr>' +
+    '<th class="num">Cost</th><th class="num">Impressions</th><th class="num">Link clicks</th><th class="num">CTR</th><th class="num">CPC</th></tr>' +
     rows.map(c => {
       const on = Number(c.impressions) > 0;
+      const lnk = c.linkClicks != null ? c.linkClicks : c.clicks;
       return '<tr><td><span class="status-word ' + (on ? 'on' : 'off') + '">' +
         (on ? '&#9679; delivering' : '&#9675; no delivery') + '</span></td>' +
         '<td>' + esc(c.campaign) + '</td>' +
         '<td>' + esc(srcName(String(c.source || ''))) + '</td>' +
+        '<td class="num">' + usd(c.spend) + '</td>' +
         '<td class="num">' + n0(c.impressions) + '</td>' +
-        '<td class="num">' + n0(c.clicks) + '</td>' +
-        '<td class="num">' + (c.impressions ? (100 * c.clicks / c.impressions).toFixed(2) + '%' : '0%') + '</td>' +
-        '<td class="num">' + usd(c.cpc) + '</td></tr>';
+        '<td class="num">' + n0(lnk) + '</td>' +
+        '<td class="num">' + (c.impressions ? (100 * lnk / c.impressions).toFixed(2) + '%' : '0%') + '</td>' +
+        '<td class="num">' + usd(lnk ? c.spend / lnk : 0) + '</td></tr>';
     }).join('');
 }
 
-// v13.48: manasiyo.com's own numbers, straight from Wix. This is what the
-// Wix dashboard shows, on this page.
-function paintWix(w) {
+// v13.56: one section for both properties. Each pill pairs manasiyo.com's
+// number (from Wix) with MAYA's (from its own Analytics), same window.
+// Wix publishes a day at a time, so its today figure does not exist until
+// the day ends; the pill says so instead of pretending zero.
+function paintVisitors(d) {
+  const w = d.wixSite || {};
+  const a = ((d.analytics || {}).ranges) || {};
   const tiles = document.getElementById('wix-tiles');
+  const extra = document.getElementById('wix-extra');
   const note = document.getElementById('wix-note');
   if (!tiles) return;
   if (!w.connected) {
@@ -709,68 +731,54 @@ function paintWix(w) {
     return;
   }
   note.style.display = 'none';
+  const pair = (wix, maya) =>
+    (wix == null ? '<span title="Wix publishes manasiyo.com a day at a time; today lands tonight">&#8230;</span>' : n0(wix)) +
+    ' <span class="pair-b">&#183; ' + n0(maya || 0) + '</span>';
   tiles.innerHTML =
-    tile('today', n0((w.today || {}).visitors)) +
-    tile('7 days', n0((w.d7 || {}).visitors)) +
-    tile('28 days', n0((w.d28 || {}).visitors)) +
-    tile('visits, 28 days', n0((w.d28 || {}).sessions));
+    tile('today', pair((w.today || {}).visitors, (a.today || {}).users)) +
+    tile('7 days', pair((w.d7 || {}).visitors, (a.d7 || {}).users)) +
+    tile('28 days', pair((w.d28 || {}).visitors, (a.d28 || {}).users));
+  if (extra) extra.innerHTML =
+    tile('visits, 28 days', n0((w.d28 || {}).sessions)) +
+    (w.d28 && w.d28.forms != null ? tile('forms, 28 days', n0(w.d28.forms)) : '') +
+    (w.d28 && w.d28.contacts != null ? tile('clicks to contact', n0(w.d28.contacts)) : '');
 }
 
-// The two tables below come from MAYA's own Analytics: where MAYA's
-// visitors arrive from, and what they open. The manasiyo.com tiles above
-// come from Wix.
+// Sources: how people reached MAYA, from its own Analytics. A source that
+// reads as a site opens as one.
 function paintSite(a) {
   if (!a.connected) return;
   const st = document.querySelector('#sources-table tbody');
   st.innerHTML = '<tr><th>Source</th><th class="num">Visits</th><th class="num">People</th></tr>' +
-    (a.sources || []).map(s => '<tr><td>' + label(s.source, s.medium) + '</td><td class="num">' +
-      n0(s.sessions) + '</td><td class="num">' + n0(s.users) + '</td></tr>').join('');
-  const pt = document.querySelector('#pages-table tbody');
-  pt.innerHTML = '<tr><th>Page</th><th class="num">Views</th></tr>' +
-    (a.pages || []).map(p => '<tr><td>' + esc(p.path) + '</td><td class="num">' + n0(p.views) + '</td></tr>').join('');
+    (a.sources || []).map(s => {
+      const src = String(s.source || '');
+      const isSite = /^[\w-]+(\.[\w-]+)+$/.test(src);
+      const name = isSite
+        ? '<a href="https://' + esc(src) + '" target="_blank" rel="noopener noreferrer" style="color:inherit">' + label(s.source, s.medium) + '</a>'
+        : label(s.source, s.medium);
+      return '<tr><td>' + name + '</td><td class="num">' +
+        n0(s.sessions) + '</td><td class="num">' + n0(s.users) + '</td></tr>';
+    }).join('');
 }
 
-// v13.54: the two panels compare the same thing now. "Link clicks" means a
-// person who actually left for the site: Google's clicks already are link
-// clicks, and Meta's clicks (every interaction, likes and profile taps
-// included) show separately as "All interactions" so they can never dress
-// up as traffic again. Cost per link click is the honest price on both.
-function paintAds(id, name, d, kind) {
-  const el = document.getElementById(id);
-  if (!d.connected) {
-    el.innerHTML = '<div style="font-size:19px;margin-bottom:6px">' + name + '</div>' +
-      '<div style="font-family:\'Jost\',sans-serif;font-size:10.5px;color:var(--dim);line-height:1.8">' +
-      'Not connected. ' + esc(d.why || '') + '</div>';
-    return;
-  }
-  const w = d.d7 || {};
-  const linkClicks = w.linkClicks != null ? w.linkClicks : w.clicks;
-  let rows =
-    '<tr><td>Impressions</td><td class="num">' + n0(w.impressions) + '</td></tr>';
-  if (kind === 'meta') {
-    rows +=
-      '<tr><td>Reach</td><td class="num">' + n0(w.reach) + '</td></tr>' +
-      '<tr><td>Link clicks</td><td class="num">' + n0(linkClicks) + '</td></tr>' +
-      '<tr><td>All interactions</td><td class="num">' + n0(w.clicks) + '</td></tr>' +
-      (w.frequency ? '<tr><td>Frequency</td><td class="num">' + Number(w.frequency).toFixed(1) + '</td></tr>' : '');
-  } else {
-    rows +=
-      '<tr><td>Link clicks</td><td class="num">' + n0(linkClicks) + '</td></tr>' +
-      '<tr><td>Conversions</td><td class="num">' +
-        (w.conversions == null ? '<span style="color:var(--faint)">not configured</span>' : n0(w.conversions)) + '</td></tr>';
-  }
-  rows += '<tr><td>Cost per link click</td><td class="num">' +
-    usd(linkClicks ? (w.spend / linkClicks) : 0) + '</td></tr>';
-  el.innerHTML = '<div style="font-size:19px;margin-bottom:2px">' + name + '</div>' +
-    '<div style="font-family:\'Jost\',sans-serif;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--faint);margin-bottom:8px">last 7 days</div>' +
-    '<div class="money">' + usd(w.spend) + '</div>' +
-    '<table style="margin-top:8px"><tbody>' + rows + '</tbody></table>';
+// v13.56: the two network panels are gone; the campaign table's Cost column
+// and the ticker carry their numbers now. The server still computes each
+// network's link clicks, reach and frequency: the warnings and the hourly
+// brief read them even though no panel paints them.
+function toggleDrawer(force) {
+  const drawer = document.getElementById('drawer');
+  if (!drawer) return;
+  const open = (typeof force === 'boolean') ? force : !drawer.classList.contains('open');
+  drawer.classList.toggle('open', open);
+  document.body.classList.toggle('drawer-open', open);
+  const btn = document.querySelector('.top-btn.hamburger');
+  if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
 
 setInterval(() => { if (_idTok && document.visibilityState === 'visible') load(); }, 180000);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load(); });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.getElementById('drawer').classList.remove('open');
+  if (e.key === 'Escape') toggleDrawer(false);
 });
 // v13.45: a click anywhere outside the drawer closes it, like everywhere.
 document.addEventListener('pointerdown', e => {
@@ -778,7 +786,7 @@ document.addEventListener('pointerdown', e => {
   if (!d || !d.classList.contains('open')) return;
   const t = e.target;
   if (t && t.closest && (t.closest('#drawer') || t.closest('.top-btn.hamburger'))) return;
-  d.classList.remove('open');
+  toggleDrawer(false);
 }, true);
 </script>
 </body>
