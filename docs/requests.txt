@@ -16,6 +16,23 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, THE STAR SPEAKS, THE BOTTOM LINE (v13.66)
+
+[x] "Remove the star from the drawer; double clicking the top left star
+    should activate the voice. It should be connected to marketing and
+    everything else, know what we pushed recently, know the date, be able
+    to ask me back, scan everything, and talk back so I know it works."
+    Done: double click opens the line and Maya greets first; she carries
+    marketing, leads, submissions, the recent ships and the date, and asks
+    back when it helps. ElevenLabs can replace the voice later; for now it
+    is OpenAI's realtime voice.
+[x] "A new row at the bottom of Marketing with the most important live
+    analytics you think are missing; think outside the box." Added The
+    bottom line: the week as one funnel from paid clicks to leads with
+    conversion at each step, cost per lead against last week, the cheapest
+    working campaign, the share of the site that steps into MAYA, and the
+    day of the week that brings people.
+
 AUGUST 24, 2026, MAYA'S VOICE (v13.65)
 
 [x] "In the Admin only, the logo at the bottom center of the drawer,

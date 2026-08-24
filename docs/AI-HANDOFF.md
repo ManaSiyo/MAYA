@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 265 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 267 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -71,6 +71,34 @@ campaign table, warnings, ticker) through Windsor, per connector. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.66 (Claude): the voice in the star, and the bottom line
+
+- THE DOCK IS GONE; the voice lives in the TOP LEFT star. Double click the
+  Admin logo (ondblclick on the brand anchor, preventDefault so the home
+  navigation stays on single click) to open the line; while live the
+  .maya-logo-mark wears .live (voicepulse) and a single click on the star
+  hangs up (the onclick guards on _voice). #voice-word floats fixed under
+  the logo. On open the data channel sends response.create so Maya greets
+  FIRST, which is also the working-line check Fromsa asked for.
+- SHE SCANS EVERYTHING: voice-token's snapshot now adds submissions
+  (folder count + most recent, from gcsListSubmissions), recently_shipped
+  (recentShips() reads the top three changelog entries off the public
+  status.html, cached an hour, so the voice always matches production) and
+  the current date and time in San Francisco baked into the instructions;
+  she is told to ask questions back when it sharpens the answer.
+- THE BOTTOM LINE (marketing, below everything): the fold nothing above
+  says. One funnel for the week: paid link clicks (arrow silent, most of
+  the site arrives free) to manasiyo.com to MAYA to leads with the real
+  conversion at each step; tiles: cost per lead this week, ad spend vs
+  last week (amber over +25%), the cheapest campaign that delivered at
+  least 5 clicks, the share of the site that steps into MAYA, and the day
+  of the week that brings people (dow rollup of wixSite.daily, 28 days);
+  one plain sentence under it. paintBottomLine(d) is pure arithmetic over
+  the payload the page already holds; no model, no new endpoint.
+- Playwright probed: dock gone, dblclick path, signed-out and failure
+  words, star never stuck live; the bottom line rendered from a realistic
+  stubbed payload (funnel, five tiles, the sentence).
 
 ## v13.65 (Claude): Maya's voice on Admin
 

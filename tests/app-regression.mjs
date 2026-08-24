@@ -1283,13 +1283,29 @@ ok('the cabinet consumes the drawer: circles at the bezel, panes edge to edge, P
   PLAYGROUND_SOURCE.indexOf('id="pg-tab-pinterest"') < PLAYGROUND_SOURCE.indexOf('id="pg-tab-fabrics"') &&
   PLAYGROUND_SOURCE.includes(">Projects</div>"));
 // ── v13.65 · Maya's voice on Admin ────────────────────────────────────────
-ok('the Admin drawer holds the star, and tapping it opens a voice line',
-  MAP_SOURCE.includes('id="voice-dock"') &&
-  MAP_SOURCE.includes('id="voice-btn"') &&
+// v13.66: the voice moved out of the drawer into the star itself.
+ok('double clicking the Admin star opens the voice line, and she speaks first',
+  !MAP_SOURCE.includes('id="voice-dock"') &&
+  MAP_SOURCE.includes('id="voice-star"') &&
+  MAP_SOURCE.includes('ondblclick="event.preventDefault();toggleMayaVoice()"') &&
   MAP_SOURCE.includes('function toggleMayaVoice(') &&
   MAP_SOURCE.includes('voicepulse') &&
-  /#voice-dock\{margin-top:auto/.test(MAP_SOURCE) &&
+  MAP_SOURCE.includes("dc.send(JSON.stringify({type:'response.create'}))") &&
   MAP_SOURCE.includes("https://api.openai.com/v1/realtime/calls?model="));
+ok('the voice scans everything and knows the date',
+  SERVER_SOURCE.includes('async function recentShips(') &&
+  SERVER_SOURCE.includes('recently_shipped') &&
+  SERVER_SOURCE.includes('submissions: subFolders') &&
+  SERVER_SOURCE.includes('Right now it is ') &&
+  SERVER_SOURCE.includes('Ask him questions back'));
+ok('the bottom line row does the arithmetic between the streams, live',
+  MKT_SOURCE.includes('id="bottom-fold"') &&
+  MKT_SOURCE.includes('function paintBottomLine(') &&
+  MKT_SOURCE.includes('become leads') &&
+  MKT_SOURCE.includes('cheapest working door') &&
+  MKT_SOURCE.includes('the day that brings people') &&
+  // deterministic: nothing in it calls a model
+  !/paintBottomLine[\s\S]{0,4000}api\/openai/.test(MKT_SOURCE));
 ok('the voice key never touches the browser: the server mints a one-call secret with live numbers',
   SERVER_SOURCE.includes("app.post('/api/admin/voice-token'") &&
   SERVER_SOURCE.includes('v1/realtime/client_secrets') &&

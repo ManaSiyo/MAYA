@@ -2790,6 +2790,23 @@ function computeMarketingWarnings(out, windsor) {
 // talks to OpenAI directly over WebRTC. The long lived API key never leaves
 // the server; the browser only ever holds the one-call ephemeral secret. ──
 const REALTIME_MODEL = process.env.OPENAI_REALTIME_MODEL || 'gpt-realtime';
+// what shipped recently, read from the public Systems Map changelog so the
+// voice always matches production, cached an hour.
+let _shipsCache = { ts: 0, data: null };
+async function recentShips() {
+  if (_shipsCache.data && Date.now() - _shipsCache.ts < 3600 * 1000) return _shipsCache.data;
+  const r = await fetch('https://maya.manasiyo.com/status.html', { signal: AbortSignal.timeout(8000) });
+  if (!r.ok) throw new Error('status ' + r.status);
+  const html = await r.text();
+  const out = [];
+  const re = /<div class="chg"><b>([^<]+)<\/b>([\s\S]*?)<\/div>/g;
+  let m;
+  while ((m = re.exec(html)) && out.length < 3) {
+    out.push(m[1] + ': ' + m[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 400));
+  }
+  if (out.length) _shipsCache = { ts: Date.now(), data: out };
+  return out.length ? out : null;
+}
 app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb' }), async (req, res) => {
   let user;
   try { user = await requireAdmin(req); }
@@ -2798,10 +2815,16 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
   if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
   if (!process.env.OPENAI_API_KEY) return res.status(503).json({ error: 'voice_unavailable' });
   try {
-    // the numbers Maya speaks from: the same cached fetchers marketing uses.
-    const [wix, ads, leads] = await Promise.all([
+    // v13.66: she scans EVERYTHING reachable: marketing analytics, leads,
+    // submissions, users, and what shipped recently (read from the public
+    // Systems Map changelog, cached an hour), and she knows the date.
+    const [wix, ads, leads, subs, ships] = await Promise.all([
       wixInsights().catch(() => null), windsorInsights().catch(() => null), wixLeads().catch(() => null),
+      gcsListSubmissions().catch(() => null), recentShips().catch(() => null),
     ]);
+    const subFolders = subs ? new Set(subs.map(o => (o.name || '').split('/')[1]).filter(Boolean)) : null;
+    const lastSub = subs && subs.length
+      ? subs.map(o => o.timeCreated).sort().slice(-1)[0] : null;
     const ctx = {
       manasiyo_visitors: wix && wix.connected ? { today: wix.today, last7_daily: (wix.daily || []).slice(-7) } : 'unavailable',
       ads: ads && ads.connected ? {
@@ -2810,13 +2833,21 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
       } : 'unavailable',
       leads: leads && leads.connected ? { today: leads.today, week: leads.d7, month: leads.d28,
         newest: (leads.list || []).slice(0, 5).map(l => ({ when: l.ts, want: l.note })) } : 'unavailable',
+      submissions: subFolders ? { total: subFolders.size, most_recent: lastSub } : 'unavailable',
+      recently_shipped: ships || 'unavailable',
     };
+    const nowLA = new Intl.DateTimeFormat('en-US', { timeZone: process.env.WIX_TZ || 'America/Los_Angeles',
+      weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
+      .format(new Date());
     const instructions =
       'You are Maya, the operations voice of Mana Siyo, a custom fashion studio in San Francisco. ' +
-      'You are speaking out loud with Fromsa, the founder, over live audio. Be warm, sharp and brief: ' +
-      'answer in a few spoken sentences unless he asks for an analysis, and then give him about thirty ' +
-      'seconds covering marketing first (visitors, ad spend and clicks, cost per lead, warnings), then ' +
-      'leads and what they want, then anything unusual. Use plain spoken numbers, say today and ' +
+      'You are speaking out loud with Fromsa, the founder, over live audio. Right now it is ' + nowLA +
+      ' in San Francisco. Open by greeting him briefly and offering the day\'s read. Be warm, sharp and ' +
+      'brief: answer in a few spoken sentences unless he asks for an analysis, and then give him about ' +
+      'thirty seconds covering marketing first (visitors, ad spend and clicks, cost per lead), then ' +
+      'leads and what they want, then submissions and anything unusual, including what shipped ' +
+      'recently if he asks what is new. Ask him questions back when it sharpens the answer: which ' +
+      'window he means, whether he wants the detail. Use plain spoken numbers, say today and ' +
       'yesterday rather than dates, and never read out raw JSON or URLs. Ground every claim ONLY in ' +
       'the snapshot below; when something is not in it, say you do not have it live rather than guess. ' +
       'Never invent numbers.\n\nBusiness snapshot, taken just now:\n' + JSON.stringify(ctx).slice(0, 14000);

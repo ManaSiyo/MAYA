@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Marketing</title>
-<meta name="maya-version" content="13.65">
+<meta name="maya-version" content="13.66">
 <script>
 // v13.43: this page NEVER clears the shared sign in. Admin owns the deploy
 // sign-out; marketing clearing it too was why the page kept asking again.
@@ -172,6 +172,20 @@ try {
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   /* v13.62: the Lead Station. Small round CTAs under each name: draft the
      next email, place the call, drop a note. Same glass as every pill. */
+  /* v13.66: the bottom line. The funnel reads left to right; the tiles under
+     it carry the derived numbers nothing else on the page states. */
+  .bl-funnel{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
+    padding:6px 0 14px;border-bottom:0.5px solid rgba(255,255,255,0.08);margin-bottom:12px}
+  .bl-step{text-align:center;min-width:104px}
+  .bl-step .v{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--ink)}
+  .bl-step .k{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--dim);margin-top:2px}
+  .bl-arrow{font-family:'Jost',sans-serif;font-size:10px;color:var(--faint);text-align:center}
+  .bl-arrow b{display:block;color:#a9c9ff;font-weight:400;font-size:11px}
+  .bl-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+  .bl-tile{border:0.5px solid rgba(255,255,255,0.12);border-radius:14px;padding:10px 14px;text-align:center}
+  .bl-tile .v{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--ink)}
+  .bl-tile .v.good{color:var(--green)} .bl-tile .v.bad{color:var(--amber)}
+  .bl-tile .k{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:3px;line-height:1.6}
   .lead-rec{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim)}
   .lead-ctas{display:flex;gap:6px;margin-top:6px}
   .lead-cta{width:26px;height:22px;border-radius:100px;border:0.5px solid var(--hair);background:transparent;
@@ -318,6 +332,18 @@ try {
        asked for is connected (Wix, Windsor, Forms); the optional direct
        Meta/Google tokens it described are covered by Windsor and live in
        docs/AI-HANDOFF.md for whoever ever needs them. -->
+
+  <!-- v13.66: THE BOTTOM LINE. The page above shows each stream on its own;
+       this row is the arithmetic between them, the numbers a founder actually
+       steers by, computed live from the same payload on every refresh. -->
+  <details class="fold" id="bottom-fold" open>
+    <summary><h2 class="grp">The bottom line</h2></summary>
+    <div class="panel">
+      <div id="bl-funnel" class="bl-funnel"></div>
+      <div id="bl-tiles" class="bl-tiles"></div>
+    </div>
+    <div id="bl-note" class="note" style="display:none;margin-top:8px"></div>
+  </details>
 </div>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -411,8 +437,85 @@ async function load() {
   paintAdCombined();
   paintCampaigns();
   paintLeads(d.leads || {});
+  paintBottomLine(d);
   buildTicker(d);
   fetchBrief(d);
+}
+
+// ── v13.66: THE BOTTOM LINE. Everything here is arithmetic over numbers the
+// payload already carries, so it is as live as the page itself and never
+// waits on a model. What it adds that nothing above says: the week as ONE
+// funnel (paid clicks to site to MAYA to leads, with the survival rate at
+// each step), what a lead costs against last week, which campaign is the
+// cheapest working door, how much of the site steps into MAYA, and which
+// day of the week actually brings people. ──
+function paintBottomLine(d) {
+  const funnel = document.getElementById('bl-funnel');
+  const tiles = document.getElementById('bl-tiles');
+  const note = document.getElementById('bl-note');
+  if (!funnel || !tiles) return;
+  const w = d.wixSite || {}, a = ((d.analytics || {}).ranges) || {}, l = d.leads || {};
+  const ac = d.adCombined || {};
+  const sum7 = (series, field) => (series || []).slice(-7).reduce((t, r) => t + Number(r[field] || 0), 0);
+  const sumPrev7 = (series, field) => (series || []).slice(-14, -7).reduce((t, r) => t + Number(r[field] || 0), 0);
+  const clicks7 = sum7(ac.google, 'linkClicks') + sum7(ac.meta, 'linkClicks');
+  const spend7 = sum7(ac.google, 'spend') + sum7(ac.meta, 'spend');
+  const spendPrev = sumPrev7(ac.google, 'spend') + sumPrev7(ac.meta, 'spend');
+  const site7 = (w.d7 || {}).visitors, maya7 = (a.d7 || {}).users, leads7 = l.connected ? l.d7 : null;
+  const pct = (part, whole) => (whole > 0 && part != null) ? Math.round(100 * part / whole) + '%' : '&#8230;';
+  const step = (v, k) => '<div class="bl-step"><div class="v">' + (v == null ? '&#8230;' : n0(v)) + '</div><div class="k">' + k + '</div></div>';
+  const arrow = (p) => '<div class="bl-arrow">&#8594;<b>' + p + '</b></div>';
+  // the first join is not a survival rate (most of the site arrives free),
+  // so that arrow stays silent; the next two are real conversions.
+  funnel.innerHTML =
+    step(clicks7 || null, 'paid clicks &#183; 7d') + '<div class="bl-arrow">&#8594;</div>' +
+    step(site7, 'manasiyo.com') + arrow(pct(maya7, site7)) +
+    step(maya7, 'reach MAYA') + arrow(pct(leads7, maya7)) +
+    step(leads7, 'become leads');
+  const cpl = (leads7 && spend7) ? spend7 / leads7 : null;
+  const spendShift = spendPrev > 0 ? Math.round(100 * (spend7 - spendPrev) / spendPrev) : null;
+  // the cheapest campaign that actually delivered clicks this week
+  let bestC = null;
+  const cut = Date.now() - 7 * 86400000;
+  const byCamp = {};
+  for (const r of (ac.campaignDaily || [])) {
+    if (new Date(r.date) < cut) continue;
+    const k = r.source + ' &#183; ' + r.campaign;
+    (byCamp[k] = byCamp[k] || { name: r.campaign, spend: 0, clicks: 0 });
+    byCamp[k].spend += Number(r.spend || 0); byCamp[k].clicks += Number(r.linkClicks || 0);
+  }
+  for (const c of Object.values(byCamp)) {
+    if (c.clicks < 5) continue;
+    c.cpc = c.spend / c.clicks;
+    if (!bestC || c.cpc < bestC.cpc) bestC = c;
+  }
+  // the day of the week that brings people to manasiyo.com, last 4 weeks
+  let bestDay = null;
+  if ((w.daily || []).length >= 7) {
+    const byDow = {};
+    for (const r of w.daily) {
+      const dow = new Date(r.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+      byDow[dow] = (byDow[dow] || 0) + Number(r.visitors || 0);
+    }
+    bestDay = Object.entries(byDow).sort((x, y) => y[1] - x[1])[0];
+  }
+  const tile = (v, k, cls) => '<div class="bl-tile"><div class="v' + (cls ? ' ' + cls : '') + '">' + v + '</div><div class="k">' + k + '</div></div>';
+  tiles.innerHTML =
+    tile(cpl != null ? usd(cpl) : '&#8230;', 'a lead costs &#183; this week') +
+    tile(spendShift == null ? '&#8230;' : (spendShift > 0 ? '+' : '') + spendShift + '%',
+      'ad spend vs last week', spendShift != null && spendShift > 25 ? 'bad' : '') +
+    tile(bestC ? usd(bestC.cpc) : '&#8230;',
+      bestC ? 'cheapest working door &#183; ' + esc(String(bestC.name).slice(0, 26)) : 'cheapest working door') +
+    tile(pct(maya7, site7), 'of the site steps into MAYA') +
+    tile(bestDay ? esc(bestDay[0]) : '&#8230;', 'the day that brings people');
+  if (note) {
+    if (cpl != null && maya7 != null && site7 > 0) {
+      note.style.display = '';
+      note.innerHTML = 'This week, every <b>' + usd(cpl) + '</b> of advertising became one lead, and <b>' +
+        pct(maya7, site7) + '</b> of manasiyo.com stepped into MAYA' +
+        (bestC ? '; the cheapest door was <b>' + esc(String(bestC.name).slice(0, 40)) + '</b> at ' + usd(bestC.cpc) + ' a click' : '') + '.';
+    } else note.style.display = 'none';
+  }
 }
 
 // ── v13.54: the lead list. The submissions the spend actually produced. ──
