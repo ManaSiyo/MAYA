@@ -1426,6 +1426,12 @@ ok('v13.80: Maya can log feature requests as a relay to Claude',
   SERVER_SOURCE.includes("app.post('/api/admin/maya-log-feature'") &&
   SERVER_SOURCE.includes("app.get('/api/admin/maya-features'") &&
   MAP_SOURCE.includes("if(name==='log_feature')"));
+ok('v13.81: Pinterest Bring-them-in is a smaller pill lifted off the bottom',
+  INDEX_SOURCE.includes('#pinterest-drawer > .pin-drawer-foot .drawer-fabrics { flex: none; width: auto; min-width: 150px'));
+ok('v13.81: the Lead Station notes read Latest Notes and edit in place',
+  MAP_SOURCE.includes('<th>Latest Notes</th>') &&
+  MAP_SOURCE.includes('onclick="toggleLeadNote(') &&
+  MAP_SOURCE.includes('class="lead-note-add"'));
 
 ok('v13.76: fabrics show real photos and survive a failed rank',
   !BACKEND_SOURCE || (

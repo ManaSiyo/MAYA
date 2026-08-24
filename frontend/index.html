@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.80">
+<meta name="maya-version" content="13.81">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -2014,7 +2014,10 @@
      anchors to the bottom. */
   #notes-drawer .pg-pane > #pinterest-drawer > .drawer-head { display: none; }
   #notes-drawer .pg-pane > #pinterest-drawer > #pinterest-drawer-body { flex: 1; padding-top: 4px; }
-  #notes-drawer .pg-pane > #pinterest-drawer > .pin-drawer-foot { margin-top: auto; flex: none; }
+  /* v13.81: Bring them in sits a little lower than the cards but not glued to
+     the very edge, with a tighter gap above it and a smaller pill. */
+  #notes-drawer .pg-pane > #pinterest-drawer > .pin-drawer-foot { margin-top: auto; flex: none; padding: 4px 18px 22px; }
+  #notes-drawer .pg-pane > #pinterest-drawer > .pin-drawer-foot .drawer-fabrics { flex: none; width: auto; min-width: 150px; padding: 8px 20px; }
   /* v13.75: Randomize, Replace and Remove share one row; smaller pills to fit. */
   #notes-drawer .pg-avatar-actions .drawer-action { font-size: 8px; padding: 3px 8px;
     letter-spacing: 0.1em; }

@@ -16,6 +16,16 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, PINTEREST FOOTER + LEAD STATION NOTES (v13.81)
+
+[x] "Pinterest Bring them in: smaller pill, a little lower but not glued to the
+    bottom, smaller gap above." Done; tell me if it needs a nudge.
+[x] "Lead Station notes modifiable, rename Latest note to Latest Notes,
+    editable by me and Maya." Column is Latest Notes; note cell is click-to-edit;
+    Maya edits by name via note_lead.
+[ ] Fromsa's Lead Station message was cut off at "...and" — awaiting the rest of
+    the dynamic/modifiable intent.
+
 AUGUST 24, 2026, MAYA FEATURE LOG (v13.80)
 
 [x] "Maya should log features requested by me or customers and pass them to

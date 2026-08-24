@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.80">
+<meta name="maya-version" content="13.81">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -487,6 +487,8 @@ try {
     transition:all .2s;text-decoration:none}
   #adm-mkt .lead-cta:hover{border-color:rgba(255,255,255,0.5);color:var(--ink)}
   #adm-mkt .lead-cta[disabled]{opacity:.45;cursor:default}
+  #adm-mkt .lead-note:hover .lead-note-add{color:var(--dim)}
+  #adm-mkt .lead-note-add{color:var(--faint);font-style:italic}
   #adm-mkt .lead-note-row td{padding-top:0}
   #adm-mkt .lead-note-box{display:flex;gap:8px;align-items:flex-start;margin:4px 0 8px}
   #adm-mkt .lead-note-box textarea{flex:1;min-height:52px;resize:vertical;border-radius:12px;border:0.5px solid var(--line);
@@ -712,9 +714,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-24r">
+  <details class="fold" id="changes-fold" data-latest="2026-08-24s">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 24</b>The Lead Station notes are the Latest Notes now, and you edit them in place: click a lead's note to open it, and the next email draft reads it. Maya can write the same note by name. And in the MAYA app, Pinterest's Bring them in is a smaller pill, sitting a little lower with less gap above it.</div>
     <div class="chg"><b>Aug 24</b>Maya can log features now. When you, or a customer, wish MAYA did something it does not yet do, tell Maya and she writes it to a feature log that reaches Claude to build. It is the first thread of the line between Maya and Claude: she records the wish, Claude turns it into work.</div>
     <div class="chg"><b>Aug 24</b>Maya's line reads on screen now, not only in the ear. When she is live the drawer carries the conversation as text, her words and yours, and every line can be copied. It is no longer voice only; you can see what she said and take it with you.</div>
     <div class="chg"><b>Aug 24</b>Polish. The circle around the Admin logo is gone when it is still; the ring of light only appears while Maya is live, breathing faster now. In the MAYA app the cabinet reads Pinterest, Fabrics, Avatar, the avatar's switch caret sits right beside the name, the tab title says Project, and the drawer keeps the last tab even when you swipe it away and back. Pinterest now sits at the same height as Fabrics with the same room for its cards. And the Operations Room wears its beta to the right of the name, not underneath.</div>
@@ -2058,12 +2061,16 @@ function paintLeads(l) {
     if (days < 7) return 'Email &#183; follow up';
     return x.phone ? 'Call &#183; ' + days + ' days quiet' : 'Email &#183; revive';
   };
-  tb.innerHTML = '<tr><th>Who</th><th>Reach them</th><th>Notes</th><th>CTA</th></tr>' +
+  tb.innerHTML = '<tr><th>Who</th><th>Reach them</th><th>Latest Notes</th><th>CTA</th></tr>' +
     l.list.map((x, i) =>
       '<tr><td style="white-space:nowrap">' + esc(x.name) +
       '<div class="lead-when">' + esc(when(x.ts)) + '</div></td>' +
       '<td>' + esc(x.email || x.phone || '') + '</td>' +
-      '<td class="lead-note" title="' + esc(x.wrote || x.note || '') + '">' + esc(x.note || '') + '</td>' +
+      // v13.81: the note cell is modifiable in place, click it to edit; Maya can
+      // also write it by name. Empty shows a quiet "add a note" prompt.
+      '<td class="lead-note"' + (x.email ? ' onclick="toggleLeadNote(' + i + ')" style="cursor:pointer"' : '') +
+        ' title="' + esc(x.wrote || x.note || '') + '">' +
+        (esc(x.note || '') || (x.email ? '<span class="lead-note-add">add a note</span>' : '')) + '</td>' +
       '<td style="white-space:nowrap"><div class="lead-rec">' + rec(x) + '</div>' +
       '<div class="lead-ctas">' +
         (x.email ? '<button class="lead-cta" id="lead-mail-' + i + '" onclick="draftLead(' + i + ')" title="Draft the next email (opens Gmail, nothing is sent)">&#9993;</button>' : '') +

@@ -73,6 +73,25 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.81 (Claude): Pinterest footer, Lead Station "Latest Notes" editable
+
+- `frontend/index.html`: Pinterest `.pin-drawer-foot` is a smaller pill
+  (`flex:none;width:auto;min-width:150px`), lifted off the very bottom
+  (padding 4px 18px 22px), tighter gap above it.
+- `backend/status.html` Lead Station: the Notes column is now "Latest Notes",
+  and the note cell is click-to-edit in place (`onclick=toggleLeadNote`), with a
+  quiet "add a note" prompt when empty. Notes were already editable via the
+  pencil and via Maya's `note_lead` tool; this makes it obvious and inline.
+
+NOTE: Fromsa's message about the Lead Station was CUT OFF ("...and"). The full
+"dynamic/modifiable" intent likely has more — asked him to finish. What is done:
+rename + inline edit. Open: whatever the rest of his sentence asks.
+
+Changed files: `frontend/index.html`, `backend/status.html`; version 13.81
+across the four surfaces; `tests/app-regression.mjs`, `tests/admin-ui-contract.mjs`.
+
+VALIDATION: app-regression all passed, contract green.
+
 ## v13.80 (Claude): Maya's feature log (the Maya → Claude relay, step 1)
 
 - New `log_feature({text, who})` voice tool. Server: `POST
