@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 267 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 269 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -71,6 +71,46 @@ campaign table, warnings, ticker) through Windsor, per connector. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.67 (Claude): Maya home in the drawer with hands, Admin consolidating
+
+- VOICE BACK IN THE DRAWER: the top-left star is a plain home link again
+  (the double-click collided with navigation). #voice-dock is pinned at the
+  drawer floor (flex column, margin-top:auto); #voice-chip is a fixed
+  bottom-right pill that shows while the line is live so she keeps talking
+  with the drawer closed, and tapping either the star or the chip hangs up.
+- SHE HAS HANDS: the minted Realtime session now carries two tools
+  (server builds `tools` and passes `instructions, tools`): remember(text)
+  -> POST /api/admin/maya-remember, and note_lead(lead, note, contact) ->
+  POST /api/admin/lead-note. The browser handles
+  response.function_call_arguments.done on the data channel, runs the tool,
+  returns function_call_output + response.create. lead-note now resolves a
+  first name to an email via resolveLeadEmail() against wixLeads.
+- SHE HAS MEMORY: MAYA_MEM_PATH = maya/memory.json (GCS), loadMayaMemory /
+  appendMayaMemory; her memory + leads_by_name ride in the voice snapshot.
+- ADMIN DRAWER CONSOLIDATED (per Fromsa): The vault = one Firebase line;
+  "Behind the scenes" (light-blue h3.tint) = one Cloud Run line; "The
+  outside tools" = Google Ads manager, Meta Ads manager, Wix dashboard;
+  Privacy policy. Design Studio, Credits, API logs, Keys/settings, GA all
+  removed.
+- PILLS PAIRED: /api/admin/analytics now returns wixSite, and
+  _paintHeadTiles pairs today/7d/28d as manasiyo (white) | MAYA (blue);
+  Users and Live now stay single (accounts, no Wix live). A legend rides
+  the "Users and traffic" heading. This is migration step one; the four
+  Marketing modules (ad campaigns, lead station, sources, bottom line) move
+  under Users and traffic next, then Marketing is retired.
+- Marketing header is one clean row now: manasiyo.com | MAYA, Wix jump at
+  the far right.
+
+OPEN / NEXT (told to Fromsa, not yet built):
+- The big migration: ad campaigns + lead station + sources + bottom line
+  into Admin under Users and traffic, then delete Marketing.
+- GA property is the likely cause of the low MAYA count: pin
+  MARKETING_GA_PROPERTY_ID and GA_PROPERTY_ID to the MAYA app property
+  (behind G-ETTJ6PXEMM) so discovery stops guessing manasiyo's property.
+- Alerting on image-gen failure / credit exhaustion (needs a channel).
+- Maya email access (Gmail send) and live lead transcription: the tools
+  scaffold is here; Gmail send needs server OAuth, deferred.
 
 ## v13.66 (Claude): the voice in the star, and the bottom line
 

@@ -626,11 +626,13 @@ ok('the map stops saying arriving once the picture clearly is not coming',
   MAP_SOURCE.includes('const ARRIVING_MS = 3 * 60 * 1000;') &&
   MAP_SOURCE.includes("'no picture'") &&
   MAP_SOURCE.includes(".badge:not(.stale)"));
-ok('one row, five numbers, users first',
+ok('one row, five numbers, users first, each window paired manasiyo | MAYA',
   MAP_SOURCE.includes('function _paintHeadTiles(d)') &&
-  MAP_SOURCE.includes('<h2 class="grp">Users and traffic</h2>') &&
+  MAP_SOURCE.includes('Users and traffic <span class="traffic-legend">') &&
   MAP_SOURCE.indexOf('<div class="k">users</div>') < MAP_SOURCE.indexOf('&#9679; live now</div>') &&
-  MAP_SOURCE.includes('>7 days<') && MAP_SOURCE.includes('>28 days<'));
+  MAP_SOURCE.includes('>7 days<') && MAP_SOURCE.includes('>28 days<') &&
+  MAP_SOURCE.includes('#head-tiles .pair-b') && MAP_SOURCE.includes('d.wixSite') &&
+  SERVER_SOURCE.includes('ranges, countries, accounts: accounts || null, wixSite'));
 ok('the map hamburger links the privacy policy',
   MAP_SOURCE.includes('<a href="/privacy.html" target="_blank">Privacy policy'));
 ok('unique accounts are counted by MAYA itself',
@@ -682,7 +684,7 @@ ok('the logo goes home to the Systems Map',
   MKT_SOURCE.includes('<a href="/status.html"') &&
   BACKEND_SOURCE.includes('<a href="/status.html"'));
 ok('one heading over the whole row',
-  MAP_SOURCE.includes('<h2 class="grp">Users and traffic</h2>') &&
+  MAP_SOURCE.includes('>Users and traffic <span class="traffic-legend">') &&
   !MAP_SOURCE.includes('Who is here') && MAP_SOURCE.includes('>today<'));
 
 
@@ -841,9 +843,9 @@ ok('the MAYA door chips can actually be reached and clicked',
   MAP_SOURCE.includes('padding-left:10px') &&
   MAP_SOURCE.includes('transition:opacity .18s ease .4s') &&
   MAP_SOURCE.includes('.card-maya .pg-chips:hover'));
-ok('every traffic pill says what it counts on hover',
-  MAP_SOURCE.includes('signed in or not, from Analytics') &&
-  MAP_SOURCE.includes('Visitors who never sign in are counted in the traffic numbers, not here'));
+ok('every traffic pill names what it pairs on hover',
+  MAP_SOURCE.includes('manasiyo.com | MAYA, today') &&
+  MAP_SOURCE.includes('Separate Google accounts that have signed in to MAYA'));
 ok('an unnamed user row says it will take a name at next sign in',
   MAP_SOURCE.includes('earlier account, named at its next sign in'));
 // v13.48: superseded. Manasiyo.com numbers now come from Wix directly and
@@ -852,8 +854,9 @@ ok('marketing names whose traffic it shows',
   // v13.56: one combined section for both properties, and the sources say
   // they are MAYA's own.
   // v13.64: one row, the jump beside the name, MAYA in the logo blue
-  MKT_SOURCE.includes('Manasiyo.com<a class="wix-jump"') &&
-  MKT_SOURCE.includes('class="grp-maya"') &&
+  MKT_SOURCE.includes('<span>Manasiyo.com</span>') &&
+  MKT_SOURCE.includes('class="grp-maya">MAYA</span>') &&
+  MKT_SOURCE.includes('class="wix-jump"') &&
   !MKT_SOURCE.includes('pair-legend">manasiyo.com') &&
   MKT_SOURCE.includes('Sources of traffic, MAYA') &&
   MKT_SOURCE.includes('WINDSOR_API_KEY'));
@@ -1284,14 +1287,29 @@ ok('the cabinet consumes the drawer: circles at the bezel, panes edge to edge, P
   PLAYGROUND_SOURCE.includes(">Projects</div>"));
 // ── v13.65 · Maya's voice on Admin ────────────────────────────────────────
 // v13.66: the voice moved out of the drawer into the star itself.
-ok('double clicking the Admin star opens the voice line, and she speaks first',
-  !MAP_SOURCE.includes('id="voice-dock"') &&
-  MAP_SOURCE.includes('id="voice-star"') &&
-  MAP_SOURCE.includes('ondblclick="event.preventDefault();toggleMayaVoice()"') &&
+ok('the voice lives at the floor of the Admin drawer, persists in a chip, and holds two tools',
+  MAP_SOURCE.includes('id="voice-dock"') &&
+  MAP_SOURCE.includes('id="voice-btn"') &&
+  MAP_SOURCE.includes('id="voice-chip"') &&
+  !MAP_SOURCE.includes('id="voice-star"') &&
   MAP_SOURCE.includes('function toggleMayaVoice(') &&
-  MAP_SOURCE.includes('voicepulse') &&
-  MAP_SOURCE.includes("dc.send(JSON.stringify({type:'response.create'}))") &&
+  MAP_SOURCE.includes('function _voiceTool(') &&
+  MAP_SOURCE.includes('response.function_call_arguments.done') &&
   MAP_SOURCE.includes("https://api.openai.com/v1/realtime/calls?model="));
+ok('the voice has memory and can note a lead by name, minted into the session as tools',
+  SERVER_SOURCE.includes("app.post('/api/admin/maya-remember'") &&
+  SERVER_SOURCE.includes('async function loadMayaMemory(') &&
+  SERVER_SOURCE.includes('async function resolveLeadEmail(') &&
+  SERVER_SOURCE.includes("name: 'note_lead'") &&
+  SERVER_SOURCE.includes('instructions, tools,') &&
+  SERVER_SOURCE.includes('your_memory:'));
+ok('the Admin drawer consolidates: firebase one line, Cloud Run, the outside managers',
+  MAP_SOURCE.includes('>Firebase<') &&
+  MAP_SOURCE.includes('>Cloud Run<') &&
+  MAP_SOURCE.includes('>Google Ads manager<') &&
+  MAP_SOURCE.includes('>Meta Ads manager<') &&
+  MAP_SOURCE.includes('class="tint">Behind the scenes') &&
+  !MAP_SOURCE.includes('>Design Studio<') && !MAP_SOURCE.includes('>Credits<'));
 ok('the voice scans everything and knows the date',
   SERVER_SOURCE.includes('async function recentShips(') &&
   SERVER_SOURCE.includes('recently_shipped') &&

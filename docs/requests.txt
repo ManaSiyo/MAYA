@@ -16,6 +16,34 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, MAYA HOME, ADMIN CONSOLIDATING (v13.67)
+
+[x] "Double clicking the star doesn't work, and clicking it takes me to
+    admin. Put Maya back in the admin drawer." Done: the star is a plain
+    home link again; the voice lives at the floor of the drawer, with a
+    chip that stays while she listens so she keeps talking with the drawer
+    closed until you tap off.
+[x] "Give Maya memory, and let her fill the lead station as we talk, ask me
+    if I called them, update the notes." Done: she has her own memory and
+    two tools, remember and note_lead; by voice she writes notes to a lead
+    by first name. (Sending email for her needs Gmail on the server, next.)
+[x] "Consolidate the admin drawer: vault one line, Behind the scenes as one
+    Cloud Run in light blue, remove Design Studio and Credits, add Google
+    Ads manager, Meta Ads manager, Wix dashboard, keep privacy." Done.
+[x] "Users and traffic should pair manasiyo and MAYA like the marketing
+    pills." Done: today, 7 days and 28 days pair manasiyo.com | MAYA.
+[x] "The marketing header split into two rows and looks ugly; one row, same
+    size, arrow on the right." Done (marketing stays until it is retired).
+[ ] "Migrate everything from Marketing into Admin under Users and traffic,
+    then kill Marketing." Step one shipped (the paired row). The four
+    panels move next.
+[ ] "Stats still say ... and the count looks wrong (Wix says 14 clicked to
+    MAYA, here says 3)." Diagnosed: the MAYA number reads whichever GA4
+    property the server discovers, and it is likely reading manasiyo's, not
+    the MAYA app's. The fix is a one-line env pin (green step given).
+[ ] "Instant alert when the API or credits go down, or a user's image
+    fails." Designed, needs a delivery channel; green step given.
+
 AUGUST 24, 2026, THE STAR SPEAKS, THE BOTTOM LINE (v13.66)
 
 [x] "Remove the star from the drawer; double clicking the top left star

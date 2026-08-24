@@ -2163,6 +2163,10 @@ app.get('/api/admin/analytics', async (req, res) => {
   // Analytics being connected, so the headline number is always there.
   let accounts = null;
   try { accounts = await countUsers(); } catch (e) { console.warn('[admin] user count —', e.message); }
+  // v13.67: manasiyo.com's own visitors, so Admin can pair the pills the way
+  // Marketing does (manasiyo in white, MAYA in blue).
+  let wixSite = null;
+  try { wixSite = await wixInsights(); } catch (_) {}
   try {
     const token = await gaToken();
     // v11.49 (Codex M11): explicit property pin wins over "first visible".
@@ -2213,11 +2217,11 @@ app.get('/api/admin/analytics', async (req, res) => {
       name: r2.dimensionValues[0].value, users: Number(r2.metricValues[0].value || 0),
     }));
     res.json({ ok: true, live: liveRow ? Number(liveRow.metricValues[0].value || 0) : 0,
-               ranges, countries, accounts: accounts || null,
+               ranges, countries, accounts: accounts || null, wixSite,
                property: _gaProp.id, ts: new Date().toISOString() });
   } catch (e) {
     console.warn('[admin] analytics unavailable —', e.message);
-    res.json({ ok: false, reason: e.message, saEmail, accounts: accounts || null });
+    res.json({ ok: false, reason: e.message, saEmail, accounts: accounts || null, wixSite });
   }
 });
 
@@ -2818,9 +2822,9 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
     // v13.66: she scans EVERYTHING reachable: marketing analytics, leads,
     // submissions, users, and what shipped recently (read from the public
     // Systems Map changelog, cached an hour), and she knows the date.
-    const [wix, ads, leads, subs, ships] = await Promise.all([
+    const [wix, ads, leads, subs, ships, mem] = await Promise.all([
       wixInsights().catch(() => null), windsorInsights().catch(() => null), wixLeads().catch(() => null),
-      gcsListSubmissions().catch(() => null), recentShips().catch(() => null),
+      gcsListSubmissions().catch(() => null), recentShips().catch(() => null), loadMayaMemory().catch(() => null),
     ]);
     const subFolders = subs ? new Set(subs.map(o => (o.name || '').split('/')[1]).filter(Boolean)) : null;
     const lastSub = subs && subs.length
@@ -2835,6 +2839,8 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
         newest: (leads.list || []).slice(0, 5).map(l => ({ when: l.ts, want: l.note })) } : 'unavailable',
       submissions: subFolders ? { total: subFolders.size, most_recent: lastSub } : 'unavailable',
       recently_shipped: ships || 'unavailable',
+      your_memory: (mem && mem.items || []).slice(-40).map(i => i.text),
+      leads_by_name: leads && leads.connected ? (leads.list || []).slice(0, 12).map(l => ({ name: l.name, want: l.note })) : 'unavailable',
     };
     const nowLA = new Intl.DateTimeFormat('en-US', { timeZone: process.env.WIX_TZ || 'America/Los_Angeles',
       weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
@@ -2850,11 +2856,27 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
       'window he means, whether he wants the detail. Use plain spoken numbers, say today and ' +
       'yesterday rather than dates, and never read out raw JSON or URLs. Ground every claim ONLY in ' +
       'the snapshot below; when something is not in it, say you do not have it live rather than guess. ' +
-      'Never invent numbers.\n\nBusiness snapshot, taken just now:\n' + JSON.stringify(ctx).slice(0, 14000);
+      'Never invent numbers. You have two tools. When Fromsa tells you something worth keeping, call ' +
+      'remember with a short fact. When he tells you what happened with a lead (you called them, they want ' +
+      'a fitting, they went cold), call note_lead with the person\'s name or email and a short note so the ' +
+      'Lead Station keeps it. Confirm out loud in a few words after a tool, then ask the next useful question.' +
+      '\n\nBusiness snapshot, taken just now:\n' + JSON.stringify(ctx).slice(0, 14000);
+    const tools = [
+      { type: 'function', name: 'remember',
+        description: 'Save a short fact to your own memory so you recall it in later conversations.',
+        parameters: { type: 'object', properties: { text: { type: 'string', description: 'the fact, one sentence' } }, required: ['text'] } },
+      { type: 'function', name: 'note_lead',
+        description: 'Add a note to a lead in the Lead Station, and optionally record that Fromsa contacted them.',
+        parameters: { type: 'object', properties: {
+          lead: { type: 'string', description: 'the lead first name or email address' },
+          note: { type: 'string', description: 'what to record about them' },
+          contact: { type: 'string', enum: ['none', 'call', 'email'], description: 'set call or email if he just reached them that way' } },
+          required: ['lead', 'note'] } },
+    ];
     const r = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session: { type: 'realtime', model: REALTIME_MODEL, instructions,
+      body: JSON.stringify({ session: { type: 'realtime', model: REALTIME_MODEL, instructions, tools,
         audio: { output: { voice: process.env.OPENAI_REALTIME_VOICE || 'marin' } } } }),
       signal: AbortSignal.timeout(20000),
     });
@@ -2962,14 +2984,58 @@ async function loadLeadNotes(email) {
 
 // One store per lead, keyed by email: free-text notes Fromsa dumps in, and
 // the contact events (email drafted, call placed) that steer the next draft.
+// ── v13.67: MAYA'S MEMORY. Her own running notebook, read at the start of
+// every voice call and added to by voice. Admin only. ──
+const MAYA_MEM_PATH = 'maya/memory.json';
+async function loadMayaMemory() {
+  const o = await gcsGet(MAYA_MEM_PATH).catch(() => ({ ok: false }));
+  if (!o.ok) return { items: [] };
+  try { const j = JSON.parse(o.buf.toString('utf8')); return { items: Array.isArray(j.items) ? j.items : [] }; }
+  catch { return { items: [] }; }
+}
+async function appendMayaMemory(text) {
+  const t = String(text || '').trim().slice(0, 600);
+  if (!t) return null;
+  const rec = await loadMayaMemory();
+  rec.items.push({ ts: new Date().toISOString(), text: t });
+  rec.items = rec.items.slice(-200);
+  await gcsPut(MAYA_MEM_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+  return rec.items.length;
+}
+app.post('/api/admin/maya-remember', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  try { const n = await appendMayaMemory((req.body || {}).text); return res.json({ ok: !!n, count: n || 0 }); }
+  catch (e) { console.error('[maya-remember]', e.message); return res.status(502).json({ error: 'remember_failed' }); }
+});
+
+// Resolve a lead by first name or email against the current form submissions,
+// so the voice can note a lead when Fromsa only says a first name.
+async function resolveLeadEmail(needle) {
+  const q = String(needle || '').trim().toLowerCase();
+  if (!q) return null;
+  if (/@/.test(q)) return q;
+  const data = await wixLeads().catch(() => null);
+  if (!data || !data.connected) return null;
+  const hit = (data.list || []).find(l => (l.name || '').toLowerCase().includes(q) && l.email)
+    || (data.list || []).find(l => (l.email || '').toLowerCase().includes(q));
+  return hit ? hit.email : null;
+}
+
 app.post('/api/admin/lead-note', requireAuthHeader, express.json({ limit: '64kb' }), async (req, res) => {
   let user;
   try { user = await requireAdmin(req); }
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
   const rl = rateLimit(user.sub, user.email);
   if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
-  const email = String((req.body && req.body.email) || '').trim().toLowerCase();
-  if (!email || !/@/.test(email)) return res.status(400).json({ error: 'email_required' });
+  let email = String((req.body && req.body.email) || '').trim().toLowerCase();
+  if ((!email || !/@/.test(email)) && (req.body && req.body.lead)) {
+    email = (await resolveLeadEmail(req.body.lead).catch(() => null)) || '';
+  }
+  if (!email || !/@/.test(email)) return res.status(400).json({ error: 'lead_not_found' });
   try {
     const rec = await loadLeadNotes(email);
     const note = String((req.body && req.body.note) || '').trim().slice(0, 2000);

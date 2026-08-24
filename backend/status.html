@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.66">
+<meta name="maya-version" content="13.67">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -73,16 +73,39 @@ try {
           transform:translateX(calc(100% + 20px));opacity:0;pointer-events:none;
           transition:transform .42s cubic-bezier(0.16,1,0.3,1),opacity .42s ease}
   #drawer.open{transform:none;opacity:1;pointer-events:auto}
-  /* v13.66: Maya's voice lives in the star itself. Double click the top
-     left logo and the line opens; while she listens the star breathes. */
-  #top-left-brand .maya-logo-mark{border-radius:50%}
-  #top-left-brand .maya-logo-mark.live{animation:voicepulse 1.6s ease-in-out infinite}
+  /* v13.67: Maya's voice lives at the floor of the drawer again. Tap the star
+     to open the line; it breathes while she listens, and a small chip stays
+     on screen even when the drawer is closed, so she keeps talking until you
+     tap it off. */
   @keyframes voicepulse{
     0%,100%{box-shadow:0 0 0 0 rgba(169,201,255,0.35);transform:scale(1)}
     50%{box-shadow:0 0 0 14px rgba(169,201,255,0);transform:scale(1.06)}}
-  #voice-word{position:fixed;top:64px;left:28px;z-index:220;
-    font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.22em;
-    text-transform:uppercase;color:rgba(169,201,255,0.9);min-height:12px;pointer-events:none}
+  #drawer{display:flex;flex-direction:column}
+  #drawer > h3, #drawer > a{flex:none}
+  #voice-dock{margin-top:auto;padding-top:18px;border-top:0.5px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;gap:8px;flex:none}
+  #voice-btn{width:64px;height:64px;border-radius:50%;padding:0;cursor:pointer;
+    border:0.5px solid var(--line);background:rgba(255,255,255,0.04);
+    display:flex;align-items:center;justify-content:center;transition:border-color .25s,transform .25s}
+  #voice-btn img{width:44px;height:44px;object-fit:contain;opacity:0.95}
+  #voice-btn:hover{border-color:rgba(255,255,255,0.5);transform:scale(1.04)}
+  #voice-btn.live{border-color:rgba(169,201,255,0.9);animation:voicepulse 1.6s ease-in-out infinite}
+  #voice-word{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.2em;
+    text-transform:uppercase;color:rgba(169,201,255,0.9);min-height:12px;text-align:center}
+  #voice-chip{position:fixed;right:16px;bottom:16px;z-index:400;display:none;align-items:center;gap:9px;
+    padding:9px 15px 9px 12px;border-radius:100px;cursor:pointer;
+    background:rgba(8,12,26,0.94);border:0.5px solid rgba(169,201,255,0.6);
+    backdrop-filter:blur(20px);box-shadow:0 8px 30px rgba(0,0,0,0.5);
+    font-family:'Jost',sans-serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(169,201,255,0.95)}
+  #voice-chip.show{display:flex}
+  #voice-chip .dot{width:9px;height:9px;border-radius:50%;background:#a9c9ff;animation:voicepulse 1.6s ease-in-out infinite}
+  /* v13.67: a light blue section title in the drawer, per Fromsa. */
+  #drawer h3.tint{color:rgba(169,201,255,0.85)}
+  /* v13.67: the manasiyo | MAYA pairing, matching Marketing. */
+  #head-tiles .pair-bar{margin:0 6px;color:var(--faint)}
+  #head-tiles .pair-b{color:#a9c9ff}
+  .traffic-legend{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--faint);margin-left:10px}
+  .traffic-legend .lg-b{color:#a9c9ff}
   /* v13.45: the hamburger never disappears. It slides left with the drawer
      and comes to rest hanging just outside the drawer's left edge (drawer:
      320 wide at right 10, pill resting ~28 from the right edge). The same
@@ -301,10 +324,8 @@ try {
 <div id="top-bar">
   <div id="top-left-brand">
     <!-- v13.35: the logo is the way home, everywhere in MAYA's back rooms. -->
-    <a href="/status.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit" title="Admin &#183; double click the star to talk to Maya"
-       ondblclick="event.preventDefault();toggleMayaVoice()">
-      <img class="maya-logo-mark" id="voice-star" src="/aesthetics/ui/logo-208.png" alt="" style="cursor:pointer"
-           onclick="if(_voice){event.preventDefault();toggleMayaVoice();}" />
+    <a href="/status.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit" title="Admin">
+      <img class="maya-logo-mark" src="/aesthetics/ui/logo-208.png" alt="" />
       <span class="brand-title">Admin</span>
     </a>
   </div>
@@ -314,20 +335,25 @@ try {
 </div>
 
 <div id="drawer">
-  <h3>The vault, where data physically lives</h3>
-  <a href="https://console.firebase.google.com/project/pro-maya/firestore/databases/-default-/data/~2Fusers" target="_blank">Boards and projects<small>Firestore. Delete a collection here to truly destroy it.</small></a>
-  <a href="https://console.firebase.google.com/project/pro-maya/storage/pro-maya.firebasestorage.app/files/~2Fusers" target="_blank">Pictures<small>Storage. Every uploaded and generated image.</small></a>
-  <a href="/operations.html">Submissions<small>Every client submission, in MAYA itself.</small></a>
-  <h3>Behind the scenes</h3>
-  <a href="https://console.firebase.google.com/project/pro-maya/hosting/sites/pro-maya" target="_blank">Hosting<small>Deploys, one click rollback.</small></a>
-  <a href="https://console.cloud.google.com/run/detail/us-west1/maya-api/logs?project=pro-maya" target="_blank">API logs<small>Every request, every real error.</small></a>
-  <a href="https://console.cloud.google.com/run/detail/us-west1/maya-api/revisions?project=pro-maya" target="_blank">Keys and settings<small>API keys, environment.</small></a>
-  <a href="https://console.cloud.google.com/billing/018BFD-6096F2-A2094E/credits?project=pro-maya" target="_blank">Credits<small>Balance and burn.</small></a>
-  <a href="https://manasiyo.com/design" target="_blank">Design Studio<small>The Wix page that sends visitors in.</small></a>
+  <h3>The vault</h3>
+  <a href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank">Firebase<small>Boards, projects, pictures and submissions. Delete a collection here to truly destroy it.</small></a>
+  <h3 class="tint">Behind the scenes</h3>
+  <a href="https://console.cloud.google.com/run/detail/us-west1/maya-api/metrics?project=pro-maya" target="_blank">Cloud Run<small>The whole API: logs, revisions, keys, environment and credit burn.</small></a>
+  <h3>The outside tools</h3>
+  <a href="https://ads.google.com/aw/overview" target="_blank">Google Ads manager<small>The paid search campaigns.</small></a>
+  <a href="https://adsmanager.facebook.com/adsmanager" target="_blank">Meta Ads manager<small>The Facebook and Instagram campaigns.</small></a>
+  <a href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/home" target="_blank">Wix dashboard<small>Manasiyo.com itself: forms, pages, analytics.</small></a>
   <h3>What MAYA promises</h3>
   <a href="/privacy.html" target="_blank">Privacy policy<small>What MAYA keeps, what is public, how to have it deleted.</small></a>
+  <!-- v13.67: Maya's voice, pinned at the floor. -->
+  <div id="voice-dock">
+    <button id="voice-btn" onclick="toggleMayaVoice()" title="Talk to Maya: live voice, grounded in today's numbers" aria-label="Talk to Maya">
+      <img src="/aesthetics/ui/logo-208.png" alt="">
+    </button>
+    <div id="voice-word"></div>
+  </div>
 </div>
-<div id="voice-word"></div>
+<div id="voice-chip" onclick="toggleMayaVoice()" title="Maya is listening. Tap to hang up."><span class="dot"></span><span id="voice-chip-word">Maya is listening</span></div>
 
 <div class="wrap">
 
@@ -371,14 +397,15 @@ try {
   <!-- v13.39: one row, five numbers, and nothing underneath. Users first,
        because that is the number that matters, then the site's own traffic. -->
   <details class="fold" id="users-fold" open>
-    <summary><h2 class="grp">Users and traffic</h2></summary>
+    <summary><h2 class="grp">Users and traffic <span class="traffic-legend">manasiyo.com <span style="margin:0 3px">|</span> <span class="lg-b">maya</span></span></h2></summary>
     <div class="fold-body"><div id="head-tiles" class="tiles hidden"></div></div>
   </details>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-24d">
+  <details class="fold" id="changes-fold" data-latest="2026-08-24e">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 24</b>Maya came home to the drawer, and she can act now. The star sits at the floor of the Admin drawer again; tap it and the line opens, a small chip staying on screen while she listens so she keeps talking even with the drawer closed, until you tap it off. She has a memory of her own now and two hands: tell her something worth keeping and she remembers it for next time; tell her what happened with a lead, that you called them or they want a fitting, and she writes it straight into the Lead Station by name. The drawer itself was consolidated, the vault is one Firebase line, Behind the scenes is a single Cloud Run door in light blue, and the outside tools are the Google Ads and Meta Ads managers and the Wix dashboard. Users and traffic now pairs every window the way Marketing does, manasiyo.com in white beside MAYA in blue.</div>
     <div class="chg"><b>Aug 24</b>The voice moved into the star itself, and the page grew a bottom line. Double click the logo at Admin's top left and Maya answers, greeting you first so a working line is never a silent mystery; the star breathes while she listens, one click hangs up. She scans everything now: the marketing numbers, the leads and what they want, the submissions, what shipped recently, and she knows what day it is in San Francisco; she will even ask you a question back when it sharpens the answer. And at the foot of Marketing sits The bottom line: the week as one funnel, paid clicks to manasiyo.com to MAYA to leads with the survival rate at each step, what a lead costs against last week, the cheapest campaign that actually delivers, how much of the site steps into MAYA, and which day of the week brings people. All of it arithmetic over numbers already on the page, live on every refresh, never waiting on a model.</div>
     <div class="chg"><b>Aug 24</b>MAYA can speak now. At the floor of the Admin drawer waits the star itself; tap it and a live voice line opens, the logo breathing while she listens. Ask how the day is going and she answers out loud in a few sentences; ask for an analysis and she gives you thirty seconds, marketing first, then the leads and what they want, then anything unusual, every number taken from a snapshot of the business made at the moment you tapped, never a guess. The key that pays for the call never touches the browser: the server mints a secret that lives for one conversation, whispers the day's numbers into it, and hands the line over. Hang up by tapping again. It works the same from a phone.</div>
     <div class="chg"><b>Aug 24</b>The rooms fell into line. The Operations Room wears the family header now, logo and all, Operations Room up top left with a quiet beta beneath, and the plan line in the middle switches plans with one click; the dead pill that haunted the bottom of the screen was an empty toast, silenced. Plan B asks for the real thing: with a CLO-SET token on the server it searches the actual asset library, and until then it says so plainly and offers the CONNECT search instead. Marketing reads as one line, manasiyo.com with its little arrow to the Wix dashboard, then MAYA in blue, and today finally shows tonight's number, because the server now counts days in California time the way Wix does instead of Greenwich's. Each lead in the Lead Station carries its own CTA column naming the recommended move. And the Playground cabinet grew into its drawer: the circles ride the bezel at the hamburger's height, Avatar then Pinterest then Fabrics, and whichever folder is open takes the whole drawer, edge to edge.</div>
@@ -990,20 +1017,28 @@ function _paintHeadTiles(d) {
   if (!head || !d) return;
   const acc = d.accounts || null;
   const t = d.ranges || {};
+  const w = d.wixSite || {};
   const live = (typeof d.live === 'number') ? d.live : null;
   const em = '&#8212;';
   const n = (r) => (t[r] ? (t[r].users || 0) : em);
-  const sig = [acc && acc.total, live, n('today'), n('d7'), n('d28')].join(',');
+  // v13.67: each window pairs manasiyo.com (white) with MAYA (logo blue), the
+  // way Marketing does. Users and live now are MAYA-only (accounts, and Wix
+  // has no live feed), so they stay single.
+  const wn = (r) => { const v = (w[r] || {}).visitors; return v == null ? null : v; };
+  const pair = (wixV, mayaV) =>
+    (wixV == null ? '<span title="Wix publishes manasiyo.com a day at a time; today lands tonight">&#8230;</span>' : wixV) +
+    '<span class="pair-bar">|</span><span class="pair-b">' + (mayaV === em ? em : mayaV) + '</span>';
+  const sig = [acc && acc.total, live, wn('today'), n('today'), wn('d7'), n('d7'), wn('d28'), n('d28')].join(',');
   if (head.dataset.sig === sig) { head.classList.remove('hidden'); return; }
   head.dataset.sig = sig;
   head.innerHTML =
-    '<div class="tile" id="users-tile" title="Separate Google accounts that have signed in to MAYA. Visitors who never sign in are counted in the traffic numbers, not here."><div class="k">users</div>' +
+    '<div class="tile" id="users-tile" title="Separate Google accounts that have signed in to MAYA."><div class="k">users</div>' +
       '<div class="v">' + (acc ? acc.total : em) + '</div></div>' +
     '<div class="tile live" title="Browsers on maya.manasiyo.com this minute, from Analytics"><div class="k">&#9679; live now</div>' +
-      '<div class="v">' + (live === null ? em : live) + '</div></div>' +
-    '<div class="tile" title="People who opened MAYA today, signed in or not, from Analytics"><div class="k">today</div><div class="v">' + n('today') + '</div></div>' +
-    '<div class="tile" title="People who opened MAYA in the last 7 days, from Analytics"><div class="k">7 days</div><div class="v">' + n('d7') + '</div></div>' +
-    '<div class="tile" title="People who opened MAYA in the last 28 days, from Analytics"><div class="k">28 days</div><div class="v">' + n('d28') + '</div></div>';
+      '<div class="v"><span class="pair-b">' + (live === null ? em : live) + '</span></div></div>' +
+    '<div class="tile" title="manasiyo.com | MAYA, today"><div class="k">today</div><div class="v">' + pair(wn('today'), n('today')) + '</div></div>' +
+    '<div class="tile" title="manasiyo.com | MAYA, last 7 days"><div class="k">7 days</div><div class="v">' + pair(wn('d7'), n('d7')) + '</div></div>' +
+    '<div class="tile" title="manasiyo.com | MAYA, last 28 days"><div class="k">28 days</div><div class="v">' + pair(wn('d28'), n('d28')) + '</div></div>';
   head.classList.remove('hidden');
   _wireUsersPop();
 }
@@ -1114,43 +1149,81 @@ loadSubmissions();
 setInterval(() => { if (_idTok && document.visibilityState === 'visible') loadTraffic(); }, 120000);
 </script>
 <script>
-// ═══ v13.65: MAYA'S VOICE. Voice to voice over WebRTC, admin only. The
-// server mints a one-call ephemeral key with the live numbers baked into
-// the instructions; the browser speaks with OpenAI Realtime directly and
-// the real API key never comes anywhere near this page. Click starts the
-// line, click again hangs up. Works the same on a phone: the tap is the
-// user gesture both the microphone and the speaker need. ═══
-let _voice = null;   // { pc, mic, audio }
-function _voiceWord(t){ const el=document.getElementById('voice-word'); if(el) el.textContent=t||''; }
+// ═══ v13.67: MAYA'S VOICE. Voice to voice over WebRTC, admin only. The
+// server mints a one-call ephemeral key with the live numbers baked into the
+// instructions; the browser speaks with OpenAI Realtime directly and the real
+// API key never comes near this page. She has two tools, remember and
+// note_lead, handled here on the data channel: she can keep a fact in her own
+// memory, and update a lead in the Lead Station while you talk. The star at
+// the drawer's floor opens the line; a chip stays on screen while she listens
+// even with the drawer closed, and tapping either hangs up. Works on a phone:
+// the tap is the gesture both the microphone and the speaker need. ═══
+let _voice = null;   // { pc, mic, audio, dc }
+function _voiceWord(t){ const el=document.getElementById('voice-word'); if(el) el.innerHTML=t||''; }
+function _voiceLive(on, word){
+  const b=document.getElementById('voice-btn'); if(b) b.classList.toggle('live', on);
+  const chip=document.getElementById('voice-chip'); if(chip) chip.classList.toggle('show', on);
+  const cw=document.getElementById('voice-chip-word'); if(cw && word) cw.textContent=word;
+}
 function _voiceStop(){
   if(!_voice) return;
   try{ _voice.pc.close(); }catch(_){}
   try{ (_voice.mic&&_voice.mic.getTracks()||[]).forEach(t=>t.stop()); }catch(_){}
   try{ _voice.audio.srcObject=null; }catch(_){}
-  _voice=null;
-  const b=document.getElementById('voice-star'); if(b) b.classList.remove('live');
-  _voiceWord('');
+  _voice=null; _voiceLive(false); _voiceWord('');
+}
+// Run one of Maya's tools and hand the result back to the conversation.
+async function _voiceTool(name, args){
+  try{
+    if(name==='remember'){
+      const r=await fetch('/api/admin/maya-remember',{method:'POST',
+        headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
+        body:JSON.stringify({text:args.text||''})});
+      const j=await r.json().catch(()=>({}));
+      return r.ok&&j.ok ? {ok:true, remembered:args.text} : {ok:false, error:j.error||('remember '+r.status)};
+    }
+    if(name==='note_lead'){
+      const r=await fetch('/api/admin/lead-note',{method:'POST',
+        headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
+        body:JSON.stringify({lead:args.lead||'', note:args.note||'',
+          contact:(args.contact&&args.contact!=='none')?args.contact:''})});
+      const j=await r.json().catch(()=>({}));
+      return r.ok&&j.ok ? {ok:true, noted:args.lead} : {ok:false, error:j.error||('note '+r.status)};
+    }
+  }catch(e){ return {ok:false, error:String(e&&e.message||e)}; }
+  return {ok:false, error:'unknown tool'};
+}
+function _voiceOnMessage(dc){
+  return async (ev)=>{
+    let m; try{ m=JSON.parse(ev.data); }catch(_){ return; }
+    if(m.type==='response.function_call_arguments.done'){
+      let args={}; try{ args=JSON.parse(m.arguments||'{}'); }catch(_){}
+      const out=await _voiceTool(m.name, args);
+      try{
+        dc.send(JSON.stringify({type:'conversation.item.create',
+          item:{type:'function_call_output', call_id:m.call_id, output:JSON.stringify(out)}}));
+        dc.send(JSON.stringify({type:'response.create'}));
+      }catch(_){}
+    }
+  };
 }
 async function toggleMayaVoice(){
   if(_voice){ _voiceStop(); return; }
-  const b=document.getElementById('voice-star');
   if(!_idTok){ _voiceWord('sign in first'); return; }
   try{
-    _voiceWord('connecting…');
-    // the numbers and the key, one short-lived secret
+    _voiceWord('connecting\u2026');
     const tr=await fetch('/api/admin/voice-token',{method:'POST',
       headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},body:'{}'});
     const tj=await tr.json().catch(()=>({}));
     if(!tr.ok||!tj.value) throw new Error(tj.error||('token '+tr.status));
-    // the line itself
     const mic=await navigator.mediaDevices.getUserMedia({audio:true});
     const pc=new RTCPeerConnection();
     mic.getTracks().forEach(t=>pc.addTrack(t,mic));
     const audio=new Audio(); audio.autoplay=true;
     pc.ontrack=e=>{ audio.srcObject=e.streams[0]; };
     const dc=pc.createDataChannel('oai-events');
-    // she speaks first, so a working line is never a silent mystery
     dc.onopen=()=>{ try{ dc.send(JSON.stringify({type:'response.create'})); }catch(_){} };
+    dc.onmessage=_voiceOnMessage(dc);
     pc.onconnectionstatechange=()=>{
       if(['failed','disconnected','closed'].includes(pc.connectionState) && _voice) _voiceStop();
     };
@@ -1159,9 +1232,9 @@ async function toggleMayaVoice(){
       method:'POST',headers:{'Authorization':'Bearer '+tj.value,'Content-Type':'application/sdp'},body:offer.sdp});
     if(!cr.ok) throw new Error('call '+cr.status);
     await pc.setRemoteDescription({type:'answer',sdp:await cr.text()});
-    _voice={pc,mic,audio};
-    if(b) b.classList.add('live');
-    _voiceWord('maya is listening &#183; click the star to hang up'.replace('&#183;','\u00b7'));
+    _voice={pc,mic,audio,dc};
+    _voiceLive(true, 'Maya is listening');
+    _voiceWord('listening \u00b7 tap to hang up');
   }catch(e){
     _voiceStop();
     _voiceWord(String(e&&e.message||e).slice(0,60));
