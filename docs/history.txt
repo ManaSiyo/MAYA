@@ -9,6 +9,15 @@ to work with Fromsa. This file is the story; README.md is the manual.
 
 ─────────────────────────────────────────────
 
+AUGUST 24, 2026, MAYA READS ON SCREEN (v13.79)
+
+Maya's line shows on screen now, not only in the ear. When she is live the drawer
+carries the conversation as text, her words and yours, and every line can be
+copied. It is the first step of turning the drawer into a real command chat: you
+can see what she said and take it with you.
+
+─────────────────────────────────────────────
+
 AUGUST 24, 2026, CABINET ORDER AND SWIPE MEMORY (v13.78)
 
 The cabinet reads Pinterest, Fabrics, Avatar now, the switch-avatar caret sits

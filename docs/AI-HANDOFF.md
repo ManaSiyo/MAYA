@@ -73,6 +73,28 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.79 (Claude): Maya's conversation shows on screen (chat box)
+
+- `backend/status.html`: the drawer command now carries a `#maya-chat`
+  transcript. `_mayaChatAdd(who, text)` appends copyable bubbles; the voice
+  handler feeds it from `response.audio_transcript.done` (Maya) and
+  `conversation.item.input_audio_transcription.completed` (you, when the session
+  provides it). Cleared on each new connect. Maya's lines work with the current
+  session config; the server voice config was intentionally NOT changed (adding
+  input transcription there risks breaking the token mint), so "You" lines only
+  appear if the session emits them.
+
+Changed files: `backend/status.html`; version 13.79 across the four surfaces;
+`tests/app-regression.mjs`, `tests/admin-ui-contract.mjs`.
+
+VALIDATION: app-regression all passed.
+
+NEXT STEP — Maya vision, still open (roadmap)
+- `log_feature` voice tool + persistent feature log (GCS) + a Maya→Claude relay
+  doc I read each session. Server work (new tool + endpoint), so needs a push.
+- Maya = Claude-like abilities, a growing memory/"soul", a more dynamic admin.
+- Favorites: clean read-only submit-only card; unfavorite removes from community.
+
 ## v13.78 (Claude): cabinet order/labels, swipe memory, logo ring, ops beta
 
 - `frontend/index.html` cabinet: tab order is Pinterest, Fabrics, Avatar; the

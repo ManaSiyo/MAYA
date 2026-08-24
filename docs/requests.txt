@@ -16,6 +16,15 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, MAYA CHAT BOX (v13.79)
+
+[x] "The drawer should be a chat box when Maya talks; I should see her response
+    and copy-paste it, not just voice-to-voice." Done: the drawer carries the
+    conversation as copyable text while she is live.
+[ ] Maya feature-log + Maya->Claude relay; Maya's growing memory/soul; dynamic
+    admin; Maya = Claude-like abilities. Roadmap, staged. NEXT.
+[ ] Favorites clean submit-only card; unfavorite removes from community. NEXT.
+
 AUGUST 24, 2026, CABINET ORDER, SWIPE MEMORY, LOGO RING (v13.78)
 
 [x] "Caret for picking the avatar should be right beside the name." Done.

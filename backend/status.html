@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.78">
+<meta name="maya-version" content="13.79">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -128,6 +128,16 @@ try {
   body.maya-live #drawer > h3,
   body.maya-live #drawer > a,
   body.maya-live #drawer > #top-lights{display:none}
+  /* v13.79: the on-screen conversation. Maya's lines and yours, each copyable. */
+  #maya-chat{display:none;flex-direction:column;gap:8px;margin:6px 0 12px;max-height:42vh;overflow:auto}
+  #maya-chat.show{display:flex}
+  .maya-msg{border-radius:12px;padding:9px 11px 9px;font-size:14px;line-height:1.45;position:relative;word-break:break-word}
+  .maya-msg.maya{background:rgba(169,201,255,0.08);border:0.5px solid rgba(169,201,255,0.22);color:var(--ink)}
+  .maya-msg.you{background:rgba(255,255,255,0.03);border:0.5px solid var(--line);color:var(--dim);align-self:flex-end;max-width:88%}
+  .maya-msg .who{font-family:'Jost',sans-serif;font-size:8px;letter-spacing:0.16em;text-transform:uppercase;color:var(--faint);margin-bottom:3px}
+  .maya-msg .copy{position:absolute;top:7px;right:9px;font-family:'Jost',sans-serif;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);cursor:pointer;opacity:0;transition:opacity .2s}
+  .maya-msg:hover .copy{opacity:1}
+  .maya-msg .copy:hover{color:var(--ink)}
   .maya-command-caption{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.14em;
     text-transform:uppercase;color:var(--faint);margin:6px 0 12px}
   .maya-command-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -557,6 +567,9 @@ try {
       <span id="maya-command-state">sign in to ground the briefing</span>
     </div>
     <div class="maya-command-caption">Her private line. She talks, she asks, you approve.</div>
+    <!-- v13.79: the conversation reads on screen too, so it is never voice-only.
+         Each line can be copied. -->
+    <div id="maya-chat" aria-label="Maya conversation"></div>
     <div id="maya-command-brief">Today and attention will appear here from the same sources as Admin.</div>
     <div id="maya-command-attention"></div>
     <div class="maya-command-nav" aria-label="Admin panel shortcuts">
@@ -699,9 +712,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-24p">
+  <details class="fold" id="changes-fold" data-latest="2026-08-24q">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 24</b>Maya's line reads on screen now, not only in the ear. When she is live the drawer carries the conversation as text, her words and yours, and every line can be copied. It is no longer voice only; you can see what she said and take it with you.</div>
     <div class="chg"><b>Aug 24</b>Polish. The circle around the Admin logo is gone when it is still; the ring of light only appears while Maya is live, breathing faster now. In the MAYA app the cabinet reads Pinterest, Fabrics, Avatar, the avatar's switch caret sits right beside the name, the tab title says Project, and the drawer keeps the last tab even when you swipe it away and back. Pinterest now sits at the same height as Fabrics with the same room for its cards. And the Operations Room wears its beta to the right of the name, not underneath.</div>
     <div class="chg"><b>Aug 24</b>On Admin the logo became Maya's voice. Tap the circle at the top left and she connects, a Connecting chip on screen and the ring pulsing while she listens; the ADMIN wordmark beside it stays the way home. The drawer titles read in the logo blue now, the health lights sit centered, and the hover chip that would not click is gone.</div>
     <div class="chg"><b>Aug 24</b>Fabrics found their photos. The sourceable wall had been painting crimson color swatches with no picture, because a failed visual ranking, often just an empty credit balance, made the Brief throw away the real retailer results. Now the real products, which always carry a real photo, show anyway when the ranking cannot answer. The color swatch wall is gone: the tab shows real fabric photos, or a quiet searching line until they arrive, and refresh re-sources whatever garment is dissected.</div>
@@ -1703,12 +1717,31 @@ async function _voiceRunCall(dc, name, call_id, argStr){
     mayaCommandState(out&&out.queued?'action waiting for confirmation':'Maya is answering',out&&out.queued?'waiting':'busy');
   }catch(_){}
 }
+// v13.79: the drawer shows the conversation as text, not only voice. Each line
+// can be copied. Maya's lines come from her audio transcript; yours from the
+// input transcription when the session provides it.
+function _mayaChatAdd(who, text){
+  const host=document.getElementById('maya-chat'); const t=String(text||'').trim(); if(!host||!t) return;
+  host.classList.add('show');
+  const row=document.createElement('div'); row.className='maya-msg '+(who==='you'?'you':'maya');
+  const lbl=document.createElement('div'); lbl.className='who'; lbl.textContent=(who==='you'?'You':'Maya');
+  const body=document.createElement('div'); body.textContent=t;
+  const copy=document.createElement('span'); copy.className='copy'; copy.textContent='copy';
+  copy.onclick=(e)=>{ e.stopPropagation(); try{ navigator.clipboard.writeText(t); copy.textContent='copied';
+    setTimeout(()=>copy.textContent='copy',1200); }catch(_){} };
+  row.append(lbl, body, copy); host.appendChild(row); host.scrollTop=host.scrollHeight;
+}
+window._mayaChatAdd=_mayaChatAdd;
+function _mayaChatClear(){ const h=document.getElementById('maya-chat'); if(h){ h.innerHTML=''; h.classList.remove('show'); } }
 function _voiceOnMessage(dc){
   const seen=new Set();
   return (ev)=>{
     let m; try{ m=JSON.parse(ev.data); }catch(_){ return; }
     if(m.type==='input_audio_buffer.speech_started') mayaCommandState('listening','busy');
     if(m.type==='response.created') mayaCommandState('Maya is thinking','busy');
+    // v13.79: transcripts to the on-screen chat. Maya's final line, and yours.
+    if(m.type==='response.audio_transcript.done' && m.transcript) _mayaChatAdd('maya', m.transcript);
+    if(m.type==='conversation.item.input_audio_transcription.completed' && m.transcript) _mayaChatAdd('you', m.transcript);
     if(m.type==='response.done' && !(m.response&&Array.isArray(m.response.output)&&m.response.output.some(x=>x.type==='function_call')))
       mayaCommandState(_mayaActions.length?'action waiting for confirmation':'ready',_mayaActions.length?'waiting':'');
     // primary path: the arguments-done event
@@ -1733,6 +1766,7 @@ async function toggleMayaVoice(){
   if(_voiceStarting){ _voiceWord('still connecting'); return; }
   if(!_idTok){ _voiceWord('sign in first'); return; }
   _voiceStarting=true;
+  _mayaChatClear();   // v13.79: a fresh conversation each time she connects
   let pendingMic=null,pendingPc=null,pendingAudio=null;
   try{
     _voiceWord('connecting\u2026');

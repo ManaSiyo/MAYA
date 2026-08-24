@@ -1416,6 +1416,11 @@ ok('v13.78: the Admin logo has no ring until Maya is live',
   MAP_SOURCE.includes('body.maya-live .maya-logo-wrap{border-color:rgba(169,201,255,0.95);animation:voicepulse 0.85s'));
 ok('v13.78: Operations Room beta sits to the right',
   !OPS_SOURCE || OPS_SOURCE.includes('.brand .brand-words{display:flex;flex-direction:row;align-items:baseline'));
+ok('v13.79: the drawer shows Maya\'s conversation as copyable text',
+  MAP_SOURCE.includes('id="maya-chat"') &&
+  MAP_SOURCE.includes('function _mayaChatAdd(') &&
+  MAP_SOURCE.includes("m.type==='response.audio_transcript.done'") &&
+  MAP_SOURCE.includes('navigator.clipboard.writeText'));
 
 ok('v13.76: fabrics show real photos and survive a failed rank',
   !BACKEND_SOURCE || (
