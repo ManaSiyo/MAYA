@@ -44,6 +44,11 @@ const BACKEND_SOURCE = existsSync(join(ROOT, AT.backend))
   ? readFileSync(join(ROOT, AT.backend), 'utf8') : '';
 const PLAYGROUND_SOURCE = existsSync(join(ROOT, AT.playground))
   ? readFileSync(join(ROOT, AT.playground), 'utf8') : '';
+// v13.72: declared with the other sources so the version-lockstep assertion
+// (which runs earlier in the file) can read it without a temporal-dead-zone
+// crash. It used to be declared far below, after its first use.
+const MKT_SOURCE = existsSync(join(ROOT, AT.marketing))
+  ? readFileSync(join(ROOT, AT.marketing), 'utf8') : '';
 const HOSTING = JSON.parse(readFileSync(join(ROOT, AT.hosting), 'utf8'));
 const FAVORITE_PULSE_SOURCE = INDEX_SOURCE.slice(
   INDEX_SOURCE.indexOf('@keyframes maya-favorite-pulse'),
@@ -294,20 +299,20 @@ const s = await pg.evaluate(() => ({
   headTiles: (document.getElementById('head-tiles') || {}).id === 'head-tiles',
   thumbnailsParallel: _paintThumbs.toString().includes('Promise.all'),
   tokenRefreshesHealth: _adoptToken.toString().includes('runChecks()'),
-  commandCenter: !!document.getElementById('maya-command'),
+  // v13.72: the command center moved into the drawer as Maya's private line.
+  commandCenter: !!document.getElementById('drawer-command'),
   marketingVisual: (() => {
     const panel = document.querySelector('#adm-mkt .panel');
     const table = document.querySelector('#adm-mkt table');
     const ticker = document.getElementById('mkt-ticker');
-    const visitorFold = document.getElementById('visitors-fold');
-    if (!panel || !table || !ticker || !visitorFold) return null;
+    if (!panel || !table || !ticker) return null;
     const panelStyle = getComputedStyle(panel);
     return {
       panelPadding: panelStyle.padding,
       panelRadius: panelStyle.borderRadius,
       tableWidth: getComputedStyle(table).width,
-      tickerVisible: getComputedStyle(ticker).display !== 'none',
-      visitorFold: visitorFold.tagName,
+      // v13.72: the ticker rides the top bar now, between wordmark and menu.
+      tickerInTopbar: !!document.querySelector('#top-bar #mkt-ticker'),
     };
   })(),
   commandQueue: (() => {
@@ -405,12 +410,14 @@ ok('Share belongs to a project, not to whatever is open',
   INDEX_SOURCE.includes('async function shareProjectById(id)') &&
   INDEX_SOURCE.includes('class="session-item-share"') &&
   !INDEX_SOURCE.includes('onclick="shareCurrentProject()"'));
-ok('Save, New and Clean are gone; Fabrics and Pinterest share the row',
+// v13.71 promoted the filing cabinet into the app: Fabrics and Pinterest are
+// tabs of the cabinet now (pgShow), not the old drawer buttons.
+ok('Save, New and Clean are gone; Fabrics and Pinterest live in the cabinet tabs',
   !INDEX_SOURCE.includes('id="save-session-btn" class=') &&
   !INDEX_SOURCE.includes('onclick="cleanReferences()"') &&
   !INDEX_SOURCE.includes('title="Start a new project">New<') &&
-  INDEX_SOURCE.includes('onclick="openFabricsDrawer()"') &&
-  INDEX_SOURCE.includes('onclick="openPinterestDrawer()"'));
+  INDEX_SOURCE.includes('id="pg-pane-fabrics"') &&
+  INDEX_SOURCE.includes('id="pg-pane-pinterest"'));
 ok('notes belong to the vision on screen, not to the drawer',
   INDEX_SOURCE.includes('function renderViewerNotes(item)') &&
   INDEX_SOURCE.includes('renderViewerNotes(item);') &&
@@ -451,7 +458,7 @@ ok('an image costs more of the budget than a chat call',
 ok('the map light reads Submissions', s.lights.includes('Submissions') && !s.lights.includes('Drive'));
 
 ok('Admin folds: users, the migrated marketing modules, then changes/prompting/architecture',
-  s.order === 'users-fold,visitors-fold,ads-fold,leads-fold,sources-fold,bottom-fold,changes-fold,pe-fold,arch-fold');
+  s.order === 'users-fold,ads-fold,leads-fold,sources-fold,bottom-fold,changes-fold,pe-fold,arch-fold');
 ok('the marketing modules are migrated into Admin under Users and traffic',
   MAP_SOURCE.includes('id="adm-mkt"') &&
   MAP_SOURCE.includes('id="campaigns-table"') &&
@@ -464,12 +471,11 @@ ok('embedded Marketing keeps the approved page-like presentation inside Admin',
   !!s.marketingVisual &&
   s.marketingVisual.panelPadding === '16px 18px' &&
   s.marketingVisual.panelRadius === '18px' &&
-  s.marketingVisual.tickerVisible &&
-  s.marketingVisual.visitorFold === 'DETAILS' &&
+  s.marketingVisual.tickerInTopbar &&
   MAP_SOURCE.includes('id="mkt-ticker"') &&
   MAP_SOURCE.includes('id="mkt-wix-tiles"') &&
   MAP_SOURCE.includes('#adm-mkt details.fold:not([open]) summary::after') &&
-  MAP_SOURCE.includes('#adm-mkt #mkt-ticker-inner'));
+  MAP_SOURCE.includes('#mkt-ticker-inner'));
 ok('embedded Marketing keeps the standalone chart and refresh interactions',
   MAP_SOURCE.includes('function paintVisitors(') &&
   MAP_SOURCE.includes('function buildTicker(') &&
@@ -488,6 +494,35 @@ ok('Systems Map checks have request timeouts', s.healthUsesTimeouts);
 ok('submission thumbnails load in parallel', s.thumbnailsParallel);
 ok('sign in immediately refreshes deep health', s.tokenRefreshesHealth);
 ok('Admin renders the command center and confirmation queue', s.commandCenter && s.commandQueue);
+
+// v13.72: Admin cleared its center, moved the controls to the edges, and made
+// Maya's command her private line inside the drawer.
+ok('v13.72: the day ticker rides the top bar, colored, not a boxed pill',
+  // the DOM probe confirms it is a child of #top-bar; the source confirms the
+  // top-bar scoping, the green tone, and that the old boxed pill is gone.
+  s.marketingVisual.tickerInTopbar &&
+  MAP_SOURCE.includes('#top-bar #mkt-ticker{flex:1') &&
+  MAP_SOURCE.includes('.tk-green{color:var(--green)') &&
+  !MAP_SOURCE.includes('#adm-mkt #mkt-ticker{'));
+ok('v13.72: the five health lights moved into the drawer',
+  /<div id="drawer">[\s\S]{0,200}id="top-lights"/.test(MAP_SOURCE) &&
+  MAP_SOURCE.includes('#drawer #top-lights{'));
+ok('v13.72: Maya command left the page center and became the drawer voice line',
+  !MAP_SOURCE.includes('<section id="maya-command"') &&
+  MAP_SOURCE.includes('id="drawer-command"') &&
+  MAP_SOURCE.includes('body.maya-live #drawer-command{display:flex') &&
+  MAP_SOURCE.includes("classList.toggle('maya-live', on)"));
+ok('v13.72: MANA SIYO mirrors MAYA with left-hanging Design Studio and Wix Studio',
+  MAP_SOURCE.includes('class="card card-mana"') &&
+  MAP_SOURCE.includes('class="mana-chips"') &&
+  MAP_SOURCE.includes('>design studio</a>') &&
+  MAP_SOURCE.includes('>wix studio</a>') &&
+  /\.card-mana \.mana-chips\{position:absolute;right:100%/.test(MAP_SOURCE));
+ok('v13.72: the duplicate Manasiyo.com|MAYA visitor row is gone from Admin',
+  !MAP_SOURCE.includes('id="visitors-fold"'));
+ok('v13.72: the voice line fails in plain words, not a raw error code',
+  MAP_SOURCE.includes('Maya is resting a moment') &&
+  !MAP_SOURCE.includes("mayaCommandState('voice unavailable: '"));
 
 // Aug 13: every deploy signs both pages out on next load, and the two
 // pages must carry the SAME version number or the map's logout never fires.
@@ -702,8 +737,7 @@ ok('the credit meter stays on the server, off the map',
   !MAP_SOURCE.includes('id="credit-row"') && !MAP_SOURCE.includes('id="topup"'));
 
 // ── v13.34, Aug 20 ─────────────────────────────────────────────────────────
-const MKT_SOURCE = existsSync(join(ROOT, AT.marketing))
-  ? readFileSync(join(ROOT, AT.marketing), 'utf8') : '';
+// v13.72: MKT_SOURCE now declared up top with the other sources.
 // v13.44: the doors dropped their pills and grid; a centered flex row now.
 // v13.45: three doors in Fromsa's order, the back rooms behind MAYA's hover.
 // v13.46: everything in caps, per Fromsa.
@@ -731,10 +765,11 @@ ok('nothing hangs below the row of five',
   !MAP_SOURCE.includes('id="mkt-tiles"'));
 
 // ── v13.35, Aug 20 ─────────────────────────────────────────────────────────
-ok('the lights ride the wordmark line and scroll away with the page',
-  MAP_SOURCE.includes('#top-lights{display:flex') &&
-  MAP_SOURCE.includes('margin:-58px 0 30px') &&
-  !/id="top-bar"[\s\S]{0,900}id="top-lights"/.test(MAP_SOURCE));
+// v13.72: the five health lights moved off the wordmark line and into the drawer.
+ok('the health lights live inside the drawer now',
+  /<div id="drawer">[\s\S]{0,260}id="top-lights"/.test(MAP_SOURCE) &&
+  MAP_SOURCE.includes('#drawer #top-lights{') &&
+  !/id="top-bar"[\s\S]{0,80}id="top-lights"/.test(MAP_SOURCE));
 ok('the logo goes home to the Systems Map',
   MAP_SOURCE.includes('<a href="/status.html"') &&
   MKT_SOURCE.includes('<a href="/status.html"') &&
@@ -1412,7 +1447,8 @@ ok('voice startup is single-flight and failed starts release the microphone',
   MAP_SOURCE.includes('let _voice = null;') &&
   MAP_SOURCE.includes('let _voiceStarting = false;') &&
   MAP_SOURCE.includes('if(_voiceStarting){') &&
-  MAP_SOURCE.includes('pendingMic.getTracks().forEach(t=>t.stop())'));
+  // v13.72: match the guarded release form the code actually uses.
+  MAP_SOURCE.includes('(pendingMic&&pendingMic.getTracks()||[]).forEach(t=>t.stop())'));
 ok('migrated Marketing reads the lexical Admin token',
   MAP_SOURCE.includes('async function loadMkt(){') &&
   MAP_SOURCE.includes('if(!_idTok){') &&

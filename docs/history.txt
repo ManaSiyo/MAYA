@@ -9,6 +9,24 @@ to work with Fromsa. This file is the story; README.md is the manual.
 
 ─────────────────────────────────────────────
 
+AUGUST 24, 2026, ADMIN CLEARS ITS CENTER (v13.72)
+
+After Kodak's v13.71 push, Fromsa redesigned the Admin page. The day now reads
+itself out as one colored line across the very top, between the wordmark and the
+menu, green for good news, red and amber for what needs him. The five health
+lights moved into the drawer, so the page opens straight onto the three doors,
+then submissions, Users and traffic, the campaigns, the Lead Station and the
+sources. The duplicate visitor row is gone. MANA SIYO now mirrors MAYA: rest on
+it and its editing rooms, Design Studio and the Wix Studio, hang to the left.
+And Maya's command left the center of the page to become her private line
+inside the drawer: tap the star and the drawer turns into her screen, the
+briefing and whatever she needs approved; tap it off and it is a drawer again.
+When the line will not open she says so plainly now instead of showing a raw
+error. Three stale v13.71 tests that had never run in the build were repaired so
+the whole regression passes again.
+
+─────────────────────────────────────────────
+
 AUGUST 24, 2026, ADMIN COMMAND CENTER
 
 MAYA reached v13.71 as an internal command center for Fromsa. Admin now opens

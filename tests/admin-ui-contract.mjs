@@ -27,9 +27,13 @@ await test('standalone Marketing remains served as its own complete fallback', (
 });
 
 await test('Admin embeds every approved Marketing surface under its shell', () => {
-  for (const token of ['id="mkt-ticker"', 'id="visitors-fold"', 'id="mkt-wix-tiles"',
+  // v13.72: the duplicate Manasiyo.com|MAYA visitor fold was removed from Admin
+  // (Users and traffic already pairs both), but its Wix holders remain so the
+  // paint stays safe.
+  for (const token of ['id="mkt-ticker"', 'id="mkt-wix-tiles"',
     'id="campaigns-table"', 'id="ad-chart"', 'id="leads-table"',
     'id="sources-table"', 'id="bottom-fold"']) assert.ok(admin.includes(token), token);
+  assert.ok(!admin.includes('id="visitors-fold"'), 'visitors-fold removed from Admin');
 });
 
 await test('Admin keeps Marketing spacing, table, folds, ticker and chart hover behavior', () => {
@@ -59,9 +63,9 @@ await test('the approved filing cabinet is promoted without removing Playground'
   assert.ok(playground.includes('>Playground</div>'));
 });
 
-await test('all four release surfaces carry v13.71', () => {
+await test('all four release surfaces carry v13.72', () => {
   const version = source => (source.match(/name="maya-version" content="([0-9.]+)"/) || [])[1];
-  assert.deepEqual([app, playground, admin, marketing].map(version), ['13.71', '13.71', '13.71', '13.71']);
+  assert.deepEqual([app, playground, admin, marketing].map(version), ['13.72', '13.72', '13.72', '13.72']);
 });
 
 console.log('\n' + (failed ? failed + ' FAILED' : passed + ' passed') + '\n');

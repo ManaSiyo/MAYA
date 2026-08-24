@@ -73,6 +73,50 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.72 (Claude): Admin cleared its center, controls to the edges
+
+Fromsa's redesign of the Admin page after Codex's v13.71 push.
+
+- The day ticker moved up into the top bar, riding between the ADMIN wordmark
+  and the hamburger, colored like Marketing's line: green for good news, red
+  and amber for warnings, white otherwise. No border, no lines above or below.
+- The five health lights (Site, API, Images, Submissions, Backup) moved into
+  the drawer under a Systems heading, so the page opens straight onto the three
+  doors.
+- The center Maya Command panel is gone. It became Maya's private line inside
+  the drawer: tap the voice star and `body.maya-live` turns the drawer into her
+  screen (grounded brief, attention, and the Confirm/Dismiss action queue),
+  hiding the links; tap it off and the drawer is a drawer again. Same element
+  IDs, so all of Codex's command/voice plumbing is unchanged. When the line
+  will not open it now says so in plain words, never a raw error code (the
+  429 is an OpenAI Realtime quota/rate limit, an owner-config matter).
+- The duplicate `Manasiyo.com | MAYA` visitor fold was removed; Users and
+  traffic already pairs both windows. The hidden `mkt-wix-tiles` holders remain
+  so `paintSite` stays safe.
+- MANA SIYO now mirrors MAYA: hover it and Design Studio and Wix Studio hang to
+  the LEFT (Wix Studio = the manage.wix.com dashboard). The Design Studio chip
+  points at manasiyo.com pending Fromsa's real target.
+- Fixed three pre-existing app-regression failures from v13.71 that never ran
+  in CI (app-regression is not in the Cloud Build gate): a `MKT_SOURCE`
+  temporal-dead-zone crash, a mic-release assertion that did not match the
+  code, and a stale cabinet assertion.
+
+Changed files: `backend/status.html`; version bumped to 13.72 across
+`frontend/index.html`, `playground/index.html`, `backend/status.html`,
+`backend/marketing.html` (lockstep, unchanged content on the other three);
+`tests/app-regression.mjs`, `tests/admin-ui-contract.mjs`.
+
+VALIDATION BEFORE COMMIT
+- PASS: app-regression (browser + source, all passed), smoke (all passed),
+  Admin command 6, Admin UI contract 6, proxy policy 27, AI routing 7,
+  fabric sourcing 6, node --check on the three server modules.
+
+NEXT STEP
+- Operations Room follow-up (Fromsa, same message): remove the dead-pill /
+  Plan B section at the bottom of the backend and make Operations Room a single
+  slide; report what Fabric needs connected (CLO-SET token on the server). Not
+  in this commit. Await Fromsa on the Design Studio link and on pushing v13.72.
+
 ## v13.71 (Codex): Admin command center and faithful Marketing parity
 
 - Admin Maya is now a visible internal command layer, not only a voice line.

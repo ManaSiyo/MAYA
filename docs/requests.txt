@@ -16,6 +16,30 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, ADMIN CLEANUP AFTER KODAK'S PUSH (v13.72)
+
+[x] "Delete the Maya Command dashboard from the center, I don't need it there."
+    Removed from the page center.
+[x] "But keep a Maya command for the voice: a transcription and a place to
+    approve things. Push it into the drawer, only when I click the voice star."
+    The drawer becomes her private command line while the star is live.
+[x] "The 429 call is acting up and 'Voice unavailable, call 429' is ugly."
+    The voice line now fails in plain words. (The 429 itself is an OpenAI
+    Realtime quota/rate limit, an owner-config matter, see fixes.txt.)
+[x] "The marquee should be colored exactly like Marketing's, green/red/white,
+    no white lines top or bottom, scrolling between Admin and the hamburger."
+    Moved to the top row, colored.
+[x] "Put the Site/API/Images/Submissions/Backup lights inside the drawer."
+[x] "Delete the second manasiyo.com | MAYA row under Users and traffic."
+[x] "Hover MANA SIYO and show Design Studio and Wix Studio to the left, like
+    MAYA shows Operations and Playground to the right." Wix Studio uses the
+    dashboard link he gave.
+[ ] Design Studio link: pointed at manasiyo.com for now, awaiting his real
+    target.
+[ ] "In the backend, Operations Room still has the dead pill, and Fabric is
+    still not working. Remove Operations Room from the bottom, make it one
+    slide, and tell me what needs connecting." Not in v13.72; next commit.
+
 AUGUST 24, 2026, FINAL ADMIN RELEASE (v13.71)
 
 [x] "Make Admin Maya the internal Jarvis and command center, not a client
