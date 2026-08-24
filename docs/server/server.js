@@ -28,6 +28,7 @@
 import express from 'express';
 import crypto from 'node:crypto';
 import { Readable } from 'node:stream';
+import { evaluateProxyPolicy } from './proxy-policy.mjs';
 import dns from 'node:dns/promises';
 import {
   applyVisualRankings,
@@ -243,6 +244,10 @@ const MODEL_UPGRADES = Object.freeze({
   'gpt-4.1':     MODEL_TERRA,
   'gpt-4o-mini': MODEL_LUNA,
 });
+// v13.70 (A1): the canonical inventory of models MAYA may run. ENFORCEMENT of
+// which model may hit which endpoint, plus image/quality/Sol policy, now lives
+// in docs/server/proxy-policy.mjs (evaluateProxyPolicy). Keep this list in step
+// with that helper's endpointModels() when the model set changes.
 const MODEL_ALLOWED = new Set([
   MODEL_TERRA, MODEL_LUNA, MODEL_SOL,
   'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.6-sol',
@@ -376,13 +381,15 @@ function requireAuthHeader(req, res, next) {
   next();
 }
 
-app.all(/^\/api\/openai\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', limit: '24mb' }), async (req, res) => {
-  let user;
-  try { user = await requireGoogleUser(req); }
-  catch (e) {
-    console.error('[openai] 401 —', e.message);
-    return res.status(401).json({ error: 'unauthorized', detail: e.message });
-  }
+// v13.70 (A1): verify the Google token BEFORE the 24MB body is buffered, so an
+// unauthorized request is refused without spending memory on its payload.
+async function openaiAuthGate(req, res, next) {
+  try { req._openaiUser = await requireGoogleUser(req); return next(); }
+  catch (e) { console.error('[openai] 401 —', e.message);
+    return res.status(401).json({ error: 'unauthorized', detail: e.message }); }
+}
+app.all(/^\/api\/openai\/(.*)/, openaiAuthGate, express.raw({ type: '*/*', limit: '24mb' }), async (req, res) => {
+  const user = req._openaiUser;
 
   const upstreamPath = req.path.replace(/^\/api\/openai\//, '');   // e.g. v1/chat/completions
   // v12.9: weight the cost. A high quality image is roughly thirty times a
@@ -414,82 +421,27 @@ app.all(/^\/api\/openai\/(.*)/, requireAuthHeader, express.raw({ type: '*/*', li
   const openaiKey = process.env.OPENAI_API_KEY;
   if (!openaiKey) return res.status(500).json({ error: 'openai_not_configured' });
 
-  // v12.9: bound what can actually be asked for. Before this a signed in user
-  // could send any body at all through the allowed paths, including sixteen
-  // images at the highest quality in one call.
-  if (isImage) {
-    const _isAdmin = ADMIN_EMAILS.includes((user.email || '').toLowerCase());
-    const ct = req.headers['content-type'] || '';
-    if (/json/i.test(ct) && req.body && req.body.length < 1000000) {
-      try {
-        const body = JSON.parse(req.body.toString('utf8') || '{}');
-        if (Number(body.n) > 2) return res.status(400).json({ error: 'too_many_images', detail: 'n must be 2 or fewer' });
-        if (!_isAdmin && body.quality === 'high') {
-          return res.status(403).json({ error: 'quality_not_allowed', detail: 'high quality is atelier only' });
-        }
-      } catch (_) { /* not JSON after all, fall through to the multipart check */ }
-    } else if (/multipart/i.test(ct) && req.body) {
-      // v13.0: the edits endpoint is multipart and is the EXPENSIVE one, and
-      // it was not being checked at all. Read just the small form fields.
-      const head = req.body.subarray(0, Math.min(req.body.length, 65536)).toString('latin1');
-      const field = (nm) => {
-        const m = head.match(new RegExp('name="' + nm + '"\\r?\\n\\r?\\n([^\\r\\n]{0,40})'));
-        return m ? m[1].trim() : null;
-      };
-      const n = Number(field('n'));
-      if (Number.isFinite(n) && n > 2) return res.status(400).json({ error: 'too_many_images', detail: 'n must be 2 or fewer' });
-      if (!_isAdmin && field('quality') === 'high') {
-        return res.status(403).json({ error: 'quality_not_allowed', detail: 'high quality is atelier only' });
-      }
-    }
+  // ═══ v13.70 (A1): one pure, fail-closed policy decides the whole request ═══
+  // content type, a present valid model, model-to-endpoint match, Sol admin
+  // only, and image count/quality regardless of body size or multipart order.
+  const _isAdmin = ADMIN_EMAILS.includes((user.email || '').toLowerCase());
+  const policy = evaluateProxyPolicy({
+    method: req.method,
+    upstreamPath,
+    contentType: req.headers['content-type'] || '',
+    body: (req.method === 'GET' || req.method === 'HEAD') ? undefined : (req.body && req.body.length ? req.body : undefined),
+    isAdmin: _isAdmin,
+    models: { TERRA: MODEL_TERRA, LUNA: MODEL_LUNA, SOL: MODEL_SOL, upgrades: MODEL_UPGRADES },
+  });
+  if (!policy.ok) {
+    console.warn('[ai] policy refuse', policy.error, policy.detail || '', upstreamPath, 'user=' + user.email);
+    return res.status(policy.status).json({ error: policy.error, detail: policy.detail });
   }
-  // ═══ v13.53: model allowlist + tier map, applied to the actual body ═══
-  // JSON bodies (chat, embeddings, image generations) are parsed once here;
-  // a legacy name is upgraded to its tier model, an allowed name passes, and
-  // anything else is refused before a single byte reaches OpenAI.
-  let bodyBuf = (req.method === 'GET' || req.method === 'HEAD') ? undefined
-              : (req.body && req.body.length ? req.body : undefined);
-  let sentModel = '', originalModel = '', fallbackBuf = null, streamRequested = false;
-  const ctIn = req.headers['content-type'] || '';
-  if (bodyBuf && /json/i.test(ctIn) && bodyBuf.length < 2000000) {
-    let parsed = null;
-    try { parsed = JSON.parse(bodyBuf.toString('utf8')); } catch (_) {}
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      streamRequested = parsed.stream === true;
-      const asked = String(parsed.model || '');
-      if (asked) {
-        if (MODEL_UPGRADES[asked]) {
-          originalModel = asked;
-          parsed.model = MODEL_UPGRADES[asked];
-          sentModel = parsed.model;
-          bodyBuf = Buffer.from(JSON.stringify(parsed), 'utf8');
-          // The safety net: if the upgraded model is refused upstream, this
-          // exact body with the original model goes out once instead.
-          parsed.model = asked;
-          fallbackBuf = Buffer.from(JSON.stringify(parsed), 'utf8');
-        } else if (MODEL_ALLOWED.has(asked)) {
-          sentModel = asked;
-        } else {
-          console.warn('[ai] model_not_allowed', asked, upstreamPath, 'user=' + user.email);
-          return res.status(403).json({ error: 'model_not_allowed', detail: asked });
-        }
-      }
-    }
-  } else if (bodyBuf && /multipart/i.test(ctIn)) {
-    // Audio and image edits arrive as multipart; read just the model field
-    // from the head and hold the same line. No rewriting here — the only
-    // legitimate multipart models are already on the allowlist.
-    const head = bodyBuf.subarray(0, Math.min(bodyBuf.length, 65536)).toString('latin1');
-    const m = head.match(/name="model"\r?\n\r?\n([^\r\n]{0,60})/);
-    if (m) {
-      const asked = m[1].trim();
-      if (!MODEL_ALLOWED.has(asked)) {
-        console.warn('[ai] model_not_allowed (multipart)', asked, upstreamPath, 'user=' + user.email);
-        return res.status(403).json({ error: 'model_not_allowed', detail: asked });
-      }
-      sentModel = asked;
-    }
-  }
+  let bodyBuf = policy.body;
+  let sentModel = policy.model || '';
+  let originalModel = policy.original || '';
+  let fallbackBuf = policy.fallback || null;
+  const streamRequested = !!policy.streamRequested;
 
   const headers = { 'Authorization': 'Bearer ' + openaiKey };
   if (req.headers['content-type']) headers['Content-Type'] = req.headers['content-type'];

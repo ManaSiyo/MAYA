@@ -16,6 +16,16 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, REMEDIATION PROGRAM, COMMIT A1 (v13.70)
+
+[x] Proxy security hardening (audit P0 #1). Every proxied OpenAI call now
+    passes one fail-closed policy: recognized content type, a valid model
+    that matches its endpoint, Sol for the atelier only, and image count and
+    quality enforced whatever the body size or multipart field order. The
+    token is verified before the body is buffered. The policy is a small
+    tested module (docs/server/proxy-policy.mjs, 27 unit tests). Committed
+    locally; NOT pushed, per the program.
+
 AUGUST 24, 2026, MAYA MORE CAPABLE (v13.69)
 
 [x] "Make Maya more intelligent, more capability: write an email, modify

@@ -72,6 +72,48 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.70 (Claude, Commit A1): proxy security hardening
+
+The first commit of the staged remediation program. ONE risk domain: the raw
+authenticated /api/openai proxy.
+
+WHAT CHANGED
+- New pure module docs/server/proxy-policy.mjs (evaluateProxyPolicy): the
+  single fail-closed decision for every proxied call. No I/O, no globals.
+- server.js: the proxy now (1) verifies the Google token in a pre-buffer gate
+  (openaiAuthGate) BEFORE express.raw reads the 24MB body; (2) replaces the two
+  size-gated inline checks with one call to the helper. The upstream call,
+  the tier-fallback retry, streaming and logging are unchanged.
+- Enforced now, regardless of body size or multipart field order:
+  recognized content type required; a present, valid model required on every
+  model-bearing route; model-to-endpoint match (whisper cannot ride chat,
+  gpt-image-2 cannot ride embeddings); Sol is admin only; image n<=2 and
+  quality=high admin-only; multipart policy fields read by a real small-field
+  part walk so a field after a large file is still seen; a duplicated model
+  field is ambiguous and refused. Never fails open.
+- Dockerfile ships proxy-policy.mjs.
+
+WHAT DELIBERATELY DID NOT CHANGE
+- No prompt, model tier, GPT Image 2 size/quality, fabric behavior, UI, Vertex,
+  Realtime, or voice change. MODEL_ALLOWED stays as the canonical inventory
+  (the helper is the enforcer now; keep them in step).
+
+TEST EVIDENCE (all run locally, all pass)
+- tests/proxy-policy.mjs: 27 unit checks covering valid chat/image/embeddings/
+  transcription, missing/unknown/malformed/mismatched model, content-type
+  spoof, oversized JSON model + image count + quality, multipart count/quality
+  after a 300KB file, ambiguous duplicate model, non-admin vs admin Sol,
+  non-admin vs admin high quality.
+- ai-routing 7, fabric-sourcing 6 (ranking regression), smoke all, app
+  regression 273 (incl. two new wiring assertions). node --check clean.
+
+OWNER CONFIG STILL NEEDED
+- None for A1. (A2 wires the fuller suite into the Cloud Build gate; until
+  then the gate still runs only ai-routing + fabric + syntax.)
+
+NEXT COMMIT: A2 — release gate and reproducibility (cloudbuild runs smoke +
+app regression + proxy-policy before the Docker build; pin tooling).
+
 ## v13.69 (Claude): Maya more capable, and the memory glitch fixed
 
 - THE MEMORY GLITCH: her memory lived inside `ctx`, which is

@@ -1018,7 +1018,8 @@ ok('the proxy holds a model allowlist and upgrades legacy names by tier',
   SERVER_SOURCE.includes("process.env.MODEL_LUNA  || 'gpt-5.6-luna'") &&
   SERVER_SOURCE.includes("'gpt-4.1':     MODEL_TERRA") &&
   SERVER_SOURCE.includes("'gpt-4o-mini': MODEL_LUNA") &&
-  SERVER_SOURCE.includes("error: 'model_not_allowed'"));
+  // v13.70: the refusal itself now lives in the fail-closed policy helper
+  readFileSync(join(ROOT, 'docs/server/proxy-policy.mjs'), 'utf8').includes("'model_not_allowed'"));
 ok('an upgraded model that fails upstream falls back to the proven one, once',
   SERVER_SOURCE.includes('fallbackBuf') &&
   SERVER_SOURCE.includes("'[ai] tier fallback'") &&
@@ -1342,6 +1343,22 @@ ok('the bottom line row does the arithmetic between the streams, live',
   MKT_SOURCE.includes('the day that brings people') &&
   // deterministic: nothing in it calls a model
   !/paintBottomLine[\s\S]{0,4000}api\/openai/.test(MKT_SOURCE));
+// ── v13.70 (A1) · proxy security hardening ────────────────────────────────
+ok('the OpenAI proxy runs the fail-closed policy helper, and verifies auth before buffering',
+  SERVER_SOURCE.includes("import { evaluateProxyPolicy } from './proxy-policy.mjs'") &&
+  SERVER_SOURCE.includes('async function openaiAuthGate(') &&
+  SERVER_SOURCE.includes('app.all(/^\\/api\\/openai\\/(.*)/, openaiAuthGate, express.raw(') &&
+  SERVER_SOURCE.includes('const policy = evaluateProxyPolicy({') &&
+  SERVER_SOURCE.includes('if (!policy.ok)') &&
+  // the old size-gated inline checks are gone
+  !SERVER_SOURCE.includes('req.body.length < 1000000') &&
+  !SERVER_SOURCE.includes('bodyBuf.length < 2000000'));
+ok('the proxy policy is fail-closed: it lives in its own tested module',
+  existsSync(join(ROOT, 'docs/server/proxy-policy.mjs')) &&
+  readFileSync(join(ROOT, 'docs/server/proxy-policy.mjs'), 'utf8').includes('never fails open') &&
+  existsSync(join(ROOT, 'tests/proxy-policy.mjs')) &&
+  // the Dockerfile ships the helper
+  readFileSync(join(ROOT, 'docs/server/Dockerfile'), 'utf8').includes('COPY proxy-policy.mjs'));
 ok('the voice key never touches the browser: the server mints a one-call secret with live numbers',
   SERVER_SOURCE.includes("app.post('/api/admin/voice-token'") &&
   SERVER_SOURCE.includes('v1/realtime/client_secrets') &&

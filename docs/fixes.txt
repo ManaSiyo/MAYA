@@ -3,7 +3,20 @@ Fix attempts and setup work that lives OUTSIDE git: Cloud Run env vars, the
 Google and Firebase consoles, credentials, external accounts. Symptom, cause,
 action, status. Newest on top. Fromsa does every credential step himself.
 
-AUGUST 24, 2026, SET UP THE API FOR FROMSA (the to-do list, in order)
+AUGUST 24, 2026, REMEDIATION PROGRAM (staged, small commits, do not push)
+
+Working through the full audit in order. A1 shipped locally (v13.70):
+- A1 proxy security hardening: DONE, committed locally, not pushed.
+- A2 release gate + reproducibility: NEXT.
+- A3 Vertex image + Realtime compatibility: pending.
+- A4 voice action safety: pending.
+- A5 deletion/terms/authorization integrity (needs one owner decision on the
+  legacy Firebase principal's privileges): pending.
+- Stage B (fabric clarity, analytics correctness, accessibility, performance,
+  production-workflow safety) and Stage C (named server task routes, provider
+  evals): pending, only after A and B.
+
+AUGUST 24, 2026, SET UP THE API FOR FROMSA (the to-do list, in order)AUGUST 24, 2026, SET UP THE API FOR FROMSA (the to-do list, in order)
 
 These are the console and environment steps only Fromsa can do. Each is a
 green step; none is code. Do them in this order.

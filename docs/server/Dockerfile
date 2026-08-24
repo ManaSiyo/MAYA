@@ -5,6 +5,7 @@ ENV NODE_ENV=production
 COPY package.json ./
 RUN npm install --omit=dev
 COPY server.js ./
+COPY proxy-policy.mjs ./
 COPY fabric-sourcing.js ./
 COPY ai-router.js ./
 EXPOSE 8080
