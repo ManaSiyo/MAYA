@@ -16,6 +16,18 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, MAYA'S VOICE (v13.65)
+
+[x] "In the Admin only, the logo at the bottom center of the drawer,
+    voice to voice like ChatGPT's voice, pulsing while it talks, connected
+    to everything: say hey Maya, give me a thirty second analysis of
+    marketing, submissions, the current state. My own Jarvis, on the
+    latest model, and it should work from my phone." Built: the star sits
+    at the drawer's floor, tap to open the line, tap to hang up, the
+    numbers are snapshotted at the moment of the tap and the key never
+    leaves the server. Needs one green step to speak: the Realtime model
+    must be available on the OpenAI account.
+
 AUGUST 24, 2026, THE ROOM IN THE FAMILY, REAL CLO, HONEST TODAY (v13.64)
 
 [x] "The circles should be the hamburger's size and height, pinned to the

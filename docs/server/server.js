@@ -2784,6 +2784,59 @@ function computeMarketingWarnings(out, windsor) {
 // Cached for an hour. On any failure the endpoint fails plainly and the
 // page renders the deterministic warnings alone: never a guess.
 // ═══════════════════════════════════════════════════════════════════════════
+// ── v13.65: Maya's voice. The Admin drawer's logo opens a voice to voice
+// line: the server mints a short lived Realtime session key with the
+// business's CURRENT numbers baked into the instructions, and the browser
+// talks to OpenAI directly over WebRTC. The long lived API key never leaves
+// the server; the browser only ever holds the one-call ephemeral secret. ──
+const REALTIME_MODEL = process.env.OPENAI_REALTIME_MODEL || 'gpt-realtime';
+app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email, 4);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  if (!process.env.OPENAI_API_KEY) return res.status(503).json({ error: 'voice_unavailable' });
+  try {
+    // the numbers Maya speaks from: the same cached fetchers marketing uses.
+    const [wix, ads, leads] = await Promise.all([
+      wixInsights().catch(() => null), windsorInsights().catch(() => null), wixLeads().catch(() => null),
+    ]);
+    const ctx = {
+      manasiyo_visitors: wix && wix.connected ? { today: wix.today, last7_daily: (wix.daily || []).slice(-7) } : 'unavailable',
+      ads: ads && ads.connected ? {
+        campaigns_30d: (ads.campaigns || []).slice(0, 8),
+        by_source_7d: ads.sources || null,
+      } : 'unavailable',
+      leads: leads && leads.connected ? { today: leads.today, week: leads.d7, month: leads.d28,
+        newest: (leads.list || []).slice(0, 5).map(l => ({ when: l.ts, want: l.note })) } : 'unavailable',
+    };
+    const instructions =
+      'You are Maya, the operations voice of Mana Siyo, a custom fashion studio in San Francisco. ' +
+      'You are speaking out loud with Fromsa, the founder, over live audio. Be warm, sharp and brief: ' +
+      'answer in a few spoken sentences unless he asks for an analysis, and then give him about thirty ' +
+      'seconds covering marketing first (visitors, ad spend and clicks, cost per lead, warnings), then ' +
+      'leads and what they want, then anything unusual. Use plain spoken numbers, say today and ' +
+      'yesterday rather than dates, and never read out raw JSON or URLs. Ground every claim ONLY in ' +
+      'the snapshot below; when something is not in it, say you do not have it live rather than guess. ' +
+      'Never invent numbers.\n\nBusiness snapshot, taken just now:\n' + JSON.stringify(ctx).slice(0, 14000);
+    const r = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session: { type: 'realtime', model: REALTIME_MODEL, instructions,
+        audio: { output: { voice: process.env.OPENAI_REALTIME_VOICE || 'marin' } } } }),
+      signal: AbortSignal.timeout(20000),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.value) throw new Error((j.error && j.error.message) || ('realtime ' + r.status));
+    noteSpend('v1/realtime', req);
+    return res.json({ ok: true, value: j.value, model: REALTIME_MODEL });
+  } catch (e) {
+    console.error('[voice-token] failed —', String(e.message).slice(0, 200));
+    return res.status(502).json({ error: 'voice_failed' });
+  }
+});
+
 // ── v13.64: the CLO route's real library. CLO-SET's public CONNECT
 // marketplace has no open search API (the site refuses outside fetches), so
 // the honest wiring is CLO-SET's own account API: Fromsa issues a token in

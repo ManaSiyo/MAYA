@@ -1282,6 +1282,21 @@ ok('the cabinet consumes the drawer: circles at the bezel, panes edge to edge, P
   /pg-folder \{[^}]*border: none/.test(PLAYGROUND_SOURCE) &&
   PLAYGROUND_SOURCE.indexOf('id="pg-tab-pinterest"') < PLAYGROUND_SOURCE.indexOf('id="pg-tab-fabrics"') &&
   PLAYGROUND_SOURCE.includes(">Projects</div>"));
+// ── v13.65 · Maya's voice on Admin ────────────────────────────────────────
+ok('the Admin drawer holds the star, and tapping it opens a voice line',
+  MAP_SOURCE.includes('id="voice-dock"') &&
+  MAP_SOURCE.includes('id="voice-btn"') &&
+  MAP_SOURCE.includes('function toggleMayaVoice(') &&
+  MAP_SOURCE.includes('voicepulse') &&
+  /#voice-dock\{margin-top:auto/.test(MAP_SOURCE) &&
+  MAP_SOURCE.includes("https://api.openai.com/v1/realtime/calls?model="));
+ok('the voice key never touches the browser: the server mints a one-call secret with live numbers',
+  SERVER_SOURCE.includes("app.post('/api/admin/voice-token'") &&
+  SERVER_SOURCE.includes('v1/realtime/client_secrets') &&
+  SERVER_SOURCE.includes('Business snapshot, taken just now') &&
+  SERVER_SOURCE.includes('Never invent numbers') &&
+  // the page holds only the ephemeral value, never OPENAI_API_KEY
+  !MAP_SOURCE.includes('OPENAI_API_KEY'));
 ok('deterministic warnings exist and never depend on a model call',
   SERVER_SOURCE.includes('function computeMarketingWarnings(') &&
   SERVER_SOURCE.includes('is enabled but has served nothing since') &&

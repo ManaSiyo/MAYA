@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.64">
+<meta name="maya-version" content="13.65">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -73,6 +73,24 @@ try {
           transform:translateX(calc(100% + 20px));opacity:0;pointer-events:none;
           transition:transform .42s cubic-bezier(0.16,1,0.3,1),opacity .42s ease}
   #drawer.open{transform:none;opacity:1;pointer-events:auto}
+  /* v13.65: Maya's voice. The logo waits at the drawer's floor, centered;
+     while the line is open it breathes like a voice assistant. */
+  #drawer{display:flex;flex-direction:column}
+  #drawer > a, #drawer > h3{flex:none}
+  #voice-dock{margin-top:auto;padding-top:18px;border-top:0.5px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;gap:8px;flex:none}
+  #voice-btn{width:64px;height:64px;border-radius:50%;padding:0;cursor:pointer;
+    border:0.5px solid var(--line);background:rgba(255,255,255,0.04);
+    display:flex;align-items:center;justify-content:center;
+    transition:border-color .25s, transform .25s}
+  #voice-btn img{width:44px;height:44px;object-fit:contain;opacity:0.95}
+  #voice-btn:hover{border-color:rgba(255,255,255,0.5);transform:scale(1.04)}
+  #voice-btn.live{border-color:rgba(169,201,255,0.9);animation:voicepulse 1.6s ease-in-out infinite}
+  @keyframes voicepulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(169,201,255,0.35);transform:scale(1)}
+    50%{box-shadow:0 0 0 14px rgba(169,201,255,0);transform:scale(1.06)}}
+  #voice-word{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.22em;
+    text-transform:uppercase;color:var(--faint);min-height:12px}
   /* v13.45: the hamburger never disappears. It slides left with the drawer
      and comes to rest hanging just outside the drawer's left edge (drawer:
      320 wide at right 10, pill resting ~28 from the right edge). The same
@@ -314,6 +332,13 @@ try {
   <a href="https://manasiyo.com/design" target="_blank">Design Studio<small>The Wix page that sends visitors in.</small></a>
   <h3>What MAYA promises</h3>
   <a href="/privacy.html" target="_blank">Privacy policy<small>What MAYA keeps, what is public, how to have it deleted.</small></a>
+  <!-- v13.65: Maya's voice. Tap the star, talk to the business. -->
+  <div id="voice-dock">
+    <button id="voice-btn" onclick="toggleMayaVoice()" title="Talk to Maya: live voice, grounded in today's numbers" aria-label="Talk to Maya">
+      <img src="/aesthetics/ui/logo-208.png" alt="">
+    </button>
+    <div id="voice-word"></div>
+  </div>
 </div>
 
 <div class="wrap">
@@ -363,9 +388,10 @@ try {
   </details>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-24b">
+  <details class="fold" id="changes-fold" data-latest="2026-08-24c">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 24</b>MAYA can speak now. At the floor of the Admin drawer waits the star itself; tap it and a live voice line opens, the logo breathing while she listens. Ask how the day is going and she answers out loud in a few sentences; ask for an analysis and she gives you thirty seconds, marketing first, then the leads and what they want, then anything unusual, every number taken from a snapshot of the business made at the moment you tapped, never a guess. The key that pays for the call never touches the browser: the server mints a secret that lives for one conversation, whispers the day's numbers into it, and hands the line over. Hang up by tapping again. It works the same from a phone.</div>
     <div class="chg"><b>Aug 24</b>The rooms fell into line. The Operations Room wears the family header now, logo and all, Operations Room up top left with a quiet beta beneath, and the plan line in the middle switches plans with one click; the dead pill that haunted the bottom of the screen was an empty toast, silenced. Plan B asks for the real thing: with a CLO-SET token on the server it searches the actual asset library, and until then it says so plainly and offers the CONNECT search instead. Marketing reads as one line, manasiyo.com with its little arrow to the Wix dashboard, then MAYA in blue, and today finally shows tonight's number, because the server now counts days in California time the way Wix does instead of Greenwich's. Each lead in the Lead Station carries its own CTA column naming the recommended move. And the Playground cabinet grew into its drawer: the circles ride the bezel at the hamburger's height, Avatar then Pinterest then Fabrics, and whichever folder is open takes the whole drawer, edge to edge.</div>
     <div class="chg"><b>Aug 24</b>The terms learned to stand up straight, and to say what MAYA is made of. The whole document reads centered now, in the popup and on its own page. And it discloses plainly: MAYA is built on artificial intelligence, every garment picture is AI generated unless you uploaded it yourself, generated pictures carry the provenance marks their models embed, and AI can be wrong. A face photograph gets its own section: used for one thing only, rendering the garment on that person, no facial recognition, no scan of face geometry kept, never sold, never published, deleted when replaced or removed. Written with the EU AI Act's transparency rules and California's AI transparency law in view, and the privacy policy says the same. The date moved to August 24, so everyone reads and agrees once more at the next sign in.</div>
     <div class="chg"><b>Aug 23</b>The Playground drawer became a filing cabinet, and Marketing grew a Lead Station. Three circles the size of the hamburger pill now sit at the drawer's top and hold one folder between them: the avatar's own face, the orange cheetah for fabrics, the Pinterest mark. They never leave and nothing goes back, because changing tab is how you leave; fabrics and Pinterest open inside the folder rather than sliding a second panel over the first. Under Avatar the repeats are gone: the open project names the pill on top, the face carries the name at its side with Replace and Remove waiting for the cursor, the project list drops in below it, and Measurements are only measurements. On Marketing, the leads became a station: each note is a short reading of what that person wants and which tier they asked about, and under every name sit the two moves that matter, an email drafted from their words, your own notes and how many times you have written before, opened ready in Gmail for you to send, and the call. Anything you learn about a lead can be dropped in underneath, and the next draft reads it.</div>
@@ -1097,6 +1123,60 @@ async function savePrompting() {
 _gisBoot();
 loadSubmissions();
 setInterval(() => { if (_idTok && document.visibilityState === 'visible') loadTraffic(); }, 120000);
+</script>
+<script>
+// ═══ v13.65: MAYA'S VOICE. Voice to voice over WebRTC, admin only. The
+// server mints a one-call ephemeral key with the live numbers baked into
+// the instructions; the browser speaks with OpenAI Realtime directly and
+// the real API key never comes anywhere near this page. Click starts the
+// line, click again hangs up. Works the same on a phone: the tap is the
+// user gesture both the microphone and the speaker need. ═══
+let _voice = null;   // { pc, mic, audio }
+function _voiceWord(t){ const el=document.getElementById('voice-word'); if(el) el.textContent=t||''; }
+function _voiceStop(){
+  if(!_voice) return;
+  try{ _voice.pc.close(); }catch(_){}
+  try{ (_voice.mic&&_voice.mic.getTracks()||[]).forEach(t=>t.stop()); }catch(_){}
+  try{ _voice.audio.srcObject=null; }catch(_){}
+  _voice=null;
+  const b=document.getElementById('voice-btn'); if(b) b.classList.remove('live');
+  _voiceWord('');
+}
+async function toggleMayaVoice(){
+  if(_voice){ _voiceStop(); return; }
+  const b=document.getElementById('voice-btn');
+  if(!_idTok){ _voiceWord('sign in first'); return; }
+  try{
+    _voiceWord('connecting…');
+    // the numbers and the key, one short-lived secret
+    const tr=await fetch('/api/admin/voice-token',{method:'POST',
+      headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},body:'{}'});
+    const tj=await tr.json().catch(()=>({}));
+    if(!tr.ok||!tj.value) throw new Error(tj.error||('token '+tr.status));
+    // the line itself
+    const mic=await navigator.mediaDevices.getUserMedia({audio:true});
+    const pc=new RTCPeerConnection();
+    mic.getTracks().forEach(t=>pc.addTrack(t,mic));
+    const audio=new Audio(); audio.autoplay=true;
+    pc.ontrack=e=>{ audio.srcObject=e.streams[0]; };
+    pc.createDataChannel('oai-events');
+    pc.onconnectionstatechange=()=>{
+      if(['failed','disconnected','closed'].includes(pc.connectionState) && _voice) _voiceStop();
+    };
+    const offer=await pc.createOffer(); await pc.setLocalDescription(offer);
+    const cr=await fetch('https://api.openai.com/v1/realtime/calls?model='+encodeURIComponent(tj.model),{
+      method:'POST',headers:{'Authorization':'Bearer '+tj.value,'Content-Type':'application/sdp'},body:offer.sdp});
+    if(!cr.ok) throw new Error('call '+cr.status);
+    await pc.setRemoteDescription({type:'answer',sdp:await cr.text()});
+    _voice={pc,mic,audio};
+    if(b) b.classList.add('live');
+    _voiceWord('listening · tap to hang up');
+  }catch(e){
+    _voiceStop();
+    _voiceWord(String(e&&e.message||e).slice(0,60));
+    console.warn('[maya voice]',e);
+  }
+}
 </script>
 </body>
 </html>

@@ -59,6 +59,10 @@ await check('fabric ranking needs a token',       post('/api/rank-fabric', { hea
 await check('fabric visualizing needs a token',   post('/api/visualize-fabric', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
 await check('marketing brief needs a token',      post('/api/admin/marketing-brief', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
 await check('hello needs a token',                post('/api/hello', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
+await check('lead note needs a token',            post('/api/admin/lead-note', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
+await check('lead draft needs a token',           post('/api/admin/lead-draft', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
+await check('clo search needs a token',           post('/api/admin/clo-search', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
+await check('the voice needs a token',            post('/api/admin/voice-token', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
 await check('openai refuses a model off the list', async () => {
   // v13.53: even with a syntactically valid Bearer, an unknown model must be
   // turned away. The bad token dies first with 401 here (no Google upstream

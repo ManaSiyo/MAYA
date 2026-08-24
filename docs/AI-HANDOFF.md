@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 263 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 265 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -71,6 +71,34 @@ campaign table, warnings, ticker) through Windsor, per connector. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.65 (Claude): Maya's voice on Admin
+
+- THE STAR AT THE DRAWER'S FLOOR: status.html's drawer is a flex column
+  now and #voice-dock rides margin-top:auto, the 64px circular logo button
+  centered at the bottom. Tap: a live voice-to-voice line opens and the
+  logo breathes (.live + voicepulse). Tap again: hang up. Signed out it
+  says "sign in first"; every failure path lands back in the idle state.
+- HOW THE LINE WORKS: POST /api/admin/voice-token (admin, rate limited,
+  weight 4) gathers wixInsights + windsorInsights + wixLeads (the cached
+  fetchers marketing uses), bakes a compact JSON snapshot into the session
+  INSTRUCTIONS (visitors, campaigns, warnings-free source rollup, newest
+  leads with their summaries; capped 14k chars) with the Maya persona:
+  warm, brief, thirty-second analysis on request, marketing first, plain
+  spoken numbers, never invent, say "I do not have it live" when the
+  snapshot lacks something. Then it mints an OpenAI Realtime ephemeral key
+  (POST v1/realtime/client_secrets, model OPENAI_REALTIME_MODEL default
+  gpt-realtime, voice OPENAI_REALTIME_VOICE default marin) and returns
+  ONLY {value, model}. The long-lived OPENAI_API_KEY never reaches the
+  page.
+- The browser does WebRTC itself: getUserMedia, RTCPeerConnection, SDP
+  offer POSTed to v1/realtime/calls with the ephemeral Bearer, answer set,
+  remote audio into an Audio element. Mobile works because the tap is the
+  user gesture both mic and autoplay need. connectionstatechange cleans up
+  on drops.
+- NOT yet verifiable end to end from here (needs mic + the live key); the
+  UI paths are Playwright-probed (dock in drawer, signed-out word, failure
+  never leaves live state) and both endpoints carry smoke 401 checks.
 
 ## v13.64 (Claude): the room in the family, real CLO, honest today
 
