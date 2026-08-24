@@ -1304,13 +1304,23 @@ ok('the voice lives at the floor of the Admin drawer, persists in a chip, and ho
   MAP_SOURCE.includes('function _voiceTool(') &&
   MAP_SOURCE.includes('response.function_call_arguments.done') &&
   MAP_SOURCE.includes("https://api.openai.com/v1/realtime/calls?model="));
-ok('the voice has memory and can note a lead by name, minted into the session as tools',
+ok('the voice has memory and four tools: remember, forget, note a lead, draft an email',
   SERVER_SOURCE.includes("app.post('/api/admin/maya-remember'") &&
+  SERVER_SOURCE.includes("app.post('/api/admin/maya-forget'") &&
   SERVER_SOURCE.includes('async function loadMayaMemory(') &&
   SERVER_SOURCE.includes('async function resolveLeadEmail(') &&
   SERVER_SOURCE.includes("name: 'note_lead'") &&
+  SERVER_SOURCE.includes("name: 'draft_email'") &&
   SERVER_SOURCE.includes('instructions, tools,') &&
-  SERVER_SOURCE.includes('your_memory:'));
+  MAP_SOURCE.includes("name==='draft_email'") &&
+  MAP_SOURCE.includes("name==='forget'") &&
+  MAP_SOURCE.includes('mail.google.com/mail/?view=cm'));
+ok('her memory is kept whole, outside the truncated snapshot, and she knows the backbone',
+  SERVER_SOURCE.includes('kept in full, never truncated') &&
+  SERVER_SOURCE.includes('const memoryLines =') &&
+  SERVER_SOURCE.includes('HOW MAYA IS BUILT') &&
+  // the snapshot cap no longer swallows memory: memory is concatenated after it
+  SERVER_SOURCE.includes("memoryLines + '\\n\\n' +"));
 ok('the Admin drawer consolidates: firebase one line, Cloud Run, the outside managers',
   MAP_SOURCE.includes('>Firebase<') &&
   MAP_SOURCE.includes('>Cloud Run<') &&

@@ -16,6 +16,25 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, MAYA MORE CAPABLE (v13.69)
+
+[x] "Make Maya more intelligent, more capability: write an email, modify
+    the lead station live, know the backbone of everything." Done: she has
+    four tools now, drafts an email into Gmail (never auto-sends), updates
+    a lead by name and the station refreshes live, remembers and forgets,
+    and her instructions carry how MAYA is built so she can troubleshoot.
+[x] "There is a glitch in her memory; there should be room for it." Found
+    and fixed: her memory was inside a snapshot that got trimmed on busy
+    days, so it could vanish. It is kept whole now and always in her prompt.
+[x] "Why hasn't the marketing stuff translated to admin, why don't the
+    features show?" It is all in v13.68, committed and pushed; a push
+    deploys both the server and the site (the build tests all pass). It was
+    committed after your screenshots; hard-refresh Admin and the version at
+    the bottom should read 13.69.
+[ ] "She should read my emails." Needs Gmail read access (OAuth on the
+    server, a scope and consent change). Writing is done via draft_email;
+    reading is the next green step when you want it.
+
 AUGUST 24, 2026, MARKETING MIGRATED INTO ADMIN (v13.68)
 
 [x] "Migrate everything from Marketing into Admin: ad campaigns, the lead

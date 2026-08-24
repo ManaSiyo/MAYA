@@ -2840,31 +2840,53 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
       submissions: subFolders ? { total: subFolders.size, most_recent: lastSub } : 'unavailable',
       recently_shipped: ships || 'unavailable',
       your_memory: (mem && mem.items || []).slice(-40).map(i => i.text),
-      leads_by_name: leads && leads.connected ? (leads.list || []).slice(0, 12).map(l => ({ name: l.name, want: l.note })) : 'unavailable',
+      leads_by_name: leads && leads.connected ? (leads.list || []).slice(0, 12).map(l => ({ name: l.name, email: l.email, want: l.note })) : 'unavailable',
     };
+    // v13.69: her memory is kept OUT of the capped snapshot so it can never be
+    // truncated away, the glitch Fromsa hit. It is always spoken to her in full.
+    const memoryLines = (mem && mem.items || []).slice(-60).map(i => '- ' + i.text).join('\n') || '(nothing yet)';
     const nowLA = new Intl.DateTimeFormat('en-US', { timeZone: process.env.WIX_TZ || 'America/Los_Angeles',
       weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
       .format(new Date());
+    const backbone =
+      'HOW MAYA IS BUILT, so you can explain it and help troubleshoot: MAYA is a web app that turns a ' +
+      'client conversation into moodboards, AI garment renders, construction notes and a fabric-sourced ' +
+      'production brief; Mana Siyo then sews the real garment. The pages: the app itself at ' +
+      'maya.manasiyo.com (design and render); Admin (this page) for submissions, users and traffic, ad ' +
+      'campaigns, the lead station, sources and the bottom line; the Operations Room for the pattern ' +
+      'pipeline; the Brief for a saved submission; plus terms and privacy. Under the hood: a Cloud Run ' +
+      'server (Node/Express) proxies OpenAI and Google models so keys never reach the browser; Firebase ' +
+      'holds accounts, projects and pictures; analytics come from Google Analytics and Wix; ads from ' +
+      'Windsor. It is free forever and money comes from the garments, not the tool. If Fromsa reports ' +
+      'something broken, ask what page and what he saw, reason about which part that touches, and suggest ' +
+      'the next check; do not claim to have fixed code, you cannot change code, but you can note it and ' +
+      'talk it through.';
     const instructions =
-      'You are Maya, the operations voice of Mana Siyo, a custom fashion studio in San Francisco. ' +
-      'You are speaking out loud with Fromsa, the founder, over live audio. Right now it is ' + nowLA +
+      'You are Maya, the operations mind and voice of Mana Siyo, a custom fashion studio in San ' +
+      'Francisco. You are speaking out loud with Fromsa, the founder, over live audio. Right now it is ' + nowLA +
       ' in San Francisco. Open by greeting him briefly and offering the day\'s read. Be warm, sharp and ' +
-      'brief: answer in a few spoken sentences unless he asks for an analysis, and then give him about ' +
+      'brief: answer in a few spoken sentences unless he asks for an analysis, and then give about ' +
       'thirty seconds covering marketing first (visitors, ad spend and clicks, cost per lead), then ' +
-      'leads and what they want, then submissions and anything unusual, including what shipped ' +
-      'recently if he asks what is new. Ask him questions back when it sharpens the answer: which ' +
-      'window he means, whether he wants the detail. Use plain spoken numbers, say today and ' +
-      'yesterday rather than dates, and never read out raw JSON or URLs. Ground every claim ONLY in ' +
-      'the snapshot below; when something is not in it, say you do not have it live rather than guess. ' +
-      'Never invent numbers. You have two tools. When Fromsa tells you something worth keeping, call ' +
-      'remember with a short fact. When he tells you what happened with a lead (you called them, they want ' +
-      'a fitting, they went cold), call note_lead with the person\'s name or email and a short note so the ' +
-      'Lead Station keeps it. Confirm out loud in a few words after a tool, then ask the next useful question.' +
-      '\n\nBusiness snapshot, taken just now:\n' + JSON.stringify(ctx).slice(0, 14000);
+      'leads and what they want, then submissions and anything unusual, including what shipped recently. ' +
+      'Ask him questions back when it sharpens the answer. Use plain spoken numbers, say today and ' +
+      'yesterday rather than dates, never read out raw JSON or URLs. Ground every number ONLY in the ' +
+      'snapshot; when something is not in it, say you do not have it live rather than guess. ' +
+      'Never invent numbers.\n\n' + backbone + '\n\n' +
+      'YOU CAN ACT. You have four tools. Use them without being asked twice, then confirm out loud in a ' +
+      'few words and ask the next useful question. remember: save a fact to your own memory. note_lead: ' +
+      'when he tells you what happened with a lead, write it into the Lead Station by name and record a ' +
+      'call or email if he just made one. draft_email: when he wants to reach a lead or anyone, compose ' +
+      'the email and open it ready in Gmail for him to review and send; you never send it yourself. ' +
+      'forget: remove a fact from your memory when he asks.\n\n' +
+      'YOUR MEMORY (kept in full, never truncated):\n' + memoryLines + '\n\n' +
+      'Business snapshot, taken just now:\n' + JSON.stringify(ctx).slice(0, 12000);
     const tools = [
       { type: 'function', name: 'remember',
         description: 'Save a short fact to your own memory so you recall it in later conversations.',
         parameters: { type: 'object', properties: { text: { type: 'string', description: 'the fact, one sentence' } }, required: ['text'] } },
+      { type: 'function', name: 'forget',
+        description: 'Remove a fact from your memory. Give the text or the gist of the fact to remove.',
+        parameters: { type: 'object', properties: { text: { type: 'string', description: 'the fact to remove, or its gist' } }, required: ['text'] } },
       { type: 'function', name: 'note_lead',
         description: 'Add a note to a lead in the Lead Station, and optionally record that Fromsa contacted them.',
         parameters: { type: 'object', properties: {
@@ -2872,6 +2894,13 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
           note: { type: 'string', description: 'what to record about them' },
           contact: { type: 'string', enum: ['none', 'call', 'email'], description: 'set call or email if he just reached them that way' } },
           required: ['lead', 'note'] } },
+      { type: 'function', name: 'draft_email',
+        description: 'Compose an email and open it ready in Gmail for Fromsa to review and send. Never sends by itself. Use for reaching a lead or anyone.',
+        parameters: { type: 'object', properties: {
+          to: { type: 'string', description: 'recipient email; if you only know a lead name, look up their email in leads_by_name' },
+          subject: { type: 'string', description: 'the subject line' },
+          body: { type: 'string', description: 'the full email body, warm and specific, signed Fromsa' } },
+          required: ['subject', 'body'] } },
     ];
     const r = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
       method: 'POST',
@@ -3002,6 +3031,27 @@ async function appendMayaMemory(text) {
   await gcsPut(MAYA_MEM_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
   return rec.items.length;
 }
+async function forgetMayaMemory(text) {
+  const q = String(text || '').trim().toLowerCase();
+  if (!q) return 0;
+  const rec = await loadMayaMemory();
+  const before = rec.items.length;
+  rec.items = rec.items.filter(i => {
+    const t = String(i.text || '').toLowerCase();
+    return !(t.includes(q) || (q.length > 12 && t.includes(q.slice(0, 12))));
+  });
+  if (rec.items.length !== before) await gcsPut(MAYA_MEM_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+  return before - rec.items.length;
+}
+app.post('/api/admin/maya-forget', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  try { const n = await forgetMayaMemory((req.body || {}).text); return res.json({ ok: true, removed: n }); }
+  catch (e) { console.error('[maya-forget]', e.message); return res.status(502).json({ error: 'forget_failed' }); }
+});
 app.post('/api/admin/maya-remember', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
   let user;
   try { user = await requireAdmin(req); }

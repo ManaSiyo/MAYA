@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 270 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 271 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -71,6 +71,38 @@ campaign table, warnings, ticker) through Windsor, per connector. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.69 (Claude): Maya more capable, and the memory glitch fixed
+
+- THE MEMORY GLITCH: her memory lived inside `ctx`, which is
+  JSON.stringify(ctx).slice(0, 14000). On a busy day leads + campaigns +
+  submissions pushed past 14k and her memory (added last) was silently
+  truncated off the prompt. Fixed: memory is pulled OUT into `memoryLines`
+  and concatenated after the (now 12k) capped snapshot, so it is ALWAYS
+  spoken to her in full. Capacity raised to 60 recent items.
+- FOUR TOOLS now (session `tools` + client handlers): remember, forget
+  (new, /api/admin/maya-forget removes matching items), note_lead (now
+  also refreshes the migrated Lead Station live via loadMkt), and
+  draft_email (new) which opens a prefilled Gmail compose in the browser,
+  never auto-sends (honors drafts-only). Tool events are handled robustly:
+  the primary response.function_call_arguments.done AND a fallback scan of
+  response.done output items, deduped by call_id.
+- THE BACKBONE: her instructions now carry a plain-language description of
+  how MAYA is built (the pages, Cloud Run proxy, Firebase, analytics
+  sources, the free-tool business model) so she can help troubleshoot and
+  explain, while being told she cannot change code.
+- WHY THINGS WEREN'T SHOWING: nothing was blocked. cloudbuild.yaml deploys
+  BOTH server and Firebase Hosting on a push to maya-v2, gated by
+  ai-routing + fabric-sourcing + node --check (all pass). v13.68's
+  migration/pills were committed after his screenshots; a push + a
+  hard-refresh shows them (version badge should read 13.69).
+
+STILL OPEN (told to Fromsa):
+- Gmail READ (so she fills leads from his inbox) needs Gmail OAuth on the
+  server, a real setup with a scope/consent change; draft_email covers
+  writing without it. Green step to be given when he wants it.
+- Promote the cabinet drawer to the real MAYA app; favorites clean submit
+  card; fabrics UI pass; retire marketing.html.
 
 ## v13.68 (Claude): Marketing migrated into Admin, App Check wired
 

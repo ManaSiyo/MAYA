@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.68">
+<meta name="maya-version" content="13.69">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -535,9 +535,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-24f">
+  <details class="fold" id="changes-fold" data-latest="2026-08-24g">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 24</b>Maya grew hands and a longer memory. She can act now: draft an email and open it ready in Gmail for you to send, write and update a lead in the Lead Station by name while you talk, remember a fact, and forget one when you ask. Her memory had a quiet glitch, it lived inside a snapshot that got trimmed when the day was busy, so it could vanish; now it is kept whole and always spoken to her in full. And she knows the backbone of MAYA itself, the pages, the server, where the numbers come from, so she can help you think through what is broken, not just read the score.</div>
     <div class="chg"><b>Aug 24</b>Marketing moved in. Everything the Marketing page carried, the Ad Campaigns with their D, W and M and the live chart, the Lead Station with its CTAs, the Sources of traffic and the Bottom Line, now lives here in Admin under Users and traffic; Marketing stays up until it is retired. The pills pop now, manasiyo.com white and MAYA blue and bold, stronger than the label beside them. The drawer widened to match MAYA's own and every section title wears the logo blue. And App Check is wired and waiting: the moment its key is set, only the real MAYA site can reach the database.</div>
     <div class="chg"><b>Aug 24</b>Maya came home to the drawer, and she can act now. The star sits at the floor of the Admin drawer again; tap it and the line opens, a small chip staying on screen while she listens so she keeps talking even with the drawer closed, until you tap it off. She has a memory of her own now and two hands: tell her something worth keeping and she remembers it for next time; tell her what happened with a lead, that you called them or they want a fitting, and she writes it straight into the Lead Station by name. The drawer itself was consolidated, the vault is one Firebase line, Behind the scenes is a single Cloud Run door in light blue, and the outside tools are the Google Ads and Meta Ads managers and the Wix dashboard. Users and traffic now pairs every window the way Marketing does, manasiyo.com in white beside MAYA in blue.</div>
     <div class="chg"><b>Aug 24</b>The voice moved into the star itself, and the page grew a bottom line. Double click the logo at Admin's top left and Maya answers, greeting you first so a working line is never a silent mystery; the star breathes while she listens, one click hangs up. She scans everything now: the marketing numbers, the leads and what they want, the submissions, what shipped recently, and she knows what day it is in San Francisco; she will even ask you a question back when it sharpens the answer. And at the foot of Marketing sits The bottom line: the week as one funnel, paid clicks to manasiyo.com to MAYA to leads with the survival rate at each step, what a lead costs against last week, the cheapest campaign that actually delivers, how much of the site steps into MAYA, and which day of the week brings people. All of it arithmetic over numbers already on the page, live on every refresh, never waiting on a model.</div>
@@ -1323,22 +1324,53 @@ async function _voiceTool(name, args){
         body:JSON.stringify({lead:args.lead||'', note:args.note||'',
           contact:(args.contact&&args.contact!=='none')?args.contact:''})});
       const j=await r.json().catch(()=>({}));
+      // refresh the migrated Lead Station so the change shows live
+      try{ if(window.loadMkt) window.loadMkt(); }catch(_){}
       return r.ok&&j.ok ? {ok:true, noted:args.lead} : {ok:false, error:j.error||('note '+r.status)};
+    }
+    if(name==='forget'){
+      const r=await fetch('/api/admin/maya-forget',{method:'POST',
+        headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
+        body:JSON.stringify({text:args.text||''})});
+      const j=await r.json().catch(()=>({}));
+      return r.ok&&j.ok ? {ok:true, removed:j.removed} : {ok:false, error:j.error||('forget '+r.status)};
+    }
+    if(name==='draft_email'){
+      const to=(args.to||'').trim();
+      const url='https://mail.google.com/mail/?view=cm&fs=1'+
+        (to?'&to='+encodeURIComponent(to):'')+
+        '&su='+encodeURIComponent(args.subject||'')+
+        '&body='+encodeURIComponent(args.body||'');
+      try{ window.open(url,'_blank','noopener'); }catch(_){}
+      return {ok:true, opened:true, note:'Draft opened in Gmail for review; not sent.'};
     }
   }catch(e){ return {ok:false, error:String(e&&e.message||e)}; }
   return {ok:false, error:'unknown tool'};
 }
+async function _voiceRunCall(dc, name, call_id, argStr){
+  let args={}; try{ args=JSON.parse(argStr||'{}'); }catch(_){}
+  const out=await _voiceTool(name, args);
+  try{
+    dc.send(JSON.stringify({type:'conversation.item.create',
+      item:{type:'function_call_output', call_id:call_id, output:JSON.stringify(out)}}));
+    dc.send(JSON.stringify({type:'response.create'}));
+  }catch(_){}
+}
 function _voiceOnMessage(dc){
+  const seen=new Set();
   return async (ev)=>{
     let m; try{ m=JSON.parse(ev.data); }catch(_){ return; }
-    if(m.type==='response.function_call_arguments.done'){
-      let args={}; try{ args=JSON.parse(m.arguments||'{}'); }catch(_){}
-      const out=await _voiceTool(m.name, args);
-      try{
-        dc.send(JSON.stringify({type:'conversation.item.create',
-          item:{type:'function_call_output', call_id:m.call_id, output:JSON.stringify(out)}}));
-        dc.send(JSON.stringify({type:'response.create'}));
-      }catch(_){}
+    // primary path: the arguments-done event
+    if(m.type==='response.function_call_arguments.done' && m.call_id && !seen.has(m.call_id)){
+      seen.add(m.call_id); await _voiceRunCall(dc, m.name, m.call_id, m.arguments); return;
+    }
+    // fallback: scan a completed response for any function_call items
+    if(m.type==='response.done' && m.response && Array.isArray(m.response.output)){
+      for(const it of m.response.output){
+        if(it.type==='function_call' && it.call_id && !seen.has(it.call_id)){
+          seen.add(it.call_id); await _voiceRunCall(dc, it.name, it.call_id, it.arguments);
+        }
+      }
     }
   };
 }
