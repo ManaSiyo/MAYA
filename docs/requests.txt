@@ -16,6 +16,31 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, THE ROOM IN THE FAMILY, REAL CLO, HONEST TODAY (v13.64)
+
+[x] "The circles should be the hamburger's size and height, pinned to the
+    drawer's bezel, and the window under them should consume the whole
+    drawer, no gap; Avatar, Pinterest, Fabrics; the pill should just say
+    Projects." Done on the playground.
+[x] "The top right arrow should be smaller and beside manasiyo.com, one
+    row, MAYA in blue, remove the repeated second row." Done.
+[x] "Today's stats are not showing; the Wix dashboard shows today." He was
+    right: a timezone bug. Wix counts days in California time and the
+    server was counting in UTC, so every evening looked empty. Fixed;
+    verified against the live Wix API.
+[x] "Move the lead buttons into their own CTA column and recommend the
+    move." Done: the recommended move heads the column, the buttons under.
+[x] "Operations Room: same header family as everywhere, logo included,
+    Operations Room top left with beta under it; kill the dead pill at the
+    bottom; kill the Plan B pill; the plan line itself should switch; audit
+    for dead buttons." All done: the dead pill was an empty toast sliver,
+    and every onclick resolves.
+[x] "Find closest CLO should look into the CLO assets themselves." Wired:
+    with a CLO-SET API token on the server, Plan B searches the real
+    library in place. CLO-SET's public CONNECT site refuses outside
+    connections and has no open search API, so until the token is set the
+    panel says so and offers the CONNECT search link.
+
 AUGUST 24, 2026, CENTERED TERMS AND THE AI DISCLOSURES (v13.63)
 
 [x] "The document should be centered, everything centered." Done, in the

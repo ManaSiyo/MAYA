@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 258 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 263 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -71,6 +71,44 @@ campaign table, warnings, ticker) through Windsor, per connector. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.64 (Claude): the room in the family, real CLO, honest today
+
+- OPS HEADER IS THE FAMILY'S: fixed top bar like Marketing and Admin,
+  logo-208 + "Operations Room" (Cormorant 20px, .22em caps) with "Beta"
+  beneath, top left, linking back to the Systems Map. The centered title is
+  gone; the centered line is the PLAN and clicking it switches plans
+  (setPlan(getPlan()==='A'?'B':'A')). The Plan pill in the header is gone;
+  the drawer's data-plan pills remain. The "dead pill" at the bottom of
+  every screenshot was the EMPTY #toast peeking above the floor
+  (translateY(140%) leaves ~10px visible); it is visibility:hidden until
+  .show now. Dead-button audit: every onclick resolves to a defined
+  function.
+- PLAN B ASKS THE REAL LIBRARY: new POST /api/admin/clo-search (admin,
+  rate limited). CLO-SET's public CONNECT marketplace refuses outside
+  fetches and has no open search API; the honest path is CLO-SET's account
+  API. When CLOSET_API_TOKEN + CLOSET_SEARCH_URL ({q} placeholder) are set
+  on Cloud Run the proxy searches Fromsa's workroom and the panel renders
+  the items in place; until then it answers clo_not_connected and the page
+  says so, offering the CONNECT search link and the local manifest.
+- TODAY WAS A TIMEZONE BUG: Wix reports days in the SITE's timezone.
+  day(0) used UTC, so from 5pm Pacific the server hunted for a row that
+  cannot exist yet while the Wix dashboard showed the day fine (verified
+  live: Aug 23 row present with 41 sessions while UTC said Aug 24).
+  wixInsights now computes all dates via Intl.DateTimeFormat en-CA in
+  WIX_TZ (default America/Los_Angeles).
+- MARKETING, ONE ROW: "Manasiyo.com ↗ · MAYA", the jump small and beside
+  the name (preventDefault + stopPropagation so the fold does not toggle),
+  MAYA in .grp-maya #a9c9ff, the pair-legend row removed.
+- LEAD STATION CTA COLUMN: the buttons moved out of Who into a CTA column
+  headed by the recommended move (.lead-rec, deterministic: no email →
+  Call; <2 days → Email now, first touch; <7 → follow up; else call or
+  revive). Note row colspan is 4.
+- PLAYGROUND CABINET, FULL BLEED: circles at -8px into the drawer's
+  padding so they ride the bezel at the hamburger's height; order Avatar,
+  Pinterest, Fabrics; .pg-folder lost its box (no border/background,
+  margin 0 -12px) so the open pane consumes the whole drawer; the pill
+  always says just "Projects".
 
 ## v13.63 (Claude): centered terms, the AI and face disclosures
 

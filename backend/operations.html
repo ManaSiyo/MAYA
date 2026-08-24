@@ -77,11 +77,17 @@ window.addEventListener('message', function(e){
     min-height:100%;
   }
   .wrap{max-width:1320px;margin:0 auto;padding:24px 28px 64px}
-  header.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
-  .brand{display:flex;align-items:baseline;gap:14px}
-  .brand h1{font-family:'Cormorant Garamond',serif;font-size:24px;letter-spacing:.22em;font-weight:500;margin:0;color:rgba(255,255,255,0.92)}
+  /* v13.64: the same fixed top bar as Marketing and Admin, logo included. */
+  header.top{position:fixed;top:0;left:0;right:0;height:60px;z-index:50;display:flex;align-items:center;
+    justify-content:space-between;padding:0 28px;pointer-events:none}
+  header.top > *{pointer-events:auto}
+  .brand{display:flex;align-items:center;gap:10px;margin-left:-8px}
+  .brand img{width:52px;height:52px;object-fit:contain;opacity:0.92}
+  .brand .brand-words{display:flex;flex-direction:column;gap:2px}
+  .brand h1{font-family:'Cormorant Garamond',serif;font-size:20px;letter-spacing:.22em;font-weight:400;margin:0;
+    color:rgba(255,255,255,0.9);text-transform:uppercase}
   .brand .sub{font-size:9px;letter-spacing:.32em;color:var(--faint);text-transform:uppercase}
-  .room-title{text-align:center;margin:18px 0 24px}
+  .room-title{text-align:center;margin:44px 0 24px}
   .room-title .ct{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:26px;letter-spacing:.18em;
     text-transform:uppercase;color:rgba(255,255,255,0.92)}
   .room-title .cs{display:block;margin-top:4px;font-size:9px;letter-spacing:.42em;text-transform:uppercase;color:var(--faint)}
@@ -280,10 +286,11 @@ window.addEventListener('message', function(e){
 
   /* toast */
   #toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(140%);
+    visibility:hidden;opacity:0;
     background:rgba(8,10,20,0.96);border:0.5px solid var(--hair-hi);border-radius:100px;padding:11px 22px;
     font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.04em;z-index:60;transition:.3s;max-width:80vw;text-align:center;
     backdrop-filter:blur(22px) saturate(180%);box-shadow:var(--pill-shadow)}
-  #toast.show{transform:translateX(-50%) translateY(0)}
+  #toast.show{transform:translateX(-50%) translateY(0);visibility:visible;opacity:1}
 
   /* v12.5: when embedded in backend.html the outer MAYA banner and outer
      hamburger are the only branding, hide the inner duplicates. The Plan
@@ -304,15 +311,16 @@ window.addEventListener('message', function(e){
 <div class="hpane hpane-main">
 <div class="wrap">
   <header class="top">
-    <a class="brand" href="/status.html" style="text-decoration:none;color:inherit" title="Back to the Systems Map"><h1>MAYA</h1><span class="sub">Mana Siyo</span></a>
+    <a class="brand" href="/status.html" style="text-decoration:none;color:inherit" title="Back to the Systems Map"><img src="/aesthetics/ui/logo-208.png" alt=""><span class="brand-words"><h1>Operations Room</h1><span class="sub">Beta</span></span></a>
     <div style="display:flex;align-items:center;gap:8px">
-      <button class="pill sm plan-btn" id="plan-btn" onclick="toggleDrawer(true)" title="Switch plan in the menu">Plan A</button>
       <button class="icon-btn hamburger" onclick="toggleDrawer(true)" title="Menu">
         <span class="hamburger-icon"><span></span><span></span><span></span></span>
       </button>
     </div>
   </header>
-  <div class="room-title"><span class="ct">Operations Room Beta</span><span class="cs" id="room-sub">Plan A · Grounded Pattern Pipeline</span></div>
+  <!-- v13.64: the room's name lives top left with the logo now; this line is
+       the PLAN, and clicking it switches to the other one. -->
+  <div class="room-title"><span class="cs" id="room-sub" onclick="setPlan(getPlan()==='A'?'B':'A')" style="cursor:pointer" title="Click to switch plan">Plan A · Grounded Pattern Pipeline</span></div>
 
   <div id="plan-a-view">
   <div class="cols">
@@ -748,8 +756,39 @@ async function startCloMatch(){
   const head='<div style="text-align:left;font-size:12px;line-height:1.9;color:var(--dim)">'
     +'Seen: <b style="color:var(--ink);font-weight:400">'+esc(g.type||'?')+'</b>'
     +(g.subtype?' · '+esc(g.subtype):'')+' &rarr; grammar <b style="color:var(--accent);font-weight:400">'+esc(typeKey)+'</b><br><br>';
+  // v13.64: ask MAYA's CLO-SET proxy first: with a CLO-SET API token on the
+  // server this searches the real workroom assets. Without one it says so
+  // and the local manifest plus a CONNECT search link stand in.
+  const q=[g.type,g.subtype].concat((g.attributes||[]).slice(0,3)).filter(Boolean).join(' ');
+  let closet=null, closetWhy='';
+  try{
+    const r=await fetch('/api/admin/clo-search',{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+getKey()},
+      body:JSON.stringify({q})});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok&&j.ok) closet=j.items||[];
+    else closetWhy=j.error||('clo '+r.status);
+  }catch(e){ closetWhy=String(e&&e.message||e); }
+  const connectLink='https://connect.clo-set.com/search?keyword='+encodeURIComponent(q);
+  if(closet&&closet.length){
+    out.innerHTML=head+'From the CLO-SET library, closest to "'+esc(q)+'":<br><br>'+
+      closet.map((it,i)=>'<div class="panel-row" style="text-align:left">'+
+        (it.thumb?'<img src="'+esc(it.thumb)+'" alt="" style="width:34px;height:34px;object-fit:cover;border-radius:8px;vertical-align:middle;margin-right:10px">':'')+
+        '<span class="q">'+(i+1)+'</span> &nbsp;'+(it.url?'<a href="'+esc(it.url)+'" target="_blank" rel="noopener" style="color:var(--ink)">'+esc(it.name)+'</a>':esc(it.name))+
+        '</div>').join('')+'</div>';
+    return;
+  }
+  if(closet&&!closet.length){
+    out.innerHTML=head+'The CLO-SET library answered but found nothing for "'+esc(q)+'". '+
+      '<a href="'+connectLink+'" target="_blank" rel="noopener" style="color:var(--accent)">Search CLO-SET CONNECT for it</a>.</div>';
+    return;
+  }
   if(!lib.length){
-    out.innerHTML=head+'The CLO library is empty so far. Add entries to <b>aesthetics/operations/clo-library.js</b> (the format is documented in the file) and this panel ranks them against the photo.</div>';
+    out.innerHTML=head+
+      (closetWhy==='clo_not_connected'
+        ? 'MAYA is not connected to your CLO-SET account yet, so it cannot pull the real assets. Issue an API token in the CLO-SET dashboard and set it on the server, and this panel searches your library directly. Meanwhile: '
+        : 'The CLO-SET search did not answer ('+esc(closetWhy)+'). Meanwhile: ')+
+      '<a href="'+connectLink+'" target="_blank" rel="noopener" style="color:var(--accent)">search CLO-SET CONNECT for "'+esc(q)+'"</a>.</div>';
     return;
   }
   const ranked=lib.map(item=>{

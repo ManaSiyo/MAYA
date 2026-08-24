@@ -2359,7 +2359,12 @@ const WIX_SITE = process.env.WIX_SITE_ID || 'a4ad1a21-d8dc-4986-8ac2-9db20fbf366
 async function wixInsights() {
   if (!WIX_KEY) return { connected: false, why: 'no WIX_API_KEY set' };
   try {
-    const day = (n) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
+    // v13.64: Wix reports days in the SITE's timezone. Computing "today" in
+    // UTC made the evening look empty: at 6pm Pacific, UTC is already
+    // tomorrow, so the row the dashboard was showing could never be found.
+    const WIX_TZ = process.env.WIX_TZ || 'America/Los_Angeles';
+    const day = (n) => new Intl.DateTimeFormat('en-CA', { timeZone: WIX_TZ })
+      .format(new Date(Date.now() - n * 86400000));
     const qs = 'dateRange.startDate=' + day(27) + '&dateRange.endDate=' + day(0) +
       '&measurementTypes=TOTAL_SESSIONS&measurementTypes=TOTAL_UNIQUE_VISITORS' +
       '&measurementTypes=TOTAL_FORMS_SUBMITTED&measurementTypes=CLICKS_TO_CONTACT';
@@ -2779,6 +2784,44 @@ function computeMarketingWarnings(out, windsor) {
 // Cached for an hour. On any failure the endpoint fails plainly and the
 // page renders the deterministic warnings alone: never a guess.
 // ═══════════════════════════════════════════════════════════════════════════
+// ── v13.64: the CLO route's real library. CLO-SET's public CONNECT
+// marketplace has no open search API (the site refuses outside fetches), so
+// the honest wiring is CLO-SET's own account API: Fromsa issues a token in
+// the CLO-SET dashboard, sets CLOSET_API_TOKEN (and CLOSET_SEARCH_URL, the
+// documented search endpoint with {q} where the words go), and this proxy
+// searches his workroom assets. Until then it says plainly that it is not
+// connected, and the page falls back to the local manifest plus a CONNECT
+// link. ──
+app.post('/api/admin/clo-search', requireAuthHeader, express.json({ limit: '16kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  const q = String((req.body && req.body.q) || '').trim().slice(0, 200);
+  if (!q) return res.status(400).json({ error: 'q_required' });
+  const token = process.env.CLOSET_API_TOKEN, urlT = process.env.CLOSET_SEARCH_URL;
+  if (!token || !urlT) return res.status(503).json({ error: 'clo_not_connected' });
+  try {
+    const r = await fetch(urlT.replace('{q}', encodeURIComponent(q)), {
+      headers: { 'Authorization': 'Bearer ' + token }, signal: AbortSignal.timeout(15000),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error('clo-set ' + r.status);
+    // best-effort mapping over whatever shape the endpoint returns
+    const rows = Array.isArray(j) ? j : (j.items || j.results || j.data || j.list || []);
+    const items = rows.slice(0, 12).map(it => ({
+      name: String(it.name || it.title || it.itemName || it.fileName || 'untitled').slice(0, 140),
+      thumb: String(it.thumbnail || it.thumbnailUrl || it.image || it.imageUrl || '').slice(0, 500),
+      url: String(it.url || it.link || it.itemUrl || '').slice(0, 500),
+    }));
+    return res.json({ ok: true, q, items });
+  } catch (e) {
+    console.error('[clo-search] failed —', String(e.message).slice(0, 200));
+    return res.status(502).json({ error: 'clo_search_failed' });
+  }
+});
+
 // ── v13.62: the Lead Station. A summary per lead, a note file per lead, and
 // an email draft composed from both. MAYA never sends the email: the page
 // opens a prefilled Gmail compose and Fromsa presses Send himself. ──

@@ -851,7 +851,10 @@ ok('an unnamed user row says it will take a name at next sign in',
 ok('marketing names whose traffic it shows',
   // v13.56: one combined section for both properties, and the sources say
   // they are MAYA's own.
-  MKT_SOURCE.includes('Manasiyo.com &#183; MAYA') &&
+  // v13.64: one row, the jump beside the name, MAYA in the logo blue
+  MKT_SOURCE.includes('Manasiyo.com<a class="wix-jump"') &&
+  MKT_SOURCE.includes('class="grp-maya"') &&
+  !MKT_SOURCE.includes('pair-legend">manasiyo.com') &&
   MKT_SOURCE.includes('Sources of traffic, MAYA') &&
   MKT_SOURCE.includes('WINDSOR_API_KEY'));
 ok('ads sit above the sources and the four week bars are gone',
@@ -1248,9 +1251,37 @@ ok('ops: Plan B mirrors Plan A, photo left, closest CLO reference right, honest 
     OPS_SOURCE.includes('function _syncPlanB(') &&
     OPS_SOURCE.includes('function startCloMatch(') &&
     OPS_SOURCE.includes('/aesthetics/operations/clo-library.js') &&
-    OPS_SOURCE.includes('The CLO library is empty') &&
+    OPS_SOURCE.includes('search CLO-SET CONNECT for') &&
     existsSync(join(ROOT, 'aesthetics/operations/clo-library.js')) &&
     readFileSync(join(ROOT, 'aesthetics/operations/clo-library.js'), 'utf8').includes('window.CLO_LIBRARY')));
+// ── v13.64 · the room joins the family for real, and the numbers tell the day ─
+ok('ops: family header with the logo, the plan line switches plans, no dead pill',
+  !OPS_SOURCE || (
+    OPS_SOURCE.includes('logo-208.png') &&
+    OPS_SOURCE.includes('<h1>Operations Room</h1>') &&
+    OPS_SOURCE.includes('<span class="sub">Beta</span>') &&
+    !OPS_SOURCE.includes('id="plan-btn"') &&
+    OPS_SOURCE.includes(`onclick="setPlan(getPlan()==='A'?'B':'A')"`) &&
+    /#toast\{[^}]*visibility:hidden/.test(OPS_SOURCE)));
+ok('the CLO route asks the real CLO-SET library through the server',
+  SERVER_SOURCE.includes("app.post('/api/admin/clo-search'") &&
+  SERVER_SOURCE.includes('CLOSET_API_TOKEN') &&
+  SERVER_SOURCE.includes('clo_not_connected') &&
+  (!OPS_SOURCE || (OPS_SOURCE.includes("/api/admin/clo-search") &&
+    OPS_SOURCE.includes('connect.clo-set.com/search?keyword='))));
+ok('today counts in the site timezone, so the evening is never empty',
+  SERVER_SOURCE.includes("process.env.WIX_TZ || 'America/Los_Angeles'") &&
+  SERVER_SOURCE.includes('Intl.DateTimeFormat') &&
+  SERVER_SOURCE.includes('at 6pm Pacific, UTC is already'));
+ok('each lead carries a CTA column with the recommended move',
+  MKT_SOURCE.includes('<th>CTA</th>') &&
+  MKT_SOURCE.includes('class="lead-rec"') &&
+  MKT_SOURCE.includes("'Email now &#183; first touch'"));
+ok('the cabinet consumes the drawer: circles at the bezel, panes edge to edge, Pinterest in the middle',
+  PLAYGROUND_SOURCE.includes('the folder consumes the whole drawer') &&
+  /pg-folder \{[^}]*border: none/.test(PLAYGROUND_SOURCE) &&
+  PLAYGROUND_SOURCE.indexOf('id="pg-tab-pinterest"') < PLAYGROUND_SOURCE.indexOf('id="pg-tab-fabrics"') &&
+  PLAYGROUND_SOURCE.includes(">Projects</div>"));
 ok('deterministic warnings exist and never depend on a model call',
   SERVER_SOURCE.includes('function computeMarketingWarnings(') &&
   SERVER_SOURCE.includes('is enabled but has served nothing since') &&

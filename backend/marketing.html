@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Marketing</title>
-<meta name="maya-version" content="13.63">
+<meta name="maya-version" content="13.64">
 <script>
 // v13.43: this page NEVER clears the shared sign in. Admin owns the deploy
 // sign-out; marketing clearing it too was why the page kept asking again.
@@ -106,8 +106,11 @@ try {
     transition:transform .2s}
   details.fold:not([open]) summary::after{transform:rotate(-90deg)}
   /* v13.59: the jump to the Wix Analytics dashboard, top right of the section. */
-  .wix-jump{position:absolute;top:-2px;right:2px;z-index:2;
-    font-family:'Jost',sans-serif;font-size:13px;text-decoration:none;
+  h2.grp .grp-maya{color:#a9c9ff}
+  /* v13.64: the jump is small and rides beside the name, inside the title row. */
+  .wix-jump{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;
+    width:16px;height:16px;margin:0 6px 0 5px;
+    font-family:'Jost',sans-serif;font-size:10px;text-decoration:none;
     color:var(--dim);border:0.5px solid var(--line);border-radius:100px;
     width:26px;height:26px;display:flex;align-items:center;justify-content:center;
     transition:all .2s}
@@ -169,6 +172,7 @@ try {
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   /* v13.62: the Lead Station. Small round CTAs under each name: draft the
      next email, place the call, drop a note. Same glass as every pill. */
+  .lead-rec{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim)}
   .lead-ctas{display:flex;gap:6px;margin-top:6px}
   .lead-cta{width:26px;height:22px;border-radius:100px;border:0.5px solid var(--hair);background:transparent;
     color:var(--dim);cursor:pointer;font-size:11px;line-height:1;display:inline-flex;align-items:center;justify-content:center;
@@ -249,10 +253,12 @@ try {
   <!-- v13.56: one section for both properties. Each pill holds two numbers:
        manasiyo.com first, then MAYA, same window. -->
   <details class="fold" id="visitors-fold" open>
-    <summary><h2 class="grp">Manasiyo.com &#183; MAYA</h2></summary>
-    <a class="wix-jump" href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/analytics/highlights?referralInfo=sidebar"
-       target="_blank" rel="noopener noreferrer" title="Open the Wix Analytics dashboard">&#8599;</a>
-    <div class="pair-legend">manasiyo.com <span style="margin:0 4px">|</span> <span class="lg-maya">maya</span></div>
+    <!-- v13.64: ONE row. The little arrow rides beside manasiyo.com and jumps
+         to the Wix Analytics dashboard; MAYA wears the logo blue. The second
+         legend row said the same thing twice and left. -->
+    <summary><h2 class="grp">Manasiyo.com<a class="wix-jump" href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/analytics/highlights?referralInfo=sidebar"
+       rel="noopener noreferrer" title="Open the Wix Analytics dashboard"
+       onclick="event.preventDefault();event.stopPropagation();window.open(this.href,'_blank','noopener')">&#8599;</a><span style="margin:0 2px">&#183;</span><span class="grp-maya">MAYA</span></h2></summary>
     <div id="wix-tiles" class="tiles"></div>
     <div id="wix-note" class="note" style="display:none"></div>
   </details>
@@ -433,18 +439,29 @@ function paintLeads(l) {
   // each name: draft the next email (opens Gmail compose, never sends),
   // place the call, drop a note that steers the next draft.
   _leadList = l.list;
-  tb.innerHTML = '<tr><th>Who</th><th>Reach them</th><th>Notes</th></tr>' +
+  // v13.64: the moves live in their own CTA column, with the recommended one
+  // named above the buttons. The recommendation is deterministic, from the
+  // lead's age and what there is to reach them with.
+  const rec = x => {
+    const days = Math.floor((Date.now() - new Date(x.ts)) / 86400000);
+    if (!x.email && x.phone) return 'Call them';
+    if (days < 2) return 'Email now &#183; first touch';
+    if (days < 7) return 'Email &#183; follow up';
+    return x.phone ? 'Call &#183; ' + days + ' days quiet' : 'Email &#183; revive';
+  };
+  tb.innerHTML = '<tr><th>Who</th><th>Reach them</th><th>Notes</th><th>CTA</th></tr>' +
     l.list.map((x, i) =>
       '<tr><td style="white-space:nowrap">' + esc(x.name) +
-      '<div class="lead-when">' + esc(when(x.ts)) + '</div>' +
+      '<div class="lead-when">' + esc(when(x.ts)) + '</div></td>' +
+      '<td>' + esc(x.email || x.phone || '') + '</td>' +
+      '<td class="lead-note" title="' + esc(x.wrote || x.note || '') + '">' + esc(x.note || '') + '</td>' +
+      '<td style="white-space:nowrap"><div class="lead-rec">' + rec(x) + '</div>' +
       '<div class="lead-ctas">' +
         (x.email ? '<button class="lead-cta" id="lead-mail-' + i + '" onclick="draftLead(' + i + ')" title="Draft the next email (opens Gmail, nothing is sent)">&#9993;</button>' : '') +
         (x.phone ? '<a class="lead-cta" href="tel:' + esc(x.phone) + '" onclick="leadContact(' + i + ',\'call\')" title="Call ' + esc(x.phone) + '">&#9742;</a>' : '') +
         (x.email ? '<button class="lead-cta" onclick="toggleLeadNote(' + i + ')" title="Add a note; the next draft reads it">&#9998;</button>' : '') +
-      '</div></td>' +
-      '<td>' + esc(x.email || x.phone || '') + '</td>' +
-      '<td class="lead-note" title="' + esc(x.wrote || x.note || '') + '">' + esc(x.note || '') + '</td></tr>' +
-      '<tr class="lead-note-row" id="lead-note-row-' + i + '" style="display:none"><td colspan="3">' +
+      '</div></td></tr>' +
+      '<tr class="lead-note-row" id="lead-note-row-' + i + '" style="display:none"><td colspan="4">' +
         '<div class="lead-note-box"><textarea id="lead-note-text-' + i + '" placeholder="Anything you know or agreed with them; the next email draft reads these notes."></textarea>' +
         '<button class="lead-cta" style="width:auto;padding:0 12px" onclick="saveLeadNote(' + i + ')">Save</button></div>' +
         '<div class="lead-note-saved" id="lead-note-saved-' + i + '"></div></td></tr>'
