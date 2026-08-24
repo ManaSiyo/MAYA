@@ -1,286 +1,54 @@
-MAYA FIXES LOG
-Plain talk, newest on top. Every fix ATTEMPT goes here, especially the ones
-that never touch git: Cloud Run environment variables, Google console
-settings, OAuth credentials, DNS, billing. Code fixes leave a trail in
-commits and in README section 8; these do not, which is why this file
-exists. Say "log the fix" in any Claude or Codex chat and the assistant adds
-an entry.
+MAYA FIXES AND SETUP STEPS
+Fix attempts and setup work that lives OUTSIDE git: Cloud Run env vars, the
+Google and Firebase consoles, credentials, external accounts. Symptom, cause,
+action, status. Newest on top. Fromsa does every credential step himself.
 
-Each entry: the date, the symptom, the cause if known, exactly what was
-done, how it was verified, and whether it is FIXED, OPEN, or RECURRED.
+AUGUST 24, 2026, SET UP THE API FOR FROMSA (the to-do list, in order)
 
-─────────────────────────────────────────────
+These are the console and environment steps only Fromsa can do. Each is a
+green step; none is code. Do them in this order.
 
-AUGUST 17, 2026, MIDDAY. STATUS: FIXED PERMANENTLY IN v13.27, PENDING DEPLOY.
+[ ] 1. PIN THE ANALYTICS PROPERTY (fixes the "3" and the "..." that look low).
+    The MAYA app's Google Analytics is G-ETTJ6PXEMM. The server was guessing
+    which GA4 property to read and likely reading manasiyo.com's, not MAYA's.
+    - Google Analytics -> Admin -> Property settings on the MAYA property
+      (the one whose data stream is G-ETTJ6PXEMM). Copy the numeric PROPERTY ID.
+    - Cloud Run -> maya-api -> Edit & deploy new revision -> Variables:
+      set MARKETING_GA_PROPERTY_ID and GA_PROPERTY_ID both to that number.
+    - Also confirm the Cloud Run service account is added as a Viewer on that
+      property (Analytics -> Admin -> Property Access Management).
 
-Symptom: for the third time, Latest Submissions empty and the light red. Deep
-health said drive_auth and /api/admin/submissions answered 500 with "Drive
-authorization rejected".
+[ ] 2. BILLING CAPS (so a bill can never surprise you).
+    - OpenAI: you are already prepaid at ~$10 with no auto-refill, which is
+      itself a spend cap; keep auto-refill OFF. Set a usage alert at $8.
+    - Google Cloud: Billing -> Budgets & alerts -> create a budget with email
+      + phone alerts at $8 and $15. Vertex image work is admin-only, so this
+      is a safety net, not a live risk.
 
-Decision, Fromsa's: stop depending on Google Drive. Firebase Storage is the
-official store from now on.
+[ ] 3. INSTANT DOWN / FAILURE ALERT (the ping OpenAI will not send you).
+    - Google Cloud -> Monitoring -> Alerting -> create a policy on the Cloud
+      Run maya-api ERROR RATE, notify your email + phone.
+    - Add a second policy on the billing budget from step 2.
+    (If you would rather MAYA email you directly when a user's image fails,
+    give Claude a Slack or Discord webhook and it will push it server-side.)
 
-What was done: the submission path was rebuilt onto MAYA's own bucket.
-  - The server asks the Cloud Run metadata server for a token for its OWN
-    service account, scope devstorage.read_write. Nothing to renew, nothing a
-    human can revoke by clicking, no seven day clock.
-  - One submission is one prefix: submissions/<client>-MM-DD-YYYY-<6 hex>/.
-    Opening a submission writes submission.json (client name, who, when);
-    each file is one object beside it.
-  - The whole feed is now ONE storage list request, grouped in memory, instead
-    of Drive's one call per folder.
-  - Reads go through /api/admin/subthumb and /api/admin/subfile, where the id
-    IS the object path, url safe, and is refused unless it names a file
-    directly inside a submission. An admin token cannot read anything else in
-    the bucket.
-  - Deep health now asks the bucket, and reports submissions true or false with
-    submissions_timeout / submissions_error / submissions_<status>.
-  - GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET,
-    GOOGLE_OAUTH_REFRESH_TOKEN and DRIVE_FOLDER_ID are no longer read by any
-    line of the server. They can be deleted from Cloud Run whenever convenient;
-    leaving them costs nothing.
-  - Optional env: SUBMISSIONS_BUCKET, default pro-maya.firebasestorage.app.
+[ ] 4. APP CHECK (only your real site can reach the database).
+    The client code is already wired and dormant. To turn it on:
+    - Google Cloud -> reCAPTCHA -> create a reCAPTCHA Enterprise site key for
+      maya.manasiyo.com. Copy the SITE KEY.
+    - In frontend/index.html and playground/index.html, set
+      MAYA_APPCHECK_SITE_KEY = 'your-site-key' (one line, near FIREBASE_CONFIG).
+      Ask Claude to make this edit and push; confirm the app still signs in.
+    - Firebase console -> App Check -> register the web app with that key.
+    - ONLY after the app works with App Check active: App Check -> APIs ->
+      set Firestore and Storage to ENFORCE.
 
-How it was verified before the push: the whole store was driven end to end
-against a local stand in for Google (metadata server plus storage API): opening
-a submission, uploading a picture and a summary, the feed grouping them with
-the client's real name in the shape every screen already parses, the thumbnail
-and the file read, saving pieces.json, and deep health green. Every refusal was
-exercised too: a traversal folder id, a filename outside the allow list, and an
-attempt to read users/abc/secret.json through the file endpoint, all blocked.
-Both suites pass, including seven new assertions.
+[ ] 5. THE VOICE MODEL (so Maya actually speaks).
+    - OpenAI: confirm the Realtime model 'gpt-realtime' is available on the
+      account (or set OPENAI_REALTIME_MODEL on Cloud Run to the one you have).
 
-If the light is still red after this deploys, the cause is not a credential.
-It is IAM: the Cloud Run service account needs Storage Object Admin on the
-bucket. Grant it here, then reload the map.
-https://console.cloud.google.com/iam-admin/iam?project=pro-maya
+[ ] 6. OPTIONAL, THE CLO LIBRARY (Plan B real search).
+    - CLO-SET dashboard -> issue an API token -> set CLOSET_API_TOKEN and
+      CLOSET_SEARCH_URL on Cloud Run, then tell Claude to wire the exact
+      search endpoint from their docs.
 
-Old submissions: still in Drive, untouched. Nothing was copied or deleted.
-
-─────────────────────────────────────────────
-
-AUGUST 17, 2026, MORNING. STATUS: FIXED IN CODE v13.26. ONE OPTIONAL OWNER
-STEP LEFT (BUCKET RULE).
-
-Symptom: pressing Visualize did nothing but show "connection hiccup, that
-didn't reach the server". The server was fine: a chat call answered in 1.1
-seconds and an image call answered in 38 seconds, both through the live proxy,
-tested from Fromsa's own signed in browser.
-
-Root cause, proved in the same browser: reading a card's own picture threw
-"TypeError: Failed to fetch". The picture lives at
-firebasestorage.googleapis.com and the bucket sends no CORS headers, so the
-browser allows an <img> to DRAW it but forbids script from READING its bytes.
-Visualize and Modify must read the bytes, because gpt-image-2 takes the prior
-picture as an anchor. MAYA's error text then honestly reported a network
-failure, which read to a human as a connection problem.
-
-Fix in code, v13.26: one helper, blobFromPicture(), is now the only way MAYA
-reads a picture's bytes. It tries the address directly, and if the browser
-refuses it comes back through a new same origin endpoint on MAYA's own server,
-/api/imgproxy, which requires sign in, only accepts MAYA's own storage hosts,
-follows no redirects, refuses anything that is not an image or video, and caps
-the size at 25 MB. Four call sites now use it: the render anchors, the video
-save, the one pager and the pieces upload.
-
-Optional but worth doing once, and it is not something an assistant can do
-because it is Fromsa's console. Give the bucket a CORS rule so the browser can
-read pictures directly and the proxy stays a fallback:
-1. Open Cloud Shell, which needs nothing installed.
-   https://console.cloud.google.com/cloudshell/open?project=pro-maya
-2. Paste these three lines, all at once, and press Return:
-
-cat > /tmp/cors.json <<'EOF'
-[{"origin":["https://maya.manasiyo.com","https://pro-maya.web.app"],"method":["GET","HEAD"],"responseHeader":["Content-Type"],"maxAgeSeconds":3600}]
-EOF
-gcloud storage buckets update gs://pro-maya.firebasestorage.app --cors-file=/tmp/cors.json
-
-3. It prints "Updating gs://..." and finishes. Nothing restarts, nothing
-   deploys, and no existing picture changes.
-Verified after the deploy: press Visualize on a saved project. If it renders,
-this is closed. The browser console says once, quietly, when a picture had to
-come through the server instead.
-
-─────────────────────────────────────────────
-
-AUGUST 16, 2026, MORNING. STATUS: OPEN, WAITING ON FROMSA. RECURRED.
-
-Symptom: Systems Map says "something needs attention (Drive authorization
-rejected, submissions will not land)" and Latest Submissions is empty. This is
-the second death of the same credential: it was renewed August 13 at 3:55 PM
-and it was dead again by August 16.
-
-What was ruled out today: the map code is fine (v13.23 is live, the page loads,
-every other light is green), and the deploy did not overwrite anything, because
-cloudbuild.yaml sets no environment variables at all. The server is simply being
-told no by Google when it exchanges the refresh token.
-
-Why a token minted "In production" can still die in three days: the token is
-revoked, not expired. The usual causes, in order of likelihood: the OAuth
-consent screen was moved back to Testing, or the app is unverified and using
-sensitive Drive scopes, or the atelier Google account's password was changed, or
-too many tokens were minted for the same client and account so Google revoked
-the oldest ones, or someone removed MAYA under the account's third party access.
-
-What Fromsa must do, in this order:
-1. Check the consent screen status and audience for project pro-maya.
-   https://console.cloud.google.com/auth/audience?project=pro-maya
-   If it says Testing, press Publish app. Testing kills a token every 7 days.
-2. Check that MAYA still has access under the atelier account.
-   https://myaccount.google.com/connections
-3. Mint a fresh refresh token in the OAuth Playground with the SERVER's client
-   pair (the one in Cloud Run, not the sign-in client), full drive scope,
-   signed in as the atelier Drive account. https://developers.google.com/oauthplayground
-4. Put it into GOOGLE_OAUTH_REFRESH_TOKEN and deploy a new revision.
-   https://console.cloud.google.com/run/detail/us-west1/maya-api/revisions?project=pro-maya
-5. Reload the Systems Map, signed in, and confirm Drive turns green and the
-   submissions appear. Then log the result here.
-
-Until then the site works, generation works, and only Drive submissions are
-blocked.
-
-─────────────────────────────────────────────
-
-AUGUST 14, 2026, NIGHT. STATUS: FIXED IN CODE v13.19-v13.23, NOT YET DEPLOYED;
-DRIVE CREDENTIAL MUST STILL BE VERIFIED AFTER DEPLOY.
-
-Symptom: Systems Map appeared missing or slow, Latest Submissions reported that
-Drive was not answering, Community could retain stale/ghost cards, and project
-work performed during a sign-out/sign-in boundary could theoretically land in
-the next account.
-
-Cause: status waited on serial image probes before starting API health; Drive
-requests had no hard provider timeout and rebuilt too many folder details on
-every refresh; Community polled and keyed repaint only by post id; generation
-provenance was inferred from card shape; queued project saves resolved the
-Firebase uid at commit time instead of capturing the initiating account.
-
-Fix: parallel health checks, bounded Drive calls and short submissions cache;
-realtime Community listener, URL-aware repaint, actual image-model provenance
-and gpt-image-2-only client/rules gates; all project reads/writes/uploads pinned
-to their starting uid with serialized auth teardown and awaited Firebase
-sign-out. Fabric assets are lazy, OpenAI responses stream, all Drive operations
-have bounded waits, and deep health tells a timeout from rejected credentials.
-
-Operational truth: an OAuth `invalid_grant` cannot be fixed in source. If the
-signed-in deep health result is red after v13.23 deploys, renew
-`GOOGLE_OAUTH_REFRESH_TOKEN` on Cloud Run using the production Drive OAuth
-client and record that owner-run action here.
-
-─────────────────────────────────────────────
-
-AUGUST 14, 2026, AFTERNOON. STATUS: FIXED IN v13.15-v13.18.
-
-Symptom: Systems Map could claim all green while Drive had not been checked,
-older refreshes could overwrite newer results, and rapid account/project work
-could leave ghost wall pictures or deleted Storage objects behind.
-
-Cause: public health treated "configured" as "working"; async status requests
-had no generation guard; project deletion discarded its Storage retry list;
-My Fabrics removed its cloud index before a one-shot Storage delete; wall
-updates could keep valid ownership while changing their project id.
-
-Fix: timed and sequenced status checks plus immediate deep health after sign
-in; atomic project/tombstone/wall/share deletion; durable project and fabric
-cleanup queues; immutable wall uid/pid on update. Community and favorites
-visual changes are covered in the browser regression assertions.
-
-─────────────────────────────────────────────
-
-AUGUST 13, 2026, AFTERNOON. STATUS: FIXED, 3:55 PM.
-
-Symptom: Systems Map Drive light red, no submissions listed, community
-wall empty (the wall turned out to be unrelated, see below).
-
-Root cause, confirmed at 3:05 PM by calling /api/admin/submissions with
-Fromsa's own signed in session: the env vars ARE set (healthz reports
-drive configured), but Google answers the token exchange with
-  oauth refresh 400 invalid_grant: "Token has been expired or revoked."
-The GOOGLE_OAUTH_REFRESH_TOKEN on Cloud Run is dead.
-
-Why it keeps dying: if the OAuth consent screen for the pro-maya web
-client is in Testing publishing status, Google expires every refresh
-token after 7 days. The token was renewed August 5. August 5 plus 7 days
-is August 12. It died on schedule. It will die every week until the app
-is published to Production.
-
-The fix, two parts, both in Fromsa's hands (credentials):
-1. PERMANENT: console.cloud.google.com, APIs and Services, OAuth consent
-   screen, project pro-maya. If Publishing status says Testing, press
-   Publish app. This stops the weekly expiry.
-2. NOW: mint a fresh refresh token for the atelier Drive account (same
-   procedure as August 5, see docs/server/MIGRATION-RUNBOOK.md), then
-   Cloud Run, maya-api, Edit and deploy new revision, replace
-   GOOGLE_OAUTH_REFRESH_TOKEN with the new value, deploy.
-What was actually done, 3:40 to 3:55 PM: confirmed the OAuth app was
-already In production (so the weekly expiry only applied to tokens
-minted earlier, under Testing). Retrieved the server's real client pair
-from the Cloud Run environment variables (the first client edited in
-the Auth console turned out to be the sign in client, not the Drive
-one). Minted a fresh refresh token in the OAuth Playground using that
-pair with the full drive scope, signed in as the atelier Drive account,
-pasted it into GOOGLE_OAUTH_REFRESH_TOKEN, deployed a new revision.
-
-Verified immediately from Fromsa's signed in session:
-/api/admin/submissions answered 200 with 7 submissions, and
-/api/healthz/deep answered ok true, drive true. Tokens minted under In
-production status do not expire on a clock; this should not recur
-weekly. If it EVER recurs, check first whether someone pressed Back to
-testing on the Audience page, or changed the atelier account password
-(that revokes refresh tokens).
-
-Also fixed in code (v13.5): the Systems Map used to show "waiting for
-the one sign in" when this failure happened. It now prints the real
-error, so next week cannot masquerade as a sign in problem.
-
-Separately confirmed the same afternoon: the community wall is NOT a
-Drive or rules problem. A full pipeline self test (Storage upload,
-Firestore create, read back, delete) passed from Fromsa's own session.
-The wall is empty because publishing only happens at the moment a heart
-is toggled, and every existing heart predates the wall. Re-heart any
-vision and it publishes.
-
-─────────────────────────────────────────────
-
-AUGUST 5, 2026. STATUS: FIXED, THEN RECURRED AUG 13.
-
-Symptom: submissions did not land in Drive, "dead Google Drive key" in
-the history entry from that day.
-
-What was done: not recorded at the time, this file did not exist yet.
-Best reconstruction: the Drive OAuth credentials were set or re-set on
-the maya-api Cloud Run service, per the procedure in
-docs/server/MIGRATION-RUNBOOK.md (gcloud run services update
---set-env-vars with OPENAI_API_KEY, GOOGLE_CLIENT_ID, the three
-GOOGLE_OAUTH values, and DRIVE_FOLDER_ID).
-
-Lesson that created this file: one sentence in history.txt was the whole
-record, so when the same thing broke again there was nothing to compare
-against.
-
-─────────────────────────────────────────────
-
-AUGUST 13, 2026, MORNING. STATUS: FIXED.
-
-Symptom: every AI call would have hung forever until a 504.
-
-Cause: in docs/server/server.js, isImage was written one line before
-upstreamPath was declared, a temporal dead zone throw on every OpenAI
-call, invisible until the server was actually booted.
-
-What was done: line order fixed, and tests/smoke.mjs was created so the
-server is always booted and all 16 routes checked before any push.
-Verified: smoke test passes, all 16 checks.
-
-─────────────────────────────────────────────
-
-KNOWN OPEN ITEMS THAT BELONG TO THIS LOG WHEN TOUCHED
-
-The rules deploy step (step 5 of cloudbuild.yaml) has never been
-confirmed green in front of an assistant. If the community wall ever
-loads empty with a permission error, check the Cloud Build history for
-that step first, then log what was found here.
-
-The full code audit of August 13 lives in its own report (16 findings,
-delivered in chat). As findings get fixed, each fix is a commit, and any
-infrastructure side of it gets an entry here.

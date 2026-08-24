@@ -426,8 +426,16 @@ ok('an image costs more of the budget than a chat call',
 
 ok('the map light reads Submissions', s.lights.includes('Submissions') && !s.lights.includes('Drive'));
 
-ok('Admin folds: users, changes, prompting, architecture',
-  s.order === 'users-fold,changes-fold,pe-fold,arch-fold');
+ok('Admin folds: users, the migrated marketing modules, then changes/prompting/architecture',
+  s.order === 'users-fold,ads-fold,leads-fold,sources-fold,bottom-fold,changes-fold,pe-fold,arch-fold');
+ok('the marketing modules are migrated into Admin under Users and traffic',
+  MAP_SOURCE.includes('id="adm-mkt"') &&
+  MAP_SOURCE.includes('id="campaigns-table"') &&
+  MAP_SOURCE.includes('id="leads-table"') &&
+  MAP_SOURCE.includes('id="ad-chart"') &&
+  MAP_SOURCE.includes('id="bl-funnel"') &&
+  MAP_SOURCE.includes('async function loadMkt(') &&
+  MAP_SOURCE.includes('function metricVal('));
 ok('Architecture is collapsible', s.archFold);
 ok('door cards have no arrows', s.arrows === 0);
 ok('"Never delete" banner removed', !s.warnBanner);

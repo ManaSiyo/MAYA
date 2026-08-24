@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.67">
+<meta name="maya-version" content="13.68">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -103,6 +103,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <!-- v11.0: Cloud Storage for full cross-device image sync. -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-check-compat.js"></script>
 <script>
   // ════════════════════════════════════════════════════════════════════
   // v10.28: Firebase init + Maya cloud data layer.
@@ -125,6 +126,8 @@
   // The apiKey here is a publishable Firebase client key, it's safe to ship
   // in client-side code. Real security comes from Firestore security rules
   // and the Authorized domains list (configured in the Firebase console).
+  // v13.68: paste your reCAPTCHA Enterprise site key here to turn on App Check.
+  const MAYA_APPCHECK_SITE_KEY = '';
   const FIREBASE_CONFIG = {
     apiKey: "AIzaSyD2rCqPDjiyS1yfZj8ghtDc-mepz3LY634",
     authDomain: "pro-maya.firebaseapp.com",
@@ -144,6 +147,18 @@
   if (_hasRealFirebaseConfig) {
     try {
       _fbApp     = firebase.initializeApp(FIREBASE_CONFIG);
+      // v13.68: App Check. Only your real site can reach Firestore and Storage
+      // once this is enforced. It activates the moment MAYA_APPCHECK_SITE_KEY
+      // is filled in with your reCAPTCHA Enterprise site key; empty = no-op, so
+      // nothing breaks before you set it. Turn on enforcement in the Firebase
+      // console AFTER this is live and you have confirmed the app still signs in.
+      try {
+        if (typeof MAYA_APPCHECK_SITE_KEY !== 'undefined' && MAYA_APPCHECK_SITE_KEY &&
+            firebase.appCheck) {
+          firebase.appCheck().activate(MAYA_APPCHECK_SITE_KEY, true);
+          console.log('[maya.firebase] App Check active');
+        }
+      } catch (_e) { console.warn('[maya.firebase] App Check skipped', _e); }
       _fbAuth    = firebase.auth();
       _fbDb      = firebase.firestore();
       _fbStorage = firebase.storage();

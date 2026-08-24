@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 269 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 270 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -71,6 +71,46 @@ campaign table, warnings, ticker) through Windsor, per connector. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.68 (Claude): Marketing migrated into Admin, App Check wired
+
+- THE MIGRATION: the four Marketing modules now live in status.html under
+  Users and traffic, inside #adm-mkt: Ad Campaigns (D/W/M chips, campaign
+  table, the SVG line chart with hover), The Lead Station (CTA column,
+  draft/call/note), Sources of traffic, The Bottom Line. Ported WHOLE from
+  marketing.html and sealed in an IIFE so nothing collides with Admin's
+  globals; the onclick handlers (setAdRange, setAdMetric, draftLead,
+  leadContact, toggleLeadNote, saveLeadNote) are re-exposed on window, and
+  loadMkt() fetches /api/admin/marketing on sign-in and on the 120s tick.
+  metricVal() had to be pulled in too (the chart calls it). Marketing.html
+  is UNTOUCHED and still live; retire it in a later pass. When editing a
+  migrated module, edit BOTH until Marketing is deleted, or delete
+  Marketing first.
+- PILLS POP: #head-tiles .tile .v is white/500, .pair-b is #a9c9ff/500,
+  the traffic-legend is white with the MAYA half blue. The paired numbers
+  now read like figures, not labels.
+- DRAWER: width 360 (matches MAYA's inner drawer), every h3 in the logo
+  blue.
+- APP CHECK wired but dormant in frontend + playground: the
+  firebase-app-check-compat script is loaded and, right after
+  initializeApp, App Check activates IF MAYA_APPCHECK_SITE_KEY is set
+  (empty by default = no-op, nothing breaks). Setup steps are in fixes.txt.
+- SETUP CHECKLIST for Fromsa written to docs/fixes.txt: GA property pin
+  (the real cause of the low counts), billing caps, the down/failure alert,
+  App Check enforcement, the Realtime model, the CLO token.
+
+STILL OPEN / NEXT (told to Fromsa):
+- Promote the playground cabinet drawer to the real MAYA app
+  (frontend/index.html) per his approval, and while there: the open tab
+  should PERSIST (staying on Pinterest when scrolled), and the projects
+  pill is cropped.
+- Favorites cards: a clean submit-only card (image + a 3-4 sentence
+  description + Submit to Mana Siyo), NOT the inspo card with Switch
+  Fabric / Add Reference / Tap to Listen.
+- "Fabrics is still terrible" — the fabrics tab UI needs a pass.
+- Retire marketing.html once Admin has run as the single dashboard.
+- Wall: no report button (per Fromsa); the unfavorite->takedown sweep
+  already exists (_unpublishNow) and stays the mechanism.
 
 ## v13.67 (Claude): Maya home in the drawer with hands, Admin consolidating
 

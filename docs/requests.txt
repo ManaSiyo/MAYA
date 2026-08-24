@@ -16,6 +16,34 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, MARKETING MIGRATED INTO ADMIN (v13.68)
+
+[x] "Migrate everything from Marketing into Admin: ad campaigns, the lead
+    station, sources of traffic, the bottom line, all of it." Done: all four
+    now live under Users and traffic in Admin. Marketing stays up until it
+    is retired.
+[x] "The pills are grayed out; make manasiyo.com white and MAYA blue, bold
+    and strong like the numbers." Done.
+[x] "Every drawer section title should be the blue, and the drawer width
+    should match MAYA's." Done.
+[x] "App Check: make sure it goes through, so only the real site can get
+    in." Wired and dormant; turns on the moment the reCAPTCHA key is set
+    (step 4 in fixes.txt).
+[x] "The wall report: no report button; just make sure unfavoriting takes
+    it down." Confirmed: that sweep already exists and stays the mechanism;
+    no report button added.
+[x] "Give me the things to do to set up the API." Written as a numbered
+    checklist in docs/fixes.txt.
+[ ] "Make MAYA itself official, promote the cabinet drawer to the app; on
+    Pinterest it should stay on Pinterest; the projects pill is cropped."
+    Next.
+[ ] "Favorites should be a clean submit-only card, not the inspo view; no
+    Switch Fabric, Add Reference or Tap to Listen, just Submit to Mana
+    Siyo with a short description." Next.
+[ ] "Fabrics is still terrible." Next, a UI pass.
+[ ] "Live now / today still show low / '...'." Root cause is the GA
+    property; step 1 in fixes.txt fixes it (env pin, no code).
+
 AUGUST 24, 2026, MAYA HOME, ADMIN CONSOLIDATING (v13.67)
 
 [x] "Double clicking the star doesn't work, and clicking it takes me to
