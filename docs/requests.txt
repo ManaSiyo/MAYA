@@ -16,6 +16,21 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, CENTERED TERMS AND THE AI DISCLOSURES (v13.63)
+
+[x] "The document should be centered, everything centered." Done, in the
+    popup and on the terms page.
+[x] "Big disclosure for anything AI related; look into California,
+    national and worldwide rules, disclaimers, the face being used, like
+    a software lawyer." Done: a Built on artificial intelligence section
+    (EU AI Act Article 50 transparency, California SB 942 spirit, FTC
+    honesty baseline) and a Your face photograph section (purpose only
+    rendering, no facial recognition, no biometric scan kept, retention
+    and deletion, never sold), mirrored in the privacy policy. The terms
+    version moved to August 24 so everyone agrees again once. Flagged to
+    Fromsa: drafted with care from current law, but a licensed attorney
+    should review it.
+
 AUGUST 23, 2026, THE CABINET AND THE LEAD STATION (v13.62)
 
 [x] "Why are there repeats? I open Measurements and the whole Michael thing

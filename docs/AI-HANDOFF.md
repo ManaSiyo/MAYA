@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 256 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 258 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -71,6 +71,40 @@ campaign table, warnings, ticker) through Windsor, per connector. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.63 (Claude): centered terms, the AI and face disclosures
+
+- CENTERED: the terms document reads centered everywhere it lives: the
+  #tos-modal in frontend AND playground (tos-scroll, its h3s, head and sub)
+  and backend/terms.html (the sheet, brand and foot).
+- BUILT ON AI, new section in all three places: MAYA is an AI system and
+  using it means interacting with one; models from OpenAI and Google under
+  Mana Siyo's accounts; every garment picture is AI generated unless the
+  user uploaded it; illustrative fabric pictures labeled Generated;
+  generated pictures carry the models' machine readable provenance marks;
+  AI can be wrong, renders are not promises. Written with the EU AI Act
+  Article 50 transparency rules (in force Aug 2, 2026: disclose AI
+  interaction, machine readable marking of synthetic media) and California
+  SB 942 (applies above 1M monthly users, MAYA is under the threshold but
+  follows its spirit) in view. FTC baseline: never present AI output as a
+  photograph or a promise.
+- YOUR FACE PHOTOGRAPH, new section: used only to render the garment on
+  that person; sent to AI providers only for that; no facial recognition,
+  no face geometry scan or biometric identifier created or kept, never
+  sold or shared for advertising, never published; deleted on replace or
+  remove or account deletion; a pictured person can ask for removal. This
+  is the BIPA style disclosure set (purpose, retention, destruction, no
+  sale) even though MAYA stores photographs, not biometric templates.
+- privacy.html: the face photograph paragraph carries the same commitments,
+  and a new "AI generated content" paragraph states the provenance marking.
+- MAYA_TOS_VERSION bumped to 2026-08-24 in BOTH index files, so every
+  account reads and agrees to the new text once at next sign in. The terms
+  date moved to August 24 in terms.html and both modals. Remember the rule:
+  the modal body duplicates terms.html on purpose; a terms change edits
+  frontend, playground AND terms.html together, plus the version constant.
+- NOT LEGAL ADVICE: this is careful drafting from public sources, not a
+  lawyer's opinion; a licensed attorney should review before Fromsa treats
+  it as bulletproof.
 
 ## v13.62 (Claude): the cabinet drawer, and the Lead Station
 

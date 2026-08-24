@@ -1071,6 +1071,23 @@ ok('the lead list shows their notes, what they actually wrote',
   MKT_SOURCE.includes('<th>Notes</th>') &&
   MKT_SOURCE.includes('class="lead-note"') &&
   !MKT_SOURCE.includes('<th class="num">When</th>'));
+// ── v13.63 · centered terms, AI and face disclosures ─────────────────────
+ok('the terms read centered, in the popup and on the page',
+  INDEX_SOURCE.includes('color: rgba(238,242,255,0.86); text-align: center;') &&
+  PLAYGROUND_SOURCE.includes('color: rgba(238,242,255,0.86); text-align: center;') &&
+  readFileSync(join(ROOT, 'backend/terms.html'), 'utf8').includes('text-align: center;'));
+ok('MAYA discloses that it is built on AI and how face photographs are treated, everywhere the terms live',
+  [INDEX_SOURCE, PLAYGROUND_SOURCE, readFileSync(join(ROOT, 'backend/terms.html'), 'utf8')].every(t =>
+    t.includes('Built on artificial intelligence') &&
+    t.includes('face photograph') &&
+    t.includes('facial recognition') &&
+    t.includes('biometric identifier')) &&
+  // the privacy policy carries the same commitments
+  readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').includes('does not run facial recognition') &&
+  readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').includes('AI generated content') &&
+  // a terms change means everyone agrees again
+  INDEX_SOURCE.includes("MAYA_TOS_VERSION = '2026-08-24'") &&
+  PLAYGROUND_SOURCE.includes("MAYA_TOS_VERSION = '2026-08-24'"));
 // ── v13.62 · the Lead Station ─────────────────────────────────────────────
 ok('the notes column is a summary of what they want and which tier',
   SERVER_SOURCE.includes('async function summarizeLead(') &&
