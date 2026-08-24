@@ -34,11 +34,14 @@ AUGUST 24, 2026, ADMIN CLEANUP AFTER KODAK'S PUSH (v13.72)
 [x] "Hover MANA SIYO and show Design Studio and Wix Studio to the left, like
     MAYA shows Operations and Playground to the right." Wix Studio uses the
     dashboard link he gave.
-[ ] Design Studio link: pointed at manasiyo.com for now, awaiting his real
-    target.
-[ ] "In the backend, Operations Room still has the dead pill, and Fabric is
-    still not working. Remove Operations Room from the bottom, make it one
-    slide, and tell me what needs connecting." Not in v13.72; next commit.
+[x] Design Studio link: Fromsa said manasiyo.com/design; wired in v13.73.
+[x] "In the backend, remove Operations Room from the bottom, make it one
+    slide." v13.73: backend Brief is a single slide, the embedded Operations
+    Room and its dead pill are gone, standalone /operations.html untouched.
+[ ] "Fabric is still not working, tell me what needs connecting." The retailer
+    window and visual ranking are already connected; the CLO library (Plan B)
+    is not (CLOSET_API_TOKEN + CLOSET_SEARCH_URL, fixes.txt step 6). Waiting to
+    hear which part he means is broken before changing code.
 
 AUGUST 24, 2026, FINAL ADMIN RELEASE (v13.71)
 

@@ -524,6 +524,16 @@ ok('v13.72: the voice line fails in plain words, not a raw error code',
   MAP_SOURCE.includes('Maya is resting a moment') &&
   !MAP_SOURCE.includes("mayaCommandState('voice unavailable: '"));
 
+// v13.73: the backend Brief is a single slide, and Design Studio has a home.
+ok('v13.73: the backend Brief dropped its Operations Room screen and page dots',
+  !BACKEND_SOURCE.includes('id="screen-operating"') &&
+  !BACKEND_SOURCE.includes('id="operations-embed"') &&
+  !BACKEND_SOURCE.includes('id="page-indicator"') &&
+  BACKEND_SOURCE.includes('id="screen-onepager"') &&
+  BACKEND_SOURCE.includes('const count = host.querySelectorAll'));
+ok('v13.73: MANA SIYO Design Studio opens manasiyo.com/design',
+  MAP_SOURCE.includes('href="https://manasiyo.com/design"'));
+
 // Aug 13: every deploy signs both pages out on next load, and the two
 // pages must carry the SAME version number or the map's logout never fires.
 const mapVer = await pg.evaluate(() =>

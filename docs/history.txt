@@ -9,6 +9,15 @@ to work with Fromsa. This file is the story; README.md is the manual.
 
 ─────────────────────────────────────────────
 
+AUGUST 24, 2026, THE BRIEF BECOMES ONE SLIDE (v13.73)
+
+Two follow-ups. The backend Brief dropped its second screen: the embedded
+Operations Room, and the dead pill that lived in it, are off the Brief now, and
+it reads as a single page. The standalone Operations Room stays. And the MANA
+SIYO shortcut for Design Studio points at manasiyo.com/design.
+
+─────────────────────────────────────────────
+
 AUGUST 24, 2026, ADMIN CLEARS ITS CENTER (v13.72)
 
 After Kodak's v13.71 push, Fromsa redesigned the Admin page. The day now reads

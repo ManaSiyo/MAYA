@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.72">
+<meta name="maya-version" content="13.73">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -568,8 +568,8 @@ try {
           onclick="window.open('https://manasiyo.com','_blank')"
           onkeydown="if(event.key==='Enter')window.open('https://manasiyo.com','_blank')">
       <span class="mana-chips">
-        <a class="pg-chip" href="https://manasiyo.com" target="_blank"
-           onclick="event.stopPropagation()" title="The manasiyo.com design site.">design studio</a>
+        <a class="pg-chip" href="https://manasiyo.com/design" target="_blank"
+           onclick="event.stopPropagation()" title="The manasiyo.com design studio.">design studio</a>
         <a class="pg-chip" href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/home?referralInfo=my-sites" target="_blank"
            onclick="event.stopPropagation()" title="Edit the website in Wix.">wix studio</a>
       </span><b>MANA SIYO</b></span>
@@ -672,9 +672,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-24j">
+  <details class="fold" id="changes-fold" data-latest="2026-08-24k">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 24</b>Two follow ups. The backend Brief is a single slide now: the embedded Operations Room that sat as a second screen, with its dead pill, was taken off the Brief, and the standalone Operations Room page is untouched. And the MANA SIYO shortcut for Design Studio now opens manasiyo.com/design.</div>
     <div class="chg"><b>Aug 24</b>Admin cleared its center and moved the controls to the edges. The day now reads itself out as one colored line across the very top, between the ADMIN wordmark and the menu, green for the good news, red and amber for what needs you, no rules above or below it. The five health lights moved into the drawer, so the page opens straight onto the three doors: MANA SIYO, MARKETING, MAYA, then the latest submissions, Users and traffic, the ad campaigns, the Lead Station and the sources. The duplicate Manasiyo.com and MAYA visitor row is gone, since Users and traffic already pairs both. And MANA SIYO now mirrors MAYA: rest on MAYA and its back rooms hang to the right, rest on MANA SIYO and its editing rooms, Design Studio and the Wix Studio where the website is edited, hang to the left. Maya's command left the center of the page and became her private line inside the drawer: tap the star and the drawer turns into her screen, the grounded briefing, what needs your eye, and anything she needs approved; tap it again and the drawer is a drawer. When the line will not open she says so in plain words now, never a raw error code.</div>
     <div class="chg"><b>Aug 24</b>Admin became a real command center. Maya now opens with a visible briefing from the same Users, Marketing, Lead Station and submission data shown on the page, can spotlight the right panel, finds a lead only by exact identity, and puts notes, memories and email drafts into a visible queue for confirmation. Nothing sends itself. Marketing now arrives inside Admin with the approved ticker, full metric strip, spacious campaign table and chart, Lead Station, Sources and Bottom Line presentation intact; the standalone Marketing page remains live as the fallback. And the filing cabinet approved in Playground now lives in MAYA itself, with Projects, Pinterest and Fabrics preserved inside its tabs. Fabric sourcing still begins instantly with its static wall, then adds real retailer inventory and closest visual matches when live retrieval and ranking answer.</div>
     <div class="chg"><b>Aug 24</b>The door to the models got a stronger lock. Every call MAYA proxies to OpenAI now passes one fail-closed gate: it must name a real model, that model must belong to the endpoint it is calling, the senior tier stays for the atelier alone, and the image count and quality hold no matter how large the request or where its fields sit in an upload. A too-large body, a spoofed content type, or a field hidden after a big file can no longer slip an unchecked request onto the studio key. The check lives in its own small tested file, and the token is verified before a single byte of the body is read.</div>

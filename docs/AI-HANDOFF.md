@@ -73,6 +73,34 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.73 (Claude): backend Brief is one slide, Design Studio has a home
+
+Two follow-ups from Fromsa after v13.72.
+
+- `backend/backend.html` is a single slide now. The embedded Operations Room
+  (screen 2, the `/aesthetics/operations/` iframe) and the page-dot indicator
+  were removed, so the Brief is the only screen and the dead pill that lived in
+  that embed is gone with it. `goToScreen` now clamps to the screens that exist,
+  so a stale `goToScreen(1)` after a dissection cannot scroll into empty space.
+  The standalone `/operations.html` is untouched (Fromsa's choice).
+- The MANA SIYO Design Studio chip now opens `https://manasiyo.com/design`.
+
+Changed files: `backend/backend.html`, `backend/status.html` (Design Studio
+href + changelog); version 13.73 across the four surfaces;
+`tests/app-regression.mjs`, `tests/admin-ui-contract.mjs`.
+
+VALIDATION: app-regression all passed (browser + source), full gate suite green.
+
+NEXT STEP
+- Fabric ("still not working"): the wall is static-first; the live retailer
+  window (`/api/source-fabric`) reads public Shopify feeds and the visual
+  ranking (`/api/rank-fabric`) uses Terra, both already connected. What is NOT
+  connected is the CLO library for Plan B (needs `CLOSET_API_TOKEN` +
+  `CLOSET_SEARCH_URL` on Cloud Run, fixes.txt step 6). Awaiting Fromsa on
+  whether "Fabric is still not working" means the retailer window itself is
+  empty (a retrieval/CORS issue to debug) or the CLO route. Await push of
+  v13.72 and v13.73.
+
 ## v13.72 (Claude): Admin cleared its center, controls to the edges
 
 Fromsa's redesign of the Admin page after Codex's v13.71 push.

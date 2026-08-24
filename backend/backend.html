@@ -1473,13 +1473,9 @@
   </div>
 </div>
 
-<!-- v0.13: page indicator now wrapped in a pill case (see #page-indicator
-     CSS). Screen 1 = "Brief" (a.k.a. Briefing window / Client window).
-     Screen 2 = "Operations Room" (a.k.a. Client screen). -->
-<div id="page-indicator">
-  <button class="page-dot active" id="dot-1" onclick="goToScreen(0)" title="Brief"></button>
-  <button class="page-dot" id="dot-2" onclick="goToScreen(1)" title="Operations Room"></button>
-</div>
+<!-- v13.73: the backend Brief is a single slide now, per Fromsa. The embedded
+     Operations Room (screen 2) and its page dots were removed; the standalone
+     /operations.html remains. -->
 
 <div id="screens">
   <!-- Screen 1: One-pager in horizontal view -->
@@ -1546,125 +1542,6 @@
     </div>
   </section>
 
-  <!-- v0.10: Operations Room, 30/70.
-       Item Window (left, 30%): the currently-active piece image. Swipe
-       horizontally to flip pieces; single pill below shows the piece name
-       and its text updates as the swipe lands.
-       Pattern Window (right, 70%): horizontally-swipeable across two
-       pages, Pattern and Nest. Single pill below shows which page is
-       active. Dissect + Nest buttons under that. -->
-  <section class="screen" id="screen-operating" data-screen="1" style="position:relative">
-  <!-- v12.4: the real OPERATIONS ROOM lives here now, the old Operations Room
-       (the early attempt) is preserved below, hidden, in case it is ever wanted. -->
-  <iframe id="operations-embed" src="/aesthetics/operations/" title="Operations Room"
-          style="position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent"></iframe>
-  <div id="legacy-operating-room" style="display:none">
-    <div class="op-room-eyebrow">Operations Room</div>
-    <div class="op-room-grid">
-
-      <!-- v0.18: LEFT column, two pills on top (3D / Rendered toggle),
-           viewer middle, "Render in 3D" button on the bottom.
-           3D       = the placeholder four-plane turntable (cube)
-           Rendered = the GLB mesh returned by Rodin (lit when cached) -->
-      <div class="op-room-col op-item-col">
-        <div class="op-room-pill-row">
-          <button class="piece-pill active" id="op-3d-pill"       onclick="set3DMode('cube')">3D</button>
-          <button class="piece-pill"        id="op-rendered-pill" onclick="set3DMode('rendered')">Rendered</button>
-        </div>
-        <div class="op-room-3d-frame" id="op-room-3d">
-          <div class="threed-empty" id="threed-empty">3D rendering will appear here.</div>
-          <div class="process-overlay">
-            <div class="po-eyebrow">3D · how it's made</div>
-            <div class="po-title" id="po-3d-title">Three.js four-plane turntable (cube)</div>
-            <div class="po-detail" id="po-3d-detail">The three-view atelier sheet from gpt-image-2 is sliced into four UV-mapped planes around a vertical axis. Drag to orbit. Press "Render in 3D" to swap this placeholder for a real photoreal mesh from fal.ai's Hyper3D Rodin.</div>
-            <div class="po-meta" id="po-3d-meta">Library: Three.js · v0.160 · OrbitControls · GLTFLoader for the real mesh</div>
-          </div>
-        </div>
-        <div class="op-room-pill-row">
-          <button class="op-dissect-btn" id="op-render-3d-btn" onclick="renderTo3D()">Render in 3D</button>
-        </div>
-      </div>
-
-      <!-- v0.16: RIGHT column, label pill ON TOP, swiper middle, function
-           button on the bottom. The top label pill swaps text on swipe
-           (Pattern · Vector · Nest · Information); click it to cycle. -->
-      <div class="op-room-col op-pattern-col">
-        <div class="op-room-pill-row">
-          <button class="piece-pill active" id="op-page-pill" onclick="setPatternPage((_patternPage + 1) % 4)">Pattern</button>
-        </div>
-        <div class="op-pattern-swiper" id="op-pattern-swiper">
-          <!-- Fabrics page (v0.28), sourcing window, sits BEFORE Pattern.
-               See-through panel like Measurements. In-house vs sourceable;
-               sourceable scours Mood / Etsy / Amazon for the dissected
-               fabric and shows price/yd + delivery ETA to 655 Bryant St. -->
-          <div class="op-pattern-page" data-page="0">
-            <div class="pattern-empty" id="pattern-empty">Dissecting the pattern automatically, give it a moment.</div>
-            <img class="pattern-image" id="pattern-image" alt="generated pattern" style="display:none">
-            <!-- v0.25: process overlay, hover the window to reveal. -->
-            <div class="process-overlay">
-              <div class="po-eyebrow">Pattern · how it's made</div>
-              <div class="po-title">OpenAI gpt-image-2 · CLO3D-look flat pattern</div>
-              <div class="po-detail">A technical-drawing-style raster is generated from the dream-garment image. Warm-white paper, dashed grainline arrows, triangular notches at every seam pair, faint seam-allowance offset 1 cm inside the cut edge, true-to-fabric proportions, marker-sheet layout.</div>
-              <div class="po-meta">Stage: decorative reference · upgrade path: GarmentCode JSON + PyGarment (Phase B)</div>
-            </div>
-          </div>
-          <!-- v0.18: Vector page is now a real SVG/PLT VIEWER with zoom
-               and pan. Auto-vectorizes the pattern raster on first visit
-               (ImageTracer.js, paper backdrop + light strokes for cosmos
-               contrast, scaled to the client's waist measurement). The
-               designer can Upload an SVG or PLT to override; wheel to
-               zoom, drag to pan. -->
-          <div class="op-pattern-page" data-page="1">
-            <div class="pattern-empty" id="vector-empty">Swipe back to <b>Pattern</b> first, the vector is built from whatever the dissect call returns.</div>
-            <svg class="nest-preview-svg" id="vector-preview" style="display:none" xmlns="http://www.w3.org/2000/svg"></svg>
-            <div id="vector-caption" style="position:absolute;bottom:14px;left:0;right:0;text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(245,250,255,0.55);display:none;"></div>
-            <input type="file" id="vector-file-input" accept=".svg,.plt,image/svg+xml,text/plain" style="display:none" onchange="onVectorFiles(event)">
-            <div class="process-overlay">
-              <div class="po-eyebrow">Vector · how it's made</div>
-              <div class="po-title">ImageTracer.js · raster → SVG with waist anchor</div>
-              <div class="po-detail">The Pattern raster is traced into SVG paths in-browser. Light strokes on translucent paper for cosmos contrast. The whole drawing is then scaled so its natural width equals the client's waist measurement in cm, the v0.14 physics anchor. Scroll to zoom · drag to pan · Upload your own SVG / PLT to override.</div>
-              <div class="po-meta">Library: ImageTracer.js · v1.2.6 · public domain · runs entirely in the browser</div>
-            </div>
-          </div>
-          <div class="op-pattern-page" data-page="2">
-            <div class="pattern-empty" id="nest-empty">Drop pattern panels (<b>SVG</b> or <b>PLT</b>) anywhere here, or add them from the menu, Maya nests them automatically against the X/Y bed in Settings.</div>
-            <img class="pattern-image" id="nest-image" alt="nested layout" style="display:none">
-            <svg class="nest-preview-svg" id="nest-preview" style="display:none" xmlns="http://www.w3.org/2000/svg"></svg>
-            <div class="process-overlay">
-              <div class="po-eyebrow">Nest · how it's made</div>
-              <div class="po-title">Bounding-box bottom-left fill · pure JS in this file</div>
-              <div class="po-detail">Each SVG / PLT panel is parsed for its bounding box in cm. Panels are sorted by area descending, then placed at the lowest-leftmost corner that fits, trying 0° / 90° / 180° / 270°. Sheet width is the X dimension from Nest config; spacing acts as the laser-kerf buffer. Upgrade path: true No-Fit-Polygon (SVGnest core) for 90%+ utilization.</div>
-              <div class="po-meta">Algorithm: bbox bottom-left · ~150 lines of in-house JS · 0 dependencies</div>
-            </div>
-          </div>
-          <!-- Information page, sheet X/Y + spacing + utilization + panel count. -->
-          <div class="op-pattern-page" data-page="3">
-            <div class="info-grid" id="info-grid">
-              <div class="info-eyebrow">Operation summary</div>
-              <div class="info-label">Active piece</div>            <div class="info-value" id="info-piece">…</div>
-              <div class="info-label">Pattern</div>                 <div class="info-value" id="info-pattern">…</div>
-              <div class="info-label">Sheet X (width)</div>         <div class="info-value" id="info-sheet-x">…</div>
-              <div class="info-label">Sheet Y (length)</div>        <div class="info-value" id="info-sheet-y">…</div>
-              <div class="info-label">Spacing</div>                 <div class="info-value" id="info-spacing">…</div>
-              <div class="info-label">Panels loaded</div>           <div class="info-value" id="info-panel-count">0</div>
-              <div class="info-label">Panels placed</div>           <div class="info-value" id="info-placed">…</div>
-              <div class="info-label">Fabric used</div>             <div class="info-value" id="info-util">…</div>
-              <div class="info-label">Used sheet length</div>       <div class="info-value" id="info-length">…</div>
-            </div>
-          </div>
-        </div>
-        <!-- v0.18: function-button row below the swiper. Now supports
-             multiple buttons per page. Vector has Try Again + Upload.
-             Built dynamically by _syncPageActionButton() from
-             PATTERN_PAGE_ACTIONS. -->
-        <div class="op-room-pill-row" id="op-page-action-row"></div>
-        <!-- v0.18: accepts both SVG and PLT (HPGL) files now. -->
-        <input type="file" id="panel-file-input" multiple accept=".svg,.plt,image/svg+xml,text/plain" style="display:none" onchange="onPanelFiles(event)">
-      </div>
-
-    </div>
-  </div>
-</section>
 </div>
 
 <!-- v10.15: first-run setup, only shown if we don't yet have a MAYA
@@ -1859,7 +1736,11 @@ function escapeHtml(s) {
 function goToScreen(n) {
   const host = document.getElementById('screens');
   if (!host) return;
-  host.scrollTo({ top: n * window.innerHeight, behavior: 'smooth' });
+  // v13.73: the Brief is a single slide now. Clamp to the screens that exist
+  // so a stale goToScreen(1) can never scroll into empty space.
+  const count = host.querySelectorAll('section[data-screen]').length || 1;
+  const target = Math.max(0, Math.min(n, count - 1));
+  host.scrollTo({ top: target * window.innerHeight, behavior: 'smooth' });
 }
 
 // v0.16: track current screen index + sync dot indicator + sync brand sub.
