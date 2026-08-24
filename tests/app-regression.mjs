@@ -34,6 +34,7 @@ const RULES_SOURCE = readFileSync(join(ROOT, 'docs/server/firestore.rules'), 'ut
 const SERVER_SOURCE = readFileSync(join(ROOT, AT.server), 'utf8');
 const FABRIC_SOURCE = readFileSync(join(ROOT, 'docs/server/fabric-sourcing.js'), 'utf8');
 const AI_ROUTER_SOURCE = readFileSync(join(ROOT, 'docs/server/ai-router.js'), 'utf8');
+const ADMIN_COMMAND_SOURCE = readFileSync(join(ROOT, 'docs/server/admin-command.mjs'), 'utf8');
 const SERVER_DOCKER = readFileSync(join(ROOT, 'docs/server/Dockerfile'), 'utf8');
 const BUILD_SOURCE = readFileSync(join(ROOT, 'cloudbuild.yaml'), 'utf8');
 const MAP_SOURCE = readFileSync(join(ROOT, AT.status), 'utf8');
@@ -293,6 +294,29 @@ const s = await pg.evaluate(() => ({
   headTiles: (document.getElementById('head-tiles') || {}).id === 'head-tiles',
   thumbnailsParallel: _paintThumbs.toString().includes('Promise.all'),
   tokenRefreshesHealth: _adoptToken.toString().includes('runChecks()'),
+  commandCenter: !!document.getElementById('maya-command'),
+  marketingVisual: (() => {
+    const panel = document.querySelector('#adm-mkt .panel');
+    const table = document.querySelector('#adm-mkt table');
+    const ticker = document.getElementById('mkt-ticker');
+    const visitorFold = document.getElementById('visitors-fold');
+    if (!panel || !table || !ticker || !visitorFold) return null;
+    const panelStyle = getComputedStyle(panel);
+    return {
+      panelPadding: panelStyle.padding,
+      panelRadius: panelStyle.borderRadius,
+      tableWidth: getComputedStyle(table).width,
+      tickerVisible: getComputedStyle(ticker).display !== 'none',
+      visitorFold: visitorFold.tagName,
+    };
+  })(),
+  commandQueue: (() => {
+    const result = _mayaQueueAction({ kind: 'remember', text: 'browser regression fact' });
+    const row = document.querySelector('[data-action-id="' + result.actionId + '"]');
+    const labels = row ? [...row.querySelectorAll('button')].map(button => button.textContent) : [];
+    mayaDismissAction(result.actionId);
+    return result.queued === true && labels.includes('Confirm') && labels.includes('Dismiss');
+  })(),
 }));
 // v13.26: the map speaks about SUBMISSIONS, not Google plumbing.
 // v13.32: the privacy policy. It has to exist, be reachable BEFORE anyone
@@ -427,7 +451,7 @@ ok('an image costs more of the budget than a chat call',
 ok('the map light reads Submissions', s.lights.includes('Submissions') && !s.lights.includes('Drive'));
 
 ok('Admin folds: users, the migrated marketing modules, then changes/prompting/architecture',
-  s.order === 'users-fold,ads-fold,leads-fold,sources-fold,bottom-fold,changes-fold,pe-fold,arch-fold');
+  s.order === 'users-fold,visitors-fold,ads-fold,leads-fold,sources-fold,bottom-fold,changes-fold,pe-fold,arch-fold');
 ok('the marketing modules are migrated into Admin under Users and traffic',
   MAP_SOURCE.includes('id="adm-mkt"') &&
   MAP_SOURCE.includes('id="campaigns-table"') &&
@@ -436,6 +460,25 @@ ok('the marketing modules are migrated into Admin under Users and traffic',
   MAP_SOURCE.includes('id="bl-funnel"') &&
   MAP_SOURCE.includes('async function loadMkt(') &&
   MAP_SOURCE.includes('function metricVal('));
+ok('embedded Marketing keeps the approved page-like presentation inside Admin',
+  !!s.marketingVisual &&
+  s.marketingVisual.panelPadding === '16px 18px' &&
+  s.marketingVisual.panelRadius === '18px' &&
+  s.marketingVisual.tickerVisible &&
+  s.marketingVisual.visitorFold === 'DETAILS' &&
+  MAP_SOURCE.includes('id="mkt-ticker"') &&
+  MAP_SOURCE.includes('id="mkt-wix-tiles"') &&
+  MAP_SOURCE.includes('#adm-mkt details.fold:not([open]) summary::after') &&
+  MAP_SOURCE.includes('#adm-mkt #mkt-ticker-inner'));
+ok('embedded Marketing keeps the standalone chart and refresh interactions',
+  MAP_SOURCE.includes('function paintVisitors(') &&
+  MAP_SOURCE.includes('function buildTicker(') &&
+  MAP_SOURCE.includes('function fetchBrief(') &&
+  MAP_SOURCE.includes('function bindChartHover(') &&
+  MAP_SOURCE.includes("addEventListener('touchmove'") &&
+  MAP_SOURCE.includes('_syncRangeChips();') &&
+  MAP_SOURCE.includes('Existing numbers remain on screen') &&
+  MAP_SOURCE.includes('r.status===401'));
 ok('Architecture is collapsible', s.archFold);
 ok('door cards have no arrows', s.arrows === 0);
 ok('"Never delete" banner removed', !s.warnBanner);
@@ -444,12 +487,17 @@ ok('all door texts share one font size', s.doorSizes === 1);
 ok('Systems Map checks have request timeouts', s.healthUsesTimeouts);
 ok('submission thumbnails load in parallel', s.thumbnailsParallel);
 ok('sign in immediately refreshes deep health', s.tokenRefreshesHealth);
+ok('Admin renders the command center and confirmation queue', s.commandCenter && s.commandQueue);
 
 // Aug 13: every deploy signs both pages out on next load, and the two
 // pages must carry the SAME version number or the map's logout never fires.
 const mapVer = await pg.evaluate(() =>
   (document.querySelector('meta[name="maya-version"]') || {}).content || 'missing');
 ok('index and map carry the same maya-version (' + r.version + ')', mapVer === r.version);
+const versionOf = source => (source.match(/name="maya-version" content="([0-9.]+)"/) || [])[1];
+ok('app, Playground, Admin and standalone Marketing share one release version',
+  [INDEX_SOURCE, PLAYGROUND_SOURCE, MAP_SOURCE, MKT_SOURCE]
+    .every(source => versionOf(source) === r.version));
 await pg.evaluate(() => {
   localStorage.setItem('maya_admin_tok', 'FAKE.TOKEN.x');
   localStorage.setItem('maya_seen_version_map', '0.0');
@@ -1219,8 +1267,8 @@ ok('every sign in says hello so the Users count is complete',
 // ── v13.58: BACKEND in caps, the circles drawer staged on the playground ───
 ok('the Backend corner speaks in caps',
   /#brand \{[\s\S]{0,260}text-transform: uppercase/.test(BACKEND_SOURCE));
-// v13.60: the circles grew into Chrome-style TABS, still playground only.
-ok('the playground stages the cabinet drawer: three circles that hold one folder',
+// v13.60 staged the tabs; v13.71 promotes the approved cabinet unchanged.
+ok('the approved cabinet drawer ships in both Playground and the real app',
   PLAYGROUND_SOURCE.includes('class="pg-tabrow"') &&
   PLAYGROUND_SOURCE.includes('id="pg-folder"') &&
   PLAYGROUND_SOURCE.includes('id="pg-pane-fabrics"') &&
@@ -1230,21 +1278,29 @@ ok('the playground stages the cabinet drawer: three circles that hold one folder
   /\.pg-tab \{[\s\S]{0,200}border-radius: 50%/.test(PLAYGROUND_SOURCE) &&
   !PLAYGROUND_SOURCE.includes('class="drawer-tabs"') &&
   !PLAYGROUND_SOURCE.includes('class="drawer-top-row"') &&
-  // the main app keeps its current drawer until Fromsa promotes the design
-  INDEX_SOURCE.includes('class="drawer-top-row"'));
-ok('the playground cabinet: panels move inside the folder, no Back, nothing repeats',
-  PLAYGROUND_SOURCE.includes("fabPane.appendChild(fab)") &&
-  PLAYGROUND_SOURCE.includes("pinPane.appendChild(pin)") &&
-  PLAYGROUND_SOURCE.includes('.pg-pane .fabrics-back { display: none; }') &&
-  PLAYGROUND_SOURCE.includes('#pg-meas-host .avatar-name-input { display: none !important; }') &&
-  PLAYGROUND_SOURCE.includes('.drawer-sessions-toggle { display: none !important; }') &&
-  PLAYGROUND_SOURCE.includes('#drawer-avatar-switcher { display: none !important; }') &&
-  PLAYGROUND_SOURCE.includes('id="pg-project-pill"') &&
-  PLAYGROUND_SOURCE.includes('class="pg-avatar-row"') &&
-  PLAYGROUND_SOURCE.includes('pg-avatar-row:hover .pg-avatar-actions') &&
-  PLAYGROUND_SOURCE.includes('id="pg-meas"') &&
-  PLAYGROUND_SOURCE.includes("host.appendChild(body)") &&
-  PLAYGROUND_SOURCE.includes('pgUpdatePill'));
+  INDEX_SOURCE.includes('class="pg-tabrow"') &&
+  INDEX_SOURCE.includes('id="pg-folder"') &&
+  INDEX_SOURCE.includes('id="pg-pane-fabrics"') &&
+  INDEX_SOURCE.includes('id="pg-pane-pinterest"') &&
+  INDEX_SOURCE.includes('function pgShow(') &&
+  !INDEX_SOURCE.includes('class="drawer-top-row"'));
+ok('the shipped cabinet moves live panels inside the folder without duplicating them',
+  [PLAYGROUND_SOURCE, INDEX_SOURCE].every(source =>
+    source.includes("fabPane.appendChild(fab)") &&
+    source.includes("pinPane.appendChild(pin)") &&
+    source.includes('.pg-pane .fabrics-back { display: none; }') &&
+    source.includes('#pg-meas-host .avatar-name-input { display: none !important; }') &&
+    source.includes('.drawer-sessions-toggle { display: none !important; }') &&
+    source.includes('#drawer-avatar-switcher { display: none !important; }') &&
+    source.includes('id="pg-project-pill"') &&
+    source.includes('class="pg-avatar-row"') &&
+    source.includes('pg-avatar-row:hover .pg-avatar-actions') &&
+    source.includes('id="pg-meas"') &&
+    source.includes("host.appendChild(body)") &&
+    source.includes('pgUpdatePill')) &&
+  INDEX_SOURCE.includes("pgShow('fabrics')") &&
+  INDEX_SOURCE.includes("pgShow('pinterest')") &&
+  INDEX_SOURCE.includes('try { toggleNotesDrawer(true);'));
 // ── v13.61 · Operations Room joins the family ────────────────────────
 ok('ops: the hamburger offset is computed from the live layout, family curve everywhere',
   !OPS_SOURCE || (
@@ -1291,12 +1347,13 @@ ok('each lead carries a CTA column with the recommended move',
   MKT_SOURCE.includes("'Email now &#183; first touch'"));
 ok('the cabinet consumes the drawer: circles at the bezel, panes edge to edge, Pinterest in the middle',
   PLAYGROUND_SOURCE.includes('the folder consumes the whole drawer') &&
-  /pg-folder \{[^}]*border: none/.test(PLAYGROUND_SOURCE) &&
-  PLAYGROUND_SOURCE.indexOf('id="pg-tab-pinterest"') < PLAYGROUND_SOURCE.indexOf('id="pg-tab-fabrics"') &&
-  PLAYGROUND_SOURCE.includes(">Projects</div>"));
+  [PLAYGROUND_SOURCE, INDEX_SOURCE].every(source =>
+    /pg-folder \{[^}]*border: none/.test(source) &&
+    source.indexOf('id="pg-tab-pinterest"') < source.indexOf('id="pg-tab-fabrics"') &&
+    source.includes(">Projects</div>")));
 // ── v13.65 · Maya's voice on Admin ────────────────────────────────────────
 // v13.66: the voice moved out of the drawer into the star itself.
-ok('the voice lives at the floor of the Admin drawer, persists in a chip, and holds two tools',
+ok('the voice lives at the floor of the Admin drawer and drives the command layer',
   MAP_SOURCE.includes('id="voice-dock"') &&
   MAP_SOURCE.includes('id="voice-btn"') &&
   MAP_SOURCE.includes('id="voice-chip"') &&
@@ -1305,22 +1362,24 @@ ok('the voice lives at the floor of the Admin drawer, persists in a chip, and ho
   MAP_SOURCE.includes('function _voiceTool(') &&
   MAP_SOURCE.includes('response.function_call_arguments.done') &&
   MAP_SOURCE.includes("https://api.openai.com/v1/realtime/calls?model="));
-ok('the voice has memory and four tools: remember, forget, note a lead, draft an email',
+ok('voice has read tools plus confirmation-gated memory and lead actions',
   SERVER_SOURCE.includes("app.post('/api/admin/maya-remember'") &&
   SERVER_SOURCE.includes("app.post('/api/admin/maya-forget'") &&
   SERVER_SOURCE.includes('async function loadMayaMemory(') &&
-  SERVER_SOURCE.includes('async function resolveLeadEmail(') &&
+  SERVER_SOURCE.includes("name: 'get_briefing'") &&
+  SERVER_SOURCE.includes("name: 'show_panel'") &&
+  SERVER_SOURCE.includes("name: 'find_lead'") &&
   SERVER_SOURCE.includes("name: 'note_lead'") &&
   SERVER_SOURCE.includes("name: 'draft_email'") &&
   SERVER_SOURCE.includes('instructions, tools,') &&
-  MAP_SOURCE.includes("name==='draft_email'") &&
-  MAP_SOURCE.includes("name==='forget'") &&
-  MAP_SOURCE.includes('mail.google.com/mail/?view=cm'));
-ok('her memory is kept whole, outside the truncated snapshot, and she knows the backbone',
-  SERVER_SOURCE.includes('kept in full, never truncated') &&
+  MAP_SOURCE.includes('_mayaQueueLeadAction') &&
+  MAP_SOURCE.includes('_mayaQueueAction') &&
+  MAP_SOURCE.includes('Waiting for your confirmation'));
+ok('her recent memory stays outside the bounded snapshot and she knows the backbone',
+  SERVER_SOURCE.includes('YOUR RECENT MEMORY (last 60 saved facts)') &&
   SERVER_SOURCE.includes('const memoryLines =') &&
+  SERVER_SOURCE.includes('slice(-60)') &&
   SERVER_SOURCE.includes('HOW MAYA IS BUILT') &&
-  // the snapshot cap no longer swallows memory: memory is concatenated after it
   SERVER_SOURCE.includes("memoryLines + '\\n\\n' +"));
 ok('the Admin drawer consolidates: firebase one line, Cloud Run, the outside managers',
   MAP_SOURCE.includes('>Firebase<') &&
@@ -1329,12 +1388,51 @@ ok('the Admin drawer consolidates: firebase one line, Cloud Run, the outside man
   MAP_SOURCE.includes('>Meta Ads manager<') &&
   MAP_SOURCE.includes('class="tint">Behind the scenes') &&
   !MAP_SOURCE.includes('>Design Studio<') && !MAP_SOURCE.includes('>Credits<'));
-ok('the voice scans everything and knows the date',
+ok('the voice and visible UI read the same bounded Admin snapshot',
+  SERVER_SOURCE.includes("app.get('/api/admin/command-snapshot'") &&
+  SERVER_SOURCE.includes('async function loadAdminCommandSnapshot(') &&
+  SERVER_SOURCE.includes('buildAdminCommandSnapshot') &&
   SERVER_SOURCE.includes('async function recentShips(') &&
-  SERVER_SOURCE.includes('recently_shipped') &&
-  SERVER_SOURCE.includes('submissions: subFolders') &&
+  MAP_SOURCE.includes('async function loadMayaCommand(') &&
+  MAP_SOURCE.includes('function mayaShowPanel(') &&
   SERVER_SOURCE.includes('Right now it is ') &&
   SERVER_SOURCE.includes('Ask him questions back'));
+ok('lead lookup is exact and never selects a fuzzy identity',
+  SERVER_SOURCE.includes("app.post('/api/admin/lead-lookup'") &&
+  ADMIN_COMMAND_SOURCE.includes('export function resolveLeadExact') &&
+  ADMIN_COMMAND_SOURCE.includes("status: 'ambiguous'") &&
+  ADMIN_COMMAND_SOURCE.includes("status: 'not_found'"));
+ok('Admin writes require a visible click and email remains a reviewable draft',
+  MAP_SOURCE.includes('async function mayaConfirmAction(') &&
+  MAP_SOURCE.includes("yes.onclick=()=>mayaConfirmAction(action.id)") &&
+  MAP_SOURCE.includes("fetch('/api/admin/lead-draft'") &&
+  MAP_SOURCE.includes('mail.google.com/mail/?view=cm') &&
+  MAP_SOURCE.includes('Allow popups, then confirm the email draft again.'));
+ok('voice startup is single-flight and failed starts release the microphone',
+  MAP_SOURCE.includes('let _voice = null;') &&
+  MAP_SOURCE.includes('let _voiceStarting = false;') &&
+  MAP_SOURCE.includes('if(_voiceStarting){') &&
+  MAP_SOURCE.includes('pendingMic.getTracks().forEach(t=>t.stop())'));
+ok('migrated Marketing reads the lexical Admin token',
+  MAP_SOURCE.includes('async function loadMkt(){') &&
+  MAP_SOURCE.includes('if(!_idTok){') &&
+  !MAP_SOURCE.includes('window._idTok'));
+ok('voice context excludes lead contact details and the briefing sees direct ad feeds',
+  ADMIN_COMMAND_SOURCE.includes('export function buildRealtimeCommandContext') &&
+  SERVER_SOURCE.includes('const voiceCtx = buildRealtimeCommandContext(ctx)') &&
+  SERVER_SOURCE.includes('JSON.stringify(voiceCtx)') &&
+  MAP_SOURCE.includes("key==='email'||key==='phone'?undefined:value") &&
+  MAP_SOURCE.includes('output:JSON.stringify(modelOut)') &&
+  SERVER_SOURCE.includes('directMeta') &&
+  SERVER_SOURCE.includes('directGoogle'));
+ok('the release build gates command safety, proxy policy, fabric and routing contracts',
+  BUILD_SOURCE.includes('node tests/admin-command.mjs') &&
+  BUILD_SOURCE.includes('node tests/admin-ui-contract.mjs') &&
+  BUILD_SOURCE.includes('node tests/proxy-policy.mjs') &&
+  BUILD_SOURCE.includes('node tests/fabric-sourcing.mjs') &&
+  BUILD_SOURCE.includes('node tests/ai-routing.mjs') &&
+  SERVER_DOCKER.includes('COPY admin-command.mjs ./') &&
+  SERVER_DOCKER.includes('COPY proxy-policy.mjs ./'));
 ok('the bottom line row does the arithmetic between the streams, live',
   MKT_SOURCE.includes('id="bottom-fold"') &&
   MKT_SOURCE.includes('function paintBottomLine(') &&
@@ -1362,7 +1460,7 @@ ok('the proxy policy is fail-closed: it lives in its own tested module',
 ok('the voice key never touches the browser: the server mints a one-call secret with live numbers',
   SERVER_SOURCE.includes("app.post('/api/admin/voice-token'") &&
   SERVER_SOURCE.includes('v1/realtime/client_secrets') &&
-  SERVER_SOURCE.includes('Business snapshot, taken just now') &&
+  SERVER_SOURCE.includes('Admin command snapshot') &&
   SERVER_SOURCE.includes('Never invent numbers') &&
   // the page holds only the ephemeral value, never OPENAI_API_KEY
   !MAP_SOURCE.includes('OPENAI_API_KEY'));

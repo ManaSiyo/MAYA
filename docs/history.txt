@@ -9,6 +9,22 @@ to work with Fromsa. This file is the story; README.md is the manual.
 
 ─────────────────────────────────────────────
 
+AUGUST 24, 2026, ADMIN COMMAND CENTER
+
+MAYA reached v13.71 as an internal command center for Fromsa. Admin now opens
+with a visible reading of today and what needs attention, points to the panel
+behind each answer, finds a lead only when identity is exact, and places every
+note, memory or email draft in a visible confirmation queue. Email opens as a
+reviewable Gmail draft and never sends itself.
+
+Marketing moved into Admin visually as well as functionally. The same moving
+headline, full metric strip, visitor view, spacious campaign table and chart,
+Lead Station, Sources and Bottom Line now sit under the Admin shell. The
+standalone Marketing page remains live as tonight's fallback. The filing
+cabinet approved in Playground also moved into MAYA itself without replacing
+the project's live save, Pinterest or fabric systems. Fabric sourcing kept its
+instant static wall and its real retailer closest visual matches.
+
 AUGUST 11 TO 13, 2026
 
 Where we are: MAYA is at v13.3. Saving is trustworthy, the app is fast, the

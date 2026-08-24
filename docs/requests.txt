@@ -16,6 +16,26 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, FINAL ADMIN RELEASE (v13.71)
+
+[x] "Make Admin Maya the internal Jarvis and command center, not a client
+    feature." Done as a visible Today/Attention/action layer connected to the
+    existing Admin snapshot and panels. She can explain, navigate, perform
+    exact lead lookup and queue notes, memory or Gmail drafts for an explicit
+    Confirm click. Nothing silently sends or performs an external action.
+[x] "Marketing parity means the page must look the same, not only carry the
+    data." Done: the approved Marketing ticker, full metric strip, visitor
+    row, spacious campaign table/chart, Lead Station, Sources, Bottom Line,
+    typography, spacing and fold behavior are embedded under the Admin shell.
+    The standalone Marketing page remains live and is not retired.
+[x] "Promote only the approved Playground filing cabinet to MAYA." Done
+    faithfully. Project/autosave/auth/deep-link code stays canonical, and the
+    Projects, Pinterest and Fabrics controls remain reachable in the folder.
+[x] "Preserve fabric sourcing and fix only verified regressions." Audited:
+    garment plus inferred traits, live retailer inventory, thumbnail ranking,
+    closest visual matches copy, real card fields, admin authorization and
+    static-first fallback remain in place with regression coverage.
+
 AUGUST 24, 2026, REMEDIATION PROGRAM, COMMIT A1 (v13.70)
 
 [x] Proxy security hardening (audit P0 #1). Every proxied OpenAI call now
@@ -23,8 +43,8 @@ AUGUST 24, 2026, REMEDIATION PROGRAM, COMMIT A1 (v13.70)
     that matches its endpoint, Sol for the atelier only, and image count and
     quality enforced whatever the body size or multipart field order. The
     token is verified before the body is buffered. The policy is a small
-    tested module (docs/server/proxy-policy.mjs, 27 unit tests). Committed
-    locally; NOT pushed, per the program.
+    tested module (docs/server/proxy-policy.mjs, 27 unit tests). It is now the
+    accepted v13.70 baseline for this release.
 
 AUGUST 24, 2026, MAYA MORE CAPABLE (v13.69)
 
@@ -63,9 +83,9 @@ AUGUST 24, 2026, MARKETING MIGRATED INTO ADMIN (v13.68)
     no report button added.
 [x] "Give me the things to do to set up the API." Written as a numbered
     checklist in docs/fixes.txt.
-[ ] "Make MAYA itself official, promote the cabinet drawer to the app; on
+[x] "Make MAYA itself official, promote the cabinet drawer to the app; on
     Pinterest it should stay on Pinterest; the projects pill is cropped."
-    Next.
+    Completed in v13.71 with the approved Playground cabinet as source.
 [ ] "Favorites should be a clean submit-only card, not the inspo view; no
     Switch Fabric, Add Reference or Tap to Listen, just Submit to Mana
     Siyo with a short description." Next.
@@ -249,10 +269,8 @@ AUGUST 23, 2026, THE POPUP, THE CAPS, THE CIRCLES (v13.58)
     avatar face, cheetah fabric, Pinterest logo, hover says just the
     name; projects underneath; measurements inside the avatar view; only
     Tip, Logout, Feedback at the bottom, a little lower." Staged on the
-    Playground, per the playground rule; the app keeps its drawer until
-    the design is approved. (Note: v13.56 and v13.57 were not pushed yet
-    when this feedback came, which is why the earlier marketing drawer
-    and caps changes were not visible.)
+    Playground, per the playground rule. The approved design was promoted
+    faithfully to the app in v13.71.
 
 AUGUST 23, 2026, TERMS, WALL, USERS (v13.57)
 

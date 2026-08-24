@@ -63,6 +63,8 @@ await check('lead note needs a token',            post('/api/admin/lead-note', {
 await check('lead draft needs a token',           post('/api/admin/lead-draft', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
 await check('clo search needs a token',           post('/api/admin/clo-search', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
 await check('the voice needs a token',            post('/api/admin/voice-token', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
+await check('command snapshot needs a token',     get('/api/admin/command-snapshot'), 401);
+await check('lead lookup needs a token',          post('/api/admin/lead-lookup', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
 await check('maya remember needs a token',        post('/api/admin/maya-remember', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
 await check('maya forget needs a token',          post('/api/admin/maya-forget', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
 await check('openai refuses a model off the list', async () => {

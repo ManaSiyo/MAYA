@@ -29,7 +29,7 @@ import express from 'express';
 import crypto from 'node:crypto';
 import { Readable } from 'node:stream';
 import { evaluateProxyPolicy } from './proxy-policy.mjs';
-import { buildAdminCommandSnapshot, resolveLeadExact } from './admin-command.mjs';
+import { buildAdminCommandSnapshot, buildRealtimeCommandContext, resolveLeadExact } from './admin-command.mjs';
 import dns from 'node:dns/promises';
 import {
   applyVisualRankings,
@@ -2775,14 +2775,28 @@ async function loadAdminCommandSnapshot() {
   if (_adminCommandCache.data && Date.now() - _adminCommandCache.ts < 60 * 1000) {
     return _adminCommandCache.data;
   }
-  const [wix, ads, leads, submissions, ships, accounts] = await Promise.all([
+  const [wix, windsor, directMeta, directGoogle, leads, submissions, ships, accounts] = await Promise.all([
     wixInsights().catch(() => null),
     windsorInsights().catch(() => null),
+    metaInsights().catch(() => null),
+    googleAdsInsights().catch(() => null),
     wixLeads().catch(() => null),
     gcsListSubmissions().catch(() => null),
     recentShips().catch(() => null),
     countUsers().catch(() => null),
   ]);
+  // Match the canonical Marketing behavior: Windsor is preferred for the
+  // combined campaign feed, while direct provider credentials remain a
+  // truthful fallback for the headline spend/click briefing.
+  let ads = windsor;
+  if (!ads || !ads.connected) {
+    const sources = {};
+    if (directGoogle && directGoogle.connected) sources.google_ads = directGoogle.d7 || {};
+    if (directMeta && directMeta.connected) sources.facebook = directMeta.d7 || {};
+    ads = Object.keys(sources).length
+      ? { connected: true, sources, campaigns: [], campaignDaily: [], adGroups: [] }
+      : windsor;
+  }
   const data = buildAdminCommandSnapshot({ wix, ads, leads, submissions, ships, accounts });
   _adminCommandCache = { ts: Date.now(), data };
   return data;
@@ -2835,9 +2849,10 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
     const [ctx, mem] = await Promise.all([
       loadAdminCommandSnapshot(), loadMayaMemory().catch(() => null),
     ]);
-    // v13.69: her memory is kept OUT of the capped snapshot so it can never be
-    // truncated away, the glitch Fromsa hit. It is always spoken to her in full.
+    // v13.69: recent memory is kept OUT of the capped snapshot so a busy
+    // business payload cannot truncate it away.
     const memoryLines = (mem && mem.items || []).slice(-60).map(i => '- ' + i.text).join('\n') || '(nothing yet)';
+    const voiceCtx = buildRealtimeCommandContext(ctx);
     const nowLA = new Intl.DateTimeFormat('en-US', { timeZone: process.env.WIX_TZ || 'America/Los_Angeles',
       weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
       .format(new Date());
@@ -2872,7 +2887,7 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
       'action in the Admin queue. Say that it is waiting for his click. Never claim a queued action is saved, ' +
       'opened or sent. Email is drafted only after he confirms, and MAYA never sends it.\n\n' +
       'YOUR RECENT MEMORY (last 60 saved facts):\n' + memoryLines + '\n\n' +
-      'Admin command snapshot:\n' + JSON.stringify(ctx).slice(0, 12000);
+      'Admin command snapshot:\n' + JSON.stringify(voiceCtx).slice(0, 12000);
     const tools = [
       { type: 'function', name: 'get_briefing',
         description: 'Show and read the deterministic today and attention briefing from the Admin command snapshot.',
@@ -3071,12 +3086,10 @@ app.post('/api/admin/maya-remember', requireAuthHeader, express.json({ limit: '8
 async function resolveLeadEmail(needle) {
   const q = String(needle || '').trim().toLowerCase();
   if (!q) return null;
-  if (/@/.test(q)) return q;
   const data = await wixLeads().catch(() => null);
   if (!data || !data.connected) return null;
-  const hit = (data.list || []).find(l => (l.name || '').toLowerCase().includes(q) && l.email)
-    || (data.list || []).find(l => (l.email || '').toLowerCase().includes(q));
-  return hit ? hit.email : null;
+  const found = resolveLeadExact(data.list || [], q);
+  return found.status === 'exact' && found.lead.email ? found.lead.email : null;
 }
 
 app.post('/api/admin/lead-note', requireAuthHeader, express.json({ limit: '64kb' }), async (req, res) => {

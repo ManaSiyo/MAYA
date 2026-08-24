@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { buildAdminCommandSnapshot, resolveLeadExact } from '../docs/server/admin-command.mjs';
+import { buildAdminCommandSnapshot, buildRealtimeCommandContext, resolveLeadExact } from '../docs/server/admin-command.mjs';
 
 let passed = 0;
 let failed = 0;
@@ -62,6 +62,17 @@ await test('missing feeds are called unavailable instead of becoming zero', () =
   assert.equal(snap.panels.traffic.manasiyo, null);
   assert.equal(snap.panels.ads, null);
   assert.ok(snap.attention.some(item => item.text.includes('unavailable')));
+});
+
+await test('Realtime context omits contact data but keeps grounded lead summaries', () => {
+  const safe = buildRealtimeCommandContext({
+    leads: [{ name: 'Mina Patel', email: 'mina@example.com', phone: '+14155550100', summary: 'Wedding look' }],
+    panels: { leads: { list: [{ name: 'Mina Patel', email: 'mina@example.com', summary: 'Wedding look' }] } },
+  });
+  assert.equal(JSON.stringify(safe).includes('mina@example.com'), false);
+  assert.equal(JSON.stringify(safe).includes('+14155550100'), false);
+  assert.equal(safe.leads[0].name, 'Mina Patel');
+  assert.equal(safe.leads[0].summary, 'Wedding look');
 });
 
 console.log('\n' + (failed ? failed + ' FAILED' : passed + ' passed') + '\n');

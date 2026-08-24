@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 271 checks. It runs only where
+3. `tests/app-regression.mjs` is the browser and source contract. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -44,10 +44,11 @@ If this file disagrees with chat memory, this file is right.
    MAYA's own bucket, the credit meter (`/api/admin/spend`, `/api/admin/credit`),
    marketing (`/api/admin/marketing`), Pinterest OAuth, `/api/fetchpic` with
    its SSRF guard, and the per-user rate limiter.
-5. Known open risks, unchanged: no client side error reporting; the rate
+5. Known open risks: no client side error reporting; the rate
    limiter is per Cloud Run instance and resets on restart; community
-   provenance is app level only; submissions filed before Aug 17 are still in
-   the old Drive folder.
+   provenance is app level only; submissions filed before Aug 17 may still be
+   in the old Drive folder; Realtime availability still depends on the OpenAI
+   account; no Gmail read integration exists.
 
 ## The playground rule, August 21
 
@@ -56,10 +57,10 @@ on Admin on hover) is Fromsa's private staging copy. Experimental features go
 there FIRST; `frontend/index.html` changes only when he approves a promotion.
 It shares the live sign in and data, so destructive experiments still need
 care. Keep the small amber Playground badge so the two are never confused.
-Since v13.58 the playground DIVERGES from frontend (the drawer redesign is
-staged there: circles in v13.58, tabs in v13.60, the filing cabinet in
-v13.62); never regenerate it as frontend plus badge without re-applying the
-blocks marked "v13.58 PLAYGROUND" and "v13.62 PLAYGROUND".
+Since v13.58 the playground has carried approved designs before promotion.
+The v13.62 filing cabinet was promoted faithfully to the real app in v13.71,
+but Playground still keeps its amber badge and remains the source of truth for
+future visual experiments. Never regenerate it as frontend plus badge.
 
 Admin access: ADMIN_EMAILS defaults to fromsa@manasiyo.com and
 worldofsiyo@gmail.com only, overridable by env. /api/admin/users lists named
@@ -71,6 +72,53 @@ campaign table, warnings, ticker) through Windsor, per connector. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.71 (Codex): Admin command center and faithful Marketing parity
+
+- Admin Maya is now a visible internal command layer, not only a voice line.
+  It reads the bounded Admin snapshot, shows Today and Attention, spotlights
+  panels, performs exact lead lookup, and creates visible Confirm/Dismiss rows
+  for memory, lead-note and Gmail-draft actions. No action silently sends.
+- Voice and the visible command center share the same snapshot. The Realtime
+  prompt strips lead email and phone fields it does not need; exact contact
+  resolution remains server-side. Direct Meta/Google feeds now backfill the
+  briefing when Windsor is unavailable.
+- The complete Marketing presentation is embedded in Admin under its shell:
+  moving ticker, full metric strip, Wix visitor row, spacious campaign table
+  and chart with mouse/touch hover, Lead Station, Sources and Bottom Line.
+  Refresh and authorization failures are visible. `backend/marketing.html`
+  remains served and is not retired or redirected.
+- The approved Playground filing cabinet is promoted to
+  `frontend/index.html`. Projects, avatar/measurements, Pinterest and Fabrics
+  use the same tab/folder structure while retaining the live project, auth,
+  autosave, Storage and deep-link implementations.
+- v13.51 fabric sourcing was audited and preserved: garment plus inferred
+  traits, real retailer inventory, image-aware thumbnail ranking, closest
+  visual matches wording, real buying fields, admin auth and static-first
+  fallback. No behavior change was required.
+- Cloud Build now gates command and proxy-policy tests in addition to AI
+  routing, fabric sourcing and syntax. Docker already ships every imported
+  helper.
+
+VALIDATION BEFORE COMMIT
+- PASS: Admin command 6, Admin UI source contract 6, proxy policy 27, AI
+  routing 7, fabric sourcing 6.
+- PASS: `node --check` for server, command helper, app regression and smoke;
+  all inline scripts parsed for app (5), Playground (5), Admin (6) and
+  standalone Marketing (2); `git diff --check` clean.
+- NOT RUN LOCALLY: smoke requires Express, and app regression requires the
+  Playwright package plus Chromium. This managed workspace contains no npm,
+  Express or browser executable, and local socket binding is blocked. The new
+  pure Admin UI contract covers the release's source/visual parity invariants
+  and runs in Cloud Build. Post-push live desktop/mobile inspection remains the
+  final visual check; authenticated data depends on an existing Admin session.
+
+NEXT SAFE SLICE
+- Do not retire standalone Marketing tonight. Later, extract shared canonical
+  Marketing rendering/styles once the embedded page has production evidence.
+- Deferred audit work remains: shared/distributed rate limiting, client error
+  reporting, end-to-end deletion authorization review, Vertex/Gemini evals,
+  Gmail read OAuth only if Fromsa explicitly authorizes its privacy scope.
 
 ## v13.70 (Claude, Commit A1): proxy security hardening
 
@@ -107,12 +155,12 @@ TEST EVIDENCE (all run locally, all pass)
 - ai-routing 7, fabric-sourcing 6 (ranking regression), smoke all, app
   regression 273 (incl. two new wiring assertions). node --check clean.
 
-OWNER CONFIG STILL NEEDED
-- None for A1. (A2 wires the fuller suite into the Cloud Build gate; until
-  then the gate still runs only ai-routing + fabric + syntax.)
-
-NEXT COMMIT: A2 — release gate and reproducibility (cloudbuild runs smoke +
-app regression + proxy-policy before the Docker build; pin tooling).
+FOLLOW-UP STATUS
+- v13.71 adds the pure command and proxy-policy suites to Cloud Build. Smoke
+  and browser regression remain local release checks because the current
+  Cloud Build image does not install their Express/Chromium dependencies.
+- Dependency pinning and a hermetic browser test image remain deferred rather
+  than changing deployment tooling in the same product release.
 
 ## v13.69 (Claude): Maya more capable, and the memory glitch fixed
 
@@ -139,12 +187,13 @@ app regression + proxy-policy before the Docker build; pin tooling).
   migration/pills were committed after his screenshots; a push + a
   hard-refresh shows them (version badge should read 13.69).
 
-STILL OPEN (told to Fromsa):
+FOLLOW-UP STATUS:
 - Gmail READ (so she fills leads from his inbox) needs Gmail OAuth on the
   server, a real setup with a scope/consent change; draft_email covers
   writing without it. Green step to be given when he wants it.
-- Promote the cabinet drawer to the real MAYA app; favorites clean submit
-  card; fabrics UI pass; retire marketing.html.
+- The cabinet was promoted in v13.71. Favorites already uses its submit-only
+  mode in source. A broader Fabrics visual redesign remains a later product
+  slice. Standalone Marketing is deliberately retained as the fallback.
 
 ## v13.68 (Claude): Marketing migrated into Admin, App Check wired
 

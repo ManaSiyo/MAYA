@@ -3,20 +3,27 @@ Fix attempts and setup work that lives OUTSIDE git: Cloud Run env vars, the
 Google and Firebase consoles, credentials, external accounts. Symptom, cause,
 action, status. Newest on top. Fromsa does every credential step himself.
 
-AUGUST 24, 2026, REMEDIATION PROGRAM (staged, small commits, do not push)
+AUGUST 24, 2026, FINAL ADMIN RELEASE REMEDIATION (v13.71)
 
-Working through the full audit in order. A1 shipped locally (v13.70):
-- A1 proxy security hardening: DONE, committed locally, not pushed.
-- A2 release gate + reproducibility: NEXT.
-- A3 Vertex image + Realtime compatibility: pending.
-- A4 voice action safety: pending.
-- A5 deletion/terms/authorization integrity (needs one owner decision on the
-  legacy Firebase principal's privileges): pending.
-- Stage B (fabric clarity, analytics correctness, accessibility, performance,
-  production-workflow safety) and Stage C (named server task routes, provider
-  evals): pending, only after A and B.
+- A1 proxy security hardening: DONE in v13.70 and retained.
+- Release contracts: command, proxy, AI router and fabric suites now gate the
+  Cloud Build source step; server and helper syntax remain gated. A hermetic
+  Express/Chromium build-test image is still deferred.
+- Voice action safety: exact or explicitly ambiguous lead resolution, visible
+  confirmation queue, no automatic send, truthful Gmail popup/failure state,
+  single-flight Realtime setup and failed microphone cleanup are DONE.
+- Admin data consistency: command snapshot now uses direct Meta/Google feeds
+  when Windsor is absent, and strips lead contact details from the Realtime
+  prompt. DONE.
+- Marketing parity regression: the modules were functionally present but the
+  Admin copy lacked the approved page spacing, ticker, Wix visitor row, chart
+  hover/state restoration and visible refresh errors. Fixed in v13.71. The
+  standalone page remains the live fallback.
+- A3 Vertex image/Realtime compatibility, A5 legacy deletion/authorization,
+  distributed rate limiting, client error reporting and provider evals remain
+  deferred. They require separate risk domains or owner configuration.
 
-AUGUST 24, 2026, SET UP THE API FOR FROMSA (the to-do list, in order)AUGUST 24, 2026, SET UP THE API FOR FROMSA (the to-do list, in order)
+AUGUST 24, 2026, SET UP THE API FOR FROMSA (the to-do list, in order)
 
 These are the console and environment steps only Fromsa can do. Each is a
 green step; none is code. Do them in this order.
@@ -64,4 +71,3 @@ green step; none is code. Do them in this order.
     - CLO-SET dashboard -> issue an API token -> set CLOSET_API_TOKEN and
       CLOSET_SEARCH_URL on Cloud Run, then tell Claude to wire the exact
       search endpoint from their docs.
-

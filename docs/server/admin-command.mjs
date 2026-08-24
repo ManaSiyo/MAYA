@@ -26,6 +26,15 @@ export function leadPublicDto(lead) {
   };
 }
 
+// The visible Admin DTO may include contact details because it is admin-only,
+// but the Realtime model does not need them. Exact identity is resolved later
+// by the server-side find_lead tool, so keep unnecessary PII out of the
+// session instructions.
+export function buildRealtimeCommandContext(snapshot) {
+  return JSON.parse(JSON.stringify(snapshot || {}, (key, value) =>
+    key === 'email' || key === 'phone' ? undefined : value));
+}
+
 // Exact means exact. A unique full name, unique email or unique first name is
 // accepted. Substrings and fuzzy matches never silently choose a person.
 export function resolveLeadExact(leads, query) {

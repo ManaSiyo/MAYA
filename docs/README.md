@@ -20,7 +20,7 @@ in `frontend/`, the back rooms live in `backend/`, pictures stay in
 Every note, the server and the rules live in `docs/`.
 Google project: `pro-maya`
 Repo: `ManaSiyo/MAYA` on GitHub, working folder `~/Desktop/MAYA-new`
-Current version: **13.52** (the number lives in a `maya-version` meta tag in
+Current version: **13.71** (the number lives in a `maya-version` meta tag in
 `frontend/index.html`, and the running site's number is the fastest way to tell whether
 a push has landed).
 
@@ -42,14 +42,16 @@ plan. A tip button exists purely as proof that payment plumbing works.
 
 ---
 
-## 2. The four screens
+## 2. The served screens
 
 | File | What it is | Who sees it |
 |---|---|---|
-| `index.html` | The MAYA app. Moodboard, community wall, favorites. ~630 KB, everything inline. | Clients |
-| `status.html` | The Systems Map. Health lights, traffic, submissions, prompting engine, changelog. | Admins only |
-| `backend.html` | The Brief plus the embedded Operations Room. One submission, opened from the Systems Map. | Admins only |
-| `operations.html` | The standalone Operations Room, the beta bench for pattern experiments. | Admins only |
+| `frontend/index.html` | The MAYA app. Moodboard, community wall, favorites and the approved filing cabinet. | Clients |
+| `backend/status.html` | Admin. Command briefing, health, traffic, Marketing, submissions, prompting and changelog. | Admins only |
+| `backend/marketing.html` | Standalone Marketing page, retained as the approved fallback. | Admins only |
+| `backend/backend.html` | The Brief plus the embedded Operations Room. One submission, opened from Admin. | Admins only |
+| `backend/operations.html` | The standalone Operations Room, the beta bench for pattern experiments. | Admins only |
+| `playground/index.html` | Private staging copy; never promote a design without Fromsa's approval. | Admins only |
 
 `aesthetics/` holds everything visual, including the Operations Room engine
 that `backend.html` embeds. `docs/` holds everything else: the server source,
@@ -132,6 +134,12 @@ Firebase Hosting rewrites `/api/**` to it, so the browser only ever talks to
 | `/api/admin/subthumb` | thumbnail for one submission picture (added v13.3) |
 | `/api/admin/savepieces` | write `pieces.json` so a dissection is never repeated |
 | `/api/admin/analytics` | Google Analytics numbers |
+| `/api/admin/marketing` | canonical Wix, Analytics and advertising data for Marketing and Admin |
+| `/api/admin/command-snapshot` | bounded Admin briefing data for the visible command center and voice |
+| `/api/admin/lead-lookup` | exact, ambiguity-safe Lead Station identity lookup |
+| `/api/admin/maya-remember`, `/api/admin/maya-forget` | confirmation-gated internal Maya memory writes |
+| `/api/admin/lead-note`, `/api/admin/lead-draft` | confirmation-gated lead note and reviewable email draft actions |
+| `/api/admin/voice-token` | short-lived Admin-only OpenAI Realtime session |
 | `/api/tip` | Stripe Checkout Session |
 
 **Environment variables on Cloud Run**
@@ -178,11 +186,14 @@ community/{postId}                  the community wall, added v13.3
 users/{uid}/projects/{pid}/images/  every picture in a project
 projects/avatars/                   client faces, survives a project delete
 community/{uid}/                    wall copies of unsaved pictures, added v13.3
+submissions/{submissionId}/         current client submission package
 ```
 
-**Google Drive** holds client submissions, one folder per submission under
-`DRIVE_FOLDER_ID`, containing `one-pager`, `dream-garment`, `summary.json`,
-`pieces.json`, `moodboard.json`, `hero.*`, `face.*`.
+The current server writes client submissions to the `SUBMISSIONS_BUCKET`
+(MAYA's Firebase Storage bucket by default), one prefix per submission with
+`one-pager`, `dream-garment`, `summary.json`, `pieces.json`, `moodboard.json`,
+`hero.*` and `face.*`. Google Drive is a legacy migration source only; do not
+delete its compatibility paths until every older submission is confirmed moved.
 
 Rules live at `docs/server/firestore.rules` and `docs/server/storage.rules`
 and publish with every deploy.
