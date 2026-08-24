@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.77">
+<meta name="maya-version" content="13.78">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -43,13 +43,15 @@ try {
   #top-left-brand{display:flex;align-items:center;gap:10px;margin-left:-8px;position:relative}
   /* v13.74: the top-left logo is a circle now, Maya's home. It breathes when
      she is live, the same pulse as the drawer star, a ring of light around it. */
+  /* v13.79: no circle around the logo when it is stationary. The ring only
+     appears while Maya is live, and it breathes faster, closer to speech. */
   .maya-logo-wrap{width:52px;height:52px;border-radius:50%;flex:none;padding:0;cursor:pointer;
     display:inline-flex;align-items:center;justify-content:center;
-    background:rgba(255,255,255,0.04);border:0.5px solid var(--line);transition:border-color .25s,transform .25s}
-  .maya-logo-wrap:hover{border-color:rgba(169,201,255,0.7);transform:scale(1.04)}
+    background:transparent;border:0.5px solid transparent;transition:border-color .25s,transform .25s}
+  .maya-logo-wrap:hover{transform:scale(1.05)}
+  body.maya-live .maya-logo-wrap{border-color:rgba(169,201,255,0.95);animation:voicepulse 0.85s ease-in-out infinite}
   #top-left-brand .maya-logo-mark{width:44px;height:44px;object-fit:contain;opacity:0.94;
     user-select:none;-webkit-user-drag:none}
-  body.maya-live .maya-logo-wrap{border-color:rgba(169,201,255,0.9);animation:voicepulse 1.6s ease-in-out infinite}
   /* v13.74: hover the Admin brand and a MAYA chip drops beneath it, the same
      chip family as Design Studio and Operations. Click it and Maya wakes. */
   #top-left-brand .admin-chips{position:absolute;left:0;top:100%;margin-top:9px;display:flex;gap:6px;
@@ -697,9 +699,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-24o">
+  <details class="fold" id="changes-fold" data-latest="2026-08-24p">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 24</b>Polish. The circle around the Admin logo is gone when it is still; the ring of light only appears while Maya is live, breathing faster now. In the MAYA app the cabinet reads Pinterest, Fabrics, Avatar, the avatar's switch caret sits right beside the name, the tab title says Project, and the drawer keeps the last tab even when you swipe it away and back. Pinterest now sits at the same height as Fabrics with the same room for its cards. And the Operations Room wears its beta to the right of the name, not underneath.</div>
     <div class="chg"><b>Aug 24</b>On Admin the logo became Maya's voice. Tap the circle at the top left and she connects, a Connecting chip on screen and the ring pulsing while she listens; the ADMIN wordmark beside it stays the way home. The drawer titles read in the logo blue now, the health lights sit centered, and the hover chip that would not click is gone.</div>
     <div class="chg"><b>Aug 24</b>Fabrics found their photos. The sourceable wall had been painting crimson color swatches with no picture, because a failed visual ranking, often just an empty credit balance, made the Brief throw away the real retailer results. Now the real products, which always carry a real photo, show anyway when the ranking cannot answer. The color swatch wall is gone: the tab shows real fabric photos, or a quiet searching line until they arrive, and refresh re-sources whatever garment is dissected.</div>
     <div class="chg"><b>Aug 24</b>The MAYA app cabinet got a round of fixes. It reopens on the last tab you used, so Pinterest stays Pinterest after you close and come back. The tab's name, Projects or Pinterest or Fabrics, rides in the empty space beside the three circles, so the panels start higher. The avatar dropdown came back, and on the Avatar tab, Randomize moved up beside Replace and Remove as three smaller pills, with Measurements no longer clipped.</div>

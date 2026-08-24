@@ -83,7 +83,8 @@ window.addEventListener('message', function(e){
   header.top > *{pointer-events:auto}
   .brand{display:flex;align-items:center;gap:10px;margin-left:-8px}
   .brand img{width:52px;height:52px;object-fit:contain;opacity:0.92}
-  .brand .brand-words{display:flex;flex-direction:column;gap:2px}
+  /* v13.79: beta sits to the RIGHT of Operations Room, not underneath. */
+  .brand .brand-words{display:flex;flex-direction:row;align-items:baseline;gap:9px}
   .brand h1{font-family:'Cormorant Garamond',serif;font-size:20px;letter-spacing:.22em;font-weight:400;margin:0;
     color:rgba(255,255,255,0.9);text-transform:uppercase}
   .brand .sub{font-size:9px;letter-spacing:.32em;color:var(--faint);text-transform:uppercase}

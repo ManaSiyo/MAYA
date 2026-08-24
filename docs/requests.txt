@@ -16,6 +16,22 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, CABINET ORDER, SWIPE MEMORY, LOGO RING (v13.78)
+
+[x] "Caret for picking the avatar should be right beside the name." Done.
+[x] "Rename Projects to Project." Done.
+[x] "Tabs: Pinterest first, then Fabrics, then Avatar." Reordered.
+[x] "Keep Pinterest when I swipe the drawer away and back." Now fires on swipe.
+[x] "Give Pinterest the same height/room as Fabrics; anchor Bring them in."
+[x] "The circle around the logo should only show when Maya is talking, and pulse
+    faster." Ring only under maya-live, faster pulse.
+[x] "Operations Room beta to the right, not underneath." Done.
+[~] Avatar switcher "broken": the dropdown opens fine in code (async); with the
+    caret now beside the name it should read clearly. Watching for repro.
+[ ] BIG: drawer chat box (see + copy Maya's text), Maya feature-log +
+    Maya->Claude relay, Maya's growing memory/soul, dynamic admin. Roadmap.
+[ ] Favorites clean submit-only card; unfavorite removes from community. NEXT.
+
 AUGUST 24, 2026, ADMIN LOGO IS THE VOICE, MORE POLISH (v13.77+)
 
 [x] "In Admin the logo should be the voice (tap to talk, says Connecting,

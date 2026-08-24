@@ -1399,6 +1399,24 @@ ok('v13.75: the avatar dropdown is back and Randomize joins Replace/Remove',
 
 // v13.76: the sourceable fabric wall shows only real retailer photos and no
 // longer collapses to color swatches when the visual ranking is unavailable.
+// v13.78: cabinet order/labels + swipe memory + Admin logo ring + ops beta.
+ok('v13.78: tabs read Pinterest, Fabrics, Avatar; the title says Project',
+  INDEX_SOURCE.indexOf('id="pg-tab-pinterest"') < INDEX_SOURCE.indexOf('id="pg-tab-fabrics"') &&
+  INDEX_SOURCE.indexOf('id="pg-tab-fabrics"') < INDEX_SOURCE.indexOf('id="pg-tab-avatar"') &&
+  INDEX_SOURCE.includes("'Fabrics' : 'Project'") &&
+  INDEX_SOURCE.includes('class="pg-avatar-nameline"'));
+ok('v13.78: reopening on the last tab works from the swipe too',
+  INDEX_SOURCE.includes('function _pgRestoreLastTab()') &&
+  INDEX_SOURCE.includes("!_drawerWasOpen && open && typeof _pgRestoreLastTab"));
+ok('v13.78: Pinterest matches Fabrics height and anchors Bring-them-in',
+  INDEX_SOURCE.includes('#pinterest-drawer > .drawer-head { display: none; }') &&
+  INDEX_SOURCE.includes('#pinterest-drawer > .pin-drawer-foot { margin-top: auto'));
+ok('v13.78: the Admin logo has no ring until Maya is live',
+  MAP_SOURCE.includes('background:transparent;border:0.5px solid transparent') &&
+  MAP_SOURCE.includes('body.maya-live .maya-logo-wrap{border-color:rgba(169,201,255,0.95);animation:voicepulse 0.85s'));
+ok('v13.78: Operations Room beta sits to the right',
+  !OPS_SOURCE || OPS_SOURCE.includes('.brand .brand-words{display:flex;flex-direction:row;align-items:baseline'));
+
 ok('v13.76: fabrics show real photos and survive a failed rank',
   !BACKEND_SOURCE || (
     BACKEND_SOURCE.includes('paint(matches.length ? matches : products)') &&

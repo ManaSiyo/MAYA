@@ -73,6 +73,35 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.78 (Claude): cabinet order/labels, swipe memory, logo ring, ops beta
+
+- `frontend/index.html` cabinet: tab order is Pinterest, Fabrics, Avatar; the
+  switch-avatar caret moved beside the name (`.pg-avatar-nameline`); the tab
+  title reads "Project"; the last-tab memory now also fires on the SWIPE path
+  (refactored into `_pgRestoreLastTab()`, called from the hscroll open handler,
+  not just `toggleNotesDrawer`). Pinterest's empty head is hidden so its
+  All-saves/Boards row aligns to Fabrics' tabs and the cards get the same room;
+  `.pin-drawer-foot` anchors to the bottom.
+- `backend/status.html`: the logo has NO ring when stationary
+  (`border:...transparent`, no background); the ring + faster pulse
+  (`voicepulse 0.85s`) appear only under `body.maya-live`.
+- `backend/operations.html`: `.brand-words` is a baseline row so "beta" sits to
+  the right of "Operations Room".
+
+Changed files: `frontend/index.html`, `backend/status.html`,
+`backend/operations.html`; version 13.78 across the four surfaces;
+`tests/app-regression.mjs`, `tests/admin-ui-contract.mjs`.
+
+VALIDATION: app-regression all passed, contract green.
+
+NEXT STEP — Fromsa's Maya vision (big, in progress)
+- Drawer chat box: show Maya's replies as readable, copy-pasteable text while
+  she is live (transcript from the realtime events), not just voice.
+- Maya feature-log tool + a Maya→Claude relay for feature requests; Maya's own
+  save/soul that grows; a more dynamic admin driven by conversation.
+- Favorites: clean read-only submit-only card; unfavorite removes from the
+  community wall (still open from the earlier batch).
+
 ## v13.77 (Claude): Admin logo is the voice, drawer polish
 
 - On `backend/status.html` the circular logo IS Maya's voice now: it is a

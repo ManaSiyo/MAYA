@@ -9,6 +9,18 @@ to work with Fromsa. This file is the story; README.md is the manual.
 
 ─────────────────────────────────────────────
 
+AUGUST 24, 2026, CABINET ORDER AND SWIPE MEMORY (v13.78)
+
+The cabinet reads Pinterest, Fabrics, Avatar now, the switch-avatar caret sits
+right beside the name, and the tab title says Project. The drawer keeps the tab
+you were on even when you swipe it away and bring it back, not only when you use
+the hamburger. Pinterest sits at the same height as Fabrics with the same room
+for its cards. On Admin the circle around the logo is gone when it is still; the
+ring only appears while Maya is live, breathing faster. And the Operations Room
+wears its beta to the right of the name.
+
+─────────────────────────────────────────────
+
 AUGUST 24, 2026, THE LOGO BECOMES THE VOICE (v13.77)
 
 On the Admin page the logo at the top left is Maya's voice now. Tap the circle

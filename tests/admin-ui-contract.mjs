@@ -63,9 +63,9 @@ await test('the approved filing cabinet is promoted without removing Playground'
   assert.ok(playground.includes('>Playground</div>'));
 });
 
-await test('all four release surfaces carry v13.77', () => {
+await test('all four release surfaces carry v13.78', () => {
   const version = source => (source.match(/name="maya-version" content="([0-9.]+)"/) || [])[1];
-  assert.deepEqual([app, playground, admin, marketing].map(version), ['13.77', '13.77', '13.77', '13.77']);
+  assert.deepEqual([app, playground, admin, marketing].map(version), ['13.78', '13.78', '13.78', '13.78']);
 });
 
 console.log('\n' + (failed ? failed + ' FAILED' : passed + ' passed') + '\n');
