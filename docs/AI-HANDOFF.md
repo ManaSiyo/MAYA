@@ -73,6 +73,29 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.80 (Claude): Maya's feature log (the Maya → Claude relay, step 1)
+
+- New `log_feature({text, who})` voice tool. Server: `POST
+  /api/admin/maya-log-feature` appends to GCS `maya/features.json` (last 500);
+  `GET /api/admin/maya-features` lists them (admin only). Client `_voiceTool`
+  posts directly (no confirm — logging has no external side effect) and echoes
+  "Logged for Claude" into the chat. See `docs/maya-feature-log.md` for the
+  relay: read the endpoint (or ask Maya) and paste to Claude; a live automation
+  is a later owner decision.
+- NOTE: server change, so it only works after a push + Cloud Run deploy.
+
+Changed files: `docs/server/server.js`, `backend/status.html`,
+`docs/maya-feature-log.md`; version 13.80 across the four surfaces;
+`tests/app-regression.mjs`, `tests/admin-ui-contract.mjs`.
+
+VALIDATION: app-regression all passed, full gate suite green, server --check OK.
+
+NEXT STEP — still open from Fromsa's Maya vision
+- Favorites: clean read-only submit-only card; unfavorite removes from community.
+- Bigger: surface the feature log in the drawer; Maya's growing memory/"soul";
+  a more dynamic admin; a real Maya→Claude automation channel (needs an owner
+  decision: GitHub issue / email / webhook). And OpenAI credits for voice.
+
 ## v13.79 (Claude): Maya's conversation shows on screen (chat box)
 
 - `backend/status.html`: the drawer command now carries a `#maya-chat`

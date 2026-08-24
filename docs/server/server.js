@@ -2925,6 +2925,12 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
         parameters: { type: 'object', properties: {
           state: { type: 'string', enum: ['open', 'close'], description: 'open to pull the drawer up, close to dismiss it' } },
           required: ['state'] } },
+      { type: 'function', name: 'log_feature',
+        description: 'Log a feature request or a frustration about something MAYA cannot do yet, from Fromsa or a customer, so it reaches Claude to build. Use whenever someone wishes MAYA did something it does not do. This is your relay to Claude.',
+        parameters: { type: 'object', properties: {
+          text: { type: 'string', description: 'the feature or wish, one or two sentences' },
+          who: { type: 'string', description: 'who asked: fromsa, or a customer name if known' } },
+          required: ['text'] } },
     ];
     const r = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
       method: 'POST',
@@ -3084,6 +3090,42 @@ app.post('/api/admin/maya-remember', requireAuthHeader, express.json({ limit: '8
   if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
   try { const n = await appendMayaMemory((req.body || {}).text); return res.json({ ok: !!n, count: n || 0 }); }
   catch (e) { console.error('[maya-remember]', e.message); return res.status(502).json({ error: 'remember_failed' }); }
+});
+
+// v13.80: Maya's feature log. Anything Fromsa or a customer wishes MAYA did but
+// it does not yet, Maya records here. It is the relay to Claude: the log is read
+// back and turned into work. Logging has no external side effect, so it does not
+// need a click to confirm.
+const MAYA_FEATURES_PATH = 'maya/features.json';
+async function loadMayaFeatures() {
+  const o = await gcsGet(MAYA_FEATURES_PATH).catch(() => ({ ok: false }));
+  if (!o.ok) return { items: [] };
+  try { const j = JSON.parse(o.buf.toString('utf8')); return { items: Array.isArray(j.items) ? j.items : [] }; }
+  catch { return { items: [] }; }
+}
+async function appendMayaFeature(text, who) {
+  const t = String(text || '').trim().slice(0, 600);
+  if (!t) return null;
+  const rec = await loadMayaFeatures();
+  rec.items.push({ ts: new Date().toISOString(), who: String(who || 'fromsa').trim().slice(0, 80), text: t, done: false });
+  rec.items = rec.items.slice(-500);
+  await gcsPut(MAYA_FEATURES_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+  return rec.items.length;
+}
+app.post('/api/admin/maya-log-feature', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  try { const n = await appendMayaFeature((req.body || {}).text, (req.body || {}).who); return res.json({ ok: !!n, count: n || 0 }); }
+  catch (e) { console.error('[maya-log-feature]', e.message); return res.status(502).json({ error: 'log_failed' }); }
+});
+app.get('/api/admin/maya-features', requireAuthHeader, async (req, res) => {
+  try { await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  try { const rec = await loadMayaFeatures(); return res.json({ ok: true, items: rec.items.slice(-200) }); }
+  catch (e) { console.error('[maya-features]', e.message); return res.status(502).json({ error: 'features_failed' }); }
 });
 
 // Resolve a lead by first name or email against the current form submissions,

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.79">
+<meta name="maya-version" content="13.80">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -712,9 +712,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-24q">
+  <details class="fold" id="changes-fold" data-latest="2026-08-24r">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 24</b>Maya can log features now. When you, or a customer, wish MAYA did something it does not yet do, tell Maya and she writes it to a feature log that reaches Claude to build. It is the first thread of the line between Maya and Claude: she records the wish, Claude turns it into work.</div>
     <div class="chg"><b>Aug 24</b>Maya's line reads on screen now, not only in the ear. When she is live the drawer carries the conversation as text, her words and yours, and every line can be copied. It is no longer voice only; you can see what she said and take it with you.</div>
     <div class="chg"><b>Aug 24</b>Polish. The circle around the Admin logo is gone when it is still; the ring of light only appears while Maya is live, breathing faster now. In the MAYA app the cabinet reads Pinterest, Fabrics, Avatar, the avatar's switch caret sits right beside the name, the tab title says Project, and the drawer keeps the last tab even when you swipe it away and back. Pinterest now sits at the same height as Fabrics with the same room for its cards. And the Operations Room wears its beta to the right of the name, not underneath.</div>
     <div class="chg"><b>Aug 24</b>On Admin the logo became Maya's voice. Tap the circle at the top left and she connects, a Connecting chip on screen and the ring pulsing while she listens; the ADMIN wordmark beside it stays the way home. The drawer titles read in the logo blue now, the health lights sit centered, and the hover chip that would not click is gone.</div>
@@ -1685,6 +1686,17 @@ async function _voiceTool(name, args){
     if(name==='show_panel') return mayaShowPanel(args.panel||'');
     if(name==='show_drawer'){ const open=(args.state!=='close'); toggleDrawer(open);
       return {ok:true, drawer: open?'open':'closed'}; }
+    if(name==='log_feature'){
+      const t=_mayaEscText(args.text).slice(0,600); if(!t) return {ok:false,error:'text_required'};
+      try{
+        const r=await fetch('/api/admin/maya-log-feature',{method:'POST',
+          headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
+          body:JSON.stringify({text:t, who:args.who||'fromsa'})});
+        if(!r.ok) return {ok:false,error:'log_failed'};
+        _mayaChatAdd('maya','Logged for Claude: '+t);
+        return {ok:true, logged:true};
+      }catch(e){ return {ok:false,error:'log_failed'}; }
+    }
     if(name==='find_lead') return await _mayaLeadLookup(args.query||'');
     if(name==='remember'){
       const t=_mayaEscText(args.text).slice(0,600);

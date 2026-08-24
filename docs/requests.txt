@@ -16,6 +16,16 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, MAYA FEATURE LOG (v13.80)
+
+[x] "Maya should log features requested by me or customers and pass them to
+    you." Done: log_feature tool + GCS log + a relay doc. First thread of the
+    Maya->Claude line. (Needs a push to deploy the server side.)
+[ ] Surface the feature log in the drawer; a real Maya->Claude automation
+    channel (owner decision needed: GitHub issue / email / webhook).
+[ ] Maya's growing memory/soul; dynamic admin; Maya = Claude abilities. Roadmap.
+[ ] Favorites clean submit-only card; unfavorite removes from community. NEXT.
+
 AUGUST 24, 2026, MAYA CHAT BOX (v13.79)
 
 [x] "The drawer should be a chat box when Maya talks; I should see her response

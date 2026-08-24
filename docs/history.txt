@@ -9,6 +9,16 @@ to work with Fromsa. This file is the story; README.md is the manual.
 
 ─────────────────────────────────────────────
 
+AUGUST 24, 2026, MAYA LOGS FEATURES (v13.80)
+
+The first thread of the line between Maya and Claude. When Fromsa or a customer
+wishes MAYA did something it cannot do yet, Maya writes it to a feature log that
+Claude reads and builds from. She records the wish, in her own words, and it
+becomes work. The log lives in the server's own store; a live automation between
+Maya and Claude is the next step, once the channel is chosen.
+
+─────────────────────────────────────────────
+
 AUGUST 24, 2026, MAYA READS ON SCREEN (v13.79)
 
 Maya's line shows on screen now, not only in the ear. When she is live the drawer

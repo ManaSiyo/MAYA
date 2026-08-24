@@ -1421,6 +1421,11 @@ ok('v13.79: the drawer shows Maya\'s conversation as copyable text',
   MAP_SOURCE.includes('function _mayaChatAdd(') &&
   MAP_SOURCE.includes("m.type==='response.audio_transcript.done'") &&
   MAP_SOURCE.includes('navigator.clipboard.writeText'));
+ok('v13.80: Maya can log feature requests as a relay to Claude',
+  SERVER_SOURCE.includes("name: 'log_feature'") &&
+  SERVER_SOURCE.includes("app.post('/api/admin/maya-log-feature'") &&
+  SERVER_SOURCE.includes("app.get('/api/admin/maya-features'") &&
+  MAP_SOURCE.includes("if(name==='log_feature')"));
 
 ok('v13.76: fabrics show real photos and survive a failed rank',
   !BACKEND_SOURCE || (
