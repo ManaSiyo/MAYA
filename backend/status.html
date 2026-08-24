@@ -99,6 +99,32 @@ try {
     font-family:'Jost',sans-serif;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(169,201,255,0.95)}
   #voice-chip.show{display:flex}
   #voice-chip .dot{width:9px;height:9px;border-radius:50%;background:#a9c9ff;animation:voicepulse 1.6s ease-in-out infinite}
+  /* v13.71: the visible Admin command layer. Maya's spoken work always has a
+     matching state, grounded brief and confirmation queue on screen. */
+  #maya-command{margin:16px 0 22px;padding:16px 18px;text-align:left;border:0.5px solid rgba(169,201,255,0.34);
+    border-radius:18px;background:rgba(10,16,34,0.62);backdrop-filter:blur(22px) saturate(170%);
+    -webkit-backdrop-filter:blur(22px) saturate(170%);box-shadow:inset 0 1px 0 rgba(255,255,255,0.08)}
+  .maya-command-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .maya-command-title{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:#a9c9ff}
+  #maya-command-state{margin-left:auto;font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim)}
+  #maya-command-state.busy{color:#a9c9ff} #maya-command-state.waiting{color:var(--amber)}
+  #maya-command-brief{margin:11px 0 10px;font-size:15px;line-height:1.5;color:var(--ink)}
+  #maya-command-attention{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 10px}
+  .maya-attention{border:0.5px solid rgba(251,191,36,0.38);border-radius:100px;padding:4px 9px;background:transparent;
+    color:rgba(255,230,180,0.9);font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.08em;cursor:pointer}
+  .maya-attention.red{border-color:rgba(253,164,175,0.45);color:rgba(255,195,205,0.95)}
+  .maya-command-nav{display:flex;gap:6px;flex-wrap:wrap}
+  .maya-command-nav button,.maya-action-btn{border:0.5px solid var(--line);border-radius:100px;padding:5px 10px;background:transparent;
+    color:var(--dim);font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer}
+  .maya-command-nav button:hover,.maya-action-btn:hover{border-color:rgba(255,255,255,0.5);color:var(--ink)}
+  #maya-action-queue{margin-top:12px;display:grid;gap:8px}
+  .maya-action{padding:10px 12px;border-radius:13px;border:0.5px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.025)}
+  .maya-action-copy{font-size:14px;line-height:1.4;color:var(--ink)}
+  .maya-action-meta{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+  .maya-action-controls{display:flex;gap:6px;margin-top:8px}
+  .maya-action-btn.confirm{border-color:rgba(169,201,255,0.55);color:#a9c9ff}
+  .maya-spotlight{animation:mayaSpot 2.2s ease-out}
+  @keyframes mayaSpot{0%,35%{box-shadow:0 0 0 2px rgba(169,201,255,0.65),0 0 32px rgba(169,201,255,0.22)}100%{box-shadow:none}}
   /* v13.67: a light blue section title in the drawer, per Fromsa. */
   /* v13.68: every drawer section title in the logo blue, they are headlines. */
   #drawer h3, #drawer h3.tint{color:rgba(169,201,255,0.85)}
@@ -460,6 +486,23 @@ try {
     <span style="font-size:14.5px;color:var(--dim)">Sign in once and everything unlocks: submissions, traffic, and the prompting engine.</span>
     <span id="gsi-slot" style="margin:0 0 0 auto"></span>
   </div>
+
+  <section id="maya-command" aria-live="polite" aria-label="Maya Admin command center">
+    <div class="maya-command-head">
+      <span class="maya-command-title">Maya command</span>
+      <span id="maya-command-state">sign in to ground the briefing</span>
+    </div>
+    <div id="maya-command-brief">Today and attention will appear here from the same sources as Admin.</div>
+    <div id="maya-command-attention"></div>
+    <div class="maya-command-nav" aria-label="Admin panel shortcuts">
+      <button onclick="mayaShowPanel('submissions')">Submissions</button>
+      <button onclick="mayaShowPanel('traffic')">Traffic</button>
+      <button onclick="mayaShowPanel('ads')">Ads</button>
+      <button onclick="mayaShowPanel('leads')">Leads</button>
+      <button onclick="mayaShowPanel('bottom')">Bottom line</button>
+    </div>
+    <div id="maya-action-queue" aria-label="Actions waiting for confirmation"></div>
+  </section>
 
   <h2 class="grp">Latest submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span></h2>
   <div id="subs-strip" style="display:none"></div>
@@ -913,6 +956,7 @@ function _adoptToken(t, firstLoad) {
   _scheduleRenew(t);
   runChecks(); loadTraffic(); loadSubmissions(); _fbBridge(t);
   try{ if(window.loadMkt) window.loadMkt(); }catch(_){}
+  try{ if(window.loadMayaCommand) window.loadMayaCommand(); }catch(_){}
 }
 function _gisBoot() {
   const cached = _cachedTok();
@@ -943,6 +987,7 @@ function _cmdBlock(label) {
 let _expiredAt = 0;
 function _expired() {
   _idTok = null;
+  try{ if(window.mayaCommandState) window.mayaCommandState('signed out', 'waiting'); }catch(_){}
   try { localStorage.removeItem('maya_admin_tok'); } catch (_) {}
   runChecks();
   // v12.8: try to renew silently FIRST, and only trouble you if that fails.
@@ -1004,6 +1049,8 @@ async function loadSubmissions() {
   try { data = await r.json(); }
   catch (_) { _subsNote('The submissions response was incomplete. It will retry automatically.'); return; }
   if (requestSeq !== _subsSeq) return;
+  window.MAYA_ADMIN_DATA = window.MAYA_ADMIN_DATA || {};
+  window.MAYA_ADMIN_DATA.submissions = data;
   document.getElementById('subs-count').textContent = data.total ? data.total + ' total' : '';
   const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const when = iso => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
@@ -1128,6 +1175,8 @@ async function loadTraffic() {
   try { d = await r.json(); }
   catch (_) { _note('Traffic returned an incomplete response. It will retry automatically.'); return; }
   if (requestSeq !== _trafficSeq) return;
+  window.MAYA_ADMIN_DATA = window.MAYA_ADMIN_DATA || {};
+  window.MAYA_ADMIN_DATA.traffic = d;
   _paintHeadTiles(d);
   if (!d.ok) {
     _note('<b>Connect Google Analytics (one time):</b> Google Analytics &#8594; Admin &#8594; Property access management &#8594; add <b>'
@@ -1286,16 +1335,185 @@ loadSubmissions();
 setInterval(() => { if (_idTok && document.visibilityState === 'visible') loadTraffic(); }, 120000);
 </script>
 <script>
-// ═══ v13.67: MAYA'S VOICE. Voice to voice over WebRTC, admin only. The
+// ═══ v13.71: THE VISIBLE ADMIN COMMAND LAYER. Deterministic briefing,
+// grounded panel reads, exact lead identity and click-confirmed writes. ═══
+window.MAYA_ADMIN_DATA = window.MAYA_ADMIN_DATA || {};
+let _mayaActions = [];
+let _mayaActionSeq = 0;
+
+function mayaCommandState(text, mode){
+  const el=document.getElementById('maya-command-state'); if(!el) return;
+  el.textContent=text||''; el.className=mode||'';
+}
+window.mayaCommandState=mayaCommandState;
+
+function _mayaEscText(value){ return String(value==null?'':value).replace(/\s+/g,' ').trim(); }
+function _mayaPanelTarget(panel){
+  return ({submissions:'subs-strip',traffic:'users-fold',ads:'ads-fold',leads:'leads-fold',
+    sources:'sources-fold',bottom:'bottom-fold',changes:'changes-fold'})[panel]||'';
+}
+function _mayaPanelData(panel){
+  const d=window.MAYA_ADMIN_DATA||{}, t=d.traffic||{}, m=d.marketing||{}, c=d.command||{};
+  if(panel==='submissions') return d.submissions ? {total:d.submissions.total,
+    newest:(d.submissions.folders||[]).slice(0,8).map(x=>({name:x.name,when:x.createdTime,files:(x.files||[]).length}))} : null;
+  if(panel==='traffic') return {accounts:t.accounts||null,live:t.live,ranges:t.ranges||null,manasiyo:t.wixSite||null};
+  if(panel==='ads') return {googleAds:m.googleAds||null,meta:m.meta||null,
+    campaigns:((m.adCombined||{}).campaigns||[]).slice(0,10),warnings:m.warnings||[]};
+  if(panel==='leads') return m.leads ? {today:m.leads.today,d7:m.leads.d7,d28:m.leads.d28,
+    list:(m.leads.list||[]).slice(0,12).map(x=>({name:x.name,email:x.email,when:x.ts,summary:x.note||x.wrote}))} : null;
+  if(panel==='sources') return (m.analytics||{}).connected ? {sources:m.analytics.sources||[],pages:m.analytics.pages||[]} : null;
+  if(panel==='bottom') return {costPerLead:m.costPerLead,
+    command:((c.panels||{}).bottom)||null,warnings:m.warnings||[]};
+  if(panel==='changes') return ((c.panels||{}).changes)||null;
+  return null;
+}
+function mayaShowPanel(panel){
+  const id=_mayaPanelTarget(panel), el=id&&document.getElementById(id);
+  if(!el) return {ok:false,error:'unknown_panel'};
+  if(el.tagName==='DETAILS') el.open=true;
+  el.classList.remove('maya-spotlight'); void el.offsetWidth; el.classList.add('maya-spotlight');
+  el.scrollIntoView({behavior:'smooth',block:'center'});
+  mayaCommandState('showing '+panel,'busy');
+  setTimeout(()=>mayaCommandState(_mayaActions.length?'action waiting for confirmation':'ready',_mayaActions.length?'waiting':''),2200);
+  return {ok:true,panel,data:_mayaPanelData(panel)};
+}
+window.mayaShowPanel=mayaShowPanel;
+
+function _mayaRenderCommand(snapshot){
+  const brief=document.getElementById('maya-command-brief');
+  const attention=document.getElementById('maya-command-attention');
+  if(brief) brief.textContent=(snapshot.briefing||[]).join(' ' )||'No grounded briefing is available yet.';
+  if(attention){
+    attention.innerHTML='';
+    (snapshot.attention||[]).forEach(item=>{
+      const b=document.createElement('button'); b.type='button';
+      b.className='maya-attention'+(item.severity==='red'?' red':'');
+      b.textContent=item.text; b.onclick=()=>mayaShowPanel(item.panel);
+      attention.appendChild(b);
+    });
+  }
+}
+async function loadMayaCommand(){
+  if(!_idTok){ mayaCommandState('sign in to ground the briefing','waiting'); return null; }
+  mayaCommandState('refreshing today','busy');
+  try{
+    const r=await fetch('/api/admin/command-snapshot?t='+Date.now(),{headers:{'Authorization':'Bearer '+_idTok},cache:'no-store'});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.ok) throw new Error(j.error||('snapshot '+r.status));
+    window.MAYA_ADMIN_DATA.command=j; _mayaRenderCommand(j);
+    mayaCommandState(_mayaActions.length?'action waiting for confirmation':'ready',_mayaActions.length?'waiting':'');
+    return j;
+  }catch(e){ mayaCommandState('briefing unavailable','waiting'); return null; }
+}
+window.loadMayaCommand=loadMayaCommand;
+
+async function _mayaLeadLookup(query){
+  const r=await fetch('/api/admin/lead-lookup',{method:'POST',
+    headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
+    body:JSON.stringify({query:query||''})});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok) return {ok:false,status:j.error||('lookup '+r.status),matches:[]};
+  return j;
+}
+function _mayaActionLabel(action){
+  if(action.kind==='remember') return 'Remember: '+action.text;
+  if(action.kind==='forget') return 'Forget: '+action.text;
+  if(action.kind==='lead_note') return 'Add to '+action.lead.name+': '+action.note;
+  if(action.kind==='email') return 'Draft a follow-up email to '+action.lead.name+
+    (action.request?' about '+action.request:'');
+  return 'Pending Admin action';
+}
+function _mayaRenderActions(){
+  const host=document.getElementById('maya-action-queue'); if(!host) return;
+  host.innerHTML='';
+  _mayaActions.forEach(action=>{
+    const row=document.createElement('div'); row.className='maya-action'; row.dataset.actionId=action.id;
+    const meta=document.createElement('div'); meta.className='maya-action-meta'; meta.textContent='Waiting for your confirmation';
+    const copy=document.createElement('div'); copy.className='maya-action-copy'; copy.textContent=_mayaActionLabel(action);
+    const controls=document.createElement('div'); controls.className='maya-action-controls';
+    const yes=document.createElement('button'); yes.type='button'; yes.className='maya-action-btn confirm'; yes.textContent='Confirm';
+    yes.onclick=()=>mayaConfirmAction(action.id);
+    const no=document.createElement('button'); no.type='button'; no.className='maya-action-btn'; no.textContent='Dismiss';
+    no.onclick=()=>mayaDismissAction(action.id);
+    controls.append(yes,no); row.append(meta,copy,controls); host.appendChild(row);
+  });
+  mayaCommandState(_mayaActions.length?'action waiting for confirmation':'ready',_mayaActions.length?'waiting':'');
+}
+function _mayaQueueAction(action){
+  const rec={...action,id:'maya-action-'+(++_mayaActionSeq)};
+  _mayaActions.push(rec); _mayaActions=_mayaActions.slice(-8); _mayaRenderActions();
+  document.getElementById('maya-command')?.scrollIntoView({behavior:'smooth',block:'center'});
+  return {ok:true,queued:true,actionId:rec.id,message:'Waiting for Fromsa to confirm on the Admin page.'};
+}
+function mayaDismissAction(id){ _mayaActions=_mayaActions.filter(a=>a.id!==id); _mayaRenderActions(); }
+window.mayaDismissAction=mayaDismissAction;
+
+async function mayaConfirmAction(id){
+  const action=_mayaActions.find(a=>a.id===id); if(!action) return;
+  const row=document.querySelector('[data-action-id="'+CSS.escape(id)+'"]');
+  const buttons=row?row.querySelectorAll('button'):[]; buttons.forEach(b=>b.disabled=true);
+  mayaCommandState('confirming '+action.kind,'busy');
+  // Open the review window inside the trusted click before the async draft call.
+  let mailWindow=null;
+  if(action.kind==='email'){
+    try{ mailWindow=window.open('about:blank','_blank'); if(mailWindow) mailWindow.opener=null; }catch(_){}
+  }
+  try{
+    if(action.kind==='email'&&!mailWindow) throw new Error('Allow popups, then confirm the email draft again.');
+    let r,j;
+    if(action.kind==='remember'||action.kind==='forget'){
+      r=await fetch('/api/admin/maya-'+action.kind,{method:'POST',headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
+        body:JSON.stringify({text:action.text})}); j=await r.json().catch(()=>({}));
+    }else if(action.kind==='lead_note'){
+      r=await fetch('/api/admin/lead-note',{method:'POST',headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
+        body:JSON.stringify({email:action.lead.email,note:action.note,contact:action.contact||''})}); j=await r.json().catch(()=>({}));
+    }else if(action.kind==='email'){
+      r=await fetch('/api/admin/lead-draft',{method:'POST',headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
+        body:JSON.stringify({email:action.lead.email,name:action.lead.name,
+          summary:[action.lead.summary,action.request].filter(Boolean).join(' | ')})}); j=await r.json().catch(()=>({}));
+      if(r.ok&&j.subject){
+        const url='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(action.lead.email)+
+          '&su='+encodeURIComponent(j.subject)+'&body='+encodeURIComponent(j.body||'');
+        mailWindow.location.href=url;
+      }
+    }
+    if(!r||!r.ok||j.ok===false) throw new Error((j&&j.error)||('action '+(r&&r.status)));
+    _mayaActions=_mayaActions.filter(a=>a.id!==id); _mayaRenderActions();
+    mayaCommandState(action.kind==='email'?'draft opened for review':'action saved','');
+    if(action.kind==='lead_note'){ try{ if(window.loadMkt) window.loadMkt(); }catch(_){} }
+  }catch(e){
+    try{ if(mailWindow) mailWindow.close(); }catch(_){}
+    if(row){ const meta=row.querySelector('.maya-action-meta'); if(meta) meta.textContent='Could not complete: '+String(e.message||e).slice(0,90); }
+    buttons.forEach(b=>b.disabled=false); mayaCommandState('action still waiting','waiting');
+  }
+}
+window.mayaConfirmAction=mayaConfirmAction;
+
+async function _mayaQueueLeadAction(query,kind,note,request,contact){
+  const found=await _mayaLeadLookup(query);
+  if(!found.ok){
+    const choices=(found.matches||[]).map(x=>x.name+' <'+x.email+'>');
+    return {ok:false,error:found.status||'lead_not_found',matches:choices,
+      instruction:choices.length?'Ask Fromsa which exact lead.':'Ask for the exact lead name or email.'};
+  }
+  return _mayaQueueAction({kind,lead:found.lead,note:_mayaEscText(note).slice(0,2000),
+    request:_mayaEscText(request).slice(0,400),contact:contact||''});
+}
+if(_idTok) loadMayaCommand();
+setInterval(()=>{ if(_idTok&&document.visibilityState==='visible') loadMayaCommand(); },120000);
+</script>
+<script>
+// ═══ v13.71: MAYA'S VOICE. Voice to voice over WebRTC, admin only. The
 // server mints a one-call ephemeral key with the live numbers baked into the
 // instructions; the browser speaks with OpenAI Realtime directly and the real
-// API key never comes near this page. She has two tools, remember and
-// note_lead, handled here on the data channel: she can keep a fact in her own
-// memory, and update a lead in the Lead Station while you talk. The star at
+// API key never comes near this page. Read tools inspect or navigate; write
+// tools only queue a visible action until Fromsa confirms it. The star at
 // the drawer's floor opens the line; a chip stays on screen while she listens
 // even with the drawer closed, and tapping either hangs up. Works on a phone:
 // the tap is the gesture both the microphone and the speaker need. ═══
 let _voice = null;   // { pc, mic, audio, dc }
+let _voiceStarting = false;
+let _voiceToolChain = Promise.resolve();
 function _voiceWord(t){ const el=document.getElementById('voice-word'); if(el) el.innerHTML=t||''; }
 function _voiceLive(on, word){
   const b=document.getElementById('voice-btn'); if(b) b.classList.toggle('live', on);
@@ -1308,68 +1526,67 @@ function _voiceStop(){
   try{ (_voice.mic&&_voice.mic.getTracks()||[]).forEach(t=>t.stop()); }catch(_){}
   try{ _voice.audio.srcObject=null; }catch(_){}
   _voice=null; _voiceLive(false); _voiceWord('');
+  mayaCommandState(_mayaActions.length?'action waiting for confirmation':'ready',_mayaActions.length?'waiting':'');
 }
 // Run one of Maya's tools and hand the result back to the conversation.
 async function _voiceTool(name, args){
   try{
+    if(name==='get_briefing'){
+      const snap=await loadMayaCommand()||window.MAYA_ADMIN_DATA.command;
+      document.getElementById('maya-command')?.scrollIntoView({behavior:'smooth',block:'center'});
+      return snap ? {ok:true,briefing:snap.briefing||[],attention:snap.attention||[]} : {ok:false,error:'briefing_unavailable'};
+    }
+    if(name==='show_panel') return mayaShowPanel(args.panel||'');
+    if(name==='find_lead') return await _mayaLeadLookup(args.query||'');
     if(name==='remember'){
-      const r=await fetch('/api/admin/maya-remember',{method:'POST',
-        headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
-        body:JSON.stringify({text:args.text||''})});
-      const j=await r.json().catch(()=>({}));
-      return r.ok&&j.ok ? {ok:true, remembered:args.text} : {ok:false, error:j.error||('remember '+r.status)};
+      const t=_mayaEscText(args.text).slice(0,600);
+      return t?_mayaQueueAction({kind:'remember',text:t}):{ok:false,error:'text_required'};
     }
     if(name==='note_lead'){
-      const r=await fetch('/api/admin/lead-note',{method:'POST',
-        headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
-        body:JSON.stringify({lead:args.lead||'', note:args.note||'',
-          contact:(args.contact&&args.contact!=='none')?args.contact:''})});
-      const j=await r.json().catch(()=>({}));
-      // refresh the migrated Lead Station so the change shows live
-      try{ if(window.loadMkt) window.loadMkt(); }catch(_){}
-      return r.ok&&j.ok ? {ok:true, noted:args.lead} : {ok:false, error:j.error||('note '+r.status)};
+      return await _mayaQueueLeadAction(args.lead||'','lead_note',args.note||'','',
+        (args.contact&&args.contact!=='none')?args.contact:'');
     }
     if(name==='forget'){
-      const r=await fetch('/api/admin/maya-forget',{method:'POST',
-        headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
-        body:JSON.stringify({text:args.text||''})});
-      const j=await r.json().catch(()=>({}));
-      return r.ok&&j.ok ? {ok:true, removed:j.removed} : {ok:false, error:j.error||('forget '+r.status)};
+      const t=_mayaEscText(args.text).slice(0,600);
+      return t?_mayaQueueAction({kind:'forget',text:t}):{ok:false,error:'text_required'};
     }
     if(name==='draft_email'){
-      const to=(args.to||'').trim();
-      const url='https://mail.google.com/mail/?view=cm&fs=1'+
-        (to?'&to='+encodeURIComponent(to):'')+
-        '&su='+encodeURIComponent(args.subject||'')+
-        '&body='+encodeURIComponent(args.body||'');
-      try{ window.open(url,'_blank','noopener'); }catch(_){}
-      return {ok:true, opened:true, note:'Draft opened in Gmail for review; not sent.'};
+      return await _mayaQueueLeadAction(args.lead||'','email','',''+(args.request||''),'');
     }
   }catch(e){ return {ok:false, error:String(e&&e.message||e)}; }
   return {ok:false, error:'unknown tool'};
 }
 async function _voiceRunCall(dc, name, call_id, argStr){
   let args={}; try{ args=JSON.parse(argStr||'{}'); }catch(_){}
+  mayaCommandState('Maya is checking '+String(name||'a tool').replace(/_/g,' '),'busy');
   const out=await _voiceTool(name, args);
   try{
     dc.send(JSON.stringify({type:'conversation.item.create',
       item:{type:'function_call_output', call_id:call_id, output:JSON.stringify(out)}}));
     dc.send(JSON.stringify({type:'response.create'}));
+    mayaCommandState(out&&out.queued?'action waiting for confirmation':'Maya is answering',out&&out.queued?'waiting':'busy');
   }catch(_){}
 }
 function _voiceOnMessage(dc){
   const seen=new Set();
-  return async (ev)=>{
+  return (ev)=>{
     let m; try{ m=JSON.parse(ev.data); }catch(_){ return; }
+    if(m.type==='input_audio_buffer.speech_started') mayaCommandState('listening','busy');
+    if(m.type==='response.created') mayaCommandState('Maya is thinking','busy');
+    if(m.type==='response.done' && !(m.response&&Array.isArray(m.response.output)&&m.response.output.some(x=>x.type==='function_call')))
+      mayaCommandState(_mayaActions.length?'action waiting for confirmation':'ready',_mayaActions.length?'waiting':'');
     // primary path: the arguments-done event
     if(m.type==='response.function_call_arguments.done' && m.call_id && !seen.has(m.call_id)){
-      seen.add(m.call_id); await _voiceRunCall(dc, m.name, m.call_id, m.arguments); return;
+      seen.add(m.call_id);
+      _voiceToolChain=_voiceToolChain.then(()=>_voiceRunCall(dc,m.name,m.call_id,m.arguments)).catch(()=>{});
+      return;
     }
     // fallback: scan a completed response for any function_call items
     if(m.type==='response.done' && m.response && Array.isArray(m.response.output)){
       for(const it of m.response.output){
         if(it.type==='function_call' && it.call_id && !seen.has(it.call_id)){
-          seen.add(it.call_id); await _voiceRunCall(dc, it.name, it.call_id, it.arguments);
+          seen.add(it.call_id);
+          _voiceToolChain=_voiceToolChain.then(()=>_voiceRunCall(dc,it.name,it.call_id,it.arguments)).catch(()=>{});
         }
       }
     }
@@ -1377,37 +1594,45 @@ function _voiceOnMessage(dc){
 }
 async function toggleMayaVoice(){
   if(_voice){ _voiceStop(); return; }
+  if(_voiceStarting){ _voiceWord('still connecting'); return; }
   if(!_idTok){ _voiceWord('sign in first'); return; }
+  _voiceStarting=true;
+  let pendingMic=null,pendingPc=null,pendingAudio=null;
   try{
     _voiceWord('connecting\u2026');
+    mayaCommandState('opening the live voice line','busy');
     const tr=await fetch('/api/admin/voice-token',{method:'POST',
       headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},body:'{}'});
     const tj=await tr.json().catch(()=>({}));
     if(!tr.ok||!tj.value) throw new Error(tj.error||('token '+tr.status));
-    const mic=await navigator.mediaDevices.getUserMedia({audio:true});
-    const pc=new RTCPeerConnection();
-    mic.getTracks().forEach(t=>pc.addTrack(t,mic));
-    const audio=new Audio(); audio.autoplay=true;
-    pc.ontrack=e=>{ audio.srcObject=e.streams[0]; };
-    const dc=pc.createDataChannel('oai-events');
+    pendingMic=await navigator.mediaDevices.getUserMedia({audio:true});
+    pendingPc=new RTCPeerConnection();
+    pendingMic.getTracks().forEach(t=>pendingPc.addTrack(t,pendingMic));
+    pendingAudio=new Audio(); pendingAudio.autoplay=true;
+    pendingPc.ontrack=e=>{ pendingAudio.srcObject=e.streams[0]; };
+    const dc=pendingPc.createDataChannel('oai-events');
     dc.onopen=()=>{ try{ dc.send(JSON.stringify({type:'response.create'})); }catch(_){} };
     dc.onmessage=_voiceOnMessage(dc);
-    pc.onconnectionstatechange=()=>{
-      if(['failed','disconnected','closed'].includes(pc.connectionState) && _voice) _voiceStop();
+    pendingPc.onconnectionstatechange=()=>{
+      if(['failed','disconnected','closed'].includes(pendingPc.connectionState) && _voice) _voiceStop();
     };
-    const offer=await pc.createOffer(); await pc.setLocalDescription(offer);
+    const offer=await pendingPc.createOffer(); await pendingPc.setLocalDescription(offer);
     const cr=await fetch('https://api.openai.com/v1/realtime/calls?model='+encodeURIComponent(tj.model),{
       method:'POST',headers:{'Authorization':'Bearer '+tj.value,'Content-Type':'application/sdp'},body:offer.sdp});
     if(!cr.ok) throw new Error('call '+cr.status);
-    await pc.setRemoteDescription({type:'answer',sdp:await cr.text()});
-    _voice={pc,mic,audio,dc};
+    await pendingPc.setRemoteDescription({type:'answer',sdp:await cr.text()});
+    _voice={pc:pendingPc,mic:pendingMic,audio:pendingAudio,dc};
     _voiceLive(true, 'Maya is listening');
     _voiceWord('listening \u00b7 tap to hang up');
   }catch(e){
+    try{ pendingPc&&pendingPc.close(); }catch(_){}
+    try{ (pendingMic&&pendingMic.getTracks()||[]).forEach(t=>t.stop()); }catch(_){}
+    try{ if(pendingAudio) pendingAudio.srcObject=null; }catch(_){}
     _voiceStop();
     _voiceWord(String(e&&e.message||e).slice(0,60));
+    mayaCommandState('voice unavailable: '+String(e&&e.message||e).slice(0,60),'waiting');
     console.warn('[maya voice]',e);
-  }
+  }finally{ _voiceStarting=false; }
 }
 </script>
 
@@ -1820,13 +2045,18 @@ function paintCampaigns() {
 }
 
 async function loadMkt(){
-  if(!window._idTok) return;
+  // v13.71: _idTok is a top-level lexical binding, not a window property.
+  // Reading window._idTok made the migrated Admin panels return before every
+  // fetch even after sign in.
+  if(!_idTok) return;
   let r;
   try{ r=await fetch('/api/admin/marketing?t='+Date.now(),
-    {headers:{'Authorization':'Bearer '+window._idTok},cache:'no-store'}); }
+    {headers:{'Authorization':'Bearer '+_idTok},cache:'no-store'}); }
   catch(_){ return; }
   if(!r.ok) return;
   let d; try{ d=await r.json(); }catch(_){ return; }
+  window.MAYA_ADMIN_DATA = window.MAYA_ADMIN_DATA || {};
+  window.MAYA_ADMIN_DATA.marketing = d;
   try{ paintSite(d.analytics||{}); }catch(e){ console.warn('[mkt] sources',e); }
   _adData = d.adCombined||null;
   _windsorWhy = (d.windsor&&d.windsor.why)||'';
@@ -1841,8 +2071,8 @@ window.draftLead=draftLead; window.leadContact=leadContact;
 window.toggleLeadNote=toggleLeadNote; window.saveLeadNote=saveLeadNote;
 window.loadMkt=loadMkt;
 // fire when signed in, and refresh with the traffic tick
-if(window._idTok) loadMkt();
-setInterval(()=>{ if(window._idTok && document.visibilityState==='visible') loadMkt(); }, 120000);
+if(_idTok) loadMkt();
+setInterval(()=>{ if(_idTok && document.visibilityState==='visible') loadMkt(); }, 120000);
 })();
 </script>
 </body>

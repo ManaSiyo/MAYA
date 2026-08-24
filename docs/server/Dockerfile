@@ -6,6 +6,7 @@ COPY package.json ./
 RUN npm install --omit=dev
 COPY server.js ./
 COPY proxy-policy.mjs ./
+COPY admin-command.mjs ./
 COPY fabric-sourcing.js ./
 COPY ai-router.js ./
 EXPOSE 8080

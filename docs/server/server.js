@@ -29,6 +29,7 @@ import express from 'express';
 import crypto from 'node:crypto';
 import { Readable } from 'node:stream';
 import { evaluateProxyPolicy } from './proxy-policy.mjs';
+import { buildAdminCommandSnapshot, resolveLeadExact } from './admin-command.mjs';
 import dns from 'node:dns/promises';
 import {
   applyVisualRankings,
@@ -2763,6 +2764,66 @@ async function recentShips() {
   if (out.length) _shipsCache = { ts: Date.now(), data: out };
   return out.length ? out : null;
 }
+
+// v13.71: one deterministic, provider-free Admin command snapshot. The voice
+// and the visible command center read the same DTO, so spoken claims cannot
+// drift away from the dashboard's underlying sources. Source failures stay
+// explicit and independent. The short cache prevents a voice tap and page
+// paint from asking every outside service twice.
+let _adminCommandCache = { ts: 0, data: null };
+async function loadAdminCommandSnapshot() {
+  if (_adminCommandCache.data && Date.now() - _adminCommandCache.ts < 60 * 1000) {
+    return _adminCommandCache.data;
+  }
+  const [wix, ads, leads, submissions, ships, accounts] = await Promise.all([
+    wixInsights().catch(() => null),
+    windsorInsights().catch(() => null),
+    wixLeads().catch(() => null),
+    gcsListSubmissions().catch(() => null),
+    recentShips().catch(() => null),
+    countUsers().catch(() => null),
+  ]);
+  const data = buildAdminCommandSnapshot({ wix, ads, leads, submissions, ships, accounts });
+  _adminCommandCache = { ts: Date.now(), data };
+  return data;
+}
+
+app.get('/api/admin/command-snapshot', requireAuthHeader, async (req, res) => {
+  try { await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  try { return res.json(await loadAdminCommandSnapshot()); }
+  catch (e) {
+    console.error('[admin-command] snapshot failed,', String(e.message).slice(0, 200));
+    return res.status(502).json({ error: 'command_snapshot_failed' });
+  }
+});
+
+// Exact identity only. A partial name never silently selects a person. The
+// caller gets either one lead, an explicit ambiguous list, or no match.
+app.post('/api/admin/lead-lookup', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  const query = String((req.body || {}).query || '').trim().slice(0, 200);
+  try {
+    const source = await wixLeads();
+    if (!source || !source.connected) return res.status(503).json({ error: 'leads_unavailable' });
+    const result = resolveLeadExact(source.list || [], query);
+    if (result.status !== 'exact') return res.json({ ok: false, status: result.status, matches: result.matches || [] });
+    const notes = result.lead.email ? await loadLeadNotes(result.lead.email) : { notes: [], contacts: [] };
+    return res.json({ ok: true, status: 'exact', lead: {
+      ...result.lead,
+      notes: (notes.notes || []).slice(-10),
+      contacts: (notes.contacts || []).slice(-10),
+    } });
+  } catch (e) {
+    console.error('[lead-lookup] failed,', String(e.message).slice(0, 200));
+    return res.status(502).json({ error: 'lead_lookup_failed' });
+  }
+});
+
 app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb' }), async (req, res) => {
   let user;
   try { user = await requireAdmin(req); }
@@ -2771,29 +2832,9 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
   if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
   if (!process.env.OPENAI_API_KEY) return res.status(503).json({ error: 'voice_unavailable' });
   try {
-    // v13.66: she scans EVERYTHING reachable: marketing analytics, leads,
-    // submissions, users, and what shipped recently (read from the public
-    // Systems Map changelog, cached an hour), and she knows the date.
-    const [wix, ads, leads, subs, ships, mem] = await Promise.all([
-      wixInsights().catch(() => null), windsorInsights().catch(() => null), wixLeads().catch(() => null),
-      gcsListSubmissions().catch(() => null), recentShips().catch(() => null), loadMayaMemory().catch(() => null),
+    const [ctx, mem] = await Promise.all([
+      loadAdminCommandSnapshot(), loadMayaMemory().catch(() => null),
     ]);
-    const subFolders = subs ? new Set(subs.map(o => (o.name || '').split('/')[1]).filter(Boolean)) : null;
-    const lastSub = subs && subs.length
-      ? subs.map(o => o.timeCreated).sort().slice(-1)[0] : null;
-    const ctx = {
-      manasiyo_visitors: wix && wix.connected ? { today: wix.today, last7_daily: (wix.daily || []).slice(-7) } : 'unavailable',
-      ads: ads && ads.connected ? {
-        campaigns_30d: (ads.campaigns || []).slice(0, 8),
-        by_source_7d: ads.sources || null,
-      } : 'unavailable',
-      leads: leads && leads.connected ? { today: leads.today, week: leads.d7, month: leads.d28,
-        newest: (leads.list || []).slice(0, 5).map(l => ({ when: l.ts, want: l.note })) } : 'unavailable',
-      submissions: subFolders ? { total: subFolders.size, most_recent: lastSub } : 'unavailable',
-      recently_shipped: ships || 'unavailable',
-      your_memory: (mem && mem.items || []).slice(-40).map(i => i.text),
-      leads_by_name: leads && leads.connected ? (leads.list || []).slice(0, 12).map(l => ({ name: l.name, email: l.email, want: l.note })) : 'unavailable',
-    };
     // v13.69: her memory is kept OUT of the capped snapshot so it can never be
     // truncated away, the glitch Fromsa hit. It is always spoken to her in full.
     const memoryLines = (mem && mem.items || []).slice(-60).map(i => '- ' + i.text).join('\n') || '(nothing yet)';
@@ -2824,35 +2865,46 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
       'yesterday rather than dates, never read out raw JSON or URLs. Ground every number ONLY in the ' +
       'snapshot; when something is not in it, say you do not have it live rather than guess. ' +
       'Never invent numbers.\n\n' + backbone + '\n\n' +
-      'YOU CAN ACT. You have four tools. Use them without being asked twice, then confirm out loud in a ' +
-      'few words and ask the next useful question. remember: save a fact to your own memory. note_lead: ' +
-      'when he tells you what happened with a lead, write it into the Lead Station by name and record a ' +
-      'call or email if he just made one. draft_email: when he wants to reach a lead or anyone, compose ' +
-      'the email and open it ready in Gmail for him to review and send; you never send it yourself. ' +
-      'forget: remove a fact from your memory when he asks.\n\n' +
-      'YOUR MEMORY (kept in full, never truncated):\n' + memoryLines + '\n\n' +
-      'Business snapshot, taken just now:\n' + JSON.stringify(ctx).slice(0, 12000);
+      'You are the command layer for this Admin dashboard. Use show_panel to navigate and explain a panel, ' +
+      'get_briefing for the deterministic today and attention read, and find_lead before discussing one ' +
+      'person. Lead identity is exact: never guess which person Fromsa means. ' +
+      'Every write is confirmation gated. remember, forget, note_lead and draft_email only place a visible ' +
+      'action in the Admin queue. Say that it is waiting for his click. Never claim a queued action is saved, ' +
+      'opened or sent. Email is drafted only after he confirms, and MAYA never sends it.\n\n' +
+      'YOUR RECENT MEMORY (last 60 saved facts):\n' + memoryLines + '\n\n' +
+      'Admin command snapshot:\n' + JSON.stringify(ctx).slice(0, 12000);
     const tools = [
+      { type: 'function', name: 'get_briefing',
+        description: 'Show and read the deterministic today and attention briefing from the Admin command snapshot.',
+        parameters: { type: 'object', properties: {} } },
+      { type: 'function', name: 'show_panel',
+        description: 'Open and spotlight one Admin panel, then return the panel data currently painted on screen.',
+        parameters: { type: 'object', properties: {
+          panel: { type: 'string', enum: ['submissions', 'traffic', 'ads', 'leads', 'sources', 'bottom', 'changes'] } },
+          required: ['panel'] } },
+      { type: 'function', name: 'find_lead',
+        description: 'Find one lead by exact email, full name, or a unique exact first name. Never fuzzy matches.',
+        parameters: { type: 'object', properties: {
+          query: { type: 'string', description: 'exact email or name spoken by Fromsa' } }, required: ['query'] } },
       { type: 'function', name: 'remember',
-        description: 'Save a short fact to your own memory so you recall it in later conversations.',
+        description: 'Queue a fact for Fromsa to confirm before it is saved to memory.',
         parameters: { type: 'object', properties: { text: { type: 'string', description: 'the fact, one sentence' } }, required: ['text'] } },
       { type: 'function', name: 'forget',
-        description: 'Remove a fact from your memory. Give the text or the gist of the fact to remove.',
+        description: 'Queue a memory removal for Fromsa to confirm before anything is removed.',
         parameters: { type: 'object', properties: { text: { type: 'string', description: 'the fact to remove, or its gist' } }, required: ['text'] } },
       { type: 'function', name: 'note_lead',
-        description: 'Add a note to a lead in the Lead Station, and optionally record that Fromsa contacted them.',
+        description: 'Queue a lead note for visible confirmation. Identity must resolve exactly before it enters the queue.',
         parameters: { type: 'object', properties: {
           lead: { type: 'string', description: 'the lead first name or email address' },
           note: { type: 'string', description: 'what to record about them' },
           contact: { type: 'string', enum: ['none', 'call', 'email'], description: 'set call or email if he just reached them that way' } },
           required: ['lead', 'note'] } },
       { type: 'function', name: 'draft_email',
-        description: 'Compose an email and open it ready in Gmail for Fromsa to review and send. Never sends by itself. Use for reaching a lead or anyone.',
+        description: 'Queue a grounded follow-up email draft for one exact lead. Fromsa must click confirm before Gmail opens.',
         parameters: { type: 'object', properties: {
-          to: { type: 'string', description: 'recipient email; if you only know a lead name, look up their email in leads_by_name' },
-          subject: { type: 'string', description: 'the subject line' },
-          body: { type: 'string', description: 'the full email body, warm and specific, signed Fromsa' } },
-          required: ['subject', 'body'] } },
+          lead: { type: 'string', description: 'exact lead email, full name, or unique exact first name' },
+          request: { type: 'string', description: 'what this follow-up should accomplish' } },
+          required: ['lead'] } },
     ];
     const r = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
       method: 'POST',
