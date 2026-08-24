@@ -2443,16 +2443,27 @@ async function wixLeads() {
         const t = typeof v[k] === 'string' ? v[k].trim() : '';
         if (t.length > note.length && t.length > 20 && !/@/.test(t.slice(0, 40)) && !/^\+?[\d\s()-]+$/.test(t)) note = t;
       }
-      return { ts: s.createdDate,
+      return { id: s.id || '', ts: s.createdDate,
                name, email: field(v, /^e?mail/i), phone: field(v, /^phone|^tel/i),
-               note: note.slice(0, 400) };
+               tier: field(v, /tier|package|plan/i).slice(0, 80),
+               wrote: note.slice(0, 400) };
     });
     const now = Date.now();
     const within = (ms) => leads.filter(l => now - new Date(l.ts).getTime() < ms).length;
+    const list = leads.slice(0, 12);
+    // v13.62: the Notes column carries a summary of what they want and which
+    // tier, written by the quick tier, cached a day per submission. When the
+    // model is unreachable the deterministic line (tier + their own words)
+    // stands instead; never a guess, never a blank.
+    await Promise.all(list.map(async l => {
+      const ai = await summarizeLead(l).catch(() => null);
+      l.note = ai || [l.tier, l.wrote].filter(Boolean).join(' · ').slice(0, 220)
+        || 'No note on the form.';
+    }));
     const data = { connected: true,
       today: within(86400000), d7: within(7 * 86400000), d28: leads.length,
       lastLeadTs: leads.length ? leads[0].ts : null,
-      list: leads.slice(0, 12) };
+      list };
     _leadsCache = { ts: Date.now(), data };
     return data;
   } catch (e) {
@@ -2768,6 +2779,125 @@ function computeMarketingWarnings(out, windsor) {
 // Cached for an hour. On any failure the endpoint fails plainly and the
 // page renders the deterministic warnings alone: never a guess.
 // ═══════════════════════════════════════════════════════════════════════════
+// ── v13.62: the Lead Station. A summary per lead, a note file per lead, and
+// an email draft composed from both. MAYA never sends the email: the page
+// opens a prefilled Gmail compose and Fromsa presses Send himself. ──
+const LEADNOTE_PREFIX = 'leads/notes/';
+const _leadSumCache = new Map();   // submission id -> { ts, text }
+
+async function askModelJson(model, system, user, timeoutMs) {
+  const ask = m => fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: m, temperature: 0.2, response_format: { type: 'json_object' },
+      messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }),
+    signal: AbortSignal.timeout(timeoutMs || 30000),
+  });
+  let r = await ask(model);
+  if (!r.ok && (r.status === 400 || r.status === 404)) {
+    const t = await r.text();
+    if (/model/i.test(t)) r = await ask(model === MODEL_LUNA ? 'gpt-4o-mini' : 'gpt-4.1');
+    else throw new Error(t.slice(0, 200));
+  }
+  if (!r.ok) throw new Error('openai ' + r.status);
+  const j = await r.json();
+  return JSON.parse(((j.choices || [])[0] || {}).message?.content || '{}');
+}
+
+async function summarizeLead(l) {
+  if (!l.id || !process.env.OPENAI_API_KEY) return null;
+  const c = _leadSumCache.get(l.id);
+  if (c && Date.now() - c.ts < 24 * 3600 * 1000) return c.text;
+  if (!l.wrote && !l.tier) return null;
+  const parsed = await askModelJson(MODEL_LUNA,
+    'You summarize one lead from a custom fashion studio\'s contact form. Return strict JSON ' +
+    '{"summary": one plain sentence, at most 160 characters, saying what they want and, if a tier or ' +
+    'package is named, which one}. Use their own nouns. No names, no email addresses, no dates.',
+    JSON.stringify({ tier: l.tier || null, they_wrote: l.wrote || null }));
+  const text = String(parsed.summary || '').trim().slice(0, 220);
+  if (!text) return null;
+  _leadSumCache.set(l.id, { ts: Date.now(), text });
+  return text;
+}
+
+const leadNotePath = email =>
+  LEADNOTE_PREFIX + crypto.createHash('sha256').update(String(email).trim().toLowerCase()).digest('hex').slice(0, 32) + '.json';
+
+async function loadLeadNotes(email) {
+  const o = await gcsGet(leadNotePath(email)).catch(() => ({ ok: false }));
+  if (!o.ok) return { email: String(email).trim().toLowerCase(), notes: [], contacts: [] };
+  try {
+    const j = JSON.parse(o.buf.toString('utf8'));
+    return { email: String(email).trim().toLowerCase(),
+      notes: Array.isArray(j.notes) ? j.notes : [], contacts: Array.isArray(j.contacts) ? j.contacts : [] };
+  } catch { return { email: String(email).trim().toLowerCase(), notes: [], contacts: [] }; }
+}
+
+// One store per lead, keyed by email: free-text notes Fromsa dumps in, and
+// the contact events (email drafted, call placed) that steer the next draft.
+app.post('/api/admin/lead-note', requireAuthHeader, express.json({ limit: '64kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  const email = String((req.body && req.body.email) || '').trim().toLowerCase();
+  if (!email || !/@/.test(email)) return res.status(400).json({ error: 'email_required' });
+  try {
+    const rec = await loadLeadNotes(email);
+    const note = String((req.body && req.body.note) || '').trim().slice(0, 2000);
+    const contact = String((req.body && req.body.contact) || '').trim();
+    let changed = false;
+    if (note) { rec.notes.push({ ts: new Date().toISOString(), text: note }); rec.notes = rec.notes.slice(-50); changed = true; }
+    if (contact === 'email' || contact === 'call') {
+      rec.contacts.push({ type: contact, ts: new Date().toISOString() }); rec.contacts = rec.contacts.slice(-100); changed = true;
+    }
+    if (changed) await gcsPut(leadNotePath(email), Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+    return res.json({ ok: true, notes: rec.notes, contacts: rec.contacts });
+  } catch (e) {
+    console.error('[lead-note] failed —', String(e.message).slice(0, 200));
+    return res.status(502).json({ error: 'lead_note_failed' });
+  }
+});
+
+// Compose the next email for one lead: first touch, second touch, or later,
+// grounded in the summary and every note on file. Returns subject and body
+// only; the page opens Gmail compose with them and NOTHING is ever sent by
+// the server.
+app.post('/api/admin/lead-draft', requireAuthHeader, express.json({ limit: '64kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  if (!process.env.OPENAI_API_KEY) return res.status(503).json({ error: 'draft_unavailable' });
+  const email = String((req.body && req.body.email) || '').trim().toLowerCase();
+  const name = String((req.body && req.body.name) || '').trim().slice(0, 120);
+  const summary = String((req.body && req.body.summary) || '').trim().slice(0, 400);
+  if (!email || !/@/.test(email)) return res.status(400).json({ error: 'email_required' });
+  try {
+    const rec = await loadLeadNotes(email);
+    const emailsSent = rec.contacts.filter(c => c.type === 'email').length;
+    const stage = emailsSent === 0 ? 'first contact' : emailsSent === 1 ? 'second contact (a follow up)' : 'later follow up, keep it brief and warm';
+    const parsed = await askModelJson(process.env.MODEL_TERRA || 'gpt-5.6-terra',
+      'You draft ONE email from Fromsa, founder of Mana Siyo, a custom fashion studio in San Francisco, ' +
+      'to a lead who filled the contact form. Return strict JSON {"subject": short and specific, ' +
+      '"body": the email, warm and personal, 90 to 160 words, greeting the lead by first name, grounded ONLY ' +
+      'in what is provided, ending with one clear next step and signed Fromsa}. This is the ' + stage + '. ' +
+      'No em dashes, no en dashes, no placeholders, never invent details.',
+      JSON.stringify({ lead_first_name: name.split(' ')[0] || 'there', what_they_want: summary || null,
+        fromsa_notes: rec.notes.slice(-10).map(n => n.text), prior_emails: emailsSent }), 45000);
+    const subject = String(parsed.subject || '').trim().slice(0, 200);
+    const body = String(parsed.body || '').trim().slice(0, 4000);
+    if (!subject || !body) throw new Error('empty draft');
+    noteSpend('v1/chat/completions', req);
+    return res.json({ ok: true, subject, body, priorEmails: emailsSent });
+  } catch (e) {
+    console.error('[lead-draft] failed —', String(e.message).slice(0, 200));
+    return res.status(502).json({ error: 'draft_failed' });
+  }
+});
+
 let _briefCache = { key: '', data: null };
 app.post('/api/admin/marketing-brief', requireAuthHeader, express.json({ limit: '256kb' }), async (req, res) => {
   let user;

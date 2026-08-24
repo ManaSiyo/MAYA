@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Marketing</title>
-<meta name="maya-version" content="13.61">
+<meta name="maya-version" content="13.62">
 <script>
 // v13.43: this page NEVER clears the shared sign in. Admin owns the deploy
 // sign-out; marketing clearing it too was why the page kept asking again.
@@ -167,6 +167,20 @@ try {
   #leads-table .lead-when{color:var(--faint);font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.08em;margin-top:2px}
   #leads-table .lead-note{font-family:'Cormorant Garamond',serif;font-size:14px;line-height:1.45;color:var(--dim);
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  /* v13.62: the Lead Station. Small round CTAs under each name: draft the
+     next email, place the call, drop a note. Same glass as every pill. */
+  .lead-ctas{display:flex;gap:6px;margin-top:6px}
+  .lead-cta{width:26px;height:22px;border-radius:100px;border:0.5px solid var(--hair);background:transparent;
+    color:var(--dim);cursor:pointer;font-size:11px;line-height:1;display:inline-flex;align-items:center;justify-content:center;
+    transition:all .2s;text-decoration:none}
+  .lead-cta:hover{border-color:var(--hair-hi);color:var(--ink)}
+  .lead-cta[disabled]{opacity:.45;cursor:default}
+  .lead-note-row td{padding-top:0}
+  .lead-note-box{display:flex;gap:8px;align-items:flex-start;margin:4px 0 8px}
+  .lead-note-box textarea{flex:1;min-height:52px;resize:vertical;border-radius:12px;border:0.5px solid var(--hair);
+    background:rgba(255,255,255,0.03);color:var(--ink);font-family:'Cormorant Garamond',serif;font-size:14px;padding:8px 12px;outline:none}
+  .lead-note-box textarea:focus{border-color:var(--hair-hi)}
+  .lead-note-saved{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);margin-top:4px}
   .chart-legend{display:flex;gap:18px;font-family:'Jost',sans-serif;font-size:9.5px;
     letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin:10px 2px 0}
   .chart-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
@@ -280,7 +294,7 @@ try {
 
   <!-- v13.54: the people the spend actually produced. -->
   <details class="fold" id="leads-fold" open>
-    <summary><h2 class="grp">Leads, newest first</h2></summary>
+    <summary><h2 class="grp">The Lead Station</h2></summary>
     <div class="panel"><table id="leads-table"><tbody></tbody></table></div>
     <div id="leads-note" class="note" style="display:none"></div>
   </details>
@@ -414,14 +428,88 @@ function paintLeads(l) {
     const t = new Date(ts), days = Math.floor((Date.now() - t) / 86400000);
     return days === 0 ? 'today' : days === 1 ? 'yesterday' : days + ' days ago';
   };
-  // v13.55: the third column is their NOTES, what they actually wrote on the
-  // form, because that is what tells you who they are. The date rides small
-  // under the name.
+  // v13.62: the Lead Station. Notes is a summary now, what they want and
+  // which tier, written server side; hovering shows their exact words. Under
+  // each name: draft the next email (opens Gmail compose, never sends),
+  // place the call, drop a note that steers the next draft.
+  _leadList = l.list;
   tb.innerHTML = '<tr><th>Who</th><th>Reach them</th><th>Notes</th></tr>' +
-    l.list.map(x => '<tr><td style="white-space:nowrap">' + esc(x.name) +
-      '<div class="lead-when">' + esc(when(x.ts)) + '</div></td>' +
+    l.list.map((x, i) =>
+      '<tr><td style="white-space:nowrap">' + esc(x.name) +
+      '<div class="lead-when">' + esc(when(x.ts)) + '</div>' +
+      '<div class="lead-ctas">' +
+        (x.email ? '<button class="lead-cta" id="lead-mail-' + i + '" onclick="draftLead(' + i + ')" title="Draft the next email (opens Gmail, nothing is sent)">&#9993;</button>' : '') +
+        (x.phone ? '<a class="lead-cta" href="tel:' + esc(x.phone) + '" onclick="leadContact(' + i + ',\'call\')" title="Call ' + esc(x.phone) + '">&#9742;</a>' : '') +
+        (x.email ? '<button class="lead-cta" onclick="toggleLeadNote(' + i + ')" title="Add a note; the next draft reads it">&#9998;</button>' : '') +
+      '</div></td>' +
       '<td>' + esc(x.email || x.phone || '') + '</td>' +
-      '<td class="lead-note" title="' + esc(x.note || '') + '">' + esc(x.note || '') + '</td></tr>').join('');
+      '<td class="lead-note" title="' + esc(x.wrote || x.note || '') + '">' + esc(x.note || '') + '</td></tr>' +
+      '<tr class="lead-note-row" id="lead-note-row-' + i + '" style="display:none"><td colspan="3">' +
+        '<div class="lead-note-box"><textarea id="lead-note-text-' + i + '" placeholder="Anything you know or agreed with them; the next email draft reads these notes."></textarea>' +
+        '<button class="lead-cta" style="width:auto;padding:0 12px" onclick="saveLeadNote(' + i + ')">Save</button></div>' +
+        '<div class="lead-note-saved" id="lead-note-saved-' + i + '"></div></td></tr>'
+    ).join('');
+}
+
+// ── v13.62: Lead Station actions. The draft comes from the server (summary +
+// notes + how many emails came before) and opens in Gmail compose; MAYA never
+// sends anything itself. ──
+let _leadList = [];
+function leadContact(i, type) {
+  const x = _leadList[i]; if (!x || !x.email) return;
+  fetch('/api/admin/lead-note', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: x.email, contact: type }),
+  }).catch(() => {});
+}
+async function draftLead(i) {
+  const x = _leadList[i]; if (!x || !x.email) return;
+  const btn = document.getElementById('lead-mail-' + i);
+  if (btn) { btn.disabled = true; btn.innerHTML = '&#8230;'; }
+  try {
+    const r = await fetch('/api/admin/lead-draft', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: x.email, name: x.name, summary: x.note || x.wrote || '' }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.subject) throw new Error(j.error || ('draft ' + r.status));
+    window.open('https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(x.email) +
+      '&su=' + encodeURIComponent(j.subject) + '&body=' + encodeURIComponent(j.body), '_blank');
+    leadContact(i, 'email');
+  } catch (e) {
+    const saved = document.getElementById('lead-note-saved-' + i);
+    const row = document.getElementById('lead-note-row-' + i);
+    if (row) row.style.display = '';
+    if (saved) saved.textContent = 'The draft did not come back (' + String(e.message || e).slice(0, 80) + '). Try again in a moment.';
+  }
+  if (btn) { btn.disabled = false; btn.innerHTML = '&#9993;'; }
+}
+function toggleLeadNote(i) {
+  const row = document.getElementById('lead-note-row-' + i); if (!row) return;
+  row.style.display = row.style.display === 'none' ? '' : 'none';
+}
+async function saveLeadNote(i) {
+  const x = _leadList[i]; if (!x || !x.email) return;
+  const ta = document.getElementById('lead-note-text-' + i);
+  const saved = document.getElementById('lead-note-saved-' + i);
+  const text = (ta && ta.value || '').trim();
+  if (!text) return;
+  try {
+    const r = await fetch('/api/admin/lead-note', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: x.email, note: text }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) throw new Error(j.error || ('save ' + r.status));
+    if (ta) ta.value = '';
+    if (saved) saved.textContent = 'Saved. ' + j.notes.length + ' note' + (j.notes.length === 1 ? '' : 's') +
+      ' on file; the next email draft reads them.';
+  } catch (e) {
+    if (saved) saved.textContent = 'Could not save (' + String(e.message || e).slice(0, 80) + ').';
+  }
 }
 
 // ── v13.56: the ticker. The day reads itself out as one moving line in the

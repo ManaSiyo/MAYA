@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.61">
+<meta name="maya-version" content="13.62">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -1941,29 +1941,56 @@
     flex-shrink: 0;
     backdrop-filter: blur(12px);
   }
-  /* v13.60 PLAYGROUND: the tabs drawer. */
-  #notes-drawer .drawer-tabs { display: flex; gap: 6px; margin: 0 0 12px; }
-  #notes-drawer .drawer-tab { flex: 1 1 0; height: 30px; border-radius: 12px 12px 6px 6px;
-    border: 0.5px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.03);
-    color: rgba(238,242,255,0.55); cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 7px;
-    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 9px;
-    letter-spacing: 0.14em; text-transform: uppercase;
-    transition: background .2s, color .2s, border-color .2s; overflow: hidden; }
-  #notes-drawer .drawer-tab:hover { color: rgba(238,242,255,0.9); }
-  #notes-drawer .drawer-tab.on { background: rgba(255,255,255,0.10);
-    border-color: rgba(255,255,255,0.5); color: #eef2ff; }
-  #notes-drawer .drawer-tab img, #notes-drawer .drawer-tab .pg-tab-face {
-    width: 18px; height: 18px; border-radius: 50%; object-fit: cover; flex: none;
-    background-size: cover; background-position: center;
-    border: 0.5px solid rgba(255,255,255,0.3); display: block; }
-  #notes-drawer .drawer-tab svg { width: 15px; height: 15px; flex: none; display: block; }
+  /* v13.62 PLAYGROUND: the drawer is a filing cabinet. Three circles the
+     size of the hamburger pill sit on top and HOLD the folder underneath;
+     they never leave, and there is no Back, because a tab is how you leave.
+     Whatever the open tab holds (the avatar, the fabrics, Pinterest) is
+     rendered inside the one folder below them. */
+  #notes-drawer .pg-tabrow { display: flex; align-items: center; gap: 14px;
+    margin: 0 0 9px 4px; position: relative; z-index: 2; }
+  #notes-drawer .pg-tab { width: 32px; height: 32px; border-radius: 50%; padding: 0;
+    flex: none; position: relative; overflow: visible; cursor: pointer;
+    border: 0.5px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.04);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0.5; transition: opacity .22s, border-color .22s, transform .22s; }
+  #notes-drawer .pg-tab:hover { opacity: 0.9; transform: translateY(-1px); }
+  #notes-drawer .pg-tab.on { opacity: 1; border-color: rgba(255,255,255,0.62);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.10); }
+  /* the tail is what makes the circle hold the folder */
+  #notes-drawer .pg-tab.on::after { content: ''; position: absolute; left: 50%; bottom: -9px;
+    margin-left: -5px; border: 5px solid transparent; border-top-color: rgba(255,255,255,0.34); }
+  #notes-drawer .pg-tab > * { width: 100%; height: 100%; border-radius: 50%;
+    object-fit: cover; display: block; background-size: cover; background-position: center; }
+  #notes-drawer .pg-tab svg { width: 17px; height: 17px; margin: auto; border-radius: 0; }
+  #notes-drawer .pg-tab .pg-tab-face.empty::after { content: '\00B7'; display: flex;
+    align-items: center; justify-content: center; height: 100%; color: rgba(220,232,255,0.4); }
+  #notes-drawer .pg-folder { flex: 1; min-height: 0; display: flex; flex-direction: column;
+    border: 0.5px solid rgba(255,255,255,0.16); border-radius: 16px;
+    background: rgba(255,255,255,0.035); padding: 14px 13px 12px; overflow-y: auto; }
+  #notes-drawer .pg-pane { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  /* the folder owns the drawer's height; the references strip no longer
+     swallows the space under it. */
+  #notes-drawer #notes-drawer-content { flex: 0 0 auto; }
+  /* the fabrics and Pinterest drawers live INSIDE the folder now: same markup,
+     same rendering code, no panel of their own and no Back. */
+  #notes-drawer .pg-pane > #fabrics-drawer,
+  #notes-drawer .pg-pane > #pinterest-drawer {
+    position: static; width: auto; max-width: none; top: auto; right: auto; bottom: auto;
+    transform: none; opacity: 1; z-index: auto; display: flex; flex: 1; min-height: 0;
+    background: none; border: none; border-radius: 0; box-shadow: none;
+    backdrop-filter: none; -webkit-backdrop-filter: none; }
+  #notes-drawer .pg-pane .drawer-head { padding: 0 0 8px; min-height: 0; }
+  #notes-drawer .pg-pane .fabrics-back { display: none; }
   #notes-drawer #pg-project-pill { width: 100%; padding: 7px 12px; margin: 0 0 12px;
     border: 0.5px solid rgba(255,255,255,0.28); border-radius: 100px; cursor: pointer;
     font-family: 'Jost', sans-serif; font-weight: 300; font-size: 10px;
     letter-spacing: 0.2em; text-transform: uppercase; color: rgba(238,242,255,0.85);
     text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #notes-drawer #pg-project-pill:hover { border-color: rgba(255,255,255,0.5); }
+  /* v13.62: ONE projects control. The pill on top names the open project and
+     opens the list; the list itself still drops below the avatar, where it
+     was asked for. The old toggle row said Projects a second time. */
+  #notes-drawer .drawer-sessions-toggle { display: none !important; }
   #notes-drawer .pg-avatar-row { display: flex; align-items: center; gap: 12px; margin: 2px 0 12px; }
   #notes-drawer .pg-avatar-hit { background: none; border: none; padding: 0; cursor: pointer; flex: none; }
   #notes-drawer .pg-avatar-row .drawer-avatar-face { width: 60px; height: 60px; }
@@ -1973,6 +2000,11 @@
   #notes-drawer .pg-avatar-actions { display: flex; gap: 8px; margin-top: 5px;
     opacity: 0; transition: opacity .25s; }
   #notes-drawer .pg-avatar-row:hover .pg-avatar-actions { opacity: 1; }
+  /* v13.62: the avatar switcher's own caret and library are gone from this
+     drawer. The client comes with the project, and the face was appearing
+     three times over. */
+  #notes-drawer #drawer-avatar-caret,
+  #notes-drawer #drawer-avatar-switcher { display: none !important; }
   #notes-drawer .pg-fold { margin: 2px 0 10px; }
   #notes-drawer .pg-fold summary { list-style: none; cursor: pointer;
     display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -1983,7 +2015,11 @@
   #notes-drawer .pg-fold summary::-webkit-details-marker { display: none; }
   #notes-drawer .pg-fold summary::after { content: '\25BE'; font-size: 10px; color: rgba(238,242,255,0.4); }
   #notes-drawer .pg-fold:not([open]) summary::after { transform: rotate(-90deg); }
-  #notes-drawer #pg-meas-host { max-height: 46vh; overflow-y: auto; padding-top: 8px; }
+  #notes-drawer #pg-meas-host { padding-top: 8px; }
+  /* v13.62: measurements are ONLY measurements. The name and the face row
+     already live above, and repeating them was the whole complaint. */
+  #notes-drawer #pg-meas-host .avatar-face-row,
+  #notes-drawer #pg-meas-host .avatar-name-input { display: none !important; }
   /* v13.58 PLAYGROUND: the circles row at the top of the drawer. */
   #notes-drawer .drawer-circles { display: flex; align-items: center; gap: 10px; margin: 2px 0 12px; }
   #notes-drawer .drawer-circle { width: 32px; height: 32px; border-radius: 50%; padding: 0; overflow: hidden;
@@ -4565,56 +4601,58 @@
     <!-- v11.25: avatar identity row. The face circle + name open the avatar
          sub-menu (edit face/measurements). The caret opens the avatar SWITCHER
          (a library of saved clients) so you can change avatar any time. -->
-    <!-- v13.60 PLAYGROUND: the drawer is TABS now, Chrome style: three
-         tabs the height of the hamburger pill riding the drawer's top row,
-         click between them. Avatar is the default view; Fabrics and
-         Pinterest open their own panels. Under Avatar: the open project on
-         top, the face bigger with the name at its side (Replace and Remove
-         appear on hover), the Projects dropdown beneath, and the
-         measurements folded below that. -->
-    <div class="drawer-tabs">
-      <button class="drawer-tab on" id="pg-tab-avatar" onclick="pgTab('avatar')" title="Avatar">
-        <span class="pg-tab-face empty"></span><span class="pg-tab-word">Avatar</span>
+    <!-- v13.62 PLAYGROUND: the filing cabinet. Three circles the size of the
+         hamburger pill sit on top and hold ONE folder; the open tab's
+         contents are rendered inside it. The circles never leave and there
+         is no Back, because switching tab is how you leave. Under Avatar:
+         the open project on top, the face with the name at its side
+         (Replace and Remove on hover), the Projects dropdown beneath, and
+         the measurements folded under that. -->
+    <div class="pg-tabrow">
+      <button class="pg-tab on" id="pg-tab-avatar" onclick="pgTab('avatar')" title="Avatar">
+        <span class="pg-tab-face empty"></span>
       </button>
-      <button class="drawer-tab" id="pg-tab-fabrics" onclick="pgTab('fabrics')" title="Fabrics">
-        <img src="/aesthetics/fabrics/Orange%20Cheetah.JPG" alt=""><span class="pg-tab-word">Fabrics</span>
+      <button class="pg-tab" id="pg-tab-fabrics" onclick="pgTab('fabrics')" title="Fabrics">
+        <img src="/aesthetics/fabrics/Orange%20Cheetah.JPG" alt="">
       </button>
-      <button class="drawer-tab" id="pg-tab-pinterest" onclick="pgTab('pinterest')" title="Pinterest">
-        <svg viewBox="0 0 24 24" fill="#e60023" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.08 3.16 9.42 7.63 11.17-.11-.95-.2-2.4.04-3.44.22-.93 1.4-5.94 1.4-5.94s-.36-.71-.36-1.77c0-1.66.96-2.9 2.16-2.9 1.02 0 1.51.77 1.51 1.68 0 1.03-.65 2.56-.99 3.98-.28 1.19.6 2.16 1.77 2.16 2.13 0 3.77-2.25 3.77-5.49 0-2.87-2.06-4.88-5.01-4.88-3.41 0-5.42 2.56-5.42 5.21 0 1.03.4 2.14.89 2.74.1.12.11.22.08.34l-.33 1.36c-.05.22-.17.27-.4.16-1.5-.7-2.43-2.89-2.43-4.65 0-3.78 2.75-7.26 7.93-7.26 4.16 0 7.4 2.97 7.4 6.93 0 4.14-2.61 7.47-6.23 7.47-1.22 0-2.36-.63-2.75-1.38l-.75 2.85c-.27 1.04-1 2.35-1.49 3.15 1.12.35 2.31.53 3.54.53 6.63 0 12-5.37 12-12S18.63 0 12 0z"/></svg><span class="pg-tab-word">Pinterest</span>
+      <button class="pg-tab" id="pg-tab-pinterest" onclick="pgTab('pinterest')" title="Pinterest">
+        <svg viewBox="0 0 24 24" fill="#e60023" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.08 3.16 9.42 7.63 11.17-.11-.95-.2-2.4.04-3.44.22-.93 1.4-5.94 1.4-5.94s-.36-.71-.36-1.77c0-1.66.96-2.9 2.16-2.9 1.02 0 1.51.77 1.51 1.68 0 1.03-.65 2.56-.99 3.98-.28 1.19.6 2.16 1.77 2.16 2.13 0 3.77-2.25 3.77-5.49 0-2.87-2.06-4.88-5.01-4.88-3.41 0-5.42 2.56-5.42 5.21 0 1.03.4 2.14.89 2.74.1.12.11.22.08.34l-.33 1.36c-.05.22-.17.27-.4.16-1.5-.7-2.43-2.89-2.43-4.65 0-3.78 2.75-7.26 7.93-7.26 4.16 0 7.4 2.97 7.4 6.93 0 4.14-2.61 7.47-6.23 7.47-1.22 0-2.36-.63-2.75-1.38l-.75 2.85c-.27 1.04-1 2.35-1.49 3.15 1.12.35 2.31.53 3.54.53 6.63 0 12-5.37 12-12S18.63 0 12 0z"/></svg>
       </button>
     </div>
-    <div id="pg-project-pill" onclick="toggleSessionsDropdown()" title="The open project; click for the list">Projects</div>
-    <div class="pg-avatar-row" id="pg-avatar-row">
-      <button class="pg-avatar-hit" id="drawer-avatar-button" onclick="openAvatarSubMenu()" title="Avatar">
-        <div class="drawer-avatar-face empty" id="drawer-avatar-face"></div>
-      </button>
-      <div class="pg-avatar-side">
-        <span class="drawer-avatar-name" id="drawer-avatar-name">name</span>
-        <div class="pg-avatar-actions">
-          <button class="drawer-action" onclick="pgReplaceFace()">Replace</button>
-          <button class="drawer-action" onclick="pgRemoveFace()">Remove</button>
+    <div class="pg-folder" id="pg-folder">
+      <div class="pg-pane" id="pg-pane-avatar">
+        <div id="pg-project-pill" onclick="pgProjects()" title="The open project; click for the list">No project open</div>
+        <div class="pg-avatar-row" id="pg-avatar-row">
+          <button class="pg-avatar-hit" id="drawer-avatar-button" onclick="openAvatarSubMenu()" title="Avatar">
+            <div class="drawer-avatar-face empty" id="drawer-avatar-face"></div>
+          </button>
+          <div class="pg-avatar-side">
+            <span class="drawer-avatar-name" id="drawer-avatar-name">name</span>
+            <div class="pg-avatar-actions">
+              <button class="drawer-action" onclick="pgReplaceFace()">Replace</button>
+              <button class="drawer-action" onclick="pgRemoveFace()">Remove</button>
+            </div>
+          </div>
+          <button class="drawer-avatar-caret" id="drawer-avatar-caret" onclick="toggleAvatarSwitcher()" title="Switch avatar / client">&#9662;</button>
         </div>
+        <div class="drawer-avatar-switcher" id="drawer-avatar-switcher" style="display:none"></div>
+        <div class="drawer-sessions">
+          <button class="drawer-sessions-toggle" onclick="toggleSessionsDropdown()" title="Saved projects, click to browse, click a row to open">
+            <span class="sessions-label">Projects</span>
+            <span class="sessions-caret" id="sessions-caret">&#9662;</span>
+          </button>
+          <div class="drawer-sessions-list" id="drawer-sessions-list" style="display:none">
+            <div class="sessions-empty" id="sessions-empty-hint">No projects yet.</div>
+          </div>
+        </div>
+        <details class="pg-fold" id="pg-meas">
+          <summary>Measurements</summary>
+          <div id="pg-meas-host"></div>
+        </details>
       </div>
-      <button class="drawer-avatar-caret" id="drawer-avatar-caret" onclick="toggleAvatarSwitcher()" title="Switch avatar / client">&#9662;</button>
+      <div class="pg-pane" id="pg-pane-fabrics" style="display:none"></div>
+      <div class="pg-pane" id="pg-pane-pinterest" style="display:none"></div>
     </div>
-    <div class="drawer-avatar-switcher" id="drawer-avatar-switcher" style="display:none"></div>
-
-    <!-- v11.3: Sessions dropdown at top, the "drawer of past sessions".
-         Replaces the Fabrics pill that lived here in v10.x. Click the
-         toggle to expand the list; click any session row to load it. -->
-    <div class="drawer-sessions">
-      <button class="drawer-sessions-toggle" onclick="toggleSessionsDropdown()" title="Saved sessions, click to browse, click a row to open">
-        <span class="sessions-label">Projects</span>
-        <span class="sessions-caret" id="sessions-caret">&#9662;</span>
-      </button>
-      <div class="drawer-sessions-list" id="drawer-sessions-list" style="display:none">
-        <div class="sessions-empty" id="sessions-empty-hint">No projects yet.</div>
-      </div>
-    </div>
-    <details class="pg-fold" id="pg-meas">
-      <summary>Measurements</summary>
-      <div id="pg-meas-host"></div>
-    </details>
     <div id="notes-drawer-content"></div>
     <!-- v11.3: Fabrics moved down below the references content. -->
     <!-- v13.29: Share moved onto each project row, where it belongs. Fabrics
@@ -16360,12 +16398,14 @@ loadFolderHandle().then(h => { if (h) folderHandle = h; }).catch(()=>{});
 
 </script>
 <script>
-// ═══ v13.60 PLAYGROUND: tabs drawer wiring. This block adapts the app's own
-// avatar machinery to the tabbed layout; nothing in the shared code changed.
+// ═══ v13.62 PLAYGROUND: the filing cabinet. The three circles hold ONE
+// folder and the open tab's panel is rendered inside it, so the tabs never
+// leave and nothing needs a Back. Nothing in the shared app code changed:
+// this block moves the existing panels into the folder and wraps the
+// functions by name.
 (function () {
-  // The measurements body and its Randomize/Save row move from the old
-  // avatar subview into the fold under the avatar row.
   try {
+    // measurements: the app's own avatar body and its Randomize/Save row.
     const host = document.getElementById('pg-meas-host');
     const body = document.getElementById('avatar-body');
     const actions = document.querySelector('#drawer-avatar .drawer-actions-bottom');
@@ -16373,43 +16413,74 @@ loadFolderHandle().then(h => { if (h) folderHandle = h; }).catch(()=>{});
     if (host && actions) host.appendChild(actions);
     const av = document.getElementById('drawer-avatar');
     if (av) av.style.display = 'none';
-  } catch (e) { console.warn('[pg tabs] mount', e); }
+    // the fabrics and Pinterest panels move WHOLE into their tab's pane, so
+    // every style and every render function still finds what it expects.
+    const fab = document.getElementById('fabrics-drawer');
+    const fabPane = document.getElementById('pg-pane-fabrics');
+    if (fab && fabPane) fabPane.appendChild(fab);
+    const pin = document.getElementById('pinterest-drawer');
+    const pinPane = document.getElementById('pg-pane-pinterest');
+    if (pin && pinPane) pinPane.appendChild(pin);
+  } catch (e) { console.warn('[pg cabinet] mount', e); }
 })();
-function pgTabMark(which) {
-  document.querySelectorAll('.drawer-tab').forEach(t =>
-    t.classList.toggle('on', t.id === 'pg-tab-' + which));
+
+// Which folder the circles are holding.
+function pgShow(which) {
+  ['avatar', 'fabrics', 'pinterest'].forEach(k => {
+    const pane = document.getElementById('pg-pane-' + k);
+    if (pane) pane.style.display = (k === which) ? 'flex' : 'none';
+    const tab = document.getElementById('pg-tab-' + k);
+    if (tab) tab.classList.toggle('on', k === which);
+  });
 }
 function pgTab(which) {
-  // Close the other panels FIRST: their Back wrappers reset the mark to
-  // Avatar, so the mark for this tab must be written after.
   if (which === 'avatar') {
     try { if (typeof closeFabricsDrawer === 'function') closeFabricsDrawer(); } catch (_) {}
     try { if (typeof closePinterestDrawer === 'function') closePinterestDrawer(); } catch (_) {}
     try { _renderAvatarBody(); } catch (_) {}
-    pgTabMark('avatar');
+    pgShow('avatar');
   } else if (which === 'fabrics') {
     try { if (typeof closePinterestDrawer === 'function') closePinterestDrawer(); } catch (_) {}
     openFabricsDrawer();
-    pgTabMark('fabrics');
   } else {
     try { if (typeof closeFabricsDrawer === 'function') closeFabricsDrawer(); } catch (_) {}
     openPinterestDrawer();
-    pgTabMark('pinterest');
   }
 }
-// The panels' own Back returns the tabs to Avatar.
+// Opening either panel anywhere in the app (the upload chooser reaches for
+// Pinterest, for one) opens the drawer on that tab.
+if (typeof openFabricsDrawer === 'function') {
+  const _pgOF = openFabricsDrawer;
+  openFabricsDrawer = function () {
+    const out = _pgOF.apply(this, arguments);
+    try { toggleNotesDrawer(true); } catch (_) {}
+    pgShow('fabrics');
+    return out;
+  };
+}
+if (typeof openPinterestDrawer === 'function') {
+  const _pgOP = openPinterestDrawer;
+  openPinterestDrawer = function () {
+    const out = _pgOP.apply(this, arguments);
+    try { toggleNotesDrawer(true); } catch (_) {}
+    pgShow('pinterest');
+    return out;
+  };
+}
+// Closing a panel hands the folder back to Avatar.
 if (typeof closeFabricsDrawer === 'function') {
   const _pgCF = closeFabricsDrawer;
-  closeFabricsDrawer = function () { _pgCF.apply(this, arguments); pgTabMark('avatar'); };
+  closeFabricsDrawer = function () { _pgCF.apply(this, arguments); pgShow('avatar'); };
 }
 if (typeof closePinterestDrawer === 'function') {
   const _pgCP = closePinterestDrawer;
-  closePinterestDrawer = function () { _pgCP.apply(this, arguments); pgTabMark('avatar'); };
+  closePinterestDrawer = function () { _pgCP.apply(this, arguments); pgShow('avatar'); };
 }
-// Avatar view IS the drawer now: opening the avatar opens the fold.
+// The avatar view IS the folder now: opening it opens the measurements fold.
 openAvatarSubMenu = function () {
   toggleNotesDrawer(true);
   try { _renderAvatarBody(); } catch (_) {}
+  pgShow('avatar');
   const d = document.getElementById('pg-meas');
   if (d) { d.open = true; d.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
 };
@@ -16426,7 +16497,7 @@ function pgRemoveFace() {
   try { if (typeof clearFacePhoto === 'function') clearFacePhoto(); } catch (_) {}
   try { refreshDrawerClientName(); } catch (_) {}
 }
-// The avatar tab's little face mirrors the big one.
+// The avatar circle on the tab row mirrors the big face.
 if (typeof refreshDrawerClientName === 'function') {
   const _pgRefresh = refreshDrawerClientName;
   refreshDrawerClientName = function () {
@@ -16441,12 +16512,18 @@ if (typeof refreshDrawerClientName === 'function') {
     } catch (_) {}
   };
 }
+// The pill on top opens the list that drops in below the avatar.
+function pgProjects() {
+  toggleSessionsDropdown();
+  const list = document.getElementById('drawer-sessions-list');
+  if (list && list.style.display !== 'none') list.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
 // The pill on top carries the OPEN project's name.
 function pgUpdatePill() {
   const pill = document.getElementById('pg-project-pill');
   if (!pill) return;
   const act = document.querySelector('#drawer-sessions-list .session-item.active');
-  pill.textContent = act ? (act.getAttribute('title') || 'Project') : 'Projects';
+  pill.textContent = act ? (act.getAttribute('title') || 'Project') : 'No project open';
 }
 if (typeof _renderSessionsDropdown === 'function') {
   const _pgSessions = _renderSessionsDropdown;
@@ -16463,8 +16540,8 @@ if (typeof toggleNotesDrawer === 'function') {
     const wasClosed = hs ? hs.scrollLeft < 10 : true;
     _pgToggle.apply(this, arguments);
     const opening = force === true || (force === undefined && wasClosed);
-    if (opening) {
-      pgTabMark('avatar');
+    if (opening && !document.querySelector('#pg-pane-fabrics[style*="flex"], #pg-pane-pinterest[style*="flex"]')) {
+      pgShow('avatar');
       try { _renderAvatarBody(); } catch (_) {}
       try { refreshDrawerClientName(); } catch (_) {}
       try { _renderSessionsDropdown(); } catch (_) {}

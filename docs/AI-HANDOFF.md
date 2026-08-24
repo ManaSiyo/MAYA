@@ -36,7 +36,7 @@ If this file disagrees with chat memory, this file is right.
 2. `docs/firebase.json` is the hosting map. Every old address is rewritten
    onto its new file, and the catch-all serves `frontend/index.html`. If a
    page 404s, this file is the first thing to read.
-3. `tests/app-regression.mjs` is the contract, 253 checks. It runs only where
+3. `tests/app-regression.mjs` is the contract, 256 checks. It runs only where
    there is Chromium and a free socket: `node tests/app-regression.mjs` from
    the repo root. `tests/smoke.mjs` covers the server. `/verify.html` is the
    only check Fromsa can run himself, because his Mac has no Node.
@@ -56,10 +56,10 @@ on Admin on hover) is Fromsa's private staging copy. Experimental features go
 there FIRST; `frontend/index.html` changes only when he approves a promotion.
 It shares the live sign in and data, so destructive experiments still need
 care. Keep the small amber Playground badge so the two are never confused.
-Since v13.58 the playground DIVERGES from frontend (first the circles
-drawer, since v13.60 the tabs drawer is staged there); never regenerate it
-as frontend plus badge without re-applying the blocks marked
-"v13.58 PLAYGROUND" and "v13.60 PLAYGROUND".
+Since v13.58 the playground DIVERGES from frontend (the drawer redesign is
+staged there: circles in v13.58, tabs in v13.60, the filing cabinet in
+v13.62); never regenerate it as frontend plus badge without re-applying the
+blocks marked "v13.58 PLAYGROUND" and "v13.62 PLAYGROUND".
 
 Admin access: ADMIN_EMAILS defaults to fromsa@manasiyo.com and
 worldofsiyo@gmail.com only, overridable by env. /api/admin/users lists named
@@ -71,6 +71,61 @@ campaign table, warnings, ticker) through Windsor, per connector. Direct
 META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
+
+## v13.62 (Claude): the cabinet drawer, and the Lead Station
+
+THE PLAYGROUND CABINET (playground only, per the playground rule; supersedes
+the v13.60 tab pills):
+
+- THREE CIRCLES, 32px like the hamburger pill, no pill wrapper, sitting on
+  the drawer's top row and HOLDING one folder (.pg-folder) below them. The
+  active circle wears a brighter ring and a small tail pointing into the
+  folder. They never leave and there is no Back anywhere: switching tab is
+  how you leave a panel.
+- ONE FOLDER, THREE PANES. At mount the patch script moves the WHOLE
+  #fabrics-drawer and #pinterest-drawer elements into #pg-pane-fabrics /
+  #pg-pane-pinterest and CSS neutralises their fixed-panel positioning
+  (position static, no glass of their own). Moving the elements whole, not
+  their children, is what keeps every descendant style and every render
+  function (renderFabricsGrid, _pinBody) working untouched.
+- pgShow(which) is the single source of truth for which pane is up;
+  openFabricsDrawer / openPinterestDrawer are wrapped so opening either
+  from anywhere else (the upload chooser reaches for Pinterest) opens the
+  drawer on that tab; the close wrappers hand the folder back to Avatar.
+- NOTHING REPEATS ANY MORE, which was the complaint: the name input and the
+  face row inside #avatar-body are hidden in the measurements fold (they
+  live above it), the avatar caret and its switcher are hidden (the client
+  comes with the project, and the face was appearing three times), and the
+  old "Projects" toggle row is hidden so the pill on top is the ONE projects
+  control: it names the open project and drops the list in below the avatar.
+- #notes-drawer-content is flex 0 0 auto now so the folder owns the height.
+
+THE LEAD STATION (marketing + server):
+
+- The leads fold is "The Lead Station". The Notes column is a SUMMARY now,
+  what they want and which tier, written server side by MODEL_LUNA
+  (summarizeLead, cached 24h per submission id). The lead's own words move
+  to lead.wrote and stay as the cell's hover title. When the model is
+  unreachable the deterministic line stands (tier + their words); never a
+  guess, never a blank. The tier comes from any form field matching
+  /tier|package|plan/.
+- Under every name: an email CTA and a call CTA. The email CTA posts to
+  /api/admin/lead-draft (Terra), which composes subject and body from the
+  summary, every note on file and how many emails came BEFORE (first
+  contact, second, later), then the page opens Gmail compose prefilled.
+  MAYA never sends: there is no send path in the server, on purpose. The
+  call CTA is a tel: link and records the contact.
+- /api/admin/lead-note stores the information dump per lead in the
+  submissions bucket at leads/notes/<sha256(email)>.json: notes[] and
+  contacts[]. The pencil CTA opens an inline box; saved notes steer every
+  later draft. Both endpoints are admin only and rate limited.
+- Sources of traffic, the answer to his question: the table is right, the
+  site is not instrumented. Wix links to MAYA carry no referrer, so those
+  arrivals land as Direct, and Stripe dominates because checkout sends
+  people back with one. Fix is Wix side, adding utm to the MAYA link.
+- Verified: local Playwright probe of the cabinet (panes, tabs persisting
+  across a fabrics switch, no Back visible, no repeats, measurements
+  render), regression 256 checks green, smoke green, server syntax checked.
 
 ## v13.61 (Claude): the Operations Room joins the family
 

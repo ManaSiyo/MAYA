@@ -1067,10 +1067,32 @@ ok('revenue is gone entirely, and cost per lead still feeds the brief',
   !/revenue/i.test(SERVER_SOURCE) &&
   !/revenue|paintMoney|money-tiles/i.test(MKT_SOURCE));
 ok('the lead list shows their notes, what they actually wrote',
-  SERVER_SOURCE.includes('note: note.slice(0, 400)') &&
+  SERVER_SOURCE.includes('wrote: note.slice(0, 400)') &&
   MKT_SOURCE.includes('<th>Notes</th>') &&
   MKT_SOURCE.includes('class="lead-note"') &&
   !MKT_SOURCE.includes('<th class="num">When</th>'));
+// ── v13.62 · the Lead Station ─────────────────────────────────────────────
+ok('the notes column is a summary of what they want and which tier',
+  SERVER_SOURCE.includes('async function summarizeLead(') &&
+  SERVER_SOURCE.includes('_leadSumCache') &&
+  SERVER_SOURCE.includes('MODEL_LUNA') &&
+  // the deterministic line stands when the model is unreachable
+  SERVER_SOURCE.includes("l.note = ai || [l.tier, l.wrote].filter(Boolean).join(' \u00b7 ')") &&
+  SERVER_SOURCE.includes('tier: field(v, /tier|package|plan/i)'));
+ok('every lead carries its own CTAs, and MAYA never sends the email itself',
+  MKT_SOURCE.includes('The Lead Station') &&
+  MKT_SOURCE.includes('function draftLead(') &&
+  MKT_SOURCE.includes('https://mail.google.com/mail/?view=cm') &&
+  MKT_SOURCE.includes('href="tel:') &&
+  !SERVER_SOURCE.includes('lead-send') &&
+  SERVER_SOURCE.includes("app.post('/api/admin/lead-draft'"));
+ok('an information dump per lead is stored and steers the next draft',
+  SERVER_SOURCE.includes("app.post('/api/admin/lead-note'") &&
+  SERVER_SOURCE.includes('function leadNotePath(') === false &&
+  SERVER_SOURCE.includes('const leadNotePath =') &&
+  SERVER_SOURCE.includes('async function loadLeadNotes(') &&
+  SERVER_SOURCE.includes("emailsSent === 0 ? 'first contact'") &&
+  MKT_SOURCE.includes('function saveLeadNote('));
 ok('one Windsor connector failing never blanks the other',
   SERVER_SOURCE.includes('const gErr = gRes instanceof Error') &&
   SERVER_SOURCE.includes('if (gErr && fErr)'));
@@ -1166,23 +1188,32 @@ ok('every sign in says hello so the Users count is complete',
 ok('the Backend corner speaks in caps',
   /#brand \{[\s\S]{0,260}text-transform: uppercase/.test(BACKEND_SOURCE));
 // v13.60: the circles grew into Chrome-style TABS, still playground only.
-ok('the playground stages the tabs drawer: avatar, fabrics, Pinterest',
-  PLAYGROUND_SOURCE.includes('class="drawer-tabs"') &&
-  PLAYGROUND_SOURCE.includes('Orange%20Cheetah.JPG') &&
-  PLAYGROUND_SOURCE.includes('id="pg-tab-pinterest"') &&
-  PLAYGROUND_SOURCE.includes('function pgTab(') &&
+ok('the playground stages the cabinet drawer: three circles that hold one folder',
+  PLAYGROUND_SOURCE.includes('class="pg-tabrow"') &&
+  PLAYGROUND_SOURCE.includes('id="pg-folder"') &&
+  PLAYGROUND_SOURCE.includes('id="pg-pane-fabrics"') &&
+  PLAYGROUND_SOURCE.includes('id="pg-pane-pinterest"') &&
+  PLAYGROUND_SOURCE.includes('function pgShow(') &&
+  // the circles are circles, not pills, and the size of the hamburger
+  /\.pg-tab \{[\s\S]{0,200}border-radius: 50%/.test(PLAYGROUND_SOURCE) &&
+  !PLAYGROUND_SOURCE.includes('class="drawer-tabs"') &&
   !PLAYGROUND_SOURCE.includes('class="drawer-top-row"') &&
-  /drawer-meta-row \{[\s\S]{0,300}margin-top: auto/.test(PLAYGROUND_SOURCE) &&
   // the main app keeps its current drawer until Fromsa promotes the design
   INDEX_SOURCE.includes('class="drawer-top-row"'));
-ok('the playground avatar tab: project on top, face beside name, hover actions, folded measurements',
+ok('the playground cabinet: panels move inside the folder, no Back, nothing repeats',
+  PLAYGROUND_SOURCE.includes("fabPane.appendChild(fab)") &&
+  PLAYGROUND_SOURCE.includes("pinPane.appendChild(pin)") &&
+  PLAYGROUND_SOURCE.includes('.pg-pane .fabrics-back { display: none; }') &&
+  PLAYGROUND_SOURCE.includes('#pg-meas-host .avatar-name-input { display: none !important; }') &&
+  PLAYGROUND_SOURCE.includes('.drawer-sessions-toggle { display: none !important; }') &&
+  PLAYGROUND_SOURCE.includes('#drawer-avatar-switcher { display: none !important; }') &&
   PLAYGROUND_SOURCE.includes('id="pg-project-pill"') &&
   PLAYGROUND_SOURCE.includes('class="pg-avatar-row"') &&
   PLAYGROUND_SOURCE.includes('pg-avatar-row:hover .pg-avatar-actions') &&
   PLAYGROUND_SOURCE.includes('id="pg-meas"') &&
   PLAYGROUND_SOURCE.includes("host.appendChild(body)") &&
   PLAYGROUND_SOURCE.includes('pgUpdatePill'));
-// ── v13.61 · Operations Room joins the family ─────────────────────────────
+// ── v13.61 · Operations Room joins the family ────────────────────────
 ok('ops: the hamburger offset is computed from the live layout, family curve everywhere',
   !OPS_SOURCE || (
     OPS_SOURCE.includes('function _placeHamburger(') &&

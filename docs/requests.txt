@@ -16,6 +16,28 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 23, 2026, THE CABINET AND THE LEAD STATION (v13.62)
+
+[x] "Why are there repeats? I open Measurements and the whole Michael thing
+    drops down again. Projects is duplicating his photo again." Fixed: the
+    name and the face row inside the measurements are hidden (they live
+    above it), the avatar switcher and its caret are gone from this drawer,
+    and the pill on top is now the only Projects control.
+[x] "The tabs should be circles, the same dimensions as the hamburger, no
+    pill around them, always visible, and they should hold the drawer
+    underneath them like a cabinet. There should be no Back." Done: three
+    circles hold one folder, fabrics and Pinterest open inside it, and
+    changing tab is how you leave.
+[x] "Rename the leads section and make it a station: notes summarizing what
+    they want and which tier, an email CTA that drafts by first, second or
+    third contact, a call, and a place to dump what I know that updates the
+    CTA." Done, as The Lead Station. The draft opens ready in Gmail; MAYA
+    never sends anything itself.
+[x] "Sources of traffic, is it correct? Wix shows people clicking to MAYA
+    but the table says Stripe." Answered: the table is right. Wix links
+    carry no referrer so those arrivals count as Direct; the fix is on the
+    Wix side, adding utm to the MAYA link.
+
 AUGUST 23, 2026, THE OPERATIONS ROOM ITSELF (v13.61)
 
 [x] "In Operations Room beta the hamburger menu is so far out; make the
