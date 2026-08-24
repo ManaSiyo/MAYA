@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.76">
+<meta name="maya-version" content="13.77">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -43,9 +43,10 @@ try {
   #top-left-brand{display:flex;align-items:center;gap:10px;margin-left:-8px;position:relative}
   /* v13.74: the top-left logo is a circle now, Maya's home. It breathes when
      she is live, the same pulse as the drawer star, a ring of light around it. */
-  .maya-logo-wrap{width:52px;height:52px;border-radius:50%;flex:none;
+  .maya-logo-wrap{width:52px;height:52px;border-radius:50%;flex:none;padding:0;cursor:pointer;
     display:inline-flex;align-items:center;justify-content:center;
-    background:rgba(255,255,255,0.04);border:0.5px solid var(--line);transition:border-color .25s}
+    background:rgba(255,255,255,0.04);border:0.5px solid var(--line);transition:border-color .25s,transform .25s}
+  .maya-logo-wrap:hover{border-color:rgba(169,201,255,0.7);transform:scale(1.04)}
   #top-left-brand .maya-logo-mark{width:44px;height:44px;object-fit:contain;opacity:0.94;
     user-select:none;-webkit-user-drag:none}
   body.maya-live .maya-logo-wrap{border-color:rgba(169,201,255,0.9);animation:voicepulse 1.6s ease-in-out infinite}
@@ -73,7 +74,7 @@ try {
   #top-lights{display:flex;gap:18px;align-items:center;justify-content:center;cursor:pointer;
               margin:-58px 0 30px;height:28px;flex-wrap:wrap;position:relative;z-index:5}
   /* v13.72: in the drawer the lights sit at the top, left aligned, no pull-up. */
-  #drawer #top-lights{margin:2px 0 10px;gap:13px;justify-content:flex-start;height:auto;flex-wrap:wrap}
+  #drawer #top-lights{margin:2px 0 12px;gap:14px;justify-content:center;height:auto;flex-wrap:wrap}
   #drawer #top-lights .lgt-lbl{display:inline}
   .hamburger-icon{display:inline-flex;flex-direction:column;gap:3px;width:14px}
   .hamburger-icon span{display:block;height:1px;width:100%;background:currentColor;border-radius:1px}
@@ -150,7 +151,8 @@ try {
   @keyframes mayaSpot{0%,35%{box-shadow:0 0 0 2px rgba(169,201,255,0.65),0 0 32px rgba(169,201,255,0.22)}100%{box-shadow:none}}
   /* v13.67: a light blue section title in the drawer, per Fromsa. */
   /* v13.68: every drawer section title in the logo blue, they are headlines. */
-  #drawer h3, #drawer h3.tint{color:rgba(169,201,255,0.85)}
+  /* v13.77: the drawer section titles read as titles, in the logo blue. */
+  #drawer h3, #drawer h3.tint{color:#a9c9ff !important}
   /* v13.67: the manasiyo | MAYA pairing, matching Marketing. */
   #head-tiles .pair-bar{margin:0 6px;color:var(--faint);font-weight:300}
   /* v13.68: the numbers pop. manasiyo.com white and bold, MAYA in the logo
@@ -510,15 +512,14 @@ try {
   <div id="top-left-brand">
     <!-- v13.35: the logo is the way home, everywhere in MAYA's back rooms.
          v13.74: the logo is a circle now and it breathes when Maya is live. -->
-    <a href="/status.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit" title="Admin">
-      <span class="maya-logo-wrap"><img class="maya-logo-mark" src="/aesthetics/ui/logo-208.png" alt="" /></span>
+    <!-- v13.77: on Admin the logo IS Maya's voice. Tap it and she connects,
+         the ring pulsing while she listens. The wordmark stays the way home. -->
+    <button class="maya-logo-wrap" onclick="toggleMayaVoice()" title="Tap to talk to Maya" aria-label="Talk to Maya">
+      <img class="maya-logo-mark" src="/aesthetics/ui/logo-208.png" alt="" />
+    </button>
+    <a href="/status.html" class="brand-home" style="display:flex;align-items:center;text-decoration:none;color:inherit" title="Admin, tap to reload">
       <span class="brand-title">Admin</span>
     </a>
-    <!-- v13.74: hover Admin and a MAYA chip drops beneath it; tap it and Maya
-         wakes, the logo pulsing as she listens and speaks. -->
-    <span class="admin-chips">
-      <button class="pg-chip maya-chip" onclick="toggleMayaVoice()" title="Talk to Maya">maya</button>
-    </span>
   </div>
   <!-- v13.72: the day reads itself out between the wordmark and the menu,
        colored like Marketing's line. -->
@@ -696,9 +697,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-24n">
+  <details class="fold" id="changes-fold" data-latest="2026-08-24o">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 24</b>On Admin the logo became Maya's voice. Tap the circle at the top left and she connects, a Connecting chip on screen and the ring pulsing while she listens; the ADMIN wordmark beside it stays the way home. The drawer titles read in the logo blue now, the health lights sit centered, and the hover chip that would not click is gone.</div>
     <div class="chg"><b>Aug 24</b>Fabrics found their photos. The sourceable wall had been painting crimson color swatches with no picture, because a failed visual ranking, often just an empty credit balance, made the Brief throw away the real retailer results. Now the real products, which always carry a real photo, show anyway when the ranking cannot answer. The color swatch wall is gone: the tab shows real fabric photos, or a quiet searching line until they arrive, and refresh re-sources whatever garment is dissected.</div>
     <div class="chg"><b>Aug 24</b>The MAYA app cabinet got a round of fixes. It reopens on the last tab you used, so Pinterest stays Pinterest after you close and come back. The tab's name, Projects or Pinterest or Fabrics, rides in the empty space beside the three circles, so the panels start higher. The avatar dropdown came back, and on the Avatar tab, Randomize moved up beside Replace and Remove as three smaller pills, with Measurements no longer clipped.</div>
     <div class="chg"><b>Aug 24</b>Maya moved into the logo. The star at the top left is a circle now, the same size it always was, and it breathes with a ring of light while Maya is live. Rest on the Admin wordmark and a MAYA chip drops beneath it, the same chip family as Design Studio and Operations; tap it and Maya wakes, no need to open the drawer first. She can pull the drawer herself now, opening or closing it as you talk so her command line comes into view when it helps. The nav lost its Marketing door, because Marketing already lives inside Admin, so it is just manasiyo.com and MAYA. And the hamburger stopped overlapping the wider drawer; it anchors just outside its edge again.</div>
@@ -1731,6 +1733,10 @@ async function toggleMayaVoice(){
   let pendingMic=null,pendingPc=null,pendingAudio=null;
   try{
     _voiceWord('connecting\u2026');
+    // v13.77: tapping the logo can happen with the drawer closed, so surface a
+    // Connecting chip immediately; _voiceLive/_voiceStop update or clear it.
+    { const chip=document.getElementById('voice-chip'); const cw=document.getElementById('voice-chip-word');
+      if(chip) chip.classList.add('show'); if(cw) cw.textContent='Connecting'; }
     mayaCommandState('opening the live voice line','busy');
     const tr=await fetch('/api/admin/voice-token',{method:'POST',
       headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},body:'{}'});

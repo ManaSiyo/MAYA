@@ -9,6 +9,16 @@ to work with Fromsa. This file is the story; README.md is the manual.
 
 ─────────────────────────────────────────────
 
+AUGUST 24, 2026, THE LOGO BECOMES THE VOICE (v13.77)
+
+On the Admin page the logo at the top left is Maya's voice now. Tap the circle
+and she connects, a Connecting chip on screen and a ring of light pulsing while
+she listens; the ADMIN wordmark beside it stays the way home. The drawer's
+section titles read in the logo blue, the health lights are centered, and the
+hover chip that never quite clicked is gone.
+
+─────────────────────────────────────────────
+
 AUGUST 24, 2026, FABRICS FIND THEIR PHOTOS (v13.76)
 
 The sourceable fabric wall had been painting solid color swatches, crimson boxes

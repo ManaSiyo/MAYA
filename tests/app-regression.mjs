@@ -539,10 +539,10 @@ ok('v13.74: the top-left logo is a circle that pulses when Maya is live',
   MAP_SOURCE.includes('class="maya-logo-wrap"') &&
   /\.maya-logo-wrap\{[^}]*border-radius:50%/.test(MAP_SOURCE) &&
   MAP_SOURCE.includes('body.maya-live .maya-logo-wrap'));
-ok('v13.74: hovering Admin offers a MAYA chip that wakes the voice',
-  MAP_SOURCE.includes('class="pg-chip maya-chip"') &&
-  MAP_SOURCE.includes('#top-left-brand .admin-chips') &&
-  /class="pg-chip maya-chip"[^>]*onclick="toggleMayaVoice\(\)"/.test(MAP_SOURCE));
+// v13.77 superseded the hover chip: the logo itself is the voice trigger now.
+ok('v13.77: tapping the Admin logo wakes Maya and shows Connecting',
+  /<button class="maya-logo-wrap" onclick="toggleMayaVoice\(\)"/.test(MAP_SOURCE) &&
+  MAP_SOURCE.includes("cw.textContent='Connecting'"));
 ok('v13.74: the admin nav is just MANA SIYO and MAYA, Marketing removed',
   !MAP_SOURCE.includes('href="/marketing.html"') &&
   MAP_SOURCE.includes('>MANA SIYO</b>') &&
@@ -552,6 +552,16 @@ ok('v13.74: the hamburger anchors to the widened drawer, not overlapping it',
 ok('v13.74: Maya can pull the drawer by voice',
   SERVER_SOURCE.includes("name: 'show_drawer'") &&
   MAP_SOURCE.includes("if(name==='show_drawer')"));
+
+// v13.77: on Admin the logo is Maya's voice, the wordmark is home; the drawer
+// titles read blue and the lights sit centered.
+ok('v13.77: the Admin logo is the voice, the wordmark is home',
+  /<button class="maya-logo-wrap" onclick="toggleMayaVoice\(\)"/.test(MAP_SOURCE) &&
+  MAP_SOURCE.includes('<a href="/status.html" class="brand-home"') &&
+  !MAP_SOURCE.includes('class="pg-chip maya-chip"'));
+ok('v13.77: the drawer titles are blue and the lights are centered',
+  MAP_SOURCE.includes('#drawer h3, #drawer h3.tint{color:#a9c9ff !important}') &&
+  MAP_SOURCE.includes('#drawer #top-lights{margin:2px 0 12px;gap:14px;justify-content:center'));
 
 // Aug 13: every deploy signs both pages out on next load, and the two
 // pages must carry the SAME version number or the map's logout never fires.

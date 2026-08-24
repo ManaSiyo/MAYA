@@ -73,6 +73,31 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.77 (Claude): Admin logo is the voice, drawer polish
+
+- On `backend/status.html` the circular logo IS Maya's voice now: it is a
+  `<button onclick="toggleMayaVoice()">`, and the ADMIN wordmark is a separate
+  home link (`a.brand-home`). The old hover `maya-chip` (which was unclickable)
+  is gone. Tapping the logo shows a "Connecting" chip immediately (surfaced in
+  `toggleMayaVoice` so it shows even with the drawer closed) and the ring pulses
+  while live. NOTE: this logo-as-voice is Admin-only; the other back rooms keep
+  the logo as the home link.
+- Drawer section titles forced to the logo blue (`#a9c9ff !important`); the
+  SYSTEMS health lights are centered.
+
+Changed files: `backend/status.html`; version 13.77 across the four surfaces;
+`tests/app-regression.mjs`, `tests/admin-ui-contract.mjs`.
+
+VALIDATION: app-regression all passed, contract green.
+
+NEXT STEP (Fromsa's Aug 24 batch, still open)
+- Cabinet: caret beside the name; fix the broken avatar switcher; rename
+  Projects→Project; reorder tabs to Pinterest, Fabrics, Avatar; Pinterest layout
+  parity with Fabrics (toggle height, card room, anchor Bring-them-in).
+- Favorites: clean read-only submit-only card (no Switch Fabric/Add
+  Reference/Tap to Listen, no editable pills); unfavoriting removes from the
+  community wall.
+
 ## v13.76 (Claude): fabrics show real photos, not color swatches
 
 Fromsa: the sourceable fabric matches were rendering as solid crimson color

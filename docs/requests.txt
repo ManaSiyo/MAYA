@@ -16,6 +16,20 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, ADMIN LOGO IS THE VOICE, MORE POLISH (v13.77+)
+
+[x] "In Admin the logo should be the voice (tap to talk, says Connecting,
+    pulses), and the ADMIN text is the way home. The hover MAYA chip is
+    unclickable." Done: logo is a voice button, wordmark is home, chip removed.
+[x] "The vault etc should be blue, they are titles." Drawer titles forced blue.
+[x] "The green light should be centered." Health lights centered in the drawer.
+[ ] Cabinet: caret beside the name; the avatar switcher is broken; rename
+    Projects to Project; tabs order Pinterest, Fabrics, Avatar; Pinterest layout
+    parity with Fabrics. NEXT.
+[ ] Favorites: clean submit-only summary card (no Switch Fabric / Add Reference
+    / Tap to Listen, no editable pills); unfavoriting removes from the community
+    wall. NEXT.
+
 AUGUST 24, 2026, FABRICS SHOW REAL PHOTOS (v13.76)
 
 [x] "The fabric matches are just red, no image. Nothing should show, we need the
