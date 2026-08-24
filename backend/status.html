@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.73">
+<meta name="maya-version" content="13.74">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -40,9 +40,23 @@ try {
            display:flex;align-items:center;justify-content:space-between;padding:0 28px;
            pointer-events:none}
   #top-bar > *{pointer-events:auto}
-  #top-left-brand{display:flex;align-items:center;gap:10px;margin-left:-8px}
-  #top-left-brand .maya-logo-mark{width:52px;height:52px;object-fit:contain;opacity:0.92;
+  #top-left-brand{display:flex;align-items:center;gap:10px;margin-left:-8px;position:relative}
+  /* v13.74: the top-left logo is a circle now, Maya's home. It breathes when
+     she is live, the same pulse as the drawer star, a ring of light around it. */
+  .maya-logo-wrap{width:52px;height:52px;border-radius:50%;flex:none;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,0.04);border:0.5px solid var(--line);transition:border-color .25s}
+  #top-left-brand .maya-logo-mark{width:44px;height:44px;object-fit:contain;opacity:0.94;
     user-select:none;-webkit-user-drag:none}
+  body.maya-live .maya-logo-wrap{border-color:rgba(169,201,255,0.9);animation:voicepulse 1.6s ease-in-out infinite}
+  /* v13.74: hover the Admin brand and a MAYA chip drops beneath it, the same
+     chip family as Design Studio and Operations. Click it and Maya wakes. */
+  #top-left-brand .admin-chips{position:absolute;left:0;top:100%;margin-top:9px;display:flex;gap:6px;
+    opacity:0;pointer-events:none;transition:opacity .18s ease .35s;z-index:20}
+  #top-left-brand:hover .admin-chips,#top-left-brand:focus-within .admin-chips,#top-left-brand .admin-chips:hover{
+    opacity:1;pointer-events:auto;transition-delay:0s}
+  .maya-chip{cursor:pointer;background:transparent}
+  body.maya-live .maya-chip{border-color:rgba(169,201,255,0.7);color:#a9c9ff}
   #top-left-brand .brand-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;
     letter-spacing:0.22em;color:rgba(255,255,255,0.9);text-transform:uppercase}
   .top-btn{background:transparent;border:0.5px solid rgba(255,255,255,0.22);border-radius:100px;
@@ -146,11 +160,12 @@ try {
   .traffic-legend{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#fff;margin-left:10px;font-weight:400}
   .traffic-legend .lg-b{color:#a9c9ff}
   /* v13.45: the hamburger never disappears. It slides left with the drawer
-     and comes to rest hanging just outside the drawer's left edge (drawer:
-     320 wide at right 10, pill resting ~28 from the right edge). The same
+     and comes to rest hanging just outside the drawer's left edge. The same
      pill closes it, and so does a click anywhere outside. */
-  /* v13.56: a couple of pixels closer to the drawer's edge, per Fromsa. */
-  body.drawer-open .top-btn.hamburger{transform:translateX(-320px)}
+  /* v13.74: the drawer is 360 wide at right 10, so its left edge sits ~370
+     from the right. The pill starts ~28 from the right, so it slides ~356 to
+     rest just outside the drawer instead of overlapping it. */
+  body.drawer-open .top-btn.hamburger{transform:translateX(-356px)}
   /* v13.46: exactly the drawer's duration and curve, so the pill is
      anchored to the drawer's edge rather than chasing it. */
   .top-btn.hamburger{transition:transform .42s cubic-bezier(0.16,1,0.3,1)}
@@ -348,7 +363,8 @@ try {
   @media (max-width: 640px) {
     body{padding:84px 14px 40px}
     #top-bar{padding:0 12px}
-    #top-left-brand .maya-logo-mark{width:40px;height:40px}
+    .maya-logo-wrap{width:42px;height:42px}
+    #top-left-brand .maya-logo-mark{width:34px;height:34px}
     #top-left-brand .brand-title{font-size:15px}
     .status-bar{gap:10px;padding:12px 14px}
     #top-lights{gap:9px}
@@ -492,11 +508,17 @@ try {
 
 <div id="top-bar">
   <div id="top-left-brand">
-    <!-- v13.35: the logo is the way home, everywhere in MAYA's back rooms. -->
+    <!-- v13.35: the logo is the way home, everywhere in MAYA's back rooms.
+         v13.74: the logo is a circle now and it breathes when Maya is live. -->
     <a href="/status.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit" title="Admin">
-      <img class="maya-logo-mark" src="/aesthetics/ui/logo-208.png" alt="" />
+      <span class="maya-logo-wrap"><img class="maya-logo-mark" src="/aesthetics/ui/logo-208.png" alt="" /></span>
       <span class="brand-title">Admin</span>
     </a>
+    <!-- v13.74: hover Admin and a MAYA chip drops beneath it; tap it and Maya
+         wakes, the logo pulsing as she listens and speaks. -->
+    <span class="admin-chips">
+      <button class="pg-chip maya-chip" onclick="toggleMayaVoice()" title="Talk to Maya">maya</button>
+    </span>
   </div>
   <!-- v13.72: the day reads itself out between the wordmark and the menu,
        colored like Marketing's line. -->
@@ -573,7 +595,9 @@ try {
         <a class="pg-chip" href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/home?referralInfo=my-sites" target="_blank"
            onclick="event.stopPropagation()" title="Edit the website in Wix.">wix studio</a>
       </span><b>MANA SIYO</b></span>
-    <a class="card" href="/marketing.html" target="_blank"><b>MARKETING</b></a>
+    <!-- v13.74: MARKETING door removed. Everything it held is built into Admin
+         now (ad campaigns, lead station, sources, bottom line). Just the two
+         doors: manasiyo.com and MAYA. -->
     <span class="card card-maya" role="link" tabindex="0"
           onclick="window.open('https://maya.manasiyo.com','_blank')"
           onkeydown="if(event.key==='Enter')window.open('https://maya.manasiyo.com','_blank')"><b>MAYA</b>
@@ -672,9 +696,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-24k">
+  <details class="fold" id="changes-fold" data-latest="2026-08-24l">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 24</b>Maya moved into the logo. The star at the top left is a circle now, the same size it always was, and it breathes with a ring of light while Maya is live. Rest on the Admin wordmark and a MAYA chip drops beneath it, the same chip family as Design Studio and Operations; tap it and Maya wakes, no need to open the drawer first. She can pull the drawer herself now, opening or closing it as you talk so her command line comes into view when it helps. The nav lost its Marketing door, because Marketing already lives inside Admin, so it is just manasiyo.com and MAYA. And the hamburger stopped overlapping the wider drawer; it anchors just outside its edge again.</div>
     <div class="chg"><b>Aug 24</b>Two follow ups. The backend Brief is a single slide now: the embedded Operations Room that sat as a second screen, with its dead pill, was taken off the Brief, and the standalone Operations Room page is untouched. And the MANA SIYO shortcut for Design Studio now opens manasiyo.com/design.</div>
     <div class="chg"><b>Aug 24</b>Admin cleared its center and moved the controls to the edges. The day now reads itself out as one colored line across the very top, between the ADMIN wordmark and the menu, green for the good news, red and amber for what needs you, no rules above or below it. The five health lights moved into the drawer, so the page opens straight onto the three doors: MANA SIYO, MARKETING, MAYA, then the latest submissions, Users and traffic, the ad campaigns, the Lead Station and the sources. The duplicate Manasiyo.com and MAYA visitor row is gone, since Users and traffic already pairs both. And MANA SIYO now mirrors MAYA: rest on MAYA and its back rooms hang to the right, rest on MANA SIYO and its editing rooms, Design Studio and the Wix Studio where the website is edited, hang to the left. Maya's command left the center of the page and became her private line inside the drawer: tap the star and the drawer turns into her screen, the grounded briefing, what needs your eye, and anything she needs approved; tap it again and the drawer is a drawer. When the line will not open she says so in plain words now, never a raw error code.</div>
     <div class="chg"><b>Aug 24</b>Admin became a real command center. Maya now opens with a visible briefing from the same Users, Marketing, Lead Station and submission data shown on the page, can spotlight the right panel, finds a lead only by exact identity, and puts notes, memories and email drafts into a visible queue for confirmation. Nothing sends itself. Marketing now arrives inside Admin with the approved ticker, full metric strip, spacious campaign table and chart, Lead Station, Sources and Bottom Line presentation intact; the standalone Marketing page remains live as the fallback. And the filing cabinet approved in Playground now lives in MAYA itself, with Projects, Pinterest and Fabrics preserved inside its tabs. Fabric sourcing still begins instantly with its static wall, then adds real retailer inventory and closest visual matches when live retrieval and ranking answer.</div>
@@ -1637,6 +1662,8 @@ async function _voiceTool(name, args){
       return snap ? {ok:true,briefing:snap.briefing||[],attention:snap.attention||[]} : {ok:false,error:'briefing_unavailable'};
     }
     if(name==='show_panel') return mayaShowPanel(args.panel||'');
+    if(name==='show_drawer'){ const open=(args.state!=='close'); toggleDrawer(open);
+      return {ok:true, drawer: open?'open':'closed'}; }
     if(name==='find_lead') return await _mayaLeadLookup(args.query||'');
     if(name==='remember'){
       const t=_mayaEscText(args.text).slice(0,600);

@@ -534,6 +534,25 @@ ok('v13.73: the backend Brief dropped its Operations Room screen and page dots',
 ok('v13.73: MANA SIYO Design Studio opens manasiyo.com/design',
   MAP_SOURCE.includes('href="https://manasiyo.com/design"'));
 
+// v13.74: MAYA lives in the top-left logo, and the nav dropped Marketing.
+ok('v13.74: the top-left logo is a circle that pulses when Maya is live',
+  MAP_SOURCE.includes('class="maya-logo-wrap"') &&
+  /\.maya-logo-wrap\{[^}]*border-radius:50%/.test(MAP_SOURCE) &&
+  MAP_SOURCE.includes('body.maya-live .maya-logo-wrap'));
+ok('v13.74: hovering Admin offers a MAYA chip that wakes the voice',
+  MAP_SOURCE.includes('class="pg-chip maya-chip"') &&
+  MAP_SOURCE.includes('#top-left-brand .admin-chips') &&
+  /class="pg-chip maya-chip"[^>]*onclick="toggleMayaVoice\(\)"/.test(MAP_SOURCE));
+ok('v13.74: the admin nav is just MANA SIYO and MAYA, Marketing removed',
+  !MAP_SOURCE.includes('href="/marketing.html"') &&
+  MAP_SOURCE.includes('>MANA SIYO</b>') &&
+  MAP_SOURCE.includes('>MAYA</b>'));
+ok('v13.74: the hamburger anchors to the widened drawer, not overlapping it',
+  MAP_SOURCE.includes('body.drawer-open .top-btn.hamburger{transform:translateX(-356px)}'));
+ok('v13.74: Maya can pull the drawer by voice',
+  SERVER_SOURCE.includes("name: 'show_drawer'") &&
+  MAP_SOURCE.includes("if(name==='show_drawer')"));
+
 // Aug 13: every deploy signs both pages out on next load, and the two
 // pages must carry the SAME version number or the map's logout never fires.
 const mapVer = await pg.evaluate(() =>
@@ -751,11 +770,12 @@ ok('the credit meter stays on the server, off the map',
 // v13.44: the doors dropped their pills and grid; a centered flex row now.
 // v13.45: three doors in Fromsa's order, the back rooms behind MAYA's hover.
 // v13.46: everything in caps, per Fromsa.
-ok('the doors read MANA SIYO, MARKETING, MAYA, in that order, in caps',
+// v13.74: the Marketing door is gone (its modules live inside Admin).
+ok('the doors read MANA SIYO then MAYA, in caps, Marketing removed',
   MAP_SOURCE.includes('.grid.doors{display:flex;justify-content:center') &&
   MAP_SOURCE.indexOf('<b>MANA SIYO</b>') > -1 &&
-  MAP_SOURCE.indexOf('<b>MANA SIYO</b>') < MAP_SOURCE.indexOf('<b>MARKETING</b>') &&
-  MAP_SOURCE.indexOf('<b>MARKETING</b>') < MAP_SOURCE.indexOf('<b>MAYA</b>'));
+  MAP_SOURCE.indexOf('<b>MANA SIYO</b>') < MAP_SOURCE.indexOf('<b>MAYA</b>') &&
+  !MAP_SOURCE.includes('<b>MARKETING</b>'));
 ok('the marketing page ships and signs in like the map',
   MKT_SOURCE.includes('MAYA Marketing') &&
   MKT_SOURCE.includes("localStorage.getItem('maya_admin_tok')") &&
@@ -1253,7 +1273,8 @@ ok('the marketing drawer slides and the hamburger rides with it, one family',
   MKT_SOURCE.includes('cubic-bezier(0.16,1,0.3,1)') &&
   MKT_SOURCE.includes('body.drawer-open .top-btn.hamburger{transform:translateX(-290px)}') &&
   MKT_SOURCE.includes('function toggleDrawer(') &&
-  MAP_SOURCE.includes('translateX(-320px)'));
+  // v13.74: Admin's drawer widened to 360, so its hamburger offset is -356.
+  MAP_SOURCE.includes('translateX(-356px)'));
 ok('what they read is gone and sources that read as sites open as sites',
   !MKT_SOURCE.includes('what they read') &&
   !MKT_SOURCE.includes('pages-table') &&

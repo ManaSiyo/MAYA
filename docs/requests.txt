@@ -16,6 +16,23 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, MAYA IN THE LOGO, MORE ADMIN (v13.74)
+
+[x] "Make the top-left logo circular, same size, and pulse when Maya talks."
+[x] "Hover Admin and show a MAYA chip like Design Studio; click it, Maya wakes
+    and the logo pulses." Done, no need to open the drawer first.
+[x] "Maya should be able to pull the drawer / show me what's happening." Added
+    a show_drawer voice tool.
+[x] "Remove Marketing from the admin nav, it's built in now." Nav is manasiyo
+    and MAYA only; marketing.html still exists as fallback.
+[x] "The hamburger is hidden/overlapping the wider drawer, anchor it to the
+    drawer." Fixed the offset for the 360 drawer.
+[ ] MAYA app cabinet bugs (see next): last tab not kept, tab title should sit
+    beside the circles, avatar dropdown missing, Measurements cropped,
+    Randomize/Replace/Remove should share one row with smaller pills. NEXT.
+[ ] Fabrics: matches show as solid crimson with no image; hide imageless ones
+    and make refresh re-source the dissected garment. NEXT.
+
 AUGUST 24, 2026, ADMIN CLEANUP AFTER KODAK'S PUSH (v13.72)
 
 [x] "Delete the Maya Command dashboard from the center, I don't need it there."

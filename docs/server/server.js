@@ -2920,6 +2920,11 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
           lead: { type: 'string', description: 'exact lead email, full name, or unique exact first name' },
           request: { type: 'string', description: 'what this follow-up should accomplish' } },
           required: ['lead'] } },
+      { type: 'function', name: 'show_drawer',
+        description: 'Open or close the Admin drawer for Fromsa. Open it to pull your command line into view while you talk, close it to put it away. The drawer is your private screen while you are live.',
+        parameters: { type: 'object', properties: {
+          state: { type: 'string', enum: ['open', 'close'], description: 'open to pull the drawer up, close to dismiss it' } },
+          required: ['state'] } },
     ];
     const r = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
       method: 'POST',

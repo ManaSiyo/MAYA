@@ -9,6 +9,18 @@ to work with Fromsa. This file is the story; README.md is the manual.
 
 ─────────────────────────────────────────────
 
+AUGUST 24, 2026, MAYA MOVES INTO THE LOGO (v13.74)
+
+The star at Admin's top left became a circle, the same size it always was, and
+it breathes with a ring of light while Maya is live. Rest on the wordmark and a
+MAYA chip drops beneath it; tap it and she wakes, no drawer needed. She can pull
+the drawer open or closed herself as she talks. The nav lost its Marketing door,
+since Marketing already lives inside Admin, so it is just manasiyo.com and MAYA.
+And the hamburger, which had begun to overlap the widened drawer, anchors just
+outside its edge again.
+
+─────────────────────────────────────────────
+
 AUGUST 24, 2026, THE BRIEF BECOMES ONE SLIDE (v13.73)
 
 Two follow-ups. The backend Brief dropped its second screen: the embedded

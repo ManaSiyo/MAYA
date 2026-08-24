@@ -73,6 +73,39 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.74 (Claude): Maya lives in the logo, Marketing door removed
+
+- The top-left logo is a circle now (52px, same size), wrapped in
+  `.maya-logo-wrap`. It pulses (the `voicepulse` ring) while `body.maya-live`.
+- Hovering `#top-left-brand` drops a MAYA chip (`.pg-chip.maya-chip`) beneath
+  it; clicking it calls `toggleMayaVoice()`, so Maya can be woken from the logo
+  without opening the drawer.
+- Maya has a new voice tool `show_drawer` (server.js tools + status.html
+  `_voiceTool`) so she can open/close the drawer to surface her command line as
+  she talks.
+- The MARKETING nav door was removed (its modules are already migrated into
+  Admin). The nav is MANA SIYO and MAYA only. `backend/marketing.html` still
+  ships as the standalone fallback; only the Admin nav link is gone.
+- Hamburger anchor fixed: the drawer is 360 wide, so the drawer-open offset is
+  `translateX(-356px)` (was -320, overlapping the widened drawer).
+
+Changed files: `backend/status.html`, `docs/server/server.js`; version 13.74
+across the four surfaces; `tests/app-regression.mjs`, `tests/admin-ui-contract.mjs`.
+
+VALIDATION: app-regression all passed, full gate suite green, server --check OK.
+
+NEXT STEP (Fromsa's same message, not yet done)
+- MAYA app cabinet (frontend/index.html): (1) persist the last tab when the
+  drawer is reopened; (2) move the tab title (Projects/Pinterest/Fabrics) into
+  the dead space beside the circle row to reclaim vertical space; (3) Avatar
+  tab: restore the avatar dropdown, fix the cropped Measurements, move
+  Randomize up beside Replace/Remove and shrink those three pills.
+- Fabrics (backend.html Brief): hide any sourced result with no real image
+  (they render as solid crimson now); the refresh must always re-source for the
+  currently dissected garment.
+- The voice 429 and empty visualize are likely OpenAI credits (Fromsa is
+  buying). To-do list owed to Fromsa.
+
 ## v13.73 (Claude): backend Brief is one slide, Design Studio has a home
 
 Two follow-ups from Fromsa after v13.72.
