@@ -1357,16 +1357,32 @@ ok('the shipped cabinet moves live panels inside the folder without duplicating 
     source.includes('.pg-pane .fabrics-back { display: none; }') &&
     source.includes('#pg-meas-host .avatar-name-input { display: none !important; }') &&
     source.includes('.drawer-sessions-toggle { display: none !important; }') &&
-    source.includes('#drawer-avatar-switcher { display: none !important; }') &&
     source.includes('id="pg-project-pill"') &&
     source.includes('class="pg-avatar-row"') &&
     source.includes('pg-avatar-row:hover .pg-avatar-actions') &&
     source.includes('id="pg-meas"') &&
     source.includes("host.appendChild(body)") &&
     source.includes('pgUpdatePill')) &&
+  // v13.75: Playground keeps the base cabinet; the live app restored the avatar
+  // dropdown, so the force-hide only remains in Playground now.
+  PLAYGROUND_SOURCE.includes('#drawer-avatar-switcher { display: none !important; }') &&
   INDEX_SOURCE.includes("pgShow('fabrics')") &&
   INDEX_SOURCE.includes("pgShow('pinterest')") &&
   INDEX_SOURCE.includes('try { toggleNotesDrawer(true);'));
+
+// v13.75: Fromsa's cabinet refinements in the live app.
+ok('v13.75: cabinet reopens on the last tab used, not always Avatar',
+  INDEX_SOURCE.includes('window._pgLastTab = which;') &&
+  INDEX_SOURCE.includes('const want = window._pgLastTab') &&
+  INDEX_SOURCE.includes('openFabricsDrawer : openPinterestDrawer'));
+ok('v13.75: the tab name rides beside the circles and the in-pane titles are hidden',
+  INDEX_SOURCE.includes('id="pg-tabtitle"') &&
+  INDEX_SOURCE.includes('#notes-drawer #pg-project-pill { display: none; }') &&
+  INDEX_SOURCE.includes('.pg-pane .drawer-head-title { display: none; }'));
+ok('v13.75: the avatar dropdown is back and Randomize joins Replace/Remove',
+  !INDEX_SOURCE.includes('#drawer-avatar-switcher { display: none !important; }') &&
+  INDEX_SOURCE.includes('avActions.insertBefore(rnd') &&
+  INDEX_SOURCE.includes('.pg-avatar-actions .drawer-action { font-size: 8px'));
 // ── v13.61 · Operations Room joins the family ────────────────────────
 ok('ops: the hamburger offset is computed from the live layout, family curve everywhere',
   !OPS_SOURCE || (

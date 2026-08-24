@@ -73,6 +73,39 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.75 (Claude): MAYA app cabinet refinements
+
+Fromsa's cabinet fixes in `frontend/index.html` (the live app cabinet, which
+now runs slightly ahead of `playground/index.html`).
+
+- The drawer reopens on the LAST tab used, not always Avatar. `pgTab` records
+  `window._pgLastTab`; the `toggleNotesDrawer` override restores it on open
+  (re-opening Fabrics/Pinterest via their own openers, guarded by `_pgRestoring`
+  against recursion). Picking Avatar sets the memory back to Avatar.
+- The current tab's name (`#pg-tabtitle`: Projects / Pinterest / Fabrics) rides
+  in the dead space beside the circle row; the redundant in-pane titles
+  (`#pg-project-pill`, `.pg-pane .drawer-head-title`) are hidden, so the panes
+  start higher. The Projects title is click-through to `pgProjects()`.
+- Avatar tab: the avatar dropdown is back (the `#drawer-avatar-switcher`
+  force-hide was removed; `#drawer-avatar-caret` shows). Randomize was moved out
+  of the Measurements fold up into the `.pg-avatar-actions` row beside Replace
+  and Remove, and those three pills were shrunk to fit one row. `#pg-meas-host`
+  gained bottom padding so Measurements is not clipped.
+
+Playground keeps the base cabinet; the app-regression assertion now checks the
+force-hide only in Playground and adds three v13.75 checks for the app.
+
+Changed files: `frontend/index.html`; version 13.75 across the four surfaces;
+`tests/app-regression.mjs`, `tests/admin-ui-contract.mjs`.
+
+VALIDATION: app-regression all passed (incl. a stubbed tab-restore probe), full
+gate suite green.
+
+NEXT STEP
+- Fabrics (backend.html Brief): still owed. Hide sourced results with no real
+  image (they render as solid crimson), and make Refresh always re-source for
+  the currently dissected garment. Then the OpenAI-credits items on Fromsa.
+
 ## v13.74 (Claude): Maya lives in the logo, Marketing door removed
 
 - The top-left logo is a circle now (52px, same size), wrapped in

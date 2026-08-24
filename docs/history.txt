@@ -9,6 +9,17 @@ to work with Fromsa. This file is the story; README.md is the manual.
 
 ─────────────────────────────────────────────
 
+AUGUST 24, 2026, THE CABINET REMEMBERS (v13.75)
+
+The MAYA app's filing cabinet got a round of fixes. It reopens on the last tab
+you used now, so Pinterest stays Pinterest after you close and come back. The
+tab's name rides in the empty space beside the three circles, Projects or
+Pinterest or Fabrics, so the panels below start higher. The avatar dropdown came
+back. And on the Avatar tab, Randomize moved up beside Replace and Remove as
+three smaller pills, with the Measurements list no longer clipped at the bottom.
+
+─────────────────────────────────────────────
+
 AUGUST 24, 2026, MAYA MOVES INTO THE LOGO (v13.74)
 
 The star at Admin's top left became a circle, the same size it always was, and

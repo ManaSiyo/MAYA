@@ -16,6 +16,19 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, MAYA APP CABINET FIXES (v13.75)
+
+[x] "If I was on Pinterest and closed the drawer, it should reopen on Pinterest,
+    not Michael." The cabinet remembers the last tab now.
+[x] "Put the tab name in the dead space beside the circles (Projects / Pinterest
+    / Fabrics) so the panes start higher." Done; in-pane titles hidden.
+[x] "The avatar dropdown is gone, bring it back." Restored.
+[x] "Move Randomize up next to Replace and Remove, and shrink those pills."
+[x] "Measurements gets cropped on the Avatar tab." Added bottom padding so it
+    scrolls fully.
+[ ] Fabrics: hide imageless matches, make Refresh re-source the dissected
+    garment. NEXT.
+
 AUGUST 24, 2026, MAYA IN THE LOGO, MORE ADMIN (v13.74)
 
 [x] "Make the top-left logo circular, same size, and pulse when Maya talks."
