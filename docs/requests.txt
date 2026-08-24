@@ -16,6 +16,18 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 24, 2026, FABRICS SHOW REAL PHOTOS (v13.76)
+
+[x] "The fabric matches are just red, no image. Nothing should show, we need the
+    image." Fixed: the sourceable wall now shows only real retailer photos. The
+    real cause was a failed visual ranking (no credits) hiding the real products
+    and leaving the color-swatch wall; now the products paint unranked instead.
+[x] "The refresh should always re-search for what's dissected." It does: refresh
+    clears the live cache and re-sources the current dissected garment; now that
+    the wall is real photos, the re-scan is visible.
+[ ] Out of OpenAI credits (Fromsa buying): needed for voice, Visualize, and
+    fabric visual ranking. See the to-do list and fixes.txt.
+
 AUGUST 24, 2026, MAYA APP CABINET FIXES (v13.75)
 
 [x] "If I was on Pinterest and closed the drawer, it should reopen on Pinterest,

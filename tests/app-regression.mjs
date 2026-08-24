@@ -1026,11 +1026,13 @@ ok('the server asks real merchants and seeds the catalog',
   SERVER_SOURCE.includes('const SOURCE_MERCHANTS') &&
   SERVER_SOURCE.includes('search/suggest.json') &&
   SERVER_SOURCE.includes("gcsPut('catalog/queries/"));
-ok('the wall paints instantly and live products replace its front',
+// v13.76: the sourceable wall fills from live merchant photos, not color
+// swatches; the static color wall was dropped per Fromsa.
+ok('the sourceable wall fills from live merchant photos',
   BACKEND_SOURCE.includes('function _fetchLiveSourcing(') &&
   BACKEND_SOURCE.includes('/api/source-fabric?q=') &&
-  BACKEND_SOURCE.includes('live.concat(staticCards)') &&
-  BACKEND_SOURCE.includes('the static wall stands'));
+  BACKEND_SOURCE.includes('live.filter(c => c.img)') &&
+  !BACKEND_SOURCE.includes('live.concat(staticCards)'));
 ok('the dissection speaks the full material sentence',
   BACKEND_SOURCE.includes('"fabric_spec"') &&
   BACKEND_SOURCE.includes('weight_gsm') &&
@@ -1055,10 +1057,11 @@ ok('fabric results are called closest visual matches, never exact matches',
   BACKEND_SOURCE.includes("'Closest visual matches'") &&
   SERVER_SOURCE.includes("label: 'closest visual matches'") &&
   !/exact matches/i.test(BACKEND_SOURCE));
-ok('ranking failures leave the immediate static cards standing',
-  /_renderFabCards\(cards\)[\s\S]{0,300}_fetchLiveSourcing/.test(BACKEND_SOURCE) &&
-  BACKEND_SOURCE.includes("if (!r.ok) return;                    // static wall stands") &&
-  BACKEND_SOURCE.includes("if (!matches.length) return;            // the static wall stands"));
+// v13.76: a failed visual ranking no longer hides the real products; they are
+// painted unranked instead of collapsing to the color-swatch wall.
+ok('ranking failures still show the real retailer photos, unranked',
+  BACKEND_SOURCE.includes('paint(matches.length ? matches : products)') &&
+  BACKEND_SOURCE.includes('function _fetchLiveSourcing('));
 ok('only real retailer thumbnails enter visual comparison',
   FABRIC_SOURCE.includes("filter(product => product.image && product.url && product.title)") &&
   FABRIC_SOURCE.includes("error.status = 422") &&
@@ -1383,6 +1386,14 @@ ok('v13.75: the avatar dropdown is back and Randomize joins Replace/Remove',
   !INDEX_SOURCE.includes('#drawer-avatar-switcher { display: none !important; }') &&
   INDEX_SOURCE.includes('avActions.insertBefore(rnd') &&
   INDEX_SOURCE.includes('.pg-avatar-actions .drawer-action { font-size: 8px'));
+
+// v13.76: the sourceable fabric wall shows only real retailer photos and no
+// longer collapses to color swatches when the visual ranking is unavailable.
+ok('v13.76: fabrics show real photos and survive a failed rank',
+  !BACKEND_SOURCE || (
+    BACKEND_SOURCE.includes('paint(matches.length ? matches : products)') &&
+    BACKEND_SOURCE.includes('live.filter(c => c.img)') &&
+    !BACKEND_SOURCE.includes('live.concat(staticCards)')));
 // ── v13.61 · Operations Room joins the family ────────────────────────
 ok('ops: the hamburger offset is computed from the live layout, family curve everywhere',
   !OPS_SOURCE || (

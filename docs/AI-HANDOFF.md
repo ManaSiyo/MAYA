@@ -73,6 +73,40 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.76 (Claude): fabrics show real photos, not color swatches
+
+Fromsa: the sourceable fabric matches were rendering as solid crimson color
+fills with no image. Root cause in `backend/backend.html`: when the visual
+ranking (`/api/rank-fabric`) returned nothing — a failure, or no OpenAI credits
+— `_fetchLiveSourcing` returned early (`if (!matches.length) return`) and left
+only the static color-swatch wall standing. The real retailer products from
+`/api/source-fabric` (which each already carry a real photo and url) were never
+shown.
+
+- When ranking is unavailable, paint the raw `products` unranked instead of
+  bailing: `paint(matches.length ? matches : products)`.
+- The static color-swatch wall was dropped. The sourceable tab renders only
+  cards with a real image (`live.filter(c => c.img)`); a "Searching the shelves…"
+  line holds the space until the photos arrive. No more crimson placeholders.
+- Refresh already re-sources the currently dissected garment (clears the live
+  cache and re-fetches for `_fabActivePiece().fabric`); with the wall now built
+  from real photos, that re-scan is finally visible.
+
+Note: `Visualize` (the Nano-Banana fabric render on an imageless card) is gone
+from the sourceable wall along with the imageless cards; it needs OpenAI credits
+anyway.
+
+Changed files: `backend/backend.html`; version 13.76 across the four surfaces;
+`tests/app-regression.mjs`, `tests/admin-ui-contract.mjs`.
+
+VALIDATION: app-regression all passed, gate suite green, backend.html loads with
+no console errors.
+
+NEXT STEP
+- All of Fromsa's Aug 24 requests are now applied locally (v13.72–v13.76). He
+  must PUSH (GitHub Desktop) to deploy, and top up OpenAI credits for voice,
+  Visualize, and fabric ranking. Nothing else queued.
+
 ## v13.75 (Claude): MAYA app cabinet refinements
 
 Fromsa's cabinet fixes in `frontend/index.html` (the live app cabinet, which

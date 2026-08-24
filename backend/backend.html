@@ -4239,16 +4239,20 @@ function renderFabricsPage() {
   // sourceable
   // v13.44: no dissection needed. Without an exact fabric string the wall
   // still fills, ranked by the garment picture's own color.
+  // v13.76: per Fromsa, the sourceable wall shows only real retailer photos,
+  // never a color-swatch placeholder. The static wall (color fills) is dropped;
+  // a "searching" line holds the space until the live merchant photos arrive.
   if (!fabricStr) {
     if (fabEl) fabEl.textContent = 'From the full view';
-    _renderFabCards(_buildFullViewCards());
+    listEl.style.display = 'flex';
+    listEl.innerHTML = '<div class="fab-page"><div class="fab-empty-msg">Searching the shelves…</div></div>';
     _fetchLiveSourcing('apparel fabric', null);
     return;
   }
-  const cards = _buildFabricCards(fabricStr);
-  _renderFabCards(cards);
-  // v13.50: then the REAL shelves. The static wall paints instantly; the
-  // live merchant answers replace the front of it when they arrive.
+  const cards = _buildFabricCards(fabricStr).filter(c => c.img);
+  if (cards.length) _renderFabCards(cards);
+  else { listEl.style.display = 'flex'; listEl.innerHTML = '<div class="fab-page"><div class="fab-empty-msg">Searching the shelves…</div></div>'; }
+  // v13.50: then the REAL shelves, with photos, from the live merchant feeds.
   _fetchLiveSourcing(fabricStr, piece);
 }
 
@@ -4291,9 +4295,9 @@ async function _fetchLiveSourcing(fabricStr, piece) {
       url: p.url, img: p.image, matchScore: p.matchScore,
       reason: p.reason, _live: true,
     }));
-    const staticCards = (fabricStr === 'apparel fabric')
-      ? _buildFullViewCards() : _buildFabricCards(fabricStr);
-    _renderFabCards(live.concat(staticCards).slice(0, 24));
+    // v13.76: only real retailer photos survive; the color-swatch search
+    // cards are dropped, per Fromsa. If nothing has a photo, show nothing.
+    _renderFabCards(live.filter(c => c.img).slice(0, 24));
   };
   try {
     const tok = localStorage.getItem('maya_admin_tok') || '';
@@ -4334,9 +4338,11 @@ async function _fetchLiveSourcing(fabricStr, piece) {
       }).catch(() => []);
     }
     const matches = await _visualRankCache[rankKey];
-    if (!matches.length) return;            // the static wall stands
-    paint(matches);
-  } catch (_) { /* the static wall stands */ }
+    // v13.76: when the visual ranking is unavailable (a failure, or no OpenAI
+    // credits), still show the real retailer products with their photos, just
+    // unranked. Only the color-swatch search cards are ever dropped.
+    paint(matches.length ? matches : products);
+  } catch (_) { /* leave whatever is on screen */ }
 }
 
 // ── v13.53: Nano Banana fabric visualization ──────────────────────────

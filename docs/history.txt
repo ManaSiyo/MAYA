@@ -9,6 +9,19 @@ to work with Fromsa. This file is the story; README.md is the manual.
 
 ─────────────────────────────────────────────
 
+AUGUST 24, 2026, FABRICS FIND THEIR PHOTOS (v13.76)
+
+The sourceable fabric wall had been painting solid color swatches, crimson boxes
+with no picture, because a failed visual ranking, often just an empty credit
+balance, made the Brief throw away the real retailer results and keep only the
+static color wall. Now when the ranking cannot answer, the real products, which
+always carry a real photo, are shown anyway, unranked. The color-swatch wall is
+gone; the tab shows real fabric photos or, until they arrive, a quiet line that
+it is searching. Refresh re-sources whatever garment is dissected, and the
+re-scan finally shows.
+
+─────────────────────────────────────────────
+
 AUGUST 24, 2026, THE CABINET REMEMBERS (v13.75)
 
 The MAYA app's filing cabinet got a round of fixes. It reopens on the last tab
