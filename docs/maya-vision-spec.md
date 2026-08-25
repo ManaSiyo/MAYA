@@ -121,6 +121,25 @@ later. Right now it's internal, for Fromsa and his team.
 - [ ] Maya updating the code itself (GitHub) — see the MCP/API item in §4; needs a
   channel + auth decision. Today: Claude edits files, Fromsa pushes.
 
+## 8. New (Aug 25, test session)
+
+- [x] "Hey Maya" wake word on Admin (opt-in toggle) — v13.88.
+- [x] Fabrics: "arrives in N days" (relative) + all prices in USD — v13.88.
+- [x] Community wall: center every line — v13.88.
+- [ ] Upload + Tap-to-Listen on ONE row: thin compact pills, just the bars (+ a
+  plus for Upload), label appears instantly on hover. Saves screen real estate.
+- [ ] Empty middle of the Projects area → a personal SCORECARD / progress bar:
+  cards made, images generated, versions, average versions. Gamify.
+- [ ] Cross-project FAVORITES store: a favorited fabric/render stays a favorite
+  forever, across projects and accounts (built in backend, surfaced in frontend later).
+- [ ] BUG: favoriting pushes/resets the card stack — it should stay put.
+- [ ] BUG (again, verify on deploy): unfavorited items must leave the wall/favorites
+  (fixed in v13.86; confirm live).
+- [ ] Fabric matching combines ALL garments in a brief, not one at a time / capped
+  at two slides. Fromsa said "fine for now" — lower priority.
+- [ ] FX rates in `_priceUSD` are approximate/hardcoded — swap for a live daily
+  rate (small server fetch) when it matters.
+
 ## Priority order
 
 1. Lead Station live/last-touchpoint + Pinterest cache + full-screen wall +

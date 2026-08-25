@@ -1696,6 +1696,19 @@ ok('Lead Station header says Email, submissions are "My submissions", fabric spe
   MAP_SOURCE.includes('My submissions <span id="subs-count"') &&
   INDEX_SOURCE.includes('!nm.includes(String(t).toLowerCase())'));
 
+// ── v13.88 ──
+ok('v13.88: fabric cards show arrival in days and prices in USD',
+  BACKEND_SOURCE.includes("'Arrives in ' + _eta + ' day'") &&
+  BACKEND_SOURCE.includes('function _priceUSD(') &&
+  BACKEND_SOURCE.includes('escapeHtml(_priceUSD(c.price))'));
+ok('v13.88: the community wall centers every line',
+  INDEX_SOURCE.includes('/* v13.88: center every line on the community wall. */'));
+ok('v13.88: admin has a "Hey Maya" wake word',
+  MAP_SOURCE.includes('function toggleWakeWord(') &&
+  MAP_SOURCE.includes('hey,?\\s*maya') &&
+  MAP_SOURCE.includes('id="wake-toggle"') &&
+  MAP_SOURCE.includes("dispatchEvent(new Event('maya-voice-ended'))"));
+
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

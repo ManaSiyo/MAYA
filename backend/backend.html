@@ -4060,8 +4060,28 @@ function _buildFullViewCards() {
   return cards.slice(0, 24);
 }
 
+// v13.88: fabric prices come back in the merchant's own currency (JPY, EUR…).
+// Show them all in dollars so the wall is comparable at a glance. Rates are
+// approximate and easy to update; the exact original price stays on hover.
+const _FX_USD = { USD:1, EUR:1.08, GBP:1.27, JPY:0.0068, CAD:0.73, AUD:0.66,
+  CNY:0.14, KRW:0.00075, CHF:1.12, SEK:0.095, DKK:0.145, NOK:0.093, INR:0.012 };
+function _priceUSD(priceStr) {
+  if (!priceStr) return '';
+  const m = String(priceStr).match(/([\d][\d.,]*)\s*([A-Za-z]{3}|[$€£¥])/);
+  if (!m) return String(priceStr);                 // 'varies', 'see listing', unknown
+  const amt = parseFloat(m[1].replace(/,/g, ''));
+  const symMap = { '$':'USD', '€':'EUR', '£':'GBP', '¥':'JPY' };
+  const cur = (symMap[m[2]] || m[2]).toUpperCase();
+  const r = _FX_USD[cur];
+  if (!r || !isFinite(amt)) return String(priceStr);
+  return '$' + (amt * r).toFixed(2);
+}
 function _fabCardHtml(c) {
-  const arrive = 'Arrives ' + _addBusinessDays(c.etaDays);
+  // v13.88: relative "arrives in N days" reads faster than a calendar date.
+  const _eta = Math.round(Number(c.etaDays));
+  const arrive = Number.isFinite(_eta) && _eta > 0
+    ? 'Arrives in ' + _eta + ' day' + (_eta === 1 ? '' : 's')
+    : 'Arrives ' + _addBusinessDays(c.etaDays);
   _lastCardsByUrl[c.url]=c;
   const fav = !!_favs[c.url];
   const fallback = c.swatch || ('linear-gradient(135deg, rgba(120,140,190,0.45), rgba(30,40,70,0.9))');
@@ -4082,7 +4102,7 @@ function _fabCardHtml(c) {
     '<div class="fab-card-body">' +
       '<div class="fab-title">' + escapeHtml(c.title) + '</div>' +
       '<div class="fab-meta-line"><span class="fab-mch">' + escapeHtml(c.merchant) + '</span>' +
-        '<span class="fab-price">' + escapeHtml(c.price) + '</span></div>' +
+        '<span class="fab-price" title="' + escapeHtml(String(c.price || '')) + '">' + escapeHtml(_priceUSD(c.price)) + '</span></div>' +
       '<div class="fab-arrive">' + escapeHtml(arrive) + '</div>' + reason +
     '</div></a>';
 }

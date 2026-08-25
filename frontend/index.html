@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.87">
+<meta name="maya-version" content="13.88">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -3223,6 +3223,8 @@
     position: absolute; left: 0; right: 0; bottom: 0;
     padding: 30px 16px 14px;
     display: flex; flex-direction: column; gap: 3px;
+    /* v13.88: center every line on the community wall. */
+    align-items: center; text-align: center;
     background: linear-gradient(to top, rgba(0,0,0,0.82), rgba(0,0,0,0));
     opacity: 0;
     pointer-events: none;

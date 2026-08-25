@@ -73,6 +73,24 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.88 (Claude): Hey-Maya wake word, fabric arrival/USD, community wall
+
+`backend/status.html`: a **"Hey Maya" wake word** — an opt-in background
+SpeechRecognition (`toggleWakeWord`, off by default, persisted in localStorage)
+that taps the voice line when it hears "hey/hi/ok maya"; it pauses while she's
+live and resumes on a `maya-voice-ended` event, and self-restarts on `onend`.
+Toggle chip in the drawer command head. `backend/backend.html` (the Brief):
+fabric cards read **"Arrives in N days"** (relative) instead of a date, and prices
+are **converted to USD** (`_priceUSD`, approximate FX table, original kept on
+hover). `frontend/index.html`: **community wall text centered** (`.cc-meta`).
+Version 13.88 x4; app-regression + contract green; 3-page headless smoke = 0 JS
+errors; conversion unit-checked.
+
+NEXT (from spec §8): compact Upload/Listen on one row; project scorecard
+(cards/images/versions) in the empty middle; cross-project favorites store;
+favoriting-resets-the-card-stack bug; fabric matching that combines all garments
+(Fromsa said fine for now).
+
 ## v13.87 (Claude): the Lead Station becomes a real custom CRM
 
 Server (`docs/server/server.js`): `maya/leads.json` now holds `{items, overrides,

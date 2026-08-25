@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.87">
+<meta name="maya-version" content="13.88">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -143,6 +143,10 @@ try {
   .maya-command-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .maya-command-title{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:#a9c9ff}
   #maya-command-state{margin-left:auto;font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim)}
+  #wake-toggle{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);
+    background:transparent;border:0.5px solid var(--line);border-radius:100px;padding:3px 9px;cursor:pointer;transition:all .15s}
+  #wake-toggle:hover{color:var(--ink);border-color:rgba(255,255,255,0.5)}
+  #wake-toggle.on{color:#a9c9ff;border-color:rgba(169,201,255,0.55)}
   #maya-command-state.busy{color:#a9c9ff} #maya-command-state.waiting{color:var(--amber)}
   #maya-command-brief{margin:11px 0 10px;font-size:15px;line-height:1.5;color:var(--ink)}
   #maya-command-attention{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 10px}
@@ -587,6 +591,7 @@ try {
     <div class="maya-command-head">
       <span class="maya-command-title">Maya</span>
       <span id="maya-command-state">sign in to ground the briefing</span>
+      <button id="wake-toggle" onclick="toggleWakeWord()" title="When on, just say &quot;Hey Maya&quot; to wake her">Hey Maya: off</button>
     </div>
     <div class="maya-command-caption">Her private line. She talks, she asks, you approve.</div>
     <!-- v13.79: the conversation reads on screen too, so it is never voice-only.
@@ -1733,6 +1738,7 @@ function _voiceStop(){
   try{ _voice.audio.srcObject=null; }catch(_){}
   _voice=null; _voiceLive(false); _voiceWord('');
   mayaCommandState(_mayaActions.length?'action waiting for confirmation':'ready',_mayaActions.length?'waiting':'');
+  try{ window.dispatchEvent(new Event('maya-voice-ended')); }catch(_){}   // v13.88: resume wake word
 }
 // Run one of Maya's tools and hand the result back to the conversation.
 async function _voiceTool(name, args){
@@ -1879,6 +1885,7 @@ async function toggleMayaVoice(){
   if(_voice){ _voiceStop(); return; }
   if(_voiceStarting){ _voiceWord('still connecting'); return; }
   if(!_idTok){ _voiceWord('sign in first'); return; }
+  try{ if(typeof _wakeStop==='function') _wakeStop(); }catch(_){}   // v13.88: free the mic while she's live
   _voiceStarting=true;
   _mayaChatClear();   // v13.79: a fresh conversation each time she connects
   let pendingMic=null,pendingPc=null,pendingAudio=null;
@@ -1929,6 +1936,46 @@ async function toggleMayaVoice(){
     console.warn('[maya voice]',e);
   }finally{ _voiceStarting=false; }
 }
+
+// ═══ v13.88: "Hey Maya" wake word. A background recognizer listens for the
+// phrase and taps the voice line for you. Off by default (it needs the mic);
+// flip it on and it remembers. It pauses while Maya is already live, and
+// restarts itself if the browser stops it. ═══
+let _wakeRec=null, _wakeOn=false, _wakeWantOn=false;
+function _wakeSupported(){ return !!(window.SpeechRecognition||window.webkitSpeechRecognition); }
+function _wakeLabel(){ const b=document.getElementById('wake-toggle'); if(!b) return;
+  b.textContent='Hey Maya: '+(_wakeWantOn?'on':'off'); b.classList.toggle('on',_wakeWantOn); }
+function toggleWakeWord(){
+  if(!_wakeSupported()){ _voiceWord&&_voiceWord('this browser can’t listen for a wake word'); return; }
+  _wakeWantOn=!_wakeWantOn;
+  try{ localStorage.setItem('maya_wake', _wakeWantOn?'1':'0'); }catch(_){}
+  _wakeLabel();
+  if(_wakeWantOn) _wakeStart(); else _wakeStop();
+}
+function _wakeStart(){
+  if(!_wakeWantOn || _wakeOn || !_wakeSupported()) return;
+  if(_voice){ return; }               // already live; wait until she hangs up
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  try{
+    _wakeRec=new SR(); _wakeRec.continuous=true; _wakeRec.interimResults=true; _wakeRec.lang='en-US';
+    _wakeRec.onresult=(e)=>{
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const t=(e.results[i][0].transcript||'').toLowerCase();
+        if(/\bhey,?\s*maya\b|\bhi,?\s*maya\b|\bok,?\s*maya\b/.test(t)){
+          if(!_voice && !_voiceStarting){ try{ toggleMayaVoice(); }catch(_){} }
+          return;
+        }
+      }
+    };
+    _wakeRec.onerror=(ev)=>{ if(ev && (ev.error==='not-allowed'||ev.error==='service-not-allowed')){ _wakeWantOn=false; try{localStorage.setItem('maya_wake','0');}catch(_){}; _wakeLabel(); } };
+    _wakeRec.onend=()=>{ _wakeOn=false; if(_wakeWantOn && !_voice){ setTimeout(_wakeStart,600); } };
+    _wakeRec.start(); _wakeOn=true;
+  }catch(_){ _wakeOn=false; }
+}
+function _wakeStop(){ _wakeOn=false; try{ if(_wakeRec){ _wakeRec.onend=null; _wakeRec.stop(); } }catch(_){} _wakeRec=null; }
+// resume the wake listener after a live session ends
+window.addEventListener('maya-voice-ended',()=>{ if(_wakeWantOn) setTimeout(_wakeStart,800); });
+try{ if(localStorage.getItem('maya_wake')==='1'){ _wakeWantOn=true; _wakeLabel(); setTimeout(_wakeStart,1200); } }catch(_){}
 </script>
 
 <script>
