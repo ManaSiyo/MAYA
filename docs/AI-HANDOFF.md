@@ -73,6 +73,30 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.85 (Claude): Projects caret + empty-project bug fix
+
+`frontend/index.html`: (1) the "Project" title is now "**Projects**" with a
+dropdown **caret** (`.pg-tabtitle-caret`) so the project list is discoverable —
+it always worked, it was just hidden under the title (Fromsa confirmed). No
+redesign. (2) BUG FIX: switching an avatar spawned an empty project every time,
+because `_persistNow`'s `hasContent` counted a bare `lastSummary` (the avatar
+identity set on switch) as content. Now `hasContent = items.length ||
+currentClientName` — an avatar alone no longer opens a bin; only a populated
+board or a named project does. Version 13.85 x4; app-regression + contract green;
+frontend headless smoke = 0 JS errors.
+
+Verified upstream: feature log works (maya/features.json, 3 items via
+/api/admin/maya-features). Codex's v13.83 server work (buildFeatureDigest,
+get_feature_digest, _leadNoteCache) is committed + deployed; synced into this
+tree. Email intent CORRECTED (log mis-transcription): Fromsa WANTS Maya to open a
+ready-to-send email directly (the draft→open-Gmail flow) — the only line held is
+no auto-SEND without his click.
+
+OPEN (need repro/verify before shipping): the Admin "confirm" button for
+lead-station changes reportedly not working — server lead-note path verified
+correct, so it's client-side/repaint; Pinterest sub-tabs beside title + search;
+affiliate-program feature. See docs/maya-vision-spec.md.
+
 ## v13.84 (Claude): Pinterest wall overhaul + admin spacing
 
 `frontend/index.html`: Pinterest no longer reloads on every tab switch —

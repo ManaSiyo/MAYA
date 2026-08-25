@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.84">
+<meta name="maya-version" content="13.85">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -2009,6 +2009,9 @@
     cursor: default; }
   #notes-drawer .pg-tabtitle.clickable { cursor: pointer; }
   #notes-drawer .pg-tabtitle.clickable:hover { color: #fff; }
+  /* v13.85: the dropdown caret beside "Projects". */
+  #notes-drawer .pg-tabtitle-caret { font-size: 12px; color: rgba(238,242,255,0.5); margin-left: 3px; }
+  #notes-drawer .pg-tabtitle.clickable:hover .pg-tabtitle-caret { color: rgba(255,255,255,0.85); }
   /* the in-pane titles are redundant now that the name sits beside the circles */
   #notes-drawer #pg-project-pill { display: none; }
   #notes-drawer .pg-pane .drawer-head-title { display: none; }
@@ -4650,7 +4653,7 @@
       </button>
       <!-- v13.75: the current tab's name rides here, in the dead space beside
            the circles, so the panes below start higher. -->
-      <span class="pg-tabtitle" id="pg-tabtitle">Project</span>
+      <span class="pg-tabtitle" id="pg-tabtitle">Projects</span>
     </div>
     <div class="pg-folder" id="pg-folder">
       <div class="pg-pane" id="pg-pane-avatar">
@@ -13819,7 +13822,10 @@ async function _persistNow(flush) {
     // No project open yet. The moment there is real content, open one so the
     // work is in the cloud from its first second. It gets its real name later,
     // when the designer presses Save.
-    const hasContent = (Array.isArray(items) && items.length) || lastSummary || currentClientName;
+    // v13.85: an avatar identity alone (lastSummary set by switching avatar, with
+    // an empty board) is NOT content — it was spawning an empty project on every
+    // avatar switch. Only a populated board or a named project opens a bin.
+    const hasContent = (Array.isArray(items) && items.length) || currentClientName;
     if (!hasContent || _creatingBin) return;
     _creatingBin = true;
     try { await projectStore.createAuto(); }
@@ -16514,8 +16520,11 @@ function pgShow(which) {
   // v13.75: name the visible tab in the dead space beside the circles.
   const title = document.getElementById('pg-tabtitle');
   if (title) {
-    title.textContent = which === 'pinterest' ? 'Pinterest' : which === 'fabrics' ? 'Fabrics' : 'Project';
     const isAvatar = (which === 'avatar');
+    // v13.85: "Projects" carries a dropdown caret so it's clear it opens the
+    // project list (it was there, just hidden under the title). No redesign.
+    title.innerHTML = which === 'pinterest' ? 'Pinterest' : which === 'fabrics' ? 'Fabrics'
+      : 'Projects <span class="pg-tabtitle-caret">▾</span>';
     title.classList.toggle('clickable', isAvatar);
     title.onclick = (isAvatar && typeof pgProjects === 'function') ? function () { pgProjects(); } : null;
   }

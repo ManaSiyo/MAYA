@@ -81,6 +81,24 @@ later. Right now it's internal, for Fromsa and his team.
 - [ ] **Front-facing Maya** (customers talk to her too) — later. Same brain,
   new surface. Design permissions so customer Maya ≠ admin Maya.
 
+## 5. New / corrected (Aug 25 PM)
+
+- [x] Rename "Project" → "Projects" with a dropdown caret beside it (v13.85). No
+  redesign — the list was just hidden under the title.
+- [x] BUG: switching an avatar spawned empty projects — fixed (v13.85).
+- [ ] EMAIL, corrected: the log entry "never send from Maya" was a mis-transcription.
+  Fromsa WANTS Maya to open a ready-to-send email directly — that's the existing
+  draft→confirm→open-Gmail flow. The ONLY line held: no auto-SEND without a human
+  click. Make Maya's email opening feel one-tap; keep the click.
+- [ ] BUG: Admin "confirm" button for lead-station changes reportedly not working.
+  Server lead-note path verified correct (saves + cache-invalidates), so it's
+  client-side/repaint on status.html — needs live repro. Check mayaConfirmAction
+  + loadMkt repaint after a lead_note/add_lead confirm.
+- [ ] Pinterest: put "All saves / Boards" as smaller sub-pills on the SAME row as
+  the "Pinterest" title (H1 title, H2 pills, right-aligned), and add a SEARCH box.
+  More vertical real estate for the wall. Apply to the real app (not just playground).
+- [ ] Affiliate program: set a 5–10% commission per lead brought in (from the log).
+
 ## Priority order
 
 1. Lead Station live/last-touchpoint + Pinterest cache + full-screen wall +

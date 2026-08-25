@@ -1400,11 +1400,13 @@ ok('v13.75: the avatar dropdown is back and Randomize joins Replace/Remove',
 // v13.76: the sourceable fabric wall shows only real retailer photos and no
 // longer collapses to color swatches when the visual ranking is unavailable.
 // v13.78: cabinet order/labels + swipe memory + Admin logo ring + ops beta.
-ok('v13.78: tabs read Pinterest, Fabrics, Avatar; the title says Project',
+ok('v13.85: tabs order holds and the title says "Projects" with a dropdown caret',
   INDEX_SOURCE.indexOf('id="pg-tab-pinterest"') < INDEX_SOURCE.indexOf('id="pg-tab-fabrics"') &&
   INDEX_SOURCE.indexOf('id="pg-tab-fabrics"') < INDEX_SOURCE.indexOf('id="pg-tab-avatar"') &&
-  INDEX_SOURCE.includes("'Fabrics' : 'Project'") &&
+  INDEX_SOURCE.includes("'Projects <span class=\"pg-tabtitle-caret\">") &&
   INDEX_SOURCE.includes('class="pg-avatar-nameline"'));
+ok('v13.85: switching an avatar no longer spawns an empty project',
+  INDEX_SOURCE.includes('const hasContent = (Array.isArray(items) && items.length) || currentClientName;'));
 ok('v13.78: reopening on the last tab works from the swipe too',
   INDEX_SOURCE.includes('function _pgRestoreLastTab()') &&
   INDEX_SOURCE.includes("!_drawerWasOpen && open && typeof _pgRestoreLastTab"));
