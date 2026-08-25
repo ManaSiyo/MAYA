@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.85">
+<meta name="maya-version" content="13.86">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -738,9 +738,16 @@
   /* v13.4: the upload button reads a touch wider per Fromsa.
      v13.8: wider again, and a size up, so it can actually be seen. */
   /* v13.33: 20% brighter, per Fromsa. 0.3 -> 0.36 at rest, 0.8 -> 0.96 lit. */
-  .upload-link { letter-spacing: 0.32em; padding: 2px 20px; font-size: 10px;
-                 color: rgba(200,210,230,0.36); }
-  .upload-link:hover { color: rgba(226,234,250,0.96); }
+  /* v13.86: it was blending into the background. Give it a real glass pill so
+     it reads as a button, wider, brighter at rest, and nudged a touch lower. */
+  .upload-link { letter-spacing: 0.3em; padding: 7px 30px; font-size: 10px;
+                 color: rgba(222,230,248,0.72);
+                 border: 0.5px solid rgba(255,255,255,0.24); border-radius: 100px;
+                 background: rgba(255,255,255,0.04);
+                 backdrop-filter: blur(12px) saturate(150%); -webkit-backdrop-filter: blur(12px) saturate(150%);
+                 box-shadow: inset 0 1px 1px rgba(255,255,255,0.14), 0 3px 12px rgba(0,0,0,0.28);
+                 margin-top: 8px; }
+  .upload-link:hover { color: rgba(255,255,255,0.98); border-color: rgba(255,255,255,0.44); }
   /* v13.4: the upload chooser. Snappy on purpose: 0.12s, no drift. */
   /* v13.31: Pinterest picker. Board tiles, then picture tiles with a tick. */
   .pin-grid {
@@ -8412,6 +8419,11 @@ function toggleFavorite(itemId) {
       else communityBoard.unpublish(it);
     }
   } catch (e) { console.warn('[Maya community] heart', e); }
+  // v13.86: unfavoriting never refreshed the Favorites screen, so an un-hearted
+  // piece stayed there. Re-render now so what's unfavorited leaves immediately.
+  if (currentScreen === 2 && typeof _renderFavoritesScroller === 'function') {
+    try { _renderFavoritesScroller(); } catch (_) {}
+  }
   if (typeof _persistSession === 'function') _persistSession();
 }
 
@@ -15350,6 +15362,15 @@ async function loadSavedSessionById(id) {
 
 async function deleteSavedSessionRow(id) {
   if (!confirm('Delete this project? This cannot be undone.')) return;
+  // v13.86: the cloud delete is async and used to leave the row on screen until
+  // it finished — so a slow connection made it look like nothing happened, and
+  // the next click deleted a DIFFERENT project. Remove the row the instant it is
+  // confirmed; if the delete fails, the re-render at the end brings it back.
+  try {
+    const sel = (window.CSS && CSS.escape) ? CSS.escape(id) : id;
+    const row = document.querySelector('#drawer-sessions-list .session-item[data-id="' + sel + '"]');
+    if (row) row.remove();
+  } catch (_) {}
   try {
     const res = await projectStore.remove(id);
     showToast(res && res.cleanupOk

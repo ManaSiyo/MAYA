@@ -99,6 +99,17 @@ later. Right now it's internal, for Fromsa and his team.
   More vertical real estate for the wall. Apply to the real app (not just playground).
 - [ ] Affiliate program: set a 5–10% commission per lead brought in (from the log).
 
+## 6. New (Aug 25, later)
+
+- [x] Upload button was invisible — now a visible glass pill, wider + lower (v13.86).
+- [x] BUG: delete-project lag caused accidental deletes — row now removed instantly (v13.86).
+- [x] BUG: unfavorited pieces stayed on the Favorites screen — fixed (v13.86).
+- [ ] DESIGN NOTES aesthetics: group the notes into named CATEGORIES — Fabric,
+  Color, Silhouette, Style — each a different color, with a clear H1/H2/H3
+  hierarchy. Apply to every place notes already render. NEEDS: confirm the surface
+  (the drawer notes panel, the favorite-card dissection overlay, and/or the Brief)
+  and do a real design pass (use artifact-design thinking).
+
 ## Priority order
 
 1. Lead Station live/last-touchpoint + Pinterest cache + full-screen wall +

@@ -73,6 +73,23 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.86 (Claude): upload button + two data-safety bug fixes
+
+`frontend/index.html`: (1) the "+ upload" button was invisible faint text — now a
+real glass pill (wider `padding:7px 30px`, brighter `rgba(222,230,248,0.72)`,
+`margin-top:8px` lower). (2) BUG (data risk): deleting a project waited for the
+async cloud delete before removing the row, so on a slow link the X looked dead
+and the next click deleted a DIFFERENT project — now the row is removed the
+instant delete is confirmed (`deleteSavedSessionRow`), with the end re-render
+restoring it if the delete fails. (3) BUG: `toggleFavorite` only re-rendered the
+Favorites screen when favoriting, so un-hearted pieces stayed — now it re-renders
+on unfavorite too. Version 13.86 x4; app-regression + contract green; 0 JS errors.
+
+NEXT: design-notes categories (Fabric / Color / Silhouette / Style as color-coded
+H1/H2/H3) — a proper design pass; needs to confirm which surface renders the notes
+(notes panel / favorite-card dissection / the Brief). Then Pinterest sub-pills +
+search, and the Admin confirm-button repro.
+
 ## v13.85 (Claude): Projects caret + empty-project bug fix
 
 `frontend/index.html`: (1) the "Project" title is now "**Projects**" with a

@@ -708,9 +708,16 @@ ok('Pinterest is a drawer in the same language as Fabrics',
 ok('all saves means every pin on the account, not just one board',
   SERVER_SOURCE.includes("const path = board ? ('/boards/' + board + '/pins?'") &&
   SERVER_SOURCE.includes("('/pins?' + qs.toString())"));
-ok('the upload button is brighter and the chooser sits lower',
-  INDEX_SOURCE.includes('color: rgba(200,210,230,0.36)') &&
+ok('v13.86: the upload button is a visible glass pill, wider and nudged lower',
+  INDEX_SOURCE.includes('.upload-link { letter-spacing: 0.3em; padding: 7px 30px;') &&
+  INDEX_SOURCE.includes('color: rgba(222,230,248,0.72)') &&
+  INDEX_SOURCE.includes('margin-top: 8px;') &&
   INDEX_SOURCE.includes('padding-bottom: 92px;'));
+ok('v13.86: deleting a project removes its row instantly (no accidental deletes)',
+  INDEX_SOURCE.includes(".session-item[data-id=\"' + sel + '\"]") &&
+  INDEX_SOURCE.includes('if (row) row.remove();'));
+ok('v13.86: unfavoriting re-renders the Favorites screen so it leaves immediately',
+  /unfavoriting never refreshed the Favorites screen/.test(INDEX_SOURCE));
 ok('the share popup says Copy to clipboard and really copies',
   INDEX_SOURCE.includes('>Copy to clipboard<') &&
   INDEX_SOURCE.includes('function _copyToClipboard(text)') &&
