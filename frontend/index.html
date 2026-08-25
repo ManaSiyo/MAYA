@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.81">
+<meta name="maya-version" content="13.82">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -671,7 +671,11 @@
   #voice-wrap {
     position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
     display: flex; flex-direction: column; align-items: center; gap: 0;
-    z-index: 100;
+    /* v13.82: cards climb via _zCounter (starts at 200 and ++ per interaction),
+       so at z-index 100 the Visualize pill was getting buried. Sit above the
+       card ceiling. #screen-inspo's own transform confines this so it never
+       leaks over modals. The pill now stays on top like the hamburger + logo. */
+    z-index: 9000;
   }
   #voice-row {
     display: flex; align-items: center; gap: 10px;
@@ -2014,9 +2018,11 @@
      anchors to the bottom. */
   #notes-drawer .pg-pane > #pinterest-drawer > .drawer-head { display: none; }
   #notes-drawer .pg-pane > #pinterest-drawer > #pinterest-drawer-body { flex: 1; padding-top: 4px; }
+  /* v13.82: Fromsa asked to drop it a couple more pixels and tighten the gap to
+     the dashed line above it: less space on top, closer to the bottom edge. */
   /* v13.81: Bring them in sits a little lower than the cards but not glued to
      the very edge, with a tighter gap above it and a smaller pill. */
-  #notes-drawer .pg-pane > #pinterest-drawer > .pin-drawer-foot { margin-top: auto; flex: none; padding: 4px 18px 22px; }
+  #notes-drawer .pg-pane > #pinterest-drawer > .pin-drawer-foot { margin-top: auto; flex: none; padding: 1px 18px 10px; }
   #notes-drawer .pg-pane > #pinterest-drawer > .pin-drawer-foot .drawer-fabrics { flex: none; width: auto; min-width: 150px; padding: 8px 20px; }
   /* v13.75: Randomize, Replace and Remove share one row; smaller pills to fit. */
   #notes-drawer .pg-avatar-actions .drawer-action { font-size: 8px; padding: 3px 8px;
@@ -2039,7 +2045,10 @@
   /* v13.75: the avatar dropdown is back, per Fromsa. The caret shows and the
      switcher opens on tap (toggleAvatarSwitcher sets display), so it is no
      longer force-hidden. */
-  #notes-drawer #drawer-avatar-switcher { margin: 0 0 12px; }
+  /* v13.82: the switcher can be taller than the room left under the avatar row,
+     so it was getting cropped at the drawer's edge. Cap it and let it scroll
+     inside itself, and it is scrolled into view when opened. */
+  #notes-drawer #drawer-avatar-switcher { margin: 0 0 12px; max-height: 44vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   #notes-drawer .pg-fold { margin: 2px 0 10px; }
   #notes-drawer .pg-fold summary { list-style: none; cursor: pointer;
     display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -7962,6 +7971,8 @@ async function toggleAvatarSwitcher() {
   panel.innerHTML = (rows || '<div class="avatar-switch-empty">No saved avatars yet. Set a name and a face, then Save.</div>') +
     '<button class="avatar-switch-row avatar-switch-new" onclick="newAvatar()">+ New avatar</button>';
   panel.style.display = 'block';
+  // v13.82: make sure the freshly opened list is fully visible, not cut at the fold.
+  try { panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (_) {}
 }
 async function switchAvatar(id) {
   const lib = await _loadAvatarLibrary();

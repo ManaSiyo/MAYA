@@ -1084,3 +1084,45 @@ Process:
     was fixed reappears as a new bug. Keep an internal loop: every request
     here gets re-checked in later sessions, and a fixed item that breaks
     again gets marked [!] with a new entry.
+
+────────────────────────────────────────────────────────────
+v13.82 — "Make the voice agent (MAYA) the real intelligence layer"
+(Aug 25, from Fromsa, two messages)
+
+[x] MAYA must see the daily ad clicks — today and yesterday separately —
+    not just a 7-day total. Root cause found and fixed: her snapshot only
+    carried 7-day aggregates. Now today/yesterday/last-7 are in her ads
+    panel, her briefing, and show_panel("ads").
+[x] MAYA must see everything on the admin side she was blocked from.
+    Ads today/yesterday wired; show_panel already returns live painted data.
+[x] Lead Station dynamic: MAYA (and Fromsa) can add leads by voice; Wix
+    leads stay but are labelled "WIX"; added leads merge in and are
+    modifiable. Notes editable by both.
+[x] Identity: "MAYA, this is Fromsa/Paula" — she knows Fromsa (founder) and
+    Paula (teammate) now, and can be taught new people.
+[x] MAYA's soul: a personal markdown record loaded every call, she journals
+    into it.
+[x] Stronger email write ability (goal-steered draft) — still confirm-gated,
+    opens Gmail, never auto-sends. This is a safety rule, not a limitation
+    I can remove: Claude/MAYA never sends mail on your behalf without your
+    click. Ask Fromsa if he wants a different flow.
+[x] Tapping the voice logo must NOT open the drawer. Fixed; drawer stays
+    closed unless he opens it.
+[x] Frontend: Visualize pill always on top of cards (z-index 9000);
+    Pinterest "bring them in" pill dropped lower; avatar switcher no longer
+    cropped (caps height + scrolls + scrolls into view).
+
+[ ] INFRA — Fromsa/owner steps so the new abilities go fully live:
+    1. Buy OpenAI credits (voice returns 429 until then; blocks live test,
+       ad ranking, Visualize).
+    2. Share the internal Google Sheet with the Cloud Run service account
+       (its email shows on Marketing as the GA "share with" address) as a
+       Viewer, AND enable the Google Sheets API on the GCP project. Until
+       both are done, read_team_sheet reports "not connected" and names the
+       SA to share with. Sheet:
+       https://docs.google.com/spreadsheets/d/1LI__xIpcKl4uH595oOhfIdJhJNJL5vBP5-vRJk-Ew0I
+    3. Push v13.82 (Fromsa presses Push).
+
+[?] "Delete nurture" — the word "nurture" does not appear anywhere in the
+    repository (searched all HTML/JS/docs). Need Fromsa to point at where he
+    sees it so it can be removed correctly rather than guessed.

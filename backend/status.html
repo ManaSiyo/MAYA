@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.81">
+<meta name="maya-version" content="13.82">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -466,6 +466,9 @@ try {
   #adm-mkt #ad-tip .tip-row .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
   #adm-mkt #leads-table td{font-size:14.5px;vertical-align:top}
   #adm-mkt #leads-table .lead-when{color:var(--faint);font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.08em;margin-top:2px}
+  #adm-mkt #leads-table .lead-src{display:inline-block;margin-left:6px;padding:0 5px;border-radius:100px;border:0.5px solid var(--line);
+    font-size:8px;letter-spacing:0.14em;color:var(--faint);vertical-align:middle}
+  #adm-mkt #leads-table .lead-src.wix{color:#a9c9ff;border-color:rgba(169,201,255,0.4)}
   #adm-mkt #leads-table .lead-note{font-family:'Cormorant Garamond',serif;font-size:14px;line-height:1.45;color:var(--dim);
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   #adm-mkt .bl-funnel{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
@@ -1504,8 +1507,21 @@ function _mayaPanelData(panel){
   if(panel==='submissions') return d.submissions ? {total:d.submissions.total,
     newest:(d.submissions.folders||[]).slice(0,8).map(x=>({name:x.name,when:x.createdTime,files:(x.files||[]).length}))} : null;
   if(panel==='traffic') return {accounts:t.accounts||null,live:t.live,ranges:t.ranges||null,manasiyo:t.wixSite||null};
-  if(panel==='ads') return {googleAds:m.googleAds||null,meta:m.meta||null,
-    campaigns:((m.adCombined||{}).campaigns||[]).slice(0,10),warnings:m.warnings||[]};
+  if(panel==='ads'){
+    // v13.82: today and yesterday link clicks, from the same daily series the
+    // ad chart paints, so Maya sees exactly what Fromsa sees on screen.
+    const ac=m.adCombined||{};
+    const dayOf=(series,off)=>{ const a=series||[]; const r=a[a.length-1-off]||{}; return r; };
+    const clk=r=>Number((r.linkClicks!=null?r.linkClicks:r.clicks)||0);
+    const spd=r=>Number(r.spend||0);
+    const gT=dayOf(ac.google,0),mT=dayOf(ac.meta,0),gY=dayOf(ac.google,1),mY=dayOf(ac.meta,1);
+    const today={linkClicks:Math.round(clk(gT)+clk(mT)),spend:Number((spd(gT)+spd(mT)).toFixed(2)),
+      date:(gT.date||mT.date||'')};
+    const yesterday={linkClicks:Math.round(clk(gY)+clk(mY)),spend:Number((spd(gY)+spd(mY)).toFixed(2)),
+      date:(gY.date||mY.date||'')};
+    return {today,yesterday,googleAds:m.googleAds||null,meta:m.meta||null,
+      campaigns:((m.adCombined||{}).campaigns||[]).slice(0,10),warnings:m.warnings||[]};
+  }
   if(panel==='leads') return m.leads ? {today:m.leads.today,d7:m.leads.d7,d28:m.leads.d28,
     list:(m.leads.list||[]).slice(0,12).map(x=>({name:x.name,email:x.email,when:x.ts,summary:x.note||x.wrote}))} : null;
   if(panel==='sources') return (m.analytics||{}).connected ? {sources:m.analytics.sources||[],pages:m.analytics.pages||[]} : null;
@@ -1570,6 +1586,10 @@ function _mayaActionLabel(action){
   if(action.kind==='lead_note') return 'Add to '+action.lead.name+': '+action.note;
   if(action.kind==='email') return 'Draft a follow-up email to '+action.lead.name+
     (action.request?' about '+action.request:'');
+  if(action.kind==='add_lead') return 'Add lead: '+action.lead.name+
+    (action.lead.email?' <'+action.lead.email+'>':'')+(action.lead.note?' — '+action.lead.note:'');
+  if(action.kind==='add_person') return 'Remember person: '+action.person.name+
+    (action.person.role?' ('+action.person.role+')':'');
   return 'Pending Admin action';
 }
 function _mayaRenderActions(){
@@ -1619,16 +1639,22 @@ async function mayaConfirmAction(id){
     }else if(action.kind==='email'){
       r=await fetch('/api/admin/lead-draft',{method:'POST',headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
         body:JSON.stringify({email:action.lead.email,name:action.lead.name,
-          summary:[action.lead.summary,action.request].filter(Boolean).join(' | ')})}); j=await r.json().catch(()=>({}));
+          summary:action.lead.summary||'',goal:action.request||''})}); j=await r.json().catch(()=>({}));
       if(!r.ok||!j.subject) throw new Error(j.error||('draft '+r.status));
       const url='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(action.lead.email)+
         '&su='+encodeURIComponent(j.subject)+'&body='+encodeURIComponent(j.body||'');
       mailWindow.location.href=url;
+    }else if(action.kind==='add_lead'){
+      r=await fetch('/api/admin/lead-add',{method:'POST',headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
+        body:JSON.stringify({name:action.lead.name,email:action.lead.email||'',phone:action.lead.phone||'',note:action.lead.note||''})}); j=await r.json().catch(()=>({}));
+    }else if(action.kind==='add_person'){
+      r=await fetch('/api/admin/maya-person',{method:'POST',headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
+        body:JSON.stringify({name:action.person.name,role:action.person.role||'',note:action.person.note||''})}); j=await r.json().catch(()=>({}));
     }
     if(!r||!r.ok||j.ok===false) throw new Error((j&&j.error)||('action '+(r&&r.status)));
     _mayaActions=_mayaActions.filter(a=>a.id!==id); _mayaRenderActions();
     mayaCommandState(action.kind==='email'?'draft opened for review':'action saved','');
-    if(action.kind==='lead_note'){ try{ if(window.loadMkt) window.loadMkt(); }catch(_){} }
+    if(action.kind==='lead_note'||action.kind==='add_lead'){ try{ if(window.loadMkt) window.loadMkt(); }catch(_){} try{ loadMayaCommand(); }catch(_){} }
   }catch(e){
     try{ if(mailWindow) mailWindow.close(); }catch(_){}
     if(row){ const meta=row.querySelector('.maya-action-meta'); if(meta) meta.textContent='Could not complete: '+String(e.message||e).slice(0,90); }
@@ -1668,8 +1694,9 @@ function _voiceLive(on, word){
   const chip=document.getElementById('voice-chip'); if(chip) chip.classList.toggle('show', on);
   const cw=document.getElementById('voice-chip-word'); if(cw && word) cw.textContent=word;
   // v13.72: the drawer becomes Maya's command line while she is live.
+  // v13.82: but tapping the voice logo must NOT pull the drawer open. The drawer
+  // stays closed unless Fromsa opens it himself (or asks Maya to, via show_drawer).
   document.body.classList.toggle('maya-live', on);
-  if(on){ const d=document.getElementById('drawer'); if(d && !d.classList.contains('open')) toggleDrawer(true); }
 }
 function _voiceStop(){
   if(!_voice) return;
@@ -1684,7 +1711,11 @@ async function _voiceTool(name, args){
   try{
     if(name==='get_briefing'){
       const snap=await loadMayaCommand()||window.MAYA_ADMIN_DATA.command;
-      return snap ? {ok:true,briefing:snap.briefing||[],attention:snap.attention||[]} : {ok:false,error:'briefing_unavailable'};
+      if(!snap) return {ok:false,error:'briefing_unavailable'};
+      // v13.82: hand back today/yesterday ad clicks structured, not just prose.
+      const ads=((snap.panels||{}).ads)||null;
+      return {ok:true,briefing:snap.briefing||[],attention:snap.attention||[],
+        adClicks: ads ? {today:ads.today||null,yesterday:ads.yesterday||null} : null};
     }
     if(name==='show_panel') return mayaShowPanel(args.panel||'');
     if(name==='show_drawer'){ const open=(args.state!=='close'); toggleDrawer(open);
@@ -1701,6 +1732,32 @@ async function _voiceTool(name, args){
       }catch(e){ return {ok:false,error:'log_failed'}; }
     }
     if(name==='find_lead') return await _mayaLeadLookup(args.query||'');
+    if(name==='add_lead'){
+      const nm=_mayaEscText(args.name).slice(0,120); if(!nm) return {ok:false,error:'name_required'};
+      return _mayaQueueAction({kind:'add_lead',lead:{name:nm,email:_mayaEscText(args.email||'').slice(0,180),
+        phone:_mayaEscText(args.phone||'').slice(0,60),note:_mayaEscText(args.note||'').slice(0,400)}});
+    }
+    if(name==='add_person'){
+      const nm=_mayaEscText(args.name).slice(0,80); if(!nm) return {ok:false,error:'name_required'};
+      return _mayaQueueAction({kind:'add_person',person:{name:nm,role:_mayaEscText(args.role||'').slice(0,120),
+        note:_mayaEscText(args.note||'').slice(0,240)}});
+    }
+    if(name==='journal'){
+      const t=_mayaEscText(args.text).slice(0,1000); if(!t) return {ok:false,error:'text_required'};
+      try{ const r=await fetch('/api/admin/maya-journal',{method:'POST',
+        headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({text:t})});
+        return r.ok?{ok:true,journaled:true}:{ok:false,error:'journal_failed'};
+      }catch(e){ return {ok:false,error:'journal_failed'}; }
+    }
+    if(name==='read_team_sheet'){
+      try{ const r=await fetch('/api/admin/team-sheet',{headers:{'Authorization':'Bearer '+_idTok}});
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok) return {ok:false,error:'sheet_failed'};
+        if(!j.connected) return {ok:false,connected:false,why:j.why||'not connected',shareWith:j.saEmail||null};
+        return {ok:true,connected:true,title:j.title,tabs:j.tabs,
+          sheets:(j.sheets||[]).map(s=>({tab:s.tab,rows:(s.rows||[]).slice(0,40)}))};
+      }catch(e){ return {ok:false,error:'sheet_failed'}; }
+    }
     if(name==='remember'){
       const t=_mayaEscText(args.text).slice(0,600);
       return t?_mayaQueueAction({kind:'remember',text:t}):{ok:false,error:'text_required'};
@@ -2064,7 +2121,10 @@ function paintLeads(l) {
   tb.innerHTML = '<tr><th>Who</th><th>Reach them</th><th>Latest Notes</th><th>CTA</th></tr>' +
     l.list.map((x, i) =>
       '<tr><td style="white-space:nowrap">' + esc(x.name) +
-      '<div class="lead-when">' + esc(when(x.ts)) + '</div></td>' +
+      '<div class="lead-when">' + esc(when(x.ts)) +
+        (x.source === 'wix' ? '<span class="lead-src wix">WIX</span>'
+          : (x.source && x.source !== 'wix' ? '<span class="lead-src">added</span>' : '')) +
+      '</div></td>' +
       '<td>' + esc(x.email || x.phone || '') + '</td>' +
       // v13.81: the note cell is modifiable in place, click it to edit; Maya can
       // also write it by name. Empty shows a quiet "add a note" prompt.

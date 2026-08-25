@@ -30,3 +30,14 @@ Until there is a live automation, the relay is manual and reliable:
 - A true Maya → Claude automation (Maya files an issue / message that starts a
   Claude session) is a larger integration; it needs an owner decision on the
   channel (GitHub issue, email, or a webhook) before wiring.
+
+## Built from the log (v13.82)
+
+- The first feature Maya relayed through `log_feature` — "real-time daily ad
+  click visibility, today and yesterday separately" — is now BUILT. Her snapshot
+  carries `panels.ads.today/yesterday/daily`, the briefing speaks it, and
+  `show_panel("ads")` returns it live. Mark that item `done` on the next pass.
+- v13.82 also added neighbours to the memory system the relay lives in:
+  `maya/soul.md` (her running record, `journal` tool), `maya/people.json` (who
+  she knows, `add_person`), and `maya/leads.json` (hand-added leads). These are
+  separate stores from `maya/features.json`; the relay itself is unchanged.

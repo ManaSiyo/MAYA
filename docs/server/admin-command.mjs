@@ -59,9 +59,35 @@ export function resolveLeadExact(leads, query) {
   return { status: 'not_found', matches: [] };
 }
 
+// v13.82: merge every source's per-day map into one calendar, so today and
+// yesterday's ad clicks are answerable the same way the dashboard's daily
+// chart shows them. Windsor ships a { 'YYYY-MM-DD': {clicks,linkClicks,...} }
+// map per source; the direct-provider fallback has no daily and yields zeros,
+// which is honest rather than invented.
+function mergeAdDaily(sources) {
+  const merged = {};
+  for (const key of Object.keys(sources || {})) {
+    const daily = (sources[key] && sources[key].daily) || {};
+    for (const d of Object.keys(daily)) {
+      const v = daily[d] || {};
+      const m = merged[d] || (merged[d] = { impressions: 0, clicks: 0, linkClicks: 0, spend: 0 });
+      m.impressions += number(v.impressions); m.clicks += number(v.clicks);
+      m.linkClicks += number(v.linkClicks); m.spend += number(v.spend);
+    }
+  }
+  return merged;
+}
+const isoDay = (date, tz) => {
+  try {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: tz || 'America/Los_Angeles',
+      year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+  } catch { return new Date(date).toISOString().slice(0, 10); }
+};
+
 export function buildAdminCommandSnapshot(raw = {}, now = new Date()) {
   const wix = raw.wix && raw.wix.connected ? raw.wix : null;
   const ads = raw.ads && raw.ads.connected ? raw.ads : null;
+  const tz = raw.tz || 'America/Los_Angeles';
   const leadData = raw.leads && raw.leads.connected ? raw.leads : null;
   const accounts = raw.accounts && typeof raw.accounts === 'object' ? raw.accounts : null;
   const leads = (leadData && Array.isArray(leadData.list) ? leadData.list : [])
@@ -79,6 +105,20 @@ export function buildAdminCommandSnapshot(raw = {}, now = new Date()) {
   const leads7 = leadData ? number(leadData.d7) : null;
   const cpl = leads7 > 0 ? spend7 / leads7 : null;
 
+  // v13.82: today and yesterday, broken out from the daily calendar so Maya can
+  // answer "how many clicks today vs yesterday" without guessing.
+  const adDaily = ads ? mergeAdDaily(ads.sources || {}) : {};
+  const todayStr = isoDay(new Date(now), tz);
+  const yesterdayStr = isoDay(new Date(new Date(now).getTime() - 86400000), tz);
+  const dayRow = key => {
+    const v = adDaily[key] || {};
+    return { date: key, linkClicks: Math.round(number(v.linkClicks)), clicks: Math.round(number(v.clicks)),
+      spend: Number(number(v.spend).toFixed(2)), impressions: Math.round(number(v.impressions)) };
+  };
+  const adToday = dayRow(todayStr);
+  const adYesterday = dayRow(yesterdayStr);
+  const adDailyTail = Object.keys(adDaily).sort().slice(-7).map(dayRow);
+
   const briefing = [];
   if (wix) {
     const today = wix.today && wix.today.visitors;
@@ -86,7 +126,10 @@ export function buildAdminCommandSnapshot(raw = {}, now = new Date()) {
       ? 'Mana Siyo traffic for today has not landed from Wix yet.'
       : number(today) + ' people visited Mana Siyo today.');
   }
-  if (ads) briefing.push(money(spend7) + ' spent across ' + Math.round(clicks7) + ' ad link clicks in the last 7 days.');
+  if (ads) {
+    briefing.push(money(spend7) + ' spent across ' + Math.round(clicks7) + ' ad link clicks in the last 7 days.');
+    briefing.push(adToday.linkClicks + ' ad link clicks today and ' + adYesterday.linkClicks + ' yesterday.');
+  }
   if (leadData) briefing.push(number(leadData.d7) + ' leads arrived in the last 7 days' +
     (leads[0] ? '; newest is ' + leads[0].name + '.' : '.'));
   briefing.push(submissionsAvailable
@@ -116,7 +159,9 @@ export function buildAdminCommandSnapshot(raw = {}, now = new Date()) {
         accounts: accounts ? { total: number(accounts.total), new7: number(accounts.d7), new28: number(accounts.d28) } : null,
         manasiyo: wix ? { today: wix.today || null, d7: wix.d7 || null, d28: wix.d28 || null } : null,
       },
-      ads: ads ? { spend7, linkClicks7: clicks7, campaigns: (ads.campaigns || []).slice(0, 8) } : null,
+      ads: ads ? { spend7, linkClicks7: clicks7,
+        today: adToday, yesterday: adYesterday, daily: adDailyTail,
+        campaigns: (ads.campaigns || []).slice(0, 8) } : null,
       leads: leadData ? { today: number(leadData.today), d7: number(leadData.d7), d28: number(leadData.d28), list: leads } : null,
       submissions: submissionsAvailable
         ? { total: folders.size, mostRecent: newestSubmission }

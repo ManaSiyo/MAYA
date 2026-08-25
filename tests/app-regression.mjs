@@ -1628,6 +1628,42 @@ ok('the marketing menu holds MAYA pages, outside tools and legal, grouped',
   MKT_SOURCE.includes('https://manage.wix.com/') &&
   MKT_SOURCE.includes('/playground.html'));
 
+// ── v13.82: Maya becomes the real intelligence layer ──
+ok('the command snapshot breaks ad clicks into today, yesterday and the last seven days',
+  ADMIN_COMMAND_SOURCE.includes('mergeAdDaily(') &&
+  ADMIN_COMMAND_SOURCE.includes('today: adToday, yesterday: adYesterday, daily: adDailyTail') &&
+  ADMIN_COMMAND_SOURCE.includes('ad link clicks today and') &&
+  SERVER_SOURCE.includes('tz: process.env.WIX_TZ'));
+ok('the ads panel and get_briefing hand Maya today and yesterday link clicks live',
+  MAP_SOURCE.includes("if(panel==='ads'){") &&
+  MAP_SOURCE.includes('yesterday={linkClicks') &&
+  MAP_SOURCE.includes('adClicks:'));
+ok('the Lead Station is dynamic: hand-added leads merge with Wix, each lead sourced and labelled',
+  SERVER_SOURCE.includes('async function loadLeadFeed(') &&
+  SERVER_SOURCE.includes("source: 'wix'") &&
+  SERVER_SOURCE.includes('async function appendManualLead(') &&
+  SERVER_SOURCE.includes("app.post('/api/admin/lead-add'") &&
+  MAP_SOURCE.includes('lead-src wix'));
+ok('tapping the voice logo no longer forces the Admin drawer open',
+  !MAP_SOURCE.includes("if(d && !d.classList.contains('open')) toggleDrawer(true)") &&
+  MAP_SOURCE.includes('must NOT pull the drawer open'));
+ok('Maya carries identity, a soul and the people she knows into every call',
+  SERVER_SOURCE.includes('DEFAULT_PEOPLE') &&
+  SERVER_SOURCE.includes("name: 'Paula'") &&
+  SERVER_SOURCE.includes('MAYA_SOUL_PATH') &&
+  SERVER_SOURCE.includes('YOUR SOUL') &&
+  SERVER_SOURCE.includes('WHO YOU KNOW'));
+ok('Maya has the new tools: add lead, add person, journal, read the internal ops sheet',
+  SERVER_SOURCE.includes("name: 'add_lead'") &&
+  SERVER_SOURCE.includes("name: 'add_person'") &&
+  SERVER_SOURCE.includes("name: 'journal'") &&
+  SERVER_SOURCE.includes("name: 'read_team_sheet'") &&
+  SERVER_SOURCE.includes('async function readTeamSheet(') &&
+  MAP_SOURCE.includes("name==='add_lead'") &&
+  MAP_SOURCE.includes("name==='read_team_sheet'"));
+ok('the Visualize pill stays above the climbing cards, like the hamburger and logo',
+  /#voice-wrap \{[^}]*z-index: 9000/.test(INDEX_SOURCE));
+
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

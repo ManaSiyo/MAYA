@@ -73,6 +73,54 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.82 (Claude): Maya becomes the intelligence layer
+
+The big one. Fromsa's repeated frustration: the voice agent could not see what
+he sees, above all daily ad clicks. Root cause: her snapshot
+(`buildAdminCommandSnapshot`) only carried 7-day ad aggregates, never a per-day
+breakdown, so "how many clicks today vs yesterday" was structurally unanswerable.
+
+- DAILY AD CLICKS. `docs/server/admin-command.mjs`: `mergeAdDaily()` folds every
+  source's Windsor daily map into one calendar; `panels.ads` now carries
+  `today`, `yesterday` and a 7-day `daily` tail, and the briefing says clicks
+  today vs yesterday. `server.js` passes `tz` (WIX_TZ). Client:
+  `_mayaPanelData('ads')` computes today/yesterday from the same daily series the
+  chart paints; `get_briefing` returns `adClicks`.
+- DYNAMIC LEAD STATION. `maya/leads.json` store + `loadLeadFeed()` merges Wix +
+  hand-added leads at one chokepoint (swapped into all four lead consumers).
+  Every lead is `source`-tagged; the station labels Wix ones with a blue "WIX"
+  chip, added ones "added". `add_lead` voice tool + `/api/admin/lead-add`
+  (confirm-gated). Notes already editable by Fromsa and Maya.
+- IDENTITY + PEOPLE. `maya/people.json` seeded with Fromsa (founder, default
+  speaker) and Paula (teammate), loaded into instructions; "this is Paula" is
+  recognized. `add_person` tool (confirm-gated) + `/api/admin/maya-person`.
+- SOUL. `maya/soul.md`, seeded and loaded each session; `journal` tool
+  (no-confirm) appends. Her running personal record between calls.
+- INTERNAL OPS SHEET. `readTeamSheet()` reads the Google Sheet via the SA token
+  (`spreadsheets.readonly`); `read_team_sheet` tool + `/api/admin/team-sheet`.
+  NEEDS INFRA (see requests.txt): share the sheet with the SA email and enable
+  the Sheets API, or it reports not-connected and names the SA to share with.
+- EMAIL. `lead-draft` takes a `goal` so Maya can steer the draft; still
+  confirm-gated, still opens Gmail, never auto-sends (safety).
+- DRAWER BUG. Tapping the voice logo no longer force-opens the drawer
+  (`_voiceLive` line removed). It stays closed unless Fromsa opens it.
+- FRONTEND. Visualize pill z-index 9000 so climbing cards (`_zCounter`) can't
+  bury it; Pinterest "bring them in" pill dropped lower (padding 1px 18px 10px);
+  avatar switcher capped `max-height:44vh` + internal scroll + scrollIntoView so
+  it is never cropped at the fold.
+
+Changed files: `docs/server/admin-command.mjs`, `docs/server/server.js`,
+`backend/status.html`, `frontend/index.html`; version 13.82 across four surfaces;
+`tests/app-regression.mjs` (+7 assertions), `tests/admin-ui-contract.mjs`.
+
+VALIDATION: app-regression all passed, admin-ui-contract green, admin-command
+safety green (new ad fields do not leak PII through buildRealtimeCommandContext).
+Live voice not tested end-to-end: blocked on OpenAI credits (429). "nurture" is
+not a string anywhere in the repo — asked Fromsa where he sees it.
+
+OPEN: Fromsa pushes (unpushed); buy OpenAI credits; share the ops sheet with the
+SA + enable Sheets API; confirm the "nurture" location.
+
 ## v13.81 (Claude): Pinterest footer, Lead Station "Latest Notes" editable
 
 - `frontend/index.html`: Pinterest `.pin-drawer-foot` is a smaller pill

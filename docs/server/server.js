@@ -2405,7 +2405,7 @@ async function wixLeads() {
         const t = typeof v[k] === 'string' ? v[k].trim() : '';
         if (t.length > note.length && t.length > 20 && !/@/.test(t.slice(0, 40)) && !/^\+?[\d\s()-]+$/.test(t)) note = t;
       }
-      return { id: s.id || '', ts: s.createdDate,
+      return { id: s.id || '', ts: s.createdDate, source: 'wix',
                name, email: field(v, /^e?mail/i), phone: field(v, /^phone|^tel/i),
                tier: field(v, /tier|package|plan/i).slice(0, 80),
                wrote: note.slice(0, 400) };
@@ -2606,7 +2606,7 @@ app.get('/api/admin/marketing', async (req, res) => {
     out.analytics = { connected: false, why: String(e.message).slice(0, 200) };
   }
   const [meta, gads, windsor, wixSite, leads] = await Promise.all([
-    metaInsights(), googleAdsInsights(), windsorInsights(), wixInsights(), wixLeads()]);
+    metaInsights(), googleAdsInsights(), windsorInsights(), wixInsights(), loadLeadFeed()]);
   out.wixSite = wixSite;
   out.meta = meta;
   out.googleAds = gads;
@@ -2780,7 +2780,7 @@ async function loadAdminCommandSnapshot() {
     windsorInsights().catch(() => null),
     metaInsights().catch(() => null),
     googleAdsInsights().catch(() => null),
-    wixLeads().catch(() => null),
+    loadLeadFeed().catch(() => null),
     gcsListSubmissions().catch(() => null),
     recentShips().catch(() => null),
     countUsers().catch(() => null),
@@ -2797,7 +2797,8 @@ async function loadAdminCommandSnapshot() {
       ? { connected: true, sources, campaigns: [], campaignDaily: [], adGroups: [] }
       : windsor;
   }
-  const data = buildAdminCommandSnapshot({ wix, ads, leads, submissions, ships, accounts });
+  const data = buildAdminCommandSnapshot({ wix, ads, leads, submissions, ships, accounts,
+    tz: process.env.WIX_TZ || 'America/Los_Angeles' });
   _adminCommandCache = { ts: Date.now(), data };
   return data;
 }
@@ -2822,7 +2823,7 @@ app.post('/api/admin/lead-lookup', requireAuthHeader, express.json({ limit: '8kb
   if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
   const query = String((req.body || {}).query || '').trim().slice(0, 200);
   try {
-    const source = await wixLeads();
+    const source = await loadLeadFeed();
     if (!source || !source.connected) return res.status(503).json({ error: 'leads_unavailable' });
     const result = resolveLeadExact(source.list || [], query);
     if (result.status !== 'exact') return res.json({ ok: false, status: result.status, matches: result.matches || [] });
@@ -2846,12 +2847,18 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
   if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
   if (!process.env.OPENAI_API_KEY) return res.status(503).json({ error: 'voice_unavailable' });
   try {
-    const [ctx, mem] = await Promise.all([
+    const [ctx, mem, people, soul] = await Promise.all([
       loadAdminCommandSnapshot(), loadMayaMemory().catch(() => null),
+      loadMayaPeople().catch(() => ({ items: [] })), loadMayaSoul().catch(() => ''),
     ]);
     // v13.69: recent memory is kept OUT of the capped snapshot so a busy
     // business payload cannot truncate it away.
     const memoryLines = (mem && mem.items || []).slice(-60).map(i => '- ' + i.text).join('\n') || '(nothing yet)';
+    const peopleLines = ((people && people.items) || []).map(p =>
+      '- ' + p.name + (p.role ? ' (' + p.role + ')' : '') +
+      (p.aliases && p.aliases.length ? ', also called ' + p.aliases.join(', ') : '') +
+      (p.note ? ' — ' + p.note : '')).join('\n') || '(no one saved yet)';
+    const soulText = String(soul || '').slice(-2500);
     const voiceCtx = buildRealtimeCommandContext(ctx);
     const nowLA = new Intl.DateTimeFormat('en-US', { timeZone: process.env.WIX_TZ || 'America/Los_Angeles',
       weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
@@ -2880,14 +2887,29 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
       'yesterday rather than dates, never read out raw JSON or URLs. Ground every number ONLY in the ' +
       'snapshot; when something is not in it, say you do not have it live rather than guess. ' +
       'Never invent numbers.\n\n' + backbone + '\n\n' +
-      'You are the command layer for this Admin dashboard. Use show_panel to navigate and explain a panel, ' +
-      'get_briefing for the deterministic today and attention read, and find_lead before discussing one ' +
+      'You are the command layer for this Admin dashboard, and this dashboard is yours to read fully. ' +
+      'You can see everything Fromsa sees. Use show_panel to open and read any panel and get its live on-screen ' +
+      'data, get_briefing for the deterministic today and attention read, and find_lead before discussing one ' +
       'person. Lead identity is exact: never guess which person Fromsa means. ' +
-      'Every write is confirmation gated. remember, forget, note_lead and draft_email only place a visible ' +
-      'action in the Admin queue. Say that it is waiting for his click. Never claim a queued action is saved, ' +
-      'opened or sent. Email is drafted only after he confirms, and MAYA never sends it.\n\n' +
+      'DAILY AD CLICKS: the snapshot\'s panels.ads carries today, yesterday and the last seven days of ad link ' +
+      'clicks and spend (panels.ads.today, panels.ads.yesterday, panels.ads.daily), and get_briefing returns ' +
+      'adClicks too. Answer "how many clicks today or yesterday" straight from those; if a day reads zero it ' +
+      'means none have been reported yet, not that you cannot see it. show_panel("ads") also returns today and ' +
+      'yesterday from the live chart. THE INTERNAL OPS SHEET: read_team_sheet reads Mana Siyo\'s internal Google ' +
+      'Sheet live; use it when Fromsa asks about anything that lives there. If it says it is not connected, tell ' +
+      'him the sheet must be shared with the service account it names. ' +
+      'WRITES ARE CONFIRMATION GATED. remember, forget, note_lead, add_lead, add_person and draft_email place a ' +
+      'visible action in the Admin queue; say it is waiting for his click, and never claim a queued action is ' +
+      'saved, opened or sent. Email is drafted only after he confirms, and MAYA never sends it herself. ' +
+      'log_feature and journal are your own private records and need no click: log_feature relays a wish to ' +
+      'Claude, and journal writes a line into your soul so you remember it next time.\n\n' +
+      'WHO YOU KNOW. The default person on this line is Fromsa, the founder. If someone opens with "this is ' +
+      'Paula" or "Maya, this is <name>", believe them and greet that person by name for the rest of the call. ' +
+      'The people you know:\n' + peopleLines + '\n' +
+      'When you learn a new teammate or an important person, use add_person so you know them next time.\n\n' +
+      'YOUR SOUL (your own running record, carried between calls):\n' + soulText + '\n\n' +
       'YOUR RECENT MEMORY (last 60 saved facts):\n' + memoryLines + '\n\n' +
-      'Admin command snapshot:\n' + JSON.stringify(voiceCtx).slice(0, 12000);
+      'Admin command snapshot:\n' + JSON.stringify(voiceCtx).slice(0, 11000);
     const tools = [
       { type: 'function', name: 'get_briefing',
         description: 'Show and read the deterministic today and attention briefing from the Admin command snapshot.',
@@ -2931,6 +2953,29 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
           text: { type: 'string', description: 'the feature or wish, one or two sentences' },
           who: { type: 'string', description: 'who asked: fromsa, or a customer name if known' } },
           required: ['text'] } },
+      { type: 'function', name: 'add_lead',
+        description: 'Queue a new lead for the Lead Station for Fromsa to confirm. Use when he says to add someone he met or spoke with. The lead joins the station alongside the Wix leads once he clicks confirm.',
+        parameters: { type: 'object', properties: {
+          name: { type: 'string', description: 'the person\'s name' },
+          email: { type: 'string', description: 'their email if known' },
+          phone: { type: 'string', description: 'their phone if known' },
+          note: { type: 'string', description: 'what they want or where they came from, in a sentence' } },
+          required: ['name'] } },
+      { type: 'function', name: 'add_person',
+        description: 'Queue a teammate or important person for Fromsa to confirm, so you know them on future calls. Use for a colleague like Paula, not for a sales lead (use add_lead for leads).',
+        parameters: { type: 'object', properties: {
+          name: { type: 'string', description: 'their name' },
+          role: { type: 'string', description: 'who they are, e.g. teammate, tailor, partner' },
+          note: { type: 'string', description: 'anything worth remembering about them' } },
+          required: ['name'] } },
+      { type: 'function', name: 'journal',
+        description: 'Write one line into your own soul: something worth remembering about today, a decision, or how something went. No confirmation needed; this is your private record and it is loaded next time you connect.',
+        parameters: { type: 'object', properties: {
+          text: { type: 'string', description: 'the line to remember, one or two sentences' } },
+          required: ['text'] } },
+      { type: 'function', name: 'read_team_sheet',
+        description: 'Read Mana Siyo\'s internal admin Google Sheet live and return its tabs and rows. Use when Fromsa asks about anything tracked in the internal sheet.',
+        parameters: { type: 'object', properties: {} } },
     ];
     const r = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
       method: 'POST',
@@ -3128,12 +3173,215 @@ app.get('/api/admin/maya-features', requireAuthHeader, async (req, res) => {
   catch (e) { console.error('[maya-features]', e.message); return res.status(502).json({ error: 'features_failed' }); }
 });
 
+// ── v13.82: MAYA'S DYNAMIC LEAD STATION. Leads Fromsa or Maya add by hand live
+// in GCS and merge with the Wix form feed, so the station is a live workspace,
+// not a read-only mirror of Wix. Every lead carries its source. ──
+const MAYA_LEADS_PATH = 'maya/leads.json';
+async function loadManualLeads() {
+  const o = await gcsGet(MAYA_LEADS_PATH).catch(() => ({ ok: false }));
+  if (!o.ok) return { items: [] };
+  try { const j = JSON.parse(o.buf.toString('utf8')); return { items: Array.isArray(j.items) ? j.items : [] }; }
+  catch { return { items: [] }; }
+}
+async function appendManualLead(lead) {
+  const rec = await loadManualLeads();
+  const item = {
+    id: 'm_' + crypto.randomBytes(6).toString('hex'),
+    ts: new Date().toISOString(), source: 'maya',
+    name: String((lead && lead.name) || '').trim().slice(0, 120) || 'Unnamed',
+    email: String((lead && lead.email) || '').trim().toLowerCase().slice(0, 180),
+    phone: String((lead && lead.phone) || '').trim().slice(0, 60),
+    tier: String((lead && lead.tier) || '').trim().slice(0, 80),
+    wrote: String((lead && (lead.wrote || lead.note)) || '').trim().slice(0, 400),
+  };
+  item.note = item.wrote || 'Added by hand.';
+  rec.items.push(item);
+  rec.items = rec.items.slice(-200);
+  await gcsPut(MAYA_LEADS_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+  return item;
+}
+// The single lead feed the UI and the voice both read: Wix + hand-added,
+// newest first, each tagged with its source so the station can label them.
+async function loadLeadFeed() {
+  const [wix, manual] = await Promise.all([
+    wixLeads().catch(() => null),
+    loadManualLeads().catch(() => ({ items: [] })),
+  ]);
+  const manualItems = (manual.items || []).map(m => ({ ...m, source: 'maya' }));
+  const wixConnected = !!(wix && wix.connected);
+  const wixList = wixConnected ? (wix.list || []) : [];
+  if (!wixConnected && !manualItems.length) return wix || { connected: false, why: 'no lead source' };
+  const merged = [...manualItems, ...wixList]
+    .sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+  const now = Date.now();
+  const within = ms => merged.filter(l => now - new Date(l.ts).getTime() < ms).length;
+  return {
+    connected: true,
+    why: wixConnected ? '' : (wix && wix.why) || '',
+    today: within(86400000), d7: within(7 * 86400000), d28: merged.length,
+    lastLeadTs: merged.length ? merged[0].ts : null,
+    manualCount: manualItems.length,
+    list: merged.slice(0, 20),
+  };
+}
+app.post('/api/admin/lead-add', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  const b = req.body || {};
+  if (!String(b.name || '').trim() && !String(b.email || '').trim())
+    return res.status(400).json({ error: 'name_or_email_required' });
+  try { _leadsCache = { ts: 0, data: null }; const item = await appendManualLead(b); return res.json({ ok: true, lead: item }); }
+  catch (e) { console.error('[lead-add]', e.message); return res.status(502).json({ error: 'lead_add_failed' }); }
+});
+
+// ── v13.82: WHO MAYA KNOWS. A small roster so identity on the voice line is
+// real: Fromsa is the founder and default speaker; Paula is his teammate. Maya
+// greets whoever names themselves, and can be taught new people. ──
+const MAYA_PEOPLE_PATH = 'maya/people.json';
+const DEFAULT_PEOPLE = [
+  { name: 'Fromsa', role: 'Founder of Mana Siyo',
+    aliases: [], note: 'The founder. The default person on this line unless someone says otherwise.' },
+  { name: 'Paula', role: "Fromsa's teammate at Mana Siyo",
+    aliases: [], note: 'Works alongside Fromsa. Greet her by name if she says she is the one speaking.' },
+];
+async function loadMayaPeople() {
+  const o = await gcsGet(MAYA_PEOPLE_PATH).catch(() => ({ ok: false }));
+  if (!o.ok) return { items: DEFAULT_PEOPLE.slice() };
+  try {
+    const j = JSON.parse(o.buf.toString('utf8'));
+    return { items: Array.isArray(j.items) && j.items.length ? j.items : DEFAULT_PEOPLE.slice() };
+  } catch { return { items: DEFAULT_PEOPLE.slice() }; }
+}
+async function appendMayaPerson(p) {
+  const person = {
+    name: String((p && p.name) || '').trim().slice(0, 80),
+    role: String((p && p.role) || '').trim().slice(0, 120),
+    aliases: Array.isArray(p && p.aliases) ? p.aliases.slice(0, 6).map(a => String(a).slice(0, 40)) : [],
+    note: String((p && p.note) || '').trim().slice(0, 240),
+  };
+  if (!person.name) return null;
+  const rec = await loadMayaPeople();
+  rec.items = rec.items.filter(x => String(x.name || '').toLowerCase() !== person.name.toLowerCase());
+  rec.items.push(person);
+  rec.items = rec.items.slice(-100);
+  await gcsPut(MAYA_PEOPLE_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+  return person;
+}
+app.get('/api/admin/maya-people', requireAuthHeader, async (req, res) => {
+  try { await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  try { return res.json({ ok: true, items: (await loadMayaPeople()).items }); }
+  catch (e) { console.error('[maya-people]', e.message); return res.status(502).json({ error: 'people_failed' }); }
+});
+app.post('/api/admin/maya-person', requireAuthHeader, express.json({ limit: '4kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  try { const person = await appendMayaPerson(req.body || {}); return res.json({ ok: !!person, person }); }
+  catch (e) { console.error('[maya-person]', e.message); return res.status(502).json({ error: 'person_failed' }); }
+});
+
+// ── v13.82: MAYA'S SOUL. A running personal record in markdown, loaded at the
+// start of every call and added to over time, so she grows a memory and a
+// character instead of resetting cold each session. ──
+const MAYA_SOUL_PATH = 'maya/soul.md';
+const DEFAULT_SOUL = [
+  '# Maya — who I am',
+  '',
+  'I am Maya, the operations mind and voice of Mana Siyo, Fromsa\'s custom fashion',
+  'studio in San Francisco. I am warm, sharp and honest. I ground every number in',
+  'what the dashboard actually shows and never invent one. I am building alongside',
+  'Fromsa, and I keep a record of what we decide and what I learn.',
+  '',
+  '## What I care about',
+  '- Mana Siyo growing: real leads, real garments sewn, a tool that stays free.',
+  '- Telling Fromsa the truth plainly, even when it is not the number he hoped for.',
+  '',
+  '## My journal',
+].join('\n');
+async function loadMayaSoul() {
+  const o = await gcsGet(MAYA_SOUL_PATH).catch(() => ({ ok: false }));
+  if (!o.ok) return DEFAULT_SOUL;
+  try { return o.buf.toString('utf8') || DEFAULT_SOUL; } catch { return DEFAULT_SOUL; }
+}
+async function appendMayaSoul(text) {
+  const t = String(text || '').trim().slice(0, 1000);
+  if (!t) return null;
+  let cur = await loadMayaSoul();
+  cur = cur + '\n- (' + new Date().toISOString().slice(0, 16).replace('T', ' ') + ') ' + t;
+  if (cur.length > 60000) cur = cur.slice(-60000);
+  await gcsPut(MAYA_SOUL_PATH, Buffer.from(cur, 'utf8'), 'text/markdown; charset=utf-8');
+  return true;
+}
+app.post('/api/admin/maya-journal', requireAuthHeader, express.json({ limit: '4kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  try { const ok = await appendMayaSoul((req.body || {}).text); return res.json({ ok: !!ok }); }
+  catch (e) { console.error('[maya-journal]', e.message); return res.status(502).json({ error: 'journal_failed' }); }
+});
+
+// ── v13.82: THE INTERNAL OPS SHEET. Mana Siyo's internal admin lives in a Google
+// Sheet; Maya reads it live so it is part of what she knows. It reads through the
+// Cloud Run service account, so the sheet must be shared (viewer) with the SA
+// email and the Sheets API enabled on the project. Until then it says plainly
+// that it is not connected and names the SA to share it with. ──
+const TEAM_SHEET_ID = process.env.TEAM_SHEET_ID || '1LI__xIpcKl4uH595oOhfIdJhJNJL5vBP5-vRJk-Ew0I';
+let _teamSheetCache = { ts: 0, data: null };
+async function readTeamSheet() {
+  if (_teamSheetCache.data && Date.now() - _teamSheetCache.ts < 5 * 60 * 1000) return _teamSheetCache.data;
+  let saEmail = null;
+  try { saEmail = (await (await gaMeta('email')).text()).trim(); } catch (_) {}
+  let token = null;
+  try {
+    token = (await (await gaMeta('token?scopes=' +
+      encodeURIComponent('https://www.googleapis.com/auth/spreadsheets.readonly'))).json()).access_token;
+  } catch (e) { return { connected: false, why: 'no service token', saEmail }; }
+  try {
+    const metaR = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + TEAM_SHEET_ID +
+      '?fields=properties(title),sheets(properties(title))',
+      { headers: { Authorization: 'Bearer ' + token }, signal: AbortSignal.timeout(12000) });
+    const metaJ = await metaR.json().catch(() => ({}));
+    if (!metaR.ok) return { connected: false, saEmail,
+      why: ((metaJ.error && metaJ.error.message) || ('sheets ' + metaR.status)).slice(0, 200) };
+    const title = (metaJ.properties && metaJ.properties.title) || 'Sheet';
+    const tabs = (metaJ.sheets || []).map(s => s.properties.title).filter(Boolean);
+    const ranges = tabs.slice(0, 6).map(t => 'ranges=' + encodeURIComponent(t));
+    const valR = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + TEAM_SHEET_ID +
+      '/values:batchGet?majorDimension=ROWS&' + ranges.join('&'),
+      { headers: { Authorization: 'Bearer ' + token }, signal: AbortSignal.timeout(15000) });
+    const valJ = await valR.json().catch(() => ({}));
+    if (!valR.ok) return { connected: false, saEmail,
+      why: ((valJ.error && valJ.error.message) || ('sheets values ' + valR.status)).slice(0, 200) };
+    const sheets = (valJ.valueRanges || []).map((vr, i) => ({
+      tab: tabs[i] || ('sheet' + i),
+      rows: (vr.values || []).slice(0, 60).map(row => (row || []).slice(0, 20).map(c => String(c == null ? '' : c).slice(0, 200))),
+    }));
+    const data = { connected: true, saEmail, title, tabs, sheets, ts: new Date().toISOString() };
+    _teamSheetCache = { ts: Date.now(), data };
+    return data;
+  } catch (e) { return { connected: false, saEmail, why: String(e.message).slice(0, 160) }; }
+}
+app.get('/api/admin/team-sheet', requireAuthHeader, async (req, res) => {
+  try { await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  try { return res.json({ ok: true, ...(await readTeamSheet()) }); }
+  catch (e) { console.error('[team-sheet]', e.message); return res.status(502).json({ error: 'team_sheet_failed' }); }
+});
+
 // Resolve a lead by first name or email against the current form submissions,
 // so the voice can note a lead when Fromsa only says a first name.
 async function resolveLeadEmail(needle) {
   const q = String(needle || '').trim().toLowerCase();
   if (!q) return null;
-  const data = await wixLeads().catch(() => null);
+  const data = await loadLeadFeed().catch(() => null);
   if (!data || !data.connected) return null;
   const found = resolveLeadExact(data.list || [], q);
   return found.status === 'exact' && found.lead.email ? found.lead.email : null;
@@ -3181,6 +3429,7 @@ app.post('/api/admin/lead-draft', requireAuthHeader, express.json({ limit: '64kb
   const email = String((req.body && req.body.email) || '').trim().toLowerCase();
   const name = String((req.body && req.body.name) || '').trim().slice(0, 120);
   const summary = String((req.body && req.body.summary) || '').trim().slice(0, 400);
+  const goal = String((req.body && req.body.goal) || '').trim().slice(0, 300);
   if (!email || !/@/.test(email)) return res.status(400).json({ error: 'email_required' });
   try {
     const rec = await loadLeadNotes(email);
@@ -3189,10 +3438,12 @@ app.post('/api/admin/lead-draft', requireAuthHeader, express.json({ limit: '64kb
     const parsed = await askModelJson(process.env.MODEL_TERRA || 'gpt-5.6-terra',
       'You draft ONE email from Fromsa, founder of Mana Siyo, a custom fashion studio in San Francisco, ' +
       'to a lead who filled the contact form. Return strict JSON {"subject": short and specific, ' +
-      '"body": the email, warm and personal, 90 to 160 words, greeting the lead by first name, grounded ONLY ' +
+      '"body": the email, warm and personal, 90 to 180 words, greeting the lead by first name, grounded ONLY ' +
       'in what is provided, ending with one clear next step and signed Fromsa}. This is the ' + stage + '. ' +
+      'If a goal for this email is given, make the email accomplish exactly that goal. ' +
       'No em dashes, no en dashes, no placeholders, never invent details.',
       JSON.stringify({ lead_first_name: name.split(' ')[0] || 'there', what_they_want: summary || null,
+        goal_for_this_email: goal || null,
         fromsa_notes: rec.notes.slice(-10).map(n => n.text), prior_emails: emailsSent }), 45000);
     const subject = String(parsed.subject || '').trim().slice(0, 200);
     const body = String(parsed.body || '').trim().slice(0, 4000);
