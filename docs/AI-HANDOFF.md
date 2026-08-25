@@ -73,6 +73,27 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.87 (Claude): the Lead Station becomes a real custom CRM
+
+Server (`docs/server/server.js`): `maya/leads.json` now holds `{items, overrides,
+tombstones}`. `updateLead(id, patch)` edits any lead — manual in place, Wix via an
+override (survives the next Wix refresh); `deleteLead(id)` removes a manual lead
+or tombstones a Wix one (stays in Wix, hidden from the station). `loadLeadFeed`
+applies overrides + tombstones. New `POST /api/admin/lead-delete`; `lead-update`
+now takes any id (was manual-only). Maya voice tools `update_lead` + `delete_lead`
+(confirm-gated) + client handlers. Client (`backend/status.html`): the station
+edits like a sheet — name / email / notes are contenteditable cells (no pencil),
+saved via lead-update / lead-note; each row has a delete X (instant remove);
+`#leads-bar` has Reload + "+ Add lead"; the WIX badge sits BESIDE the name now.
+Version 13.87 x4; app-regression + contract + admin-command green; admin headless
+smoke = 0 JS errors; CRM override/tombstone merge unit-tested.
+
+AUDIT ANSWERED: the "users" number is signed-in ACCOUNTS (countUsers → GCS user
+records): total 3. GA MAYA visitors = 15 (7d) / 49 (28d); manasiyo.com (Wix) is
+~30/day. So 3 is correct for accounts; the ~30 are site visitors, a different
+metric. NOT DONE: merging Bottom Line + Sources of Traffic into one shell (still
+queued in the spec).
+
 ## v13.86 (Claude): upload button + two data-safety bug fixes
 
 `frontend/index.html`: (1) the "+ upload" button was invisible faint text — now a

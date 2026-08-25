@@ -110,6 +110,17 @@ later. Right now it's internal, for Fromsa and his team.
   (the drawer notes panel, the favorite-card dissection overlay, and/or the Brief)
   and do a real design pass (use artifact-design thinking).
 
+## 7. Lead Station custom CRM  [SHIPPED v13.87]
+
+- [x] Delete a lead (manual removed; Wix tombstoned — hidden here, stays in Wix).
+- [x] Update any lead (manual in place; Wix via override that survives refresh).
+- [x] Every field edits in place like a sheet (name / email / notes), pencil removed.
+- [x] Reload + "+ Add lead" controls; WIX badge beside the name (not underneath).
+- [x] Maya can add / update / nurture (note) / delete leads by voice (confirm-gated).
+- [ ] STILL OPEN: merge Bottom Line + Sources of Traffic into one shell (not done yet).
+- [ ] Maya updating the code itself (GitHub) — see the MCP/API item in §4; needs a
+  channel + auth decision. Today: Claude edits files, Fromsa pushes.
+
 ## Priority order
 
 1. Lead Station live/last-touchpoint + Pinterest cache + full-screen wall +

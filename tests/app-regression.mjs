@@ -1442,10 +1442,23 @@ ok('v13.84: "Bring in" floats over the cards, only while pictures are selected',
   INDEX_SOURCE.includes('_pinSetFoot(_pinPicked.size > 0)'));
 ok('v13.84: Ad Campaigns gets breathing room above the money section',
   MAP_SOURCE.includes('#adm-mkt #ads-fold{margin-top:40px}'));
-ok('v13.81: the Lead Station notes read Latest Notes and edit in place',
+ok('v13.87: the Lead Station is a custom CRM — every field edits in place, rows delete, WIX badge by the name',
   MAP_SOURCE.includes('<th>Latest Notes</th>') &&
-  MAP_SOURCE.includes('onclick="toggleLeadNote(') &&
-  MAP_SOURCE.includes('class="lead-note-add"'));
+  MAP_SOURCE.includes('async function saveLeadField(') &&
+  MAP_SOURCE.includes('async function deleteLeadRow(') &&
+  MAP_SOURCE.includes('function reloadLeads(') &&
+  MAP_SOURCE.includes('cell(i, x, \'name\', x.name') &&
+  !MAP_SOURCE.includes('&#9998;'));   // the pencil is gone
+ok('v13.87: server can update or delete any lead, Wix via override/tombstone',
+  SERVER_SOURCE.includes('async function updateLead(') &&
+  SERVER_SOURCE.includes('async function deleteLead(') &&
+  SERVER_SOURCE.includes("app.post('/api/admin/lead-delete'") &&
+  SERVER_SOURCE.includes('rec.overrides[key] = {') &&
+  SERVER_SOURCE.includes('rec.tombstones.push(key)') &&
+  SERVER_SOURCE.includes("name: 'update_lead'") &&
+  SERVER_SOURCE.includes("name: 'delete_lead'") &&
+  MAP_SOURCE.includes("name==='update_lead'") &&
+  MAP_SOURCE.includes("name==='delete_lead'"));
 
 ok('v13.76: fabrics show real photos and survive a failed rank',
   !BACKEND_SOURCE || (

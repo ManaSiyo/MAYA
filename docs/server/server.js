@@ -2898,7 +2898,10 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
       'yesterday from the live chart. THE INTERNAL OPS SHEET: read_team_sheet reads Mana Siyo\'s internal Google ' +
       'Sheet live; use it when Fromsa asks about anything that lives there. If it says it is not connected, tell ' +
       'him the sheet must be shared with the service account it names. ' +
-      'WRITES ARE CONFIRMATION GATED. remember, forget, note_lead, add_lead, add_person and draft_email place a ' +
+      'THE LEAD STATION is a custom CRM you run with Fromsa: it draws from Wix forms, from what he adds, and from ' +
+      'your conversation, and you can add, update (rename, fix email or phone, set tier), note (nurture) and delete ' +
+      'leads. A Wix lead you delete is only hidden from the station; it stays in Wix. ' +
+      'WRITES ARE CONFIRMATION GATED. remember, forget, note_lead, add_lead, update_lead, delete_lead, add_person and draft_email place a ' +
       'visible action in the Admin queue; say it is waiting for his click, and never claim a queued action is ' +
       'saved, opened or sent. Email is drafted only after he confirms, and MAYA never sends it herself. ' +
       'log_feature is the one narrow no-click inbox action: use it only when a named speaker explicitly asks for ' +
@@ -2965,6 +2968,20 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
           phone: { type: 'string', description: 'their phone if known' },
           note: { type: 'string', description: 'what they want or where they came from, in a sentence' } },
           required: ['name'] } },
+      { type: 'function', name: 'update_lead',
+        description: 'Queue a change to an existing lead in the Lead Station for Fromsa to confirm — rename them, fix their email or phone, or set the tier. Works on any lead, Wix or hand-added. Identity must resolve exactly first.',
+        parameters: { type: 'object', properties: {
+          lead: { type: 'string', description: 'the lead first name or email to change' },
+          name: { type: 'string', description: 'new name, if changing it' },
+          email: { type: 'string', description: 'new email, if changing it' },
+          phone: { type: 'string', description: 'new phone, if changing it' },
+          tier: { type: 'string', description: 'the package or tier they want, if setting it' } },
+          required: ['lead'] } },
+      { type: 'function', name: 'delete_lead',
+        description: 'Queue removing a lead from the Lead Station for Fromsa to confirm. A Wix lead is only hidden from the station (it stays in Wix); a hand-added lead is removed. Identity must resolve exactly.',
+        parameters: { type: 'object', properties: {
+          lead: { type: 'string', description: 'the lead first name or email to remove' } },
+          required: ['lead'] } },
       { type: 'function', name: 'add_person',
         description: 'Queue a teammate or important person for Fromsa to confirm, so you know them on future calls. Use for a colleague like Paula, not for a sales lead (use add_lead for leads).',
         parameters: { type: 'object', properties: {
@@ -3206,9 +3223,19 @@ app.get('/api/admin/maya-features', requireAuthHeader, async (req, res) => {
 const MAYA_LEADS_PATH = 'maya/leads.json';
 async function loadManualLeads() {
   const o = await gcsGet(MAYA_LEADS_PATH).catch(() => ({ ok: false }));
-  if (!o.ok) return { items: [] };
-  try { const j = JSON.parse(o.buf.toString('utf8')); return { items: Array.isArray(j.items) ? j.items : [] }; }
-  catch { return { items: [] }; }
+  const empty = { items: [], overrides: {}, tombstones: [] };
+  if (!o.ok) return empty;
+  try {
+    const j = JSON.parse(o.buf.toString('utf8'));
+    return {
+      items: Array.isArray(j.items) ? j.items : [],
+      // v13.87: the station is a custom CRM. Edits to a Wix lead are stored as an
+      // override (keyed by id), and a deleted Wix lead is a tombstone, so the Wix
+      // feed still flows in but the station is fully modifiable on top of it.
+      overrides: (j.overrides && typeof j.overrides === 'object') ? j.overrides : {},
+      tombstones: Array.isArray(j.tombstones) ? j.tombstones : [],
+    };
+  } catch { return empty; }
 }
 async function appendManualLead(lead) {
   const rec = await loadManualLeads();
@@ -3227,18 +3254,53 @@ async function appendManualLead(lead) {
   await gcsPut(MAYA_LEADS_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
   return item;
 }
-async function updateManualLead(id, patch) {
-  const rec = await loadManualLeads();
-  const item = rec.items.find(x => String(x && x.id) === String(id || ''));
-  if (!item || !String(item.id || '').startsWith('m_')) return null;
+// v13.87: update ANY lead by id. Manual leads (m_*) are edited in place; a Wix
+// lead is patched through an override so the change survives the next Wix refresh.
+async function updateLead(id, patch) {
+  const key = String(id || '').trim();
   const next = patch || {};
-  if (Object.prototype.hasOwnProperty.call(next, 'name')) item.name = String(next.name || '').trim().slice(0, 120) || 'Unnamed';
-  if (Object.prototype.hasOwnProperty.call(next, 'email')) item.email = String(next.email || '').trim().toLowerCase().slice(0, 180);
-  if (Object.prototype.hasOwnProperty.call(next, 'phone')) item.phone = String(next.phone || '').trim().slice(0, 60);
-  if (Object.prototype.hasOwnProperty.call(next, 'tier')) item.tier = String(next.tier || '').trim().slice(0, 80);
-  item.updatedAt = new Date().toISOString();
+  const has = k => Object.prototype.hasOwnProperty.call(next, k);
+  const clean = {};
+  if (has('name')) clean.name = String(next.name || '').trim().slice(0, 120);
+  if (has('email')) clean.email = String(next.email || '').trim().toLowerCase().slice(0, 180);
+  if (has('phone')) clean.phone = String(next.phone || '').trim().slice(0, 60);
+  if (has('tier')) clean.tier = String(next.tier || '').trim().slice(0, 80);
+  // note is the fallback path for a lead with no email (email leads note through
+  // the email-keyed note store instead); sets both the display note and wrote.
+  if (has('note')) { clean.note = String(next.note || '').trim().slice(0, 2000); clean.wrote = clean.note; }
+  if (!key || !Object.keys(clean).length) return null;
+  const rec = await loadManualLeads();
+  if (key.startsWith('m_')) {
+    const item = rec.items.find(x => String(x && x.id) === key);
+    if (!item) return null;
+    Object.assign(item, clean);
+    if (clean.name === '') item.name = 'Unnamed';
+    item.updatedAt = new Date().toISOString();
+  } else {
+    if (!rec.overrides || typeof rec.overrides !== 'object') rec.overrides = {};
+    rec.overrides[key] = { ...(rec.overrides[key] || {}), ...clean, updatedAt: new Date().toISOString() };
+  }
   await gcsPut(MAYA_LEADS_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
-  return item;
+  return { ok: true, id: key, patch: clean };
+}
+// v13.87: delete ANY lead. Manual leads are removed; a Wix lead is tombstoned so
+// it stops flowing into the station (it stays in Wix; the CRM just hides it).
+async function deleteLead(id) {
+  const key = String(id || '').trim();
+  if (!key) return null;
+  const rec = await loadManualLeads();
+  if (key.startsWith('m_')) {
+    const before = rec.items.length;
+    rec.items = rec.items.filter(x => String(x && x.id) !== key);
+    if (rec.items.length === before) return null;
+  } else {
+    if (!Array.isArray(rec.tombstones)) rec.tombstones = [];
+    if (!rec.tombstones.includes(key)) rec.tombstones.push(key);
+    rec.tombstones = rec.tombstones.slice(-1000);
+    if (rec.overrides) delete rec.overrides[key];
+  }
+  await gcsPut(MAYA_LEADS_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+  return { ok: true, id: key };
 }
 // The single lead feed the UI and the voice both read: Wix + hand-added,
 // newest first, each tagged with its source so the station can label them.
@@ -3251,7 +3313,13 @@ async function loadLeadFeed() {
   const wixConnected = !!(wix && wix.connected);
   const wixList = wixConnected ? (wix.list || []) : [];
   if (!wixConnected && !manualItems.length) return wix || { connected: false, why: 'no lead source' };
+  // v13.87: the custom-CRM layer — hide tombstoned leads, patch Wix leads with
+  // any stored override — so the station is fully modifiable on top of Wix.
+  const overrides = manual.overrides || {};
+  const tombstones = new Set(manual.tombstones || []);
   const merged = [...manualItems, ...wixList]
+    .filter(l => !tombstones.has(String(l && l.id)))
+    .map(l => { const ov = overrides[String(l && l.id)]; return ov ? { ...l, ...ov } : l; })
     .sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
   const now = Date.now();
   const within = ms => merged.filter(l => now - new Date(l.ts).getTime() < ms).length;
@@ -3311,14 +3379,33 @@ app.post('/api/admin/lead-update', requireAuthHeader, express.json({ limit: '8kb
   const rl = rateLimit(user.sub, user.email);
   if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
   const b = req.body || {};
-  if (!String(b.id || '').startsWith('m_')) return res.status(400).json({ error: 'manual_lead_required' });
+  if (!String(b.id || '').trim()) return res.status(400).json({ error: 'id_required' });
   try {
-    const lead = await updateManualLead(b.id, b);
+    _leadsCache = { ts: 0, data: null };
+    const lead = await updateLead(b.id, b);
     if (!lead) return res.status(404).json({ error: 'lead_not_found' });
     return res.json({ ok: true, lead });
   } catch (e) {
     console.error('[lead-update]', e.message);
     return res.status(502).json({ error: 'lead_update_failed' });
+  }
+});
+app.post('/api/admin/lead-delete', requireAuthHeader, express.json({ limit: '4kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  const id = String((req.body && req.body.id) || '').trim();
+  if (!id) return res.status(400).json({ error: 'id_required' });
+  try {
+    _leadsCache = { ts: 0, data: null };
+    const out = await deleteLead(id);
+    if (!out) return res.status(404).json({ error: 'lead_not_found' });
+    return res.json({ ok: true, id });
+  } catch (e) {
+    console.error('[lead-delete]', e.message);
+    return res.status(502).json({ error: 'lead_delete_failed' });
   }
 });
 
