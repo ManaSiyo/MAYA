@@ -1408,9 +1408,11 @@ ok('v13.78: tabs read Pinterest, Fabrics, Avatar; the title says Project',
 ok('v13.78: reopening on the last tab works from the swipe too',
   INDEX_SOURCE.includes('function _pgRestoreLastTab()') &&
   INDEX_SOURCE.includes("!_drawerWasOpen && open && typeof _pgRestoreLastTab"));
-ok('v13.78: Pinterest matches Fabrics height and anchors Bring-them-in',
+ok('v13.84: Pinterest wall is edge-to-edge and caches the session',
   INDEX_SOURCE.includes('#pinterest-drawer > .drawer-head { display: none; }') &&
-  INDEX_SOURCE.includes('#pinterest-drawer > .pin-drawer-foot { margin-top: auto'));
+  INDEX_SOURCE.includes('#pinterest-drawer { position: relative; padding: 0; }') &&
+  INDEX_SOURCE.includes('let _pinPicsCache = {}') &&
+  INDEX_SOURCE.includes("if (_pinLoaded && body && body.querySelector('.pin-grid'))"));
 ok('v13.78: the Admin logo has no ring until Maya is live',
   MAP_SOURCE.includes('background:transparent;border:0.5px solid transparent') &&
   MAP_SOURCE.includes('body.maya-live .maya-logo-wrap{border-color:rgba(169,201,255,0.95);animation:voicepulse 0.85s'));
@@ -1426,8 +1428,11 @@ ok('v13.80: Maya can log feature requests as a relay to Claude',
   SERVER_SOURCE.includes("app.post('/api/admin/maya-log-feature'") &&
   SERVER_SOURCE.includes("app.get('/api/admin/maya-features'") &&
   MAP_SOURCE.includes("if(name==='log_feature')"));
-ok('v13.81: Pinterest Bring-them-in is a smaller pill lifted off the bottom',
-  INDEX_SOURCE.includes('#pinterest-drawer > .pin-drawer-foot .drawer-fabrics { flex: none; width: auto; min-width: 150px'));
+ok('v13.84: "Bring in" floats over the cards, only while pictures are selected',
+  INDEX_SOURCE.includes('position: absolute; left: 50%; bottom: 16px;') &&
+  INDEX_SOURCE.includes('_pinSetFoot(_pinPicked.size > 0)'));
+ok('v13.84: Ad Campaigns gets breathing room above the money section',
+  MAP_SOURCE.includes('#adm-mkt #ads-fold{margin-top:40px}'));
 ok('v13.81: the Lead Station notes read Latest Notes and edit in place',
   MAP_SOURCE.includes('<th>Latest Notes</th>') &&
   MAP_SOURCE.includes('onclick="toggleLeadNote(') &&

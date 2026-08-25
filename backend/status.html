@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.83">
+<meta name="maya-version" content="13.84">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -418,6 +418,8 @@ try {
   #adm-mkt #mkt-status{font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.16em;
     color:var(--faint);text-transform:uppercase;min-height:14px;margin:0 0 10px}
   #adm-mkt details.fold{margin:16px 0 8px;position:relative}
+  /* v13.84: more breathing room before Ad Campaigns, where the money section starts. */
+  #adm-mkt #ads-fold{margin-top:40px}
   #adm-mkt details.fold summary{gap:8px}
   #adm-mkt details.fold[open] summary::after{transform:none}
   #adm-mkt details.fold:not([open]) summary::after{transform:rotate(-90deg)}

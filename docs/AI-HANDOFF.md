@@ -73,6 +73,23 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.84 (Claude): Pinterest wall overhaul + admin spacing
+
+`frontend/index.html`: Pinterest no longer reloads on every tab switch —
+`_pinPicsCache` + `_pinLoaded` + `_pinStatusOk` cache the session (like Fabrics);
+`openPinterestDrawer` keeps the rendered wall if it exists, `_pinReload()` forces
+a real refetch. The wall is edge-to-edge (`#pinterest-drawer{position:relative;
+padding:0}`, compact `#pin-tabs`), and "Bring in" is now a floating, near-
+transparent pill (`position:absolute;bottom:16px`, glass) that appears ONLY while
+pictures are selected (`_pinSetFoot(_pinPicked.size>0)`), label kept as "Bring in".
+`backend/status.html`: `#ads-fold` gets `margin-top:40px` (breathing room before
+the money section). Version 13.84 x4; app-regression + contract green; frontend
+headless smoke = 0 JS errors.
+
+NEXT (from docs/maya-vision-spec.md): admin shell-merge (Sources+Maya+Bottom into
+one), top-bar height trim, drawer trackpad-swipe, surface the feature digest fold,
+then the brain items (Maya MCP/API + expanded email) which need Fromsa's decisions.
+
 ## v13.83 (Claude): quick wins + the vision spec
 
 Small safe batch while the big vision gets specced. `backend/status.html`: Lead

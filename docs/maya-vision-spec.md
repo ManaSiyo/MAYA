@@ -46,20 +46,14 @@ later. Right now it's internal, for Fromsa and his team.
 - [ ] The Admin **drawer should be swipe-able like the frontend** — open/close
   by trackpad swipe on a Mac (two-finger horizontal), same feel as the app.
 
-## 3. MAYA APP (frontend) — Pinterest wall
+## 3. MAYA APP (frontend) — Pinterest wall  [SHIPPED v13.84]
 
-- [ ] **Pinterest reloads every time** you switch to it (Fabrics stays loaded).
-  Cache/persist the Pinterest wall so switching Fabrics↔Pinterest is instant;
-  don't refetch unless the user asks.
-- [ ] The wall should be **edge-to-edge, full screen**: move the "All saves /
-  Boards" header UP onto the same row as the "Pinterest" title (make it
-  smaller), freeing the vertical space.
-- [ ] "Bring in" CTA becomes a **floating, near-transparent overlay** on top of
-  the cards that appears **only when items are selected** (and hides otherwise
-  so cards get full space). Keep the label **"Bring in"**. Applies to Pinterest;
-  keep the existing "Bring in" for Fabrics too.
-- [ ] Acceptance: with nothing selected the wall is full and clean; select 2+ and
-  a translucent "Bring in" floats over the cards.
+- [x] **Pinterest reloads every time** → cached for the session (`_pinPicsCache`,
+  `_pinLoaded`, `_pinStatusOk`); switching Fabrics↔Pinterest is instant.
+  `_pinReload()` forces a refetch when needed.
+- [x] The wall is **edge-to-edge** (compact `#pin-tabs` header, `padding:0`).
+- [x] "Bring in" is a **floating, near-transparent overlay** that appears **only
+  when items are selected**; label kept as **"Bring in"**.
 
 ## 4. MAYA THE BRAIN — architecture (needs Fromsa decisions where noted)
 

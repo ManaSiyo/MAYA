@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.83">
+<meta name="maya-version" content="13.84">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -2017,13 +2017,25 @@
      line Fabrics' tabs sit on, giving the cards the same room. Bring them in
      anchors to the bottom. */
   #notes-drawer .pg-pane > #pinterest-drawer > .drawer-head { display: none; }
-  #notes-drawer .pg-pane > #pinterest-drawer > #pinterest-drawer-body { flex: 1; padding-top: 4px; }
-  /* v13.82: Fromsa asked to drop it a couple more pixels and tighten the gap to
-     the dashed line above it: less space on top, closer to the bottom edge. */
-  /* v13.81: Bring them in sits a little lower than the cards but not glued to
-     the very edge, with a tighter gap above it and a smaller pill. */
-  #notes-drawer .pg-pane > #pinterest-drawer > .pin-drawer-foot { margin-top: auto; flex: none; padding: 1px 18px 10px; }
-  #notes-drawer .pg-pane > #pinterest-drawer > .pin-drawer-foot .drawer-fabrics { flex: none; width: auto; min-width: 150px; padding: 8px 20px; }
+  /* v13.84: the wall goes edge-to-edge and the pane anchors the floating CTA. */
+  #notes-drawer .pg-pane > #pinterest-drawer { position: relative; padding: 0; }
+  #notes-drawer .pg-pane > #pinterest-drawer > #pinterest-drawer-body { flex: 1; padding: 2px 2px 0; }
+  /* v13.84: "All saves / Boards" is the header now (the title is hidden), so make
+     it compact and let it sit tight on its own row above the full-width wall. */
+  #notes-drawer .pg-pane > #pinterest-drawer > #pin-tabs { gap: 6px; margin: 0 0 4px; padding: 0 2px; }
+  #notes-drawer .pg-pane > #pinterest-drawer > #pin-tabs .fabrics-tab { font-size: 9px; padding: 4px 10px; }
+  /* v13.84: "Bring in" floats over the cards, near-transparent, and shows only
+     while pictures are selected (JS toggles display). The wrapper doesn't block
+     card taps; only the pill itself is clickable. */
+  #notes-drawer .pg-pane > #pinterest-drawer > .pin-drawer-foot {
+    position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%);
+    margin: 0; padding: 0; z-index: 40; pointer-events: none; }
+  #notes-drawer .pg-pane > #pinterest-drawer > .pin-drawer-foot .drawer-fabrics {
+    pointer-events: auto; flex: none; width: auto; min-width: 128px; padding: 9px 22px;
+    border-radius: 100px; color: rgba(245,250,255,0.95);
+    background: rgba(18,24,38,0.5); border: 0.5px solid rgba(255,255,255,0.28);
+    backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.38); }
   /* v13.75: Randomize, Replace and Remove share one row; smaller pills to fit. */
   #notes-drawer .pg-avatar-actions .drawer-action { font-size: 8px; padding: 3px 8px;
     letter-spacing: 0.1em; }
@@ -4916,7 +4928,7 @@
   </div>
   <div class="fabrics-drawer-body" id="pinterest-drawer-body"></div>
   <div class="pin-drawer-foot" id="pin-drawer-foot" style="display:none">
-    <button class="drawer-fabrics" id="pin-import-btn" onclick="_pinImport()" disabled>Bring them in</button>
+    <button class="drawer-fabrics" id="pin-import-btn" onclick="_pinImport()" disabled>Bring in</button>
   </div>
 </div>
 
@@ -9862,6 +9874,12 @@ async function _pinRevealButton() {
 // ════════════════════════════════════════════════════════════
 let _pinTab = 'all';
 let _pinBoardName = '';
+// v13.84: Pinterest used to re-fetch on every tab switch. Cache the session so
+// switching Fabrics<->Pinterest is instant, like Fabrics. A manual reconnect or
+// board change still fetches; the wall just doesn't reload for nothing.
+let _pinLoaded = false;
+let _pinStatusOk = false;
+let _pinPicsCache = {};   // boardId||'all' -> rendered pins HTML
 
 function openPinterestDrawer() {
   const d = document.getElementById('pinterest-drawer');
@@ -9869,9 +9887,19 @@ function openPinterestDrawer() {
   d.classList.add('open');
   _pinPicked = new Set();
   _pinSetFoot(false);
+  // v13.84: already loaded this session? keep the wall, don't reload it.
+  const body = document.getElementById('pinterest-drawer-body');
+  if (_pinLoaded && body && body.querySelector('.pin-grid')) {
+    _pinTabsVisible(true);
+    return;
+  }
   _pinBody('<div class="pin-note">Looking at your Pinterest\u2026</div>');
   _pinDrawerBoot();
 }
+// v13.84: force a real re-fetch (used by the refresh affordance and reconnect).
+function _pinReload() { _pinLoaded = false; _pinStatusOk = false; _pinPicsCache = {};
+  _pinBody('<div class="pin-note">Refreshing your Pinterest\u2026</div>'); _pinDrawerBoot(); }
+window._pinReload = _pinReload;
 function closePinterestDrawer() {
   const d = document.getElementById('pinterest-drawer');
   if (d) d.classList.remove('open');
@@ -9890,7 +9918,7 @@ function _pinSetFoot(show) {
   const f = document.getElementById('pin-drawer-foot');
   if (f) f.style.display = show ? 'flex' : 'none';
   const btn = document.getElementById('pin-import-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Bring them in'; }
+  if (btn && !show) { btn.disabled = true; btn.textContent = 'Bring in'; }
 }
 function _pinTabsVisible(show) {
   const t = document.getElementById('pin-tabs');
@@ -9899,6 +9927,8 @@ function _pinTabsVisible(show) {
 
 async function _pinDrawerBoot() {
   _pinTabsVisible(false);
+  // v13.84: status is stable for the session; once connected, skip the re-check.
+  if (_pinStatusOk) { _pinTabsVisible(true); setPinterestTab(_pinTab || 'all'); return; }
   let st;
   try { st = await _pinApi('/api/pinterest/status'); }
   catch (_) {
@@ -9914,6 +9944,7 @@ async function _pinDrawerBoot() {
     return;
   }
   if (!st.connected) return _pinDrawerConnect();
+  _pinStatusOk = true;
   _pinTabsVisible(true);
   setPinterestTab(_pinTab || 'all');
 }
@@ -10007,6 +10038,13 @@ async function _pinDrawerPins(boardId, boardName) {
   _pinPicked = new Set();
   _pinSetFoot(false);
   _pinSub(boardName ? boardName : 'everything you have saved');
+  const key = boardId || 'all';
+  // v13.84: render from the session cache when we have it \u2014 no reload.
+  if (_pinPicsCache[key]) {
+    _pinBody(_pinPicsCache[key]);
+    _pinLoaded = true;
+    return;
+  }
   _pinBody('<div class="pin-note">Loading pictures\u2026</div>');
   let j;
   try {
@@ -10020,11 +10058,15 @@ async function _pinDrawerPins(boardId, boardName) {
     _pinBody('<div class="pin-note">' + (boardId ? 'Nothing on that board yet.' : 'Nothing saved on that account yet.') + '</div>');
     return;
   }
-  _pinBody('<div class="pin-grid pics">' + j.pins.map(p =>
+  const html = '<div class="pin-grid pics">' + j.pins.map(p =>
     '<button class="pin-pic" data-url="' + escapeHtml(p.url) + '" data-alt="' + escapeHtml(p.alt || '') + '"' +
       ' onclick="_pinToggle(this)"><img src="' + _safeImgSrc(p.url) + '" alt="" loading="lazy">' +
-      '<span class="pin-check">&#10003;</span></button>').join('') + '</div>');
-  _pinSetFoot(true);
+      '<span class="pin-check">&#10003;</span></button>').join('') + '</div>';
+  _pinPicsCache[key] = html;
+  _pinLoaded = true;
+  _pinBody(html);
+  // v13.84: the CTA no longer sits at the bottom on load; it floats in only
+  // once pictures are selected (see _pinToggle), so the wall stays edge-to-edge.
 }
 
 function _pinToggle(el) {
@@ -10034,10 +10076,12 @@ function _pinToggle(el) {
     if (_pinPicked.size >= PIN_PICK_MAX) { showToast('Up to ' + PIN_PICK_MAX + '.'); return; }
     _pinPicked.add(url); el.classList.add('picked');
   }
+  // v13.84: the floating "Bring in" surfaces only while something is picked.
+  _pinSetFoot(_pinPicked.size > 0);
   const btn = document.getElementById('pin-import-btn');
   if (btn) {
     btn.disabled = _pinPicked.size === 0;
-    btn.textContent = _pinPicked.size ? 'Bring in ' + _pinPicked.size : 'Bring them in';
+    btn.textContent = _pinPicked.size ? 'Bring in ' + _pinPicked.size : 'Bring in';
   }
 }
 
@@ -10065,8 +10109,10 @@ async function _pinImport() {
     }
   };
   await Promise.all([worker(), worker()]);
+  _pinPicked = new Set();
+  _pinSetFoot(false);
   closePinterestDrawer();
-  if (btn) { btn.disabled = false; btn.textContent = 'Bring them in'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Bring in'; }
   if (landed && !failed) showToast(landed + ' picture' + (landed === 1 ? '' : 's') + ' placed.');
   else if (landed) showToast(landed + ' placed, ' + failed + ' did not arrive.');
   else showError('Those pictures could not be brought in.');
