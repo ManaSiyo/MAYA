@@ -1663,6 +1663,11 @@ ok('Maya has the new tools: add lead, add person, journal, read the internal ops
   MAP_SOURCE.includes("name==='read_team_sheet'"));
 ok('the Visualize pill stays above the climbing cards, like the hamburger and logo',
   /#voice-wrap \{[^}]*z-index: 9000/.test(INDEX_SOURCE));
+// v13.83 quick wins
+ok('Lead Station header says Email, submissions are "My submissions", fabric spec de-dupes the name',
+  MAP_SOURCE.includes('<th>Email</th>') &&
+  MAP_SOURCE.includes('My submissions <span id="subs-count"') &&
+  INDEX_SOURCE.includes('!nm.includes(String(t).toLowerCase())'));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

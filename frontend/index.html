@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.82">
+<meta name="maya-version" content="13.83">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -12587,7 +12587,12 @@ function renderFabricsGrid(opts = {}) {
                  'aria-label="Fabric name" />' +
           '<div class="fabric-spec">' +
             (f.analyzed
-              ? [f.color, f.weave, f.weight].filter(Boolean).map(escapeHtml).join('<span class="dot">·</span>')
+              // v13.83: don't repeat words already in the name ("Burgundy Lace"
+              // then "burgundy · lace"). Drop any spec token the name covers.
+              ? (() => { const nm = String(f.name || '').toLowerCase();
+                  return [f.color, f.weave, f.weight].filter(Boolean)
+                    .filter(t => !nm.includes(String(t).toLowerCase()))
+                    .map(escapeHtml).join('<span class="dot">·</span>'); })()
               : '<span class="fabric-analyzing">Maya is reading the swatch…</span>'
             ) +
           '</div>' +

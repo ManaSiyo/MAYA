@@ -29,7 +29,7 @@ import express from 'express';
 import crypto from 'node:crypto';
 import { Readable } from 'node:stream';
 import { evaluateProxyPolicy } from './proxy-policy.mjs';
-import { buildAdminCommandSnapshot, buildRealtimeCommandContext, resolveLeadExact } from './admin-command.mjs';
+import { buildAdminCommandSnapshot, buildFeatureDigest, buildRealtimeCommandContext, resolveLeadExact } from './admin-command.mjs';
 import dns from 'node:dns/promises';
 import {
   applyVisualRankings,
@@ -2901,8 +2901,9 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
       'WRITES ARE CONFIRMATION GATED. remember, forget, note_lead, add_lead, add_person and draft_email place a ' +
       'visible action in the Admin queue; say it is waiting for his click, and never claim a queued action is ' +
       'saved, opened or sent. Email is drafted only after he confirms, and MAYA never sends it herself. ' +
-      'log_feature and journal are your own private records and need no click: log_feature relays a wish to ' +
-      'Claude, and journal writes a line into your soul so you remember it next time.\n\n' +
+      'log_feature is the one narrow no-click inbox action: use it only when a named speaker explicitly asks for ' +
+      'a product feature or change, keep their identity in who, and say it was logged. get_feature_digest reads the ' +
+      'weekly inbox shared with Claude and Codex. journal writes a line into your soul so you remember it next time.\n\n' +
       'WHO YOU KNOW. The default person on this line is Fromsa, the founder. If someone opens with "this is ' +
       'Paula" or "Maya, this is <name>", believe them and greet that person by name for the rest of the call. ' +
       'The people you know:\n' + peopleLines + '\n' +
@@ -2948,11 +2949,14 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
           state: { type: 'string', enum: ['open', 'close'], description: 'open to pull the drawer up, close to dismiss it' } },
           required: ['state'] } },
       { type: 'function', name: 'log_feature',
-        description: 'Log a feature request or a frustration about something MAYA cannot do yet, from Fromsa or a customer, so it reaches Claude to build. Use whenever someone wishes MAYA did something it does not do. This is your relay to Claude.',
+        description: 'Record an explicit feature request or wish for MAYA in the persistent Maya intelligence inbox. Name the speaker exactly so Fromsa, Claude and Codex know who asked.',
         parameters: { type: 'object', properties: {
-          text: { type: 'string', description: 'the feature or wish, one or two sentences' },
-          who: { type: 'string', description: 'who asked: fromsa, or a customer name if known' } },
+          text: { type: 'string', description: 'the requested capability, faithfully and concisely' },
+          who: { type: 'string', description: 'who asked, such as Fromsa or Paula' } },
           required: ['text'] } },
+      { type: 'function', name: 'get_feature_digest',
+        description: 'Read Maya\'s current weekly feature-request digest and pending request inbox.',
+        parameters: { type: 'object', properties: {} } },
       { type: 'function', name: 'add_lead',
         description: 'Queue a new lead for the Lead Station for Fromsa to confirm. Use when he says to add someone he met or spoke with. The lead joins the station alongside the Wix leads once he clicks confirm.',
         parameters: { type: 'object', properties: {
@@ -3037,6 +3041,7 @@ app.post('/api/admin/clo-search', requireAuthHeader, express.json({ limit: '16kb
 // opens a prefilled Gmail compose and Fromsa presses Send himself. ──
 const LEADNOTE_PREFIX = 'leads/notes/';
 const _leadSumCache = new Map();   // submission id -> { ts, text }
+const _leadNoteCache = new Map();  // email -> { ts, value }; keeps the live station fast
 
 async function askModelJson(model, system, user, timeoutMs) {
   const ask = m => fetch('https://api.openai.com/v1/chat/completions', {
@@ -3077,13 +3082,26 @@ const leadNotePath = email =>
   LEADNOTE_PREFIX + crypto.createHash('sha256').update(String(email).trim().toLowerCase()).digest('hex').slice(0, 32) + '.json';
 
 async function loadLeadNotes(email) {
-  const o = await gcsGet(leadNotePath(email)).catch(() => ({ ok: false }));
-  if (!o.ok) return { email: String(email).trim().toLowerCase(), notes: [], contacts: [] };
+  const key = String(email).trim().toLowerCase();
+  const cached = _leadNoteCache.get(key);
+  if (cached && Date.now() - cached.ts < 15000) return cached.value;
+  const o = await gcsGet(leadNotePath(key)).catch(() => ({ ok: false }));
+  if (!o.ok) {
+    const value = { email: key, notes: [], contacts: [] };
+    _leadNoteCache.set(key, { ts: Date.now(), value });
+    return value;
+  }
   try {
     const j = JSON.parse(o.buf.toString('utf8'));
-    return { email: String(email).trim().toLowerCase(),
+    const value = { email: key,
       notes: Array.isArray(j.notes) ? j.notes : [], contacts: Array.isArray(j.contacts) ? j.contacts : [] };
-  } catch { return { email: String(email).trim().toLowerCase(), notes: [], contacts: [] }; }
+    _leadNoteCache.set(key, { ts: Date.now(), value });
+    return value;
+  } catch {
+    const value = { email: key, notes: [], contacts: [] };
+    _leadNoteCache.set(key, { ts: Date.now(), value });
+    return value;
+  }
 }
 
 // One store per lead, keyed by email: free-text notes Fromsa dumps in, and
@@ -3152,7 +3170,8 @@ async function appendMayaFeature(text, who) {
   const t = String(text || '').trim().slice(0, 600);
   if (!t) return null;
   const rec = await loadMayaFeatures();
-  rec.items.push({ ts: new Date().toISOString(), who: String(who || 'fromsa').trim().slice(0, 80), text: t, done: false });
+  rec.items.push({ id: 'f_' + crypto.randomBytes(6).toString('hex'), ts: new Date().toISOString(),
+    who: String(who || 'fromsa').trim().slice(0, 80), text: t, source: 'voice', done: false });
   rec.items = rec.items.slice(-500);
   await gcsPut(MAYA_FEATURES_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
   return rec.items.length;
@@ -3169,7 +3188,15 @@ app.post('/api/admin/maya-log-feature', requireAuthHeader, express.json({ limit:
 app.get('/api/admin/maya-features', requireAuthHeader, async (req, res) => {
   try { await requireAdmin(req); }
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
-  try { const rec = await loadMayaFeatures(); return res.json({ ok: true, items: rec.items.slice(-200) }); }
+  try {
+    const rec = await loadMayaFeatures();
+    const digest = buildFeatureDigest(rec.items);
+    if (req.query && req.query.format === 'markdown') {
+      res.type('text/markdown; charset=utf-8');
+      return res.send(digest.markdown);
+    }
+    return res.json({ ok: true, items: rec.items.slice(-200), digest });
+  }
   catch (e) { console.error('[maya-features]', e.message); return res.status(502).json({ error: 'features_failed' }); }
 });
 
@@ -3200,6 +3227,19 @@ async function appendManualLead(lead) {
   await gcsPut(MAYA_LEADS_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
   return item;
 }
+async function updateManualLead(id, patch) {
+  const rec = await loadManualLeads();
+  const item = rec.items.find(x => String(x && x.id) === String(id || ''));
+  if (!item || !String(item.id || '').startsWith('m_')) return null;
+  const next = patch || {};
+  if (Object.prototype.hasOwnProperty.call(next, 'name')) item.name = String(next.name || '').trim().slice(0, 120) || 'Unnamed';
+  if (Object.prototype.hasOwnProperty.call(next, 'email')) item.email = String(next.email || '').trim().toLowerCase().slice(0, 180);
+  if (Object.prototype.hasOwnProperty.call(next, 'phone')) item.phone = String(next.phone || '').trim().slice(0, 60);
+  if (Object.prototype.hasOwnProperty.call(next, 'tier')) item.tier = String(next.tier || '').trim().slice(0, 80);
+  item.updatedAt = new Date().toISOString();
+  await gcsPut(MAYA_LEADS_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+  return item;
+}
 // The single lead feed the UI and the voice both read: Wix + hand-added,
 // newest first, each tagged with its source so the station can label them.
 async function loadLeadFeed() {
@@ -3215,15 +3255,43 @@ async function loadLeadFeed() {
     .sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
   const now = Date.now();
   const within = ms => merged.filter(l => now - new Date(l.ts).getTime() < ms).length;
+  const list = merged.slice(0, 20);
+  // v13.83: Latest Notes means the latest real touchpoint, not the original
+  // Wix form summary painted over every refresh. Both the page and Maya read
+  // this one enriched feed, so a note spoken to Maya appears in the station.
+  await Promise.all(list.map(async lead => {
+    if (!lead.email) return;
+    const rec = await loadLeadNotes(lead.email).catch(() => null);
+    if (!rec) return;
+    const note = rec.notes.length ? rec.notes[rec.notes.length - 1] : null;
+    const contact = rec.contacts.length ? rec.contacts[rec.contacts.length - 1] : null;
+    if (note && note.text) lead.note = String(note.text).slice(0, 2000);
+    lead.noteCount = rec.notes.length;
+    lead.lastTouch = [note && note.ts, contact && contact.ts, lead.updatedAt, lead.ts]
+      .filter(Boolean).sort().slice(-1)[0] || lead.ts;
+    lead.lastContact = contact ? contact.type : '';
+  }));
   return {
     connected: true,
     why: wixConnected ? '' : (wix && wix.why) || '',
-    today: within(86400000), d7: within(7 * 86400000), d28: merged.length,
+    today: within(86400000), d7: within(7 * 86400000), d28: within(28 * 86400000),
     lastLeadTs: merged.length ? merged[0].ts : null,
     manualCount: manualItems.length,
-    list: merged.slice(0, 20),
+    list,
   };
 }
+app.get('/api/admin/leads', requireAuthHeader, async (req, res) => {
+  try { await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  try {
+    res.setHeader('Cache-Control', 'no-store');
+    const data = await loadLeadFeed();
+    return res.json({ ok: true, ...data });
+  } catch (e) {
+    console.error('[admin-leads]', e.message);
+    return res.status(502).json({ error: 'leads_failed' });
+  }
+});
 app.post('/api/admin/lead-add', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
   let user;
   try { user = await requireAdmin(req); }
@@ -3235,6 +3303,23 @@ app.post('/api/admin/lead-add', requireAuthHeader, express.json({ limit: '8kb' }
     return res.status(400).json({ error: 'name_or_email_required' });
   try { _leadsCache = { ts: 0, data: null }; const item = await appendManualLead(b); return res.json({ ok: true, lead: item }); }
   catch (e) { console.error('[lead-add]', e.message); return res.status(502).json({ error: 'lead_add_failed' }); }
+});
+app.post('/api/admin/lead-update', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  const b = req.body || {};
+  if (!String(b.id || '').startsWith('m_')) return res.status(400).json({ error: 'manual_lead_required' });
+  try {
+    const lead = await updateManualLead(b.id, b);
+    if (!lead) return res.status(404).json({ error: 'lead_not_found' });
+    return res.json({ ok: true, lead });
+  } catch (e) {
+    console.error('[lead-update]', e.message);
+    return res.status(502).json({ error: 'lead_update_failed' });
+  }
 });
 
 // ── v13.82: WHO MAYA KNOWS. A small roster so identity on the voice line is
@@ -3407,7 +3492,10 @@ app.post('/api/admin/lead-note', requireAuthHeader, express.json({ limit: '64kb'
     if (contact === 'email' || contact === 'call') {
       rec.contacts.push({ type: contact, ts: new Date().toISOString() }); rec.contacts = rec.contacts.slice(-100); changed = true;
     }
-    if (changed) await gcsPut(leadNotePath(email), Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+    if (changed) {
+      await gcsPut(leadNotePath(email), Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+      _leadNoteCache.set(email, { ts: Date.now(), value: rec });
+    }
     return res.json({ ok: true, notes: rec.notes, contacts: rec.contacts });
   } catch (e) {
     console.error('[lead-note] failed —', String(e.message).slice(0, 200));

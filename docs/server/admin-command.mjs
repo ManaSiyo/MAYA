@@ -59,6 +59,42 @@ export function resolveLeadExact(leads, query) {
   return { status: 'not_found', matches: [] };
 }
 
+// A bounded, deterministic weekly read of Maya's feature inbox. This is kept
+// model-free so the Admin page, voice line and repository handoff all agree.
+export function buildFeatureDigest(items, now = new Date()) {
+  const rows = (Array.isArray(items) ? items : []).map((item, index) => ({
+    id: text(item && (item.id || ('feature-' + index)), 100),
+    ts: text(item && item.ts, 50),
+    who: text(item && item.who, 80) || 'unknown',
+    text: text(item && item.text, 600),
+    done: !!(item && item.done),
+    source: text(item && item.source, 40) || 'voice',
+  })).filter(item => item.text);
+  const cutoff = new Date(now).getTime() - 7 * 86400000;
+  const weekly = rows.filter(item => {
+    const ts = new Date(item.ts).getTime();
+    return Number.isFinite(ts) && ts >= cutoff;
+  });
+  const pending = rows.filter(item => !item.done);
+  const people = [...new Set(weekly.map(item => item.who))];
+  const summary = weekly.length
+    ? weekly.length + ' request' + (weekly.length === 1 ? '' : 's') + ' logged this week' +
+      (people.length ? ' from ' + people.join(', ') : '') + '.'
+    : 'No feature requests were logged in the last seven days.';
+  const lines = [
+    '# Maya intelligence inbox',
+    '',
+    'Generated ' + new Date(now).toISOString() + '.',
+    '',
+    '## This week',
+    '',
+    ...(weekly.length ? weekly.slice().reverse().map(item =>
+      '- [' + (item.done ? 'x' : ' ') + '] ' + item.text + ' — ' + item.who +
+      (item.ts ? ', ' + item.ts.slice(0, 10) : '')) : ['- No requests logged.']),
+  ];
+  return { summary, weekly: weekly.slice(-50).reverse(), pending: pending.slice(-100).reverse(), markdown: lines.join('\n') + '\n' };
+}
+
 // v13.82: merge every source's per-day map into one calendar, so today and
 // yesterday's ad clicks are answerable the same way the dashboard's daily
 // chart shows them. Windsor ships a { 'YYYY-MM-DD': {clicks,linkClicks,...} }

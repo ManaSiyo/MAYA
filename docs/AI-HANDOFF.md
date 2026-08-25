@@ -73,6 +73,23 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.83 (Claude): quick wins + the vision spec
+
+Small safe batch while the big vision gets specced. `backend/status.html`: Lead
+Station header "Reach them"→"Email"; "Latest submissions"→"My submissions".
+`frontend/index.html`: fabric spec line no longer repeats words already in the
+name ("Burgundy Lace" + "burgundy · lace" → name only). New: `docs/maya-soul.md`
+(local mirror of Maya's soul, Claude-readable) and **`docs/maya-vision-spec.md`**
+— the full prioritized build list from Fromsa's Aug 25 vision dump (dynamic Lead
+Station, admin layout merge, Pinterest cache + full-screen wall + floating "Bring
+in", Maya-as-brain: own MCP/API, weekly digest, soul auto-export, expanded email
+power with the never-auto-send safety line). START THERE for the next build.
+
+Changed: backend/status.html, frontend/index.html, playground/index.html,
+backend/marketing.html, tests/app-regression.mjs (+1), tests/admin-ui-contract.mjs,
+docs/maya-soul.md (new), docs/maya-vision-spec.md (new). Version 13.83 x4.
+VALIDATION: app-regression all passed, contract green.
+
 ## v13.82 (Claude): Maya becomes the intelligence layer
 
 The big one. Fromsa's repeated frustration: the voice agent could not see what

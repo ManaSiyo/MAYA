@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.82">
+<meta name="maya-version" content="13.83">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -636,7 +636,7 @@ try {
     <span id="gsi-slot" style="margin:0 0 0 auto"></span>
   </div>
 
-  <h2 class="grp">Latest submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span></h2>
+  <h2 class="grp">My submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span></h2>
   <div id="subs-strip" style="display:none"></div>
   <div id="subs-note-inline">Waiting for the one sign in at the top of the page.</div>
 
@@ -2118,7 +2118,7 @@ function paintLeads(l) {
     if (days < 7) return 'Email &#183; follow up';
     return x.phone ? 'Call &#183; ' + days + ' days quiet' : 'Email &#183; revive';
   };
-  tb.innerHTML = '<tr><th>Who</th><th>Reach them</th><th>Latest Notes</th><th>CTA</th></tr>' +
+  tb.innerHTML = '<tr><th>Who</th><th>Email</th><th>Latest Notes</th><th>CTA</th></tr>' +
     l.list.map((x, i) =>
       '<tr><td style="white-space:nowrap">' + esc(x.name) +
       '<div class="lead-when">' + esc(when(x.ts)) +
