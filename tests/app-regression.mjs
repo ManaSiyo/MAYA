@@ -1441,7 +1441,7 @@ ok('v13.84: "Bring in" floats over the cards, only while pictures are selected',
 ok('v13.84: Ad Campaigns gets breathing room above the money section',
   MAP_SOURCE.includes('#adm-mkt #ads-fold{margin-top:40px}'));
 ok('v13.87: the Lead Station is a custom CRM — every field edits in place, rows delete, WIX badge by the name',
-  MAP_SOURCE.includes('<th>Latest Notes</th>') &&
+  MAP_SOURCE.includes('>Latest Notes</th>') &&
   MAP_SOURCE.includes('async function saveLeadField(') &&
   MAP_SOURCE.includes('async function deleteLeadRow(') &&
   MAP_SOURCE.includes('function reloadLeads(') &&
@@ -1805,6 +1805,24 @@ ok('v13.92: the favorites nav arrows sit nearer the corners (10px)',
   INDEX_SOURCE.includes("b.style[d < 0 ? 'left' : 'right'] = '10px'"));
 ok('v13.92: the avatar name opens the switcher too (bigger hit target than the caret)',
   INDEX_SOURCE.includes('id="drawer-avatar-name" onclick="toggleAvatarSwitcher()"'));
+
+// ── v13.93 ──
+ok('v13.93: the Lead Station is Hunter-style — frozen header + Full name column, Actions, quote/invoice columns',
+  MAP_SOURCE.includes('class="lead-h-name">Full name</th>') &&
+  MAP_SOURCE.includes('class="lead-h-actions">Actions</th>') &&
+  MAP_SOURCE.includes("cell(i, x, 'company'") &&
+  MAP_SOURCE.includes("cell(i, x, 'quote'") &&
+  MAP_SOURCE.includes("cell(i, x, 'invoice1'") &&
+  MAP_SOURCE.includes("cell(i, x, 'invoice2'") &&
+  /#leads-fold \.panel\{max-height:62vh;overflow:auto\}/.test(MAP_SOURCE) &&
+  /\.lead-td-name\{[^}]*position:sticky;left:0/.test(MAP_SOURCE));
+ok('v13.93: the note marquee runs one shared speed for every row',
+  MAP_SOURCE.includes('sp.style.animationDuration = Math.max(6, shift / SPEED)'));
+ok('v13.93: the server persists the new CRM columns (company, quote, both invoices)',
+  SERVER_SOURCE.includes("has('company')") &&
+  SERVER_SOURCE.includes("has('quote')") &&
+  SERVER_SOURCE.includes("has('invoice1')") &&
+  SERVER_SOURCE.includes("has('invoice2')"));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

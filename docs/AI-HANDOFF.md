@@ -73,6 +73,33 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.93 (Claude): Lead Station goes Hunter-style (frozen header + first column)
+
+`backend/status.html` + `docs/server/server.js`:
+- The **Lead Station is a scrolling CRM now**. The panel is a scroll box
+  (`#leads-fold .panel{max-height:62vh;overflow:auto}`); the **header row is
+  frozen** (`th{position:sticky;top:0}`) and the **Full name column is frozen**
+  (`.lead-td-name{position:sticky;left:0}`), Hunter.io style. New columns:
+  **Company / Title, Quote, Invoice 1, Invoice 2**, and the recommendation column
+  header is now **Actions**. Empty money cells show a faint `+`, empty company a
+  faint `add`.
+- **One marquee speed for all rows.** `_leadMarquees()` sets each note's
+  `animationDuration` from its scroll distance at a fixed ~34 px/s, so long and
+  short notes drift at the same pace instead of long ones sprinting.
+- **Server persists the new fields.** `updateLead` accepts `company`, `quote`,
+  `invoice1`, `invoice2` (in-place for manual leads, overrides for Wix). The
+  client `saveLeadField` now mirrors any edited field back onto the local row.
+
+NEXT (this batch, ordered by Fromsa): (2) Admin drawer as an EXACT functional
+copy of the frontend swipe + hamburger (fixes the reverse-swipe firing the
+browser back-gesture; center the drawer headings; hover pills under ADMIN).
+(3) Speed to Lead scaffolding LAST — Wix webhook → Maya drafts SMS/email + a
+voice heads-up to Fromsa via Quo/OpenPhone; auto-send to the lead is APPROVED,
+the call to Fromsa is the human checkpoint. Needs from Fromsa: Quo account + key,
+his phone number in env (never stored by Claude), his humanized copy prompt.
+Also queued: quote→pay-link automation, Maya voice drawer control, Maya knowing
+yesterday's Wix stats.
+
 ## v13.92 (Claude): favorites polish, popup copy, card centering, avatar-dropdown target
 
 `frontend/index.html` (the three other surfaces: version bump for lockstep):

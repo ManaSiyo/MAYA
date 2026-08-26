@@ -1203,3 +1203,49 @@ v13.82 — "Make the voice agent (MAYA) the real intelligence layer"
 [ ] NEXT: bring the playground up to the current app, then add a pinch-to-zoom
     "map" of the whole board to the PLAYGROUND ONLY (floor ~10% card size, Maya
     logo resets to 100%). Large; separate chunk.
+
+── Aug 26: Marketing course batch (Claude Code Marketing, Nick Saraev) ────────
+Summary doc created in Drive 2026 folder: "Claude Code Marketing Full Summary".
+
+FLAGSHIP, agreed next build:
+[ ] SPEED TO LEAD. On a Wix form submit: within ~30-60s, Maya SMS + emails the
+    lead (a 15-second read, humanized, paraphrasing their request), AND places a
+    <15s voice heads-up call to Fromsa ("this is Maya, <name> is interested in
+    <tier>"), because he is too late for email/dashboards. Phone number + the
+    automated SMS/call via Quo (formerly OpenPhone).
+    NEEDS FROM FROMSA: (1) a Quo/OpenPhone account + its API key/webhook;
+    (2) his full phone number entered in config at build time (Claude will NOT
+    store it); (3) the humanized copy prompt he will paste; (4) explicit sign-off
+    that auto-send to the lead is intended (crosses the usual no-auto-send line;
+    legitimate here because it is his own reply to his own inbound lead, and the
+    call to him is the human checkpoint).
+
+BUILDABLE NOW (no external accounts):
+[ ] Lead Station -> Hunter.io style. Columns: Full name, Email, Company/Title,
+    plus more. Scrollable table with the header row AND first column frozen.
+    Rename the recommendation column header to "Actions". Add a real header/title
+    row (missing now). Marquee: one shared speed for every row (some run too fast).
+    New columns: Quote amount, Invoice 1 (first half), Invoice 2 (second half).
+[ ] Pay links: Maya auto-generates a pay link from the quote amount and sends it
+    on SMS + email. Booking link = $150 consultation deposit; pay link = the
+    quote. (Links live in the 2026 Google Sheet for now.)
+[ ] Admin drawer = COPY THE FRONTEND EXACTLY (functionality, not just looks):
+    the swipe architecture, the hamburger style, its distance from the drawer
+    corner. Today the reverse swipe triggers the browser back-gesture ("max wipe")
+    because admin uses a fixed panel + wheel handler instead of the frontend's
+    native horizontal scroll-snap. Port the frontend architecture so it is exact.
+    Content inside may differ. Asked ~10 times; make it exact.
+[ ] Center the drawer section headings (Systems, The Vault, Behind the scenes).
+[ ] Admin hover pills: hovering "ADMIN" drops pills beneath it (like Mana Siyo's
+    Wix Studio / Design Studio), e.g. Operations Room / Playground, plus a link
+    to the 2026 Google Sheet for now.
+[ ] Maya controls the drawer by voice: "open the drawer" / "close the drawer",
+    and auto-open the drawer when something needs Fromsa's confirmation.
+[ ] Maya should know YESTERDAY's Wix stats (she doesn't; Wix shows them).
+
+LATER (design / accounts needed):
+[ ] Ad creative skill + Higgsfield AI video, on a new admin content page.
+[ ] MCP / API for Maya, so Claude and Maya share the same tools (a "Maya"
+    connector for Claude). Design first.
+[ ] Personalized copy (cold email + fuzzy variables): can be done with Claude
+    directly; low priority to build into the app.

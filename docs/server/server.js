@@ -3363,6 +3363,12 @@ async function updateLead(id, patch) {
   if (has('email')) clean.email = String(next.email || '').trim().toLowerCase().slice(0, 180);
   if (has('phone')) clean.phone = String(next.phone || '').trim().slice(0, 60);
   if (has('tier')) clean.tier = String(next.tier || '').trim().slice(0, 80);
+  // v13.93: Hunter-style CRM columns. Company/title, the quote, and the two
+  // invoice halves (first + second payment) all edit and persist like any field.
+  if (has('company')) clean.company = String(next.company || '').trim().slice(0, 120);
+  if (has('quote')) clean.quote = String(next.quote || '').trim().slice(0, 40);
+  if (has('invoice1')) clean.invoice1 = String(next.invoice1 || '').trim().slice(0, 40);
+  if (has('invoice2')) clean.invoice2 = String(next.invoice2 || '').trim().slice(0, 40);
   // note is the fallback path for a lead with no email (email leads note through
   // the email-keyed note store instead); sets both the display note and wrote.
   if (has('note')) { clean.note = String(next.note || '').trim().slice(0, 2000); clean.wrote = clean.note; }

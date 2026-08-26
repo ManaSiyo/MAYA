@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.92">
+<meta name="maya-version" content="13.93">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -471,6 +471,25 @@ try {
   #adm-mkt #ad-tip .tip-row{display:flex;align-items:center;gap:6px;margin-top:2px}
   #adm-mkt #ad-tip .tip-row .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
   #adm-mkt #leads-table td{font-size:14.5px;vertical-align:top}
+  /* v13.93: Hunter-style CRM. The station is a scroll box: the header row and the
+     Full name column stay frozen while everything else scrolls both ways. */
+  #adm-mkt #leads-fold .panel{max-height:62vh;overflow:auto}
+  #adm-mkt #leads-table{min-width:960px;border-collapse:separate;border-spacing:0}
+  #adm-mkt #leads-table th{position:sticky;top:0;z-index:3;background:#0d1120;
+    font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--dim);font-weight:400;text-align:left;padding:7px 12px 9px;white-space:nowrap;
+    border-bottom:0.5px solid var(--line)}
+  #adm-mkt #leads-table td{padding:9px 12px 9px}
+  /* the Full name column is frozen on the left; the corner cell rides on top */
+  #adm-mkt #leads-table .lead-h-name,#adm-mkt #leads-table .lead-td-name{
+    position:sticky;left:0;background:#0d1120;box-shadow:1px 0 0 var(--line)}
+  #adm-mkt #leads-table .lead-td-name{z-index:2}
+  #adm-mkt #leads-table th.lead-h-name{z-index:4}
+  #adm-mkt #leads-table th.lead-h-actions{text-align:left}
+  /* the quote and invoice columns invite a value with a faint + when empty */
+  #adm-mkt #leads-table .lead-money-edit{font-variant-numeric:tabular-nums;white-space:nowrap}
+  #adm-mkt #leads-table .lead-money-edit:empty::before{content:'+';color:var(--faint)}
+  #adm-mkt #leads-table .lead-company-edit:empty::before{content:'add';color:var(--faint);font-style:italic}
   #adm-mkt #leads-table .lead-when{color:var(--faint);font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.08em;margin-top:2px}
   #adm-mkt #leads-table .lead-src{display:inline-block;margin-left:6px;padding:0 5px;border-radius:100px;border:0.5px solid var(--line);
     font-size:8px;letter-spacing:0.14em;color:var(--faint);vertical-align:middle}
@@ -2259,7 +2278,20 @@ function paintLeads(l) {
       '" data-field="' + field + '" contenteditable="true" spellcheck="false"' +
       ' onfocus="this.dataset.orig=(this.textContent||\'\').trim()" onblur="saveLeadField(this)"' +
       ' onkeydown="_leadCellKey(event,this)">' + esc(value || '') + '</span>';
-  tb.innerHTML = '<tr><th>Who</th><th>Email</th><th>Latest Notes</th><th></th></tr>' +
+  // v13.93: a real CRM in the Hunter style. Many columns, the sheet scrolls
+  // sideways, the header row and the Full name column stay frozen. Actions is
+  // the last column (the recommended move + the CTAs).
+  tb.innerHTML =
+    '<tr>' +
+      '<th class="lead-h-name">Full name</th>' +
+      '<th>Email</th>' +
+      '<th>Company / Title</th>' +
+      '<th>Latest Notes</th>' +
+      '<th>Quote</th>' +
+      '<th>Invoice 1</th>' +
+      '<th>Invoice 2</th>' +
+      '<th class="lead-h-actions">Actions</th>' +
+    '</tr>' +
     l.list.map((x, i) =>
       '<tr id="lead-tr-' + i + '"><td class="lead-td-name" style="white-space:nowrap">' +
         cell(i, x, 'name', x.name, 'lead-name-edit') +
@@ -2267,10 +2299,14 @@ function paintLeads(l) {
           : (x.source && x.source !== 'wix' ? '<span class="lead-src">added</span>' : '')) +
         '<div class="lead-when">' + esc(when(x.lastTouch || x.ts)) + '</div></td>' +
       '<td>' + cell(i, x, 'email', x.email || x.phone || '', 'lead-email-edit') + '</td>' +
+      '<td>' + cell(i, x, 'company', x.company || x.tier || '', 'lead-company-edit') + '</td>' +
       // v13.91: Latest Notes ride a marquee — the note scrolls when it overruns
       // its column, pausing on hover and while you edit it in place.
       '<td class="lead-note"><div class="lead-note-vp">' + cell(i, x, 'note', x.note || '', 'lead-note-edit') + '</div></td>' +
-      '<td style="white-space:nowrap"><div class="lead-rec">' + rec(x) + '</div>' +
+      '<td>' + cell(i, x, 'quote', x.quote || '', 'lead-money-edit') + '</td>' +
+      '<td>' + cell(i, x, 'invoice1', x.invoice1 || '', 'lead-money-edit') + '</td>' +
+      '<td>' + cell(i, x, 'invoice2', x.invoice2 || '', 'lead-money-edit') + '</td>' +
+      '<td class="lead-td-actions" style="white-space:nowrap"><div class="lead-rec">' + rec(x) + '</div>' +
       '<div class="lead-ctas">' +
         (x.email ? '<button class="lead-cta" id="lead-mail-' + i + '" onclick="draftLead(' + i + ')" title="Draft the next email (opens Gmail, nothing is sent)">&#9993;</button>' : '') +
         (x.phone ? '<a class="lead-cta" href="tel:' + esc(x.phone) + '" onclick="leadContact(' + i + ',\'call\')" title="Call ' + esc(x.phone) + '">' + PHONE_SVG + '</a>' : '') +
@@ -2282,13 +2318,23 @@ function paintLeads(l) {
 // v13.91: a real smartphone glyph for the call button, not a 1970s handset.
 const PHONE_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><line x1="10.6" y1="18.4" x2="13.4" y2="18.4"/></svg>';
 // Turn on the note marquee only where the text actually overruns the column.
+// v13.93: every marquee scrolls at the SAME SPEED (~34 px/s), so a long note and
+// a short one drift at the same pace. The duration scales with the distance,
+// with a floor so a barely-overrunning note doesn't sprint.
 function _leadMarquees() {
+  const SPEED = 34;  // px per second, one pace for all rows
   document.querySelectorAll('#leads-table .lead-note-vp').forEach(vp => {
     const sp = vp.querySelector('.lead-note-edit');
     if (!sp) return;
     const over = sp.scrollWidth - vp.clientWidth;
-    if (over > 8) { vp.style.setProperty('--mq', (over + 18) + 'px'); vp.classList.add('mq'); }
-    else { vp.classList.remove('mq'); vp.style.removeProperty('--mq'); }
+    if (over > 8) {
+      const shift = over + 18;
+      vp.style.setProperty('--mq', shift + 'px');
+      sp.style.animationDuration = Math.max(6, shift / SPEED).toFixed(1) + 's';
+      vp.classList.add('mq');
+    } else {
+      vp.classList.remove('mq'); vp.style.removeProperty('--mq'); sp.style.animationDuration = '';
+    }
   });
 }
 function _leadCellKey(e, el) {
@@ -2311,8 +2357,7 @@ async function saveLeadField(el) {
       r = await fetch('/api/admin/lead-update', { method: 'POST',
         headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
         body: JSON.stringify(body) });
-      if (field === 'email') x.email = val;
-      if (field === 'name') x.name = val;
+      if (field) x[field] = val;   // v13.93: keep the local row fresh for any column
     }
     if (!r.ok) throw new Error('save ' + r.status);
     el.dataset.orig = val;
