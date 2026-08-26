@@ -73,6 +73,41 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.91 (Claude): favorites two-pill submit, admin lead-station + swipe, merges
+
+`frontend/index.html`:
+- **Projects pill** now uses the EXACT type of the "Fromsa" name — Cormorant,
+  19px, weight 300, italic, not caps — so it never reads larger than the name.
+  (Reverses the v13.90 caps/bold that looked oversized.) Mobile matches at 17px.
+- **Favorites: two pills side by side**, both always visible — **Community Wall**
+  and **Mana Siyo** — replacing the v13.90 Submit-hover menu (the menu vanished
+  before it could be clicked). `.submit-wrap` is a centred, wrapping row.
+- **Design notes are OUT of the favorites screen** — hidden in
+  `[data-mode="submit"]`; they live only on the inspo/modify screen (where the
+  exclude-x pills still work). The v13.90 pills→prose/colour-tint code was
+  reverted since notes no longer render in favorites.
+- Mana Siyo still opens the quote-by-email confirm → atelier submit.
+
+`backend/status.html` (Admin):
+- **Lead Station marquee.** Latest Notes now scroll (ping-pong) inside their
+  column when longer than the space, pausing on hover and while editing
+  (`.lead-note-vp`, `_leadMarquees()`, `@keyframes leadmq`). The **Email** cell
+  now shares the notes' Cormorant face/size (`.lead-email-edit`), keeping its own
+  colour. The call CTA is a **real smartphone glyph** (`PHONE_SVG`), not the ☎
+  handset.
+- **Sources of traffic + The bottom line merged into one fold** (`#bottom-fold`):
+  funnel + tiles up top, a `.bl-sub` divider, then the sources table. The old
+  `#sources-fold` is gone; the panel-spotlight map points `sources → bottom-fold`.
+- **Drawer swipe finally answers the trackpad.** `_wireDrawerSwipe` already had
+  touch + mouse, but a Mac two-finger swipe fires `wheel` (deltaX), which nothing
+  listened for — that's why it never worked. Added a horizontal-wheel accumulator
+  that pulls the drawer in on a right-to-left swipe and pushes it back on
+  left-to-right, ignoring vertical scroll and swipes over scrollable tables.
+- NOTE: users visibility — signed-in Gmail accounts already surface in Admin via
+  `/api/admin/users` (the Users hover / `metrics/users/<hash>.json` markers).
+  Cloud Run console/IAM access is Fromsa's own GCP grant, not something the app
+  can hand out.
+
 ## v13.90 (Claude): favorites Submit split, design-notes as prose, drawer polish
 
 `frontend/index.html` only (other three surfaces: version bump for lockstep):

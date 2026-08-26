@@ -1165,3 +1165,24 @@ v13.82 — "Make the voice agent (MAYA) the real intelligence layer"
     name no longer truncates beside the Projects pill.
 [ ] NEXT (Fromsa building): the approximate-quote logic behind the Mana Siyo
     submission, so the email quote can be pre-estimated in-app.
+
+── v13.91 (Claude) ──────────────────────────────────────────────────────────
+[x] Projects pill: use the literal same font as the name ("Fromsa") — Cormorant,
+    same size, italic, not caps — so it isn't oversized.
+[x] Favorites: Community Wall + Mana Siyo as two pills SIDE BY SIDE, always
+    visible (the hover menu vanished before you could click it). Mana Siyo still
+    pops the quote-by-email confirm.
+[x] Favorites: design notes removed from the favorite screen — they live only on
+    the inspo screen now.
+[x] Admin Lead Station: Latest Notes scroll as a marquee when long (pause on
+    hover / while editing); Email now shares the notes' font (colours kept);
+    call icon is a real smartphone, not a telephone handset.
+[x] Admin: Sources of traffic + The bottom line merged into one fold.
+[x] Admin: drawer now answers a Mac trackpad two-finger swipe (the missing piece
+    was wheel/deltaX; touch + mouse were already wired). Right-to-left pulls it
+    in, left-to-right pushes it back.
+[i] "See actual users": signed-in Gmail accounts already show in Admin under
+    Users (/api/admin/users). Cloud Run / GCP console access is a Google Cloud
+    IAM grant Fromsa controls; the app can't hand that out.
+[ ] OPEN: if the trackpad swipe opens the wrong way on Fromsa's machine, flip the
+    two wAccum sign checks in _wireDrawerSwipe (one-line change).

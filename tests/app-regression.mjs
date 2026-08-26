@@ -458,7 +458,7 @@ ok('an image costs more of the budget than a chat call',
 ok('the map light reads Submissions', s.lights.includes('Submissions') && !s.lights.includes('Drive'));
 
 ok('Admin folds: users, the migrated marketing modules, then changes/prompting/architecture',
-  s.order === 'users-fold,ads-fold,leads-fold,sources-fold,bottom-fold,changes-fold,pe-fold,arch-fold');
+  s.order === 'users-fold,ads-fold,leads-fold,bottom-fold,changes-fold,pe-fold,arch-fold');
 ok('the marketing modules are migrated into Admin under Users and traffic',
   MAP_SOURCE.includes('id="adm-mkt"') &&
   MAP_SOURCE.includes('id="campaigns-table"') &&
@@ -1739,24 +1739,24 @@ ok('v13.89: /api/usage reports the signed-in user\'s own trial meter',
 ok('v13.90: favorites Submit is the only action — modify chrome is hidden in submit mode',
   INDEX_SOURCE.includes('#garment-modal[data-mode="submit"] #viewer-mid-row') &&
   INDEX_SOURCE.includes('#garment-modal[data-mode="submit"] #viewer-row-modify-1'));
-ok('v13.90: Submit reveals Community Wall and Mana Siyo, each with its own handler',
+ok('v13.91: favorites shows Community Wall and Mana Siyo side by side, each with its own handler',
   INDEX_SOURCE.includes('id="submit-wrap"') &&
+  INDEX_SOURCE.includes('id="submit-community"') &&
+  INDEX_SOURCE.includes('id="submit-manasiyo"') &&
   INDEX_SOURCE.includes('onclick="submitToCommunity()"') &&
   INDEX_SOURCE.includes('onclick="submitToManasiyo()"') &&
   INDEX_SOURCE.includes('function submitToCommunity(') &&
-  INDEX_SOURCE.includes('function submitToManasiyo('));
+  INDEX_SOURCE.includes('function submitToManasiyo(') &&
+  /\.submit-wrap \{[^}]*flex-direction: row/.test(INDEX_SOURCE));
 ok('v13.90: the Mana Siyo path is a quote-by-email confirm that runs the atelier submit',
   INDEX_SOURCE.includes('function mayaShowManasiyoPopup(') &&
   INDEX_SOURCE.includes('email you back a custom quote') &&
   INDEX_SOURCE.includes('#maya-manasiyo-popup'));
-ok('v13.90: design-note values read as plain words (not pills) with colour tints in submit mode',
-  INDEX_SOURCE.includes('function _colorSwatch(') &&
-  INDEX_SOURCE.includes("dataset.mode === 'submit'") &&
-  INDEX_SOURCE.includes('class="vn-words"') &&
-  INDEX_SOURCE.includes('#viewer-notes .vn-word'));
-ok('v13.90: Projects rides beside the name in Cormorant at name size, all caps; labels uppercased',
+ok('v13.91: the design notes are hidden on the favorites screen (inspo screen only)',
+  INDEX_SOURCE.includes('#garment-modal[data-mode="submit"] #viewer-notes'));
+ok('v13.91: Projects is literally the name font — Cormorant, 19px, italic, not caps',
   /\.pg-project-beside \{[^}]*font-family: 'Cormorant Garamond'[^}]*font-size: 19px/.test(INDEX_SOURCE) &&
-  /\.pg-project-beside \{[^}]*text-transform: uppercase/.test(INDEX_SOURCE) &&
+  /\.pg-project-beside \{[^}]*font-style: italic[^}]*text-transform: none/.test(INDEX_SOURCE) &&
   /\.pg-tabtitle \{[^}]*text-transform: uppercase/.test(INDEX_SOURCE));
 ok('v13.90: Stats and Measurements default open in the drawer',
   INDEX_SOURCE.includes('id="pg-stats" open') &&
@@ -1767,6 +1767,26 @@ ok('v13.90: Upload is brighter at rest, brighter still on hover, nudged lower',
 ok('v13.90: the drawer type scales down for phones (Apple-style desktop→mobile ratio)',
   INDEX_SOURCE.includes('#notes-drawer .pg-tabtitle { font-size: 17px; }') &&
   INDEX_SOURCE.includes('#notes-drawer .pg-gauge-value { font-size: 22px; }'));
+
+// ── v13.91 (Admin) ──
+ok('v13.91: Lead Station notes ride a marquee, email matches the notes font',
+  MAP_SOURCE.includes('class="lead-note-vp"') &&
+  MAP_SOURCE.includes('function _leadMarquees(') &&
+  MAP_SOURCE.includes('@keyframes leadmq') &&
+  MAP_SOURCE.includes('.lead-edit.lead-email-edit{font-family:\'Cormorant Garamond\',serif'));
+ok('v13.91: the call CTA is a real smartphone glyph, not a telephone handset',
+  MAP_SOURCE.includes('const PHONE_SVG =') &&
+  MAP_SOURCE.includes('PHONE_SVG + ') &&
+  !MAP_SOURCE.includes('\'call\')" title="Call \' + esc(x.phone) + \'">&#9742;'));
+ok('v13.91: Sources of traffic and the Bottom Line share one shell',
+  MAP_SOURCE.includes('id="bottom-fold"') &&
+  !MAP_SOURCE.includes('id="sources-fold"') &&
+  MAP_SOURCE.includes('class="bl-sub">Sources of traffic') &&
+  MAP_SOURCE.includes('id="sources-table"'));
+ok('v13.91: the Admin drawer answers a trackpad two-finger swipe (wheel deltaX)',
+  MAP_SOURCE.includes("addEventListener('wheel'") &&
+  MAP_SOURCE.includes('wAccum') &&
+  MAP_SOURCE.includes('toggleDrawer(true)'));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

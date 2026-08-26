@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.90">
+<meta name="maya-version" content="13.91">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -484,6 +484,21 @@ try {
   #adm-mkt #leads-table .lead-edit.lead-name-edit{font-weight:500}
   #adm-mkt #leads-table .lead-edit.lead-note-edit{font-family:'Cormorant Garamond',serif;color:var(--dim)}
   #adm-mkt #leads-table .lead-edit.lead-note-edit:empty::before{content:'add a note';color:var(--faint);font-style:italic}
+  /* v13.91: the Email reads in the same face and size as the Latest Notes,
+     keeping its own colour. */
+  #adm-mkt #leads-table .lead-edit.lead-email-edit{font-family:'Cormorant Garamond',serif;font-size:14px}
+  /* v13.91: Latest Notes marquee — the note scrolls inside its column when it
+     is longer than the space, ping-ponging so nothing is ever cut off. It
+     pauses on hover, and while you edit it scrolls normally instead. */
+  #adm-mkt #leads-table td.lead-note{max-width:300px}
+  #adm-mkt #leads-table .lead-note-vp{overflow:hidden;max-width:300px}
+  #adm-mkt #leads-table .lead-note-vp:focus-within{overflow:auto}
+  #adm-mkt #leads-table .lead-note-vp .lead-note-edit{display:inline-block;white-space:nowrap;margin:0}
+  #adm-mkt #leads-table .lead-note-vp.mq .lead-note-edit{animation:leadmq 9s ease-in-out infinite alternate}
+  #adm-mkt #leads-table .lead-note-vp:hover .lead-note-edit,
+  #adm-mkt #leads-table .lead-note-vp:focus-within .lead-note-edit{animation-play-state:paused}
+  @keyframes leadmq{from{transform:translateX(0)}to{transform:translateX(calc(-1 * var(--mq,0px)))}}
+  @media (prefers-reduced-motion: reduce){ #adm-mkt .lead-note-vp.mq .lead-note-edit{animation:none} }
   #adm-mkt #leads-table .lead-edit.lead-saved{background:rgba(120,220,150,0.16);box-shadow:0 0 0 1px rgba(120,220,150,0.5)}
   #adm-mkt #leads-table .lead-edit.lead-save-err{background:rgba(248,113,113,0.16);box-shadow:0 0 0 1px rgba(248,113,113,0.55)}
   #adm-mkt #leads-table .lead-del{color:var(--faint)}
@@ -500,6 +515,9 @@ try {
   #adm-mkt .bl-arrow{font-family:'Jost',sans-serif;font-size:10px;color:var(--faint);text-align:center}
   #adm-mkt .bl-arrow b{display:block;color:#a9c9ff;font-weight:400;font-size:11px}
   #adm-mkt .bl-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+  /* v13.91: the traffic-sources sub-heading inside the merged bottom-line shell. */
+  #adm-mkt .bl-sub{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;
+    color:var(--dim);margin:18px 0 6px;padding-top:14px;border-top:0.5px solid rgba(255,255,255,0.10)}
   #adm-mkt .bl-tile{border:0.5px solid rgba(255,255,255,0.12);border-radius:14px;padding:10px 14px;text-align:center}
   #adm-mkt .bl-tile .v{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--ink)}
   #adm-mkt .bl-tile .v.good{color:var(--green)} #adm-mkt .bl-tile .v.bad{color:var(--amber)}
@@ -721,19 +739,19 @@ try {
     <div id="leads-note" class="note" style="display:none"></div>
   </details>
 
-  <details class="fold" id="sources-fold" open>
-    <summary><h2 class="grp">Sources of traffic, MAYA</h2></summary>
-    <div class="panel"><table id="sources-table"><tbody></tbody></table></div>
-    <div class="note" style="margin-top:8px">How people reached MAYA itself, from its own Analytics.
-    checkout.stripe.com means someone came back from a Stripe page; it is an attribution artifact, not
-    a count of tips. Wix does not share a per source breakdown for manasiyo.com through its API yet.</div>
-  </details>
-
+  <!-- v13.91: Sources of traffic and The bottom line share one shell now, per
+       Fromsa — one fold, the funnel and tiles up top, the traffic sources under
+       a divider below. -->
   <details class="fold" id="bottom-fold" open>
     <summary><h2 class="grp">The bottom line</h2></summary>
     <div class="panel">
       <div id="bl-funnel" class="bl-funnel"></div>
       <div id="bl-tiles" class="bl-tiles"></div>
+      <div class="bl-sub">Sources of traffic, MAYA</div>
+      <table id="sources-table"><tbody></tbody></table>
+      <div class="note" style="margin-top:8px">How people reached MAYA itself, from its own Analytics.
+      checkout.stripe.com means someone came back from a Stripe page; it is an attribution artifact, not
+      a count of tips. Wix does not share a per source breakdown for manasiyo.com through its API yet.</div>
     </div>
     <div id="bl-note" class="note" style="display:none;margin-top:8px"></div>
   </details>
@@ -980,6 +998,32 @@ function toggleDrawer(force) {
   }, { passive: true });
   document.addEventListener('mouseup', (e) => {
     if (e.button === 0) finish(e.clientX, e.clientY);
+  }, { passive: true });
+  // v13.91: the piece that was missing — a Mac trackpad two-finger horizontal
+  // swipe fires `wheel` events (deltaX), not touch or mouse, so the drawer never
+  // answered the gesture Fromsa was actually making. Accumulate horizontal wheel
+  // delta and, on a decisive right-to-left swipe, pull the drawer in; left-to-
+  // right pushes it back. Vertical scrolls and swipes over a scrollable table
+  // are left alone.
+  let wAccum = 0, wTimer = null;
+  document.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;       // vertical intent
+    let n = e.target;
+    while (n && n !== document.body && n.nodeType === 1) {
+      if (n.scrollWidth - n.clientWidth > 4) {
+        const ov = getComputedStyle(n).overflowX;
+        if (ov === 'auto' || ov === 'scroll') return;            // let the table scroll
+      }
+      n = n.parentElement;
+    }
+    wAccum += e.deltaX;
+    clearTimeout(wTimer);
+    wTimer = setTimeout(() => { wAccum = 0; }, 200);
+    const drawer = document.getElementById('drawer');
+    if (!drawer) return;
+    const open = drawer.classList.contains('open');
+    if (!open && wAccum > 120) { toggleDrawer(true); wAccum = 0; }
+    else if (open && wAccum < -120) { toggleDrawer(false); wAccum = 0; }
   }, { passive: true });
 })();
 function setDot(id,s){document.getElementById(id).className='sdot '+s}
@@ -1523,7 +1567,7 @@ window.mayaCommandState=mayaCommandState;
 function _mayaEscText(value){ return String(value==null?'':value).replace(/\s+/g,' ').trim(); }
 function _mayaPanelTarget(panel){
   return ({submissions:'subs-strip',traffic:'users-fold',ads:'ads-fold',leads:'leads-fold',
-    sources:'sources-fold',bottom:'bottom-fold',changes:'changes-fold'})[panel]||'';
+    sources:'bottom-fold',bottom:'bottom-fold',changes:'changes-fold'})[panel]||'';
 }
 function _mayaPanelData(panel){
   const d=window.MAYA_ADMIN_DATA||{}, t=d.traffic||{}, m=d.marketing||{}, c=d.command||{};
@@ -2222,15 +2266,30 @@ function paintLeads(l) {
         (x.source === 'wix' ? '<span class="lead-src wix">WIX</span>'
           : (x.source && x.source !== 'wix' ? '<span class="lead-src">added</span>' : '')) +
         '<div class="lead-when">' + esc(when(x.lastTouch || x.ts)) + '</div></td>' +
-      '<td>' + cell(i, x, 'email', x.email || x.phone || '') + '</td>' +
-      '<td class="lead-note">' + cell(i, x, 'note', x.note || '', 'lead-note-edit') + '</td>' +
+      '<td>' + cell(i, x, 'email', x.email || x.phone || '', 'lead-email-edit') + '</td>' +
+      // v13.91: Latest Notes ride a marquee — the note scrolls when it overruns
+      // its column, pausing on hover and while you edit it in place.
+      '<td class="lead-note"><div class="lead-note-vp">' + cell(i, x, 'note', x.note || '', 'lead-note-edit') + '</div></td>' +
       '<td style="white-space:nowrap"><div class="lead-rec">' + rec(x) + '</div>' +
       '<div class="lead-ctas">' +
         (x.email ? '<button class="lead-cta" id="lead-mail-' + i + '" onclick="draftLead(' + i + ')" title="Draft the next email (opens Gmail, nothing is sent)">&#9993;</button>' : '') +
-        (x.phone ? '<a class="lead-cta" href="tel:' + esc(x.phone) + '" onclick="leadContact(' + i + ',\'call\')" title="Call ' + esc(x.phone) + '">&#9742;</a>' : '') +
+        (x.phone ? '<a class="lead-cta" href="tel:' + esc(x.phone) + '" onclick="leadContact(' + i + ',\'call\')" title="Call ' + esc(x.phone) + '">' + PHONE_SVG + '</a>' : '') +
         '<button class="lead-cta lead-del" onclick="deleteLeadRow(' + i + ')" title="Remove this lead from the station">&#215;</button>' +
       '</div></td></tr>'
     ).join('');
+  try { _leadMarquees(); } catch (_) {}
+}
+// v13.91: a real smartphone glyph for the call button, not a 1970s handset.
+const PHONE_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><line x1="10.6" y1="18.4" x2="13.4" y2="18.4"/></svg>';
+// Turn on the note marquee only where the text actually overruns the column.
+function _leadMarquees() {
+  document.querySelectorAll('#leads-table .lead-note-vp').forEach(vp => {
+    const sp = vp.querySelector('.lead-note-edit');
+    if (!sp) return;
+    const over = sp.scrollWidth - vp.clientWidth;
+    if (over > 8) { vp.style.setProperty('--mq', (over + 18) + 'px'); vp.classList.add('mq'); }
+    else { vp.classList.remove('mq'); vp.style.removeProperty('--mq'); }
+  });
 }
 function _leadCellKey(e, el) {
   if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
