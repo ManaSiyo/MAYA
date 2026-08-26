@@ -73,6 +73,37 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.92 (Claude): favorites polish, popup copy, card centering, avatar-dropdown target
+
+`frontend/index.html` (the three other surfaces: version bump for lockstep):
+- **Favorites pills** relabelled **"Post to Community Wall"** and **"Get it made"**,
+  restyled to read like the X/heart glass icons — subtle 0.22 border, no
+  attention-pulse (the `::after` halo + `maya-submit-pulse` keyframes are gone) —
+  and smaller (9.5px, tighter padding, min-width 0).
+- **Mana Siyo popup**: the em-dash is gone (house rule), body copy is a touch
+  larger (13.5px) and the **Request my quote** button is a small centred pill
+  (`inline-block; width:auto`) instead of a full-width bar.
+- **Favorite card stays centered when stepping.** The caption slot
+  (`#viewer-piece-summary` in submit mode) now reserves a fixed two-line height
+  (`2.9em`), so a short vs long caption no longer shifts the image up and down as
+  you go left/right. The three-view cards are one aspect, so the image now holds
+  its position.
+- **Favorites nav arrows** (`fav-nav-prev/next`) moved nearer the corners (18px →
+  10px).
+- **Avatar switcher hit target.** The caret was a ~2px sliver beside the big
+  Projects pill; now the **name itself opens the switcher** (`#drawer-avatar-name`
+  onclick) and the caret is a bigger button (13px, 4×7 padding). If the dropdown
+  still misbehaves, we need the exact symptom (nothing happens vs opens empty).
+- Dissect is untouched and still fires on favorite; design notes (with the
+  dissection) remain on the inspo screen only.
+
+OPEN / NEXT: **playground** — Fromsa wants it brought up to the current app
+("make the playground the current version of what Maya is"), then a
+**pinch-to-zoom map feature added to the playground only**: the whole board
+zooms in/out like a map, floor at ~10% card size, tapping the Maya logo resets to
+100%. That is the next chunk (a careful playground refresh + a new pan/zoom
+engine); NOT in v13.92.
+
 ## v13.91 (Claude): favorites two-pill submit, admin lead-station + swipe, merges
 
 `frontend/index.html`:

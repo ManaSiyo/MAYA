@@ -1186,3 +1186,20 @@ v13.82 — "Make the voice agent (MAYA) the real intelligence layer"
     IAM grant Fromsa controls; the app can't hand that out.
 [ ] OPEN: if the trackpad swipe opens the wrong way on Fromsa's machine, flip the
     two wAccum sign checks in _wireDrawerSwipe (one-line change).
+
+── v13.92 (Claude) ──────────────────────────────────────────────────────────
+[x] Favorites pills relabelled "Post to Community Wall" / "Get it made", smaller,
+    styled like the X/heart glass icons (calm, no pulse).
+[x] Mana Siyo popup: no dashes, slightly larger body copy, Request-my-quote is a
+    smaller centred pill.
+[x] Favorite card held centered when stepping left/right — the caption slot is a
+    fixed two lines so long/short captions don't jump the image.
+[x] Favorites nav arrows nudged nearer the corners.
+[x] Avatar switcher: the name now opens it too (bigger target than the caret).
+    If it still misbehaves, need the exact symptom.
+[x] Confirmed: submit pills + Mana Siyo popup are favorites-only; the inspo card
+    keeps Tap to Listen / Switch Fabric / Add Reference; design notes + dissect
+    stay on the inspo screen.
+[ ] NEXT: bring the playground up to the current app, then add a pinch-to-zoom
+    "map" of the whole board to the PLAYGROUND ONLY (floor ~10% card size, Maya
+    logo resets to 100%). Large; separate chunk.

@@ -1788,6 +1788,24 @@ ok('v13.91: the Admin drawer answers a trackpad two-finger swipe (wheel deltaX)'
   MAP_SOURCE.includes('wAccum') &&
   MAP_SOURCE.includes('toggleDrawer(true)'));
 
+// ── v13.92 ──
+ok('v13.92: the favorites pills read "Post to Community Wall" / "Get it made", calm glass, no pulse',
+  INDEX_SOURCE.includes('>Post to Community Wall</button>') &&
+  INDEX_SOURCE.includes('>Get it made</button>') &&
+  !INDEX_SOURCE.includes('animation: maya-submit-pulse') &&
+  /\.viewer-submit-btn \{[^}]*font-size: 9\.5px/.test(INDEX_SOURCE));
+ok('v13.92: the Mana Siyo popup has no dashes, larger body copy, a smaller quote pill',
+  INDEX_SOURCE.includes('custom quote, what it would cost') &&
+  !/mmp-body">[^<]*—/.test(INDEX_SOURCE) &&
+  /\.mmp-body \{[^}]*font-size: 13\.5px/.test(INDEX_SOURCE) &&
+  /\.mmp-go \{[^}]*display: inline-block; width: auto/.test(INDEX_SOURCE));
+ok('v13.92: the favorite card is held centered — the caption slot is a fixed two lines',
+  /\[data-mode="submit"\] #viewer-piece-summary \{[^}]*height: 2\.9em/.test(INDEX_SOURCE));
+ok('v13.92: the favorites nav arrows sit nearer the corners (10px)',
+  INDEX_SOURCE.includes("b.style[d < 0 ? 'left' : 'right'] = '10px'"));
+ok('v13.92: the avatar name opens the switcher too (bigger hit target than the caret)',
+  INDEX_SOURCE.includes('id="drawer-avatar-name" onclick="toggleAvatarSwitcher()"'));
+
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);
