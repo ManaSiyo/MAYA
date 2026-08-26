@@ -708,10 +708,8 @@ ok('Pinterest is a drawer in the same language as Fabrics',
 ok('all saves means every pin on the account, not just one board',
   SERVER_SOURCE.includes("const path = board ? ('/boards/' + board + '/pins?'") &&
   SERVER_SOURCE.includes("('/pins?' + qs.toString())"));
-ok('v13.89: upload reverted to a plain text link, brighter, hover holds, nudged lower',
-  INDEX_SOURCE.includes('.upload-link { letter-spacing: 0.32em; padding: 2px 20px; font-size: 10px;') &&
-  INDEX_SOURCE.includes('color: rgba(216,226,246,0.60); margin-top: 7px;') &&
-  INDEX_SOURCE.includes('.upload-link:hover { color: rgba(216,226,246,0.52); }'));
+ok('v13.89/90: upload is a plain text link, brighter, nudged lower (values tuned in v13.90)',
+  INDEX_SOURCE.includes('.upload-link { letter-spacing: 0.32em; padding: 2px 20px; font-size: 10px;'));
 ok('v13.86: deleting a project removes its row instantly (no accidental deletes)',
   INDEX_SOURCE.includes(".session-item[data-id=\"' + sel + '\"]") &&
   INDEX_SOURCE.includes('if (row) row.remove();'));
@@ -1736,6 +1734,39 @@ ok('v13.89: the server meters each user against a $2 free trial and blocks image
 ok('v13.89: /api/usage reports the signed-in user\'s own trial meter',
   SERVER_SOURCE.includes("app.get('/api/usage'") &&
   SERVER_SOURCE.includes('capUsd: USER_TRIAL_USD'));
+
+// ── v13.90 ──
+ok('v13.90: favorites Submit is the only action — modify chrome is hidden in submit mode',
+  INDEX_SOURCE.includes('#garment-modal[data-mode="submit"] #viewer-mid-row') &&
+  INDEX_SOURCE.includes('#garment-modal[data-mode="submit"] #viewer-row-modify-1'));
+ok('v13.90: Submit reveals Community Wall and Mana Siyo, each with its own handler',
+  INDEX_SOURCE.includes('id="submit-wrap"') &&
+  INDEX_SOURCE.includes('onclick="submitToCommunity()"') &&
+  INDEX_SOURCE.includes('onclick="submitToManasiyo()"') &&
+  INDEX_SOURCE.includes('function submitToCommunity(') &&
+  INDEX_SOURCE.includes('function submitToManasiyo('));
+ok('v13.90: the Mana Siyo path is a quote-by-email confirm that runs the atelier submit',
+  INDEX_SOURCE.includes('function mayaShowManasiyoPopup(') &&
+  INDEX_SOURCE.includes('email you back a custom quote') &&
+  INDEX_SOURCE.includes('#maya-manasiyo-popup'));
+ok('v13.90: design-note values read as plain words (not pills) with colour tints in submit mode',
+  INDEX_SOURCE.includes('function _colorSwatch(') &&
+  INDEX_SOURCE.includes("dataset.mode === 'submit'") &&
+  INDEX_SOURCE.includes('class="vn-words"') &&
+  INDEX_SOURCE.includes('#viewer-notes .vn-word'));
+ok('v13.90: Projects rides beside the name in Cormorant at name size, all caps; labels uppercased',
+  /\.pg-project-beside \{[^}]*font-family: 'Cormorant Garamond'[^}]*font-size: 19px/.test(INDEX_SOURCE) &&
+  /\.pg-project-beside \{[^}]*text-transform: uppercase/.test(INDEX_SOURCE) &&
+  /\.pg-tabtitle \{[^}]*text-transform: uppercase/.test(INDEX_SOURCE));
+ok('v13.90: Stats and Measurements default open in the drawer',
+  INDEX_SOURCE.includes('id="pg-stats" open') &&
+  INDEX_SOURCE.includes('id="pg-meas" open'));
+ok('v13.90: Upload is brighter at rest, brighter still on hover, nudged lower',
+  INDEX_SOURCE.includes('color: rgba(220,230,248,0.68); margin-top: 9px;') &&
+  INDEX_SOURCE.includes('.upload-link:hover { color: rgba(236,242,255,0.94); }'));
+ok('v13.90: the drawer type scales down for phones (Apple-style desktop→mobile ratio)',
+  INDEX_SOURCE.includes('#notes-drawer .pg-tabtitle { font-size: 17px; }') &&
+  INDEX_SOURCE.includes('#notes-drawer .pg-gauge-value { font-size: 22px; }'));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

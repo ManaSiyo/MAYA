@@ -1145,3 +1145,23 @@ v13.82 — "Make the voice agent (MAYA) the real intelligence layer"
 [ ] NEXT (needs Fromsa): wire the real $5 top-up (Stripe) with ~50% margin so
     a paid balance adds to the trial. The Upgrade button is a placeholder
     until a payment key + price sign-off.
+
+── v13.90 (Claude) ──────────────────────────────────────────────────────────
+[x] Favorites view: only a Submit button (no Tap to Listen / Switch Fabric /
+    Add Reference — those stay on the inspo card). Submit reveals two options on
+    hover/tap: Community Wall (publish to the wall) and Mana Siyo. Mana Siyo pops
+    a confirm: "we'll email you back a custom quote — cost + timeline," then runs
+    the atelier submission. Amounts not shown (most run $1,500+). Submit pill
+    tightened.
+[x] Design notes (favorites): values are plain words, not pills. Colour values
+    show in their actual colour (Red in red, Green in green). Silhouette / Color
+    / Detail / Material headings kept. Modify (inspo) keeps the exclude-x pills.
+[x] Drawer: Projects pill now matches "Fromsa" — Cormorant, name-size, centred,
+    ALL CAPS, beside the name. USERS / FABRICS / PINTEREST uppercased. Stats and
+    Measurements both always open.
+[x] Upload: brighter at rest, clearly brighter (not faded) on hover, a couple
+    pixels lower.
+[x] Mobile pass: drawer type scales down at phone size (Apple-style ratio); the
+    name no longer truncates beside the Projects pill.
+[ ] NEXT (Fromsa building): the approximate-quote logic behind the Mana Siyo
+    submission, so the email quote can be pre-estimated in-app.

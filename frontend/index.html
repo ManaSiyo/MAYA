@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.89">
+<meta name="maya-version" content="13.90">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -742,9 +742,11 @@
      link, per Fromsa. Kept it a touch brighter than playground at rest; hover
      holds the same colour (a hair faded, not lit) so it reads as constant; and
      nudged a few pixels lower. */
+  /* v13.90: a touch brighter at rest, a couple pixels lower still, and hover now
+     lifts it clearly brighter (easily visible) rather than fading. */
   .upload-link { letter-spacing: 0.32em; padding: 2px 20px; font-size: 10px;
-                 color: rgba(216,226,246,0.60); margin-top: 7px; }
-  .upload-link:hover { color: rgba(216,226,246,0.52); }
+                 color: rgba(220,230,248,0.68); margin-top: 9px; }
+  .upload-link:hover { color: rgba(236,242,255,0.94); }
   /* v13.4: the upload chooser. Snappy on purpose: 0.12s, no drift. */
   /* v13.31: Pinterest picker. Board tiles, then picture tiles with a tick. */
   .pin-grid {
@@ -2009,6 +2011,7 @@
      Projects, Pinterest reads Pinterest, Fabrics reads Fabrics. */
   #notes-drawer .pg-tabtitle { flex: 1; min-width: 0; text-align: left; padding-left: 4px;
     font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 400;
+    text-transform: uppercase; letter-spacing: 0.04em;
     color: rgba(245,250,255,0.92); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     cursor: default; }
   #notes-drawer .pg-tabtitle.clickable { cursor: pointer; }
@@ -2080,13 +2083,16 @@
   #notes-drawer .pg-fold:not([open]) summary::after { transform: rotate(-90deg); }
   /* v13.89: Projects, beside the name, right-aligned over the Remove pill. Its
      own pill + caret; opens the same project list the top title used to. */
+  /* v13.90: Projects reads like a second name — same Cormorant face and size as
+     "Fromsa", all caps, centred in its pill, right-aligned over the Remove pill. */
   #notes-drawer .pg-project-beside { margin-left: auto; flex: none;
     background: none; border: 0.5px solid rgba(255,255,255,0.22); border-radius: 100px;
-    cursor: pointer; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 9px;
-    letter-spacing: 0.14em; text-transform: uppercase; color: rgba(238,242,255,0.82);
-    padding: 4px 12px; white-space: nowrap; transition: border-color 0.2s, color 0.2s; }
+    cursor: pointer; font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: 19px;
+    letter-spacing: 0.04em; text-transform: uppercase; color: rgba(238,242,255,0.9);
+    padding: 1px 16px; text-align: center; white-space: nowrap; line-height: 1.4;
+    transition: border-color 0.2s, color 0.2s; }
   #notes-drawer .pg-project-beside:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
-  #notes-drawer .pg-project-beside-caret { font-size: 10px; color: rgba(238,242,255,0.5); margin-left: 4px; }
+  #notes-drawer .pg-project-beside-caret { font-size: 12px; color: rgba(238,242,255,0.5); margin-left: 5px; }
   /* v13.89: the Stats fold — a car-dash for the free trial. */
   #notes-drawer .pg-stats-body { padding: 12px 0 6px; }
   #notes-drawer .pg-gauge-wrap { position: relative; width: 118px; height: 118px; margin: 0 auto 14px; }
@@ -2139,6 +2145,30 @@
     font-family: 'Jost', sans-serif; font-weight: 300; font-size: 10px; letter-spacing: 0.14em;
     text-transform: uppercase; transition: color 0.2s; }
   #maya-credits-popup .mcp-later:hover { color: rgba(228,234,248,0.85); }
+  /* v13.90: the Mana Siyo made-to-order confirm. */
+  #maya-manasiyo-popup { position: fixed; inset: 0; z-index: 12000; display: none;
+    align-items: center; justify-content: center; padding: 24px;
+    background: rgba(6,8,14,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  #maya-manasiyo-popup.show { display: flex; }
+  #maya-manasiyo-popup .mmp-card { width: 100%; max-width: 340px; text-align: center;
+    padding: 28px 24px 22px; border-radius: 20px;
+    background: rgba(20,26,40,0.92); border: 0.5px solid rgba(255,255,255,0.16);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  #maya-manasiyo-popup .mmp-title { font-family: 'Cormorant Garamond', serif; font-size: 26px;
+    font-weight: 500; color: rgba(245,250,255,0.98); margin-bottom: 10px; }
+  #maya-manasiyo-popup .mmp-body { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 12px;
+    line-height: 1.55; color: rgba(228,234,248,0.72); margin-bottom: 20px; }
+  #maya-manasiyo-popup .mmp-go { display: block; width: 100%; margin: 0 0 10px; padding: 12px 18px;
+    border-radius: 100px; cursor: pointer; border: 0.5px solid rgba(169,201,255,0.5);
+    background: rgba(169,201,255,0.14); color: rgba(245,250,255,0.98);
+    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; transition: background 0.2s, border-color 0.2s; }
+  #maya-manasiyo-popup .mmp-go:hover { background: rgba(169,201,255,0.24); border-color: rgba(169,201,255,0.8); }
+  #maya-manasiyo-popup .mmp-later { display: block; width: 100%; background: none; border: none;
+    cursor: pointer; padding: 6px; color: rgba(228,234,248,0.5);
+    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; transition: color 0.2s; }
+  #maya-manasiyo-popup .mmp-later:hover { color: rgba(228,234,248,0.85); }
   #notes-drawer #pg-meas-host { padding-top: 8px; }
   #notes-drawer #pg-meas-host .avatar-face-row,
   #notes-drawer #pg-meas-host .avatar-name-input { display: none !important; }
@@ -3398,6 +3428,10 @@
   #garment-modal[data-mode="submit"] #viewer-fabrics,
   #garment-modal[data-mode="submit"] #viewer-refs,
   #garment-modal[data-mode="submit"] #modifications-bar,
+  /* v13.90: favorites is Submit-only — no modify chrome. Tap to Listen,
+     Switch Fabric, Add Reference and the Visualize/mid row are all inspo-only. */
+  #garment-modal[data-mode="submit"] #viewer-mid-row,
+  #garment-modal[data-mode="submit"] #viewer-row-modify-1,
   #garment-modal[data-mode="submit"] .viewer-default-btn {
     display: none !important;
   }
@@ -3415,9 +3449,9 @@
     background: transparent;
     border: 0.5px solid rgba(255,255,255,0.32);
     border-radius: 100px;
-    /* v11.23: narrower. */
-    padding: 6px 18px;
-    min-width: 120px;
+    /* v11.23: narrower. v13.90: tighter still, per Fromsa. */
+    padding: 5px 15px;
+    min-width: 104px;
     font-family: 'Jost', sans-serif;
     font-size: 11px; font-weight: 300;
     letter-spacing: 0.15em; text-transform: uppercase;
@@ -3454,6 +3488,24 @@
     border-color: rgba(255,255,255,0.55);
     transform: translateY(-1px);
   }
+  /* v13.90: the two-destination menu that rises above Submit on hover/tap. */
+  .submit-wrap { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
+  .submit-menu {
+    position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%) translateY(6px);
+    display: flex; flex-direction: column; gap: 6px; width: max-content;
+    opacity: 0; pointer-events: none; transition: opacity 0.18s ease, transform 0.18s ease; z-index: 6;
+  }
+  .submit-wrap:hover .submit-menu,
+  .submit-wrap.open .submit-menu { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+  .submit-menu-item {
+    background: rgba(18,24,38,0.72); border: 0.5px solid rgba(255,255,255,0.28); border-radius: 100px;
+    padding: 8px 18px; min-width: 128px; cursor: pointer;
+    font-family: 'Jost', sans-serif; font-size: 10px; font-weight: 300;
+    letter-spacing: 0.14em; text-transform: uppercase; color: rgba(245,250,255,0.94);
+    -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.34); transition: border-color 0.2s, background 0.2s;
+  }
+  .submit-menu-item:hover { border-color: rgba(255,255,255,0.6); background: rgba(28,36,54,0.82); }
 
   /* v11.4/v11.6: 2-line italic Cormorant piece-summary above Submit.
      Hidden by default; switched on in submit mode (the -webkit-box
@@ -3569,6 +3621,13 @@
     margin-bottom: 3px;
   }
   #viewer-notes .vn-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+  /* v13.90: read-only values as plain words (favorites), not pills. */
+  #viewer-notes .vn-words {
+    margin-top: 3px; font-family: 'Cormorant Garamond', serif; font-size: 15px;
+    line-height: 1.5; color: rgba(228,234,250,0.9); letter-spacing: 0.01em;
+  }
+  #viewer-notes .vn-word { font-style: italic; }
+  #viewer-notes .vn-sep { color: rgba(228,234,250,0.4); }
   #viewer-notes .vn-pill {
     display: inline-flex; align-items: center; gap: 6px;
     border: 0.5px solid rgba(255,255,255,0.24); border-radius: 999px;
@@ -4256,6 +4315,25 @@
     #secondary-row { margin-bottom: 4px; }
     /* lighter GPU load: soften the heaviest glass effects */
     .modal { backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+    /* v13.90: the drawer type steps down on a phone, the same ~0.88 desktop→
+       mobile ratio the rest of the app already uses, so the new Users header,
+       Projects pill and Stats read at phone scale instead of desktop scale. */
+    #notes-drawer .pg-tabtitle { font-size: 17px; }
+    #notes-drawer .pg-avatar-side .drawer-avatar-name,
+    #notes-drawer .drawer-avatar-name { font-size: 17px; }
+    #notes-drawer .pg-project-beside { font-size: 16px; padding: 1px 13px; }
+    #notes-drawer .pg-project-beside-caret { font-size: 11px; }
+    /* v13.90: on a narrow phone the name keeps its natural width instead of
+       being squeezed to "Fro…" — it never shrinks and its ellipsis is off, so a
+       tight row wraps the Projects pill to its own right-aligned line instead. */
+    #notes-drawer .pg-avatar-nameline { flex-wrap: wrap; row-gap: 6px; }
+    #notes-drawer .pg-avatar-side .pg-avatar-nameline .drawer-avatar-name {
+      flex: 0 0 auto; overflow: visible; text-overflow: clip; max-width: none; }
+    #notes-drawer .pg-avatar-nameline .pg-project-beside { flex: 0 1 auto; min-width: 0; overflow: hidden; }
+    #notes-drawer .pg-gauge-wrap, #notes-drawer .pg-gauge { width: 104px; height: 104px; }
+    #notes-drawer .pg-gauge-value { font-size: 22px; }
+    #notes-drawer .pg-stat-num { font-size: 18px; }
+    #notes-drawer .pg-fold summary { font-size: 9px; }
   }
   /* v13.33: on a phone the finger needs a bigger target than the eye needs a
      bigger label. Nothing here changes a type size, only the area you can hit,
@@ -4758,7 +4836,7 @@
         <!-- v13.89: a collapsible Stats fold rides on top of Measurements and
              fills the empty drawer space. Circular gauge = trial credits left of
              $2; four tiles under it. When Measurements opens it pushes down. -->
-        <details class="pg-fold pg-stats-fold" id="pg-stats">
+        <details class="pg-fold pg-stats-fold" id="pg-stats" open>
           <summary>Stats</summary>
           <div class="pg-stats-body" id="pg-stats-body">
             <div class="pg-gauge-wrap">
@@ -4780,7 +4858,7 @@
             <button class="pg-try-popup" onclick="mayaTryCreditsPopup()" title="Preview the out-of-credits popup">Try popup</button>
           </div>
         </details>
-        <details class="pg-fold" id="pg-meas">
+        <details class="pg-fold" id="pg-meas" open>
           <summary>Measurements</summary>
           <div id="pg-meas-host"></div>
         </details>
@@ -4969,7 +5047,15 @@
       <button class="modal-text-btn viewer-modify-btn" id="modify-add-ref"       onclick="modifyAddReference()">Add Reference</button>
     </div>
     <!-- v9.12: shown only when garment-modal[data-mode="submit"], favorites click path -->
-    <button class="modal-text-btn viewer-submit-btn" id="submit-btn" onclick="submitFavorite()">Submit</button>
+    <!-- v13.90: Submit reveals two destinations on hover/tap — the community wall,
+         or Mana Siyo (a made-to-order quote by email). -->
+    <div class="submit-wrap" id="submit-wrap">
+      <button class="modal-text-btn viewer-submit-btn" id="submit-btn" onclick="toggleSubmitMenu(event)">Submit</button>
+      <div class="submit-menu" id="submit-menu">
+        <button class="submit-menu-item" onclick="submitToCommunity()">Community Wall</button>
+        <button class="submit-menu-item" onclick="submitToManasiyo()">Mana Siyo</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -7411,6 +7497,64 @@ async function submitFavorite() {
   } else {
     await _doSubmitConfirmed();
   }
+}
+
+// v13.90: Submit is now a two-destination chooser. On desktop the menu rises on
+// hover; on touch the Submit button toggles it. The two paths:
+//   Community Wall → publish this vision to the shared wall.
+//   Mana Siyo      → a made-to-order request; we email back a custom quote.
+function toggleSubmitMenu(e) {
+  if (e) e.stopPropagation();
+  const wrap = document.getElementById('submit-wrap');
+  if (!wrap) return;
+  const willOpen = !wrap.classList.contains('open');
+  wrap.classList.toggle('open', willOpen);
+  if (willOpen) {
+    const off = (ev) => { if (!wrap.contains(ev.target)) { wrap.classList.remove('open'); document.removeEventListener('click', off, true); } };
+    setTimeout(() => document.addEventListener('click', off, true), 0);
+  }
+}
+function submitToCommunity() {
+  const wrap = document.getElementById('submit-wrap'); if (wrap) wrap.classList.remove('open');
+  const itemId = viewerItemId;
+  const item = itemId != null ? items.find(i => i.id === itemId) : null;
+  if (!item || !item.card || !item.card.image) { showToast('No vision to share'); return; }
+  item.card.favorited = true;
+  try { if (typeof communityBoard !== 'undefined' && communityBoard.publish) communityBoard.publish(item); } catch (_) {}
+  try { if (typeof _persistSession === 'function') _persistSession(); } catch (_) {}
+  try { closeGarmentModal(); } catch (_) {}
+  showToast('Shared to the community wall.');
+}
+function submitToManasiyo() {
+  const wrap = document.getElementById('submit-wrap'); if (wrap) wrap.classList.remove('open');
+  const itemId = viewerItemId;
+  const item = itemId != null ? items.find(i => i.id === itemId) : null;
+  if (!item || !item.card || !item.card.image) { showToast('No vision to submit'); return; }
+  mayaShowManasiyoPopup();
+}
+// The made-to-order confirm. On confirm, the existing atelier submission runs
+// (writes the client folder / streams to Mana Siyo's Drive via /api/submit).
+function mayaShowManasiyoPopup() {
+  let ov = document.getElementById('maya-manasiyo-popup');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'maya-manasiyo-popup';
+    ov.innerHTML =
+      '<div class="mmp-card" role="dialog" aria-modal="true">' +
+        '<div class="mmp-title">Submit to Mana Siyo?</div>' +
+        '<div class="mmp-body">If you\'d like this made, we\'ll take it from here and email you back a custom quote — what it would cost and how long it would take to make.</div>' +
+        '<button class="mmp-go" id="mmp-go">Request my quote</button>' +
+        '<button class="mmp-later" id="mmp-later">Not now</button>' +
+      '</div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('show'); });
+    ov.querySelector('#mmp-later').addEventListener('click', () => ov.classList.remove('show'));
+    ov.querySelector('#mmp-go').addEventListener('click', () => {
+      ov.classList.remove('show');
+      try { submitFavorite(); } catch (e) { try { showError(String(e && e.message || e)); } catch (_) {} }
+    });
+  }
+  ov.classList.add('show');
 }
 
 // v10.7: extracted from old submitFavorite, runs after the inspo picker
@@ -11602,6 +11746,27 @@ function viewerStep(delta) {
 // picture. They sit in the empty space beside it, and they change as you step
 // between versions.
 // ════════════════════════════════════════════════════════════
+// v13.90: map a colour word to a legible tint on the dark viewer. Returns '' for
+// anything we can't confidently colour, so the value just stays default text.
+const _COLOR_TINTS = {
+  red: '#f47174', crimson: '#f0576a', scarlet: '#f4695c', burgundy: '#c65a6b', maroon: '#c86b78',
+  pink: '#f6a5c0', rose: '#f0a6b8', magenta: '#ef6fb5', fuchsia: '#ef6fb5',
+  orange: '#f4a259', amber: '#f2b45a', coral: '#f58a76', peach: '#f4b79e', rust: '#d08a5e',
+  yellow: '#f2d06b', gold: '#e6c25a', mustard: '#d9b24a', cream: '#efe6cf', ivory: '#efe9d8', beige: '#e4d7bf', tan: '#d8bd93', camel: '#cca878', khaki: '#c9bd8a',
+  green: '#7fce9b', olive: '#b4bd6a', emerald: '#5fce9a', mint: '#a7e6c4', teal: '#5ec7c0', sage: '#a9c4a0', lime: '#b9e07a', forest: '#6db083',
+  blue: '#7fb0f4', navy: '#8aa4e0', cobalt: '#7c9cf2', sky: '#9fd0f4', denim: '#8fb0e2', turquoise: '#6fd3d0', aqua: '#7fdfe0',
+  purple: '#c4a5f4', violet: '#c0a6f6', lavender: '#cbb9f2', plum: '#c07fbf', indigo: '#9d95ef', lilac: '#d3bff0',
+  brown: '#c69a72', chocolate: '#b98a63', coffee: '#bf9c7d', taupe: '#c4b3a0',
+  black: '#c9ccd8', charcoal: '#aab0be', jet: '#c2c6d2', onyx: '#bcc1cf',
+  white: '#eef2fb', ivorywhite: '#efe9d8', silver: '#c7cfda', grey: '#b6bcc8', gray: '#b6bcc8', slate: '#a7b0c0',
+};
+function _colorSwatch(name) {
+  const raw = String(name || '').toLowerCase();
+  // Try the whole phrase, then each word (so "deep red" and "olive green" hit).
+  if (_COLOR_TINTS[raw.replace(/\s+/g, '')]) return _COLOR_TINTS[raw.replace(/\s+/g, '')];
+  for (const w of raw.split(/[^a-z]+/)) { if (w && _COLOR_TINTS[w]) return _COLOR_TINTS[w]; }
+  return '';
+}
 function renderViewerNotes(item) {
   const host = document.getElementById('viewer-notes');
   if (!host) return;
@@ -11644,18 +11809,33 @@ function renderViewerNotes(item) {
                   fabric: 'rgba(94,234,212,0.85)', era: 'rgba(251,191,36,0.85)',
                   designer: 'rgba(249,168,212,0.85)' };
     const dot = (t) => '<span class="vn-dot" style="background:' + (DOT[t] || 'rgba(238,242,255,0.5)') + '"></span>';
-    // v13.44: the attributes LIVE here now. Each value is a pill with its own
-    // x, crossed out the same way the old Attributes row worked: a crossed
-    // pill is excluded from the next Visualize.
+    // v13.90: in favorites (submit) mode the notes are read-only — no exclude-x,
+    // so the values read as plain words instead of pills, and colour values are
+    // tinted their actual colour rather than carrying a category dot.
+    const _m = document.getElementById('garment-modal');
+    const submitMode = !!(_m && _m.dataset.mode === 'submit');
+    const isColorTag = (t) => t === 'color' || t === 'colour';
     const body = [...byTag.entries()]
       .filter(([, list]) => list.length)
       .sort((a, b) => rank(a[0]) - rank(b[0]))
-      .map(([tag, list]) =>
-        '<div class="note-item"><div class="note-title">' + dot(tag) + escapeHtml(cap(tag)) + '</div>' +
-        '<div class="vn-pills">' + list.slice(0, 6).map(v =>
-          '<span class="vn-pill' + (viewerDeselected.has(v) ? ' deselected' : '') + '" data-ref="' + escapeHtml(v) + '">' +
-            escapeHtml(v) + '<button class="vn-pill-x" title="Exclude from the next Visualize">&times;</button></span>'
-        ).join('') + '</div></div>')
+      .map(([tag, list]) => {
+        const vals = list.slice(0, 6);
+        if (submitMode) {
+          const colorTag = isColorTag(tag);
+          const title = (colorTag ? '' : dot(tag)) + escapeHtml(cap(tag));
+          const words = vals.map(v => {
+            const tint = colorTag ? _colorSwatch(v) : '';
+            return '<span class="vn-word"' + (tint ? ' style="color:' + tint + '"' : '') + '>' + escapeHtml(v) + '</span>';
+          }).join('<span class="vn-sep">,</span> ');
+          return '<div class="note-item"><div class="note-title">' + title + '</div>' +
+                 '<div class="vn-words">' + words + '</div></div>';
+        }
+        return '<div class="note-item"><div class="note-title">' + dot(tag) + escapeHtml(cap(tag)) + '</div>' +
+          '<div class="vn-pills">' + vals.map(v =>
+            '<span class="vn-pill' + (viewerDeselected.has(v) ? ' deselected' : '') + '" data-ref="' + escapeHtml(v) + '">' +
+              escapeHtml(v) + '<button class="vn-pill-x" title="Exclude from the next Visualize">&times;</button></span>'
+          ).join('') + '</div></div>';
+      })
       .join('');
     if (body) groups.push({ t: 'Aesthetics and constraints', b: body });
   }

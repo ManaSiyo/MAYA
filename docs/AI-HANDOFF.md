@@ -73,6 +73,38 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.90 (Claude): favorites Submit split, design-notes as prose, drawer polish
+
+`frontend/index.html` only (other three surfaces: version bump for lockstep):
+- **Favorites is Submit-only.** In `#garment-modal[data-mode="submit"]` the modify
+  chrome (`#viewer-row-modify-1` Tap to Listen / Switch Fabric / Add Reference,
+  and `#viewer-mid-row` Visualize) is hidden — those stay inspo-only. The lone
+  **Submit** pill (tighter now) reveals two destinations on hover (desktop) or
+  tap (`toggleSubmitMenu`, works on touch):
+  - **Community Wall** → `submitToCommunity()` publishes the vision to the wall
+    (`communityBoard.publish`) and confirms.
+  - **Mana Siyo** → `submitToManasiyo()` → `mayaShowManasiyoPopup()`, a made-to-
+    order confirm ("we'll email you back a custom quote — cost and timeline").
+    On confirm it runs the existing atelier submission (`submitFavorite` →
+    `/api/submit`). Quote amounts are deliberately NOT shown (most run $1,500+).
+- **Design notes read as prose, not pills.** In submit (favorites) mode
+  `renderViewerNotes` renders each value as a plain italic word instead of a
+  `.vn-pill` with an exclude-x; colour values are tinted their actual colour via
+  `_colorSwatch` (a name→hex map). Modify (inspo) mode keeps the functional
+  pills + x so refs can still be excluded from the next Visualize.
+- **Drawer.** The **Projects** pill now matches the "Fromsa" name — Cormorant,
+  ~19px, centred, ALL CAPS — sitting beside it. The top label and tab titles are
+  uppercased (`.pg-tabtitle text-transform: uppercase` → USERS / FABRICS /
+  PINTEREST). **Stats and Measurements both default `open`.**
+- **Upload** is brighter at rest (`rgba(220,230,248,0.68)`), clearly brighter on
+  hover (`rgba(236,242,255,0.94)`, no longer a fade), nudged a couple px lower.
+- **Mobile pass.** The new drawer type steps down on phones (`@media
+  max-width:640px`) at the same ~0.88 ratio the rest of the app uses; the name
+  no longer truncates to "Fro…" beside the Projects pill (name won't shrink, the
+  pill yields / wraps). Design notes stay desktop-only (hidden < 1280px).
+- NOTE: the Mana Siyo "custom quote" is by email only — there is no in-app
+  pricing engine yet; Fromsa is building the approximate-quote logic separately.
+
 ## v13.89 (Claude): free-trial credits, drawer Stats + Projects/Users restructure
 
 `frontend/index.html`:
