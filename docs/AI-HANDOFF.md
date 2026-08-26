@@ -73,6 +73,42 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.95 (Claude): drawer floor redesign + Lead Station restructure + invoicing
+
+`backend/status.html`, `docs/server/server.js`, `aesthetics/ui/logo-circle.png`:
+
+- **Drawer floor (`#voice-dock`).** The logo is now a true circle
+  (`aesthetics/ui/logo-circle.png`, a circular-masked PNG cut from `logo-208.png`;
+  transparent corners, so no more square-in-a-ring). The dock sits lower
+  (`padding-top:30px;margin-bottom:-16px`). A small **MAYA pill** (`#maya-toggle`,
+  pg-chip family, a pulsing dot) floats under the logo and toggles the voice on/off;
+  `_voiceLive` mirrors the state onto it ("Maya" ↔ "Maya · on").
+- **Lead Station is column-driven and draggable.** `paintLeads` builds from
+  `_leadColDefs()` + a persisted order (`_leadColOrder`, localStorage
+  `maya.leadCols`). Drag any header to reorder (`_leadColDragStart/Over/Leave/Drop/End`);
+  whichever column lands first gets the frozen-left treatment (`.lead-col-first`,
+  replacing the name-only sticky). `cell` is hoisted to module scope so the defs
+  share it. All lead handlers are now on `window` (inline handlers on innerHTML).
+- **Columns:** Full name · Email · Latest Notes · **Last Quote** · Actions.
+  Invoice 1 / Invoice 2 removed. Quote → **Last Quote**, which defaults to the tier
+  price parsed from the signature ("Signature · $600" → 600) and reads faint
+  (`.lead-quote-default`) until set by hand, then editable/persisted. The day-count
+  line under the name (`.lead-when`) is gone; the signature line stays.
+- **Actions = email + phone + pay-link only** (`_actionsCell`); the recommendation
+  text (`rec`) is dropped. The pay-link icon opens the **invoice composer**
+  (`leadInvoice` → `#lead-inv-modal`): it prefills a skill-formatted brief from the
+  lead (name, price = Last Quote, tier, note), a "Copy brief for Maya" button, and a
+  paste-back field that saves the pay link to the lead (`paylink`, new field in
+  `updateLead`'s allowlist). A saved link glows the icon and is folded into the
+  email draft (`draftLead` appends "Pay here: <link>"). The actual Wix pay link is
+  built through the **Invoicing skill** (image/bullets/tax/price done right); no
+  money is created by a stray click. Verified headless: columns paint, reorder +
+  persist, quote default faint, modal opens with the saved link, 0 code JS errors.
+
+NEXT: real one-click Wix pay-link creation server-side (opt-in, behind a confirm)
+is still available if Fromsa wants it. Speed to Lead scaffolding remains the ordered
+next big build (Quo key + phone in env + copy prompt).
+
 ## v13.94 (Claude): Admin drawer is now an EXACT copy of the frontend
 
 `backend/status.html`:

@@ -63,9 +63,31 @@ await test('the approved filing cabinet is promoted without removing Playground'
   assert.ok(playground.includes('>Playground</div>'));
 });
 
-await test('all four release surfaces carry v13.94', () => {
+await test('all four release surfaces carry v13.95', () => {
   const version = source => (source.match(/name="maya-version" content="([0-9.]+)"/) || [])[1];
-  assert.deepEqual([app, playground, admin, marketing].map(version), ['13.94', '13.94', '13.94', '13.94']);
+  assert.deepEqual([app, playground, admin, marketing].map(version), ['13.95', '13.95', '13.95', '13.95']);
+});
+
+await test('v13.95 drawer floor: circular logo, MAYA toggle pill', () => {
+  assert.ok(admin.includes('logo-circle.png'), 'circular logo file referenced');
+  assert.ok(admin.includes('id="maya-toggle"'), 'MAYA toggle pill present');
+  assert.ok(admin.includes("mt.classList.toggle('live', on)"), 'pill mirrors the on/off state');
+});
+
+await test('v13.95 Lead Station: no Invoice columns, Last Quote, draggable columns', () => {
+  assert.ok(!/'<th[^>]*>Invoice 1<\/th>'|>Invoice 1</.test(admin), 'Invoice 1 column removed');
+  assert.ok(!admin.includes("label: 'Invoice"), 'no invoice column def');
+  assert.ok(admin.includes("label: 'Last Quote'"), 'Quote renamed to Last Quote');
+  assert.ok(admin.includes('_leadColDragStart'), 'columns are draggable');
+  assert.ok(admin.includes('lead-col-first'), 'first column stays frozen');
+  assert.ok(!admin.includes("'<div class=\"lead-when\">"), 'day-count line under the name removed');
+});
+
+await test('v13.95 Actions: email, phone, pay-link only; invoicing wired', () => {
+  assert.ok(admin.includes('function _actionsCell'), 'actions cell builder');
+  assert.ok(admin.includes('function leadInvoice'), 'invoice composer');
+  assert.ok(admin.includes('lead-inv-modal'), 'invoice modal');
+  assert.ok(!/lead-rec">'\s*\+\s*rec\(x\)/.test(admin), 'recommendation text dropped from actions');
 });
 
 console.log('\n' + (failed ? failed + ' FAILED' : passed + ' passed') + '\n');

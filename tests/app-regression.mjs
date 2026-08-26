@@ -1440,7 +1440,7 @@ ok('v13.84: "Bring in" floats over the cards, only while pictures are selected',
 ok('v13.84: Ad Campaigns gets breathing room above the money section',
   MAP_SOURCE.includes('#adm-mkt #ads-fold{margin-top:40px}'));
 ok('v13.87: the Lead Station is a custom CRM — every field edits in place, rows delete, WIX badge by the name',
-  MAP_SOURCE.includes('>Latest Notes</th>') &&
+  MAP_SOURCE.includes("label: 'Latest Notes'") &&   // v13.95: header is column-driven now
   MAP_SOURCE.includes('async function saveLeadField(') &&
   MAP_SOURCE.includes('async function deleteLeadRow(') &&
   MAP_SOURCE.includes('function reloadLeads(') &&
@@ -1689,7 +1689,7 @@ ok('the Visualize pill stays above the climbing cards, like the hamburger and lo
   /#voice-wrap \{[^}]*z-index: 9000/.test(INDEX_SOURCE));
 // v13.83 quick wins
 ok('Lead Station header says Email, submissions are "My submissions", fabric spec de-dupes the name',
-  MAP_SOURCE.includes('<th>Email</th>') &&
+  MAP_SOURCE.includes("label: 'Email'") &&   // v13.95: column-driven header
   MAP_SOURCE.includes('My submissions <span id="subs-count"') &&
   INDEX_SOURCE.includes('!nm.includes(String(t).toLowerCase())'));
 
@@ -1810,15 +1810,16 @@ ok('v13.92: the avatar name opens the switcher too (bigger hit target than the c
   INDEX_SOURCE.includes('id="drawer-avatar-name" onclick="toggleAvatarSwitcher()"'));
 
 // ── v13.93 ──
-ok('v13.93: the Lead Station is Hunter-style — frozen header + Full name column, Actions, quote/invoice columns',
-  MAP_SOURCE.includes('class="lead-h-name">Full name</th>') &&
-  MAP_SOURCE.includes('class="lead-h-actions">Actions</th>') &&
+ok('v13.95: the Lead Station is Hunter-style, column-driven — frozen first column, Actions, Last Quote, no invoice columns',
+  MAP_SOURCE.includes("label: 'Full name'") &&
+  MAP_SOURCE.includes("label: 'Actions'") &&
+  MAP_SOURCE.includes("label: 'Last Quote'") &&
   MAP_SOURCE.includes("cell(i, x, 'company'") &&
-  MAP_SOURCE.includes("cell(i, x, 'quote'") &&
-  MAP_SOURCE.includes("cell(i, x, 'invoice1'") &&
-  MAP_SOURCE.includes("cell(i, x, 'invoice2'") &&
+  MAP_SOURCE.includes("_quoteCell(i, x)") &&
+  !MAP_SOURCE.includes("cell(i, x, 'invoice1'") &&
+  !MAP_SOURCE.includes("cell(i, x, 'invoice2'") &&
   /#leads-fold \.panel\{max-height:62vh;overflow:auto\}/.test(MAP_SOURCE) &&
-  /\.lead-td-name\{[^}]*position:sticky;left:0/.test(MAP_SOURCE));
+  /\.lead-col-first\{position:sticky;left:0/.test(MAP_SOURCE));
 ok('v13.93: the note marquee runs one shared speed for every row',
   MAP_SOURCE.includes('sp.style.animationDuration = Math.max(6, shift / SPEED)'));
 ok('v13.93: the server persists the new CRM columns (company, quote, both invoices)',
@@ -1841,6 +1842,36 @@ ok('v13.94: Company/Title moved under the name as a signature line; columns cent
   MAP_SOURCE.includes('class="lead-sig"') &&
   /#adm-mkt #leads-table td\{[^}]*text-align:center/.test(MAP_SOURCE) &&
   !MAP_SOURCE.includes('class="lead-cta lead-del" onclick="deleteLeadRow'));
+
+// ── v13.95 ──
+ok('v13.95: the drawer floor is a circular logo pushed lower, with a small MAYA on/off pill under it',
+  MAP_SOURCE.includes('/aesthetics/ui/logo-circle.png') &&
+  /#voice-dock\{[^}]*margin-bottom:-16px/.test(MAP_SOURCE) &&
+  MAP_SOURCE.includes('id="maya-toggle"') &&
+  MAP_SOURCE.includes("mt.classList.toggle('live', on)"));
+ok('v13.95: Last Quote defaults to the tier price and reads faint until set by hand',
+  MAP_SOURCE.includes('function _quoteCell') &&
+  MAP_SOURCE.includes('function _leadTierNum') &&
+  MAP_SOURCE.includes("label: 'Last Quote'") &&
+  /\.lead-quote-default\{color:var\(--faint\)\}/.test(MAP_SOURCE));
+ok('v13.95: the Invoice 1 / Invoice 2 columns and the day-count line under the name are gone',
+  !MAP_SOURCE.includes("label: 'Invoice") &&
+  !MAP_SOURCE.includes("cell(i, x, 'invoice1'") &&
+  !MAP_SOURCE.includes('<div class="lead-when">'));
+ok('v13.95: columns drag to reorder, the order persists, the first column stays frozen',
+  MAP_SOURCE.includes('_leadColDragStart') &&
+  MAP_SOURCE.includes('_leadColDrop') &&
+  MAP_SOURCE.includes("localStorage.setItem('maya.leadCols'") &&
+  MAP_SOURCE.includes('lead-col-first'));
+ok('v13.95: Actions is email + phone + pay-link only, invoicing composer wired, no recommendation text',
+  MAP_SOURCE.includes('function _actionsCell') &&
+  MAP_SOURCE.includes('class="lead-cta lead-pay') &&
+  MAP_SOURCE.includes('function leadInvoice') &&
+  MAP_SOURCE.includes('lead-inv-modal') &&
+  !/lead-rec">'\s*\+\s*rec\(x\)/.test(MAP_SOURCE));
+ok('v13.95: a saved pay link persists on the lead and rides the next email draft',
+  SERVER_SOURCE.includes("has('paylink')") &&
+  MAP_SOURCE.includes("? ('\\n\\nPay here: ' + String(x.paylink).trim())"));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

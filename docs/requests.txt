@@ -1249,3 +1249,54 @@ LATER (design / accounts needed):
     connector for Claude). Design first.
 [ ] Personalized copy (cold email + fuzzy variables): can be done with Claude
     directly; low priority to build into the app.
+
+── Aug 26: MAYA app nurture (re-engagement emails) ───────────────────────────
+[ ] Maya sends a lifecycle email to a signed-in MAYA APP user who GENERATED
+    something but has not returned in ~2 days: a warm "your design is waiting,
+    come back and keep going" follow-up (inspired by the Quo "continue your
+    setup" email). This is the app-side nurture, distinct from Speed to Lead
+    (which is the Wix atelier leads).
+    DATA WE ALREADY HAVE: metrics/users/<hash>.json {email, firstSeenMs,
+    lastSeenMs} and metrics/trial/<hash>.json {email, images, updatedAtMs}. So
+    "generated" = trial images > 0; "idle 2 days" = lastSeenMs older than 2 days;
+    we have the email. A fuzzy variable (one line about what they made) comes
+    from their last render's caption.
+    NEEDS: (1) an email sender. This SHARES the Speed to Lead email layer, build
+    once, use for both. Options: a proper ESP (Resend/SendGrid/Postmark) with
+    domain auth (SPF/DKIM) and an unsubscribe link, or the Gmail API (has daily
+    send caps + deliverability risk for bulk). ESP is the right tool for nurture.
+    (2) Unsubscribe / opt-out handling + honoring it (CAN-SPAM: unsubscribe +
+    physical address; the Quo email Fromsa shot has the unsubscribe footer).
+    (3) A daily scheduler on the server (Cloud Scheduler / cron) that finds the
+    "generated + idle 2 days + not yet emailed + not unsubscribed" set and sends.
+    (4) The copy (Claude can draft it now; unblocked).
+    Auto-send to app users is the same category Fromsa already approved for
+    Speed to Lead. Queue AFTER Speed to Lead since they share the email layer.
+
+── v13.95 (Claude): drawer floor + Lead Station restructure + invoicing ──────
+[x] Drawer floor: the MAYA logo is a true circle now (new file logo-circle.png,
+    cut from logo-208.png — transparent corners, no square-in-a-ring). The dock
+    and its divider sit lower. A small MAYA pill floats under the logo and toggles
+    the voice on/off (mirrors the live state).
+[x] Lead Station: Invoice 1 and Invoice 2 columns removed. "Quote" renamed to
+    "Last Quote" — defaults to the tier's price (Signature · $600 → 600), reading
+    faint until set by hand, then editable and saved (a higher quote after the
+    call overwrites it). The day-count line under the name is gone; the
+    "Signature · $600" signature line stays.
+[x] Actions: email + phone + pay-link icons only. The recommendation text
+    (EMAIL · FOLLOW UP / CALL · 9 DAYS QUIET) is gone.
+[x] Columns are draggable — drag any header to reorder; the arrangement persists
+    per browser; the first column stays frozen.
+[x] Invoicing skill wired in: the pay-link icon opens a composer prefilled from
+    the lead (name, price, tier, note) in the skill's format, with a "Copy brief
+    for Maya" button and a paste-back field that saves the Wix pay link on the
+    lead. A saved link glows the icon and rides the next email draft. The real Wix
+    link is still built through the Invoicing skill (so the client's MAYA image,
+    spec bullets, tax group and price semantics are right) — no money is created
+    by a stray click.
+[ ] OFFERED: real one-click Wix pay-link creation server-side, behind an in-page
+    confirm, if Fromsa wants clicking to create the link directly. Not built yet
+    (money-touching; the skill path is safer and higher-quality for now).
+[q] Fromsa asked earlier whether the ADMIN hover pill should be just ONE — not
+    captured in the log at the time. Currently three (operations room / playground
+    / the sheet). Awaiting which single link he wants before collapsing them.

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.94">
+<meta name="maya-version" content="13.95">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -115,16 +115,28 @@ try {
     50%{box-shadow:0 0 0 14px rgba(169,201,255,0);transform:scale(1.06)}}
   #drawer{display:flex;flex-direction:column}
   #drawer > h3, #drawer > a{flex:none}
-  #voice-dock{margin-top:auto;padding-top:18px;border-top:0.5px solid var(--line);
-    display:flex;flex-direction:column;align-items:center;gap:8px;flex:none}
-  #voice-btn{width:64px;height:64px;border-radius:50%;padding:0;cursor:pointer;
-    border:0.5px solid var(--line);background:rgba(255,255,255,0.04);
+  /* v13.95: Maya's floor, mirroring the frontend — the divider and the logo
+     sit lower, the logo is a true circle (pre-cut file, no square in a ring),
+     and a small MAYA pill floats under her to toggle the voice on and off. */
+  #voice-dock{margin-top:auto;padding-top:30px;margin-bottom:-16px;border-top:0.5px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;gap:10px;flex:none}
+  #voice-btn{width:66px;height:66px;border-radius:50%;padding:0;cursor:pointer;
+    border:0.5px solid var(--line);background:transparent;
     display:flex;align-items:center;justify-content:center;transition:border-color .25s,transform .25s}
-  #voice-btn img{width:44px;height:44px;object-fit:contain;opacity:0.95}
+  #voice-btn img{width:62px;height:62px;object-fit:cover;border-radius:50%;opacity:0.98}
   #voice-btn:hover{border-color:rgba(255,255,255,0.5);transform:scale(1.04)}
   #voice-btn.live{border-color:rgba(169,201,255,0.9);animation:voicepulse 1.6s ease-in-out infinite}
+  /* the little MAYA toggle pill, same family as the Design Studio / Operations chips */
+  #maya-toggle{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.24em;text-transform:uppercase;
+    color:var(--dim);background:rgba(255,255,255,0.04);border:0.5px solid var(--line);border-radius:100px;
+    padding:5px 13px;cursor:pointer;transition:color .2s,border-color .2s,background .2s;white-space:nowrap}
+  #maya-toggle:hover{color:var(--ink);border-color:rgba(255,255,255,0.45)}
+  #maya-toggle.live{color:#a9c9ff;border-color:rgba(169,201,255,0.55);background:rgba(169,201,255,0.10)}
+  #maya-toggle .mt-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;
+    opacity:0.45;margin-right:6px;vertical-align:middle}
+  #maya-toggle.live .mt-dot{opacity:1;animation:voicepulse 1.4s ease-in-out infinite}
   #voice-word{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.2em;
-    text-transform:uppercase;color:rgba(169,201,255,0.9);min-height:12px;text-align:center}
+    text-transform:uppercase;color:rgba(169,201,255,0.9);min-height:11px;text-align:center}
   #voice-chip{position:fixed;right:16px;bottom:16px;z-index:400;display:none;align-items:center;gap:9px;
     padding:9px 15px 9px 12px;border-radius:100px;cursor:pointer;
     background:rgba(8,12,26,0.94);border:0.5px solid rgba(169,201,255,0.6);
@@ -494,18 +506,21 @@ try {
   /* v13.93: Hunter-style CRM. The station is a scroll box: the header row and the
      Full name column stay frozen while everything else scrolls both ways. */
   #adm-mkt #leads-fold .panel{max-height:62vh;overflow:auto}
-  #adm-mkt #leads-table{min-width:880px;border-collapse:separate;border-spacing:0}
+  #adm-mkt #leads-table{min-width:720px;border-collapse:separate;border-spacing:0}
   /* v13.94: every column is centered, per Fromsa. */
   #adm-mkt #leads-table th{position:sticky;top:0;z-index:3;background:#0d1120;
     font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;
     color:var(--dim);font-weight:400;text-align:center;padding:7px 12px 9px;white-space:nowrap;
     border-bottom:0.5px solid var(--line)}
   #adm-mkt #leads-table td{padding:9px 12px 9px;text-align:center}
-  /* the Full name column is frozen on the left; the corner cell rides on top */
-  #adm-mkt #leads-table .lead-h-name,#adm-mkt #leads-table .lead-td-name{
-    position:sticky;left:0;background:#0d1120;box-shadow:1px 0 0 var(--line)}
-  #adm-mkt #leads-table .lead-td-name{z-index:2}
-  #adm-mkt #leads-table th.lead-h-name{z-index:4}
+  /* v13.95: columns drag to reorder; whichever lands first is frozen on the left. */
+  #adm-mkt #leads-table th.lead-th{cursor:grab;user-select:none}
+  #adm-mkt #leads-table th.lead-th:active{cursor:grabbing}
+  #adm-mkt #leads-table th.lead-col-drop{box-shadow:inset 2px 0 0 rgba(169,201,255,0.9)}
+  #adm-mkt #leads-table .lead-col-first{position:sticky;left:0;background:#0d1120;box-shadow:1px 0 0 var(--line)}
+  #adm-mkt #leads-table td.lead-col-first{z-index:2}
+  #adm-mkt #leads-table th.lead-col-first{z-index:4}
+  #adm-mkt #leads-table .lead-td-name,#adm-mkt #leads-table .lead-h-name{min-width:148px}
   /* Company / Title now sits under the name as a signature line. */
   #adm-mkt #leads-table .lead-sig{margin-top:2px}
   #adm-mkt #leads-table .lead-sig-edit{font-family:'Cormorant Garamond',serif;font-size:12px;color:var(--dim);font-style:italic}
@@ -513,6 +528,38 @@ try {
   /* the quote and invoice columns invite a value with a faint + when empty */
   #adm-mkt #leads-table .lead-money-edit{font-variant-numeric:tabular-nums;white-space:nowrap}
   #adm-mkt #leads-table .lead-money-edit:empty::before{content:'+';color:var(--faint)}
+  /* v13.95: a Last Quote still showing the tier default (not set by hand) reads faint. */
+  #adm-mkt #leads-table .lead-quote-default{color:var(--faint)}
+  /* the pay-link icon glows once a link is saved on the lead. */
+  #adm-mkt .lead-cta.lead-pay.has-link{color:#a9c9ff;border-color:rgba(169,201,255,0.55)}
+  /* v13.95: the invoice composer, opened from the pay-link icon. */
+  #lead-inv-modal{position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center}
+  #lead-inv-modal.show{display:flex}
+  #lead-inv-modal .inv-scrim{position:absolute;inset:0;background:rgba(4,7,16,0.66);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+  #lead-inv-modal .inv-card{position:relative;z-index:1;width:min(480px,92vw);max-height:88vh;overflow:auto;
+    background:#0d1120;border:0.5px solid var(--line);border-radius:18px;padding:24px 24px 22px;
+    box-shadow:0 30px 80px rgba(0,0,0,0.6)}
+  #lead-inv-modal .inv-close{position:absolute;top:12px;right:14px;background:transparent;border:none;color:var(--dim);
+    font-size:20px;line-height:1;cursor:pointer}
+  #lead-inv-modal .inv-close:hover{color:var(--ink)}
+  #lead-inv-modal h4{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:22px;color:var(--ink);margin:0 20px 6px 0}
+  #lead-inv-modal .inv-lede{font-family:'Jost',sans-serif;font-size:11.5px;line-height:1.5;color:var(--dim);margin:0 0 14px}
+  #lead-inv-modal .inv-label{display:block;font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.18em;
+    text-transform:uppercase;color:var(--faint);margin:0 0 5px}
+  #lead-inv-modal .inv-brief{width:100%;background:rgba(255,255,255,0.03);border:0.5px solid var(--line);border-radius:10px;
+    color:var(--ink);font-family:'Jost',sans-serif;font-size:11.5px;line-height:1.5;padding:10px 12px;resize:vertical}
+  #lead-inv-modal .inv-input{width:100%;background:rgba(255,255,255,0.03);border:0.5px solid var(--line);border-radius:10px;
+    color:var(--ink);font-family:'Jost',sans-serif;font-size:12px;padding:9px 12px}
+  #lead-inv-modal .inv-input:focus{outline:none;border-color:rgba(169,201,255,0.6)}
+  #lead-inv-modal .inv-btn{margin-top:9px;font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;
+    color:var(--dim);background:transparent;border:0.5px solid var(--line);border-radius:100px;padding:7px 15px;cursor:pointer;transition:all .18s}
+  #lead-inv-modal .inv-btn:hover{color:var(--ink);border-color:rgba(255,255,255,0.5)}
+  #lead-inv-modal .inv-btn.primary{color:#a9c9ff;border-color:rgba(169,201,255,0.45)}
+  #lead-inv-modal .inv-btn.primary:hover{background:rgba(169,201,255,0.10)}
+  #lead-inv-modal .inv-row{display:flex;align-items:center;gap:12px;margin-top:9px}
+  #lead-inv-modal .inv-msg{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:0.05em;color:var(--dim)}
+  #lead-inv-modal .inv-existing{font-family:'Jost',sans-serif;font-size:10.5px;line-height:1.5;color:var(--dim);margin-top:10px}
+  #lead-inv-modal .inv-existing a{color:#a9c9ff;word-break:break-all}
   /* Actions: the icons ride on top, the recommended timing sits under them. */
   #adm-mkt #leads-table .lead-td-actions .lead-ctas{justify-content:center;margin:0 0 5px}
   #adm-mkt #leads-table .lead-td-actions .lead-rec{text-align:center}
@@ -689,8 +736,9 @@ try {
   <!-- v13.67: Maya's voice, pinned at the floor. -->
   <div id="voice-dock">
     <button id="voice-btn" onclick="toggleMayaVoice()" title="Talk to Maya: live voice, grounded in today's numbers" aria-label="Talk to Maya">
-      <img src="/aesthetics/ui/logo-208.png" alt="">
+      <img src="/aesthetics/ui/logo-circle.png" alt="">
     </button>
+    <button id="maya-toggle" onclick="toggleMayaVoice()" aria-pressed="false" title="Turn Maya's voice on or off"><span class="mt-dot"></span><span id="maya-toggle-word">Maya</span></button>
     <div id="voice-word"></div>
   </div>
 </div>
@@ -1785,6 +1833,10 @@ let _voiceToolChain = Promise.resolve();
 function _voiceWord(t){ const el=document.getElementById('voice-word'); if(el) el.innerHTML=t||''; }
 function _voiceLive(on, word){
   const b=document.getElementById('voice-btn'); if(b) b.classList.toggle('live', on);
+  // v13.95: the little MAYA pill under the logo mirrors the on/off state.
+  const mt=document.getElementById('maya-toggle');
+  if(mt){ mt.classList.toggle('live', on); mt.setAttribute('aria-pressed', on?'true':'false'); }
+  const mtw=document.getElementById('maya-toggle-word'); if(mtw) mtw.textContent = on ? 'Maya · on' : 'Maya';
   const chip=document.getElementById('voice-chip'); if(chip) chip.classList.toggle('show', on);
   const cw=document.getElementById('voice-chip-word'); if(cw && word) cw.textContent=word;
   // v13.72: the drawer becomes Maya's command line while she is live.
@@ -2268,55 +2320,203 @@ function paintLeads(l) {
     if (days < 7) return 'Email &#183; follow up';
     return x.phone ? 'Call &#183; ' + days + ' days quiet' : 'Email &#183; revive';
   };
-  // v13.87: the station is a custom CRM — every field edits in place like a
-  // sheet (no pencil), the WIX badge sits beside the name, and each row can be
-  // removed. Name/email/tier save through lead-update; notes through lead-note.
-  const cell = (i, x, field, value, cls) =>
-    '<span class="lead-edit' + (cls ? ' ' + cls : '') + '" data-idx="' + i + '" data-id="' + esc(x.id || '') +
-      '" data-field="' + field + '" contenteditable="true" spellcheck="false"' +
-      ' onfocus="this.dataset.orig=(this.textContent||\'\').trim()" onblur="saveLeadField(this)"' +
-      ' onkeydown="_leadCellKey(event,this)">' + esc(value || '') + '</span>';
-  // v13.93: a real CRM in the Hunter style. Many columns, the sheet scrolls
-  // sideways, the header row and the Full name column stay frozen. Actions is
-  // the last column (the recommended move + the CTAs).
-  // v13.94: Company / Title moved under the name as a signature line (dropped as
-  // a column). Every column is centered. Actions puts the email + phone icons on
-  // top with the recommended timing under them; no delete X in the row.
+  // v13.95: `cell` is now module-level (see below) so the draggable column
+  // definitions can share it. It still edits every field in place like a sheet.
+  // v13.95: the station is column-driven so the header can be dragged into any
+  // order (persisted per browser). Invoice 1 / Invoice 2 are gone; Quote became
+  // "Last Quote" and defaults to the tier's price until Fromsa sets a real one
+  // after the call. The day-count line under the name is gone; Actions is just
+  // the email, phone and pay-link icons — no recommendation text.
+  const defs = _leadColDefs();
+  const order = _leadColOrder.filter(k => defs[k]);
+  const thHtml = (k, ci) => {
+    const d = defs[k];
+    const cls = ['lead-th', d.h || '', ci === 0 ? 'lead-col-first' : ''].filter(Boolean).join(' ');
+    return '<th class="' + cls + '" draggable="true" data-col="' + k + '"' +
+      ' ondragstart="_leadColDragStart(event,\'' + k + '\')" ondragover="_leadColDragOver(event)"' +
+      ' ondragleave="_leadColDragLeave(event)" ondrop="_leadColDrop(event,\'' + k + '\')"' +
+      ' ondragend="_leadColDragEnd(event)" title="Drag to reorder">' + d.label + '</th>';
+  };
   tb.innerHTML =
-    '<tr>' +
-      '<th class="lead-h-name">Full name</th>' +
-      '<th>Email</th>' +
-      '<th>Latest Notes</th>' +
-      '<th>Quote</th>' +
-      '<th>Invoice 1</th>' +
-      '<th>Invoice 2</th>' +
-      '<th class="lead-h-actions">Actions</th>' +
-    '</tr>' +
+    '<tr>' + order.map(thHtml).join('') + '</tr>' +
     l.list.map((x, i) =>
-      '<tr id="lead-tr-' + i + '"><td class="lead-td-name">' +
-        cell(i, x, 'name', x.name, 'lead-name-edit') +
-        (x.source === 'wix' ? '<span class="lead-src wix">WIX</span>'
-          : (x.source && x.source !== 'wix' ? '<span class="lead-src">added</span>' : '')) +
-        '<div class="lead-sig">' + cell(i, x, 'company', x.company || x.tier || '', 'lead-sig-edit') + '</div>' +
-        '<div class="lead-when">' + esc(when(x.lastTouch || x.ts)) + '</div></td>' +
-      '<td>' + cell(i, x, 'email', x.email || x.phone || '', 'lead-email-edit') + '</td>' +
-      // v13.91: Latest Notes ride a marquee — the note scrolls when it overruns
-      // its column, pausing on hover and while you edit it in place.
-      '<td class="lead-note"><div class="lead-note-vp">' + cell(i, x, 'note', x.note || '', 'lead-note-edit') + '</div></td>' +
-      '<td>' + cell(i, x, 'quote', x.quote || '', 'lead-money-edit') + '</td>' +
-      '<td>' + cell(i, x, 'invoice1', x.invoice1 || '', 'lead-money-edit') + '</td>' +
-      '<td>' + cell(i, x, 'invoice2', x.invoice2 || '', 'lead-money-edit') + '</td>' +
-      '<td class="lead-td-actions">' +
-      '<div class="lead-ctas">' +
-        (x.email ? '<button class="lead-cta" id="lead-mail-' + i + '" onclick="draftLead(' + i + ')" title="Draft the next email (opens Gmail, nothing is sent)">&#9993;</button>' : '') +
-        (x.phone ? '<a class="lead-cta" href="tel:' + esc(x.phone) + '" onclick="leadContact(' + i + ',\'call\')" title="Call ' + esc(x.phone) + '">' + PHONE_SVG + '</a>' : '') +
-      '</div>' +
-      '<div class="lead-rec">' + rec(x) + '</div></td></tr>'
+      '<tr id="lead-tr-' + i + '">' + order.map((k, ci) => {
+        const d = defs[k];
+        const cls = [d.td || '', ci === 0 ? 'lead-col-first' : ''].filter(Boolean).join(' ');
+        return '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + d.render(x, i) + '</td>';
+      }).join('') + '</tr>'
     ).join('');
   try { _leadMarquees(); } catch (_) {}
 }
 // v13.91: a real smartphone glyph for the call button, not a 1970s handset.
 const PHONE_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><line x1="10.6" y1="18.4" x2="13.4" y2="18.4"/></svg>';
+// v13.95: the pay-link glyph — a receipt for the invoice / pay link action.
+const PAY_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2.5h12v19l-2.5-1.6L13 21l-1-1.6L11 21l-2.5-1.1L6 21.5z"/><line x1="9" y1="7.5" x2="15" y2="7.5"/><line x1="9" y1="11" x2="15" y2="11"/></svg>';
+// v13.95: one editable cell, shared by every draggable column (hoisted out of
+// paintLeads). Every field saves in place through lead-update / lead-note.
+const cell = (i, x, field, value, cls) =>
+  '<span class="lead-edit' + (cls ? ' ' + cls : '') + '" data-idx="' + i + '" data-id="' + esc(x.id || '') +
+    '" data-field="' + field + '" contenteditable="true" spellcheck="false"' +
+    ' onfocus="this.dataset.orig=(this.textContent||\'\').trim()" onblur="saveLeadField(this)"' +
+    ' onkeydown="_leadCellKey(event,this)">' + esc(value || '') + '</span>';
+// The tier's price, pulled from the tier / signature string ("Signature · $600" → 600).
+function _leadTierNum(x){ const m = String(x.tier || x.company || '').match(/([0-9][0-9,]{1,})/); return m ? m[1].replace(/,/g,'') : ''; }
+// Last Quote: the real quote if set, else the tier default shown faintly. Editable
+// either way, so a higher number given on the call just overwrites it.
+function _quoteCell(i, x){
+  const set = x.quote && String(x.quote).trim();
+  const tierNum = _leadTierNum(x);
+  const val = set ? x.quote : tierNum;
+  const dflt = !set && tierNum;
+  return cell(i, x, 'quote', val, 'lead-money-edit' + (dflt ? ' lead-quote-default' : ''));
+}
+// Actions: email, phone, pay-link. No recommendation text, no delete X.
+function _actionsCell(i, x){
+  const paid = x.paylink && String(x.paylink).trim();
+  return '<div class="lead-ctas">' +
+    (x.email ? '<button class="lead-cta" id="lead-mail-' + i + '" onclick="draftLead(' + i + ')" title="Draft the next email (opens Gmail, nothing is sent)">&#9993;</button>' : '') +
+    (x.phone ? '<a class="lead-cta" href="tel:' + esc(x.phone) + '" onclick="leadContact(' + i + ',\'call\')" title="Call ' + esc(x.phone) + '">' + PHONE_SVG + '</a>' : '') +
+    '<button class="lead-cta lead-pay' + (paid ? ' has-link' : '') + '" onclick="leadInvoice(' + i + ')" title="' +
+      (paid ? 'Pay link ready — view, copy or add it to the email' : 'Invoice this lead — build a pay link with the Invoicing skill') + '">' + PAY_SVG + '</button>' +
+  '</div>';
+}
+// v13.95: the column catalogue. `render` closes over the shared `cell`. The name
+// column carries the WIX badge and the signature line; order lives in localStorage.
+function _leadColDefs(){
+  return {
+    name: { label: 'Full name', h: 'lead-h-name', td: 'lead-td-name',
+      render: (x, i) => cell(i, x, 'name', x.name, 'lead-name-edit') +
+        (x.source === 'wix' ? '<span class="lead-src wix">WIX</span>'
+          : (x.source && x.source !== 'wix' ? '<span class="lead-src">added</span>' : '')) +
+        '<div class="lead-sig">' + cell(i, x, 'company', x.company || x.tier || '', 'lead-sig-edit') + '</div>' },
+    email: { label: 'Email', render: (x, i) => cell(i, x, 'email', x.email || x.phone || '', 'lead-email-edit') },
+    note: { label: 'Latest Notes', td: 'lead-note',
+      render: (x, i) => '<div class="lead-note-vp">' + cell(i, x, 'note', x.note || '', 'lead-note-edit') + '</div>' },
+    quote: { label: 'Last Quote', render: (x, i) => _quoteCell(i, x) },
+    actions: { label: 'Actions', h: 'lead-h-actions', td: 'lead-td-actions', render: (x, i) => _actionsCell(i, x) },
+  };
+}
+const LEAD_COLS_DEFAULT = ['name', 'email', 'note', 'quote', 'actions'];
+function _loadLeadColOrder(){
+  try {
+    const s = JSON.parse(localStorage.getItem('maya.leadCols') || 'null');
+    if (Array.isArray(s) && s.length){
+      const known = new Set(LEAD_COLS_DEFAULT);
+      const ord = s.filter(k => known.has(k));
+      LEAD_COLS_DEFAULT.forEach(k => { if (!ord.includes(k)) ord.push(k); });
+      return ord;
+    }
+  } catch (_) {}
+  return LEAD_COLS_DEFAULT.slice();
+}
+let _leadColOrder = _loadLeadColOrder();
+function _saveLeadColOrder(){ try { localStorage.setItem('maya.leadCols', JSON.stringify(_leadColOrder)); } catch (_) {} }
+// Drag a header to reorder its whole column; the arrangement sticks per browser.
+let _leadDragCol = null;
+function _leadColDragStart(e, k){ _leadDragCol = k; try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', k); } catch (_) {} }
+function _leadColDragOver(e){ e.preventDefault(); try { e.dataTransfer.dropEffect = 'move'; } catch (_) {} const th = e.currentTarget; if (th && th.dataset.col !== _leadDragCol) th.classList.add('lead-col-drop'); }
+function _leadColDragLeave(e){ const th = e.currentTarget; if (th) th.classList.remove('lead-col-drop'); }
+function _leadColDragEnd(){ document.querySelectorAll('#leads-table .lead-col-drop').forEach(el => el.classList.remove('lead-col-drop')); _leadDragCol = null; }
+function _leadColDrop(e, target){
+  e.preventDefault();
+  const src = _leadDragCol; _leadColDragEnd();
+  if (!src || src === target) return;
+  const ord = _leadColOrder.filter(k => k !== src);
+  const ti = ord.indexOf(target);
+  if (ti < 0) return;
+  ord.splice(ti, 0, src);
+  _leadColOrder = ord; _saveLeadColOrder();
+  try { paintLeads({ connected: true, list: _leadList }); } catch (_) {}
+}
+// v13.95: the Invoicing skill, reached from the lead. The pay-link icon opens a
+// composer prefilled from the lead (name, price, skill-formatted brief). The
+// actual Wix pay link is built with the Invoicing skill — so the client's MAYA
+// image, the spec bullets, the tax group and the price semantics are all right —
+// and the returned link is pasted back here, saved on the lead, and folded into
+// the email draft. Money is never created by a stray click.
+function _leadFirst(name){ return String(name || '').trim().split(/\s+/)[0] || 'there'; }
+function leadInvoice(i){
+  const x = _leadList[i]; if (!x) return;
+  const first = _leadFirst(x.name);
+  const price = (x.quote && String(x.quote).trim()) || _leadTierNum(x) || '';
+  const tier = String(x.tier || x.company || '').trim();
+  const title = first + ' Mana Siyo Custom';
+  const brief =
+    'Invoice this lead with the Invoicing skill.\n' +
+    'Client: ' + (x.name ? x.name.trim() : first) + '\n' +
+    (x.email ? ('Email: ' + x.email + '\n') : '') +
+    (tier ? ('Tier: ' + tier + '\n') : '') +
+    'Price: $' + (price || '[confirm]') + (price ? '' : ' — needs confirming') + '\n' +
+    (x.note ? ('What they want: ' + String(x.note).trim() + '\n') : '') +
+    'Suggested title: ' + title + '\n' +
+    'Image: use their MAYA-generated piece; the logo only as a fallback.';
+  _openInvoiceModal(i, x, price, brief);
+}
+function _invModalEl(){
+  let m = document.getElementById('lead-inv-modal');
+  if (m) return m;
+  m = document.createElement('div');
+  m.id = 'lead-inv-modal';
+  m.innerHTML =
+    '<div class="inv-card">' +
+      '<button class="inv-close" onclick="_closeInvoiceModal()" aria-label="Close">&#215;</button>' +
+      '<h4 id="inv-title">Invoice</h4>' +
+      '<p class="inv-lede">Build the pay link with the Invoicing skill (it gets the image, the bullets, the tax group and the price right), then paste it back here so it saves on the lead and rides the next email.</p>' +
+      '<label class="inv-label">Brief for Maya</label>' +
+      '<textarea id="inv-brief" class="inv-brief" rows="7" readonly></textarea>' +
+      '<button class="inv-btn" onclick="_copyInvBrief()">Copy brief for Maya</button>' +
+      '<div class="inv-existing" id="inv-existing" style="display:none"></div>' +
+      '<label class="inv-label" style="margin-top:14px">Pay link</label>' +
+      '<input id="inv-link" class="inv-input" type="url" placeholder="https://www.manasiyo.com/_paylink/…" />' +
+      '<div class="inv-row"><button class="inv-btn primary" id="inv-save" onclick="_saveInvoiceLink()">Save link to lead</button><span class="inv-msg" id="inv-msg"></span></div>' +
+    '</div>' +
+    '<div class="inv-scrim" onclick="_closeInvoiceModal()"></div>';
+  document.body.appendChild(m);
+  return m;
+}
+let _invIdx = -1;
+function _openInvoiceModal(i, x, price, brief){
+  _invIdx = i;
+  const m = _invModalEl();
+  m.querySelector('#inv-title').textContent = 'Invoice — ' + (x.name ? x.name.trim() : 'lead');
+  m.querySelector('#inv-brief').value = brief;
+  const link = (x.paylink && String(x.paylink).trim()) || '';
+  const inp = m.querySelector('#inv-link'); inp.value = link;
+  const ex = m.querySelector('#inv-existing');
+  if (link){
+    ex.style.display = '';
+    ex.innerHTML = 'On file: <a href="' + esc(link) + '" target="_blank" rel="noopener">' + esc(link) + '</a> · it is added to the email draft automatically.';
+  } else { ex.style.display = 'none'; ex.innerHTML = ''; }
+  m.querySelector('#inv-msg').textContent = '';
+  m.classList.add('show');
+}
+function _closeInvoiceModal(){ const m = document.getElementById('lead-inv-modal'); if (m) m.classList.remove('show'); _invIdx = -1; }
+function _copyInvBrief(){
+  const t = document.getElementById('inv-brief'); if (!t) return;
+  try { navigator.clipboard.writeText(t.value); } catch (_) { t.select(); try { document.execCommand('copy'); } catch (__) {} }
+  const b = event && event.target; if (b){ const o = b.textContent; b.textContent = 'Copied'; setTimeout(() => { b.textContent = o; }, 1400); }
+}
+async function _saveInvoiceLink(){
+  const i = _invIdx; const x = _leadList[i]; if (!x) return;
+  const inp = document.getElementById('inv-link'); const msg = document.getElementById('inv-msg');
+  const link = (inp && inp.value || '').trim();
+  if (link && !/^https?:\/\//i.test(link)){ if (msg) msg.textContent = 'That does not look like a link.'; return; }
+  if (msg) msg.textContent = 'Saving…';
+  try {
+    const r = await fetch('/api/admin/lead-update', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: x.id, paylink: link }),
+    });
+    if (!r.ok) throw new Error('save ' + r.status);
+    x.paylink = link;
+    if (msg) msg.textContent = link ? 'Saved. It will ride the next email.' : 'Cleared.';
+    try { paintLeads({ connected: true, list: _leadList }); } catch (_) {}
+    setTimeout(_closeInvoiceModal, 900);
+  } catch (e) {
+    if (msg) msg.textContent = 'Did not save (' + String(e.message || e).slice(0, 40) + ').';
+  }
+}
 // Turn on the note marquee only where the text actually overruns the column.
 // v13.93: every marquee scrolls at the SAME SPEED (~34 px/s), so a long note and
 // a short one drift at the same pace. The duration scales with the distance,
@@ -2418,8 +2618,10 @@ async function draftLead(i) {
     });
     const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.subject) throw new Error(j.error || ('draft ' + r.status));
+    // v13.95: if a pay link is on file for this lead, carry it into the draft.
+    const body = j.body + (x.paylink && String(x.paylink).trim() ? ('\n\nPay here: ' + String(x.paylink).trim()) : '');
     mailWindow.location.href = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(x.email) +
-      '&su=' + encodeURIComponent(j.subject) + '&body=' + encodeURIComponent(j.body);
+      '&su=' + encodeURIComponent(j.subject) + '&body=' + encodeURIComponent(body);
     leadContact(i, 'email');
   } catch (e) {
     try { if (mailWindow) mailWindow.close(); } catch (_) {}
@@ -2723,6 +2925,14 @@ window.setAdRange=setAdRange; window.setAdMetric=setAdMetric;
 window.draftLead=draftLead; window.leadContact=leadContact;
 window.toggleLeadNote=toggleLeadNote; window.saveLeadNote=saveLeadNote;
 window.loadMkt=loadMkt;
+// v13.95: in-place edit + the draggable columns and the invoice composer all
+// fire from inline handlers on innerHTML, so they must live on window too.
+window.saveLeadField=saveLeadField; window._leadCellKey=_leadCellKey;
+window.leadInvoice=leadInvoice; window._closeInvoiceModal=_closeInvoiceModal;
+window._copyInvBrief=_copyInvBrief; window._saveInvoiceLink=_saveInvoiceLink;
+window._leadColDragStart=_leadColDragStart; window._leadColDragOver=_leadColDragOver;
+window._leadColDragLeave=_leadColDragLeave; window._leadColDrop=_leadColDrop;
+window._leadColDragEnd=_leadColDragEnd; window.paintLeads=paintLeads;
 // fire when signed in, and refresh with the traffic tick
 if(_idTok) loadMkt();
 setInterval(()=>{ if(_idTok && document.visibilityState==='visible') loadMkt(); }, 120000);

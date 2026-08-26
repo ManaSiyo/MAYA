@@ -3369,6 +3369,8 @@ async function updateLead(id, patch) {
   if (has('quote')) clean.quote = String(next.quote || '').trim().slice(0, 40);
   if (has('invoice1')) clean.invoice1 = String(next.invoice1 || '').trim().slice(0, 40);
   if (has('invoice2')) clean.invoice2 = String(next.invoice2 || '').trim().slice(0, 40);
+  // v13.95: a pay link (invoice) saved on the lead, folded into the email draft.
+  if (has('paylink')) clean.paylink = String(next.paylink || '').trim().slice(0, 400);
   // note is the fallback path for a lead with no email (email leads note through
   // the email-keyed note store instead); sets both the display note and wrote.
   if (has('note')) { clean.note = String(next.note || '').trim().slice(0, 2000); clean.wrote = clean.note; }
