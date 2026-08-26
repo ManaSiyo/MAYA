@@ -708,11 +708,10 @@ ok('Pinterest is a drawer in the same language as Fabrics',
 ok('all saves means every pin on the account, not just one board',
   SERVER_SOURCE.includes("const path = board ? ('/boards/' + board + '/pins?'") &&
   SERVER_SOURCE.includes("('/pins?' + qs.toString())"));
-ok('v13.86: the upload button is a visible glass pill, wider and nudged lower',
-  INDEX_SOURCE.includes('.upload-link { letter-spacing: 0.3em; padding: 7px 30px;') &&
-  INDEX_SOURCE.includes('color: rgba(222,230,248,0.72)') &&
-  INDEX_SOURCE.includes('margin-top: 8px;') &&
-  INDEX_SOURCE.includes('padding-bottom: 92px;'));
+ok('v13.89: upload reverted to a plain text link, brighter, hover holds, nudged lower',
+  INDEX_SOURCE.includes('.upload-link { letter-spacing: 0.32em; padding: 2px 20px; font-size: 10px;') &&
+  INDEX_SOURCE.includes('color: rgba(216,226,246,0.60); margin-top: 7px;') &&
+  INDEX_SOURCE.includes('.upload-link:hover { color: rgba(216,226,246,0.52); }'));
 ok('v13.86: deleting a project removes its row instantly (no accidental deletes)',
   INDEX_SOURCE.includes(".session-item[data-id=\"' + sel + '\"]") &&
   INDEX_SOURCE.includes('if (row) row.remove();'));
@@ -1407,10 +1406,11 @@ ok('v13.75: the avatar dropdown is back and Randomize joins Replace/Remove',
 // v13.76: the sourceable fabric wall shows only real retailer photos and no
 // longer collapses to color swatches when the visual ranking is unavailable.
 // v13.78: cabinet order/labels + swipe memory + Admin logo ring + ops beta.
-ok('v13.85: tabs order holds and the title says "Projects" with a dropdown caret',
+ok('v13.89: tabs order holds; the top label says "Users" and Projects rides beside the name',
   INDEX_SOURCE.indexOf('id="pg-tab-pinterest"') < INDEX_SOURCE.indexOf('id="pg-tab-fabrics"') &&
   INDEX_SOURCE.indexOf('id="pg-tab-fabrics"') < INDEX_SOURCE.indexOf('id="pg-tab-avatar"') &&
-  INDEX_SOURCE.includes("'Projects <span class=\"pg-tabtitle-caret\">") &&
+  INDEX_SOURCE.includes("? 'Fabrics' : 'Users';") &&
+  INDEX_SOURCE.includes('id="pg-project-beside"') &&
   INDEX_SOURCE.includes('class="pg-avatar-nameline"'));
 ok('v13.85: switching an avatar no longer spawns an empty project',
   INDEX_SOURCE.includes('const hasContent = (Array.isArray(items) && items.length) || currentClientName;'));
@@ -1708,6 +1708,34 @@ ok('v13.88: admin has a "Hey Maya" wake word',
   MAP_SOURCE.includes('hey,?\\s*maya') &&
   MAP_SOURCE.includes('id="wake-toggle"') &&
   MAP_SOURCE.includes("dispatchEvent(new Event('maya-voice-ended'))"));
+
+// ── v13.89 ──
+ok('v13.89: the drawer has a collapsible Stats fold on top of Measurements with a gauge + four tiles',
+  INDEX_SOURCE.includes('id="pg-stats"') &&
+  INDEX_SOURCE.indexOf('id="pg-stats"') < INDEX_SOURCE.indexOf('id="pg-meas"') &&
+  INDEX_SOURCE.includes('id="pg-gauge-fill"') &&
+  INDEX_SOURCE.includes('id="pg-stat-dollars"') &&
+  INDEX_SOURCE.includes('id="pg-stat-cards"') &&
+  INDEX_SOURCE.includes('id="pg-stat-favs"') &&
+  INDEX_SOURCE.includes('id="pg-stat-images"') &&
+  INDEX_SOURCE.includes('function _renderDrawerStats('));
+ok('v13.89: the Projects dropdown moved beside the avatar name, keeping pgProjects',
+  INDEX_SOURCE.includes('id="pg-project-beside"') &&
+  INDEX_SOURCE.includes('onclick="pgProjects()"') &&
+  INDEX_SOURCE.includes('.pg-project-beside { margin-left: auto;'));
+ok('v13.89: the out-of-credits popup exists with an upgrade path and a dev preview',
+  INDEX_SOURCE.includes('function mayaShowCreditsPopup(') &&
+  INDEX_SOURCE.includes('function mayaTryCreditsPopup(') &&
+  INDEX_SOURCE.includes('out of credits</div>') &&
+  INDEX_SOURCE.includes('res.status === 402'));
+ok('v13.89: the server meters each user against a $2 free trial and blocks image calls at the cap',
+  SERVER_SOURCE.includes('const USER_TRIAL_USD = Number(process.env.USER_TRIAL_USD || 2)') &&
+  SERVER_SOURCE.includes('async function noteUserSpend(') &&
+  SERVER_SOURCE.includes("error: 'trial_exhausted'") &&
+  SERVER_SOURCE.includes('noteUserSpend(user.sub, user.email, upstreamPath, req)'));
+ok('v13.89: /api/usage reports the signed-in user\'s own trial meter',
+  SERVER_SOURCE.includes("app.get('/api/usage'") &&
+  SERVER_SOURCE.includes('capUsd: USER_TRIAL_USD'));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

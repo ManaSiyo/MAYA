@@ -126,10 +126,13 @@ later. Right now it's internal, for Fromsa and his team.
 - [x] "Hey Maya" wake word on Admin (opt-in toggle) — v13.88.
 - [x] Fabrics: "arrives in N days" (relative) + all prices in USD — v13.88.
 - [x] Community wall: center every line — v13.88.
-- [ ] Upload + Tap-to-Listen on ONE row: thin compact pills, just the bars (+ a
-  plus for Upload), label appears instantly on hover. Saves screen real estate.
-- [ ] Empty middle of the Projects area → a personal SCORECARD / progress bar:
-  cards made, images generated, versions, average versions. Gamify.
+- [x] Upload + Tap-to-Listen: REVERSED (v13.89). Fromsa decided against the
+  one-row compact pills and asked to revert both to the playground's plain style.
+  Upload is now plain text, a touch brighter, hover holds the colour, nudged
+  lower. Tap-to-Listen already matched the playground.
+- [x] Empty middle of the Projects area → a personal SCORECARD (v13.89): the
+  collapsible Stats fold on top of Measurements — a circular credits gauge over
+  four tiles (credits left, cards made, favourites, images rendered). Gamified.
 - [ ] Cross-project FAVORITES store: a favorited fabric/render stays a favorite
   forever, across projects and accounts (built in backend, surfaced in frontend later).
 - [ ] BUG: favoriting pushes/resets the card stack — it should stay put.
@@ -139,6 +142,20 @@ later. Right now it's internal, for Fromsa and his team.
   at two slides. Fromsa said "fine for now" — lower priority.
 - [ ] FX rates in `_priceUSD` are approximate/hardcoded — swap for a live daily
   rate (small server fetch) when it matters.
+
+## 9. Credits + drawer restructure  [SHIPPED v13.89]
+
+- [x] Per-user **free trial: $2** of image renders, metered server-side; image
+  calls blocked at the cap (admins never capped). `GET /api/usage` feeds the app.
+- [x] Circular **credits gauge** + four stats (credits left, cards made,
+  favourites, images rendered) in a collapsible **Stats fold** on top of
+  Measurements, filling the empty drawer space.
+- [x] **Out-of-credits popup** on 402, with an Upgrade ($5 ≈ 13 renders) button
+  and a "Try popup" dev preview.
+- [x] Drawer: top label **"Users"**; **Projects moved beside the name**,
+  right-aligned, same dropdown; avatar and Projects independent under one account.
+- [ ] NEXT: wire real payments — the $5 top-up (Stripe), ~50% margin, so a paid
+  balance adds to the trial. The button is a labelled placeholder until then.
 
 ## Priority order
 

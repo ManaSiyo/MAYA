@@ -1126,3 +1126,22 @@ v13.82 — "Make the voice agent (MAYA) the real intelligence layer"
 [?] "Delete nurture" — the word "nurture" does not appear anywhere in the
     repository (searched all HTML/JS/docs). Need Fromsa to point at where he
     sees it so it can be removed correctly rather than guessed.
+
+── v13.89 (Claude) ──────────────────────────────────────────────────────────
+[x] Revert Upload + Tap-to-Listen to the playground's plain style. Upload is
+    now a plain text link, a touch brighter at rest, hover holds the same
+    colour a hair faded (constant, not lit), nudged a few pixels lower.
+    Tap-to-Listen already matched the playground.
+[x] Free-trial credits: $2 per account, metered server-side. Image calls are
+    refused at the cap (admins never capped); GET /api/usage feeds the app.
+    Out-of-credits popup with an Upgrade ($5, ~13 renders) placeholder button,
+    plus a "Try popup" dev preview.
+[x] Drawer Stats: a collapsible fold on top of Measurements filling the empty
+    space — a circular credits gauge over four tiles (credits left, cards made,
+    favourites, images rendered).
+[x] Drawer restructure: top label -> "Users"; Projects moved beside the name
+    (right-aligned, same dropdown). Avatar and Projects independent under one
+    account.
+[ ] NEXT (needs Fromsa): wire the real $5 top-up (Stripe) with ~50% margin so
+    a paid balance adds to the trial. The Upgrade button is a placeholder
+    until a payment key + price sign-off.

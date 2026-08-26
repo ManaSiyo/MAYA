@@ -73,6 +73,49 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.89 (Claude): free-trial credits, drawer Stats + Projects/Users restructure
+
+`frontend/index.html`:
+- **Upload reverted** from the v13.86 glass pill to the playground's plain text
+  link — a touch brighter at rest (`rgba(216,226,246,0.60)`), hover holds the
+  same colour a hair faded (`0.52`, constant, not lit), nudged a few px lower
+  (`margin-top: 7px`). Tap-to-Listen already matched the playground, so it was
+  left as-is.
+- **Drawer restructure.** The top cabinet label now reads **"Users"** (the
+  account/Google-ID header), no longer the projects opener. The **Projects
+  dropdown moved beside the avatar name** (`#pg-project-beside`, right-aligned
+  over the Remove pill), keeping the exact same behaviour (`pgProjects` →
+  `toggleSessionsDropdown`). Avatar (face + measurements) and Projects are now
+  independent under one account; the old `#pg-project-pill` stays hidden.
+- **Stats fold** (`#pg-stats`), collapsible like Measurements and sitting ON TOP
+  of it, fills the empty drawer space. A circular SVG gauge shows trial credits
+  left of $2, over four tiles: credits left, cards made, favourites, images
+  rendered. Cards/images/favourites come from local `items`; credits come from
+  `/api/usage`. `_renderDrawerStats()` repaints on avatar-pane show and on
+  favourite toggle. A **"Try popup"** dev link (and `?trypopup`) previews the
+  out-of-credits popup.
+- **Out-of-credits popup** (`mayaShowCreditsPopup`): shown when an image call
+  returns `402 trial_exhausted`, with an Upgrade (($5, ~13 renders) button that
+  is a labelled placeholder until payments are wired. `showError` swallows the
+  trial error so no raw toast fires.
+
+`docs/server/server.js`:
+- **Per-user free-trial meter.** Every signed-in account gets `USER_TRIAL_USD`
+  (default $2) of image renders. Image calls are refused with `402
+  trial_exhausted` once the account is at the cap; **admins are never capped**.
+  The check runs BEFORE the upstream call, so a blocked user costs nothing.
+  Cumulative (a trial is a lifetime allowance), one GCS object per account at
+  **`metrics/trial/<sha256(sub)[:24]>.json`** — its OWN prefix, hashed sub, so
+  it never collides with or inflates the `metrics/users/` account count.
+  `noteUserSpend` charges the meter after each successful call (images flush
+  immediately so the cap survives a restart). **`GET /api/usage`** returns the
+  signed-in user's own meter (`capUsd`, `spentUsd`, `leftUsd`, `images`) — any
+  authed user, real numbers for everyone so the gauge moves.
+- KNOWN LIMIT: like the rate limiter, the per-user meter is per-instance
+  in-memory with a 10s GCS-backed read, so a rare cross-instance race can let a
+  render or two slip past $2. Fine for a trial guard; not a billing ledger.
+  Payments (the real $5 top-up) are NOT wired — that is the next step.
+
 ## v13.88 (Claude): Hey-Maya wake word, fabric arrival/USD, community wall
 
 `backend/status.html`: a **"Hey Maya" wake word** — an opt-in background

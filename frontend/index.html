@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.88">
+<meta name="maya-version" content="13.89">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -738,16 +738,13 @@
   /* v13.4: the upload button reads a touch wider per Fromsa.
      v13.8: wider again, and a size up, so it can actually be seen. */
   /* v13.33: 20% brighter, per Fromsa. 0.3 -> 0.36 at rest, 0.8 -> 0.96 lit. */
-  /* v13.86: it was blending into the background. Give it a real glass pill so
-     it reads as a button, wider, brighter at rest, and nudged a touch lower. */
-  .upload-link { letter-spacing: 0.3em; padding: 7px 30px; font-size: 10px;
-                 color: rgba(222,230,248,0.72);
-                 border: 0.5px solid rgba(255,255,255,0.24); border-radius: 100px;
-                 background: rgba(255,255,255,0.04);
-                 backdrop-filter: blur(12px) saturate(150%); -webkit-backdrop-filter: blur(12px) saturate(150%);
-                 box-shadow: inset 0 1px 1px rgba(255,255,255,0.14), 0 3px 12px rgba(0,0,0,0.28);
-                 margin-top: 8px; }
-  .upload-link:hover { color: rgba(255,255,255,0.98); border-color: rgba(255,255,255,0.44); }
+  /* v13.89: reverted the v13.86 glass pill back to the playground's plain text
+     link, per Fromsa. Kept it a touch brighter than playground at rest; hover
+     holds the same colour (a hair faded, not lit) so it reads as constant; and
+     nudged a few pixels lower. */
+  .upload-link { letter-spacing: 0.32em; padding: 2px 20px; font-size: 10px;
+                 color: rgba(216,226,246,0.60); margin-top: 7px; }
+  .upload-link:hover { color: rgba(216,226,246,0.52); }
   /* v13.4: the upload chooser. Snappy on purpose: 0.12s, no drift. */
   /* v13.31: Pinterest picker. Board tiles, then picture tiles with a tick. */
   .pin-grid {
@@ -2081,6 +2078,67 @@
   #notes-drawer .pg-fold summary::-webkit-details-marker { display: none; }
   #notes-drawer .pg-fold summary::after { content: '\25BE'; font-size: 10px; color: rgba(238,242,255,0.4); }
   #notes-drawer .pg-fold:not([open]) summary::after { transform: rotate(-90deg); }
+  /* v13.89: Projects, beside the name, right-aligned over the Remove pill. Its
+     own pill + caret; opens the same project list the top title used to. */
+  #notes-drawer .pg-project-beside { margin-left: auto; flex: none;
+    background: none; border: 0.5px solid rgba(255,255,255,0.22); border-radius: 100px;
+    cursor: pointer; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 9px;
+    letter-spacing: 0.14em; text-transform: uppercase; color: rgba(238,242,255,0.82);
+    padding: 4px 12px; white-space: nowrap; transition: border-color 0.2s, color 0.2s; }
+  #notes-drawer .pg-project-beside:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
+  #notes-drawer .pg-project-beside-caret { font-size: 10px; color: rgba(238,242,255,0.5); margin-left: 4px; }
+  /* v13.89: the Stats fold — a car-dash for the free trial. */
+  #notes-drawer .pg-stats-body { padding: 12px 0 6px; }
+  #notes-drawer .pg-gauge-wrap { position: relative; width: 118px; height: 118px; margin: 0 auto 14px; }
+  #notes-drawer .pg-gauge { width: 118px; height: 118px; transform: rotate(-90deg); }
+  #notes-drawer .pg-gauge-track { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 8; }
+  #notes-drawer .pg-gauge-fill { fill: none; stroke: rgba(169,201,255,0.9); stroke-width: 8;
+    stroke-linecap: round; stroke-dasharray: 326.7; stroke-dashoffset: 0;
+    transition: stroke-dashoffset 0.6s ease, stroke 0.3s ease; }
+  #notes-drawer .pg-gauge-fill.low { stroke: rgba(235,150,150,0.9); }
+  #notes-drawer .pg-gauge-center { position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2px; }
+  #notes-drawer .pg-gauge-value { font-family: 'Cormorant Garamond', serif; font-size: 26px;
+    font-weight: 500; color: rgba(245,250,255,0.96); line-height: 1; }
+  #notes-drawer .pg-gauge-cap { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 8px;
+    letter-spacing: 0.16em; text-transform: uppercase; color: rgba(238,242,255,0.5); }
+  #notes-drawer .pg-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #notes-drawer .pg-stat { display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 10px 6px; border: 0.5px solid rgba(255,255,255,0.08); border-radius: 12px;
+    background: rgba(255,255,255,0.02); }
+  #notes-drawer .pg-stat-num { font-family: 'Cormorant Garamond', serif; font-size: 20px;
+    font-weight: 500; color: rgba(245,250,255,0.95); line-height: 1; }
+  #notes-drawer .pg-stat-lab { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 7.5px;
+    letter-spacing: 0.14em; text-transform: uppercase; color: rgba(238,242,255,0.5); text-align: center; }
+  #notes-drawer .pg-try-popup { display: block; margin: 12px auto 2px; background: none; border: none;
+    cursor: pointer; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 8px;
+    letter-spacing: 0.2em; text-transform: uppercase; color: rgba(169,201,255,0.55);
+    transition: color 0.2s; }
+  #notes-drawer .pg-try-popup:hover { color: rgba(169,201,255,0.9); }
+  /* v13.89: the out-of-credits popup. */
+  #maya-credits-popup { position: fixed; inset: 0; z-index: 12000; display: none;
+    align-items: center; justify-content: center; padding: 24px;
+    background: rgba(6,8,14,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  #maya-credits-popup.show { display: flex; }
+  #maya-credits-popup .mcp-card { width: 100%; max-width: 320px; text-align: center;
+    padding: 28px 24px 22px; border-radius: 20px;
+    background: rgba(20,26,40,0.92); border: 0.5px solid rgba(255,255,255,0.16);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  #maya-credits-popup .mcp-title { font-family: 'Cormorant Garamond', serif; font-size: 26px;
+    font-weight: 500; color: rgba(245,250,255,0.98); margin-bottom: 10px; }
+  #maya-credits-popup .mcp-body { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 12px;
+    line-height: 1.5; color: rgba(228,234,248,0.72); margin-bottom: 20px; }
+  #maya-credits-popup .mcp-upgrade { display: block; width: 100%; margin: 0 0 10px; padding: 12px 18px;
+    border-radius: 100px; cursor: pointer; border: 0.5px solid rgba(169,201,255,0.5);
+    background: rgba(169,201,255,0.14); color: rgba(245,250,255,0.98);
+    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; transition: background 0.2s, border-color 0.2s; }
+  #maya-credits-popup .mcp-upgrade:hover { background: rgba(169,201,255,0.24); border-color: rgba(169,201,255,0.8); }
+  #maya-credits-popup .mcp-later { display: block; width: 100%; background: none; border: none;
+    cursor: pointer; padding: 6px; color: rgba(228,234,248,0.5);
+    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; transition: color 0.2s; }
+  #maya-credits-popup .mcp-later:hover { color: rgba(228,234,248,0.85); }
   #notes-drawer #pg-meas-host { padding-top: 8px; }
   #notes-drawer #pg-meas-host .avatar-face-row,
   #notes-drawer #pg-meas-host .avatar-name-input { display: none !important; }
@@ -4662,7 +4720,7 @@
       </button>
       <!-- v13.75: the current tab's name rides here, in the dead space beside
            the circles, so the panes below start higher. -->
-      <span class="pg-tabtitle" id="pg-tabtitle">Projects</span>
+      <span class="pg-tabtitle" id="pg-tabtitle">Users</span>
     </div>
     <div class="pg-folder" id="pg-folder">
       <div class="pg-pane" id="pg-pane-avatar">
@@ -4676,6 +4734,10 @@
             <div class="pg-avatar-nameline">
               <span class="drawer-avatar-name" id="drawer-avatar-name">name</span>
               <button class="drawer-avatar-caret" id="drawer-avatar-caret" onclick="toggleAvatarSwitcher()" title="Switch avatar / client">&#9662;</button>
+              <!-- v13.89: Projects rides beside the name, right-aligned over the
+                   Remove pill. Same list, same dropdown behaviour (pgProjects);
+                   the avatar and Projects are now independent under one account. -->
+              <button class="pg-project-beside" id="pg-project-beside" onclick="pgProjects()" title="Your projects; click for the list">Projects <span class="pg-project-beside-caret">&#9662;</span></button>
             </div>
             <div class="pg-avatar-actions">
               <button class="drawer-action" onclick="pgReplaceFace()">Replace</button>
@@ -4693,6 +4755,31 @@
             <div class="sessions-empty" id="sessions-empty-hint">No projects yet.</div>
           </div>
         </div>
+        <!-- v13.89: a collapsible Stats fold rides on top of Measurements and
+             fills the empty drawer space. Circular gauge = trial credits left of
+             $2; four tiles under it. When Measurements opens it pushes down. -->
+        <details class="pg-fold pg-stats-fold" id="pg-stats">
+          <summary>Stats</summary>
+          <div class="pg-stats-body" id="pg-stats-body">
+            <div class="pg-gauge-wrap">
+              <svg class="pg-gauge" viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="pg-gauge-track" cx="60" cy="60" r="52"></circle>
+                <circle class="pg-gauge-fill" id="pg-gauge-fill" cx="60" cy="60" r="52"></circle>
+              </svg>
+              <div class="pg-gauge-center">
+                <span class="pg-gauge-value" id="pg-gauge-value">$2.00</span>
+                <span class="pg-gauge-cap" id="pg-gauge-cap">left of $2</span>
+              </div>
+            </div>
+            <div class="pg-stats-grid">
+              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-dollars">$2.00</span><span class="pg-stat-lab">Credits left</span></div>
+              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-cards">0</span><span class="pg-stat-lab">Cards made</span></div>
+              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-favs">0</span><span class="pg-stat-lab">Favorites</span></div>
+              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-images">0</span><span class="pg-stat-lab">Images rendered</span></div>
+            </div>
+            <button class="pg-try-popup" onclick="mayaTryCreditsPopup()" title="Preview the out-of-credits popup">Try popup</button>
+          </div>
+        </details>
         <details class="pg-fold" id="pg-meas">
           <summary>Measurements</summary>
           <div id="pg-meas-host"></div>
@@ -5344,6 +5431,8 @@ function showError(msg) {
   // even after our auto-rewrite + retry. The raw message is intimidating
   // and not actionable for Fromsa; soften it to fashion-editor tone.
   const raw = (msg || '').toString();
+  // v13.89: the out-of-credits popup already handled this; no scary toast.
+  if (/trial_exhausted/i.test(raw)) return;
   if (/safety system|content policy|violates|moderation|not allowed/i.test(raw)) {
     showToast('Couldn\'t render this. The image filter caught some vocabulary. Try softer language or move forward without that ref.', true);
     console.error('[Maya safety]', raw);
@@ -8392,6 +8481,8 @@ function toggleFavorite(itemId) {
     const fb = it.el.querySelector('.fav-btn');
     if (fb) fb.classList.toggle('is-fav', it.card.favorited);
   }
+  // v13.89: keep the drawer Stats favourites count live.
+  try { _renderDrawerStats(); } catch (_) {}
   // v10.9: when a vision card is favorited, fire a one-shot construction
   // dissection via gpt-4.1 vision. Result is cached on card._dissection
   // and shown under the favorite card on hover. Re-renders the favorites
@@ -11814,6 +11905,11 @@ async function callOpenAIImageEdit(prevDataUrl, prompt, size, quality, opts) {
   }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
+    // v13.89: free-trial ceiling on the edit path too.
+    if (res.status === 402 || err.error === 'trial_exhausted') {
+      try { mayaShowCreditsPopup(err); } catch (_) {}
+      const e2 = new Error('trial_exhausted'); e2.code = 'trial_exhausted'; throw e2;
+    }
     throw new Error(err.error?.message || ('Image edit error: ' + res.status));
   }
   const data = await res.json();
@@ -11852,6 +11948,11 @@ async function callOpenAIImage(prompt, size, quality, opts) {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
+    // v13.89: free-trial ceiling. Show the upgrade popup, not a raw error toast.
+    if (res.status === 402 || err.error === 'trial_exhausted') {
+      try { mayaShowCreditsPopup(err); } catch (_) {}
+      const e2 = new Error('trial_exhausted'); e2.code = 'trial_exhausted'; throw e2;
+    }
     throw new Error(err.error?.message || ('Image error: ' + res.status));
   }
   const data = await res.json();
@@ -16543,15 +16644,91 @@ function pgShow(which) {
   // v13.75: name the visible tab in the dead space beside the circles.
   const title = document.getElementById('pg-tabtitle');
   if (title) {
-    const isAvatar = (which === 'avatar');
-    // v13.85: "Projects" carries a dropdown caret so it's clear it opens the
-    // project list (it was there, just hidden under the title). No redesign.
-    title.innerHTML = which === 'pinterest' ? 'Pinterest' : which === 'fabrics' ? 'Fabrics'
-      : 'Projects <span class="pg-tabtitle-caret">▾</span>';
-    title.classList.toggle('clickable', isAvatar);
-    title.onclick = (isAvatar && typeof pgProjects === 'function') ? function () { pgProjects(); } : null;
+    // v13.89: the top label reads "Users" — the account/Google-ID header. The
+    // project list moved to the "Projects" pill beside the name, so the title is
+    // now a plain label, not the projects opener.
+    title.innerHTML = which === 'pinterest' ? 'Pinterest' : which === 'fabrics' ? 'Fabrics' : 'Users';
+    title.classList.remove('clickable');
+    title.onclick = null;
+  }
+  // v13.89: refresh the drawer stats whenever the avatar pane is shown. Paint
+  // the local counts at once, then pull fresh credits and repaint.
+  if (which === 'avatar') {
+    try { _renderDrawerStats(); } catch (_) {}
+    try { _refreshUsage().then(() => { try { _renderDrawerStats(); } catch (_) {} }); } catch (_) {}
   }
 }
+// v13.89: the Stats fold — trial credits gauge + four tiles. Cards, images and
+// favourites come from the local `items`; credits (dollars left of the $2 trial)
+// come from /api/usage, with the full $2 shown until the server answers.
+let _mayaUsage = { spentUsd: 0, capUsd: 2, images: 0, ok: false };
+async function _refreshUsage() {
+  try {
+    const key = (typeof getApiKey === 'function') ? getApiKey() : '';
+    if (!key) return;
+    const r = await fetch('/api/usage', { headers: { 'Authorization': 'Bearer ' + key } });
+    if (!r.ok) return;
+    const j = await r.json();
+    if (j && typeof j.capUsd === 'number') {
+      _mayaUsage = { spentUsd: Number(j.spentUsd) || 0, capUsd: Number(j.capUsd) || 2,
+                     images: Number(j.images) || 0, ok: true };
+    }
+  } catch (_) {}
+}
+function _renderDrawerStats() {
+  const list = (typeof items !== 'undefined' && Array.isArray(items)) ? items : (window.items || []);
+  const cards = list.length;
+  const imagesLocal = list.filter(i => i && i.card && i.card.image).length;
+  const favs = list.filter(i => i && i.card && i.card.favorited && i.card.image).length;
+  const cap = _mayaUsage.capUsd || 2;
+  const spent = Math.min(cap, Math.max(0, _mayaUsage.spentUsd || 0));
+  const left = Math.max(0, cap - spent);
+  const frac = cap > 0 ? left / cap : 0;
+  const images = _mayaUsage.ok ? _mayaUsage.images : imagesLocal;
+  const C = 326.7;
+  const fill = document.getElementById('pg-gauge-fill');
+  if (fill) {
+    fill.style.strokeDashoffset = String(C * (1 - frac));
+    fill.classList.toggle('low', frac <= 0.2);
+  }
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const money = '$' + left.toFixed(2);
+  set('pg-gauge-value', money);
+  set('pg-gauge-cap', 'left of $' + cap.toFixed(0));
+  set('pg-stat-dollars', money);
+  set('pg-stat-cards', String(cards));
+  set('pg-stat-favs', String(favs));
+  set('pg-stat-images', String(images));
+}
+// v13.89: the out-of-credits popup. Shown when an image call comes back 402
+// trial_exhausted, and previewable from the "Try popup" link in the Stats fold.
+// Payments aren't wired yet — the $5 button is a labelled placeholder.
+function mayaShowCreditsPopup(info) {
+  info = info || {};
+  let ov = document.getElementById('maya-credits-popup');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'maya-credits-popup';
+    ov.innerHTML =
+      '<div class="mcp-card" role="dialog" aria-modal="true">' +
+        '<div class="mcp-title">You\'re out of credits</div>' +
+        '<div class="mcp-body">You\'ve used your $2 of free renders. Top up to keep visualizing — about 13 more renders for $5.</div>' +
+        '<button class="mcp-upgrade" id="mcp-upgrade">Get $5 more · ~13 renders</button>' +
+        '<button class="mcp-later" id="mcp-later">Not now</button>' +
+      '</div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('show'); });
+    ov.querySelector('#mcp-later').addEventListener('click', () => ov.classList.remove('show'));
+    ov.querySelector('#mcp-upgrade').addEventListener('click', () => {
+      ov.classList.remove('show');
+      try { showToast('Payments are coming soon — you\'ll be able to top up for $5.'); } catch (_) {}
+    });
+  }
+  ov.classList.add('show');
+}
+// Dev preview trigger, callable from the Stats fold's "Try popup" link or ?trypopup.
+function mayaTryCreditsPopup() { mayaShowCreditsPopup({ preview: true }); }
+try { if (/[?&]trypopup\b/.test(location.search)) setTimeout(mayaTryCreditsPopup, 400); } catch (_) {}
 function pgTab(which) {
   // v13.75: remember the tab Fromsa chose, so reopening the drawer returns here.
   window._pgLastTab = which;

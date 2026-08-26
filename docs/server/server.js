@@ -444,6 +444,19 @@ app.all(/^\/api\/openai\/(.*)/, openaiAuthGate, express.raw({ type: '*/*', limit
   let fallbackBuf = policy.fallback || null;
   const streamRequested = !!policy.streamRequested;
 
+  // v13.89: the free-trial ceiling. An image call is refused once the account
+  // has spent its USER_TRIAL_USD; admins are never capped. Checked here, before
+  // any money is spent upstream, so a blocked user costs nothing.
+  if (isImage && !_isAdmin) {
+    const spent = await userSpendTotal(user.sub);
+    if ((spent.usd || 0) >= USER_TRIAL_USD) {
+      console.warn('[trial] exhausted', user.email, (spent.usd || 0).toFixed(2));
+      return res.status(402).json({ error: 'trial_exhausted',
+        detail: 'You have used your free trial credits. Upgrade to keep rendering.',
+        capUsd: USER_TRIAL_USD, spentUsd: Number((spent.usd || 0).toFixed(2)) });
+    }
+  }
+
   const headers = { 'Authorization': 'Bearer ' + openaiKey };
   if (req.headers['content-type']) headers['Content-Type'] = req.headers['content-type'];
 
@@ -489,6 +502,9 @@ app.all(/^\/api\/openai\/(.*)/, openaiAuthGate, express.raw({ type: '*/*', limit
     // v13.28: the meter. MAYA counts its own spending here, because OpenAI
     // will not tell an application key what the balance is.
     noteSpend(upstreamPath, req);
+    // v13.89: charge the caller's own free-trial meter too (fire-and-forget;
+    // images persist immediately inside so the cap survives a restart).
+    noteUserSpend(user.sub, user.email, upstreamPath, req);
     // v13.53: one structured line per AI call. For small non-streamed JSON
     // answers (chat, embeddings) the real token usage is read from the body;
     // streamed and binary responses log without it and keep flowing.
@@ -899,6 +915,88 @@ async function bootMeter() {
     }
   } catch (_) {}
 }
+
+// ═══ v13.89: per-user free-trial meter ══════════════════════════════════════
+// The _spend meter above tracks MAYA's whole OpenAI bill. THIS one is per
+// person: every signed-in Google account gets USER_TRIAL_USD (default $2) of
+// image renders, and image calls are refused once that is used up. Admins are
+// never capped. It is a soft trial guard, not a billing ledger — a rare
+// cross-instance race can let a render or two slip over, fine for a $2
+// allowance. Cumulative, because a trial is a lifetime allowance, not monthly.
+// One GCS object per account at metrics/trial/<hash>.json. The name is a one-way
+// hash of the Google sub — never the raw id — matching the sign-in markers'
+// privacy, and it lives under its OWN prefix so it does not collide with, or
+// inflate, the metrics/users/ account count.
+const USER_TRIAL_USD = Number(process.env.USER_TRIAL_USD || 2);
+const USER_METRICS_PREFIX = 'metrics/trial/';
+const _userSpend = new Map();   // uid -> { usd, images, calls, email, dirty, ts, lastFlush }
+function _uidKey(uid) {
+  const h = crypto.createHash('sha256').update(String(uid)).digest('hex').slice(0, 24);
+  return USER_METRICS_PREFIX + h + '.json';
+}
+async function userSpendTotal(uid) {
+  const cached = _userSpend.get(uid);
+  if (cached && Date.now() - cached.ts < 10000) return cached;
+  const rec = { usd: 0, images: 0, calls: 0, email: (cached && cached.email) || '',
+                dirty: false, ts: Date.now(), lastFlush: (cached && cached.lastFlush) || 0 };
+  try {
+    const o = await gcsGet(_uidKey(uid));
+    if (o.ok) {
+      const j = JSON.parse(o.buf.toString('utf8'));
+      rec.usd = Number(j.usd) || 0; rec.images = Number(j.images) || 0;
+      rec.calls = Number(j.calls) || 0; rec.email = j.email || rec.email;
+    }
+  } catch (_) {}
+  // Keep any unflushed local increments that ran ahead of the stored copy.
+  if (cached && cached.usd > rec.usd) {
+    rec.usd = cached.usd; rec.images = cached.images; rec.calls = cached.calls; rec.dirty = cached.dirty;
+  }
+  _userSpend.set(uid, rec);
+  return rec;
+}
+async function noteUserSpend(uid, email, path, req) {
+  try {
+    const price = priceOf(path, req);
+    const rec = await userSpendTotal(uid);
+    rec.usd += price; rec.calls += 1;
+    if (/images\//.test(path)) rec.images += 1;
+    if (email) rec.email = email;
+    rec.dirty = true; rec.ts = Date.now();
+    _userSpend.set(uid, rec);
+    // Persist images at once (rare + they carry the cost the cap is about); let
+    // chat/audio ride the throttle so we do not write on every keystroke.
+    if (/images\//.test(path) || Date.now() - (rec.lastFlush || 0) > 60000) await flushUserSpend(uid);
+  } catch (e) { console.error('[trial] note failed,', e.message); }
+}
+async function flushUserSpend(uid) {
+  const rec = _userSpend.get(uid);
+  if (!rec || !rec.dirty) return;
+  // No raw uid in the object — the filename is already its one-way hash.
+  const snap = { email: rec.email || '', usd: Number(rec.usd.toFixed(4)),
+                 images: rec.images, calls: rec.calls, updatedAtMs: Date.now() };
+  try {
+    await gcsPut(_uidKey(uid), Buffer.from(JSON.stringify(snap), 'utf8'), 'application/json');
+    rec.dirty = false; rec.lastFlush = Date.now();
+  } catch (e) { console.error('[trial] flush failed,', e.message); rec.lastFlush = Date.now(); }
+}
+// GET /api/usage — the signed-in user's own free-trial meter. Any authed user
+// (not admin-only): the app reads it to paint the drawer credits gauge. Reports
+// real spend for everyone so the gauge moves; only NON-admins are ever blocked.
+app.get('/api/usage', requireAuthHeader, async (req, res) => {
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized', detail: e.message }); }
+  const isAdmin = ADMIN_EMAILS.includes((user.email || '').toLowerCase());
+  try {
+    const rec = await userSpendTotal(user.sub);
+    const spent = Number((rec.usd || 0).toFixed(2));
+    res.json({ capUsd: USER_TRIAL_USD, spentUsd: spent,
+               leftUsd: Number(Math.max(0, USER_TRIAL_USD - spent).toFixed(2)),
+               images: rec.images || 0, calls: rec.calls || 0, admin: isAdmin });
+  } catch (e) {
+    res.status(500).json({ error: 'usage_failed', detail: String(e.message).slice(0, 80) });
+  }
+});
 
 // GET /api/admin/spend — the month's estimated OpenAI spend, every instance
 // summed, plus this instance's unwritten remainder so the gauge never lags.

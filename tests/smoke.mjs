@@ -81,6 +81,7 @@ await check('runway is dormant',                  post('/api/runway', AUTH), 501
 await check('fal is dormant',                     post('/api/fal/fal-ai/hyper3d/rodin', AUTH), 501);
 await check('fal storage is dormant',             post('/api/falstorage/storage/upload/initiate', AUTH), 501);
 await check('tip is dormant until a key is set',  post('/api/tip', { ...AUTH, headers: { ...AUTH.headers, 'Content-Type': 'application/json' }, body: '{"amount":5}' }), 501);
+await check('usage meter needs a token',           get('/api/usage', AUTH), 401);
 
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);
