@@ -925,8 +925,9 @@ ok('Admin answers WHO on hover, from named markers',
   MAP_SOURCE.includes('/api/admin/users') &&
   SERVER_SOURCE.includes("app.get('/api/admin/users'") &&
   SERVER_SOURCE.includes('doc.lastSeenMs = Date.now();'));
-ok('Admin opens to a swipe like MAYA does',
-  MAP_SOURCE.includes('_wireDrawerSwipe'));
+ok('Admin opens to a swipe like MAYA does (native horizontal scroll-snap now)',
+  MAP_SOURCE.includes('id="adm-hscroll"') &&
+  /#adm-hscroll\{[^}]*scroll-snap-type:x mandatory/.test(MAP_SOURCE));
 ok('marketing never clears the shared sign in on a deploy',
   !/maya_seen_version_mkt[\s\S]{0,200}removeItem/.test(MKT_SOURCE));
 ok('Windsor can feed both ad panels through one key',
@@ -950,9 +951,9 @@ ok('the Admin doors are plain words, MANA SIYO among them',
   MAP_SOURCE.includes('.grid.doors .card{border:0;background:none') &&
   MAP_SOURCE.includes('<b>MANA SIYO</b>') &&
   !MAP_SOURCE.includes('a.card{display:block'));
-ok('the Admin drawer runs full height and answers a mouse drag',
-  MAP_SOURCE.includes('#drawer{position:fixed;top:10px;right:10px;bottom:10px') &&
-  /mousedown[\s\S]{0,200}begin\(e\.clientX/.test(MAP_SOURCE));
+ok('the Admin drawer is the second pane of the scroll-snap host, full height',
+  MAP_SOURCE.includes('class="hpane hpane-drawer"') &&
+  /\.hpane-drawer\{order:2;width:378px/.test(MAP_SOURCE));
 // v13.45: no button inside the drawer any more; the top bar pill slides out
 // with the drawer on every page and stays visible, and a click anywhere
 // outside the drawer closes it.
@@ -963,9 +964,7 @@ ok('the hamburger slides out with the drawer on every page',
   // v13.61: ops computes the offset live instead of a fixed translateX
   (!OPS_SOURCE || OPS_SOURCE.includes('function _placeHamburger(')));
 // ── v13.46 ─────────────────────────────────────────────────────────────────
-ok('the pill and each drawer share one duration and curve, anchored not chasing',
-  MAP_SOURCE.includes('transition:transform .42s cubic-bezier(0.16,1,0.3,1)') &&
-  MAP_SOURCE.includes('transform:translateX(calc(100% + 20px))') &&
+ok('the Backend drawer keeps the shared slide duration and curve',
   BACKEND_SOURCE.includes('transition: transform 0.42s cubic-bezier(0.16,1,0.3,1)'));
 ok('the Backend drawer slides open first and fills after',
   /async function openClientsDrawer\(\) \{[\s\S]{0,400}classList\.add\('open'\)[\s\S]{0,400}getMayaFolder/.test(BACKEND_SOURCE));
@@ -1783,10 +1782,14 @@ ok('v13.91: Sources of traffic and the Bottom Line share one shell',
   !MAP_SOURCE.includes('id="sources-fold"') &&
   MAP_SOURCE.includes('class="bl-sub">Sources of traffic') &&
   MAP_SOURCE.includes('id="sources-table"'));
-ok('v13.91: the Admin drawer answers a trackpad two-finger swipe (wheel deltaX)',
-  MAP_SOURCE.includes("addEventListener('wheel'") &&
-  MAP_SOURCE.includes('wAccum') &&
-  MAP_SOURCE.includes('toggleDrawer(true)'));
+ok('v13.94: the Admin drawer is an exact copy of the frontend — native horizontal scroll-snap, no browser back-swipe',
+  MAP_SOURCE.includes('id="adm-hscroll"') &&
+  MAP_SOURCE.includes('class="hpane hpane-drawer"') &&
+  MAP_SOURCE.includes('class="hpane hpane-main"') &&
+  /#adm-hscroll\{[^}]*scroll-snap-type:x mandatory/.test(MAP_SOURCE) &&
+  /#adm-hscroll\{[^}]*overscroll-behavior-x:contain/.test(MAP_SOURCE) &&
+  MAP_SOURCE.includes("hs.scrollTo({ left: target, behavior: 'smooth' })") &&
+  !MAP_SOURCE.includes('let wAccum'));
 
 // ── v13.92 ──
 ok('v13.92: the favorites pills read "Post to Community Wall" / "Get it made", calm glass, no pulse',
@@ -1823,6 +1826,21 @@ ok('v13.93: the server persists the new CRM columns (company, quote, both invoic
   SERVER_SOURCE.includes("has('quote')") &&
   SERVER_SOURCE.includes("has('invoice1')") &&
   SERVER_SOURCE.includes("has('invoice2')"));
+
+// ── v13.94 ──
+ok('v13.94: the drawer section headings are centered',
+  /#drawer h3\{[^}]*text-align:center/.test(MAP_SOURCE));
+ok('v13.94: hovering ADMIN drops its rooms + the sheet beneath the wordmark',
+  MAP_SOURCE.includes('class="brand-chips"') &&
+  MAP_SOURCE.includes('>operations room</a>') &&
+  MAP_SOURCE.includes('>playground</a>') &&
+  MAP_SOURCE.includes('>the sheet</a>') &&
+  /#top-left-brand:hover \.brand-chips/.test(MAP_SOURCE));
+ok('v13.94: Company/Title moved under the name as a signature line; columns centered; no delete X in the row',
+  MAP_SOURCE.includes("cell(i, x, 'company', x.company || x.tier || '', 'lead-sig-edit')") &&
+  MAP_SOURCE.includes('class="lead-sig"') &&
+  /#adm-mkt #leads-table td\{[^}]*text-align:center/.test(MAP_SOURCE) &&
+  !MAP_SOURCE.includes('class="lead-cta lead-del" onclick="deleteLeadRow'));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

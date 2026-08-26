@@ -73,6 +73,36 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.94 (Claude): Admin drawer is now an EXACT copy of the frontend
+
+`backend/status.html`:
+- **The drawer is the frontend architecture, ported.** The whole admin page is a
+  two-pane native horizontal scroll-snap (`#adm-hscroll` = fixed flex host,
+  `scroll-snap-type:x mandatory`, **`overscroll-behavior-x:contain`**). Pane 1
+  (`.hpane-main` > `#adm-scroll`) is the page (scrolls vertically inside itself);
+  pane 2 (`.hpane-drawer`, order:2, 378px) holds `#drawer`, now static, not fixed.
+  `toggleDrawer` scrolls the host exactly like the app's `toggleNotesDrawer`, and
+  the swipe itself is pure native scroll-snap. The reverse swipe can no longer
+  fire the browser back-gesture (that was the "max wipe" bug). Verified headless:
+  open→scrollLeft 378, close→0, overscroll contain, 0 JS errors. `window.openDrawer`
+  / `window.closeDrawer` are exposed so Maya can open/close it by voice.
+  NOTE: the admin page itself no longer scrolls; `#adm-scroll` does. The old
+  `_wireDrawerSwipe` wheel handler and the fixed-drawer transform are gone.
+- **Drawer section headings centered** (`#drawer h3{text-align:center}`).
+- **Hover pills under ADMIN**: `.brand-chips` drop beneath the wordmark on hover
+  (operations room, playground, the 2026 sheet), same family as the Mana Siyo
+  door chips.
+- **Lead Station tweaks**: Company / Title dropped as a column and moved under the
+  name as an editable signature line (`.lead-sig`); every column centered; the
+  Actions column now shows the email + phone icons on top with the recommended
+  timing under them, and the delete X is gone from the row (`deleteLeadRow` still
+  exists for Maya/voice).
+
+NEXT (still Fromsa-ordered): Speed to Lead scaffolding (waiting on his Quo/OpenPhone
+key + phone number in env + copy prompt; the "Speed to Lead, Humanized Copy" doc
+is in the Drive 2026 folder). Also queued: quote→pay-link automation, Maya
+knowing yesterday's Wix stats, the pinch-zoom playground.
+
 ## v13.93 (Claude): Lead Station goes Hunter-style (frozen header + first column)
 
 `backend/status.html` + `docs/server/server.js`:

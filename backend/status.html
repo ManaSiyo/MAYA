@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.93">
+<meta name="maya-version" content="13.94">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -31,8 +31,10 @@ try {
     --grp:rgba(245,250,255,0.82);
     --green:#4ade80;--amber:#fbbf24;--blue:rgba(245,250,255,0.85);--violet:rgba(245,250,255,0.7);--rose:#fda4af}
   *{box-sizing:border-box;margin:0;padding:0}
+  /* v13.94: the page no longer scrolls itself; #adm-scroll (pane 1) does. */
+  html{overscroll-behavior-x:none}
   body{background:#000 url('/aesthetics/ui/birth-of-a-star.png') center / cover no-repeat fixed;
-       color:var(--ink);font-family:'Cormorant Garamond',Georgia,serif;padding:80px 28px 40px;min-height:100vh}
+       color:var(--ink);font-family:'Cormorant Garamond',Georgia,serif;padding:0;height:100vh;overflow:hidden}
   .wrap{max-width:1000px;margin:0 auto;text-align:center}
 
   /* Top bar, mirrors the MAYA app exactly: logo left, wordmark, hamburger right */
@@ -85,14 +87,25 @@ try {
   /* v13.44: the drawer runs the full height of the window, and the hamburger
      rides with it: the top bar one fades, the drawer's own takes its place
      in the drawer's top-left corner. Same move as the MAYA app. */
-  #drawer{position:fixed;top:10px;right:10px;bottom:10px;width:360px;overflow:auto;
-          z-index:210;border:0.5px solid var(--line);border-radius:20px;padding:18px;
-          background:rgba(8,12,26,0.82);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
-          /* v13.46: the drawer SLIDES in, same duration and curve as the
-             hamburger pill, so the two move as one piece. */
-          transform:translateX(calc(100% + 20px));opacity:0;pointer-events:none;
-          transition:transform .42s cubic-bezier(0.16,1,0.3,1),opacity .42s ease}
-  #drawer.open{transform:none;opacity:1;pointer-events:auto}
+  /* v13.94: EXACT copy of the frontend's drawer architecture. The drawer is the
+     second pane of a native horizontal scroll-snap host (#adm-hscroll). The
+     browser drives the swipe, with momentum and rubber-band, exactly like the
+     app; overscroll-behavior-x:contain means a reverse swipe can never fire the
+     browser's back-gesture. The page is pane 1, the drawer is pane 2. */
+  #adm-hscroll{position:fixed;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;
+    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;
+    scrollbar-width:none;z-index:1}
+  #adm-hscroll::-webkit-scrollbar{display:none}
+  .hpane{flex:0 0 auto;height:100vh;scroll-snap-align:start;scroll-snap-stop:always;
+    transform:translate3d(0,0,0);backface-visibility:hidden}
+  .hpane-main{order:1;width:100vw;position:relative}
+  .hpane-drawer{order:2;width:378px;position:relative}
+  #adm-scroll{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;padding:80px 28px 40px}
+  #adm-scroll::-webkit-scrollbar{display:none}
+  #drawer{position:absolute;top:70px;right:10px;bottom:10px;left:8px;overflow:auto;
+    z-index:2;border:0.5px solid var(--line);border-radius:20px;padding:18px;
+    background:rgba(8,12,26,0.82);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%)}
   /* v13.67: Maya's voice lives at the floor of the drawer again. Tap the star
      to open the line; it breathes while she listens, and a small chip stays
      on screen even when the drawer is closed, so she keeps talking until you
@@ -188,8 +201,9 @@ try {
      anchored to the drawer's edge rather than chasing it. */
   .top-btn.hamburger{transition:transform .42s cubic-bezier(0.16,1,0.3,1)}
   @media (max-width: 640px){ body.drawer-open .top-btn.hamburger{transform:none} }
+  /* v13.94: the drawer section headings are centered, per Fromsa. */
   #drawer h3{font-family:'Jost',sans-serif;font-weight:400;font-size:10px;letter-spacing:0.24em;
-             text-transform:uppercase;color:var(--grp);margin:14px 0 8px}
+             text-transform:uppercase;color:var(--grp);margin:14px 0 8px;text-align:center}
   #drawer h3:first-child{margin-top:0}
   #drawer a{text-align:left;display:block;text-decoration:none;color:var(--ink);font-size:14.5px;padding:7px 10px;
             border-radius:10px;transition:background .2s}
@@ -366,6 +380,12 @@ try {
     color:var(--dim);border:0.5px solid var(--line);border-radius:100px;padding:3px 9px;
     text-decoration:none}
   .pg-chip:hover{color:var(--ink);border-color:rgba(255,255,255,0.45)}
+  /* v13.94: the ADMIN wordmark drops its rooms beneath it on hover. */
+  #top-left-brand{position:relative}
+  #top-left-brand .brand-chips{position:absolute;left:60px;top:100%;margin-top:5px;
+    display:flex;gap:6px;white-space:nowrap;opacity:0;pointer-events:none;
+    transition:opacity .18s ease .4s;z-index:230}
+  #top-left-brand:hover .brand-chips,#top-left-brand .brand-chips:hover{opacity:1;pointer-events:auto;transition-delay:0s}
   /* v13.72: MANA SIYO mirrors MAYA. Hover it and its two editing rooms hang to
      the LEFT, Design Studio and Wix Studio, the same chips as MAYA's. */
   .card-mana{position:relative}
@@ -474,22 +494,28 @@ try {
   /* v13.93: Hunter-style CRM. The station is a scroll box: the header row and the
      Full name column stay frozen while everything else scrolls both ways. */
   #adm-mkt #leads-fold .panel{max-height:62vh;overflow:auto}
-  #adm-mkt #leads-table{min-width:960px;border-collapse:separate;border-spacing:0}
+  #adm-mkt #leads-table{min-width:880px;border-collapse:separate;border-spacing:0}
+  /* v13.94: every column is centered, per Fromsa. */
   #adm-mkt #leads-table th{position:sticky;top:0;z-index:3;background:#0d1120;
     font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;
-    color:var(--dim);font-weight:400;text-align:left;padding:7px 12px 9px;white-space:nowrap;
+    color:var(--dim);font-weight:400;text-align:center;padding:7px 12px 9px;white-space:nowrap;
     border-bottom:0.5px solid var(--line)}
-  #adm-mkt #leads-table td{padding:9px 12px 9px}
+  #adm-mkt #leads-table td{padding:9px 12px 9px;text-align:center}
   /* the Full name column is frozen on the left; the corner cell rides on top */
   #adm-mkt #leads-table .lead-h-name,#adm-mkt #leads-table .lead-td-name{
     position:sticky;left:0;background:#0d1120;box-shadow:1px 0 0 var(--line)}
   #adm-mkt #leads-table .lead-td-name{z-index:2}
   #adm-mkt #leads-table th.lead-h-name{z-index:4}
-  #adm-mkt #leads-table th.lead-h-actions{text-align:left}
+  /* Company / Title now sits under the name as a signature line. */
+  #adm-mkt #leads-table .lead-sig{margin-top:2px}
+  #adm-mkt #leads-table .lead-sig-edit{font-family:'Cormorant Garamond',serif;font-size:12px;color:var(--dim);font-style:italic}
+  #adm-mkt #leads-table .lead-sig-edit:empty::before{content:'company or title';color:var(--faint);font-style:italic}
   /* the quote and invoice columns invite a value with a faint + when empty */
   #adm-mkt #leads-table .lead-money-edit{font-variant-numeric:tabular-nums;white-space:nowrap}
   #adm-mkt #leads-table .lead-money-edit:empty::before{content:'+';color:var(--faint)}
-  #adm-mkt #leads-table .lead-company-edit:empty::before{content:'add';color:var(--faint);font-style:italic}
+  /* Actions: the icons ride on top, the recommended timing sits under them. */
+  #adm-mkt #leads-table .lead-td-actions .lead-ctas{justify-content:center;margin:0 0 5px}
+  #adm-mkt #leads-table .lead-td-actions .lead-rec{text-align:center}
   #adm-mkt #leads-table .lead-when{color:var(--faint);font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.08em;margin-top:2px}
   #adm-mkt #leads-table .lead-src{display:inline-block;margin-left:6px;padding:0 5px;border-radius:100px;border:0.5px solid var(--line);
     font-size:8px;letter-spacing:0.14em;color:var(--faint);vertical-align:middle}
@@ -574,6 +600,8 @@ try {
   #adm-mkt .status-word{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase}
   #adm-mkt .status-word.on{color:var(--green)} #adm-mkt .status-word.off{color:var(--faint)}
   #adm-mkt .pair-b{color:#a9c9ff}
+  /* v13.94: on a phone the drawer pane is the full width, like the app. */
+  @media (max-width:640px){ .hpane-drawer{width:100vw} #adm-scroll{padding:70px 14px 30px} #drawer{left:12px;right:12px} }
 
 </style>
 <!-- v13.19: removable Systems Map-only polish. Keeping this outside the
@@ -595,6 +623,13 @@ try {
     <a href="/status.html" class="brand-home" style="display:flex;align-items:center;text-decoration:none;color:inherit" title="Admin, tap to reload">
       <span class="brand-title">Admin</span>
     </a>
+    <!-- v13.94: hover ADMIN and its rooms drop beneath it, the same chip family
+         as Mana Siyo's Wix Studio / Design Studio: the back rooms and the sheet. -->
+    <span class="brand-chips">
+      <a class="pg-chip" href="/operations.html" target="_blank">operations room</a>
+      <a class="pg-chip" href="/playground.html" target="_blank">playground</a>
+      <a class="pg-chip" href="https://docs.google.com/spreadsheets/d/1LI__xIpcKl4uH595oOhfIdJhJNJL5vBP5-vRJk-Ew0I/" target="_blank">the sheet</a>
+    </span>
   </div>
   <!-- v13.72: the day reads itself out between the wordmark and the menu,
        colored like Marketing's line. -->
@@ -604,6 +639,10 @@ try {
   </button>
 </div>
 
+<!-- v13.94: the whole page is a two-pane native horizontal scroll-snap, an exact
+     copy of the frontend app. Pane 2 is the drawer; pane 1 is everything else. -->
+<div id="adm-hscroll">
+<div class="hpane hpane-drawer">
 <div id="drawer">
   <h3 class="tint">Systems</h3>
   <div id="top-lights" onclick="runChecks()" title="Tap to check again">
@@ -655,6 +694,8 @@ try {
     <div id="voice-word"></div>
   </div>
 </div>
+</div><!-- /hpane-drawer -->
+<div class="hpane hpane-main"><div id="adm-scroll">
 <div id="voice-chip" onclick="toggleMayaVoice()" title="Maya is listening. Tap to hang up."><span class="dot"></span><span id="voice-chip-word">Maya is listening</span></div>
 
 <div class="wrap">
@@ -946,6 +987,8 @@ try {
 
   </div><!-- /map-footer -->
 </div>
+</div></div><!-- /adm-scroll /hpane-main -->
+</div><!-- /adm-hscroll -->
 
 <script>
 // v12.8: light the green dot when the newest entry has not been read on this
@@ -971,80 +1014,35 @@ try {
 // v13.43: the drawer answers a swipe, like MAYA. Start within an inch of the
 // right edge, pull left, it opens; swipe right anywhere on it, it closes.
 // v13.44: works with a mouse drag too, so it behaves the same on desktop.
-// v13.45: a click anywhere outside the drawer closes it.
+// v13.94: the drawer opens and closes by scrolling the horizontal #adm-hscroll
+// container, the SAME mechanism as the frontend app's toggleNotesDrawer. The
+// swipe itself is pure native scroll-snap (no JS in the gesture path), so it has
+// the app's exact momentum and rubber-band, and overscroll-behavior-x:contain
+// keeps the browser back-swipe from ever firing. Maya can call this too, so
+// "open the drawer" / "close the drawer" and an auto-open on a confirm both work.
+function toggleDrawer(force) {
+  const hs = document.getElementById('adm-hscroll');
+  if (!hs) return;
+  const max = hs.scrollWidth - hs.clientWidth;
+  const isOpen = hs.scrollLeft > max / 2;
+  let target;
+  if (force === true) target = max;
+  else if (force === false) target = 0;
+  else target = isOpen ? 0 : max;
+  hs.scrollTo({ left: target, behavior: 'smooth' });
+  const btn = document.querySelector('.top-btn.hamburger');
+  if (btn) btn.setAttribute('aria-expanded', target > 0 ? 'true' : 'false');
+}
+window.openDrawer = () => toggleDrawer(true);
+window.closeDrawer = () => toggleDrawer(false);
+// v13.94: a click anywhere outside the open drawer closes it, same as the app.
 document.addEventListener('pointerdown', (e) => {
-  const drawer = document.getElementById('drawer');
-  if (!drawer || !drawer.classList.contains('open')) return;
+  const hs = document.getElementById('adm-hscroll');
+  if (!hs || hs.scrollLeft <= (hs.scrollWidth - hs.clientWidth) / 2) return;
   const t = e.target;
   if (t && t.closest && (t.closest('#drawer') || t.closest('.top-btn.hamburger'))) return;
   toggleDrawer(false);
 }, true);
-function toggleDrawer(force) {
-  const drawer = document.getElementById('drawer');
-  if (!drawer) return;
-  const open = (typeof force === 'boolean') ? force : !drawer.classList.contains('open');
-  drawer.classList.toggle('open', open);
-  document.body.classList.toggle('drawer-open', open);
-  const btn = document.querySelector('.top-btn.hamburger');
-  if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-}
-(function _wireDrawerSwipe() {
-  let sx = null, sy = null, fromEdge = false;
-  function begin(x, y) {
-    sx = x; sy = y;
-    fromEdge = (window.innerWidth - x) < 90;
-  }
-  function finish(x, y) {
-    if (sx == null) return;
-    const dx = x - sx, dy = y - sy;
-    sx = null;
-    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
-    const drawer = document.getElementById('drawer');
-    if (!drawer) return;
-    if (dx < 0 && fromEdge) toggleDrawer(true);
-    else if (dx > 0 && drawer.classList.contains('open')) toggleDrawer(false);
-  }
-  document.addEventListener('touchstart', (e) => {
-    const t = e.touches && e.touches[0];
-    if (t) begin(t.clientX, t.clientY);
-  }, { passive: true });
-  document.addEventListener('touchend', (e) => {
-    const t = e.changedTouches && e.changedTouches[0];
-    if (t) finish(t.clientX, t.clientY);
-  }, { passive: true });
-  document.addEventListener('mousedown', (e) => {
-    if (e.button === 0) begin(e.clientX, e.clientY);
-  }, { passive: true });
-  document.addEventListener('mouseup', (e) => {
-    if (e.button === 0) finish(e.clientX, e.clientY);
-  }, { passive: true });
-  // v13.91: the piece that was missing — a Mac trackpad two-finger horizontal
-  // swipe fires `wheel` events (deltaX), not touch or mouse, so the drawer never
-  // answered the gesture Fromsa was actually making. Accumulate horizontal wheel
-  // delta and, on a decisive right-to-left swipe, pull the drawer in; left-to-
-  // right pushes it back. Vertical scrolls and swipes over a scrollable table
-  // are left alone.
-  let wAccum = 0, wTimer = null;
-  document.addEventListener('wheel', (e) => {
-    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;       // vertical intent
-    let n = e.target;
-    while (n && n !== document.body && n.nodeType === 1) {
-      if (n.scrollWidth - n.clientWidth > 4) {
-        const ov = getComputedStyle(n).overflowX;
-        if (ov === 'auto' || ov === 'scroll') return;            // let the table scroll
-      }
-      n = n.parentElement;
-    }
-    wAccum += e.deltaX;
-    clearTimeout(wTimer);
-    wTimer = setTimeout(() => { wAccum = 0; }, 200);
-    const drawer = document.getElementById('drawer');
-    if (!drawer) return;
-    const open = drawer.classList.contains('open');
-    if (!open && wAccum > 120) { toggleDrawer(true); wAccum = 0; }
-    else if (open && wAccum < -120) { toggleDrawer(false); wAccum = 0; }
-  }, { passive: true });
-})();
 function setDot(id,s){document.getElementById(id).className='sdot '+s}
 let _idTok = null;
 let _healthSeq = 0;
@@ -2281,11 +2279,13 @@ function paintLeads(l) {
   // v13.93: a real CRM in the Hunter style. Many columns, the sheet scrolls
   // sideways, the header row and the Full name column stay frozen. Actions is
   // the last column (the recommended move + the CTAs).
+  // v13.94: Company / Title moved under the name as a signature line (dropped as
+  // a column). Every column is centered. Actions puts the email + phone icons on
+  // top with the recommended timing under them; no delete X in the row.
   tb.innerHTML =
     '<tr>' +
       '<th class="lead-h-name">Full name</th>' +
       '<th>Email</th>' +
-      '<th>Company / Title</th>' +
       '<th>Latest Notes</th>' +
       '<th>Quote</th>' +
       '<th>Invoice 1</th>' +
@@ -2293,25 +2293,25 @@ function paintLeads(l) {
       '<th class="lead-h-actions">Actions</th>' +
     '</tr>' +
     l.list.map((x, i) =>
-      '<tr id="lead-tr-' + i + '"><td class="lead-td-name" style="white-space:nowrap">' +
+      '<tr id="lead-tr-' + i + '"><td class="lead-td-name">' +
         cell(i, x, 'name', x.name, 'lead-name-edit') +
         (x.source === 'wix' ? '<span class="lead-src wix">WIX</span>'
           : (x.source && x.source !== 'wix' ? '<span class="lead-src">added</span>' : '')) +
+        '<div class="lead-sig">' + cell(i, x, 'company', x.company || x.tier || '', 'lead-sig-edit') + '</div>' +
         '<div class="lead-when">' + esc(when(x.lastTouch || x.ts)) + '</div></td>' +
       '<td>' + cell(i, x, 'email', x.email || x.phone || '', 'lead-email-edit') + '</td>' +
-      '<td>' + cell(i, x, 'company', x.company || x.tier || '', 'lead-company-edit') + '</td>' +
       // v13.91: Latest Notes ride a marquee — the note scrolls when it overruns
       // its column, pausing on hover and while you edit it in place.
       '<td class="lead-note"><div class="lead-note-vp">' + cell(i, x, 'note', x.note || '', 'lead-note-edit') + '</div></td>' +
       '<td>' + cell(i, x, 'quote', x.quote || '', 'lead-money-edit') + '</td>' +
       '<td>' + cell(i, x, 'invoice1', x.invoice1 || '', 'lead-money-edit') + '</td>' +
       '<td>' + cell(i, x, 'invoice2', x.invoice2 || '', 'lead-money-edit') + '</td>' +
-      '<td class="lead-td-actions" style="white-space:nowrap"><div class="lead-rec">' + rec(x) + '</div>' +
+      '<td class="lead-td-actions">' +
       '<div class="lead-ctas">' +
         (x.email ? '<button class="lead-cta" id="lead-mail-' + i + '" onclick="draftLead(' + i + ')" title="Draft the next email (opens Gmail, nothing is sent)">&#9993;</button>' : '') +
         (x.phone ? '<a class="lead-cta" href="tel:' + esc(x.phone) + '" onclick="leadContact(' + i + ',\'call\')" title="Call ' + esc(x.phone) + '">' + PHONE_SVG + '</a>' : '') +
-        '<button class="lead-cta lead-del" onclick="deleteLeadRow(' + i + ')" title="Remove this lead from the station">&#215;</button>' +
-      '</div></td></tr>'
+      '</div>' +
+      '<div class="lead-rec">' + rec(x) + '</div></td></tr>'
     ).join('');
   try { _leadMarquees(); } catch (_) {}
 }
