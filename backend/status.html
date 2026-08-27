@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.96">
+<meta name="maya-version" content="13.97">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -869,7 +869,11 @@ try {
   <details class="fold" id="changes-fold" data-latest="2026-08-24s">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
-    <div class="chg"><b>Aug 24</b>The Lead Station notes are the Latest Notes now, and you edit them in place: click a lead's note to open it, and the next email draft reads it. Maya can write the same note by name. And in the MAYA app, Pinterest's Bring them in is a smaller pill, sitting a little lower with less gap above it.</div>
+    <div class="chg"><b>Aug 27</b>The back rooms refresh themselves now. The Systems Map used to hold whatever build it opened with until you reloaded by hand, so a full day of shipping could look like nothing had changed. It checks for a new build every few minutes and whenever you return to the tab, and quietly updates itself, the way the app already did.</div>
+    <div class="chg"><b>Aug 27</b>The free trial stretches much further, and resets clean. Each generation now counts as five cents against the two dollars, so the same two dollars carries about forty renders instead of a handful. And every release hands everyone their full two dollars back.</div>
+    <div class="chg"><b>Aug 27</b>The avatar switcher opens to its full list again. In the app the client dropdown would open to nothing, a thin sliver with the names hidden inside it; it stands at its real height now and shows every saved avatar.</div>
+    <div class="chg"><b>Aug 26</b>The Lead Station became a real desk. The columns drag into any order and the first one stays frozen, the quote reads Last Quote and starts from the tier's own price until you change it after the call, and every lead carries an invoice button that builds a Wix pay link and folds it into the email. The two invoice columns are gone, and Actions is just the mail, phone and pay-link icons.</div>
+    <div class="chg"><b>Aug 26</b>The drawer floor is Maya's circle now, a true round logo sitting lower with a small MAYA pill beneath it that turns her voice on and off. The Systems Map drawer is an exact copy of the app's, the same swipe with no browser back-gesture, its headings centered, and resting on ADMIN drops the rooms and the 2026 sheet beneath the wordmark.</div>
     <div class="chg"><b>Aug 24</b>Maya can log features now. When you, or a customer, wish MAYA did something it does not yet do, tell Maya and she writes it to a feature log that reaches Claude to build. It is the first thread of the line between Maya and Claude: she records the wish, Claude turns it into work.</div>
     <div class="chg"><b>Aug 24</b>Maya's line reads on screen now, not only in the ear. When she is live the drawer carries the conversation as text, her words and yours, and every line can be copied. It is no longer voice only; you can see what she said and take it with you.</div>
     <div class="chg"><b>Aug 24</b>Polish. The circle around the Admin logo is gone when it is still; the ring of light only appears while Maya is live, breathing faster now. In the MAYA app the cabinet reads Pinterest, Fabrics, Avatar, the avatar's switch caret sits right beside the name, the tab title says Project, and the drawer keeps the last tab even when you swipe it away and back. Pinterest now sits at the same height as Fabrics with the same room for its cards. And the Operations Room wears its beta to the right of the name, not underneath.</div>
@@ -2936,6 +2940,45 @@ window._leadColDragEnd=_leadColDragEnd; window.paintLeads=paintLeads;
 // fire when signed in, and refresh with the traffic tick
 if(_idTok) loadMkt();
 setInterval(()=>{ if(_idTok && document.visibilityState==='visible') loadMkt(); }, 120000);
+})();
+</script>
+<script>
+// v13.97: the Systems Map refreshes itself on a new deploy, the way the app
+// already does. Before this it only read the version ON LOAD, so an open admin
+// tab would sit on an old build for a whole day of shipping and look unchanged.
+// Now it checks every few minutes and on refocus, and reloads to the new build
+// (the on-load block at the top then clears the token / signs out cleanly).
+(function(){
+  const RUN = (document.querySelector('meta[name="maya-version"]') || {}).content || '';
+  if (!RUN) return;
+  let reloading = false;
+  const newer = (a, b) => {
+    const pa = String(a).split('.').map(Number), pb = String(b).split('.').map(Number);
+    for (let i = 0; i < Math.max(pa.length, pb.length); i++) { const x = pa[i]||0, y = pb[i]||0; if (x !== y) return x > y; }
+    return false;
+  };
+  async function checkAdminUpdate(){
+    if (reloading) return;
+    try {
+      const t = await (await fetch('/status.html?uv=' + Date.now(), { cache: 'no-store' })).text();
+      const m = t.match(/maya-version" content="([0-9.]+)"/);
+      if (m && newer(m[1], RUN)) {
+        // never reload while Maya is live on the line
+        if (document.body.classList.contains('maya-live')) { setTimeout(checkAdminUpdate, 60000); return; }
+        reloading = true;
+        try { if (typeof showToast === 'function') showToast('Updating to ' + m[1] + '…'); } catch (_) {}
+        setTimeout(() => location.reload(), 900);
+      }
+    } catch (_) { /* offline, try later */ }
+  }
+  setInterval(checkAdminUpdate, 5 * 60 * 1000);
+  let last = 0;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    if (Date.now() - last < 300000) return;
+    last = Date.now(); checkAdminUpdate();
+  });
+  setTimeout(checkAdminUpdate, 8000);   // catch a tab opened already-stale
 })();
 </script>
 </body>

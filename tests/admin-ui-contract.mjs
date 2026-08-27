@@ -63,18 +63,18 @@ await test('the approved filing cabinet is promoted without removing Playground'
   assert.ok(playground.includes('>Playground</div>'));
 });
 
-await test('all four release surfaces carry v13.96', () => {
+await test('all four release surfaces carry v13.97', () => {
   const version = source => (source.match(/name="maya-version" content="([0-9.]+)"/) || [])[1];
-  assert.deepEqual([app, playground, admin, marketing].map(version), ['13.96', '13.96', '13.96', '13.96']);
+  assert.deepEqual([app, playground, admin, marketing].map(version), ['13.97', '13.97', '13.97', '13.97']);
 });
 
-await test('v13.96 drawer floor: circular logo, MAYA toggle pill', () => {
+await test('v13.97 drawer floor: circular logo, MAYA toggle pill', () => {
   assert.ok(admin.includes('logo-circle.png'), 'circular logo file referenced');
   assert.ok(admin.includes('id="maya-toggle"'), 'MAYA toggle pill present');
   assert.ok(admin.includes("mt.classList.toggle('live', on)"), 'pill mirrors the on/off state');
 });
 
-await test('v13.96 Lead Station: no Invoice columns, Last Quote, draggable columns', () => {
+await test('v13.97 Lead Station: no Invoice columns, Last Quote, draggable columns', () => {
   assert.ok(!/'<th[^>]*>Invoice 1<\/th>'|>Invoice 1</.test(admin), 'Invoice 1 column removed');
   assert.ok(!admin.includes("label: 'Invoice"), 'no invoice column def');
   assert.ok(admin.includes("label: 'Last Quote'"), 'Quote renamed to Last Quote');
@@ -83,11 +83,18 @@ await test('v13.96 Lead Station: no Invoice columns, Last Quote, draggable colum
   assert.ok(!admin.includes("'<div class=\"lead-when\">"), 'day-count line under the name removed');
 });
 
-await test('v13.96 Actions: email, phone, pay-link only; invoicing wired', () => {
+await test('v13.97 Actions: email, phone, pay-link only; invoicing wired', () => {
   assert.ok(admin.includes('function _actionsCell'), 'actions cell builder');
   assert.ok(admin.includes('function leadInvoice'), 'invoice composer');
   assert.ok(admin.includes('lead-inv-modal'), 'invoice modal');
   assert.ok(!/lead-rec">'\s*\+\s*rec\(x\)/.test(admin), 'recommendation text dropped from actions');
+});
+
+await test('v13.97 the admin auto-refreshes on a new deploy (no more stale tab)', () => {
+  assert.ok(admin.includes('function checkAdminUpdate'), 'admin has an update poller');
+  assert.ok(admin.includes("fetch('/status.html?uv='"), 'poller fetches the live version');
+  assert.ok(admin.includes('setInterval(checkAdminUpdate'), 'poller runs on an interval');
+  assert.ok(admin.includes('<b>Aug 27</b>'), 'recent changes list is current');
 });
 
 console.log('\n' + (failed ? failed + ' FAILED' : passed + ' passed') + '\n');

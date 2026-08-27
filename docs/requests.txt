@@ -1334,3 +1334,26 @@ LATER (design / accounts needed):
 [ ] Per-user personal backgrounds: a folder per user holding their background
     (currently the shared Birth-of-a-Star); users can change/generate/save their
     own Maya background. QUEUED (large; storage + generation + UI).
+
+── v13.97 (Claude): the "changes don't reflect" fix ─────────────────────────
+LIVE TEST (via Fromsa's signed-in Chrome): the frontend served 13.96; his admin
+TAB was showing a CACHED 13.94. A forced reload loaded 13.96 with every change
+(circular logo, Last Quote, no invoice cols, MAYA toggle). So the deploy pipeline
+WORKS; the admin tab was simply never reloaded since the deploys.
+Unique signed-in users right now: 4 (worldofsiyo, fromsa@manasiyo, april.gong.biz,
+jejuan.narcisse.art). "4" is correct; non-signed-in visitors are the Wix count.
+[x] Root cause: the app (index.html) has a 5-min version poller that auto-reloads
+    on a new deploy, but the ADMIN (status.html) only checked the version ON LOAD.
+    Added the same poller to the admin (checkAdminUpdate; 5-min interval + on
+    refocus + 8s after load; skips while Maya is live; reload triggers the on-load
+    sign-out). Now an open admin tab refreshes itself.
+[x] "Recent changes" was stuck at Aug 24 because no new dated entries were added
+    while shipping. Added Aug 26/27 entries for v13.94-13.97.
+[note] Hosting headers were ALREADY Cache-Control:no-cache for HTML; nothing to
+    fix there. A normal reload always revalidates; the issue was only open tabs.
+[ ] Still queued from the last batch: username editable-when-date; admin "Users"
+    is the right count (4) but he wants to confirm it tracks growth; randomize
+    speed/for-all-users; Hey-Maya toggle OFF BY DEFAULT and in the drawer;
+    inspiration version-0 swipe; a dedicated "what's new" popup modal (the
+    changelog is current now, but not shown as a popup yet); Maya feature-request
+    log; per-user backgrounds.

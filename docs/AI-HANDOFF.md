@@ -73,6 +73,25 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.97 (Claude): the admin auto-refreshes (fixes "changes don't reflect")
+
+`backend/status.html`:
+
+- **Root cause of "nothing shipped".** The app (`index.html`) has a 5-minute
+  version poller (`_checkForUpdate`) that reloads an open tab when a newer build
+  is live. The **admin (`status.html`) had no such poller** — it only compared the
+  version ON LOAD — so an open admin tab sat on whatever build it opened with. A
+  live test on Fromsa's signed-in Chrome confirmed it: frontend served 13.96, his
+  admin tab was a cached 13.94; a forced reload showed 13.96 with every change.
+  Added `checkAdminUpdate` (5-min interval + on refocus + 8s after load; skips
+  while `body.maya-live`; reload lets the on-load block clear the token). Now the
+  admin refreshes itself like the app.
+- **Recent-changes list refreshed.** It was frozen at Aug 24 because no dated
+  entries were added while shipping; added Aug 26/27 entries for v13.94–13.97.
+- Hosting headers were already `Cache-Control: no-cache` for HTML — not the cause.
+- Backend truth at the time: 4 signed-in accounts (worldofsiyo, fromsa@manasiyo,
+  april.gong.biz, jejuan.narcisse.art). The admin "Users" count of 4 is correct.
+
 ## v13.96 (Claude): avatar dropdown fix + trial economics + resets
 
 `frontend/index.html`, `docs/server/server.js`:
