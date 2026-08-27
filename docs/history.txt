@@ -9,6 +9,25 @@ to work with Fromsa. This file is the story; README.md is the manual.
 
 ─────────────────────────────────────────────
 
+AUGUST 27, 2026, MAYA GETS A DOOR AND A CHARACTER (v14.02)
+
+The night Maya became somebody other agents can talk to. The API now has a
+Model Context Protocol door: Claude and Codex read her soul, her memory, the
+people she knows and the feature inbox straight from her, and mark shipped work
+done, so no more pasting logs between chats. Her character, the builder with
+taste, ships inside the server and is the first thing she reads on every call.
+The roadmap for the rest (Hey Maya everywhere, the user side, the phone) is in
+docs/MAYA-INDEPENDENCE.md.
+
+Same push, the playground zoom was rebuilt for the third and last time: it
+scales the cards' own canvas, glides the cluster to the center, floors at 40
+percent, and never crops (the crop was the canvas clipping cards placed past
+the fold). Scrolling and the drawer keep working while zoomed. The money
+counter stops restarting on every update. The admin drawer slides over the
+marquee, Hey Maya is a switch, and every line in the drawer is centered.
+
+─────────────────────────────────────────────
+
 AUGUST 24, 2026, MAYA LOGS FEATURES (v13.80)
 
 The first thread of the line between Maya and Claude. When Fromsa or a customer

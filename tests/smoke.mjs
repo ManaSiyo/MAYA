@@ -10,6 +10,7 @@ import assert from 'node:assert';
 
 process.env.GOOGLE_CLIENT_ID = 'smoke-test.apps.googleusercontent.com';
 process.env.PORT = process.env.PORT || '8791';
+process.env.MAYA_MCP_TOKEN = process.env.MAYA_MCP_TOKEN || 'smoke-token';
 const BASE = 'http://127.0.0.1:' + process.env.PORT;
 
 await import(new URL('../docs/server/server.js', import.meta.url).href);
@@ -35,6 +36,16 @@ const get  = (p, o = {}) => () => fetch(BASE + p, o);
 const AUTH = { headers: { Authorization: 'Bearer not-a-real-token' } };
 
 console.log('\nMAYA smoke test\n');
+// v14.02: Maya's door. Closed without a token, unauthorized with a wrong one,
+// open with the right one (set below, before the server booted? no: env is read
+// at boot, so the smoke run exports MAYA_MCP_TOKEN=smoke before importing).
+await check('mcp door: wrong token is 401',        post('/mcp', { headers: { 'Content-Type': 'application/json', Authorization: 'Bearer nope' }, body: '{"jsonrpc":"2.0","id":1,"method":"ping"}' }), process.env.MAYA_MCP_TOKEN ? 401 : 503);
+await check('mcp door: right token answers ping', async () => {
+  const r = await fetch(BASE + '/mcp?token=' + encodeURIComponent(process.env.MAYA_MCP_TOKEN || ''), { method: 'POST',
+    headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 7, method: 'tools/list' }) });
+  if (process.env.MAYA_MCP_TOKEN) { const j = await r.json(); assert.ok(j.result && j.result.tools.length === 8, 'eight tools'); }
+  return r;
+}, process.env.MAYA_MCP_TOKEN ? 200 : 503);
 await check('healthz answers',                    get('/api/healthz'), 200);
 await check('subthumb rejects a bad token',        get('/api/admin/subthumb?id=1a2b3c4d5e6f7g', AUTH), 401);
 await check('healthz reports what is configured', async () => {

@@ -46,7 +46,9 @@ backend/privacy.html       privacy policy     → /privacy.html
 backend/verify.html        deploy check       → /verify.html
 aesthetics/                every picture the site serves, at the root
 docs/                      everything an agent reads, nothing the web serves
-docs/server/               Cloud Run: server.js, Dockerfile, rules
+docs/server/               Cloud Run: server.js, Dockerfile, rules,
+                           maya-mcp.mjs (Maya's MCP door) and
+                           maya-character.md (who Maya is, read per call)
 docs/firebase.json         the hosting map. Moving a page starts HERE.
 playground/index.html      Fromsa's private copy → /playground.html. New or
                            risky features land HERE first and are promoted to
@@ -54,6 +56,8 @@ playground/index.html      Fromsa's private copy → /playground.html. New or
 robots.txt                 a real file, so a crawler is not handed the app
 cloudbuild.yaml            Cloud Build reads it at the root, leave it there
 tests/                     the suite resolves the repo root from its own folder
+docs/MAYA-INDEPENDENCE.md  the roadmap for Maya as an entity; read it before
+                           touching her voice, memory, tools or the door
 AGENTS.md / CLAUDE.md      this contract, one text under two names
 ```
 

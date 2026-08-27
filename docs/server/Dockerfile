@@ -9,5 +9,7 @@ COPY proxy-policy.mjs ./
 COPY admin-command.mjs ./
 COPY fabric-sourcing.js ./
 COPY ai-router.js ./
+COPY maya-mcp.mjs ./
+COPY maya-character.md ./
 EXPOSE 8080
 CMD ["node", "server.js"]

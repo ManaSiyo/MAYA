@@ -30,6 +30,8 @@ steps:
         node tests/admin-command.mjs
         node tests/admin-ui-contract.mjs
         node tests/proxy-policy.mjs
+        node tests/maya-mcp.mjs
+        node --check docs/server/maya-mcp.mjs
         node --check docs/server/admin-command.mjs
         node --check docs/server/proxy-policy.mjs
         node --check docs/server/server.js

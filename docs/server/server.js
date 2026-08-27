@@ -30,6 +30,10 @@ import crypto from 'node:crypto';
 import { Readable } from 'node:stream';
 import { evaluateProxyPolicy } from './proxy-policy.mjs';
 import { buildAdminCommandSnapshot, buildFeatureDigest, buildRealtimeCommandContext, resolveLeadExact } from './admin-command.mjs';
+import { createMayaMcp } from './maya-mcp.mjs';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname as pathDirname, join as pathJoin } from 'node:path';
 import dns from 'node:dns/promises';
 import {
   applyVisualRankings,
@@ -196,6 +200,12 @@ const RL_PER_DAY = Number(process.env.RL_PER_DAY || 50);
 const RL_ADMIN_PER_MIN = Number(process.env.RL_ADMIN_PER_MIN || 120);
 const RL_ADMIN_PER_DAY = Number(process.env.RL_ADMIN_PER_DAY || 6000);
 const _rl = new Map();  // sub -> { min:[ts...], day:[ts...] }
+// v14.02: Maya's character, one file in the container. Missing file = empty, she
+// still runs on the inline instructions.
+const MAYA_CHARACTER = (() => {
+  try { return readFileSync(pathJoin(pathDirname(fileURLToPath(import.meta.url)), 'maya-character.md'), 'utf8').slice(0, 9000); }
+  catch (_) { return ''; }
+})();
 function rateLimit(sub, email, weight) {
   const w = Math.max(1, Number(weight) || 1);
   const isAdmin = !!email && ADMIN_EMAILS.includes(String(email).toLowerCase());
@@ -933,11 +943,12 @@ async function bootMeter() {
 // inflate, the metrics/users/ account count.
 const USER_TRIAL_USD = Number(process.env.USER_TRIAL_USD || 2);
 const USER_METRICS_PREFIX = 'metrics/trial/';
-// v13.96: every release refreshes everyone's free trial back to the full $2.
 // Each account's meter records the epoch it was last reset at; when the current
-// epoch differs, the meter zeroes on next read. Bump this string on any release
-// where the trial should reset (and it doubles as the one-off "reset everyone
-// now" Fromsa asked for). Overridable via env for an out-of-band reset.
+// epoch differs, the meter zeroes on next read.
+// v14.02: THE EPOCH IS FROZEN. It no longer follows the release number. Fromsa's
+// rule (Aug 27 2026): an update must never restart anyone's money counter. Do
+// NOT bump this string in a release. A deliberate one-off reset is done out of
+// band by setting TRIAL_EPOCH on Cloud Run, never in code.
 const TRIAL_EPOCH = String(process.env.TRIAL_EPOCH || 'v14.00');
 const _userSpend = new Map();   // uid -> { usd, images, calls, email, dirty, ts, lastFlush }
 function _uidKey(uid) {
@@ -2975,6 +2986,8 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
       (p.aliases && p.aliases.length ? ', also called ' + p.aliases.join(', ') : '') +
       (p.note ? ' — ' + p.note : '')).join('\n') || '(no one saved yet)';
     const soulText = String(soul || '').slice(-2500);
+    // v14.02: her character ships with the container (maya-character.md), read once.
+    const character = MAYA_CHARACTER ? 'WHO YOU ARE (your character, kept in maya-character.md):\n' + MAYA_CHARACTER + '\n\n' : '';
     const voiceCtx = buildRealtimeCommandContext(ctx);
     const nowLA = new Intl.DateTimeFormat('en-US', { timeZone: process.env.WIX_TZ || 'America/Los_Angeles',
       weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
@@ -2993,6 +3006,7 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
       'the next check; do not claim to have fixed code, you cannot change code, but you can note it and ' +
       'talk it through.';
     const instructions =
+      character +
       'You are Maya, the operations mind and voice of Mana Siyo, a custom fashion studio in San ' +
       'Francisco. You are speaking out loud with Fromsa, the founder, over live audio. Right now it is ' + nowLA +
       ' in San Francisco. Open by greeting him briefly and offering the day\'s read. Be warm, sharp and ' +
@@ -3880,6 +3894,55 @@ app.post('/api/admin/marketing-brief', requireAuthHeader, express.json({ limit: 
 });
 
 const port = process.env.PORT || 8080;
+// ═══ v14.02: MAYA'S OWN DOOR. /mcp is a Model Context Protocol server (Streamable
+// HTTP, JSON replies) so Claude, Codex or any MCP client can read Maya's soul,
+// memory, people, feature inbox and lead station, journal a line, and mark a
+// feature shipped. It is the MAYA to Claude line Fromsa asked for: she logs, he
+// approves, Claude ships. Guarded by MAYA_MCP_TOKEN (Cloud Run env, set by
+// Fromsa); with no token the door is closed (503). Token rides as
+// Authorization: Bearer <token> or ?token=<token> for clients that cannot send
+// headers. No voice-line writes here: leads stay read only. ═══
+const MAYA_MCP_TOKEN = String(process.env.MAYA_MCP_TOKEN || '');
+const mayaMcp = createMayaMcp({
+  version: process.env.K_REVISION || 'local',
+  configured: () => ({ openai: !!process.env.OPENAI_API_KEY, bucket: process.env.SUBMISSIONS_BUCKET || 'pro-maya.firebasestorage.app', windsor: !!process.env.WINDSOR_API_KEY }),
+  loadFeatures: loadMayaFeatures,
+  saveFeatures: async (rec) => gcsPut(MAYA_FEATURES_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json'),
+  loadMemory: loadMayaMemory,
+  loadPeople: loadMayaPeople,
+  loadSoul: loadMayaSoul,
+  appendSoul: appendMayaSoul,
+  loadLeads: async () => { const d = await loadLeadFeed(); return { leads: d.leads || d.items || [] }; },
+});
+function mcpTokenOk(req) {
+  if (!MAYA_MCP_TOKEN) return false;
+  const h = String(req.headers.authorization || '');
+  const given = h.startsWith('Bearer ') ? h.slice(7).trim() : String((req.query || {}).token || '');
+  if (!given || given.length !== MAYA_MCP_TOKEN.length) return false;
+  try { return crypto.timingSafeEqual(Buffer.from(given), Buffer.from(MAYA_MCP_TOKEN)); } catch (_) { return false; }
+}
+app.get('/mcp', (req, res) => {
+  if (!MAYA_MCP_TOKEN) return res.status(503).json({ error: 'maya_door_closed', hint: 'set MAYA_MCP_TOKEN on Cloud Run' });
+  if (!mcpTokenOk(req)) return res.status(401).json({ error: 'unauthorized' });
+  // no server-to-client stream; clients POST each message
+  return res.status(405).json({ error: 'post_only' });
+});
+app.post('/mcp', express.json({ limit: '64kb' }), async (req, res) => {
+  if (!MAYA_MCP_TOKEN) return res.status(503).json({ error: 'maya_door_closed', hint: 'set MAYA_MCP_TOKEN on Cloud Run' });
+  if (!mcpTokenOk(req)) return res.status(401).json({ error: 'unauthorized' });
+  const rl = rateLimit('mcp', 'mcp@maya', 1);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  try {
+    const out = await mayaMcp.handle(req.body);
+    if (out === null) return res.status(202).end();
+    res.setHeader('Cache-Control', 'no-store');
+    return res.json(out);
+  } catch (e) {
+    console.error('[mcp]', e.message);
+    return res.status(500).json({ jsonrpc: '2.0', id: null, error: { code: -32603, message: 'internal error' } });
+  }
+});
+
 app.listen(port, () => {
   console.log('[maya-api] listening on', port);
   // v13.28: pick the credit meter's month back up after a restart.

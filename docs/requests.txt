@@ -16,6 +16,34 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 27, 2026, MAYA AUDIT 2, THE AESTHETIC PUSH (v14.02)
+
+[x] "Zoom works but I should still be able to scroll down and pull the drawer;
+    it should feel snappy; zooming is glitchy, make it smooth and faster." Done:
+    zoom v5, rAF eased, screens never pinned, plain scroll native.
+[x] "Zoom out to 40, not 20." Done: floor 0.40.
+[x] "Cards are still cropped when I zoom out; they should never be." Done: the
+    canvas' overflow:hidden was the crop; the cluster is measured and fitted.
+[x] "Every update restarts the money counter; it should not." Done: epoch frozen.
+[x] "The circle around the money a little bluer and 5 percent thinner." Done.
+[x] "Admin: the marquee should be beneath the drawer, not floating on top." Done.
+[x] "Instead of Turn on MAYA, a toggle like Apple's: Hey MAYA and a switch;
+    the divider way lower." Done.
+[x] "Center everything in the drawer: the vault, Firebase, Cloud Run, the
+    managers." Done.
+[x] "MAYA should have her own MCP or API so she is an independent entity."
+    Done: POST /mcp, eight tools, token guarded (fixes.txt has the two steps).
+[x] "Give MAYA the personality of the ultimate builder with taste, from the
+    Aesthetics PDF and our conversations, in the soul MD." Done:
+    docs/server/maya-character.md, read into every voice call.
+[x] "Strategize how to get MAYA there and push the framework." Done:
+    docs/MAYA-INDEPENDENCE.md.
+[x] "Full audit of the codebase, things not needed." Done:
+    docs/AUDIT-2026-08-27.md.
+[ ] Promote zoom v5 to the main app once Fromsa is happy with it live.
+[ ] Hey Maya and voice navigation on the user side (stage 3 of the roadmap).
+[ ] Maya on the phone (stage 4). Needs a number.
+
 AUGUST 24, 2026, PINTEREST FOOTER + LEAD STATION NOTES (v13.81)
 
 [x] "Pinterest Bring them in: smaller pill, a little lower but not glued to the

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="14.01">
+<meta name="maya-version" content="14.02">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -130,7 +130,8 @@ try {
      smaller with a tighter crop of the circle, and the pill on its RIGHT is
      the Hey Maya wake-word toggle (off by default) — the logo itself stays
      the live voice line. */
-  #voice-dock{margin-top:auto;padding-top:38px;margin-bottom:-12px;border-top:0.5px solid var(--line);
+  /* v14.02: the divider drops way down, a breath above the floor row. */
+  #voice-dock{margin-top:auto;padding-top:12px;margin-bottom:-12px;border-top:0.5px solid var(--line);
     display:flex;flex-direction:column;align-items:center;gap:8px;flex:none}
   #voice-dock .voice-row{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:14px}
   #voice-btn{width:56px;height:56px;border-radius:50%;padding:0;cursor:pointer;overflow:hidden;
@@ -139,15 +140,21 @@ try {
   #voice-btn img{width:64px;height:64px;object-fit:cover;border-radius:50%;opacity:0.98;flex:none}
   #voice-btn:hover{border-color:rgba(255,255,255,0.5);transform:scale(1.04)}
   #voice-btn.live{border-color:rgba(169,201,255,0.9);animation:voicepulse 1.6s ease-in-out infinite}
-  /* the Hey Maya toggle pill, same family as the Design Studio / Operations chips */
-  #maya-toggle{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;
-    color:var(--dim);background:rgba(255,255,255,0.04);border:0.5px solid var(--line);border-radius:100px;
-    padding:6px 13px;cursor:pointer;transition:color .2s,border-color .2s,background .2s;white-space:nowrap}
-  #maya-toggle:hover{color:var(--ink);border-color:rgba(255,255,255,0.45)}
-  #maya-toggle.live{color:#a9c9ff;border-color:rgba(169,201,255,0.55);background:rgba(169,201,255,0.10)}
-  #maya-toggle .mt-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;
-    opacity:0.45;margin-right:6px;vertical-align:middle}
-  #maya-toggle.live .mt-dot{opacity:1;animation:voicepulse 1.4s ease-in-out infinite}
+  /* v14.02: the Hey Maya toggle is a switch, the Apple kind: the word stays
+     "Hey Maya", the knob slides and the track turns logo blue when it is on.
+     Narrower than the old pill, so the whole floor row reads lighter. */
+  #maya-toggle{display:inline-flex;align-items:center;gap:10px;font-family:'Jost',sans-serif;font-size:9px;
+    letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);background:transparent;border:none;
+    padding:6px 2px;cursor:pointer;transition:color .2s;white-space:nowrap}
+  #maya-toggle:hover{color:var(--ink)}
+  #maya-toggle.live{color:#a9c9ff}
+  #maya-toggle .mt-switch{position:relative;width:34px;height:20px;border-radius:100px;flex:none;
+    background:rgba(255,255,255,0.10);border:0.5px solid rgba(255,255,255,0.22);
+    transition:background .25s,border-color .25s;box-shadow:inset 0 1px 2px rgba(0,0,0,0.35)}
+  #maya-toggle .mt-knob{position:absolute;top:1.5px;left:1.5px;width:16px;height:16px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.45);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+  #maya-toggle.live .mt-switch{background:rgba(128,176,255,0.95);border-color:rgba(128,176,255,0.95)}
+  #maya-toggle.live .mt-knob{transform:translateX(14px)}
   #voice-word{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.2em;
     text-transform:uppercase;color:rgba(169,201,255,0.9);min-height:11px;text-align:center;width:100%}
   #voice-chip{position:fixed;right:16px;bottom:16px;z-index:400;display:none;align-items:center;gap:9px;
@@ -230,7 +237,8 @@ try {
   #drawer h3{font-family:'Jost',sans-serif;font-weight:400;font-size:10px;letter-spacing:0.24em;
              text-transform:uppercase;color:var(--grp);margin:14px 0 8px;text-align:center}
   #drawer h3:first-child{margin-top:0}
-  #drawer a{text-align:left;display:block;text-decoration:none;color:var(--ink);font-size:14.5px;padding:7px 10px;
+  /* v14.02: every drawer line centered, the vault and the tools alike. */
+  #drawer a{text-align:center;display:block;text-decoration:none;color:var(--ink);font-size:14.5px;padding:7px 10px;
             border-radius:10px;transition:background .2s}
   #drawer a:hover{background:rgba(255,255,255,0.07)}
   #drawer a small{display:block;font-family:'Jost',sans-serif;font-size:10px;color:var(--dim)}
@@ -454,7 +462,15 @@ try {
   /* v13.72: the day ticker moved up to the top bar, colored like Marketing's,
      riding between the ADMIN wordmark and the hamburger, no lines above or
      below it. Green for good, red and amber for warnings, white otherwise. */
-  #top-bar #mkt-ticker{flex:1;min-width:0;overflow:hidden;margin:0 26px;
+  /* v14.02: the marquee rides its OWN fixed strip at z-index 0, beneath the
+     two-pane scroller (z 1), so the drawer glides over it and the note reads
+     blurred through the glass instead of floating on top. The strip keeps the
+     top bar's exact geometry: it starts where the wordmark ends and stops
+     where the hamburger begins (placeTicker measures both). */
+  #ticker-bar{position:fixed;top:0;left:0;right:0;height:60px;z-index:0;display:flex;align-items:center;
+    padding:0 96px 0 200px;pointer-events:none}
+  #ticker-bar #mkt-ticker{pointer-events:auto}
+  #top-bar #mkt-ticker, #ticker-bar #mkt-ticker{flex:1;min-width:0;overflow:hidden;margin:0 26px;
     -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
     mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
   #mkt-ticker-inner{display:inline-block;white-space:nowrap;
@@ -466,7 +482,7 @@ try {
   #mkt-ticker-inner .tk-red{color:#f87171}
   #mkt-ticker-inner .tk-amber{color:var(--amber)}
   #mkt-ticker-inner .tk-green{color:var(--green)}
-  @media (max-width:760px){ #top-bar #mkt-ticker{display:none} }
+  @media (max-width:760px){ #top-bar #mkt-ticker, #ticker-bar #mkt-ticker{display:none} }
   @keyframes tickerslide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
   #adm-mkt #mkt-status{font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.16em;
     color:var(--faint);text-transform:uppercase;min-height:14px;margin:0 0 10px}
@@ -701,12 +717,32 @@ try {
   </div>
   <!-- v13.72: the day reads itself out between the wordmark and the menu,
        colored like Marketing's line. -->
-  <div id="mkt-ticker" aria-label="Today, in one line"><span id="mkt-ticker-inner">The numbers are on their way.</span></div>
   <button class="top-btn hamburger" onclick="toggleDrawer()" title="Menu" aria-expanded="false" aria-controls="drawer">
     <span class="hamburger-icon"><span></span><span></span><span></span></span>
   </button>
 </div>
 
+<!-- v14.02: the day reads itself out on its own strip UNDER the panes, between
+     the wordmark and the menu, so the drawer slides over it. -->
+<div id="ticker-bar" aria-hidden="false">
+  <div id="mkt-ticker" aria-label="Today, in one line"><span id="mkt-ticker-inner">The numbers are on their way.</span></div>
+</div>
+<script>
+  // v14.02: fit the ticker strip between the wordmark and the hamburger.
+  function placeTicker(){
+    const bar=document.getElementById('ticker-bar'), brand=document.getElementById('top-left-brand'),
+          ham=document.querySelector('#top-bar .top-btn.hamburger');
+    if(!bar||!brand) return;
+    const r=brand.getBoundingClientRect();
+    const right=ham?Math.max(0,window.innerWidth-ham.getBoundingClientRect().left):96;
+    bar.style.paddingLeft=Math.round(r.right)+'px';
+    bar.style.paddingRight=Math.round(Math.min(right,140))+'px';
+  }
+  window.addEventListener('resize',placeTicker);
+  window.addEventListener('load',placeTicker);
+  try{ document.fonts.ready.then(placeTicker); }catch(_){}
+  placeTicker();
+</script>
 <!-- v13.94: the whole page is a two-pane native horizontal scroll-snap, an exact
      copy of the frontend app. Pane 2 is the drawer; pane 1 is everything else. -->
 <div id="adm-hscroll">
@@ -760,7 +796,8 @@ try {
       <button id="voice-btn" onclick="toggleMayaVoice()" title="Talk to Maya: live voice, grounded in today's numbers" aria-label="Talk to Maya">
         <img src="/aesthetics/ui/logo-circle.png" alt="">
       </button>
-      <button id="maya-toggle" onclick="toggleWakeWord()" aria-pressed="false" title="When on, just say Hey Maya to wake her"><span class="mt-dot"></span><span id="maya-toggle-word">Turn on Hey Maya</span></button>
+      <!-- v14.02: a switch, the Apple kind. The word never changes; the knob does. -->
+      <button id="maya-toggle" onclick="toggleWakeWord()" aria-pressed="false" role="switch" title="When on, just say Hey Maya to wake her"><span id="maya-toggle-word">Hey Maya</span><span class="mt-switch" aria-hidden="true"><span class="mt-knob"></span></span></button>
     </div>
     <div id="voice-word"></div>
   </div>
@@ -2112,8 +2149,7 @@ function _wakeLabel(){
   // v13.98: the drawer-floor pill is the same toggle, reading as an action.
   const mt=document.getElementById('maya-toggle');
   if(mt){ mt.classList.toggle('live',_wakeWantOn); mt.setAttribute('aria-pressed',_wakeWantOn?'true':'false'); }
-  const mtw=document.getElementById('maya-toggle-word');
-  if(mtw) mtw.textContent=_wakeWantOn?'Turn off Hey Maya':'Turn on Hey Maya';
+  // v14.02: the word is always "Hey Maya"; the switch carries the state.
 }
 function toggleWakeWord(){
   if(!_wakeSupported()){ _voiceWord&&_voiceWord('this browser can’t listen for a wake word'); return; }

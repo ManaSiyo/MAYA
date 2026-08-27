@@ -311,8 +311,11 @@ const s = await pg.evaluate(() => ({
       panelPadding: panelStyle.padding,
       panelRadius: panelStyle.borderRadius,
       tableWidth: getComputedStyle(table).width,
-      // v13.72: the ticker rides the top bar now, between wordmark and menu.
-      tickerInTopbar: !!document.querySelector('#top-bar #mkt-ticker'),
+      // v13.72: the ticker rides between wordmark and menu; v14.02: on its
+      // own strip beneath the panes, so the drawer slides over it.
+      tickerInTopbar: !!document.querySelector('#ticker-bar #mkt-ticker') &&
+        getComputedStyle(document.getElementById('ticker-bar')).zIndex === '0' &&
+        !document.querySelector('#top-bar #mkt-ticker'),
     };
   })(),
   commandQueue: (() => {
@@ -497,11 +500,14 @@ ok('Admin renders the command center and confirmation queue', s.commandCenter &&
 
 // v13.72: Admin cleared its center, moved the controls to the edges, and made
 // Maya's command her private line inside the drawer.
-ok('v13.72: the day ticker rides the top bar, colored, not a boxed pill',
-  // the DOM probe confirms it is a child of #top-bar; the source confirms the
-  // top-bar scoping, the green tone, and that the old boxed pill is gone.
+ok('v13.72/v14.02: the day ticker rides its own strip under the drawer, colored, not a boxed pill',
+  // the DOM probe confirms it lives in #ticker-bar at z 0 (below the panes at
+  // z 1); the source confirms the strip, the green tone, and that the old boxed
+  // pill is gone.
   s.marketingVisual.tickerInTopbar &&
-  MAP_SOURCE.includes('#top-bar #mkt-ticker{flex:1') &&
+  MAP_SOURCE.includes('#ticker-bar{position:fixed;top:0;left:0;right:0;height:60px;z-index:0') &&
+  MAP_SOURCE.includes('function placeTicker()') &&
+  MAP_SOURCE.includes('#ticker-bar #mkt-ticker{flex:1') &&
   MAP_SOURCE.includes('.tk-green{color:var(--green)') &&
   !MAP_SOURCE.includes('#adm-mkt #mkt-ticker{'));
 ok('v13.72: the five health lights moved into the drawer',
@@ -1849,11 +1855,11 @@ ok('v13.94: Company/Title moved under the name as a signature line; columns cent
 // ── v13.95 ──
 ok('v13.95/v13.98: the drawer floor is a smaller tighter circle, lower, with the Hey Maya toggle at its right',
   MAP_SOURCE.includes('/aesthetics/ui/logo-circle.png') &&
-  /#voice-dock\{[^}]*padding-top:38px/.test(MAP_SOURCE) &&
+  /#voice-dock\{[^}]*padding-top:12px/.test(MAP_SOURCE) &&
   MAP_SOURCE.includes('class="voice-row"') &&
   MAP_SOURCE.includes('id="maya-toggle"') &&
   MAP_SOURCE.includes('onclick="toggleWakeWord()"') &&
-  MAP_SOURCE.includes("mtw.textContent=_wakeWantOn?'Turn off Hey Maya':'Turn on Hey Maya'"));
+  MAP_SOURCE.includes('class="mt-switch"'));
 ok('v13.95: Last Quote defaults to the tier price and reads faint until set by hand',
   MAP_SOURCE.includes('function _quoteCell') &&
   MAP_SOURCE.includes('function _leadTierNum') &&
@@ -1923,10 +1929,10 @@ ok('v13.98/99: the Playground is a live copy of the app; order inspo, favorites,
   PLAYGROUND_SOURCE.includes('window._pgScreenPos = { 1: 0, 2: 1, 0: 2 }') &&
   PLAYGROUND_SOURCE.includes('host.scrollTop = 0;'));
 ok('v13.98/99: Playground zoom fires ONLY on pinch or Cmd/Ctrl scroll, never plain scroll',
-  PLAYGROUND_SOURCE.includes('const MINZ = 0.25') &&
+  PLAYGROUND_SOURCE.includes('const MINZ = 0.40') &&
   PLAYGROUND_SOURCE.includes('window.pgZoomReset') &&
   PLAYGROUND_SOURCE.includes('if (!(e.ctrlKey || e.metaKey)) return;') &&
-  PLAYGROUND_SOURCE.includes('body.pg-zoomed #screen-inspo'));
+  PLAYGROUND_SOURCE.includes('body.pg-zoomed #maya-canvas'));
 ok('v13.98/99: Playground backgrounds are fabric-sized cards with names underneath',
   PLAYGROUND_SOURCE.includes('id="pg-bg-fold"') &&
   PLAYGROUND_SOURCE.includes('>Birth of a Star<') &&
@@ -1942,20 +1948,32 @@ ok('v13.98: one click creates a real Wix pay link server-side, the skill recipe'
   SERVER_SOURCE.includes('INVOICE_FALLBACK_IMAGE'));
 
 // ── v14.00 ──
-ok('v14.01: the circle carries the price over a thinner ring; visualizations left is a tile',
+ok('v14.01/v14.02: the circle carries the price over a thinner, bluer ring; visualizations left is a tile',
   INDEX_SOURCE.includes("set('pg-gauge-value', '$' + left.toFixed(2))") &&
   INDEX_SOURCE.includes('const cardsLeft = Math.max(0, Math.floor(left / perCard') &&
   INDEX_SOURCE.includes('>Visualizations left</span>') &&
-  INDEX_SOURCE.includes('stroke-width: 5.5') &&
+  INDEX_SOURCE.includes('stroke: rgba(128,176,255,0.95); stroke-width: 5.2') &&
+  PLAYGROUND_SOURCE.includes('stroke: rgba(128,176,255,0.95); stroke-width: 5.2') &&
   INDEX_SOURCE.includes('>Projects</span>'));
 ok('v14.00: /api/usage reports the per-card price so the gauge stays honest',
   SERVER_SOURCE.includes('perCardUsd: Number((PRICE_IMAGE * 0.5).toFixed(3))'));
-ok('v14.01: playground zoom fits the card cluster, pins the screens, parks the voice bar',
-  PLAYGROUND_SOURCE.includes("host.style.overflowY = zoomed ? 'hidden' : ''") &&
-  PLAYGROUND_SOURCE.includes('if (zoomIn && z > 0.92) z = 1') &&
+ok('v14.02: playground zoom v5 scales the canvas only, rAF-eased, floor 0.40 or the fit, never pins the screens',
   PLAYGROUND_SOURCE.includes('function measure()') &&
-  PLAYGROUND_SOURCE.includes('function parkVoiceBar(') &&
-  PLAYGROUND_SOURCE.includes('if (z < 0.999 && host.scrollTop !== 0) host.scrollTop = 0'));
+  PLAYGROUND_SOURCE.includes('zfloor = Math.min(MINZ, Math.max(0.12, fit))') &&
+  PLAYGROUND_SOURCE.includes('raf = requestAnimationFrame(tick)') &&
+  PLAYGROUND_SOURCE.includes('if (zoomIn && next > 0.92) next = 1') &&
+  PLAYGROUND_SOURCE.includes('body.pg-zoomed #maya-canvas { overflow: visible') &&
+  !PLAYGROUND_SOURCE.includes('function parkVoiceBar(') &&
+  !PLAYGROUND_SOURCE.includes("host.style.overflowY = zoomed ? 'hidden' : ''") &&
+  !PLAYGROUND_SOURCE.includes('#screen-inspo { transition: transform'));
+ok('v14.02: the money counter never restarts on an update (trial epoch frozen)',
+  SERVER_SOURCE.includes('THE EPOCH IS FROZEN') &&
+  SERVER_SOURCE.includes("const TRIAL_EPOCH = String(process.env.TRIAL_EPOCH || 'v14.00')"));
+ok('v14.02: admin drawer lines are centered; Hey Maya is a switch; the divider sits low',
+  MAP_SOURCE.includes('#drawer a{text-align:center') &&
+  MAP_SOURCE.includes('#maya-toggle.live .mt-knob{transform:translateX(14px)}') &&
+  MAP_SOURCE.includes('role="switch"') &&
+  !MAP_SOURCE.includes("'Turn on Hey Maya'"));
 ok('v14.00: playground backgrounds persist and can be uploaded',
   PLAYGROUND_SOURCE.includes("const LIST = 'maya_pg_bgs'") &&
   PLAYGROUND_SOURCE.includes('window.pgUploadBackground') &&

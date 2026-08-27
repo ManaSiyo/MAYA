@@ -26,6 +26,11 @@ a push has landed).
 
 ---
 
+
+> v14.02 (Aug 27 2026): Maya has a door (`POST /mcp`, `docs/server/maya-mcp.mjs`)
+> and a character (`docs/server/maya-character.md`). Roadmap:
+> `docs/MAYA-INDEPENDENCE.md`. Audit: `docs/AUDIT-2026-08-27.md`.
+
 ## 1. What MAYA is
 
 MAYA means Most Advanced Yet Acceptable. It is Mana Siyo's intelligence layer:
