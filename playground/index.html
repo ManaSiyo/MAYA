@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.99">
+<meta name="maya-version" content="14.00">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -917,12 +917,12 @@
   /* v8.2: only the LATEST visualized card glows. .is-vision identifies a
      Maya render; .is-latest is added only to the newest. */
   .item-card.is-vision.is-latest {
-    border-color: rgba(220,232,255,0.65);
+    border-color: rgba(220,232,255,0.47);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.45),
       inset 0 -1px 1px rgba(0,0,0,0.22),
-      0 0 8px 1px rgba(200,222,255,0.55),
-      0 0 14px 2px rgba(200,222,255,0.30);
+      0 0 8px 1px rgba(200,222,255,0.40),
+      0 0 14px 2px rgba(200,222,255,0.16);
     /* v11.23: slower pulse + GPU hint so the glow animates smoothly (no stutter). */
     animation: maya-vision-pulse 4.2s ease-in-out infinite;
     will-change: box-shadow;
@@ -932,20 +932,20 @@
     box-shadow:
       inset 0 1px 2px rgba(255,255,255,0.62),
       inset 0 -1px 1px rgba(0,0,0,0.28),
-      0 0 12px 2px rgba(220,232,255,0.75),
-      0 0 20px 4px rgba(220,232,255,0.42);
+      0 0 12px 2px rgba(220,232,255,0.55),
+      0 0 20px 4px rgba(220,232,255,0.30);
   }
   @keyframes maya-vision-pulse {
     0%, 100% { box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.45),
       inset 0 -1px 1px rgba(0,0,0,0.22),
-      0 0 7px 1px rgba(200,222,255,0.45),
-      0 0 12px 2px rgba(200,222,255,0.22); }
+      0 0 7px 1px rgba(200,222,255,0.33),
+      0 0 12px 2px rgba(200,222,255,0.16); }
     50%      { box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.45),
       inset 0 -1px 1px rgba(0,0,0,0.22),
-      0 0 10px 2px rgba(220,232,255,0.65),
-      0 0 16px 3px rgba(220,232,255,0.32); }
+      0 0 10px 2px rgba(220,232,255,0.47),
+      0 0 16px 3px rgba(220,232,255,0.23); }
   }
   /* Non-latest visions stay as quiet glass cards, no glow. */
   .item-card.pinned { border-color: rgba(200,220,255,0.45); }
@@ -1934,7 +1934,7 @@
     background-color: rgba(255,255,255,0.05);
     border: 0.5px solid rgba(255,255,255,0.22); flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    color: rgba(220,232,255,0.32);
+    color: rgba(220,232,255,0.23);
   }
   #notes-drawer .avatar-switch-new {
     font-family: 'Jost', sans-serif; font-style: normal;
@@ -2189,7 +2189,7 @@
     content: '·';
     display: flex; align-items: center; justify-content: center;
     height: 100%;
-    color: rgba(220,232,255,0.32);
+    color: rgba(220,232,255,0.23);
   }
   #notes-drawer .drawer-avatar-name {
     font-family: 'Cormorant Garamond', serif;
@@ -2253,7 +2253,7 @@
     -webkit-backdrop-filter: blur(20px);
     transition: border-color 0.2s;
   }
-  #notes-drawer .meas-row input:focus { border-color: rgba(220,232,255,0.55); }
+  #notes-drawer .meas-row input:focus { border-color: rgba(220,232,255,0.40); }
   #notes-drawer .meas-row input::placeholder { color: rgba(220,232,255,0.35); }
   /* v11.20: Height + Hip are the load-bearing measurements, highlight them as
      recommended so they get filled even when the client skips Randomize. */
@@ -3095,7 +3095,7 @@
     animation: fadeUp 0.2s ease;
   }
   #manual-ref-input::placeholder {
-    color: rgba(220,232,255,0.42); font-style: italic;
+    color: rgba(220,232,255,0.30); font-style: italic;
     text-align: center;
   }
   /* canvas-card fabric strip, small dots in the corner of inspo cards */
@@ -3292,14 +3292,14 @@
     border-radius: 16px;
     overflow: hidden;
     background: transparent;
-    border: 0.5px solid rgba(220,232,255,0.55);
+    border: 0.5px solid rgba(220,232,255,0.40);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
             backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.32),
       inset 0 -1px 1px rgba(0,0,0,0.20),
-      0 0 9px 1.7px rgba(220,232,255,0.42),
-      0 0 13.6px 2.55px rgba(220,232,255,0.22),
+      0 0 9px 1.7px rgba(220,232,255,0.30),
+      0 0 13.6px 2.55px rgba(220,232,255,0.16),
       0 8px 32px rgba(0,0,0,0.42);
     position: relative;
     cursor: pointer;
@@ -3308,7 +3308,7 @@
   .community-card:hover, .community-card:focus-visible {
     transform: translateY(-4px);
     outline: none;
-    border-color: rgba(220,232,255,0.75);
+    border-color: rgba(220,232,255,0.55);
   }
   .community-card .cc-image { overflow: hidden; border-radius: inherit; }
   .community-card img.cc-img {
@@ -3363,7 +3363,7 @@
     max-width: min(92vw, 900px); max-height: 78vh;
     object-fit: contain;
     border-radius: 14px;
-    border: 0.5px solid rgba(220,232,255,0.42);
+    border: 0.5px solid rgba(220,232,255,0.30);
     box-shadow: 0 0 30px 6px rgba(200,222,255,0.20), 0 14px 44px rgba(0,0,0,0.5);
   }
   #community-lightbox .cl-meta {
@@ -3404,14 +3404,14 @@
     border-radius: 16px;
     overflow: hidden;
     background: transparent;
-    border: 0.5px solid rgba(220,232,255,0.55);
+    border: 0.5px solid rgba(220,232,255,0.40);
     backdrop-filter: blur(22px) saturate(180%);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.32),
       inset 0 -1px 1px rgba(0,0,0,0.20),
-      0 0 9px 1.7px rgba(220,232,255,0.42),
-      0 0 13.6px 2.55px rgba(220,232,255,0.22),
+      0 0 9px 1.7px rgba(220,232,255,0.30),
+      0 0 13.6px 2.55px rgba(220,232,255,0.16),
       0 8px 32px rgba(0,0,0,0.42);
     display: flex; flex-direction: column;
     position: relative;
@@ -3674,6 +3674,9 @@
     justify-content: center; align-items: center;
     flex-wrap: wrap;
   }
+  /* v14.00: the whole action stack centers to the screen as one column. */
+  #viewer-actions { display: flex; flex-direction: column; align-items: center; }
+  #viewer-actions .viewer-row { width: 100%; }
   /* v13.43: the three live at the bottom. Submit lives in the mid row with
      the staged chips, appearing only once something is staged. */
   #viewer-row-modify-1 { display: flex; }
@@ -3693,7 +3696,7 @@
   #staged-chips.has-staged { display: flex; }
   .staged-chip {
     position: relative; width: 34px; height: 34px; border-radius: 50%;
-    border: 0.5px solid rgba(220,232,255,0.55);
+    border: 0.5px solid rgba(220,232,255,0.40);
     background-size: cover; background-position: center;
     background-color: rgba(255,255,255,0.06);
     box-shadow: 0 2px 10px rgba(0,0,0,0.4);
@@ -3841,12 +3844,12 @@
     0%, 100% { box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
-      0 0 12px 1px rgba(200,222,255,0.30),
+      0 0 12px 1px rgba(200,222,255,0.16),
       0 4px 16px rgba(0,0,0,0.22); }
     50%      { box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.40),
       inset 0 -1px 1px rgba(0,0,0,0.18),
-      0 0 22px 3px rgba(200,222,255,0.55),
+      0 0 22px 3px rgba(200,222,255,0.40),
       0 4px 16px rgba(0,0,0,0.22); }
   }
 
@@ -4068,9 +4071,9 @@
 <body>
 <!-- PLAYGROUND. Fromsa's private copy for trying new things. Promoted to
      frontend/index.html only when approved. Same sign in, same data. -->
-<div style="position:fixed;top:64px;left:22px;z-index:400;font-family:'Jost',sans-serif;
+<div id="pg-badge" style="position:fixed;top:64px;left:22px;z-index:400;font-family:'Jost',sans-serif;
      font-size:8.5px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(251,191,36,0.75);
-     pointer-events:none">Playground</div>
+     pointer-events:none;white-space:nowrap">Playground</div>
 
 
 <!-- ────────────────────────────────────────────────────────────────────────
@@ -4843,15 +4846,15 @@
                 <circle class="pg-gauge-fill" id="pg-gauge-fill" cx="60" cy="60" r="52"></circle>
               </svg>
               <div class="pg-gauge-center">
-                <span class="pg-gauge-value" id="pg-gauge-value">$2.00</span>
-                <span class="pg-gauge-cap" id="pg-gauge-cap">left of $2</span>
+                <span class="pg-gauge-value" id="pg-gauge-value">30</span>
+                <span class="pg-gauge-cap" id="pg-gauge-cap">card renders left</span>
               </div>
             </div>
             <div class="pg-stats-grid">
-              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-dollars">$2.00</span><span class="pg-stat-lab">Credits left</span></div>
               <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-cards">0</span><span class="pg-stat-lab">Cards made</span></div>
+              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-images">0</span><span class="pg-stat-lab">Cards rendered</span></div>
               <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-favs">0</span><span class="pg-stat-lab">Favorites</span></div>
-              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-images">0</span><span class="pg-stat-lab">Images rendered</span></div>
+              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-projects">0</span><span class="pg-stat-lab">Projects</span></div>
             </div>
             <button class="pg-try-popup" onclick="mayaTryCreditsPopup()" title="Preview the out-of-credits popup">Try popup</button>
           </div>
@@ -4874,6 +4877,8 @@
               </div>
             </div>
             <button class="pg-bg-gen" id="pg-bg-gen" onclick="pgGenerateBackground()">Generate a new background</button>
+            <button class="pg-bg-gen" id="pg-bg-upload" onclick="pgUploadBackground()" style="margin-left:6px">Upload a background</button>
+            <input type="file" id="pg-bg-file" accept="image/*" style="display:none" onchange="_pgBgFilePicked(this)">
           </div>
         </details>
       </div>
@@ -16816,7 +16821,7 @@ function pgShow(which) {
 // v13.89: the Stats fold — trial credits gauge + four tiles. Cards, images and
 // favourites come from the local `items`; credits (dollars left of the $2 trial)
 // come from /api/usage, with the full $2 shown until the server answers.
-let _mayaUsage = { spentUsd: 0, capUsd: 2, images: 0, ok: false };
+let _mayaUsage = { spentUsd: 0, capUsd: 2, images: 0, perCard: 0.065, projects: null, ok: false };
 async function _refreshUsage() {
   try {
     const key = (typeof getApiKey === 'function') ? getApiKey() : '';
@@ -16826,8 +16831,17 @@ async function _refreshUsage() {
     const j = await r.json();
     if (j && typeof j.capUsd === 'number') {
       _mayaUsage = { spentUsd: Number(j.spentUsd) || 0, capUsd: Number(j.capUsd) || 2,
-                     images: Number(j.images) || 0, ok: true };
+                     images: Number(j.images) || 0,
+                     perCard: Number(j.perCardUsd) || 0.065,
+                     projects: _mayaUsage.projects, ok: true };
     }
+    // v14.00: the fourth tile counts the account's projects.
+    try {
+      if (typeof projectStore !== 'undefined' && projectStore.ready && projectStore.ready() && projectStore.listSessions) {
+        const ss = await projectStore.listSessions();
+        if (Array.isArray(ss)) _mayaUsage.projects = ss.length;
+      }
+    } catch (_) {}
   } catch (_) {}
 }
 function _renderDrawerStats() {
@@ -16835,10 +16849,16 @@ function _renderDrawerStats() {
   const cards = list.length;
   const imagesLocal = list.filter(i => i && i.card && i.card.image).length;
   const favs = list.filter(i => i && i.card && i.card.favorited && i.card.image).length;
+  // v14.00: the meter thinks in CARD RENDERS, not dollars. One card costs the
+  // honest per-card figure the server reports (about 6.5 cents), so the gauge
+  // reads "N card renders left" and no dollar figure faces the user.
   const cap = _mayaUsage.capUsd || 2;
   const spent = Math.min(cap, Math.max(0, _mayaUsage.spentUsd || 0));
   const left = Math.max(0, cap - spent);
-  const frac = cap > 0 ? left / cap : 0;
+  const perCard = _mayaUsage.perCard || 0.065;
+  const totalCards = Math.max(1, Math.floor(cap / perCard + 1e-6));
+  const cardsLeft = Math.max(0, Math.floor(left / perCard + 1e-6));
+  const frac = cardsLeft / totalCards;
   const images = _mayaUsage.ok ? _mayaUsage.images : imagesLocal;
   const C = 326.7;
   const fill = document.getElementById('pg-gauge-fill');
@@ -16847,13 +16867,12 @@ function _renderDrawerStats() {
     fill.classList.toggle('low', frac <= 0.2);
   }
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  const money = '$' + left.toFixed(2);
-  set('pg-gauge-value', money);
-  set('pg-gauge-cap', 'left of $' + cap.toFixed(0));
-  set('pg-stat-dollars', money);
+  set('pg-gauge-value', String(cardsLeft));
+  set('pg-gauge-cap', 'card renders left');
   set('pg-stat-cards', String(cards));
   set('pg-stat-favs', String(favs));
   set('pg-stat-images', String(images));
+  set('pg-stat-projects', _mayaUsage.projects == null ? String(cards ? 1 : 0) : String(_mayaUsage.projects));
 }
 // v13.89: the out-of-credits popup. Shown when an image call comes back 402
 // trial_exhausted, and previewable from the "Try popup" link in the Stats fold.
@@ -16867,8 +16886,8 @@ function mayaShowCreditsPopup(info) {
     ov.innerHTML =
       '<div class="mcp-card" role="dialog" aria-modal="true">' +
         '<div class="mcp-title">You\'re out of credits</div>' +
-        '<div class="mcp-body">You\'ve used your $2 of free renders. Top up to keep visualizing, about 100 more renders for $5.</div>' +
-        '<button class="mcp-upgrade" id="mcp-upgrade">Get $5 more · ~13 renders</button>' +
+        '<div class="mcp-body">You\'ve used your 30 free card renders. Top up to keep visualizing, about 75 more for $5.</div>' +
+        '<button class="mcp-upgrade" id="mcp-upgrade">Get $5 more</button>' +
         '<button class="mcp-later" id="mcp-later">Not now</button>' +
       '</div>';
     document.body.appendChild(ov);
@@ -17042,13 +17061,19 @@ if (typeof toggleNotesDrawer === 'function') {
 // cards are a survey, not a workbench: interactions come back at 100%. ═══
 (function () {
   let z = 1;
-  const MINZ = 0.1;
+  const MINZ = 0.25;
   const board = () => document.getElementById('screen-inspo');
   function apply() {
     const b = board(); if (!b) return;
     b.style.transform = z < 0.999 ? 'scale(' + z.toFixed(3) + ')' : '';
-    b.style.transformOrigin = '50% 42%';
+    // dead center: the cluster shrinks toward the middle of the screen, where
+    // the Dying Star card sits, never tucking away to the top.
+    b.style.transformOrigin = '50% 50%';
     document.body.classList.toggle('pg-zoomed', z < 0.999);
+    // While zoomed the moodboard is its OWN world: the screens cannot scroll,
+    // so zooming can never drag favorites up. Scroll comes back at 100%.
+    const host = document.getElementById('screens');
+    if (host) host.style.overflowY = z < 0.999 ? 'hidden' : '';
   }
   function onInspo() {
     const host = document.getElementById('screens'); if (!host) return false;
@@ -17068,6 +17093,7 @@ if (typeof toggleNotesDrawer === 'function') {
     const zoomIn = e.deltaY < 0;
     const step = 0.04 * (1 + Math.min(3, Math.abs(e.deltaY) / 60));
     z = Math.min(1, Math.max(MINZ, z + (zoomIn ? step : -step)));
+    if (zoomIn && z > 0.92) z = 1;   // snap home, so the board is never stuck at 99%
     apply();
   }, { passive: false });
   let pinchD = 0;
@@ -17083,40 +17109,58 @@ if (typeof toggleNotesDrawer === 'function') {
       if (Math.abs(next - z) > 0.004) { e.preventDefault(); z = next; pinchD = d; apply(); }
     }
   }, { passive: false });
-  document.addEventListener('touchend', () => { pinchD = 0; }, { passive: true });
+  document.addEventListener('touchend', () => { pinchD = 0; if (z > 0.92 && z < 1) { z = 1; apply(); } }, { passive: true });
   // the logo zooms back in (and keeps its refresh when already at 100%)
   document.addEventListener('click', (e) => {
     const logo = e.target && e.target.closest && e.target.closest('.maya-logo-mark, #top-left-brand');
     if (logo && z < 0.999) { e.preventDefault(); e.stopPropagation(); pgZoomReset(); }
   }, true);
 })();
-// ═══ PLAYGROUND ONLY: personal backgrounds. ═══
+// ═══ PLAYGROUND ONLY: personal backgrounds. Birth of a Star is the house
+// backdrop; every generated or uploaded background is SAVED as its own card
+// (kept in this browser), and tapping a card applies it. ═══
 (function () {
-  const KEY = 'maya_pg_background';
+  const KEY = 'maya_pg_background';       // the active choice
+  const LIST = 'maya_pg_bgs';             // every saved background, newest last
+  function loadList() { try { const a = JSON.parse(localStorage.getItem(LIST) || '[]'); return Array.isArray(a) ? a : []; } catch (_) { return []; } }
+  function saveList(a) { try { localStorage.setItem(LIST, JSON.stringify(a.slice(-6))); } catch (_) {} }
   function setBg(url, name, thumbEl) {
     document.body.style.background = "#000 url('" + url + "') center/cover no-repeat fixed";
     document.querySelectorAll('.pg-bg-thumb').forEach(t => t.classList.remove('on'));
     if (thumbEl) thumbEl.classList.add('on');
   }
-  function addBgCard(url, name, onclick) {
+  function addBgCard(url, name) {
     const row = document.getElementById('pg-bg-row'); if (!row) return null;
     const card = document.createElement('div'); card.className = 'pg-bg-card';
     const t = document.createElement('button'); t.className = 'pg-bg-thumb';
     t.title = 'Tap to make this your background';
     t.style.backgroundImage = "url('" + url + "')";
-    t.onclick = onclick;
+    t.onclick = function () {
+      setBg(url, name, t);
+      try { localStorage.setItem(KEY, JSON.stringify({ url, name })); } catch (_) {}
+    };
     const label = document.createElement('div'); label.className = 'pg-bg-cardname'; label.textContent = name;
     card.appendChild(t); card.appendChild(label); row.appendChild(card);
     return t;
   }
-  window.pgApplyBackground = function (which, url, name) {
+  window.pgApplyBackground = function (which) {
     if (which === 'star') {
       setBg('/aesthetics/ui/birth-of-a-star.png', 'Birth of a Star', document.getElementById('pg-bg-star'));
       try { localStorage.removeItem(KEY); } catch (_) {}
-    } else if (url) {
-      try { localStorage.setItem(KEY, JSON.stringify({ url, name: name || 'My background' })); } catch (_) {}
     }
   };
+  function keepBg(url, name) {
+    const a = loadList(); a.push({ url, name }); saveList(a);
+  }
+  async function _shrinkBg(blobOrData) {
+    const bmp = await createImageBitmap(blobOrData);
+    const sc = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(bmp.width * sc); c.height = Math.round(bmp.height * sc);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    bmp.close && bmp.close();
+    return c.toDataURL('image/jpeg', 0.82);
+  }
   window.pgGenerateBackground = async function () {
     const btn = document.getElementById('pg-bg-gen'); if (!btn || btn.disabled) return;
     btn.disabled = true; const was = btn.textContent; btn.textContent = 'Generating…';
@@ -17125,10 +17169,8 @@ if (typeof toggleNotesDrawer === 'function') {
         'A breathtaking deep-space vista: a luminous newborn star wrapped in drifting nebula veils, vast dark sky, cinematic, no text, no people. A quiet cosmic backdrop for a fashion app.',
         '1536x1024', 'low', { output_format: 'jpeg' });
       if (dataUrl) {
-        const t = addBgCard(dataUrl, 'Generated background', function () {
-          pgApplyBackground('mine', dataUrl, 'Generated background');
-          setBg(dataUrl, 'Generated background', t);
-        });
+        addBgCard(dataUrl, 'Generated background');
+        keepBg(dataUrl, 'Generated background');
         if (typeof showToast === 'function') showToast('New background ready. Tap it to apply.');
       }
     } catch (e) {
@@ -17136,15 +17178,30 @@ if (typeof toggleNotesDrawer === 'function') {
     }
     btn.disabled = false; btn.textContent = was;
   };
-  // restore a saved personal background on load
+  window.pgUploadBackground = function () {
+    const f = document.getElementById('pg-bg-file'); if (f) f.click();
+  };
+  window._pgBgFilePicked = async function (input) {
+    const file = input.files && input.files[0]; if (!file) return;
+    try {
+      const dataUrl = await _shrinkBg(file);
+      addBgCard(dataUrl, 'My background');
+      keepBg(dataUrl, 'My background');
+      if (typeof showToast === 'function') showToast('Background added. Tap it to apply.');
+    } catch (_) {
+      if (typeof showToast === 'function') showToast('Could not read that image.');
+    }
+    input.value = '';
+  };
+  // boot: render every saved background, then restore the active one
   try {
-    const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (saved && saved.url) {
-      const t = addBgCard(saved.url, 'My background', function () {
-        pgApplyBackground('mine', saved.url, 'My background');
-        setBg(saved.url, 'My background', t);
-      });
-      if (t) setBg(saved.url, 'My background', t);
+    const saved = loadList();
+    saved.forEach(b => { if (b && b.url) addBgCard(b.url, b.name || 'My background'); });
+    const act = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (act && act.url) {
+      const thumbs = [...document.querySelectorAll('.pg-bg-thumb')];
+      const hit = thumbs.find(t => (t.style.backgroundImage || '').includes(act.url.slice(0, 80)));
+      setBg(act.url, act.name || 'My background', hit || null);
     }
   } catch (_) {}
 })();
@@ -17163,6 +17220,20 @@ if (typeof toggleNotesDrawer === 'function') {
 <script>
   /* semantic screen number -> physical position in the playground order */
   window._pgScreenPos = { 1: 0, 2: 1, 0: 2 };
+</script>
+
+<script>
+/* PLAYGROUND: the amber label rides in the same row as the wordmark. */
+(function () {
+  const b = document.getElementById('pg-badge');
+  const brand = document.getElementById('top-left-brand');
+  if (b && brand) {
+    b.style.position = 'static';
+    b.style.marginLeft = '10px';
+    b.style.alignSelf = 'center';
+    brand.appendChild(b);
+  }
+})();
 </script>
 </body>
 </html>

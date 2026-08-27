@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.99">
+<meta name="maya-version" content="14.00">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -401,7 +401,8 @@ try {
      gap (padding keeps the hover zone contiguous), and it lingers long enough
      to actually reach and click. */
   #top-left-brand{position:relative}
-  #top-left-brand .brand-chips{position:absolute;left:56px;top:100%;padding-top:4px;
+  #top-left-brand .brand-chips{position:absolute;left:50%;transform:translateX(-50%);
+    top:100%;padding-top:2px;justify-content:center;
     display:flex;gap:6px;white-space:nowrap;opacity:0;pointer-events:none;
     transition:opacity .18s ease .9s;z-index:230}
   #top-left-brand:hover .brand-chips,#top-left-brand .brand-chips:hover{opacity:1;pointer-events:auto;transition-delay:0s}
@@ -876,6 +877,7 @@ try {
   <details class="fold" id="changes-fold" data-latest="2026-08-24s">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 27</b>The meter tells the truth now, and it counts in cards. One render meters at its real six and a half cents, the gauge reads card renders left instead of dollars, the tiles count cards made, cards rendered, favorites and projects, and everyone starts v14 with their full thirty. The Playground zoom grew up: it locks the screens while zoomed so scrolling never drags favorites in, floors at a quarter size in the dead center of the sky, and snaps home past ninety two percent. Backgrounds save now, uploads included, each one its own named card. And the Lead Station invoice can be sent the moment it exists, Email or Text, wearing the lead's own first name.</div>
     <div class="chg"><b>Aug 27</b>The Playground became a living copy of MAYA, and grew three experiments: pinch or scroll and the whole moodboard zooms out to a tenth of its size for a full survey, tapping the logo brings it back; it opens on the community wall now, favorites below; and the drawer carries a Background fold, Birth of a Star named as the house backdrop, with a pill that generates a brand new cosmic background and waits for your tap before anything swaps.</div>
     <div class="chg"><b>Aug 27</b>The Lead Station writes real invoices now. The pay-link icon opens a small composer, the name, the price and the description already filled in the house style, and one click creates a live Wix pay link, single use, service tax, saved on the lead and folded into the next email. The drawer went full-bleed like the app's own, the hamburger is glued to its edge, the hover under ADMIN is just the sheet and it waits to be clicked, and the pill beside Maya's circle now simply turns Hey Maya on and off.</div>
     <div class="chg"><b>Aug 27</b>Randomize got fast for everyone. The headshots it draws from are two-megabyte files, and every tap used to swallow one whole before anything moved; now the picture is shrunk the moment it arrives, so the face and measurements land in a blink on any connection. The fabric captions tightened to half their height and centered, and the Projects pill centers its word.</div>
@@ -2508,6 +2510,10 @@ function _invModalEl(){
       '<textarea id="inv-brief" class="inv-brief" rows="7"></textarea>' +
       '<div class="inv-row"><button class="inv-btn primary" id="inv-create" onclick="_createInvoiceNow()">Create the pay link</button><span class="inv-msg" id="inv-msg"></span></div>' +
       '<div class="inv-existing" id="inv-existing" style="display:none"></div>' +
+      '<div class="inv-row" id="inv-send-row">' +
+        '<button class="inv-btn" id="inv-email" onclick="_invEmailLead()">Email lead</button>' +
+        '<button class="inv-btn" id="inv-text" onclick="_invTextLead()">Text lead</button>' +
+      '</div>' +
       '<label class="inv-label" style="margin-top:14px">Or paste a link built elsewhere</label>' +
       '<input id="inv-link" class="inv-input" type="url" placeholder="https://www.manasiyo.com/_paylink/…" />' +
       '<div class="inv-row"><button class="inv-btn" id="inv-save" onclick="_saveInvoiceLink()">Save link to lead</button></div>' +
@@ -2532,9 +2538,40 @@ function _openInvoiceModal(i, x, price, title, desc){
     ex.innerHTML = 'On file: <a href="' + esc(link) + '" target="_blank" rel="noopener">' + esc(link) + '</a>. It is added to the email draft automatically.';
   } else { ex.style.display = 'none'; ex.innerHTML = ''; }
   m.querySelector('#inv-msg').textContent = '';
+  // v14.00: the send buttons wear the lead's own name.
+  const fn = _leadFirst(x.name);
+  const be = m.querySelector('#inv-email'); if (be) be.textContent = x.email ? ('Email ' + fn) : 'No email on file';
+  const bt = m.querySelector('#inv-text'); if (bt) bt.textContent = x.phone ? ('Text ' + fn) : 'No phone on file';
   m.classList.add('show');
 }
 function _closeInvoiceModal(){ const m = document.getElementById('lead-inv-modal'); if (m) m.classList.remove('show'); _invIdx = -1; }
+// v14.00: send the pay link straight from the composer. Email opens a Gmail
+// draft (never auto-sends); Text opens Messages with the link prefilled.
+function _invCurrentLink(){
+  const x = _leadList[_invIdx] || {};
+  const typed = (document.getElementById('inv-link') || {}).value || '';
+  return (typed.trim() || (x.paylink || '')).trim();
+}
+function _invEmailLead(){
+  const x = _leadList[_invIdx]; const msg = document.getElementById('inv-msg');
+  if (!x || !x.email){ if (msg) msg.textContent = 'This lead has no email.'; return; }
+  const link = _invCurrentLink();
+  if (!link){ if (msg) msg.textContent = 'Create the pay link first.'; return; }
+  const fn = _leadFirst(x.name);
+  const body = 'Hi ' + fn + ',\n\nYour piece is ready to reserve. Pay here:\n' + link +
+    '\n\nKind Regards,\nFromsa';
+  window.open('https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(x.email) +
+    '&su=' + encodeURIComponent('Your Mana Siyo Piece') + '&body=' + encodeURIComponent(body), '_blank');
+}
+function _invTextLead(){
+  const x = _leadList[_invIdx]; const msg = document.getElementById('inv-msg');
+  if (!x || !x.phone){ if (msg) msg.textContent = 'This lead has no phone.'; return; }
+  const link = _invCurrentLink();
+  if (!link){ if (msg) msg.textContent = 'Create the pay link first.'; return; }
+  const fn = _leadFirst(x.name);
+  const num = String(x.phone).replace(/[^+0-9]/g, '');
+  location.href = 'sms:' + num + '?&body=' + encodeURIComponent('Hi ' + fn + ', your Mana Siyo pay link: ' + link);
+}
 // v13.98: one click creates the real Wix pay link through the server (the
 // invoicing skill's exact recipe) and saves it onto the lead.
 async function _createInvoiceNow(){
@@ -3001,6 +3038,7 @@ window.loadMkt=loadMkt;
 window.saveLeadField=saveLeadField; window._leadCellKey=_leadCellKey;
 window.leadInvoice=leadInvoice; window._closeInvoiceModal=_closeInvoiceModal;
 window._createInvoiceNow=_createInvoiceNow; window._saveInvoiceLink=_saveInvoiceLink;
+window._invEmailLead=_invEmailLead; window._invTextLead=_invTextLead;
 window._leadColDragStart=_leadColDragStart; window._leadColDragOver=_leadColDragOver;
 window._leadColDragLeave=_leadColDragLeave; window._leadColDrop=_leadColDrop;
 window._leadColDragEnd=_leadColDragEnd; window.paintLeads=paintLeads;

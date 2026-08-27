@@ -774,10 +774,11 @@ async function gcsListSubmissions() {
 // Each Cloud Run instance owns ONE object, metrics/spend/<YYYY-MM>/<id>.json,
 // so instances never overwrite each other and the total is their sum.
 // ═══════════════════════════════════════════════════════════════════════════
-// v13.96: the free trial is a generosity budget, not a billing ledger. Fromsa
-// wants $2 to buy plenty of generations, so an image meters at $0.05 (≈40 for $2)
-// rather than its raw OpenAI cost. Override via OPENAI_PRICE_IMAGE if needed.
-const PRICE_IMAGE = Number(process.env.OPENAI_PRICE_IMAGE || 0.05);
+// v14.00: the meter charges the HONEST cost of a card. MAYA renders at medium
+// quality, which prices below at PRICE_IMAGE * 0.5, so the default 0.13 makes
+// one card meter at $0.065, the real GPT Image cost with reference input. The
+// $2 trial therefore reads as ~30 card renders. Override via OPENAI_PRICE_IMAGE.
+const PRICE_IMAGE = Number(process.env.OPENAI_PRICE_IMAGE || 0.13);
 const PRICE_CHAT  = Number(process.env.OPENAI_PRICE_CHAT  || 0.01);
 const PRICE_AUDIO = Number(process.env.OPENAI_PRICE_AUDIO || 0.006);
 const MONTHLY_BUDGET_USD = Number(process.env.MONTHLY_BUDGET_USD || 50);
@@ -937,7 +938,7 @@ const USER_METRICS_PREFIX = 'metrics/trial/';
 // epoch differs, the meter zeroes on next read. Bump this string on any release
 // where the trial should reset (and it doubles as the one-off "reset everyone
 // now" Fromsa asked for). Overridable via env for an out-of-band reset.
-const TRIAL_EPOCH = String(process.env.TRIAL_EPOCH || 'v13.96');
+const TRIAL_EPOCH = String(process.env.TRIAL_EPOCH || 'v14.00');
 const _userSpend = new Map();   // uid -> { usd, images, calls, email, dirty, ts, lastFlush }
 function _uidKey(uid) {
   const h = crypto.createHash('sha256').update(String(uid)).digest('hex').slice(0, 24);
@@ -1008,6 +1009,7 @@ app.get('/api/usage', requireAuthHeader, async (req, res) => {
     const spent = Number((rec.usd || 0).toFixed(2));
     res.json({ capUsd: USER_TRIAL_USD, spentUsd: spent,
                leftUsd: Number(Math.max(0, USER_TRIAL_USD - spent).toFixed(2)),
+               perCardUsd: Number((PRICE_IMAGE * 0.5).toFixed(3)),
                images: rec.images || 0, calls: rec.calls || 0, admin: isAdmin });
   } catch (e) {
     res.status(500).json({ error: 'usage_failed', detail: String(e.message).slice(0, 80) });

@@ -1712,7 +1712,7 @@ ok('v13.89: the drawer has a collapsible Stats fold on top of Measurements with 
   INDEX_SOURCE.includes('id="pg-stats"') &&
   INDEX_SOURCE.indexOf('id="pg-stats"') < INDEX_SOURCE.indexOf('id="pg-meas"') &&
   INDEX_SOURCE.includes('id="pg-gauge-fill"') &&
-  INDEX_SOURCE.includes('id="pg-stat-dollars"') &&
+  INDEX_SOURCE.includes('id="pg-stat-projects"') &&   // v14.00: dollars tile became Projects
   INDEX_SOURCE.includes('id="pg-stat-cards"') &&
   INDEX_SOURCE.includes('id="pg-stat-favs"') &&
   INDEX_SOURCE.includes('id="pg-stat-images"') &&
@@ -1836,7 +1836,8 @@ ok('v13.94/v13.98: hovering ADMIN drops JUST the sheet beneath the wordmark, clo
   MAP_SOURCE.includes('class="brand-chips"') &&
   MAP_SOURCE.includes('>the sheet</a>') &&
   !/brand-chips">\s*<a[^>]*>operations room/.test(MAP_SOURCE) &&
-  /#top-left-brand \.brand-chips\{[^}]*padding-top:4px/.test(MAP_SOURCE) &&
+  /#top-left-brand \.brand-chips\{[^}]*left:50%;transform:translateX\(-50%\)/.test(MAP_SOURCE) &&
+  /#top-left-brand \.brand-chips\{[^}]*padding-top:2px/.test(MAP_SOURCE) &&
   /transition:opacity \.18s ease \.9s/.test(MAP_SOURCE) &&
   /#top-left-brand:hover \.brand-chips/.test(MAP_SOURCE));
 ok('v13.94: Company/Title moved under the name as a signature line; columns centered; no delete X in the row',
@@ -1892,8 +1893,9 @@ ok('v13.96: the avatar switcher no longer collapses to a 2px sliver (flex:0 0 au
   });
   ok('v13.96: opening the avatar switcher yields a visible panel (height > 20px)', d > 20);
 }
-ok('v13.96: an image meters at $0.05 so $2 buys ~40 generations',
-  SERVER_SOURCE.includes('OPENAI_PRICE_IMAGE || 0.05'));
+ok('v13.96/v14.00: a card meters at its honest cost, $0.065 at medium ($2 = ~30 cards)',
+  SERVER_SOURCE.includes('OPENAI_PRICE_IMAGE || 0.13') &&
+  SERVER_SOURCE.includes('perCardUsd: Number((PRICE_IMAGE * 0.5).toFixed(3))'));
 ok('v13.96: a trial epoch resets everyone now and on every release',
   SERVER_SOURCE.includes('const TRIAL_EPOCH = String(process.env.TRIAL_EPOCH') &&
   SERVER_SOURCE.includes("String(j.epoch || '') === TRIAL_EPOCH") &&
@@ -1910,8 +1912,8 @@ ok('v13.98/99: the Projects pill is centered and a little smaller (16px)',
 ok('v13.98: Randomize downscales the 2MB headshots at fetch, before anything paints',
   INDEX_SOURCE.includes('createImageBitmap(blob)') &&
   INDEX_SOURCE.includes("c.toDataURL('image/jpeg', 0.85)"));
-ok('v13.98: the credits copy carries no dashes and the honest render count',
-  INDEX_SOURCE.includes('about 100 more renders for $5') &&
+ok('v13.98/v14.00: the credits copy carries no dashes and the honest render count',
+  INDEX_SOURCE.includes('about 75 more for $5') &&
   !INDEX_SOURCE.includes('visualizing —'));
 ok('v13.98/99: the Playground is a live copy of the app; order inspo, favorites, wall',
   PLAYGROUND_SOURCE.includes('>Playground</div>') &&
@@ -1921,7 +1923,7 @@ ok('v13.98/99: the Playground is a live copy of the app; order inspo, favorites,
   PLAYGROUND_SOURCE.includes('window._pgScreenPos = { 1: 0, 2: 1, 0: 2 }') &&
   PLAYGROUND_SOURCE.includes('host.scrollTop = 0;'));
 ok('v13.98/99: Playground zoom fires ONLY on pinch or Cmd/Ctrl scroll, never plain scroll',
-  PLAYGROUND_SOURCE.includes('const MINZ = 0.1') &&
+  PLAYGROUND_SOURCE.includes('const MINZ = 0.25') &&
   PLAYGROUND_SOURCE.includes('window.pgZoomReset') &&
   PLAYGROUND_SOURCE.includes('if (!(e.ctrlKey || e.metaKey)) return;') &&
   PLAYGROUND_SOURCE.includes('body.pg-zoomed #screen-inspo'));
@@ -1938,6 +1940,34 @@ ok('v13.98: one click creates a real Wix pay link server-side, the skill recipe'
   SERVER_SOURCE.includes("INVOICE_TAX_GROUP = '13d21c63-b5ec-5912-8397-c3a5ddb27a97'") &&
   SERVER_SOURCE.includes('paymentsLimit: 1') &&
   SERVER_SOURCE.includes('INVOICE_FALLBACK_IMAGE'));
+
+// ── v14.00 ──
+ok('v14.00: the stats speak in card renders, no dollars facing the user',
+  INDEX_SOURCE.includes("set('pg-gauge-cap', 'card renders left')") &&
+  INDEX_SOURCE.includes('const cardsLeft = Math.max(0, Math.floor(left / perCard') &&
+  !INDEX_SOURCE.includes("id=\"pg-stat-dollars\"") &&
+  INDEX_SOURCE.includes('>Cards rendered</span>') &&
+  INDEX_SOURCE.includes('>Projects</span>'));
+ok('v14.00: /api/usage reports the per-card price so the gauge stays honest',
+  SERVER_SOURCE.includes('perCardUsd: Number((PRICE_IMAGE * 0.5).toFixed(3))'));
+ok('v14.00: playground zoom locks the screens while zoomed and snaps home',
+  PLAYGROUND_SOURCE.includes("host.style.overflowY = z < 0.999 ? 'hidden' : ''") &&
+  PLAYGROUND_SOURCE.includes('if (zoomIn && z > 0.92) z = 1') &&
+  PLAYGROUND_SOURCE.includes("b.style.transformOrigin = '50% 50%'"));
+ok('v14.00: playground backgrounds persist and can be uploaded',
+  PLAYGROUND_SOURCE.includes("const LIST = 'maya_pg_bgs'") &&
+  PLAYGROUND_SOURCE.includes('window.pgUploadBackground') &&
+  PLAYGROUND_SOURCE.includes('id="pg-bg-file"') &&
+  PLAYGROUND_SOURCE.includes('keepBg(dataUrl'));
+ok('v14.00: the Playground label rides beside the wordmark; the halo is quieter',
+  PLAYGROUND_SOURCE.includes('id="pg-badge"') &&
+  PLAYGROUND_SOURCE.includes('brand.appendChild(b)') &&
+  PLAYGROUND_SOURCE.includes('rgba(200,222,255,0.40)'));
+ok('v14.00: the invoice composer emails or texts the lead by name',
+  MAP_SOURCE.includes('function _invEmailLead') &&
+  MAP_SOURCE.includes('function _invTextLead') &&
+  MAP_SOURCE.includes("'sms:' + num + '?&body='") &&
+  MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

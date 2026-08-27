@@ -1405,3 +1405,36 @@ jejuan.narcisse.art). "4" is correct; non-signed-in visitors are the Wix count.
     background"). Generate still never auto-swaps.
 [x] Projects pill a little smaller (16px, still Cormorant italic, centered) in
     BOTH the app and the playground.
+
+── v14.00 (Claude): the honest meter + playground round 3 + invoice sending ──
+[x] ECONOMICS, honest at last: a card now meters at its true cost, $0.065
+    (PRICE_IMAGE 0.13 x 0.5 for medium). The ChatGPT audit was right that the
+    old $0.05 base was being halved to $0.025. $2 trial = ~30 card renders.
+    TRIAL_EPOCH v14.00 resets everyone to the full 30.
+[x] Stats speak in CARDS, not dollars: gauge reads "30 card renders left"; the
+    credits-left tile became Projects; "Images rendered" renamed Cards rendered;
+    /api/usage now reports perCardUsd so the gauge stays honest if pricing moves.
+    Out-of-credits popup: "30 free card renders... about 75 more for $5".
+[x] Invoice composer: Email <first name> and Text <first name> buttons send the
+    pay link (Gmail draft / Messages with the link prefilled, never auto-sent).
+[x] Admin hover chip "the sheet": centered on the ADMIN wordmark and tighter.
+[x] PLAYGROUND zoom v3: floor 25 percent; zooms to dead center (the Dying Star);
+    the screens LOCK while zoomed so scrolling can never pull favorites up; zoom
+    past 92 percent snaps home to 100, which also fixes the stuck +/unclickable
+    cards; plain scroll never zooms (pinch or Cmd/Ctrl+scroll only).
+[x] PLAYGROUND: the amber Playground label rides beside the wordmark, same row.
+[x] PLAYGROUND: card halo ~28 percent quieter, closer to glass.
+[x] PLAYGROUND backgrounds: every generated background is SAVED as its own card,
+    plus an Upload a background pill; tapping any card applies it; kept per
+    browser (server-side per-user folders still queued).
+[x] Viewer action rows centered as one column (both app and playground).
+[x] Emailed: typography audit (MAYA vs Apple) + unit economics update.
+[ ] QUEUED, the $50 consultation flow (his spec): after Get it made, offer a $50
+    consultation deposit; after paying, popup: "We'll send you a confirmation
+    link within two days. Your $50 goes toward your final order." Consultation
+    ~2 days out. NEEDS: the $50 pay link (static Wix link or via invoice-create).
+[ ] QUEUED, from the audit + tonight's testing: VISION ERROR 403 on the upload
+    card; dissect design-notes mismatch; long delay after Get it made; editing a
+    lead's email orphans its note history (needs key migration); README + verify-
+    live stale; browser regression not a deploy gate; playground GPT garment
+    notes panel + inspiration version-0 chip.

@@ -73,6 +73,36 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.00 (Claude): the honest meter, playground round 3, invoice sending
+
+`docs/server/server.js`, `frontend/index.html`, `playground/index.html`,
+`backend/status.html`:
+
+- **Economics**: PRICE_IMAGE 0.13 (medium x0.5 = $0.065/card, the true cost; the
+  old 0.05 was silently halved to 0.025). TRIAL_EPOCH `v14.00` resets all.
+  `/api/usage` adds `perCardUsd`.
+- **Stats in cards**: gauge "N card renders left" (cardsLeft = leftUsd/perCard);
+  dollars tile -> Projects (from projectStore.listSessions); "Images rendered" ->
+  "Cards rendered"; popup copy 30 free / ~75 for $5; no dollar faces the user.
+- **Invoice composer**: `_invEmailLead` / `_invTextLead` send the pay link via
+  Gmail compose / sms:, buttons labeled with the lead's first name; sheet chip
+  centered on ADMIN (`left:50%;translateX(-50%)`, padding-top 2px).
+- **Playground zoom v3**: MINZ 0.25; origin 50%/50%; `#screens` overflowY hidden
+  while zoomed (favorites can never pull up); snap to 1 past z>0.92 on zoom-in +
+  touchend (fixes stuck pointer-events / the + icon); wheel still ctrl/meta-only.
+- **Playground**: badge `#pg-badge` moved into `#top-left-brand` (same row);
+  halo alphas ~x0.72; backgrounds v2 (`maya_pg_bgs` list, every generated one
+  saved, `pgUploadBackground` + hidden file input, cards named Birth of a Star /
+  Generated background / My background, cap 6).
+- Viewer actions column centered (`#viewer-actions{flex column center}`), both.
+- Emails sent to Fromsa: typography audit (MAYA vs Apple), unit economics.
+- Verified headless: zoom lock+snap+unlock, badge in brand row, gauge "card
+  renders left", upload pill, 0 JS errors. All suites pass.
+
+NEXT decisions Fromsa owes: the $50 consultation pay link (flow queued with his
+popup copy); then the queued audit fixes (lead-email note migration, vision 403,
+dissect mismatch, README/verify-live, deploy gate).
+
 ## v13.99 (Claude): playground feedback round
 
 `playground/index.html`, `frontend/index.html`:

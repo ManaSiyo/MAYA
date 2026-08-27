@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.99">
+<meta name="maya-version" content="14.00">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -3674,6 +3674,9 @@
     justify-content: center; align-items: center;
     flex-wrap: wrap;
   }
+  /* v14.00: the whole action stack centers to the screen as one column. */
+  #viewer-actions { display: flex; flex-direction: column; align-items: center; }
+  #viewer-actions .viewer-row { width: 100%; }
   /* v13.43: the three live at the bottom. Submit lives in the mid row with
      the staged chips, appearing only once something is staged. */
   #viewer-row-modify-1 { display: flex; }
@@ -4837,15 +4840,15 @@
                 <circle class="pg-gauge-fill" id="pg-gauge-fill" cx="60" cy="60" r="52"></circle>
               </svg>
               <div class="pg-gauge-center">
-                <span class="pg-gauge-value" id="pg-gauge-value">$2.00</span>
-                <span class="pg-gauge-cap" id="pg-gauge-cap">left of $2</span>
+                <span class="pg-gauge-value" id="pg-gauge-value">30</span>
+                <span class="pg-gauge-cap" id="pg-gauge-cap">card renders left</span>
               </div>
             </div>
             <div class="pg-stats-grid">
-              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-dollars">$2.00</span><span class="pg-stat-lab">Credits left</span></div>
               <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-cards">0</span><span class="pg-stat-lab">Cards made</span></div>
+              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-images">0</span><span class="pg-stat-lab">Cards rendered</span></div>
               <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-favs">0</span><span class="pg-stat-lab">Favorites</span></div>
-              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-images">0</span><span class="pg-stat-lab">Images rendered</span></div>
+              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-projects">0</span><span class="pg-stat-lab">Projects</span></div>
             </div>
             <button class="pg-try-popup" onclick="mayaTryCreditsPopup()" title="Preview the out-of-credits popup">Try popup</button>
           </div>
@@ -16794,7 +16797,7 @@ function pgShow(which) {
 // v13.89: the Stats fold — trial credits gauge + four tiles. Cards, images and
 // favourites come from the local `items`; credits (dollars left of the $2 trial)
 // come from /api/usage, with the full $2 shown until the server answers.
-let _mayaUsage = { spentUsd: 0, capUsd: 2, images: 0, ok: false };
+let _mayaUsage = { spentUsd: 0, capUsd: 2, images: 0, perCard: 0.065, projects: null, ok: false };
 async function _refreshUsage() {
   try {
     const key = (typeof getApiKey === 'function') ? getApiKey() : '';
@@ -16804,8 +16807,17 @@ async function _refreshUsage() {
     const j = await r.json();
     if (j && typeof j.capUsd === 'number') {
       _mayaUsage = { spentUsd: Number(j.spentUsd) || 0, capUsd: Number(j.capUsd) || 2,
-                     images: Number(j.images) || 0, ok: true };
+                     images: Number(j.images) || 0,
+                     perCard: Number(j.perCardUsd) || 0.065,
+                     projects: _mayaUsage.projects, ok: true };
     }
+    // v14.00: the fourth tile counts the account's projects.
+    try {
+      if (typeof projectStore !== 'undefined' && projectStore.ready && projectStore.ready() && projectStore.listSessions) {
+        const ss = await projectStore.listSessions();
+        if (Array.isArray(ss)) _mayaUsage.projects = ss.length;
+      }
+    } catch (_) {}
   } catch (_) {}
 }
 function _renderDrawerStats() {
@@ -16813,10 +16825,16 @@ function _renderDrawerStats() {
   const cards = list.length;
   const imagesLocal = list.filter(i => i && i.card && i.card.image).length;
   const favs = list.filter(i => i && i.card && i.card.favorited && i.card.image).length;
+  // v14.00: the meter thinks in CARD RENDERS, not dollars. One card costs the
+  // honest per-card figure the server reports (about 6.5 cents), so the gauge
+  // reads "N card renders left" and no dollar figure faces the user.
   const cap = _mayaUsage.capUsd || 2;
   const spent = Math.min(cap, Math.max(0, _mayaUsage.spentUsd || 0));
   const left = Math.max(0, cap - spent);
-  const frac = cap > 0 ? left / cap : 0;
+  const perCard = _mayaUsage.perCard || 0.065;
+  const totalCards = Math.max(1, Math.floor(cap / perCard + 1e-6));
+  const cardsLeft = Math.max(0, Math.floor(left / perCard + 1e-6));
+  const frac = cardsLeft / totalCards;
   const images = _mayaUsage.ok ? _mayaUsage.images : imagesLocal;
   const C = 326.7;
   const fill = document.getElementById('pg-gauge-fill');
@@ -16825,13 +16843,12 @@ function _renderDrawerStats() {
     fill.classList.toggle('low', frac <= 0.2);
   }
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  const money = '$' + left.toFixed(2);
-  set('pg-gauge-value', money);
-  set('pg-gauge-cap', 'left of $' + cap.toFixed(0));
-  set('pg-stat-dollars', money);
+  set('pg-gauge-value', String(cardsLeft));
+  set('pg-gauge-cap', 'card renders left');
   set('pg-stat-cards', String(cards));
   set('pg-stat-favs', String(favs));
   set('pg-stat-images', String(images));
+  set('pg-stat-projects', _mayaUsage.projects == null ? String(cards ? 1 : 0) : String(_mayaUsage.projects));
 }
 // v13.89: the out-of-credits popup. Shown when an image call comes back 402
 // trial_exhausted, and previewable from the "Try popup" link in the Stats fold.
@@ -16845,8 +16862,8 @@ function mayaShowCreditsPopup(info) {
     ov.innerHTML =
       '<div class="mcp-card" role="dialog" aria-modal="true">' +
         '<div class="mcp-title">You\'re out of credits</div>' +
-        '<div class="mcp-body">You\'ve used your $2 of free renders. Top up to keep visualizing, about 100 more renders for $5.</div>' +
-        '<button class="mcp-upgrade" id="mcp-upgrade">Get $5 more · ~13 renders</button>' +
+        '<div class="mcp-body">You\'ve used your 30 free card renders. Top up to keep visualizing, about 75 more for $5.</div>' +
+        '<button class="mcp-upgrade" id="mcp-upgrade">Get $5 more</button>' +
         '<button class="mcp-later" id="mcp-later">Not now</button>' +
       '</div>';
     document.body.appendChild(ov);
