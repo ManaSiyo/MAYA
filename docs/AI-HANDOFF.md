@@ -73,6 +73,31 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.96 (Claude): avatar dropdown fix + trial economics + resets
+
+`frontend/index.html`, `docs/server/server.js`:
+
+- **Avatar/username dropdown was collapsing to 2px.** `#drawer-avatar-switcher`
+  is a flex item in a flex-column pane that overflows; with default flex-shrink it
+  was squished to border-height (~2px) and `overflow:hidden` clipped the rows, so
+  the dropdown "opened" but showed nothing (the long-standing complaint). Fix:
+  `#drawer-avatar-switcher{flex:0 0 auto}`. Verified headless — opening it now
+  produces a real ~72px panel with its rows.
+- **Trial meters at $0.05/image** (`PRICE_IMAGE` default 0.19 → 0.05), so the $2
+  free trial ≈ 40 generations. Overridable via `OPENAI_PRICE_IMAGE`.
+- **Everyone's trial resets now and on every release.** `TRIAL_EPOCH` (default
+  `'v13.96'`); `userSpendTotal` zeroes any meter whose stored `epoch` differs and
+  writes the new epoch on flush; the unflushed-increment guard is epoch-scoped.
+  Bump `TRIAL_EPOCH` each release to reset all (or set the env var out of band).
+- Circular logo (`logo-circle.png`) emailed to Fromsa.
+
+OPEN / QUEUED (see requests.txt v13.96 block): username editable when it shows a
+date; admin "Users" label/count; randomize speed (needs live headshot assets);
+Hey-Maya toggle in the hamburger; inspiration version-0 with swipe; sign-in
+"what's new" popup; Maya non-deletable feature-request log; per-user backgrounds.
+Also paused mid-task: the Twilio Speed to Lead setup (Fromsa is creating the
+account/number/keys; next is grabbing the 4 values into env).
+
 ## v13.95 (Claude): drawer floor redesign + Lead Station restructure + invoicing
 
 `backend/status.html`, `docs/server/server.js`, `aesthetics/ui/logo-circle.png`:

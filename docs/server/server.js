@@ -774,7 +774,10 @@ async function gcsListSubmissions() {
 // Each Cloud Run instance owns ONE object, metrics/spend/<YYYY-MM>/<id>.json,
 // so instances never overwrite each other and the total is their sum.
 // ═══════════════════════════════════════════════════════════════════════════
-const PRICE_IMAGE = Number(process.env.OPENAI_PRICE_IMAGE || 0.19);
+// v13.96: the free trial is a generosity budget, not a billing ledger. Fromsa
+// wants $2 to buy plenty of generations, so an image meters at $0.05 (≈40 for $2)
+// rather than its raw OpenAI cost. Override via OPENAI_PRICE_IMAGE if needed.
+const PRICE_IMAGE = Number(process.env.OPENAI_PRICE_IMAGE || 0.05);
 const PRICE_CHAT  = Number(process.env.OPENAI_PRICE_CHAT  || 0.01);
 const PRICE_AUDIO = Number(process.env.OPENAI_PRICE_AUDIO || 0.006);
 const MONTHLY_BUDGET_USD = Number(process.env.MONTHLY_BUDGET_USD || 50);
@@ -929,6 +932,12 @@ async function bootMeter() {
 // inflate, the metrics/users/ account count.
 const USER_TRIAL_USD = Number(process.env.USER_TRIAL_USD || 2);
 const USER_METRICS_PREFIX = 'metrics/trial/';
+// v13.96: every release refreshes everyone's free trial back to the full $2.
+// Each account's meter records the epoch it was last reset at; when the current
+// epoch differs, the meter zeroes on next read. Bump this string on any release
+// where the trial should reset (and it doubles as the one-off "reset everyone
+// now" Fromsa asked for). Overridable via env for an out-of-band reset.
+const TRIAL_EPOCH = String(process.env.TRIAL_EPOCH || 'v13.96');
 const _userSpend = new Map();   // uid -> { usd, images, calls, email, dirty, ts, lastFlush }
 function _uidKey(uid) {
   const h = crypto.createHash('sha256').update(String(uid)).digest('hex').slice(0, 24);
@@ -938,17 +947,24 @@ async function userSpendTotal(uid) {
   const cached = _userSpend.get(uid);
   if (cached && Date.now() - cached.ts < 10000) return cached;
   const rec = { usd: 0, images: 0, calls: 0, email: (cached && cached.email) || '',
-                dirty: false, ts: Date.now(), lastFlush: (cached && cached.lastFlush) || 0 };
+                epoch: TRIAL_EPOCH, dirty: false, ts: Date.now(), lastFlush: (cached && cached.lastFlush) || 0 };
   try {
     const o = await gcsGet(_uidKey(uid));
     if (o.ok) {
       const j = JSON.parse(o.buf.toString('utf8'));
-      rec.usd = Number(j.usd) || 0; rec.images = Number(j.images) || 0;
-      rec.calls = Number(j.calls) || 0; rec.email = j.email || rec.email;
+      // v13.96: a meter from an earlier epoch is reset to zero (full $2 again).
+      if (String(j.epoch || '') === TRIAL_EPOCH) {
+        rec.usd = Number(j.usd) || 0; rec.images = Number(j.images) || 0;
+        rec.calls = Number(j.calls) || 0;
+      } else {
+        rec.dirty = true;   // persist the reset (with the new epoch) on next flush
+      }
+      rec.email = j.email || rec.email;
     }
   } catch (_) {}
-  // Keep any unflushed local increments that ran ahead of the stored copy.
-  if (cached && cached.usd > rec.usd) {
+  // Keep any unflushed local increments that ran ahead of the stored copy,
+  // but only within the same epoch (a fresh epoch must win, not old spend).
+  if (cached && String(cached.epoch || TRIAL_EPOCH) === TRIAL_EPOCH && cached.usd > rec.usd) {
     rec.usd = cached.usd; rec.images = cached.images; rec.calls = cached.calls; rec.dirty = cached.dirty;
   }
   _userSpend.set(uid, rec);
@@ -973,7 +989,7 @@ async function flushUserSpend(uid) {
   if (!rec || !rec.dirty) return;
   // No raw uid in the object — the filename is already its one-way hash.
   const snap = { email: rec.email || '', usd: Number(rec.usd.toFixed(4)),
-                 images: rec.images, calls: rec.calls, updatedAtMs: Date.now() };
+                 images: rec.images, calls: rec.calls, epoch: rec.epoch || TRIAL_EPOCH, updatedAtMs: Date.now() };
   try {
     await gcsPut(_uidKey(uid), Buffer.from(JSON.stringify(snap), 'utf8'), 'application/json');
     rec.dirty = false; rec.lastFlush = Date.now();

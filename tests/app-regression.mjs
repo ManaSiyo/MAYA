@@ -1873,6 +1873,28 @@ ok('v13.95: a saved pay link persists on the lead and rides the next email draft
   SERVER_SOURCE.includes("has('paylink')") &&
   MAP_SOURCE.includes("? ('\\n\\nPay here: ' + String(x.paylink).trim())"));
 
+// ── v13.96 ──
+ok('v13.96: the avatar switcher no longer collapses to a 2px sliver (flex:0 0 auto)',
+  /#drawer-avatar-switcher \{ flex: 0 0 auto;/.test(INDEX_SOURCE));
+{
+  // the dropdown actually renders with real height once opened
+  const d = await pg.evaluate(async () => {
+    const dr = document.getElementById('notes-drawer'); if (dr){ dr.style.display='flex'; dr.classList.add('open'); }
+    try { if (window.pgShow) pgShow('avatar'); } catch(_){}
+    try { await window.toggleAvatarSwitcher(); } catch(_){}
+    await new Promise(r=>setTimeout(r,200));
+    const p = document.getElementById('drawer-avatar-switcher');
+    return p ? Math.round(p.getBoundingClientRect().height) : 0;
+  });
+  ok('v13.96: opening the avatar switcher yields a visible panel (height > 20px)', d > 20);
+}
+ok('v13.96: an image meters at $0.05 so $2 buys ~40 generations',
+  SERVER_SOURCE.includes('OPENAI_PRICE_IMAGE || 0.05'));
+ok('v13.96: a trial epoch resets everyone now and on every release',
+  SERVER_SOURCE.includes('const TRIAL_EPOCH = String(process.env.TRIAL_EPOCH') &&
+  SERVER_SOURCE.includes("String(j.epoch || '') === TRIAL_EPOCH") &&
+  SERVER_SOURCE.includes('epoch: rec.epoch || TRIAL_EPOCH'));
+
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

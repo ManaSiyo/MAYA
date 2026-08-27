@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.94">
+<meta name="maya-version" content="13.96">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -2072,7 +2072,11 @@
   /* v13.82: the switcher can be taller than the room left under the avatar row,
      so it was getting cropped at the drawer's edge. Cap it and let it scroll
      inside itself, and it is scrolled into view when opened. */
-  #notes-drawer #drawer-avatar-switcher { margin: 0 0 12px; max-height: 44vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  /* v13.96: the switcher is a flex item in a column that can overflow; without
+     flex:0 0 auto the column shrinks it to 0 content height (border-only ~2px)
+     and overflow:hidden clips the rows, so the dropdown "opened" but showed
+     nothing. Pin its size and let the folder scroll to it. */
+  #notes-drawer #drawer-avatar-switcher { flex: 0 0 auto; margin: 0 0 12px; max-height: 44vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   #notes-drawer .pg-fold { margin: 2px 0 10px; }
   #notes-drawer .pg-fold summary { list-style: none; cursor: pointer;
     display: flex; align-items: center; justify-content: center; gap: 8px;

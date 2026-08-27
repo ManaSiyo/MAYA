@@ -1300,3 +1300,37 @@ LATER (design / accounts needed):
 [q] Fromsa asked earlier whether the ADMIN hover pill should be just ONE — not
     captured in the log at the time. Currently three (operations room / playground
     / the sheet). Awaiting which single link he wants before collapsing them.
+
+── v13.96 (Claude): dropdown fix, trial economics, logo email + big backlog ──
+[x] Avatar/username dropdown "hidden" — ROOT CAUSE found: the switcher is a flex
+    item in a column that overflows, and with no flex-shrink:0 it collapsed to a
+    2px sliver (border only) while overflow:hidden clipped its rows. Fixed with
+    #drawer-avatar-switcher{flex:0 0 auto}. Verified headless: opening it now
+    yields a real ~72px panel. (Asked ~10 times; this is the actual fix.)
+[x] Trial economics: an image now meters at $0.05 (was $0.19 default, higher at
+    full quality), so $2 buys ~40 generations. PRICE_IMAGE default 0.05.
+[x] Reset everyone now + reset on every release: TRIAL_EPOCH (='v13.96'). Each
+    meter records its epoch; when the epoch changes the meter zeroes on next read
+    (full $2 again). Bumping TRIAL_EPOCH each release resets everyone automatically.
+[x] Circular logo emailed to worldofsiyo@gmail.com (PNG attached, transparent bg).
+[ ] Username editable when it shows a date / "clickable and changeable" — the name
+    currently opens the switcher on click; needs a distinct edit affordance. QUEUED.
+[ ] Admin "Users" label wrong / "we have more users today" — need to confirm
+    whether it's the admin user COUNT that's stale or the label text. QUEUED (ask).
+[ ] Randomize (hamburger name/avatar) doesn't work + should be faster — depends on
+    the headshots assets (MAYA_PUBLIC_HEADSHOTS) which aren't in this checkout;
+    needs live-asset verification. QUEUED.
+[ ] Hey-Maya / "Maya is listening" pill: a toggle to turn it off from inside the
+    hamburger (admin). QUEUED.
+[ ] Inspiration version-0: a card generated from inspiration shows the source inspo
+    as a small circle (like the fabric preview) bottom-right; in the image viewer
+    it's clickable to expand the original (v0), swipe left/right to the starting
+    point. QUEUED (medium).
+[ ] Version/update popup on sign-in ("what's new, we're on v14"); auto-refresh +
+    show it first/second login after an update. QUEUED (medium).
+[ ] Maya feature-request log: frontend users ask Maya for features; Maya logs them
+    to a NON-DELETABLE internal store with everyone's history, summarized for Claude
+    to pick up; Maya <-> Claude. QUEUED (large; new server store).
+[ ] Per-user personal backgrounds: a folder per user holding their background
+    (currently the shared Birth-of-a-Star); users can change/generate/save their
+    own Maya background. QUEUED (large; storage + generation + UI).
