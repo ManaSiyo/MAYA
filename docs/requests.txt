@@ -16,6 +16,33 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 27, 2026, MORNING ROUND (v14.03)
+
+[x] "Zoom works, cards are not cropped, but I cannot drag cards while zoomed;
+    everything that works at regular size must work zoomed." Done.
+[x] "Background pills should just say Upload and Generate, side by side,
+    lower, closer to the divider." Done.
+[x] "Playground floor: Logout, Feedback, Hey Maya toggle at the bottom right;
+    remove Tip from the playground." Done.
+[x] "Hey Maya on the playground: pull the drawer, switch to Pinterest, bring
+    the pin I ask for, talk to Maya instead of tapping to listen, use my
+    reference cards, visualize by voice." Done: /api/voice-token + her hands.
+[x] "Feedback: Maya records what we discussed as structured notes, then
+    Submit; feature requests logged like cards; X on top of the title; the
+    popup in the drawer's aesthetic." Done.
+[x] "Admin hamburger still not the same as the frontend." Done: same pill.
+[x] "The Hey Maya toggle is glitchy, I cannot turn it on." Done: primes the
+    mic on the click; transient errors no longer snap it off.
+[x] "Divider a little lower above Hey Maya; the logo a little lower." Done.
+[x] "Recent changes is not updated on every push." Done: stamped with the
+    version; the suite fails when it is stale. Two entries added.
+[x] "Replace the Maya prompting engine with Feature requests by users, a
+    collapsible list, user then very concise ask." Done (engine hidden, not
+    deleted, its saved fields still reach the app).
+[x] "Remove Sources of traffic from the Bottom Line." Done.
+[ ] Watch: the wake word and Tap to Listen share one speech engine; they
+    take turns. If Hey Maya ever goes quiet after a listen, say so.
+
 AUGUST 27, 2026, MAYA AUDIT 2, THE AESTHETIC PUSH (v14.02)
 
 [x] "Zoom works but I should still be able to scroll down and pull the drawer;

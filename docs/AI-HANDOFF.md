@@ -74,6 +74,53 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.03 (Claude): Maya on the user side, drag while zoomed, Admin round
+
+`playground/index.html`, `backend/status.html`, `docs/server/server.js`,
+`backend/marketing.html`, `frontend/index.html` (meta only), `tests/*`:
+
+- **Playground, everything works zoomed**: pointer deltas in `makeDraggable`
+  and the resize handle are divided by `pgZoomLevel()`; the
+  `pointer-events:none` rule is gone. Cards drag, resize, open and favorite
+  at any zoom.
+- **Backgrounds fold**: two pills, "Upload" and "Generate", side by side in
+  `#pg-bg-pills`, lower, near the floor divider.
+- **Floor row**: Logout (left), Feedback (middle), Hey Maya switch (right).
+  Tip is gone from the playground only (the app keeps it).
+- **Hey Maya on the user side**: `POST /api/voice-token` (any signed in user,
+  rate limited, 402 when the trial is spent, priced `PRICE_REALTIME` 0.10 per
+  call opened) builds a Realtime session from `maya-character.md` plus the
+  client's own board (sent in the body) with tools executed in the browser:
+  `open_drawer`, `close_drawer`, `bring_in_pins` (matches words against the
+  loaded pins' alt text, picks, `_pinImport()`), `describe_garment`
+  (`processConsultation`), `visualize`, `write_feedback`, `log_feature`
+  (`POST /api/feature`, new, any user, lands in the inbox as source `app`),
+  `list_board`, `hang_up`. The wake word (`_pgWake*`, localStorage
+  `maya_pg_wake`) pauses while the moodboard's Tap to Listen or the feedback
+  listener owns the speech engine (they are wrapped). Her lines show above
+  the voice bar (`#pg-maya-lines`), a chip at the bottom right hangs up.
+- **Feedback popup**: the drawer's exact glass, an X pill on the title, a
+  Feedback / Feature request chip pair, "Talk to Maya" (she takes structured
+  notes into the box via `write_feedback`), Submit posts to `/api/feedback`
+  and, for a feature request, to `/api/feature`.
+- **Admin**: `.top-btn` carries the app's exact shadow, hover and 44px hit
+  target (the hamburger is the same object now); `toggleWakeWord` is async
+  and primes the microphone on the click, transient recognizer errors no
+  longer snap the switch off; `#voice-dock` padding-top 9, margin-bottom -16;
+  **Feature requests** fold (`#features-fold`, `loadFeatureRequests()` from
+  `/api/admin/maya-features`, who / concise ask / day, done ones struck)
+  replaced the Prompting Engine fold, which is `hidden` but still loads and
+  saves; the Sources of traffic table is hidden inside the Bottom Line.
+- **Changelog rule**: `#changes-fold` carries `data-version`; the regression
+  suite fails when it drifts from the meta version. Two entries added.
+- Verified: 386 browser assertions, 11 MCP, smoke; headless screenshots of
+  the playground floor row, the feedback popup and the Admin drawer.
+
+NEXT (Fromsa): push, then on the playground flip Hey Maya on, allow the mic,
+say "Hey Maya" and ask her to open the drawer, bring in a pin by name, and
+visualize. Report what she got wrong; that is the next round. Open MAYA's
+door (fixes.txt) if not yet done.
+
 ## v14.02 (Claude): zoom v5, the frozen meter, the drawer floor, MAYA's door
 
 `playground/index.html`, `frontend/index.html`, `backend/status.html`,
@@ -122,10 +169,7 @@ The fabric sourcing revamp shipped in v13.44; see that section below.
   `docs/MAYA-INDEPENDENCE.md` is the roadmap for Maya as an entity;
   `docs/AUDIT-2026-08-27.md` is the codebase audit.
 
-NEXT (Fromsa): push; then open MAYA's door (fixes.txt steps: set
-MAYA_MCP_TOKEN on Cloud Run, add the connector in Claude). Then verify live:
-pinch on the playground (floor 40, nothing cropped, scroll and drawer work),
-the admin drawer over the marquee, the switch.
+(Superseded by v14.03 above.)
 
 ## v14.01 (Claude): the lag found and killed + zoom v4 + wall enforcement
 

@@ -873,6 +873,7 @@ function monthKey(d) {
   const t = d || new Date();
   return t.getUTCFullYear() + '-' + String(t.getUTCMonth() + 1).padStart(2, '0');
 }
+const PRICE_REALTIME = Number(process.env.OPENAI_PRICE_REALTIME || 0.10);
 function priceOf(path, req) {
   if (/images\/(generations|edits)/.test(path)) {
     // MAYA always asks for one picture at a time; quality changes the price.
@@ -882,6 +883,9 @@ function priceOf(path, req) {
     return PRICE_IMAGE;
   }
   if (/audio\/(transcriptions|translations|speech)/.test(path)) return PRICE_AUDIO;
+  // v14.03: a live voice line is priced per call opened, a rough average of a
+  // few spoken minutes, so the meter moves honestly for a user talking to Maya.
+  if (/realtime/.test(path)) return PRICE_REALTIME;
   return PRICE_CHAT;
 }
 function noteSpend(path, req) {
@@ -3894,6 +3898,122 @@ app.post('/api/admin/marketing-brief', requireAuthHeader, express.json({ limit: 
 });
 
 const port = process.env.PORT || 8080;
+// ═══ v14.03: MAYA ON THE USER SIDE. The same brain as the Admin voice line, a
+// narrower set of hands. Any signed in user may open the line (the Playground
+// carries it first; the app when Fromsa promotes it). The tools are all
+// executed in the browser: open or close the drawer, switch to Pinterest and
+// bring pins in, describe the garment into the moodboard pipeline, visualize,
+// write structured feedback, log a feature request into the inbox. No admin
+// reads here, no lead data, no snapshot: only this person's own board, which
+// the client sends with the request so she can use the reference cards on
+// screen. Rate limited like an image call. ═══
+function appendMayaFeatureFrom(text, who, source) {
+  return appendMayaFeature(text, who).then(async (n) => {
+    if (!n || !source) return n;
+    try {
+      const rec = await loadMayaFeatures();
+      const last = rec.items[rec.items.length - 1];
+      if (last && last.text === String(text || '').trim().slice(0, 600)) { last.source = source; await gcsPut(MAYA_FEATURES_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json'); }
+    } catch (_) {}
+    return n;
+  });
+}
+app.post('/api/feature', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  const text = String((req.body || {}).text || '').trim().slice(0, 600);
+  if (text.length < 3) return res.status(400).json({ error: 'empty' });
+  const who = String((req.body || {}).who || user.name || user.email || 'a user').trim().slice(0, 80);
+  try { const n = await appendMayaFeatureFrom(text, who, 'app'); return res.json({ ok: !!n }); }
+  catch (e) { console.error('[feature]', e.message); return res.status(502).json({ error: 'log_failed' }); }
+});
+app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }), async (req, res) => {
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email, 4);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  if (!process.env.OPENAI_API_KEY) return res.status(503).json({ error: 'voice_unavailable' });
+  const isAdmin = ADMIN_EMAILS.includes((user.email || '').toLowerCase());
+  try {
+    if (!isAdmin) {
+      const rec = await userSpendTotal(user.sub);
+      if ((rec.usd || 0) >= USER_TRIAL_USD) return res.status(402).json({ error: 'trial_exhausted' });
+    }
+    const body = req.body || {};
+    const name = String(body.name || user.name || '').trim().slice(0, 60) || 'the client';
+    const board = Array.isArray(body.board) ? body.board.slice(0, 40).map(c => ({
+      kind: String(c.kind || '').slice(0, 20), title: String(c.title || '').slice(0, 120),
+      caption: String(c.caption || '').slice(0, 200), favorited: !!c.favorited })) : [];
+    const drawer = body.drawer && typeof body.drawer === 'object' ? {
+      open: !!body.drawer.open, tab: String(body.drawer.tab || '').slice(0, 20), pinterest: !!body.drawer.pinterest } : { open: false };
+    const nowLA = new Intl.DateTimeFormat('en-US', { timeZone: process.env.WIX_TZ || 'America/Los_Angeles',
+      weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date());
+    const boardLines = board.length ? board.map((c, i) => (i + 1) + '. ' + (c.kind || 'card') + ': ' + (c.title || '') +
+      (c.caption ? ' (' + c.caption + ')' : '') + (c.favorited ? ' [hearted]' : '')).join('\n') : '(the board is empty)';
+    const character = MAYA_CHARACTER ? 'WHO YOU ARE:\n' + MAYA_CHARACTER + '\n\n' : '';
+    const instructions = character +
+      'You are Maya, speaking out loud with ' + name + ' inside the MAYA app at maya.manasiyo.com. It is ' + nowLA +
+      ' in San Francisco. This is the design conversation: the person describes the garment they imagine, you help them ' +
+      'say it precisely (silhouette, fabric feel, mood, color, what they do not want), then you put it on the board and ' +
+      'visualize it on them. Be warm, sharp and brief: one or two spoken sentences at a time, then listen. Never read ' +
+      'URLs or JSON aloud. Open by greeting them by name and asking what they are imagining, unless the board already ' +
+      'holds cards, then say what you see in one sentence and ask what to do with it.\n\n' +
+      'YOUR HANDS (tools run in their browser, instantly, no confirmation needed):\n' +
+      '- open_drawer(tab) / close_drawer: the side drawer. Tabs: avatar (their face, projects, stats), pinterest, fabrics.\n' +
+      '- bring_in_pins(query, count): open Pinterest and bring the pins that match the words onto the board as reference cards. ' +
+      'If nothing matches you get the list of what is there; choose the closest or ask.\n' +
+      '- describe_garment(text): the moment you have enough, send ONE consolidated description in the client\'s own words; ' +
+      'MAYA turns it into cards. Do this instead of asking them to tap to listen.\n' +
+      '- visualize: render the described garment on them, using the reference cards on the board. Say it takes a moment.\n' +
+      '- write_feedback(notes, kind): when they give feedback or ask for something MAYA cannot do, turn it into structured ' +
+      'notes (What, Why, Where in MAYA) and put them in the Feedback box; they press Submit. kind is feedback or feature.\n' +
+      '- log_feature(text): a feature request, logged straight into the studio inbox with their name. Use it when they ' +
+      'explicitly ask for something new; say it was logged.\n' +
+      '- list_board: the cards on screen right now.\n' +
+      '- hang_up: end the call when they say goodbye or stop.\n\n' +
+      'THE BOARD RIGHT NOW (' + board.length + ' cards):\n' + boardLines + '\n' +
+      'DRAWER: ' + (drawer.open ? 'open on ' + (drawer.tab || 'avatar') : 'closed') + (drawer.pinterest ? ', Pinterest connected' : '') + '.\n' +
+      'Never invent what is on the board; call list_board if unsure. No dashes in anything you say.';
+    const tools = [
+      { type: 'function', name: 'open_drawer', description: 'Open the side drawer, optionally on a tab.',
+        parameters: { type: 'object', properties: { tab: { type: 'string', enum: ['avatar', 'pinterest', 'fabrics'] } } } },
+      { type: 'function', name: 'close_drawer', description: 'Close the side drawer.', parameters: { type: 'object', properties: {} } },
+      { type: 'function', name: 'bring_in_pins', description: 'Open Pinterest and bring matching saved pins onto the board as reference cards.',
+        parameters: { type: 'object', properties: { query: { type: 'string', description: 'words to match against the pins' },
+          count: { type: 'integer', description: 'how many, default 1, max 6' } }, required: ['query'] } },
+      { type: 'function', name: 'describe_garment', description: 'Send the consolidated garment description into the moodboard pipeline; it becomes cards.',
+        parameters: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] } },
+      { type: 'function', name: 'visualize', description: 'Render the garment on the client using the board.', parameters: { type: 'object', properties: {} } },
+      { type: 'function', name: 'write_feedback', description: 'Put structured notes into the Feedback box for the client to submit.',
+        parameters: { type: 'object', properties: { notes: { type: 'string' }, kind: { type: 'string', enum: ['feedback', 'feature'] } }, required: ['notes'] } },
+      { type: 'function', name: 'log_feature', description: 'Log a feature request into the studio inbox now.',
+        parameters: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] } },
+      { type: 'function', name: 'list_board', description: 'The cards on the board right now.', parameters: { type: 'object', properties: {} } },
+      { type: 'function', name: 'hang_up', description: 'End the call.', parameters: { type: 'object', properties: {} } },
+    ];
+    const r = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session: { type: 'realtime', model: REALTIME_MODEL, instructions, tools,
+        audio: { input: { transcription: { model: 'whisper-1' } },
+                 output: { voice: process.env.OPENAI_REALTIME_VOICE || 'marin' } } } }),
+      signal: AbortSignal.timeout(20000),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.value) throw new Error((j.error && j.error.message) || ('realtime ' + r.status));
+    noteSpend('v1/realtime', req);
+    try { await noteUserSpend(user.sub, user.email, 'v1/realtime', req); } catch (_) {}
+    return res.json({ ok: true, value: j.value, model: REALTIME_MODEL });
+  } catch (e) {
+    console.error('[voice-token app] failed,', String(e.message).slice(0, 200));
+    return res.status(502).json({ error: 'voice_failed' });
+  }
+});
+
 // ═══ v14.02: MAYA'S OWN DOOR. /mcp is a Model Context Protocol server (Streamable
 // HTTP, JSON replies) so Claude, Codex or any MCP client can read Maya's soul,
 // memory, people, feature inbox and lead station, journal a line, and mark a

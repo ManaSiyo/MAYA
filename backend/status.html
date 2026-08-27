@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="14.02">
+<meta name="maya-version" content="14.03">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -69,9 +69,11 @@ try {
     letter-spacing:0.15em;text-transform:uppercase;color:rgba(245,250,255,0.85);
     cursor:pointer;transition:all .2s;
     backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18)}
-  .top-btn:hover{border-color:rgba(255,255,255,0.42);color:rgba(245,250,255,1)}
-  .top-btn.hamburger{width:32px;height:28px;padding:0;display:flex;align-items:center;justify-content:center}
+    /* v14.03: the app's exact pill shadow and hover, so the hamburger is the same object */
+    box-shadow:inset 0 1px 1px rgba(255,255,255,0.28), inset 0 -1px 1px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.22)}
+  .top-btn:hover{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.42);color:rgba(255,255,255,1)}
+  .top-btn.hamburger{width:32px;height:28px;padding:0;display:flex;align-items:center;justify-content:center;position:relative}
+  .top-btn.hamburger::after{content:'';position:absolute;left:50%;top:50%;width:44px;height:44px;transform:translate(-50%,-50%)}
   /* Lights live in the top bar, same line as the wordmark */
   /* v13.39: the lights sit on the SAME line as the wordmark, but they live in
      the page, not in the fixed bar, so they scroll away and the bar does not. */
@@ -131,8 +133,9 @@ try {
      the Hey Maya wake-word toggle (off by default) — the logo itself stays
      the live voice line. */
   /* v14.02: the divider drops way down, a breath above the floor row. */
-  #voice-dock{margin-top:auto;padding-top:12px;margin-bottom:-12px;border-top:0.5px solid var(--line);
-    display:flex;flex-direction:column;align-items:center;gap:8px;flex:none}
+  /* v14.03: divider a touch lower still, the logo row a touch lower too. */
+  #voice-dock{margin-top:auto;padding-top:9px;margin-bottom:-16px;border-top:0.5px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;gap:6px;flex:none}
   #voice-dock .voice-row{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:14px}
   #voice-btn{width:56px;height:56px;border-radius:50%;padding:0;cursor:pointer;overflow:hidden;
     border:0.5px solid var(--line);background:transparent;flex:none;
@@ -333,6 +336,13 @@ try {
   details.fold summary::after{content:'\25BE';font-family:'Jost',sans-serif;font-size:11px;color:var(--faint);transition:transform .2s}
   /* A small green light when something has shipped that you have not read yet.
      It goes out the moment the section is opened. */
+  .fr-list{display:grid;gap:6px}
+  .fr{display:grid;grid-template-columns:130px 1fr auto;gap:12px;align-items:baseline;padding:7px 10px;border-radius:10px;
+      border:0.5px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02)}
+  .fr .who{font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.16em;text-transform:uppercase;color:#a9c9ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fr .ask{font-size:14px;line-height:1.35;color:var(--ink)}
+  .fr .when{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);white-space:nowrap}
+  .fr.done .ask{color:var(--dim);text-decoration:line-through;text-decoration-color:rgba(255,255,255,0.25)}
   .new-dot{width:7px;height:7px;border-radius:50%;background:var(--green);
            box-shadow:0 0 10px rgba(74,222,128,0.85);display:none;flex:0 0 auto;
            animation:newpulse 2.4s ease-in-out infinite}
@@ -915,20 +925,21 @@ try {
     <div class="panel">
       <div id="bl-funnel" class="bl-funnel"></div>
       <div id="bl-tiles" class="bl-tiles"></div>
-      <div class="bl-sub">Sources of traffic, MAYA</div>
-      <table id="sources-table"><tbody></tbody></table>
-      <div class="note" style="margin-top:8px">How people reached MAYA itself, from its own Analytics.
-      checkout.stripe.com means someone came back from a Stripe page; it is an attribution artifact, not
-      a count of tips. Wix does not share a per source breakdown for manasiyo.com through its API yet.</div>
+      <!-- v14.03: the Sources of traffic table is gone, per Fromsa (it was not
+           telling him anything). The element stays, hidden, because the
+           marketing painter still writes into it. -->
+      <table id="sources-table" hidden><tbody></tbody></table>
     </div>
     <div id="bl-note" class="note" style="display:none;margin-top:8px"></div>
   </details>
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-24s">
+  <details class="fold" id="changes-fold" data-latest="2026-08-27b" data-version="14.03">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 27</b>Maya stepped onto the user side. On the Playground the drawer floor reads Logout, Feedback, Hey Maya, and the switch turns on a wake word: say Hey Maya and she opens the line herself, with her own hands in the app. She pulls the drawer, switches to Pinterest and brings in the pins you name, sends what you described straight onto the board, visualizes it on you, and writes your feedback into the box as structured notes; a feature request goes into her inbox under your name. Cards drag and resize while zoomed out now, exactly as they do at full size. Here on Admin the hamburger is the app's own pill to the pixel, the Hey Maya switch asks for the microphone on the click so it never snaps back, the divider and the logo sit a touch lower, Feature requests took the Prompting Engine's place as Maya's history of everyone's asks, and the Sources of traffic table left the Bottom Line.</div>
+    <div class="chg"><b>Aug 27</b>Maya got a door and a character. The API now speaks the Model Context Protocol at /mcp, so Claude and Codex read her soul, her memory, the people she knows and the feature inbox straight from her and mark shipped work done. Her character, the builder with taste, ships inside the server and leads every call. The Playground zoom was rebuilt: it scales the cards' own canvas, glides the cluster to the center, floors at forty percent and never crops; scrolling and the drawer keep working while zoomed. The money counter stops restarting on every update. Here, the marquee slides under the drawer, Hey Maya is a switch, and every line in the drawer is centered.</div>
     <div class="chg"><b>Aug 26</b>The lag is dead. The Admin hamburger had been quietly animating its ride 200 milliseconds behind the drawer since the day it learned to slide; the transition is gone and the pill is glued to the drawer's edge, frame for frame, exactly like the app. The drawer itself now wears the app drawer's exact glass, the same gradient, border, radius and shadows, only the contents differ. The playground zoom fits the whole cluster around its own bounding box and glides it to the center, nothing cropped, the Tap to Listen bar steps out of the zoom entirely, and the screens are pinned hard while zoomed. The circle carries the price again over a thinner ring, with visualizations left as its own tile. The wall now mirrors the hearts by force: every visit sweeps this account's orphaned posts. And every popup reads centered.</div>
     <div class="chg"><b>Aug 26</b>The meter tells the truth now, and it counts in cards. One render meters at its real six and a half cents, the gauge reads card renders left instead of dollars, the tiles count cards made, cards rendered, favorites and projects, and everyone starts v14 with their full thirty. The Playground zoom grew up: it locks the screens while zoomed so scrolling never drags favorites in, floors at a quarter size in the dead center of the sky, and snaps home past ninety two percent. Backgrounds save now, uploads included, each one its own named card. And the Lead Station invoice can be sent the moment it exists, Email or Text, wearing the lead's own first name.</div>
     <div class="chg"><b>Aug 26</b>The Playground became a living copy of MAYA, and grew three experiments: pinch or scroll and the whole moodboard zooms out to a tenth of its size for a full survey, tapping the logo brings it back; it opens on the community wall now, favorites below; and the drawer carries a Background fold, Birth of a Star named as the house backdrop, with a pill that generates a brand new cosmic background and waits for your tap before anything swaps.</div>
@@ -1045,7 +1056,18 @@ try {
   </div>
   </details>
 
-  <details class="fold" id="pe-fold">
+  <!-- v14.03: Maya's history of everyone's requests. Who asked, then in a few
+       words what they asked for, newest first. Read from her inbox. -->
+  <details class="fold" id="features-fold">
+  <summary><h2 class="grp">Feature requests <span class="new-dot"></span></h2></summary>
+  <div class="fold-body">
+    <div id="features-list" class="fr-list"><div class="note">Waiting for the one sign in at the top of the page.</div></div>
+  </div>
+  </details>
+
+  <!-- v14.03: the Prompting Engine stepped off the page, per Fromsa. Its
+       fields still load and save (the live app reads them), it is only hidden. -->
+  <details class="fold" id="pe-fold" hidden>
   <summary><h2 class="grp">MAYA Prompting Engine</h2></summary>
   <div class="fold-body">
   <div class="pe-live">
@@ -1108,6 +1130,26 @@ try {
 </div><!-- /adm-hscroll -->
 
 <script>
+// v14.03: Feature requests, Maya's inbox on the page. Who asked, what, when.
+// The ask is trimmed to one line; hover carries the whole of it.
+async function loadFeatureRequests(){
+  const host=document.getElementById('features-list'); if(!host||!_idTok) return;
+  try{
+    const r=await fetch('/api/admin/maya-features',{headers:{'Authorization':'Bearer '+_idTok}});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(j.error||('http '+r.status));
+    const items=(j.items||[]).slice().reverse();
+    if(!items.length){ host.innerHTML='<div class="note">Nothing asked yet. Everything anyone asks Maya for lands here.</div>'; return; }
+    const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const day=ts=>{ try{ return new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric'}).format(new Date(ts)); }catch(_){ return ''; } };
+    const short=t=>{ t=String(t||'').replace(/\s+/g,' ').trim(); return t.length>110?t.slice(0,107).replace(/\s\S*$/,'')+'\u2026':t; };
+    host.innerHTML=items.map(i=>'<div class="fr'+(i.done?' done':'')+'" title="'+esc(i.text)+'"><span class="who">'+esc(i.who||'someone')+'</span><span class="ask">'+esc(short(i.text))+'</span><span class="when">'+esc(day(i.ts))+'</span></div>').join('');
+    const f=document.getElementById('features-fold');
+    if(f){ const latest=String(items[0].id||items[0].ts||''); let seen=''; try{ seen=localStorage.getItem('maya_features_seen')||''; }catch(_){}
+      f.classList.toggle('unseen', seen!==latest);
+      f.addEventListener('toggle',()=>{ if(f.open){ f.classList.remove('unseen'); try{ localStorage.setItem('maya_features_seen',latest); }catch(_){} } },{once:true}); }
+  }catch(e){ host.innerHTML='<div class="note">Maya\'s inbox did not answer: '+String(e.message||e).replace(/[<>]/g,'')+'</div>'; }
+}
 // v12.8: light the green dot when the newest entry has not been read on this
 // device, and put it out the moment the section is opened.
 (function _changesDot(){
@@ -1327,6 +1369,7 @@ function _adoptToken(t, firstLoad) {
   _scheduleRenew(t);
   runChecks(); loadTraffic(); loadSubmissions(); _fbBridge(t);
   try{ if(window.loadMkt) window.loadMkt(); }catch(_){}
+  try{ loadFeatureRequests(); }catch(_){}
   try{ if(window.loadMayaCommand) window.loadMayaCommand(); }catch(_){}
 }
 function _gisBoot() {
@@ -2151,12 +2194,23 @@ function _wakeLabel(){
   if(mt){ mt.classList.toggle('live',_wakeWantOn); mt.setAttribute('aria-pressed',_wakeWantOn?'true':'false'); }
   // v14.02: the word is always "Hey Maya"; the switch carries the state.
 }
-function toggleWakeWord(){
-  if(!_wakeSupported()){ _voiceWord&&_voiceWord('this browser can’t listen for a wake word'); return; }
+let _wakeBusy=false;
+async function toggleWakeWord(){
+  if(!_wakeSupported()){ _voiceWord&&_voiceWord('this browser cannot listen for a wake word'); return; }
+  if(_wakeBusy) return;
   _wakeWantOn=!_wakeWantOn;
   try{ localStorage.setItem('maya_wake', _wakeWantOn?'1':'0'); }catch(_){}
   _wakeLabel();
-  if(_wakeWantOn) _wakeStart(); else _wakeStop();
+  if(!_wakeWantOn){ _wakeStop(); _voiceWord(''); return; }
+  // v14.03: the click is a user gesture, so ask for the microphone HERE. The
+  // recognizer then never trips not-allowed, which used to snap the switch
+  // straight back off and read as a glitch.
+  _wakeBusy=true;
+  try{ const m=await navigator.mediaDevices.getUserMedia({audio:true}); m.getTracks().forEach(t=>t.stop()); }
+  catch(_){ _wakeWantOn=false; try{localStorage.setItem('maya_wake','0');}catch(__){} _wakeLabel(); _voiceWord('let the browser use the microphone for Hey Maya'); _wakeBusy=false; return; }
+  _wakeBusy=false;
+  _wakeStart();
+  _voiceWord('say Hey Maya');
 }
 function _wakeStart(){
   if(!_wakeWantOn || _wakeOn || !_wakeSupported()) return;
@@ -2173,7 +2227,11 @@ function _wakeStart(){
         }
       }
     };
-    _wakeRec.onerror=(ev)=>{ if(ev && (ev.error==='not-allowed'||ev.error==='service-not-allowed')){ _wakeWantOn=false; try{localStorage.setItem('maya_wake','0');}catch(_){}; _wakeLabel(); } };
+    _wakeRec.onerror=(ev)=>{
+      const err=ev&&ev.error||'';
+      if(err==='not-allowed'||err==='service-not-allowed'){ _wakeWantOn=false; try{localStorage.setItem('maya_wake','0');}catch(_){}; _wakeLabel(); _voiceWord('the microphone was refused, Hey Maya is off'); }
+      // aborted, no-speech, network: transient; onend restarts the listener
+    };
     _wakeRec.onend=()=>{ _wakeOn=false; if(_wakeWantOn && !_voice){ setTimeout(_wakeStart,600); } };
     _wakeRec.start(); _wakeOn=true;
   }catch(_){ _wakeOn=false; }

@@ -460,8 +460,9 @@ ok('an image costs more of the budget than a chat call',
 
 ok('the map light reads Submissions', s.lights.includes('Submissions') && !s.lights.includes('Drive'));
 
-ok('Admin folds: users, the migrated marketing modules, then changes/prompting/architecture',
-  s.order === 'users-fold,ads-fold,leads-fold,bottom-fold,changes-fold,pe-fold,arch-fold');
+ok('Admin folds: users, the migrated marketing modules, then changes/feature requests/architecture (the prompting engine hidden)',
+  s.order === 'users-fold,ads-fold,leads-fold,bottom-fold,changes-fold,features-fold,pe-fold,arch-fold' &&
+  /<details class="fold" id="pe-fold" hidden>/.test(MAP_SOURCE));
 ok('the marketing modules are migrated into Admin under Users and traffic',
   MAP_SOURCE.includes('id="adm-mkt"') &&
   MAP_SOURCE.includes('id="campaigns-table"') &&
@@ -491,7 +492,7 @@ ok('embedded Marketing keeps the standalone chart and refresh interactions',
 ok('Architecture is collapsible', s.archFold);
 ok('door cards have no arrows', s.arrows === 0);
 ok('"Never delete" banner removed', !s.warnBanner);
-ok('folds live in the bottom footer', s.footerFolds === 3);
+ok('folds live in the bottom footer (changes, feature requests, the hidden prompting engine, architecture)', s.footerFolds === 4);
 ok('all door texts share one font size', s.doorSizes === 1);
 ok('Systems Map checks have request timeouts', s.healthUsesTimeouts);
 ok('submission thumbnails load in parallel', s.thumbnailsParallel);
@@ -1784,11 +1785,10 @@ ok('v13.91: the call CTA is a real smartphone glyph, not a telephone handset',
   MAP_SOURCE.includes('const PHONE_SVG =') &&
   MAP_SOURCE.includes('PHONE_SVG + ') &&
   !MAP_SOURCE.includes('\'call\')" title="Call \' + esc(x.phone) + \'">&#9742;'));
-ok('v13.91: Sources of traffic and the Bottom Line share one shell',
+ok('v13.91/v14.03: the Bottom Line is one shell; the Sources of traffic table is hidden inside it since v14.03',
   MAP_SOURCE.includes('id="bottom-fold"') &&
   !MAP_SOURCE.includes('id="sources-fold"') &&
-  MAP_SOURCE.includes('class="bl-sub">Sources of traffic') &&
-  MAP_SOURCE.includes('id="sources-table"'));
+  MAP_SOURCE.includes('<table id="sources-table" hidden>'));
 ok('v13.94: the Admin drawer is an exact copy of the frontend — native horizontal scroll-snap, no browser back-swipe',
   MAP_SOURCE.includes('id="adm-hscroll"') &&
   MAP_SOURCE.includes('class="hpane hpane-drawer"') &&
@@ -1855,7 +1855,7 @@ ok('v13.94: Company/Title moved under the name as a signature line; columns cent
 // ── v13.95 ──
 ok('v13.95/v13.98: the drawer floor is a smaller tighter circle, lower, with the Hey Maya toggle at its right',
   MAP_SOURCE.includes('/aesthetics/ui/logo-circle.png') &&
-  /#voice-dock\{[^}]*padding-top:12px/.test(MAP_SOURCE) &&
+  /#voice-dock\{[^}]*padding-top:9px/.test(MAP_SOURCE) &&
   MAP_SOURCE.includes('class="voice-row"') &&
   MAP_SOURCE.includes('id="maya-toggle"') &&
   MAP_SOURCE.includes('onclick="toggleWakeWord()"') &&
@@ -1988,6 +1988,44 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes('function _invTextLead') &&
   MAP_SOURCE.includes("'sms:' + num + '?&body='") &&
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
+
+// ── v14.03 ──
+ok('v14.03: the changelog is stamped with the shipping version, so a push cannot leave it stale',
+  (MAP_SOURCE.match(/id="changes-fold"[^>]*data-version="([0-9.]+)"/) || [])[1] === versionOf(MAP_SOURCE));
+ok('v14.03: Admin hamburger is the app\'s pill to the pixel (shadow, hover, 44px target)',
+  MAP_SOURCE.includes('box-shadow:inset 0 1px 1px rgba(255,255,255,0.28), inset 0 -1px 1px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.22)}') &&
+  MAP_SOURCE.includes('.top-btn.hamburger::after{content:') &&
+  MAP_SOURCE.includes('.top-btn:hover{background:rgba(255,255,255,0.04)'));
+ok('v14.03: the Hey Maya switch primes the microphone on the click and never snaps back on a transient error',
+  MAP_SOURCE.includes('async function toggleWakeWord()') &&
+  MAP_SOURCE.includes("navigator.mediaDevices.getUserMedia({audio:true}); m.getTracks().forEach(t=>t.stop());") &&
+  MAP_SOURCE.includes('// aborted, no-speech, network: transient'));
+ok('v14.03: Feature requests fold reads Maya\'s inbox; Sources of traffic is gone from the Bottom Line',
+  MAP_SOURCE.includes('id="features-fold"') && MAP_SOURCE.includes('async function loadFeatureRequests()') &&
+  MAP_SOURCE.includes("fetch('/api/admin/maya-features'") &&
+  MAP_SOURCE.includes('<table id="sources-table" hidden>') && !MAP_SOURCE.includes('<div class="bl-sub">Sources of traffic'));
+ok('v14.03: playground cards drag and resize while zoomed (pointer deltas divided by the scale)',
+  PLAYGROUND_SOURCE.includes('_curDx = (me.clientX - startX) / _zs') &&
+  PLAYGROUND_SOURCE.includes("const dx = (me.clientX - startX) / _zs") &&
+  !PLAYGROUND_SOURCE.includes('body.pg-zoomed #maya-canvas * { pointer-events: none; }'));
+ok('v14.03: playground floor reads Logout, Feedback, Hey Maya; Tip is gone; backgrounds say Upload and Generate side by side',
+  !PLAYGROUND_SOURCE.includes('onclick="openTip()" title="MAYA is free') &&
+  PLAYGROUND_SOURCE.includes('id="pg-maya-toggle"') && PLAYGROUND_SOURCE.includes('onclick="pgToggleWake()"') &&
+  /onclick="mayaSignOut\(\)"[\s\S]{0,600}onclick="openFeedback\(\)"[\s\S]{0,400}id="pg-maya-toggle"/.test(PLAYGROUND_SOURCE) &&
+  PLAYGROUND_SOURCE.includes('id="pg-bg-pills"') && PLAYGROUND_SOURCE.includes('onclick="pgUploadBackground()">Upload</button>') &&
+  PLAYGROUND_SOURCE.includes('onclick="pgGenerateBackground()">Generate</button>'));
+ok('v14.03: Maya on the user side: the voice line, her hands, the wake word, the feedback notes',
+  SERVER_SOURCE.includes("app.post('/api/voice-token'") && SERVER_SOURCE.includes("app.post('/api/feature'") &&
+  SERVER_SOURCE.includes("name: 'bring_in_pins'") && SERVER_SOURCE.includes("name: 'describe_garment'") &&
+  SERVER_SOURCE.includes("name: 'write_feedback'") && SERVER_SOURCE.includes('const PRICE_REALTIME') &&
+  PLAYGROUND_SOURCE.includes('async function pgMayaStart()') && PLAYGROUND_SOURCE.includes("fetch('/api/voice-token'") &&
+  PLAYGROUND_SOURCE.includes("case 'bring_in_pins':") && PLAYGROUND_SOURCE.includes('processConsultation(t)') &&
+  PLAYGROUND_SOURCE.includes('function _pgWakeStart()') && PLAYGROUND_SOURCE.includes("startListening = function () { _pgWakePause();"));
+ok('v14.03: the feedback popup wears the drawer glass, an X on the title, a kind chip, and Talk to Maya',
+  PLAYGROUND_SOURCE.includes('class="modal-close icon pg-fb-x"') &&
+  PLAYGROUND_SOURCE.includes('#feedback-modal .modal-card { position: relative; border-radius: 18px;') &&
+  PLAYGROUND_SOURCE.includes('id="feedback-kind"') && PLAYGROUND_SOURCE.includes('onclick="pgMayaFeedback()">Talk to Maya</button>') &&
+  PLAYGROUND_SOURCE.includes("fetch('/api/feature'"));
 
 ok('v14.01: the wall mirrors the hearts by force (reconcile sweep on entry)',
   INDEX_SOURCE.includes('async reconcile()') &&

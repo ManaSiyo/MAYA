@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.02">
+<meta name="maya-version" content="14.03">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -4876,8 +4876,12 @@
                 <div class="pg-bg-cardname">Birth of a Star</div>
               </div>
             </div>
-            <button class="pg-bg-gen" id="pg-bg-gen" onclick="pgGenerateBackground()">Generate a new background</button>
-            <button class="pg-bg-gen" id="pg-bg-upload" onclick="pgUploadBackground()">Upload a background</button>
+            <!-- v14.03: two pills side by side, lower, near the floor divider. The
+                 fold already says Background, so the pills just say what they do. -->
+            <div id="pg-bg-pills">
+              <button class="pg-bg-gen" id="pg-bg-upload" onclick="pgUploadBackground()">Upload</button>
+              <button class="pg-bg-gen" id="pg-bg-gen" onclick="pgGenerateBackground()">Generate</button>
+            </div>
             <input type="file" id="pg-bg-file" accept="image/*" style="display:none" onchange="_pgBgFilePicked(this)">
           </div>
         </details>
@@ -4901,12 +4905,14 @@
     <!-- v7.9: Settings + Logout share the bottom text-link row. -->
     <div class="drawer-meta-row">
       <!-- v13.33: Settings removed. Nothing in it changes day to day. -->
-      <button class="drawer-settings-link" onclick="openTip()" title="MAYA is free. If it was useful, you can support the atelier.">Tip</button>
+      <!-- v14.03 PLAYGROUND: Tip is gone from this row; Hey Maya (a switch) sits at
+           the right. The three read Logout, Feedback, Hey Maya. -->
       <button class="drawer-settings-link" onclick="mayaSignOut()" title="Sign out of Google and return to the Maya sign-in screen.">Logout</button>
       <!-- v13.32: reachable without hunting for it. -->
       <!-- v13.41: Privacy lives on the sign in screen and the Systems Map.
            This slot listens instead: problems, ideas, wishes, spoken or typed. -->
       <button class="drawer-settings-link" onclick="openFeedback()" title="Problems, ideas, wishes. Speak or type, MAYA passes it straight to the atelier.">Feedback</button>
+      <button id="pg-maya-toggle" class="drawer-settings-link" onclick="pgToggleWake()" role="switch" aria-checked="false" title="When on, just say Hey Maya and she answers"><span>Hey Maya</span><span class="mt-switch" aria-hidden="true"><span class="mt-knob"></span></span></button>
     </div>
   </div>
 
@@ -5152,10 +5158,15 @@
      Tap to listen borrows the same speech engine the moodboard uses, lands the
      words in the box, and Submit files it into MAYA's own store. -->
 <div class="modal" id="feedback-modal">
-  <button class="modal-close" onclick="closeFeedback()">Close</button>
   <div class="modal-card" style="text-align:center;max-width:520px">
+    <!-- v14.03: the X rides the card's corner, on top of the title, the viewer's round pill. -->
+    <button class="modal-close icon pg-fb-x" onclick="closeFeedback()" aria-label="Close">×</button>
     <h2 style="text-align:center">Feedback</h2>
-    <div class="modal-hint" style="text-align:center">Suggestions and ideas for MAYA. Speak or type, it reaches a human.</div>
+    <div class="modal-hint" style="text-align:center">Suggestions and ideas for MAYA. Talk to Maya or type, it reaches a human.</div>
+    <div id="feedback-kind" role="radiogroup" aria-label="What kind of note">
+      <button type="button" class="fb-kind on" data-kind="feedback" onclick="_fbKind('feedback')">Feedback</button>
+      <button type="button" class="fb-kind" data-kind="feature" onclick="_fbKind('feature')">Feature request</button>
+    </div>
     <textarea id="feedback-box" rows="6" placeholder="What should MAYA do better?"
       style="width:100%;margin-top:14px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.2);
              border-radius:14px;padding:12px 14px;color:#eef2ff;font-family:'Cormorant Garamond',serif;
@@ -5164,6 +5175,7 @@
          color:rgba(238,242,255,0.5);min-height:16px;margin-top:8px"></div>
     <div class="modal-actions" style="justify-content:center;gap:12px">
       <button class="modal-text-btn" id="feedback-listen" onclick="feedbackListenToggle()">Tap to Listen</button>
+      <button class="modal-text-btn" id="feedback-maya" onclick="pgMayaFeedback()">Talk to Maya</button>
       <button class="modal-text-btn" id="feedback-send" onclick="submitFeedback()">Submit</button>
     </div>
   </div>
@@ -5883,7 +5895,7 @@ function _placeItemInternal(card, delay, fixedPos, isRestore) {
         if (!e.isPrimary) return;
         e.preventDefault(); e.stopPropagation();
         const startX = e.clientX;
-        const startW = el.getBoundingClientRect().width;
+        const startW = el.offsetWidth;   // v14.03: layout width, not the scaled rect
         const itId = parseInt(el.dataset.id);
         const it = items.find(i => i.id === itId);
         const img = el.querySelector('.inspo-thumb');
@@ -5893,7 +5905,8 @@ function _placeItemInternal(card, delay, fixedPos, isRestore) {
         // wider than a phone screen.
         const maxW = Math.min(560, window.innerWidth - 28);
         function onMove(me) {
-          const dx = me.clientX - startX;
+          const _zs = (typeof window.pgZoomLevel === 'function' ? window.pgZoomLevel() : 1) || 1;
+          const dx = (me.clientX - startX) / _zs;   // v14.03: zoom aware
           resizeMoved = Math.max(resizeMoved, Math.abs(dx));
           const w = Math.max(120, Math.min(maxW, startW + dx));
           el.style.width = w + 'px';
@@ -6032,7 +6045,10 @@ function makeDraggable(el) {
     function onMove(me) {
       if (!dragging) return;
       if (el._pinching) return;   // v13.45: two fingers means resize, not drag
-      _curDx = me.clientX - startX; _curDy = me.clientY - startY;
+      // v14.03 PLAYGROUND: the canvas may be scaled (survey zoom); a pointer
+      // pixel is 1/z board pixels, so the card stays under the finger.
+      const _zs = (typeof window.pgZoomLevel === 'function' ? window.pgZoomLevel() : 1) || 1;
+      _curDx = (me.clientX - startX) / _zs; _curDy = (me.clientY - startY) / _zs;
       moved = Math.max(moved, Math.abs(_curDx) + Math.abs(_curDy));
       if (_groupStarts) {
         // v13.4: the whole stack follows the pointer as one unit.
@@ -10490,16 +10506,26 @@ async function submitFeedback() {
   st.textContent = 'Sending\u2026';
   try {
     const ver = (document.querySelector('meta[name="maya-version"]') || {}).content || '';
+    // v14.03: a feature request lands in Maya's inbox (the studio's work queue)
+    // as well as the feedback store, under the client's name.
+    const kind = (typeof _fbKindNow === 'string') ? _fbKindNow : 'feedback';
     const r = await fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-      body: JSON.stringify({ text, page: 'app', version: ver }),
+      body: JSON.stringify({ text: (kind === 'feature' ? '[feature request] ' : '') + text, page: 'app', version: ver }),
     });
     if (!r.ok) throw new Error('http ' + r.status);
+    if (kind === 'feature') {
+      try {
+        await fetch('/api/feature', { method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+          body: JSON.stringify({ text, who: (typeof _pgWhoAmI === 'function' ? _pgWhoAmI() : '') }) });
+      } catch (_) {}
+    }
     box.value = '';
     st.textContent = '';
     closeFeedback();
-    showToast('Thank you. It reached the atelier.');
+    showToast(kind === 'feature' ? 'Logged. Maya keeps it for the studio.' : 'Thank you. It reached the atelier.');
   } catch (e) {
     st.textContent = 'That did not send. It is kept in the box, try again in a moment.';
   } finally { send.disabled = false; }
@@ -17072,7 +17098,8 @@ if (typeof toggleNotesDrawer === 'function') {
   .pg-bg-thumb.on { box-shadow: inset 0 0 0 1.5px rgba(169,201,255,0.9); }
   .pg-bg-cardname { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 13px;
     color: rgba(238,242,255,0.85); text-align: center; padding: 5px 6px 7px; line-height: 1.2; }
-  #pg-bg-body .pg-bg-gen { display: block; margin: 12px auto 0; }
+  #pg-bg-pills { display: flex; justify-content: center; gap: 10px; margin: 22px 0 2px; }
+  #pg-bg-body .pg-bg-gen { display: inline-block; margin: 0; }
   .pg-bg-gen { font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
     color: rgba(238,242,255,0.8); background: rgba(255,255,255,0.04); border: 0.5px solid rgba(255,255,255,0.25);
     border-radius: 100px; padding: 6px 14px; cursor: pointer; transition: all 0.2s; }
@@ -17086,8 +17113,7 @@ if (typeof toggleNotesDrawer === 'function') {
      glass blur on every card is the single most expensive thing to scale, so
      it rests while zoomed. */
   #maya-canvas { will-change: transform; transform-origin: 50% 50%; }
-  body.pg-zoomed #maya-canvas { overflow: visible; cursor: zoom-in; }
-  body.pg-zoomed #maya-canvas * { pointer-events: none; }
+  body.pg-zoomed #maya-canvas { overflow: visible; }
   body.pg-zoomed .item-card { backdrop-filter: none; -webkit-backdrop-filter: none;
     background: rgba(10,14,28,0.55); }
 </style>
@@ -17243,7 +17269,7 @@ if (typeof toggleNotesDrawer === 'function') {
   }
   window.pgGenerateBackground = async function () {
     const btn = document.getElementById('pg-bg-gen'); if (!btn || btn.disabled) return;
-    btn.disabled = true; const was = btn.textContent; btn.textContent = 'Generating…';
+    btn.disabled = true; const was = btn.textContent; btn.textContent = 'Generating\u2026';
     try {
       const dataUrl = await callOpenAIImage(
         'A breathtaking deep-space vista: a luminous newborn star wrapped in drifting nebula veils, vast dark sky, cinematic, no text, no people. A quiet cosmic backdrop for a fashion app.',
@@ -17314,6 +17340,305 @@ if (typeof toggleNotesDrawer === 'function') {
     brand.appendChild(b);
   }
 })();
+</script>
+
+<style>
+  /* ═══ PLAYGROUND v14.03: the floor row is Logout, Feedback, Hey Maya. The
+     Hey Maya link carries an Apple style switch (the Admin drawer's exact
+     switch). ═══ */
+  /* Logout left, Feedback in the middle, Hey Maya at the bottom right */
+  #notes-drawer .drawer-meta-row { align-items: center; justify-content: space-between; gap: 12px; padding-left: 8px; padding-right: 4px; }
+  #pg-maya-toggle { display: inline-flex; align-items: center; gap: 9px; }
+  #pg-maya-toggle .mt-switch { position: relative; width: 34px; height: 20px; border-radius: 100px; flex: none;
+    background: rgba(255,255,255,0.10); border: 0.5px solid rgba(255,255,255,0.22);
+    transition: background .25s, border-color .25s; box-shadow: inset 0 1px 2px rgba(0,0,0,0.35); }
+  #pg-maya-toggle .mt-knob { position: absolute; top: 1.5px; left: 1.5px; width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.45); transition: transform .25s cubic-bezier(.2,.8,.2,1); }
+  #pg-maya-toggle.on { color: #a9c9ff; }
+  #pg-maya-toggle.on .mt-switch { background: rgba(128,176,255,0.95); border-color: rgba(128,176,255,0.95); }
+  #pg-maya-toggle.on .mt-knob { transform: translateX(14px); }
+  #pg-maya-toggle.live .mt-knob { box-shadow: 0 0 0 3px rgba(169,201,255,0.35), 0 1px 3px rgba(0,0,0,0.45); }
+  /* the feedback popup wears the drawer's glass: same gradient, hairline,
+     radius, blur and shadows; the X rides the corner over the title */
+  #feedback-modal .modal-card { position: relative; border-radius: 18px; padding: 30px 28px 26px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%,
+      rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18), 0 12px 48px rgba(0,0,0,0.38); }
+  #feedback-modal .modal-close.pg-fb-x { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; font-size: 16px; }
+  #feedback-modal h2 { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: 26px; color: rgba(245,250,255,0.92); }
+  #feedback-modal #feedback-box { background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.22); border-radius: 14px; }
+  #feedback-kind { display: flex; justify-content: center; gap: 8px; margin: 2px 0 4px; }
+  .fb-kind { font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(245,250,255,0.6); background: transparent; border: 0.5px solid rgba(255,255,255,0.18); border-radius: 100px;
+    padding: 5px 12px; cursor: pointer; transition: all .2s; }
+  .fb-kind:hover { color: rgba(245,250,255,0.95); border-color: rgba(255,255,255,0.42); }
+  .fb-kind.on { color: #a9c9ff; border-color: rgba(128,176,255,0.7); background: rgba(128,176,255,0.10); }
+  /* Maya live: a small chip at the bottom right, and her last lines above the voice bar */
+  #pg-maya-chip { position: fixed; right: 18px; bottom: 18px; z-index: 9500; display: none; align-items: center; gap: 9px;
+    padding: 8px 14px 8px 11px; border-radius: 100px; cursor: pointer; background: rgba(8,12,26,0.85);
+    border: 0.5px solid rgba(169,201,255,0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(169,201,255,0.95);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+  #pg-maya-chip.show { display: flex; }
+  #pg-maya-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: #a9c9ff; animation: pgmayapulse 1.6s ease-in-out infinite; }
+  @keyframes pgmayapulse { 0%,100% { box-shadow: 0 0 0 0 rgba(169,201,255,0.35); } 50% { box-shadow: 0 0 0 8px rgba(169,201,255,0); } }
+  #pg-maya-lines { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 9400; width: min(560px, 90vw);
+    display: none; flex-direction: column; gap: 4px; pointer-events: none; text-align: center; }
+  #pg-maya-lines.show { display: flex; }
+  #pg-maya-lines .ln { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 15px; line-height: 1.35;
+    color: rgba(238,242,255,0.88); text-shadow: 0 1px 8px rgba(0,0,0,0.6); }
+  #pg-maya-lines .ln.you { color: rgba(238,242,255,0.55); font-size: 13px; }
+</style>
+<div id="pg-maya-chip" onclick="pgMayaStop()" title="Maya is on the line. Tap to hang up."><span class="dot"></span><span id="pg-maya-chip-word">Maya is listening</span></div>
+<div id="pg-maya-lines" aria-live="polite"></div>
+<script>
+// ═══ PLAYGROUND v14.03: HEY MAYA ON THE USER SIDE. The same brain as Admin's
+// voice line, a narrower set of hands. The switch at the drawer floor turns a
+// background wake word on; "Hey Maya" opens the live line (OpenAI Realtime,
+// WebRTC, key from /api/voice-token). Her tools run right here: the drawer,
+// Pinterest, the moodboard pipeline, visualize, the feedback box, the studio
+// inbox. The moodboard's own Tap to Listen and the wake recognizer share one
+// speech engine, so each steps aside for the other. ═══
+let _fbKindNow = 'feedback';
+function _fbKind(k) {
+  _fbKindNow = (k === 'feature') ? 'feature' : 'feedback';
+  document.querySelectorAll('#feedback-kind .fb-kind').forEach(b => b.classList.toggle('on', b.dataset.kind === _fbKindNow));
+}
+function _pgWhoAmI() {
+  try { const u = firebase.auth().currentUser; return (u && (u.displayName || u.email)) || ''; } catch (_) { return ''; }
+}
+function _pgBoardSnapshot() {
+  try {
+    return (items || []).filter(i => i && i.card).slice(0, 40).map(i => ({
+      kind: i.card.kind || '', title: String(i.card.title || i.card.text || '').slice(0, 120),
+      caption: String(i.card.caption || '').slice(0, 200), favorited: !!i.card.favorited }));
+  } catch (_) { return []; }
+}
+function _pgDrawerState() {
+  const hs = document.getElementById('hscroll');
+  const open = hs ? hs.scrollLeft > (hs.scrollWidth - hs.clientWidth) / 2 : false;
+  return { open, tab: window._pgLastTab || 'avatar', pinterest: !!(typeof _pinStatusOk !== 'undefined' && _pinStatusOk) };
+}
+// ── the live line ──
+let _pgVoice = null, _pgVoiceStarting = false, _pgToolChain = Promise.resolve();
+function _pgLine(who, text) {
+  const host = document.getElementById('pg-maya-lines'); const t = String(text || '').trim(); if (!host || !t) return;
+  host.classList.add('show');
+  const ln = document.createElement('div'); ln.className = 'ln ' + (who === 'you' ? 'you' : 'maya'); ln.textContent = t;
+  host.appendChild(ln);
+  while (host.children.length > 2) host.removeChild(host.firstChild);
+  clearTimeout(host._fade); host._fade = setTimeout(() => host.classList.remove('show'), 14000);
+}
+function _pgChip(on, word) {
+  const c = document.getElementById('pg-maya-chip'); const w = document.getElementById('pg-maya-chip-word');
+  if (c) c.classList.toggle('show', !!on); if (w && word) w.textContent = word;
+  const t = document.getElementById('pg-maya-toggle'); if (t) t.classList.toggle('live', !!on);
+}
+async function _pgTool(name, a) {
+  a = a && typeof a === 'object' ? a : {};
+  switch (name) {
+    case 'open_drawer': {
+      try { toggleNotesDrawer(true); } catch (_) {}
+      const tab = ['avatar', 'pinterest', 'fabrics'].includes(a.tab) ? a.tab : (window._pgLastTab || 'avatar');
+      try { pgTab(tab); } catch (_) {}
+      return { ok: true, tab };
+    }
+    case 'close_drawer': { try { toggleNotesDrawer(false); } catch (_) {} return { ok: true }; }
+    case 'bring_in_pins': {
+      try { toggleNotesDrawer(true); pgTab('pinterest'); } catch (_) {}
+      // wait for the wall (up to 8s), then match words against the pins' own text
+      let pics = [];
+      for (let i = 0; i < 40; i++) {
+        pics = [...document.querySelectorAll('#pinterest-drawer-body .pin-pic')];
+        if (pics.length) break;
+        await new Promise(r => setTimeout(r, 200));
+      }
+      if (!pics.length) return { ok: false, reason: 'no pins loaded; is Pinterest connected?' };
+      const words = String(a.query || '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 2);
+      const want = Math.max(1, Math.min(6, Number(a.count) || 1));
+      const scored = pics.map(el => {
+        const alt = String(el.dataset.alt || '').toLowerCase();
+        return { el, alt, score: words.reduce((n, w) => n + (alt.includes(w) ? 1 : 0), 0) };
+      }).filter(x => x.score > 0).sort((x, y) => y.score - x.score).slice(0, want);
+      if (!scored.length) {
+        return { ok: false, reason: 'nothing matched', available: pics.slice(0, 30).map(el => String(el.dataset.alt || '').slice(0, 80)).filter(Boolean) };
+      }
+      pics.forEach(el => { if (el.classList.contains('picked')) el.click(); });
+      scored.forEach(x => x.el.click());
+      try { await _pinImport(); } catch (_) {}
+      return { ok: true, brought: scored.map(x => x.alt.slice(0, 80)) };
+    }
+    case 'describe_garment': {
+      const t = String(a.text || '').trim(); if (!t) return { ok: false };
+      try { dismissHints(); } catch (_) {}
+      try { processConsultation(t); } catch (e) { return { ok: false, reason: String(e && e.message || e) }; }
+      return { ok: true, cards: 'arriving' };
+    }
+    case 'visualize': {
+      try { const r = visualizeGarment(); if (r && r.then) r.catch(() => {}); } catch (e) { return { ok: false, reason: String(e && e.message || e) }; }
+      return { ok: true, note: 'rendering, say it takes a moment' };
+    }
+    case 'write_feedback': {
+      try { openFeedback(); } catch (_) {}
+      const box = document.getElementById('feedback-box'); if (box) box.value = String(a.notes || '').slice(0, 4000);
+      _fbKind(a.kind === 'feature' ? 'feature' : 'feedback');
+      return { ok: true, note: 'in the box, they press Submit' };
+    }
+    case 'log_feature': {
+      const key = getApiKey(); const t = String(a.text || '').trim();
+      if (!key || !t) return { ok: false };
+      try {
+        const r = await fetch('/api/feature', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+          body: JSON.stringify({ text: t, who: _pgWhoAmI() }) });
+        return { ok: r.ok };
+      } catch (_) { return { ok: false }; }
+    }
+    case 'list_board': return { board: _pgBoardSnapshot(), drawer: _pgDrawerState() };
+    case 'hang_up': { setTimeout(pgMayaStop, 800); return { ok: true }; }
+    default: return { ok: false, reason: 'unknown tool' };
+  }
+}
+async function _pgRunCall(dc, name, call_id, argStr) {
+  let args = {}; try { args = JSON.parse(argStr || '{}'); } catch (_) {}
+  const out = await _pgTool(name, args);
+  try {
+    dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id, output: JSON.stringify(out || {}) } }));
+    dc.send(JSON.stringify({ type: 'response.create' }));
+  } catch (_) {}
+}
+function _pgOnMessage(dc) {
+  const seen = new Set();
+  return (ev) => {
+    let m; try { m = JSON.parse(ev.data); } catch (_) { return; }
+    if (m.type === 'response.audio_transcript.done' && m.transcript) _pgLine('maya', m.transcript);
+    if (m.type === 'conversation.item.input_audio_transcription.completed' && m.transcript) _pgLine('you', m.transcript);
+    if (m.type === 'response.function_call_arguments.done' && m.call_id && !seen.has(m.call_id)) {
+      seen.add(m.call_id);
+      _pgToolChain = _pgToolChain.then(() => _pgRunCall(dc, m.name, m.call_id, m.arguments)).catch(() => {});
+      return;
+    }
+    if (m.type === 'response.done' && m.response && Array.isArray(m.response.output)) {
+      for (const it of m.response.output) {
+        if (it.type === 'function_call' && it.call_id && !seen.has(it.call_id)) {
+          seen.add(it.call_id);
+          _pgToolChain = _pgToolChain.then(() => _pgRunCall(dc, it.name, it.call_id, it.arguments)).catch(() => {});
+        }
+      }
+    }
+  };
+}
+async function pgMayaStart() {
+  if (_pgVoice || _pgVoiceStarting) return;
+  const key = getApiKey(); if (!key) { showToast('Sign in first.'); return; }
+  _pgVoiceStarting = true; _pgWakePause();
+  let mic = null, pc = null, audio = null;
+  try {
+    _pgChip(true, 'Connecting');
+    const tr = await fetch('/api/voice-token', { method: 'POST', headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: _pgWhoAmI().split(' ')[0], board: _pgBoardSnapshot(), drawer: _pgDrawerState() }) });
+    const tj = await tr.json().catch(() => ({}));
+    if (tr.status === 402) { _pgChip(false); if (typeof mayaShowCreditsPopup === 'function') mayaShowCreditsPopup({}); return; }
+    if (!tr.ok || !tj.value) throw new Error(tj.error || ('token ' + tr.status));
+    mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+    pc = new RTCPeerConnection();
+    mic.getTracks().forEach(t => pc.addTrack(t, mic));
+    audio = new Audio(); audio.autoplay = true;
+    pc.ontrack = e => { audio.srcObject = e.streams[0]; };
+    const dc = pc.createDataChannel('oai-events');
+    dc.onopen = () => { try { dc.send(JSON.stringify({ type: 'response.create' })); } catch (_) {} };
+    dc.onmessage = _pgOnMessage(dc);
+    pc.onconnectionstatechange = () => { if (['failed', 'disconnected', 'closed'].includes(pc.connectionState) && _pgVoice) pgMayaStop(); };
+    const offer = await pc.createOffer(); await pc.setLocalDescription(offer);
+    const cr = await fetch('https://api.openai.com/v1/realtime/calls?model=' + encodeURIComponent(tj.model), {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + tj.value, 'Content-Type': 'application/sdp' }, body: offer.sdp });
+    if (!cr.ok) throw new Error('call ' + cr.status);
+    await pc.setRemoteDescription({ type: 'answer', sdp: await cr.text() });
+    _pgVoice = { pc, mic, audio, dc };
+    _pgChip(true, 'Maya is listening');
+  } catch (e) {
+    try { pc && pc.close(); } catch (_) {}
+    try { (mic && mic.getTracks() || []).forEach(t => t.stop()); } catch (_) {}
+    _pgVoice = null; _pgChip(false);
+    const raw = String(e && e.message || e);
+    showToast(/getUserMedia|Permission|NotAllowed/i.test(raw) ? 'Let the browser use the microphone, then try again.' :
+      /429/.test(raw) ? 'Maya is resting a moment, try again shortly.' : 'The voice line did not connect.');
+    console.warn('[hey maya]', e);
+    _pgWakeResume();
+  } finally { _pgVoiceStarting = false; }
+}
+function pgMayaStop() {
+  const v = _pgVoice; _pgVoice = null;
+  if (v) {
+    try { v.dc && v.dc.close(); } catch (_) {}
+    try { v.pc && v.pc.close(); } catch (_) {}
+    try { (v.mic && v.mic.getTracks() || []).forEach(t => t.stop()); } catch (_) {}
+    try { if (v.audio) v.audio.srcObject = null; } catch (_) {}
+  }
+  _pgChip(false);
+  _pgWakeResume();
+}
+// Feedback: Talk to Maya. She opens the line (if it is not open) and takes the notes.
+function pgMayaFeedback() {
+  if (_pgVoice) { try { _pgVoice.dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'message', role: 'user',
+    content: [{ type: 'input_text', text: 'I want to leave feedback. Ask me what, then write it into the Feedback box as structured notes.' }] } }));
+    _pgVoice.dc.send(JSON.stringify({ type: 'response.create' })); } catch (_) {} return; }
+  pgMayaStart().then(() => { if (_pgVoice) setTimeout(() => { try {
+    _pgVoice.dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'message', role: 'user',
+      content: [{ type: 'input_text', text: 'I want to leave feedback. Ask me what, then write it into the Feedback box as structured notes.' }] } }));
+    _pgVoice.dc.send(JSON.stringify({ type: 'response.create' })); } catch (_) {} }, 400); });
+}
+// ── the wake word ──
+let _pgWakeRec = null, _pgWakeOn = false, _pgWakeWant = false, _pgWakePaused = false;
+function _pgWakeSupported() { return !!(window.SpeechRecognition || window.webkitSpeechRecognition); }
+function _pgWakeLabel() {
+  const t = document.getElementById('pg-maya-toggle');
+  if (t) { t.classList.toggle('on', _pgWakeWant); t.setAttribute('aria-checked', _pgWakeWant ? 'true' : 'false'); }
+}
+async function pgToggleWake() {
+  if (!_pgWakeSupported()) { showToast('This browser cannot listen for a wake word.'); return; }
+  _pgWakeWant = !_pgWakeWant;
+  try { localStorage.setItem('maya_pg_wake', _pgWakeWant ? '1' : '0'); } catch (_) {}
+  _pgWakeLabel();
+  if (_pgWakeWant) {
+    // a click is a user gesture: ask for the microphone now so the recognizer never hits not-allowed
+    try { const m = await navigator.mediaDevices.getUserMedia({ audio: true }); m.getTracks().forEach(t => t.stop()); }
+    catch (_) { showToast('Let the browser use the microphone for Hey Maya.'); _pgWakeWant = false; _pgWakeLabel(); return; }
+    _pgWakeStart(); showToast('Say Hey Maya.');
+  } else _pgWakeStop();
+}
+function _pgWakeStart() {
+  if (!_pgWakeWant || _pgWakeOn || _pgWakePaused || _pgVoice || !_pgWakeSupported()) return;
+  if (typeof isListening !== 'undefined' && isListening) return;   // the moodboard owns the engine right now
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  try {
+    _pgWakeRec = new SR(); _pgWakeRec.continuous = true; _pgWakeRec.interimResults = true; _pgWakeRec.lang = 'en-US';
+    _pgWakeRec.onresult = (e) => {
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = (e.results[i][0].transcript || '').toLowerCase();
+        if (/\bhey,?\s*maya\b|\bhi,?\s*maya\b|\bok,?\s*maya\b/.test(t)) { pgMayaStart(); return; }
+      }
+    };
+    _pgWakeRec.onerror = (ev) => {
+      if (ev && (ev.error === 'not-allowed' || ev.error === 'service-not-allowed')) {
+        _pgWakeWant = false; try { localStorage.setItem('maya_pg_wake', '0'); } catch (_) {}
+        _pgWakeLabel(); showToast('The microphone was refused, Hey Maya is off.');
+      }
+    };
+    _pgWakeRec.onend = () => { _pgWakeOn = false; if (_pgWakeWant && !_pgWakePaused && !_pgVoice) setTimeout(_pgWakeStart, 600); };
+    _pgWakeRec.start(); _pgWakeOn = true;
+  } catch (_) { _pgWakeOn = false; }
+}
+function _pgWakeStop() { _pgWakeOn = false; try { if (_pgWakeRec) { _pgWakeRec.onend = null; _pgWakeRec.stop(); } } catch (_) {} _pgWakeRec = null; }
+function _pgWakePause() { _pgWakePaused = true; _pgWakeStop(); }
+function _pgWakeResume() { _pgWakePaused = false; if (_pgWakeWant) setTimeout(_pgWakeStart, 700); }
+// the moodboard's Tap to Listen and the feedback listener use the same engine: step aside, come back
+if (typeof startListening === 'function') { const _o = startListening; startListening = function () { _pgWakePause(); return _o.apply(this, arguments); }; }
+if (typeof stopListening === 'function') { const _o = stopListening; stopListening = function () { const r = _o.apply(this, arguments); _pgWakeResume(); return r; }; }
+if (typeof feedbackListenToggle === 'function') { const _o = feedbackListenToggle; feedbackListenToggle = function () { const was = _fbListening; if (!was) _pgWakePause(); const r = _o.apply(this, arguments); if (was) _pgWakeResume(); return r; }; }
+try { if (localStorage.getItem('maya_pg_wake') === '1') { _pgWakeWant = true; _pgWakeLabel(); setTimeout(_pgWakeStart, 1500); } } catch (_) {}
+window.pgMayaStart = pgMayaStart; window.pgMayaStop = pgMayaStop;
 </script>
 </body>
 </html>

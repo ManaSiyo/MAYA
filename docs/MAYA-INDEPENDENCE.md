@@ -62,6 +62,10 @@ her soul so she knows next time. Fromsa's only job is the yes.
 
 ### Stage 3: Maya on the user side (maya.manasiyo.com)
 
+STARTED in v14.03 on the Playground: `/api/voice-token`, the wake word switch
+at the drawer floor, and her hands (drawer, Pinterest bring in, describe,
+visualize, feedback notes, feature log). Promotion to the app is Fromsa's call.
+
 Same brain, narrower permissions. A user-side voice token endpoint
 (`/api/voice-token`, any signed in user, low rate limit) with a tool set that
 has no admin reads: `open_drawer`, `close_drawer`, `show_pinterest`,

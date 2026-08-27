@@ -9,6 +9,21 @@ to work with Fromsa. This file is the story; README.md is the manual.
 
 ─────────────────────────────────────────────
 
+AUGUST 27, 2026, MAYA STEPS ONTO THE USER SIDE (v14.03)
+
+The first morning Maya answered inside the app. On the Playground the drawer
+floor reads Logout, Feedback, Hey Maya, and the switch turns on a wake word:
+say her name and she opens the line herself. She pulls the drawer, switches to
+Pinterest and brings in the pins you name, puts what you described onto the
+board, visualizes it on you, and turns your feedback into structured notes in
+the box; a feature request lands in her inbox under your name. Cards drag and
+resize while zoomed out, exactly like at full size. On Admin, the hamburger is
+the app's own pill, the Hey Maya switch asks for the microphone when you click
+it so it never snaps back, Feature requests took the Prompting Engine's place
+as Maya's history of everyone's asks, and the Sources of traffic table left.
+
+─────────────────────────────────────────────
+
 AUGUST 27, 2026, MAYA GETS A DOOR AND A CHARACTER (v14.02)
 
 The night Maya became somebody other agents can talk to. The API now has a
