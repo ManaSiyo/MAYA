@@ -1391,3 +1391,17 @@ jejuan.narcisse.art). "4" is correct; non-signed-in visitors are the Wix count.
     GPT-written garment notes (era, design style, looks; bullets + paragraphs).
 [ ] Queued still: username editable when it shows a date; per-user background
     folders server-side (the playground version is per-browser for now).
+
+── v13.99 (Claude): playground feedback round ────────────────────────────────
+[x] Zoom no longer fights scrolling: it fires ONLY on a trackpad pinch (two
+    fingers) or Cmd/Ctrl + scroll on a mouse. A plain two-finger scroll always
+    navigates the screens. Verified headless: plain wheel does not zoom, ctrl
+    wheel does, logo resets.
+[x] Screen order is now 1) inspo page 2) favorites 3) community wall, landing on
+    inspo. Done with CSS order + a position map, so all wall/favorites logic
+    (keyed to data-screen numbers) is untouched.
+[x] Background cards sized like the fabric cards: two columns, 16:10 image, the
+    name underneath each ("Birth of a Star", "My background", "Generated
+    background"). Generate still never auto-swaps.
+[x] Projects pill a little smaller (16px, still Cormorant italic, centered) in
+    BOTH the app and the playground.

@@ -73,6 +73,25 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.99 (Claude): playground feedback round
+
+`playground/index.html`, `frontend/index.html`:
+
+- **Zoom gesture fixed**: fires ONLY on trackpad pinch (browser reports it as
+  ctrl+wheel) or Cmd/Ctrl+scroll; plain scroll always navigates screens
+  (`if (!(e.ctrlKey || e.metaKey)) return;`). Touch pinch unchanged.
+- **Screen order**: inspo (land) → favorites → community wall, via flex `order`
+  on `#screens` + `window._pgScreenPos = {1:0, 2:1, 0:2}` mapping in
+  `setScreen`/resize; `data-screen` semantics untouched so wall/favorites logic
+  still keys correctly. Zoom's `onInspo()` now checks position 0.
+- **Background cards**: fabric-card style (2-col grid, 16:10 image,
+  `.pg-bg-cardname` under each: Birth of a Star / My background / Generated
+  background); `addBgCard()` helper; generate still never auto-swaps.
+- **Projects pill 16px** (was 19) in app + playground; still Cormorant italic,
+  centered, caret absolute.
+- Verified headless: visual order correct, lands on inspo, plain wheel does NOT
+  zoom, ctrl+wheel does, reset works, card 160px wide, pill 16px, 0 JS errors.
+
 ## v13.98 (Claude): admin polish + one-click invoices + Playground overhaul r1
 
 `backend/status.html`, `docs/server/server.js`, `frontend/index.html`,

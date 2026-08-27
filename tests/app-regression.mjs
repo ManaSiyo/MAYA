@@ -1754,8 +1754,8 @@ ok('v13.90: the Mana Siyo path is a quote-by-email confirm that runs the atelier
   INDEX_SOURCE.includes('#maya-manasiyo-popup'));
 ok('v13.91: the design notes are hidden on the favorites screen (inspo screen only)',
   INDEX_SOURCE.includes('#garment-modal[data-mode="submit"] #viewer-notes'));
-ok('v13.91: Projects is literally the name font — Cormorant, 19px, italic, not caps',
-  /\.pg-project-beside \{[^}]*font-family: 'Cormorant Garamond'[^}]*font-size: 19px/.test(INDEX_SOURCE) &&
+ok('v13.91/99: Projects is the name font — Cormorant, italic, not caps (16px since v13.99)',
+  /\.pg-project-beside \{[^}]*font-family: 'Cormorant Garamond'[^}]*font-size: 16px/.test(INDEX_SOURCE) &&
   /\.pg-project-beside \{[^}]*font-style: italic[^}]*text-transform: none/.test(INDEX_SOURCE) &&
   /\.pg-tabtitle \{[^}]*text-transform: uppercase/.test(INDEX_SOURCE));
 ok('v13.90: Stats and Measurements default open in the drawer',
@@ -1903,26 +1903,34 @@ ok('v13.96: a trial epoch resets everyone now and on every release',
 ok('v13.98: fabric captions are half-height and centered',
   /\.fabric-meta \{ padding: 4px 8px 6px; text-align: center; \}/.test(INDEX_SOURCE) &&
   INDEX_SOURCE.includes('outline: none; padding: 0; text-align: center;'));
-ok('v13.98: the Projects pill text is truly centered (caret absolute)',
-  INDEX_SOURCE.includes('.pg-project-beside .pg-project-beside-caret { position: absolute; right: 9px'));
+ok('v13.98/99: the Projects pill is centered and a little smaller (16px)',
+  INDEX_SOURCE.includes('.pg-project-beside .pg-project-beside-caret { position: absolute; right: 9px') &&
+  /pg-project-beside \{[^}]*font-size: 16px/.test(INDEX_SOURCE) &&
+  /pg-project-beside \{[^}]*font-size: 16px/.test(PLAYGROUND_SOURCE));
 ok('v13.98: Randomize downscales the 2MB headshots at fetch, before anything paints',
   INDEX_SOURCE.includes('createImageBitmap(blob)') &&
   INDEX_SOURCE.includes("c.toDataURL('image/jpeg', 0.85)"));
 ok('v13.98: the credits copy carries no dashes and the honest render count',
   INDEX_SOURCE.includes('about 100 more renders for $5') &&
   !INDEX_SOURCE.includes('visualizing —'));
-ok('v13.98: the Playground is a live copy of the app, landing on the community wall',
+ok('v13.98/99: the Playground is a live copy of the app; order inspo, favorites, wall',
   PLAYGROUND_SOURCE.includes('>Playground</div>') &&
-  PLAYGROUND_SOURCE.includes('the first screen is the community wall') &&
+  PLAYGROUND_SOURCE.includes('#screen-inspo { order: 1; }') &&
+  PLAYGROUND_SOURCE.includes('#screen-favorites { order: 2; }') &&
+  PLAYGROUND_SOURCE.includes('#screen-community { order: 3; }') &&
+  PLAYGROUND_SOURCE.includes('window._pgScreenPos = { 1: 0, 2: 1, 0: 2 }') &&
   PLAYGROUND_SOURCE.includes('host.scrollTop = 0;'));
-ok('v13.98: Playground pinch/scroll zoom to 10%, the logo zooms back',
+ok('v13.98/99: Playground zoom fires ONLY on pinch or Cmd/Ctrl scroll, never plain scroll',
   PLAYGROUND_SOURCE.includes('const MINZ = 0.1') &&
   PLAYGROUND_SOURCE.includes('window.pgZoomReset') &&
-  PLAYGROUND_SOURCE.includes("document.addEventListener('wheel'") &&
+  PLAYGROUND_SOURCE.includes('if (!(e.ctrlKey || e.metaKey)) return;') &&
   PLAYGROUND_SOURCE.includes('body.pg-zoomed #screen-inspo'));
-ok('v13.98: Playground backgrounds: Birth of a Star named, generate without auto-swap',
+ok('v13.98/99: Playground backgrounds are fabric-sized cards with names underneath',
   PLAYGROUND_SOURCE.includes('id="pg-bg-fold"') &&
   PLAYGROUND_SOURCE.includes('>Birth of a Star<') &&
+  PLAYGROUND_SOURCE.includes("'Generated background'") &&
+  PLAYGROUND_SOURCE.includes('pg-bg-cardname') &&
+  PLAYGROUND_SOURCE.includes('aspect-ratio: 16 / 10') &&
   PLAYGROUND_SOURCE.includes('window.pgGenerateBackground') &&
   PLAYGROUND_SOURCE.includes('Tap it to apply'));
 ok('v13.98: one click creates a real Wix pay link server-side, the skill recipe',
