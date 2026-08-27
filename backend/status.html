@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="13.97">
+<meta name="maya-version" content="13.98">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -103,8 +103,10 @@ try {
   #adm-scroll{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;
     -webkit-overflow-scrolling:touch;scrollbar-width:none;padding:80px 28px 40px}
   #adm-scroll::-webkit-scrollbar{display:none}
-  #drawer{position:absolute;top:70px;right:10px;bottom:10px;left:8px;overflow:auto;
-    z-index:2;border:0.5px solid var(--line);border-radius:20px;padding:18px;
+  /* v13.98: the drawer is full-bleed like MAYA's own, not an inset glass card.
+     It owns its whole pane edge to edge; the top bar rides over it. */
+  #drawer{position:absolute;inset:0;overflow:auto;
+    z-index:2;border:none;border-radius:0;padding:74px 20px 20px;
     background:rgba(8,12,26,0.82);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%)}
   /* v13.67: Maya's voice lives at the floor of the drawer again. Tap the star
      to open the line; it breathes while she listens, and a small chip stays
@@ -115,28 +117,31 @@ try {
     50%{box-shadow:0 0 0 14px rgba(169,201,255,0);transform:scale(1.06)}}
   #drawer{display:flex;flex-direction:column}
   #drawer > h3, #drawer > a{flex:none}
-  /* v13.95: Maya's floor, mirroring the frontend — the divider and the logo
-     sit lower, the logo is a true circle (pre-cut file, no square in a ring),
-     and a small MAYA pill floats under her to toggle the voice on and off. */
-  #voice-dock{margin-top:auto;padding-top:30px;margin-bottom:-16px;border-top:0.5px solid var(--line);
-    display:flex;flex-direction:column;align-items:center;gap:10px;flex:none}
-  #voice-btn{width:66px;height:66px;border-radius:50%;padding:0;cursor:pointer;
-    border:0.5px solid var(--line);background:transparent;
+  /* v13.95: Maya's floor, mirroring the frontend.
+     v13.98: the divider and the logo sit lower still, the logo is a touch
+     smaller with a tighter crop of the circle, and the pill on its RIGHT is
+     the Hey Maya wake-word toggle (off by default) — the logo itself stays
+     the live voice line. */
+  #voice-dock{margin-top:auto;padding-top:38px;margin-bottom:-12px;border-top:0.5px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;gap:8px;flex:none}
+  #voice-dock .voice-row{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:14px}
+  #voice-btn{width:56px;height:56px;border-radius:50%;padding:0;cursor:pointer;overflow:hidden;
+    border:0.5px solid var(--line);background:transparent;flex:none;
     display:flex;align-items:center;justify-content:center;transition:border-color .25s,transform .25s}
-  #voice-btn img{width:62px;height:62px;object-fit:cover;border-radius:50%;opacity:0.98}
+  #voice-btn img{width:64px;height:64px;object-fit:cover;border-radius:50%;opacity:0.98;flex:none}
   #voice-btn:hover{border-color:rgba(255,255,255,0.5);transform:scale(1.04)}
   #voice-btn.live{border-color:rgba(169,201,255,0.9);animation:voicepulse 1.6s ease-in-out infinite}
-  /* the little MAYA toggle pill, same family as the Design Studio / Operations chips */
-  #maya-toggle{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.24em;text-transform:uppercase;
+  /* the Hey Maya toggle pill, same family as the Design Studio / Operations chips */
+  #maya-toggle{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;
     color:var(--dim);background:rgba(255,255,255,0.04);border:0.5px solid var(--line);border-radius:100px;
-    padding:5px 13px;cursor:pointer;transition:color .2s,border-color .2s,background .2s;white-space:nowrap}
+    padding:6px 13px;cursor:pointer;transition:color .2s,border-color .2s,background .2s;white-space:nowrap}
   #maya-toggle:hover{color:var(--ink);border-color:rgba(255,255,255,0.45)}
   #maya-toggle.live{color:#a9c9ff;border-color:rgba(169,201,255,0.55);background:rgba(169,201,255,0.10)}
   #maya-toggle .mt-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;
     opacity:0.45;margin-right:6px;vertical-align:middle}
   #maya-toggle.live .mt-dot{opacity:1;animation:voicepulse 1.4s ease-in-out infinite}
   #voice-word{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.2em;
-    text-transform:uppercase;color:rgba(169,201,255,0.9);min-height:11px;text-align:center}
+    text-transform:uppercase;color:rgba(169,201,255,0.9);min-height:11px;text-align:center;width:100%}
   #voice-chip{position:fixed;right:16px;bottom:16px;z-index:400;display:none;align-items:center;gap:9px;
     padding:9px 15px 9px 12px;border-radius:100px;cursor:pointer;
     background:rgba(8,12,26,0.94);border:0.5px solid rgba(169,201,255,0.6);
@@ -208,11 +213,10 @@ try {
   /* v13.74: the drawer is 360 wide at right 10, so its left edge sits ~370
      from the right. The pill starts ~28 from the right, so it slides ~356 to
      rest just outside the drawer instead of overlapping it. */
-  body.drawer-open .top-btn.hamburger{transform:translateX(-356px)}
-  /* v13.46: exactly the drawer's duration and curve, so the pill is
-     anchored to the drawer's edge rather than chasing it. */
-  .top-btn.hamburger{transition:transform .42s cubic-bezier(0.16,1,0.3,1)}
-  @media (max-width: 640px){ body.drawer-open .top-btn.hamburger{transform:none} }
+  /* v13.98: exactly the frontend's mechanism — the pill's transform is written
+     from the live scroll offset every frame (see the scroll listener), so it is
+     GLUED to the drawer's edge, no CSS transition chasing it. */
+  .top-btn.hamburger{will-change:transform}
   /* v13.94: the drawer section headings are centered, per Fromsa. */
   #drawer h3{font-family:'Jost',sans-serif;font-weight:400;font-size:10px;letter-spacing:0.24em;
              text-transform:uppercase;color:var(--grp);margin:14px 0 8px;text-align:center}
@@ -392,11 +396,14 @@ try {
     color:var(--dim);border:0.5px solid var(--line);border-radius:100px;padding:3px 9px;
     text-decoration:none}
   .pg-chip:hover{color:var(--ink);border-color:rgba(255,255,255,0.45)}
-  /* v13.94: the ADMIN wordmark drops its rooms beneath it on hover. */
+  /* v13.94: the ADMIN wordmark drops its rooms beneath it on hover.
+     v13.98: just THE SHEET now, sitting right under the wordmark with no dead
+     gap (padding keeps the hover zone contiguous), and it lingers long enough
+     to actually reach and click. */
   #top-left-brand{position:relative}
-  #top-left-brand .brand-chips{position:absolute;left:60px;top:100%;margin-top:5px;
+  #top-left-brand .brand-chips{position:absolute;left:56px;top:100%;padding-top:4px;
     display:flex;gap:6px;white-space:nowrap;opacity:0;pointer-events:none;
-    transition:opacity .18s ease .4s;z-index:230}
+    transition:opacity .18s ease .9s;z-index:230}
   #top-left-brand:hover .brand-chips,#top-left-brand .brand-chips:hover{opacity:1;pointer-events:auto;transition-delay:0s}
   /* v13.72: MANA SIYO mirrors MAYA. Hover it and its two editing rooms hang to
      the LEFT, Design Studio and Wix Studio, the same chips as MAYA's. */
@@ -648,7 +655,7 @@ try {
   #adm-mkt .status-word.on{color:var(--green)} #adm-mkt .status-word.off{color:var(--faint)}
   #adm-mkt .pair-b{color:#a9c9ff}
   /* v13.94: on a phone the drawer pane is the full width, like the app. */
-  @media (max-width:640px){ .hpane-drawer{width:100vw} #adm-scroll{padding:70px 14px 30px} #drawer{left:12px;right:12px} }
+  @media (max-width:640px){ .hpane-drawer{width:100vw} #adm-scroll{padding:70px 14px 30px} #drawer{padding:70px 16px 18px} }
 
 </style>
 <!-- v13.19: removable Systems Map-only polish. Keeping this outside the
@@ -673,8 +680,6 @@ try {
     <!-- v13.94: hover ADMIN and its rooms drop beneath it, the same chip family
          as Mana Siyo's Wix Studio / Design Studio: the back rooms and the sheet. -->
     <span class="brand-chips">
-      <a class="pg-chip" href="/operations.html" target="_blank">operations room</a>
-      <a class="pg-chip" href="/playground.html" target="_blank">playground</a>
       <a class="pg-chip" href="https://docs.google.com/spreadsheets/d/1LI__xIpcKl4uH595oOhfIdJhJNJL5vBP5-vRJk-Ew0I/" target="_blank">the sheet</a>
     </span>
   </div>
@@ -735,10 +740,12 @@ try {
   </div>
   <!-- v13.67: Maya's voice, pinned at the floor. -->
   <div id="voice-dock">
-    <button id="voice-btn" onclick="toggleMayaVoice()" title="Talk to Maya: live voice, grounded in today's numbers" aria-label="Talk to Maya">
-      <img src="/aesthetics/ui/logo-circle.png" alt="">
-    </button>
-    <button id="maya-toggle" onclick="toggleMayaVoice()" aria-pressed="false" title="Turn Maya's voice on or off"><span class="mt-dot"></span><span id="maya-toggle-word">Maya</span></button>
+    <div class="voice-row">
+      <button id="voice-btn" onclick="toggleMayaVoice()" title="Talk to Maya: live voice, grounded in today's numbers" aria-label="Talk to Maya">
+        <img src="/aesthetics/ui/logo-circle.png" alt="">
+      </button>
+      <button id="maya-toggle" onclick="toggleWakeWord()" aria-pressed="false" title="When on, just say Hey Maya to wake her"><span class="mt-dot"></span><span id="maya-toggle-word">Turn on Hey Maya</span></button>
+    </div>
     <div id="voice-word"></div>
   </div>
 </div>
@@ -869,6 +876,9 @@ try {
   <details class="fold" id="changes-fold" data-latest="2026-08-24s">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 27</b>The Playground became a living copy of MAYA, and grew three experiments: pinch or scroll and the whole moodboard zooms out to a tenth of its size for a full survey, tapping the logo brings it back; it opens on the community wall now, favorites below; and the drawer carries a Background fold, Birth of a Star named as the house backdrop, with a pill that generates a brand new cosmic background and waits for your tap before anything swaps.</div>
+    <div class="chg"><b>Aug 27</b>The Lead Station writes real invoices now. The pay-link icon opens a small composer, the name, the price and the description already filled in the house style, and one click creates a live Wix pay link, single use, service tax, saved on the lead and folded into the next email. The drawer went full-bleed like the app's own, the hamburger is glued to its edge, the hover under ADMIN is just the sheet and it waits to be clicked, and the pill beside Maya's circle now simply turns Hey Maya on and off.</div>
+    <div class="chg"><b>Aug 27</b>Randomize got fast for everyone. The headshots it draws from are two-megabyte files, and every tap used to swallow one whole before anything moved; now the picture is shrunk the moment it arrives, so the face and measurements land in a blink on any connection. The fabric captions tightened to half their height and centered, and the Projects pill centers its word.</div>
     <div class="chg"><b>Aug 27</b>The back rooms refresh themselves now. The Systems Map used to hold whatever build it opened with until you reloaded by hand, so a full day of shipping could look like nothing had changed. It checks for a new build every few minutes and whenever you return to the tab, and quietly updates itself, the way the app already did.</div>
     <div class="chg"><b>Aug 27</b>The free trial stretches much further, and resets clean. Each generation now counts as five cents against the two dollars, so the same two dollars carries about forty renders instead of a handful. And every release hands everyone their full two dollars back.</div>
     <div class="chg"><b>Aug 27</b>The avatar switcher opens to its full list again. In the app the client dropdown would open to nothing, a thin sliver with the names hidden inside it; it stands at its real height now and shows every saved avatar.</div>
@@ -1087,6 +1097,26 @@ function toggleDrawer(force) {
 }
 window.openDrawer = () => toggleDrawer(true);
 window.closeDrawer = () => toggleDrawer(false);
+// v13.98: the hamburger is GLUED to the drawer's edge, the frontend's exact
+// mechanism — its transform is written from the live scroll offset every frame,
+// so the pill rides the drawer instead of chasing it through a CSS transition.
+(function () {
+  const hs = document.getElementById('adm-hscroll');
+  if (!hs) return;
+  const update = () => {
+    const open = hs.scrollLeft > (hs.scrollWidth - hs.clientWidth) / 2;
+    document.body.classList.toggle('drawer-open', open);
+    const hb = document.querySelector('.top-btn.hamburger');
+    if (hb) {
+      if (window.innerWidth <= 640) hb.style.transform = '';
+      else hb.style.transform = 'translateX(' + (-Math.max(0, hs.scrollLeft - 18)) + 'px)';
+      hb.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+  };
+  hs.addEventListener('scroll', () => requestAnimationFrame(update), { passive: true });
+  window.addEventListener('resize', update);
+  update();
+})();
 // v13.94: a click anywhere outside the open drawer closes it, same as the app.
 document.addEventListener('pointerdown', (e) => {
   const hs = document.getElementById('adm-hscroll');
@@ -1723,7 +1753,7 @@ function _mayaActionLabel(action){
   if(action.kind==='email') return 'Draft a follow-up email to '+action.lead.name+
     (action.request?' about '+action.request:'');
   if(action.kind==='add_lead') return 'Add lead: '+action.lead.name+
-    (action.lead.email?' <'+action.lead.email+'>':'')+(action.lead.note?' — '+action.lead.note:'');
+    (action.lead.email?' <'+action.lead.email+'>':'')+(action.lead.note?', '+action.lead.note:'');
   if(action.kind==='add_person') return 'Remember person: '+action.person.name+
     (action.person.role?' ('+action.person.role+')':'');
   if(action.kind==='update_lead') return 'Update '+action.lead.name+': '+
@@ -1837,10 +1867,8 @@ let _voiceToolChain = Promise.resolve();
 function _voiceWord(t){ const el=document.getElementById('voice-word'); if(el) el.innerHTML=t||''; }
 function _voiceLive(on, word){
   const b=document.getElementById('voice-btn'); if(b) b.classList.toggle('live', on);
-  // v13.95: the little MAYA pill under the logo mirrors the on/off state.
-  const mt=document.getElementById('maya-toggle');
-  if(mt){ mt.classList.toggle('live', on); mt.setAttribute('aria-pressed', on?'true':'false'); }
-  const mtw=document.getElementById('maya-toggle-word'); if(mtw) mtw.textContent = on ? 'Maya · on' : 'Maya';
+  // v13.98: the pill beside the logo is the HEY MAYA wake toggle now (see
+  // _wakeLabel); the live-voice state shows only on the logo ring + chip.
   const chip=document.getElementById('voice-chip'); if(chip) chip.classList.toggle('show', on);
   const cw=document.getElementById('voice-chip-word'); if(cw && word) cw.textContent=word;
   // v13.72: the drawer becomes Maya's command line while she is live.
@@ -2060,8 +2088,15 @@ async function toggleMayaVoice(){
 // restarts itself if the browser stops it. ═══
 let _wakeRec=null, _wakeOn=false, _wakeWantOn=false;
 function _wakeSupported(){ return !!(window.SpeechRecognition||window.webkitSpeechRecognition); }
-function _wakeLabel(){ const b=document.getElementById('wake-toggle'); if(!b) return;
-  b.textContent='Hey Maya: '+(_wakeWantOn?'on':'off'); b.classList.toggle('on',_wakeWantOn); }
+function _wakeLabel(){
+  const b=document.getElementById('wake-toggle');
+  if(b){ b.textContent='Hey Maya: '+(_wakeWantOn?'on':'off'); b.classList.toggle('on',_wakeWantOn); }
+  // v13.98: the drawer-floor pill is the same toggle, reading as an action.
+  const mt=document.getElementById('maya-toggle');
+  if(mt){ mt.classList.toggle('live',_wakeWantOn); mt.setAttribute('aria-pressed',_wakeWantOn?'true':'false'); }
+  const mtw=document.getElementById('maya-toggle-word');
+  if(mtw) mtw.textContent=_wakeWantOn?'Turn off Hey Maya':'Turn on Hey Maya';
+}
 function toggleWakeWord(){
   if(!_wakeSupported()){ _voiceWord&&_voiceWord('this browser can’t listen for a wake word'); return; }
   _wakeWantOn=!_wakeWantOn;
@@ -2381,7 +2416,7 @@ function _actionsCell(i, x){
     (x.email ? '<button class="lead-cta" id="lead-mail-' + i + '" onclick="draftLead(' + i + ')" title="Draft the next email (opens Gmail, nothing is sent)">&#9993;</button>' : '') +
     (x.phone ? '<a class="lead-cta" href="tel:' + esc(x.phone) + '" onclick="leadContact(' + i + ',\'call\')" title="Call ' + esc(x.phone) + '">' + PHONE_SVG + '</a>' : '') +
     '<button class="lead-cta lead-pay' + (paid ? ' has-link' : '') + '" onclick="leadInvoice(' + i + ')" title="' +
-      (paid ? 'Pay link ready — view, copy or add it to the email' : 'Invoice this lead — build a pay link with the Invoicing skill') + '">' + PAY_SVG + '</button>' +
+      (paid ? 'Pay link ready: view, copy or add it to the email' : 'Invoice this lead: build a pay link in one click') + '">' + PAY_SVG + '</button>' +
   '</div>';
 }
 // v13.95: the column catalogue. `render` closes over the shared `cell`. The name
@@ -2443,18 +2478,17 @@ function leadInvoice(i){
   const x = _leadList[i]; if (!x) return;
   const first = _leadFirst(x.name);
   const price = (x.quote && String(x.quote).trim()) || _leadTierNum(x) || '';
-  const tier = String(x.tier || x.company || '').trim();
-  const title = first + ' Mana Siyo Custom';
-  const brief =
-    'Invoice this lead with the Invoicing skill.\n' +
-    'Client: ' + (x.name ? x.name.trim() : first) + '\n' +
-    (x.email ? ('Email: ' + x.email + '\n') : '') +
-    (tier ? ('Tier: ' + tier + '\n') : '') +
-    'Price: $' + (price || '[confirm]') + (price ? '' : ' — needs confirming') + '\n' +
-    (x.note ? ('What they want: ' + String(x.note).trim() + '\n') : '') +
-    'Suggested title: ' + title + '\n' +
-    'Image: use their MAYA-generated piece; the logo only as a fallback.';
-  _openInvoiceModal(i, x, price, brief);
+  const title = (first + ' Mana Siyo Custom').slice(0, 50);
+  // v13.98: the description prefills in the invoicing skill's shape: bullets,
+  // the standing perks, the sign-off and the tagline. Editable before creating.
+  const desc =
+    'Custom piece, sewn to your measurements.\n\n' +
+    '• Six months free alterations\n' +
+    '• Embroidery is an additional cost\n\n' +
+    'Thanks again, ' + first + '.\n' +
+    'Fromsa @ Mana Siyo\n' +
+    '"Wear Your Imagination"';
+  _openInvoiceModal(i, x, price, title, desc);
 }
 function _invModalEl(){
   let m = document.getElementById('lead-inv-modal');
@@ -2465,40 +2499,73 @@ function _invModalEl(){
     '<div class="inv-card">' +
       '<button class="inv-close" onclick="_closeInvoiceModal()" aria-label="Close">&#215;</button>' +
       '<h4 id="inv-title">Invoice</h4>' +
-      '<p class="inv-lede">Build the pay link with the Invoicing skill (it gets the image, the bullets, the tax group and the price right), then paste it back here so it saves on the lead and rides the next email.</p>' +
-      '<label class="inv-label">Brief for Maya</label>' +
-      '<textarea id="inv-brief" class="inv-brief" rows="7" readonly></textarea>' +
-      '<button class="inv-btn" onclick="_copyInvBrief()">Copy brief for Maya</button>' +
+      '<p class="inv-lede">One click builds a real Wix pay link: single use, service tax, the Mana Siyo logo as the item image until a MAYA render is attached. It saves onto the lead and rides the next email draft.</p>' +
+      '<label class="inv-label">Link name</label>' +
+      '<input id="inv-name" class="inv-input" type="text" maxlength="50" />' +
+      '<label class="inv-label" style="margin-top:10px">Price, USD</label>' +
+      '<input id="inv-price" class="inv-input" type="text" inputmode="decimal" style="max-width:130px" />' +
+      '<label class="inv-label" style="margin-top:10px">Description</label>' +
+      '<textarea id="inv-brief" class="inv-brief" rows="7"></textarea>' +
+      '<div class="inv-row"><button class="inv-btn primary" id="inv-create" onclick="_createInvoiceNow()">Create the pay link</button><span class="inv-msg" id="inv-msg"></span></div>' +
       '<div class="inv-existing" id="inv-existing" style="display:none"></div>' +
-      '<label class="inv-label" style="margin-top:14px">Pay link</label>' +
+      '<label class="inv-label" style="margin-top:14px">Or paste a link built elsewhere</label>' +
       '<input id="inv-link" class="inv-input" type="url" placeholder="https://www.manasiyo.com/_paylink/…" />' +
-      '<div class="inv-row"><button class="inv-btn primary" id="inv-save" onclick="_saveInvoiceLink()">Save link to lead</button><span class="inv-msg" id="inv-msg"></span></div>' +
+      '<div class="inv-row"><button class="inv-btn" id="inv-save" onclick="_saveInvoiceLink()">Save link to lead</button></div>' +
     '</div>' +
     '<div class="inv-scrim" onclick="_closeInvoiceModal()"></div>';
   document.body.appendChild(m);
   return m;
 }
 let _invIdx = -1;
-function _openInvoiceModal(i, x, price, brief){
+function _openInvoiceModal(i, x, price, title, desc){
   _invIdx = i;
   const m = _invModalEl();
-  m.querySelector('#inv-title').textContent = 'Invoice — ' + (x.name ? x.name.trim() : 'lead');
-  m.querySelector('#inv-brief').value = brief;
+  m.querySelector('#inv-title').textContent = 'Invoice, ' + (x.name ? x.name.trim() : 'lead');
+  m.querySelector('#inv-name').value = title || '';
+  m.querySelector('#inv-price').value = price || '';
+  m.querySelector('#inv-brief').value = desc || '';
   const link = (x.paylink && String(x.paylink).trim()) || '';
   const inp = m.querySelector('#inv-link'); inp.value = link;
   const ex = m.querySelector('#inv-existing');
   if (link){
     ex.style.display = '';
-    ex.innerHTML = 'On file: <a href="' + esc(link) + '" target="_blank" rel="noopener">' + esc(link) + '</a> · it is added to the email draft automatically.';
+    ex.innerHTML = 'On file: <a href="' + esc(link) + '" target="_blank" rel="noopener">' + esc(link) + '</a>. It is added to the email draft automatically.';
   } else { ex.style.display = 'none'; ex.innerHTML = ''; }
   m.querySelector('#inv-msg').textContent = '';
   m.classList.add('show');
 }
 function _closeInvoiceModal(){ const m = document.getElementById('lead-inv-modal'); if (m) m.classList.remove('show'); _invIdx = -1; }
-function _copyInvBrief(){
-  const t = document.getElementById('inv-brief'); if (!t) return;
-  try { navigator.clipboard.writeText(t.value); } catch (_) { t.select(); try { document.execCommand('copy'); } catch (__) {} }
-  const b = event && event.target; if (b){ const o = b.textContent; b.textContent = 'Copied'; setTimeout(() => { b.textContent = o; }, 1400); }
+// v13.98: one click creates the real Wix pay link through the server (the
+// invoicing skill's exact recipe) and saves it onto the lead.
+async function _createInvoiceNow(){
+  const i = _invIdx; const x = _leadList[i]; if (!x) return;
+  const msg = document.getElementById('inv-msg');
+  const btn = document.getElementById('inv-create');
+  const title = (document.getElementById('inv-name').value || '').trim().slice(0, 50);
+  const price = (document.getElementById('inv-price').value || '').replace(/[^0-9.]/g, '');
+  const desc = (document.getElementById('inv-brief').value || '').trim().slice(0, 600);
+  if (!title){ if (msg) msg.textContent = 'Give the link a name.'; return; }
+  if (!(Number(price) > 0)){ if (msg) msg.textContent = 'Set a price.'; return; }
+  if (btn) btn.disabled = true;
+  if (msg) msg.textContent = 'Creating the link…';
+  try {
+    const r = await fetch('/api/admin/invoice-create', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ leadId: x.id, title, price, description: desc }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.url) throw new Error(j.detail || j.error || ('create ' + r.status));
+    x.paylink = j.url;
+    const inp = document.getElementById('inv-link'); if (inp) inp.value = j.url;
+    if (msg) msg.textContent = 'Created. It is saved on the lead and rides the next email.';
+    const ex = document.getElementById('inv-existing');
+    if (ex){ ex.style.display = ''; ex.innerHTML = 'Live: <a href="' + esc(j.url) + '" target="_blank" rel="noopener">' + esc(j.url) + '</a>' + (j.imageOk ? '' : ' (check the item image in Wix)'); }
+    try { paintLeads({ connected: true, list: _leadList }); } catch (_) {}
+  } catch (e) {
+    if (msg) msg.textContent = 'Could not create it (' + String(e.message || e).slice(0, 60) + ').';
+  }
+  if (btn) btn.disabled = false;
 }
 async function _saveInvoiceLink(){
   const i = _invIdx; const x = _leadList[i]; if (!x) return;
@@ -2573,7 +2640,7 @@ async function saveLeadField(el) {
 async function deleteLeadRow(i) {
   const x = _leadList[i]; if (!x) return;
   const wix = x.source === 'wix';
-  if (!confirm('Remove ' + (x.name || 'this lead') + ' from the station?' + (wix ? '\n(It stays in Wix — just hidden here.)' : ''))) return;
+  if (!confirm('Remove ' + (x.name || 'this lead') + ' from the station?' + (wix ? '\n(It stays in Wix, just hidden here.)' : ''))) return;
   const row = document.getElementById('lead-tr-' + i); if (row) row.remove();   // instant, like the project delete
   try {
     const r = await fetch('/api/admin/lead-delete', { method: 'POST',
@@ -2585,9 +2652,9 @@ async function deleteLeadRow(i) {
 function reloadLeads() { try { if (window.loadMkt) loadMkt(); } catch (_) {} try { loadMayaCommand(); } catch (_) {} }
 window.reloadLeads = reloadLeads;
 async function addLeadManual() {
-  const name = prompt('New lead — name:'); if (name == null || !name.trim()) return;
+  const name = prompt('New lead. Name:'); if (name == null || !name.trim()) return;
   const email = prompt('Email (optional):') || '';
-  const notev = prompt('Note — what they want (optional):') || '';
+  const notev = prompt('Note, what they want (optional):') || '';
   try {
     const r = await fetch('/api/admin/lead-add', { method: 'POST',
       headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
@@ -2933,7 +3000,7 @@ window.loadMkt=loadMkt;
 // fire from inline handlers on innerHTML, so they must live on window too.
 window.saveLeadField=saveLeadField; window._leadCellKey=_leadCellKey;
 window.leadInvoice=leadInvoice; window._closeInvoiceModal=_closeInvoiceModal;
-window._copyInvBrief=_copyInvBrief; window._saveInvoiceLink=_saveInvoiceLink;
+window._createInvoiceNow=_createInvoiceNow; window._saveInvoiceLink=_saveInvoiceLink;
 window._leadColDragStart=_leadColDragStart; window._leadColDragOver=_leadColDragOver;
 window._leadColDragLeave=_leadColDragLeave; window._leadColDrop=_leadColDrop;
 window._leadColDragEnd=_leadColDragEnd; window.paintLeads=paintLeads;

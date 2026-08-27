@@ -63,18 +63,35 @@ await test('the approved filing cabinet is promoted without removing Playground'
   assert.ok(playground.includes('>Playground</div>'));
 });
 
-await test('all four release surfaces carry v13.97', () => {
+await test('all four release surfaces carry v13.98', () => {
   const version = source => (source.match(/name="maya-version" content="([0-9.]+)"/) || [])[1];
-  assert.deepEqual([app, playground, admin, marketing].map(version), ['13.97', '13.97', '13.97', '13.97']);
+  assert.deepEqual([app, playground, admin, marketing].map(version), ['13.98', '13.98', '13.98', '13.98']);
 });
 
-await test('v13.97 drawer floor: circular logo, MAYA toggle pill', () => {
+await test('v13.98 drawer floor: circular logo, Hey Maya toggle beside it', () => {
   assert.ok(admin.includes('logo-circle.png'), 'circular logo file referenced');
-  assert.ok(admin.includes('id="maya-toggle"'), 'MAYA toggle pill present');
-  assert.ok(admin.includes("mt.classList.toggle('live', on)"), 'pill mirrors the on/off state');
+  assert.ok(admin.includes('id="maya-toggle"'), 'toggle pill present');
+  assert.ok(admin.includes('onclick="toggleWakeWord()"'), 'pill toggles the Hey Maya wake word');
+  assert.ok(admin.includes("mtw.textContent=_wakeWantOn?'Turn off Hey Maya':'Turn on Hey Maya'"),
+    'pill reads Turn on/off Hey Maya');
+  assert.ok(admin.includes('class="voice-row"'), 'toggle rides beside the logo');
 });
 
-await test('v13.97 Lead Station: no Invoice columns, Last Quote, draggable columns', () => {
+await test('v13.98 admin drawer: full-bleed, sheet-only hover, glued hamburger, one-click invoice', () => {
+  assert.match(admin, /#drawer\{position:absolute;inset:0/, 'drawer is full-bleed, not an inset card');
+  // the ADMIN wordmark's own chip strip carries only the sheet (the MAYA door
+  // card keeps its separate rooms)
+  const chips = admin.slice(admin.indexOf('class="brand-chips"'), admin.indexOf('class="brand-chips"') + 400);
+  assert.ok(!chips.includes('>operations room<'), 'ADMIN hover: operations room gone');
+  assert.ok(!chips.includes('>playground<'), 'ADMIN hover: playground gone');
+  assert.ok(chips.includes('>the sheet</a>'), 'ADMIN hover: the sheet stays');
+  assert.ok(admin.includes("hb.style.transform = 'translateX(' + (-Math.max(0, hs.scrollLeft - 18))"),
+    'hamburger glued to the drawer edge per frame');
+  assert.ok(!admin.includes('translateX(-356px)'), 'old CSS-transition slide removed');
+  assert.ok(admin.includes('function _createInvoiceNow'), 'one-click invoice in the composer');
+});
+
+await test('v13.98 Lead Station: no Invoice columns, Last Quote, draggable columns', () => {
   assert.ok(!/'<th[^>]*>Invoice 1<\/th>'|>Invoice 1</.test(admin), 'Invoice 1 column removed');
   assert.ok(!admin.includes("label: 'Invoice"), 'no invoice column def');
   assert.ok(admin.includes("label: 'Last Quote'"), 'Quote renamed to Last Quote');
@@ -83,14 +100,14 @@ await test('v13.97 Lead Station: no Invoice columns, Last Quote, draggable colum
   assert.ok(!admin.includes("'<div class=\"lead-when\">"), 'day-count line under the name removed');
 });
 
-await test('v13.97 Actions: email, phone, pay-link only; invoicing wired', () => {
+await test('v13.98 Actions: email, phone, pay-link only; invoicing wired', () => {
   assert.ok(admin.includes('function _actionsCell'), 'actions cell builder');
   assert.ok(admin.includes('function leadInvoice'), 'invoice composer');
   assert.ok(admin.includes('lead-inv-modal'), 'invoice modal');
   assert.ok(!/lead-rec">'\s*\+\s*rec\(x\)/.test(admin), 'recommendation text dropped from actions');
 });
 
-await test('v13.97 the admin auto-refreshes on a new deploy (no more stale tab)', () => {
+await test('v13.98 the admin auto-refreshes on a new deploy (no more stale tab)', () => {
   assert.ok(admin.includes('function checkAdminUpdate'), 'admin has an update poller');
   assert.ok(admin.includes("fetch('/status.html?uv='"), 'poller fetches the live version');
   assert.ok(admin.includes('setInterval(checkAdminUpdate'), 'poller runs on an interval');

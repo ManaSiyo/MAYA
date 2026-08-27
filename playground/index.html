@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="13.97">
+<meta name="maya-version" content="13.98">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -671,7 +671,11 @@
   #voice-wrap {
     position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
     display: flex; flex-direction: column; align-items: center; gap: 0;
-    z-index: 100;
+    /* v13.82: cards climb via _zCounter (starts at 200 and ++ per interaction),
+       so at z-index 100 the Visualize pill was getting buried. Sit above the
+       card ceiling. #screen-inspo's own transform confines this so it never
+       leaks over modals. The pill now stays on top like the hamburger + logo. */
+    z-index: 9000;
   }
   #voice-row {
     display: flex; align-items: center; gap: 10px;
@@ -734,9 +738,15 @@
   /* v13.4: the upload button reads a touch wider per Fromsa.
      v13.8: wider again, and a size up, so it can actually be seen. */
   /* v13.33: 20% brighter, per Fromsa. 0.3 -> 0.36 at rest, 0.8 -> 0.96 lit. */
+  /* v13.89: reverted the v13.86 glass pill back to the playground's plain text
+     link, per Fromsa. Kept it a touch brighter than playground at rest; hover
+     holds the same colour (a hair faded, not lit) so it reads as constant; and
+     nudged a few pixels lower. */
+  /* v13.90: a touch brighter at rest, a couple pixels lower still, and hover now
+     lifts it clearly brighter (easily visible) rather than fading. */
   .upload-link { letter-spacing: 0.32em; padding: 2px 20px; font-size: 10px;
-                 color: rgba(200,210,230,0.36); }
-  .upload-link:hover { color: rgba(226,234,250,0.96); }
+                 color: rgba(220,230,248,0.68); margin-top: 9px; }
+  .upload-link:hover { color: rgba(236,242,255,0.94); }
   /* v13.4: the upload chooser. Snappy on purpose: 0.12s, no drift. */
   /* v13.31: Pinterest picker. Board tiles, then picture tiles with a tick. */
   .pin-grid {
@@ -1848,7 +1858,7 @@
       0 12px 48px rgba(0,0,0,0.38);
     z-index: 1;
     overflow-y: auto;
-    padding: 16px 12px 16px;   /* v13.64: tighter, the cabinet rides the bezel */
+    padding: 16px 12px 16px;
     text-align: center;
     display: flex; flex-direction: column;
   }
@@ -1956,11 +1966,8 @@
     flex-shrink: 0;
     backdrop-filter: blur(12px);
   }
-  /* v13.62 PLAYGROUND: the drawer is a filing cabinet. Three circles the
-     size of the hamburger pill sit on top and HOLD the folder underneath;
-     they never leave, and there is no Back, because a tab is how you leave.
-     Whatever the open tab holds (the avatar, the fabrics, Pinterest) is
-     rendered inside the one folder below them. */
+  /* v13.71: the approved Playground filing cabinet, promoted faithfully.
+     Three circles hold one full-height folder, with no second panel or Back. */
   #notes-drawer .pg-tabrow { display: flex; align-items: center; gap: 14px;
     margin: -8px 0 8px -8px; position: relative; z-index: 2; }
   #notes-drawer .pg-tab { width: 32px; height: 32px; border-radius: 50%; padding: 0;
@@ -1971,7 +1978,6 @@
   #notes-drawer .pg-tab:hover { opacity: 0.9; transform: translateY(-1px); }
   #notes-drawer .pg-tab.on { opacity: 1; border-color: rgba(255,255,255,0.62);
     box-shadow: 0 0 0 1px rgba(255,255,255,0.10); }
-  /* the tail is what makes the circle hold the folder */
   #notes-drawer .pg-tab.on::after { content: ''; position: absolute; left: 50%; bottom: -9px;
     margin-left: -5px; border: 5px solid transparent; border-top-color: rgba(255,255,255,0.34); }
   #notes-drawer .pg-tab > * { width: 100%; height: 100%; border-radius: 50%;
@@ -1979,19 +1985,13 @@
   #notes-drawer .pg-tab svg { width: 17px; height: 17px; margin: auto; border-radius: 0; }
   #notes-drawer .pg-tab .pg-tab-face.empty::after { content: '\00B7'; display: flex;
     align-items: center; justify-content: center; height: 100%; color: rgba(220,232,255,0.4); }
-  /* v13.64: the folder consumes the whole drawer. No inner box, no side
-     margins; the open pane goes to the drawer's own glass. */
   #notes-drawer .pg-folder { flex: 1; min-height: 0; display: flex; flex-direction: column;
     border: none; border-radius: 0; background: none; padding: 0; overflow-y: auto;
     margin: 0 -12px; }
   #notes-drawer #pg-pane-avatar { padding: 2px 12px 0; }
   #notes-drawer .pg-pane > #fabrics-drawer, #notes-drawer .pg-pane > #pinterest-drawer { padding: 0 4px; }
   #notes-drawer .pg-pane { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-  /* the folder owns the drawer's height; the references strip no longer
-     swallows the space under it. */
   #notes-drawer #notes-drawer-content { flex: 0 0 auto; }
-  /* the fabrics and Pinterest drawers live INSIDE the folder now: same markup,
-     same rendering code, no panel of their own and no Back. */
   #notes-drawer .pg-pane > #fabrics-drawer,
   #notes-drawer .pg-pane > #pinterest-drawer {
     position: static; width: auto; max-width: none; top: auto; right: auto; bottom: auto;
@@ -2006,24 +2006,77 @@
     letter-spacing: 0.2em; text-transform: uppercase; color: rgba(238,242,255,0.85);
     text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #notes-drawer #pg-project-pill:hover { border-color: rgba(255,255,255,0.5); }
-  /* v13.62: ONE projects control. The pill on top names the open project and
-     opens the list; the list itself still drops below the avatar, where it
-     was asked for. The old toggle row said Projects a second time. */
+  /* v13.75: the tab's name rides in the dead space to the right of the circles,
+     reclaiming the vertical room the in-pane titles used to take. Avatar reads
+     Projects, Pinterest reads Pinterest, Fabrics reads Fabrics. */
+  #notes-drawer .pg-tabtitle { flex: 1; min-width: 0; text-align: left; padding-left: 4px;
+    font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 400;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    color: rgba(245,250,255,0.92); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    cursor: default; }
+  #notes-drawer .pg-tabtitle.clickable { cursor: pointer; }
+  #notes-drawer .pg-tabtitle.clickable:hover { color: #fff; }
+  /* v13.85: the dropdown caret beside "Projects". */
+  #notes-drawer .pg-tabtitle-caret { font-size: 12px; color: rgba(238,242,255,0.5); margin-left: 3px; }
+  #notes-drawer .pg-tabtitle.clickable:hover .pg-tabtitle-caret { color: rgba(255,255,255,0.85); }
+  /* the in-pane titles are redundant now that the name sits beside the circles */
+  #notes-drawer #pg-project-pill { display: none; }
+  #notes-drawer .pg-pane .drawer-head-title { display: none; }
+  /* v13.78: Pinterest matches Fabrics' vertical rhythm. Its head held only the
+     now-hidden title, so removing it lifts All saves / Boards up to the same
+     line Fabrics' tabs sit on, giving the cards the same room. Bring them in
+     anchors to the bottom. */
+  #notes-drawer .pg-pane > #pinterest-drawer > .drawer-head { display: none; }
+  /* v13.84: the wall goes edge-to-edge and the pane anchors the floating CTA. */
+  #notes-drawer .pg-pane > #pinterest-drawer { position: relative; padding: 0; }
+  #notes-drawer .pg-pane > #pinterest-drawer > #pinterest-drawer-body { flex: 1; padding: 2px 2px 0; }
+  /* v13.84: "All saves / Boards" is the header now (the title is hidden), so make
+     it compact and let it sit tight on its own row above the full-width wall. */
+  #notes-drawer .pg-pane > #pinterest-drawer > #pin-tabs { gap: 6px; margin: 0 0 4px; padding: 0 2px; }
+  #notes-drawer .pg-pane > #pinterest-drawer > #pin-tabs .fabrics-tab { font-size: 9px; padding: 4px 10px; }
+  /* v13.84: "Bring in" floats over the cards, near-transparent, and shows only
+     while pictures are selected (JS toggles display). The wrapper doesn't block
+     card taps; only the pill itself is clickable. */
+  #notes-drawer .pg-pane > #pinterest-drawer > .pin-drawer-foot {
+    position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%);
+    margin: 0; padding: 0; z-index: 40; pointer-events: none; }
+  #notes-drawer .pg-pane > #pinterest-drawer > .pin-drawer-foot .drawer-fabrics {
+    pointer-events: auto; flex: none; width: auto; min-width: 128px; padding: 9px 22px;
+    border-radius: 100px; color: rgba(245,250,255,0.95);
+    background: rgba(18,24,38,0.5); border: 0.5px solid rgba(255,255,255,0.28);
+    backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.38); }
+  /* v13.75: Randomize, Replace and Remove share one row; smaller pills to fit. */
+  #notes-drawer .pg-avatar-actions .drawer-action { font-size: 8px; padding: 3px 8px;
+    letter-spacing: 0.1em; }
+  #notes-drawer #pg-meas-host { padding-bottom: 26px; }
   #notes-drawer .drawer-sessions-toggle { display: none !important; }
   #notes-drawer .pg-avatar-row { display: flex; align-items: center; gap: 12px; margin: 2px 0 12px; }
   #notes-drawer .pg-avatar-hit { background: none; border: none; padding: 0; cursor: pointer; flex: none; }
   #notes-drawer .pg-avatar-row .drawer-avatar-face { width: 60px; height: 60px; }
   #notes-drawer .pg-avatar-side { flex: 1; min-width: 0; text-align: left; }
+  /* v13.78: the name and its switch-avatar caret sit together. */
+  #notes-drawer .pg-avatar-nameline { display: flex; align-items: center; gap: 6px; }
+  #notes-drawer .pg-avatar-nameline .drawer-avatar-caret { font-size: 13px; padding: 4px 7px; flex: none;
+    background: none; border: none; cursor: pointer; line-height: 1;
+    color: rgba(169,201,255,0.9); }
+  #notes-drawer .pg-avatar-nameline .drawer-avatar-caret:hover { color: #fff; }
   #notes-drawer .pg-avatar-side .drawer-avatar-name { display: block; font-family: 'Cormorant Garamond', serif;
     font-size: 19px; color: rgba(245,250,255,0.95); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #notes-drawer .pg-avatar-actions { display: flex; gap: 8px; margin-top: 5px;
     opacity: 0; transition: opacity .25s; }
   #notes-drawer .pg-avatar-row:hover .pg-avatar-actions { opacity: 1; }
-  /* v13.62: the avatar switcher's own caret and library are gone from this
-     drawer. The client comes with the project, and the face was appearing
-     three times over. */
-  #notes-drawer #drawer-avatar-caret,
-  #notes-drawer #drawer-avatar-switcher { display: none !important; }
+  /* v13.75: the avatar dropdown is back, per Fromsa. The caret shows and the
+     switcher opens on tap (toggleAvatarSwitcher sets display), so it is no
+     longer force-hidden. */
+  /* v13.82: the switcher can be taller than the room left under the avatar row,
+     so it was getting cropped at the drawer's edge. Cap it and let it scroll
+     inside itself, and it is scrolled into view when opened. */
+  /* v13.96: the switcher is a flex item in a column that can overflow; without
+     flex:0 0 auto the column shrinks it to 0 content height (border-only ~2px)
+     and overflow:hidden clips the rows, so the dropdown "opened" but showed
+     nothing. Pin its size and let the folder scroll to it. */
+  #notes-drawer #drawer-avatar-switcher { flex: 0 0 auto; margin: 0 0 12px; max-height: 44vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   #notes-drawer .pg-fold { margin: 2px 0 10px; }
   #notes-drawer .pg-fold summary { list-style: none; cursor: pointer;
     display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -2034,22 +2087,104 @@
   #notes-drawer .pg-fold summary::-webkit-details-marker { display: none; }
   #notes-drawer .pg-fold summary::after { content: '\25BE'; font-size: 10px; color: rgba(238,242,255,0.4); }
   #notes-drawer .pg-fold:not([open]) summary::after { transform: rotate(-90deg); }
+  /* v13.89: Projects, beside the name, right-aligned over the Remove pill. Its
+     own pill + caret; opens the same project list the top title used to. */
+  /* v13.91: Projects is literally the same type as the "Fromsa" name — same
+     Cormorant face, 19px, weight 300, italic — just wearing a pill. Not caps,
+     not bold, so it never reads larger than the name beside it. */
+  /* v13.98: the pill's text sits truly centered (the caret is absolute now, so
+     it stops shoving the word left), literally the name's font and size. */
+  #notes-drawer .pg-project-beside { margin-left: auto; flex: none; position: relative;
+    background: none; border: 0.5px solid rgba(255,255,255,0.22); border-radius: 100px;
+    cursor: pointer; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: 19px;
+    font-style: italic; letter-spacing: 0.04em; text-transform: none; color: rgba(245,250,255,0.95);
+    padding: 1px 24px; text-align: center; white-space: nowrap; line-height: 1.4;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: border-color 0.2s, color 0.2s; }
+  #notes-drawer .pg-project-beside .pg-project-beside-caret { position: absolute; right: 9px; margin-left: 0; }
+  #notes-drawer .pg-project-beside:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
+  #notes-drawer .pg-project-beside-caret { font-size: 12px; color: rgba(238,242,255,0.5); margin-left: 5px; font-style: normal; }
+  /* v13.89: the Stats fold — a car-dash for the free trial. */
+  #notes-drawer .pg-stats-body { padding: 12px 0 6px; }
+  #notes-drawer .pg-gauge-wrap { position: relative; width: 118px; height: 118px; margin: 0 auto 14px; }
+  #notes-drawer .pg-gauge { width: 118px; height: 118px; transform: rotate(-90deg); }
+  #notes-drawer .pg-gauge-track { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 8; }
+  #notes-drawer .pg-gauge-fill { fill: none; stroke: rgba(169,201,255,0.9); stroke-width: 8;
+    stroke-linecap: round; stroke-dasharray: 326.7; stroke-dashoffset: 0;
+    transition: stroke-dashoffset 0.6s ease, stroke 0.3s ease; }
+  #notes-drawer .pg-gauge-fill.low { stroke: rgba(235,150,150,0.9); }
+  #notes-drawer .pg-gauge-center { position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2px; }
+  #notes-drawer .pg-gauge-value { font-family: 'Cormorant Garamond', serif; font-size: 26px;
+    font-weight: 500; color: rgba(245,250,255,0.96); line-height: 1; }
+  #notes-drawer .pg-gauge-cap { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 8px;
+    letter-spacing: 0.16em; text-transform: uppercase; color: rgba(238,242,255,0.5); }
+  #notes-drawer .pg-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #notes-drawer .pg-stat { display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 10px 6px; border: 0.5px solid rgba(255,255,255,0.08); border-radius: 12px;
+    background: rgba(255,255,255,0.02); }
+  #notes-drawer .pg-stat-num { font-family: 'Cormorant Garamond', serif; font-size: 20px;
+    font-weight: 500; color: rgba(245,250,255,0.95); line-height: 1; }
+  #notes-drawer .pg-stat-lab { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 7.5px;
+    letter-spacing: 0.14em; text-transform: uppercase; color: rgba(238,242,255,0.5); text-align: center; }
+  #notes-drawer .pg-try-popup { display: block; margin: 12px auto 2px; background: none; border: none;
+    cursor: pointer; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 8px;
+    letter-spacing: 0.2em; text-transform: uppercase; color: rgba(169,201,255,0.55);
+    transition: color 0.2s; }
+  #notes-drawer .pg-try-popup:hover { color: rgba(169,201,255,0.9); }
+  /* v13.89: the out-of-credits popup. */
+  #maya-credits-popup { position: fixed; inset: 0; z-index: 12000; display: none;
+    align-items: center; justify-content: center; padding: 24px;
+    background: rgba(6,8,14,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  #maya-credits-popup.show { display: flex; }
+  #maya-credits-popup .mcp-card { width: 100%; max-width: 320px; text-align: center;
+    padding: 28px 24px 22px; border-radius: 20px;
+    background: rgba(20,26,40,0.92); border: 0.5px solid rgba(255,255,255,0.16);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  #maya-credits-popup .mcp-title { font-family: 'Cormorant Garamond', serif; font-size: 26px;
+    font-weight: 500; color: rgba(245,250,255,0.98); margin-bottom: 10px; }
+  #maya-credits-popup .mcp-body { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 12px;
+    line-height: 1.5; color: rgba(228,234,248,0.72); margin-bottom: 20px; }
+  #maya-credits-popup .mcp-upgrade { display: block; width: 100%; margin: 0 0 10px; padding: 12px 18px;
+    border-radius: 100px; cursor: pointer; border: 0.5px solid rgba(169,201,255,0.5);
+    background: rgba(169,201,255,0.14); color: rgba(245,250,255,0.98);
+    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; transition: background 0.2s, border-color 0.2s; }
+  #maya-credits-popup .mcp-upgrade:hover { background: rgba(169,201,255,0.24); border-color: rgba(169,201,255,0.8); }
+  #maya-credits-popup .mcp-later { display: block; width: 100%; background: none; border: none;
+    cursor: pointer; padding: 6px; color: rgba(228,234,248,0.5);
+    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; transition: color 0.2s; }
+  #maya-credits-popup .mcp-later:hover { color: rgba(228,234,248,0.85); }
+  /* v13.90: the Mana Siyo made-to-order confirm. */
+  #maya-manasiyo-popup { position: fixed; inset: 0; z-index: 12000; display: none;
+    align-items: center; justify-content: center; padding: 24px;
+    background: rgba(6,8,14,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  #maya-manasiyo-popup.show { display: flex; }
+  #maya-manasiyo-popup .mmp-card { width: 100%; max-width: 340px; text-align: center;
+    padding: 28px 24px 22px; border-radius: 20px;
+    background: rgba(20,26,40,0.92); border: 0.5px solid rgba(255,255,255,0.16);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  #maya-manasiyo-popup .mmp-title { font-family: 'Cormorant Garamond', serif; font-size: 26px;
+    font-weight: 500; color: rgba(245,250,255,0.98); margin-bottom: 10px; }
+  /* v13.92: slightly larger body copy (Fromsa likes the wording), and the quote
+     button is a smaller centred pill rather than a full-width bar. */
+  #maya-manasiyo-popup .mmp-body { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 13.5px;
+    line-height: 1.6; color: rgba(228,234,248,0.76); margin-bottom: 22px; }
+  #maya-manasiyo-popup .mmp-go { display: inline-block; width: auto; margin: 0 0 8px; padding: 9px 24px;
+    border-radius: 100px; cursor: pointer; border: 0.5px solid rgba(169,201,255,0.5);
+    background: rgba(169,201,255,0.14); color: rgba(245,250,255,0.98);
+    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; transition: background 0.2s, border-color 0.2s; }
+  #maya-manasiyo-popup .mmp-go:hover { background: rgba(169,201,255,0.24); border-color: rgba(169,201,255,0.8); }
+  #maya-manasiyo-popup .mmp-later { display: block; width: 100%; background: none; border: none;
+    cursor: pointer; padding: 6px; color: rgba(228,234,248,0.5);
+    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; transition: color 0.2s; }
+  #maya-manasiyo-popup .mmp-later:hover { color: rgba(228,234,248,0.85); }
   #notes-drawer #pg-meas-host { padding-top: 8px; }
-  /* v13.62: measurements are ONLY measurements. The name and the face row
-     already live above, and repeating them was the whole complaint. */
   #notes-drawer #pg-meas-host .avatar-face-row,
   #notes-drawer #pg-meas-host .avatar-name-input { display: none !important; }
-  /* v13.58 PLAYGROUND: the circles row at the top of the drawer. */
-  #notes-drawer .drawer-circles { display: flex; align-items: center; gap: 10px; margin: 2px 0 12px; }
-  #notes-drawer .drawer-circle { width: 32px; height: 32px; border-radius: 50%; padding: 0; overflow: hidden;
-    border: 0.5px solid rgba(255,255,255,0.35); background: rgba(255,255,255,0.05);
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: border-color .2s, transform .2s; flex: none; }
-  #notes-drawer .drawer-circle:hover { border-color: rgba(255,255,255,0.7); transform: scale(1.07); }
-  #notes-drawer .drawer-circle img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  #notes-drawer .drawer-circle .drawer-avatar-face { width: 100%; height: 100%; border: none; border-radius: 50%; }
-  #notes-drawer .drawer-circle svg { width: 17px; height: 17px; display: block; }
-  #notes-drawer .drawer-circles .drawer-avatar-caret { margin-left: auto; }
   #notes-drawer .drawer-avatar-face.empty::after {
     content: '·';
     display: flex; align-items: center; justify-content: center;
@@ -2067,7 +2202,6 @@
   #notes-drawer .drawer-meta-row {
     display: flex; justify-content: center; gap: 22px;
     border-top: 0.5px solid rgba(255,255,255,0.06);
-    /* v13.58 PLAYGROUND: a little lower, riding the drawer's floor. */
     margin-top: auto;
     padding-top: 16px;
   }
@@ -2766,18 +2900,20 @@
     background-size: cover; background-position: center;
     background-color: rgba(255,255,255,0.03);
   }
-  .fabric-meta { padding: 9px 11px 12px; }
+  /* v13.98: the caption under each fabric takes half the room it used to, and
+     everything in it reads centered, per Fromsa. */
+  .fabric-meta { padding: 4px 8px 6px; text-align: center; }
   .fabric-name-input {
     font-family: 'Cormorant Garamond', serif;
     font-size: 13px; color: rgba(230,240,255,0.92);
-    line-height: 1.25; margin-bottom: 4px;
+    line-height: 1.15; margin-bottom: 1px;
     border: none; background: none; width: 100%;
-    outline: none; padding: 0;
+    outline: none; padding: 0; text-align: center;
   }
   .fabric-name-input:focus { color: #fff; border-bottom: 0.5px solid rgba(200,220,255,0.5); }
   .fabric-spec {
-    font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
-    color: rgba(200,210,230,0.55); line-height: 1.5;
+    font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: rgba(200,210,230,0.55); line-height: 1.3; text-align: center;
   }
   .fabric-spec .dot { opacity: 0.4; margin: 0 5px; }
   .fabric-analyzing {
@@ -3190,6 +3326,8 @@
     position: absolute; left: 0; right: 0; bottom: 0;
     padding: 30px 16px 14px;
     display: flex; flex-direction: column; gap: 3px;
+    /* v13.88: center every line on the community wall. */
+    align-items: center; text-align: center;
     background: linear-gradient(to top, rgba(0,0,0,0.82), rgba(0,0,0,0));
     opacity: 0;
     pointer-events: none;
@@ -3305,6 +3443,12 @@
   #garment-modal[data-mode="submit"] #viewer-fabrics,
   #garment-modal[data-mode="submit"] #viewer-refs,
   #garment-modal[data-mode="submit"] #modifications-bar,
+  /* v13.90: favorites is Submit-only — no modify chrome. Tap to Listen,
+     Switch Fabric, Add Reference and the Visualize/mid row are all inspo-only. */
+  #garment-modal[data-mode="submit"] #viewer-mid-row,
+  #garment-modal[data-mode="submit"] #viewer-row-modify-1,
+  /* v13.91: the design notes belong to the inspo screen only, not favorites. */
+  #garment-modal[data-mode="submit"] #viewer-notes,
   #garment-modal[data-mode="submit"] .viewer-default-btn {
     display: none !important;
   }
@@ -3316,51 +3460,44 @@
      tap-to-visualize) family, same dimensions, padding, border weight,
      glass. The send-cue lives on a ::after pseudo so the pulse can be
      fast and bright without ballooning the chip's footprint. */
+  /* v13.92: the two favorites pills read like the X and heart glass icons —
+     subtle 0.22 border, calm, no attention-pulse — just smaller and wearing a
+     word. Tighter padding and a lighter type, per Fromsa. */
   .viewer-submit-btn {
     position: relative;
     display: inline-flex; align-items: center; justify-content: center;
     background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.32);
+    border: 0.5px solid rgba(255,255,255,0.22);
     border-radius: 100px;
-    /* v11.23: narrower. */
-    padding: 6px 18px;
-    min-width: 120px;
+    padding: 5px 14px;
+    min-width: 0;
     font-family: 'Jost', sans-serif;
-    font-size: 11px; font-weight: 300;
-    letter-spacing: 0.15em; text-transform: uppercase;
-    color: rgba(245,250,255,0.98);
+    font-size: 9.5px; font-weight: 300;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: rgba(245,250,255,0.9);
     cursor: pointer;
     -webkit-backdrop-filter: blur(22px) saturate(180%);
             backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
-      inset 0 1px 1px rgba(255,255,255,0.28),
-      inset 0 -1px 1px rgba(0,0,0,0.18),
-      0 4px 16px rgba(0,0,0,0.22);
-    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-  }
-  /* Halo lives behind the pill, small radius, fast pulse, never spills. */
-  .viewer-submit-btn::after {
-    content: '';
-    position: absolute; inset: -2px;
-    border-radius: 100px;
-    pointer-events: none;
-    box-shadow:
-      0 0 5px 0 rgba(210,228,255,0.30);
-    animation: maya-submit-pulse 2.6s ease-in-out infinite;
-  }
-  @keyframes maya-submit-pulse {
-    0%, 100% { box-shadow: 0 0 3px 0 rgba(210,228,255,0.22); }
-    50%      { box-shadow: 0 0 6px 1px rgba(215,232,255,0.40); }
+      inset 0 1px 1px rgba(255,255,255,0.24),
+      inset 0 -1px 1px rgba(0,0,0,0.16),
+      0 3px 12px rgba(0,0,0,0.20);
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
   }
   /* v11.23: favorites Submit mode drops the button to the Tap-to-Listen height. */
   #garment-modal[data-mode="submit"] #viewer-actions {
     position: fixed; left: 0; right: 0; bottom: 22px; margin: 0; z-index: 4;
   }
   .viewer-submit-btn:hover {
-    background: rgba(255,255,255,0.04);
-    border-color: rgba(255,255,255,0.55);
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.5);
+    color: rgba(255,255,255,1);
     transform: translateY(-1px);
   }
+  /* v13.91: the two destinations sit side by side, both always visible; they
+     wrap and centre if a narrow screen can't hold them on one line. */
+  .submit-wrap { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center;
+    justify-content: center; gap: 10px; }
 
   /* v11.4/v11.6: 2-line italic Cormorant piece-summary above Submit.
      Hidden by default; switched on in submit mode (the -webkit-box
@@ -3380,8 +3517,13 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  /* v13.92: reserve a fixed two-line height for the caption so stepping between
+     favorites never moves the image — the card stays fixed and centered, and a
+     short or long caption just fills more or less of the same reserved slot. */
   #garment-modal[data-mode="submit"] #viewer-piece-summary {
     display: -webkit-box;
+    height: 2.9em; min-height: 2.9em;
+    margin: 16px auto 8px;
   }
   /* v10.11: photo fullscreen mode inside the garment viewer. Click the
      image → it expands edge-to-edge over the modal. Escape exits back to
@@ -4169,6 +4311,25 @@
     #secondary-row { margin-bottom: 4px; }
     /* lighter GPU load: soften the heaviest glass effects */
     .modal { backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+    /* v13.90: the drawer type steps down on a phone, the same ~0.88 desktop→
+       mobile ratio the rest of the app already uses, so the new Users header,
+       Projects pill and Stats read at phone scale instead of desktop scale. */
+    #notes-drawer .pg-tabtitle { font-size: 17px; }
+    #notes-drawer .pg-avatar-side .drawer-avatar-name,
+    #notes-drawer .drawer-avatar-name { font-size: 17px; }
+    #notes-drawer .pg-project-beside { font-size: 17px; padding: 1px 13px; }
+    #notes-drawer .pg-project-beside-caret { font-size: 11px; }
+    /* v13.90: on a narrow phone the name keeps its natural width instead of
+       being squeezed to "Fro…" — it never shrinks and its ellipsis is off, so a
+       tight row wraps the Projects pill to its own right-aligned line instead. */
+    #notes-drawer .pg-avatar-nameline { flex-wrap: wrap; row-gap: 6px; }
+    #notes-drawer .pg-avatar-side .pg-avatar-nameline .drawer-avatar-name {
+      flex: 0 0 auto; overflow: visible; text-overflow: clip; max-width: none; }
+    #notes-drawer .pg-avatar-nameline .pg-project-beside { flex: 0 1 auto; min-width: 0; overflow: hidden; }
+    #notes-drawer .pg-gauge-wrap, #notes-drawer .pg-gauge { width: 104px; height: 104px; }
+    #notes-drawer .pg-gauge-value { font-size: 22px; }
+    #notes-drawer .pg-stat-num { font-size: 18px; }
+    #notes-drawer .pg-fold summary { font-size: 9px; }
   }
   /* v13.33: on a phone the finger needs a bigger target than the eye needs a
      bigger label. Nothing here changes a type size, only the area you can hit,
@@ -4618,29 +4779,22 @@
 
   <!-- v9.2: two-level drawer restored, main menu + Avatar sub-menu. -->
   <div id="drawer-main">
-    <!-- v7.9: avatar identity button replaces both the client text input
-         AND the Avatar pill. Clicking the face opens the avatar sub-menu;
-         name displays beside it (edited inside the sub-menu). -->
-    <!-- v11.25: avatar identity row. The face circle + name open the avatar
-         sub-menu (edit face/measurements). The caret opens the avatar SWITCHER
-         (a library of saved clients) so you can change avatar any time. -->
-    <!-- v13.62 PLAYGROUND: the filing cabinet. Three circles the size of the
-         hamburger pill sit on top and hold ONE folder; the open tab's
-         contents are rendered inside it. The circles never leave and there
-         is no Back, because switching tab is how you leave. Under Avatar:
-         the open project on top, the face with the name at its side
-         (Replace and Remove on hover), the Projects dropdown beneath, and
-         the measurements folded under that. -->
+    <!-- v13.71: the approved filing cabinet from Playground, promoted
+         faithfully into MAYA. Avatar, Pinterest and Fabrics hold one folder. -->
+    <!-- v13.78: Fromsa's order, Pinterest then Fabrics then Avatar. -->
     <div class="pg-tabrow">
-      <button class="pg-tab on" id="pg-tab-avatar" onclick="pgTab('avatar')" title="Avatar">
-        <span class="pg-tab-face empty"></span>
-      </button>
       <button class="pg-tab" id="pg-tab-pinterest" onclick="pgTab('pinterest')" title="Pinterest">
         <svg viewBox="0 0 24 24" fill="#e60023" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.08 3.16 9.42 7.63 11.17-.11-.95-.2-2.4.04-3.44.22-.93 1.4-5.94 1.4-5.94s-.36-.71-.36-1.77c0-1.66.96-2.9 2.16-2.9 1.02 0 1.51.77 1.51 1.68 0 1.03-.65 2.56-.99 3.98-.28 1.19.6 2.16 1.77 2.16 2.13 0 3.77-2.25 3.77-5.49 0-2.87-2.06-4.88-5.01-4.88-3.41 0-5.42 2.56-5.42 5.21 0 1.03.4 2.14.89 2.74.1.12.11.22.08.34l-.33 1.36c-.05.22-.17.27-.4.16-1.5-.7-2.43-2.89-2.43-4.65 0-3.78 2.75-7.26 7.93-7.26 4.16 0 7.4 2.97 7.4 6.93 0 4.14-2.61 7.47-6.23 7.47-1.22 0-2.36-.63-2.75-1.38l-.75 2.85c-.27 1.04-1 2.35-1.49 3.15 1.12.35 2.31.53 3.54.53 6.63 0 12-5.37 12-12S18.63 0 12 0z"/></svg>
       </button>
       <button class="pg-tab" id="pg-tab-fabrics" onclick="pgTab('fabrics')" title="Fabrics">
         <img src="/aesthetics/fabrics/Orange%20Cheetah.JPG" alt="">
       </button>
+      <button class="pg-tab on" id="pg-tab-avatar" onclick="pgTab('avatar')" title="Avatar">
+        <span class="pg-tab-face empty"></span>
+      </button>
+      <!-- v13.75: the current tab's name rides here, in the dead space beside
+           the circles, so the panes below start higher. -->
+      <span class="pg-tabtitle" id="pg-tabtitle">Users</span>
     </div>
     <div class="pg-folder" id="pg-folder">
       <div class="pg-pane" id="pg-pane-avatar">
@@ -4650,13 +4804,22 @@
             <div class="drawer-avatar-face empty" id="drawer-avatar-face"></div>
           </button>
           <div class="pg-avatar-side">
-            <span class="drawer-avatar-name" id="drawer-avatar-name">name</span>
+            <!-- v13.78: the switch-avatar caret rides right beside the name. -->
+            <div class="pg-avatar-nameline">
+              <!-- v13.92: the name itself opens the avatar switcher too, so the
+                   caret is no longer a 2px sliver you have to hit exactly. -->
+              <span class="drawer-avatar-name" id="drawer-avatar-name" onclick="toggleAvatarSwitcher()" title="Switch avatar / client" style="cursor:pointer">name</span>
+              <button class="drawer-avatar-caret" id="drawer-avatar-caret" type="button" onclick="toggleAvatarSwitcher()" title="Switch avatar / client">&#9662;</button>
+              <!-- v13.89: Projects rides beside the name, right-aligned over the
+                   Remove pill. Same list, same dropdown behaviour (pgProjects);
+                   the avatar and Projects are now independent under one account. -->
+              <button class="pg-project-beside" id="pg-project-beside" onclick="pgProjects()" title="Your projects; click for the list">Projects <span class="pg-project-beside-caret">&#9662;</span></button>
+            </div>
             <div class="pg-avatar-actions">
               <button class="drawer-action" onclick="pgReplaceFace()">Replace</button>
               <button class="drawer-action" onclick="pgRemoveFace()">Remove</button>
             </div>
           </div>
-          <button class="drawer-avatar-caret" id="drawer-avatar-caret" onclick="toggleAvatarSwitcher()" title="Switch avatar / client">&#9662;</button>
         </div>
         <div class="drawer-avatar-switcher" id="drawer-avatar-switcher" style="display:none"></div>
         <div class="drawer-sessions">
@@ -4668,9 +4831,48 @@
             <div class="sessions-empty" id="sessions-empty-hint">No projects yet.</div>
           </div>
         </div>
-        <details class="pg-fold" id="pg-meas">
+        <!-- v13.89: a collapsible Stats fold rides on top of Measurements and
+             fills the empty drawer space. Circular gauge = trial credits left of
+             $2; four tiles under it. When Measurements opens it pushes down. -->
+        <details class="pg-fold pg-stats-fold" id="pg-stats" open>
+          <summary>Stats</summary>
+          <div class="pg-stats-body" id="pg-stats-body">
+            <div class="pg-gauge-wrap">
+              <svg class="pg-gauge" viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="pg-gauge-track" cx="60" cy="60" r="52"></circle>
+                <circle class="pg-gauge-fill" id="pg-gauge-fill" cx="60" cy="60" r="52"></circle>
+              </svg>
+              <div class="pg-gauge-center">
+                <span class="pg-gauge-value" id="pg-gauge-value">$2.00</span>
+                <span class="pg-gauge-cap" id="pg-gauge-cap">left of $2</span>
+              </div>
+            </div>
+            <div class="pg-stats-grid">
+              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-dollars">$2.00</span><span class="pg-stat-lab">Credits left</span></div>
+              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-cards">0</span><span class="pg-stat-lab">Cards made</span></div>
+              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-favs">0</span><span class="pg-stat-lab">Favorites</span></div>
+              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-images">0</span><span class="pg-stat-lab">Images rendered</span></div>
+            </div>
+            <button class="pg-try-popup" onclick="mayaTryCreditsPopup()" title="Preview the out-of-credits popup">Try popup</button>
+          </div>
+        </details>
+        <details class="pg-fold" id="pg-meas" open>
           <summary>Measurements</summary>
           <div id="pg-meas-host"></div>
+        </details>
+        <!-- PLAYGROUND: personal backgrounds. Birth of a Star is the house
+             background; Generate makes a new one WITHOUT swapping anything,
+             and tapping a thumb applies it. -->
+        <details class="pg-fold" id="pg-bg-fold" open>
+          <summary>Background</summary>
+          <div id="pg-bg-body">
+            <div id="pg-bg-row">
+              <button class="pg-bg-thumb on" id="pg-bg-star" onclick="pgApplyBackground('star')" title="Birth of a Star, the house background"
+                style="background-image:url('/aesthetics/ui/birth-of-a-star.png')"></button>
+            </div>
+            <div id="pg-bg-name">Birth of a Star</div>
+            <button class="pg-bg-gen" id="pg-bg-gen" onclick="pgGenerateBackground()">Generate a new background</button>
+          </div>
         </details>
       </div>
       <div class="pg-pane" id="pg-pane-fabrics" style="display:none"></div>
@@ -4684,7 +4886,7 @@
          bottom of the drawer. New and Clean are gone: New lives inside the
          Projects dropdown where new projects belong, and nothing needs a
          Clean button once every card can be removed on its own. -->
-    <!-- v13.58 PLAYGROUND: Fabrics and Pinterest moved up into the circles. -->
+    <!-- Fabrics and Pinterest now live in the cabinet tabs. -->
     <!-- v13.36: the card count is gone from the drawer, it said nothing you
          could not see on the board. The element stays, hidden, because the
          canvas still writes its state here. -->
@@ -4857,7 +5059,12 @@
       <button class="modal-text-btn viewer-modify-btn" id="modify-add-ref"       onclick="modifyAddReference()">Add Reference</button>
     </div>
     <!-- v9.12: shown only when garment-modal[data-mode="submit"], favorites click path -->
-    <button class="modal-text-btn viewer-submit-btn" id="submit-btn" onclick="submitFavorite()">Submit</button>
+    <!-- v13.91: two destinations, side by side, always visible — the community
+         wall, or Mana Siyo (a made-to-order quote by email). No hidden menu. -->
+    <div class="submit-wrap" id="submit-wrap">
+      <button class="modal-text-btn viewer-submit-btn" id="submit-community" onclick="submitToCommunity()">Post to Community Wall</button>
+      <button class="modal-text-btn viewer-submit-btn" id="submit-manasiyo" onclick="submitToManasiyo()">Get it made</button>
+    </div>
   </div>
 </div>
 
@@ -4915,7 +5122,7 @@
   </div>
   <div class="fabrics-drawer-body" id="pinterest-drawer-body"></div>
   <div class="pin-drawer-foot" id="pin-drawer-foot" style="display:none">
-    <button class="drawer-fabrics" id="pin-import-btn" onclick="_pinImport()" disabled>Bring them in</button>
+    <button class="drawer-fabrics" id="pin-import-btn" onclick="_pinImport()" disabled>Bring in</button>
   </div>
 </div>
 
@@ -5319,6 +5526,8 @@ function showError(msg) {
   // even after our auto-rewrite + retry. The raw message is intimidating
   // and not actionable for Fromsa; soften it to fashion-editor tone.
   const raw = (msg || '').toString();
+  // v13.89: the out-of-credits popup already handled this; no scary toast.
+  if (/trial_exhausted/i.test(raw)) return;
   if (/safety system|content policy|violates|moderation|not allowed/i.test(raw)) {
     showToast('Couldn\'t render this. The image filter caught some vocabulary. Try softer language or move forward without that ref.', true);
     console.error('[Maya safety]', raw);
@@ -6407,8 +6616,8 @@ function _bootScreenObserver() {
   if (!host.dataset.homed) {
     host.dataset.homed = '1';
     const home = () => {
-      const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-      host.scrollTop = vh;
+      // PLAYGROUND: the first screen is the community wall, favorites below.
+      host.scrollTop = 0;
     };
     home();
     requestAnimationFrame(home);
@@ -6476,6 +6685,11 @@ function _bootScreenObserver() {
         closeFabricsDrawer();
         // v13.46: Pinterest floats the same way; it goes away with the drawer too.
         if (typeof closePinterestDrawer === 'function') closePinterestDrawer();
+      }
+      // v13.78: swiping the drawer OPEN restores the last tab too, not just the
+      // hamburger. Without this the swipe path always landed on Avatar.
+      if (!_drawerWasOpen && open && typeof _pgRestoreLastTab === 'function') {
+        try { _pgRestoreLastTab(); } catch (_) {}
       }
       _drawerWasOpen = open;
     };
@@ -7170,7 +7384,7 @@ function openFavoriteForSubmit(itemId) {
         'width:46px;height:46px;border-radius:50%;border:0.5px solid rgba(255,255,255,0.3);' +
         'background:rgba(10,16,34,0.55);color:rgba(240,246,255,0.9);font-size:22px;cursor:pointer;' +
         'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)';
-      b.style[d < 0 ? 'left' : 'right'] = '18px';
+      b.style[d < 0 ? 'left' : 'right'] = '10px';   // v13.92: nudged nearer the corners, per Fromsa
       b.onclick = (e) => { e.stopPropagation(); _favStep(d); };
       modal.appendChild(b);
     };
@@ -7292,6 +7506,52 @@ async function submitFavorite() {
   } else {
     await _doSubmitConfirmed();
   }
+}
+
+// v13.90: Submit is now a two-destination chooser. On desktop the menu rises on
+// two pills, side by side. The two paths:
+//   Community Wall → publish this vision to the shared wall.
+//   Mana Siyo      → a made-to-order request; we email back a custom quote.
+function submitToCommunity() {
+  const itemId = viewerItemId;
+  const item = itemId != null ? items.find(i => i.id === itemId) : null;
+  if (!item || !item.card || !item.card.image) { showToast('No vision to share'); return; }
+  item.card.favorited = true;
+  try { if (typeof communityBoard !== 'undefined' && communityBoard.publish) communityBoard.publish(item); } catch (_) {}
+  try { if (typeof _persistSession === 'function') _persistSession(); } catch (_) {}
+  try { closeGarmentModal(); } catch (_) {}
+  showToast('Shared to the community wall.');
+}
+function submitToManasiyo() {
+  const wrap = document.getElementById('submit-wrap'); if (wrap) wrap.classList.remove('open');
+  const itemId = viewerItemId;
+  const item = itemId != null ? items.find(i => i.id === itemId) : null;
+  if (!item || !item.card || !item.card.image) { showToast('No vision to submit'); return; }
+  mayaShowManasiyoPopup();
+}
+// The made-to-order confirm. On confirm, the existing atelier submission runs
+// (writes the client folder / streams to Mana Siyo's Drive via /api/submit).
+function mayaShowManasiyoPopup() {
+  let ov = document.getElementById('maya-manasiyo-popup');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'maya-manasiyo-popup';
+    ov.innerHTML =
+      '<div class="mmp-card" role="dialog" aria-modal="true">' +
+        '<div class="mmp-title">Submit to Mana Siyo?</div>' +
+        '<div class="mmp-body">If you\'d like this made, we\'ll take it from here and email you back a custom quote, what it would cost and how long it would take to make.</div>' +
+        '<button class="mmp-go" id="mmp-go">Request my quote</button>' +
+        '<button class="mmp-later" id="mmp-later">Not now</button>' +
+      '</div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('show'); });
+    ov.querySelector('#mmp-later').addEventListener('click', () => ov.classList.remove('show'));
+    ov.querySelector('#mmp-go').addEventListener('click', () => {
+      ov.classList.remove('show');
+      try { submitFavorite(); } catch (e) { try { showError(String(e && e.message || e)); } catch (_) {} }
+    });
+  }
+  ov.classList.add('show');
 }
 
 // v10.7: extracted from old submitFavorite, runs after the inspo picker
@@ -7965,6 +8225,8 @@ async function toggleAvatarSwitcher() {
   panel.innerHTML = (rows || '<div class="avatar-switch-empty">No saved avatars yet. Set a name and a face, then Save.</div>') +
     '<button class="avatar-switch-row avatar-switch-new" onclick="newAvatar()">+ New avatar</button>';
   panel.style.display = 'block';
+  // v13.82: make sure the freshly opened list is fully visible, not cut at the fold.
+  try { panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (_) {}
 }
 async function switchAvatar(id) {
   const lib = await _loadAvatarLibrary();
@@ -8180,11 +8442,23 @@ const MAYA_PUBLIC_HEADSHOTS = [
 
 async function pickRandomHeadshot() {
   // v0.13: public deploy, fetch directly from /aesthetics/headshots/.
+  // v13.98: the source files are 2MB+ PNGs, and turning one into a full-size
+  // base64 string froze Randomize for everyone but Fromsa on fiber. Downscale
+  // to 640px JPEG the moment it arrives, BEFORE anything paints or persists.
   if (typeof MAYA_IS_PUBLIC !== 'undefined' && MAYA_IS_PUBLIC) {
     try {
       if (!MAYA_PUBLIC_HEADSHOTS.length) { showToast('No headshots configured.'); return null; }
       const pick = MAYA_PUBLIC_HEADSHOTS[Math.floor(Math.random() * MAYA_PUBLIC_HEADSHOTS.length)];
       const blob = await (await fetch('/aesthetics/headshots/' + encodeURIComponent(pick))).blob();
+      try {
+        const bmp = await createImageBitmap(blob);
+        const s = Math.min(1, 640 / Math.max(bmp.width, bmp.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+        c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+        bmp.close && bmp.close();
+        return c.toDataURL('image/jpeg', 0.85);
+      } catch (_) { /* older browser: fall through to the raw read */ }
       return await new Promise((resolve, reject) => {
         const fr = new FileReader();
         fr.onload = () => resolve(fr.result);
@@ -8360,6 +8634,8 @@ function toggleFavorite(itemId) {
     const fb = it.el.querySelector('.fav-btn');
     if (fb) fb.classList.toggle('is-fav', it.card.favorited);
   }
+  // v13.89: keep the drawer Stats favourites count live.
+  try { _renderDrawerStats(); } catch (_) {}
   // v10.9: when a vision card is favorited, fire a one-shot construction
   // dissection via gpt-4.1 vision. Result is cached on card._dissection
   // and shown under the favorite card on hover. Re-renders the favorites
@@ -8389,6 +8665,11 @@ function toggleFavorite(itemId) {
       else communityBoard.unpublish(it);
     }
   } catch (e) { console.warn('[Maya community] heart', e); }
+  // v13.86: unfavoriting never refreshed the Favorites screen, so an un-hearted
+  // piece stayed there. Re-render now so what's unfavorited leaves immediately.
+  if (currentScreen === 2 && typeof _renderFavoritesScroller === 'function') {
+    try { _renderFavoritesScroller(); } catch (_) {}
+  }
   if (typeof _persistSession === 'function') _persistSession();
 }
 
@@ -9854,6 +10135,12 @@ async function _pinRevealButton() {
 // ════════════════════════════════════════════════════════════
 let _pinTab = 'all';
 let _pinBoardName = '';
+// v13.84: Pinterest used to re-fetch on every tab switch. Cache the session so
+// switching Fabrics<->Pinterest is instant, like Fabrics. A manual reconnect or
+// board change still fetches; the wall just doesn't reload for nothing.
+let _pinLoaded = false;
+let _pinStatusOk = false;
+let _pinPicsCache = {};   // boardId||'all' -> rendered pins HTML
 
 function openPinterestDrawer() {
   const d = document.getElementById('pinterest-drawer');
@@ -9861,9 +10148,19 @@ function openPinterestDrawer() {
   d.classList.add('open');
   _pinPicked = new Set();
   _pinSetFoot(false);
+  // v13.84: already loaded this session? keep the wall, don't reload it.
+  const body = document.getElementById('pinterest-drawer-body');
+  if (_pinLoaded && body && body.querySelector('.pin-grid')) {
+    _pinTabsVisible(true);
+    return;
+  }
   _pinBody('<div class="pin-note">Looking at your Pinterest\u2026</div>');
   _pinDrawerBoot();
 }
+// v13.84: force a real re-fetch (used by the refresh affordance and reconnect).
+function _pinReload() { _pinLoaded = false; _pinStatusOk = false; _pinPicsCache = {};
+  _pinBody('<div class="pin-note">Refreshing your Pinterest\u2026</div>'); _pinDrawerBoot(); }
+window._pinReload = _pinReload;
 function closePinterestDrawer() {
   const d = document.getElementById('pinterest-drawer');
   if (d) d.classList.remove('open');
@@ -9882,7 +10179,7 @@ function _pinSetFoot(show) {
   const f = document.getElementById('pin-drawer-foot');
   if (f) f.style.display = show ? 'flex' : 'none';
   const btn = document.getElementById('pin-import-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Bring them in'; }
+  if (btn && !show) { btn.disabled = true; btn.textContent = 'Bring in'; }
 }
 function _pinTabsVisible(show) {
   const t = document.getElementById('pin-tabs');
@@ -9891,6 +10188,8 @@ function _pinTabsVisible(show) {
 
 async function _pinDrawerBoot() {
   _pinTabsVisible(false);
+  // v13.84: status is stable for the session; once connected, skip the re-check.
+  if (_pinStatusOk) { _pinTabsVisible(true); setPinterestTab(_pinTab || 'all'); return; }
   let st;
   try { st = await _pinApi('/api/pinterest/status'); }
   catch (_) {
@@ -9906,6 +10205,7 @@ async function _pinDrawerBoot() {
     return;
   }
   if (!st.connected) return _pinDrawerConnect();
+  _pinStatusOk = true;
   _pinTabsVisible(true);
   setPinterestTab(_pinTab || 'all');
 }
@@ -9999,6 +10299,13 @@ async function _pinDrawerPins(boardId, boardName) {
   _pinPicked = new Set();
   _pinSetFoot(false);
   _pinSub(boardName ? boardName : 'everything you have saved');
+  const key = boardId || 'all';
+  // v13.84: render from the session cache when we have it \u2014 no reload.
+  if (_pinPicsCache[key]) {
+    _pinBody(_pinPicsCache[key]);
+    _pinLoaded = true;
+    return;
+  }
   _pinBody('<div class="pin-note">Loading pictures\u2026</div>');
   let j;
   try {
@@ -10012,11 +10319,15 @@ async function _pinDrawerPins(boardId, boardName) {
     _pinBody('<div class="pin-note">' + (boardId ? 'Nothing on that board yet.' : 'Nothing saved on that account yet.') + '</div>');
     return;
   }
-  _pinBody('<div class="pin-grid pics">' + j.pins.map(p =>
+  const html = '<div class="pin-grid pics">' + j.pins.map(p =>
     '<button class="pin-pic" data-url="' + escapeHtml(p.url) + '" data-alt="' + escapeHtml(p.alt || '') + '"' +
       ' onclick="_pinToggle(this)"><img src="' + _safeImgSrc(p.url) + '" alt="" loading="lazy">' +
-      '<span class="pin-check">&#10003;</span></button>').join('') + '</div>');
-  _pinSetFoot(true);
+      '<span class="pin-check">&#10003;</span></button>').join('') + '</div>';
+  _pinPicsCache[key] = html;
+  _pinLoaded = true;
+  _pinBody(html);
+  // v13.84: the CTA no longer sits at the bottom on load; it floats in only
+  // once pictures are selected (see _pinToggle), so the wall stays edge-to-edge.
 }
 
 function _pinToggle(el) {
@@ -10026,10 +10337,12 @@ function _pinToggle(el) {
     if (_pinPicked.size >= PIN_PICK_MAX) { showToast('Up to ' + PIN_PICK_MAX + '.'); return; }
     _pinPicked.add(url); el.classList.add('picked');
   }
+  // v13.84: the floating "Bring in" surfaces only while something is picked.
+  _pinSetFoot(_pinPicked.size > 0);
   const btn = document.getElementById('pin-import-btn');
   if (btn) {
     btn.disabled = _pinPicked.size === 0;
-    btn.textContent = _pinPicked.size ? 'Bring in ' + _pinPicked.size : 'Bring them in';
+    btn.textContent = _pinPicked.size ? 'Bring in ' + _pinPicked.size : 'Bring in';
   }
 }
 
@@ -10057,8 +10370,10 @@ async function _pinImport() {
     }
   };
   await Promise.all([worker(), worker()]);
+  _pinPicked = new Set();
+  _pinSetFoot(false);
   closePinterestDrawer();
-  if (btn) { btn.disabled = false; btn.textContent = 'Bring them in'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Bring in'; }
   if (landed && !failed) showToast(landed + ' picture' + (landed === 1 ? '' : 's') + ' placed.');
   else if (landed) showToast(landed + ' placed, ' + failed + ' did not arrive.');
   else showError('Those pictures could not be brought in.');
@@ -11482,9 +11797,9 @@ function renderViewerNotes(item) {
                   fabric: 'rgba(94,234,212,0.85)', era: 'rgba(251,191,36,0.85)',
                   designer: 'rgba(249,168,212,0.85)' };
     const dot = (t) => '<span class="vn-dot" style="background:' + (DOT[t] || 'rgba(238,242,255,0.5)') + '"></span>';
-    // v13.44: the attributes LIVE here now. Each value is a pill with its own
-    // x, crossed out the same way the old Attributes row worked: a crossed
-    // pill is excluded from the next Visualize.
+    // v13.44/91: the notes live on the inspo screen only (hidden in favorites),
+    // where each value is an exclude-pill: a crossed pill drops from the next
+    // Visualize.
     const body = [...byTag.entries()]
       .filter(([, list]) => list.length)
       .sort((a, b) => rank(a[0]) - rank(b[0]))
@@ -11743,6 +12058,11 @@ async function callOpenAIImageEdit(prevDataUrl, prompt, size, quality, opts) {
   }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
+    // v13.89: free-trial ceiling on the edit path too.
+    if (res.status === 402 || err.error === 'trial_exhausted') {
+      try { mayaShowCreditsPopup(err); } catch (_) {}
+      const e2 = new Error('trial_exhausted'); e2.code = 'trial_exhausted'; throw e2;
+    }
     throw new Error(err.error?.message || ('Image edit error: ' + res.status));
   }
   const data = await res.json();
@@ -11781,6 +12101,11 @@ async function callOpenAIImage(prompt, size, quality, opts) {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
+    // v13.89: free-trial ceiling. Show the upgrade popup, not a raw error toast.
+    if (res.status === 402 || err.error === 'trial_exhausted') {
+      try { mayaShowCreditsPopup(err); } catch (_) {}
+      const e2 = new Error('trial_exhausted'); e2.code = 'trial_exhausted'; throw e2;
+    }
     throw new Error(err.error?.message || ('Image error: ' + res.status));
   }
   const data = await res.json();
@@ -12579,7 +12904,12 @@ function renderFabricsGrid(opts = {}) {
                  'aria-label="Fabric name" />' +
           '<div class="fabric-spec">' +
             (f.analyzed
-              ? [f.color, f.weave, f.weight].filter(Boolean).map(escapeHtml).join('<span class="dot">·</span>')
+              // v13.83: don't repeat words already in the name ("Burgundy Lace"
+              // then "burgundy · lace"). Drop any spec token the name covers.
+              ? (() => { const nm = String(f.name || '').toLowerCase();
+                  return [f.color, f.weave, f.weight].filter(Boolean)
+                    .filter(t => !nm.includes(String(t).toLowerCase()))
+                    .map(escapeHtml).join('<span class="dot">·</span>'); })()
               : '<span class="fabric-analyzing">Maya is reading the swatch…</span>'
             ) +
           '</div>' +
@@ -13760,7 +14090,10 @@ async function _persistNow(flush) {
     // No project open yet. The moment there is real content, open one so the
     // work is in the cloud from its first second. It gets its real name later,
     // when the designer presses Save.
-    const hasContent = (Array.isArray(items) && items.length) || lastSummary || currentClientName;
+    // v13.85: an avatar identity alone (lastSummary set by switching avatar, with
+    // an empty board) is NOT content — it was spawning an empty project on every
+    // avatar switch. Only a populated board or a named project opens a bin.
+    const hasContent = (Array.isArray(items) && items.length) || currentClientName;
     if (!hasContent || _creatingBin) return;
     _creatingBin = true;
     try { await projectStore.createAuto(); }
@@ -15285,6 +15618,15 @@ async function loadSavedSessionById(id) {
 
 async function deleteSavedSessionRow(id) {
   if (!confirm('Delete this project? This cannot be undone.')) return;
+  // v13.86: the cloud delete is async and used to leave the row on screen until
+  // it finished — so a slow connection made it look like nothing happened, and
+  // the next click deleted a DIFFERENT project. Remove the row the instant it is
+  // confirmed; if the delete fails, the re-render at the end brings it back.
+  try {
+    const sel = (window.CSS && CSS.escape) ? CSS.escape(id) : id;
+    const row = document.querySelector('#drawer-sessions-list .session-item[data-id="' + sel + '"]');
+    if (row) row.remove();
+  } catch (_) {}
   try {
     const res = await projectStore.remove(id);
     showToast(res && res.cleanupOk
@@ -16421,33 +16763,30 @@ loadFolderHandle().then(h => { if (h) folderHandle = h; }).catch(()=>{});
 
 </script>
 <script>
-// ═══ v13.62 PLAYGROUND: the filing cabinet. The three circles hold ONE
-// folder and the open tab's panel is rendered inside it, so the tabs never
-// leave and nothing needs a Back. Nothing in the shared app code changed:
-// this block moves the existing panels into the folder and wraps the
-// functions by name.
+// v13.71: approved filing-cabinet controller, promoted from Playground.
 (function () {
   try {
-    // measurements: the app's own avatar body and its Randomize/Save row.
     const host = document.getElementById('pg-meas-host');
     const body = document.getElementById('avatar-body');
     const actions = document.querySelector('#drawer-avatar .drawer-actions-bottom');
     if (host && body) host.appendChild(body);
+    // v13.75: Randomize joins Replace and Remove in the avatar row; Save stays
+    // with the measurements it saves.
+    const rnd = actions && actions.querySelector('button[onclick="randomizeAvatar()"]');
+    const avActions = document.querySelector('#pg-avatar-row .pg-avatar-actions');
+    if (rnd && avActions) avActions.insertBefore(rnd, avActions.firstChild);
     if (host && actions) host.appendChild(actions);
     const av = document.getElementById('drawer-avatar');
     if (av) av.style.display = 'none';
-    // the fabrics and Pinterest panels move WHOLE into their tab's pane, so
-    // every style and every render function still finds what it expects.
     const fab = document.getElementById('fabrics-drawer');
     const fabPane = document.getElementById('pg-pane-fabrics');
     if (fab && fabPane) fabPane.appendChild(fab);
     const pin = document.getElementById('pinterest-drawer');
     const pinPane = document.getElementById('pg-pane-pinterest');
     if (pin && pinPane) pinPane.appendChild(pin);
-  } catch (e) { console.warn('[pg cabinet] mount', e); }
+  } catch (e) { console.warn('[cabinet] mount', e); }
 })();
 
-// Which folder the circles are holding.
 function pgShow(which) {
   ['avatar', 'fabrics', 'pinterest'].forEach(k => {
     const pane = document.getElementById('pg-pane-' + k);
@@ -16455,8 +16794,97 @@ function pgShow(which) {
     const tab = document.getElementById('pg-tab-' + k);
     if (tab) tab.classList.toggle('on', k === which);
   });
+  // v13.75: name the visible tab in the dead space beside the circles.
+  const title = document.getElementById('pg-tabtitle');
+  if (title) {
+    // v13.89: the top label reads "Users" — the account/Google-ID header. The
+    // project list moved to the "Projects" pill beside the name, so the title is
+    // now a plain label, not the projects opener.
+    title.innerHTML = which === 'pinterest' ? 'Pinterest' : which === 'fabrics' ? 'Fabrics' : 'Users';
+    title.classList.remove('clickable');
+    title.onclick = null;
+  }
+  // v13.89: refresh the drawer stats whenever the avatar pane is shown. Paint
+  // the local counts at once, then pull fresh credits and repaint.
+  if (which === 'avatar') {
+    try { _renderDrawerStats(); } catch (_) {}
+    try { _refreshUsage().then(() => { try { _renderDrawerStats(); } catch (_) {} }); } catch (_) {}
+  }
 }
+// v13.89: the Stats fold — trial credits gauge + four tiles. Cards, images and
+// favourites come from the local `items`; credits (dollars left of the $2 trial)
+// come from /api/usage, with the full $2 shown until the server answers.
+let _mayaUsage = { spentUsd: 0, capUsd: 2, images: 0, ok: false };
+async function _refreshUsage() {
+  try {
+    const key = (typeof getApiKey === 'function') ? getApiKey() : '';
+    if (!key) return;
+    const r = await fetch('/api/usage', { headers: { 'Authorization': 'Bearer ' + key } });
+    if (!r.ok) return;
+    const j = await r.json();
+    if (j && typeof j.capUsd === 'number') {
+      _mayaUsage = { spentUsd: Number(j.spentUsd) || 0, capUsd: Number(j.capUsd) || 2,
+                     images: Number(j.images) || 0, ok: true };
+    }
+  } catch (_) {}
+}
+function _renderDrawerStats() {
+  const list = (typeof items !== 'undefined' && Array.isArray(items)) ? items : (window.items || []);
+  const cards = list.length;
+  const imagesLocal = list.filter(i => i && i.card && i.card.image).length;
+  const favs = list.filter(i => i && i.card && i.card.favorited && i.card.image).length;
+  const cap = _mayaUsage.capUsd || 2;
+  const spent = Math.min(cap, Math.max(0, _mayaUsage.spentUsd || 0));
+  const left = Math.max(0, cap - spent);
+  const frac = cap > 0 ? left / cap : 0;
+  const images = _mayaUsage.ok ? _mayaUsage.images : imagesLocal;
+  const C = 326.7;
+  const fill = document.getElementById('pg-gauge-fill');
+  if (fill) {
+    fill.style.strokeDashoffset = String(C * (1 - frac));
+    fill.classList.toggle('low', frac <= 0.2);
+  }
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const money = '$' + left.toFixed(2);
+  set('pg-gauge-value', money);
+  set('pg-gauge-cap', 'left of $' + cap.toFixed(0));
+  set('pg-stat-dollars', money);
+  set('pg-stat-cards', String(cards));
+  set('pg-stat-favs', String(favs));
+  set('pg-stat-images', String(images));
+}
+// v13.89: the out-of-credits popup. Shown when an image call comes back 402
+// trial_exhausted, and previewable from the "Try popup" link in the Stats fold.
+// Payments aren't wired yet — the $5 button is a labelled placeholder.
+function mayaShowCreditsPopup(info) {
+  info = info || {};
+  let ov = document.getElementById('maya-credits-popup');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'maya-credits-popup';
+    ov.innerHTML =
+      '<div class="mcp-card" role="dialog" aria-modal="true">' +
+        '<div class="mcp-title">You\'re out of credits</div>' +
+        '<div class="mcp-body">You\'ve used your $2 of free renders. Top up to keep visualizing, about 100 more renders for $5.</div>' +
+        '<button class="mcp-upgrade" id="mcp-upgrade">Get $5 more · ~13 renders</button>' +
+        '<button class="mcp-later" id="mcp-later">Not now</button>' +
+      '</div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('show'); });
+    ov.querySelector('#mcp-later').addEventListener('click', () => ov.classList.remove('show'));
+    ov.querySelector('#mcp-upgrade').addEventListener('click', () => {
+      ov.classList.remove('show');
+      try { showToast('Payments are coming soon. You\'ll be able to top up for $5.'); } catch (_) {}
+    });
+  }
+  ov.classList.add('show');
+}
+// Dev preview trigger, callable from the Stats fold's "Try popup" link or ?trypopup.
+function mayaTryCreditsPopup() { mayaShowCreditsPopup({ preview: true }); }
+try { if (/[?&]trypopup\b/.test(location.search)) setTimeout(mayaTryCreditsPopup, 400); } catch (_) {}
 function pgTab(which) {
+  // v13.75: remember the tab Fromsa chose, so reopening the drawer returns here.
+  window._pgLastTab = which;
   if (which === 'avatar') {
     try { if (typeof closeFabricsDrawer === 'function') closeFabricsDrawer(); } catch (_) {}
     try { if (typeof closePinterestDrawer === 'function') closePinterestDrawer(); } catch (_) {}
@@ -16470,8 +16898,6 @@ function pgTab(which) {
     openPinterestDrawer();
   }
 }
-// Opening either panel anywhere in the app (the upload chooser reaches for
-// Pinterest, for one) opens the drawer on that tab.
 if (typeof openFabricsDrawer === 'function') {
   const _pgOF = openFabricsDrawer;
   openFabricsDrawer = function () {
@@ -16490,7 +16916,6 @@ if (typeof openPinterestDrawer === 'function') {
     return out;
   };
 }
-// Closing a panel hands the folder back to Avatar.
 if (typeof closeFabricsDrawer === 'function') {
   const _pgCF = closeFabricsDrawer;
   closeFabricsDrawer = function () { _pgCF.apply(this, arguments); pgShow('avatar'); };
@@ -16499,7 +16924,6 @@ if (typeof closePinterestDrawer === 'function') {
   const _pgCP = closePinterestDrawer;
   closePinterestDrawer = function () { _pgCP.apply(this, arguments); pgShow('avatar'); };
 }
-// The avatar view IS the folder now: opening it opens the measurements fold.
 openAvatarSubMenu = function () {
   toggleNotesDrawer(true);
   try { _renderAvatarBody(); } catch (_) {}
@@ -16520,7 +16944,6 @@ function pgRemoveFace() {
   try { if (typeof clearFacePhoto === 'function') clearFacePhoto(); } catch (_) {}
   try { refreshDrawerClientName(); } catch (_) {}
 }
-// The avatar circle on the tab row mirrors the big face.
 if (typeof refreshDrawerClientName === 'function') {
   const _pgRefresh = refreshDrawerClientName;
   refreshDrawerClientName = function () {
@@ -16535,16 +16958,12 @@ if (typeof refreshDrawerClientName === 'function') {
     } catch (_) {}
   };
 }
-// The pill on top opens the list that drops in below the avatar.
 function pgProjects() {
   toggleSessionsDropdown();
   const list = document.getElementById('drawer-sessions-list');
   if (list && list.style.display !== 'none') list.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
-// The pill on top carries the OPEN project's name.
 function pgUpdatePill() {
-  // v13.64: the pill just says Projects, per Fromsa; the open project shows
-  // as the active row in the list itself.
   const pill = document.getElementById('pg-project-pill');
   if (pill) pill.textContent = 'Projects';
 }
@@ -16555,7 +16974,27 @@ if (typeof _renderSessionsDropdown === 'function') {
     pgUpdatePill();
   };
 }
-// Opening the drawer lands on the Avatar tab, freshly painted.
+let _pgRestoring = false;
+// v13.75/78: reopen on the last tab Fromsa used, not always Avatar. If the
+// Fabrics or Pinterest pane is still shown, leave it; otherwise restore whatever
+// tab was last chosen. Called from BOTH the hamburger (toggleNotesDrawer) and
+// the swipe-open scroll handler, so the memory holds either way.
+function _pgRestoreLastTab() {
+  if (_pgRestoring) return;
+  const paneShown = document.querySelector('#pg-pane-fabrics[style*="flex"], #pg-pane-pinterest[style*="flex"]');
+  if (paneShown) return;
+  const want = window._pgLastTab || 'avatar';
+  if (want === 'fabrics' || want === 'pinterest') {
+    _pgRestoring = true;
+    try { (want === 'fabrics' ? openFabricsDrawer : openPinterestDrawer)(); } catch (_) {}
+    _pgRestoring = false;
+  } else {
+    pgShow('avatar');
+    try { _renderAvatarBody(); } catch (_) {}
+    try { refreshDrawerClientName(); } catch (_) {}
+    try { _renderSessionsDropdown(); } catch (_) {}
+  }
+}
 if (typeof toggleNotesDrawer === 'function') {
   const _pgToggle = toggleNotesDrawer;
   toggleNotesDrawer = function (force) {
@@ -16563,14 +17002,141 @@ if (typeof toggleNotesDrawer === 'function') {
     const wasClosed = hs ? hs.scrollLeft < 10 : true;
     _pgToggle.apply(this, arguments);
     const opening = force === true || (force === undefined && wasClosed);
-    if (opening && !document.querySelector('#pg-pane-fabrics[style*="flex"], #pg-pane-pinterest[style*="flex"]')) {
-      pgShow('avatar');
-      try { _renderAvatarBody(); } catch (_) {}
-      try { refreshDrawerClientName(); } catch (_) {}
-      try { _renderSessionsDropdown(); } catch (_) {}
-    }
+    if (opening) _pgRestoreLastTab();
   };
 }
+</script>
+
+<style>
+  /* PLAYGROUND: backgrounds fold */
+  #pg-bg-body { padding: 10px 0 4px; text-align: center; }
+  #pg-bg-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .pg-bg-thumb { width: 64px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);
+    background-size: cover; background-position: center; cursor: pointer; padding: 0;
+    transition: border-color 0.2s, transform 0.2s; }
+  .pg-bg-thumb:hover { transform: scale(1.05); }
+  .pg-bg-thumb.on { border-color: rgba(169,201,255,0.9); box-shadow: 0 0 0 1px rgba(169,201,255,0.4); }
+  #pg-bg-name { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 13px;
+    color: rgba(238,242,255,0.75); margin: 7px 0 9px; }
+  .pg-bg-gen { font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(238,242,255,0.8); background: rgba(255,255,255,0.04); border: 0.5px solid rgba(255,255,255,0.25);
+    border-radius: 100px; padding: 6px 14px; cursor: pointer; transition: all 0.2s; }
+  .pg-bg-gen:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
+  .pg-bg-gen[disabled] { opacity: 0.5; cursor: default; }
+  /* PLAYGROUND: zoomed-out survey mode */
+  #screen-inspo { transition: transform 0.18s ease-out; will-change: transform; }
+  body.pg-zoomed #screen-inspo * { pointer-events: none; }
+  body.pg-zoomed #screen-inspo { cursor: zoom-in; }
+</style>
+<script>
+// ═══ PLAYGROUND ONLY: pinch / scroll zoom on the moodboard. Trackpad pinch
+// (ctrl+wheel), plain mouse wheel, or a two-finger touch pinch zooms the whole
+// canvas out to 10%; tapping the MAYA logo zooms back to 100%. While zoomed the
+// cards are a survey, not a workbench: interactions come back at 100%. ═══
+(function () {
+  let z = 1;
+  const MINZ = 0.1;
+  const board = () => document.getElementById('screen-inspo');
+  function apply() {
+    const b = board(); if (!b) return;
+    b.style.transform = z < 0.999 ? 'scale(' + z.toFixed(3) + ')' : '';
+    b.style.transformOrigin = '50% 42%';
+    document.body.classList.toggle('pg-zoomed', z < 0.999);
+  }
+  function onInspo() {
+    const host = document.getElementById('screens'); if (!host) return false;
+    const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    const n = Math.round(host.scrollTop / vh);
+    return n === 1;
+  }
+  window.pgZoomReset = function () { z = 1; apply(); };
+  document.addEventListener('wheel', (e) => {
+    if (!onInspo()) return;
+    if (e.target && e.target.closest && e.target.closest('#notes-drawer, .hpane-drawer, #feedback-modal, #lead-inv-modal')) return;
+    const zoomOut = e.deltaY > 0, zoomIn = e.deltaY < 0;
+    if ((zoomOut && z > MINZ) || (zoomIn && z < 1)) {
+      e.preventDefault();
+      const step = e.ctrlKey ? 0.035 : 0.06;
+      z = Math.min(1, Math.max(MINZ, z + (zoomIn ? step : -step) * (1 + Math.min(3, Math.abs(e.deltaY) / 60))));
+      apply();
+    }
+  }, { passive: false });
+  let pinchD = 0;
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2 && onInspo()) {
+      pinchD = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    }
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && pinchD && onInspo()) {
+      const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      const next = Math.min(1, Math.max(MINZ, z * (d / pinchD)));
+      if (Math.abs(next - z) > 0.004) { e.preventDefault(); z = next; pinchD = d; apply(); }
+    }
+  }, { passive: false });
+  document.addEventListener('touchend', () => { pinchD = 0; }, { passive: true });
+  // the logo zooms back in (and keeps its refresh when already at 100%)
+  document.addEventListener('click', (e) => {
+    const logo = e.target && e.target.closest && e.target.closest('.maya-logo-mark, #top-left-brand');
+    if (logo && z < 0.999) { e.preventDefault(); e.stopPropagation(); pgZoomReset(); }
+  }, true);
+})();
+// ═══ PLAYGROUND ONLY: personal backgrounds. ═══
+(function () {
+  const KEY = 'maya_pg_background';
+  function setBg(url, name, thumbEl) {
+    document.body.style.background = "#000 url('" + url + "') center/cover no-repeat fixed";
+    const label = document.getElementById('pg-bg-name'); if (label) label.textContent = name;
+    document.querySelectorAll('.pg-bg-thumb').forEach(t => t.classList.remove('on'));
+    if (thumbEl) thumbEl.classList.add('on');
+  }
+  window.pgApplyBackground = function (which, url, name) {
+    if (which === 'star') {
+      setBg('/aesthetics/ui/birth-of-a-star.png', 'Birth of a Star', document.getElementById('pg-bg-star'));
+      try { localStorage.removeItem(KEY); } catch (_) {}
+    } else if (url) {
+      setBg(url, name || 'My background', event && event.target);
+      try { localStorage.setItem(KEY, JSON.stringify({ url, name: name || 'My background' })); } catch (_) {}
+    }
+  };
+  window.pgGenerateBackground = async function () {
+    const btn = document.getElementById('pg-bg-gen'); if (!btn || btn.disabled) return;
+    btn.disabled = true; const was = btn.textContent; btn.textContent = 'Generating…';
+    try {
+      const dataUrl = await callOpenAIImage(
+        'A breathtaking deep-space vista: a luminous newborn star wrapped in drifting nebula veils, vast dark sky, cinematic, no text, no people. A quiet cosmic backdrop for a fashion app.',
+        '1536x1024', 'low', { output_format: 'jpeg' });
+      const row = document.getElementById('pg-bg-row');
+      if (row && dataUrl) {
+        const t = document.createElement('button');
+        t.className = 'pg-bg-thumb';
+        t.title = 'Tap to make this your background';
+        t.style.backgroundImage = "url('" + dataUrl + "')";
+        t.onclick = function () { pgApplyBackground('mine', dataUrl, 'My background'); };
+        row.appendChild(t);
+        if (typeof showToast === 'function') showToast('New background ready. Tap it to apply.');
+      }
+    } catch (e) {
+      if (typeof showToast === 'function' && (!e || e.code !== 'trial_exhausted')) showToast('Could not generate a background.');
+    }
+    btn.disabled = false; btn.textContent = was;
+  };
+  // restore a saved personal background on load
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (saved && saved.url) {
+      const row = document.getElementById('pg-bg-row');
+      if (row) {
+        const t = document.createElement('button');
+        t.className = 'pg-bg-thumb';
+        t.style.backgroundImage = "url('" + saved.url + "')";
+        t.onclick = function () { pgApplyBackground('mine', saved.url, saved.name); };
+        row.appendChild(t);
+        setBg(saved.url, saved.name || 'My background', t);
+      }
+    }
+  } catch (_) {}
+})();
 </script>
 </body>
 </html>

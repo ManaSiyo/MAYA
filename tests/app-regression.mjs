@@ -547,8 +547,9 @@ ok('v13.74: the admin nav is just MANA SIYO and MAYA, Marketing removed',
   !MAP_SOURCE.includes('href="/marketing.html"') &&
   MAP_SOURCE.includes('>MANA SIYO</b>') &&
   MAP_SOURCE.includes('>MAYA</b>'));
-ok('v13.74: the hamburger anchors to the widened drawer, not overlapping it',
-  MAP_SOURCE.includes('body.drawer-open .top-btn.hamburger{transform:translateX(-356px)}'));
+ok('v13.74/v13.98: the Admin hamburger is glued to the drawer edge (per-frame transform)',
+  MAP_SOURCE.includes("hb.style.transform = 'translateX(' + (-Math.max(0, hs.scrollLeft - 18))") &&
+  !MAP_SOURCE.includes('translateX(-356px)'));
 ok('v13.74: Maya can pull the drawer by voice',
   SERVER_SOURCE.includes("name: 'show_drawer'") &&
   MAP_SOURCE.includes("if(name==='show_drawer')"));
@@ -959,7 +960,7 @@ ok('the Admin drawer is the second pane of the scroll-snap host, full height',
 // outside the drawer closes it.
 ok('the hamburger slides out with the drawer on every page',
   INDEX_SOURCE.includes("hb.style.transform = 'translateX(") &&
-  MAP_SOURCE.includes('body.drawer-open .top-btn.hamburger{transform:translateX(') &&
+  MAP_SOURCE.includes("hb.style.transform = 'translateX(") &&
   BACKEND_SOURCE.includes('body.drawer-open #top-actions .top-btn.hamburger { transform: translateX(') &&
   // v13.61: ops computes the offset live instead of a fixed translateX
   (!OPS_SOURCE || OPS_SOURCE.includes('function _placeHamburger(')));
@@ -1289,8 +1290,8 @@ ok('the marketing drawer slides and the hamburger rides with it, one family',
   MKT_SOURCE.includes('cubic-bezier(0.16,1,0.3,1)') &&
   MKT_SOURCE.includes('body.drawer-open .top-btn.hamburger{transform:translateX(-290px)}') &&
   MKT_SOURCE.includes('function toggleDrawer(') &&
-  // v13.74: Admin's drawer widened to 360, so its hamburger offset is -356.
-  MAP_SOURCE.includes('translateX(-356px)'));
+  // v13.98: Admin's hamburger is glued per-frame now, no fixed offset.
+  MAP_SOURCE.includes("hs.addEventListener('scroll'"));
 ok('what they read is gone and sources that read as sites open as sites',
   !MKT_SOURCE.includes('what they read') &&
   !MKT_SOURCE.includes('pages-table') &&
@@ -1379,9 +1380,9 @@ ok('the shipped cabinet moves live panels inside the folder without duplicating 
     source.includes('id="pg-meas"') &&
     source.includes("host.appendChild(body)") &&
     source.includes('pgUpdatePill')) &&
-  // v13.75: Playground keeps the base cabinet; the live app restored the avatar
-  // dropdown, so the force-hide only remains in Playground now.
-  PLAYGROUND_SOURCE.includes('#drawer-avatar-switcher { display: none !important; }') &&
+  // v13.98: the Playground is a live copy of the app now, avatar dropdown and
+  // all, so both sources carry the same working switcher.
+  PLAYGROUND_SOURCE.includes('id="drawer-avatar-switcher"') &&
   INDEX_SOURCE.includes("pgShow('fabrics')") &&
   INDEX_SOURCE.includes("pgShow('pinterest')") &&
   INDEX_SOURCE.includes('try { toggleNotesDrawer(true);'));
@@ -1507,7 +1508,7 @@ ok('each lead carries a CTA column with the recommended move',
   MKT_SOURCE.includes('class="lead-rec"') &&
   MKT_SOURCE.includes("'Email now &#183; first touch'"));
 ok('the cabinet consumes the drawer: circles at the bezel, panes edge to edge, Pinterest in the middle',
-  PLAYGROUND_SOURCE.includes('the folder consumes the whole drawer') &&
+  PLAYGROUND_SOURCE.includes('>Playground</div>') &&
   [PLAYGROUND_SOURCE, INDEX_SOURCE].every(source =>
     /pg-folder \{[^}]*border: none/.test(source) &&
     source.indexOf('id="pg-tab-pinterest"') < source.indexOf('id="pg-tab-fabrics"') &&
@@ -1831,11 +1832,12 @@ ok('v13.93: the server persists the new CRM columns (company, quote, both invoic
 // ── v13.94 ──
 ok('v13.94: the drawer section headings are centered',
   /#drawer h3\{[^}]*text-align:center/.test(MAP_SOURCE));
-ok('v13.94: hovering ADMIN drops its rooms + the sheet beneath the wordmark',
+ok('v13.94/v13.98: hovering ADMIN drops JUST the sheet beneath the wordmark, close and clickable',
   MAP_SOURCE.includes('class="brand-chips"') &&
-  MAP_SOURCE.includes('>operations room</a>') &&
-  MAP_SOURCE.includes('>playground</a>') &&
   MAP_SOURCE.includes('>the sheet</a>') &&
+  !/brand-chips">\s*<a[^>]*>operations room/.test(MAP_SOURCE) &&
+  /#top-left-brand \.brand-chips\{[^}]*padding-top:4px/.test(MAP_SOURCE) &&
+  /transition:opacity \.18s ease \.9s/.test(MAP_SOURCE) &&
   /#top-left-brand:hover \.brand-chips/.test(MAP_SOURCE));
 ok('v13.94: Company/Title moved under the name as a signature line; columns centered; no delete X in the row',
   MAP_SOURCE.includes("cell(i, x, 'company', x.company || x.tier || '', 'lead-sig-edit')") &&
@@ -1844,11 +1846,13 @@ ok('v13.94: Company/Title moved under the name as a signature line; columns cent
   !MAP_SOURCE.includes('class="lead-cta lead-del" onclick="deleteLeadRow'));
 
 // ── v13.95 ──
-ok('v13.95: the drawer floor is a circular logo pushed lower, with a small MAYA on/off pill under it',
+ok('v13.95/v13.98: the drawer floor is a smaller tighter circle, lower, with the Hey Maya toggle at its right',
   MAP_SOURCE.includes('/aesthetics/ui/logo-circle.png') &&
-  /#voice-dock\{[^}]*margin-bottom:-16px/.test(MAP_SOURCE) &&
+  /#voice-dock\{[^}]*padding-top:38px/.test(MAP_SOURCE) &&
+  MAP_SOURCE.includes('class="voice-row"') &&
   MAP_SOURCE.includes('id="maya-toggle"') &&
-  MAP_SOURCE.includes("mt.classList.toggle('live', on)"));
+  MAP_SOURCE.includes('onclick="toggleWakeWord()"') &&
+  MAP_SOURCE.includes("mtw.textContent=_wakeWantOn?'Turn off Hey Maya':'Turn on Hey Maya'"));
 ok('v13.95: Last Quote defaults to the tier price and reads faint until set by hand',
   MAP_SOURCE.includes('function _quoteCell') &&
   MAP_SOURCE.includes('function _leadTierNum') &&
@@ -1894,6 +1898,38 @@ ok('v13.96: a trial epoch resets everyone now and on every release',
   SERVER_SOURCE.includes('const TRIAL_EPOCH = String(process.env.TRIAL_EPOCH') &&
   SERVER_SOURCE.includes("String(j.epoch || '') === TRIAL_EPOCH") &&
   SERVER_SOURCE.includes('epoch: rec.epoch || TRIAL_EPOCH'));
+
+// ── v13.98 ──
+ok('v13.98: fabric captions are half-height and centered',
+  /\.fabric-meta \{ padding: 4px 8px 6px; text-align: center; \}/.test(INDEX_SOURCE) &&
+  INDEX_SOURCE.includes('outline: none; padding: 0; text-align: center;'));
+ok('v13.98: the Projects pill text is truly centered (caret absolute)',
+  INDEX_SOURCE.includes('.pg-project-beside .pg-project-beside-caret { position: absolute; right: 9px'));
+ok('v13.98: Randomize downscales the 2MB headshots at fetch, before anything paints',
+  INDEX_SOURCE.includes('createImageBitmap(blob)') &&
+  INDEX_SOURCE.includes("c.toDataURL('image/jpeg', 0.85)"));
+ok('v13.98: the credits copy carries no dashes and the honest render count',
+  INDEX_SOURCE.includes('about 100 more renders for $5') &&
+  !INDEX_SOURCE.includes('visualizing —'));
+ok('v13.98: the Playground is a live copy of the app, landing on the community wall',
+  PLAYGROUND_SOURCE.includes('>Playground</div>') &&
+  PLAYGROUND_SOURCE.includes('the first screen is the community wall') &&
+  PLAYGROUND_SOURCE.includes('host.scrollTop = 0;'));
+ok('v13.98: Playground pinch/scroll zoom to 10%, the logo zooms back',
+  PLAYGROUND_SOURCE.includes('const MINZ = 0.1') &&
+  PLAYGROUND_SOURCE.includes('window.pgZoomReset') &&
+  PLAYGROUND_SOURCE.includes("document.addEventListener('wheel'") &&
+  PLAYGROUND_SOURCE.includes('body.pg-zoomed #screen-inspo'));
+ok('v13.98: Playground backgrounds: Birth of a Star named, generate without auto-swap',
+  PLAYGROUND_SOURCE.includes('id="pg-bg-fold"') &&
+  PLAYGROUND_SOURCE.includes('>Birth of a Star<') &&
+  PLAYGROUND_SOURCE.includes('window.pgGenerateBackground') &&
+  PLAYGROUND_SOURCE.includes('Tap it to apply'));
+ok('v13.98: one click creates a real Wix pay link server-side, the skill recipe',
+  SERVER_SOURCE.includes("app.post('/api/admin/invoice-create'") &&
+  SERVER_SOURCE.includes("INVOICE_TAX_GROUP = '13d21c63-b5ec-5912-8397-c3a5ddb27a97'") &&
+  SERVER_SOURCE.includes('paymentsLimit: 1') &&
+  SERVER_SOURCE.includes('INVOICE_FALLBACK_IMAGE'));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

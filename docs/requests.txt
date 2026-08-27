@@ -1357,3 +1357,37 @@ jejuan.narcisse.art). "4" is correct; non-signed-in visitors are the Wix count.
     inspiration version-0 swipe; a dedicated "what's new" popup modal (the
     changelog is current now, but not shown as a popup yet); Maya feature-request
     log; per-user backgrounds.
+
+── v13.98 (Claude): admin polish batch + playground overhaul, round 1 ────────
+[x] ADMIN hover: just "the sheet", vertically closer (contiguous hover zone),
+    lingers ~0.9s so it can be clicked. (The MAYA door card keeps its own rooms.)
+[x] Admin drawer full-bleed like MAYA's (no inset glass card); hamburger glued
+    to the drawer edge per frame, the frontend's exact mechanism.
+[x] Drawer floor: logo smaller + tighter circle crop + lower; divider lower; the
+    pill sits at the logo's RIGHT and is the HEY MAYA wake toggle, reading
+    "Turn on Hey Maya" / "Turn off Hey Maya" (off by default, as it already was).
+    The logo itself stays the live voice line.
+[x] One-click invoice: /api/admin/invoice-create builds a real Wix pay link with
+    the invoicing skill's exact recipe (service tax group, name-first title,
+    single use, not shippable, logo fallback image, image verified in the
+    response). The composer prefills name/price/description and the link saves
+    to the lead + rides the next email.
+[x] Frontend: Projects pill text truly centered (caret absolute); fabric captions
+    half height, everything centered; Randomize fixed for everyone (the 2MB
+    headshot PNGs now downscale to 640px JPEG at fetch, before painting or the
+    face analysis); credits copy carries no dashes and says ~100 renders for $5.
+[x] No dashes anywhere in MAYA UI copy (swept admin + frontend visible strings).
+[x] PLAYGROUND round 1: it is now a live copy of the current app (all current
+    features incl. Stats, Measurements, avatar dropdown), PLUS:
+    - pinch/scroll zoom of the moodboard down to 10% (survey mode; cards pause
+      interaction while zoomed; tapping the MAYA logo zooms back to 100%)
+    - opens on the COMMUNITY WALL, favorites below
+    - Background fold in the drawer: "Birth of a Star" named as the house
+      background + "Generate a new background" pill; generating never auto-swaps,
+      tap the new thumb to apply; personal choice persists per browser.
+[ ] PLAYGROUND round 2 (queued): the inspiration shown INSIDE the generated card
+    (small circle like the fabric preview) + clickable to expand the original as
+    version 0 with swipe; card centered in the viewer; right-hand panel with
+    GPT-written garment notes (era, design style, looks; bullets + paragraphs).
+[ ] Queued still: username editable when it shows a date; per-user background
+    folders server-side (the playground version is per-browser for now).

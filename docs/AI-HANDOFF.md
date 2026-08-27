@@ -73,6 +73,48 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v13.98 (Claude): admin polish + one-click invoices + Playground overhaul r1
+
+`backend/status.html`, `docs/server/server.js`, `frontend/index.html`,
+`playground/index.html`:
+
+- **ADMIN hover = the sheet only**, contiguous hover zone (padding not margin),
+  ~0.9s linger. The MAYA door card keeps its separate room chips.
+- **Admin drawer full-bleed** (`#drawer{inset:0;padding:74px 20px 20px}`, no
+  border/radius); **hamburger glued per-frame** to the drawer edge (scroll
+  listener writes the transform, old `translateX(-356px)` CSS removed).
+- **Drawer floor**: 56px circle with a tighter crop (64px img, overflow hidden),
+  dock lower (`padding-top:38px`); the pill at the logo's right is the **Hey
+  Maya wake toggle** (`toggleWakeWord`, label via `_wakeLabel`, off by default);
+  `_voiceLive` no longer touches it.
+- **One-click invoice**: `POST /api/admin/invoice-create` (admin-only) creates a
+  Wix Payment Link per the invoicing skill: tax group
+  `13d21c63…`, name-first ≤50-char title, ≤600-char description, `paymentsLimit:1`,
+  `shippable:false`, logo fallback image (all four fields), image verified from
+  the create response, link auto-saved onto the lead (`paylink`). The composer
+  (`leadInvoice`) prefills name/price/description in the house shape.
+- **Frontend**: Projects pill centered (caret absolute right); fabric captions
+  half-height + centered; **Randomize fixed for everyone** (headshots are 2MB+
+  PNGs; now downscaled to 640px JPEG via createImageBitmap at fetch, before
+  paint/analysis); credits copy: no dashes, "about 100 more renders for $5"
+  (matches $0.05/render); dash sweep across visible admin strings.
+- **PLAYGROUND round 1**: `playground/index.html` is a fresh copy of the current
+  app + amber badge, PLUS (all playground-only, appended before `</body>`):
+  wall-first landing (`host.scrollTop = 0`), pinch/scroll **zoom to 10%**
+  (`pgZoomReset`, wheel + ctrl+wheel + 2-finger touch; `body.pg-zoomed` pauses
+  card pointer-events; logo click restores), **Background fold** (`pg-bg-fold`:
+  Birth of a Star + `pgGenerateBackground()` via `callOpenAIImage`, landscape
+  low; never auto-swaps, tap thumb to apply, persists in
+  `localStorage.maya_pg_background`).
+- Verified headless: playground boots with 3 screens, zoom + backgrounds wired,
+  0 JS errors; admin full-bleed + voice-row + sheet-only chips + invoice fn, 0
+  JS errors. All suites pass.
+
+QUEUED (r2): inspiration chip inside the generated card + version-0 expand with
+swipe; centered card in viewer; right-hand GPT garment notes (era/style/looks,
+bullets+paragraphs); username editable when it shows a date; server-side
+per-user background folders.
+
 ## v13.97 (Claude): the admin auto-refreshes (fixes "changes don't reflect")
 
 `backend/status.html`:

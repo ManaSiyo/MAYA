@@ -3531,6 +3531,71 @@ app.post('/api/admin/lead-delete', requireAuthHeader, express.json({ limit: '4kb
   }
 });
 
+// ── v13.98: ONE-CLICK INVOICE. The pay-link icon in the Lead Station creates a
+// real Wix pay link through the Payment Links API, exactly the way the
+// invoicing skill specifies: service tax group, name-first title, single use,
+// not shippable, and the Mana Siyo logo as the item image until a MAYA render
+// is supplied. Admin only, and only ever fired by an explicit click. ──
+const INVOICE_TAX_GROUP = '13d21c63-b5ec-5912-8397-c3a5ddb27a97';   // "Service"
+const INVOICE_FALLBACK_IMAGE = {
+  id: 'aa2370_11f0d109eb9f454cbd3b8f2d610b1a5f~mv2.png',
+  url: 'https://static.wixstatic.com/media/aa2370_11f0d109eb9f454cbd3b8f2d610b1a5f~mv2.png',
+  height: 1080, width: 1080,
+};
+app.post('/api/admin/invoice-create', requireAuthHeader, express.json({ limit: '16kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  if (!WIX_KEY) return res.status(503).json({ error: 'wix_not_connected' });
+  const b = req.body || {};
+  const title = String(b.title || '').trim().slice(0, 50);
+  const description = String(b.description || '').trim().slice(0, 600);
+  const price = String(b.price || '').replace(/[^0-9.]/g, '');
+  const leadId = String(b.leadId || '').trim();
+  if (!title || !price || !(Number(price) > 0)) return res.status(400).json({ error: 'title_and_price_required' });
+  const image = (b.image && b.image.id && b.image.url && b.image.width > 0 && b.image.height > 0)
+    ? { id: String(b.image.id), url: String(b.image.url), height: Number(b.image.height), width: Number(b.image.width) }
+    : INVOICE_FALLBACK_IMAGE;
+  try {
+    const r = await fetch('https://www.wixapis.com/payment-links/v1/payment-links', {
+      method: 'POST',
+      headers: { 'Authorization': WIX_KEY, 'wix-site-id': WIX_SITE, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paymentLink: {
+        title, description, currency: 'USD', type: 'ECOM', paymentsLimit: 1,
+        ecomPaymentLink: { lineItems: [{ type: 'CUSTOM', customItem: {
+          quantity: 1, name: title, description, price,
+          physicalProperties: { shippable: false },
+          taxGroupId: INVOICE_TAX_GROUP, image,
+        } }] },
+      } }),
+      signal: AbortSignal.timeout(20000),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      console.error('[invoice-create]', r.status, JSON.stringify(j).slice(0, 300));
+      return res.status(502).json({ error: 'wix_rejected', status: r.status, detail: (j.message || '').slice(0, 200) });
+    }
+    const url = j && j.paymentLink && j.paymentLink.links && j.paymentLink.links.url && j.paymentLink.links.url.url || '';
+    const linkId = j && j.paymentLink && j.paymentLink.id || '';
+    // verify the image stored whole, per the skill (all four fields, non-zero)
+    let imageOk = false;
+    try {
+      const st = j.paymentLink.ecomPaymentLink.lineItems[0].customItem.image;
+      imageOk = !!(st && st.id && st.width > 0 && st.height > 0);
+    } catch (_) {}
+    if (!url) return res.status(502).json({ error: 'no_link_returned' });
+    // save the link on the lead so it rides the next email draft
+    if (leadId) { try { _leadsCache = { ts: 0, data: null }; await updateLead(leadId, { paylink: url }); } catch (_) {} }
+    console.log('[invoice-create]', user.email, title, '$' + price, url);
+    return res.json({ ok: true, url, linkId, imageOk });
+  } catch (e) {
+    console.error('[invoice-create]', e.message);
+    return res.status(502).json({ error: 'invoice_failed' });
+  }
+});
+
 // ── v13.82: WHO MAYA KNOWS. A small roster so identity on the voice line is
 // real: Fromsa is the founder and default speaker; Paula is his teammate. Maya
 // greets whoever names themselves, and can be taught new people. ──
