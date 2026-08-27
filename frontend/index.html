@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.00">
+<meta name="maya-version" content="14.01">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -2108,8 +2108,8 @@
   #notes-drawer .pg-stats-body { padding: 12px 0 6px; }
   #notes-drawer .pg-gauge-wrap { position: relative; width: 118px; height: 118px; margin: 0 auto 14px; }
   #notes-drawer .pg-gauge { width: 118px; height: 118px; transform: rotate(-90deg); }
-  #notes-drawer .pg-gauge-track { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 8; }
-  #notes-drawer .pg-gauge-fill { fill: none; stroke: rgba(169,201,255,0.9); stroke-width: 8;
+  #notes-drawer .pg-gauge-track { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 5.5; }
+  #notes-drawer .pg-gauge-fill { fill: none; stroke: rgba(169,201,255,0.9); stroke-width: 5.5;
     stroke-linecap: round; stroke-dasharray: 326.7; stroke-dashoffset: 0;
     transition: stroke-dashoffset 0.6s ease, stroke 0.3s ease; }
   #notes-drawer .pg-gauge-fill.low { stroke: rgba(235,150,150,0.9); }
@@ -4840,13 +4840,13 @@
                 <circle class="pg-gauge-fill" id="pg-gauge-fill" cx="60" cy="60" r="52"></circle>
               </svg>
               <div class="pg-gauge-center">
-                <span class="pg-gauge-value" id="pg-gauge-value">30</span>
-                <span class="pg-gauge-cap" id="pg-gauge-cap">card renders left</span>
+                <span class="pg-gauge-value" id="pg-gauge-value">$2.00</span>
+                <span class="pg-gauge-cap" id="pg-gauge-cap">left of $2</span>
               </div>
             </div>
             <div class="pg-stats-grid">
               <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-cards">0</span><span class="pg-stat-lab">Cards made</span></div>
-              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-images">0</span><span class="pg-stat-lab">Cards rendered</span></div>
+              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-images">30</span><span class="pg-stat-lab">Visualizations left</span></div>
               <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-favs">0</span><span class="pg-stat-lab">Favorites</span></div>
               <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-projects">0</span><span class="pg-stat-lab">Projects</span></div>
             </div>
@@ -6499,7 +6499,7 @@ function _syncScreenUI(n) {
     if (dot) dot.classList.toggle('active', n === (i - 1));
   }
   if (n === 2) _renderFavoritesScroller();
-  if (n === 0 && typeof communityBoard !== 'undefined') communityBoard.enter();
+  if (n === 0 && typeof communityBoard !== 'undefined') { try { communityBoard.reconcile(); } catch (_) {} communityBoard.enter(); }
   // v10.5/10.6: wordmark text follows the active screen. Crossfade, and
   // FAVORITES gets a smaller font-size so its width matches MAYA visually.
   const brand = document.getElementById('brand-title');
@@ -6858,6 +6858,32 @@ const communityBoard = {
     });
     this._chains[postId] = tracked;
     return tracked;
+  },
+
+  // v14.01: the wall MIRRORS the hearts, enforced. On every visit to the wall
+  // this account's posts for the OPEN project are checked against the cards
+  // actually favorited right now; any orphan (unheart that never landed, a
+  // deleted card, an interrupted tab) is swept, storage copy included. Only
+  // this account's own posts are ever touched.
+  async reconcile() {
+    try {
+      const uid = this._uid(); if (!uid) return;
+      const pid = (typeof projectStore !== 'undefined' && projectStore.currentId) || '';
+      if (!pid) return;
+      const list = (typeof items !== 'undefined' && Array.isArray(items)) ? items : [];
+      const live = new Set();
+      for (const it of list) {
+        const c = it && it.card;
+        if (c && c.favorited && (c.image || c.imageUrl) && this._isVision(c)) live.add(this._postId(c, uid));
+      }
+      const snap = await this._col().where('uid', '==', uid).where('pid', '==', pid).get();
+      for (const doc of snap.docs) {
+        if (live.has(doc.id)) continue;
+        const d = doc.data() || {};
+        try { if (d.storagePath) await firebase.storage().ref(d.storagePath).delete(); } catch (_) {}
+        try { await doc.ref.delete(); } catch (_) {}
+      }
+    } catch (_) {}
   },
 
   async publish(item, projectId) {
@@ -16843,11 +16869,13 @@ function _renderDrawerStats() {
     fill.classList.toggle('low', frac <= 0.2);
   }
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  set('pg-gauge-value', String(cardsLeft));
-  set('pg-gauge-cap', 'card renders left');
+  // v14.01: the circle carries the PRICE (dollars left); the tile carries how
+  // many visualizations that money still buys.
+  set('pg-gauge-value', '$' + left.toFixed(2));
+  set('pg-gauge-cap', 'left of $' + cap.toFixed(0));
   set('pg-stat-cards', String(cards));
   set('pg-stat-favs', String(favs));
-  set('pg-stat-images', String(images));
+  set('pg-stat-images', String(cardsLeft));
   set('pg-stat-projects', _mayaUsage.projects == null ? String(cards ? 1 : 0) : String(_mayaUsage.projects));
 }
 // v13.89: the out-of-credits popup. Shown when an image call comes back 402

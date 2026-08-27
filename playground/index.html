@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.00">
+<meta name="maya-version" content="14.01">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -2108,8 +2108,8 @@
   #notes-drawer .pg-stats-body { padding: 12px 0 6px; }
   #notes-drawer .pg-gauge-wrap { position: relative; width: 118px; height: 118px; margin: 0 auto 14px; }
   #notes-drawer .pg-gauge { width: 118px; height: 118px; transform: rotate(-90deg); }
-  #notes-drawer .pg-gauge-track { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 8; }
-  #notes-drawer .pg-gauge-fill { fill: none; stroke: rgba(169,201,255,0.9); stroke-width: 8;
+  #notes-drawer .pg-gauge-track { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 5.5; }
+  #notes-drawer .pg-gauge-fill { fill: none; stroke: rgba(169,201,255,0.9); stroke-width: 5.5;
     stroke-linecap: round; stroke-dasharray: 326.7; stroke-dashoffset: 0;
     transition: stroke-dashoffset 0.6s ease, stroke 0.3s ease; }
   #notes-drawer .pg-gauge-fill.low { stroke: rgba(235,150,150,0.9); }
@@ -4846,13 +4846,13 @@
                 <circle class="pg-gauge-fill" id="pg-gauge-fill" cx="60" cy="60" r="52"></circle>
               </svg>
               <div class="pg-gauge-center">
-                <span class="pg-gauge-value" id="pg-gauge-value">30</span>
-                <span class="pg-gauge-cap" id="pg-gauge-cap">card renders left</span>
+                <span class="pg-gauge-value" id="pg-gauge-value">$2.00</span>
+                <span class="pg-gauge-cap" id="pg-gauge-cap">left of $2</span>
               </div>
             </div>
             <div class="pg-stats-grid">
               <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-cards">0</span><span class="pg-stat-lab">Cards made</span></div>
-              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-images">0</span><span class="pg-stat-lab">Cards rendered</span></div>
+              <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-images">30</span><span class="pg-stat-lab">Visualizations left</span></div>
               <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-favs">0</span><span class="pg-stat-lab">Favorites</span></div>
               <div class="pg-stat"><span class="pg-stat-num" id="pg-stat-projects">0</span><span class="pg-stat-lab">Projects</span></div>
             </div>
@@ -4877,7 +4877,7 @@
               </div>
             </div>
             <button class="pg-bg-gen" id="pg-bg-gen" onclick="pgGenerateBackground()">Generate a new background</button>
-            <button class="pg-bg-gen" id="pg-bg-upload" onclick="pgUploadBackground()" style="margin-left:6px">Upload a background</button>
+            <button class="pg-bg-gen" id="pg-bg-upload" onclick="pgUploadBackground()">Upload a background</button>
             <input type="file" id="pg-bg-file" accept="image/*" style="display:none" onchange="_pgBgFilePicked(this)">
           </div>
         </details>
@@ -6523,7 +6523,7 @@ function _syncScreenUI(n) {
     if (dot) dot.classList.toggle('active', n === (i - 1));
   }
   if (n === 2) _renderFavoritesScroller();
-  if (n === 0 && typeof communityBoard !== 'undefined') communityBoard.enter();
+  if (n === 0 && typeof communityBoard !== 'undefined') { try { communityBoard.reconcile(); } catch (_) {} communityBoard.enter(); }
   // v10.5/10.6: wordmark text follows the active screen. Crossfade, and
   // FAVORITES gets a smaller font-size so its width matches MAYA visually.
   const brand = document.getElementById('brand-title');
@@ -6882,6 +6882,32 @@ const communityBoard = {
     });
     this._chains[postId] = tracked;
     return tracked;
+  },
+
+  // v14.01: the wall MIRRORS the hearts, enforced. On every visit to the wall
+  // this account's posts for the OPEN project are checked against the cards
+  // actually favorited right now; any orphan (unheart that never landed, a
+  // deleted card, an interrupted tab) is swept, storage copy included. Only
+  // this account's own posts are ever touched.
+  async reconcile() {
+    try {
+      const uid = this._uid(); if (!uid) return;
+      const pid = (typeof projectStore !== 'undefined' && projectStore.currentId) || '';
+      if (!pid) return;
+      const list = (typeof items !== 'undefined' && Array.isArray(items)) ? items : [];
+      const live = new Set();
+      for (const it of list) {
+        const c = it && it.card;
+        if (c && c.favorited && (c.image || c.imageUrl) && this._isVision(c)) live.add(this._postId(c, uid));
+      }
+      const snap = await this._col().where('uid', '==', uid).where('pid', '==', pid).get();
+      for (const doc of snap.docs) {
+        if (live.has(doc.id)) continue;
+        const d = doc.data() || {};
+        try { if (d.storagePath) await firebase.storage().ref(d.storagePath).delete(); } catch (_) {}
+        try { await doc.ref.delete(); } catch (_) {}
+      }
+    } catch (_) {}
   },
 
   async publish(item, projectId) {
@@ -16867,11 +16893,13 @@ function _renderDrawerStats() {
     fill.classList.toggle('low', frac <= 0.2);
   }
   const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  set('pg-gauge-value', String(cardsLeft));
-  set('pg-gauge-cap', 'card renders left');
+  // v14.01: the circle carries the PRICE (dollars left); the tile carries how
+  // many visualizations that money still buys.
+  set('pg-gauge-value', '$' + left.toFixed(2));
+  set('pg-gauge-cap', 'left of $' + cap.toFixed(0));
   set('pg-stat-cards', String(cards));
   set('pg-stat-favs', String(favs));
-  set('pg-stat-images', String(images));
+  set('pg-stat-images', String(cardsLeft));
   set('pg-stat-projects', _mayaUsage.projects == null ? String(cards ? 1 : 0) : String(_mayaUsage.projects));
 }
 // v13.89: the out-of-credits popup. Shown when an image call comes back 402
@@ -17044,6 +17072,7 @@ if (typeof toggleNotesDrawer === 'function') {
   .pg-bg-thumb.on { box-shadow: inset 0 0 0 1.5px rgba(169,201,255,0.9); }
   .pg-bg-cardname { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 13px;
     color: rgba(238,242,255,0.85); text-align: center; padding: 5px 6px 7px; line-height: 1.2; }
+  #pg-bg-body .pg-bg-gen { display: block; margin: 12px auto 0; }
   .pg-bg-gen { font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
     color: rgba(238,242,255,0.8); background: rgba(255,255,255,0.04); border: 0.5px solid rgba(255,255,255,0.25);
     border-radius: 100px; padding: 6px 14px; cursor: pointer; transition: all 0.2s; }
@@ -17055,26 +17084,74 @@ if (typeof toggleNotesDrawer === 'function') {
   body.pg-zoomed #screen-inspo { cursor: zoom-in; }
 </style>
 <script>
-// ═══ PLAYGROUND ONLY: pinch / scroll zoom on the moodboard. Trackpad pinch
-// (ctrl+wheel), plain mouse wheel, or a two-finger touch pinch zooms the whole
-// canvas out to 10%; tapping the MAYA logo zooms back to 100%. While zoomed the
-// cards are a survey, not a workbench: interactions come back at 100%. ═══
+// ═══ PLAYGROUND ONLY: survey zoom, v4. Pinch (ctrl+wheel) or Cmd/Ctrl+scroll
+// zooms ONLY the cards: the whole cluster is fitted around its own bounding
+// box and glides to the center of the screen, so nothing is ever cropped. The
+// Tap to Listen / Upload bar steps OUT of the board while zoomed (it never
+// shrinks or drifts). The screens are hard-pinned while zoomed: scrolling can
+// not pull favorites in, full stop. Zooming back past 92 percent snaps home.
 (function () {
   let z = 1;
   const MINZ = 0.25;
+  let bbox = null;
   const board = () => document.getElementById('screen-inspo');
+  function measure() {
+    const b = board(); if (!b) return null;
+    let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9, found = false;
+    for (const el of b.children) {
+      if (el.id === 'voice-wrap') continue;
+      const w = el.offsetWidth, h = el.offsetHeight;
+      if (!w || !h) continue;
+      const x = el.offsetLeft, y = el.offsetTop;
+      minX = Math.min(minX, x); minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x + w); maxY = Math.max(maxY, y + h);
+      found = true;
+    }
+    if (!found) return null;
+    return { cx: (minX + maxX) / 2, cy: (minY + maxY) / 2 };
+  }
+  let _vw = null, _vwParent = null, _vwNext = null;
+  function parkVoiceBar(zoomed) {
+    const vw = document.getElementById('voice-wrap'); if (!vw) return;
+    if (zoomed && !_vw) {
+      _vw = vw; _vwParent = vw.parentElement; _vwNext = vw.nextSibling;
+      document.body.appendChild(vw);
+      vw.style.position = 'fixed'; vw.style.bottom = '22px'; vw.style.left = '50%';
+      vw.style.transform = 'translateX(-50%)'; vw.style.zIndex = '320';
+    } else if (!zoomed && _vw) {
+      const el = _vw; _vw = null;
+      el.style.position = ''; el.style.bottom = ''; el.style.left = '';
+      el.style.transform = ''; el.style.zIndex = '';
+      try { _vwParent.insertBefore(el, _vwNext); } catch (_) { try { _vwParent.appendChild(el); } catch (__) {} }
+    }
+  }
   function apply() {
     const b = board(); if (!b) return;
-    b.style.transform = z < 0.999 ? 'scale(' + z.toFixed(3) + ')' : '';
-    // dead center: the cluster shrinks toward the middle of the screen, where
-    // the Dying Star card sits, never tucking away to the top.
-    b.style.transformOrigin = '50% 50%';
-    document.body.classList.toggle('pg-zoomed', z < 0.999);
-    // While zoomed the moodboard is its OWN world: the screens cannot scroll,
-    // so zooming can never drag favorites up. Scroll comes back at 100%.
+    const zoomed = z < 0.999;
+    if (zoomed) {
+      if (!bbox) bbox = measure() || { cx: b.offsetWidth / 2, cy: b.offsetHeight / 2 };
+      const vw2 = b.offsetWidth / 2, vh2 = b.offsetHeight / 2;
+      b.style.transformOrigin = bbox.cx + 'px ' + bbox.cy + 'px';
+      b.style.transform = 'translate(' + (vw2 - bbox.cx) + 'px,' + (vh2 - bbox.cy) + 'px) scale(' + z.toFixed(3) + ')';
+    } else {
+      b.style.transform = ''; b.style.transformOrigin = ''; bbox = null;
+    }
+    document.body.classList.toggle('pg-zoomed', zoomed);
+    parkVoiceBar(zoomed);
     const host = document.getElementById('screens');
-    if (host) host.style.overflowY = z < 0.999 ? 'hidden' : '';
+    if (host) {
+      host.style.overflowY = zoomed ? 'hidden' : '';
+      // snap disabled while zoomed, so the pin below is INSTANT: no easing
+      // animation can carry favorites into view mid-pinch.
+      host.style.scrollSnapType = zoomed ? 'none' : '';
+      if (zoomed) host.scrollTop = 0;
+    }
   }
+  // hard pin: even a scroll that slips through native momentum is snapped back
+  (function () {
+    const host = document.getElementById('screens');
+    if (host) host.addEventListener('scroll', () => { if (z < 0.999 && host.scrollTop !== 0) host.scrollTop = 0; }, { passive: true });
+  })();
   function onInspo() {
     const host = document.getElementById('screens'); if (!host) return false;
     const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
@@ -17083,17 +17160,16 @@ if (typeof toggleNotesDrawer === 'function') {
   }
   window.pgZoomReset = function () { z = 1; apply(); };
   document.addEventListener('wheel', (e) => {
-    // Zoom ONLY on a trackpad pinch (the browser reports it as ctrl+wheel) or
-    // Cmd/Ctrl + scroll on a mouse. A plain two-finger scroll keeps navigating
-    // the screens; the two gestures never fight.
+    if (e.target && e.target.closest && e.target.closest('#notes-drawer, .hpane-drawer, #feedback-modal, #lead-inv-modal')) return;
+    // While zoomed EVERY wheel is ours: nothing may scroll the screens.
+    if (z < 0.999 && !(e.ctrlKey || e.metaKey)) { e.preventDefault(); return; }
     if (!(e.ctrlKey || e.metaKey)) return;
     if (!onInspo()) return;
-    if (e.target && e.target.closest && e.target.closest('#notes-drawer, .hpane-drawer, #feedback-modal, #lead-inv-modal')) return;
     e.preventDefault();
     const zoomIn = e.deltaY < 0;
     const step = 0.04 * (1 + Math.min(3, Math.abs(e.deltaY) / 60));
     z = Math.min(1, Math.max(MINZ, z + (zoomIn ? step : -step)));
-    if (zoomIn && z > 0.92) z = 1;   // snap home, so the board is never stuck at 99%
+    if (zoomIn && z > 0.92) z = 1;   // snap home, never stuck at 99 percent
     apply();
   }, { passive: false });
   let pinchD = 0;
@@ -17110,7 +17186,6 @@ if (typeof toggleNotesDrawer === 'function') {
     }
   }, { passive: false });
   document.addEventListener('touchend', () => { pinchD = 0; if (z > 0.92 && z < 1) { z = 1; apply(); } }, { passive: true });
-  // the logo zooms back in (and keeps its refresh when already at 100%)
   document.addEventListener('click', (e) => {
     const logo = e.target && e.target.closest && e.target.closest('.maya-logo-mark, #top-left-brand');
     if (logo && z < 0.999) { e.preventDefault(); e.stopPropagation(); pgZoomReset(); }

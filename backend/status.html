@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="14.00">
+<meta name="maya-version" content="14.01">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -103,11 +103,19 @@ try {
   #adm-scroll{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;
     -webkit-overflow-scrolling:touch;scrollbar-width:none;padding:80px 28px 40px}
   #adm-scroll::-webkit-scrollbar{display:none}
-  /* v13.98: the drawer is full-bleed like MAYA's own, not an inset glass card.
-     It owns its whole pane edge to edge; the top bar rides over it. */
-  #drawer{position:absolute;inset:0;overflow:auto;
-    z-index:2;border:none;border-radius:0;padding:74px 20px 20px;
-    background:rgba(8,12,26,0.82);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%)}
+  /* v14.01: the drawer is the frontend's #notes-drawer glass, verbatim: same
+     inset, same gradient, same border, radius, blur and shadows. Only the
+     content inside differs. */
+  #drawer{position:absolute;top:10px;right:18px;bottom:10px;left:0;overflow-y:auto;
+    z-index:2;border:0.5px solid rgba(255,255,255,0.22);border-radius:18px;
+    background:linear-gradient(180deg,
+      rgba(255,255,255,0.10) 0%,
+      rgba(255,255,255,0.03) 25%,
+      rgba(255,255,255,0.02) 65%,
+      rgba(255,255,255,0.07) 100%);
+    backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);
+    box-shadow:inset 0 1px 1px rgba(255,255,255,0.30),inset 0 -1px 1px rgba(0,0,0,0.18),0 12px 48px rgba(0,0,0,0.38);
+    padding:56px 12px 16px}
   /* v13.67: Maya's voice lives at the floor of the drawer again. Tap the star
      to open the line; it breathes while she listens, and a small chip stays
      on screen even when the drawer is closed, so she keeps talking until you
@@ -213,10 +221,11 @@ try {
   /* v13.74: the drawer is 360 wide at right 10, so its left edge sits ~370
      from the right. The pill starts ~28 from the right, so it slides ~356 to
      rest just outside the drawer instead of overlapping it. */
-  /* v13.98: exactly the frontend's mechanism — the pill's transform is written
-     from the live scroll offset every frame (see the scroll listener), so it is
-     GLUED to the drawer's edge, no CSS transition chasing it. */
-  .top-btn.hamburger{will-change:transform}
+  /* v14.01: THE LAG, finally found. The base .top-btn carries transition:all,
+     which quietly animated the hamburger's transform 200ms behind the drawer on
+     every frame. The frontend overrides that to opacity-only; now Admin does
+     too, and the pill is truly glued. */
+  .top-btn.hamburger{transition:opacity .25s;will-change:transform}
   /* v13.94: the drawer section headings are centered, per Fromsa. */
   #drawer h3{font-family:'Jost',sans-serif;font-weight:400;font-size:10px;letter-spacing:0.24em;
              text-transform:uppercase;color:var(--grp);margin:14px 0 8px;text-align:center}
@@ -546,7 +555,13 @@ try {
   #lead-inv-modal .inv-scrim{position:absolute;inset:0;background:rgba(4,7,16,0.66);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
   #lead-inv-modal .inv-card{position:relative;z-index:1;width:min(480px,92vw);max-height:88vh;overflow:auto;
     background:#0d1120;border:0.5px solid var(--line);border-radius:18px;padding:24px 24px 22px;
-    box-shadow:0 30px 80px rgba(0,0,0,0.6)}
+    box-shadow:0 30px 80px rgba(0,0,0,0.6);text-align:center}
+  /* v14.01: everything in the popup is centered, per Fromsa. */
+  #lead-inv-modal h4,#lead-inv-modal .inv-lede,#lead-inv-modal .inv-label,
+  #lead-inv-modal .inv-existing{text-align:center}
+  #lead-inv-modal .inv-input{text-align:center}
+  #lead-inv-modal .inv-row{justify-content:center}
+  #lead-inv-modal .inv-btn{margin-left:4px;margin-right:4px}
   #lead-inv-modal .inv-close{position:absolute;top:12px;right:14px;background:transparent;border:none;color:var(--dim);
     font-size:20px;line-height:1;cursor:pointer}
   #lead-inv-modal .inv-close:hover{color:var(--ink)}
@@ -564,7 +579,7 @@ try {
   #lead-inv-modal .inv-btn:hover{color:var(--ink);border-color:rgba(255,255,255,0.5)}
   #lead-inv-modal .inv-btn.primary{color:#a9c9ff;border-color:rgba(169,201,255,0.45)}
   #lead-inv-modal .inv-btn.primary:hover{background:rgba(169,201,255,0.10)}
-  #lead-inv-modal .inv-row{display:flex;align-items:center;gap:12px;margin-top:9px}
+  #lead-inv-modal .inv-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:9px}
   #lead-inv-modal .inv-msg{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:0.05em;color:var(--dim)}
   #lead-inv-modal .inv-existing{font-family:'Jost',sans-serif;font-size:10.5px;line-height:1.5;color:var(--dim);margin-top:10px}
   #lead-inv-modal .inv-existing a{color:#a9c9ff;word-break:break-all}
@@ -656,7 +671,7 @@ try {
   #adm-mkt .status-word.on{color:var(--green)} #adm-mkt .status-word.off{color:var(--faint)}
   #adm-mkt .pair-b{color:#a9c9ff}
   /* v13.94: on a phone the drawer pane is the full width, like the app. */
-  @media (max-width:640px){ .hpane-drawer{width:100vw} #adm-scroll{padding:70px 14px 30px} #drawer{padding:70px 16px 18px} }
+  @media (max-width:640px){ .hpane-drawer{width:100vw} #adm-scroll{padding:70px 14px 30px} #drawer{right:12px;left:12px;padding:64px 12px 16px} }
 
 </style>
 <!-- v13.19: removable Systems Map-only polish. Keeping this outside the
@@ -877,13 +892,14 @@ try {
   <details class="fold" id="changes-fold" data-latest="2026-08-24s">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
-    <div class="chg"><b>Aug 27</b>The meter tells the truth now, and it counts in cards. One render meters at its real six and a half cents, the gauge reads card renders left instead of dollars, the tiles count cards made, cards rendered, favorites and projects, and everyone starts v14 with their full thirty. The Playground zoom grew up: it locks the screens while zoomed so scrolling never drags favorites in, floors at a quarter size in the dead center of the sky, and snaps home past ninety two percent. Backgrounds save now, uploads included, each one its own named card. And the Lead Station invoice can be sent the moment it exists, Email or Text, wearing the lead's own first name.</div>
-    <div class="chg"><b>Aug 27</b>The Playground became a living copy of MAYA, and grew three experiments: pinch or scroll and the whole moodboard zooms out to a tenth of its size for a full survey, tapping the logo brings it back; it opens on the community wall now, favorites below; and the drawer carries a Background fold, Birth of a Star named as the house backdrop, with a pill that generates a brand new cosmic background and waits for your tap before anything swaps.</div>
-    <div class="chg"><b>Aug 27</b>The Lead Station writes real invoices now. The pay-link icon opens a small composer, the name, the price and the description already filled in the house style, and one click creates a live Wix pay link, single use, service tax, saved on the lead and folded into the next email. The drawer went full-bleed like the app's own, the hamburger is glued to its edge, the hover under ADMIN is just the sheet and it waits to be clicked, and the pill beside Maya's circle now simply turns Hey Maya on and off.</div>
-    <div class="chg"><b>Aug 27</b>Randomize got fast for everyone. The headshots it draws from are two-megabyte files, and every tap used to swallow one whole before anything moved; now the picture is shrunk the moment it arrives, so the face and measurements land in a blink on any connection. The fabric captions tightened to half their height and centered, and the Projects pill centers its word.</div>
-    <div class="chg"><b>Aug 27</b>The back rooms refresh themselves now. The Systems Map used to hold whatever build it opened with until you reloaded by hand, so a full day of shipping could look like nothing had changed. It checks for a new build every few minutes and whenever you return to the tab, and quietly updates itself, the way the app already did.</div>
-    <div class="chg"><b>Aug 27</b>The free trial stretches much further, and resets clean. Each generation now counts as five cents against the two dollars, so the same two dollars carries about forty renders instead of a handful. And every release hands everyone their full two dollars back.</div>
-    <div class="chg"><b>Aug 27</b>The avatar switcher opens to its full list again. In the app the client dropdown would open to nothing, a thin sliver with the names hidden inside it; it stands at its real height now and shows every saved avatar.</div>
+    <div class="chg"><b>Aug 26</b>The lag is dead. The Admin hamburger had been quietly animating its ride 200 milliseconds behind the drawer since the day it learned to slide; the transition is gone and the pill is glued to the drawer's edge, frame for frame, exactly like the app. The drawer itself now wears the app drawer's exact glass, the same gradient, border, radius and shadows, only the contents differ. The playground zoom fits the whole cluster around its own bounding box and glides it to the center, nothing cropped, the Tap to Listen bar steps out of the zoom entirely, and the screens are pinned hard while zoomed. The circle carries the price again over a thinner ring, with visualizations left as its own tile. The wall now mirrors the hearts by force: every visit sweeps this account's orphaned posts. And every popup reads centered.</div>
+    <div class="chg"><b>Aug 26</b>The meter tells the truth now, and it counts in cards. One render meters at its real six and a half cents, the gauge reads card renders left instead of dollars, the tiles count cards made, cards rendered, favorites and projects, and everyone starts v14 with their full thirty. The Playground zoom grew up: it locks the screens while zoomed so scrolling never drags favorites in, floors at a quarter size in the dead center of the sky, and snaps home past ninety two percent. Backgrounds save now, uploads included, each one its own named card. And the Lead Station invoice can be sent the moment it exists, Email or Text, wearing the lead's own first name.</div>
+    <div class="chg"><b>Aug 26</b>The Playground became a living copy of MAYA, and grew three experiments: pinch or scroll and the whole moodboard zooms out to a tenth of its size for a full survey, tapping the logo brings it back; it opens on the community wall now, favorites below; and the drawer carries a Background fold, Birth of a Star named as the house backdrop, with a pill that generates a brand new cosmic background and waits for your tap before anything swaps.</div>
+    <div class="chg"><b>Aug 26</b>The Lead Station writes real invoices now. The pay-link icon opens a small composer, the name, the price and the description already filled in the house style, and one click creates a live Wix pay link, single use, service tax, saved on the lead and folded into the next email. The drawer went full-bleed like the app's own, the hamburger is glued to its edge, the hover under ADMIN is just the sheet and it waits to be clicked, and the pill beside Maya's circle now simply turns Hey Maya on and off.</div>
+    <div class="chg"><b>Aug 26</b>Randomize got fast for everyone. The headshots it draws from are two-megabyte files, and every tap used to swallow one whole before anything moved; now the picture is shrunk the moment it arrives, so the face and measurements land in a blink on any connection. The fabric captions tightened to half their height and centered, and the Projects pill centers its word.</div>
+    <div class="chg"><b>Aug 26</b>The back rooms refresh themselves now. The Systems Map used to hold whatever build it opened with until you reloaded by hand, so a full day of shipping could look like nothing had changed. It checks for a new build every few minutes and whenever you return to the tab, and quietly updates itself, the way the app already did.</div>
+    <div class="chg"><b>Aug 26</b>The free trial stretches much further, and resets clean. Each generation now counts as five cents against the two dollars, so the same two dollars carries about forty renders instead of a handful. And every release hands everyone their full two dollars back.</div>
+    <div class="chg"><b>Aug 26</b>The avatar switcher opens to its full list again. In the app the client dropdown would open to nothing, a thin sliver with the names hidden inside it; it stands at its real height now and shows every saved avatar.</div>
     <div class="chg"><b>Aug 26</b>The Lead Station became a real desk. The columns drag into any order and the first one stays frozen, the quote reads Last Quote and starts from the tier's own price until you change it after the call, and every lead carries an invoice button that builds a Wix pay link and folds it into the email. The two invoice columns are gone, and Actions is just the mail, phone and pay-link icons.</div>
     <div class="chg"><b>Aug 26</b>The drawer floor is Maya's circle now, a true round logo sitting lower with a small MAYA pill beneath it that turns her voice on and off. The Systems Map drawer is an exact copy of the app's, the same swipe with no browser back-gesture, its headings centered, and resting on ADMIN drops the rooms and the 2026 sheet beneath the wordmark.</div>
     <div class="chg"><b>Aug 24</b>Maya can log features now. When you, or a customer, wish MAYA did something it does not yet do, tell Maya and she writes it to a feature log that reaches Claude to build. It is the first thread of the line between Maya and Claude: she records the wish, Claude turns it into work.</div>
@@ -1115,7 +1131,7 @@ window.closeDrawer = () => toggleDrawer(false);
       hb.setAttribute('aria-expanded', open ? 'true' : 'false');
     }
   };
-  hs.addEventListener('scroll', () => requestAnimationFrame(update), { passive: true });
+  hs.addEventListener('scroll', update, { passive: true });   // v14.01: synchronous, like the app
   window.addEventListener('resize', update);
   update();
 })();

@@ -1438,3 +1438,35 @@ jejuan.narcisse.art). "4" is correct; non-signed-in visitors are the Wix count.
     lead's email orphans its note history (needs key migration); README + verify-
     live stale; browser regression not a deploy gate; playground GPT garment
     notes panel + inspiration version-0 chip.
+
+── v14.01 (Claude): THE LAG, found and killed + the angry-batch fixes ─────────
+ROOT CAUSE of "the admin swipe still lags", asked since the beginning: the
+admin hamburger inherits transition:all .2s from the base .top-btn pill, so its
+transform animated 200ms BEHIND the drawer on every frame. The frontend always
+overrode that to opacity-only; the admin never did. Fixed (+ the scroll handler
+now writes the transform synchronously, no requestAnimationFrame delay).
+[x] Admin drawer = the frontend's #notes-drawer glass VERBATIM: same inset
+    (10/18/10/0), gradient, border, 18px radius, blur 28, shadows. Only the
+    content differs. (v13.98's full-bleed was my wrong guess; reverted.)
+[x] Playground zoom v4: the cluster is fitted around its own BOUNDING BOX and
+    glides to screen center, so cards are never cropped at any zoom; the Tap to
+    Listen / Upload bar steps OUT of the board while zoomed (parked fixed,
+    never shrinks); the screens are pinned hard while zoomed (overflow hidden +
+    snap disabled + scrollTop pinned to 0), so favorites can NEVER pull in;
+    plain wheel while zoomed is fully consumed. Verified live headless:
+    pinned=true, plainWheelInert=true, snap+scroll restored at 100 percent.
+[x] Stats: the circle carries the PRICE again ($ left of $2) over a ring 30
+    percent thinner; the "Cards rendered 0" tile became "Visualizations left"
+    (how many cards the money still buys). Cards made / Favorites / Projects stay.
+[x] Background pills sit lower, stacked, with space between them.
+[x] Community wall mirrors the hearts BY FORCE now: entering the wall sweeps
+    this account's posts for the open project against the actually-favorited
+    cards; any orphan (missed unheart, deleted card, killed tab) is deleted,
+    storage copy included. Other accounts' posts are never touched.
+[x] Every popup centered (invoice composer: title, copy, labels, inputs,
+    button rows; description text stays left for readability).
+[x] Recent changes: entries relabeled to Fromsa's own dates (Aug 26, not the
+    server's Aug 27) + new entry added.
+[x] Repo cleanup round 1: dead FILES moved to _to_delete (root audit html,
+    tests scratch screenshot). Dead-code deletion inside index.html is queued
+    as a careful pass (good Codex cross-check candidate; handoff is current).

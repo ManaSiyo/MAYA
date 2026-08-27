@@ -73,6 +73,33 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.01 (Claude): the lag found and killed + zoom v4 + wall enforcement
+
+- **THE ADMIN LAG ROOT CAUSE**: base `.top-btn` has `transition:all .2s`; the
+  admin hamburger inherited it, so its transform animated 200ms behind the
+  drawer. Fix: `.top-btn.hamburger{transition:opacity .25s}` + the scroll
+  listener calls `update` synchronously (no rAF). This was the years-long
+  "drawer not the same" complaint.
+- **Admin `#drawer`** = frontend `#notes-drawer` glass verbatim (top:10 right:18
+  bottom:10 left:0, gradient, 18px radius, blur 28, inset shadows, padding
+  56/12/16). v13.98 full-bleed reverted.
+- **Playground zoom v4** (`playground/index.html` addon): `measure()` computes
+  the card bounding box (children of #screen-inspo minus #voice-wrap, offset*
+  geometry); transform = translate(center-delta) + scale about the bbox center,
+  so nothing crops; `parkVoiceBar()` reparents #voice-wrap to body (fixed,
+  bottom 22) while zoomed and restores it after; screens pinned: overflowY
+  hidden + `scrollSnapType:none` + scroll listener forcing scrollTop 0; ALL
+  plain wheel consumed while zoomed. Live-verified.
+- **Stats v14.01**: gauge = dollars left (cap 'left of $2'), ring stroke 5.5;
+  `pg-stat-images` tile = "Visualizations left" (cardsLeft). Both files.
+- **Wall enforcement**: `communityBoard.reconcile()` (both files) sweeps this
+  uid's posts where pid == current project against currently-favorited postIds;
+  orphans deleted with storage copy. Called on wall entry.
+- Invoice modal fully centered; background pills stacked lower; changelog
+  relabeled to Fromsa-local dates.
+- Repo cleanup r1: `MAYA-audit-2026-08-24.html`, `tests/_drawer.png` moved to
+  `_to_delete/`. Deep dead-code pass queued (Codex-friendly; docs current).
+
 ## v14.00 (Claude): the honest meter, playground round 3, invoice sending
 
 `docs/server/server.js`, `frontend/index.html`, `playground/index.html`,

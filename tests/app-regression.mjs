@@ -1942,18 +1942,20 @@ ok('v13.98: one click creates a real Wix pay link server-side, the skill recipe'
   SERVER_SOURCE.includes('INVOICE_FALLBACK_IMAGE'));
 
 // ── v14.00 ──
-ok('v14.00: the stats speak in card renders, no dollars facing the user',
-  INDEX_SOURCE.includes("set('pg-gauge-cap', 'card renders left')") &&
+ok('v14.01: the circle carries the price over a thinner ring; visualizations left is a tile',
+  INDEX_SOURCE.includes("set('pg-gauge-value', '$' + left.toFixed(2))") &&
   INDEX_SOURCE.includes('const cardsLeft = Math.max(0, Math.floor(left / perCard') &&
-  !INDEX_SOURCE.includes("id=\"pg-stat-dollars\"") &&
-  INDEX_SOURCE.includes('>Cards rendered</span>') &&
+  INDEX_SOURCE.includes('>Visualizations left</span>') &&
+  INDEX_SOURCE.includes('stroke-width: 5.5') &&
   INDEX_SOURCE.includes('>Projects</span>'));
 ok('v14.00: /api/usage reports the per-card price so the gauge stays honest',
   SERVER_SOURCE.includes('perCardUsd: Number((PRICE_IMAGE * 0.5).toFixed(3))'));
-ok('v14.00: playground zoom locks the screens while zoomed and snaps home',
-  PLAYGROUND_SOURCE.includes("host.style.overflowY = z < 0.999 ? 'hidden' : ''") &&
+ok('v14.01: playground zoom fits the card cluster, pins the screens, parks the voice bar',
+  PLAYGROUND_SOURCE.includes("host.style.overflowY = zoomed ? 'hidden' : ''") &&
   PLAYGROUND_SOURCE.includes('if (zoomIn && z > 0.92) z = 1') &&
-  PLAYGROUND_SOURCE.includes("b.style.transformOrigin = '50% 50%'"));
+  PLAYGROUND_SOURCE.includes('function measure()') &&
+  PLAYGROUND_SOURCE.includes('function parkVoiceBar(') &&
+  PLAYGROUND_SOURCE.includes('if (z < 0.999 && host.scrollTop !== 0) host.scrollTop = 0'));
 ok('v14.00: playground backgrounds persist and can be uploaded',
   PLAYGROUND_SOURCE.includes("const LIST = 'maya_pg_bgs'") &&
   PLAYGROUND_SOURCE.includes('window.pgUploadBackground') &&
@@ -1968,6 +1970,12 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes('function _invTextLead') &&
   MAP_SOURCE.includes("'sms:' + num + '?&body='") &&
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
+
+ok('v14.01: the wall mirrors the hearts by force (reconcile sweep on entry)',
+  INDEX_SOURCE.includes('async reconcile()') &&
+  INDEX_SOURCE.includes("where('pid', '==', pid)") &&
+  INDEX_SOURCE.includes('communityBoard.reconcile()') &&
+  PLAYGROUND_SOURCE.includes('async reconcile()'));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
