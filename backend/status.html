@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="14.07">
+<meta name="maya-version" content="14.08">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -943,9 +943,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-28d" data-version="14.07">
+  <details class="fold" id="changes-fold" data-latest="2026-08-28e" data-version="14.08">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 28</b>The third pass signed it off. Every request from the last two days was verified a final time, function by function, in a clean browser: the five truths render centered, the wake word survives everything that once silenced it, Maya looks before she speaks, the inbox reads deduplicated, the zoom tells the truth to fingers, pinches, dissects and typed references alike, and the hamburger measures the app's exact pill. Three audits, three fixes, three pushes, as asked.</div>
     <div class="chg"><b>Aug 28</b>The second pass caught what the first one owed. Maya on this page can finally read her own inbox aloud (the tool existed on the server for weeks; the page never answered it). An out of credits Hey Maya no longer kills the wake word, the viewer's Tap to Listen and the wake word now take turns instead of fighting over the microphone, she looks at the screen before her first words instead of after, and an Improve Maya note shows once in the Feature requests fold, not twice. While zoomed out: pinching a card no longer snaps it small, dissect and stack animations fly true, and a typed reference lands where the finger pointed. The fullscreen photo stays clean of pills, phones see the two destinations without needing a hover, and the thank you toast sits lower on them too.</div>
     <div class="chg"><b>Aug 28</b>Every picture tells the same five truths now. The design notes read uniformly on every card, old and new: a short bio, the aesthetic, the silhouette, the color, the era, centered in their column, written once by the profile sweep. The viewer sits a touch lower, the thank you toast rests lower, the favorites arrows wear the canon pill and step in from the edges, and the hover rise carrying the two destination pills keeps the card's rounded corners.</div>
     <div class="chg"><b>Aug 28</b>The smoke test opened the door for real. Maya's own door, the line Claude and Codex read her through, answered perfectly on the server but the public address swallowed it: the website's catch-all was serving the app page at /mcp. Found live, in one probe. The door now answers at /api/mcp on any deploy, and at /mcp itself from this one on.</div>

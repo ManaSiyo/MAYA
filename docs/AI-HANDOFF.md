@@ -74,6 +74,21 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.08 (Claude): triple-audit round 3, the sign-off
+
+Third independent pass, clean browser: both pages boot with zero JS errors;
+the five-truths notes render centered; every voice wrapper verified as a
+function (`startVisualizeListen`/`stopVisualizeListen` wrapped, 402 resume);
+`get_feature_digest` answered; Feature requests dedupe live; the hamburger
+computes 32x28 with the fixed stylesheet. Version metas and the changelog
+stamp at 14.08. Fromsa's loop for big rounds is now the house method: build,
+fresh scan and fix, scan again, three commits.
+
+NEXT (Fromsa): push (three commits ride this push: v14.06, v14.07, v14.08).
+Then live: open a card and watch the five truths fill in as the sweep runs;
+say Hey Maya out of credits and confirm the wake word survives; ask her to
+read the feature inbox on Admin.
+
 ## v14.07 (Claude): triple-audit round 2, the fresh-eyes fixes
 
 An independent audit agent re-read the Aug 27-28 ledger against the code and

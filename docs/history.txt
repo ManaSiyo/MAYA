@@ -9,6 +9,18 @@ to work with Fromsa. This file is the story; README.md is the manual.
 
 ─────────────────────────────────────────────
 
+AUGUST 28, 2026, THE TRIPLE AUDIT (v14.06, v14.07, v14.08)
+
+Fromsa asked for a loop: build, then scan everything fresh and fix, then scan
+again, three commits. Round one made every picture tell the same five truths
+(bio, aesthetic, silhouette, color, era, centered on every card) and settled
+the viewer: lower, canon arrows, a rise that respects the corners. Round two,
+a separate pair of eyes, found thirteen real defects, the oldest from v13.80:
+a tool Maya was told she had but the page never answered. All fixed. Round
+three verified everything again in a clean browser and signed it off.
+
+─────────────────────────────────────────────
+
 AUGUST 28, 2026, MAYA OPENS HER EYES (v14.04)
 
 Say Hey Maya and she looks at the actual screen now, a real picture of it, so

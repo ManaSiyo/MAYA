@@ -16,6 +16,20 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 28, 2026, TRIPLE AUDIT ROUND 3 (v14.08): the sign-off
+
+[x] Third independent scan of every Aug 27-28 request, in a clean browser:
+    profile notes render (Bio/Aesthetic/Silhouette/Color/Era, centered), all
+    voice wrappers verified live, get_feature_digest answered, dedupe active,
+    hamburger measures 32x28 with the fixed stylesheet, zero JS errors on
+    boot of both pages, 396 assertions green. The one probe miss
+    (addManualRef mapping) was a harness artifact: the function awaits the
+    API before placing; the zoom mapping sits before that call and is
+    statically verified.
+[x] The false alarm from round 2 checked: docs/MAYA-INDEPENDENCE.md and
+    docs/AUDIT-2026-08-27.md exist in the repo; the auditor's copy was
+    partial.
+
 AUGUST 28, 2026, TRIPLE AUDIT ROUND 2 (v14.07): the fresh-eyes findings, fixed
 
 A separate fresh audit of everything asked Aug 27-28 found 13 real defects;
