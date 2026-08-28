@@ -1990,6 +1990,16 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.09: the autonomous observer: Maya logs her own limits and the wishes she hears, and the studio reads both',
+  PLAYGROUND_SOURCE.includes('function _pgAutoLog(') &&
+  PLAYGROUND_SOURCE.includes('const _PG_CANT =') &&
+  PLAYGROUND_SOURCE.includes('const _PG_WISH =') &&
+  PLAYGROUND_SOURCE.includes('id="fb-tabs"') &&
+  PLAYGROUND_SOURCE.includes('function _fbRenderMayaLogs()') &&
+  PLAYGROUND_SOURCE.includes("window._pgAutoLog('Maya could not ' + String(name).replace(/_/g, ' ') +") &&
+  SERVER_SOURCE.includes("const source = (req.body || {}).source === 'maya' ? 'maya' : 'app';") &&
+  SERVER_SOURCE.includes('YOUR OWN LIMITS ARE LOGGED FOR YOU.') &&
+  MAP_SOURCE.includes("i.source==='app'||i.source==='maya'"));
 ok('v14.07: the second audit pass: digest answered, wake survives 402 and the viewer listen, look before greet, dedupe, zoom trues',
   MAP_SOURCE.includes("if(name==='get_feature_digest'){") &&
   MAP_SOURCE.includes('const inboxTexts=new Set(items.map(i=>norm(i.text)));') &&

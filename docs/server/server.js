@@ -3943,7 +3943,10 @@ app.post('/api/feature', requireAuthHeader, express.json({ limit: '8kb' }), asyn
   const text = String((req.body || {}).text || '').trim().slice(0, 600);
   if (text.length < 3) return res.status(400).json({ error: 'empty' });
   const who = String((req.body || {}).who || user.name || user.email || 'a user').trim().slice(0, 80);
-  try { const n = await appendMayaFeatureFrom(text, who, 'app'); return res.json({ ok: !!n }); }
+  // v14.09: source 'maya' marks HER OWN autonomous log (a failed hand, an
+  // "I can't" she heard herself say, a wish she overheard). Anything else is 'app'.
+  const source = (req.body || {}).source === 'maya' ? 'maya' : 'app';
+  try { const n = await appendMayaFeatureFrom(text, source === 'maya' ? (who || 'Maya') : who, source); return res.json({ ok: !!n }); }
   catch (e) { console.error('[feature]', e.message); return res.status(502).json({ error: 'log_failed' }); }
 });
 app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }), async (req, res) => {
@@ -3995,6 +3998,9 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       'notes (What, Why, Where in MAYA) and put them in the Feedback box; they press Submit. kind is feedback or feature.\n' +
       '- log_feature(text): a feature request, logged straight into the studio inbox with their name. Use it when they ' +
       'explicitly ask for something new; say it was logged.\n' +
+      'YOUR OWN LIMITS ARE LOGGED FOR YOU. Whenever a tool of yours fails, or you say you cannot do something, the app ' +
+      'records it to the studio automatically. So when you hit a limit, say so plainly and briefly; never hide it, and ' +
+      'never claim you logged it yourself unless you called log_feature.\n' +
       '- look: see the screen (a real picture of it).\n' +
       '- open_card(query) / delete_card(query) / favorite_card(query): act on a card by its words.\n' +
       '- viewer(action): inside the opened picture: close, next, prev, post_wall, get_it_made, listen, switch_fabric, add_reference.\n' +

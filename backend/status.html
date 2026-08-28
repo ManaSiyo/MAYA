@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="14.08">
+<meta name="maya-version" content="14.09">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -943,9 +943,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-28e" data-version="14.08">
+  <details class="fold" id="changes-fold" data-latest="2026-08-28f" data-version="14.09">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 28</b>Maya keeps her own list now. Every time she says I can't, every tool that fails under her hands, every wish a user speaks out loud, she writes it down herself and sends it home to the studio without being asked. The Improve Maya window grew a second tab where her logs sit beside the user's note, and the Feature requests fold on this page receives both. Nobody has to file a report about Maya anymore. Maya files it.</div>
     <div class="chg"><b>Aug 28</b>The third pass signed it off. Every request from the last two days was verified a final time, function by function, in a clean browser: the five truths render centered, the wake word survives everything that once silenced it, Maya looks before she speaks, the inbox reads deduplicated, the zoom tells the truth to fingers, pinches, dissects and typed references alike, and the hamburger measures the app's exact pill. Three audits, three fixes, three pushes, as asked.</div>
     <div class="chg"><b>Aug 28</b>The second pass caught what the first one owed. Maya on this page can finally read her own inbox aloud (the tool existed on the server for weeks; the page never answered it). An out of credits Hey Maya no longer kills the wake word, the viewer's Tap to Listen and the wake word now take turns instead of fighting over the microphone, she looks at the screen before her first words instead of after, and an Improve Maya note shows once in the Feature requests fold, not twice. While zoomed out: pinching a card no longer snaps it small, dissect and stack animations fly true, and a typed reference lands where the finger pointed. The fullscreen photo stays clean of pills, phones see the two destinations without needing a hover, and the thank you toast sits lower on them too.</div>
     <div class="chg"><b>Aug 28</b>Every picture tells the same five truths now. The design notes read uniformly on every card, old and new: a short bio, the aesthetic, the silhouette, the color, the era, centered in their column, written once by the profile sweep. The viewer sits a touch lower, the thank you toast rests lower, the favorites arrows wear the canon pill and step in from the edges, and the hover rise carrying the two destination pills keeps the card's rounded corners.</div>
@@ -1169,7 +1170,9 @@ async function loadFeatureRequests(){
     const inboxTexts=new Set(items.map(i=>norm(i.text)));
     const feedback=(fb.notes||[]).filter(n=>!inboxTexts.has(norm(n.text)))
       .map(n=>({ id:'', ts:n.ts, who:(n.email||'a user').split('@')[0], text:n.text, done:false, source:'app' }));
-    const front=[...items.filter(i=>i.source==='app'),...feedback].sort((a,b)=>String(b.ts).localeCompare(String(a.ts)));
+    // v14.09: Maya's own autonomous logs (source 'maya') sit with the front
+    // end room, under her name, beside what users asked.
+    const front=[...items.filter(i=>i.source==='app'||i.source==='maya'),...feedback].sort((a,b)=>String(b.ts).localeCompare(String(a.ts)));
     const adminSide=items.filter(i=>i.source!=='app');
     const row=i=>'<div class="fr'+(i.done?' done':'')+'" title="'+esc(i.text)+'"'+(i.id?' data-fid="'+esc(i.id)+'"':'')+'>'+
       '<span class="who">'+esc(i.who||'someone')+'</span><span class="ask">'+esc(short(i.text))+'</span>'+

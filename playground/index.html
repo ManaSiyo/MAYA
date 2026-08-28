@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.08">
+<meta name="maya-version" content="14.09">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -5186,6 +5186,16 @@
     <button class="modal-close icon pg-fb-x" onclick="closeFeedback()" aria-label="Close">×</button>
     <h2 style="text-align:center">Improve Maya</h2>
     <div class="modal-hint" style="text-align:center">Any idea or feature you wish for. Maya learns from every note.</div>
+    <!-- v14.09: two tabs. Your note is yours to write; Maya's logs is what she
+         recorded about her own limits, automatically, already with the studio. -->
+    <div id="fb-tabs" role="tablist" aria-label="Improve Maya">
+      <button type="button" class="fb-kind on" id="fb-tab-note" onclick="_fbTab('note')">Your note</button>
+      <button type="button" class="fb-kind" id="fb-tab-maya" onclick="_fbTab('maya')">Maya's logs</button>
+    </div>
+    <div id="fb-maya-pane" style="display:none">
+      <div id="fb-maya-list"></div>
+      <div id="fb-maya-note" class="modal-hint" style="margin-top:10px">Maya watches her own limits and files them as she goes. These already reached the studio.</div>
+    </div>
     <textarea id="feedback-box" rows="6" placeholder="What should MAYA do better?"
       style="width:100%;margin-top:14px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.2);
              border-radius:14px;padding:12px 14px;color:#eef2ff;font-family:'Cormorant Garamond',serif;
@@ -5195,6 +5205,7 @@
     <div class="modal-actions" style="justify-content:center;gap:12px">
       <!-- v14.04: Submit is the only button. Hey Maya replaced the listeners. -->
       <button class="modal-text-btn" id="feedback-send" onclick="submitFeedback()">Submit</button>
+      <!-- v14.09: Send all: the note plus a recap of Maya's session logs -->
     </div>
   </div>
 </div>
@@ -17683,6 +17694,14 @@ async function _pgTool(name, a, dc) {
 async function _pgRunCall(dc, name, call_id, argStr) {
   let args = {}; try { args = JSON.parse(argStr || '{}'); } catch (_) {}
   const out = await _pgTool(name, args, dc);
+  // v14.09: a failed hand files itself into the studio inbox, autonomously.
+  try {
+    if (out && out.ok === false && name !== 'hang_up' && typeof window._pgAutoLog === 'function') {
+      window._pgAutoLog('Maya could not ' + String(name).replace(/_/g, ' ') +
+        (out.reason ? ': ' + String(out.reason).slice(0, 140) : '') +
+        (args && args.query ? ' (asked for "' + String(args.query).slice(0, 60) + '")' : ''), 'Maya', 'maya');
+    }
+  } catch (_) {}
   try {
     dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id, output: JSON.stringify(out || {}) } }));
     dc.send(JSON.stringify({ type: 'response.create' }));
@@ -17892,6 +17911,89 @@ setInterval(_pgCaptionOne, 7000);
   const home = document.getElementById('garment-image-wrap');
   if (wrap && home) home.appendChild(wrap);
 })();
+</script>
+
+<style>
+  /* ═══ PLAYGROUND v14.09: MAYA WATCHES HER OWN LIMITS ═══ */
+  #fb-tabs { display: flex; justify-content: center; gap: 8px; margin: 2px 0 10px; }
+  #fb-maya-list { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; text-align: left; }
+  .fbm-row { border: 0.5px solid rgba(255,255,255,0.10); border-radius: 12px; padding: 8px 12px;
+    background: rgba(255,255,255,0.02); }
+  .fbm-row .t { font-size: 13px; line-height: 1.45; color: rgba(230,236,250,0.9); }
+  .fbm-row .w { font-family: 'Jost', sans-serif; font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: rgba(169,201,255,0.7); margin-bottom: 2px; }
+  #fb-maya-list .fbm-empty { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14px;
+    color: rgba(200,210,230,0.5); text-align: center; padding: 18px 0; }
+</style>
+<script>
+// ═══ PLAYGROUND v14.09: THE AUTONOMOUS OBSERVER. Maya files her own limits
+// without being asked: a tool of hers fails, or she hears herself say
+// "I can't", and it lands in the studio inbox by itself, tagged as hers. A
+// wish overheard in the conversation ("Maya should...", "I wish...") files
+// too, under the client's name. Everything shows in the Improve Maya popup
+// under Maya's logs, already sent; Submit remains for the client's own note.
+window._pgMayaLogBuf = [];
+const _pgLogSeen = new Set();
+function _pgAutoLog(text, who, source) {
+  const t = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 420);
+  if (t.length < 8) return;
+  const norm = t.toLowerCase().slice(0, 160);
+  if (_pgLogSeen.has(norm)) return;
+  _pgLogSeen.add(norm);
+  _pgMayaLogBuf.push({ ts: new Date().toISOString(), text: t, who: who || 'Maya', source: source || 'maya' });
+  try { _fbRenderMayaLogs(); } catch (_) {}
+  const key = (typeof getApiKey === 'function') ? getApiKey() : '';
+  if (!key) return;
+  fetch('/api/feature', { method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+    body: JSON.stringify({ text: t, who: who || 'Maya', source: source || 'maya' }) }).catch(() => {});
+}
+window._pgAutoLog = _pgAutoLog;
+// her incapacity, in her own words; and a wish heard in the client's
+const _PG_CANT = /\b(i can.?t|i cannot|i'?m (?:not able|unable)|i am (?:not able|unable)|not (?:yet )?able to|i (?:do|did)n.?t have (?:a way|the ability|eyes|access)|my eyes (?:are|were)|that (?:tool|is) (?:failed|not possible)|i (?:couldn|could not)|beyond (?:my|what i can))/i;
+const _PG_WISH = /\b(maya should|you should (?:be able|add|let)|it (?:would|d) be (?:nice|great|cool) if|i wish (?:you|maya|it)|can you add|please add|there should be)\b/i;
+function _fbRenderMayaLogs() {
+  const host = document.getElementById('fb-maya-list'); if (!host) return;
+  if (!_pgMayaLogBuf.length) { host.innerHTML = '<div class="fbm-empty">Nothing yet. When Maya hits a limit, it files itself here.</div>'; return; }
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  host.innerHTML = _pgMayaLogBuf.slice(-30).reverse().map(l =>
+    '<div class="fbm-row"><div class="w">' + esc(l.who) + (l.source === 'maya' ? ' · logged herself' : ' · heard in conversation') + '</div>' +
+    '<div class="t">' + esc(l.text) + '</div></div>').join('');
+}
+function _fbTab(which) {
+  const note = which !== 'maya';
+  const box = document.getElementById('feedback-box');
+  const pane = document.getElementById('fb-maya-pane');
+  const st = document.getElementById('feedback-state');
+  if (box) box.style.display = note ? '' : 'none';
+  if (pane) pane.style.display = note ? 'none' : '';
+  if (st) st.style.display = note ? '' : 'none';
+  const send = document.getElementById('feedback-send');
+  if (send) send.style.display = note ? '' : 'none';
+  const tn = document.getElementById('fb-tab-note'), tm = document.getElementById('fb-tab-maya');
+  if (tn) tn.classList.toggle('on', note);
+  if (tm) tm.classList.toggle('on', !note);
+  if (!note) _fbRenderMayaLogs();
+}
+window._fbTab = _fbTab;
+// her spoken "I can't" files itself; a wish in the client's line files under
+// their name (the failed-hand hook lives inside _pgRunCall itself)
+if (typeof _pgLine === 'function') {
+  const _oLine = _pgLine;
+  _pgLine = function (who, text) {
+    try {
+      const t = String(text || '');
+      if (who !== 'you' && _PG_CANT.test(t)) _pgAutoLog('Maya, in her own words: "' + t.slice(0, 300) + '"', 'Maya', 'maya');
+      if (who === 'you' && _PG_WISH.test(t)) _pgAutoLog('Wish heard in conversation: "' + t.slice(0, 300) + '"', (typeof _pgWhoAmI === 'function' && _pgWhoAmI()) || 'a user', 'app');
+    } catch (_) {}
+    return _oLine.apply(this, arguments);
+  };
+}
+// opening the popup always shows fresh logs on the Maya tab
+if (typeof openFeedback === 'function') {
+  const _oOF = openFeedback;
+  openFeedback = function () { const r = _oOF.apply(this, arguments); try { _fbRenderMayaLogs(); _fbTab('note'); } catch (_) {} return r; };
+}
 </script>
 </body>
 </html>
