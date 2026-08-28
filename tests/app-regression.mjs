@@ -1990,6 +1990,10 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.05: the door is reachable from the public domain: /mcp is rewritten to Cloud Run and /api/mcp always was',
+  JSON.stringify(HOSTING.hosting.rewrites).includes('"source":"/mcp"') &&
+  SERVER_SOURCE.includes("app.post(['/mcp', '/api/mcp']") &&
+  SERVER_SOURCE.includes("app.get(['/mcp', '/api/mcp']"));
 ok('v14.03: the changelog is stamped with the shipping version, so a push cannot leave it stale',
   (MAP_SOURCE.match(/id="changes-fold"[^>]*data-version="([0-9.]+)"/) || [])[1] === versionOf(MAP_SOURCE));
 ok('v14.03: Admin hamburger is the app\'s pill to the pixel (shadow, hover, 44px target)',
@@ -2052,7 +2056,8 @@ ok('v14.04: the Admin fold reads in two rooms with a shipped check; the stale cs
   MAP_SOURCE.includes("section('Admin side, what we ask'") &&
   MAP_SOURCE.includes('async function markFeatureDone(') &&
   SERVER_SOURCE.includes("app.post('/api/admin/maya-feature-done'") &&
-  !readFileSync(join(ROOT, 'aesthetics/ui/status-v13.19.css'), 'utf8').includes('width: 36px'));
+  !readFileSync(join(ROOT, 'aesthetics/ui/status-v13.19.css'), 'utf8').includes('width: 36px') &&
+  MAP_SOURCE.includes('status-v13.19.css?v=1405'));
 
 ok('v14.01: the wall mirrors the hearts by force (reconcile sweep on entry)',
   INDEX_SOURCE.includes('async reconcile()') &&

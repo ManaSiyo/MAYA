@@ -16,8 +16,9 @@ deployed, but it stays CLOSED (503) until a token exists. Two green steps.
    private; it is the only key to the door.
 🟢 2. Add Maya to Claude as a custom connector.
    claude.ai > Settings > Connectors > Add custom connector. Name: Maya. URL:
-   https://maya.manasiyo.com/mcp?token=YOUR_TOKEN (the query form exists for
-   connectors that cannot send a header). Save. In any chat or Cowork
+   https://maya.manasiyo.com/api/mcp?token=YOUR_TOKEN (the query form exists for
+   connectors that cannot send a header; /api/mcp is the address, the bare /mcp
+   only works from v14.05 on). Save. In any chat or Cowork
    session, Maya's eight tools appear (maya_soul, maya_inbox, ...).
    Claude Code / Codex: same URL as an MCP server of type http.
 

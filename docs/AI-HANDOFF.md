@@ -74,6 +74,24 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.05 (Claude): the door actually opens
+
+Live smoke test of production (v14.03 at the time) found that
+`POST https://maya.manasiyo.com/mcp` never reached the server: the hosting
+catch-all rewrite served `frontend/index.html` with a 200. The route existed
+only on Cloud Run. Fix: `docs/firebase.json` rewrites `/mcp` to the run
+service, and `server.js` mounts the door at BOTH `/mcp` and `/api/mcp`
+(`/api/**` was always routed, so `/api/mcp` works on any deploy).
+`fixes.txt` now tells Fromsa to use `/api/mcp?token=...` for the Claude
+connector. One new regression assertion covers all three.
+
+Everything else verified live on v14.03: floor row Logout/Feedback/Hey Maya,
+the switch, ticker strip under the drawer at z 0, Feature requests fold
+painting 5 rows, prompting engine hidden, sources table hidden, all five
+health lights green, /api/voice-token and /api/feature deployed (401 clean
+when unauthenticated). The v14.04 items (eyes, glass, THE hamburger fix)
+are committed but were not yet pushed at test time; re-verify after push.
+
 ## v14.04 (Claude): Maya opens her eyes, one feedback stream, the Bible of glass
 
 `playground/index.html`, `backend/status.html`, `docs/server/server.js`,

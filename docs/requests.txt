@@ -16,6 +16,18 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 28, 2026, THE LIVE SMOKE TEST (v14.05)
+
+[x] "Make sure everything is actually pushed and working; find bugs." Ran
+    against production. Found and fixed: /mcp was swallowed by the hosting
+    catch-all (Maya's door unreachable from the public address); it now lives
+    at /api/mcp everywhere and /mcp from v14.05. Verified live on v14.03:
+    drawer floor row, Hey Maya switch, marquee under the drawer, Feature
+    requests fold (5 rows), hidden prompting engine, hidden sources, five
+    green lights, the new API routes answering.
+[!] The admin hamburger is still 36x36 IN PRODUCTION because v14.04 (which
+    carries the css fix) is not pushed. Not a code bug: press Push.
+
 AUGUST 28, 2026, MAYA'S EYES AND THE BIBLE OF GLASS (v14.04)
 
 [x] "Transcription right above the Visualize pill, three rows, scrolls up and

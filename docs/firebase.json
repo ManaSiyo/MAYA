@@ -53,6 +53,13 @@
         }
       },
       {
+        "source": "/mcp",
+        "run": {
+          "serviceId": "maya-api",
+          "region": "us-west1"
+        }
+      },
+      {
         "source": "/playground.html",
         "destination": "/playground/index.html"
       },

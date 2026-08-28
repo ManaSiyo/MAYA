@@ -4075,13 +4075,17 @@ function mcpTokenOk(req) {
   if (!given || given.length !== MAYA_MCP_TOKEN.length) return false;
   try { return crypto.timingSafeEqual(Buffer.from(given), Buffer.from(MAYA_MCP_TOKEN)); } catch (_) { return false; }
 }
-app.get('/mcp', (req, res) => {
+// v14.05: the door answers at BOTH /mcp and /api/mcp. The smoke test caught
+// that the public domain's catch-all rewrite was swallowing /mcp and serving
+// the app page; /api/** was always routed to Cloud Run, so /api/mcp works on
+// any deploy, and firebase.json now routes /mcp too.
+app.get(['/mcp', '/api/mcp'], (req, res) => {
   if (!MAYA_MCP_TOKEN) return res.status(503).json({ error: 'maya_door_closed', hint: 'set MAYA_MCP_TOKEN on Cloud Run' });
   if (!mcpTokenOk(req)) return res.status(401).json({ error: 'unauthorized' });
   // no server-to-client stream; clients POST each message
   return res.status(405).json({ error: 'post_only' });
 });
-app.post('/mcp', express.json({ limit: '64kb' }), async (req, res) => {
+app.post(['/mcp', '/api/mcp'], express.json({ limit: '64kb' }), async (req, res) => {
   if (!MAYA_MCP_TOKEN) return res.status(503).json({ error: 'maya_door_closed', hint: 'set MAYA_MCP_TOKEN on Cloud Run' });
   if (!mcpTokenOk(req)) return res.status(401).json({ error: 'unauthorized' });
   const rl = rateLimit('mcp', 'mcp@maya', 1);
