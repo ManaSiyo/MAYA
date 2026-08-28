@@ -74,6 +74,22 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.09 (Claude): the autonomous observer
+
+Maya logs her own limits. `_pgAutoLog(text, who, source)` in the playground
+buffers, renders and POSTs to /api/feature; `_PG_CANT` catches her "I can't"
+lines on the transcript, `_PG_WISH` catches user wishes, and the failed-tool
+hook sits IN `_pgRunCall` itself (fires on `out.ok === false`, `hang_up`
+excluded). Dedupe by normalized 160 chars in `_pgLogSeen`. The Improve Maya
+modal has two tabs (`#fb-tabs`: Your note / Maya's logs); `openFeedback`
+re-renders and resets to the note tab. Server: /api/feature reads
+`source:'maya'` (who defaults to Maya); voice instructions carry the "YOUR
+OWN LIMITS ARE LOGGED FOR YOU" paragraph. Admin front room filters
+`source==='app'||source==='maya'`. Metas and changelog stamp 14.09.
+
+NEXT (Fromsa): push (five commits ride it: v14.05 through v14.09). Then set
+MAYA_MCP_TOKEN on Cloud Run and add the connector (steps in docs/fixes.txt).
+
 ## v14.08 (Claude): triple-audit round 3, the sign-off
 
 Third independent pass, clean browser: both pages boot with zero JS errors;

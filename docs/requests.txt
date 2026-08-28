@@ -16,6 +16,22 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 28, 2026, NIGHT (v14.09): the autonomous observer
+
+[x] Automatic logging: every time Maya says "I can't" (or "my eyes are
+    incapable", "I'm unable", any wording of a limit) the line is logged as a
+    feature request automatically, tagged as hers.
+[x] Every failed tool call logs itself: "Maya could not <tool>: <reason>",
+    no human in the loop.
+[x] Users' wishes ("Maya should...", "I wish you could...", "can you add...")
+    heard in conversation auto-log under the user's name.
+[x] The Improve Maya popup grew two tabs: "Your note" and "Maya's logs".
+    Submit still sends the note; Maya's logs already sent themselves.
+[x] Admin Feature requests fold shows both rooms' sources (app and maya)
+    in the front room, deduplicated as before.
+[x] Server /api/feature accepts source:'maya'; the voice instructions tell
+    Maya her limits are logged for her so she never apologizes twice.
+
 AUGUST 28, 2026, TRIPLE AUDIT ROUND 3 (v14.08): the sign-off
 
 [x] Third independent scan of every Aug 27-28 request, in a clean browser:

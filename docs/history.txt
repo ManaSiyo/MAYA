@@ -7,6 +7,13 @@ first. It is written for an assistant starting a fresh conversation with no
 memory: architecture, deploys, data model, every bug and its cause, and how
 to work with Fromsa. This file is the story; README.md is the manual.
 
+AUGUST 28, 2026 (v14.09). Maya became her own bug reporter. Every "I can't"
+she says, every tool that fails under her hands, every wish a user speaks
+("Maya should...") now logs itself straight to the studio's feature inbox,
+tagged by who said it. The Improve Maya window shows her logs in a second
+tab beside the user's note. Nobody files reports about Maya anymore; she
+files them herself.
+
 ─────────────────────────────────────────────
 
 AUGUST 28, 2026, THE TRIPLE AUDIT (v14.06, v14.07, v14.08)
