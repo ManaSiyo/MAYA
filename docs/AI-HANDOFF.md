@@ -74,6 +74,18 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.07 (Claude): triple-audit round 2, the fresh-eyes fixes
+
+An independent audit agent re-read the Aug 27-28 ledger against the code and
+found 13 real defects (33 of 41 claims verified clean). All fixed:
+`get_feature_digest` answered on Admin; wake word survives the 402 branch and
+the viewer's Tap to Listen (`startVisualizeListen`/`stopVisualizeListen`
+wrapped); look-then-greet on connect; Feature requests dedupe (inbox text set);
+pinch-resize seeds `offsetWidth`; fly animations and `addManualRef` divide by
+the zoom; fullscreen photo hides `.submit-wrap`; `@media (hover:none)` shows
+the pills on phones; mobile toast 96px; `_capTries` three-strikes; dead
+`wrap.classList.remove('open')` gone. 396 assertions green. Round 3 follows.
+
 ## v14.06 (Claude): the five truths (triple-audit round 1)
 
 `playground/index.html`, `backend/status.html`, metas, `tests/*`: the caption

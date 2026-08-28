@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.06">
+<meta name="maya-version" content="14.07">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -4312,7 +4312,7 @@
     }
     #voice-wrap { bottom: calc(14px + env(safe-area-inset-bottom)); }
     /* toast: sensible position on a short screen */
-    #toast { bottom: calc(120px + env(safe-area-inset-bottom)); max-width: 92vw; }
+    #toast { bottom: calc(96px + env(safe-area-inset-bottom)); max-width: 92vw; }   /* v14.07: lower here too */
     /* sign-in gate: wordmark scales with the screen */
     #signin-gate .signin-wordmark { font-size: clamp(48px, 18vw, 104px); }
     /* modals fit */
@@ -6136,7 +6136,7 @@ function makeDraggable(el) {
       e.preventDefault();
       el._pinching = true;
       pinchD0 = dist(e.touches);
-      pinchW0 = el.getBoundingClientRect().width;
+      pinchW0 = el.offsetWidth;   // v14.07: layout width, so a pinch while zoomed does not snap the card
     }, { passive: false });
     el.addEventListener('touchmove', (e) => {
       if (!el._pinching || e.touches.length !== 2 || !pinchD0) return;
@@ -6345,8 +6345,9 @@ function consumeFloatingCards() {
     if (recentImage && recentImage.el) {
       const imgRect = recentImage.el.getBoundingClientRect();
       const elRect  = it.el.getBoundingClientRect();
-      dx = (imgRect.left + imgRect.width / 2)  - (elRect.left + elRect.width / 2);
-      dy = (imgRect.top  + imgRect.height / 2) - (elRect.top  + elRect.height / 2);
+      const _zs = (typeof window.pgZoomLevel === 'function' ? window.pgZoomLevel() : 1) || 1;
+      dx = ((imgRect.left + imgRect.width / 2)  - (elRect.left + elRect.width / 2)) / _zs;
+      dy = ((imgRect.top  + imgRect.height / 2) - (elRect.top  + elRect.height / 2)) / _zs;
     }
     it.el.classList.add('falling');
     it.el.style.transform = `translate(${dx}px, ${dy}px) scale(0.25)`;
@@ -7600,7 +7601,6 @@ function submitToCommunity() {
   showToast('Shared to the community wall.');
 }
 function submitToManasiyo() {
-  const wrap = document.getElementById('submit-wrap'); if (wrap) wrap.classList.remove('open');
   const itemId = viewerItemId;
   const item = itemId != null ? items.find(i => i.id === itemId) : null;
   if (!item || !item.card || !item.card.image) { showToast('No vision to submit'); return; }
@@ -10804,8 +10804,9 @@ function stackDissectedRefs(id) {
   const imgRect = source.el.getBoundingClientRect();
   targets.forEach((it, idx) => {
     const elRect = it.el.getBoundingClientRect();
-    const dx = (imgRect.left + imgRect.width / 2)  - (elRect.left + elRect.width / 2);
-    const dy = (imgRect.top  + imgRect.height / 2) - (elRect.top  + elRect.height / 2);
+    const _zs = (typeof window.pgZoomLevel === 'function' ? window.pgZoomLevel() : 1) || 1;
+    const dx = ((imgRect.left + imgRect.width / 2)  - (elRect.left + elRect.width / 2)) / _zs;
+    const dy = ((imgRect.top  + imgRect.height / 2) - (elRect.top  + elRect.height / 2)) / _zs;
     it.el.classList.add('falling');
     it.el.style.transform = 'translate(' + dx + 'px, ' + dy + 'px) scale(0.25)';
     it.el.style.opacity = '0';
@@ -17451,6 +17452,10 @@ if (typeof toggleNotesDrawer === 'function') {
     border-radius: 0 0 16px 16px; }
   /* v14.06: the whole viewer block sits a touch lower, per Fromsa */
   #garment-modal:not([data-photo="full"]) #garment-image-wrap { margin-top: 30px; }
+  /* v14.07: the edge-to-edge photo stays clean */
+  #garment-modal[data-photo="full"] #garment-image-wrap .submit-wrap { display: none !important; }
+  /* v14.07: no hover on a phone; the pills simply show */
+  @media (hover: none) { #garment-image-wrap .submit-wrap { opacity: 1; } }
   #garment-image-wrap:hover .submit-wrap { opacity: 1; }
 </style>
 <div id="pg-maya-chip" onclick="pgMayaStop()" title="Maya is on the line. Tap to hang up."><span class="dot"></span><span id="pg-maya-chip-word">Maya is listening</span></div>
@@ -17714,7 +17719,7 @@ async function pgMayaStart() {
     const tr = await fetch('/api/voice-token', { method: 'POST', headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: _pgWhoAmI().split(' ')[0], board: _pgBoardSnapshot(), drawer: _pgDrawerState() }) });
     const tj = await tr.json().catch(() => ({}));
-    if (tr.status === 402) { _pgChip(false); if (typeof mayaShowCreditsPopup === 'function') mayaShowCreditsPopup({}); return; }
+    if (tr.status === 402) { _pgChip(false); _pgWakeResume(); if (typeof mayaShowCreditsPopup === 'function') mayaShowCreditsPopup({}); return; }
     if (!tr.ok || !tj.value) throw new Error(tj.error || ('token ' + tr.status));
     mic = await navigator.mediaDevices.getUserMedia({ audio: true });
     pc = new RTCPeerConnection();
@@ -17722,7 +17727,15 @@ async function pgMayaStart() {
     audio = new Audio(); audio.autoplay = true;
     pc.ontrack = e => { audio.srcObject = e.streams[0]; };
     const dc = pc.createDataChannel('oai-events');
-    dc.onopen = () => { try { dc.send(JSON.stringify({ type: 'response.create' })); } catch (_) {} };
+    // v14.07: she looks FIRST, then greets, so her first words can be about
+    // what is actually on the screen. If the capture is slow the greeting
+    // goes ahead after 2.5s regardless.
+    dc.onopen = () => {
+      let greeted = false;
+      const greet = () => { if (greeted) return; greeted = true; try { dc.send(JSON.stringify({ type: 'response.create' })); } catch (_) {} };
+      setTimeout(greet, 2500);
+      _pgLook(dc).then(greet).catch(greet);
+    };
     dc.onmessage = _pgOnMessage(dc);
     pc.onconnectionstatechange = () => { if (['failed', 'disconnected', 'closed'].includes(pc.connectionState) && _pgVoice) pgMayaStop(); };
     const offer = await pc.createOffer(); await pc.setLocalDescription(offer);
@@ -17732,9 +17745,6 @@ async function pgMayaStart() {
     await pc.setRemoteDescription({ type: 'answer', sdp: await cr.text() });
     _pgVoice = { pc, mic, audio, dc };
     _pgChip(true, 'Maya is listening');
-    // v14.04: she looks at the screen as she arrives, so her first words can
-    // be about what is actually there.
-    setTimeout(() => { if (_pgVoice) _pgLook(_pgVoice.dc).catch(() => {}); }, 1200);
   } catch (e) {
     try { pc && pc.close(); } catch (_) {}
     try { (mic && mic.getTracks() || []).forEach(t => t.stop()); } catch (_) {}
@@ -17815,8 +17825,28 @@ function _pgWakeResume() { _pgWakePaused = false; if (_pgWakeWant) setTimeout(_p
 if (typeof startListening === 'function') { const _o = startListening; startListening = function () { _pgWakePause(); return _o.apply(this, arguments); }; }
 if (typeof stopListening === 'function') { const _o = stopListening; stopListening = function () { const r = _o.apply(this, arguments); _pgWakeResume(); return r; }; }
 if (typeof feedbackListenToggle === 'function') { const _o = feedbackListenToggle; feedbackListenToggle = function () { const was = _fbListening; if (!was) _pgWakePause(); const r = _o.apply(this, arguments); if (was) _pgWakeResume(); return r; }; }
+// the viewer's own Tap to Listen (visualize modifications) uses the same engine
+if (typeof startVisualizeListen === 'function') { const _o = startVisualizeListen; startVisualizeListen = function () { _pgWakePause(); return _o.apply(this, arguments); }; }
+if (typeof stopVisualizeListen === 'function') { const _o = stopVisualizeListen; stopVisualizeListen = function () { const r = _o.apply(this, arguments); _pgWakeResume(); return r; }; }
 try { if (localStorage.getItem('maya_pg_wake') === '1') { _pgWakeWant = true; _pgWakeLabel(); setTimeout(_pgWakeStart, 1500); } } catch (_) {}
 window.pgMayaStart = pgMayaStart; window.pgMayaStop = pgMayaStop;
+// v14.07: a typed reference (click the empty canvas) maps its viewport point
+// into canvas coordinates when the survey zoom is on, so the card lands where
+// the finger pointed.
+if (typeof addManualRef === 'function') {
+  const _oAMR = addManualRef;
+  addManualRef = function (text, xy) {
+    try {
+      const z = (typeof window.pgZoomLevel === 'function' ? window.pgZoomLevel() : 1) || 1;
+      if (z < 0.999 && xy && typeof xy.x === 'number') {
+        const c = document.getElementById('maya-canvas');
+        const r = c.getBoundingClientRect();
+        xy = { x: (xy.x - r.left) / z, y: (xy.y - r.top) / z };
+      }
+    } catch (_) {}
+    return _oAMR.call(this, text, xy);
+  };
+}
 // ═══ PLAYGROUND v14.04: EVERY PICTURE SPEAKS. A quiet sweep captions each
 // card that has a picture and no line yet: at most ten words, written once,
 // saved with the project, shown wherever the summary shows (favorites hover,
@@ -17851,8 +17881,8 @@ async function _pgCaptionOne() {
       it.card.caption = it.card.profile.bio;   // the bio is the one-line summary everywhere
       if (typeof _persistSession === 'function') _persistSession();
       try { if (document.getElementById('garment-modal').classList.contains('open') && typeof viewerItemId !== 'undefined' && viewerItemId === it.id) renderViewerNotes(it); } catch (_) {}
-    } else { it.card._capFailed = true; }
-  } catch (_) { it.card._capFailed = true; }
+    } else { it.card._capTries = (it.card._capTries || 0) + 1; if (it.card._capTries >= 3) it.card._capFailed = true; }
+  } catch (_) { it.card._capTries = (it.card._capTries || 0) + 1; if (it.card._capTries >= 3) it.card._capFailed = true; }
   _pgCapBusy = false;
 }
 setInterval(_pgCaptionOne, 7000);

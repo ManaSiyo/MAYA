@@ -16,6 +16,28 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 28, 2026, TRIPLE AUDIT ROUND 2 (v14.07): the fresh-eyes findings, fixed
+
+A separate fresh audit of everything asked Aug 27-28 found 13 real defects;
+all fixed this round:
+[x] Maya on Admin could never answer get_feature_digest (declared server-side
+    since v13.80, no client case). She reads her inbox aloud now.
+[x] Out-of-credits Hey Maya left the wake word dead with the switch still on.
+[x] The viewer's Tap to Listen fought the wake recognizer over the mic.
+[x] She greeted BEFORE the look landed; now she looks first, greets after
+    (2.5s ceiling).
+[x] Improve Maya notes showed twice in the Feature requests fold; deduped.
+[x] Pinch-resize while zoomed snapped cards small (scaled rect seed).
+[x] Dissect/stack fly animations ran short while zoomed; typed references
+    landed off-target while zoomed. Both mapped through the zoom now.
+[x] Fullscreen photo showed the two pills over the edge-to-edge image; phones
+    could not reach them at all (hover-gated). Fullscreen clean, phones see
+    them plainly.
+[x] Mobile toast kept its old height; lowered there too.
+[x] One transient 429 banished a card from the profile sweep forever; three
+    strikes now.
+[x] Dead pre-v14.04 submit-wrap code removed.
+
 AUGUST 28, 2026, THE FIVE TRUTHS AND THE TRIPLE AUDIT (v14.06, round 1 of 3)
 
 [x] "Design notes must be consistent on every card: a short bio (about 15

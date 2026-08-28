@@ -1990,6 +1990,18 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.07: the second audit pass: digest answered, wake survives 402 and the viewer listen, look before greet, dedupe, zoom trues',
+  MAP_SOURCE.includes("if(name==='get_feature_digest'){") &&
+  MAP_SOURCE.includes('const inboxTexts=new Set(items.map(i=>norm(i.text)));') &&
+  PLAYGROUND_SOURCE.includes('_pgChip(false); _pgWakeResume();') &&
+  PLAYGROUND_SOURCE.includes('startVisualizeListen = function () { _pgWakePause();') &&
+  PLAYGROUND_SOURCE.includes('_pgLook(dc).then(greet).catch(greet);') &&
+  PLAYGROUND_SOURCE.includes('pinchW0 = el.offsetWidth;') &&
+  PLAYGROUND_SOURCE.includes('#garment-modal[data-photo="full"] #garment-image-wrap .submit-wrap { display: none !important; }') &&
+  PLAYGROUND_SOURCE.includes('@media (hover: none) { #garment-image-wrap .submit-wrap { opacity: 1; } }') &&
+  PLAYGROUND_SOURCE.includes('addManualRef = function (text, xy)') &&
+  PLAYGROUND_SOURCE.includes('it.card._capTries') &&
+  !PLAYGROUND_SOURCE.includes("wrap.classList.remove('open')"));
 ok('v14.06: every card carries the five-line profile, centered; the viewer and toast sit lower; canon arrows; rounded rise',
   PLAYGROUND_SOURCE.includes("const it = (items || []).find(i => i && i.card && i.card.image && !i.card.profile") &&
   PLAYGROUND_SOURCE.includes("row('Bio', P.bio) + row('Aesthetic', P.aesthetic) + row('Silhouette', P.silhouette)") &&

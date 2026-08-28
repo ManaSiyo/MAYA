@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="14.06">
+<meta name="maya-version" content="14.07">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -943,9 +943,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-28c" data-version="14.06">
+  <details class="fold" id="changes-fold" data-latest="2026-08-28d" data-version="14.07">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 28</b>The second pass caught what the first one owed. Maya on this page can finally read her own inbox aloud (the tool existed on the server for weeks; the page never answered it). An out of credits Hey Maya no longer kills the wake word, the viewer's Tap to Listen and the wake word now take turns instead of fighting over the microphone, she looks at the screen before her first words instead of after, and an Improve Maya note shows once in the Feature requests fold, not twice. While zoomed out: pinching a card no longer snaps it small, dissect and stack animations fly true, and a typed reference lands where the finger pointed. The fullscreen photo stays clean of pills, phones see the two destinations without needing a hover, and the thank you toast sits lower on them too.</div>
     <div class="chg"><b>Aug 28</b>Every picture tells the same five truths now. The design notes read uniformly on every card, old and new: a short bio, the aesthetic, the silhouette, the color, the era, centered in their column, written once by the profile sweep. The viewer sits a touch lower, the thank you toast rests lower, the favorites arrows wear the canon pill and step in from the edges, and the hover rise carrying the two destination pills keeps the card's rounded corners.</div>
     <div class="chg"><b>Aug 28</b>The smoke test opened the door for real. Maya's own door, the line Claude and Codex read her through, answered perfectly on the server but the public address swallowed it: the website's catch-all was serving the app page at /mcp. Found live, in one probe. The door now answers at /api/mcp on any deploy, and at /mcp itself from this one on.</div>
     <div class="chg"><b>Aug 28</b>Maya opened her eyes. Say Hey Maya on the Playground and she can now look at the actual screen, a real picture of it, so "let's work on the white and red outfit, the girl with the apple" just works: she opens it, deletes cards, hearts them, presses the viewer's own pills, walks your Pinterest boards and scrolls the wall, everything a finger could do. She allows herself one warm opinion now and then, like a friend over a sketchbook. Her transcription whispers just above the Visualize pill in the same voice as tap to listen, three rows that slide up and fade when the talking stops, and the logo breathes smoothly while she is on the line. Every picture is learning to speak for itself: a quiet sweep gives each card its own line, at most ten words, shown wherever a summary shows. The feedback popup became Improve Maya, one box and one Submit, and every note lands in her inbox as one stream. Every popup wears the drawer's glass now, the wall's glow eased five percent, and here on Admin the Feature requests fold reads in two rooms, front end and admin side, with a quiet check to mark a wish shipped. And the hamburger is finally, truly the app's pill: a stale stylesheet had been quietly overriding it to a circle all along.</div>
@@ -1161,7 +1162,12 @@ async function loadFeatureRequests(){
     const day=ts=>{ try{ return new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric'}).format(new Date(ts)); }catch(_){ return ''; } };
     const short=t=>{ t=String(t||'').replace(/\s+/g,' ').trim(); return t.length>110?t.slice(0,107).replace(/\s\S*$/,'')+'\u2026':t; };
     const items=(j.items||[]).slice().reverse();
-    const feedback=(fb.notes||[]).map(n=>({ id:'', ts:n.ts, who:(n.email||'a user').split('@')[0], text:n.text, done:false, source:'app' }));
+    // v14.07: an Improve Maya note lands in BOTH stores; show it once. A
+    // feedback note whose text already lives in the inbox is skipped.
+    const norm=t=>String(t||'').replace(/\s+/g,' ').trim().toLowerCase().slice(0,180);
+    const inboxTexts=new Set(items.map(i=>norm(i.text)));
+    const feedback=(fb.notes||[]).filter(n=>!inboxTexts.has(norm(n.text)))
+      .map(n=>({ id:'', ts:n.ts, who:(n.email||'a user').split('@')[0], text:n.text, done:false, source:'app' }));
     const front=[...items.filter(i=>i.source==='app'),...feedback].sort((a,b)=>String(b.ts).localeCompare(String(a.ts)));
     const adminSide=items.filter(i=>i.source!=='app');
     const row=i=>'<div class="fr'+(i.done?' done':'')+'" title="'+esc(i.text)+'"'+(i.id?' data-fid="'+esc(i.id)+'"':'')+'>'+
@@ -2041,6 +2047,17 @@ async function _voiceTool(name, args){
         _mayaChatAdd('maya','Logged for Claude: '+t);
         return {ok:true, logged:true};
       }catch(e){ return {ok:false,error:'log_failed'}; }
+    }
+    if(name==='get_feature_digest'){
+      // v14.07: the server has declared this tool since v13.80; the client
+      // never answered it, so every call failed. She reads her inbox now.
+      try{
+        const r=await fetch('/api/admin/maya-features',{headers:{'Authorization':'Bearer '+_idTok}});
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok) return {ok:false,error:'digest_failed'};
+        const items=(j.items||[]).slice(-40).reverse().map(i=>({who:i.who,ask:String(i.text||'').slice(0,200),when:i.ts,done:!!i.done,source:i.source||'voice'}));
+        return {ok:true, open:items.filter(i=>!i.done).length, items};
+      }catch(e){ return {ok:false,error:'digest_failed'}; }
     }
     if(name==='find_lead') return await _mayaLeadLookup(args.query||'');
     if(name==='add_lead'){
