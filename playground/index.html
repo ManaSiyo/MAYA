@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.03">
+<meta name="maya-version" content="14.04">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -1276,8 +1276,10 @@
   /* ───────── garment modal (visualize, moodboard mode) ───────── */
   .modal {
     display: flex; position: fixed; inset: 0; z-index: 200;
-    background: rgba(8,10,18,0.93);
-    backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+    /* v14.04: the overlay shows the hue of the board behind it, like the
+       drawer over the cosmos. The card carries the drawer's own glass. */
+    background: rgba(8,12,24,0.38);
+    backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
     align-items: center; justify-content: center;
     flex-direction: column; gap: 18px;
     padding: 40px 0 24px;
@@ -1610,11 +1612,16 @@
   /* ───────── modal card (paste / settings / pickers), v10: glass canon ───────── */
   .modal-card {
     width: 640px; max-width: 90vw;
-    background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22); border-radius: 16px;
+    /* v14.04: the drawer's exact gradient, hairline and radius. */
+    background: linear-gradient(180deg,
+      rgba(255,255,255,0.10) 0%,
+      rgba(255,255,255,0.03) 25%,
+      rgba(255,255,255,0.02) 65%,
+      rgba(255,255,255,0.07) 100%);
+    border: 0.5px solid rgba(255,255,255,0.22); border-radius: 18px;
     padding: 32px;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -2135,12 +2142,15 @@
   /* v13.89: the out-of-credits popup. */
   #maya-credits-popup { position: fixed; inset: 0; z-index: 12000; display: none;
     align-items: center; justify-content: center; padding: 24px;
-    background: rgba(6,8,14,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    background: rgba(8,12,24,0.38); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%); }
   #maya-credits-popup.show { display: flex; }
+  /* v14.04: drawer glass, the Bible */
   #maya-credits-popup .mcp-card { width: 100%; max-width: 320px; text-align: center;
-    padding: 28px 24px 22px; border-radius: 20px;
-    background: rgba(20,26,40,0.92); border: 0.5px solid rgba(255,255,255,0.16);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    padding: 28px 24px 22px; border-radius: 18px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18), 0 12px 48px rgba(0,0,0,0.38); }
   #maya-credits-popup .mcp-title { font-family: 'Cormorant Garamond', serif; font-size: 26px;
     font-weight: 500; color: rgba(245,250,255,0.98); margin-bottom: 10px; }
   #maya-credits-popup .mcp-body { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 12px;
@@ -2159,12 +2169,17 @@
   /* v13.90: the Mana Siyo made-to-order confirm. */
   #maya-manasiyo-popup { position: fixed; inset: 0; z-index: 12000; display: none;
     align-items: center; justify-content: center; padding: 24px;
-    background: rgba(6,8,14,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    background: rgba(8,12,24,0.38); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%); }
   #maya-manasiyo-popup.show { display: flex; }
+  /* v14.04: the drawer is the Bible; this card wears its glass too. */
   #maya-manasiyo-popup .mmp-card { width: 100%; max-width: 340px; text-align: center;
-    padding: 28px 24px 22px; border-radius: 20px;
-    background: rgba(20,26,40,0.92); border: 0.5px solid rgba(255,255,255,0.16);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    padding: 28px 24px 22px; border-radius: 18px;
+    background: linear-gradient(180deg,
+      rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%,
+      rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18), 0 12px 48px rgba(0,0,0,0.38); }
   #maya-manasiyo-popup .mmp-title { font-family: 'Cormorant Garamond', serif; font-size: 26px;
     font-weight: 500; color: rgba(245,250,255,0.98); margin-bottom: 10px; }
   /* v13.92: slightly larger body copy (Fromsa likes the wording), and the quote
@@ -3298,8 +3313,8 @@
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.32),
       inset 0 -1px 1px rgba(0,0,0,0.20),
-      0 0 9px 1.7px rgba(220,232,255,0.30),
-      0 0 13.6px 2.55px rgba(220,232,255,0.16),
+      0 0 9px 1.7px rgba(220,232,255,0.285),
+      0 0 13.6px 2.55px rgba(220,232,255,0.152),
       0 8px 32px rgba(0,0,0,0.42);
     position: relative;
     cursor: pointer;
@@ -3410,8 +3425,8 @@
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.32),
       inset 0 -1px 1px rgba(0,0,0,0.20),
-      0 0 9px 1.7px rgba(220,232,255,0.30),
-      0 0 13.6px 2.55px rgba(220,232,255,0.16),
+      0 0 9px 1.7px rgba(220,232,255,0.285),
+      0 0 13.6px 2.55px rgba(220,232,255,0.152),
       0 8px 32px rgba(0,0,0,0.42);
     display: flex; flex-direction: column;
     position: relative;
@@ -5161,12 +5176,8 @@
   <div class="modal-card" style="text-align:center;max-width:520px">
     <!-- v14.03: the X rides the card's corner, on top of the title, the viewer's round pill. -->
     <button class="modal-close icon pg-fb-x" onclick="closeFeedback()" aria-label="Close">×</button>
-    <h2 style="text-align:center">Feedback</h2>
-    <div class="modal-hint" style="text-align:center">Suggestions and ideas for MAYA. Talk to Maya or type, it reaches a human.</div>
-    <div id="feedback-kind" role="radiogroup" aria-label="What kind of note">
-      <button type="button" class="fb-kind on" data-kind="feedback" onclick="_fbKind('feedback')">Feedback</button>
-      <button type="button" class="fb-kind" data-kind="feature" onclick="_fbKind('feature')">Feature request</button>
-    </div>
+    <h2 style="text-align:center">Improve Maya</h2>
+    <div class="modal-hint" style="text-align:center">Any idea or feature you wish for. Maya learns from every note.</div>
     <textarea id="feedback-box" rows="6" placeholder="What should MAYA do better?"
       style="width:100%;margin-top:14px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.2);
              border-radius:14px;padding:12px 14px;color:#eef2ff;font-family:'Cormorant Garamond',serif;
@@ -5174,8 +5185,7 @@
     <div id="feedback-state" style="font-family:'Jost',sans-serif;font-size:10px;letter-spacing:0.08em;
          color:rgba(238,242,255,0.5);min-height:16px;margin-top:8px"></div>
     <div class="modal-actions" style="justify-content:center;gap:12px">
-      <button class="modal-text-btn" id="feedback-listen" onclick="feedbackListenToggle()">Tap to Listen</button>
-      <button class="modal-text-btn" id="feedback-maya" onclick="pgMayaFeedback()">Talk to Maya</button>
+      <!-- v14.04: Submit is the only button. Hey Maya replaced the listeners. -->
       <button class="modal-text-btn" id="feedback-send" onclick="submitFeedback()">Submit</button>
     </div>
   </div>
@@ -7122,7 +7132,7 @@ const communityBoard = {
     // read the id from the data attribute, which is plain text, not code.
     const one = (p) =>
       '<div class="community-card" data-id="' + escapeHtml(p.id) + '" role="button" tabindex="0" aria-label="Open community design by ' + escapeHtml(p.author) + '">' +
-        '<div class="cc-image"><img class="cc-img" src="' + escapeHtml(p.imageUrl) + '" alt="" loading="lazy" onload="communityBoard.fit(this)" onerror="communityBoard.broken(this)"/></div>' +
+        '<div class="cc-image"><img class="cc-img" src="' + escapeHtml(p.imageUrl) + '" alt="" loading="lazy" decoding="async" onload="communityBoard.fit(this)" onerror="communityBoard.broken(this)"/></div>' +
         '<div class="cc-meta">' +
           '<span class="cc-author">' + escapeHtml(p.author) + (p.uid && p.uid === mine ? ' &middot; yours' : '') + '</span>' +
           (p.summary ? '<span class="cc-summary">' + escapeHtml(p.summary) + '</span>' : '') +
@@ -7377,7 +7387,7 @@ function _renderFavoritesScroller() {
     return '<div class="favorite-card" data-id="' + f.id + '" ' +
       'onmouseenter="_favHoverIn(this)" onmouseleave="_favHoverOut(this)" ' +
       'onclick="openFavoriteForSubmit(' + f.id + ')">' +
-      '<div class="fc-image"><img class="fc-img" src="' + escapeHtml(f.card.image) + '" alt="" loading="lazy" onerror="_favImgBroken(this,' + f.id + ')"/></div>' +
+      '<div class="fc-image"><img class="fc-img" src="' + escapeHtml(f.card.image) + '" alt="" loading="lazy" decoding="async" onerror="_favImgBroken(this,' + f.id + ')"/></div>' +
       videoHtml +
       pendingHtml +
       '<div class="fc-summary">' + escapeHtml(summary) + '</div>' +
@@ -7467,6 +7477,9 @@ function _cap15Words(s) {
 }
 function _buildPieceSummaryLine(item) {
   if (!item || !item.card) return 'A dream garment, made just for them.';
+  // v14.04: every picture carries its own AI line (max ~10 words), written
+  // once by the caption sweep. When it exists, it is the summary.
+  if (item.card.caption && String(item.card.caption).trim()) return String(item.card.caption).trim();
 
   const refs = (item.card.refs || []).filter(r => r && r.title);
   if (refs.length >= 2) {
@@ -10506,26 +10519,24 @@ async function submitFeedback() {
   st.textContent = 'Sending\u2026';
   try {
     const ver = (document.querySelector('meta[name="maya-version"]') || {}).content || '';
-    // v14.03: a feature request lands in Maya's inbox (the studio's work queue)
-    // as well as the feedback store, under the client's name.
-    const kind = (typeof _fbKindNow === 'string') ? _fbKindNow : 'feedback';
+    // v14.04: feedback and features are one stream. Every note lands in the
+    // feedback archive AND in Maya's inbox under the client's name, so the
+    // studio reads one list.
     const r = await fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-      body: JSON.stringify({ text: (kind === 'feature' ? '[feature request] ' : '') + text, page: 'app', version: ver }),
+      body: JSON.stringify({ text, page: 'app', version: ver }),
     });
     if (!r.ok) throw new Error('http ' + r.status);
-    if (kind === 'feature') {
-      try {
-        await fetch('/api/feature', { method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-          body: JSON.stringify({ text, who: (typeof _pgWhoAmI === 'function' ? _pgWhoAmI() : '') }) });
-      } catch (_) {}
-    }
+    try {
+      await fetch('/api/feature', { method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({ text, who: (typeof _pgWhoAmI === 'function' ? _pgWhoAmI() : '') }) });
+    } catch (_) {}
     box.value = '';
     st.textContent = '';
     closeFeedback();
-    showToast(kind === 'feature' ? 'Logged. Maya keeps it for the studio.' : 'Thank you. It reached the atelier.');
+    showToast('Thank you. Maya keeps it.');
   } catch (e) {
     st.textContent = 'That did not send. It is kept in the box, try again in a moment.';
   } finally { send.disabled = false; }
@@ -17384,12 +17395,34 @@ if (typeof toggleNotesDrawer === 'function') {
   #pg-maya-chip.show { display: flex; }
   #pg-maya-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: #a9c9ff; animation: pgmayapulse 1.6s ease-in-out infinite; }
   @keyframes pgmayapulse { 0%,100% { box-shadow: 0 0 0 0 rgba(169,201,255,0.35); } 50% { box-shadow: 0 0 0 8px rgba(169,201,255,0); } }
-  #pg-maya-lines { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 9400; width: min(560px, 90vw);
-    display: none; flex-direction: column; gap: 4px; pointer-events: none; text-align: center; }
-  #pg-maya-lines.show { display: flex; }
-  #pg-maya-lines .ln { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 15px; line-height: 1.35;
-    color: rgba(238,242,255,0.88); text-shadow: 0 1px 8px rgba(0,0,0,0.6); }
-  #pg-maya-lines .ln.you { color: rgba(238,242,255,0.55); font-size: 13px; }
+  /* v14.04: Maya's transcription is the SAME voice as tap-to-listen's echo:
+     Cormorant italic, whisper faint, centered, riding 2px above the Visualize
+     pill. Three rows at most; older lines slide up and fade as new ones land,
+     and the whole thing breathes away when the talking stops. */
+  #pg-maya-lines { position: absolute; left: 50%; bottom: 92px; transform: translateX(-50%); z-index: 8990;
+    width: min(640px, 78vw); max-height: 48px; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: flex-end; gap: 1px;
+    pointer-events: none; text-align: center;
+    opacity: 0; transition: opacity 1.4s ease; }
+  #pg-maya-lines.show { opacity: 1; transition: opacity 0.3s ease; }
+  #pg-maya-lines .ln { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 300;
+    font-size: 11px; line-height: 1.4; color: rgba(200,210,230,0.32);
+    transition: opacity 0.8s ease; }
+  #pg-maya-lines .ln.you { color: rgba(200,210,230,0.24); }
+  #pg-maya-lines .ln.bye { opacity: 0; }
+  /* the logo breathes, smooth and slow, while Maya is on the line */
+  @keyframes pgMayaBreathe {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(169,201,255,0.0), 0 0 18px 2px rgba(169,201,255,0.18); transform: scale(1); }
+    50%      { box-shadow: 0 0 0 5px rgba(169,201,255,0.10), 0 0 26px 4px rgba(169,201,255,0.30); transform: scale(1.03); }
+  }
+  body.pg-maya-live #top-left-brand .maya-logo-wrap,
+  body.pg-maya-live #top-left-brand img:first-child { border-radius: 50%; animation: pgMayaBreathe 3.2s ease-in-out infinite; }
+  /* v14.04: the two destination pills ride INSIDE the photo now, appearing on
+     hover at its floor, over a soft rise of black. */
+  #garment-image-wrap .submit-wrap { position: absolute; left: 0; right: 0; bottom: 0; z-index: 22;
+    padding: 42px 12px 16px; margin: 0; opacity: 0; transition: opacity 0.25s ease;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.75) 100%); }
+  #garment-image-wrap:hover .submit-wrap { opacity: 1; }
 </style>
 <div id="pg-maya-chip" onclick="pgMayaStop()" title="Maya is on the line. Tap to hang up."><span class="dot"></span><span id="pg-maya-chip-word">Maya is listening</span></div>
 <div id="pg-maya-lines" aria-live="polite"></div>
@@ -17401,11 +17434,11 @@ if (typeof toggleNotesDrawer === 'function') {
 // Pinterest, the moodboard pipeline, visualize, the feedback box, the studio
 // inbox. The moodboard's own Tap to Listen and the wake recognizer share one
 // speech engine, so each steps aside for the other. ═══
+// v14.04: feedback and features are one stream; the chips are gone. The
+// function stays as a harmless no-op because Maya's write_feedback tool and
+// older sessions may still call it.
 let _fbKindNow = 'feedback';
-function _fbKind(k) {
-  _fbKindNow = (k === 'feature') ? 'feature' : 'feedback';
-  document.querySelectorAll('#feedback-kind .fb-kind').forEach(b => b.classList.toggle('on', b.dataset.kind === _fbKindNow));
-}
+function _fbKind() {}
 function _pgWhoAmI() {
   try { const u = firebase.auth().currentUser; return (u && (u.displayName || u.email)) || ''; } catch (_) { return ''; }
 }
@@ -17425,20 +17458,133 @@ function _pgDrawerState() {
 let _pgVoice = null, _pgVoiceStarting = false, _pgToolChain = Promise.resolve();
 function _pgLine(who, text) {
   const host = document.getElementById('pg-maya-lines'); const t = String(text || '').trim(); if (!host || !t) return;
+  // v14.04: the echo lives just above the pill inside the inspo screen.
+  if (host.parentElement === document.body) {
+    const home = document.getElementById('screen-inspo'); if (home) home.appendChild(host);
+  }
   host.classList.add('show');
   const ln = document.createElement('div'); ln.className = 'ln ' + (who === 'you' ? 'you' : 'maya'); ln.textContent = t;
   host.appendChild(ln);
-  while (host.children.length > 2) host.removeChild(host.firstChild);
-  clearTimeout(host._fade); host._fade = setTimeout(() => host.classList.remove('show'), 14000);
+  // three rows breathe; the one above them fades out, then leaves
+  while (host.children.length > 4) host.removeChild(host.firstChild);
+  if (host.children.length === 4) {
+    const old = host.firstChild; old.classList.add('bye');
+    setTimeout(() => { try { host.removeChild(old); } catch (_) {} }, 800);
+  }
+  clearTimeout(host._fade); host._fade = setTimeout(() => host.classList.remove('show'), 6000);
 }
 function _pgChip(on, word) {
   const c = document.getElementById('pg-maya-chip'); const w = document.getElementById('pg-maya-chip-word');
   if (c) c.classList.toggle('show', !!on); if (w && word) w.textContent = word;
   const t = document.getElementById('pg-maya-toggle'); if (t) t.classList.toggle('live', !!on);
+  document.body.classList.toggle('pg-maya-live', !!on);   // the logo breathes with her
 }
-async function _pgTool(name, a) {
+// find a card by words: captions, titles, kinds, reference titles all count
+function _pgFindCard(query) {
+  const words = String(query || '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 2);
+  if (!words.length) return null;
+  let best = null, bestScore = 0;
+  for (const it of (items || [])) {
+    if (!it || !it.card || !it.el) continue;
+    const hay = [it.card.caption, it.card.title, it.card.text, it.card.kind,
+      ...(it.card.refs || []).map(r => r && r.title)].filter(Boolean).join(' ').toLowerCase();
+    const score = words.reduce((n, w) => n + (hay.includes(w) ? 1 : 0), 0);
+    if (score > bestScore) { bestScore = score; best = it; }
+  }
+  return bestScore > 0 ? best : null;
+}
+function _pgClick(sel) { const el = document.querySelector(sel); if (el) { el.click(); return true; } return false; }
+// v14.04: MAYA SEES. html2canvas (loaded once, on demand) paints the page into
+// a picture and it rides into the live session as an image, so she can look at
+// the actual screen: every card, the drawer, the viewer, where things sit.
+let _pgH2C = null;
+function _pgLoadH2C() {
+  if (window.html2canvas) return Promise.resolve();
+  if (_pgH2C) return _pgH2C;
+  _pgH2C = new Promise((ok, bad) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    sc.onload = () => ok(); sc.onerror = () => bad(new Error('html2canvas failed to load'));
+    document.head.appendChild(sc);
+  });
+  return _pgH2C;
+}
+async function _pgLook(dc) {
+  await _pgLoadH2C();
+  const canvas = await window.html2canvas(document.body, {
+    useCORS: true, logging: false, backgroundColor: '#05060c',
+    scale: Math.min(1, 1100 / Math.max(1, window.innerWidth)),
+    ignoreElements: el => el.id === 'pg-maya-chip' || el.id === 'pg-maya-lines',
+  });
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+  dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'message', role: 'user',
+    content: [{ type: 'input_image', image_url: dataUrl }] } }));
+  return { ok: true, note: 'the current screen is attached as a picture; describe what you see only from it' };
+}
+async function _pgTool(name, a, dc) {
   a = a && typeof a === 'object' ? a : {};
   switch (name) {
+    case 'look': {
+      try { return await _pgLook(dc); }
+      catch (e) { return { ok: false, reason: 'could not capture the screen (' + String(e && e.message || e).slice(0, 60) + ')', board: _pgBoardSnapshot(), drawer: _pgDrawerState() }; }
+    }
+    case 'open_card': {
+      const it = _pgFindCard(a.query); if (!it) return { ok: false, reason: 'no card matches', board: _pgBoardSnapshot() };
+      try { it.el.click(); } catch (_) {}
+      return { ok: true, opened: String(it.card.caption || it.card.title || it.card.kind || 'card').slice(0, 80) };
+    }
+    case 'delete_card': {
+      const it = _pgFindCard(a.query); if (!it) return { ok: false, reason: 'no card matches', board: _pgBoardSnapshot() };
+      const btn = it.el.querySelector('.delete-btn');
+      if (!btn) return { ok: false, reason: 'that card has no delete control' };
+      btn.click();
+      return { ok: true, deleted: String(it.card.caption || it.card.title || 'card').slice(0, 80) };
+    }
+    case 'favorite_card': {
+      const it = _pgFindCard(a.query); if (!it) return { ok: false, reason: 'no card matches', board: _pgBoardSnapshot() };
+      const btn = it.el.querySelector('.fav-btn');
+      if (!btn) return { ok: false, reason: 'that card has no heart' };
+      btn.click();
+      return { ok: true, card: String(it.card.caption || it.card.title || 'card').slice(0, 80), favorited: !it.card.favorited ? 'now hearted' : 'heart removed' };
+    }
+    case 'viewer': {
+      const act = String(a.action || '');
+      const map = {
+        close: () => _pgClick('#garment-image-wrap .viewer-close') || _pgClick('#garment-modal .modal-close'),
+        next: () => { try { _favStep(1); return true; } catch (_) { return false; } },
+        prev: () => { try { _favStep(-1); return true; } catch (_) { return false; } },
+        post_wall: () => _pgClick('#submit-community'),
+        get_it_made: () => _pgClick('#submit-manasiyo'),
+        listen: () => _pgClick('#modify-listen-toggle'),
+        switch_fabric: () => _pgClick('#modify-switch-fabric'),
+        add_reference: () => _pgClick('#modify-add-ref'),
+      };
+      if (!map[act]) return { ok: false, reason: 'unknown action', actions: Object.keys(map) };
+      return { ok: !!map[act]() };
+    }
+    case 'pin_view': {
+      try { toggleNotesDrawer(true); pgTab('pinterest'); } catch (_) {}
+      await new Promise(r => setTimeout(r, 400));
+      const ok = a.which === 'boards' ? _pgClick('#pin-tab-boards') : _pgClick('#pin-tab-all');
+      return { ok };
+    }
+    case 'open_board': {
+      try { toggleNotesDrawer(true); pgTab('pinterest'); } catch (_) {}
+      try {
+        const j = await _pinApi('/api/pinterest/boards');
+        const words = String(a.name || '').toLowerCase();
+        const hit = (j.boards || []).find(b => String(b.name || '').toLowerCase().includes(words));
+        if (!hit) return { ok: false, boards: (j.boards || []).map(b => b.name).slice(0, 30) };
+        await _pinDrawerPins(hit.id, hit.name);
+        return { ok: true, board: hit.name };
+      } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+    }
+    case 'scroll_pins': {
+      const body = document.getElementById('pinterest-drawer-body');
+      if (!body) return { ok: false, reason: 'Pinterest is not open' };
+      body.scrollBy({ top: (a.direction === 'up' ? -1 : 1) * 420, behavior: 'smooth' });
+      return { ok: true };
+    }
     case 'open_drawer': {
       try { toggleNotesDrawer(true); } catch (_) {}
       const tab = ['avatar', 'pinterest', 'fabrics'].includes(a.tab) ? a.tab : (window._pgLastTab || 'avatar');
@@ -17502,7 +17648,7 @@ async function _pgTool(name, a) {
 }
 async function _pgRunCall(dc, name, call_id, argStr) {
   let args = {}; try { args = JSON.parse(argStr || '{}'); } catch (_) {}
-  const out = await _pgTool(name, args);
+  const out = await _pgTool(name, args, dc);
   try {
     dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id, output: JSON.stringify(out || {}) } }));
     dc.send(JSON.stringify({ type: 'response.create' }));
@@ -17557,6 +17703,9 @@ async function pgMayaStart() {
     await pc.setRemoteDescription({ type: 'answer', sdp: await cr.text() });
     _pgVoice = { pc, mic, audio, dc };
     _pgChip(true, 'Maya is listening');
+    // v14.04: she looks at the screen as she arrives, so her first words can
+    // be about what is actually there.
+    setTimeout(() => { if (_pgVoice) _pgLook(_pgVoice.dc).catch(() => {}); }, 1200);
   } catch (e) {
     try { pc && pc.close(); } catch (_) {}
     try { (mic && mic.getTracks() || []).forEach(t => t.stop()); } catch (_) {}
@@ -17639,6 +17788,43 @@ if (typeof stopListening === 'function') { const _o = stopListening; stopListeni
 if (typeof feedbackListenToggle === 'function') { const _o = feedbackListenToggle; feedbackListenToggle = function () { const was = _fbListening; if (!was) _pgWakePause(); const r = _o.apply(this, arguments); if (was) _pgWakeResume(); return r; }; }
 try { if (localStorage.getItem('maya_pg_wake') === '1') { _pgWakeWant = true; _pgWakeLabel(); setTimeout(_pgWakeStart, 1500); } } catch (_) {}
 window.pgMayaStart = pgMayaStart; window.pgMayaStop = pgMayaStop;
+// ═══ PLAYGROUND v14.04: EVERY PICTURE SPEAKS. A quiet sweep captions each
+// card that has a picture and no line yet: at most ten words, written once,
+// saved with the project, shown wherever the summary shows (favorites hover,
+// the viewer's piece line). One card every few seconds, never during a render.
+let _pgCapBusy = false;
+async function _pgCaptionOne() {
+  if (_pgCapBusy || document.hidden) return;
+  const key = (typeof getApiKey === 'function') ? getApiKey() : '';
+  if (!key) return;
+  const it = (items || []).find(i => i && i.card && i.card.image && !i.card.caption && !i.card._capFailed);
+  if (!it) return;
+  _pgCapBusy = true;
+  try {
+    const r = await fetch('/api/openai/v1/chat/completions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 40, messages: [
+        { role: 'system', content: 'You caption fashion pictures for a design studio. Answer with ONE evocative line, at most 10 words, no quotes, no dashes, no ending period.' },
+        { role: 'user', content: [
+          { type: 'text', text: 'Caption this picture.' },
+          { type: 'image_url', image_url: { url: it.card.image } } ] } ] }),
+    });
+    const j = await r.json().catch(() => ({}));
+    const line = r.ok ? String(((j.choices || [])[0] || {}).message && j.choices[0].message.content || '').trim().replace(/^"|"$/g, '').slice(0, 90) : '';
+    if (line) {
+      it.card.caption = line;
+      if (typeof _persistSession === 'function') _persistSession();
+    } else { it.card._capFailed = true; }
+  } catch (_) { it.card._capFailed = true; }
+  _pgCapBusy = false;
+}
+setInterval(_pgCaptionOne, 7000);
+// v14.04: the two destination pills live inside the photo (hover reveals them)
+(function () {
+  const wrap = document.getElementById('submit-wrap');
+  const home = document.getElementById('garment-image-wrap');
+  if (wrap && home) home.appendChild(wrap);
+})();
 </script>
 </body>
 </html>

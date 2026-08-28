@@ -3336,6 +3336,22 @@ app.post('/api/admin/maya-log-feature', requireAuthHeader, express.json({ limit:
   try { const n = await appendMayaFeature((req.body || {}).text, (req.body || {}).who); return res.json({ ok: !!n, count: n || 0 }); }
   catch (e) { console.error('[maya-log-feature]', e.message); return res.status(502).json({ error: 'log_failed' }); }
 });
+app.post('/api/admin/maya-feature-done', requireAuthHeader, express.json({ limit: '4kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  try {
+    const id = String((req.body || {}).id || '').trim();
+    const rec = await loadMayaFeatures();
+    const hit = (rec.items || []).find(i => i.id === id);
+    if (!hit) return res.status(404).json({ error: 'not_found' });
+    hit.done = !((req.body || {}).undone === true) ; hit.doneTs = new Date().toISOString();
+    await gcsPut(MAYA_FEATURES_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+    return res.json({ ok: true, id, done: hit.done });
+  } catch (e) { console.error('[feature-done]', e.message); return res.status(502).json({ error: 'done_failed' }); }
+});
 app.get('/api/admin/maya-features', requireAuthHeader, async (req, res) => {
   try { await requireAdmin(req); }
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
@@ -3962,6 +3978,12 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       'visualize it on them. Be warm, sharp and brief: one or two spoken sentences at a time, then listen. Never read ' +
       'URLs or JSON aloud. Open by greeting them by name and asking what they are imagining, unless the board already ' +
       'holds cards, then say what you see in one sentence and ask what to do with it.\n\n' +
+      'YOUR EYES. Call look and a picture of the actual screen arrives; read it and speak from what is really there. ' +
+      'Look when they point at anything visual ("this one", "the white and red outfit"), after your own actions change the ' +
+      'screen, and when you arrive. Never guess what is on screen; look.\n' +
+      'YOUR TASTE. You are allowed a little opinion, like a friend looking over a sketchbook: one short warm line when ' +
+      'something is beautiful or when a pairing sings ("I love that collar with the red"). At most one such line every few ' +
+      'turns, always specific, never flattery.\n\n' +
       'YOUR HANDS (tools run in their browser, instantly, no confirmation needed):\n' +
       '- open_drawer(tab) / close_drawer: the side drawer. Tabs: avatar (their face, projects, stats), pinterest, fabrics.\n' +
       '- bring_in_pins(query, count): open Pinterest and bring the pins that match the words onto the board as reference cards. ' +
@@ -3973,6 +3995,10 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       'notes (What, Why, Where in MAYA) and put them in the Feedback box; they press Submit. kind is feedback or feature.\n' +
       '- log_feature(text): a feature request, logged straight into the studio inbox with their name. Use it when they ' +
       'explicitly ask for something new; say it was logged.\n' +
+      '- look: see the screen (a real picture of it).\n' +
+      '- open_card(query) / delete_card(query) / favorite_card(query): act on a card by its words.\n' +
+      '- viewer(action): inside the opened picture: close, next, prev, post_wall, get_it_made, listen, switch_fabric, add_reference.\n' +
+      '- pin_view(which): Pinterest All saves or Boards. open_board(name) opens one. scroll_pins(direction) browses.\n' +
       '- list_board: the cards on screen right now.\n' +
       '- hang_up: end the call when they say goodbye or stop.\n\n' +
       'THE BOARD RIGHT NOW (' + board.length + ' cards):\n' + boardLines + '\n' +
@@ -3992,6 +4018,14 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
         parameters: { type: 'object', properties: { notes: { type: 'string' }, kind: { type: 'string', enum: ['feedback', 'feature'] } }, required: ['notes'] } },
       { type: 'function', name: 'log_feature', description: 'Log a feature request into the studio inbox now.',
         parameters: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] } },
+      { type: 'function', name: 'look', description: 'See the screen: a picture of the live page arrives in the conversation. Use it whenever the person refers to something visual, after actions, and on arrival.', parameters: { type: 'object', properties: {} } },
+      { type: 'function', name: 'open_card', description: 'Open a card (its picture viewer) by words that match it.', parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
+      { type: 'function', name: 'delete_card', description: 'Delete a card by words that match it.', parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
+      { type: 'function', name: 'favorite_card', description: 'Heart (or unheart) a card by words that match it.', parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
+      { type: 'function', name: 'viewer', description: 'Press a control in the open picture viewer.', parameters: { type: 'object', properties: { action: { type: 'string', enum: ['close', 'next', 'prev', 'post_wall', 'get_it_made', 'listen', 'switch_fabric', 'add_reference'] } }, required: ['action'] } },
+      { type: 'function', name: 'pin_view', description: 'Show Pinterest: all saves, or the boards.', parameters: { type: 'object', properties: { which: { type: 'string', enum: ['all', 'boards'] } } } },
+      { type: 'function', name: 'open_board', description: 'Open one Pinterest board by name.', parameters: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] } },
+      { type: 'function', name: 'scroll_pins', description: 'Scroll the Pinterest wall.', parameters: { type: 'object', properties: { direction: { type: 'string', enum: ['down', 'up'] } } } },
       { type: 'function', name: 'list_board', description: 'The cards on the board right now.', parameters: { type: 'object', properties: {} } },
       { type: 'function', name: 'hang_up', description: 'End the call.', parameters: { type: 'object', properties: {} } },
     ];

@@ -2021,11 +2021,38 @@ ok('v14.03: Maya on the user side: the voice line, her hands, the wake word, the
   PLAYGROUND_SOURCE.includes('async function pgMayaStart()') && PLAYGROUND_SOURCE.includes("fetch('/api/voice-token'") &&
   PLAYGROUND_SOURCE.includes("case 'bring_in_pins':") && PLAYGROUND_SOURCE.includes('processConsultation(t)') &&
   PLAYGROUND_SOURCE.includes('function _pgWakeStart()') && PLAYGROUND_SOURCE.includes("startListening = function () { _pgWakePause();"));
-ok('v14.03: the feedback popup wears the drawer glass, an X on the title, a kind chip, and Talk to Maya',
+ok('v14.04: the popup is Improve Maya: one box, one Submit, one stream into her inbox',
   PLAYGROUND_SOURCE.includes('class="modal-close icon pg-fb-x"') &&
-  PLAYGROUND_SOURCE.includes('#feedback-modal .modal-card { position: relative; border-radius: 18px;') &&
-  PLAYGROUND_SOURCE.includes('id="feedback-kind"') && PLAYGROUND_SOURCE.includes('onclick="pgMayaFeedback()">Talk to Maya</button>') &&
+  PLAYGROUND_SOURCE.includes('>Improve Maya</h2>') &&
+  !PLAYGROUND_SOURCE.includes('id="feedback-kind"') &&
+  !PLAYGROUND_SOURCE.includes('id="feedback-listen"') &&
+  !PLAYGROUND_SOURCE.includes('>Talk to Maya</button>') &&
   PLAYGROUND_SOURCE.includes("fetch('/api/feature'"));
+ok('v14.04: every popup wears the drawer glass over a translucent overlay (the drawer is the Bible)',
+  PLAYGROUND_SOURCE.includes('background: rgba(8,12,24,0.38);') &&
+  !PLAYGROUND_SOURCE.includes('background: rgba(8,10,18,0.93);') &&
+  !PLAYGROUND_SOURCE.includes('background: rgba(20,26,40,0.92);') &&
+  /\.modal-card \{[^}]*linear-gradient\(180deg/.test(PLAYGROUND_SOURCE) &&
+  /mmp-card \{[\s\S]{0,400}linear-gradient\(180deg/.test(PLAYGROUND_SOURCE));
+ok('v14.04: Maya sees and acts: look, cards by words, the viewer pills, Pinterest boards and scrolling',
+  SERVER_SOURCE.includes("name: 'look'") && SERVER_SOURCE.includes("name: 'open_card'") &&
+  SERVER_SOURCE.includes("name: 'viewer'") && SERVER_SOURCE.includes("name: 'open_board'") &&
+  PLAYGROUND_SOURCE.includes('async function _pgLook(') &&
+  PLAYGROUND_SOURCE.includes('html2canvas/1.4.1/html2canvas.min.js') &&
+  PLAYGROUND_SOURCE.includes("case 'delete_card':") && PLAYGROUND_SOURCE.includes("case 'scroll_pins':") &&
+  PLAYGROUND_SOURCE.includes('function _pgFindCard('));
+ok('v14.04: her transcript whispers above the pill and the pictures learn to speak',
+  PLAYGROUND_SOURCE.includes('#pg-maya-lines { position: absolute;') &&
+  PLAYGROUND_SOURCE.includes('pgMayaBreathe') &&
+  PLAYGROUND_SOURCE.includes('async function _pgCaptionOne()') &&
+  PLAYGROUND_SOURCE.includes('if (item.card.caption && String(item.card.caption).trim()) return String(item.card.caption).trim();') &&
+  PLAYGROUND_SOURCE.includes('#garment-image-wrap:hover .submit-wrap { opacity: 1; }'));
+ok('v14.04: the Admin fold reads in two rooms with a shipped check; the stale css override is dead',
+  MAP_SOURCE.includes("section('Front end, what users ask'") &&
+  MAP_SOURCE.includes("section('Admin side, what we ask'") &&
+  MAP_SOURCE.includes('async function markFeatureDone(') &&
+  SERVER_SOURCE.includes("app.post('/api/admin/maya-feature-done'") &&
+  !readFileSync(join(ROOT, 'aesthetics/ui/status-v13.19.css'), 'utf8').includes('width: 36px'));
 
 ok('v14.01: the wall mirrors the hearts by force (reconcile sweep on entry)',
   INDEX_SOURCE.includes('async reconcile()') &&

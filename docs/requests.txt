@@ -16,6 +16,36 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 28, 2026, MAYA'S EYES AND THE BIBLE OF GLASS (v14.04)
+
+[x] "Transcription right above the Visualize pill, three rows, scrolls up and
+    fades, same style as tap to listen." Done.
+[x] "Logo should pulse smoother when Maya talks." Done, 3.2s breathe.
+[x] "Feedback becomes Improve Maya: no two pills, one Submit, concise sweet
+    copy; feedback and features are one thing." Done; every note also lands
+    in Maya's inbox.
+[x] "Every popup wears the drawer's aesthetic; the drawer is the Bible;
+    overlay shows the background hue." Done: feedback, Submit to Mana Siyo,
+    credits popup, every .modal.
+[x] "Maya should SEE the screen." Done: the look tool sends a real picture of
+    the page into the session; she looks on arrival and on anything visual.
+[x] "Everything a finger can do, Maya can do." Done this round: open, delete
+    and heart cards by words, the viewer's own pills, Pinterest all saves and
+    boards, board by name, scrolling the wall.
+[x] "She should be about 10 percent more opinionated, like a friend over a
+    sketchbook." Done, one warm specific line, rarely.
+[x] "Every picture gets its own AI line, max 10 words, shown as the summary;
+    backfill existing cards." Done: the caption sweep.
+[x] "Reduce the wall glow about 5 percent, favorites too." Done.
+[x] "The two pills should live in the photo and appear on hover." Done.
+[x] "Community wall cards load slowly." decoding=async added; the real weight
+    is full-size pictures; thumbnail sizes are the next step if it still lags.
+[x] "For the twelfth time, the admin hamburger." TRULY found: a stale line in
+    status-v13.19.css forced 36x36 and overrode every fix. Removed.
+[ ] Visualization speed: DECISION. A fast low-quality preview upgraded on
+    heart would halve the wait at a quarter the price per look. Yes or no.
+[ ] Watch Maya's sight on cross-origin pictures; report any card she misreads.
+
 AUGUST 27, 2026, MORNING ROUND (v14.03)
 
 [x] "Zoom works, cards are not cropped, but I cannot drag cards while zoomed;

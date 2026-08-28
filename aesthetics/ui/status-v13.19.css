@@ -6,14 +6,12 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* v14.04: the min-height and the 36px hamburger are GONE. They were the reason
+   the Admin hamburger never matched the app no matter what status.html said:
+   this file loads after the inline styles and quietly won. The hamburger is
+   the app's exact 32x28 pill now; the 44px hit target lives on ::after. */
 .systems-map .top-btn {
-  min-height: 36px;
   font-size: 11px;
-}
-
-.systems-map .top-btn.hamburger {
-  width: 36px;
-  height: 36px;
 }
 
 .systems-map #checked-at,

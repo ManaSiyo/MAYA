@@ -74,6 +74,57 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.04 (Claude): Maya opens her eyes, one feedback stream, the Bible of glass
+
+`playground/index.html`, `backend/status.html`, `docs/server/server.js`,
+`aesthetics/ui/status-v13.19.css`, `backend/marketing.html`, `frontend/index.html`
+(meta), `tests/*`:
+
+- **MAYA SEES**: tool `look` captures the live page with html2canvas (cdnjs,
+  loaded once on demand, useCORS, ~1100px wide jpeg) and sends it into the
+  Realtime session as an `input_image`; she also looks on arrival. Fallback on
+  capture failure: the structured board snapshot. Instructions tell her to look
+  whenever something visual is referenced and never to guess the screen.
+- **More hands**: `open_card`, `delete_card`, `favorite_card` (match by words
+  via `_pgFindCard` over captions/titles/refs), `viewer(action)` (close, next,
+  prev, post_wall, get_it_made, listen, switch_fabric, add_reference),
+  `pin_view(all|boards)`, `open_board(name)`, `scroll_pins(direction)`.
+- **Her voice on screen**: `#pg-maya-lines` is the tap-to-listen echo's exact
+  voice (Cormorant italic 11px, whisper faint), absolute in `#screen-inspo`
+  just above the Visualize pill, three rows, older lines fade and leave, the
+  whole thing fades ~6s after the last word. The logo breathes
+  (`pgMayaBreathe`, 3.2s) while she is live. One warm opinion allowed, rarely.
+- **Every picture speaks**: `_pgCaptionOne` sweep (7s interval, one at a time,
+  gpt-4o-mini via the proxy) writes `card.caption` (max 10 words) for any
+  pictured card without one; `_buildPieceSummaryLine` returns the caption when
+  present, so favorites hover and the viewer's piece line show it. Persisted.
+- **Improve Maya**: the feedback popup is one box and one Submit (chips,
+  Tap to Listen and Talk to Maya removed); every note goes to /api/feedback
+  AND /api/feature (one stream). Toast: "Thank you. Maya keeps it."
+- **The drawer is the Bible**: `.modal` overlay is translucent
+  (rgba(8,12,24,0.38) + blur 28) and `.modal-card`, `.mmp-card`, `.mcp-card`
+  all wear the drawer gradient glass, radius 18. Wall/favorites glow eased 5%.
+  The two destination pills live INSIDE `#garment-image-wrap`, hover-revealed
+  over a black rise.
+- **THE HAMBURGER, actually fixed**: `aesthetics/ui/status-v13.19.css` carried
+  `.systems-map .top-btn.hamburger{width:36px;height:36px}` and a min-height,
+  loading after the inline styles and overriding every prior fix. Removed;
+  verified live-computed 32x28 on both pages is now inevitable.
+- **Admin Feature requests**: two rooms (Front end, what users ask; Admin
+  side, what we ask), the feedback store merged into the front room, a hover
+  check (`markFeatureDone` → `POST /api/admin/maya-feature-done`) marks a wish
+  shipped or unshipped.
+- Verified: 392 browser assertions + suites; headless probe: transcript rows,
+  parent, position above the pill, Improve Maya, submit-wrap in the photo,
+  logo animation, 0 JS errors.
+
+NEXT (Fromsa): push, then talk to her with eyes: "let's work on the white and
+red outfit, the girl with the apple". Watch the first `look`: html2canvas may
+miss a cross-origin picture here and there; if her sight reads wrong, say
+which card and we tighten the capture. Visualization speed is a decision, not
+a bug: a low-quality fast preview upgraded on heart would cut the wait
+roughly in half at a quarter of the render price; say the word.
+
 ## v14.03 (Claude): Maya on the user side, drag while zoomed, Admin round
 
 `playground/index.html`, `backend/status.html`, `docs/server/server.js`,

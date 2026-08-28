@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="14.03">
+<meta name="maya-version" content="14.04">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -342,6 +342,12 @@ try {
   .fr .who{font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.16em;text-transform:uppercase;color:#a9c9ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .fr .ask{font-size:14px;line-height:1.35;color:var(--ink)}
   .fr .when{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);white-space:nowrap}
+  .fr-sec{font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.24em;text-transform:uppercase;color:var(--grp);text-align:center;margin:12px 0 4px}
+  .fr-done{margin-left:8px;background:transparent;border:0.5px solid var(--line);border-radius:50%;width:18px;height:18px;
+    color:var(--dim);font-size:10px;line-height:1;cursor:pointer;opacity:0;transition:opacity .2s,color .2s,border-color .2s;vertical-align:middle}
+  .fr:hover .fr-done{opacity:1}
+  .fr-done:hover{color:var(--green);border-color:var(--green)}
+  .fr.done .fr-done{opacity:0.6;color:var(--green);border-color:var(--green)}
   .fr.done .ask{color:var(--dim);text-decoration:line-through;text-decoration-color:rgba(255,255,255,0.25)}
   .new-dot{width:7px;height:7px;border-radius:50%;background:var(--green);
            box-shadow:0 0 10px rgba(74,222,128,0.85);display:none;flex:0 0 auto;
@@ -935,9 +941,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-27b" data-version="14.03">
+  <details class="fold" id="changes-fold" data-latest="2026-08-28a" data-version="14.04">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 28</b>Maya opened her eyes. Say Hey Maya on the Playground and she can now look at the actual screen, a real picture of it, so "let's work on the white and red outfit, the girl with the apple" just works: she opens it, deletes cards, hearts them, presses the viewer's own pills, walks your Pinterest boards and scrolls the wall, everything a finger could do. She allows herself one warm opinion now and then, like a friend over a sketchbook. Her transcription whispers just above the Visualize pill in the same voice as tap to listen, three rows that slide up and fade when the talking stops, and the logo breathes smoothly while she is on the line. Every picture is learning to speak for itself: a quiet sweep gives each card its own line, at most ten words, shown wherever a summary shows. The feedback popup became Improve Maya, one box and one Submit, and every note lands in her inbox as one stream. Every popup wears the drawer's glass now, the wall's glow eased five percent, and here on Admin the Feature requests fold reads in two rooms, front end and admin side, with a quiet check to mark a wish shipped. And the hamburger is finally, truly the app's pill: a stale stylesheet had been quietly overriding it to a circle all along.</div>
     <div class="chg"><b>Aug 27</b>Maya stepped onto the user side. On the Playground the drawer floor reads Logout, Feedback, Hey Maya, and the switch turns on a wake word: say Hey Maya and she opens the line herself, with her own hands in the app. She pulls the drawer, switches to Pinterest and brings in the pins you name, sends what you described straight onto the board, visualizes it on you, and writes your feedback into the box as structured notes; a feature request goes into her inbox under your name. Cards drag and resize while zoomed out now, exactly as they do at full size. Here on Admin the hamburger is the app's own pill to the pixel, the Hey Maya switch asks for the microphone on the click so it never snaps back, the divider and the logo sit a touch lower, Feature requests took the Prompting Engine's place as Maya's history of everyone's asks, and the Sources of traffic table left the Bottom Line.</div>
     <div class="chg"><b>Aug 27</b>Maya got a door and a character. The API now speaks the Model Context Protocol at /mcp, so Claude and Codex read her soul, her memory, the people she knows and the feature inbox straight from her and mark shipped work done. Her character, the builder with taste, ships inside the server and leads every call. The Playground zoom was rebuilt: it scales the cards' own canvas, glides the cluster to the center, floors at forty percent and never crops; scrolling and the drawer keep working while zoomed. The money counter stops restarting on every update. Here, the marquee slides under the drawer, Hey Maya is a switch, and every line in the drawer is centered.</div>
     <div class="chg"><b>Aug 26</b>The lag is dead. The Admin hamburger had been quietly animating its ride 200 milliseconds behind the drawer since the day it learned to slide; the transition is gone and the pill is glued to the drawer's edge, frame for frame, exactly like the app. The drawer itself now wears the app drawer's exact glass, the same gradient, border, radius and shadows, only the contents differ. The playground zoom fits the whole cluster around its own bounding box and glides it to the center, nothing cropped, the Tap to Listen bar steps out of the zoom entirely, and the screens are pinned hard while zoomed. The circle carries the price again over a thinner ring, with visualizations left as its own tile. The wall now mirrors the hearts by force: every visit sweeps this account's orphaned posts. And every popup reads centered.</div>
@@ -1135,20 +1142,43 @@ try {
 async function loadFeatureRequests(){
   const host=document.getElementById('features-list'); if(!host||!_idTok) return;
   try{
-    const r=await fetch('/api/admin/maya-features',{headers:{'Authorization':'Bearer '+_idTok}});
-    const j=await r.json().catch(()=>({}));
-    if(!r.ok) throw new Error(j.error||('http '+r.status));
-    const items=(j.items||[]).slice().reverse();
-    if(!items.length){ host.innerHTML='<div class="note">Nothing asked yet. Everything anyone asks Maya for lands here.</div>'; return; }
+    // v14.04: one stream, two rooms. The front end (users in the app, and their
+    // Improve Maya notes) and the Admin side (the voice line, Fromsa). Feedback
+    // and features are the same thing here.
+    const h={'Authorization':'Bearer '+_idTok};
+    const [frR,fbR]=await Promise.all([
+      fetch('/api/admin/maya-features',{headers:h}),
+      fetch('/api/admin/feedback',{headers:h}).catch(()=>null),
+    ]);
+    const j=await frR.json().catch(()=>({}));
+    if(!frR.ok) throw new Error(j.error||('http '+frR.status));
+    const fb=fbR?await fbR.json().catch(()=>({})):{};
     const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     const day=ts=>{ try{ return new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric'}).format(new Date(ts)); }catch(_){ return ''; } };
     const short=t=>{ t=String(t||'').replace(/\s+/g,' ').trim(); return t.length>110?t.slice(0,107).replace(/\s\S*$/,'')+'\u2026':t; };
-    host.innerHTML=items.map(i=>'<div class="fr'+(i.done?' done':'')+'" title="'+esc(i.text)+'"><span class="who">'+esc(i.who||'someone')+'</span><span class="ask">'+esc(short(i.text))+'</span><span class="when">'+esc(day(i.ts))+'</span></div>').join('');
+    const items=(j.items||[]).slice().reverse();
+    const feedback=(fb.notes||[]).map(n=>({ id:'', ts:n.ts, who:(n.email||'a user').split('@')[0], text:n.text, done:false, source:'app' }));
+    const front=[...items.filter(i=>i.source==='app'),...feedback].sort((a,b)=>String(b.ts).localeCompare(String(a.ts)));
+    const adminSide=items.filter(i=>i.source!=='app');
+    const row=i=>'<div class="fr'+(i.done?' done':'')+'" title="'+esc(i.text)+'"'+(i.id?' data-fid="'+esc(i.id)+'"':'')+'>'+
+      '<span class="who">'+esc(i.who||'someone')+'</span><span class="ask">'+esc(short(i.text))+'</span>'+
+      '<span class="when">'+esc(day(i.ts))+(i.id?'<button class="fr-done" title="Mark shipped" onclick="markFeatureDone(this)">\u2713</button>':'')+'</span></div>';
+    const section=(t,arr)=>arr.length?('<div class="fr-sec">'+esc(t)+'</div>'+arr.map(row).join('')):'';
+    host.innerHTML=(section('Front end, what users ask',front)+section('Admin side, what we ask',adminSide))||'<div class="note">Nothing asked yet. Everything anyone asks Maya for lands here.</div>';
     const f=document.getElementById('features-fold');
-    if(f){ const latest=String(items[0].id||items[0].ts||''); let seen=''; try{ seen=localStorage.getItem('maya_features_seen')||''; }catch(_){}
+    const newest=front[0]||adminSide[0];
+    if(f&&newest){ const latest=String(newest.id||newest.ts||''); let seen=''; try{ seen=localStorage.getItem('maya_features_seen')||''; }catch(_){}
       f.classList.toggle('unseen', seen!==latest);
       f.addEventListener('toggle',()=>{ if(f.open){ f.classList.remove('unseen'); try{ localStorage.setItem('maya_features_seen',latest); }catch(_){} } },{once:true}); }
   }catch(e){ host.innerHTML='<div class="note">Maya\'s inbox did not answer: '+String(e.message||e).replace(/[<>]/g,'')+'</div>'; }
+}
+async function markFeatureDone(btn){
+  const rowEl=btn.closest('.fr'); const id=rowEl&&rowEl.getAttribute('data-fid'); if(!id||!_idTok) return;
+  const undone=rowEl.classList.contains('done');
+  try{
+    const r=await fetch('/api/admin/maya-feature-done',{method:'POST',headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({id,undone})});
+    if(r.ok) rowEl.classList.toggle('done',!undone);
+  }catch(_){ }
 }
 // v12.8: light the green dot when the newest entry has not been read on this
 // device, and put it out the moment the section is opened.
