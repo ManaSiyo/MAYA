@@ -16,6 +16,21 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 28, 2026, THE FIVE TRUTHS AND THE TRIPLE AUDIT (v14.06, round 1 of 3)
+
+[x] "Design notes must be consistent on every card: a short bio (about 15
+    words), the aesthetic, the silhouette, the color, the era, subheadlines
+    with answers underneath, the whole column centered, existing and future
+    cards alike." Done: the profile sweep writes all five per picture; the
+    viewer renders them first, centered.
+[x] "The main image sits a little high; lower the whole thing." Done, 30px.
+[x] "The thank you toast is a little high." Done, lower.
+[x] "Favorites arrows are not the pill aesthetic and sit too far out." Done:
+    canon pill, stepped inward.
+[x] "The hover rise under Post to Community Wall / Get it made cuts the card's
+    rounded corners." Done: the rise carries the same radius.
+[ ] Round 2 and round 3 of the triple audit follow as separate commits.
+
 AUGUST 28, 2026, THE LIVE SMOKE TEST (v14.05)
 
 [x] "Make sure everything is actually pushed and working; find bugs." Ran

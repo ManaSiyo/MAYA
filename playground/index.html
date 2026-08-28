@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.05">
+<meta name="maya-version" content="14.06">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -1253,7 +1253,8 @@
 
   /* toast, v10: pulled into the page-1 glass-pill canon. */
   #toast {
-    position: fixed; bottom: 110px; left: 50%;
+    /* v14.06: a touch lower, per Fromsa */
+    position: fixed; bottom: 72px; left: 50%;
     transform: translateX(-50%) translateY(8px);
     background: transparent;
     border: 0.5px solid rgba(255,255,255,0.22);
@@ -3597,9 +3598,16 @@
     position: fixed; left: 26px; top: 104px;
     width: min(250px, calc(15vw - 20px));
     max-height: 66vh; overflow-y: auto; z-index: 5;
-    text-align: left; display: none;
+    /* v14.06: the column reads centered, per Fromsa, even though it lives left */
+    text-align: center; display: none;
     scrollbar-width: none;
   }
+  #viewer-notes .vn-pills { justify-content: center; }
+  /* v14.06: the five-line profile every picture carries: bio, aesthetic,
+     silhouette, color, era. Subheadlines with their answers underneath. */
+  #viewer-notes .vn-profile .note-item { border-bottom: 0.25px solid rgba(255,255,255,0.06); padding: 7px 0; }
+  #viewer-notes .vn-profile .note-detail { font-style: normal; font-family: 'Cormorant Garamond', serif;
+    font-size: 13px; line-height: 1.4; color: rgba(225,230,245,0.92); }
   #viewer-notes::-webkit-scrollbar { display: none; }
   #garment-modal.open:not([data-photo="full"]) #viewer-notes { display: block; }
   /* Same type, same rhythm, same hairlines as the notes that used to live in
@@ -7436,14 +7444,21 @@ function openFavoriteForSubmit(itemId) {
   if (modal) modal.dataset.mode = 'submit';
   // v11.50: ‹ › on the favorites viewer, browse all favorites without closing
   if (modal && !document.getElementById('fav-nav-prev')) {
+    // v14.06: the arrows are the canon pill now (the viewer close's exact
+    // recipe), a step inward from the edges, per Fromsa.
     const mk = (id, txt, d) => {
       const b = document.createElement('button');
       b.id = id; b.innerHTML = txt;
       b.style.cssText = 'position:absolute;top:50%;transform:translateY(-50%);z-index:40;' +
-        'width:46px;height:46px;border-radius:50%;border:0.5px solid rgba(255,255,255,0.3);' +
-        'background:rgba(10,16,34,0.55);color:rgba(240,246,255,0.9);font-size:22px;cursor:pointer;' +
-        'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)';
-      b.style[d < 0 ? 'left' : 'right'] = '10px';   // v13.92: nudged nearer the corners, per Fromsa
+        'width:36px;height:36px;border-radius:50%;border:0.5px solid rgba(255,255,255,0.22);' +
+        'background:transparent;color:rgba(245,250,255,0.85);font-size:18px;line-height:1;cursor:pointer;' +
+        'display:flex;align-items:center;justify-content:center;' +
+        'backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);' +
+        'box-shadow:inset 0 1px 1px rgba(255,255,255,0.28), inset 0 -1px 1px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.22);' +
+        'transition:border-color .2s,background .2s,color .2s';
+      b.onmouseenter = () => { b.style.background = 'rgba(255,255,255,0.04)'; b.style.borderColor = 'rgba(255,255,255,0.42)'; b.style.color = 'rgba(255,255,255,1)'; };
+      b.onmouseleave = () => { b.style.background = 'transparent'; b.style.borderColor = 'rgba(255,255,255,0.22)'; b.style.color = 'rgba(245,250,255,0.85)'; };
+      b.style[d < 0 ? 'left' : 'right'] = '42px';
       b.onclick = (e) => { e.stopPropagation(); _favStep(d); };
       modal.appendChild(b);
     };
@@ -11836,7 +11851,17 @@ function renderViewerNotes(item) {
     '<div class="note-item"><div class="note-title">' + escapeHtml(title) + '</div>' +
     (detail ? '<div class="note-detail">' + escapeHtml(detail) + '</div>' : '') + '</div>';
   const groups = [];
-  if (c.caption) {
+  // v14.06: EVERY picture carries the same five lines: Bio, Aesthetic,
+  // Silhouette, Color, Era, written once by the profile sweep. Uniform across
+  // every card, old and new; anything else follows below.
+  if (c.profile && typeof c.profile === 'object') {
+    const P = c.profile;
+    const row = (t, v) => v ? '<div class="note-item"><div class="note-group-title">' + escapeHtml(t) + '</div>' +
+      '<div class="note-detail">' + escapeHtml(String(v)) + '</div></div>' : '';
+    const body = row('Bio', P.bio) + row('Aesthetic', P.aesthetic) + row('Silhouette', P.silhouette) +
+                 row('Color', P.color) + row('Era', P.era);
+    if (body) groups.push({ t: 'Notes', b: '<div class="vn-profile">' + body + '</div>' });
+  } else if (c.caption) {
     groups.push({ t: 'Notes', b: '<div class="vn-caption">' + escapeHtml(c.caption) + '</div>' });
   }
   if (Array.isArray(c.mods) && c.mods.length) {
@@ -17421,7 +17446,11 @@ if (typeof toggleNotesDrawer === 'function') {
      hover at its floor, over a soft rise of black. */
   #garment-image-wrap .submit-wrap { position: absolute; left: 0; right: 0; bottom: 0; z-index: 22;
     padding: 42px 12px 16px; margin: 0; opacity: 0; transition: opacity 0.25s ease;
-    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.75) 100%); }
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.75) 100%);
+    /* v14.06: the rise stays inside the card's rounded corners */
+    border-radius: 0 0 16px 16px; }
+  /* v14.06: the whole viewer block sits a touch lower, per Fromsa */
+  #garment-modal:not([data-photo="full"]) #garment-image-wrap { margin-top: 30px; }
   #garment-image-wrap:hover .submit-wrap { opacity: 1; }
 </style>
 <div id="pg-maya-chip" onclick="pgMayaStop()" title="Maya is on the line. Tap to hang up."><span class="dot"></span><span id="pg-maya-chip-word">Maya is listening</span></div>
@@ -17797,23 +17826,31 @@ async function _pgCaptionOne() {
   if (_pgCapBusy || document.hidden) return;
   const key = (typeof getApiKey === 'function') ? getApiKey() : '';
   if (!key) return;
-  const it = (items || []).find(i => i && i.card && i.card.image && !i.card.caption && !i.card._capFailed);
+  // v14.06: the sweep writes the full five-line profile now (bio, aesthetic,
+  // silhouette, color, era), the same shape for every picture. Cards that only
+  // carry the old one-line caption get upgraded too.
+  const it = (items || []).find(i => i && i.card && i.card.image && !i.card.profile && !i.card._capFailed);
   if (!it) return;
   _pgCapBusy = true;
   try {
     const r = await fetch('/api/openai/v1/chat/completions', {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-      body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 40, messages: [
-        { role: 'system', content: 'You caption fashion pictures for a design studio. Answer with ONE evocative line, at most 10 words, no quotes, no dashes, no ending period.' },
+      body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 150, response_format: { type: 'json_object' }, messages: [
+        { role: 'system', content: 'You profile fashion pictures for a design studio. Answer ONLY a JSON object with the keys bio (one evocative line, at most 15 words), aesthetic (2 to 4 words), silhouette (2 to 4 words), color (2 to 4 words), era (2 to 4 words). No quotes inside values, no dashes, no ending periods.' },
         { role: 'user', content: [
-          { type: 'text', text: 'Caption this picture.' },
+          { type: 'text', text: 'Profile this picture.' },
           { type: 'image_url', image_url: { url: it.card.image } } ] } ] }),
     });
     const j = await r.json().catch(() => ({}));
-    const line = r.ok ? String(((j.choices || [])[0] || {}).message && j.choices[0].message.content || '').trim().replace(/^"|"$/g, '').slice(0, 90) : '';
-    if (line) {
-      it.card.caption = line;
+    let prof = null;
+    try { prof = JSON.parse(((j.choices || [])[0] || {}).message.content); } catch (_) {}
+    if (r.ok && prof && prof.bio) {
+      const clean = v => String(v || '').trim().replace(/^"|"$/g, '').slice(0, 90);
+      it.card.profile = { bio: clean(prof.bio), aesthetic: clean(prof.aesthetic),
+        silhouette: clean(prof.silhouette), color: clean(prof.color), era: clean(prof.era) };
+      it.card.caption = it.card.profile.bio;   // the bio is the one-line summary everywhere
       if (typeof _persistSession === 'function') _persistSession();
+      try { if (document.getElementById('garment-modal').classList.contains('open') && typeof viewerItemId !== 'undefined' && viewerItemId === it.id) renderViewerNotes(it); } catch (_) {}
     } else { it.card._capFailed = true; }
   } catch (_) { it.card._capFailed = true; }
   _pgCapBusy = false;

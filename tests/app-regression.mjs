@@ -1990,6 +1990,14 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.06: every card carries the five-line profile, centered; the viewer and toast sit lower; canon arrows; rounded rise',
+  PLAYGROUND_SOURCE.includes("const it = (items || []).find(i => i && i.card && i.card.image && !i.card.profile") &&
+  PLAYGROUND_SOURCE.includes("row('Bio', P.bio) + row('Aesthetic', P.aesthetic) + row('Silhouette', P.silhouette)") &&
+  PLAYGROUND_SOURCE.includes('text-align: center; display: none;') &&
+  PLAYGROUND_SOURCE.includes('border-radius: 0 0 16px 16px; }') &&
+  PLAYGROUND_SOURCE.includes('#garment-modal:not([data-photo="full"]) #garment-image-wrap { margin-top: 30px; }') &&
+  PLAYGROUND_SOURCE.includes('position: fixed; bottom: 72px; left: 50%;') &&
+  PLAYGROUND_SOURCE.includes("b.style[d < 0 ? 'left' : 'right'] = '42px';"));
 ok('v14.05: the door is reachable from the public domain: /mcp is rewritten to Cloud Run and /api/mcp always was',
   JSON.stringify(HOSTING.hosting.rewrites).includes('"source":"/mcp"') &&
   SERVER_SOURCE.includes("app.post(['/mcp', '/api/mcp']") &&

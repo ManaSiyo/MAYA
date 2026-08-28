@@ -74,6 +74,19 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.06 (Claude): the five truths (triple-audit round 1)
+
+`playground/index.html`, `backend/status.html`, metas, `tests/*`: the caption
+sweep became the PROFILE sweep (`card.profile` = bio, aesthetic, silhouette,
+color, era via one json_object vision call; `card.caption` = bio; cards with
+only the old caption get upgraded; live viewer repaints on arrival);
+`renderViewerNotes` leads with the five centered subheadlines for every card;
+`#viewer-notes` text centered; viewer block 30px lower; toast bottom 72px;
+favorites arrows in the canon pill recipe at 42px insets; the submit-wrap rise
+keeps the 16px bottom radius. Probed headless: titles Bio/Aesthetic/
+Silhouette/Color/Era, centered, Design ideas intact, 0 JS errors; 395
+assertions green. Rounds 2 and 3 of Fromsa's triple audit follow separately.
+
 ## v14.05 (Claude): the door actually opens
 
 Live smoke test of production (v14.03 at the time) found that
