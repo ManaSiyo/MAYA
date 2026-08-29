@@ -4020,6 +4020,9 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       '- background(which): star or generate, a fresh backdrop behind the board.\n' +
       '- randomize_avatar and set_measurement(name, value): their fit model; measurements arrive like "waist 29".\n' +
       '- pick_fabric(name, mode): inside the Switch Fabric flow, choose in house or sourceable, then the fabric by name.\n' +
+      '- move_card(query, direction) and resize_card(query, size): rearrange the sketchbook by voice; center is a direction too, size is bigger or smaller.\n' +
+      '- list_favorites / open_favorite(query): their hearted pieces by name; opening one lands in the submit flow.\n' +
+      '- set_quality(quality): medium is fast, high is sharper; use medium for drafts.\n' +
       '- list_board: the cards on screen right now.\n' +
       '- hang_up: end the call when they say goodbye or stop.\n\n' +
       'THE BOARD RIGHT NOW (' + board.length + ' cards):\n' + boardLines + '\n' +
@@ -4047,6 +4050,17 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       { type: 'function', name: 'pin_view', description: 'Show Pinterest: all saves, or the boards.', parameters: { type: 'object', properties: { which: { type: 'string', enum: ['all', 'boards'] } } } },
       { type: 'function', name: 'open_board', description: 'Open one Pinterest board by name.', parameters: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] } },
       { type: 'function', name: 'scroll_pins', description: 'Scroll the Pinterest wall.', parameters: { type: 'object', properties: { direction: { type: 'string', enum: ['down', 'up'] } } } },
+      { type: 'function', name: 'move_card', description: 'Move a card on the board: left, right, up, down, or center.',
+        parameters: { type: 'object', properties: { query: { type: 'string' }, direction: { type: 'string', enum: ['left', 'right', 'up', 'down', 'center'] },
+          amount: { type: 'number', description: 'pixels, default 170' } }, required: ['query', 'direction'] } },
+      { type: 'function', name: 'resize_card', description: 'Make a card bigger or smaller.',
+        parameters: { type: 'object', properties: { query: { type: 'string' }, size: { type: 'string', enum: ['bigger', 'smaller'] } }, required: ['query', 'size'] } },
+      { type: 'function', name: 'list_favorites', description: 'The hearted pieces, by name.', parameters: { type: 'object', properties: {} } },
+      { type: 'function', name: 'open_favorite', description: 'Open one hearted piece by words that match it; lands in the submit flow.',
+        parameters: { type: 'object', properties: { query: { type: 'string' } } } },
+      { type: 'function', name: 'set_quality', description: 'Set image render quality: medium (fast) or high (sharper).',
+        parameters: { type: 'object', properties: { quality: { type: 'string', enum: ['medium', 'high'] } }, required: ['quality'] } },
+      { type: 'function', name: 'clear_hints', description: 'Dismiss the onboarding hints from the screen.', parameters: { type: 'object', properties: {} } },
       { type: 'function', name: 'zoom', description: 'Zoom the moodboard: in, out, or reset.',
         parameters: { type: 'object', properties: { action: { type: 'string', enum: ['in', 'out', 'reset'] } }, required: ['action'] } },
       { type: 'function', name: 'organize_board', description: 'Tidy the canvas into a clean layout.', parameters: { type: 'object', properties: {} } },

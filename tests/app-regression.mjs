@@ -1990,6 +1990,19 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.12: the second pass: honest scroll and credits, moving hands, favorites by name, quality by voice',
+  PLAYGROUND_SOURCE.includes("if (!body || !body.offsetParent) return { ok: false, reason: 'Pinterest is not open' };") &&
+  PLAYGROUND_SOURCE.includes("area = (pb && pb.offsetParent) ? 'pins'") &&
+  PLAYGROUND_SOURCE.includes("if (j.admin) return { ok: true, admin: true, note: 'studio account, no cap'") &&
+  PLAYGROUND_SOURCE.includes("return { ok: true, note: 'that reference was already on the canvas' };") &&
+  PLAYGROUND_SOURCE.includes("reason: 'that control is not on screen right now'") &&
+  PLAYGROUND_SOURCE.includes("case 'move_card': {") &&
+  PLAYGROUND_SOURCE.includes("case 'resize_card': {") &&
+  PLAYGROUND_SOURCE.includes("case 'open_favorite': {") &&
+  PLAYGROUND_SOURCE.includes("case 'set_quality': {") &&
+  SERVER_SOURCE.includes("name: 'move_card'") &&
+  SERVER_SOURCE.includes("name: 'open_favorite'") &&
+  SERVER_SOURCE.includes("name: 'set_quality'"));
 ok('v14.11: thirteen new hands from walking the interface: zoom, organize, dissect, references, projects, credits, fabric, avatar',
   PLAYGROUND_SOURCE.includes("case 'zoom': {") &&
   PLAYGROUND_SOURCE.includes("case 'organize_board': {") &&

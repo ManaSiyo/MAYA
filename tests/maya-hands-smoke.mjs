@@ -141,6 +141,18 @@ const battery = [
   ['viewer', { action: 'heart' }, o => o && typeof o.ok === 'boolean'],
   ['viewer', { action: 'photo' }, o => o && typeof o.ok === 'boolean'],
   ['viewer', { action: 'attributes' }, o => o && typeof o.ok === 'boolean'],
+  // v14.12: the second audit pass: honest scroll, moving hands, favorites by name.
+  ['move_card', { query: 'apple', direction: 'right' }, o => o && o.ok === true && o.direction === 'right'],
+  ['move_card', { query: 'apple', direction: 'center' }, o => o && o.ok === true],
+  ['move_card', { query: 'apple', direction: 'sideways' }, o => o && o.ok === false && Array.isArray(o.directions)],
+  ['move_card', { query: 'purple spacesuit', direction: 'left' }, o => o && o.ok === false],
+  ['resize_card', { query: 'apple', size: 'bigger' }, o => o && o.ok === true && /px/.test(o.width)],
+  ['resize_card', { query: 'apple', size: 'smaller' }, o => o && o.ok === true],
+  ['list_favorites', {}, o => o && typeof o.ok === 'boolean'],
+  ['open_favorite', { query: 'anything' }, o => o && typeof o.ok === 'boolean'],
+  ['set_quality', { quality: 'high' }, o => o && o.ok === true && o.quality === 'high'],
+  ['set_quality', { quality: 'ultra' }, o => o && o.ok === false],
+  ['clear_hints', {}, o => o && o.ok === true],
 ];
 for (const [name, args, judge] of battery) {
   let out, threw = null;
@@ -154,6 +166,20 @@ for (const [name, args, judge] of battery) {
     !threw && judge(out),
     threw ? 'THREW: ' + threw : (out && out.ok === false ? 'said no: ' + (out.reason || '(no reason)') : ''));
 }
+
+// ── 3b. v14.12: scroll is honest about a closed drawer ──
+const honest = await page.evaluate(async () => {
+  try { toggleNotesDrawer(false); } catch (_) {}
+  await new Promise(r => setTimeout(r, 700));
+  const closedPins = await window._pgTool('scroll_pins', {}, { send: () => {} });
+  const bare = await window._pgTool('scroll', {}, { send: () => {} });
+  return { closedPins, bare };
+});
+ok('scroll_pins with the drawer closed says so instead of pretending',
+  honest.closedPins && honest.closedPins.ok === false && /not open/.test(honest.closedPins.reason || ''),
+  JSON.stringify(honest.closedPins));
+ok('bare scroll with the drawer closed never claims the pins',
+  honest.bare && honest.bare.area !== 'pins', JSON.stringify(honest.bare));
 
 // ── 4. the failed hand files itself (v14.09 observer) ──
 const logged = await page.evaluate(async () => {

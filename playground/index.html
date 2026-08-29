@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.11">
+<meta name="maya-version" content="14.12">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -17612,7 +17612,8 @@ async function _pgTool(name, a, dc) {
         attributes: () => { try { toggleAttributes(); return true; } catch (_) { return false; } },
       };
       if (!map[act]) return { ok: false, reason: 'unknown action', actions: Object.keys(map) };
-      return { ok: !!map[act]() };
+      const hit = !!map[act]();
+      return hit ? { ok: true } : { ok: false, reason: 'that control is not on screen right now' };
     }
     case 'pin_view': {
       try { toggleNotesDrawer(true); pgTab('pinterest'); } catch (_) {}
@@ -17633,7 +17634,7 @@ async function _pgTool(name, a, dc) {
     }
     case 'scroll_pins': {
       const body = document.getElementById('pinterest-drawer-body');
-      if (!body) return { ok: false, reason: 'Pinterest is not open' };
+      if (!body || !body.offsetParent) return { ok: false, reason: 'Pinterest is not open' };
       body.scrollBy({ top: (a.direction === 'up' ? -1 : 1) * 420, behavior: 'smooth' });
       return { ok: true };
     }
@@ -17693,6 +17694,68 @@ async function _pgTool(name, a, dc) {
         return { ok: r.ok };
       } catch (_) { return { ok: false }; }
     }
+    case 'move_card': {
+      // v14.12: she can rearrange the sketchbook. style.left/top are canvas
+      // units, so zoom never skews the step; _persistSession keeps the spot.
+      const it = _pgFindCard(a.query); if (!it) return { ok: false, reason: 'no card matches', board: _pgBoardSnapshot() };
+      const el = it.el;
+      const step = Math.max(40, Math.min(600, Number(a.amount) || 170));
+      const d = String(a.direction || '').toLowerCase();
+      let x = parseInt(el.style.left) || 0, y = parseInt(el.style.top) || 0;
+      if (d === 'left') x -= step; else if (d === 'right') x += step;
+      else if (d === 'up') y -= step; else if (d === 'down') y += step;
+      else if (d === 'center') {
+        const c = document.getElementById('maya-canvas');
+        if (c) { x = Math.round((c.clientWidth - el.offsetWidth) / 2); y = Math.round((c.clientHeight - el.offsetHeight) / 2); }
+      } else return { ok: false, reason: 'unknown direction', directions: ['left', 'right', 'up', 'down', 'center'] };
+      el.style.left = x + 'px'; el.style.top = y + 'px';
+      try { if (typeof _persistSession === 'function') _persistSession(); } catch (_) {}
+      return { ok: true, moved: String(it.card.caption || it.card.title || 'card').slice(0, 60), direction: d };
+    }
+    case 'resize_card': {
+      const it = _pgFindCard(a.query); if (!it) return { ok: false, reason: 'no card matches', board: _pgBoardSnapshot() };
+      const el = it.el;
+      const cur = parseInt(el.style.width) || el.offsetWidth || 220;
+      const wantBig = String(a.size || '').toLowerCase() !== 'smaller';
+      const w = Math.max(140, Math.min(640, Math.round(cur * (wantBig ? 1.25 : 0.8))));
+      el.style.width = w + 'px'; it.card.width = w;
+      const img = el.querySelector('img'); if (img) { img.style.width = '100%'; img.style.maxWidth = w + 'px'; img.style.maxHeight = 'none'; }
+      try { if (typeof _persistSession === 'function') _persistSession(); } catch (_) {}
+      return { ok: true, card: String(it.card.caption || it.card.title || 'card').slice(0, 60), width: w + 'px' };
+    }
+    case 'list_favorites': {
+      const favs = (items || []).filter(i => i && i.card && i.card.favorited && i.card.image);
+      if (!favs.length) return { ok: false, reason: 'no favorites yet' };
+      return { ok: true, count: favs.length, favorites: favs.slice(0, 20).map(f => String(f.card.caption || f.card.title || 'piece').slice(0, 70)) };
+    }
+    case 'open_favorite': {
+      const favs = (items || []).filter(i => i && i.card && i.card.favorited && i.card.image);
+      if (!favs.length) return { ok: false, reason: 'no favorites yet' };
+      const words = String(a.query || '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 2);
+      let best = favs[0], bestScore = 0;
+      if (words.length) for (const f of favs) {
+        const P = f.card.profile || {};
+        const hay = [f.card.caption, f.card.title, P.bio, P.aesthetic, P.silhouette, P.color, P.era].filter(Boolean).join(' ').toLowerCase();
+        const score = words.reduce((n, w) => n + (hay.includes(w) ? 1 : 0), 0);
+        if (score > bestScore) { bestScore = score; best = f; }
+      }
+      if (words.length && !bestScore) return { ok: false, reason: 'no favorite matches', favorites: favs.slice(0, 20).map(f => String(f.card.caption || f.card.title || '').slice(0, 70)) };
+      try { openFavoriteForSubmit(best.id); } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      return { ok: true, opened: String(best.card.caption || best.card.title || 'favorite').slice(0, 70) };
+    }
+    case 'set_quality': {
+      const q = String(a.quality || '').toLowerCase();
+      if (!['medium', 'high'].includes(q)) return { ok: false, reason: 'quality is medium or high' };
+      try {
+        localStorage.setItem(STORAGE_KEY_IMG_QUALITY, q);
+        const sel = document.getElementById('quality-input'); if (sel) sel.value = q;
+      } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      return { ok: true, quality: q, note: q === 'high' ? 'sharper renders, a touch slower' : 'the fast balanced default' };
+    }
+    case 'clear_hints': {
+      try { dismissHints(); } catch (_) {}
+      return { ok: true };
+    }
     case 'zoom': {
       // v14.11: she can step back from the board and lean in again.
       if (typeof window.pgZoomTo !== 'function') return { ok: false, reason: 'zoom is not ready' };
@@ -17719,8 +17782,10 @@ async function _pgTool(name, a, dc) {
       const c = document.getElementById('maya-canvas'); if (!c) return { ok: false, reason: 'the board is not here' };
       const r = c.getBoundingClientRect();
       const xy = { x: r.left + r.width * (0.35 + Math.random() * 0.3), y: r.top + r.height * (0.28 + Math.random() * 0.3) };
+      const before = (items || []).length;
       try { await addManualRef(t, xy); } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
-      return { ok: true, placed: t };
+      if ((items || []).length > before) return { ok: true, placed: t };
+      return { ok: true, note: 'that reference was already on the canvas' };
     }
     case 'card_details': {
       const it = _pgFindCard(a.query); if (!it) return { ok: false, reason: 'no card matches', board: _pgBoardSnapshot() };
@@ -17757,8 +17822,11 @@ async function _pgTool(name, a, dc) {
         const r = await fetch('/api/usage', { headers: { Authorization: 'Bearer ' + key } });
         if (!r.ok) return { ok: false, reason: 'usage answered ' + r.status };
         const j = await r.json();
-        const cap = Number(j.capUsd) || 2, spent = Number(j.spentUsd) || 0;
-        return { ok: true, dollarsLeft: Math.max(0, cap - spent).toFixed(2), spent: spent.toFixed(2), cap: cap.toFixed(2), images: Number(j.images) || 0 };
+        const spent = Number(j.spentUsd) || 0;
+        if (j.admin) return { ok: true, admin: true, note: 'studio account, no cap', spent: spent.toFixed(2), images: Number(j.images) || 0 };
+        const cap = Number(j.capUsd) || 2;
+        const left = (typeof j.leftUsd === 'number') ? j.leftUsd : Math.max(0, cap - spent);
+        return { ok: true, dollarsLeft: Number(left).toFixed(2), spent: spent.toFixed(2), cap: cap.toFixed(2), images: Number(j.images) || 0 };
       } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
     }
     case 'background': {
@@ -17833,12 +17901,13 @@ async function _pgTool(name, a, dc) {
       let area = String(a.area || '').toLowerCase();
       if (!area) {
         const here = (typeof currentScreen === 'number') ? currentScreen : 1;
-        area = document.getElementById('pinterest-drawer-body') ? 'pins'
+        const pb = document.getElementById('pinterest-drawer-body');
+        area = (pb && pb.offsetParent) ? 'pins'
           : here === 2 ? 'favorites' : here === 0 ? 'community' : '';
       }
       if (area === 'pins' || area === 'pinterest') {
         const body = document.getElementById('pinterest-drawer-body');
-        if (!body) return { ok: false, reason: 'Pinterest is not open' };
+        if (!body || !body.offsetParent) return { ok: false, reason: 'Pinterest is not open' };
         body.scrollBy({ top: dir * 420, behavior: 'smooth' });
         return { ok: true, area: 'pins' };
       }

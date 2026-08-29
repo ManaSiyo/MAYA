@@ -74,6 +74,27 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.12 (Claude): the second pass
+
+Audit findings on my own v14.10/v14.11 work, all fixed: #pinterest-drawer-body
+is STATIC markup, always in the DOM, so every "is Pinterest open" check must
+use offsetParent, never bare existence (scroll_pins, scroll's pins branch,
+and scroll's bare-area inference all fixed; two scripted battery scenarios
+now pin this). /api/usage returns admin:true and leftUsd; check_credits now
+honors both. addManualRef dedupes silently, so add_reference counts items
+before and after and reports "already on the canvas". viewer returns a
+spoken reason on a miss. New tools: move_card (style.left/top are canvas
+units so zoom never skews the step; _persistSession saves), resize_card
+(140 to 640 px clamp, mirrors the resize handle's img sizing), list_favorites
+and open_favorite (items filter favorited+image; openFavoriteForSubmit),
+set_quality (writes STORAGE_KEY_IMG_QUALITY directly, never saveSettings,
+which would clobber the model input; only medium and high exist in the app),
+clear_hints. Battery: 73 checks. She is at 41 tools.
+
+NEXT (Fromsa): push. Then on a call: "move the red dress to the center and
+make it bigger", "open my favorite with the gold collar", "high quality
+this time".
+
 ## v14.11 (Claude): thirteen new hands
 
 The method: inventory every interactive element in the live playground DOM

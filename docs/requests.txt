@@ -16,6 +16,23 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 29, 2026 (v14.12): the second pass (audit again, add, audit again)
+
+[x] Fresh-eyes audit of v14.10 and v14.11 found four quiet lies, all fixed:
+    scroll_pins and bare scroll trusted a drawer node that always exists, so
+    a closed drawer "scrolled" invisibly (now checks visibility); the
+    credits reader told admins they had a $2 cap (now says studio account,
+    no cap); add_reference claimed to place a reference the dedupe had
+    skipped (now says it was already there); a viewer press that found no
+    control returned a bare no (now says the control is not on screen).
+[x] Six more hands where the walk left gaps: move_card (left/right/up/down/
+    center, persists), resize_card (bigger/smaller, clamped), list_favorites
+    and open_favorite (hearted pieces by name, straight into the submit
+    flow), set_quality (medium or high), clear_hints.
+[x] Third pass: battery grown to 73 checks including two scripted honesty
+    scenarios; all green, plus the 400-assertion regression suite, contract,
+    MCP, and syntax checks.
+
 AUGUST 29, 2026 (v14.11): thirteen new hands (the interface walk)
 
 [x] "Interact with Maya yourself, swipe through everything, give her more
