@@ -3132,13 +3132,18 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
         description: 'Read Mana Siyo\'s internal admin Google Sheet live and return its tabs and rows. Use when Fromsa asks about anything tracked in the internal sheet.',
         parameters: { type: 'object', properties: {} } },
     ];
-    const r = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
+    // v14.10: same ears as the app: far_field noise reduction, with a plain fallback.
+    const _secretA = (session) => fetch('https://api.openai.com/v1/realtime/client_secrets', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session: { type: 'realtime', model: REALTIME_MODEL, instructions, tools,
-        audio: { output: { voice: process.env.OPENAI_REALTIME_VOICE || 'marin' } } } }),
+      body: JSON.stringify({ session }),
       signal: AbortSignal.timeout(20000),
     });
+    let r = await _secretA({ type: 'realtime', model: REALTIME_MODEL, instructions, tools,
+      audio: { input: { noise_reduction: { type: 'far_field' } },
+               output: { voice: process.env.OPENAI_REALTIME_VOICE || 'marin' } } });
+    if (!r.ok) r = await _secretA({ type: 'realtime', model: REALTIME_MODEL, instructions, tools,
+      audio: { output: { voice: process.env.OPENAI_REALTIME_VOICE || 'marin' } } });
     const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.value) throw new Error((j.error && j.error.message) || ('realtime ' + r.status));
     noteSpend('v1/realtime', req);
@@ -3979,7 +3984,7 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       ' in San Francisco. This is the design conversation: the person describes the garment they imagine, you help them ' +
       'say it precisely (silhouette, fabric feel, mood, color, what they do not want), then you put it on the board and ' +
       'visualize it on them. Be warm, sharp and brief: one or two spoken sentences at a time, then listen. Never read ' +
-      'URLs or JSON aloud. Open by greeting them by name and asking what they are imagining, unless the board already ' +
+      'URLs or JSON aloud. If you are not sure what they said, do not guess a command; repeat the few words you caught and ask. Open by greeting them by name and asking what they are imagining, unless the board already ' +
       'holds cards, then say what you see in one sentence and ask what to do with it.\n\n' +
       'YOUR EYES. Call look and a picture of the actual screen arrives; read it and speak from what is really there. ' +
       'Look when they point at anything visual ("this one", "the white and red outfit"), after your own actions change the ' +
@@ -4005,6 +4010,8 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       '- open_card(query) / delete_card(query) / favorite_card(query): act on a card by its words.\n' +
       '- viewer(action): inside the opened picture: close, next, prev, post_wall, get_it_made, listen, switch_fabric, add_reference.\n' +
       '- pin_view(which): Pinterest All saves or Boards. open_board(name) opens one. scroll_pins(direction) browses.\n' +
+      '- go_to_screen(where): walk the app itself: community (the shared wall above), home (the moodboard), favorites (below). Go there before talking about what lives there.\n' +
+      '- scroll(area, direction): move through favorites, the community wall, or the pins. When they say go down, keep going, or show me more, scroll.\n' +
       '- list_board: the cards on screen right now.\n' +
       '- hang_up: end the call when they say goodbye or stop.\n\n' +
       'THE BOARD RIGHT NOW (' + board.length + ' cards):\n' + boardLines + '\n' +
@@ -4032,17 +4039,28 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       { type: 'function', name: 'pin_view', description: 'Show Pinterest: all saves, or the boards.', parameters: { type: 'object', properties: { which: { type: 'string', enum: ['all', 'boards'] } } } },
       { type: 'function', name: 'open_board', description: 'Open one Pinterest board by name.', parameters: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] } },
       { type: 'function', name: 'scroll_pins', description: 'Scroll the Pinterest wall.', parameters: { type: 'object', properties: { direction: { type: 'string', enum: ['down', 'up'] } } } },
+      { type: 'function', name: 'go_to_screen', description: 'Walk the app: community (the shared wall above), home (the moodboard), favorites (below).',
+        parameters: { type: 'object', properties: { where: { type: 'string', enum: ['community', 'home', 'favorites'] } }, required: ['where'] } },
+      { type: 'function', name: 'scroll', description: 'Scroll an area: favorites, the community wall, or the Pinterest pins. down means forward.',
+        parameters: { type: 'object', properties: { area: { type: 'string', enum: ['favorites', 'community', 'pins'] }, direction: { type: 'string', enum: ['down', 'up'] } } } },
       { type: 'function', name: 'list_board', description: 'The cards on the board right now.', parameters: { type: 'object', properties: {} } },
       { type: 'function', name: 'hang_up', description: 'End the call.', parameters: { type: 'object', properties: {} } },
     ];
-    const r = await fetch('https://api.openai.com/v1/realtime/client_secrets', {
+    // v14.10: her ears. far_field noise reduction for rooms that are not quiet,
+    // and a stronger transcriber. If OpenAI ever rejects the richer shape, the
+    // plain session goes out instead, so voice can never die from this.
+    const _secret = (session) => fetch('https://api.openai.com/v1/realtime/client_secrets', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session: { type: 'realtime', model: REALTIME_MODEL, instructions, tools,
-        audio: { input: { transcription: { model: 'whisper-1' } },
-                 output: { voice: process.env.OPENAI_REALTIME_VOICE || 'marin' } } } }),
+      body: JSON.stringify({ session }),
       signal: AbortSignal.timeout(20000),
     });
+    let r = await _secret({ type: 'realtime', model: REALTIME_MODEL, instructions, tools,
+      audio: { input: { noise_reduction: { type: 'far_field' }, transcription: { model: 'gpt-4o-mini-transcribe' } },
+               output: { voice: process.env.OPENAI_REALTIME_VOICE || 'marin' } } });
+    if (!r.ok) r = await _secret({ type: 'realtime', model: REALTIME_MODEL, instructions, tools,
+      audio: { input: { transcription: { model: 'whisper-1' } },
+               output: { voice: process.env.OPENAI_REALTIME_VOICE || 'marin' } } });
     const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.value) throw new Error((j.error && j.error.message) || ('realtime ' + r.status));
     noteSpend('v1/realtime', req);

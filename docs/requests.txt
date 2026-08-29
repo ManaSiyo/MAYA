@@ -16,6 +16,28 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 28, 2026, LATE (v14.10): her legs and ears (the hands smoke test)
+
+[x] "Dump a bunch of requests that are Maya's and do a smoke screen test
+    yourself": tests/maya-hands-smoke.mjs boots the playground headless and
+    fires thirty of her own tool calls through her dispatcher, good args and
+    bad. Nothing throws, nothing hangs, every failure answers with a reason.
+[x] BUG FOUND AND FIXED: Maya could not go to favorites or come back, and
+    could not scroll anything but Pinterest. New tools: go_to_screen
+    (community / home / favorites) and scroll (favorites, community wall,
+    or pins; bare "go down" steps a screen).
+[x] BUG FOUND AND FIXED: her card matching ignored the five design truths;
+    naming an era, color, or aesthetic now finds the card.
+[x] "Maya has a hard time understanding me, the room was not quiet": the
+    voice session now asks for far field noise reduction and a stronger
+    transcriber, on the app line and the admin line, with a plain fallback
+    session if OpenAI ever rejects the richer shape. Her instructions also
+    say: if unsure what was said, repeat the few words caught and ask, never
+    guess a command.
+[x] "Double-check she still tries to be helpful": character file, warmth and
+    taste lines verified in the instruction block; the battery shows every
+    refusal comes with a reason she can speak.
+
 AUGUST 28, 2026, NIGHT (v14.09): the autonomous observer
 
 [x] Automatic logging: every time Maya says "I can't" (or "my eyes are

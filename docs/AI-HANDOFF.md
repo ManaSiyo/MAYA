@@ -74,6 +74,26 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.10 (Claude): her legs and ears
+
+tests/maya-hands-smoke.mjs is the new battery: serves the repo with a fake
+/api, boots playground headless (fake media flags), seeds two cards, fires
+~30 calls through `_pgTool` with good and bad args, asserts shape not just
+success, checks the v14.09 auto-log fires on failure, and that the wake
+plumbing never throws. Run it after touching anything in the voice agent.
+Found: no screen navigation and no general scroll (the "cannot go down"
+bug). Fixed: `go_to_screen` (setScreen 0/1/2) and `scroll` (favorites
+scroller sideways, community rows sideways, pins down; no area = the screen
+under her, or step a screen). `_pgFindCard` hay now includes profile
+bio/aesthetic/silhouette/color/era. Server: both voice-token routes send
+audio.input.noise_reduction far_field (+ gpt-4o-mini-transcribe on the app
+line) and RETRY WITH THE PLAIN SHAPE if OpenAI rejects it, so voice cannot
+die from the upgrade. Instructions carry the honest-ears line. Metas and
+changelog stamp 14.10.
+
+NEXT (Fromsa): push, then call her in a noisy room and say "go to my
+favorites" and "keep going".
+
 ## v14.09 (Claude): the autonomous observer
 
 Maya logs her own limits. `_pgAutoLog(text, who, source)` in the playground

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.09">
+<meta name="maya-version" content="14.10">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -17531,7 +17531,9 @@ function _pgFindCard(query) {
   let best = null, bestScore = 0;
   for (const it of (items || [])) {
     if (!it || !it.card || !it.el) continue;
+    const P = it.card.profile || {};
     const hay = [it.card.caption, it.card.title, it.card.text, it.card.kind,
+      P.bio, P.aesthetic, P.silhouette, P.color, P.era,
       ...(it.card.refs || []).map(r => r && r.title)].filter(Boolean).join(' ').toLowerCase();
     const score = words.reduce((n, w) => n + (hay.includes(w) ? 1 : 0), 0);
     if (score > bestScore) { bestScore = score; best = it; }
@@ -17685,6 +17687,47 @@ async function _pgTool(name, a, dc) {
           body: JSON.stringify({ text: t, who: _pgWhoAmI() }) });
         return { ok: r.ok };
       } catch (_) { return { ok: false }; }
+    }
+    case 'go_to_screen': {
+      // v14.10: she can finally walk the app. 0=community wall, 1=home, 2=favorites.
+      const w = String(a.where || '').toLowerCase();
+      const n = (w === 'community' || w === 'wall') ? 0
+        : (w === 'favorites' || w === 'favourites') ? 2
+        : (w === 'home' || w === 'board' || w === 'moodboard' || w === 'inspo') ? 1 : -1;
+      if (n < 0) return { ok: false, reason: 'unknown screen', screens: ['community', 'home', 'favorites'] };
+      try { setScreen(n); } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      return { ok: true, screen: ['community', 'home', 'favorites'][n] };
+    }
+    case 'scroll': {
+      // v14.10: "keep going", "go down". Scrolls the area they mean, or the
+      // one under her feet: favorites and community move sideways, pins move down.
+      const dir = (a.direction === 'up' || a.direction === 'back') ? -1 : 1;
+      let area = String(a.area || '').toLowerCase();
+      if (!area) {
+        const here = (typeof currentScreen === 'number') ? currentScreen : 1;
+        area = document.getElementById('pinterest-drawer-body') ? 'pins'
+          : here === 2 ? 'favorites' : here === 0 ? 'community' : '';
+      }
+      if (area === 'pins' || area === 'pinterest') {
+        const body = document.getElementById('pinterest-drawer-body');
+        if (!body) return { ok: false, reason: 'Pinterest is not open' };
+        body.scrollBy({ top: dir * 420, behavior: 'smooth' });
+        return { ok: true, area: 'pins' };
+      }
+      if (area === 'favorites' || area === 'favourites') {
+        const el = document.getElementById('favorites-scroller');
+        if (!el || !el.children.length) return { ok: false, reason: 'favorites is empty' };
+        el.scrollBy({ left: dir * Math.max(320, el.clientWidth * 0.8), behavior: 'smooth' });
+        return { ok: true, area: 'favorites' };
+      }
+      if (area === 'community' || area === 'wall') {
+        const rows = [...document.querySelectorAll('#community-scroller .community-row')];
+        if (!rows.length || !rows.some(r => r.children.length)) return { ok: false, reason: 'the community wall is empty' };
+        rows.forEach(r => r.scrollBy({ left: dir * Math.max(320, r.clientWidth * 0.6), behavior: 'smooth' }));
+        return { ok: true, area: 'community' };
+      }
+      // nothing scrollable under her: step a screen instead, so "go down" still means something
+      return _pgTool('go_to_screen', { where: dir > 0 ? 'favorites' : 'community' }, dc);
     }
     case 'list_board': return { board: _pgBoardSnapshot(), drawer: _pgDrawerState() };
     case 'hang_up': { setTimeout(pgMayaStop, 800); return { ok: true }; }

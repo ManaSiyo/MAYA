@@ -1990,6 +1990,16 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.10: her legs and ears: go_to_screen and scroll on both sides, five-truths card matching, far_field hearing with a plain fallback',
+  PLAYGROUND_SOURCE.includes("case 'go_to_screen': {") &&
+  PLAYGROUND_SOURCE.includes("case 'scroll': {") &&
+  PLAYGROUND_SOURCE.includes('P.bio, P.aesthetic, P.silhouette, P.color, P.era,') &&
+  SERVER_SOURCE.includes("name: 'go_to_screen'") &&
+  SERVER_SOURCE.includes("name: 'scroll'") &&
+  SERVER_SOURCE.includes("noise_reduction: { type: 'far_field' }") &&
+  SERVER_SOURCE.includes('gpt-4o-mini-transcribe') &&
+  SERVER_SOURCE.includes('repeat the few words you caught and ask.') &&
+  existsSync(join(ROOT, 'tests/maya-hands-smoke.mjs')));
 ok('v14.09: the autonomous observer: Maya logs her own limits and the wishes she hears, and the studio reads both',
   PLAYGROUND_SOURCE.includes('function _pgAutoLog(') &&
   PLAYGROUND_SOURCE.includes('const _PG_CANT =') &&
