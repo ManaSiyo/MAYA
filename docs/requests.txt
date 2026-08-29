@@ -16,6 +16,23 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 29, 2026 (v14.11): thirteen new hands (the interface walk)
+
+[x] "Interact with Maya yourself, swipe through everything, give her more
+    features, no limit": Claude catalogued every tappable control in the
+    live playground through Fromsa's own browser, then gave Maya a tool for
+    each one a finger could reach and she could not.
+[x] New: zoom (in/out/reset on the board), organize_board (tidy layout),
+    dissect_card (open a look into pieces, stack it back), add_reference
+    (typed reference without Pinterest), card_details (speak a card's five
+    notes from memory), list_projects / open_project / new_project,
+    check_credits (trial balance out loud), background (star or generate),
+    randomize_avatar, set_measurement ("waist 29" onto the fit model),
+    pick_fabric (the real picker inside Switch Fabric).
+[x] Viewer grew heart, photo (fullscreen), attributes.
+[x] Hands battery grew to 59 checks; all green, plus the 399-assertion
+    regression suite.
+
 AUGUST 28, 2026, LATE (v14.10): her legs and ears (the hands smoke test)
 
 [x] "Dump a bunch of requests that are Maya's and do a smoke screen test

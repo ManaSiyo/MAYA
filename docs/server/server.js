@@ -4012,6 +4012,14 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       '- pin_view(which): Pinterest All saves or Boards. open_board(name) opens one. scroll_pins(direction) browses.\n' +
       '- go_to_screen(where): walk the app itself: community (the shared wall above), home (the moodboard), favorites (below). Go there before talking about what lives there.\n' +
       '- scroll(area, direction): move through favorites, the community wall, or the pins. When they say go down, keep going, or show me more, scroll.\n' +
+      '- zoom(action): in, out, or reset on the moodboard; organize_board tidies the canvas into a clean layout.\n' +
+      '- add_reference(text): drop one typed reference onto the board ("baggy", "Mugler shoulders") without Pinterest.\n' +
+      '- card_details(query): a card\'s five design notes so you speak about it precisely; dissect_card(query) opens it into its pieces, calling it again stacks it back.\n' +
+      '- list_projects / open_project(name) / new_project: their projects; each keeps its own board and nothing is lost by switching.\n' +
+      '- check_credits: their trial balance; say it warmly and plainly, never as an apology.\n' +
+      '- background(which): star or generate, a fresh backdrop behind the board.\n' +
+      '- randomize_avatar and set_measurement(name, value): their fit model; measurements arrive like "waist 29".\n' +
+      '- pick_fabric(name, mode): inside the Switch Fabric flow, choose in house or sourceable, then the fabric by name.\n' +
       '- list_board: the cards on screen right now.\n' +
       '- hang_up: end the call when they say goodbye or stop.\n\n' +
       'THE BOARD RIGHT NOW (' + board.length + ' cards):\n' + boardLines + '\n' +
@@ -4035,10 +4043,32 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       { type: 'function', name: 'open_card', description: 'Open a card (its picture viewer) by words that match it.', parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
       { type: 'function', name: 'delete_card', description: 'Delete a card by words that match it.', parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
       { type: 'function', name: 'favorite_card', description: 'Heart (or unheart) a card by words that match it.', parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
-      { type: 'function', name: 'viewer', description: 'Press a control in the open picture viewer.', parameters: { type: 'object', properties: { action: { type: 'string', enum: ['close', 'next', 'prev', 'post_wall', 'get_it_made', 'listen', 'switch_fabric', 'add_reference'] } }, required: ['action'] } },
+      { type: 'function', name: 'viewer', description: 'Press a control in the open picture viewer.', parameters: { type: 'object', properties: { action: { type: 'string', enum: ['close', 'next', 'prev', 'post_wall', 'get_it_made', 'listen', 'switch_fabric', 'add_reference', 'heart', 'photo', 'attributes'] } }, required: ['action'] } },
       { type: 'function', name: 'pin_view', description: 'Show Pinterest: all saves, or the boards.', parameters: { type: 'object', properties: { which: { type: 'string', enum: ['all', 'boards'] } } } },
       { type: 'function', name: 'open_board', description: 'Open one Pinterest board by name.', parameters: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] } },
       { type: 'function', name: 'scroll_pins', description: 'Scroll the Pinterest wall.', parameters: { type: 'object', properties: { direction: { type: 'string', enum: ['down', 'up'] } } } },
+      { type: 'function', name: 'zoom', description: 'Zoom the moodboard: in, out, or reset.',
+        parameters: { type: 'object', properties: { action: { type: 'string', enum: ['in', 'out', 'reset'] } }, required: ['action'] } },
+      { type: 'function', name: 'organize_board', description: 'Tidy the canvas into a clean layout.', parameters: { type: 'object', properties: {} } },
+      { type: 'function', name: 'dissect_card', description: 'Open a card into its pieces; calling it again stacks it back.',
+        parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
+      { type: 'function', name: 'add_reference', description: 'Place one typed reference word or phrase onto the board.',
+        parameters: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] } },
+      { type: 'function', name: 'card_details', description: 'The five design notes of a card: bio, aesthetic, silhouette, color, era, plus its references.',
+        parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
+      { type: 'function', name: 'list_projects', description: 'Their saved projects.', parameters: { type: 'object', properties: {} } },
+      { type: 'function', name: 'open_project', description: 'Open one saved project by name.',
+        parameters: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] } },
+      { type: 'function', name: 'new_project', description: 'Start a fresh project; the old one is saved.', parameters: { type: 'object', properties: {} } },
+      { type: 'function', name: 'check_credits', description: 'Their trial balance: dollars left, spent, images rendered.', parameters: { type: 'object', properties: {} } },
+      { type: 'function', name: 'background', description: 'Change the backdrop behind the board: the star, or generate a new one.',
+        parameters: { type: 'object', properties: { which: { type: 'string', enum: ['star', 'generate'] } } } },
+      { type: 'function', name: 'randomize_avatar', description: 'Give their fit model a new random face.', parameters: { type: 'object', properties: {} } },
+      { type: 'function', name: 'set_measurement', description: 'Set one body measurement on their fit model, in inches.',
+        parameters: { type: 'object', properties: { name: { type: 'string', description: 'waist, hip, bust, inseam, sleeve, neck, shoulder, thigh, height...' },
+          value: { type: 'number' } }, required: ['name', 'value'] } },
+      { type: 'function', name: 'pick_fabric', description: 'Inside the Switch Fabric flow: choose the mode and then a fabric by name.',
+        parameters: { type: 'object', properties: { name: { type: 'string' }, mode: { type: 'string', enum: ['inhouse', 'sourceable'] } }, required: ['name'] } },
       { type: 'function', name: 'go_to_screen', description: 'Walk the app: community (the shared wall above), home (the moodboard), favorites (below).',
         parameters: { type: 'object', properties: { where: { type: 'string', enum: ['community', 'home', 'favorites'] } }, required: ['where'] } },
       { type: 'function', name: 'scroll', description: 'Scroll an area: favorites, the community wall, or the Pinterest pins. down means forward.',

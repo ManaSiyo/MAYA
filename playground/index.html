@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.10">
+<meta name="maya-version" content="14.11">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -17237,6 +17237,8 @@ if (typeof toggleNotesDrawer === 'function') {
   window.pgZoomReset = function () { go(1); };
   window.pgZoomFloor = () => zfloor;
   window.pgZoomLevel = () => z;
+  // v14.11: Maya's thumb and finger. Clamped to the same floor as the wheel.
+  window.pgZoomTo = function (v) { go(Math.max(zfloor, Math.min(1, Number(v) || 1))); };
   document.addEventListener('wheel', (e) => {
     if (!(e.ctrlKey || e.metaKey)) return;          // plain scroll always navigates
     if (e.target && e.target.closest && e.target.closest('#notes-drawer, .hpane-drawer, #feedback-modal, #lead-inv-modal')) return;
@@ -17605,6 +17607,9 @@ async function _pgTool(name, a, dc) {
         listen: () => _pgClick('#modify-listen-toggle'),
         switch_fabric: () => _pgClick('#modify-switch-fabric'),
         add_reference: () => _pgClick('#modify-add-ref'),
+        heart: () => { try { viewerToggleHeart(); return true; } catch (_) { return false; } },
+        photo: () => { try { enterPhotoFullscreen(); return true; } catch (_) { return false; } },
+        attributes: () => { try { toggleAttributes(); return true; } catch (_) { return false; } },
       };
       if (!map[act]) return { ok: false, reason: 'unknown action', actions: Object.keys(map) };
       return { ok: !!map[act]() };
@@ -17687,6 +17692,129 @@ async function _pgTool(name, a, dc) {
           body: JSON.stringify({ text: t, who: _pgWhoAmI() }) });
         return { ok: r.ok };
       } catch (_) { return { ok: false }; }
+    }
+    case 'zoom': {
+      // v14.11: she can step back from the board and lean in again.
+      if (typeof window.pgZoomTo !== 'function') return { ok: false, reason: 'zoom is not ready' };
+      const z = (typeof pgZoomLevel === 'function' ? pgZoomLevel() : 1) || 1;
+      const act = String(a.action || 'reset');
+      const floor = (typeof pgZoomFloor === 'function' ? pgZoomFloor() : 0.4) || 0.4;
+      const next = act === 'in' ? Math.min(1, z + 0.18) : act === 'out' ? Math.max(floor, z - 0.18) : 1;
+      window.pgZoomTo(next);
+      return { ok: true, level: Math.round(next * 100) + ' percent' };
+    }
+    case 'organize_board': {
+      try { brandTitleClick(); } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      return { ok: true, note: 'tidied into a clean layout' };
+    }
+    case 'dissect_card': {
+      const it = _pgFindCard(a.query); if (!it) return { ok: false, reason: 'no card matches', board: _pgBoardSnapshot() };
+      const btn = it.el.querySelector('.dissect-btn');
+      if (!btn) return { ok: false, reason: 'that card cannot be dissected' };
+      const label = (btn.textContent || '').trim().toLowerCase(); btn.click();
+      return { ok: true, did: label || 'dissect', card: String(it.card.caption || it.card.title || 'card').slice(0, 80) };
+    }
+    case 'add_reference': {
+      const t = String(a.text || '').trim(); if (!t) return { ok: false, reason: 'no words given' };
+      const c = document.getElementById('maya-canvas'); if (!c) return { ok: false, reason: 'the board is not here' };
+      const r = c.getBoundingClientRect();
+      const xy = { x: r.left + r.width * (0.35 + Math.random() * 0.3), y: r.top + r.height * (0.28 + Math.random() * 0.3) };
+      try { await addManualRef(t, xy); } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      return { ok: true, placed: t };
+    }
+    case 'card_details': {
+      const it = _pgFindCard(a.query); if (!it) return { ok: false, reason: 'no card matches', board: _pgBoardSnapshot() };
+      const c = it.card; const P = c.profile || {};
+      return { ok: true, caption: c.caption || '', kind: c.kind || '', favorited: !!c.favorited,
+        bio: P.bio || '', aesthetic: P.aesthetic || '', silhouette: P.silhouette || '', color: P.color || '', era: P.era || '',
+        references: (c.refs || []).map(r2 => r2 && r2.title).filter(Boolean).slice(0, 12) };
+    }
+    case 'list_projects': {
+      const rows = [...document.querySelectorAll('.session-item[data-id]')];
+      if (!rows.length) return { ok: false, reason: 'no projects yet' };
+      return { ok: true, projects: rows.slice(0, 30).map(r2 => ({ name: (r2.getAttribute('title') || '').slice(0, 60), active: r2.classList.contains('active') })) };
+    }
+    case 'open_project': {
+      const words = String(a.name || '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 1);
+      const rows = [...document.querySelectorAll('.session-item[data-id]')];
+      let best = null, bestScore = 0;
+      for (const r2 of rows) {
+        const t = (r2.getAttribute('title') || '').toLowerCase();
+        const score = words.reduce((n, w) => n + (t.includes(w) ? 1 : 0), 0);
+        if (score > bestScore) { bestScore = score; best = r2; }
+      }
+      if (!best) return { ok: false, reason: 'no project matches', projects: rows.map(r2 => r2.getAttribute('title')).filter(Boolean).slice(0, 20) };
+      try { await loadSavedSessionById(best.getAttribute('data-id')); } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      return { ok: true, opened: best.getAttribute('title') };
+    }
+    case 'new_project': {
+      try { await newConsultation(); } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      return { ok: true, note: 'a fresh board; the old project is saved' };
+    }
+    case 'check_credits': {
+      const key = getApiKey(); if (!key) return { ok: false, reason: 'not signed in' };
+      try {
+        const r = await fetch('/api/usage', { headers: { Authorization: 'Bearer ' + key } });
+        if (!r.ok) return { ok: false, reason: 'usage answered ' + r.status };
+        const j = await r.json();
+        const cap = Number(j.capUsd) || 2, spent = Number(j.spentUsd) || 0;
+        return { ok: true, dollarsLeft: Math.max(0, cap - spent).toFixed(2), spent: spent.toFixed(2), cap: cap.toFixed(2), images: Number(j.images) || 0 };
+      } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+    }
+    case 'background': {
+      const w = String(a.which || 'star');
+      try {
+        if (w === 'generate') {
+          if (typeof pgGenerateBackground !== 'function') return { ok: false, reason: 'not available' };
+          pgGenerateBackground();
+          return { ok: true, note: 'generating a backdrop, it takes a moment' };
+        }
+        if (typeof pgApplyBackground !== 'function') return { ok: false, reason: 'not available' };
+        pgApplyBackground('star');
+        return { ok: true, applied: 'Birth of a Star' };
+      } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+    }
+    case 'randomize_avatar': {
+      try { const p = randomizeAvatar(); if (p && p.then) p.catch(() => {}); }
+      catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      return { ok: true, note: 'a new face is on its way' };
+    }
+    case 'set_measurement': {
+      const val = Number(a.value);
+      if (!isFinite(val) || val <= 0) return { ok: false, reason: 'need a number' };
+      const key0 = String(a.name || '').toLowerCase().replace(/[^a-z ]/g, '').trim();
+      const MAP = { height: 'height', waist: 'waist_narrowest', hips: 'hip', hip: 'hip', 'low hip': 'low_hip_widest',
+        bust: 'bust_chest', chest: 'bust_chest', 'under bust': 'under_bust', inseam: 'inseam', sleeve: 'sleeve',
+        bicep: 'bicep', wrist: 'wrist', neck: 'neck_base', shoulders: 'full_shoulder', shoulder: 'full_shoulder',
+        thigh: 'thigh', calves: 'calves', calf: 'calves', 'arm hole': 'arm_hole', 'pant length': 'pant_length' };
+      let id = MAP[key0];
+      if (!id) { const k = Object.keys(MAP).find(k2 => key0.includes(k2)); if (k) id = MAP[k]; }
+      const el = id && document.getElementById('ameas-' + id);
+      if (!el) return { ok: false, reason: 'unknown measurement', knows: Object.keys(MAP).slice(0, 14) };
+      el.value = String(val);
+      try { saveAvatar(); } catch (_) {}
+      return { ok: true, set: key0, value: val };
+    }
+    case 'pick_fabric': {
+      const modeBtns = [...document.querySelectorAll('.mode-choose')].filter(b => b.offsetParent);
+      if (modeBtns.length && a.mode) {
+        const want = String(a.mode).toLowerCase().replace(/[^a-z]/g, '');
+        const hit = modeBtns.find(b => (b.textContent || '').toLowerCase().replace(/[^a-z]/g, '').includes(want));
+        if (hit) { hit.click(); await new Promise(r => setTimeout(r, 600)); }
+      }
+      const picks = [...document.querySelectorAll('.fabric-pick')].filter(b => b.offsetParent);
+      if (!picks.length) return { ok: false, reason: 'the fabric picker is not open; use viewer switch_fabric first' };
+      const words = String(a.name || '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 2);
+      let best = null, bestScore = 0;
+      for (const b of picks) {
+        const t = (b.textContent || '').toLowerCase();
+        const score = words.reduce((n, w) => n + (t.includes(w) ? 1 : 0), 0);
+        if (score > bestScore) { bestScore = score; best = b; }
+      }
+      if (!best) return { ok: false, reason: 'no fabric matches', fabrics: picks.map(b => (b.textContent || '').trim().slice(0, 40)) };
+      if (!best.classList.contains('selected')) best.click();
+      const go2 = document.getElementById('fabric-pick-confirm'); if (go2) go2.click();
+      return { ok: true, fabric: (best.textContent || '').trim().slice(0, 40) };
     }
     case 'go_to_screen': {
       // v14.10: she can finally walk the app. 0=community wall, 1=home, 2=favorites.

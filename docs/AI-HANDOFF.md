@@ -74,6 +74,28 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.11 (Claude): thirteen new hands
+
+The method: inventory every interactive element in the live playground DOM
+(buttons, onclicks, pills) via the browser, then close the gap between what
+a finger can do and what Maya can. New _pgTool cases: zoom (window.pgZoomTo
+added inside the zoom closure, clamped to zfloor), organize_board
+(brandTitleClick), dissect_card (.dissect-btn on the matched card),
+add_reference (addManualRef at a center-ish xy; the v14.07 wrapper divides
+by zoom), card_details (card.profile + refs), list_projects / open_project
+(parse .session-item[data-id] title attrs, call loadSavedSessionById) /
+new_project (newConsultation), check_credits (GET /api/usage: spentUsd,
+capUsd, images), background (pgApplyBackground star / pgGenerateBackground),
+randomize_avatar, set_measurement (spoken name to ameas-* id map, then
+saveAvatar), pick_fabric (mode-choose then .fabric-pick match then
+fabric-pick-confirm). Viewer map: heart, photo, attributes. Server declares
+all thirteen, the viewer enum grew, and the instructions carry one line per
+power. Battery: 59 checks in tests/maya-hands-smoke.mjs.
+
+NEXT (Fromsa): push, then on a call try "step back and look at the whole
+board", "what do my favorites say about me", "my waist is 29", and inside a
+photo "switch the fabric to the midnight velvet".
+
 ## v14.10 (Claude): her legs and ears
 
 tests/maya-hands-smoke.mjs is the new battery: serves the repo with a fake

@@ -1990,6 +1990,22 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.11: thirteen new hands from walking the interface: zoom, organize, dissect, references, projects, credits, fabric, avatar',
+  PLAYGROUND_SOURCE.includes("case 'zoom': {") &&
+  PLAYGROUND_SOURCE.includes("case 'organize_board': {") &&
+  PLAYGROUND_SOURCE.includes("case 'dissect_card': {") &&
+  PLAYGROUND_SOURCE.includes("case 'add_reference': {") &&
+  PLAYGROUND_SOURCE.includes("case 'card_details': {") &&
+  PLAYGROUND_SOURCE.includes("case 'open_project': {") &&
+  PLAYGROUND_SOURCE.includes("case 'check_credits': {") &&
+  PLAYGROUND_SOURCE.includes("case 'set_measurement': {") &&
+  PLAYGROUND_SOURCE.includes("case 'pick_fabric': {") &&
+  PLAYGROUND_SOURCE.includes('window.pgZoomTo = function (v)') &&
+  PLAYGROUND_SOURCE.includes('heart: () => { try { viewerToggleHeart(); return true; }') &&
+  SERVER_SOURCE.includes("name: 'card_details'") &&
+  SERVER_SOURCE.includes("name: 'set_measurement'") &&
+  SERVER_SOURCE.includes("name: 'pick_fabric'") &&
+  SERVER_SOURCE.includes("'heart', 'photo', 'attributes'"));
 ok('v14.10: her legs and ears: go_to_screen and scroll on both sides, five-truths card matching, far_field hearing with a plain fallback',
   PLAYGROUND_SOURCE.includes("case 'go_to_screen': {") &&
   PLAYGROUND_SOURCE.includes("case 'scroll': {") &&

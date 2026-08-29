@@ -119,6 +119,28 @@ const battery = [
   ['scroll', { area: 'pins', direction: 'down' }, o => o && typeof o.ok === 'boolean'],
   ['scroll', {}, o => o && typeof o.ok === 'boolean'],
   ['no_such_tool', {}, o => o && o.ok === false && o.reason === 'unknown tool'],
+  // v14.11: the batch from walking the whole interface like a user.
+  ['zoom', { action: 'out' }, o => o && o.ok === true && /percent/.test(o.level)],
+  ['zoom', { action: 'in' }, o => o && o.ok === true],
+  ['zoom', { action: 'reset' }, o => o && o.ok === true && o.level === '100 percent'],
+  ['organize_board', {}, o => o && o.ok === true],
+  ['dissect_card', { query: 'apple' }, o => o && o.ok === false && /dissect/.test(o.reason)],
+  ['dissect_card', { query: 'purple spacesuit' }, o => o && o.ok === false],
+  ['add_reference', {}, o => o && o.ok === false],
+  ['add_reference', { text: 'Mugler shoulders' }, o => o && typeof o.ok === 'boolean'],
+  ['card_details', { query: 'quiet luxury' }, o => o && o.ok === true && o.bio && o.era],
+  ['card_details', { query: 'purple spacesuit' }, o => o && o.ok === false],
+  ['list_projects', {}, o => o && typeof o.ok === 'boolean'],
+  ['open_project', { name: 'zzz no such project' }, o => o && o.ok === false],
+  ['check_credits', {}, o => o && typeof o.ok === 'boolean'],
+  ['background', { which: 'star' }, o => o && typeof o.ok === 'boolean'],
+  ['set_measurement', { name: 'waist', value: 29 }, o => o && o.ok === true],
+  ['set_measurement', { name: 'aura', value: 9 }, o => o && o.ok === false && Array.isArray(o.knows)],
+  ['set_measurement', { name: 'waist', value: 'soft' }, o => o && o.ok === false],
+  ['pick_fabric', { name: 'midnight velvet' }, o => o && o.ok === false && /picker is not open/.test(o.reason)],
+  ['viewer', { action: 'heart' }, o => o && typeof o.ok === 'boolean'],
+  ['viewer', { action: 'photo' }, o => o && typeof o.ok === 'boolean'],
+  ['viewer', { action: 'attributes' }, o => o && typeof o.ok === 'boolean'],
 ];
 for (const [name, args, judge] of battery) {
   let out, threw = null;
