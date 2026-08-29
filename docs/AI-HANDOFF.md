@@ -74,6 +74,32 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.13 (Claude): she understands the card in front of her
+
+The comprehension pass, from a live session. Root causes, not symptoms:
+`visualize` always ran `visualizeGarment()` (home screen: avatar check then
+`openFabricMode()`), so talking to an open picture could never render and
+always popped a fabric chooser. Fixed with `modify_garment(text)` which
+pushes into `visualizeModifications` and calls `modifySubmit()` (the direct
+apply path, no picker), and `visualize` is now context aware. `viewer`
+next/prev called `_favStep` (favorites strip) instead of `viewerStep`
+(versions): new `card_version` tool plus `_pgStep()` which checks
+`#viewer-version-nav` visibility. `_pgFindCardDetailed` replaces the flat
+matcher: deixis (open card), position (left/right/middle by style.left),
+recency, double weight on the five design notes and color, version families
+collapsed to newest, and `ambiguous` + candidates on a genuine tie so she
+asks. `showError` records `window._pgLastRenderError` and auto-logs; new
+`render_status` tool. Instructions gained THE CARD EDITOR and UNDERSTANDING
+THEM sections. 44 tools. Battery: 82 checks.
+
+Also: docs/CODEX-MAYA-BRIEF.md is the second-engineer handoff (frustrations,
+fixes, repo map, prior art on tool design and voice repair, paste prompt).
+Open question it raises: 44 flat tools is past reliable selection; consider
+per-mode tool sets pushed with session.update when the viewer opens.
+
+NEXT (Fromsa): push. Then open a picture and just talk to it: "make it a
+trench coat", "go back to the previous version", "the red one".
+
 ## v14.12 (Claude): the second pass
 
 Audit findings on my own v14.10/v14.11 work, all fixed: #pinterest-drawer-body

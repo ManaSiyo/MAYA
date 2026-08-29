@@ -1990,6 +1990,21 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.13: the card editor understands: modify without popups, versions not cards, deictic and positional matching, spoken failures',
+  PLAYGROUND_SOURCE.includes("case 'modify_garment': {") &&
+  PLAYGROUND_SOURCE.includes("case 'card_version': {") &&
+  PLAYGROUND_SOURCE.includes("case 'render_status': {") &&
+  PLAYGROUND_SOURCE.includes('function _pgFindCardDetailed(') &&
+  PLAYGROUND_SOURCE.includes('const _PG_DEICTIC =') &&
+  PLAYGROUND_SOURCE.includes('function _pgStep(d)') &&
+  PLAYGROUND_SOURCE.includes('window._pgLastRenderError = String(msg') &&
+  !PLAYGROUND_SOURCE.includes("next: () => { try { _favStep(1); return true; }") &&
+  SERVER_SOURCE.includes('THE CARD EDITOR.') &&
+  SERVER_SOURCE.includes('UNDERSTANDING THEM.') &&
+  SERVER_SOURCE.includes("name: 'modify_garment'") &&
+  SERVER_SOURCE.includes("name: 'card_version'") &&
+  SERVER_SOURCE.includes("name: 'render_status'") &&
+  existsSync(join(ROOT, 'docs/CODEX-MAYA-BRIEF.md')));
 ok('v14.12: the second pass: honest scroll and credits, moving hands, favorites by name, quality by voice',
   PLAYGROUND_SOURCE.includes("if (!body || !body.offsetParent) return { ok: false, reason: 'Pinterest is not open' };") &&
   PLAYGROUND_SOURCE.includes("area = (pb && pb.offsetParent) ? 'pins'") &&

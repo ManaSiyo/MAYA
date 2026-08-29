@@ -153,6 +153,12 @@ const battery = [
   ['set_quality', { quality: 'high' }, o => o && o.ok === true && o.quality === 'high'],
   ['set_quality', { quality: 'ultra' }, o => o && o.ok === false],
   ['clear_hints', {}, o => o && o.ok === true],
+  // v14.13: the card editor. Every one of these is a bug Fromsa hit out loud.
+  ['modify_garment', { text: 'make it a trench coat' }, o => o && o.ok === false && /open the card first/.test(o.reason)],
+  ['modify_garment', {}, o => o && o.ok === false],
+  ['card_version', { direction: 'previous' }, o => o && o.ok === false && /no picture is open/.test(o.reason)],
+  ['render_status', {}, o => o && o.ok === true && o.rendering === false],
+  ['visualize', {}, o => o && typeof o.ok === 'boolean'],
 ];
 for (const [name, args, judge] of battery) {
   let out, threw = null;
@@ -180,6 +186,68 @@ ok('scroll_pins with the drawer closed says so instead of pretending',
   JSON.stringify(honest.closedPins));
 ok('bare scroll with the drawer closed never claims the pins',
   honest.bare && honest.bare.area !== 'pins', JSON.stringify(honest.bare));
+
+// ── 3c. v14.13: the card editor, with a picture actually open ──
+const editor = await page.evaluate(async () => {
+  const out = {};
+  const mk = (n, ver) => {
+    const el = document.createElement('div');
+    el.className = 'moodboard-item'; el.style.left = (n * 300) + 'px'; el.style.top = '80px';
+    document.body.appendChild(el);
+    const card = { kind: 'inspo', image: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=',
+      caption: n === 0 ? 'red fur bomber over crocodile flares' : 'ivory column gown',
+      inspirationId: 'insp-1', version: ver, profile: { color: n === 0 ? 'Red and bronze' : 'Ivory' } };
+    const it = { id: 'seed-' + n + '-' + ver, card, el };
+    (0, eval)('items').push(it);
+    return it;
+  };
+  const v1 = mk(0, 1), v2 = mk(0, 2), other = mk(1, 1);
+  other.card.inspirationId = 'insp-2';
+  // viewerItemId and the viewer helpers are page-scope: indirect eval reaches
+  // the script's lexical scope, a window assignment does not.
+  window.__seedId = v2.id;
+  (0, eval)('viewerItemId = window.__seedId');
+  window.__spy = out;
+  (0, eval)('viewerStep = (d) => { window.__spy.viewerStepCalledWith = d; }');
+  (0, eval)('_favStep = () => { window.__spy.favStepCalled = true; }');
+  (0, eval)('modifySubmit = () => { window.__spy.modifySubmitCalled = true; }');
+  const modal = document.getElementById('garment-modal'); if (modal) modal.classList.add('open');
+  const nav = document.getElementById('viewer-version-nav'); if (nav) nav.style.display = 'flex';
+
+  out.deictic = (typeof _pgFindCardDetailed === 'function') && _pgFindCardDetailed('this one').it === v2;
+  out.positional = (typeof _pgFindCardDetailed === 'function') && !!_pgFindCardDetailed('the one on the left').it;
+  // a color word either lands on one piece or reports the ambiguity with
+  // candidates to read back. What it must never do is guess wrong silently.
+  const red = _pgFindCardDetailed('the red one');
+  out.byColor = !!red.it || (red.ambiguous === true && Array.isArray(red.candidates) && red.candidates.length > 1);
+  const fam = _pgFindCardDetailed('crocodile flares');
+  out.versionsCollapse = !!fam.it && fam.it.id === v2.id;
+
+  out.modify = await window._pgTool('modify_garment', { text: 'make it a trench coat' }, { send: () => {} });
+  out.version = await window._pgTool('card_version', { direction: 'previous' }, { send: () => {} });
+  out.visualizeInViewer = await window._pgTool('visualize', {}, { send: () => {} });
+  out.fabricModalOpen = !!(document.getElementById('fabric-mode-modal') || {}).classList &&
+    document.getElementById('fabric-mode-modal').classList.contains('open');
+  try { showError('OpenAI error: 403'); } catch (_) {}
+  out.status = await window._pgTool('render_status', {}, { send: () => {} });
+  if (modal) modal.classList.remove('open');
+  return out;
+});
+ok('"this one" resolves to the picture on screen', editor.deictic === true);
+ok('"the one on the left" resolves by position', editor.positional === true);
+ok('a color word finds one piece or names the candidates, never a silent wrong guess', editor.byColor === true);
+ok('two versions of one piece are never an ambiguous question', editor.versionsCollapse === true);
+ok('modify_garment applies the change through the modify pipeline',
+  editor.modify && editor.modify.ok === true && editor.modifySubmitCalled === true, JSON.stringify(editor.modify));
+ok('modify_garment NEVER opens the fabric popup', editor.fabricModalOpen === false);
+ok('card_version steps versions, never the favorites strip',
+  editor.version && editor.version.ok === true && editor.version.sameGarment === true &&
+  editor.viewerStepCalledWith === -1 && !editor.favStepCalled, JSON.stringify(editor.version));
+ok('visualize inside an open picture renders THIS piece, no home screen flow',
+  editor.visualizeInViewer && editor.visualizeInViewer.ok === true && /this piece/.test(editor.visualizeInViewer.note || ''),
+  JSON.stringify(editor.visualizeInViewer));
+ok('a failed render is readable by Maya and auto-logged',
+  editor.status && editor.status.failed === true && /403/.test(editor.status.error || ''), JSON.stringify(editor.status));
 
 // ── 4. the failed hand files itself (v14.09 observer) ──
 const logged = await page.evaluate(async () => {

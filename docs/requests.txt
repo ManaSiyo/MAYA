@@ -16,6 +16,35 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 29, 2026, NIGHT (v14.13): she understands the card in front of her
+
+Fromsa talked to Maya live and hit five real walls. Each traced to a cause:
+
+[x] "She agrees to my changes but never renders." The visualize tool always
+    ran the HOME SCREEN flow, which stops on the avatar check or the fabric
+    mode picker and waits for a tap. Nothing could render. New tool
+    modify_garment(text) pushes the spoken change into the modify pipeline
+    and calls modifySubmit, which applies directly with no popup. visualize
+    inside an open picture now renders THIS piece.
+[x] "Previous version changes the whole card." viewer next/prev called
+    _favStep (the favorites strip, different garments). New card_version
+    tool uses viewerStep; _pgStep routes the arrows correctly.
+[x] "I asked for a trench coat and got the fabric popup." Same root cause as
+    the first. Instructions now: only touch fabric if they say fabric,
+    material or name a cloth; only touch references if they say reference,
+    image or pin. The fabric on the piece stays.
+[x] "She opens the wrong card." Matcher rewritten: this one / it / the one
+    I am looking at resolve to the open card; left, right, middle, newest
+    resolve by position and recency; the five design notes and color count
+    double; versions of one piece collapse to the newest; a real tie between
+    different pieces returns candidates so she asks instead of guessing.
+[x] "OPENAI ERROR 403 on screen and she said nothing." showError now records
+    the error and auto-logs it; new render_status tool lets her read whether
+    the picture is coming or why it died, and say it plainly.
+[x] Codex handoff written: docs/CODEX-MAYA-BRIEF.md, with the frustrations in
+    plain words, the fixes already made, repo pointers, what the field knows
+    about grounding and mode scoping, and a ready to paste prompt.
+
 AUGUST 29, 2026 (v14.12): the second pass (audit again, add, audit again)
 
 [x] Fresh-eyes audit of v14.10 and v14.11 found four quiet lies, all fixed:

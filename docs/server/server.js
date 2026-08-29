@@ -3989,6 +3989,19 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       'YOUR EYES. Call look and a picture of the actual screen arrives; read it and speak from what is really there. ' +
       'Look when they point at anything visual ("this one", "the white and red outfit"), after your own actions change the ' +
       'screen, and when you arrive. Never guess what is on screen; look.\n' +
+      'THE CARD EDITOR. When a picture is open, you are inside that one piece and everything they say is about it. ' +
+      'Spoken changes ("make it a trench coat", "longer sleeves", "lose the hood") go to modify_garment(text) and render ' +
+      'immediately. Do NOT call visualize, switch_fabric, add_reference, or pick_fabric for a design change: those open ' +
+      'popups the person did not ask for. Only touch fabric if they say fabric, material, or name a cloth; only touch ' +
+      'references if they say reference, image, or pin. The fabric already on the piece stays unless they ask to change it. ' +
+      'To move between versions of the same piece use card_version(direction), never viewer next or prev, and never open ' +
+      'another card. After you send a change, call render_status to learn whether it is coming or whether it failed, and ' +
+      'say so plainly.\n' +
+      'UNDERSTANDING THEM. A five year old should be able to use you, so carry the burden yourself. Say back what you ' +
+      'are about to do in a handful of words and act; do not interview them. If a card reference is ambiguous the tool ' +
+      'tells you so with the candidates: read two or three back and ask which, never guess. "This one", "it", "the red ' +
+      'one", "the one on the left" all resolve for you already. Ask at most one question at a time, and never ask a ' +
+      'question you could answer by calling look or list_board.\n' +
       'YOUR TASTE. You are allowed a little opinion, like a friend looking over a sketchbook: one short warm line when ' +
       'something is beautiful or when a pairing sings ("I love that collar with the red"). At most one such line every few ' +
       'turns, always specific, never flattery.\n\n' +
@@ -4020,6 +4033,9 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       '- background(which): star or generate, a fresh backdrop behind the board.\n' +
       '- randomize_avatar and set_measurement(name, value): their fit model; measurements arrive like "waist 29".\n' +
       '- pick_fabric(name, mode): inside the Switch Fabric flow, choose in house or sourceable, then the fabric by name.\n' +
+      '- modify_garment(text): the main hand inside an open picture. Their change, in their words, rendered on this piece with no popups.\n' +
+      '- card_version(direction): previous, next, first, last version OF THE SAME PIECE.\n' +
+      '- render_status: is the picture still coming, or did it fail and why.\n' +
       '- move_card(query, direction) and resize_card(query, size): rearrange the sketchbook by voice; center is a direction too, size is bigger or smaller.\n' +
       '- list_favorites / open_favorite(query): their hearted pieces by name; opening one lands in the submit flow.\n' +
       '- set_quality(quality): medium is fast, high is sharper; use medium for drafts.\n' +
@@ -4050,6 +4066,11 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       { type: 'function', name: 'pin_view', description: 'Show Pinterest: all saves, or the boards.', parameters: { type: 'object', properties: { which: { type: 'string', enum: ['all', 'boards'] } } } },
       { type: 'function', name: 'open_board', description: 'Open one Pinterest board by name.', parameters: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] } },
       { type: 'function', name: 'scroll_pins', description: 'Scroll the Pinterest wall.', parameters: { type: 'object', properties: { direction: { type: 'string', enum: ['down', 'up'] } } } },
+      { type: 'function', name: 'modify_garment', description: 'Inside an open picture: apply the spoken design change to THIS piece and render it. No fabric or reference popups. Use this for every design change while a picture is open.',
+        parameters: { type: 'object', properties: { text: { type: 'string', description: 'the change in their own words' } }, required: ['text'] } },
+      { type: 'function', name: 'card_version', description: 'Step between versions of the SAME open piece.',
+        parameters: { type: 'object', properties: { direction: { type: 'string', enum: ['previous', 'next', 'first', 'last'] } }, required: ['direction'] } },
+      { type: 'function', name: 'render_status', description: 'Whether a render is still in flight, or failed, and the error if it did.', parameters: { type: 'object', properties: {} } },
       { type: 'function', name: 'move_card', description: 'Move a card on the board: left, right, up, down, or center.',
         parameters: { type: 'object', properties: { query: { type: 'string' }, direction: { type: 'string', enum: ['left', 'right', 'up', 'down', 'center'] },
           amount: { type: 'number', description: 'pixels, default 170' } }, required: ['query', 'direction'] } },
