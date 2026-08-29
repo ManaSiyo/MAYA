@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="14.13">
+<meta name="maya-version" content="14.14">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -943,9 +943,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-08-29c" data-version="14.13">
+  <details class="fold" id="changes-fold" data-latest="2026-08-29d" data-version="14.14">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Aug 29</b>The release blockers, closed. A card named out loud that matches nothing is now a miss, never a quiet grab of whatever picture is open, and deleting anything takes a spoken yes before her hand moves. A tool that hangs or breaks can no longer leave her frozen mid sentence: every call answers within its time limit, truthfully, and a fresh call starts with a clean slate. She stops claiming pictures are done before they are; the app itself tells her when a render truly finished or died, and only then does she say so. Her self logs learned the difference between a bug and an ordinary no, so the studio inbox holds real defects instead of noise. A visible Help improve Maya switch, off until you turn it on, shares only tool names, outcomes and timing, never photos, audio or measurements, and a weekly digest reads it back to the studio. The side door got scoped: a token in a link can only read, and the leads book and Maya's memory open only to the full key.</div>
     <div class="chg"><b>Aug 29</b>Maya finally understands the card in front of her. Talking to an open picture used to go nowhere: she agreed to every change and rendered nothing, because the only render she had was the home screen one, which stops on a fabric popup nobody asked for. Now a spoken change goes straight onto that piece and renders, with no popup, and the fabric already on it stays unless the word fabric is said. Asking for the previous version steps back one version of the same garment instead of jumping to a different card. She hears a description the way a person gives one: this one, the red one, the one on the left, the newest, and when two different pieces genuinely fit she names them and asks instead of guessing. Two versions of one piece are never treated as two answers. And a render that dies is no longer a silent pill on the screen: she reads the error, says it plainly, and it files itself.</div>
     <div class="chg"><b>Aug 29</b>The second pass caught the quiet lies and gave her steadier hands. Scrolling the pins with the drawer closed used to pretend it worked; now she says the drawer is closed. The credits reader knows a studio account has no cap. A reference that was already on the canvas is reported as such instead of claimed as new, and a viewer press that finds nothing says so out loud. New since the audit: she moves and resizes cards on the board by voice, lists the hearted favorites by name and opens one straight into the submit flow, sets the render quality, and clears the onboarding hints. The hands battery grew to 73 checks; every one is green.</div>
     <div class="chg"><b>Aug 29</b>Claude walked the whole app in a real browser, catalogued every control a finger can reach, and handed Maya thirteen new hands. She now zooms the board in and out, tidies the canvas into a clean layout, dissects a card into its pieces and stacks it back, drops typed references without Pinterest, recites any card's five design notes from memory, lists and opens and starts projects, reads the trial balance out loud, changes the backdrop or generates a new one, gives the fit model a new face, takes body measurements by voice, and picks the actual fabric inside the Switch Fabric flow. The viewer answers heart, fullscreen photo, and attributes too. Fifty nine checks in the hands battery say every one of them answers.</div>
@@ -2731,6 +2732,7 @@ function _invEmailLead(){
     '\n\nKind Regards,\nFromsa';
   window.open('https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(x.email) +
     '&su=' + encodeURIComponent('Your Mana Siyo Piece') + '&body=' + encodeURIComponent(body), '_blank');
+  if (msg) msg.textContent = 'Draft opened in Gmail. Nothing has been sent yet.';
 }
 function _invTextLead(){
   const x = _leadList[_invIdx]; const msg = document.getElementById('inv-msg');
@@ -2739,6 +2741,7 @@ function _invTextLead(){
   if (!link){ if (msg) msg.textContent = 'Create the pay link first.'; return; }
   const fn = _leadFirst(x.name);
   const num = String(x.phone).replace(/[^+0-9]/g, '');
+  if (msg) msg.textContent = 'Messages opened with the text prefilled. Nothing has been sent yet.';
   location.href = 'sms:' + num + '?&body=' + encodeURIComponent('Hi ' + fn + ', your Mana Siyo pay link: ' + link);
 }
 // v13.98: one click creates the real Wix pay link through the server (the

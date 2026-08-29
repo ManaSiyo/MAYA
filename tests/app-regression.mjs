@@ -1990,6 +1990,22 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.14: the release blockers: no silent fallback, confirm gated delete, timeouts, honest outcomes, scoped door, locked stores',
+  PLAYGROUND_SOURCE.includes('no card matches those words') &&
+  PLAYGROUND_SOURCE.includes('needsConfirmation: true') &&
+  PLAYGROUND_SOURCE.includes('_PG_TOOL_TIMEOUT_MS') &&
+  PLAYGROUND_SOURCE.includes('_pgToolChain = Promise.resolve();') &&
+  PLAYGROUND_SOURCE.includes('function _pgWatchRender(dc)') &&
+  PLAYGROUND_SOURCE.includes('function _pgClassifyFail(out)') &&
+  PLAYGROUND_SOURCE.includes('Every note lands in the studio inbox.') &&
+  PLAYGROUND_SOURCE.includes('function _fbConsentToggle()') &&
+  MAP_SOURCE.includes('Nothing has been sent yet.') &&
+  SERVER_SOURCE.includes('function mcpAuthScope(req)') &&
+  SERVER_SOURCE.includes('MCP_HEADER_ONLY_TOOLS') &&
+  SERVER_SOURCE.includes("app.post('/api/telemetry'") &&
+  SERVER_SOURCE.includes("app.get('/api/admin/maya-digest'") &&
+  SERVER_SOURCE.includes('function withLock(key, fn)') &&
+  BUILD_SOURCE.includes('tests/maya-hands-smoke.mjs'));
 ok('v14.13: the card editor understands: modify without popups, versions not cards, deictic and positional matching, spoken failures',
   PLAYGROUND_SOURCE.includes("case 'modify_garment': {") &&
   PLAYGROUND_SOURCE.includes("case 'card_version': {") &&

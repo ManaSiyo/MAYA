@@ -3271,7 +3271,8 @@ async function loadMayaMemory() {
   try { const j = JSON.parse(o.buf.toString('utf8')); return { items: Array.isArray(j.items) ? j.items : [] }; }
   catch { return { items: [] }; }
 }
-async function appendMayaMemory(text) {
+async function appendMayaMemory(text) { return withLock('memory', () => _appendMayaMemoryRaw(text)); }
+async function _appendMayaMemoryRaw(text) {
   const t = String(text || '').trim().slice(0, 600);
   if (!t) return null;
   const rec = await loadMayaMemory();
@@ -3280,7 +3281,8 @@ async function appendMayaMemory(text) {
   await gcsPut(MAYA_MEM_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
   return rec.items.length;
 }
-async function forgetMayaMemory(text) {
+async function forgetMayaMemory(text) { return withLock('memory', () => _forgetMayaMemoryRaw(text)); }
+async function _forgetMayaMemoryRaw(text) {
   const q = String(text || '').trim().toLowerCase();
   if (!q) return 0;
   const rec = await loadMayaMemory();
@@ -3315,6 +3317,15 @@ app.post('/api/admin/maya-remember', requireAuthHeader, express.json({ limit: '8
 // it does not yet, Maya records here. It is the relay to Claude: the log is read
 // back and turned into work. Logging has no external side effect, so it does not
 // need a click to confirm.
+// v14.14: concurrency protection for every read-modify-write store.
+// One promise queue per key; writers line up instead of clobbering.
+const _storeLocks = new Map();
+function withLock(key, fn) {
+  const prev = _storeLocks.get(key) || Promise.resolve();
+  const next = prev.then(fn, fn);
+  _storeLocks.set(key, next.catch(() => {}));
+  return next;
+}
 const MAYA_FEATURES_PATH = 'maya/features.json';
 async function loadMayaFeatures() {
   const o = await gcsGet(MAYA_FEATURES_PATH).catch(() => ({ ok: false }));
@@ -3322,7 +3333,8 @@ async function loadMayaFeatures() {
   try { const j = JSON.parse(o.buf.toString('utf8')); return { items: Array.isArray(j.items) ? j.items : [] }; }
   catch { return { items: [] }; }
 }
-async function appendMayaFeature(text, who) {
+async function appendMayaFeature(text, who) { return withLock('features', () => _appendMayaFeatureRaw(text, who)); }
+async function _appendMayaFeatureRaw(text, who) {
   const t = String(text || '').trim().slice(0, 600);
   if (!t) return null;
   const rec = await loadMayaFeatures();
@@ -3349,12 +3361,16 @@ app.post('/api/admin/maya-feature-done', requireAuthHeader, express.json({ limit
   if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
   try {
     const id = String((req.body || {}).id || '').trim();
-    const rec = await loadMayaFeatures();
-    const hit = (rec.items || []).find(i => i.id === id);
-    if (!hit) return res.status(404).json({ error: 'not_found' });
-    hit.done = !((req.body || {}).undone === true) ; hit.doneTs = new Date().toISOString();
-    await gcsPut(MAYA_FEATURES_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
-    return res.json({ ok: true, id, done: hit.done });
+    const found = await withLock('features', async () => {
+      const rec = await loadMayaFeatures();
+      const hit = (rec.items || []).find(i => i.id === id);
+      if (!hit) return null;
+      hit.done = !((req.body || {}).undone === true); hit.doneTs = new Date().toISOString();
+      await gcsPut(MAYA_FEATURES_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+      return hit.done;
+    });
+    if (found === null) return res.status(404).json({ error: 'not_found' });
+    return res.json({ ok: true, id, done: found });
   } catch (e) { console.error('[feature-done]', e.message); return res.status(502).json({ error: 'done_failed' }); }
 });
 app.get('/api/admin/maya-features', requireAuthHeader, async (req, res) => {
@@ -3663,11 +3679,13 @@ async function appendMayaPerson(p) {
     note: String((p && p.note) || '').trim().slice(0, 240),
   };
   if (!person.name) return null;
-  const rec = await loadMayaPeople();
-  rec.items = rec.items.filter(x => String(x.name || '').toLowerCase() !== person.name.toLowerCase());
-  rec.items.push(person);
-  rec.items = rec.items.slice(-100);
-  await gcsPut(MAYA_PEOPLE_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+  await withLock('people', async () => {
+    const rec = await loadMayaPeople();
+    rec.items = rec.items.filter(x => String(x.name || '').toLowerCase() !== person.name.toLowerCase());
+    rec.items.push(person);
+    rec.items = rec.items.slice(-100);
+    await gcsPut(MAYA_PEOPLE_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+  });
   return person;
 }
 app.get('/api/admin/maya-people', requireAuthHeader, async (req, res) => {
@@ -3709,7 +3727,8 @@ async function loadMayaSoul() {
   if (!o.ok) return DEFAULT_SOUL;
   try { return o.buf.toString('utf8') || DEFAULT_SOUL; } catch { return DEFAULT_SOUL; }
 }
-async function appendMayaSoul(text) {
+async function appendMayaSoul(text) { return withLock('soul', () => _appendMayaSoulRaw(text)); }
+async function _appendMayaSoulRaw(text) {
   const t = String(text || '').trim().slice(0, 1000);
   if (!t) return null;
   let cur = await loadMayaSoul();
@@ -3932,13 +3951,84 @@ function appendMayaFeatureFrom(text, who, source) {
   return appendMayaFeature(text, who).then(async (n) => {
     if (!n || !source) return n;
     try {
-      const rec = await loadMayaFeatures();
-      const last = rec.items[rec.items.length - 1];
-      if (last && last.text === String(text || '').trim().slice(0, 600)) { last.source = source; await gcsPut(MAYA_FEATURES_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json'); }
+      await withLock('features', async () => {
+        const rec = await loadMayaFeatures();
+        const last = rec.items[rec.items.length - 1];
+        if (last && last.text === String(text || '').trim().slice(0, 600)) { last.source = source; await gcsPut(MAYA_FEATURES_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json'); }
+      });
     } catch (_) {}
     return n;
   });
 }
+// v14.14: consented interaction telemetry. Sanitized by construction: the
+// schema admits tool name, outcome class, latency, trace, and consent
+// version. Transcripts, images, audio, faces, and measurements have no
+// field to arrive in. Append-only, capped, admin-readable.
+const MAYA_TELEMETRY_PATH = 'maya/telemetry.json';
+async function loadTelemetry() {
+  const o = await gcsGet(MAYA_TELEMETRY_PATH).catch(() => ({ ok: false }));
+  if (!o.ok) return { items: [] };
+  try { const j = JSON.parse(o.buf.toString('utf8')); return { items: Array.isArray(j.items) ? j.items : [] }; }
+  catch { return { items: [] }; }
+}
+app.post('/api/telemetry', requireAuthHeader, express.json({ limit: '4kb' }), async (req, res) => {
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email, 60);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  const b = req.body || {};
+  const ev = {
+    ts: new Date().toISOString(),
+    trace: String(b.trace || '').replace(/[^a-z0-9_]/gi, '').slice(0, 24),
+    who: crypto.createHash('sha256').update(String(user.sub || '')).digest('hex').slice(0, 12),
+    tool: String(b.tool || '').replace(/[^a-z0-9_]/gi, '').slice(0, 40),
+    cls: ['ok', 'expected', 'ambiguity', 'confirmation', 'timeout', 'defect'].includes(b.cls) ? b.cls : 'other',
+    ms: Math.min(120000, Math.max(0, Number(b.ms) || 0)),
+    consentV: Number(b.consentV) || 1,
+  };
+  if (!ev.tool) return res.status(400).json({ error: 'empty' });
+  try {
+    await withLock('telemetry', async () => {
+      const rec = await loadTelemetry();
+      rec.items.push(ev);
+      rec.items = rec.items.slice(-5000);
+      await gcsPut(MAYA_TELEMETRY_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+    });
+    return res.json({ ok: true });
+  } catch (e) { return res.status(502).json({ error: 'telemetry_failed' }); }
+});
+// v14.14: the reviewed digest. Admin-only, agent-readable Markdown assembled
+// from the inbox and telemetry. Production never writes to Git and never
+// deploys anything; a human reads this and decides.
+app.get('/api/admin/maya-digest', requireAuthHeader, async (req, res) => {
+  try { await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  try {
+    const since = Date.now() - 7 * 24 * 3600 * 1000;
+    const feats = (await loadMayaFeatures()).items.filter(i => new Date(i.ts || 0).getTime() >= since);
+    const tel = (await loadTelemetry()).items.filter(i => new Date(i.ts || 0).getTime() >= since);
+    const byTool = new Map();
+    for (const e of tel) {
+      const t = byTool.get(e.tool) || { calls: 0, defect: 0, timeout: 0, expected: 0, ms: [] };
+      t.calls++; t.ms.push(e.ms);
+      if (e.cls === 'defect') t.defect++; if (e.cls === 'timeout') t.timeout++;
+      if (e.cls === 'expected' || e.cls === 'ambiguity' || e.cls === 'confirmation') t.expected++;
+      byTool.set(e.tool, t);
+    }
+    const p50 = a => { if (!a.length) return 0; const s = a.slice().sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
+    let md = '# MAYA weekly digest\n\nGenerated ' + new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC. ' +
+      feats.length + ' inbox items and ' + tel.length + ' consented tool events in the last 7 days.\n\n## Inbox\n\n';
+    for (const f of feats.slice(-60)) md += '- [' + (f.done ? 'x' : ' ') + '] (' + (f.source || 'app') + ') ' + String(f.who || '') + ': ' + String(f.text || '').slice(0, 200) + '\n';
+    md += '\n## Tool health (consented sessions only)\n\n| tool | calls | defects | timeouts | expected answers | p50 ms |\n|---|---|---|---|---|---|\n';
+    for (const [name, t] of [...byTool.entries()].sort((a, b) => b[1].defect - a[1].defect)) {
+      md += '| ' + name + ' | ' + t.calls + ' | ' + t.defect + ' | ' + t.timeout + ' | ' + t.expected + ' | ' + p50(t.ms) + ' |\n';
+    }
+    md += '\nA human reviews this and turns the worst recurring defect into a proposed change. Nothing here deploys itself.\n';
+    res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+    return res.send(md);
+  } catch (e) { return res.status(502).json({ error: 'digest_failed' }); }
+});
 app.post('/api/feature', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
   let user;
   try { user = await requireGoogleUser(req); }
@@ -3995,8 +4085,10 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       'popups the person did not ask for. Only touch fabric if they say fabric, material, or name a cloth; only touch ' +
       'references if they say reference, image, or pin. The fabric already on the piece stays unless they ask to change it. ' +
       'To move between versions of the same piece use card_version(direction), never viewer next or prev, and never open ' +
-      'another card. After you send a change, call render_status to learn whether it is coming or whether it failed, and ' +
-      'say so plainly.\n' +
+      'another card. A render is never done when the tool answers: the tool says STARTED, the app tells you later whether ' +
+      'it finished or failed, and only then do you say so. Deleting is confirm gated: the first delete_card call only ' +
+      'stages it; say which card out loud, get their yes, then call delete_card again with confirm true. If a card tool ' +
+      'answers with candidates, read them back and ask which; never pick for them.\n' +
       'UNDERSTANDING THEM. A five year old should be able to use you, so carry the burden yourself. Say back what you ' +
       'are about to do in a handful of words and act; do not interview them. If a card reference is ambiguous the tool ' +
       'tells you so with the candidates: read two or three back and ask which, never guess. "This one", "it", "the red ' +
@@ -4060,7 +4152,8 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
         parameters: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] } },
       { type: 'function', name: 'look', description: 'See the screen: a picture of the live page arrives in the conversation. Use it whenever the person refers to something visual, after actions, and on arrival.', parameters: { type: 'object', properties: {} } },
       { type: 'function', name: 'open_card', description: 'Open a card (its picture viewer) by words that match it.', parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
-      { type: 'function', name: 'delete_card', description: 'Delete a card by words that match it.', parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
+      { type: 'function', name: 'delete_card', description: 'Delete a card. First call stages and returns needsConfirmation; ask for their yes out loud, then call again with confirm true.',
+        parameters: { type: 'object', properties: { query: { type: 'string' }, confirm: { type: 'boolean', description: 'true only after they said yes' } }, required: ['query'] } },
       { type: 'function', name: 'favorite_card', description: 'Heart (or unheart) a card by words that match it.', parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
       { type: 'function', name: 'viewer', description: 'Press a control in the open picture viewer.', parameters: { type: 'object', properties: { action: { type: 'string', enum: ['close', 'next', 'prev', 'post_wall', 'get_it_made', 'listen', 'switch_fabric', 'add_reference', 'heart', 'photo', 'attributes'] } }, required: ['action'] } },
       { type: 'function', name: 'pin_view', description: 'Show Pinterest: all saves, or the boards.', parameters: { type: 'object', properties: { which: { type: 'string', enum: ['all', 'boards'] } } } },
@@ -4157,13 +4250,24 @@ const mayaMcp = createMayaMcp({
   appendSoul: appendMayaSoul,
   loadLeads: async () => { const d = await loadLeadFeed(); return { leads: d.leads || d.items || [] }; },
 });
-function mcpTokenOk(req) {
-  if (!MAYA_MCP_TOKEN) return false;
+// v14.14: two scopes at the door. Header auth is full access. A token in
+// the query string (which lands in request logs) is READ-ONLY and never
+// touches PII or Maya's memory: writes and the leads book demand the header.
+function mcpAuthScope(req) {
+  if (!MAYA_MCP_TOKEN) return null;
   const h = String(req.headers.authorization || '');
-  const given = h.startsWith('Bearer ') ? h.slice(7).trim() : String((req.query || {}).token || '');
-  if (!given || given.length !== MAYA_MCP_TOKEN.length) return false;
-  try { return crypto.timingSafeEqual(Buffer.from(given), Buffer.from(MAYA_MCP_TOKEN)); } catch (_) { return false; }
+  const fromHeader = h.startsWith('Bearer ') ? h.slice(7).trim() : '';
+  const fromQuery = String((req.query || {}).token || '');
+  const check = (given) => {
+    if (!given || given.length !== MAYA_MCP_TOKEN.length) return false;
+    try { return crypto.timingSafeEqual(Buffer.from(given), Buffer.from(MAYA_MCP_TOKEN)); } catch (_) { return false; }
+  };
+  if (check(fromHeader)) return 'full';
+  if (check(fromQuery)) return 'readonly';
+  return null;
 }
+const MCP_HEADER_ONLY_TOOLS = new Set(['maya_feature_done', 'maya_journal', 'maya_leads', 'maya_memory']);
+function mcpTokenOk(req) { return mcpAuthScope(req) !== null; }
 // v14.05: the door answers at BOTH /mcp and /api/mcp. The smoke test caught
 // that the public domain's catch-all rewrite was swallowing /mcp and serving
 // the app page; /api/** was always routed to Cloud Run, so /api/mcp works on
@@ -4176,10 +4280,19 @@ app.get(['/mcp', '/api/mcp'], (req, res) => {
 });
 app.post(['/mcp', '/api/mcp'], express.json({ limit: '64kb' }), async (req, res) => {
   if (!MAYA_MCP_TOKEN) return res.status(503).json({ error: 'maya_door_closed', hint: 'set MAYA_MCP_TOKEN on Cloud Run' });
-  if (!mcpTokenOk(req)) return res.status(401).json({ error: 'unauthorized' });
+  const scope = mcpAuthScope(req);
+  if (!scope) return res.status(401).json({ error: 'unauthorized' });
   const rl = rateLimit('mcp', 'mcp@maya', 1);
   if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
   try {
+    const _b = req.body || {};
+    if (scope === 'readonly' && _b.method === 'tools/call' &&
+        MCP_HEADER_ONLY_TOOLS.has(String((_b.params || {}).name || ''))) {
+      console.log('[mcp] readonly scope refused', String((_b.params || {}).name || ''));
+      return res.json({ jsonrpc: '2.0', id: _b.id ?? null, error: { code: -32001,
+        message: 'this tool needs full access: send the token as an Authorization Bearer header, not in the URL' } });
+    }
+    if (scope === 'readonly' && _b.method === 'tools/call') console.log('[mcp] readonly call', String((_b.params || {}).name || ''));
     const out = await mayaMcp.handle(req.body);
     if (out === null) return res.status(202).end();
     res.setHeader('Cache-Control', 'no-store');

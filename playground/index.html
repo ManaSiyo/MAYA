@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.13">
+<meta name="maya-version" content="14.14">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -5185,7 +5185,8 @@
     <!-- v14.03: the X rides the card's corner, on top of the title, the viewer's round pill. -->
     <button class="modal-close icon pg-fb-x" onclick="closeFeedback()" aria-label="Close">×</button>
     <h2 style="text-align:center">Improve Maya</h2>
-    <div class="modal-hint" style="text-align:center">Any idea or feature you wish for. Maya learns from every note.</div>
+    <div class="modal-hint" style="text-align:center">Any idea or feature you wish for. Every note lands in the studio inbox.</div>
+    <div class="modal-hint" id="fb-consent" onclick="_fbConsentToggle()" style="text-align:center;cursor:pointer;opacity:0.75" title="Anonymized tool telemetry only. Never photos, audio, transcripts, faces, or measurements. Tap to change."></div>
     <!-- v14.09: two tabs. Your note is yours to write; Maya's logs is what she
          recorded about her own limits, automatically, already with the studio. -->
     <div id="fb-tabs" role="tablist" aria-label="Improve Maya">
@@ -17577,8 +17578,9 @@ function _pgFindCardDetailed(query) {
     if (score > 0) scored.push({ it, score });
   }
   if (!scored.length) {
-    if (open) return { it: open, how: 'the open card (nothing else matched)' };
-    return { it: null, reason: 'no card matches' };
+    // v14.14: an explicitly named card that matches nothing is a MISS.
+    // Falling back to the open card here made her act on the wrong piece.
+    return { it: null, reason: 'no card matches those words' };
   }
   scored.sort((a, b) => b.score - a.score);
   // versions of ONE piece are not two answers. Keep the newest of each family
@@ -17602,6 +17604,31 @@ function _pgFindCardDetailed(query) {
 }
 function _pgFindCard(query) { return _pgFindCardDetailed(query).it; }
 function _pgClick(sel) { const el = document.querySelector(sel); if (el) { el.click(); return true; } return false; }
+// v14.14: she never claims a picture is done before it is. This watcher
+// waits for the real outcome and tells her, so completion is announced by
+// the app, not assumed by the model.
+let _pgRenderWatch = null;
+function _pgWatchRender(dc) {
+  if (_pgRenderWatch) return;
+  const t0 = Date.now(); let armed = false;
+  _pgRenderWatch = setInterval(() => {
+    const n = (typeof _renderLabels !== 'undefined' && _renderLabels) ? _renderLabels.length : 0;
+    const err = window._pgLastRenderError;
+    if (n > 0) armed = true;
+    const done = (armed && n === 0) || (!armed && err) || (Date.now() - t0 > 180000);
+    if (!done) return;
+    clearInterval(_pgRenderWatch); _pgRenderWatch = null;
+    const msg = err
+      ? '[app] the render FAILED: ' + String(err).slice(0, 140) + '. Tell them plainly; it is already logged.'
+      : armed ? '[app] the render finished; the new picture is on screen. Tell them it is ready.'
+      : '[app] no render started; do not claim anything rendered.';
+    try {
+      dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'message', role: 'user',
+        content: [{ type: 'input_text', text: msg }] } }));
+      dc.send(JSON.stringify({ type: 'response.create' }));
+    } catch (_) {}
+  }, window._PG_WATCH_MS || 1200);
+}
 // v14.13: one step, the right kind. Versions of the open piece by default;
 // the favorites strip only in the favorites submit view.
 function _pgStep(d) {
@@ -17655,14 +17682,28 @@ async function _pgTool(name, a, dc) {
       return { ok: true, opened: String(it.card.caption || it.card.title || it.card.kind || 'card').slice(0, 80) };
     }
     case 'delete_card': {
-      const it = _pgFindCard(a.query); if (!it) return { ok: false, reason: 'no card matches', board: _pgBoardSnapshot() };
+      // v14.14: deleting needs their spoken yes. First call stages, second
+      // call with confirm true (same card, within a minute) executes.
+      const f = _pgFindCardDetailed(a.query);
+      if (!f.it) return { ok: false, reason: f.reason || 'no card matches', candidates: f.candidates, board: _pgBoardSnapshot() };
+      const it = f.it;
+      const label = String(it.card.caption || it.card.title || 'card').slice(0, 80);
+      const staged = window._pgPendingDelete;
+      if (!a.confirm || !staged || staged.id !== it.id || Date.now() > staged.until) {
+        window._pgPendingDelete = { id: it.id, until: Date.now() + 60000 };
+        return { ok: false, needsConfirmation: true, card: label,
+          reason: 'not deleted yet; say which card you will delete and ask for their yes, then call delete_card again with confirm true' };
+      }
+      window._pgPendingDelete = null;
       const btn = it.el.querySelector('.delete-btn');
       if (!btn) return { ok: false, reason: 'that card has no delete control' };
       btn.click();
-      return { ok: true, deleted: String(it.card.caption || it.card.title || 'card').slice(0, 80) };
+      return { ok: true, deleted: label };
     }
     case 'favorite_card': {
-      const it = _pgFindCard(a.query); if (!it) return { ok: false, reason: 'no card matches', board: _pgBoardSnapshot() };
+      const f = _pgFindCardDetailed(a.query);
+      if (!f.it) return { ok: false, reason: f.reason || 'no card matches', candidates: f.candidates, board: _pgBoardSnapshot() };
+      const it = f.it;
       const btn = it.el.querySelector('.fav-btn');
       if (!btn) return { ok: false, reason: 'that card has no heart' };
       btn.click();
@@ -17757,12 +17798,14 @@ async function _pgTool(name, a, dc) {
         if (visualizeModifications && visualizeModifications.length) {
           try { window._pgLastRenderError = null; modifySubmit(); }
           catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 90) }; }
-          return { ok: true, note: 'rendering the change on this piece' };
+          _pgWatchRender(dc);
+          return { ok: true, note: 'rendering the change on this piece; started, not finished, the app will tell you the outcome' };
         }
         return { ok: false, reason: 'nothing is staged on this picture; describe the change first with modify_garment' };
       }
       try { window._pgLastRenderError = null; const r = visualizeGarment(); if (r && r.then) r.catch(() => {}); }
       catch (e) { return { ok: false, reason: String(e && e.message || e) }; }
+      _pgWatchRender(dc);
       // the home screen flow can stop on a question; say which one, do not go quiet
       await new Promise(r2 => setTimeout(r2, 500));
       const q = document.getElementById('avatar-check-modal');
@@ -17802,7 +17845,8 @@ async function _pgTool(name, a, dc) {
         window._pgLastRenderError = null;
         modifySubmit();
       } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 90) }; }
-      return { ok: true, applying: t.slice(0, 140), note: 'rendering the new version now; say it takes a moment, then check render_status' };
+      _pgWatchRender(dc);
+      return { ok: true, applying: t.slice(0, 140), note: 'render STARTED, not finished; say it is on its way and wait, the app will tell you when it is done or failed' };
     }
     case 'card_version': {
       // v14.13: versions of THE SAME piece. Never the favorites strip, which
@@ -17836,7 +17880,9 @@ async function _pgTool(name, a, dc) {
     case 'move_card': {
       // v14.12: she can rearrange the sketchbook. style.left/top are canvas
       // units, so zoom never skews the step; _persistSession keeps the spot.
-      const it = _pgFindCard(a.query); if (!it) return { ok: false, reason: 'no card matches', board: _pgBoardSnapshot() };
+      const f = _pgFindCardDetailed(a.query);
+      if (!f.it) return { ok: false, reason: f.reason || 'no card matches', candidates: f.candidates, board: _pgBoardSnapshot() };
+      const it = f.it;
       const el = it.el;
       const step = Math.max(40, Math.min(600, Number(a.amount) || 170));
       const d = String(a.direction || '').toLowerCase();
@@ -17852,7 +17898,9 @@ async function _pgTool(name, a, dc) {
       return { ok: true, moved: String(it.card.caption || it.card.title || 'card').slice(0, 60), direction: d };
     }
     case 'resize_card': {
-      const it = _pgFindCard(a.query); if (!it) return { ok: false, reason: 'no card matches', board: _pgBoardSnapshot() };
+      const f = _pgFindCardDetailed(a.query);
+      if (!f.it) return { ok: false, reason: f.reason || 'no card matches', candidates: f.candidates, board: _pgBoardSnapshot() };
+      const it = f.it;
       const el = it.el;
       const cur = parseInt(el.style.width) || el.offsetWidth || 220;
       const wantBig = String(a.size || '').toLowerCase() !== 'smaller';
@@ -17910,7 +17958,9 @@ async function _pgTool(name, a, dc) {
       return { ok: true, note: 'tidied into a clean layout' };
     }
     case 'dissect_card': {
-      const it = _pgFindCard(a.query); if (!it) return { ok: false, reason: 'no card matches', board: _pgBoardSnapshot() };
+      const f = _pgFindCardDetailed(a.query);
+      if (!f.it) return { ok: false, reason: f.reason || 'no card matches', candidates: f.candidates, board: _pgBoardSnapshot() };
+      const it = f.it;
       const btn = it.el.querySelector('.dissect-btn');
       if (!btn) return { ok: false, reason: 'that card cannot be dissected' };
       const label = (btn.textContent || '').trim().toLowerCase(); btn.click();
@@ -17927,7 +17977,9 @@ async function _pgTool(name, a, dc) {
       return { ok: true, note: 'that reference was already on the canvas' };
     }
     case 'card_details': {
-      const it = _pgFindCard(a.query); if (!it) return { ok: false, reason: 'no card matches', board: _pgBoardSnapshot() };
+      const f = _pgFindCardDetailed(a.query);
+      if (!f.it) return { ok: false, reason: f.reason || 'no card matches', candidates: f.candidates, board: _pgBoardSnapshot() };
+      const it = f.it;
       const c = it.card; const P = c.profile || {};
       return { ok: true, caption: c.caption || '', kind: c.kind || '', favorited: !!c.favorited,
         bio: P.bio || '', aesthetic: P.aesthetic || '', silhouette: P.silhouette || '', color: P.color || '', era: P.era || '',
@@ -18070,20 +18122,59 @@ async function _pgTool(name, a, dc) {
     default: return { ok: false, reason: 'unknown tool' };
   }
 }
+// v14.14: expected answers are answers, not defects. An empty favorites
+// screen, an ambiguous card, a staged delete waiting for a yes: none of
+// these are bugs and none of them belong in the studio inbox.
+const _PG_EXPECTED_FAIL = /no card matches|more than one card fits|no words|favorites is empty|no favorites yet|no projects yet|no pins loaded|Pinterest is not open|no picture is open|only one version|this is the (first|newest) version|unknown (screen|direction|action|tool)|unknown measurement|quality is|need a number|nothing is staged|no change described|no project matches|no fabric matches|fabric picker is not open|not deleted yet|no reason|already on the canvas|not signed in/i;
+function _pgClassifyFail(out) {
+  const r = String((out && out.reason) || '');
+  if (out && out.needsConfirmation) return 'confirmation';
+  if (out && out.ambiguous) return 'ambiguity';
+  if (/timed out/i.test(r)) return 'timeout';
+  if (_PG_EXPECTED_FAIL.test(r)) return 'expected';
+  return 'defect';
+}
 async function _pgRunCall(dc, name, call_id, argStr) {
   let args = {}; try { args = JSON.parse(argStr || '{}'); } catch (_) {}
-  const out = await _pgTool(name, args, dc);
-  // v14.09: a failed hand files itself into the studio inbox, autonomously.
+  const t0 = Date.now();
+  // v14.14: a hung or thrown tool must never leave the model waiting. The
+  // race guarantees a truthful function output either way.
+  let out;
   try {
-    if (out && out.ok === false && name !== 'hang_up' && typeof window._pgAutoLog === 'function') {
+    out = await Promise.race([
+      _pgTool(name, args, dc),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('the tool timed out after ' + Math.round((window._PG_TOOL_TIMEOUT_MS || 25000) / 1000) + ' seconds')),
+        window._PG_TOOL_TIMEOUT_MS || 25000)),
+    ]);
+  } catch (e) {
+    out = { ok: false, reason: String(e && e.message || e).slice(0, 120) };
+  }
+  const cls = (out && out.ok === false) ? _pgClassifyFail(out) : 'ok';
+  // v14.09/v14.14: only genuine defects file themselves; expected answers do not.
+  try {
+    if ((cls === 'defect' || cls === 'timeout') && name !== 'hang_up' && typeof window._pgAutoLog === 'function') {
       window._pgAutoLog('Maya could not ' + String(name).replace(/_/g, ' ') +
         (out.reason ? ': ' + String(out.reason).slice(0, 140) : '') +
         (args && args.query ? ' (asked for "' + String(args.query).slice(0, 60) + '")' : ''), 'Maya', 'maya');
     }
   } catch (_) {}
+  try { _pgTelemetry(name, cls, Date.now() - t0); } catch (_) {}
   try {
     dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id, output: JSON.stringify(out || {}) } }));
     dc.send(JSON.stringify({ type: 'response.create' }));
+  } catch (_) {}
+}
+// v14.14: consented, sanitized telemetry. Tool name, outcome class, and
+// latency only. Never transcripts, never images, never measurements, never
+// the words the person said. Off unless the person turned it on.
+let _pgTraceId = '';
+function _pgConsentOn() { try { return localStorage.getItem('maya_improve_consent') === '1'; } catch (_) { return false; } }
+function _pgTelemetry(tool, cls, ms) {
+  if (!_pgConsentOn()) return;
+  const key = getApiKey(); if (!key) return;
+  try {
+    fetch('/api/telemetry', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ trace: _pgTraceId, tool: String(tool).slice(0, 40), cls, ms: Math.min(120000, Math.max(0, Number(ms) || 0)), consentV: 1 }) }).catch(() => {});
   } catch (_) {}
 }
 function _pgOnMessage(dc) {
@@ -18110,6 +18201,10 @@ function _pgOnMessage(dc) {
 async function pgMayaStart() {
   if (_pgVoice || _pgVoiceStarting) return;
   const key = getApiKey(); if (!key) { showToast('Sign in first.'); return; }
+  // v14.14: every session starts with a clean tool chain and its own trace.
+  // A tool that hung in the last call can never block this one.
+  _pgToolChain = Promise.resolve();
+  _pgTraceId = 'tr_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   _pgVoiceStarting = true; _pgWakePause();
   let mic = null, pc = null, audio = null;
   try {
@@ -18331,6 +18426,15 @@ window._pgAutoLog = _pgAutoLog;
 // her incapacity, in her own words; and a wish heard in the client's
 const _PG_CANT = /\b(i can.?t|i cannot|i'?m (?:not able|unable)|i am (?:not able|unable)|not (?:yet )?able to|i (?:do|did)n.?t have (?:a way|the ability|eyes|access)|my eyes (?:are|were)|that (?:tool|is) (?:failed|not possible)|i (?:couldn|could not)|beyond (?:my|what i can))/i;
 const _PG_WISH = /\b(maya should|you should (?:be able|add|let)|it (?:would|d) be (?:nice|great|cool) if|i wish (?:you|maya|it)|can you add|please add|there should be)\b/i;
+function _fbConsentRender() {
+  const el = document.getElementById('fb-consent'); if (!el) return;
+  const on = _pgConsentOn();
+  el.textContent = 'Help improve Maya: ' + (on ? 'ON' : 'OFF') + ' (anonymized tool telemetry only, never photos, audio, or measurements)';
+}
+function _fbConsentToggle() {
+  try { localStorage.setItem('maya_improve_consent', _pgConsentOn() ? '0' : '1'); } catch (_) {}
+  _fbConsentRender();
+}
 function _fbRenderMayaLogs() {
   const host = document.getElementById('fb-maya-list'); if (!host) return;
   if (!_pgMayaLogBuf.length) { host.innerHTML = '<div class="fbm-empty">Nothing yet. When Maya hits a limit, it files itself here.</div>'; return; }
@@ -18371,7 +18475,7 @@ if (typeof _pgLine === 'function') {
 // opening the popup always shows fresh logs on the Maya tab
 if (typeof openFeedback === 'function') {
   const _oOF = openFeedback;
-  openFeedback = function () { const r = _oOF.apply(this, arguments); try { _fbRenderMayaLogs(); _fbTab('note'); } catch (_) {} return r; };
+  openFeedback = function () { const r = _oOF.apply(this, arguments); try { _fbRenderMayaLogs(); _fbTab('note'); _fbConsentRender(); } catch (_) {} return r; };
 }
 </script>
 </body>

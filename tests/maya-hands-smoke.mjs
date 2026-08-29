@@ -34,8 +34,9 @@ const srv = http.createServer((req, res) => {
 });
 await new Promise(r => srv.listen(8898, '127.0.0.1', r));
 
+const exe = process.env.PW_CHROMIUM || (existsSync('/opt/pw-browsers/chromium') ? '/opt/pw-browsers/chromium' : null);
 const browser = await chromium.launch({
-  executablePath: process.env.PW_CHROMIUM || '/opt/pw-browsers/chromium',
+  ...(exe ? { executablePath: exe } : {}),
   args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
 });
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
@@ -159,6 +160,9 @@ const battery = [
   ['card_version', { direction: 'previous' }, o => o && o.ok === false && /no picture is open/.test(o.reason)],
   ['render_status', {}, o => o && o.ok === true && o.rendering === false],
   ['visualize', {}, o => o && typeof o.ok === 'boolean'],
+  // v14.14: deletion is a two step handshake, never a single guess
+  ['delete_card', { query: 'the girl with the apple' }, o => o && o.ok === false && o.needsConfirmation === true],
+  ['delete_card', { query: 'zzz nothing matches this' }, o => o && o.ok === false && !o.needsConfirmation],
 ];
 for (const [name, args, judge] of battery) {
   let out, threw = null;
@@ -249,13 +253,95 @@ ok('visualize inside an open picture renders THIS piece, no home screen flow',
 ok('a failed render is readable by Maya and auto-logged',
   editor.status && editor.status.failed === true && /403/.test(editor.status.error || ''), JSON.stringify(editor.status));
 
-// ── 4. the failed hand files itself (v14.09 observer) ──
-const logged = await page.evaluate(async () => {
-  const before = (window._pgMayaLogBuf || []).length;
-  await window._pgRunCall({ send: () => {} }, 'open_card', 'call_smoke_1', JSON.stringify({ query: 'purple spacesuit' }));
-  return (window._pgMayaLogBuf || []).length > before;
+// ── 4. the observer, v14.14 rules: defects file themselves, expected
+// answers stay out of the inbox (that was the inaccurate-logs complaint)
+const observer = await page.evaluate(async () => {
+  const out = {};
+  const b0 = (window._pgMayaLogBuf || []).length;
+  await window._pgRunCall({ send: () => {} }, 'open_card', 'call_ob_1', JSON.stringify({ query: 'purple spacesuit' }));
+  out.benignStayedQuiet = (window._pgMayaLogBuf || []).length === b0;
+  const orig = window._pgTool;
+  window._pgTool = () => { throw new Error('exploded for the test'); };
+  await window._pgRunCall({ send: () => {} }, 'open_card', 'call_ob_2', '{}');
+  window._pgTool = orig;
+  out.defectFiled = (window._pgMayaLogBuf || []).length === b0 + 1;
+  return out;
 });
-ok('a failed tool call auto-logs itself to the studio', logged);
+ok('an expected miss (no such card) does NOT file a defect', observer.benignStayedQuiet);
+ok('a thrown tool DOES file itself to the studio', observer.defectFiled);
+
+// ── 4b. v14.14: the real routing layer, driven by synthetic model events ──
+const routing = await page.evaluate(async () => {
+  const out = { sent: [] };
+  const dc = { send: (x) => { try { out.sent.push(JSON.parse(x)); } catch (_) {} } };
+  const handler = _pgOnMessage(dc);
+  const fire = (o) => handler({ data: JSON.stringify(o) });
+  window._PG_TOOL_TIMEOUT_MS = 600;
+  fire({ type: 'response.function_call_arguments.done', call_id: 'c1', name: 'open_card', arguments: '{not json' });
+  fire({ type: 'response.function_call_arguments.done', call_id: 'c2', name: 'warp_drive', arguments: '{}' });
+  fire({ type: 'response.function_call_arguments.done', call_id: 'c2', name: 'warp_drive', arguments: '{}' });
+  const orig = window._pgTool;
+  window._pgTool = (n, a, d) => n === 'hang_forever' ? new Promise(() => {}) : orig(n, a, d);
+  fire({ type: 'response.function_call_arguments.done', call_id: 'c3', name: 'hang_forever', arguments: '{}' });
+  await new Promise(r => setTimeout(r, 1800));
+  window._pgTool = orig;
+  delete window._PG_TOOL_TIMEOUT_MS;
+  const outs = out.sent.filter(m => m && m.item && m.item.type === 'function_call_output');
+  const byId = {}; outs.forEach(m => { byId[m.item.call_id] = JSON.parse(m.item.output); });
+  return { count: outs.length, c1: byId.c1, c2: byId.c2, c3: byId.c3 };
+});
+ok('malformed arguments still produce a truthful function output', routing.c1 && routing.c1.ok === false);
+ok('an unknown tool answers unknown tool through the routing layer', routing.c2 && routing.c2.reason === 'unknown tool');
+ok('a duplicate call id is answered exactly once', routing.count === 3);
+ok('a hanging tool times out and still answers the model', routing.c3 && routing.c3.ok === false && /timed out/.test(routing.c3.reason), JSON.stringify(routing.c3));
+
+// ── 4c. v14.14: named-but-unmatched never falls back to the open card ──
+const nofall = await page.evaluate(async () => {
+  const modal = document.getElementById('garment-modal'); if (modal) modal.classList.add('open');
+  const first = (0, eval)('items').find(i => i && i.card && i.card.caption);
+  (0, eval)('viewerItemId = "' + first.id + '"');
+  const miss = _pgFindCardDetailed('chartreuse parachute pants');
+  const hit = _pgFindCardDetailed('this one');
+  if (modal) modal.classList.remove('open');
+  return { missIsNull: !miss.it, deicticStillWorks: !!hit.it };
+});
+ok('an explicitly named card that matches nothing is a MISS, not the open card', nofall.missIsNull);
+ok('"this one" still resolves to the open card', nofall.deicticStillWorks);
+
+// ── 4d. v14.14: the delete handshake executes only after confirm ──
+const delflow = await page.evaluate(async () => {
+  const el = document.createElement('div'); el.className = 'moodboard-item';
+  const btn = document.createElement('div'); btn.className = 'delete-btn';
+  let clicked = false; btn.addEventListener('click', () => { clicked = true; });
+  el.appendChild(btn); document.body.appendChild(el);
+  (0, eval)('items').push({ id: 'del-1', card: { caption: 'doomed neon parka', kind: 'render' }, el });
+  const first = await window._pgTool('delete_card', { query: 'doomed neon parka' }, { send: () => {} });
+  const notYet = !clicked;
+  const second = await window._pgTool('delete_card', { query: 'doomed neon parka', confirm: true }, { send: () => {} });
+  return { first, second, notYet, clicked };
+});
+ok('delete stages without touching the card', delflow.first && delflow.first.needsConfirmation === true && delflow.notYet);
+ok('delete with confirm executes the staged card', delflow.second && delflow.second.ok === true && delflow.clicked);
+
+// ── 4e. v14.14: the render outcome watcher speaks failure truthfully ──
+const watcher = await page.evaluate(async () => {
+  const out = { sent: [] };
+  const dc = { send: (x) => { try { out.sent.push(JSON.parse(x)); } catch (_) {} } };
+  window._PG_WATCH_MS = 80;
+  (0, eval)('_renderLabels').push({ label: 'modifying', startedAt: Date.now(), expectedMs: 1000 });
+  _pgWatchRender(dc);
+  await new Promise(r => setTimeout(r, 250));
+  window._pgLastRenderError = 'OpenAI error: 403';
+  (0, eval)('_renderLabels').pop();
+  await new Promise(r => setTimeout(r, 400));
+  delete window._PG_WATCH_MS;
+  const said = out.sent.filter(m => m && m.item && m.item.type === 'message')
+    .map(m => (m.item.content && m.item.content[0] && m.item.content[0].text) || '').join(' ');
+  window._pgLastRenderError = null;
+  return { said };
+});
+ok('the watcher tells Maya a render FAILED, with the error',
+  /FAILED/.test(watcher.said) && /403/.test(watcher.said), watcher.said.slice(0, 120));
 
 // ── 5. her ears: the voice plumbing survives without a mic or a token ──
 const voice = await page.evaluate(async () => {

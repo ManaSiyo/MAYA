@@ -31,6 +31,14 @@ steps:
         node tests/admin-ui-contract.mjs
         node tests/proxy-policy.mjs
         node tests/maya-mcp.mjs
+        # v14.14: the voice agent battery runs in the gate when a browser can
+        # be installed. An install failure skips loudly (infra, not code); a
+        # test failure fails the build.
+        if npm install --no-save playwright >/dev/null 2>&1 && npx playwright install --with-deps chromium >/dev/null 2>&1; then
+          node tests/maya-hands-smoke.mjs
+        else
+          echo "WARNING browser unavailable in CI, maya-hands-smoke skipped"
+        fi
         node --check docs/server/maya-mcp.mjs
         node --check docs/server/admin-command.mjs
         node --check docs/server/proxy-policy.mjs

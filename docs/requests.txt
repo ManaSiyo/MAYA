@@ -16,6 +16,69 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 29, 2026, THE RELEASE AUDIT (v14.14): blockers closed before push
+
+Codex reviewed the unshipped v14.02 to v14.13 work and filed 20 findings.
+The blockers are fixed; the larger projects are triaged below, honestly.
+
+DONE (each with a battery or smoke assertion):
+[x] P0-1 Matcher: a named card that matches nothing is a MISS, never a
+    fallback to the open card. All mutating card tools (favorite, dissect,
+    move, resize, details, delete) stop on ambiguity and return candidates.
+    Deletion is confirm gated: first call stages, second call with confirm
+    true (same card, 60s window) executes. "This one" still works.
+[x] P0-2 Tool chain: reset per Realtime session with a fresh trace id; every
+    call races a 25s timeout; a thrown or hung tool always sends a truthful
+    function output. Tested through the real routing layer (_pgOnMessage)
+    with malformed args, unknown tools, duplicate call ids, and a hang.
+[x] P0-3 Honest outcomes: modify and visualize now say STARTED, and the app
+    itself tells Maya when the render truly finished or failed (the render
+    watcher injects the outcome into the conversation). She no longer
+    announces completion she cannot see.
+[x] P0-4 Routing tests: the battery drives _pgOnMessage with synthetic model
+    events; wrong card prevention, ambiguity, delete handshake, stale chain
+    recovery via timeout, and the failure watcher are all pinned (97 checks).
+[x] P0-5 Release gate: cloudbuild's test step now runs the browser battery
+    when it can install chromium; an install failure skips loudly, a test
+    failure fails the build.
+[x] 6 Truthful copy: "Maya learns from every note" is gone; the note goes to
+    the studio inbox and the copy says exactly that.
+[x] 7+8 Consent + telemetry: a visible "Help improve Maya" toggle, OFF by
+    default, revocable in one tap, in the Improve Maya popup. When ON, the
+    app sends tool name, outcome class, latency, trace id and consent
+    version to /api/telemetry (auth required, append only, capped, per-user
+    hashed identity). The schema has no field for transcripts, photos,
+    audio, faces or measurements, so they cannot arrive.
+[x] 9 Failure classes: ok:false answers are classified (expected, ambiguity,
+    confirmation, timeout, defect). Only defects and timeouts auto-file to
+    the studio; an empty favorites screen is no longer reported as a bug.
+[x] 10 (lite) Digest: GET /api/admin/maya-digest returns an admin-only
+    Markdown digest of the week's inbox and tool health. Production never
+    writes to Git and never deploys anything.
+[x] 11 Truthful touchpoints: the invoice Email and Text buttons now say
+    "Draft opened... Nothing has been sent yet."
+[x] 16 Fabric-name dedupe now applies to both fabric tabs.
+[x] 18+19 MCP scopes: a query-string token is READ ONLY; maya_feature_done,
+    maya_journal, maya_memory and maya_leads (the PII) demand the token as
+    an Authorization header. Read-only calls are logged.
+[x] 20 Concurrency: withLock promise queues around features, memory, soul,
+    people and telemetry read-modify-write stores.
+
+DEFERRED, with reasons (not blockers, some need Fromsa's call):
+[ ] 10 (full) The scheduled weekly export and proposal pipeline: needs the
+    digest reviewed a few weeks first; endpoint exists.
+[ ] 12 Lead Station columns/queue/marketing data: nothing in v14.02-14.14
+    touched these; verified intact, no work needed.
+[ ] 13 Restore Sources inside a combined Bottom Line shell: Fromsa asked to
+    REMOVE Sources of traffic in the v14.03 round; re-adding it inside a
+    merged shell contradicts that and needs his decision.
+[ ] 14 Pinterest tabs on the title row and [ ] 15 persistent pin caching:
+    real UI work from the old spec, not release blockers for this push.
+[ ] 17 Favorites submit-only: unchanged and covered by existing behavior.
+[ ] Full scoped-token redesign (expiring per-agent tokens, per-tool audit
+    trail): the read/write split ships now; rotation and expiry need a
+    token store decision (Cloud Run env vs Firestore) that is Fromsa's.
+
 AUGUST 29, 2026, NIGHT (v14.13): she understands the card in front of her
 
 Fromsa talked to Maya live and hit five real walls. Each traced to a cause:

@@ -46,6 +46,27 @@ await check('mcp door: right token answers ping', async () => {
   if (process.env.MAYA_MCP_TOKEN) { const j = await r.json(); assert.ok(j.result && j.result.tools.length === 8, 'eight tools'); }
   return r;
 }, process.env.MAYA_MCP_TOKEN ? 200 : 503);
+// v14.14: the query-string token is READ-ONLY and PII-free. Writes and the
+// leads book demand the Authorization header.
+await check('mcp scopes: query token cannot reach the leads book', async () => {
+  const r = await fetch(BASE + '/mcp?token=' + encodeURIComponent(process.env.MAYA_MCP_TOKEN || ''), { method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 9, method: 'tools/call', params: { name: 'maya_leads', arguments: {} } }) });
+  if (process.env.MAYA_MCP_TOKEN) {
+    const j = await r.json();
+    assert.ok(j.error && /header/.test(j.error.message || ''), 'expected a header-auth refusal, got ' + JSON.stringify(j).slice(0, 120));
+  }
+  return r;
+}, process.env.MAYA_MCP_TOKEN ? 200 : 503);
+await check('mcp scopes: header token reaches everything', async () => {
+  const r = await fetch(BASE + '/mcp', { method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (process.env.MAYA_MCP_TOKEN || '') },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 10, method: 'tools/call', params: { name: 'maya_status', arguments: {} } }) });
+  if (process.env.MAYA_MCP_TOKEN) { const j = await r.json(); assert.ok(j.result, 'expected a result'); }
+  return r;
+}, process.env.MAYA_MCP_TOKEN ? 200 : 503);
+await check('telemetry needs a token',             post('/api/telemetry', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
+await check('the digest needs an admin',           get('/api/admin/maya-digest'), 401);
 await check('healthz answers',                    get('/api/healthz'), 200);
 await check('subthumb rejects a bad token',        get('/api/admin/subthumb?id=1a2b3c4d5e6f7g', AUTH), 401);
 await check('healthz reports what is configured', async () => {

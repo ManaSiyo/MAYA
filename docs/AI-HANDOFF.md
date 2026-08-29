@@ -74,6 +74,34 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.14 (Claude): the release audit, blockers closed
+
+Codex's 20-finding review, triaged and fixed before any push. The load
+bearing changes: _pgFindCardDetailed no longer falls back to the open card
+on a zero-score named query (the deictic path is untouched); every mutating
+card tool uses the detailed matcher and surfaces candidates; delete_card is
+a two-call confirm handshake staged by card id with a 60s window
+(window._pgPendingDelete). _pgRunCall races every tool against
+window._PG_TOOL_TIMEOUT_MS (default 25s), catches throws, classifies
+failures (_pgClassifyFail: expected/ambiguity/confirmation/timeout/defect;
+only defect and timeout auto-file), posts consented telemetry
+(_pgTelemetry, gated by localStorage maya_improve_consent, toggle in the
+Improve Maya modal), and ALWAYS sends function_call_output. pgMayaStart
+resets _pgToolChain and mints _pgTraceId. _pgWatchRender polls
+_renderLabels and _pgLastRenderError and injects the true outcome into the
+conversation; modify/visualize answer STARTED. Server: withLock promise
+mutex around features/memory/soul/people/telemetry; POST /api/telemetry
+(sanitized schema, capped 5000); GET /api/admin/maya-digest (admin
+Markdown); mcpAuthScope splits header (full) from query token (readonly,
+MCP_HEADER_ONLY_TOOLS = feature_done, journal, memory, leads). cloudbuild
+runs the browser battery when chromium installs, skips loudly otherwise.
+Battery: 97 checks incl. the routing layer driven through _pgOnMessage.
+Deferred items and reasons live in requests.txt.
+
+NEXT (Fromsa): push (v14.10 through v14.14 ride it). The Claude connector
+keeps working read-only via ?token=; for full access it needs the token as
+an Authorization header (see fixes.txt).
+
 ## v14.13 (Claude): she understands the card in front of her
 
 The comprehension pass, from a live session. Root causes, not symptoms:

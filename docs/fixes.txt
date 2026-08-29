@@ -94,3 +94,4 @@ green step; none is code. Do them in this order.
     - CLO-SET dashboard -> issue an API token -> set CLOSET_API_TOKEN and
       CLOSET_SEARCH_URL on Cloud Run, then tell Claude to wire the exact
       search endpoint from their docs.
+\n[v14.14] MCP door scopes: /api/mcp?token=... is now READ ONLY (status,\ninbox, soul, people). maya_leads, maya_memory, maya_journal and\nmaya_feature_done need the token as an Authorization: Bearer header.\nA connector that cannot send headers keeps read access unchanged.\n
