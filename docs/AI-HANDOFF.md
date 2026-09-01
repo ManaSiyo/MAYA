@@ -74,6 +74,13 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.15 (Claude): the feedback round
+
+Four fixes straight from maya/features.json: brevity after actions and
+live write_feedback typing (both in the voice instructions, UNDERSTANDING
+THEM block), singular/plural tolerant pin matching in bring_in_pins, and a
+self-explaining dissect refusal. Assertion in the v14.15 regression block.
+
 ## v14.14 (Claude): the release audit, blockers closed
 
 Codex's 20-finding review, triaged and fixed before any push. The load

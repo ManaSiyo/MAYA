@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.14">
+<meta name="maya-version" content="14.15">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -17774,7 +17774,9 @@ async function _pgTool(name, a, dc) {
       const want = Math.max(1, Math.min(6, Number(a.count) || 1));
       const scored = pics.map(el => {
         const alt = String(el.dataset.alt || '').toLowerCase();
-        return { el, alt, score: words.reduce((n, w) => n + (alt.includes(w) ? 1 : 0), 0) };
+        // v14.15: "corsets" must find "corset". Singular and plural both count.
+        const hit = (w) => alt.includes(w) || (w.endsWith('s') && alt.includes(w.slice(0, -1))) || alt.includes(w + 's');
+        return { el, alt, score: words.reduce((n, w) => n + (hit(w) ? 1 : 0), 0) };
       }).filter(x => x.score > 0).sort((x, y) => y.score - x.score).slice(0, want);
       if (!scored.length) {
         return { ok: false, reason: 'nothing matched', available: pics.slice(0, 30).map(el => String(el.dataset.alt || '').slice(0, 80)).filter(Boolean) };
@@ -17962,7 +17964,7 @@ async function _pgTool(name, a, dc) {
       if (!f.it) return { ok: false, reason: f.reason || 'no card matches', candidates: f.candidates, board: _pgBoardSnapshot() };
       const it = f.it;
       const btn = it.el.querySelector('.dissect-btn');
-      if (!btn) return { ok: false, reason: 'that card cannot be dissected' };
+      if (!btn) return { ok: false, reason: 'no dissect control on this one; only garment visions open into pieces' };
       const label = (btn.textContent || '').trim().toLowerCase(); btn.click();
       return { ok: true, did: label || 'dissect', card: String(it.card.caption || it.card.title || 'card').slice(0, 80) };
     }

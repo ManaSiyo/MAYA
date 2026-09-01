@@ -16,6 +16,22 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+AUGUST 29, 2026, LATE (v14.15): the feedback round
+
+Read straight from the inbox Maya keeps (the voice thing, as asked):
+[x] "Responses should be shorter after simple actions": she confirms a done
+    action in a couple of words now and never recaps.
+[x] "Feedback should be typed live as it is discussed": she calls
+    write_feedback after every point while still talking, so the notes land
+    in the box as you watch.
+[x] "Bring in corsets found nothing": pin matching is singular and plural
+    tolerant now; corsets finds corset.
+[x] "Could not dissect" logs: the refusal explains itself (only garment
+    visions open into pieces) instead of a flat no.
+Everything else in the inbox (wrong card, no render, fabric popup, favorites
+instead of editor, log every I can't) was already fixed in v14.10 to v14.14
+and ships with this same push.
+
 AUGUST 29, 2026, THE RELEASE AUDIT (v14.14): blockers closed before push
 
 Codex reviewed the unshipped v14.02 to v14.13 work and filed 20 findings.

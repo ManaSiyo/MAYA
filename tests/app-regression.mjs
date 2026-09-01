@@ -1990,6 +1990,11 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.15: the feedback round: brevity, live feedback typing, plural tolerant pins, honest dissect',
+  SERVER_SOURCE.includes('never recap what you just did') &&
+  SERVER_SOURCE.includes('typed live while you keep talking') &&
+  PLAYGROUND_SOURCE.includes("alt.includes(w + 's')") &&
+  PLAYGROUND_SOURCE.includes('only garment visions open into pieces'));
 ok('v14.14: the release blockers: no silent fallback, confirm gated delete, timeouts, honest outcomes, scoped door, locked stores',
   PLAYGROUND_SOURCE.includes('no card matches those words') &&
   PLAYGROUND_SOURCE.includes('needsConfirmation: true') &&
