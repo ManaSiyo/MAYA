@@ -16,6 +16,22 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 1, 2026, LATE NIGHT (v14.18): the glide everywhere, the wider search
+
+[x] "I meant the scroll, only on Maya mode: if I ask for scroll it should
+    just automatically be smooth and continuous. That's all I wanted":
+    every scroll Maya performs glides now, not just the pins. Favorites
+    slides sideways, the community wall's three rows glide together, the
+    pins glide down, and stop halts any of them the moment it is said.
+[x] "Pinterest: just add a search function. If it's a different API, let's
+    work on that. I might not have corsets in my pins. Search pins should
+    be for things outside my pins, or Maya should ask me, these are what
+    you have, I can look for more": search has two rooms. She shows what
+    the loaded wall holds and offers the wider room; wider goes through a
+    new server route to Pinterest's own API and searches everything the
+    account has saved. Beyond an account's saves Pinterest has no public
+    search, and she says so and offers describe_garment instead.
+
 SEPTEMBER 1, 2026, NIGHT (v14.17): Pinterest search, the glide, position words
 
 [x] "My pins and boards should have a search, just a small search icon": a

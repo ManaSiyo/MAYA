@@ -19,6 +19,9 @@ const srv = http.createServer((req, res) => {
   if (p.startsWith('/api/')) {
     res.setHeader('Content-Type', 'application/json');
     if (p === '/api/pinterest/boards') return res.end(JSON.stringify({ boards: [{ id: 'b1', name: 'Summer whites' }, { id: 'b2', name: 'Red carpet' }] }));
+    if (p === '/api/pinterest/search') return res.end(JSON.stringify({ ok: true, pins: [
+      { id: 'w1', url: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=', alt: 'victorian corset in ivory silk' },
+      { id: 'w2', url: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=', alt: 'black leather corset belt' }] }));
     if (p === '/api/pinterest/pins') return res.end(JSON.stringify({ pins: [] }));
     if (p === '/api/feature') return res.end(JSON.stringify({ ok: true }));
     if (p === '/api/feedback') return res.end(JSON.stringify({ ok: true }));
@@ -156,7 +159,8 @@ const battery = [
   ['clear_hints', {}, o => o && o.ok === true],
   // v14.17: search, the glide, and stop as a first class word
   ['search_pins', {}, o => o && o.ok === false && /no words/.test(o.reason)],
-  ['search_pins', { query: 'corsets' }, o => o && o.ok === false && /pins loaded|Pinterest/.test(o.reason)],
+  // v14.18: nothing on the loaded wall means she goes wider by herself
+  ['search_pins', { query: 'corsets' }, o => o && o.ok === true && o.matches === 2 && /everything saved/.test(o.from)],
   ['clear_pin_search', {}, o => o && o.ok === true],
   ['scroll', { direction: 'stop' }, o => o && o.ok === true && /stopped|nothing was moving/.test(o.note)],
   ['scroll_pins', { direction: 'stop' }, o => o && o.ok === true],
@@ -300,6 +304,41 @@ ok('the glide moves the wall on its own', glide.moved === true, JSON.stringify(g
 ok('stop halts the glide and it stays halted', glide.stopped === true && glide.stayed === true);
 ok('searching corsets shows only corset pins (plural finds singular)', glide.matches === 10 && glide.hidden === 20);
 ok('clearing the search brings the whole wall back', glide.restored === true);
+
+// ── 3c3. v14.18: the glide slides SIDEWAYS too, and many rows at once ──
+const glideX = await page.evaluate(async () => {
+  const mkRow = () => {
+    const r = document.createElement('div');
+    r.style.cssText = 'position:fixed;top:0;left:0;width:200px;height:60px;overflow-x:auto;white-space:nowrap;';
+    for (let i = 0; i < 30; i++) { const c = document.createElement('span'); c.style.cssText = 'display:inline-block;width:60px;height:50px;'; r.appendChild(c); }
+    document.body.appendChild(r); return r;
+  };
+  const r1 = mkRow(), r2 = mkRow();
+  _pgGlideStart([r1, r2], 1, 'x');
+  await new Promise(r => setTimeout(r, 300));
+  const moved = r1.scrollLeft > 0 && r2.scrollLeft > 0;
+  const stopped = _pgGlideStop();
+  r1.remove(); r2.remove();
+  return { moved, stopped };
+});
+ok('the glide slides two rows sideways together and stops', glideX.moved === true && glideX.stopped === true, JSON.stringify(glideX));
+
+// ── 3c4. v14.18: the wider room searches everything saved, not the loaded page ──
+const wider = await page.evaluate(async () => {
+  const out = {};
+  out.res = await window._pgTool('search_pins', { query: 'corsets', wider: true }, { send: () => {} });
+  const body = document.getElementById('pinterest-drawer-body');
+  out.walls = body ? body.querySelectorAll('.pin-pic').length : -1;
+  out.alt = body && body.querySelector('.pin-pic') ? body.querySelector('.pin-pic').dataset.alt : '';
+  _pgGlideStop();
+  const cleared = await window._pgTool('clear_pin_search', {}, { send: () => {} });
+  out.cleared = cleared && cleared.ok === true;
+  return out;
+});
+ok('the wider search renders every saved match onto the wall',
+  wider.res && wider.res.ok === true && wider.res.matches === 2 && wider.walls === 2 && /corset/.test(wider.alt),
+  JSON.stringify(wider.res));
+ok('clearing after a wider search restores the wall', wider.cleared === true);
 
 // ── 3d. v14.16: the studio gauge never claims zero of two dollars ──
 const gauge = await page.evaluate(() => {

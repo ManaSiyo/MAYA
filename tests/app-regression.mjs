@@ -1990,6 +1990,16 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.18: every voice scroll glides, and search reaches everything saved on Pinterest',
+  PLAYGROUND_SOURCE.includes('function _pgGlideStart(els, dir, axis)') &&
+  PLAYGROUND_SOURCE.includes("axis === 'x' ? 'scrollLeft' : 'scrollTop'") &&
+  PLAYGROUND_SOURCE.includes("_pgGlideStart(el, dir, 'x')") &&
+  PLAYGROUND_SOURCE.includes("_pgGlideStart(rows, dir, 'x')") &&
+  PLAYGROUND_SOURCE.includes('window._pinWiderActive = true;') &&
+  PLAYGROUND_SOURCE.includes("_pinApi('/api/pinterest/search?q='") &&
+  SERVER_SOURCE.includes("app.get('/api/pinterest/search'") &&
+  SERVER_SOURCE.includes("wider: { type: 'boolean'") &&
+  SERVER_SOURCE.includes('EVERY scroll you perform is a continuous glide'));
 ok('v14.17: Pinterest search for fingers and voice, the continuous glide, and position words on every card',
   PLAYGROUND_SOURCE.includes('id="pin-search-btn"') &&
   PLAYGROUND_SOURCE.includes('function _pinSearch(') &&

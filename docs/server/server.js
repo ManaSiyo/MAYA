@@ -1895,6 +1895,38 @@ app.get('/api/pinterest/pins', requireAuthHeader, async (req, res) => {
   } catch (e) { pinErr(res, e); }
 });
 
+// v14.18: search EVERYTHING the account has saved on Pinterest, server side.
+// The v5 API's /search/pins covers the whole account, not just a loaded page.
+// Pinterest exposes no public search beyond an account's own saves.
+app.get('/api/pinterest/search', requireAuthHeader, async (req, res) => {
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized' }); }
+  if (!pinConfigured()) return res.status(501).json({ error: 'not_configured' });
+  const q = String(req.query.q || '').trim().slice(0, 80);
+  if (q.length < 2) return res.status(400).json({ error: 'empty' });
+  try {
+    const j = await pinFetch(user.sub, '/search/pins?' + new URLSearchParams({ query: q, page_size: '48' }).toString());
+    const biggest = (images) => {
+      if (!images || typeof images !== 'object') return '';
+      let best = '', bestW = -1;
+      for (const [key, val] of Object.entries(images)) {
+        const url = val && val.url;
+        if (!url) continue;
+        const w = key === 'originals' ? 99999 : Number((val.width) || (String(key).split('x')[0]) || 0);
+        if (w > bestW) { bestW = w; best = url; }
+      }
+      return best;
+    };
+    const pins = (j.items || []).map(p => ({
+      id: String(p.id),
+      url: biggest(p.media && p.media.images) || '',
+      alt: String(p.alt_text || p.title || '').slice(0, 120),
+    })).filter(p => p.url);
+    res.json({ ok: true, pins, bookmark: j.bookmark || null });
+  } catch (e) { pinErr(res, e); }
+});
+
 // GET /api/admin/submissions — every submission in MAYA's own store, newest
 // first, with its files. Powers the Systems Map strip and the Brief.
 app.get('/api/admin/submissions', async (req, res) => {
@@ -4118,8 +4150,8 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       '- open_card(query) / delete_card(query) / favorite_card(query): act on a card by its words.\n' +
       '- viewer(action): inside the opened picture: close, next, prev, post_wall, get_it_made, listen, switch_fabric, add_reference.\n' +
       '- pin_view(which): Pinterest All saves or Boards. open_board(name) opens one.\n' +
-      '- search_pins(query): "let us look at corsets" means THIS: open Pinterest, show only the matching pins, and glide down them slowly. clear_pin_search brings the whole wall back.\n' +
-      '- scrolling the pins is a continuous glide that keeps moving on its own; the MOMENT they say stop, call scroll with direction stop. Never leave it moving after a stop.\n' +
+      '- search_pins(query): "let us look at corsets" means THIS: open Pinterest, show the matches, glide them slowly. It looks at the loaded wall first; when it finds some there, OFFER the wider search and on a yes call search_pins with wider true, which searches EVERYTHING saved on their Pinterest through the API. Finds nothing locally, it goes wider by itself. Pinterest has no public search beyond an account\'s own saves; wanting fresh outside imagery means describe_garment. clear_pin_search brings the wall back.\n' +
+      '- EVERY scroll you perform is a continuous glide: pins slide down, favorites and the community wall slide sideways, and it keeps moving on its own until they say stop. The MOMENT they say stop, call scroll with direction stop. Never leave anything moving after a stop.\n' +
       '- every card in list_board and on the board list carries a position word (top left, center, bottom right). When they describe a card by where it sits ("the one in the upper center"), those words resolve it; check list_board before guessing.\n' +
       '- go_to_screen(where): walk the app itself: community (the shared wall above), home (the moodboard), favorites (below). Go there before talking about what lives there.\n' +
       '- scroll(area, direction): move through favorites, the community wall, or the pins. When they say go down, keep going, or show me more, scroll.\n' +
@@ -4165,8 +4197,8 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       { type: 'function', name: 'pin_view', description: 'Show Pinterest: all saves, or the boards.', parameters: { type: 'object', properties: { which: { type: 'string', enum: ['all', 'boards'] } } } },
       { type: 'function', name: 'open_board', description: 'Open one Pinterest board by name.', parameters: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] } },
       { type: 'function', name: 'scroll_pins', description: 'Glide the Pinterest wall continuously; stop halts it.', parameters: { type: 'object', properties: { direction: { type: 'string', enum: ['down', 'up', 'stop'] } } } },
-      { type: 'function', name: 'search_pins', description: 'Open Pinterest, show ONLY the pins matching the words, and glide down them slowly.',
-        parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
+      { type: 'function', name: 'search_pins', description: 'Search Pinterest and glide the matches. Default: the loaded wall. wider true: everything the account has saved, through the API.',
+        parameters: { type: 'object', properties: { query: { type: 'string' }, wider: { type: 'boolean', description: 'true to search everything saved on their Pinterest' } }, required: ['query'] } },
       { type: 'function', name: 'clear_pin_search', description: 'Clear the pin search; the whole wall comes back.', parameters: { type: 'object', properties: {} } },
       { type: 'function', name: 'modify_garment', description: 'Inside an open picture: apply the spoken design change to THIS piece and render it. No fabric or reference popups. Use this for every design change while a picture is open.',
         parameters: { type: 'object', properties: { text: { type: 'string', description: 'the change in their own words' } }, required: ['text'] } },

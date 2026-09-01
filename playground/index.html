@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.17">
+<meta name="maya-version" content="14.18">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -17704,19 +17704,29 @@ function _pgGlideStop() {
   if (!_pgGlide) return false;
   const g = _pgGlide; _pgGlide = null;
   try { cancelAnimationFrame(g.raf); } catch (_) {}
-  try { g.el.removeEventListener('wheel', g.halt); g.el.removeEventListener('pointerdown', g.halt); } catch (_) {}
+  try { (g.els || []).forEach(el => { el.removeEventListener('wheel', g.halt); el.removeEventListener('pointerdown', g.halt); }); } catch (_) {}
   return true;
 }
-function _pgGlideStart(el, dir) {
+// v14.18: EVERY voice scroll glides. Vertical for the pins, sideways for
+// favorites and the community rows (all three rows move together).
+function _pgGlideStart(els, dir, axis) {
   _pgGlideStop();
-  const g = { el, dir, raf: 0, halt: () => _pgGlideStop() };
-  el.addEventListener('wheel', g.halt, { passive: true });
-  el.addEventListener('pointerdown', g.halt, { passive: true });
+  const list = (Array.isArray(els) ? els : [els]).filter(Boolean);
+  if (!list.length) return;
+  const prop = axis === 'x' ? 'scrollLeft' : 'scrollTop';
+  const size = axis === 'x' ? 'clientWidth' : 'clientHeight';
+  const full = axis === 'x' ? 'scrollWidth' : 'scrollHeight';
+  const g = { els: list, raf: 0, halt: () => _pgGlideStop() };
+  list.forEach(el => { el.addEventListener('wheel', g.halt, { passive: true }); el.addEventListener('pointerdown', g.halt, { passive: true }); });
   const step = () => {
     if (_pgGlide !== g) return;
-    el.scrollTop += dir * 1.5;
-    const atEnd = dir > 0 ? (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) : el.scrollTop <= 0;
-    if (atEnd) { _pgGlideStop(); return; }
+    let ended = true;
+    for (const el of list) {
+      el[prop] += dir * 1.5;
+      const atEnd = dir > 0 ? (el[prop] + el[size] >= el[full] - 2) : el[prop] <= 0;
+      if (!atEnd) ended = false;
+    }
+    if (ended) { _pgGlideStop(); return; }
     g.raf = requestAnimationFrame(step);
   };
   _pgGlide = g; g.raf = requestAnimationFrame(step);
@@ -18211,33 +18221,59 @@ async function _pgTool(name, a, dc) {
       return { ok: true, fabric: (best.textContent || '').trim().slice(0, 40) };
     }
     case 'search_pins': {
-      // v14.17: "let's look at corsets". Open Pinterest, show only the
-      // matches, glide down them slowly until they say stop.
+      // v14.18: two rooms. The loaded wall first; then, wider, the Pinterest
+      // API searches EVERYTHING the account has saved, not just the page
+      // that happens to be loaded. Beyond an account's own saves Pinterest
+      // has no public search, and she says so instead of pretending.
       const q = String(a.query || '').trim();
       if (!q) return { ok: false, reason: 'no words to search' };
       try { toggleNotesDrawer(true); pgTab('pinterest'); } catch (_) {}
-      let pics = [];
-      for (let i = 0; i < 40; i++) {
-        pics = [...document.querySelectorAll('#pinterest-drawer-body .pin-pic')];
-        if (pics.length) break;
-        await new Promise(r => setTimeout(r, 200));
-      }
-      if (!pics.length) return { ok: false, reason: 'no pins loaded; is Pinterest connected?' };
       const inp = document.getElementById('pin-search-input');
-      if (inp) { inp.style.display = ''; inp.value = q; }
-      const shown = _pinSearch(q);
-      if (!shown) {
-        _pinSearch(''); if (inp) inp.value = '';
-        return { ok: false, reason: 'nothing on the wall matches ' + q.slice(0, 40),
-          available: pics.slice(0, 20).map(el => String(el.dataset.alt || '').slice(0, 70)).filter(Boolean) };
-      }
       const body = document.getElementById('pinterest-drawer-body');
-      if (body) { body.scrollTop = 0; _pgGlideStart(body, 1); }
-      return { ok: true, matches: shown, showing: q, gliding: true,
-        note: 'only ' + q + ' is on the wall now, gliding slowly; scroll direction stop when they say stop, clear_pin_search to show everything again' };
+      const glideTop = () => { if (body) { body.scrollTop = 0; _pgGlideStart(body, 1, 'y'); } };
+      if (!a.wider) {
+        let pics = [];
+        for (let i = 0; i < 40; i++) {
+          pics = [...document.querySelectorAll('#pinterest-drawer-body .pin-pic')];
+          if (pics.length) break;
+          await new Promise(r => setTimeout(r, 200));
+        }
+        if (pics.length) {
+          if (inp) { inp.style.display = ''; inp.value = q; }
+          const shown = _pinSearch(q);
+          if (shown) {
+            glideTop();
+            return { ok: true, matches: shown, from: 'the loaded wall', gliding: true,
+              note: 'these are the ' + q + ' already in front of them; OFFER the wider search of everything saved on their Pinterest, and if they want it call search_pins again with wider true' };
+          }
+        }
+      }
+      let j;
+      try { j = await _pinApi('/api/pinterest/search?q=' + encodeURIComponent(q)); }
+      catch (e) { return { ok: false, reason: 'the wider search could not run: ' + String(e && e.message || e).slice(0, 80) }; }
+      const pins = (j && j.pins) || [];
+      if (!pins.length) return { ok: false, reason: 'nothing matching ' + q.slice(0, 40) + ' anywhere in what they have saved on Pinterest; Pinterest has no public search beyond an account, but describe_garment can conjure fresh references instead' };
+      window._pinWiderActive = true;
+      if (body) body.innerHTML = '<div class="pin-grid pics">' + pins.map(p =>
+        '<button class="pin-pic" data-url="' + escapeHtml(p.url) + '" data-alt="' + escapeHtml(p.alt || '') + '"' +
+          ' onclick="_pinToggle(this)"><img src="' + _safeImgSrc(p.url) + '" alt="" loading="lazy">' +
+          '<span class="pin-check">&#10003;</span></button>').join('') + '</div>';
+      try { _pinSub('search: ' + q); } catch (_) {}
+      if (inp) { inp.style.display = ''; inp.value = q; }
+      glideTop();
+      return { ok: true, matches: pins.length, from: 'everything saved on their Pinterest', gliding: true,
+        note: 'the wall now holds every ' + q + ' across their whole Pinterest; clear_pin_search brings the normal wall back' };
     }
     case 'clear_pin_search': {
-      try { _pgGlideStop(); _pinSearch(''); const inp = document.getElementById('pin-search-input'); if (inp) inp.value = ''; } catch (_) {}
+      try {
+        _pgGlideStop();
+        const inp = document.getElementById('pin-search-input'); if (inp) inp.value = '';
+        if (window._pinWiderActive) {
+          window._pinWiderActive = false;
+          if (_pinPicsCache['all']) _pinBody(_pinPicsCache['all']);
+          else { try { _pinDrawerPins('', ''); } catch (_) {} }
+        } else { _pinSearch(''); }
+      } catch (_) {}
       return { ok: true, note: 'the whole wall is back' };
     }
     case 'go_to_screen': {
@@ -18274,14 +18310,14 @@ async function _pgTool(name, a, dc) {
       if (area === 'favorites' || area === 'favourites') {
         const el = document.getElementById('favorites-scroller');
         if (!el || !el.children.length) return { ok: false, reason: 'favorites is empty' };
-        el.scrollBy({ left: dir * Math.max(320, el.clientWidth * 0.8), behavior: 'smooth' });
-        return { ok: true, area: 'favorites' };
+        _pgGlideStart(el, dir, 'x');
+        return { ok: true, area: 'favorites', gliding: true, note: 'gliding sideways continuously; the MOMENT they say stop, call scroll with direction stop' };
       }
       if (area === 'community' || area === 'wall') {
         const rows = [...document.querySelectorAll('#community-scroller .community-row')];
         if (!rows.length || !rows.some(r => r.children.length)) return { ok: false, reason: 'the community wall is empty' };
-        rows.forEach(r => r.scrollBy({ left: dir * Math.max(320, r.clientWidth * 0.6), behavior: 'smooth' }));
-        return { ok: true, area: 'community' };
+        _pgGlideStart(rows, dir, 'x');
+        return { ok: true, area: 'community', gliding: true, note: 'all three rows gliding sideways; the MOMENT they say stop, call scroll with direction stop' };
       }
       // nothing scrollable under her: step a screen instead, so "go down" still means something
       return _pgTool('go_to_screen', { where: dir > 0 ? 'favorites' : 'community' }, dc);

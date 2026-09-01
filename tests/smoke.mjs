@@ -67,6 +67,7 @@ await check('mcp scopes: header token reaches everything', async () => {
 }, process.env.MAYA_MCP_TOKEN ? 200 : 503);
 await check('telemetry needs a token',             post('/api/telemetry', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
 await check('the digest needs an admin',           get('/api/admin/maya-digest'), 401);
+await check('pinterest search needs a token',      get('/api/pinterest/search?q=corsets'), 401);
 await check('healthz answers',                    get('/api/healthz'), 200);
 await check('subthumb rejects a bad token',        get('/api/admin/subthumb?id=1a2b3c4d5e6f7g', AUTH), 401);
 await check('healthz reports what is configured', async () => {

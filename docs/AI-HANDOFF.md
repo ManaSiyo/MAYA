@@ -74,6 +74,22 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.18 (Claude): the universal glide and the wider search
+
+The glide is _pgGlideStart(els, dir, axis) now: element or array, axis 'x'
+or 'y', 1.5px/frame rAF over scrollLeft/scrollTop, every element moving
+together. Favorites glides 'x', community glides all .community-row rows
+'x' at once, pins glide 'y'; stop stays a first class direction everywhere.
+search_pins has two rooms: the loaded wall first (returning a spoken OFFER
+of the wider search), then wider:true, or a local miss, calls GET
+/api/pinterest/search, a new server proxy over Pinterest v5 /search/pins
+(everything the ACCOUNT has saved, page_size 48, biggest image picked,
+requireAuthHeader + Google user + pinConfigured). The wall re-renders those
+pins (window._pinWiderActive) and clear_pin_search restores the cached wall.
+Pinterest exposes no public search beyond an account's own saves; the tool
+says so and points at describe_garment for fresh imagery. Battery: 115
+checks.
+
 ## v14.17 (Claude): Pinterest search, the glide, position words
 
 The search: #pin-search-btn + #pin-search-input in #pin-tabs; _pinSearch(q)
@@ -87,9 +103,8 @@ Position words: _pgPosWord(it, pool) buckets style.left/top into terciles
 (top/middle/bottom x left/center/right); _pgBoardSnapshot carries pos, the
 server sanitizer passes it (24 chars) and boardLines print it; the matcher
 resolves 2D regions with version-family collapse and candidate ambiguity.
-There is no remote Pinterest search API in the server, so search filters the
-LOADED wall (all saves pages newest first); a true API search is a future
-server feature. Battery: 109 checks.
+Search filtered only the LOADED wall in this version; v14.18 added the true
+API search of everything the account saved. Battery: 109 checks.
 
 ## v14.16 (Claude): the studio gauge and the fast Admin
 
