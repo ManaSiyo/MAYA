@@ -16,6 +16,28 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 1, 2026, NIGHT (v14.17): Pinterest search, the glide, position words
+
+[x] "My pins and boards should have a search, just a small search icon": a
+    canon hairline search pill sits beside the All saves / Boards tabs;
+    typing filters pins by their words and boards by name, singular and
+    plural both count, clearing restores everything.
+[x] "Let us look at corsets: she should pull Pinterest, search corsets, show
+    me, and start scrolling smoothly": new search_pins(query) does exactly
+    that sequence, and clear_pin_search brings the wall back. bring_in_pins
+    only grips pins a search left visible.
+[x] "Scroll inside the Pinterest bar should be smooth and continuous until I
+    say stop": scrolling the pins is a gentle requestAnimationFrame glide
+    now; it halts on the word stop (a first class direction on scroll and
+    scroll_pins), on a touch or wheel, at the end of the wall, and on hang
+    up. Never a 420 pixel lurch again.
+[x] "She keeps bringing wrong cards": every card carries a position word
+    (top left, center, bottom right) computed from where it sits among its
+    neighbors, in list_board, in the board list her instructions carry, and
+    in the matcher, which now understands rows AND columns ("the one in the
+    upper center"). Versions of one piece collapse before ambiguity, and
+    when two different pieces truly share a spot she names them and asks.
+
 SEPTEMBER 1, 2026 (v14.16): the studio gauge and the fast Admin
 
 [x] "What is up with the credits being zero?" The drawer ring computed cap

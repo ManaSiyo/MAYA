@@ -154,6 +154,12 @@ const battery = [
   ['set_quality', { quality: 'high' }, o => o && o.ok === true && o.quality === 'high'],
   ['set_quality', { quality: 'ultra' }, o => o && o.ok === false],
   ['clear_hints', {}, o => o && o.ok === true],
+  // v14.17: search, the glide, and stop as a first class word
+  ['search_pins', {}, o => o && o.ok === false && /no words/.test(o.reason)],
+  ['search_pins', { query: 'corsets' }, o => o && o.ok === false && /pins loaded|Pinterest/.test(o.reason)],
+  ['clear_pin_search', {}, o => o && o.ok === true],
+  ['scroll', { direction: 'stop' }, o => o && o.ok === true && /stopped|nothing was moving/.test(o.note)],
+  ['scroll_pins', { direction: 'stop' }, o => o && o.ok === true],
   // v14.13: the card editor. Every one of these is a bug Fromsa hit out loud.
   ['modify_garment', { text: 'make it a trench coat' }, o => o && o.ok === false && /open the card first/.test(o.reason)],
   ['modify_garment', {}, o => o && o.ok === false],
@@ -226,6 +232,10 @@ const editor = await page.evaluate(async () => {
   out.byColor = !!red.it || (red.ambiguous === true && Array.isArray(red.candidates) && red.candidates.length > 1);
   const fam = _pgFindCardDetailed('crocodile flares');
   out.versionsCollapse = !!fam.it && fam.it.id === v2.id;
+  const posHit = _pgFindCardDetailed('the card on the left');
+  out.posRegion = !!posHit.it && posHit.it.id === v2.id;
+  out.posRegionInfo = posHit.it ? posHit.how : posHit.reason;
+  out.snapshotPos = _pgBoardSnapshot().every(c => typeof c.pos === 'string');
 
   out.modify = await window._pgTool('modify_garment', { text: 'make it a trench coat' }, { send: () => {} });
   out.version = await window._pgTool('card_version', { direction: 'previous' }, { send: () => {} });
@@ -241,6 +251,8 @@ ok('"this one" resolves to the picture on screen', editor.deictic === true);
 ok('"the one on the left" resolves by position', editor.positional === true);
 ok('a color word finds one piece or names the candidates, never a silent wrong guess', editor.byColor === true);
 ok('two versions of one piece are never an ambiguous question', editor.versionsCollapse === true);
+ok('"the card on the left" resolves through the region, versions collapsed', editor.posRegion === true, JSON.stringify(editor.posRegionInfo || null));
+ok('every board snapshot card carries a position word', editor.snapshotPos === true);
 ok('modify_garment applies the change through the modify pipeline',
   editor.modify && editor.modify.ok === true && editor.modifySubmitCalled === true, JSON.stringify(editor.modify));
 ok('modify_garment NEVER opens the fabric popup', editor.fabricModalOpen === false);
@@ -252,6 +264,42 @@ ok('visualize inside an open picture renders THIS piece, no home screen flow',
   JSON.stringify(editor.visualizeInViewer));
 ok('a failed render is readable by Maya and auto-logged',
   editor.status && editor.status.failed === true && /403/.test(editor.status.error || ''), JSON.stringify(editor.status));
+
+// ── 3c2. v14.17: the glide moves on its own and stop halts it; search filters ──
+const glide = await page.evaluate(async () => {
+  const body = document.getElementById('pinterest-drawer-body');
+  body.innerHTML = '';
+  for (let i = 0; i < 30; i++) {
+    const d = document.createElement('div'); d.className = 'pin-pic';
+    d.dataset.alt = i % 3 === 0 ? 'black lace corset with ribbon' : 'silk gown flowing ' + i;
+    d.style.height = '80px'; d.style.display = 'block'; body.appendChild(d);
+  }
+  // the drawer pane is display:none headless (no layout, nothing scrolls),
+  // so the glide mechanics run on a real scrollable attached to the page
+  const rig = document.createElement('div');
+  rig.style.cssText = 'position:fixed;left:0;top:0;width:200px;height:200px;overflow-y:auto;';
+  for (let i = 0; i < 40; i++) { const c = document.createElement('div'); c.style.height = '60px'; rig.appendChild(c); }
+  document.body.appendChild(rig);
+  const y0 = rig.scrollTop;
+  _pgGlideStart(rig, 1);
+  await new Promise(r => setTimeout(r, 300));
+  const moved = rig.scrollTop > y0;
+  const stopped = _pgGlideStop();
+  const yStop = rig.scrollTop;
+  await new Promise(r => setTimeout(r, 200));
+  const stayed = rig.scrollTop === yStop;
+  rig.remove();
+  const matches = _pinSearch('corsets');
+  const hidden = [...body.querySelectorAll('.pin-pic')].filter(el => el.style.display === 'none').length;
+  _pinSearch('');
+  const restored = [...body.querySelectorAll('.pin-pic')].filter(el => el.style.display === 'none').length === 0;
+  body.innerHTML = '';
+  return { moved, stopped, stayed, matches, hidden, restored };
+});
+ok('the glide moves the wall on its own', glide.moved === true, JSON.stringify(glide));
+ok('stop halts the glide and it stays halted', glide.stopped === true && glide.stayed === true);
+ok('searching corsets shows only corset pins (plural finds singular)', glide.matches === 10 && glide.hidden === 20);
+ok('clearing the search brings the whole wall back', glide.restored === true);
 
 // ── 3d. v14.16: the studio gauge never claims zero of two dollars ──
 const gauge = await page.evaluate(() => {

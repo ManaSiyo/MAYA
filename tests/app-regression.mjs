@@ -1990,6 +1990,17 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.17: Pinterest search for fingers and voice, the continuous glide, and position words on every card',
+  PLAYGROUND_SOURCE.includes('id="pin-search-btn"') &&
+  PLAYGROUND_SOURCE.includes('function _pinSearch(') &&
+  PLAYGROUND_SOURCE.includes("case 'search_pins': {") &&
+  PLAYGROUND_SOURCE.includes("case 'clear_pin_search': {") &&
+  PLAYGROUND_SOURCE.includes('function _pgGlideStart(') &&
+  PLAYGROUND_SOURCE.includes('function _pgPosWord(') &&
+  PLAYGROUND_SOURCE.includes('pos: (typeof _pgPosWord') &&
+  SERVER_SOURCE.includes("name: 'search_pins'") &&
+  SERVER_SOURCE.includes("'down', 'up', 'stop'") &&
+  SERVER_SOURCE.includes("pos: String(c.pos || '').slice(0, 24)"));
 ok('v14.16: the studio gauge tells the truth and the Admin paints from cache first',
   PLAYGROUND_SOURCE.includes("setA('pg-gauge-value', 'Studio');") &&
   INDEX_SOURCE.includes("setA('pg-gauge-value', 'Studio');") &&

@@ -63,9 +63,9 @@ await test('the approved filing cabinet is promoted without removing Playground'
   assert.ok(playground.includes('>Playground</div>'));
 });
 
-await test('all four release surfaces carry v14.16', () => {
+await test('all four release surfaces carry v14.17', () => {
   const version = source => (source.match(/name="maya-version" content="([0-9.]+)"/) || [])[1];
-  assert.deepEqual([app, playground, admin, marketing].map(version), ['14.16', '14.16', '14.16', '14.16']);
+  assert.deepEqual([app, playground, admin, marketing].map(version), ['14.17', '14.17', '14.17', '14.17']);
 });
 
 await test('v14.01 drawer floor: circular logo, Hey Maya toggle beside it', () => {

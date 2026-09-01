@@ -4061,13 +4061,14 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
     const name = String(body.name || user.name || '').trim().slice(0, 60) || 'the client';
     const board = Array.isArray(body.board) ? body.board.slice(0, 40).map(c => ({
       kind: String(c.kind || '').slice(0, 20), title: String(c.title || '').slice(0, 120),
-      caption: String(c.caption || '').slice(0, 200), favorited: !!c.favorited })) : [];
+      caption: String(c.caption || '').slice(0, 200), favorited: !!c.favorited,
+      pos: String(c.pos || '').slice(0, 24) })) : [];
     const drawer = body.drawer && typeof body.drawer === 'object' ? {
       open: !!body.drawer.open, tab: String(body.drawer.tab || '').slice(0, 20), pinterest: !!body.drawer.pinterest } : { open: false };
     const nowLA = new Intl.DateTimeFormat('en-US', { timeZone: process.env.WIX_TZ || 'America/Los_Angeles',
       weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date());
     const boardLines = board.length ? board.map((c, i) => (i + 1) + '. ' + (c.kind || 'card') + ': ' + (c.title || '') +
-      (c.caption ? ' (' + c.caption + ')' : '') + (c.favorited ? ' [hearted]' : '')).join('\n') : '(the board is empty)';
+      (c.caption ? ' (' + c.caption + ')' : '') + (c.pos ? ' [' + c.pos + ']' : '') + (c.favorited ? ' [hearted]' : '')).join('\n') : '(the board is empty)';
     const character = MAYA_CHARACTER ? 'WHO YOU ARE:\n' + MAYA_CHARACTER + '\n\n' : '';
     const instructions = character +
       'You are Maya, speaking out loud with ' + name + ' inside the MAYA app at maya.manasiyo.com. It is ' + nowLA +
@@ -4116,7 +4117,10 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       '- look: see the screen (a real picture of it).\n' +
       '- open_card(query) / delete_card(query) / favorite_card(query): act on a card by its words.\n' +
       '- viewer(action): inside the opened picture: close, next, prev, post_wall, get_it_made, listen, switch_fabric, add_reference.\n' +
-      '- pin_view(which): Pinterest All saves or Boards. open_board(name) opens one. scroll_pins(direction) browses.\n' +
+      '- pin_view(which): Pinterest All saves or Boards. open_board(name) opens one.\n' +
+      '- search_pins(query): "let us look at corsets" means THIS: open Pinterest, show only the matching pins, and glide down them slowly. clear_pin_search brings the whole wall back.\n' +
+      '- scrolling the pins is a continuous glide that keeps moving on its own; the MOMENT they say stop, call scroll with direction stop. Never leave it moving after a stop.\n' +
+      '- every card in list_board and on the board list carries a position word (top left, center, bottom right). When they describe a card by where it sits ("the one in the upper center"), those words resolve it; check list_board before guessing.\n' +
       '- go_to_screen(where): walk the app itself: community (the shared wall above), home (the moodboard), favorites (below). Go there before talking about what lives there.\n' +
       '- scroll(area, direction): move through favorites, the community wall, or the pins. When they say go down, keep going, or show me more, scroll.\n' +
       '- zoom(action): in, out, or reset on the moodboard; organize_board tidies the canvas into a clean layout.\n' +
@@ -4160,7 +4164,10 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       { type: 'function', name: 'viewer', description: 'Press a control in the open picture viewer.', parameters: { type: 'object', properties: { action: { type: 'string', enum: ['close', 'next', 'prev', 'post_wall', 'get_it_made', 'listen', 'switch_fabric', 'add_reference', 'heart', 'photo', 'attributes'] } }, required: ['action'] } },
       { type: 'function', name: 'pin_view', description: 'Show Pinterest: all saves, or the boards.', parameters: { type: 'object', properties: { which: { type: 'string', enum: ['all', 'boards'] } } } },
       { type: 'function', name: 'open_board', description: 'Open one Pinterest board by name.', parameters: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] } },
-      { type: 'function', name: 'scroll_pins', description: 'Scroll the Pinterest wall.', parameters: { type: 'object', properties: { direction: { type: 'string', enum: ['down', 'up'] } } } },
+      { type: 'function', name: 'scroll_pins', description: 'Glide the Pinterest wall continuously; stop halts it.', parameters: { type: 'object', properties: { direction: { type: 'string', enum: ['down', 'up', 'stop'] } } } },
+      { type: 'function', name: 'search_pins', description: 'Open Pinterest, show ONLY the pins matching the words, and glide down them slowly.',
+        parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
+      { type: 'function', name: 'clear_pin_search', description: 'Clear the pin search; the whole wall comes back.', parameters: { type: 'object', properties: {} } },
       { type: 'function', name: 'modify_garment', description: 'Inside an open picture: apply the spoken design change to THIS piece and render it. No fabric or reference popups. Use this for every design change while a picture is open.',
         parameters: { type: 'object', properties: { text: { type: 'string', description: 'the change in their own words' } }, required: ['text'] } },
       { type: 'function', name: 'card_version', description: 'Step between versions of the SAME open piece.',
@@ -4201,8 +4208,8 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
         parameters: { type: 'object', properties: { name: { type: 'string' }, mode: { type: 'string', enum: ['inhouse', 'sourceable'] } }, required: ['name'] } },
       { type: 'function', name: 'go_to_screen', description: 'Walk the app: community (the shared wall above), home (the moodboard), favorites (below).',
         parameters: { type: 'object', properties: { where: { type: 'string', enum: ['community', 'home', 'favorites'] } }, required: ['where'] } },
-      { type: 'function', name: 'scroll', description: 'Scroll an area: favorites, the community wall, or the Pinterest pins. down means forward.',
-        parameters: { type: 'object', properties: { area: { type: 'string', enum: ['favorites', 'community', 'pins'] }, direction: { type: 'string', enum: ['down', 'up'] } } } },
+      { type: 'function', name: 'scroll', description: 'Scroll an area: favorites, the community wall, or the Pinterest pins. In the pins it glides continuously; direction stop halts it.',
+        parameters: { type: 'object', properties: { area: { type: 'string', enum: ['favorites', 'community', 'pins'] }, direction: { type: 'string', enum: ['down', 'up', 'stop'] } } } },
       { type: 'function', name: 'list_board', description: 'The cards on the board right now.', parameters: { type: 'object', properties: {} } },
       { type: 'function', name: 'hang_up', description: 'End the call.', parameters: { type: 'object', properties: {} } },
     ];

@@ -74,6 +74,23 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.17 (Claude): Pinterest search, the glide, position words
+
+The search: #pin-search-btn + #pin-search-input in #pin-tabs; _pinSearch(q)
+filters .pin-pic by dataset.alt and .pin-tile by name, plural tolerant,
+returns the visible count. Voice: search_pins(query) opens the drawer,
+filters, scrolls to top and starts the glide; clear_pin_search restores;
+bring_in_pins collects only visible pins. The glide: _pgGlideStart(el, dir)
+is a 1.5px/frame rAF loop stopping on _pgGlideStop (the stop direction on
+scroll and scroll_pins), wheel/pointerdown, the end of the wall, or hang_up.
+Position words: _pgPosWord(it, pool) buckets style.left/top into terciles
+(top/middle/bottom x left/center/right); _pgBoardSnapshot carries pos, the
+server sanitizer passes it (24 chars) and boardLines print it; the matcher
+resolves 2D regions with version-family collapse and candidate ambiguity.
+There is no remote Pinterest search API in the server, so search filters the
+LOADED wall (all saves pages newest first); a true API search is a future
+server feature. Battery: 109 checks.
+
 ## v14.16 (Claude): the studio gauge and the fast Admin
 
 _mayaUsage gained admin (from /api/usage admin:true); _renderDrawerStats has
