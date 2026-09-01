@@ -16,6 +16,23 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 1, 2026 (v14.16): the studio gauge and the fast Admin
+
+[x] "What is up with the credits being zero?" The drawer ring computed cap
+    minus spent for everyone; a studio account has spent past the two dollar
+    trial years of testing ago, so it pinned at $0.00 of $2. The server
+    already says admin: true; the ring now reads it and shows a full circle,
+    Studio, no cap, on both the app and the playground. Regular clients see
+    exactly what they saw before.
+[x] "Make the admin load faster." The Marketing shell used to sit empty for
+    the two to five seconds the aggregator (GA, ads, leads, Wix) takes.
+    The Admin now remembers the last visit's numbers in this browser and
+    paints them instantly on open, marked Refreshing Marketing, and the
+    fresh fetch repaints when it lands. The AI brief never runs off the
+    cache, only off fresh data. Staleness ceiling two days.
+[x] Feedback inbox re-read: nothing new since Aug 29; every open voice item
+    is covered by v14.10 to v14.15 in this same push.
+
 AUGUST 29, 2026, LATE (v14.15): the feedback round
 
 Read straight from the inbox Maya keeps (the voice thing, as asked):

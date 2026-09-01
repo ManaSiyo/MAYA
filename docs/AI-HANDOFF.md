@@ -74,6 +74,15 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.16 (Claude): the studio gauge and the fast Admin
+
+_mayaUsage gained admin (from /api/usage admin:true); _renderDrawerStats has
+an admin branch (full ring, Studio, no cap) on BOTH index and playground.
+Admin: loadMkt's paint block extracted to _paintMkt(d, alsoBrief); success
+saves maya_mkt_cache (localStorage, ts + payload); _mktWarmPaint paints the
+cache instantly at boot when a cached admin token exists (48h ceiling), with
+fetchBrief gated to fresh fetches only. Assertions in the v14.16 block.
+
 ## v14.15 (Claude): the feedback round
 
 Four fixes straight from maya/features.json: brevity after actions and

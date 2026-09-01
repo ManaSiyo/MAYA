@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.15">
+<meta name="maya-version" content="14.16">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -16835,6 +16835,7 @@ async function _refreshUsage() {
       _mayaUsage = { spentUsd: Number(j.spentUsd) || 0, capUsd: Number(j.capUsd) || 2,
                      images: Number(j.images) || 0,
                      perCard: Number(j.perCardUsd) || 0.065,
+                     admin: !!j.admin,
                      projects: _mayaUsage.projects, ok: true };
     }
     // v14.00: the fourth tile counts the account's projects.
@@ -16851,6 +16852,20 @@ function _renderDrawerStats() {
   const cards = list.length;
   const imagesLocal = list.filter(i => i && i.card && i.card.image).length;
   const favs = list.filter(i => i && i.card && i.card.favorited && i.card.image).length;
+  // v14.16: the studio account has no cap. Showing Fromsa $0.00 left of $2
+  // was arithmetic on a rule that does not apply to him. Full ring, plain words.
+  if (_mayaUsage.admin) {
+    const fillA = document.getElementById('pg-gauge-fill');
+    if (fillA) { fillA.style.strokeDashoffset = '0'; fillA.classList.remove('low'); }
+    const setA = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setA('pg-gauge-value', 'Studio');
+    setA('pg-gauge-cap', 'no cap');
+    setA('pg-stat-cards', String(cards));
+    setA('pg-stat-favs', String(favs));
+    setA('pg-stat-images', String(_mayaUsage.ok ? _mayaUsage.images : imagesLocal));
+    setA('pg-stat-projects', _mayaUsage.projects == null ? String(cards ? 1 : 0) : String(_mayaUsage.projects));
+    return;
+  }
   // v14.00: the meter thinks in CARD RENDERS, not dollars. One card costs the
   // honest per-card figure the server reports (about 6.5 cents), so the gauge
   // reads "N card renders left" and no dollar figure faces the user.

@@ -1990,6 +1990,14 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.16: the studio gauge tells the truth and the Admin paints from cache first',
+  PLAYGROUND_SOURCE.includes("setA('pg-gauge-value', 'Studio');") &&
+  INDEX_SOURCE.includes("setA('pg-gauge-value', 'Studio');") &&
+  PLAYGROUND_SOURCE.includes('admin: !!j.admin,') &&
+  INDEX_SOURCE.includes('admin: !!j.admin,') &&
+  MAP_SOURCE.includes('function _paintMkt(d, alsoBrief)') &&
+  MAP_SOURCE.includes("localStorage.setItem('maya_mkt_cache'") &&
+  MAP_SOURCE.includes('_mktWarmPaint'));
 ok('v14.15: the feedback round: brevity, live feedback typing, plural tolerant pins, honest dissect',
   SERVER_SOURCE.includes('never recap what you just did') &&
   SERVER_SOURCE.includes('typed live while you keep talking') &&

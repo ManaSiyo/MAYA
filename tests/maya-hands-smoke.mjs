@@ -253,6 +253,16 @@ ok('visualize inside an open picture renders THIS piece, no home screen flow',
 ok('a failed render is readable by Maya and auto-logged',
   editor.status && editor.status.failed === true && /403/.test(editor.status.error || ''), JSON.stringify(editor.status));
 
+// ── 3d. v14.16: the studio gauge never claims zero of two dollars ──
+const gauge = await page.evaluate(() => {
+  (0, eval)('_mayaUsage = { spentUsd: 9.4, capUsd: 2, images: 120, perCard: 0.065, admin: true, projects: 3, ok: true }');
+  try { _renderDrawerStats(); } catch (e) { return { err: String(e.message) }; }
+  const v = (document.getElementById('pg-gauge-value') || {}).textContent;
+  const c = (document.getElementById('pg-gauge-cap') || {}).textContent;
+  return { v, c };
+});
+ok('an admin gauge says Studio, no cap, never $0.00 of $2', gauge.v === 'Studio' && gauge.c === 'no cap', JSON.stringify(gauge));
+
 // ── 4. the observer, v14.14 rules: defects file themselves, expected
 // answers stay out of the inbox (that was the inaccurate-logs complaint)
 const observer = await page.evaluate(async () => {
