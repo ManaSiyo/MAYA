@@ -74,6 +74,30 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.20 (Claude): the drawer organized, the wider finger search, natural proportions
+
+Tab title Profile (pgShow + the span). #pg-projects is a pg-fold above
+#pg-stats; the cabinet controller moves .drawer-sessions into
+#pg-projects-body, adds class open, and CSS keeps #drawer-sessions-list
+display:block !important inside it. toggleSessionsDropdown is overridden to
+open the fold and repaint; loadSavedSessionById is wrapped so opening a
+project never hides the list. pgUpdatePill also writes #pg-projects-current
+(the summary's italic name). .pg-avatar-actions and .pg-project-beside are
+display:none (the elements stay for the tools and tests); the client
+dropdown (toggleAvatarSwitcher) now opens with .avatar-switch-actions:
+Rename (pgRenameClient), Randomize (randomizeAvatar), Replace photo
+(pgReplaceFace), Remove photo (pgRemoveFace), then the rows, then + New
+avatar. Rename a project: renameProjectById(id, name) saves through
+projectStore.save when it is the open one, else updates the doc (name +
+revision increment) and _touchIndex; pgRenameProject(id) is the in place
+input (pencil .session-item-rename on every row; the open row's title too).
+Search (playground): #pin-search-btn is an inline SVG glass in a 24px
+circle, the box is 150px centered; typing filters (_pinSearchInput), Enter
+runs _pinWideSearch(q) (shared with the search_pins wider branch), an
+emptied box or the toggle restores (_pinSearchRestore). buildMeasClause
+always ends with the natural proportions sentence (head about one eighth
+of height, face reference sets likeness only). Battery: 133 checks.
+
 ## v14.19 (Claude): the drawer untangled
 
 The avatar pane had two identities braided together. currentClientName is

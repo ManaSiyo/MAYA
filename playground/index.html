@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.19">
+<meta name="maya-version" content="14.20">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -1947,6 +1947,32 @@
     opacity: 0; transition: opacity 0.15s; }
   #notes-drawer .avatar-switch-row:hover .avatar-switch-delete { opacity: 1; }
   #notes-drawer .avatar-switch-delete:hover { color: #fff; border-color: rgba(255,170,170,0.6); }
+  /* v14.20: the pills under the name and the pill beside it were placeholders;
+     Rename, Randomize, Replace and Remove live in the client dropdown now, and
+     Projects is a fold above Stats. */
+  #notes-drawer .pg-avatar-actions { display: none !important; }
+  #notes-drawer .pg-project-beside { display: none !important; }
+  #notes-drawer #pg-projects-body { padding: 4px 0 6px; }
+  #notes-drawer #pg-projects-body .drawer-sessions { margin: 0; }
+  #notes-drawer #pg-projects-body #drawer-sessions-list { display: block !important; margin-top: 4px; }
+  #notes-drawer .pg-fold-current { font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 13px; letter-spacing: 0.02em; text-transform: none; color: rgba(245,250,255,0.92);
+    max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #notes-drawer .pg-fold-current:empty { display: none; }
+  #notes-drawer .avatar-switch-actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px;
+    border-bottom: 0.5px solid rgba(255,255,255,0.08); }
+  #notes-drawer .avatar-switch-actions .drawer-action { font-size: 8px; padding: 3px 9px; letter-spacing: 0.1em; }
+  #notes-drawer .session-item-rename { position: absolute; top: 8px; right: 60px;
+    width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.2);
+    color: rgba(215,230,255,0.9); cursor: pointer; padding: 0; font-size: 11px; line-height: 1;
+    opacity: 0; transition: opacity 0.15s; }
+  #notes-drawer .session-item:hover .session-item-rename, #notes-drawer .session-item.active .session-item-rename { opacity: 1; }
+  #notes-drawer .session-item.active .session-item-title { cursor: text; }
+  #notes-drawer .pg-project-rename { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 13px;
+    color: #fff; background: rgba(255,255,255,0.05); border: 0.5px solid rgba(169,201,255,0.6);
+    border-radius: 6px; padding: 1px 6px; width: 100%; outline: none; }
+  @media (hover: none) { #notes-drawer .session-item-rename { opacity: 1; } }
   /* v14.19: the project pill wears the open project's name and a brighter ring. */
   #notes-drawer .pg-project-beside { max-width: 62%; overflow: hidden; text-overflow: ellipsis; }
   #notes-drawer .pg-project-beside.on { border-color: rgba(169,201,255,0.75); color: #fff;
@@ -2066,14 +2092,18 @@
   #notes-drawer .pg-pane > #pinterest-drawer > #pin-tabs { gap: 6px; margin: 0 0 4px; padding: 0 2px; }
   #notes-drawer .pg-pane > #pinterest-drawer > #pin-tabs .fabrics-tab { font-size: 9px; padding: 4px 10px; }
   /* v14.17: the small search. Canon hairline pill, quiet until wanted. */
+  /* v14.20: a real magnifying glass, in the same circle; the box is longer and
+     its word sits centered. Enter searches everything saved on Pinterest. */
   .pin-search-btn { background: transparent; border: 0.5px solid rgba(255,255,255,0.22); border-radius: 100px;
-    color: rgba(245,250,255,0.75); width: 22px; height: 22px; font-size: 13px; line-height: 1; cursor: pointer;
+    color: rgba(245,250,255,0.8); width: 24px; height: 24px; padding: 0; line-height: 0; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
     backdrop-filter: blur(22px) saturate(180%); -webkit-backdrop-filter: blur(22px) saturate(180%);
     transition: border-color .2s, color .2s; flex: 0 0 auto; }
-  .pin-search-btn:hover { border-color: rgba(255,255,255,0.42); color: rgba(245,250,255,0.95); }
+  .pin-search-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; }
+  .pin-search-btn:hover { border-color: rgba(255,255,255,0.42); color: #fff; }
   #pin-search-input { background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.18);
     border-radius: 100px; color: #fff; font-family: 'Jost', sans-serif; font-size: 10px; letter-spacing: 0.08em;
-    padding: 4px 12px; outline: none; width: 108px; }
+    padding: 4px 12px; outline: none; width: 150px; text-align: center; }
   #pin-search-input::placeholder { color: rgba(245,250,255,0.35); text-transform: uppercase; letter-spacing: 0.12em; }
   /* v13.84: "Bring in" floats over the cards, near-transparent, and shows only
      while pictures are selected (JS toggles display). The wrapper doesn't block
@@ -4854,7 +4884,7 @@
       </button>
       <!-- v13.75: the current tab's name rides here, in the dead space beside
            the circles, so the panes below start higher. -->
-      <span class="pg-tabtitle" id="pg-tabtitle">Users</span>
+      <span class="pg-tabtitle" id="pg-tabtitle">Profile</span>
     </div>
     <div class="pg-folder" id="pg-folder">
       <div class="pg-pane" id="pg-pane-avatar">
@@ -4895,6 +4925,12 @@
         <!-- v13.89: a collapsible Stats fold rides on top of Measurements and
              fills the empty drawer space. Circular gauge = trial credits left of
              $2; four tiles under it. When Measurements opens it pushes down. -->
+        <!-- v14.20: Projects is a fold like Stats, above it. The summary carries
+             the open project's name so it is highlighted even when folded. -->
+        <details class="pg-fold pg-projects-fold" id="pg-projects" open>
+          <summary>Projects <span class="pg-fold-current" id="pg-projects-current"></span></summary>
+          <div id="pg-projects-body"></div>
+        </details>
         <details class="pg-fold pg-stats-fold" id="pg-stats" open>
           <summary>Stats</summary>
           <div class="pg-stats-body" id="pg-stats-body">
@@ -5190,8 +5226,8 @@
   <div class="fabrics-tabs centred" id="pin-tabs" style="display:none">
     <button class="fabrics-tab active" id="pin-tab-all" onclick="setPinterestTab('all')">All saves</button>
     <button class="fabrics-tab" id="pin-tab-boards" onclick="setPinterestTab('boards')">Boards</button>
-    <button class="pin-search-btn" id="pin-search-btn" onclick="_pinSearchToggle()" title="Search Pinterest" aria-label="Search Pinterest">&#x2315;</button>
-    <input id="pin-search-input" type="search" placeholder="Search" oninput="_pinSearch(this.value)" style="display:none" />
+    <button class="pin-search-btn" id="pin-search-btn" onclick="_pinSearchToggle()" title="Search Pinterest" aria-label="Search Pinterest"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 L21 21"/></svg></button>
+    <input id="pin-search-input" type="search" placeholder="Search" oninput="_pinSearchInput(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();_pinSearchEnter(this.value);}" style="display:none" />
   </div>
   <div class="fabrics-drawer-body" id="pinterest-drawer-body"></div>
   <div class="pin-drawer-foot" id="pin-drawer-foot" style="display:none">
@@ -7845,8 +7881,12 @@ function buildMeasClause() {
   if (m.bust_chest)      parts.push(m.bust_chest + '-inch chest');
   if (m.waist_narrowest) parts.push(m.waist_narrowest + '-inch waist');
   if (m.hip)             parts.push(m.hip + '-inch hips');
-  if (!parts.length) return '';
-  return ' The model has these proportions: ' + parts.join(', ') + '.';
+  // v14.20: the face reference kept setting the SIZE of the head, so every
+  // first render came out with a head too big for the body. Say the ratio
+  // out loud, in every prompt, measurements or not.
+  const natural = ' Natural adult photographic proportions: the head is about one eighth of the standing height and is never enlarged, the neck, shoulders, torso and legs are in realistic scale to it, and the face reference sets likeness only, never the size of the head.';
+  if (!parts.length) return natural;
+  return ' The model has these proportions: ' + parts.join(', ') + '.' + natural;
 }
 
 // v9.9: render the cached face descriptors into a prompt clause. Belt and
@@ -8359,7 +8399,15 @@ async function toggleAvatarSwitcher() {
       '<button class="avatar-switch-delete" type="button" onclick="event.stopPropagation();deleteAvatar(\'' + escapeHtml(a.id) + '\')" title="Remove this client from the list" aria-label="Remove this client">&#215;</button>' +
     '</div>'
   ).join('');
-  panel.innerHTML = (rows || '<div class="avatar-switch-empty">No saved avatars yet. Set a name and a face, then Save.</div>') +
+  // v14.20: Rename, Randomize, Replace and Remove ride inside the dropdown,
+  // beside the photo they act on, whether or not the list has anyone in it.
+  const actions = '<div class="avatar-switch-actions">' +
+    '<button class="drawer-action" type="button" onclick="pgRenameClient()" title="Name this client">Rename</button>' +
+    '<button class="drawer-action" type="button" onclick="randomizeAvatar()" title="Random measurements and a random face">Randomize</button>' +
+    '<button class="drawer-action" type="button" onclick="pgReplaceFace()" title="Upload a face photo">Replace photo</button>' +
+    '<button class="drawer-action" type="button" onclick="pgRemoveFace()" title="Remove the face photo">Remove photo</button>' +
+    '</div>';
+  panel.innerHTML = actions + (rows || '<div class="avatar-switch-empty">No saved clients yet. Rename, add a face, and they are filed.</div>') +
     '<button class="avatar-switch-row avatar-switch-new" onclick="newAvatar()">+ New avatar</button>';
   panel.style.display = 'block';
   // v13.82: make sure the freshly opened list is fully visible, not cut at the fold.
@@ -15754,12 +15802,57 @@ function _projectRows(sessions) {
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 L12 15" /><path d="M8.4 7.1 L12 3.5 L15.6 7.1" /><path d="M6.5 11.5 L5 11.5 L5 20 L19 20 L19 11.5 L17.5 11.5" /></svg>
         </button>
         <button class="session-item-delete" onclick="event.stopPropagation();deleteSavedSessionRow('${escapeHtml(s.id)}')" title="Delete this project">&#215;</button>
-        <div class="session-item-title">${escapeHtml(s.name || 'untitled')}</div>
+        <button class="session-item-rename" onclick="event.stopPropagation();pgRenameProject('${escapeHtml(s.id)}')" title="Rename this project" aria-label="Rename this project">&#9998;</button>
+        <div class="session-item-title" onclick="if(this.parentNode.classList.contains('active')){event.stopPropagation();pgRenameProject('${escapeHtml(s.id)}');}">${escapeHtml(s.name || 'untitled')}</div>
         <div class="session-item-meta">${s.shared ? 'Shared · ' : ''}${dateStr}${label ? ' · ' + escapeHtml(label) : ''}</div>
       </div>`;
   }).join('');
 }
 
+// v14.20: rename a project where it sits. The open project renames through
+// its own save; any other project has its document and index row touched
+// directly, revision bumped so other devices notice.
+async function renameProjectById(id, name) {
+  name = String(name || '').trim().slice(0, 60);
+  if (!name || typeof projectStore === 'undefined') return false;
+  if (projectStore.currentId === id) {
+    currentClientName = name;
+    projectStore.autoName = null;
+    try { await projectStore.save(); } catch (e) { console.warn('[maya rename]', e && e.message); }
+  } else {
+    try {
+      await projectStore._col().doc(id).update({ name, revision: firebase.firestore.FieldValue.increment(1) });
+      await projectStore._touchIndex(id, { name, updatedAt: Date.now() });
+    } catch (e) { showError('Could not rename that project. ' + ((e && e.message) || '')); return false; }
+  }
+  projectStore._idxTs = 0;
+  if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
+  if (typeof _renderSessionsDropdown === 'function') _renderSessionsDropdown();
+  showToast('Renamed to ' + name);
+  return true;
+}
+function pgRenameProject(id) {
+  let row = null;
+  try { const sel = (window.CSS && CSS.escape) ? CSS.escape(id) : id; row = document.querySelector('#drawer-sessions-list .session-item[data-id="' + sel + '"]'); } catch (_) {}
+  const title = row && row.querySelector('.session-item-title');
+  if (!title || row.querySelector('.pg-project-rename')) return;
+  const cur = title.textContent.trim();
+  const inp = document.createElement('input');
+  inp.className = 'pg-project-rename'; inp.type = 'text'; inp.value = cur; inp.maxLength = 60; inp.autocomplete = 'off';
+  inp.addEventListener('click', e => e.stopPropagation());
+  title.textContent = ''; title.appendChild(inp);
+  let done = false;
+  const finish = (commit) => {
+    if (done) return; done = true;
+    const v = commit ? inp.value.trim() : cur;
+    try { inp.remove(); } catch (_) {}
+    title.textContent = v || cur;
+    if (commit && v && v !== cur) renameProjectById(id, v);
+  };
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); finish(true); } else if (e.key === 'Escape') finish(false); });
+  inp.addEventListener('blur', () => finish(true));
+  inp.focus(); inp.select();
+}
 async function loadSavedSessionById(id) {
   // v12.5: everything is a cloud project now. Legacy ids that survived the
   // rescue pass are gone from the list, so there is nothing else to try.
@@ -16941,6 +17034,12 @@ loadFolderHandle().then(h => { if (h) folderHandle = h; }).catch(()=>{});
     const avActions = document.querySelector('#pg-avatar-row .pg-avatar-actions');
     if (rnd && avActions) avActions.insertBefore(rnd, avActions.firstChild);
     if (host && actions) host.appendChild(actions);
+    // v14.20: the project list lives inside the Projects fold, always shown.
+    const sess = document.querySelector('#pg-pane-avatar .drawer-sessions');
+    const pbody = document.getElementById('pg-projects-body');
+    if (sess && pbody) { pbody.appendChild(sess); sess.classList.add('open'); }
+    const slist = document.getElementById('drawer-sessions-list');
+    if (slist) slist.style.display = 'block';
     const av = document.getElementById('drawer-avatar');
     if (av) av.style.display = 'none';
     const fab = document.getElementById('fabrics-drawer');
@@ -16965,7 +17064,7 @@ function pgShow(which) {
     // v13.89: the top label reads "Users" — the account/Google-ID header. The
     // project list moved to the "Projects" pill beside the name, so the title is
     // now a plain label, not the projects opener.
-    title.innerHTML = which === 'pinterest' ? 'Pinterest' : which === 'fabrics' ? 'Fabrics' : 'Users';
+    title.innerHTML = which === 'pinterest' ? 'Pinterest' : which === 'fabrics' ? 'Fabrics' : 'Profile';
     title.classList.remove('clickable');
     title.onclick = null;
   }
@@ -17156,6 +17255,26 @@ if (typeof refreshDrawerClientName === 'function') {
     } catch (_) {}
   };
 }
+// v14.20: the list lives in the Projects fold, so "toggle" means open the fold
+// and repaint; opening a project must never fold the list away either.
+if (typeof toggleSessionsDropdown === 'function') {
+  toggleSessionsDropdown = function () {
+    const d = document.getElementById('pg-projects'); if (d) d.open = true;
+    const block = document.querySelector('#notes-drawer .drawer-sessions'); if (block) block.classList.add('open');
+    const list = document.getElementById('drawer-sessions-list'); if (list) list.style.display = 'block';
+    try { _renderSessionsDropdown(); } catch (_) {}
+  };
+}
+if (typeof loadSavedSessionById === 'function') {
+  const _pgLoadSaved = loadSavedSessionById;
+  loadSavedSessionById = async function () {
+    try { return await _pgLoadSaved.apply(this, arguments); }
+    finally {
+      const block = document.querySelector('#notes-drawer .drawer-sessions'); if (block) block.classList.add('open');
+      const list = document.getElementById('drawer-sessions-list'); if (list) list.style.display = 'block';
+    }
+  };
+}
 function pgProjects() {
   toggleSessionsDropdown();
   const list = document.getElementById('drawer-sessions-list');
@@ -17175,6 +17294,8 @@ function pgUpdatePill() {
     beside.classList.toggle('on', has);
     beside.title = has ? ('Open project: ' + name + '. Click for the list') : 'Your projects; click for the list';
   }
+  const sumName = document.getElementById('pg-projects-current');
+  if (sumName) sumName.textContent = has ? name : '';
   const cur = has ? projectStore.currentId : null;
   document.querySelectorAll('#drawer-sessions-list .session-item[data-id]').forEach(r => {
     r.classList.toggle('active', !!cur && r.getAttribute('data-id') === cur);
@@ -17867,11 +17988,49 @@ function _pinSearch(q) {
   });
   return shown;
 }
+// v14.20: the finger's search reaches as far as Maya's. Typing filters the
+// loaded wall; Enter searches EVERYTHING the account has saved on Pinterest
+// through the API, and a cleared box brings the normal wall back.
+async function _pinWideSearch(q) {
+  q = String(q || '').trim();
+  if (q.length < 2) return { ok: false, reason: 'no words to search' };
+  const body = document.getElementById('pinterest-drawer-body');
+  let j;
+  try { j = await _pinApi('/api/pinterest/search?q=' + encodeURIComponent(q)); }
+  catch (e) { return { ok: false, reason: 'the wider search could not run: ' + String(e && e.message || e).slice(0, 80) }; }
+  const pins = (j && j.pins) || [];
+  if (!pins.length) return { ok: false, reason: 'nothing matching ' + q.slice(0, 40) + ' anywhere in what they have saved on Pinterest; Pinterest has no public search beyond an account, but describe_garment can conjure fresh references instead' };
+  window._pinWiderActive = true;
+  if (body) body.innerHTML = '<div class="pin-grid pics">' + pins.map(p =>
+    '<button class="pin-pic" data-url="' + escapeHtml(p.url) + '" data-alt="' + escapeHtml(p.alt || '') + '"' +
+      ' onclick="_pinToggle(this)"><img src="' + _safeImgSrc(p.url) + '" alt="" loading="lazy">' +
+      '<span class="pin-check">&#10003;</span></button>').join('') + '</div>';
+  try { _pinSub('search: ' + q); } catch (_) {}
+  return { ok: true, matches: pins.length };
+}
+function _pinSearchRestore() {
+  window._pinWiderActive = false;
+  try { _pinSub(''); } catch (_) {}
+  if (_pinPicsCache['all']) _pinBody(_pinPicsCache['all']);
+  else { try { _pinDrawerPins('', ''); } catch (_) {} }
+}
+function _pinSearchInput(v) {
+  if (window._pinWiderActive && !String(v || '').trim()) { _pinSearchRestore(); return; }
+  if (!window._pinWiderActive) _pinSearch(v);
+}
+async function _pinSearchEnter(v) {
+  const q = String(v || '').trim();
+  if (q.length < 2) return;
+  try { _pinSub('searching everything saved for ' + q); } catch (_) {}
+  const r = await _pinWideSearch(q);
+  if (!r.ok) { try { _pinSub(''); } catch (_) {} showToast('Nothing saved on your Pinterest matches ' + q); }
+}
 function _pinSearchToggle() {
   const inp = document.getElementById('pin-search-input'); if (!inp) return;
   const show = inp.style.display === 'none';
   inp.style.display = show ? '' : 'none';
-  if (show) { try { inp.focus(); } catch (_) {} } else { inp.value = ''; _pinSearch(''); }
+  if (show) { try { inp.focus(); } catch (_) {} }
+  else { inp.value = ''; if (window._pinWiderActive) _pinSearchRestore(); else _pinSearch(''); }
 }
 // v14.13: one step, the right kind. Versions of the open piece by default;
 // the favorites strip only in the favorites submit view.
@@ -18375,20 +18534,11 @@ async function _pgTool(name, a, dc) {
           }
         }
       }
-      let j;
-      try { j = await _pinApi('/api/pinterest/search?q=' + encodeURIComponent(q)); }
-      catch (e) { return { ok: false, reason: 'the wider search could not run: ' + String(e && e.message || e).slice(0, 80) }; }
-      const pins = (j && j.pins) || [];
-      if (!pins.length) return { ok: false, reason: 'nothing matching ' + q.slice(0, 40) + ' anywhere in what they have saved on Pinterest; Pinterest has no public search beyond an account, but describe_garment can conjure fresh references instead' };
-      window._pinWiderActive = true;
-      if (body) body.innerHTML = '<div class="pin-grid pics">' + pins.map(p =>
-        '<button class="pin-pic" data-url="' + escapeHtml(p.url) + '" data-alt="' + escapeHtml(p.alt || '') + '"' +
-          ' onclick="_pinToggle(this)"><img src="' + _safeImgSrc(p.url) + '" alt="" loading="lazy">' +
-          '<span class="pin-check">&#10003;</span></button>').join('') + '</div>';
-      try { _pinSub('search: ' + q); } catch (_) {}
+      const wide = await _pinWideSearch(q);
+      if (!wide.ok) return wide;
       if (inp) { inp.style.display = ''; inp.value = q; }
       glideTop();
-      return { ok: true, matches: pins.length, from: 'everything saved on their Pinterest', gliding: true,
+      return { ok: true, matches: wide.matches, from: 'everything saved on their Pinterest', gliding: true,
         note: 'the wall now holds every ' + q + ' across their whole Pinterest; clear_pin_search brings the normal wall back' };
     }
     case 'clear_pin_search': {

@@ -16,6 +16,33 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 2, 2026, LATER (v14.20): the drawer organized his way
+
+[x] "Instead of Users, call it Profile": done on both surfaces.
+[x] "Remove the randomize buttons, those are placeholders. Rename and
+    Randomize should be in the dropdown of Linda, even if it is empty":
+    the pill row under the name is gone; Rename, Randomize, Replace photo
+    and Remove photo open at the top of the client dropdown always.
+[x] "Projects should be a dropdown like Stats, on top of Stats, exactly
+    how it is right now": a Projects fold above Stats holds the same list,
+    and the open project's name rides in the fold heading.
+[x] "If I click within it I should change the name. There is no way of
+    changing the project name": a pencil on every project row, and a tap
+    on the open project's name, renames it where it sits.
+[x] "The characters always have a bigger head than usual": every render
+    prompt now states natural proportions, head about one eighth of the
+    height, never enlarged, face reference for likeness only.
+[x] "The search icon is very small, the magnifying glass bigger, Search
+    centered, the pill longer": a real glass in the same circle, a longer
+    centered box.
+[x] "Once clicked, let us work on the API for actually searching across
+    Pinterest itself": Enter in the box searches everything the account
+    has saved through the Pinterest API (the same reach Maya has). A
+    public search of all of Pinterest is not offered by the API.
+[ ] Studio: the studio ring is only for the two admin emails on the
+    server (ADMIN_EMAILS); everyone else starts with the two dollar trial,
+    shown as card renders left. No change needed, noted for the record.
+
 SEPTEMBER 2, 2026 (v14.19): the drawer untangled
 
 [x] "We should have the current project highlighted at all times": the

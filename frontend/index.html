@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.19">
+<meta name="maya-version" content="14.20">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -1939,6 +1939,32 @@
     opacity: 0; transition: opacity 0.15s; }
   #notes-drawer .avatar-switch-row:hover .avatar-switch-delete { opacity: 1; }
   #notes-drawer .avatar-switch-delete:hover { color: #fff; border-color: rgba(255,170,170,0.6); }
+  /* v14.20: the pills under the name and the pill beside it were placeholders;
+     Rename, Randomize, Replace and Remove live in the client dropdown now, and
+     Projects is a fold above Stats. */
+  #notes-drawer .pg-avatar-actions { display: none !important; }
+  #notes-drawer .pg-project-beside { display: none !important; }
+  #notes-drawer #pg-projects-body { padding: 4px 0 6px; }
+  #notes-drawer #pg-projects-body .drawer-sessions { margin: 0; }
+  #notes-drawer #pg-projects-body #drawer-sessions-list { display: block !important; margin-top: 4px; }
+  #notes-drawer .pg-fold-current { font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 13px; letter-spacing: 0.02em; text-transform: none; color: rgba(245,250,255,0.92);
+    max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #notes-drawer .pg-fold-current:empty { display: none; }
+  #notes-drawer .avatar-switch-actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px;
+    border-bottom: 0.5px solid rgba(255,255,255,0.08); }
+  #notes-drawer .avatar-switch-actions .drawer-action { font-size: 8px; padding: 3px 9px; letter-spacing: 0.1em; }
+  #notes-drawer .session-item-rename { position: absolute; top: 8px; right: 60px;
+    width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.2);
+    color: rgba(215,230,255,0.9); cursor: pointer; padding: 0; font-size: 11px; line-height: 1;
+    opacity: 0; transition: opacity 0.15s; }
+  #notes-drawer .session-item:hover .session-item-rename, #notes-drawer .session-item.active .session-item-rename { opacity: 1; }
+  #notes-drawer .session-item.active .session-item-title { cursor: text; }
+  #notes-drawer .pg-project-rename { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 13px;
+    color: #fff; background: rgba(255,255,255,0.05); border: 0.5px solid rgba(169,201,255,0.6);
+    border-radius: 6px; padding: 1px 6px; width: 100%; outline: none; }
+  @media (hover: none) { #notes-drawer .session-item-rename { opacity: 1; } }
   /* v14.19: the project pill wears the open project's name and a brighter ring. */
   #notes-drawer .pg-project-beside { max-width: 62%; overflow: hidden; text-overflow: ellipsis; }
   #notes-drawer .pg-project-beside.on { border-color: rgba(169,201,255,0.75); color: #fff;
@@ -4815,7 +4841,7 @@
       </button>
       <!-- v13.75: the current tab's name rides here, in the dead space beside
            the circles, so the panes below start higher. -->
-      <span class="pg-tabtitle" id="pg-tabtitle">Users</span>
+      <span class="pg-tabtitle" id="pg-tabtitle">Profile</span>
     </div>
     <div class="pg-folder" id="pg-folder">
       <div class="pg-pane" id="pg-pane-avatar">
@@ -4856,6 +4882,12 @@
         <!-- v13.89: a collapsible Stats fold rides on top of Measurements and
              fills the empty drawer space. Circular gauge = trial credits left of
              $2; four tiles under it. When Measurements opens it pushes down. -->
+        <!-- v14.20: Projects is a fold like Stats, above it. The summary carries
+             the open project's name so it is highlighted even when folded. -->
+        <details class="pg-fold pg-projects-fold" id="pg-projects" open>
+          <summary>Projects <span class="pg-fold-current" id="pg-projects-current"></span></summary>
+          <div id="pg-projects-body"></div>
+        </details>
         <details class="pg-fold pg-stats-fold" id="pg-stats" open>
           <summary>Stats</summary>
           <div class="pg-stats-body" id="pg-stats-body">
@@ -7745,8 +7777,12 @@ function buildMeasClause() {
   if (m.bust_chest)      parts.push(m.bust_chest + '-inch chest');
   if (m.waist_narrowest) parts.push(m.waist_narrowest + '-inch waist');
   if (m.hip)             parts.push(m.hip + '-inch hips');
-  if (!parts.length) return '';
-  return ' The model has these proportions: ' + parts.join(', ') + '.';
+  // v14.20: the face reference kept setting the SIZE of the head, so every
+  // first render came out with a head too big for the body. Say the ratio
+  // out loud, in every prompt, measurements or not.
+  const natural = ' Natural adult photographic proportions: the head is about one eighth of the standing height and is never enlarged, the neck, shoulders, torso and legs are in realistic scale to it, and the face reference sets likeness only, never the size of the head.';
+  if (!parts.length) return natural;
+  return ' The model has these proportions: ' + parts.join(', ') + '.' + natural;
 }
 
 // v9.9: render the cached face descriptors into a prompt clause. Belt and
@@ -8259,7 +8295,15 @@ async function toggleAvatarSwitcher() {
       '<button class="avatar-switch-delete" type="button" onclick="event.stopPropagation();deleteAvatar(\'' + escapeHtml(a.id) + '\')" title="Remove this client from the list" aria-label="Remove this client">&#215;</button>' +
     '</div>'
   ).join('');
-  panel.innerHTML = (rows || '<div class="avatar-switch-empty">No saved avatars yet. Set a name and a face, then Save.</div>') +
+  // v14.20: Rename, Randomize, Replace and Remove ride inside the dropdown,
+  // beside the photo they act on, whether or not the list has anyone in it.
+  const actions = '<div class="avatar-switch-actions">' +
+    '<button class="drawer-action" type="button" onclick="pgRenameClient()" title="Name this client">Rename</button>' +
+    '<button class="drawer-action" type="button" onclick="randomizeAvatar()" title="Random measurements and a random face">Randomize</button>' +
+    '<button class="drawer-action" type="button" onclick="pgReplaceFace()" title="Upload a face photo">Replace photo</button>' +
+    '<button class="drawer-action" type="button" onclick="pgRemoveFace()" title="Remove the face photo">Remove photo</button>' +
+    '</div>';
+  panel.innerHTML = actions + (rows || '<div class="avatar-switch-empty">No saved clients yet. Rename, add a face, and they are filed.</div>') +
     '<button class="avatar-switch-row avatar-switch-new" onclick="newAvatar()">+ New avatar</button>';
   panel.style.display = 'block';
   // v13.82: make sure the freshly opened list is fully visible, not cut at the fold.
@@ -15635,12 +15679,57 @@ function _projectRows(sessions) {
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 L12 15" /><path d="M8.4 7.1 L12 3.5 L15.6 7.1" /><path d="M6.5 11.5 L5 11.5 L5 20 L19 20 L19 11.5 L17.5 11.5" /></svg>
         </button>
         <button class="session-item-delete" onclick="event.stopPropagation();deleteSavedSessionRow('${escapeHtml(s.id)}')" title="Delete this project">&#215;</button>
-        <div class="session-item-title">${escapeHtml(s.name || 'untitled')}</div>
+        <button class="session-item-rename" onclick="event.stopPropagation();pgRenameProject('${escapeHtml(s.id)}')" title="Rename this project" aria-label="Rename this project">&#9998;</button>
+        <div class="session-item-title" onclick="if(this.parentNode.classList.contains('active')){event.stopPropagation();pgRenameProject('${escapeHtml(s.id)}');}">${escapeHtml(s.name || 'untitled')}</div>
         <div class="session-item-meta">${s.shared ? 'Shared · ' : ''}${dateStr}${label ? ' · ' + escapeHtml(label) : ''}</div>
       </div>`;
   }).join('');
 }
 
+// v14.20: rename a project where it sits. The open project renames through
+// its own save; any other project has its document and index row touched
+// directly, revision bumped so other devices notice.
+async function renameProjectById(id, name) {
+  name = String(name || '').trim().slice(0, 60);
+  if (!name || typeof projectStore === 'undefined') return false;
+  if (projectStore.currentId === id) {
+    currentClientName = name;
+    projectStore.autoName = null;
+    try { await projectStore.save(); } catch (e) { console.warn('[maya rename]', e && e.message); }
+  } else {
+    try {
+      await projectStore._col().doc(id).update({ name, revision: firebase.firestore.FieldValue.increment(1) });
+      await projectStore._touchIndex(id, { name, updatedAt: Date.now() });
+    } catch (e) { showError('Could not rename that project. ' + ((e && e.message) || '')); return false; }
+  }
+  projectStore._idxTs = 0;
+  if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
+  if (typeof _renderSessionsDropdown === 'function') _renderSessionsDropdown();
+  showToast('Renamed to ' + name);
+  return true;
+}
+function pgRenameProject(id) {
+  let row = null;
+  try { const sel = (window.CSS && CSS.escape) ? CSS.escape(id) : id; row = document.querySelector('#drawer-sessions-list .session-item[data-id="' + sel + '"]'); } catch (_) {}
+  const title = row && row.querySelector('.session-item-title');
+  if (!title || row.querySelector('.pg-project-rename')) return;
+  const cur = title.textContent.trim();
+  const inp = document.createElement('input');
+  inp.className = 'pg-project-rename'; inp.type = 'text'; inp.value = cur; inp.maxLength = 60; inp.autocomplete = 'off';
+  inp.addEventListener('click', e => e.stopPropagation());
+  title.textContent = ''; title.appendChild(inp);
+  let done = false;
+  const finish = (commit) => {
+    if (done) return; done = true;
+    const v = commit ? inp.value.trim() : cur;
+    try { inp.remove(); } catch (_) {}
+    title.textContent = v || cur;
+    if (commit && v && v !== cur) renameProjectById(id, v);
+  };
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); finish(true); } else if (e.key === 'Escape') finish(false); });
+  inp.addEventListener('blur', () => finish(true));
+  inp.focus(); inp.select();
+}
 async function loadSavedSessionById(id) {
   // v12.5: everything is a cloud project now. Legacy ids that survived the
   // rescue pass are gone from the list, so there is nothing else to try.
@@ -16822,6 +16911,12 @@ loadFolderHandle().then(h => { if (h) folderHandle = h; }).catch(()=>{});
     const avActions = document.querySelector('#pg-avatar-row .pg-avatar-actions');
     if (rnd && avActions) avActions.insertBefore(rnd, avActions.firstChild);
     if (host && actions) host.appendChild(actions);
+    // v14.20: the project list lives inside the Projects fold, always shown.
+    const sess = document.querySelector('#pg-pane-avatar .drawer-sessions');
+    const pbody = document.getElementById('pg-projects-body');
+    if (sess && pbody) { pbody.appendChild(sess); sess.classList.add('open'); }
+    const slist = document.getElementById('drawer-sessions-list');
+    if (slist) slist.style.display = 'block';
     const av = document.getElementById('drawer-avatar');
     if (av) av.style.display = 'none';
     const fab = document.getElementById('fabrics-drawer');
@@ -16846,7 +16941,7 @@ function pgShow(which) {
     // v13.89: the top label reads "Users" — the account/Google-ID header. The
     // project list moved to the "Projects" pill beside the name, so the title is
     // now a plain label, not the projects opener.
-    title.innerHTML = which === 'pinterest' ? 'Pinterest' : which === 'fabrics' ? 'Fabrics' : 'Users';
+    title.innerHTML = which === 'pinterest' ? 'Pinterest' : which === 'fabrics' ? 'Fabrics' : 'Profile';
     title.classList.remove('clickable');
     title.onclick = null;
   }
@@ -17037,6 +17132,26 @@ if (typeof refreshDrawerClientName === 'function') {
     } catch (_) {}
   };
 }
+// v14.20: the list lives in the Projects fold, so "toggle" means open the fold
+// and repaint; opening a project must never fold the list away either.
+if (typeof toggleSessionsDropdown === 'function') {
+  toggleSessionsDropdown = function () {
+    const d = document.getElementById('pg-projects'); if (d) d.open = true;
+    const block = document.querySelector('#notes-drawer .drawer-sessions'); if (block) block.classList.add('open');
+    const list = document.getElementById('drawer-sessions-list'); if (list) list.style.display = 'block';
+    try { _renderSessionsDropdown(); } catch (_) {}
+  };
+}
+if (typeof loadSavedSessionById === 'function') {
+  const _pgLoadSaved = loadSavedSessionById;
+  loadSavedSessionById = async function () {
+    try { return await _pgLoadSaved.apply(this, arguments); }
+    finally {
+      const block = document.querySelector('#notes-drawer .drawer-sessions'); if (block) block.classList.add('open');
+      const list = document.getElementById('drawer-sessions-list'); if (list) list.style.display = 'block';
+    }
+  };
+}
 function pgProjects() {
   toggleSessionsDropdown();
   const list = document.getElementById('drawer-sessions-list');
@@ -17056,6 +17171,8 @@ function pgUpdatePill() {
     beside.classList.toggle('on', has);
     beside.title = has ? ('Open project: ' + name + '. Click for the list') : 'Your projects; click for the list';
   }
+  const sumName = document.getElementById('pg-projects-current');
+  if (sumName) sumName.textContent = has ? name : '';
   const cur = has ? projectStore.currentId : null;
   document.querySelectorAll('#drawer-sessions-list .session-item[data-id]').forEach(r => {
     r.classList.toggle('active', !!cur && r.getAttribute('data-id') === cur);

@@ -405,6 +405,67 @@ ok('switching the client keeps every card and the notes', drawer.sw && drawer.sw
 ok('a client can be named in place without renaming the project', drawer.renameBox === true && drawer.renamed === 'Aster' && drawer.projectUntouched === 'Rudy the Presley' && drawer.boxGone === true, JSON.stringify({ renamed: drawer.renamed, proj: drawer.projectUntouched }));
 ok('with no project open the pill reads Projects', /^Projects/.test(drawer.pillIdle), drawer.pillIdle);
 
+// ── 3c6. v14.20: Profile, the Projects fold, renaming in place, the finger's wider search ──
+const fold = await page.evaluate(async () => {
+  const out = {};
+  pgShow('avatar');
+  out.title = (document.getElementById('pg-tabtitle') || {}).textContent;
+  const pf = document.getElementById('pg-projects');
+  out.foldAboveStats = !!pf && pf.nextElementSibling && pf.nextElementSibling.id === 'pg-stats';
+  out.listInFold = !!document.querySelector('#pg-projects-body #drawer-sessions-list');
+  out.pillHidden = getComputedStyle(document.getElementById('pg-project-beside')).display === 'none';
+  out.actionsHidden = getComputedStyle(document.querySelector('#pg-avatar-row .pg-avatar-actions')).display === 'none';
+  // the summary carries the open project's name
+  projectStore.currentId = 'p1';
+  (0, eval)("currentClientName = 'Rudy the Presley';");
+  pgUpdatePill();
+  out.summary = (document.getElementById('pg-projects-current') || {}).textContent;
+  // the client dropdown carries Rename, Randomize, Replace and Remove, list or no list
+  (0, eval)("_avatarLibCache = []; lastSummary = { client: { name: 'Rudy' } }; _avatarSwitcherOpen = false;");
+  await toggleAvatarSwitcher();
+  const panel = document.getElementById('drawer-avatar-switcher');
+  out.actionButtons = [...panel.querySelectorAll('.avatar-switch-actions .drawer-action')].map(b => b.textContent.trim());
+  out.newClient = /New avatar/.test(panel.textContent);
+  (0, eval)('_closeAvatarSwitcher()');
+  // renaming a project where it sits
+  const list = document.getElementById('drawer-sessions-list');
+  list.innerHTML = '<div class="session-item active" data-id="p1"><button class="session-item-rename"></button><div class="session-item-title">Rudy the Presley</div></div>';
+  pgRenameProject('p1');
+  const inp = list.querySelector('.pg-project-rename');
+  out.renameBox = !!inp;
+  if (inp) { inp.value = 'Gala 2026'; inp.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); }
+  await new Promise(r => setTimeout(r, 80));
+  out.renamed = (0, eval)('currentClientName');
+  out.titleAfter = (list.querySelector('.session-item-title') || {}).textContent;
+  pgUpdatePill();
+  out.summaryAfter = (document.getElementById('pg-projects-current') || {}).textContent;
+  projectStore.currentId = null; (0, eval)("currentClientName = null; lastSummary = null;");
+  pgUpdatePill();
+  out.summaryIdle = (document.getElementById('pg-projects-current') || {}).textContent;
+  // the search pill and the finger's wider search
+  out.glass = !!document.querySelector('#pin-search-btn svg');
+  out.inputCentered = getComputedStyle(document.getElementById('pin-search-input')).textAlign === 'center';
+  const wide = await _pinWideSearch('corsets');
+  out.wide = wide;
+  out.wideWall = document.querySelectorAll('#pinterest-drawer-body .pin-pic').length;
+  _pinSearchInput('');
+  out.restored = window._pinWiderActive === false;
+  // every render prompt says the head is never enlarged
+  (0, eval)("lastSummary = null;");
+  out.clause = buildMeasClause();
+  return out;
+});
+ok('the tab reads Profile', fold.title === 'Profile', fold.title);
+ok('Projects is a fold above Stats holding the list', fold.foldAboveStats === true && fold.listInFold === true);
+ok('the placeholder pills and the beside pill are gone', fold.pillHidden === true && fold.actionsHidden === true);
+ok('the fold summary carries the open project name', fold.summary === 'Rudy the Presley' && fold.summaryIdle === '', JSON.stringify([fold.summary, fold.summaryIdle]));
+ok('the client dropdown carries Rename, Randomize, Replace and Remove even when empty',
+  fold.actionButtons.length === 4 && fold.actionButtons[0] === 'Rename' && fold.actionButtons[1] === 'Randomize' && fold.newClient === true, JSON.stringify(fold.actionButtons));
+ok('a project is renamed where it sits', fold.renameBox === true && fold.renamed === 'Gala 2026' && fold.summaryAfter === 'Gala 2026', JSON.stringify([fold.renamed, fold.titleAfter, fold.summaryAfter]));
+ok('the search pill is a real magnifying glass with a centered box', fold.glass === true && fold.inputCentered === true);
+ok('the finger search reaches everything saved and a cleared box restores the wall', fold.wide && fold.wide.ok === true && fold.wide.matches === 2 && fold.wideWall === 2 && fold.restored === true, JSON.stringify(fold.wide));
+ok('every render prompt says the head is never enlarged', /one eighth of the standing height/.test(fold.clause), fold.clause.slice(0, 60));
+
 // ── 3d. v14.16: the studio gauge never claims zero of two dollars ──
 const gauge = await page.evaluate(() => {
   (0, eval)('_mayaUsage = { spentUsd: 9.4, capUsd: 2, images: 120, perCard: 0.065, admin: true, projects: 3, ok: true }');

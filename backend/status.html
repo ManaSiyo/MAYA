@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="14.19">
+<meta name="maya-version" content="14.20">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -943,9 +943,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-09-02" data-version="14.19">
+  <details class="fold" id="changes-fold" data-latest="2026-09-02b" data-version="14.20">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Sep 2</b>The drawer, organized the way Fromsa drew it. The tab reads Profile. The placeholder pills under the name are gone; Rename, Randomize, Replace photo and Remove photo live inside the client dropdown now, beside the photo they act on, there even when the list is empty. Projects is a fold above Stats, exactly like Stats, and the open project's name rides in its heading so it is highlighted even folded. Every project can be renamed where it sits: a small pencil on each row, or a tap on the open one's name. The Pinterest search wears a real magnifying glass, the box is longer with its word centered, and pressing Enter searches everything saved on the account through the API, the same reach Maya has. And every render prompt now says the head is about one eighth of the height and never enlarged, because the face reference had been setting the size of the head on first renders.</div>
     <div class="chg"><b>Sep 2</b>The drawer's people and projects, untangled. The open project is highlighted at all times now: the pill beside the name wears its name and a brighter ring, and its row in the list carries the mark whether the list is open or not. The client and the project stopped bleeding into each other: an automatic project name can no longer become a client called Untitled, and naming a client no longer renames the board. Tapping the photo opens the client list instead of dropping you into the measurements. Switching the client puts that person on the board you are looking at, face and measurements, and keeps every card where it is; it used to wipe the canvas. A client can be named right where the name sits, removed from the list with a small x, and the Name, Replace and Remove pills stay visible on a phone, where a hover never comes. The Projects tile counts the real projects. And Maya got two new hands: list_clients and switch_client, so put this on Micheal just works.</div>
     <div class="chg"><b>Sep 1</b>Two clarifications, honored exactly. Every scroll Maya performs is the smooth continuous glide now, not just the pins: favorites slides sideways, the community wall's three rows glide together, and everything keeps moving on its own until the word stop. And search grew a second room: ask for corsets and she shows what the wall in front of you holds first, then offers to search everything saved on your Pinterest through the API itself, so a pin from months ago is one sentence away. When even your whole Pinterest has none, she says so plainly and offers to conjure fresh references instead.</div>
     <div class="chg"><b>Sep 1</b>Pinterest learned to be looked through. A small search sits beside the tabs now, for fingers; and when you tell Maya let us look at corsets, she opens Pinterest, keeps only the matching pins on the wall, and glides down them slowly, a continuous smooth scroll that keeps moving until the word stop, a touch, or the end of the wall. Stop is a first class word: the moment it is said, the glide halts. And the wrong card problem got its deepest fix yet: every card now carries a position word, top left, center, bottom right, in everything Maya reads, so the one in the upper center is an address, not a guess, and when two cards truly share a spot she names them and asks.</div>

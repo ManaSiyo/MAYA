@@ -1411,10 +1411,10 @@ ok('v13.75: the avatar dropdown is back and Randomize joins Replace/Remove',
 // v13.76: the sourceable fabric wall shows only real retailer photos and no
 // longer collapses to color swatches when the visual ranking is unavailable.
 // v13.78: cabinet order/labels + swipe memory + Admin logo ring + ops beta.
-ok('v13.89: tabs order holds; the top label says "Users" and Projects rides beside the name',
+ok('v13.89: tabs order holds; the top label says "Profile" (Users until v14.20) and Projects rides beside the name',
   INDEX_SOURCE.indexOf('id="pg-tab-pinterest"') < INDEX_SOURCE.indexOf('id="pg-tab-fabrics"') &&
   INDEX_SOURCE.indexOf('id="pg-tab-fabrics"') < INDEX_SOURCE.indexOf('id="pg-tab-avatar"') &&
-  INDEX_SOURCE.includes("? 'Fabrics' : 'Users';") &&
+  INDEX_SOURCE.includes("? 'Fabrics' : 'Profile';") &&
   INDEX_SOURCE.includes('id="pg-project-beside"') &&
   INDEX_SOURCE.includes('class="pg-avatar-nameline"'));
 ok('v13.85: switching an avatar no longer spawns an empty project',
@@ -1990,6 +1990,19 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.20: Profile, the Projects fold, renaming in place, the dropdown actions, the wider finger search, natural proportions',
+  PLAYGROUND_SOURCE.includes('id="pg-tabtitle">Profile</span>') &&
+  INDEX_SOURCE.includes('id="pg-tabtitle">Profile</span>') &&
+  PLAYGROUND_SOURCE.includes('id="pg-projects" open>') &&
+  INDEX_SOURCE.includes('id="pg-projects" open>') &&
+  PLAYGROUND_SOURCE.includes('async function renameProjectById(id, name)') &&
+  INDEX_SOURCE.includes('async function renameProjectById(id, name)') &&
+  PLAYGROUND_SOURCE.includes('class="avatar-switch-actions"') &&
+  INDEX_SOURCE.includes('class="avatar-switch-actions"') &&
+  PLAYGROUND_SOURCE.includes('one eighth of the standing height') &&
+  INDEX_SOURCE.includes('one eighth of the standing height') &&
+  PLAYGROUND_SOURCE.includes('async function _pinWideSearch(q)') &&
+  PLAYGROUND_SOURCE.includes('<button class="pin-search-btn" id="pin-search-btn" onclick="_pinSearchToggle()" title="Search Pinterest" aria-label="Search Pinterest"><svg'));
 ok('v14.19: the drawer untangled: the open project highlighted, clients and projects independent, the photo opens the list',
   PLAYGROUND_SOURCE.includes('id="drawer-avatar-button" onclick="toggleAvatarSwitcher()"') &&
   INDEX_SOURCE.includes('id="drawer-avatar-button" onclick="toggleAvatarSwitcher()"') &&
