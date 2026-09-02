@@ -1811,8 +1811,8 @@ ok('v13.92: the Mana Siyo popup has no dashes, larger body copy, a smaller quote
   /\.mmp-go \{[^}]*display: inline-block; width: auto/.test(INDEX_SOURCE));
 ok('v13.92: the favorite card is held centered — the caption slot is a fixed two lines',
   /\[data-mode="submit"\] #viewer-piece-summary \{[^}]*height: 2\.9em/.test(INDEX_SOURCE));
-ok('v13.92: the favorites nav arrows sit nearer the corners (10px)',
-  INDEX_SOURCE.includes("b.style[d < 0 ? 'left' : 'right'] = '10px'"));
+ok('v13.92, then v14.06: the favorites nav arrows are the canon pill, a step in from the edges (42px)',
+  INDEX_SOURCE.includes("b.style[d < 0 ? 'left' : 'right'] = '42px'"));
 ok('v13.92: the avatar name opens the switcher too (bigger hit target than the caret)',
   INDEX_SOURCE.includes('id="drawer-avatar-name" onclick="toggleAvatarSwitcher()"'));
 
@@ -1990,6 +1990,20 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.21: the Playground promoted whole into the app: Maya, zoom, backgrounds, captions, glass, search, Improve Maya; no badge; Tip stays',
+  INDEX_SOURCE.includes('PLAYGROUND ONLY: survey zoom') &&
+  INDEX_SOURCE.includes('async function pgMayaStart()') &&
+  INDEX_SOURCE.includes('async function _pgTool(name, a, dc)') &&
+  INDEX_SOURCE.includes('id="pg-maya-toggle"') &&
+  INDEX_SOURCE.includes('id="pg-bg-fold"') &&
+  INDEX_SOURCE.includes('id="pin-search-btn"') &&
+  INDEX_SOURCE.includes('id="fb-tab-maya"') &&
+  INDEX_SOURCE.includes('function _pgAutoLog(text, who, source)') &&
+  INDEX_SOURCE.includes('async function _pgCaptionOne()') &&
+  !INDEX_SOURCE.includes('id="pg-badge"') &&
+  INDEX_SOURCE.includes('onclick="openTip()"') &&
+  !PLAYGROUND_SOURCE.includes('onclick="openTip()"') &&
+  PLAYGROUND_SOURCE.includes('id="pg-badge"'));
 ok('v14.20: Profile, the Projects fold, renaming in place, the dropdown actions, the wider finger search, natural proportions',
   PLAYGROUND_SOURCE.includes('id="pg-tabtitle">Profile</span>') &&
   INDEX_SOURCE.includes('id="pg-tabtitle">Profile</span>') &&

@@ -16,6 +16,19 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 2, 2026, EVENING (v14.21): the promotion
+
+[x] "Are these changes applied only on the Playground? Tell me all the
+    differences, then we are going to start migrating. Everything.": the
+    app is now the Playground, whole. Kept as the app's own: no amber
+    Playground badge, and the Tip pill on the floor row. Everything else
+    promoted: Maya on the user side with every hand, sight and the wake
+    word; survey zoom; the screen order inspo, favorites, community; the
+    Background fold; the caption sweep and five line profile; the drawer
+    glass on popups and softer glows; canon arrows and the pills inside
+    the photo; the Pinterest search and its wider reach; Improve Maya with
+    Maya's logs, consent, and her self logging.
+
 SEPTEMBER 2, 2026, LATER (v14.20): the drawer organized his way
 
 [x] "Instead of Users, call it Profile": done on both surfaces.

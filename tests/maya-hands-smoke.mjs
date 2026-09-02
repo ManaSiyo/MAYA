@@ -12,6 +12,19 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+// v14.21: the app IS the Playground now, so the battery fires on both. With no
+// MAYA_SURFACE set it runs itself once per surface and fails if either fails.
+if (!process.env.MAYA_SURFACE) {
+  const { spawnSync } = await import('node:child_process');
+  let bad = 0;
+  for (const s of (process.env.MAYA_SURFACES || 'playground,frontend').split(',')) {
+    console.log('\n══════ surface: ' + s + ' ══════');
+    const r = spawnSync(process.execPath, [fileURLToPath(import.meta.url)], { stdio: 'inherit', env: { ...process.env, MAYA_SURFACE: s } });
+    if (r.status !== 0) bad++;
+  }
+  process.exit(bad ? 1 : 0);
+}
+const SURFACE = process.env.MAYA_SURFACE;
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.css': 'text/css', '.png': 'image/png' };
 const srv = http.createServer((req, res) => {
   let p = decodeURIComponent(req.url.split('?')[0]);
@@ -45,7 +58,7 @@ const browser = await chromium.launch({
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 const pageErrors = [];
 page.on('pageerror', e => pageErrors.push(String(e && e.message || e).slice(0, 200)));
-await page.goto('http://127.0.0.1:8898/playground/index.html', { waitUntil: 'domcontentloaded' });
+await page.goto('http://127.0.0.1:8898/' + SURFACE + '/index.html', { waitUntil: 'domcontentloaded' });
 await page.waitForTimeout(2500);
 
 let failed = 0;
@@ -54,7 +67,7 @@ const ok = (name, cond, extra) => {
   if (!cond) failed++;
 };
 
-console.log('\nMAYA hands smoke test\n');
+console.log('\nMAYA hands smoke test (' + SURFACE + ')\n');
 
 // ── 1. every function her hands rest on must exist ──
 const missing = await page.evaluate(() => {

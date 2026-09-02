@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.20">
+<meta name="maya-version" content="14.21">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -917,12 +917,12 @@
   /* v8.2: only the LATEST visualized card glows. .is-vision identifies a
      Maya render; .is-latest is added only to the newest. */
   .item-card.is-vision.is-latest {
-    border-color: rgba(220,232,255,0.65);
+    border-color: rgba(220,232,255,0.47);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.45),
       inset 0 -1px 1px rgba(0,0,0,0.22),
-      0 0 8px 1px rgba(200,222,255,0.55),
-      0 0 14px 2px rgba(200,222,255,0.30);
+      0 0 8px 1px rgba(200,222,255,0.40),
+      0 0 14px 2px rgba(200,222,255,0.16);
     /* v11.23: slower pulse + GPU hint so the glow animates smoothly (no stutter). */
     animation: maya-vision-pulse 4.2s ease-in-out infinite;
     will-change: box-shadow;
@@ -932,20 +932,20 @@
     box-shadow:
       inset 0 1px 2px rgba(255,255,255,0.62),
       inset 0 -1px 1px rgba(0,0,0,0.28),
-      0 0 12px 2px rgba(220,232,255,0.75),
-      0 0 20px 4px rgba(220,232,255,0.42);
+      0 0 12px 2px rgba(220,232,255,0.55),
+      0 0 20px 4px rgba(220,232,255,0.30);
   }
   @keyframes maya-vision-pulse {
     0%, 100% { box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.45),
       inset 0 -1px 1px rgba(0,0,0,0.22),
-      0 0 7px 1px rgba(200,222,255,0.45),
-      0 0 12px 2px rgba(200,222,255,0.22); }
+      0 0 7px 1px rgba(200,222,255,0.33),
+      0 0 12px 2px rgba(200,222,255,0.16); }
     50%      { box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.45),
       inset 0 -1px 1px rgba(0,0,0,0.22),
-      0 0 10px 2px rgba(220,232,255,0.65),
-      0 0 16px 3px rgba(220,232,255,0.32); }
+      0 0 10px 2px rgba(220,232,255,0.47),
+      0 0 16px 3px rgba(220,232,255,0.23); }
   }
   /* Non-latest visions stay as quiet glass cards, no glow. */
   .item-card.pinned { border-color: rgba(200,220,255,0.45); }
@@ -1253,7 +1253,8 @@
 
   /* toast, v10: pulled into the page-1 glass-pill canon. */
   #toast {
-    position: fixed; bottom: 110px; left: 50%;
+    /* v14.06: a touch lower, per Fromsa */
+    position: fixed; bottom: 72px; left: 50%;
     transform: translateX(-50%) translateY(8px);
     background: transparent;
     border: 0.5px solid rgba(255,255,255,0.22);
@@ -1276,8 +1277,10 @@
   /* ───────── garment modal (visualize, moodboard mode) ───────── */
   .modal {
     display: flex; position: fixed; inset: 0; z-index: 200;
-    background: rgba(8,10,18,0.93);
-    backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+    /* v14.04: the overlay shows the hue of the board behind it, like the
+       drawer over the cosmos. The card carries the drawer's own glass. */
+    background: rgba(8,12,24,0.38);
+    backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
     align-items: center; justify-content: center;
     flex-direction: column; gap: 18px;
     padding: 40px 0 24px;
@@ -1610,11 +1613,16 @@
   /* ───────── modal card (paste / settings / pickers), v10: glass canon ───────── */
   .modal-card {
     width: 640px; max-width: 90vw;
-    background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22); border-radius: 16px;
+    /* v14.04: the drawer's exact gradient, hairline and radius. */
+    background: linear-gradient(180deg,
+      rgba(255,255,255,0.10) 0%,
+      rgba(255,255,255,0.03) 25%,
+      rgba(255,255,255,0.02) 65%,
+      rgba(255,255,255,0.07) 100%);
+    border: 0.5px solid rgba(255,255,255,0.22); border-radius: 18px;
     padding: 32px;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -1983,7 +1991,7 @@
     background-color: rgba(255,255,255,0.05);
     border: 0.5px solid rgba(255,255,255,0.22); flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    color: rgba(220,232,255,0.32);
+    color: rgba(220,232,255,0.23);
   }
   #notes-drawer .avatar-switch-new {
     font-family: 'Jost', sans-serif; font-style: normal;
@@ -2083,6 +2091,20 @@
      it compact and let it sit tight on its own row above the full-width wall. */
   #notes-drawer .pg-pane > #pinterest-drawer > #pin-tabs { gap: 6px; margin: 0 0 4px; padding: 0 2px; }
   #notes-drawer .pg-pane > #pinterest-drawer > #pin-tabs .fabrics-tab { font-size: 9px; padding: 4px 10px; }
+  /* v14.17: the small search. Canon hairline pill, quiet until wanted. */
+  /* v14.20: a real magnifying glass, in the same circle; the box is longer and
+     its word sits centered. Enter searches everything saved on Pinterest. */
+  .pin-search-btn { background: transparent; border: 0.5px solid rgba(255,255,255,0.22); border-radius: 100px;
+    color: rgba(245,250,255,0.8); width: 24px; height: 24px; padding: 0; line-height: 0; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(22px) saturate(180%); -webkit-backdrop-filter: blur(22px) saturate(180%);
+    transition: border-color .2s, color .2s; flex: 0 0 auto; }
+  .pin-search-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; }
+  .pin-search-btn:hover { border-color: rgba(255,255,255,0.42); color: #fff; }
+  #pin-search-input { background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.18);
+    border-radius: 100px; color: #fff; font-family: 'Jost', sans-serif; font-size: 10px; letter-spacing: 0.08em;
+    padding: 4px 12px; outline: none; width: 150px; text-align: center; }
+  #pin-search-input::placeholder { color: rgba(245,250,255,0.35); text-transform: uppercase; letter-spacing: 0.12em; }
   /* v13.84: "Bring in" floats over the cards, near-transparent, and shows only
      while pictures are selected (JS toggles display). The wrapper doesn't block
      card taps; only the pill itself is clickable. */
@@ -2185,12 +2207,15 @@
   /* v13.89: the out-of-credits popup. */
   #maya-credits-popup { position: fixed; inset: 0; z-index: 12000; display: none;
     align-items: center; justify-content: center; padding: 24px;
-    background: rgba(6,8,14,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    background: rgba(8,12,24,0.38); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%); }
   #maya-credits-popup.show { display: flex; }
+  /* v14.04: drawer glass, the Bible */
   #maya-credits-popup .mcp-card { width: 100%; max-width: 320px; text-align: center;
-    padding: 28px 24px 22px; border-radius: 20px;
-    background: rgba(20,26,40,0.92); border: 0.5px solid rgba(255,255,255,0.16);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    padding: 28px 24px 22px; border-radius: 18px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18), 0 12px 48px rgba(0,0,0,0.38); }
   #maya-credits-popup .mcp-title { font-family: 'Cormorant Garamond', serif; font-size: 26px;
     font-weight: 500; color: rgba(245,250,255,0.98); margin-bottom: 10px; }
   #maya-credits-popup .mcp-body { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 12px;
@@ -2209,12 +2234,17 @@
   /* v13.90: the Mana Siyo made-to-order confirm. */
   #maya-manasiyo-popup { position: fixed; inset: 0; z-index: 12000; display: none;
     align-items: center; justify-content: center; padding: 24px;
-    background: rgba(6,8,14,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    background: rgba(8,12,24,0.38); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%); }
   #maya-manasiyo-popup.show { display: flex; }
+  /* v14.04: the drawer is the Bible; this card wears its glass too. */
   #maya-manasiyo-popup .mmp-card { width: 100%; max-width: 340px; text-align: center;
-    padding: 28px 24px 22px; border-radius: 20px;
-    background: rgba(20,26,40,0.92); border: 0.5px solid rgba(255,255,255,0.16);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    padding: 28px 24px 22px; border-radius: 18px;
+    background: linear-gradient(180deg,
+      rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%,
+      rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18), 0 12px 48px rgba(0,0,0,0.38); }
   #maya-manasiyo-popup .mmp-title { font-family: 'Cormorant Garamond', serif; font-size: 26px;
     font-weight: 500; color: rgba(245,250,255,0.98); margin-bottom: 10px; }
   /* v13.92: slightly larger body copy (Fromsa likes the wording), and the quote
@@ -2239,7 +2269,7 @@
     content: '·';
     display: flex; align-items: center; justify-content: center;
     height: 100%;
-    color: rgba(220,232,255,0.32);
+    color: rgba(220,232,255,0.23);
   }
   #notes-drawer .drawer-avatar-name {
     font-family: 'Cormorant Garamond', serif;
@@ -2303,7 +2333,7 @@
     -webkit-backdrop-filter: blur(20px);
     transition: border-color 0.2s;
   }
-  #notes-drawer .meas-row input:focus { border-color: rgba(220,232,255,0.55); }
+  #notes-drawer .meas-row input:focus { border-color: rgba(220,232,255,0.40); }
   #notes-drawer .meas-row input::placeholder { color: rgba(220,232,255,0.35); }
   /* v11.20: Height + Hip are the load-bearing measurements, highlight them as
      recommended so they get filled even when the client skips Randomize. */
@@ -3145,7 +3175,7 @@
     animation: fadeUp 0.2s ease;
   }
   #manual-ref-input::placeholder {
-    color: rgba(220,232,255,0.42); font-style: italic;
+    color: rgba(220,232,255,0.30); font-style: italic;
     text-align: center;
   }
   /* canvas-card fabric strip, small dots in the corner of inspo cards */
@@ -3342,14 +3372,14 @@
     border-radius: 16px;
     overflow: hidden;
     background: transparent;
-    border: 0.5px solid rgba(220,232,255,0.55);
+    border: 0.5px solid rgba(220,232,255,0.40);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
             backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.32),
       inset 0 -1px 1px rgba(0,0,0,0.20),
-      0 0 9px 1.7px rgba(220,232,255,0.42),
-      0 0 13.6px 2.55px rgba(220,232,255,0.22),
+      0 0 9px 1.7px rgba(220,232,255,0.285),
+      0 0 13.6px 2.55px rgba(220,232,255,0.152),
       0 8px 32px rgba(0,0,0,0.42);
     position: relative;
     cursor: pointer;
@@ -3358,7 +3388,7 @@
   .community-card:hover, .community-card:focus-visible {
     transform: translateY(-4px);
     outline: none;
-    border-color: rgba(220,232,255,0.75);
+    border-color: rgba(220,232,255,0.55);
   }
   .community-card .cc-image { overflow: hidden; border-radius: inherit; }
   .community-card img.cc-img {
@@ -3413,7 +3443,7 @@
     max-width: min(92vw, 900px); max-height: 78vh;
     object-fit: contain;
     border-radius: 14px;
-    border: 0.5px solid rgba(220,232,255,0.42);
+    border: 0.5px solid rgba(220,232,255,0.30);
     box-shadow: 0 0 30px 6px rgba(200,222,255,0.20), 0 14px 44px rgba(0,0,0,0.5);
   }
   #community-lightbox .cl-meta {
@@ -3454,14 +3484,14 @@
     border-radius: 16px;
     overflow: hidden;
     background: transparent;
-    border: 0.5px solid rgba(220,232,255,0.55);
+    border: 0.5px solid rgba(220,232,255,0.40);
     backdrop-filter: blur(22px) saturate(180%);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.32),
       inset 0 -1px 1px rgba(0,0,0,0.20),
-      0 0 9px 1.7px rgba(220,232,255,0.42),
-      0 0 13.6px 2.55px rgba(220,232,255,0.22),
+      0 0 9px 1.7px rgba(220,232,255,0.285),
+      0 0 13.6px 2.55px rgba(220,232,255,0.152),
       0 8px 32px rgba(0,0,0,0.42);
     display: flex; flex-direction: column;
     position: relative;
@@ -3632,9 +3662,16 @@
     position: fixed; left: 26px; top: 104px;
     width: min(250px, calc(15vw - 20px));
     max-height: 66vh; overflow-y: auto; z-index: 5;
-    text-align: left; display: none;
+    /* v14.06: the column reads centered, per Fromsa, even though it lives left */
+    text-align: center; display: none;
     scrollbar-width: none;
   }
+  #viewer-notes .vn-pills { justify-content: center; }
+  /* v14.06: the five-line profile every picture carries: bio, aesthetic,
+     silhouette, color, era. Subheadlines with their answers underneath. */
+  #viewer-notes .vn-profile .note-item { border-bottom: 0.25px solid rgba(255,255,255,0.06); padding: 7px 0; }
+  #viewer-notes .vn-profile .note-detail { font-style: normal; font-family: 'Cormorant Garamond', serif;
+    font-size: 13px; line-height: 1.4; color: rgba(225,230,245,0.92); }
   #viewer-notes::-webkit-scrollbar { display: none; }
   #garment-modal.open:not([data-photo="full"]) #viewer-notes { display: block; }
   /* Same type, same rhythm, same hairlines as the notes that used to live in
@@ -3746,7 +3783,7 @@
   #staged-chips.has-staged { display: flex; }
   .staged-chip {
     position: relative; width: 34px; height: 34px; border-radius: 50%;
-    border: 0.5px solid rgba(220,232,255,0.55);
+    border: 0.5px solid rgba(220,232,255,0.40);
     background-size: cover; background-position: center;
     background-color: rgba(255,255,255,0.06);
     box-shadow: 0 2px 10px rgba(0,0,0,0.4);
@@ -3894,12 +3931,12 @@
     0%, 100% { box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
-      0 0 12px 1px rgba(200,222,255,0.30),
+      0 0 12px 1px rgba(200,222,255,0.16),
       0 4px 16px rgba(0,0,0,0.22); }
     50%      { box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.40),
       inset 0 -1px 1px rgba(0,0,0,0.18),
-      0 0 22px 3px rgba(200,222,255,0.55),
+      0 0 22px 3px rgba(200,222,255,0.40),
       0 4px 16px rgba(0,0,0,0.22); }
   }
 
@@ -4119,6 +4156,8 @@
 </script>
 </head>
 <body>
+<!-- v14.21: this is the Playground, promoted whole. The amber badge is the
+     only thing that stayed behind. -->
 
 <!-- ────────────────────────────────────────────────────────────────────────
      v0.11: Public deploy, Google Sign-In gate.
@@ -4333,7 +4372,7 @@
     }
     #voice-wrap { bottom: calc(14px + env(safe-area-inset-bottom)); }
     /* toast: sensible position on a short screen */
-    #toast { bottom: calc(120px + env(safe-area-inset-bottom)); max-width: 92vw; }
+    #toast { bottom: calc(96px + env(safe-area-inset-bottom)); max-width: 92vw; }   /* v14.07: lower here too */
     /* sign-in gate: wordmark scales with the screen */
     #signin-gate .signin-wordmark { font-size: clamp(48px, 18vw, 104px); }
     /* modals fit */
@@ -4914,6 +4953,28 @@
           <summary>Measurements</summary>
           <div id="pg-meas-host"></div>
         </details>
+        <!-- PLAYGROUND: personal backgrounds. Birth of a Star is the house
+             background; Generate makes a new one WITHOUT swapping anything,
+             and tapping a thumb applies it. -->
+        <details class="pg-fold" id="pg-bg-fold" open>
+          <summary>Background</summary>
+          <div id="pg-bg-body">
+            <div id="pg-bg-row">
+              <div class="pg-bg-card">
+                <button class="pg-bg-thumb on" id="pg-bg-star" onclick="pgApplyBackground('star')" title="Birth of a Star, the house background"
+                  style="background-image:url('/aesthetics/ui/birth-of-a-star.png')"></button>
+                <div class="pg-bg-cardname">Birth of a Star</div>
+              </div>
+            </div>
+            <!-- v14.03: two pills side by side, lower, near the floor divider. The
+                 fold already says Background, so the pills just say what they do. -->
+            <div id="pg-bg-pills">
+              <button class="pg-bg-gen" id="pg-bg-upload" onclick="pgUploadBackground()">Upload</button>
+              <button class="pg-bg-gen" id="pg-bg-gen" onclick="pgGenerateBackground()">Generate</button>
+            </div>
+            <input type="file" id="pg-bg-file" accept="image/*" style="display:none" onchange="_pgBgFilePicked(this)">
+          </div>
+        </details>
       </div>
       <div class="pg-pane" id="pg-pane-fabrics" style="display:none"></div>
       <div class="pg-pane" id="pg-pane-pinterest" style="display:none"></div>
@@ -4934,12 +4995,15 @@
     <!-- v7.9: Settings + Logout share the bottom text-link row. -->
     <div class="drawer-meta-row">
       <!-- v13.33: Settings removed. Nothing in it changes day to day. -->
+      <!-- v14.21: the app keeps its Tip. The row reads Tip, Logout, Feedback,
+           Hey Maya (a switch). -->
       <button class="drawer-settings-link" onclick="openTip()" title="MAYA is free. If it was useful, you can support the atelier.">Tip</button>
       <button class="drawer-settings-link" onclick="mayaSignOut()" title="Sign out of Google and return to the Maya sign-in screen.">Logout</button>
       <!-- v13.32: reachable without hunting for it. -->
       <!-- v13.41: Privacy lives on the sign in screen and the Systems Map.
            This slot listens instead: problems, ideas, wishes, spoken or typed. -->
       <button class="drawer-settings-link" onclick="openFeedback()" title="Problems, ideas, wishes. Speak or type, MAYA passes it straight to the atelier.">Feedback</button>
+      <button id="pg-maya-toggle" class="drawer-settings-link" onclick="pgToggleWake()" role="switch" aria-checked="false" title="When on, just say Hey Maya and she answers"><span>Hey Maya</span><span class="mt-switch" aria-hidden="true"><span class="mt-knob"></span></span></button>
     </div>
   </div>
 
@@ -5159,6 +5223,8 @@
   <div class="fabrics-tabs centred" id="pin-tabs" style="display:none">
     <button class="fabrics-tab active" id="pin-tab-all" onclick="setPinterestTab('all')">All saves</button>
     <button class="fabrics-tab" id="pin-tab-boards" onclick="setPinterestTab('boards')">Boards</button>
+    <button class="pin-search-btn" id="pin-search-btn" onclick="_pinSearchToggle()" title="Search Pinterest" aria-label="Search Pinterest"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 L21 21"/></svg></button>
+    <input id="pin-search-input" type="search" placeholder="Search" oninput="_pinSearchInput(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();_pinSearchEnter(this.value);}" style="display:none" />
   </div>
   <div class="fabrics-drawer-body" id="pinterest-drawer-body"></div>
   <div class="pin-drawer-foot" id="pin-drawer-foot" style="display:none">
@@ -5185,10 +5251,22 @@
      Tap to listen borrows the same speech engine the moodboard uses, lands the
      words in the box, and Submit files it into MAYA's own store. -->
 <div class="modal" id="feedback-modal">
-  <button class="modal-close" onclick="closeFeedback()">Close</button>
   <div class="modal-card" style="text-align:center;max-width:520px">
-    <h2 style="text-align:center">Feedback</h2>
-    <div class="modal-hint" style="text-align:center">Suggestions and ideas for MAYA. Speak or type, it reaches a human.</div>
+    <!-- v14.03: the X rides the card's corner, on top of the title, the viewer's round pill. -->
+    <button class="modal-close icon pg-fb-x" onclick="closeFeedback()" aria-label="Close">×</button>
+    <h2 style="text-align:center">Improve Maya</h2>
+    <div class="modal-hint" style="text-align:center">Any idea or feature you wish for. Every note lands in the studio inbox.</div>
+    <div class="modal-hint" id="fb-consent" onclick="_fbConsentToggle()" style="text-align:center;cursor:pointer;opacity:0.75" title="Anonymized tool telemetry only. Never photos, audio, transcripts, faces, or measurements. Tap to change."></div>
+    <!-- v14.09: two tabs. Your note is yours to write; Maya's logs is what she
+         recorded about her own limits, automatically, already with the studio. -->
+    <div id="fb-tabs" role="tablist" aria-label="Improve Maya">
+      <button type="button" class="fb-kind on" id="fb-tab-note" onclick="_fbTab('note')">Your note</button>
+      <button type="button" class="fb-kind" id="fb-tab-maya" onclick="_fbTab('maya')">Maya's logs</button>
+    </div>
+    <div id="fb-maya-pane" style="display:none">
+      <div id="fb-maya-list"></div>
+      <div id="fb-maya-note" class="modal-hint" style="margin-top:10px">Maya watches her own limits and files them as she goes. These already reached the studio.</div>
+    </div>
     <textarea id="feedback-box" rows="6" placeholder="What should MAYA do better?"
       style="width:100%;margin-top:14px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.2);
              border-radius:14px;padding:12px 14px;color:#eef2ff;font-family:'Cormorant Garamond',serif;
@@ -5196,8 +5274,9 @@
     <div id="feedback-state" style="font-family:'Jost',sans-serif;font-size:10px;letter-spacing:0.08em;
          color:rgba(238,242,255,0.5);min-height:16px;margin-top:8px"></div>
     <div class="modal-actions" style="justify-content:center;gap:12px">
-      <button class="modal-text-btn" id="feedback-listen" onclick="feedbackListenToggle()">Tap to Listen</button>
+      <!-- v14.04: Submit is the only button. Hey Maya replaced the listeners. -->
       <button class="modal-text-btn" id="feedback-send" onclick="submitFeedback()">Submit</button>
+      <!-- v14.09: Send all: the note plus a recap of Maya's session logs -->
     </div>
   </div>
 </div>
@@ -5562,6 +5641,14 @@ function showToast(msg, isError) {
   }
 }
 function showError(msg) {
+  // v14.13: Maya hears every failure. She reads it back through
+  // render_status and the observer files it without anyone asking.
+  try {
+    window._pgLastRenderError = String(msg || '').slice(0, 200);
+    if (typeof window._pgAutoLog === 'function' && window._pgLastRenderError) {
+      window._pgAutoLog('Render or action failed in the app: ' + window._pgLastRenderError, 'Maya', 'maya');
+    }
+  } catch (_) {}
   // v5.4: friendlier framing when OpenAI's safety system rejects a request
   // even after our auto-rewrite + retry. The raw message is intimidating
   // and not actionable for Fromsa; soften it to fashion-editor tone.
@@ -5916,7 +6003,7 @@ function _placeItemInternal(card, delay, fixedPos, isRestore) {
         if (!e.isPrimary) return;
         e.preventDefault(); e.stopPropagation();
         const startX = e.clientX;
-        const startW = el.getBoundingClientRect().width;
+        const startW = el.offsetWidth;   // v14.03: layout width, not the scaled rect
         const itId = parseInt(el.dataset.id);
         const it = items.find(i => i.id === itId);
         const img = el.querySelector('.inspo-thumb');
@@ -5926,7 +6013,8 @@ function _placeItemInternal(card, delay, fixedPos, isRestore) {
         // wider than a phone screen.
         const maxW = Math.min(560, window.innerWidth - 28);
         function onMove(me) {
-          const dx = me.clientX - startX;
+          const _zs = (typeof window.pgZoomLevel === 'function' ? window.pgZoomLevel() : 1) || 1;
+          const dx = (me.clientX - startX) / _zs;   // v14.03: zoom aware
           resizeMoved = Math.max(resizeMoved, Math.abs(dx));
           const w = Math.max(120, Math.min(maxW, startW + dx));
           el.style.width = w + 'px';
@@ -6065,7 +6153,10 @@ function makeDraggable(el) {
     function onMove(me) {
       if (!dragging) return;
       if (el._pinching) return;   // v13.45: two fingers means resize, not drag
-      _curDx = me.clientX - startX; _curDy = me.clientY - startY;
+      // v14.03 PLAYGROUND: the canvas may be scaled (survey zoom); a pointer
+      // pixel is 1/z board pixels, so the card stays under the finger.
+      const _zs = (typeof window.pgZoomLevel === 'function' ? window.pgZoomLevel() : 1) || 1;
+      _curDx = (me.clientX - startX) / _zs; _curDy = (me.clientY - startY) / _zs;
       moved = Math.max(moved, Math.abs(_curDx) + Math.abs(_curDy));
       if (_groupStarts) {
         // v13.4: the whole stack follows the pointer as one unit.
@@ -6135,7 +6226,7 @@ function makeDraggable(el) {
       e.preventDefault();
       el._pinching = true;
       pinchD0 = dist(e.touches);
-      pinchW0 = el.getBoundingClientRect().width;
+      pinchW0 = el.offsetWidth;   // v14.07: layout width, so a pinch while zoomed does not snap the card
     }, { passive: false });
     el.addEventListener('touchmove', (e) => {
       if (!el._pinching || e.touches.length !== 2 || !pinchD0) return;
@@ -6344,8 +6435,9 @@ function consumeFloatingCards() {
     if (recentImage && recentImage.el) {
       const imgRect = recentImage.el.getBoundingClientRect();
       const elRect  = it.el.getBoundingClientRect();
-      dx = (imgRect.left + imgRect.width / 2)  - (elRect.left + elRect.width / 2);
-      dy = (imgRect.top  + imgRect.height / 2) - (elRect.top  + elRect.height / 2);
+      const _zs = (typeof window.pgZoomLevel === 'function' ? window.pgZoomLevel() : 1) || 1;
+      dx = ((imgRect.left + imgRect.width / 2)  - (elRect.left + elRect.width / 2)) / _zs;
+      dy = ((imgRect.top  + imgRect.height / 2) - (elRect.top  + elRect.height / 2)) / _zs;
     }
     it.el.classList.add('falling');
     it.el.style.transform = `translate(${dx}px, ${dy}px) scale(0.25)`;
@@ -6537,7 +6629,7 @@ function setScreen(n) {
   // v11.30: visualViewport height tracks the real visible area on mobile
   // (Safari's collapsing URL bar makes innerHeight lie).
   const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-  host.scrollTo({ top: n * vh, behavior: 'smooth' });
+  host.scrollTo({ top: ((((window._pgScreenPos || {})[n]) ?? n)) * vh, behavior: 'smooth' });
 }
 function _syncScreenUI(n) {
   // v12.7: the observer fires at three thresholds, so one swipe used to run
@@ -6656,8 +6748,8 @@ function _bootScreenObserver() {
   if (!host.dataset.homed) {
     host.dataset.homed = '1';
     const home = () => {
-      const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-      host.scrollTop = vh;
+      // PLAYGROUND: the order is inspo, favorites, community wall; land on inspo.
+      host.scrollTop = 0;
     };
     home();
     requestAnimationFrame(home);
@@ -6668,7 +6760,7 @@ function _bootScreenObserver() {
       clearTimeout(_rt);
       _rt = setTimeout(() => {
         const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-        host.scrollTop = currentScreen * vh;
+        host.scrollTop = ((((window._pgScreenPos || {})[currentScreen]) ?? currentScreen)) * vh;
       }, 180);
     }, { passive: true });
   }
@@ -7139,7 +7231,7 @@ const communityBoard = {
     // read the id from the data attribute, which is plain text, not code.
     const one = (p) =>
       '<div class="community-card" data-id="' + escapeHtml(p.id) + '" role="button" tabindex="0" aria-label="Open community design by ' + escapeHtml(p.author) + '">' +
-        '<div class="cc-image"><img class="cc-img" src="' + escapeHtml(p.imageUrl) + '" alt="" loading="lazy" onload="communityBoard.fit(this)" onerror="communityBoard.broken(this)"/></div>' +
+        '<div class="cc-image"><img class="cc-img" src="' + escapeHtml(p.imageUrl) + '" alt="" loading="lazy" decoding="async" onload="communityBoard.fit(this)" onerror="communityBoard.broken(this)"/></div>' +
         '<div class="cc-meta">' +
           '<span class="cc-author">' + escapeHtml(p.author) + (p.uid && p.uid === mine ? ' &middot; yours' : '') + '</span>' +
           (p.summary ? '<span class="cc-summary">' + escapeHtml(p.summary) + '</span>' : '') +
@@ -7394,7 +7486,7 @@ function _renderFavoritesScroller() {
     return '<div class="favorite-card" data-id="' + f.id + '" ' +
       'onmouseenter="_favHoverIn(this)" onmouseleave="_favHoverOut(this)" ' +
       'onclick="openFavoriteForSubmit(' + f.id + ')">' +
-      '<div class="fc-image"><img class="fc-img" src="' + escapeHtml(f.card.image) + '" alt="" loading="lazy" onerror="_favImgBroken(this,' + f.id + ')"/></div>' +
+      '<div class="fc-image"><img class="fc-img" src="' + escapeHtml(f.card.image) + '" alt="" loading="lazy" decoding="async" onerror="_favImgBroken(this,' + f.id + ')"/></div>' +
       videoHtml +
       pendingHtml +
       '<div class="fc-summary">' + escapeHtml(summary) + '</div>' +
@@ -7443,14 +7535,21 @@ function openFavoriteForSubmit(itemId) {
   if (modal) modal.dataset.mode = 'submit';
   // v11.50: ‹ › on the favorites viewer, browse all favorites without closing
   if (modal && !document.getElementById('fav-nav-prev')) {
+    // v14.06: the arrows are the canon pill now (the viewer close's exact
+    // recipe), a step inward from the edges, per Fromsa.
     const mk = (id, txt, d) => {
       const b = document.createElement('button');
       b.id = id; b.innerHTML = txt;
       b.style.cssText = 'position:absolute;top:50%;transform:translateY(-50%);z-index:40;' +
-        'width:46px;height:46px;border-radius:50%;border:0.5px solid rgba(255,255,255,0.3);' +
-        'background:rgba(10,16,34,0.55);color:rgba(240,246,255,0.9);font-size:22px;cursor:pointer;' +
-        'backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)';
-      b.style[d < 0 ? 'left' : 'right'] = '10px';   // v13.92: nudged nearer the corners, per Fromsa
+        'width:36px;height:36px;border-radius:50%;border:0.5px solid rgba(255,255,255,0.22);' +
+        'background:transparent;color:rgba(245,250,255,0.85);font-size:18px;line-height:1;cursor:pointer;' +
+        'display:flex;align-items:center;justify-content:center;' +
+        'backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);' +
+        'box-shadow:inset 0 1px 1px rgba(255,255,255,0.28), inset 0 -1px 1px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.22);' +
+        'transition:border-color .2s,background .2s,color .2s';
+      b.onmouseenter = () => { b.style.background = 'rgba(255,255,255,0.04)'; b.style.borderColor = 'rgba(255,255,255,0.42)'; b.style.color = 'rgba(255,255,255,1)'; };
+      b.onmouseleave = () => { b.style.background = 'transparent'; b.style.borderColor = 'rgba(255,255,255,0.22)'; b.style.color = 'rgba(245,250,255,0.85)'; };
+      b.style[d < 0 ? 'left' : 'right'] = '42px';
       b.onclick = (e) => { e.stopPropagation(); _favStep(d); };
       modal.appendChild(b);
     };
@@ -7484,6 +7583,9 @@ function _cap15Words(s) {
 }
 function _buildPieceSummaryLine(item) {
   if (!item || !item.card) return 'A dream garment, made just for them.';
+  // v14.04: every picture carries its own AI line (max ~10 words), written
+  // once by the caption sweep. When it exists, it is the summary.
+  if (item.card.caption && String(item.card.caption).trim()) return String(item.card.caption).trim();
 
   const refs = (item.card.refs || []).filter(r => r && r.title);
   if (refs.length >= 2) {
@@ -7589,7 +7691,6 @@ function submitToCommunity() {
   showToast('Shared to the community wall.');
 }
 function submitToManasiyo() {
-  const wrap = document.getElementById('submit-wrap'); if (wrap) wrap.classList.remove('open');
   const itemId = viewerItemId;
   const item = itemId != null ? items.find(i => i.id === itemId) : null;
   if (!item || !item.card || !item.card.image) { showToast('No vision to submit'); return; }
@@ -10547,16 +10648,24 @@ async function submitFeedback() {
   st.textContent = 'Sending\u2026';
   try {
     const ver = (document.querySelector('meta[name="maya-version"]') || {}).content || '';
+    // v14.04: feedback and features are one stream. Every note lands in the
+    // feedback archive AND in Maya's inbox under the client's name, so the
+    // studio reads one list.
     const r = await fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
       body: JSON.stringify({ text, page: 'app', version: ver }),
     });
     if (!r.ok) throw new Error('http ' + r.status);
+    try {
+      await fetch('/api/feature', { method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({ text, who: (typeof _pgWhoAmI === 'function' ? _pgWhoAmI() : '') }) });
+    } catch (_) {}
     box.value = '';
     st.textContent = '';
     closeFeedback();
-    showToast('Thank you. It reached the atelier.');
+    showToast('Thank you. Maya keeps it.');
   } catch (e) {
     st.textContent = 'That did not send. It is kept in the box, try again in a moment.';
   } finally { send.disabled = false; }
@@ -10809,8 +10918,9 @@ function stackDissectedRefs(id) {
   const imgRect = source.el.getBoundingClientRect();
   targets.forEach((it, idx) => {
     const elRect = it.el.getBoundingClientRect();
-    const dx = (imgRect.left + imgRect.width / 2)  - (elRect.left + elRect.width / 2);
-    const dy = (imgRect.top  + imgRect.height / 2) - (elRect.top  + elRect.height / 2);
+    const _zs = (typeof window.pgZoomLevel === 'function' ? window.pgZoomLevel() : 1) || 1;
+    const dx = ((imgRect.left + imgRect.width / 2)  - (elRect.left + elRect.width / 2)) / _zs;
+    const dy = ((imgRect.top  + imgRect.height / 2) - (elRect.top  + elRect.height / 2)) / _zs;
     it.el.classList.add('falling');
     it.el.style.transform = 'translate(' + dx + 'px, ' + dy + 'px) scale(0.25)';
     it.el.style.opacity = '0';
@@ -11856,7 +11966,17 @@ function renderViewerNotes(item) {
     '<div class="note-item"><div class="note-title">' + escapeHtml(title) + '</div>' +
     (detail ? '<div class="note-detail">' + escapeHtml(detail) + '</div>' : '') + '</div>';
   const groups = [];
-  if (c.caption) {
+  // v14.06: EVERY picture carries the same five lines: Bio, Aesthetic,
+  // Silhouette, Color, Era, written once by the profile sweep. Uniform across
+  // every card, old and new; anything else follows below.
+  if (c.profile && typeof c.profile === 'object') {
+    const P = c.profile;
+    const row = (t, v) => v ? '<div class="note-item"><div class="note-group-title">' + escapeHtml(t) + '</div>' +
+      '<div class="note-detail">' + escapeHtml(String(v)) + '</div></div>' : '';
+    const body = row('Bio', P.bio) + row('Aesthetic', P.aesthetic) + row('Silhouette', P.silhouette) +
+                 row('Color', P.color) + row('Era', P.era);
+    if (body) groups.push({ t: 'Notes', b: '<div class="vn-profile">' + body + '</div>' });
+  } else if (c.caption) {
     groups.push({ t: 'Notes', b: '<div class="vn-caption">' + escapeHtml(c.caption) + '</div>' });
   }
   if (Array.isArray(c.mods) && c.mods.length) {
@@ -17266,6 +17386,1563 @@ if (typeof toggleNotesDrawer === 'function') {
     const opening = force === true || (force === undefined && wasClosed);
     if (opening) _pgRestoreLastTab();
   };
+}
+</script>
+
+<style>
+  /* PLAYGROUND: backgrounds fold */
+  #pg-bg-body { padding: 10px 0 4px; text-align: center; }
+  /* the background cards read like the fabric cards: two columns, a generous
+     image, the name underneath each one */
+  #pg-bg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .pg-bg-card { background: rgba(255,255,255,0.02); border: 0.5px solid rgba(255,255,255,0.06);
+    border-radius: 8px; overflow: hidden; transition: border-color 0.2s; }
+  .pg-bg-card:hover { border-color: rgba(200,220,255,0.25); }
+  .pg-bg-thumb { display: block; width: 100%; aspect-ratio: 16 / 10; border: none; border-radius: 0;
+    background-size: cover; background-position: center; cursor: pointer; padding: 0;
+    transition: opacity 0.2s; }
+  .pg-bg-thumb:hover { opacity: 0.85; }
+  .pg-bg-thumb.on { box-shadow: inset 0 0 0 1.5px rgba(169,201,255,0.9); }
+  .pg-bg-cardname { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 13px;
+    color: rgba(238,242,255,0.85); text-align: center; padding: 5px 6px 7px; line-height: 1.2; }
+  #pg-bg-pills { display: flex; justify-content: center; gap: 10px; margin: 22px 0 2px; }
+  #pg-bg-body .pg-bg-gen { display: inline-block; margin: 0; }
+  .pg-bg-gen { font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(238,242,255,0.8); background: rgba(255,255,255,0.04); border: 0.5px solid rgba(255,255,255,0.25);
+    border-radius: 100px; padding: 6px 14px; cursor: pointer; transition: all 0.2s; }
+  .pg-bg-gen:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
+  .pg-bg-gen[disabled] { opacity: 0.5; cursor: default; }
+  /* PLAYGROUND: zoomed-out survey mode, v5. Only the card canvas scales (the
+     voice bar, hints and echo are its siblings and never move). No CSS
+     transition: a requestAnimationFrame lerp drives every frame, so a burst of
+     wheel events never restarts an easing curve. The canvas clips its overflow
+     at rest; while zoomed it must not, or cards placed past the fold crop. The
+     glass blur on every card is the single most expensive thing to scale, so
+     it rests while zoomed. */
+  #maya-canvas { will-change: transform; transform-origin: 50% 50%; }
+  body.pg-zoomed #maya-canvas { overflow: visible; }
+  body.pg-zoomed .item-card { backdrop-filter: none; -webkit-backdrop-filter: none;
+    background: rgba(10,14,28,0.55); }
+</style>
+<script>
+// ═══ PLAYGROUND ONLY: survey zoom, v5. Pinch (the browser reports it as
+// ctrl+wheel) or Cmd/Ctrl+scroll zooms the card canvas about the cluster of
+// cards: the cluster's own bounding box glides to the center of the screen as
+// the scale falls, so at the floor everything is on screen and nothing is
+// cropped. The floor is 40 percent; it only goes lower when the cluster is so
+// wide that 40 would still crop it. Plain scrolling and the drawer keep
+// working while zoomed: the screens are never pinned. Zooming back past 92
+// percent snaps home. Tapping the logo snaps home.
+(function () {
+  const MINZ = 0.40;
+  let z = 1, target = 1, raf = 0, bbox = null, zfloor = MINZ;
+  const canvas = () => document.getElementById('maya-canvas');
+  function measure() {
+    const c = canvas(); if (!c) return null;
+    let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9, found = false;
+    for (const el of c.children) {
+      if (el.classList.contains('cloud')) continue;
+      const w = el.offsetWidth, h = el.offsetHeight;
+      if (!w || !h) continue;
+      const x = el.offsetLeft, y = el.offsetTop;
+      minX = Math.min(minX, x); minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x + w); maxY = Math.max(maxY, y + h);
+      found = true;
+    }
+    if (!found) return null;
+    const pad = 36;
+    minX -= pad; minY -= pad; maxX += pad; maxY += pad;
+    return { cx: (minX + maxX) / 2, cy: (minY + maxY) / 2, w: maxX - minX, h: maxY - minY };
+  }
+  function prepare() {
+    const c = canvas(); if (!c) return;
+    bbox = measure() || { cx: c.offsetWidth / 2, cy: c.offsetHeight / 2, w: c.offsetWidth, h: c.offsetHeight };
+    // the lowest scale that still shows the whole cluster; 0.40 unless that crops
+    const fit = Math.min(c.offsetWidth / bbox.w, c.offsetHeight / bbox.h);
+    zfloor = Math.min(MINZ, Math.max(0.12, fit));
+  }
+  function paint() {
+    const c = canvas(); if (!c) return;
+    const zoomed = z < 0.999;
+    if (zoomed) {
+      if (!bbox) prepare();
+      const p = Math.min(1, (1 - z) / Math.max(0.001, 1 - zfloor));
+      const dx = (c.offsetWidth / 2 - bbox.cx) * p, dy = (c.offsetHeight / 2 - bbox.cy) * p;
+      c.style.transformOrigin = bbox.cx + 'px ' + bbox.cy + 'px';
+      c.style.transform = 'translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) scale(' + z.toFixed(4) + ')';
+    } else {
+      c.style.transform = ''; c.style.transformOrigin = ''; bbox = null; zfloor = MINZ;
+    }
+    document.body.classList.toggle('pg-zoomed', zoomed);
+  }
+  function tick() {
+    raf = 0;
+    const d = target - z;
+    if (Math.abs(d) < 0.0012) { z = target; paint(); return; }
+    z += d * 0.32;               // exponential ease: fast, never overshoots
+    paint();
+    raf = requestAnimationFrame(tick);
+  }
+  function go(next) {
+    if (!bbox && next < 0.999) prepare();
+    target = Math.min(1, Math.max(zfloor, next));
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+  function onInspo() {
+    const host = document.getElementById('screens'); if (!host) return false;
+    const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    return Math.round(host.scrollTop / vh) === 0;
+  }
+  window.pgZoomReset = function () { go(1); };
+  window.pgZoomFloor = () => zfloor;
+  window.pgZoomLevel = () => z;
+  // v14.11: Maya's thumb and finger. Clamped to the same floor as the wheel.
+  window.pgZoomTo = function (v) { go(Math.max(zfloor, Math.min(1, Number(v) || 1))); };
+  document.addEventListener('wheel', (e) => {
+    if (!(e.ctrlKey || e.metaKey)) return;          // plain scroll always navigates
+    if (e.target && e.target.closest && e.target.closest('#notes-drawer, .hpane-drawer, #feedback-modal, #lead-inv-modal')) return;
+    if (!onInspo()) return;
+    e.preventDefault();
+    const zoomIn = e.deltaY < 0;
+    const step = 0.05 * (1 + Math.min(3, Math.abs(e.deltaY) / 60));
+    let next = target + (zoomIn ? step : -step);
+    if (zoomIn && next > 0.92) next = 1;              // snap home, never stuck at 99 percent
+    go(next);
+  }, { passive: false });
+  let pinchD = 0, pinchZ = 1;
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2 && onInspo()) {
+      pinchD = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      pinchZ = target;
+    }
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && pinchD && onInspo()) {
+      const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      e.preventDefault();
+      go(pinchZ * (d / pinchD));
+    }
+  }, { passive: false });
+  document.addEventListener('touchend', () => { pinchD = 0; if (target > 0.92 && target < 1) go(1); }, { passive: true });
+  document.addEventListener('click', (e) => {
+    const logo = e.target && e.target.closest && e.target.closest('.maya-logo-mark, #top-left-brand');
+    if (logo && z < 0.999) { e.preventDefault(); e.stopPropagation(); pgZoomReset(); }
+  }, true);
+  // a card dropped or added while zoomed changes the cluster: re-fit on the next zoom step
+  window.addEventListener('resize', () => { if (z < 0.999) { prepare(); paint(); } });
+})();
+// ═══ PLAYGROUND ONLY: personal backgrounds. Birth of a Star is the house
+// backdrop; every generated or uploaded background is SAVED as its own card
+// (kept in this browser), and tapping a card applies it. ═══
+(function () {
+  const KEY = 'maya_pg_background';       // the active choice
+  const LIST = 'maya_pg_bgs';             // every saved background, newest last
+  function loadList() { try { const a = JSON.parse(localStorage.getItem(LIST) || '[]'); return Array.isArray(a) ? a : []; } catch (_) { return []; } }
+  function saveList(a) { try { localStorage.setItem(LIST, JSON.stringify(a.slice(-6))); } catch (_) {} }
+  function setBg(url, name, thumbEl) {
+    document.body.style.background = "#000 url('" + url + "') center/cover no-repeat fixed";
+    document.querySelectorAll('.pg-bg-thumb').forEach(t => t.classList.remove('on'));
+    if (thumbEl) thumbEl.classList.add('on');
+  }
+  function addBgCard(url, name) {
+    const row = document.getElementById('pg-bg-row'); if (!row) return null;
+    const card = document.createElement('div'); card.className = 'pg-bg-card';
+    const t = document.createElement('button'); t.className = 'pg-bg-thumb';
+    t.title = 'Tap to make this your background';
+    t.style.backgroundImage = "url('" + url + "')";
+    t.onclick = function () {
+      setBg(url, name, t);
+      try { localStorage.setItem(KEY, JSON.stringify({ url, name })); } catch (_) {}
+    };
+    const label = document.createElement('div'); label.className = 'pg-bg-cardname'; label.textContent = name;
+    card.appendChild(t); card.appendChild(label); row.appendChild(card);
+    return t;
+  }
+  window.pgApplyBackground = function (which) {
+    if (which === 'star') {
+      setBg('/aesthetics/ui/birth-of-a-star.png', 'Birth of a Star', document.getElementById('pg-bg-star'));
+      try { localStorage.removeItem(KEY); } catch (_) {}
+    }
+  };
+  function keepBg(url, name) {
+    const a = loadList(); a.push({ url, name }); saveList(a);
+  }
+  async function _shrinkBg(blobOrData) {
+    const bmp = await createImageBitmap(blobOrData);
+    const sc = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(bmp.width * sc); c.height = Math.round(bmp.height * sc);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    bmp.close && bmp.close();
+    return c.toDataURL('image/jpeg', 0.82);
+  }
+  window.pgGenerateBackground = async function () {
+    const btn = document.getElementById('pg-bg-gen'); if (!btn || btn.disabled) return;
+    btn.disabled = true; const was = btn.textContent; btn.textContent = 'Generating\u2026';
+    try {
+      const dataUrl = await callOpenAIImage(
+        'A breathtaking deep-space vista: a luminous newborn star wrapped in drifting nebula veils, vast dark sky, cinematic, no text, no people. A quiet cosmic backdrop for a fashion app.',
+        '1536x1024', 'low', { output_format: 'jpeg' });
+      if (dataUrl) {
+        addBgCard(dataUrl, 'Generated background');
+        keepBg(dataUrl, 'Generated background');
+        if (typeof showToast === 'function') showToast('New background ready. Tap it to apply.');
+      }
+    } catch (e) {
+      if (typeof showToast === 'function' && (!e || e.code !== 'trial_exhausted')) showToast('Could not generate a background.');
+    }
+    btn.disabled = false; btn.textContent = was;
+  };
+  window.pgUploadBackground = function () {
+    const f = document.getElementById('pg-bg-file'); if (f) f.click();
+  };
+  window._pgBgFilePicked = async function (input) {
+    const file = input.files && input.files[0]; if (!file) return;
+    try {
+      const dataUrl = await _shrinkBg(file);
+      addBgCard(dataUrl, 'My background');
+      keepBg(dataUrl, 'My background');
+      if (typeof showToast === 'function') showToast('Background added. Tap it to apply.');
+    } catch (_) {
+      if (typeof showToast === 'function') showToast('Could not read that image.');
+    }
+    input.value = '';
+  };
+  // boot: render every saved background, then restore the active one
+  try {
+    const saved = loadList();
+    saved.forEach(b => { if (b && b.url) addBgCard(b.url, b.name || 'My background'); });
+    const act = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (act && act.url) {
+      const thumbs = [...document.querySelectorAll('.pg-bg-thumb')];
+      const hit = thumbs.find(t => (t.style.backgroundImage || '').includes(act.url.slice(0, 80)));
+      setBg(act.url, act.name || 'My background', hit || null);
+    }
+  } catch (_) {}
+})();
+</script>
+
+<style>
+  /* PLAYGROUND: screen order is inspo, favorites, community wall. The sections
+     keep their data-screen numbers (all the wall/favorites logic is keyed to
+     them); flex order changes only where each one sits. */
+  #screens { display: flex; flex-direction: column; }
+  #screens > section[data-screen] { flex: none; }
+  #screen-inspo { order: 1; }
+  #screen-favorites { order: 2; }
+  #screen-community { order: 3; }
+</style>
+<script>
+  /* semantic screen number -> physical position in the playground order */
+  window._pgScreenPos = { 1: 0, 2: 1, 0: 2 };
+</script>
+
+<!-- v14.21: the amber label script stayed on the Playground. -->
+
+<style>
+  /* ═══ PLAYGROUND v14.03: the floor row is Logout, Feedback, Hey Maya. The
+     Hey Maya link carries an Apple style switch (the Admin drawer's exact
+     switch). ═══ */
+  /* Logout left, Feedback in the middle, Hey Maya at the bottom right */
+  #notes-drawer .drawer-meta-row { align-items: center; justify-content: space-between; gap: 12px; padding-left: 8px; padding-right: 4px; }
+  #pg-maya-toggle { display: inline-flex; align-items: center; gap: 9px; }
+  #pg-maya-toggle .mt-switch { position: relative; width: 34px; height: 20px; border-radius: 100px; flex: none;
+    background: rgba(255,255,255,0.10); border: 0.5px solid rgba(255,255,255,0.22);
+    transition: background .25s, border-color .25s; box-shadow: inset 0 1px 2px rgba(0,0,0,0.35); }
+  #pg-maya-toggle .mt-knob { position: absolute; top: 1.5px; left: 1.5px; width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.45); transition: transform .25s cubic-bezier(.2,.8,.2,1); }
+  #pg-maya-toggle.on { color: #a9c9ff; }
+  #pg-maya-toggle.on .mt-switch { background: rgba(128,176,255,0.95); border-color: rgba(128,176,255,0.95); }
+  #pg-maya-toggle.on .mt-knob { transform: translateX(14px); }
+  #pg-maya-toggle.live .mt-knob { box-shadow: 0 0 0 3px rgba(169,201,255,0.35), 0 1px 3px rgba(0,0,0,0.45); }
+  /* the feedback popup wears the drawer's glass: same gradient, hairline,
+     radius, blur and shadows; the X rides the corner over the title */
+  #feedback-modal .modal-card { position: relative; border-radius: 18px; padding: 30px 28px 26px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%,
+      rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18), 0 12px 48px rgba(0,0,0,0.38); }
+  #feedback-modal .modal-close.pg-fb-x { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; font-size: 16px; }
+  #feedback-modal h2 { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: 26px; color: rgba(245,250,255,0.92); }
+  #feedback-modal #feedback-box { background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.22); border-radius: 14px; }
+  #feedback-kind { display: flex; justify-content: center; gap: 8px; margin: 2px 0 4px; }
+  .fb-kind { font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(245,250,255,0.6); background: transparent; border: 0.5px solid rgba(255,255,255,0.18); border-radius: 100px;
+    padding: 5px 12px; cursor: pointer; transition: all .2s; }
+  .fb-kind:hover { color: rgba(245,250,255,0.95); border-color: rgba(255,255,255,0.42); }
+  .fb-kind.on { color: #a9c9ff; border-color: rgba(128,176,255,0.7); background: rgba(128,176,255,0.10); }
+  /* Maya live: a small chip at the bottom right, and her last lines above the voice bar */
+  #pg-maya-chip { position: fixed; right: 18px; bottom: 18px; z-index: 9500; display: none; align-items: center; gap: 9px;
+    padding: 8px 14px 8px 11px; border-radius: 100px; cursor: pointer; background: rgba(8,12,26,0.85);
+    border: 0.5px solid rgba(169,201,255,0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(169,201,255,0.95);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+  #pg-maya-chip.show { display: flex; }
+  #pg-maya-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: #a9c9ff; animation: pgmayapulse 1.6s ease-in-out infinite; }
+  @keyframes pgmayapulse { 0%,100% { box-shadow: 0 0 0 0 rgba(169,201,255,0.35); } 50% { box-shadow: 0 0 0 8px rgba(169,201,255,0); } }
+  /* v14.04: Maya's transcription is the SAME voice as tap-to-listen's echo:
+     Cormorant italic, whisper faint, centered, riding 2px above the Visualize
+     pill. Three rows at most; older lines slide up and fade as new ones land,
+     and the whole thing breathes away when the talking stops. */
+  #pg-maya-lines { position: absolute; left: 50%; bottom: 92px; transform: translateX(-50%); z-index: 8990;
+    width: min(640px, 78vw); max-height: 48px; overflow: hidden;
+    display: flex; flex-direction: column; justify-content: flex-end; gap: 1px;
+    pointer-events: none; text-align: center;
+    opacity: 0; transition: opacity 1.4s ease; }
+  #pg-maya-lines.show { opacity: 1; transition: opacity 0.3s ease; }
+  #pg-maya-lines .ln { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 300;
+    font-size: 11px; line-height: 1.4; color: rgba(200,210,230,0.32);
+    transition: opacity 0.8s ease; }
+  #pg-maya-lines .ln.you { color: rgba(200,210,230,0.24); }
+  #pg-maya-lines .ln.bye { opacity: 0; }
+  /* the logo breathes, smooth and slow, while Maya is on the line */
+  @keyframes pgMayaBreathe {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(169,201,255,0.0), 0 0 18px 2px rgba(169,201,255,0.18); transform: scale(1); }
+    50%      { box-shadow: 0 0 0 5px rgba(169,201,255,0.10), 0 0 26px 4px rgba(169,201,255,0.30); transform: scale(1.03); }
+  }
+  body.pg-maya-live #top-left-brand .maya-logo-wrap,
+  body.pg-maya-live #top-left-brand img:first-child { border-radius: 50%; animation: pgMayaBreathe 3.2s ease-in-out infinite; }
+  /* v14.04: the two destination pills ride INSIDE the photo now, appearing on
+     hover at its floor, over a soft rise of black. */
+  #garment-image-wrap .submit-wrap { position: absolute; left: 0; right: 0; bottom: 0; z-index: 22;
+    padding: 42px 12px 16px; margin: 0; opacity: 0; transition: opacity 0.25s ease;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.75) 100%);
+    /* v14.06: the rise stays inside the card's rounded corners */
+    border-radius: 0 0 16px 16px; }
+  /* v14.06: the whole viewer block sits a touch lower, per Fromsa */
+  #garment-modal:not([data-photo="full"]) #garment-image-wrap { margin-top: 30px; }
+  /* v14.07: the edge-to-edge photo stays clean */
+  #garment-modal[data-photo="full"] #garment-image-wrap .submit-wrap { display: none !important; }
+  /* v14.07: no hover on a phone; the pills simply show */
+  @media (hover: none) { #garment-image-wrap .submit-wrap { opacity: 1; } }
+  #garment-image-wrap:hover .submit-wrap { opacity: 1; }
+</style>
+<div id="pg-maya-chip" onclick="pgMayaStop()" title="Maya is on the line. Tap to hang up."><span class="dot"></span><span id="pg-maya-chip-word">Maya is listening</span></div>
+<div id="pg-maya-lines" aria-live="polite"></div>
+<script>
+// ═══ PLAYGROUND v14.03: HEY MAYA ON THE USER SIDE. The same brain as Admin's
+// voice line, a narrower set of hands. The switch at the drawer floor turns a
+// background wake word on; "Hey Maya" opens the live line (OpenAI Realtime,
+// WebRTC, key from /api/voice-token). Her tools run right here: the drawer,
+// Pinterest, the moodboard pipeline, visualize, the feedback box, the studio
+// inbox. The moodboard's own Tap to Listen and the wake recognizer share one
+// speech engine, so each steps aside for the other. ═══
+// v14.04: feedback and features are one stream; the chips are gone. The
+// function stays as a harmless no-op because Maya's write_feedback tool and
+// older sessions may still call it.
+let _fbKindNow = 'feedback';
+function _fbKind() {}
+function _pgWhoAmI() {
+  try { const u = firebase.auth().currentUser; return (u && (u.displayName || u.email)) || ''; } catch (_) { return ''; }
+}
+function _pgBoardSnapshot() {
+  try {
+    const pool = (items || []).filter(i => i && i.card && i.el);
+    return (items || []).filter(i => i && i.card).slice(0, 40).map(i => ({
+      kind: i.card.kind || '', title: String(i.card.title || i.card.text || '').slice(0, 120),
+      caption: String(i.card.caption || '').slice(0, 200), favorited: !!i.card.favorited,
+      pos: (typeof _pgPosWord === 'function' && i.el) ? _pgPosWord(i, pool) : '' }));
+  } catch (_) { return []; }
+}
+function _pgDrawerState() {
+  const hs = document.getElementById('hscroll');
+  const open = hs ? hs.scrollLeft > (hs.scrollWidth - hs.clientWidth) / 2 : false;
+  return { open, tab: window._pgLastTab || 'avatar', pinterest: !!(typeof _pinStatusOk !== 'undefined' && _pinStatusOk) };
+}
+// ── the live line ──
+let _pgVoice = null, _pgVoiceStarting = false, _pgToolChain = Promise.resolve();
+function _pgLine(who, text) {
+  const host = document.getElementById('pg-maya-lines'); const t = String(text || '').trim(); if (!host || !t) return;
+  // v14.04: the echo lives just above the pill inside the inspo screen.
+  if (host.parentElement === document.body) {
+    const home = document.getElementById('screen-inspo'); if (home) home.appendChild(host);
+  }
+  host.classList.add('show');
+  const ln = document.createElement('div'); ln.className = 'ln ' + (who === 'you' ? 'you' : 'maya'); ln.textContent = t;
+  host.appendChild(ln);
+  // three rows breathe; the one above them fades out, then leaves
+  while (host.children.length > 4) host.removeChild(host.firstChild);
+  if (host.children.length === 4) {
+    const old = host.firstChild; old.classList.add('bye');
+    setTimeout(() => { try { host.removeChild(old); } catch (_) {} }, 800);
+  }
+  clearTimeout(host._fade); host._fade = setTimeout(() => host.classList.remove('show'), 6000);
+}
+function _pgChip(on, word) {
+  const c = document.getElementById('pg-maya-chip'); const w = document.getElementById('pg-maya-chip-word');
+  if (c) c.classList.toggle('show', !!on); if (w && word) w.textContent = word;
+  const t = document.getElementById('pg-maya-toggle'); if (t) t.classList.toggle('live', !!on);
+  document.body.classList.toggle('pg-maya-live', !!on);   // the logo breathes with her
+}
+// v14.13: the card she means. A five year old points and says "this one",
+// "the red one", "the one on the left". So: the open card wins any deictic,
+// position and recency are real language, and when two cards tie she is told
+// it is ambiguous instead of confidently opening the wrong one.
+const _PG_DEICTIC = /\b(this|that|it|the one i(?:'m| am)? (?:looking at|seeing|on)|current|open one|same one|here)\b/i;
+function _pgOpenItem() {
+  const m = document.getElementById('garment-modal');
+  if (!m || !m.classList.contains('open')) return null;
+  if (typeof viewerItemId === 'undefined' || !viewerItemId) return null;
+  return (items || []).find(i => i && i.id === viewerItemId) || null;
+}
+function _pgPictured() {
+  return (items || []).filter(i => i && i.card && i.el && i.card.image);
+}
+function _pgFindCardDetailed(query) {
+  const raw = String(query || '').toLowerCase().trim();
+  const open = _pgOpenItem();
+  // "this one", "it", "the one I'm looking at": the open card, always.
+  if (open && (!raw || _PG_DEICTIC.test(raw))) return { it: open, how: 'the open card' };
+  const words = raw.split(/[^a-z0-9]+/).filter(w => w.length > 2);
+  // position and recency, the way people actually talk
+  const pool = _pgPictured().length ? _pgPictured() : (items || []).filter(i => i && i.card && i.el);
+  // v14.17: rows AND columns, because "the one in the upper center" is how
+  // people actually point. Versions of one piece collapse before ambiguity.
+  const wantRow = /\b(top|upper)\b/.test(raw) ? 'top' : /\b(bottom|lower)\b/.test(raw) ? 'bottom' : '';
+  const wantCol = /\b(left|leftmost)\b/.test(raw) ? 'left' : /\b(right|rightmost)\b/.test(raw) ? 'right'
+    : /\b(center|centre|middle)\b/.test(raw) ? 'center' : '';
+  if ((wantRow || wantCol) && pool.length) {
+    const inRegion = pool.filter(p => {
+      const w = _pgPosWord(p, pool);
+      const rowOk = !wantRow || w.includes(wantRow);
+      const colOk = !wantCol || w.includes(wantCol) || (wantCol === 'center' && w === 'center');
+      return rowOk && colOk;
+    });
+    const famR = new Map(); const region = [];
+    for (const p of inRegion) {
+      const k = p.card.inspirationId || ('id:' + p.id); const prev = famR.get(k);
+      if (!prev) { famR.set(k, p); region.push(p); }
+      else if ((p.card.version || 0) > (prev.card.version || 0)) { region[region.indexOf(prev)] = p; famR.set(k, p); }
+    }
+    const zone = ((wantRow ? wantRow + ' ' : '') + wantCol).trim() || 'that spot';
+    if (region.length === 1) return { it: region[0], how: 'the one at ' + zone };
+    if (region.length > 1) {
+      const others = raw.split(/[^a-z0-9]+/).filter(x => x.length > 2 &&
+        !/^(top|upper|bottom|lower|left|leftmost|right|rightmost|center|centre|middle|one|card|the)$/.test(x));
+      if (others.length) {
+        let best = null, bs = 0;
+        for (const p of region) {
+          const P2 = p.card.profile || {};
+          const hay2 = [p.card.caption, p.card.title, P2.bio, P2.color, P2.aesthetic, P2.silhouette, P2.era]
+            .filter(Boolean).join(' ').toLowerCase();
+          const sc = others.reduce((n, w) => n + (hay2.includes(w) ? 1 : 0), 0);
+          if (sc > bs) { bs = sc; best = p; }
+        }
+        if (best) return { it: best, how: 'words plus position at ' + zone };
+      }
+      return { it: null, ambiguous: true, reason: 'more than one card sits at ' + zone,
+        candidates: region.slice(0, 4).map(p => String(p.card.caption || p.card.title || 'a card').slice(0, 70)) };
+    }
+    // nothing in that region: fall through to plain word scoring below
+  }
+  if (/\b(first)\b/.test(raw) && pool.length) {
+    const byX0 = pool.slice().sort((a, b) => (parseInt(a.el.style.left) || 0) - (parseInt(b.el.style.left) || 0));
+    return { it: byX0[0], how: 'the first' };
+  }
+  if (/\b(newest|latest|last one|most recent|the new one)\b/.test(raw) && pool.length) return { it: pool[pool.length - 1], how: 'the newest' };
+  if (!words.length) return open ? { it: open, how: 'the open card' } : { it: null, reason: 'no words to go on' };
+  const scored = [];
+  for (const it of (items || [])) {
+    if (!it || !it.card || !it.el) continue;
+    const P = it.card.profile || {};
+    // the five truths and the color word carry extra weight: they are how
+    // people describe a picture out loud
+    const strong = [it.card.caption, P.bio, P.color, P.aesthetic, P.silhouette, P.era].filter(Boolean).join(' ').toLowerCase();
+    const hay = [it.card.caption, it.card.title, it.card.text, it.card.kind,
+      P.bio, P.aesthetic, P.silhouette, P.color, P.era,
+      ...(it.card.refs || []).map(r => r && r.title)].filter(Boolean).join(' ').toLowerCase();
+    let score = 0;
+    for (const w of words) { if (hay.includes(w)) score += 1; if (strong.includes(w)) score += 1; }
+    if (score > 0) scored.push({ it, score });
+  }
+  if (!scored.length) {
+    // v14.14: an explicitly named card that matches nothing is a MISS.
+    // Falling back to the open card here made her act on the wrong piece.
+    return { it: null, reason: 'no card matches those words' };
+  }
+  scored.sort((a, b) => b.score - a.score);
+  // versions of ONE piece are not two answers. Keep the newest of each family
+  // so she never asks "which one" about the same garment twice over.
+  const fam = new Map(), collapsed = [];
+  for (const s2 of scored) {
+    const key = s2.it.card.inspirationId || ('id:' + s2.it.id);
+    const prev = fam.get(key);
+    if (!prev) { fam.set(key, s2); collapsed.push(s2); }
+    else if ((s2.it.card.version || 0) > (prev.it.card.version || 0)) {
+      collapsed[collapsed.indexOf(prev)] = s2; fam.set(key, s2);
+    }
+  }
+  scored.length = 0; collapsed.forEach(c => scored.push(c));
+  // a real tie between DIFFERENT pieces is a question, not a guess
+  if (scored.length > 1 && scored[1].score === scored[0].score && scored[0].score < 3) {
+    return { it: null, ambiguous: true, reason: 'more than one card fits those words',
+      candidates: scored.slice(0, 4).map(s => String(s.it.card.caption || s.it.card.title || 'a card').slice(0, 70)) };
+  }
+  return { it: scored[0].it, how: 'matched by words' };
+}
+function _pgFindCard(query) { return _pgFindCardDetailed(query).it; }
+function _pgClick(sel) { const el = document.querySelector(sel); if (el) { el.click(); return true; } return false; }
+// v14.14: she never claims a picture is done before it is. This watcher
+// waits for the real outcome and tells her, so completion is announced by
+// the app, not assumed by the model.
+let _pgRenderWatch = null;
+function _pgWatchRender(dc) {
+  if (_pgRenderWatch) return;
+  const t0 = Date.now(); let armed = false;
+  _pgRenderWatch = setInterval(() => {
+    const n = (typeof _renderLabels !== 'undefined' && _renderLabels) ? _renderLabels.length : 0;
+    const err = window._pgLastRenderError;
+    if (n > 0) armed = true;
+    const done = (armed && n === 0) || (!armed && err) || (Date.now() - t0 > 180000);
+    if (!done) return;
+    clearInterval(_pgRenderWatch); _pgRenderWatch = null;
+    const msg = err
+      ? '[app] the render FAILED: ' + String(err).slice(0, 140) + '. Tell them plainly; it is already logged.'
+      : armed ? '[app] the render finished; the new picture is on screen. Tell them it is ready.'
+      : '[app] no render started; do not claim anything rendered.';
+    try {
+      dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'message', role: 'user',
+        content: [{ type: 'input_text', text: msg }] } }));
+      dc.send(JSON.stringify({ type: 'response.create' }));
+    } catch (_) {}
+  }, window._PG_WATCH_MS || 1200);
+}
+// v14.17: the continuous glide. Scroll inside the Pinterest wall keeps
+// moving, gently, until they say stop, they touch it, or it reaches the end.
+let _pgGlide = null;
+function _pgGlideStop() {
+  if (!_pgGlide) return false;
+  const g = _pgGlide; _pgGlide = null;
+  try { cancelAnimationFrame(g.raf); } catch (_) {}
+  try { (g.els || []).forEach(el => { el.removeEventListener('wheel', g.halt); el.removeEventListener('pointerdown', g.halt); }); } catch (_) {}
+  return true;
+}
+// v14.18: EVERY voice scroll glides. Vertical for the pins, sideways for
+// favorites and the community rows (all three rows move together).
+function _pgGlideStart(els, dir, axis) {
+  _pgGlideStop();
+  const list = (Array.isArray(els) ? els : [els]).filter(Boolean);
+  if (!list.length) return;
+  const prop = axis === 'x' ? 'scrollLeft' : 'scrollTop';
+  const size = axis === 'x' ? 'clientWidth' : 'clientHeight';
+  const full = axis === 'x' ? 'scrollWidth' : 'scrollHeight';
+  const g = { els: list, raf: 0, halt: () => _pgGlideStop() };
+  list.forEach(el => { el.addEventListener('wheel', g.halt, { passive: true }); el.addEventListener('pointerdown', g.halt, { passive: true }); });
+  const step = () => {
+    if (_pgGlide !== g) return;
+    let ended = true;
+    for (const el of list) {
+      el[prop] += dir * 1.5;
+      const atEnd = dir > 0 ? (el[prop] + el[size] >= el[full] - 2) : el[prop] <= 0;
+      if (!atEnd) ended = false;
+    }
+    if (ended) { _pgGlideStop(); return; }
+    g.raf = requestAnimationFrame(step);
+  };
+  _pgGlide = g; g.raf = requestAnimationFrame(step);
+}
+// v14.17: where a card sits, in words. People point with rows and columns.
+function _pgPosWord(it, pool) {
+  try {
+    const xs = pool.map(p => parseInt(p.el.style.left) || 0), ys = pool.map(p => parseInt(p.el.style.top) || 0);
+    const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+    const fx = (maxX - minX) < 40 ? 0.5 : ((parseInt(it.el.style.left) || 0) - minX) / (maxX - minX);
+    const fy = (maxY - minY) < 40 ? 0.5 : ((parseInt(it.el.style.top) || 0) - minY) / (maxY - minY);
+    const col = fx < 0.34 ? 'left' : fx > 0.66 ? 'right' : 'center';
+    const row = fy < 0.34 ? 'top' : fy > 0.66 ? 'bottom' : 'middle';
+    return (row === 'middle' && col === 'center') ? 'center' : ((row === 'middle' ? '' : row + ' ') + col).trim();
+  } catch (_) { return ''; }
+}
+// v14.17: the search over the loaded wall: pins by their words, boards by
+// name, singular and plural both. Returns how many stayed visible.
+function _pinSearch(q) {
+  q = String(q || '').toLowerCase().trim();
+  const words = q.split(/[^a-z0-9]+/).filter(x => x.length > 1);
+  const hit = (t) => !words.length || words.every(x => t.includes(x) ||
+    (x.endsWith('s') && t.includes(x.slice(0, -1))) || t.includes(x + 's'));
+  let shown = 0;
+  document.querySelectorAll('#pinterest-drawer-body .pin-pic').forEach(el => {
+    const on = hit(String(el.dataset.alt || '').toLowerCase());
+    el.style.display = on ? '' : 'none'; if (on) shown++;
+  });
+  document.querySelectorAll('#pinterest-drawer-body .pin-tile').forEach(el => {
+    const nm = el.querySelector('.pin-tile-name');
+    const on = hit(String((nm && nm.textContent) || '').toLowerCase());
+    el.style.display = on ? '' : 'none'; if (on) shown++;
+  });
+  return shown;
+}
+// v14.20: the finger's search reaches as far as Maya's. Typing filters the
+// loaded wall; Enter searches EVERYTHING the account has saved on Pinterest
+// through the API, and a cleared box brings the normal wall back.
+async function _pinWideSearch(q) {
+  q = String(q || '').trim();
+  if (q.length < 2) return { ok: false, reason: 'no words to search' };
+  const body = document.getElementById('pinterest-drawer-body');
+  let j;
+  try { j = await _pinApi('/api/pinterest/search?q=' + encodeURIComponent(q)); }
+  catch (e) { return { ok: false, reason: 'the wider search could not run: ' + String(e && e.message || e).slice(0, 80) }; }
+  const pins = (j && j.pins) || [];
+  if (!pins.length) return { ok: false, reason: 'nothing matching ' + q.slice(0, 40) + ' anywhere in what they have saved on Pinterest; Pinterest has no public search beyond an account, but describe_garment can conjure fresh references instead' };
+  window._pinWiderActive = true;
+  if (body) body.innerHTML = '<div class="pin-grid pics">' + pins.map(p =>
+    '<button class="pin-pic" data-url="' + escapeHtml(p.url) + '" data-alt="' + escapeHtml(p.alt || '') + '"' +
+      ' onclick="_pinToggle(this)"><img src="' + _safeImgSrc(p.url) + '" alt="" loading="lazy">' +
+      '<span class="pin-check">&#10003;</span></button>').join('') + '</div>';
+  try { _pinSub('search: ' + q); } catch (_) {}
+  return { ok: true, matches: pins.length };
+}
+function _pinSearchRestore() {
+  window._pinWiderActive = false;
+  try { _pinSub(''); } catch (_) {}
+  if (_pinPicsCache['all']) _pinBody(_pinPicsCache['all']);
+  else { try { _pinDrawerPins('', ''); } catch (_) {} }
+}
+function _pinSearchInput(v) {
+  if (window._pinWiderActive && !String(v || '').trim()) { _pinSearchRestore(); return; }
+  if (!window._pinWiderActive) _pinSearch(v);
+}
+async function _pinSearchEnter(v) {
+  const q = String(v || '').trim();
+  if (q.length < 2) return;
+  try { _pinSub('searching everything saved for ' + q); } catch (_) {}
+  const r = await _pinWideSearch(q);
+  if (!r.ok) { try { _pinSub(''); } catch (_) {} showToast('Nothing saved on your Pinterest matches ' + q); }
+}
+function _pinSearchToggle() {
+  const inp = document.getElementById('pin-search-input'); if (!inp) return;
+  const show = inp.style.display === 'none';
+  inp.style.display = show ? '' : 'none';
+  if (show) { try { inp.focus(); } catch (_) {} }
+  else { inp.value = ''; if (window._pinWiderActive) _pinSearchRestore(); else _pinSearch(''); }
+}
+// v14.13: one step, the right kind. Versions of the open piece by default;
+// the favorites strip only in the favorites submit view.
+function _pgStep(d) {
+  const m = document.getElementById('garment-modal');
+  const nav = document.getElementById('viewer-version-nav');
+  const hasVersions = nav && nav.style.display !== 'none' && nav.offsetParent;
+  if (m && m.dataset.mode === 'submit' && !hasVersions) { _favStep(d); return true; }
+  if (hasVersions) { viewerStep(d); return true; }
+  if (m && m.dataset.mode === 'submit') { _favStep(d); return true; }
+  return false;
+}
+// v14.04: MAYA SEES. html2canvas (loaded once, on demand) paints the page into
+// a picture and it rides into the live session as an image, so she can look at
+// the actual screen: every card, the drawer, the viewer, where things sit.
+let _pgH2C = null;
+function _pgLoadH2C() {
+  if (window.html2canvas) return Promise.resolve();
+  if (_pgH2C) return _pgH2C;
+  _pgH2C = new Promise((ok, bad) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    sc.onload = () => ok(); sc.onerror = () => bad(new Error('html2canvas failed to load'));
+    document.head.appendChild(sc);
+  });
+  return _pgH2C;
+}
+async function _pgLook(dc) {
+  await _pgLoadH2C();
+  const canvas = await window.html2canvas(document.body, {
+    useCORS: true, logging: false, backgroundColor: '#05060c',
+    scale: Math.min(1, 1100 / Math.max(1, window.innerWidth)),
+    ignoreElements: el => el.id === 'pg-maya-chip' || el.id === 'pg-maya-lines',
+  });
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+  dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'message', role: 'user',
+    content: [{ type: 'input_image', image_url: dataUrl }] } }));
+  return { ok: true, note: 'the current screen is attached as a picture; describe what you see only from it' };
+}
+async function _pgTool(name, a, dc) {
+  a = a && typeof a === 'object' ? a : {};
+  switch (name) {
+    case 'look': {
+      try { return await _pgLook(dc); }
+      catch (e) { return { ok: false, reason: 'could not capture the screen (' + String(e && e.message || e).slice(0, 60) + ')', board: _pgBoardSnapshot(), drawer: _pgDrawerState() }; }
+    }
+    case 'open_card': {
+      const f = _pgFindCardDetailed(a.query);
+      if (!f.it) return { ok: false, reason: f.reason || 'no card matches', candidates: f.candidates, board: _pgBoardSnapshot() };
+      const it = f.it;
+      try { it.el.click(); } catch (_) {}
+      return { ok: true, opened: String(it.card.caption || it.card.title || it.card.kind || 'card').slice(0, 80) };
+    }
+    case 'delete_card': {
+      // v14.14: deleting needs their spoken yes. First call stages, second
+      // call with confirm true (same card, within a minute) executes.
+      const f = _pgFindCardDetailed(a.query);
+      if (!f.it) return { ok: false, reason: f.reason || 'no card matches', candidates: f.candidates, board: _pgBoardSnapshot() };
+      const it = f.it;
+      const label = String(it.card.caption || it.card.title || 'card').slice(0, 80);
+      const staged = window._pgPendingDelete;
+      if (!a.confirm || !staged || staged.id !== it.id || Date.now() > staged.until) {
+        window._pgPendingDelete = { id: it.id, until: Date.now() + 60000 };
+        return { ok: false, needsConfirmation: true, card: label,
+          reason: 'not deleted yet; say which card you will delete and ask for their yes, then call delete_card again with confirm true' };
+      }
+      window._pgPendingDelete = null;
+      const btn = it.el.querySelector('.delete-btn');
+      if (!btn) return { ok: false, reason: 'that card has no delete control' };
+      btn.click();
+      return { ok: true, deleted: label };
+    }
+    case 'favorite_card': {
+      const f = _pgFindCardDetailed(a.query);
+      if (!f.it) return { ok: false, reason: f.reason || 'no card matches', candidates: f.candidates, board: _pgBoardSnapshot() };
+      const it = f.it;
+      const btn = it.el.querySelector('.fav-btn');
+      if (!btn) return { ok: false, reason: 'that card has no heart' };
+      btn.click();
+      return { ok: true, card: String(it.card.caption || it.card.title || 'card').slice(0, 80), favorited: !it.card.favorited ? 'now hearted' : 'heart removed' };
+    }
+    case 'viewer': {
+      const act = String(a.action || '');
+      const map = {
+        close: () => _pgClick('#garment-image-wrap .viewer-close') || _pgClick('#garment-modal .modal-close'),
+        // v14.13: inside a normal picture these are VERSIONS of this piece.
+        // Only the favorites submit view steps between different favorites.
+        next: () => { try { return _pgStep(1); } catch (_) { return false; } },
+        prev: () => { try { return _pgStep(-1); } catch (_) { return false; } },
+        post_wall: () => _pgClick('#submit-community'),
+        get_it_made: () => _pgClick('#submit-manasiyo'),
+        listen: () => _pgClick('#modify-listen-toggle'),
+        switch_fabric: () => _pgClick('#modify-switch-fabric'),
+        add_reference: () => _pgClick('#modify-add-ref'),
+        heart: () => { try { viewerToggleHeart(); return true; } catch (_) { return false; } },
+        photo: () => { try { enterPhotoFullscreen(); return true; } catch (_) { return false; } },
+        attributes: () => { try { toggleAttributes(); return true; } catch (_) { return false; } },
+      };
+      if (!map[act]) return { ok: false, reason: 'unknown action', actions: Object.keys(map) };
+      const hit = !!map[act]();
+      return hit ? { ok: true } : { ok: false, reason: 'that control is not on screen right now' };
+    }
+    case 'pin_view': {
+      try { toggleNotesDrawer(true); pgTab('pinterest'); } catch (_) {}
+      await new Promise(r => setTimeout(r, 400));
+      const ok = a.which === 'boards' ? _pgClick('#pin-tab-boards') : _pgClick('#pin-tab-all');
+      return { ok };
+    }
+    case 'open_board': {
+      try { toggleNotesDrawer(true); pgTab('pinterest'); } catch (_) {}
+      try {
+        const j = await _pinApi('/api/pinterest/boards');
+        const words = String(a.name || '').toLowerCase();
+        const hit = (j.boards || []).find(b => String(b.name || '').toLowerCase().includes(words));
+        if (!hit) return { ok: false, boards: (j.boards || []).map(b => b.name).slice(0, 30) };
+        await _pinDrawerPins(hit.id, hit.name);
+        return { ok: true, board: hit.name };
+      } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+    }
+    case 'scroll_pins': {
+      if (String(a.direction || '').toLowerCase() === 'stop') {
+        const was = _pgGlideStop();
+        return { ok: true, stopped: was, note: was ? 'stopped' : 'nothing was moving' };
+      }
+      const body = document.getElementById('pinterest-drawer-body');
+      if (!body || !body.offsetParent) return { ok: false, reason: 'Pinterest is not open' };
+      _pgGlideStart(body, a.direction === 'up' ? -1 : 1);
+      return { ok: true, gliding: true, note: 'gliding continuously; the MOMENT they say stop, call scroll_pins with direction stop' };
+    }
+    case 'open_drawer': {
+      try { toggleNotesDrawer(true); } catch (_) {}
+      const tab = ['avatar', 'pinterest', 'fabrics'].includes(a.tab) ? a.tab : (window._pgLastTab || 'avatar');
+      try { pgTab(tab); } catch (_) {}
+      return { ok: true, tab };
+    }
+    case 'close_drawer': { try { toggleNotesDrawer(false); } catch (_) {} return { ok: true }; }
+    case 'bring_in_pins': {
+      try { toggleNotesDrawer(true); pgTab('pinterest'); } catch (_) {}
+      // wait for the wall (up to 8s), then match words against the pins' own text
+      let pics = [];
+      for (let i = 0; i < 40; i++) {
+        pics = [...document.querySelectorAll('#pinterest-drawer-body .pin-pic')].filter(el => el.style.display !== 'none');
+        if (pics.length) break;
+        await new Promise(r => setTimeout(r, 200));
+      }
+      if (!pics.length) return { ok: false, reason: 'no pins loaded; is Pinterest connected?' };
+      const words = String(a.query || '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 2);
+      const want = Math.max(1, Math.min(6, Number(a.count) || 1));
+      const scored = pics.map(el => {
+        const alt = String(el.dataset.alt || '').toLowerCase();
+        // v14.15: "corsets" must find "corset". Singular and plural both count.
+        const hit = (w) => alt.includes(w) || (w.endsWith('s') && alt.includes(w.slice(0, -1))) || alt.includes(w + 's');
+        return { el, alt, score: words.reduce((n, w) => n + (hit(w) ? 1 : 0), 0) };
+      }).filter(x => x.score > 0).sort((x, y) => y.score - x.score).slice(0, want);
+      if (!scored.length) {
+        return { ok: false, reason: 'nothing matched', available: pics.slice(0, 30).map(el => String(el.dataset.alt || '').slice(0, 80)).filter(Boolean) };
+      }
+      pics.forEach(el => { if (el.classList.contains('picked')) el.click(); });
+      scored.forEach(x => x.el.click());
+      try { await _pinImport(); } catch (_) {}
+      return { ok: true, brought: scored.map(x => x.alt.slice(0, 80)) };
+    }
+    case 'describe_garment': {
+      const t = String(a.text || '').trim(); if (!t) return { ok: false };
+      try { dismissHints(); } catch (_) {}
+      try { processConsultation(t); } catch (e) { return { ok: false, reason: String(e && e.message || e) }; }
+      return { ok: true, cards: 'arriving' };
+    }
+    case 'visualize': {
+      // v14.13: inside an open picture, "visualize it" means render the
+      // changes on THIS piece, not start the home screen flow with its
+      // fabric popup. Staged changes go now; nothing staged is a question.
+      if (_pgOpenItem()) {
+        if (visualizeModifications && visualizeModifications.length) {
+          try { window._pgLastRenderError = null; modifySubmit(); }
+          catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 90) }; }
+          _pgWatchRender(dc);
+          return { ok: true, note: 'rendering the change on this piece; started, not finished, the app will tell you the outcome' };
+        }
+        return { ok: false, reason: 'nothing is staged on this picture; describe the change first with modify_garment' };
+      }
+      try { window._pgLastRenderError = null; const r = visualizeGarment(); if (r && r.then) r.catch(() => {}); }
+      catch (e) { return { ok: false, reason: String(e && e.message || e) }; }
+      _pgWatchRender(dc);
+      // the home screen flow can stop on a question; say which one, do not go quiet
+      await new Promise(r2 => setTimeout(r2, 500));
+      const q = document.getElementById('avatar-check-modal');
+      const fm = document.getElementById('fabric-mode-modal');
+      if (q && q.classList.contains('open')) return { ok: true, asking: 'avatar', note: 'it is asking about the avatar; tell them and offer to continue anyway' };
+      if (fm && fm.classList.contains('open')) return { ok: true, asking: 'fabric mode', note: 'it is asking in house or sourceable; ask them which, then pick_fabric' };
+      return { ok: true, note: 'rendering, say it takes a moment' };
+    }
+    case 'write_feedback': {
+      try { openFeedback(); } catch (_) {}
+      const box = document.getElementById('feedback-box'); if (box) box.value = String(a.notes || '').slice(0, 4000);
+      _fbKind(a.kind === 'feature' ? 'feature' : 'feedback');
+      return { ok: true, note: 'in the box, they press Submit' };
+    }
+    case 'log_feature': {
+      const key = getApiKey(); const t = String(a.text || '').trim();
+      if (!key || !t) return { ok: false };
+      try {
+        const r = await fetch('/api/feature', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+          body: JSON.stringify({ text: t, who: _pgWhoAmI() }) });
+        return { ok: r.ok };
+      } catch (_) { return { ok: false }; }
+    }
+    case 'modify_garment': {
+      // v14.13: THE FIX. Inside an open picture, spoken changes go straight
+      // into the modify pipeline and render. modifySubmit applies directly:
+      // no fabric mode popup, no reference picker, nothing to tap.
+      const open = _pgOpenItem();
+      if (!open) return { ok: false, reason: 'no picture is open; open the card first, then describe the change' };
+      const t = String(a.text || '').trim();
+      if (!t) return { ok: false, reason: 'no change described' };
+      if (typeof modifySubmit !== 'function') return { ok: false, reason: 'the modify pipeline is missing' };
+      try {
+        const parts = t.split(/[.;]\s+|,\s+(?=and\b|then\b)/).map(x => x.trim()).filter(Boolean);
+        (parts.length ? parts : [t]).forEach(p => visualizeModifications.push(p));
+        if (typeof renderModificationsBar === 'function') renderModificationsBar();
+        window._pgLastRenderError = null;
+        modifySubmit();
+      } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 90) }; }
+      _pgWatchRender(dc);
+      return { ok: true, applying: t.slice(0, 140), note: 'render STARTED, not finished; say it is on its way and wait, the app will tell you when it is done or failed' };
+    }
+    case 'card_version': {
+      // v14.13: versions of THE SAME piece. Never the favorites strip, which
+      // is a different card entirely: that was the bug behind "she changed
+      // the whole card when I asked for the previous version".
+      const open = _pgOpenItem();
+      if (!open) return { ok: false, reason: 'no picture is open' };
+      const insp = open.card.inspirationId;
+      if (!insp) return { ok: false, reason: 'this picture has only one version' };
+      const sib = (items || []).filter(i => i && i.card && i.card.kind === 'inspo' && i.card.image && i.card.inspirationId === insp)
+        .sort((x, y) => (x.card.version || 0) - (y.card.version || 0));
+      if (sib.length < 2) return { ok: false, reason: 'this picture has only one version' };
+      const idx = sib.findIndex(s => s.id === open.id);
+      const d = String(a.direction || 'previous').toLowerCase();
+      const want = (d === 'next' || d === 'forward' || d === 'newer') ? idx + 1
+        : (d === 'first' || d === 'original') ? 0
+        : (d === 'last' || d === 'newest') ? sib.length - 1 : idx - 1;
+      if (want < 0 || want >= sib.length) return { ok: false, reason: want < 0 ? 'this is the first version' : 'this is the newest version', at: 'v' + (idx + 1) + ' of ' + sib.length };
+      try { viewerStep(want - idx); } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      return { ok: true, now: 'v' + (want + 1) + ' of ' + sib.length, sameGarment: true };
+    }
+    case 'render_status': {
+      // v14.13: she can tell whether the picture is coming or whether it died.
+      const inFlight = (typeof _renderLabels !== 'undefined' && _renderLabels && _renderLabels.length) ? _renderLabels.length : 0;
+      const err = window._pgLastRenderError || null;
+      if (inFlight) return { ok: true, rendering: true, count: inFlight, note: 'still working' };
+      if (err) return { ok: true, rendering: false, failed: true, error: String(err).slice(0, 140),
+        note: 'say plainly that the render failed and what it said; it is already logged' };
+      return { ok: true, rendering: false, note: 'nothing rendering right now' };
+    }
+    case 'move_card': {
+      // v14.12: she can rearrange the sketchbook. style.left/top are canvas
+      // units, so zoom never skews the step; _persistSession keeps the spot.
+      const f = _pgFindCardDetailed(a.query);
+      if (!f.it) return { ok: false, reason: f.reason || 'no card matches', candidates: f.candidates, board: _pgBoardSnapshot() };
+      const it = f.it;
+      const el = it.el;
+      const step = Math.max(40, Math.min(600, Number(a.amount) || 170));
+      const d = String(a.direction || '').toLowerCase();
+      let x = parseInt(el.style.left) || 0, y = parseInt(el.style.top) || 0;
+      if (d === 'left') x -= step; else if (d === 'right') x += step;
+      else if (d === 'up') y -= step; else if (d === 'down') y += step;
+      else if (d === 'center') {
+        const c = document.getElementById('maya-canvas');
+        if (c) { x = Math.round((c.clientWidth - el.offsetWidth) / 2); y = Math.round((c.clientHeight - el.offsetHeight) / 2); }
+      } else return { ok: false, reason: 'unknown direction', directions: ['left', 'right', 'up', 'down', 'center'] };
+      el.style.left = x + 'px'; el.style.top = y + 'px';
+      try { if (typeof _persistSession === 'function') _persistSession(); } catch (_) {}
+      return { ok: true, moved: String(it.card.caption || it.card.title || 'card').slice(0, 60), direction: d };
+    }
+    case 'resize_card': {
+      const f = _pgFindCardDetailed(a.query);
+      if (!f.it) return { ok: false, reason: f.reason || 'no card matches', candidates: f.candidates, board: _pgBoardSnapshot() };
+      const it = f.it;
+      const el = it.el;
+      const cur = parseInt(el.style.width) || el.offsetWidth || 220;
+      const wantBig = String(a.size || '').toLowerCase() !== 'smaller';
+      const w = Math.max(140, Math.min(640, Math.round(cur * (wantBig ? 1.25 : 0.8))));
+      el.style.width = w + 'px'; it.card.width = w;
+      const img = el.querySelector('img'); if (img) { img.style.width = '100%'; img.style.maxWidth = w + 'px'; img.style.maxHeight = 'none'; }
+      try { if (typeof _persistSession === 'function') _persistSession(); } catch (_) {}
+      return { ok: true, card: String(it.card.caption || it.card.title || 'card').slice(0, 60), width: w + 'px' };
+    }
+    case 'list_favorites': {
+      const favs = (items || []).filter(i => i && i.card && i.card.favorited && i.card.image);
+      if (!favs.length) return { ok: false, reason: 'no favorites yet' };
+      return { ok: true, count: favs.length, favorites: favs.slice(0, 20).map(f => String(f.card.caption || f.card.title || 'piece').slice(0, 70)) };
+    }
+    case 'open_favorite': {
+      const favs = (items || []).filter(i => i && i.card && i.card.favorited && i.card.image);
+      if (!favs.length) return { ok: false, reason: 'no favorites yet' };
+      const words = String(a.query || '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 2);
+      let best = favs[0], bestScore = 0;
+      if (words.length) for (const f of favs) {
+        const P = f.card.profile || {};
+        const hay = [f.card.caption, f.card.title, P.bio, P.aesthetic, P.silhouette, P.color, P.era].filter(Boolean).join(' ').toLowerCase();
+        const score = words.reduce((n, w) => n + (hay.includes(w) ? 1 : 0), 0);
+        if (score > bestScore) { bestScore = score; best = f; }
+      }
+      if (words.length && !bestScore) return { ok: false, reason: 'no favorite matches', favorites: favs.slice(0, 20).map(f => String(f.card.caption || f.card.title || '').slice(0, 70)) };
+      try { openFavoriteForSubmit(best.id); } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      return { ok: true, opened: String(best.card.caption || best.card.title || 'favorite').slice(0, 70) };
+    }
+    case 'set_quality': {
+      const q = String(a.quality || '').toLowerCase();
+      if (!['medium', 'high'].includes(q)) return { ok: false, reason: 'quality is medium or high' };
+      try {
+        localStorage.setItem(STORAGE_KEY_IMG_QUALITY, q);
+        const sel = document.getElementById('quality-input'); if (sel) sel.value = q;
+      } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      return { ok: true, quality: q, note: q === 'high' ? 'sharper renders, a touch slower' : 'the fast balanced default' };
+    }
+    case 'clear_hints': {
+      try { dismissHints(); } catch (_) {}
+      return { ok: true };
+    }
+    case 'zoom': {
+      // v14.11: she can step back from the board and lean in again.
+      if (typeof window.pgZoomTo !== 'function') return { ok: false, reason: 'zoom is not ready' };
+      const z = (typeof pgZoomLevel === 'function' ? pgZoomLevel() : 1) || 1;
+      const act = String(a.action || 'reset');
+      const floor = (typeof pgZoomFloor === 'function' ? pgZoomFloor() : 0.4) || 0.4;
+      const next = act === 'in' ? Math.min(1, z + 0.18) : act === 'out' ? Math.max(floor, z - 0.18) : 1;
+      window.pgZoomTo(next);
+      return { ok: true, level: Math.round(next * 100) + ' percent' };
+    }
+    case 'organize_board': {
+      try { brandTitleClick(); } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      return { ok: true, note: 'tidied into a clean layout' };
+    }
+    case 'dissect_card': {
+      const f = _pgFindCardDetailed(a.query);
+      if (!f.it) return { ok: false, reason: f.reason || 'no card matches', candidates: f.candidates, board: _pgBoardSnapshot() };
+      const it = f.it;
+      const btn = it.el.querySelector('.dissect-btn');
+      if (!btn) return { ok: false, reason: 'no dissect control on this one; only garment visions open into pieces' };
+      const label = (btn.textContent || '').trim().toLowerCase(); btn.click();
+      return { ok: true, did: label || 'dissect', card: String(it.card.caption || it.card.title || 'card').slice(0, 80) };
+    }
+    case 'add_reference': {
+      const t = String(a.text || '').trim(); if (!t) return { ok: false, reason: 'no words given' };
+      const c = document.getElementById('maya-canvas'); if (!c) return { ok: false, reason: 'the board is not here' };
+      const r = c.getBoundingClientRect();
+      const xy = { x: r.left + r.width * (0.35 + Math.random() * 0.3), y: r.top + r.height * (0.28 + Math.random() * 0.3) };
+      const before = (items || []).length;
+      try { await addManualRef(t, xy); } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      if ((items || []).length > before) return { ok: true, placed: t };
+      return { ok: true, note: 'that reference was already on the canvas' };
+    }
+    case 'card_details': {
+      const f = _pgFindCardDetailed(a.query);
+      if (!f.it) return { ok: false, reason: f.reason || 'no card matches', candidates: f.candidates, board: _pgBoardSnapshot() };
+      const it = f.it;
+      const c = it.card; const P = c.profile || {};
+      return { ok: true, caption: c.caption || '', kind: c.kind || '', favorited: !!c.favorited,
+        bio: P.bio || '', aesthetic: P.aesthetic || '', silhouette: P.silhouette || '', color: P.color || '', era: P.era || '',
+        references: (c.refs || []).map(r2 => r2 && r2.title).filter(Boolean).slice(0, 12) };
+    }
+    case 'list_projects': {
+      const rows = [...document.querySelectorAll('.session-item[data-id]')];
+      if (!rows.length) return { ok: false, reason: 'no projects yet' };
+      return { ok: true, projects: rows.slice(0, 30).map(r2 => ({ name: (r2.getAttribute('title') || '').slice(0, 60), active: r2.classList.contains('active') })) };
+    }
+    case 'open_project': {
+      const words = String(a.name || '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 1);
+      const rows = [...document.querySelectorAll('.session-item[data-id]')];
+      let best = null, bestScore = 0;
+      for (const r2 of rows) {
+        const t = (r2.getAttribute('title') || '').toLowerCase();
+        const score = words.reduce((n, w) => n + (t.includes(w) ? 1 : 0), 0);
+        if (score > bestScore) { bestScore = score; best = r2; }
+      }
+      if (!best) return { ok: false, reason: 'no project matches', projects: rows.map(r2 => r2.getAttribute('title')).filter(Boolean).slice(0, 20) };
+      try { await loadSavedSessionById(best.getAttribute('data-id')); } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      return { ok: true, opened: best.getAttribute('title') };
+    }
+    case 'list_clients': {
+      let lib = [];
+      try { lib = await _loadAvatarLibrary(); } catch (_) {}
+      const cur = String((lastSummary && lastSummary.client && lastSummary.client.name) || '').trim();
+      if (!lib.length) return { ok: false, reason: 'no saved clients yet', current: cur || null };
+      return { ok: true, current: cur || null, clients: lib.slice(0, 30).map(c => ({ name: String(c.name || '').slice(0, 60), face: !!c.face, measured: !!(c.measurements && Object.keys(c.measurements).length) })) };
+    }
+    case 'switch_client': {
+      const words = String(a.name || '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 1);
+      if (!words.length) return { ok: false, reason: 'no name to switch to' };
+      let lib = [];
+      try { lib = await _loadAvatarLibrary(); } catch (_) {}
+      let best = null, bestScore = 0;
+      for (const c of lib) {
+        const t = String(c.name || '').toLowerCase();
+        const score = words.reduce((n, w) => n + (t.includes(w) ? 1 : 0), 0);
+        if (score > bestScore) { bestScore = score; best = c; }
+      }
+      if (!best) return { ok: false, reason: 'no client matches', clients: lib.map(c => c.name).filter(Boolean).slice(0, 20) };
+      try { await switchAvatar(best.id); } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      return { ok: true, wearing: best.name, note: 'the board stayed; only who wears it changed' };
+    }
+    case 'new_project': {
+      try { await newConsultation(); } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      return { ok: true, note: 'a fresh board; the old project is saved' };
+    }
+    case 'check_credits': {
+      const key = getApiKey(); if (!key) return { ok: false, reason: 'not signed in' };
+      try {
+        const r = await fetch('/api/usage', { headers: { Authorization: 'Bearer ' + key } });
+        if (!r.ok) return { ok: false, reason: 'usage answered ' + r.status };
+        const j = await r.json();
+        const spent = Number(j.spentUsd) || 0;
+        if (j.admin) return { ok: true, admin: true, note: 'studio account, no cap', spent: spent.toFixed(2), images: Number(j.images) || 0 };
+        const cap = Number(j.capUsd) || 2;
+        const left = (typeof j.leftUsd === 'number') ? j.leftUsd : Math.max(0, cap - spent);
+        return { ok: true, dollarsLeft: Number(left).toFixed(2), spent: spent.toFixed(2), cap: cap.toFixed(2), images: Number(j.images) || 0 };
+      } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+    }
+    case 'background': {
+      const w = String(a.which || 'star');
+      try {
+        if (w === 'generate') {
+          if (typeof pgGenerateBackground !== 'function') return { ok: false, reason: 'not available' };
+          pgGenerateBackground();
+          return { ok: true, note: 'generating a backdrop, it takes a moment' };
+        }
+        if (typeof pgApplyBackground !== 'function') return { ok: false, reason: 'not available' };
+        pgApplyBackground('star');
+        return { ok: true, applied: 'Birth of a Star' };
+      } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+    }
+    case 'randomize_avatar': {
+      try { const p = randomizeAvatar(); if (p && p.then) p.catch(() => {}); }
+      catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      return { ok: true, note: 'a new face is on its way' };
+    }
+    case 'set_measurement': {
+      const val = Number(a.value);
+      if (!isFinite(val) || val <= 0) return { ok: false, reason: 'need a number' };
+      const key0 = String(a.name || '').toLowerCase().replace(/[^a-z ]/g, '').trim();
+      const MAP = { height: 'height', waist: 'waist_narrowest', hips: 'hip', hip: 'hip', 'low hip': 'low_hip_widest',
+        bust: 'bust_chest', chest: 'bust_chest', 'under bust': 'under_bust', inseam: 'inseam', sleeve: 'sleeve',
+        bicep: 'bicep', wrist: 'wrist', neck: 'neck_base', shoulders: 'full_shoulder', shoulder: 'full_shoulder',
+        thigh: 'thigh', calves: 'calves', calf: 'calves', 'arm hole': 'arm_hole', 'pant length': 'pant_length' };
+      let id = MAP[key0];
+      if (!id) { const k = Object.keys(MAP).find(k2 => key0.includes(k2)); if (k) id = MAP[k]; }
+      const el = id && document.getElementById('ameas-' + id);
+      if (!el) return { ok: false, reason: 'unknown measurement', knows: Object.keys(MAP).slice(0, 14) };
+      el.value = String(val);
+      try { saveAvatar(); } catch (_) {}
+      return { ok: true, set: key0, value: val };
+    }
+    case 'pick_fabric': {
+      const modeBtns = [...document.querySelectorAll('.mode-choose')].filter(b => b.offsetParent);
+      if (modeBtns.length && a.mode) {
+        const want = String(a.mode).toLowerCase().replace(/[^a-z]/g, '');
+        const hit = modeBtns.find(b => (b.textContent || '').toLowerCase().replace(/[^a-z]/g, '').includes(want));
+        if (hit) { hit.click(); await new Promise(r => setTimeout(r, 600)); }
+      }
+      const picks = [...document.querySelectorAll('.fabric-pick')].filter(b => b.offsetParent);
+      if (!picks.length) return { ok: false, reason: 'the fabric picker is not open; use viewer switch_fabric first' };
+      const words = String(a.name || '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 2);
+      let best = null, bestScore = 0;
+      for (const b of picks) {
+        const t = (b.textContent || '').toLowerCase();
+        const score = words.reduce((n, w) => n + (t.includes(w) ? 1 : 0), 0);
+        if (score > bestScore) { bestScore = score; best = b; }
+      }
+      if (!best) return { ok: false, reason: 'no fabric matches', fabrics: picks.map(b => (b.textContent || '').trim().slice(0, 40)) };
+      if (!best.classList.contains('selected')) best.click();
+      const go2 = document.getElementById('fabric-pick-confirm'); if (go2) go2.click();
+      return { ok: true, fabric: (best.textContent || '').trim().slice(0, 40) };
+    }
+    case 'search_pins': {
+      // v14.18: two rooms. The loaded wall first; then, wider, the Pinterest
+      // API searches EVERYTHING the account has saved, not just the page
+      // that happens to be loaded. Beyond an account's own saves Pinterest
+      // has no public search, and she says so instead of pretending.
+      const q = String(a.query || '').trim();
+      if (!q) return { ok: false, reason: 'no words to search' };
+      try { toggleNotesDrawer(true); pgTab('pinterest'); } catch (_) {}
+      const inp = document.getElementById('pin-search-input');
+      const body = document.getElementById('pinterest-drawer-body');
+      const glideTop = () => { if (body) { body.scrollTop = 0; _pgGlideStart(body, 1, 'y'); } };
+      if (!a.wider) {
+        let pics = [];
+        for (let i = 0; i < 40; i++) {
+          pics = [...document.querySelectorAll('#pinterest-drawer-body .pin-pic')];
+          if (pics.length) break;
+          await new Promise(r => setTimeout(r, 200));
+        }
+        if (pics.length) {
+          if (inp) { inp.style.display = ''; inp.value = q; }
+          const shown = _pinSearch(q);
+          if (shown) {
+            glideTop();
+            return { ok: true, matches: shown, from: 'the loaded wall', gliding: true,
+              note: 'these are the ' + q + ' already in front of them; OFFER the wider search of everything saved on their Pinterest, and if they want it call search_pins again with wider true' };
+          }
+        }
+      }
+      const wide = await _pinWideSearch(q);
+      if (!wide.ok) return wide;
+      if (inp) { inp.style.display = ''; inp.value = q; }
+      glideTop();
+      return { ok: true, matches: wide.matches, from: 'everything saved on their Pinterest', gliding: true,
+        note: 'the wall now holds every ' + q + ' across their whole Pinterest; clear_pin_search brings the normal wall back' };
+    }
+    case 'clear_pin_search': {
+      try {
+        _pgGlideStop();
+        const inp = document.getElementById('pin-search-input'); if (inp) inp.value = '';
+        if (window._pinWiderActive) {
+          window._pinWiderActive = false;
+          if (_pinPicsCache['all']) _pinBody(_pinPicsCache['all']);
+          else { try { _pinDrawerPins('', ''); } catch (_) {} }
+        } else { _pinSearch(''); }
+      } catch (_) {}
+      return { ok: true, note: 'the whole wall is back' };
+    }
+    case 'go_to_screen': {
+      // v14.10: she can finally walk the app. 0=community wall, 1=home, 2=favorites.
+      const w = String(a.where || '').toLowerCase();
+      const n = (w === 'community' || w === 'wall') ? 0
+        : (w === 'favorites' || w === 'favourites') ? 2
+        : (w === 'home' || w === 'board' || w === 'moodboard' || w === 'inspo') ? 1 : -1;
+      if (n < 0) return { ok: false, reason: 'unknown screen', screens: ['community', 'home', 'favorites'] };
+      try { setScreen(n); } catch (e) { return { ok: false, reason: String(e && e.message || e).slice(0, 80) }; }
+      return { ok: true, screen: ['community', 'home', 'favorites'][n] };
+    }
+    case 'scroll': {
+      // v14.10: "keep going", "go down". Scrolls the area they mean, or the
+      // one under her feet: favorites and community move sideways, pins move down.
+      if (String(a.direction || '').toLowerCase() === 'stop' || String(a.area || '').toLowerCase() === 'stop') {
+        const was = _pgGlideStop();
+        return { ok: true, stopped: was, note: was ? 'stopped' : 'nothing was moving' };
+      }
+      const dir = (a.direction === 'up' || a.direction === 'back') ? -1 : 1;
+      let area = String(a.area || '').toLowerCase();
+      if (!area) {
+        const here = (typeof currentScreen === 'number') ? currentScreen : 1;
+        const pb = document.getElementById('pinterest-drawer-body');
+        area = (pb && pb.offsetParent) ? 'pins'
+          : here === 2 ? 'favorites' : here === 0 ? 'community' : '';
+      }
+      if (area === 'pins' || area === 'pinterest') {
+        const body = document.getElementById('pinterest-drawer-body');
+        if (!body || !body.offsetParent) return { ok: false, reason: 'Pinterest is not open' };
+        _pgGlideStart(body, dir);
+        return { ok: true, area: 'pins', gliding: true, note: 'gliding continuously; the MOMENT they say stop, call scroll with direction stop' };
+      }
+      if (area === 'favorites' || area === 'favourites') {
+        const el = document.getElementById('favorites-scroller');
+        if (!el || !el.children.length) return { ok: false, reason: 'favorites is empty' };
+        _pgGlideStart(el, dir, 'x');
+        return { ok: true, area: 'favorites', gliding: true, note: 'gliding sideways continuously; the MOMENT they say stop, call scroll with direction stop' };
+      }
+      if (area === 'community' || area === 'wall') {
+        const rows = [...document.querySelectorAll('#community-scroller .community-row')];
+        if (!rows.length || !rows.some(r => r.children.length)) return { ok: false, reason: 'the community wall is empty' };
+        _pgGlideStart(rows, dir, 'x');
+        return { ok: true, area: 'community', gliding: true, note: 'all three rows gliding sideways; the MOMENT they say stop, call scroll with direction stop' };
+      }
+      // nothing scrollable under her: step a screen instead, so "go down" still means something
+      return _pgTool('go_to_screen', { where: dir > 0 ? 'favorites' : 'community' }, dc);
+    }
+    case 'list_board': return { board: _pgBoardSnapshot(), drawer: _pgDrawerState() };
+    case 'hang_up': { try { _pgGlideStop(); } catch (_) {} setTimeout(pgMayaStop, 800); return { ok: true }; }
+    default: return { ok: false, reason: 'unknown tool' };
+  }
+}
+// v14.14: expected answers are answers, not defects. An empty favorites
+// screen, an ambiguous card, a staged delete waiting for a yes: none of
+// these are bugs and none of them belong in the studio inbox.
+const _PG_EXPECTED_FAIL = /no card matches|more than one card fits|no words|favorites is empty|no favorites yet|no projects yet|no pins loaded|Pinterest is not open|no picture is open|only one version|this is the (first|newest) version|unknown (screen|direction|action|tool)|unknown measurement|quality is|need a number|nothing is staged|no change described|no project matches|no fabric matches|fabric picker is not open|not deleted yet|no reason|already on the canvas|not signed in/i;
+function _pgClassifyFail(out) {
+  const r = String((out && out.reason) || '');
+  if (out && out.needsConfirmation) return 'confirmation';
+  if (out && out.ambiguous) return 'ambiguity';
+  if (/timed out/i.test(r)) return 'timeout';
+  if (_PG_EXPECTED_FAIL.test(r)) return 'expected';
+  return 'defect';
+}
+async function _pgRunCall(dc, name, call_id, argStr) {
+  let args = {}; try { args = JSON.parse(argStr || '{}'); } catch (_) {}
+  const t0 = Date.now();
+  // v14.14: a hung or thrown tool must never leave the model waiting. The
+  // race guarantees a truthful function output either way.
+  let out;
+  try {
+    out = await Promise.race([
+      _pgTool(name, args, dc),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('the tool timed out after ' + Math.round((window._PG_TOOL_TIMEOUT_MS || 25000) / 1000) + ' seconds')),
+        window._PG_TOOL_TIMEOUT_MS || 25000)),
+    ]);
+  } catch (e) {
+    out = { ok: false, reason: String(e && e.message || e).slice(0, 120) };
+  }
+  const cls = (out && out.ok === false) ? _pgClassifyFail(out) : 'ok';
+  // v14.09/v14.14: only genuine defects file themselves; expected answers do not.
+  try {
+    if ((cls === 'defect' || cls === 'timeout') && name !== 'hang_up' && typeof window._pgAutoLog === 'function') {
+      window._pgAutoLog('Maya could not ' + String(name).replace(/_/g, ' ') +
+        (out.reason ? ': ' + String(out.reason).slice(0, 140) : '') +
+        (args && args.query ? ' (asked for "' + String(args.query).slice(0, 60) + '")' : ''), 'Maya', 'maya');
+    }
+  } catch (_) {}
+  try { _pgTelemetry(name, cls, Date.now() - t0); } catch (_) {}
+  try {
+    dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id, output: JSON.stringify(out || {}) } }));
+    dc.send(JSON.stringify({ type: 'response.create' }));
+  } catch (_) {}
+}
+// v14.14: consented, sanitized telemetry. Tool name, outcome class, and
+// latency only. Never transcripts, never images, never measurements, never
+// the words the person said. Off unless the person turned it on.
+let _pgTraceId = '';
+function _pgConsentOn() { try { return localStorage.getItem('maya_improve_consent') === '1'; } catch (_) { return false; } }
+function _pgTelemetry(tool, cls, ms) {
+  if (!_pgConsentOn()) return;
+  const key = getApiKey(); if (!key) return;
+  try {
+    fetch('/api/telemetry', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ trace: _pgTraceId, tool: String(tool).slice(0, 40), cls, ms: Math.min(120000, Math.max(0, Number(ms) || 0)), consentV: 1 }) }).catch(() => {});
+  } catch (_) {}
+}
+function _pgOnMessage(dc) {
+  const seen = new Set();
+  return (ev) => {
+    let m; try { m = JSON.parse(ev.data); } catch (_) { return; }
+    if (m.type === 'response.audio_transcript.done' && m.transcript) _pgLine('maya', m.transcript);
+    if (m.type === 'conversation.item.input_audio_transcription.completed' && m.transcript) _pgLine('you', m.transcript);
+    if (m.type === 'response.function_call_arguments.done' && m.call_id && !seen.has(m.call_id)) {
+      seen.add(m.call_id);
+      _pgToolChain = _pgToolChain.then(() => _pgRunCall(dc, m.name, m.call_id, m.arguments)).catch(() => {});
+      return;
+    }
+    if (m.type === 'response.done' && m.response && Array.isArray(m.response.output)) {
+      for (const it of m.response.output) {
+        if (it.type === 'function_call' && it.call_id && !seen.has(it.call_id)) {
+          seen.add(it.call_id);
+          _pgToolChain = _pgToolChain.then(() => _pgRunCall(dc, it.name, it.call_id, it.arguments)).catch(() => {});
+        }
+      }
+    }
+  };
+}
+async function pgMayaStart() {
+  if (_pgVoice || _pgVoiceStarting) return;
+  const key = getApiKey(); if (!key) { showToast('Sign in first.'); return; }
+  // v14.14: every session starts with a clean tool chain and its own trace.
+  // A tool that hung in the last call can never block this one.
+  _pgToolChain = Promise.resolve();
+  _pgTraceId = 'tr_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  _pgVoiceStarting = true; _pgWakePause();
+  let mic = null, pc = null, audio = null;
+  try {
+    _pgChip(true, 'Connecting');
+    const tr = await fetch('/api/voice-token', { method: 'POST', headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: _pgWhoAmI().split(' ')[0], board: _pgBoardSnapshot(), drawer: _pgDrawerState() }) });
+    const tj = await tr.json().catch(() => ({}));
+    if (tr.status === 402) { _pgChip(false); _pgWakeResume(); if (typeof mayaShowCreditsPopup === 'function') mayaShowCreditsPopup({}); return; }
+    if (!tr.ok || !tj.value) throw new Error(tj.error || ('token ' + tr.status));
+    mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+    pc = new RTCPeerConnection();
+    mic.getTracks().forEach(t => pc.addTrack(t, mic));
+    audio = new Audio(); audio.autoplay = true;
+    pc.ontrack = e => { audio.srcObject = e.streams[0]; };
+    const dc = pc.createDataChannel('oai-events');
+    // v14.07: she looks FIRST, then greets, so her first words can be about
+    // what is actually on the screen. If the capture is slow the greeting
+    // goes ahead after 2.5s regardless.
+    dc.onopen = () => {
+      let greeted = false;
+      const greet = () => { if (greeted) return; greeted = true; try { dc.send(JSON.stringify({ type: 'response.create' })); } catch (_) {} };
+      setTimeout(greet, 2500);
+      _pgLook(dc).then(greet).catch(greet);
+    };
+    dc.onmessage = _pgOnMessage(dc);
+    pc.onconnectionstatechange = () => { if (['failed', 'disconnected', 'closed'].includes(pc.connectionState) && _pgVoice) pgMayaStop(); };
+    const offer = await pc.createOffer(); await pc.setLocalDescription(offer);
+    const cr = await fetch('https://api.openai.com/v1/realtime/calls?model=' + encodeURIComponent(tj.model), {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + tj.value, 'Content-Type': 'application/sdp' }, body: offer.sdp });
+    if (!cr.ok) throw new Error('call ' + cr.status);
+    await pc.setRemoteDescription({ type: 'answer', sdp: await cr.text() });
+    _pgVoice = { pc, mic, audio, dc };
+    _pgChip(true, 'Maya is listening');
+  } catch (e) {
+    try { pc && pc.close(); } catch (_) {}
+    try { (mic && mic.getTracks() || []).forEach(t => t.stop()); } catch (_) {}
+    _pgVoice = null; _pgChip(false);
+    const raw = String(e && e.message || e);
+    showToast(/getUserMedia|Permission|NotAllowed/i.test(raw) ? 'Let the browser use the microphone, then try again.' :
+      /429/.test(raw) ? 'Maya is resting a moment, try again shortly.' : 'The voice line did not connect.');
+    console.warn('[hey maya]', e);
+    _pgWakeResume();
+  } finally { _pgVoiceStarting = false; }
+}
+function pgMayaStop() {
+  const v = _pgVoice; _pgVoice = null;
+  if (v) {
+    try { v.dc && v.dc.close(); } catch (_) {}
+    try { v.pc && v.pc.close(); } catch (_) {}
+    try { (v.mic && v.mic.getTracks() || []).forEach(t => t.stop()); } catch (_) {}
+    try { if (v.audio) v.audio.srcObject = null; } catch (_) {}
+  }
+  _pgChip(false);
+  _pgWakeResume();
+}
+// Feedback: Talk to Maya. She opens the line (if it is not open) and takes the notes.
+function pgMayaFeedback() {
+  if (_pgVoice) { try { _pgVoice.dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'message', role: 'user',
+    content: [{ type: 'input_text', text: 'I want to leave feedback. Ask me what, then write it into the Feedback box as structured notes.' }] } }));
+    _pgVoice.dc.send(JSON.stringify({ type: 'response.create' })); } catch (_) {} return; }
+  pgMayaStart().then(() => { if (_pgVoice) setTimeout(() => { try {
+    _pgVoice.dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'message', role: 'user',
+      content: [{ type: 'input_text', text: 'I want to leave feedback. Ask me what, then write it into the Feedback box as structured notes.' }] } }));
+    _pgVoice.dc.send(JSON.stringify({ type: 'response.create' })); } catch (_) {} }, 400); });
+}
+// ── the wake word ──
+let _pgWakeRec = null, _pgWakeOn = false, _pgWakeWant = false, _pgWakePaused = false;
+function _pgWakeSupported() { return !!(window.SpeechRecognition || window.webkitSpeechRecognition); }
+function _pgWakeLabel() {
+  const t = document.getElementById('pg-maya-toggle');
+  if (t) { t.classList.toggle('on', _pgWakeWant); t.setAttribute('aria-checked', _pgWakeWant ? 'true' : 'false'); }
+}
+async function pgToggleWake() {
+  if (!_pgWakeSupported()) { showToast('This browser cannot listen for a wake word.'); return; }
+  _pgWakeWant = !_pgWakeWant;
+  try { localStorage.setItem('maya_pg_wake', _pgWakeWant ? '1' : '0'); } catch (_) {}
+  _pgWakeLabel();
+  if (_pgWakeWant) {
+    // a click is a user gesture: ask for the microphone now so the recognizer never hits not-allowed
+    try { const m = await navigator.mediaDevices.getUserMedia({ audio: true }); m.getTracks().forEach(t => t.stop()); }
+    catch (_) { showToast('Let the browser use the microphone for Hey Maya.'); _pgWakeWant = false; _pgWakeLabel(); return; }
+    _pgWakeStart(); showToast('Say Hey Maya.');
+  } else _pgWakeStop();
+}
+function _pgWakeStart() {
+  if (!_pgWakeWant || _pgWakeOn || _pgWakePaused || _pgVoice || !_pgWakeSupported()) return;
+  if (typeof isListening !== 'undefined' && isListening) return;   // the moodboard owns the engine right now
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  try {
+    _pgWakeRec = new SR(); _pgWakeRec.continuous = true; _pgWakeRec.interimResults = true; _pgWakeRec.lang = 'en-US';
+    _pgWakeRec.onresult = (e) => {
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = (e.results[i][0].transcript || '').toLowerCase();
+        if (/\bhey,?\s*maya\b|\bhi,?\s*maya\b|\bok,?\s*maya\b/.test(t)) { pgMayaStart(); return; }
+      }
+    };
+    _pgWakeRec.onerror = (ev) => {
+      if (ev && (ev.error === 'not-allowed' || ev.error === 'service-not-allowed')) {
+        _pgWakeWant = false; try { localStorage.setItem('maya_pg_wake', '0'); } catch (_) {}
+        _pgWakeLabel(); showToast('The microphone was refused, Hey Maya is off.');
+      }
+    };
+    _pgWakeRec.onend = () => { _pgWakeOn = false; if (_pgWakeWant && !_pgWakePaused && !_pgVoice) setTimeout(_pgWakeStart, 600); };
+    _pgWakeRec.start(); _pgWakeOn = true;
+  } catch (_) { _pgWakeOn = false; }
+}
+function _pgWakeStop() { _pgWakeOn = false; try { if (_pgWakeRec) { _pgWakeRec.onend = null; _pgWakeRec.stop(); } } catch (_) {} _pgWakeRec = null; }
+function _pgWakePause() { _pgWakePaused = true; _pgWakeStop(); }
+function _pgWakeResume() { _pgWakePaused = false; if (_pgWakeWant) setTimeout(_pgWakeStart, 700); }
+// the moodboard's Tap to Listen and the feedback listener use the same engine: step aside, come back
+if (typeof startListening === 'function') { const _o = startListening; startListening = function () { _pgWakePause(); return _o.apply(this, arguments); }; }
+if (typeof stopListening === 'function') { const _o = stopListening; stopListening = function () { const r = _o.apply(this, arguments); _pgWakeResume(); return r; }; }
+if (typeof feedbackListenToggle === 'function') { const _o = feedbackListenToggle; feedbackListenToggle = function () { const was = _fbListening; if (!was) _pgWakePause(); const r = _o.apply(this, arguments); if (was) _pgWakeResume(); return r; }; }
+// the viewer's own Tap to Listen (visualize modifications) uses the same engine
+if (typeof startVisualizeListen === 'function') { const _o = startVisualizeListen; startVisualizeListen = function () { _pgWakePause(); return _o.apply(this, arguments); }; }
+if (typeof stopVisualizeListen === 'function') { const _o = stopVisualizeListen; stopVisualizeListen = function () { const r = _o.apply(this, arguments); _pgWakeResume(); return r; }; }
+try { if (localStorage.getItem('maya_pg_wake') === '1') { _pgWakeWant = true; _pgWakeLabel(); setTimeout(_pgWakeStart, 1500); } } catch (_) {}
+window.pgMayaStart = pgMayaStart; window.pgMayaStop = pgMayaStop;
+// v14.07: a typed reference (click the empty canvas) maps its viewport point
+// into canvas coordinates when the survey zoom is on, so the card lands where
+// the finger pointed.
+if (typeof addManualRef === 'function') {
+  const _oAMR = addManualRef;
+  addManualRef = function (text, xy) {
+    try {
+      const z = (typeof window.pgZoomLevel === 'function' ? window.pgZoomLevel() : 1) || 1;
+      if (z < 0.999 && xy && typeof xy.x === 'number') {
+        const c = document.getElementById('maya-canvas');
+        const r = c.getBoundingClientRect();
+        xy = { x: (xy.x - r.left) / z, y: (xy.y - r.top) / z };
+      }
+    } catch (_) {}
+    return _oAMR.call(this, text, xy);
+  };
+}
+// ═══ PLAYGROUND v14.04: EVERY PICTURE SPEAKS. A quiet sweep captions each
+// card that has a picture and no line yet: at most ten words, written once,
+// saved with the project, shown wherever the summary shows (favorites hover,
+// the viewer's piece line). One card every few seconds, never during a render.
+let _pgCapBusy = false;
+async function _pgCaptionOne() {
+  if (_pgCapBusy || document.hidden) return;
+  const key = (typeof getApiKey === 'function') ? getApiKey() : '';
+  if (!key) return;
+  // v14.06: the sweep writes the full five-line profile now (bio, aesthetic,
+  // silhouette, color, era), the same shape for every picture. Cards that only
+  // carry the old one-line caption get upgraded too.
+  const it = (items || []).find(i => i && i.card && i.card.image && !i.card.profile && !i.card._capFailed);
+  if (!it) return;
+  _pgCapBusy = true;
+  try {
+    const r = await fetch('/api/openai/v1/chat/completions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 150, response_format: { type: 'json_object' }, messages: [
+        { role: 'system', content: 'You profile fashion pictures for a design studio. Answer ONLY a JSON object with the keys bio (one evocative line, at most 15 words), aesthetic (2 to 4 words), silhouette (2 to 4 words), color (2 to 4 words), era (2 to 4 words). No quotes inside values, no dashes, no ending periods.' },
+        { role: 'user', content: [
+          { type: 'text', text: 'Profile this picture.' },
+          { type: 'image_url', image_url: { url: it.card.image } } ] } ] }),
+    });
+    const j = await r.json().catch(() => ({}));
+    let prof = null;
+    try { prof = JSON.parse(((j.choices || [])[0] || {}).message.content); } catch (_) {}
+    if (r.ok && prof && prof.bio) {
+      const clean = v => String(v || '').trim().replace(/^"|"$/g, '').slice(0, 90);
+      it.card.profile = { bio: clean(prof.bio), aesthetic: clean(prof.aesthetic),
+        silhouette: clean(prof.silhouette), color: clean(prof.color), era: clean(prof.era) };
+      it.card.caption = it.card.profile.bio;   // the bio is the one-line summary everywhere
+      if (typeof _persistSession === 'function') _persistSession();
+      try { if (document.getElementById('garment-modal').classList.contains('open') && typeof viewerItemId !== 'undefined' && viewerItemId === it.id) renderViewerNotes(it); } catch (_) {}
+    } else { it.card._capTries = (it.card._capTries || 0) + 1; if (it.card._capTries >= 3) it.card._capFailed = true; }
+  } catch (_) { it.card._capTries = (it.card._capTries || 0) + 1; if (it.card._capTries >= 3) it.card._capFailed = true; }
+  _pgCapBusy = false;
+}
+setInterval(_pgCaptionOne, 7000);
+// v14.04: the two destination pills live inside the photo (hover reveals them)
+(function () {
+  const wrap = document.getElementById('submit-wrap');
+  const home = document.getElementById('garment-image-wrap');
+  if (wrap && home) home.appendChild(wrap);
+})();
+</script>
+
+<style>
+  /* ═══ PLAYGROUND v14.09: MAYA WATCHES HER OWN LIMITS ═══ */
+  #fb-tabs { display: flex; justify-content: center; gap: 8px; margin: 2px 0 10px; }
+  #fb-maya-list { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; text-align: left; }
+  .fbm-row { border: 0.5px solid rgba(255,255,255,0.10); border-radius: 12px; padding: 8px 12px;
+    background: rgba(255,255,255,0.02); }
+  .fbm-row .t { font-size: 13px; line-height: 1.45; color: rgba(230,236,250,0.9); }
+  .fbm-row .w { font-family: 'Jost', sans-serif; font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: rgba(169,201,255,0.7); margin-bottom: 2px; }
+  #fb-maya-list .fbm-empty { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14px;
+    color: rgba(200,210,230,0.5); text-align: center; padding: 18px 0; }
+</style>
+<script>
+// ═══ PLAYGROUND v14.09: THE AUTONOMOUS OBSERVER. Maya files her own limits
+// without being asked: a tool of hers fails, or she hears herself say
+// "I can't", and it lands in the studio inbox by itself, tagged as hers. A
+// wish overheard in the conversation ("Maya should...", "I wish...") files
+// too, under the client's name. Everything shows in the Improve Maya popup
+// under Maya's logs, already sent; Submit remains for the client's own note.
+window._pgMayaLogBuf = [];
+const _pgLogSeen = new Set();
+function _pgAutoLog(text, who, source) {
+  const t = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 420);
+  if (t.length < 8) return;
+  const norm = t.toLowerCase().slice(0, 160);
+  if (_pgLogSeen.has(norm)) return;
+  _pgLogSeen.add(norm);
+  _pgMayaLogBuf.push({ ts: new Date().toISOString(), text: t, who: who || 'Maya', source: source || 'maya' });
+  try { _fbRenderMayaLogs(); } catch (_) {}
+  const key = (typeof getApiKey === 'function') ? getApiKey() : '';
+  if (!key) return;
+  fetch('/api/feature', { method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+    body: JSON.stringify({ text: t, who: who || 'Maya', source: source || 'maya' }) }).catch(() => {});
+}
+window._pgAutoLog = _pgAutoLog;
+// her incapacity, in her own words; and a wish heard in the client's
+const _PG_CANT = /\b(i can.?t|i cannot|i'?m (?:not able|unable)|i am (?:not able|unable)|not (?:yet )?able to|i (?:do|did)n.?t have (?:a way|the ability|eyes|access)|my eyes (?:are|were)|that (?:tool|is) (?:failed|not possible)|i (?:couldn|could not)|beyond (?:my|what i can))/i;
+const _PG_WISH = /\b(maya should|you should (?:be able|add|let)|it (?:would|d) be (?:nice|great|cool) if|i wish (?:you|maya|it)|can you add|please add|there should be)\b/i;
+function _fbConsentRender() {
+  const el = document.getElementById('fb-consent'); if (!el) return;
+  const on = _pgConsentOn();
+  el.textContent = 'Help improve Maya: ' + (on ? 'ON' : 'OFF') + ' (anonymized tool telemetry only, never photos, audio, or measurements)';
+}
+function _fbConsentToggle() {
+  try { localStorage.setItem('maya_improve_consent', _pgConsentOn() ? '0' : '1'); } catch (_) {}
+  _fbConsentRender();
+}
+function _fbRenderMayaLogs() {
+  const host = document.getElementById('fb-maya-list'); if (!host) return;
+  if (!_pgMayaLogBuf.length) { host.innerHTML = '<div class="fbm-empty">Nothing yet. When Maya hits a limit, it files itself here.</div>'; return; }
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  host.innerHTML = _pgMayaLogBuf.slice(-30).reverse().map(l =>
+    '<div class="fbm-row"><div class="w">' + esc(l.who) + (l.source === 'maya' ? ' · logged herself' : ' · heard in conversation') + '</div>' +
+    '<div class="t">' + esc(l.text) + '</div></div>').join('');
+}
+function _fbTab(which) {
+  const note = which !== 'maya';
+  const box = document.getElementById('feedback-box');
+  const pane = document.getElementById('fb-maya-pane');
+  const st = document.getElementById('feedback-state');
+  if (box) box.style.display = note ? '' : 'none';
+  if (pane) pane.style.display = note ? 'none' : '';
+  if (st) st.style.display = note ? '' : 'none';
+  const send = document.getElementById('feedback-send');
+  if (send) send.style.display = note ? '' : 'none';
+  const tn = document.getElementById('fb-tab-note'), tm = document.getElementById('fb-tab-maya');
+  if (tn) tn.classList.toggle('on', note);
+  if (tm) tm.classList.toggle('on', !note);
+  if (!note) _fbRenderMayaLogs();
+}
+window._fbTab = _fbTab;
+// her spoken "I can't" files itself; a wish in the client's line files under
+// their name (the failed-hand hook lives inside _pgRunCall itself)
+if (typeof _pgLine === 'function') {
+  const _oLine = _pgLine;
+  _pgLine = function (who, text) {
+    try {
+      const t = String(text || '');
+      if (who !== 'you' && _PG_CANT.test(t)) _pgAutoLog('Maya, in her own words: "' + t.slice(0, 300) + '"', 'Maya', 'maya');
+      if (who === 'you' && _PG_WISH.test(t)) _pgAutoLog('Wish heard in conversation: "' + t.slice(0, 300) + '"', (typeof _pgWhoAmI === 'function' && _pgWhoAmI()) || 'a user', 'app');
+    } catch (_) {}
+    return _oLine.apply(this, arguments);
+  };
+}
+// opening the popup always shows fresh logs on the Maya tab
+if (typeof openFeedback === 'function') {
+  const _oOF = openFeedback;
+  openFeedback = function () { const r = _oOF.apply(this, arguments); try { _fbRenderMayaLogs(); _fbTab('note'); _fbConsentRender(); } catch (_) {} return r; };
 }
 </script>
 </body>

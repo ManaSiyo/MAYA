@@ -74,6 +74,25 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.21 (Claude): THE PROMOTION. frontend/index.html IS the Playground now
+
+Fromsa said "everything", so frontend/index.html was replaced by a copy of
+playground/index.html with exactly two differences: no #pg-badge (and no
+amber label script), and the Tip pill kept on the floor row (Tip, Logout,
+Feedback, Hey Maya). Everything else is identical, including the voice
+layer (~1,570 lines at the tail: pgMayaStart, _pgTool with every hand,
+sight, wake word, glide, matcher, observer, telemetry), the survey zoom,
+the screen order (inspo, favorites, community; _pgScreenPos), the
+Background fold, the caption and profile sweeps, the drawer glass on
+popups, the Pinterest search pill and wider search, Improve Maya with
+Maya's logs. The server needed nothing: the realtime session already
+admits any signed in user. From here, edit BOTH files for every change
+(the two differ by two hunks; `diff playground/index.html
+frontend/index.html` must stay that small), or edit the Playground and
+re-promote with the v14.21 script pattern. tests/maya-hands-smoke.mjs runs
+itself once per surface (MAYA_SURFACE / MAYA_SURFACES) and fails if either
+fails. The v13.92 arrow assertion was updated to the v14.06 canon (42px).
+
 ## v14.20 (Claude): the drawer organized, the wider finger search, natural proportions
 
 Tab title Profile (pgShow + the span). #pg-projects is a pg-fold above
