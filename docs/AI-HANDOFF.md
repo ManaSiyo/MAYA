@@ -74,6 +74,30 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.19 (Claude): the drawer untangled
+
+The avatar pane had two identities braided together. currentClientName is
+the PROJECT label (the Save flow names it; autoName otherwise) and
+lastSummary.client.name is the CLIENT (face, measurements, the person who
+wears the board). Three fallbacks leaked the project label into the client
+(saveAvatar, randomizeAvatar, onFacePhotoSelected) and updateClientNameInline
+wrote both; all four are client only now, and refreshDrawerClientName no
+longer falls back to the project label. pgUpdatePill writes the open
+project's name into #pg-project-beside (class .on) and syncs .active on
+the list rows from projectStore.currentId; it runs after every
+refreshDrawerClientName and _renderSessionsDropdown, plus a 1.2s watch on
+(currentId, currentClientName, autoName) that repaints only on change. The
+store's methods are NOT wrapped: the regression suite reads them by
+source (projectStore.save.toString()). The photo
+button calls toggleAvatarSwitcher. switchAvatar and newAvatar go through
+_wearClient(a): identity fields only, the board and the notes stay, then
+queueSave. deleteAvatar(id) removes a roster entry (confirm gated, rewrites
+settings/avatars). pgRenameClient() is an in place input over the name
+span (Enter or blur keeps, Escape drops) that names the client and files it
+in the library. The Projects tile uses projectStore.list() (listSessions
+never existed on the store). Voice: list_clients and switch_client.
+Battery: 124 checks.
+
 ## v14.18 (Claude): the universal glide and the wider search
 
 The glide is _pgGlideStart(els, dir, axis) now: element or array, axis 'x'

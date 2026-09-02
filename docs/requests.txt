@@ -16,6 +16,25 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 2, 2026 (v14.19): the drawer untangled
+
+[x] "We should have the current project highlighted at all times": the
+    pill beside the name reads the open project's name with a brighter
+    ring, and its row in the list is marked, list open or closed, after
+    every open, save, new, switch and delete.
+[x] "Projects, clients, everything else is very glitchy. Audit everything
+    in that drawer, especially clients and projects": found and fixed the
+    root of it, the client's name and the project's name were one variable
+    in three places, so an automatic project name became a client called
+    Untitled and naming a client renamed the board. Also: switching the
+    client wiped the canvas (now it only changes who wears it), a new
+    client could never be named in this layout (a Name pill and an in
+    place box now), no client could ever be removed (an x on each row),
+    the Name, Replace and Remove pills were invisible on a phone (always
+    visible now), and the Projects tile always read 1 or 0.
+[x] "Clicking on the photo area takes to the measurements": the photo
+    opens the client list now; Measurements keeps its own fold.
+
 SEPTEMBER 1, 2026, LATE NIGHT (v14.18): the glide everywhere, the wider search
 
 [x] "I meant the scroll, only on Maya mode: if I ask for scroll it should

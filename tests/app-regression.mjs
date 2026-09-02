@@ -1990,6 +1990,22 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.19: the drawer untangled: the open project highlighted, clients and projects independent, the photo opens the list',
+  PLAYGROUND_SOURCE.includes('id="drawer-avatar-button" onclick="toggleAvatarSwitcher()"') &&
+  INDEX_SOURCE.includes('id="drawer-avatar-button" onclick="toggleAvatarSwitcher()"') &&
+  PLAYGROUND_SOURCE.includes("beside.classList.toggle('on', has);") &&
+  INDEX_SOURCE.includes("beside.classList.toggle('on', has);") &&
+  PLAYGROUND_SOURCE.includes('function pgRenameClient()') &&
+  INDEX_SOURCE.includes('function pgRenameClient()') &&
+  PLAYGROUND_SOURCE.includes('function _wearClient(a)') &&
+  INDEX_SOURCE.includes('function _wearClient(a)') &&
+  PLAYGROUND_SOURCE.includes('async function deleteAvatar(id)') &&
+  INDEX_SOURCE.includes('async function deleteAvatar(id)') &&
+  !PLAYGROUND_SOURCE.includes('{ client: { name: currentClientName || null } }') &&
+  !INDEX_SOURCE.includes('{ client: { name: currentClientName || null } }') &&
+  PLAYGROUND_SOURCE.includes("case 'switch_client': {") &&
+  SERVER_SOURCE.includes("name: 'switch_client'") &&
+  SERVER_SOURCE.includes("name: 'list_clients'"));
 ok('v14.18: every voice scroll glides, and search reaches everything saved on Pinterest',
   PLAYGROUND_SOURCE.includes('function _pgGlideStart(els, dir, axis)') &&
   PLAYGROUND_SOURCE.includes("axis === 'x' ? 'scrollLeft' : 'scrollTop'") &&

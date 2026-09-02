@@ -136,6 +136,10 @@ const battery = [
   ['card_details', { query: 'purple spacesuit' }, o => o && o.ok === false],
   ['list_projects', {}, o => o && typeof o.ok === 'boolean'],
   ['open_project', { name: 'zzz no such project' }, o => o && o.ok === false],
+  // v14.19: her hands on the clients
+  ['list_clients', {}, o => o && typeof o.ok === 'boolean'],
+  ['switch_client', { name: 'zzz nobody' }, o => o && o.ok === false],
+  ['switch_client', {}, o => o && o.ok === false],
   ['check_credits', {}, o => o && typeof o.ok === 'boolean'],
   ['background', { which: 'star' }, o => o && typeof o.ok === 'boolean'],
   ['set_measurement', { name: 'waist', value: 29 }, o => o && o.ok === true],
@@ -339,6 +343,67 @@ ok('the wider search renders every saved match onto the wall',
   wider.res && wider.res.ok === true && wider.res.matches === 2 && wider.walls === 2 && /corset/.test(wider.alt),
   JSON.stringify(wider.res));
 ok('clearing after a wider search restores the wall', wider.cleared === true);
+
+// ── 3c5. v14.19: the drawer's people and projects, untangled ──
+const drawer = await page.evaluate(async () => {
+  const out = {};
+  out.photoOpensList = /toggleAvatarSwitcher/.test(document.getElementById('drawer-avatar-button').getAttribute('onclick') || '');
+  // a project label must never read as the client's name
+  (0, eval)("lastSummary = null; currentClientName = 'Untitled 09/01 19:03';");
+  refreshDrawerClientName();
+  out.nameNoLeak = document.getElementById('drawer-avatar-name').textContent;
+  // the open project is highlighted at all times: on the pill and in the list
+  projectStore.currentId = 'p1';
+  (0, eval)("currentClientName = 'Rudy the Presley';");
+  const list = document.getElementById('drawer-sessions-list');
+  list.innerHTML = '<div class="session-item" data-id="p1"></div><div class="session-item active" data-id="p2"></div>';
+  pgUpdatePill();
+  const beside = document.getElementById('pg-project-beside');
+  out.pill = beside.textContent.trim();
+  out.pillOn = beside.classList.contains('on');
+  out.rowP1 = list.querySelector('[data-id="p1"]').classList.contains('active');
+  out.rowP2 = list.querySelector('[data-id="p2"]').classList.contains('active');
+  // clients: the current one is marked, each has an x, switching keeps the board
+  (0, eval)("_avatarLibCache = [{ id: 'micheal', name: 'Micheal', face: null, measurements: { height: '180' } }, { id: 'rudy', name: 'Rudy', face: null }]; lastSummary = { client: { name: 'Rudy' }, dream_outcome: 'a fedora' };");
+  out.list = await window._pgTool('list_clients', {}, { send: () => {} });
+  (0, eval)('_avatarSwitcherOpen = false');
+  await toggleAvatarSwitcher();
+  const panel = document.getElementById('drawer-avatar-switcher');
+  out.rows = panel.querySelectorAll('.avatar-switch-row[data-id]').length;
+  out.activeRow = (panel.querySelector('.avatar-switch-row.active') || {}).dataset ? panel.querySelector('.avatar-switch-row.active').dataset.id : '';
+  out.xs = panel.querySelectorAll('.avatar-switch-delete').length;
+  const cardsBefore = (0, eval)('items.length');
+  out.sw = await window._pgTool('switch_client', { name: 'micheal' }, { send: () => {} });
+  out.cardsKept = (0, eval)('items.length') === cardsBefore;
+  const ls = (0, eval)('lastSummary');
+  out.wearing = ls && ls.client && ls.client.name;
+  out.height = ls && ls._measurements && ls._measurements.height;
+  out.notesKept = ls && ls.dream_outcome;
+  out.switcherClosed = panel.style.display === 'none';
+  // naming a client in place, without renaming the project
+  pgRenameClient();
+  const inp = document.getElementById('pg-client-rename');
+  out.renameBox = !!inp;
+  if (inp) { inp.value = 'Aster'; inp.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); }
+  await new Promise(r => setTimeout(r, 50));
+  out.renamed = document.getElementById('drawer-avatar-name').textContent;
+  out.projectUntouched = (0, eval)('currentClientName');
+  out.boxGone = !document.getElementById('pg-client-rename');
+  projectStore.currentId = null;
+  (0, eval)("currentClientName = null; lastSummary = null;");
+  refreshDrawerClientName();
+  out.pillIdle = document.getElementById('pg-project-beside').textContent.trim();
+  return out;
+});
+ok('the photo opens the client list, not the measurements', drawer.photoOpensList === true);
+ok('a project label never reads as the client name', drawer.nameNoLeak === 'client', drawer.nameNoLeak);
+ok('the open project is highlighted on the pill', /^Rudy the Presley/.test(drawer.pill) && drawer.pillOn === true, drawer.pill);
+ok('the open project is highlighted in the list, and only it', drawer.rowP1 === true && drawer.rowP2 === false);
+ok('list_clients names the people and who wears the board', drawer.list && drawer.list.ok === true && drawer.list.current === 'Rudy' && drawer.list.clients.length === 2, JSON.stringify(drawer.list));
+ok('the client list marks the current client and gives each an x', drawer.rows === 2 && drawer.activeRow === 'rudy' && drawer.xs === 2, JSON.stringify({ rows: drawer.rows, activeRow: drawer.activeRow, xs: drawer.xs }));
+ok('switching the client keeps every card and the notes', drawer.sw && drawer.sw.ok === true && drawer.cardsKept === true && drawer.wearing === 'Micheal' && drawer.height === '180' && drawer.notesKept === 'a fedora' && drawer.switcherClosed === true, JSON.stringify(drawer.sw));
+ok('a client can be named in place without renaming the project', drawer.renameBox === true && drawer.renamed === 'Aster' && drawer.projectUntouched === 'Rudy the Presley' && drawer.boxGone === true, JSON.stringify({ renamed: drawer.renamed, proj: drawer.projectUntouched }));
+ok('with no project open the pill reads Projects', /^Projects/.test(drawer.pillIdle), drawer.pillIdle);
 
 // ── 3d. v14.16: the studio gauge never claims zero of two dollars ──
 const gauge = await page.evaluate(() => {

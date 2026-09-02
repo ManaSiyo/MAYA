@@ -4159,6 +4159,7 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       '- add_reference(text): drop one typed reference onto the board ("baggy", "Mugler shoulders") without Pinterest.\n' +
       '- card_details(query): a card\'s five design notes so you speak about it precisely; dissect_card(query) opens it into its pieces, calling it again stacks it back.\n' +
       '- list_projects / open_project(name) / new_project: their projects; each keeps its own board and nothing is lost by switching.\n' +
+      '- list_clients / switch_client(name): the people who wear the boards (name, face, measurements). "Put this on Micheal" means switch_client then visualize; switching a client never touches the cards.\n' +
       '- check_credits: their trial balance; say it warmly and plainly, never as an apology.\n' +
       '- background(which): star or generate, a fresh backdrop behind the board.\n' +
       '- randomize_avatar and set_measurement(name, value): their fit model; measurements arrive like "waist 29".\n' +
@@ -4229,6 +4230,9 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       { type: 'function', name: 'open_project', description: 'Open one saved project by name.',
         parameters: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] } },
       { type: 'function', name: 'new_project', description: 'Start a fresh project; the old one is saved.', parameters: { type: 'object', properties: {} } },
+      { type: 'function', name: 'list_clients', description: 'Their saved clients, and who is wearing the board now.', parameters: { type: 'object', properties: {} } },
+      { type: 'function', name: 'switch_client', description: 'Put a saved client on the current board: name, face, measurements. The cards stay.',
+        parameters: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] } },
       { type: 'function', name: 'check_credits', description: 'Their trial balance: dollars left, spent, images rendered.', parameters: { type: 'object', properties: {} } },
       { type: 'function', name: 'background', description: 'Change the backdrop behind the board: the star, or generate a new one.',
         parameters: { type: 'object', properties: { which: { type: 'string', enum: ['star', 'generate'] } } } },
