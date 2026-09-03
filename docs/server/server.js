@@ -1721,10 +1721,19 @@ async function pinFetch(uid, path, retry) {
     if (!fresh) { const e = new Error('reconnect'); e.code = 'reconnect'; throw e; }
   }
   const use = retry ? stored : (await pinLoad(uid)) || stored;
-  const r = await fetch(PIN_API + path, {
-    headers: { 'Authorization': 'Bearer ' + use.access_token },
-    signal: AbortSignal.timeout(15000),
-  });
+  let r;
+  try {
+    r = await fetch(PIN_API + path, {
+      headers: { 'Authorization': 'Bearer ' + use.access_token },
+      signal: AbortSignal.timeout(15000),
+    });
+  } catch (err) {
+    // v14.26: a timeout is a DOMException whose .code is the number 23; it
+    // used to reach the app as the word "23". Name it.
+    const e = new Error('pinterest timeout on ' + path.split('?')[0]);
+    e.code = (err && err.name === 'TimeoutError') ? 'pinterest_timeout' : 'pinterest_unreachable';
+    throw e;
+  }
   if (r.status === 401 && !retry && use.refresh_token) {
     const fresh = await pinRefresh(uid, use);
     if (fresh) return pinFetch(uid, path, true);
@@ -1732,7 +1741,8 @@ async function pinFetch(uid, path, retry) {
   }
   if (!r.ok) {
     const e = new Error('pinterest ' + r.status + ': ' + (await r.text()).slice(0, 200));
-    e.code = r.status === 403 ? 'not_allowed' : 'pinterest_error';
+    e.code = r.status === 403 ? 'not_allowed' : r.status === 429 ? 'pinterest_rate' : 'pinterest_error';
+    e.status = r.status;
     throw e;
   }
   return await r.json();
@@ -1842,10 +1852,13 @@ app.post('/api/pinterest/disconnect', requireAuthHeader, express.json({ limit: '
 });
 
 const pinErr = (res, e) => {
-  const code = (e && e.code) || 'pinterest_error';
+  const code = (typeof (e && e.code) === 'string' && e.code) || 'pinterest_error';
   console.error('[pinterest]', (e && e.message) || e);
-  const status = code === 'not_connected' || code === 'reconnect' ? 401 : (code === 'not_allowed' ? 403 : 502);
-  res.status(status).json({ error: code });
+  const status = code === 'not_connected' || code === 'reconnect' ? 401 : code === 'not_allowed' ? 403 :
+    code === 'pinterest_timeout' ? 504 : code === 'pinterest_rate' ? 429 : 502;
+  // v14.26: the upstream answer rides along, so the studio can read what
+  // Pinterest actually said without opening the server logs.
+  res.status(status).json({ error: code, upstream: (e && e.status) || null, detail: String((e && e.message) || '').slice(0, 160) });
 };
 
 app.get('/api/pinterest/boards', requireAuthHeader, async (req, res) => {
@@ -1972,6 +1985,12 @@ app.post('/api/pinterest/thumbs', requireAuthHeader, express.json({ limit: '8kb'
   res.json({ ok: true, thumbs });
 });
 
+// v14.23: ALL of Pinterest. Two doors, tried in order:
+//   1. Pinterest v5 GET /search/partner/pins (term, country_code): the top
+//      pins across Pinterest for a term. Beta, granted per app by Pinterest.
+//   2. A web image search pinned to pinterest.com through Google Custom
+//      Search (GOOGLE_CSE_KEY + GOOGLE_CSE_CX), when those are set.
+// Neither open means 501 not_available, and the client says so plainly.
 app.get('/api/pinterest/everywhere', requireAuthHeader, async (req, res) => {
   let user;
   try { user = await requireGoogleUser(req); }
@@ -4237,7 +4256,9 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       '"end the call" end the call.\n' +
       'SPENDING. A render (visualize, modify_garment) spends their credits. Before one, say the change back in one short ' +
       'line ("a black trench, longer sleeves, on Micheal, go?") and wait for their yes; any yes, go, do it, sure counts. ' +
-      'Once they said it, act at once and never ask twice for the same render.\n' +
+      'The tools hold you to it: modify_garment and visualize answer needsConfirmation until you call them with confirm ' +
+      'true. Say the line, hear the yes, call again with confirm true. When they already said go, call with confirm true ' +
+      'at once. Never ask twice for the same render.\n' +
       'GARMENT FIRST. Every description you send or speak names the garment type in the first words (a pant, a coat, a ' +
       'corset dress), then the rest.\n' +
       'YOUR TASTE. You are allowed a little opinion, like a friend looking over a sketchbook: one short warm line when ' +
@@ -4259,7 +4280,7 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       'YOUR OWN LIMITS ARE LOGGED FOR YOU. Whenever a tool of yours fails, or you say you cannot do something, the app ' +
       'records it to the studio automatically. So when you hit a limit, say so plainly and briefly; never hide it, and ' +
       'never claim you logged it yourself unless you called log_feature.\n' +
-      '- look: see the screen. You get a real picture of it, with the Pinterest pictures painted in when the wall is open, PLUS two lists: the board (every card with its place word) and the drawer (every Pinterest pin on screen with its place word: top left, bottom right, center). Answer "which one is bottom right" from the picture and the list together. If a thing is in neither the picture nor the lists, say you cannot see it. Never invent a card or a pin.\n' +
+      '- look: see the screen. You get a real photograph of it, the board with its pictures and the Pinterest wall when it is open. Answer from the photograph, the way a person glancing at the screen would: what the pictures show, colors, where things sit. Two lists ride along (the board and the pins with place words); use them silently to get an exact name right, never recite them and never describe the screen as a list. If a thing is in neither the picture nor the lists, say you cannot see it. Never invent a card or a pin.\n' +
       '- open_card(query) / delete_card(query) / favorite_card(query): act on a card by its words.\n' +
       '- viewer(action): inside the opened picture: close, next, prev, post_wall, get_it_made, listen, switch_fabric, add_reference.\n' +
       '- pin_view(which): Pinterest All saves or Boards. open_board(name) opens one.\n' +
@@ -4299,7 +4320,8 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       { type: 'function', name: 'describe_garment', description: 'Send the consolidated garment description into the moodboard pipeline; it becomes cards.',
         parameters: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] } },
       { type: 'function', name: 'visualize', description: 'Render the garment on the client. Name the inspirations they asked for by their words; name none for a fresh render.',
-        parameters: { type: 'object', properties: { references: { type: 'string', description: 'the inspirations they named, comma separated ("the logo, the red corset"); empty or "none" for a fresh render' } } } },
+        parameters: { type: 'object', properties: { references: { type: 'string', description: 'the inspirations they named, comma separated ("the logo, the red corset"); empty or "none" for a fresh render' },
+          confirm: { type: 'boolean', description: 'true only after they said yes to this render (or said go with it)' } } } },
       { type: 'function', name: 'write_feedback', description: 'Put structured notes into the Feedback box for the client to submit.',
         parameters: { type: 'object', properties: { notes: { type: 'string' }, kind: { type: 'string', enum: ['feedback', 'feature'] } }, required: ['notes'] } },
       { type: 'function', name: 'log_feature', description: 'Log a feature request into the studio inbox now.',
@@ -4317,7 +4339,8 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
         parameters: { type: 'object', properties: { query: { type: 'string' }, wider: { type: 'boolean', description: 'true to search everything saved on their Pinterest' }, scope: { type: 'string', enum: ['saved', 'everywhere'], description: 'everywhere searches ALL of Pinterest, not only their saves' } }, required: ['query'] } },
       { type: 'function', name: 'clear_pin_search', description: 'Clear the pin search; the whole wall comes back.', parameters: { type: 'object', properties: {} } },
       { type: 'function', name: 'modify_garment', description: 'Inside an open picture: apply the spoken design change to THIS piece and render it. No fabric or reference popups. Use this for every design change while a picture is open.',
-        parameters: { type: 'object', properties: { text: { type: 'string', description: 'the change in their own words' } }, required: ['text'] } },
+        parameters: { type: 'object', properties: { text: { type: 'string', description: 'the change in their own words' },
+          confirm: { type: 'boolean', description: 'true only after they said yes to this change (or said go with it)' } }, required: ['text'] } },
       { type: 'function', name: 'card_version', description: 'Step between versions of the SAME open piece.',
         parameters: { type: 'object', properties: { direction: { type: 'string', enum: ['previous', 'next', 'first', 'last'] } }, required: ['direction'] } },
       { type: 'function', name: 'render_status', description: 'Whether a render is still in flight, or failed, and the error if it did.', parameters: { type: 'object', properties: {} } },
@@ -4386,7 +4409,10 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
     return res.json({ ok: true, value: j.value, model: REALTIME_MODEL });
   } catch (e) {
     console.error('[voice-token app] failed,', String(e.message).slice(0, 200));
-    return res.status(502).json({ error: 'voice_failed' });
+    // v14.26: an OpenAI account out of credit is a different sentence from a
+    // line that did not connect; the app tells the studio which.
+    const why = /insufficient_quota|billing|exceeded your current quota|hard limit/i.test(String(e.message)) ? 'voice_credit' : 'voice_failed';
+    return res.status(502).json({ error: why });
   }
 });
 

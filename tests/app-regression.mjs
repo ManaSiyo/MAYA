@@ -757,7 +757,7 @@ ok('note categories lead, values sit under them, silhouette first',
   INDEX_SOURCE.includes('.sort((a, b) => rank(a[0]) - rank(b[0]))'));
 ok('a restored project finds its fabric swatches again',
   INDEX_SOURCE.includes('function fabricSwatchUrl(f)') &&
-  INDEX_SOURCE.includes("return '/aesthetics/fabrics/' + encodeURIComponent(f.fileName)") &&
+  INDEX_SOURCE.includes("return '/aesthetics/fabrics/thumbs/' + encodeURIComponent(String(f.fileName).replace(/\\.[^.]+$/, '')) + '.jpg';") &&   // v14.26: the thumbnail
   INDEX_SOURCE.includes('fabricSwatchUrl(fb)'));
 // v13.58: the sign in screen is spare again; the terms wait BEHIND it as a
 // popup, exactly as asked the second time.
@@ -1990,6 +1990,28 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.26: demo readiness: fabric thumbnails, Pinterest answers in words, the voice line out of credit says so',
+  PLAYGROUND_SOURCE.includes('function _fabricThumb(f)') &&
+  INDEX_SOURCE.includes('function _fabricThumb(f)') &&
+  PLAYGROUND_SOURCE.includes('/aesthetics/fabrics/thumbs/Orange%20Cheetah.jpg') &&
+  INDEX_SOURCE.includes('/aesthetics/fabrics/thumbs/Orange%20Cheetah.jpg') &&
+  !PLAYGROUND_SOURCE.includes("'the wider search could not run: ' + msg.slice(0, 80)") &&
+  PLAYGROUND_SOURCE.includes('Pinterest took too long to answer') &&
+  PLAYGROUND_SOURCE.includes("OpenAI credit has run out") &&
+  SERVER_SOURCE.includes("e.code = (err && err.name === 'TimeoutError') ? 'pinterest_timeout' : 'pinterest_unreachable';") &&
+  SERVER_SOURCE.includes("code === 'pinterest_timeout' ? 504") &&
+  SERVER_SOURCE.includes("? 'voice_credit' : 'voice_failed'") &&
+  PLAYGROUND_SOURCE.includes('#notes-drawer #drawer-avatar-rename { display: none; }') &&
+  PLAYGROUND_SOURCE.includes('#notes-drawer .avatar-switch-row.active .avatar-switch-rename { opacity: 1; }') &&
+  PLAYGROUND_SOURCE.includes("if (curKey && curKey !== 'client' && !lib.some(a => a.id === curKey)) {") &&
+  PLAYGROUND_SOURCE.includes('.note-group-title { color: rgba(255,255,255,0.98); font-weight: 600; margin: 0 0 3px; }') &&
+  PLAYGROUND_SOURCE.includes("if (a.confirm !== true) return { ok: false, needsConfirmation: true, change: t.slice(0, 140),") &&
+  INDEX_SOURCE.includes("if (a.confirm !== true) return { ok: false, needsConfirmation: true, change: t.slice(0, 140),") &&
+  PLAYGROUND_SOURCE.includes('} else if (typeof _zCounter !== 'undefined') {') &&
+  PLAYGROUND_SOURCE.includes('#feedback-modal { z-index: 260; }') &&
+  PLAYGROUND_SOURCE.includes('async function _pgPictureData(src)') &&
+  SERVER_SOURCE.includes("confirm: { type: 'boolean', description: 'true only after they said yes to this change (or said go with it)' }") &&
+  SERVER_SOURCE.includes('You get a real photograph of it'));
 ok('v14.25: feedback submitted, plain logs with a retry, stop means stop, references by voice, the wall in her picture',
   PLAYGROUND_SOURCE.includes("showToast('Feedback submitted.');") &&
   INDEX_SOURCE.includes("showToast('Feedback submitted.');") &&

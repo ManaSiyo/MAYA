@@ -16,6 +16,44 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 3, 2026, LATER (v14.26): "I am demoing Maya, audit everything"
+
+[x] "Try it out yourself": drove the live app signed in as Fromsa through
+    30 of Maya's hands (no renders, no credits spent). Zero errors; every
+    tool under two seconds except the two below.
+[x] Fabrics loaded slowly on a first visit: the swatches were the 3 to 4
+    MB originals. Thumbnails now.
+[x] The wider Pinterest search said "23": a timeout's number. Pinterest's
+    answers are words now, and the studio can read what Pinterest said.
+[x] If the studio's OpenAI credit is out, Hey Maya says so plainly.
+[x] "The pencil should hide away like the share and x; it should be in the
+    dropdown and only appear when an avatar is highlighted": done. The one
+    beside the name is gone.
+[x] "Fromsa should also be in the dropdown, highlighted like the current
+    project": the client on the board is always in the list, highlighted,
+    and filed the first time the list opens.
+[x] "Aesthetic should be bold and brighter, and Future Chic under it less
+    bright": reversed as asked, for all five lines.
+[x] "The whole thing went to Pinterest and started scrolling by itself":
+    that was Claude's live audit driving the same tab through Maya's
+    hands. Not a bug; Claude now tests only on a tab it opens itself.
+[x] "Ask for confirmation before applying modifications or visualizations,
+    especially when the element is already part of the reference": the
+    tools themselves wait for the yes now; no render starts without it.
+[x] "New cards from Pinterest should always land on top": done.
+[x] "The feedback box did not appear after adding notes": it opened
+    behind the open picture. Above it now.
+[x] "She should see the actual screen, not a transcript": look already
+    sends a real picture (the board's pictures paint into it, and since
+    v14.25 the Pinterest pins do too). The instructions now say the
+    picture is what she answers from and the lists are a silent aid,
+    never recited.
+[ ] Fromsa, before the demo: top up OpenAI; push and let the build land;
+    open the app once signed in so the first visit's caching is done;
+    keep the Pinterest drawer connected (the wall search works; the wider
+    search depends on Pinterest answering, and all of Pinterest is off
+    until the beta access or the Google keys).
+
 SEPTEMBER 3, 2026, LATE (v14.25): "where did my feedback go"
 
 [x] "You did not see any of the feedback. Where is it being logged? Fix

@@ -74,6 +74,69 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.26 (Claude): demo readiness: the live drive, fabric thumbnails, Pinterest in words
+
+How the live app was audited (repeatable): from Fromsa's signed in Chrome
+tab on maya.manasiyo.com, a script injected into the page (a <script>
+element; the extension's isolated world cannot see page globals) called
+window._pgTool for every non spending tool with a stub data channel,
+timed each, captured window errors and console.error, and wrote the
+result to document.documentElement.dataset.audit. Read it back from the
+isolated world. Findings: 30 steps, zero page errors, everything under
+2 s except the wider Pinterest search (15 s then "23") and the first
+visit. /root/audit-driver.js in the Claude session is the script.
+Fabrics: aesthetics/fabrics/*.JPG are 3 to 4 MB originals (23 MB for
+eight) and were painted as swatches and even as the drawer tab icon.
+aesthetics/fabrics/thumbs/<name>.jpg (640 px, quality 82, made with PIL
+on the device) are what paint now: fabricsInventory items carry thumb;
+_fabricThumb(f) returns thumb, else the thumbs path for a house fileName
+without a dataUrl, else the dataUrl (a designer's own upload);
+fabricSwatchUrl (card dots, viewer chips, staged chips) prefers thumb;
+the house grid, the pick grid and the spec rows use _fabricThumb; the
+tab icon is thumbs/Orange Cheetah.jpg. dataUrl (the original) stays for
+analyzeFabricWithVision and the OpenAI edit anchors. Add a fabric: drop
+the JPG and regenerate its thumb (PIL: thumbnail((640, 640)), quality 82).
+Pinterest: pinFetch names a timeout (pinterest_timeout, was a DOMException
+whose .code 23 leaked to the app as the word "23") and unreachable;
+non ok answers carry e.status and 429 is pinterest_rate; pinErr answers
+504 / 429 / 502 with {error, upstream, detail}. _pinWideSearch speaks
+the failure in words (took too long, needs to be connected again, asking
+for a short pause, did not answer) with needs: reconnect | retry, and
+tells Maya the wall still searches. The live wider search returned 502
+pinterest_error at the time of the audit; the detail now rides in the
+response so the next round can read what Pinterest said.
+Aesthetic: #drawer-avatar-rename is display none; .avatar-switch-rename
+shows only on .avatar-switch-row.active (hover no longer reveals it, the
+x still shows on hover); toggleAvatarSwitcher files the client on the
+board (_saveCurrentAvatarToLibrary) when the roster lacks it and falls
+back to a synthetic row, so the current client is always listed and
+highlighted. Card editor: .vn-profile .note-group-title is white and
+600 weight, .note-detail is rgba(222,230,245,0.74).
+Sight: the look instruction says the picture is what she answers from;
+the board and drawer lists are a silent aid for exact names, never
+recited. The board's pictures paint (Firebase Storage answers
+access-control-allow-origin * on every response, verified with curl) and
+the pins paint since v14.25.
+From the inbox of Sep 2, 9:53 to 9:59 pm (read live before this round):
+the yes is in the tool now: modify_garment and visualize answer {ok:false,
+needsConfirmation:true, say} until called with confirm true (the
+instructions alone did not hold; _pgClassifyFail already treats
+needsConfirmation as 'confirmation', never a defect); the decls carry
+confirm. A card without z (a pin brought in, an upload, a fresh render)
+takes ++_zCounter in the render function, so it lands on top. The
+feedback box is z 260 (it was 200, the same as the viewer, so it opened
+behind the open picture: "the box did not appear"). look carries the
+open picture itself at 1024 px via _pgPictureData(src) (canvas, CORS,
+cached) as a second input_image, and the page capture is JPEG 0.78;
+window._pgLastLook keeps the last capture for a human to inspect.
+Open from that inbox: "add my logo onto the back properly, this is not
+my logo" (a render fidelity ask; references by words help, the image
+model decides the rest).
+Voice: /api/voice-token answers error voice_credit when OpenAI's message
+says insufficient_quota / billing / quota / hard limit; pgMayaStart
+toasts "The studio's OpenAI credit has run out. Top it up, then say Hey
+Maya again." Battery: 157 checks per surface.
+
 ## v14.25 (Claude): from Maya's inbox: feedback submitted, stop, references, the wall in her picture
 
 RULE, FIRST: before any audit or any "check the feedback" round, read

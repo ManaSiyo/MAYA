@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.25">
+<meta name="maya-version" content="14.26">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -1960,7 +1960,13 @@
     background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.2);
     color: rgba(215,230,255,0.8); font-size: 10px; line-height: 1; cursor: pointer; transition: color .2s, border-color .2s; }
   #notes-drawer .drawer-avatar-rename:hover { color: #fff; border-color: rgba(255,255,255,0.45); }
-  @media (hover: none) { #notes-drawer .avatar-switch-rename { opacity: 1; } }
+  /* v14.26: the pencil hides like the x does, and shows on the highlighted
+     client only, the way the open project carries its pencil. The one that
+     sat beside the name is gone. */
+  #notes-drawer #drawer-avatar-rename { display: none; }
+  #notes-drawer .avatar-switch-row:hover .avatar-switch-rename { opacity: 0; }
+  #notes-drawer .avatar-switch-row.active .avatar-switch-rename { opacity: 1; }
+  @media (hover: none) { #notes-drawer .avatar-switch-rename { opacity: 0; } #notes-drawer .avatar-switch-row.active .avatar-switch-rename { opacity: 1; } }
   #notes-drawer .avatar-switch-delete:hover { color: #fff; border-color: rgba(255,170,170,0.6); }
   /* v14.20: the pills under the name and the pill beside it were placeholders;
      Rename, Randomize, Replace and Remove live in the client dropdown now, and
@@ -3688,9 +3694,11 @@
   /* v14.23: the five lines read white. The old rule lost to the generic
      .note-item .note-detail rule (same specificity, declared later), which
      is why Bio and friends came out dim and italic. */
+  /* v14.26: reversed, as asked: the title (Aesthetic) bold and bright, the
+     answer under it (futuristic chic) softer. */
   #viewer-notes .vn-profile .note-item .note-detail { font-style: normal; font-family: 'Cormorant Garamond', serif;
-    font-size: 14px; line-height: 1.4; color: rgba(255,255,255,0.98); }
-  #viewer-notes .vn-profile .note-item .note-group-title { color: rgba(238,244,255,0.78); margin: 0 0 3px; }
+    font-size: 14px; line-height: 1.4; color: rgba(222,230,245,0.74); }
+  #viewer-notes .vn-profile .note-item .note-group-title { color: rgba(255,255,255,0.98); font-weight: 600; margin: 0 0 3px; }
   #viewer-notes::-webkit-scrollbar { display: none; }
   #garment-modal.open:not([data-photo="full"]) #viewer-notes { display: block; }
   /* Same type, same rhythm, same hairlines as the notes that used to live in
@@ -4892,7 +4900,7 @@
         <svg viewBox="0 0 24 24" fill="#e60023" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.08 3.16 9.42 7.63 11.17-.11-.95-.2-2.4.04-3.44.22-.93 1.4-5.94 1.4-5.94s-.36-.71-.36-1.77c0-1.66.96-2.9 2.16-2.9 1.02 0 1.51.77 1.51 1.68 0 1.03-.65 2.56-.99 3.98-.28 1.19.6 2.16 1.77 2.16 2.13 0 3.77-2.25 3.77-5.49 0-2.87-2.06-4.88-5.01-4.88-3.41 0-5.42 2.56-5.42 5.21 0 1.03.4 2.14.89 2.74.1.12.11.22.08.34l-.33 1.36c-.05.22-.17.27-.4.16-1.5-.7-2.43-2.89-2.43-4.65 0-3.78 2.75-7.26 7.93-7.26 4.16 0 7.4 2.97 7.4 6.93 0 4.14-2.61 7.47-6.23 7.47-1.22 0-2.36-.63-2.75-1.38l-.75 2.85c-.27 1.04-1 2.35-1.49 3.15 1.12.35 2.31.53 3.54.53 6.63 0 12-5.37 12-12S18.63 0 12 0z"/></svg>
       </button>
       <button class="pg-tab" id="pg-tab-fabrics" onclick="pgTab('fabrics')" title="Fabrics">
-        <img src="/aesthetics/fabrics/Orange%20Cheetah.JPG" alt="">
+        <img src="/aesthetics/fabrics/thumbs/Orange%20Cheetah.jpg" alt="">
       </button>
       <button class="pg-tab on" id="pg-tab-avatar" onclick="pgTab('avatar')" title="Avatar">
         <span class="pg-tab-face empty"></span>
@@ -5553,11 +5561,20 @@ let fabricsFolderHandle = null;
 // their swatch dots. This finds the picture again from what DID survive:
 // house fabrics live on the site by file name, a designer's own fabrics live
 // in their account library by id.
+// v14.26: what paints as a swatch. A house fabric has a small thumbnail;
+// anything else (a designer's own upload, a data URL) paints as it is.
+function _fabricThumb(f) {
+  if (!f) return '';
+  if (f.thumb) return f.thumb;
+  if (f.fileName && !f.dataUrl) return '/aesthetics/fabrics/thumbs/' + encodeURIComponent(String(f.fileName).replace(/\.[^.]+$/, '')) + '.jpg';
+  return _safeImgSrc(f.dataUrl || '');
+}
 function fabricSwatchUrl(f) {
   if (!f) return '';
+  if (f.thumb) return f.thumb;
   const direct = _safeImgSrc(f.dataUrl || '');
   if (direct) return direct;
-  if (f.fileName) return '/aesthetics/fabrics/' + encodeURIComponent(f.fileName);
+  if (f.fileName) return '/aesthetics/fabrics/thumbs/' + encodeURIComponent(String(f.fileName).replace(/\.[^.]+$/, '')) + '.jpg';
   const mine = (typeof myFabrics !== 'undefined' && Array.isArray(myFabrics))
     ? myFabrics.find(m => m && ((f.id && m.id === f.id) || (f.name && m.name === f.name))) : null;
   if (mine) return _safeImgSrc(mine.url || mine.dataUrl || '');
@@ -5891,6 +5908,11 @@ function _placeItemInternal(card, delay, fixedPos, isRestore) {
     if (card.z) {
       el.style.zIndex = card.z;
       if (typeof _zCounter !== 'undefined' && card.z > _zCounter) _zCounter = card.z;
+    } else if (typeof _zCounter !== 'undefined') {
+      // v14.26: a card arriving now (a pin brought in, an upload, a fresh
+      // render) lands on top of everything, never under the restored cards.
+      card.z = ++_zCounter;
+      el.style.zIndex = card.z;
     }
     // v13.4: the entry fade runs ONCE. The .dragging class sets
     // animation:none, and removing that class at drag end RESTARTED the
@@ -8421,9 +8443,20 @@ async function toggleAvatarSwitcher() {
   _avatarSwitcherOpen = !_avatarSwitcherOpen;
   if (caret) caret.style.transform = _avatarSwitcherOpen ? 'rotate(180deg)' : '';
   if (!_avatarSwitcherOpen) { panel.style.display = 'none'; return; }
-  const lib = await _loadAvatarLibrary();
+  let lib = await _loadAvatarLibrary();
   // v14.19: the client on the board is marked, and every client can be removed.
   const curKey = String((lastSummary && lastSummary.client && lastSummary.client.name) || '').trim().toLowerCase();
+  // v14.26: the client on the board is always in the list, highlighted. One
+  // named before the roster existed (Fromsa himself) is filed the first time
+  // the list opens.
+  if (curKey && curKey !== 'client' && !lib.some(a => a.id === curKey)) {
+    try { await _saveCurrentAvatarToLibrary(); } catch (_) {}
+    lib = await _loadAvatarLibrary();
+    if (!lib.some(a => a.id === curKey)) {
+      const idn = (typeof _avatarIdentity === 'function' ? _avatarIdentity() : null) || {};
+      lib = [{ id: curKey, name: (lastSummary.client.name || '').trim(), face: (typeof idn.face === 'string' && idn.face) || null }].concat(lib);
+    }
+  }
   const rows = lib.map(a =>
     '<div class="avatar-switch-row' + (a.id === curKey ? ' active' : '') + '" role="button" tabindex="0" data-id="' + escapeHtml(a.id) + '" onclick="switchAvatar(\'' + escapeHtml(a.id) + '\')">' +
       (a.face ? '<span class="avatar-switch-face" style="background-image:url(\'' + a.face + '\')"></span>'
@@ -13064,9 +13097,13 @@ async function scanFabricsFromAssets() {
   // anything, adding roughly 23 MB of network and memory to every app visit.
   // The browser now fetches a swatch only when the fabric UI actually paints
   // it; OpenAI edit calls can fetch the same URL when a selected swatch is used.
+  // v14.26: the swatch the eye sees is a 640px thumbnail (under 100 KB);
+  // the 3 to 4 MB original is read only when a render needs its bytes. The
+  // first visit used to pull every original before the drawer could paint.
   fabricsInventory = items.filter(it => it && it.fileName).map(it => ({
     ...it,
     dataUrl: new URL(FABRIC_BASE + encodeURIComponent(it.fileName), window.location.origin).href,
+    thumb: new URL(FABRIC_BASE + 'thumbs/' + encodeURIComponent(String(it.fileName).replace(/\.[^.]+$/, '')) + '.jpg', window.location.origin).href,
   }));
   renderFabricsGrid();
   console.log('[Maya] fabric manifest loaded:', fabricsInventory.length);
@@ -13219,7 +13256,7 @@ function renderFabricsGrid(opts = {}) {
     '<div class="fabrics-grid">' +
     fabricsInventory.map((f, idx) =>
       '<div class="fabric-card" data-idx="' + idx + '">' +
-        '<div class="fabric-swatch" style="background-image:url(\'' + escapeHtml(_safeImgSrc(f.dataUrl)) + '\')"></div>' +
+        '<div class="fabric-swatch" style="background-image:url(\'' + escapeHtml(_fabricThumb(f)) + '\')"></div>' +
         '<div class="fabric-meta">' +
           '<input class="fabric-name-input" value="' + escapeHtml(f.name || '') + '" ' +
                  'onchange="renameFabric(' + idx + ', this.value)" ' +
@@ -13885,7 +13922,7 @@ function openFabricPicker() {
   const grid = document.getElementById('fabric-pick-grid');
   grid.innerHTML = fabricsInventory.map((f, idx) =>
     '<div class="fabric-pick" data-idx="' + idx + '" onclick="toggleFabricPick(' + idx + ')">' +
-      '<div class="swatch" style="background-image:url(\'' + escapeHtml(_safeImgSrc(f.dataUrl)) + '\')"></div>' +
+      '<div class="swatch" style="background-image:url(\'' + escapeHtml(_fabricThumb(f)) + '\')"></div>' +
       '<div class="label">' + escapeHtml(f.name) + '</div>' +
       '<div class="order-badge"></div>' +
     '</div>'
@@ -16919,7 +16956,7 @@ function buildPage2Html(summary, moodboardItems) {
 
   const inhouseRow = (f) => {
     const specBits = [f.color, f.weave, f.weight].filter(Boolean).map(escapeHtml).join(' &middot; ');
-    const swatchSrc = _safeImgSrc(f.dataUrl);
+    const swatchSrc = _fabricThumb(f);
     const swatch = swatchSrc
       ? `<div style="width:42px;height:42px;border-radius:6px;background-image:url('${escapeHtml(swatchSrc)}');background-size:cover;background-position:center;border:0.5px solid rgba(255,255,255,0.22);flex-shrink:0"></div>`
       : `<div style="width:42px;height:42px;border-radius:6px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.22);flex-shrink:0"></div>`;
@@ -17797,6 +17834,9 @@ if (typeof toggleNotesDrawer === 'function') {
   #pg-maya-toggle.live .mt-knob { box-shadow: 0 0 0 3px rgba(169,201,255,0.35), 0 1px 3px rgba(0,0,0,0.45); }
   /* the feedback popup wears the drawer's glass: same gradient, hairline,
      radius, blur and shadows; the X rides the corner over the title */
+  /* v14.26: the feedback box sits above the open picture (both were z 200,
+     so the box opened BEHIND the viewer and "did not appear"). */
+  #feedback-modal { z-index: 260; }
   #feedback-modal .modal-card { position: relative; border-radius: 18px; padding: 30px 28px 26px;
     background: linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%,
       rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%);
@@ -18174,7 +18214,10 @@ async function _pinWideSearch(q, scope) {
   catch (e) {
     const msg = String(e && e.message || e);
     if (everywhere && /not_available|501/.test(msg)) return { ok: false, reason: 'searching ALL of Pinterest is not switched on for this app yet: it needs Pinterest\'s partner search access or a web image key on the server; the studio can turn it on. Everything saved on their own Pinterest still searches.', needs: 'access' };
-    return { ok: false, reason: 'the wider search could not run: ' + msg.slice(0, 80) };
+    const why = /timeout|took too long/i.test(msg) ? 'Pinterest took too long to answer' :
+      /reconnect|not_connected|signed out/i.test(msg) ? 'Pinterest needs to be connected again from the drawer' :
+      /rate/i.test(msg) ? 'Pinterest is asking for a short pause' : 'Pinterest did not answer the wider search';
+    return { ok: false, reason: why + '; what is on the wall still searches, offer that', needs: /reconnect|not_connected/i.test(msg) ? 'reconnect' : 'retry' };
   }
   const pins = (j && j.pins) || [];
   if (!pins.length) return { ok: false, reason: everywhere
@@ -18294,6 +18337,25 @@ async function _pgPinThumbs() {
   return out;
 }
 window._pgPinThumbs = _pgPinThumbs;
+// v14.26: a picture (a data URL or a Firebase address, which answers CORS)
+// scaled to 1024 on its long side as a JPEG data URL, cached per address.
+const _pgPicCache = new Map();
+async function _pgPictureData(src) {
+  if (!src) return null;
+  if (_pgPicCache.has(src)) return _pgPicCache.get(src);
+  const out = await new Promise(resolve => {
+    const im = new Image(); im.crossOrigin = 'anonymous';
+    im.onload = () => { try {
+      const k = Math.min(1, 1024 / Math.max(im.naturalWidth, im.naturalHeight, 1));
+      const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.naturalWidth * k)); c.height = Math.max(1, Math.round(im.naturalHeight * k));
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); resolve(c.toDataURL('image/jpeg', 0.8));
+    } catch (_) { resolve(null); } };
+    im.onerror = () => resolve(null);
+    im.src = src;
+  });
+  _pgPicCache.set(src, out);
+  return out;
+}
 async function _pgLook(dc) {
   await _pgLoadH2C();
   let thumbs = new Map();
@@ -18305,12 +18367,23 @@ async function _pgLook(dc) {
     onclone: doc => { try { doc.querySelectorAll('#pinterest-drawer-body img').forEach(img => { const d = thumbs.get(img.src); if (d) { img.removeAttribute('srcset'); img.src = d; } }); } catch (_) {} },
   });
   window._pgLastLookPins = thumbs.size;
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
-  dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'message', role: 'user',
-    content: [{ type: 'input_image', image_url: dataUrl }] } }));
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.78);
+  const content = [{ type: 'input_image', image_url: dataUrl }];
+  // v14.26: when a picture is open she also gets that picture itself, at
+  // full detail, the way the person sees it; the page capture alone
+  // shrinks it.
+  let openPic = null;
+  try {
+    const open = _pgOpenItem();
+    const src = open && open.card && open.card.image;
+    if (src) openPic = await _pgPictureData(src);
+  } catch (_) {}
+  if (openPic) content.push({ type: 'input_image', image_url: openPic });
+  window._pgLastLook = dataUrl;
+  dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content } }));
   // v14.24: the picture plus the lists. Pictures from other sites (Pinterest)
   // do not paint into the screenshot, so the lists carry what the eye misses.
-  return { ok: true, note: 'the current screen is attached as a picture' + (thumbs.size ? ' with ' + thumbs.size + ' Pinterest pictures painted in' : '') + '; describe what you see from it AND from the board and drawer lists here. If something is in neither, say you cannot see it; never invent a card or a pin.',
+  return { ok: true, note: 'the current screen is attached as a picture' + (thumbs.size ? ' with ' + thumbs.size + ' Pinterest pictures painted in' : '') + (openPic ? ', and the open picture itself at full detail' : '') + '; describe what you see from it AND from the board and drawer lists here. If something is in neither, say you cannot see it; never invent a card or a pin.',
     pinsPainted: thumbs.size, board: _pgBoardSnapshot(), drawer: _pgDrawerState() };
 }
 async function _pgTool(name, a, dc) {
@@ -18453,6 +18526,11 @@ async function _pgTool(name, a, dc) {
       return { ok: true, cards: 'arriving' };
     }
     case 'visualize': {
+      // v14.26: a render spends credits; the tool waits for their yes (see
+      // modify_garment). confirm true after they said yes, or when they
+      // already said go.
+      if (a.confirm !== true) return { ok: false, needsConfirmation: true,
+        say: 'say back what will render in one short line (the piece, the client, the references) and ask for their yes; then call visualize again with confirm true' };
       // v14.13: inside an open picture, "visualize it" means render the
       // changes on THIS piece, not start the home screen flow with its
       // fabric popup. Staged changes go now; nothing staged is a question.
@@ -18509,6 +18587,12 @@ async function _pgTool(name, a, dc) {
       if (!open) return { ok: false, reason: 'no picture is open; open the card first, then describe the change' };
       const t = String(a.text || '').trim();
       if (!t) return { ok: false, reason: 'no change described' };
+      // v14.26: a render spends credits, so the tool itself waits for their
+      // yes. The first call answers with the line to say; the second, with
+      // confirm true after they said yes, renders. A yes they already gave
+      // ("do it", "go ahead") means calling with confirm true straight away.
+      if (a.confirm !== true) return { ok: false, needsConfirmation: true, change: t.slice(0, 140),
+        say: 'say the change back in one short line and ask for their yes; then call modify_garment again with the same text and confirm true' };
       if (typeof modifySubmit !== 'function') return { ok: false, reason: 'the modify pipeline is missing' };
       try {
         const parts = t.split(/[.;]\s+|,\s+(?=and\b|then\b)/).map(x => x.trim()).filter(Boolean);
@@ -18993,6 +19077,7 @@ async function pgMayaStart() {
     _pgVoice = null; _pgChip(false);
     const raw = String(e && e.message || e);
     showToast(/getUserMedia|Permission|NotAllowed/i.test(raw) ? 'Let the browser use the microphone, then try again.' :
+      /voice_credit/.test(raw) ? 'The studio\'s OpenAI credit has run out. Top it up, then say Hey Maya again.' :
       /429/.test(raw) ? 'Maya is resting a moment, try again shortly.' : 'The voice line did not connect.');
     console.warn('[hey maya]', e);
     _pgWakeResume();

@@ -263,9 +263,10 @@ const editor = await page.evaluate(async () => {
   out.posRegionInfo = posHit.it ? posHit.how : posHit.reason;
   out.snapshotPos = _pgBoardSnapshot().every(c => typeof c.pos === 'string');
 
-  out.modify = await window._pgTool('modify_garment', { text: 'make it a trench coat' }, { send: () => {} });
+  out.modifyAsks = await window._pgTool('modify_garment', { text: 'make it a trench coat' }, { send: () => {} });   // v14.26: first call asks
+  out.modify = await window._pgTool('modify_garment', { text: 'make it a trench coat', confirm: true }, { send: () => {} });
   out.version = await window._pgTool('card_version', { direction: 'previous' }, { send: () => {} });
-  out.visualizeInViewer = await window._pgTool('visualize', {}, { send: () => {} });
+  out.visualizeInViewer = await window._pgTool('visualize', { confirm: true }, { send: () => {} });
   out.fabricModalOpen = !!(document.getElementById('fabric-mode-modal') || {}).classList &&
     document.getElementById('fabric-mode-modal').classList.contains('open');
   try { showError('OpenAI error: 403'); } catch (_) {}
@@ -281,6 +282,8 @@ ok('"the card on the left" resolves through the region, versions collapsed', edi
 ok('every board snapshot card carries a position word', editor.snapshotPos === true);
 ok('modify_garment applies the change through the modify pipeline',
   editor.modify && editor.modify.ok === true && editor.modifySubmitCalled === true, JSON.stringify(editor.modify));
+ok('a render waits for their yes: modify_garment without confirm asks, never spends (v14.26)',
+  editor.modifyAsks && editor.modifyAsks.ok === false && editor.modifyAsks.needsConfirmation === true && /confirm true/.test(editor.modifyAsks.say || ''), JSON.stringify(editor.modifyAsks));
 ok('modify_garment NEVER opens the fabric popup', editor.fabricModalOpen === false);
 ok('card_version steps versions, never the favorites strip',
   editor.version && editor.version.ok === true && editor.version.sameGarment === true &&
@@ -561,7 +564,9 @@ const c8 = await page.evaluate(async () => {
   out.noNotesTitle = ![...host.querySelectorAll('.note-group-title')].some(t => t.textContent.trim().toLowerCase() === 'notes');
   const detail = host.querySelector('.vn-profile .note-item .note-detail');
   const cs = detail && getComputedStyle(detail);
-  out.detailWhite = !!cs && cs.color === 'rgba(255, 255, 255, 0.98)' && cs.fontStyle === 'normal';
+  out.detailWhite = !!cs && cs.color === 'rgba(222, 230, 245, 0.74)' && cs.fontStyle === 'normal';   // v14.26: the value softer, the title bright
+  const gt = host.querySelector('.vn-profile .note-item .note-group-title');
+  out.titleBright = !!gt && getComputedStyle(gt).color === 'rgba(255, 255, 255, 0.98)' && Number(getComputedStyle(gt).fontWeight) >= 600;
   // all of Pinterest: the third room
   const ev = await _pinWideSearch('gloves', 'everywhere');
   out.ev = ev;
@@ -584,7 +589,7 @@ const c8 = await page.evaluate(async () => {
 ok('the pencil sits beside the name, and every saved client has a pencil and an x', c8.pencilByName === true && c8.rowPencils === 2 && c8.rowXs === 2, JSON.stringify([c8.pencilByName, c8.rowPencils, c8.rowXs]));
 ok('renaming a saved client rewrites the roster and the board follows', c8.rowBox === true && c8.libRenamed === true && c8.boardFollows === true, JSON.stringify([c8.rowBox, c8.libRenamed, c8.boardFollows]));
 ok('Randomize fills the numbers, the face, and the fold you can see', c8.randHeight === true && c8.randFace === true && c8.randInput === true, JSON.stringify([c8.randHeight, c8.randFace, c8.randInput]));
-ok('the card editor notes lose the Notes subheader and read white', c8.noNotesTitle === true && c8.detailWhite === true, JSON.stringify([c8.noNotesTitle, c8.detailWhite]));
+ok('the card editor notes lose the Notes subheader; the title bright and bold, the value softer (v14.26)', c8.noNotesTitle === true && c8.detailWhite === true && c8.titleBright === true, JSON.stringify([c8.noNotesTitle, c8.detailWhite, c8.titleBright]));
 ok('all of Pinterest is the third room', c8.ev && c8.ev.ok === true && c8.ev.matches === 3 && c8.ev.scope === 'everywhere' && c8.evWall === 3 && /all of Pinterest/.test(c8.evSub), JSON.stringify(c8.ev));
 ok('a search of what is saved offers all of Pinterest in one pill', c8.pillAfterSaved === true && c8.pillGone === true);
 ok('when all of Pinterest is not switched on, she says exactly that', c8.off && c8.off.ok === false && c8.off.needs === 'access', JSON.stringify(c8.off));
@@ -669,11 +674,13 @@ const c10 = await page.evaluate(async () => {
   (0, eval)('_waitForVoicePipelineQuiet = async () => {}');
   (0, eval)("openFabricMode = () => chooseFabricMode('sourceable')");
   (0, eval)('_runVisualizeNow = async () => { window.__spy.ran = (window.__spy.ran || 0) + 1; window.__spy.refs = selectedImageReferences.map(r => r.title); }');
-  const named = await window._pgTool('visualize', { references: 'the logo' }, { send: () => {} });
+  const asks = await window._pgTool('visualize', { references: 'the logo' }, { send: () => {} });
+  out.asks = asks && asks.ok === false && asks.needsConfirmation === true;
+  const named = await window._pgTool('visualize', { references: 'the logo', confirm: true }, { send: () => {} });
   out.named = named; out.namedRefs = out.refs; out.pickerOpen = document.getElementById('image-ref-modal').classList.contains('open');
-  const fresh = await window._pgTool('visualize', {}, { send: () => {} });
+  const fresh = await window._pgTool('visualize', { confirm: true }, { send: () => {} });
   out.fresh = fresh; out.freshRefs = out.refs;
-  const missed = await window._pgTool('visualize', { references: 'the blue hat' }, { send: () => {} });
+  const missed = await window._pgTool('visualize', { references: 'the blue hat', confirm: true }, { send: () => {} });
   out.missed = missed;
   { const arr = (0, eval)('items'); for (const id of seedIds) { const i = arr.findIndex(x => x.id === id); if (i >= 0) arr.splice(i, 1); } }
   document.querySelectorAll('.moodboard-item').forEach(el => { if (el.style.top === '420px') el.remove(); });
@@ -698,10 +705,68 @@ const c10 = await page.evaluate(async () => {
 });
 ok('after Submit the person hears "Feedback submitted."', c10.toast === 'Feedback submitted.', JSON.stringify(c10.toast));
 ok('a failed tool logs itself in plain words and the log goes to the studio', /^Tool viewer failed: that control/.test(c10.logText) && c10.logSent === true && c10.retryExists === true, JSON.stringify([c10.logText, c10.logSent]));
+ok('visualize waits for their yes (v14.26)', c10.asks === true);
 ok('visualize by voice picks the reference they named, no popup', c10.named && c10.named.ok === true && Array.isArray(c10.namedRefs) && c10.namedRefs.length === 1 && /logo/i.test(c10.namedRefs[0]) && c10.pickerOpen === false, JSON.stringify([c10.named, c10.namedRefs, c10.pickerOpen]));
 ok('visualize by voice with nothing named starts fresh, nothing blended in', c10.fresh && c10.fresh.ok === true && Array.isArray(c10.freshRefs) && c10.freshRefs.length === 0 && /fresh/.test(c10.fresh.note || ''), JSON.stringify([c10.fresh, c10.freshRefs]));
 ok('a reference that is not on the board is named as missing', c10.missed && c10.missed.ok === true && /not found on the board: the blue hat/.test(c10.missed.note || ''), JSON.stringify(c10.missed));
 ok('the pins on screen come back as pictures for her screenshot, once', c10.thumbs === 1 && c10.thumbData === true && c10.cached === true, JSON.stringify([c10.thumbs, c10.thumbData, c10.cached]));
+
+// ── 3c11. v14.26: demo readiness: swatches from thumbnails, Pinterest in words, credit out in words ──
+const c11 = await page.evaluate(async () => {
+  const out = {};
+  // fabric swatches paint from thumbnails, the original stays for renders
+  out.thumbFromFile = _fabricThumb({ fileName: 'Burgundy Lace.JPG' });
+  out.thumbFromInv = _fabricThumb({ fileName: 'Gray Knit.JPG', dataUrl: 'https://x/aesthetics/fabrics/Gray%20Knit.JPG', thumb: 'https://x/aesthetics/fabrics/thumbs/Gray%20Knit.jpg' });
+  out.dotUrl = fabricSwatchUrl({ fileName: 'Red Royal.JPG' });
+  out.ownUpload = _fabricThumb({ name: 'mine', dataUrl: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=' });
+  out.tabIcon = (document.querySelector('#pg-tab-fabrics img') || {}).getAttribute('src');
+  // a wider search that fails says why in words, never a number
+  const origApi = window._pinApi;
+  window._pinApi = async () => { const e = new Error('pinterest_timeout'); e.code = 'pinterest_timeout'; throw e; };
+  out.timeout = await _pinWideSearch('corsets', 'saved');
+  window._pinApi = async () => { const e = new Error('reconnect'); e.code = 'reconnect'; throw e; };
+  out.reconnect = await _pinWideSearch('corsets', 'saved');
+  window._pinApi = async () => { const e = new Error('23'); throw e; };
+  out.mystery = await _pinWideSearch('corsets', 'saved');
+  window._pinApi = origApi;
+  // the voice line out of credit tells the studio so
+  const toasts = []; const origToast = window.showToast; window.showToast = (m) => toasts.push(String(m));
+  const origFetch = window.fetch;
+  window.fetch = async (u, o) => { if (String(u).includes('/api/voice-token')) return { ok: false, status: 502, json: async () => ({ error: 'voice_credit' }) }; return origFetch(u, o); };
+  await pgMayaStart();
+  window.fetch = origFetch; window.showToast = origToast;
+  out.creditToast = toasts.find(t => /credit/i.test(t)) || toasts.join(' | ');
+  // the pencil: hidden beside the name, shown on the highlighted client only; the client on the board is in the list
+  out.namePencilHidden = getComputedStyle(document.getElementById('drawer-avatar-rename')).display === 'none';
+  (0, eval)("_avatarLibCache = [{ id: 'linda', name: 'Linda', face: null }]; lastSummary = { client: { name: 'Fromsa' }, _measurements: { height: 70 } }; _avatarSwitcherOpen = false;");
+  await toggleAvatarSwitcher();
+  const panel = document.getElementById('drawer-avatar-switcher');
+  const rows = [...panel.querySelectorAll('.avatar-switch-row:not(.avatar-switch-new)')];
+  out.rowNames = rows.map(r => (r.querySelector('.avatar-switch-name') || {}).textContent);
+  const active = panel.querySelector('.avatar-switch-row.active');
+  out.activeName = active && active.querySelector('.avatar-switch-name').textContent;
+  out.activePencil = !!active && getComputedStyle(active.querySelector('.avatar-switch-rename')).opacity === '1';
+  const other = rows.find(r => !r.classList.contains('active'));
+  out.otherPencilHidden = !!other && getComputedStyle(other.querySelector('.avatar-switch-rename')).opacity === '0';
+  (0, eval)('_closeAvatarSwitcher()');
+  // new cards land on top; the feedback box sits above the viewer; her look carries the open picture
+  out.fbZ = getComputedStyle(document.getElementById('feedback-modal')).zIndex;
+  out.pic = await _pgPictureData('data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=');
+  return out;
+});
+ok('fabric swatches paint from thumbnails, the original stays for renders',
+  /\/aesthetics\/fabrics\/thumbs\/Burgundy%20Lace\.jpg$/.test(c11.thumbFromFile) && /thumbs\/Gray%20Knit\.jpg$/.test(c11.thumbFromInv) &&
+  /thumbs\/Red%20Royal\.jpg$/.test(c11.dotUrl) && /^data:image/.test(c11.ownUpload) && c11.tabIcon === '/aesthetics/fabrics/thumbs/Orange%20Cheetah.jpg',
+  JSON.stringify([c11.thumbFromFile, c11.dotUrl, c11.tabIcon]));
+ok('a wider search that fails says why in words, never a number',
+  c11.timeout && /took too long/.test(c11.timeout.reason) && c11.reconnect && c11.reconnect.needs === 'reconnect' && c11.mystery && !/23/.test(c11.mystery.reason) && /did not answer/.test(c11.mystery.reason),
+  JSON.stringify([c11.timeout, c11.reconnect, c11.mystery]));
+ok('the voice line out of credit says so to the studio', /OpenAI credit has run out/.test(c11.creditToast), JSON.stringify(c11.creditToast));
+ok('the feedback box opens above the open picture, and her look can carry a picture at full detail',
+  Number(c11.fbZ) > 200 && /^data:image\/jpeg/.test(c11.pic || ''), JSON.stringify([c11.fbZ, String(c11.pic).slice(0, 30)]));
+ok('the client on the board sits in the list, highlighted, with the only pencil; the one beside the name is gone',
+  c11.namePencilHidden === true && c11.activeName === 'Fromsa' && c11.rowNames.includes('Linda') && c11.activePencil === true && c11.otherPencilHidden === true,
+  JSON.stringify([c11.namePencilHidden, c11.rowNames, c11.activeName, c11.activePencil, c11.otherPencilHidden]));
 
 // ── 3d. v14.16: the studio gauge never claims zero of two dollars ──
 const gauge = await page.evaluate(() => {
