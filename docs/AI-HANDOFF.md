@@ -74,6 +74,42 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.23 (Claude): the profile tidied, Randomize fixed, white notes, all of Pinterest
+
+Profile: .avatar-switch-actions holds Randomize and Replace only.
+#drawer-avatar-rename (pencil) sits after the caret in .pg-avatar-nameline
+and calls pgRenameClient(). Each roster row has .avatar-switch-rename
+(pgRenameAvatarRow(id): in place input) and the x; renameAvatarById(id,
+name) rewrites the settings/avatars list under the new key and, when that
+client is on the board, updateClientNameInline follows.
+Randomize: _refreshActiveAvatarView used to repaint only under a
+.viewing-avatar class that the cabinet layout never sets, so nothing
+showed; it now always runs _renderAvatarBody + refreshDrawerClientName,
+and randomizeAvatar files the client (_saveCurrentAvatarToLibrary) and
+queues a save. The public headshots list (MAYA_PUBLIC_HEADSHOTS) is served
+from /aesthetics/headshots/, verified live.
+Card editor: renderViewerNotes pushes the profile group with an empty
+title (no "Notes" subheader; empty titles are skipped in the join).
+#viewer-notes .vn-profile .note-item .note-detail is white and upright
+(the old .vn-profile .note-detail rule tied on specificity with the later
+generic italic rule and lost); the column's head, items, titles and group
+titles are brighter across the board.
+Search, third room: _pinWideSearch(q, scope) with scope 'saved' (GET
+/api/pinterest/search) or 'everywhere' (GET /api/pinterest/everywhere).
+_pinSearchAllPill adds #pin-search-all (class fabrics-tab, "All of
+Pinterest") to #pin-tabs after a saved search; _pinSearchEnter goes to
+everywhere by itself when saved is empty; a not_available answer returns
+{needs:'access'} with a plain reason. search_pins tool: scope
+'saved'|'everywhere' (the server decl carries the enum); instructions
+describe three rooms with OFFER between them. Server route: tries
+Pinterest v5 GET /search/partner/pins (term, country_code US, limit 50;
+BETA, granted per app by Pinterest, read from the v5 OpenAPI spec), then
+Google Custom Search image search with siteSearch pinterest.com when
+GOOGLE_CSE_KEY + GOOGLE_CSE_CX are set (healthz reports pinterestWeb),
+else 501 not_available. Both doors are Fromsa's to open: request beta
+access for search/partner/pins in the Pinterest developer portal, or set
+the two Google keys on Cloud Run. Battery: 143 checks per surface.
+
 ## v14.22 (Claude): the third rung of the safety ladder
 
 _runVisualizeNow (both surfaces): faceDescClause and lineageAnchor are

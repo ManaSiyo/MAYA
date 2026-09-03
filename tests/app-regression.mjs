@@ -1990,6 +1990,22 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.23: the pencil beside the name, Randomize repaints, white notes, all of Pinterest as the third room',
+  PLAYGROUND_SOURCE.includes('id="drawer-avatar-rename"') &&
+  INDEX_SOURCE.includes('id="drawer-avatar-rename"') &&
+  PLAYGROUND_SOURCE.includes('async function renameAvatarById(id, name)') &&
+  INDEX_SOURCE.includes('async function renameAvatarById(id, name)') &&
+  !PLAYGROUND_SOURCE.includes('title="Remove the face photo">Remove photo</button>') &&
+  PLAYGROUND_SOURCE.includes('try { _renderAvatarBody(); } catch (_) {}\n  try { refreshDrawerClientName(); } catch (_) {}') &&
+  PLAYGROUND_SOURCE.includes("groups.push({ t: '', b: '<div class=\"vn-profile\">'") &&
+  PLAYGROUND_SOURCE.includes('#viewer-notes .vn-profile .note-item .note-detail') &&
+  PLAYGROUND_SOURCE.includes('async function _pinWideSearch(q, scope)') &&
+  INDEX_SOURCE.includes('async function _pinWideSearch(q, scope)') &&
+  PLAYGROUND_SOURCE.includes('function _pinSearchAllPill(q, hide)') &&
+  SERVER_SOURCE.includes("app.get('/api/pinterest/everywhere'") &&
+  SERVER_SOURCE.includes('/search/partner/pins?') &&
+  SERVER_SOURCE.includes('GOOGLE_CSE_KEY') &&
+  SERVER_SOURCE.includes("enum: ['saved', 'everywhere']"));
 ok('v14.22: a face the image filter refuses still renders, on a fit model, and says so',
   PLAYGROUND_SOURCE.includes('let faceSkipped = false;') &&
   INDEX_SOURCE.includes('let faceSkipped = false;') &&
@@ -2024,7 +2040,7 @@ ok('v14.20: Profile, the Projects fold, renaming in place, the dropdown actions,
   INDEX_SOURCE.includes('class="avatar-switch-actions"') &&
   PLAYGROUND_SOURCE.includes('one eighth of the standing height') &&
   INDEX_SOURCE.includes('one eighth of the standing height') &&
-  PLAYGROUND_SOURCE.includes('async function _pinWideSearch(q)') &&
+  PLAYGROUND_SOURCE.includes('async function _pinWideSearch(q, scope)') &&
   PLAYGROUND_SOURCE.includes('<button class="pin-search-btn" id="pin-search-btn" onclick="_pinSearchToggle()" title="Search Pinterest" aria-label="Search Pinterest"><svg'));
 ok('v14.19: the drawer untangled: the open project highlighted, clients and projects independent, the photo opens the list',
   PLAYGROUND_SOURCE.includes('id="drawer-avatar-button" onclick="toggleAvatarSwitcher()"') &&
@@ -2048,7 +2064,7 @@ ok('v14.18: every voice scroll glides, and search reaches everything saved on Pi
   PLAYGROUND_SOURCE.includes("_pgGlideStart(el, dir, 'x')") &&
   PLAYGROUND_SOURCE.includes("_pgGlideStart(rows, dir, 'x')") &&
   PLAYGROUND_SOURCE.includes('window._pinWiderActive = true;') &&
-  PLAYGROUND_SOURCE.includes("_pinApi('/api/pinterest/search?q='") &&
+  PLAYGROUND_SOURCE.includes("'/api/pinterest/search?q='") &&
   SERVER_SOURCE.includes("app.get('/api/pinterest/search'") &&
   SERVER_SOURCE.includes("wider: { type: 'boolean'") &&
   SERVER_SOURCE.includes('EVERY scroll you perform is a continuous glide'));

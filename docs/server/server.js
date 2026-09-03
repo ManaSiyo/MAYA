@@ -137,6 +137,7 @@ function _healthz(_req, res) {
       drive:  !!SUBMISSIONS_BUCKET,
       fal:    !!process.env.FAL_API_KEY,
       stripe: !!process.env.STRIPE_SECRET_KEY,
+      pinterestWeb: !!(process.env.GOOGLE_CSE_KEY && process.env.GOOGLE_CSE_CX),   // v14.23
     },
   });
 }
@@ -1925,6 +1926,69 @@ app.get('/api/pinterest/search', requireAuthHeader, async (req, res) => {
     })).filter(p => p.url);
     res.json({ ok: true, pins, bookmark: j.bookmark || null });
   } catch (e) { pinErr(res, e); }
+});
+
+// v14.23: ALL of Pinterest. Two doors, tried in order:
+//   1. Pinterest v5 GET /search/partner/pins (term, country_code): the top
+//      pins across Pinterest for a term. Beta, granted per app by Pinterest.
+//   2. A web image search pinned to pinterest.com through Google Custom
+//      Search (GOOGLE_CSE_KEY + GOOGLE_CSE_CX), when those are set.
+// Neither open means 501 not_available, and the client says so plainly.
+app.get('/api/pinterest/everywhere', requireAuthHeader, async (req, res) => {
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized' }); }
+  const q = String(req.query.q || '').trim().slice(0, 80);
+  if (q.length < 2) return res.status(400).json({ error: 'empty' });
+  let partnerNote = '';
+  if (pinConfigured()) {
+    try {
+      const j = await pinFetch(user.sub, '/search/partner/pins?' + new URLSearchParams({ term: q, country_code: 'US', limit: '50' }).toString());
+      const biggest = (images) => {
+        if (!images || typeof images !== 'object') return '';
+        let best = '', bestW = -1;
+        for (const [key, val] of Object.entries(images)) {
+          const url = val && val.url;
+          if (!url) continue;
+          const w = key === 'originals' ? 99999 : Number((val.width) || (String(key).split('x')[0]) || 0);
+          if (w > bestW) { bestW = w; best = url; }
+        }
+        return best;
+      };
+      const pins = (j.items || []).map(p => ({
+        id: String(p.id),
+        url: biggest(p.media && p.media.images) || '',
+        alt: String(p.alt_text || p.title || p.description || '').slice(0, 120),
+      })).filter(p => p.url);
+      if (pins.length) return res.json({ ok: true, pins, source: 'pinterest', bookmark: j.bookmark || null });
+    } catch (e) {
+      partnerNote = String((e && e.message) || e).slice(0, 120);
+      if (e && (e.code === 'not_connected' || e.code === 'reconnect')) return pinErr(res, e);
+      console.warn('[pinterest everywhere] partner search unavailable:', partnerNote);
+    }
+  }
+  const key = process.env.GOOGLE_CSE_KEY, cx = process.env.GOOGLE_CSE_CX;
+  if (key && cx) {
+    try {
+      const u = 'https://www.googleapis.com/customsearch/v1?' + new URLSearchParams({
+        key, cx, q, searchType: 'image', num: '10', safe: 'active',
+        siteSearch: 'pinterest.com', siteSearchFilter: 'i' }).toString();
+      const r = await fetch(u, { signal: AbortSignal.timeout(15000) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error('web search ' + r.status + ': ' + JSON.stringify(j).slice(0, 120));
+      const pins = (j.items || []).map((it, i) => ({
+        id: 'web-' + i + '-' + Buffer.from(String(it.link || '')).toString('base64').slice(0, 12),
+        url: String(it.link || ''),
+        alt: String(it.title || '').slice(0, 120),
+        page: String((it.image && it.image.contextLink) || ''),
+      })).filter(p => /^https:\/\//.test(p.url));
+      return res.json({ ok: true, pins, source: 'web' });
+    } catch (e) {
+      console.warn('[pinterest everywhere] web search failed:', String((e && e.message) || e).slice(0, 160));
+      return res.status(502).json({ error: 'web_search_failed' });
+    }
+  }
+  res.status(501).json({ error: 'not_available', partner: partnerNote || 'not tried', web: 'no key' });
 });
 
 // GET /api/admin/submissions — every submission in MAYA's own store, newest
@@ -4150,7 +4214,7 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       '- open_card(query) / delete_card(query) / favorite_card(query): act on a card by its words.\n' +
       '- viewer(action): inside the opened picture: close, next, prev, post_wall, get_it_made, listen, switch_fabric, add_reference.\n' +
       '- pin_view(which): Pinterest All saves or Boards. open_board(name) opens one.\n' +
-      '- search_pins(query): "let us look at corsets" means THIS: open Pinterest, show the matches, glide them slowly. It looks at the loaded wall first; when it finds some there, OFFER the wider search and on a yes call search_pins with wider true, which searches EVERYTHING saved on their Pinterest through the API. Finds nothing locally, it goes wider by itself. Pinterest has no public search beyond an account\'s own saves; wanting fresh outside imagery means describe_garment. clear_pin_search brings the wall back.\n' +
+      '- search_pins(query): "let us look at corsets" means THIS: open Pinterest, show the matches, glide them slowly. Three rooms: the loaded wall first; then wider true, everything saved on their Pinterest; then scope everywhere, ALL of Pinterest. When one room has matches, OFFER the next before going there; when a room is empty, go to the next by yourself and say so. If all of Pinterest answers that it is not switched on, say exactly that (the studio can turn it on) and offer describe_garment for fresh imagery. clear_pin_search brings the wall back.\n' +
       '- EVERY scroll you perform is a continuous glide: pins slide down, favorites and the community wall slide sideways, and it keeps moving on its own until they say stop. The MOMENT they say stop, call scroll with direction stop. Never leave anything moving after a stop.\n' +
       '- every card in list_board and on the board list carries a position word (top left, center, bottom right). When they describe a card by where it sits ("the one in the upper center"), those words resolve it; check list_board before guessing.\n' +
       '- go_to_screen(where): walk the app itself: community (the shared wall above), home (the moodboard), favorites (below). Go there before talking about what lives there.\n' +
@@ -4199,7 +4263,7 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       { type: 'function', name: 'open_board', description: 'Open one Pinterest board by name.', parameters: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] } },
       { type: 'function', name: 'scroll_pins', description: 'Glide the Pinterest wall continuously; stop halts it.', parameters: { type: 'object', properties: { direction: { type: 'string', enum: ['down', 'up', 'stop'] } } } },
       { type: 'function', name: 'search_pins', description: 'Search Pinterest and glide the matches. Default: the loaded wall. wider true: everything the account has saved, through the API.',
-        parameters: { type: 'object', properties: { query: { type: 'string' }, wider: { type: 'boolean', description: 'true to search everything saved on their Pinterest' } }, required: ['query'] } },
+        parameters: { type: 'object', properties: { query: { type: 'string' }, wider: { type: 'boolean', description: 'true to search everything saved on their Pinterest' }, scope: { type: 'string', enum: ['saved', 'everywhere'], description: 'everywhere searches ALL of Pinterest, not only their saves' } }, required: ['query'] } },
       { type: 'function', name: 'clear_pin_search', description: 'Clear the pin search; the whole wall comes back.', parameters: { type: 'object', properties: {} } },
       { type: 'function', name: 'modify_garment', description: 'Inside an open picture: apply the spoken design change to THIS piece and render it. No fabric or reference popups. Use this for every design change while a picture is open.',
         parameters: { type: 'object', properties: { text: { type: 'string', description: 'the change in their own words' } }, required: ['text'] } },

@@ -35,6 +35,10 @@ const srv = http.createServer((req, res) => {
     if (p === '/api/pinterest/search') return res.end(JSON.stringify({ ok: true, pins: [
       { id: 'w1', url: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=', alt: 'victorian corset in ivory silk' },
       { id: 'w2', url: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=', alt: 'black leather corset belt' }] }));
+    if (p === '/api/pinterest/everywhere') return res.end(JSON.stringify({ ok: true, source: 'pinterest', pins: [
+      { id: 'e1', url: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=', alt: 'opera gloves in black lace' },
+      { id: 'e2', url: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=', alt: 'satin evening gloves' },
+      { id: 'e3', url: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=', alt: 'fishnet gloves with bows' }] }));
     if (p === '/api/pinterest/pins') return res.end(JSON.stringify({ pins: [] }));
     if (p === '/api/feature') return res.end(JSON.stringify({ ok: true }));
     if (p === '/api/feedback') return res.end(JSON.stringify({ ok: true }));
@@ -472,8 +476,8 @@ ok('the tab reads Profile', fold.title === 'Profile', fold.title);
 ok('Projects is a fold above Stats holding the list', fold.foldAboveStats === true && fold.listInFold === true);
 ok('the placeholder pills and the beside pill are gone', fold.pillHidden === true && fold.actionsHidden === true);
 ok('the fold summary carries the open project name', fold.summary === 'Rudy the Presley' && fold.summaryIdle === '', JSON.stringify([fold.summary, fold.summaryIdle]));
-ok('the client dropdown carries Rename, Randomize, Replace and Remove even when empty',
-  fold.actionButtons.length === 4 && fold.actionButtons[0] === 'Rename' && fold.actionButtons[1] === 'Randomize' && fold.newClient === true, JSON.stringify(fold.actionButtons));
+ok('the client dropdown carries Randomize and Replace only (v14.23), even when empty',
+  fold.actionButtons.length === 2 && fold.actionButtons[0] === 'Randomize' && fold.actionButtons[1] === 'Replace' && fold.newClient === true, JSON.stringify(fold.actionButtons));
 ok('a project is renamed where it sits', fold.renameBox === true && fold.renamed === 'Gala 2026' && fold.summaryAfter === 'Gala 2026', JSON.stringify([fold.renamed, fold.titleAfter, fold.summaryAfter]));
 ok('the search pill is a real magnifying glass with a centered box', fold.glass === true && fold.inputCentered === true);
 ok('the finger search reaches everything saved and a cleared box restores the wall', fold.wide && fold.wide.ok === true && fold.wide.matches === 2 && fold.wideWall === 2 && fold.restored === true, JSON.stringify(fold.wide));
@@ -520,6 +524,70 @@ ok('a face the filter refuses still renders, on a fit model with the same measur
   !ladder.threw && ladder.placed === true && ladder.edits.length === 1 && ladder.gens.length === 1 && ladder.genHasFace === false && ladder.genHasAge === false && ladder.genHasHeight === true,
   JSON.stringify({ threw: ladder.threw, placed: ladder.placed, edits: ladder.edits.length, gens: ladder.gens.length, face: ladder.genHasFace, age: ladder.genHasAge, height: ladder.genHasHeight }));
 ok('and it says so, to the person and to Maya', /fit model/.test(ladder.note) && ladder.err === '', ladder.note);
+
+// ── 3c8. v14.23: the pencil beside the name, Randomize that shows, white notes, all of Pinterest ──
+const c8 = await page.evaluate(async () => {
+  const out = {};
+  out.pencilByName = !!document.getElementById('drawer-avatar-rename');
+  // a pencil and an x on every saved client; renaming a row rewrites the roster
+  (0, eval)("_avatarLibCache = [{ id: 'micheal', name: 'Micheal', face: null }, { id: 'rudy', name: 'Rudy', face: null }]; lastSummary = { client: { name: 'Micheal' } }; _avatarSwitcherOpen = false;");
+  await toggleAvatarSwitcher();
+  const panel = document.getElementById('drawer-avatar-switcher');
+  out.rowPencils = panel.querySelectorAll('.avatar-switch-rename').length;
+  out.rowXs = panel.querySelectorAll('.avatar-switch-delete').length;
+  pgRenameAvatarRow('micheal');
+  const inp = panel.querySelector('.pg-client-rename');
+  out.rowBox = !!inp;
+  if (inp) { inp.value = 'Aster'; inp.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); }
+  await new Promise(r => setTimeout(r, 150));
+  const lib = (0, eval)('_avatarLibCache');
+  out.libRenamed = lib.some(a => a.id === 'aster' && a.name === 'Aster') && !lib.some(a => a.id === 'micheal');
+  out.boardFollows = (0, eval)('lastSummary.client.name') === 'Aster';
+  (0, eval)('_closeAvatarSwitcher()');
+  // Randomize paints what it did: the numbers land in the fold and the face fills
+  const origPick = window.pickRandomHeadshot;
+  window.pickRandomHeadshot = async () => 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=';
+  const origAnalyze = window.analyzeFacePhoto; window.analyzeFacePhoto = async () => ({});
+  await randomizeAvatar();
+  await new Promise(r => setTimeout(r, 200));
+  out.randHeight = !!(0, eval)('lastSummary._measurements.height');
+  out.randFace = !document.getElementById('drawer-avatar-face').classList.contains('empty');
+  out.randInput = !!document.querySelector('#pg-meas-host input[id="ameas-height"]') && document.querySelector('#pg-meas-host input[id="ameas-height"]').value !== '';
+  window.pickRandomHeadshot = origPick; window.analyzeFacePhoto = origAnalyze;
+  // the card editor notes: no "Notes" subheader, the five lines in white
+  renderViewerNotes({ card: { profile: { bio: 'A crisp look', aesthetic: 'Fresh', silhouette: 'A line', color: 'White', era: 'Now' } } });
+  const host = document.getElementById('viewer-notes');
+  out.noNotesTitle = ![...host.querySelectorAll('.note-group-title')].some(t => t.textContent.trim().toLowerCase() === 'notes');
+  const detail = host.querySelector('.vn-profile .note-item .note-detail');
+  const cs = detail && getComputedStyle(detail);
+  out.detailWhite = !!cs && cs.color === 'rgba(255, 255, 255, 0.98)' && cs.fontStyle === 'normal';
+  // all of Pinterest: the third room
+  const ev = await _pinWideSearch('gloves', 'everywhere');
+  out.ev = ev;
+  out.evWall = document.querySelectorAll('#pinterest-drawer-body .pin-pic').length;
+  out.evSub = (document.getElementById('pin-drawer-title') || {}).textContent;
+  const saved = await _pinWideSearch('corsets', 'saved');
+  out.pillAfterSaved = !!document.getElementById('pin-search-all');
+  const origApi = window._pinApi;
+  window._pinApi = async () => { const e = new Error('not_available'); e.code = 'not_available'; throw e; };
+  out.off = await _pinWideSearch('gloves', 'everywhere');
+  window._pinApi = origApi;
+  const tool = await window._pgTool('search_pins', { query: 'gloves', scope: 'everywhere' }, { send: () => {} });
+  out.tool = tool;
+  _pgGlideStop();
+  await window._pgTool('clear_pin_search', {}, { send: () => {} });
+  out.pillGone = !document.getElementById('pin-search-all');
+  (0, eval)("lastSummary = null;");
+  return out;
+});
+ok('the pencil sits beside the name, and every saved client has a pencil and an x', c8.pencilByName === true && c8.rowPencils === 2 && c8.rowXs === 2, JSON.stringify([c8.pencilByName, c8.rowPencils, c8.rowXs]));
+ok('renaming a saved client rewrites the roster and the board follows', c8.rowBox === true && c8.libRenamed === true && c8.boardFollows === true, JSON.stringify([c8.rowBox, c8.libRenamed, c8.boardFollows]));
+ok('Randomize fills the numbers, the face, and the fold you can see', c8.randHeight === true && c8.randFace === true && c8.randInput === true, JSON.stringify([c8.randHeight, c8.randFace, c8.randInput]));
+ok('the card editor notes lose the Notes subheader and read white', c8.noNotesTitle === true && c8.detailWhite === true, JSON.stringify([c8.noNotesTitle, c8.detailWhite]));
+ok('all of Pinterest is the third room', c8.ev && c8.ev.ok === true && c8.ev.matches === 3 && c8.ev.scope === 'everywhere' && c8.evWall === 3 && /all of Pinterest/.test(c8.evSub), JSON.stringify(c8.ev));
+ok('a search of what is saved offers all of Pinterest in one pill', c8.pillAfterSaved === true && c8.pillGone === true);
+ok('when all of Pinterest is not switched on, she says exactly that', c8.off && c8.off.ok === false && c8.off.needs === 'access', JSON.stringify(c8.off));
+ok('search_pins with scope everywhere reaches the third room', c8.tool && c8.tool.ok === true && c8.tool.from === 'all of Pinterest', JSON.stringify(c8.tool));
 
 // ── 3d. v14.16: the studio gauge never claims zero of two dollars ──
 const gauge = await page.evaluate(() => {

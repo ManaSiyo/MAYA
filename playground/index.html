@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.22">
+<meta name="maya-version" content="14.23">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -1946,6 +1946,21 @@
     color: rgba(235,190,190,0.85); font-size: 13px; line-height: 1; cursor: pointer; padding: 0;
     opacity: 0; transition: opacity 0.15s; }
   #notes-drawer .avatar-switch-row:hover .avatar-switch-delete { opacity: 1; }
+  /* v14.23: a pencil on every saved client, and one beside the name itself. */
+  #notes-drawer .avatar-switch-row { padding-right: 64px; }
+  #notes-drawer .avatar-switch-rename { position: absolute; top: 50%; right: 36px; transform: translateY(-50%);
+    width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.2);
+    color: rgba(215,230,255,0.9); font-size: 11px; line-height: 1; cursor: pointer; padding: 0;
+    opacity: 0; transition: opacity 0.15s; }
+  #notes-drawer .avatar-switch-row:hover .avatar-switch-rename { opacity: 1; }
+  #notes-drawer .avatar-switch-row .pg-client-rename { font-size: 14px; padding: 0 6px; width: 100%; }
+  #notes-drawer .drawer-avatar-rename { flex: none; width: 20px; height: 20px; border-radius: 50%; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center; margin-left: 2px;
+    background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.2);
+    color: rgba(215,230,255,0.8); font-size: 10px; line-height: 1; cursor: pointer; transition: color .2s, border-color .2s; }
+  #notes-drawer .drawer-avatar-rename:hover { color: #fff; border-color: rgba(255,255,255,0.45); }
+  @media (hover: none) { #notes-drawer .avatar-switch-rename { opacity: 1; } }
   #notes-drawer .avatar-switch-delete:hover { color: #fff; border-color: rgba(255,170,170,0.6); }
   /* v14.20: the pills under the name and the pill beside it were placeholders;
      Rename, Randomize, Replace and Remove live in the client dropdown now, and
@@ -3670,8 +3685,12 @@
   /* v14.06: the five-line profile every picture carries: bio, aesthetic,
      silhouette, color, era. Subheadlines with their answers underneath. */
   #viewer-notes .vn-profile .note-item { border-bottom: 0.25px solid rgba(255,255,255,0.06); padding: 7px 0; }
-  #viewer-notes .vn-profile .note-detail { font-style: normal; font-family: 'Cormorant Garamond', serif;
-    font-size: 13px; line-height: 1.4; color: rgba(225,230,245,0.92); }
+  /* v14.23: the five lines read white. The old rule lost to the generic
+     .note-item .note-detail rule (same specificity, declared later), which
+     is why Bio and friends came out dim and italic. */
+  #viewer-notes .vn-profile .note-item .note-detail { font-style: normal; font-family: 'Cormorant Garamond', serif;
+    font-size: 14px; line-height: 1.4; color: rgba(255,255,255,0.98); }
+  #viewer-notes .vn-profile .note-item .note-group-title { color: rgba(238,244,255,0.78); margin: 0 0 3px; }
   #viewer-notes::-webkit-scrollbar { display: none; }
   #garment-modal.open:not([data-photo="full"]) #viewer-notes { display: block; }
   /* Same type, same rhythm, same hairlines as the notes that used to live in
@@ -3679,7 +3698,7 @@
   #viewer-notes .vn-head {
     font-family: 'Jost', sans-serif; font-weight: 300;
     font-size: 9.5px; letter-spacing: 0.28em; text-transform: uppercase;
-    color: rgba(245,250,255,0.85);
+    color: rgba(255,255,255,0.96);
     padding-bottom: 10px; margin-bottom: 4px;
     border-bottom: 0.5px solid rgba(255,255,255,0.08);
   }
@@ -3688,20 +3707,20 @@
   #viewer-notes .note-group-title {
     font-family: 'Jost', sans-serif; font-weight: 300;
     font-size: 8.5px; letter-spacing: 0.24em; text-transform: uppercase;
-    color: rgba(200,210,230,0.5);
+    color: rgba(225,235,250,0.72);
     margin: 12px 0 4px;
   }
   #viewer-notes .note-item {
     padding: 9px 0;
     border-bottom: 0.25px solid rgba(255,255,255,0.06);
     font-size: 12px; font-weight: 300; line-height: 1.55;
-    color: rgba(220,225,240,0.88);
+    color: rgba(245,248,255,0.96);
   }
   #viewer-notes .note-item:last-child { border-bottom: none; }
   #viewer-notes .note-item .note-title {
     font-family: 'Cormorant Garamond', serif;
     font-size: 14px; line-height: 1.35;
-    color: rgba(225,230,245,0.94);
+    color: rgba(255,255,255,0.97);
     margin-bottom: 3px;
   }
   #viewer-notes .vn-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
@@ -4900,6 +4919,8 @@
                    caret is no longer a 2px sliver you have to hit exactly. -->
               <span class="drawer-avatar-name" id="drawer-avatar-name" onclick="toggleAvatarSwitcher()" title="Switch avatar / client" style="cursor:pointer">name</span>
               <button class="drawer-avatar-caret" id="drawer-avatar-caret" type="button" onclick="toggleAvatarSwitcher()" title="Switch avatar / client">&#9662;</button>
+              <!-- v14.23: the pencil sits beside the name itself. -->
+              <button class="drawer-avatar-rename" id="drawer-avatar-rename" type="button" onclick="pgRenameClient()" title="Rename this client" aria-label="Rename this client">&#9998;</button>
               <!-- v13.89: Projects rides beside the name, right-aligned over the
                    Remove pill. Same list, same dropdown behaviour (pgProjects);
                    the avatar and Projects are now independent under one account. -->
@@ -8396,16 +8417,16 @@ async function toggleAvatarSwitcher() {
       (a.face ? '<span class="avatar-switch-face" style="background-image:url(\'' + a.face + '\')"></span>'
               : '<span class="avatar-switch-face empty">·</span>') +
       '<span class="avatar-switch-name">' + escapeHtml(a.name) + '</span>' +
+      '<button class="avatar-switch-rename" type="button" onclick="event.stopPropagation();pgRenameAvatarRow(\'' + escapeHtml(a.id) + '\')" title="Rename this client" aria-label="Rename this client">&#9998;</button>' +
       '<button class="avatar-switch-delete" type="button" onclick="event.stopPropagation();deleteAvatar(\'' + escapeHtml(a.id) + '\')" title="Remove this client from the list" aria-label="Remove this client">&#215;</button>' +
     '</div>'
   ).join('');
   // v14.20: Rename, Randomize, Replace and Remove ride inside the dropdown,
   // beside the photo they act on, whether or not the list has anyone in it.
+  // v14.23: two pills only. Renaming lives on the pencil beside the name.
   const actions = '<div class="avatar-switch-actions">' +
-    '<button class="drawer-action" type="button" onclick="pgRenameClient()" title="Name this client">Rename</button>' +
     '<button class="drawer-action" type="button" onclick="randomizeAvatar()" title="Random measurements and a random face">Randomize</button>' +
-    '<button class="drawer-action" type="button" onclick="pgReplaceFace()" title="Upload a face photo">Replace photo</button>' +
-    '<button class="drawer-action" type="button" onclick="pgRemoveFace()" title="Remove the face photo">Remove photo</button>' +
+    '<button class="drawer-action" type="button" onclick="pgReplaceFace()" title="Upload a face photo">Replace</button>' +
     '</div>';
   panel.innerHTML = actions + (rows || '<div class="avatar-switch-empty">No saved clients yet. Rename, add a face, and they are filed.</div>') +
     '<button class="avatar-switch-row avatar-switch-new" onclick="newAvatar()">+ New avatar</button>';
@@ -8451,6 +8472,50 @@ async function newAvatar() {
   if (typeof pgRenameClient === 'function') pgRenameClient(); else openAvatarSubMenu();
   showToast('New client. Type their name, then add a face.');
 }
+// v14.23: rename a saved client where it sits in the list. The library entry
+// is rewritten under the new key; if that person is on the board, the board
+// follows.
+async function renameAvatarById(id, name) {
+  name = String(name || '').trim().slice(0, 40);
+  if (!name) return false;
+  const lib = await _loadAvatarLibrary();
+  const a = lib.find(x => x.id === id);
+  if (!a) return false;
+  const key = name.toLowerCase();
+  const next = lib.filter(x => x.id !== id && x.id !== key);
+  next.unshift(Object.assign({}, a, { id: key, name, updatedAt: Date.now() }));
+  _avatarLibCache = next;
+  try { if (typeof projectStore !== 'undefined' && projectStore.ready()) await _avatarsDoc().set({ list: next, updatedAtMs: Date.now() }); }
+  catch (e) { showError('Could not rename that client. ' + ((e && e.message) || '')); return false; }
+  const curKey = String((lastSummary && lastSummary.client && lastSummary.client.name) || '').trim().toLowerCase();
+  if (curKey === id) { updateClientNameInline(name); refreshDrawerClientName(); }
+  _avatarSwitcherOpen = false;
+  toggleAvatarSwitcher();
+  showToast('Renamed to ' + name);
+  return true;
+}
+function pgRenameAvatarRow(id) {
+  let row = null;
+  try { const sel = (window.CSS && CSS.escape) ? CSS.escape(id) : id; row = document.querySelector('#drawer-avatar-switcher .avatar-switch-row[data-id="' + sel + '"]'); } catch (_) {}
+  const nameEl = row && row.querySelector('.avatar-switch-name');
+  if (!nameEl || row.querySelector('.pg-client-rename')) return;
+  const cur = nameEl.textContent.trim();
+  const inp = document.createElement('input');
+  inp.className = 'pg-client-rename'; inp.type = 'text'; inp.value = cur; inp.maxLength = 40; inp.autocomplete = 'off';
+  inp.addEventListener('click', e => e.stopPropagation());
+  nameEl.textContent = ''; nameEl.appendChild(inp);
+  let done = false;
+  const finish = (commit) => {
+    if (done) return; done = true;
+    const v = commit ? inp.value.trim() : cur;
+    try { inp.remove(); } catch (_) {}
+    nameEl.textContent = v || cur;
+    if (commit && v && v !== cur) renameAvatarById(id, v);
+  };
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); finish(true); } else if (e.key === 'Escape') finish(false); });
+  inp.addEventListener('blur', () => finish(true));
+  inp.focus(); inp.select();
+}
 async function deleteAvatar(id) {
   const lib = await _loadAvatarLibrary();
   const a = lib.find(x => x.id === id);
@@ -8466,10 +8531,11 @@ async function deleteAvatar(id) {
 }
 // Helper for face-photo handlers, re-render whichever Avatar UI is active.
 function _refreshActiveAvatarView() {
-  const drawer = document.getElementById('notes-drawer');
-  if (drawer && drawer.classList.contains('viewing-avatar')) {
-    _renderAvatarBody();
-  }
+  // v14.23: the measurements live in the Profile fold now, not in a sub menu
+  // with a viewing-avatar class, so this used to repaint nothing: Randomize
+  // filled the numbers and the face and the drawer never showed either.
+  try { _renderAvatarBody(); } catch (_) {}
+  try { refreshDrawerClientName(); } catch (_) {}
 }
 
 // v9.2: face descriptors still cached for future use even though no
@@ -8725,6 +8791,8 @@ async function randomizeAvatar() {
     console.warn('[Maya randomize]', e);
   }
   _refreshActiveAvatarView();
+  try { _saveCurrentAvatarToLibrary(); } catch (_) {}
+  try { if (typeof projectStore !== 'undefined' && projectStore.currentId) projectStore.queueSave(); } catch (_) {}
   showToast('Randomized.');
 }
 
@@ -11978,7 +12046,7 @@ function renderViewerNotes(item) {
       '<div class="note-detail">' + escapeHtml(String(v)) + '</div></div>' : '';
     const body = row('Bio', P.bio) + row('Aesthetic', P.aesthetic) + row('Silhouette', P.silhouette) +
                  row('Color', P.color) + row('Era', P.era);
-    if (body) groups.push({ t: 'Notes', b: '<div class="vn-profile">' + body + '</div>' });
+    if (body) groups.push({ t: '', b: '<div class="vn-profile">' + body + '</div>' });   // v14.23: Design Notes is heading enough
   } else if (c.caption) {
     groups.push({ t: 'Notes', b: '<div class="vn-caption">' + escapeHtml(c.caption) + '</div>' });
   }
@@ -12038,7 +12106,7 @@ function renderViewerNotes(item) {
     return;
   }
   host.innerHTML = head + groups.map(g =>
-    '<div class="note-group"><div class="note-group-title">' + escapeHtml(g.t) + '</div>' + g.b + '</div>').join('');
+    '<div class="note-group">' + (g.t ? '<div class="note-group-title">' + escapeHtml(g.t) + '</div>' : '') + g.b + '</div>').join('');
   // v13.44: the pills answer their x. Crossed = excluded from the next render.
   host.querySelectorAll('.vn-pill .vn-pill-x').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -18011,25 +18079,55 @@ function _pinSearch(q) {
 // v14.20: the finger's search reaches as far as Maya's. Typing filters the
 // loaded wall; Enter searches EVERYTHING the account has saved on Pinterest
 // through the API, and a cleared box brings the normal wall back.
-async function _pinWideSearch(q) {
+// v14.23: three rooms. 'saved' is everything the account has saved (the
+// Pinterest API's own search); 'everywhere' is all of Pinterest, through
+// Pinterest's partner search when this app has that access, or a web image
+// search pinned to pinterest.com when a key is set. The server says which.
+async function _pinWideSearch(q, scope) {
   q = String(q || '').trim();
   if (q.length < 2) return { ok: false, reason: 'no words to search' };
   const body = document.getElementById('pinterest-drawer-body');
+  const everywhere = scope === 'everywhere';
   let j;
-  try { j = await _pinApi('/api/pinterest/search?q=' + encodeURIComponent(q)); }
-  catch (e) { return { ok: false, reason: 'the wider search could not run: ' + String(e && e.message || e).slice(0, 80) }; }
+  try { j = await _pinApi((everywhere ? '/api/pinterest/everywhere?q=' : '/api/pinterest/search?q=') + encodeURIComponent(q)); }
+  catch (e) {
+    const msg = String(e && e.message || e);
+    if (everywhere && /not_available|501/.test(msg)) return { ok: false, reason: 'searching ALL of Pinterest is not switched on for this app yet: it needs Pinterest\'s partner search access or a web image key on the server; the studio can turn it on. Everything saved on their own Pinterest still searches.', needs: 'access' };
+    return { ok: false, reason: 'the wider search could not run: ' + msg.slice(0, 80) };
+  }
   const pins = (j && j.pins) || [];
-  if (!pins.length) return { ok: false, reason: 'nothing matching ' + q.slice(0, 40) + ' anywhere in what they have saved on Pinterest; Pinterest has no public search beyond an account, but describe_garment can conjure fresh references instead' };
+  if (!pins.length) return { ok: false, reason: everywhere
+    ? ('nothing on Pinterest matched ' + q.slice(0, 40) + '; describe_garment can conjure fresh references instead')
+    : ('nothing matching ' + q.slice(0, 40) + ' anywhere in what they have saved on Pinterest; search_pins with scope everywhere reaches all of Pinterest, or describe_garment can conjure fresh references') };
   window._pinWiderActive = true;
+  window._pinWiderScope = everywhere ? 'everywhere' : 'saved';
   if (body) body.innerHTML = '<div class="pin-grid pics">' + pins.map(p =>
     '<button class="pin-pic" data-url="' + escapeHtml(p.url) + '" data-alt="' + escapeHtml(p.alt || '') + '"' +
       ' onclick="_pinToggle(this)"><img src="' + _safeImgSrc(p.url) + '" alt="" loading="lazy">' +
       '<span class="pin-check">&#10003;</span></button>').join('') + '</div>';
-  try { _pinSub('search: ' + q); } catch (_) {}
-  return { ok: true, matches: pins.length };
+  try { _pinSub((everywhere ? 'all of Pinterest: ' : 'search: ') + q); } catch (_) {}
+  try { _pinSearchAllPill(q, everywhere); } catch (_) {}
+  return { ok: true, matches: pins.length, scope: everywhere ? 'everywhere' : 'saved' };
+}
+// v14.23: after a search of what is saved, one pill offers all of Pinterest.
+function _pinSearchAllPill(q, hide) {
+  const tabs = document.getElementById('pin-tabs'); if (!tabs) return;
+  let pill = document.getElementById('pin-search-all');
+  if (hide || !q) { if (pill) pill.remove(); return; }
+  if (!pill) {
+    pill = document.createElement('button');
+    pill.id = 'pin-search-all'; pill.className = 'fabrics-tab'; pill.type = 'button';
+    pill.textContent = 'All of Pinterest';
+    pill.title = 'Search all of Pinterest, not only what is saved';
+    tabs.appendChild(pill);
+  }
+  pill.onclick = () => { try { _pinSub('searching all of Pinterest for ' + q); } catch (_) {}
+    _pinWideSearch(q, 'everywhere').then(r => { if (!r.ok) { try { _pinSub(''); } catch (_) {} showToast(r.needs === 'access' ? 'Searching all of Pinterest is not switched on yet.' : ('Nothing on Pinterest matches ' + q)); } }); };
 }
 function _pinSearchRestore() {
   window._pinWiderActive = false;
+  window._pinWiderScope = '';
+  try { _pinSearchAllPill('', true); } catch (_) {}
   try { _pinSub(''); } catch (_) {}
   if (_pinPicsCache['all']) _pinBody(_pinPicsCache['all']);
   else { try { _pinDrawerPins('', ''); } catch (_) {} }
@@ -18042,8 +18140,12 @@ async function _pinSearchEnter(v) {
   const q = String(v || '').trim();
   if (q.length < 2) return;
   try { _pinSub('searching everything saved for ' + q); } catch (_) {}
-  const r = await _pinWideSearch(q);
-  if (!r.ok) { try { _pinSub(''); } catch (_) {} showToast('Nothing saved on your Pinterest matches ' + q); }
+  const r = await _pinWideSearch(q, 'saved');
+  if (r.ok) return;
+  // nothing saved: go to all of Pinterest by itself
+  try { _pinSub('searching all of Pinterest for ' + q); } catch (_) {}
+  const r2 = await _pinWideSearch(q, 'everywhere');
+  if (!r2.ok) { try { _pinSub(''); } catch (_) {} showToast(r2.needs === 'access' ? ('Nothing saved matches ' + q + '. All of Pinterest is not switched on yet.') : ('Nothing on Pinterest matches ' + q)); }
 }
 function _pinSearchToggle() {
   const inp = document.getElementById('pin-search-input'); if (!inp) return;
@@ -18554,12 +18656,16 @@ async function _pgTool(name, a, dc) {
           }
         }
       }
-      const wide = await _pinWideSearch(q);
+      const everywhere = a.scope === 'everywhere' || a.everywhere === true;
+      const wide = await _pinWideSearch(q, everywhere ? 'everywhere' : 'saved');
       if (!wide.ok) return wide;
       if (inp) { inp.style.display = ''; inp.value = q; }
       glideTop();
-      return { ok: true, matches: wide.matches, from: 'everything saved on their Pinterest', gliding: true,
-        note: 'the wall now holds every ' + q + ' across their whole Pinterest; clear_pin_search brings the normal wall back' };
+      return everywhere
+        ? { ok: true, matches: wide.matches, from: 'all of Pinterest', gliding: true,
+            note: 'the wall now holds ' + q + ' from all of Pinterest; clear_pin_search brings the normal wall back' }
+        : { ok: true, matches: wide.matches, from: 'everything saved on their Pinterest', gliding: true,
+            note: 'the wall now holds every ' + q + ' across their whole Pinterest; OFFER all of Pinterest (search_pins with scope everywhere) if they want more; clear_pin_search brings the normal wall back' };
     }
     case 'clear_pin_search': {
       try {

@@ -16,6 +16,36 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 3, 2026, LATER (v14.23): after using the new drawer
+
+[x] "In the avatar, delete and rename. Have the pencil icon beside the
+    name itself in the dropdown, so there is no need to have a rename
+    over there. Randomize can stay, Replace can stay, that is it": done.
+    Randomize and Replace only; a pencil beside the name, a pencil and an
+    x on every saved client.
+[x] "Make sure Randomize works, it might not work": it was not showing
+    its result (the repaint looked for a sub menu that no longer exists).
+    Fixed, and it files the client now.
+[x] "Search across all Pinterest instead of just everything in our pins;
+    figure out the API": Pinterest's v5 API has GET /search/partner/pins
+    (all of Pinterest, top pins by term) but it is BETA and granted per
+    app. The route tries it, then a web image search pinned to
+    pinterest.com when GOOGLE_CSE_KEY and GOOGLE_CSE_CX are set, and says
+    plainly when neither is open. One pill (All of Pinterest) and Maya's
+    scope everywhere reach it.
+[ ] Fromsa: request beta access to search/partner/pins in the Pinterest
+    developer portal (Apps, the MAYA app, request access), or set
+    GOOGLE_CSE_KEY and GOOGLE_CSE_CX on Cloud Run. Until one is done the
+    third room answers "not switched on yet".
+[x] "On the editor card, delete Notes, just Design Notes is enough": done.
+[x] "Bio, aesthetic, silhouette, color, era: make it white so it pops;
+    make everything whiter": the five lines are white and upright, the
+    whole column is brighter.
+[ ] "Fabrics, Pinterest and the cards loaded very slowly, maybe first
+    time": likely the first visit after the promotion, when the caption
+    and profile sweeps wrote a line for every card that had none, plus
+    fresh downloads. Watching; nothing changed yet.
+
 SEPTEMBER 3, 2026 (v14.22): from Maya's own inbox
 
 [x] Maya's log of Sep 1, "Render or action failed: Your request was
