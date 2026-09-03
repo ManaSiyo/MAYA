@@ -479,6 +479,48 @@ ok('the search pill is a real magnifying glass with a centered box', fold.glass 
 ok('the finger search reaches everything saved and a cleared box restores the wall', fold.wide && fold.wide.ok === true && fold.wide.matches === 2 && fold.wideWall === 2 && fold.restored === true, JSON.stringify(fold.wide));
 ok('every render prompt says the head is never enlarged', /one eighth of the standing height/.test(fold.clause), fold.clause.slice(0, 60));
 
+// ── 3c7. v14.22: the image filter refuses the face, the render still happens ──
+const ladder = await page.evaluate(async () => {
+  const out = { edits: [], gens: [] };
+  const FACE = 'data:image/gif;base64,R0lGODlhAQABAAAAACw=';
+  const PIC = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=';
+  const origEdit = window.callOpenAIImageEditSafe, origGen = window.callOpenAIImageSafe;
+  const origErr = window._pgLastRenderError;
+  const origFade = window.fadeOutFloatingCards; window.fadeOutFloatingCards = () => {};
+  // a real visualize consumes the cards that fed it; remember them so the board is put back afterwards
+  const snap = (0, eval)('items').map(i => ({ i, consumed: i.consumed, el: i.el, parent: i.el && i.el.parentNode, next: i.el && i.el.nextSibling }));
+  window.callOpenAIImageEditSafe = async (anchors, prompt) => {
+    out.edits.push(prompt.slice(0, 60));
+    const list = Array.isArray(anchors) ? anchors : [anchors];
+    if (list[0] && list[0].length < 200) throw new Error('Your request was rejected by the safety system.');
+    return PIC;
+  };
+  window.callOpenAIImageSafe = async (prompt) => { out.gens.push(prompt); return PIC; };
+  (0, eval)("lastSummary = { client: { name: 'Linda' }, _face_photo: '" + FACE + "', _face_descriptors: { age_range: '14-16' }, _measurements: { height: '62' }, dream_outcome: 'a navy gown' }; selectedImageReferences = []; selectedImageReference = null; visualizeModifications = [];");
+  window._pgLastRenderError = '';
+  const before = (0, eval)('items.length');
+  try { await _runVisualizeNow(); } catch (e) { out.threw = String(e && e.message || e); }
+  // the fed cards fly into the picture on a 520ms timer; wait it out before putting the board back
+  await new Promise(r => setTimeout(r, 1100));
+  out.after = (0, eval)('items.length');
+  out.note = window._mayaRenderNote || '';
+  out.err = window._pgLastRenderError || '';
+  out.genHasFace = out.gens.some(p => /client's face|Image 1/.test(p));
+  out.genHasAge = out.gens.some(p => /14-16/.test(p));
+  out.genHasHeight = out.gens.some(p => /62 inches/.test(p));
+  out.placed = out.after === before + 1;
+  // leave the board as it was for the checks that follow
+  snap.forEach(r => { r.i.consumed = r.consumed; if (r.el) { r.i.el = r.el; if (r.parent && !r.el.isConnected) { try { r.parent.insertBefore(r.el, r.next && r.next.isConnected ? r.next : null); } catch (_) { r.parent.appendChild(r.el); } } r.el.style.opacity = ''; r.el.style.display = ''; } });
+  try { (0, eval)('(function(){ const it = items[items.length - 1]; if (it && it.card && it.card.kind === "inspo") { items.pop(); if (it.el) it.el.remove(); } })()'); } catch (_) {}
+  window.callOpenAIImageEditSafe = origEdit; window.callOpenAIImageSafe = origGen; window._pgLastRenderError = origErr; window.fadeOutFloatingCards = origFade;
+  (0, eval)("lastSummary = null;");
+  return out;
+});
+ok('a face the filter refuses still renders, on a fit model with the same measurements',
+  !ladder.threw && ladder.placed === true && ladder.edits.length === 1 && ladder.gens.length === 1 && ladder.genHasFace === false && ladder.genHasAge === false && ladder.genHasHeight === true,
+  JSON.stringify({ threw: ladder.threw, placed: ladder.placed, edits: ladder.edits.length, gens: ladder.gens.length, face: ladder.genHasFace, age: ladder.genHasAge, height: ladder.genHasHeight }));
+ok('and it says so, to the person and to Maya', /fit model/.test(ladder.note) && ladder.err === '', ladder.note);
+
 // ── 3d. v14.16: the studio gauge never claims zero of two dollars ──
 const gauge = await page.evaluate(() => {
   (0, eval)('_mayaUsage = { spentUsd: 9.4, capUsd: 2, images: 120, perCard: 0.065, admin: true, projects: 3, ok: true }');

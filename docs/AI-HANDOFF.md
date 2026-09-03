@@ -74,6 +74,21 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.22 (Claude): the third rung of the safety ladder
+
+_runVisualizeNow (both surfaces): faceDescClause and lineageAnchor are
+`let` now, plus `let faceSkipped` and `window._mayaRenderNote`. The face
+branch's callOpenAIImageEditSafe call is wrapped: on isSafetyRejection
+after the softened retry it sets faceSkipped, nulls lineageAnchor and
+faceDescClause (they carry the same face), writes _mayaRenderNote, toasts,
+and auto logs; the following branches became `if (!dataUrl && ...)` so the
+render falls through to refs, lineage, or plain generation on a fit model
+with measClause intact. _pgWatchRender appends "Also say this plainly:
+<note>" to the finished message when the note is set. The generic safety
+toast no longer blames vocabulary alone. Battery: 135 checks per surface;
+the scenario stubs callOpenAIImageEditSafe/callOpenAIImageSafe, waits out
+the 520ms fly in timer, and restores the seeded board.
+
 ## v14.21 (Claude): THE PROMOTION. frontend/index.html IS the Playground now
 
 Fromsa said "everything", so frontend/index.html was replaced by a copy of

@@ -16,6 +16,13 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 3, 2026 (v14.22): from Maya's own inbox
+
+[x] Maya's log of Sep 1, "Render or action failed: Your request was
+    rejected by the safety system": the face photo was the cause and both
+    retries resent it. A refused face now renders on a fit model with the
+    same measurements, and the toast, Maya, and the inbox all say so.
+
 SEPTEMBER 2, 2026, EVENING (v14.21): the promotion
 
 [x] "Are these changes applied only on the Playground? Tell me all the

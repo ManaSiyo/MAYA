@@ -1990,6 +1990,15 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.22: a face the image filter refuses still renders, on a fit model, and says so',
+  PLAYGROUND_SOURCE.includes('let faceSkipped = false;') &&
+  INDEX_SOURCE.includes('let faceSkipped = false;') &&
+  PLAYGROUND_SOURCE.includes("window._mayaRenderNote = 'the image filter would not accept the face photo") &&
+  INDEX_SOURCE.includes("window._mayaRenderNote = 'the image filter would not accept the face photo") &&
+  PLAYGROUND_SOURCE.includes('if (!dataUrl && refsSnap.length) {') &&
+  INDEX_SOURCE.includes('if (!dataUrl && refsSnap.length) {') &&
+  PLAYGROUND_SOURCE.includes("Also say this plainly: ' + window._mayaRenderNote") &&
+  INDEX_SOURCE.includes("Also say this plainly: ' + window._mayaRenderNote"));
 ok('v14.21: the Playground promoted whole into the app: Maya, zoom, backgrounds, captions, glass, search, Improve Maya; no badge; Tip stays',
   INDEX_SOURCE.includes('PLAYGROUND ONLY: survey zoom') &&
   INDEX_SOURCE.includes('async function pgMayaStart()') &&

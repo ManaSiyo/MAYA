@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.21">
+<meta name="maya-version" content="14.22">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -5656,7 +5656,7 @@ function showError(msg) {
   // v13.89: the out-of-credits popup already handled this; no scary toast.
   if (/trial_exhausted/i.test(raw)) return;
   if (/safety system|content policy|violates|moderation|not allowed/i.test(raw)) {
-    showToast('Couldn\'t render this. The image filter caught some vocabulary. Try softer language or move forward without that ref.', true);
+    showToast('Couldn\'t render this. The image filter refused it, usually the wording or a reference picture. Try softer words or move forward without that ref.', true);
     console.error('[Maya safety]', raw);
     return;
   }
@@ -12451,13 +12451,15 @@ async function _runVisualizeNow() {
     // v9.9: descriptor clause from the cached GPT-4.1 face analysis. Always
     // injected when a face photo exists, gives the model BOTH the photo
     // (pixel anchor) AND a structured text description (semantic anchor).
-    const faceDescClause = buildFaceDescriptorClause();
+    let faceDescClause = buildFaceDescriptorClause();
     // v9.9: lineage anchor, most recent rendered vision on the canvas
     // that was face-locked to this same client. When present, we feed it
     // back as a second /edits anchor so hair/build/skin tone don't drift.
-    const lineageAnchor = _findLineageAnchor();
+    let lineageAnchor = _findLineageAnchor();
 
     let dataUrl;
+    let faceSkipped = false;
+    window._mayaRenderNote = '';
     if (facePhotoSnap) {
       // v9.9: HARDENED face-lock with MULTI-ANCHOR payload.
       //   image[0] = the client's face photo (identity)
@@ -12483,8 +12485,24 @@ async function _runVisualizeNow() {
         'NEVER substitute, blend, or replace the client\'s face with anyone else. ' +
         'Wearing the following design: ' +
         prompt + measClause + faceDescClause + styleHint + FRAMING_MANDATE + _promptTuning();
-      dataUrl = await callOpenAIImageEditSafe(anchors, facePrompt, '1536x1024', null, { model: generatedBy });
-    } else if (refsSnap.length) {
+      try {
+        dataUrl = await callOpenAIImageEditSafe(anchors, facePrompt, '1536x1024', null, { model: generatedBy });
+      } catch (e) {
+        if (!isSafetyRejection(e)) throw e;
+        // v14.22: the words were softened and it still refused, so the face
+        // photo itself is what the filter will not take. Render the garment
+        // on a fit model with the same measurements instead of giving up,
+        // and leave out the previous renders and the face description too,
+        // since they carry the same face.
+        faceSkipped = true;
+        lineageAnchor = null;
+        faceDescClause = '';
+        window._mayaRenderNote = 'the image filter would not accept the face photo, so this one is on a fit model with the same measurements';
+        showToast('The image filter would not take the face photo. Rendering on a fit model with the same measurements.');
+        try { if (typeof window._pgAutoLog === 'function') window._pgAutoLog('The image filter rejected the face photo; rendered on a fit model instead', 'Maya', 'maya'); } catch (_) {}
+      }
+    }
+    if (!dataUrl && refsSnap.length) {
       const primary = refsSnap[0];
       const extraClause = refsSnap.length > 1
         ? ' Also blend in style cues from: ' + refsSnap.slice(1).map(r => r.title).filter(Boolean).join(', ') + '.'
@@ -12508,7 +12526,7 @@ async function _runVisualizeNow() {
             'generic model whose face does NOT match anyone visible in the reference image.') +
         ' Following this specification: ' + prompt + extraClause + measClause + faceDescClause + FRAMING_MANDATE + _promptTuning();
       dataUrl = await callOpenAIImageEditSafe(anchors.length > 1 ? anchors : anchors[0], styleRefPrompt, '1536x1024', null, { model: generatedBy });
-    } else if (lineageAnchor) {
+    } else if (!dataUrl && lineageAnchor) {
       // v9.9: no face photo, no refs, but we have a previous render in the
       // same client lineage, use it as an /edits anchor for identity carry.
       const lineagePrompt =
@@ -12516,9 +12534,10 @@ async function _runVisualizeNow() {
         'same face, hair, skin tone, body type, height. Re-dress the SAME person in the following NEW design: ' +
         prompt + measClause + faceDescClause + FRAMING_MANDATE + _promptTuning();
       dataUrl = await callOpenAIImageEditSafe(lineageAnchor, lineagePrompt, '1536x1024', null, { model: generatedBy });
-    } else {
+    } else if (!dataUrl) {
       dataUrl = await callOpenAIImageSafe(prompt + measClause + faceDescClause + FRAMING_MANDATE + _promptTuning(), '1536x1024', null, { model: generatedBy });
     }
+    if (faceSkipped) { try { console.warn('[maya] face photo refused by the image filter; rendered on a fit model'); } catch (_) {} }
     if (myBoardEpoch !== _boardEpoch) {
       console.warn('[maya] render finished after a project switch, discarded to protect the new board');
       return;
@@ -17899,7 +17918,8 @@ function _pgWatchRender(dc) {
     clearInterval(_pgRenderWatch); _pgRenderWatch = null;
     const msg = err
       ? '[app] the render FAILED: ' + String(err).slice(0, 140) + '. Tell them plainly; it is already logged.'
-      : armed ? '[app] the render finished; the new picture is on screen. Tell them it is ready.'
+      : armed ? ('[app] the render finished; the new picture is on screen. Tell them it is ready.' +
+          (window._mayaRenderNote ? ' Also say this plainly: ' + window._mayaRenderNote + '.' : ''))
       : '[app] no render started; do not claim anything rendered.';
     try {
       dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'message', role: 'user',
