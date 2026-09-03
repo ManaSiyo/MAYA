@@ -1990,6 +1990,22 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.25: feedback submitted, plain logs with a retry, stop means stop, references by voice, the wall in her picture',
+  PLAYGROUND_SOURCE.includes("showToast('Feedback submitted.');") &&
+  INDEX_SOURCE.includes("showToast('Feedback submitted.');") &&
+  !PLAYGROUND_SOURCE.includes("'Maya could not ' + String(name)") &&
+  PLAYGROUND_SOURCE.includes('function _pgLogSend(body, attempt)') &&
+  INDEX_SOURCE.includes('function _pgLogSend(body, attempt)') &&
+  PLAYGROUND_SOURCE.includes('window._pgRefIntent = { ts: Date.now(), refs:') &&
+  PLAYGROUND_SOURCE.includes('const intent = window._pgRefIntent;') &&
+  PLAYGROUND_SOURCE.includes('async function _pgPinThumbs()') &&
+  INDEX_SOURCE.includes('async function _pgPinThumbs()') &&
+  PLAYGROUND_SOURCE.includes("fetch('/api/pinterest/thumbs'") &&
+  SERVER_SOURCE.includes("app.post('/api/pinterest/thumbs'") &&
+  SERVER_SOURCE.includes('STOP MEANS STOP.') &&
+  SERVER_SOURCE.includes('GARMENT FIRST.') &&
+  SERVER_SOURCE.includes("references: { type: 'string'") &&
+  SERVER_SOURCE.includes('Never on "stop".'));
 ok('v14.24: the 403 healed, the wall never reloads, uploads file the client, Contact and the Prompting Engine on Admin, Maya sees the pins',
   PLAYGROUND_SOURCE.includes("if (stored && stored !== 'gpt-4.1' && stored !== 'gpt-4o-mini')") &&
   INDEX_SOURCE.includes("if (stored && stored !== 'gpt-4.1' && stored !== 'gpt-4o-mini')") &&
@@ -2184,7 +2200,7 @@ ok('v14.09: the autonomous observer: Maya logs her own limits and the wishes she
   PLAYGROUND_SOURCE.includes('const _PG_WISH =') &&
   PLAYGROUND_SOURCE.includes('id="fb-tabs"') &&
   PLAYGROUND_SOURCE.includes('function _fbRenderMayaLogs()') &&
-  PLAYGROUND_SOURCE.includes("window._pgAutoLog('Maya could not ' + String(name).replace(/_/g, ' ') +") &&
+  PLAYGROUND_SOURCE.includes("window._pgAutoLog('Tool ' + String(name) + ' failed' +") &&   // v14.25: plain words
   SERVER_SOURCE.includes("const source = (req.body || {}).source === 'maya' ? 'maya' : 'app';") &&
   SERVER_SOURCE.includes('YOUR OWN LIMITS ARE LOGGED FOR YOU.') &&
   MAP_SOURCE.includes("i.source==='app'||i.source==='maya'"));

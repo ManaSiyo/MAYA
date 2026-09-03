@@ -74,6 +74,45 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.25 (Claude): from Maya's inbox: feedback submitted, stop, references, the wall in her picture
+
+RULE, FIRST: before any audit or any "check the feedback" round, read
+Maya's live inbox. It is GET /api/admin/maya-features (Bearer the admin
+token from localStorage maya_admin_tok on status.html) plus
+GET /api/admin/feedback; the Admin Feature requests fold renders both,
+newest first; the MCP door (/api/mcp, tool maya_inbox) reads the same
+store once MAYA_MCP_TOKEN is set on Cloud Run. On Sep 2 night Fromsa gave
+Maya nine notes and she logged two of her own; all landed instantly (the
+pipe was never broken); Claude had read the inbox before that session
+and did not read it again, so the audit missed them. Never again.
+App: submitFeedback toasts "Feedback submitted."; _pgRunCall logs a
+failed tool as "Tool <name> failed: <reason>" (was "Maya could not
+viewer"); _pgAutoLog sends through _pgLogSend(body, attempt) which retries
+at 20 s and 60 s on a network failure or a 5xx (never on 400/401).
+Visualize by voice: the tool takes references (comma separated words);
+it sets window._pgRefIntent {ts, refs} (empty for none/fresh) and
+maybeAskImageRef consumes it within 90 s: the named inspirations are
+matched by words against title/caption/bio (stop words dropped, then
+_pgFindCardDetailed), selectedImageReferences is set, the popup never
+opens, _runVisualizeNow runs; window._pgRefResult {used, missed} is
+read by the tool after its 500 ms wait and spoken back (missing names
+are named). Nothing named means nothing attached.
+Her eyes: _pgPinThumbs() collects the visible .pin-pic/.pin-tile imgs
+(https only, up to 12) in #pinterest-drawer-body, POSTs the uncached
+ones to /api/pinterest/thumbs {urls} and keeps data URLs in
+_pgPinThumbCache; _pgLook swaps them in through html2canvas onclone, so
+the wall paints; look returns pinsPainted. Server route: requireGoogleUser,
+one rateLimit tick per batch, pinimg.com hosts only, 600 KB per picture,
+8 s each, answers {thumbs: {url: dataUrl|null}}.
+Instructions: "feedback submitted" after Submit; STOP MEANS STOP (scroll
+stop, say nothing; only goodbye / hang up / end the call end the call,
+and the hang_up line says never on "stop"); SPENDING (say the render back
+in one line, wait for a yes, never ask twice); GARMENT FIRST; visualize
+carries references; look says the pins are painted in. Battery: 154
+checks per surface. Open from the same inbox: "let me try it on" in one
+step (item 2), fresh renders never blending old inspirations by hand
+(the voice path is done; the button path still asks).
+
 ## v14.24 (Claude): the audit round: 403, the wall, uploads, Admin, Maya's eyes
 
 OPENAI ERROR 403: localStorage maya_openai_model held gpt-4o (an old

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.24">
+<meta name="maya-version" content="14.25">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -10758,7 +10758,7 @@ async function submitFeedback() {
     box.value = '';
     st.textContent = '';
     closeFeedback();
-    showToast('Thank you. Maya keeps it.');
+    showToast('Feedback submitted.');
   } catch (e) {
     st.textContent = 'That did not send. It is kept in the box, try again in a moment.';
   } finally { send.disabled = false; }
@@ -14149,6 +14149,34 @@ async function maybeAskImageRef() {
     return;
   }
   _imageRefCandidates = candidates;
+  // v14.25: Maya's hand. When the render was asked by voice, the references
+  // they named are matched by their words and the popup never shows. Nothing
+  // named means nothing attached: a fresh render never blends in old
+  // inspirations on its own.
+  const intent = window._pgRefIntent;
+  if (intent && Date.now() - intent.ts < 90000) {
+    window._pgRefIntent = null;
+    const used = [], missed = [];
+    const hay = it => [it.card.title, it.card.caption, it.card.alt, (it.card.profile || {}).bio].filter(Boolean).join(' ').toLowerCase();
+    for (const want of intent.refs) {
+      const w = String(want).toLowerCase().split(/[^a-z0-9]+/).filter(x => x.length > 2 && !/^(the|one|that|this|with|and|use|using|from|card|pin|reference)$/.test(x));
+      let best = null, bs = 0;
+      for (const it of candidates) {
+        const h = hay(it);
+        const sc = w.reduce((n, x) => n + (h.includes(x) ? 1 : 0), 0);
+        if (sc > bs) { bs = sc; best = it; }
+      }
+      if (!best && typeof _pgFindCardDetailed === 'function') { try { const f = _pgFindCardDetailed(want); if (f && f.it && candidates.includes(f.it)) best = f.it; } catch (_) {} }
+      if (best && !used.includes(best)) used.push(best); else if (!best) missed.push(String(want));
+    }
+    const refs = used.map(it => ({ dataUrl: it.card.image, title: it.card.title || 'inspo' }));
+    selectedImageReference = refs[0] || null;
+    selectedImageReferences = refs;
+    window._pgRefResult = { used: used.map(it => String(it.card.title || it.card.caption || 'inspo').slice(0, 60)), missed };
+    if (refs.length) showToast('Using ' + refs.map(r => r.title).join(', ') + ' as reference.');
+    await _runVisualizeNow();
+    return;
+  }
   const grid = document.getElementById('image-ref-grid');
   grid.innerHTML = candidates.map((it, idx) =>
     '<div class="fabric-pick" data-idx="' + idx + '" onclick="pickImageRef(' + idx + ')">' +
@@ -18235,20 +18263,55 @@ function _pgLoadH2C() {
   });
   return _pgH2C;
 }
+// v14.25: pictures from another site never paint into a screenshot (the
+// browser draws them but will not let a script read them). So before the
+// capture, the pins on screen are fetched once through MAYA's own server as
+// data URLs (one request for all of them, cached for the session) and swapped
+// in on the clone html2canvas paints. Now the wall is in her picture.
+const _pgPinThumbCache = new Map();
+async function _pgPinThumbs() {
+  const body = document.getElementById('pinterest-drawer-body');
+  if (!body) return new Map();
+  const r = body.getBoundingClientRect();
+  if (!r.width || !r.height) return new Map();
+  const imgs = [...body.querySelectorAll('.pin-pic img, .pin-tile img')].filter(img => {
+    const b = img.getBoundingClientRect();
+    return b.bottom > Math.max(0, r.top) && b.top < Math.min(window.innerHeight, r.bottom) && /^https?:/.test(img.src);
+  }).slice(0, 12);
+  const want = [...new Set(imgs.map(i => i.src))].filter(u => !_pgPinThumbCache.has(u));
+  const key = (typeof getApiKey === 'function') ? getApiKey() : '';
+  if (want.length && key) {
+    try {
+      const res = await fetch('/api/pinterest/thumbs', { method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({ urls: want }), signal: AbortSignal.timeout(9000) });
+      const j = res.ok ? await res.json() : {};
+      for (const u of want) _pgPinThumbCache.set(u, (j.thumbs && j.thumbs[u]) || null);
+    } catch (_) { for (const u of want) if (!_pgPinThumbCache.has(u)) _pgPinThumbCache.set(u, null); }
+  }
+  const out = new Map();
+  for (const img of imgs) { const u = img.src; const d = _pgPinThumbCache.get(u); if (d) out.set(u, d); }
+  return out;
+}
+window._pgPinThumbs = _pgPinThumbs;
 async function _pgLook(dc) {
   await _pgLoadH2C();
+  let thumbs = new Map();
+  try { thumbs = await _pgPinThumbs(); } catch (_) {}
   const canvas = await window.html2canvas(document.body, {
     useCORS: true, logging: false, backgroundColor: '#05060c',
     scale: Math.min(1, 1100 / Math.max(1, window.innerWidth)),
     ignoreElements: el => el.id === 'pg-maya-chip' || el.id === 'pg-maya-lines',
+    onclone: doc => { try { doc.querySelectorAll('#pinterest-drawer-body img').forEach(img => { const d = thumbs.get(img.src); if (d) { img.removeAttribute('srcset'); img.src = d; } }); } catch (_) {} },
   });
+  window._pgLastLookPins = thumbs.size;
   const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
   dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'message', role: 'user',
     content: [{ type: 'input_image', image_url: dataUrl }] } }));
   // v14.24: the picture plus the lists. Pictures from other sites (Pinterest)
   // do not paint into the screenshot, so the lists carry what the eye misses.
-  return { ok: true, note: 'the current screen is attached as a picture; describe what you see from it AND from the board and drawer lists here. If something is in neither, say you cannot see it; never invent a card or a pin.',
-    board: _pgBoardSnapshot(), drawer: _pgDrawerState() };
+  return { ok: true, note: 'the current screen is attached as a picture' + (thumbs.size ? ' with ' + thumbs.size + ' Pinterest pictures painted in' : '') + '; describe what you see from it AND from the board and drawer lists here. If something is in neither, say you cannot see it; never invent a card or a pin.',
+    pinsPainted: thumbs.size, board: _pgBoardSnapshot(), drawer: _pgDrawerState() };
 }
 async function _pgTool(name, a, dc) {
   a = a && typeof a === 'object' ? a : {};
@@ -18402,11 +18465,21 @@ async function _pgTool(name, a, dc) {
         }
         return { ok: false, reason: 'nothing is staged on this picture; describe the change first with modify_garment' };
       }
+      // v14.25: by voice, the inspirations picker never opens. The references
+      // they named ("use the logo") are picked for them by their words; when
+      // they named none, the render starts fresh from the description.
+      const wantRefs = String(a.references || '').trim();
+      window._pgRefResult = null;
+      window._pgRefIntent = { ts: Date.now(), refs: /^(none|no|nothing|fresh)$/i.test(wantRefs) ? [] :
+        wantRefs.split(/\s*(?:,|;|\band\b)\s*/).map(x => x.trim()).filter(Boolean) };
       try { window._pgLastRenderError = null; const r = visualizeGarment(); if (r && r.then) r.catch(() => {}); }
-      catch (e) { return { ok: false, reason: String(e && e.message || e) }; }
+      catch (e) { window._pgRefIntent = null; return { ok: false, reason: String(e && e.message || e) }; }
       _pgWatchRender(dc);
       // the home screen flow can stop on a question; say which one, do not go quiet
       await new Promise(r2 => setTimeout(r2, 500));
+      if (window._pgRefResult) { const rr = window._pgRefResult; window._pgRefResult = null;
+        if (rr.missed && rr.missed.length) return { ok: true, note: 'rendering, say it takes a moment. These references were not found on the board: ' + rr.missed.join(', ') + (rr.used.length ? '; using ' + rr.used.join(', ') : '; rendering from the description alone'), references: rr.used };
+        return { ok: true, note: rr.used.length ? 'rendering with ' + rr.used.join(', ') + ' as reference; say it takes a moment' : 'rendering fresh from the description, no inspiration attached; say it takes a moment', references: rr.used }; }
       const q = document.getElementById('avatar-check-modal');
       const fm = document.getElementById('fabric-mode-modal');
       if (q && q.classList.contains('open')) return { ok: true, asking: 'avatar', note: 'it is asking about the avatar; tell them and offer to continue anyway' };
@@ -18829,7 +18902,7 @@ async function _pgRunCall(dc, name, call_id, argStr) {
   // v14.09/v14.14: only genuine defects file themselves; expected answers do not.
   try {
     if ((cls === 'defect' || cls === 'timeout') && name !== 'hang_up' && typeof window._pgAutoLog === 'function') {
-      window._pgAutoLog('Maya could not ' + String(name).replace(/_/g, ' ') +
+      window._pgAutoLog('Tool ' + String(name) + ' failed' +
         (out.reason ? ': ' + String(out.reason).slice(0, 140) : '') +
         (args && args.query ? ' (asked for "' + String(args.query).slice(0, 60) + '")' : ''), 'Maya', 'maya');
     }
@@ -19094,9 +19167,19 @@ function _pgAutoLog(text, who, source) {
   try { _fbRenderMayaLogs(); } catch (_) {}
   const key = (typeof getApiKey === 'function') ? getApiKey() : '';
   if (!key) return;
+  _pgLogSend({ text: t, who: who || 'Maya', source: source || 'maya' }, 0);
+}
+// v14.25: the studio copy is the one that matters. A send that fails (a
+// dropped connection, a sleeping tab) is retried at 20 seconds and again at
+// 60, with a fresh token each time.
+function _pgLogSend(body, attempt) {
+  const key = (typeof getApiKey === 'function') ? getApiKey() : '';
+  if (!key) return;
   fetch('/api/feature', { method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-    body: JSON.stringify({ text: t, who: who || 'Maya', source: source || 'maya' }) }).catch(() => {});
+    body: JSON.stringify(body) })
+    .then(r => { if (!r.ok && r.status !== 400 && r.status !== 401) throw new Error('http ' + r.status); })
+    .catch(() => { if (attempt < 2) setTimeout(() => _pgLogSend(body, attempt + 1), attempt ? 60000 : 20000); });
 }
 window._pgAutoLog = _pgAutoLog;
 // her incapacity, in her own words; and a wish heard in the client's

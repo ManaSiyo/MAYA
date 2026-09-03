@@ -40,6 +40,7 @@ const srv = http.createServer((req, res) => {
       { id: 'e2', url: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=', alt: 'satin evening gloves' },
       { id: 'e3', url: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=', alt: 'fishnet gloves with bows' }] }));
     if (p === '/api/pinterest/pins') return res.end(JSON.stringify({ pins: [] }));
+    if (p === '/api/pinterest/thumbs') return res.end(JSON.stringify({ ok: true, thumbs: { 'https://i.pinimg.com/236x/aa/bb/cc.jpg': 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=' } }));
     if (p === '/api/feature') return res.end(JSON.stringify({ ok: true }));
     if (p === '/api/feedback') return res.end(JSON.stringify({ ok: true }));
     if (p === '/api/usage') return res.end(JSON.stringify({ usd: 0, cap: 2 }));
@@ -633,6 +634,74 @@ ok('Maya sees every pin on screen with a place word', c9.seen.length === 2 && c9
 ok('bring_in_pins by place picks the pin that sits there, and says when none does',
   c9.byPlace && c9.byPlace.ok === true && c9.imported === 1 && c9.nowhere && c9.nowhere.ok === false && Array.isArray(c9.nowhere.pinsOnScreen),
   JSON.stringify([c9.byPlace, c9.nowhere && c9.nowhere.reason]));
+
+// ── 3c10. v14.25: feedback submitted, plain logs, references by voice, the wall in her picture ──
+const c10 = await page.evaluate(async () => {
+  const out = {};
+  // the word after Submit
+  const toasts = []; const origToast = window.showToast; window.showToast = (m) => toasts.push(String(m));
+  try { openFeedback(); } catch (_) {}
+  const box = document.getElementById('feedback-box'); if (box) box.value = 'The sleeves should read first, then the fabric.';
+  await submitFeedback();
+  out.toast = toasts[toasts.length - 1] || '';
+  // a failed tool logs itself in plain words, and every log goes out through the retrying sender
+  const origTool = window._pgTool; window._pgTool = async () => ({ ok: false, reason: 'that control is not on screen right now' });
+  const sent = []; const origFetch = window.fetch;
+  window.fetch = async (u, o) => { if (String(u).includes('/api/feature')) { sent.push(JSON.parse(o.body)); return { ok: true, status: 200 }; } return origFetch(u, o); };
+  await _pgRunCall({ send: () => {} }, 'viewer', 'c-1', '{"action":"next"}');
+  window._pgTool = origTool;
+  out.logText = (window._pgMayaLogBuf.slice(-1)[0] || {}).text || '';
+  out.logSent = sent.length === 1 && /^Tool viewer failed: that control/.test(sent[0].text) && sent[0].source === 'maya';
+  window.fetch = origFetch;
+  out.retryExists = typeof _pgLogSend === 'function';
+  // references by voice: named ones are picked, none named means fresh
+  const seedIds = [];
+  const mk = (n, title) => {
+    const el = document.createElement('div'); el.className = 'moodboard-item'; el.style.left = (n * 300) + 'px'; el.style.top = '420px';
+    document.body.appendChild(el);
+    const it = { id: 'ref-' + n, card: { kind: 'inspo', image: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=', title: title, caption: title }, el };
+    (0, eval)('items').push(it); seedIds.push(it.id); return it;
+  };
+  mk(0, 'Mana Siyo logo'); mk(1, 'red corset');
+  (0, eval)("lastSummary = Object.assign(lastSummary || {}, { _face_photo: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=', _measurements: { height: 70 } });");
+  window.__spy = out;
+  window.__orig = { q: (0, eval)('_waitForVoicePipelineQuiet'), f: (0, eval)('openFabricMode'), r: (0, eval)('_runVisualizeNow') };
+  (0, eval)('_waitForVoicePipelineQuiet = async () => {}');
+  (0, eval)("openFabricMode = () => chooseFabricMode('sourceable')");
+  (0, eval)('_runVisualizeNow = async () => { window.__spy.ran = (window.__spy.ran || 0) + 1; window.__spy.refs = selectedImageReferences.map(r => r.title); }');
+  const named = await window._pgTool('visualize', { references: 'the logo' }, { send: () => {} });
+  out.named = named; out.namedRefs = out.refs; out.pickerOpen = document.getElementById('image-ref-modal').classList.contains('open');
+  const fresh = await window._pgTool('visualize', {}, { send: () => {} });
+  out.fresh = fresh; out.freshRefs = out.refs;
+  const missed = await window._pgTool('visualize', { references: 'the blue hat' }, { send: () => {} });
+  out.missed = missed;
+  { const arr = (0, eval)('items'); for (const id of seedIds) { const i = arr.findIndex(x => x.id === id); if (i >= 0) arr.splice(i, 1); } }
+  document.querySelectorAll('.moodboard-item').forEach(el => { if (el.style.top === '420px') el.remove(); });
+  (0, eval)('_waitForVoicePipelineQuiet = window.__orig.q; openFabricMode = window.__orig.f; _runVisualizeNow = window.__orig.r; clearInterval(_pgRenderWatch); _pgRenderWatch = null;');
+  window.showToast = origToast;
+  // the wall in her picture: the pins on screen come back as data URLs, one request
+  try { toggleNotesDrawer(true); pgTab('pinterest'); } catch (_) {}
+  await _pinWideSearch('corsets', 'saved');
+  _pgGlideStop();
+  const img = document.querySelector('#pinterest-drawer-body .pin-pic img');
+  if (img) img.src = 'https://i.pinimg.com/236x/aa/bb/cc.jpg';
+  const thumbs = await _pgPinThumbs();
+  out.thumbs = thumbs.size;
+  out.thumbData = /^data:image/.test(thumbs.get('https://i.pinimg.com/236x/aa/bb/cc.jpg') || '');
+  let calls = 0; const origFetch2 = window.fetch; window.fetch = async (u, o) => { if (String(u).includes('/api/pinterest/thumbs')) calls++; return origFetch2(u, o); };
+  await _pgPinThumbs();
+  window.fetch = origFetch2;
+  out.cached = calls === 0 && /^data:image/.test(_pgPinThumbCache.get('https://i.pinimg.com/236x/aa/bb/cc.jpg') || '');
+  _pgGlideStop();
+  await window._pgTool('clear_pin_search', {}, { send: () => {} });
+  return out;
+});
+ok('after Submit the person hears "Feedback submitted."', c10.toast === 'Feedback submitted.', JSON.stringify(c10.toast));
+ok('a failed tool logs itself in plain words and the log goes to the studio', /^Tool viewer failed: that control/.test(c10.logText) && c10.logSent === true && c10.retryExists === true, JSON.stringify([c10.logText, c10.logSent]));
+ok('visualize by voice picks the reference they named, no popup', c10.named && c10.named.ok === true && Array.isArray(c10.namedRefs) && c10.namedRefs.length === 1 && /logo/i.test(c10.namedRefs[0]) && c10.pickerOpen === false, JSON.stringify([c10.named, c10.namedRefs, c10.pickerOpen]));
+ok('visualize by voice with nothing named starts fresh, nothing blended in', c10.fresh && c10.fresh.ok === true && Array.isArray(c10.freshRefs) && c10.freshRefs.length === 0 && /fresh/.test(c10.fresh.note || ''), JSON.stringify([c10.fresh, c10.freshRefs]));
+ok('a reference that is not on the board is named as missing', c10.missed && c10.missed.ok === true && /not found on the board: the blue hat/.test(c10.missed.note || ''), JSON.stringify(c10.missed));
+ok('the pins on screen come back as pictures for her screenshot, once', c10.thumbs === 1 && c10.thumbData === true && c10.cached === true, JSON.stringify([c10.thumbs, c10.thumbData, c10.cached]));
 
 // ── 3d. v14.16: the studio gauge never claims zero of two dollars ──
 const gauge = await page.evaluate(() => {

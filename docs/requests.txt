@@ -16,6 +16,39 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 3, 2026, LATE (v14.25): "where did my feedback go"
+
+[x] "You did not see any of the feedback. Where is it being logged? Fix
+    that": it was never lost. Every Submit and every log of Maya's own
+    landed live in the studio bucket the second it was sent (14 entries
+    the night of Sep 2, in both stores, on Admin newest first). Claude
+    had read the inbox before that session and did not read it again.
+    The rule is written at the top of the v14.25 handoff: read the live
+    inbox before every round.
+[ ] Fromsa: set MAYA_MCP_TOKEN on Cloud Run (any long random string) and
+    add the connector in Claude, so the inbox can be pulled from any
+    Claude session without a browser. Until then it is read through the
+    Admin tab, which works.
+[x] "Just say feedback submitted": done.
+[x] "Minimal replies to stop, no confirmation after every small action":
+    stop halts the glide and she says nothing; only goodbye ends the call.
+[x] "Confirm each design change with a short summary and ask before
+    spending credits": one line back, one yes, never twice.
+[x] "Name the garment type first": every description leads with it.
+[x] "Pick the reference I named (the logo) yourself": visualize by voice
+    takes the names, matches the cards, no popup; a name that is not on
+    the board is said back.
+[x] "A fresh visualization should not blend in earlier inspirations": by
+    voice, nothing named means nothing attached. The Visualize button
+    still asks with the picker.
+[x] "Auto log every error card": it already did (the 403 and the safety
+    refusal filed themselves); failed tools now log in plain words and a
+    log that does not reach the studio is retried.
+[x] "She should see what is on screen, take a screenshot internally": the
+    Pinterest pictures on screen are read once through MAYA's own server
+    and painted into her screenshot. The wall is in her picture now.
+[ ] "Let me try it on" in one step from an inspiration card: next.
+
 SEPTEMBER 3, 2026, NIGHT (v14.24): the audit round
 
 [x] "OPENAI ERROR: 403" on the board: the browser held an old model name

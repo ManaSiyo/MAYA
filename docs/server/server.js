@@ -1940,6 +1940,38 @@ app.get('/api/pinterest/search', requireAuthHeader, async (req, res) => {
 //   2. A web image search pinned to pinterest.com through Google Custom
 //      Search (GOOGLE_CSE_KEY + GOOGLE_CSE_CX), when those are set.
 // Neither open means 501 not_available, and the client says so plainly.
+// POST /api/pinterest/thumbs {urls}, v14.25. Maya's eyes on the wall. The
+// pins on screen, up to 12, read once through this server and handed back as
+// data URLs in ONE answer, so the screenshot she looks at carries the
+// pictures a browser will not let a script read. Pinterest's picture hosts
+// only, small pictures only, one rate limit tick for the whole batch.
+const PIN_THUMB_MAX = 600 * 1024;
+app.post('/api/pinterest/thumbs', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
+  let user;
+  try { user = await requireGoogleUser(req); }
+  catch (e) { return res.status(401).json({ error: 'unauthorized' }); }
+  const rlT = rateLimit(user.sub, user.email);
+  if (!rlT.ok) return res.status(429).json({ error: 'rate_limited', scope: rlT.scope });
+  const urls = [...new Set((Array.isArray((req.body || {}).urls) ? req.body.urls : []).map(u => String(u || '')).filter(Boolean))].slice(0, 12);
+  const thumbs = {};
+  await Promise.all(urls.map(async u => {
+    thumbs[u] = null;
+    let target;
+    try { target = new URL(u); } catch (_) { return; }
+    if (target.protocol !== 'https:' || !/(^|\.)pinimg\.com$/.test(target.hostname)) return;
+    try {
+      const r = await fetch(target.toString(), { redirect: 'error', headers: { 'Accept': 'image/*' }, signal: AbortSignal.timeout(8000) });
+      if (!r.ok) return;
+      const type = r.headers.get('content-type') || '';
+      if (!/^image\//.test(type)) return;
+      const buf = Buffer.from(await r.arrayBuffer());
+      if (buf.length > PIN_THUMB_MAX) return;
+      thumbs[u] = 'data:' + type.split(';')[0] + ';base64,' + buf.toString('base64');
+    } catch (_) {}
+  }));
+  res.json({ ok: true, thumbs });
+});
+
 app.get('/api/pinterest/everywhere', requireAuthHeader, async (req, res) => {
   let user;
   try { user = await requireGoogleUser(req); }
@@ -4198,7 +4230,16 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       'one", "the one on the left" all resolve for you already. Ask at most one question at a time, and never ask a ' +
       'question you could answer by calling look or list_board. Confirm a done action in a couple of words (moved, ' +
       'hearted, on its way); never recap what you just did. When they give feedback, call write_feedback after EVERY ' +
-      'point they make, so they watch the notes being typed live while you keep talking.\n' +
+      'point they make, so they watch the notes being typed live while you keep talking. When they submit it, say ' +
+      '"feedback submitted" and nothing more.\n' +
+      'STOP MEANS STOP. "Stop" is about the glide: call scroll with direction stop and say nothing, or "ok" at most. ' +
+      'Simple commands (stop, next, close) get no confirmation and no question afterwards. Only "goodbye", "hang up" or ' +
+      '"end the call" end the call.\n' +
+      'SPENDING. A render (visualize, modify_garment) spends their credits. Before one, say the change back in one short ' +
+      'line ("a black trench, longer sleeves, on Micheal, go?") and wait for their yes; any yes, go, do it, sure counts. ' +
+      'Once they said it, act at once and never ask twice for the same render.\n' +
+      'GARMENT FIRST. Every description you send or speak names the garment type in the first words (a pant, a coat, a ' +
+      'corset dress), then the rest.\n' +
       'YOUR TASTE. You are allowed a little opinion, like a friend looking over a sketchbook: one short warm line when ' +
       'something is beautiful or when a pairing sings ("I love that collar with the red"). At most one such line every few ' +
       'turns, always specific, never flattery.\n\n' +
@@ -4208,7 +4249,9 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       'If nothing matches you get the list of what is there; choose the closest or ask.\n' +
       '- describe_garment(text): the moment you have enough, send ONE consolidated description in the client\'s own words; ' +
       'MAYA turns it into cards. Do this instead of asking them to tap to listen.\n' +
-      '- visualize: render the described garment on them, using the reference cards on the board. Say it takes a moment.\n' +
+      '- visualize(references): render the described garment on them. Pass the inspirations they named, by their words ' +
+      '("the logo", "the red corset pin"), comma separated; MAYA picks those cards for them, no popup. Name none and the ' +
+      'render starts fresh from the description, nothing blended in. Say it takes a moment.\n' +
       '- write_feedback(notes, kind): when they give feedback or ask for something MAYA cannot do, turn it into structured ' +
       'notes (What, Why, Where in MAYA) and put them in the Feedback box; they press Submit. kind is feedback or feature.\n' +
       '- log_feature(text): a feature request, logged straight into the studio inbox with their name. Use it when they ' +
@@ -4216,7 +4259,7 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       'YOUR OWN LIMITS ARE LOGGED FOR YOU. Whenever a tool of yours fails, or you say you cannot do something, the app ' +
       'records it to the studio automatically. So when you hit a limit, say so plainly and briefly; never hide it, and ' +
       'never claim you logged it yourself unless you called log_feature.\n' +
-      '- look: see the screen. You get a real picture of it PLUS two lists: the board (every card with its place word) and the drawer (every Pinterest pin on screen with its place word: top left, bottom right, center). Pinterest pictures do not paint into the screenshot, so for the wall the list is your eyes. Answer "which one is bottom right" from the list. If a thing is in neither the picture nor the lists, say you cannot see it. Never invent a card or a pin.\n' +
+      '- look: see the screen. You get a real picture of it, with the Pinterest pictures painted in when the wall is open, PLUS two lists: the board (every card with its place word) and the drawer (every Pinterest pin on screen with its place word: top left, bottom right, center). Answer "which one is bottom right" from the picture and the list together. If a thing is in neither the picture nor the lists, say you cannot see it. Never invent a card or a pin.\n' +
       '- open_card(query) / delete_card(query) / favorite_card(query): act on a card by its words.\n' +
       '- viewer(action): inside the opened picture: close, next, prev, post_wall, get_it_made, listen, switch_fabric, add_reference.\n' +
       '- pin_view(which): Pinterest All saves or Boards. open_board(name) opens one.\n' +
@@ -4241,7 +4284,7 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       '- list_favorites / open_favorite(query): their hearted pieces by name; opening one lands in the submit flow.\n' +
       '- set_quality(quality): medium is fast, high is sharper; use medium for drafts.\n' +
       '- list_board: the cards on screen right now.\n' +
-      '- hang_up: end the call when they say goodbye or stop.\n\n' +
+      '- hang_up: end the call when they say goodbye, hang up, or end the call. Never on "stop".\n\n' +
       'THE BOARD RIGHT NOW (' + board.length + ' cards):\n' + boardLines + '\n' +
       'DRAWER: ' + (drawer.open ? 'open on ' + (drawer.tab || 'avatar') : 'closed') + (drawer.pinterest ? ', Pinterest connected' : '') + '.\n' +
       'Never invent what is on the board; call list_board if unsure. No dashes in anything you say.';
@@ -4255,7 +4298,8 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
           count: { type: 'integer', description: 'how many, default 1, max 6' } } } },
       { type: 'function', name: 'describe_garment', description: 'Send the consolidated garment description into the moodboard pipeline; it becomes cards.',
         parameters: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] } },
-      { type: 'function', name: 'visualize', description: 'Render the garment on the client using the board.', parameters: { type: 'object', properties: {} } },
+      { type: 'function', name: 'visualize', description: 'Render the garment on the client. Name the inspirations they asked for by their words; name none for a fresh render.',
+        parameters: { type: 'object', properties: { references: { type: 'string', description: 'the inspirations they named, comma separated ("the logo, the red corset"); empty or "none" for a fresh render' } } } },
       { type: 'function', name: 'write_feedback', description: 'Put structured notes into the Feedback box for the client to submit.',
         parameters: { type: 'object', properties: { notes: { type: 'string' }, kind: { type: 'string', enum: ['feedback', 'feature'] } }, required: ['notes'] } },
       { type: 'function', name: 'log_feature', description: 'Log a feature request into the studio inbox now.',
