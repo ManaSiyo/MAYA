@@ -74,6 +74,38 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.27 (Claude): ready for a phone
+
+How it was audited (repeatable): tests/tmp/mobile-shots.mjs in the Claude
+session, Playwright with devices['iPhone 14'] against the battery's fake
+API, cards placed through placeItemAt, screenshots of home, the drawer
+(profile, clients, Pinterest, fabrics), the card editor, the feedback box
+and the chip, plus a probe for horizontal overflow and page errors. Zero
+errors, no horizontal overflow; the findings were visual.
+Voice: _pgPhone() is (pointer: coarse) and not (hover: hover). On a phone
+pgToggleWake opens the line (pgMayaStart) or hangs up (pgMayaStop) and
+never starts the wake recognizer (_pgWakeStart returns at once), so no
+Safari chime and it works on Chrome for iPhone which has no recognizer.
+pgMayaStart asks for the microphone before the token fetch (inside the
+tap), sets playsinline on the Audio element and calls play() in ontrack;
+a 402 stops the mic tracks it took.
+Touch: the (hover: none) rules show .fav-btn, .delete-btn, .stack-btn,
+.dissect-btn and the resize handle only on .item-card.touched; the
+pointerdown in makeDraggable marks the touched card and clears the
+others. A tap still opens the card; closing it leaves that card marked.
+Feedback box: the inline max-width:520px beat the phone rule (inline
+beats a media query) so the card was 520 px on a 390 px screen; it is
+min(520px, 94vw) now with 16 px side padding under 640 px; the other
+inline card (max-width 420px) got the same treatment. #pg-maya-chip
+bottom respects env(safe-area-inset-bottom); the Hey Maya label is
+nowrap.
+Known and left: a desktop board restores as a pile on a phone (v11.30
+clamps every card into the viewport; the canvas is overflow hidden and
+one screen tall). organize_board (pinterestLayout, one column on a
+phone) and zoom out are the tools; a fresh project is the clean demo.
+Notes are hidden in the card editor under 1280 px (by design). Battery:
+165 checks per surface.
+
 ## v14.26 (Claude): demo readiness: the live drive, fabric thumbnails, Pinterest in words
 
 How the live app was audited (repeatable): from Fromsa's signed in Chrome

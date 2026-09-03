@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.26">
+<meta name="maya-version" content="14.27">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -4465,11 +4465,14 @@
   /* touch devices (any width): hover-gated controls must be visible,
      and cards own their gestures so drag doesn't fight scroll-snap */
   @media (hover: none) {
-    .item-card .fav-btn,
-    .item-card .delete-btn { display: flex; }
-    .item-card.inspo .stack-btn,
-    .item-card.inspo .dissect-btn { display: flex; }
-    .item-card.inspo .resize-handle { opacity: 0.8; }
+    /* v14.27: on a phone the heart, the x, the stack and dissect buttons show
+       on the card the finger touched last, not on every card at once; a
+       board of twenty cards was a wall of buttons. */
+    .item-card.touched .fav-btn,
+    .item-card.touched .delete-btn { display: flex; }
+    .item-card.inspo.touched .stack-btn,
+    .item-card.inspo.touched .dissect-btn { display: flex; }
+    .item-card.inspo.touched .resize-handle { opacity: 0.8; }
     .item-card { touch-action: none; }
   }
 </style>
@@ -5283,7 +5286,7 @@
      Tap to listen borrows the same speech engine the moodboard uses, lands the
      words in the box, and Submit files it into MAYA's own store. -->
 <div class="modal" id="feedback-modal">
-  <div class="modal-card" style="text-align:center;max-width:520px">
+  <div class="modal-card" style="text-align:center;max-width:min(520px, 94vw)">
     <!-- v14.03: the X rides the card's corner, on top of the title, the viewer's round pill. -->
     <button class="modal-close icon pg-fb-x" onclick="closeFeedback()" aria-label="Close">×</button>
     <h2 style="text-align:center">Improve Maya</h2>
@@ -6172,6 +6175,8 @@ function makeDraggable(el) {
     // v12.9: closest, not classList. The heart is a button with an SVG inside
     // it, so most of the heart is the SVG, the old test missed, and pressing
     // it started a drag and then opened the picture instead of favouriting.
+    // v14.27: the card the finger touched carries the controls on a phone.
+    try { document.querySelectorAll('.item-card.touched').forEach(c => { if (c !== el) c.classList.remove('touched'); }); el.classList.add('touched'); } catch (_) {}
     dragging = true; startX = e.clientX; startY = e.clientY;
     startLeft = parseInt(el.style.left) || 0; startTop = parseInt(el.style.top) || 0;
     moved = 0;
@@ -14899,7 +14904,7 @@ function openTip() {
     el.id = 'tip-modal';
     el.className = 'modal';
     el.innerHTML =
-      '<div class="modal-card" style="max-width:420px;text-align:center">' +
+      '<div class="modal-card" style="max-width:min(420px, 94vw);text-align:center">' +
         '<div style="font-family:\'Cormorant Garamond\',serif;font-size:26px;margin-bottom:6px">Tip Mana Siyo</div>' +
         '<div style="font-family:\'Jost\',sans-serif;font-size:12px;line-height:1.7;color:rgba(238,242,255,0.6);margin-bottom:18px">' +
           'MAYA is free and always will be. This is a gift to the atelier, not a purchase, it buys you nothing and unlocks nothing.' +
@@ -17859,6 +17864,10 @@ if (typeof toggleNotesDrawer === 'function') {
     backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
     box-shadow: inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18), 0 12px 48px rgba(0,0,0,0.38); }
   #feedback-modal .modal-close.pg-fb-x { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; font-size: 16px; }
+  /* v14.27: on a phone the box keeps inside the screen with room to breathe,
+     and the switch label stays on one line. */
+  @media (max-width: 640px) { #feedback-modal .modal-card { padding: 26px 16px 20px; } }
+  #pg-maya-toggle > span:first-child { white-space: nowrap; }
   #feedback-modal h2 { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: 26px; color: rgba(245,250,255,0.92); }
   #feedback-modal #feedback-box { background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.22); border-radius: 14px; }
   #feedback-kind { display: flex; justify-content: center; gap: 8px; margin: 2px 0 4px; }
@@ -17868,7 +17877,7 @@ if (typeof toggleNotesDrawer === 'function') {
   .fb-kind:hover { color: rgba(245,250,255,0.95); border-color: rgba(255,255,255,0.42); }
   .fb-kind.on { color: #a9c9ff; border-color: rgba(128,176,255,0.7); background: rgba(128,176,255,0.10); }
   /* Maya live: a small chip at the bottom right, and her last lines above the voice bar */
-  #pg-maya-chip { position: fixed; right: 18px; bottom: 18px; z-index: 9500; display: none; align-items: center; gap: 9px;
+  #pg-maya-chip { position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 9500; display: none; align-items: center; gap: 9px;
     padding: 8px 14px 8px 11px; border-radius: 100px; cursor: pointer; background: rgba(8,12,26,0.85);
     border: 0.5px solid rgba(169,201,255,0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(169,201,255,0.95);
@@ -19057,16 +19066,20 @@ async function pgMayaStart() {
   let mic = null, pc = null, audio = null;
   try {
     _pgChip(true, 'Connecting');
+    // v14.27: the microphone is asked for FIRST, inside the tap, before any
+    // network wait; iPhone Safari ties the permission and the speaker to the
+    // gesture, and a refused microphone costs no token.
+    mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audio = new Audio(); audio.autoplay = true;
+    try { audio.setAttribute('playsinline', ''); audio.playsInline = true; } catch (_) {}
     const tr = await fetch('/api/voice-token', { method: 'POST', headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: _pgWhoAmI().split(' ')[0], board: _pgBoardSnapshot(), drawer: _pgDrawerState() }) });
     const tj = await tr.json().catch(() => ({}));
-    if (tr.status === 402) { _pgChip(false); _pgWakeResume(); if (typeof mayaShowCreditsPopup === 'function') mayaShowCreditsPopup({}); return; }
+    if (tr.status === 402) { _pgChip(false); _pgWakeResume(); try { mic.getTracks().forEach(t => t.stop()); } catch (_) {} if (typeof mayaShowCreditsPopup === 'function') mayaShowCreditsPopup({}); return; }
     if (!tr.ok || !tj.value) throw new Error(tj.error || ('token ' + tr.status));
-    mic = await navigator.mediaDevices.getUserMedia({ audio: true });
     pc = new RTCPeerConnection();
     mic.getTracks().forEach(t => pc.addTrack(t, mic));
-    audio = new Audio(); audio.autoplay = true;
-    pc.ontrack = e => { audio.srcObject = e.streams[0]; };
+    pc.ontrack = e => { audio.srcObject = e.streams[0]; try { const p = audio.play(); if (p && p.catch) p.catch(() => {}); } catch (_) {} };
     const dc = pc.createDataChannel('oai-events');
     // v14.07: she looks FIRST, then greets, so her first words can be about
     // what is actually on the screen. If the capture is slow the greeting
@@ -19126,8 +19139,20 @@ function _pgWakeLabel() {
   const t = document.getElementById('pg-maya-toggle');
   if (t) { t.classList.toggle('on', _pgWakeWant); t.setAttribute('aria-checked', _pgWakeWant ? 'true' : 'false'); }
 }
+// v14.27: a phone. Touch only, no hover: the wake word is a poor fit there
+// (Safari chimes on every restart of the recognizer, Chrome on iPhone has no
+// recognizer at all), so the switch opens the line itself, one tap, and the
+// chip or the switch hangs up.
+function _pgPhone() {
+  try { return window.matchMedia('(pointer: coarse)').matches && !window.matchMedia('(hover: hover)').matches; }
+  catch (_) { return false; }
+}
 async function pgToggleWake() {
-  if (!_pgWakeSupported()) { showToast('This browser cannot listen for a wake word.'); return; }
+  if (_pgPhone() || !_pgWakeSupported()) {
+    if (_pgVoice) { pgMayaStop(); return; }
+    await pgMayaStart();
+    return;
+  }
   _pgWakeWant = !_pgWakeWant;
   try { localStorage.setItem('maya_pg_wake', _pgWakeWant ? '1' : '0'); } catch (_) {}
   _pgWakeLabel();
@@ -19139,6 +19164,7 @@ async function pgToggleWake() {
   } else _pgWakeStop();
 }
 function _pgWakeStart() {
+  if (_pgPhone()) return;   // v14.27: the switch is the line on a phone
   if (!_pgWakeWant || _pgWakeOn || _pgWakePaused || _pgVoice || !_pgWakeSupported()) return;
   if (typeof isListening !== 'undefined' && isListening) return;   // the moodboard owns the engine right now
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;

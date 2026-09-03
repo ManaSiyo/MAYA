@@ -16,6 +16,26 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 3, 2026, NIGHT (v14.27): "Ready it for mobile"
+
+[x] Ran the app at iPhone size and looked at every screen: no errors, no
+    sideways scroll. What needed fixing is fixed:
+[x] Hey Maya on a phone: the switch opens the line with one tap, the
+    next tap hangs up. No wake word on phones (Safari chimes on every
+    restart of it, Chrome on iPhone has no recognizer at all).
+[x] The microphone is asked for inside the tap, before the network, so
+    iPhone Safari always allows the speaker.
+[x] Card buttons on touch: only on the card you touched, not a wall of
+    hearts and x's across the whole board.
+[x] The feedback box ran off both edges of the screen on a phone, close
+    button included. It fits now.
+[x] The Maya chip clears the home indicator; Hey Maya stays on one line.
+[ ] Fromsa, for a phone demo: start a fresh project (or a small one). A
+    22 card desktop board lands as a pile on a phone; "organize the
+    board" or "zoom out" are the ways through it.
+[ ] Fromsa: on the phone, allow the microphone once when asked, and keep
+    the phone unmuted (the ring switch) so her voice plays.
+
 SEPTEMBER 3, 2026, LATER (v14.26): "I am demoing Maya, audit everything"
 
 [x] "Try it out yourself": drove the live app signed in as Fromsa through

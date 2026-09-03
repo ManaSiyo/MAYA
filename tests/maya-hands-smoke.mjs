@@ -768,6 +768,45 @@ ok('the client on the board sits in the list, highlighted, with the only pencil;
   c11.namePencilHidden === true && c11.activeName === 'Fromsa' && c11.rowNames.includes('Linda') && c11.activePencil === true && c11.otherPencilHidden === true,
   JSON.stringify([c11.namePencilHidden, c11.rowNames, c11.activeName, c11.activePencil, c11.otherPencilHidden]));
 
+// ── 3c12. v14.27: a phone: the switch is the line, the touched card carries the controls ──
+const c12 = await page.evaluate(async () => {
+  const out = {};
+  const origPhone = window._pgPhone, origStart = window.pgMayaStart, origStop = window.pgMayaStop, origToast = window.showToast;
+  let started = 0, stopped = 0; const toasts = [];
+  window._pgPhone = () => true; window.pgMayaStart = async () => { started++; }; window.pgMayaStop = () => { stopped++; }; window.showToast = m => toasts.push(String(m));
+  await pgToggleWake();
+  out.startedOnTap = started === 1 && stopped === 0;
+  (0, eval)('_pgVoice = { dc: { send() {} } }');
+  await pgToggleWake();
+  out.hungUpOnSecondTap = stopped === 1;
+  (0, eval)('_pgVoice = null');
+  out.noWakeToast = !toasts.some(t => /Say Hey Maya|cannot listen/.test(t));
+  (0, eval)('_pgWakeWant = true');
+  _pgWakeStart();
+  out.noRecognizerOnPhone = !(0, eval)('_pgWakeOn');
+  (0, eval)('_pgWakeWant = false');
+  window._pgPhone = origPhone; window.pgMayaStart = origStart; window.pgMayaStop = origStop; window.showToast = origToast;
+  // the touched card carries the controls
+  const cards = [...document.querySelectorAll('.item-card')].slice(0, 2);
+  if (cards.length === 2) {
+    cards[0].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, isPrimary: true, pointerType: 'touch', clientX: 10, clientY: 10 }));
+    cards[0].dispatchEvent(new PointerEvent('pointerup', { bubbles: true, isPrimary: true, pointerType: 'touch', clientX: 10, clientY: 10 }));
+    out.firstTouched = cards[0].classList.contains('touched');
+    cards[1].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, isPrimary: true, pointerType: 'touch', clientX: 10, clientY: 10 }));
+    cards[1].dispatchEvent(new PointerEvent('pointerup', { bubbles: true, isPrimary: true, pointerType: 'touch', clientX: 10, clientY: 10 }));
+    out.onlyOneTouched = cards[1].classList.contains('touched') && !cards[0].classList.contains('touched');
+  } else { out.firstTouched = out.onlyOneTouched = 'no cards'; }
+  out.fbMax = (document.querySelector('#feedback-modal .modal-card') || {}).style.maxWidth;
+  out.phoneCss = [...document.styleSheets].some(ss => { try { return [...ss.cssRules].some(r => r.media && /hover: none/.test(r.media.mediaText) && /\.item-card\.touched \.fav-btn/.test(r.cssText)); } catch (_) { return false; } });
+  return out;
+});
+ok('on a phone the Hey Maya switch opens the line with one tap and hangs up with the next, no wake word',
+  c12.startedOnTap === true && c12.hungUpOnSecondTap === true && c12.noWakeToast === true && c12.noRecognizerOnPhone === true, JSON.stringify(c12));
+ok('on touch the controls ride on the card the finger touched, one card at a time',
+  (c12.firstTouched === true && c12.onlyOneTouched === true) || c12.firstTouched === 'no cards', JSON.stringify([c12.firstTouched, c12.onlyOneTouched, c12.phoneCss]));
+ok('the phone CSS scopes the card controls to the touched card', c12.phoneCss === true);
+ok('the feedback box never runs off a phone screen', /min\(520px, 94vw\)/.test(c12.fbMax || ''), JSON.stringify(c12.fbMax));
+
 // ── 3d. v14.16: the studio gauge never claims zero of two dollars ──
 const gauge = await page.evaluate(() => {
   (0, eval)('_mayaUsage = { spentUsd: 9.4, capUsd: 2, images: 120, perCard: 0.065, admin: true, projects: 3, ok: true }');

@@ -1990,6 +1990,17 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.27: ready for a phone: the switch is the line, mic first, the touched card carries the controls, the feedback box fits',
+  PLAYGROUND_SOURCE.includes('function _pgPhone()') &&
+  INDEX_SOURCE.includes('function _pgPhone()') &&
+  PLAYGROUND_SOURCE.includes('if (_pgPhone() || !_pgWakeSupported()) {') &&
+  PLAYGROUND_SOURCE.includes('if (_pgPhone()) return;   // v14.27: the switch is the line on a phone') &&
+  PLAYGROUND_SOURCE.indexOf('mic = await navigator.mediaDevices.getUserMedia({ audio: true });') < PLAYGROUND_SOURCE.indexOf("const tr = await fetch('/api/voice-token'") &&
+  PLAYGROUND_SOURCE.includes(".item-card.touched .fav-btn,") &&
+  INDEX_SOURCE.includes(".item-card.touched .fav-btn,") &&
+  PLAYGROUND_SOURCE.includes('style="text-align:center;max-width:min(520px, 94vw)"') &&
+  INDEX_SOURCE.includes('style="text-align:center;max-width:min(520px, 94vw)"') &&
+  PLAYGROUND_SOURCE.includes('bottom: calc(18px + env(safe-area-inset-bottom, 0px))'));
 ok('v14.26: demo readiness: fabric thumbnails, Pinterest answers in words, the voice line out of credit says so',
   PLAYGROUND_SOURCE.includes('function _fabricThumb(f)') &&
   INDEX_SOURCE.includes('function _fabricThumb(f)') &&
@@ -2007,7 +2018,7 @@ ok('v14.26: demo readiness: fabric thumbnails, Pinterest answers in words, the v
   PLAYGROUND_SOURCE.includes('.note-group-title { color: rgba(255,255,255,0.98); font-weight: 600; margin: 0 0 3px; }') &&
   PLAYGROUND_SOURCE.includes("if (a.confirm !== true) return { ok: false, needsConfirmation: true, change: t.slice(0, 140),") &&
   INDEX_SOURCE.includes("if (a.confirm !== true) return { ok: false, needsConfirmation: true, change: t.slice(0, 140),") &&
-  PLAYGROUND_SOURCE.includes('} else if (typeof _zCounter !== 'undefined') {') &&
+  PLAYGROUND_SOURCE.includes('} else if (typeof _zCounter !== \'undefined\') {') &&
   PLAYGROUND_SOURCE.includes('#feedback-modal { z-index: 260; }') &&
   PLAYGROUND_SOURCE.includes('async function _pgPictureData(src)') &&
   SERVER_SOURCE.includes("confirm: { type: 'boolean', description: 'true only after they said yes to this change (or said go with it)' }") &&
