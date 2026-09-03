@@ -460,9 +460,9 @@ ok('an image costs more of the budget than a chat call',
 
 ok('the map light reads Submissions', s.lights.includes('Submissions') && !s.lights.includes('Drive'));
 
-ok('Admin folds: users, the migrated marketing modules, then changes/feature requests/architecture (the prompting engine hidden)',
+ok('Admin folds: users, the migrated marketing modules, then changes/feature requests/architecture (the prompting engine back since v14.24)',
   s.order === 'users-fold,ads-fold,leads-fold,bottom-fold,changes-fold,features-fold,pe-fold,arch-fold' &&
-  /<details class="fold" id="pe-fold" hidden>/.test(MAP_SOURCE));
+  /<details class="fold" id="pe-fold">/.test(MAP_SOURCE));
 ok('the marketing modules are migrated into Admin under Users and traffic',
   MAP_SOURCE.includes('id="adm-mkt"') &&
   MAP_SOURCE.includes('id="campaigns-table"') &&
@@ -1153,8 +1153,8 @@ ok('the proxy holds a model allowlist and upgrades legacy names by tier',
   SERVER_SOURCE.includes('const MODEL_ALLOWED') &&
   SERVER_SOURCE.includes("process.env.MODEL_TERRA || 'gpt-5.6-terra'") &&
   SERVER_SOURCE.includes("process.env.MODEL_LUNA  || 'gpt-5.6-luna'") &&
-  SERVER_SOURCE.includes("'gpt-4.1':     MODEL_TERRA") &&
-  SERVER_SOURCE.includes("'gpt-4o-mini': MODEL_LUNA") &&
+  SERVER_SOURCE.includes("'gpt-4.1':      MODEL_TERRA") &&
+  SERVER_SOURCE.includes("'gpt-4o-mini':  MODEL_LUNA") &&
   // v13.70: the refusal itself now lives in the fail-closed policy helper
   readFileSync(join(ROOT, 'docs/server/proxy-policy.mjs'), 'utf8').includes("'model_not_allowed'"));
 ok('an upgraded model that fails upstream falls back to the proven one, once',
@@ -1696,8 +1696,8 @@ ok('Maya has the new tools: add lead, add person, journal, read the internal ops
 ok('the Visualize pill stays above the climbing cards, like the hamburger and logo',
   /#voice-wrap \{[^}]*z-index: 9000/.test(INDEX_SOURCE));
 // v13.83 quick wins
-ok('Lead Station header says Email, submissions are "My submissions", fabric spec de-dupes the name',
-  MAP_SOURCE.includes("label: 'Email'") &&   // v13.95: column-driven header
+ok('Lead Station header says Contact (Email until v14.24), submissions are "My submissions", fabric spec de-dupes the name',
+  MAP_SOURCE.includes("label: 'Contact'") &&   // v13.95: column-driven header; v14.24: Contact, phone first
   MAP_SOURCE.includes('My submissions <span id="subs-count"') &&
   INDEX_SOURCE.includes('!nm.includes(String(t).toLowerCase())'));
 
@@ -1990,6 +1990,22 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.24: the 403 healed, the wall never reloads, uploads file the client, Contact and the Prompting Engine on Admin, Maya sees the pins',
+  PLAYGROUND_SOURCE.includes("if (stored && stored !== 'gpt-4.1' && stored !== 'gpt-4o-mini')") &&
+  INDEX_SOURCE.includes("if (stored && stored !== 'gpt-4.1' && stored !== 'gpt-4o-mini')") &&
+  PLAYGROUND_SOURCE.includes("let _pinBoardsCache = '';") &&
+  PLAYGROUND_SOURCE.includes('_pinSetFoot(_pinPicked.size > 0);') &&
+  PLAYGROUND_SOURCE.includes('function _pgPinsOnScreen()') &&
+  INDEX_SOURCE.includes('function _pgPinsOnScreen()') &&
+  PLAYGROUND_SOURCE.includes('function _pgPinsByPlace(place)') &&
+  PLAYGROUND_SOURCE.includes("' BODY, atelier direction: '") &&
+  INDEX_SOURCE.includes("' BODY, atelier direction: '") &&
+  SERVER_SOURCE.includes("'gpt-4o':       MODEL_TERRA,") &&
+  SERVER_SOURCE.includes('Never invent a card or a pin.') &&
+  MAP_SOURCE.includes("label: 'Contact'") &&
+  MAP_SOURCE.includes('<details class="fold" id="pe-fold">') &&
+  MAP_SOURCE.includes('id="pe-body"') &&
+  MAP_SOURCE.includes("body: document.getElementById('pe-body').value.trim(),"));
 ok('v14.23: the pencil beside the name, Randomize repaints, white notes, all of Pinterest as the third room',
   PLAYGROUND_SOURCE.includes('id="drawer-avatar-rename"') &&
   INDEX_SOURCE.includes('id="drawer-avatar-rename"') &&

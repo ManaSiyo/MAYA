@@ -16,6 +16,33 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 3, 2026, NIGHT (v14.24): the audit round
+
+[x] "OPENAI ERROR: 403" on the board: the browser held an old model name
+    (gpt-4o) that the proxy refuses. The browser heals it, the server
+    upgrades old names, errors say their words.
+[x] "Uploading an avatar or randomizing takes a long time to change;
+    sometimes I close the drawer and open it back for it to take effect":
+    the repaint was the v14.23 fix; uploads now also file the client at
+    once and stop persisting the full size photo before it is shrunk.
+[x] "Pinterest, once loaded, should not reload. If I go to Profile and
+    come back it reloads the whole thing": the Boards tab was refetching
+    every visit; it is kept for the session now, and picks survive a
+    close and reopen.
+[x] "On the admin side, instead of Email it should say Contact and show
+    the phone number": Contact, phone first, email when there is none.
+[x] "Bring back prompt engineering to my admin, possibly modifiable, for
+    the heights and big heads": the Prompting Engine fold is back with a
+    fourth field, The body, appended to every render.
+[x] "Maya should be able to see what I see. Bottom right Pinterest card,
+    she cannot see it, she is hallucinating": Pinterest pictures never
+    painted into her screenshot. look now hands her every pin on screen
+    with a place word, bring_in_pins takes a place, and she is told to say
+    she cannot see rather than invent.
+[ ] "Faster, snappier, audit the whole code base": this round fixed the
+    reload, the picks, the upload persist; the caption and profile sweeps
+    on first visit remain the biggest first-load cost. Continuing.
+
 SEPTEMBER 3, 2026, LATER (v14.23): after using the new drawer
 
 [x] "In the avatar, delete and rename. Have the pencil icon beside the

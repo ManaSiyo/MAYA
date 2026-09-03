@@ -74,6 +74,37 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.24 (Claude): the audit round: 403, the wall, uploads, Admin, Maya's eyes
+
+OPENAI ERROR 403: localStorage maya_openai_model held gpt-4o (an old
+settings screen); proxy-policy refuses unknown models with 403
+model_not_allowed; callOpenAIChat printed only the status. Fixes: getModel()
+drops anything but gpt-4.1 / gpt-4o-mini; MODEL_UPGRADES also maps gpt-4o,
+gpt-4, gpt-4-turbo (TERRA) and gpt-4.1-mini (LUNA); the chat error prefers
+err.error.message, then err.detail, then the error word.
+Pinterest: _pinBoardsCache (cleared by _pinReload) so Boards never refetch
+in a session; openPinterestDrawer keeps _pinPicked when the wall is kept
+and shows the foot when picks exist (it used to reset the Set while the
+checkmarks stayed); _pinWideSearch resets picks on a new wall.
+Upload: onFacePhotoSelected no longer persists the full size data URL
+before the shrink, and files the client (_saveCurrentAvatarToLibrary) at
+once plus queueSave.
+Body direction: buildMeasClause appends " BODY, atelier direction: " +
+_promptCfg.body after the natural proportions sentence.
+Admin: lead column 'Contact' (phone field when present, else email);
+#pe-fold is visible again with a fourth textarea #pe-body, loaded and
+saved with the other three (config/prompting.body); the body layer
+paragraph explains where it lands.
+Maya's eyes: _pgPinsOnScreen() lists visible .pin-pic / .pin-tile in the
+drawer body with pos (row x col terciles of the visible body rect), words
+(alt or board name), picked; _pgDrawerState carries pinsOnScreen + a
+truth note, the search word and the scope; look returns board +
+drawer alongside the screenshot; bring_in_pins takes position (via
+_pgPinsByPlace) and answers with the list when nothing sits there; the
+server decl drops required query and the instructions say the list is
+her eyes on the wall and to never invent a card or pin. Battery: 148
+checks per surface.
+
 ## v14.23 (Claude): the profile tidied, Randomize fixed, white notes, all of Pinterest
 
 Profile: .avatar-switch-actions holds Randomize and Replace only.

@@ -253,8 +253,14 @@ const MODEL_TERRA = process.env.MODEL_TERRA || 'gpt-5.6-terra';
 const MODEL_LUNA  = process.env.MODEL_LUNA  || 'gpt-5.6-luna';
 const MODEL_SOL   = process.env.MODEL_SOL   || 'gpt-5.6-sol';
 const MODEL_UPGRADES = Object.freeze({
-  'gpt-4.1':     MODEL_TERRA,
-  'gpt-4o-mini': MODEL_LUNA,
+  'gpt-4.1':      MODEL_TERRA,
+  'gpt-4o-mini':  MODEL_LUNA,
+  // v14.24: names an older browser may still hold. Refusing them as 403 left
+  // a consultation reading OPENAI ERROR: 403 with no way out.
+  'gpt-4o':       MODEL_TERRA,
+  'gpt-4':        MODEL_TERRA,
+  'gpt-4-turbo':  MODEL_TERRA,
+  'gpt-4.1-mini': MODEL_LUNA,
 });
 // v13.70 (A1): the canonical inventory of models MAYA may run. ENFORCEMENT of
 // which model may hit which endpoint, plus image/quality/Sol policy, now lives
@@ -4198,7 +4204,7 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       'turns, always specific, never flattery.\n\n' +
       'YOUR HANDS (tools run in their browser, instantly, no confirmation needed):\n' +
       '- open_drawer(tab) / close_drawer: the side drawer. Tabs: avatar (their face, projects, stats), pinterest, fabrics.\n' +
-      '- bring_in_pins(query, count): open Pinterest and bring the pins that match the words onto the board as reference cards. ' +
+      '- bring_in_pins(query, count) or bring_in_pins(position): open Pinterest and bring pins onto the board as reference cards, by their words or by where they sit ("bottom right", "top left", "center"). ' +
       'If nothing matches you get the list of what is there; choose the closest or ask.\n' +
       '- describe_garment(text): the moment you have enough, send ONE consolidated description in the client\'s own words; ' +
       'MAYA turns it into cards. Do this instead of asking them to tap to listen.\n' +
@@ -4210,7 +4216,7 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       'YOUR OWN LIMITS ARE LOGGED FOR YOU. Whenever a tool of yours fails, or you say you cannot do something, the app ' +
       'records it to the studio automatically. So when you hit a limit, say so plainly and briefly; never hide it, and ' +
       'never claim you logged it yourself unless you called log_feature.\n' +
-      '- look: see the screen (a real picture of it).\n' +
+      '- look: see the screen. You get a real picture of it PLUS two lists: the board (every card with its place word) and the drawer (every Pinterest pin on screen with its place word: top left, bottom right, center). Pinterest pictures do not paint into the screenshot, so for the wall the list is your eyes. Answer "which one is bottom right" from the list. If a thing is in neither the picture nor the lists, say you cannot see it. Never invent a card or a pin.\n' +
       '- open_card(query) / delete_card(query) / favorite_card(query): act on a card by its words.\n' +
       '- viewer(action): inside the opened picture: close, next, prev, post_wall, get_it_made, listen, switch_fabric, add_reference.\n' +
       '- pin_view(which): Pinterest All saves or Boards. open_board(name) opens one.\n' +
@@ -4243,9 +4249,10 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       { type: 'function', name: 'open_drawer', description: 'Open the side drawer, optionally on a tab.',
         parameters: { type: 'object', properties: { tab: { type: 'string', enum: ['avatar', 'pinterest', 'fabrics'] } } } },
       { type: 'function', name: 'close_drawer', description: 'Close the side drawer.', parameters: { type: 'object', properties: {} } },
-      { type: 'function', name: 'bring_in_pins', description: 'Open Pinterest and bring matching saved pins onto the board as reference cards.',
+      { type: 'function', name: 'bring_in_pins', description: 'Open Pinterest and bring pins onto the board as reference cards, by their words or by where they sit on screen.',
         parameters: { type: 'object', properties: { query: { type: 'string', description: 'words to match against the pins' },
-          count: { type: 'integer', description: 'how many, default 1, max 6' } }, required: ['query'] } },
+          position: { type: 'string', description: 'where it sits on the wall: top left, top right, center, bottom right...' },
+          count: { type: 'integer', description: 'how many, default 1, max 6' } } } },
       { type: 'function', name: 'describe_garment', description: 'Send the consolidated garment description into the moodboard pipeline; it becomes cards.',
         parameters: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] } },
       { type: 'function', name: 'visualize', description: 'Render the garment on the client using the board.', parameters: { type: 'object', properties: {} } },

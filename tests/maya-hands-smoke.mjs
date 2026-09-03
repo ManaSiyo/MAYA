@@ -589,6 +589,51 @@ ok('a search of what is saved offers all of Pinterest in one pill', c8.pillAfter
 ok('when all of Pinterest is not switched on, she says exactly that', c8.off && c8.off.ok === false && c8.off.needs === 'access', JSON.stringify(c8.off));
 ok('search_pins with scope everywhere reaches the third room', c8.tool && c8.tool.ok === true && c8.tool.from === 'all of Pinterest', JSON.stringify(c8.tool));
 
+// ── 3c9. v14.24: a stale model heals, the wall stays, Maya sees the pins with place words ──
+const c9 = await page.evaluate(async () => {
+  const out = {};
+  // the 403 root cause: a stale model name in this browser
+  localStorage.setItem('maya_openai_model', 'gpt-4o');
+  out.model = getModel();
+  out.modelCleared = localStorage.getItem('maya_openai_model') === null;
+  // the wall: picks survive a reopen, boards are cached
+  try { toggleNotesDrawer(true); pgTab('pinterest'); } catch (_) {}
+  await _pinWideSearch('corsets', 'saved');
+  const pics = [...document.querySelectorAll('#pinterest-drawer-body .pin-pic')];
+  if (pics[0]) pics[0].click();
+  const pickedBefore = (0, eval)('_pinPicked.size');
+  closePinterestDrawer(); openPinterestDrawer();
+  out.picksKept = (0, eval)('_pinPicked.size') === pickedBefore && pickedBefore === 1;
+  out.wallKept = document.querySelectorAll('#pinterest-drawer-body .pin-pic').length === 2;
+  await _pinDrawerBoards();
+  const cache1 = (0, eval)('_pinBoardsCache');
+  const origApi = window._pinApi; let fetched = 0;
+  window._pinApi = async (p) => { fetched++; return origApi(p); };
+  await _pinDrawerBoards();
+  window._pinApi = origApi;
+  out.boardsCached = !!cache1 && fetched === 0 && document.querySelectorAll('#pinterest-drawer-body .pin-tile').length === 2;
+  // Maya's eyes on the wall
+  await _pinWideSearch('corsets', 'saved');
+  const seen = _pgPinsOnScreen();
+  out.seen = seen;
+  const drawer = _pgDrawerState();
+  out.drawerLists = Array.isArray(drawer.pinsOnScreen) && drawer.pinsOnScreen.length === 2 && /truth/.test(drawer.pinsNote || '');
+  const origImport = window._pinImport; window._pinImport = async () => { out.imported = (0, eval)('_pinPicked.size'); };
+  out.byPlace = await window._pgTool('bring_in_pins', { position: seen[0] ? seen[0].pos : 'top left' }, { send: () => {} });
+  out.nowhere = await window._pgTool('bring_in_pins', { position: 'bottom right' }, { send: () => {} });
+  window._pinImport = origImport;
+  _pgGlideStop();
+  await window._pgTool('clear_pin_search', {}, { send: () => {} });
+  return out;
+});
+ok('a stale model name in the browser heals itself instead of a 403', c9.model === 'gpt-4.1' && c9.modelCleared === true);
+ok('the Pinterest wall and its picks survive closing and reopening', c9.picksKept === true && c9.wallKept === true, JSON.stringify([c9.picksKept, c9.wallKept]));
+ok('boards are kept for the session, never refetched on the way back', c9.boardsCached === true);
+ok('Maya sees every pin on screen with a place word', c9.seen.length === 2 && c9.seen.every(p => p.pos && p.words) && c9.drawerLists === true, JSON.stringify(c9.seen));
+ok('bring_in_pins by place picks the pin that sits there, and says when none does',
+  c9.byPlace && c9.byPlace.ok === true && c9.imported === 1 && c9.nowhere && c9.nowhere.ok === false && Array.isArray(c9.nowhere.pinsOnScreen),
+  JSON.stringify([c9.byPlace, c9.nowhere && c9.nowhere.reason]));
+
 // ── 3d. v14.16: the studio gauge never claims zero of two dollars ──
 const gauge = await page.evaluate(() => {
   (0, eval)('_mayaUsage = { spentUsd: 9.4, capUsd: 2, images: 120, perCard: 0.065, admin: true, projects: 3, ok: true }');

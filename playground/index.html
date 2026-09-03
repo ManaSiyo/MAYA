@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.23">
+<meta name="maya-version" content="14.24">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -5596,7 +5596,14 @@ let _switchFabricsContext = null;
 function getApiKey() {
   return (typeof getGoogleIdToken === 'function') ? (getGoogleIdToken() || '') : '';
 }
-function getModel()  { return localStorage.getItem(STORAGE_KEY_MODEL) || 'gpt-4.1'; }
+function getModel()  {
+  // v14.24: only the two names the proxy upgrades may leave this browser. A
+  // stale gpt-4o from an old settings screen was answered 403 on every
+  // consultation read, shown as OPENAI ERROR: 403 and nothing else.
+  const stored = localStorage.getItem(STORAGE_KEY_MODEL);
+  if (stored && stored !== 'gpt-4.1' && stored !== 'gpt-4o-mini') { try { localStorage.removeItem(STORAGE_KEY_MODEL); } catch (_) {} return 'gpt-4.1'; }
+  return stored || 'gpt-4.1';
+}
 // Image quality preference (medium = fast/cheap; high = sharper, better face).
 // History: v5.15 introduced the toggle. v9.9 raised the default to 'high'
 // for face consistency. v0.13.10 reverted to 'medium' after measuring
@@ -7906,8 +7913,13 @@ function buildMeasClause() {
   // first render came out with a head too big for the body. Say the ratio
   // out loud, in every prompt, measurements or not.
   const natural = ' Natural adult photographic proportions: the head is about one eighth of the standing height and is never enlarged, the neck, shoulders, torso and legs are in realistic scale to it, and the face reference sets likeness only, never the size of the head.';
-  if (!parts.length) return natural;
-  return ' The model has these proportions: ' + parts.join(', ') + '.' + natural;
+  // v14.24: the atelier can steer the body layer from the Admin prompting
+  // engine (config/prompting.body), the same way character, background and
+  // style are steered. Height and head size live here.
+  const c = (typeof _promptCfg !== 'undefined' && _promptCfg) || {};
+  const bodyDir = c.body && String(c.body).trim() ? ' BODY, atelier direction: ' + String(c.body).trim() : '';
+  if (!parts.length) return natural + bodyDir;
+  return ' The model has these proportions: ' + parts.join(', ') + '.' + natural + bodyDir;
 }
 
 // v9.9: render the cached face descriptors into a prompt clause. Belt and
@@ -8218,9 +8230,12 @@ async function onFacePhotoSelected(ev) {
         if (typeof _persistSession === 'function') _persistSession();
       }
     });
-    if (typeof _persistSession === 'function') _persistSession();
     showToast('Face saved.');
     _refreshActiveAvatarView();
+    // v14.24: the roster gets the new face right away, and the big photo is
+    // persisted only once shrunk (the shrink path persists), never at full size.
+    try { _saveCurrentAvatarToLibrary(); } catch (_) {}
+    try { if (typeof projectStore !== 'undefined' && projectStore.currentId) projectStore.queueSave(); } catch (_) {}
     // v9.2: still cache face descriptors for future use. No closet refresh.
     analyzeFacePhoto(dataUrl).then(d => {
         // v13.0: do not write one client's face onto another's project
@@ -9426,7 +9441,8 @@ async function callOpenAIChat(transcript) {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || ('OpenAI error: ' + res.status));
+    // v14.24: the server answers {error, detail}; OpenAI answers {error:{message}}. Say the words, not the number.
+    throw new Error((err.error && err.error.message) || err.detail || (typeof err.error === 'string' ? err.error.replace(/_/g, ' ') + ' (' + res.status + ')' : '') || ('OpenAI error: ' + res.status));
   }
   const data = await res.json();
   return JSON.parse(data.choices[0].message.content);
@@ -10408,19 +10424,22 @@ function openPinterestDrawer() {
   const d = document.getElementById('pinterest-drawer');
   if (!d) return;
   d.classList.add('open');
-  _pinPicked = new Set();
-  _pinSetFoot(false);
   // v13.84: already loaded this session? keep the wall, don't reload it.
+  // v14.24: and keep the picks. They used to be forgotten on every reopen
+  // while the checkmarks stayed on screen, so Bring in did nothing.
   const body = document.getElementById('pinterest-drawer-body');
   if (_pinLoaded && body && body.querySelector('.pin-grid')) {
     _pinTabsVisible(true);
+    _pinSetFoot(_pinPicked.size > 0);
     return;
   }
+  _pinPicked = new Set();
+  _pinSetFoot(false);
   _pinBody('<div class="pin-note">Looking at your Pinterest\u2026</div>');
   _pinDrawerBoot();
 }
 // v13.84: force a real re-fetch (used by the refresh affordance and reconnect).
-function _pinReload() { _pinLoaded = false; _pinStatusOk = false; _pinPicsCache = {};
+function _pinReload() { _pinLoaded = false; _pinStatusOk = false; _pinPicsCache = {}; _pinBoardsCache = '';
   _pinBody('<div class="pin-note">Refreshing your Pinterest\u2026</div>'); _pinDrawerBoot(); }
 window._pinReload = _pinReload;
 function closePinterestDrawer() {
@@ -10528,9 +10547,13 @@ function setPinterestTab(tab) {
   return _pinDrawerPins('', '');
 }
 
+let _pinBoardsCache = '';
 async function _pinDrawerBoards() {
   _pinSub('');
   _pinSetFoot(false);
+  // v14.24: Boards used to refetch on every visit, which is the reload Fromsa
+  // saw coming back from Profile. The session keeps it like the pins.
+  if (_pinBoardsCache) { _pinBody(_pinBoardsCache); _pinLoaded = true; return; }
   _pinBody('<div class="pin-note">Loading your boards\u2026</div>');
   let j;
   try { j = await _pinApi('/api/pinterest/boards'); }
@@ -10547,13 +10570,15 @@ async function _pinDrawerBoards() {
     _pinBody('<div class="pin-note">No boards on that Pinterest account.</div>');
     return;
   }
-  _pinBody('<div class="pin-grid">' + j.boards.map(b =>
+  _pinBoardsCache = '<div class="pin-grid">' + j.boards.map(b =>
     '<button class="pin-tile" onclick="_pinDrawerPins(\'' + escapeHtml(b.id) + '\',\'' +
       escapeHtml(String(b.name).replace(/[\'\\]/g, '')) + '\')">' +
       (b.cover ? '<img src="' + _safeImgSrc(b.cover) + '" alt="" loading="lazy">' : '<span class="pin-blank"></span>') +
       '<span class="pin-tile-name">' + escapeHtml(b.name) + '</span>' +
       '<span class="pin-tile-count">' + b.pins + ' pin' + (b.pins === 1 ? '' : 's') + '</span>' +
-    '</button>').join('') + '</div>');
+    '</button>').join('') + '</div>';
+  _pinLoaded = true;
+  _pinBody(_pinBoardsCache);
 }
 
 async function _pinDrawerPins(boardId, boardName) {
@@ -17850,7 +17875,50 @@ function _pgBoardSnapshot() {
 function _pgDrawerState() {
   const hs = document.getElementById('hscroll');
   const open = hs ? hs.scrollLeft > (hs.scrollWidth - hs.clientWidth) / 2 : false;
-  return { open, tab: window._pgLastTab || 'avatar', pinterest: !!(typeof _pinStatusOk !== 'undefined' && _pinStatusOk) };
+  const st = { open, tab: window._pgLastTab || 'avatar', pinterest: !!(typeof _pinStatusOk !== 'undefined' && _pinStatusOk) };
+  try { const pins = _pgPinsOnScreen(); if (pins.length) { st.pinsOnScreen = pins; st.pinsNote = 'these are the Pinterest pictures on screen right now, with where each one sits; this list is the truth, the screenshot may not show them'; } } catch (_) {}
+  try { const inp = document.getElementById('pin-search-input'); if (inp && inp.value) st.pinSearch = inp.value; if (window._pinWiderScope) st.pinScope = window._pinWiderScope; } catch (_) {}
+  return st;
+}
+// v14.24: Maya's eyes on the Pinterest wall. html2canvas cannot paint pictures
+// from another site, so the screenshot showed empty tiles and she guessed.
+// This is the wall as a list: every pin actually visible in the drawer, its
+// words, whether it is picked, and where it sits (top left, bottom right...)
+// measured against what is on screen, the way a person points.
+function _pgPinsOnScreen() {
+  const body = document.getElementById('pinterest-drawer-body');
+  if (!body) return [];
+  const br = body.getBoundingClientRect();
+  if (br.width < 10 || br.height < 10) return [];
+  const els = [...body.querySelectorAll('.pin-pic, .pin-tile')].filter(el => el.style.display !== 'none');
+  const seen = [];
+  for (const el of els) {
+    const r = el.getBoundingClientRect();
+    if (r.bottom < br.top + 4 || r.top > br.bottom - 4) continue;   // scrolled out of view
+    const cx = (r.left + r.width / 2 - br.left) / br.width;
+    const cy = (r.top + r.height / 2 - br.top) / br.height;
+    const row = cy < 1 / 3 ? 'top' : cy < 2 / 3 ? 'middle' : 'bottom';
+    const col = cx < 1 / 3 ? 'left' : cx < 2 / 3 ? 'center' : 'right';
+    const pos = row === 'middle' && col === 'center' ? 'center' : (row + ' ' + col);
+    const isBoard = el.classList.contains('pin-tile');
+    const words = isBoard ? String((el.querySelector('.pin-tile-name') || {}).textContent || '').trim()
+                          : String(el.dataset.alt || '').trim();
+    seen.push({ n: seen.length + 1, pos, kind: isBoard ? 'board' : 'pin', words: words.slice(0, 80), picked: el.classList.contains('picked') });
+  }
+  return seen;
+}
+function _pgPinsByPlace(place) {
+  const want = String(place || '').toLowerCase().replace(/[^a-z ]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!want) return [];
+  const row = /\b(top|upper)\b/.test(want) ? 'top' : /\b(bottom|lower)\b/.test(want) ? 'bottom' : /\b(middle)\b/.test(want) ? 'middle' : '';
+  const col = /\b(left)\b/.test(want) ? 'left' : /\b(right)\b/.test(want) ? 'right' : /\b(center|centre|middle)\b/.test(want) && !row ? 'center' : (/\b(center|centre)\b/.test(want) ? 'center' : '');
+  const body = document.getElementById('pinterest-drawer-body');
+  if (!body) return [];
+  const list = _pgPinsOnScreen();
+  const els = [...body.querySelectorAll('.pin-pic, .pin-tile')].filter(el => el.style.display !== 'none');
+  const br = body.getBoundingClientRect();
+  const visible = els.filter(el => { const r = el.getBoundingClientRect(); return !(r.bottom < br.top + 4 || r.top > br.bottom - 4); });
+  return list.map((p, i) => ({ p, el: visible[i] })).filter(x => x.el && (!row || x.p.pos.includes(row)) && (!col || x.p.pos.includes(col) || (col === 'center' && x.p.pos === 'center')));
 }
 // ── the live line ──
 let _pgVoice = null, _pgVoiceStarting = false, _pgToolChain = Promise.resolve();
@@ -18101,6 +18169,8 @@ async function _pinWideSearch(q, scope) {
     : ('nothing matching ' + q.slice(0, 40) + ' anywhere in what they have saved on Pinterest; search_pins with scope everywhere reaches all of Pinterest, or describe_garment can conjure fresh references') };
   window._pinWiderActive = true;
   window._pinWiderScope = everywhere ? 'everywhere' : 'saved';
+  // v14.24: a new wall means a clean pick list; stale picks made Bring in miss.
+  _pinPicked = new Set(); _pinSetFoot(false);
   if (body) body.innerHTML = '<div class="pin-grid pics">' + pins.map(p =>
     '<button class="pin-pic" data-url="' + escapeHtml(p.url) + '" data-alt="' + escapeHtml(p.alt || '') + '"' +
       ' onclick="_pinToggle(this)"><img src="' + _safeImgSrc(p.url) + '" alt="" loading="lazy">' +
@@ -18190,7 +18260,10 @@ async function _pgLook(dc) {
   const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
   dc.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'message', role: 'user',
     content: [{ type: 'input_image', image_url: dataUrl }] } }));
-  return { ok: true, note: 'the current screen is attached as a picture; describe what you see only from it' };
+  // v14.24: the picture plus the lists. Pictures from other sites (Pinterest)
+  // do not paint into the screenshot, so the lists carry what the eye misses.
+  return { ok: true, note: 'the current screen is attached as a picture; describe what you see from it AND from the board and drawer lists here. If something is in neither, say you cannot see it; never invent a card or a pin.',
+    board: _pgBoardSnapshot(), drawer: _pgDrawerState() };
 }
 async function _pgTool(name, a, dc) {
   a = a && typeof a === 'object' ? a : {};
@@ -18299,8 +18372,18 @@ async function _pgTool(name, a, dc) {
         await new Promise(r => setTimeout(r, 200));
       }
       if (!pics.length) return { ok: false, reason: 'no pins loaded; is Pinterest connected?' };
-      const words = String(a.query || '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 2);
       const want = Math.max(1, Math.min(6, Number(a.count) || 1));
+      // v14.24: "the bottom right one". A place on the screen picks the pin.
+      if (a.position && String(a.position).trim()) {
+        const byPlace = _pgPinsByPlace(a.position).filter(x => x.el.classList.contains('pin-pic'));
+        if (!byPlace.length) return { ok: false, reason: 'no pin sits at ' + String(a.position).slice(0, 30) + ' right now', pinsOnScreen: _pgPinsOnScreen() };
+        const chosen = byPlace.slice(0, want);
+        pics.forEach(el => { if (el.classList.contains('picked')) el.click(); });
+        chosen.forEach(x => x.el.click());
+        try { await _pinImport(); } catch (_) {}
+        return { ok: true, brought: chosen.map(x => x.p.words || ('the ' + x.p.pos + ' one')), from: a.position };
+      }
+      const words = String(a.query || '').toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 2);
       const scored = pics.map(el => {
         const alt = String(el.dataset.alt || '').toLowerCase();
         // v14.15: "corsets" must find "corset". Singular and plural both count.
