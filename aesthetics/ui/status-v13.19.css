@@ -1,0 +1,48 @@
+/* MAYA Systems Map v13.19 — intentionally isolated and removable. */
+.systems-map .top-btn,
+.systems-map details.fold summary,
+.systems-map .sub-tile,
+.systems-map .door-card {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* v14.04: the min-height and the 36px hamburger are GONE. They were the reason
+   the Admin hamburger never matched the app no matter what status.html said:
+   this file loads after the inline styles and quietly won. The hamburger is
+   the app's exact 32x28 pill now; the 44px hit target lives on ::after. */
+.systems-map .top-btn {
+  font-size: 11px;
+}
+
+.systems-map #checked-at,
+.systems-map .status-item,
+.systems-map #subs-note-inline,
+.systems-map .tile .k,
+.systems-map .pe-field label,
+.systems-map .arch h4 {
+  font-size: 11px;
+}
+
+.systems-map .sub-tile .tm,
+.systems-map .sub-tile .badge {
+  font-size: 10px;
+}
+
+.systems-map :is(a, button, summary, textarea):focus-visible {
+  outline: 1px solid rgba(255,255,255,.82);
+  outline-offset: 3px;
+}
+
+@media (max-width: 720px) {
+  .systems-map {
+    padding-inline: 16px;
+  }
+
+  .systems-map #top-bar {
+    padding-inline: 16px;
+  }
+
+  .systems-map #top-lights {
+    gap: 9px;
+  }
+}

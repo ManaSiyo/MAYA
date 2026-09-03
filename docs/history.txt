@@ -1,0 +1,292 @@
+MAYA HISTORY
+Plain talk, newest entry on top. Say "update the history" in any Claude or
+Codex chat and the assistant adds a new dated entry here.
+
+For the full technical picture, read README.md at the root of this folder
+first. It is written for an assistant starting a fresh conversation with no
+memory: architecture, deploys, data model, every bug and its cause, and how
+to work with Fromsa. This file is the story; README.md is the manual.
+
+AUGUST 28, 2026 (v14.09). Maya became her own bug reporter. Every "I can't"
+she says, every tool that fails under her hands, every wish a user speaks
+("Maya should...") now logs itself straight to the studio's feature inbox,
+tagged by who said it. The Improve Maya window shows her logs in a second
+tab beside the user's note. Nobody files reports about Maya anymore; she
+files them herself.
+
+─────────────────────────────────────────────
+
+AUGUST 28, 2026, THE TRIPLE AUDIT (v14.06, v14.07, v14.08)
+
+Fromsa asked for a loop: build, then scan everything fresh and fix, then scan
+again, three commits. Round one made every picture tell the same five truths
+(bio, aesthetic, silhouette, color, era, centered on every card) and settled
+the viewer: lower, canon arrows, a rise that respects the corners. Round two,
+a separate pair of eyes, found thirteen real defects, the oldest from v13.80:
+a tool Maya was told she had but the page never answered. All fixed. Round
+three verified everything again in a clean browser and signed it off.
+
+─────────────────────────────────────────────
+
+AUGUST 28, 2026, MAYA OPENS HER EYES (v14.04)
+
+Say Hey Maya and she looks at the actual screen now, a real picture of it, so
+"the white and red outfit, the girl with the apple" is enough: she opens it,
+hearts it, presses the pills, walks the Pinterest boards. Her words whisper
+just above the Visualize pill in the same voice as tap to listen and fade when
+the talking stops, the logo breathes while she is on the line, and she allows
+herself one warm opinion now and then. Every picture is learning its own ten
+word line. Feedback became Improve Maya, one box, one stream into her inbox.
+Every popup wears the drawer's glass, because the drawer is the Bible. And the
+admin hamburger mystery ended after twelve rounds: a stale stylesheet had been
+forcing it into a circle the whole time.
+
+─────────────────────────────────────────────
+
+AUGUST 27, 2026, MAYA STEPS ONTO THE USER SIDE (v14.03)
+
+The first morning Maya answered inside the app. On the Playground the drawer
+floor reads Logout, Feedback, Hey Maya, and the switch turns on a wake word:
+say her name and she opens the line herself. She pulls the drawer, switches to
+Pinterest and brings in the pins you name, puts what you described onto the
+board, visualizes it on you, and turns your feedback into structured notes in
+the box; a feature request lands in her inbox under your name. Cards drag and
+resize while zoomed out, exactly like at full size. On Admin, the hamburger is
+the app's own pill, the Hey Maya switch asks for the microphone when you click
+it so it never snaps back, Feature requests took the Prompting Engine's place
+as Maya's history of everyone's asks, and the Sources of traffic table left.
+
+─────────────────────────────────────────────
+
+AUGUST 27, 2026, MAYA GETS A DOOR AND A CHARACTER (v14.02)
+
+The night Maya became somebody other agents can talk to. The API now has a
+Model Context Protocol door: Claude and Codex read her soul, her memory, the
+people she knows and the feature inbox straight from her, and mark shipped work
+done, so no more pasting logs between chats. Her character, the builder with
+taste, ships inside the server and is the first thing she reads on every call.
+The roadmap for the rest (Hey Maya everywhere, the user side, the phone) is in
+docs/MAYA-INDEPENDENCE.md.
+
+Same push, the playground zoom was rebuilt for the third and last time: it
+scales the cards' own canvas, glides the cluster to the center, floors at 40
+percent, and never crops (the crop was the canvas clipping cards placed past
+the fold). Scrolling and the drawer keep working while zoomed. The money
+counter stops restarting on every update. The admin drawer slides over the
+marquee, Hey Maya is a switch, and every line in the drawer is centered.
+
+─────────────────────────────────────────────
+
+AUGUST 24, 2026, MAYA LOGS FEATURES (v13.80)
+
+The first thread of the line between Maya and Claude. When Fromsa or a customer
+wishes MAYA did something it cannot do yet, Maya writes it to a feature log that
+Claude reads and builds from. She records the wish, in her own words, and it
+becomes work. The log lives in the server's own store; a live automation between
+Maya and Claude is the next step, once the channel is chosen.
+
+─────────────────────────────────────────────
+
+AUGUST 24, 2026, MAYA READS ON SCREEN (v13.79)
+
+Maya's line shows on screen now, not only in the ear. When she is live the drawer
+carries the conversation as text, her words and yours, and every line can be
+copied. It is the first step of turning the drawer into a real command chat: you
+can see what she said and take it with you.
+
+─────────────────────────────────────────────
+
+AUGUST 24, 2026, CABINET ORDER AND SWIPE MEMORY (v13.78)
+
+The cabinet reads Pinterest, Fabrics, Avatar now, the switch-avatar caret sits
+right beside the name, and the tab title says Project. The drawer keeps the tab
+you were on even when you swipe it away and bring it back, not only when you use
+the hamburger. Pinterest sits at the same height as Fabrics with the same room
+for its cards. On Admin the circle around the logo is gone when it is still; the
+ring only appears while Maya is live, breathing faster. And the Operations Room
+wears its beta to the right of the name.
+
+─────────────────────────────────────────────
+
+AUGUST 24, 2026, THE LOGO BECOMES THE VOICE (v13.77)
+
+On the Admin page the logo at the top left is Maya's voice now. Tap the circle
+and she connects, a Connecting chip on screen and a ring of light pulsing while
+she listens; the ADMIN wordmark beside it stays the way home. The drawer's
+section titles read in the logo blue, the health lights are centered, and the
+hover chip that never quite clicked is gone.
+
+─────────────────────────────────────────────
+
+AUGUST 24, 2026, FABRICS FIND THEIR PHOTOS (v13.76)
+
+The sourceable fabric wall had been painting solid color swatches, crimson boxes
+with no picture, because a failed visual ranking, often just an empty credit
+balance, made the Brief throw away the real retailer results and keep only the
+static color wall. Now when the ranking cannot answer, the real products, which
+always carry a real photo, are shown anyway, unranked. The color-swatch wall is
+gone; the tab shows real fabric photos or, until they arrive, a quiet line that
+it is searching. Refresh re-sources whatever garment is dissected, and the
+re-scan finally shows.
+
+─────────────────────────────────────────────
+
+AUGUST 24, 2026, THE CABINET REMEMBERS (v13.75)
+
+The MAYA app's filing cabinet got a round of fixes. It reopens on the last tab
+you used now, so Pinterest stays Pinterest after you close and come back. The
+tab's name rides in the empty space beside the three circles, Projects or
+Pinterest or Fabrics, so the panels below start higher. The avatar dropdown came
+back. And on the Avatar tab, Randomize moved up beside Replace and Remove as
+three smaller pills, with the Measurements list no longer clipped at the bottom.
+
+─────────────────────────────────────────────
+
+AUGUST 24, 2026, MAYA MOVES INTO THE LOGO (v13.74)
+
+The star at Admin's top left became a circle, the same size it always was, and
+it breathes with a ring of light while Maya is live. Rest on the wordmark and a
+MAYA chip drops beneath it; tap it and she wakes, no drawer needed. She can pull
+the drawer open or closed herself as she talks. The nav lost its Marketing door,
+since Marketing already lives inside Admin, so it is just manasiyo.com and MAYA.
+And the hamburger, which had begun to overlap the widened drawer, anchors just
+outside its edge again.
+
+─────────────────────────────────────────────
+
+AUGUST 24, 2026, THE BRIEF BECOMES ONE SLIDE (v13.73)
+
+Two follow-ups. The backend Brief dropped its second screen: the embedded
+Operations Room, and the dead pill that lived in it, are off the Brief now, and
+it reads as a single page. The standalone Operations Room stays. And the MANA
+SIYO shortcut for Design Studio points at manasiyo.com/design.
+
+─────────────────────────────────────────────
+
+AUGUST 24, 2026, ADMIN CLEARS ITS CENTER (v13.72)
+
+After Kodak's v13.71 push, Fromsa redesigned the Admin page. The day now reads
+itself out as one colored line across the very top, between the wordmark and the
+menu, green for good news, red and amber for what needs him. The five health
+lights moved into the drawer, so the page opens straight onto the three doors,
+then submissions, Users and traffic, the campaigns, the Lead Station and the
+sources. The duplicate visitor row is gone. MANA SIYO now mirrors MAYA: rest on
+it and its editing rooms, Design Studio and the Wix Studio, hang to the left.
+And Maya's command left the center of the page to become her private line
+inside the drawer: tap the star and the drawer turns into her screen, the
+briefing and whatever she needs approved; tap it off and it is a drawer again.
+When the line will not open she says so plainly now instead of showing a raw
+error. Three stale v13.71 tests that had never run in the build were repaired so
+the whole regression passes again.
+
+─────────────────────────────────────────────
+
+AUGUST 24, 2026, ADMIN COMMAND CENTER
+
+MAYA reached v13.71 as an internal command center for Fromsa. Admin now opens
+with a visible reading of today and what needs attention, points to the panel
+behind each answer, finds a lead only when identity is exact, and places every
+note, memory or email draft in a visible confirmation queue. Email opens as a
+reviewable Gmail draft and never sends itself.
+
+Marketing moved into Admin visually as well as functionally. The same moving
+headline, full metric strip, visitor view, spacious campaign table and chart,
+Lead Station, Sources and Bottom Line now sit under the Admin shell. The
+standalone Marketing page remains live as tonight's fallback. The filing
+cabinet approved in Playground also moved into MAYA itself without replacing
+the project's live save, Pinterest or fabric systems. Fabric sourcing kept its
+instant static wall and its real retailer closest visual matches.
+
+AUGUST 11 TO 13, 2026
+
+Where we are: MAYA is at v13.3. Saving is trustworthy, the app is fast, the
+Systems Map tells the truth, dissection costs credits once instead of every
+time, Stripe is live, and there is a community wall.
+
+AUGUST 14, 2026, AFTERNOON
+
+Codex completed the second-eye release, v13.15 through v13.18. The practical
+change is simple: project deletion is one cloud act and picture cleanup keeps
+retrying instead of becoming a ghost; the Systems Map can no longer confuse
+"configured" with "working" or let an old refresh win. The Community wall now
+uses the Inspiration-card language, without white glow columns, and Favorites
+breathes through a smaller fixed halo rather than a resizing shadow.
+
+The thing that started it: a client's project was saved and then was not
+there. The cause was found. Naming a project from the Save box wrote to the
+browser's own storage only, while the screen said "Saved". Everything about
+the save system was rebuilt on top of that: one save path, cloud only,
+"New" genuinely means a new project, and a project is never left without
+first confirming it was written.
+
+What else got fixed, in Fromsa's words rather than mine: twenty four copies
+of the same card, the same fabric appearing over and over, a heart that
+never worked, an X button that did nothing on stacked cards, the screen
+refreshing itself every five seconds, dragging that lagged behind the
+cursor, being asked to sign in while already signed in, and submissions
+that would not appear on the Systems Map.
+
+New in these three days: the Systems Map redesign (one line doors, lights in
+the top bar, submissions running the full width, collapsible prompting
+engine, a Recent changes list with a green dot when it has not been read),
+Operating Room renamed Operations Room everywhere, a deliberate Begin
+Dissection button whose result is saved forever, a third admin account, a
+Stripe tip button, and the community wall.
+
+The community wall: swipe up from the moodboard instead of down. Everyone's
+hearted visions drift past sideways, forever, with no seam. Favorites are
+still one swipe below. Hearting a vision now publishes it, which is worth
+deciding on deliberately at some point.
+
+Also new: tests/smoke.mjs, the first automated test this project has ever
+had. It boots the real server and checks every route. It exists because a
+single line written in the wrong order in the server would have made every
+AI call hang forever, and nothing but booting it would have found that.
+
+AUGUST 5, 2026, EVENING
+
+Where we are: the whole pipeline works end to end for the first time. A
+client submits in MAYA, the submission shows up as a garment bubble on the
+Systems Map, clicking it opens the Brief in a new tab with the biography,
+vision, measurements and fabric sourcing filled in, the garment gets
+dissected into pieces automatically, and the pieces land in the Operating
+Room below where Start runs the pattern pipeline on them.
+
+What happened today, in order: audited the whole project fresh, reorganized
+the folder (three HTMLs at the root, aesthetics for everything visual, docs
+for everything else), fixed all the broken backgrounds and icons, redesigned
+the Systems Map to match the MAYA look, renamed everything to Brief and
+Operating Room, removed all dashes, fixed the dead Google Drive key so
+submissions work again, migrated to this MAYA-new folder under git, and set
+up automatic server deploys.
+
+How publishing works now, remember this part:
+  ONE ACTION: press "Push origin" in GitHub Desktop. Google then deploys
+  BOTH the website and the server by itself, takes about 4 minutes.
+  "Deploy MAYA.command" in docs still works as a backup for the website
+  only, but you should never need it.
+
+What each root file is:
+  index.html    the live MAYA app clients use
+  status.html   the Systems Map
+  backend.html  the Brief plus Operating Room, the atelier's workroom
+  operations.html  the standalone Operating Room (the beta for experiments),
+                reachable from the Operating Room Beta door on the Systems Map
+  cloudbuild.yaml  the ONE technical file that must stay at the top: Google
+                reads it on every GitHub push and deploys the website AND the
+                server, moving it breaks the automatic deploys
+  aesthetics/   everything visual: ui, fabrics, headshots, the Operating
+                Room engine the backend embeds
+  docs/         everything else: firebase.json (the deploy borrows it for a
+                minute then puts it back), Deploy MAYA.command, the server
+                source, pattern R&D (operating-room folder), Vision.pdf,
+                Strategy-A.md, and _to_delete which is the trash can, empty
+                it any time
+
+Still on the list for next sessions:
+  Fabric search that actually shops: show a piece photo, get real matching
+  purchasable fabric (needs a small server upgrade).
+  Front, back and side renders for each dissected piece.
+  Operating Room polish so it fully mirrors the old backend behavior with
+  the new grounded logic.
+  Old empty test submissions in Drive can be deleted by hand.

@@ -1,0 +1,2049 @@
+MAYA REQUESTS
+Fromsa's own log. What HE asked for and what HE noticed, in his words,
+simplified, with date and time. Not what Claude did (that trail lives in
+commits and fixes.txt). Say "log the request" in any chat and Claude adds
+the entry from the prompt just given. Newest on top.
+
+How the four text files divide the work:
+  README.md     the manual. Architecture, deploys, data, how to work here.
+  history.txt   the story. What happened, in narrative, dated.
+  fixes.txt     fix attempts, especially ones outside git (Cloud Run,
+                Google console, credentials). Symptom, cause, action, status.
+  requests.txt  this file. Fromsa's requests and the bugs he notices, so
+                every ask can be checked later: done or not, and whether a
+                fixed thing broke again.
+
+Each entry: date and time of the prompt, then the asks as short lines.
+Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
+
+SEPTEMBER 3, 2026, LATER (v14.26): "I am demoing Maya, audit everything"
+
+[x] "Try it out yourself": drove the live app signed in as Fromsa through
+    30 of Maya's hands (no renders, no credits spent). Zero errors; every
+    tool under two seconds except the two below.
+[x] Fabrics loaded slowly on a first visit: the swatches were the 3 to 4
+    MB originals. Thumbnails now.
+[x] The wider Pinterest search said "23": a timeout's number. Pinterest's
+    answers are words now, and the studio can read what Pinterest said.
+[x] If the studio's OpenAI credit is out, Hey Maya says so plainly.
+[x] "The pencil should hide away like the share and x; it should be in the
+    dropdown and only appear when an avatar is highlighted": done. The one
+    beside the name is gone.
+[x] "Fromsa should also be in the dropdown, highlighted like the current
+    project": the client on the board is always in the list, highlighted,
+    and filed the first time the list opens.
+[x] "Aesthetic should be bold and brighter, and Future Chic under it less
+    bright": reversed as asked, for all five lines.
+[x] "The whole thing went to Pinterest and started scrolling by itself":
+    that was Claude's live audit driving the same tab through Maya's
+    hands. Not a bug; Claude now tests only on a tab it opens itself.
+[x] "Ask for confirmation before applying modifications or visualizations,
+    especially when the element is already part of the reference": the
+    tools themselves wait for the yes now; no render starts without it.
+[x] "New cards from Pinterest should always land on top": done.
+[x] "The feedback box did not appear after adding notes": it opened
+    behind the open picture. Above it now.
+[x] "She should see the actual screen, not a transcript": look already
+    sends a real picture (the board's pictures paint into it, and since
+    v14.25 the Pinterest pins do too). The instructions now say the
+    picture is what she answers from and the lists are a silent aid,
+    never recited.
+[ ] Fromsa, before the demo: top up OpenAI; push and let the build land;
+    open the app once signed in so the first visit's caching is done;
+    keep the Pinterest drawer connected (the wall search works; the wider
+    search depends on Pinterest answering, and all of Pinterest is off
+    until the beta access or the Google keys).
+
+SEPTEMBER 3, 2026, LATE (v14.25): "where did my feedback go"
+
+[x] "You did not see any of the feedback. Where is it being logged? Fix
+    that": it was never lost. Every Submit and every log of Maya's own
+    landed live in the studio bucket the second it was sent (14 entries
+    the night of Sep 2, in both stores, on Admin newest first). Claude
+    had read the inbox before that session and did not read it again.
+    The rule is written at the top of the v14.25 handoff: read the live
+    inbox before every round.
+[ ] Fromsa: set MAYA_MCP_TOKEN on Cloud Run (any long random string) and
+    add the connector in Claude, so the inbox can be pulled from any
+    Claude session without a browser. Until then it is read through the
+    Admin tab, which works.
+[x] "Just say feedback submitted": done.
+[x] "Minimal replies to stop, no confirmation after every small action":
+    stop halts the glide and she says nothing; only goodbye ends the call.
+[x] "Confirm each design change with a short summary and ask before
+    spending credits": one line back, one yes, never twice.
+[x] "Name the garment type first": every description leads with it.
+[x] "Pick the reference I named (the logo) yourself": visualize by voice
+    takes the names, matches the cards, no popup; a name that is not on
+    the board is said back.
+[x] "A fresh visualization should not blend in earlier inspirations": by
+    voice, nothing named means nothing attached. The Visualize button
+    still asks with the picker.
+[x] "Auto log every error card": it already did (the 403 and the safety
+    refusal filed themselves); failed tools now log in plain words and a
+    log that does not reach the studio is retried.
+[x] "She should see what is on screen, take a screenshot internally": the
+    Pinterest pictures on screen are read once through MAYA's own server
+    and painted into her screenshot. The wall is in her picture now.
+[ ] "Let me try it on" in one step from an inspiration card: next.
+
+SEPTEMBER 3, 2026, NIGHT (v14.24): the audit round
+
+[x] "OPENAI ERROR: 403" on the board: the browser held an old model name
+    (gpt-4o) that the proxy refuses. The browser heals it, the server
+    upgrades old names, errors say their words.
+[x] "Uploading an avatar or randomizing takes a long time to change;
+    sometimes I close the drawer and open it back for it to take effect":
+    the repaint was the v14.23 fix; uploads now also file the client at
+    once and stop persisting the full size photo before it is shrunk.
+[x] "Pinterest, once loaded, should not reload. If I go to Profile and
+    come back it reloads the whole thing": the Boards tab was refetching
+    every visit; it is kept for the session now, and picks survive a
+    close and reopen.
+[x] "On the admin side, instead of Email it should say Contact and show
+    the phone number": Contact, phone first, email when there is none.
+[x] "Bring back prompt engineering to my admin, possibly modifiable, for
+    the heights and big heads": the Prompting Engine fold is back with a
+    fourth field, The body, appended to every render.
+[x] "Maya should be able to see what I see. Bottom right Pinterest card,
+    she cannot see it, she is hallucinating": Pinterest pictures never
+    painted into her screenshot. look now hands her every pin on screen
+    with a place word, bring_in_pins takes a place, and she is told to say
+    she cannot see rather than invent.
+[ ] "Faster, snappier, audit the whole code base": this round fixed the
+    reload, the picks, the upload persist; the caption and profile sweeps
+    on first visit remain the biggest first-load cost. Continuing.
+
+SEPTEMBER 3, 2026, LATER (v14.23): after using the new drawer
+
+[x] "In the avatar, delete and rename. Have the pencil icon beside the
+    name itself in the dropdown, so there is no need to have a rename
+    over there. Randomize can stay, Replace can stay, that is it": done.
+    Randomize and Replace only; a pencil beside the name, a pencil and an
+    x on every saved client.
+[x] "Make sure Randomize works, it might not work": it was not showing
+    its result (the repaint looked for a sub menu that no longer exists).
+    Fixed, and it files the client now.
+[x] "Search across all Pinterest instead of just everything in our pins;
+    figure out the API": Pinterest's v5 API has GET /search/partner/pins
+    (all of Pinterest, top pins by term) but it is BETA and granted per
+    app. The route tries it, then a web image search pinned to
+    pinterest.com when GOOGLE_CSE_KEY and GOOGLE_CSE_CX are set, and says
+    plainly when neither is open. One pill (All of Pinterest) and Maya's
+    scope everywhere reach it.
+[ ] Fromsa: request beta access to search/partner/pins in the Pinterest
+    developer portal (Apps, the MAYA app, request access), or set
+    GOOGLE_CSE_KEY and GOOGLE_CSE_CX on Cloud Run. Until one is done the
+    third room answers "not switched on yet".
+[x] "On the editor card, delete Notes, just Design Notes is enough": done.
+[x] "Bio, aesthetic, silhouette, color, era: make it white so it pops;
+    make everything whiter": the five lines are white and upright, the
+    whole column is brighter.
+[ ] "Fabrics, Pinterest and the cards loaded very slowly, maybe first
+    time": likely the first visit after the promotion, when the caption
+    and profile sweeps wrote a line for every card that had none, plus
+    fresh downloads. Watching; nothing changed yet.
+
+SEPTEMBER 3, 2026 (v14.22): from Maya's own inbox
+
+[x] Maya's log of Sep 1, "Render or action failed: Your request was
+    rejected by the safety system": the face photo was the cause and both
+    retries resent it. A refused face now renders on a fit model with the
+    same measurements, and the toast, Maya, and the inbox all say so.
+
+SEPTEMBER 2, 2026, EVENING (v14.21): the promotion
+
+[x] "Are these changes applied only on the Playground? Tell me all the
+    differences, then we are going to start migrating. Everything.": the
+    app is now the Playground, whole. Kept as the app's own: no amber
+    Playground badge, and the Tip pill on the floor row. Everything else
+    promoted: Maya on the user side with every hand, sight and the wake
+    word; survey zoom; the screen order inspo, favorites, community; the
+    Background fold; the caption sweep and five line profile; the drawer
+    glass on popups and softer glows; canon arrows and the pills inside
+    the photo; the Pinterest search and its wider reach; Improve Maya with
+    Maya's logs, consent, and her self logging.
+
+SEPTEMBER 2, 2026, LATER (v14.20): the drawer organized his way
+
+[x] "Instead of Users, call it Profile": done on both surfaces.
+[x] "Remove the randomize buttons, those are placeholders. Rename and
+    Randomize should be in the dropdown of Linda, even if it is empty":
+    the pill row under the name is gone; Rename, Randomize, Replace photo
+    and Remove photo open at the top of the client dropdown always.
+[x] "Projects should be a dropdown like Stats, on top of Stats, exactly
+    how it is right now": a Projects fold above Stats holds the same list,
+    and the open project's name rides in the fold heading.
+[x] "If I click within it I should change the name. There is no way of
+    changing the project name": a pencil on every project row, and a tap
+    on the open project's name, renames it where it sits.
+[x] "The characters always have a bigger head than usual": every render
+    prompt now states natural proportions, head about one eighth of the
+    height, never enlarged, face reference for likeness only.
+[x] "The search icon is very small, the magnifying glass bigger, Search
+    centered, the pill longer": a real glass in the same circle, a longer
+    centered box.
+[x] "Once clicked, let us work on the API for actually searching across
+    Pinterest itself": Enter in the box searches everything the account
+    has saved through the Pinterest API (the same reach Maya has). A
+    public search of all of Pinterest is not offered by the API.
+[ ] Studio: the studio ring is only for the two admin emails on the
+    server (ADMIN_EMAILS); everyone else starts with the two dollar trial,
+    shown as card renders left. No change needed, noted for the record.
+
+SEPTEMBER 2, 2026 (v14.19): the drawer untangled
+
+[x] "We should have the current project highlighted at all times": the
+    pill beside the name reads the open project's name with a brighter
+    ring, and its row in the list is marked, list open or closed, after
+    every open, save, new, switch and delete.
+[x] "Projects, clients, everything else is very glitchy. Audit everything
+    in that drawer, especially clients and projects": found and fixed the
+    root of it, the client's name and the project's name were one variable
+    in three places, so an automatic project name became a client called
+    Untitled and naming a client renamed the board. Also: switching the
+    client wiped the canvas (now it only changes who wears it), a new
+    client could never be named in this layout (a Name pill and an in
+    place box now), no client could ever be removed (an x on each row),
+    the Name, Replace and Remove pills were invisible on a phone (always
+    visible now), and the Projects tile always read 1 or 0.
+[x] "Clicking on the photo area takes to the measurements": the photo
+    opens the client list now; Measurements keeps its own fold.
+
+SEPTEMBER 1, 2026, LATE NIGHT (v14.18): the glide everywhere, the wider search
+
+[x] "I meant the scroll, only on Maya mode: if I ask for scroll it should
+    just automatically be smooth and continuous. That's all I wanted":
+    every scroll Maya performs glides now, not just the pins. Favorites
+    slides sideways, the community wall's three rows glide together, the
+    pins glide down, and stop halts any of them the moment it is said.
+[x] "Pinterest: just add a search function. If it's a different API, let's
+    work on that. I might not have corsets in my pins. Search pins should
+    be for things outside my pins, or Maya should ask me, these are what
+    you have, I can look for more": search has two rooms. She shows what
+    the loaded wall holds and offers the wider room; wider goes through a
+    new server route to Pinterest's own API and searches everything the
+    account has saved. Beyond an account's saves Pinterest has no public
+    search, and she says so and offers describe_garment instead.
+
+SEPTEMBER 1, 2026, NIGHT (v14.17): Pinterest search, the glide, position words
+
+[x] "My pins and boards should have a search, just a small search icon": a
+    canon hairline search pill sits beside the All saves / Boards tabs;
+    typing filters pins by their words and boards by name, singular and
+    plural both count, clearing restores everything.
+[x] "Let us look at corsets: she should pull Pinterest, search corsets, show
+    me, and start scrolling smoothly": new search_pins(query) does exactly
+    that sequence, and clear_pin_search brings the wall back. bring_in_pins
+    only grips pins a search left visible.
+[x] "Scroll inside the Pinterest bar should be smooth and continuous until I
+    say stop": scrolling the pins is a gentle requestAnimationFrame glide
+    now; it halts on the word stop (a first class direction on scroll and
+    scroll_pins), on a touch or wheel, at the end of the wall, and on hang
+    up. Never a 420 pixel lurch again.
+[x] "She keeps bringing wrong cards": every card carries a position word
+    (top left, center, bottom right) computed from where it sits among its
+    neighbors, in list_board, in the board list her instructions carry, and
+    in the matcher, which now understands rows AND columns ("the one in the
+    upper center"). Versions of one piece collapse before ambiguity, and
+    when two different pieces truly share a spot she names them and asks.
+
+SEPTEMBER 1, 2026 (v14.16): the studio gauge and the fast Admin
+
+[x] "What is up with the credits being zero?" The drawer ring computed cap
+    minus spent for everyone; a studio account has spent past the two dollar
+    trial years of testing ago, so it pinned at $0.00 of $2. The server
+    already says admin: true; the ring now reads it and shows a full circle,
+    Studio, no cap, on both the app and the playground. Regular clients see
+    exactly what they saw before.
+[x] "Make the admin load faster." The Marketing shell used to sit empty for
+    the two to five seconds the aggregator (GA, ads, leads, Wix) takes.
+    The Admin now remembers the last visit's numbers in this browser and
+    paints them instantly on open, marked Refreshing Marketing, and the
+    fresh fetch repaints when it lands. The AI brief never runs off the
+    cache, only off fresh data. Staleness ceiling two days.
+[x] Feedback inbox re-read: nothing new since Aug 29; every open voice item
+    is covered by v14.10 to v14.15 in this same push.
+
+AUGUST 29, 2026, LATE (v14.15): the feedback round
+
+Read straight from the inbox Maya keeps (the voice thing, as asked):
+[x] "Responses should be shorter after simple actions": she confirms a done
+    action in a couple of words now and never recaps.
+[x] "Feedback should be typed live as it is discussed": she calls
+    write_feedback after every point while still talking, so the notes land
+    in the box as you watch.
+[x] "Bring in corsets found nothing": pin matching is singular and plural
+    tolerant now; corsets finds corset.
+[x] "Could not dissect" logs: the refusal explains itself (only garment
+    visions open into pieces) instead of a flat no.
+Everything else in the inbox (wrong card, no render, fabric popup, favorites
+instead of editor, log every I can't) was already fixed in v14.10 to v14.14
+and ships with this same push.
+
+AUGUST 29, 2026, THE RELEASE AUDIT (v14.14): blockers closed before push
+
+Codex reviewed the unshipped v14.02 to v14.13 work and filed 20 findings.
+The blockers are fixed; the larger projects are triaged below, honestly.
+
+DONE (each with a battery or smoke assertion):
+[x] P0-1 Matcher: a named card that matches nothing is a MISS, never a
+    fallback to the open card. All mutating card tools (favorite, dissect,
+    move, resize, details, delete) stop on ambiguity and return candidates.
+    Deletion is confirm gated: first call stages, second call with confirm
+    true (same card, 60s window) executes. "This one" still works.
+[x] P0-2 Tool chain: reset per Realtime session with a fresh trace id; every
+    call races a 25s timeout; a thrown or hung tool always sends a truthful
+    function output. Tested through the real routing layer (_pgOnMessage)
+    with malformed args, unknown tools, duplicate call ids, and a hang.
+[x] P0-3 Honest outcomes: modify and visualize now say STARTED, and the app
+    itself tells Maya when the render truly finished or failed (the render
+    watcher injects the outcome into the conversation). She no longer
+    announces completion she cannot see.
+[x] P0-4 Routing tests: the battery drives _pgOnMessage with synthetic model
+    events; wrong card prevention, ambiguity, delete handshake, stale chain
+    recovery via timeout, and the failure watcher are all pinned (97 checks).
+[x] P0-5 Release gate: cloudbuild's test step now runs the browser battery
+    when it can install chromium; an install failure skips loudly, a test
+    failure fails the build.
+[x] 6 Truthful copy: "Maya learns from every note" is gone; the note goes to
+    the studio inbox and the copy says exactly that.
+[x] 7+8 Consent + telemetry: a visible "Help improve Maya" toggle, OFF by
+    default, revocable in one tap, in the Improve Maya popup. When ON, the
+    app sends tool name, outcome class, latency, trace id and consent
+    version to /api/telemetry (auth required, append only, capped, per-user
+    hashed identity). The schema has no field for transcripts, photos,
+    audio, faces or measurements, so they cannot arrive.
+[x] 9 Failure classes: ok:false answers are classified (expected, ambiguity,
+    confirmation, timeout, defect). Only defects and timeouts auto-file to
+    the studio; an empty favorites screen is no longer reported as a bug.
+[x] 10 (lite) Digest: GET /api/admin/maya-digest returns an admin-only
+    Markdown digest of the week's inbox and tool health. Production never
+    writes to Git and never deploys anything.
+[x] 11 Truthful touchpoints: the invoice Email and Text buttons now say
+    "Draft opened... Nothing has been sent yet."
+[x] 16 Fabric-name dedupe now applies to both fabric tabs.
+[x] 18+19 MCP scopes: a query-string token is READ ONLY; maya_feature_done,
+    maya_journal, maya_memory and maya_leads (the PII) demand the token as
+    an Authorization header. Read-only calls are logged.
+[x] 20 Concurrency: withLock promise queues around features, memory, soul,
+    people and telemetry read-modify-write stores.
+
+DEFERRED, with reasons (not blockers, some need Fromsa's call):
+[ ] 10 (full) The scheduled weekly export and proposal pipeline: needs the
+    digest reviewed a few weeks first; endpoint exists.
+[ ] 12 Lead Station columns/queue/marketing data: nothing in v14.02-14.14
+    touched these; verified intact, no work needed.
+[ ] 13 Restore Sources inside a combined Bottom Line shell: Fromsa asked to
+    REMOVE Sources of traffic in the v14.03 round; re-adding it inside a
+    merged shell contradicts that and needs his decision.
+[ ] 14 Pinterest tabs on the title row and [ ] 15 persistent pin caching:
+    real UI work from the old spec, not release blockers for this push.
+[ ] 17 Favorites submit-only: unchanged and covered by existing behavior.
+[ ] Full scoped-token redesign (expiring per-agent tokens, per-tool audit
+    trail): the read/write split ships now; rotation and expiry need a
+    token store decision (Cloud Run env vs Firestore) that is Fromsa's.
+
+AUGUST 29, 2026, NIGHT (v14.13): she understands the card in front of her
+
+Fromsa talked to Maya live and hit five real walls. Each traced to a cause:
+
+[x] "She agrees to my changes but never renders." The visualize tool always
+    ran the HOME SCREEN flow, which stops on the avatar check or the fabric
+    mode picker and waits for a tap. Nothing could render. New tool
+    modify_garment(text) pushes the spoken change into the modify pipeline
+    and calls modifySubmit, which applies directly with no popup. visualize
+    inside an open picture now renders THIS piece.
+[x] "Previous version changes the whole card." viewer next/prev called
+    _favStep (the favorites strip, different garments). New card_version
+    tool uses viewerStep; _pgStep routes the arrows correctly.
+[x] "I asked for a trench coat and got the fabric popup." Same root cause as
+    the first. Instructions now: only touch fabric if they say fabric,
+    material or name a cloth; only touch references if they say reference,
+    image or pin. The fabric on the piece stays.
+[x] "She opens the wrong card." Matcher rewritten: this one / it / the one
+    I am looking at resolve to the open card; left, right, middle, newest
+    resolve by position and recency; the five design notes and color count
+    double; versions of one piece collapse to the newest; a real tie between
+    different pieces returns candidates so she asks instead of guessing.
+[x] "OPENAI ERROR 403 on screen and she said nothing." showError now records
+    the error and auto-logs it; new render_status tool lets her read whether
+    the picture is coming or why it died, and say it plainly.
+[x] Codex handoff written: docs/CODEX-MAYA-BRIEF.md, with the frustrations in
+    plain words, the fixes already made, repo pointers, what the field knows
+    about grounding and mode scoping, and a ready to paste prompt.
+
+AUGUST 29, 2026 (v14.12): the second pass (audit again, add, audit again)
+
+[x] Fresh-eyes audit of v14.10 and v14.11 found four quiet lies, all fixed:
+    scroll_pins and bare scroll trusted a drawer node that always exists, so
+    a closed drawer "scrolled" invisibly (now checks visibility); the
+    credits reader told admins they had a $2 cap (now says studio account,
+    no cap); add_reference claimed to place a reference the dedupe had
+    skipped (now says it was already there); a viewer press that found no
+    control returned a bare no (now says the control is not on screen).
+[x] Six more hands where the walk left gaps: move_card (left/right/up/down/
+    center, persists), resize_card (bigger/smaller, clamped), list_favorites
+    and open_favorite (hearted pieces by name, straight into the submit
+    flow), set_quality (medium or high), clear_hints.
+[x] Third pass: battery grown to 73 checks including two scripted honesty
+    scenarios; all green, plus the 400-assertion regression suite, contract,
+    MCP, and syntax checks.
+
+AUGUST 29, 2026 (v14.11): thirteen new hands (the interface walk)
+
+[x] "Interact with Maya yourself, swipe through everything, give her more
+    features, no limit": Claude catalogued every tappable control in the
+    live playground through Fromsa's own browser, then gave Maya a tool for
+    each one a finger could reach and she could not.
+[x] New: zoom (in/out/reset on the board), organize_board (tidy layout),
+    dissect_card (open a look into pieces, stack it back), add_reference
+    (typed reference without Pinterest), card_details (speak a card's five
+    notes from memory), list_projects / open_project / new_project,
+    check_credits (trial balance out loud), background (star or generate),
+    randomize_avatar, set_measurement ("waist 29" onto the fit model),
+    pick_fabric (the real picker inside Switch Fabric).
+[x] Viewer grew heart, photo (fullscreen), attributes.
+[x] Hands battery grew to 59 checks; all green, plus the 399-assertion
+    regression suite.
+
+AUGUST 28, 2026, LATE (v14.10): her legs and ears (the hands smoke test)
+
+[x] "Dump a bunch of requests that are Maya's and do a smoke screen test
+    yourself": tests/maya-hands-smoke.mjs boots the playground headless and
+    fires thirty of her own tool calls through her dispatcher, good args and
+    bad. Nothing throws, nothing hangs, every failure answers with a reason.
+[x] BUG FOUND AND FIXED: Maya could not go to favorites or come back, and
+    could not scroll anything but Pinterest. New tools: go_to_screen
+    (community / home / favorites) and scroll (favorites, community wall,
+    or pins; bare "go down" steps a screen).
+[x] BUG FOUND AND FIXED: her card matching ignored the five design truths;
+    naming an era, color, or aesthetic now finds the card.
+[x] "Maya has a hard time understanding me, the room was not quiet": the
+    voice session now asks for far field noise reduction and a stronger
+    transcriber, on the app line and the admin line, with a plain fallback
+    session if OpenAI ever rejects the richer shape. Her instructions also
+    say: if unsure what was said, repeat the few words caught and ask, never
+    guess a command.
+[x] "Double-check she still tries to be helpful": character file, warmth and
+    taste lines verified in the instruction block; the battery shows every
+    refusal comes with a reason she can speak.
+
+AUGUST 28, 2026, NIGHT (v14.09): the autonomous observer
+
+[x] Automatic logging: every time Maya says "I can't" (or "my eyes are
+    incapable", "I'm unable", any wording of a limit) the line is logged as a
+    feature request automatically, tagged as hers.
+[x] Every failed tool call logs itself: "Maya could not <tool>: <reason>",
+    no human in the loop.
+[x] Users' wishes ("Maya should...", "I wish you could...", "can you add...")
+    heard in conversation auto-log under the user's name.
+[x] The Improve Maya popup grew two tabs: "Your note" and "Maya's logs".
+    Submit still sends the note; Maya's logs already sent themselves.
+[x] Admin Feature requests fold shows both rooms' sources (app and maya)
+    in the front room, deduplicated as before.
+[x] Server /api/feature accepts source:'maya'; the voice instructions tell
+    Maya her limits are logged for her so she never apologizes twice.
+
+AUGUST 28, 2026, TRIPLE AUDIT ROUND 3 (v14.08): the sign-off
+
+[x] Third independent scan of every Aug 27-28 request, in a clean browser:
+    profile notes render (Bio/Aesthetic/Silhouette/Color/Era, centered), all
+    voice wrappers verified live, get_feature_digest answered, dedupe active,
+    hamburger measures 32x28 with the fixed stylesheet, zero JS errors on
+    boot of both pages, 396 assertions green. The one probe miss
+    (addManualRef mapping) was a harness artifact: the function awaits the
+    API before placing; the zoom mapping sits before that call and is
+    statically verified.
+[x] The false alarm from round 2 checked: docs/MAYA-INDEPENDENCE.md and
+    docs/AUDIT-2026-08-27.md exist in the repo; the auditor's copy was
+    partial.
+
+AUGUST 28, 2026, TRIPLE AUDIT ROUND 2 (v14.07): the fresh-eyes findings, fixed
+
+A separate fresh audit of everything asked Aug 27-28 found 13 real defects;
+all fixed this round:
+[x] Maya on Admin could never answer get_feature_digest (declared server-side
+    since v13.80, no client case). She reads her inbox aloud now.
+[x] Out-of-credits Hey Maya left the wake word dead with the switch still on.
+[x] The viewer's Tap to Listen fought the wake recognizer over the mic.
+[x] She greeted BEFORE the look landed; now she looks first, greets after
+    (2.5s ceiling).
+[x] Improve Maya notes showed twice in the Feature requests fold; deduped.
+[x] Pinch-resize while zoomed snapped cards small (scaled rect seed).
+[x] Dissect/stack fly animations ran short while zoomed; typed references
+    landed off-target while zoomed. Both mapped through the zoom now.
+[x] Fullscreen photo showed the two pills over the edge-to-edge image; phones
+    could not reach them at all (hover-gated). Fullscreen clean, phones see
+    them plainly.
+[x] Mobile toast kept its old height; lowered there too.
+[x] One transient 429 banished a card from the profile sweep forever; three
+    strikes now.
+[x] Dead pre-v14.04 submit-wrap code removed.
+
+AUGUST 28, 2026, THE FIVE TRUTHS AND THE TRIPLE AUDIT (v14.06, round 1 of 3)
+
+[x] "Design notes must be consistent on every card: a short bio (about 15
+    words), the aesthetic, the silhouette, the color, the era, subheadlines
+    with answers underneath, the whole column centered, existing and future
+    cards alike." Done: the profile sweep writes all five per picture; the
+    viewer renders them first, centered.
+[x] "The main image sits a little high; lower the whole thing." Done, 30px.
+[x] "The thank you toast is a little high." Done, lower.
+[x] "Favorites arrows are not the pill aesthetic and sit too far out." Done:
+    canon pill, stepped inward.
+[x] "The hover rise under Post to Community Wall / Get it made cuts the card's
+    rounded corners." Done: the rise carries the same radius.
+[ ] Round 2 and round 3 of the triple audit follow as separate commits.
+
+AUGUST 28, 2026, THE LIVE SMOKE TEST (v14.05)
+
+[x] "Make sure everything is actually pushed and working; find bugs." Ran
+    against production. Found and fixed: /mcp was swallowed by the hosting
+    catch-all (Maya's door unreachable from the public address); it now lives
+    at /api/mcp everywhere and /mcp from v14.05. Verified live on v14.03:
+    drawer floor row, Hey Maya switch, marquee under the drawer, Feature
+    requests fold (5 rows), hidden prompting engine, hidden sources, five
+    green lights, the new API routes answering.
+[!] The admin hamburger is still 36x36 IN PRODUCTION because v14.04 (which
+    carries the css fix) is not pushed. Not a code bug: press Push.
+
+AUGUST 28, 2026, MAYA'S EYES AND THE BIBLE OF GLASS (v14.04)
+
+[x] "Transcription right above the Visualize pill, three rows, scrolls up and
+    fades, same style as tap to listen." Done.
+[x] "Logo should pulse smoother when Maya talks." Done, 3.2s breathe.
+[x] "Feedback becomes Improve Maya: no two pills, one Submit, concise sweet
+    copy; feedback and features are one thing." Done; every note also lands
+    in Maya's inbox.
+[x] "Every popup wears the drawer's aesthetic; the drawer is the Bible;
+    overlay shows the background hue." Done: feedback, Submit to Mana Siyo,
+    credits popup, every .modal.
+[x] "Maya should SEE the screen." Done: the look tool sends a real picture of
+    the page into the session; she looks on arrival and on anything visual.
+[x] "Everything a finger can do, Maya can do." Done this round: open, delete
+    and heart cards by words, the viewer's own pills, Pinterest all saves and
+    boards, board by name, scrolling the wall.
+[x] "She should be about 10 percent more opinionated, like a friend over a
+    sketchbook." Done, one warm specific line, rarely.
+[x] "Every picture gets its own AI line, max 10 words, shown as the summary;
+    backfill existing cards." Done: the caption sweep.
+[x] "Reduce the wall glow about 5 percent, favorites too." Done.
+[x] "The two pills should live in the photo and appear on hover." Done.
+[x] "Community wall cards load slowly." decoding=async added; the real weight
+    is full-size pictures; thumbnail sizes are the next step if it still lags.
+[x] "For the twelfth time, the admin hamburger." TRULY found: a stale line in
+    status-v13.19.css forced 36x36 and overrode every fix. Removed.
+[ ] Visualization speed: DECISION. A fast low-quality preview upgraded on
+    heart would halve the wait at a quarter the price per look. Yes or no.
+[ ] Watch Maya's sight on cross-origin pictures; report any card she misreads.
+
+AUGUST 27, 2026, MORNING ROUND (v14.03)
+
+[x] "Zoom works, cards are not cropped, but I cannot drag cards while zoomed;
+    everything that works at regular size must work zoomed." Done.
+[x] "Background pills should just say Upload and Generate, side by side,
+    lower, closer to the divider." Done.
+[x] "Playground floor: Logout, Feedback, Hey Maya toggle at the bottom right;
+    remove Tip from the playground." Done.
+[x] "Hey Maya on the playground: pull the drawer, switch to Pinterest, bring
+    the pin I ask for, talk to Maya instead of tapping to listen, use my
+    reference cards, visualize by voice." Done: /api/voice-token + her hands.
+[x] "Feedback: Maya records what we discussed as structured notes, then
+    Submit; feature requests logged like cards; X on top of the title; the
+    popup in the drawer's aesthetic." Done.
+[x] "Admin hamburger still not the same as the frontend." Done: same pill.
+[x] "The Hey Maya toggle is glitchy, I cannot turn it on." Done: primes the
+    mic on the click; transient errors no longer snap it off.
+[x] "Divider a little lower above Hey Maya; the logo a little lower." Done.
+[x] "Recent changes is not updated on every push." Done: stamped with the
+    version; the suite fails when it is stale. Two entries added.
+[x] "Replace the Maya prompting engine with Feature requests by users, a
+    collapsible list, user then very concise ask." Done (engine hidden, not
+    deleted, its saved fields still reach the app).
+[x] "Remove Sources of traffic from the Bottom Line." Done.
+[ ] Watch: the wake word and Tap to Listen share one speech engine; they
+    take turns. If Hey Maya ever goes quiet after a listen, say so.
+
+AUGUST 27, 2026, MAYA AUDIT 2, THE AESTHETIC PUSH (v14.02)
+
+[x] "Zoom works but I should still be able to scroll down and pull the drawer;
+    it should feel snappy; zooming is glitchy, make it smooth and faster." Done:
+    zoom v5, rAF eased, screens never pinned, plain scroll native.
+[x] "Zoom out to 40, not 20." Done: floor 0.40.
+[x] "Cards are still cropped when I zoom out; they should never be." Done: the
+    canvas' overflow:hidden was the crop; the cluster is measured and fitted.
+[x] "Every update restarts the money counter; it should not." Done: epoch frozen.
+[x] "The circle around the money a little bluer and 5 percent thinner." Done.
+[x] "Admin: the marquee should be beneath the drawer, not floating on top." Done.
+[x] "Instead of Turn on MAYA, a toggle like Apple's: Hey MAYA and a switch;
+    the divider way lower." Done.
+[x] "Center everything in the drawer: the vault, Firebase, Cloud Run, the
+    managers." Done.
+[x] "MAYA should have her own MCP or API so she is an independent entity."
+    Done: POST /mcp, eight tools, token guarded (fixes.txt has the two steps).
+[x] "Give MAYA the personality of the ultimate builder with taste, from the
+    Aesthetics PDF and our conversations, in the soul MD." Done:
+    docs/server/maya-character.md, read into every voice call.
+[x] "Strategize how to get MAYA there and push the framework." Done:
+    docs/MAYA-INDEPENDENCE.md.
+[x] "Full audit of the codebase, things not needed." Done:
+    docs/AUDIT-2026-08-27.md.
+[ ] Promote zoom v5 to the main app once Fromsa is happy with it live.
+[ ] Hey Maya and voice navigation on the user side (stage 3 of the roadmap).
+[ ] Maya on the phone (stage 4). Needs a number.
+
+AUGUST 24, 2026, PINTEREST FOOTER + LEAD STATION NOTES (v13.81)
+
+[x] "Pinterest Bring them in: smaller pill, a little lower but not glued to the
+    bottom, smaller gap above." Done; tell me if it needs a nudge.
+[x] "Lead Station notes modifiable, rename Latest note to Latest Notes,
+    editable by me and Maya." Column is Latest Notes; note cell is click-to-edit;
+    Maya edits by name via note_lead.
+[ ] Fromsa's Lead Station message was cut off at "...and" — awaiting the rest of
+    the dynamic/modifiable intent.
+
+AUGUST 24, 2026, MAYA FEATURE LOG (v13.80)
+
+[x] "Maya should log features requested by me or customers and pass them to
+    you." Done: log_feature tool + GCS log + a relay doc. First thread of the
+    Maya->Claude line. (Needs a push to deploy the server side.)
+[ ] Surface the feature log in the drawer; a real Maya->Claude automation
+    channel (owner decision needed: GitHub issue / email / webhook).
+[ ] Maya's growing memory/soul; dynamic admin; Maya = Claude abilities. Roadmap.
+[ ] Favorites clean submit-only card; unfavorite removes from community. NEXT.
+
+AUGUST 24, 2026, MAYA CHAT BOX (v13.79)
+
+[x] "The drawer should be a chat box when Maya talks; I should see her response
+    and copy-paste it, not just voice-to-voice." Done: the drawer carries the
+    conversation as copyable text while she is live.
+[ ] Maya feature-log + Maya->Claude relay; Maya's growing memory/soul; dynamic
+    admin; Maya = Claude-like abilities. Roadmap, staged. NEXT.
+[ ] Favorites clean submit-only card; unfavorite removes from community. NEXT.
+
+AUGUST 24, 2026, CABINET ORDER, SWIPE MEMORY, LOGO RING (v13.78)
+
+[x] "Caret for picking the avatar should be right beside the name." Done.
+[x] "Rename Projects to Project." Done.
+[x] "Tabs: Pinterest first, then Fabrics, then Avatar." Reordered.
+[x] "Keep Pinterest when I swipe the drawer away and back." Now fires on swipe.
+[x] "Give Pinterest the same height/room as Fabrics; anchor Bring them in."
+[x] "The circle around the logo should only show when Maya is talking, and pulse
+    faster." Ring only under maya-live, faster pulse.
+[x] "Operations Room beta to the right, not underneath." Done.
+[~] Avatar switcher "broken": the dropdown opens fine in code (async); with the
+    caret now beside the name it should read clearly. Watching for repro.
+[ ] BIG: drawer chat box (see + copy Maya's text), Maya feature-log +
+    Maya->Claude relay, Maya's growing memory/soul, dynamic admin. Roadmap.
+[ ] Favorites clean submit-only card; unfavorite removes from community. NEXT.
+
+AUGUST 24, 2026, ADMIN LOGO IS THE VOICE, MORE POLISH (v13.77+)
+
+[x] "In Admin the logo should be the voice (tap to talk, says Connecting,
+    pulses), and the ADMIN text is the way home. The hover MAYA chip is
+    unclickable." Done: logo is a voice button, wordmark is home, chip removed.
+[x] "The vault etc should be blue, they are titles." Drawer titles forced blue.
+[x] "The green light should be centered." Health lights centered in the drawer.
+[ ] Cabinet: caret beside the name; the avatar switcher is broken; rename
+    Projects to Project; tabs order Pinterest, Fabrics, Avatar; Pinterest layout
+    parity with Fabrics. NEXT.
+[ ] Favorites: clean submit-only summary card (no Switch Fabric / Add Reference
+    / Tap to Listen, no editable pills); unfavoriting removes from the community
+    wall. NEXT.
+
+AUGUST 24, 2026, FABRICS SHOW REAL PHOTOS (v13.76)
+
+[x] "The fabric matches are just red, no image. Nothing should show, we need the
+    image." Fixed: the sourceable wall now shows only real retailer photos. The
+    real cause was a failed visual ranking (no credits) hiding the real products
+    and leaving the color-swatch wall; now the products paint unranked instead.
+[x] "The refresh should always re-search for what's dissected." It does: refresh
+    clears the live cache and re-sources the current dissected garment; now that
+    the wall is real photos, the re-scan is visible.
+[ ] Out of OpenAI credits (Fromsa buying): needed for voice, Visualize, and
+    fabric visual ranking. See the to-do list and fixes.txt.
+
+AUGUST 24, 2026, MAYA APP CABINET FIXES (v13.75)
+
+[x] "If I was on Pinterest and closed the drawer, it should reopen on Pinterest,
+    not Michael." The cabinet remembers the last tab now.
+[x] "Put the tab name in the dead space beside the circles (Projects / Pinterest
+    / Fabrics) so the panes start higher." Done; in-pane titles hidden.
+[x] "The avatar dropdown is gone, bring it back." Restored.
+[x] "Move Randomize up next to Replace and Remove, and shrink those pills."
+[x] "Measurements gets cropped on the Avatar tab." Added bottom padding so it
+    scrolls fully.
+[ ] Fabrics: hide imageless matches, make Refresh re-source the dissected
+    garment. NEXT.
+
+AUGUST 24, 2026, MAYA IN THE LOGO, MORE ADMIN (v13.74)
+
+[x] "Make the top-left logo circular, same size, and pulse when Maya talks."
+[x] "Hover Admin and show a MAYA chip like Design Studio; click it, Maya wakes
+    and the logo pulses." Done, no need to open the drawer first.
+[x] "Maya should be able to pull the drawer / show me what's happening." Added
+    a show_drawer voice tool.
+[x] "Remove Marketing from the admin nav, it's built in now." Nav is manasiyo
+    and MAYA only; marketing.html still exists as fallback.
+[x] "The hamburger is hidden/overlapping the wider drawer, anchor it to the
+    drawer." Fixed the offset for the 360 drawer.
+[ ] MAYA app cabinet bugs (see next): last tab not kept, tab title should sit
+    beside the circles, avatar dropdown missing, Measurements cropped,
+    Randomize/Replace/Remove should share one row with smaller pills. NEXT.
+[ ] Fabrics: matches show as solid crimson with no image; hide imageless ones
+    and make refresh re-source the dissected garment. NEXT.
+
+AUGUST 24, 2026, ADMIN CLEANUP AFTER KODAK'S PUSH (v13.72)
+
+[x] "Delete the Maya Command dashboard from the center, I don't need it there."
+    Removed from the page center.
+[x] "But keep a Maya command for the voice: a transcription and a place to
+    approve things. Push it into the drawer, only when I click the voice star."
+    The drawer becomes her private command line while the star is live.
+[x] "The 429 call is acting up and 'Voice unavailable, call 429' is ugly."
+    The voice line now fails in plain words. (The 429 itself is an OpenAI
+    Realtime quota/rate limit, an owner-config matter, see fixes.txt.)
+[x] "The marquee should be colored exactly like Marketing's, green/red/white,
+    no white lines top or bottom, scrolling between Admin and the hamburger."
+    Moved to the top row, colored.
+[x] "Put the Site/API/Images/Submissions/Backup lights inside the drawer."
+[x] "Delete the second manasiyo.com | MAYA row under Users and traffic."
+[x] "Hover MANA SIYO and show Design Studio and Wix Studio to the left, like
+    MAYA shows Operations and Playground to the right." Wix Studio uses the
+    dashboard link he gave.
+[x] Design Studio link: Fromsa said manasiyo.com/design; wired in v13.73.
+[x] "In the backend, remove Operations Room from the bottom, make it one
+    slide." v13.73: backend Brief is a single slide, the embedded Operations
+    Room and its dead pill are gone, standalone /operations.html untouched.
+[ ] "Fabric is still not working, tell me what needs connecting." The retailer
+    window and visual ranking are already connected; the CLO library (Plan B)
+    is not (CLOSET_API_TOKEN + CLOSET_SEARCH_URL, fixes.txt step 6). Waiting to
+    hear which part he means is broken before changing code.
+
+AUGUST 24, 2026, FINAL ADMIN RELEASE (v13.71)
+
+[x] "Make Admin Maya the internal Jarvis and command center, not a client
+    feature." Done as a visible Today/Attention/action layer connected to the
+    existing Admin snapshot and panels. She can explain, navigate, perform
+    exact lead lookup and queue notes, memory or Gmail drafts for an explicit
+    Confirm click. Nothing silently sends or performs an external action.
+[x] "Marketing parity means the page must look the same, not only carry the
+    data." Done: the approved Marketing ticker, full metric strip, visitor
+    row, spacious campaign table/chart, Lead Station, Sources, Bottom Line,
+    typography, spacing and fold behavior are embedded under the Admin shell.
+    The standalone Marketing page remains live and is not retired.
+[x] "Promote only the approved Playground filing cabinet to MAYA." Done
+    faithfully. Project/autosave/auth/deep-link code stays canonical, and the
+    Projects, Pinterest and Fabrics controls remain reachable in the folder.
+[x] "Preserve fabric sourcing and fix only verified regressions." Audited:
+    garment plus inferred traits, live retailer inventory, thumbnail ranking,
+    closest visual matches copy, real card fields, admin authorization and
+    static-first fallback remain in place with regression coverage.
+
+AUGUST 24, 2026, REMEDIATION PROGRAM, COMMIT A1 (v13.70)
+
+[x] Proxy security hardening (audit P0 #1). Every proxied OpenAI call now
+    passes one fail-closed policy: recognized content type, a valid model
+    that matches its endpoint, Sol for the atelier only, and image count and
+    quality enforced whatever the body size or multipart field order. The
+    token is verified before the body is buffered. The policy is a small
+    tested module (docs/server/proxy-policy.mjs, 27 unit tests). It is now the
+    accepted v13.70 baseline for this release.
+
+AUGUST 24, 2026, MAYA MORE CAPABLE (v13.69)
+
+[x] "Make Maya more intelligent, more capability: write an email, modify
+    the lead station live, know the backbone of everything." Done: she has
+    four tools now, drafts an email into Gmail (never auto-sends), updates
+    a lead by name and the station refreshes live, remembers and forgets,
+    and her instructions carry how MAYA is built so she can troubleshoot.
+[x] "There is a glitch in her memory; there should be room for it." Found
+    and fixed: her memory was inside a snapshot that got trimmed on busy
+    days, so it could vanish. It is kept whole now and always in her prompt.
+[x] "Why hasn't the marketing stuff translated to admin, why don't the
+    features show?" It is all in v13.68, committed and pushed; a push
+    deploys both the server and the site (the build tests all pass). It was
+    committed after your screenshots; hard-refresh Admin and the version at
+    the bottom should read 13.69.
+[ ] "She should read my emails." Needs Gmail read access (OAuth on the
+    server, a scope and consent change). Writing is done via draft_email;
+    reading is the next green step when you want it.
+
+AUGUST 24, 2026, MARKETING MIGRATED INTO ADMIN (v13.68)
+
+[x] "Migrate everything from Marketing into Admin: ad campaigns, the lead
+    station, sources of traffic, the bottom line, all of it." Done: all four
+    now live under Users and traffic in Admin. Marketing stays up until it
+    is retired.
+[x] "The pills are grayed out; make manasiyo.com white and MAYA blue, bold
+    and strong like the numbers." Done.
+[x] "Every drawer section title should be the blue, and the drawer width
+    should match MAYA's." Done.
+[x] "App Check: make sure it goes through, so only the real site can get
+    in." Wired and dormant; turns on the moment the reCAPTCHA key is set
+    (step 4 in fixes.txt).
+[x] "The wall report: no report button; just make sure unfavoriting takes
+    it down." Confirmed: that sweep already exists and stays the mechanism;
+    no report button added.
+[x] "Give me the things to do to set up the API." Written as a numbered
+    checklist in docs/fixes.txt.
+[x] "Make MAYA itself official, promote the cabinet drawer to the app; on
+    Pinterest it should stay on Pinterest; the projects pill is cropped."
+    Completed in v13.71 with the approved Playground cabinet as source.
+[ ] "Favorites should be a clean submit-only card, not the inspo view; no
+    Switch Fabric, Add Reference or Tap to Listen, just Submit to Mana
+    Siyo with a short description." Next.
+[ ] "Fabrics is still terrible." Next, a UI pass.
+[ ] "Live now / today still show low / '...'." Root cause is the GA
+    property; step 1 in fixes.txt fixes it (env pin, no code).
+
+AUGUST 24, 2026, MAYA HOME, ADMIN CONSOLIDATING (v13.67)
+
+[x] "Double clicking the star doesn't work, and clicking it takes me to
+    admin. Put Maya back in the admin drawer." Done: the star is a plain
+    home link again; the voice lives at the floor of the drawer, with a
+    chip that stays while she listens so she keeps talking with the drawer
+    closed until you tap off.
+[x] "Give Maya memory, and let her fill the lead station as we talk, ask me
+    if I called them, update the notes." Done: she has her own memory and
+    two tools, remember and note_lead; by voice she writes notes to a lead
+    by first name. (Sending email for her needs Gmail on the server, next.)
+[x] "Consolidate the admin drawer: vault one line, Behind the scenes as one
+    Cloud Run in light blue, remove Design Studio and Credits, add Google
+    Ads manager, Meta Ads manager, Wix dashboard, keep privacy." Done.
+[x] "Users and traffic should pair manasiyo and MAYA like the marketing
+    pills." Done: today, 7 days and 28 days pair manasiyo.com | MAYA.
+[x] "The marketing header split into two rows and looks ugly; one row, same
+    size, arrow on the right." Done (marketing stays until it is retired).
+[ ] "Migrate everything from Marketing into Admin under Users and traffic,
+    then kill Marketing." Step one shipped (the paired row). The four
+    panels move next.
+[ ] "Stats still say ... and the count looks wrong (Wix says 14 clicked to
+    MAYA, here says 3)." Diagnosed: the MAYA number reads whichever GA4
+    property the server discovers, and it is likely reading manasiyo's, not
+    the MAYA app's. The fix is a one-line env pin (green step given).
+[ ] "Instant alert when the API or credits go down, or a user's image
+    fails." Designed, needs a delivery channel; green step given.
+
+AUGUST 24, 2026, THE STAR SPEAKS, THE BOTTOM LINE (v13.66)
+
+[x] "Remove the star from the drawer; double clicking the top left star
+    should activate the voice. It should be connected to marketing and
+    everything else, know what we pushed recently, know the date, be able
+    to ask me back, scan everything, and talk back so I know it works."
+    Done: double click opens the line and Maya greets first; she carries
+    marketing, leads, submissions, the recent ships and the date, and asks
+    back when it helps. ElevenLabs can replace the voice later; for now it
+    is OpenAI's realtime voice.
+[x] "A new row at the bottom of Marketing with the most important live
+    analytics you think are missing; think outside the box." Added The
+    bottom line: the week as one funnel from paid clicks to leads with
+    conversion at each step, cost per lead against last week, the cheapest
+    working campaign, the share of the site that steps into MAYA, and the
+    day of the week that brings people.
+
+AUGUST 24, 2026, MAYA'S VOICE (v13.65)
+
+[x] "In the Admin only, the logo at the bottom center of the drawer,
+    voice to voice like ChatGPT's voice, pulsing while it talks, connected
+    to everything: say hey Maya, give me a thirty second analysis of
+    marketing, submissions, the current state. My own Jarvis, on the
+    latest model, and it should work from my phone." Built: the star sits
+    at the drawer's floor, tap to open the line, tap to hang up, the
+    numbers are snapshotted at the moment of the tap and the key never
+    leaves the server. Needs one green step to speak: the Realtime model
+    must be available on the OpenAI account.
+
+AUGUST 24, 2026, THE ROOM IN THE FAMILY, REAL CLO, HONEST TODAY (v13.64)
+
+[x] "The circles should be the hamburger's size and height, pinned to the
+    drawer's bezel, and the window under them should consume the whole
+    drawer, no gap; Avatar, Pinterest, Fabrics; the pill should just say
+    Projects." Done on the playground.
+[x] "The top right arrow should be smaller and beside manasiyo.com, one
+    row, MAYA in blue, remove the repeated second row." Done.
+[x] "Today's stats are not showing; the Wix dashboard shows today." He was
+    right: a timezone bug. Wix counts days in California time and the
+    server was counting in UTC, so every evening looked empty. Fixed;
+    verified against the live Wix API.
+[x] "Move the lead buttons into their own CTA column and recommend the
+    move." Done: the recommended move heads the column, the buttons under.
+[x] "Operations Room: same header family as everywhere, logo included,
+    Operations Room top left with beta under it; kill the dead pill at the
+    bottom; kill the Plan B pill; the plan line itself should switch; audit
+    for dead buttons." All done: the dead pill was an empty toast sliver,
+    and every onclick resolves.
+[x] "Find closest CLO should look into the CLO assets themselves." Wired:
+    with a CLO-SET API token on the server, Plan B searches the real
+    library in place. CLO-SET's public CONNECT site refuses outside
+    connections and has no open search API, so until the token is set the
+    panel says so and offers the CONNECT search link.
+
+AUGUST 24, 2026, CENTERED TERMS AND THE AI DISCLOSURES (v13.63)
+
+[x] "The document should be centered, everything centered." Done, in the
+    popup and on the terms page.
+[x] "Big disclosure for anything AI related; look into California,
+    national and worldwide rules, disclaimers, the face being used, like
+    a software lawyer." Done: a Built on artificial intelligence section
+    (EU AI Act Article 50 transparency, California SB 942 spirit, FTC
+    honesty baseline) and a Your face photograph section (purpose only
+    rendering, no facial recognition, no biometric scan kept, retention
+    and deletion, never sold), mirrored in the privacy policy. The terms
+    version moved to August 24 so everyone agrees again once. Flagged to
+    Fromsa: drafted with care from current law, but a licensed attorney
+    should review it.
+
+AUGUST 23, 2026, THE CABINET AND THE LEAD STATION (v13.62)
+
+[x] "Why are there repeats? I open Measurements and the whole Michael thing
+    drops down again. Projects is duplicating his photo again." Fixed: the
+    name and the face row inside the measurements are hidden (they live
+    above it), the avatar switcher and its caret are gone from this drawer,
+    and the pill on top is now the only Projects control.
+[x] "The tabs should be circles, the same dimensions as the hamburger, no
+    pill around them, always visible, and they should hold the drawer
+    underneath them like a cabinet. There should be no Back." Done: three
+    circles hold one folder, fabrics and Pinterest open inside it, and
+    changing tab is how you leave.
+[x] "Rename the leads section and make it a station: notes summarizing what
+    they want and which tier, an email CTA that drafts by first, second or
+    third contact, a call, and a place to dump what I know that updates the
+    CTA." Done, as The Lead Station. The draft opens ready in Gmail; MAYA
+    never sends anything itself.
+[x] "Sources of traffic, is it correct? Wix shows people clicking to MAYA
+    but the table says Stripe." Answered: the table is right. Wix links
+    carry no referrer so those arrivals count as Direct; the fix is on the
+    Wix side, adding utm to the MAYA link.
+
+AUGUST 23, 2026, THE OPERATIONS ROOM ITSELF (v13.61)
+
+[x] "In Operations Room beta the hamburger menu is so far out; make the
+    family of the drawers the same across it." Done: the offset is
+    computed from the live layout now and the curve matches every other
+    drawer.
+[x] "There is some odd pill at the bottom of the screen; fix that." Done:
+    those were the trace folds' summaries and comma placeholders; the
+    folds match the family (arrow beside the title) and the commas are
+    ellipses.
+[x] "Plan B, the CLO route, should have the same aesthetics as Plan A,
+    photo on the left and the result on the right, and it should source
+    CLO files and find the closest CLO reference." Done: Plan B is the
+    same two-panel room, the photo carries over from Plan A, and Find
+    closest CLO reads the garment and ranks aesthetics/operations/
+    clo-library.js, which is empty until real CLO projects are listed
+    (the panel says so honestly).
+
+AUGUST 23, 2026, THE PLAYGROUND TABS (v13.60)
+
+[x] "Make the drawer circles Chrome-style tabs, the height of the
+    hamburger pill, in the same row: Avatar, Fabrics, Pinterest." Done,
+    on the playground only.
+[x] "Avatar tab: the project's name in a pill on top where Micheal was,
+    a bigger circle with the name at its right, Replace and Remove only
+    on hover, the projects dropdown below the avatar, measurements
+    collapsible, and only Tip, Log out, Feedback at the bottom, pushed
+    lower." Done.
+
+AUGUST 23, 2026, MARKETING AESTHETICS (v13.59)
+
+[x] "The dropdown arrow should be beside the title, not underneath." Done
+    on every fold.
+[x] "Combine the pills into one row: live now, today, 7 days, 28 days;
+    manasiyo | MAYA with a vertical bar, MAYA in the logo's light blue;
+    drop the Wix forms and clicks to contact tiles." Done.
+[x] "A clickable arrow at the top right that takes me straight to my Wix
+    Analytics dashboard." Done, using the link he pasted.
+[x] "Combine ads and campaigns into one collapsible called Ad Campaigns,
+    campaigns first, chart under; D W M should change the campaign
+    numbers too." Done: the range steers the table and the chart alike.
+[x] "Double check the Connecting what is missing mess; if not necessary,
+    remove it." Removed: everything it asked for is connected; the
+    optional token recipes moved to docs/AI-HANDOFF.md.
+[x] "The marquee should start from halfway, and a bit faster." Done: it
+    begins mid story, seamless loop, slightly quicker.
+
+AUGUST 23, 2026, THE POPUP, THE CAPS, THE CIRCLES (v13.58)
+
+[x] "Terms should open as a pop up after sign in, scroll all the way down
+    to accept, one time." Done: the checkbox is gone; the terms open over
+    the app on first sign in and Agree wakes at the end of the text.
+[x] "Backend should be all caps." Done: BACKEND.
+[x] "The playground drawer redesign: three small circles at the top,
+    avatar face, cheetah fabric, Pinterest logo, hover says just the
+    name; projects underneath; measurements inside the avatar view; only
+    Tip, Logout, Feedback at the bottom, a little lower." Staged on the
+    Playground, per the playground rule. The approved design was promoted
+    faithfully to the app in v13.71.
+
+AUGUST 23, 2026, TERMS, WALL, USERS (v13.57)
+
+[x] "During sign in for new users, let them read and agree to the terms
+    and conditions; succinct, lawful, clear, especially about the
+    Community Wall." Done: /terms.html, one short page; the wall rule is
+    its own section; the sign in button sleeps until the box is ticked;
+    agreement is remembered and recorded with the account.
+[x] "When someone unfavorites something on the Community Wall it should
+    be gone; the wall must reflect what is favorited." Done: unhearting
+    now also sweeps any older post this account ever made for that same
+    garment, so no ghost can linger.
+[x] "On the admin side we do not have only two users; make sure that is
+    correct." He was right: only accounts whose work reached the API were
+    being counted (the store really held 2 markers). The app now says one
+    quiet hello at every sign in, so every account counts from this
+    version forward; the missed history cannot be reconstructed.
+[x] "Users and traffic on Admin is MAYA, not manasiyo.com, correct?"
+    Correct: Admin is MAYA only; manasiyo.com lives on Marketing.
+[x] "Playground drawer not working, links broken?" Checked the code end
+    to end (local browser test: drawer opens, closes, projects listed)
+    and found no fault; the live file is identical to the app plus the
+    badge. If it misbehaves again, note which link and it gets hunted.
+
+AUGUST 23, 2026, THE TICKER AND THE FOLDS (v13.56)
+
+[x] "Make Today a marquee between the hamburger and Marketing, reading
+    like news, in the label font, succinct, CPL not cost per link click,
+    say today and yesterday instead of dates." Done.
+[x] "Combine Manasiyo.com and MAYA into one set of pills showing both
+    numbers; today is not zero, check Wix." Done; checked against Wix
+    directly: Wix publishes a day at a time and today's row does not
+    exist until tonight, so the pill now says it is on its way instead
+    of showing a zero that was never true.
+[x] "Call it Ads, make everything collapsible, add a Cost column to
+    campaigns and remove the two big network boxes." Done.
+[x] "Kill what they read; make sources clickable; what is
+    checkout.stripe.com?" Done; it means someone came back to MAYA from a
+    Stripe payment page, a tip. The sources note says so on the page.
+[x] "Same drawer and hamburger swipe everywhere; pill a pixel or two
+    closer." Marketing now slides like Admin and the app; Admin's pill
+    moved 2px closer.
+[ ] Wix per-source traffic for manasiyo.com: the Data API has no source
+    breakdown; the Semantic Model API might. Next slice if wanted.
+
+AUGUST 23, 2026, TRIM MARKETING (v13.55)
+
+[x] "Cancel everything about revenue. Remove the money in one row. That
+    was just my bad." Done: revenue code, envs, tiles and notes all
+    removed; a test now fails if revenue ever reappears there.
+[x] "Windsor got disconnected, what happened?" Checked live through his
+    own session minutes later: Windsor was connected and the chart was
+    drawing; the alarming text was the revenue setup note. Also hardened
+    so one network's feed failing never blanks the other.
+[x] "Leads, newest first, is good, but instead of When I would like
+    notes." Done: the third column is the client's own words from the
+    form; the date sits small under the name.
+[x] "D, W, M: make them a little closer, spacing-wise." Done.
+[x] "What do you mean Wix API? I thought we did that last night." We did:
+    the key set on Aug 22 already covers Forms, leads verified connected.
+    Nothing to do.
+
+AUGUST 23, 2026, MARKETING V2, THE INTELLIGENCE LAYER (v13.54)
+
+[x] (Pasted handoff spec "marketing.html v2".) "Bug fixes first": Meta
+    link clicks instead of all interactions, reach no longer 0,
+    conversions say not configured. Done, each verified against Windsor's
+    own numbers (27 link clicks / 53 interactions / reach 928).
+[x] "Lead counting via Gmail (replaces the pixel dependency)." Done via a
+    better door: the Wix Forms API record itself, which is what the
+    notification email is written from. Same key as analytics, no pixel,
+    no new consent. Leads tile, cost per lead, and the list newest first.
+[x] "Revenue from the admin Google Sheet," three numbers only. Code done;
+    needs the sheet shared with the service account and REVENUE_SHEET_ID
+    set (manual REVENUE_MTD fallback exists). See below.
+[x] "Chart: D / W / M toggle and hover readout." Done, choice remembered,
+    tooltip follows the cursor and works on touch.
+[x] "Today's summary drop-down" with deterministic warnings that never
+    depend on the AI. Done; the ad-group-gone-silent check is the Suits
+    and Tailoring failure class. Google credit balance is not readable
+    from any connected API, so that one warning does not exist yet rather
+    than being guessed.
+[x] "Intelligence layer" text analysis: hourly cached, structured JSON,
+    numbers only (never lead names), degrades to warnings alone. Done.
+[x] "Hamburger menu" grouped and completed. Done.
+[ ] Voice (spec 5.2): deferred on purpose, text first. Next slice.
+[x] (Withdrawn next morning: revenue cancelled in v13.55, no owner steps
+    remain; the Wix key already covered Forms so leads needed nothing.)
+
+AUGUST 23, 2026, EVERY UPGRADE (v13.53)
+
+[x] "Proceed with the next steps. Major changes are: upgrading every model
+    to what was recommended. Updating the privacy. Nano Banana as well, as
+    we discussed. All, everything, every upgrade." Done. The server upgrades
+    gpt-4.1 to GPT 5.6 Terra and gpt-4o-mini to Luna at the proxy, the
+    Operations Room judge and pattern loop speak with Sol, and a model that
+    is refused upstream falls back once to the proven one, so nothing can
+    break. The proxy now refuses any model not on MAYA's own allowlist,
+    which closes the hole both review memos ranked first. Every AI call
+    logs its real token usage. The privacy page says plainly who does the
+    thinking. Nano Banana visualizes gradient-only fabric cards through
+    Vertex AI inside our own project, labeled Generated.
+[ ] Owner step for Nano Banana: enable the Vertex AI API
+    (aiplatform.googleapis.com) on the pro-maya project. Until then the
+    Visualize chip answers "Not enabled yet" and everything else works.
+[ ] Deferred on purpose: the Gemini shadow evaluation for ranking and
+    dissection waits for the eval suite, so a promotion is evidence, not
+    fashion.
+
+AUGUST 22, 2026, MODEL ROUTING FOUNDATION (v13.52)
+
+[x] "Start the model upgrade with the foundation only: provider-neutral task
+    routing, evals and safe telemetry, without changing the live model route
+    or configuring Google Cloud." Done. The existing admin fabric rank is the
+    first exercised task, still OpenAI gpt-4.1 with the same 60 second ceiling,
+    response and static fallback. Route tests cover success, transient
+    fallback, timeout, invalid output, safety refusal and telemetry privacy.
+[x] "Retire GPT Image 1.5 in favor of GPT Image 2 without changing quality,
+    size or the rest of image behavior." Done. Piece renders, the app and the
+    playground now have one supported image model; old browser preferences are
+    cleared and medium quality, existing sizes, anchors and parallel piece
+    rendering stay unchanged.
+[x] Preserve the Mana Siyo manufacturing context and write the missing MAYA
+    AI architecture down in the repository. Done in
+    docs/MAYA-AI-ARCHITECTURE.md.
+
+AUGUST 22, 2026, VISION-LED FABRIC SOURCING (v13.51)
+
+[x] "Match ChatGPT's fabric-sourcing experience: use the garment image and
+    inferred traits, retrieve real purchasable inventory, visually rank the
+    closest products, explain each choice, and keep static cards only as the
+    graceful fallback." Done. The real retailer pool is compared picture by
+    picture against the garment by the vision model. Ranked cards show the
+    real image, title, price, merchant, score and a short visual reason under
+    the honest heading "Closest visual matches." Retailer, thumbnail and
+    ranking failures leave the fast static wall standing.
+[x] Guard ranking success, retailer failure, missing images, unauthorized
+    requests and the static fallback with focused tests and the regression
+    suite.
+
+AUGUST 22, 2026, ALL OF THEM NOW (v13.50)
+
+[x] "Do the next build and the live merchant in parallel, and draft the
+    SwatchOn email. Let's do all of them now." Done in one pass: the
+    dissection returns the full material sentence, the server asks six
+    real merchants and the wall shows their actual products and prices,
+    and the SwatchOn letter sits in Gmail drafts ready to send.
+[x] Visual matching, answered: it needs a catalog to search before it can
+    search one. The live window now SEEDS that catalog with every query,
+    so number four started today too, quietly.
+
+AUGUST 22, 2026, HEX AND THE SOURCING STUDY (v13.49)
+
+[x] "Apply number one." The dissection now returns each fabric's exact
+    color as a hex read from the image itself, and sourcing trusts it
+    first.
+[x] "Research where the best retail fabrics are found online, no MOQ, 2
+    to 3 yards, worldwide, and the Korean site with the videos." The
+    study is docs/fabric-sourcing-study.md. The Korean site is SwatchOn:
+    20,000+ fabrics, 1 yard minimum, video swatches.
+[ ] Next fabrics pass, when asked: live merchant search on the server
+    with caching, then a SERP API for breadth, then visual matching once
+    a catalog exists.
+
+AUGUST 22, 2026, WIX, AXES, AND THE WALL (v13.48)
+
+[x] "Remove the last checked line; MAYA who is arriving is not related to
+    marketing." Both gone from Marketing.
+[x] "I want analytics absorbed from the website as well; I have the Wix
+    API." Wired: manasiyo.com visitors now come straight from Wix's own
+    Analytics API, the same numbers the Wix dashboard shows. One step
+    remains, Fromsa's own: set WIX_API_KEY on the maya-api service.
+[x] "The x axis and y axis are not defined; add them subtly, and one more
+    pill that combines all three." Every day is named under the chart, the
+    gridline values sit quietly on the left, and the All three chip draws
+    clicks, impressions and cost per click at once.
+[x] "Fabrics UI got messed up: half the screen, stretches the canvas,
+    cannot scroll." Fixed: the wall is back to four columns by three rows
+    inside exactly the full view frame's footprint, pages swiped sideways,
+    and nothing can stretch the page any more.
+[x] "The color of the recommended fabric is not even close." Fixed: the
+    color word in the dissected fabric now leads (crimson means crimson),
+    search cards wear that color instead of a borrowed navy photo, and
+    color truth outranks catalog order.
+
+AUGUST 22, 2026, THE NUMBERS AUDIT (v13.47)
+
+[x] "Is the admin analytics working or not, and why? 14 people came from
+    the Mana Siyo website but users still says 2 and one row says before
+    names were kept." Audited live: the traffic pills ARE working and
+    count MAYA visitors from Analytics (24 in the last 7 days). Users
+    counts Google sign-ins only, so visitors who never sign in are not in
+    it; each pill now explains itself on hover. The unnamed row is an
+    account from before names were kept; it takes its name at its next
+    sign in and now says so. The 14 people are Wix's own counter for
+    manasiyo.com, which has no Analytics property yet; the Marketing fold
+    now carries the exact steps to connect it.
+[x] "When I hover on MAYA to reach operations room or playground, they
+    hide before I can click." The chips hold still and stay reachable.
+[x] "The first marketing graph looks redundant; put paid both networks at
+    the top." The four week bars are gone; the paid chart and campaign
+    table sit right under the visitor tiles.
+[ ] Windsor: everything on the Windsor side is connected and flowing
+    (Google Ads + Meta verified). One step remains, Fromsa's own:
+    set WINDSOR_API_KEY on the maya-api Cloud Run service.
+
+AUGUST 22, 2026, ANCHORED (v13.46)
+
+[x] "The pill should be stuck to the invisible drawer, anchored on it, not
+    chasing it." In MAYA the pill's position is now written from the
+    drawer's own motion every frame; on Admin and the Backend the drawer
+    glides with exactly the pill's timing.
+[x] "Pinterest and Fabrics are still not the full screen of the new drawer
+    length." Both now run top 10 to bottom 10, same as the main drawer.
+[x] "Clicking Back on Fabrics sometimes hides the main drawer. Back should
+    just take me back." Back only closes its own panel now; the main
+    drawer stays open behind it.
+[x] "On Admin, call it MANA SIYO, and Marketing in caps too." The doors
+    read MANA SIYO, MARKETING, MAYA.
+
+AUGUST 22, 2026, DRAWERS AND MOBILE (v13.45)
+
+[x] "The hamburger menu pill doesn't disappear, it slides towards the left
+    with the drawer and stays on the left, outside the drawer, hanging
+    out." The pill rides out with the drawer on MAYA, Admin, Backend and
+    the Operations Room, and the same pill closes it.
+[x] "If I click anywhere outside the drawer, it should hide the drawer,
+    even on Admin." A click anywhere outside closes it, everywhere.
+[x] "Order: Mana, Marketing, Maya, with Operations Room Beta and
+    Playground on the Maya hover. Three things on top." Done.
+[x] "Double check the mobile version. Cards a little smaller, text a
+    little smaller, and I should be able to pinch and resize the cards
+    with my fingers." Cards and type step down on phones, and a two
+    finger pinch resizes any card, saved like the corner handle.
+
+AUGUST 22, 2026, THE v13.44 BATCH
+
+[x] "Attributes and design notes can be combined, values as crossable pills
+    exactly how attributes work." One column now; every value is a pill with
+    a cross, wired to the same deselection the attributes panel used.
+[x] "Use this fabric, and also Use this reference." The picker says it.
+[x] "Submit should say Visualize." It does; Apply changes when edits staged.
+[x] "The MAYA door has no pill. Apply that to all of them, font 1px higher,
+    closer spacing, and Manasiyo.com just says Mana." All four doors are
+    plain words in a centered row.
+[x] "The swipe drawer has not been applied to Admin." It answers a mouse
+    drag now, not just touch.
+[x] "The drawer should take the full vertical space, with the hamburger in
+    the drawer's own top-left corner, on MAYA, Admin, Backend and the
+    Operations Room." Done on all four.
+[x] "The backend should literally say Backend top-left, and Submissions,
+    not Clients." Renamed everywhere it shows.
+[x] "Combine the marketing dashboard: one graph like Google's with lines
+    from both sources, and a table per campaign with status, impressions,
+    clicks, CTR, CPC." One SVG chart with metric chips plus the campaign
+    table, both fed by Windsor.
+[x] "Fabric sourcing worldwide: 4 columns, 3 rows, swipeable, high res
+    pictures, accurate prices, working from the full view without
+    dissection, and in-house fabrics loading faster." Ten merchants across
+    the world, paged 4x3 with a sideways swipe, full-view sourcing without
+    dissection, in-house library prefetched at boot. Search cards say
+    "varies" because only a listing can state its own price.
+[ ] Playground: "good idea but we are not going to actually use it for
+    now." It stays as is, behind the MAYA door hover.
+
+AUGUST 18, 2026, PINTEREST (v13.31)
+
+[x] "Let the user log into Pinterest and choose a board, an image, or a
+    collection, and import it straight into MAYA as reference images." Built.
+    Upload now offers Pinterest: sign in with your own Pinterest account, your
+    boards appear, tap one, tap up to six pictures, and they land on the
+    moodboard as inspo cards, copied into the project so they can never go
+    dead. They work as references for Visualize like any other picture.
+    Where the secrets live: nowhere near the browser. MAYA's own server does
+    the sign in, holds the Pinterest token, and this screen only ever sees
+    board names and picture addresses.
+[x] Also built on the way: "From a link". Copy a picture's address from
+    anywhere, paste up to six, they come in. Dragging a picture straight from
+    another browser tab onto the board works now too. Both go through MAYA's
+    server, because a browser is not allowed to read a picture it did not
+    serve.
+
+    TWO THINGS ONLY FROMSA CAN DO, and Pinterest is strict about both:
+    1. Create the app at developers.pinterest.com (a Pinterest BUSINESS
+       account is required), set the redirect to
+       https://maya.manasiyo.com/api/pinterest/callback, then put
+       PINTEREST_APP_ID and PINTEREST_APP_SECRET on Cloud Run. Until those
+       exist the Pinterest button does not appear at all.
+    2. A new Pinterest app has TRIAL access: it works for the app's own
+       account and the testers listed on it, nobody else. To open it to
+       clients, Pinterest wants a video of this exact sign in flow and grants
+       Standard access after review. So this ships working for the atelier and
+       becomes public when they say yes.
+
+AUGUST 18, 2026, THE FOLDER (v13.30)
+
+[x] "Clean up MAYA-new, all I need to see is the four screens." Done, and the
+    important thing first: THAT FOLDER IS THE WEBSITE. Firebase Hosting
+    publishes the repository root, so index.html, status.html, backend.html,
+    operations.html, verify.html and aesthetics/ are literally the live pages.
+    Renaming or moving one of them by hand changes the site on the next push,
+    and deleting .git would cut the folder off from GitHub. So the tidy was
+    done as code, with the references updated in the same commit.
+    The root now holds: the five served pages, aesthetics/, cloudbuild.yaml
+    (Cloud Build reads it there), tests/ (the suite finds the repo from its own
+    folder), CLAUDE.md and AGENTS.md (each agent looks for its contract at the
+    root), and the three dot files git and Firebase need.
+    Moved into docs/: README.md, requests.txt, fixes.txt, history.txt. Moved
+    into docs/archive/: the retired Codex handoff and the old Deploy MAYA
+    command, which Cloud Build replaced.
+    Deleted: the .firebase local cache and every .DS_Store, which are now
+    untracked for good so they stop appearing as changes in GitHub Desktop.
+[x] Four new assertions guard the layout, so a future tidy cannot quietly break
+    the deploy: the served pages must be at the root, the notes must be in
+    docs/, the build files must still be where the build looks, and the hosting
+    ignore list must still publish the pages and hide everything else.
+[ ] Two folders named _to_delete (one at the root, one in docs/) hold the junk I
+    am not allowed to delete from here. Both are ignored by git and by the
+    website. Empty them from Finder whenever you like.
+
+AUGUST 18, 2026, LAUNCH PASS (v13.29)
+
+[!] "My friend could not open the project I shared." FOUND. A share handed over
+    the addresses of MY OWN pictures, and only I am allowed to read those, so
+    the friend's browser got 403 Forbidden and the copy failed. Fixed: a share
+    now COPIES every picture into a folder belonging to the share itself, which
+    anyone signed in may read, and those copies are deleted when the project is.
+    One picture that still cannot be read now drops that picture instead of
+    killing the whole import.
+[x] Share moved onto the project itself. Every row in Projects has a share
+    glyph left of the ×, so a project can be sent without opening it. The old
+    drawer-wide Share button is gone.
+[x] Fabrics is now as wide as Projects. Save is deleted: everything saves
+    itself the moment it lands, so a Save button only invited doubt.
+[x] Notes are one place: Design notes. Design ideas, aesthetics, constraints,
+    sourcing and anything said out loud fall under it, and a part with nothing
+    in it is not shown at all.
+[x] "Project deleted everywhere" is now "Project deleted". Verbiage cut across
+    the whole app: the inspo picker reads "Choose your favorite / Up to three",
+    the share note reads "Whoever opens it saves their own copy. Yours stays
+    yours", and forty other lines got shorter.
+[x] Community wall rolls properly: top row to the right, middle back to the
+    left, bottom to the right.
+[x] Systems Map: submission cards no longer clip when hovered, the lights paint
+    one by one as each answer lands instead of waiting for the slowest, and a
+    submission that is still arriving is re-checked every 5 seconds.
+[x] The credit ring can now be REAL. Set OPENAI_ADMIN_KEY (an sk-admin key) and
+    it reads OpenAI's own Costs API and says "measured"; set OPENAI_CREDIT_USD
+    to what was loaded (10) and the ring counts down from that. Without the
+    admin key it still estimates, and says "estimated" so the two can never be
+    confused.
+
+AUGUST 17, 2026, AFTERNOON
+
+[x] "A circular design of API credits left from OpenAI on the Systems Map,
+    under LIVE NOW." Built in v13.28: a ring under the traffic tiles showing
+    how much of the month's budget is left, the dollars beside it, and how
+    many calls it took.
+    One honest caveat, said plainly on the page itself: this is an ESTIMATE,
+    not a bank balance. OpenAI only reveals a real balance to an organisation
+    admin key, and that kind of key has no business living on a web server. So
+    MAYA prices its own calls as it makes them: a high quality render costs
+    the most, medium and low a fraction of it, a chat call a cent, and the
+    month's total is kept in MAYA's own storage. Set the ceiling with
+    MONTHLY_BUDGET_USD on Cloud Run (it defaults to 50) and the ring follows
+    it. The ring turns amber under 40 percent and rose under 15.
+
+AUGUST 17, 2026, MIDDAY
+
+[x] "Firebase storage is the official storage from now on, no need to send it
+    to Google Drive." Done, v13.27. Submissions are written into MAYA's own
+    Cloud Storage bucket by the server itself, using the identity Cloud Run
+    already runs as. There is no refresh token, no consent screen and no human
+    step anywhere in the path, so the failure that hit twice in four days
+    cannot happen again. The Systems Map lists submissions from there, the
+    Brief reads their files from there, and the dissection is saved there.
+    Every trace of Drive is out of the server.
+    One thing to know: submissions filed BEFORE today still sit in the old
+    Drive folder. They are not lost, they are just not listed in MAYA. Say the
+    word and they can be copied across.
+
+AUGUST 17, 2026, MORNING
+
+[!] "Image generation is not working, it says connection hiccup." FOUND, and it
+    was not the connection. Since projects live in the cloud, a card's picture
+    is an address, not the picture. The browser will DRAW such a picture but
+    refuses to let MAYA read its bytes back unless the storage bucket says it
+    may, and the bucket never said so. Visualize and Modify need those bytes,
+    because the previous picture is the anchor for the new one. So every render
+    on a saved project failed, and the honest network message came out as
+    "connection hiccup". Fixed in v13.26: MAYA reads its own pictures through
+    its own server whenever the browser refuses, so this can never stop a
+    render again. Setting the bucket rule is still worth doing once, and it is
+    one command, in fixes.txt dated today.
+[x] "It should not say Drive any more." Done. The light on the Systems Map now
+    reads SUBMISSIONS, and when something is wrong it says what is wrong with
+    the submissions instead of naming Google plumbing. The Google words stay
+    where engineers need them, in fixes.txt.
+[ ] Latest Submissions still empty, and this one is not code: the folder is
+    refusing the server until the authorisation is renewed. Steps with links
+    are in fixes.txt, August 16. Nothing else on the map is red.
+
+AUGUST 16, 2026, NIGHT
+
+[x] "Test whatever is pushed out, without me checking the Systems Map." Done
+    two ways. I read the live deployed files and the live API directly and
+    confirmed v13.24 shipped whole, wall fix included, server healthy. Then,
+    because your Mac turned out to have no Node installed at all, I built a
+    check that needs nothing: maya.manasiyo.com/verify.html. It asks the
+    server itself, and it borrows the Systems Map sign in to tell you whether
+    Google still accepts the Drive authorisation. One glance, works on a
+    phone, ships in v13.25.
+[x] Rated launch readiness honestly: 8.5 out of 10 for your own consultations
+    and invited clients, 4.5 out of 10 for opening it to the public today.
+    What separates them is money visibility, failure visibility and
+    provenance, not fragility. Order of work is in docs/AI-HANDOFF.md.
+[x] Recorded the real reason regressions slipped: the browser suite could only
+    ever run in one of the three places we work, and a crash mid-file used to
+    hide every check after it. Corrected, and the truth about where each test
+    can run is now written in the handoff instead of assumed.
+
+AUGUST 16, 2026, MORNING
+
+[x] Final audit before handing the work to Codex. Everything checked: both
+    pages parse, the browser regression suite runs end to end and passes, the
+    server smoke test passes all 16, and the live site is confirmed serving
+    the pushed version.
+[x] "Is GitHub working or not?" It is. One repository, one branch. The Desktop
+    folder, the Codex folder and GitHub are all the same commit, the working
+    tree is clean, and v13.23 is live on maya.manasiyo.com. The duplicate
+    clone that caused the confusion is gone from the picture.
+[!] Systems Map acting up. The map itself is healthy; DRIVE is red again.
+    Google has revoked the server's Drive refresh token a second time, three
+    days after it was renewed. No code can fix this, it is a credential.
+    Steps are in fixes.txt, dated today.
+[x] Community wall must match the inspiration page exactly, cards a little
+    larger, information only on hover, no white glow column between the
+    cards. Done in v13.24: the white plate behind each picture is gone (that
+    was the column), the card now wears the same glass and starlight edge as
+    a favorite, and each frame takes its own picture's shape so nothing can
+    ever be letterboxed into a lit box again. Details still appear on hover
+    or keyboard focus only.
+[x] Hand off to Codex properly: docs/AI-HANDOFF.md is now the one live file
+    both agents read and update. Same repository, same branch, one agent at a
+    time, Fromsa pushes.
+
+AUGUST 14, 2026, NIGHT
+
+[x] Audit the current code before changing it, strengthen account/project
+    isolation, Community provenance, Systems Map responsiveness, and startup.
+[x] Keep visual work reversible and grouped: Systems Map-only polish lives in
+    one scoped stylesheet; the now-approved Community layout stays unchanged.
+[x] Community accepts only cards generated with gpt-image-2; uploaded/favorited
+    inspiration and explicit other-model cards are filtered and rules reject
+    ordinary-client writes without the required model marker.
+[x] Diagnose Systems Map and Latest Submissions: status races and expensive
+    uncached Drive fanout fixed; Drive credentials remain an owner-run Cloud Run
+    operation if deep health reports an expired or revoked OAuth token.
+[x] Audit first-1,000-user readiness and unit economics. Result: controlled beta
+    ready after deploy verification; not ready for an unbounded public launch
+    until durable quotas, cost budgets, App Check, and generation backpressure.
+[ ] Push v13.23 from GitHub Desktop. Codex committed the release, but its
+    sandbox could not resolve github.com, so nothing reached production yet.
+[ ] Measure exact Firebase Storage and Drive usage from signed-in consoles; the
+    public/local code cannot truthfully calculate Fromsa's current account use.
+
+AUGUST 14, 2026, AFTERNOON
+
+[x] Codex took over after Claude credits ran out and prepared one safe push.
+[x] Systems Map refresh races and false public Drive-green state fixed.
+[x] Community cards match Inspiration: 30 percent larger than the old wall,
+    no white column glow, details only on hover/focus, rows flow left to right.
+[x] Favorites halo is 15 percent smaller and animates smoothly by opacity.
+[x] Deletion cleanup is durable for projects and My Fabrics; wall posts cannot
+    be reassigned between projects by an update.
+
+─────────────────────────────────────────────
+
+AUGUST 14, 2026, 10:30 AM
+
+[x] Full Codex audit executed in one version, v13.14, per Fromsa: "do all
+    the priorities yourself, plus the cosmetic ones, I push."
+    Priority one (security): wall XSS closed, picture gate everywhere,
+    shares token-only with revocation. Priority two (isolation): renders,
+    fabric switches and uploads that outlive their project are dropped;
+    My Fabrics keyed to the account and cleared on sign in and out;
+    favorites strip cleared on every board clear. Priority three
+    (deletion and saving): project delete is one atomic batch that also
+    sweeps wall posts and share links; wall publish and unpublish run
+    serialized per card with the heart rechecked; a failed save STOPS
+    sign out, New, switching and share import; a lost save race is named
+    plainly; the false "saved on this device" message is gone. Cosmetic:
+    dedicated calmer favorites glow to the Codex spec. Cleanup: ten dead
+    legacy functions removed and the broken mayaFreshStart command fixed
+    by the removal.
+    NOT done, on purpose: merging the two Operations Room files (they are
+    intentionally separate since Aug 13, beta is the test bench), removing
+    backend.html's hidden legacy room (patterns still render into it, it
+    needs rewiring first), and the full conflict dialog for stale saves
+    (honest toast for now).
+
+AUGUST 14, 2026, 9:55 AM
+
+[x] Pulled in the Codex handoff protocol: CLAUDE.md and AGENTS.md at the
+    root, docs/AI-HANDOFF.md as the shared current-task file, commit
+    convention [Agent][v13.xx], one category per commit, Fromsa pushes.
+[x] Consolidated conversation record: requests.txt stays MY log (dated),
+    fixes.txt the incident log, docs/AI-HANDOFF.md the agents' current
+    state with agent and date marked on completed work. Three files, one
+    system, no duplicate history file.
+[x] Codex audit priority one built as [Claude][v13.12]: community XSS
+    closed (no inline handlers, ids validated), shared-project XSS closed
+    (every picture address gated to https or inline image), share links
+    no longer enumerable (token-only reads), and deleting a project now
+    revokes its share links.
+[x] Favorites got their own calmer glow as [Claude][v13.13], exactly to
+    the Codex spec, board pulse untouched, reduced-motion respected.
+[ ] Codex audit priorities two (project isolation) and three (deletion
+    and saving) are next, starting v13.14.
+
+AUGUST 13, 2026, 6:40 PM
+
+Community wall, rebuilt in v13.11:
+[x] Kill the duplicates, show only the original. Each heart writes its own
+    post, so a shared project hearted by two people made two. Every post
+    now carries a fingerprint of the GARMENT (its inspiration id and
+    version, which survive a share copy), and the wall shows the earliest
+    post of each garment: the original.
+[x] Only actually generated visions go up. Uploaded inspo, fabric photos
+    and Pinterest screenshots never reach the wall, in the heart, the
+    backfill and the all-projects sweep.
+[x] Cards carry the whole horizontal three view render, uncropped, not a
+    cropped front view like the favorites strip.
+[x] Cards about a third larger, and wearing the same glass as a favorite
+    card.
+[x] Three rows instead of one, drifting right to left at slightly
+    different speeds. Fewer rows while the wall is young so a handful of
+    visions is not spread thin.
+[x] The repeated look is gone: a row only loops when one copy of it
+    already runs past the edge of the screen. Padding short rows with
+    copies is what put the same garments across the wall five times.
+[x] Background refresh, never a screen refresh: the wall re reads every 30
+    seconds while it is on screen and repaints only if something changed,
+    keeping every row exactly where it was.
+[x] Everything hearted across all projects reaches it (the v13.9 sweep,
+    now vision only and fingerprint deduped).
+
+AUGUST 13, 2026, 5:35 PM
+
+[x] Stacks fan the right way now: the LATEST version sits top right and
+    each older version steps down-left behind it.
+[x] "8 swatches loaded" line under the fabrics title deleted.
+[x] Deleted and consumed cards no longer appear in the "Choose your
+    favorite inspo image" picker before submitting; only cards actually
+    on the board with a working picture are offered, and a tile whose
+    picture fails to load removes itself.
+
+AUGUST 13, 2026, 5:23 PM
+
+[!] Community wall empty again on v13.8. Diagnosed live: the wall code
+    works, but the open project had zero cards, and the v13.8 backfill
+    only covered the OPEN board. Fixed in v13.9: once per visit the wall
+    sweeps ALL projects on the account and posts every hearted piece.
+    Post ids are deterministic so the sweep can never duplicate.
+[x] Submissions take too long to appear on the map: poll was every 45
+    seconds, now every 15 while the page is visible.
+[x] Submission tiles slightly cropped vertically: strip taller again.
+[x] White hue behind the submission row: the glow is dark now.
+
+AUGUST 13, 2026, 4:32 PM
+
+[x] Speed boost across everything: saves skip the tombstone round trip
+    after the first check, the duplicate sweep skips unchanged boards,
+    sharing snapshots from memory instead of re downloading the project,
+    and the app pre warms its Google connections at load.
+[x] Share shows a popup with the link, a Copy button, and confirmation
+    that it is already copied. Sharing is faster too.
+[x] Projects list says "Shared" left of the date on shared projects.
+[x] Systems Map: traffic tiles way thinner, one line each.
+[x] Systems Map: calmer type, titles not bold (door names, page title).
+[x] Systems Map: Backend door replaced by Operations Room Beta (the
+    submissions themselves open the Brief), standalone beta door removed.
+[x] Submissions strip taller so tiles do not read cropped.
+[x] The empty "All submissions in Drive" tile removed, Open Drive folder
+    already exists by the heading.
+[x] "Open Drive folder" and "last checked" lines pop more now.
+[x] Upload button wider again and a size up.
+[x] Community wall now reflects favorites: entering the wall publishes
+    any hearted card that never got its post (hearts from before the
+    wall existed, or made offline).
+
+AUGUST 13, 2026, 4:10 PM
+
+[x] Projects shareable with a link. BUILT in v13.7: Share button in the
+    drawer copies a /?share=TOKEN link. Recipient signs in with Google
+    as normal, confirms, and the project is COPIED into their account,
+    every picture and the face re-uploaded as their own. Deleting on
+    either side never touches the other. Share name falls back: project
+    name, then client name, then the sharer. No live co-editing.
+[x] Projects are self-contained now: the client's face photo is copied
+    INTO each project on save, so a project carries everything it needs
+    to be shared. The avatar roster keeps its own copy for the client
+    list.
+[x] No dead floating images ever: deleting a card or a whole project now
+    takes its community wall post down first. Each account's hearts make
+    that account's own wall posts, so my delete never touches the copy
+    someone saved and hearted themselves.
+[x] Fixed while mapping the data for sharing: deleting a project could
+    wrongly delete the client's face photo from the SHARED avatars
+    folder, blanking the face in every other project of that client
+    (audit finding 4). A guard now protects the shared folder.
+
+AUGUST 13, 2026, 3:58 PM
+
+[x] Every push that ships a new version must force a sign out on both
+    the MAYA app and the Systems Map, so an update is unmistakable.
+    Done in v13.6: open tabs already signed out via the update watchdog;
+    now a fresh load after a deploy signs out too, on both pages. The
+    Systems Map now carries the same version number as the app, and the
+    regression test fails if the two ever drift apart.
+
+AUGUST 13, 2026, 3:03 PM
+
+Bugs I notice:
+[x] Systems Map still shows no submissions. Root cause: the Drive
+    refresh token on Cloud Run was expired (invalid_grant). FIXED 3:55
+    PM: fresh token minted under In production status, deployed,
+    verified live: 7 submissions listed, deep health all green. Full
+    story in fixes.txt. The map also said "waiting for sign in" instead
+    of the real error; that lie is fixed in v13.5.
+[x] Community board shows nothing. Diagnosed: not Drive, not rules. The
+    pipeline passes a full self test. The wall is empty because hearts
+    publish only at the moment of hearting, and all existing hearts
+    predate the wall. Re-heart any vision and it appears.
+
+Changes I want:
+[x] Delete the "Never delete the Google project" text.
+[x] Put the collapsible sections (Recent changes, prompting engine,
+    architecture) at the bottom of the screen.
+[x] Door cards (Backend, MAYA, Manasiyo.com, Operations Room Beta):
+    remove the arrows, keep every door's text the same font size.
+
+AUGUST 13, 2026, 2:35 PM
+
+Documentation:
+[x] Create this file: my personal log of requests and noticed bugs, with
+    date and time, kept in the folder as text.
+
+Bugs I notice:
+[x] Systems Map shows no submissions, says "Waiting for the one sign in
+    at the top of the page."
+[x] Drive problem, apparently the cause of the above.
+[x] Dragging cards looks glitchy: the card pops, goes invisible for a
+    moment, comes back when I let go.
+[x] Card layering is wrong: whatever I click last should come to the top
+    and stay there. Right now some cards act stuck on a bottom layer even
+    after I click them.
+[x] Version stack order is backwards: pressing stack puts version 1 in
+    front. The LATEST version should be on top.
+
+Changes I want:
+[x] Stacked cards should sit about 30 percent closer together than now.
+[x] The stack button should toggle: press again to unstack.
+[x] Dragging any card of a stacked group should drag the whole stack.
+[x] Fabric drawer: when I swipe the drawer away, the fabrics panel should
+    go with it. Right now it stays on screen.
+[x] Rename "In-house fabrics" to "Mana Siyo fabrics." Add a second tab in
+    the same aesthetics: "My fabrics," the client's own uploads.
+[x] Clients can photograph fabrics with their phone and upload them. Their
+    fabrics live in their own personal drawer, per account, not per
+    project, so a new project can reach fabrics from before. The personal
+    folder holds avatars and fabrics; the project holds everything on its
+    screen (moodboard, references, saves).
+[x] "UPLOAD INSPO" becomes just "UPLOAD," about 20 percent wider. Pressing
+    it asks, snappily: inspo, or my fabric?
+[x] Systems Map: Architecture (local and online) becomes a dropdown like
+    Recent changes.
+[x] Systems Map order: Recent changes first, MAYA prompting engine second,
+    Architecture third, all collapsible.
+
+Process:
+[x] After the changes, run a full audit and the smoke test so nothing that
+    was fixed reappears as a new bug. Keep an internal loop: every request
+    here gets re-checked in later sessions, and a fixed item that breaks
+    again gets marked [!] with a new entry.
+
+────────────────────────────────────────────────────────────
+v13.82 — "Make the voice agent (MAYA) the real intelligence layer"
+(Aug 25, from Fromsa, two messages)
+
+[x] MAYA must see the daily ad clicks — today and yesterday separately —
+    not just a 7-day total. Root cause found and fixed: her snapshot only
+    carried 7-day aggregates. Now today/yesterday/last-7 are in her ads
+    panel, her briefing, and show_panel("ads").
+[x] MAYA must see everything on the admin side she was blocked from.
+    Ads today/yesterday wired; show_panel already returns live painted data.
+[x] Lead Station dynamic: MAYA (and Fromsa) can add leads by voice; Wix
+    leads stay but are labelled "WIX"; added leads merge in and are
+    modifiable. Notes editable by both.
+[x] Identity: "MAYA, this is Fromsa/Paula" — she knows Fromsa (founder) and
+    Paula (teammate) now, and can be taught new people.
+[x] MAYA's soul: a personal markdown record loaded every call, she journals
+    into it.
+[x] Stronger email write ability (goal-steered draft) — still confirm-gated,
+    opens Gmail, never auto-sends. This is a safety rule, not a limitation
+    I can remove: Claude/MAYA never sends mail on your behalf without your
+    click. Ask Fromsa if he wants a different flow.
+[x] Tapping the voice logo must NOT open the drawer. Fixed; drawer stays
+    closed unless he opens it.
+[x] Frontend: Visualize pill always on top of cards (z-index 9000);
+    Pinterest "bring them in" pill dropped lower; avatar switcher no longer
+    cropped (caps height + scrolls + scrolls into view).
+
+[ ] INFRA — Fromsa/owner steps so the new abilities go fully live:
+    1. Buy OpenAI credits (voice returns 429 until then; blocks live test,
+       ad ranking, Visualize).
+    2. Share the internal Google Sheet with the Cloud Run service account
+       (its email shows on Marketing as the GA "share with" address) as a
+       Viewer, AND enable the Google Sheets API on the GCP project. Until
+       both are done, read_team_sheet reports "not connected" and names the
+       SA to share with. Sheet:
+       https://docs.google.com/spreadsheets/d/1LI__xIpcKl4uH595oOhfIdJhJNJL5vBP5-vRJk-Ew0I
+    3. Push v13.82 (Fromsa presses Push).
+
+[?] "Delete nurture" — the word "nurture" does not appear anywhere in the
+    repository (searched all HTML/JS/docs). Need Fromsa to point at where he
+    sees it so it can be removed correctly rather than guessed.
+
+── v13.89 (Claude) ──────────────────────────────────────────────────────────
+[x] Revert Upload + Tap-to-Listen to the playground's plain style. Upload is
+    now a plain text link, a touch brighter at rest, hover holds the same
+    colour a hair faded (constant, not lit), nudged a few pixels lower.
+    Tap-to-Listen already matched the playground.
+[x] Free-trial credits: $2 per account, metered server-side. Image calls are
+    refused at the cap (admins never capped); GET /api/usage feeds the app.
+    Out-of-credits popup with an Upgrade ($5, ~13 renders) placeholder button,
+    plus a "Try popup" dev preview.
+[x] Drawer Stats: a collapsible fold on top of Measurements filling the empty
+    space — a circular credits gauge over four tiles (credits left, cards made,
+    favourites, images rendered).
+[x] Drawer restructure: top label -> "Users"; Projects moved beside the name
+    (right-aligned, same dropdown). Avatar and Projects independent under one
+    account.
+[ ] NEXT (needs Fromsa): wire the real $5 top-up (Stripe) with ~50% margin so
+    a paid balance adds to the trial. The Upgrade button is a placeholder
+    until a payment key + price sign-off.
+
+── v13.90 (Claude) ──────────────────────────────────────────────────────────
+[x] Favorites view: only a Submit button (no Tap to Listen / Switch Fabric /
+    Add Reference — those stay on the inspo card). Submit reveals two options on
+    hover/tap: Community Wall (publish to the wall) and Mana Siyo. Mana Siyo pops
+    a confirm: "we'll email you back a custom quote — cost + timeline," then runs
+    the atelier submission. Amounts not shown (most run $1,500+). Submit pill
+    tightened.
+[x] Design notes (favorites): values are plain words, not pills. Colour values
+    show in their actual colour (Red in red, Green in green). Silhouette / Color
+    / Detail / Material headings kept. Modify (inspo) keeps the exclude-x pills.
+[x] Drawer: Projects pill now matches "Fromsa" — Cormorant, name-size, centred,
+    ALL CAPS, beside the name. USERS / FABRICS / PINTEREST uppercased. Stats and
+    Measurements both always open.
+[x] Upload: brighter at rest, clearly brighter (not faded) on hover, a couple
+    pixels lower.
+[x] Mobile pass: drawer type scales down at phone size (Apple-style ratio); the
+    name no longer truncates beside the Projects pill.
+[ ] NEXT (Fromsa building): the approximate-quote logic behind the Mana Siyo
+    submission, so the email quote can be pre-estimated in-app.
+
+── v13.91 (Claude) ──────────────────────────────────────────────────────────
+[x] Projects pill: use the literal same font as the name ("Fromsa") — Cormorant,
+    same size, italic, not caps — so it isn't oversized.
+[x] Favorites: Community Wall + Mana Siyo as two pills SIDE BY SIDE, always
+    visible (the hover menu vanished before you could click it). Mana Siyo still
+    pops the quote-by-email confirm.
+[x] Favorites: design notes removed from the favorite screen — they live only on
+    the inspo screen now.
+[x] Admin Lead Station: Latest Notes scroll as a marquee when long (pause on
+    hover / while editing); Email now shares the notes' font (colours kept);
+    call icon is a real smartphone, not a telephone handset.
+[x] Admin: Sources of traffic + The bottom line merged into one fold.
+[x] Admin: drawer now answers a Mac trackpad two-finger swipe (the missing piece
+    was wheel/deltaX; touch + mouse were already wired). Right-to-left pulls it
+    in, left-to-right pushes it back.
+[i] "See actual users": signed-in Gmail accounts already show in Admin under
+    Users (/api/admin/users). Cloud Run / GCP console access is a Google Cloud
+    IAM grant Fromsa controls; the app can't hand that out.
+[ ] OPEN: if the trackpad swipe opens the wrong way on Fromsa's machine, flip the
+    two wAccum sign checks in _wireDrawerSwipe (one-line change).
+
+── v13.92 (Claude) ──────────────────────────────────────────────────────────
+[x] Favorites pills relabelled "Post to Community Wall" / "Get it made", smaller,
+    styled like the X/heart glass icons (calm, no pulse).
+[x] Mana Siyo popup: no dashes, slightly larger body copy, Request-my-quote is a
+    smaller centred pill.
+[x] Favorite card held centered when stepping left/right — the caption slot is a
+    fixed two lines so long/short captions don't jump the image.
+[x] Favorites nav arrows nudged nearer the corners.
+[x] Avatar switcher: the name now opens it too (bigger target than the caret).
+    If it still misbehaves, need the exact symptom.
+[x] Confirmed: submit pills + Mana Siyo popup are favorites-only; the inspo card
+    keeps Tap to Listen / Switch Fabric / Add Reference; design notes + dissect
+    stay on the inspo screen.
+[ ] NEXT: bring the playground up to the current app, then add a pinch-to-zoom
+    "map" of the whole board to the PLAYGROUND ONLY (floor ~10% card size, Maya
+    logo resets to 100%). Large; separate chunk.
+
+── Aug 26: Marketing course batch (Claude Code Marketing, Nick Saraev) ────────
+Summary doc created in Drive 2026 folder: "Claude Code Marketing Full Summary".
+
+FLAGSHIP, agreed next build:
+[ ] SPEED TO LEAD. On a Wix form submit: within ~30-60s, Maya SMS + emails the
+    lead (a 15-second read, humanized, paraphrasing their request), AND places a
+    <15s voice heads-up call to Fromsa ("this is Maya, <name> is interested in
+    <tier>"), because he is too late for email/dashboards. Phone number + the
+    automated SMS/call via Quo (formerly OpenPhone).
+    NEEDS FROM FROMSA: (1) a Quo/OpenPhone account + its API key/webhook;
+    (2) his full phone number entered in config at build time (Claude will NOT
+    store it); (3) the humanized copy prompt he will paste; (4) explicit sign-off
+    that auto-send to the lead is intended (crosses the usual no-auto-send line;
+    legitimate here because it is his own reply to his own inbound lead, and the
+    call to him is the human checkpoint).
+
+BUILDABLE NOW (no external accounts):
+[ ] Lead Station -> Hunter.io style. Columns: Full name, Email, Company/Title,
+    plus more. Scrollable table with the header row AND first column frozen.
+    Rename the recommendation column header to "Actions". Add a real header/title
+    row (missing now). Marquee: one shared speed for every row (some run too fast).
+    New columns: Quote amount, Invoice 1 (first half), Invoice 2 (second half).
+[ ] Pay links: Maya auto-generates a pay link from the quote amount and sends it
+    on SMS + email. Booking link = $150 consultation deposit; pay link = the
+    quote. (Links live in the 2026 Google Sheet for now.)
+[ ] Admin drawer = COPY THE FRONTEND EXACTLY (functionality, not just looks):
+    the swipe architecture, the hamburger style, its distance from the drawer
+    corner. Today the reverse swipe triggers the browser back-gesture ("max wipe")
+    because admin uses a fixed panel + wheel handler instead of the frontend's
+    native horizontal scroll-snap. Port the frontend architecture so it is exact.
+    Content inside may differ. Asked ~10 times; make it exact.
+[ ] Center the drawer section headings (Systems, The Vault, Behind the scenes).
+[ ] Admin hover pills: hovering "ADMIN" drops pills beneath it (like Mana Siyo's
+    Wix Studio / Design Studio), e.g. Operations Room / Playground, plus a link
+    to the 2026 Google Sheet for now.
+[ ] Maya controls the drawer by voice: "open the drawer" / "close the drawer",
+    and auto-open the drawer when something needs Fromsa's confirmation.
+[ ] Maya should know YESTERDAY's Wix stats (she doesn't; Wix shows them).
+
+LATER (design / accounts needed):
+[ ] Ad creative skill + Higgsfield AI video, on a new admin content page.
+[ ] MCP / API for Maya, so Claude and Maya share the same tools (a "Maya"
+    connector for Claude). Design first.
+[ ] Personalized copy (cold email + fuzzy variables): can be done with Claude
+    directly; low priority to build into the app.
+
+── Aug 26: MAYA app nurture (re-engagement emails) ───────────────────────────
+[ ] Maya sends a lifecycle email to a signed-in MAYA APP user who GENERATED
+    something but has not returned in ~2 days: a warm "your design is waiting,
+    come back and keep going" follow-up (inspired by the Quo "continue your
+    setup" email). This is the app-side nurture, distinct from Speed to Lead
+    (which is the Wix atelier leads).
+    DATA WE ALREADY HAVE: metrics/users/<hash>.json {email, firstSeenMs,
+    lastSeenMs} and metrics/trial/<hash>.json {email, images, updatedAtMs}. So
+    "generated" = trial images > 0; "idle 2 days" = lastSeenMs older than 2 days;
+    we have the email. A fuzzy variable (one line about what they made) comes
+    from their last render's caption.
+    NEEDS: (1) an email sender. This SHARES the Speed to Lead email layer, build
+    once, use for both. Options: a proper ESP (Resend/SendGrid/Postmark) with
+    domain auth (SPF/DKIM) and an unsubscribe link, or the Gmail API (has daily
+    send caps + deliverability risk for bulk). ESP is the right tool for nurture.
+    (2) Unsubscribe / opt-out handling + honoring it (CAN-SPAM: unsubscribe +
+    physical address; the Quo email Fromsa shot has the unsubscribe footer).
+    (3) A daily scheduler on the server (Cloud Scheduler / cron) that finds the
+    "generated + idle 2 days + not yet emailed + not unsubscribed" set and sends.
+    (4) The copy (Claude can draft it now; unblocked).
+    Auto-send to app users is the same category Fromsa already approved for
+    Speed to Lead. Queue AFTER Speed to Lead since they share the email layer.
+
+── v13.95 (Claude): drawer floor + Lead Station restructure + invoicing ──────
+[x] Drawer floor: the MAYA logo is a true circle now (new file logo-circle.png,
+    cut from logo-208.png — transparent corners, no square-in-a-ring). The dock
+    and its divider sit lower. A small MAYA pill floats under the logo and toggles
+    the voice on/off (mirrors the live state).
+[x] Lead Station: Invoice 1 and Invoice 2 columns removed. "Quote" renamed to
+    "Last Quote" — defaults to the tier's price (Signature · $600 → 600), reading
+    faint until set by hand, then editable and saved (a higher quote after the
+    call overwrites it). The day-count line under the name is gone; the
+    "Signature · $600" signature line stays.
+[x] Actions: email + phone + pay-link icons only. The recommendation text
+    (EMAIL · FOLLOW UP / CALL · 9 DAYS QUIET) is gone.
+[x] Columns are draggable — drag any header to reorder; the arrangement persists
+    per browser; the first column stays frozen.
+[x] Invoicing skill wired in: the pay-link icon opens a composer prefilled from
+    the lead (name, price, tier, note) in the skill's format, with a "Copy brief
+    for Maya" button and a paste-back field that saves the Wix pay link on the
+    lead. A saved link glows the icon and rides the next email draft. The real Wix
+    link is still built through the Invoicing skill (so the client's MAYA image,
+    spec bullets, tax group and price semantics are right) — no money is created
+    by a stray click.
+[ ] OFFERED: real one-click Wix pay-link creation server-side, behind an in-page
+    confirm, if Fromsa wants clicking to create the link directly. Not built yet
+    (money-touching; the skill path is safer and higher-quality for now).
+[q] Fromsa asked earlier whether the ADMIN hover pill should be just ONE — not
+    captured in the log at the time. Currently three (operations room / playground
+    / the sheet). Awaiting which single link he wants before collapsing them.
+
+── v13.96 (Claude): dropdown fix, trial economics, logo email + big backlog ──
+[x] Avatar/username dropdown "hidden" — ROOT CAUSE found: the switcher is a flex
+    item in a column that overflows, and with no flex-shrink:0 it collapsed to a
+    2px sliver (border only) while overflow:hidden clipped its rows. Fixed with
+    #drawer-avatar-switcher{flex:0 0 auto}. Verified headless: opening it now
+    yields a real ~72px panel. (Asked ~10 times; this is the actual fix.)
+[x] Trial economics: an image now meters at $0.05 (was $0.19 default, higher at
+    full quality), so $2 buys ~40 generations. PRICE_IMAGE default 0.05.
+[x] Reset everyone now + reset on every release: TRIAL_EPOCH (='v13.96'). Each
+    meter records its epoch; when the epoch changes the meter zeroes on next read
+    (full $2 again). Bumping TRIAL_EPOCH each release resets everyone automatically.
+[x] Circular logo emailed to worldofsiyo@gmail.com (PNG attached, transparent bg).
+[ ] Username editable when it shows a date / "clickable and changeable" — the name
+    currently opens the switcher on click; needs a distinct edit affordance. QUEUED.
+[ ] Admin "Users" label wrong / "we have more users today" — need to confirm
+    whether it's the admin user COUNT that's stale or the label text. QUEUED (ask).
+[ ] Randomize (hamburger name/avatar) doesn't work + should be faster — depends on
+    the headshots assets (MAYA_PUBLIC_HEADSHOTS) which aren't in this checkout;
+    needs live-asset verification. QUEUED.
+[ ] Hey-Maya / "Maya is listening" pill: a toggle to turn it off from inside the
+    hamburger (admin). QUEUED.
+[ ] Inspiration version-0: a card generated from inspiration shows the source inspo
+    as a small circle (like the fabric preview) bottom-right; in the image viewer
+    it's clickable to expand the original (v0), swipe left/right to the starting
+    point. QUEUED (medium).
+[ ] Version/update popup on sign-in ("what's new, we're on v14"); auto-refresh +
+    show it first/second login after an update. QUEUED (medium).
+[ ] Maya feature-request log: frontend users ask Maya for features; Maya logs them
+    to a NON-DELETABLE internal store with everyone's history, summarized for Claude
+    to pick up; Maya <-> Claude. QUEUED (large; new server store).
+[ ] Per-user personal backgrounds: a folder per user holding their background
+    (currently the shared Birth-of-a-Star); users can change/generate/save their
+    own Maya background. QUEUED (large; storage + generation + UI).
+
+── v13.97 (Claude): the "changes don't reflect" fix ─────────────────────────
+LIVE TEST (via Fromsa's signed-in Chrome): the frontend served 13.96; his admin
+TAB was showing a CACHED 13.94. A forced reload loaded 13.96 with every change
+(circular logo, Last Quote, no invoice cols, MAYA toggle). So the deploy pipeline
+WORKS; the admin tab was simply never reloaded since the deploys.
+Unique signed-in users right now: 4 (worldofsiyo, fromsa@manasiyo, april.gong.biz,
+jejuan.narcisse.art). "4" is correct; non-signed-in visitors are the Wix count.
+[x] Root cause: the app (index.html) has a 5-min version poller that auto-reloads
+    on a new deploy, but the ADMIN (status.html) only checked the version ON LOAD.
+    Added the same poller to the admin (checkAdminUpdate; 5-min interval + on
+    refocus + 8s after load; skips while Maya is live; reload triggers the on-load
+    sign-out). Now an open admin tab refreshes itself.
+[x] "Recent changes" was stuck at Aug 24 because no new dated entries were added
+    while shipping. Added Aug 26/27 entries for v13.94-13.97.
+[note] Hosting headers were ALREADY Cache-Control:no-cache for HTML; nothing to
+    fix there. A normal reload always revalidates; the issue was only open tabs.
+[ ] Still queued from the last batch: username editable-when-date; admin "Users"
+    is the right count (4) but he wants to confirm it tracks growth; randomize
+    speed/for-all-users; Hey-Maya toggle OFF BY DEFAULT and in the drawer;
+    inspiration version-0 swipe; a dedicated "what's new" popup modal (the
+    changelog is current now, but not shown as a popup yet); Maya feature-request
+    log; per-user backgrounds.
+
+── v13.98 (Claude): admin polish batch + playground overhaul, round 1 ────────
+[x] ADMIN hover: just "the sheet", vertically closer (contiguous hover zone),
+    lingers ~0.9s so it can be clicked. (The MAYA door card keeps its own rooms.)
+[x] Admin drawer full-bleed like MAYA's (no inset glass card); hamburger glued
+    to the drawer edge per frame, the frontend's exact mechanism.
+[x] Drawer floor: logo smaller + tighter circle crop + lower; divider lower; the
+    pill sits at the logo's RIGHT and is the HEY MAYA wake toggle, reading
+    "Turn on Hey Maya" / "Turn off Hey Maya" (off by default, as it already was).
+    The logo itself stays the live voice line.
+[x] One-click invoice: /api/admin/invoice-create builds a real Wix pay link with
+    the invoicing skill's exact recipe (service tax group, name-first title,
+    single use, not shippable, logo fallback image, image verified in the
+    response). The composer prefills name/price/description and the link saves
+    to the lead + rides the next email.
+[x] Frontend: Projects pill text truly centered (caret absolute); fabric captions
+    half height, everything centered; Randomize fixed for everyone (the 2MB
+    headshot PNGs now downscale to 640px JPEG at fetch, before painting or the
+    face analysis); credits copy carries no dashes and says ~100 renders for $5.
+[x] No dashes anywhere in MAYA UI copy (swept admin + frontend visible strings).
+[x] PLAYGROUND round 1: it is now a live copy of the current app (all current
+    features incl. Stats, Measurements, avatar dropdown), PLUS:
+    - pinch/scroll zoom of the moodboard down to 10% (survey mode; cards pause
+      interaction while zoomed; tapping the MAYA logo zooms back to 100%)
+    - opens on the COMMUNITY WALL, favorites below
+    - Background fold in the drawer: "Birth of a Star" named as the house
+      background + "Generate a new background" pill; generating never auto-swaps,
+      tap the new thumb to apply; personal choice persists per browser.
+[ ] PLAYGROUND round 2 (queued): the inspiration shown INSIDE the generated card
+    (small circle like the fabric preview) + clickable to expand the original as
+    version 0 with swipe; card centered in the viewer; right-hand panel with
+    GPT-written garment notes (era, design style, looks; bullets + paragraphs).
+[ ] Queued still: username editable when it shows a date; per-user background
+    folders server-side (the playground version is per-browser for now).
+
+── v13.99 (Claude): playground feedback round ────────────────────────────────
+[x] Zoom no longer fights scrolling: it fires ONLY on a trackpad pinch (two
+    fingers) or Cmd/Ctrl + scroll on a mouse. A plain two-finger scroll always
+    navigates the screens. Verified headless: plain wheel does not zoom, ctrl
+    wheel does, logo resets.
+[x] Screen order is now 1) inspo page 2) favorites 3) community wall, landing on
+    inspo. Done with CSS order + a position map, so all wall/favorites logic
+    (keyed to data-screen numbers) is untouched.
+[x] Background cards sized like the fabric cards: two columns, 16:10 image, the
+    name underneath each ("Birth of a Star", "My background", "Generated
+    background"). Generate still never auto-swaps.
+[x] Projects pill a little smaller (16px, still Cormorant italic, centered) in
+    BOTH the app and the playground.
+
+── v14.00 (Claude): the honest meter + playground round 3 + invoice sending ──
+[x] ECONOMICS, honest at last: a card now meters at its true cost, $0.065
+    (PRICE_IMAGE 0.13 x 0.5 for medium). The ChatGPT audit was right that the
+    old $0.05 base was being halved to $0.025. $2 trial = ~30 card renders.
+    TRIAL_EPOCH v14.00 resets everyone to the full 30.
+[x] Stats speak in CARDS, not dollars: gauge reads "30 card renders left"; the
+    credits-left tile became Projects; "Images rendered" renamed Cards rendered;
+    /api/usage now reports perCardUsd so the gauge stays honest if pricing moves.
+    Out-of-credits popup: "30 free card renders... about 75 more for $5".
+[x] Invoice composer: Email <first name> and Text <first name> buttons send the
+    pay link (Gmail draft / Messages with the link prefilled, never auto-sent).
+[x] Admin hover chip "the sheet": centered on the ADMIN wordmark and tighter.
+[x] PLAYGROUND zoom v3: floor 25 percent; zooms to dead center (the Dying Star);
+    the screens LOCK while zoomed so scrolling can never pull favorites up; zoom
+    past 92 percent snaps home to 100, which also fixes the stuck +/unclickable
+    cards; plain scroll never zooms (pinch or Cmd/Ctrl+scroll only).
+[x] PLAYGROUND: the amber Playground label rides beside the wordmark, same row.
+[x] PLAYGROUND: card halo ~28 percent quieter, closer to glass.
+[x] PLAYGROUND backgrounds: every generated background is SAVED as its own card,
+    plus an Upload a background pill; tapping any card applies it; kept per
+    browser (server-side per-user folders still queued).
+[x] Viewer action rows centered as one column (both app and playground).
+[x] Emailed: typography audit (MAYA vs Apple) + unit economics update.
+[ ] QUEUED, the $50 consultation flow (his spec): after Get it made, offer a $50
+    consultation deposit; after paying, popup: "We'll send you a confirmation
+    link within two days. Your $50 goes toward your final order." Consultation
+    ~2 days out. NEEDS: the $50 pay link (static Wix link or via invoice-create).
+[ ] QUEUED, from the audit + tonight's testing: VISION ERROR 403 on the upload
+    card; dissect design-notes mismatch; long delay after Get it made; editing a
+    lead's email orphans its note history (needs key migration); README + verify-
+    live stale; browser regression not a deploy gate; playground GPT garment
+    notes panel + inspiration version-0 chip.
+
+── v14.01 (Claude): THE LAG, found and killed + the angry-batch fixes ─────────
+ROOT CAUSE of "the admin swipe still lags", asked since the beginning: the
+admin hamburger inherits transition:all .2s from the base .top-btn pill, so its
+transform animated 200ms BEHIND the drawer on every frame. The frontend always
+overrode that to opacity-only; the admin never did. Fixed (+ the scroll handler
+now writes the transform synchronously, no requestAnimationFrame delay).
+[x] Admin drawer = the frontend's #notes-drawer glass VERBATIM: same inset
+    (10/18/10/0), gradient, border, 18px radius, blur 28, shadows. Only the
+    content differs. (v13.98's full-bleed was my wrong guess; reverted.)
+[x] Playground zoom v4: the cluster is fitted around its own BOUNDING BOX and
+    glides to screen center, so cards are never cropped at any zoom; the Tap to
+    Listen / Upload bar steps OUT of the board while zoomed (parked fixed,
+    never shrinks); the screens are pinned hard while zoomed (overflow hidden +
+    snap disabled + scrollTop pinned to 0), so favorites can NEVER pull in;
+    plain wheel while zoomed is fully consumed. Verified live headless:
+    pinned=true, plainWheelInert=true, snap+scroll restored at 100 percent.
+[x] Stats: the circle carries the PRICE again ($ left of $2) over a ring 30
+    percent thinner; the "Cards rendered 0" tile became "Visualizations left"
+    (how many cards the money still buys). Cards made / Favorites / Projects stay.
+[x] Background pills sit lower, stacked, with space between them.
+[x] Community wall mirrors the hearts BY FORCE now: entering the wall sweeps
+    this account's posts for the open project against the actually-favorited
+    cards; any orphan (missed unheart, deleted card, killed tab) is deleted,
+    storage copy included. Other accounts' posts are never touched.
+[x] Every popup centered (invoice composer: title, copy, labels, inputs,
+    button rows; description text stays left for readability).
+[x] Recent changes: entries relabeled to Fromsa's own dates (Aug 26, not the
+    server's Aug 27) + new entry added.
+[x] Repo cleanup round 1: dead FILES moved to _to_delete (root audit html,
+    tests scratch screenshot). Dead-code deletion inside index.html is queued
+    as a careful pass (good Codex cross-check candidate; handoff is current).

@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAYA Marketing</title>
+<meta name="maya-version" content="14.26">
+<script>
+// v13.43: this page NEVER clears the shared sign in. Admin owns the deploy
+// sign-out; marketing clearing it too was why the page kept asking again.
+try {
+  const _vNow = (document.querySelector('meta[name="maya-version"]') || {}).content || '';
+  localStorage.setItem('maya_seen_version_mkt', _vNow);
+} catch (_) {}
+</script>
+<link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#070a14;--line:rgba(255,255,255,0.22);--ink:#eef2ff;
+    --dim:rgba(238,242,255,0.55);--faint:rgba(238,242,255,0.35);--grp:rgba(245,250,255,0.82);
+    --green:#4ade80;--amber:#fbbf24;--blue:rgba(245,250,255,0.85)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#000 url('/aesthetics/ui/birth-of-a-star.png') center / cover no-repeat fixed;
+       color:var(--ink);font-family:'Cormorant Garamond',Georgia,serif;padding:80px 28px 40px;min-height:100vh}
+  .wrap{max-width:1000px;margin:0 auto;text-align:center}
+  #top-bar{position:fixed;top:0;left:0;right:0;height:60px;z-index:200;display:flex;align-items:center;
+    justify-content:space-between;padding:0 28px;pointer-events:none}
+  #top-bar > *{pointer-events:auto}
+  #top-left-brand{display:flex;align-items:center;gap:10px;margin-left:-8px}
+  #top-left-brand img{width:52px;height:52px;object-fit:contain;opacity:0.92}
+  .brand-title{font-family:'Cormorant Garamond',serif;font-size:20px;letter-spacing:0.22em;
+    color:rgba(255,255,255,0.9);text-transform:uppercase}
+  .top-btn{background:transparent;border:0.5px solid var(--line);border-radius:100px;padding:6px 14px;
+    font-family:'Jost',sans-serif;font-size:10px;font-weight:300;letter-spacing:0.15em;
+    text-transform:uppercase;color:var(--blue);cursor:pointer;transition:all .2s;
+    backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%)}
+  .top-btn:hover{border-color:rgba(255,255,255,0.42)}
+  .top-btn.hamburger{width:32px;height:28px;padding:0;display:flex;align-items:center;justify-content:center}
+  .hamburger-icon{display:inline-flex;flex-direction:column;gap:3px;width:14px}
+  .hamburger-icon span{display:block;height:1px;width:100%;background:currentColor;border-radius:1px}
+  /* v13.56: the drawer slides in from the right and the hamburger rides
+     with it, resting just outside the drawer's edge. Same duration and
+     curve as Admin and the MAYA app, one family. */
+  #drawer{position:fixed;top:10px;right:10px;bottom:10px;width:290px;z-index:210;padding:14px;border-radius:20px;
+    overflow-y:auto;
+    border:0.5px solid var(--line);background:rgba(8,12,26,0.88);
+    backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
+    transform:translateX(calc(100% + 20px));opacity:0;pointer-events:none;
+    transition:transform .42s cubic-bezier(0.16,1,0.3,1),opacity .42s ease;
+    text-align:left}
+  #drawer.open{transform:none;opacity:1;pointer-events:auto}
+  .top-btn.hamburger{transition:transform .42s cubic-bezier(0.16,1,0.3,1)}
+  body.drawer-open .top-btn.hamburger{transform:translateX(-290px)}
+  @media (max-width:640px){ body.drawer-open .top-btn.hamburger{transform:none} }
+  #drawer h3{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.24em;text-transform:uppercase;
+    color:var(--faint);margin:8px 6px 6px}
+  #drawer a{display:block;padding:8px 10px;border-radius:12px;text-decoration:none;color:var(--ink);
+    font-size:15px;line-height:1.25}
+  #drawer a small{display:block;font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.1em;
+    color:var(--faint);margin-top:2px}
+  #drawer a:hover{background:rgba(255,255,255,0.05)}
+  h2.grp{font-size:11.5px;letter-spacing:0.26em;text-transform:uppercase;color:var(--grp);
+    font-family:'Jost',sans-serif;font-weight:300;margin:22px 0 8px}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:6px}
+  .tile{border:0.5px solid var(--line);border-radius:100px;background:rgba(10,16,34,0.55);
+    backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+    padding:6px 14px;display:flex;align-items:baseline;justify-content:center;gap:8px}
+  .tile .k{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim)}
+  .tile .v{font-size:16px}
+  .tile.live .v{color:var(--green)}
+  .panel{border:0.5px solid var(--line);border-radius:18px;background:rgba(8,12,26,0.55);
+    backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+    padding:16px 18px;text-align:left}
+  .note{font-family:'Jost',sans-serif;font-size:10.5px;color:var(--dim);line-height:1.8;
+    border:0.5px dashed var(--line);border-radius:14px;padding:12px 14px;text-align:left}
+  .note b{color:var(--ink);font-weight:400}
+  .note code{font-family:ui-monospace,Menlo,monospace;font-size:10px;color:var(--amber)}
+  table{width:100%;border-collapse:collapse;font-family:'Jost',sans-serif;font-size:11px;color:var(--ink)}
+  th{font-size:8.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--faint);
+     font-weight:300;text-align:left;padding:6px 8px}
+  td{padding:7px 8px;border-top:0.5px solid rgba(255,255,255,0.07)}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .src-tag{display:inline-block;padding:2px 8px;border-radius:100px;font-size:8.5px;letter-spacing:0.14em;
+    text-transform:uppercase;border:0.5px solid var(--line);color:var(--dim);margin-left:8px}
+  .src-tag.paid{color:var(--amber);border-color:rgba(251,191,36,0.4)}
+  .bars{display:flex;align-items:flex-end;gap:3px;height:110px;padding:8px 2px 0}
+  .bar{flex:1 1 0;background:linear-gradient(to top,rgba(120,170,255,0.75),rgba(190,215,255,0.35));
+    border-radius:3px 3px 0 0;min-height:2px;position:relative}
+  .bar:hover{background:linear-gradient(to top,rgba(160,200,255,0.95),rgba(220,235,255,0.6))}
+  .bars-axis{display:flex;justify-content:space-between;font-family:'Jost',sans-serif;font-size:8.5px;
+    letter-spacing:0.12em;color:var(--faint);margin-top:6px}
+  .money{font-family:'Cormorant Garamond',serif;font-size:26px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:760px){ .grid2{grid-template-columns:1fr} body{padding:76px 14px 30px} }
+  .status-bar{border:0.5px solid var(--line);border-radius:100px;padding:10px 18px;display:flex;
+    align-items:center;gap:14px;background:rgba(10,16,34,0.5);margin:6px 0 10px}
+  details.fold{margin:16px 0 8px;position:relative}
+  details.fold summary{list-style:none;cursor:pointer;
+    /* v13.59: the arrow rides BESIDE the title, not under it. */
+    display:flex;align-items:center;justify-content:center;gap:8px}
+  details.fold summary::-webkit-details-marker{display:none}
+  details.fold summary h2.grp{margin:0}
+  details.fold summary::after{content:'\25BE';font-family:'Jost',sans-serif;font-size:11px;color:var(--faint);
+    transition:transform .2s}
+  details.fold:not([open]) summary::after{transform:rotate(-90deg)}
+  /* v13.59: the jump to the Wix Analytics dashboard, top right of the section. */
+  h2.grp .grp-maya{color:#a9c9ff}
+  /* v13.64: the jump is small and rides beside the name, inside the title row. */
+  .wix-jump{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;
+    width:16px;height:16px;margin:0 6px 0 5px;
+    font-family:'Jost',sans-serif;font-size:10px;text-decoration:none;
+    color:var(--dim);border:0.5px solid var(--line);border-radius:100px;
+    width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+    transition:all .2s}
+  .wix-jump:hover{color:var(--ink);border-color:rgba(255,255,255,0.5)}
+  #checked-at{font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.16em;color:var(--faint);
+    text-transform:uppercase;margin-bottom:10px}
+  /* v13.44: the paid section is one dashboard now, drawn the way Google Ads
+     draws its own: metric chips, one chart, a line per source, then the
+     campaign table underneath. */
+  .metric-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .metric-chip{font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--dim);border:0.5px solid var(--line);border-radius:100px;padding:5px 13px;
+    background:transparent;cursor:pointer;transition:all .2s}
+  .metric-chip:hover{color:var(--ink)}
+  .metric-chip.on{color:var(--ink);border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.06)}
+  /* v13.54: the D / W / M range toggle, a smaller cousin of the metric chip. */
+  .range-chip{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.1em;
+    padding:4px 9px;border:0.5px solid var(--line);border-radius:100px;background:transparent;
+    color:var(--dim);cursor:pointer;transition:all .2s}
+  .range-chip:hover{color:var(--ink)}
+  .range-chip.on{color:var(--ink);border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.06)}
+  /* v13.56: the today ticker. A quiet marquee riding the top bar between
+     the wordmark and the hamburger, reading the day like a news line, in
+     the same Jost small caps the labels wear. */
+  #ticker{flex:1;min-width:0;overflow:hidden;margin:0 26px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
+    mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+  /* v13.59: the line is doubled and slides half its width, so it starts
+     mid-story with words already on screen, seamless, and a touch faster. */
+  #ticker-inner{display:inline-block;white-space:nowrap;
+    font-family:'Jost',sans-serif;font-weight:300;font-size:10px;letter-spacing:0.18em;
+    text-transform:uppercase;color:var(--blue);line-height:28px;
+    animation:tickerslide 34s linear infinite;will-change:transform}
+  #ticker:hover #ticker-inner{animation-play-state:paused}
+  #ticker-inner .tk-sep{color:var(--faint);margin:0 14px}
+  #ticker-inner .tk-red{color:#f87171}
+  #ticker-inner .tk-amber{color:var(--amber)}
+  @keyframes tickerslide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @media (max-width:760px){ #ticker{display:none} }
+  /* v13.56: the pair pills. v13.59: manasiyo.com in white, MAYA in the
+     light blue of the logo's edges, a thin bar between them. */
+  .tile .v .pair-b{color:#a9c9ff}
+  .tile .v .pair-bar{color:var(--faint);margin:0 6px;font-weight:300}
+  .pair-legend{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--faint);margin:2px 0 6px}
+  .pair-legend .lg-maya{color:#a9c9ff}
+  /* v13.54: the chart hover layer. */
+  #ad-tip{position:absolute;top:8px;pointer-events:none;display:none;z-index:5;
+    padding:8px 11px;border-radius:12px;border:0.5px solid var(--line);
+    background:rgba(8,12,26,0.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    font-family:'Jost',sans-serif;font-size:10.5px;letter-spacing:0.04em;color:var(--ink);
+    text-align:left;white-space:nowrap}
+  #ad-tip .tip-date{color:var(--faint);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px}
+  #ad-tip .tip-row{display:flex;align-items:center;gap:6px;margin-top:2px}
+  #ad-tip .tip-row .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+  /* v13.54: leads list. v13.55: the notes column, clipped to three lines. */
+  #leads-table td{font-size:14.5px;vertical-align:top}
+  #leads-table .lead-when{color:var(--faint);font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.08em;margin-top:2px}
+  #leads-table .lead-note{font-family:'Cormorant Garamond',serif;font-size:14px;line-height:1.45;color:var(--dim);
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  /* v13.62: the Lead Station. Small round CTAs under each name: draft the
+     next email, place the call, drop a note. Same glass as every pill. */
+  /* v13.66: the bottom line. The funnel reads left to right; the tiles under
+     it carry the derived numbers nothing else on the page states. */
+  .bl-funnel{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
+    padding:6px 0 14px;border-bottom:0.5px solid rgba(255,255,255,0.08);margin-bottom:12px}
+  .bl-step{text-align:center;min-width:104px}
+  .bl-step .v{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--ink)}
+  .bl-step .k{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--dim);margin-top:2px}
+  .bl-arrow{font-family:'Jost',sans-serif;font-size:10px;color:var(--faint);text-align:center}
+  .bl-arrow b{display:block;color:#a9c9ff;font-weight:400;font-size:11px}
+  .bl-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+  .bl-tile{border:0.5px solid rgba(255,255,255,0.12);border-radius:14px;padding:10px 14px;text-align:center}
+  .bl-tile .v{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--ink)}
+  .bl-tile .v.good{color:var(--green)} .bl-tile .v.bad{color:var(--amber)}
+  .bl-tile .k{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:3px;line-height:1.6}
+  .lead-rec{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim)}
+  .lead-ctas{display:flex;gap:6px;margin-top:6px}
+  .lead-cta{width:26px;height:22px;border-radius:100px;border:0.5px solid var(--hair);background:transparent;
+    color:var(--dim);cursor:pointer;font-size:11px;line-height:1;display:inline-flex;align-items:center;justify-content:center;
+    transition:all .2s;text-decoration:none}
+  .lead-cta:hover{border-color:var(--hair-hi);color:var(--ink)}
+  .lead-cta[disabled]{opacity:.45;cursor:default}
+  .lead-note-row td{padding-top:0}
+  .lead-note-box{display:flex;gap:8px;align-items:flex-start;margin:4px 0 8px}
+  .lead-note-box textarea{flex:1;min-height:52px;resize:vertical;border-radius:12px;border:0.5px solid var(--hair);
+    background:rgba(255,255,255,0.03);color:var(--ink);font-family:'Cormorant Garamond',serif;font-size:14px;padding:8px 12px;outline:none}
+  .lead-note-box textarea:focus{border-color:var(--hair-hi)}
+  .lead-note-saved{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);margin-top:4px}
+  .chart-legend{display:flex;gap:18px;font-family:'Jost',sans-serif;font-size:9.5px;
+    letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin:10px 2px 0}
+  .chart-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+  #ad-chart{width:100%;height:190px;display:block}
+  /* v13.48: subtle axes. The y labels ride the gridlines; the x row names
+     every day under the chart. */
+  #ad-ylabels span{position:absolute;left:4px;transform:translateY(-50%);
+    font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.08em;color:var(--faint);
+    background:rgba(8,12,26,0.55);padding:0 4px;border-radius:6px;pointer-events:none}
+  #ad-xaxis{justify-content:space-between}
+  #ad-xaxis span{flex:1;text-align:center}
+  #ad-xaxis span:first-child{text-align:left}
+  #ad-xaxis span:last-child{text-align:right}
+  #ad-yaxis-word{font-size:8.5px;color:var(--faint);letter-spacing:0.1em}
+  .chart-legend .lg-line{display:inline-block;width:16px;height:0;border-top:2px solid var(--dim);
+    margin-right:6px;vertical-align:middle}
+  .chart-legend .lg-line.thin{border-top-width:1px;opacity:0.6}
+  .chart-legend .lg-line.dash{border-top-style:dashed}
+  .status-word{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase}
+  .status-word.on{color:var(--green)}
+  .status-word.off{color:var(--faint)}
+</style>
+</head>
+<body>
+
+<div id="top-bar">
+  <div id="top-left-brand">
+    <!-- v13.35: home is the Systems Map, from every back room. -->
+    <a href="/status.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit" title="Back to Admin">
+      <img src="/aesthetics/ui/logo-208.png" alt="">
+      <span class="brand-title">Marketing</span>
+    </a>
+  </div>
+  <!-- v13.56: the day reads itself out between the wordmark and the menu. -->
+  <div id="ticker" aria-label="Today, in one line"><span id="ticker-inner">The numbers are on their way.</span></div>
+  <button class="top-btn hamburger" onclick="toggleDrawer()" title="Menu" aria-expanded="false" aria-controls="drawer">
+    <span class="hamburger-icon"><span></span><span></span><span></span></span>
+  </button>
+</div>
+
+<div id="drawer">
+  <h3>MAYA</h3>
+  <a href="/status.html">Admin<small>Health, submissions, users, systems map.</small></a>
+  <a href="/marketing.html">Marketing<small>This page.</small></a>
+  <a href="/operations.html">Operations Room Beta<small>Every client submission.</small></a>
+  <a href="https://maya.manasiyo.com" target="_blank">MAYA<small>The app itself.</small></a>
+  <a href="/playground.html">Playground<small>The private staging copy.</small></a>
+  <h3>Outside tools</h3>
+  <a href="https://manasiyo.com" target="_blank">Manasiyo.com<small>The site these visitors land on.</small></a>
+  <a href="https://analytics.google.com/" target="_blank">Google Analytics<small>The property behind these numbers.</small></a>
+  <a href="https://ads.google.com/" target="_blank">Google Ads<small>Search and shopping campaigns.</small></a>
+  <a href="https://adsmanager.facebook.com/" target="_blank">Meta Ads Manager<small>Facebook and Instagram.</small></a>
+  <a href="https://manage.wix.com/" target="_blank">Wix dashboard<small>Manasiyo.com itself: forms, pages, analytics.</small></a>
+  <h3>Legal</h3>
+  <a href="/privacy.html" target="_blank">Privacy policy<small>What MAYA keeps.</small></a>
+</div>
+
+<div class="wrap">
+  <div id="checked-at">loading&#8230;</div>
+
+  <div id="signin-panel" class="status-bar">
+    <span style="font-size:14.5px;color:var(--dim)">Sign in once and the marketing numbers unlock.</span>
+    <span id="gsi-slot" style="margin:0 0 0 auto"></span>
+  </div>
+
+  <!-- v13.56: one section for both properties. Each pill holds two numbers:
+       manasiyo.com first, then MAYA, same window. -->
+  <details class="fold" id="visitors-fold" open>
+    <!-- v13.64: ONE row. The little arrow rides beside manasiyo.com and jumps
+         to the Wix Analytics dashboard; MAYA wears the logo blue. The second
+         legend row said the same thing twice and left. -->
+    <!-- v13.67: one clean row, same font size: manasiyo.com | MAYA, and the
+         Wix jump arrow at the far right of the row. -->
+    <summary><h2 class="grp" style="display:flex;align-items:center;justify-content:center;gap:7px;width:100%">
+      <span>Manasiyo.com</span><span style="color:var(--faint)">|</span><span class="grp-maya">MAYA</span>
+      <a class="wix-jump" href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/analytics/highlights?referralInfo=sidebar"
+       rel="noopener noreferrer" title="Open the Wix Analytics dashboard" style="margin-left:auto"
+       onclick="event.preventDefault();event.stopPropagation();window.open(this.href,'_blank','noopener')">&#8599;</a></h2></summary>
+    <div id="wix-tiles" class="tiles"></div>
+    <div id="wix-note" class="note" style="display:none"></div>
+  </details>
+
+  <!-- v13.59: one fold for the whole paid story: the campaigns first, the
+       chart under them, and D / W / M steering both. -->
+  <details class="fold" id="ads-fold" open>
+  <summary><h2 class="grp">Ad campaigns</h2></summary>
+  <div class="metric-chips" style="margin:10px 0 8px">
+    <span id="range-word" style="font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--faint);align-self:center">last 7 days</span>
+    <span style="margin-left:auto;display:inline-flex;gap:3px" id="range-chips">
+      <button class="range-chip" data-r="D" onclick="setAdRange('D')" title="Today against yesterday">D</button>
+      <button class="range-chip on" data-r="W" onclick="setAdRange('W')" title="Last 7 days">W</button>
+      <button class="range-chip" data-r="M" onclick="setAdRange('M')" title="Last 30 days">M</button>
+    </span>
+  </div>
+  <div class="panel" style="margin-bottom:12px"><table id="campaigns-table"><tbody></tbody></table></div>
+  <div class="panel" id="ad-combined-panel">
+    <div class="metric-chips" id="metric-chips">
+      <button class="metric-chip on" data-m="clicks" onclick="setAdMetric('clicks')" title="Link clicks: people who actually left for the site. Meta's all-interactions number lives on its panel below.">Link clicks</button>
+      <button class="metric-chip" data-m="impressions" onclick="setAdMetric('impressions')">Impressions</button>
+      <button class="metric-chip" data-m="cpc" onclick="setAdMetric('cpc')" title="Dollars per link click, on both networks">Cost per click</button>
+      <button class="metric-chip" data-m="all" onclick="setAdMetric('all')" title="Link clicks, impressions and cost per click at once, each line scaled to its own peak">All three</button>
+    </div>
+    <div style="position:relative" id="ad-chart-wrap">
+      <svg id="ad-chart" viewBox="0 0 700 190" preserveAspectRatio="none"></svg>
+      <div id="ad-ylabels"></div>
+      <div id="ad-tip"></div>
+    </div>
+    <div class="bars-axis" id="ad-xaxis"></div>
+    <div class="chart-legend" id="ad-legend">
+      <span><span class="dot" style="background:#8ab4f8"></span>Google Ads</span>
+      <span><span class="dot" style="background:#81c995"></span>Meta Ads</span>
+      <span id="ad-yaxis-word" style="margin-left:auto"></span>
+    </div>
+    <div id="ad-combined-note" class="note" style="display:none;margin-top:10px"></div>
+  </div>
+  </details>
+
+  <!-- v13.54: the people the spend actually produced. -->
+  <details class="fold" id="leads-fold" open>
+    <summary><h2 class="grp">The Lead Station</h2></summary>
+    <div class="panel"><table id="leads-table"><tbody></tbody></table></div>
+    <div id="leads-note" class="note" style="display:none"></div>
+  </details>
+
+  <details class="fold" id="sources-fold" open>
+    <summary><h2 class="grp">Sources of traffic, MAYA</h2></summary>
+    <div class="panel"><table id="sources-table"><tbody></tbody></table></div>
+    <div class="note" style="margin-top:8px">These are how people reached MAYA itself, from its own
+    Analytics. checkout.stripe.com means someone came back from a Stripe payment page, a tip. Wix does
+    not share a per source breakdown for manasiyo.com through its API; when its Semantic Model API
+    opens that door, the two sites will merge here.</div>
+  </details>
+
+  <!-- v13.59: the setup instructions fold left the page. Everything it
+       asked for is connected (Wix, Windsor, Forms); the optional direct
+       Meta/Google tokens it described are covered by Windsor and live in
+       docs/AI-HANDOFF.md for whoever ever needs them. -->
+
+  <!-- v13.66: THE BOTTOM LINE. The page above shows each stream on its own;
+       this row is the arithmetic between them, the numbers a founder actually
+       steers by, computed live from the same payload on every refresh. -->
+  <details class="fold" id="bottom-fold" open>
+    <summary><h2 class="grp">The bottom line</h2></summary>
+    <div class="panel">
+      <div id="bl-funnel" class="bl-funnel"></div>
+      <div id="bl-tiles" class="bl-tiles"></div>
+    </div>
+    <div id="bl-note" class="note" style="display:none;margin-top:8px"></div>
+  </details>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+const _CLIENT_ID = '90396949475-7cen4909qftr8hf4la86nuhus38isid1.apps.googleusercontent.com';
+let _idTok = null, _gisTries = 0, _renewTimer = null;
+function _showSignin(show) { document.getElementById('signin-panel').style.display = show ? 'flex' : 'none'; }
+function _cacheTok(t) { try { localStorage.setItem('maya_admin_tok', t); } catch (_) {} }
+function _cachedTok() {
+  try {
+    const t = localStorage.getItem('maya_admin_tok');
+    if (!t) return null;
+    const p = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return (p.exp * 1000 - Date.now() > 120000) ? t : null;
+  } catch (_) { return null; }
+}
+function _tokExpiryMs(t) {
+  try { return JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).exp * 1000; }
+  catch (_) { return 0; }
+}
+function _scheduleRenew(tok) {
+  clearTimeout(_renewTimer);
+  const exp = _tokExpiryMs(tok);
+  if (!exp) return;
+  _renewTimer = setTimeout(() => {
+    try { if (window.google && google.accounts) google.accounts.id.prompt(); } catch (_) {}
+  }, Math.max(30000, exp - Date.now() - 5 * 60 * 1000));
+}
+function _adopt(t) {
+  if (t === _idTok) return;
+  _idTok = t; _cacheTok(t); _showSignin(false); _scheduleRenew(t); load();
+}
+function _gisBoot() {
+  const cached = _cachedTok();
+  if (cached && !_idTok) _adopt(cached);
+  if (!window.google || !google.accounts || !google.accounts.id) {
+    if (++_gisTries > 40) return;
+    return setTimeout(_gisBoot, 250);
+  }
+  google.accounts.id.initialize({ client_id: _CLIENT_ID,
+    callback: r => { if (r && r.credential) _adopt(r.credential); },
+    auto_select: true, use_fedcm_for_prompt: true });
+  if (!_idTok) {
+    google.accounts.id.prompt();
+    const slot = document.getElementById('gsi-slot');
+    if (slot) google.accounts.id.renderButton(slot, { theme: 'filled_black', size: 'medium', shape: 'pill' });
+  }
+}
+_gisBoot();
+
+const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const n0 = v => Number(v || 0).toLocaleString();
+const usd = v => '$' + Number(v || 0).toFixed(2);
+function tile(k, v, live) {
+  return '<div class="tile' + (live ? ' live' : '') + '"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>';
+}
+// Google and Facebook are the two Fromsa asked to see called out by name.
+function label(src, med) {
+  const s = (src || '').toLowerCase(), m = (med || '').toLowerCase();
+  let name = src || '(unknown)';
+  if (/google/.test(s)) name = 'Google';
+  else if (/facebook|fb|meta/.test(s)) name = 'Facebook';
+  else if (/instagram|ig/.test(s)) name = 'Instagram';
+  else if (/pinterest/.test(s)) name = 'Pinterest';
+  else if (s === '(direct)') name = 'Direct';
+  const paid = /cpc|ppc|paid/.test(m);
+  const tag = m ? '<span class="src-tag' + (paid ? ' paid' : '') + '">' + esc(paid ? 'paid' : m) + '</span>' : '';
+  return esc(name) + tag;
+}
+
+async function load() {
+  if (!_idTok) return;
+  let r;
+  try {
+    r = await fetch('/api/admin/marketing?t=' + Date.now(),
+      { headers: { 'Authorization': 'Bearer ' + _idTok }, cache: 'no-store' });
+  } catch (_) { document.getElementById('checked-at').textContent = 'could not reach the API'; return; }
+  if (r.status === 401) { _idTok = null; try { localStorage.removeItem('maya_admin_tok'); } catch (_) {} _showSignin(true); return; }
+  if (r.status === 403) { document.getElementById('checked-at').textContent = 'this account is not on the admin list'; return; }
+  if (!r.ok) { document.getElementById('checked-at').textContent = 'marketing data unavailable (' + r.status + ')'; return; }
+  const d = await r.json();
+  // v13.48: the last-checked line is gone, per Fromsa. The element stays
+  // only as a mouth for errors.
+  document.getElementById('checked-at').textContent = '';
+  const _sa = document.getElementById('sa-email');
+  if (_sa && d.saEmail) _sa.textContent = d.saEmail;
+  paintVisitors(d);
+  paintSite(d.analytics || {});
+  _adData = d.adCombined || null;
+  _windsorWhy = (d.windsor && d.windsor.why) || '';
+  paintAdCombined();
+  paintCampaigns();
+  paintLeads(d.leads || {});
+  paintBottomLine(d);
+  buildTicker(d);
+  fetchBrief(d);
+}
+
+// ── v13.66: THE BOTTOM LINE. Everything here is arithmetic over numbers the
+// payload already carries, so it is as live as the page itself and never
+// waits on a model. What it adds that nothing above says: the week as ONE
+// funnel (paid clicks to site to MAYA to leads, with the survival rate at
+// each step), what a lead costs against last week, which campaign is the
+// cheapest working door, how much of the site steps into MAYA, and which
+// day of the week actually brings people. ──
+function paintBottomLine(d) {
+  const funnel = document.getElementById('bl-funnel');
+  const tiles = document.getElementById('bl-tiles');
+  const note = document.getElementById('bl-note');
+  if (!funnel || !tiles) return;
+  const w = d.wixSite || {}, a = ((d.analytics || {}).ranges) || {}, l = d.leads || {};
+  const ac = d.adCombined || {};
+  const sum7 = (series, field) => (series || []).slice(-7).reduce((t, r) => t + Number(r[field] || 0), 0);
+  const sumPrev7 = (series, field) => (series || []).slice(-14, -7).reduce((t, r) => t + Number(r[field] || 0), 0);
+  const clicks7 = sum7(ac.google, 'linkClicks') + sum7(ac.meta, 'linkClicks');
+  const spend7 = sum7(ac.google, 'spend') + sum7(ac.meta, 'spend');
+  const spendPrev = sumPrev7(ac.google, 'spend') + sumPrev7(ac.meta, 'spend');
+  const site7 = (w.d7 || {}).visitors, maya7 = (a.d7 || {}).users, leads7 = l.connected ? l.d7 : null;
+  const pct = (part, whole) => (whole > 0 && part != null) ? Math.round(100 * part / whole) + '%' : '&#8230;';
+  const step = (v, k) => '<div class="bl-step"><div class="v">' + (v == null ? '&#8230;' : n0(v)) + '</div><div class="k">' + k + '</div></div>';
+  const arrow = (p) => '<div class="bl-arrow">&#8594;<b>' + p + '</b></div>';
+  // the first join is not a survival rate (most of the site arrives free),
+  // so that arrow stays silent; the next two are real conversions.
+  funnel.innerHTML =
+    step(clicks7 || null, 'paid clicks &#183; 7d') + '<div class="bl-arrow">&#8594;</div>' +
+    step(site7, 'manasiyo.com') + arrow(pct(maya7, site7)) +
+    step(maya7, 'reach MAYA') + arrow(pct(leads7, maya7)) +
+    step(leads7, 'become leads');
+  const cpl = (leads7 && spend7) ? spend7 / leads7 : null;
+  const spendShift = spendPrev > 0 ? Math.round(100 * (spend7 - spendPrev) / spendPrev) : null;
+  // the cheapest campaign that actually delivered clicks this week
+  let bestC = null;
+  const cut = Date.now() - 7 * 86400000;
+  const byCamp = {};
+  for (const r of (ac.campaignDaily || [])) {
+    if (new Date(r.date) < cut) continue;
+    const k = r.source + ' &#183; ' + r.campaign;
+    (byCamp[k] = byCamp[k] || { name: r.campaign, spend: 0, clicks: 0 });
+    byCamp[k].spend += Number(r.spend || 0); byCamp[k].clicks += Number(r.linkClicks || 0);
+  }
+  for (const c of Object.values(byCamp)) {
+    if (c.clicks < 5) continue;
+    c.cpc = c.spend / c.clicks;
+    if (!bestC || c.cpc < bestC.cpc) bestC = c;
+  }
+  // the day of the week that brings people to manasiyo.com, last 4 weeks
+  let bestDay = null;
+  if ((w.daily || []).length >= 7) {
+    const byDow = {};
+    for (const r of w.daily) {
+      const dow = new Date(r.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long' });
+      byDow[dow] = (byDow[dow] || 0) + Number(r.visitors || 0);
+    }
+    bestDay = Object.entries(byDow).sort((x, y) => y[1] - x[1])[0];
+  }
+  const tile = (v, k, cls) => '<div class="bl-tile"><div class="v' + (cls ? ' ' + cls : '') + '">' + v + '</div><div class="k">' + k + '</div></div>';
+  tiles.innerHTML =
+    tile(cpl != null ? usd(cpl) : '&#8230;', 'a lead costs &#183; this week') +
+    tile(spendShift == null ? '&#8230;' : (spendShift > 0 ? '+' : '') + spendShift + '%',
+      'ad spend vs last week', spendShift != null && spendShift > 25 ? 'bad' : '') +
+    tile(bestC ? usd(bestC.cpc) : '&#8230;',
+      bestC ? 'cheapest working door &#183; ' + esc(String(bestC.name).slice(0, 26)) : 'cheapest working door') +
+    tile(pct(maya7, site7), 'of the site steps into MAYA') +
+    tile(bestDay ? esc(bestDay[0]) : '&#8230;', 'the day that brings people');
+  if (note) {
+    if (cpl != null && maya7 != null && site7 > 0) {
+      note.style.display = '';
+      note.innerHTML = 'This week, every <b>' + usd(cpl) + '</b> of advertising became one lead, and <b>' +
+        pct(maya7, site7) + '</b> of manasiyo.com stepped into MAYA' +
+        (bestC ? '; the cheapest door was <b>' + esc(String(bestC.name).slice(0, 40)) + '</b> at ' + usd(bestC.cpc) + ' a click' : '') + '.';
+    } else note.style.display = 'none';
+  }
+}
+
+// ── v13.54: the lead list. The submissions the spend actually produced. ──
+function paintLeads(l) {
+  const tb = document.querySelector('#leads-table tbody');
+  const note = document.getElementById('leads-note');
+  if (!tb) return;
+  if (!l.connected) {
+    tb.innerHTML = '<tr><td style="color:var(--dim)">Not connected. ' + esc(l.why || '') +
+      ' The Wix API key needs the Forms read permission.</td></tr>';
+    note.style.display = 'none';
+    return;
+  }
+  if (!(l.list || []).length) {
+    tb.innerHTML = '<tr><td style="color:var(--dim)">No form submissions in the last 28 days.</td></tr>';
+    return;
+  }
+  const when = ts => {
+    const t = new Date(ts), days = Math.floor((Date.now() - t) / 86400000);
+    return days === 0 ? 'today' : days === 1 ? 'yesterday' : days + ' days ago';
+  };
+  // v13.62: the Lead Station. Notes is a summary now, what they want and
+  // which tier, written server side; hovering shows their exact words. Under
+  // each name: draft the next email (opens Gmail compose, never sends),
+  // place the call, drop a note that steers the next draft.
+  _leadList = l.list;
+  // v13.64: the moves live in their own CTA column, with the recommended one
+  // named above the buttons. The recommendation is deterministic, from the
+  // lead's age and what there is to reach them with.
+  const rec = x => {
+    const days = Math.floor((Date.now() - new Date(x.ts)) / 86400000);
+    if (!x.email && x.phone) return 'Call them';
+    if (days < 2) return 'Email now &#183; first touch';
+    if (days < 7) return 'Email &#183; follow up';
+    return x.phone ? 'Call &#183; ' + days + ' days quiet' : 'Email &#183; revive';
+  };
+  tb.innerHTML = '<tr><th>Who</th><th>Reach them</th><th>Notes</th><th>CTA</th></tr>' +
+    l.list.map((x, i) =>
+      '<tr><td style="white-space:nowrap">' + esc(x.name) +
+      '<div class="lead-when">' + esc(when(x.ts)) + '</div></td>' +
+      '<td>' + esc(x.email || x.phone || '') + '</td>' +
+      '<td class="lead-note" title="' + esc(x.wrote || x.note || '') + '">' + esc(x.note || '') + '</td>' +
+      '<td style="white-space:nowrap"><div class="lead-rec">' + rec(x) + '</div>' +
+      '<div class="lead-ctas">' +
+        (x.email ? '<button class="lead-cta" id="lead-mail-' + i + '" onclick="draftLead(' + i + ')" title="Draft the next email (opens Gmail, nothing is sent)">&#9993;</button>' : '') +
+        (x.phone ? '<a class="lead-cta" href="tel:' + esc(x.phone) + '" onclick="leadContact(' + i + ',\'call\')" title="Call ' + esc(x.phone) + '">&#9742;</a>' : '') +
+        (x.email ? '<button class="lead-cta" onclick="toggleLeadNote(' + i + ')" title="Add a note; the next draft reads it">&#9998;</button>' : '') +
+      '</div></td></tr>' +
+      '<tr class="lead-note-row" id="lead-note-row-' + i + '" style="display:none"><td colspan="4">' +
+        '<div class="lead-note-box"><textarea id="lead-note-text-' + i + '" placeholder="Anything you know or agreed with them; the next email draft reads these notes."></textarea>' +
+        '<button class="lead-cta" style="width:auto;padding:0 12px" onclick="saveLeadNote(' + i + ')">Save</button></div>' +
+        '<div class="lead-note-saved" id="lead-note-saved-' + i + '"></div></td></tr>'
+    ).join('');
+}
+
+// ── v13.62: Lead Station actions. The draft comes from the server (summary +
+// notes + how many emails came before) and opens in Gmail compose; MAYA never
+// sends anything itself. ──
+let _leadList = [];
+function leadContact(i, type) {
+  const x = _leadList[i]; if (!x || !x.email) return;
+  fetch('/api/admin/lead-note', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: x.email, contact: type }),
+  }).catch(() => {});
+}
+async function draftLead(i) {
+  const x = _leadList[i]; if (!x || !x.email) return;
+  const btn = document.getElementById('lead-mail-' + i);
+  if (btn) { btn.disabled = true; btn.innerHTML = '&#8230;'; }
+  try {
+    const r = await fetch('/api/admin/lead-draft', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: x.email, name: x.name, summary: x.note || x.wrote || '' }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.subject) throw new Error(j.error || ('draft ' + r.status));
+    window.open('https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(x.email) +
+      '&su=' + encodeURIComponent(j.subject) + '&body=' + encodeURIComponent(j.body), '_blank');
+    leadContact(i, 'email');
+  } catch (e) {
+    const saved = document.getElementById('lead-note-saved-' + i);
+    const row = document.getElementById('lead-note-row-' + i);
+    if (row) row.style.display = '';
+    if (saved) saved.textContent = 'The draft did not come back (' + String(e.message || e).slice(0, 80) + '). Try again in a moment.';
+  }
+  if (btn) { btn.disabled = false; btn.innerHTML = '&#9993;'; }
+}
+function toggleLeadNote(i) {
+  const row = document.getElementById('lead-note-row-' + i); if (!row) return;
+  row.style.display = row.style.display === 'none' ? '' : 'none';
+}
+async function saveLeadNote(i) {
+  const x = _leadList[i]; if (!x || !x.email) return;
+  const ta = document.getElementById('lead-note-text-' + i);
+  const saved = document.getElementById('lead-note-saved-' + i);
+  const text = (ta && ta.value || '').trim();
+  if (!text) return;
+  try {
+    const r = await fetch('/api/admin/lead-note', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: x.email, note: text }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) throw new Error(j.error || ('save ' + r.status));
+    if (ta) ta.value = '';
+    if (saved) saved.textContent = 'Saved. ' + j.notes.length + ' note' + (j.notes.length === 1 ? '' : 's') +
+      ' on file; the next email draft reads them.';
+  } catch (e) {
+    if (saved) saved.textContent = 'Could not save (' + String(e.message || e).slice(0, 80) + ').';
+  }
+}
+
+// ── v13.56: the ticker. The day reads itself out as one moving line in the
+// top bar: the AI headline when it has answered, every warning, the numbers
+// that matter, in relative words (today, yesterday, this week), never raw
+// dates, always abbreviated the second time. Deterministic parts render at
+// once; the AI line joins when the brief answers. ──
+let _brief = null, _briefHour = '';
+function buildTicker(d) {
+  const el = document.getElementById('ticker-inner');
+  if (!el) return;
+  const sep = '<span class="tk-sep">&#183;</span>';
+  const bits = [];
+  const compact = t => esc(String(t || '')
+    .replace(/cost per link click/ig, 'CPL')
+    .replace(/day over day/ig, 'vs yesterday')
+    .replace(/week over week/ig, 'vs last week')
+    .replace(/\b20\d\d-(\d\d)-(\d\d)\b/g, (m, mo, dd) => mo + '/' + dd));
+  if (_brief && _brief.ok && _brief.headline) bits.push(compact(_brief.headline));
+  for (const w of (d.warnings || [])) {
+    bits.push('<span class="tk-' + (w.severity === 'red' ? 'red' : 'amber') + '">' + compact(w.text) + '</span>');
+  }
+  const g = (d.googleAds && d.googleAds.d7) || {};
+  const f = (d.meta && d.meta.d7) || {};
+  const gL = Number(g.linkClicks != null ? g.linkClicks : g.clicks || 0);
+  const fL = Number(f.linkClicks || 0);
+  const spend = Number(g.spend || 0) + Number(f.spend || 0);
+  if (spend) bits.push('this week ' + usd(spend) + ' spent, ' + n0(gL + fL) + ' link clicks');
+  if (g.spend) bits.push('Google CPL ' + usd(gL ? g.spend / gL : 0));
+  if (f.spend) bits.push('Meta CPL ' + usd(fL ? f.spend / fL : 0));
+  if (d.leads && d.leads.connected) {
+    bits.push(n0(d.leads.d7) + ' lead' + (d.leads.d7 === 1 ? '' : 's') + ' this week, ' + n0(d.leads.d28) + ' this month');
+    if (d.costPerLead != null) bits.push('cost per lead ' + usd(d.costPerLead));
+  }
+  if (_brief && _brief.ok && _brief.action) bits.push('next: ' + compact(_brief.action));
+  if (!bits.length) bits.push('quiet: nothing needs you today');
+  // v13.59: the line rides twice in a row and slides half its width, so it
+  // begins mid-story with words already on screen and loops seamlessly.
+  const line = bits.join(sep) + sep;
+  el.innerHTML = line + line;
+  // Longer lines walk at the same pace instead of sprinting; a touch
+  // brisker than before, per Fromsa.
+  const chars = el.textContent.length / 2;
+  el.style.animationDuration = Math.max(20, Math.min(80, Math.round(chars / 4.5))) + 's';
+}
+async function fetchBrief(d) {
+  const hour = new Date().toISOString().slice(0, 13);
+  if (_briefHour === hour && _brief) return;   // the server caches too; be polite
+  try {
+    const payload = { ...d };
+    delete payload.analytics; delete payload.saEmail;
+    if (payload.leads) payload.leads = { today: payload.leads.today, d7: payload.leads.d7, d28: payload.leads.d28 };
+    const r = await fetch('/api/admin/marketing-brief', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: payload }),
+    });
+    if (!r.ok) return;                          // deterministic warnings stand alone
+    _brief = await r.json();
+    _briefHour = hour;
+    buildTicker(d);
+  } catch (_) { /* the warnings already rendered */ }
+}
+
+// v13.44: the combined chart. One SVG, a line per network, and the metric
+// chips decide what the lines mean. All of it comes from Windsor.
+// v13.54: clicks mean LINK clicks on both networks; D / W / M picks the
+// window (the server always sends 30 days); a proper hover layer replaces
+// the slow native tooltips.
+let _adData = null, _adMetric = 'clicks', _windsorWhy = '';
+let _adRange = 'W';
+try { _adRange = localStorage.getItem('maya_mkt_range') || 'W'; } catch (_) {}
+if (!['D', 'W', 'M'].includes(_adRange)) _adRange = 'W';
+let _hoverState = null;
+function setAdMetric(m) {
+  _adMetric = m;
+  document.querySelectorAll('.metric-chip').forEach(c =>
+    c.classList.toggle('on', c.getAttribute('data-m') === m));
+  paintAdCombined();
+}
+function setAdRange(r) {
+  _adRange = r;
+  try { localStorage.setItem('maya_mkt_range', r); } catch (_) {}
+  document.querySelectorAll('.range-chip').forEach(c =>
+    c.classList.toggle('on', c.getAttribute('data-r') === r));
+  // v13.59: one window for the whole fold: the word, the table, the chart.
+  const word = document.getElementById('range-word');
+  if (word) word.textContent = r === 'M' ? 'last 30 days' : r === 'D' ? 'today and yesterday' : 'last 7 days';
+  paintCampaigns();
+  paintAdCombined();
+}
+function _syncRangeChips() {
+  document.querySelectorAll('.range-chip').forEach(c =>
+    c.classList.toggle('on', c.getAttribute('data-r') === _adRange));
+  const word = document.getElementById('range-word');
+  if (word) word.textContent = _adRange === 'M' ? 'last 30 days' : _adRange === 'D' ? 'today and yesterday' : 'last 7 days';
+}
+_syncRangeChips();
+// The comparable number: link clicks wherever the network reports them.
+function metricVal(r, m) {
+  if (m === 'cpc') return r.cpc;
+  if (m === 'clicks') return (r.linkClicks != null ? r.linkClicks : r.clicks);
+  return r[m];
+}
+function paintAdCombined() {
+  const svg = document.getElementById('ad-chart');
+  const note = document.getElementById('ad-combined-note');
+  const ylab = document.getElementById('ad-ylabels');
+  const xaxis = document.getElementById('ad-xaxis');
+  const yword = document.getElementById('ad-yaxis-word');
+  if (!svg) return;
+  const d = _adData;
+  if (!d || !d.connected || !(d.days || []).length) {
+    svg.innerHTML = ''; if (ylab) ylab.innerHTML = ''; if (xaxis) xaxis.innerHTML = '';
+    if (yword) yword.textContent = '';
+    note.style.display = '';
+    note.innerHTML = '<b>No combined ad data yet.</b> ' +
+      esc(_windsorWhy || 'Windsor has nothing for the last 7 days.') +
+      ' Set <code>WINDSOR_API_KEY</code> on the API and both networks appear here.';
+    return;
+  }
+  note.style.display = 'none';
+  const W = 700, H = 190, PAD = 8;
+  // v13.54: the range decides how many of the 30 days are on screen.
+  const keep = _adRange === 'M' ? 30 : _adRange === 'D' ? 2 : 7;
+  const from = Math.max(0, d.days.length - keep);
+  const days = d.days.slice(from);
+  const nets = [
+    { name: 'Google', pts: d.google, color: '#8ab4f8' },
+    { name: 'Meta', pts: d.meta, color: '#81c995' },
+  ].filter(s => Array.isArray(s.pts) && s.pts.length)
+   .map(s => ({ ...s, pts: s.pts.slice(from) }));
+  const x = (i) => days.length < 2 ? W / 2 : PAD + i * (W - PAD * 2) / (days.length - 1);
+  const yOf = (v, max) => H - PAD - (v / max) * (H - PAD * 2);
+  const fmt = (m, v) => m === 'cpc' ? usd(v) : n0(Math.round(v));
+  let out = '';
+  for (let g = 1; g <= 3; g++) {
+    const gy = PAD + g * (H - PAD * 2) / 4;
+    out += '<line x1="0" y1="' + gy + '" x2="' + W + '" y2="' + gy +
+      '" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>';
+  }
+  const maxima = {};
+  const drawSeries = (pts, color, metric, max, style) => {
+    const line = pts.map((r, i) => x(i).toFixed(1) + ',' + yOf(metricVal(r, metric), max).toFixed(1)).join(' ');
+    out += '<polyline points="' + line + '" fill="none" stroke="' + color + '"' +
+      ' stroke-width="' + style.w + '"' + (style.dash ? ' stroke-dasharray="5 5"' : '') +
+      (style.op ? ' stroke-opacity="' + style.op + '"' : '') +
+      ' stroke-linejoin="round" stroke-linecap="round"/>';
+    if (style.dots) out += pts.map((r, i) =>
+      '<circle cx="' + x(i).toFixed(1) + '" cy="' + yOf(metricVal(r, metric), max).toFixed(1) +
+      '" r="2.6" fill="' + color + '"/>').join('');
+  };
+  if (_adMetric === 'all') {
+    // v13.48: all three at once. Each METRIC is scaled to its own peak
+    // across both networks, so the shapes compare; the legend says which
+    // line weight is which.
+    for (const metric of ['impressions', 'clicks', 'cpc']) {
+      const max = Math.max(0.0001, ...nets.flatMap(s => s.pts.map(r => metricVal(r, metric))));
+      maxima[metric] = max;
+      const style = metric === 'clicks' ? { w: 2, dots: true }
+        : metric === 'impressions' ? { w: 1.2, op: 0.55 }
+        : { w: 1.5, dash: true, op: 0.85 };
+      for (const s of nets) drawSeries(s.pts, s.color, metric, max, style);
+    }
+    if (ylab) ylab.innerHTML = '';
+    if (yword) yword.textContent = 'each line scaled to its own peak';
+  } else {
+    const max = Math.max(0.0001, ...nets.flatMap(s => s.pts.map(r => metricVal(r, _adMetric))));
+    maxima[_adMetric] = max;
+    for (const s of nets) drawSeries(s.pts, s.color, _adMetric, max, { w: 2, dots: true });
+    // y axis: the gridline values, quiet, riding the lines they mark.
+    if (ylab) {
+      let marks = '';
+      for (let g = 1; g <= 3; g++) {
+        const frac = 1 - g / 4;
+        const py = PAD + g * (H - PAD * 2) / 4;
+        marks += '<span style="top:' + py + 'px">' + fmt(_adMetric, max * frac) + '</span>';
+      }
+      ylab.innerHTML = marks;
+    }
+    if (yword) yword.textContent = _adMetric === 'cpc' ? 'dollars per link click, per day' :
+      _adMetric === 'clicks' ? 'link clicks per day' : _adMetric + ' per day';
+  }
+  out += '<g id="ad-hover-g"></g>';
+  svg.innerHTML = out;
+  _hoverState = { days, nets, maxima, x, yOf, W, H };
+  const pretty = (s) => s && s.length >= 10 ? (s.slice(5, 7) + '/' + s.slice(8, 10)) : s;
+  // A month of labels cannot all fit; name every few days instead.
+  const step = days.length > 16 ? 4 : days.length > 9 ? 2 : 1;
+  if (xaxis) xaxis.innerHTML = days.map((dd, i) =>
+    '<span>' + (i % step === 0 || i === days.length - 1 ? esc(pretty(dd)) : '') + '</span>').join('');
+  // the second legend row: line styles, only when all three are drawn
+  const legend = document.getElementById('ad-legend');
+  let styleRow = document.getElementById('ad-style-legend');
+  if (_adMetric === 'all') {
+    if (!styleRow && legend) {
+      styleRow = document.createElement('div');
+      styleRow.id = 'ad-style-legend';
+      styleRow.className = 'chart-legend';
+      legend.after(styleRow);
+    }
+    if (styleRow) styleRow.innerHTML =
+      '<span><span class="lg-line"></span>clicks</span>' +
+      '<span><span class="lg-line thin"></span>impressions</span>' +
+      '<span><span class="lg-line dash"></span>cost per click</span>';
+  } else if (styleRow) styleRow.remove();
+}
+// v13.54: the hover layer. One pointer handler over the chart computes the
+// nearest day, draws a guide line and enlarged dots in the SVG, and floats
+// a tooltip that follows the cursor and clamps to the panel edges. The same
+// handler serves touch.
+(function bindChartHover() {
+  const wrap = document.getElementById('ad-chart-wrap');
+  const tip = document.getElementById('ad-tip');
+  if (!wrap || !tip) return;
+  const clear = () => {
+    tip.style.display = 'none';
+    const g = document.getElementById('ad-hover-g');
+    if (g) g.innerHTML = '';
+  };
+  const show = (clientX) => {
+    const st = _hoverState;
+    const g = document.getElementById('ad-hover-g');
+    if (!st || !g || !st.days.length) return clear();
+    const rect = wrap.getBoundingClientRect();
+    const fx = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
+    const i = Math.round(fx * (st.days.length - 1));
+    const gx = st.x(i);
+    let overlay = '<line x1="' + gx.toFixed(1) + '" y1="0" x2="' + gx.toFixed(1) + '" y2="' + st.H +
+      '" stroke="rgba(255,255,255,0.28)" stroke-width="1"/>';
+    const metrics = _adMetric === 'all' ? ['impressions', 'clicks', 'cpc'] : [_adMetric];
+    const fmtV = (m, v) => m === 'cpc' ? usd(v) : n0(Math.round(v));
+    let rows = '';
+    for (const s of st.nets) {
+      const r = s.pts[i];
+      if (!r) continue;
+      for (const m of metrics) {
+        overlay += '<circle cx="' + gx.toFixed(1) + '" cy="' +
+          st.yOf(metricVal(r, m), st.maxima[m] || 1).toFixed(1) +
+          '" r="4.5" fill="' + s.color + '" stroke="rgba(0,0,0,0.5)" stroke-width="1"/>';
+      }
+      const words = metrics.map(m =>
+        fmtV(m, metricVal(r, m)) + (m === 'cpc' ? ' per link click' : ' ' + (m === 'clicks' ? 'link clicks' : m))).join(' &#183; ');
+      rows += '<div class="tip-row"><span class="dot" style="background:' + s.color + '"></span>' +
+        esc(s.name) + '&nbsp; ' + words + '</div>';
+    }
+    g.innerHTML = overlay;
+    tip.innerHTML = '<div class="tip-date">' + esc(st.days[i]) + '</div>' + rows;
+    tip.style.display = 'block';
+    const px = fx * rect.width;
+    const tw = tip.offsetWidth || 140;
+    tip.style.left = Math.min(Math.max(px - tw / 2, 4), rect.width - tw - 4) + 'px';
+  };
+  wrap.addEventListener('mousemove', e => show(e.clientX));
+  wrap.addEventListener('mouseleave', clear);
+  wrap.addEventListener('touchstart', e => { if (e.touches[0]) show(e.touches[0].clientX); }, { passive: true });
+  wrap.addEventListener('touchmove', e => { if (e.touches[0]) show(e.touches[0].clientX); }, { passive: true });
+  wrap.addEventListener('touchend', clear);
+})();
+
+function paintCampaigns() {
+  const tb = document.querySelector('#campaigns-table tbody');
+  if (!tb) return;
+  // v13.59: the table obeys D / W / M like the chart. The raw campaign days
+  // come along in campaignDaily; the window is aggregated right here.
+  let rows = [];
+  const daily = (_adData && _adData.campaignDaily) || [];
+  if (daily.length) {
+    const keep = _adRange === 'M' ? 30 : _adRange === 'D' ? 2 : 7;
+    const cut = new Date(Date.now() - keep * 86400000).toISOString().slice(0, 10);
+    const byKey = {};
+    for (const r of daily) {
+      if (r.date < cut) continue;
+      const k = r.source + ' | ' + r.campaign;
+      if (!byKey[k]) byKey[k] = { source: r.source, campaign: r.campaign, status: '',
+        impressions: 0, clicks: 0, linkClicks: 0, spend: 0 };
+      const c = byKey[k];
+      c.impressions += Number(r.impressions || 0);
+      c.clicks += Number(r.clicks || 0);
+      c.linkClicks += Number(r.linkClicks || 0);
+      c.spend += Number(r.spend || 0);
+      if (r.status) c.status = r.status;
+    }
+    rows = Object.values(byKey).sort((a, b) => b.impressions - a.impressions);
+  } else {
+    rows = (_adData && _adData.campaigns) || [];
+  }
+  if (!rows.length) {
+    tb.innerHTML = '<tr><td style="color:var(--dim)">No campaigns reported for this window.</td></tr>';
+    return;
+  }
+  const srcName = (s) => /google/.test(s) ? 'Google' : /facebook|meta/.test(s) ? 'Meta' : s;
+  // Status is honest: it says whether the campaign actually delivered
+  // impressions inside the window, which is all the feed can prove.
+  // v13.56: the Cost column carries what the two big panels used to say,
+  // and clicks mean LINK clicks on both networks here too.
+  tb.innerHTML = '<tr><th>Status</th><th>Campaign</th><th>Network</th>' +
+    '<th class="num">Cost</th><th class="num">Impressions</th><th class="num">Link clicks</th><th class="num">CTR</th><th class="num">CPC</th></tr>' +
+    rows.map(c => {
+      const on = Number(c.impressions) > 0;
+      const lnk = c.linkClicks != null ? c.linkClicks : c.clicks;
+      return '<tr><td><span class="status-word ' + (on ? 'on' : 'off') + '">' +
+        (on ? '&#9679; delivering' : '&#9675; no delivery') + '</span></td>' +
+        '<td>' + esc(c.campaign) + '</td>' +
+        '<td>' + esc(srcName(String(c.source || ''))) + '</td>' +
+        '<td class="num">' + usd(c.spend) + '</td>' +
+        '<td class="num">' + n0(c.impressions) + '</td>' +
+        '<td class="num">' + n0(lnk) + '</td>' +
+        '<td class="num">' + (c.impressions ? (100 * lnk / c.impressions).toFixed(2) + '%' : '0%') + '</td>' +
+        '<td class="num">' + usd(lnk ? c.spend / lnk : 0) + '</td></tr>';
+    }).join('');
+}
+
+// v13.56: one section for both properties. Each pill pairs manasiyo.com's
+// number (from Wix) with MAYA's (from its own Analytics), same window.
+// Wix publishes a day at a time, so its today figure does not exist until
+// the day ends; the pill says so instead of pretending zero.
+// v13.59: FOUR pills in one row, live now leading. Each pairs manasiyo.com
+// (white) with MAYA (the light blue of the logo's edges), a thin bar
+// between. Wix has no live feed and no today until the day ends; those
+// halves say so quietly instead of pretending.
+function paintVisitors(d) {
+  const w = d.wixSite || {};
+  const a = ((d.analytics || {}).ranges) || {};
+  const live = (d.analytics || {}).live;
+  const tiles = document.getElementById('wix-tiles');
+  const note = document.getElementById('wix-note');
+  if (!tiles) return;
+  if (!w.connected) {
+    tiles.innerHTML = '';
+    note.style.display = '';
+    note.innerHTML = '<b>Wix is not connected yet.</b> ' + esc(w.why || '') +
+      ' Set <code>WIX_API_KEY</code> on the API and the manasiyo.com visitors ' +
+      'appear here, the same numbers as the Wix dashboard.';
+    return;
+  }
+  note.style.display = 'none';
+  const pair = (wix, maya) =>
+    (wix == null ? '<span title="Wix publishes manasiyo.com a day at a time; today lands tonight">&#8230;</span>' : n0(wix)) +
+    '<span class="pair-bar">|</span><span class="pair-b">' + n0(maya || 0) + '</span>';
+  tiles.innerHTML =
+    tile('live now', '<span class="pair-b" title="MAYA, right now; Wix has no live feed">' + n0(live || 0) + '</span>') +
+    tile('today', pair((w.today || {}).visitors, (a.today || {}).users)) +
+    tile('7 days', pair((w.d7 || {}).visitors, (a.d7 || {}).users)) +
+    tile('28 days', pair((w.d28 || {}).visitors, (a.d28 || {}).users));
+}
+
+// Sources: how people reached MAYA, from its own Analytics. A source that
+// reads as a site opens as one.
+function paintSite(a) {
+  if (!a.connected) return;
+  const st = document.querySelector('#sources-table tbody');
+  st.innerHTML = '<tr><th>Source</th><th class="num">Visits</th><th class="num">People</th></tr>' +
+    (a.sources || []).map(s => {
+      const src = String(s.source || '');
+      const isSite = /^[\w-]+(\.[\w-]+)+$/.test(src);
+      const name = isSite
+        ? '<a href="https://' + esc(src) + '" target="_blank" rel="noopener noreferrer" style="color:inherit">' + label(s.source, s.medium) + '</a>'
+        : label(s.source, s.medium);
+      return '<tr><td>' + name + '</td><td class="num">' +
+        n0(s.sessions) + '</td><td class="num">' + n0(s.users) + '</td></tr>';
+    }).join('');
+}
+
+// v13.56: the two network panels are gone; the campaign table's Cost column
+// and the ticker carry their numbers now. The server still computes each
+// network's link clicks, reach and frequency: the warnings and the hourly
+// brief read them even though no panel paints them.
+function toggleDrawer(force) {
+  const drawer = document.getElementById('drawer');
+  if (!drawer) return;
+  const open = (typeof force === 'boolean') ? force : !drawer.classList.contains('open');
+  drawer.classList.toggle('open', open);
+  document.body.classList.toggle('drawer-open', open);
+  const btn = document.querySelector('.top-btn.hamburger');
+  if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+setInterval(() => { if (_idTok && document.visibilityState === 'visible') load(); }, 180000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') toggleDrawer(false);
+});
+// v13.45: a click anywhere outside the drawer closes it, like everywhere.
+document.addEventListener('pointerdown', e => {
+  const d = document.getElementById('drawer');
+  if (!d || !d.classList.contains('open')) return;
+  const t = e.target;
+  if (t && t.closest && (t.closest('#drawer') || t.closest('.top-btn.hamburger'))) return;
+  toggleDrawer(false);
+}, true);
+</script>
+</body>
+</html>

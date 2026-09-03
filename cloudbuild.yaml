@@ -1,0 +1,84 @@
+# MAYA, the one build. Google reads this on every GitHub push and deploys
+# BOTH the server (Cloud Run) and the website (Firebase Hosting). This file
+# replaces the old root Dockerfile and the manual Deploy MAYA.command.
+# v12.5: the Firestore and Storage rules deploy too. They used to be checked
+# into the folder but never published, so production could be running rules
+# nobody had seen in months.
+#
+# The website and the rules are SEPARATE steps on purpose. When they were one
+# command, a rules problem took the whole website down with it: the server
+# shipped, the site did not, and the two halves of MAYA ran out of step with
+# each other. Now the site always ships first, and a rules failure is loud but
+# harmless to what is already live.
+steps:
+  # The GitHub trigger currently watches every branch. Refuse to deploy a
+  # Claude/Codex work branch to production; only maya-v2 is the release line.
+  - id: Guard production branch
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    args:
+      - '-ceu'
+      - 'test "$BRANCH_NAME" = "maya-v2" || { echo "Refusing production deploy from $BRANCH_NAME"; exit 1; }'
+  - id: Test release contracts
+    name: node:20
+    entrypoint: bash
+    args:
+      - '-ceu'
+      - |
+        node tests/ai-routing.mjs
+        node tests/fabric-sourcing.mjs
+        node tests/admin-command.mjs
+        node tests/admin-ui-contract.mjs
+        node tests/proxy-policy.mjs
+        node tests/maya-mcp.mjs
+        # v14.14: the voice agent battery runs in the gate when a browser can
+        # be installed. An install failure skips loudly (infra, not code); a
+        # test failure fails the build.
+        if npm install --no-save playwright >/dev/null 2>&1 && npx playwright install --with-deps chromium >/dev/null 2>&1; then
+          node tests/maya-hands-smoke.mjs
+        else
+          echo "WARNING browser unavailable in CI, maya-hands-smoke skipped"
+        fi
+        node --check docs/server/maya-mcp.mjs
+        node --check docs/server/admin-command.mjs
+        node --check docs/server/proxy-policy.mjs
+        node --check docs/server/server.js
+  - id: Build server
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - '-t'
+      - 'us-west1-docker.pkg.dev/pro-maya/cloud-run-source-deploy/maya-api:$COMMIT_SHA'
+      - docs/server
+  - id: Push image
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - 'us-west1-docker.pkg.dev/pro-maya/cloud-run-source-deploy/maya-api:$COMMIT_SHA'
+  - id: Deploy server
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - maya-api
+      - '--image'
+      - 'us-west1-docker.pkg.dev/pro-maya/cloud-run-source-deploy/maya-api:$COMMIT_SHA'
+      - '--region'
+      - us-west1
+      - '--quiet'
+  - id: Deploy website
+    name: node:20
+    entrypoint: bash
+    args:
+      - '-c'
+      - 'cp docs/firebase.json ./firebase.json && npx -y firebase-tools@latest deploy --only hosting --project pro-maya --non-interactive'
+  - id: Deploy rules
+    name: node:20
+    entrypoint: bash
+    args:
+      - '-c'
+      - 'cp docs/firebase.json ./firebase.json && npx -y firebase-tools@latest deploy --only firestore:rules,storage --project pro-maya --non-interactive'
+timeout: 1200s
+options:
+  logging: CLOUD_LOGGING_ONLY

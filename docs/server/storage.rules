@@ -1,0 +1,43 @@
+rules_version = '2';
+// MAYA v12.5. Every picture a designer or client uploads lives under their own
+// uid and nowhere else. Nothing is stored on anyone's machine.
+service firebase.storage {
+  match /b/{bucket}/o {
+    // v13.3 the community wall. A render that was never saved is still a
+    // data: URL, so hearting it uploads a 900px copy here. Readable by every
+    // signed in account, writable only by the account that owns the folder.
+    match /community/{uid}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+      allow write: if request.auth != null && request.auth.uid == uid
+        && request.resource.size < 3 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // v13.29 SHARED PROJECTS. A share link hands someone else a project, so
+    // the pictures in it have to be readable by that someone. They are copied
+    // here at share time, under the SHARER's uid, and only the sharer can
+    // write or remove them. Nothing else of theirs becomes readable: a share
+    // folder holds copies made deliberately for that one link.
+    match /shares/{uid}/{token}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+      allow write: if request.auth != null && request.auth.uid == uid
+        && request.resource.size < 8 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /users/{uid}/{allPaths=**} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+      // v12.5: a size and type ceiling. The old rule allowed a signed in
+      // account to upload files of unlimited size and any type into its own
+      // folder, which the atelier pays for.
+      allow write: if request.auth != null && request.auth.uid == uid
+        && request.resource.size < 25 * 1024 * 1024
+        && (request.resource.contentType.matches('image/.*')
+            || request.resource.contentType.matches('video/.*')
+            || request.resource.contentType == 'application/json');
+    }
+  }
+}
