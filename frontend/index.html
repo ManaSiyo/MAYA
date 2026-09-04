@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.27">
+<meta name="maya-version" content="14.28">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -1964,8 +1964,10 @@
      client only, the way the open project carries its pencil. The one that
      sat beside the name is gone. */
   #notes-drawer #drawer-avatar-rename { display: none; }
-  #notes-drawer .avatar-switch-row:hover .avatar-switch-rename { opacity: 0; }
-  #notes-drawer .avatar-switch-row.active .avatar-switch-rename { opacity: 1; }
+  /* v14.28: hidden until the row is hovered, exactly like the x. On touch,
+     where nothing hovers, the highlighted row keeps it. */
+  #notes-drawer .avatar-switch-row .avatar-switch-rename { opacity: 0; }
+  #notes-drawer .avatar-switch-row:hover .avatar-switch-rename { opacity: 1; }
   @media (hover: none) { #notes-drawer .avatar-switch-rename { opacity: 0; } #notes-drawer .avatar-switch-row.active .avatar-switch-rename { opacity: 1; } }
   #notes-drawer .avatar-switch-delete:hover { color: #fff; border-color: rgba(255,170,170,0.6); }
   /* v14.20: the pills under the name and the pill beside it were placeholders;
@@ -1988,7 +1990,8 @@
     background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.2);
     color: rgba(215,230,255,0.9); cursor: pointer; padding: 0; font-size: 11px; line-height: 1;
     opacity: 0; transition: opacity 0.15s; }
-  #notes-drawer .session-item:hover .session-item-rename, #notes-drawer .session-item.active .session-item-rename { opacity: 1; }
+  #notes-drawer .session-item:hover .session-item-rename { opacity: 1; }   /* v14.28: hover only, like the x */
+  @media (hover: none) { #notes-drawer .session-item.active .session-item-rename { opacity: 1; } }
   #notes-drawer .session-item.active .session-item-title { cursor: text; }
   #notes-drawer .pg-project-rename { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 13px;
     color: #fff; background: rgba(255,255,255,0.05); border: 0.5px solid rgba(169,201,255,0.6);
@@ -5288,7 +5291,8 @@
     <button class="modal-close icon pg-fb-x" onclick="closeFeedback()" aria-label="Close">×</button>
     <h2 style="text-align:center">Improve Maya</h2>
     <div class="modal-hint" style="text-align:center">Any idea or feature you wish for. Every note lands in the studio inbox.</div>
-    <div class="modal-hint" id="fb-consent" onclick="_fbConsentToggle()" style="text-align:center;cursor:pointer;opacity:0.75" title="Anonymized tool telemetry only. Never photos, audio, transcripts, faces, or measurements. Tap to change."></div>
+    <!-- v14.28: the telemetry line is gone from the box, per Fromsa; consent stays where it was set. -->
+    <div class="modal-hint" id="fb-consent" onclick="_fbConsentToggle()" style="display:none" title="Anonymized tool telemetry only. Never photos, audio, transcripts, faces, or measurements. Tap to change."></div>
     <!-- v14.09: two tabs. Your note is yours to write; Maya's logs is what she
          recorded about her own limits, automatically, already with the studio. -->
     <div id="fb-tabs" role="tablist" aria-label="Improve Maya">

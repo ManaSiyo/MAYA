@@ -74,6 +74,35 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.28 (Claude): the pencil on hover, the consent line gone, the playground flip
+
+Both surfaces: .avatar-switch-rename is opacity 0 and shows on
+.avatar-switch-row:hover (the v14.26 active-row rule is gone; the
+(hover: none) block keeps it on .active for phones); .session-item-rename
+shows on .session-item:hover only, .active under (hover: none). #fb-consent
+is display none (the telemetry consent stays whatever it was; the toggle
+function remains for a future setting).
+Playground only, the experiment Fromsa asked for: inside
+#garment-image-wrap sit #pg-callouts (absolute, inset 0, pointer events
+none, opacity 0, shown on wrap hover), #pg-flip (bottom right, camera
+switch icon, shown on hover, always on touch) and #pg-card-back (display
+none until .flipped; the drawer's glass; #pg-card-back-body with
+.pgb-title, .pgb-row / .pgb-k / .pgb-v, .pgb-chips from card.refs).
+_pgViewerExtras(item) renders both from card.profile (bio, aesthetic,
+silhouette, color, era); the four callouts anchor at fixed fractions of
+the wrap on the middle figure of the three view sheet (Aesthetic 0.545,
+0.22 right; Silhouette 0.455, 0.47 left; Color 0.55, 0.40 right; Era
+0.46, 0.76 left), an SVG draws dot and hairline, labels are positioned in
+percent. It runs after renderViewerNotes (wrapped), on the image's load
+and on resize. pgFlipCard: two half turns (.turning to 90deg in 380 ms,
+swap .flipped while edge on, .turning-in at -90 without transition, then
+.turned eases to 0 in 420 ms); no 3D stacking, so hit testing stays
+sane (a true rotateY(180deg) card with preserve-3d let the front
+intercept clicks on the back in Chromium). Full screen photo hides both.
+A version step re-renders and unflips. Battery: 168 checks on the
+playground, 167 on the app. tests/tmp/desk-shots.mjs in the Claude
+session took the screenshots that verified the look.
+
 ## v14.27 (Claude): ready for a phone
 
 How it was audited (repeatable): tests/tmp/mobile-shots.mjs in the Claude

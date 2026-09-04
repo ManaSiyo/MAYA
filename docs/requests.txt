@@ -16,6 +16,22 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 4, 2026 (v14.28): three small asks and the flip experiment
+
+[x] "The pencil should be hidden until you hover, like the share and the
+    x, for both avatars and projects": done on both.
+[x] "In Improve Maya the second paragraph is not necessary": gone.
+[x] "On the playground, design notes integrated into the picture, arrows
+    on hover like a CAD file; a flip icon bottom right that turns the
+    whole card over to the notes on the back, smooth; all existing
+    cards": built on the playground only. Hover: four callouts (Aesthetic,
+    Silhouette, Color, Era) with dot, hairline and label on the middle
+    figure. Flip: two half turns, the back in the drawer's glass with bio,
+    the five lines and the constraint chips.
+[ ] Fromsa: look at it on a real card and say which of the two (the
+    callouts, the flip) should go to the app, and whether the callout
+    spots should follow the garment instead of fixed points.
+
 SEPTEMBER 3, 2026, NIGHT (v14.27): "Ready it for mobile"
 
 [x] Ran the app at iPhone size and looked at every screen: no errors, no

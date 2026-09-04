@@ -1990,6 +1990,16 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.28: the pencil hides until hover, the consent line is gone, the playground flips its cards to the notes',
+  PLAYGROUND_SOURCE.includes('#notes-drawer .avatar-switch-row:hover .avatar-switch-rename { opacity: 1; }') &&
+  INDEX_SOURCE.includes('#notes-drawer .avatar-switch-row:hover .avatar-switch-rename { opacity: 1; }') &&
+  !INDEX_SOURCE.includes('#notes-drawer .session-item:hover .session-item-rename, #notes-drawer .session-item.active .session-item-rename { opacity: 1; }') &&
+  INDEX_SOURCE.includes('id="fb-consent" onclick="_fbConsentToggle()" style="display:none"') &&
+  PLAYGROUND_SOURCE.includes('id="pg-callouts"') &&
+  PLAYGROUND_SOURCE.includes('function pgFlipCard(ev)') &&
+  PLAYGROUND_SOURCE.includes('function _pgViewerExtras(item)') &&
+  !INDEX_SOURCE.includes('id="pg-callouts"') &&
+  !INDEX_SOURCE.includes('function pgFlipCard(ev)'));
 ok('v14.27: ready for a phone: the switch is the line, mic first, the touched card carries the controls, the feedback box fits',
   PLAYGROUND_SOURCE.includes('function _pgPhone()') &&
   INDEX_SOURCE.includes('function _pgPhone()') &&

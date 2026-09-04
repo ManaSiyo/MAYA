@@ -745,7 +745,8 @@ const c11 = await page.evaluate(async () => {
   out.rowNames = rows.map(r => (r.querySelector('.avatar-switch-name') || {}).textContent);
   const active = panel.querySelector('.avatar-switch-row.active');
   out.activeName = active && active.querySelector('.avatar-switch-name').textContent;
-  out.activePencil = !!active && getComputedStyle(active.querySelector('.avatar-switch-rename')).opacity === '1';
+  out.activePencil = !!active && getComputedStyle(active.querySelector('.avatar-switch-rename')).opacity === '0';   // v14.28: hidden until hover, like the x
+  out.hoverRule = [...document.styleSheets].some(ss => { try { return [...ss.cssRules].some(r => r.selectorText === '#notes-drawer .avatar-switch-row:hover .avatar-switch-rename' && /opacity:\s*1/.test(r.cssText)); } catch (_) { return false; } });
   const other = rows.find(r => !r.classList.contains('active'));
   out.otherPencilHidden = !!other && getComputedStyle(other.querySelector('.avatar-switch-rename')).opacity === '0';
   (0, eval)('_closeAvatarSwitcher()');
@@ -764,9 +765,9 @@ ok('a wider search that fails says why in words, never a number',
 ok('the voice line out of credit says so to the studio', /OpenAI credit has run out/.test(c11.creditToast), JSON.stringify(c11.creditToast));
 ok('the feedback box opens above the open picture, and her look can carry a picture at full detail',
   Number(c11.fbZ) > 200 && /^data:image\/jpeg/.test(c11.pic || ''), JSON.stringify([c11.fbZ, String(c11.pic).slice(0, 30)]));
-ok('the client on the board sits in the list, highlighted, with the only pencil; the one beside the name is gone',
-  c11.namePencilHidden === true && c11.activeName === 'Fromsa' && c11.rowNames.includes('Linda') && c11.activePencil === true && c11.otherPencilHidden === true,
-  JSON.stringify([c11.namePencilHidden, c11.rowNames, c11.activeName, c11.activePencil, c11.otherPencilHidden]));
+ok('the client on the board sits in the list, highlighted; every pencil hides until its row is hovered, like the x (v14.28)',
+  c11.namePencilHidden === true && c11.activeName === 'Fromsa' && c11.rowNames.includes('Linda') && c11.activePencil === true && c11.otherPencilHidden === true && c11.hoverRule === true,
+  JSON.stringify([c11.namePencilHidden, c11.rowNames, c11.activeName, c11.activePencil, c11.otherPencilHidden, c11.hoverRule]));
 
 // ── 3c12. v14.27: a phone: the switch is the line, the touched card carries the controls ──
 const c12 = await page.evaluate(async () => {
@@ -806,6 +807,38 @@ ok('on touch the controls ride on the card the finger touched, one card at a tim
   (c12.firstTouched === true && c12.onlyOneTouched === true) || c12.firstTouched === 'no cards', JSON.stringify([c12.firstTouched, c12.onlyOneTouched, c12.phoneCss]));
 ok('the phone CSS scopes the card controls to the touched card', c12.phoneCss === true);
 ok('the feedback box never runs off a phone screen', /min\(520px, 94vw\)/.test(c12.fbMax || ''), JSON.stringify(c12.fbMax));
+
+// ── 3c13. v14.28: the notes on the picture and the flip (playground); the consent line gone (both) ──
+const c13 = await page.evaluate(async () => {
+  const out = { surface: location.pathname.includes('/playground/') ? 'playground' : 'frontend' };
+  out.consentHidden = getComputedStyle(document.getElementById('fb-consent')).display === 'none';
+  out.hasExtras = typeof window._pgViewerExtras === 'function' && typeof window.pgFlipCard === 'function';
+  if (out.hasExtras) {
+    const seed = { id: 'flip-1', card: { kind: 'inspo', image: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=', title: 'flip test', caption: 'flip test', profile: { bio: 'A crisp look', aesthetic: 'Fresh', silhouette: 'A line', color: 'White', era: 'Now' }, refs: [{ tag: 'detail', title: 'metal chains' }] }, el: document.createElement('div') };
+    window._pgViewerExtras(seed);
+    out.callouts = document.querySelectorAll('#pg-callouts .pgc-label').length;
+    out.dots = document.querySelectorAll('#pg-callouts .pgc-dot').length;
+    out.backRows = document.querySelectorAll('#pg-card-back-body .pgb-row').length;
+    out.backChips = document.querySelectorAll('#pg-card-back-body .pgb-chip').length;
+    const wrap = document.getElementById('garment-image-wrap');
+    window.pgFlipCard();
+    await new Promise(r => setTimeout(r, 950));
+    out.flipped = wrap.classList.contains('flipped') && getComputedStyle(document.getElementById('pg-card-back')).display === 'flex';
+    window.pgFlipCard();
+    await new Promise(r => setTimeout(r, 950));
+    out.unflipped = !wrap.classList.contains('flipped') && getComputedStyle(document.getElementById('pg-card-back')).display === 'none';
+    out.flipBtn = !!document.getElementById('pg-flip') && getComputedStyle(document.getElementById('pg-flip')).position === 'absolute';
+  }
+  return out;
+});
+ok('the Improve Maya box has lost its second paragraph', c13.consentHidden === true);
+if (c13.surface === 'playground') {
+  ok('playground: the design notes point at the figure and the back of the card carries them all',
+    c13.callouts === 4 && c13.dots === 4 && c13.backRows === 5 && c13.backChips === 1, JSON.stringify(c13));
+  ok('playground: the card flips to its notes and back, smoothly, from the corner', c13.flipped === true && c13.unflipped === true && c13.flipBtn === true, JSON.stringify([c13.flipped, c13.unflipped, c13.flipBtn]));
+} else {
+  ok('the app is untouched by the playground flip experiment', c13.hasExtras === false);
+}
 
 // ── 3d. v14.16: the studio gauge never claims zero of two dollars ──
 const gauge = await page.evaluate(() => {

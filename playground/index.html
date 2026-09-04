@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.27">
+<meta name="maya-version" content="14.28">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -1442,6 +1442,59 @@
   /* preserve aspect ratio, never stretch the generated image */
   .modal-img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; opacity: 0; transition: opacity 0.35s ease; }
   .modal-img.loaded { opacity: 1; }
+  /* v14.28 PLAYGROUND: the card flips. The wrap is the card; the picture is
+     its front, the notes its back. The modal lends the perspective. */
+  #garment-modal.open { perspective: 1800px; }
+  /* two half turns: the card turns edge on, the face swaps, it turns the rest
+     of the way. No 3D stacking to fight, and it reads as one smooth flip. */
+  #garment-image-wrap.turning { transition: transform .38s cubic-bezier(.4,0,.8,.6); transform: rotateY(90deg); }
+  #garment-image-wrap.turning-in { transition: none; transform: rotateY(-90deg); }
+  #garment-image-wrap.turned { transition: transform .42s cubic-bezier(.2,.6,.2,1); transform: rotateY(0deg); }
+  #garment-image-wrap.flipped #garment-image, #garment-image-wrap.flipped .submit-wrap, #garment-image-wrap.flipped .viewer-heart,
+  #garment-image-wrap.flipped #garment-spinner, #garment-image-wrap.flipped .viewer-close { visibility: hidden; }
+  #pg-flip { position: absolute; right: 12px; bottom: 12px; z-index: 24; width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer;
+    background: rgba(8,12,26,0.72); border: 0.5px solid rgba(255,255,255,0.3); color: rgba(235,242,255,0.92);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); opacity: 0; transition: opacity .2s, transform .2s; }
+  #pg-flip svg, #pg-card-back .pg-back-flip svg { width: 18px; height: 18px; fill: currentColor; }
+  #garment-image-wrap:hover #pg-flip { opacity: 1; }
+  #pg-flip:hover { transform: rotate(180deg); }
+  @media (hover: none) { #pg-flip { opacity: 1; } }
+  #garment-modal[data-photo="full"] #pg-flip, #garment-modal[data-photo="full"] #pg-callouts { display: none; }
+  /* the back of the card: the drawer's glass, the notes centered */
+  #pg-card-back { position: absolute; inset: 0; border-radius: 16px; z-index: 26; overflow: hidden;
+    display: none; align-items: center; justify-content: center; padding: 34px 40px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%), rgba(8,12,26,0.92);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18); }
+  #pg-card-back .pg-back-flip { position: absolute; right: 12px; bottom: 12px; width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer;
+    background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.3); color: rgba(235,242,255,0.92); }
+  #pg-card-back-body { width: min(560px, 100%); max-height: 100%; overflow-y: auto; scrollbar-width: none; text-align: center; }
+  #pg-card-back-body::-webkit-scrollbar { display: none; }
+  #pg-card-back-body .pgb-title { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: rgba(238,244,255,0.62); margin-bottom: 18px; }
+  #pg-card-back-body .pgb-row { padding: 10px 0; border-bottom: 0.25px solid rgba(255,255,255,0.08); }
+  #pg-card-back-body .pgb-row:last-child { border-bottom: none; }
+  #pg-card-back-body .pgb-k { font-family: 'Jost', sans-serif; font-weight: 600; font-size: 9px; letter-spacing: 0.26em; text-transform: uppercase; color: rgba(255,255,255,0.98); margin-bottom: 4px; }
+  #pg-card-back-body .pgb-v { font-family: 'Cormorant Garamond', serif; font-size: 17px; line-height: 1.45; color: rgba(222,230,245,0.8); }
+  #pg-card-back-body .pgb-v.bio { font-size: 19px; font-style: italic; color: rgba(238,244,255,0.9); }
+  #pg-card-back-body .pgb-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 14px; }
+  #pg-card-back-body .pgb-chip { font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(235,242,255,0.85); border: 0.5px solid rgba(255,255,255,0.24); border-radius: 999px; padding: 4px 10px; }
+  /* the callouts: a dot on the figure, a hairline, a label; like a CAD sheet */
+  #pg-callouts { position: absolute; inset: 0; z-index: 21; pointer-events: none; opacity: 0; transition: opacity .35s ease; border-radius: 16px; overflow: hidden; }
+  #garment-image-wrap:hover #pg-callouts { opacity: 1; }
+  #garment-image-wrap.flipped #pg-callouts, #garment-image-wrap.flipped #pg-flip { opacity: 0; pointer-events: none; }
+  #garment-image-wrap.flipped #pg-card-back { display: flex; }
+  #pg-callouts svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #pg-callouts .pgc-line { stroke: rgba(235,242,255,0.75); stroke-width: 1; fill: none; }
+  #pg-callouts .pgc-dot { fill: rgba(255,255,255,0.95); stroke: rgba(8,12,26,0.6); stroke-width: 1.5; }
+  #pg-callouts .pgc-label { position: absolute; transform: translate(0, -50%); white-space: nowrap; max-width: 46%;
+    padding: 6px 11px; border-radius: 999px; background: rgba(8,12,26,0.78); border: 0.5px solid rgba(255,255,255,0.28);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); text-align: left; }
+  #pg-callouts .pgc-label.left { transform: translate(-100%, -50%); }
+  #pg-callouts .pgc-k { display: block; font-family: 'Jost', sans-serif; font-weight: 600; font-size: 8px; letter-spacing: 0.26em; text-transform: uppercase; color: rgba(255,255,255,0.98); }
+  #pg-callouts .pgc-v { display: block; font-family: 'Cormorant Garamond', serif; font-size: 14px; line-height: 1.2; color: rgba(222,230,245,0.85); overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
   #garment-image { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; opacity: 0; transition: opacity 0.35s ease; }
   #garment-image.loaded { opacity: 1; }
   /* version navigator inside the image viewer.
@@ -1964,8 +2017,10 @@
      client only, the way the open project carries its pencil. The one that
      sat beside the name is gone. */
   #notes-drawer #drawer-avatar-rename { display: none; }
-  #notes-drawer .avatar-switch-row:hover .avatar-switch-rename { opacity: 0; }
-  #notes-drawer .avatar-switch-row.active .avatar-switch-rename { opacity: 1; }
+  /* v14.28: hidden until the row is hovered, exactly like the x. On touch,
+     where nothing hovers, the highlighted row keeps it. */
+  #notes-drawer .avatar-switch-row .avatar-switch-rename { opacity: 0; }
+  #notes-drawer .avatar-switch-row:hover .avatar-switch-rename { opacity: 1; }
   @media (hover: none) { #notes-drawer .avatar-switch-rename { opacity: 0; } #notes-drawer .avatar-switch-row.active .avatar-switch-rename { opacity: 1; } }
   #notes-drawer .avatar-switch-delete:hover { color: #fff; border-color: rgba(255,170,170,0.6); }
   /* v14.20: the pills under the name and the pill beside it were placeholders;
@@ -1988,7 +2043,8 @@
     background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.2);
     color: rgba(215,230,255,0.9); cursor: pointer; padding: 0; font-size: 11px; line-height: 1;
     opacity: 0; transition: opacity 0.15s; }
-  #notes-drawer .session-item:hover .session-item-rename, #notes-drawer .session-item.active .session-item-rename { opacity: 1; }
+  #notes-drawer .session-item:hover .session-item-rename { opacity: 1; }   /* v14.28: hover only, like the x */
+  @media (hover: none) { #notes-drawer .session-item.active .session-item-rename { opacity: 1; } }
   #notes-drawer .session-item.active .session-item-title { cursor: text; }
   #notes-drawer .pg-project-rename { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 13px;
     color: #fff; background: rgba(255,255,255,0.05); border: 0.5px solid rgba(169,201,255,0.6);
@@ -5162,6 +5218,19 @@
       <div class="spinner-ring"></div>
       <div id="spinner-text">rendering vision...</div>
     </div>
+    <!-- v14.28 PLAYGROUND: the design notes on the picture itself. Hover the
+         picture and the five lines point at the figure like a CAD sheet; the
+         flip in the corner turns the whole card over to the notes on its back. -->
+    <div id="pg-callouts" aria-hidden="true"></div>
+    <button id="pg-flip" type="button" onclick="pgFlipCard(event)" title="Flip to the design notes" aria-label="Flip the card">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h8.2l-1.6-1.6L14.7 4.3 18.4 8l-3.7 3.7-1.1-1.1L15.2 9H7a2 2 0 0 0-2 2v2H3v-2a4 4 0 0 1 4-4zm10 10H8.8l1.6 1.6-1.1 1.1L5.6 16l3.7-3.7 1.1 1.1L8.8 15H17a2 2 0 0 0 2-2v-2h2v2a4 4 0 0 1-4 4z"/></svg>
+    </button>
+    <div id="pg-card-back" aria-hidden="true">
+      <button class="pg-back-flip" type="button" onclick="pgFlipCard(event)" title="Flip back to the picture" aria-label="Flip back">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h8.2l-1.6-1.6L14.7 4.3 18.4 8l-3.7 3.7-1.1-1.1L15.2 9H7a2 2 0 0 0-2 2v2H3v-2a4 4 0 0 1 4-4zm10 10H8.8l1.6 1.6-1.1 1.1L5.6 16l3.7-3.7 1.1 1.1L8.8 15H17a2 2 0 0 0 2-2v-2h2v2a4 4 0 0 1-4 4z"/></svg>
+      </button>
+      <div id="pg-card-back-body"></div>
+    </div>
   </div>
   <div id="viewer-version-nav">
     <button class="nav-arrow" id="viewer-prev" onclick="viewerStep(-1)" title="Previous version">&#8249;</button>
@@ -5291,7 +5360,8 @@
     <button class="modal-close icon pg-fb-x" onclick="closeFeedback()" aria-label="Close">×</button>
     <h2 style="text-align:center">Improve Maya</h2>
     <div class="modal-hint" style="text-align:center">Any idea or feature you wish for. Every note lands in the studio inbox.</div>
-    <div class="modal-hint" id="fb-consent" onclick="_fbConsentToggle()" style="text-align:center;cursor:pointer;opacity:0.75" title="Anonymized tool telemetry only. Never photos, audio, transcripts, faces, or measurements. Tap to change."></div>
+    <!-- v14.28: the telemetry line is gone from the box, per Fromsa; consent stays where it was set. -->
+    <div class="modal-hint" id="fb-consent" onclick="_fbConsentToggle()" style="display:none" title="Anonymized tool telemetry only. Never photos, audio, transcripts, faces, or measurements. Tap to change."></div>
     <!-- v14.09: two tabs. Your note is yours to write; Maya's logs is what she
          recorded about her own limits, automatically, already with the studio. -->
     <div id="fb-tabs" role="tablist" aria-label="Improve Maya">
@@ -19362,6 +19432,85 @@ if (typeof openFeedback === 'function') {
   const _oOF = openFeedback;
   openFeedback = function () { const r = _oOF.apply(this, arguments); try { _fbRenderMayaLogs(); _fbTab('note'); _fbConsentRender(); } catch (_) {} return r; };
 }
+// ═══ PLAYGROUND v14.28: THE NOTES ON THE PICTURE. Hover the open picture and
+// the five lines point at the figure, dot, hairline, label, like a CAD sheet.
+// The flip in the corner turns the card over; the back carries the notes in
+// the drawer's glass. Every card that exists gets this, because it reads the
+// same profile the notes column reads.
+let _pgFlipBusy = false;
+function pgFlipCard(ev) {
+  try { if (ev) { ev.stopPropagation(); ev.preventDefault(); } } catch (_) {}
+  const wrap = document.getElementById('garment-image-wrap'); if (!wrap || _pgFlipBusy) return;
+  _pgFlipBusy = true;
+  const back = document.getElementById('pg-card-back');
+  wrap.classList.remove('turned', 'turning-in');
+  wrap.classList.add('turning');                          // edge on
+  setTimeout(() => {
+    wrap.classList.toggle('flipped');                     // the face swaps while edge on
+    if (back) back.setAttribute('aria-hidden', wrap.classList.contains('flipped') ? 'false' : 'true');
+    wrap.classList.remove('turning'); wrap.classList.add('turning-in');
+    void wrap.offsetWidth;                                // commit the -90 before easing to 0
+    wrap.classList.remove('turning-in'); wrap.classList.add('turned');
+    setTimeout(() => { wrap.classList.remove('turned'); _pgFlipBusy = false; }, 440);
+  }, 380);
+}
+window.pgFlipCard = pgFlipCard;
+function _pgViewerExtras(item) {
+  const c = (item && item.card) || {};
+  const P = c.profile || {};
+  const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  // the back
+  const back = document.getElementById('pg-card-back-body');
+  if (back) {
+    const rows = [['Bio', P.bio, 'bio'], ['Aesthetic', P.aesthetic], ['Silhouette', P.silhouette], ['Color', P.color], ['Era', P.era]]
+      .filter(r => r[1]).map(r => '<div class="pgb-row"><div class="pgb-k">' + esc(r[0]) + '</div><div class="pgb-v' + (r[2] ? ' ' + r[2] : '') + '">' + esc(r[1]) + '</div></div>').join('');
+    const refs = Array.isArray(c.refs) ? c.refs : [];
+    const chips = refs.map(r => r && r.title ? (r.tag ? String(r.tag).replace(/_/g, ' ') + ': ' : '') + r.title : '').filter(Boolean).slice(0, 12)
+      .map(a => '<span class="pgb-chip">' + esc(a) + '</span>').join('');
+    back.innerHTML = '<div class="pgb-title">Design notes' + (c.version ? ', v' + esc(c.version) : '') + '</div>' +
+      (rows || '<div class="pgb-v bio">' + esc(c.caption || c.title || 'No notes on this one yet.') + '</div>') +
+      (chips ? '<div class="pgb-chips">' + chips + '</div>' : '');
+  }
+  // the callouts on the front: anchors on the front figure (the middle third of a three view sheet)
+  const host = document.getElementById('pg-callouts');
+  if (host) {
+    const spots = [
+      ['Aesthetic', P.aesthetic, 0.545, 0.22, 'right'],
+      ['Silhouette', P.silhouette, 0.455, 0.47, 'left'],
+      ['Color', P.color, 0.55, 0.40, 'right'],
+      ['Era', P.era, 0.46, 0.76, 'left'],
+    ].filter(s => s[1]);
+    if (!spots.length) { host.innerHTML = ''; }
+    else {
+      const W = host.clientWidth || 1000, H = host.clientHeight || 700;
+      let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">';
+      let labels = '';
+      spots.forEach(s => {
+        const x = s[2] * W, y = s[3] * H, dir = s[4];
+        const lx = dir === 'right' ? Math.min(W - 12, x + W * 0.14) : Math.max(12, x - W * 0.14);
+        svg += '<path class="pgc-line" d="M' + x.toFixed(1) + ' ' + y.toFixed(1) + ' L' + lx.toFixed(1) + ' ' + y.toFixed(1) + '"/>';
+        svg += '<circle class="pgc-dot" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="3.5"/>';
+        labels += '<div class="pgc-label ' + dir + '" style="left:' + (lx / W * 100).toFixed(2) + '%;top:' + (y / H * 100).toFixed(2) + '%">' +
+          '<span class="pgc-k">' + esc(s[0]) + '</span><span class="pgc-v">' + esc(s[1]) + '</span></div>';
+      });
+      host.innerHTML = svg + '</svg>' + labels;
+    }
+  }
+  const wrap = document.getElementById('garment-image-wrap');
+  if (wrap && !_pgFlipBusy) wrap.classList.remove('flipped');
+}
+window._pgViewerExtras = _pgViewerExtras;
+if (typeof renderViewerNotes === 'function') {
+  const _oRVN = renderViewerNotes;
+  renderViewerNotes = function (item) { const r = _oRVN.apply(this, arguments); try { _pgViewerExtras(item); } catch (_) {} return r; };
+}
+// the picture's own size decides where the dots land: redraw once it has loaded and on resize
+(function () {
+  const img = document.getElementById('garment-image');
+  const redraw = () => { try { const it = (typeof _pgOpenItem === 'function') ? _pgOpenItem() : null; if (it) _pgViewerExtras(it); } catch (_) {} };
+  if (img) img.addEventListener('load', redraw);
+  window.addEventListener('resize', redraw);
+})();
 </script>
 </body>
 </html>
