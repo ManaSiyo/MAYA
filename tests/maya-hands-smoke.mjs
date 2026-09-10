@@ -840,6 +840,38 @@ if (c13.surface === 'playground') {
   ok('the app is untouched by the playground flip experiment', c13.hasExtras === false);
 }
 
+// ── 3c14. v14.29: an iPad fits. Portrait 820 wide: the drawer opens, the pills stay in the visible board, the floor stays on screen ──
+await page.evaluate(() => { toggleNotesDrawer(false); try { document.getElementById('screens').scrollTo({ top: window.innerHeight, behavior: 'auto' }); } catch (_) {} });
+await page.waitForTimeout(600);
+await page.setViewportSize({ width: 820, height: 1180 });
+await page.waitForTimeout(300);
+await page.evaluate(() => { try { document.getElementById('screens').scrollTo({ top: window.innerHeight, behavior: 'auto' }); } catch (_) {} toggleNotesDrawer(true); });
+await page.waitForTimeout(900);
+const c14 = await page.evaluate(() => {
+  const out = { vw: window.innerWidth, vh: window.innerHeight };
+  const r = sel => { const el = document.querySelector(sel); if (!el) return null; const b = el.getBoundingClientRect(); return { l: Math.round(b.left), r: Math.round(b.right), t: Math.round(b.top), b: Math.round(b.bottom) }; };
+  out.voice = r('#voice-wrap'); out.floor = r('#notes-drawer .drawer-meta-row'); out.drawer = r('#notes-drawer'); out.toggle = r('#pg-maya-toggle');
+  const hs = document.getElementById('hscroll');
+  out.scrolled = hs ? hs.scrollLeft : -1;
+  out.visibleLeft = out.vw - (hs ? (hs.scrollWidth - hs.clientWidth) : 0);
+  const inspoTop = Math.round(document.getElementById('screen-inspo').getBoundingClientRect().top);   // the battery may have left another screen current; measure the pill inside its own screen
+  out.pillInside = !!out.voice && out.voice.l >= 0 && out.voice.r <= out.vw && out.voice.b - inspoTop <= out.vh && out.voice.t - inspoTop >= 0;
+  out.floorInside = !!out.floor && out.floor.b <= out.vh && out.floor.l >= 0 && out.floor.r <= out.vw;
+  out.toggleInside = !!out.toggle && out.toggle.r <= out.vw && out.toggle.b <= out.vh;
+  out.paneDvh = [...document.styleSheets].some(ss => { try { return [...ss.cssRules].some(r => r.conditionText === '(height: 100dvh)' && /\.hpane \{ height: 100dvh/.test(r.cssText)); } catch (_) { return false; } });
+  out.lightGlassRule = [...document.styleSheets].some(ss => { try { return [...ss.cssRules].some(r => r.media && r.media.mediaText === '(pointer: coarse)' && /#notes-drawer, #fabrics-drawer, #pinterest-drawer/.test(r.cssText)); } catch (_) { return false; } });
+  return out;
+});
+await page.evaluate(() => { toggleNotesDrawer(false); });
+await page.waitForTimeout(700);
+const c14b = await page.evaluate(() => { const b = document.getElementById('voice-wrap').getBoundingClientRect(); return { l: Math.round(b.left), r: Math.round(b.right), center: Math.round((b.left + b.right) / 2), vw: window.innerWidth, tf: document.getElementById('voice-wrap').style.transform }; });
+await page.setViewportSize({ width: 1280, height: 800 });
+await page.waitForTimeout(400);
+ok('iPad portrait: the drawer opens and the Tap to listen pill stays inside the board the drawer leaves visible', c14.scrolled > 300 && c14.pillInside === true && c14.voice.l >= 0, JSON.stringify(c14));
+ok('iPad portrait: Tip, Logout, Feedback and Hey Maya sit on screen at the drawer floor', c14.floorInside === true && c14.toggleInside === true, JSON.stringify([c14.floor, c14.toggle, c14.vh]));
+ok('the panes follow the visible height at every width (dvh), and every touch screen gets the lighter glass', c14.paneDvh === true && c14.lightGlassRule === true, JSON.stringify([c14.paneDvh, c14.lightGlassRule]));
+ok('iPad portrait: with the drawer closed the pill returns to the center of the whole board', Math.abs(c14b.center - c14b.vw / 2) <= 2 && c14b.tf === '', JSON.stringify(c14b));
+
 // ── 3d. v14.16: the studio gauge never claims zero of two dollars ──
 const gauge = await page.evaluate(() => {
   (0, eval)('_mayaUsage = { spentUsd: 9.4, capUsd: 2, images: 120, perCard: 0.065, admin: true, projects: 3, ok: true }');

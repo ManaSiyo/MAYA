@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.28">
+<meta name="maya-version" content="14.29">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -4388,14 +4388,16 @@
      flow, just sized for a hand.
      ═══════════════════════════════════════════════════════════ */
   @supports (height: 100dvh) {
-    @media (max-width: 640px) {
-      /* v11.34: the PANES were still 100vh, on iPhone Safari 100vh is the
-         LARGE viewport (URL bar collapsed), so pane bottoms (and the drawer
-         inside the drawer pane) sat below the visible screen: the "cropped
-         at the bottom" bug. dvh tracks the real visible height. */
-      #screen-community, #screen-inspo, #screen-favorites { height: 100dvh; min-height: 100dvh; }
-      .hpane { height: 100dvh; }
-    }
+    /* v11.34: the PANES were still 100vh, on iPhone Safari 100vh is the
+       LARGE viewport (URL bar collapsed), so pane bottoms (and the drawer
+       inside the drawer pane) sat below the visible screen: the "cropped
+       at the bottom" bug. dvh tracks the real visible height.
+       v14.29: at every width, not only under 640. iPad Safari has the same
+       tall 100vh, so on an iPad the drawer floor (Tip, Logout, Feedback,
+       Hey Maya) and the Tap to listen pill sat under the visible edge. On a
+       desktop dvh and vh are the same number, nothing moves there. */
+    #screen-community, #screen-inspo, #screen-favorites { height: 100dvh; min-height: 100dvh; }
+    .hpane { height: 100dvh; }
   }
   @media (max-width: 640px) {
     /* v11.34: top bar, brand block shrinks and truncates so the wordmark
@@ -4503,6 +4505,36 @@
     #notes-drawer .pg-gauge-value { font-size: 22px; }
     #notes-drawer .pg-stat-num { font-size: 18px; }
     #notes-drawer .pg-fold summary { font-size: 9px; }
+  }
+  /* v14.29: TABLET FIT. An iPad sits between the phone rules (640 and
+     under) and the desktop (1280 and over) and used to get the desktop
+     layout untouched: with the drawer open the board scrolls 378px to the
+     left and the Tap to listen and Visualize pills, centered on the whole
+     board, went half off the left edge. In this band the pills stay
+     centered in the part of the board that is still visible (the offset is
+     written from the live scroll position, see updateDrawerState), the
+     bottom rows wrap inside it, and the drawer floor keeps clear of the
+     home indicator. */
+  @media (min-width: 641px) and (max-width: 1279px) {
+    body.drawer-open #voice-wrap { max-width: calc(100vw - 378px - 12px); }
+    #voice-row, #secondary-row { flex-wrap: wrap; justify-content: center; row-gap: 6px; }
+    #notes-drawer { bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+    #viewer-row-default, #viewer-row-modify-1, #viewer-row-modify-2 { flex-wrap: wrap; justify-content: center; gap: 6px; padding: 0 12px; }
+    #garment-modal:not([data-mode="submit"]):not([data-photo="full"]) #viewer-actions { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+    .modal-card { max-width: min(560px, 92vw); max-height: 88dvh; overflow-y: auto; }
+  }
+  /* v14.29: every touch screen, the iPad included, gets the lighter glass the
+     phone already had. Blur is the one effect that costs a whole frame on a
+     mobile GPU, and the iPad was paying the desktop price on every scroll,
+     glide and drag. Nothing changes on a mouse. */
+  @media (pointer: coarse) {
+    .item-card { backdrop-filter: blur(12px) saturate(160%);
+                 -webkit-backdrop-filter: blur(12px) saturate(160%); }
+    .modal { backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+    #notes-drawer, #fabrics-drawer, #pinterest-drawer {
+      backdrop-filter: blur(20px) saturate(170%);
+      -webkit-backdrop-filter: blur(20px) saturate(170%); }
+    #voice-bar { backdrop-filter: blur(14px) saturate(170%); -webkit-backdrop-filter: blur(14px) saturate(170%); }
   }
   /* v13.33: on a phone the finger needs a bigger target than the eye needs a
      bigger label. Nothing here changes a type size, only the area you can hit,
@@ -6933,6 +6965,18 @@ function _bootScreenObserver() {
           else hb.style.transform = 'translateX(' + (-Math.max(0, hscroll.scrollLeft - 18)) + 'px)';
         }
       } catch (_) {}
+      // v14.29: on a tablet (641 to 1279 wide) the Tap to listen and Visualize
+      // pills stay centered in the part of the board the drawer leaves
+      // visible, glued to the scroll like the hamburger; on a phone the
+      // drawer covers the board and on a desktop the board is wide enough.
+      try {
+        const vw = document.getElementById('voice-wrap');
+        if (vw) {
+          const w = window.innerWidth;
+          if (w > 640 && w < 1280 && hscroll.scrollLeft > 0) vw.style.transform = 'translateX(calc(-50% + ' + Math.round(hscroll.scrollLeft / 2) + 'px))';
+          else if (vw.style.transform) vw.style.transform = '';
+        }
+      } catch (_) {}
       // v13.43: the button that opened the drawer steps aside while it is
       // open; the drawer owns that corner. aria stays truthful for readers.
       try {
@@ -6954,6 +6998,9 @@ function _bootScreenObserver() {
       _drawerWasOpen = open;
     };
     hscroll.addEventListener('scroll', updateDrawerState, { passive: true });
+    // v14.29: an iPad turned in the hand changes the width band; the pill
+    // offset is written again from the same scroll position.
+    window.addEventListener('resize', updateDrawerState, { passive: true });
     updateDrawerState();
   }
 }

@@ -16,6 +16,25 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 9, 2026, NIGHT (v14.29): "audit everything for the iPad and mobile, make sure everything fits, and a smooth refresh rate"
+
+[x] "The vertical screen cuts the tap to listen and visualization, I
+    barely can see them": the board slid 378px under the drawer and the
+    pills stayed centered on the whole board. They now stay centered in
+    the visible part, at every tablet width, and follow the drawer.
+[x] "Logout, Feedback, Hey Maya are outside the view for iPads and
+    mobile": Safari's tall 100vh at iPad widths. Every pane follows the
+    visible height now, at every width, the same fix the phone got in
+    v11.34.
+[x] "A smooth refresh rate for the iPad": every touch screen gets the
+    lighter glass the phone had (the blur was the frame the iPad lost on
+    every scroll and glide); nothing changes on a mouse.
+[ ] "Get back on Pinterest, being able to search anything inside
+    Pinterest": the wider search still needs one of the two keys that are
+    Fromsa's (the Pinterest partner search beta, or a Google Custom Search
+    key and cx on Cloud Run). The saved pins search is checked live in
+    this round.
+
 SEPTEMBER 4, 2026 (v14.28): three small asks and the flip experiment
 
 [x] "The pencil should be hidden until you hover, like the share and the

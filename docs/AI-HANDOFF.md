@@ -74,6 +74,36 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.29 (Claude): the iPad fits
+
+Both surfaces, CSS: the @supports (height: 100dvh) block no longer nests
+the 640px query; #screen-* and .hpane are 100dvh at every width (iPad
+Safari's 100vh is the tall viewport, exactly the iPhone bug of v11.34, so
+the drawer floor and the pill sat under the visible edge). New band
+@media (min-width: 641px) and (max-width: 1279px): body.drawer-open
+#voice-wrap max-width calc(100vw - 378px - 12px); #voice-row and
+#secondary-row wrap; #notes-drawer bottom adds the safe area; the viewer
+rows wrap; .modal-card max-width min(560px, 92vw), max-height 88dvh.
+New @media (pointer: coarse) at any width: .item-card blur 12, .modal blur
+18, the three drawers blur 20, #voice-bar blur 14 (the phone already had
+the first two under 640; the iPad was paying the desktop blur).
+JS, updateDrawerState: between 641 and 1279 wide, while hscroll.scrollLeft
+is above 0, #voice-wrap gets translateX(calc(-50% + scrollLeft/2 px)),
+which keeps it centered in the visible part of the board (the board pane
+is 100vw and scrolls 378px under the drawer); otherwise the inline
+transform is cleared. window resize calls updateDrawerState too (an iPad
+turned in the hand). Nothing changes under 641 (the drawer covers the
+board) or at 1280 and over.
+Battery 3c14 resizes the page to 820 x 1180, opens the drawer and checks
+the pill, the floor row and the Hey Maya switch are inside the viewport,
+then closes it and checks the pill is back at the center: app 171,
+playground 172. tests/tmp/tablet-shots.mjs (Claude session) takes iPad
+gen 5, gen 11, Pro 11 landscape and iPhone 14 shots with a probe of the
+key rects.
+Not done, his: the Pinterest wider search (see v14.26); the live saved
+pins search 502 is read in this round from a tab of mine and the finding
+is in requests.txt.
+
 ## v14.28 (Claude): the pencil on hover, the consent line gone, the playground flip
 
 Both surfaces: .avatar-switch-rename is opacity 0 and shows on

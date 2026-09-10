@@ -1990,6 +1990,14 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.29: the iPad fits: dvh panes at every width, the pills follow the visible board, lighter glass on touch',
+  INDEX_SOURCE.includes('#screen-community, #screen-inspo, #screen-favorites { height: 100dvh; min-height: 100dvh; }\n    .hpane { height: 100dvh; }\n  }') &&
+  INDEX_SOURCE.includes('@media (min-width: 641px) and (max-width: 1279px) {') &&
+  INDEX_SOURCE.includes("if (w > 640 && w < 1280 && hscroll.scrollLeft > 0) vw.style.transform = 'translateX(calc(-50% + ' + Math.round(hscroll.scrollLeft / 2) + 'px))';") &&
+  INDEX_SOURCE.includes("window.addEventListener('resize', updateDrawerState, { passive: true });") &&
+  INDEX_SOURCE.includes('@media (pointer: coarse) {\n    .item-card { backdrop-filter: blur(12px) saturate(160%);') &&
+  PLAYGROUND_SOURCE.includes('@media (min-width: 641px) and (max-width: 1279px) {') &&
+  PLAYGROUND_SOURCE.includes("window.addEventListener('resize', updateDrawerState, { passive: true });"));
 ok('v14.28: the pencil hides until hover, the consent line is gone, the playground flips its cards to the notes',
   PLAYGROUND_SOURCE.includes('#notes-drawer .avatar-switch-row:hover .avatar-switch-rename { opacity: 1; }') &&
   INDEX_SOURCE.includes('#notes-drawer .avatar-switch-row:hover .avatar-switch-rename { opacity: 1; }') &&
