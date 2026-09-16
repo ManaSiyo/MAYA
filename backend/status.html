@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="14.30">
+<meta name="maya-version" content="14.31">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -944,9 +944,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-09-15a" data-version="14.30">
+  <details class="fold" id="changes-fold" data-latest="2026-09-15b" data-version="14.31">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Sep 15</b>Maya calls Fromsa. Say "give me a call" to her here in Admin and his phone rings from the studio number, 510 990 9223; she opens with why she is calling, reads him the newest leads when he asks, notes what he says onto a lead, and hangs up when he says that is all. Only his number, ever. The phone line can run its own model too, so the studio call can be the mini model while the app keeps the full one.</div>
     <div class="chg"><b>Sep 15</b>Maya answers the phone. Twilio rings the studio number, streams the caller's voice to the server, and Maya is on the line in her own voice: she asks what they are picturing, takes a name, confirms the number, and saves the caller into the Lead Station with a PHONE badge, then tells them Fromsa will call back. Interrupt her and she stops mid sentence. A caller who talks and hangs up before she saved them still lands in the station from the transcript, and every call's transcript is kept. The line is off until the Twilio token and the number are set. And the Lead Station now reads a whole year of Wix instead of 28 days, so all nine Call back submissions show, each badge saying which form it came from.</div>
     <div class="chg"><b>Sep 9</b>The iPad fits. It sat between the phone rules and the desktop and got the desktop layout untouched: with the drawer open the board slid 378px left and the Tap to listen and Visualize pills went half off the edge, and Safari's tall 100vh put Tip, Logout, Feedback and Hey Maya under the visible bottom. Now every pane follows the visible height at every width, the pills stay centered in the part of the board the drawer leaves open (glued to the scroll, re-seated when the iPad turns), the bottom rows wrap inside it, and every touch screen gets the lighter glass the phone already had, which is the frame the iPad was losing on each scroll and glide.</div>
     <div class="chg"><b>Sep 4</b>Three small asks and one experiment. The pencil on clients and on projects hides until the row is hovered, exactly like the x (on a phone the highlighted row keeps it, since nothing hovers there). The Improve Maya box lost its second paragraph. And on the Playground only: the design notes live on the picture. Hover the open picture and Aesthetic, Silhouette, Color and Era point at the figure with a dot, a hairline and a label, like a CAD sheet; the flip in the bottom right corner turns the whole card over, two half turns, and the back carries all the notes in the drawer's glass, bio first, with the constraint chips under them. Every card that exists gets it, because it reads the same profile the notes column reads.</div>
@@ -2121,6 +2122,14 @@ async function _voiceTool(name, args){
         headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({text:t})});
         return r.ok?{ok:true,journaled:true}:{ok:false,error:'journal_failed'};
       }catch(e){ return {ok:false,error:'journal_failed'}; }
+    }
+    if(name==='call_me'){
+      // v14.31: she rings Fromsa's phone from the studio number and briefs him there.
+      try{ const r=await fetch('/api/phone/call-me',{method:'POST',
+        headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({reason:_mayaEscText(args.reason||'').slice(0,1200)})});
+        const j=await r.json().catch(()=>({}));
+        return j.ok?{ok:true,calling:true,say:'his phone is ringing now'}:{ok:false,why:j.why||'the call did not go out',say:'tell him plainly why the call did not go out'};
+      }catch(e){ return {ok:false,why:'the call did not go out'}; }
     }
     if(name==='read_team_sheet'){
       try{ const r=await fetch('/api/admin/team-sheet',{headers:{'Authorization':'Bearer '+_idTok}});

@@ -29,14 +29,21 @@ const AUTH = 'test-twilio-auth-token';
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 const server = http.createServer(app);
-const leads = [], transcripts = [], spends = [];
-mountMayaPhone(app, server, {
+const leads = [], transcripts = [], spends = [], notes = [];
+// a fake Twilio REST API for the calls Maya places
+const twSrv = http.createServer((req, res) => { let b = ''; req.on('data', c => b += c); req.on('end', () => { twRest.push({ url: req.url, auth: req.headers.authorization || '', form: Object.fromEntries(new URLSearchParams(b)) }); res.setHeader('Content-Type', 'application/json'); res.statusCode = 201; res.end(JSON.stringify({ sid: 'CAOUT1', status: 'queued' })); }); });
+const twRest = [];
+await new Promise(r => twSrv.listen(0, '127.0.0.1', r));
+const phone = mountMayaPhone(app, server, {
   authToken: AUTH, openaiKey: 'sk-test', model: 'gpt-realtime', voice: 'marin', character: 'I am Maya.',
   saveLead: async (lead, prevId) => { const item = { id: prevId || ('m_' + leads.length), ...lead }; leads.push(item); return item; },
   saveTranscript: async (callSid, rec) => { transcripts.push({ callSid, rec }); },
   noteSpend: () => spends.push(1),
   openaiUrl: 'ws://127.0.0.1:' + aiPort + '/v1/realtime',
   WebSocketServer, WebSocketClient: WebSocket, publicHost: 'maya.manasiyo.com', log: () => {},
+  accountSid: 'ACtest', fromNumber: '+15109909223', fromsaPhone: '+15104917540', twilioApi: 'http://127.0.0.1:' + twSrv.address().port,
+  listLeads: async (n) => leads.slice(-n).map(l => ({ name: l.name, phone: l.phone, wrote: l.wrote })),
+  noteLead: async (lead, note) => { notes.push({ lead, note }); return /tori/i.test(lead) ? { ok: true, name: 'Tori' } : { ok: false, why: 'no lead named ' + lead }; },
 });
 await new Promise(r => server.listen(0, '127.0.0.1', r));
 const port = server.address().port;
@@ -152,8 +159,57 @@ ok('the call is gone from the live count', stEnd.calls === 0);
   ok('a hang up before save_lead still lands the caller in the station from the transcript, with the caller id',
     transcripts.length === 2 && leads.length === n + 1 && leads[n].source === 'phone' && leads[n].name === 'Caller' && leads[n].phone === '+14155550123' && /navy, three piece/.test(leads[n].wrote), JSON.stringify(leads.slice(n)));
 }
+// 5. v14.31: Maya calls Fromsa
+{
+  const placed = await phone.callFromsa('Fromsa asked for a test call from Admin.');
+  const rest = twRest[0];
+  ok('callFromsa places one Twilio call to Fromsa from the studio number, pointing at the outbound TwiML',
+    placed.ok === true && placed.sid === 'CAOUT1' && !!rest && rest.url === '/2010-04-01/Accounts/ACtest/Calls.json' &&
+    rest.auth === 'Basic ' + Buffer.from('ACtest:' + AUTH).toString('base64') &&
+    rest.form.To === '+15104917540' && rest.form.From === '+15109909223' && rest.form.Url === 'https://maya.manasiyo.com/api/phone/outbound',
+    JSON.stringify([placed, rest]));
+  const oUrl = 'https://maya.manasiyo.com/api/phone/outbound';
+  const oParams = { CallSid: 'CAOUT1', From: '+15109909223', To: '+15104917540', Direction: 'outbound-api' };
+  const postO = (p, headers) => fetch(base + '/api/phone/outbound', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...headers }, body: new URLSearchParams(p).toString() });
+  const bad = await postO(oParams, {});
+  const unknown = await postO({ ...oParams, CallSid: 'CAnope' }, { 'X-Twilio-Signature': sign(oUrl, { ...oParams, CallSid: 'CAnope' }, AUTH) });
+  const good2 = await postO(oParams, { 'X-Twilio-Signature': sign(oUrl, oParams, AUTH) });
+  const tw2 = await good2.text();
+  ok('the outbound TwiML is signed, known to the server, and opens the same stream with a per call token',
+    bad.status === 403 && unknown.status === 404 && good2.status === 200 && tw2.includes('name="token" value="' + callToken(AUTH, 'CAOUT1') + '"'), [bad.status, unknown.status, good2.status].join(','));
+  const tw = new WebSocket('ws://127.0.0.1:' + port + '/api/phone/stream');
+  const twGot = []; tw.on('message', raw => { try { twGot.push(JSON.parse(raw.toString())); } catch (_) {} });
+  await new Promise(r => tw.on('open', r));
+  const n0 = ai.sockets.length, g0 = ai.got.length;
+  tw.send(JSON.stringify({ event: 'start', streamSid: 'MZ3', start: { callSid: 'CAOUT1', customParameters: { token: callToken(AUTH, 'CAOUT1'), from: '+15104917540', callSid: 'CAOUT1' } } }));
+  await until(() => ai.sockets.length === n0 + 1 && ai.got.slice(g0).some(m => m.type === 'response.create'));
+  const su = ai.got.slice(g0).find(m => m.type === 'session.update');
+  ok('on Fromsa\'s side Maya is his secretary: the reason is in her brief, she opens with his name, and she has list_leads, note_lead, save_lead, end_call',
+    !!su && /WHY YOU ARE CALLING: Fromsa asked for a test call from Admin\./.test(su.session.instructions) && /Hey Fromsa, it is Maya/.test(su.session.instructions) &&
+    su.session.tools.map(t => t.name).join(',') === 'list_leads,note_lead,save_lead,end_call' && !/[\u2014\u2013]/.test(su.session.instructions), su && su.session.tools.map(t => t.name).join(','));
+  const s3 = ai.sockets[n0].sock; const say = o => s3.send(JSON.stringify(o));
+  const g1 = ai.got.length;
+  say({ type: 'response.function_call_arguments.done', call_id: 'c_l', name: 'list_leads', arguments: JSON.stringify({ count: 2 }) });
+  await until(() => ai.got.slice(g1).some(m => m.type === 'conversation.item.create'));
+  const lo = JSON.parse(ai.got.slice(g1).find(m => m.type === 'conversation.item.create').item.output);
+  ok('list_leads reads the station for her', lo.ok === true && Array.isArray(lo.leads) && lo.leads.length === 2 && lo.leads[0].name, JSON.stringify(lo));
+  const g2 = ai.got.length;
+  say({ type: 'response.function_call_arguments.done', call_id: 'c_n', name: 'note_lead', arguments: JSON.stringify({ lead: 'Tori', note: 'call her Thursday' }) });
+  await until(() => ai.got.slice(g2).some(m => m.type === 'conversation.item.create'));
+  const no = JSON.parse(ai.got.slice(g2).find(m => m.type === 'conversation.item.create').item.output);
+  ok('note_lead writes his words onto the lead', no.ok === true && notes.length === 1 && notes[0].note === 'call her Thursday', JSON.stringify([no, notes]));
+  let closed = false; tw.on('close', () => { closed = true; });
+  const nl = leads.length;
+  say({ type: 'response.function_call_arguments.done', call_id: 'c_e', name: 'end_call', arguments: '{}' });
+  await until(() => closed, 5000);
+  const last = transcripts[transcripts.length - 1];
+  ok('the brief call ends on end_call, its transcript says brief, and no ghost lead is made from Fromsa\'s own words',
+    closed === true && last && last.rec.mode === 'brief' && last.rec.reason.startsWith('Fromsa asked') && leads.length === nl, JSON.stringify(last && last.rec));
+  const twice = await phone.callFromsa('again');
+  ok('a second call can be placed once the first is over', twice.ok === true);
+}
 ok('phoneInstructions reads the character first', phoneInstructions({ character: 'X', nowLA: 'now', from: '' }).startsWith('WHO YOU ARE:\nX'));
 
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + ' (' + passed + ' ok)');
-aiSrv.close(); server.close();
+aiSrv.close(); twSrv.close(); server.close();
 process.exit(failed ? 1 : 0);

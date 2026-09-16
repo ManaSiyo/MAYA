@@ -1992,6 +1992,15 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.31: Maya calls Fromsa: the outbound route, the brief persona, call_me in Admin, only his number',
+  PHONE_SOURCE.includes("app.post('/api/phone/outbound', outboundTwiml);") &&
+  PHONE_SOURCE.includes('export function briefInstructions(') &&
+  PHONE_SOURCE.includes("const form = new URLSearchParams({ To: deps.fromsaPhone, From: deps.fromNumber,") &&
+  SERVER_SOURCE.includes("app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {") &&
+  SERVER_SOURCE.includes("{ type: 'function', name: 'call_me',") &&
+  SERVER_SOURCE.includes("fromsaPhone: process.env.FROMSA_PHONE || '+15104917540',") &&
+  SERVER_SOURCE.includes("model: process.env.PHONE_REALTIME_MODEL || REALTIME_MODEL,") &&
+  MAP_SOURCE.includes("if(name==='call_me'){"));
 ok('v14.30: Maya on the phone and a year of leads: the phone module, the station badges, the CI test',
   SERVER_SOURCE.includes("import { mountMayaPhone } from './maya-phone.mjs';") &&
   SERVER_SOURCE.includes("const LEADS_DAYS = Number(process.env.WIX_LEADS_DAYS || 365);") &&

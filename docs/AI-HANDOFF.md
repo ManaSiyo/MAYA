@@ -74,6 +74,42 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.31 (Claude): Maya calls Fromsa
+
+maya-phone.mjs: mountMayaPhone now returns { live, wss, callFromsa(reason) }.
+callFromsa POSTs to Twilio (deps.twilioApi, default api.twilio.com)
+/2010-04-01/Accounts/SID/Calls.json with Basic SID:token, form To =
+deps.fromsaPhone (only ever his number), From = deps.fromNumber, Url =
+https://publicHost/api/phone/outbound, Timeout 30; the returned CallSid is
+kept in an in memory map with the reason (15 min TTL). POST
+/api/phone/outbound (Twilio fetches it when he picks up): signature
+checked, CallSid must be in that map (404 otherwise), answers the same
+<Connect><Stream> TwiML. On the stream's start event a CallSid found in
+the map flips the call to mode 'brief': briefInstructions(reason) and
+BRIEF_TOOLS (list_leads -> deps.listLeads(n), note_lead ->
+deps.noteLead(query, note), save_lead, end_call); the first
+response.create says "Hey Fromsa, it is Maya." plus the reason. No auto
+lead from a brief call; the transcript carries mode and reason.
+server.js: POST /api/phone/call-me (admin, JSON { reason }) ->
+_phone.callFromsa; the Admin realtime tool call_me (in the tool list and
+in Maya's instructions) and status.html's dispatcher call that route.
+Mount deps: accountSid TWILIO_ACCOUNT_SID, fromNumber TWILIO_FROM_NUMBER
+(default +15109909223, the Oakland number he registered), fromsaPhone
+FROMSA_PHONE (default his mobile), publicHost PHONE_PUBLIC_HOST (default
+maya-api-53947659283.us-west1.run.app), model PHONE_REALTIME_MODEL falls
+back to REALTIME_MODEL, listLeads reads loadLeadFeed, noteLead resolves
+by resolveLeadExact then a unique first name, writes the email keyed
+note store or updateLead(note) for leads without an email.
+/api/phone/outbound gets express.urlencoded like /incoming.
+tests/maya-phone.mjs: 28 checks now (a fake Twilio REST API answers the
+placed call; the outbound TwiML is signed and known; the brief session
+shape; list_leads and note_lead; end_call; a second call).
+Env Fromsa sets: TWILIO_ACCOUNT_SID (the AC... id from the console).
+Everything else has a working default.
+Next (v14.32, his go): the Wix form hook and the call end trigger that
+text the client, text Fromsa one line and ring him; texts wait on the
+10DLC campaign approval.
+
 ## v14.30 (Claude): Maya on the phone, a year of leads
 
 docs/server/maya-phone.mjs (new): mountMayaPhone(app, httpServer, deps).

@@ -16,6 +16,17 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 15, 2026, LATE (v14.31): "If I tell Maya give me a call, she should be able to call me. You know my number."
+
+[x] "Give me a call": Maya in Admin has call_me; his phone rings from
+    510 990 9223 and she briefs him in her voice, reads the newest leads,
+    notes what he says, hangs up on "that is all". Only his number.
+[ ] Fromsa: set TWILIO_ACCOUNT_SID on Cloud Run (the AC id), push, then
+    tell Maya in Admin "give me a call".
+[ ] Next, his go: the secretary loop (form lands or call ends: text the
+    client, text him one line, ring him). Texts wait on the 10DLC
+    campaign.
+
 SEPTEMBER 15, 2026 (v14.30): "Can the lead station be linked to Wix itself? There are around 10 in Wix. Tori just confirmed. Let's get Maya a phone call, a number."
 
 [x] "Can the lead station be linked to Wix itself, the Wix API": it has

@@ -3222,7 +3222,9 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
       'clicks and spend (panels.ads.today, panels.ads.yesterday, panels.ads.daily), and get_briefing returns ' +
       'adClicks too. Answer "how many clicks today or yesterday" straight from those; if a day reads zero it ' +
       'means none have been reported yet, not that you cannot see it. show_panel("ads") also returns today and ' +
-      'yesterday from the live chart. THE INTERNAL OPS SHEET: read_team_sheet reads Mana Siyo\'s internal Google ' +
+      'yesterday from the live chart. YOUR PHONE: call_me rings Fromsa\'s own phone from the studio number and you ' +
+      'brief him out loud on that call; when he says "call me" or "give me a call", call it at once with the reason ' +
+      'and tell him his phone is about to ring. THE INTERNAL OPS SHEET: read_team_sheet reads Mana Siyo\'s internal Google ' +
       'Sheet live; use it when Fromsa asks about anything that lives there. If it says it is not connected, tell ' +
       'him the sheet must be shared with the service account it names. ' +
       'THE LEAD STATION is a custom CRM you run with Fromsa: it draws from Wix forms, from what he adds, and from ' +
@@ -3324,6 +3326,12 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
       { type: 'function', name: 'read_team_sheet',
         description: 'Read Mana Siyo\'s internal admin Google Sheet live and return its tabs and rows. Use when Fromsa asks about anything tracked in the internal sheet.',
         parameters: { type: 'object', properties: {} } },
+      // v14.31: Maya can ring Fromsa's phone from the studio number.
+      { type: 'function', name: 'call_me',
+        description: 'Ring Fromsa\'s own phone from the studio line and brief him out loud. Use when he says "call me", "give me a call", "ring me", or asks for a test call. Pass the reason in one or two sentences; for a test, say it is a test.',
+        parameters: { type: 'object', properties: {
+          reason: { type: 'string', description: 'why you are calling, one or two sentences, in plain words' } },
+          required: ['reason'] } },
     ];
     // v14.10: same ears as the app: far_field noise reduction, with a plain fallback.
     const _secretA = (session) => fetch('https://api.openai.com/v1/realtime/client_secrets', {
@@ -4544,22 +4552,73 @@ const _httpServer = app.listen(port, () => {
 // stream token) and the `ws` package; without either the line is off and the
 // routes say so. The webhook takes Twilio's form encoded POST.
 const PHONE_TRANSCRIPTS = 'maya/phone/';
+let _phone = null;
+// v14.31: "Maya, give me a call." Admin only. The reason is what she opens with.
+app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
+  let user;
+  try { user = await requireAdmin(req); }
+  catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
+  const rl = rateLimit(user.sub, user.email, 6);
+  if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
+  if (!_phone || !_phone.callFromsa) return res.status(503).json({ ok: false, why: 'the phone line is off' });
+  const reason = String((req.body && req.body.reason) || '').trim().slice(0, 1200) || 'Fromsa asked for a test call from Admin. Tell him the studio line works and ask if he needs anything.';
+  try {
+    const r = await _phone.callFromsa(reason);
+    if (!r.ok) console.warn('[phone] call-me refused:', r.why);
+    return res.status(r.ok ? 200 : 502).json(r);
+  } catch (e) { console.error('[phone] call-me', e.message); return res.status(502).json({ ok: false, why: 'the call did not go out' }); }
+});
 (async () => {
   let WebSocketServer = null, WebSocketClient = null;
   try { const ws = await import('ws'); WebSocketServer = ws.WebSocketServer; WebSocketClient = ws.WebSocket; }
   catch (_) { console.warn('[phone] the ws package is not installed; the studio line is off'); }
   app.use('/api/phone/incoming', express.urlencoded({ extended: false, limit: '32kb' }));
-  mountMayaPhone(app, _httpServer, {
+  app.use('/api/phone/outbound', express.urlencoded({ extended: false, limit: '32kb' }));
+  _phone = mountMayaPhone(app, _httpServer, {
     authToken: process.env.TWILIO_AUTH_TOKEN || '',
     openaiKey: process.env.OPENAI_API_KEY || '',
-    model: REALTIME_MODEL,
+    model: process.env.PHONE_REALTIME_MODEL || REALTIME_MODEL,   // v14.31: the phone can run the mini model on its own
     voice: process.env.OPENAI_REALTIME_VOICE || 'marin',
     character: MAYA_CHARACTER,
     // the stream cannot pass through Firebase Hosting (no WebSockets on the
     // /api rewrite), so Twilio is pointed at the Cloud Run URL itself and the
     // host it called is the host the stream uses; PHONE_PUBLIC_HOST overrides.
-    publicHost: process.env.PHONE_PUBLIC_HOST || '',
+    publicHost: process.env.PHONE_PUBLIC_HOST || 'maya-api-53947659283.us-west1.run.app',   // v14.31: the Cloud Run host, needed to place calls
     openaiUrl: process.env.OPENAI_REALTIME_URL || '',   // a test points this at a fake
+    // v14.31: the studio number and Fromsa's phone, so Maya can ring him.
+    accountSid: process.env.TWILIO_ACCOUNT_SID || '',
+    twilioApi: process.env.TWILIO_API_URL || '',   // a test points this at a fake
+    fromNumber: process.env.TWILIO_FROM_NUMBER || '+15109909223',
+    fromsaPhone: process.env.FROMSA_PHONE || '+15104917540',
+    listLeads: async (n) => {
+      const feed = await loadLeadFeed();
+      return (feed.list || []).slice(0, n).map(l => ({ name: l.name, phone: l.phone || '', email: l.email || '',
+        from: l.source === 'phone' ? 'a phone call' : (l.form || l.source || ''), when: l.ts, wants: String(l.note || l.wrote || '').slice(0, 220) }));
+    },
+    noteLead: async (query, note) => {
+      const feed = await loadLeadFeed();
+      const list = feed.list || [];
+      let found = resolveLeadExact(list, query);
+      if (found.status !== 'exact') {
+        const q = String(query || '').trim().toLowerCase();
+        const byFirst = list.filter(l => String(l.name || '').trim().toLowerCase().split(/\s+/)[0] === q);
+        if (byFirst.length === 1) found = { status: 'exact', lead: byFirst[0] };
+        else return { ok: false, why: byFirst.length > 1 ? 'more than one lead named ' + query + '; ask which' : 'no lead named ' + query };
+      }
+      const lead = list.find(l => (l.email && found.lead.email && l.email === found.lead.email) || (l.name === found.lead.name)) || found.lead;
+      const text = String(note || '').trim().slice(0, 2000);
+      if (!text) return { ok: false, why: 'nothing to note' };
+      if (lead.email) {
+        const rec = await loadLeadNotes(lead.email);
+        rec.notes.push({ ts: new Date().toISOString(), text }); rec.notes = rec.notes.slice(-50);
+        await gcsPut(leadNotePath(lead.email), Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+        _leadNoteCache.set(lead.email, { ts: Date.now(), value: rec });
+      } else if (lead.id) {
+        await updateLead(lead.id, { note: text });
+      } else return { ok: false, why: 'that lead has no id to note on' };
+      _leadsCache = { ts: 0, data: null };
+      return { ok: true, name: lead.name };
+    },
     WebSocketServer, WebSocketClient,
     noteSpend: () => noteSpend('v1/realtime', { body: {} }),
     saveLead: async (lead, prevId) => {

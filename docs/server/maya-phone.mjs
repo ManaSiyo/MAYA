@@ -68,6 +68,44 @@ export function phoneInstructions({ character, nowLA, from }) {
     'the conversation is done, say goodbye in one sentence and then call end_call.';
 }
 
+// v14.31: Maya calling Fromsa. She is his secretary on the line: the reason
+// first, then whatever he asks, then goodbye.
+export function briefInstructions({ character, nowLA, reason }) {
+  const who = character ? 'WHO YOU ARE:\n' + character + '\n\n' : '';
+  return who +
+    'You are Maya, and you are calling Fromsa, the founder of Mana Siyo, on his own phone. It is ' + nowLA +
+    ' in San Francisco. You are his secretary on this call: short, warm, precise, one or two sentences at a time, ' +
+    'then listen. No lists, no bullet points, no dashes. Never read numbers digit by digit unless he asks; say the ' +
+    'name and what the person wants.\n\n' +
+    'WHY YOU ARE CALLING: ' + (reason || 'he asked you to call him from Admin as a test') + '\n\n' +
+    'THE CALL. Open with "Hey Fromsa, it is Maya." and the reason in one or two sentences, then stop and listen. ' +
+    'He may ask what the latest leads look like: call list_leads and tell him the newest ones in plain words, shortest ' +
+    'first. He may tell you about a person to save: call save_lead. He may ask you to note something on a lead: call ' +
+    'note_lead. When he says that is all, or goodbye, say one short goodbye and call end_call. If nobody speaks for a ' +
+    'long while, say goodbye and call end_call.';
+}
+
+export const BRIEF_TOOLS = [
+  { type: 'function', name: 'list_leads',
+    description: 'The newest leads in the studio Lead Station: who, from where, and what they want. Call it when Fromsa asks about leads, sign ups, or who came in.',
+    parameters: { type: 'object', properties: { count: { type: 'integer', description: 'how many, default 6' } } } },
+  { type: 'function', name: 'note_lead',
+    description: 'Add a note to a lead in the station, by the name Fromsa says.',
+    parameters: { type: 'object', properties: {
+      lead: { type: 'string', description: 'the lead first name or email' },
+      note: { type: 'string', description: 'the note in Fromsa\'s words' } },
+      required: ['lead', 'note'] } },
+  { type: 'function', name: 'save_lead',
+    description: 'Save a person Fromsa tells you about into the Lead Station.',
+    parameters: { type: 'object', properties: {
+      name: { type: 'string' }, phone: { type: 'string' }, email: { type: 'string' },
+      wrote: { type: 'string', description: 'what they want' }, tier: { type: 'string' } },
+      required: ['name'] } },
+  { type: 'function', name: 'end_call',
+    description: 'Hang up. Only after you have said goodbye.',
+    parameters: { type: 'object', properties: {} } },
+];
+
 export const PHONE_TOOLS = [
   { type: 'function', name: 'save_lead',
     description: 'Save this caller in the studio Lead Station so Fromsa calls them back. Call it as soon as you have what they are picturing and a name; call it again if they add something important.',
@@ -86,11 +124,42 @@ export const PHONE_TOOLS = [
 // mountMayaPhone(app, server, deps): wires the webhook and the stream.
 // deps: { authToken, openaiKey, model, voice, character, saveLead(lead),
 //         saveTranscript(callSid, record), noteSpend(), log(), openaiUrl,
-//         WebSocketServer, WebSocketClient (from ws), publicHost }
+//         WebSocketServer, WebSocketClient (from ws), publicHost,
+//         v14.31: accountSid, fromNumber, fromsaPhone, listLeads(n),
+//         noteLead(lead, note), twilioApi (a test points it at a fake) }
+// Returns { live, wss, callFromsa(reason) }.
 export function mountMayaPhone(app, server, deps) {
   const log = deps.log || ((...a) => console.log('[phone]', ...a));
   const authToken = deps.authToken || '';
   const live = new Map();   // callSid -> { streamSid, ai, twilio, timers }
+  const outbound = new Map();   // v14.31: callSid -> { reason, to, ts } for calls Maya placed
+
+  // v14.31: Maya calls Fromsa. Only his number, ever (deps.fromsaPhone); the
+  // reason rides in memory keyed by the CallSid Twilio returns, and Twilio
+  // fetches the TwiML from /api/phone/outbound when he picks up.
+  const callFromsa = async (reason) => {
+    if (!authToken || !deps.accountSid || !deps.fromNumber) return { ok: false, why: 'the line needs TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER' };
+    if (!deps.fromsaPhone) return { ok: false, why: 'FROMSA_PHONE is not set' };
+    if (!deps.openaiKey || !deps.WebSocketServer) return { ok: false, why: 'the voice bridge is off' };
+    if (live.size >= MAX_CALLS) return { ok: false, why: 'Maya is on ' + live.size + ' calls already' };
+    const host = deps.publicHost || '';
+    if (!host) return { ok: false, why: 'PHONE_PUBLIC_HOST is not set (the Cloud Run host), so Twilio would not know where to fetch the call' };
+    const api = (deps.twilioApi || 'https://api.twilio.com') + '/2010-04-01/Accounts/' + encodeURIComponent(deps.accountSid) + '/Calls.json';
+    const form = new URLSearchParams({ To: deps.fromsaPhone, From: deps.fromNumber,
+      Url: 'https://' + host + '/api/phone/outbound', Method: 'POST', Timeout: '30' });
+    let r, j;
+    try {
+      r = await fetch(api, { method: 'POST', signal: AbortSignal.timeout(15000),
+        headers: { 'Authorization': 'Basic ' + Buffer.from(deps.accountSid + ':' + authToken).toString('base64'), 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: form.toString() });
+      j = await r.json().catch(() => ({}));
+    } catch (e) { return { ok: false, why: 'Twilio did not answer: ' + e.message }; }
+    if (!r.ok || !j.sid) { log('call failed', r.status, JSON.stringify(j).slice(0, 200)); return { ok: false, why: 'Twilio refused the call: ' + (j.message || r.status) }; }
+    outbound.set(j.sid, { reason: String(reason || '').slice(0, 1200), to: deps.fromsaPhone, ts: Date.now() });
+    for (const [sid, o] of outbound) if (Date.now() - o.ts > 15 * 60000) outbound.delete(sid);
+    log('calling Fromsa', j.sid);
+    return { ok: true, sid: j.sid };
+  };
 
   const incoming = (req, res) => {
     const params = req.body || {};
@@ -111,24 +180,39 @@ export function mountMayaPhone(app, server, deps) {
     }
     const callSid = String(params.CallSid || '');
     const from = String(params.From || '');
+    res.set('Content-Type', 'text/xml');
+    res.send(streamTwiml(host, callSid, from));
+  };
+  const streamTwiml = (host, callSid, from) => {
     const token = callToken(authToken, callSid);
     const streamUrl = 'wss://' + host + '/api/phone/stream';
-    res.set('Content-Type', 'text/xml');
-    res.send('<?xml version="1.0" encoding="UTF-8"?><Response><Connect><Stream url="' + xmlEscape(streamUrl) + '">' +
+    return '<?xml version="1.0" encoding="UTF-8"?><Response><Connect><Stream url="' + xmlEscape(streamUrl) + '">' +
       '<Parameter name="token" value="' + xmlEscape(token) + '"/>' +
       '<Parameter name="from" value="' + xmlEscape(from) + '"/>' +
       '<Parameter name="callSid" value="' + xmlEscape(callSid) + '"/>' +
-      '</Stream></Connect></Response>');
+      '</Stream></Connect></Response>';
+  };
+  // v14.31: Twilio fetches this when Fromsa picks up a call Maya placed.
+  const outboundTwiml = (req, res) => {
+    const params = req.body || {};
+    const host = deps.publicHost || req.get('x-forwarded-host') || req.get('host') || '';
+    const url = 'https://' + host + (req.originalUrl || '/api/phone/outbound');
+    if (!twilioSignatureValid(authToken, url, params, req.get('X-Twilio-Signature'))) { log('outbound rejected: bad signature'); return res.status(403).send('forbidden'); }
+    const callSid = String(params.CallSid || '');
+    if (!outbound.has(callSid)) { log('outbound rejected: unknown call', callSid); return res.status(404).send('unknown call'); }
+    res.set('Content-Type', 'text/xml');
+    res.send(streamTwiml(host, callSid, String(params.To || '')));
   };
   app.post('/api/phone/incoming', incoming);
+  app.post('/api/phone/outbound', outboundTwiml);
   app.get('/api/phone/status', (req, res) => res.json({ ok: true, on: !!(authToken && deps.openaiKey && deps.WebSocketServer), calls: live.size }));
 
-  if (!deps.WebSocketServer || !server) { log('line off at boot: no WebSocket server'); return { live }; }
+  if (!deps.WebSocketServer || !server) { log('line off at boot: no WebSocket server'); return { live, callFromsa }; }
   const wss = new deps.WebSocketServer({ server, path: '/api/phone/stream' });
 
   wss.on('connection', (tw) => {
     const call = { callSid: '', streamSid: '', from: '', ai: null, open: false, started: Date.now(),
-                   transcript: [], saved: null, leadCalls: 0, timers: [], done: false };
+                   transcript: [], saved: null, leadCalls: 0, timers: [], done: false, mode: 'inbound', reason: '' };
     const send = (obj) => { try { if (tw.readyState === 1) tw.send(JSON.stringify(obj)); } catch (_) {} };
     const aiSend = (obj) => { try { if (call.ai && call.ai.readyState === 1) call.ai.send(JSON.stringify(obj)); } catch (_) {} };
     const finish = async (why) => {
@@ -142,13 +226,13 @@ export function mountMayaPhone(app, server, deps) {
       // a caller who talked for a while and was never saved still lands in the station
       try {
         const said = call.transcript.filter(t => t.who === 'caller').map(t => t.text).join(' ').trim();
-        if (!call.saved && seconds >= autoLeadS() && said.length >= 20 && deps.saveLead) {
+        if (call.mode === 'inbound' && !call.saved && seconds >= autoLeadS() && said.length >= 20 && deps.saveLead) {
           call.saved = await deps.saveLead({ source: 'phone', name: 'Caller', phone: call.from, wrote: said.slice(0, 400) + ' (from the call transcript; Maya did not get a name)' });
         }
       } catch (e) { log('auto lead failed', e.message); }
       try {
         if (deps.saveTranscript && call.callSid && call.open) await deps.saveTranscript(call.callSid, {
-          callSid: call.callSid, from: call.from, startedAt: new Date(call.started).toISOString(), seconds, why,
+          callSid: call.callSid, from: call.from, mode: call.mode, reason: call.reason || undefined, startedAt: new Date(call.started).toISOString(), seconds, why,
           lead: call.saved ? call.saved.id : null, transcript: call.transcript });
       } catch (e) { log('transcript save failed', e.message); }
     };
@@ -165,14 +249,18 @@ export function mountMayaPhone(app, server, deps) {
           weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date());
         aiSend({ type: 'session.update', session: {
           type: 'realtime',
-          instructions: phoneInstructions({ character: deps.character || '', nowLA, from: call.from }),
+          instructions: call.mode === 'brief'
+            ? briefInstructions({ character: deps.character || '', nowLA, reason: call.reason })
+            : phoneInstructions({ character: deps.character || '', nowLA, from: call.from }),
           output_modalities: ['audio'],
           audio: { input: { format: { type: 'audio/pcmu' },
                             transcription: { model: process.env.PHONE_TRANSCRIBE_MODEL || 'gpt-4o-mini-transcribe' },
                             turn_detection: { type: 'server_vad', silence_duration_ms: 650, prefix_padding_ms: 300 } },
                    output: { format: { type: 'audio/pcmu' }, voice: deps.voice || 'marin' } },
-          tools: PHONE_TOOLS, tool_choice: 'auto' } });
-        aiSend({ type: 'response.create', response: { instructions: 'Greet the caller now, exactly as THE CALL says, in one sentence.' } });
+          tools: call.mode === 'brief' ? BRIEF_TOOLS : PHONE_TOOLS, tool_choice: 'auto' } });
+        aiSend({ type: 'response.create', response: { instructions: call.mode === 'brief'
+          ? 'Fromsa just picked up. Say "Hey Fromsa, it is Maya." and the reason for the call in one or two sentences, then stop.'
+          : 'Greet the caller now, exactly as THE CALL says, in one sentence.' } });
         try { if (deps.noteSpend) deps.noteSpend(); } catch (_) {}
       });
       ai.addEventListener('message', async (ev) => {
@@ -200,6 +288,17 @@ export function mountMayaPhone(app, server, deps) {
                 output = { ok: true, say: 'saved; tell them Fromsa will call back, usually the same day' };
               }
             } catch (e) { log('save_lead failed', e.message); output = { ok: false, say: 'the station did not answer; tell them you have their number and Fromsa will call back' }; }
+          } else if (m.name === 'list_leads') {
+            try {
+              const n = Math.max(1, Math.min(12, Number(args.count) || 6));
+              const rows = deps.listLeads ? await deps.listLeads(n) : [];
+              output = { ok: true, leads: rows };
+            } catch (e) { log('list_leads failed', e.message); output = { ok: false, say: 'the station did not answer' }; }
+          } else if (m.name === 'note_lead') {
+            try {
+              const r = deps.noteLead ? await deps.noteLead(String(args.lead || ''), String(args.note || '')) : { ok: false };
+              output = r && r.ok ? { ok: true, say: 'noted on ' + (r.name || args.lead) } : { ok: false, say: (r && r.why) || 'no lead by that name; ask him which one' };
+            } catch (e) { log('note_lead failed', e.message); output = { ok: false, say: 'the station did not answer' }; }
           } else if (m.name === 'end_call') {
             output = { ok: true };
             call.timers.push(setTimeout(() => finish('end_call'), 2500));
@@ -227,9 +326,11 @@ export function mountMayaPhone(app, server, deps) {
         const want = callToken(authToken, call.callSid);
         if (!cp.token || String(cp.token) !== want) { log('stream rejected: bad token', call.callSid); return finish('bad_token'); }
         if (live.size >= MAX_CALLS) return finish('busy');
+        const ob = outbound.get(call.callSid);
+        if (ob) { call.mode = 'brief'; call.reason = ob.reason; outbound.delete(call.callSid); }
         live.set(call.callSid, call);
         call.open = true;
-        log('call started', call.callSid, 'from', call.from ? call.from.replace(/\d(?=\d{4})/g, 'x') : '?');
+        log('call started', call.callSid, call.mode, call.from ? call.from.replace(/\d(?=\d{4})/g, 'x') : '?');
         call.timers.push(setTimeout(() => finish('max_minutes'), MAX_MINUTES * 60000));
         openAi();
       } else if (ev === 'media') {
@@ -242,6 +343,6 @@ export function mountMayaPhone(app, server, deps) {
     tw.on('error', () => { if (!call.done) finish('twilio_error'); });
   });
 
-  log('line on: /api/phone/incoming and /api/phone/stream');
-  return { live, wss };
+  log('line on: /api/phone/incoming, /api/phone/outbound and /api/phone/stream' + (deps.fromsaPhone && deps.accountSid && deps.fromNumber ? '; Maya can call Fromsa' : '; outbound off until TWILIO_ACCOUNT_SID, TWILIO_FROM_NUMBER and FROMSA_PHONE are set'));
+  return { live, wss, callFromsa };
 }
