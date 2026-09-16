@@ -1,0 +1,6 @@
+.DS_Store
+.firebase/
+_to_delete/
+docs/_to_delete/
+docs/server/node_modules/
+docs/server/package-lock.json

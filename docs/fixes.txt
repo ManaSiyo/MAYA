@@ -1,0 +1,97 @@
+MAYA FIXES AND SETUP STEPS
+Fix attempts and setup work that lives OUTSIDE git: Cloud Run env vars, the
+Google and Firebase consoles, credentials, external accounts. Symptom, cause,
+action, status. Newest on top. Fromsa does every credential step himself.
+
+AUGUST 27, 2026, OPEN MAYA'S DOOR (v14.02, after the push)
+
+Maya's MCP server is live at POST https://maya.manasiyo.com/mcp once v14.02 is
+deployed, but it stays CLOSED (503) until a token exists. Two green steps.
+
+🟢 1. Make a token and set it on Cloud Run.
+   Any long random string works (32+ characters, letters and digits). Open
+   https://console.cloud.google.com/run/detail/us-west1/maya-api/revisions?project=pro-maya
+   then "Edit & deploy new revision" > Variables & Secrets > Add variable:
+   name MAYA_MCP_TOKEN, value = the token. Deploy. Keep the token somewhere
+   private; it is the only key to the door.
+🟢 2. Add Maya to Claude as a custom connector.
+   claude.ai > Settings > Connectors > Add custom connector. Name: Maya. URL:
+   https://maya.manasiyo.com/api/mcp?token=YOUR_TOKEN (the query form exists for
+   connectors that cannot send a header; /api/mcp is the address, the bare /mcp
+   only works from v14.05 on). Save. In any chat or Cowork
+   session, Maya's eight tools appear (maya_soul, maya_inbox, ...).
+   Claude Code / Codex: same URL as an MCP server of type http.
+
+Check it worked: ask Claude "read maya_status". It answers with the version
+and the number of open feature requests. If you see maya_door_closed, the env
+var did not land; if unauthorized, the token in the URL does not match.
+
+AUGUST 24, 2026, FINAL ADMIN RELEASE REMEDIATION (v13.71)
+
+- A1 proxy security hardening: DONE in v13.70 and retained.
+- Release contracts: command, proxy, AI router and fabric suites now gate the
+  Cloud Build source step; server and helper syntax remain gated. A hermetic
+  Express/Chromium build-test image is still deferred.
+- Voice action safety: exact or explicitly ambiguous lead resolution, visible
+  confirmation queue, no automatic send, truthful Gmail popup/failure state,
+  single-flight Realtime setup and failed microphone cleanup are DONE.
+- Admin data consistency: command snapshot now uses direct Meta/Google feeds
+  when Windsor is absent, and strips lead contact details from the Realtime
+  prompt. DONE.
+- Marketing parity regression: the modules were functionally present but the
+  Admin copy lacked the approved page spacing, ticker, Wix visitor row, chart
+  hover/state restoration and visible refresh errors. Fixed in v13.71. The
+  standalone page remains the live fallback.
+- A3 Vertex image/Realtime compatibility, A5 legacy deletion/authorization,
+  distributed rate limiting, client error reporting and provider evals remain
+  deferred. They require separate risk domains or owner configuration.
+
+AUGUST 24, 2026, SET UP THE API FOR FROMSA (the to-do list, in order)
+
+These are the console and environment steps only Fromsa can do. Each is a
+green step; none is code. Do them in this order.
+
+[ ] 1. PIN THE ANALYTICS PROPERTY (fixes the "3" and the "..." that look low).
+    The MAYA app's Google Analytics is G-ETTJ6PXEMM. The server was guessing
+    which GA4 property to read and likely reading manasiyo.com's, not MAYA's.
+    - Google Analytics -> Admin -> Property settings on the MAYA property
+      (the one whose data stream is G-ETTJ6PXEMM). Copy the numeric PROPERTY ID.
+    - Cloud Run -> maya-api -> Edit & deploy new revision -> Variables:
+      set MARKETING_GA_PROPERTY_ID and GA_PROPERTY_ID both to that number.
+    - Also confirm the Cloud Run service account is added as a Viewer on that
+      property (Analytics -> Admin -> Property Access Management).
+
+[ ] 2. BILLING CAPS (so a bill can never surprise you).
+    - OpenAI: you are already prepaid at ~$10 with no auto-refill, which is
+      itself a spend cap; keep auto-refill OFF. Set a usage alert at $8.
+    - Google Cloud: Billing -> Budgets & alerts -> create a budget with email
+      + phone alerts at $8 and $15. Vertex image work is admin-only, so this
+      is a safety net, not a live risk.
+
+[ ] 3. INSTANT DOWN / FAILURE ALERT (the ping OpenAI will not send you).
+    - Google Cloud -> Monitoring -> Alerting -> create a policy on the Cloud
+      Run maya-api ERROR RATE, notify your email + phone.
+    - Add a second policy on the billing budget from step 2.
+    (If you would rather MAYA email you directly when a user's image fails,
+    give Claude a Slack or Discord webhook and it will push it server-side.)
+
+[ ] 4. APP CHECK (only your real site can reach the database).
+    The client code is already wired and dormant. To turn it on:
+    - Google Cloud -> reCAPTCHA -> create a reCAPTCHA Enterprise site key for
+      maya.manasiyo.com. Copy the SITE KEY.
+    - In frontend/index.html and playground/index.html, set
+      MAYA_APPCHECK_SITE_KEY = 'your-site-key' (one line, near FIREBASE_CONFIG).
+      Ask Claude to make this edit and push; confirm the app still signs in.
+    - Firebase console -> App Check -> register the web app with that key.
+    - ONLY after the app works with App Check active: App Check -> APIs ->
+      set Firestore and Storage to ENFORCE.
+
+[ ] 5. THE VOICE MODEL (so Maya actually speaks).
+    - OpenAI: confirm the Realtime model 'gpt-realtime' is available on the
+      account (or set OPENAI_REALTIME_MODEL on Cloud Run to the one you have).
+
+[ ] 6. OPTIONAL, THE CLO LIBRARY (Plan B real search).
+    - CLO-SET dashboard -> issue an API token -> set CLOSET_API_TOKEN and
+      CLOSET_SEARCH_URL on Cloud Run, then tell Claude to wire the exact
+      search endpoint from their docs.
+\n[v14.14] MCP door scopes: /api/mcp?token=... is now READ ONLY (status,\ninbox, soul, people). maya_leads, maya_memory, maya_journal and\nmaya_feature_done need the token as an Authorization: Bearer header.\nA connector that cannot send headers keeps read access unchanged.\n
