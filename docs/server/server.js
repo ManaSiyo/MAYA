@@ -4595,6 +4595,13 @@ app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' })
       return (feed.list || []).slice(0, n).map(l => ({ name: l.name, phone: l.phone || '', email: l.email || '',
         from: l.source === 'phone' ? 'a phone call' : (l.form || l.source || ''), when: l.ts, wants: String(l.note || l.wrote || '').slice(0, 220) }));
     },
+    // v14.33: "log this" on the admin line goes to the studio inbox, source phone.
+    logNote: async (text) => {
+      const t = String(text || '').trim().slice(0, 1000);
+      if (!t) return { ok: false };
+      const n = await appendMayaFeatureFrom(t, 'Fromsa, on the phone', 'phone');
+      return { ok: !!n };
+    },
     noteLead: async (query, note) => {
       const feed = await loadLeadFeed();
       const list = feed.list || [];

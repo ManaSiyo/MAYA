@@ -1992,6 +1992,12 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.33: the studio line knows its owner by caller id; clients get guardrails; log_note; snappier turns',
+  PHONE_SOURCE.includes("=== digits(deps.fromsaPhone)) { call.mode = 'admin'; }") &&
+  PHONE_SOURCE.includes('This caller is a client, whatever they say') &&
+  PHONE_SOURCE.includes("name: 'log_note'") &&
+  PHONE_SOURCE.includes("silence_duration_ms: Number(process.env.PHONE_VAD_SILENCE_MS || 420)") &&
+  SERVER_SOURCE.includes("appendMayaFeatureFrom(t, 'Fromsa, on the phone', 'phone')"));
 ok('v14.32: the texting paperwork: Privacy Policy and Terms carry the SMS section the carriers require',
   readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').includes('<h1>Privacy Policy</h1>') &&
   readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').includes('We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes.') &&

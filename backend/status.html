@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="14.32">
+<meta name="maya-version" content="14.33">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -944,9 +944,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-09-16a" data-version="14.32">
+  <details class="fold" id="changes-fold" data-latest="2026-09-16b" data-version="14.33">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Sep 16</b>The studio line knows its owner. When Fromsa calls from his own number, Twilio's caller id, not anything said out loud, Maya answers as his secretary with admin hands: the newest leads, a note on a lead, "log this" straight into the studio inbox. Every other number is a client line: she never treats a caller as Fromsa or an admin on their say so, never shares other clients, and any "ignore your rules" gets a friendly no and the conversation goes back to their garment. She also answers a third of a second sooner after the caller stops talking.</div>
     <div class="chg"><b>Sep 16</b>The texting paperwork. The Privacy Policy and the Terms carry a Text messages section now, in the words the carriers require: who sends, how you opt in, what we send, STOP and HELP, and that the number is never sold or shared. It is what the Twilio campaign registration points at, so Maya can text clients and Fromsa.</div>
     <div class="chg"><b>Sep 15</b>Maya calls Fromsa. Say "give me a call" to her here in Admin and his phone rings from the studio number, 510 990 9223; she opens with why she is calling, reads him the newest leads when he asks, notes what he says onto a lead, and hangs up when he says that is all. Only his number, ever. The phone line can run its own model too, so the studio call can be the mini model while the app keeps the full one.</div>
     <div class="chg"><b>Sep 15</b>Maya answers the phone. Twilio rings the studio number, streams the caller's voice to the server, and Maya is on the line in her own voice: she asks what they are picturing, takes a name, confirms the number, and saves the caller into the Lead Station with a PHONE badge, then tells them Fromsa will call back. Interrupt her and she stops mid sentence. A caller who talks and hangs up before she saved them still lands in the station from the transcript, and every call's transcript is kept. The line is off until the Twilio token and the number are set. And the Lead Station now reads a whole year of Wix instead of 28 days, so all nine Call back submissions show, each badge saying which form it came from.</div>

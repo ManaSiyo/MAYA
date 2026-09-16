@@ -16,6 +16,17 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 16, 2026, MORNING (v14.33): "So cool, it works. Snappier. My number should have admin control; people cannot fake being me; stronger security; I can say log this bug."
+
+[x] Snappier: she answers a third of a second sooner after the caller
+    stops.
+[x] His number is the admin line, by Twilio's caller id, never by what a
+    caller says: leads, notes, "log this" into the studio inbox.
+[x] Every other caller is a client: no admin by claim, no other clients'
+    data, no rule changes.
+[ ] Fromsa: push, then call 510 990 9223 from his phone and say "log
+    this: ..." and "who came in this week".
+
 SEPTEMBER 16, 2026 (v14.32): "Help me answer this" (the Twilio A2P campaign form)
 
 [x] Privacy Policy and Terms now say what the carriers require about
