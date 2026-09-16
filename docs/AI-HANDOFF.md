@@ -74,6 +74,24 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.36 (Claude): the audit
+
+Run after v14.35 landed: maya-hands-smoke 171 app / 172 playground,
+app-regression (only the known ops artifact), admin-ui-contract 11,
+admin-command 6, maya-mcp, proxy-policy 27, ai-routing 7,
+fabric-sourcing 6, smoke, maya-phone 40, maya-messages 17. Live: the app
+and Admin pages arrive brotli compressed (210 KB and 70 KB) in about
+0.3 s; /api/healthz 0.35 to 0.5 s warm, 1 s cold; the Cloud Run phone
+status 0.6 s. Fixes: _phoneFindLead matches a phone number (7+ digits,
+leading 1 dropped) before the unique first name, so note_lead on a
+client call whose lead has no name still lands; the phone saveLead dep
+names the thread (_messages.name) when Maya saves a lead by name.
+Noted, not done: the greeting on a call starts about a second after
+pickup because the OpenAI socket opens on Twilio's start event; opening
+it from the incoming webhook would shave part of that. Texts through a
+Messaging Service: set TWILIO_MESSAGING_SID (MG...) if Twilio ties the
+campaign to the service rather than the number.
+
 ## v14.35 (Claude): Messages
 
 docs/server/maya-messages.mjs (new). createMessageStore({ load, save })

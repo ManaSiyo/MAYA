@@ -4573,9 +4573,13 @@ async function _phoneFindLead(query) {
   let found = resolveLeadExact(list, query);
   if (found.status !== 'exact') {
     const q = String(query || '').trim().toLowerCase();
-    const byFirst = list.filter(l => String(l.name || '').trim().toLowerCase().split(/\s+/)[0] === q);
-    if (byFirst.length === 1) found = { status: 'exact', lead: byFirst[0] };
-    else return { ok: false, why: byFirst.length > 1 ? 'more than one lead named ' + query + '; ask which' : 'no lead named ' + query };
+    // v14.36: a phone number finds its lead too (a client call whose lead has no name yet)
+    const qd = q.replace(/\D/g, '').replace(/^1(\d{10})$/, '$1');
+    const byPhone = qd.length >= 7 ? list.filter(l => String(l.phone || '').replace(/\D/g, '').replace(/^1(\d{10})$/, '$1') === qd) : [];
+    const byFirst = byPhone.length ? [] : list.filter(l => String(l.name || '').trim().toLowerCase().split(/\s+/)[0] === q);
+    if (byPhone.length === 1) found = { status: 'exact', lead: byPhone[0] };
+    else if (byFirst.length === 1) found = { status: 'exact', lead: byFirst[0] };
+    else return { ok: false, why: (byFirst.length > 1 || byPhone.length > 1) ? 'more than one lead named ' + query + '; ask which' : 'no lead named ' + query };
   }
   const lead = list.find(l => (l.email && found.lead.email && l.email === found.lead.email) || (l.name === found.lead.name)) || found.lead;
   return { ok: true, lead };
@@ -4666,7 +4670,10 @@ app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' })
         const updated = await updateLead(prevId, patch);
         if (updated) return updated;
       }
-      return appendManualLead({ ...lead, source: 'phone' });
+      const item = await appendManualLead({ ...lead, source: 'phone' });
+      // v14.36: the thread for that number learns the name Maya heard
+      try { if (lead.phone && lead.name && lead.name !== 'Caller') await _messages.name(lead.phone, lead.name); } catch (_) {}
+      return item;
     },
     saveTranscript: async (callSid, rec) => {
       await gcsPut(PHONE_TRANSCRIPTS + String(callSid).replace(/[^A-Za-z0-9_-]/g, '') + '.json',

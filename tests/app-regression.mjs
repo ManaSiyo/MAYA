@@ -1991,6 +1991,9 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.36: the audit: a lead is found by phone too, the thread learns the name Maya heard',
+  SERVER_SOURCE.includes("const byPhone = qd.length >= 7 ? list.filter(") &&
+  SERVER_SOURCE.includes("await _messages.name(lead.phone, lead.name);"));
 ok('v14.35: Messages: the drawer tabs, the thread store, the sms webhook, Maya calls a client from the station',
   SERVER_SOURCE.includes("import { createMessageStore, sendSms, mountMessages, THREADS_PATH } from './maya-messages.mjs';") &&
   SERVER_SOURCE.includes("onCallEnd: async (rec) => { await _messages.call(rec); },") &&

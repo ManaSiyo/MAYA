@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="14.35">
+<meta name="maya-version" content="14.36">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -1025,9 +1025,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-09-16d" data-version="14.35">
+  <details class="fold" id="changes-fold" data-latest="2026-09-16e" data-version="14.36">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Sep 16</b>The audit. Everything green on both machines: the voice battery on both surfaces, the regression, the contract, the phone and messaging checks; the live pages arrive compressed in about a third of a second. Two small fixes from reading the new code with a hostile eye: a note from Maya's client call finds the lead by phone number when the lead has no name yet, and a thread learns the name Maya heard on the call the moment she saves it.</div>
     <div class="chg"><b>Sep 16</b>Messages. The drawer thinks in tabs now, Systems and Messages, and Messages is a phone: one thread per number, texts both ways from the studio number, every call Maya took or placed written into the same thread, an unread badge on the tab, and a composer at the bottom that texts as Mana Siyo. The first text to a number is the one that asks if it is okay to text them; nothing else goes out until they answer, and STOP closes the thread to texts for good. In the Lead Station the phone icon asks Maya to call the lead for you, in her voice, about whatever you type in one line, and the new chat icon opens their thread. Texts go live the day the carrier registration clears; calls work today.</div>
     <div class="chg"><b>Sep 16</b>The Lead Station, trimmed. It is the Call back form from manasiyo.com/design only now, no other forms; Last Quote is gone, the tier under the name is what they went with, and Maya sets it by voice, in Admin or on the phone: "Kristi went with signature". The frozen header covers the top of the box so rows never show through above it, the name column is narrower, and the phone line no longer makes "Caller" rows out of transcripts: a lead is what Maya saved by name.</div>
     <div class="chg"><b>Sep 16</b>The studio line knows its owner. When Fromsa calls from his own number, Twilio's caller id, not anything said out loud, Maya answers as his secretary with admin hands: the newest leads, a note on a lead, "log this" straight into the studio inbox. Every other number is a client line: she never treats a caller as Fromsa or an admin on their say so, never shares other clients, and any "ignore your rules" gets a friendly no and the conversation goes back to their garment. She also answers a third of a second sooner after the caller stops talking.</div>
