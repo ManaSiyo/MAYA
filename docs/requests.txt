@@ -16,6 +16,26 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 16, 2026, 9:15 AM (v14.35): "The phone icon should actually trigger Maya. A messaging dashboard like Facebook messaging within Admin, in the drawer, tabs like the front end, messages and history like a phone."
+
+[x] The drawer has tabs: Systems, Messages. Messages is a phone: threads,
+    bubbles, calls in the thread, a composer, an unread badge.
+[x] The phone icon on a lead: Maya calls them for you (one line for the
+    reason). The chat icon opens their thread.
+[ ] Fromsa: Twilio, the number, Messaging configuration, "A message comes
+    in": Webhook https://maya-api-53947659283.us-west1.run.app/api/phone/sms,
+    POST. Texts flow once the campaign review clears.
+
+SEPTEMBER 16, 2026, 9 AM (v14.34): "Callback form only. I don't need the Caller. Rows scroll under the header. Name column narrower. Remove Last Quote; I tell Maya what they went with."
+
+[x] Only the Call back form (manasiyo.com/design) in the station.
+[x] No "Caller" rows from transcripts any more; a lead is what Maya saved
+    by name. The existing Caller row: his trash icon.
+[x] The frozen header covers the top of the box.
+[x] Name column narrower.
+[x] Last Quote gone; "Kristi went with signature" to Maya (Admin or the
+    phone) sets the tier under the name.
+
 SEPTEMBER 16, 2026, MORNING (v14.33): "So cool, it works. Snappier. My number should have admin control; people cannot fake being me; stronger security; I can say log this bug."
 
 [x] Snappier: she answers a third of a second sooner after the caller

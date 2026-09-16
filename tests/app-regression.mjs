@@ -1819,15 +1819,15 @@ ok('v13.92: the avatar name opens the switcher too (bigger hit target than the c
   INDEX_SOURCE.includes('id="drawer-avatar-name" onclick="toggleAvatarSwitcher()"'));
 
 // ── v13.93 ──
-ok('v13.95: the Lead Station is Hunter-style, column-driven — frozen first column, Actions, Last Quote, no invoice columns',
+ok('v13.95: the Lead Station is Hunter-style, column-driven: frozen first column, Actions, no invoice columns (Last Quote left in v14.34)',
   MAP_SOURCE.includes("label: 'Full name'") &&
   MAP_SOURCE.includes("label: 'Actions'") &&
-  MAP_SOURCE.includes("label: 'Last Quote'") &&
+  !MAP_SOURCE.includes("label: 'Last Quote'") &&
   MAP_SOURCE.includes("cell(i, x, 'company'") &&
-  MAP_SOURCE.includes("_quoteCell(i, x)") &&
+  !MAP_SOURCE.includes("_quoteCell(i, x)") &&
   !MAP_SOURCE.includes("cell(i, x, 'invoice1'") &&
   !MAP_SOURCE.includes("cell(i, x, 'invoice2'") &&
-  /#leads-fold \.panel\{max-height:62vh;overflow:auto\}/.test(MAP_SOURCE) &&
+  /#leads-fold \.panel\{max-height:62vh;overflow:auto;padding:0\}/.test(MAP_SOURCE) &&
   /\.lead-col-first\{position:sticky;left:0/.test(MAP_SOURCE));
 ok('v13.93: the note marquee runs one shared speed for every row',
   MAP_SOURCE.includes('sp.style.animationDuration = Math.max(6, shift / SPEED)'));
@@ -1849,7 +1849,7 @@ ok('v13.94/v13.98: hovering ADMIN drops JUST the sheet beneath the wordmark, clo
   /transition:opacity \.18s ease \.9s/.test(MAP_SOURCE) &&
   /#top-left-brand:hover \.brand-chips/.test(MAP_SOURCE));
 ok('v13.94: Company/Title moved under the name as a signature line; columns centered; no delete X in the row',
-  MAP_SOURCE.includes("cell(i, x, 'company', x.company || x.tier || '', 'lead-sig-edit')") &&
+  MAP_SOURCE.includes("cell(i, x, 'company', String(x.company || x.tier || '').replace(") &&   // v14.34: the middle dot becomes a comma
   MAP_SOURCE.includes('class="lead-sig"') &&
   /#adm-mkt #leads-table td\{[^}]*text-align:center/.test(MAP_SOURCE) &&
   !MAP_SOURCE.includes('class="lead-cta lead-del" onclick="deleteLeadRow'));
@@ -1862,11 +1862,10 @@ ok('v13.95/v13.98: the drawer floor is a smaller tighter circle, lower, with the
   MAP_SOURCE.includes('id="maya-toggle"') &&
   MAP_SOURCE.includes('onclick="toggleWakeWord()"') &&
   MAP_SOURCE.includes('class="mt-switch"'));
-ok('v13.95: Last Quote defaults to the tier price and reads faint until set by hand',
-  MAP_SOURCE.includes('function _quoteCell') &&
+ok('v14.34: Last Quote is gone; the tier price helper stays for the pay link',
+  !MAP_SOURCE.includes('function _quoteCell') &&
   MAP_SOURCE.includes('function _leadTierNum') &&
-  MAP_SOURCE.includes("label: 'Last Quote'") &&
-  /\.lead-quote-default\{color:var\(--faint\)\}/.test(MAP_SOURCE));
+  MAP_SOURCE.includes("const LEAD_COLS_DEFAULT = ['name', 'email', 'note', 'actions'];"));
 ok('v13.95: the Invoice 1 / Invoice 2 columns and the day-count line under the name are gone',
   !MAP_SOURCE.includes("label: 'Invoice") &&
   !MAP_SOURCE.includes("cell(i, x, 'invoice1'") &&
@@ -1992,6 +1991,25 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.35: Messages: the drawer tabs, the thread store, the sms webhook, Maya calls a client from the station',
+  SERVER_SOURCE.includes("import { createMessageStore, sendSms, mountMessages, THREADS_PATH } from './maya-messages.mjs';") &&
+  SERVER_SOURCE.includes("onCallEnd: async (rec) => { await _messages.call(rec); },") &&
+  SERVER_DOCKER.includes('COPY maya-messages.mjs ./') &&
+  BUILD_SOURCE.includes('node tests/maya-messages.mjs') &&
+  MAP_SOURCE.includes('id="adm-tabrow"') && MAP_SOURCE.includes('id="drawer-messages"') &&
+  MAP_SOURCE.includes("onclick=\"leadMayaCall(' + i + ')\"") && MAP_SOURCE.includes("onclick=\"leadOpenThread(' + i + ')\"") &&
+  !MAP_SOURCE.includes('href="tel:') &&
+  PHONE_SOURCE.includes('export function clientCallInstructions(') && PHONE_SOURCE.includes("return { live, wss, callFromsa, callClient };") &&
+  existsSync(join(ROOT, 'docs/server/maya-messages.mjs')) && existsSync(join(ROOT, 'tests/maya-messages.mjs')));
+ok('v14.34: the station is the Call back form only, no Last Quote, the header covers the top, tiers by voice',
+  SERVER_SOURCE.includes("const LEADS_ONLY_FORMS = new RegExp(process.env.WIX_LEADS_FORMS || 'call ?back', 'i');") &&
+  SERVER_SOURCE.includes("if (LEADS_SKIP_FORMS.test(form) || !LEADS_ONLY_FORMS.test(form)) return null;") &&
+  SERVER_SOURCE.includes('async function _phoneFindLead(query)') &&
+  SERVER_SOURCE.includes("call update_lead with that lead and tier") &&
+  PHONE_SOURCE.includes("name: 'set_tier'") &&
+  PHONE_SOURCE.includes("const autoLeadS = () => Number(process.env.PHONE_AUTO_LEAD_SECONDS || 0);") &&
+  MAP_SOURCE.includes("replace(/\\s*\\u00b7\\s*/g, ', ')") &&
+  MAP_SOURCE.includes('min-width:112px;max-width:190px'));
 ok('v14.33: the studio line knows its owner by caller id; clients get guardrails; log_note; snappier turns',
   PHONE_SOURCE.includes("=== digits(deps.fromsaPhone)) { call.mode = 'admin'; }") &&
   PHONE_SOURCE.includes('This caller is a client, whatever they say') &&
@@ -2007,7 +2025,7 @@ ok('v14.32: the texting paperwork: Privacy Policy and Terms carry the SMS sectio
 ok('v14.31: Maya calls Fromsa: the outbound route, the brief persona, call_me in Admin, only his number',
   PHONE_SOURCE.includes("app.post('/api/phone/outbound', outboundTwiml);") &&
   PHONE_SOURCE.includes('export function briefInstructions(') &&
-  PHONE_SOURCE.includes("const form = new URLSearchParams({ To: deps.fromsaPhone, From: deps.fromNumber,") &&
+  PHONE_SOURCE.includes("return placeCall(deps.fromsaPhone, { mode: 'brief', reason: String(reason || '').slice(0, 1200) });") &&   // v14.35: placeCall is shared with client calls
   SERVER_SOURCE.includes("app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {") &&
   SERVER_SOURCE.includes("{ type: 'function', name: 'call_me',") &&
   SERVER_SOURCE.includes("fromsaPhone: process.env.FROMSA_PHONE || '+15104917540',") &&

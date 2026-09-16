@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="14.33">
+<meta name="maya-version" content="14.35">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -127,6 +127,60 @@ try {
     50%{box-shadow:0 0 0 14px rgba(169,201,255,0);transform:scale(1.06)}}
   #drawer{display:flex;flex-direction:column}
   #drawer > h3, #drawer > a{flex:none}
+  /* v14.35: the drawer's tabs, the app's pill family. Messages hides the
+     Systems links and takes the drawer, like a phone. */
+  #adm-tabrow{order:-1;display:flex;justify-content:center;gap:8px;margin:-6px 0 12px;flex:none}
+  .adm-tab{position:relative;font-family:'Jost',sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;
+    color:var(--dim);background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.18);border-radius:100px;
+    padding:6px 14px;cursor:pointer;transition:color .2s,border-color .2s,background .2s}
+  .adm-tab:hover{color:var(--ink)}
+  .adm-tab.on{color:var(--ink);border-color:rgba(255,255,255,0.55);background:rgba(255,255,255,0.07)}
+  .adm-unread{position:absolute;top:-6px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:100px;
+    background:#a9c9ff;color:#0d1120;font-size:9px;letter-spacing:0;line-height:16px;text-align:center}
+  #drawer.msgs > h3, #drawer.msgs > a, #drawer.msgs > #top-lights{display:none}
+  body.maya-live #adm-tabrow, body.maya-live #drawer-messages{display:none}
+  #drawer-messages{flex:1;min-height:0;display:flex;flex-direction:column;text-align:left}
+  #drawer-messages[hidden]{display:none}
+  #msg-list{flex:1;min-height:0;overflow-y:auto;margin:0 -4px}
+  .msg-row{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:12px;cursor:pointer;transition:background .2s}
+  .msg-row:hover{background:rgba(255,255,255,0.06)}
+  .msg-ava{width:34px;height:34px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+    border:0.5px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.05);font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--ink)}
+  .msg-main{flex:1;min-width:0}
+  .msg-title{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .msg-title b{font-weight:500;font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .msg-title small{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.08em;color:var(--faint);white-space:nowrap}
+  .msg-last{font-family:'Cormorant Garamond',serif;font-size:13px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .msg-row.unread .msg-last{color:var(--ink)}
+  .msg-dot{width:8px;height:8px;border-radius:50%;background:#a9c9ff;flex:none}
+  .msg-empty{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--dim);text-align:center;padding:26px 10px;font-size:14px}
+  #msg-thread{flex:1;min-height:0;display:flex;flex-direction:column}
+  #msg-thread[hidden]{display:none}
+  .msg-head{display:flex;align-items:center;gap:8px;padding:0 0 8px;border-bottom:0.5px solid var(--line);flex:none}
+  .msg-back{width:28px;height:28px;border-radius:50%;border:0.5px solid var(--line);background:transparent;color:var(--ink);font-size:18px;line-height:1;cursor:pointer}
+  .msg-who{flex:1;min-width:0}
+  .msg-name{font-size:14.5px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .msg-number{font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:0.08em;color:var(--faint)}
+  .msg-call{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink);
+    border:0.5px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.04);border-radius:100px;padding:6px 11px;cursor:pointer;white-space:nowrap}
+  .msg-call:hover{background:rgba(255,255,255,0.09)}
+  .msg-scroll{flex:1;min-height:0;overflow-y:auto;padding:10px 2px;display:flex;flex-direction:column;gap:6px}
+  .bub{max-width:82%;padding:8px 12px;border-radius:16px;font-family:'Cormorant Garamond',serif;font-size:14.5px;line-height:1.35;white-space:pre-wrap;word-break:break-word}
+  .bub.in{align-self:flex-start;background:rgba(255,255,255,0.08);color:var(--ink);border-bottom-left-radius:5px}
+  .bub.out{align-self:flex-end;background:rgba(169,201,255,0.22);color:var(--ink);border-bottom-right-radius:5px}
+  .bub-when{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.08em;color:var(--faint);margin-top:3px;text-align:right}
+  .bub.in .bub-when{text-align:left}
+  .msg-call-line{align-self:center;font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);
+    border:0.5px dashed var(--line);border-radius:100px;padding:4px 10px;margin:4px 0;max-width:92%;text-align:center}
+  .msg-call-line small{display:block;font-family:'Cormorant Garamond',serif;font-size:12px;letter-spacing:0;text-transform:none;color:var(--faint);margin-top:2px;font-style:italic;white-space:normal}
+  .msg-compose{display:flex;gap:6px;align-items:flex-end;padding-top:8px;border-top:0.5px solid var(--line);flex:none}
+  #msg-input{flex:1;resize:none;max-height:96px;border-radius:14px;border:0.5px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.04);
+    color:var(--ink);font-family:'Cormorant Garamond',serif;font-size:14.5px;padding:8px 12px;outline:none}
+  #msg-input:focus{border-color:rgba(169,201,255,0.6)}
+  .msg-send{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#0d1120;background:#a9c9ff;
+    border:none;border-radius:100px;padding:9px 14px;cursor:pointer}
+  .msg-send:disabled{opacity:0.5;cursor:default}
+  .msg-consent{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.08em;color:var(--faint);text-align:center;padding:6px 0 0;min-height:14px}
   /* v13.95: Maya's floor, mirroring the frontend.
      v13.98: the divider and the logo sit lower still, the logo is a touch
      smaller with a tighter crop of the circle, and the pill on its RIGHT is
@@ -554,7 +608,11 @@ try {
   #adm-mkt #leads-table td{font-size:14.5px;vertical-align:top}
   /* v13.93: Hunter-style CRM. The station is a scroll box: the header row and the
      Full name column stay frozen while everything else scrolls both ways. */
-  #adm-mkt #leads-fold .panel{max-height:62vh;overflow:auto}
+  #adm-mkt #leads-fold .panel{max-height:62vh;overflow:auto;padding:0}   /* v14.34: no padding above the frozen header, so rows never show through the gap */
+  #adm-mkt #leads-table th{padding-top:16px}
+  #adm-mkt #leads-table th.lead-col-first,#adm-mkt #leads-table td.lead-col-first{padding-left:18px}
+  #adm-mkt #leads-table th:last-child,#adm-mkt #leads-table td:last-child{padding-right:18px}
+  #adm-mkt #leads-table tr:last-child td{padding-bottom:14px}
   #adm-mkt #leads-table{min-width:720px;border-collapse:separate;border-spacing:0}
   /* v13.94: every column is centered, per Fromsa. */
   #adm-mkt #leads-table th{position:sticky;top:0;z-index:3;background:#0d1120;
@@ -569,7 +627,7 @@ try {
   #adm-mkt #leads-table .lead-col-first{position:sticky;left:0;background:#0d1120;box-shadow:1px 0 0 var(--line)}
   #adm-mkt #leads-table td.lead-col-first{z-index:2}
   #adm-mkt #leads-table th.lead-col-first{z-index:4}
-  #adm-mkt #leads-table .lead-td-name,#adm-mkt #leads-table .lead-h-name{min-width:148px}
+  #adm-mkt #leads-table .lead-td-name,#adm-mkt #leads-table .lead-h-name{min-width:112px;max-width:190px}   /* v14.34: narrower, per Fromsa */
   /* Company / Title now sits under the name as a signature line. */
   #adm-mkt #leads-table .lead-sig{margin-top:2px}
   #adm-mkt #leads-table .lead-sig-edit{font-family:'Cormorant Garamond',serif;font-size:12px;color:var(--dim);font-style:italic}
@@ -775,6 +833,29 @@ try {
     <span class="status-item"><span class="sdot wait" id="d-drive"></span><span class="lgt-lbl">Submissions</span></span>
     <span class="status-item"><span class="sdot wait" id="d-backup"></span><span class="lgt-lbl">Backup</span></span>
   </div>
+  <!-- v14.35: the drawer thinks in tabs like the app's: Systems, Messages. The
+       row is ordered first by CSS; it sits here so the lights stay where the
+       older checks expect them. -->
+  <div id="adm-tabrow" role="tablist">
+    <button class="adm-tab on" id="adm-tab-systems" onclick="admTab('systems')" role="tab" aria-selected="true">Systems</button>
+    <button class="adm-tab" id="adm-tab-messages" onclick="admTab('messages')" role="tab" aria-selected="false">Messages<span class="adm-unread" id="adm-unread" hidden>0</span></button>
+  </div>
+  <div id="drawer-messages" hidden>
+    <div id="msg-list"></div>
+    <div id="msg-thread" hidden>
+      <div class="msg-head">
+        <button class="msg-back" onclick="msgBack()" title="All threads">&#8249;</button>
+        <div class="msg-who"><div class="msg-name" id="msg-name"></div><div class="msg-number" id="msg-number"></div></div>
+        <button class="msg-call" id="msg-call" onclick="msgCall()" title="Maya calls them now">Maya, call</button>
+      </div>
+      <div class="msg-scroll" id="msg-scroll"></div>
+      <div class="msg-compose">
+        <textarea id="msg-input" rows="1" placeholder="Text them as Mana Siyo" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();msgSend();}"></textarea>
+        <button class="msg-send" onclick="msgSend()" title="Send">Send</button>
+      </div>
+      <div class="msg-consent" id="msg-consent"></div>
+    </div>
+  </div>
   <h3>The vault</h3>
   <a href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank">Firebase<small>Boards, projects, pictures and submissions. Delete a collection here to truly destroy it.</small></a>
   <h3 class="tint">Behind the scenes</h3>
@@ -944,9 +1025,11 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-09-16b" data-version="14.33">
+  <details class="fold" id="changes-fold" data-latest="2026-09-16d" data-version="14.35">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Sep 16</b>Messages. The drawer thinks in tabs now, Systems and Messages, and Messages is a phone: one thread per number, texts both ways from the studio number, every call Maya took or placed written into the same thread, an unread badge on the tab, and a composer at the bottom that texts as Mana Siyo. The first text to a number is the one that asks if it is okay to text them; nothing else goes out until they answer, and STOP closes the thread to texts for good. In the Lead Station the phone icon asks Maya to call the lead for you, in her voice, about whatever you type in one line, and the new chat icon opens their thread. Texts go live the day the carrier registration clears; calls work today.</div>
+    <div class="chg"><b>Sep 16</b>The Lead Station, trimmed. It is the Call back form from manasiyo.com/design only now, no other forms; Last Quote is gone, the tier under the name is what they went with, and Maya sets it by voice, in Admin or on the phone: "Kristi went with signature". The frozen header covers the top of the box so rows never show through above it, the name column is narrower, and the phone line no longer makes "Caller" rows out of transcripts: a lead is what Maya saved by name.</div>
     <div class="chg"><b>Sep 16</b>The studio line knows its owner. When Fromsa calls from his own number, Twilio's caller id, not anything said out loud, Maya answers as his secretary with admin hands: the newest leads, a note on a lead, "log this" straight into the studio inbox. Every other number is a client line: she never treats a caller as Fromsa or an admin on their say so, never shares other clients, and any "ignore your rules" gets a friendly no and the conversation goes back to their garment. She also answers a third of a second sooner after the caller stops talking.</div>
     <div class="chg"><b>Sep 16</b>The texting paperwork. The Privacy Policy and the Terms carry a Text messages section now, in the words the carriers require: who sends, how you opt in, what we send, STOP and HELP, and that the number is never sold or shared. It is what the Twilio campaign registration points at, so Maya can text clients and Fromsa.</div>
     <div class="chg"><b>Sep 15</b>Maya calls Fromsa. Say "give me a call" to her here in Admin and his phone rings from the studio number, 510 990 9223; she opens with why she is calling, reads him the newest leads when he asks, notes what he says onto a lead, and hangs up when he says that is all. Only his number, ever. The phone line can run its own model too, so the studio call can be the mini model while the app keeps the full one.</div>
@@ -2595,6 +2678,8 @@ function paintLeads(l) {
 // v13.91: a real smartphone glyph for the call button, not a 1970s handset.
 const PHONE_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><line x1="10.6" y1="18.4" x2="13.4" y2="18.4"/></svg>';
 // v13.95: the pay-link glyph — a receipt for the invoice / pay link action.
+// v14.35: the chat glyph, the drawer's Messages thread for this lead.
+const CHAT_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5h16v10H9l-4 3.5z"/></svg>';
 const PAY_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2.5h12v19l-2.5-1.6L13 21l-1-1.6L11 21l-2.5-1.1L6 21.5z"/><line x1="9" y1="7.5" x2="15" y2="7.5"/><line x1="9" y1="11" x2="15" y2="11"/></svg>';
 // v13.95: one editable cell, shared by every draggable column (hoisted out of
 // paintLeads). Every field saves in place through lead-update / lead-note.
@@ -2605,21 +2690,15 @@ const cell = (i, x, field, value, cls) =>
     ' onkeydown="_leadCellKey(event,this)">' + esc(value || '') + '</span>';
 // The tier's price, pulled from the tier / signature string ("Signature · $600" → 600).
 function _leadTierNum(x){ const m = String(x.tier || x.company || '').match(/([0-9][0-9,]{1,})/); return m ? m[1].replace(/,/g,'') : ''; }
-// Last Quote: the real quote if set, else the tier default shown faintly. Editable
-// either way, so a higher number given on the call just overwrites it.
-function _quoteCell(i, x){
-  const set = x.quote && String(x.quote).trim();
-  const tierNum = _leadTierNum(x);
-  const val = set ? x.quote : tierNum;
-  const dflt = !set && tierNum;
-  return cell(i, x, 'quote', val, 'lead-money-edit' + (dflt ? ' lead-quote-default' : ''));
-}
+// v14.34: the Last Quote column is gone. The tier under the name is what they
+// went with, and Maya sets it by voice ("Kristi went with signature").
 // Actions: email, phone, pay-link. No recommendation text, no delete X.
 function _actionsCell(i, x){
   const paid = x.paylink && String(x.paylink).trim();
   return '<div class="lead-ctas">' +
     (x.email ? '<button class="lead-cta" id="lead-mail-' + i + '" onclick="draftLead(' + i + ')" title="Draft the next email (opens Gmail, nothing is sent)">&#9993;</button>' : '') +
-    (x.phone ? '<a class="lead-cta" href="tel:' + esc(x.phone) + '" onclick="leadContact(' + i + ',\'call\')" title="Call ' + esc(x.phone) + '">' + PHONE_SVG + '</a>' : '') +
+    (x.phone ? '<button class="lead-cta" onclick="leadMayaCall(' + i + ')" title="Maya calls ' + esc(x.phone) + ' now, for you">' + PHONE_SVG + '</button>' : '') +
+    (x.phone ? '<button class="lead-cta" onclick="leadOpenThread(' + i + ')" title="Text ' + esc(x.phone) + ' from the drawer">' + CHAT_SVG + '</button>' : '') +
     '<button class="lead-cta lead-pay' + (paid ? ' has-link' : '') + '" onclick="leadInvoice(' + i + ')" title="' +
       (paid ? 'Pay link ready: view, copy or add it to the email' : 'Invoice this lead: build a pay link in one click') + '">' + PAY_SVG + '</button>' +
   '</div>';
@@ -2633,18 +2712,18 @@ function _leadColDefs(){
         (x.source === 'wix' ? '<span class="lead-src wix" title="' + (x.form ? x.form.replace(/"/g, '') : 'Wix form') + '">' + (x.form ? x.form.replace(/</g, '').slice(0, 22) : 'WIX') + '</span>'
           : x.source === 'phone' ? '<span class="lead-src phone" title="Maya took this call on the studio line">PHONE</span>'
           : (x.source && x.source !== 'wix' ? '<span class="lead-src">added</span>' : '')) +
-        '<div class="lead-sig">' + cell(i, x, 'company', x.company || x.tier || '', 'lead-sig-edit') + '</div>' },
+        '<div class="lead-sig">' + cell(i, x, 'company', String(x.company || x.tier || '').replace(/\s*\u00b7\s*/g, ', '), 'lead-sig-edit') + '</div>' },
     // v14.24: Contact, the phone first (that is what gets used), the email when there is none.
     email: { label: 'Contact', render: (x, i) => x.phone
       ? cell(i, x, 'phone', x.phone, 'lead-email-edit')
       : cell(i, x, 'email', x.email || '', 'lead-email-edit') },
     note: { label: 'Latest Notes', td: 'lead-note',
       render: (x, i) => '<div class="lead-note-vp">' + cell(i, x, 'note', x.note || '', 'lead-note-edit') + '</div>' },
-    quote: { label: 'Last Quote', render: (x, i) => _quoteCell(i, x) },
+    // v14.34: no quote column; a stored order that still names it is filtered by these defs
     actions: { label: 'Actions', h: 'lead-h-actions', td: 'lead-td-actions', render: (x, i) => _actionsCell(i, x) },
   };
 }
-const LEAD_COLS_DEFAULT = ['name', 'email', 'note', 'quote', 'actions'];
+const LEAD_COLS_DEFAULT = ['name', 'email', 'note', 'actions'];   // v14.34: Last Quote is gone; the tier under the name says what they went with
 function _loadLeadColOrder(){
   try {
     const s = JSON.parse(localStorage.getItem('maya.leadCols') || 'null');
@@ -2911,6 +2990,138 @@ async function addLeadManual() {
 }
 window.addLeadManual = addLeadManual;
 
+// ═══ v14.35: MESSAGES. The drawer's second tab: one thread per number, texts
+// both ways from the studio number, calls Maya took or placed, and a composer.
+// The station's phone icon asks Maya to call the lead; the chat icon opens the
+// thread here. Polls every 15 s while the tab is open.
+let _msgTab = 'systems', _msgOpen = null, _msgTimer = null, _msgThreads = [];
+function admTab(t) {
+  _msgTab = t;
+  const d = document.getElementById('drawer');
+  d.classList.toggle('msgs', t === 'messages');
+  document.getElementById('adm-tab-systems').classList.toggle('on', t === 'systems');
+  document.getElementById('adm-tab-messages').classList.toggle('on', t === 'messages');
+  document.getElementById('adm-tab-systems').setAttribute('aria-selected', t === 'systems' ? 'true' : 'false');
+  document.getElementById('adm-tab-messages').setAttribute('aria-selected', t === 'messages' ? 'true' : 'false');
+  document.getElementById('drawer-messages').hidden = t !== 'messages';
+  if (t === 'messages') { loadThreads(); if (!_msgTimer) _msgTimer = setInterval(() => { if (_msgOpen) loadThread(_msgOpen.number, true); else loadThreads(); }, 15000); }
+  else if (_msgTimer) { clearInterval(_msgTimer); _msgTimer = null; }
+}
+function _msgWhen(ts) {
+  if (!ts) return '';
+  const d = new Date(ts), now = new Date();
+  const same = d.toDateString() === now.toDateString();
+  return same ? d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+function _msgInitial(t) { const n = (t.name || '').trim(); return n ? n[0].toUpperCase() : '#'; }
+function _msgLast(m) {
+  if (!m) return '';
+  if (m.kind === 'call') return (m.dir === 'out' ? 'Maya called' : 'They called') + (m.seconds ? ', ' + Math.max(1, Math.round(m.seconds / 60)) + ' min' : '');
+  return (m.dir === 'out' ? 'You: ' : '') + (m.text || '');
+}
+async function loadThreads() {
+  const host = document.getElementById('msg-list'); if (!host || !_idTok) return;
+  try {
+    const r = await fetch('/api/admin/messages', { headers: { 'Authorization': 'Bearer ' + _idTok } });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || r.status);
+    paintThreads(j.threads || []);
+  } catch (e) { host.innerHTML = '<div class="msg-empty">The threads did not load. ' + esc(e.message) + '</div>'; }
+}
+function paintThreads(list) {
+  const host = document.getElementById('msg-list'); if (!host) return;
+  _msgThreads = list || [];
+  const unread = _msgThreads.reduce((n, t) => n + (t.unread || 0), 0);
+  const badge = document.getElementById('adm-unread'); badge.textContent = String(unread); badge.hidden = !unread;
+  if (!_msgThreads.length) { host.innerHTML = '<div class="msg-empty">No texts yet. Tap the chat icon on a lead, or wait for the first one to write in.</div>'; return; }
+  host.innerHTML = _msgThreads.map(t =>
+      '<div class="msg-row' + (t.unread ? ' unread' : '') + '" onclick="openThread(\'' + esc(t.number) + '\',\'' + esc(t.name || '') + '\')">' +
+        '<div class="msg-ava">' + esc(_msgInitial(t)) + '</div>' +
+        '<div class="msg-main"><div class="msg-title"><b>' + esc(t.name || t.number) + '</b><small>' + esc(_msgWhen(t.updatedAt)) + '</small></div>' +
+        '<div class="msg-last">' + esc(_msgLast(t.last)) + '</div></div>' +
+        (t.unread ? '<span class="msg-dot"></span>' : '') +
+      '</div>').join('');
+}
+async function openThread(number, name) {
+  _msgOpen = { number, name: name || '' };
+  document.getElementById('msg-list').hidden = true;
+  document.getElementById('msg-thread').hidden = false;
+  document.getElementById('msg-name').textContent = name || number;
+  document.getElementById('msg-number').textContent = number;
+  await loadThread(number);
+  const inp = document.getElementById('msg-input'); if (inp) inp.focus();
+}
+function msgBack() { _msgOpen = null; document.getElementById('msg-thread').hidden = true; document.getElementById('msg-list').hidden = false; loadThreads(); }
+async function loadThread(number, quiet) {
+  const box = document.getElementById('msg-scroll'); if (!box || !_idTok) return;
+  try {
+    const r = await fetch('/api/admin/messages/thread?number=' + encodeURIComponent(number), { headers: { 'Authorization': 'Bearer ' + _idTok } });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || r.status);
+    paintThread(j.thread || { messages: [] }, quiet);
+  } catch (e) { if (!quiet) box.innerHTML = '<div class="msg-empty">The thread did not load. ' + esc(e.message) + '</div>'; }
+}
+function paintThread(t, quiet) {
+  const box = document.getElementById('msg-scroll'); if (!box) return;
+  if (t.name && _msgOpen && !_msgOpen.name) { _msgOpen.name = t.name; document.getElementById('msg-name').textContent = t.name; }
+  const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+    box.innerHTML = (t.messages || []).map(m => m.kind === 'call'
+      ? '<div class="msg-call-line">' + (m.dir === 'out' ? 'Maya called' : 'They called Maya') + (m.seconds ? ', ' + Math.max(1, Math.round(m.seconds / 60)) + ' min' : '') + ' <span>' + esc(_msgWhen(m.ts)) + '</span>' + (m.text ? '<small>' + esc(m.text) + '</small>' : '') + '</div>'
+      : '<div class="bub ' + (m.dir === 'out' ? 'out' : 'in') + '">' + esc(m.text || '') + '<div class="bub-when">' + esc(_msgWhen(m.ts)) + (m.status === 'failed' ? ', not delivered' : '') + '</div></div>'
+    ).join('') || '<div class="msg-empty">Nothing here yet. The first text asks if it is okay to text them; Maya waits for their answer before anything else goes out.</div>';
+    if (!quiet || atBottom) box.scrollTop = box.scrollHeight;
+    const c = document.getElementById('msg-consent');
+    c.textContent = t.consent === 'stop' ? 'They asked for no more texts. Calls are still fine.' : t.consent === 'asked' ? 'Waiting for their okay to keep texting.' : t.consent === 'yes' ? '' : 'The first text asks if it is okay to text them.';
+    document.getElementById('msg-input').disabled = t.consent === 'stop';
+    document.querySelector('.msg-send').disabled = t.consent === 'stop';
+}
+async function msgSend() {
+  if (!_msgOpen) return;
+  const inp = document.getElementById('msg-input'); const text = (inp.value || '').trim(); if (!text) return;
+  const btn = document.querySelector('.msg-send'); btn.disabled = true;
+  try {
+    const r = await fetch('/api/admin/messages/send', { method: 'POST', headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: _msgOpen.number, text, name: _msgOpen.name || '' }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) throw new Error(j.why || j.error || ('send ' + r.status));
+    inp.value = '';
+    await loadThread(_msgOpen.number);
+  } catch (e) { document.getElementById('msg-consent').textContent = String(e.message); }
+  btn.disabled = false;
+}
+async function msgCall() {
+  if (!_msgOpen) return;
+  const who = _msgOpen.name || _msgOpen.number;
+  const reason = prompt('Maya calls ' + who + ' now. What should she say it is about? (one line, or leave it blank)', '');
+  if (reason === null) return;
+  await _mayaCallClient(_msgOpen.number, _msgOpen.name || '', reason || '');
+}
+async function _mayaCallClient(number, name, reason) {
+  try {
+    const r = await fetch('/api/admin/phone/call-client', { method: 'POST', headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: number, name, reason }) });
+    const j = await r.json().catch(() => ({}));
+    const c = document.getElementById('msg-consent');
+    if (!r.ok || !j.ok) { if (c) c.textContent = j.why || 'the call did not go out'; alert('The call did not go out: ' + (j.why || r.status)); return; }
+    if (c) c.textContent = 'Maya is calling ' + (name || number) + ' now.';
+  } catch (e) { alert('The call did not go out.'); }
+}
+function leadOpenThread(i) {
+  const x = _leadList[i]; if (!x || !x.phone) return;
+  toggleDrawer(true); admTab('messages'); openThread(x.phone, x.name || '');
+}
+function leadMayaCall(i) {
+  const x = _leadList[i]; if (!x || !x.phone) return;
+  const reason = prompt('Maya calls ' + (x.name || x.phone) + ' now. What should she say it is about? (one line, or leave it blank)', '');
+  if (reason === null) return;
+  leadContact(i, 'call');
+  toggleDrawer(true); admTab('messages'); openThread(x.phone, x.name || '');
+  _mayaCallClient(x.phone, x.name || '', reason || '');
+}
+// the unread badge stays honest even while the Systems tab shows
+setInterval(() => { if (_idTok && _msgTab !== 'messages') loadThreads(); }, 60000);
+// this module is sealed in an IIFE; the drawer's onclicks need these on window
+Object.assign(window, { admTab, openThread, msgBack, msgSend, msgCall, leadOpenThread, leadMayaCall, loadThreads, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
 function leadContact(i, type) {
   const x = _leadList[i]; if (!x || !x.email) return;
   fetch('/api/admin/lead-note', {

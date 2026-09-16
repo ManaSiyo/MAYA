@@ -2,7 +2,7 @@
 // and a fake OpenAI, no network. Run: node tests/maya-phone.mjs
 import crypto from 'node:crypto';
 import http from 'node:http';
-process.env.PHONE_AUTO_LEAD_SECONDS = '0';
+process.env.PHONE_AUTO_LEAD_SECONDS = '0.0001';   // on for the test; off by default since v14.34
 let express, WebSocketServer, WebSocket;
 try { express = (await import('express')).default; ({ WebSocketServer, WebSocket } = await import('ws')); }
 catch (e) { console.log('SKIPPED maya-phone: express or ws is not installed here (' + e.message.split('\n')[0] + '); CI installs both'); process.exit(0); }
@@ -45,8 +45,10 @@ const phone = mountMayaPhone(app, server, {
   listLeads: async (n) => leads.slice(-n).map(l => ({ name: l.name, phone: l.phone, wrote: l.wrote })),
   noteLead: async (lead, note) => { notes.push({ lead, note }); return /tori/i.test(lead) ? { ok: true, name: 'Tori' } : { ok: false, why: 'no lead named ' + lead }; },
   logNote: async (text) => { inbox.push(text); return { ok: true }; },
+  onCallEnd: async (rec) => { threadCalls.push(rec); },
+  setTier: async (lead, tier) => { tiers.push({ lead, tier }); return /tori/i.test(lead) ? { ok: true, name: 'Tori' } : { ok: false, why: 'no lead named ' + lead }; },
 });
-const inbox = [];
+const inbox = [], tiers = [], threadCalls = [];
 await new Promise(r => server.listen(0, '127.0.0.1', r));
 const port = server.address().port;
 const base = 'http://127.0.0.1:' + port;
@@ -190,7 +192,7 @@ ok('the call is gone from the live count', stEnd.calls === 0);
   const su = ai.got.slice(g0).find(m => m.type === 'session.update');
   ok('on Fromsa\'s side Maya is his secretary: the reason is in her brief, she opens with his name, and she has list_leads, note_lead, save_lead, end_call',
     !!su && /WHY YOU ARE CALLING: Fromsa asked for a test call from Admin\./.test(su.session.instructions) && /Hey Fromsa, it is Maya/.test(su.session.instructions) &&
-    su.session.tools.map(t => t.name).join(',') === 'list_leads,note_lead,save_lead,log_note,end_call' && !/[\u2014\u2013]/.test(su.session.instructions), su && su.session.tools.map(t => t.name).join(','));
+    su.session.tools.map(t => t.name).join(',') === 'list_leads,note_lead,save_lead,set_tier,log_note,end_call' && !/[\u2014\u2013]/.test(su.session.instructions), su && su.session.tools.map(t => t.name).join(','));
   const s3 = ai.sockets[n0].sock; const say = o => s3.send(JSON.stringify(o));
   const g1 = ai.got.length;
   say({ type: 'response.function_call_arguments.done', call_id: 'c_l', name: 'list_leads', arguments: JSON.stringify({ count: 2 }) });
@@ -226,13 +228,18 @@ ok('the call is gone from the live count', stEnd.calls === 0);
   const su = ai.got.slice(g0).find(m => m.type === 'session.update');
   ok('by caller id, not by his word: the session is the admin brief with the inbox tool and the snappier turn taking',
     !!su && /verified his number/.test(su.session.instructions) && /Hey Fromsa, it is Maya\. What do you need\?/.test(su.session.instructions) &&
-    su.session.tools.map(t => t.name).join(',') === 'list_leads,note_lead,save_lead,log_note,end_call' &&
+    su.session.tools.map(t => t.name).join(',') === 'list_leads,note_lead,save_lead,set_tier,log_note,end_call' &&
     su.session.audio.input.turn_detection.silence_duration_ms === 420, su && su.session.tools.map(t => t.name).join(','));
   const sk = ai.sockets[n0].sock; const say = o => sk.send(JSON.stringify(o));
   const g1 = ai.got.length;
   say({ type: 'response.function_call_arguments.done', call_id: 'c_log', name: 'log_note', arguments: JSON.stringify({ text: 'the fabrics tab loads slowly on the iPad' }) });
   await until(() => ai.got.slice(g1).some(m => m.type === 'conversation.item.create'));
   ok('log_note lands his words in the studio inbox', inbox.length === 1 && /fabrics tab/.test(inbox[0]));
+  const g1b = ai.got.length;
+  say({ type: 'response.function_call_arguments.done', call_id: 'c_tier', name: 'set_tier', arguments: JSON.stringify({ lead: 'Tori', tier: 'signature' }) });
+  await until(() => ai.got.slice(g1b).some(m => m.type === 'conversation.item.create'));
+  const to = JSON.parse(ai.got.slice(g1b).find(m => m.type === 'conversation.item.create').item.output);
+  ok('"Tori went with signature" sets the tier on her row', to.ok === true && tiers.length === 1 && tiers[0].tier === 'signature' && /down as signature/.test(to.say), JSON.stringify([to, tiers]));
   let closed = false; tw.on('close', () => { closed = true; });
   const nl = leads.length;
   say({ type: 'conversation.item.input_audio_transcription.completed', transcript: 'Log that, and also the drawer looks good now, thanks Maya, that is all.' });
@@ -251,6 +258,36 @@ ok('the call is gone from the live count', stEnd.calls === 0);
   ok('any other number is a client line with only save_lead and end_call', su2.session.tools.map(t => t.name).join(',') === 'save_lead,end_call' && !/admin access/.test(su2.session.instructions));
   tw2.send(JSON.stringify({ event: 'stop' }));
   await wait(200);
+}
+// 7. v14.35: Maya calls a client for Fromsa
+{
+  const refused = await phone.callClient({ to: '+15104917540', name: 'Fromsa', reason: 'x' });
+  const abroad = await phone.callClient({ to: '+441234567890', name: 'x', reason: 'x' });
+  ok('a client call never goes to Fromsa\'s own number or abroad', refused.ok === false && abroad.ok === false);
+  const nRest = twRest.length;
+  const placed = await phone.callClient({ to: '+16469966115', name: 'Kristi Lugo', reason: 'Fromsa wants to know if Thursday at 3 pm works for the fitting.' });
+  ok('the station\'s phone icon places a call to the client from the studio number', placed.ok === true && twRest[nRest].form.To === '+16469966115' && twRest[nRest].form.From === '+15109909223');
+  const tw = new WebSocket('ws://127.0.0.1:' + port + '/api/phone/stream');
+  await new Promise(r => tw.on('open', r));
+  const n0 = ai.sockets.length, g0 = ai.got.length;
+  tw.send(JSON.stringify({ event: 'start', streamSid: 'MZ11', start: { callSid: 'CAOUT1', customParameters: { token: callToken(AUTH, 'CAOUT1'), from: '+16469966115', callSid: 'CAOUT1' } } }));
+  await until(() => ai.sockets.length === n0 + 1 && ai.got.slice(g0).some(m => m.type === 'response.create'));
+  const su = ai.got.slice(g0).find(m => m.type === 'session.update');
+  ok('on the client call she opens with their first name and Fromsa\'s reason, with note_lead and end_call only',
+    !!su && /Hi Kristi, this is Maya from Mana Siyo\. Fromsa asked me to call about your request\./.test(su.session.instructions) &&
+    /Thursday at 3 pm/.test(su.session.instructions) && su.session.tools.map(t => t.name).join(',') === 'note_lead,end_call' && !/[\u2014\u2013]/.test(su.session.instructions), su && su.session.tools.map(t => t.name).join(','));
+  const sk = ai.sockets[n0].sock; const say = o => sk.send(JSON.stringify(o));
+  const nNotes = notes.length;
+  say({ type: 'conversation.item.input_audio_transcription.completed', transcript: 'Thursday at three is perfect.' });
+  say({ type: 'response.function_call_arguments.done', call_id: 'c_cn', name: 'note_lead', arguments: JSON.stringify({ note: 'Thursday at 3 pm works for the fitting' }) });
+  await until(() => notes.length === nNotes + 1);
+  ok('her note lands on that client, never on a name the model picks', notes[nNotes].lead === 'Kristi Lugo' && /Thursday/.test(notes[nNotes].note));
+  let closed = false; tw.on('close', () => { closed = true; });
+  say({ type: 'response.function_call_arguments.done', call_id: 'c_ce', name: 'end_call', arguments: '{}' });
+  await until(() => closed, 5000);
+  await wait(100);
+  const tc = threadCalls[threadCalls.length - 1];
+  ok('the call is written into the client\'s thread as an outgoing call with what they said', !!tc && tc.number === '+16469966115' && tc.dir === 'out' && tc.mode === 'client' && /Thursday at three/.test(tc.summary), JSON.stringify(tc));
 }
 ok('phoneInstructions reads the character first', phoneInstructions({ character: 'X', nowLA: 'now', from: '' }).startsWith('WHO YOU ARE:\nX'));
 

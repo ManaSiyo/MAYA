@@ -11,6 +11,7 @@ COPY fabric-sourcing.js ./
 COPY ai-router.js ./
 COPY maya-mcp.mjs ./
 COPY maya-phone.mjs ./
+COPY maya-messages.mjs ./
 COPY maya-character.md ./
 EXPOSE 8080
 CMD ["node", "server.js"]

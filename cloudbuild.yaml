@@ -42,10 +42,12 @@ steps:
         # v14.30: the phone line, against a fake Twilio and a fake OpenAI.
         if npm install --no-save express ws >/dev/null 2>&1; then
           node tests/maya-phone.mjs
+          node tests/maya-messages.mjs
         else
           echo "WARNING express or ws unavailable in CI, maya-phone skipped"
         fi
         node --check docs/server/maya-phone.mjs
+        node --check docs/server/maya-messages.mjs
         node --check docs/server/maya-mcp.mjs
         node --check docs/server/admin-command.mjs
         node --check docs/server/proxy-policy.mjs

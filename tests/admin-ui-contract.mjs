@@ -63,9 +63,9 @@ await test('the approved filing cabinet is promoted without removing Playground'
   assert.ok(playground.includes('>Playground</div>'));
 });
 
-await test('all four release surfaces carry v14.33', () => {
+await test('all four release surfaces carry v14.35', () => {
   const version = source => (source.match(/name="maya-version" content="([0-9.]+)"/) || [])[1];
-  assert.deepEqual([app, playground, admin, marketing].map(version), ['14.33', '14.33', '14.33', '14.33']);
+  assert.deepEqual([app, playground, admin, marketing].map(version), ['14.35', '14.35', '14.35', '14.35']);
 });
 
 await test('v14.01 drawer floor: circular logo, Hey Maya toggle beside it', () => {
@@ -97,10 +97,10 @@ await test('v14.01 admin drawer: full-bleed, sheet-only hover, glued hamburger, 
   assert.ok(admin.includes('function _createInvoiceNow'), 'one-click invoice in the composer');
 });
 
-await test('v14.01 Lead Station: no Invoice columns, Last Quote, draggable columns', () => {
+await test('v14.01 Lead Station: no Invoice columns, no Last Quote (v14.34), draggable columns', () => {
   assert.ok(!/'<th[^>]*>Invoice 1<\/th>'|>Invoice 1</.test(admin), 'Invoice 1 column removed');
   assert.ok(!admin.includes("label: 'Invoice"), 'no invoice column def');
-  assert.ok(admin.includes("label: 'Last Quote'"), 'Quote renamed to Last Quote');
+  assert.ok(!admin.includes("label: 'Last Quote'"), 'Last Quote column gone; the tier under the name says what they went with');
   assert.ok(admin.includes('_leadColDragStart'), 'columns are draggable');
   assert.ok(admin.includes('lead-col-first'), 'first column stays frozen');
   assert.ok(!admin.includes("'<div class=\"lead-when\">"), 'day-count line under the name removed');

@@ -32,6 +32,7 @@ import { evaluateProxyPolicy } from './proxy-policy.mjs';
 import { buildAdminCommandSnapshot, buildFeatureDigest, buildRealtimeCommandContext, resolveLeadExact } from './admin-command.mjs';
 import { createMayaMcp } from './maya-mcp.mjs';
 import { mountMayaPhone } from './maya-phone.mjs';   // v14.30: Maya on the studio phone number
+import { createMessageStore, sendSms, mountMessages, THREADS_PATH } from './maya-messages.mjs';   // v14.35: the studio's text threads
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname as pathDirname, join as pathJoin } from 'node:path';
@@ -2654,6 +2655,9 @@ const LEADS_NAMESPACE = process.env.WIX_FORMS_NAMESPACE || 'wix.form_app.form';
 // Seamstress Network are people offering help, not clients, and stay out.
 const LEADS_DAYS = Number(process.env.WIX_LEADS_DAYS || 365);
 const LEADS_SKIP_FORMS = /volunteer|seamstress/i;
+// v14.34: the station is the Call back form on manasiyo.com/design, nothing
+// else; WIX_LEADS_FORMS (a regex) widens it if that ever changes.
+const LEADS_ONLY_FORMS = new RegExp(process.env.WIX_LEADS_FORMS || 'call ?back', 'i');
 let _wixFormsCache = { ts: 0, names: {} };
 async function wixFormNames() {
   if (Date.now() - _wixFormsCache.ts < 3600000) return _wixFormsCache.names;
@@ -2719,7 +2723,7 @@ async function wixLeads() {
     const leads = subs.map(s => {
       const v = s.submissions || {};
       const form = formNames[s.formId] || guessFormName(v);
-      if (LEADS_SKIP_FORMS.test(form)) return null;
+      if (LEADS_SKIP_FORMS.test(form) || !LEADS_ONLY_FORMS.test(form)) return null;
       const name = [field(v, /^first[_-]?name/i), field(v, /^last[_-]?name/i)]
         .filter(Boolean).join(' ') || field(v, /^name/i) || 'Unnamed';
       // v13.55: the note is what they actually wrote: the longest free-text
@@ -3224,7 +3228,9 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
       'means none have been reported yet, not that you cannot see it. show_panel("ads") also returns today and ' +
       'yesterday from the live chart. YOUR PHONE: call_me rings Fromsa\'s own phone from the studio number and you ' +
       'brief him out loud on that call; when he says "call me" or "give me a call", call it at once with the reason ' +
-      'and tell him his phone is about to ring. THE INTERNAL OPS SHEET: read_team_sheet reads Mana Siyo\'s internal Google ' +
+      'and tell him his phone is about to ring. WHAT THEY WENT WITH: when he says a lead chose a tier ("Kristi went with ' +
+      'signature", "Tori chose ceremonial"), call update_lead with that lead and tier; the tier is what shows under the ' +
+      'name in the station. THE INTERNAL OPS SHEET: read_team_sheet reads Mana Siyo\'s internal Google ' +
       'Sheet live; use it when Fromsa asks about anything that lives there. If it says it is not connected, tell ' +
       'him the sheet must be shared with the service account it names. ' +
       'THE LEAD STATION is a custom CRM you run with Fromsa: it draws from Wix forms, from what he adds, and from ' +
@@ -4553,6 +4559,27 @@ const _httpServer = app.listen(port, () => {
 // routes say so. The webhook takes Twilio's form encoded POST.
 const PHONE_TRANSCRIPTS = 'maya/phone/';
 let _phone = null;
+// v14.35: one thread per number in maya/sms/threads.json, read and written
+// through the same storage helpers as everything else.
+const _messages = createMessageStore({
+  load: async () => { const o = await gcsGet(THREADS_PATH).catch(() => ({ ok: false })); if (!o.ok) return null; try { return JSON.parse(o.buf.toString('utf8')); } catch (_) { return null; } },
+  save: async (rec) => { await gcsPut(THREADS_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json'); },
+});
+// v14.34: one lead by the name Fromsa says: exact name or email first, then a
+// unique first name; anything else asks him which.
+async function _phoneFindLead(query) {
+  const feed = await loadLeadFeed();
+  const list = feed.list || [];
+  let found = resolveLeadExact(list, query);
+  if (found.status !== 'exact') {
+    const q = String(query || '').trim().toLowerCase();
+    const byFirst = list.filter(l => String(l.name || '').trim().toLowerCase().split(/\s+/)[0] === q);
+    if (byFirst.length === 1) found = { status: 'exact', lead: byFirst[0] };
+    else return { ok: false, why: byFirst.length > 1 ? 'more than one lead named ' + query + '; ask which' : 'no lead named ' + query };
+  }
+  const lead = list.find(l => (l.email && found.lead.email && l.email === found.lead.email) || (l.name === found.lead.name)) || found.lead;
+  return { ok: true, lead };
+}
 // v14.31: "Maya, give me a call." Admin only. The reason is what she opens with.
 app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
   let user;
@@ -4602,17 +4629,20 @@ app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' })
       const n = await appendMayaFeatureFrom(t, 'Fromsa, on the phone', 'phone');
       return { ok: !!n };
     },
+    // v14.34: "Kristi went with signature" on the phone sets the tier under her name.
+    setTier: async (query, tier) => {
+      const f = await _phoneFindLead(query);
+      if (!f.ok) return f;
+      const t = String(tier || '').trim().slice(0, 80);
+      if (!t || !f.lead.id) return { ok: false, why: !t ? 'no tier said' : 'that lead has no id' };
+      await updateLead(f.lead.id, { tier: t });
+      _leadsCache = { ts: 0, data: null };
+      return { ok: true, name: f.lead.name };
+    },
     noteLead: async (query, note) => {
-      const feed = await loadLeadFeed();
-      const list = feed.list || [];
-      let found = resolveLeadExact(list, query);
-      if (found.status !== 'exact') {
-        const q = String(query || '').trim().toLowerCase();
-        const byFirst = list.filter(l => String(l.name || '').trim().toLowerCase().split(/\s+/)[0] === q);
-        if (byFirst.length === 1) found = { status: 'exact', lead: byFirst[0] };
-        else return { ok: false, why: byFirst.length > 1 ? 'more than one lead named ' + query + '; ask which' : 'no lead named ' + query };
-      }
-      const lead = list.find(l => (l.email && found.lead.email && l.email === found.lead.email) || (l.name === found.lead.name)) || found.lead;
+      const f = await _phoneFindLead(query);
+      if (!f.ok) return f;
+      const lead = f.lead;
       const text = String(note || '').trim().slice(0, 2000);
       if (!text) return { ok: false, why: 'nothing to note' };
       if (lead.email) {
@@ -4642,5 +4672,22 @@ app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' })
       await gcsPut(PHONE_TRANSCRIPTS + String(callSid).replace(/[^A-Za-z0-9_-]/g, '') + '.json',
         Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
     },
+    // v14.35: every call lands in the number's thread, next to the texts.
+    onCallEnd: async (rec) => { await _messages.call(rec); },
+  });
+  // v14.35: the text threads and the routes behind the drawer's Messages tab.
+  const twilioDeps = { accountSid: process.env.TWILIO_ACCOUNT_SID || '', authToken: process.env.TWILIO_AUTH_TOKEN || '',
+    fromNumber: process.env.TWILIO_FROM_NUMBER || '+15109909223', messagingSid: process.env.TWILIO_MESSAGING_SID || '',
+    twilioApi: process.env.TWILIO_API_URL || '' };
+  mountMessages(app, {
+    store: _messages,
+    sendSms: (to, text) => sendSms(twilioDeps, { to, text }),
+    authToken: process.env.TWILIO_AUTH_TOKEN || '',
+    publicHost: process.env.PHONE_PUBLIC_HOST || 'maya-api-53947659283.us-west1.run.app',
+    requireAdmin,
+    rateLimit: (user) => rateLimit(user.sub, user.email, 2).ok,
+    json: express.json({ limit: '16kb' }),
+    urlencoded: express.urlencoded({ extended: false, limit: '32kb' }),
+    callClient: (x) => (_phone && _phone.callClient) ? _phone.callClient(x) : { ok: false, why: 'the phone line is off' },
   });
 })().catch(e => console.error('[phone] mount failed', e.message));

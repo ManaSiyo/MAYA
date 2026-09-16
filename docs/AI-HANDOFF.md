@@ -74,6 +74,77 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.35 (Claude): Messages
+
+docs/server/maya-messages.mjs (new). createMessageStore({ load, save })
+keeps maya/sms/threads.json: threads keyed by E.164 number, each { number,
+name, messages[], consent ('none' | 'asked' | 'yes' | 'stop'), unread,
+updatedAt }; a message is { id, dir in|out, kind sms|call, text, ts,
+status, by, seconds, mode }, capped at 400 per thread; writes are
+serialized in memory. inbound() bumps unread and sets consent (a no or
+STOP -> stop, anything else -> yes); outbound({ asks }) sets 'asked' on a
+number's first text; call() writes a call line. sendSms(deps, { to, text })
+posts to Twilio Messages.json from TWILIO_FROM_NUMBER (or
+TWILIO_MESSAGING_SID when set); error 30034 or an A2P message reads as
+"texting is waiting on the carrier registration". mountMessages(app,
+deps): POST /api/phone/sms (Twilio's inbound text webhook, signature
+checked with the same helper as voice, answers empty TwiML), GET
+/api/admin/messages (thread list, newest first, with last and unread),
+GET /api/admin/messages/thread?number= (the thread; clears unread), POST
+/api/admin/messages/send { to, text, name } (409 when consent is stop;
+the first text to a number is marked asks), POST
+/api/admin/phone/call-client { to, name, reason } -> _phone.callClient.
+maya-phone.mjs: placeCall(to, entry) is the shared Twilio call, callFromsa
+uses it with mode 'brief', callClient({ to, name, reason }) with mode
+'client' (US numbers only, never Fromsa's own); mode 'client' runs
+clientCallInstructions (opens "Hi <first>, this is Maya from Mana Siyo.
+Fromsa asked me to call about your request.", the reason, a question;
+voicemail gets one sentence and end_call) with CLIENT_CALL_TOOLS
+(note_lead fixed to that client, end_call). deps.onCallEnd(rec) fires for
+inbound and client calls (not brief or admin) so the call lands in the
+thread with what the person said. server.js wires _messages, the Twilio
+deps, and the routes; Dockerfile copies the module; CI runs
+tests/maya-messages.mjs (17 checks) next to maya-phone (40).
+status.html: #adm-tabrow (Systems, Messages with an unread badge) at the
+top of the drawer; #drawer.msgs hides the Systems links; #drawer-messages
+holds #msg-list (rows: initial, name, when, last line, unread dot) and
+#msg-thread (head with back, name, number and a "Maya, call" pill;
+bubbles in/out; call lines; composer; a consent line). admTab(),
+loadThreads(), openThread(), loadThread(), msgSend(), msgCall(),
+_mayaCallClient(), leadOpenThread(i), leadMayaCall(i). The station's
+phone icon is now leadMayaCall (a one line prompt for the reason, then
+Maya calls and the thread opens); the tel: link is gone; a chat icon
+(CHAT_SVG) opens the thread. Polls every 15 s while the tab is open; the
+badge refreshes once a minute otherwise. Both tabs hide while Maya's
+voice line is live (body.maya-live), as the links always did.
+Twilio, his: point the number's Messaging webhook ("A message comes in")
+at https://maya-api-53947659283.us-west1.run.app/api/phone/sms, POST.
+Texts stay refused by Twilio until the A2P campaign is approved; calls
+work now.
+
+## v14.34 (Claude): the Lead Station, trimmed
+
+server.js: LEADS_ONLY_FORMS (env WIX_LEADS_FORMS, default /call ?back/i)
+keeps only the Call back form's submissions in wixLeads; LEADS_SKIP_FORMS
+still applies. _phoneFindLead(query) is the shared resolver (exact name
+or email, then unique first name) for the phone deps noteLead and the
+new setTier(query, tier) -> updateLead(id, { tier }) (a Wix lead gets an
+override, a manual lead is edited). The Admin voice instructions say a
+"went with" sentence means update_lead with tier (status.html's
+dispatcher already patched tier). maya-phone.mjs: BRIEF_TOOLS gain
+set_tier; the transcript auto lead is off unless PHONE_AUTO_LEAD_SECONDS
+is above 0 (default 0; it used to be 25). Tests: 35 phone checks.
+status.html: LEAD_COLS_DEFAULT is name, email, note, actions; the quote
+column def and _quoteCell are gone (_leadTierNum stays for the pay link;
+a stored column order that still names quote is filtered by the defs).
+The tier line under the name replaces a middle dot with a comma.
+#leads-fold .panel has padding 0 with th padding-top 16px and 18px side
+padding on the first and last cells, so the sticky header covers the
+scrollport's top edge (rows used to show through the panel's 16px top
+padding above the header). Name column min-width 112px, max 190px.
+His to do: delete the one "Caller" row from before v14.33 (the trash
+icon on the row), it was his own test call.
+
 ## v14.33 (Claude): the studio line knows its owner
 
 maya-phone.mjs: on the stream's start event, an inbound call whose Twilio
