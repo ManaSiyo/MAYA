@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="14.31">
+<meta name="maya-version" content="14.32">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -944,9 +944,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-09-15b" data-version="14.31">
+  <details class="fold" id="changes-fold" data-latest="2026-09-16a" data-version="14.32">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Sep 16</b>The texting paperwork. The Privacy Policy and the Terms carry a Text messages section now, in the words the carriers require: who sends, how you opt in, what we send, STOP and HELP, and that the number is never sold or shared. It is what the Twilio campaign registration points at, so Maya can text clients and Fromsa.</div>
     <div class="chg"><b>Sep 15</b>Maya calls Fromsa. Say "give me a call" to her here in Admin and his phone rings from the studio number, 510 990 9223; she opens with why she is calling, reads him the newest leads when he asks, notes what he says onto a lead, and hangs up when he says that is all. Only his number, ever. The phone line can run its own model too, so the studio call can be the mini model while the app keeps the full one.</div>
     <div class="chg"><b>Sep 15</b>Maya answers the phone. Twilio rings the studio number, streams the caller's voice to the server, and Maya is on the line in her own voice: she asks what they are picturing, takes a name, confirms the number, and saves the caller into the Lead Station with a PHONE badge, then tells them Fromsa will call back. Interrupt her and she stops mid sentence. A caller who talks and hangs up before she saved them still lands in the station from the transcript, and every call's transcript is kept. The line is off until the Twilio token and the number are set. And the Lead Station now reads a whole year of Wix instead of 28 days, so all nine Call back submissions show, each badge saying which form it came from.</div>
     <div class="chg"><b>Sep 9</b>The iPad fits. It sat between the phone rules and the desktop and got the desktop layout untouched: with the drawer open the board slid 378px left and the Tap to listen and Visualize pills went half off the edge, and Safari's tall 100vh put Tip, Logout, Feedback and Hey Maya under the visible bottom. Now every pane follows the visible height at every width, the pills stay centered in the part of the board the drawer leaves open (glued to the scroll, re-seated when the iPad turns), the bottom rows wrap inside it, and every touch screen gets the lighter glass the phone already had, which is the frame the iPad was losing on each scroll and glide.</div>

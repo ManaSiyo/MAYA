@@ -74,6 +74,23 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.32 (Claude): the texting paperwork
+
+backend/privacy.html: title "Privacy Policy | Mana Siyo and MAYA", h1
+"Privacy Policy", dateline Mana Siyo Inc., new "Text messages" section
+(sender Mana Siyo Inc. from 510 990 9223, opt in by form or verbal yes on
+the studio line, what is sent, frequency varies, rates may apply, STOP and
+HELP, the carrier sentence "We do not sell or share your SMS opt-in data
+or personal information with third parties for marketing purposes.",
+Twilio named as the carrier). backend/terms.html: "Text messages" section
+with the same consent, STOP, HELP and carrier lines. Both pages carry
+maya-version 14.32 (they are not in the four surface lockstep). These are
+the two links the Twilio A2P campaign registration asks for:
+https://maya.manasiyo.com/privacy.html and
+https://maya.manasiyo.com/terms.html. Still his: the consent sentence
+under the phone field of the Wix Call back form, and a public screenshot
+of it for the opt in proof.
+
 ## v14.31 (Claude): Maya calls Fromsa
 
 maya-phone.mjs: mountMayaPhone now returns { live, wss, callFromsa(reason) }.

@@ -333,7 +333,7 @@ const s = await pg.evaluate(() => ({
 // signs in, and keep saying the things that are legally load bearing.
 const PRIVACY_SOURCE = existsSync(join(ROOT, AT.privacy))
   ? readFileSync(join(ROOT, AT.privacy), 'utf8') : '';
-ok('the privacy policy ships as a page', PRIVACY_SOURCE.includes('<h1>Privacy policy</h1>'));
+ok('the privacy policy ships as a page', PRIVACY_SOURCE.includes('<h1>Privacy Policy</h1>'));   // v14.32: the carriers want the exact title
 ok('the policy still names the sensitive things',
   ['face photograph', 'community wall', 'OpenAI', 'Pinterest', 'Measurements', 'Deleting things']
     .every(t => PRIVACY_SOURCE.includes(t)));
@@ -1992,6 +1992,12 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.32: the texting paperwork: Privacy Policy and Terms carry the SMS section the carriers require',
+  readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').includes('<h1>Privacy Policy</h1>') &&
+  readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').includes('We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes.') &&
+  readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').includes('Mana Siyo Inc.') &&
+  readFileSync(join(ROOT, 'backend/terms.html'), 'utf8').includes('Reply STOP to any message') &&
+  !/[\u2014\u2013]/.test(readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').split('<h2>Text messages</h2>')[1].split('<h2>')[0]));
 ok('v14.31: Maya calls Fromsa: the outbound route, the brief persona, call_me in Admin, only his number',
   PHONE_SOURCE.includes("app.post('/api/phone/outbound', outboundTwiml);") &&
   PHONE_SOURCE.includes('export function briefInstructions(') &&

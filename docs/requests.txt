@@ -16,6 +16,14 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 16, 2026 (v14.32): "Help me answer this" (the Twilio A2P campaign form)
+
+[x] Privacy Policy and Terms now say what the carriers require about
+    texts, at maya.manasiyo.com/privacy.html and /terms.html.
+[ ] Fromsa: add the consent sentence under the phone field on the Wix
+    Call back form, screenshot it, paste the screenshot link as the opt
+    in proof, submit the campaign.
+
 SEPTEMBER 15, 2026, LATE (v14.31): "If I tell Maya give me a call, she should be able to call me. You know my number."
 
 [x] "Give me a call": Maya in Admin has call_me; his phone rings from
