@@ -16,6 +16,23 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 15, 2026 (v14.30): "Can the lead station be linked to Wix itself? There are around 10 in Wix. Tori just confirmed. Let's get Maya a phone call, a number."
+
+[x] "Can the lead station be linked to Wix itself, the Wix API": it has
+    been since v13.54; it never read Gmail. It read 28 days, so the Call
+    back form's nine showed as five. It reads a year now and each row's
+    badge names the form it came from.
+[x] "Let's get Maya a phone call, a number": built. Twilio rings, Maya
+    answers in her own voice, saves the caller in the Lead Station
+    (PHONE badge), keeps the transcript. Off until the Twilio auth token
+    is set on Cloud Run and the number's webhook points at the server.
+[ ] Fromsa: buy the number in Twilio, set TWILIO_AUTH_TOKEN on Cloud Run,
+    raise the Cloud Run request timeout to 900 s, point the number's
+    voice webhook at the Cloud Run URL /api/phone/incoming (POST), and
+    call it.
+[ ] Later, his call: texting the caller a link after the call needs the
+    A2P registration (the Business Profile approval was step one).
+
 SEPTEMBER 9, 2026, NIGHT (v14.29): "audit everything for the iPad and mobile, make sure everything fits, and a smooth refresh rate"
 
 [x] "The vertical screen cuts the tap to listen and visualization, I

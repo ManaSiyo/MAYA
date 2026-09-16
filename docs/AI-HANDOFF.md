@@ -74,6 +74,62 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.30 (Claude): Maya on the phone, a year of leads
+
+docs/server/maya-phone.mjs (new): mountMayaPhone(app, httpServer, deps).
+POST /api/phone/incoming is Twilio's voice webhook: form encoded, checked
+against X-Twilio-Signature (HMAC SHA1 of the URL Twilio called plus the
+sorted form fields, keyed by TWILIO_AUTH_TOKEN), answered with TwiML
+<Connect><Stream url="wss://HOST/api/phone/stream"> carrying three
+parameters: token (HMAC SHA256 of the CallSid, keyed by the same auth
+token), from, callSid. HOST is the host Twilio called (PHONE_PUBLIC_HOST
+overrides). The stream MUST be the Cloud Run URL, not maya.manasiyo.com:
+Firebase Hosting's /api rewrite does not carry WebSockets. So Twilio is
+pointed at the Cloud Run service URL for the webhook too, and the
+signature then matches. /api/phone/stream is a ws WebSocketServer on the
+same http server (app.listen now returns _httpServer). On Twilio's start
+event the token is checked, then one OpenAI Realtime socket opens
+(wss://api.openai.com/v1/realtime?model=REALTIME_MODEL, Bearer
+OPENAI_API_KEY, GA event shapes, no beta header): session.update with
+audio/pcmu in and out, server_vad (650 ms silence), transcription
+(PHONE_TRANSCRIBE_MODEL, default gpt-4o-mini-transcribe), voice
+OPENAI_REALTIME_VOICE, the character file plus phoneInstructions(), tools
+save_lead and end_call; then response.create so Maya greets first.
+Twilio media -> input_audio_buffer.append; response.output_audio.delta ->
+Twilio media; speech_started -> Twilio clear plus response.cancel (barge
+in); transcripts collected from
+conversation.item.input_audio_transcription.completed and
+response.output_audio_transcript.done. save_lead -> deps.saveLead(lead,
+prevId): appendManualLead with source 'phone' the first time, updateLead
+after (one lead per call, up to four saves). end_call -> hang up 2.5 s
+after the goodbye. On any end: if no lead was saved and the caller talked
+at least PHONE_AUTO_LEAD_SECONDS (25) with 20+ characters of transcript, a
+lead named "Caller" is saved from the transcript; the whole transcript
+goes to GCS maya/phone/<CallSid>.json. Caps: PHONE_MAX_MINUTES (10),
+PHONE_MAX_CALLS (3; the fourth caller hears a busy line). GET
+/api/phone/status says whether the line is on and how many calls are
+live. ws is a new dependency (package.json, Dockerfile copies
+maya-phone.mjs); it is imported dynamically, so a machine without it
+(the device VM) boots with the line off and a warning.
+tests/maya-phone.mjs: a fake Twilio and a fake OpenAI over local
+WebSockets, 21 checks (signature, TwiML, bad token, session shape, audio
+both ways, barge in, save_lead and the update, end_call, the transcript,
+the auto lead). It skips itself when express or ws is missing; CI installs
+both (cloudbuild.yaml) and runs it, plus node --check on the module.
+Lead Station: wixLeads reads WIX_LEADS_DAYS (365) instead of 28 days,
+resolves form names once an hour (form-schema-service query) with
+guessFormName() for deleted forms, skips forms matching
+/volunteer|seamstress/i, lists 60, asks the model for the newest 20
+summaries only, and joins tier and words with a comma (the middle dot is
+gone). Each lead has `form`; the station badge shows the form name (WIX
+leads) or PHONE. The feed reports year and phoneCount next to d28.
+Env Fromsa sets on Cloud Run: TWILIO_AUTH_TOKEN (required), optional
+PHONE_PUBLIC_HOST, PHONE_MAX_MINUTES, PHONE_MAX_CALLS,
+PHONE_AUTO_LEAD_SECONDS, PHONE_TRANSCRIBE_MODEL. Cloud Run request
+timeout must be at least PHONE_MAX_MINUTES (default 300 s; set 900 s).
+Not built yet, on purpose: SMS after the call (needs A2P 10DLC or toll
+free verification), outbound calls, the app's board tools on the phone.
+
 ## v14.29 (Claude): the iPad fits
 
 Both surfaces, CSS: the @supports (height: 100dvh) block no longer nests

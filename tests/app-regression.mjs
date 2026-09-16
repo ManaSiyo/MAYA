@@ -37,6 +37,8 @@ const AI_ROUTER_SOURCE = readFileSync(join(ROOT, 'docs/server/ai-router.js'), 'u
 const ADMIN_COMMAND_SOURCE = readFileSync(join(ROOT, 'docs/server/admin-command.mjs'), 'utf8');
 const SERVER_DOCKER = readFileSync(join(ROOT, 'docs/server/Dockerfile'), 'utf8');
 const BUILD_SOURCE = readFileSync(join(ROOT, 'cloudbuild.yaml'), 'utf8');
+const PHONE_SOURCE = existsSync(join(ROOT, 'docs/server/maya-phone.mjs'))
+  ? readFileSync(join(ROOT, 'docs/server/maya-phone.mjs'), 'utf8') : '';   // v14.30
 const MAP_SOURCE = readFileSync(join(ROOT, AT.status), 'utf8');
 const STORAGE_RULES = existsSync(join(ROOT, 'docs/server/storage.rules'))
   ? readFileSync(join(ROOT, 'docs/server/storage.rules'), 'utf8') : '';
@@ -1246,7 +1248,7 @@ ok('the notes column is a summary of what they want and which tier',
   SERVER_SOURCE.includes('_leadSumCache') &&
   SERVER_SOURCE.includes('MODEL_LUNA') &&
   // the deterministic line stands when the model is unreachable
-  SERVER_SOURCE.includes("l.note = ai || [l.tier, l.wrote].filter(Boolean).join(' \u00b7 ')") &&
+  SERVER_SOURCE.includes("l.note = ai || [l.tier, l.wrote].filter(Boolean).join(', ')") &&   // v14.30: no middle dot anywhere Fromsa reads
   SERVER_SOURCE.includes('tier: field(v, /tier|package|plan/i)'));
 ok('every lead carries its own CTAs, and MAYA never sends the email itself',
   MKT_SOURCE.includes('The Lead Station') &&
@@ -1990,6 +1992,16 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
 // ── v14.03 ──
+ok('v14.30: Maya on the phone and a year of leads: the phone module, the station badges, the CI test',
+  SERVER_SOURCE.includes("import { mountMayaPhone } from './maya-phone.mjs';") &&
+  SERVER_SOURCE.includes("const LEADS_DAYS = Number(process.env.WIX_LEADS_DAYS || 365);") &&
+  SERVER_SOURCE.includes("source: (lead && lead.source === 'phone') ? 'phone' : 'maya'") &&
+  SERVER_SOURCE.includes("app.use('/api/phone/incoming', express.urlencoded({ extended: false, limit: '32kb' }));") &&
+  MAP_SOURCE.includes('<span class="lead-src phone" title="Maya took this call on the studio line">PHONE</span>') &&
+  PHONE_SOURCE.includes("app.post('/api/phone/incoming', incoming);") &&
+  PHONE_SOURCE.includes("new deps.WebSocketServer({ server, path: '/api/phone/stream' })") &&
+  PHONE_SOURCE.includes("format: { type: 'audio/pcmu' }") &&
+  !/[\u2014\u2013]/.test(PHONE_SOURCE));
 ok('v14.29: the iPad fits: dvh panes at every width, the pills follow the visible board, lighter glass on touch',
   INDEX_SOURCE.includes('#screen-community, #screen-inspo, #screen-favorites { height: 100dvh; min-height: 100dvh; }\n    .hpane { height: 100dvh; }\n  }') &&
   INDEX_SOURCE.includes('@media (min-width: 641px) and (max-width: 1279px) {') &&

@@ -31,6 +31,7 @@ import { Readable } from 'node:stream';
 import { evaluateProxyPolicy } from './proxy-policy.mjs';
 import { buildAdminCommandSnapshot, buildFeatureDigest, buildRealtimeCommandContext, resolveLeadExact } from './admin-command.mjs';
 import { createMayaMcp } from './maya-mcp.mjs';
+import { mountMayaPhone } from './maya-phone.mjs';   // v14.30: Maya on the studio phone number
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname as pathDirname, join as pathJoin } from 'node:path';
@@ -2646,12 +2647,49 @@ async function wixInsights() {
 // the Forms permission, the page says so instead of showing zeros.
 // ═══════════════════════════════════════════════════════════════════════════
 const LEADS_NAMESPACE = process.env.WIX_FORMS_NAMESPACE || 'wix.form_app.form';
+// v14.30: the station used to read 28 days of Wix, so the Call back form's
+// nine submissions showed as five while Wix showed nine. It reads a year now
+// (WIX_LEADS_DAYS), and every lead carries the name of the form it came from,
+// read once an hour from the form schemas; forms for volunteers and the
+// Seamstress Network are people offering help, not clients, and stay out.
+const LEADS_DAYS = Number(process.env.WIX_LEADS_DAYS || 365);
+const LEADS_SKIP_FORMS = /volunteer|seamstress/i;
+let _wixFormsCache = { ts: 0, names: {} };
+async function wixFormNames() {
+  if (Date.now() - _wixFormsCache.ts < 3600000) return _wixFormsCache.names;
+  try {
+    const r = await fetch('https://www.wixapis.com/form-schema-service/v4/forms/query', {
+      method: 'POST',
+      headers: { 'Authorization': WIX_KEY, 'wix-site-id': WIX_SITE, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ namespace: LEADS_NAMESPACE, query: { filter: { namespace: { $eq: LEADS_NAMESPACE } }, cursorPaging: { limit: 100 } } }),
+      signal: AbortSignal.timeout(12000),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok) {
+      const names = {};
+      for (const f of (j.forms || [])) names[f.id] = String(f.name || (f.properties && f.properties.name) || '').trim();
+      _wixFormsCache = { ts: Date.now(), names };
+    }
+  } catch (e) { console.warn('[leads] form names', e.message); }
+  return _wixFormsCache.names;
+}
+// a deleted form has no schema any more; its fields still say what it was
+function guessFormName(v) {
+  const keys = Object.keys(v || {}).join(' ');
+  if (/what_are_you_picturing/.test(keys)) return 'Call back form';
+  if (/what_would_you_like_to_make/.test(keys)) return 'Make request';
+  if (/i_am_looking_to/.test(keys)) return 'Contact form';
+  if (/describe_your_style/.test(keys)) return 'Design form';
+  if (/get_involved|role_would_you_like/.test(keys)) return 'Event interest';
+  return 'Form';
+}
 let _leadsCache = { ts: 0, data: null };
 async function wixLeads() {
   if (!WIX_KEY) return { connected: false, why: 'no WIX_API_KEY set' };
   if (_leadsCache.data && Date.now() - _leadsCache.ts < 10 * 60 * 1000) return _leadsCache.data;
   try {
-    const sinceMs = Date.now() - 28 * 86400000;
+    const sinceMs = Date.now() - LEADS_DAYS * 86400000;
+    const formNames = await wixFormNames();
     const subs = [];
     let cursor = null, guard = 0, done = false;
     do {
@@ -2673,13 +2711,15 @@ async function wixLeads() {
       }
       cursor = (!done && j.metadata && j.metadata.hasNext && j.metadata.cursors && j.metadata.cursors.next)
         ? j.metadata.cursors.next : null;
-    } while (cursor && ++guard < 5);
+    } while (cursor && ++guard < 10);
     const field = (obj, re) => {
       for (const k of Object.keys(obj || {})) if (re.test(k)) return String(obj[k] || '').trim();
       return '';
     };
     const leads = subs.map(s => {
       const v = s.submissions || {};
+      const form = formNames[s.formId] || guessFormName(v);
+      if (LEADS_SKIP_FORMS.test(form)) return null;
       const name = [field(v, /^first[_-]?name/i), field(v, /^last[_-]?name/i)]
         .filter(Boolean).join(' ') || field(v, /^name/i) || 'Unnamed';
       // v13.55: the note is what they actually wrote: the longest free-text
@@ -2689,25 +2729,25 @@ async function wixLeads() {
         const t = typeof v[k] === 'string' ? v[k].trim() : '';
         if (t.length > note.length && t.length > 20 && !/@/.test(t.slice(0, 40)) && !/^\+?[\d\s()-]+$/.test(t)) note = t;
       }
-      return { id: s.id || '', ts: s.createdDate, source: 'wix',
+      return { id: s.id || '', ts: s.createdDate, source: 'wix', form,
                name, email: field(v, /^e?mail/i), phone: field(v, /^phone|^tel/i),
                tier: field(v, /tier|package|plan/i).slice(0, 80),
                wrote: note.slice(0, 400) };
-    });
+    }).filter(Boolean);
     const now = Date.now();
     const within = (ms) => leads.filter(l => now - new Date(l.ts).getTime() < ms).length;
-    const list = leads.slice(0, 12);
+    const list = leads.slice(0, 60);   // v14.30: the whole year, newest first
     // v13.62: the Notes column carries a summary of what they want and which
     // tier, written by the quick tier, cached a day per submission. When the
     // model is unreachable the deterministic line (tier + their own words)
     // stands instead; never a guess, never a blank.
-    await Promise.all(list.map(async l => {
-      const ai = await summarizeLead(l).catch(() => null);
-      l.note = ai || [l.tier, l.wrote].filter(Boolean).join(' · ').slice(0, 220)
+    await Promise.all(list.map(async (l, i) => {
+      const ai = i < 20 ? await summarizeLead(l).catch(() => null) : null;   // v14.30: the model reads the newest twenty; older rows keep their own words
+      l.note = ai || [l.tier, l.wrote].filter(Boolean).join(', ').slice(0, 220)
         || 'No note on the form.';
     }));
     const data = { connected: true,
-      today: within(86400000), d7: within(7 * 86400000), d28: leads.length,
+      today: within(86400000), d7: within(7 * 86400000), d28: within(28 * 86400000), year: leads.length,
       lastLeadTs: leads.length ? leads[0].ts : null,
       list };
     _leadsCache = { ts: Date.now(), data };
@@ -3565,7 +3605,7 @@ async function appendManualLead(lead) {
   const rec = await loadManualLeads();
   const item = {
     id: 'm_' + crypto.randomBytes(6).toString('hex'),
-    ts: new Date().toISOString(), source: 'maya',
+    ts: new Date().toISOString(), source: (lead && lead.source === 'phone') ? 'phone' : 'maya',
     name: String((lead && lead.name) || '').trim().slice(0, 120) || 'Unnamed',
     email: String((lead && lead.email) || '').trim().toLowerCase().slice(0, 180),
     phone: String((lead && lead.phone) || '').trim().slice(0, 60),
@@ -3641,7 +3681,7 @@ async function loadLeadFeed() {
     wixLeads().catch(() => null),
     loadManualLeads().catch(() => ({ items: [] })),
   ]);
-  const manualItems = (manual.items || []).map(m => ({ ...m, source: 'maya' }));
+  const manualItems = (manual.items || []).map(m => ({ ...m, source: m.source === 'phone' ? 'phone' : 'maya' }));   // v14.30: a lead Maya took on the phone says so
   const wixConnected = !!(wix && wix.connected);
   const wixList = wixConnected ? (wix.list || []) : [];
   if (!wixConnected && !manualItems.length) return wix || { connected: false, why: 'no lead source' };
@@ -3655,7 +3695,7 @@ async function loadLeadFeed() {
     .sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
   const now = Date.now();
   const within = ms => merged.filter(l => now - new Date(l.ts).getTime() < ms).length;
-  const list = merged.slice(0, 20);
+  const list = merged.slice(0, 60);   // v14.30: the whole year
   // v13.83: Latest Notes means the latest real touchpoint, not the original
   // Wix form summary painted over every refresh. Both the page and Maya read
   // this one enriched feed, so a note spoken to Maya appears in the station.
@@ -3674,9 +3714,10 @@ async function loadLeadFeed() {
   return {
     connected: true,
     why: wixConnected ? '' : (wix && wix.why) || '',
-    today: within(86400000), d7: within(7 * 86400000), d28: within(28 * 86400000),
+    today: within(86400000), d7: within(7 * 86400000), d28: within(28 * 86400000), year: merged.length,
     lastLeadTs: merged.length ? merged[0].ts : null,
     manualCount: manualItems.length,
+    phoneCount: manualItems.filter(m => m.source === 'phone').length,
     list,
   };
 }
@@ -4489,8 +4530,51 @@ app.post(['/mcp', '/api/mcp'], express.json({ limit: '64kb' }), async (req, res)
   }
 });
 
-app.listen(port, () => {
+const _httpServer = app.listen(port, () => {
   console.log('[maya-api] listening on', port);
   // v13.28: pick the credit meter's month back up after a restart.
   bootMeter().catch(() => {});
 });
+
+// ═══ v14.30: MAYA ON THE PHONE. Twilio rings the studio number and streams
+// the caller's voice here over a WebSocket; maya-phone.mjs bridges it to the
+// OpenAI Realtime API in the phone's own mu-law and gives Maya two hands:
+// save_lead (the caller lands in the Lead Station, source PHONE) and
+// end_call. Needs TWILIO_AUTH_TOKEN (the webhook signature and the per call
+// stream token) and the `ws` package; without either the line is off and the
+// routes say so. The webhook takes Twilio's form encoded POST.
+const PHONE_TRANSCRIPTS = 'maya/phone/';
+(async () => {
+  let WebSocketServer = null, WebSocketClient = null;
+  try { const ws = await import('ws'); WebSocketServer = ws.WebSocketServer; WebSocketClient = ws.WebSocket; }
+  catch (_) { console.warn('[phone] the ws package is not installed; the studio line is off'); }
+  app.use('/api/phone/incoming', express.urlencoded({ extended: false, limit: '32kb' }));
+  mountMayaPhone(app, _httpServer, {
+    authToken: process.env.TWILIO_AUTH_TOKEN || '',
+    openaiKey: process.env.OPENAI_API_KEY || '',
+    model: REALTIME_MODEL,
+    voice: process.env.OPENAI_REALTIME_VOICE || 'marin',
+    character: MAYA_CHARACTER,
+    // the stream cannot pass through Firebase Hosting (no WebSockets on the
+    // /api rewrite), so Twilio is pointed at the Cloud Run URL itself and the
+    // host it called is the host the stream uses; PHONE_PUBLIC_HOST overrides.
+    publicHost: process.env.PHONE_PUBLIC_HOST || '',
+    openaiUrl: process.env.OPENAI_REALTIME_URL || '',   // a test points this at a fake
+    WebSocketServer, WebSocketClient,
+    noteSpend: () => noteSpend('v1/realtime', { body: {} }),
+    saveLead: async (lead, prevId) => {
+      _leadsCache = { ts: 0, data: null };
+      if (prevId) {
+        const patch = { name: lead.name, phone: lead.phone, tier: lead.tier, note: lead.wrote };
+        if (lead.email) patch.email = lead.email;
+        const updated = await updateLead(prevId, patch);
+        if (updated) return updated;
+      }
+      return appendManualLead({ ...lead, source: 'phone' });
+    },
+    saveTranscript: async (callSid, rec) => {
+      await gcsPut(PHONE_TRANSCRIPTS + String(callSid).replace(/[^A-Za-z0-9_-]/g, '') + '.json',
+        Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+    },
+  });
+})().catch(e => console.error('[phone] mount failed', e.message));

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="14.29">
+<meta name="maya-version" content="14.30">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -622,6 +622,7 @@ try {
   #adm-mkt #leads-table .lead-src{display:inline-block;margin-left:6px;padding:0 5px;border-radius:100px;border:0.5px solid var(--line);
     font-size:8px;letter-spacing:0.14em;color:var(--faint);vertical-align:middle}
   #adm-mkt #leads-table .lead-src.wix{color:#a9c9ff;border-color:rgba(169,201,255,0.4)}
+  #adm-mkt #leads-table .lead-src.phone{color:#b8f0c8;border-color:rgba(184,240,200,0.45)}   /* v14.30: a lead Maya took on the phone */
   #adm-mkt #leads-table .lead-note{font-family:'Cormorant Garamond',serif;font-size:14px;line-height:1.45;color:var(--dim)}
   /* v13.87: the whole station edits in place, like a sheet. */
   #adm-mkt #leads-table .lead-edit{display:inline-block;min-width:14px;border-radius:5px;padding:1px 4px;margin:-1px -4px;
@@ -943,9 +944,10 @@ try {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-09-09a" data-version="14.29">
+  <details class="fold" id="changes-fold" data-latest="2026-09-15a" data-version="14.30">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="chg"><b>Sep 15</b>Maya answers the phone. Twilio rings the studio number, streams the caller's voice to the server, and Maya is on the line in her own voice: she asks what they are picturing, takes a name, confirms the number, and saves the caller into the Lead Station with a PHONE badge, then tells them Fromsa will call back. Interrupt her and she stops mid sentence. A caller who talks and hangs up before she saved them still lands in the station from the transcript, and every call's transcript is kept. The line is off until the Twilio token and the number are set. And the Lead Station now reads a whole year of Wix instead of 28 days, so all nine Call back submissions show, each badge saying which form it came from.</div>
     <div class="chg"><b>Sep 9</b>The iPad fits. It sat between the phone rules and the desktop and got the desktop layout untouched: with the drawer open the board slid 378px left and the Tap to listen and Visualize pills went half off the edge, and Safari's tall 100vh put Tip, Logout, Feedback and Hey Maya under the visible bottom. Now every pane follows the visible height at every width, the pills stay centered in the part of the board the drawer leaves open (glued to the scroll, re-seated when the iPad turns), the bottom rows wrap inside it, and every touch screen gets the lighter glass the phone already had, which is the frame the iPad was losing on each scroll and glide.</div>
     <div class="chg"><b>Sep 4</b>Three small asks and one experiment. The pencil on clients and on projects hides until the row is hovered, exactly like the x (on a phone the highlighted row keeps it, since nothing hovers there). The Improve Maya box lost its second paragraph. And on the Playground only: the design notes live on the picture. Hover the open picture and Aesthetic, Silhouette, Color and Era point at the figure with a dot, a hairline and a label, like a CAD sheet; the flip in the bottom right corner turns the whole card over, two half turns, and the back carries all the notes in the drawer's glass, bio first, with the constraint chips under them. Every card that exists gets it, because it reads the same profile the notes column reads.</div>
     <div class="chg"><b>Sep 3</b>Ready for a phone. Claude ran the app at iPhone size and looked at every screen. On a phone the Hey Maya switch opens the line itself with one tap and hangs up with the next; the wake word never runs there (Safari chimes on every restart of its recognizer and Chrome on iPhone has none). The microphone is asked for inside the tap, before any network wait, and the speaker plays inline. On touch the heart, the x, the stack and dissect buttons ride on the card the finger touched last, not on every card at once. The feedback box fits the screen (an inline width beat the phone rule and it ran off both edges, close button and all). The chip clears the home indicator and the switch label stays on one line. One thing to know: a board built on a desktop lands as a pile on a phone, by design since v11.30; ask Maya to organize the board, or start a fresh project for the phone.</div>
@@ -2617,7 +2619,8 @@ function _leadColDefs(){
   return {
     name: { label: 'Full name', h: 'lead-h-name', td: 'lead-td-name',
       render: (x, i) => cell(i, x, 'name', x.name, 'lead-name-edit') +
-        (x.source === 'wix' ? '<span class="lead-src wix">WIX</span>'
+        (x.source === 'wix' ? '<span class="lead-src wix" title="' + (x.form ? x.form.replace(/"/g, '') : 'Wix form') + '">' + (x.form ? x.form.replace(/</g, '').slice(0, 22) : 'WIX') + '</span>'
+          : x.source === 'phone' ? '<span class="lead-src phone" title="Maya took this call on the studio line">PHONE</span>'
           : (x.source && x.source !== 'wix' ? '<span class="lead-src">added</span>' : '')) +
         '<div class="lead-sig">' + cell(i, x, 'company', x.company || x.tier || '', 'lead-sig-edit') + '</div>' },
     // v14.24: Contact, the phone first (that is what gets used), the email when there is none.

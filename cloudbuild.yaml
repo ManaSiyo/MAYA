@@ -39,6 +39,13 @@ steps:
         else
           echo "WARNING browser unavailable in CI, maya-hands-smoke skipped"
         fi
+        # v14.30: the phone line, against a fake Twilio and a fake OpenAI.
+        if npm install --no-save express ws >/dev/null 2>&1; then
+          node tests/maya-phone.mjs
+        else
+          echo "WARNING express or ws unavailable in CI, maya-phone skipped"
+        fi
+        node --check docs/server/maya-phone.mjs
         node --check docs/server/maya-mcp.mjs
         node --check docs/server/admin-command.mjs
         node --check docs/server/proxy-policy.mjs
