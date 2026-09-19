@@ -608,7 +608,8 @@ try {
   #adm-mkt #leads-table td{font-size:14.5px;vertical-align:top}
   /* v13.93: Hunter-style CRM. The station is a scroll box: the header row and the
      Full name column stay frozen while everything else scrolls both ways. */
-  #adm-mkt #leads-fold .panel{max-height:62vh;overflow:auto;padding:0}   /* v14.34: no padding above the frozen header, so rows never show through the gap */
+  #adm-mkt #leads-fold .panel{max-height:62vh;overflow:auto;padding:0;scrollbar-width:none}
+  #adm-mkt #leads-fold .panel::-webkit-scrollbar{display:none}
   #adm-mkt #leads-table th{padding-top:16px}
   #adm-mkt #leads-table th.lead-col-first,#adm-mkt #leads-table td.lead-col-first{padding-left:18px}
   #adm-mkt #leads-table th:last-child,#adm-mkt #leads-table td:last-child{padding-right:18px}
@@ -2249,7 +2250,9 @@ async function _voiceRunCall(dc, name, call_id, argStr){
   mayaCommandState('Maya is checking '+String(name||'a tool').replace(/_/g,' '),'busy');
   const out=await _voiceTool(name, args);
   try{
-    const modelOut=JSON.parse(JSON.stringify(out||{},(key,value)=>
+    // An explicit, authenticated lookup must preserve the contact Fromsa asked for.
+    // Broad dashboard snapshots still omit contact details.
+    const modelOut=name==='find_lead' ? out : JSON.parse(JSON.stringify(out||{},(key,value)=>
       key==='email'||key==='phone'?undefined:value));
     dc.send(JSON.stringify({type:'conversation.item.create',
       item:{type:'function_call_output', call_id:call_id, output:JSON.stringify(modelOut)}}));

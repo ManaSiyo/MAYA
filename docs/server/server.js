@@ -4569,19 +4569,13 @@ const _messages = createMessageStore({
 // unique first name; anything else asks him which.
 async function _phoneFindLead(query) {
   const feed = await loadLeadFeed();
+  if (!feed || !feed.connected) return { ok: false, why: 'the Lead Station is unavailable; try again' };
   const list = feed.list || [];
-  let found = resolveLeadExact(list, query);
-  if (found.status !== 'exact') {
-    const q = String(query || '').trim().toLowerCase();
-    // v14.36: a phone number finds its lead too (a client call whose lead has no name yet)
-    const qd = q.replace(/\D/g, '').replace(/^1(\d{10})$/, '$1');
-    const byPhone = qd.length >= 7 ? list.filter(l => String(l.phone || '').replace(/\D/g, '').replace(/^1(\d{10})$/, '$1') === qd) : [];
-    const byFirst = byPhone.length ? [] : list.filter(l => String(l.name || '').trim().toLowerCase().split(/\s+/)[0] === q);
-    if (byPhone.length === 1) found = { status: 'exact', lead: byPhone[0] };
-    else if (byFirst.length === 1) found = { status: 'exact', lead: byFirst[0] };
-    else return { ok: false, why: (byFirst.length > 1 || byPhone.length > 1) ? 'more than one lead named ' + query + '; ask which' : 'no lead named ' + query };
-  }
-  const lead = list.find(l => (l.email && found.lead.email && l.email === found.lead.email) || (l.name === found.lead.name)) || found.lead;
+  const found = resolveLeadExact(list, query);
+  if (found.status !== 'exact') return { ok: false, status: found.status,
+    why: found.status === 'ambiguous' ? 'more than one matching lead; ask which' : 'no matching lead in the station',
+    matches: (found.matches || []).map(l => ({ id: l.id, name: l.name, tier: l.tier })) };
+  const lead = list.find(l => l.id && l.id === found.lead.id) || found.lead;
   return { ok: true, lead };
 }
 // v14.31: "Maya, give me a call." Admin only. The reason is what she opens with.
@@ -4621,6 +4615,13 @@ app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' })
     twilioApi: process.env.TWILIO_API_URL || '',   // a test points this at a fake
     fromNumber: process.env.TWILIO_FROM_NUMBER || '+15109909223',
     fromsaPhone: process.env.FROMSA_PHONE || '+15104917540',
+    findLead: async (query) => {
+      const found = await _phoneFindLead(query);
+      if (!found.ok) return found;
+      const l = found.lead;
+      return { ok: true, lead: { id: l.id, name: l.name, phone: l.phone || '', email: l.email || '',
+        tier: l.tier || '', request: l.note || l.wrote || l.summary || '', when: l.ts || l.when || '' } };
+    },
     listLeads: async (n) => {
       const feed = await loadLeadFeed();
       return (feed.list || []).slice(0, n).map(l => ({ name: l.name, phone: l.phone || '', email: l.email || '',

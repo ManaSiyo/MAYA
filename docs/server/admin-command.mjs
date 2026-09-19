@@ -39,9 +39,19 @@ export function buildRealtimeCommandContext(snapshot) {
 // accepted. Substrings and fuzzy matches never silently choose a person.
 export function resolveLeadExact(leads, query) {
   const list = (Array.isArray(leads) ? leads : []).map(leadPublicDto)
-    .filter(lead => lead.email || lead.name);
+    .filter(lead => lead.id || lead.email || lead.name || lead.phone);
   const q = normalize(query);
   if (!q) return { status: 'query_required', matches: [] };
+
+  const idMatches = list.filter(lead => lead.id && lead.id === text(query, 120));
+  if (idMatches.length === 1) return { status: 'exact', lead: idMatches[0] };
+  if (idMatches.length > 1) return { status: 'ambiguous', matches: idMatches };
+  const phoneDigits = value => String(value || '').replace(/\D/g, '').replace(/^1(\d{10})$/, '$1');
+  if (/^\+?[\d\s().-]+$/.test(String(query).trim()) && phoneDigits(query).length >= 7) {
+    const phoneMatches = list.filter(lead => lead.phone && phoneDigits(lead.phone) === phoneDigits(query));
+    if (phoneMatches.length === 1) return { status: 'exact', lead: phoneMatches[0] };
+    if (phoneMatches.length > 1) return { status: 'ambiguous', matches: phoneMatches };
+  }
 
   const emailMatches = list.filter(lead => normalize(lead.email) === q);
   if (emailMatches.length === 1) return { status: 'exact', lead: emailMatches[0] };

@@ -96,7 +96,9 @@ export function briefInstructions({ character, nowLA, reason, inbound }) {
       : 'WHY YOU ARE CALLING: ' + (reason || 'he asked you to call him from Admin as a test') + '\n\n' +
         'THE CALL. Open with "Hey Fromsa, it is Maya." and the reason in one or two sentences, then stop and listen. ') +
     'He may ask what the latest leads look like: call list_leads and tell him the newest ones in plain words, shortest ' +
-    'first. He may tell you about a person to save: call save_lead. He may ask you to note something on a lead: call ' +
+    'first. For a particular person or their phone number, call find_lead, which searches the whole station. ' +
+    'Read the returned phone number when he asks; never infer a missing number or say it is unavailable without checking. ' +
+    'If the lookup is ambiguous, ask which person. He may tell you about a person to save: call save_lead. He may ask you to note something on a lead: call ' +
     'note_lead. When he says what a lead went with ("Kristi went with signature"), call set_tier. He may report a bug, an idea or anything for the studio inbox ("log this", "there is a bug", "remember ' +
     'to"): call log_note with his words, then confirm in five words. When he says that is all, or goodbye, say one ' +
     'short goodbye and call end_call. If nobody speaks for a long while, say goodbye and call end_call.';
@@ -131,6 +133,9 @@ export const CLIENT_CALL_TOOLS = [
 ];
 
 export const BRIEF_TOOLS = [
+  { type: 'function', name: 'find_lead',
+    description: 'Find a particular lead across the entire Lead Station by full name, unique first name, email, or phone. Returns their saved phone, email, tier and request. Use for contact details, not just the newest leads.',
+    parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
   { type: 'function', name: 'list_leads',
     description: 'The newest leads in the studio Lead Station: who, from where, and what they want. Call it when Fromsa asks about leads, sign ups, or who came in.',
     parameters: { type: 'object', properties: { count: { type: 'integer', description: 'how many, default 6' } } } },
@@ -356,6 +361,12 @@ export function mountMayaPhone(app, server, deps) {
         } else if (t === 'response.function_call_arguments.done') {
           let args = {}; try { args = JSON.parse(m.arguments || '{}'); } catch (_) {}
           let output = { ok: true };
+          const allowed = (call.mode === 'brief' || call.mode === 'admin') ? BRIEF_TOOLS : call.mode === 'client' ? CLIENT_CALL_TOOLS : PHONE_TOOLS;
+          if (!allowed.some(tool => tool.name === m.name)) {
+            aiSend({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: m.call_id, output: JSON.stringify({ ok: false, say: 'That action is not available on this call.' }) } });
+            aiSend({ type: 'response.create' });
+            return;
+          }
           if (m.name === 'save_lead') {
             try {
               call.leadCalls += 1;
@@ -366,6 +377,9 @@ export function mountMayaPhone(app, server, deps) {
                 output = { ok: true, say: 'saved; tell them Fromsa will call back, usually the same day' };
               }
             } catch (e) { log('save_lead failed', e.message); output = { ok: false, say: 'the station did not answer; tell them you have their number and Fromsa will call back' }; }
+          } else if (m.name === 'find_lead') {
+            try { output = deps.findLead ? await deps.findLead(String(args.query || '')) : { ok: false, why: 'the station lookup is unavailable' }; }
+            catch (_) { output = { ok: false, why: 'the station did not answer' }; }
           } else if (m.name === 'list_leads') {
             try {
               const n = Math.max(1, Math.min(12, Number(args.count) || 6));
@@ -374,7 +388,7 @@ export function mountMayaPhone(app, server, deps) {
             } catch (e) { log('list_leads failed', e.message); output = { ok: false, say: 'the station did not answer' }; }
           } else if (m.name === 'note_lead') {
             try {
-              const who = call.mode === 'client' ? (call.name || call.from) : String(args.lead || '');
+              const who = call.mode === 'client' ? call.from : String(args.lead || '');
               const r = deps.noteLead ? await deps.noteLead(who, String(args.note || '')) : { ok: false };
               output = r && r.ok ? { ok: true, say: 'noted on ' + (r.name || args.lead) } : { ok: false, say: (r && r.why) || 'no lead by that name; ask him which one' };
             } catch (e) { log('note_lead failed', e.message); output = { ok: false, say: 'the station did not answer' }; }
