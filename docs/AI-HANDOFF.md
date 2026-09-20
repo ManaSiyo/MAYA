@@ -76,6 +76,18 @@ The fabric sourcing revamp shipped in v13.44; see that section below.
 
 ## v14.36 (Claude): the audit
 
+September 19 current audit: see `AUDIT-2026-09-19.md`. Owner requests economics
+before any push, natural faster voice, an active CRM and direct Google/Meta
+reporting without Windsor. Live Windsor warning: five accounts versus free-plan
+limit one; reads paused. Admin treats the warning as campaigns and the ticker
+incorrectly says campaigns are paused. Source delivery is unknown. Existing direct
+API aggregate readers do not feed the Windsor-dependent combined campaign chart.
+September 19 CRM patch is already in 9b0beac; its test updates/validation remain
+outstanding. No new push or production configuration changes performed here.
+Next: validate that patch, reject Windsor diagnostic rows, preserve unavailable
+metrics as unknown, then reconcile actual provider costs after owner dashboard
+sign-in. Audit changes only documentation; no new tests run for this note.
+
 Run after v14.35 landed: maya-hands-smoke 171 app / 172 playground,
 app-regression (only the known ops artifact), admin-ui-contract 11,
 admin-command 6, maya-mcp, proxy-policy 27, ai-routing 7,

@@ -2174,3 +2174,9 @@ now writes the transform synchronously, no requestAnimationFrame delay).
 [x] Repo cleanup round 1: dead FILES moved to _to_delete (root audit html,
     tests scratch screenshot). Dead-code deletion inside index.html is queued
     as a careful pass (good Codex cross-check candidate; handoff is current).
+SEPTEMBER 19, 2026: economics and intelligence layer
+[ ] Verify actual OpenAI/Twilio spend before any push; repair estimated usage accounting.
+[ ] Make Maya voice faster, clearer and natural; compare browser and telephone audio.
+[ ] Replace Windsor reporting with direct Google Ads, Meta and GA4 integrations.
+[ ] Active CRM: instant owner call/SMS for new leads, structured follow-ups, pipeline,
+    unified history and campaign-to-paid-order attribution. See AUDIT-2026-09-19.md.
