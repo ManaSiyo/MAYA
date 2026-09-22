@@ -1,3 +1,40 @@
+SEPTEMBER 22, 2026: code-first SMS audit (FIXED LOCALLY, not deployed)
+Reproduced and corrected ordinary 'No problem' being treated as STOP, START not
+restoring opt-in, and late carrier error codes being lost on terminal statuses.
+Signed OptOutType START/STOP/HELP is passed into consent handling. Owner blocks
+remain independent. Both known Maya and Cloud Run webhook URLs are explicitly
+allowed in server wiring; arbitrary/forwarded host signatures remain rejected.
+50 SMS tests now cover these defects with fake providers. 443 browser checks and
+related phone/transfer/feedback/admin/API suites passed. Live inbound/outbound
+failure is still OPEN: native Chrome reached Twilio login, signed out; carrier
+logs remain unread. The owner sign-in tab is open.
+No credentials, provider configuration, real message, commit or push changed.
+Next: owner review and deploy; inspect Twilio inbound result and outgoing SID
+status/error, then confirm receipt in both directions before declaring resolution.
+
+SEPTEMBER 22, 2026: SMS delivery failure after reported unsuspension (OPEN)
+Owner reports neither phone-to-Maya nor Admin-to-phone texts arrive. Live Admin
+still shows old text-pill tabs because the previous build stopped before deploy.
+Twilio Console was signed out, then Chrome access disconnected; actual account
+state, carrier errors and inbound webhook result could not be inspected. Do not
+attribute this incident to A2P, suspension or a webhook mismatch without logs.
+Local UI now preserves visible send/delivery errors during polling and has clearer
+contact editing. SMS introductions can label unnamed contacts without AI spend.
+38 message checks, phone/transfer/feedback, 11 UI contracts, 438 browser checks
+passed. No live message sent, credentials/configuration changed or push performed.
+Next: owner sign-in, inspect both directions in Twilio, deploy reviewed code,
+verify receipt and history. The account being active alone is not delivery proof.
+
+SEPTEMBER 22, 2026: Cloud Build failed before deployment
+Commit ae8704f, build 1b827272-c2f5-4b64-809d-285caafd9ce0, PR #1.
+GitHub check logs identify one failed maya-hands-smoke assertion: the avatar
+dropdown test expected Randomize/Replace only, while Playground now also has
+the requested Save control. Corrected the exact expected list per surface;
+frontend still requires two buttons. Verified locally: 172 Playground and 171
+frontend hands assertions, seven other release suites and phone/Messages/transfer
+all passed. No deployment rerun, push or credentials
+changed. Production build/deploy steps never started for this commit.
+
 SEPTEMBER 21, 2026, LOCAL REMEDIATION (not deployed)
 Fixed locally: feedback source race and unsafe empty-store fallback; outbound
 call briefing lost between Cloud Run instances; mutable stream caller identity;

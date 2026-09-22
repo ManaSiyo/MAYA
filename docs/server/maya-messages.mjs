@@ -23,6 +23,8 @@ export const THREADS_PATH = 'maya/sms/threads.json';
 const MAX_MESSAGES = 400;
 const STATUS_RANK = { accepted: 0, queued: 1, sending: 2, sent: 3, delivered: 4, undelivered: 4, failed: 4 };
 function applyStatus(message, update) {
+  // A repeated final status may add the carrier's previously missing reason.
+  if (message.status === update.status && update.errorCode) message.errorCode = String(update.errorCode);
   if ((STATUS_RANK[message.status] ?? -1) < 4 && STATUS_RANK[update.status] >= (STATUS_RANK[message.status] ?? -1)) {
     message.status = update.status;
     if (update.errorCode) message.errorCode = String(update.errorCode);
@@ -36,12 +38,27 @@ export function e164(v) {
 }
 export function isNo(text) {
   const t = String(text || '').trim().toLowerCase();
-  return /^(stop|stopall|unsubscribe|cancel|end|quit|no|no thanks|no thank you|please stop|don't|do not)\b/.test(t);
+  return /^(?:stop|stopall|unsubscribe|cancel|end|quit|no|no thanks|no thank you|please stop)[.!\s]*$/.test(t) ||
+    /^(?:please\s+)?(?:stop|don't|do not)\s+(?:texting|messaging|contacting)(?:\s+me)?[.!\s]*$/.test(t);
 }
+const isStart = text => /^(?:start|unstop)[.!\s]*$/i.test(String(text || '').trim());
 export function isYes(text) {
   const t = String(text || '').trim().toLowerCase();
   if (isNo(t)) return false;
   return t.length > 0;   // any reply that is not a no is a yes to "okay to text you here?"
+}
+
+// A display label only, never authentication. Prefer a missed introduction to
+// guessing an identity, and never replace a name the studio already supplied.
+export function introducedName(text) {
+  const intro = String(text || '').trim().match(/^(?:(?:hi|hello|hey)[,!\s]+)?(?:my name is|this is|i am|i['’]m)\s+([^\n!?;:]+)/iu);
+  if (!intro) return '';
+  const candidate = intro[1].split(/,|(?<=[\p{L}]{2})\.(?:\s|$)|\s+(?:and|but|from|here|calling|texting|about|interested|looking|want|need)\b/iu)[0].trim();
+  const words = candidate.split(/\s+/);
+  if (!candidate || candidate.length > 80 || words.length > 4 ||
+      !words.every(w => /^[\p{L}][\p{L}\p{M}'’\-]*\.?$/u.test(w)) ||
+      /\b(?:interested|looking|calling|texting|wondering|trying|available|ready|sorry|happy|not|a|an|the|your|customer|admin|owner|designer|spam|scam)\b/iu.test(candidate)) return '';
+  return candidate;
 }
 
 // createMessageStore({ load, save, log }) -> the store. load() returns the
@@ -75,18 +92,24 @@ export function createMessageStore(deps) {
 
   return {
     // a text that came in through Twilio
-    async inbound({ from, text, sid }) {
+    async inbound({ from, text, sid, optOutType }) {
       return locked(async () => {
         const rec = await read();
         const t = thread(rec, from);
         if (!t) return null;
         if (sid && t.messages.some(m => m.id === sid)) return { number: t.number, duplicate: true };
         if (t.blocked) return { number: t.number, blocked: true };
+        if (t.nameSource !== 'manual' && (!t.name || /^caller$/i.test(t.name))) {
+          const name = introducedName(text);
+          if (name) { t.name = name; t.nameSource = 'sms'; }
+        }
         t.deleted = false;
         const ts = new Date().toISOString();
         push(t, { id: sid || crypto.randomBytes(6).toString('hex'), dir: 'in', kind: 'sms', text: String(text || '').slice(0, 1600), ts });
         t.unread = (t.unread || 0) + 1;
-        if (isNo(text)) t.consent = 'stop';
+        if (optOutType === 'STOP' || (!optOutType && isNo(text))) t.consent = 'stop';
+        else if (optOutType === 'START' || (!optOutType && isStart(text))) t.consent = 'yes';
+        else if (optOutType === 'HELP') { /* Help is not permission to resume. */ }
         else if (t.consent === 'asked' || t.consent === 'none') t.consent = 'yes';
         await write(rec);
         return { number: t.number, consent: t.consent };
@@ -125,7 +148,7 @@ export function createMessageStore(deps) {
       });
     },
     async name(number, name) {
-      return locked(async () => { const rec = await read(); const t = thread(rec, number, name); if (t) { t.name = String(name || '').trim().slice(0, 120); t.deleted = false; } await write(rec); });
+      return locked(async () => { const rec = await read(); const t = thread(rec, number, name); if (t) { t.name = String(name || '').trim().slice(0, 120); t.nameSource = 'manual'; t.deleted = false; } await write(rec); });
     },
     async block(number, blocked) {
       return locked(async () => { const rec = await read(); const t = thread(rec, number); if (!t) throw new Error('invalid number'); t.blocked = blocked; await write(rec); });
@@ -216,14 +239,19 @@ export async function readSmsStatus(deps, sid, to) {
 // deps: { store, sendSms(to, text), authToken, publicHost, requireAdmin(req), rateLimit(user), json, urlencoded, callClient({to, name, reason}), log }
 export function mountMessages(app, deps) {
   const log = deps.log || ((...a) => console.log('[messages]', ...a));
+  // Validate only against configured studio URLs, never a caller-supplied
+  // forwarded host. Hosting and the direct Cloud Run URL serve the same route.
+  const signedWebhook = (req, params) => {
+    const hosts = [deps.publicHost, ...(deps.webhookHosts || [])].filter(Boolean);
+    return !!deps.authToken && hosts.some(host => twilioSignatureValid(deps.authToken,
+      'https://' + host + req.originalUrl, params, req.get('X-Twilio-Signature')));
+  };
 
   // Twilio's inbound text webhook, signed like the voice one.
   app.post('/api/phone/sms', deps.urlencoded, async (req, res) => {
     const params = req.body || {};
-    const host = deps.publicHost || req.get('x-forwarded-host') || req.get('host') || '';
-    const url = 'https://' + host + (req.originalUrl || '/api/phone/sms');
-    if (!deps.authToken || !twilioSignatureValid(deps.authToken, url, params, req.get('X-Twilio-Signature'))) { log('sms rejected: bad signature'); return res.status(403).send('forbidden'); }
-    try { await deps.store.inbound({ from: params.From, text: params.Body, sid: params.MessageSid }); }
+    if (!signedWebhook(req, params)) { log('sms rejected: bad signature'); return res.status(403).send('forbidden'); }
+    try { await deps.store.inbound({ from: params.From, text: params.Body, sid: params.MessageSid, optOutType: params.OptOutType }); }
     catch (e) { log('inbound store failed', e.message); return res.status(503).send('storage unavailable'); }
     res.set('Content-Type', 'text/xml');
     res.send('<?xml version="1.0" encoding="UTF-8"?><Response></Response>');
@@ -231,8 +259,7 @@ export function mountMessages(app, deps) {
 
   app.post('/api/phone/sms/status', deps.urlencoded, async (req, res) => {
     const params = req.body || {};
-    const url = 'https://' + (deps.publicHost || req.get('host')) + (req.originalUrl || '/api/phone/sms/status');
-    if (!deps.authToken || !twilioSignatureValid(deps.authToken, url, params, req.get('X-Twilio-Signature'))) return res.status(403).send('forbidden');
+    if (!signedWebhook(req, params)) return res.status(403).send('forbidden');
     try { await deps.store.status({sid:params.MessageSid,status:params.MessageStatus,errorCode:params.ErrorCode}); res.sendStatus(204); }
     catch(e) { log('status failed', e.message); res.sendStatus(503); }
   });

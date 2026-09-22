@@ -1,4 +1,38 @@
-SEPTEMBER 21, 2026, IMPLEMENTATION CONTINUATION (local, not shipped)
+SEPTEMBER 22, 2026: Affiliates Beta and texting continuation
+[local] Mana hover -> Affiliates Beta (/affiliates.html), separate full-page view.
+    Large Fromsa initial profile, four loaded-lead stats, existing Lead Station
+    with callback/manual/phone leads and Call/Text/Invoice/notes/Maya access.
+    Admin-only preview, no partner access or fake commission/attribution stats.
+[local] Skip unrelated dashboard reports/AI brief in this workspace; preserve
+    admin API authorization, clear denied/failed data, ignore stale responses.
+[local] Fix exact opt-outs/START/UNSTOP/OptOutType, late delivery error details,
+    and explicit trusted-host webhook signatures. 50 fake-provider SMS checks pass.
+[ ] Live SMS receiving and sending still require Twilio logs and receipt after
+    owner deployment. Twilio is open at sign-in; do not claim live resolution.
+[future] Individual affiliate sign-in, assigned leads and scoped Maya tools.
+
+SEPTEMBER 22, 2026: SMS and compact Messages drawer
+[local] Systems gear and rounded Messages bubble in frontend-style circular tabs
+    at the same top inset; back/name higher, Call label, smaller Hey Maya controls.
+[local] Click name or pencil to rename, explicit save feedback and failure restore.
+[local] Recognize clear SMS introductions for unnamed contacts without an AI call;
+    preserve owner-set names. Unknown senders already create their own threads.
+[local] Keep carrier/send/rename feedback visible while inbox polls.
+[ ] Determine why inbound and outbound texts currently fail after reported account
+    unsuspension. Twilio requires owner sign-in; carrier/webhook logs unread.
+    Live Admin still shows the old version. No claim of successful SMS delivery.
+
+SEPTEMBER 22, 2026: GitHub Desktop workflow
+[x] Automatically prepare accurate Summary and Description before owner commits;
+    persist the instruction in AGENTS.md and CLAUDE.md. No automatic Commit/Push.
+[x] Explain #1 / red X: PR check summary; two Vercel checks passed and pro-maya
+    Cloud Build failed after 3m 3s. The avatar test still expected two buttons in
+    Playground, rejecting the requested Save button. Corrected locally.
+[x] GitHub plugin connected; verified access to Maya PR #1 and its build logs.
+September 21 implementation was pushed as ae8704f (tt); production deployment
+stopped at tests, before server build or any production deploy step.
+
+SEPTEMBER 21, 2026, IMPLEMENTATION CONTINUATION (deployment unverified)
 [local] Reception greeting exactly: "Hi this is Maya from Mana Siyo. How may I
         direct your call? Tell me what you're interested in and I'll connect you."
 [local] Brief customer intake; decline unsolicited sales; saved inquiry + caller

@@ -9,6 +9,12 @@
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
 <script>
+const IS_AFFILIATES = location.pathname === '/affiliates.html';
+if (IS_AFFILIATES) {
+  document.documentElement.classList.add('affiliates-view');
+  document.title = 'Affiliates Beta | MAYA';
+}
+
 try {
   const _vNow = (document.querySelector('meta[name="maya-version"]') || {}).content || '';
   const _vSeen = localStorage.getItem('maya_seen_version_map');
@@ -117,7 +123,7 @@ try {
       rgba(255,255,255,0.07) 100%);
     backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);
     box-shadow:inset 0 1px 1px rgba(255,255,255,0.30),inset 0 -1px 1px rgba(0,0,0,0.18),0 12px 48px rgba(0,0,0,0.38);
-    padding:56px 12px 16px}
+    padding:16px 12px 16px}
   /* v13.67: Maya's voice lives at the floor of the drawer again. Tap the star
      to open the line; it breathes while she listens, and a small chip stays
      on screen even when the drawer is closed, so she keeps talking until you
@@ -140,6 +146,12 @@ try {
   .adm-tab svg{width:17px;height:17px}
   #adm-tabtitle{flex:1;min-width:0;text-align:left;padding-left:4px;font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:400;text-transform:uppercase;letter-spacing:0.04em;color:rgba(245,250,255,0.92)}
   .msg-name{width:100%;border:0;background:transparent;font-family:inherit;padding:0;outline-offset:3px}
+  .msg-name:focus{outline:1px solid rgba(169,201,255,0.65);border-radius:4px}
+  .msg-name-edit{display:flex;align-items:center;gap:5px}
+  .msg-rename{border:0;background:transparent;color:var(--dim);cursor:pointer;padding:3px;flex:none;display:flex}
+  .msg-rename svg{width:13px;height:13px}
+  #msg-feedback{font-size:12px;color:#b9d5ff;line-height:1.4;padding-top:4px;white-space:normal}
+  #msg-feedback:empty{display:none}
   .msg-controls{display:flex;gap:8px;padding:8px 0}
   .msg-controls button{background:transparent;border:0;color:var(--dim);cursor:pointer;font:inherit;font-size:12px}
   #msg-list,.msg-scroll{scrollbar-width:none}
@@ -207,27 +219,27 @@ try {
   #voice-dock{margin-top:auto;padding-top:9px;margin-bottom:-16px;border-top:0.5px solid var(--line);
     display:flex;flex-direction:column;align-items:center;gap:6px;flex:none}
   #voice-dock .voice-row{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:14px}
-  #voice-btn{width:56px;height:56px;border-radius:50%;padding:0;cursor:pointer;overflow:hidden;
+  #voice-btn{width:40px;height:40px;border-radius:50%;padding:0;cursor:pointer;overflow:hidden;
     border:0.5px solid var(--line);background:transparent;flex:none;
     display:flex;align-items:center;justify-content:center;transition:border-color .25s,transform .25s}
-  #voice-btn img{width:64px;height:64px;object-fit:cover;border-radius:50%;opacity:0.98;flex:none}
+  #voice-btn img{width:46px;height:46px;object-fit:cover;border-radius:50%;opacity:0.98;flex:none}
   #voice-btn:hover{border-color:rgba(255,255,255,0.5);transform:scale(1.04)}
   #voice-btn.live{border-color:rgba(169,201,255,0.9);animation:voicepulse 1.6s ease-in-out infinite}
   /* v14.02: the Hey Maya toggle is a switch, the Apple kind: the word stays
      "Hey Maya", the knob slides and the track turns logo blue when it is on.
      Narrower than the old pill, so the whole floor row reads lighter. */
-  #maya-toggle{display:inline-flex;align-items:center;gap:10px;font-family:'Jost',sans-serif;font-size:9px;
+  #maya-toggle{display:inline-flex;align-items:center;gap:8px;font-family:'Jost',sans-serif;font-size:8px;
     letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);background:transparent;border:none;
     padding:6px 2px;cursor:pointer;transition:color .2s;white-space:nowrap}
   #maya-toggle:hover{color:var(--ink)}
   #maya-toggle.live{color:#a9c9ff}
-  #maya-toggle .mt-switch{position:relative;width:34px;height:20px;border-radius:100px;flex:none;
+  #maya-toggle .mt-switch{position:relative;width:30px;height:18px;border-radius:100px;flex:none;
     background:rgba(255,255,255,0.10);border:0.5px solid rgba(255,255,255,0.22);
     transition:background .25s,border-color .25s;box-shadow:inset 0 1px 2px rgba(0,0,0,0.35)}
-  #maya-toggle .mt-knob{position:absolute;top:1.5px;left:1.5px;width:16px;height:16px;border-radius:50%;
+  #maya-toggle .mt-knob{position:absolute;top:1.5px;left:1.5px;width:14px;height:14px;border-radius:50%;
     background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.45);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
   #maya-toggle.live .mt-switch{background:rgba(128,176,255,0.95);border-color:rgba(128,176,255,0.95)}
-  #maya-toggle.live .mt-knob{transform:translateX(14px)}
+  #maya-toggle.live .mt-knob{transform:translateX(12px)}
   #voice-word{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.2em;
     text-transform:uppercase;color:rgba(169,201,255,0.9);min-height:11px;text-align:center;width:100%}
   #voice-chip{position:fixed;right:16px;bottom:16px;z-index:400;display:none;align-items:center;gap:9px;
@@ -792,6 +804,24 @@ try {
 <!-- v14.05: the ?v breaks the 7 day aesthetics cache. Without it the OLD css
      (with its 36px hamburger override) kept serving for a week after the fix. -->
 <link rel="stylesheet" href="/aesthetics/ui/status-v13.19.css?v=1405">
+<style>
+  #affiliate-profile{display:none}
+  .affiliates-view #affiliate-profile{display:block;text-align:center;margin:12px auto 32px;max-width:900px}
+  .affiliates-view #adm-scroll > .wrap > :not(#affiliate-profile):not(#signin-panel):not(#adm-mkt),
+  .affiliates-view #adm-mkt > :not(#leads-fold),.affiliates-view #ticker-bar{display:none!important}
+  .affiliates-view #adm-scroll{padding-top:100px}
+  .affiliate-back{display:block;text-align:left;color:var(--dim);font:11px 'Jost',sans-serif;text-decoration:none}
+  .affiliate-avatar{width:116px;height:116px;border-radius:50%;margin:20px auto 12px;display:grid;place-items:center;border:1px solid rgba(169,201,255,.6);background:radial-gradient(circle at 35% 25%,#294c75,#091527);color:#dbe8ff;font:46px 'Cormorant Garamond',serif;box-shadow:0 0 40px #5f9fe51c}
+  #affiliate-profile h1{font-weight:400;font-size:36px;margin:6px 0}
+  .affiliate-beta{font:10px 'Jost',sans-serif;letter-spacing:.18em;color:var(--amber);text-transform:uppercase}
+  .affiliate-caption,#affiliate-status{font:12px/1.7 'Jost',sans-serif;color:var(--dim)}
+  .affiliate-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0 10px}
+  .affiliate-stat{padding:18px 8px;border:1px solid var(--line);border-radius:18px;background:rgba(8,12,26,.55)}
+  .affiliate-stat strong{display:block;font:30px 'Cormorant Garamond',serif;color:var(--ink)}
+  .affiliate-stat span{font:9px 'Jost',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+  .affiliates-view #adm-mkt{margin-top:0}
+  @media(max-width:640px){.affiliate-stats{grid-template-columns:repeat(2,1fr)}.affiliates-view #adm-scroll{padding-top:80px}.affiliate-avatar{width:96px;height:96px}}
+</style>
 </head>
 <body class="systems-map">
 
@@ -858,8 +888,8 @@ try {
        row is ordered first by CSS; it sits here so the lights stay where the
        older checks expect them. -->
   <div id="adm-tabrow" role="tablist">
-    <button class="adm-tab on" id="adm-tab-systems" onclick="admTab('systems')" role="tab" aria-selected="true" aria-label="Systems" title="Systems"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></button>
-    <button class="adm-tab" id="adm-tab-messages" onclick="admTab('messages')" role="tab" aria-selected="false" aria-label="Messages" title="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 5h16v11H9l-5 4z"/></svg><span class="adm-unread" id="adm-unread" hidden>0</span></button><button class="adm-tab" id="adm-tab-logs" onclick="admTab('logs')" role="tab" aria-selected="false" aria-label="Logs" title="Logs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18H5zM8 7h8M8 11h8M8 15h5"/></svg></button><span id="adm-tabtitle">Systems</span>
+    <button class="adm-tab on" id="adm-tab-systems" onclick="admTab('systems')" role="tab" aria-selected="true" aria-label="Systems" title="Systems"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m9 3-1 3-3 1 1 3-2 2 2 2-1 3 3 1 1 3h6l1-3 3-1-1-3 2-2-2-2 1-3-3-1-1-3z"/><circle cx="12" cy="12" r="3"/></svg></button>
+    <button class="adm-tab" id="adm-tab-messages" onclick="admTab('messages')" role="tab" aria-selected="false" aria-label="Messages" title="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path fill="currentColor" stroke="none" d="M12 3C6.5 3 2 6.6 2 11c0 2.6 1.6 4.9 4 6.4L5 21l4.4-2.3c.8.2 1.7.3 2.6.3 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg><span class="adm-unread" id="adm-unread" hidden>0</span></button><button class="adm-tab" id="adm-tab-logs" onclick="admTab('logs')" role="tab" aria-selected="false" aria-label="Logs" title="Logs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18H5zM8 7h8M8 11h8M8 15h5"/></svg></button><span id="adm-tabtitle">Systems</span>
   </div>
   <div id="drawer-logs" hidden><div class="msg-controls"><button onclick="loadMayaLogs()">Refresh logs</button></div><p class="note">Feedback given to Maya, in the original wording. Logged requests remain open until marked shipped.</p><div id="maya-logs-list" aria-live="polite"></div></div>
   <div id="drawer-messages" hidden>
@@ -867,7 +897,7 @@ try {
     <div id="msg-thread" hidden>
       <div class="msg-head">
         <button class="msg-back" onclick="msgBack()" title="All threads">&#8249;</button>
-        <div class="msg-who"><input class="msg-name" id="msg-name" aria-label="Contact name" placeholder="Caller" maxlength="120" onblur="msgRename()" onkeydown="if(event.key==='Enter')this.blur()"><div class="msg-number" id="msg-number"></div></div>
+        <div class="msg-who"><div class="msg-name-edit"><input class="msg-name" id="msg-name" aria-label="Contact name" placeholder="Caller" title="Click to name this contact; Enter saves" maxlength="120" onblur="msgRename()" onkeydown="if(event.key==='Enter')this.blur()"><button class="msg-rename" aria-label="Edit contact name" onclick="document.getElementById('msg-name').focus()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 16-1 5 5-1L21 7l-4-4zM14 6l4 4"/></svg></button></div><div class="msg-number" id="msg-number"></div></div>
         <button class="msg-call" id="msg-call" onclick="msgCall()" title="Call this person">Call</button>
       </div>
       <div class="msg-controls"><button onclick="msgCheckDelivery()" title="Check the last five outgoing texts with the carrier">Check delivery</button><button id="msg-block" onclick="msgBlock()">Block</button><button onclick="msgDelete()">Delete conversation</button></div><div class="msg-scroll" id="msg-scroll"></div>
@@ -875,7 +905,7 @@ try {
         <textarea id="msg-input" rows="1" placeholder="Text them as Mana Siyo" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();msgSend();}"></textarea>
         <button class="msg-send" onclick="msgSend()" title="Send">Send</button>
       </div>
-      <div class="msg-consent" id="msg-consent"></div>
+      <div id="msg-feedback" role="status" aria-live="polite"></div><div class="msg-consent" id="msg-consent"></div>
     </div>
   </div>
   <h3>The vault</h3>
@@ -941,6 +971,7 @@ try {
           onclick="window.open('https://manasiyo.com','_blank')"
           onkeydown="if(event.key==='Enter')window.open('https://manasiyo.com','_blank')">
       <span class="mana-chips">
+        <a class="pg-chip" href="/affiliates.html" onclick="event.stopPropagation()" onkeydown="event.stopPropagation()" title="Affiliates Beta, your leads workspace">affiliates beta</a>
         <a class="pg-chip" href="https://manasiyo.com/design" target="_blank"
            onclick="event.stopPropagation()" title="The manasiyo.com design studio.">design studio</a>
         <a class="pg-chip" href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/home?referralInfo=my-sites" target="_blank"
@@ -961,6 +992,21 @@ try {
   </div>
 
 
+  <section id="affiliate-profile" aria-label="Affiliates dashboard">
+    <a class="affiliate-back" href="/status.html">&#8592; Admin</a>
+    <div class="affiliate-avatar" aria-label="Fromsa profile">F</div>
+    <div class="affiliate-beta">Affiliates &#183; Beta</div>
+    <h1>Fromsa</h1>
+    <p class="affiliate-caption">Your studio leads, together with Maya.</p>
+    <div class="affiliate-stats">
+      <div class="affiliate-stat"><strong id="affiliate-total">&#183;</strong><span>Leads loaded</span></div>
+      <div class="affiliate-stat"><strong id="affiliate-week">&#183;</strong><span>New this week</span></div>
+      <div class="affiliate-stat"><strong id="affiliate-phone">&#183;</strong><span>With a phone</span></div>
+      <div class="affiliate-stat"><strong id="affiliate-notes">&#183;</strong><span>With notes</span></div>
+    </div>
+    <p id="affiliate-status" role="status" aria-live="polite">Sign in with your admin account to load leads.</p>
+    <p class="affiliate-caption">Admin preview. Affiliate invitations and individual lead assignments are coming next.</p>
+  </section>
   <div id="signin-panel" class="status-bar" style="margin-top:0">
     <span style="font-size:14.5px;color:var(--dim)">Sign in once and everything unlocks: submissions, traffic, and the prompting engine.</span>
     <span id="gsi-slot" style="margin:0 0 0 auto"></span>
@@ -1546,6 +1592,11 @@ function _adoptToken(t, firstLoad) {
   _cacheTok(t);
   _showSignin(false);
   _scheduleRenew(t);
+  if (IS_AFFILIATES) {
+    _fbBridge(t);
+    if (window.loadAffiliateLeads) window.loadAffiliateLeads();
+    return;
+  }
   runChecks(); loadTraffic(); loadSubmissions(); _fbBridge(t);
   try{ if(window.loadMkt) window.loadMkt(); }catch(_){}
   try{ loadFeatureRequests(); }catch(_){}
@@ -1579,6 +1630,7 @@ function _cmdBlock(label) {
 }
 let _expiredAt = 0;
 function _expired() {
+  if (IS_AFFILIATES && window.clearAffiliateLeads) window.clearAffiliateLeads('Sign in again to load leads.');
   _idTok = null;
   try{ if(window.mayaCommandState) window.mayaCommandState('signed out', 'waiting'); }catch(_){}
   try { localStorage.removeItem('maya_admin_tok'); } catch (_) {}
@@ -1605,6 +1657,7 @@ function _subsNote(html) {
 }
 let _subsSeq = 0;
 async function loadSubmissions() {
+  if (IS_AFFILIATES) return;
   const requestSeq = ++_subsSeq;
   const strip = document.getElementById('subs-strip');
   if (!_idTok) {
@@ -1753,6 +1806,7 @@ document.addEventListener('visibilitychange', () => {
 
 let _trafficSeq = 0;
 async function loadTraffic() {
+  if (IS_AFFILIATES) return;
   const requestSeq = ++_trafficSeq;
   const tiles = document.getElementById('traffic-tiles');
   if (!_idTok) { _note('Waiting for the one sign in at the top of the page.'); return; }
@@ -2127,8 +2181,8 @@ async function _mayaQueueLeadAction(query,kind,note,request,contact){
   return _mayaQueueAction({kind,lead:found.lead,note:_mayaEscText(note).slice(0,2000),
     request:_mayaEscText(request).slice(0,400),contact:contact||''});
 }
-if(_idTok) loadMayaCommand();
-setInterval(()=>{ if(_idTok&&document.visibilityState==='visible') loadMayaCommand(); },120000);
+if(!IS_AFFILIATES && _idTok) loadMayaCommand();
+setInterval(()=>{ if(!IS_AFFILIATES && _idTok&&document.visibilityState==='visible') loadMayaCommand(); },120000);
 </script>
 <script>
 // ═══ v13.71: MAYA'S VOICE. Voice to voice over WebRTC, admin only. The
@@ -2640,6 +2694,7 @@ async function fetchBrief(d) {
 }
 
 function paintLeads(l) {
+  _leadList = l.connected ? (l.list || []) : [];
   const tb = document.querySelector('#leads-table tbody');
   const note = document.getElementById('leads-note');
   if (!tb) return;
@@ -2650,7 +2705,7 @@ function paintLeads(l) {
     return;
   }
   if (!(l.list || []).length) {
-    tb.innerHTML = '<tr><td style="color:var(--dim)">No form submissions in the last 28 days.</td></tr>';
+    tb.innerHTML = '<tr><td style="color:var(--dim)">No leads to show yet.</td></tr>';
     return;
   }
   const when = ts => {
@@ -2994,7 +3049,7 @@ async function deleteLeadRow(i) {
     if (!r.ok) throw new Error('delete ' + r.status);
   } catch (_) { reloadLeads(); }
 }
-function reloadLeads() { try { if (window.loadMkt) loadMkt(); } catch (_) {} try { loadMayaCommand(); } catch (_) {} }
+function reloadLeads() { if (IS_AFFILIATES) return window.loadAffiliateLeads(); try { if (window.loadMkt) loadMkt(); } catch (_) {} try { loadMayaCommand(); } catch (_) {} }
 window.reloadLeads = reloadLeads;
 async function addLeadManual() {
   const name = prompt('New lead. Name:'); if (name == null || !name.trim()) return;
@@ -3088,6 +3143,7 @@ function paintThreads(list) {
 
 async function openThread(number, name) {
   _msgOpen = { number, name: name || '' };
+  document.getElementById('msg-feedback').textContent = '';
   document.getElementById('msg-list').hidden = true;
   document.getElementById('msg-thread').hidden = false;
   document.getElementById('msg-name').value = name || '';
@@ -3134,8 +3190,8 @@ async function msgSend() {
       body: JSON.stringify({ to: target.number, text, name: target.name || '' }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.ok) throw new Error(j.why || j.error || ('send ' + r.status));
-    if (_msgOpen && _msgOpen.number === target.number) { inp.value = ''; await loadThread(target.number); if (j.warning) { document.getElementById('msg-consent').textContent = j.warning; alert(j.warning); } }
-  } catch (e) { document.getElementById('msg-consent').textContent = String(e.message); }
+    if (_msgOpen && _msgOpen.number === target.number) { inp.value = ''; await loadThread(target.number); if (j.warning) { document.getElementById('msg-feedback').textContent = j.warning; } else { document.getElementById('msg-feedback').textContent = 'Accepted by carrier. Delivery is not yet confirmed; use Check delivery.'; } }
+  } catch (e) { if (_msgOpen && _msgOpen.number === target.number) document.getElementById('msg-feedback').textContent = String(e.message); }
   _msgSending = false; btn.disabled = !!(_msgOpen && (_msgOpen.blocked || _msgOpen.consent === 'stop'));
 }
 async function msgUpdate(action, extra = {}) {
@@ -3151,8 +3207,8 @@ async function msgRename() {
   const name = document.getElementById('msg-name').value.trim();
   if (name === (_msgOpen.name || '')) return;
   const target = _msgOpen; target.renaming = true;
-  try { const number = await msgUpdate('name',{name}); if (_msgOpen && _msgOpen.number === number) _msgOpen.name = name; }
-  catch(e) { document.getElementById('msg-consent').textContent = e.message; }
+  try { const number = await msgUpdate('name',{name}); if (_msgOpen === target) { _msgOpen.name = name; document.getElementById('msg-feedback').textContent = 'Name saved.'; } }
+  catch(e) { if (_msgOpen === target) { document.getElementById('msg-name').value = target.name || ''; document.getElementById('msg-feedback').textContent = e.message; } }
   finally { target.renaming = false; }
 }
 async function msgBlock() {
@@ -3168,7 +3224,7 @@ async function msgDelete() {
 async function msgCheckDelivery() {
   if (!_msgOpen) return;
   const number = _msgOpen.number;
-  const status = document.getElementById('msg-consent');
+  const status = document.getElementById('msg-feedback');
   status.textContent = 'Checking carrier delivery...';
   try {
     const r = await fetch('/api/admin/messages/check-delivery', { method:'POST', headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({number}) });
@@ -3178,7 +3234,7 @@ async function msgCheckDelivery() {
       await loadThread(number);
       status.textContent = j.warning || (j.checked ? 'Carrier statuses updated below.' : 'No outgoing texts to check.');
     }
-  } catch(e) { status.textContent = e.message; }
+  } catch(e) { if (_msgOpen && _msgOpen.number === number) status.textContent = e.message; }
 }
 async function msgCall() {
   if (!_msgOpen) return;
@@ -3510,7 +3566,50 @@ function paintCampaigns() {
     }).join('');
 }
 
+// The beta uses the admin-authorized lead feed, never cached account data.
+let _affiliateRequest = 0;
+function clearAffiliateLeads(message) {
+  _affiliateRequest++;
+  _leadList = [];
+  if (window.MAYA_ADMIN_DATA?.marketing) delete window.MAYA_ADMIN_DATA.marketing.leads;
+  document.querySelector('#leads-table tbody').replaceChildren();
+  document.getElementById('leads-note').style.display = 'none';
+  for (const key of ['total','week','phone','notes']) document.getElementById('affiliate-'+key).textContent = '·';
+  document.getElementById('affiliate-status').textContent = message;
+}
+async function loadAffiliateLeads() {
+  if (!IS_AFFILIATES) return;
+  if (!_idTok) { clearAffiliateLeads('Sign in with your admin account to load leads.'); return; }
+  const token = _idTok, request = ++_affiliateRequest;
+  const status = document.getElementById('affiliate-status');
+  status.textContent = 'Loading your leads';
+  try {
+    const response = await fetch('/api/admin/leads', {headers:{Authorization:'Bearer '+token},cache:'no-store'});
+    if (request !== _affiliateRequest || token !== _idTok) return;
+    if (response.status === 401) { _expired(); _showSignin(true); return; }
+    if (response.status === 403) { clearAffiliateLeads('This beta is available to studio admins only.'); _showSignin(true); return; }
+    if (!response.ok) throw new Error('Leads could not load. Try Reload.');
+    const data = await response.json();
+    if (request !== _affiliateRequest || token !== _idTok) return;
+    if (!data.ok || !data.connected) throw new Error('Lead source unavailable. Check Systems, then try Reload.');
+    const leads = Array.isArray(data.list) ? data.list : [];
+    window.MAYA_ADMIN_DATA = window.MAYA_ADMIN_DATA || {};
+    window.MAYA_ADMIN_DATA.marketing = {leads:{...data,list:leads}};
+    paintLeads({...data,list:leads});
+    const weekAgo = Date.now()-7*86400000;
+    const stats = {total:leads.length,week:leads.filter(l=>new Date(l.ts).getTime()>=weekAgo && new Date(l.ts).getTime()<=Date.now()).length,
+      phone:leads.filter(l=>/^(?:1)?[2-9]\d{9}$/.test(String(l.phone||'').replace(/\D/g,''))).length,notes:leads.filter(l=>String(l.note||'').trim()).length};
+    for (const [key,value] of Object.entries(stats)) document.getElementById('affiliate-'+key).textContent = value;
+    status.textContent = 'Stats reflect the '+leads.length+' leads shown below.'+(data.why ? ' Some lead sources are unavailable.' : '');
+  } catch (error) {
+    if (request === _affiliateRequest && token === _idTok) clearAffiliateLeads(error.message || 'Leads could not load. Try Reload.');
+  }
+}
+window.loadAffiliateLeads=loadAffiliateLeads;
+window.clearAffiliateLeads=clearAffiliateLeads;
+
 async function loadMkt(){
+  if (IS_AFFILIATES) return loadAffiliateLeads();
   // v13.71: _idTok is a top-level lexical binding, not a property on the window
   // object. Reading it off the global made the migrated Admin panels return
   // before every fetch even after sign in.
@@ -3564,6 +3663,7 @@ window._leadColDragEnd=_leadColDragEnd; window.paintLeads=paintLeads;
 // cached numbers immediately (no waiting on the aggregator) and let the real
 // fetch repaint when it lands. Two days is the staleness ceiling.
 (function _mktWarmPaint(){
+  if (IS_AFFILIATES) return;
   try{
     if(!localStorage.getItem('maya_admin_tok')) return;
     const c = JSON.parse(localStorage.getItem('maya_mkt_cache')||'null');

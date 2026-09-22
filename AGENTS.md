@@ -21,6 +21,11 @@ While working:
 - Keep changes focused and verify every edited path.
 - Never push unless Fromsa explicitly asks. The current Cloud Build trigger can
   deploy a pushed branch to production.
+- Before handing changes back for Fromsa to commit, automatically fill GitHub
+  Desktop's Summary and Description with an accurate title, changes, validation
+  and remaining limitations for the selected changes. Verify the fields in the
+  app. Leave Commit and Push to Fromsa unless separately authorized. Do not
+  amend an existing commit or reuse a stale summary for a different change set.
 
 Before handing off:
 
@@ -39,6 +44,7 @@ address onto its new file, so every URL that ever worked still works.
 ```
 frontend/index.html        the app            → served at /
 backend/status.html        Systems Map        → /status.html
+                           Affiliates Beta    → /affiliates.html (admin-only route view)
 backend/marketing.html     Marketing          → /marketing.html
 backend/operations.html    Operations Room    → /operations.html
 backend/backend.html       the Brief          → /backend.html

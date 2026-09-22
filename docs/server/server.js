@@ -4698,6 +4698,7 @@ app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' })
     twilioApi: process.env.TWILIO_API_URL || '' };
   mountMessages(app, {
     store: _messages,
+    webhookHosts: ['maya.manasiyo.com', 'maya-api-53947659283.us-west1.run.app'],
     sendSms: (to, text) => sendSms(twilioDeps, { to, text }),
     readStatus: (sid, to) => readSmsStatus(twilioDeps, sid, to),
     authToken: process.env.TWILIO_AUTH_TOKEN || '',

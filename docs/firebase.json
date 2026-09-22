@@ -64,6 +64,10 @@
         "destination": "/playground/index.html"
       },
       {
+        "source": "/affiliates.html",
+        "destination": "/backend/status.html"
+      },
+      {
         "source": "/status.html",
         "destination": "/backend/status.html"
       },

@@ -441,7 +441,7 @@ const fold = await page.evaluate(async () => {
   (0, eval)("currentClientName = 'Rudy the Presley';");
   pgUpdatePill();
   out.summary = (document.getElementById('pg-projects-current') || {}).textContent;
-  // the client dropdown carries Rename, Randomize, Replace and Remove, list or no list
+  // Check the approved controls, including Playground's staged Save button.
   (0, eval)("_avatarLibCache = []; lastSummary = { client: { name: 'Rudy' } }; _avatarSwitcherOpen = false;");
   await toggleAvatarSwitcher();
   const panel = document.getElementById('drawer-avatar-switcher');
@@ -480,8 +480,10 @@ ok('the tab reads Profile', fold.title === 'Profile', fold.title);
 ok('Projects is a fold above Stats holding the list', fold.foldAboveStats === true && fold.listInFold === true);
 ok('the placeholder pills and the beside pill are gone', fold.pillHidden === true && fold.actionsHidden === true);
 ok('the fold summary carries the open project name', fold.summary === 'Rudy the Presley' && fold.summaryIdle === '', JSON.stringify([fold.summary, fold.summaryIdle]));
-ok('the client dropdown carries Randomize and Replace only (v14.23), even when empty',
-  fold.actionButtons.length === 2 && fold.actionButtons[0] === 'Randomize' && fold.actionButtons[1] === 'Replace' && fold.newClient === true, JSON.stringify(fold.actionButtons));
+const expectedAvatarActions = SURFACE === 'playground'
+  ? ['Randomize', 'Replace', 'Save'] : ['Randomize', 'Replace'];
+ok('the client dropdown carries the approved actions for ' + SURFACE + ', even when empty',
+  JSON.stringify(fold.actionButtons) === JSON.stringify(expectedAvatarActions) && fold.newClient === true, JSON.stringify(fold.actionButtons));
 ok('a project is renamed where it sits', fold.renameBox === true && fold.renamed === 'Gala 2026' && fold.summaryAfter === 'Gala 2026', JSON.stringify([fold.renamed, fold.titleAfter, fold.summaryAfter]));
 ok('the search pill is a real magnifying glass with a centered box', fold.glass === true && fold.inputCentered === true);
 ok('the finger search reaches everything saved and a cleared box restores the wall', fold.wide && fold.wide.ok === true && fold.wide.matches === 2 && fold.wideWall === 2 && fold.restored === true, JSON.stringify(fold.wide));

@@ -595,6 +595,34 @@ const adminInteractions = await pg.evaluate(async () => {
 });
 ok('Admin behavior: Logs is a separate accessible drawer tab', adminInteractions.logsTab);
 ok('Admin behavior: punctuation in names is safe; failed delivery exposes carrier error', adminInteractions.noInjectedImage && adminInteractions.exactName && adminInteractions.deliveryVisible);
+const messageRefinements = await pg.evaluate(async () => {
+  const input = document.getElementById('msg-name');
+  const oldFetch = window.fetch;
+  let saved;
+  window.fetch = async (url, options) => {
+    if (url === '/api/admin/messages/name') { saved = JSON.parse(options.body); return {ok:true,json:async()=>({ok:true})}; }
+    return oldFetch(url, options);
+  };
+  try {
+    input.value = 'Mary Example';
+    await msgRename();
+    const renameSaved = saved?.name === 'Mary Example' && document.getElementById('msg-feedback').textContent === 'Name saved.';
+    document.getElementById('msg-feedback').textContent = 'Carrier could not deliver this text.';
+    _msgPaintThread({name:'Mary Example',messages:[]},true);
+    return {renameSaved, feedbackPersists:document.getElementById('msg-feedback').textContent.includes('could not deliver'),
+      padding:getComputedStyle(document.getElementById('drawer')).paddingTop,
+      voiceSize:getComputedStyle(document.getElementById('voice-btn')).width,
+      gear:!!document.querySelector('#adm-tab-systems svg circle'),
+      bubble:document.querySelector('#adm-tab-messages svg path').getAttribute('fill') === 'currentColor',
+      callLabel:document.getElementById('msg-call').textContent.trim()};
+  } finally { window.fetch = oldFetch; }
+});
+ok('Messages: top circular gear/chat tabs match frontend spacing and the voice button is compact',
+  messageRefinements.padding === '16px' && messageRefinements.voiceSize === '40px' && messageRefinements.gear && messageRefinements.bubble);
+ok('Messages: contact rename saves and carrier feedback survives inbox polling', messageRefinements.renameSaved && messageRefinements.feedbackPersists && messageRefinements.callLabel === 'Call');
+const { introducedName: smsIntroducedName } = await import('../docs/server/maya-messages.mjs');
+ok('Messages: explicit SMS introductions produce a contact name without treating inquiries as names',
+  smsIntroducedName('Hi, my name is Mary Ingram, I need a fitting') === 'Mary Ingram' && !smsIntroducedName('I am interested in a fitting'));
 ok('CRM behavior: tier has no price; three actions below identity; tier saves to its own field',
   adminInteractions.tier.includes('Signature') && !adminInteractions.tier.includes('$') && adminInteractions.actionsBelow && adminInteractions.actions === 3 && adminInteractions.tierField);
 const mapVer = await pg.evaluate(() =>
@@ -1994,7 +2022,7 @@ ok('v14.02: the money counter never restarts on an update (trial epoch frozen)',
   SERVER_SOURCE.includes("const TRIAL_EPOCH = String(process.env.TRIAL_EPOCH || 'v14.00')"));
 ok('v14.02: admin drawer lines are centered; Hey Maya is a switch; the divider sits low',
   MAP_SOURCE.includes('#drawer a{text-align:center') &&
-  MAP_SOURCE.includes('#maya-toggle.live .mt-knob{transform:translateX(14px)}') &&
+  MAP_SOURCE.includes('#maya-toggle.live .mt-knob{transform:translateX(12px)}') &&
   MAP_SOURCE.includes('role="switch"') &&
   !MAP_SOURCE.includes("'Turn on Hey Maya'"));
 ok('v14.00: playground backgrounds persist and can be uploaded',
@@ -2477,6 +2505,56 @@ ok('Playground avatar behavior: cloud Save, three buttons, direct name editing, 
   stagedBehavior.avatarSaved && stagedBehavior.actions === 'Randomize,Replace,Save' && stagedBehavior.editableName && stagedBehavior.failureHonest);
 ok('Playground Pinterest behavior: next-page cursor, deduplicated pins, explicit global/saved search',
   stagedBehavior.pagination && stagedBehavior.globalSearch && stagedBehavior.savedSearch);
+
+// Affiliates is a separate, admin-only workspace backed by the same Lead Station.
+ok('Affiliates has an explicit hosting route and a Mana hover entry',
+  HOSTING.hosting.rewrites.some(r=>r.source==='/affiliates.html' && r.destination==='/backend/status.html') &&
+  /class="mana-chips">[\s\S]*?href="\/affiliates.html"/.test(MAP_SOURCE));
+const affiliatePage = await browser.newPage({viewport:{width:1440,height:1000}});
+const affiliateErrors=[];
+affiliatePage.on('pageerror',e=>affiliateErrors.push(e.message));
+const affiliateRequests=[];
+await affiliatePage.route('**/*', async route => {
+  const url=route.request().url();
+  if(url.endsWith('/affiliates.html')) return route.fulfill({contentType:'text/html',body:MAP_SOURCE});
+  if(url.includes('/api/')) {affiliateRequests.push(url); return route.fulfill({status:401,contentType:'application/json',body:'{}'});}
+  return url.startsWith(PAGE_ROOT) ? route.continue() : route.abort();
+});
+await affiliatePage.goto(PAGE_ROOT+'affiliates.html',{waitUntil:'domcontentloaded'});
+const affiliateBehavior=await affiliatePage.evaluate(async()=>{
+  const shown=id=>getComputedStyle(document.getElementById(id)).display!=='none';
+  const layout=shown('affiliate-profile') && shown('leads-fold') && !shown('ads-fold') && !shown('ticker-bar');
+  let mode='ok'; let resolveSlow; const calls=[];
+  window.fetch=async(url,options)=>{
+    calls.push({url,auth:options?.headers?.Authorization});
+    if(mode==='slow') return new Promise(resolve=>{resolveSlow=resolve;});
+    if(mode==='denied') return {status:403,ok:false};
+    return {status:200,ok:true,json:async()=>({ok:true,connected:true,list:[
+      {id:'w_test',source:'wix',name:'Mary Example',phone:'4155550123',tier:'Signature',note:'A custom jacket',ts:new Date().toISOString()},
+      {id:'m_test',source:'maya',name:'Alex Example',phone:'',note:'',ts:'2020-01-01'}]})};
+  };
+  _idTok='fictional-admin'; await loadAffiliateLeads();
+  const populated=document.querySelector('#leads-table').textContent.includes('Mary Example') &&
+    document.getElementById('affiliate-total').textContent==='2' && document.getElementById('affiliate-week').textContent==='1' &&
+    document.getElementById('affiliate-phone').textContent==='1' && document.getElementById('affiliate-notes').textContent==='1';
+  const actions=['Call','Text','Invoice'].every(label=>document.querySelector('#leads-table [aria-label="'+label+'"]'));
+  mode='denied'; await loadAffiliateLeads();
+  const denied=!document.querySelector('#leads-table').textContent.includes('Mary Example') && document.getElementById('affiliate-status').textContent.includes('admins only');
+  mode='slow'; const pending=loadAffiliateLeads();
+  _idTok=null; clearAffiliateLeads('Signed out');
+  resolveSlow({status:200,ok:true,json:async()=>({ok:true,connected:true,list:[{name:'Late private lead'}]})}); await pending;
+  const stale=!document.querySelector('#leads-table').textContent.includes('Late private lead');
+  await loadTraffic();await loadSubmissions();
+  return {layout,populated,actions,denied,stale,onlyLeads:calls.every(c=>c.url==='/api/admin/leads' && c.auth==='Bearer fictional-admin')};
+});
+ok('Affiliates displays profile, real loaded stats and shared Call/Text/Invoice actions',affiliateBehavior.layout && affiliateBehavior.populated && affiliateBehavior.actions);
+ok('Affiliates clears denied data, ignores stale responses and skips unrelated reports',affiliateBehavior.denied && affiliateBehavior.stale && affiliateBehavior.onlyLeads && !affiliateRequests.some(u=>/marketing|submissions|traffic|maya-command/.test(u)));
+ok('Affiliates boots without JavaScript errors',affiliateErrors.length===0);
+await affiliatePage.close();
+const smsSource=readFileSync(join(ROOT,'docs/server/maya-messages.mjs'),'utf8');
+ok('SMS audit fixes preserve opt-in, carrier reasons and trusted-host signature checks',
+  smsSource.includes("optOutType === 'START'") && smsSource.includes('message.status === update.status && update.errorCode') &&
+  smsSource.includes('signedWebhook(req, params)') && SERVER_SOURCE.includes("webhookHosts: ['maya.manasiyo.com', 'maya-api-53947659283.us-west1.run.app']"));
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

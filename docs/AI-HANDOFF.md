@@ -76,10 +76,80 @@ The fabric sourcing revamp shipped in v13.44; see that section below.
 
 ## v14.36 (Claude): the audit
 
-September 21 implementation, LOCAL ONLY, supersedes the earlier audit next step.
-Base HEAD was 5e9c0d9 (Improve message drawer and lead actions); those previous
-"uncommitted draft" files were committed before this turn. Current edits are
-uncommitted. No push, release bump, credentials, provider settings or live calls.
+September 22 latest continuation, LOCAL ONLY: the reproduced SMS audit defects
+are now fixed in maya-messages.mjs: exact opt-outs no longer classify 'No problem'
+as STOP; explicit START/UNSTOP and signed Twilio OptOutType restore opt-in while
+preserving admin blocks; repeated final statuses retain newly supplied error
+codes. SMS and delivery callback signatures validate only the configured host
+and the two known Maya/Cloud Run hosts wired in server.js. No forwarded-host
+trust or signature bypass. Actual carrier failure is still unverified.
+
+Affiliates Beta: /affiliates.html rewrites to backend/status.html, whose explicit
+route view shows Fromsa's large initial profile, four stats and the existing Lead
+Station. Mana hover includes the new page. Uses admin-only /api/admin/leads,
+including current Wix callback leads and the same manual/phone leads, Call/Text/
+Invoice/notes and on-demand Maya drawer. Stats are for the loaded list (up to 60),
+not an all-time affiliate report. No affiliate invitations, assignments or partner
+permissions yet. No production access was broadened. Unrelated ads/traffic/
+submissions/AI-brief loads and marketing cache reads are skipped in this view.
+Denied/expired/failed reads clear the list; stale responses cannot repaint it.
+Changed this continuation: status.html, firebase.json, maya-messages.mjs,
+server.js, SMS/browser regressions, AGENTS/CLAUDE route map and these handoff logs.
+Validation: 50 SMS, 443 browser, 48 phone, transfer, feedback, 11 Admin UI,
+6 admin command and API smoke checks passed. Desktop/mobile screenshots reviewed
+at /private/tmp/maya-affiliates-desktop.png and maya-affiliates-mobile.png using
+fictional leads. Earlier same-diff hands checks: 172 Playground / 171 frontend.
+No live SMS or provider settings changed. Chrome extension access was unavailable,
+but native Chrome controls opened Twilio successfully: the console redirects to
+its signed-out Email login. Tab left open for owner sign-in. Actual Twilio status/
+error and incoming webhook logs remain unread. GitHub Desktop Summary/Description
+were filled and read back for this complete diff; Commit/Push left to owner.
+Exact next step: owner review/commit/push the prepared diff, verify Cloud Build,
+then verify owner phone -> Maya inbox and Maya Admin -> owner phone using Twilio
+logs and physical receipt. Do not call live texting fixed until both are proven.
+Separate affiliate accounts need scoped server authorization before invitations.
+
+September 22 SMS follow-up, local only: backend/status.html now matches the
+frontend's 16px drawer top padding and circular tabs, with gear/chat glyphs,
+higher contact/back controls, a visible name-edit pencil and 40px voice button.
+Rename success/errors and carrier feedback have a separate live status region
+that polling does not erase; delayed responses stay on their own thread.
+maya-messages.mjs recognizes conservative explicit introductions on incoming SMS
+and names only an unnamed/Caller thread, never overwriting a manual name. This
+uses no OpenAI call and does not grant the sender any identity/authorization.
+Tests changed: maya-messages, app-regression and admin-ui-contract. Validation:
+38 message checks, 48 phone checks, transfer, feedback, 11 Admin contracts and
+438 browser assertions passed. Fictional-message screenshot inspected at
+/private/tmp/maya-messages-sep22.png. Prior build-test fix remains in this diff.
+Live Admin was opened and still showed the old text-pill tabs, not these edits.
+Twilio Console opened signed out; no authenticated carrier logs were accessible,
+then Chrome disconnected. Account unsuspension is owner-reported, not verified.
+Incoming/outgoing SMS failure remains OPEN; no new real SMS/call or provider
+configuration changes. Ordinary inbox/SMS paths have no OpenAI calls; phone and
+browser Realtime do. Actual billing was not read.
+Exact next step: owner signs into Twilio and Maya Admin; inspect latest inbound
+webhook URL/HTTP result and outbound MessageSid status/error, then fix the proven
+cause. Review and owner commit/push the local changes, verify Cloud Build, then
+test both directions. GitHub Desktop summary must describe this whole diff.
+
+September 21 implementation was committed by the owner as ae8704f (tt) on
+September 22. Local HEAD and the existing origin/maya-v2 tracking ref agree;
+GitHub confirms this commit was pushed. PR #1 has two successful Vercel checks
+and failed Cloud Build 1b827272-c2f5-4b64-809d-285caafd9ce0 (3m 3s).
+The release-contract gate failed on the stale two-button avatar assertion in
+tests/maya-hands-smoke.mjs: Playground correctly has Randomize/Replace/Save.
+Server build and all production deploy steps never started. No assistant push,
+release bump, credentials, provider settings or live calls in this follow-up.
+September 22 workflow change: AGENTS.md and CLAUDE.md now require automatically
+preparing Desktop's Summary and Description before owner commit/push. This
+follow-up also corrects that test to require exactly three buttons in Playground
+and exactly two in the unpromoted frontend. GitHub plugin connected and repository
+access verified. Validation: maya-hands-smoke passed 172 Playground and 171
+frontend assertions; all seven non-browser release suites plus phone, Messages
+and transfer passed locally. git diff --check and mirrored instructions passed.
+Next: prepared Desktop commit fields describe the full current local diff;
+Fromsa commits/pushes, then verify the new Cloud Build result. Do not amend
+the already committed feature batch or rerun the old deployment automatically.
 Exact review and remaining work: `REVIEW-2026-09-21.md`.
 
 Changed: backend/status.html (compact tier/actions, handset, plus, safe Messages

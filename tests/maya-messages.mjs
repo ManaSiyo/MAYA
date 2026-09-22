@@ -5,13 +5,30 @@ import http from 'node:http';
 let express;
 try { express = (await import('express')).default; }
 catch (e) { console.log('SKIPPED maya-messages: express is not installed here; CI installs it'); process.exit(0); }
-const { createMessageStore, sendSms, readSmsStatus, mountMessages, e164, isNo, isYes } = await import('../docs/server/maya-messages.mjs');
+const { createMessageStore, sendSms, readSmsStatus, mountMessages, e164, isNo, isYes, introducedName } = await import('../docs/server/maya-messages.mjs');
 
 let passed = 0, failed = 0;
 function ok(name, cond, detail) { if (cond) { passed++; console.log('  ok   ' + name); } else { failed++; console.log('  FAIL ' + name + (detail ? '   ' + detail : '')); } }
 
 ok('numbers normalize to E.164', e164('(510) 991-9445') === '+15109919445' && e164('+15109909223') === '+15109909223' && e164('15109909223') === '+15109909223');
 ok('a no is a no, anything else is a yes', isNo('STOP') && isNo('no thanks') && isYes('sure, sounds good') && !isYes('Stop'));
+ok('clear introductions recognize names without an AI request',
+  introducedName("Hi, my name is Mary E. Ingram. I need a fitting.") === 'Mary E. Ingram' &&
+  introducedName("Hello, this is José O’Connor, looking for a suit") === 'José O’Connor' &&
+  introducedName("I'm Mary and I would like a jacket") === 'Mary');
+ok('ordinary inquiries and markup never become contact names',
+  ['I am interested in a suit', 'This is a question', 'My friend is Mary', 'My name is <img src=x>', 'STOP'].every(t => !introducedName(t)));
+let nameBucket = null;
+const nameStore = createMessageStore({load:async()=>nameBucket,save:async r=>{nameBucket=structuredClone(r);}});
+await nameStore.inbound({from:'+14155550190',text:'Hi, my name is Mary Ingram, can I book?',sid:'SMname1'});
+ok('a stranger introduction names its own thread and appears in the inbox',
+  (await nameStore.list())[0].name === 'Mary Ingram' && (await nameStore.get('+14155550190')).nameSource === 'sms');
+await nameStore.name('+14155550190', 'Mary, fitting client');
+await nameStore.inbound({from:'+14155550190',text:'This is Someone Else',sid:'SMname2'});
+ok('SMS introductions never overwrite an owner-assigned name', (await nameStore.get('+14155550190')).name === 'Mary, fitting client');
+await nameStore.block('+14155550191',true);
+await nameStore.inbound({from:'+14155550191',text:'My name is Blocked Person',sid:'SMname3'});
+ok('blocked senders cannot create a name or message through an introduction', !(await nameStore.get('+14155550191')).name && !(await nameStore.get('+14155550191')).messages.length);
 
 // the store on a fake bucket
 let bucket = null;
@@ -45,7 +62,7 @@ const app = express();
 const AUTH = 'tok';
 const calls = [];
 mountMessages(app, {
-  store, readStatus: (sid, to) => readSmsStatus(tdeps, sid, to), sendSms: (to, text) => sendSms(tdeps, { to, text }), authToken: AUTH, publicHost: 'maya.manasiyo.com',
+  store, readStatus: (sid, to) => readSmsStatus(tdeps, sid, to), sendSms: (to, text) => sendSms(tdeps, { to, text }), authToken: AUTH, publicHost: 'maya-api-53947659283.us-west1.run.app', webhookHosts: ['maya.manasiyo.com'],
   requireAdmin: async (req) => { if (req.get('authorization') === 'Bearer admin') return { email: 'worldofsiyo@gmail.com' }; const e = new Error('no'); e.status = 401; throw e; },
   json: express.json(), urlencoded: express.urlencoded({ extended: false }),
   callClient: async (x) => { calls.push(x); return { ok: true, sid: 'CAx' }; }, log: () => {},
@@ -117,6 +134,41 @@ let conflicts=0, saved;
 const concurrent=createMessageStore({load:async()=>({threads:{}}),save:async(r)=>{if(!conflicts++){const e=new Error('conflict');e.status=412;throw e;}saved=r;}});
 await concurrent.name('+14155550100','Retry');
 ok('generation conflicts reload and retry mutations',conflicts===2 && saved.threads['+14155550100'].name==='Retry');
+
+// Reproductions from the September 22 code audit.
+let consentBucket = null;
+const consentStore = createMessageStore({load:async()=>consentBucket,save:async r=>{consentBucket=structuredClone(r);}});
+const consentNumber = '+14155550188';
+await consentStore.inbound({from:consentNumber,text:'No problem, tomorrow works',sid:'ordinary'});
+ok('ordinary No problem replies keep texting enabled',await consentStore.consent(consentNumber)==='yes');
+await consentStore.inbound({from:consentNumber,text:'STOP',sid:'stop'});
+await consentStore.inbound({from:consentNumber,text:'HELP',sid:'help',optOutType:'HELP'});
+ok('HELP never reverses STOP',await consentStore.consent(consentNumber)==='stop');
+await consentStore.inbound({from:consentNumber,text:'START',sid:'start'});
+ok('explicit START restores texting',await consentStore.consent(consentNumber)==='yes');
+await consentStore.inbound({from:consentNumber,text:'custom unsubscribe',sid:'customstop',optOutType:'STOP'});
+ok('Twilio OptOutType STOP takes precedence over the message body',await consentStore.consent(consentNumber)==='stop');
+await consentStore.inbound({from:consentNumber,text:'custom subscribe',sid:'customstart',optOutType:'START'});
+ok('Twilio OptOutType START restores texting',await consentStore.consent(consentNumber)==='yes');
+await consentStore.inbound({from:consentNumber,text:'no thanks',sid:'no'});
+await consentStore.inbound({from:consentNumber,text:'UNSTOP',sid:'unstop'});
+ok('UNSTOP restores an explicit opt-out',await consentStore.consent(consentNumber)==='yes');
+await consentStore.block(consentNumber,true);
+await consentStore.inbound({from:consentNumber,text:'START',sid:'blockedstart',optOutType:'START'});
+ok('START cannot remove an owner block',(await consentStore.get(consentNumber)).blocked);
+await store.outbound({to:'+14155550100',text:'test',sid:'SMlatecode',status:'undelivered'});
+await store.status({sid:'SMlatecode',status:'undelivered',errorCode:'30034'});
+await store.status({sid:'SMlatecode',status:'delivered'});
+const lateCode=(await store.get('+14155550100')).messages.find(m=>m.id==='SMlatecode');
+ok('same terminal status accepts missing carrier detail without accepting contradictory status',lateCode.status==='undelivered' && lateCode.errorCode==='30034');
+const signedPost = (path,host,params,extra={}) => fetch(base+path,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','X-Twilio-Signature':sign('https://'+host+path,params),...extra},body:new URLSearchParams(params)});
+const cloudInbound={From:'+14155550187',Body:'START',OptOutType:'START',MessageSid:'SMcloud'};
+ok('configured Cloud Run webhook signatures also validate',(await signedPost('/api/phone/sms','maya-api-53947659283.us-west1.run.app',cloudInbound)).status===200);
+const cloudStop={...cloudInbound,Body:'custom keyword',OptOutType:'STOP',MessageSid:'SMcloudstop'};
+await signedPost('/api/phone/sms','maya.manasiyo.com',cloudStop);
+ok('signed inbound route forwards OptOutType to the consent store',await store.consent(cloudStop.From)==='stop');
+ok('untrusted forwarded hosts cannot authorize a webhook',(await signedPost('/api/phone/sms','attacker.example',cloudInbound,{'X-Forwarded-Host':'attacker.example'})).status===403);
+ok('Cloud Run delivery callbacks validate too',(await signedPost('/api/phone/sms/status','maya-api-53947659283.us-west1.run.app',delivery)).status===204);
 
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + ' (' + passed + ' ok)');
 twSrv.close(); server.close();

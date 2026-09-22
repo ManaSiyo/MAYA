@@ -74,7 +74,7 @@ await test('v14.01 drawer floor: circular logo, Hey Maya toggle beside it', () =
   assert.ok(admin.includes('onclick="toggleWakeWord()"'), 'pill toggles the Hey Maya wake word');
   // v14.02: the pill became an Apple-style switch; the word is always Hey Maya
   assert.ok(admin.includes('class="mt-switch"') && admin.includes('class="mt-knob"'), 'switch markup present');
-  assert.ok(admin.includes('#maya-toggle.live .mt-knob{transform:translateX(14px)}'), 'knob slides when on');
+  assert.ok(admin.includes('#maya-toggle.live .mt-knob{transform:translateX(12px)}'), 'compact knob slides within the smaller switch when on');
   assert.ok(!admin.includes("'Turn on Hey Maya'"), 'no more Turn on / Turn off verb');
   assert.ok(admin.includes('class="voice-row"'), 'toggle rides beside the logo');
 });
