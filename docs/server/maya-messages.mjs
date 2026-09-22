@@ -42,11 +42,13 @@ export function isYes(text) {
 export function createMessageStore(deps) {
   const log = deps.log || ((...a) => console.log('[messages]', ...a));
   let queue = Promise.resolve();
-  const locked = (fn) => { const next = queue.then(fn, fn); queue = next.catch(() => {}); return next; };
+  const locked = (fn) => { const retry = async () => { for (let n=0; ; n++) { try { return await fn(); } catch(e) { if (e.status !== 412 || n >= 4) throw e; } } }; const next = queue.then(retry, retry); queue = next.catch(() => {}); return next; };
   const empty = () => ({ threads: {} });
   async function read() {
-    try { const j = await deps.load(); if (j && typeof j === 'object' && j.threads) return j; } catch (e) { log('load failed', e.message); }
-    return empty();
+    const j = await deps.load();
+    if (j == null) return empty();
+    if (!j.threads || typeof j.threads !== 'object') throw new Error('invalid message store');
+    return structuredClone(j);
   }
   async function write(rec) { await deps.save(rec); }
 
@@ -61,7 +63,7 @@ export function createMessageStore(deps) {
   function push(t, m) {
     t.messages.push(m);
     if (t.messages.length > MAX_MESSAGES) t.messages = t.messages.slice(-MAX_MESSAGES);
-    t.updatedAt = m.ts;
+    t.updatedAt = m.ts; t.deleted = false;
   }
 
   return {
@@ -71,6 +73,9 @@ export function createMessageStore(deps) {
         const rec = await read();
         const t = thread(rec, from);
         if (!t) return null;
+        if (sid && t.messages.some(m => m.id === sid)) return { number: t.number, duplicate: true };
+        if (t.blocked) return { number: t.number, blocked: true };
+        t.deleted = false;
         const ts = new Date().toISOString();
         push(t, { id: sid || crypto.randomBytes(6).toString('hex'), dir: 'in', kind: 'sms', text: String(text || '').slice(0, 1600), ts });
         t.unread = (t.unread || 0) + 1;
@@ -106,15 +111,33 @@ export function createMessageStore(deps) {
       });
     },
     async name(number, name) {
-      return locked(async () => { const rec = await read(); const t = thread(rec, number, name); if (t && name) t.name = String(name).slice(0, 120); await write(rec); });
+      return locked(async () => { const rec = await read(); const t = thread(rec, number, name); if (t) { t.name = String(name || '').trim().slice(0, 120); t.deleted = false; } await write(rec); });
+    },
+    async block(number, blocked) {
+      return locked(async () => { const rec = await read(); const t = thread(rec, number); if (!t) throw new Error('invalid number'); t.blocked = blocked; await write(rec); });
+    },
+    async remove(number) {
+      return locked(async () => { const rec = await read(); const t = thread(rec, number); if (!t) throw new Error('invalid number'); t.messages = []; t.unread = 0; t.deleted = true; await write(rec); });
+    },
+    async status({ sid, status, errorCode }) {
+      const rank = {accepted:0,queued:1,sending:2,sent:3,delivered:4,undelivered:4,failed:4};
+      if (!(status in rank)) return;
+      return locked(async () => { const rec = await read();
+        for (const t of Object.values(rec.threads)) {
+          const m = t.messages.find(m => m.id === sid && m.dir === 'out');
+          if (!m) continue;
+          if ((rank[m.status] ?? -1) < 4 && rank[status] >= (rank[m.status] ?? -1)) { m.status = status; if (errorCode) m.errorCode = String(errorCode); await write(rec); }
+          return;
+        }
+      });
     },
     async markRead(number) {
       return locked(async () => { const rec = await read(); const t = rec.threads[e164(number)]; if (t) { t.unread = 0; await write(rec); } });
     },
     async list() {
       const rec = await read();
-      return Object.values(rec.threads)
-        .map(t => { const last = t.messages[t.messages.length - 1] || null; return { number: t.number, name: t.name, consent: t.consent, unread: t.unread || 0, updatedAt: t.updatedAt, last: last ? { dir: last.dir, kind: last.kind, text: last.text, ts: last.ts, seconds: last.seconds } : null }; })
+      return Object.values(rec.threads).filter(t => !t.deleted)
+        .map(t => { const last = t.messages[t.messages.length - 1] || null; return { number: t.number, name: t.name, blocked: !!t.blocked, consent: t.consent, unread: t.unread || 0, updatedAt: t.updatedAt, last: last ? { dir: last.dir, kind: last.kind, text: last.text, ts: last.ts, seconds: last.seconds } : null }; })
         .sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
     },
     async get(number) {
@@ -139,6 +162,7 @@ export async function sendSms(deps, { to, text }) {
   if (!body) return { ok: false, why: 'nothing to send' };
   const api = (deps.twilioApi || 'https://api.twilio.com') + '/2010-04-01/Accounts/' + encodeURIComponent(deps.accountSid) + '/Messages.json';
   const form = new URLSearchParams({ To: dest, Body: body.slice(0, 1600) });
+  if (deps.statusCallback) form.set('StatusCallback', deps.statusCallback);
   if (deps.messagingSid) form.set('MessagingServiceSid', deps.messagingSid); else form.set('From', deps.fromNumber);
   let r, j;
   try {
@@ -169,9 +193,17 @@ export function mountMessages(app, deps) {
     const url = 'https://' + host + (req.originalUrl || '/api/phone/sms');
     if (!deps.authToken || !twilioSignatureValid(deps.authToken, url, params, req.get('X-Twilio-Signature'))) { log('sms rejected: bad signature'); return res.status(403).send('forbidden'); }
     try { await deps.store.inbound({ from: params.From, text: params.Body, sid: params.MessageSid }); }
-    catch (e) { log('inbound store failed', e.message); }
+    catch (e) { log('inbound store failed', e.message); return res.status(503).send('storage unavailable'); }
     res.set('Content-Type', 'text/xml');
     res.send('<?xml version="1.0" encoding="UTF-8"?><Response></Response>');
+  });
+
+  app.post('/api/phone/sms/status', deps.urlencoded, async (req, res) => {
+    const params = req.body || {};
+    const url = 'https://' + (deps.publicHost || req.get('host')) + (req.originalUrl || '/api/phone/sms/status');
+    if (!deps.authToken || !twilioSignatureValid(deps.authToken, url, params, req.get('X-Twilio-Signature'))) return res.status(403).send('forbidden');
+    try { await deps.store.status({sid:params.MessageSid,status:params.MessageStatus,errorCode:params.ErrorCode}); res.sendStatus(204); }
+    catch(e) { log('status failed', e.message); res.sendStatus(503); }
   });
 
   const admin = async (req, res) => { try { return await deps.requireAdmin(req); } catch (e) { res.status(e.status || 401).json({ error: 'unauthorized' }); return null; } };
@@ -192,6 +224,21 @@ export function mountMessages(app, deps) {
       res.json({ ok: true, thread: t || { number, name: '', messages: [], consent: 'none', unread: 0 } });
     } catch (e) { log('thread failed', e.message); res.status(502).json({ error: 'messages_failed' }); }
   });
+  for (const action of ['name', 'block', 'delete']) {
+    app.post('/api/admin/messages/' + action, deps.json, async (req, res) => {
+      if (!(await admin(req, res))) return;
+      const body = req.body || {}, number = e164(body.number);
+      if (!/^\+[1-9]\d{7,14}$/.test(number)) return res.status(400).json({error:'invalid_number'});
+      if (action === 'block' && typeof body.blocked !== 'boolean') return res.status(400).json({error:'blocked_required'});
+      if (action === 'name' && typeof body.name !== 'string') return res.status(400).json({error:'name_required'});
+      try {
+        if (action === 'name') await deps.store.name(number, body.name);
+        if (action === 'block') await deps.store.block(number, body.blocked);
+        if (action === 'delete') await deps.store.remove(number);
+        res.json({ok:true});
+      } catch(e) { log('thread update failed',e.message); res.status(503).json({error:'messages_unavailable'}); }
+    });
+  }
   app.post('/api/admin/messages/send', deps.json, async (req, res) => {
     const user = await admin(req, res); if (!user) return;
     if (deps.rateLimit && !deps.rateLimit(user)) return res.status(429).json({ error: 'rate_limited' });
@@ -199,13 +246,16 @@ export function mountMessages(app, deps) {
     const text = String((req.body || {}).text || '').trim().slice(0, 1600);
     const name = String((req.body || {}).name || '').trim().slice(0, 120);
     if (!to || !text) return res.status(400).json({ error: 'to_and_text_required' });
-    const consent = await deps.store.consent(to);
+    let contact;
+    try { contact = await deps.store.get(to); } catch(e) { return res.status(503).json({error:'messages_unavailable'}); }
+    if (contact && contact.blocked) return res.status(409).json({ok:false,why:'This contact is blocked.'});
+    const consent = contact ? contact.consent : 'none';
     if (consent === 'stop') return res.status(409).json({ ok: false, why: 'they asked for no more texts' });
     const asks = consent === 'none';   // the first text to a number is the one that asks
     const r = await deps.sendSms(to, text);
     if (!r.ok) return res.status(502).json(r);
-    try { await deps.store.outbound({ to, text, sid: r.sid, status: r.status, asks, name, by: user.email || 'fromsa' }); } catch (e) { log('outbound store failed', e.message); }
-    res.json({ ok: true, sid: r.sid, consent: asks ? 'asked' : consent });
+    try { await deps.store.outbound({ to, text, sid: r.sid, status: r.status, asks, name, by: user.email || 'fromsa' }); } catch (e) { log('outbound store failed', e.message); return res.json({ok:true,sid:r.sid,status:r.status,warning:'Text accepted by carrier, but history could not be saved. Do not resend.'}); }
+    res.json({ ok: true, sid: r.sid, status:r.status, consent: asks ? 'asked' : consent });
   });
   // v14.35: the phone icon in the station: Maya calls the client.
   app.post('/api/admin/phone/call-client', deps.json, async (req, res) => {
@@ -217,6 +267,8 @@ export function mountMessages(app, deps) {
     if (!/^\+1\d{10}$/.test(to)) return res.status(400).json({ ok: false, why: 'that is not a US number' });
     if (!deps.callClient) return res.status(503).json({ ok: false, why: 'the phone line is off' });
     try {
+      const contact = await deps.store.get(to);
+      if (contact && contact.blocked) return res.status(409).json({ok:false,why:'This contact is blocked.'});
       const r = await deps.callClient({ to, name, reason });
       if (!r.ok) log('call-client refused:', r.why);
       return res.status(r.ok ? 200 : 502).json(r);

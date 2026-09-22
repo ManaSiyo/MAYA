@@ -3,6 +3,14 @@ Fix attempts and setup work that lives OUTSIDE git: Cloud Run env vars, the
 Google and Firebase consoles, credentials, external accounts. Symptom, cause,
 action, status. Newest on top. Fromsa does every credential step himself.
 
+SEPTEMBER 21, 2026: Admin/phone audit, not a release
+Open: in-memory outbound call state; feature-inbox read failures/concurrent writes
+can lose requests; owner calls excluded from Messages; incomplete blocking and
+delivery handling; inline contact-name handler escaping; ticker CPC called CPL;
+inaccurate consent/warning UI. See AUDIT-2026-09-21.md for evidence and test results.
+Messages draft passes 29 checks; phone and browser regressions are not all green.
+Live feature inbox read successfully. Latest owner requests remain open.
+
 AUGUST 27, 2026, OPEN MAYA'S DOOR (v14.02, after the push)
 
 Maya's MCP server is live at POST https://maya.manasiyo.com/mcp once v14.02 is

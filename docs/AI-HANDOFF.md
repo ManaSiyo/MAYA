@@ -76,6 +76,21 @@ The fabric sourcing revamp shipped in v13.44; see that section below.
 
 ## v14.36 (Claude): the audit
 
+September 21 current state supersedes the September 19 next step below. See
+`AUDIT-2026-09-21.md`: live phone inbox now read successfully, including Sep 21
+Respond faster and Sep 19 Logs/usage/history/dropped-call requests, all open.
+Four unfinished behavior files remain uncommitted: backend/status.html,
+docs/server/maya-messages.mjs, docs/server/server.js, tests/maya-messages.mjs.
+They contain compact CRM/drawer UI and Messages rename/block/delete/status,
+deduplication and conditional storage writes. They are NOT release-ready.
+Validation: Messages 29 pass; phone 37 pass/3 stale expectation failures; app
+regression 419 pass/6 failures; admin command 6, UI contract 11, routing 7,
+proxy 27, smoke all pass. Audit documents preserve exact open findings.
+Next: finish draft correctness/behavior coverage, then Logs and durable phone
+request handling. Wix is primary site analytics; GA4 is not a replacement.
+Owner presses Push after receiving exact changes and verification. No secrets,
+production configuration, live deletion or feature-completion markings changed.
+
 September 19 current audit: see `AUDIT-2026-09-19.md`. Owner requests economics
 before any push, natural faster voice, an active CRM and direct Google/Meta
 reporting without Windsor. Live Windsor warning: five accounts versus free-plan

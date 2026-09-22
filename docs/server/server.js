@@ -748,16 +748,16 @@ function idToPath(id) {
   return p;
 }
 
-async function gcsPut(path, bytes, contentType) {
+async function gcsPut(path, bytes, contentType, generation) {
   const tok = await serviceToken(STORAGE_SCOPE);
   const r = await fetch('https://storage.googleapis.com/upload/storage/v1/b/' +
-    encodeURIComponent(SUBMISSIONS_BUCKET) + '/o?uploadType=media&name=' + encodeURIComponent(path), {
+    encodeURIComponent(SUBMISSIONS_BUCKET) + '/o?uploadType=media&name=' + encodeURIComponent(path) + (generation !== undefined ? '&ifGenerationMatch=' + encodeURIComponent(generation) : ''), {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': contentType || 'application/octet-stream' },
     body: bytes,
     signal: AbortSignal.timeout(60000),
   });
-  if (!r.ok) throw new Error('storage put ' + r.status + ': ' + (await r.text()).slice(0, 300));
+  if (!r.ok) { const e = new Error('storage put ' + r.status); e.status = r.status; throw e; }
   return await r.json();
 }
 
@@ -1258,6 +1258,7 @@ async function gcsGet(path) {
   return {
     ok: true,
     type: r.headers.get('content-type') || 'application/octet-stream',
+    generation: r.headers.get('x-goog-generation'),
     buf: Buffer.from(await r.arrayBuffer()),
   };
 }
@@ -4562,8 +4563,8 @@ let _phone = null;
 // v14.35: one thread per number in maya/sms/threads.json, read and written
 // through the same storage helpers as everything else.
 const _messages = createMessageStore({
-  load: async () => { const o = await gcsGet(THREADS_PATH).catch(() => ({ ok: false })); if (!o.ok) return null; try { return JSON.parse(o.buf.toString('utf8')); } catch (_) { return null; } },
-  save: async (rec) => { await gcsPut(THREADS_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json'); },
+  load: async () => { const o = await gcsGet(THREADS_PATH); if (o.status === 404) return {threads:{},_generation:'0'}; if (!o.ok || !o.generation) throw new Error('message storage unavailable'); return {...JSON.parse(o.buf.toString('utf8')), _generation:o.generation}; },
+  save: async ({_generation, ...rec}) => { await gcsPut(THREADS_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json', _generation); },
 });
 // v14.34: one lead by the name Fromsa says: exact name or email first, then a
 // unique first name; anything else asks him which.
@@ -4686,6 +4687,7 @@ app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' })
   // v14.35: the text threads and the routes behind the drawer's Messages tab.
   const twilioDeps = { accountSid: process.env.TWILIO_ACCOUNT_SID || '', authToken: process.env.TWILIO_AUTH_TOKEN || '',
     fromNumber: process.env.TWILIO_FROM_NUMBER || '+15109909223', messagingSid: process.env.TWILIO_MESSAGING_SID || '',
+    statusCallback: 'https://' + (process.env.PHONE_PUBLIC_HOST || 'maya-api-53947659283.us-west1.run.app') + '/api/phone/sms/status',
     twilioApi: process.env.TWILIO_API_URL || '' };
   mountMessages(app, {
     store: _messages,

@@ -16,6 +16,20 @@ How the four text files divide the work:
 Each entry: date and time of the prompt, then the asks as short lines.
 Status marks: [ ] requested   [x] done   [!] recurred after being fixed.
 
+SEPTEMBER 21, 2026: live phone inbox and current Admin audit
+[ ] Respond faster; fix dropped calls and make voice more natural.
+[ ] Drawer tabs Systems / Messages / Logs matching frontend; usage in Logs.
+[ ] Recent Logs under Systems, updated per interaction and grouped by shipment.
+    Owner asked to clear on push; recommend archive verified shipped items only.
+[ ] Finish compact CRM: tier pill, actions below name, phone stays in its column,
+    remove email action, hide scrollbars, keep Reload and Add lead.
+[ ] Verify Admin calls/texts; incoming stranger texts; rename Caller; block/delete.
+[ ] Direct Google/Meta reads, approved writes and integrated market research;
+    28-month own-account history. Wix is primary website analytics.
+[ ] Phone request execution/status and instant new-lead owner SMS/call.
+Audit evidence and all recent live inbox items: AUDIT-2026-09-21.md.
+No new request marked completed; four behavior files remain an unfinished draft.
+
 SEPTEMBER 16, 2026, 10 AM (v14.36): "Audit everything. No bugs. Latency as low as it can be, front end, back end, Admin."
 
 [x] Every suite green on both machines; live pages in about a third of a

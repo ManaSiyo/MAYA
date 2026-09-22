@@ -72,6 +72,41 @@ ok('a thread that said STOP refuses to send', stopped.status === 409);
 const cc = await (await fetch(base + '/api/admin/phone/call-client', { method: 'POST', headers: H, body: JSON.stringify({ to: '646 996 6115', name: 'Kristi Lugo', reason: 'Thursday?' }) })).json();
 ok('the phone icon route hands the call to Maya with the number in E.164', cc.ok === true && calls.length === 1 && calls[0].to === '+16469966115' && calls[0].name === 'Kristi Lugo');
 
+// September 20: names, blocking, deletion, webhook retries and delivery state.
+const post = (action,body) => fetch(base + '/api/admin/messages/' + action,{method:'POST',headers:H,body:JSON.stringify(body)});
+await post('name',{number:'+14155550100',name:'Taylor'});
+ok('an admin can rename Caller and the name persists', (await store.get('+14155550100')).name === 'Taylor');
+ok('renaming needs admin authorization',(await fetch(base+'/api/admin/messages/name',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({number:'+14155550100',name:'Intruder'})})).status === 401);
+await post('block',{number:'+14155550100',blocked:true});
+const beforeBlock = twRest.length;
+ok('blocked contact cannot receive an outbound text',(await post('send',{to:'+14155550100',text:'blocked'})).status===409 && twRest.length===beforeBlock);
+ok('blocked contact cannot be called',(await fetch(base+'/api/admin/phone/call-client',{method:'POST',headers:H,body:JSON.stringify({to:'+14155550100'})})).status===409 && calls.length===1);
+const beforeIncoming=(await store.get('+14155550100')).messages.length;
+await store.inbound({from:'+14155550100',text:'blocked incoming',sid:'SMblocked'});
+ok('blocked inbound does not enter the inbox',(await store.get('+14155550100')).messages.length===beforeIncoming);
+await post('delete',{number:'+14155550100'});
+ok('delete clears history and hides the thread but preserves blocking',(await store.get('+14155550100')).blocked && !(await store.list()).some(t=>t.number==='+14155550100'));
+await post('block',{number:'+14155550100',blocked:false});
+await store.inbound({from:'+14155550100',text:'new conversation',sid:'SMnew'});
+await store.inbound({from:'+14155550100',text:'new conversation',sid:'SMnew'});
+ok('duplicate inbound webhook is stored exactly once and deleted threads can return',(await store.get('+14155550100')).messages.length===1 && (await store.get('+14155550100')).unread===1);
+await store.outbound({to:'+14155550100',text:'hello',sid:'SMdelivery',status:'queued'});
+const delivery={MessageSid:'SMdelivery',MessageStatus:'delivered'};
+const callback=await fetch(base+'/api/phone/sms/status',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','X-Twilio-Signature':sign('https://maya.manasiyo.com/api/phone/sms/status',delivery)},body:new URLSearchParams(delivery)});
+await store.status({sid:'SMdelivery',status:'sent'});
+ok('signed delivery callback updates status and late sent does not downgrade delivered',callback.status===204 && (await store.get('+14155550100')).messages[1].status==='delivered');
+ok('unsigned status callback is refused',(await fetch(base+'/api/phone/sms/status',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams(delivery)})).status===403);
+await post('delete',{number:'+16469966115'});
+ok('deletion never clears STOP',(await store.consent('+16469966115'))==='stop');
+let writes=0;
+const failing=createMessageStore({load:async()=>{throw new Error('storage down');},save:async()=>writes++,log:()=>{}});
+try { await failing.inbound({from:'+14155550100',text:'x',sid:'failure'}); } catch {}
+ok('failed storage read never replaces history with an empty file',writes===0);
+let conflicts=0, saved;
+const concurrent=createMessageStore({load:async()=>({threads:{}}),save:async(r)=>{if(!conflicts++){const e=new Error('conflict');e.status=412;throw e;}saved=r;}});
+await concurrent.name('+14155550100','Retry');
+ok('generation conflicts reload and retry mutations',conflicts===2 && saved.threads['+14155550100'].name==='Retry');
+
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + ' (' + passed + ' ok)');
 twSrv.close(); server.close();
 process.exit(failed ? 1 : 0);
