@@ -106,8 +106,10 @@ await test('v14.01 Lead Station: no Invoice columns, no Last Quote (v14.34), dra
   assert.ok(!admin.includes("'<div class=\"lead-when\">"), 'day-count line under the name removed');
 });
 
-await test('v14.01 Actions: email, phone, pay-link only; invoicing wired', () => {
-  assert.ok(admin.includes('function _actionsCell'), 'actions cell builder');
+await test('CRM actions: Call, Text, Invoice below the name, no email icon', () => {
+  const actions = admin.slice(admin.indexOf('function _actionsCell'), admin.indexOf('function _leadColDefs'));
+  assert.ok(actions.includes('PHONE_SVG') && actions.includes('CHAT_SVG') && actions.includes('PAY_SVG'), 'three requested actions');
+  assert.ok(!actions.includes('EMAIL_SVG') && !actions.includes('leadEmail'), 'no email icon');
   assert.ok(admin.includes('function leadInvoice'), 'invoice composer');
   assert.ok(admin.includes('lead-inv-modal'), 'invoice modal');
   assert.ok(!/lead-rec">'\s*\+\s*rec\(x\)/.test(admin), 'recommendation text dropped from actions');

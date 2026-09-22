@@ -1,3 +1,15 @@
+SEPTEMBER 21, 2026, LOCAL REMEDIATION (not deployed)
+Fixed locally: feedback source race and unsafe empty-store fallback; outbound
+call briefing lost between Cloud Run instances; mutable stream caller identity;
+early voice audio dropped during startup; SMS callback before history saved;
+contact-name inline JavaScript; tier edited into the wrong field; hidden blocked
+contacts with no unblock path; missing Pinterest saved-pin pagination (Playground).
+Added signed owner transfer acceptance and explicit carrier-status reconciliation.
+Actual SMS non-delivery cause is NOT established; ask for provider status/error.
+Real GCS/Firestore persistence, transfer/no-answer behavior and telephone audio
+need owner live verification after a separately reviewed deploy. No credentials
+or production settings were changed. See REVIEW-2026-09-21.md.
+
 MAYA FIXES AND SETUP STEPS
 Fix attempts and setup work that lives OUTSIDE git: Cloud Run env vars, the
 Google and Firebase consoles, credentials, external accounts. Symptom, cause,

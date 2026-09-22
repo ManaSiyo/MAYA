@@ -82,3 +82,9 @@ Every commit that changes behaviour updates, in the same commit:
 
 `AGENTS.md` and `CLAUDE.md` are the same text under two names, because Codex
 reads one and Claude reads the other. Change one, copy it to the other.
+
+Communications changes also run `tests/maya-phone.mjs`, `tests/maya-messages.mjs`,
+`tests/maya-transfer.mjs` and `tests/maya-feedback.mjs`. These use fake providers;
+live call audio, SMS delivery and owner transfer acceptance still need an owner
+verification after deployment. Avatar/Pinterest changes stay in Playground until
+Fromsa approves promotion.

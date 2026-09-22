@@ -1,3 +1,33 @@
+SEPTEMBER 21, 2026, IMPLEMENTATION CONTINUATION (local, not shipped)
+[local] Reception greeting exactly: "Hi this is Maya from Mana Siyo. How may I
+        direct your call? Tell me what you're interested in and I'll connect you."
+[local] Brief customer intake; decline unsolicited sales; saved inquiry + caller
+        permission before handoff; fixed Fromsa number with press-1 acceptance.
+[local] CRM name+tier pill (no price/form badge), Call/Text/Invoice below, phone
+        unchanged in Contact, Forms indicator, Reload, plus, hidden scrollbar.
+[local] Messages carrier delivery/error lookup, safe names, blocked contacts
+        remain accessible for unblocking; incoming voice blocking; owner history.
+[local] Logs drawer tab with original feedback/source/date/open or shipped state.
+        Direct feedback is primary; source and text saved atomically; no dropping
+        the oldest 500 entries, no empty replacement on a failed read.
+[playground] Equal Randomize/Replace/Save controls; explicit cloud Save with
+        truthful errors; click Client/pencil to edit; current face in dropdown.
+[playground] Saved pins use pagination; All Pinterest/My saves search selector.
+[ ] Verify live SMS receipt and investigate actual carrier error; browser-visible
+    sent/queued is not proof of delivery. Awaiting Fromsa's Twilio log status.
+[ ] Instant new Wix form -> owner call AND SMS with name, number, tier, request;
+    authenticated events, persistent deduplication, retries and alert outcomes.
+[ ] Verified ads-down call/SMS alerts; connection errors must not imply paused ads.
+[ ] Direct Google/Meta integration without Windsor, supported writes, 28 months
+    own-account history and local market research. Owner authorization pending.
+[ ] Expanded Wix analytics grounded in real site data; no embedded dashboard needed.
+[ ] Actual OpenAI/Twilio spend before push; snappier/clearer voice measured on calls.
+[ ] CRM unified source/history/follow-ups; Recent Logs since release and usage view;
+    stronger owner authentication beyond caller ID, no admin access for strangers.
+[owner] Fromsa adds Maya's public number to Wix himself. Do not add a contact
+        section/phone number to the Maya frontend.
+Review: docs/REVIEW-2026-09-21.md. Nothing above is marked shipped.
+
 MAYA REQUESTS
 Fromsa's own log. What HE asked for and what HE noticed, in his words,
 simplified, with date and time. Not what Claude did (that trail lives in

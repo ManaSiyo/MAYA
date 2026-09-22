@@ -5,7 +5,7 @@ import http from 'node:http';
 let express;
 try { express = (await import('express')).default; }
 catch (e) { console.log('SKIPPED maya-messages: express is not installed here; CI installs it'); process.exit(0); }
-const { createMessageStore, sendSms, mountMessages, e164, isNo, isYes } = await import('../docs/server/maya-messages.mjs');
+const { createMessageStore, sendSms, readSmsStatus, mountMessages, e164, isNo, isYes } = await import('../docs/server/maya-messages.mjs');
 
 let passed = 0, failed = 0;
 function ok(name, cond, detail) { if (cond) { passed++; console.log('  ok   ' + name); } else { failed++; console.log('  FAIL ' + name + (detail ? '   ' + detail : '')); } }
@@ -31,7 +31,7 @@ ok('a stranger texting in opens a thread of their own, and counts as yes', (awai
 
 // sendSms against a fake Twilio
 const twRest = [];
-const twSrv = http.createServer((req, res) => { let b = ''; req.on('data', c => b += c); req.on('end', () => { const form = Object.fromEntries(new URLSearchParams(b)); twRest.push({ url: req.url, form }); res.setHeader('Content-Type', 'application/json'); if (form.To === '+14155559999') { res.statusCode = 400; res.end(JSON.stringify({ code: 30034, message: 'Unregistered' })); } else { res.statusCode = 201; res.end(JSON.stringify({ sid: 'SM' + twRest.length, status: 'queued' })); } }); });
+const twSrv = http.createServer((req, res) => { let b = ''; req.on('data', c => b += c); req.on('end', () => { if (req.method === 'GET') { res.setHeader('Content-Type','application/json'); return res.end(JSON.stringify({to:'+14155550100',status:'undelivered',error_code:30034})); } const form = Object.fromEntries(new URLSearchParams(b)); twRest.push({ url: req.url, form }); res.setHeader('Content-Type', 'application/json'); if (form.To === '+14155559999') { res.statusCode = 400; res.end(JSON.stringify({ code: 30034, message: 'Unregistered' })); } else { res.statusCode = 201; res.end(JSON.stringify({ sid: 'SM' + twRest.length, status: 'queued' })); } }); });
 await new Promise(r => twSrv.listen(0, '127.0.0.1', r));
 const tdeps = { accountSid: 'ACtest', authToken: 'tok', fromNumber: '+15109909223', twilioApi: 'http://127.0.0.1:' + twSrv.address().port };
 const sent = await sendSms(tdeps, { to: '646 996 6115', text: 'Great. We will call you around 3 pm.' });
@@ -45,7 +45,7 @@ const app = express();
 const AUTH = 'tok';
 const calls = [];
 mountMessages(app, {
-  store, sendSms: (to, text) => sendSms(tdeps, { to, text }), authToken: AUTH, publicHost: 'maya.manasiyo.com',
+  store, readStatus: (sid, to) => readSmsStatus(tdeps, sid, to), sendSms: (to, text) => sendSms(tdeps, { to, text }), authToken: AUTH, publicHost: 'maya.manasiyo.com',
   requireAdmin: async (req) => { if (req.get('authorization') === 'Bearer admin') return { email: 'worldofsiyo@gmail.com' }; const e = new Error('no'); e.status = 401; throw e; },
   json: express.json(), urlencoded: express.urlencoded({ extended: false }),
   callClient: async (x) => { calls.push(x); return { ok: true, sid: 'CAx' }; }, log: () => {},
@@ -72,6 +72,17 @@ ok('a thread that said STOP refuses to send', stopped.status === 409);
 const cc = await (await fetch(base + '/api/admin/phone/call-client', { method: 'POST', headers: H, body: JSON.stringify({ to: '646 996 6115', name: 'Kristi Lugo', reason: 'Thursday?' }) })).json();
 ok('the phone icon route hands the call to Maya with the number in E.164', cc.ok === true && calls.length === 1 && calls[0].to === '+16469966115' && calls[0].name === 'Kristi Lugo');
 
+await store.status({ sid: 'SMearly', status: 'undelivered', errorCode: '30034' });
+await store.outbound({ to: '+14155550100', text: 'test', sid: 'SMearly', status: 'queued' });
+const early = (await store.get('+14155550100')).messages.find(m => m.id === 'SMearly');
+ok('delivery callback before storage survives with the carrier error', early.status === 'undelivered' && early.errorCode === '30034');
+await store.status({ sid: 'SMearly', status: 'sent' });
+ok('later sent callback cannot hide an undelivered result', (await store.get('+14155550100')).messages.find(m => m.id === 'SMearly').status === 'undelivered');
+const checked = await (await fetch(base+'/api/admin/messages/check-delivery',{method:'POST',headers:H,body:JSON.stringify({number:'+14155550100'})})).json();
+ok('Admin can reconcile recent texts directly with carrier delivery status', checked.ok && checked.checked > 0 && (await store.get('+14155550100')).messages.some(m=>m.status==='undelivered' && m.errorCode==='30034'));
+let wrongRecipient = false;
+try { await readSmsStatus(tdeps, 'SMprivate', '+16469966115'); } catch (_) {wrongRecipient = true;}
+ok('delivery lookup refuses a carrier record for another recipient', wrongRecipient);
 // September 20: names, blocking, deletion, webhook retries and delivery state.
 const post = (action,body) => fetch(base + '/api/admin/messages/' + action,{method:'POST',headers:H,body:JSON.stringify(body)});
 await post('name',{number:'+14155550100',name:'Taylor'});
@@ -85,7 +96,7 @@ const beforeIncoming=(await store.get('+14155550100')).messages.length;
 await store.inbound({from:'+14155550100',text:'blocked incoming',sid:'SMblocked'});
 ok('blocked inbound does not enter the inbox',(await store.get('+14155550100')).messages.length===beforeIncoming);
 await post('delete',{number:'+14155550100'});
-ok('delete clears history and hides the thread but preserves blocking',(await store.get('+14155550100')).blocked && !(await store.list()).some(t=>t.number==='+14155550100'));
+ok('delete clears history but a blocked contact stays reachable for unblocking',(await store.get('+14155550100')).blocked && (await store.list()).some(t=>t.number==='+14155550100' && t.blocked));
 await post('block',{number:'+14155550100',blocked:false});
 await store.inbound({from:'+14155550100',text:'new conversation',sid:'SMnew'});
 await store.inbound({from:'+14155550100',text:'new conversation',sid:'SMnew'});

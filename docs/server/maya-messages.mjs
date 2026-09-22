@@ -11,8 +11,8 @@
 // Consent lives on the thread: `consent` is 'asked' after the first text
 // (the one that asks "okay to text you here about it?"), 'yes' once the
 // person answers anything that is not a no, 'stop' on STOP or a no. Nothing
-// but that first question goes out while consent is 'asked', and nothing at
-// all once it is 'stop'. Twilio's own STOP handling still applies on top.
+// is sent once it is 'stop'. An admin-composed text is not automatically a
+// consent question. Twilio's own STOP handling still applies on top.
 //
 // No dashes of any kind in anything a client reads.
 
@@ -21,6 +21,13 @@ import { twilioSignatureValid } from './maya-phone.mjs';
 
 export const THREADS_PATH = 'maya/sms/threads.json';
 const MAX_MESSAGES = 400;
+const STATUS_RANK = { accepted: 0, queued: 1, sending: 2, sent: 3, delivered: 4, undelivered: 4, failed: 4 };
+function applyStatus(message, update) {
+  if ((STATUS_RANK[message.status] ?? -1) < 4 && STATUS_RANK[update.status] >= (STATUS_RANK[message.status] ?? -1)) {
+    message.status = update.status;
+    if (update.errorCode) message.errorCode = String(update.errorCode);
+  }
+}
 
 export const digits = (v) => String(v || '').replace(/\D/g, '').replace(/^1(\d{10})$/, '$1');
 export function e164(v) {
@@ -92,7 +99,14 @@ export function createMessageStore(deps) {
         const t = thread(rec, to, name);
         if (!t) return null;
         const ts = new Date().toISOString();
-        push(t, { id: sid || crypto.randomBytes(6).toString('hex'), dir: 'out', kind: 'sms', text: String(text || '').slice(0, 1600), ts, status: status || 'sent', by: by || 'fromsa' });
+        if (sid && t.messages.some(m => m.id === sid)) return { number: t.number, duplicate: true };
+        const message = { id: sid || crypto.randomBytes(6).toString('hex'), dir: 'out', kind: 'sms', text: String(text || '').slice(0, 1600), ts, status: status || 'queued', by: by || 'fromsa' };
+        // A carrier callback can beat the response to the original send.
+        if (sid && rec.pendingStatuses?.[sid]) {
+          applyStatus(message, rec.pendingStatuses[sid]);
+          delete rec.pendingStatuses[sid];
+        }
+        push(t, message);
         if (asks && t.consent === 'none') t.consent = 'asked';
         await write(rec);
         return { number: t.number, consent: t.consent };
@@ -120,15 +134,22 @@ export function createMessageStore(deps) {
       return locked(async () => { const rec = await read(); const t = thread(rec, number); if (!t) throw new Error('invalid number'); t.messages = []; t.unread = 0; t.deleted = true; await write(rec); });
     },
     async status({ sid, status, errorCode }) {
-      const rank = {accepted:0,queued:1,sending:2,sent:3,delivered:4,undelivered:4,failed:4};
-      if (!(status in rank)) return;
+      if (!Object.hasOwn(STATUS_RANK, status) || !/^SM[a-zA-Z0-9]+$/.test(String(sid || ''))) return;
       return locked(async () => { const rec = await read();
         for (const t of Object.values(rec.threads)) {
           const m = t.messages.find(m => m.id === sid && m.dir === 'out');
           if (!m) continue;
-          if ((rank[m.status] ?? -1) < 4 && rank[status] >= (rank[m.status] ?? -1)) { m.status = status; if (errorCode) m.errorCode = String(errorCode); await write(rec); }
+          applyStatus(m, { status, errorCode });
+          await write(rec);
           return;
         }
+        const pending = rec.pendingStatuses || {};
+        const update = pending[sid] || { ts: Date.now() };
+        applyStatus(update, { status, errorCode });
+        pending[sid] = update;
+        rec.pendingStatuses = Object.fromEntries(Object.entries(pending)
+          .filter(([, value]) => Date.now() - value.ts < 86400000).slice(-1000));
+        await write(rec);
       });
     },
     async markRead(number) {
@@ -136,7 +157,7 @@ export function createMessageStore(deps) {
     },
     async list() {
       const rec = await read();
-      return Object.values(rec.threads).filter(t => !t.deleted)
+      return Object.values(rec.threads).filter(t => !t.deleted || t.blocked)
         .map(t => { const last = t.messages[t.messages.length - 1] || null; return { number: t.number, name: t.name, blocked: !!t.blocked, consent: t.consent, unread: t.unread || 0, updatedAt: t.updatedAt, last: last ? { dir: last.dir, kind: last.kind, text: last.text, ts: last.ts, seconds: last.seconds } : null }; })
         .sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
     },
@@ -179,6 +200,16 @@ export async function sendSms(deps, { to, text }) {
     return { ok: false, why, code };
   }
   return { ok: true, sid: j.sid, status: j.status || 'queued', to: dest };
+}
+
+export async function readSmsStatus(deps, sid, to) {
+  if (!/^SM[a-zA-Z0-9]+$/.test(sid) || !deps.accountSid || !deps.authToken) throw new Error('Delivery lookup is unavailable.');
+  const url = (deps.twilioApi || 'https://api.twilio.com') + '/2010-04-01/Accounts/' + encodeURIComponent(deps.accountSid) + '/Messages/' + encodeURIComponent(sid) + '.json';
+  const r = await fetch(url, { signal: AbortSignal.timeout(8000), headers: {
+    Authorization: 'Basic ' + Buffer.from(deps.accountSid + ':' + deps.authToken).toString('base64') } });
+  const j = await r.json();
+  if (!r.ok || e164(j.to) !== e164(to)) throw new Error('The carrier could not verify this message.');
+  return { sid, status: j.status, errorCode: j.error_code || '' };
 }
 
 // mountMessages(app, deps): the routes.
@@ -224,6 +255,19 @@ export function mountMessages(app, deps) {
       res.json({ ok: true, thread: t || { number, name: '', messages: [], consent: 'none', unread: 0 } });
     } catch (e) { log('thread failed', e.message); res.status(502).json({ error: 'messages_failed' }); }
   });
+  app.post('/api/admin/messages/check-delivery', deps.json, async (req, res) => {
+    const user = await admin(req, res); if (!user) return;
+    if (deps.rateLimit && !deps.rateLimit(user)) return res.status(429).json({ error: 'rate_limited' });
+    if (!deps.readStatus) return res.status(503).json({ error: 'Delivery lookup is unavailable.' });
+    const number = e164(req.body?.number);
+    try {
+      const t = await deps.store.get(number);
+      const messages = (t?.messages || []).filter(m => m.kind === 'sms' && m.dir === 'out' && /^SM/.test(m.id)).slice(-5);
+      const results = await Promise.allSettled(messages.map(async m => deps.store.status(await deps.readStatus(m.id, number))));
+      const failed = results.filter(r => r.status === 'rejected').length;
+      res.json({ ok: true, checked: results.length - failed, warning: failed ? 'Some delivery statuses could not be checked. Try again shortly.' : '' });
+    } catch (_) { res.status(503).json({ error: 'Delivery status could not be checked.' }); }
+  });
   for (const action of ['name', 'block', 'delete']) {
     app.post('/api/admin/messages/' + action, deps.json, async (req, res) => {
       if (!(await admin(req, res))) return;
@@ -251,7 +295,8 @@ export function mountMessages(app, deps) {
     if (contact && contact.blocked) return res.status(409).json({ok:false,why:'This contact is blocked.'});
     const consent = contact ? contact.consent : 'none';
     if (consent === 'stop') return res.status(409).json({ ok: false, why: 'they asked for no more texts' });
-    const asks = consent === 'none';   // the first text to a number is the one that asks
+    // An arbitrary admin message is not automatically a consent question.
+    const asks = false;
     const r = await deps.sendSms(to, text);
     if (!r.ok) return res.status(502).json(r);
     try { await deps.store.outbound({ to, text, sid: r.sid, status: r.status, asks, name, by: user.email || 'fromsa' }); } catch (e) { log('outbound store failed', e.message); return res.json({ok:true,sid:r.sid,status:r.status,warning:'Text accepted by carrier, but history could not be saved. Do not resend.'}); }

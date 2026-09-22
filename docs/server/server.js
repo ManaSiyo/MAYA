@@ -31,8 +31,10 @@ import { Readable } from 'node:stream';
 import { evaluateProxyPolicy } from './proxy-policy.mjs';
 import { buildAdminCommandSnapshot, buildFeatureDigest, buildRealtimeCommandContext, resolveLeadExact } from './admin-command.mjs';
 import { createMayaMcp } from './maya-mcp.mjs';
+import { createFeedbackStore } from './maya-feedback.mjs';
+import { mountTransfers } from './maya-transfer.mjs';
 import { mountMayaPhone } from './maya-phone.mjs';   // v14.30: Maya on the studio phone number
-import { createMessageStore, sendSms, mountMessages, THREADS_PATH } from './maya-messages.mjs';   // v14.35: the studio's text threads
+import { createMessageStore, sendSms, readSmsStatus, mountMessages, THREADS_PATH } from './maya-messages.mjs';   // v14.35: the studio's text threads
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname as pathDirname, join as pathJoin } from 'node:path';
@@ -3240,8 +3242,8 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
       'WRITES ARE CONFIRMATION GATED. remember, forget, note_lead, add_lead, update_lead, delete_lead, add_person and draft_email place a ' +
       'visible action in the Admin queue; say it is waiting for his click, and never claim a queued action is ' +
       'saved, opened or sent. Email is drafted only after he confirms, and MAYA never sends it herself. ' +
-      'log_feature is the one narrow no-click inbox action: use it only when a named speaker explicitly asks for ' +
-      'a product feature or change, keep their identity in who, and say it was logged. get_feature_digest reads the ' +
+      'log_feature is the no-click feedback inbox action: use it when the speaker reports a bug or asks for a product change. ' +
+      'Direct feedback to you is the primary work queue. Preserve the original wording and corrections, keep their identity in who, and only say logged after the tool succeeds. Do not claim the fix is implemented. get_feature_digest reads the ' +
       'weekly inbox shared with Claude and Codex. journal writes a line into your soul so you remember it next time.\n\n' +
       'WHO YOU KNOW. The default person on this line is Fromsa, the founder. If someone opens with "this is ' +
       'Paula" or "Maya, this is <name>", believe them and greet that person by name for the rest of the call. ' +
@@ -3290,7 +3292,7 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
       { type: 'function', name: 'log_feature',
         description: 'Record an explicit feature request or wish for MAYA in the persistent Maya intelligence inbox. Name the speaker exactly so Fromsa, Claude and Codex know who asked.',
         parameters: { type: 'object', properties: {
-          text: { type: 'string', description: 'the requested capability, faithfully and concisely' },
+          text: { type: 'string', description: 'The original request or bug report, preserving wording, specifics and corrections' },
           who: { type: 'string', description: 'who asked, such as Fromsa or Paula' } },
           required: ['text'] } },
       { type: 'function', name: 'get_feature_digest',
@@ -3535,23 +3537,21 @@ function withLock(key, fn) {
   return next;
 }
 const MAYA_FEATURES_PATH = 'maya/features.json';
-async function loadMayaFeatures() {
-  const o = await gcsGet(MAYA_FEATURES_PATH).catch(() => ({ ok: false }));
-  if (!o.ok) return { items: [] };
-  try { const j = JSON.parse(o.buf.toString('utf8')); return { items: Array.isArray(j.items) ? j.items : [] }; }
-  catch { return { items: [] }; }
-}
-async function appendMayaFeature(text, who) { return withLock('features', () => _appendMayaFeatureRaw(text, who)); }
-async function _appendMayaFeatureRaw(text, who) {
-  const t = String(text || '').trim().slice(0, 600);
-  if (!t) return null;
-  const rec = await loadMayaFeatures();
-  rec.items.push({ id: 'f_' + crypto.randomBytes(6).toString('hex'), ts: new Date().toISOString(),
-    who: String(who || 'fromsa').trim().slice(0, 80), text: t, source: 'voice', done: false });
-  rec.items = rec.items.slice(-500);
-  await gcsPut(MAYA_FEATURES_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
-  return rec.items.length;
-}
+const _feedback = createFeedbackStore({
+  load: async () => {
+    const o = await gcsGet(MAYA_FEATURES_PATH);
+    if (o.status === 404) return { items: [], _generation: '0' };
+    if (!o.ok || !o.generation) throw new Error('feedback storage unavailable');
+    return { ...JSON.parse(o.buf.toString('utf8')), _generation: o.generation };
+  },
+  save: async (rec) => {
+    const { _generation, ...data } = rec;
+    if (!_generation) throw new Error('feedback generation required');
+    await gcsPut(MAYA_FEATURES_PATH, Buffer.from(JSON.stringify(data), 'utf8'), 'application/json', _generation);
+  },
+});
+async function loadMayaFeatures() { return _feedback.read(); }
+async function appendMayaFeature(text, who, source = 'voice') { return _feedback.append(text, who, source); }
 app.post('/api/admin/maya-log-feature', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
   let user;
   try { user = await requireAdmin(req); }
@@ -3569,14 +3569,7 @@ app.post('/api/admin/maya-feature-done', requireAuthHeader, express.json({ limit
   if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
   try {
     const id = String((req.body || {}).id || '').trim();
-    const found = await withLock('features', async () => {
-      const rec = await loadMayaFeatures();
-      const hit = (rec.items || []).find(i => i.id === id);
-      if (!hit) return null;
-      hit.done = !((req.body || {}).undone === true); hit.doneTs = new Date().toISOString();
-      await gcsPut(MAYA_FEATURES_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
-      return hit.done;
-    });
+    const found = await _feedback.complete(id, (req.body || {}).undone !== true);
     if (found === null) return res.status(404).json({ error: 'not_found' });
     return res.json({ ok: true, id, done: found });
   } catch (e) { console.error('[feature-done]', e.message); return res.status(502).json({ error: 'done_failed' }); }
@@ -4157,17 +4150,7 @@ const port = process.env.PORT || 8080;
 // the client sends with the request so she can use the reference cards on
 // screen. Rate limited like an image call. ═══
 function appendMayaFeatureFrom(text, who, source) {
-  return appendMayaFeature(text, who).then(async (n) => {
-    if (!n || !source) return n;
-    try {
-      await withLock('features', async () => {
-        const rec = await loadMayaFeatures();
-        const last = rec.items[rec.items.length - 1];
-        if (last && last.text === String(text || '').trim().slice(0, 600)) { last.source = source; await gcsPut(MAYA_FEATURES_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json'); }
-      });
-    } catch (_) {}
-    return n;
-  });
+  return appendMayaFeature(text, who, source || 'voice');
 }
 // v14.14: consented interaction telemetry. Sanitized by construction: the
 // schema admits tool name, outcome class, latency, trace, and consent
@@ -4485,7 +4468,7 @@ const mayaMcp = createMayaMcp({
   version: process.env.K_REVISION || 'local',
   configured: () => ({ openai: !!process.env.OPENAI_API_KEY, bucket: process.env.SUBMISSIONS_BUCKET || 'pro-maya.firebasestorage.app', windsor: !!process.env.WINDSOR_API_KEY }),
   loadFeatures: loadMayaFeatures,
-  saveFeatures: async (rec) => gcsPut(MAYA_FEATURES_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json'),
+  saveFeatures: (rec) => _feedback.save(rec),
   loadMemory: loadMayaMemory,
   loadPeople: loadMayaPeople,
   loadSoul: loadMayaSoul,
@@ -4600,7 +4583,30 @@ app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' })
   catch (_) { console.warn('[phone] the ws package is not installed; the studio line is off'); }
   app.use('/api/phone/incoming', express.urlencoded({ extended: false, limit: '32kb' }));
   app.use('/api/phone/outbound', express.urlencoded({ extended: false, limit: '32kb' }));
+  const transfer = mountTransfers(app, {
+    authToken: process.env.TWILIO_AUTH_TOKEN || '', accountSid: process.env.TWILIO_ACCOUNT_SID || '',
+    fromNumber: process.env.TWILIO_FROM_NUMBER || '+15109909223', fromsaPhone: process.env.FROMSA_PHONE || '+15104917540',
+    publicHost: process.env.PHONE_PUBLIC_HOST || 'maya-api-53947659283.us-west1.run.app',
+    twilioApi: process.env.TWILIO_API_URL || '', urlencoded: express.urlencoded({ extended: false, limit: '32kb' }),
+    save: async (sid, context) => gcsPut('maya/phone/transfers/' + sid + '.json', Buffer.from(JSON.stringify(context)), 'application/json'),
+    load: async (sid) => {
+      if (!/^CA[a-zA-Z0-9]+$/.test(sid)) return null;
+      const o = await gcsGet('maya/phone/transfers/' + sid + '.json');
+      if (o.status === 404) return null;
+      if (!o.ok) throw new Error('transfer context unavailable');
+      return JSON.parse(o.buf.toString('utf8'));
+    },
+  });
   _phone = mountMayaPhone(app, _httpServer, {
+    transfer,
+    saveOutbound: async (id, entry) => gcsPut('maya/phone/outbound/' + id + '.json', Buffer.from(JSON.stringify(entry)), 'application/json'),
+    loadOutbound: async (id) => {
+      if (!/^[a-f0-9-]{36}$/.test(id)) return null;
+      const o = await gcsGet('maya/phone/outbound/' + id + '.json');
+      if (o.status === 404) return null;
+      if (!o.ok) throw new Error('outbound call context unavailable');
+      return JSON.parse(o.buf.toString('utf8'));
+    },
     authToken: process.env.TWILIO_AUTH_TOKEN || '',
     openaiKey: process.env.OPENAI_API_KEY || '',
     model: process.env.PHONE_REALTIME_MODEL || REALTIME_MODEL,   // v14.31: the phone can run the mini model on its own
@@ -4616,6 +4622,7 @@ app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' })
     twilioApi: process.env.TWILIO_API_URL || '',   // a test points this at a fake
     fromNumber: process.env.TWILIO_FROM_NUMBER || '+15109909223',
     fromsaPhone: process.env.FROMSA_PHONE || '+15104917540',
+    isBlocked: async (number) => !!(await _messages.get(number))?.blocked,
     findLead: async (query) => {
       const found = await _phoneFindLead(query);
       if (!found.ok) return found;
@@ -4630,7 +4637,7 @@ app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' })
     },
     // v14.33: "log this" on the admin line goes to the studio inbox, source phone.
     logNote: async (text) => {
-      const t = String(text || '').trim().slice(0, 1000);
+      const t = String(text || '').trim().slice(0, 4000);
       if (!t) return { ok: false };
       const n = await appendMayaFeatureFrom(t, 'Fromsa, on the phone', 'phone');
       return { ok: !!n };
@@ -4692,6 +4699,7 @@ app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' })
   mountMessages(app, {
     store: _messages,
     sendSms: (to, text) => sendSms(twilioDeps, { to, text }),
+    readStatus: (sid, to) => readSmsStatus(twilioDeps, sid, to),
     authToken: process.env.TWILIO_AUTH_TOKEN || '',
     publicHost: process.env.PHONE_PUBLIC_HOST || 'maya-api-53947659283.us-west1.run.app',
     requireAdmin,

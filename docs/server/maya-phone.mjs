@@ -38,8 +38,8 @@ export function twilioSignatureValid(authToken, url, params, signature) {
   catch (_) { return false; }
 }
 
-export function callToken(authToken, callSid) {
-  return crypto.createHmac('sha256', String(authToken || '')).update(String(callSid || '')).digest('hex').slice(0, 40);
+export function callToken(authToken, callSid, from = '', context = '') {
+  return crypto.createHmac('sha256', String(authToken || '')).update(JSON.stringify([String(callSid || ''), String(from), String(context)])).digest('hex').slice(0, 40);
 }
 
 const digits = (v) => String(v || '').replace(/\D/g, '').replace(/^1(\d{10})$/, '$1');
@@ -57,12 +57,17 @@ export function phoneInstructions({ character, nowLA, from }) {
     (from ? ', calling from ' + from : '') + '. ' +
     'Speak like a warm, sharp person on the phone: one or two short sentences, then listen. Never spell out web ' +
     'addresses; say "maya dot manasiyo dot com". No lists, no bullet points, no dashes; say "and" or start a new sentence.\n\n' +
-    'THE CALL. Open with: "Hi, this is Maya at Mana Siyo. What are you picturing?" Then learn, one question at a time and ' +
-    'only what they have not already told you: what they are picturing (the garment, the occasion, when they need it), ' +
-    'their first name, and whether the number they are calling from is the best one to reach them (you already have it). ' +
-    'Take an email only if they offer one. As soon as you have the piece and a name, call save_lead once with everything ' +
-    'you know, then tell them Fromsa, the founder, will call them back, usually the same day. If they add something ' +
-    'important after that, call save_lead again with the fuller note.\n' +
+    'THE CALL. Open exactly with: "Hi this is Maya from Mana Siyo. How may I direct your call? Tell me what you\'re interested in and I\'ll connect you." Then stop and listen. ' +
+    'You are a receptionist, not an interview. Ask for their name only if they have not given it. ' +
+    'For a customer inquiry or an existing client, save_lead with their name and request, then ask whether they want to connect to Fromsa now. ' +
+    'If they agree, call transfer_to_owner with confirmed=true. Do not gather garment details before connecting. ' +
+    'If they prefer a callback, save it and say the request is saved; do not promise a callback time. ' +
+    'If transfer fails, offer a callback and accurately state that the transfer did not connect. ' +
+    'Take an email only if they offer one. Use caller ID for callback unless they give another number.\n' +
+    'SCREENING. Unsolicited business sales, robocalls, and suspected scams do not get transferred. ' +
+    'Briefly decline sales pitches. Do not classify someone by their accent, pauses, or speech style. ' +
+    'When intent is unclear, ask one short question; offer to take a message instead of assuming spam. ' +
+    'Never claim a person is verified or safe based only on their voice.\n' +
     'PRICES. Custom pieces are quoted after a short consultation, and Fromsa gives the number on the call back. Never ' +
     'invent a price or a delivery date; "as little as 24 hours" is the studio\'s speed, not a promise for their piece.\n' +
     'DESIGNING THEMSELVES. If they want to see it first, tell them about maya dot manasiyo dot com, where they can ' +
@@ -100,7 +105,7 @@ export function briefInstructions({ character, nowLA, reason, inbound }) {
     'Read the returned phone number when he asks; never infer a missing number or say it is unavailable without checking. ' +
     'If the lookup is ambiguous, ask which person. He may tell you about a person to save: call save_lead. He may ask you to note something on a lead: call ' +
     'note_lead. When he says what a lead went with ("Kristi went with signature"), call set_tier. He may report a bug, an idea or anything for the studio inbox ("log this", "there is a bug", "remember ' +
-    'to"): call log_note with his words, then confirm in five words. When he says that is all, or goodbye, say one ' +
+    'to"): call log_note with his original wording, including corrections and specifics. This is the primary feedback queue. Do not wait for him to say log this when he reports a problem or requests a change. Only confirm it is logged after the tool succeeds; never claim the fix is implemented. When he says that is all, or goodbye, say one ' +
     'short goodbye and call end_call. If nobody speaks for a long while, say goodbye and call end_call.';
 }
 
@@ -160,7 +165,7 @@ export const BRIEF_TOOLS = [
   { type: 'function', name: 'log_note',
     description: 'Write a line into the studio inbox that the engineers read: a bug Fromsa saw, an idea, a reminder. Use it whenever he says log this, note this, there is a bug, or remember to.',
     parameters: { type: 'object', properties: {
-      text: { type: 'string', description: 'his words, one or two sentences' } },
+      text: { type: 'string', description: 'His original feedback, with specifics and corrections preserved. Do not replace it with a vague summary.' } },
       required: ['text'] } },
   { type: 'function', name: 'end_call',
     description: 'Hang up. Only after you have said goodbye.',
@@ -177,6 +182,9 @@ export const PHONE_TOOLS = [
       wrote: { type: 'string', description: 'what they are picturing, in their own words: the piece, the occasion, the timing, anything that matters' },
       tier: { type: 'string', description: 'the kind of piece if clear: ceremonial, everyday, a gown, a suit, alterations' } },
       required: ['name', 'wrote'] } },
+  { type: 'function', name: 'transfer_to_owner',
+    description: 'Connect this customer inquiry to Fromsa after saving the request and the caller agrees. Never for sales pitches, spam, or an unclassified caller.',
+    parameters: { type: 'object', properties: { confirmed: { type: 'boolean' } }, required: ['confirmed'] } },
   { type: 'function', name: 'end_call',
     description: 'Hang up. Only after you have said goodbye.',
     parameters: { type: 'object', properties: {} } },
@@ -206,8 +214,16 @@ export function mountMayaPhone(app, server, deps) {
     const host = deps.publicHost || '';
     if (!host) return { ok: false, why: 'PHONE_PUBLIC_HOST is not set (the Cloud Run host), so Twilio would not know where to fetch the call' };
     const api = (deps.twilioApi || 'https://api.twilio.com') + '/2010-04-01/Accounts/' + encodeURIComponent(deps.accountSid) + '/Calls.json';
+    const contextId = crypto.randomUUID();
+    const context = { ...entry, to, ts: Date.now() };
+    // Persist before dialing: the answer webhook may arrive at another instance
+    // or before the REST response returns. No private briefing text in the URL.
+    if (deps.saveOutbound) {
+      try { await deps.saveOutbound(contextId, context); }
+      catch (_) { return { ok: false, why: 'The call briefing could not be saved. No call was placed.' }; }
+    }
     const form = new URLSearchParams({ To: to, From: deps.fromNumber,
-      Url: 'https://' + host + '/api/phone/outbound', Method: 'POST', Timeout: '30' });
+      Url: 'https://' + host + '/api/phone/outbound' + (deps.saveOutbound ? '?context=' + contextId : ''), Method: 'POST', Timeout: '30' });
     let r, j;
     try {
       r = await fetch(api, { method: 'POST', signal: AbortSignal.timeout(15000),
@@ -216,7 +232,7 @@ export function mountMayaPhone(app, server, deps) {
       j = await r.json().catch(() => ({}));
     } catch (e) { return { ok: false, why: 'Twilio did not answer: ' + e.message }; }
     if (!r.ok || !j.sid) { log('call failed', r.status, JSON.stringify(j).slice(0, 200)); return { ok: false, why: 'Twilio refused the call: ' + (j.message || r.status) }; }
-    outbound.set(j.sid, { ...entry, to, ts: Date.now() });
+    outbound.set(j.sid, context);
     for (const [sid, o] of outbound) if (Date.now() - o.ts > 15 * 60000) outbound.delete(sid);
     log('calling', entry.mode, j.sid);
     return { ok: true, sid: j.sid };
@@ -234,7 +250,7 @@ export function mountMayaPhone(app, server, deps) {
     return placeCall(dest, { mode: 'client', name: String(name || '').slice(0, 120), reason: String(reason || '').slice(0, 1200) });
   };
 
-  const incoming = (req, res) => {
+  const incoming = async (req, res) => {
     const params = req.body || {};
     const host = deps.publicHost || req.get('x-forwarded-host') || req.get('host') || '';
     const url = 'https://' + host + (req.originalUrl || '/api/phone/incoming');
@@ -253,28 +269,40 @@ export function mountMayaPhone(app, server, deps) {
     }
     const callSid = String(params.CallSid || '');
     const from = String(params.From || '');
+    try {
+      if (deps.isBlocked && await deps.isBlocked(from)) return res.type('text/xml').send('<Response><Reject reason="rejected"/></Response>');
+    } catch (_) { return res.status(503).send('contact lookup unavailable'); }
     res.set('Content-Type', 'text/xml');
     res.send(streamTwiml(host, callSid, from));
   };
-  const streamTwiml = (host, callSid, from) => {
-    const token = callToken(authToken, callSid);
+  const streamTwiml = (host, callSid, from, entry = null) => {
+    const context = entry ? JSON.stringify(entry) : '';
+    const token = callToken(authToken, callSid, from, context);
+    const chars = Array.from(context);
+    const parts = Array.from({ length: Math.ceil(chars.length / 200) }, (_, i) => chars.slice(i * 200, i * 200 + 200).join(''));
     const streamUrl = 'wss://' + host + '/api/phone/stream';
     return '<?xml version="1.0" encoding="UTF-8"?><Response><Connect><Stream url="' + xmlEscape(streamUrl) + '">' +
       '<Parameter name="token" value="' + xmlEscape(token) + '"/>' +
       '<Parameter name="from" value="' + xmlEscape(from) + '"/>' +
+      parts.map((part, i) => '<Parameter name="context' + i + '" value="' + xmlEscape(part) + '"/>').join('') +
       '<Parameter name="callSid" value="' + xmlEscape(callSid) + '"/>' +
       '</Stream></Connect></Response>';
   };
   // v14.31: Twilio fetches this when Fromsa picks up a call Maya placed.
-  const outboundTwiml = (req, res) => {
+  const outboundTwiml = async (req, res) => {
     const params = req.body || {};
     const host = deps.publicHost || req.get('x-forwarded-host') || req.get('host') || '';
     const url = 'https://' + host + (req.originalUrl || '/api/phone/outbound');
     if (!twilioSignatureValid(authToken, url, params, req.get('X-Twilio-Signature'))) { log('outbound rejected: bad signature'); return res.status(403).send('forbidden'); }
     const callSid = String(params.CallSid || '');
-    if (!outbound.has(callSid)) { log('outbound rejected: unknown call', callSid); return res.status(404).send('unknown call'); }
+    let entry = outbound.get(callSid);
+    if (deps.loadOutbound && req.query.context) {
+      try { entry = await deps.loadOutbound(String(req.query.context)); }
+      catch (_) { return res.status(503).send('call briefing unavailable'); }
+    }
+    if (!entry || Date.now() - entry.ts > 15 * 60000 || digits(entry.to) !== digits(params.To)) return res.status(404).send('unknown call');
     res.set('Content-Type', 'text/xml');
-    res.send(streamTwiml(host, callSid, String(params.To || '')));
+    res.send(streamTwiml(host, callSid, entry.to, entry));
   };
   app.post('/api/phone/incoming', incoming);
   app.post('/api/phone/outbound', outboundTwiml);
@@ -285,7 +313,7 @@ export function mountMayaPhone(app, server, deps) {
 
   wss.on('connection', (tw) => {
     const call = { callSid: '', streamSid: '', from: '', ai: null, open: false, started: Date.now(),
-                   transcript: [], saved: null, leadCalls: 0, timers: [], done: false, mode: 'inbound', reason: '', name: '' };
+                   transcript: [], saved: null, leadCalls: 0, timers: [], done: false, mode: 'inbound', reason: '', name: '', earlyAudio: [], aiReady: false, transferring: false };
     const send = (obj) => { try { if (tw.readyState === 1) tw.send(JSON.stringify(obj)); } catch (_) {} };
     const aiSend = (obj) => { try { if (call.ai && call.ai.readyState === 1) call.ai.send(JSON.stringify(obj)); } catch (_) {} };
     const finish = async (why) => {
@@ -304,8 +332,8 @@ export function mountMayaPhone(app, server, deps) {
         }
       } catch (e) { log('auto lead failed', e.message); }
       try {
-        if (deps.onCallEnd && call.open && call.mode !== 'brief' && call.mode !== 'admin') await deps.onCallEnd({
-          number: call.from, dir: call.mode === 'client' ? 'out' : 'in', seconds, mode: call.mode, name: call.name,
+        if (deps.onCallEnd && call.open) await deps.onCallEnd({
+          number: call.from, dir: call.mode === 'client' || call.mode === 'brief' ? 'out' : 'in', seconds, mode: call.mode, name: call.mode === 'brief' || call.mode === 'admin' ? 'Fromsa' : call.name,
           summary: call.transcript.filter(t => t.who === 'caller').map(t => t.text).join(' ').slice(0, 400) });
       } catch (e) { log('thread note failed', e.message); }
       try {
@@ -330,7 +358,7 @@ export function mountMayaPhone(app, server, deps) {
           instructions: call.mode === 'brief' || call.mode === 'admin'
             ? briefInstructions({ character: deps.character || '', nowLA, reason: call.reason, inbound: call.mode === 'admin' })
             : call.mode === 'client'
-              ? clientCallInstructions({ character: deps.character || '', nowLA, name: call.name, reason: call.reason })
+              ? clientCallInstructions({ character: deps.character || '', nowLA, name: call.mode === 'brief' || call.mode === 'admin' ? 'Fromsa' : call.name, reason: call.reason })
               : phoneInstructions({ character: deps.character || '', nowLA, from: call.from }),
           output_modalities: ['audio'],
           audio: { input: { format: { type: 'audio/pcmu' },
@@ -343,7 +371,9 @@ export function mountMayaPhone(app, server, deps) {
           ? 'Fromsa just picked up. Say "Hey Fromsa, it is Maya." and the reason for the call in one or two sentences, then stop.'
           : call.mode === 'admin' ? 'Say "Hey Fromsa, it is Maya. What do you need?" and stop.'
           : call.mode === 'client' ? 'They just picked up. Open exactly as THE CALL says, then the reason in one sentence and your question, then stop.'
-          : 'Greet the caller now, exactly as THE CALL says, in one sentence.' } });
+          : 'Greet the caller now, exactly as THE CALL says, then listen.' } });
+        call.aiReady = true;
+        for (const audio of call.earlyAudio.splice(0)) aiSend({ type: 'input_audio_buffer.append', audio });
         try { if (deps.noteSpend) deps.noteSpend(); } catch (_) {}
       });
       ai.addEventListener('message', async (ev) => {
@@ -373,10 +403,23 @@ export function mountMayaPhone(app, server, deps) {
               if (call.leadCalls > 4) { output = { ok: false, say: 'the lead is already saved' }; }
               else {
                 const lead = { source: 'phone', name: args.name, phone: args.phone || (call.mode === 'inbound' ? call.from : ''), email: args.email || '', tier: args.tier || '', wrote: args.wrote || '' };
-                call.saved = deps.saveLead ? await deps.saveLead(lead, call.saved ? call.saved.id : null) : { id: 'none' };
-                output = { ok: true, say: 'saved; tell them Fromsa will call back, usually the same day' };
+                if (!deps.saveLead) throw new Error('lead storage unavailable');
+                call.saved = await deps.saveLead(lead, call.saved ? call.saved.id : null);
+                if (!call.saved?.id) throw new Error('lead was not saved');
+                output = { ok: true, say: 'Saved. Offer to connect them now, or keep their callback request.' };
               }
-            } catch (e) { log('save_lead failed', e.message); output = { ok: false, say: 'the station did not answer; tell them you have their number and Fromsa will call back' }; }
+            } catch (e) { log('save_lead failed', e.message); output = { ok: false, say: 'The request could not be saved. Do not claim it was saved or promise a callback.' }; }
+          } else if (m.name === 'transfer_to_owner') {
+            if (call.mode !== 'inbound' || !call.saved || args.confirmed !== true || call.transferring) {
+              output = { ok: false, why: 'Save the customer request and ask their permission to connect first.' };
+            } else {
+              call.transferring = true;
+              try {
+                output = deps.transfer ? await deps.transfer({ callSid: call.callSid, from: call.from,
+                  name: call.saved.name, request: call.saved.wrote || call.saved.note }) : { ok: false, why: 'Live transfer is unavailable. Offer a callback.' };
+              } catch (_) { output = { ok: false, why: 'Transfer could not be confirmed. Do not retry automatically; the callback request is saved.' }; }
+              if (!output.ok) call.transferring = false;
+            }
           } else if (m.name === 'find_lead') {
             try { output = deps.findLead ? await deps.findLead(String(args.query || '')) : { ok: false, why: 'the station lookup is unavailable' }; }
             catch (_) { output = { ok: false, why: 'the station did not answer' }; }
@@ -399,7 +442,7 @@ export function mountMayaPhone(app, server, deps) {
             } catch (e) { log('set_tier failed', e.message); output = { ok: false, say: 'the station did not answer' }; }
           } else if (m.name === 'log_note') {
             try {
-              const r = deps.logNote ? await deps.logNote(String(args.text || '').slice(0, 1000)) : { ok: false };
+              const r = deps.logNote ? await deps.logNote(String(args.text || '').slice(0, 4000)) : { ok: false };
               output = r && r.ok ? { ok: true, say: 'logged' } : { ok: false, say: 'the inbox did not answer' };
             } catch (e) { log('log_note failed', e.message); output = { ok: false, say: 'the inbox did not answer' }; }
           } else if (m.name === 'end_call') {
@@ -407,7 +450,7 @@ export function mountMayaPhone(app, server, deps) {
             call.timers.push(setTimeout(() => finish('end_call'), 2500));
           }
           aiSend({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: m.call_id, output: JSON.stringify(output) } });
-          if (m.name !== 'end_call') aiSend({ type: 'response.create' });
+          if (m.name !== 'end_call' && !call.transferring) aiSend({ type: 'response.create' });
         } else if (t === 'error') {
           const code = m.error && m.error.code;
           if (code !== 'response_cancel_not_active') log('openai error', JSON.stringify(m.error || m).slice(0, 300));
@@ -426,10 +469,13 @@ export function mountMayaPhone(app, server, deps) {
         call.callSid = String(s.callSid || cp.callSid || '');
         call.streamSid = String(m.streamSid || s.streamSid || '');
         call.from = String(cp.from || '');
-        const want = callToken(authToken, call.callSid);
+        const context = Array.from({ length: 16 }, (_, i) => String(cp['context' + i] || '')).join('');
+        const want = callToken(authToken, call.callSid, call.from, context);
         if (!cp.token || String(cp.token) !== want) { log('stream rejected: bad token', call.callSid); return finish('bad_token'); }
         if (live.size >= MAX_CALLS) return finish('busy');
-        const ob = outbound.get(call.callSid);
+        let ob = null;
+        try { ob = context ? JSON.parse(context) : outbound.get(call.callSid); } catch (_) { return finish('invalid_context'); }
+        if (ob && (Date.now() - ob.ts > 15 * 60000 || digits(ob.to) !== digits(call.from))) return finish('expired_context');
         if (ob) { call.mode = ob.mode || 'brief'; call.reason = ob.reason || ''; call.name = ob.name || ''; call.from = ob.to || call.from; outbound.delete(call.callSid); }
         // v14.33: Fromsa calling in from his own number is the admin line. The
         // number comes from Twilio's caller id, not from anything the caller
@@ -441,7 +487,10 @@ export function mountMayaPhone(app, server, deps) {
         call.timers.push(setTimeout(() => finish('max_minutes'), MAX_MINUTES * 60000));
         openAi();
       } else if (ev === 'media') {
-        if (call.open && m.media && m.media.payload) aiSend({ type: 'input_audio_buffer.append', audio: m.media.payload });
+        if (call.open && m.media && m.media.payload) {
+          if (call.aiReady) aiSend({ type: 'input_audio_buffer.append', audio: m.media.payload });
+          else if (call.earlyAudio.length < 150) call.earlyAudio.push(m.media.payload);
+        }
       } else if (ev === 'stop') {
         finish('caller_hung_up');
       }

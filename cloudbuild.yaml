@@ -31,6 +31,7 @@ steps:
         node tests/admin-ui-contract.mjs
         node tests/proxy-policy.mjs
         node tests/maya-mcp.mjs
+        node tests/maya-feedback.mjs
         # v14.14: the voice agent battery runs in the gate when a browser can
         # be installed. An install failure skips loudly (infra, not code); a
         # test failure fails the build.
@@ -43,6 +44,7 @@ steps:
         if npm install --no-save express ws >/dev/null 2>&1; then
           node tests/maya-phone.mjs
           node tests/maya-messages.mjs
+          node tests/maya-transfer.mjs
         else
           echo "WARNING express or ws unavailable in CI, maya-phone skipped"
         fi

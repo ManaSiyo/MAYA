@@ -2037,7 +2037,7 @@
   #notes-drawer .pg-fold-current:empty { display: none; }
   #notes-drawer .avatar-switch-actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px;
     border-bottom: 0.5px solid rgba(255,255,255,0.08); }
-  #notes-drawer .avatar-switch-actions .drawer-action { font-size: 8px; padding: 3px 9px; letter-spacing: 0.1em; }
+  #notes-drawer .avatar-switch-actions .drawer-action { flex:1; font-size: 8px; padding: 3px 9px; letter-spacing: 0.1em; }
   #notes-drawer .session-item-rename { position: absolute; top: 8px; right: 60px;
     width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
     background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.2);
@@ -5016,7 +5016,7 @@
             <div class="pg-avatar-nameline">
               <!-- v13.92: the name itself opens the avatar switcher too, so the
                    caret is no longer a 2px sliver you have to hit exactly. -->
-              <span class="drawer-avatar-name" id="drawer-avatar-name" onclick="toggleAvatarSwitcher()" title="Switch avatar / client" style="cursor:pointer">name</span>
+              <span class="drawer-avatar-name" id="drawer-avatar-name" role="button" tabindex="0" onclick="pgRenameClient()" onkeydown="if(event.key==='Enter'){pgRenameClient();}" title="Edit client name" style="cursor:pointer">name</span>
               <button class="drawer-avatar-caret" id="drawer-avatar-caret" type="button" onclick="toggleAvatarSwitcher()" title="Switch avatar / client">&#9662;</button>
               <!-- v14.23: the pencil sits beside the name itself. -->
               <button class="drawer-avatar-rename" id="drawer-avatar-rename" type="button" onclick="pgRenameClient()" title="Rename this client" aria-label="Rename this client">&#9998;</button>
@@ -5360,7 +5360,8 @@
     <button class="fabrics-tab active" id="pin-tab-all" onclick="setPinterestTab('all')">All saves</button>
     <button class="fabrics-tab" id="pin-tab-boards" onclick="setPinterestTab('boards')">Boards</button>
     <button class="pin-search-btn" id="pin-search-btn" onclick="_pinSearchToggle()" title="Search Pinterest" aria-label="Search Pinterest"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 L21 21"/></svg></button>
-    <input id="pin-search-input" type="search" placeholder="Search" oninput="_pinSearchInput(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();_pinSearchEnter(this.value);}" style="display:none" />
+    <select id="pin-search-scope" aria-label="Pinterest search scope" class="drawer-action"><option value="everywhere">All Pinterest</option><option value="saved">My saves</option></select>
+    <input id="pin-search-input" type="search" placeholder="Search Pinterest" oninput="_pinSearchInput(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();_pinSearchEnter(this.value);}" style="display:none" />
   </div>
   <div class="fabrics-drawer-body" id="pinterest-drawer-body"></div>
   <div class="pin-drawer-foot" id="pin-drawer-foot" style="display:none">
@@ -8528,38 +8529,62 @@ async function _loadAvatarLibrary() {
   } catch (_) { _avatarLibCache = []; }
   return _avatarLibCache;
 }
-async function _saveCurrentAvatarToLibrary() {
+async function _saveCurrentAvatarToLibrary(strict = false) {
+  const snapshot = lastSummary;
+  const uid = typeof projectStore !== 'undefined' ? projectStore._uid() : null;
+  const sameAccount = () => uid && projectStore._uid() === uid && lastSummary === snapshot;
   const id = _avatarIdentity();
-  if (!id || !id.name || id.name === 'client') return;  // need a real name to file it
-  if (typeof projectStore === 'undefined' || !projectStore.ready()) return;
+  if (!id || !id.name || id.name === 'client') { if (strict) throw new Error('Name this avatar first.'); return; }  // need a real name to file it
+  if (typeof projectStore === 'undefined' || !projectStore.ready()) { if (strict) throw new Error('Sign in to save this avatar.'); return; }
   try {
     // The face is stored by address, never as raw bytes, so this document stays
     // small and the roster can hold as many clients as the atelier has.
     const face = id.face;
     let faceRef = (typeof face === 'string' && face.startsWith('http')) ? face : null;
     if (!faceRef && typeof face === 'string' && face.startsWith('data:')) {
-      if (lastSummary && lastSummary._face_photo_url) faceRef = lastSummary._face_photo_url;
+      if (!strict && lastSummary && lastSummary._face_photo_url) faceRef = lastSummary._face_photo_url;
       else if (projectStore.ready()) {
         // v12.9: a client's face belongs to the CLIENT, not to whichever
         // project happened to be open. It used to live inside that project's
         // folder, so deleting the project broke that client's face everywhere.
         try {
           const up = await projectStore.uploadImage(face, 'avatars');
+          if (!sameAccount()) throw new Error('The open client changed. Please save again.');
           faceRef = up.url;
           // Point the open project at the same shared copy rather than making
           // a second one inside the project on the next save.
           if (lastSummary) { lastSummary._face_photo_url = up.url; lastSummary._face_photo_path = up.path; }
-        } catch (_) {}
+        } catch (e) { if (strict) throw e; }
       }
     }
+    if (!sameAccount()) throw new Error('The open client changed. Please save again.');
     const lib = await _loadAvatarLibrary();
+    if (!sameAccount()) throw new Error('The open client changed. Please save again.');
     const key = id.name.trim().toLowerCase();
     const rec = JSON.parse(JSON.stringify({ id: key, ...id, face: faceRef || null, updatedAt: Date.now() }));
     const next = lib.filter(a => a.id !== key);
     next.unshift(rec);
-    _avatarLibCache = next;
     await _avatarsDoc().set({ list: next, updatedAtMs: Date.now() });
-  } catch (e) { console.warn('[Maya avatar lib]', e); }
+    if (sameAccount()) _avatarLibCache = next;
+    return true;
+  } catch (e) { console.warn('[Maya avatar lib]', e); if (strict) throw e; return false; }
+}
+async function saveAvatarFromDrawer(button) {
+  const name = (lastSummary && lastSummary.client && lastSummary.client.name || '').trim();
+  if (!name || name.toLowerCase() === 'client') { pgRenameClient(); showToast('Name the avatar, then press Save.'); return; }
+  if (button) button.disabled = true;
+  try {
+    await _saveCurrentAvatarToLibrary(true);
+    if (typeof projectStore !== 'undefined' && projectStore.currentId) {
+      projectStore.queueSave();
+      if (!(await projectStore.flush())) throw new Error('Avatar saved, but the project did not save. Please try again.');
+    }
+    refreshDrawerClientName();
+    _avatarSwitcherOpen = false;
+    await toggleAvatarSwitcher();
+    showToast('Avatar saved.');
+  } catch (e) { showToast(e.message || 'Avatar did not save. Please try again.'); }
+  finally { if (button) button.disabled = false; }
 }
 async function toggleAvatarSwitcher() {
   const panel = document.getElementById('drawer-avatar-switcher');
@@ -8582,6 +8607,12 @@ async function toggleAvatarSwitcher() {
       lib = [{ id: curKey, name: (lastSummary.client.name || '').trim(), face: (typeof idn.face === 'string' && idn.face) || null }].concat(lib);
     }
   }
+  const current = _avatarIdentity();
+  if (current && current.face) {
+    lib = lib.map(a => a.id === curKey ? { ...a, face: current.face } : a);
+  }
+  const preview = current && current.face && !lib.some(a => a.id === curKey)
+    ? '<div class="avatar-switch-row active"><img class="avatar-switch-face" alt="Current avatar" src="' + escapeHtml(current.face) + '"><span>' + escapeHtml(current.name || 'Client') + ' (unsaved)</span></div>' : '';
   const rows = lib.map(a =>
     '<div class="avatar-switch-row' + (a.id === curKey ? ' active' : '') + '" role="button" tabindex="0" data-id="' + escapeHtml(a.id) + '" onclick="switchAvatar(\'' + escapeHtml(a.id) + '\')">' +
       (a.face ? '<span class="avatar-switch-face" style="background-image:url(\'' + a.face + '\')"></span>'
@@ -8597,8 +8628,9 @@ async function toggleAvatarSwitcher() {
   const actions = '<div class="avatar-switch-actions">' +
     '<button class="drawer-action" type="button" onclick="randomizeAvatar()" title="Random measurements and a random face">Randomize</button>' +
     '<button class="drawer-action" type="button" onclick="pgReplaceFace()" title="Upload a face photo">Replace</button>' +
+    '<button class="drawer-action" type="button" onclick="saveAvatarFromDrawer(this)">Save</button>' +
     '</div>';
-  panel.innerHTML = actions + (rows || '<div class="avatar-switch-empty">No saved clients yet. Rename, add a face, and they are filed.</div>') +
+  panel.innerHTML = actions + preview + (rows || '<div class="avatar-switch-empty">No saved clients yet. Rename, add a face, and they are filed.</div>') +
     '<button class="avatar-switch-row avatar-switch-new" onclick="newAvatar()">+ New avatar</button>';
   panel.style.display = 'block';
   // v13.82: make sure the freshly opened list is fully visible, not cut at the fold.
@@ -10736,40 +10768,46 @@ async function _pinDrawerBoards() {
   _pinBody(_pinBoardsCache);
 }
 
+let _pinListSeq = 0;
+let _pinSearchSeq = 0;
+let _pinListing = null;
+const _pinPictureMarkup = p => '<button class="pin-pic" data-url="' + escapeHtml(p.url) + '" data-alt="' + escapeHtml(p.alt || '') + '" onclick="_pinToggle(this)"><img src="' + _safeImgSrc(p.url) + '" alt="" loading="lazy"><span class="pin-check">&#10003;</span></button>';
 async function _pinDrawerPins(boardId, boardName) {
+  _pinSearchSeq++;
   _pinBoardName = boardName || '';
-  _pinPicked = new Set();
-  _pinSetFoot(false);
-  _pinSub(boardName ? boardName : 'everything you have saved');
-  const key = boardId || 'all';
-  // v13.84: render from the session cache when we have it \u2014 no reload.
-  if (_pinPicsCache[key]) {
-    _pinBody(_pinPicsCache[key]);
-    _pinLoaded = true;
-    return;
-  }
-  _pinBody('<div class="pin-note">Loading pictures\u2026</div>');
-  let j;
+  _pinPicked = new Set(); _pinSetFoot(false);
+  window._pinWiderActive = false;
+  _pinSub(boardName || 'your saved pins');
+  const state = { seq: ++_pinListSeq, boardId: boardId || '', uid: projectStore._uid(), bookmark: '', seen: new Set(), loading: false };
+  _pinListing = state;
+  _pinBody('<div class="pin-grid pics"></div><button class="drawer-action" id="pin-load-more" onclick="_pinLoadNext()">Load saved pins</button><div class="pin-note" id="pin-page-note"></div>');
+  await _pinLoadNext();
+}
+async function _pinLoadNext() {
+  const state = _pinListing;
+  if (!state || state.loading || state.uid !== projectStore._uid() || window._pinWiderActive) return;
+  const button = document.getElementById('pin-load-more');
+  const note = document.getElementById('pin-page-note');
+  if (!button || !note) return;
+  state.loading = true; button.disabled = true; note.textContent = 'Loading saved pins...';
   try {
-    j = await _pinApi('/api/pinterest/pins' + (boardId ? '?board=' + encodeURIComponent(boardId) : ''));
+    const query = new URLSearchParams();
+    if (state.boardId) query.set('board', state.boardId);
+    if (state.bookmark) query.set('bookmark', state.bookmark);
+    const j = await _pinApi('/api/pinterest/pins?' + query);
+    if (_pinListing !== state || state.uid !== projectStore._uid() || window._pinWiderActive) return;
+    const grid = document.querySelector('#pinterest-drawer-body .pin-grid');
+    if (!grid) return;
+    const pins = (j.pins || []).filter(p => { const key = p.id || p.url; if (state.seen.has(key)) return false; state.seen.add(key); return true; });
+    grid.insertAdjacentHTML('beforeend', pins.map(_pinPictureMarkup).join(''));
+    const repeated = !!j.bookmark && j.bookmark === state.bookmark;
+    state.bookmark = repeated ? '' : (j.bookmark || '');
+    button.hidden = !state.bookmark; button.textContent = 'Load more saved pins';
+    note.textContent = repeated ? 'Pinterest repeated a page. Reopen the board to try again.' : state.seen.size ? state.seen.size + ' saved pins loaded' : 'No saved pins were returned for this account.';
+    _pinLoaded = true;
   } catch (e) {
-    if (e.code === 'not_connected' || e.code === 'reconnect') return _pinDrawerConnect();
-    _pinBody('<div class="pin-note">Could not read that.</div>');
-    return;
-  }
-  if (!j.pins.length) {
-    _pinBody('<div class="pin-note">' + (boardId ? 'Nothing on that board yet.' : 'Nothing saved on that account yet.') + '</div>');
-    return;
-  }
-  const html = '<div class="pin-grid pics">' + j.pins.map(p =>
-    '<button class="pin-pic" data-url="' + escapeHtml(p.url) + '" data-alt="' + escapeHtml(p.alt || '') + '"' +
-      ' onclick="_pinToggle(this)"><img src="' + _safeImgSrc(p.url) + '" alt="" loading="lazy">' +
-      '<span class="pin-check">&#10003;</span></button>').join('') + '</div>';
-  _pinPicsCache[key] = html;
-  _pinLoaded = true;
-  _pinBody(html);
-  // v13.84: the CTA no longer sits at the bottom on load; it floats in only
-  // once pictures are selected (see _pinToggle), so the wall stays edge-to-edge.
+    if (_pinListing === state && state.uid === projectStore._uid()) { note.textContent = 'Saved pins could not load. Try again.'; button.textContent = 'Retry'; }
+  } finally { state.loading = false; button.disabled = false; }
 }
 
 function _pinToggle(el) {
@@ -18346,6 +18384,7 @@ function _pinSearch(q) {
 // Pinterest's partner search when this app has that access, or a web image
 // search pinned to pinterest.com when a key is set. The server says which.
 async function _pinWideSearch(q, scope) {
+  const seq = ++_pinSearchSeq, uid = projectStore._uid();
   q = String(q || '').trim();
   if (q.length < 2) return { ok: false, reason: 'no words to search' };
   const body = document.getElementById('pinterest-drawer-body');
@@ -18360,6 +18399,7 @@ async function _pinWideSearch(q, scope) {
       /rate/i.test(msg) ? 'Pinterest is asking for a short pause' : 'Pinterest did not answer the wider search';
     return { ok: false, reason: why + '; what is on the wall still searches, offer that', needs: /reconnect|not_connected/i.test(msg) ? 'reconnect' : 'retry' };
   }
+  if (seq !== _pinSearchSeq || uid !== projectStore._uid()) return { ok: false, cancelled: true };
   const pins = (j && j.pins) || [];
   if (!pins.length) return { ok: false, reason: everywhere
     ? ('nothing on Pinterest matched ' + q.slice(0, 40) + '; describe_garment can conjure fresh references instead')
@@ -18406,14 +18446,17 @@ function _pinSearchInput(v) {
 async function _pinSearchEnter(v) {
   const q = String(v || '').trim();
   if (q.length < 2) return;
-  try { _pinSub('searching everything saved for ' + q); } catch (_) {}
-  const r = await _pinWideSearch(q, 'saved');
-  if (r.ok) return;
-  // nothing saved: go to all of Pinterest by itself
-  try { _pinSub('searching all of Pinterest for ' + q); } catch (_) {}
-  const r2 = await _pinWideSearch(q, 'everywhere');
-  if (!r2.ok) { try { _pinSub(''); } catch (_) {} showToast(r2.needs === 'access' ? ('Nothing saved matches ' + q + '. All of Pinterest is not switched on yet.') : ('Nothing on Pinterest matches ' + q)); }
+  const scope = document.getElementById('pin-search-scope')?.value || 'everywhere';
+  _pinListSeq++; _pinListing = null;
+  _pinSub(scope === 'everywhere' ? 'searching Pinterest for ' + q : 'searching your saves for ' + q);
+  const r = await _pinWideSearch(q, scope);
+  if (r.cancelled) return;
+  if (!r.ok) {
+    _pinSub('');
+    showToast(r.needs === 'access' ? 'Pinterest-wide search needs provider access. Your saved pins are still available.' : 'No results returned. Try another search.');
+  }
 }
+
 function _pinSearchToggle() {
   const inp = document.getElementById('pin-search-input'); if (!inp) return;
   const show = inp.style.display === 'none';

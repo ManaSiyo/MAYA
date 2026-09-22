@@ -149,7 +149,14 @@ try {
   #drawer.msgs > h3, #drawer.msgs > a, #drawer.msgs > #top-lights{display:none}
   body.maya-live #adm-tabrow, body.maya-live #drawer-messages{display:none}
   #drawer-messages{flex:1;min-height:0;display:flex;flex-direction:column;text-align:left}
-  #drawer-messages[hidden]{display:none}
+  #drawer-messages[hidden],#drawer-logs[hidden]{display:none}
+  #drawer-logs{flex:1;min-height:0;overflow:auto;scrollbar-width:none;text-align:left}
+  #drawer-logs::-webkit-scrollbar{display:none}
+  .maya-log{padding:12px 0;border-bottom:0.5px solid var(--line)}
+  #drawer-logs > .note{font-size:13px;line-height:1.5;color:var(--dim)}
+  .maya-log p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.5;margin:6px 0}
+  .maya-log small{color:var(--dim);font-size:11px}
+  body.maya-live #drawer-logs{display:none}
   #msg-list{flex:1;min-height:0;overflow-y:auto;margin:0 -4px}
   .msg-row{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:12px;cursor:pointer;transition:background .2s}
   .msg-row:hover{background:rgba(255,255,255,0.06)}
@@ -637,11 +644,11 @@ try {
   #adm-mkt #leads-table .lead-col-first{position:sticky;left:0;background:#0d1120;box-shadow:1px 0 0 var(--line)}
   #adm-mkt #leads-table td.lead-col-first{z-index:2}
   #adm-mkt #leads-table th.lead-col-first{z-index:4}
-  #adm-mkt #leads-table .lead-td-name,#adm-mkt #leads-table .lead-h-name{min-width:112px;max-width:190px}   /* v14.34: narrower, per Fromsa */
+  #adm-mkt #leads-table .lead-td-name,#adm-mkt #leads-table .lead-h-name{min-width:240px;max-width:260px;width:260px}   /* v14.34: narrower, per Fromsa */
   /* Company / Title now sits under the name as a signature line. */
   #adm-mkt #leads-table .lead-sig{margin-top:2px}
   #adm-mkt #leads-table .lead-sig-edit{font-family:'Cormorant Garamond',serif;font-size:12px;color:var(--dim);font-style:italic}
-  #adm-mkt #leads-table .lead-sig-edit:empty::before{content:'company or title';color:var(--faint);font-style:italic}
+  #adm-mkt #leads-table .lead-sig-edit:empty::before{content:'tier';color:var(--faint);font-style:italic}
   /* the quote and invoice columns invite a value with a faint + when empty */
   #adm-mkt #leads-table .lead-money-edit{font-variant-numeric:tabular-nums;white-space:nowrap}
   #adm-mkt #leads-table .lead-money-edit:empty::before{content:'+';color:var(--faint)}
@@ -739,6 +746,10 @@ try {
   #adm-mkt .bl-tile .v.good{color:var(--green)} #adm-mkt .bl-tile .v.bad{color:var(--amber)}
   #adm-mkt .bl-tile .k{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:3px;line-height:1.6}
   #adm-mkt .lead-rec{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim)}
+  #adm-mkt .lead-identity{display:flex;align-items:center;gap:8px;white-space:nowrap}
+  #adm-mkt #leads-table .lead-identity .lead-name-edit{min-width:0;max-width:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
+  #adm-mkt #leads-table .lead-email-edit{white-space:nowrap;min-width:120px}
+  #adm-mkt .lead-identity .lead-src{flex:none}
   #adm-mkt .lead-ctas{display:flex;gap:6px;margin-top:6px}
   #adm-mkt .lead-cta{width:26px;height:22px;border-radius:100px;border:0.5px solid var(--line);background:transparent;
     color:var(--dim);cursor:pointer;font-size:11px;line-height:1;display:inline-flex;align-items:center;justify-content:center;
@@ -848,8 +859,9 @@ try {
        older checks expect them. -->
   <div id="adm-tabrow" role="tablist">
     <button class="adm-tab on" id="adm-tab-systems" onclick="admTab('systems')" role="tab" aria-selected="true" aria-label="Systems" title="Systems"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></button>
-    <button class="adm-tab" id="adm-tab-messages" onclick="admTab('messages')" role="tab" aria-selected="false" aria-label="Messages" title="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 5h16v11H9l-5 4z"/></svg><span class="adm-unread" id="adm-unread" hidden>0</span></button><span id="adm-tabtitle">Systems</span>
+    <button class="adm-tab" id="adm-tab-messages" onclick="admTab('messages')" role="tab" aria-selected="false" aria-label="Messages" title="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 5h16v11H9l-5 4z"/></svg><span class="adm-unread" id="adm-unread" hidden>0</span></button><button class="adm-tab" id="adm-tab-logs" onclick="admTab('logs')" role="tab" aria-selected="false" aria-label="Logs" title="Logs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18H5zM8 7h8M8 11h8M8 15h5"/></svg></button><span id="adm-tabtitle">Systems</span>
   </div>
+  <div id="drawer-logs" hidden><div class="msg-controls"><button onclick="loadMayaLogs()">Refresh logs</button></div><p class="note">Feedback given to Maya, in the original wording. Logged requests remain open until marked shipped.</p><div id="maya-logs-list" aria-live="polite"></div></div>
   <div id="drawer-messages" hidden>
     <div id="msg-list"></div>
     <div id="msg-thread" hidden>
@@ -858,7 +870,7 @@ try {
         <div class="msg-who"><input class="msg-name" id="msg-name" aria-label="Contact name" placeholder="Caller" maxlength="120" onblur="msgRename()" onkeydown="if(event.key==='Enter')this.blur()"><div class="msg-number" id="msg-number"></div></div>
         <button class="msg-call" id="msg-call" onclick="msgCall()" title="Call this person">Call</button>
       </div>
-      <div class="msg-controls"><button id="msg-block" onclick="msgBlock()">Block</button><button onclick="msgDelete()">Delete conversation</button></div><div class="msg-scroll" id="msg-scroll"></div>
+      <div class="msg-controls"><button onclick="msgCheckDelivery()" title="Check the last five outgoing texts with the carrier">Check delivery</button><button id="msg-block" onclick="msgBlock()">Block</button><button onclick="msgDelete()">Delete conversation</button></div><div class="msg-scroll" id="msg-scroll"></div>
       <div class="msg-compose">
         <textarea id="msg-input" rows="1" placeholder="Text them as Mana Siyo" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();msgSend();}"></textarea>
         <button class="msg-send" onclick="msgSend()" title="Send">Send</button>
@@ -1012,7 +1024,7 @@ try {
 
   <details class="fold" id="leads-fold" open>
     <summary><h2 class="grp">The Lead Station</h2></summary>
-    <div id="leads-bar"><button class="lead-tool" onclick="event.preventDefault();reloadLeads()" title="Refresh the station">&#8635; Reload</button><button class="lead-tool" onclick="event.preventDefault();addLeadManual()" title="Add a lead by hand">+ Add lead</button></div>
+    <div id="leads-bar"><span class="lead-tool" aria-current="page">Forms</span><button class="lead-tool" onclick="event.preventDefault();reloadLeads()" title="Refresh the station">&#8635; Reload</button><button class="lead-tool" onclick="event.preventDefault();addLeadManual()" title="Add lead" aria-label="Add lead">+</button></div>
     <div class="panel"><table id="leads-table"><tbody></tbody></table></div>
     <div id="leads-note" class="note" style="display:none"></div>
   </details>
@@ -1296,7 +1308,7 @@ async function loadFeatureRequests(){
     // v14.09: Maya's own autonomous logs (source 'maya') sit with the front
     // end room, under her name, beside what users asked.
     const front=[...items.filter(i=>i.source==='app'||i.source==='maya'),...feedback].sort((a,b)=>String(b.ts).localeCompare(String(a.ts)));
-    const adminSide=items.filter(i=>i.source!=='app');
+    const adminSide=items.filter(i=>i.source!=='app'&&i.source!=='maya');
     const row=i=>'<div class="fr'+(i.done?' done':'')+'" title="'+esc(i.text)+'"'+(i.id?' data-fid="'+esc(i.id)+'"':'')+'>'+
       '<span class="who">'+esc(i.who||'someone')+'</span><span class="ask">'+esc(short(i.text))+'</span>'+
       '<span class="when">'+esc(day(i.ts))+(i.id?'<button class="fr-done" title="Mark shipped" onclick="markFeatureDone(this)">\u2713</button>':'')+'</span></div>';
@@ -2166,13 +2178,13 @@ async function _voiceTool(name, args){
     if(name==='show_drawer'){ const open=(args.state!=='close'); toggleDrawer(open);
       return {ok:true, drawer: open?'open':'closed'}; }
     if(name==='log_feature'){
-      const t=_mayaEscText(args.text).slice(0,600); if(!t) return {ok:false,error:'text_required'};
+      const t=_mayaEscText(args.text).slice(0,4000); if(!t) return {ok:false,error:'text_required'};
       try{
         const r=await fetch('/api/admin/maya-log-feature',{method:'POST',
           headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
           body:JSON.stringify({text:t, who:args.who||'fromsa'})});
         if(!r.ok) return {ok:false,error:'log_failed'};
-        _mayaChatAdd('maya','Logged for Claude: '+t);
+        _mayaChatAdd('maya','Logged in Maya’s feedback queue: '+t);
         return {ok:true, logged:true};
       }catch(e){ return {ok:false,error:'log_failed'}; }
     }
@@ -2237,7 +2249,7 @@ async function _voiceTool(name, args){
       }catch(e){ return {ok:false,error:'sheet_failed'}; }
     }
     if(name==='remember'){
-      const t=_mayaEscText(args.text).slice(0,600);
+      const t=_mayaEscText(args.text).slice(0,4000);
       return t?_mayaQueueAction({kind:'remember',text:t}):{ok:false,error:'text_required'};
     }
     if(name==='note_lead'){
@@ -2245,7 +2257,7 @@ async function _voiceTool(name, args){
         (args.contact&&args.contact!=='none')?args.contact:'');
     }
     if(name==='forget'){
-      const t=_mayaEscText(args.text).slice(0,600);
+      const t=_mayaEscText(args.text).slice(0,4000);
       return t?_mayaQueueAction({kind:'forget',text:t}):{ok:false,error:'text_required'};
     }
     if(name==='draft_email'){
@@ -2688,8 +2700,8 @@ function paintLeads(l) {
     ).join('');
   try { _leadMarquees(); } catch (_) {}
 }
-// v13.91: a real smartphone glyph for the call button, not a 1970s handset.
-const PHONE_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.4"/><line x1="10.6" y1="18.4" x2="13.4" y2="18.4"/></svg>';
+// Telephone handset for the call action.
+const PHONE_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2z"/></svg>';
 // v13.95: the pay-link glyph — a receipt for the invoice / pay link action.
 // v14.35: the chat glyph, the drawer's Messages thread for this lead.
 const CHAT_SVG = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5h16v10H9l-4 3.5z"/></svg>';
@@ -2710,8 +2722,8 @@ function _actionsCell(i, x){
   const paid = x.paylink && String(x.paylink).trim();
   return '<div class="lead-ctas">' +
     (x.phone ? '<button class="lead-cta" onclick="leadMayaCall(' + i + ')" aria-label="Call" title="Call ' + esc(x.phone) + '">' + PHONE_SVG + '</button>' : '') +
-    (x.phone ? '<button class="lead-cta" onclick="leadOpenThread(' + i + ')" title="Text ' + esc(x.phone) + ' from the drawer">' + CHAT_SVG + '</button>' : '') +
-    '<button class="lead-cta lead-pay' + (paid ? ' has-link' : '') + '" onclick="leadInvoice(' + i + ')" title="' +
+    (x.phone ? '<button class="lead-cta" onclick="leadOpenThread(' + i + ')" aria-label="Text" title="Text ' + esc(x.phone) + ' from the drawer">' + CHAT_SVG + '</button>' : '') +
+    '<button class="lead-cta lead-pay' + (paid ? ' has-link' : '') + '" onclick="leadInvoice(' + i + ')" aria-label="Invoice" title="' +
       (paid ? 'Pay link ready: view, copy or add it to the email' : 'Invoice this lead: build a pay link in one click') + '">' + PAY_SVG + '</button>' +
   '</div>';
 }
@@ -2721,7 +2733,7 @@ function _leadColDefs(){
   return {
     name: { label: 'Full name', h: 'lead-h-name', td: 'lead-td-name',
       render: (x, i) => '<div class="lead-identity">' + cell(i, x, 'name', x.name, 'lead-name-edit') +
-        '<span class="lead-src wix">' + cell(i, x, 'company', String(x.tier || x.company || '').replace(/\s*[·,]?\s*\$[\d,.]+.*$/, '').trim(), 'lead-sig-edit') + '</span></div>' + _actionsCell(i, x) },
+        '<span class="lead-src wix">' + cell(i, x, 'tier', String(x.tier || x.company || '').replace(/\s*[·,]?\s*\$[\d,.]+.*$/, '').trim(), 'lead-sig-edit') + '</span></div>' + _actionsCell(i, x) },
     // v14.24: Contact, the phone first (that is what gets used), the email when there is none.
     email: { label: 'Contact', render: (x, i) => x.phone
       ? cell(i, x, 'phone', x.phone, 'lead-email-edit')
@@ -3005,10 +3017,15 @@ window.addLeadManual = addLeadManual;
 let _msgSending = false;
 let _msgTab = 'systems', _msgOpen = null, _msgTimer = null, _msgThreads = [];
 function admTab(t) {
+  if (!['systems','messages','logs'].includes(t)) return;
   _msgTab = t;
-  document.getElementById('adm-tabtitle').textContent = t === 'messages' ? 'Messages' : 'Systems';
+  document.getElementById('adm-tabtitle').textContent = t === 'messages' ? 'Messages' : t === 'logs' ? 'Logs' : 'Systems';
+  document.getElementById('drawer-logs').hidden = t !== 'logs';
+  document.getElementById('adm-tab-logs').classList.toggle('on', t === 'logs');
+  document.getElementById('adm-tab-logs').setAttribute('aria-selected', String(t === 'logs'));
+  if (t === 'logs') loadMayaLogs();
   const d = document.getElementById('drawer');
-  d.classList.toggle('msgs', t === 'messages');
+  d.classList.toggle('msgs', t !== 'systems');
   document.getElementById('adm-tab-systems').classList.toggle('on', t === 'systems');
   document.getElementById('adm-tab-messages').classList.toggle('on', t === 'messages');
   document.getElementById('adm-tab-systems').setAttribute('aria-selected', t === 'systems' ? 'true' : 'false');
@@ -3016,6 +3033,18 @@ function admTab(t) {
   document.getElementById('drawer-messages').hidden = t !== 'messages';
   if (t === 'messages') { loadThreads(); if (!_msgTimer) _msgTimer = setInterval(() => { if (_msgOpen) loadThread(_msgOpen.number, true); else loadThreads(); }, 15000); }
   else if (_msgTimer) { clearInterval(_msgTimer); _msgTimer = null; }
+}
+async function loadMayaLogs() {
+  const host = document.getElementById('maya-logs-list');
+  if (!_idTok) { host.textContent = 'Sign in to read Maya’s feedback.'; return; }
+  host.textContent = 'Loading feedback...';
+  try {
+    const r = await fetch('/api/admin/maya-features', {headers:{Authorization:'Bearer '+_idTok}});
+    const j = await r.json();
+    if (!r.ok || !j.ok) throw new Error('The feedback inbox could not be loaded.');
+    host.innerHTML = (j.items || []).slice().sort((a,b)=>String(b.ts).localeCompare(String(a.ts))).map(item =>
+      '<article class="maya-log"><small>' + esc(item.who || 'Maya') + ' · ' + esc(item.source || 'voice') + ' · ' + esc(_msgWhen(item.ts)) + ' · ' + (item.done ? 'Shipped' : 'Open') + '</small><p>' + esc(item.text || '') + '</p></article>').join('') || '<p class="note">No feedback logged yet.</p>';
+  } catch(e) { host.textContent = e.message; }
 }
 function _msgWhen(ts) {
   if (!ts) return '';
@@ -3044,14 +3073,19 @@ function paintThreads(list) {
   const unread = _msgThreads.reduce((n, t) => n + (t.unread || 0), 0);
   const badge = document.getElementById('adm-unread'); badge.textContent = String(unread); badge.hidden = !unread;
   if (!_msgThreads.length) { host.innerHTML = '<div class="msg-empty">No texts yet. Tap the chat icon on a lead, or wait for the first one to write in.</div>'; return; }
-  host.innerHTML = _msgThreads.map(t =>
-      '<div class="msg-row' + (t.unread ? ' unread' : '') + '" onclick="openThread(\'' + esc(t.number) + '\',\'' + esc(t.name || '') + '\')">' +
+  host.innerHTML = _msgThreads.map((t, i) =>
+      '<div class="msg-row' + (t.unread ? ' unread' : '') + '" role="button" tabindex="0" data-thread-index="' + i + '">' +
         '<div class="msg-ava">' + esc(_msgInitial(t)) + '</div>' +
         '<div class="msg-main"><div class="msg-title"><b>' + esc(t.name || t.number) + '</b><small>' + esc(_msgWhen(t.updatedAt)) + '</small></div>' +
-        '<div class="msg-last">' + esc(_msgLast(t.last)) + '</div></div>' +
-        (t.unread ? '<span class="msg-dot"></span>' : '') +
-      '</div>').join('');
+        '<div class="msg-last">' + (t.blocked ? 'Blocked. ' : '') + esc(_msgLast(t.last)) + '</div></div>' +
+        (t.unread ? '<span class="msg-dot"></span>' : '') + '</div>').join('');
+  host.querySelectorAll('[data-thread-index]').forEach(row => {
+    const t = _msgThreads[Number(row.dataset.threadIndex)];
+    row.onclick = () => openThread(t.number, t.name || '');
+    row.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); row.click(); } };
+  });
 }
+
 async function openThread(number, name) {
   _msgOpen = { number, name: name || '' };
   document.getElementById('msg-list').hidden = true;
@@ -3074,21 +3108,21 @@ async function loadThread(number, quiet) {
 }
 function paintThread(t, quiet) {
   const box = document.getElementById('msg-scroll'); if (!box) return;
-  if (_msgOpen) { _msgOpen.blocked = !!t.blocked; _msgOpen.consent = t.consent; if (t.name) _msgOpen.name = t.name; }
+  if (_msgOpen) { _msgOpen.blocked = !!t.blocked; _msgOpen.consent = t.consent; if (!_msgOpen.renaming) _msgOpen.name = t.name || '';  }
   const nameInput = document.getElementById('msg-name');
-  if (document.activeElement !== nameInput) nameInput.value = (_msgOpen && _msgOpen.name) || '';
+  if (document.activeElement !== nameInput && !(_msgOpen && _msgOpen.renaming)) nameInput.value = (_msgOpen && _msgOpen.name) || '';
   document.getElementById('msg-block').textContent = t.blocked ? 'Unblock' : 'Block';
   document.getElementById('msg-call').disabled = !!t.blocked;
   const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
     box.innerHTML = (t.messages || []).map(m => m.kind === 'call'
       ? '<div class="msg-call-line">' + (m.dir === 'out' ? 'Maya called' : 'They called Maya') + (m.seconds ? ', ' + Math.max(1, Math.round(m.seconds / 60)) + ' min' : '') + ' <span>' + esc(_msgWhen(m.ts)) + '</span>' + (m.text ? '<small>' + esc(m.text) + '</small>' : '') + '</div>'
-      : '<div class="bub ' + (m.dir === 'out' ? 'out' : 'in') + '">' + esc(m.text || '') + '<div class="bub-when">' + esc(_msgWhen(m.ts)) + (m.dir === 'out' && m.status ? ', ' + esc(m.status) : '') + '</div></div>'
-    ).join('') || '<div class="msg-empty">Nothing here yet. The first text asks if it is okay to text them; Maya waits for their answer before anything else goes out.</div>';
+      : '<div class="bub ' + (m.dir === 'out' ? 'out' : 'in') + '">' + esc(m.text || '') + '<div class="bub-when">' + esc(_msgWhen(m.ts)) + (m.dir === 'out' && m.status ? ', ' + esc(m.status) + (m.errorCode ? ' (carrier error ' + esc(m.errorCode) + ')' : '') : '') + '</div></div>'
+    ).join('') || '<div class="msg-empty">No messages yet. Send a text to start the conversation.</div>';
     if (!quiet || atBottom) box.scrollTop = box.scrollHeight;
     const c = document.getElementById('msg-consent');
-    c.textContent = t.blocked ? 'Blocked. Unblock to call or text.' : t.consent === 'stop' ? 'They asked for no more texts. Calls are still fine.' : t.consent === 'asked' ? 'Waiting for their okay to keep texting.' : t.consent === 'yes' ? '' : 'The first text asks if it is okay to text them.';
+    c.textContent = t.blocked ? 'Blocked. Unblock to call or text.' : t.consent === 'stop' ? 'They asked for no more texts. Calls are still fine.' : t.consent === 'asked' ? 'Consent request sent; no reply recorded.' : t.consent === 'yes' ? '' : 'Only text people who have agreed to hear from the studio.';
     document.getElementById('msg-input').disabled = !!t.blocked || t.consent === 'stop';
-    document.querySelector('.msg-send').disabled = !!t.blocked || t.consent === 'stop';
+    document.querySelector('.msg-send').disabled = _msgSending || !!t.blocked || t.consent === 'stop';
 }
 async function msgSend() {
   if (!_msgOpen || _msgOpen.blocked || _msgSending) return;
@@ -3100,7 +3134,7 @@ async function msgSend() {
       body: JSON.stringify({ to: target.number, text, name: target.name || '' }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.ok) throw new Error(j.why || j.error || ('send ' + r.status));
-    if (_msgOpen && _msgOpen.number === target.number) { inp.value = ''; await loadThread(target.number); }
+    if (_msgOpen && _msgOpen.number === target.number) { inp.value = ''; await loadThread(target.number); if (j.warning) { document.getElementById('msg-consent').textContent = j.warning; alert(j.warning); } }
   } catch (e) { document.getElementById('msg-consent').textContent = String(e.message); }
   _msgSending = false; btn.disabled = !!(_msgOpen && (_msgOpen.blocked || _msgOpen.consent === 'stop'));
 }
@@ -3116,8 +3150,10 @@ async function msgRename() {
   if (!_msgOpen) return;
   const name = document.getElementById('msg-name').value.trim();
   if (name === (_msgOpen.name || '')) return;
+  const target = _msgOpen; target.renaming = true;
   try { const number = await msgUpdate('name',{name}); if (_msgOpen && _msgOpen.number === number) _msgOpen.name = name; }
   catch(e) { document.getElementById('msg-consent').textContent = e.message; }
+  finally { target.renaming = false; }
 }
 async function msgBlock() {
   if (!_msgOpen) return;
@@ -3129,10 +3165,25 @@ async function msgDelete() {
   try { const number = await msgUpdate('delete'); if (_msgOpen && _msgOpen.number === number) msgBack(); }
   catch(e) { document.getElementById('msg-consent').textContent = e.message; }
 }
+async function msgCheckDelivery() {
+  if (!_msgOpen) return;
+  const number = _msgOpen.number;
+  const status = document.getElementById('msg-consent');
+  status.textContent = 'Checking carrier delivery...';
+  try {
+    const r = await fetch('/api/admin/messages/check-delivery', { method:'POST', headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({number}) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'Delivery lookup failed.');
+    if (_msgOpen && _msgOpen.number === number) {
+      await loadThread(number);
+      status.textContent = j.warning || (j.checked ? 'Carrier statuses updated below.' : 'No outgoing texts to check.');
+    }
+  } catch(e) { status.textContent = e.message; }
+}
 async function msgCall() {
   if (!_msgOpen) return;
   const who = _msgOpen.name || _msgOpen.number;
-  if (_msgOpen.blocked || !confirm('Do you want to call ' + who + '?')) return;
+  if (_msgOpen.blocked || !confirm('Do you want Maya to call ' + who + '?')) return;
   const reason = '';
   await _mayaCallClient(_msgOpen.number, _msgOpen.name || '', reason || '');
 }
@@ -3152,7 +3203,7 @@ function leadOpenThread(i) {
 }
 function leadMayaCall(i) {
   const x = _leadList[i]; if (!x || !x.phone) return;
-  if (!confirm('Do you want to call ' + (x.name || x.phone) + '?')) return;
+  if (!confirm('Do you want Maya to call ' + (x.name || x.phone) + '?')) return;
   const reason = '';
   leadContact(i, 'call');
   toggleDrawer(true); admTab('messages'); openThread(x.phone, x.name || '');
@@ -3161,7 +3212,7 @@ function leadMayaCall(i) {
 // the unread badge stays honest even while the Systems tab shows
 setInterval(() => { if (_idTok && _msgTab !== 'messages') loadThreads(); }, 60000);
 // this module is sealed in an IIFE; the drawer's onclicks need these on window
-Object.assign(window, { msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, leadOpenThread, leadMayaCall, loadThreads, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
+Object.assign(window, { loadMayaLogs, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, leadOpenThread, leadMayaCall, loadThreads, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
 function leadContact(i, type) {
   const x = _leadList[i]; if (!x || !x.email) return;
   fetch('/api/admin/lead-note', {

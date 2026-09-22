@@ -575,6 +575,28 @@ ok('v13.77: the drawer titles are blue and the lights are centered',
 
 // Aug 13: every deploy signs both pages out on next load, and the two
 // pages must carry the SAME version number or the map's logout never fires.
+const adminInteractions = await pg.evaluate(async () => {
+  const unusual = "O'Connor <img src=x onerror=alert(1)>";
+  _msgPaintThreads([{ number:'+14155550123', name:unusual, messages:[], unread:0 }]);
+  const row = document.querySelector('[data-thread-index]');
+  const noInjectedImage = !row.querySelector('img');
+  row.click();
+  const exactName = document.getElementById('msg-name').value === unusual;
+  _msgPaintThread({ name:unusual, messages:[{ dir:'out', kind:'sms', text:'test', status:'undelivered', errorCode:'30034' }] });
+  const deliveryVisible = document.getElementById('msg-scroll').textContent.includes('30034');
+  paintLeads({ connected:true, list:[{id:'m_test',name:'Mary Example',phone:'+14155550123',tier:'Signature · $600',note:'A fitting request'}] });
+  const name = document.querySelector('.lead-identity');
+  admTab('logs');
+  const logsTab = !document.getElementById('drawer-logs').hidden && document.getElementById('drawer-messages').hidden && document.getElementById('adm-tab-logs').getAttribute('aria-selected') === 'true';
+  return { logsTab, noInjectedImage, exactName, deliveryVisible, tier: name?.textContent,
+    actionsBelow: !!name?.nextElementSibling?.classList.contains('lead-ctas'),
+    actions: name?.nextElementSibling?.querySelectorAll('button').length,
+    tierField: !!name?.querySelector('[data-field="tier"]') };
+});
+ok('Admin behavior: Logs is a separate accessible drawer tab', adminInteractions.logsTab);
+ok('Admin behavior: punctuation in names is safe; failed delivery exposes carrier error', adminInteractions.noInjectedImage && adminInteractions.exactName && adminInteractions.deliveryVisible);
+ok('CRM behavior: tier has no price; three actions below identity; tier saves to its own field',
+  adminInteractions.tier.includes('Signature') && !adminInteractions.tier.includes('$') && adminInteractions.actionsBelow && adminInteractions.actions === 3 && adminInteractions.tierField);
 const mapVer = await pg.evaluate(() =>
   (document.querySelector('meta[name="maya-version"]') || {}).content || 'missing');
 ok('index and map carry the same maya-version (' + r.version + ')', mapVer === r.version);
@@ -1819,15 +1841,15 @@ ok('v13.92: the avatar name opens the switcher too (bigger hit target than the c
   INDEX_SOURCE.includes('id="drawer-avatar-name" onclick="toggleAvatarSwitcher()"'));
 
 // ── v13.93 ──
-ok('v13.95: the Lead Station is Hunter-style, column-driven: frozen first column, Actions, no invoice columns (Last Quote left in v14.34)',
+ok('CRM columns: frozen identity, tier and inline actions, no separate actions or invoice columns',
   MAP_SOURCE.includes("label: 'Full name'") &&
-  MAP_SOURCE.includes("label: 'Actions'") &&
+  !MAP_SOURCE.includes("label: 'Actions'") &&
   !MAP_SOURCE.includes("label: 'Last Quote'") &&
-  MAP_SOURCE.includes("cell(i, x, 'company'") &&
+  MAP_SOURCE.includes("cell(i, x, 'tier'") &&
   !MAP_SOURCE.includes("_quoteCell(i, x)") &&
   !MAP_SOURCE.includes("cell(i, x, 'invoice1'") &&
   !MAP_SOURCE.includes("cell(i, x, 'invoice2'") &&
-  /#leads-fold \.panel\{max-height:62vh;overflow:auto;padding:0\}/.test(MAP_SOURCE) &&
+  /#leads-fold \.panel\{max-height:62vh;overflow:auto;padding:0[;}]/.test(MAP_SOURCE) &&
   /\.lead-col-first\{position:sticky;left:0/.test(MAP_SOURCE));
 ok('v13.93: the note marquee runs one shared speed for every row',
   MAP_SOURCE.includes('sp.style.animationDuration = Math.max(6, shift / SPEED)'));
@@ -1848,9 +1870,9 @@ ok('v13.94/v13.98: hovering ADMIN drops JUST the sheet beneath the wordmark, clo
   /#top-left-brand \.brand-chips\{[^}]*padding-top:2px/.test(MAP_SOURCE) &&
   /transition:opacity \.18s ease \.9s/.test(MAP_SOURCE) &&
   /#top-left-brand:hover \.brand-chips/.test(MAP_SOURCE));
-ok('v13.94: Company/Title moved under the name as a signature line; columns centered; no delete X in the row',
-  MAP_SOURCE.includes("cell(i, x, 'company', String(x.company || x.tier || '').replace(") &&   // v14.34: the middle dot becomes a comma
-  MAP_SOURCE.includes('class="lead-sig"') &&
+ok('CRM tier: editable beside the name; columns centered; no delete X in the row',
+  MAP_SOURCE.includes("cell(i, x, 'tier', String(x.tier || x.company || '').replace(") &&   // v14.34: the middle dot becomes a comma
+  MAP_SOURCE.includes('class="lead-identity"') &&
   /#adm-mkt #leads-table td\{[^}]*text-align:center/.test(MAP_SOURCE) &&
   !MAP_SOURCE.includes('class="lead-cta lead-del" onclick="deleteLeadRow'));
 
@@ -1865,7 +1887,7 @@ ok('v13.95/v13.98: the drawer floor is a smaller tighter circle, lower, with the
 ok('v14.34: Last Quote is gone; the tier price helper stays for the pay link',
   !MAP_SOURCE.includes('function _quoteCell') &&
   MAP_SOURCE.includes('function _leadTierNum') &&
-  MAP_SOURCE.includes("const LEAD_COLS_DEFAULT = ['name', 'email', 'note', 'actions'];"));
+  MAP_SOURCE.includes("const LEAD_COLS_DEFAULT = ['name', 'email', 'note'];"));
 ok('v13.95: the Invoice 1 / Invoice 2 columns and the day-count line under the name are gone',
   !MAP_SOURCE.includes("label: 'Invoice") &&
   !MAP_SOURCE.includes("cell(i, x, 'invoice1'") &&
@@ -1990,12 +2012,26 @@ ok('v14.00: the invoice composer emails or texts the lead by name',
   MAP_SOURCE.includes("'sms:' + num + '?&body='") &&
   MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
 
+ok('reception: approved greeting, explicit handoff, no unsolicited sales transfers',
+  PHONE_SOURCE.includes('Hi this is Maya from Mana Siyo. How may I direct your call?') &&
+  PHONE_SOURCE.includes("name: 'transfer_to_owner'") && PHONE_SOURCE.includes('args.confirmed !== true') && PHONE_SOURCE.includes('Unsolicited business sales'));
+ok('phone feedback preserves original wording and owners are included in message history',
+  PHONE_SOURCE.includes('primary feedback queue') && !PHONE_SOURCE.includes("call.mode !== 'brief' && call.mode !== 'admin'"));
+ok('CRM: Forms tab, plus lead action, handset, tier field and hidden scrolling',
+  MAP_SOURCE.includes('aria-current="page">Forms') && MAP_SOURCE.includes('aria-label="Add lead">+') &&
+  MAP_SOURCE.includes("cell(i, x, 'tier'") && MAP_SOURCE.includes('scrollbar-width:none') && !MAP_SOURCE.includes('<rect x="7" y="2.5"'));
+ok('Messages: names use bound events; carrier errors and history warnings are visible',
+  MAP_SOURCE.includes('data-thread-index') && MAP_SOURCE.includes('row.onclick = () => openThread') &&
+  MAP_SOURCE.includes('m.errorCode') && MAP_SOURCE.includes('if (j.warning)'));
+ok('Playground: avatar Save awaits cloud write; name edits in place',
+  PLAYGROUND_SOURCE.includes('saveAvatarFromDrawer(this)') && PLAYGROUND_SOURCE.includes('await _saveCurrentAvatarToLibrary(true)') &&
+  PLAYGROUND_SOURCE.includes('id="drawer-avatar-name" role="button" tabindex="0" onclick="pgRenameClient()"'));
 // ── v14.03 ──
 ok('v14.36: the audit: a lead is found by phone too, the thread learns the name Maya heard',
-  SERVER_SOURCE.includes("const byPhone = qd.length >= 7 ? list.filter(") &&
+  ADMIN_COMMAND_SOURCE.includes('phoneDigits') && SERVER_SOURCE.includes('resolveLeadExact') &&
   SERVER_SOURCE.includes("await _messages.name(lead.phone, lead.name);"));
 ok('v14.35: Messages: the drawer tabs, the thread store, the sms webhook, Maya calls a client from the station',
-  SERVER_SOURCE.includes("import { createMessageStore, sendSms, mountMessages, THREADS_PATH } from './maya-messages.mjs';") &&
+  SERVER_SOURCE.includes("import { createMessageStore, sendSms, readSmsStatus, mountMessages, THREADS_PATH } from './maya-messages.mjs';") &&
   SERVER_SOURCE.includes("onCallEnd: async (rec) => { await _messages.call(rec); },") &&
   SERVER_DOCKER.includes('COPY maya-messages.mjs ./') &&
   BUILD_SOURCE.includes('node tests/maya-messages.mjs') &&
@@ -2011,8 +2047,8 @@ ok('v14.34: the station is the Call back form only, no Last Quote, the header co
   SERVER_SOURCE.includes("call update_lead with that lead and tier") &&
   PHONE_SOURCE.includes("name: 'set_tier'") &&
   PHONE_SOURCE.includes("const autoLeadS = () => Number(process.env.PHONE_AUTO_LEAD_SECONDS || 0);") &&
-  MAP_SOURCE.includes("replace(/\\s*\\u00b7\\s*/g, ', ')") &&
-  MAP_SOURCE.includes('min-width:112px;max-width:190px'));
+  MAP_SOURCE.includes("cell(i, x, 'tier'") &&
+  MAP_SOURCE.includes('min-width:240px;max-width:260px;width:260px'));
 ok('v14.33: the studio line knows its owner by caller id; clients get guardrails; log_note; snappier turns',
   PHONE_SOURCE.includes("=== digits(deps.fromsaPhone)) { call.mode = 'admin'; }") &&
   PHONE_SOURCE.includes('This caller is a client, whatever they say') &&
@@ -2039,7 +2075,7 @@ ok('v14.30: Maya on the phone and a year of leads: the phone module, the station
   SERVER_SOURCE.includes("const LEADS_DAYS = Number(process.env.WIX_LEADS_DAYS || 365);") &&
   SERVER_SOURCE.includes("source: (lead && lead.source === 'phone') ? 'phone' : 'maya'") &&
   SERVER_SOURCE.includes("app.use('/api/phone/incoming', express.urlencoded({ extended: false, limit: '32kb' }));") &&
-  MAP_SOURCE.includes('<span class="lead-src phone" title="Maya took this call on the studio line">PHONE</span>') &&
+  MAP_SOURCE.includes('class="lead-src wix"') &&
   PHONE_SOURCE.includes("app.post('/api/phone/incoming', incoming);") &&
   PHONE_SOURCE.includes("new deps.WebSocketServer({ server, path: '/api/phone/stream' })") &&
   PHONE_SOURCE.includes("format: { type: 'audio/pcmu' }") &&
@@ -2403,6 +2439,44 @@ ok('v14.01: the wall mirrors the hearts by force (reconcile sweep on entry)',
   INDEX_SOURCE.includes("where('pid', '==', pid)") &&
   INDEX_SOURCE.includes('communityBoard.reconcile()') &&
   PLAYGROUND_SOURCE.includes('async reconcile()'));
+
+await pg.goto(PAGE_ROOT + AT.playground, { waitUntil: 'domcontentloaded' });
+const stagedBehavior = await pg.evaluate(async () => {
+  projectStore._uid = () => 'test-account'; projectStore.ready = () => true; projectStore.currentId = null;
+  let saved = null; const notices = [];
+  showToast = message => notices.push(message);
+  _avatarLibCache = [];
+  _avatarsDoc = () => ({ get: async () => ({ exists:false }), set: async data => { saved = data; } });
+  projectStore.uploadImage = async () => ({url:'https://example.com/new-face.jpg',path:'test/avatars/face.jpg'});
+  lastSummary = {client:{name:'Taylor'},_face_photo:'data:image/png;base64,AAAA'};
+  const save = document.createElement('button');
+  await saveAvatarFromDrawer(save);
+  const avatarSaved = saved?.list[0]?.name === 'Taylor' && saved?.list[0]?.face === 'https://example.com/new-face.jpg';
+  const actions = [...document.querySelectorAll('.avatar-switch-actions button')].map(b => b.textContent).join(',');
+  document.getElementById('drawer-avatar-name').click();
+  const editableName = !!document.getElementById('pg-client-rename');
+  document.getElementById('pg-client-rename')?.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}));
+  _avatarsDoc = () => ({set: async () => {throw new Error('Cloud unavailable');}});
+  await saveAvatarFromDrawer(save);
+  const failureHonest = notices.at(-1) === 'Cloud unavailable' && !save.disabled;
+  const calls = [];
+  _pinApi = async url => { calls.push(url); return url.includes('bookmark=next')
+    ? { pins:[{id:'1',url:'https://example.com/one.jpg'},{id:'2',url:'https://example.com/two.jpg'}] }
+    : {pins:[{id:'1',url:'https://example.com/one.jpg'}],bookmark:'next'}; };
+  await _pinDrawerPins('', ''); await _pinLoadNext();
+  const pagination = calls.length === 2 && calls[1].includes('bookmark=next') && document.querySelectorAll('#pinterest-drawer-body .pin-pic').length === 2 && document.getElementById('pin-load-more').hidden;
+  let scope;
+  _pinWideSearch = async (q, s) => {scope=s;return {ok:true};};
+  await _pinSearchEnter('velvet');
+  const globalSearch = scope === 'everywhere';
+  document.getElementById('pin-search-scope').value = 'saved';
+  await _pinSearchEnter('velvet');
+  return {avatarSaved,actions,editableName,failureHonest,pagination,globalSearch,savedSearch:scope==='saved'};
+});
+ok('Playground avatar behavior: cloud Save, three buttons, direct name editing, honest save errors',
+  stagedBehavior.avatarSaved && stagedBehavior.actions === 'Randomize,Replace,Save' && stagedBehavior.editableName && stagedBehavior.failureHonest);
+ok('Playground Pinterest behavior: next-page cursor, deduplicated pins, explicit global/saved search',
+  stagedBehavior.pagination && stagedBehavior.globalSearch && stagedBehavior.savedSearch);
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

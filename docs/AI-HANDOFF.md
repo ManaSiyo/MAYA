@@ -76,20 +76,39 @@ The fabric sourcing revamp shipped in v13.44; see that section below.
 
 ## v14.36 (Claude): the audit
 
-September 21 current state supersedes the September 19 next step below. See
-`AUDIT-2026-09-21.md`: live phone inbox now read successfully, including Sep 21
-Respond faster and Sep 19 Logs/usage/history/dropped-call requests, all open.
-Four unfinished behavior files remain uncommitted: backend/status.html,
-docs/server/maya-messages.mjs, docs/server/server.js, tests/maya-messages.mjs.
-They contain compact CRM/drawer UI and Messages rename/block/delete/status,
-deduplication and conditional storage writes. They are NOT release-ready.
-Validation: Messages 29 pass; phone 37 pass/3 stale expectation failures; app
-regression 419 pass/6 failures; admin command 6, UI contract 11, routing 7,
-proxy 27, smoke all pass. Audit documents preserve exact open findings.
-Next: finish draft correctness/behavior coverage, then Logs and durable phone
-request handling. Wix is primary site analytics; GA4 is not a replacement.
-Owner presses Push after receiving exact changes and verification. No secrets,
-production configuration, live deletion or feature-completion markings changed.
+September 21 implementation, LOCAL ONLY, supersedes the earlier audit next step.
+Base HEAD was 5e9c0d9 (Improve message drawer and lead actions); those previous
+"uncommitted draft" files were committed before this turn. Current edits are
+uncommitted. No push, release bump, credentials, provider settings or live calls.
+Exact review and remaining work: `REVIEW-2026-09-21.md`.
+
+Changed: backend/status.html (compact tier/actions, handset, plus, safe Messages
+names, delivery diagnostics, Logs tab); maya-phone.mjs (approved greeting,
+customer transfer tool, blocked incoming calls, owner history, early audio,
+signed caller/context binding and durable outbound briefing); new
+maya-transfer.mjs (fixed owner, press-1 acceptance, decline/no-answer fallback);
+maya-messages.mjs (early status callback recovery, carrier lookup, visible blocked
+tombstones); new maya-feedback.mjs (atomic source+wording, generation retries,
+no silent truncation of old requests); server.js wiring; Dockerfile and Cloud
+Build module/test entries. Playground only: explicit avatar Save, name edit,
+current avatar preview, saved-pin pagination and global/saved search selector.
+frontend/index.html has NOT been promoted or modified.
+
+Validation: phone 48 passed; Messages 33 passed; transfer and feedback suites
+passed; browser 435 assertions passed (including the final
+layout and staged behavior checks); admin command 6, UI contract 11, MCP 11 and API smoke
+all pass. Local screenshots use invented contacts. No live audio, transfer,
+SMS receipt, real Firestore/GCS write or provider-access verification claimed.
+
+Next: read the review and finish remaining alert/integration work. Instant Wix
+form call+SMS requires an authenticated event subscription; current Wix reader
+is a ten-minute cache refreshed on demand, not an instant event source. Direct
+Google/Meta authorization and replacing Windsor, extensive Wix analytics,
+actual cost reconciliation, voice quality measurements and stronger owner auth
+remain open. Do not claim the entire requested release is complete. The owner
+publishes the studio number on Wix manually; no Maya contact page is requested.
+Feedback given directly to Maya is the primary request queue; logging is not
+implementation or permission to silently deploy. Preserve the original wording.
 
 September 19 current audit: see `AUDIT-2026-09-19.md`. Owner requests economics
 before any push, natural faster voice, an active CRM and direct Google/Meta
