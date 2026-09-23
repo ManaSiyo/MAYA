@@ -143,7 +143,7 @@ try {
   .adm-tab:hover{opacity:0.9;transform:translateY(-1px)}
   .adm-tab.on{opacity:1;border-color:rgba(255,255,255,0.62);box-shadow:0 0 0 1px rgba(255,255,255,0.10)}
   .adm-tab.on::after{content:'';position:absolute;left:50%;bottom:-9px;margin-left:-5px;border:5px solid transparent;border-top-color:rgba(255,255,255,0.34)}
-  .adm-tab svg{width:17px;height:17px}
+  .adm-tab svg{width:17px;height:17px;flex:none;aspect-ratio:1}
   #adm-tabtitle{flex:1;min-width:0;text-align:left;padding-left:4px;font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:400;text-transform:uppercase;letter-spacing:0.04em;color:rgba(245,250,255,0.92)}
   .msg-name{width:100%;border:0;background:transparent;font-family:inherit;padding:0;outline-offset:3px}
   .msg-name:focus{outline:1px solid rgba(169,201,255,0.65);border-radius:4px}
@@ -523,12 +523,12 @@ try {
   #top-left-brand:hover .brand-chips,#top-left-brand .brand-chips:hover{opacity:1;pointer-events:auto;transition-delay:0s}
   /* Mana rooms remain reachable during pointer travel and keyboard focus. */
   .card-mana{position:relative}
-  .card-mana .mana-chips{position:absolute;left:50%;top:100%;transform:translateX(-50%);z-index:20;
-    display:flex;gap:6px;white-space:nowrap;padding-top:8px;
+  .card-mana .mana-chips{position:absolute;right:100%;top:50%;transform:translateY(-50%);z-index:20;
+    display:flex;gap:6px;white-space:nowrap;padding-right:10px;
     opacity:0;visibility:hidden;transition:opacity .18s ease 1s,visibility 0s linear 1.18s}
   .card-mana:hover .mana-chips,.card-mana:focus-within .mana-chips,.card-mana .mana-chips:hover{
     opacity:1;visibility:visible;transition-delay:0s}
-  @media(max-width:900px){.card-mana .mana-chips{right:auto;left:0;top:100%;transform:none;flex-direction:column;align-items:flex-start;padding:8px 0 0;z-index:20;background:rgba(8,12,26,.96);border-radius:12px}}
+  @media(max-width:640px){.card-mana .mana-chips{flex-direction:column;align-items:flex-end;gap:4px}}
   .warn{margin-top:22px;border:0.5px solid rgba(253,164,175,0.3);border-radius:12px;padding:11px 15px;
         font-size:12px;color:var(--rose);background:rgba(253,164,175,0.06)}
   .money{margin-top:14px;font-size:12px;color:var(--dim);line-height:1.8}
@@ -814,7 +814,6 @@ try {
   .affiliates-view #adm-scroll > .wrap > :not(#affiliate-profile):not(#signin-panel):not(#adm-mkt),
   .affiliates-view #adm-mkt > :not(#leads-fold),.affiliates-view #ticker-bar{display:none!important}
   .affiliates-view #adm-scroll{padding-top:100px}
-  .affiliate-back{display:block;text-align:left;color:var(--dim);font:11px 'Jost',sans-serif;text-decoration:none}
   .affiliate-avatar{width:116px;height:116px;border-radius:50%;margin:20px auto 12px;display:grid;place-items:center;border:1px solid rgba(169,201,255,.6);background:radial-gradient(circle at 35% 25%,#294c75,#091527);color:#dbe8ff;font:46px 'Cormorant Garamond',serif;box-shadow:0 0 40px #5f9fe51c}
   #affiliate-profile h1{font-weight:400;font-size:36px;margin:6px 0}
   .affiliate-beta{font:10px 'Jost',sans-serif;letter-spacing:.18em;color:var(--amber);text-transform:uppercase}
@@ -825,6 +824,10 @@ try {
   .affiliate-stat strong{display:block;font:30px 'Cormorant Garamond',serif;color:var(--ink)}
   .affiliate-stat span{font:9px 'Jost',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
   .affiliates-view #adm-mkt{margin-top:0}
+  .affiliates-view #top-left-brand .brand-chips,.affiliates-view #adm-tab-systems,.affiliates-view #adm-tab-logs{display:none!important}
+  #leads-bar button.lead-tool{font-size:12.5px;line-height:1;width:32px;height:26px;padding:0}
+  .lead-stage{background:transparent;color:var(--dim);border:0;font:9px Jost,sans-serif;max-width:86px}
+  .lead-stage option{background:#0d1120}
   @media(max-width:640px){.affiliate-stats{grid-template-columns:repeat(2,1fr)}.affiliates-view #adm-scroll{padding-top:80px}.affiliate-avatar{width:96px;height:96px}}
 </style>
 </head>
@@ -909,7 +912,7 @@ if (IS_AFFILIATES) {
        row is ordered first by CSS; it sits here so the lights stay where the
        older checks expect them. -->
   <div id="adm-tabrow" role="tablist">
-    <button class="adm-tab on" id="adm-tab-systems" onclick="admTab('systems')" role="tab" aria-selected="true" aria-label="Systems" title="Systems"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m9 3-1 3-3 1 1 3-2 2 2 2-1 3 3 1 1 3h6l1-3 3-1-1-3 2-2-2-2 1-3-3-1-1-3z"/><circle cx="12" cy="12" r="3"/></svg></button>
+    <button class="adm-tab on" id="adm-tab-systems" onclick="admTab('systems')" role="tab" aria-selected="true" aria-label="Systems" title="Systems"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22.000 12.000L21.808 13.951L19.391 15.061L18.652 16.445L19.071 19.071L17.556 20.315L15.061 19.391L13.561 19.846L12.000 22.000L10.049 21.808L8.939 19.391L7.555 18.652L4.929 19.071L3.685 17.556L4.609 15.061L4.154 13.561L2.000 12.000L2.192 10.049L4.609 8.939L5.348 7.555L4.929 4.929L6.444 3.685L8.939 4.609L10.439 4.154L12.000 2.000L13.951 2.192L15.061 4.609L16.445 5.348L19.071 4.929L20.315 6.444L19.391 8.939L19.846 10.439Z"/><circle cx="12" cy="12" r="3"/></svg></button>
     <button class="adm-tab" id="adm-tab-messages" onclick="admTab('messages')" role="tab" aria-selected="false" aria-label="Messages" title="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path fill="currentColor" stroke="none" d="M12 3C6.5 3 2 6.6 2 11c0 2.6 1.6 4.9 4 6.4L5 21l4.4-2.3c.8.2 1.7.3 2.6.3 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg><span class="adm-unread" id="adm-unread" hidden>0</span></button><button class="adm-tab" id="adm-tab-logs" onclick="admTab('logs')" role="tab" aria-selected="false" aria-label="Logs" title="Logs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18H5zM8 7h8M8 11h8M8 15h5"/></svg></button><span id="adm-tabtitle">Systems</span>
   </div>
   <div id="drawer-logs" hidden><div class="msg-controls"><button onclick="loadMayaLogs()">Refresh logs</button></div><p class="note">Feedback given to Maya, in the original wording. Logged requests remain open until marked shipped.</p><div id="maya-logs-list" aria-live="polite"></div></div>
@@ -1014,15 +1017,14 @@ if (IS_AFFILIATES) {
 
 
   <section id="affiliate-profile" aria-label="Affiliates dashboard">
-    <a class="affiliate-back" href="/status.html">&#8592; Admin</a>
     <div class="affiliate-avatar" aria-label="Fromsa profile">F</div>
     <div class="affiliate-beta">Affiliates</div>
     <h1>Fromsa</h1>
     <div class="affiliate-stats">
-      <div class="affiliate-stat"><strong id="affiliate-total">&#183;</strong><span>Leads loaded</span></div>
+      <div class="affiliate-stat"><strong id="affiliate-total">&#183;</strong><span>Total leads</span></div>
       <div class="affiliate-stat"><strong id="affiliate-week">&#183;</strong><span>New this week</span></div>
-      <div class="affiliate-stat"><strong id="affiliate-phone">&#183;</strong><span>With a phone</span></div>
-      <div class="affiliate-stat"><strong id="affiliate-notes">&#183;</strong><span>With notes</span></div>
+      <div class="affiliate-stat"><strong id="affiliate-contacted">&#183;</strong><span>Contacted</span></div>
+      <div class="affiliate-stat"><strong id="affiliate-closed">&#183;</strong><span>Closed</span></div>
     </div>
     <p id="affiliate-status" role="status" aria-live="polite">Sign in with your admin account to load leads.</p>
   </section>
@@ -1424,6 +1426,7 @@ async function markFeatureDone(btn){
 // keeps the browser back-swipe from ever firing. Maya can call this too, so
 // "open the drawer" / "close the drawer" and an auto-open on a confirm both work.
 function toggleDrawer(force) {
+  if (IS_AFFILIATES) admTab('messages');
   const hs = document.getElementById('adm-hscroll');
   if (!hs) return;
   const max = hs.scrollWidth - hs.clientWidth;
@@ -2799,7 +2802,7 @@ function _actionsCell(i, x){
     (x.phone ? '<button class="lead-cta" onclick="leadOpenThread(' + i + ')" aria-label="Text" title="Text ' + esc(x.phone) + ' from the drawer">' + CHAT_SVG + '</button>' : '') +
     '<button class="lead-cta lead-pay' + (paid ? ' has-link' : '') + '" onclick="leadInvoice(' + i + ')" aria-label="Invoice" title="' +
       (paid ? 'Pay link ready: view, copy or add it to the email' : 'Invoice this lead: build a pay link in one click') + '">' + PAY_SVG + '</button>' +
-  '</div>';
+  '<select class="lead-stage" aria-label="Lead status" onchange="setLeadStage(' + i + ',this)">' + ['new','contacted','closed'].map(stage=>'<option value="'+stage+'"'+((x.stage || (x.lastContact ? 'contacted' : 'new'))===stage?' selected':'')+'>'+stage[0].toUpperCase()+stage.slice(1)+'</option>').join('')+'</select></div>';
 }
 // v13.95: the column catalogue. `render` closes over the shared `cell`. The name
 // column carries the WIX badge and the signature line; order lives in localStorage.
@@ -3031,6 +3034,19 @@ function _leadCellKey(e, el) {
   if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
   else if (e.key === 'Escape') { el.textContent = el.dataset.orig || ''; el.blur(); }
 }
+async function setLeadStage(index, select) {
+  const lead = _leadList[index]; if (!lead) return;
+  const previous = lead.stage || (lead.lastContact ? 'contacted' : 'new');
+  const stage = select.value; select.disabled = true;
+  try {
+    const response = await fetch('/api/admin/lead-update', {method:'POST',headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({id:lead.id,stage})});
+    if (!response.ok) throw new Error('Lead status did not save.');
+    lead.stage = stage;
+    await loadMkt();
+  } catch (error) { select.value = previous; alert(error.message); }
+  finally { select.disabled = false; }
+}
+window.setLeadStage = setLeadStage;
 async function saveLeadField(el) {
   const id = el.dataset.id, field = el.dataset.field, i = el.dataset.idx;
   const val = (el.textContent || '').replace(/\s+/g, ' ').trim();
@@ -3091,6 +3107,7 @@ window.addLeadManual = addLeadManual;
 let _msgSending = false;
 let _msgTab = 'systems', _msgOpen = null, _msgTimer = null, _msgThreads = [];
 function admTab(t) {
+  if (IS_AFFILIATES) t = 'messages';
   if (!['systems','messages','logs'].includes(t)) return;
   _msgTab = t;
   document.getElementById('adm-tabtitle').textContent = t === 'messages' ? 'Messages' : t === 'logs' ? 'Logs' : 'Systems';
@@ -3593,7 +3610,7 @@ function clearAffiliateLeads(message) {
   if (window.MAYA_ADMIN_DATA?.marketing) delete window.MAYA_ADMIN_DATA.marketing.leads;
   document.querySelector('#leads-table tbody').replaceChildren();
   document.getElementById('leads-note').style.display = 'none';
-  for (const key of ['total','week','phone','notes']) document.getElementById('affiliate-'+key).textContent = '·';
+  for (const key of ['total','week','contacted','closed']) document.getElementById('affiliate-'+key).textContent = '·';
   document.getElementById('affiliate-status').textContent = message;
 }
 async function loadAffiliateLeads() {
@@ -3617,7 +3634,7 @@ async function loadAffiliateLeads() {
     paintLeads({...data,list:leads});
     const weekAgo = Date.now()-7*86400000;
     const stats = {total:leads.length,week:leads.filter(l=>new Date(l.ts).getTime()>=weekAgo && new Date(l.ts).getTime()<=Date.now()).length,
-      phone:leads.filter(l=>/^(?:1)?[2-9]\d{9}$/.test(String(l.phone||'').replace(/\D/g,''))).length,notes:leads.filter(l=>String(l.note||'').trim()).length};
+      contacted:leads.filter(l=>l.lastContact || l.stage==='contacted' || l.stage==='closed').length,closed:leads.filter(l=>l.stage==='closed').length};
     for (const [key,value] of Object.entries(stats)) document.getElementById('affiliate-'+key).textContent = value;
     status.textContent = data.why ? 'Some lead sources are unavailable.' : '';
   } catch (error) {

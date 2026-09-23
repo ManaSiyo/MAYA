@@ -76,14 +76,36 @@ The fabric sourcing revamp shipped in v13.44; see that section below.
 
 ## v14.36 (Claude): the audit
 
-September 22 late continuation: Affiliates opens in a new tab; its heading is
-Affiliates and its logo/wordmark return to Admin, not voice. Removed normal-state
-preview/count/subtitle copy. Reload is icon-only with aria label/title. Notes
-are left-aligned and vertically centered in a fixed-layout table so long notes
-cannot expand the entire table; existing note animation and sticky headers stay.
-Tests: Admin contract 11 passed and all nine inline scripts parse; browser cases
-added but not run because owner prohibits computer use. No push/commit. Desktop
-summary remains a file, docs/COMMIT-REVIEW.txt, per that restriction.
+September 22 22:59 request, CURRENT LOCAL work on top of owner commit 1a4184a:
+- status.html: Mana links restored to left with delayed dismissal; reload/plus
+  glyphs 39% larger; square nonshrinking gear. Affiliates removes extra Admin
+  link and brand flyout; logo still returns Admin. Its drawer opens Messages,
+  hiding Systems/Logs navigation. Stats: Total leads, New this week, Contacted,
+  Closed, counting the loaded list. Shared Lead Station now has a status selector.
+- server.js: admin-only lead update accepts new/contacted/closed and persists
+  manual records or Wix overrides. Closed is recorded explicitly, not inferred
+  from free text. Existing lastContact also counts as contacted.
+- frontend/index.html + playground/index.html: current name/pencil editable;
+  Randomize / Save / Replace. Explicit Save appends a UUID avatar in a cloud
+  transaction, preserving previous same-name avatars. Implicit project edits no
+  longer overwrite the roster. Unsaved current face appears in the dropdown.
+  Save guards project/account changes and reports failures. Signature is
+  non-enumerable so raw photo data is not duplicated in project serialization.
+  Wheel and pinch zoom increments halved, home snap narrowed. Frontend receives
+  Playground's paginated Pinterest saves and All Pinterest/My saves selector;
+  provider-unavailable searches offer an external Pinterest search link.
+  Playground-only flip/callout experiments preserved, not copied into frontend.
+- tests/profile-crm.mjs: 22 offline checks pass (actual extracted avatar and lead
+  functions, failed writes, account/project switches, inline JavaScript syntax).
+  Admin UI 11 and admin-command 6 pass; server syntax and git diff whitespace pass.
+  app-regression and maya-hands expectations updated, NOT browser-run because
+  owner forbids computer use. Visual validation remains outstanding.
+- No push, commit, deployment, computer use, live calls/SMS, paid AI requests,
+  credentials or environment changes. GitHub Desktop draft in COMMIT-REVIEW.txt.
+Next: owner reviews local changes and visual behavior before pushing. Native
+Pinterest-wide provider access remains unverified. Affiliates is still an
+admin-only preview, not a partner login/lead-assignment security implementation.
+
 Owner now wants the customer-facing SMS/callback program, not owner-only staging.
 No separate SMS checkbox exists yet. Owner prefers less visual clutter; explain
 alternative explicit opt-in methods without falsely promising approval for the
@@ -99,7 +121,7 @@ unverifiable compliant privacy policy, and Twilio error 30034. Inbound Sept 22
 URL/response is still needed; campaign rejection alone does not explain missing
 inbox storage. No need to retrieve or change the Cloud auth token for 30034.
 
-New LOCAL edits: status.html Mana hover moves below Mana, stays clickable for
+Earlier batch (superseded layout above): Mana hover moved below Mana, stayed clickable for
 one second on pointer departure (visibility transition fixes immediate pointer
 loss), supports focus-within; compact centered name/tier/actions, 10px icon
 artwork, left-aligned note text with existing ping-pong overflow, keyboard-focusable

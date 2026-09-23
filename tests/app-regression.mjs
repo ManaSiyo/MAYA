@@ -2012,7 +2012,7 @@ ok('v14.02: playground zoom v5 scales the canvas only, rAF-eased, floor 0.40 or 
   PLAYGROUND_SOURCE.includes('function measure()') &&
   PLAYGROUND_SOURCE.includes('zfloor = Math.min(MINZ, Math.max(0.12, fit))') &&
   PLAYGROUND_SOURCE.includes('raf = requestAnimationFrame(tick)') &&
-  PLAYGROUND_SOURCE.includes('if (zoomIn && next > 0.92) next = 1') &&
+  PLAYGROUND_SOURCE.includes('if (zoomIn && next > 0.98) next = 1') &&
   PLAYGROUND_SOURCE.includes('body.pg-zoomed #maya-canvas { overflow: visible') &&
   !PLAYGROUND_SOURCE.includes('function parkVoiceBar(') &&
   !PLAYGROUND_SOURCE.includes("host.style.overflowY = zoomed ? 'hidden' : ''") &&
@@ -2051,6 +2051,21 @@ ok('CRM: Forms tab, plus lead action, handset, tier field and hidden scrolling',
 ok('Messages: names use bound events; carrier errors and history warnings are visible',
   MAP_SOURCE.includes('data-thread-index') && MAP_SOURCE.includes('row.onclick = () => openThread') &&
   MAP_SOURCE.includes('m.errorCode') && MAP_SOURCE.includes('if (j.warning)'));
+ok('September 22: Mana links sit left, lead tools grow, gear stays square',
+  MAP_SOURCE.includes('.card-mana .mana-chips{position:absolute;right:100%;top:50%;') &&
+  MAP_SOURCE.includes('font-size:12.5px;line-height:1;width:32px;height:26px') &&
+  MAP_SOURCE.includes('flex:none;aspect-ratio:1'));
+ok('September 22: standalone Affiliates removes extra admin navigation and records real stages',
+  !MAP_SOURCE.includes('class="affiliate-back"') && MAP_SOURCE.includes('.affiliates-view #top-left-brand .brand-chips') &&
+  MAP_SOURCE.includes('id="affiliate-contacted"') && MAP_SOURCE.includes('id="affiliate-closed"') &&
+  MAP_SOURCE.includes('aria-label="Lead status"') && SERVER_SOURCE.includes("clean.stage = next.stage"));
+ok('September 22: frontend and Playground share explicit new-avatar Save, slower zoom and Pinterest scopes',
+  [INDEX_SOURCE, PLAYGROUND_SOURCE].every(source =>
+    source.includes('id:crypto.randomUUID()') && source.includes('runTransaction(async transaction') &&
+    source.includes('const merged = [record, ...list]') && source.includes('enumerable:false') &&
+    source.includes('pg-avatar-nameline:hover #drawer-avatar-rename') &&
+    source.includes('const step = 0.025') && source.includes('(d / pinchD - 1) * 0.5') &&
+    source.includes('id="pin-search-scope"') && source.includes('Open Pinterest search')));
 ok('Playground: avatar Save awaits cloud write; name edits in place',
   PLAYGROUND_SOURCE.includes('saveAvatarFromDrawer(this)') && PLAYGROUND_SOURCE.includes('await _saveCurrentAvatarToLibrary(true)') &&
   PLAYGROUND_SOURCE.includes('id="drawer-avatar-name" role="button" tabindex="0" onclick="pgRenameClient()"'));
@@ -2149,9 +2164,9 @@ ok('v14.26: demo readiness: fabric thumbnails, Pinterest answers in words, the v
   SERVER_SOURCE.includes("e.code = (err && err.name === 'TimeoutError') ? 'pinterest_timeout' : 'pinterest_unreachable';") &&
   SERVER_SOURCE.includes("code === 'pinterest_timeout' ? 504") &&
   SERVER_SOURCE.includes("? 'voice_credit' : 'voice_failed'") &&
-  PLAYGROUND_SOURCE.includes('#notes-drawer #drawer-avatar-rename { display: none; }') &&
+  PLAYGROUND_SOURCE.includes('#notes-drawer #drawer-avatar-rename { display: inline-flex; }') &&
   PLAYGROUND_SOURCE.includes('#notes-drawer .avatar-switch-row.active .avatar-switch-rename { opacity: 1; }') &&
-  PLAYGROUND_SOURCE.includes("if (curKey && curKey !== 'client' && !lib.some(a => a.id === curKey)) {") &&
+  PLAYGROUND_SOURCE.includes("if (!strict) return;") &&
   PLAYGROUND_SOURCE.includes('.note-group-title { color: rgba(255,255,255,0.98); font-weight: 600; margin: 0 0 3px; }') &&
   PLAYGROUND_SOURCE.includes("if (a.confirm !== true) return { ok: false, needsConfirmation: true, change: t.slice(0, 140),") &&
   INDEX_SOURCE.includes("if (a.confirm !== true) return { ok: false, needsConfirmation: true, change: t.slice(0, 140),") &&
@@ -2475,6 +2490,7 @@ const stagedBehavior = await pg.evaluate(async () => {
   let saved = null; const notices = [];
   showToast = message => notices.push(message);
   _avatarLibCache = [];
+  firebase.firestore = () => ({runTransaction: async fn => fn({get: doc => doc.get(), set: (doc, data) => doc.set(data)})});
   _avatarsDoc = () => ({ get: async () => ({ exists:false }), set: async data => { saved = data; } });
   projectStore.uploadImage = async () => ({url:'https://example.com/new-face.jpg',path:'test/avatars/face.jpg'});
   lastSummary = {client:{name:'Taylor'},_face_photo:'data:image/png;base64,AAAA'};
@@ -2485,7 +2501,8 @@ const stagedBehavior = await pg.evaluate(async () => {
   document.getElementById('drawer-avatar-name').click();
   const editableName = !!document.getElementById('pg-client-rename');
   document.getElementById('pg-client-rename')?.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}));
-  _avatarsDoc = () => ({set: async () => {throw new Error('Cloud unavailable');}});
+  lastSummary.client.name = 'Changed name';
+  firebase.firestore = () => ({runTransaction: async () => {throw new Error('Cloud unavailable');}});
   await saveAvatarFromDrawer(save);
   const failureHonest = notices.at(-1) === 'Cloud unavailable' && !save.disabled;
   const calls = [];
@@ -2503,7 +2520,7 @@ const stagedBehavior = await pg.evaluate(async () => {
   return {avatarSaved,actions,editableName,failureHonest,pagination,globalSearch,savedSearch:scope==='saved'};
 });
 ok('Playground avatar behavior: cloud Save, three buttons, direct name editing, honest save errors',
-  stagedBehavior.avatarSaved && stagedBehavior.actions === 'Randomize,Replace,Save' && stagedBehavior.editableName && stagedBehavior.failureHonest);
+  stagedBehavior.avatarSaved && stagedBehavior.actions === 'Randomize,Save,Replace' && stagedBehavior.editableName && stagedBehavior.failureHonest);
 ok('Playground Pinterest behavior: next-page cursor, deduplicated pins, explicit global/saved search',
   stagedBehavior.pagination && stagedBehavior.globalSearch && stagedBehavior.savedSearch);
 
@@ -2531,13 +2548,13 @@ const affiliateBehavior=await affiliatePage.evaluate(async()=>{
     if(mode==='slow') return new Promise(resolve=>{resolveSlow=resolve;});
     if(mode==='denied') return {status:403,ok:false};
     return {status:200,ok:true,json:async()=>({ok:true,connected:true,list:[
-      {id:'w_test',source:'wix',name:'Mary Example',phone:'4155550123',tier:'Signature',note:'A custom jacket',ts:new Date().toISOString()},
+      {id:'w_test',source:'wix',name:'Mary Example',phone:'4155550123',tier:'Signature',stage:'closed',note:'A custom jacket',ts:new Date().toISOString()},
       {id:'m_test',source:'maya',name:'Alex Example',phone:'',note:'',ts:'2020-01-01'}]})};
   };
   _idTok='fictional-admin'; await loadAffiliateLeads();
   const populated=document.querySelector('#leads-table').textContent.includes('Mary Example') &&
     document.getElementById('affiliate-total').textContent==='2' && document.getElementById('affiliate-week').textContent==='1' &&
-    document.getElementById('affiliate-phone').textContent==='1' && document.getElementById('affiliate-notes').textContent==='1';
+    document.getElementById('affiliate-contacted').textContent==='1' && document.getElementById('affiliate-closed').textContent==='1';
   const actions=['Call','Text','Invoice'].every(label=>document.querySelector('#leads-table [aria-label="'+label+'"]'));
   mode='denied'; await loadAffiliateLeads();
   const denied=!document.querySelector('#leads-table').textContent.includes('Mary Example') && document.getElementById('affiliate-status').textContent.includes('admins only');

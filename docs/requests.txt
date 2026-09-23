@@ -1,3 +1,18 @@
+SEPTEMBER 22 22:59: current local aesthetic and avatar requests
+[local] Mana links left of Mana Siyo; reload/plus glyphs 39% larger; square gear.
+[local] Affiliates: remove extra Admin link and brand dropdown, retain logo return;
+    drawer only Messages; Total leads / New this week / Contacted / Closed.
+    Shared status selector persists real lead stages; same Lead Station layout.
+[local] Frontend + Playground: editable name, hover pencil, Randomize/Save/Replace;
+    explicit Save adds a new avatar after edits, preserving old avatars. Unsaved
+    current face shown. Account/project changes and cloud failures guarded.
+[local] Wheel/pinch zoom sensitivity halved; Playground experiments preserved.
+[local] Frontend Pinterest catches up with Playground pagination/search scopes.
+    Wider provider access unverified; external Pinterest search offered if absent.
+[verified] 22 offline function/syntax checks, 11 admin UI, 6 admin-command checks.
+[pending] Visual/browser review (no computer use), owner push; native global
+    Pinterest access and real affiliate authentication are separate open work.
+
 SEPTEMBER 22 LATE: simplified Affiliates and fixed notes layout
 [local] Notes align left and vertically middle; fixed table layout constrains
     long text to its own scrolling viewport, while column headers remain sticky.

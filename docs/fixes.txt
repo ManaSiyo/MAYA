@@ -1,3 +1,14 @@
+SEPTEMBER 22 22:59: local fixes, not deployed
+Mana flyout had moved below the heading: restored left placement and delayed
+hide. Reload/plus glyph size raised 39%; gear forced square/nonshrinking.
+Affiliates extra Admin link and brand hover navigation removed; logo still
+returns Admin. Its visible drawer is Messages, not Systems/Logs.
+Live avatar controls lagged Playground. Both now expose explicit transactional
+Save-as-new; a changed same-name photo no longer replaces its saved predecessor.
+Current unsaved photo stays visible in the dropdown; name is editable.
+Validation: profile-crm 22, admin UI 11, admin-command 6, syntax/whitespace pass.
+No browser/computer use or external paid tests. Visual review remains pending.
+
 SEPTEMBER 22 LATE: lead layout and Affiliates navigation, local
 Constrain the table with fixed layout, keeping long notes inside their viewport;
 notes start left and sit vertically centered; headers retain top sticky position.

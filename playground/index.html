@@ -2016,7 +2016,7 @@
   /* v14.26: the pencil hides like the x does, and shows on the highlighted
      client only, the way the open project carries its pencil. The one that
      sat beside the name is gone. */
-  #notes-drawer #drawer-avatar-rename { display: none; }
+  #notes-drawer #drawer-avatar-rename { display: inline-flex; }
   /* v14.28: hidden until the row is hovered, exactly like the x. On touch,
      where nothing hovers, the highlighted row keeps it. */
   #notes-drawer .avatar-switch-row .avatar-switch-rename { opacity: 0; }
@@ -4228,6 +4228,9 @@
     letter-spacing: 0.38em; text-transform: uppercase;
     color: rgba(220,225,240,0.7);
   }
+  #notes-drawer #drawer-avatar-rename{border:0;background:transparent;color:var(--dim);cursor:pointer;opacity:0;transition:opacity .15s}
+  #notes-drawer .pg-avatar-nameline:hover #drawer-avatar-rename,#notes-drawer .pg-avatar-nameline:focus-within #drawer-avatar-rename{opacity:1}
+  @media(hover:none){#notes-drawer #drawer-avatar-rename{opacity:1}}
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-ETTJ6PXEMM"></script>
@@ -8520,61 +8523,64 @@ function _avatarsDoc() {
            .collection('settings').doc('avatars');
 }
 let _avatarLibCache = null;
+let _avatarLibCacheUid = null;
 async function _loadAvatarLibrary() {
-  if (typeof projectStore === 'undefined' || !projectStore.ready()) return _avatarLibCache || [];
-  if (_avatarLibCache) return _avatarLibCache;
+  if (typeof projectStore === 'undefined' || !projectStore.ready()) return [];
+  const uid = projectStore._uid();
+  if (_avatarLibCache && _avatarLibCacheUid === uid) return _avatarLibCache;
+  const document = _avatarsDoc();
   try {
-    const d = await _avatarsDoc().get();
-    _avatarLibCache = (d.exists && Array.isArray((d.data() || {}).list)) ? d.data().list : [];
-  } catch (_) { _avatarLibCache = []; }
-  return _avatarLibCache;
+    const snapshot = await document.get();
+    if (uid !== projectStore._uid()) return [];
+    _avatarLibCache = snapshot.exists && Array.isArray(snapshot.data()?.list) ? snapshot.data().list : [];
+    _avatarLibCacheUid = uid;
+    return _avatarLibCache;
+  } catch (_) { return []; }
 }
 async function _saveCurrentAvatarToLibrary(strict = false) {
+  // Library changes are explicit. Editing a project never overwrites a saved person.
+  if (!strict) return;
   const snapshot = lastSummary;
-  const uid = typeof projectStore !== 'undefined' ? projectStore._uid() : null;
-  const sameAccount = () => uid && projectStore._uid() === uid && lastSummary === snapshot;
-  const id = _avatarIdentity();
-  if (!id || !id.name || id.name === 'client') { if (strict) throw new Error('Name this avatar first.'); return; }  // need a real name to file it
-  if (typeof projectStore === 'undefined' || !projectStore.ready()) { if (strict) throw new Error('Sign in to save this avatar.'); return; }
-  try {
-    // The face is stored by address, never as raw bytes, so this document stays
-    // small and the roster can hold as many clients as the atelier has.
-    const face = id.face;
-    let faceRef = (typeof face === 'string' && face.startsWith('http')) ? face : null;
-    if (!faceRef && typeof face === 'string' && face.startsWith('data:')) {
-      if (!strict && lastSummary && lastSummary._face_photo_url) faceRef = lastSummary._face_photo_url;
-      else if (projectStore.ready()) {
-        // v12.9: a client's face belongs to the CLIENT, not to whichever
-        // project happened to be open. It used to live inside that project's
-        // folder, so deleting the project broke that client's face everywhere.
-        try {
-          const up = await projectStore.uploadImage(face, 'avatars');
-          if (!sameAccount()) throw new Error('The open client changed. Please save again.');
-          faceRef = up.url;
-          // Point the open project at the same shared copy rather than making
-          // a second one inside the project on the next save.
-          if (lastSummary) { lastSummary._face_photo_url = up.url; lastSummary._face_photo_path = up.path; }
-        } catch (e) { if (strict) throw e; }
-      }
-    }
-    if (!sameAccount()) throw new Error('The open client changed. Please save again.');
-    const lib = await _loadAvatarLibrary();
-    if (!sameAccount()) throw new Error('The open client changed. Please save again.');
-    const key = id.name.trim().toLowerCase();
-    const rec = JSON.parse(JSON.stringify({ id: key, ...id, face: faceRef || null, updatedAt: Date.now() }));
-    const next = lib.filter(a => a.id !== key);
-    next.unshift(rec);
-    await _avatarsDoc().set({ list: next, updatedAtMs: Date.now() });
-    if (sameAccount()) _avatarLibCache = next;
-    return true;
-  } catch (e) { console.warn('[Maya avatar lib]', e); if (strict) throw e; return false; }
+  const uid = projectStore._uid();
+  const identity = _avatarIdentity();
+  if (!identity || !identity.name || identity.name.toLowerCase() === 'client') throw new Error('Name this avatar first.');
+  if (!uid || !projectStore.ready()) throw new Error('Sign in to save this avatar.');
+  const signature = JSON.stringify(identity);
+  const same = () => projectStore._uid() === uid && lastSummary === snapshot && JSON.stringify(_avatarIdentity()) === signature;
+  if (snapshot._avatarSavedSignature === signature && snapshot._avatarLibraryId && _avatarLibCacheUid === uid && _avatarLibCache?.some(a => a.id === snapshot._avatarLibraryId)) return true;
+  const doc = _avatarsDoc();
+  let face = identity.face;
+  if (typeof face === 'string' && face.startsWith('data:')) {
+    const uploaded = await projectStore.uploadImage(face, 'avatars');
+    if (!same()) throw new Error('The open client changed. Please save again.');
+    face = uploaded.url;
+  }
+  if (!same()) throw new Error('The open client changed. Please save again.');
+  const record = JSON.parse(JSON.stringify({...identity, face:face || null, id:crypto.randomUUID(), updatedAt:Date.now()}));
+  const next = await firebase.firestore().runTransaction(async transaction => {
+    const stored = await transaction.get(doc);
+    if (!same()) throw new Error('The open client changed. Please save again.');
+    const list = stored.exists && Array.isArray(stored.data()?.list) ? stored.data().list : [];
+    const merged = [record, ...list];
+    transaction.set(doc, {list:merged, updatedAtMs:Date.now()});
+    return merged;
+  });
+  if (same()) {
+    _avatarLibCache = next;
+    _avatarLibCacheUid = uid;
+    snapshot._avatarLibraryId = record.id;
+    Object.defineProperty(snapshot, '_avatarSavedSignature', {value:signature,writable:true,configurable:true,enumerable:false});
+  }
+  return true;
 }
 async function saveAvatarFromDrawer(button) {
+  const snapshot = lastSummary, uid = projectStore._uid();
   const name = (lastSummary && lastSummary.client && lastSummary.client.name || '').trim();
   if (!name || name.toLowerCase() === 'client') { pgRenameClient(); showToast('Name the avatar, then press Save.'); return; }
   if (button) button.disabled = true;
   try {
     await _saveCurrentAvatarToLibrary(true);
+    if (snapshot !== lastSummary || uid !== projectStore._uid()) throw new Error('The open client changed.');
     if (typeof projectStore !== 'undefined' && projectStore.currentId) {
       projectStore.queueSave();
       if (!(await projectStore.flush())) throw new Error('Avatar saved, but the project did not save. Please try again.');
@@ -8594,25 +8600,11 @@ async function toggleAvatarSwitcher() {
   if (caret) caret.style.transform = _avatarSwitcherOpen ? 'rotate(180deg)' : '';
   if (!_avatarSwitcherOpen) { panel.style.display = 'none'; return; }
   let lib = await _loadAvatarLibrary();
-  // v14.19: the client on the board is marked, and every client can be removed.
-  const curKey = String((lastSummary && lastSummary.client && lastSummary.client.name) || '').trim().toLowerCase();
-  // v14.26: the client on the board is always in the list, highlighted. One
-  // named before the roster existed (Fromsa himself) is filed the first time
-  // the list opens.
-  if (curKey && curKey !== 'client' && !lib.some(a => a.id === curKey)) {
-    try { await _saveCurrentAvatarToLibrary(); } catch (_) {}
-    lib = await _loadAvatarLibrary();
-    if (!lib.some(a => a.id === curKey)) {
-      const idn = (typeof _avatarIdentity === 'function' ? _avatarIdentity() : null) || {};
-      lib = [{ id: curKey, name: (lastSummary.client.name || '').trim(), face: (typeof idn.face === 'string' && idn.face) || null }].concat(lib);
-    }
-  }
   const current = _avatarIdentity();
-  if (current && current.face) {
-    lib = lib.map(a => a.id === curKey ? { ...a, face: current.face } : a);
-  }
-  const preview = current && current.face && !lib.some(a => a.id === curKey)
-    ? '<div class="avatar-switch-row active"><img class="avatar-switch-face" alt="Current avatar" src="' + escapeHtml(current.face) + '"><span>' + escapeHtml(current.name || 'Client') + ' (unsaved)</span></div>' : '';
+  const signature = JSON.stringify(current);
+  const curKey = lastSummary && lastSummary._avatarSavedSignature === signature ? lastSummary._avatarLibraryId : null;
+  const preview = current && !lib.some(a => a.id === curKey)
+    ? '<div class="avatar-switch-row active">' + (current.face ? '<img class="avatar-switch-face" alt="Current avatar" src="' + escapeHtml(current.face) + '">' : '') + '<span>' + escapeHtml(current.name || 'Client') + ' (unsaved)</span></div>' : '';
   const rows = lib.map(a =>
     '<div class="avatar-switch-row' + (a.id === curKey ? ' active' : '') + '" role="button" tabindex="0" data-id="' + escapeHtml(a.id) + '" onclick="switchAvatar(\'' + escapeHtml(a.id) + '\')">' +
       (a.face ? '<span class="avatar-switch-face" style="background-image:url(\'' + a.face + '\')"></span>'
@@ -8624,13 +8616,13 @@ async function toggleAvatarSwitcher() {
   ).join('');
   // v14.20: Rename, Randomize, Replace and Remove ride inside the dropdown,
   // beside the photo they act on, whether or not the list has anyone in it.
-  // v14.23: two pills only. Renaming lives on the pencil beside the name.
+  // Explicit Save sits between Randomize and Replace; the name is editable above.
   const actions = '<div class="avatar-switch-actions">' +
     '<button class="drawer-action" type="button" onclick="randomizeAvatar()" title="Random measurements and a random face">Randomize</button>' +
+    '<button class="drawer-action" type="button" onclick="saveAvatarFromDrawer(this)" title="Save as a new avatar">Save</button>' +
     '<button class="drawer-action" type="button" onclick="pgReplaceFace()" title="Upload a face photo">Replace</button>' +
-    '<button class="drawer-action" type="button" onclick="saveAvatarFromDrawer(this)">Save</button>' +
     '</div>';
-  panel.innerHTML = actions + preview + (rows || '<div class="avatar-switch-empty">No saved clients yet. Rename, add a face, and they are filed.</div>') +
+  panel.innerHTML = actions + preview + (rows || '<div class="avatar-switch-empty">Name this avatar, then press Save.</div>') +
     '<button class="avatar-switch-row avatar-switch-new" onclick="newAvatar()">+ New avatar</button>';
   panel.style.display = 'block';
   // v13.82: make sure the freshly opened list is fully visible, not cut at the fold.
@@ -8655,6 +8647,8 @@ function _wearClient(a) {
   lastSummary._face_descriptors = (a && a.descriptors) || null;
   lastSummary._measurements = (a && a.measurements) || null;
   delete lastSummary._face_photo_url; delete lastSummary._face_photo_path;
+  lastSummary._avatarLibraryId = a ? a.id : null;
+  Object.defineProperty(lastSummary, '_avatarSavedSignature', {value:a ? JSON.stringify(_avatarIdentity()) : null,writable:true,configurable:true,enumerable:false});
   refreshDrawerClientName();
   if (typeof _renderAvatarBody === 'function') { try { _renderAvatarBody(); } catch (_) {} }
   if (typeof _persistSession === 'function') _persistSession();
@@ -8684,13 +8678,13 @@ async function renameAvatarById(id, name) {
   const a = lib.find(x => x.id === id);
   if (!a) return false;
   const key = name.toLowerCase();
-  const next = lib.filter(x => x.id !== id && x.id !== key);
-  next.unshift(Object.assign({}, a, { id: key, name, updatedAt: Date.now() }));
+  const next = lib.filter(x => x.id !== id);
+  next.unshift(Object.assign({}, a, { name, updatedAt: Date.now() }));
   _avatarLibCache = next;
   try { if (typeof projectStore !== 'undefined' && projectStore.ready()) await _avatarsDoc().set({ list: next, updatedAtMs: Date.now() }); }
   catch (e) { showError('Could not rename that client. ' + ((e && e.message) || '')); return false; }
   const curKey = String((lastSummary && lastSummary.client && lastSummary.client.name) || '').trim().toLowerCase();
-  if (curKey === id) { updateClientNameInline(name); refreshDrawerClientName(); }
+  if (lastSummary?._avatarLibraryId === id || curKey === id) { updateClientNameInline(name); refreshDrawerClientName(); }
   _avatarSwitcherOpen = false;
   toggleAvatarSwitcher();
   showToast('Renamed to ' + name);
@@ -17666,6 +17660,7 @@ function pgRenameClient() {
   inp.addEventListener('keydown', e => { if (e.key === 'Enter') finish(true); else if (e.key === 'Escape') finish(false); });
   inp.addEventListener('blur', () => finish(true));
   inp.focus(); inp.select();
+  if (!_avatarSwitcherOpen) toggleAvatarSwitcher();
 }
 if (typeof refreshDrawerClientName === 'function') {
   const _pgRefreshPill = refreshDrawerClientName;
@@ -17844,9 +17839,9 @@ if (typeof toggleNotesDrawer === 'function') {
     if (!onInspo()) return;
     e.preventDefault();
     const zoomIn = e.deltaY < 0;
-    const step = 0.05 * (1 + Math.min(3, Math.abs(e.deltaY) / 60));
+    const step = 0.025 * (1 + Math.min(3, Math.abs(e.deltaY) / 60));
     let next = target + (zoomIn ? step : -step);
-    if (zoomIn && next > 0.92) next = 1;              // snap home, never stuck at 99 percent
+    if (zoomIn && next > 0.98) next = 1;              // snap home, never stuck at 99 percent
     go(next);
   }, { passive: false });
   let pinchD = 0, pinchZ = 1;
@@ -17860,10 +17855,10 @@ if (typeof toggleNotesDrawer === 'function') {
     if (e.touches.length === 2 && pinchD && onInspo()) {
       const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
       e.preventDefault();
-      go(pinchZ * (d / pinchD));
+      go(pinchZ * (1 + (d / pinchD - 1) * 0.5));
     }
   }, { passive: false });
-  document.addEventListener('touchend', () => { pinchD = 0; if (target > 0.92 && target < 1) go(1); }, { passive: true });
+  document.addEventListener('touchend', () => { pinchD = 0; if (target > 0.98 && target < 1) go(1); }, { passive: true });
   document.addEventListener('click', (e) => {
     const logo = e.target && e.target.closest && e.target.closest('.maya-logo-mark, #top-left-brand');
     if (logo && z < 0.999) { e.preventDefault(); e.stopPropagation(); pgZoomReset(); }
@@ -18392,6 +18387,7 @@ async function _pinWideSearch(q, scope) {
   let j;
   try { j = await _pinApi((everywhere ? '/api/pinterest/everywhere?q=' : '/api/pinterest/search?q=') + encodeURIComponent(q)); }
   catch (e) {
+    if (seq !== _pinSearchSeq || uid !== projectStore._uid()) return { ok:false, cancelled:true };
     const msg = String(e && e.message || e);
     if (everywhere && /not_available|501/.test(msg)) return { ok: false, reason: 'searching ALL of Pinterest is not switched on for this app yet: it needs Pinterest\'s partner search access or a web image key on the server; the studio can turn it on. Everything saved on their own Pinterest still searches.', needs: 'access' };
     const why = /timeout|took too long/i.test(msg) ? 'Pinterest took too long to answer' :
@@ -18453,6 +18449,10 @@ async function _pinSearchEnter(v) {
   if (r.cancelled) return;
   if (!r.ok) {
     _pinSub('');
+    if (r.needs === 'access') {
+      const host = document.getElementById('pinterest-drawer-body');
+      if (host) host.innerHTML = '<a class="drawer-action" target="_blank" rel="noopener noreferrer" href="https://www.pinterest.com/search/pins/?q=' + encodeURIComponent(q) + '">Open Pinterest search</a>';
+    }
     showToast(r.needs === 'access' ? 'Pinterest-wide search needs provider access. Your saved pins are still available.' : 'No results returned. Try another search.');
   }
 }

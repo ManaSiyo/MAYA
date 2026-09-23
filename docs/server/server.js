@@ -3637,6 +3637,10 @@ async function updateLead(id, patch) {
   if (has('email')) clean.email = String(next.email || '').trim().toLowerCase().slice(0, 180);
   if (has('phone')) clean.phone = String(next.phone || '').trim().slice(0, 60);
   if (has('tier')) clean.tier = String(next.tier || '').trim().slice(0, 80);
+  if (has('stage')) {
+    if (!['new','contacted','closed'].includes(next.stage)) return null;
+    clean.stage = next.stage;
+  }
   // v13.93: Hunter-style CRM columns. Company/title, the quote, and the two
   // invoice halves (first + second payment) all edit and persist like any field.
   if (has('company')) clean.company = String(next.company || '').trim().slice(0, 120);
