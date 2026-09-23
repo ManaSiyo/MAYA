@@ -54,7 +54,7 @@ const tdeps = { accountSid: 'ACtest', authToken: 'tok', fromNumber: '+1510990922
 const sent = await sendSms(tdeps, { to: '646 996 6115', text: 'Great. We will call you around 3 pm.' });
 ok('a text goes out from the studio number', sent.ok === true && twRest[0].url === '/2010-04-01/Accounts/ACtest/Messages.json' && twRest[0].form.From === '+15109909223' && twRest[0].form.To === '+16469966115');
 const blocked = await sendSms(tdeps, { to: '+14155559999', text: 'x' });
-ok('an unregistered number failure reads as the campaign still in review', blocked.ok === false && /carrier registration/.test(blocked.why));
+ok('an unregistered number failure directs the owner to approval and sender assignment', blocked.ok === false && /carrier registration/.test(blocked.why) && /approval and sender assignment/.test(blocked.why) && !/still in review/.test(blocked.why));
 ok('a foreign or bad number is refused before Twilio', (await sendSms(tdeps, { to: '+44 20 1234', text: 'x' })).ok === false);
 
 // the routes

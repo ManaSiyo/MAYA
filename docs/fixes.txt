@@ -1,3 +1,23 @@
+SEPTEMBER 22 LATE: lead layout and Affiliates navigation, local
+Constrain the table with fixed layout, keeping long notes inside their viewport;
+notes start left and sit vertically centered; headers retain top sticky position.
+Affiliates opens new tab; route brand now identifies Affiliates and logo links
+back to Admin, replacing its inherited voice trigger. Remove unnecessary copy.
+Admin contract and inline syntax validated; browser checks not run per owner.
+
+SEPTEMBER 22 EVENING: SMS carrier blocker CONFIRMED by owner screenshots
+Account is Active, brand complete, campaign rejected: compliant privacy policy
+cannot be verified. Twilio overview reports 30034. Outbound 'hello' 17:00 is
+Undelivered; inbound 'Hi.' 09:46 is Received at Twilio. Missing inbound in Maya
+remains a separate webhook/storage investigation, not proved by A2P rejection.
+Public policy/terms are accessible (200); exact submitted URLs/opt-in flow unknown.
+Policy wording edits and registration guide are local drafts, not resubmitted.
+Mana menu also lost pointer events immediately on pointer departure despite a
+visible delayed fade; changed to delayed visibility, focus support and below-Mana
+placement. Affiliates public route is deployed. No authenticated/visual checks
+under owner's no-computer-use restriction. 50 SMS and 11 admin checks pass;
+phone/transfer/feedback pass and inline scripts parse. Nothing pushed here.
+
 SEPTEMBER 22, 2026: code-first SMS audit (FIXED LOCALLY, not deployed)
 Reproduced and corrected ordinary 'No problem' being treated as STOP, START not
 restoring opt-in, and late carrier error codes being lost on terminal statuses.

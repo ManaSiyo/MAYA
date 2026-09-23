@@ -1,0 +1,21 @@
+Summary: [Codex][v14.36] Repair Mana menu and clarify SMS registration
+
+Open Affiliates in a new tab, label its header correctly, make its logo return
+to Admin, and remove preview boilerplate. Use icon-only Reload.
+Center lead identity/actions, shrink icon artwork, left-align/vertically center
+notes, constrain long text with fixed table layout, retain sticky headers and preserve
+horizontal keyboard scrolling. Keep the Mana flyout clickable during dismissal
+and place it below Mana so Affiliates is easier to reach.
+
+Clarify error 30034 and carrier registration failures. Revise SMS privacy/terms
+wording for explicit optional consent and affiliate non-sharing. Include a
+field-by-field A2P registration draft; owner must publish/verify actual Wix
+consent flow and resubmit the campaign.
+
+Validation: 50 SMS, 11 admin contracts, 48 phone, transfer and feedback pass;
+nine Admin inline scripts parse. Browser regression additions not run because
+owner requested no computer use. Live HTTP confirms existing Affiliates route
+and policies are reachable; authenticated data and physical SMS unverified.
+
+No calls, SMS, paid AI endpoints, credentials, provider settings, commit or push
+changed. Screenshot evidence confirms registration blocker, not an auth failure.

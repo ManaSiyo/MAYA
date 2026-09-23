@@ -76,6 +76,52 @@ The fabric sourcing revamp shipped in v13.44; see that section below.
 
 ## v14.36 (Claude): the audit
 
+September 22 late continuation: Affiliates opens in a new tab; its heading is
+Affiliates and its logo/wordmark return to Admin, not voice. Removed normal-state
+preview/count/subtitle copy. Reload is icon-only with aria label/title. Notes
+are left-aligned and vertically centered in a fixed-layout table so long notes
+cannot expand the entire table; existing note animation and sticky headers stay.
+Tests: Admin contract 11 passed and all nine inline scripts parse; browser cases
+added but not run because owner prohibits computer use. No push/commit. Desktop
+summary remains a file, docs/COMMIT-REVIEW.txt, per that restriction.
+Owner now wants the customer-facing SMS/callback program, not owner-only staging.
+No separate SMS checkbox exists yet. Owner prefers less visual clutter; explain
+alternative explicit opt-in methods without falsely promising approval for the
+current callback notice. Registration guide marks owner-only draft superseded.
+
+September 22 evening CURRENT STATE: owner committed the preceding batch as
+cbc5674; local HEAD/origin agree, and read-only HTTP checks confirm the live
+/affiliates.html and /status.html serve the new route code. Privacy and terms
+also return 200. Server deployment and authenticated affiliate data not verified.
+Owner screenshots now establish account Active, campaign REJECTED for an
+unverifiable compliant privacy policy, and Twilio error 30034. Inbound Sept 22
+09:46 is Received in Twilio; outbound messages are Undelivered. Incoming webhook
+URL/response is still needed; campaign rejection alone does not explain missing
+inbox storage. No need to retrieve or change the Cloud auth token for 30034.
+
+New LOCAL edits: status.html Mana hover moves below Mana, stays clickable for
+one second on pointer departure (visibility transition fixes immediate pointer
+loss), supports focus-within; compact centered name/tier/actions, 10px icon
+artwork, left-aligned note text with existing ping-pong overflow, keyboard-focusable
+horizontal scroll region. SMS errors no longer misleadingly say 'still in review';
+30034 has an explanation in the thread. privacy.html and terms.html are revised
+DRAFTS for explicit optional permission and no third-party/affiliate marketing
+sharing of SMS consent. Owner must align actual Wix opt-in before resubmission.
+Full copy/paste draft and checklist: SMS-REGISTRATION-REVIEW.md. Owner confirmed Wix has no separate SMS checkbox and current scope is owner-only
+Maya testing. Exact submitted policy URLs still unknown. Registration guide now
+prioritizes truthful internal testing, with future customer flow clearly separate;
+do not claim the Wix checkbox or automated alerts already exist.
+Tests: 50 SMS and 11 admin contracts passed, eight inline scripts parse;
+phone 48, transfer and feedback passed. Added browser regression cases, NOT run
+this turn: owner explicitly forbids computer use, including GitHub Desktop.
+No computer use, live SMS/calls, paid AI endpoints, credential/config changes,
+commit or push performed. GitHub Desktop fields intentionally not updated;
+commit summary is in docs/COMMIT-REVIEW.txt instead. Visual/browser validation is
+still outstanding for these CSS changes. Prior 443 browser result predates them.
+Next: owner reviews/publishes policy + consent flow, supplies exact Twilio URLs
+and inbound Request Inspector HTTP result, runs error check and resubmits the
+campaign, then verifies sender assignment after approval. Only then test receipt.
+
 September 22 latest continuation, LOCAL ONLY: the reproduced SMS audit defects
 are now fixed in maya-messages.mjs: exact opt-outs no longer classify 'No problem'
 as STOP; explicit START/UNSTOP and signed Twilio OptOutType restore opt-in while

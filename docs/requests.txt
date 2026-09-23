@@ -1,3 +1,31 @@
+SEPTEMBER 22 LATE: simplified Affiliates and fixed notes layout
+[local] Notes align left and vertically middle; fixed table layout constrains
+    long text to its own scrolling viewport, while column headers remain sticky.
+[local] Reload icon only beside plus, with accessible names and tooltips.
+[local] Affiliates link opens a separate tab, heading says Affiliates, brand logo
+    returns to Admin instead of starting voice. Removed subtitle/preview/count
+    explanation text; retained real loading/auth/source errors.
+[ ] No browser automation or screenshot validation under owner restriction.
+Current SMS scope: customer-facing human-led callback and texting via Maya.
+Owner dislikes a large Wix checkbox; consent method/design remains to be chosen.
+Do not register an opt-in flow that has not been published and verified.
+
+SEPTEMBER 22 EVENING: no computer use, SMS registration and aesthetics
+[local] Center names/tier/actions; smaller icon art; notes start left, existing
+    ping-pong remains; keyboard and horizontal scroll preserved.
+[local] Mana flyout stays clickable during delayed dismissal, keyboard focus
+    keeps it open, and narrower screens use a vertical menu. Affiliates URL is
+    live; authenticated data/visual interaction still need owner confirmation.
+[local draft] Privacy/terms clarify explicit optional SMS consent and no sharing
+    with affiliates for their marketing. Registration field guide prepared.
+[confirmed] Twilio screenshots: campaign rejected for privacy verification;
+    overview error 30034; inbound received by Twilio, outgoing undelivered.
+[ ] Owner confirms submitted policy URLs, publishes Wix consent flow, resubmits
+    A2P campaign and verifies sender assignment. Inspect incoming webhook result.
+Superseded owner-only staging: owner now wants the customer-facing version.
+Wix still has no separate SMS checkbox; actual SMS opt-in remains unresolved.
+Constraint: no computer use, live paid features, credential changes or push.
+
 SEPTEMBER 22, 2026: Affiliates Beta and texting continuation
 [local] Mana hover -> Affiliates Beta (/affiliates.html), separate full-page view.
     Large Fromsa initial profile, four loaded-lead stats, existing Lead Station

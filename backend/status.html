@@ -12,7 +12,7 @@
 const IS_AFFILIATES = location.pathname === '/affiliates.html';
 if (IS_AFFILIATES) {
   document.documentElement.classList.add('affiliates-view');
-  document.title = 'Affiliates Beta | MAYA';
+  document.title = 'Affiliates | MAYA';
 }
 
 try {
@@ -521,14 +521,14 @@ try {
     display:flex;gap:6px;white-space:nowrap;opacity:0;pointer-events:none;
     transition:opacity .18s ease .9s;z-index:230}
   #top-left-brand:hover .brand-chips,#top-left-brand .brand-chips:hover{opacity:1;pointer-events:auto;transition-delay:0s}
-  /* v13.72: MANA SIYO mirrors MAYA. Hover it and its two editing rooms hang to
-     the LEFT, Design Studio and Wix Studio, the same chips as MAYA's. */
+  /* Mana rooms remain reachable during pointer travel and keyboard focus. */
   .card-mana{position:relative}
-  .card-mana .mana-chips{position:absolute;right:100%;top:50%;transform:translateY(-50%);
-    display:flex;gap:6px;white-space:nowrap;padding-right:10px;
-    opacity:0;pointer-events:none;transition:opacity .18s ease .4s}
-  .card-mana:hover .mana-chips,.card-mana:focus .mana-chips,.card-mana .mana-chips:hover{
-    opacity:1;pointer-events:auto;transition-delay:0s}
+  .card-mana .mana-chips{position:absolute;left:50%;top:100%;transform:translateX(-50%);z-index:20;
+    display:flex;gap:6px;white-space:nowrap;padding-top:8px;
+    opacity:0;visibility:hidden;transition:opacity .18s ease 1s,visibility 0s linear 1.18s}
+  .card-mana:hover .mana-chips,.card-mana:focus-within .mana-chips,.card-mana .mana-chips:hover{
+    opacity:1;visibility:visible;transition-delay:0s}
+  @media(max-width:900px){.card-mana .mana-chips{right:auto;left:0;top:100%;transform:none;flex-direction:column;align-items:flex-start;padding:8px 0 0;z-index:20;background:rgba(8,12,26,.96);border-radius:12px}}
   .warn{margin-top:22px;border:0.5px solid rgba(253,164,175,0.3);border-radius:12px;padding:11px 15px;
         font-size:12px;color:var(--rose);background:rgba(253,164,175,0.06)}
   .money{margin-top:14px;font-size:12px;color:var(--dim);line-height:1.8}
@@ -642,7 +642,7 @@ try {
   #adm-mkt #leads-table th.lead-col-first,#adm-mkt #leads-table td.lead-col-first{padding-left:18px}
   #adm-mkt #leads-table th:last-child,#adm-mkt #leads-table td:last-child{padding-right:18px}
   #adm-mkt #leads-table tr:last-child td{padding-bottom:14px}
-  #adm-mkt #leads-table{min-width:720px;border-collapse:separate;border-spacing:0}
+  #adm-mkt #leads-table{table-layout:fixed;width:100%;min-width:720px;border-collapse:separate;border-spacing:0}
   /* v13.94: every column is centered, per Fromsa. */
   #adm-mkt #leads-table th{position:sticky;top:0;z-index:3;background:#0d1120;
     font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;
@@ -725,7 +725,9 @@ try {
   /* v13.91: Latest Notes marquee — the note scrolls inside its column when it
      is longer than the space, ping-ponging so nothing is ever cut off. It
      pauses on hover, and while you edit it scrolls normally instead. */
-  #adm-mkt #leads-table td.lead-note{width:100%}
+  #adm-mkt #leads-table td.lead-note{text-align:left;vertical-align:middle}
+  #adm-mkt #leads-table .lead-h-note{text-align:left}
+  #adm-mkt #leads-table .lead-h-contact{width:170px}
   #adm-mkt #leads-table .lead-note-vp{overflow:hidden;width:100%}
   #adm-mkt #leads-table .lead-note-vp:focus-within{overflow:auto}
   #adm-mkt #leads-table .lead-note-vp .lead-note-edit{display:inline-block;white-space:nowrap;margin:0}
@@ -758,11 +760,13 @@ try {
   #adm-mkt .bl-tile .v.good{color:var(--green)} #adm-mkt .bl-tile .v.bad{color:var(--amber)}
   #adm-mkt .bl-tile .k{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:3px;line-height:1.6}
   #adm-mkt .lead-rec{font-family:'Jost',sans-serif;font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim)}
-  #adm-mkt .lead-identity{display:flex;align-items:center;gap:8px;white-space:nowrap}
+  #adm-mkt .lead-identity{display:flex;justify-content:center;align-items:center;gap:8px;white-space:nowrap}
   #adm-mkt #leads-table .lead-identity .lead-name-edit{min-width:0;max-width:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
   #adm-mkt #leads-table .lead-email-edit{white-space:nowrap;min-width:120px}
   #adm-mkt .lead-identity .lead-src{flex:none}
-  #adm-mkt .lead-ctas{display:flex;gap:6px;margin-top:6px}
+  #adm-mkt .lead-ctas{display:flex;justify-content:center;gap:6px;margin-top:6px}
+  #adm-mkt .lead-cta svg{width:10px;height:10px}
+  #adm-mkt #leads-table .lead-identity .lead-src{padding:1px 8px;margin-left:0;background:rgba(169,201,255,.04)}
   #adm-mkt .lead-cta{width:26px;height:22px;border-radius:100px;border:0.5px solid var(--line);background:transparent;
     color:var(--dim);cursor:pointer;font-size:11px;line-height:1;display:inline-flex;align-items:center;justify-content:center;
     transition:all .2s;text-decoration:none}
@@ -815,6 +819,7 @@ try {
   #affiliate-profile h1{font-weight:400;font-size:36px;margin:6px 0}
   .affiliate-beta{font:10px 'Jost',sans-serif;letter-spacing:.18em;color:var(--amber);text-transform:uppercase}
   .affiliate-caption,#affiliate-status{font:12px/1.7 'Jost',sans-serif;color:var(--dim)}
+  #affiliate-status:empty{display:none}
   .affiliate-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0 10px}
   .affiliate-stat{padding:18px 8px;border:1px solid var(--line);border-radius:18px;background:rgba(8,12,26,.55)}
   .affiliate-stat strong{display:block;font:30px 'Cormorant Garamond',serif;color:var(--ink)}
@@ -850,6 +855,22 @@ try {
   </button>
 </div>
 
+<script>
+// Affiliates is a separate workspace. Its brand returns home, never starts voice.
+if (IS_AFFILIATES) {
+  const brand = document.querySelector('#top-left-brand .brand-title');
+  brand.textContent = 'Affiliates';
+  brand.closest('a').title = 'Back to Admin';
+  const logo = document.querySelector('#top-left-brand .maya-logo-wrap');
+  const home = document.createElement('a');
+  home.className = logo.className;
+  home.href = '/status.html';
+  home.title = 'Back to Admin';
+  home.setAttribute('aria-label', 'Back to Admin');
+  home.innerHTML = logo.innerHTML;
+  logo.replaceWith(home);
+}
+</script>
 <!-- v14.02: the day reads itself out on its own strip UNDER the panes, between
      the wordmark and the menu, so the drawer slides over it. -->
 <div id="ticker-bar" aria-hidden="false">
@@ -971,7 +992,7 @@ try {
           onclick="window.open('https://manasiyo.com','_blank')"
           onkeydown="if(event.key==='Enter')window.open('https://manasiyo.com','_blank')">
       <span class="mana-chips">
-        <a class="pg-chip" href="/affiliates.html" onclick="event.stopPropagation()" onkeydown="event.stopPropagation()" title="Affiliates Beta, your leads workspace">affiliates beta</a>
+        <a class="pg-chip" href="/affiliates.html" target="_blank" rel="noopener" onclick="event.stopPropagation()" onkeydown="event.stopPropagation()" title="Open Affiliates in a new tab">affiliates</a>
         <a class="pg-chip" href="https://manasiyo.com/design" target="_blank"
            onclick="event.stopPropagation()" title="The manasiyo.com design studio.">design studio</a>
         <a class="pg-chip" href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/home?referralInfo=my-sites" target="_blank"
@@ -995,9 +1016,8 @@ try {
   <section id="affiliate-profile" aria-label="Affiliates dashboard">
     <a class="affiliate-back" href="/status.html">&#8592; Admin</a>
     <div class="affiliate-avatar" aria-label="Fromsa profile">F</div>
-    <div class="affiliate-beta">Affiliates &#183; Beta</div>
+    <div class="affiliate-beta">Affiliates</div>
     <h1>Fromsa</h1>
-    <p class="affiliate-caption">Your studio leads, together with Maya.</p>
     <div class="affiliate-stats">
       <div class="affiliate-stat"><strong id="affiliate-total">&#183;</strong><span>Leads loaded</span></div>
       <div class="affiliate-stat"><strong id="affiliate-week">&#183;</strong><span>New this week</span></div>
@@ -1005,7 +1025,6 @@ try {
       <div class="affiliate-stat"><strong id="affiliate-notes">&#183;</strong><span>With notes</span></div>
     </div>
     <p id="affiliate-status" role="status" aria-live="polite">Sign in with your admin account to load leads.</p>
-    <p class="affiliate-caption">Admin preview. Affiliate invitations and individual lead assignments are coming next.</p>
   </section>
   <div id="signin-panel" class="status-bar" style="margin-top:0">
     <span style="font-size:14.5px;color:var(--dim)">Sign in once and everything unlocks: submissions, traffic, and the prompting engine.</span>
@@ -1070,8 +1089,8 @@ try {
 
   <details class="fold" id="leads-fold" open>
     <summary><h2 class="grp">The Lead Station</h2></summary>
-    <div id="leads-bar"><span class="lead-tool" aria-current="page">Forms</span><button class="lead-tool" onclick="event.preventDefault();reloadLeads()" title="Refresh the station">&#8635; Reload</button><button class="lead-tool" onclick="event.preventDefault();addLeadManual()" title="Add lead" aria-label="Add lead">+</button></div>
-    <div class="panel"><table id="leads-table"><tbody></tbody></table></div>
+    <div id="leads-bar"><span class="lead-tool" aria-current="page">Forms</span><button class="lead-tool" onclick="event.preventDefault();reloadLeads()" title="Reload leads" aria-label="Reload leads">&#8635;</button><button class="lead-tool" onclick="event.preventDefault();addLeadManual()" title="Add lead" aria-label="Add lead">+</button></div>
+    <div class="panel" tabindex="0" role="region" aria-label="Lead Station, scroll horizontally for more columns"><table id="leads-table"><tbody></tbody></table></div>
     <div id="leads-note" class="note" style="display:none"></div>
   </details>
 
@@ -2790,10 +2809,10 @@ function _leadColDefs(){
       render: (x, i) => '<div class="lead-identity">' + cell(i, x, 'name', x.name, 'lead-name-edit') +
         '<span class="lead-src wix">' + cell(i, x, 'tier', String(x.tier || x.company || '').replace(/\s*[·,]?\s*\$[\d,.]+.*$/, '').trim(), 'lead-sig-edit') + '</span></div>' + _actionsCell(i, x) },
     // v14.24: Contact, the phone first (that is what gets used), the email when there is none.
-    email: { label: 'Contact', render: (x, i) => x.phone
+    email: { label: 'Contact', h: 'lead-h-contact', render: (x, i) => x.phone
       ? cell(i, x, 'phone', x.phone, 'lead-email-edit')
       : cell(i, x, 'email', x.email || '', 'lead-email-edit') },
-    note: { label: 'Latest Notes', td: 'lead-note',
+    note: { label: 'Latest Notes', h: 'lead-h-note', td: 'lead-note',
       render: (x, i) => '<div class="lead-note-vp">' + cell(i, x, 'note', x.note || '', 'lead-note-edit') + '</div>' },
     // v14.34: no quote column; a stored order that still names it is filtered by these defs
   };
@@ -3172,7 +3191,7 @@ function paintThread(t, quiet) {
   const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
     box.innerHTML = (t.messages || []).map(m => m.kind === 'call'
       ? '<div class="msg-call-line">' + (m.dir === 'out' ? 'Maya called' : 'They called Maya') + (m.seconds ? ', ' + Math.max(1, Math.round(m.seconds / 60)) + ' min' : '') + ' <span>' + esc(_msgWhen(m.ts)) + '</span>' + (m.text ? '<small>' + esc(m.text) + '</small>' : '') + '</div>'
-      : '<div class="bub ' + (m.dir === 'out' ? 'out' : 'in') + '">' + esc(m.text || '') + '<div class="bub-when">' + esc(_msgWhen(m.ts)) + (m.dir === 'out' && m.status ? ', ' + esc(m.status) + (m.errorCode ? ' (carrier error ' + esc(m.errorCode) + ')' : '') : '') + '</div></div>'
+      : '<div class="bub ' + (m.dir === 'out' ? 'out' : 'in') + '">' + esc(m.text || '') + '<div class="bub-when">' + esc(_msgWhen(m.ts)) + (m.dir === 'out' && m.status ? ', ' + esc(m.status) + (m.errorCode ? ' (carrier error ' + esc(m.errorCode) + (String(m.errorCode) === '30034' ? ': sending number needs approved A2P registration' : '') + ')' : '') : '') + '</div></div>'
     ).join('') || '<div class="msg-empty">No messages yet. Send a text to start the conversation.</div>';
     if (!quiet || atBottom) box.scrollTop = box.scrollHeight;
     const c = document.getElementById('msg-consent');
@@ -3600,7 +3619,7 @@ async function loadAffiliateLeads() {
     const stats = {total:leads.length,week:leads.filter(l=>new Date(l.ts).getTime()>=weekAgo && new Date(l.ts).getTime()<=Date.now()).length,
       phone:leads.filter(l=>/^(?:1)?[2-9]\d{9}$/.test(String(l.phone||'').replace(/\D/g,''))).length,notes:leads.filter(l=>String(l.note||'').trim()).length};
     for (const [key,value] of Object.entries(stats)) document.getElementById('affiliate-'+key).textContent = value;
-    status.textContent = 'Stats reflect the '+leads.length+' leads shown below.'+(data.why ? ' Some lead sources are unavailable.' : '');
+    status.textContent = data.why ? 'Some lead sources are unavailable.' : '';
   } catch (error) {
     if (request === _affiliateRequest && token === _idTok) clearAffiliateLeads(error.message || 'Leads could not load. Try Reload.');
   }

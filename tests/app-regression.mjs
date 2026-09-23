@@ -2085,7 +2085,8 @@ ok('v14.33: the studio line knows its owner by caller id; clients get guardrails
   SERVER_SOURCE.includes("appendMayaFeatureFrom(t, 'Fromsa, on the phone', 'phone')"));
 ok('v14.32: the texting paperwork: Privacy Policy and Terms carry the SMS section the carriers require',
   readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').includes('<h1>Privacy Policy</h1>') &&
-  readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').includes('We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes.') &&
+  readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').includes('third parties, affiliates, or lead generators for their marketing or promotional use.') &&
+  readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').includes('Providing a phone number for a callback alone does not authorize text messages.') &&
   readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').includes('Mana Siyo Inc.') &&
   readFileSync(join(ROOT, 'backend/terms.html'), 'utf8').includes('Reply STOP to any message') &&
   !/[\u2014\u2013]/.test(readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').split('<h2>Text messages</h2>')[1].split('<h2>')[0]));
@@ -2550,6 +2551,35 @@ const affiliateBehavior=await affiliatePage.evaluate(async()=>{
 ok('Affiliates displays profile, real loaded stats and shared Call/Text/Invoice actions',affiliateBehavior.layout && affiliateBehavior.populated && affiliateBehavior.actions);
 ok('Affiliates clears denied data, ignores stale responses and skips unrelated reports',affiliateBehavior.denied && affiliateBehavior.stale && affiliateBehavior.onlyLeads && !affiliateRequests.some(u=>/marketing|submissions|traffic|maya-command/.test(u)));
 ok('Affiliates boots without JavaScript errors',affiliateErrors.length===0);
+const affiliateChrome=await affiliatePage.evaluate(()=>({
+  brand:document.querySelector('#top-left-brand .brand-title').textContent,
+  home:document.querySelector('#top-left-brand a.maya-logo-wrap')?.getAttribute('href'),
+  voice:document.querySelector('#top-left-brand .maya-logo-wrap')?.getAttribute('onclick'),
+  preview:document.getElementById('affiliate-profile').textContent.includes('Admin preview.'),
+  open:document.querySelector('a[href="/affiliates.html"]').target,
+  reload:document.querySelector('[aria-label="Reload leads"]').textContent.trim()
+}));
+ok('Affiliates opens separately, has its own heading and a home logo without voice action',affiliateChrome.brand==='Affiliates' && affiliateChrome.home==='/status.html' && !affiliateChrome.voice && affiliateChrome.open==='_blank');
+ok('Affiliates removes preview copy and uses an accessible icon-only reload',!affiliateChrome.preview && affiliateChrome.reload===String.fromCodePoint(8635));
+await affiliatePage.goto(PAGE_ROOT+AT.status,{waitUntil:'domcontentloaded'});
+await affiliatePage.locator('.card-mana').hover();
+await affiliatePage.mouse.move(5,5);
+await affiliatePage.waitForTimeout(400);
+const manaMenu = await affiliatePage.locator('.mana-chips').evaluate(el=>({visible:getComputedStyle(el).visibility,pointer:getComputedStyle(el).pointerEvents}));
+ok('Mana menu stays visible and clickable while moving toward Affiliates',manaMenu.visible==='visible' && manaMenu.pointer!=='none');
+const leadAlignment = await affiliatePage.evaluate(()=>{
+  paintLeads({connected:true,list:[{id:'fixture',name:'Example',phone:'4155550123',tier:'Signature',note:'A long form response that should start on the left',ts:new Date().toISOString()}]});
+  const panel=document.querySelector('#leads-fold .panel');
+  return {scroll:getComputedStyle(panel).overflowX,focus:panel.tabIndex,
+    name:getComputedStyle(document.querySelector('.lead-identity')).justifyContent,
+    actions:getComputedStyle(document.querySelector('.lead-ctas')).justifyContent,
+    note:getComputedStyle(document.querySelector('td.lead-note')).textAlign,
+    middle:getComputedStyle(document.querySelector('td.lead-note')).verticalAlign,
+    header:getComputedStyle(document.querySelector('.lead-h-note')).position,
+    fixed:getComputedStyle(document.querySelector('#leads-table')).tableLayout,
+    icon:getComputedStyle(document.querySelector('.lead-cta svg')).width};
+});
+ok('Lead rows center names/actions, left-align notes and retain keyboard horizontal scrolling',leadAlignment.name==='center' && leadAlignment.actions==='center' && leadAlignment.note==='left' && leadAlignment.middle==='middle' && leadAlignment.header==='sticky' && leadAlignment.fixed==='fixed' && leadAlignment.scroll==='auto' && leadAlignment.focus===0 && leadAlignment.icon==='10px');
 await affiliatePage.close();
 const smsSource=readFileSync(join(ROOT,'docs/server/maya-messages.mjs'),'utf8');
 ok('SMS audit fixes preserve opt-in, carrier reasons and trusted-host signature checks',

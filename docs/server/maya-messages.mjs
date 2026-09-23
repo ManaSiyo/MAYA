@@ -218,7 +218,7 @@ export async function sendSms(deps, { to, text }) {
   if (!r.ok || !j.sid) {
     const code = j && j.code;
     const why = code === 30034 || /A2P|10DLC|unregistered/i.test(String(j.message || ''))
-      ? 'texting is waiting on the carrier registration (Twilio campaign still in review)'
+      ? 'texting is blocked by carrier registration; check A2P campaign approval and sender assignment in Twilio'
       : 'Twilio refused the text: ' + (j.message || r.status);
     return { ok: false, why, code };
   }
