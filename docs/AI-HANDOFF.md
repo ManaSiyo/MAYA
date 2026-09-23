@@ -76,7 +76,17 @@ The fabric sourcing revamp shipped in v13.44; see that section below.
 
 ## v14.36 (Claude): the audit
 
-September 22 22:59 request, CURRENT LOCAL work on top of owner commit 1a4184a:
+September 23 workflow update: owner now authorizes local commits with descriptive
+summary/body so only Push remains in GitHub Desktop. AGENTS.md and CLAUDE.md
+updated identically; no computer use, push, or history rewriting. Previous UI
+batch is already committed as 36368d6 (title "t"), matching the locally recorded
+origin/maya-v2 at inspection; production deployment has not been rechecked.
+This documentation-only change records the standing workflow. Validation:
+instruction files match and git diff --check passes. Next: owner pushes the new
+workflow commit; subsequent completed task changes should be committed locally
+with accurate descriptions and verification notes, leaving Push to the owner.
+
+September 22 22:59 request, now in owner commit 36368d6:
 - status.html: Mana links restored to left with delayed dismissal; reload/plus
   glyphs 39% larger; square nonshrinking gear. Affiliates removes extra Admin
   link and brand flyout; logo still returns Admin. Its drawer opens Messages,

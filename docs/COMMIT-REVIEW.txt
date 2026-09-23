@@ -1,13 +1,10 @@
 Summary:
-[Codex][v14.36] Refine Admin and Affiliates, save avatars as new entries
+[Codex][v14.36] Prepare descriptive local commits before owner push
 
 Description:
-Restore Mana links to the left, enlarge lead tools, and correct the gear icon.
-Simplify Affiliates navigation and add persisted Contacted/Closed lead stages.
-Bring editable avatar names, explicit Save-as-new, Pinterest scopes/pagination,
-and 50% slower zoom to frontend and Playground; preserve Playground experiments.
+Record Fromsa's standing authorization to commit completed, verified requested
+work with an accurate summary and description, leaving Push to Fromsa.
+Keep AGENTS.md and CLAUDE.md in sync and use Git without computer use.
 
-Validation: 22 offline profile/CRM checks, 11 Admin UI contracts, 6 admin-command
-checks, inline/server syntax and git diff --check pass. Browser/visual checks
-not run per owner instruction. Pinterest-wide provider access unverified.
-No deployment or push performed. Affiliates remains admin-only preview.
+Validation: matching instruction files and git diff --check. Documentation only.
+The previous feature batch is already in 36368d6; its history is unchanged.

@@ -21,11 +21,12 @@ While working:
 - Keep changes focused and verify every edited path.
 - Never push unless Fromsa explicitly asks. The current Cloud Build trigger can
   deploy a pushed branch to production.
-- Before handing changes back for Fromsa to commit, automatically fill GitHub
-  Desktop's Summary and Description with an accurate title, changes, validation
-  and remaining limitations for the selected changes. Verify the fields in the
-  app. Leave Commit and Push to Fromsa unless separately authorized. Do not
-  amend an existing commit or reuse a stale summary for a different change set.
+- Fromsa authorizes local commits of completed, verified requested work. Prepare
+  an accurate commit summary and description covering changes, validation and
+  remaining limitations, then commit the task's files so only Push remains for
+  Fromsa in GitHub Desktop. Do not include unrelated edits. No computer use is
+  needed: use Git directly. Never amend existing commits unless explicitly asked.
+  Keep docs/COMMIT-REVIEW.txt aligned with the current prepared commit.
 
 Before handing off:
 

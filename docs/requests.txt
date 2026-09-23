@@ -1,3 +1,8 @@
+SEPTEMBER 23: prepare commits automatically
+[done] Owner authorizes local commits with accurate summary, description,
+    validation and limitations, leaving only Push in GitHub Desktop. Preserve
+    unrelated edits and existing commit history. No computer use required.
+
 SEPTEMBER 22 22:59: current local aesthetic and avatar requests
 [local] Mana links left of Mana Siyo; reload/plus glyphs 39% larger; square gear.
 [local] Affiliates: remove extra Admin link and brand dropdown, retain logo return;
