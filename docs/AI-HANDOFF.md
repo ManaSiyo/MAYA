@@ -74,6 +74,37 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## Release 14.39 prepared, September 24
+Owner rejected the 14.38 aesthetics and requested the actual Outbound workbook.
+Changed status.html (shared Affiliates view): four current statuses, single phone
+row action, tier/date subline, white consistent Jost text, translucent dismissible
+filter, grouped model snapshot. Fixed missing global bindings for the filter and
+message Invoice button; browser tests now click both controls. Old closed/passed values remain visible as disabled
+previous values until explicitly changed; the four new choices do not silently
+reclassify completed records. Outbound now reuses Admin star field/glass surfaces,
+has a dismissible hamburger drawer, Gmail compose review and imported-company view.
+Server adds /api/admin/outbound/sheets/sync: reads all three 9/23 campaign tabs,
+validates before storage, creates account-scoped campaigns, deduplicates, preserves
+local drafts/stages and propagates suppression. Later sync refreshes untouched
+source fields; local edits win. No Sheet writes, deleted-row removal or email sends.
+Connector read verified 51 Ceremonial, 128 Corporates, 20 Fashion Houses (3 bounced).
+Real rows parsed successfully; private data stayed outside repository/public assets.
+Maya Cloud Run access is NOT yet verified and live workspace is NOT populated by
+these connector reads. Sync surfaces the service-account sharing step if denied.
+Gmail is a compose handoff, NOT mailbox OAuth, saved Gmail drafts or reply sync.
+Owner needs to authorize mailbox scopes/setup separately; no secrets/env edited.
+Validation: Outbound 28, profile 28 plus stage checks, Admin UI 11, new mocked
+headless UI test (also added to Cloud Build), nine release-contract suites and
+source syntax/diff checks. Existing Maya hands smoke passes on both frontend and
+Playground. Render inspected with invented contacts;
+Google fonts were blocked in that test, so its screenshot uses fallback fonts.
+Full legacy app-regression is NOT green: outdated historical assertions remain and
+the run aborts in its avatar fixture when the external Firebase SDK is unavailable.
+The isolated new browser test mocks all network calls and passes; it is in CI.
+Exact next step: owner pushes prepared commit; after deploy Sync Sheet in Outbound.
+If server denies Sheets access, share Viewer access with the account named in the
+error. Verify actual campaign counts and saved contact edits. No paid API calls run.
+
 ## Release 14.38 live, September 24
 Owner now explicitly authorizes shipping and live verification. See RELEASE-14.38.md
 for scope and honest limitations. Changed Admin CRM columns/status/filter/typeface,

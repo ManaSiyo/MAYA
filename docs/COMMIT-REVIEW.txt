@@ -1,8 +1,22 @@
 Summary:
-[Codex][v14.38] Update CRM statuses and repair release gate
+[Codex][v14.39] Align CRM styling and sync Outbound campaigns
 
 Description:
-Add status filtering, message navigation/invoice, compact notes, model configuration
-snapshot and Outbound pain/criteria with people-table filters. Match data fonts and
-reorder drawer tabs. Repair avatar test fixtures that blocked deployment without
-disabling the release gate. See RELEASE-14.38.md for scope and limitations.
+
+Match Outbound to Admin and connect campaign workbook sync.
+
+- Four CRM statuses, matching white Jost text, dismissible translucent filter.
+- One phone action beneath names; tier/date retained; invoice in Messages.
+- Group configured models by model name.
+- Admin background, glass panels and hamburger drawer in Outbound.
+- Sync 9/23 Ceremonial, Corporates and Fashion Houses into account-scoped campaigns.
+- Companies from imported contacts; Gmail compose review (no automatic send/replies).
+
+Validated source data: 199 contacts, including 3 suppressed bounces. No contact data
+committed. Local tests: Outbound 28, profile 28 plus CRM assertions, Admin UI 11,
+mocked browser UI, nine release-contract suites and syntax. The broad historical
+app-regression suite still has stale assertions and a Firebase fixture failure. Live Sheets authorization remains to be verified.
+
+Push, wait for successful deployment, then Sync Sheet. If denied, the UI names the
+Cloud Run service account needing Viewer access. Gmail API integration still needs
+owner Google authorization and implementation; compose is the current capability.

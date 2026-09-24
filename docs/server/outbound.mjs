@@ -48,7 +48,10 @@ export function mergeContacts(state, incoming, campaignId) {
     const existing=state.contacts.find(x=>x.campaignId===campaignId && (c.email?x.email===c.email:x.domain===c.domain&&x.name===c.name));
     // A fresh suppression signal must also update already-imported records.
     if(c.email&&c.stage==='suppressed')for(const other of state.contacts)if(other.email===c.email)other.stage='suppressed';
-    if(existing)continue;
+    if(existing){
+      if(c.sheetData){for(const field of ['name','company','title','notes','subject'])if(existing.sheetData&&existing[field]===existing.sheetData[field])existing[field]=c[field];existing.sheetData=c.sheetData;}
+      continue;
+    }
     if(state.contacts.length>=5000)throw fail('Workspace limit is 5,000 contacts. Export before importing more.');
     const suppressed=c.email&&state.contacts.some(x=>x.email===c.email&&x.stage==='suppressed');
     state.contacts.push({...c,campaignId,stage:suppressed?'suppressed':c.stage});added++;
@@ -122,6 +125,29 @@ export function mountOutbound(app,deps) {
       if(!current.email)throw fail('No email to verify.');const j=await hunter('email-verifier',{email:current.email});patch={verification:text(j.data?.status)||'unknown'};
     }else throw fail('Unknown Hunter action.');
     const result=await change(user.sub,s=>{const c=s.contacts.find(x=>x.id===current.id);if(!c||c.stage==='suppressed')throw fail('Contact changed. Reload.',409);Object.assign(c,patch,{updatedAt:new Date().toISOString()});});res.json({ok:true,...result});
+  }));
+  app.post(api+'/sheets/sync',handler(async(req,res,user)=>{
+    const {state}=await load(user.sub),sheetId=state.settings.sheetId;
+    if(!sheetId)throw fail('Save your workbook URL in Connections first.');
+    const tabs=await deps.sheetTabs(sheetId);
+    const campaignTabs=tabs.filter(t=>/^9\/23 (Ceremonial|Corporates|Fashion Houses)$/.test(t));
+    if(!campaignTabs.length)throw fail('No 9/23 campaign tabs found in this workbook.');
+    // Read and validate every source before changing storage. A failed tab cannot
+    // leave an apparently successful partial import.
+    const imports=[];
+    for(const tab of campaignTabs){const rows=await deps.sheetRows(sheetId,"'"+tab.replace(/'/g,"''")+"'!A1:AA1001");imports.push({tab,contacts:rowsToContacts(rows)});}
+    const result=await change(user.sub,s=>{
+      if(s.settings.sheetId!==sheetId)throw fail('Workbook changed while syncing. Try again.',409);
+      const report=[];
+      for(const entry of imports){
+        let c=s.campaigns.find(c=>c.sheetId===sheetId&&c.sheetTab===entry.tab);
+        if(!c){if(s.campaigns.length>=100)throw fail('Campaign limit reached.');c={id:randomUUID(),name:entry.tab,status:'active',sheetId,sheetTab:entry.tab,createdAt:new Date().toISOString()};s.campaigns.push(c);}
+        const added=mergeContacts(s,entry.contacts.map(c=>({...c,source:entry.tab,sheetData:{name:c.name,company:c.company,title:c.title,notes:c.notes,subject:c.subject}})),c.id);
+        c.syncedAt=new Date().toISOString();
+        report.push({tab:entry.tab,read:entry.contacts.length,added,total:s.contacts.filter(p=>p.campaignId===c.id).length});
+      }
+      s.settings.lastSyncedAt=new Date().toISOString();return report;
+    });res.json({ok:true,...result});
   }));
   app.post(api+'/sheets',handler(async(req,res,user)=>{
     const b=req.body||{}, {state}=await load(user.sub),settings=state.settings;

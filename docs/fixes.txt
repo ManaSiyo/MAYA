@@ -1,3 +1,12 @@
+SEPTEMBER 24: 14.39 CRM styling and empty Outbound
+Legacy CSS below the prior patch overrode status size/color. Strong scoped rules
+now match campaign typography. Native details needed explicit outside/Escape close.
+Outbound required a campaign and exact single-tab setup; sync now discovers the
+three owner campaign tabs and imports atomically, with actionable access errors.
+Two existing inline controls (status filter and message invoice) were missing
+window bindings. Both are now exported and exercised through actual button clicks.
+Focused tests pass; Cloud Run workbook access is not proven by connector access.
+
 SEPTEMBER 24: release recovery verified
 9395417 pushed; public frontend/Admin report 14.38, Outbound page/module are real,
 API healthy. Legacy live hover assertion repaired without changing UI behavior.

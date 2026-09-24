@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="14.38">
+<meta name="maya-version" content="14.39">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -808,6 +808,20 @@ try {
 .lead-filter{display:inline-block;position:relative;margin-left:8px;font:12px Jost,sans-serif;letter-spacing:normal;text-transform:none}
 .lead-filter summary{cursor:pointer;list-style:none}.lead-filter svg{width:16px;height:16px}.lead-filter>div{position:absolute;z-index:10;background:#17202c;padding:12px;min-width:185px;border:1px solid #ffffff30;border-radius:12px}.lead-filter label{display:block;margin:8px 0;white-space:nowrap}
 #model-snapshot{font-size:11px;text-align:left;padding:12px;overflow-wrap:anywhere}#drawer.msgs #model-snapshot{display:none}
+
+/* Shared Admin/Affiliates CRM typography and translucent controls. */
+#adm-mkt #leads-table td,#adm-mkt #leads-table .lead-note-vp,#adm-mkt #leads-table .lead-stage,#adm-mkt #leads-table .lead-open{font:400 13px/1.55 Jost,sans-serif;color:#fff;font-variant-numeric:tabular-nums}
+#adm-mkt #leads-table th{font:500 11px Jost,sans-serif;letter-spacing:.12em;vertical-align:middle;color:#fff}
+#adm-mkt #leads-table .lead-stage{max-width:none;width:150px;text-align:center;text-align-last:center;padding:6px;background:transparent;border:0}
+#adm-mkt #leads-table .lead-h-stage{width:180px;white-space:nowrap}
+#adm-mkt #leads-table .lead-identity{justify-content:center}
+.lead-subline{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:7px;color:#fff;font:12px Jost,sans-serif}
+#adm-mkt #leads-table .lead-src,#adm-mkt #leads-table .lead-sig-edit{color:#fff;font:12px Jost,sans-serif}
+.lead-filter{vertical-align:middle;line-height:1;letter-spacing:normal;color:#fff}
+.lead-filter summary{display:flex;align-items:center;padding:3px}.lead-filter summary::-webkit-details-marker{display:none}
+.lead-filter>div{right:0;text-align:left;background:linear-gradient(150deg,rgba(30,40,55,.92),rgba(0,35,77,.9));backdrop-filter:blur(20px);box-shadow:0 12px 32px #0008;padding:14px}
+.lead-filter label{font:13px/1.5 Jost,sans-serif;color:#fff;display:flex;align-items:center;gap:8px}.lead-filter input{accent-color:#adcdf8}
+#model-snapshot{text-align:center;padding:0;font-family:Jost,sans-serif}.model-group{padding:12px;border-radius:12px;margin:4px 0;background:rgba(255,255,255,.035)}.model-group strong{display:block;font:18px 'Cormorant Garamond',serif;color:#fff}.model-group small{display:block;font:11px/1.5 Jost,sans-serif;color:var(--dim)}.model-note{font:10px Jost,sans-serif;color:var(--dim);padding:8px}
 </style>
 <!-- v13.19: removable Systems Map-only polish. Keeping this outside the
      single-file app makes the visual pass easy to revert without touching
@@ -2776,7 +2790,7 @@ function paintLeads(l) {
   };
   tb.innerHTML =
     '<tr>' + order.map(thHtml).join('') + '</tr>' +
-    l.list.map((x, i) => !leadStatusFilter.has(leadStage(x)) ? '' :
+    l.list.map((x, i) => (LEAD_STAGES[leadStage(x)] ? !leadStatusFilter.has(leadStage(x)) : leadStatusFilter.size!==Object.keys(LEAD_STAGES).length) ? '' :
       '<tr id="lead-tr-' + i + '">' + order.map((k, ci) => {
         const d = defs[k];
         const cls = [d.td || '', ci === 0 ? 'lead-col-first' : ''].filter(Boolean).join(' ');
@@ -2804,33 +2818,30 @@ function _leadTierNum(x){ const m = String(x.tier || x.company || '').match(/([0
 // went with, and Maya sets it by voice ("Kristi went with signature").
 // Actions: email, phone, pay-link. No recommendation text, no delete X.
 function _actionsCell(i, x){
-  const paid = x.paylink && String(x.paylink).trim();
-  return '<div class="lead-ctas">' +
-    (x.phone ? '<button class="lead-cta" onclick="leadMayaCall(' + i + ')" aria-label="Call" title="Call ' + esc(x.phone) + '">' + PHONE_SVG + '</button>' : '') +
-    (x.phone ? '<button class="lead-cta" onclick="leadOpenThread(' + i + ')" aria-label="Text" title="Text ' + esc(x.phone) + ' from the drawer">' + CHAT_SVG + '</button>' : '') +
-    '<button class="lead-cta lead-pay' + (paid ? ' has-link' : '') + '" onclick="leadInvoice(' + i + ')" aria-label="Invoice" title="' +
-      (paid ? 'Pay link ready: view, copy or add it to the email' : 'Invoice this lead: build a pay link in one click') + '">' + PAY_SVG + '</button>' +
-  '</div>';
+  return x.phone ? '<button class="lead-cta" onclick="leadMayaCall('+i+')" aria-label="Call" title="Call">'+PHONE_SVG+'</button>' : '';
 }
+function leadSignup(x){const value=x.createdAt||x.ts||x.date;const d=value?new Date(value):null;return d&&!Number.isNaN(d.getTime())?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';}
 // v13.95: the column catalogue. `render` closes over the shared `cell`. The name
 // column carries the WIX badge and the signature line; order lives in localStorage.
 function _leadColDefs(){
   return {
     name: { label: 'Full name', h: 'lead-h-name', td: 'lead-td-name',
-      render: (x, i) => '<div class="lead-identity">' + '<button class="lead-open" onclick="leadOpenThread('+i+')">'+esc(x.name || 'Unnamed')+'</button>' +
-        '<span class="lead-src wix">' + cell(i, x, 'tier', String(x.tier || x.company || '').replace(/\s*[·,]?\s*\$[\d,.]+.*$/, '').trim(), 'lead-sig-edit') + '</span></div>' + _actionsCell(i, x) },
+      render: (x, i) => '<div class="lead-identity"><button class="lead-open" onclick="leadOpenThread('+i+')">'+esc(x.name || 'Unnamed')+'</button></div><div class="lead-subline"><span class="lead-src wix">'+cell(i, x, 'tier', String(x.tier || x.company || '').replace(/\s*[·,]?\s*\$[\d,.]+.*$/,'').trim(),'lead-sig-edit')+'</span><time>'+esc(leadSignup(x))+'</time>'+_actionsCell(i,x)+'</div>' },
     // v14.24: Contact, the phone first (that is what gets used), the email when there is none.
-    stage: {label:'Status',h:'lead-h-stage',render:(x,i)=>'<select class="lead-stage" aria-label="Lead status" onchange="setLeadStage('+i+',this)">'+Object.entries(LEAD_STAGES).map(([k,v])=>'<option value="'+k+'"'+(leadStage(x)===k?' selected':'')+'>'+v+'</option>').join('')+'</select>'},
+    stage: {label:'Status',h:'lead-h-stage',render:(x,i)=>'<select class="lead-stage" aria-label="Lead status" onchange="setLeadStage('+i+',this)">'+(['closed','passed'].includes(x.stage)?'<option value="'+x.stage+'" selected disabled>'+ (x.stage==='closed'?'Closed':'Passed')+' (previous)</option>':'')+Object.entries(LEAD_STAGES).map(([k,v])=>'<option value="'+k+'"'+(leadStage(x)===k?' selected':'')+'>'+v+'</option>').join('')+'</select>'},
     note: { label: 'Latest Notes', h: 'lead-h-note', td: 'lead-note',
       render: (x, i) => '<div class="lead-note-vp">' + '<span title="'+esc(x.wrote || x.note || '')+'">'+esc(leadSummary(x))+'</span>' + '</div>' },
     // v14.34: no quote column; a stored order that still names it is filtered by these defs
   };
 }
-const LEAD_STAGES={passed:'Passed',in_process:'In process',new:'Not contacted',in_progress:'In progress',canceled:'Canceled'};
+const LEAD_STAGES={new:'Not contacted',in_progress:'In progress',booked:'Booked',canceled:'Cancelled'};
 let leadStatusFilter=new Set(Object.keys(LEAD_STAGES));
-function leadStage(x){if(LEAD_STAGES[x.stage])return x.stage;if(x.stage==='closed')return 'passed';if(x.stage==='contacted')return 'in_progress';if(/^cancel(?:led|ed)[.!]?$/i.test(String(x.note||'').trim()))return 'canceled';return x.lastContact?'in_progress':'new';}
+function leadStage(x){if(LEAD_STAGES[x.stage])return x.stage;if(['closed','passed'].includes(x.stage))return x.stage;if(['in_process','contacted'].includes(x.stage))return 'in_progress';if(x.stage==='meeting')return 'booked';if(/^cancel(?:led|ed)[.!]?$/i.test(String(x.note||'').trim()))return 'canceled';return x.lastContact?'in_progress':'new';}
+// Dismiss filter menus without changing their selected values.
+document.addEventListener('click',e=>{document.querySelectorAll('.lead-filter[open]').forEach(d=>{if(!d.contains(e.target))d.open=false;});});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.lead-filter[open]').forEach(d=>d.open=false);});
 function leadSummary(x){let value=String(x.wrote||x.note||'').replace(/^(?:Signature|Help me decide)\s*[·,:-]?\s*(?:\$[\d,.]+)?\s*[,·:]?\s*/i,'').replace(/\s+/g,' ').trim();if(/^(?:cancel(?:led|ed)|in progress|passed|not contacted)[.!]?$/i.test(value))return 'Request details not recorded';return value.length>120?value.slice(0,117).replace(/\s+\S*$/,'')+'...':value||'Request details not recorded';}
-function filterLeadStatus(key,checked){if(checked)leadStatusFilter.add(key);else leadStatusFilter.delete(key);paintLeads({connected:true,list:_leadList});}
+function filterLeadStatus(key,checked){if(checked)leadStatusFilter.add(key);else leadStatusFilter.delete(key);paintLeads({connected:true,list:_leadList});const menu=document.querySelector('.lead-filter');if(menu)menu.open=true;}
 const LEAD_COLS_DEFAULT = ['name', 'stage', 'note'];   // v14.34: Last Quote is gone; the tier under the name says what they went with
 function _loadLeadColOrder(){
   try {
@@ -3057,7 +3068,7 @@ async function setLeadStage(index, select) {
   } catch (error) { select.value = previous; alert(error.message); }
   finally { select.disabled = false; }
 }
-window.setLeadStage = setLeadStage;
+window.setLeadStage = setLeadStage; window.filterLeadStatus = filterLeadStatus;
 async function saveLeadField(el) {
   const id = el.dataset.id, field = el.dataset.field, i = el.dataset.idx;
   const val = (el.textContent || '').replace(/\s+/g, ' ').trim();
@@ -3140,7 +3151,7 @@ function admTab(t) {
 async function loadModelSnapshot(){
  const host=document.getElementById('model-snapshot');host.textContent='Loading model configuration...';
  const auth=_idTok;
- try{const r=await fetch('/api/admin/models',{headers:{Authorization:'Bearer '+auth}});const j=await r.json();if(auth!==_idTok)return;if(!r.ok)throw Error('Model snapshot unavailable.');host.innerHTML=Object.entries(j.models).map(([k,v])=>'<p>'+esc(k)+': <b>'+esc(v)+'</b></p>').join('')+'<p>Configured defaults, not an active-session or provider-availability test. Checked '+esc(new Date(j.checkedAt).toLocaleTimeString())+'</p>';}
+ try{const r=await fetch('/api/admin/models',{headers:{Authorization:'Bearer '+auth}});const j=await r.json();if(auth!==_idTok)return;if(!r.ok)throw Error('Model snapshot unavailable.');const groups=new Map();for(const [role,model] of Object.entries(j.models)){if(!groups.has(model))groups.set(model,[]);groups.get(model).push(role);}host.innerHTML=[...groups].map(([model,roles])=>'<div class="model-group"><strong>'+esc(model.replace(/^gpt-/,'GPT-').replace('luna','Luna'))+'</strong><small>'+esc(roles.join(' · '))+'</small></div>').join('')+'<p class="model-note">Configured models · '+esc(new Date(j.checkedAt).toLocaleTimeString())+'</p>' ;}
  catch(e){if(auth===_idTok)host.textContent=e.message;}
 }
 async function loadMayaLogs() {
@@ -3181,7 +3192,7 @@ function paintThreads(list) {
   _msgThreads = list || [];
   const unread = _msgThreads.reduce((n, t) => n + (t.unread || 0), 0);
   const badge = document.getElementById('adm-unread'); badge.textContent = String(unread); badge.hidden = !unread;
-  if (!_msgThreads.length) { host.innerHTML = '<div class="msg-empty">No texts yet. Tap the chat icon on a lead, or wait for the first one to write in.</div>'; return; }
+  if (!_msgThreads.length) { host.innerHTML = '<div class="msg-empty">No texts yet. Tap a lead name, or wait for the first one to write in.</div>'; return; }
   host.innerHTML = _msgThreads.map((t, i) =>
       '<div class="msg-row' + (t.unread ? ' unread' : '') + '" role="button" tabindex="0" data-thread-index="' + i + '">' +
         '<div class="msg-ava">' + esc(_msgInitial(t)) + '</div>' +
@@ -3323,7 +3334,7 @@ function leadMayaCall(i) {
 // the unread badge stays honest even while the Systems tab shows
 setInterval(() => { if (_idTok && _msgTab !== 'messages') loadThreads(); }, 60000);
 // this module is sealed in an IIFE; the drawer's onclicks need these on window
-Object.assign(window, { loadMayaLogs, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, leadOpenThread, leadMayaCall, loadThreads, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
+Object.assign(window, { loadMayaLogs, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, msgInvoice, leadOpenThread, leadMayaCall, loadThreads, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
 function leadContact(i, type) {
   const x = _leadList[i]; if (!x || !x.email) return;
   fetch('/api/admin/lead-note', {
@@ -3653,7 +3664,7 @@ async function loadAffiliateLeads() {
     paintLeads({...data,list:leads});
     const weekAgo = Date.now()-7*86400000;
     const stats = {total:leads.length,week:leads.filter(l=>new Date(l.ts).getTime()>=weekAgo && new Date(l.ts).getTime()<=Date.now()).length,
-      contacted:leads.filter(l=>l.lastContact || ['contacted','closed','passed','in_process','in_progress'].includes(l.stage)).length,closed:leads.filter(l=>['closed','passed'].includes(l.stage)).length};
+      contacted:leads.filter(l=>l.lastContact || ['contacted','closed','passed','in_process','in_progress','booked'].includes(l.stage)).length,closed:leads.filter(l=>['closed','passed'].includes(l.stage)).length};
     for (const [key,value] of Object.entries(stats)) document.getElementById('affiliate-'+key).textContent = value;
     status.textContent = data.why ? 'Some lead sources are unavailable.' : '';
   } catch (error) {

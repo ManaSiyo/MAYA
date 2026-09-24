@@ -589,10 +589,10 @@ const adminInteractions = await pg.evaluate(async () => {
   const name = document.querySelector('.lead-identity');
   admTab('logs');
   const logsTab = !document.getElementById('drawer-logs').hidden && document.getElementById('drawer-messages').hidden && document.getElementById('adm-tab-logs').getAttribute('aria-selected') === 'true';
-  return { logsTab, noInjectedImage, exactName, deliveryVisible, tier: name?.textContent,
-    actionsBelow: !!name?.nextElementSibling?.classList.contains('lead-ctas'),
+  return { logsTab, noInjectedImage, exactName, deliveryVisible, tier: name?.nextElementSibling?.textContent,
+    actionsBelow: !!name?.nextElementSibling?.classList.contains('lead-subline'),
     actions: name?.nextElementSibling?.querySelectorAll('button').length,
-    tierField: !!name?.querySelector('[data-field="tier"]') };
+    tierField: !!name?.nextElementSibling?.querySelector('[data-field="tier"]') };
 });
 ok('Admin behavior: Logs is a separate accessible drawer tab', adminInteractions.logsTab);
 ok('Admin behavior: punctuation in names is safe; failed delivery exposes carrier error', adminInteractions.noInjectedImage && adminInteractions.exactName && adminInteractions.deliveryVisible);
@@ -624,8 +624,8 @@ ok('Messages: contact rename saves and carrier feedback survives inbox polling',
 const { introducedName: smsIntroducedName } = await import('../docs/server/maya-messages.mjs');
 ok('Messages: explicit SMS introductions produce a contact name without treating inquiries as names',
   smsIntroducedName('Hi, my name is Mary Ingram, I need a fitting') === 'Mary Ingram' && !smsIntroducedName('I am interested in a fitting'));
-ok('CRM behavior: tier has no price; three actions below identity; tier saves to its own field',
-  adminInteractions.tier.includes('Signature') && !adminInteractions.tier.includes('$') && adminInteractions.actionsBelow && adminInteractions.actions === 3 && adminInteractions.tierField);
+ok('CRM behavior: tier has no price; one phone action below identity; tier saves to its own field',
+  adminInteractions.tier.includes('Signature') && !adminInteractions.tier.includes('$') && adminInteractions.actionsBelow && adminInteractions.actions === 1 && adminInteractions.tierField);
 const mapVer = await pg.evaluate(() =>
   (document.querySelector('meta[name="maya-version"]') || {}).content || 'missing');
 ok('index and map carry the same maya-version (' + r.version + ')', mapVer === r.version);
@@ -1749,8 +1749,8 @@ ok('Maya has the new tools: add lead, add person, journal, read the internal ops
 ok('the Visualize pill stays above the climbing cards, like the hamburger and logo',
   /#voice-wrap \{[^}]*z-index: 9000/.test(INDEX_SOURCE));
 // v13.83 quick wins
-ok('Lead Station header says Contact (Email until v14.24), submissions are "My submissions", fabric spec de-dupes the name',
-  MAP_SOURCE.includes("label: 'Contact'") &&   // v13.95: column-driven header; v14.24: Contact, phone first
+ok('Lead Station header says Status, submissions are "My submissions", fabric spec de-dupes the name',
+  MAP_SOURCE.includes("label:'Status'") &&   // v13.95: column-driven header; v14.24: Contact, phone first
   MAP_SOURCE.includes('My submissions <span id="subs-count"') &&
   INDEX_SOURCE.includes('!nm.includes(String(t).toLowerCase())'));
 
@@ -1899,7 +1899,7 @@ ok('v13.94/v13.98: hovering ADMIN drops JUST the sheet beneath the wordmark, clo
   /#top-left-brand \.brand-chips\{[^}]*padding-top:2px/.test(MAP_SOURCE) &&
   /transition:opacity \.18s ease \.9s/.test(MAP_SOURCE) &&
   /#top-left-brand:hover \.brand-chips/.test(MAP_SOURCE));
-ok('CRM tier: editable beside the name; columns centered; no delete X in the row',
+ok('CRM tier: editable beneath the name; columns centered; no delete X in the row',
   MAP_SOURCE.includes("cell(i, x, 'tier', String(x.tier || x.company || '').replace(") &&   // v14.34: the middle dot becomes a comma
   MAP_SOURCE.includes('class="lead-identity"') &&
   /#adm-mkt #leads-table td\{[^}]*text-align:center/.test(MAP_SOURCE) &&
@@ -1916,7 +1916,7 @@ ok('v13.95/v13.98: the drawer floor is a smaller tighter circle, lower, with the
 ok('v14.34: Last Quote is gone; the tier price helper stays for the pay link',
   !MAP_SOURCE.includes('function _quoteCell') &&
   MAP_SOURCE.includes('function _leadTierNum') &&
-  MAP_SOURCE.includes("const LEAD_COLS_DEFAULT = ['name', 'email', 'note'];"));
+  MAP_SOURCE.includes("const LEAD_COLS_DEFAULT = ['name', 'stage', 'note'];"));
 ok('v13.95: the Invoice 1 / Invoice 2 columns and the day-count line under the name are gone',
   !MAP_SOURCE.includes("label: 'Invoice") &&
   !MAP_SOURCE.includes("cell(i, x, 'invoice1'") &&
@@ -1926,9 +1926,9 @@ ok('v13.95: columns drag to reorder, the order persists, the first column stays 
   MAP_SOURCE.includes('_leadColDrop') &&
   MAP_SOURCE.includes("localStorage.setItem('maya.leadCols'") &&
   MAP_SOURCE.includes('lead-col-first'));
-ok('v13.95: Actions is email + phone + pay-link only, invoicing composer wired, no recommendation text',
+ok('CRM: row action is phone only, invoicing composer remains inside Messages',
   MAP_SOURCE.includes('function _actionsCell') &&
-  MAP_SOURCE.includes('class="lead-cta lead-pay') &&
+  MAP_SOURCE.includes('onclick="msgInvoice()"') &&
   MAP_SOURCE.includes('function leadInvoice') &&
   MAP_SOURCE.includes('lead-inv-modal') &&
   !/lead-rec">'\s*\+\s*rec\(x\)/.test(MAP_SOURCE));
@@ -2209,7 +2209,7 @@ ok('v14.24: the 403 healed, the wall never reloads, uploads file the client, Con
   INDEX_SOURCE.includes("' BODY, atelier direction: '") &&
   SERVER_SOURCE.includes("'gpt-4o':       MODEL_TERRA,") &&
   SERVER_SOURCE.includes('Never invent a card or a pin.') &&
-  MAP_SOURCE.includes("label: 'Contact'") &&
+  MAP_SOURCE.includes("label:'Status'") &&
   MAP_SOURCE.includes('<details class="fold" id="pe-fold">') &&
   MAP_SOURCE.includes('id="pe-body"') &&
   MAP_SOURCE.includes("body: document.getElementById('pe-body').value.trim(),"));
@@ -2561,7 +2561,7 @@ const affiliateBehavior=await affiliatePage.evaluate(async()=>{
   const populated=document.querySelector('#leads-table').textContent.includes('Mary Example') &&
     document.getElementById('affiliate-total').textContent==='2' && document.getElementById('affiliate-week').textContent==='1' &&
     document.getElementById('affiliate-contacted').textContent==='1' && document.getElementById('affiliate-closed').textContent==='1';
-  const actions=['Call','Text','Invoice'].every(label=>document.querySelector('#leads-table [aria-label="'+label+'"]'));
+  const actions=!!document.querySelector('#leads-table [aria-label="Call"]')&&!document.querySelector('#leads-table [aria-label="Invoice"]');
   mode='denied'; await loadAffiliateLeads();
   const denied=!document.querySelector('#leads-table').textContent.includes('Mary Example') && document.getElementById('affiliate-status').textContent.includes('admins only');
   mode='slow'; const pending=loadAffiliateLeads();
@@ -2571,7 +2571,7 @@ const affiliateBehavior=await affiliatePage.evaluate(async()=>{
   await loadTraffic();await loadSubmissions();
   return {layout,populated,actions,denied,stale,onlyLeads:calls.every(c=>c.url==='/api/admin/leads' && c.auth==='Bearer fictional-admin')};
 });
-ok('Affiliates displays profile, real loaded stats and shared Call/Text/Invoice actions',affiliateBehavior.layout && affiliateBehavior.populated && affiliateBehavior.actions);
+ok('Affiliates displays profile, real loaded stats and shared phone-only row action',affiliateBehavior.layout && affiliateBehavior.populated && affiliateBehavior.actions);
 ok('Affiliates clears denied data, ignores stale responses and skips unrelated reports',affiliateBehavior.denied && affiliateBehavior.stale && affiliateBehavior.onlyLeads && !affiliateRequests.some(u=>/marketing|submissions|traffic|maya-command/.test(u)));
 ok('Affiliates boots without JavaScript errors',affiliateErrors.length===0);
 const affiliateChrome=await affiliatePage.evaluate(()=>({
@@ -2595,7 +2595,7 @@ const leadAlignment = await affiliatePage.evaluate(()=>{
   const panel=document.querySelector('#leads-fold .panel');
   return {scroll:getComputedStyle(panel).overflowX,focus:panel.tabIndex,
     name:getComputedStyle(document.querySelector('.lead-identity')).justifyContent,
-    actions:getComputedStyle(document.querySelector('.lead-ctas')).justifyContent,
+    actions:getComputedStyle(document.querySelector('.lead-subline')).justifyContent,
     note:getComputedStyle(document.querySelector('td.lead-note')).textAlign,
     middle:getComputedStyle(document.querySelector('td.lead-note')).verticalAlign,
     header:getComputedStyle(document.querySelector('.lead-h-note')).position,
@@ -2624,5 +2624,11 @@ ok('CRM status column hides contact numbers and opens the thread by name',MAP_SO
 ok('Model snapshot uses authenticated server config',MAP_SOURCE.includes('/api/admin/models') && SERVER_SOURCE.includes("app.get('/api/admin/models', requireAuthHeader"));
 ok('Outbound preserves campaign pain and criteria and provides a people table',outboundJS.includes("field('pain'") && outboundJS.includes("field('criteria'") && outboundJS.includes('function renderPeople()'));
 await browser.close(); if (served) srv.close();
+ok('CRM uses four owner statuses and dismisses the filter outside or on Escape',MAP_SOURCE.includes("booked:'Booked'") && MAP_SOURCE.includes("canceled:'Cancelled'") && MAP_SOURCE.includes("if(!d.contains(e.target))d.open=false") && MAP_SOURCE.includes('window.filterLeadStatus = filterLeadStatus'));
+ok('Lead rows use one phone icon, date and tier beneath the linked name',MAP_SOURCE.includes('class="lead-subline"') && MAP_SOURCE.includes('function leadSignup') && !MAP_SOURCE.slice(MAP_SOURCE.indexOf('function _actionsCell'),MAP_SOURCE.indexOf('function _leadColDefs')).includes('PAY_SVG'));
+ok('Model snapshot groups shared models by their roles',MAP_SOURCE.includes('const groups=new Map()') && MAP_SOURCE.includes('roles.join'));
+const outboundRevampUI=readFileSync(join(ROOT,'backend/outbound.html'),'utf8'),outboundRevampJS=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');
+ok('Outbound uses the Admin background and functioning drawer',outboundRevampUI.includes('birth-of-a-star.png')&&outboundRevampUI.includes('outbound-drawer')&&outboundRevampJS.includes('function closeDrawer'));
+ok('Outbound syncs real workbook campaigns and reviews drafts in Gmail',outboundRevampJS.includes("api('/sheets/sync'")&&outboundRevampJS.includes('mail.google.com/mail/?view=cm'));
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

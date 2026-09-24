@@ -4,8 +4,8 @@ import vm from 'node:vm';
 import {mountOutbound,rowsToContacts,contact,domain,mergeContacts} from '../docs/server/outbound.mjs';
 import {chatBody,TEXT_MODEL,IMAGE_MODEL} from '../docs/server/model-config.mjs';
 import {evaluateProxyPolicy} from '../docs/server/proxy-policy.mjs';
-const handlers=new Map(),store=new Map();let user='owner',failWrite=false,conflict=false,providerCalls=0;
-mountOutbound({get:(p,h)=>handlers.set('GET '+p,h),post:(p,h)=>handlers.set('POST '+p,h)},{requireAdmin:async()=>{if(!user)throw Error('unauthorized');return{sub:user};},allow:()=>true,read:async key=>store.has(key)?{ok:true,buf:Buffer.from(JSON.stringify(store.get(key).data)),generation:String(store.get(key).version)}:{ok:false,status:404},write:async(key,buf,type,generation)=>{if(failWrite)throw Error('storage');if(conflict){conflict=false;throw Object.assign(Error('conflict'),{status:412});}assert.equal(String(store.get(key)?.version||0),generation);store.set(key,{data:JSON.parse(buf),version:Number(generation)+1});},hunterKey:'fake',aiReady:true,model:TEXT_MODEL,fetch:async()=>{providerCalls++;return {ok:true,json:async()=>({data:{organization:'Example',emails:[{value:'a@example.com',first_name:'A',verification:{status:'valid'}}]}})};},sheetRows:async()=>[['Name','Email'],['Sheet Person','sheet@example.com']],draft:async()=>({subject:'Hello',body:'An introduction'}),research:async()=> 'Evidence and sources'});
+const handlers=new Map(),store=new Map();let user='owner',failWrite=false,conflict=false,providerCalls=0,failSheet=false,sheetName='Sheet Person';
+mountOutbound({get:(p,h)=>handlers.set('GET '+p,h),post:(p,h)=>handlers.set('POST '+p,h)},{requireAdmin:async()=>{if(!user)throw Error('unauthorized');return{sub:user};},allow:()=>true,read:async key=>store.has(key)?{ok:true,buf:Buffer.from(JSON.stringify(store.get(key).data)),generation:String(store.get(key).version)}:{ok:false,status:404},write:async(key,buf,type,generation)=>{if(failWrite)throw Error('storage');if(conflict){conflict=false;throw Object.assign(Error('conflict'),{status:412});}assert.equal(String(store.get(key)?.version||0),generation);store.set(key,{data:JSON.parse(buf),version:Number(generation)+1});},hunterKey:'fake',aiReady:true,model:TEXT_MODEL,fetch:async()=>{providerCalls++;return {ok:true,json:async()=>({data:{organization:'Example',emails:[{value:'a@example.com',first_name:'A',verification:{status:'valid'}}]}})};},sheetTabs:async()=>['Principles','9/23 Ceremonial','9/23 Corporates','9/23 Fashion Houses'],sheetRows:async(_,range)=>{if(failSheet&&range.includes('Corporates'))throw Error('sheet unavailable');return [['Name','Email','Notes'],[sheetName,'sheet@example.com',sheetName]];},draft:async()=>({subject:'Hello',body:'An introduction'}),research:async()=> 'Evidence and sources'});
 async function call(path='',body){let status=200,data;const req={method:body?'POST':'GET',body};const res={set:()=>{},status:n=>{status=n;return res;},json:v=>{data=v;return res;}};await handlers.get(req.method+' /api/admin/outbound'+path)(req,res);return {status,...data};}
 let checks=0;const test=async(name,fn)=>{await fn();checks++;console.log('ok '+name);};
 await test('unauthenticated reads denied',async()=>{user='';assert.equal((await call()).status,401);user='owner';});
@@ -61,5 +61,27 @@ await test('draft navigation guards detect changes and respect cancellation',()=
 await test('campaign pain and qualification criteria persist',async()=>{
  const j=await call('/save',{type:'campaign',id:campaignId,name:'Boutiques',pain:'Slow sampling',criteria:'Small design-led brands'});
  const c=j.state.campaigns.find(c=>c.id===campaignId);assert.equal(c.pain,'Slow sampling');assert.equal(c.criteria,'Small design-led brands');
+});
+await test('workbook sync creates three campaigns, preserves drafts and is idempotent',async()=>{
+ const j=await call('/sheets/sync',{});assert.equal(j.status,200);assert.equal(j.result.length,3);
+ const campaigns=j.state.campaigns.filter(c=>c.sheetTab);assert.equal(campaigns.length,3);
+ const p=j.state.contacts.find(p=>p.campaignId===campaigns[0].id);
+ await call('/save',{type:'contact',id:p.id,body:'Owner draft',stage:'replied'});
+ const next=await call('/sheets/sync',{});assert.ok(next.result.every(r=>r.added===0));
+ assert.equal(next.state.contacts.find(x=>x.id===p.id).body,'Owner draft');
+ assert.equal(next.state.contacts.find(x=>x.id===p.id).stage,'replied');
+ user='isolated';assert.equal((await call('/sheets/sync',{})).status,400);assert.equal((await call()).state.contacts.length,0);user='owner';
+});
+await test('failed workbook tab leaves all stored campaigns unchanged',async()=>{
+ const before=JSON.stringify((await call()).state);failSheet=true;
+ assert.equal((await call('/sheets/sync',{})).status,502);failSheet=false;
+ assert.equal(JSON.stringify((await call()).state),before);
+});
+await test('source edits refresh untouched fields and preserve local edits',async()=>{
+ const current=(await call()).state, c=current.campaigns.find(c=>c.sheetTab), p=current.contacts.find(p=>p.campaignId===c.id);
+ sheetName='Updated source name';let j=await call('/sheets/sync',{});
+ assert.equal(j.state.contacts.find(x=>x.id===p.id).name,sheetName);
+ await call('/save',{type:'contact',id:p.id,notes:'Local notes'});sheetName='Another source name';
+ j=await call('/sheets/sync',{});assert.equal(j.state.contacts.find(x=>x.id===p.id).notes,'Local notes');
 });
 console.log(`${checks} outbound/model checks passed. No live providers called.`);

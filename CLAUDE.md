@@ -103,4 +103,6 @@ compatibility: docs/server/model-config.mjs. Outbound stores each admin's
 workspace under maya/outbound/<encoded Google sub>.json with GCS generation
 preconditions. Never replace that account-scoped key with a shared file.
 Run tests/outbound.mjs for Outbound/model changes; it uses fake providers.
+Run tests/outbound-ui.mjs for Outbound/shared CRM UI changes; its browser routes
+use local files and fake data. Both are in the Cloud Build release gate.
 See docs/OUTBOUND-SETUP.md for owner-only connection and launch steps.

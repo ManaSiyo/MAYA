@@ -3642,7 +3642,7 @@ async function updateLead(id, patch) {
   if (has('phone')) clean.phone = String(next.phone || '').trim().slice(0, 60);
   if (has('tier')) clean.tier = String(next.tier || '').trim().slice(0, 80);
   if (has('stage')) {
-    if (!['new','contacted','closed','passed','in_process','in_progress','canceled'].includes(next.stage)) return null;
+    if (!['new','contacted','closed','passed','in_process','in_progress','booked','canceled'].includes(next.stage)) return null;
     clean.stage = next.stage;
   }
   // v13.93: Hunter-style CRM columns. Company/title, the quote, and the two
@@ -4726,6 +4726,12 @@ mountOutbound(app, {
   allow:user=>rateLimit(user.sub,user.email,2).ok,
   fetch:(...args)=>fetch(...args), hunterKey:process.env.HUNTER_API_KEY,
   aiReady:!!process.env.OPENAI_API_KEY, model:TEXT_MODEL,
+  sheetTabs:async id=>{
+    const token=await serviceToken('https://www.googleapis.com/auth/spreadsheets.readonly');
+    const r=await fetch('https://sheets.googleapis.com/v4/spreadsheets/'+encodeURIComponent(id)+'?fields=sheets(properties(title))',{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(15000)});
+    if(!r.ok){let email='';try{email=(await (await gaMeta('email')).text()).trim();}catch(_){}throw Object.assign(new Error('Google Sheets access failed ('+r.status+'). Share this workbook as Viewer with '+(email||'the Cloud Run service account')+' and enable the Sheets API, then Sync again.'),{status:502});}
+    return ((await r.json()).sheets||[]).map(s=>s.properties.title);
+  },
   sheetRows:async(id,range)=>{
     const token=await serviceToken('https://www.googleapis.com/auth/spreadsheets.readonly');
     const r=await fetch('https://sheets.googleapis.com/v4/spreadsheets/'+encodeURIComponent(id)+'/values/'+encodeURIComponent(range),{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(15000)});

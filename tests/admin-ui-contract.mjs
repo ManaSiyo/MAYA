@@ -63,9 +63,9 @@ await test('the approved filing cabinet is promoted without removing Playground'
   assert.ok(playground.includes('>Playground</div>'));
 });
 
-await test('all four release surfaces carry v14.38', () => {
+await test('all four release surfaces carry v14.39', () => {
   const version = source => (source.match(/name="maya-version" content="([0-9.]+)"/) || [])[1];
-  assert.deepEqual([app, playground, admin, marketing].map(version), ['14.38', '14.38', '14.38', '14.38']);
+  assert.deepEqual([app, playground, admin, marketing].map(version), ['14.39', '14.39', '14.39', '14.39']);
 });
 
 await test('v14.01 drawer floor: circular logo, Hey Maya toggle beside it', () => {
@@ -106,9 +106,9 @@ await test('v14.01 Lead Station: no Invoice columns, no Last Quote (v14.34), dra
   assert.ok(!admin.includes("'<div class=\"lead-when\">"), 'day-count line under the name removed');
 });
 
-await test('CRM actions: Call, Text, Invoice below the name, no email icon', () => {
+await test('CRM actions: only Call below the name, invoice in Messages', () => {
   const actions = admin.slice(admin.indexOf('function _actionsCell'), admin.indexOf('function _leadColDefs'));
-  assert.ok(actions.includes('PHONE_SVG') && actions.includes('CHAT_SVG') && actions.includes('PAY_SVG'), 'three requested actions');
+  assert.ok(actions.includes('PHONE_SVG') && !actions.includes('CHAT_SVG') && !actions.includes('PAY_SVG'), 'one requested action');
   assert.ok(!actions.includes('EMAIL_SVG') && !actions.includes('leadEmail'), 'no email icon');
   assert.ok(admin.includes('function leadInvoice'), 'invoice composer');
   assert.ok(admin.includes('lead-inv-modal'), 'invoice modal');

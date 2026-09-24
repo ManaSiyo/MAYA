@@ -1,4 +1,4 @@
-# Maya Outbound · v14.37
+# Maya Outbound · v14.39 prepared
 
 Prepared locally, not deployed by Codex. Opens at `/outbound.html` from the
 right-side Maya menu. Operation Room and Playground stay alongside it.
@@ -14,7 +14,7 @@ right-side Maya menu. Operation Room and Playground stay alongside it.
   the owner's workspace and applies when importing into another campaign.
 - Maya market research with web search; editable email drafts grounded in saved
   studio facts and contact/campaign data. Explicit actions initiate billable work.
-- Email-app handoff for human review. No automatic sends, inbox/reply sync,
+- Gmail compose handoff for human review. No automatic sends, inbox/reply sync,
   scheduled sequences, mailbox warming or calendar booking. Results reflect
   manually recorded stages, not observed email delivery/open/click events.
 - GCS generation preconditions protect concurrent writes; failed storage reads
@@ -22,20 +22,22 @@ right-side Maya menu. Operation Room and Playground stay alongside it.
 
 ## Owner connection steps
 
-1. Provide the outbound Google Sheet URL and exact tab name, or enter them in
-   Outbound → Connections after deployment. Share that sheet as Viewer with the
-   existing Cloud Run service account. Do not publish the sheet publicly.
+1. Open Outbound → hamburger → Connections after deployment. Save the owner
+   workbook URL, then Sync Sheet. It discovers the three 9/23 campaign tabs and
+   creates their campaigns. If access is denied, share the workbook as Viewer
+   with the Cloud Run service account shown in the error. Keep the sheet private.
 2. If Hunter is not configured, attach its key as `HUNTER_API_KEY` to Maya's
    Cloud Run service through your existing secret-management process. Never put
    the key in this repository, a browser field or chat. No credentials or service
    environment settings were inspected or changed during this implementation.
-3. Save your real studio facts in Connections. Create a campaign, import a small
-   known sample, then check field mappings. Imported rows do not overwrite
-   existing contact notes or drafts. Export is CSV; no automatic Sheets writeback.
+3. Save your real studio facts in Connections. Check the synced campaigns: 51
+   Ceremonial, 128 Corporates and 20 Fashion Houses contacts at inspection. Sync
+   refreshes untouched source fields; local edits/drafts/stages survive. Bounces
+   suppress outreach. There is no automatic Sheets writeback or row deletion.
 4. Review Hunter/OpenAI account access and balances before clicking paid actions.
    Provider adapters are tested against fakes; production credentials and model
    entitlement still need owner verification after deployment.
-5. Review drafts before opening them in your mail app. Record Contacted/Replied/
+5. Review drafts in Gmail. This opens compose, not a mailbox API connection. Record Contacted/Replied/
    Meeting/Closed after those events occur. Use Suppressed for do-not-contact.
 
 ## Models and economics, checked September 23
@@ -77,19 +79,19 @@ proxy policy, routing, ranking and admin contracts pass. No computer use,
 paid API requests, calls, emails or SMS were performed. Visual/browser checks,
 Firestore emulator checks and real provider smoke tests remain outstanding.
 
-Public HTML fetch confirmed the deployed Admin still had the older below-Mana
-CSS at inspection. Local v14.37 restores left placement and increments the
-version so the Admin's deployment refresh can detect the new shipment. Owner
-must push and confirm both hosting and API/rules deployment succeed.
+v14.38 is deployed. The v14.39 sync and UI revisions are prepared locally; owner
+push and successful deployment are required. Local mocked UI checks pass, including
+filter clicks, drawer dismissal and the message invoice action. Real server Sheet
+access and Gmail API integration remain unverified/unimplemented respectively.
 
 ## Owner workbook inspected
 Workbook: https://docs.google.com/spreadsheets/d/1G2zfqopOyZNHf78nuEeNdLgRY7ON0JTeegkhhZ4azyg/edit
 The supplied gid points to Principles (sales framework), not a contacts table.
-Use one of these exact tab names in Connections and a corresponding campaign:
-- August SDR
+Sync Sheet discovers these active tabs automatically:
 - 9/23 Ceremonial
 - 9/23 Corporates
 - 9/23 Fashion Houses
+August SDR remains available through the optional single-tab import.
 Corporates uses row 3 for headers; the importer detects it automatically. Research,
 original status, date and other extra columns are retained in contact notes.
 Sheet Hunter status does not automatically count as current email verification.

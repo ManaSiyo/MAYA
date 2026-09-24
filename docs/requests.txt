@@ -1,3 +1,14 @@
+SEPTEMBER 24: 14.39 review corrections
+[prepared] Four CRM options: Not contacted, In progress, Booked, Cancelled.
+[prepared] White Jost data, aligned status gear, outside/Escape dismissal; one phone
+    icon with tier/date below name. Invoice remains in Messages. Affiliates shares UI.
+[prepared] Model groups share one row per configured model with roles below.
+[prepared] Outbound Admin background/glass, drawer, companies from imported contacts,
+    three campaign workbook sync, duplicate/suppression handling and Gmail compose.
+[verified] Source workbook has 51 / 128 / 20 contacts across the three 9/23 tabs.
+[pending] Owner push and live server Sheet access/readback. Gmail mailbox OAuth and
+    reply sync remain unimplemented; compose handoff is explicitly labeled.
+
 SEPTEMBER 24: 14.38 owner-authorized release
 [deployed] CRM three columns, five statuses, status filter gear, names open Messages,
     phone hidden from table, invoice in message header; compact request excerpts.

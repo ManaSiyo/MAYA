@@ -39,6 +39,7 @@ steps:
         # test failure fails the build.
         if npm install --no-save playwright >/dev/null 2>&1 && npx playwright install --with-deps chromium >/dev/null 2>&1; then
           node tests/maya-hands-smoke.mjs
+          node tests/outbound-ui.mjs
         else
           echo "WARNING browser unavailable in CI, maya-hands-smoke skipped"
         fi
