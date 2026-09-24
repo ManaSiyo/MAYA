@@ -385,7 +385,7 @@ const drawer = await page.evaluate(async () => {
   out.rowP1 = list.querySelector('[data-id="p1"]').classList.contains('active');
   out.rowP2 = list.querySelector('[data-id="p2"]').classList.contains('active');
   // clients: the current one is marked, each has an x, switching keeps the board
-  (0, eval)("_avatarLibCache = [{ id: 'micheal', name: 'Micheal', face: null, measurements: { height: '180' } }, { id: 'rudy', name: 'Rudy', face: null }]; lastSummary = { client: { name: 'Rudy' }, dream_outcome: 'a fedora' };");
+  (0, eval)("projectStore.ready = () => true; projectStore._uid = () => 'avatar-fixture'; _avatarsDoc = () => ({set:async()=>{},get:async()=>({exists:false})}); _avatarLibCacheUid = 'avatar-fixture'; _avatarLibCache = [{ id: 'micheal', name: 'Micheal', face: null, measurements: { height: '180' } }, { id: 'rudy', name: 'Rudy', face: null }]; lastSummary = { client: { name: 'Rudy' }, dream_outcome: 'a fedora' }; lastSummary._avatarLibraryId='rudy'; lastSummary._avatarSavedSignature=JSON.stringify(_avatarIdentity());");
   out.list = await window._pgTool('list_clients', {}, { send: () => {} });
   (0, eval)('_avatarSwitcherOpen = false');
   await toggleAvatarSwitcher();
@@ -442,7 +442,7 @@ const fold = await page.evaluate(async () => {
   pgUpdatePill();
   out.summary = (document.getElementById('pg-projects-current') || {}).textContent;
   // Check the approved controls, including Playground's staged Save button.
-  (0, eval)("_avatarLibCache = []; lastSummary = { client: { name: 'Rudy' } }; _avatarSwitcherOpen = false;");
+  (0, eval)("projectStore.ready = () => true; projectStore._uid = () => 'avatar-fixture'; _avatarsDoc = () => ({set:async()=>{},get:async()=>({exists:false})}); _avatarLibCacheUid = 'avatar-fixture'; _avatarLibCache = []; lastSummary = { client: { name: 'Rudy' } }; _avatarSwitcherOpen = false;");
   await toggleAvatarSwitcher();
   const panel = document.getElementById('drawer-avatar-switcher');
   out.actionButtons = [...panel.querySelectorAll('.avatar-switch-actions .drawer-action')].map(b => b.textContent.trim());
@@ -535,7 +535,7 @@ const c8 = await page.evaluate(async () => {
   const out = {};
   out.pencilByName = !!document.getElementById('drawer-avatar-rename');
   // a pencil and an x on every saved client; renaming a row rewrites the roster
-  (0, eval)("_avatarLibCache = [{ id: 'micheal', name: 'Micheal', face: null }, { id: 'rudy', name: 'Rudy', face: null }]; lastSummary = { client: { name: 'Micheal' } }; _avatarSwitcherOpen = false;");
+  (0, eval)("projectStore.ready = () => true; projectStore._uid = () => 'avatar-fixture'; _avatarsDoc = () => ({set:async()=>{},get:async()=>({exists:false})}); _avatarLibCacheUid = 'avatar-fixture'; _avatarLibCache = [{ id: 'micheal', name: 'Micheal', face: null }, { id: 'rudy', name: 'Rudy', face: null }]; lastSummary = { client: { name: 'Micheal' } }; _avatarSwitcherOpen = false;");
   await toggleAvatarSwitcher();
   const panel = document.getElementById('drawer-avatar-switcher');
   out.rowPencils = panel.querySelectorAll('.avatar-switch-rename').length;
@@ -546,7 +546,7 @@ const c8 = await page.evaluate(async () => {
   if (inp) { inp.value = 'Aster'; inp.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); }
   await new Promise(r => setTimeout(r, 150));
   const lib = (0, eval)('_avatarLibCache');
-  out.libRenamed = lib.some(a => a.id === 'aster' && a.name === 'Aster') && !lib.some(a => a.id === 'micheal');
+  out.libRenamed = lib.some(a => a.id === 'micheal' && a.name === 'Aster') && !lib.some(a => a.name === 'Micheal');
   out.boardFollows = (0, eval)('lastSummary.client.name') === 'Aster';
   (0, eval)('_closeAvatarSwitcher()');
   // Randomize paints what it did: the numbers land in the fold and the face fills
@@ -739,14 +739,15 @@ const c11 = await page.evaluate(async () => {
   out.creditToast = toasts.find(t => /credit/i.test(t)) || toasts.join(' | ');
   // the pencil: hidden beside the name, shown on the highlighted client only; the client on the board is in the list
   out.namePencilHidden = getComputedStyle(document.getElementById('drawer-avatar-rename')).opacity === '0';
-  (0, eval)("_avatarLibCache = [{ id: 'linda', name: 'Linda', face: null }]; lastSummary = { client: { name: 'Fromsa' }, _measurements: { height: 70 } }; _avatarSwitcherOpen = false;");
+  (0, eval)("projectStore.ready = () => true; projectStore._uid = () => 'avatar-fixture'; _avatarsDoc = () => ({set:async()=>{},get:async()=>({exists:false})}); _avatarLibCacheUid = 'avatar-fixture'; _avatarLibCache = [{ id: 'linda', name: 'Linda', face: null }]; lastSummary = { client: { name: 'Fromsa' }, _measurements: { height: 70 } }; _avatarSwitcherOpen = false;");
   await toggleAvatarSwitcher();
   const panel = document.getElementById('drawer-avatar-switcher');
   const rows = [...panel.querySelectorAll('.avatar-switch-row:not(.avatar-switch-new)')];
   out.rowNames = rows.map(r => (r.querySelector('.avatar-switch-name') || {}).textContent);
   const active = panel.querySelector('.avatar-switch-row.active');
-  out.activeName = active && active.querySelector('.avatar-switch-name').textContent;
-  out.activePencil = !!active && getComputedStyle(active.querySelector('.avatar-switch-rename')).opacity === '0';   // v14.28: hidden until hover, like the x
+  out.activeName = active?.querySelector('.avatar-switch-name')?.textContent;
+  out.hasSave = !!panel.querySelector('button[onclick="saveAvatarFromDrawer(this)"]');
+  out.activePencil = !active?.querySelector('.avatar-switch-rename') || getComputedStyle(active.querySelector('.avatar-switch-rename')).opacity === '0';   // v14.28: hidden until hover, like the x
   out.hoverRule = [...document.styleSheets].some(ss => { try { return [...ss.cssRules].some(r => r.selectorText === '#notes-drawer .avatar-switch-row:hover .avatar-switch-rename' && /opacity:\s*1/.test(r.cssText)); } catch (_) { return false; } });
   const other = rows.find(r => !r.classList.contains('active'));
   out.otherPencilHidden = !!other && getComputedStyle(other.querySelector('.avatar-switch-rename')).opacity === '0';
@@ -767,7 +768,7 @@ ok('the voice line out of credit says so to the studio', /OpenAI credit has run 
 ok('the feedback box opens above the open picture, and her look can carry a picture at full detail',
   Number(c11.fbZ) > 200 && /^data:image\/jpeg/.test(c11.pic || ''), JSON.stringify([c11.fbZ, String(c11.pic).slice(0, 30)]));
 ok('the client on the board sits in the list, highlighted; every pencil hides until its row is hovered, like the x (v14.28)',
-  c11.namePencilHidden === true && c11.activeName === 'Fromsa' && c11.rowNames.includes('Linda') && c11.activePencil === true && c11.otherPencilHidden === true && c11.hoverRule === true,
+  c11.namePencilHidden === true && c11.activeName === 'Fromsa (unsaved)' && c11.hasSave === true && c11.rowNames.includes('Linda') && c11.activePencil === true && c11.otherPencilHidden === true && c11.hoverRule === true,
   JSON.stringify([c11.namePencilHidden, c11.rowNames, c11.activeName, c11.activePencil, c11.otherPencilHidden, c11.hoverRule]));
 
 // ── 3c12. v14.27: a phone: the switch is the line, the touched card carries the controls ──

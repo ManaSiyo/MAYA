@@ -74,6 +74,20 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## Release 14.38 in progress, September 24
+Owner now explicitly authorizes shipping and live verification. See RELEASE-14.38.md
+for scope and honest limitations. Changed Admin CRM columns/status/filter/typeface,
+message invoice, drawer order/gear, authenticated model snapshot; Outbound pain/
+criteria fields and People table filters; server stage validation and model route.
+Versions are 14.38 across release pages. Cloud Build screenshot identifies failing
+avatar hands-test fixtures as blocker; account-scoped fixtures and stable-ID rename
+expectations corrected, unsaved preview now has consistent name markup.
+Tests: Outbound 25, profile 27 plus CRM migration/summary checks, Admin UI 11.
+Both hands-test surfaces and API smoke passed locally.
+Exact next step: commit/push the
+owner-authorized release, then verify Cloud Build and public Hosting/API results.
+Do not declare live success from git push alone.
+
 ## September 24 audit and local corrections
 See AUDIT-2026-09-24.md for the complete request status and remaining gaps.
 Public HTTP checks: live still 14.36; Outbound and its module resolve to the app

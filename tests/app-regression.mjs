@@ -2620,6 +2620,9 @@ mergeContacts(suppressionState,rowsToContacts([['Email','Status'],['a@example.co
 ok('Reimported bounced contacts suppress existing outreach',suppressionState.contacts[0].stage==='suppressed');
 const liveVerifier=readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8');
 ok('Live verifier checks moved pages and Outbound module type',liveVerifier.includes("localVersion('frontend/index.html')") && liveVerifier.includes('outboundScript.contentType'));
+ok('CRM status column hides contact numbers and opens the thread by name',MAP_SOURCE.includes("['name', 'stage', 'note']") && MAP_SOURCE.includes('function leadStage(x)') && MAP_SOURCE.includes('function leadSummary(x)') && MAP_SOURCE.includes('function msgInvoice()'));
+ok('Model snapshot uses authenticated server config',MAP_SOURCE.includes('/api/admin/models') && SERVER_SOURCE.includes("app.get('/api/admin/models', requireAuthHeader"));
+ok('Outbound preserves campaign pain and criteria and provides a people table',outboundJS.includes("field('pain'") && outboundJS.includes("field('criteria'") && outboundJS.includes('function renderPeople()'));
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

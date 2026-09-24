@@ -27,6 +27,12 @@ const server=read('docs/server/server.js');let record={items:[{id:'m_one',name:'
 const context=vm.createContext({loadManualLeads:async()=>structuredClone(record),gcsPut:async(_,data)=>{record=JSON.parse(data);writes++;},MAYA_LEADS_PATH:'fake',Buffer});
 vm.runInContext(server.slice(server.indexOf('async function updateLead('),server.indexOf('// v13.87: delete ANY lead')),context);
 for(const id of ['m_one','w_one']){await vm.runInContext(`updateLead('${id}',{stage:'closed'})`,context);assert.equal(id==='m_one'?record.items[0].stage:record.overrides.w_one.stage,'closed');checks++;}
-assert.equal(await vm.runInContext("updateLead('m_one',{stage:'invalid'})",context),null);assert.equal(writes,2);checks++;
+for(const stage of ['passed','in_process','in_progress','canceled','new']){await vm.runInContext(`updateLead('m_one',{stage:'${stage}'})`,context);assert.equal(record.items[0].stage,stage);checks++;}
+assert.equal(await vm.runInContext("updateLead('m_one',{stage:'invalid'})",context),null);assert.equal(writes,7);checks++;
 const admin=read('backend/status.html');for(const match of admin.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){if(!/\bsrc=|application\/ld\+json/.test(match[1]))new vm.Script(match[2]);}checks++;
 console.log(`${checks} checks passed; no browser or external service used.`);
+
+const crm=vm.createContext({});vm.runInContext(admin.slice(admin.indexOf('const LEAD_STAGES='),admin.indexOf('const LEAD_COLS_DEFAULT')),crm);
+assert.equal(crm.leadStage({note:'Cancelled'}),'canceled');assert.equal(crm.leadStage({stage:'in_process'}),'in_process');assert.equal(crm.leadStage({stage:'closed'}),'passed');
+assert.equal(crm.leadSummary({note:'Cancelled',wrote:'A velvet suit for a wedding'}),'A velvet suit for a wedding');assert.ok(crm.leadSummary({wrote:'long request '.repeat(30)}).length<=120);
+console.log('CRM stage migration and compact request summaries passed.');

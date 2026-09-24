@@ -1,11 +1,8 @@
 Summary:
-[Codex][v14.37] Harden Outbound drafts and audit release readiness
+[Codex][v14.38] Update CRM statuses and repair release gate
 
 Description:
-Guard unsaved drafts, apply suppression when duplicate contacts are reimported,
-and align Outbound logo, fonts, focus and mobile layout with Maya. Repair live
-verification paths and detect Outbound falling back to the app. Record incomplete
-requests and observed production v14.36 deployment gap.
-
-Validation: Outbound 24 and broad API/CRM/phone/SMS/model suites pass. No browser
-or paid calls. Production deploy/provider access/rendered visuals unverified.
+Add status filtering, message navigation/invoice, compact notes, model configuration
+snapshot and Outbound pain/criteria with people-table filters. Match data fonts and
+reorder drawer tabs. Repair avatar test fixtures that blocked deployment without
+disabling the release gate. See RELEASE-14.38.md for scope and limitations.

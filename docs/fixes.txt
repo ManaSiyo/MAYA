@@ -1,3 +1,9 @@
+SEPTEMBER 24: deployment root cause identified
+Cloud Build bc53725d-a5fb-4dfa-abe4-ed34be0d190f for 2e1b47c failed at
+tests/maya-hands-smoke.mjs:716: old avatar fixtures/DOM expectations. Build and
+deploy never ran. Updated fixtures with account identity, stable IDs and explicit
+unsaved preview; no release gate removed.
+
 SEPTEMBER 24: live Outbound missing despite origin containing changes
 Public HTTP: /outbound.html and /backend/outbound.js returned frontend HTML v14.36.
 Local routing is correct; Cloud Build failure/trigger cause not established.

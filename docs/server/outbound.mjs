@@ -75,7 +75,7 @@ export function mountOutbound(app,deps) {
         let campaign=b.id?state.campaigns.find(c=>c.id===b.id):null;
         if(b.id&&!campaign)throw fail('Campaign not found.',404);
         if(!campaign){if(state.campaigns.length>=100)throw fail('Campaign limit reached.');campaign={id:randomUUID(),createdAt:new Date().toISOString()};state.campaigns.push(campaign);}
-        Object.assign(campaign,{name,objective:text(b.objective,2000),audience:text(b.audience,1000),competitors:text(b.competitors,12000),status:b.status==='paused'?'paused':'active'});
+        Object.assign(campaign,{name,objective:text(b.objective,2000),audience:text(b.audience,1000),pain:text(b.pain,2000),criteria:text(b.criteria,3000),competitors:text(b.competitors,12000),status:b.status==='paused'?'paused':'active'});
       }else if(b.type==='contact'){
         const c=state.contacts.find(x=>x.id===b.id);if(!c)throw fail('Contact not found.',404);
         if(b.stage!==undefined){if(!STAGES.includes(b.stage))throw fail('Invalid stage.');c.stage=b.stage;if(b.stage==='suppressed'&&c.email)for(const other of state.contacts)if(other.email===c.email)other.stage='suppressed';}

@@ -58,4 +58,8 @@ await test('draft navigation guards detect changes and respect cancellation',()=
   assert.equal(ctx.hasUnsavedDraft(),false);fields.body.value='edited';assert.equal(ctx.hasUnsavedDraft(),true);assert.equal(ctx.leaveDraft(),false);
   fields.body.value='saved';assert.equal(ctx.leaveDraft(),true);
 });
+await test('campaign pain and qualification criteria persist',async()=>{
+ const j=await call('/save',{type:'campaign',id:campaignId,name:'Boutiques',pain:'Slow sampling',criteria:'Small design-led brands'});
+ const c=j.state.campaigns.find(c=>c.id===campaignId);assert.equal(c.pain,'Slow sampling');assert.equal(c.criteria,'Small design-led brands');
+});
 console.log(`${checks} outbound/model checks passed. No live providers called.`);
