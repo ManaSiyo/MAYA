@@ -19,8 +19,8 @@ const WAIT = process.argv.includes('--wait');
 
 const localVersion = (src) => (readFileSync(join(ROOT, src), 'utf8')
   .match(/name="maya-version" content="([\d.]+)"/) || [])[1];
-const WANT = localVersion('index.html');
-const WANT_MAP = localVersion('status.html');
+const WANT = localVersion('frontend/index.html');
+const WANT_MAP = localVersion('backend/status.html');
 
 let failed = 0;
 const ok = (name, cond, detail) => {
@@ -30,7 +30,7 @@ const ok = (name, cond, detail) => {
 const get = async (path) => {
   const r = await fetch(SITE + path + (path.includes('?') ? '&' : '?') + 'cb=' + Date.now(),
     { headers: { 'Cache-Control': 'no-cache' } });
-  return { status: r.status, text: await r.text() };
+  return { status: r.status, contentType:r.headers.get('content-type')||'', text: await r.text() };
 };
 const versionOf = (t) => (t.match(/name="maya-version" content="([\d.]+)"/) || [])[1] || 'none';
 
@@ -63,6 +63,11 @@ ok('community frames take each picture\'s own shape',
 ok('wall details stay hidden until hover', /\.cc-meta \{[\s\S]{0,300}?opacity: 0;/.test(app.text));
 ok('the deploy signs everyone out on the next load',
   app.text.includes('maya_seen_version_app') && map.text.includes('maya_seen_version_map'));
+
+const outbound = await get('/outbound.html');
+const outboundScript = await get('/backend/outbound.js');
+ok('Outbound is the real page, not the app fallback',outbound.status===200 && versionOf(outbound.text)===WANT && outbound.text.includes('id="campaigns"') && outbound.text.includes('/backend/outbound.js'));
+ok('Outbound module is served as JavaScript',outboundScript.status===200 && /javascript/.test(outboundScript.contentType) && outboundScript.text.includes('/api/admin/outbound'));
 
 const health = await get('/api/healthz');
 let h = {};

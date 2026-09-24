@@ -1,10 +1,11 @@
 Summary:
-[Codex][v14.37] Match Outbound imports to owner workbook
+[Codex][v14.37] Harden Outbound drafts and audit release readiness
 
 Description:
-Detect summary-prefixed contact headers and map corporate contact/role/subject
-columns. Preserve research and outreach history; quarantine incomplete email
-addresses and suppress bounced/unsubscribed contacts. Document exact tabs.
+Guard unsaved drafts, apply suppression when duplicate contacts are reimported,
+and align Outbound logo, fonts, focus and mobile layout with Maya. Repair live
+verification paths and detect Outbound falling back to the app. Record incomplete
+requests and observed production v14.36 deployment gap.
 
-Validation: 22 offline Outbound/model checks pass; no paid calls or Sheet writes.
-Cloud Run sheet access and actual import remain unverified. Not pushed.
+Validation: Outbound 24 and broad API/CRM/phone/SMS/model suites pass. No browser
+or paid calls. Production deploy/provider access/rendered visuals unverified.

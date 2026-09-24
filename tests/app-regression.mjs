@@ -7,7 +7,7 @@
 //
 // Needs Playwright + Chromium. Claude runs this in its workspace as part of
 // the pre-push loop: smoke.mjs, then this, then the push is prepared.
-import { rowsToContacts } from '../docs/server/outbound.mjs';
+import { rowsToContacts, mergeContacts } from '../docs/server/outbound.mjs';
 import { chromium } from 'playwright';
 import http from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
@@ -2612,6 +2612,14 @@ ok('SMS audit fixes preserve opt-in, carrier reasons and trusted-host signature 
 const importedCorporate=rowsToContacts([['Summary'],['Company','Contact','Email address','Role','Status'],['Example','Person','person@example.com','Director','Sent']])[0];
 ok('Outbound imports summary-prefixed corporate sheets without losing names or status',importedCorporate.name==='Person' && importedCorporate.title==='Director' && importedCorporate.stage==='contacted');
 
+const outboundUI=readFileSync(join(ROOT,'backend/outbound.html'),'utf8');
+const outboundJS=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');
+ok('Outbound matches Maya fonts/logo and guards unsaved drafts',outboundUI.includes('/aesthetics/ui/logo-208.png') && outboundUI.includes('Cormorant+Garamond') && outboundUI.includes('Jost:') && outboundUI.includes(':focus-visible') && outboundJS.includes('function hasUnsavedDraft()') && outboundJS.includes("if(!leaveDraft())return;selected="));
+const suppressionState={campaigns:[{id:'audit'}],contacts:[{campaignId:'audit',email:'a@example.com',stage:'contacted'}]};
+mergeContacts(suppressionState,rowsToContacts([['Email','Status'],['a@example.com','Bounced']]),'audit');
+ok('Reimported bounced contacts suppress existing outreach',suppressionState.contacts[0].stage==='suppressed');
+const liveVerifier=readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8');
+ok('Live verifier checks moved pages and Outbound module type',liveVerifier.includes("localVersion('frontend/index.html')") && liveVerifier.includes('outboundScript.contentType'));
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

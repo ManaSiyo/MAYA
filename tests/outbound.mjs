@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import {mountOutbound,rowsToContacts,contact,domain} from '../docs/server/outbound.mjs';
+import {mountOutbound,rowsToContacts,contact,domain,mergeContacts} from '../docs/server/outbound.mjs';
 import {chatBody,TEXT_MODEL,IMAGE_MODEL} from '../docs/server/model-config.mjs';
 import {evaluateProxyPolicy} from '../docs/server/proxy-policy.mjs';
 const handlers=new Map(),store=new Map();let user='owner',failWrite=false,conflict=false,providerCalls=0;
@@ -44,5 +44,18 @@ await test('CSV preserves quoted commas, newlines and quotes',()=>{
   const ctx=vm.createContext({});vm.runInContext(csv,ctx);
   const rows=ctx.parseCSV('Name,Notes\n"A, B","Line 1\nLine 2"');assert.equal(rows[1][0],'A, B');assert.equal(rows[1][1],'Line 1\nLine 2');
   assert.throws(()=>ctx.parseCSV('Name\n"unfinished'));
+});
+await test('reimported bounce suppresses existing contacts across campaigns',()=>{
+  const state={campaigns:[{id:'a'},{id:'b'}],contacts:[{id:'x',campaignId:'a',email:'a@example.com',stage:'contacted'},{id:'y',campaignId:'b',email:'a@example.com',stage:'ready'}]};
+  assert.equal(mergeContacts(state,rowsToContacts([['Email','Status'],['a@example.com','Bounced']]),'a'),0);
+  assert.ok(state.contacts.every(c=>c.stage==='suppressed'));
+});
+await test('draft navigation guards detect changes and respect cancellation',()=>{
+  const source=readFileSync(new URL('../backend/outbound.js',import.meta.url),'utf8');
+  const fields={body:{value:'saved'},subject:{value:'Hello'},notes:{value:''},stage:{value:'new'}};
+  const ctx=vm.createContext({state:{contacts:[{id:'one',body:'saved',subject:'Hello',notes:'',stage:'new'}]},selected:'one',$:id=>fields[id],confirm:()=>false});
+  vm.runInContext(source.slice(source.indexOf('function hasUnsavedDraft'),source.indexOf("window.addEventListener('beforeunload'")),ctx);
+  assert.equal(ctx.hasUnsavedDraft(),false);fields.body.value='edited';assert.equal(ctx.hasUnsavedDraft(),true);assert.equal(ctx.leaveDraft(),false);
+  fields.body.value='saved';assert.equal(ctx.leaveDraft(),true);
 });
 console.log(`${checks} outbound/model checks passed. No live providers called.`);

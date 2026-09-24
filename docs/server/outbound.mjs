@@ -46,6 +46,8 @@ export function mergeContacts(state, incoming, campaignId) {
   let added=0;
   for(const c of incoming){
     const existing=state.contacts.find(x=>x.campaignId===campaignId && (c.email?x.email===c.email:x.domain===c.domain&&x.name===c.name));
+    // A fresh suppression signal must also update already-imported records.
+    if(c.email&&c.stage==='suppressed')for(const other of state.contacts)if(other.email===c.email)other.stage='suppressed';
     if(existing)continue;
     if(state.contacts.length>=5000)throw fail('Workspace limit is 5,000 contacts. Export before importing more.');
     const suppressed=c.email&&state.contacts.some(x=>x.email===c.email&&x.stage==='suppressed');

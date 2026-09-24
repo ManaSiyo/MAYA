@@ -74,6 +74,20 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## September 24 audit and local corrections
+See AUDIT-2026-09-24.md for the complete request status and remaining gaps.
+Public HTTP checks: live still 14.36; Outbound and its module resolve to the app
+fallback. Git origin already contains de1c1fc; deployment remains unresolved.
+Fixed draft-discard navigation, duplicate-import suppression, Outbound logo/mobile
+layout/focus styling, and stale paths in tests/verify-live.mjs. Files: backend/
+outbound.html, outbound.js; docs/server/outbound.mjs; tests/outbound.mjs,
+app-regression.mjs, verify-live.mjs. Validation: Outbound 24, profile 22, proxy 27,
+routing 7, fabric 6, admin command 6/UI 11, MCP 11, API smoke, phone 48/SMS 50,
+transfer and feedback pass. Syntax/diff checks pass. No browser or paid API use.
+Exact next step: owner checks Cloud Build for the already-pushed 14.37 revision;
+push this follow-up only after review. Recheck actual routes after successful
+hosting deploy. Live providers and rendered aesthetics remain unverified.
+
 ## Outbound workbook mapping verified, September 23
 Read-only connector inspection confirmed workbook "Outbound", ID
 1G2zfqopOyZNHf78nuEeNdLgRY7ON0JTeegkhhZ4azyg. The linked gid 509408163

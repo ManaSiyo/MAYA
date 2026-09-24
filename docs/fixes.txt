@@ -1,3 +1,9 @@
+SEPTEMBER 24: live Outbound missing despite origin containing changes
+Public HTTP: /outbound.html and /backend/outbound.js returned frontend HTML v14.36.
+Local routing is correct; Cloud Build failure/trigger cause not established.
+Fixed deployment verifier old file paths and added explicit Outbound/MIME checks.
+Also fixed local unsaved draft loss and suppression on duplicate imports.
+
 SEPTEMBER 23: Outbound sheet mapping
 Owner workbook uses row-3 headers for Corporates and nonstandard Contact/Role
 columns. Importer now detects those headers and retains outreach subjects and
