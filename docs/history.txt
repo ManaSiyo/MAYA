@@ -1,3 +1,8 @@
+SEPTEMBER 24, 2026 (v14.38). Repaired the avatar test blocking deployment.
+Public Hosting and API now serve the CRM status/filter update, model snapshot
+and Outbound workspace. Outbound includes campaign pain/criteria and people
+filters; live provider access and SMS carrier approval remain separate work.
+
 MAYA HISTORY
 Plain talk, newest entry on top. Say "update the history" in any Claude or
 Codex chat and the assistant adds a new dated entry here.

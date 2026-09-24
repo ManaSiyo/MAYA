@@ -1,10 +1,10 @@
 SEPTEMBER 24: 14.38 owner-authorized release
-[local] CRM three columns, five statuses, status filter gear, names open Messages,
+[deployed] CRM three columns, five statuses, status filter gear, names open Messages,
     phone hidden from table, invoice in message header; compact request excerpts.
-[local] Systems rightmost; Jost data typeface; deployed model configuration snapshot.
-[local] Outbound campaign pain/criteria, People table and title/status filters.
-[fixed locally] Build avatar fixtures match account scoping and stable rename IDs.
-[pending] Successful production deployment and external provider verification.
+[deployed] Systems rightmost; Jost data typeface; deployed model configuration snapshot.
+[deployed] Outbound campaign pain/criteria, People table and title/status filters.
+[fixed; deployed] Build avatar fixtures match account scoping and stable rename IDs.
+[verified] Hosting/API deployment. External provider verification remains pending.
 
 SEPTEMBER 24: review all requests and Outbound consistency
 [done locally] Fix unsaved-draft navigation and imported bounce suppression;

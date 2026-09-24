@@ -1,3 +1,8 @@
+SEPTEMBER 24: release recovery verified
+9395417 pushed; public frontend/Admin report 14.38, Outbound page/module are real,
+API healthy. Legacy live hover assertion repaired without changing UI behavior.
+Final Cloud Build/rules status and signed-in provider flows still unverified.
+
 SEPTEMBER 24: deployment root cause identified
 Cloud Build bc53725d-a5fb-4dfa-abe4-ed34be0d190f for 2e1b47c failed at
 tests/maya-hands-smoke.mjs:716: old avatar fixtures/DOM expectations. Build and

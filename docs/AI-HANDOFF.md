@@ -74,7 +74,7 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
-## Release 14.38 in progress, September 24
+## Release 14.38 live, September 24
 Owner now explicitly authorizes shipping and live verification. See RELEASE-14.38.md
 for scope and honest limitations. Changed Admin CRM columns/status/filter/typeface,
 message invoice, drawer order/gear, authenticated model snapshot; Outbound pain/
@@ -84,9 +84,13 @@ avatar hands-test fixtures as blocker; account-scoped fixtures and stable-ID ren
 expectations corrected, unsaved preview now has consistent name markup.
 Tests: Outbound 25, profile 27 plus CRM migration/summary checks, Admin UI 11.
 Both hands-test surfaces and API smoke passed locally.
-Exact next step: commit/push the
-owner-authorized release, then verify Cloud Build and public Hosting/API results.
-Do not declare live success from git push alone.
+Commit 9395417 pushed through GitHub Desktop. Public checks at 08:23 PDT confirm
+frontend/Admin 14.38, real Outbound page, JavaScript module MIME, healthy API,
+and internal files inaccessible. Cloud Console history failed to load, so final
+build/rules status is not independently verified. Live verifier legacy hover check
+used a brittle 300-character CSS window; replaced with a rule-bounded assertion.
+Exact next step: signed-in visual acceptance, model snapshot readback and provider
+checks; SMS carrier approval and external integrations remain unresolved.
 
 ## September 24 audit and local corrections
 See AUDIT-2026-09-24.md for the complete request status and remaining gaps.

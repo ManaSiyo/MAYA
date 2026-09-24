@@ -60,7 +60,7 @@ ok('community cards carry no white plate behind the picture',
   !/\.community-card \{[\s\S]{0,400}?background: rgba\(255,255,255,0\.06\)/.test(app.text));
 ok('community frames take each picture\'s own shape',
   app.text.includes('aspect-ratio: var(--cc-ar, 3 / 2)') && app.text.includes('communityBoard.fit(this)'));
-ok('wall details stay hidden until hover', /\.cc-meta \{[\s\S]{0,300}?opacity: 0;/.test(app.text));
+ok('wall details stay hidden until hover', /\.community-card\s+\.cc-meta\s*\{[^}]*opacity:\s*0\s*;/.test(app.text));
 ok('the deploy signs everyone out on the next load',
   app.text.includes('maya_seen_version_app') && map.text.includes('maya_seen_version_map'));
 
