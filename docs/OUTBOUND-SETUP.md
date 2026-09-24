@@ -81,3 +81,18 @@ Public HTML fetch confirmed the deployed Admin still had the older below-Mana
 CSS at inspection. Local v14.37 restores left placement and increments the
 version so the Admin's deployment refresh can detect the new shipment. Owner
 must push and confirm both hosting and API/rules deployment succeed.
+
+## Owner workbook inspected
+Workbook: https://docs.google.com/spreadsheets/d/1G2zfqopOyZNHf78nuEeNdLgRY7ON0JTeegkhhZ4azyg/edit
+The supplied gid points to Principles (sales framework), not a contacts table.
+Use one of these exact tab names in Connections and a corresponding campaign:
+- August SDR
+- 9/23 Ceremonial
+- 9/23 Corporates
+- 9/23 Fashion Houses
+Corporates uses row 3 for headers; the importer detects it automatically. Research,
+original status, date and other extra columns are retained in contact notes.
+Sheet Hunter status does not automatically count as current email verification.
+Incomplete historical addresses stay in notes; bounced addresses are suppressed.
+This is a read-only import, not ongoing two-way sync. The original workbook was
+not modified. Cloud Run service-account access still needs verification.

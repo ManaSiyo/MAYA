@@ -74,6 +74,23 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## Outbound workbook mapping verified, September 23
+Read-only connector inspection confirmed workbook "Outbound", ID
+1G2zfqopOyZNHf78nuEeNdLgRY7ON0JTeegkhhZ4azyg. The linked gid 509408163
+is Principles, not contacts. Contact tabs: August SDR, 9/23 Ceremonial,
+9/23 Corporates, 9/23 Fashion Houses. Corporates headers start on row 3.
+Changed outbound.mjs to detect contact headers in first 10 rows, map Contact/Role/
+Email subject / thread, preserve extra research/status/date fields in notes,
+keep incomplete historical email addresses out of sendable fields, and suppress
+bounced/unsubscribed contacts. Imported Hunter status stays evidence in notes;
+verification remains unverified until separately checked. Sent/touch records
+become contacted; Not sent remains new. Principles is rejected as a contact tab.
+Validation: tests/outbound.mjs 22 pass with fake providers; app-regression adds
+mapping assertion (browser suite not run per owner). No Sheet writes or paid calls.
+Exact next step: owner pushes local commits, then Outbound > Connections saves
+workbook URL and a contacts tab; import into its matching campaign. Connector
+access does not prove Cloud Run service-account access. No actual contacts imported.
+
 ## v14.37 prepared: Outbound and cost-first model defaults
 
 September 23: new task changes prepared as a local commit; owner alone pushes.
@@ -94,7 +111,8 @@ provider actions and Sheets import. server.js wires existing admin auth/storage,
 Sheets service token, Hunter secret reference and OpenAI generation/research.
 No credentials/env changed. No automated sends, reply sync, sequences, calendar
 booking or Sheets writeback. Hunter/Sheet account setup is still unverified;
-owner question for exact Sheet/tab and existing Hunter connection is pending.
+Owner supplied the Outbound workbook; its tab/header mapping is verified below.
+Cloud Run sheet access and the existing Hunter connection remain unverified.
 
 New model-config.mjs: GPT-6 Luna default text roles; Chat Completions normalizer
 sets reasoning none for tool compatibility, drops sampling knobs, translates

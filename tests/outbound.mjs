@@ -27,6 +27,15 @@ await test('Sheet config and import',async()=>{await call('/save',{type:'setting
 await test('research requires confirmation',async()=>{assert.equal((await call('/research',{campaignId})).status,400);assert.equal((await call('/research',{campaignId,confirm:true})).research,'Evidence and sources');});
 await test('domain rejects URL credentials and local addresses',()=>{for(const d of ['localhost','127.0.0.1','https://u:p@example.com','example.com?x=1'])assert.throws(()=>domain(d));assert.equal(domain('https://example.com/path'),'example.com');});
 await test('CSV mapper rejects malformed rows',()=>{assert.throws(()=>rowsToContacts([['Email'],['bad']]));assert.throws(()=>rowsToContacts([['unknown'],['bad']]));assert.equal(contact({name:'X'}).verification,'unverified');});
+await test('owner sheet headers, summaries and historical outreach survive import',()=>{
+  const corporate=rowsToContacts([['Corporate outreach','Messages sent'],['Sept','101'],['Company','Contact','Email address','Role','Email subject / thread','Status'],['Example','Person','person@example.com','Director','Hello','Sent']])[0];
+  assert.equal(corporate.name,'Person');assert.equal(corporate.title,'Director');assert.equal(corporate.subject,'Hello');assert.equal(corporate.stage,'contacted');
+  const historical=rowsToContacts([['Full Name','Email','Status','Current Signal','Hunter Status'],['Person','per...@example.com','1st touch, no reply','Hiring','Valid']])[0];
+  assert.equal(historical.email,'');assert.equal(historical.verification,'unverified');assert.match(historical.notes,/Current Signal: Hiring/);assert.match(historical.notes,/incomplete/);
+  assert.equal(rowsToContacts([['Email','Status'],['a@example.com','Not sent']])[0].stage,'new');
+  assert.equal(rowsToContacts([['Email','Status'],['a@example.com','Bounced']])[0].stage,'suppressed');
+  assert.throws(()=>rowsToContacts([['Sales Framework','Principle'],['Framework','Rule']]));
+});
 await test('Luna compatibility removes unsupported knobs and preserves tool contract',()=>{const b=chatBody({temperature:.2,max_tokens:50,tools:[{type:'function'}]});assert.equal(b.model,'gpt-6-luna');assert.equal(b.reasoning_effort,'none');assert.equal(b.max_completion_tokens,50);assert.equal(b.temperature,undefined);assert.equal(b.tools.length,1);});
 await test('shared Luna roles remain usable by clients; image quality gates remain',()=>{const models={TERRA:TEXT_MODEL,LUNA:TEXT_MODEL,SOL:TEXT_MODEL,upgrades:{'gpt-4.1':TEXT_MODEL}};const ev=(path,body)=>evaluateProxyPolicy({method:'POST',upstreamPath:path,contentType:'application/json',body:Buffer.from(JSON.stringify(body)),models});const routed=ev('v1/chat/completions',{model:'gpt-4.1',tools:[]});assert.equal(routed.ok,true);assert.equal(JSON.parse(routed.fallback).model,'gpt-4o-mini');assert.equal(ev('v1/images/generations',{model:IMAGE_MODEL,quality:'medium'}).ok,true);for(const quality of ['high','xhigh','max'])assert.equal(ev('v1/images/generations',{model:IMAGE_MODEL,quality}).ok,false);});
 await test('CSV preserves quoted commas, newlines and quotes',()=>{

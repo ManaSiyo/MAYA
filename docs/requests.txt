@@ -8,7 +8,9 @@ SEPTEMBER 23: Outbound + latest efficient models (v14.37 prepared)
     Maya web research and editable drafts. Human email-app review, no auto send.
 [local] Luna default text roles; Image 2.5 Flare; Realtime 2.1 Mini voice default.
     Existing production model overrides are respected; no env/secret edits.
-[pending] Exact Sheet/tab and Hunter connection, model entitlement/provider checks.
+[verified] Owner workbook/tab headers inspected; local importer adapted to summaries,
+    subjects, statuses and research fields. No workbook edits or live import.
+[pending] Cloud Run Sheet access, Hunter connection and model entitlement checks.
 [pending] Visual review; automatic sending, reply sync, sequencing, calendar
     integration and Sheets writeback are not implemented in this batch.
 

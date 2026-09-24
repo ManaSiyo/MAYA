@@ -1,3 +1,9 @@
+SEPTEMBER 23: Outbound sheet mapping
+Owner workbook uses row-3 headers for Corporates and nonstandard Contact/Role
+columns. Importer now detects those headers and retains outreach subjects and
+research/status fields. Historical truncated emails are retained only as notes.
+22 offline checks pass; production import remains unverified.
+
 SEPTEMBER 23: Mana hover still below on live site
 Read-only HTTP fetch confirmed deployed Admin had left:50%/top:100% CSS. Local
 branch already contained right:100%/top:50%. Prepared v14.37 adds explicit left

@@ -1,19 +1,10 @@
 Summary:
-[Codex][v14.37] Add Maya Outbound and cost-first model defaults
+[Codex][v14.37] Match Outbound imports to owner workbook
 
 Description:
-Build a separate admin Outbound workspace for campaigns, company/contact
-research, Hunter discovery and verification, Sheets/CSV import, drafts and
-manual results. Persist account-scoped data with generation-safe writes.
-Restore Mana navigation beside its heading and add Outbound to Maya's menu.
-Rename Operation Room and bump served versions to distinguish the deployment.
-Default text work to GPT-6 Luna, images to Image 2.5 Flare and voice to Realtime
-2.1 Mini; preserve env overrides, modality separation and legacy image records.
+Detect summary-prefixed contact headers and map corporate contact/role/subject
+columns. Preserve research and outreach history; quarantine incomplete email
+addresses and suppress bounced/unsubscribed contacts. Document exact tabs.
 
-Validation: Outbound/model 21, profile/CRM 22, proxy 27, routing 7, fabric 6,
-admin UI 11, API smoke, phone 48, SMS 50, transfer and feedback pass. Syntax and
-whitespace checks pass. No browser/computer use or paid provider tests.
-
-Limits: Hunter/Sheet setup and model entitlement require owner verification.
-Email composition is human-reviewed; no automated sending/reply sync/calendar
-booking/sequence service or Sheets writeback. See OUTBOUND-SETUP.md. Not pushed.
+Validation: 22 offline Outbound/model checks pass; no paid calls or Sheet writes.
+Cloud Run sheet access and actual import remain unverified. Not pushed.

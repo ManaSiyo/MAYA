@@ -16,13 +16,29 @@ export function contact(input) {
 }
 export function rowsToContacts(rows) {
   if (!Array.isArray(rows)||rows.length>1001) throw fail('Import up to 1,000 rows at a time.');
-  const headers=(rows[0]||[]).map(h=>text(h).toLowerCase().replace(/[^a-z]/g,''));
-  const columns={name:['name','fullname','contactname'],email:['email','emailaddress','workemail'],company:['company','companyname','organization'],domain:['domain','website','companydomain'],title:['title','jobtitle','position'],notes:['notes','note','description']};
-  if (!headers.some(h=>Object.values(columns).flat().includes(h))) throw fail('Include a header row: Name, Email, Company, Domain, Title, Notes.');
-  return rows.slice(1).filter(row=>row.some(v=>text(v))).map((row,index)=>{
-    const obj={source:'Sheet import'};
+  const normalize=h=>text(h).toLowerCase().replace(/[^a-z]/g,'');
+  const columns={name:['name','fullname','contactname','contact'],email:['email','emailaddress','workemail'],company:['company','companyname','organization'],domain:['domain','website','companydomain'],title:['title','jobtitle','position','role'],notes:['notes','note','description'],subject:['subject','emailsubjectthread']};
+  // Summary rows may precede the actual contact table. Never import a strategy tab.
+  const start=rows.slice(0,10).findIndex(row=>Array.isArray(row)&&row.map(normalize).some(h=>columns.email.includes(h)));
+  if(start<0)throw fail('Choose a contacts tab with an Email header, not a strategy or summary tab.');
+  const headers=rows[start].map(normalize);
+  return rows.slice(start+1).flatMap((row,index)=>{
+    if(!Array.isArray(row))throw fail(`Row ${start+index+2}: Invalid row.`);
+    const obj={source:'Sheet import'}, extra=[];
     for(const [key,aliases] of Object.entries(columns)){const i=headers.findIndex(h=>aliases.includes(h));if(i>=0)obj[key]=row[i];}
-    try{return contact(obj);}catch(e){throw fail(`Row ${index+2}: ${e.message}`);}
+    if(![obj.name,obj.company,obj.email].some(v=>text(v)))return [];
+    for(let i=0;i<headers.length;i++)if(text(row[i])&&!Object.values(columns).flat().includes(headers[i]))extra.push(text(rows[start][i])+': '+text(row[i],2000));
+    // Truncated addresses in historical sheets are evidence, not sendable emails.
+    if(/\.\.\.|…/.test(text(obj.email))){extra.push('Original email (incomplete): '+text(obj.email));obj.email='';}
+    const notes=[text(obj.notes,4000),...extra].filter(Boolean).join('\n');
+    if(notes.length>4000)throw fail(`Row ${start+index+2}: Notes exceed 4,000 characters; shorten before importing.`);
+    try{
+      const result=contact({...obj,notes});result.subject=text(obj.subject,500);
+      const status=text(row[headers.indexOf('status')]).toLowerCase();
+      if(/bounced|unsubscribed|do not contact/.test(status))result.stage='suppressed';
+      else if(!/not sent|unsent/.test(status)&&/\bsent\b|\btouch\b/.test(status))result.stage='contacted';
+      return [result];
+    }catch(e){throw fail(`Row ${start+index+2}: ${e.message}`);}
   });
 }
 export function mergeContacts(state, incoming, campaignId) {

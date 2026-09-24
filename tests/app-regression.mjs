@@ -7,6 +7,7 @@
 //
 // Needs Playwright + Chromium. Claude runs this in its workspace as part of
 // the pre-push loop: smoke.mjs, then this, then the push is prepared.
+import { rowsToContacts } from '../docs/server/outbound.mjs';
 import { chromium } from 'playwright';
 import http from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
@@ -2607,6 +2608,9 @@ const smsSource=readFileSync(join(ROOT,'docs/server/maya-messages.mjs'),'utf8');
 ok('SMS audit fixes preserve opt-in, carrier reasons and trusted-host signature checks',
   smsSource.includes("optOutType === 'START'") && smsSource.includes('message.status === update.status && update.errorCode') &&
   smsSource.includes('signedWebhook(req, params)') && SERVER_SOURCE.includes("webhookHosts: ['maya.manasiyo.com', 'maya-api-53947659283.us-west1.run.app']"));
+
+const importedCorporate=rowsToContacts([['Summary'],['Company','Contact','Email address','Role','Status'],['Example','Person','person@example.com','Director','Sent']])[0];
+ok('Outbound imports summary-prefixed corporate sheets without losing names or status',importedCorporate.name==='Person' && importedCorporate.title==='Director' && importedCorporate.stage==='contacted');
 
 await browser.close(); if (served) srv.close();
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
