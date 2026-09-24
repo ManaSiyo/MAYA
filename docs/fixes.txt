@@ -1,0 +1,231 @@
+SEPTEMBER 24: 14.39 CRM styling and empty Outbound
+Legacy CSS below the prior patch overrode status size/color. Strong scoped rules
+now match campaign typography. Native details needed explicit outside/Escape close.
+Outbound required a campaign and exact single-tab setup; sync now discovers the
+three owner campaign tabs and imports atomically, with actionable access errors.
+Two existing inline controls (status filter and message invoice) were missing
+window bindings. Both are now exported and exercised through actual button clicks.
+Focused tests pass; Cloud Run workbook access is not proven by connector access.
+
+SEPTEMBER 24: release recovery verified
+9395417 pushed; public frontend/Admin report 14.38, Outbound page/module are real,
+API healthy. Legacy live hover assertion repaired without changing UI behavior.
+Final Cloud Build/rules status and signed-in provider flows still unverified.
+
+SEPTEMBER 24: deployment root cause identified
+Cloud Build bc53725d-a5fb-4dfa-abe4-ed34be0d190f for 2e1b47c failed at
+tests/maya-hands-smoke.mjs:716: old avatar fixtures/DOM expectations. Build and
+deploy never ran. Updated fixtures with account identity, stable IDs and explicit
+unsaved preview; no release gate removed.
+
+SEPTEMBER 24: live Outbound missing despite origin containing changes
+Public HTTP: /outbound.html and /backend/outbound.js returned frontend HTML v14.36.
+Local routing is correct; Cloud Build failure/trigger cause not established.
+Fixed deployment verifier old file paths and added explicit Outbound/MIME checks.
+Also fixed local unsaved draft loss and suppression on duplicate imports.
+
+SEPTEMBER 23: Outbound sheet mapping
+Owner workbook uses row-3 headers for Corporates and nonstandard Contact/Role
+columns. Importer now detects those headers and retains outreach subjects and
+research/status fields. Historical truncated emails are retained only as notes.
+22 offline checks pass; production import remains unverified.
+
+SEPTEMBER 23: Mana hover still below on live site
+Read-only HTTP fetch confirmed deployed Admin had left:50%/top:100% CSS. Local
+branch already contained right:100%/top:50%. Prepared v14.37 adds explicit left
+reset and version bump; owner must confirm a successful hosting deployment.
+No claim that the production bug is fixed before that deployment.
+Model update also preserves legacy image records and extends Firestore's strict
+model allowlist so new Flare images are not rejected when posting to community.
+
+SEPTEMBER 22 22:59: local fixes, not deployed
+Mana flyout had moved below the heading: restored left placement and delayed
+hide. Reload/plus glyph size raised 39%; gear forced square/nonshrinking.
+Affiliates extra Admin link and brand hover navigation removed; logo still
+returns Admin. Its visible drawer is Messages, not Systems/Logs.
+Live avatar controls lagged Playground. Both now expose explicit transactional
+Save-as-new; a changed same-name photo no longer replaces its saved predecessor.
+Current unsaved photo stays visible in the dropdown; name is editable.
+Validation: profile-crm 22, admin UI 11, admin-command 6, syntax/whitespace pass.
+No browser/computer use or external paid tests. Visual review remains pending.
+
+SEPTEMBER 22 LATE: lead layout and Affiliates navigation, local
+Constrain the table with fixed layout, keeping long notes inside their viewport;
+notes start left and sit vertically centered; headers retain top sticky position.
+Affiliates opens new tab; route brand now identifies Affiliates and logo links
+back to Admin, replacing its inherited voice trigger. Remove unnecessary copy.
+Admin contract and inline syntax validated; browser checks not run per owner.
+
+SEPTEMBER 22 EVENING: SMS carrier blocker CONFIRMED by owner screenshots
+Account is Active, brand complete, campaign rejected: compliant privacy policy
+cannot be verified. Twilio overview reports 30034. Outbound 'hello' 17:00 is
+Undelivered; inbound 'Hi.' 09:46 is Received at Twilio. Missing inbound in Maya
+remains a separate webhook/storage investigation, not proved by A2P rejection.
+Public policy/terms are accessible (200); exact submitted URLs/opt-in flow unknown.
+Policy wording edits and registration guide are local drafts, not resubmitted.
+Mana menu also lost pointer events immediately on pointer departure despite a
+visible delayed fade; changed to delayed visibility, focus support and below-Mana
+placement. Affiliates public route is deployed. No authenticated/visual checks
+under owner's no-computer-use restriction. 50 SMS and 11 admin checks pass;
+phone/transfer/feedback pass and inline scripts parse. Nothing pushed here.
+
+SEPTEMBER 22, 2026: code-first SMS audit (FIXED LOCALLY, not deployed)
+Reproduced and corrected ordinary 'No problem' being treated as STOP, START not
+restoring opt-in, and late carrier error codes being lost on terminal statuses.
+Signed OptOutType START/STOP/HELP is passed into consent handling. Owner blocks
+remain independent. Both known Maya and Cloud Run webhook URLs are explicitly
+allowed in server wiring; arbitrary/forwarded host signatures remain rejected.
+50 SMS tests now cover these defects with fake providers. 443 browser checks and
+related phone/transfer/feedback/admin/API suites passed. Live inbound/outbound
+failure is still OPEN: native Chrome reached Twilio login, signed out; carrier
+logs remain unread. The owner sign-in tab is open.
+No credentials, provider configuration, real message, commit or push changed.
+Next: owner review and deploy; inspect Twilio inbound result and outgoing SID
+status/error, then confirm receipt in both directions before declaring resolution.
+
+SEPTEMBER 22, 2026: SMS delivery failure after reported unsuspension (OPEN)
+Owner reports neither phone-to-Maya nor Admin-to-phone texts arrive. Live Admin
+still shows old text-pill tabs because the previous build stopped before deploy.
+Twilio Console was signed out, then Chrome access disconnected; actual account
+state, carrier errors and inbound webhook result could not be inspected. Do not
+attribute this incident to A2P, suspension or a webhook mismatch without logs.
+Local UI now preserves visible send/delivery errors during polling and has clearer
+contact editing. SMS introductions can label unnamed contacts without AI spend.
+38 message checks, phone/transfer/feedback, 11 UI contracts, 438 browser checks
+passed. No live message sent, credentials/configuration changed or push performed.
+Next: owner sign-in, inspect both directions in Twilio, deploy reviewed code,
+verify receipt and history. The account being active alone is not delivery proof.
+
+SEPTEMBER 22, 2026: Cloud Build failed before deployment
+Commit ae8704f, build 1b827272-c2f5-4b64-809d-285caafd9ce0, PR #1.
+GitHub check logs identify one failed maya-hands-smoke assertion: the avatar
+dropdown test expected Randomize/Replace only, while Playground now also has
+the requested Save control. Corrected the exact expected list per surface;
+frontend still requires two buttons. Verified locally: 172 Playground and 171
+frontend hands assertions, seven other release suites and phone/Messages/transfer
+all passed. No deployment rerun, push or credentials
+changed. Production build/deploy steps never started for this commit.
+
+SEPTEMBER 21, 2026, LOCAL REMEDIATION (not deployed)
+Fixed locally: feedback source race and unsafe empty-store fallback; outbound
+call briefing lost between Cloud Run instances; mutable stream caller identity;
+early voice audio dropped during startup; SMS callback before history saved;
+contact-name inline JavaScript; tier edited into the wrong field; hidden blocked
+contacts with no unblock path; missing Pinterest saved-pin pagination (Playground).
+Added signed owner transfer acceptance and explicit carrier-status reconciliation.
+Actual SMS non-delivery cause is NOT established; ask for provider status/error.
+Real GCS/Firestore persistence, transfer/no-answer behavior and telephone audio
+need owner live verification after a separately reviewed deploy. No credentials
+or production settings were changed. See REVIEW-2026-09-21.md.
+
+MAYA FIXES AND SETUP STEPS
+Fix attempts and setup work that lives OUTSIDE git: Cloud Run env vars, the
+Google and Firebase consoles, credentials, external accounts. Symptom, cause,
+action, status. Newest on top. Fromsa does every credential step himself.
+
+SEPTEMBER 21, 2026: Admin/phone audit, not a release
+Open: in-memory outbound call state; feature-inbox read failures/concurrent writes
+can lose requests; owner calls excluded from Messages; incomplete blocking and
+delivery handling; inline contact-name handler escaping; ticker CPC called CPL;
+inaccurate consent/warning UI. See AUDIT-2026-09-21.md for evidence and test results.
+Messages draft passes 29 checks; phone and browser regressions are not all green.
+Live feature inbox read successfully. Latest owner requests remain open.
+
+AUGUST 27, 2026, OPEN MAYA'S DOOR (v14.02, after the push)
+
+Maya's MCP server is live at POST https://maya.manasiyo.com/mcp once v14.02 is
+deployed, but it stays CLOSED (503) until a token exists. Two green steps.
+
+🟢 1. Make a token and set it on Cloud Run.
+   Any long random string works (32+ characters, letters and digits). Open
+   https://console.cloud.google.com/run/detail/us-west1/maya-api/revisions?project=pro-maya
+   then "Edit & deploy new revision" > Variables & Secrets > Add variable:
+   name MAYA_MCP_TOKEN, value = the token. Deploy. Keep the token somewhere
+   private; it is the only key to the door.
+🟢 2. Add Maya to Claude as a custom connector.
+   claude.ai > Settings > Connectors > Add custom connector. Name: Maya. URL:
+   https://maya.manasiyo.com/api/mcp?token=YOUR_TOKEN (the query form exists for
+   connectors that cannot send a header; /api/mcp is the address, the bare /mcp
+   only works from v14.05 on). Save. In any chat or Cowork
+   session, Maya's eight tools appear (maya_soul, maya_inbox, ...).
+   Claude Code / Codex: same URL as an MCP server of type http.
+
+Check it worked: ask Claude "read maya_status". It answers with the version
+and the number of open feature requests. If you see maya_door_closed, the env
+var did not land; if unauthorized, the token in the URL does not match.
+
+AUGUST 24, 2026, FINAL ADMIN RELEASE REMEDIATION (v13.71)
+
+- A1 proxy security hardening: DONE in v13.70 and retained.
+- Release contracts: command, proxy, AI router and fabric suites now gate the
+  Cloud Build source step; server and helper syntax remain gated. A hermetic
+  Express/Chromium build-test image is still deferred.
+- Voice action safety: exact or explicitly ambiguous lead resolution, visible
+  confirmation queue, no automatic send, truthful Gmail popup/failure state,
+  single-flight Realtime setup and failed microphone cleanup are DONE.
+- Admin data consistency: command snapshot now uses direct Meta/Google feeds
+  when Windsor is absent, and strips lead contact details from the Realtime
+  prompt. DONE.
+- Marketing parity regression: the modules were functionally present but the
+  Admin copy lacked the approved page spacing, ticker, Wix visitor row, chart
+  hover/state restoration and visible refresh errors. Fixed in v13.71. The
+  standalone page remains the live fallback.
+- A3 Vertex image/Realtime compatibility, A5 legacy deletion/authorization,
+  distributed rate limiting, client error reporting and provider evals remain
+  deferred. They require separate risk domains or owner configuration.
+
+AUGUST 24, 2026, SET UP THE API FOR FROMSA (the to-do list, in order)
+
+These are the console and environment steps only Fromsa can do. Each is a
+green step; none is code. Do them in this order.
+
+[ ] 1. PIN THE ANALYTICS PROPERTY (fixes the "3" and the "..." that look low).
+    The MAYA app's Google Analytics is G-ETTJ6PXEMM. The server was guessing
+    which GA4 property to read and likely reading manasiyo.com's, not MAYA's.
+    - Google Analytics -> Admin -> Property settings on the MAYA property
+      (the one whose data stream is G-ETTJ6PXEMM). Copy the numeric PROPERTY ID.
+    - Cloud Run -> maya-api -> Edit & deploy new revision -> Variables:
+      set MARKETING_GA_PROPERTY_ID and GA_PROPERTY_ID both to that number.
+    - Also confirm the Cloud Run service account is added as a Viewer on that
+      property (Analytics -> Admin -> Property Access Management).
+
+[ ] 2. BILLING CAPS (so a bill can never surprise you).
+    - OpenAI: you are already prepaid at ~$10 with no auto-refill, which is
+      itself a spend cap; keep auto-refill OFF. Set a usage alert at $8.
+    - Google Cloud: Billing -> Budgets & alerts -> create a budget with email
+      + phone alerts at $8 and $15. Vertex image work is admin-only, so this
+      is a safety net, not a live risk.
+
+[ ] 3. INSTANT DOWN / FAILURE ALERT (the ping OpenAI will not send you).
+    - Google Cloud -> Monitoring -> Alerting -> create a policy on the Cloud
+      Run maya-api ERROR RATE, notify your email + phone.
+    - Add a second policy on the billing budget from step 2.
+    (If you would rather MAYA email you directly when a user's image fails,
+    give Claude a Slack or Discord webhook and it will push it server-side.)
+
+[ ] 4. APP CHECK (only your real site can reach the database).
+    The client code is already wired and dormant. To turn it on:
+    - Google Cloud -> reCAPTCHA -> create a reCAPTCHA Enterprise site key for
+      maya.manasiyo.com. Copy the SITE KEY.
+    - In frontend/index.html and playground/index.html, set
+      MAYA_APPCHECK_SITE_KEY = 'your-site-key' (one line, near FIREBASE_CONFIG).
+      Ask Claude to make this edit and push; confirm the app still signs in.
+    - Firebase console -> App Check -> register the web app with that key.
+    - ONLY after the app works with App Check active: App Check -> APIs ->
+      set Firestore and Storage to ENFORCE.
+
+[ ] 5. THE VOICE MODEL (so Maya actually speaks).
+    - OpenAI: confirm the Realtime model 'gpt-realtime' is available on the
+      account (or set OPENAI_REALTIME_MODEL on Cloud Run to the one you have).
+
+[ ] 6. OPTIONAL, THE CLO LIBRARY (Plan B real search).
+    - CLO-SET dashboard -> issue an API token -> set CLOSET_API_TOKEN and
+      CLOSET_SEARCH_URL on Cloud Run, then tell Claude to wire the exact
+      search endpoint from their docs.
+\n[v14.14] MCP door scopes: /api/mcp?token=... is now READ ONLY (status,\ninbox, soul, people). maya_leads, maya_memory, maya_journal and\nmaya_feature_done need the token as an Authorization: Bearer header.\nA connector that cannot send headers keeps read access unchanged.\n
+SEPTEMBER 19, 2026: live marketing reporting incident (OPEN)
+Windsor returns an account-limit notice: five connected accounts, free plan allows
+one. Admin renders the notice as a campaign with zero delivery; generated ticker
+incorrectly infers ads are paused. Reject diagnostic rows and mark reporting
+unavailable. Actual ad delivery has not been verified. No credentials or plan
+changed. See AUDIT-2026-09-19.md for evidence and direct-integration replacement.

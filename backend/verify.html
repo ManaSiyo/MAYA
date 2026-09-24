@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAYA Deploy Check</title>
+<!-- MAYA deploy check, v13.25. Fromsa's Mac has no Node, so the terminal
+     verifier could never run there. This page does the same job with nothing
+     installed: it lives ON the site, so it can read its own files and its own
+     API, and it can borrow the Systems Map sign in (same origin localStorage)
+     to ask the one question the public health endpoint cannot answer, which is
+     whether Drive is actually authorised. Open it on a phone if you like. -->
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; padding: 34px 20px 60px;
+    background: radial-gradient(1200px 700px at 50% -10%, #0d1730 0%, #05070f 60%, #03040a 100%);
+    color: #eef3ff;
+    font-family: 'Jost', ui-sans-serif, -apple-system, system-ui, sans-serif;
+    font-weight: 300; letter-spacing: 0.02em;
+  }
+  h1 { font-size: 13px; letter-spacing: 0.34em; text-transform: uppercase;
+       color: rgba(238,243,255,0.62); font-weight: 300; margin: 0 0 4px; }
+  .sub { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic;
+         font-size: 15px; color: rgba(238,243,255,0.55); margin: 0 0 26px; }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  .verdict {
+    border-radius: 16px; padding: 20px 22px; margin: 0 0 22px;
+    border: 0.5px solid rgba(220,232,255,0.42);
+    background: rgba(255,255,255,0.03);
+    -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.28), 0 8px 32px rgba(0,0,0,0.42);
+  }
+  .verdict b { display: block; font-size: 20px; font-weight: 300; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .verdict span { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic;
+                  font-size: 15px; color: rgba(238,243,255,0.72); }
+  .good b { color: #a9e8c3; } .bad b { color: #ffb4b4; } .wait b { color: rgba(238,243,255,0.7); }
+  .grp { font-size: 9.5px; letter-spacing: 0.3em; text-transform: uppercase;
+         color: rgba(238,243,255,0.4); margin: 22px 0 8px; }
+  .row { display: flex; gap: 12px; align-items: baseline; padding: 9px 12px;
+         border-radius: 10px; border: 0.5px solid rgba(255,255,255,0.10);
+         background: rgba(255,255,255,0.015); margin-bottom: 6px; font-size: 13.5px; }
+  .row .m { width: 15px; flex: 0 0 15px; text-align: center; }
+  .row .t { flex: 1 1 auto; color: rgba(238,243,255,0.86); }
+  .row .d { color: rgba(238,243,255,0.42); font-size: 11.5px; text-align: right; }
+  .pass .m { color: #7ddba4; } .fail .m { color: #ff8c8c; } .info .m { color: rgba(238,243,255,0.45); }
+  .fail { border-color: rgba(255,140,140,0.35); background: rgba(255,140,140,0.06); }
+  button {
+    font-family: inherit; font-weight: 300; font-size: 12px; letter-spacing: 0.22em;
+    text-transform: uppercase; color: #eef3ff; cursor: pointer;
+    padding: 11px 20px; border-radius: 11px; margin: 24px 8px 0 0;
+    border: 0.5px solid rgba(220,232,255,0.5); background: rgba(255,255,255,0.04);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+  }
+  button:hover { border-color: rgba(220,232,255,0.8); }
+  a { color: rgba(190,214,255,0.9); }
+  .note { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic;
+          font-size: 14px; color: rgba(238,243,255,0.5); margin-top: 18px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Deploy check</h1>
+  <p class="sub">Does the live site match the version that was pushed, and is anything red.</p>
+  <div id="verdict" class="verdict wait"><b>Checking</b><span>Reading the live files from this server.</span></div>
+  <div id="out"></div>
+  <button id="again">Check again</button>
+  <button id="watch">Watch for a new deploy</button>
+  <p class="note">Cloud Build takes about four minutes after a push. "Watch for a new deploy"
+  re-checks every fifteen seconds until the version changes, so you can leave this open.
+  The Drive answer needs the one sign in from the Systems Map; this page borrows it and never
+  shows or stores it.</p>
+</div>
+<script>
+const out = document.getElementById('out');
+const verdict = document.getElementById('verdict');
+let rows = [];
+const groups = [];
+const add = (group, name, state, detail) => { rows.push({ group, name, state, detail }); };
+const paint = () => {
+  const byGroup = {};
+  for (const r of rows) (byGroup[r.group] = byGroup[r.group] || []).push(r);
+  out.innerHTML = Object.entries(byGroup).map(([g, list]) =>
+    '<div class="grp">' + g + '</div>' + list.map(r =>
+      '<div class="row ' + r.state + '"><span class="m">' +
+      (r.state === 'pass' ? '✓' : r.state === 'fail' ? '✕' : '·') + '</span>' +
+      '<span class="t"></span><span class="d"></span></div>').join('')
+  ).join('');
+  // text set as text, never markup: this page must never be an injection route
+  const cells = out.querySelectorAll('.row');
+  let i = 0;
+  for (const list of Object.values(byGroup)) for (const r of list) {
+    const c = cells[i++];
+    c.querySelector('.t').textContent = r.name;
+    c.querySelector('.d').textContent = r.detail || '';
+  }
+};
+const get = async (path) => {
+  const u = path + (path.includes('?') ? '&' : '?') + 'cb=' + Date.now();
+  const r = await fetch(u, { headers: { 'Cache-Control': 'no-cache' } });
+  return { status: r.status, text: await r.text() };
+};
+const verOf = (t) => (t.match(/name="maya-version" content="([\d.]+)"/) || [])[1] || 'none';
+
+async function run() {
+  rows = [];
+  verdict.className = 'verdict wait';
+  verdict.innerHTML = '<b>Checking</b><span>Reading the live files from this server.</span>';
+  paint();
+
+  const app = await get('/index.html');
+  const map = await get('/status.html');
+  const appV = verOf(app.text), mapV = verOf(map.text);
+
+  add('Version', 'MAYA and the Systems Map carry the same version',
+    appV === mapV && appV !== 'none' ? 'pass' : 'fail', appV + ' / ' + mapV);
+  add('Version', 'app page downloaded whole', app.status === 200 && app.text.length > 400000 ? 'pass' : 'fail',
+    Math.round(app.text.length / 1000) + 'k');
+  add('Version', 'Systems Map downloaded whole', map.status === 200 && map.text.length > 30000 ? 'pass' : 'fail',
+    Math.round(map.text.length / 1000) + 'k');
+  add('Version', 'a new version signs everyone out on the next load',
+    app.text.includes('maya_seen_version_app') && map.text.includes('maya_seen_version_map') ? 'pass' : 'fail');
+
+  add('The wall', 'no white plate behind a wall picture',
+    !/\.community-card \{[\s\S]{0,400}?background: rgba\(255,255,255,0\.06\)/.test(app.text) ? 'pass' : 'fail');
+  add('The wall', 'each frame takes its own picture shape',
+    app.text.includes('aspect-ratio: var(--cc-ar, 3 / 2)') && app.text.includes('communityBoard.fit(this)') ? 'pass' : 'fail');
+  add('The wall', 'details stay hidden until hover',
+    /\.cc-meta \{[\s\S]{0,300}?opacity: 0;/.test(app.text) ? 'pass' : 'fail');
+  add('The wall', 'no click handlers written into the markup',
+    !app.text.includes("communityBoard.openPost('") ? 'pass' : 'fail');
+
+  let h = {};
+  try { h = JSON.parse((await get('/api/healthz')).text); } catch (_) {}
+  add('The server', 'server answers', h.ok === true ? 'pass' : 'fail', h.service || 'no answer');
+  add('The server', 'OpenAI key present on the server', h.configured && h.configured.openai ? 'pass' : 'fail');
+  add('The server', 'Drive credentials present on the server', h.configured && h.configured.drive ? 'pass' : 'fail');
+
+  // The only question that matters about Drive: does Google still accept the
+  // token. Public health cannot answer it, so borrow the Systems Map sign in.
+  const tok = localStorage.getItem('maya_admin_tok');
+  let driveWorks = null;
+  if (!tok) {
+    add('Drive, the real answer', 'sign in once on the Systems Map to enable this check', 'info', 'skipped');
+  } else {
+    try {
+      const r = await fetch('/api/healthz/deep?cb=' + Date.now(), { headers: { Authorization: 'Bearer ' + tok } });
+      const d = await r.json();
+      driveWorks = !!d.drive;
+      add('Drive, the real answer', 'Google still accepts the server\'s Drive authorisation',
+        driveWorks ? 'pass' : 'fail', driveWorks ? 'submissions will land' : (d.detail || 'rejected'));
+      if (d.ok === false && driveWorks) add('Drive, the real answer', 'something else in deep health is unhappy', 'fail', '');
+    } catch (e) {
+      add('Drive, the real answer', 'could not ask, sign in again on the Systems Map', 'info', 'expired');
+    }
+  }
+
+  add('Hygiene', 'internal files are not published',
+    (await get('/docs/server/firestore.rules')).text.includes('rules_version') ? 'fail' : 'pass');
+
+  paint();
+  const fails = rows.filter(r => r.state === 'fail');
+  if (!fails.length) {
+    verdict.className = 'verdict good';
+    verdict.innerHTML = '<b>All clear, live on ' + appV + '</b><span>' +
+      (driveWorks === null
+        ? 'Everything checked is healthy. Drive was not checked, sign in on the Systems Map once.'
+        : 'Everything checked is healthy, Drive included.') + '</span>';
+  } else {
+    verdict.className = 'verdict bad';
+    verdict.innerHTML = '<b>' + fails.length + ' need' + (fails.length === 1 ? 's' : '') +
+      ' attention, live on ' + appV + '</b><span>' + '</span>';
+    verdict.querySelector('span').textContent = fails.map(f => f.name).join('. ') + '.';
+  }
+  return appV;
+}
+
+let watching = null;
+document.getElementById('again').onclick = () => { clearInterval(watching); watching = null; run(); };
+document.getElementById('watch').onclick = async () => {
+  clearInterval(watching);
+  const start = await run();
+  watching = setInterval(async () => {
+    const now = await run();
+    if (now !== start) { clearInterval(watching); watching = null; }
+  }, 15000);
+};
+run();
+</script>
+</body>
+</html>
