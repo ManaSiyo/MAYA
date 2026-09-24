@@ -20,7 +20,7 @@ in `frontend/`, the back rooms live in `backend/`, pictures stay in
 Every note, the server and the rules live in `docs/`.
 Google project: `pro-maya`
 Repo: `ManaSiyo/MAYA` on GitHub, working folder `~/Desktop/MAYA-new`
-Current version: **13.71** (the number lives in a `maya-version` meta tag in
+Prepared version: **14.37** (owner deployment pending) (the number lives in a `maya-version` meta tag in
 `frontend/index.html`, and the running site's number is the fastest way to tell whether
 a push has landed).
 
@@ -55,7 +55,8 @@ plan. A tip button exists purely as proof that payment plumbing works.
 | `backend/status.html` | Admin. Command briefing, health, traffic, Marketing, submissions, prompting and changelog. | Admins only |
 | `backend/marketing.html` | Standalone Marketing page, retained as the approved fallback. | Admins only |
 | `backend/backend.html` | The Brief plus the embedded Operations Room. One submission, opened from Admin. | Admins only |
-| `backend/operations.html` | The standalone Operations Room, the beta bench for pattern experiments. | Admins only |
+| `backend/outbound.html` | Outbound campaigns, Hunter/Sheets imports, research and drafts. | Admins, account-scoped |
+| `backend/operations.html` | The standalone Operation Room, the beta bench for pattern experiments. | Admins only |
 | `playground/index.html` | Private staging copy; never promote a design without Fromsa's approval. | Admins only |
 
 `aesthetics/` holds everything visual, including the Operations Room engine

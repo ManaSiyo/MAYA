@@ -1,3 +1,4 @@
+import { chatBody } from './model-config.mjs';
 // ═══════════════════════════════════════════════════════════════════════════
 // MAYA proxy policy — v13.70 (Commit A1). PURE and testable: no I/O, no
 // globals, no network. Given one proxied /api/openai request it decides
@@ -40,8 +41,8 @@ function endpointModels(cfg) {
   const TERRA = cfg.TERRA, LUNA = cfg.LUNA, SOL = cfg.SOL;
   return {
     'v1/chat/completions': new Set([TERRA, LUNA, SOL, 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.6-sol']),
-    'v1/images/generations': new Set(['gpt-image-2']),
-    'v1/images/edits': new Set(['gpt-image-2']),
+    'v1/images/generations': new Set(['gpt-image-2', 'gpt-image-2.5-flare']),
+    'v1/images/edits': new Set(['gpt-image-2', 'gpt-image-2.5-flare']),
     'v1/audio/transcriptions': new Set(['whisper-1']),
     'v1/embeddings': new Set(['text-embedding-3-small']),
   };
@@ -49,7 +50,7 @@ function endpointModels(cfg) {
 
 // The senior tier is admin/Operations only, whatever env name it wears.
 function isAdminOnlyModel(model, cfg) {
-  return model === (cfg.SOL || 'gpt-5.6-sol') || model === 'gpt-5.6-sol';
+  return (cfg.SOL !== cfg.LUNA && cfg.SOL !== cfg.TERRA && model === (cfg.SOL || 'gpt-5.6-sol')) || model === 'gpt-5.6-sol';
 }
 
 function contentKind(contentType) {
@@ -160,7 +161,7 @@ function evaluateProxyPolicy(opts) {
   if (!allowed.has(target)) {
     // unknown everywhere vs a real model on the wrong endpoint
     const knownAnywhere = [cfg.TERRA, cfg.LUNA, cfg.SOL, 'gpt-5.6-terra', 'gpt-5.6-luna', 'gpt-5.6-sol',
-      'gpt-image-2', 'whisper-1', 'text-embedding-3-small'].includes(target);
+      'gpt-image-2', 'gpt-image-2.5-flare', 'whisper-1', 'text-embedding-3-small'].includes(target);
     if (knownAnywhere) return reject(403, 'model_endpoint_mismatch', target + ' is not valid on ' + upstreamPath);
     return reject(403, 'model_not_allowed', target);
   }
@@ -171,7 +172,7 @@ function evaluateProxyPolicy(opts) {
   // image count and quality, enforced whatever the body size
   if (upstreamPath === 'v1/images/generations' || upstreamPath === 'v1/images/edits') {
     if (n != null && (!Number.isFinite(n) || n > 2)) return reject(400, 'too_many_images', 'n must be 2 or fewer');
-    if (quality === 'high' && !isAdmin) return reject(403, 'quality_not_allowed', 'high quality is atelier only');
+    if (['high','xhigh','max'].includes(quality) && !isAdmin) return reject(403, 'quality_not_allowed', 'high quality is atelier only');
   }
 
   // rewrite only when a legacy name was upgraded (JSON chat). The rewritten
@@ -181,11 +182,12 @@ function evaluateProxyPolicy(opts) {
   if (kind === 'json' && upgraded) {
     parsed.model = target;
     outBody = Buffer.from(JSON.stringify(parsed), 'utf8');
-    parsed.model = asked;
+    parsed.model = /^gpt-6-/.test(target) ? 'gpt-4o-mini' : asked;
     fallback = Buffer.from(JSON.stringify(parsed), 'utf8');
   }
 
-  return { ok: true, model: target, original: upgraded ? asked : '', body: outBody, fallback, streamRequested };
+  if (kind === 'json' && upstreamPath === 'v1/chat/completions') outBody = Buffer.from(JSON.stringify(chatBody({...JSON.parse(outBody.toString('utf8'))}, target)));
+  return { ok: true, model: target, original: upgraded ? asked : '', fallbackModel: fallback ? JSON.parse(fallback.toString('utf8')).model : '', body: outBody, fallback, streamRequested };
 }
 
 export { evaluateProxyPolicy, readMultipartFields, MODEL_BEARING, endpointModels };

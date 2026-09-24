@@ -1,3 +1,17 @@
+SEPTEMBER 23: Outbound + latest efficient models (v14.37 prepared)
+[local] Confirmed live site still serves old below-Mana CSS; left-side placement
+    retained explicitly, version bumped so a successful deploy is detectable.
+[local] Maya right menu: Operation Room, Playground, Outbound, opening new tabs.
+[local] New Outbound dashboard: campaigns, audience/competitor notes, companies,
+    people, verification, drafts, results, suppression and per-account storage.
+[local] Hunter Discover/domain search/finder/verifier; Sheets/CSV import, CSV export;
+    Maya web research and editable drafts. Human email-app review, no auto send.
+[local] Luna default text roles; Image 2.5 Flare; Realtime 2.1 Mini voice default.
+    Existing production model overrides are respected; no env/secret edits.
+[pending] Exact Sheet/tab and Hunter connection, model entitlement/provider checks.
+[pending] Visual review; automatic sending, reply sync, sequencing, calendar
+    integration and Sheets writeback are not implemented in this batch.
+
 SEPTEMBER 23: prepare commits automatically
 [done] Owner authorizes local commits with accurate summary, description,
     validation and limitations, leaving only Push in GitHub Desktop. Preserve

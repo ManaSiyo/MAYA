@@ -72,7 +72,7 @@ test('the ranking request model follows the tier env vars', () => {
   // v13.53: no hardcoded model. RANK_MODEL wins, then MODEL_TERRA, then the
   // Terra default, so a model change is an env change and nothing else.
   const built = buildVisualRankingRequest({ garmentImage, traits: {}, products });
-  const expected = process.env.RANK_MODEL || process.env.MODEL_TERRA || 'gpt-5.6-terra';
+  const expected = process.env.RANK_MODEL || process.env.MODEL_TERRA || process.env.MODEL_LUNA || 'gpt-6-luna';
   assert.equal(built.requestBody.model, expected);
 });
 

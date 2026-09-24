@@ -74,6 +74,47 @@ META_ADS_TOKEN / GOOGLE_ADS_* still win when set.
 
 The fabric sourcing revamp shipped in v13.44; see that section below.
 
+## v14.37 prepared: Outbound and cost-first model defaults
+
+September 23: new task changes prepared as a local commit; owner alone pushes.
+Public HTTP fetch of /status.html confirmed production still had Mana chips at
+left:50%, top:100%, unlike the locally committed left-side fix. This batch adds
+explicit left:auto/right:100% and bumps served app/Admin/Playground/Marketing/
+Operation Room version metadata to 14.37 so the existing refresh detects it.
+
+New backend/outbound.html + outbound.js: three-column campaign/company/contact/
+draft workspace, Connections, CSV/Sheet import, CSV export, Hunter discovery,
+lookup/verification, Maya research, email drafts, mail-app handoff and manual
+results. Admin's Maya menu adds Outbound after Operation Room and Playground;
+Operation Room loses plural/Beta. docs/firebase.json serves the new route.
+
+New server/outbound.mjs: authenticated account-scoped GCS workspaces with CAS,
+validated campaign/contact updates, duplicate prevention, suppression, bounded
+provider actions and Sheets import. server.js wires existing admin auth/storage,
+Sheets service token, Hunter secret reference and OpenAI generation/research.
+No credentials/env changed. No automated sends, reply sync, sequences, calendar
+booking or Sheets writeback. Hunter/Sheet account setup is still unverified;
+owner question for exact Sheet/tab and existing Hunter connection is pending.
+
+New model-config.mjs: GPT-6 Luna default text roles; Chat Completions normalizer
+sets reasoning none for tool compatibility, drops sampling knobs, translates
+max_tokens. Explicit owner env overrides survive. Fabric rank fallback now cheap
+4o-mini. Image defaults become Image 2.5 Flare across app, Playground, Operations
+and Brief; community filters and Firestore rules accept old/new image records.
+Voice defaults to Realtime 2.1 Mini; no actual audio/model entitlement tested.
+Dockerfile copies new modules; Cloud Build adds offline Outbound/profile gates.
+
+Validation: 21 Outbound/model checks, 22 profile/CRM, 27 proxy policy, 7 AI routing,
+6 fabric, 11 admin contracts; API smoke and phone 48/SMS 50/transfer/feedback pass
+with fake providers. Inline JS/module syntax and diff checks pass. Browser and
+visual tests NOT run under owner's no-computer-use constraint. Rules model-list
+change inspected, not emulator-tested. app-regression expectations updated.
+
+Exact next step: owner reviews/pushes prepared commit, checks hosting/API/rules
+build success, configures Hunter and Sheet access per OUTBOUND-SETUP.md, then
+verifies one real provider action and render/voice before broad use. All feature
+screens start empty; no mock contacts or fabricated performance were shipped.
+
 ## v14.36 (Claude): the audit
 
 September 23 workflow update: owner now authorizes local commits with descriptive

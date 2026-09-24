@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
-<meta name="maya-version" content="14.36">
+<meta name="maya-version" content="14.37">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -5220,7 +5220,7 @@
     </p>
     <label for="model-input">Image model</label>
     <select id="model-input" style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.12);border-radius:6px;padding:10px 12px;font-family:'Jost',sans-serif;font-size:12px;color:#fff;outline:none">
-      <option value="gpt-image-2">gpt-image-2</option>
+      <option value="gpt-image-2.5-flare">gpt-image-2.5-flare</option>
     </select>
     <label for="quality-input">Image quality</label>
     <select id="quality-input" style="background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.12);border-radius:6px;padding:10px 12px;font-family:'Jost',sans-serif;font-size:12px;color:#fff;outline:none">
@@ -5749,8 +5749,8 @@ function getImageQuality() { return 'medium'; }
 const STORAGE_KEY_IMG_MODEL = 'maya_image_model';
 function getImageModel() {
   const stored = localStorage.getItem(STORAGE_KEY_IMG_MODEL);
-  if (stored && stored !== 'gpt-image-2') localStorage.removeItem(STORAGE_KEY_IMG_MODEL);
-  return 'gpt-image-2';
+  if (stored && stored !== 'gpt-image-2.5-flare') localStorage.removeItem(STORAGE_KEY_IMG_MODEL);
+  return 'gpt-image-2.5-flare';
 }
 
 // v0.11: Settings simplified for public deploy. No key, no model field ,
@@ -5766,7 +5766,7 @@ function closeSettings() {
   document.getElementById('settings-modal').classList.remove('open');
 }
 function saveSettings() {
-  const model = document.getElementById('model-input').value   || 'gpt-image-2';
+  const model = document.getElementById('model-input').value   || 'gpt-image-2.5-flare';
   const qual  = document.getElementById('quality-input').value || 'medium';
   localStorage.setItem(STORAGE_KEY_IMG_MODEL,   model);
   localStorage.setItem(STORAGE_KEY_IMG_QUALITY, qual);
@@ -7168,7 +7168,7 @@ const communityBoard = {
   // migration fallback. An explicit different model always stays private.
   _isVision(card) {
     if (!card || card.kind !== 'inspo' || !(card.image || card.imageUrl)) return false;
-    if (card.generatedBy) return card.generatedBy === 'gpt-image-2';
+    if (card.generatedBy) return ['gpt-image-2','gpt-image-2.5-flare'].includes(card.generatedBy);
     return /^insp_[a-z0-9]+$/i.test(String(card.inspirationId || '')) &&
       Number.isFinite(Number(card.version));
   },
@@ -7328,7 +7328,7 @@ const communityBoard = {
       // Explicitly reject every non-GPT Image 2 post. Legacy generated posts
       // are recognizable by their inspiration fingerprint; uploaded images
       // use a u: fingerprint and stay off the wall.
-      if (v.model && v.model !== 'gpt-image-2') return;
+      if (v.model && !['gpt-image-2','gpt-image-2.5-flare'].includes(v.model)) return;
       if (!v.model && !/^i:insp_[a-z0-9]+\|v\d+$/i.test(String(v.fp || ''))) return;
       if (!/^[\w-]{4,120}$/.test(d.id)) return;
       if (!/^(https:\/\/|data:image\/)/.test(String(v.imageUrl))) return;

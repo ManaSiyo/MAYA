@@ -1664,7 +1664,7 @@
         </div>
       </div>
       <div class="key-row">
-        <label>Pattern raster quality · OpenAI gpt-image-2</label>
+        <label>Pattern raster quality · GPT Image 2.5</label>
         <div class="quality-row">
           <button class="quality-pill" id="p-medium" onclick="setPatternQuality('medium')">medium</button>
           <button class="quality-pill" id="p-high"   onclick="setPatternQuality('high')">high</button>
@@ -1678,8 +1678,8 @@
       <div class="info-row"><span class="lbl">App</span> <span class="val">Mana Siyo · Maya · Designer view</span></div>
       <div class="info-row"><span class="lbl">Image-to-3D</span> <span class="val">fal.ai · Hyper3D Rodin</span></div>
       <div class="info-row"><span class="lbl">LLM dissect</span> <span class="val">OpenAI · GPT-4.1</span></div>
-      <div class="info-row"><span class="lbl">Piece renders</span> <span class="val">OpenAI · gpt-image-2</span></div>
-      <div class="info-row"><span class="lbl">Pattern raster</span> <span class="val">OpenAI · gpt-image-2</span></div>
+      <div class="info-row"><span class="lbl">Piece renders</span> <span class="val">OpenAI · GPT Image 2.5</span></div>
+      <div class="info-row"><span class="lbl">Pattern raster</span> <span class="val">OpenAI · GPT Image 2.5</span></div>
       <div class="info-row"><span class="lbl">Vectorizer</span> <span class="val">ImageTracer.js · 1.2.6</span></div>
       <div class="info-row"><span class="lbl">3D viewer</span> <span class="val">Three.js · 0.160</span></div>
       <div class="info-row"><span class="lbl">Nest engine</span> <span class="val">Maya · bbox bottom-left</span></div>
@@ -2706,7 +2706,7 @@ async function renderPiece(heroImage, piece) {
     'the garment keys cleanly to transparent. The garment is the only thing visible. ' +
     'No text, no labels, no captions, no measurements, no rulers.';
   const form = new FormData();
-  form.append('model', 'gpt-image-2');
+  form.append('model', 'gpt-image-2.5-flare');
   form.append('prompt', prompt);
   const blob = await (await fetch(heroImage)).blob();
   form.append('image', blob, 'hero.png');
@@ -3059,7 +3059,7 @@ async function generatePattern(heroImage, piece) {
     'No model, no 3D garment, no body, no mannequin, no shading, no rendering, no text ' +
     'other than the small panel labels. Output: a flat technical-drawing PDF look.';
   const form = new FormData();
-  form.append('model', 'gpt-image-2');
+  form.append('model', 'gpt-image-2.5-flare');
   form.append('prompt', prompt);
   const blob = await (await fetch(heroImage)).blob();
   form.append('image', blob, 'hero.png');

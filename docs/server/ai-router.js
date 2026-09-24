@@ -1,3 +1,4 @@
+import { TEXT_MODEL } from './model-config.mjs';
 import { randomUUID } from 'node:crypto';
 
 const DEFAULT_FALLBACK_CATEGORIES = Object.freeze([
@@ -20,7 +21,7 @@ const freezeTask = task => Object.freeze({
 // eval and the browser no longer chooses their provider or model directly.
 // v13.53: the route follows the tier env vars, with the proven previous
 // model kept as the registered fallback route.
-const RANK_MODEL = process.env.RANK_MODEL || process.env.MODEL_TERRA || 'gpt-5.6-terra';
+const RANK_MODEL = process.env.RANK_MODEL || process.env.MODEL_TERRA || TEXT_MODEL;
 export const AI_TASKS = Object.freeze({
   'fabric.visual_rank': freezeTask({
     version: '2',
@@ -33,7 +34,7 @@ export const AI_TASKS = Object.freeze({
       timeoutMs: 60_000,
     }, {
       provider: 'openai',
-      model: 'gpt-4.1',
+      model: 'gpt-4o-mini',
       endpoint: 'v1/chat/completions',
       timeoutMs: 60_000,
     }],

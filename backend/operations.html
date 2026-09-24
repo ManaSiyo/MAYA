@@ -44,7 +44,7 @@ window.addEventListener('message', function(e){
   }
 });</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MAYA · Operations Room Beta</title>
+<title>MAYA · Operation Room</title>
 <script src="/aesthetics/operations/kb/kb.js"></script>
 <!-- test images embedded as data URLs → loads on a plain double-click (file://), no fetch/server needed -->
 <script src="/aesthetics/operations/tests-data.js"></script>
@@ -312,7 +312,7 @@ window.addEventListener('message', function(e){
 <div class="hpane hpane-main">
 <div class="wrap">
   <header class="top">
-    <a class="brand" href="/status.html" style="text-decoration:none;color:inherit" title="Back to the Systems Map"><img src="/aesthetics/ui/logo-208.png" alt=""><span class="brand-words"><h1>Operations Room</h1><span class="sub">Beta</span></span></a>
+    <a class="brand" href="/status.html" style="text-decoration:none;color:inherit" title="Back to the Systems Map"><img src="/aesthetics/ui/logo-208.png" alt=""><span class="brand-words"><h1>Operation Room</h1></span></a>
     <div style="display:flex;align-items:center;gap:8px">
       <button class="icon-btn hamburger" onclick="toggleDrawer(true)" title="Menu">
         <span class="hamburger-icon"><span></span><span></span><span></span></span>
@@ -1649,7 +1649,7 @@ function composeGroundedPrompt(g, typeKey, gram, hits){
 /* ---- gpt-image-2 edit ---- */
 async function gptImageEdit(img, prompt){
   const form=new FormData();
-  form.append('model','gpt-image-2');
+  form.append('model','gpt-image-2.5-flare');
   form.append('prompt',prompt);
   const blob=await(await fetch(img)).blob();
   form.append('image',blob,'hero.png');

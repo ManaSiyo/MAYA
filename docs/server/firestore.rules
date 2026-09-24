@@ -59,7 +59,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
           'uid', 'author', 'imageUrl', 'storagePath', 'summary', 'fp', 'pid', 'model', 'ts'
         ])
-        && request.resource.data.model == 'gpt-image-2'
+        && request.resource.data.model in ['gpt-image-2', 'gpt-image-2.5-flare']
         && request.resource.data.imageUrl is string
         && request.resource.data.imageUrl.size() < 2000
         && request.resource.data.author is string
@@ -80,7 +80,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
           'uid', 'author', 'imageUrl', 'storagePath', 'summary', 'fp', 'pid', 'model', 'ts'
         ])
-        && request.resource.data.model == 'gpt-image-2'
+        && request.resource.data.model in ['gpt-image-2', 'gpt-image-2.5-flare']
         && request.resource.data.imageUrl is string
         && request.resource.data.imageUrl.size() < 2000
         && request.resource.data.author is string

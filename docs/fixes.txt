@@ -1,3 +1,11 @@
+SEPTEMBER 23: Mana hover still below on live site
+Read-only HTTP fetch confirmed deployed Admin had left:50%/top:100% CSS. Local
+branch already contained right:100%/top:50%. Prepared v14.37 adds explicit left
+reset and version bump; owner must confirm a successful hosting deployment.
+No claim that the production bug is fixed before that deployment.
+Model update also preserves legacy image records and extends Firestore's strict
+model allowlist so new Flare images are not rejected when posting to community.
+
 SEPTEMBER 22 22:59: local fixes, not deployed
 Mana flyout had moved below the heading: restored left placement and delayed
 hide. Reload/plus glyph size raised 39%; gear forced square/nonshrinking.

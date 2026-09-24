@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
-<meta name="maya-version" content="14.36">
+<meta name="maya-version" content="14.37">
 <!-- v13.6: keep this number in step with index.html's maya-version.
      A version change signs the map out on load, per Fromsa: every deploy
      must be unmistakable. The regression test asserts the two match. -->
@@ -523,7 +523,7 @@ try {
   #top-left-brand:hover .brand-chips,#top-left-brand .brand-chips:hover{opacity:1;pointer-events:auto;transition-delay:0s}
   /* Mana rooms remain reachable during pointer travel and keyboard focus. */
   .card-mana{position:relative}
-  .card-mana .mana-chips{position:absolute;right:100%;top:50%;transform:translateY(-50%);z-index:20;
+  .card-mana .mana-chips{position:absolute;left:auto;right:100%;top:50%;bottom:auto;transform:translateY(-50%);z-index:20;
     display:flex;gap:6px;white-space:nowrap;padding-right:10px;
     opacity:0;visibility:hidden;transition:opacity .18s ease 1s,visibility 0s linear 1.18s}
   .card-mana:hover .mana-chips,.card-mana:focus-within .mana-chips,.card-mana .mana-chips:hover{
@@ -1009,9 +1009,10 @@ if (IS_AFFILIATES) {
           onkeydown="if(event.key==='Enter')window.open('https://maya.manasiyo.com','_blank')"><b>MAYA</b>
       <span class="pg-chips">
         <a class="pg-chip" href="/operations.html" target="_blank"
-           onclick="event.stopPropagation()" title="The test bench.">operations room beta</a>
+           onclick="event.stopPropagation()" title="The test bench.">operation room</a>
         <a class="pg-chip" href="/playground.html" target="_blank"
            onclick="event.stopPropagation()" title="Your private copy for trying new things. The live app never sees it.">playground</a>
+        <a class="pg-chip" href="/outbound.html" target="_blank" rel="noopener" onclick="event.stopPropagation()" onkeydown="event.stopPropagation()">outbound</a>
       </span></span>
   </div>
 

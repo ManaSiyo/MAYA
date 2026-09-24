@@ -60,6 +60,10 @@
         }
       },
       {
+        "source": "/outbound.html",
+        "destination": "/backend/outbound.html"
+      },
+      {
         "source": "/playground.html",
         "destination": "/playground/index.html"
       },

@@ -47,7 +47,9 @@ frontend/index.html        the app            → served at /
 backend/status.html        Systems Map        → /status.html
                            Affiliates Beta    → /affiliates.html (admin-only route view)
 backend/marketing.html     Marketing          → /marketing.html
-backend/operations.html    Operations Room    → /operations.html
+backend/operations.html    Operation Room     → /operations.html
+backend/outbound.html      Outbound           → /outbound.html
+backend/outbound.js        Outbound UI logic (served alongside its page)
 backend/backend.html       the Brief          → /backend.html
 backend/privacy.html       privacy policy     → /privacy.html
 backend/verify.html        deploy check       → /verify.html
@@ -95,3 +97,10 @@ Communications changes also run `tests/maya-phone.mjs`, `tests/maya-messages.mjs
 live call audio, SMS delivery and owner transfer acceptance still need an owner
 verification after deployment. Avatar/Pinterest changes stay in Playground until
 Fromsa approves promotion.
+
+Outbound implementation: docs/server/outbound.mjs, model defaults and chat
+compatibility: docs/server/model-config.mjs. Outbound stores each admin's
+workspace under maya/outbound/<encoded Google sub>.json with GCS generation
+preconditions. Never replace that account-scoped key with a shared file.
+Run tests/outbound.mjs for Outbound/model changes; it uses fake providers.
+See docs/OUTBOUND-SETUP.md for owner-only connection and launch steps.

@@ -255,7 +255,7 @@ ok('share rules bound the item list and schema',
 ok('wall updates cannot move a post between projects',
   RULES_SOURCE.includes('request.resource.data.pid == resource.data.pid'));
 ok('new wall posts require GPT Image 2 provenance',
-  RULES_SOURCE.includes("request.resource.data.model == 'gpt-image-2'") &&
+  RULES_SOURCE.includes("request.resource.data.model in ['gpt-image-2', 'gpt-image-2.5-flare']") &&
   INDEX_SOURCE.includes("model: card.generatedBy || 'gpt-image-2'"));
 ok('community uses a live listener instead of polling', p.liveListener);
 ok('fabric library is lazy and URL-backed',
@@ -526,7 +526,7 @@ ok('v13.72: MANA SIYO mirrors MAYA with left-hanging Design Studio and Wix Studi
   MAP_SOURCE.includes('class="mana-chips"') &&
   MAP_SOURCE.includes('>design studio</a>') &&
   MAP_SOURCE.includes('>wix studio</a>') &&
-  /\.card-mana \.mana-chips\{position:absolute;right:100%/.test(MAP_SOURCE));
+  /\.card-mana \.mana-chips\{position:absolute;left:auto;right:100%/.test(MAP_SOURCE));
 ok('v13.72: the duplicate Manasiyo.com|MAYA visitor row is gone from Admin',
   !MAP_SOURCE.includes('id="visitors-fold"'));
 ok('v13.72: the voice line fails in plain words, not a raw error code',
@@ -1144,7 +1144,7 @@ ok('fabric ranking uses the task router without changing its live route',
   SERVER_SOURCE.includes("aiTaskRouter.run('fabric.visual_rank'") &&
   AI_ROUTER_SOURCE.includes("'fabric.visual_rank': freezeTask") &&
   AI_ROUTER_SOURCE.includes("provider: 'openai'") &&
-  AI_ROUTER_SOURCE.includes("model: 'gpt-4.1'") &&
+  AI_ROUTER_SOURCE.includes("model: 'gpt-4o-mini'") &&
   AI_ROUTER_SOURCE.includes("timeoutMs: 60_000") &&
   SERVER_DOCKER.includes('COPY ai-router.js ./'));
 ok('AI route telemetry records metadata only and the build gates its contracts',
@@ -1157,9 +1157,9 @@ ok('GPT Image 1.5 is retired from every active image path and picker',
   !INDEX_SOURCE.includes('gpt-image-1.5') &&
   !PLAYGROUND_SOURCE.includes('gpt-image-1.5') &&
   !BACKEND_SOURCE.includes('gpt-image-1.5') &&
-  BACKEND_SOURCE.includes("form.append('model', 'gpt-image-2')") &&
-  INDEX_SOURCE.includes("stored !== 'gpt-image-2'") &&
-  PLAYGROUND_SOURCE.includes("stored !== 'gpt-image-2'"));
+  BACKEND_SOURCE.includes("form.append('model', 'gpt-image-2.5-flare')") &&
+  INDEX_SOURCE.includes("stored !== 'gpt-image-2.5-flare'") &&
+  PLAYGROUND_SOURCE.includes("stored !== 'gpt-image-2.5-flare'"));
 ok('piece render quality, size and parallel behavior stayed unchanged',
   /async function renderPiece[\s\S]{0,3000}form\.append\('size', '1536x1024'\)[\s\S]{0,120}form\.append\('quality', 'medium'\)/.test(BACKEND_SOURCE) &&
   BACKEND_SOURCE.includes('const promises = targets.map(p =>') &&
@@ -1203,8 +1203,8 @@ ok('fabric sourcing looks across the world, four wide, swiped sideways',
 ok('the proxy holds a model allowlist and upgrades legacy names by tier',
   SERVER_SOURCE.includes('const MODEL_UPGRADES') &&
   SERVER_SOURCE.includes('const MODEL_ALLOWED') &&
-  SERVER_SOURCE.includes("process.env.MODEL_TERRA || 'gpt-5.6-terra'") &&
-  SERVER_SOURCE.includes("process.env.MODEL_LUNA  || 'gpt-5.6-luna'") &&
+  SERVER_SOURCE.includes("process.env.MODEL_TERRA || TEXT_MODEL") &&
+  SERVER_SOURCE.includes("const MODEL_LUNA  = TEXT_MODEL") &&
   SERVER_SOURCE.includes("'gpt-4.1':      MODEL_TERRA") &&
   SERVER_SOURCE.includes("'gpt-4o-mini':  MODEL_LUNA") &&
   // v13.70: the refusal itself now lives in the fail-closed policy helper
@@ -1227,7 +1227,7 @@ ok('the Operations Room judge and pattern loop speak with Sol',
     /model:'gpt-5\.6-sol', stream:true/.test(OPS_SOURCE) &&
     OPS_SOURCE.includes("model:'text-embedding-3-small'"))));
 ok('the ranking model rides the tier env instead of a hardcoded name',
-  FABRIC_SOURCE.includes("process.env.RANK_MODEL || process.env.MODEL_TERRA || 'gpt-5.6-terra'") &&
+  FABRIC_SOURCE.includes("process.env.RANK_MODEL || process.env.MODEL_TERRA || TEXT_MODEL") &&
   AI_ROUTER_SOURCE.includes('const RANK_MODEL') &&
   AI_ROUTER_SOURCE.includes('model: RANK_MODEL'));
 ok('the privacy page says who does the thinking and what they receive',
@@ -2051,8 +2051,13 @@ ok('CRM: Forms tab, plus lead action, handset, tier field and hidden scrolling',
 ok('Messages: names use bound events; carrier errors and history warnings are visible',
   MAP_SOURCE.includes('data-thread-index') && MAP_SOURCE.includes('row.onclick = () => openThread') &&
   MAP_SOURCE.includes('m.errorCode') && MAP_SOURCE.includes('if (j.warning)'));
+ok('Outbound: separate served page, real authenticated API and bounded provider actions',
+  HOSTING.hosting.rewrites.some(r=>r.source==='/outbound.html'&&r.destination==='/backend/outbound.html') &&
+  MAP_SOURCE.includes('href="/outbound.html" target="_blank"') &&
+  SERVER_SOURCE.includes('mountOutbound(app,') && SERVER_DOCKER.includes('COPY outbound.mjs ./') &&
+  BUILD_SOURCE.includes('node tests/outbound.mjs'));
 ok('September 22: Mana links sit left, lead tools grow, gear stays square',
-  MAP_SOURCE.includes('.card-mana .mana-chips{position:absolute;right:100%;top:50%;') &&
+  MAP_SOURCE.includes('.card-mana .mana-chips{position:absolute;left:auto;right:100%;top:50%;') &&
   MAP_SOURCE.includes('font-size:12.5px;line-height:1;width:32px;height:26px') &&
   MAP_SOURCE.includes('flex:none;aspect-ratio:1'));
 ok('September 22: standalone Affiliates removes extra admin navigation and records real stages',

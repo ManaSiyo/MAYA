@@ -65,6 +65,8 @@ await check('mcp scopes: header token reaches everything', async () => {
   if (process.env.MAYA_MCP_TOKEN) { const j = await r.json(); assert.ok(j.result, 'expected a result'); }
   return r;
 }, process.env.MAYA_MCP_TOKEN ? 200 : 503);
+await check('outbound workspace needs an admin', get('/api/admin/outbound'), 401);
+await check('outbound writes need an admin', post('/api/admin/outbound/save', {headers:{'Content-Type':'application/json'},body:'{}'}), 401);
 await check('telemetry needs a token',             post('/api/telemetry', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
 await check('the digest needs an admin',           get('/api/admin/maya-digest'), 401);
 await check('pinterest search needs a token',      get('/api/pinterest/search?q=corsets'), 401);

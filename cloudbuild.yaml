@@ -30,6 +30,8 @@ steps:
         node tests/admin-command.mjs
         node tests/admin-ui-contract.mjs
         node tests/proxy-policy.mjs
+        node tests/outbound.mjs
+        node tests/profile-crm.mjs
         node tests/maya-mcp.mjs
         node tests/maya-feedback.mjs
         # v14.14: the voice agent battery runs in the gate when a browser can
