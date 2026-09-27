@@ -1,0 +1,124 @@
+/* MAYA V4: V3 is the foundation. Dense information gets quieter, not heavier.
+   Source: docs/Aesthetics.pdf. Page 1 is canon; every screen shares these controls. */
+:root {
+  --maya-font-ui: 'Jost', sans-serif;
+  --maya-font-brand: 'Cormorant Garamond', serif;
+  --maya-text-caption: 12px;
+  --maya-text-body: 14px;
+  --maya-text-section: 18px;
+  --maya-text-metric: 28px;
+  --maya-ink: rgba(245,250,255,.92);
+  --maya-secondary: rgba(245,250,255,.72);
+  --maya-tertiary: rgba(245,250,255,.58);
+  --maya-line: rgba(255,255,255,.22);
+  --maya-line-hover: rgba(255,255,255,.42);
+  --maya-hairline: .5px;
+  --maya-radius-pill: 100px;
+  --maya-radius-panel: 16px;
+  --maya-space: 8px;
+  --maya-surface: rgba(7,10,20,.48);
+  --maya-glass: rgba(7,10,20,.62);
+  --maya-hover: rgba(255,255,255,.04);
+  --maya-selected: rgba(180,210,255,.08);
+  --maya-frost: blur(22px) saturate(180%);
+  --maya-quiet-frost: blur(12px) saturate(110%);
+  --maya-inset: inset 0 1px 1px rgba(255,255,255,.12), inset 0 -1px 1px rgba(255,255,255,.06);
+  --maya-floating-shadow: var(--maya-inset), 0 4px 16px rgba(0,0,0,.22);
+  --maya-booked: #4ade80;
+  --maya-progress: #fbbf24;
+  --maya-cancelled: #fda4af;
+  --maya-inactive: #b5bdc8;
+  --maya-duration: 180ms;
+  --maya-ease: ease-out;
+  --ink: var(--maya-ink); --dim: var(--maya-secondary); --faint: var(--maya-tertiary);
+  --line: var(--maya-line); --panel: var(--maya-surface);
+  --green: var(--maya-booked); --amber: var(--maya-progress); --rose: var(--maya-cancelled);
+  --mint: var(--maya-booked); --blue: var(--maya-ink);
+}
+body { font-family:var(--maya-font-ui);font-weight:400;color:var(--maya-ink); }
+/* Font inheritance must also cover dynamically created forms and data. */
+:where(button,input,select,textarea,table,time,.msg-number,.model-group,.model-note) {
+  font-family:var(--maya-font-ui);font-variant-numeric:tabular-nums;
+}
+:where(button,input,select,textarea) { color:var(--maya-ink); }
+:where(button,[role="button"],input,select,textarea,summary,a):focus-visible {
+  outline:1px solid rgba(245,250,255,.85);outline-offset:3px;
+}
+/* Reusable capsule treatment. Layout and control behavior remain owned by pages. */
+:where(html[data-maya-surface]) :is(.pill,.top-btn,.inv-btn,.msg-call,.primary,.dialog-actions button,.tabs button,.lead-tool,.lead-cta,button[type="submit"]) {
+  font-family:var(--maya-font-ui);font-weight:400;
+  color:var(--maya-ink);background:transparent;
+  border:var(--maya-hairline) solid var(--maya-line);border-radius:var(--maya-radius-pill);
+  box-shadow:var(--maya-inset);backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
+  transition:background var(--maya-duration) var(--maya-ease),border-color var(--maya-duration) var(--maya-ease);
+}
+:where(html[data-maya-surface]) :is(.pill,.top-btn,.inv-btn,.msg-call,.primary,.dialog-actions button,.tabs button,.lead-tool,.lead-cta):hover {
+  background:var(--maya-hover);color:var(--maya-ink);border-color:var(--maya-line-hover);
+}
+html[data-maya-surface="dense"] :is(button,input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
+  font-family:var(--maya-font-ui);font-weight:400;color:var(--maya-ink);
+  border-width:var(--maya-hairline);border-color:var(--maya-line);
+}
+html[data-maya-surface="dense"] :is(button,input:not([type="checkbox"]):not([type="radio"]),select) { border-radius:var(--maya-radius-pill); }
+html[data-maya-surface="dense"] textarea { border-radius:var(--maya-radius-panel); }
+html[data-maya-surface="dense"] :is(button,.primary,.tabs .active) { background:transparent;color:var(--maya-ink);box-shadow:none; }
+html[data-maya-surface="dense"] button:hover { background:var(--maya-hover); }
+html[data-maya-surface="dense"] :is(button.active,[aria-selected="true"],.person.active) { background:var(--maya-selected);border-color:var(--maya-line-hover); }
+/* Strong frost is for navigation and temporary layers, not every card. */
+html[data-maya-surface] :is(#drawer,#outbound-drawer,dialog,.lead-filter>div,#lead-inv-modal .inv-card) {
+  background:var(--maya-glass);border:var(--maya-hairline) solid var(--maya-line);
+  box-shadow:var(--maya-floating-shadow);backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
+}
+html[data-maya-surface="dense"] :is(.panel,.tile,.stat,.affiliate-stat,.detail,.metric-row,.person,.empty,.layout>aside,main,.people-scroll,.model-group,.chart-wrap) {
+  background:var(--maya-surface);border-width:var(--maya-hairline);border-color:var(--maya-line);
+  box-shadow:none;backdrop-filter:var(--maya-quiet-frost);-webkit-backdrop-filter:var(--maya-quiet-frost);
+}
+html[data-maya-surface="dense"] :is(table,th,td,input,select,textarea) { font-family:var(--maya-font-ui);font-variant-numeric:tabular-nums; }
+html[data-maya-surface="dense"] :is(th,td) { border-color:rgba(255,255,255,.1);border-width:var(--maya-hairline); }
+html[data-maya-surface="dense"] th { background:rgba(7,10,20,.78);backdrop-filter:var(--maya-quiet-frost); }
+html[data-maya-surface="dense"] tbody tr:hover { background:var(--maya-hover); }
+/* Metrics use weight and alignment rather than a decorative typeface. */
+html[data-maya-surface] :is(.tile .v,.money,.bl-step .v,.bl-tile .v,.stat strong,.affiliate-stat strong,.pg-stat-num,.pg-plan-num,.pg-plan-price,.funnel .v) {
+  font-family:var(--maya-font-ui);font-weight:500;font-style:normal;
+  font-variant-numeric:tabular-nums;letter-spacing:0;color:var(--maya-ink);
+  text-shadow:none;animation:none;
+}
+html[data-maya-surface="dense"] :is(.affiliate-stat strong,.stat strong,.money) {font-size:var(--maya-text-metric);}
+html[data-maya-surface="dense"] :is(#adm-tabtitle,#drawer h3,#outbound-drawer h3,.model-group strong,h2,h3,h4) {
+  font-family:var(--maya-font-ui);font-weight:500;font-style:normal;color:var(--maya-ink);
+}
+html[data-maya-surface="dense"] .model-group strong {font-size:var(--maya-text-section);}
+/* Lead Station is the dense canon example; all actions and persistence are unchanged. */
+html[data-maya-surface] #adm-mkt #leads-table :is(td,.lead-note-vp,.lead-stage,.lead-open) {
+  font:400 var(--maya-text-body)/1.5 var(--maya-font-ui);font-variant-numeric:tabular-nums;
+}
+html[data-maya-surface] #adm-mkt #leads-table .lead-open {font-weight:500;color:var(--maya-ink);}
+html[data-maya-surface] #adm-mkt #leads-table :is(.lead-note,.lead-note-vp,.lead-note-edit) {color:var(--maya-secondary);font-style:normal;}
+html[data-maya-surface] #adm-mkt #leads-table :is(.lead-src,.lead-sig-edit,.lead-when,.lead-subline) {
+  font:400 var(--maya-text-caption)/1.5 var(--maya-font-ui);color:var(--maya-tertiary);letter-spacing:0;
+}
+html[data-maya-surface] #adm-mkt #leads-table :is(th,.lead-filter label) {
+  font:500 var(--maya-text-caption)/1.5 var(--maya-font-ui);letter-spacing:.06em;color:var(--maya-ink);
+}
+html[data-maya-surface] #adm-mkt #leads-table td {padding-top:calc(2 * var(--maya-space));padding-bottom:calc(2 * var(--maya-space));}
+html[data-maya-surface] #adm-mkt #leads-table .lead-stage {color:var(--maya-inactive);background:transparent;box-shadow:none;}
+html[data-maya-surface] #adm-mkt #leads-table .lead-stage:has(option[value="in_progress"]:checked) {color:var(--maya-progress);}
+html[data-maya-surface] #adm-mkt #leads-table .lead-stage:has(option[value="booked"]:checked) {color:var(--maya-booked);}
+html[data-maya-surface] #adm-mkt #leads-table .lead-stage:has(option[value="canceled"]:checked) {color:var(--maya-cancelled);}
+html[data-maya-surface] .lead-filter>div {color:var(--maya-ink);}
+html[data-maya-surface] .affiliate-avatar {background:transparent;border-color:var(--maya-line);box-shadow:none;}
+html[data-maya-surface="dense"] :is(.sdot,.new-dot,.model-group) {box-shadow:none;}
+/* No serif data, including inline output from legacy templates. */
+html[data-maya-surface] :is(table,input,select,textarea,.pg-stat-num,.model-group,.msg-number) {font-family:var(--maya-font-ui)!important;}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  html[data-maya-surface] :is(#drawer,#outbound-drawer,dialog,.lead-filter>div,.panel,.detail,.stat) {background:rgba(7,10,20,.92);}
+}
+@media(prefers-reduced-motion:reduce) {
+  html[data-maya-surface] *,html[data-maya-surface] *::before,html[data-maya-surface] *::after {
+    animation:none!important;transition:none!important;scroll-behavior:auto!important;
+  }
+}
+/* V3 branding is deliberately exempt from functional heading normalization. */
+html[data-maya-surface] :is(#top-left-brand .brand-title,.brand h1,#brand,.brand-title) {
+  font-family:var(--maya-font-brand);font-weight:500;
+}

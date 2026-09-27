@@ -106,3 +106,11 @@ Run tests/outbound.mjs for Outbound/model changes; it uses fake providers.
 Run tests/outbound-ui.mjs for Outbound/shared CRM UI changes; its browser routes
 use local files and fake data. Both are in the Cloud Build release gate.
 See docs/OUTBOUND-SETUP.md for owner-only connection and launch steps.
+
+## Visual canon
+
+`docs/Aesthetics.pdf` (V3) is the primary aesthetic reference.
+`docs/MAYA-V4-CANON.md` extends it for dense interfaces; it does not replace V3.
+All served pages load `aesthetics/ui/maya-canon.css`. Change shared tokens and
+components there, not a new per-page visual system. Jost is functional; Cormorant
+is reserved for branding/display. Data and metrics use Jost with tabular numerals.

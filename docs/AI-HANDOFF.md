@@ -8,6 +8,33 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## V4 canon implementation prepared, September 26 (14.40)
+
+Owner explicitly restored original `docs/Aesthetics.pdf` V3 as primary reference
+and authorized consolidation around a dense-interface V4 extension. Original PDF
+unchanged. `docs/MAYA-V4-CANON.md` and the two-page
+`docs/output/pdf/MAYA-V4-Canon.pdf` supersede the earlier long review proposal.
+
+11 served HTML sources now load `aesthetics/ui/maya-canon.css`; tokens replace
+2,540 authored declarations, including 184 functional serif uses. Jost 400/500/600,
+tabular metrics, four functional sizes, bone-white capsules, 0.5px hairlines,
+strong navigation frost, quieter tables and labeled semantic CRM colors.
+Removed 38 superseded local declarations and old status-v13.19.css. All 37 inline
+scripts remain byte-identical; routes/APIs/account isolation/actions untouched.
+Version metadata prepared at 14.40; nothing pushed/deployed.
+
+Validation: canon source contract; 11 pages desktop/mobile, actual-font visual
+pass; Outbound/CRM interaction suite; 11 Admin contracts; Maya hands on frontend
+and Playground; script syntax/diff check; two-page PDF rendered/inspected.
+Tests added to Cloud Build. Full historical app-regression is not claimed green.
+Detailed files, evidence and remaining template/native-control/visual limits:
+`docs/design/MAYA-V4-AUDIT.md`. Audit inventories in the same directory.
+
+Exact next step: owner reviews V4 and local UI changes, then pushes the prepared
+commit. Verify signed-in real-data layout and deployment afterwards; no live
+provider setup or credentials were touched. Old font sample PDF is a pre-migration
+reference, not the current design source of truth.
+
 ## The rules, in one place
 
 1. One repository, one branch: `ManaSiyo/MAYA`, branch `maya-v2`, working

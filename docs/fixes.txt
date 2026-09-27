@@ -1,3 +1,8 @@
+SEPTEMBER 26: visual rules drifting from original V3 canon
+[prepared, 14.40] Repeated serif data/metrics, local frost and late Systems Map
+    overrides consolidated into maya-canon.css. Original V3 remains primary.
+    See design/MAYA-V4-AUDIT.md for verification and remaining limits. Not deployed.
+
 SEPTEMBER 24: 14.39 CRM styling and empty Outbound
 Legacy CSS below the prior patch overrode status size/color. Strong scoped rules
 now match campaign typography. Native details needed explicit outside/Escape close.

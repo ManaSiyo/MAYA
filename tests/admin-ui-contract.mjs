@@ -63,9 +63,9 @@ await test('the approved filing cabinet is promoted without removing Playground'
   assert.ok(playground.includes('>Playground</div>'));
 });
 
-await test('all four release surfaces carry v14.39', () => {
+await test('all four release surfaces carry v14.40', () => {
   const version = source => (source.match(/name="maya-version" content="([0-9.]+)"/) || [])[1];
-  assert.deepEqual([app, playground, admin, marketing].map(version), ['14.39', '14.39', '14.39', '14.39']);
+  assert.deepEqual([app, playground, admin, marketing].map(version), ['14.40', '14.40', '14.40', '14.40']);
 });
 
 await test('v14.01 drawer floor: circular logo, Hey Maya toggle beside it', () => {
@@ -82,7 +82,7 @@ await test('v14.01 drawer floor: circular logo, Hey Maya toggle beside it', () =
 await test('v14.01 admin drawer: full-bleed, sheet-only hover, glued hamburger, one-click invoice', () => {
   // v14.01: the drawer is the frontend's exact glass card, not full-bleed
   assert.match(admin, /#drawer\{position:absolute;top:10px;right:18px;bottom:10px;left:0/, 'drawer wears the app glass geometry');
-  assert.ok(admin.includes('rgba(255,255,255,0.10) 0%'), 'the app gradient');
+  assert.ok(admin.includes('/aesthetics/ui/maya-canon.css?v=4'), 'shared V3 frost, not a page-specific gradient');
   assert.ok(admin.includes('.top-btn.hamburger{transition:opacity .25s'), 'no transform transition: the lag fix');
   assert.ok(admin.includes("hs.addEventListener('scroll', update, { passive: true })"), 'synchronous glue, like the app');
   // the ADMIN wordmark's own chip strip carries only the sheet (the MAYA door

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html data-maya-surface="dense" lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -29,7 +29,7 @@
 </script>
 <title>MAYA · Brief</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;0,600;1,300&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;0,600;1,300&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
@@ -38,7 +38,7 @@
        lives under MAYA/Back End/ and the UI assets moved to MAYA/Front End/
        assets/ui/. Path is relative to this file. */
     background: #000 url("/aesthetics/ui/birth-of-a-star.png") center/cover no-repeat fixed;
-    font-family: 'Jost', sans-serif; color: rgba(245,250,255,0.85);
+    font-family:var(--maya-font-ui); color: rgba(245,250,255,0.85);
   }
 
   /* ───────── sticky top bar ───────── */
@@ -50,16 +50,16 @@
   }
   #top-bar > * { pointer-events: auto; }
   #brand {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 22px; font-weight: 500;
+    font-family:var(--maya-font-brand);
+    font-size:22px; font-weight:500;
     letter-spacing: 0.22em;
     text-transform: uppercase;   /* v13.58: BACKEND, caps like every corner */
     color: rgba(255,255,255,0.9);
     cursor: default;
   }
   #brand .sub {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 9px; letter-spacing: 0.32em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.32em; text-transform: uppercase;
     color: rgba(245,250,255,0.55);
     margin-left: 12px;
   }
@@ -68,14 +68,14 @@
     display: inline-flex; align-items: center;
     margin-left: 16px;
     padding: 4px 12px;
-    border-radius: 100px;
+    border-radius:var(--maya-radius-pill);
     background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.42);
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 9px; letter-spacing: 0.32em; text-transform: uppercase;
+    border:var(--maya-hairline) solid rgba(255,255,255,0.42);
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.32em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
     animation: maya-listen-pulse-bk 1.8s ease-in-out infinite;
   }
   @keyframes maya-listen-pulse-bk {
@@ -90,16 +90,16 @@
   }
   .top-btn {
     background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 100px;
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:var(--maya-radius-pill);
     padding: 6px 14px;
-    font-family: 'Jost', sans-serif;
-    font-size: 10px; font-weight: 300;
+    font-family:var(--maya-font-ui);
+    font-size:var(--maya-text-caption); font-weight:400;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     cursor: pointer;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -148,12 +148,12 @@
   .op-header {
     display: flex; justify-content: space-between; align-items: flex-end;
     padding-bottom: 14px;
-    border-bottom: 0.5px solid rgba(255,255,255,0.22);
+    border-bottom:var(--maya-hairline) solid rgba(255,255,255,0.22);
   }
   .op-hero {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 600;
-    font-size: 64px;
+    font-family:var(--maya-font-ui);
+    font-weight:600;
+    font-size:var(--maya-text-metric);
     letter-spacing: 0.22em;
     color: #ffffff;
     text-shadow:
@@ -161,8 +161,8 @@
       0 0 64px rgba(180,210,255,0.28);
   }
   .op-meta {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
   }
   .op-row {
@@ -181,10 +181,10 @@
     width: 100%; max-height: 70vh;
     padding: 12px;
     background: rgba(255,255,255,0.02);
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 16px;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:16px;
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -193,7 +193,7 @@
   }
   .op-image-frame img {
     width: 100%; height: auto; max-height: calc(70vh - 24px);
-    object-fit: contain; border-radius: 8px;
+    object-fit: contain; border-radius:8px;
   }
   /* v0.9: right column gains its own vertical scroll if content overflows
      so the full measurements list always reads. */
@@ -211,20 +211,20 @@
     scrollbar-color: rgba(255,255,255,0.18) transparent;
   }
   .op-info-col::-webkit-scrollbar { width: 4px; }
-  .op-info-col::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 4px; }
+  .op-info-col::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius:4px; }
   .op-section {
     display: flex; flex-direction: column; gap: 6px;
   }
   .op-eyebrow {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.55);
   }
   /* v0.9: center-aligned editorial paragraphs. Biography + Vision read
      centered in the right column. */
   .op-text {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 14px; line-height: 1.55;
+    font-family:var(--maya-font-ui);
+    font-size:var(--maya-text-body); line-height: 1.55;
     color: rgba(245,250,255,0.85);
     text-align: center;
   }
@@ -232,15 +232,15 @@
   .op-name-pill {
     align-self: flex-start;
     padding: 8px 22px;
-    border-radius: 100px;
+    border-radius:var(--maya-radius-pill);
     background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22);
-    font-family: 'Cormorant Garamond', serif;
-    font-style: italic; font-weight: 300;
-    font-size: 22px;
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    font-family:var(--maya-font-ui);
+    font-style: italic; font-weight:400;
+    font-size:var(--maya-text-section);
     color: rgba(245,250,255,0.95);
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -251,11 +251,11 @@
   }
   .op-chip {
     background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 100px;
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:var(--maya-radius-pill);
     padding: 4px 12px;
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
   }
   /* v10.12: piece swiper, pills + dissect CTA under the dream-garment frame. */
@@ -280,15 +280,15 @@
   .piece-pill.dissect-start.busy { opacity: 0.55; cursor: wait; }
   .piece-pill {
     background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 100px;
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:var(--maya-radius-pill);
     padding: 6px 14px;
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     cursor: pointer;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -306,15 +306,15 @@
   .piece-pill.skip { opacity: 0.4; }
   .piece-swiper .dissect-btn {
     background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 100px;
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:var(--maya-radius-pill);
     padding: 8px 22px;
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     cursor: pointer;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -330,25 +330,25 @@
   }
   .op-measurements .meas-row {
     display: flex; justify-content: space-between; align-items: baseline;
-    border-bottom: 0.25px solid rgba(255,255,255,0.12);
+    border-bottom:0.25px solid rgba(255,255,255,0.12);
     padding: 4px 0;
   }
   .op-measurements .meas-label {
-    font-family: 'Cormorant Garamond', serif; font-style: italic;
-    font-size: 11px; color: rgba(245,250,255,0.65);
+    font-family:var(--maya-font-ui); font-style: italic;
+    font-size:var(--maya-text-caption); color: rgba(245,250,255,0.65);
   }
   /* v0.9.2: section header inside the measurements list (Body / Arms / X-axis…) */
   .op-measurements .meas-section-header {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 9px; letter-spacing: 0.20em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.20em; text-transform: uppercase;
     color: rgba(245,250,255,0.50);
     margin-top: 14px; margin-bottom: 4px;
     text-align: center;
   }
   .op-measurements .meas-section-header:first-child { margin-top: 4px; }
   .op-measurements .meas-value {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 11px; color: rgba(245,250,255,0.95);
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); color: rgba(245,250,255,0.95);
     letter-spacing: 0.02em;
   }
 
@@ -360,8 +360,8 @@
     gap: 18px;
   }
   .op-room-eyebrow {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.32em; text-transform: uppercase;
     color: rgba(245,250,255,0.55);
     text-align: center;
   }
@@ -394,7 +394,7 @@
   }
   /* v0.16: pill font shrunk from 10 → 9 so labels read as labels, not buttons. */
   .op-room-pill-row .piece-pill {
-    font-size: 9px;
+    font-size:var(--maya-text-caption);
     letter-spacing: 0.18em;
     padding: 5px 16px;
   }
@@ -404,10 +404,10 @@
     position: relative;
     display: flex; align-items: center; justify-content: center;
     background: rgba(0,0,0,0.32);
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 16px;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:16px;
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -419,7 +419,7 @@
   .op-room-3d-frame .threed-empty {
     position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-family:var(--maya-font-ui); font-style: italic;
     color: rgba(245,250,255,0.45);
     text-align: center;
     pointer-events: none;
@@ -445,27 +445,27 @@
   }
   .info-eyebrow {
     grid-column: 1 / -1;
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 9px; letter-spacing: 0.32em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.32em; text-transform: uppercase;
     color: rgba(245,250,255,0.45);
     text-align: center;
     padding-bottom: 8px;
-    border-bottom: 0.25px solid rgba(255,255,255,0.18);
+    border-bottom:0.25px solid rgba(255,255,255,0.18);
     margin-bottom: 6px;
   }
   .info-label {
-    font-family: 'Cormorant Garamond', serif; font-style: italic;
-    font-size: 12px;
+    font-family:var(--maya-font-ui); font-style: italic;
+    font-size:var(--maya-text-caption);
     color: rgba(245,250,255,0.55);
   }
   .info-value {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 11px; letter-spacing: 0.08em;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.08em;
     color: rgba(245,250,255,0.95);
     text-align: right;
   }
   .info-empty {
-    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-family:var(--maya-font-ui); font-style: italic;
     color: rgba(245,250,255,0.45);
     text-align: center;
   }
@@ -474,10 +474,10 @@
     flex: 1;
     display: flex; align-items: center; justify-content: center;
     background: rgba(255,255,255,0.02);
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 16px;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:16px;
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -532,10 +532,10 @@
         rgba(255,255,255,0.03) var(--in, 14px)
       );
     background-size: 100% 100%;
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 16px;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:16px;
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -580,10 +580,10 @@
     padding: 16px;
     display: flex; flex-direction: column; gap: 14px;
     background: rgba(255,255,255,0.02);
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 16px;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:16px;
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -592,26 +592,26 @@
   .fab-head {
     display: flex; align-items: center; justify-content: space-between;
     gap: 12px; flex-shrink: 0; padding-bottom: 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.10);
+    border-bottom:var(--maya-hairline) solid rgba(255,255,255,0.10);
   }
   .fab-head-left { min-width: 0; }
   .fab-head-label {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.55); margin-bottom: 3px;
   }
   .fab-head-fabric {
-    font-family: 'Cormorant Garamond', serif; font-size: 18px;
+    font-family:var(--maya-font-ui); font-size:var(--maya-text-section);
     color: rgba(245,250,255,0.95); line-height: 1.1; text-transform: capitalize;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .fab-source-toggle { display: flex; gap: 6px; flex-shrink: 0; }
   .fab-src-pill {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
-    padding: 6px 14px; border-radius: 100px; cursor: pointer;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 6px 14px; border-radius:var(--maya-radius-pill); cursor: pointer;
     color: rgba(245,250,255,0.85); background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22); transition: all 0.2s;
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22); transition: all 0.2s;
   }
   .fab-src-pill:hover { border-color: rgba(255,255,255,0.42); }
   .fab-src-pill.active {
@@ -628,7 +628,7 @@
     -webkit-overflow-scrolling: touch;
   }
   .fab-grid::-webkit-scrollbar { height: 4px; }
-  .fab-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 4px; }
+  .fab-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius:4px; }
   .fab-page {
     flex: 0 0 100%; min-width: 100%; max-width: 100%;
     height: 100%;
@@ -647,7 +647,7 @@
     display: flex; justify-content: center; gap: 6px; padding-top: 8px; flex-shrink: 0;
   }
   .fab-page-dots .fpd {
-    width: 5px; height: 5px; border-radius: 50%;
+    width: 5px; height: 5px; border-radius:50%;
     background: rgba(255,255,255,0.22); transition: background .2s;
   }
   .fab-page-dots .fpd.on { background: rgba(255,255,255,0.75); }
@@ -656,10 +656,10 @@
   .fab-card { display: flex; flex-direction: column; text-decoration: none;
               position: relative; min-width: 0; min-height: 0; }
   .fab-icon-btn {
-    font-family: 'Jost', sans-serif; font-size: 15px; line-height: 1;
-    width: 30px; height: 30px; border-radius: 100px; cursor: pointer;
+    font-family:var(--maya-font-ui); font-size:15px; line-height: 1;
+    width: 30px; height: 30px; border-radius:var(--maya-radius-pill); cursor: pointer;
     color: rgba(245,250,255,0.85); background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22); transition: all 0.2s;
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22); transition: all 0.2s;
     display: inline-flex; align-items: center; justify-content: center;
   }
   .fab-icon-btn:hover { border-color: rgba(255,255,255,0.42); transform: rotate(90deg); }
@@ -671,9 +671,9 @@
      Hidden until card hover; pinned (always shown) once favorited. */
   .fab-heart {
     position: absolute; top: -9px; left: -9px; z-index: 3;
-    width: 25px; height: 25px; border-radius: 50%;
+    width: 25px; height: 25px; border-radius:50%;
     background: rgba(255,255,255,0.06);
-    border: 0.5px solid rgba(255,255,255,0.2);
+    border:var(--maya-hairline) solid rgba(255,255,255,0.2);
     color: rgba(225,235,255,0.55);
     cursor: pointer; transition: all 0.2s; padding: 0;
     display: none; align-items: center; justify-content: center;
@@ -694,9 +694,9 @@
     /* v13.48: no fixed aspect any more; the picture fills whatever height
        the row gives it, so 4 columns by 3 rows always fit the frame. */
     position: relative; width: 100%; flex: 1; min-height: 0;
-    border-radius: 12px; overflow: hidden;
+    border-radius:12px; overflow: hidden;
     background-size: cover; background-position: center;
-    border: 0.5px solid rgba(255,255,255,0.18);
+    border:var(--maya-hairline) solid rgba(255,255,255,0.18);
   }
   .fab-swatch img {
     position: absolute; inset: 0; width: 100%; height: 100%;
@@ -704,8 +704,8 @@
   }
   .fab-match-score {
     position: absolute; top: 7px; right: 7px; z-index: 2;
-    padding: 3px 7px; border-radius: 100px;
-    font-family: 'Jost', sans-serif; font-size: 10px; letter-spacing: 0.04em;
+    padding: 3px 7px; border-radius:var(--maya-radius-pill);
+    font-family:var(--maya-font-ui); font-size:var(--maya-text-caption); letter-spacing: 0.04em;
     color: #0b0e16; background: rgba(245,250,255,0.9);
     box-shadow: 0 2px 10px rgba(0,0,0,0.25);
   }
@@ -713,23 +713,23 @@
   /* v13.53: a gradient-only card can ask Nano Banana for an illustration. */
   .fab-visualize {
     position: absolute; bottom: 7px; right: 7px; z-index: 2;
-    padding: 3px 8px; border-radius: 100px; cursor: pointer;
-    font-family: 'Jost', sans-serif; font-size: 10px; letter-spacing: 0.08em;
+    padding: 3px 8px; border-radius:var(--maya-radius-pill); cursor: pointer;
+    font-family:var(--maya-font-ui); font-size:var(--maya-text-caption); letter-spacing: 0.08em;
     text-transform: uppercase; color: rgba(245,250,255,0.85);
-    background: rgba(10,14,26,0.72); border: 0.5px solid rgba(255,255,255,0.28);
-    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    background: rgba(10,14,26,0.72); border:var(--maya-hairline) solid rgba(255,255,255,0.28);
+    backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost);
   }
   .fab-visualize:hover { color: #fff; border-color: rgba(255,255,255,0.55); }
   .fab-gen-label {
     position: absolute; bottom: 7px; left: 7px; z-index: 2;
-    padding: 2px 7px; border-radius: 100px;
-    font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.14em;
+    padding: 2px 7px; border-radius:var(--maya-radius-pill);
+    font-family:var(--maya-font-ui); font-size:var(--maya-text-caption); letter-spacing: 0.14em;
     text-transform: uppercase; color: rgba(245,250,255,0.9);
-    background: rgba(10,14,26,0.75); border: 0.5px solid rgba(255,255,255,0.3);
+    background: rgba(10,14,26,0.75); border:var(--maya-hairline) solid rgba(255,255,255,0.3);
   }
   .fab-card-body { padding: 6px 2px 0; flex-shrink: 0; }
   .fab-title {
-    font-family: 'Cormorant Garamond', serif; font-size: 14px; line-height: 1.2;
+    font-family:var(--maya-font-ui); font-size:var(--maya-text-body); line-height: 1.2;
     color: rgba(245,250,255,0.92);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
@@ -738,57 +738,57 @@
     gap: 8px; margin-top: 2px;
   }
   .fab-mch {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.12em; text-transform: uppercase;
     color: rgba(245,250,255,0.5);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .fab-price {
-    font-family: 'Jost', sans-serif; font-size: 12px;
+    font-family:var(--maya-font-ui); font-size:var(--maya-text-caption);
     color: rgba(245,250,255,0.92); flex-shrink: 0;
   }
   .fab-arrive {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; letter-spacing: 0.05em;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.05em;
     color: rgba(245,250,255,0.5); margin-top: 2px;
   }
   .fab-reason {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; line-height: 1.2; margin-top: 2px;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); line-height: 1.2; margin-top: 2px;
     color: rgba(245,250,255,0.68);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .fab-empty-msg {
     grid-column: 1 / -1; text-align: center; padding: 30px 10px;
-    font-family: 'Cormorant Garamond', serif; font-style: italic;
-    font-size: 14px; color: rgba(245,250,255,0.5);
+    font-family:var(--maya-font-ui); font-style: italic;
+    font-size:var(--maya-text-body); color: rgba(245,250,255,0.5);
   }
   .fab-inhouse {
     margin: auto; max-width: 320px; text-align: center;
-    padding: 20px 18px; border-radius: 16px;
-    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.14);
-    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    padding: 20px 18px; border-radius:16px;
+    background: rgba(255,255,255,0.05); border:var(--maya-hairline) solid rgba(255,255,255,0.14);
+    backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost);
   }
   .fab-inhouse .fi-eyebrow {
-    font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+    font-size:var(--maya-text-caption); letter-spacing: 0.2em; text-transform: uppercase;
     color: rgba(245,250,255,0.45); margin-bottom: 8px;
   }
   .fab-inhouse .fi-title {
-    font-family: 'Cormorant Garamond', serif; font-size: 22px;
+    font-family:var(--maya-font-ui); font-size:var(--maya-text-section);
     color: rgba(245,250,255,0.96); margin-bottom: 8px;
   }
-  .fab-inhouse .fi-detail { font-size: 12px; color: rgba(245,250,255,0.62); line-height: 1.5; }
+  .fab-inhouse .fi-detail { font-size:var(--maya-text-caption); color: rgba(245,250,255,0.62); line-height: 1.5; }
   .figure-empty, .pattern-empty {
-    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-family:var(--maya-font-ui); font-style: italic;
     color: rgba(245,250,255,0.45);
     text-align: center;
     max-width: 80%;
     line-height: 1.5;
   }
   .pattern-empty b {
-    font-style: normal; font-weight: 300;
-    font-family: 'Jost', sans-serif;
-    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    font-style: normal; font-weight:400;
+    font-family:var(--maya-font-ui);
+    font-size:var(--maya-text-caption); letter-spacing: 0.18em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
   }
   /* v0.10: pill row under each window, one centered pill. */
@@ -813,15 +813,15 @@
      the buttons sit underneath. */
   .op-dissect-btn {
     background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.32);
-    border-radius: 100px;
+    border:var(--maya-hairline) solid rgba(255,255,255,0.32);
+    border-radius:var(--maya-radius-pill);
     padding: 9px 24px;
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.18em; text-transform: uppercase;
     color: rgba(245,250,255,0.90);
     cursor: pointer;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -857,25 +857,25 @@
     opacity: 1;
   }
   .process-overlay .po-eyebrow {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 9px; letter-spacing: 0.32em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.32em; text-transform: uppercase;
     color: rgba(245,250,255,0.55);
     margin-bottom: 6px;
   }
   .process-overlay .po-title {
-    font-family: 'Cormorant Garamond', serif; font-weight: 500;
-    font-size: 13px; letter-spacing: 0.08em;
+    font-family:var(--maya-font-ui); font-weight:500;
+    font-size:var(--maya-text-body); letter-spacing: 0.08em;
     color: rgba(255,255,255,0.95);
     margin-bottom: 4px;
   }
   .process-overlay .po-detail {
-    font-family: 'Cormorant Garamond', serif; font-style: italic;
-    font-size: 11.5px; line-height: 1.45;
+    font-family:var(--maya-font-ui); font-style: italic;
+    font-size:var(--maya-text-caption); line-height: 1.45;
     color: rgba(245,250,255,0.78);
   }
   .process-overlay .po-meta {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 9px; letter-spacing: 0.15em;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.15em;
     color: rgba(245,250,255,0.55);
     margin-top: 6px;
   }
@@ -892,9 +892,9 @@
     position: absolute; inset: 0;
     padding: 22px 22px 18px;
     background: rgba(8, 10, 20, 0.96);
-    backdrop-filter: blur(28px) saturate(180%);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
-    border-radius: inherit;
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
+    border-radius:inherit;
     transform: translateX(110%);
     transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex; flex-direction: column;
@@ -908,31 +908,31 @@
     margin-bottom: 14px;
   }
   #drawer-settings .settings-title {
-    font-family: 'Cormorant Garamond', serif; font-weight: 500;
-    font-size: 18px; letter-spacing: 0.18em;
+    font-family:var(--maya-font-ui); font-weight:500;
+    font-size:var(--maya-text-section); letter-spacing: 0.18em;
     color: rgba(245,250,255,0.95);
     text-transform: uppercase;
   }
   #drawer-settings .settings-back {
-    background: transparent; border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 100px;
+    background: transparent; border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:var(--maya-radius-pill);
     padding: 5px 12px;
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.18em; text-transform: uppercase;
     color: rgba(245,250,255,0.85); cursor: pointer;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
   }
   #drawer-settings .settings-back:hover { border-color: rgba(255,255,255,0.55); }
   #drawer-settings .settings-section {
     margin-top: 6px;
     padding-top: 12px;
-    border-top: 0.25px solid rgba(255,255,255,0.18);
+    border-top:0.25px solid rgba(255,255,255,0.18);
   }
-  #drawer-settings .settings-section:first-of-type { border-top: none; padding-top: 0; }
+  #drawer-settings .settings-section:first-of-type { border-top:none; padding-top: 0; }
   #drawer-settings .settings-section-title {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 9px; letter-spacing: 0.32em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.32em; text-transform: uppercase;
     color: rgba(245,250,255,0.45);
     margin-bottom: 8px; text-align: center;
   }
@@ -941,18 +941,18 @@
     margin-bottom: 12px;
   }
   #drawer-settings .key-row label {
-    font-family: 'Cormorant Garamond', serif; font-style: italic;
-    font-size: 12px;
+    font-family:var(--maya-font-ui); font-style: italic;
+    font-size:var(--maya-text-caption);
     color: rgba(245,250,255,0.65);
   }
   #drawer-settings .key-row input {
     background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 100px;
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:var(--maya-radius-pill);
     padding: 8px 14px;
     color: rgba(245,250,255,0.95);
-    font-family: ui-monospace, 'SF Mono', monospace;
-    font-size: 10.5px;
+    font-family:ui-monospace, 'SF Mono', monospace;
+    font-size:var(--maya-text-caption);
     width: 100%;
     box-sizing: border-box;
   }
@@ -961,8 +961,8 @@
     border-color: rgba(255,255,255,0.55);
   }
   #drawer-settings .key-status {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 9px; letter-spacing: 0.10em;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.10em;
     margin-top: 2px; padding-left: 6px;
   }
   #drawer-settings .key-status.ok   { color: #5acf6e; }
@@ -971,15 +971,15 @@
   #drawer-settings .info-row {
     display: flex; justify-content: space-between;
     padding: 6px 0;
-    border-bottom: 0.25px solid rgba(255,255,255,0.10);
-    font-size: 10.5px;
+    border-bottom:0.25px solid rgba(255,255,255,0.10);
+    font-size:var(--maya-text-caption);
   }
   #drawer-settings .info-row .lbl {
-    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-family:var(--maya-font-ui); font-style: italic;
     color: rgba(245,250,255,0.55);
   }
   #drawer-settings .info-row .val {
-    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-family:var(--maya-font-ui); font-weight:400;
     color: rgba(245,250,255,0.95);
     letter-spacing: 0.05em;
   }
@@ -990,15 +990,15 @@
   }
   #drawer-settings .quality-pill {
     background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 100px;
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:var(--maya-radius-pill);
     padding: 5px 12px;
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 9.5px; letter-spacing: 0.10em;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.10em;
     color: rgba(245,250,255,0.85);
     cursor: pointer;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
   }
   #drawer-settings .quality-pill:hover { border-color: rgba(255,255,255,0.42); }
   #drawer-settings .quality-pill.active {
@@ -1013,12 +1013,12 @@
      compete with the client list above it. */
   .drawer-section {
     padding: 26px 18px 10px;
-    border-top: 0.25px solid rgba(255,255,255,0.18);
+    border-top:0.25px solid rgba(255,255,255,0.18);
     margin-top: 8px;
   }
   .drawer-section-title {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 9px; letter-spacing: 0.32em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.32em; text-transform: uppercase;
     color: rgba(245,250,255,0.55);
     text-align: center;
     padding-bottom: 10px;
@@ -1039,31 +1039,31 @@
   .nest-field {
     display: inline-flex; align-items: center; gap: 6px;
     background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 100px;
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:var(--maya-radius-pill);
     padding: 6px 14px;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
       0 4px 16px rgba(0,0,0,0.22);
   }
   .nest-field label {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.55);
   }
   .nest-field input {
-    background: transparent; border: none; outline: none;
+    background: transparent; border:none; outline: none;
     color: rgba(245,250,255,0.95);
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 10px; letter-spacing: 0.10em;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.10em;
     width: 48px; text-align: center;
   }
   .nest-field .unit {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.45);
   }
   /* v0.13: .nest-utilization removed, the live pill that used to read
@@ -1079,16 +1079,16 @@
     display: inline-flex; align-items: center; gap: 6px;
     padding: 5px 12px;
     background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 100px;
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 9.5px; letter-spacing: 0.10em;
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:var(--maya-radius-pill);
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.10em;
     color: rgba(245,250,255,0.85);
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
   }
   .nest-panel-chip .x {
-    cursor: pointer; opacity: 0.55; font-size: 11px;
+    cursor: pointer; opacity: 0.55; font-size:var(--maya-text-caption);
     transition: opacity 0.15s ease;
   }
   .nest-panel-chip .x:hover { opacity: 1; }
@@ -1096,9 +1096,9 @@
   .nest-panels-hint {
     display: none;
     text-align: center;
-    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-family:var(--maya-font-ui); font-style: italic;
     color: rgba(245,250,255,0.45);
-    font-size: 13px;
+    font-size:var(--maya-text-body);
   }
 
   /* The Nest page swaps to this when a nest result lands. Live SVG renders
@@ -1120,15 +1120,15 @@
     stroke-width: 0.5;
   }
   .nest-preview-svg .panel-label {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
     fill: rgba(245,250,255,0.85);
     text-anchor: middle; dominant-baseline: middle;
   }
   .figure-overlay {
     position: absolute;
-    border: 0.5px dashed rgba(180,210,255,0.55);
-    border-radius: 8px;
+    border:0.5px dashed rgba(180,210,255,0.55);
+    border-radius:8px;
     pointer-events: auto;
     cursor: pointer;
     transition: all 0.2s;
@@ -1141,8 +1141,8 @@
   }
   .figure-overlay .ov-label {
     position: absolute; top: -22px; left: 0;
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     white-space: nowrap;
   }
@@ -1157,13 +1157,13 @@
   }
   .piece-card {
     background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 16px;
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:16px;
     padding: 22px 24px;
     cursor: pointer;
     transition: all 0.2s;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -1191,27 +1191,27 @@
     margin-bottom: 8px;
   }
   .piece-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 300;
-    font-size: 22px;
+    font-family:var(--maya-font-ui);
+    font-weight:400;
+    font-size:var(--maya-text-section);
     color: rgba(245,250,255,0.95);
   }
   .piece-status {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
   }
   .piece-body {
-    font-family: 'Cormorant Garamond', serif;
+    font-family:var(--maya-font-ui);
     font-style: italic;
-    font-size: 13px; line-height: 1.55;
+    font-size:var(--maya-text-body); line-height: 1.55;
     color: rgba(245,250,255,0.75);
   }
   .piece-meta {
     margin-top: 10px;
     display: flex; gap: 6px; flex-wrap: wrap;
   }
-  .piece-meta .op-chip { font-size: 9px; }
+  .piece-meta .op-chip { font-size:var(--maya-text-caption); }
 
   /* ───────── v0.25: page indicator, smaller (~20% slimmer) + pushed
      further left so it doesn't kiss the window edges. */
@@ -1221,18 +1221,18 @@
     display: flex; flex-direction: column; gap: 8px;
     padding: 9px 5px;
     background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 100px;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:var(--maya-radius-pill);
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
       0 4px 16px rgba(0,0,0,0.22);
   }
   .page-dot {
-    width: 5px; height: 5px; border-radius: 50%;
-    border: 0.5px solid rgba(255,255,255,0.22);
+    width: 5px; height: 5px; border-radius:50%;
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
     background: transparent;
     cursor: pointer;
     padding: 0;
@@ -1252,10 +1252,10 @@
         rgba(255,255,255,0.03) 25%,
         rgba(255,255,255,0.02) 65%,
         rgba(255,255,255,0.07) 100%);
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 18px;
-    backdrop-filter: blur(28px) saturate(180%);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:18px;
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.30),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -1282,17 +1282,17 @@
     body.drawer-open #top-actions .top-btn.hamburger { transform: none; }
   }
   #clients-drawer .drawer-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 300;
-    font-size: 22px;
+    font-family:var(--maya-font-ui);
+    font-weight:400;
+    font-size:var(--maya-text-section);
     color: rgba(245,250,255,0.95);
     text-align: center;
     margin-bottom: 4px;
   }
   #clients-drawer .drawer-sub {
-    font-family: 'Jost', sans-serif;
-    font-weight: 300;
-    font-size: 9px; letter-spacing: 0.32em; text-transform: uppercase;
+    font-family:var(--maya-font-ui);
+    font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.32em; text-transform: uppercase;
     color: rgba(245,250,255,0.55);
     margin-bottom: 18px;
   }
@@ -1303,19 +1303,19 @@
     padding: 4px 2px;
   }
   #clients-drawer .clients-list::-webkit-scrollbar { width: 4px; }
-  #clients-drawer .clients-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 4px; }
+  #clients-drawer .clients-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius:4px; }
   #clients-drawer .client-item {
     background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 100px;
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:var(--maya-radius-pill);
     padding: 10px 18px;
-    font-family: 'Jost', sans-serif;
-    font-size: 10px; font-weight: 300;
+    font-family:var(--maya-font-ui);
+    font-size:var(--maya-text-caption); font-weight:400;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     cursor: pointer;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -1337,8 +1337,8 @@
     background: rgba(255,255,255,0.04);
   }
   #clients-drawer .client-item .client-date {
-    font-family: 'Cormorant Garamond', serif; font-style: italic;
-    font-size: 10px; letter-spacing: 0.04em;
+    font-family:var(--maya-font-ui); font-style: italic;
+    font-size:var(--maya-text-caption); letter-spacing: 0.04em;
     color: rgba(245,250,255,0.55);
     text-transform: none;
   }
@@ -1346,12 +1346,12 @@
     display: flex; justify-content: center; gap: 28px;
     margin-top: 18px;
     padding-top: 14px;
-    border-top: 0.5px solid rgba(255,255,255,0.10);
+    border-top:var(--maya-hairline) solid rgba(255,255,255,0.10);
   }
   #clients-drawer .drawer-settings-link {
-    background: none; border: none;
-    font-family: 'Jost', sans-serif;
-    font-size: 10px; font-weight: 300;
+    background: none; border:none;
+    font-family:var(--maya-font-ui);
+    font-size:var(--maya-text-caption); font-weight:400;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     cursor: pointer; transition: color 0.2s;
@@ -1361,7 +1361,7 @@
   /* hamburger button in top-actions */
   .top-btn.hamburger {
     width: 28px; height: 28px; padding: 0;
-    border-radius: 50%;
+    border-radius:50%;
     display: flex; align-items: center; justify-content: center;
   }
   .hamburger-icon {
@@ -1371,7 +1371,7 @@
   .hamburger-icon span {
     width: 100%; height: 0.5px;
     background: rgba(245,250,255,0.85);
-    border-radius: 1px;
+    border-radius:1px;
   }
 
   /* ───────── v0.26: upload-gate retired as a boot takeover ─────────
@@ -1393,8 +1393,8 @@
   }
   .upload-gate.hidden { opacity: 0; pointer-events: none; }
   .upload-gate .upload-hero {
-    font-family: 'Cormorant Garamond', serif; font-weight: 600;
-    font-size: 72px; letter-spacing: 0.22em;
+    font-family:var(--maya-font-ui); font-weight:600;
+    font-size:var(--maya-text-metric); letter-spacing: 0.22em;
     color: #ffffff;
     text-shadow: 0 0 32px rgba(180,210,255,0.55), 0 0 64px rgba(180,210,255,0.28);
     animation: maya-wordmark-breathe 4s ease-in-out infinite;
@@ -1404,22 +1404,22 @@
     50%      { text-shadow: 0 0 48px rgba(180,210,255,0.70), 0 0 96px rgba(180,210,255,0.38); }
   }
   .upload-gate .upload-sub {
-    font-family: 'Jost', sans-serif; font-weight: 300;
-    font-size: 11px; letter-spacing: 0.32em; text-transform: uppercase;
+    font-family:var(--maya-font-ui); font-weight:400;
+    font-size:var(--maya-text-caption); letter-spacing: 0.32em; text-transform: uppercase;
     color: rgba(220,225,240,0.65);
   }
   .upload-gate .upload-btn {
     background: transparent;
-    border: 0.5px solid rgba(255,255,255,0.22);
-    border-radius: 100px;
+    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius:var(--maya-radius-pill);
     padding: 14px 38px;
-    font-family: 'Jost', sans-serif;
-    font-size: 11px; font-weight: 300;
+    font-family:var(--maya-font-ui);
+    font-size:var(--maya-text-caption); font-weight:400;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.95);
     cursor: pointer;
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter:var(--maya-frost);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.42),
       inset 0 -1px 1px rgba(0,0,0,0.22),
@@ -1444,8 +1444,8 @@
       0 0 16px 3px rgba(220,232,255,0.32); }
   }
   .upload-gate .upload-hint {
-    font-family: 'Cormorant Garamond', serif; font-style: italic;
-    font-size: 13px; color: rgba(255,180,180,0.85);
+    font-family:var(--maya-font-ui); font-style: italic;
+    font-size:var(--maya-text-body); color: rgba(255,180,180,0.85);
     max-width: 420px;
   }
 
@@ -1454,6 +1454,7 @@
   #screens { opacity: 1; transition: opacity 0.4s ease; }
   #page-indicator { /* visible on boot */ }
 </style>
+<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=4">
 </head>
 <body>
 

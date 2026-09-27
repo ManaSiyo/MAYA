@@ -1,3 +1,4 @@
+import {assertCanon} from './canon-contract.mjs';
 // MAYA app regression test. Companion to smoke.mjs (which covers the server).
 // Boots the real pages headlessly and asserts the behaviors Fromsa has asked
 // for stay true, so a fixed thing failing again is caught BEFORE a push.
@@ -80,6 +81,7 @@ try {
 const PAGE_ROOT = served ? 'http://127.0.0.1:8899/' : pathToFileURL(ROOT + '/').href;
 
 let failed = 0;
+assertCanon(); // V4: shared typography, capsules, semantic colors and motion fallbacks.
 const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name); if (!cond) failed++; };
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium' });

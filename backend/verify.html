@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html data-maya-surface="dense" lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,47 +17,48 @@
     margin: 0; min-height: 100vh; padding: 34px 20px 60px;
     background: radial-gradient(1200px 700px at 50% -10%, #0d1730 0%, #05070f 60%, #03040a 100%);
     color: #eef3ff;
-    font-family: 'Jost', ui-sans-serif, -apple-system, system-ui, sans-serif;
-    font-weight: 300; letter-spacing: 0.02em;
+    font-family:'Jost', ui-sans-serif, -apple-system, system-ui, sans-serif;
+    font-weight:400; letter-spacing: 0.02em;
   }
-  h1 { font-size: 13px; letter-spacing: 0.34em; text-transform: uppercase;
-       color: rgba(238,243,255,0.62); font-weight: 300; margin: 0 0 4px; }
-  .sub { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic;
-         font-size: 15px; color: rgba(238,243,255,0.55); margin: 0 0 26px; }
+  h1 { font-size:13px; letter-spacing: 0.34em; text-transform: uppercase;
+       color: rgba(238,243,255,0.62); font-weight:300; margin: 0 0 4px; }
+  .sub { font-family:var(--maya-font-ui); font-style: italic;
+         font-size:var(--maya-text-body); color: rgba(238,243,255,0.55); margin: 0 0 26px; }
   .wrap { max-width: 720px; margin: 0 auto; }
   .verdict {
-    border-radius: 16px; padding: 20px 22px; margin: 0 0 22px;
-    border: 0.5px solid rgba(220,232,255,0.42);
+    border-radius:16px; padding: 20px 22px; margin: 0 0 22px;
+    border:var(--maya-hairline) solid rgba(220,232,255,0.42);
     background: rgba(255,255,255,0.03);
-    -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter:var(--maya-frost); backdrop-filter:var(--maya-frost);
     box-shadow: inset 0 1px 1px rgba(255,255,255,0.28), 0 8px 32px rgba(0,0,0,0.42);
   }
-  .verdict b { display: block; font-size: 20px; font-weight: 300; letter-spacing: 0.06em; margin-bottom: 6px; }
-  .verdict span { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic;
-                  font-size: 15px; color: rgba(238,243,255,0.72); }
+  .verdict b { display: block; font-size:var(--maya-text-section); font-weight:400; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .verdict span { font-family:var(--maya-font-ui); font-style: italic;
+                  font-size:var(--maya-text-body); color: rgba(238,243,255,0.72); }
   .good b { color: #a9e8c3; } .bad b { color: #ffb4b4; } .wait b { color: rgba(238,243,255,0.7); }
-  .grp { font-size: 9.5px; letter-spacing: 0.3em; text-transform: uppercase;
+  .grp { font-size:var(--maya-text-caption); letter-spacing: 0.3em; text-transform: uppercase;
          color: rgba(238,243,255,0.4); margin: 22px 0 8px; }
   .row { display: flex; gap: 12px; align-items: baseline; padding: 9px 12px;
-         border-radius: 10px; border: 0.5px solid rgba(255,255,255,0.10);
-         background: rgba(255,255,255,0.015); margin-bottom: 6px; font-size: 13.5px; }
+         border-radius:10px; border:var(--maya-hairline) solid rgba(255,255,255,0.10);
+         background: rgba(255,255,255,0.015); margin-bottom: 6px; font-size:var(--maya-text-body); }
   .row .m { width: 15px; flex: 0 0 15px; text-align: center; }
   .row .t { flex: 1 1 auto; color: rgba(238,243,255,0.86); }
-  .row .d { color: rgba(238,243,255,0.42); font-size: 11.5px; text-align: right; }
+  .row .d { color: rgba(238,243,255,0.42); font-size:var(--maya-text-caption); text-align: right; }
   .pass .m { color: #7ddba4; } .fail .m { color: #ff8c8c; } .info .m { color: rgba(238,243,255,0.45); }
   .fail { border-color: rgba(255,140,140,0.35); background: rgba(255,140,140,0.06); }
   button {
-    font-family: inherit; font-weight: 300; font-size: 12px; letter-spacing: 0.22em;
+    font-family:inherit; font-weight:400; font-size:var(--maya-text-caption); letter-spacing: 0.22em;
     text-transform: uppercase; color: #eef3ff; cursor: pointer;
-    padding: 11px 20px; border-radius: 11px; margin: 24px 8px 0 0;
-    border: 0.5px solid rgba(220,232,255,0.5); background: rgba(255,255,255,0.04);
-    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+    padding: 11px 20px; border-radius:11px; margin: 24px 8px 0 0;
+    border:var(--maya-hairline) solid rgba(220,232,255,0.5); background: rgba(255,255,255,0.04);
+    -webkit-backdrop-filter:var(--maya-frost); backdrop-filter:var(--maya-frost);
   }
   button:hover { border-color: rgba(220,232,255,0.8); }
   a { color: rgba(190,214,255,0.9); }
-  .note { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic;
-          font-size: 14px; color: rgba(238,243,255,0.5); margin-top: 18px; line-height: 1.6; }
+  .note { font-family:var(--maya-font-ui); font-style: italic;
+          font-size:var(--maya-text-body); color: rgba(238,243,255,0.5); margin-top: 18px; line-height: 1.6; }
 </style>
+<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=4">
 </head>
 <body>
 <div class="wrap">
