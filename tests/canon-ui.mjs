@@ -42,8 +42,10 @@ const chromeStyle=async(selector)=>page.locator(selector).evaluate(el=>{
 });
 await page.goto('https://maya.test/frontend/index.html');
 const master=await chromeStyle('#notes-drawer');
+const masterTitle=await page.locator('.pg-tabtitle').first().evaluate(el=>({font:getComputedStyle(el).fontFamily,size:getComputedStyle(el).fontSize}));
 const masterTab=await chromeStyle('#notes-drawer .pg-tab.on');
 await page.goto('https://maya.test/backend/status.html');
+assert.deepEqual(await page.locator('#adm-tabtitle').evaluate(el=>({font:getComputedStyle(el).fontFamily,size:getComputedStyle(el).fontSize})),masterTitle);
 assert.deepEqual(await chromeStyle('#drawer'),master,'Admin drawer matches frontend');
 assert.deepEqual(await chromeStyle('.adm-tab.on'),masterTab,'Admin selected tab matches frontend');
 await page.locator('#drawer').evaluate(el=>{document.body.append(el);Object.assign(el.style,{position:'fixed',left:'auto',width:'360px',zIndex:'999'});});

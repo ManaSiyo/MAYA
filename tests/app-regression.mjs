@@ -2073,7 +2073,7 @@ ok('September 22: frontend and Playground share explicit new-avatar Save, slower
     source.includes('const merged = [record, ...list]') && source.includes('enumerable:false') &&
     source.includes('pg-avatar-nameline:hover #drawer-avatar-rename') &&
     source.includes('const step = 0.025') && source.includes('(d / pinchD - 1) * 0.5') &&
-    source.includes('id="pin-search-scope"') && source.includes('Open Pinterest search')));
+    !source.includes('id="pin-search-scope"') && source.includes('Open Pinterest search')));
 ok('Playground: avatar Save awaits cloud write; name edits in place',
   PLAYGROUND_SOURCE.includes('saveAvatarFromDrawer(this)') && PLAYGROUND_SOURCE.includes('await _saveCurrentAvatarToLibrary(true)') &&
   PLAYGROUND_SOURCE.includes('id="drawer-avatar-name" role="button" tabindex="0" onclick="pgRenameClient()"'));
@@ -2532,9 +2532,9 @@ const stagedBehavior = await pg.evaluate(async () => {
   _pinWideSearch = async (q, s) => {scope=s;return {ok:true};};
   await _pinSearchEnter('velvet');
   const globalSearch = scope === 'everywhere';
-  document.getElementById('pin-search-scope').value = 'saved';
+  const noScopeMenu = !document.getElementById('pin-search-scope');
   await _pinSearchEnter('velvet');
-  return {avatarSaved,actions,editableName,failureHonest,pagination,globalSearch,savedSearch:scope==='saved'};
+  return {avatarSaved,actions,editableName,failureHonest,pagination,globalSearch,savedSearch:noScopeMenu && scope==='everywhere'};
 });
 ok('Playground avatar behavior: cloud Save, three buttons, direct name editing, honest save errors',
   stagedBehavior.avatarSaved && stagedBehavior.actions === 'Randomize,Save,Replace' && stagedBehavior.editableName && stagedBehavior.failureHonest);

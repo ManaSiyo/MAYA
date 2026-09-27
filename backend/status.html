@@ -841,7 +841,7 @@ try {
   .lead-stage option{background:#0d1120}
   @media(max-width:640px){.affiliate-stats{grid-template-columns:repeat(2,1fr)}.affiliates-view #adm-scroll{padding-top:80px}.affiliate-avatar{width:96px;height:96px}}
 </style>
-<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=4">
+<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=5">
 </head>
 <body class="systems-map">
 
@@ -852,7 +852,7 @@ try {
     <!-- v13.77: on Admin the logo IS Maya's voice. Tap it and she connects,
          the ring pulsing while she listens. The wordmark stays the way home. -->
     <button class="maya-logo-wrap" onclick="toggleMayaVoice()" title="Tap to talk to Maya" aria-label="Talk to Maya">
-      <img class="maya-logo-mark" src="/aesthetics/ui/logo-208.png" alt="" />
+      <img class="maya-logo-mark" src="/aesthetics/ui/logo-circle.png" alt="" />
     </button>
     <a href="/status.html" class="brand-home" style="display:flex;align-items:center;text-decoration:none;color:inherit" title="Admin, tap to reload">
       <span class="brand-title">Admin</span>
@@ -1774,7 +1774,7 @@ async function loadSubmissions() {
     // tiles. v13.27: the picture now comes out of MAYA's own store.
     const img = thumbId
       ? '<img loading="lazy" data-thumb="' + esc(thumbId) + '" alt="" onerror="this.remove()">'
-      : '<img src="/aesthetics/ui/logo-208.png" alt="" style="position:absolute;inset:0;margin:auto;width:44px;height:44px;object-fit:contain;opacity:0.3">';
+      : '<img src="/aesthetics/ui/logo-circle.png" alt="" style="position:absolute;inset:0;margin:auto;width:44px;height:44px;object-fit:contain;opacity:0.3">';
     return '<a class="sub-tile" target="_blank" rel="noopener" href="/backend.html?submission=' + encodeURIComponent(f.id) + '&name=' + encodeURIComponent(f.name) + (thumbId ? '&img=' + encodeURIComponent(thumbId) : '') + '" title="Open the Brief">' +
       img + (state ? '<span class="badge' + (state === 'arriving' ? '' : ' stale') + '">' + state + '</span>' : '') +
       '<span class="veil"><span class="nm">' + esc(prettyName(f.name)) + '</span><span class="tm">' + when(f.createdTime) + '</span></span></a>';

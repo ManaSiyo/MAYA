@@ -8,6 +8,24 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## September 27: compact rows, circular asset and Pinterest
+
+Backend uses existing logo-circle.png rather than square logo-208.png. Shared CSS
+now v=5 on every backend surface; explicit no-cache rule for the stylesheet avoids
+the previous seven-day UI asset cache. Rows use 4px vertical padding, 2px subline
+spacing, 22px phone control; data 11px, metrics unchanged. Drawer titles match
+frontend Profile at upright Cormorant 19px; quiet backend labels retain small Jost.
+
+Frontend/Playground change only Pinterest: All saves, Boards and global search;
+no scope dropdown. IntersectionObserver loads saved-pin pages automatically,
+stops repeated cursors, deduplicates pins and checks account identity. Retry is
+shown only after failures. Search typing is debounced and uses global scope.
+Validation passed: focused Pinterest pagination/debounced global search suite on
+both surfaces; CRM/Outbound browser suite (rows under 60px); 11-page actual-font
+desktop/mobile canon checks; 11 Admin contracts; Maya hands on both surfaces.
+Diff checked and screenshots inspected. Full historical regression not claimed. No push or provider changes.
+Next: owner pushes commit, then verify new CSS URL and published circular logo.
+
 ## Frontend-master backend chrome, September 26
 
 Applied frontend drawer gradient, 18px corners, frost and inset/drop shadows to

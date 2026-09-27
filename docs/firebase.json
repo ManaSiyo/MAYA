@@ -134,6 +134,15 @@
             "value": "public, max-age=604800"
           }
         ]
+      },
+      {
+        "source": "/aesthetics/ui/maya-canon.css",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
       }
     ]
   },

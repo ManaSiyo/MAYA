@@ -53,3 +53,7 @@ Consumer frontend and Playground are restored to pre-September-26 styles and do
 not load backend canon CSS. Backend drawer frost matches that master at 28px;
 capsule frost stays 22px. CRM data uses campaign-scale 11px. Logos and drawer
 handles are borderless. Log headings are white and details secondary gray.
+
+September 27: backend drawer titles follow frontend Profile (Cormorant 19px,
+upright). Data remains Jost 11px; metric sizes unchanged. CRM row padding is 4px.
+Use logo-circle.png directly, with no frame or border.

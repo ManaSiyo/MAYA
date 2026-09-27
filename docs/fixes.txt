@@ -1,3 +1,8 @@
+SEPTEMBER 27: cached visual fixes
+UI stylesheet inherited seven-day asset caching under unchanged v=4 URL. Backend
+now requests v=5; stylesheet has explicit no-cache. Logo uses circular source asset.
+No production deployment performed here.
+
 SEPTEMBER 26: Consumer style rollback and backend cleanup
 Restored consumer and Playground source from 3af43c3 except version metadata;
 all scripts unchanged. Detached consumer from backend CSS. Round logo clipping

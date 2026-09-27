@@ -181,3 +181,22 @@ html[data-maya-surface="dense"] #maya-logs-list .maya-log small {
   color:var(--maya-ink);font-weight:500;
 }
 html[data-maya-surface="dense"] #maya-logs-list .maya-log p {color:var(--maya-secondary);font-weight:400;}
+
+/* Compact backend matches the frontend's small controls; metric sizes stay intact. */
+html[data-maya-surface="dense"] #adm-mkt #leads-table td {padding-top:4px;padding-bottom:4px;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-subline {margin-top:2px;gap:6px;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-stage {padding-top:2px;padding-bottom:2px;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table :is(.lead-note-vp,.lead-note-edit) {line-height:1.35;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-cta {width:22px;height:22px;padding:3px;}
+html[data-maya-surface="dense"] :is(#adm-tabtitle,#drawer h3,#outbound-drawer h3) {font-weight:400;}
+html[data-maya-surface="dense"] :is(.bl-step .k,.bl-tile .k,.bl-target,.bl-summary) {font-size:8.5px;font-style:normal;}
+html[data-maya-surface="dense"] :is(.grp,.section-title) {font-size:11px;font-weight:400;font-style:normal;}
+html[data-maya-surface="dense"] #maya-logs-list .maya-log p {font-size:12px;}
+html[data-maya-surface="dense"] body.maya-live .maya-logo-wrap,
+html[data-maya-surface="dense"] #voice-btn.live {animation:none;border:0;box-shadow:none;}
+
+html[data-maya-surface="dense"] :is(#adm-tabtitle,#outbound-drawer > .row h2) {
+  font-family:var(--maya-font-brand);font-size:19px;font-weight:400;font-style:normal;
+}
+
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-open {border:0;box-shadow:none;background:transparent;}

@@ -5294,7 +5294,6 @@
     <button class="fabrics-tab active" id="pin-tab-all" onclick="setPinterestTab('all')">All saves</button>
     <button class="fabrics-tab" id="pin-tab-boards" onclick="setPinterestTab('boards')">Boards</button>
     <button class="pin-search-btn" id="pin-search-btn" onclick="_pinSearchToggle()" title="Search Pinterest" aria-label="Search Pinterest"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 L21 21"/></svg></button>
-    <select id="pin-search-scope" aria-label="Pinterest search scope" class="drawer-action"><option value="everywhere">All Pinterest</option><option value="saved">My saves</option></select>
     <input id="pin-search-input" type="search" placeholder="Search" oninput="_pinSearchInput(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();_pinSearchEnter(this.value);}" style="display:none" />
   </div>
   <div class="fabrics-drawer-body" id="pinterest-drawer-body"></div>
@@ -10559,6 +10558,7 @@ function closePinterestDrawer() {
   if (d) d.classList.remove('open');
 }
 function _pinBody(html) {
+  if (_pinPageObserver) { _pinPageObserver.disconnect(); _pinPageObserver = null; }
   const b = document.getElementById('pinterest-drawer-body');
   if (b) b.innerHTML = html;
 }
@@ -10650,6 +10650,7 @@ async function _pinSignInFailed() {
 }
 
 function setPinterestTab(tab) {
+  clearTimeout(_pinInputTimer);
   _pinTab = tab;
   const a = document.getElementById('pin-tab-all');
   const b = document.getElementById('pin-tab-boards');
@@ -10696,6 +10697,7 @@ async function _pinDrawerBoards() {
 let _pinListSeq = 0;
 let _pinSearchSeq = 0;
 let _pinListing = null;
+let _pinPageObserver = null;
 const _pinPictureMarkup = p => '<button class="pin-pic" data-url="' + escapeHtml(p.url) + '" data-alt="' + escapeHtml(p.alt || '') + '" onclick="_pinToggle(this)"><img src="' + _safeImgSrc(p.url) + '" alt="" loading="lazy"><span class="pin-check">&#10003;</span></button>';
 async function _pinDrawerPins(boardId, boardName) {
   _pinSearchSeq++;
@@ -10703,18 +10705,23 @@ async function _pinDrawerPins(boardId, boardName) {
   _pinPicked = new Set(); _pinSetFoot(false);
   window._pinWiderActive = false;
   _pinSub(boardName || 'your saved pins');
-  const state = { seq: ++_pinListSeq, boardId: boardId || '', uid: projectStore._uid(), bookmark: '', seen: new Set(), loading: false };
+  const state = { seq: ++_pinListSeq, boardId: boardId || '', uid: projectStore._uid(), bookmark: '', seen: new Set(), loading: false, started: false };
   _pinListing = state;
-  _pinBody('<div class="pin-grid pics"></div><button class="drawer-action" id="pin-load-more" onclick="_pinLoadNext()">Load saved pins</button><div class="pin-note" id="pin-page-note"></div>');
+  _pinBody('<div class="pin-grid pics"></div><div id="pin-page-end" style="height:1px" aria-hidden="true"></div><button class="drawer-action" id="pin-load-more" hidden onclick="_pinLoadNext()">Retry</button><div class="pin-note" id="pin-page-note"></div>');
+  _pinPageObserver = new IntersectionObserver(entries => {
+    if (entries.some(e => e.isIntersecting) && _pinListing === state) _pinLoadNext();
+  }, {rootMargin:'200px'});
+  const end = document.getElementById('pin-page-end');
+  if (end) _pinPageObserver.observe(end);
   await _pinLoadNext();
 }
 async function _pinLoadNext() {
   const state = _pinListing;
-  if (!state || state.loading || state.uid !== projectStore._uid() || window._pinWiderActive) return;
+  if (!state || state.loading || (state.started && !state.bookmark) || state.uid !== projectStore._uid() || window._pinWiderActive) return;
   const button = document.getElementById('pin-load-more');
   const note = document.getElementById('pin-page-note');
   if (!button || !note) return;
-  state.loading = true; button.disabled = true; note.textContent = 'Loading saved pins...';
+  state.loading = true; button.disabled = true; button.hidden = true; note.textContent = 'Loading saved pins...';
   try {
     const query = new URLSearchParams();
     if (state.boardId) query.set('board', state.boardId);
@@ -10726,13 +10733,21 @@ async function _pinLoadNext() {
     const pins = (j.pins || []).filter(p => { const key = p.id || p.url; if (state.seen.has(key)) return false; state.seen.add(key); return true; });
     grid.insertAdjacentHTML('beforeend', pins.map(_pinPictureMarkup).join(''));
     const repeated = !!j.bookmark && j.bookmark === state.bookmark;
+    state.started = true;
     state.bookmark = repeated ? '' : (j.bookmark || '');
-    button.hidden = !state.bookmark; button.textContent = 'Load more saved pins';
+    button.hidden = true;
     note.textContent = repeated ? 'Pinterest repeated a page. Reopen the board to try again.' : state.seen.size ? state.seen.size + ' saved pins loaded' : 'No saved pins were returned for this account.';
     _pinLoaded = true;
   } catch (e) {
-    if (_pinListing === state && state.uid === projectStore._uid()) { note.textContent = 'Saved pins could not load. Try again.'; button.textContent = 'Retry'; }
-  } finally { state.loading = false; button.disabled = false; }
+    if (_pinListing === state && state.uid === projectStore._uid()) { note.textContent = 'Saved pins could not load. Try again.'; button.textContent = 'Retry'; button.hidden = false; }
+  } finally {
+    state.loading = false; button.disabled = false;
+    if (_pinListing === state && _pinPageObserver) {
+      _pinPageObserver.disconnect();
+      const end = document.getElementById('pin-page-end');
+      if (state.bookmark && button.hidden && end) _pinPageObserver.observe(end);
+    }
+  }
 }
 
 function _pinToggle(el) {
@@ -18351,17 +18366,19 @@ function _pinSearchRestore() {
   window._pinWiderScope = '';
   try { _pinSearchAllPill('', true); } catch (_) {}
   try { _pinSub(''); } catch (_) {}
-  if (_pinPicsCache['all']) _pinBody(_pinPicsCache['all']);
-  else { try { _pinDrawerPins('', ''); } catch (_) {} }
+  try { _pinDrawerPins('', ''); } catch (_) {}
 }
+let _pinInputTimer = null;
 function _pinSearchInput(v) {
-  if (window._pinWiderActive && !String(v || '').trim()) { _pinSearchRestore(); return; }
-  if (!window._pinWiderActive) _pinSearch(v);
+  clearTimeout(_pinInputTimer);
+  if (!String(v || '').trim()) { _pinSearchRestore(); return; }
+  _pinInputTimer = setTimeout(() => _pinSearchEnter(v), 350);
 }
 async function _pinSearchEnter(v) {
+  clearTimeout(_pinInputTimer);
   const q = String(v || '').trim();
   if (q.length < 2) return;
-  const scope = document.getElementById('pin-search-scope')?.value || 'everywhere';
+  const scope = 'everywhere';
   _pinListSeq++; _pinListing = null;
   _pinSub(scope === 'everywhere' ? 'searching Pinterest for ' + q : 'searching your saves for ' + q);
   const r = await _pinWideSearch(q, scope);
