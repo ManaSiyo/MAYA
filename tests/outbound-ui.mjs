@@ -27,13 +27,17 @@ const compact = await page.evaluate(()=>({
   ticker:getComputedStyle(document.querySelector('#mkt-ticker-inner')).fontSize,
   header:getComputedStyle(document.querySelector('#campaigns-table th')).backgroundColor
 }));
-assert.equal(report.size,'13px');assert.equal(compact.padding,'8px');assert.ok(compact.row<85);
+assert.equal(report.size,'11px');assert.equal(compact.padding,'8px');assert.ok(compact.row<85);
+assert.equal(await page.locator('#top-left-brand .brand-chips').count(),0);
+assert.equal(await page.locator('.maya-logo-wrap').evaluate(e=>getComputedStyle(e).borderTopWidth),'0px');
+assert.equal(await page.locator('.top-btn.hamburger').evaluate(e=>getComputedStyle(e).boxShadow),'none');
+assert.match(await page.locator('.grid.doors .card b').first().evaluate(e=>getComputedStyle(e).fontFamily),/Cormorant/);
 assert.equal(compact.tierInteractive,false);assert.equal(compact.tier,'Signature');
 assert.equal(compact.ticker,'10px');assert.equal(compact.header,'rgba(0, 0, 0, 0)');
 await page.evaluate(()=>document.querySelector('#leads-fold').scrollIntoView());
 await page.screenshot({path:join(tmpdir(),'maya-admin-compact.png')});
 await page.setViewportSize({width:390,height:844});
-assert.equal(await page.locator('.lead-stage').evaluate(el=>getComputedStyle(el).fontSize),'13px');
+assert.equal(await page.locator('.lead-stage').evaluate(el=>getComputedStyle(el).fontSize),'11px');
 await page.evaluate(()=>document.body.classList.add('affiliates-view'));
 assert.equal(await page.locator('#lead-tr-0 td').first().evaluate(el=>getComputedStyle(el).paddingTop),'8px');
 await page.evaluate(()=>document.body.classList.remove('affiliates-view'));

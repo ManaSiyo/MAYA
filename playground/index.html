@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html data-maya-surface="consumer" lang="en">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -87,7 +87,7 @@
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com">
 <link rel="preconnect" href="https://accounts.google.com">
 <link rel="preconnect" href="https://www.gstatic.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
 <!-- Two-page PDF generation -->
 <!-- v11.29: html2canvas + jspdf moved out of the head, they lazy-load via
      _ensurePdfLibs() the first time a one-pager/PDF is rendered. -->
@@ -325,7 +325,7 @@
   *::-webkit-scrollbar-track { background: transparent; }
   *::-webkit-scrollbar-thumb {
     background: rgba(150,175,225,0.28);
-    border-radius:var(--maya-radius-pill);
+    border-radius: 100px;
   }
   *::-webkit-scrollbar-thumb:hover { background: rgba(180,205,255,0.45); }
   *::-webkit-scrollbar-corner { background: transparent; }
@@ -339,7 +339,7 @@
   #fabrics-drawer::-webkit-scrollbar, #fabrics-drawer *::-webkit-scrollbar { width: 5px; height: 5px; }
   #notes-drawer::-webkit-scrollbar-thumb, #notes-drawer *::-webkit-scrollbar-thumb,
   #fabrics-drawer::-webkit-scrollbar-thumb, #fabrics-drawer *::-webkit-scrollbar-thumb {
-    background: rgba(150,175,225,0.28); border-radius:var(--maya-radius-pill);
+    background: rgba(150,175,225,0.28); border-radius: 100px;
   }
   #notes-drawer::-webkit-scrollbar-track, #notes-drawer *::-webkit-scrollbar-track,
   #fabrics-drawer::-webkit-scrollbar-track, #fabrics-drawer *::-webkit-scrollbar-track { background: transparent; }
@@ -369,9 +369,9 @@
      element-specific size/typography, but the chrome lives here. */
   .glass-pill {
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -387,7 +387,7 @@
   html, body {
     width: 100%; height: 100%; overflow: hidden;
     background: #000 url("/aesthetics/ui/birth-of-a-star.png") center/cover no-repeat fixed;
-    font-family:var(--maya-font-ui); color: rgba(220,225,240,0.88);
+    font-family: 'Jost', sans-serif; color: rgba(220,225,240,0.88);
   }
   /* v11.34: iOS polish, no gray tap flash on interactive elements, and no
      Safari auto-inflation of text in landscape. Visual no-ops otherwise. */
@@ -460,7 +460,7 @@
     overflow: hidden;
   }
   .cloud {
-    position: absolute; border-radius:50%;
+    position: absolute; border-radius: 50%;
     background: rgba(220, 225, 240, 0.04);
     filter: blur(60px); animation: cloudDrift linear infinite; pointer-events: none;
   }
@@ -506,8 +506,8 @@
     line-height: 1;
   }
   #top-left-brand .brand-title {
-    font-family:var(--maya-font-brand);
-    font-size:24px; font-weight:500;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px; font-weight: 500;
     letter-spacing: 0.22em;
     /* v5.21: 90% opacity per Fromsa, 10% transparent */
     color: rgba(255,255,255,0.9);
@@ -518,14 +518,14 @@
   /* v10.6: FAVORITES is longer than MAYA, drop the size so it reads
      visually equivalent to the MAYA wordmark width-wise. */
   #top-left-brand .brand-title.is-favorites {
-    font-size:16px;
+    font-size: 16px;
     letter-spacing: 0.18em;
   }
   #top-left-brand .brand-title:hover { opacity: 0.7; }
   /* v6.9: status text back beside MAYA, baseline-aligned inside the wrap. */
   #top-left-brand .brand-status {
-    font-family:var(--maya-font-ui);
-    font-style: italic; font-size:var(--maya-text-body);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 14px;
     color: rgba(220,230,255,0.55);
     letter-spacing: 0.05em;
     line-height: 1;
@@ -542,8 +542,8 @@
   /* The card-count line lives inside the drawer now (see .drawer-count). */
   #item-count {
     display: block;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 9px; font-weight: 300;
     letter-spacing: 0.22em; text-transform: uppercase;
     color: rgba(200, 210, 230, 0.55);
   }
@@ -553,15 +553,15 @@
      + specular shadow on every variant. */
   .top-btn {
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:var(--maya-radius-pill);
-    padding: 6px 14px; font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
+    padding: 6px 14px; font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     cursor: pointer; transition: all 0.2s;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -577,7 +577,7 @@
   .top-btn.cog {
     width: 28px; height: 28px; padding: 0;
     display: flex; align-items: center; justify-content: center;
-    font-size:var(--maya-text-caption);
+    font-size: 12px;
   }
   /* v5.5: hamburger, single top-bar button that opens the action hub drawer */
   .top-btn.hamburger {
@@ -604,14 +604,14 @@
     width: 14px;
   }
   .hamburger-icon span {
-    display: block; height: 1px; background: currentColor; border-radius:1px;
+    display: block; height: 1px; background: currentColor; border-radius: 1px;
     width: 100%;
   }
   /* notes-dot was originally scoped to #notes-toggle, also apply to hamburger
      so a draft consultation still glows when there's something worth saving. */
   #hamburger-toggle .notes-dot {
     position: absolute; top: 4px; right: 4px;
-    width: 6px; height: 6px; border-radius:50%;
+    width: 6px; height: 6px; border-radius: 50%;
     background: rgba(200,220,255,0.85);
     box-shadow: 0 0 8px rgba(200,220,255,0.6);
     display: none;
@@ -621,7 +621,7 @@
   /* mode toggle */
   #mode-toggle {
     display: flex; align-items: center; gap: 0;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.08); border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.08); border-radius: 100px;
     padding: 2px; margin-right: 6px;
   }
   /* v10: .mode-opt CSS deleted, was v8 closet/avatar tab styling, orphaned. */
@@ -634,16 +634,16 @@
      layered top sheen, inner specular highlight, soft outer shadow. */
   .action-btn {
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
     padding: 6px 14px;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     cursor: pointer; transition: all 0.2s;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -684,12 +684,12 @@
   #voice-bar {
     display: flex; align-items: center; justify-content: center; gap: 8px;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22); border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.22); border-radius: 100px;
     padding: 6px 14px; cursor: pointer; transition: all 0.2s;
     min-width: 160px;
     text-align: center;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -704,7 +704,7 @@
   #voice-bar.thinking  { border-color: rgba(200,220,255,0.45); cursor: default; }
 
   #voice-icon { display: flex; align-items: center; gap: 2px; }
-  .wave-bar { width: 1.5px; height: 6px; background: rgba(245,250,255,0.85); border-radius:2px; transition: height 0.3s; }
+  .wave-bar { width: 1.5px; height: 6px; background: rgba(245,250,255,0.85); border-radius: 2px; transition: height 0.3s; }
   #voice-bar.listening .wave-bar:nth-child(1) { animation: wave 0.8s ease infinite 0s; }
   #voice-bar.listening .wave-bar:nth-child(2) { animation: wave 0.8s ease infinite 0.1s; }
   #voice-bar.listening .wave-bar:nth-child(3) { animation: wave 0.8s ease infinite 0.2s; }
@@ -715,8 +715,8 @@
   @keyframes thinkPulse { 0%,100% { opacity: 0.3; height: 4px; } 50% { opacity: 0.85; height: 10px; } }
 
   #voice-text {
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     transition: color 0.2s;
@@ -728,9 +728,9 @@
     align-items: center; justify-content: center;
   }
   .input-link {
-    background: none; border:none;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    background: none; border: none;
+    font-family: 'Jost', sans-serif;
+    font-size: 9px; font-weight: 300;
     letter-spacing: 0.2em; text-transform: uppercase;
     color: rgba(200,210,230,0.3);
     cursor: pointer; transition: color 0.2s;
@@ -744,7 +744,7 @@
      nudged a few pixels lower. */
   /* v13.90: a touch brighter at rest, a couple pixels lower still, and hover now
      lifts it clearly brighter (easily visible) rather than fading. */
-  .upload-link { letter-spacing: 0.32em; padding: 2px 20px; font-size:var(--maya-text-caption);
+  .upload-link { letter-spacing: 0.32em; padding: 2px 20px; font-size: 10px;
                  color: rgba(220,230,248,0.68); margin-top: 9px; }
   .upload-link:hover { color: rgba(236,242,255,0.94); }
   /* v13.4: the upload chooser. Snappy on purpose: 0.12s, no drift. */
@@ -756,8 +756,8 @@
   .pin-grid.pics { grid-template-columns: repeat(auto-fill, minmax(138px, 1fr)); gap: 12px; }
   .pin-tile, .pin-pic {
     position: relative; display: flex; flex-direction: column; gap: 4px;
-    padding: 0; border-radius:12px; overflow: hidden; cursor: pointer;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22); background: transparent;
+    padding: 0; border-radius: 12px; overflow: hidden; cursor: pointer;
+    border: 0.5px solid rgba(255,255,255,0.22); background: transparent;
     color: rgba(238,243,255,0.86); text-align: left;
     transition: border-color 0.2s, transform 0.2s;
   }
@@ -765,10 +765,10 @@
   .pin-tile img { width: 100%; height: 132px; object-fit: cover; display: block; }
   .pin-tile .pin-blank { display: block; width: 100%; height: 132px; background: rgba(255,255,255,0.05); }
   .pin-tile-name {
-    font-family:var(--maya-font-ui); font-size:var(--maya-text-body); padding: 0 8px;
+    font-family: 'Cormorant Garamond', serif; font-size: 13px; padding: 0 8px;
   }
   .pin-tile-count {
-    font-family:var(--maya-font-ui); font-size:var(--maya-text-caption); letter-spacing: 0.16em;
+    font-family: 'Jost', sans-serif; font-size: 8.5px; letter-spacing: 0.16em;
     text-transform: uppercase; color: rgba(238,243,255,0.42); padding: 0 8px 8px;
   }
   /* v13.40: Pinterest is a vertical medium. The tiles read like pins now,
@@ -776,8 +776,8 @@
   .pin-pic img { width: 100%; height: 200px; object-fit: cover; display: block; }
   .pin-pic .pin-check {
     position: absolute; top: 6px; right: 6px; width: 18px; height: 18px;
-    border-radius:50%; display: flex; align-items: center; justify-content: center;
-    font-size:var(--maya-text-caption); color: #05070f; background: rgba(255,255,255,0.9);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: #05070f; background: rgba(255,255,255,0.9);
     opacity: 0; transform: scale(0.8); transition: opacity 0.15s, transform 0.15s;
   }
   .pin-pic.picked { border-color: rgba(220,232,255,0.9); }
@@ -794,22 +794,22 @@
   .upload-choose-card {
     display: flex; gap: 10px;
     padding: 14px 16px;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.2);
-    border-radius:14px;
+    border: 0.5px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
     background: rgba(10,14,24,0.85);
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     transform: translateY(6px);
     transition: transform 0.12s ease;
   }
   #upload-choose-modal.open .upload-choose-card { transform: translateY(0); }
   .upload-choose-btn {
     background: none;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 999px;
     padding: 9px 18px;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
     letter-spacing: 0.2em; text-transform: uppercase;
     color: rgba(225,232,245,0.85);
     cursor: pointer;
@@ -827,27 +827,27 @@
   #share-link-modal .share-card {
     width: min(440px, 92vw);
     padding: 20px 22px;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:16px;
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 16px;
     background: rgba(10,14,24,0.9);
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     display: flex; flex-direction: column; gap: 12px; text-align: center;
   }
   #share-link-modal .share-title {
-    font-family:var(--maya-font-ui); font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif; font-size: 11px; font-weight: 300;
     letter-spacing: 0.22em; text-transform: uppercase; color: rgba(240,244,252,0.95);
   }
   #share-link-modal .share-link-input {
     width: 100%; box-sizing: border-box;
     background: rgba(255,255,255,0.05);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.18); border-radius:10px;
+    border: 0.5px solid rgba(255,255,255,0.18); border-radius: 10px;
     padding: 9px 11px; color: rgba(230,236,248,0.95);
-    font-family:Menlo, monospace; font-size:var(--maya-text-caption);
+    font-family: Menlo, monospace; font-size: 11px;
   }
   #share-link-modal .share-row { display: flex; gap: 10px; justify-content: center; }
   #share-link-modal .share-note {
-    font-family:var(--maya-font-ui); font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif; font-size: 10px; font-weight: 300;
     letter-spacing: 0.06em; color: rgba(200,210,230,0.55); line-height: 1.6;
   }
   .input-link:hover { color: rgba(220,225,240,0.7); }
@@ -860,9 +860,9 @@
     position: absolute; bottom: 78px; left: 50%; transform: translateX(-50%);
     max-width: 640px; width: 78vw; max-height: 38px;
     text-align: center;
-    font-family:var(--maya-font-ui);
-    font-style: italic; font-weight:400;
-    font-size:var(--maya-text-caption); line-height: 1.4;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-weight: 300;
+    font-size: 11px; line-height: 1.4;
     color: rgba(200,210,230,0.32);
     z-index: 80; pointer-events: none;
     overflow: hidden;
@@ -876,8 +876,8 @@
   .item-card {
     position: absolute;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:11px;
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 11px;
     padding: 3px 10px 4px;
     /* v9.13: shrink to content so chips hug their text, fixes the
        dead-space rectangle that appeared to the right of short labels. */
@@ -894,8 +894,8 @@
     transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
     user-select: none;
     z-index: 5;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -965,11 +965,11 @@
   .item-card .fav-btn {
     /* v11.21: 25x25, centered on the corner so it sits half outside the card. */
     position: absolute; top: -13px; left: -13px;
-    width: 25px; height: 25px; border-radius:50%;
+    width: 25px; height: 25px; border-radius: 50%;
     background: rgba(255,255,255,0.06);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.2);
+    border: 0.5px solid rgba(255,255,255,0.2);
     color: rgba(225,235,255,0.55);
-    font-size:var(--maya-text-body); line-height: 1;
+    font-size: 13px; line-height: 1;
     cursor: pointer; transition: all 0.2s;
     display: none; align-items: center; justify-content: center;
     /* v11.22: bubbly rounded heart (SVG) instead of the pointy ♥ glyph. */
@@ -997,12 +997,12 @@
     position: absolute;
     bottom: -10px; right: -10px;
     width: 20px; height: 20px;
-    border-radius:50%;
+    border-radius: 50%;
     cursor: nwse-resize;
     pointer-events: auto;
     background: rgba(40,50,70,0.18);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     opacity: 0; transition: opacity 0.25s;
     z-index: 20;
   }
@@ -1028,7 +1028,7 @@
     max-width: 280px;
     max-height: 360px;
     width: auto; height: auto;
-    border-radius:12px;
+    border-radius: 12px;
   }
   /* hide the kind tag entirely, it was just clutter */
   .item-card.inspo .item-tag { display: none; }
@@ -1037,10 +1037,10 @@
     position: absolute; left: 0; right: 0; bottom: 0;
     margin: 0; padding: 22px 14px 10px;
     background: linear-gradient(to top, rgba(0,0,0,0.78), rgba(0,0,0,0));
-    border-radius:0 0 12px 12px;
-    font-family:var(--maya-font-brand);
-    font-style: italic; font-weight:300;
-    font-size:12px; line-height: 1.3;
+    border-radius: 0 0 12px 12px;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-weight: 300;
+    font-size: 12px; line-height: 1.3;
     color: rgba(225,230,245,0.92);
     text-align: center;                    /* v13.43: centred, per Fromsa */
     opacity: 0; transition: opacity 0.2s;
@@ -1059,10 +1059,10 @@
     left: 0; right: 0; bottom: 0;
     padding: 22px 14px 12px;
     background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0) 100%);
-    border-radius:0 0 12px 12px;
-    font-family:var(--maya-font-ui);
-    font-style: italic; font-weight:400;
-    font-size:var(--maya-text-caption); line-height: 1.35;
+    border-radius: 0 0 12px 12px;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-weight: 300;
+    font-size: 11px; line-height: 1.35;
     color: rgba(245,250,255,0.92);
     text-align: center;
     letter-spacing: 0.02em;
@@ -1085,13 +1085,13 @@
   .item-card .delete-btn {
     /* v11.21: 25x25, centered on the top-right corner (half outside). */
     position: absolute; top: -13px; right: -13px;
-    width: 25px; height: 25px; border-radius:50%;
+    width: 25px; height: 25px; border-radius: 50%;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,140,140,0.55);
-    color: rgba(255,200,200,0.95); font-size:var(--maya-text-body); cursor: pointer;
+    border: 0.5px solid rgba(255,140,140,0.55);
+    color: rgba(255,200,200,0.95); font-size: 14px; cursor: pointer;
     display: none; align-items: center; justify-content: center;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -1103,14 +1103,14 @@
     /* v11.21: 25x25, raised to straddle the top edge and pulled closer to the
        delete × (4px gap). */
     position: absolute; top: -13px; right: 16px;
-    width: 25px; height: 25px; border-radius:50%;
+    width: 25px; height: 25px; border-radius: 50%;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    color: rgba(245,250,255,0.85); font-size:var(--maya-text-body); cursor: pointer;
+    border: 0.5px solid rgba(255,255,255,0.22);
+    color: rgba(245,250,255,0.85); font-size: 13px; cursor: pointer;
     display: none; align-items: center; justify-content: center;
     line-height: 1;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -1123,17 +1123,17 @@
     /* v11.21: cleared past the 25px stack/delete; 20px pill vertically centered
        on the icon axis. */
     position: absolute; top: -10px; right: 48px;
-    height: 20px; padding: 0 12px; border-radius:var(--maya-radius-pill);
+    height: 20px; padding: 0 12px; border-radius: 100px;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border: 0.5px solid rgba(255,255,255,0.22);
     color: rgba(245,250,255,0.85);
-    font-size:var(--maya-text-caption); font-family:var(--maya-font-ui);
-    letter-spacing: 0.15em; text-transform: uppercase; font-weight:400;
+    font-size: 10px; font-family: 'Jost', sans-serif;
+    letter-spacing: 0.15em; text-transform: uppercase; font-weight: 300;
     cursor: pointer;
     display: none; align-items: center; justify-content: center;
     line-height: 1; white-space: nowrap;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -1161,15 +1161,15 @@
      so they rendered as plain white browser buttons sitting on the glass. */
   .tip-amt {
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
     padding: 9px 20px;
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.12em;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 12px; letter-spacing: 0.12em;
     color: rgba(245,250,255,0.85);
     cursor: pointer;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow: inset 0 1px 1px rgba(255,255,255,0.22), inset 0 -1px 1px rgba(0,0,0,0.18);
     transition: border-color .2s, background .2s, color .2s;
   }
@@ -1195,25 +1195,25 @@
 
   .item-tag {
     /* v5.18: smaller tag relative to title, so the title carries the card */
-    font-size:var(--maya-text-caption); letter-spacing: 0.22em; text-transform: uppercase;
-    color: rgba(200,220,255,0.55); font-weight:400;
+    font-size: 7px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(200,220,255,0.55); font-weight: 300;
     margin-bottom: 1px;
   }
   .item-title {
-    font-family:var(--maya-font-brand);
-    font-size:15px; font-weight:300;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px; font-weight: 300;
     color: rgba(225,230,245,0.92); line-height: 1.2; margin-bottom: 0;
   }
   .item-detail {
-    font-size:var(--maya-text-caption); color: rgba(200,210,230,0.4);
-    font-weight:400; letter-spacing: 0.05em;
+    font-size: 10px; color: rgba(200,210,230,0.4);
+    font-weight: 300; letter-spacing: 0.05em;
     font-style: italic;
   }
 
   /* realism dot for design idea cards */
   .realism-dot {
     display: inline-block;
-    width: 5px; height: 5px; border-radius:50%;
+    width: 5px; height: 5px; border-radius: 50%;
     margin-right: 5px; vertical-align: middle;
     background: rgba(200,220,255,0.6);
   }
@@ -1241,8 +1241,8 @@
   #listening-ring.active { display: block; }
   #listening-ring::before {
     content: ''; position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%,-50%); width: 300px; height: 300px; border-radius:50%;
-    border:var(--maya-hairline) solid rgba(200,220,255,0.07);
+    transform: translate(-50%,-50%); width: 300px; height: 300px; border-radius: 50%;
+    border: 0.5px solid rgba(200,220,255,0.07);
     animation: ringPulse 3s ease infinite;
   }
   @keyframes ringPulse {
@@ -1257,14 +1257,14 @@
     position: fixed; bottom: 72px; left: 50%;
     transform: translateX(-50%) translateY(8px);
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:var(--maya-radius-pill); padding: 8px 22px;
-    font-family:var(--maya-font-ui);
-    font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px; padding: 8px 22px;
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -1280,7 +1280,7 @@
     /* v14.04: the overlay shows the hue of the board behind it, like the
        drawer over the cosmos. The card carries the drawer's own glass. */
     background: rgba(8,12,24,0.38);
-    backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
     align-items: center; justify-content: center;
     flex-direction: column; gap: 18px;
     padding: 40px 0 24px;
@@ -1314,14 +1314,14 @@
   .modal-close {
     position: absolute; top: 22px; right: 24px;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
     padding: 6px 14px;
-    font-family:var(--maya-font-ui);
-    font-size:10px; font-weight:400; letter-spacing: 0.15em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85); cursor: pointer;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -1340,14 +1340,14 @@
     position: absolute; top: -14px; right: -14px;
     width: 30px; height: 30px; padding: 0;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:50%;
-    font-family:var(--maya-font-ui);
-    font-size:16px; line-height: 1; letter-spacing: 0;
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 50%;
+    font-family: 'Jost', sans-serif;
+    font-size: 16px; line-height: 1; letter-spacing: 0;
     color: rgba(245,250,255,0.85);
     cursor: pointer;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -1364,10 +1364,10 @@
   /* v5.14: × icon variant (round, no letter-spacing). v10: canon-normalized. */
   .modal-close.icon {
     width: 36px; height: 36px; padding: 0;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:50%;
-    font-family:var(--maya-font-ui);
-    font-size:20px; line-height: 1; letter-spacing: 0;
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 50%;
+    font-family: 'Jost', sans-serif;
+    font-size: 20px; line-height: 1; letter-spacing: 0;
     display: flex; align-items: center; justify-content: center;
     color: rgba(245,250,255,0.85);
   }
@@ -1379,15 +1379,15 @@
   /* v7.2: Listen / Modify / Switch fabric, liquid glass pill. */
   .modal-text-btn {
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22); border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.22); border-radius: 100px;
     padding: 6px 14px;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     cursor: pointer; transition: all 0.2s;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -1403,7 +1403,7 @@
 
   .image-wrap {
     width: 380px; max-width: 86vw; aspect-ratio: 3/4;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.08); border-radius:16px; overflow: hidden;
+    border: 0.5px solid rgba(255,255,255,0.08); border-radius: 16px; overflow: hidden;
     position: relative; background: rgba(255,255,255,0.03);
     display: flex; align-items: center; justify-content: center;
   }
@@ -1417,14 +1417,14 @@
   #garment-image-wrap {
     max-width: 96vw;
     max-height: 62vh;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:16px;
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 16px;
     position: relative;
     background: transparent;
     display: inline-flex; align-items: center; justify-content: center;
     flex-shrink: 0;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -1437,7 +1437,7 @@
     max-height: 62vh;
     width: auto; height: auto;
     object-fit: contain;
-    border-radius:16px;
+    border-radius: 16px;
   }
   /* preserve aspect ratio, never stretch the generated image */
   .modal-img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; opacity: 0; transition: opacity 0.35s ease; }
@@ -1452,37 +1452,37 @@
   #garment-image-wrap.turned { transition: transform .42s cubic-bezier(.2,.6,.2,1); transform: rotateY(0deg); }
   #garment-image-wrap.flipped #garment-image, #garment-image-wrap.flipped .submit-wrap, #garment-image-wrap.flipped .viewer-heart,
   #garment-image-wrap.flipped #garment-spinner, #garment-image-wrap.flipped .viewer-close { visibility: hidden; }
-  #pg-flip { position: absolute; right: 12px; bottom: 12px; z-index: 24; width: 34px; height: 34px; border-radius:50%;
+  #pg-flip { position: absolute; right: 12px; bottom: 12px; z-index: 24; width: 34px; height: 34px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer;
-    background: rgba(8,12,26,0.72); border:var(--maya-hairline) solid rgba(255,255,255,0.3); color: rgba(235,242,255,0.92);
-    backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost); opacity: 0; transition: opacity .2s, transform .2s; }
+    background: rgba(8,12,26,0.72); border: 0.5px solid rgba(255,255,255,0.3); color: rgba(235,242,255,0.92);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); opacity: 0; transition: opacity .2s, transform .2s; }
   #pg-flip svg, #pg-card-back .pg-back-flip svg { width: 18px; height: 18px; fill: currentColor; }
   #garment-image-wrap:hover #pg-flip { opacity: 1; }
   #pg-flip:hover { transform: rotate(180deg); }
   @media (hover: none) { #pg-flip { opacity: 1; } }
   #garment-modal[data-photo="full"] #pg-flip, #garment-modal[data-photo="full"] #pg-callouts { display: none; }
   /* the back of the card: the drawer's glass, the notes centered */
-  #pg-card-back { position: absolute; inset: 0; border-radius:16px; z-index: 26; overflow: hidden;
+  #pg-card-back { position: absolute; inset: 0; border-radius: 16px; z-index: 26; overflow: hidden;
     display: none; align-items: center; justify-content: center; padding: 34px 40px;
     background: linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%), rgba(8,12,26,0.92);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border: 0.5px solid rgba(255,255,255,0.22);
     box-shadow: inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18); }
-  #pg-card-back .pg-back-flip { position: absolute; right: 12px; bottom: 12px; width: 34px; height: 34px; border-radius:50%;
+  #pg-card-back .pg-back-flip { position: absolute; right: 12px; bottom: 12px; width: 34px; height: 34px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer;
-    background: rgba(255,255,255,0.06); border:var(--maya-hairline) solid rgba(255,255,255,0.3); color: rgba(235,242,255,0.92); }
+    background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.3); color: rgba(235,242,255,0.92); }
   #pg-card-back-body { width: min(560px, 100%); max-height: 100%; overflow-y: auto; scrollbar-width: none; text-align: center; }
   #pg-card-back-body::-webkit-scrollbar { display: none; }
-  #pg-card-back-body .pgb-title { font-family:var(--maya-font-ui); font-weight:400; font-size:var(--maya-text-caption); letter-spacing: 0.28em; text-transform: uppercase; color: rgba(238,244,255,0.62); margin-bottom: 18px; }
-  #pg-card-back-body .pgb-row { padding: 10px 0; border-bottom:0.25px solid rgba(255,255,255,0.08); }
-  #pg-card-back-body .pgb-row:last-child { border-bottom:none; }
-  #pg-card-back-body .pgb-k { font-family:var(--maya-font-ui); font-weight:600; font-size:var(--maya-text-caption); letter-spacing: 0.26em; text-transform: uppercase; color: rgba(255,255,255,0.98); margin-bottom: 4px; }
-  #pg-card-back-body .pgb-v { font-family:var(--maya-font-ui); font-size:var(--maya-text-section); line-height: 1.45; color: rgba(222,230,245,0.8); }
-  #pg-card-back-body .pgb-v.bio { font-size:var(--maya-text-section); font-style: italic; color: rgba(238,244,255,0.9); }
+  #pg-card-back-body .pgb-title { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: rgba(238,244,255,0.62); margin-bottom: 18px; }
+  #pg-card-back-body .pgb-row { padding: 10px 0; border-bottom: 0.25px solid rgba(255,255,255,0.08); }
+  #pg-card-back-body .pgb-row:last-child { border-bottom: none; }
+  #pg-card-back-body .pgb-k { font-family: 'Jost', sans-serif; font-weight: 600; font-size: 9px; letter-spacing: 0.26em; text-transform: uppercase; color: rgba(255,255,255,0.98); margin-bottom: 4px; }
+  #pg-card-back-body .pgb-v { font-family: 'Cormorant Garamond', serif; font-size: 17px; line-height: 1.45; color: rgba(222,230,245,0.8); }
+  #pg-card-back-body .pgb-v.bio { font-size: 19px; font-style: italic; color: rgba(238,244,255,0.9); }
   #pg-card-back-body .pgb-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 14px; }
-  #pg-card-back-body .pgb-chip { font-family:var(--maya-font-ui); font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
-    color: rgba(235,242,255,0.85); border:var(--maya-hairline) solid rgba(255,255,255,0.24); border-radius:var(--maya-radius-pill); padding: 4px 10px; }
+  #pg-card-back-body .pgb-chip { font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(235,242,255,0.85); border: 0.5px solid rgba(255,255,255,0.24); border-radius: 999px; padding: 4px 10px; }
   /* the callouts: a dot on the figure, a hairline, a label; like a CAD sheet */
-  #pg-callouts { position: absolute; inset: 0; z-index: 21; pointer-events: none; opacity: 0; transition: opacity .35s ease; border-radius:16px; overflow: hidden; }
+  #pg-callouts { position: absolute; inset: 0; z-index: 21; pointer-events: none; opacity: 0; transition: opacity .35s ease; border-radius: 16px; overflow: hidden; }
   #garment-image-wrap:hover #pg-callouts { opacity: 1; }
   #garment-image-wrap.flipped #pg-callouts, #garment-image-wrap.flipped #pg-flip { opacity: 0; pointer-events: none; }
   #garment-image-wrap.flipped #pg-card-back { display: flex; }
@@ -1490,11 +1490,11 @@
   #pg-callouts .pgc-line { stroke: rgba(235,242,255,0.75); stroke-width: 1; fill: none; }
   #pg-callouts .pgc-dot { fill: rgba(255,255,255,0.95); stroke: rgba(8,12,26,0.6); stroke-width: 1.5; }
   #pg-callouts .pgc-label { position: absolute; transform: translate(0, -50%); white-space: nowrap; max-width: 46%;
-    padding: 6px 11px; border-radius:var(--maya-radius-pill); background: rgba(8,12,26,0.78); border:var(--maya-hairline) solid rgba(255,255,255,0.28);
-    backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost); text-align: left; }
+    padding: 6px 11px; border-radius: 999px; background: rgba(8,12,26,0.78); border: 0.5px solid rgba(255,255,255,0.28);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); text-align: left; }
   #pg-callouts .pgc-label.left { transform: translate(-100%, -50%); }
-  #pg-callouts .pgc-k { display: block; font-family:var(--maya-font-ui); font-weight:600; font-size:var(--maya-text-caption); letter-spacing: 0.26em; text-transform: uppercase; color: rgba(255,255,255,0.98); }
-  #pg-callouts .pgc-v { display: block; font-family:var(--maya-font-ui); font-size:var(--maya-text-body); line-height: 1.2; color: rgba(222,230,245,0.85); overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+  #pg-callouts .pgc-k { display: block; font-family: 'Jost', sans-serif; font-weight: 600; font-size: 8px; letter-spacing: 0.26em; text-transform: uppercase; color: rgba(255,255,255,0.98); }
+  #pg-callouts .pgc-v { display: block; font-family: 'Cormorant Garamond', serif; font-size: 14px; line-height: 1.2; color: rgba(222,230,245,0.85); overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
   #garment-image { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; opacity: 0; transition: opacity 0.35s ease; }
   #garment-image.loaded { opacity: 1; }
   /* version navigator inside the image viewer.
@@ -1507,14 +1507,14 @@
   /* v10: nav arrows canon-normalized, same recipe as round close ×. */
   #viewer-version-nav .nav-arrow {
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border: 0.5px solid rgba(255,255,255,0.22);
     color: rgba(245,250,255,0.85);
-    width: 28px; height: 28px; border-radius:50%;
+    width: 28px; height: 28px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; transition: all 0.2s;
-    font-size:14px;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    font-size: 14px;
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -1529,8 +1529,8 @@
     opacity: 0.25; cursor: default;
   }
   #viewer-version-nav .version-label {
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     min-width: 70px; text-align: center;
@@ -1563,21 +1563,21 @@
   }
   #viewer-refs::-webkit-scrollbar { width: 6px; }
   #viewer-refs::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.18); border-radius:var(--maya-radius-pill);
+    background: rgba(255,255,255,0.18); border-radius: 100px;
   }
   #viewer-refs::-webkit-scrollbar-track { background: transparent; }
   /* v10: viewer ref chip, canon glass pill. v11.10: one notch smaller. */
   .viewer-ref-chip {
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
     padding: 5px 12px;
-    font-family:var(--maya-font-ui);
-    font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -1596,10 +1596,10 @@
     /* pulsing white border applied via .deselected keyframe below */
   }
   .viewer-ref-chip .chip-x {
-    background: none; border:none;
+    background: none; border: none;
     color: inherit;
     cursor: pointer;
-    font-size:var(--maya-text-body); line-height: 1;
+    font-size: 13px; line-height: 1;
     padding: 0;
     opacity: 0.55;
   }
@@ -1615,15 +1615,15 @@
     max-height: 56px; overflow: hidden;
   }
   #modifications-bar .mod {
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px; font-style: italic;
     color: rgba(230,240,255,0.78); letter-spacing: 0.04em;
     position: relative; padding-left: 14px;
     animation: maya-mod-roll-in 0.5s ease-out;
   }
   #modifications-bar .mod:before {
     content: '·'; position: absolute; left: 4px; top: -2px;
-    color: rgba(200,220,255,0.55); font-size:var(--maya-text-section); line-height: 1;
+    color: rgba(200,220,255,0.55); font-size: 18px; line-height: 1;
   }
   #modifications-bar .mod.live {
     color: rgba(200,220,255,0.55);
@@ -1647,19 +1647,19 @@
   }
   .spinner-ring {
     width: 32px; height: 32px;
-    border:var(--maya-hairline) solid rgba(200,220,255,0.15); border-top-color: rgba(200,220,255,0.65);
-    border-radius:50%; animation: spin 1.2s linear infinite;
+    border: 0.5px solid rgba(200,220,255,0.15); border-top-color: rgba(200,220,255,0.65);
+    border-radius: 50%; animation: spin 1.2s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   .modal-spinner-text, #spinner-text {
-    font-family:var(--maya-font-ui);
-    font-size:12px; font-weight:400; font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px; font-weight: 300; font-style: italic;
     letter-spacing: 0.2em; color: rgba(215,228,255,0.4); text-transform: uppercase;
   }
   .prompt-display, #garment-prompt-display {
     max-width: 420px; text-align: center;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400; font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px; font-weight: 300; font-style: italic;
     color: rgba(200,210,230,0.3); letter-spacing: 0.05em; line-height: 1.6; padding: 0 20px;
   }
 
@@ -1672,47 +1672,47 @@
       rgba(255,255,255,0.03) 25%,
       rgba(255,255,255,0.02) 65%,
       rgba(255,255,255,0.07) 100%);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22); border-radius:18px;
+    border: 0.5px solid rgba(255,255,255,0.22); border-radius: 18px;
     padding: 32px;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
       0 12px 48px rgba(0,0,0,0.38);
   }
   .modal-card h2 {
-    font-family:var(--maya-font-ui);
-    font-weight:400; font-size:var(--maya-text-metric);
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300; font-size: 26px;
     color: rgba(245,250,255,0.92); margin-bottom: 6px;
   }
   .modal-card .modal-hint {
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     margin-bottom: 20px;
   }
   .modal-card p.modal-help {
-    font-size:var(--maya-text-caption); line-height: 1.7; font-weight:400;
+    font-size: 12px; line-height: 1.7; font-weight: 300;
     color: rgba(245,250,255,0.65); margin-bottom: 20px;
   }
   .modal-card label {
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     display: block; margin-bottom: 8px; margin-top: 12px;
   }
   .modal-card input {
     width: 100%;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22); border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.22); border-radius: 100px;
     padding: 12px 18px;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400; letter-spacing: 0.15em;
+    font-family: 'Jost', sans-serif;
+    font-size: 11px; font-weight: 300; letter-spacing: 0.15em;
     color: rgba(245,250,255,0.95);
     outline: none;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18);
@@ -1721,14 +1721,14 @@
   .modal-card textarea {
     width: 100%;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22); border-radius:16px;
+    border: 0.5px solid rgba(255,255,255,0.22); border-radius: 16px;
     padding: 14px 18px;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 12px; font-weight: 300;
     color: rgba(245,250,255,0.95);
     outline: none;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18);
@@ -1742,7 +1742,7 @@
   }
   .modal-card textarea::placeholder, .modal-card input::placeholder {
     color: rgba(200,210,230,0.25);
-    font-family:var(--maya-font-ui);
+    font-family: 'Cormorant Garamond', serif;
     font-style: italic;
   }
   .modal-card .modal-actions {
@@ -1752,17 +1752,17 @@
   }
   .modal-card .help-link {
     color: rgba(245,250,255,0.85); text-decoration: none;
-    font-size:var(--maya-text-caption); letter-spacing: 0.04em;
+    font-size: 11px; letter-spacing: 0.04em;
   }
   .modal-card .help-link:hover { color: rgba(220,232,255,0.95); }
 
   /* drop zone inside paste modal */
   .drop-zone {
     margin-top: 14px; padding: 12px;
-    border:0.5px dashed rgba(255,255,255,0.22); border-radius:16px;
+    border: 0.5px dashed rgba(255,255,255,0.22); border-radius: 16px;
     text-align: center;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.55);
     transition: all 0.2s; cursor: pointer;
@@ -1795,18 +1795,18 @@
   /* v10.2: canon glass pill. Was opaque dark + blue-tinted border. */
   .ref-chip {
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
     /* v11.22: smaller + italic, the refs stacked under the image read as a
        quiet annotation, not loud chips. */
     padding: 3px 9px;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400; font-style: italic;
+    font-family: 'Jost', sans-serif;
+    font-size: 8px; font-weight: 300; font-style: italic;
     letter-spacing: 0.12em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     white-space: nowrap;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -1838,8 +1838,8 @@
   /* v10.2: picker thumb, canon hairline, white-alpha hover. */
   .picker-thumb {
     position: relative; aspect-ratio: 3/4;
-    border-radius:8px; overflow: hidden;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius: 8px; overflow: hidden;
+    border: 0.5px solid rgba(255,255,255,0.22);
     cursor: pointer; transition: all 0.2s;
     background: rgba(255,255,255,0.03);
   }
@@ -1854,23 +1854,23 @@
     position: absolute; bottom: 0; left: 0; right: 0;
     padding: 8px 10px;
     background: linear-gradient(to top, rgba(0,0,0,0.78), rgba(0,0,0,0));
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
   }
   /* v10.2: numbered badge, glass pill instead of opaque blue */
   .picker-thumb .picker-badge {
     position: absolute; top: 8px; right: 8px;
-    width: 24px; height: 24px; border-radius:50%;
+    width: 24px; height: 24px; border-radius: 50%;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.42);
+    border: 0.5px solid rgba(255,255,255,0.42);
     color: rgba(245,250,255,0.95);
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 11px; font-weight: 300;
     align-items: center; justify-content: center;
     display: none;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -1888,7 +1888,7 @@
   }
   #notes-toggle .notes-dot {
     position: absolute; top: 4px; right: 4px;
-    width: 6px; height: 6px; border-radius:50%;
+    width: 6px; height: 6px; border-radius: 50%;
     background: rgba(200,220,255,0.85);
     box-shadow: 0 0 8px rgba(200,220,255,0.6);
     display: none;
@@ -1909,10 +1909,10 @@
         rgba(255,255,255,0.03) 25%,
         rgba(255,255,255,0.02) 65%,
         rgba(255,255,255,0.07) 100%);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:18px;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 18px;
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.30),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -1938,9 +1938,9 @@
   /* Back button in sub-menu, small text link, matches the unified font. */
   #notes-drawer .drawer-back {
     align-self: flex-start;
-    background: none; border:none; padding: 4px 0 12px;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    background: none; border: none; padding: 4px 0 12px;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     cursor: pointer; transition: color 0.2s;
@@ -1959,59 +1959,59 @@
     display: flex; align-items: center; justify-content: center;
     gap: 12px;
     padding: 6px 10px;
-    background: transparent; border:none;
+    background: transparent; border: none;
     cursor: pointer;
     transition: opacity 0.2s;
   }
   #notes-drawer .drawer-avatar-button:hover { opacity: 0.85; }
   #notes-drawer .drawer-avatar-caret {
-    background: transparent; border:none;
+    background: transparent; border: none;
     color: rgba(200,215,245,0.7); cursor: pointer;
-    font-size:var(--maya-text-caption); line-height: 1; padding: 4px;
+    font-size: 12px; line-height: 1; padding: 4px;
     transition: transform 0.2s, color 0.2s;
   }
   #notes-drawer .drawer-avatar-caret:hover { color: #fff; }
   /* v11.25: avatar switcher, client roster. */
   #notes-drawer .drawer-avatar-switcher {
     margin: 0 0 14px;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.12);
-    border-radius:12px;
+    border: 0.5px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
     overflow: hidden;
     background: rgba(255,255,255,0.02);
   }
   #notes-drawer .avatar-switch-row {
     width: 100%; display: flex; align-items: center; gap: 10px;
-    padding: 8px 12px; background: transparent; border:none;
-    border-bottom:var(--maya-hairline) solid rgba(255,255,255,0.06);
+    padding: 8px 12px; background: transparent; border: none;
+    border-bottom: 0.5px solid rgba(255,255,255,0.06);
     color: rgba(235,243,255,0.9); cursor: pointer;
-    font-family:var(--maya-font-ui); font-size:var(--maya-text-body); font-style: italic;
+    font-family: 'Cormorant Garamond', serif; font-size: 14px; font-style: italic;
     transition: background 0.15s; text-align: left;
   }
-  #notes-drawer .avatar-switch-row:last-child { border-bottom:none; }
+  #notes-drawer .avatar-switch-row:last-child { border-bottom: none; }
   #notes-drawer .avatar-switch-row:hover { background: rgba(180,205,255,0.08); }
   /* v14.19: the client on the board is marked, like the open project is. */
   #notes-drawer .avatar-switch-row { position: relative; padding-right: 36px; }
   #notes-drawer .avatar-switch-row.active { background: rgba(180,210,255,0.10);
     box-shadow: inset 2px 0 0 rgba(160,200,255,0.55); }
   #notes-drawer .avatar-switch-delete { position: absolute; top: 50%; right: 8px; transform: translateY(-50%);
-    width: 22px; height: 22px; border-radius:50%; display: flex; align-items: center; justify-content: center;
-    background: rgba(255,255,255,0.06); border:var(--maya-hairline) solid rgba(255,255,255,0.2);
-    color: rgba(235,190,190,0.85); font-size:var(--maya-text-body); line-height: 1; cursor: pointer; padding: 0;
+    width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.2);
+    color: rgba(235,190,190,0.85); font-size: 13px; line-height: 1; cursor: pointer; padding: 0;
     opacity: 0; transition: opacity 0.15s; }
   #notes-drawer .avatar-switch-row:hover .avatar-switch-delete { opacity: 1; }
   /* v14.23: a pencil on every saved client, and one beside the name itself. */
   #notes-drawer .avatar-switch-row { padding-right: 64px; }
   #notes-drawer .avatar-switch-rename { position: absolute; top: 50%; right: 36px; transform: translateY(-50%);
-    width: 22px; height: 22px; border-radius:50%; display: flex; align-items: center; justify-content: center;
-    background: rgba(255,255,255,0.06); border:var(--maya-hairline) solid rgba(255,255,255,0.2);
-    color: rgba(215,230,255,0.9); font-size:var(--maya-text-caption); line-height: 1; cursor: pointer; padding: 0;
+    width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.2);
+    color: rgba(215,230,255,0.9); font-size: 11px; line-height: 1; cursor: pointer; padding: 0;
     opacity: 0; transition: opacity 0.15s; }
   #notes-drawer .avatar-switch-row:hover .avatar-switch-rename { opacity: 1; }
-  #notes-drawer .avatar-switch-row .pg-client-rename { font-size:var(--maya-text-body); padding: 0 6px; width: 100%; }
-  #notes-drawer .drawer-avatar-rename { flex: none; width: 20px; height: 20px; border-radius:50%; padding: 0;
+  #notes-drawer .avatar-switch-row .pg-client-rename { font-size: 14px; padding: 0 6px; width: 100%; }
+  #notes-drawer .drawer-avatar-rename { flex: none; width: 20px; height: 20px; border-radius: 50%; padding: 0;
     display: inline-flex; align-items: center; justify-content: center; margin-left: 2px;
-    background: rgba(255,255,255,0.05); border:var(--maya-hairline) solid rgba(255,255,255,0.2);
-    color: rgba(215,230,255,0.8); font-size:var(--maya-text-caption); line-height: 1; cursor: pointer; transition: color .2s, border-color .2s; }
+    background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.2);
+    color: rgba(215,230,255,0.8); font-size: 10px; line-height: 1; cursor: pointer; transition: color .2s, border-color .2s; }
   #notes-drawer .drawer-avatar-rename:hover { color: #fff; border-color: rgba(255,255,255,0.45); }
   /* v14.26: the pencil hides like the x does, and shows on the highlighted
      client only, the way the open project carries its pencil. The one that
@@ -2031,96 +2031,96 @@
   #notes-drawer #pg-projects-body { padding: 4px 0 6px; }
   #notes-drawer #pg-projects-body .drawer-sessions { margin: 0; }
   #notes-drawer #pg-projects-body #drawer-sessions-list { display: block !important; margin-top: 4px; }
-  #notes-drawer .pg-fold-current { font-family:var(--maya-font-ui); font-style: italic;
-    font-size:var(--maya-text-body); letter-spacing: 0.02em; text-transform: none; color: rgba(245,250,255,0.92);
+  #notes-drawer .pg-fold-current { font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 13px; letter-spacing: 0.02em; text-transform: none; color: rgba(245,250,255,0.92);
     max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #notes-drawer .pg-fold-current:empty { display: none; }
   #notes-drawer .avatar-switch-actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px;
-    border-bottom:var(--maya-hairline) solid rgba(255,255,255,0.08); }
-  #notes-drawer .avatar-switch-actions .drawer-action { flex:1; font-size:var(--maya-text-caption); padding: 3px 9px; letter-spacing: 0.1em; }
+    border-bottom: 0.5px solid rgba(255,255,255,0.08); }
+  #notes-drawer .avatar-switch-actions .drawer-action { flex:1; font-size: 8px; padding: 3px 9px; letter-spacing: 0.1em; }
   #notes-drawer .session-item-rename { position: absolute; top: 8px; right: 60px;
-    width: 22px; height: 22px; border-radius:50%; display: flex; align-items: center; justify-content: center;
-    background: rgba(255,255,255,0.06); border:var(--maya-hairline) solid rgba(255,255,255,0.2);
-    color: rgba(215,230,255,0.9); cursor: pointer; padding: 0; font-size:var(--maya-text-caption); line-height: 1;
+    width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.2);
+    color: rgba(215,230,255,0.9); cursor: pointer; padding: 0; font-size: 11px; line-height: 1;
     opacity: 0; transition: opacity 0.15s; }
   #notes-drawer .session-item:hover .session-item-rename { opacity: 1; }   /* v14.28: hover only, like the x */
   @media (hover: none) { #notes-drawer .session-item.active .session-item-rename { opacity: 1; } }
   #notes-drawer .session-item.active .session-item-title { cursor: text; }
-  #notes-drawer .pg-project-rename { font-family:var(--maya-font-ui); font-style: italic; font-size:var(--maya-text-body);
-    color: #fff; background: rgba(255,255,255,0.05); border:var(--maya-hairline) solid rgba(169,201,255,0.6);
-    border-radius:6px; padding: 1px 6px; width: 100%; outline: none; }
+  #notes-drawer .pg-project-rename { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 13px;
+    color: #fff; background: rgba(255,255,255,0.05); border: 0.5px solid rgba(169,201,255,0.6);
+    border-radius: 6px; padding: 1px 6px; width: 100%; outline: none; }
   @media (hover: none) { #notes-drawer .session-item-rename { opacity: 1; } }
   /* v14.19: the project pill wears the open project's name and a brighter ring. */
   #notes-drawer .pg-project-beside { max-width: 62%; overflow: hidden; text-overflow: ellipsis; }
   #notes-drawer .pg-project-beside.on { border-color: rgba(169,201,255,0.75); color: #fff;
     box-shadow: inset 0 0 0 0.5px rgba(169,201,255,0.35); }
-  #notes-drawer .pg-client-rename { font-family:var(--maya-font-ui); font-size:var(--maya-text-section);
-    color: rgba(245,250,255,0.95); background: rgba(255,255,255,0.05); border:var(--maya-hairline) solid rgba(169,201,255,0.6);
-    border-radius:8px; padding: 1px 8px; min-width: 0; flex: 1; outline: none; }
+  #notes-drawer .pg-client-rename { font-family: 'Cormorant Garamond', serif; font-size: 19px;
+    color: rgba(245,250,255,0.95); background: rgba(255,255,255,0.05); border: 0.5px solid rgba(169,201,255,0.6);
+    border-radius: 8px; padding: 1px 8px; min-width: 0; flex: 1; outline: none; }
   /* v14.19: on a touch screen nothing waits for a hover. */
   @media (hover: none) {
     #notes-drawer .pg-avatar-actions { opacity: 1; }
     #notes-drawer .session-item-delete, #notes-drawer .avatar-switch-delete { opacity: 1; }
   }
   #notes-drawer .avatar-switch-face {
-    width: 28px; height: 28px; border-radius:50%;
+    width: 28px; height: 28px; border-radius: 50%;
     background-size: cover; background-position: center;
     background-color: rgba(255,255,255,0.05);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22); flex-shrink: 0;
+    border: 0.5px solid rgba(255,255,255,0.22); flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
     color: rgba(220,232,255,0.23);
   }
   #notes-drawer .avatar-switch-new {
-    font-family:var(--maya-font-ui); font-style: normal;
-    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif; font-style: normal;
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(200,215,245,0.7); justify-content: center;
   }
   /* v13.39: the same row, in the same colours, as "+ New avatar". */
   #notes-drawer .session-item-new {
     width: 100%; display: flex; align-items: center; justify-content: center;
-    padding: 8px 12px; background: transparent; border:none;
-    border-top:var(--maya-hairline) solid rgba(255,255,255,0.06);
-    font-family:var(--maya-font-ui); font-style: normal;
-    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 8px 12px; background: transparent; border: none;
+    border-top: 0.5px solid rgba(255,255,255,0.06);
+    font-family: 'Jost', sans-serif; font-style: normal;
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(200,215,245,0.7); cursor: pointer;
     transition: background 0.15s;
   }
   #notes-drawer .session-item-new:hover { background: rgba(180,205,255,0.08); }
   #notes-drawer .avatar-switch-empty {
     padding: 14px; text-align: center;
-    font-family:var(--maya-font-ui); font-style: italic;
-    font-size:var(--maya-text-caption); color: rgba(200,210,230,0.5);
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 12px; color: rgba(200,210,230,0.5);
   }
   #notes-drawer .drawer-avatar-face {
     width: 72px; height: 72px;
-    border-radius:50%;
+    border-radius: 50%;
     background-size: cover; background-position: center;
     background-color: rgba(255,255,255,0.04);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.32);
+    border: 0.5px solid rgba(255,255,255,0.32);
     flex-shrink: 0;
-    backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(12px);
   }
   /* v13.71: the approved Playground filing cabinet, promoted faithfully.
      Three circles hold one full-height folder, with no second panel or Back. */
   #notes-drawer .pg-tabrow { display: flex; align-items: center; gap: 14px;
     margin: -8px 0 8px -8px; position: relative; z-index: 2; }
-  #notes-drawer .pg-tab { width: 32px; height: 32px; border-radius:50%; padding: 0;
+  #notes-drawer .pg-tab { width: 32px; height: 32px; border-radius: 50%; padding: 0;
     flex: none; position: relative; overflow: visible; cursor: pointer;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.04);
+    border: 0.5px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.04);
     display: flex; align-items: center; justify-content: center;
     opacity: 0.5; transition: opacity .22s, border-color .22s, transform .22s; }
   #notes-drawer .pg-tab:hover { opacity: 0.9; transform: translateY(-1px); }
   #notes-drawer .pg-tab.on { opacity: 1; border-color: rgba(255,255,255,0.62);
     box-shadow: 0 0 0 1px rgba(255,255,255,0.10); }
   #notes-drawer .pg-tab.on::after { content: ''; position: absolute; left: 50%; bottom: -9px;
-    margin-left: -5px; border:5px solid transparent; border-top-color: rgba(255,255,255,0.34); }
-  #notes-drawer .pg-tab > * { width: 100%; height: 100%; border-radius:50%;
+    margin-left: -5px; border: 5px solid transparent; border-top-color: rgba(255,255,255,0.34); }
+  #notes-drawer .pg-tab > * { width: 100%; height: 100%; border-radius: 50%;
     object-fit: cover; display: block; background-size: cover; background-position: center; }
-  #notes-drawer .pg-tab svg { width: 17px; height: 17px; margin: auto; border-radius:0; }
+  #notes-drawer .pg-tab svg { width: 17px; height: 17px; margin: auto; border-radius: 0; }
   #notes-drawer .pg-tab .pg-tab-face.empty::after { content: '\00B7'; display: flex;
     align-items: center; justify-content: center; height: 100%; color: rgba(220,232,255,0.4); }
   #notes-drawer .pg-folder { flex: 1; min-height: 0; display: flex; flex-direction: column;
-    border:none; border-radius:0; background: none; padding: 0; overflow-y: auto;
+    border: none; border-radius: 0; background: none; padding: 0; overflow-y: auto;
     margin: 0 -12px; }
   #notes-drawer #pg-pane-avatar { padding: 2px 12px 0; }
   #notes-drawer .pg-pane > #fabrics-drawer, #notes-drawer .pg-pane > #pinterest-drawer { padding: 0 4px; }
@@ -2130,13 +2130,13 @@
   #notes-drawer .pg-pane > #pinterest-drawer {
     position: static; width: auto; max-width: none; top: auto; right: auto; bottom: auto;
     transform: none; opacity: 1; z-index: auto; display: flex; flex: 1; min-height: 0;
-    background: none; border:none; border-radius:0; box-shadow: none;
-    backdrop-filter:none; -webkit-backdrop-filter:none; }
+    background: none; border: none; border-radius: 0; box-shadow: none;
+    backdrop-filter: none; -webkit-backdrop-filter: none; }
   #notes-drawer .pg-pane .drawer-head { padding: 0 0 8px; min-height: 0; }
   #notes-drawer .pg-pane .fabrics-back { display: none; }
   #notes-drawer #pg-project-pill { width: 100%; padding: 7px 12px; margin: 0 0 12px;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.28); border-radius:var(--maya-radius-pill); cursor: pointer;
-    font-family:var(--maya-font-ui); font-weight:400; font-size:var(--maya-text-caption);
+    border: 0.5px solid rgba(255,255,255,0.28); border-radius: 100px; cursor: pointer;
+    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 10px;
     letter-spacing: 0.2em; text-transform: uppercase; color: rgba(238,242,255,0.85);
     text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #notes-drawer #pg-project-pill:hover { border-color: rgba(255,255,255,0.5); }
@@ -2144,14 +2144,14 @@
      reclaiming the vertical room the in-pane titles used to take. Avatar reads
      Projects, Pinterest reads Pinterest, Fabrics reads Fabrics. */
   #notes-drawer .pg-tabtitle { flex: 1; min-width: 0; text-align: left; padding-left: 4px;
-    font-family:var(--maya-font-ui); font-size:var(--maya-text-section); font-weight:400;
+    font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 400;
     text-transform: uppercase; letter-spacing: 0.04em;
     color: rgba(245,250,255,0.92); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     cursor: default; }
   #notes-drawer .pg-tabtitle.clickable { cursor: pointer; }
   #notes-drawer .pg-tabtitle.clickable:hover { color: #fff; }
   /* v13.85: the dropdown caret beside "Projects". */
-  #notes-drawer .pg-tabtitle-caret { font-size:var(--maya-text-caption); color: rgba(238,242,255,0.5); margin-left: 3px; }
+  #notes-drawer .pg-tabtitle-caret { font-size: 12px; color: rgba(238,242,255,0.5); margin-left: 3px; }
   #notes-drawer .pg-tabtitle.clickable:hover .pg-tabtitle-caret { color: rgba(255,255,255,0.85); }
   /* the in-pane titles are redundant now that the name sits beside the circles */
   #notes-drawer #pg-project-pill { display: none; }
@@ -2167,19 +2167,19 @@
   /* v13.84: "All saves / Boards" is the header now (the title is hidden), so make
      it compact and let it sit tight on its own row above the full-width wall. */
   #notes-drawer .pg-pane > #pinterest-drawer > #pin-tabs { gap: 6px; margin: 0 0 4px; padding: 0 2px; }
-  #notes-drawer .pg-pane > #pinterest-drawer > #pin-tabs .fabrics-tab { font-size:var(--maya-text-caption); padding: 4px 10px; }
+  #notes-drawer .pg-pane > #pinterest-drawer > #pin-tabs .fabrics-tab { font-size: 9px; padding: 4px 10px; }
   /* v14.17: the small search. Canon hairline pill, quiet until wanted. */
   /* v14.20: a real magnifying glass, in the same circle; the box is longer and
      its word sits centered. Enter searches everything saved on Pinterest. */
-  .pin-search-btn { background: transparent; border:var(--maya-hairline) solid rgba(255,255,255,0.22); border-radius:var(--maya-radius-pill);
+  .pin-search-btn { background: transparent; border: 0.5px solid rgba(255,255,255,0.22); border-radius: 100px;
     color: rgba(245,250,255,0.8); width: 24px; height: 24px; padding: 0; line-height: 0; cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center;
-    backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%); -webkit-backdrop-filter: blur(22px) saturate(180%);
     transition: border-color .2s, color .2s; flex: 0 0 auto; }
   .pin-search-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; }
   .pin-search-btn:hover { border-color: rgba(255,255,255,0.42); color: #fff; }
-  #pin-search-input { background: rgba(255,255,255,0.05); border:var(--maya-hairline) solid rgba(255,255,255,0.18);
-    border-radius:var(--maya-radius-pill); color: #fff; font-family:var(--maya-font-ui); font-size:var(--maya-text-caption); letter-spacing: 0.08em;
+  #pin-search-input { background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.18);
+    border-radius: 100px; color: #fff; font-family: 'Jost', sans-serif; font-size: 10px; letter-spacing: 0.08em;
     padding: 4px 12px; outline: none; width: 150px; text-align: center; }
   #pin-search-input::placeholder { color: rgba(245,250,255,0.35); text-transform: uppercase; letter-spacing: 0.12em; }
   /* v13.84: "Bring in" floats over the cards, near-transparent, and shows only
@@ -2190,27 +2190,27 @@
     margin: 0; padding: 0; z-index: 40; pointer-events: none; }
   #notes-drawer .pg-pane > #pinterest-drawer > .pin-drawer-foot .drawer-fabrics {
     pointer-events: auto; flex: none; width: auto; min-width: 128px; padding: 9px 22px;
-    border-radius:var(--maya-radius-pill); color: rgba(245,250,255,0.95);
-    background: rgba(18,24,38,0.5); border:var(--maya-hairline) solid rgba(255,255,255,0.28);
-    backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost);
+    border-radius: 100px; color: rgba(245,250,255,0.95);
+    background: rgba(18,24,38,0.5); border: 0.5px solid rgba(255,255,255,0.28);
+    backdrop-filter: blur(16px) saturate(160%); -webkit-backdrop-filter: blur(16px) saturate(160%);
     box-shadow: 0 6px 22px rgba(0,0,0,0.38); }
   /* v13.75: Randomize, Replace and Remove share one row; smaller pills to fit. */
-  #notes-drawer .pg-avatar-actions .drawer-action { font-size:var(--maya-text-caption); padding: 3px 8px;
+  #notes-drawer .pg-avatar-actions .drawer-action { font-size: 8px; padding: 3px 8px;
     letter-spacing: 0.1em; }
   #notes-drawer #pg-meas-host { padding-bottom: 26px; }
   #notes-drawer .drawer-sessions-toggle { display: none !important; }
   #notes-drawer .pg-avatar-row { display: flex; align-items: center; gap: 12px; margin: 2px 0 12px; }
-  #notes-drawer .pg-avatar-hit { background: none; border:none; padding: 0; cursor: pointer; flex: none; }
+  #notes-drawer .pg-avatar-hit { background: none; border: none; padding: 0; cursor: pointer; flex: none; }
   #notes-drawer .pg-avatar-row .drawer-avatar-face { width: 60px; height: 60px; }
   #notes-drawer .pg-avatar-side { flex: 1; min-width: 0; text-align: left; }
   /* v13.78: the name and its switch-avatar caret sit together. */
   #notes-drawer .pg-avatar-nameline { display: flex; align-items: center; gap: 6px; }
-  #notes-drawer .pg-avatar-nameline .drawer-avatar-caret { font-size:var(--maya-text-body); padding: 4px 7px; flex: none;
-    background: none; border:none; cursor: pointer; line-height: 1;
+  #notes-drawer .pg-avatar-nameline .drawer-avatar-caret { font-size: 13px; padding: 4px 7px; flex: none;
+    background: none; border: none; cursor: pointer; line-height: 1;
     color: rgba(169,201,255,0.9); }
   #notes-drawer .pg-avatar-nameline .drawer-avatar-caret:hover { color: #fff; }
-  #notes-drawer .pg-avatar-side .drawer-avatar-name { display: block; font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-section); color: rgba(245,250,255,0.95); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #notes-drawer .pg-avatar-side .drawer-avatar-name { display: block; font-family: 'Cormorant Garamond', serif;
+    font-size: 19px; color: rgba(245,250,255,0.95); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* v14.19: the pills used to hide until a hover, which a finger never gives. */
   #notes-drawer .pg-avatar-actions { display: flex; gap: 8px; margin-top: 5px;
     opacity: 0.62; transition: opacity .25s; }
@@ -2229,12 +2229,12 @@
   #notes-drawer .pg-fold { margin: 2px 0 10px; }
   #notes-drawer .pg-fold summary { list-style: none; cursor: pointer;
     display: flex; align-items: center; justify-content: center; gap: 8px;
-    font-family:var(--maya-font-ui); font-weight:400; font-size:var(--maya-text-caption);
+    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 9.5px;
     letter-spacing: 0.22em; text-transform: uppercase; color: rgba(238,242,255,0.6);
-    padding: 7px 0; border-top:var(--maya-hairline) solid rgba(255,255,255,0.08);
-    border-bottom:var(--maya-hairline) solid rgba(255,255,255,0.08); }
+    padding: 7px 0; border-top: 0.5px solid rgba(255,255,255,0.08);
+    border-bottom: 0.5px solid rgba(255,255,255,0.08); }
   #notes-drawer .pg-fold summary::-webkit-details-marker { display: none; }
-  #notes-drawer .pg-fold summary::after { content: '\25BE'; font-size:var(--maya-text-caption); color: rgba(238,242,255,0.4); }
+  #notes-drawer .pg-fold summary::after { content: '\25BE'; font-size: 10px; color: rgba(238,242,255,0.4); }
   #notes-drawer .pg-fold:not([open]) summary::after { transform: rotate(-90deg); }
   /* v13.89: Projects, beside the name, right-aligned over the Remove pill. Its
      own pill + caret; opens the same project list the top title used to. */
@@ -2244,15 +2244,15 @@
   /* v13.98: the pill's text sits truly centered (the caret is absolute now, so
      it stops shoving the word left), literally the name's font and size. */
   #notes-drawer .pg-project-beside { margin-left: auto; flex: none; position: relative;
-    background: none; border:var(--maya-hairline) solid rgba(255,255,255,0.22); border-radius:var(--maya-radius-pill);
-    cursor: pointer; font-family:var(--maya-font-ui); font-weight:400; font-size:var(--maya-text-body);
+    background: none; border: 0.5px solid rgba(255,255,255,0.22); border-radius: 100px;
+    cursor: pointer; font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: 16px;
     font-style: italic; letter-spacing: 0.04em; text-transform: none; color: rgba(245,250,255,0.95);
     padding: 1px 20px; text-align: center; white-space: nowrap; line-height: 1.4;
     display: inline-flex; align-items: center; justify-content: center;
     transition: border-color 0.2s, color 0.2s; }
   #notes-drawer .pg-project-beside .pg-project-beside-caret { position: absolute; right: 9px; margin-left: 0; }
   #notes-drawer .pg-project-beside:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
-  #notes-drawer .pg-project-beside-caret { font-size:var(--maya-text-caption); color: rgba(238,242,255,0.5); margin-left: 5px; font-style: normal; }
+  #notes-drawer .pg-project-beside-caret { font-size: 12px; color: rgba(238,242,255,0.5); margin-left: 5px; font-style: normal; }
   /* v13.89: the Stats fold — a car-dash for the free trial. */
   #notes-drawer .pg-stats-body { padding: 12px 0 6px; }
   #notes-drawer .pg-gauge-wrap { position: relative; width: 118px; height: 118px; margin: 0 auto 14px; }
@@ -2264,79 +2264,79 @@
   #notes-drawer .pg-gauge-fill.low { stroke: rgba(235,150,150,0.9); }
   #notes-drawer .pg-gauge-center { position: absolute; inset: 0; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 2px; }
-  #notes-drawer .pg-gauge-value { font-family:var(--maya-font-ui); font-size:var(--maya-text-metric);
-    font-weight:500; color: rgba(245,250,255,0.96); line-height: 1; }
-  #notes-drawer .pg-gauge-cap { font-family:var(--maya-font-ui); font-weight:400; font-size:var(--maya-text-caption);
+  #notes-drawer .pg-gauge-value { font-family: 'Cormorant Garamond', serif; font-size: 26px;
+    font-weight: 500; color: rgba(245,250,255,0.96); line-height: 1; }
+  #notes-drawer .pg-gauge-cap { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 8px;
     letter-spacing: 0.16em; text-transform: uppercase; color: rgba(238,242,255,0.5); }
   #notes-drawer .pg-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   #notes-drawer .pg-stat { display: flex; flex-direction: column; align-items: center; gap: 3px;
-    padding: 10px 6px; border:var(--maya-hairline) solid rgba(255,255,255,0.08); border-radius:12px;
+    padding: 10px 6px; border: 0.5px solid rgba(255,255,255,0.08); border-radius: 12px;
     background: rgba(255,255,255,0.02); }
-  #notes-drawer .pg-stat-num { font-family:var(--maya-font-ui); font-size:var(--maya-text-section);
-    font-weight:500; color: rgba(245,250,255,0.95); line-height: 1; }
-  #notes-drawer .pg-stat-lab { font-family:var(--maya-font-ui); font-weight:400; font-size:var(--maya-text-caption);
+  #notes-drawer .pg-stat-num { font-family: 'Cormorant Garamond', serif; font-size: 20px;
+    font-weight: 500; color: rgba(245,250,255,0.95); line-height: 1; }
+  #notes-drawer .pg-stat-lab { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 7.5px;
     letter-spacing: 0.14em; text-transform: uppercase; color: rgba(238,242,255,0.5); text-align: center; }
-  #notes-drawer .pg-try-popup { display: block; margin: 12px auto 2px; background: none; border:none;
-    cursor: pointer; font-family:var(--maya-font-ui); font-weight:400; font-size:var(--maya-text-caption);
+  #notes-drawer .pg-try-popup { display: block; margin: 12px auto 2px; background: none; border: none;
+    cursor: pointer; font-family: 'Jost', sans-serif; font-weight: 300; font-size: 8px;
     letter-spacing: 0.2em; text-transform: uppercase; color: rgba(169,201,255,0.55);
     transition: color 0.2s; }
   #notes-drawer .pg-try-popup:hover { color: rgba(169,201,255,0.9); }
   /* v13.89: the out-of-credits popup. */
   #maya-credits-popup { position: fixed; inset: 0; z-index: 12000; display: none;
     align-items: center; justify-content: center; padding: 24px;
-    background: rgba(8,12,24,0.38); backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost); }
+    background: rgba(8,12,24,0.38); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%); }
   #maya-credits-popup.show { display: flex; }
   /* v14.04: drawer glass, the Bible */
   #maya-credits-popup .mcp-card { width: 100%; max-width: 320px; text-align: center;
-    padding: 28px 24px 22px; border-radius:18px;
+    padding: 28px 24px 22px; border-radius: 18px;
     background: linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
     box-shadow: inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18), 0 12px 48px rgba(0,0,0,0.38); }
-  #maya-credits-popup .mcp-title { font-family:var(--maya-font-ui); font-size:var(--maya-text-metric);
-    font-weight:500; color: rgba(245,250,255,0.98); margin-bottom: 10px; }
-  #maya-credits-popup .mcp-body { font-family:var(--maya-font-ui); font-weight:400; font-size:var(--maya-text-caption);
+  #maya-credits-popup .mcp-title { font-family: 'Cormorant Garamond', serif; font-size: 26px;
+    font-weight: 500; color: rgba(245,250,255,0.98); margin-bottom: 10px; }
+  #maya-credits-popup .mcp-body { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 12px;
     line-height: 1.5; color: rgba(228,234,248,0.72); margin-bottom: 20px; }
   #maya-credits-popup .mcp-upgrade { display: block; width: 100%; margin: 0 0 10px; padding: 12px 18px;
-    border-radius:var(--maya-radius-pill); cursor: pointer; border:var(--maya-hairline) solid rgba(169,201,255,0.5);
+    border-radius: 100px; cursor: pointer; border: 0.5px solid rgba(169,201,255,0.5);
     background: rgba(169,201,255,0.14); color: rgba(245,250,255,0.98);
-    font-family:var(--maya-font-ui); font-weight:400; font-size:var(--maya-text-caption); letter-spacing: 0.12em;
+    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 11px; letter-spacing: 0.12em;
     text-transform: uppercase; transition: background 0.2s, border-color 0.2s; }
   #maya-credits-popup .mcp-upgrade:hover { background: rgba(169,201,255,0.24); border-color: rgba(169,201,255,0.8); }
-  #maya-credits-popup .mcp-later { display: block; width: 100%; background: none; border:none;
+  #maya-credits-popup .mcp-later { display: block; width: 100%; background: none; border: none;
     cursor: pointer; padding: 6px; color: rgba(228,234,248,0.5);
-    font-family:var(--maya-font-ui); font-weight:400; font-size:var(--maya-text-caption); letter-spacing: 0.14em;
+    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 10px; letter-spacing: 0.14em;
     text-transform: uppercase; transition: color 0.2s; }
   #maya-credits-popup .mcp-later:hover { color: rgba(228,234,248,0.85); }
   /* v13.90: the Mana Siyo made-to-order confirm. */
   #maya-manasiyo-popup { position: fixed; inset: 0; z-index: 12000; display: none;
     align-items: center; justify-content: center; padding: 24px;
-    background: rgba(8,12,24,0.38); backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost); }
+    background: rgba(8,12,24,0.38); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%); }
   #maya-manasiyo-popup.show { display: flex; }
   /* v14.04: the drawer is the Bible; this card wears its glass too. */
   #maya-manasiyo-popup .mmp-card { width: 100%; max-width: 340px; text-align: center;
-    padding: 28px 24px 22px; border-radius:18px;
+    padding: 28px 24px 22px; border-radius: 18px;
     background: linear-gradient(180deg,
       rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%,
       rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
     box-shadow: inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18), 0 12px 48px rgba(0,0,0,0.38); }
-  #maya-manasiyo-popup .mmp-title { font-family:var(--maya-font-ui); font-size:var(--maya-text-metric);
-    font-weight:500; color: rgba(245,250,255,0.98); margin-bottom: 10px; }
+  #maya-manasiyo-popup .mmp-title { font-family: 'Cormorant Garamond', serif; font-size: 26px;
+    font-weight: 500; color: rgba(245,250,255,0.98); margin-bottom: 10px; }
   /* v13.92: slightly larger body copy (Fromsa likes the wording), and the quote
      button is a smaller centred pill rather than a full-width bar. */
-  #maya-manasiyo-popup .mmp-body { font-family:var(--maya-font-ui); font-weight:400; font-size:var(--maya-text-body);
+  #maya-manasiyo-popup .mmp-body { font-family: 'Jost', sans-serif; font-weight: 300; font-size: 13.5px;
     line-height: 1.6; color: rgba(228,234,248,0.76); margin-bottom: 22px; }
   #maya-manasiyo-popup .mmp-go { display: inline-block; width: auto; margin: 0 0 8px; padding: 9px 24px;
-    border-radius:var(--maya-radius-pill); cursor: pointer; border:var(--maya-hairline) solid rgba(169,201,255,0.5);
+    border-radius: 100px; cursor: pointer; border: 0.5px solid rgba(169,201,255,0.5);
     background: rgba(169,201,255,0.14); color: rgba(245,250,255,0.98);
-    font-family:var(--maya-font-ui); font-weight:400; font-size:var(--maya-text-caption); letter-spacing: 0.12em;
+    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 10px; letter-spacing: 0.12em;
     text-transform: uppercase; transition: background 0.2s, border-color 0.2s; }
   #maya-manasiyo-popup .mmp-go:hover { background: rgba(169,201,255,0.24); border-color: rgba(169,201,255,0.8); }
-  #maya-manasiyo-popup .mmp-later { display: block; width: 100%; background: none; border:none;
+  #maya-manasiyo-popup .mmp-later { display: block; width: 100%; background: none; border: none;
     cursor: pointer; padding: 6px; color: rgba(228,234,248,0.5);
-    font-family:var(--maya-font-ui); font-weight:400; font-size:var(--maya-text-caption); letter-spacing: 0.14em;
+    font-family: 'Jost', sans-serif; font-weight: 300; font-size: 10px; letter-spacing: 0.14em;
     text-transform: uppercase; transition: color 0.2s; }
   #maya-manasiyo-popup .mmp-later:hover { color: rgba(228,234,248,0.85); }
   #notes-drawer #pg-meas-host { padding-top: 8px; }
@@ -2349,8 +2349,8 @@
     color: rgba(220,232,255,0.23);
   }
   #notes-drawer .drawer-avatar-name {
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-section); font-style: italic; font-weight:400;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px; font-style: italic; font-weight: 300;
     letter-spacing: 0.04em;
     color: rgba(245,250,255,0.95);
     line-height: 1;
@@ -2358,13 +2358,13 @@
   /* v7.9: meta-row puts Settings + Logout side by side under the count. */
   #notes-drawer .drawer-meta-row {
     display: flex; justify-content: center; gap: 22px;
-    border-top:var(--maya-hairline) solid rgba(255,255,255,0.06);
+    border-top: 0.5px solid rgba(255,255,255,0.06);
     margin-top: auto;
     padding-top: 16px;
   }
   #notes-drawer .drawer-meta-row .drawer-settings-link {
     margin: 0; padding: 0;
-    border-top:none;
+    border-top: none;
     width: auto;
   }
 
@@ -2379,7 +2379,7 @@
     display: flex; flex-direction: column; gap: 6px;
   }
   #notes-drawer .avatar-face-buttons .drawer-action {
-    padding: 4px 12px; font-size:var(--maya-text-caption);
+    padding: 4px 12px; font-size: 9px;
   }
   #notes-drawer .avatar-meas-list {
     display: flex; flex-direction: column; gap: 5px;
@@ -2391,23 +2391,23 @@
   }
   #notes-drawer .meas-row label {
     flex: 1;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-style: italic; font-weight:400;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px; font-style: italic; font-weight: 300;
     color: rgba(225,235,250,0.85);
     text-align: left;
   }
   #notes-drawer .meas-row input {
     width: 64px;
     background: none;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
     padding: 3px 10px;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); letter-spacing: 0.04em;
+    font-family: 'Jost', sans-serif;
+    font-size: 11px; letter-spacing: 0.04em;
     color: rgba(245,250,255,0.95);
     outline: none; text-align: center;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     transition: border-color 0.2s;
   }
   #notes-drawer .meas-row input:focus { border-color: rgba(220,232,255,0.40); }
@@ -2420,10 +2420,10 @@
     box-shadow: inset 0 0 0 1px rgba(180,210,255,0.18), 0 0 10px rgba(180,210,255,0.15);
   }
   #notes-drawer .meas-row .meas-rec {
-    font-family:var(--maya-font-ui); font-style: normal;
-    font-size:var(--maya-text-caption); font-weight:400; letter-spacing: 0.18em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif; font-style: normal;
+    font-size: 7px; font-weight: 300; letter-spacing: 0.18em; text-transform: uppercase;
     color: rgba(180,210,255,0.85);
-    border:var(--maya-hairline) solid rgba(180,210,255,0.4); border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(180,210,255,0.4); border-radius: 100px;
     padding: 1px 6px; margin-left: 7px; vertical-align: middle; white-space: nowrap;
   }
   /* v7.6: thin-line group divider with a small centered uppercase header
@@ -2439,8 +2439,8 @@
     position: relative; top: -7px;
     display: inline-block;
     padding: 0 12px;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 9px; font-weight: 300;
     letter-spacing: 0.3em; text-transform: uppercase;
     color: rgba(200,220,255,0.55);
     background: transparent;
@@ -2453,13 +2453,13 @@
       rgba(15,15,25,0.95) 0%,
       rgba(15,15,25,0.95) 60%,
       rgba(15,15,25,0) 100%);
-    z-index: -1; border-radius:8px;
+    z-index: -1; border-radius: 8px;
   }
 
   /* Sub-menu title, same italic Cormorant flavor as the Client name. */
   #notes-drawer .drawer-sub-title {
-    font-family:var(--maya-font-ui);
-    font-style: italic; font-size:var(--maya-text-section); font-weight:400;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 18px; font-weight: 300;
     letter-spacing: 0.04em;
     color: rgba(245,250,255,0.95);
     text-align: center;
@@ -2473,18 +2473,18 @@
   }
   #notes-drawer #avatar-body::-webkit-scrollbar { width: 6px; }
   #notes-drawer #avatar-body::-webkit-scrollbar-track { background: transparent; }
-  #notes-drawer #avatar-body::-webkit-scrollbar-thumb { background: rgba(200,220,255,0.22); border-radius:3px; }
+  #notes-drawer #avatar-body::-webkit-scrollbar-thumb { background: rgba(200,220,255,0.22); border-radius: 3px; }
 
   /* v9.2: face-thumb used by the Avatar sub-menu face upload row. */
   .face-thumb {
-    width: 64px; height: 64px; border-radius:50%;
+    width: 64px; height: 64px; border-radius: 50%;
     background-size: cover; background-position: center;
     background-color: rgba(255,255,255,0.04);
-    border:var(--maya-hairline) solid rgba(200,220,255,0.25);
+    border: 0.5px solid rgba(200,220,255,0.25);
     flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); letter-spacing: 0.18em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif;
+    font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase;
     color: rgba(200,210,230,0.4);
     text-align: center;
   }
@@ -2497,18 +2497,18 @@
   #notes-drawer .drawer-client-big {
     width: 100%;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
     padding: 3px 12px;
     margin: 0 0 10px;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-section); font-weight:400; font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px; font-weight: 300; font-style: italic;
     letter-spacing: 0.04em;
     color: rgba(245,250,255,0.95);
     text-align: center;
     outline: none;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18);
@@ -2548,17 +2548,17 @@
   #notes-drawer .drawer-sessions-toggle {
     width: 100%;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
     padding: 8px 16px;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     cursor: pointer; transition: all 0.2s;
     text-align: center;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -2582,21 +2582,21 @@
     margin-top: 10px;
     max-height: 280px;
     overflow-y: auto;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.10);
-    border-radius:12px;
+    border: 0.5px solid rgba(255,255,255,0.10);
+    border-radius: 12px;
     background: rgba(255,255,255,0.02);
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
   }
   #notes-drawer .session-item {
     position: relative;
     padding: 10px 30px 10px 14px;
-    border-bottom:var(--maya-hairline) solid rgba(255,255,255,0.06);
+    border-bottom: 0.5px solid rgba(255,255,255,0.06);
     cursor: pointer;
     transition: background 0.15s;
     display: flex; flex-direction: column; gap: 2px;
   }
-  #notes-drawer .session-item:last-child { border-bottom:none; }
+  #notes-drawer .session-item:last-child { border-bottom: none; }
   #notes-drawer .session-item:hover {
     background: rgba(255,255,255,0.04);
   }
@@ -2605,15 +2605,15 @@
     box-shadow: inset 2px 0 0 rgba(160,200,255,0.55);
   }
   #notes-drawer .session-item-title {
-    font-family:var(--maya-font-brand);
+    font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-size:13px;
+    font-size: 13px;
     color: rgba(230,240,255,0.92);
   }
   #notes-drawer .session-item-meta {
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption);
-    font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 9px;
+    font-weight: 300;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: rgba(200,210,230,0.55);
@@ -2621,12 +2621,12 @@
   /* v11.22: × pinned to the top-right corner as a round bubble, shown on hover. */
   #notes-drawer .session-item-delete {
     position: absolute; top: 8px; right: 8px;
-    width: 22px; height: 22px; border-radius:50%;
+    width: 22px; height: 22px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     background: rgba(255,255,255,0.06);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.2);
+    border: 0.5px solid rgba(255,255,255,0.2);
     color: rgba(235,190,190,0.85);
-    font-size:var(--maya-text-body); line-height: 1;
+    font-size: 13px; line-height: 1;
     cursor: pointer; padding: 0;
     opacity: 0; transition: opacity 0.15s, color 0.15s, border-color 0.15s, background 0.15s;
   }
@@ -2640,10 +2640,10 @@
      belongs to a project, so it lives on the project. */
   #notes-drawer .session-item-share {
     position: absolute; top: 8px; right: 34px;
-    width: 22px; height: 22px; border-radius:50%;
+    width: 22px; height: 22px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     background: rgba(255,255,255,0.06);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.2);
+    border: 0.5px solid rgba(255,255,255,0.2);
     color: rgba(215,230,255,0.9);
     cursor: pointer; padding: 0;
     opacity: 0; transition: opacity 0.15s, color 0.15s, border-color 0.15s, background 0.15s;
@@ -2664,16 +2664,16 @@
   #notes-drawer .note-group { margin: 2px 0 10px; }
   #notes-drawer .note-group:last-child { margin-bottom: 2px; }
   #notes-drawer .note-group-title {
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.24em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 8.5px; letter-spacing: 0.24em; text-transform: uppercase;
     color: rgba(200,210,230,0.5);
     margin: 10px 0 4px;
   }
   #notes-drawer .sessions-empty {
     padding: 14px;
-    font-family:var(--maya-font-ui);
+    font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-size:var(--maya-text-caption);
+    font-size: 12px;
     color: rgba(200,210,230,0.5);
     text-align: center;
   }
@@ -2682,19 +2682,19 @@
   #notes-drawer .drawer-fabrics {
     flex: 1; min-width: 80px;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
     padding: 6px 14px;
     margin: 0;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     cursor: pointer; transition: all 0.2s;
     white-space: nowrap;
     text-align: center;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -2710,23 +2710,23 @@
     display: flex; gap: 6px; flex-wrap: wrap;
     margin: 6px 0 0;
     padding-top: 8px;
-    border-top:var(--maya-hairline) solid rgba(255,255,255,0.06);
+    border-top: 0.5px solid rgba(255,255,255,0.06);
   }
   /* v7.2: bottom action row, liquid glass. */
   #notes-drawer .drawer-action {
     flex: 1; min-width: 64px;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
     padding: 6px 14px;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     cursor: pointer; transition: all 0.2s;
     text-align: center;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -2741,13 +2741,13 @@
   #notes-drawer .drawer-action.violet:hover { color: rgba(255,255,255,1); }
   /* v6.8: Settings link centered, unified font. */
   #notes-drawer .drawer-settings-link {
-    background: none; border:none;
+    background: none; border: none;
     margin-top: 28px;
     padding: 12px 0 6px;
-    border-top:var(--maya-hairline) solid rgba(255,255,255,0.06);
+    border-top: 0.5px solid rgba(255,255,255,0.06);
     width: 100%;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     text-align: center; cursor: pointer; transition: color 0.2s;
@@ -2757,8 +2757,8 @@
   #notes-drawer a.drawer-settings-link { text-decoration: none; }
   /* v6.8: reference count, same font, centered. v10: canon white. */
   #notes-drawer .drawer-count {
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     padding: 15px 0 4px;
@@ -2768,8 +2768,8 @@
   /* v13.45: the drawer carries no button of its own. The top bar hamburger
      slides out with it (see #hamburger-toggle above) and closes it. */
   #notes-drawer h3 {
-    font-family:var(--maya-font-ui);
-    font-weight:400; font-size:var(--maya-text-caption);
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300; font-size: 11px;
     letter-spacing: 0.32em; text-transform: uppercase;
     color: rgba(200,220,255,0.55);
     margin: 22px 0 10px;
@@ -2777,31 +2777,31 @@
   #notes-drawer h3:first-of-type { margin-top: 0; }
   #notes-drawer .note-item {
     padding: 10px 0;
-    border-bottom:0.25px solid rgba(255,255,255,0.06);
-    font-size:var(--maya-text-caption); font-weight:400;
+    border-bottom: 0.25px solid rgba(255,255,255,0.06);
+    font-size: 12px; font-weight: 300;
     line-height: 1.55;
     color: rgba(220,225,240,0.88);
   }
-  #notes-drawer .note-item:last-child { border-bottom:none; }
+  #notes-drawer .note-item:last-child { border-bottom: none; }
   #notes-drawer .note-item .note-title {
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-body); line-height: 1.3;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px; line-height: 1.3;
     color: rgba(225,230,245,0.94);
     margin-bottom: 3px;
   }
   #notes-drawer .note-item .note-detail {
     font-style: italic;
     color: rgba(200,210,230,0.55);
-    font-size:var(--maya-text-caption);
+    font-size: 11px;
   }
   #notes-drawer .note-item .realism-dot {
     display: inline-block;
-    width: 5px; height: 5px; border-radius:50%;
+    width: 5px; height: 5px; border-radius: 50%;
     margin-right: 7px; vertical-align: middle;
   }
   #notes-drawer .notes-empty {
-    font-family:var(--maya-font-ui);
-    font-style: italic; font-size:var(--maya-text-body);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 13px;
     color: rgba(200,210,230,0.4);
     padding: 30px 0;
     text-align: center;
@@ -2817,12 +2817,12 @@
     list-style: none;
     cursor: pointer;
     padding: 10px 0 6px;
-    font-family:var(--maya-font-ui);
-    font-weight:400; font-size:var(--maya-text-caption);
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300; font-size: 11px;
     text-align: center;
     letter-spacing: 0.3em; text-transform: uppercase;
     color: rgba(200,220,255,0.6);
-    border-bottom:0.25px solid rgba(200,220,255,0.18);
+    border-bottom: 0.25px solid rgba(200,220,255,0.18);
     transition: color 0.2s;
     user-select: none;
   }
@@ -2846,8 +2846,8 @@
   }
   #notes-drawer .inspiration-caption {
     margin-top: 4px;
-    font-family:var(--maya-font-ui);
-    font-style: italic; font-size:var(--maya-text-caption);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 12px;
     color: rgba(220,210,240,0.6);
     text-transform: none; letter-spacing: 0.02em;
     text-align: center;
@@ -2856,8 +2856,8 @@
   /* refs grouped by tag header inside an inspiration */
   #notes-drawer .note-tag-block { margin: 10px 0 2px; }
   #notes-drawer .note-tag-header {
-    font-size:var(--maya-text-caption);
-    font-weight:400;
+    font-size: 8.5px;
+    font-weight: 300;
     letter-spacing: 0.28em;
     text-transform: uppercase;
     color: rgba(200,210,230,0.42);
@@ -2868,27 +2868,27 @@
   }
   #notes-drawer .note-tag-item {
     background: rgba(255,255,255,0.035);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.06);
-    border-radius:6px;
+    border: 0.5px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
     padding: 4px 9px;
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-size: 11px; font-weight: 300;
     color: rgba(220,225,240,0.85);
-    font-family:var(--maya-font-ui);
+    font-family: 'Jost', sans-serif;
   }
 
   /* full-canvas drop hint when dragging audio over the page */
   #canvas-drop-hint {
     display: none; position: fixed; inset: 0; z-index: 250;
     background: rgba(20,16,40,0.85);
-    backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     align-items: center; justify-content: center;
-    border:1px dashed rgba(200,220,255,0.5);
+    border: 1px dashed rgba(200,220,255,0.5);
     pointer-events: none;
   }
   #canvas-drop-hint.show { display: flex; }
   #canvas-drop-hint .hint {
-    font-family:var(--maya-font-ui);
-    font-style: italic; font-size:var(--maya-text-section); font-weight:400;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 22px; font-weight: 300;
     color: rgba(230,240,255,0.85);
     letter-spacing: 0.08em;
   }
@@ -2911,10 +2911,10 @@
         rgba(255,255,255,0.03) 25%,
         rgba(255,255,255,0.02) 65%,
         rgba(255,255,255,0.07) 100%);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:18px;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 18px;
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.30),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -2935,23 +2935,23 @@
   }
   .drawer-head .fabrics-back {
     position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-    padding: 4px 4px !important; font-size:9px !important; letter-spacing: 0.18em;
+    padding: 4px 4px !important; font-size: 9px !important; letter-spacing: 0.18em;
     color: rgba(200,210,230,0.55) !important;
   }
   .drawer-head .fabrics-back:hover { color: rgba(255,255,255,0.95) !important; }
   .drawer-head-title {
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-section); font-weight:400; letter-spacing: 0.06em;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px; font-weight: 400; letter-spacing: 0.06em;
     color: rgba(230,240,255,0.92); text-align: center;
   }
   .fabrics-tabs.centred { justify-content: center; padding-top: 2px; }
   .drawer-head .fabrics-tabs { padding: 0; }
   #fabrics-drawer .fabrics-back, #pinterest-drawer .fabrics-back {
     align-self: flex-start;
-    background: none; border:none;
+    background: none; border: none;
     padding: 18px 22px 0;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
     letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
     cursor: pointer; transition: color 0.2s;
@@ -2964,30 +2964,30 @@
   }
   .pin-drawer-foot .drawer-fabrics {
     flex: 1; background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22); border-radius:var(--maya-radius-pill);
-    padding: 9px 14px; font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400; letter-spacing: 0.15em; text-transform: uppercase;
+    border: 0.5px solid rgba(255,255,255,0.22); border-radius: 100px;
+    padding: 9px 14px; font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85); cursor: pointer; transition: all 0.2s;
   }
   .pin-drawer-foot .drawer-fabrics:disabled { opacity: 0.4; cursor: default; }
   .pin-drawer-foot .drawer-fabrics:hover:not(:disabled) { border-color: rgba(255,255,255,0.5); }
   #pinterest-drawer .pin-grid { max-height: none; }
   #pinterest-drawer .pin-note {
-    font-family:var(--maya-font-ui); font-style: italic; font-size:var(--maya-text-body);
+    font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14px;
     line-height: 1.6; color: rgba(230,238,255,0.7); text-align: center; padding: 10px 4px 16px;
   }
   #pinterest-drawer .pin-cta {
     display: block; margin: 0 auto; background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.24); border-radius:var(--maya-radius-pill);
-    padding: 9px 18px; font-family:var(--maya-font-ui); font-size:var(--maya-text-caption);
+    border: 0.5px solid rgba(255,255,255,0.24); border-radius: 100px;
+    padding: 9px 18px; font-family: 'Jost', sans-serif; font-size: 10px;
     letter-spacing: 0.16em; text-transform: uppercase; color: rgba(245,250,255,0.88);
     cursor: pointer;
   }
   #pinterest-drawer .pin-cta:hover { border-color: rgba(255,255,255,0.5); }
   #pinterest-drawer .pin-redirect {
-    font-family:ui-monospace, Menlo, monospace; font-size:var(--maya-text-caption); line-height: 1.6;
+    font-family: ui-monospace, Menlo, monospace; font-size: 10px; line-height: 1.6;
     color: rgba(245,250,255,0.9); background: rgba(255,255,255,0.04);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.16); border-radius:10px;
+    border: 0.5px solid rgba(255,255,255,0.16); border-radius: 10px;
     padding: 9px 10px; margin: 0 0 14px; word-break: break-all; text-align: center;
   }
   .fabrics-drawer-header {
@@ -2995,12 +2995,12 @@
     padding: 12px 22px 14px;
   }
   .fabrics-drawer-title {
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-section); font-weight:400; letter-spacing: 0.06em;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px; font-weight: 400; letter-spacing: 0.06em;
     color: rgba(230,240,255,0.92);
   }
   .fabrics-drawer-sub {
-    font-size:var(--maya-text-caption); letter-spacing: 0.22em; text-transform: uppercase;
+    font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
     color: rgba(200,210,230,0.4); margin-top: 5px;
   }
   .fabrics-drawer-actions { display: flex; gap: 8px; align-items: center; }
@@ -3010,11 +3010,11 @@
   }
   .fabrics-tab {
     background: none;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.16);
-    border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.16);
+    border-radius: 999px;
     padding: 5px 12px;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 9px; font-weight: 300;
     letter-spacing: 0.16em; text-transform: uppercase;
     color: rgba(200,210,230,0.5);
     cursor: pointer;
@@ -3029,16 +3029,16 @@
   .myfabrics-upload-row { display: flex; justify-content: center; padding: 4px 0 14px; }
   .fabrics-drawer-body { flex: 1; overflow-y: auto; padding: 16px 18px 30px; }
   .fabrics-empty {
-    font-family:var(--maya-font-ui); font-style: italic;
-    color: rgba(200,210,230,0.5); font-size:var(--maya-text-body);
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    color: rgba(200,210,230,0.5); font-size: 14px;
     text-align: center; padding: 50px 14px; line-height: 1.65;
   }
   .fabrics-empty .path {
-    font-family:var(--maya-font-ui); font-style: normal;
-    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif; font-style: normal;
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(200,220,255,0.7);
     background: rgba(200,220,255,0.06);
-    padding: 4px 9px; border-radius:4px; margin-top: 10px;
+    padding: 4px 9px; border-radius: 4px; margin-top: 10px;
     display: inline-block;
   }
   .fabrics-grid {
@@ -3046,8 +3046,8 @@
   }
   .fabric-card {
     background: rgba(255,255,255,0.02);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.06);
-    border-radius:8px; overflow: hidden;
+    border: 0.5px solid rgba(255,255,255,0.06);
+    border-radius: 8px; overflow: hidden;
     display: flex; flex-direction: column;
     transition: border-color 0.2s;
   }
@@ -3061,20 +3061,20 @@
      everything in it reads centered, per Fromsa. */
   .fabric-meta { padding: 4px 8px 6px; text-align: center; }
   .fabric-name-input {
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-body); color: rgba(230,240,255,0.92);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px; color: rgba(230,240,255,0.92);
     line-height: 1.15; margin-bottom: 1px;
-    border:none; background: none; width: 100%;
+    border: none; background: none; width: 100%;
     outline: none; padding: 0; text-align: center;
   }
-  .fabric-name-input:focus { color: #fff; border-bottom:var(--maya-hairline) solid rgba(200,220,255,0.5); }
+  .fabric-name-input:focus { color: #fff; border-bottom: 0.5px solid rgba(200,220,255,0.5); }
   .fabric-spec {
-    font-size:var(--maya-text-caption); letter-spacing: 0.08em; text-transform: uppercase;
+    font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase;
     color: rgba(200,210,230,0.55); line-height: 1.3; text-align: center;
   }
   .fabric-spec .dot { opacity: 0.4; margin: 0 5px; }
   .fabric-analyzing {
-    font-size:var(--maya-text-caption); letter-spacing: 0.18em; text-transform: uppercase;
+    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
     color: rgba(200,220,255,0.75); font-style: italic;
   }
 
@@ -3083,12 +3083,12 @@
   /* v10.2: canon glass + white-alpha hover. */
   .mode-choose {
     flex: 1; padding: 22px 18px;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22); border-radius:16px;
+    border: 0.5px solid rgba(255,255,255,0.22); border-radius: 16px;
     background: transparent; cursor: pointer;
     transition: all 0.2s; text-align: center;
-    font-family:var(--maya-font-ui);
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    font-family: 'Jost', sans-serif;
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -3099,13 +3099,13 @@
     background: rgba(255,255,255,0.04);
   }
   .mode-choose-title {
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-section); font-weight:400;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px; font-weight: 300;
     color: rgba(245,250,255,0.95);
     text-align: center;
   }
   .mode-choose-desc {
-    font-size:var(--maya-text-caption); line-height: 1.5;
+    font-size: 11px; line-height: 1.5;
     color: rgba(245,250,255,0.65);
   }
 
@@ -3118,8 +3118,8 @@
   /* v10.2: 0.5px hairline + canon white selected. */
   .fabric-pick {
     cursor: pointer; position: relative;
-    border-radius:8px; overflow: hidden;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border-radius: 8px; overflow: hidden;
+    border: 0.5px solid rgba(255,255,255,0.22);
     transition: border-color 0.2s;
   }
   .fabric-pick:hover { border-color: rgba(255,255,255,0.42); }
@@ -3133,24 +3133,24 @@
     position: absolute; bottom: 0; left: 0; right: 0;
     padding: 5px 7px;
     background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0));
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85); line-height: 1.2;
   }
   /* v10.2: glass-pill badge instead of opaque blue. */
   .fabric-pick .order-badge {
     position: absolute; top: 6px; right: 6px;
-    width: 22px; height: 22px; border-radius:50%;
+    width: 22px; height: 22px; border-radius: 50%;
     /* v13.43: a number on top of a busy swatch needs its own ground. */
     background: rgba(6,10,20,0.85);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.65);
+    border: 0.5px solid rgba(255,255,255,0.65);
     color: #fff;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
     align-items: center; justify-content: center;
     display: none;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -3168,14 +3168,14 @@
   .viewer-fabric-chip {
     display: flex; align-items: center; gap: 6px;
     /* v11.18: ~20% smaller than before. */
-    padding: 4px 13px 4px 4px; border-radius:var(--maya-radius-pill);
+    padding: 4px 13px 4px 4px; border-radius: 100px;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
+    border: 0.5px solid rgba(255,255,255,0.22);
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85);
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -3183,16 +3183,16 @@
     transition: all 0.2s;
   }
   .viewer-fabric-chip .swatch {
-    width: 26px; height: 26px; border-radius:50%;
+    width: 26px; height: 26px; border-radius: 50%;
     background-size: cover; background-position: center;
     background-color: rgba(255,255,255,0.05);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    border: 0.5px solid rgba(255,255,255,0.22);
     flex-shrink: 0;
   }
   .viewer-fabric-chip .chip-x {
-    background: none; border:none;
+    background: none; border: none;
     color: inherit; cursor: pointer;
-    font-size:var(--maya-text-caption); line-height: 1; padding: 0 6px;
+    font-size: 12px; line-height: 1; padding: 0 6px;
     opacity: 0.45;
   }
   .viewer-fabric-chip .chip-x:hover { opacity: 1; }
@@ -3221,7 +3221,7 @@
   .fabric-pick-grid::-webkit-scrollbar-track { background: transparent; }
   .fabric-pick-grid::-webkit-scrollbar-thumb {
     background: rgba(200,220,255,0.22);
-    border-radius:3px;
+    border-radius: 3px;
   }
   .fabric-pick-grid::-webkit-scrollbar-thumb:hover { background: rgba(200,220,255,0.45); }
   /* Firefox */
@@ -3238,16 +3238,16 @@
   #manual-ref-input {
     position: fixed; z-index: 60;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.42);
-    border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.42);
+    border-radius: 100px;
     padding: 6px 14px;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 12px; font-style: italic;
     color: rgba(245,250,255,0.95);
     outline: none;
     width: 140px;
     text-align: center;
-    backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%); -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow: 0 6px 18px rgba(0,0,0,0.35);
     animation: fadeUp 0.2s ease;
   }
@@ -3262,10 +3262,10 @@
   }
   .item-card .card-fabric-dot {
     /* v11.22: 20x20 (slightly smaller than the action icons). */
-    width: 20px; height: 20px; border-radius:50%;
+    width: 20px; height: 20px; border-radius: 50%;
     background-size: cover; background-position: center;
     background-color: rgba(0,0,0,0.4);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.6);
+    border: 1px solid rgba(255,255,255,0.6);
     box-shadow: 0 1px 3px rgba(0,0,0,0.4);
   }
 
@@ -3321,11 +3321,11 @@
   #onboarding-hints .hint-card {
     width: 240px;
     padding: 22px 22px 24px;
-    border-radius:16px;
+    border-radius: 16px;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    -webkit-backdrop-filter:var(--maya-frost);
-            backdrop-filter:var(--maya-frost);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+            backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -3333,16 +3333,16 @@
     text-align: center;
   }
   #onboarding-hints .hint-eyebrow {
-    font-family:var(--maya-font-ui);
-    font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.32em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
     color: rgba(245,250,255,0.55);
     margin-bottom: 10px;
   }
   #onboarding-hints .hint-body {
-    font-family:var(--maya-font-ui);
-    font-style: italic; font-weight:400;
-    font-size:var(--maya-text-body); line-height: 1.5;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-weight: 300;
+    font-size: 14px; line-height: 1.5;
     color: rgba(245,250,255,0.85);
   }
 
@@ -3359,7 +3359,7 @@
     scrollbar-color: rgba(255,255,255,0.22) transparent;
   }
   #favorites-scroller::-webkit-scrollbar { height: 8px; }
-  #favorites-scroller::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.22); border-radius:4px; }
+  #favorites-scroller::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.22); border-radius: 4px; }
 
   /* ───────── v13.3: THE COMMUNITY WALL ─────────
      Screen 0. Same glass language as favorites, one size smaller, and it
@@ -3411,11 +3411,11 @@
     position: absolute; left: 50%; top: 50%;
     transform: translate(-50%, -50%);
     width: 300px; padding: 22px 22px 24px;
-    border-radius:16px;
+    border-radius: 16px;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    -webkit-backdrop-filter:var(--maya-frost);
-            backdrop-filter:var(--maya-frost);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+            backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -3426,14 +3426,14 @@
   }
   body.viewing-community:not(.has-community) #community-empty { opacity: 1; }
   #community-empty .hint-eyebrow {
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.32em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
     color: rgba(245,250,255,0.55); margin-bottom: 10px;
   }
   #community-empty .hint-body {
-    font-family:var(--maya-font-ui);
-    font-style: italic; font-weight:400;
-    font-size:var(--maya-text-body); line-height: 1.5;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-weight: 300;
+    font-size: 14px; line-height: 1.5;
     color: rgba(245,250,255,0.85);
   }
   /* v13.17: the card carries the WHOLE three-view render, never cropped,
@@ -3446,12 +3446,12 @@
   .community-card {
     flex: 0 0 auto;
     width: 320px;
-    border-radius:16px;
+    border-radius: 16px;
     overflow: hidden;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(220,232,255,0.40);
-    -webkit-backdrop-filter:var(--maya-frost);
-            backdrop-filter:var(--maya-frost);
+    border: 0.5px solid rgba(220,232,255,0.40);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+            backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.32),
       inset 0 -1px 1px rgba(0,0,0,0.20),
@@ -3467,7 +3467,7 @@
     outline: none;
     border-color: rgba(220,232,255,0.55);
   }
-  .community-card .cc-image { overflow: hidden; border-radius:inherit; }
+  .community-card .cc-image { overflow: hidden; border-radius: inherit; }
   .community-card img.cc-img {
     width: 100%; height: auto;
     /* CONTAIN, not cover: the three view sheet arrives whole, side, front
@@ -3493,14 +3493,14 @@
   .community-card:hover .cc-meta,
   .community-card:focus-visible .cc-meta { opacity: 1; }
   .community-card .cc-author {
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.26em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 9.5px; letter-spacing: 0.26em; text-transform: uppercase;
     color: rgba(245,250,255,0.62);
   }
   .community-card .cc-summary {
-    font-family:var(--maya-font-ui);
-    font-style: italic; font-weight:400;
-    font-size:var(--maya-text-caption); line-height: 1.35;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-weight: 300;
+    font-size: 12px; line-height: 1.35;
     color: rgba(245,250,255,0.82);
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     overflow: hidden;
@@ -3511,7 +3511,7 @@
     align-items: center; justify-content: center;
     flex-direction: column; gap: 14px;
     background: rgba(3,6,16,0.86);
-    -webkit-backdrop-filter:var(--maya-frost); backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
     cursor: zoom-out;
     padding: 40px;
   }
@@ -3519,14 +3519,14 @@
   #community-lightbox img {
     max-width: min(92vw, 900px); max-height: 78vh;
     object-fit: contain;
-    border-radius:14px;
-    border:var(--maya-hairline) solid rgba(220,232,255,0.30);
+    border-radius: 14px;
+    border: 0.5px solid rgba(220,232,255,0.30);
     box-shadow: 0 0 30px 6px rgba(200,222,255,0.20), 0 14px 44px rgba(0,0,0,0.5);
   }
   #community-lightbox .cl-meta {
-    font-family:var(--maya-font-ui);
-    font-style: italic; font-weight:400;
-    font-size:var(--maya-text-body); line-height: 1.5;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-weight: 300;
+    font-size: 15px; line-height: 1.5;
     color: rgba(245,250,255,0.82);
     max-width: 640px; text-align: center;
   }
@@ -3558,12 +3558,12 @@
        512×1024 panel halfway so head+feet aren't clipped. */
     width: 280px;
     max-height: 82vh;
-    border-radius:16px;
+    border-radius: 16px;
     overflow: hidden;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(220,232,255,0.40);
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    border: 0.5px solid rgba(220,232,255,0.40);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.32),
       inset 0 -1px 1px rgba(0,0,0,0.20),
@@ -3578,7 +3578,7 @@
   .favorite-card::after {
     content: '';
     position: absolute; inset: 0;
-    border-radius:inherit;
+    border-radius: inherit;
     box-shadow: inset 0 0 18px 2px rgba(220,232,255,0.36);
     opacity: 0.28;
     pointer-events: none;
@@ -3624,17 +3624,17 @@
     position: relative;
     display: inline-flex; align-items: center; justify-content: center;
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
     padding: 5px 14px;
     min-width: 0;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 9.5px; font-weight: 300;
     letter-spacing: 0.14em; text-transform: uppercase;
     color: rgba(245,250,255,0.9);
     cursor: pointer;
-    -webkit-backdrop-filter:var(--maya-frost);
-            backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+            backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.24),
       inset 0 -1px 1px rgba(0,0,0,0.16),
@@ -3664,9 +3664,9 @@
     max-width: min(640px, 75vw);
     margin: 14px auto 6px;
     padding: 0 14px;
-    font-family:var(--maya-font-ui);
+    font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-size:var(--maya-text-body);
+    font-size: 14px;
     line-height: 1.45;
     color: rgba(245,250,255,0.85);
     text-align: center;
@@ -3706,7 +3706,7 @@
     max-width: 100vw; max-height: 100vh;
     object-fit: contain;
     cursor: zoom-out;
-    border-radius:0;
+    border-radius: 0;
   }
   #garment-modal[data-photo="full"] .viewer-close {
     position: fixed; top: 22px; right: 22px;
@@ -3720,9 +3720,9 @@
     position: absolute; top: -14px; left: -14px; z-index: 310;
     width: 30px; height: 30px; padding: 0;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(8,12,24,0.45); border:var(--maya-hairline) solid rgba(255,255,255,0.28);
-    border-radius:50%; cursor: pointer;
-    -webkit-backdrop-filter:var(--maya-frost); backdrop-filter:var(--maya-frost);
+    background: rgba(8,12,24,0.45); border: 0.5px solid rgba(255,255,255,0.28);
+    border-radius: 50%; cursor: pointer;
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
     transition: border-color 0.2s, transform 0.2s, background 0.2s;
   }
   .viewer-heart:hover { border-color: rgba(255,255,255,0.6); transform: scale(1.06); }
@@ -3746,60 +3746,60 @@
   #viewer-notes .vn-pills { justify-content: center; }
   /* v14.06: the five-line profile every picture carries: bio, aesthetic,
      silhouette, color, era. Subheadlines with their answers underneath. */
-  #viewer-notes .vn-profile .note-item { border-bottom:0.25px solid rgba(255,255,255,0.06); padding: 7px 0; }
+  #viewer-notes .vn-profile .note-item { border-bottom: 0.25px solid rgba(255,255,255,0.06); padding: 7px 0; }
   /* v14.23: the five lines read white. The old rule lost to the generic
      .note-item .note-detail rule (same specificity, declared later), which
      is why Bio and friends came out dim and italic. */
   /* v14.26: reversed, as asked: the title (Aesthetic) bold and bright, the
      answer under it (futuristic chic) softer. */
-  #viewer-notes .vn-profile .note-item .note-detail { font-style: normal; font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-body); line-height: 1.4; color: rgba(222,230,245,0.74); }
-  #viewer-notes .vn-profile .note-item .note-group-title { color: rgba(255,255,255,0.98); font-weight:600; margin: 0 0 3px; }
+  #viewer-notes .vn-profile .note-item .note-detail { font-style: normal; font-family: 'Cormorant Garamond', serif;
+    font-size: 14px; line-height: 1.4; color: rgba(222,230,245,0.74); }
+  #viewer-notes .vn-profile .note-item .note-group-title { color: rgba(255,255,255,0.98); font-weight: 600; margin: 0 0 3px; }
   #viewer-notes::-webkit-scrollbar { display: none; }
   #garment-modal.open:not([data-photo="full"]) #viewer-notes { display: block; }
   /* Same type, same rhythm, same hairlines as the notes that used to live in
      the drawer. Only the home changed. */
   #viewer-notes .vn-head {
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.28em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 9.5px; letter-spacing: 0.28em; text-transform: uppercase;
     color: rgba(255,255,255,0.96);
     padding-bottom: 10px; margin-bottom: 4px;
-    border-bottom:var(--maya-hairline) solid rgba(255,255,255,0.08);
+    border-bottom: 0.5px solid rgba(255,255,255,0.08);
   }
   #viewer-notes .note-group { margin: 2px 0 10px; }
   #viewer-notes .note-group:last-child { margin-bottom: 2px; }
   #viewer-notes .note-group-title {
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.24em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 8.5px; letter-spacing: 0.24em; text-transform: uppercase;
     color: rgba(225,235,250,0.72);
     margin: 12px 0 4px;
   }
   #viewer-notes .note-item {
     padding: 9px 0;
-    border-bottom:0.25px solid rgba(255,255,255,0.06);
-    font-size:var(--maya-text-caption); font-weight:400; line-height: 1.55;
+    border-bottom: 0.25px solid rgba(255,255,255,0.06);
+    font-size: 12px; font-weight: 300; line-height: 1.55;
     color: rgba(245,248,255,0.96);
   }
-  #viewer-notes .note-item:last-child { border-bottom:none; }
+  #viewer-notes .note-item:last-child { border-bottom: none; }
   #viewer-notes .note-item .note-title {
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-body); line-height: 1.35;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px; line-height: 1.35;
     color: rgba(255,255,255,0.97);
     margin-bottom: 3px;
   }
   #viewer-notes .vn-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
   #viewer-notes .vn-pill {
     display: inline-flex; align-items: center; gap: 6px;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.24); border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.24); border-radius: 999px;
     padding: 3px 9px 3px 11px;
-    font-family:var(--maya-font-ui); font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif; font-size: 9px; font-weight: 300;
     letter-spacing: 0.14em; text-transform: uppercase;
     color: rgba(230,238,252,0.88);
   }
   #viewer-notes .vn-pill.deselected { opacity: 0.4; text-decoration: line-through; }
   #viewer-notes .vn-pill-x {
-    background: none; border:none; padding: 0; margin: 0;
-    color: rgba(238,242,255,0.5); font-size:var(--maya-text-caption); line-height: 1; cursor: pointer;
+    background: none; border: none; padding: 0; margin: 0;
+    color: rgba(238,242,255,0.5); font-size: 11px; line-height: 1; cursor: pointer;
   }
   #viewer-notes .vn-pill-x:hover { color: #fff; }
   /* v13.44: the notes column IS the attributes now. The old toggle and chip
@@ -3808,19 +3808,19 @@
     #garment-modal .attributes-toggle, #garment-modal #viewer-refs { display: none !important; }
   }
   #viewer-notes .vn-dot {
-    display: inline-block; width: 6px; height: 6px; border-radius:50%;
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
     margin-right: 8px; vertical-align: middle;
   }
   #viewer-notes .note-item .note-detail {
-    font-style: italic; color: rgba(200,210,230,0.55); font-size:var(--maya-text-caption);
+    font-style: italic; color: rgba(200,210,230,0.55); font-size: 11px;
   }
   #viewer-notes .vn-caption {
-    font-family:var(--maya-font-ui); font-style: italic;
-    font-size:var(--maya-text-body); line-height: 1.55; color: rgba(238,244,255,0.86);
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 14px; line-height: 1.55; color: rgba(238,244,255,0.86);
   }
   #viewer-notes .notes-empty {
-    font-family:var(--maya-font-ui);
-    font-style: italic; font-size:var(--maya-text-body);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 13px;
     color: rgba(200,210,230,0.4); padding: 22px 0; text-align: center;
   }
   /* v13.39: the picture is centred, as it was. The notes live in the margin
@@ -3865,22 +3865,22 @@
   #staged-chips { display: none; gap: 10px; align-items: center; justify-content: center; }
   #staged-chips.has-staged { display: flex; }
   .staged-chip {
-    position: relative; width: 34px; height: 34px; border-radius:50%;
-    border:var(--maya-hairline) solid rgba(220,232,255,0.40);
+    position: relative; width: 34px; height: 34px; border-radius: 50%;
+    border: 0.5px solid rgba(220,232,255,0.40);
     background-size: cover; background-position: center;
     background-color: rgba(255,255,255,0.06);
     box-shadow: 0 2px 10px rgba(0,0,0,0.4);
   }
   .staged-chip .staged-x {
     position: absolute; top: -7px; right: -7px;
-    width: 16px; height: 16px; border-radius:50%;
-    background: rgba(6,10,20,0.9); border:var(--maya-hairline) solid rgba(255,255,255,0.4);
-    color: rgba(245,250,255,0.9); font-size:var(--maya-text-caption); line-height: 1;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: rgba(6,10,20,0.9); border: 0.5px solid rgba(255,255,255,0.4);
+    color: rgba(245,250,255,0.9); font-size: 10px; line-height: 1;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; padding: 0;
   }
   .staged-chip-label {
-    font-family:var(--maya-font-ui); font-size:var(--maya-text-caption); letter-spacing: 0.16em;
+    font-family: 'Jost', sans-serif; font-size: 8px; letter-spacing: 0.16em;
     text-transform: uppercase; color: rgba(200,210,230,0.5);
   }
   /* The three are there when a favorite is open too. Only the atelier's own
@@ -3932,15 +3932,15 @@
      Collapsed by default; opens when #garment-modal gets .attrs-open. */
   .attributes-toggle {
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
     padding: 5px 16px;
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
     color: rgba(245,250,255,0.85); cursor: pointer;
     margin: 0 auto;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -3988,17 +3988,17 @@
      of modify mode, not a navigation step. */
   .modify-back-link {
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:50%;
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 50%;
     width: 28px; height: 28px;
     display: inline-flex; align-items: center; justify-content: center;
     padding: 0;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-body); line-height: 1;
+    font-family: 'Jost', sans-serif;
+    font-size: 14px; line-height: 1;
     color: rgba(245,250,255,0.85);
     cursor: pointer;
-    -webkit-backdrop-filter:var(--maya-frost);
-            backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+            backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18),
@@ -4052,9 +4052,9 @@
       rgba(0,0,0,0) 0%,
       rgba(0,0,0,0.55) 45%,
       rgba(0,0,0,0.9) 100%);
-    font-family:var(--maya-font-ui);
+    font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-size:var(--maya-text-body); line-height: 1.4;
+    font-size: 15px; line-height: 1.4;
     color: rgba(245,250,255,0.96);
     text-align: center;
     opacity: 0;
@@ -4069,7 +4069,7 @@
     position: absolute; inset: 0;
     width: 100%; height: 100%;
     object-fit: cover;
-    border-radius:inherit;
+    border-radius: inherit;
     opacity: 0;
     transition: opacity 0.35s ease;
     pointer-events: none;
@@ -4078,14 +4078,14 @@
   /* "rendering 360°…" badge while Runway is still generating the clip. */
   .favorite-card .fc-rendering {
     position: absolute; top: 12px; left: 12px;
-    font-family:var(--maya-font-ui);
-    font-size:var(--maya-text-caption); font-weight:400;
+    font-family: 'Jost', sans-serif;
+    font-size: 9px; font-weight: 300;
     letter-spacing: 0.18em; text-transform: uppercase;
     color: rgba(225,235,255,0.9);
     background: rgba(0,0,0,0.45);
-    padding: 5px 11px; border-radius:var(--maya-radius-pill);
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    padding: 5px 11px; border-radius: 100px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
@@ -4100,9 +4100,9 @@
     left: 0; right: 0; bottom: 0;
     padding: 14px 18px 16px;
     background: linear-gradient(180deg, rgba(8,10,18,0.0) 0%, rgba(8,10,18,0.55) 30%, rgba(8,10,18,0.85) 100%);
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
-    border-top:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    border-top: 0.5px solid rgba(255,255,255,0.22);
     display: flex; flex-wrap: wrap; gap: 6px;
     align-items: center; justify-content: center;
     opacity: 0;
@@ -4116,17 +4116,17 @@
   }
   .favorite-card .fc-tag {
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:var(--maya-radius-pill);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
     padding: 3px 11px;
-    font-family:var(--maya-font-ui);
-    font-weight:400;
-    font-size:var(--maya-text-caption);
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    font-size: 9px;
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: rgba(245,250,255,0.85);
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 1px rgba(255,255,255,0.28),
       inset 0 -1px 1px rgba(0,0,0,0.18);
@@ -4135,9 +4135,9 @@
     width: 100%;
     margin-top: 4px;
     text-align: center;
-    font-family:var(--maya-font-ui);
+    font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-size:var(--maya-text-caption);
+    font-size: 11px;
     line-height: 1.4;
     color: rgba(245,250,255,0.72);
   }
@@ -4162,10 +4162,10 @@
     padding: 5px 5px;
     /* liquid-glass pill, canon recipe */
     background: transparent;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:var(--maya-radius-pill);
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    border-radius: 100px;
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,0.28),
       inset 0 -1px 0 rgba(0,0,0,0.18),
@@ -4180,8 +4180,8 @@
      v10.21: active dot brightened from 0.72 → 1.0 (~39% brighter) per
      Fromsa, the swipe affordance was too easy to miss. */
   .page-dot {
-    width: 6px; height: 6px; border-radius:50%;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+    width: 6px; height: 6px; border-radius: 50%;
+    border: 0.5px solid rgba(255,255,255,0.22);
     background: transparent;
     cursor: pointer;
     transition: all 0.25s;
@@ -4202,8 +4202,8 @@
   #thankyou {
     position: fixed; inset: 0; z-index: 9500;
     background: rgba(8,10,18,0.55);
-    -webkit-backdrop-filter:var(--maya-frost);
-            backdrop-filter:var(--maya-frost);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+            backdrop-filter: blur(40px) saturate(180%);
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     gap: 18px;
@@ -4213,18 +4213,18 @@
   }
   #thankyou.show { opacity: 1; pointer-events: auto; }
   #thankyou .ty-title {
-    font-family:var(--maya-font-brand);
+    font-family: 'Cormorant Garamond', serif;
     /* v11.22: "Submitted to Maya", bold. Size eased down since the line is
        longer than the old "Thank you". */
-    font-weight:600;
-    font-size:clamp(44px, 8vw, 92px);
+    font-weight: 600;
+    font-size: clamp(44px, 8vw, 92px);
     color: #ffffff;
     letter-spacing: 0.1em;
     text-shadow: none;
   }
   #thankyou .ty-sub {
-    font-family:var(--maya-font-ui);
-    font-size:10px; font-weight:300;
+    font-family: 'Jost', sans-serif;
+    font-size: 10px; font-weight: 300;
     letter-spacing: 0.38em; text-transform: uppercase;
     color: rgba(220,225,240,0.7);
   }
@@ -4240,7 +4240,6 @@
   gtag('js', new Date());
   gtag('config', 'G-ETTJ6PXEMM');
 </script>
-<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=4">
 </head>
 <body>
 <!-- PLAYGROUND. Fromsa's private copy for trying new things. Promoted to
@@ -4269,7 +4268,7 @@
     background:
       linear-gradient(rgba(0,4,12,0.42), rgba(0,4,12,0.62)),
       #000 url("/aesthetics/ui/birth-of-a-star.png") center/cover no-repeat;
-    font-family:var(--maya-font-ui);
+    font-family: 'Cormorant Garamond', serif;
     color: rgba(245,250,255,0.95);
     transition: opacity 0.4s ease;
   }
@@ -4285,23 +4284,23 @@
     text-align: center;
   }
   #signin-gate .signin-wordmark {
-    font-family:var(--maya-font-brand);
-    font-weight:600;
-    font-size:104px;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 104px;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     line-height: 1;
     margin-bottom: 6px;
   }
   #signin-gate .signin-tag {
-    font-family:var(--maya-font-ui); font-style: italic;
-    font-size:var(--maya-text-section); line-height: 1.4;
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 17px; line-height: 1.4;
     color: rgba(245,250,255,0.75);
     margin: 0;
   }
   #signin-gate .signin-sub {
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.28em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
     color: rgba(245,250,255,0.45);
     margin: 0;
   }
@@ -4318,52 +4317,52 @@
   #tos-modal {
     position: fixed; inset: 0; z-index: 4000;
     background: rgba(2,4,10,0.66);
-    backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     display: none; align-items: center; justify-content: center; padding: 20px;
   }
   #tos-modal.open { display: flex; }
   #tos-modal .tos-sheet {
     width: min(620px, 94vw); max-height: min(78vh, 720px);
     display: flex; flex-direction: column;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22); border-radius:22px;
+    border: 0.5px solid rgba(255,255,255,0.22); border-radius: 22px;
     background: rgba(8,12,26,0.92);
-    backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost);
+    backdrop-filter: blur(26px) saturate(180%); -webkit-backdrop-filter: blur(26px) saturate(180%);
     box-shadow: 0 18px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.10);
     padding: 26px 26px 20px;
   }
   #tos-modal .tos-head {
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.3em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase;
     color: rgba(245,250,255,0.85); margin-bottom: 4px; text-align: center;
   }
   #tos-modal .tos-sub {
-    font-family:var(--maya-font-ui); font-style: italic;
-    font-size:var(--maya-text-body); color: rgba(238,242,255,0.5); margin-bottom: 14px; text-align: center;
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 14px; color: rgba(238,242,255,0.5); margin-bottom: 14px; text-align: center;
   }
   #tos-modal .tos-scroll {
     flex: 1; min-height: 0; overflow-y: auto; padding-right: 12px;
-    font-family:var(--maya-font-ui); font-size:var(--maya-text-body); line-height: 1.65;
+    font-family: 'Cormorant Garamond', serif; font-size: 15.5px; line-height: 1.65;
     color: rgba(238,242,255,0.86); text-align: center;   /* v13.63: the document reads centered */
   }
   #tos-modal .tos-scroll h3 {
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.24em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase;
     color: rgba(245,250,255,0.75); margin: 16px 0 6px; text-align: center;
   }
   #tos-modal .tos-scroll h3:first-child { margin-top: 0; }
   #tos-modal .tos-scroll p { margin-bottom: 10px; }
-  #tos-modal .tos-scroll p b { color: #fff; font-weight:400; }
+  #tos-modal .tos-scroll p b { color: #fff; font-weight: 400; }
   #tos-modal .tos-scroll a { color: rgba(190,214,255,0.95); }
   #tos-modal .tos-foot {
     display: flex; align-items: center; justify-content: space-between;
     gap: 12px; margin-top: 16px; padding-top: 14px;
-    border-top:var(--maya-hairline) solid rgba(255,255,255,0.12);
+    border-top: 0.5px solid rgba(255,255,255,0.12);
   }
   #tos-modal .tos-agree {
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.18em; text-transform: uppercase;
-    padding: 9px 22px; border-radius:var(--maya-radius-pill); cursor: pointer;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.5);
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase;
+    padding: 9px 22px; border-radius: 100px; cursor: pointer;
+    border: 0.5px solid rgba(255,255,255,0.5);
     background: rgba(245,250,255,0.92); color: #0b0e16;
     transition: opacity 0.25s;
   }
@@ -4372,16 +4371,16 @@
     background: transparent; color: rgba(245,250,255,0.7);
   }
   #tos-modal .tos-decline {
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.16em; text-transform: uppercase;
-    padding: 8px 14px; border-radius:var(--maya-radius-pill); cursor: pointer;
-    border:var(--maya-hairline) solid rgba(255,255,255,0.2); background: transparent;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 8px 14px; border-radius: 100px; cursor: pointer;
+    border: 0.5px solid rgba(255,255,255,0.2); background: transparent;
     color: rgba(238,242,255,0.5);
   }
   #tos-modal .tos-decline:hover { color: rgba(238,242,255,0.85); }
   #signin-gate .signin-fineprint {
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.20em; text-transform: uppercase;
+    font-family: 'Jost', sans-serif; font-weight: 300;
+    font-size: 9px; letter-spacing: 0.20em; text-transform: uppercase;
     color: rgba(245,250,255,0.35);
     text-align: center;
   }
@@ -4409,9 +4408,9 @@
     #top-bar { padding: 0 12px; }
     #top-left-brand { margin-left: -6px; max-width: calc(100vw - 92px); overflow: hidden; }
     #top-left-brand .maya-logo-mark.tiny { width: 40px; height: 40px; flex-shrink: 0; }
-    #top-left-brand .brand-title { font-size:20px; }
-    #top-left-brand .brand-title.is-favorites { font-size:14px; }
-    #top-left-brand .brand-status { font-size:var(--maya-text-caption); white-space: nowrap; }
+    #top-left-brand .brand-title { font-size: 20px; }
+    #top-left-brand .brand-title.is-favorites { font-size: 14px; }
+    #top-left-brand .brand-status { font-size: 12px; white-space: nowrap; }
     .top-btn.hamburger { width: 30px; height: 26px; }
     /* drawer pane can never be wider than the screen */
     .hpane-drawer { width: 100vw; }
@@ -4424,7 +4423,7 @@
                     bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
     #notes-drawer { top: 64px; right: 12px; left: 12px;
                     bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-                    padding: 18px 16px 16px; border-radius:20px; }
+                    padding: 18px 16px 16px; border-radius: 20px; }
     #notes-drawer .drawer-avatar-row { margin-top: 6px; }
     /* favorites: reclaim the side padding, size cards to the hand */
     #favorites-scroller { padding: 24px 14px calc(24px + env(safe-area-inset-bottom)); }
@@ -4435,15 +4434,15 @@
     .item-card, .item-card.inspo { max-width: min(200px, calc(100vw - 48px)); }
     .item-card.inspo .inspo-thumb { max-width: min(200px, calc(100vw - 48px)); max-height: 260px; }
     /* v13.45: type steps down a notch on a phone. */
-    .item-title { font-size:13px; }
-    .item-card.inspo .item-title { font-size:11px; }
-    .item-detail { font-size:var(--maya-text-caption); }
-    #notes-drawer a, #notes-drawer button.drawer-link { font-size:var(--maya-text-body); }
-    .top-btn { font-size:var(--maya-text-caption); }
+    .item-title { font-size: 13px; }
+    .item-card.inspo .item-title { font-size: 11px; }
+    .item-detail { font-size: 9px; }
+    #notes-drawer a, #notes-drawer button.drawer-link { font-size: 13.5px; }
+    .top-btn { font-size: 9px; }
     /* lighter glass on phones, blur is the priciest effect on mobile GPUs;
        this is the single biggest smoothness win per frame. */
-    .item-card { backdrop-filter:var(--maya-frost);
-                 -webkit-backdrop-filter:var(--maya-frost); }
+    .item-card { backdrop-filter: blur(12px) saturate(160%);
+                 -webkit-backdrop-filter: blur(12px) saturate(160%); }
     /* viewer close button stays fully on-screen */
     #garment-image-wrap .viewer-close { top: 6px; right: 6px; }
     #garment-image-wrap .viewer-heart { top: 6px; left: 6px; }
@@ -4467,7 +4466,7 @@
     /* toast: sensible position on a short screen */
     #toast { bottom: calc(96px + env(safe-area-inset-bottom)); max-width: 92vw; }   /* v14.07: lower here too */
     /* sign-in gate: wordmark scales with the screen */
-    #signin-gate .signin-wordmark { font-size:clamp(48px, 18vw, 104px); }
+    #signin-gate .signin-wordmark { font-size: clamp(48px, 18vw, 104px); }
     /* modals fit */
     .modal-card { max-width: 94vw; max-height: 86vh; overflow-y: auto; }
     /* listening ring shrinks */
@@ -4479,25 +4478,25 @@
     .page-dot { width: 6px; height: 6px; }
     #page-indicator { left: 6px; gap: 8px; padding: 4px 4px; }
     /* legibility floor + iOS focus-zoom prevention */
-    input, textarea { font-size:16px !important; }
+    input, textarea { font-size: 16px !important; }
     #manual-ref-input { width: min(230px, 70vw); }
     /* v11.33: bottom-bar controls smaller per Fromsa; upload-inspo nudged
        down toward the listen pill. */
-    .input-link { font-size:var(--maya-text-caption); padding: 5px 10px; }
-    .action-btn { font-size:var(--maya-text-caption); padding: 6px 14px; }
+    .input-link { font-size: 9px; padding: 5px 10px; }
+    .action-btn { font-size: 10px; padding: 6px 14px; }
     #voice-bar { min-height: 34px; min-width: 140px; padding: 5px 14px; }
-    #voice-text { font-size:var(--maya-text-caption); }
+    #voice-text { font-size: 9px; }
     #secondary-row { margin-bottom: 4px; }
     /* lighter GPU load: soften the heaviest glass effects */
-    .modal { backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost); }
+    .modal { backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
     /* v13.90: the drawer type steps down on a phone, the same ~0.88 desktop→
        mobile ratio the rest of the app already uses, so the new Users header,
        Projects pill and Stats read at phone scale instead of desktop scale. */
-    #notes-drawer .pg-tabtitle { font-size:var(--maya-text-section); }
+    #notes-drawer .pg-tabtitle { font-size: 17px; }
     #notes-drawer .pg-avatar-side .drawer-avatar-name,
-    #notes-drawer .drawer-avatar-name { font-size:var(--maya-text-section); }
-    #notes-drawer .pg-project-beside { font-size:var(--maya-text-section); padding: 1px 13px; }
-    #notes-drawer .pg-project-beside-caret { font-size:var(--maya-text-caption); }
+    #notes-drawer .drawer-avatar-name { font-size: 17px; }
+    #notes-drawer .pg-project-beside { font-size: 17px; padding: 1px 13px; }
+    #notes-drawer .pg-project-beside-caret { font-size: 11px; }
     /* v13.90: on a narrow phone the name keeps its natural width instead of
        being squeezed to "Fro…" — it never shrinks and its ellipsis is off, so a
        tight row wraps the Projects pill to its own right-aligned line instead. */
@@ -4506,9 +4505,9 @@
       flex: 0 0 auto; overflow: visible; text-overflow: clip; max-width: none; }
     #notes-drawer .pg-avatar-nameline .pg-project-beside { flex: 0 1 auto; min-width: 0; overflow: hidden; }
     #notes-drawer .pg-gauge-wrap, #notes-drawer .pg-gauge { width: 104px; height: 104px; }
-    #notes-drawer .pg-gauge-value { font-size:var(--maya-text-section); }
-    #notes-drawer .pg-stat-num { font-size:var(--maya-text-section); }
-    #notes-drawer .pg-fold summary { font-size:var(--maya-text-caption); }
+    #notes-drawer .pg-gauge-value { font-size: 22px; }
+    #notes-drawer .pg-stat-num { font-size: 18px; }
+    #notes-drawer .pg-fold summary { font-size: 9px; }
   }
   /* v14.29: TABLET FIT. An iPad sits between the phone rules (640 and
      under) and the desktop (1280 and over) and used to get the desktop
@@ -4532,13 +4531,13 @@
      mobile GPU, and the iPad was paying the desktop price on every scroll,
      glide and drag. Nothing changes on a mouse. */
   @media (pointer: coarse) {
-    .item-card { backdrop-filter:var(--maya-frost);
-                 -webkit-backdrop-filter:var(--maya-frost); }
-    .modal { backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost); }
+    .item-card { backdrop-filter: blur(12px) saturate(160%);
+                 -webkit-backdrop-filter: blur(12px) saturate(160%); }
+    .modal { backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
     #notes-drawer, #fabrics-drawer, #pinterest-drawer {
-      backdrop-filter:var(--maya-frost);
-      -webkit-backdrop-filter:var(--maya-frost); }
-    #voice-bar { backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost); }
+      backdrop-filter: blur(20px) saturate(170%);
+      -webkit-backdrop-filter: blur(20px) saturate(170%); }
+    #voice-bar { backdrop-filter: blur(14px) saturate(170%); -webkit-backdrop-filter: blur(14px) saturate(170%); }
   }
   /* v13.33: on a phone the finger needs a bigger target than the eye needs a
      bigger label. Nothing here changes a type size, only the area you can hit,
@@ -17731,21 +17730,21 @@ if (typeof toggleNotesDrawer === 'function') {
   /* the background cards read like the fabric cards: two columns, a generous
      image, the name underneath each one */
   #pg-bg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-  .pg-bg-card { background: rgba(255,255,255,0.02); border:var(--maya-hairline) solid rgba(255,255,255,0.06);
-    border-radius:8px; overflow: hidden; transition: border-color 0.2s; }
+  .pg-bg-card { background: rgba(255,255,255,0.02); border: 0.5px solid rgba(255,255,255,0.06);
+    border-radius: 8px; overflow: hidden; transition: border-color 0.2s; }
   .pg-bg-card:hover { border-color: rgba(200,220,255,0.25); }
-  .pg-bg-thumb { display: block; width: 100%; aspect-ratio: 16 / 10; border:none; border-radius:0;
+  .pg-bg-thumb { display: block; width: 100%; aspect-ratio: 16 / 10; border: none; border-radius: 0;
     background-size: cover; background-position: center; cursor: pointer; padding: 0;
     transition: opacity 0.2s; }
   .pg-bg-thumb:hover { opacity: 0.85; }
   .pg-bg-thumb.on { box-shadow: inset 0 0 0 1.5px rgba(169,201,255,0.9); }
-  .pg-bg-cardname { font-family:var(--maya-font-ui); font-style: italic; font-size:var(--maya-text-body);
+  .pg-bg-cardname { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 13px;
     color: rgba(238,242,255,0.85); text-align: center; padding: 5px 6px 7px; line-height: 1.2; }
   #pg-bg-pills { display: flex; justify-content: center; gap: 10px; margin: 22px 0 2px; }
   #pg-bg-body .pg-bg-gen { display: inline-block; margin: 0; }
-  .pg-bg-gen { font-family:var(--maya-font-ui); font-size:var(--maya-text-caption); letter-spacing: 0.18em; text-transform: uppercase;
-    color: rgba(238,242,255,0.8); background: rgba(255,255,255,0.04); border:var(--maya-hairline) solid rgba(255,255,255,0.25);
-    border-radius:var(--maya-radius-pill); padding: 6px 14px; cursor: pointer; transition: all 0.2s; }
+  .pg-bg-gen { font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(238,242,255,0.8); background: rgba(255,255,255,0.04); border: 0.5px solid rgba(255,255,255,0.25);
+    border-radius: 100px; padding: 6px 14px; cursor: pointer; transition: all 0.2s; }
   .pg-bg-gen:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
   .pg-bg-gen[disabled] { opacity: 0.5; cursor: default; }
   /* PLAYGROUND: zoomed-out survey mode, v5. Only the card canvas scales (the
@@ -17757,7 +17756,7 @@ if (typeof toggleNotesDrawer === 'function') {
      it rests while zoomed. */
   #maya-canvas { will-change: transform; transform-origin: 50% 50%; }
   body.pg-zoomed #maya-canvas { overflow: visible; }
-  body.pg-zoomed .item-card { backdrop-filter:none; -webkit-backdrop-filter:none;
+  body.pg-zoomed .item-card { backdrop-filter: none; -webkit-backdrop-filter: none;
     background: rgba(10,14,28,0.55); }
 </style>
 <script>
@@ -17994,10 +17993,10 @@ if (typeof toggleNotesDrawer === 'function') {
   /* Logout left, Feedback in the middle, Hey Maya at the bottom right */
   #notes-drawer .drawer-meta-row { align-items: center; justify-content: space-between; gap: 12px; padding-left: 8px; padding-right: 4px; }
   #pg-maya-toggle { display: inline-flex; align-items: center; gap: 9px; }
-  #pg-maya-toggle .mt-switch { position: relative; width: 34px; height: 20px; border-radius:var(--maya-radius-pill); flex: none;
-    background: rgba(255,255,255,0.10); border:var(--maya-hairline) solid rgba(255,255,255,0.22);
+  #pg-maya-toggle .mt-switch { position: relative; width: 34px; height: 20px; border-radius: 100px; flex: none;
+    background: rgba(255,255,255,0.10); border: 0.5px solid rgba(255,255,255,0.22);
     transition: background .25s, border-color .25s; box-shadow: inset 0 1px 2px rgba(0,0,0,0.35); }
-  #pg-maya-toggle .mt-knob { position: absolute; top: 1.5px; left: 1.5px; width: 16px; height: 16px; border-radius:50%;
+  #pg-maya-toggle .mt-knob { position: absolute; top: 1.5px; left: 1.5px; width: 16px; height: 16px; border-radius: 50%;
     background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.45); transition: transform .25s cubic-bezier(.2,.8,.2,1); }
   #pg-maya-toggle.on { color: #a9c9ff; }
   #pg-maya-toggle.on .mt-switch { background: rgba(128,176,255,0.95); border-color: rgba(128,176,255,0.95); }
@@ -18008,33 +18007,33 @@ if (typeof toggleNotesDrawer === 'function') {
   /* v14.26: the feedback box sits above the open picture (both were z 200,
      so the box opened BEHIND the viewer and "did not appear"). */
   #feedback-modal { z-index: 260; }
-  #feedback-modal .modal-card { position: relative; border-radius:18px; padding: 30px 28px 26px;
+  #feedback-modal .modal-card { position: relative; border-radius: 18px; padding: 30px 28px 26px;
     background: linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%,
       rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost);
+    border: 0.5px solid rgba(255,255,255,0.22);
+    backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
     box-shadow: inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18), 0 12px 48px rgba(0,0,0,0.38); }
-  #feedback-modal .modal-close.pg-fb-x { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; font-size:16px; }
+  #feedback-modal .modal-close.pg-fb-x { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; font-size: 16px; }
   /* v14.27: on a phone the box keeps inside the screen with room to breathe,
      and the switch label stays on one line. */
   @media (max-width: 640px) { #feedback-modal .modal-card { padding: 26px 16px 20px; } }
   #pg-maya-toggle > span:first-child { white-space: nowrap; }
-  #feedback-modal h2 { font-family:var(--maya-font-ui); font-weight:400; font-size:var(--maya-text-metric); color: rgba(245,250,255,0.92); }
-  #feedback-modal #feedback-box { background: rgba(255,255,255,0.03); border:var(--maya-hairline) solid rgba(255,255,255,0.22); border-radius:14px; }
+  #feedback-modal h2 { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: 26px; color: rgba(245,250,255,0.92); }
+  #feedback-modal #feedback-box { background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.22); border-radius: 14px; }
   #feedback-kind { display: flex; justify-content: center; gap: 8px; margin: 2px 0 4px; }
-  .fb-kind { font-family:var(--maya-font-ui); font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
-    color: rgba(245,250,255,0.6); background: transparent; border:var(--maya-hairline) solid rgba(255,255,255,0.18); border-radius:var(--maya-radius-pill);
+  .fb-kind { font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: rgba(245,250,255,0.6); background: transparent; border: 0.5px solid rgba(255,255,255,0.18); border-radius: 100px;
     padding: 5px 12px; cursor: pointer; transition: all .2s; }
   .fb-kind:hover { color: rgba(245,250,255,0.95); border-color: rgba(255,255,255,0.42); }
   .fb-kind.on { color: #a9c9ff; border-color: rgba(128,176,255,0.7); background: rgba(128,176,255,0.10); }
   /* Maya live: a small chip at the bottom right, and her last lines above the voice bar */
   #pg-maya-chip { position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 9500; display: none; align-items: center; gap: 9px;
-    padding: 8px 14px 8px 11px; border-radius:var(--maya-radius-pill); cursor: pointer; background: rgba(8,12,26,0.85);
-    border:var(--maya-hairline) solid rgba(169,201,255,0.6); backdrop-filter:var(--maya-frost); -webkit-backdrop-filter:var(--maya-frost);
-    font-family:var(--maya-font-ui); font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase; color: rgba(169,201,255,0.95);
+    padding: 8px 14px 8px 11px; border-radius: 100px; cursor: pointer; background: rgba(8,12,26,0.85);
+    border: 0.5px solid rgba(169,201,255,0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    font-family: 'Jost', sans-serif; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(169,201,255,0.95);
     box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
   #pg-maya-chip.show { display: flex; }
-  #pg-maya-chip .dot { width: 8px; height: 8px; border-radius:50%; background: #a9c9ff; animation: pgmayapulse 1.6s ease-in-out infinite; }
+  #pg-maya-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: #a9c9ff; animation: pgmayapulse 1.6s ease-in-out infinite; }
   @keyframes pgmayapulse { 0%,100% { box-shadow: 0 0 0 0 rgba(169,201,255,0.35); } 50% { box-shadow: 0 0 0 8px rgba(169,201,255,0); } }
   /* v14.04: Maya's transcription is the SAME voice as tap-to-listen's echo:
      Cormorant italic, whisper faint, centered, riding 2px above the Visualize
@@ -18046,8 +18045,8 @@ if (typeof toggleNotesDrawer === 'function') {
     pointer-events: none; text-align: center;
     opacity: 0; transition: opacity 1.4s ease; }
   #pg-maya-lines.show { opacity: 1; transition: opacity 0.3s ease; }
-  #pg-maya-lines .ln { font-family:var(--maya-font-ui); font-style: italic; font-weight:400;
-    font-size:var(--maya-text-caption); line-height: 1.4; color: rgba(200,210,230,0.32);
+  #pg-maya-lines .ln { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 300;
+    font-size: 11px; line-height: 1.4; color: rgba(200,210,230,0.32);
     transition: opacity 0.8s ease; }
   #pg-maya-lines .ln.you { color: rgba(200,210,230,0.24); }
   #pg-maya-lines .ln.bye { opacity: 0; }
@@ -18057,14 +18056,14 @@ if (typeof toggleNotesDrawer === 'function') {
     50%      { box-shadow: 0 0 0 5px rgba(169,201,255,0.10), 0 0 26px 4px rgba(169,201,255,0.30); transform: scale(1.03); }
   }
   body.pg-maya-live #top-left-brand .maya-logo-wrap,
-  body.pg-maya-live #top-left-brand img:first-child { border-radius:50%; animation: pgMayaBreathe 3.2s ease-in-out infinite; }
+  body.pg-maya-live #top-left-brand img:first-child { border-radius: 50%; animation: pgMayaBreathe 3.2s ease-in-out infinite; }
   /* v14.04: the two destination pills ride INSIDE the photo now, appearing on
      hover at its floor, over a soft rise of black. */
   #garment-image-wrap .submit-wrap { position: absolute; left: 0; right: 0; bottom: 0; z-index: 22;
     padding: 42px 12px 16px; margin: 0; opacity: 0; transition: opacity 0.25s ease;
     background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.45) 55%, rgba(0,0,0,0.75) 100%);
     /* v14.06: the rise stays inside the card's rounded corners */
-    border-radius:0 0 16px 16px; }
+    border-radius: 0 0 16px 16px; }
   /* v14.06: the whole viewer block sits a touch lower, per Fromsa */
   #garment-modal:not([data-photo="full"]) #garment-image-wrap { margin-top: 30px; }
   /* v14.07: the edge-to-edge photo stays clean */
@@ -19427,12 +19426,12 @@ setInterval(_pgCaptionOne, 7000);
   /* ═══ PLAYGROUND v14.09: MAYA WATCHES HER OWN LIMITS ═══ */
   #fb-tabs { display: flex; justify-content: center; gap: 8px; margin: 2px 0 10px; }
   #fb-maya-list { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; text-align: left; }
-  .fbm-row { border:var(--maya-hairline) solid rgba(255,255,255,0.10); border-radius:12px; padding: 8px 12px;
+  .fbm-row { border: 0.5px solid rgba(255,255,255,0.10); border-radius: 12px; padding: 8px 12px;
     background: rgba(255,255,255,0.02); }
-  .fbm-row .t { font-size:var(--maya-text-body); line-height: 1.45; color: rgba(230,236,250,0.9); }
-  .fbm-row .w { font-family:var(--maya-font-ui); font-size:var(--maya-text-caption); letter-spacing: 0.16em; text-transform: uppercase;
+  .fbm-row .t { font-size: 13px; line-height: 1.45; color: rgba(230,236,250,0.9); }
+  .fbm-row .w { font-family: 'Jost', sans-serif; font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase;
     color: rgba(169,201,255,0.7); margin-bottom: 2px; }
-  #fb-maya-list .fbm-empty { font-family:var(--maya-font-ui); font-style: italic; font-size:var(--maya-text-body);
+  #fb-maya-list .fbm-empty { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14px;
     color: rgba(200,210,230,0.5); text-align: center; padding: 18px 0; }
 </style>
 <script>

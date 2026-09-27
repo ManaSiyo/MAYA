@@ -1,3 +1,14 @@
+SEPTEMBER 26: Consumer style rollback and backend cleanup
+Restored consumer and Playground source from 3af43c3 except version metadata;
+all scripts unchanged. Detached consumer from backend CSS. Round logo clipping
+removes square corners, border/shadow reset removes bezels; Sheet hover removed.
+CRM now matches 11px campaign data, log headings white/details gray.
+
+SEPTEMBER 26: Backend chrome drift
+Dense overrides had flattened capsule depth and replaced frontend glass. Shared
+backend treatment now matches the frontend drawer and tab finish; compact tables
+retained. Local changes only; signed-in production remains to be checked.
+
 SEPTEMBER 26: V4 typography/density regression
 Shared header fill introduced a dark campaign strip; fixed by leaving nonsticky
 headers transparent. Size normalization inflated labels and CRM padding; compact

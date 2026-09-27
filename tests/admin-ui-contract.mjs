@@ -79,18 +79,13 @@ await test('v14.01 drawer floor: circular logo, Hey Maya toggle beside it', () =
   assert.ok(admin.includes('class="voice-row"'), 'toggle rides beside the logo');
 });
 
-await test('v14.01 admin drawer: full-bleed, sheet-only hover, glued hamburger, one-click invoice', () => {
+await test('v14.01 admin drawer: full-bleed, no floating Sheet link, glued hamburger, one-click invoice', () => {
   // v14.01: the drawer is the frontend's exact glass card, not full-bleed
   assert.match(admin, /#drawer\{position:absolute;top:10px;right:18px;bottom:10px;left:0/, 'drawer wears the app glass geometry');
   assert.ok(admin.includes('/aesthetics/ui/maya-canon.css?v=4'), 'shared V3 frost, not a page-specific gradient');
   assert.ok(admin.includes('.top-btn.hamburger{transition:opacity .25s'), 'no transform transition: the lag fix');
   assert.ok(admin.includes("hs.addEventListener('scroll', update, { passive: true })"), 'synchronous glue, like the app');
-  // the ADMIN wordmark's own chip strip carries only the sheet (the MAYA door
-  // card keeps its separate rooms)
-  const chips = admin.slice(admin.indexOf('class="brand-chips"'), admin.indexOf('class="brand-chips"') + 400);
-  assert.ok(!chips.includes('>operations room<'), 'ADMIN hover: operations room gone');
-  assert.ok(!chips.includes('>playground<'), 'ADMIN hover: playground gone');
-  assert.ok(chips.includes('>the sheet</a>'), 'ADMIN hover: the sheet stays');
+  assert.ok(!admin.includes('>the sheet</a>'), 'owner removed the floating Sheet link');
   assert.ok(admin.includes("hb.style.transform = 'translateX(' + (-Math.max(0, hs.scrollLeft - 18))"),
     'hamburger glued to the drawer edge per frame');
   assert.ok(!admin.includes('translateX(-356px)'), 'old CSS-transition slide removed');

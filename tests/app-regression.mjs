@@ -81,7 +81,7 @@ try {
 const PAGE_ROOT = served ? 'http://127.0.0.1:8899/' : pathToFileURL(ROOT + '/').href;
 
 let failed = 0;
-assertCanon(); // V4: shared typography, capsules, semantic colors and motion fallbacks.
+assertCanon(); // Backend follows frontend chrome; consumer styling stays isolated from V4.
 const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name); if (!cond) failed++; };
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium' });

@@ -8,6 +8,30 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## Frontend-master backend chrome, September 26
+
+Applied frontend drawer gradient, 18px corners, frost and inset/drop shadows to
+backend drawers, dialogs and popovers. Restored capsule depth, selected tab rings,
+quiet frosted inputs and compact frontend-style footer/switch geometry. All backend
+pages inherit aesthetics/ui/maya-canon.css; Admin/Affiliates share one source.
+Campaign data stays 11px; CRM data now also 11px per the latest owner correction.
+Restored frontend/index.html and playground/index.html to 3af43c3 styling (last
+commit before today), retaining 14.40 metadata. All scripts match byte-for-byte.
+Consumer pages no longer load backend canon CSS. Removed floating Sheet link;
+round-clipped logos and hamburger are borderless; log metadata white/details gray;
+Mana Siyo/MAYA door labels use Admin brand Cormorant. Backend scripts unchanged. No new consumer-only
+Tip/Feedback actions were added to Admin. Brand sizes remain compact as requested.
+
+Validation: source contract, 11-page desktop/mobile canon checks including exact
+frontend/Admin/Outbound drawer and selected-tab computed-style parity; Outbound/CRM
+interaction checks; all 11 Admin contracts; Maya hands smoke on frontend and
+Playground; actual-font screenshot inspection and git diff check. Verified consumer
+source equals 3af43c3 except version metadata. Historical full regression suite not claimed green.
+Changed: shared CSS; canon-contract.mjs, canon-ui.mjs, outbound-ui.mjs, admin-ui-contract.mjs,
+app-regression.mjs; handoff,
+requests, fixes and V4 canon clarification. Next: owner pushes the local commit,
+then verify the signed-in live drawers. No push/deploy or provider changes performed.
+
 ## Compact Admin correction, September 26
 
 Owner rejected enlarged V4 typography/density. Restored 141 increased size

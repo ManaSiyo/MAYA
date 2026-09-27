@@ -22,18 +22,35 @@ await page.route('**/*',async r=>{
 for(const path of canonPages){
  await page.goto('https://maya.test/'+path);await page.evaluate(()=>document.fonts.ready);
  const brand=page.locator('#top-left-brand .brand-title,.brand h1,#brand,.brand-title').first();if(await brand.count())assert.match(await brand.evaluate(el=>getComputedStyle(el).fontFamily),/Cormorant/,path);
+ if(!path.startsWith('frontend/')&&!path.startsWith('playground/')) {
  const result=await page.evaluate(()=>{
   const box=document.createElement('div');box.innerHTML='<div class="stat"><strong>12,345</strong></div><button class="pill">Maya action</button><table><tbody><tr><td>Data 12,345</td></tr></tbody></table>';document.body.append(box);
   const metric=getComputedStyle(box.querySelector('strong')),button=getComputedStyle(box.querySelector('button')),data=getComputedStyle(box.querySelector('td'));
   const out={family:metric.fontFamily,weight:metric.fontWeight,numeric:metric.fontVariantNumeric,data:data.fontFamily,border:button.borderTopWidth,radius:button.borderRadius,fill:button.backgroundImage};box.remove();return out;
  });
  assert.match(result.family,/Jost/,path);assert.equal(result.weight,'500',path);assert.equal(result.numeric,'tabular-nums',path);assert.match(result.data,/Jost/,path);assert.equal(result.radius,'100px',path);assert.equal(result.fill,'none',path);
+ }
  await page.evaluate(()=>{document.querySelectorAll('#gate,#auth-gate,#signin-panel').forEach(x=>x.style.display='none');});
- await page.screenshot({path:join(dir,path.replaceAll('/','-')+'.png')});
+ await page.screenshot({animations:'disabled',timeout:60000,path:join(dir,path.replaceAll('/','-')+'.png')});
  await page.setViewportSize({width:390,height:844});
  assert.equal(await page.evaluate(()=>getComputedStyle(document.body).fontFamily.includes('Jost')),true,path);
- await page.screenshot({path:join(dir,path.replaceAll('/','-')+'-mobile.png')});await page.setViewportSize({width:1440,height:1000});
+ await page.screenshot({animations:'disabled',timeout:60000,path:join(dir,path.replaceAll('/','-')+'-mobile.png')});await page.setViewportSize({width:1440,height:1000});
 }
+// Compare the actual frontend master with backend chrome, not guessed values.
+const chromeStyle=async(selector)=>page.locator(selector).evaluate(el=>{
+ const c=getComputedStyle(el);return {background:c.backgroundImage,shadow:c.boxShadow,blur:c.backdropFilter,radius:c.borderRadius};
+});
+await page.goto('https://maya.test/frontend/index.html');
+const master=await chromeStyle('#notes-drawer');
+const masterTab=await chromeStyle('#notes-drawer .pg-tab.on');
+await page.goto('https://maya.test/backend/status.html');
+assert.deepEqual(await chromeStyle('#drawer'),master,'Admin drawer matches frontend');
+assert.deepEqual(await chromeStyle('.adm-tab.on'),masterTab,'Admin selected tab matches frontend');
+await page.locator('#drawer').evaluate(el=>{document.body.append(el);Object.assign(el.style,{position:'fixed',left:'auto',width:'360px',zIndex:'999'});});
+await page.screenshot({animations:'disabled',path:join(dir,'backend-drawer-parity.png')});
+assert.equal(await page.locator('#maya-toggle .mt-switch').evaluate(el=>getComputedStyle(el).width),'34px');
+await page.goto('https://maya.test/backend/outbound.html');
+assert.deepEqual(await chromeStyle('#outbound-drawer'),master,'Outbound drawer matches frontend');
 await page.emulateMedia({reducedMotion:'reduce'});
 assert.equal(await page.locator('body').evaluate(el=>getComputedStyle(el).animationName),'none');
 console.log('V4 canon rendered checks: 11 pages, desktop/mobile, metric typography, capsule styles and reduced motion passed');

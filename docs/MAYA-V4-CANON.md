@@ -42,3 +42,14 @@ Shared tokens/components: `/aesthetics/ui/maya-canon.css`.
 8px spacing base; 16px panel radius; 180ms feedback; visible focus; reduced-motion support.
 Retain routes, API/data behavior, account/project isolation and all existing actions.
 V2-style proposals and the earlier long V4 review are superseded.
+
+## September 26 clarification: frontend component master
+Backend chrome inherits the actual frontend drawer glass gradient, inset highlights,
+capsules, tab rings and footer treatment. This gradient is restricted to floating
+surfaces; no gradient pills or decorative table fills. Keep the restored compact
+Admin data sizes. Preserve backend actions rather than adding consumer-only actions.
+
+Consumer frontend and Playground are restored to pre-September-26 styles and do
+not load backend canon CSS. Backend drawer frost matches that master at 28px;
+capsule frost stays 22px. CRM data uses campaign-scale 11px. Logos and drawer
+handles are borderless. Log headings are white and details secondary gray.
