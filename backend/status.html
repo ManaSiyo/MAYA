@@ -71,7 +71,7 @@ try {
   #top-left-brand .brand-title{font-family:var(--maya-font-brand);font-size:20px;font-weight:400;
     letter-spacing:0.22em;color:rgba(255,255,255,0.9);text-transform:uppercase}
   .top-btn{background:transparent;border:var(--maya-hairline) solid rgba(255,255,255,0.22);border-radius:var(--maya-radius-pill);
-    padding:6px 14px;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);font-weight:400;
+    padding:6px 14px;font-family:var(--maya-font-ui);font-size:10px;font-weight:400;
     letter-spacing:0.15em;text-transform:uppercase;color:rgba(245,250,255,0.85);
     cursor:pointer;transition:all .2s;
     backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
@@ -153,7 +153,7 @@ try {
   #msg-list,.msg-scroll{scrollbar-width:none}
   #msg-list::-webkit-scrollbar,.msg-scroll::-webkit-scrollbar{display:none}
   .adm-unread{position:absolute;top:-6px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:var(--maya-radius-pill);
-    background:#a9c9ff;color:#0d1120;font-size:var(--maya-text-caption);letter-spacing:0;line-height:16px;text-align:center}
+    background:#a9c9ff;color:#0d1120;font-size:9px;letter-spacing:0;line-height:16px;text-align:center}
   #drawer.msgs > h3, #drawer.msgs > a, #drawer.msgs > #top-lights{display:none}
   body.maya-live #adm-tabrow, body.maya-live #drawer-messages{display:none}
   #drawer-messages{flex:1;min-height:0;display:flex;flex-direction:column;text-align:left}
@@ -161,9 +161,9 @@ try {
   #drawer-logs{flex:1;min-height:0;overflow:auto;scrollbar-width:none;text-align:left}
   #drawer-logs::-webkit-scrollbar{display:none}
   .maya-log{padding:12px 0;border-bottom:var(--maya-hairline) solid var(--line)}
-  #drawer-logs > .note{font-size:var(--maya-text-body);line-height:1.5;color:var(--dim)}
+  #drawer-logs > .note{font-size:13px;line-height:1.5;color:var(--dim)}
   .maya-log p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:var(--maya-text-body);line-height:1.5;margin:6px 0}
-  .maya-log small{color:var(--dim);font-size:var(--maya-text-caption)}
+  .maya-log small{color:var(--dim);font-size:11px}
   body.maya-live #drawer-logs{display:none}
   #msg-list{flex:1;min-height:0;overflow-y:auto;margin:0 -4px}
   .msg-row{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:12px;cursor:pointer;transition:background .2s}
@@ -173,8 +173,8 @@ try {
   .msg-main{flex:1;min-width:0}
   .msg-title{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
   .msg-title b{font-weight:500;font-size:var(--maya-text-body);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .msg-title small{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.08em;color:var(--faint);white-space:nowrap}
-  .msg-last{font-family:var(--maya-font-ui);font-size:var(--maya-text-body);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .msg-title small{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.08em;color:var(--faint);white-space:nowrap}
+  .msg-last{font-family:var(--maya-font-ui);font-size:13px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .msg-row.unread .msg-last{color:var(--ink)}
   .msg-dot{width:8px;height:8px;border-radius:50%;background:#a9c9ff;flex:none}
   .msg-empty{font-family:var(--maya-font-ui);font-style:italic;color:var(--dim);text-align:center;padding:26px 10px;font-size:var(--maya-text-body)}
@@ -184,27 +184,27 @@ try {
   .msg-back{width:28px;height:28px;border-radius:50%;border:var(--maya-hairline) solid var(--line);background:transparent;color:var(--ink);font-size:var(--maya-text-section);line-height:1;cursor:pointer}
   .msg-who{flex:1;min-width:0}
   .msg-name{font-size:var(--maya-text-body);font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .msg-number{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.08em;color:var(--faint)}
-  .msg-call{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.14em;text-transform:uppercase;color:var(--ink);
+  .msg-number{font-family:var(--maya-font-ui);font-size:9.5px;letter-spacing:0.08em;color:var(--faint)}
+  .msg-call{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink);
     border:var(--maya-hairline) solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.04);border-radius:var(--maya-radius-pill);padding:6px 11px;cursor:pointer;white-space:nowrap}
   .msg-call:hover{background:rgba(255,255,255,0.09)}
   .msg-scroll{flex:1;min-height:0;overflow-y:auto;padding:10px 2px;display:flex;flex-direction:column;gap:6px}
   .bub{max-width:82%;padding:8px 12px;border-radius:16px;font-family:var(--maya-font-ui);font-size:var(--maya-text-body);line-height:1.35;white-space:pre-wrap;word-break:break-word}
   .bub.in{align-self:flex-start;background:rgba(255,255,255,0.08);color:var(--ink);border-bottom-left-radius:5px}
   .bub.out{align-self:flex-end;background:rgba(169,201,255,0.22);color:var(--ink);border-bottom-right-radius:5px}
-  .bub-when{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.08em;color:var(--faint);margin-top:3px;text-align:right}
+  .bub-when{font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.08em;color:var(--faint);margin-top:3px;text-align:right}
   .bub.in .bub-when{text-align:left}
-  .msg-call-line{align-self:center;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);
+  .msg-call-line{align-self:center;font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);
     border:0.5px dashed var(--line);border-radius:var(--maya-radius-pill);padding:4px 10px;margin:4px 0;max-width:92%;text-align:center}
   .msg-call-line small{display:block;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0;text-transform:none;color:var(--faint);margin-top:2px;font-style:italic;white-space:normal}
   .msg-compose{display:flex;gap:6px;align-items:flex-end;padding-top:8px;border-top:var(--maya-hairline) solid var(--line);flex:none}
   #msg-input{flex:1;resize:none;max-height:96px;border-radius:14px;border:var(--maya-hairline) solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.04);
     color:var(--ink);font-family:var(--maya-font-ui);font-size:var(--maya-text-body);padding:8px 12px;outline:none}
   #msg-input:focus{border-color:rgba(169,201,255,0.6)}
-  .msg-send{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.14em;text-transform:uppercase;color:#0d1120;background:#a9c9ff;
+  .msg-send{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#0d1120;background:#a9c9ff;
     border:none;border-radius:var(--maya-radius-pill);padding:9px 14px;cursor:pointer}
   .msg-send:disabled{opacity:0.5;cursor:default}
-  .msg-consent{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.08em;color:var(--faint);text-align:center;padding:6px 0 0;min-height:14px}
+  .msg-consent{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.08em;color:var(--faint);text-align:center;padding:6px 0 0;min-height:14px}
   /* v13.95: Maya's floor, mirroring the frontend.
      v13.98: the divider and the logo sit lower still, the logo is a touch
      smaller with a tighter crop of the circle, and the pill on its RIGHT is
@@ -224,7 +224,7 @@ try {
   /* v14.02: the Hey Maya toggle is a switch, the Apple kind: the word stays
      "Hey Maya", the knob slides and the track turns logo blue when it is on.
      Narrower than the old pill, so the whole floor row reads lighter. */
-  #maya-toggle{display:inline-flex;align-items:center;gap:8px;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);
+  #maya-toggle{display:inline-flex;align-items:center;gap:8px;font-family:var(--maya-font-ui);font-size:8px;
     letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);background:transparent;border:none;
     padding:6px 2px;cursor:pointer;transition:color .2s;white-space:nowrap}
   #maya-toggle:hover{color:var(--ink)}
@@ -236,13 +236,13 @@ try {
     background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.45);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
   #maya-toggle.live .mt-switch{background:rgba(128,176,255,0.95);border-color:rgba(128,176,255,0.95)}
   #maya-toggle.live .mt-knob{transform:translateX(12px)}
-  #voice-word{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.2em;
+  #voice-word{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.2em;
     text-transform:uppercase;color:rgba(169,201,255,0.9);min-height:11px;text-align:center;width:100%}
   #voice-chip{position:fixed;right:16px;bottom:16px;z-index:400;display:none;align-items:center;gap:9px;
     padding:9px 15px 9px 12px;border-radius:var(--maya-radius-pill);cursor:pointer;
     background:rgba(8,12,26,0.94);border:var(--maya-hairline) solid rgba(169,201,255,0.6);
     backdrop-filter:var(--maya-frost);box-shadow:0 8px 30px rgba(0,0,0,0.5);
-    font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.12em;text-transform:uppercase;color:rgba(169,201,255,0.95)}
+    font-family:var(--maya-font-ui);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(169,201,255,0.95)}
   #voice-chip.show{display:flex}
   #voice-chip .dot{width:9px;height:9px;border-radius:50%;background:#a9c9ff;animation:voicepulse 1.6s ease-in-out infinite}
   /* v13.72: Maya's command is her private line now. It lives in the drawer and
@@ -260,16 +260,16 @@ try {
   .maya-msg{border-radius:12px;padding:9px 11px 9px;font-size:var(--maya-text-body);line-height:1.45;position:relative;word-break:break-word}
   .maya-msg.maya{background:rgba(169,201,255,0.08);border:var(--maya-hairline) solid rgba(169,201,255,0.22);color:var(--ink)}
   .maya-msg.you{background:rgba(255,255,255,0.03);border:var(--maya-hairline) solid var(--line);color:var(--dim);align-self:flex-end;max-width:88%}
-  .maya-msg .who{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.16em;text-transform:uppercase;color:var(--faint);margin-bottom:3px}
-  .maya-msg .copy{position:absolute;top:7px;right:9px;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);cursor:pointer;opacity:0;transition:opacity .2s}
+  .maya-msg .who{font-family:var(--maya-font-ui);font-size:8px;letter-spacing:0.16em;text-transform:uppercase;color:var(--faint);margin-bottom:3px}
+  .maya-msg .copy{position:absolute;top:7px;right:9px;font-family:var(--maya-font-ui);font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);cursor:pointer;opacity:0;transition:opacity .2s}
   .maya-msg:hover .copy{opacity:1}
   .maya-msg .copy:hover{color:var(--ink)}
-  .maya-command-caption{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.14em;
+  .maya-command-caption{font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.14em;
     text-transform:uppercase;color:var(--faint);margin:6px 0 12px}
   .maya-command-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .maya-command-title{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.22em;text-transform:uppercase;color:#a9c9ff}
-  #maya-command-state{margin-left:auto;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.14em;text-transform:uppercase;color:var(--dim)}
-  #wake-toggle{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);
+  .maya-command-title{font-family:var(--maya-font-ui);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:#a9c9ff}
+  #maya-command-state{margin-left:auto;font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim)}
+  #wake-toggle{font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);
     background:transparent;border:var(--maya-hairline) solid var(--line);border-radius:var(--maya-radius-pill);padding:3px 9px;cursor:pointer;transition:all .15s}
   #wake-toggle:hover{color:var(--ink);border-color:rgba(255,255,255,0.5)}
   #wake-toggle.on{color:#a9c9ff;border-color:rgba(169,201,255,0.55)}
@@ -277,16 +277,16 @@ try {
   #maya-command-brief{margin:11px 0 10px;font-size:var(--maya-text-body);line-height:1.5;color:var(--ink)}
   #maya-command-attention{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 10px}
   .maya-attention{border:var(--maya-hairline) solid rgba(251,191,36,0.38);border-radius:var(--maya-radius-pill);padding:4px 9px;background:transparent;
-    color:rgba(255,230,180,0.9);font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.08em;cursor:pointer}
+    color:rgba(255,230,180,0.9);font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.08em;cursor:pointer}
   .maya-attention.red{border-color:rgba(253,164,175,0.45);color:rgba(255,195,205,0.95)}
   .maya-command-nav{display:flex;gap:6px;flex-wrap:wrap}
   .maya-command-nav button,.maya-action-btn{border:var(--maya-hairline) solid var(--line);border-radius:var(--maya-radius-pill);padding:5px 10px;background:transparent;
-    color:var(--dim);font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.1em;text-transform:uppercase;cursor:pointer}
+    color:var(--dim);font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer}
   .maya-command-nav button:hover,.maya-action-btn:hover{border-color:rgba(255,255,255,0.5);color:var(--ink)}
   #maya-action-queue{margin-top:12px;display:grid;gap:8px}
   .maya-action{padding:10px 12px;border-radius:13px;border:var(--maya-hairline) solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.025)}
   .maya-action-copy{font-size:var(--maya-text-body);line-height:1.4;color:var(--ink)}
-  .maya-action-meta{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+  .maya-action-meta{font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
   .maya-action-controls{display:flex;gap:6px;margin-top:8px}
   .maya-action-btn.confirm{border-color:rgba(169,201,255,0.55);color:#a9c9ff}
   .maya-spotlight{animation:mayaSpot 2.2s ease-out}
@@ -301,7 +301,7 @@ try {
      blue and bold, like the big figures, stronger than the labels. */
   #head-tiles .tile .v{color:#fff;font-weight:500}
   #head-tiles .pair-b{color:#a9c9ff;font-weight:500}
-  .traffic-legend{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.14em;text-transform:uppercase;color:#fff;margin-left:10px;font-weight:400}
+  .traffic-legend{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#fff;margin-left:10px;font-weight:400}
   .traffic-legend .lg-b{color:#a9c9ff}
   /* v13.45: the hamburger never disappears. It slides left with the drawer
      and comes to rest hanging just outside the drawer's left edge. The same
@@ -315,18 +315,18 @@ try {
      too, and the pill is truly glued. */
   .top-btn.hamburger{transition:opacity .25s;will-change:transform}
   /* v13.94: the drawer section headings are centered, per Fromsa. */
-  #drawer h3{font-family:var(--maya-font-ui);font-weight:400;font-size:var(--maya-text-caption);letter-spacing:0.24em;
+  #drawer h3{font-family:var(--maya-font-ui);font-weight:400;font-size:10px;letter-spacing:0.24em;
              text-transform:uppercase;color:var(--grp);margin:14px 0 8px;text-align:center}
   #drawer h3:first-child{margin-top:0}
   /* v14.02: every drawer line centered, the vault and the tools alike. */
   #drawer a{text-align:center;display:block;text-decoration:none;color:var(--ink);font-size:var(--maya-text-body);padding:7px 10px;
             border-radius:10px;transition:background .2s}
   #drawer a:hover{background:rgba(255,255,255,0.07)}
-  #drawer a small{display:block;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);color:var(--dim)}
+  #drawer a small{display:block;font-family:var(--maya-font-ui);font-size:10px;color:var(--dim)}
 
   .status-bar{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;margin:6px 0 8px;
               border:var(--maya-hairline) solid var(--line);border-radius:16px;padding:13px 18px;background:rgba(10,16,34,0.55);backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost)}
-  .status-item{display:flex;align-items:center;gap:8px;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);
+  .status-item{display:flex;align-items:center;gap:8px;font-family:var(--maya-font-ui);font-size:11px;
                letter-spacing:0.1em;text-transform:uppercase;color:var(--dim)}
   .sdot{width:6px;height:6px;border-radius:50%;background:var(--faint);transition:all .3s}
   .sdot.ok{background:var(--green);box-shadow:0 0 6px rgba(74,222,128,0.5)}
@@ -334,13 +334,13 @@ try {
   .sdot.wait{background:var(--amber);animation:pulse 1s infinite}
   @keyframes pulse{50%{opacity:0.4}}
 
-  #checked-at{text-align:center;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.08em;color:rgba(238,242,255,0.75);margin:4px 0 10px 4px}
+  #checked-at{text-align:center;font-family:var(--maya-font-ui);font-size:10px;letter-spacing:0.08em;color:rgba(238,242,255,0.75);margin:4px 0 10px 4px}
 
-  h2.grp{font-size:var(--maya-text-caption);letter-spacing:0.26em;text-transform:uppercase;color:var(--grp);
+  h2.grp{font-size:11.5px;letter-spacing:0.26em;text-transform:uppercase;color:var(--grp);
          font-family:var(--maya-font-ui);font-weight:400;margin:14px 0 8px;
          display:flex;align-items:baseline;gap:14px;justify-content:center}
-  h2.grp .aside{font-size:var(--maya-text-caption);letter-spacing:0.12em;color:rgba(238,242,255,0.75);text-transform:none}
-  h2.grp a{color:rgba(238,242,255,0.9);text-decoration:none;font-size:var(--maya-text-caption);letter-spacing:0.14em}
+  h2.grp .aside{font-size:9.5px;letter-spacing:0.12em;color:rgba(238,242,255,0.75);text-transform:none}
+  h2.grp a{color:rgba(238,242,255,0.9);text-decoration:none;font-size:9.5px;letter-spacing:0.14em}
 
   /* Latest submissions strip: 25vh tall, newest on the left, flows sideways */
   /* v13.29: the strip used to start flush against the heading, so a tile that
@@ -359,16 +359,16 @@ try {
   .sub-tile .veil{position:absolute;inset:auto 0 0 0;padding:18px 10px 7px;text-align:center;
                   background:linear-gradient(transparent, rgba(0,4,12,0.85));opacity:0;transition:opacity .25s}
   .sub-tile:hover .veil{opacity:1}
-  .sub-tile .nm{display:block;font-size:var(--maya-text-body);line-height:1.15}
-  .sub-tile .tm{display:block;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:1px}
-  .sub-tile .badge{position:absolute;top:10px;left:10px;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);
+  .sub-tile .nm{display:block;font-size:12.5px;line-height:1.15}
+  .sub-tile .tm{display:block;font-family:var(--maya-font-ui);font-size:7.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:1px}
+  .sub-tile .badge{position:absolute;top:10px;left:10px;font-family:var(--maya-font-ui);font-size:8.5px;
                    letter-spacing:0.16em;text-transform:uppercase;color:#0b1408;background:var(--green);
                    border-radius:20px;padding:3px 9px}
   /* v13.33: a picture that never landed is not still arriving. */
   .sub-tile .badge.stale{background:rgba(255,196,120,0.92);color:#241503}
   .sub-tile.more{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;
-                 font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.15em;text-transform:uppercase;color:var(--dim)}
-  #subs-note-inline{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);color:var(--dim);
+                 font-family:var(--maya-font-ui);font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dim)}
+  #subs-note-inline{font-family:var(--maya-font-ui);font-size:11px;color:var(--dim);
                     border:0.5px dashed var(--line);border-radius:12px;padding:12px 14px;line-height:1.7}
 
   .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:6px}
@@ -376,7 +376,7 @@ try {
   .tile{border:var(--maya-hairline) solid var(--line);border-radius:var(--maya-radius-pill);background:rgba(10,16,34,0.55);backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
         box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18);padding:5px 14px;
         display:flex;align-items:baseline;justify-content:center;gap:8px}
-  .tile .k{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.14em;text-transform:uppercase;color:var(--dim)}
+  .tile .k{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim)}
   .tile .v{font-size:var(--maya-text-body)}
   .tile.live .v{color:var(--green)}
   #users-pop{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);
@@ -385,12 +385,12 @@ try {
     backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
     padding:10px 12px;box-shadow:0 12px 40px rgba(0,0,0,0.5)}
   #users-pop .up-row{display:flex;justify-content:space-between;gap:14px;
-    font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.04em;color:var(--ink);
+    font-family:var(--maya-font-ui);font-size:10.5px;letter-spacing:0.04em;color:var(--ink);
     padding:4px 2px;border-bottom:0.25px solid rgba(255,255,255,0.06)}
   #users-pop .up-row:last-child{border-bottom:none}
   #users-pop .up-when{color:var(--faint);white-space:nowrap}
   #users-pop .dim{color:var(--dim)}
-  #traffic-note{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);color:var(--dim);line-height:1.7;
+  #traffic-note{font-family:var(--maya-font-ui);font-size:10.5px;color:var(--dim);line-height:1.7;
     border:0.5px dashed var(--line);border-radius:12px;padding:11px 14px}
   #traffic-note.hidden,#traffic-tiles.hidden{display:none}
     font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;
@@ -402,7 +402,7 @@ try {
     text-transform:uppercase;color:var(--dim)}
     text-transform:uppercase;color:var(--faint);margin-top:2px}
   #gsi-slot{margin-top:8px}
-  pre.cmd{text-align:left;font-family:Menlo,monospace;font-size:var(--maya-text-caption);color:var(--ink);background:rgba(255,255,255,0.06);
+  pre.cmd{text-align:left;font-family:Menlo,monospace;font-size:10.5px;color:var(--ink);background:rgba(255,255,255,0.06);
           border:var(--maya-hairline) solid var(--line);border-radius:10px;padding:10px 12px;margin-top:10px;
           white-space:pre-wrap;word-break:break-all;user-select:all}
 
@@ -411,18 +411,18 @@ try {
   details.fold summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
   details.fold summary::-webkit-details-marker{display:none}
   details.fold summary h2.grp{margin:0}
-  details.fold summary::after{content:'\25BE';font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);color:var(--faint);transition:transform .2s}
+  details.fold summary::after{content:'\25BE';font-family:var(--maya-font-ui);font-size:11px;color:var(--faint);transition:transform .2s}
   /* A small green light when something has shipped that you have not read yet.
      It goes out the moment the section is opened. */
   .fr-list{display:grid;gap:6px}
   .fr{display:grid;grid-template-columns:130px 1fr auto;gap:12px;align-items:baseline;padding:7px 10px;border-radius:10px;
       border:var(--maya-hairline) solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02)}
-  .fr .who{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.16em;text-transform:uppercase;color:#a9c9ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fr .who{font-family:var(--maya-font-ui);font-size:9.5px;letter-spacing:0.16em;text-transform:uppercase;color:#a9c9ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .fr .ask{font-size:var(--maya-text-body);line-height:1.35;color:var(--ink)}
-  .fr .when{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);white-space:nowrap}
-  .fr-sec{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.24em;text-transform:uppercase;color:var(--grp);text-align:center;margin:12px 0 4px}
+  .fr .when{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);white-space:nowrap}
+  .fr-sec{font-family:var(--maya-font-ui);font-size:9.5px;letter-spacing:0.24em;text-transform:uppercase;color:var(--grp);text-align:center;margin:12px 0 4px}
   .fr-done{margin-left:8px;background:transparent;border:var(--maya-hairline) solid var(--line);border-radius:50%;width:18px;height:18px;
-    color:var(--dim);font-size:var(--maya-text-caption);line-height:1;cursor:pointer;opacity:0;transition:opacity .2s,color .2s,border-color .2s;vertical-align:middle}
+    color:var(--dim);font-size:10px;line-height:1;cursor:pointer;opacity:0;transition:opacity .2s,color .2s,border-color .2s;vertical-align:middle}
   .fr:hover .fr-done{opacity:1}
   .fr-done:hover{color:var(--green);border-color:var(--green)}
   .fr.done .fr-done{opacity:0.6;color:var(--green);border-color:var(--green)}
@@ -440,28 +440,28 @@ try {
              padding:12px 18px;text-align:center}
   .chg{padding:7px 0;font-size:var(--maya-text-body);color:var(--dim);line-height:1.5;border-bottom:var(--maya-hairline) solid rgba(255,255,255,0.07)}
   .chg:last-child{border-bottom:0}
-  .chg b{color:var(--ink);font-weight:500;margin-right:8px;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);
+  .chg b{color:var(--ink);font-weight:500;margin-right:8px;font-family:var(--maya-font-ui);font-size:9.5px;
          letter-spacing:0.14em;text-transform:uppercase}
 
   /* Prompting engine */
   .pe-panel{border:var(--maya-hairline) solid var(--line);border-radius:16px;background:rgba(10,16,34,0.55);
             backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
             padding:12px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18)}
-  .pe-field label{text-align:center;display:block;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);font-weight:400;
+  .pe-field label{text-align:center;display:block;font-family:var(--maya-font-ui);font-size:9px;font-weight:400;
                   letter-spacing:0.18em;text-transform:uppercase;color:var(--faint);margin-bottom:7px}
   .pe-field textarea{text-align:left;width:100%;min-height:44px;height:44px;resize:vertical;color:var(--ink);
-      font-family:var(--maya-font-ui);font-size:var(--maya-text-body);line-height:1.45;
+      font-family:var(--maya-font-ui);font-size:13.5px;line-height:1.45;
       background:transparent;border:var(--maya-hairline) solid rgba(255,255,255,0.16);border-radius:10px;padding:7px 10px;
       outline:none;transition:border-color .25s}
   .pe-field textarea:focus{border-color:rgba(255,255,255,0.42)}
   .pe-row{grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  #pe-state{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.1em;color:var(--faint)}
+  #pe-state{font-family:var(--maya-font-ui);font-size:10px;letter-spacing:0.1em;color:var(--faint)}
   .pe-live{border:var(--maya-hairline) solid var(--line);border-radius:16px;background:rgba(6,10,22,0.6);padding:16px 18px;margin-bottom:6px}
-  .pe-live h4{font-family:var(--maya-font-ui);font-weight:400;font-size:var(--maya-text-caption);letter-spacing:0.2em;
+  .pe-live h4{font-family:var(--maya-font-ui);font-weight:400;font-size:9.5px;letter-spacing:0.2em;
               text-transform:uppercase;color:var(--grp);margin-bottom:9px}
-  .pe-live p{font-size:var(--maya-text-body);line-height:1.65;color:var(--dim);margin-bottom:10px}
+  .pe-live p{font-size:13.5px;line-height:1.65;color:var(--dim);margin-bottom:10px}
   .pe-live p b{color:var(--ink);font-weight:500}
-  .pe-live pre{text-align:left;font-family:Menlo,monospace;font-size:var(--maya-text-caption);line-height:1.65;color:rgba(238,242,255,0.72);
+  .pe-live pre{text-align:left;font-family:Menlo,monospace;font-size:10px;line-height:1.65;color:rgba(238,242,255,0.72);
                white-space:pre-wrap;background:rgba(255,255,255,0.045);border:var(--maya-hairline) solid var(--line);
                border-radius:10px;padding:11px 13px;margin-bottom:10px}
 
@@ -473,14 +473,14 @@ try {
   .map-footer{margin-top:auto;padding-top:34px}
   .arch{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .arch .col{border:var(--maya-hairline) solid var(--line);border-radius:16px;background:rgba(10,16,34,0.55);padding:16px 18px}
-  .arch h4{font-family:var(--maya-font-ui);font-weight:400;font-size:var(--maya-text-caption);letter-spacing:0.24em;
+  .arch h4{font-family:var(--maya-font-ui);font-weight:400;font-size:10px;letter-spacing:0.24em;
            text-transform:uppercase;color:var(--grp);margin-bottom:10px}
   .arch .it{text-align:center;border-bottom:var(--maya-hairline) solid rgba(255,255,255,0.08);padding:7px 0;font-size:var(--maya-text-body)}
   .arch .it:last-child{border-bottom:0}
-  .arch .it small{display:block;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);color:var(--dim);line-height:1.5}
-  .arch-deploy{grid-column:1/-1;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);color:var(--dim);line-height:1.9;
+  .arch .it small{display:block;font-family:var(--maya-font-ui);font-size:10px;color:var(--dim);line-height:1.5}
+  .arch-deploy{grid-column:1/-1;font-family:var(--maya-font-ui);font-size:10.5px;color:var(--dim);line-height:1.9;
                border:0.5px dashed var(--line);border-radius:12px;padding:11px 15px}
-  .arch-deploy code{font-family:Menlo,monospace;font-size:var(--maya-text-caption);color:var(--ink)}
+  .arch-deploy code{font-family:Menlo,monospace;font-size:10px;color:var(--ink)}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
   /* v13.44: the doors are plain words. Fromsa liked how MAYA looked without
@@ -491,7 +491,7 @@ try {
     display:flex;align-items:center;justify-content:center;gap:10px;
     text-decoration:none;color:var(--ink);opacity:0.9;transition:opacity .2s;cursor:pointer}
   .grid.doors .card:hover{opacity:1}
-  .grid.doors .card b{font-size:var(--maya-text-section);font-weight:400;display:inline;margin:0}
+  .grid.doors .card b{font-size:20px;font-weight:400;display:inline;margin:0}
   /* v13.45: hovering MAYA reveals the two back rooms, the Operations Room
      Beta and the Playground, as chips hanging to its right. */
   .card-maya{position:relative}
@@ -503,7 +503,7 @@ try {
     opacity:0;pointer-events:none;transition:opacity .18s ease .4s}
   .card-maya:hover .pg-chips,.card-maya:focus .pg-chips,.card-maya .pg-chips:hover{
     opacity:1;pointer-events:auto;transition-delay:0s}
-  .pg-chip{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.18em;text-transform:uppercase;
+  .pg-chip{font-family:var(--maya-font-ui);font-size:8px;letter-spacing:0.18em;text-transform:uppercase;
     color:var(--dim);border:var(--maya-hairline) solid var(--line);border-radius:var(--maya-radius-pill);padding:3px 9px;
     text-decoration:none}
   .pg-chip:hover{color:var(--ink);border-color:rgba(255,255,255,0.45)}
@@ -540,7 +540,7 @@ try {
     #top-lights .lgt-lbl{display:none}
     .grid{grid-template-columns:1fr 1fr}
     .grid.doors{gap:18px}
-    .grid.doors .card b{font-size:var(--maya-text-body)}
+    .grid.doors .card b{font-size:16px}
     .tiles{grid-template-columns:1fr 1fr}
     .pe-panel{grid-template-columns:1fr}
     .arch{grid-template-columns:1fr}
@@ -568,7 +568,7 @@ try {
     -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
     mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
   #mkt-ticker-inner{display:inline-block;white-space:nowrap;
-    font-family:var(--maya-font-ui);font-weight:400;font-size:var(--maya-text-caption);letter-spacing:0.18em;
+    font-family:var(--maya-font-ui);font-weight:400;font-size:10px;letter-spacing:0.18em;
     text-transform:uppercase;color:var(--blue);line-height:28px;
     animation:tickerslide 34s linear infinite;will-change:transform}
   #mkt-ticker:hover #mkt-ticker-inner{animation-play-state:paused}
@@ -578,7 +578,7 @@ try {
   #mkt-ticker-inner .tk-green{color:var(--green)}
   @media (max-width:760px){ #top-bar #mkt-ticker, #ticker-bar #mkt-ticker{display:none} }
   @keyframes tickerslide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-  #adm-mkt #mkt-status{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.16em;
+  #adm-mkt #mkt-status{font-family:var(--maya-font-ui);font-size:9.5px;letter-spacing:0.16em;
     color:var(--faint);text-transform:uppercase;min-height:14px;margin:0 0 10px}
   #adm-mkt details.fold{margin:16px 0 8px;position:relative}
   /* v13.84: more breathing room before Ad Campaigns, where the money section starts. */
@@ -594,29 +594,29 @@ try {
   #adm-mkt .panel{border:var(--maya-hairline) solid var(--line);border-radius:18px;background:rgba(8,12,26,0.55);
     backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
     padding:16px 18px;text-align:left}
-  #adm-mkt .note{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);color:var(--dim);line-height:1.8;
+  #adm-mkt .note{font-family:var(--maya-font-ui);font-size:10.5px;color:var(--dim);line-height:1.8;
     border:0.5px dashed var(--line);border-radius:14px;padding:12px 14px;text-align:left}
-  #adm-mkt table{width:100%;border-collapse:collapse;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);color:var(--ink)}
-  #adm-mkt th{font-size:var(--maya-text-caption);letter-spacing:0.18em;text-transform:uppercase;color:var(--faint);
+  #adm-mkt table{width:100%;border-collapse:collapse;font-family:var(--maya-font-ui);font-size:11px;color:var(--ink)}
+  #adm-mkt th{font-size:8.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--faint);
     font-weight:400;text-align:left;padding:6px 8px}
   #adm-mkt td{padding:7px 8px;border-top:var(--maya-hairline) solid rgba(255,255,255,0.07)}
   #adm-mkt td.num,#adm-mkt th.num{text-align:right;font-variant-numeric:tabular-nums}
   #adm-mkt .wix-jump{display:flex;align-items:center;justify-content:center;width:26px;height:26px;
     margin-left:auto;color:var(--dim);border:var(--maya-hairline) solid var(--line);border-radius:var(--maya-radius-pill);
-    text-decoration:none;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);transition:all .2s}
+    text-decoration:none;font-family:var(--maya-font-ui);font-size:10px;transition:all .2s}
   #adm-mkt .wix-jump:hover{color:var(--ink);border-color:rgba(255,255,255,0.5)}
-  #adm-mkt .src-tag{display:inline-block;padding:2px 8px;border-radius:var(--maya-radius-pill);font-size:var(--maya-text-caption);letter-spacing:0.14em;
+  #adm-mkt .src-tag{display:inline-block;padding:2px 8px;border-radius:var(--maya-radius-pill);font-size:8.5px;letter-spacing:0.14em;
     text-transform:uppercase;border:var(--maya-hairline) solid var(--line);color:var(--dim);margin-left:8px}
   #adm-mkt .src-tag.paid{color:var(--amber);border-color:rgba(251,191,36,0.4)}
-  #adm-mkt .bars-axis{display:flex;justify-content:space-between;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);
+  #adm-mkt .bars-axis{display:flex;justify-content:space-between;font-family:var(--maya-font-ui);font-size:8.5px;
     letter-spacing:0.12em;color:var(--faint);margin-top:6px}
   #adm-mkt .metric-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-  #adm-mkt .metric-chip{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.14em;text-transform:uppercase;
+  #adm-mkt .metric-chip{font-family:var(--maya-font-ui);font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;
     color:var(--dim);border:var(--maya-hairline) solid var(--line);border-radius:var(--maya-radius-pill);padding:5px 13px;
     background:transparent;cursor:pointer;transition:all .2s}
   #adm-mkt .metric-chip:hover{color:var(--ink)}
   #adm-mkt .metric-chip.on{color:var(--ink);border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.06)}
-  #adm-mkt .range-chip{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.1em;
+  #adm-mkt .range-chip{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.1em;
     padding:4px 9px;border:var(--maya-hairline) solid var(--line);border-radius:var(--maya-radius-pill);background:transparent;
     color:var(--dim);cursor:pointer;transition:all .2s}
   #adm-mkt .range-chip:hover{color:var(--ink)}
@@ -624,9 +624,9 @@ try {
   #adm-mkt #ad-tip{position:absolute;top:8px;pointer-events:none;display:none;z-index:5;
     padding:8px 11px;border-radius:12px;border:var(--maya-hairline) solid var(--line);
     background:rgba(8,12,26,0.92);backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
-    font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.04em;color:var(--ink);
+    font-family:var(--maya-font-ui);font-size:10.5px;letter-spacing:0.04em;color:var(--ink);
     text-align:left;white-space:nowrap}
-  #adm-mkt #ad-tip .tip-date{color:var(--faint);font-size:var(--maya-text-caption);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px}
+  #adm-mkt #ad-tip .tip-date{color:var(--faint);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px}
   #adm-mkt #ad-tip .tip-row{display:flex;align-items:center;gap:6px;margin-top:2px}
   #adm-mkt #ad-tip .tip-row .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
   #adm-mkt #leads-table td{font-size:var(--maya-text-body);vertical-align:top}
@@ -641,7 +641,7 @@ try {
   #adm-mkt #leads-table{table-layout:fixed;width:100%;min-width:720px;border-collapse:separate;border-spacing:0}
   /* v13.94: every column is centered, per Fromsa. */
   #adm-mkt #leads-table th{position:sticky;top:0;z-index:3;background:#0d1120;
-    font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.14em;text-transform:uppercase;
+    font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;
     color:var(--dim);font-weight:400;text-align:center;padding:7px 12px 9px;white-space:nowrap;
     border-bottom:var(--maya-hairline) solid var(--line)}
   #adm-mkt #leads-table td{padding:9px 12px 9px;text-align:center}
@@ -681,29 +681,29 @@ try {
     font-size:20px;line-height:1;cursor:pointer}
   #lead-inv-modal .inv-close:hover{color:var(--ink)}
   #lead-inv-modal h4{font-family:var(--maya-font-ui);font-weight:500;font-size:var(--maya-text-section);color:var(--ink);margin:0 20px 6px 0}
-  #lead-inv-modal .inv-lede{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);line-height:1.5;color:var(--dim);margin:0 0 14px}
-  #lead-inv-modal .inv-label{display:block;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.18em;
+  #lead-inv-modal .inv-lede{font-family:var(--maya-font-ui);font-size:11.5px;line-height:1.5;color:var(--dim);margin:0 0 14px}
+  #lead-inv-modal .inv-label{display:block;font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.18em;
     text-transform:uppercase;color:var(--faint);margin:0 0 5px}
   #lead-inv-modal .inv-brief{width:100%;background:rgba(255,255,255,0.03);border:var(--maya-hairline) solid var(--line);border-radius:10px;
-    color:var(--ink);font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);line-height:1.5;padding:10px 12px;resize:vertical}
+    color:var(--ink);font-family:var(--maya-font-ui);font-size:11.5px;line-height:1.5;padding:10px 12px;resize:vertical}
   #lead-inv-modal .inv-input{width:100%;background:rgba(255,255,255,0.03);border:var(--maya-hairline) solid var(--line);border-radius:10px;
     color:var(--ink);font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);padding:9px 12px}
   #lead-inv-modal .inv-input:focus{outline:none;border-color:rgba(169,201,255,0.6)}
-  #lead-inv-modal .inv-btn{margin-top:9px;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.16em;text-transform:uppercase;
+  #lead-inv-modal .inv-btn{margin-top:9px;font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.16em;text-transform:uppercase;
     color:var(--dim);background:transparent;border:var(--maya-hairline) solid var(--line);border-radius:var(--maya-radius-pill);padding:7px 15px;cursor:pointer;transition:all .18s}
   #lead-inv-modal .inv-btn:hover{color:var(--ink);border-color:rgba(255,255,255,0.5)}
   #lead-inv-modal .inv-btn.primary{color:#a9c9ff;border-color:rgba(169,201,255,0.45)}
   #lead-inv-modal .inv-btn.primary:hover{background:rgba(169,201,255,0.10)}
   #lead-inv-modal .inv-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:9px}
-  #lead-inv-modal .inv-msg{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.05em;color:var(--dim)}
-  #lead-inv-modal .inv-existing{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);line-height:1.5;color:var(--dim);margin-top:10px}
+  #lead-inv-modal .inv-msg{font-family:var(--maya-font-ui);font-size:10px;letter-spacing:0.05em;color:var(--dim)}
+  #lead-inv-modal .inv-existing{font-family:var(--maya-font-ui);font-size:10.5px;line-height:1.5;color:var(--dim);margin-top:10px}
   #lead-inv-modal .inv-existing a{color:#a9c9ff;word-break:break-all}
   /* Actions: the icons ride on top, the recommended timing sits under them. */
   #adm-mkt #leads-table .lead-td-actions .lead-ctas{justify-content:center;margin:0 0 5px}
   #adm-mkt #leads-table .lead-td-actions .lead-rec{text-align:center}
-  #adm-mkt #leads-table .lead-when{color:var(--faint);font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.08em;margin-top:2px}
+  #adm-mkt #leads-table .lead-when{color:var(--faint);font-family:var(--maya-font-ui);font-size:9.5px;letter-spacing:0.08em;margin-top:2px}
   #adm-mkt #leads-table .lead-src{display:inline-block;margin-left:6px;padding:0 5px;border-radius:var(--maya-radius-pill);border:var(--maya-hairline) solid var(--line);
-    font-size:var(--maya-text-caption);letter-spacing:0.14em;color:var(--faint);vertical-align:middle}
+    font-size:8px;letter-spacing:0.14em;color:var(--faint);vertical-align:middle}
   #adm-mkt #leads-table .lead-src.wix{color:#a9c9ff;border-color:rgba(169,201,255,0.4)}
   #adm-mkt #leads-table .lead-src.phone{color:#b8f0c8;border-color:rgba(184,240,200,0.45)}   /* v14.30: a lead Maya took on the phone */
   #adm-mkt #leads-table .lead-note{font-family:var(--maya-font-ui);font-size:var(--maya-text-body);line-height:1.45;color:var(--dim)}
@@ -737,25 +737,25 @@ try {
   #adm-mkt #leads-table .lead-del{color:var(--faint)}
   #adm-mkt #leads-table .lead-del:hover{color:#f87171;border-color:rgba(248,113,113,0.5)}
   #adm-mkt #leads-bar{display:flex;gap:8px;justify-content:flex-end;margin:0 0 8px}
-  #adm-mkt .lead-tool{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.14em;text-transform:uppercase;
+  #adm-mkt .lead-tool{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;
     color:var(--dim);background:transparent;border:var(--maya-hairline) solid var(--line);border-radius:var(--maya-radius-pill);padding:5px 12px;cursor:pointer;transition:all .15s}
   #adm-mkt .lead-tool:hover{color:var(--ink);border-color:rgba(255,255,255,0.5)}
   #adm-mkt .bl-funnel{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
     padding:6px 0 14px;border-bottom:var(--maya-hairline) solid rgba(255,255,255,0.08);margin-bottom:12px}
   #adm-mkt .bl-step{text-align:center;min-width:104px}
-  #adm-mkt .bl-step .v{font-family:var(--maya-font-ui);font-size:var(--maya-text-metric);color:var(--ink)}
-  #adm-mkt .bl-step .k{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.16em;text-transform:uppercase;color:var(--dim);margin-top:2px}
+  #adm-mkt .bl-step .v{font-family:var(--maya-font-ui);font-size:24px;color:var(--ink)}
+  #adm-mkt .bl-step .k{font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--dim);margin-top:2px}
   #adm-mkt .bl-arrow{font-family:var(--maya-font-ui);font-size:10px;color:var(--faint);text-align:center}
   #adm-mkt .bl-arrow b{display:block;color:#a9c9ff;font-weight:400;font-size:11px}
   #adm-mkt .bl-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
   /* v13.91: the traffic-sources sub-heading inside the merged bottom-line shell. */
-  #adm-mkt .bl-sub{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.18em;text-transform:uppercase;
+  #adm-mkt .bl-sub{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.18em;text-transform:uppercase;
     color:var(--dim);margin:18px 0 6px;padding-top:14px;border-top:var(--maya-hairline) solid rgba(255,255,255,0.10)}
   #adm-mkt .bl-tile{border:var(--maya-hairline) solid rgba(255,255,255,0.12);border-radius:14px;padding:10px 14px;text-align:center}
   #adm-mkt .bl-tile .v{font-family:var(--maya-font-ui);font-size:var(--maya-text-section);color:var(--ink)}
   #adm-mkt .bl-tile .v.good{color:var(--green)} #adm-mkt .bl-tile .v.bad{color:var(--amber)}
-  #adm-mkt .bl-tile .k{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:3px;line-height:1.6}
-  #adm-mkt .lead-rec{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.12em;text-transform:uppercase;color:var(--dim)}
+  #adm-mkt .bl-tile .k{font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:3px;line-height:1.6}
+  #adm-mkt .lead-rec{font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim)}
   #adm-mkt .lead-identity{display:flex;justify-content:center;align-items:center;gap:8px;white-space:nowrap}
   #adm-mkt #leads-table .lead-identity .lead-name-edit{min-width:0;max-width:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
   #adm-mkt #leads-table .lead-email-edit{white-space:nowrap;min-width:120px}
@@ -764,7 +764,7 @@ try {
   #adm-mkt .lead-cta svg{width:10px;height:10px}
   #adm-mkt #leads-table .lead-identity .lead-src{padding:1px 8px;margin-left:0;background:rgba(169,201,255,.04)}
   #adm-mkt .lead-cta{width:26px;height:22px;border-radius:var(--maya-radius-pill);border:var(--maya-hairline) solid var(--line);background:transparent;
-    color:var(--dim);cursor:pointer;font-size:var(--maya-text-caption);line-height:1;display:inline-flex;align-items:center;justify-content:center;
+    color:var(--dim);cursor:pointer;font-size:11px;line-height:1;display:inline-flex;align-items:center;justify-content:center;
     transition:all .2s;text-decoration:none}
   #adm-mkt .lead-cta:hover{border-color:rgba(255,255,255,0.5);color:var(--ink)}
   #adm-mkt .lead-cta[disabled]{opacity:.45;cursor:default}
@@ -774,24 +774,24 @@ try {
   #adm-mkt .lead-note-box{display:flex;gap:8px;align-items:flex-start;margin:4px 0 8px}
   #adm-mkt .lead-note-box textarea{flex:1;min-height:52px;resize:vertical;border-radius:12px;border:var(--maya-hairline) solid var(--line);
     background:rgba(255,255,255,0.03);color:var(--ink);font-family:var(--maya-font-ui);font-size:var(--maya-text-body);padding:8px 12px;outline:none}
-  #adm-mkt .lead-note-saved{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);margin-top:4px}
-  #adm-mkt .chart-legend{display:flex;gap:18px;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);
+  #adm-mkt .lead-note-saved{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);margin-top:4px}
+  #adm-mkt .chart-legend{display:flex;gap:18px;font-family:var(--maya-font-ui);font-size:9.5px;
     letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin:10px 2px 0}
   #adm-mkt .chart-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
   #adm-mkt #ad-chart{width:100%;height:190px;display:block}
   #adm-mkt #ad-ylabels span{position:absolute;left:4px;transform:translateY(-50%);
-    font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.08em;color:var(--faint);
+    font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.08em;color:var(--faint);
     background:rgba(8,12,26,0.55);padding:0 4px;border-radius:6px;pointer-events:none}
   #adm-mkt #ad-xaxis{justify-content:space-between}
   #adm-mkt #ad-xaxis span{flex:1;text-align:center}
   #adm-mkt #ad-xaxis span:first-child{text-align:left}
   #adm-mkt #ad-xaxis span:last-child{text-align:right}
-  #adm-mkt #ad-yaxis-word{font-size:var(--maya-text-caption);color:var(--faint);letter-spacing:0.1em}
+  #adm-mkt #ad-yaxis-word{font-size:8.5px;color:var(--faint);letter-spacing:0.1em}
   #adm-mkt .chart-legend .lg-line{display:inline-block;width:16px;height:0;border-top:2px solid var(--dim);
     margin-right:6px;vertical-align:middle}
   #adm-mkt .chart-legend .lg-line.thin{border-top-width:1px;opacity:0.6}
   #adm-mkt .chart-legend .lg-line.dash{border-top-style:dashed}
-  #adm-mkt .status-word{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.14em;text-transform:uppercase}
+  #adm-mkt .status-word{font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase}
   #adm-mkt .status-word.on{color:var(--green)} #adm-mkt .status-word.off{color:var(--faint)}
   #adm-mkt .pair-b{color:#a9c9ff}
   /* v13.94: on a phone the drawer pane is the full width, like the app. */
@@ -803,11 +803,11 @@ try {
 #adm-mkt #leads-table .lead-h-stage{width:160px}.lead-stage{max-width:145px;}
 .lead-filter{display:inline-block;position:relative;margin-left:8px;font:var(--maya-text-caption) var(--maya-font-ui);letter-spacing:normal;text-transform:none}
 .lead-filter summary{cursor:pointer;list-style:none}.lead-filter svg{width:16px;height:16px}.lead-filter>div{position:absolute;z-index:10;padding:12px;min-width:185px;border:var(--maya-hairline) solid #ffffff30;border-radius:12px}.lead-filter label{display:block;margin:8px 0;white-space:nowrap}
-#model-snapshot{font-size:var(--maya-text-caption);text-align:left;padding:12px;overflow-wrap:anywhere}#drawer.msgs #model-snapshot{display:none}
+#model-snapshot{font-size:11px;text-align:left;padding:12px;overflow-wrap:anywhere}#drawer.msgs #model-snapshot{display:none}
 
 /* Shared Admin/Affiliates CRM typography and translucent controls. */
-#adm-mkt #leads-table td,#adm-mkt #leads-table .lead-note-vp,#adm-mkt #leads-table .lead-stage,#adm-mkt #leads-table .lead-open{font:400 var(--maya-text-body)/1.55 var(--maya-font-ui);color:#fff;font-variant-numeric:tabular-nums}
-#adm-mkt #leads-table th{font:500 var(--maya-text-caption) var(--maya-font-ui);letter-spacing:.12em;vertical-align:middle;color:#fff}
+#adm-mkt #leads-table td,#adm-mkt #leads-table .lead-note-vp,#adm-mkt #leads-table .lead-stage,#adm-mkt #leads-table .lead-open{font:400 13px/1.55 var(--maya-font-ui);color:#fff;font-variant-numeric:tabular-nums}
+#adm-mkt #leads-table th{font:500 11px var(--maya-font-ui);letter-spacing:.12em;vertical-align:middle;color:#fff}
 #adm-mkt #leads-table .lead-stage{max-width:none;width:150px;text-align:center;text-align-last:center;padding:6px;background:transparent;border:0}
 #adm-mkt #leads-table .lead-h-stage{width:180px;white-space:nowrap}
 #adm-mkt #leads-table .lead-identity{justify-content:center}
@@ -816,8 +816,8 @@ try {
 .lead-filter{vertical-align:middle;line-height:1;letter-spacing:normal;color:#fff}
 .lead-filter summary{display:flex;align-items:center;padding:3px}.lead-filter summary::-webkit-details-marker{display:none}
 .lead-filter>div{right:0;text-align:left;padding:14px}
-.lead-filter label{font:var(--maya-text-body)/1.5 var(--maya-font-ui);color:#fff;display:flex;align-items:center;gap:8px}.lead-filter input{accent-color:#adcdf8}
-#model-snapshot{text-align:center;padding:0;font-family:var(--maya-font-ui)}.model-group{padding:12px;border-radius:12px;margin:4px 0;}.model-group strong{display:block;font:var(--maya-text-section) var(--maya-font-ui);color:#fff}.model-group small{display:block;font:var(--maya-text-caption)/1.5 var(--maya-font-ui);color:var(--dim)}.model-note{font:var(--maya-text-caption) var(--maya-font-ui);color:var(--dim);padding:8px}
+.lead-filter label{font:13px/1.5 var(--maya-font-ui);color:#fff;display:flex;align-items:center;gap:8px}.lead-filter input{accent-color:#adcdf8}
+#model-snapshot{text-align:center;padding:0;font-family:var(--maya-font-ui)}.model-group{padding:12px;border-radius:12px;margin:4px 0;}.model-group strong{display:block;font:var(--maya-text-section) var(--maya-font-ui);color:#fff}.model-group small{display:block;font:11px/1.5 var(--maya-font-ui);color:var(--dim)}.model-note{font:10px var(--maya-font-ui);color:var(--dim);padding:8px}
 </style>
 <style>
   #affiliate-profile{display:none}
@@ -827,16 +827,16 @@ try {
   .affiliates-view #adm-scroll{padding-top:100px}
   .affiliate-avatar{width:116px;height:116px;border-radius:50%;margin:20px auto 12px;display:grid;place-items:center;border:var(--maya-hairline) solid rgba(169,201,255,.6);background:radial-gradient(circle at 35% 25%,#294c75,#091527);color:#dbe8ff;font:var(--maya-text-metric) var(--maya-font-ui);box-shadow:0 0 40px #5f9fe51c}
   #affiliate-profile h1{font-weight:400;font-size:36px;margin:6px 0}
-  .affiliate-beta{font:var(--maya-text-caption) var(--maya-font-ui);letter-spacing:.18em;color:var(--amber);text-transform:uppercase}
+  .affiliate-beta{font:10px var(--maya-font-ui);letter-spacing:.18em;color:var(--amber);text-transform:uppercase}
   .affiliate-caption,#affiliate-status{font:var(--maya-text-caption)/1.7 var(--maya-font-ui);color:var(--dim)}
   #affiliate-status:empty{display:none}
   .affiliate-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0 10px}
   .affiliate-stat{padding:18px 8px;border:var(--maya-hairline) solid var(--line);border-radius:18px;}
   .affiliate-stat strong{display:block;font:var(--maya-text-metric) var(--maya-font-ui);color:var(--ink)}
-  .affiliate-stat span{font:var(--maya-text-caption) var(--maya-font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+  .affiliate-stat span{font:9px var(--maya-font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
   .affiliates-view #adm-mkt{margin-top:0}
   .affiliates-view #top-left-brand .brand-chips,.affiliates-view #adm-tab-systems,.affiliates-view #adm-tab-logs{display:none!important}
-  #leads-bar button.lead-tool{font-size:var(--maya-text-body);line-height:1;width:32px;height:26px;padding:0}
+  #leads-bar button.lead-tool{font-size:12.5px;line-height:1;width:32px;height:26px;padding:0}
   .lead-stage{background:transparent;border:0;max-width:86px}
   .lead-stage option{background:#0d1120}
   @media(max-width:640px){.affiliate-stats{grid-template-columns:repeat(2,1fr)}.affiliates-view #adm-scroll{padding-top:80px}.affiliate-avatar{width:96px;height:96px}}
@@ -2817,7 +2817,7 @@ function leadSignup(x){const value=x.createdAt||x.ts||x.date;const d=value?new D
 function _leadColDefs(){
   return {
     name: { label: 'Full name', h: 'lead-h-name', td: 'lead-td-name',
-      render: (x, i) => '<div class="lead-identity"><button class="lead-open" onclick="leadOpenThread('+i+')">'+esc(x.name || 'Unnamed')+'</button></div><div class="lead-subline"><span class="lead-src wix">'+cell(i, x, 'tier', String(x.tier || x.company || '').replace(/\s*[·,]?\s*\$[\d,.]+.*$/,'').trim(),'lead-sig-edit')+'</span><time>'+esc(leadSignup(x))+'</time>'+_actionsCell(i,x)+'</div>' },
+      render: (x, i) => '<div class="lead-identity"><button class="lead-open" onclick="leadOpenThread('+i+')">'+esc(x.name || 'Unnamed')+'</button></div><div class="lead-subline"><span class="lead-src wix">'+esc(String(x.tier || x.company || '').replace(/\s*[·,]?\s*\$[\d,.]+.*$/,'').trim())+'</span><time>'+esc(leadSignup(x))+'</time>'+_actionsCell(i,x)+'</div>' },
     // v14.24: Contact, the phone first (that is what gets used), the email when there is none.
     stage: {label:'Status',h:'lead-h-stage',render:(x,i)=>'<select class="lead-stage" aria-label="Lead status" onchange="setLeadStage('+i+',this)">'+(['closed','passed'].includes(x.stage)?'<option value="'+x.stage+'" selected disabled>'+ (x.stage==='closed'?'Closed':'Passed')+' (previous)</option>':'')+Object.entries(LEAD_STAGES).map(([k,v])=>'<option value="'+k+'"'+(leadStage(x)===k?' selected':'')+'>'+v+'</option>').join('')+'</select>'},
     note: { label: 'Latest Notes', h: 'lead-h-note', td: 'lead-note',

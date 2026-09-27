@@ -33,7 +33,7 @@ try {
   .brand-title{font-family:var(--maya-font-brand);font-size:20px;letter-spacing:0.22em;
     color:rgba(255,255,255,0.9);text-transform:uppercase}
   .top-btn{background:transparent;border:var(--maya-hairline) solid var(--line);border-radius:var(--maya-radius-pill);padding:6px 14px;
-    font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);font-weight:400;letter-spacing:0.15em;
+    font-family:var(--maya-font-ui);font-size:10px;font-weight:400;letter-spacing:0.15em;
     text-transform:uppercase;color:var(--blue);cursor:pointer;transition:all .2s;
     backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost)}
   .top-btn:hover{border-color:rgba(255,255,255,0.42)}
@@ -54,44 +54,44 @@ try {
   .top-btn.hamburger{transition:transform .42s cubic-bezier(0.16,1,0.3,1)}
   body.drawer-open .top-btn.hamburger{transform:translateX(-290px)}
   @media (max-width:640px){ body.drawer-open .top-btn.hamburger{transform:none} }
-  #drawer h3{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.24em;text-transform:uppercase;
+  #drawer h3{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.24em;text-transform:uppercase;
     color:var(--faint);margin:8px 6px 6px}
   #drawer a{display:block;padding:8px 10px;border-radius:12px;text-decoration:none;color:var(--ink);
     font-size:var(--maya-text-body);line-height:1.25}
-  #drawer a small{display:block;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.1em;
+  #drawer a small{display:block;font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.1em;
     color:var(--faint);margin-top:2px}
   #drawer a:hover{background:rgba(255,255,255,0.05)}
-  h2.grp{font-size:var(--maya-text-caption);letter-spacing:0.26em;text-transform:uppercase;color:var(--grp);
+  h2.grp{font-size:11.5px;letter-spacing:0.26em;text-transform:uppercase;color:var(--grp);
     font-family:var(--maya-font-ui);font-weight:400;margin:22px 0 8px}
   .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:6px}
   .tile{border:var(--maya-hairline) solid var(--line);border-radius:var(--maya-radius-pill);background:rgba(10,16,34,0.55);
     backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
     padding:6px 14px;display:flex;align-items:baseline;justify-content:center;gap:8px}
-  .tile .k{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.14em;text-transform:uppercase;color:var(--dim)}
+  .tile .k{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim)}
   .tile .v{font-size:var(--maya-text-body)}
   .tile.live .v{color:var(--green)}
   .panel{border:var(--maya-hairline) solid var(--line);border-radius:18px;
 
     padding:16px 18px;text-align:left}
-  .note{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);color:var(--dim);line-height:1.8;
+  .note{font-family:var(--maya-font-ui);font-size:10.5px;color:var(--dim);line-height:1.8;
     border:0.5px dashed var(--line);border-radius:14px;padding:12px 14px;text-align:left}
   .note b{color:var(--ink);font-weight:400}
-  .note code{font-family:ui-monospace,Menlo,monospace;font-size:var(--maya-text-caption);color:var(--amber)}
-  table{width:100%;border-collapse:collapse;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);color:var(--ink)}
-  th{font-size:var(--maya-text-caption);letter-spacing:0.18em;text-transform:uppercase;color:var(--faint);
+  .note code{font-family:ui-monospace,Menlo,monospace;font-size:10px;color:var(--amber)}
+  table{width:100%;border-collapse:collapse;font-family:var(--maya-font-ui);font-size:11px;color:var(--ink)}
+  th{font-size:8.5px;letter-spacing:0.18em;text-transform:uppercase;color:var(--faint);
      font-weight:400;text-align:left;padding:6px 8px}
   td{padding:7px 8px;border-top:var(--maya-hairline) solid rgba(255,255,255,0.07)}
   td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
-  .src-tag{display:inline-block;padding:2px 8px;border-radius:var(--maya-radius-pill);font-size:var(--maya-text-caption);letter-spacing:0.14em;
+  .src-tag{display:inline-block;padding:2px 8px;border-radius:var(--maya-radius-pill);font-size:8.5px;letter-spacing:0.14em;
     text-transform:uppercase;border:var(--maya-hairline) solid var(--line);color:var(--dim);margin-left:8px}
   .src-tag.paid{color:var(--amber);border-color:rgba(251,191,36,0.4)}
   .bars{display:flex;align-items:flex-end;gap:3px;height:110px;padding:8px 2px 0}
   .bar{flex:1 1 0;background:linear-gradient(to top,rgba(120,170,255,0.75),rgba(190,215,255,0.35));
     border-radius:3px 3px 0 0;min-height:2px;position:relative}
   .bar:hover{background:linear-gradient(to top,rgba(160,200,255,0.95),rgba(220,235,255,0.6))}
-  .bars-axis{display:flex;justify-content:space-between;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);
+  .bars-axis{display:flex;justify-content:space-between;font-family:var(--maya-font-ui);font-size:8.5px;
     letter-spacing:0.12em;color:var(--faint);margin-top:6px}
-  .money{font-family:var(--maya-font-ui);font-size:var(--maya-text-metric)}
+  .money{font-family:var(--maya-font-ui);font-size:26px}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   @media (max-width:760px){ .grid2{grid-template-columns:1fr} body{padding:76px 14px 30px} }
   .status-bar{border:var(--maya-hairline) solid var(--line);border-radius:var(--maya-radius-pill);padding:10px 18px;display:flex;
@@ -102,7 +102,7 @@ try {
     display:flex;align-items:center;justify-content:center;gap:8px}
   details.fold summary::-webkit-details-marker{display:none}
   details.fold summary h2.grp{margin:0}
-  details.fold summary::after{content:'\25BE';font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);color:var(--faint);
+  details.fold summary::after{content:'\25BE';font-family:var(--maya-font-ui);font-size:11px;color:var(--faint);
     transition:transform .2s}
   details.fold:not([open]) summary::after{transform:rotate(-90deg)}
   /* v13.59: the jump to the Wix Analytics dashboard, top right of the section. */
@@ -110,24 +110,24 @@ try {
   /* v13.64: the jump is small and rides beside the name, inside the title row. */
   .wix-jump{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;
     width:16px;height:16px;margin:0 6px 0 5px;
-    font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);text-decoration:none;
+    font-family:var(--maya-font-ui);font-size:10px;text-decoration:none;
     color:var(--dim);border:var(--maya-hairline) solid var(--line);border-radius:var(--maya-radius-pill);
     width:26px;height:26px;display:flex;align-items:center;justify-content:center;
     transition:all .2s}
   .wix-jump:hover{color:var(--ink);border-color:rgba(255,255,255,0.5)}
-  #checked-at{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.16em;color:var(--faint);
+  #checked-at{font-family:var(--maya-font-ui);font-size:9.5px;letter-spacing:0.16em;color:var(--faint);
     text-transform:uppercase;margin-bottom:10px}
   /* v13.44: the paid section is one dashboard now, drawn the way Google Ads
      draws its own: metric chips, one chart, a line per source, then the
      campaign table underneath. */
   .metric-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-  .metric-chip{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.14em;text-transform:uppercase;
+  .metric-chip{font-family:var(--maya-font-ui);font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;
     color:var(--dim);border:var(--maya-hairline) solid var(--line);border-radius:var(--maya-radius-pill);padding:5px 13px;
     background:transparent;cursor:pointer;transition:all .2s}
   .metric-chip:hover{color:var(--ink)}
   .metric-chip.on{color:var(--ink);border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.06)}
   /* v13.54: the D / W / M range toggle, a smaller cousin of the metric chip. */
-  .range-chip{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.1em;
+  .range-chip{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.1em;
     padding:4px 9px;border:var(--maya-hairline) solid var(--line);border-radius:var(--maya-radius-pill);background:transparent;
     color:var(--dim);cursor:pointer;transition:all .2s}
   .range-chip:hover{color:var(--ink)}
@@ -140,7 +140,7 @@ try {
   /* v13.59: the line is doubled and slides half its width, so it starts
      mid-story with words already on screen, seamless, and a touch faster. */
   #ticker-inner{display:inline-block;white-space:nowrap;
-    font-family:var(--maya-font-ui);font-weight:400;font-size:var(--maya-text-caption);letter-spacing:0.18em;
+    font-family:var(--maya-font-ui);font-weight:400;font-size:10px;letter-spacing:0.18em;
     text-transform:uppercase;color:var(--blue);line-height:28px;
     animation:tickerslide 34s linear infinite;will-change:transform}
   #ticker:hover #ticker-inner{animation-play-state:paused}
@@ -153,21 +153,21 @@ try {
      light blue of the logo's edges, a thin bar between them. */
   .tile .v .pair-b{color:#a9c9ff}
   .tile .v .pair-bar{color:var(--faint);margin:0 6px;font-weight:400}
-  .pair-legend{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.14em;text-transform:uppercase;
+  .pair-legend{font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;
     color:var(--faint);margin:2px 0 6px}
   .pair-legend .lg-maya{color:#a9c9ff}
   /* v13.54: the chart hover layer. */
   #ad-tip{position:absolute;top:8px;pointer-events:none;display:none;z-index:5;
     padding:8px 11px;border-radius:12px;border:var(--maya-hairline) solid var(--line);
     background:rgba(8,12,26,0.92);backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
-    font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.04em;color:var(--ink);
+    font-family:var(--maya-font-ui);font-size:10.5px;letter-spacing:0.04em;color:var(--ink);
     text-align:left;white-space:nowrap}
-  #ad-tip .tip-date{color:var(--faint);font-size:var(--maya-text-caption);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px}
+  #ad-tip .tip-date{color:var(--faint);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:4px}
   #ad-tip .tip-row{display:flex;align-items:center;gap:6px;margin-top:2px}
   #ad-tip .tip-row .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
   /* v13.54: leads list. v13.55: the notes column, clipped to three lines. */
   #leads-table td{font-size:var(--maya-text-body);vertical-align:top}
-  #leads-table .lead-when{color:var(--faint);font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.08em;margin-top:2px}
+  #leads-table .lead-when{color:var(--faint);font-family:var(--maya-font-ui);font-size:9.5px;letter-spacing:0.08em;margin-top:2px}
   #leads-table .lead-note{font-family:var(--maya-font-ui);font-size:var(--maya-text-body);line-height:1.45;color:var(--dim);
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   /* v13.62: the Lead Station. Small round CTAs under each name: draft the
@@ -177,19 +177,19 @@ try {
   .bl-funnel{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
     padding:6px 0 14px;border-bottom:var(--maya-hairline) solid rgba(255,255,255,0.08);margin-bottom:12px}
   .bl-step{text-align:center;min-width:104px}
-  .bl-step .v{font-family:var(--maya-font-ui);font-size:var(--maya-text-metric);color:var(--ink)}
-  .bl-step .k{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.16em;text-transform:uppercase;color:var(--dim);margin-top:2px}
+  .bl-step .v{font-family:var(--maya-font-ui);font-size:24px;color:var(--ink)}
+  .bl-step .k{font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--dim);margin-top:2px}
   .bl-arrow{font-family:var(--maya-font-ui);font-size:10px;color:var(--faint);text-align:center}
   .bl-arrow b{display:block;color:#a9c9ff;font-weight:400;font-size:11px}
   .bl-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
   .bl-tile{border:var(--maya-hairline) solid rgba(255,255,255,0.12);border-radius:14px;padding:10px 14px;text-align:center}
   .bl-tile .v{font-family:var(--maya-font-ui);font-size:var(--maya-text-section);color:var(--ink)}
   .bl-tile .v.good{color:var(--green)} .bl-tile .v.bad{color:var(--amber)}
-  .bl-tile .k{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:3px;line-height:1.6}
-  .lead-rec{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.12em;text-transform:uppercase;color:var(--dim)}
+  .bl-tile .k{font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:3px;line-height:1.6}
+  .lead-rec{font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim)}
   .lead-ctas{display:flex;gap:6px;margin-top:6px}
   .lead-cta{width:26px;height:22px;border-radius:var(--maya-radius-pill);border:var(--maya-hairline) solid var(--hair);background:transparent;
-    color:var(--dim);cursor:pointer;font-size:var(--maya-text-caption);line-height:1;display:inline-flex;align-items:center;justify-content:center;
+    color:var(--dim);cursor:pointer;font-size:11px;line-height:1;display:inline-flex;align-items:center;justify-content:center;
     transition:all .2s;text-decoration:none}
   .lead-cta:hover{border-color:var(--hair-hi);color:var(--ink)}
   .lead-cta[disabled]{opacity:.45;cursor:default}
@@ -198,26 +198,26 @@ try {
   .lead-note-box textarea{flex:1;min-height:52px;resize:vertical;border-radius:12px;border:var(--maya-hairline) solid var(--hair);
     background:rgba(255,255,255,0.03);color:var(--ink);font-family:var(--maya-font-ui);font-size:var(--maya-text-body);padding:8px 12px;outline:none}
   .lead-note-box textarea:focus{border-color:var(--hair-hi)}
-  .lead-note-saved{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);margin-top:4px}
-  .chart-legend{display:flex;gap:18px;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);
+  .lead-note-saved{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--faint);margin-top:4px}
+  .chart-legend{display:flex;gap:18px;font-family:var(--maya-font-ui);font-size:9.5px;
     letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin:10px 2px 0}
   .chart-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
   #ad-chart{width:100%;height:190px;display:block}
   /* v13.48: subtle axes. The y labels ride the gridlines; the x row names
      every day under the chart. */
   #ad-ylabels span{position:absolute;left:4px;transform:translateY(-50%);
-    font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.08em;color:var(--faint);
+    font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.08em;color:var(--faint);
     background:rgba(8,12,26,0.55);padding:0 4px;border-radius:6px;pointer-events:none}
   #ad-xaxis{justify-content:space-between}
   #ad-xaxis span{flex:1;text-align:center}
   #ad-xaxis span:first-child{text-align:left}
   #ad-xaxis span:last-child{text-align:right}
-  #ad-yaxis-word{font-size:var(--maya-text-caption);color:var(--faint);letter-spacing:0.1em}
+  #ad-yaxis-word{font-size:8.5px;color:var(--faint);letter-spacing:0.1em}
   .chart-legend .lg-line{display:inline-block;width:16px;height:0;border-top:2px solid var(--dim);
     margin-right:6px;vertical-align:middle}
   .chart-legend .lg-line.thin{border-top-width:1px;opacity:0.6}
   .chart-legend .lg-line.dash{border-top-style:dashed}
-  .status-word{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0.14em;text-transform:uppercase}
+  .status-word{font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.14em;text-transform:uppercase}
   .status-word.on{color:var(--green)}
   .status-word.off{color:var(--faint)}
 </style>

@@ -8,6 +8,24 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## Compact Admin correction, September 26
+
+Owner rejected enlarged V4 typography/density. Restored 141 increased size
+settings against 3af43c3 across backend/status.html, marketing.html and outbound.html,
+keeping current font families and semantic colors. Mana Siyo/MAYA navigation is
+20px (16px mobile), ticker 10px, campaign data 11px/headers 8.5px. Lead Station
+uses 13px data, 11px metadata, 8px vertical padding and 4px subline gap; Affiliates
+inherits it. Removed generic opaque table-header fill while retaining sticky CRM
+headers. Tier/Signature is escaped plain text, no inline editor; name/phone actions
+remain. Shared adjustments live in aesthetics/ui/maya-canon.css.
+
+Validation: canon source contract, Outbound/CRM browser suite including compact
+sizes, transparent campaign header, noninteractive tier, status/filter/message/invoice
+behavior, mobile and Affiliates density; git diff check. Full historical regression
+suite not claimed green. Existing app-regression tier assertions updated.
+Next: owner pushes this local commit; verify production at normal browser zoom.
+No push, credentials, provider setting changes or live messages in this task.
+
 ## Twilio checkbox registration copy, September 26
 
 Owner has published the optional unchecked SMS consent at https://manasiyo.com/design

@@ -18,6 +18,27 @@ await page.screenshot({path:join(tmpdir(),'maya-outbound-revised.png')});
 await page.goto('https://maya.test/status.html');
 await page.evaluate(()=>{document.querySelectorAll('#gate,#auth-gate').forEach(e=>e.remove());document.querySelector('#adm-mkt').style.display='block';paintLeads({connected:true,list:[{id:'fixture',name:'Example Person',phone:'+15555550100',tier:'Signature',wrote:'A custom suit for a ceremony',createdAt:'2026-09-23',stage:'new'}]});});
 const report=await page.evaluate(()=>{const sel=document.querySelector('.lead-stage'),note=document.querySelector('.lead-note-vp');return {options:[...sel.options].map(x=>x.text),size:getComputedStyle(sel).fontSize,noteSize:getComputedStyle(note).fontSize,color:getComputedStyle(sel).color,actions:document.querySelectorAll('.lead-subline button').length};});
+await page.evaluate(()=>{const table=document.querySelector('#campaigns-table');if(!table.querySelector('th'))table.createTHead().innerHTML='<tr><th>Status</th><th>Campaign</th></tr>';});
+const compact = await page.evaluate(()=>({
+  row:document.querySelector('#lead-tr-0').getBoundingClientRect().height,
+  padding:getComputedStyle(document.querySelector('#lead-tr-0 td')).paddingTop,
+  tierInteractive:!!document.querySelector('.lead-src [contenteditable],.lead-src button,.lead-src a'),
+  tier:document.querySelector('.lead-src').textContent,
+  ticker:getComputedStyle(document.querySelector('#mkt-ticker-inner')).fontSize,
+  header:getComputedStyle(document.querySelector('#campaigns-table th')).backgroundColor
+}));
+assert.equal(report.size,'13px');assert.equal(compact.padding,'8px');assert.ok(compact.row<85);
+assert.equal(compact.tierInteractive,false);assert.equal(compact.tier,'Signature');
+assert.equal(compact.ticker,'10px');assert.equal(compact.header,'rgba(0, 0, 0, 0)');
+await page.evaluate(()=>document.querySelector('#leads-fold').scrollIntoView());
+await page.screenshot({path:join(tmpdir(),'maya-admin-compact.png')});
+await page.setViewportSize({width:390,height:844});
+assert.equal(await page.locator('.lead-stage').evaluate(el=>getComputedStyle(el).fontSize),'13px');
+await page.evaluate(()=>document.body.classList.add('affiliates-view'));
+assert.equal(await page.locator('#lead-tr-0 td').first().evaluate(el=>getComputedStyle(el).paddingTop),'8px');
+await page.evaluate(()=>document.body.classList.remove('affiliates-view'));
+await page.setViewportSize({width:1440,height:1000});
+
 assert.deepEqual(report.options,['Not contacted','In progress','Booked','Cancelled']);assert.equal(report.size,report.noteSize);assert.equal(report.color,'rgb(181, 189, 200)');assert.equal(report.actions,1);
 for(const [value,color] of [['in_progress','rgb(251, 191, 36)'],['booked','rgb(74, 222, 128)'],['canceled','rgb(253, 164, 175)']]){assert.equal(await page.locator('.lead-stage').evaluate((el,value)=>{el.value=value;return getComputedStyle(el).color;},value),color);}await page.locator('.lead-stage').evaluate(el=>el.value='new');
 await page.evaluate(()=>{document.querySelector('.lead-filter').open=true;document.querySelector('.lead-filter input').click();});

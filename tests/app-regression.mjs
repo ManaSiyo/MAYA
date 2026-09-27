@@ -626,8 +626,8 @@ ok('Messages: contact rename saves and carrier feedback survives inbox polling',
 const { introducedName: smsIntroducedName } = await import('../docs/server/maya-messages.mjs');
 ok('Messages: explicit SMS introductions produce a contact name without treating inquiries as names',
   smsIntroducedName('Hi, my name is Mary Ingram, I need a fitting') === 'Mary Ingram' && !smsIntroducedName('I am interested in a fitting'));
-ok('CRM behavior: tier has no price; one phone action below identity; tier saves to its own field',
-  adminInteractions.tier.includes('Signature') && !adminInteractions.tier.includes('$') && adminInteractions.actionsBelow && adminInteractions.actions === 1 && adminInteractions.tierField);
+ok('CRM behavior: tier has no price; one phone action below identity; tier is a noninteractive label',
+  adminInteractions.tier.includes('Signature') && !adminInteractions.tier.includes('$') && adminInteractions.actionsBelow && adminInteractions.actions === 1 && !adminInteractions.tierField);
 const mapVer = await pg.evaluate(() =>
   (document.querySelector('meta[name="maya-version"]') || {}).content || 'missing');
 ok('index and map carry the same maya-version (' + r.version + ')', mapVer === r.version);
@@ -1876,7 +1876,7 @@ ok('CRM columns: frozen identity, tier and inline actions, no separate actions o
   MAP_SOURCE.includes("label: 'Full name'") &&
   !MAP_SOURCE.includes("label: 'Actions'") &&
   !MAP_SOURCE.includes("label: 'Last Quote'") &&
-  MAP_SOURCE.includes("cell(i, x, 'tier'") &&
+  !MAP_SOURCE.includes("cell(i, x, 'tier'") &&
   !MAP_SOURCE.includes("_quoteCell(i, x)") &&
   !MAP_SOURCE.includes("cell(i, x, 'invoice1'") &&
   !MAP_SOURCE.includes("cell(i, x, 'invoice2'") &&
@@ -2050,7 +2050,7 @@ ok('phone feedback preserves original wording and owners are included in message
   PHONE_SOURCE.includes('primary feedback queue') && !PHONE_SOURCE.includes("call.mode !== 'brief' && call.mode !== 'admin'"));
 ok('CRM: Forms tab, plus lead action, handset, tier field and hidden scrolling',
   MAP_SOURCE.includes('aria-current="page">Forms') && MAP_SOURCE.includes('aria-label="Add lead">+') &&
-  MAP_SOURCE.includes("cell(i, x, 'tier'") && MAP_SOURCE.includes('scrollbar-width:none') && !MAP_SOURCE.includes('<rect x="7" y="2.5"'));
+  !MAP_SOURCE.includes("cell(i, x, 'tier'") && MAP_SOURCE.includes('scrollbar-width:none') && !MAP_SOURCE.includes('<rect x="7" y="2.5"'));
 ok('Messages: names use bound events; carrier errors and history warnings are visible',
   MAP_SOURCE.includes('data-thread-index') && MAP_SOURCE.includes('row.onclick = () => openThread') &&
   MAP_SOURCE.includes('m.errorCode') && MAP_SOURCE.includes('if (j.warning)'));
@@ -2098,7 +2098,7 @@ ok('v14.34: the station is the Call back form only, no Last Quote, the header co
   SERVER_SOURCE.includes("call update_lead with that lead and tier") &&
   PHONE_SOURCE.includes("name: 'set_tier'") &&
   PHONE_SOURCE.includes("const autoLeadS = () => Number(process.env.PHONE_AUTO_LEAD_SECONDS || 0);") &&
-  MAP_SOURCE.includes("cell(i, x, 'tier'") &&
+  !MAP_SOURCE.includes("cell(i, x, 'tier'") &&
   MAP_SOURCE.includes('min-width:240px;max-width:260px;width:260px'));
 ok('v14.33: the studio line knows its owner by caller id; clients get guardrails; log_note; snappier turns',
   PHONE_SOURCE.includes("=== digits(deps.fromsaPhone)) { call.mode = 'admin'; }") &&

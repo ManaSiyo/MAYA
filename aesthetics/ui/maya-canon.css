@@ -5,6 +5,8 @@
   --maya-font-brand: 'Cormorant Garamond', serif;
   --maya-text-caption: 12px;
   --maya-text-body: 14px;
+  --maya-text-table: 13px;
+  --maya-text-meta: 11px;
   --maya-text-section: 18px;
   --maya-text-metric: 28px;
   --maya-ink: rgba(245,250,255,.92);
@@ -75,7 +77,7 @@ html[data-maya-surface="dense"] :is(.panel,.tile,.stat,.affiliate-stat,.detail,.
 }
 html[data-maya-surface="dense"] :is(table,th,td,input,select,textarea) { font-family:var(--maya-font-ui);font-variant-numeric:tabular-nums; }
 html[data-maya-surface="dense"] :is(th,td) { border-color:rgba(255,255,255,.1);border-width:var(--maya-hairline); }
-html[data-maya-surface="dense"] th { background:rgba(7,10,20,.78);backdrop-filter:var(--maya-quiet-frost); }
+/* Table headers inherit their panel; sticky Lead Station headers keep their own fill. */
 html[data-maya-surface="dense"] tbody tr:hover { background:var(--maya-hover); }
 /* Metrics use weight and alignment rather than a decorative typeface. */
 html[data-maya-surface] :is(.tile .v,.money,.bl-step .v,.bl-tile .v,.stat strong,.affiliate-stat strong,.pg-stat-num,.pg-plan-num,.pg-plan-price,.funnel .v) {
@@ -90,17 +92,17 @@ html[data-maya-surface="dense"] :is(#adm-tabtitle,#drawer h3,#outbound-drawer h3
 html[data-maya-surface="dense"] .model-group strong {font-size:var(--maya-text-section);}
 /* Lead Station is the dense canon example; all actions and persistence are unchanged. */
 html[data-maya-surface] #adm-mkt #leads-table :is(td,.lead-note-vp,.lead-stage,.lead-open) {
-  font:400 var(--maya-text-body)/1.5 var(--maya-font-ui);font-variant-numeric:tabular-nums;
+  font:400 var(--maya-text-table)/1.5 var(--maya-font-ui);font-variant-numeric:tabular-nums;
 }
 html[data-maya-surface] #adm-mkt #leads-table .lead-open {font-weight:500;color:var(--maya-ink);}
 html[data-maya-surface] #adm-mkt #leads-table :is(.lead-note,.lead-note-vp,.lead-note-edit) {color:var(--maya-secondary);font-style:normal;}
 html[data-maya-surface] #adm-mkt #leads-table :is(.lead-src,.lead-sig-edit,.lead-when,.lead-subline) {
-  font:400 var(--maya-text-caption)/1.5 var(--maya-font-ui);color:var(--maya-tertiary);letter-spacing:0;
+  font:400 var(--maya-text-meta)/1.5 var(--maya-font-ui);color:var(--maya-tertiary);letter-spacing:0;
 }
 html[data-maya-surface] #adm-mkt #leads-table :is(th,.lead-filter label) {
-  font:500 var(--maya-text-caption)/1.5 var(--maya-font-ui);letter-spacing:.06em;color:var(--maya-ink);
+  font:500 var(--maya-text-meta)/1.5 var(--maya-font-ui);letter-spacing:.06em;color:var(--maya-ink);
 }
-html[data-maya-surface] #adm-mkt #leads-table td {padding-top:calc(2 * var(--maya-space));padding-bottom:calc(2 * var(--maya-space));}
+html[data-maya-surface] #adm-mkt #leads-table td {padding-top:var(--maya-space);padding-bottom:var(--maya-space);}
 html[data-maya-surface] #adm-mkt #leads-table .lead-stage {color:var(--maya-inactive);background:transparent;box-shadow:none;}
 html[data-maya-surface] #adm-mkt #leads-table .lead-stage:has(option[value="in_progress"]:checked) {color:var(--maya-progress);}
 html[data-maya-surface] #adm-mkt #leads-table .lead-stage:has(option[value="booked"]:checked) {color:var(--maya-booked);}
@@ -122,3 +124,7 @@ html[data-maya-surface] :is(table,input,select,textarea,.pg-stat-num,.model-grou
 html[data-maya-surface] :is(#top-left-brand .brand-title,.brand h1,#brand,.brand-title) {
   font-family:var(--maya-font-brand);font-weight:500;
 }
+
+/* Owner-approved compact Admin scale; keep V4 fonts and semantic colors. */
+html[data-maya-surface] #adm-mkt #leads-table .lead-subline {margin-top:4px;gap:8px;}
+html[data-maya-surface] #adm-mkt #leads-table .lead-src {cursor:default;}

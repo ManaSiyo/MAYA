@@ -1,3 +1,8 @@
+SEPTEMBER 26: V4 typography/density regression
+Shared header fill introduced a dark campaign strip; fixed by leaving nonsticky
+headers transparent. Size normalization inflated labels and CRM padding; compact
+sizes restored locally. Provider/data behavior unchanged; production unverified.
+
 SEPTEMBER 26: A2P privacy rejection follow-up (OPEN)
 Owner published optional SMS checkbox at manasiyo.com/design. Policy copy refined
 locally for inquiry/appointment messages. No Twilio submission or live settings

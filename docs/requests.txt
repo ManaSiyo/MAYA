@@ -1,3 +1,9 @@
+SEPTEMBER 26: Compact Admin after V4
+[prepared] Restore compact labels, marquee, campaign data and Mana Siyo/MAYA sizes; retain fonts.
+[prepared] Remove dark campaign-header strip; 8px CRM row padding; plain tier labels.
+[verified] Local browser checks; Affiliates shares Lead Station corrections.
+[pending] Owner push and production acceptance.
+
 SEPTEMBER 26: Twilio customer SMS checkbox registration
 [prepared] Professional SMS privacy and terms copy; existing URLs preserved.
 [pending] Policy publication, keyword reply verification and owner resubmission.
