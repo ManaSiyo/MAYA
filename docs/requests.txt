@@ -1,3 +1,8 @@
+SEPTEMBER 26: Twilio customer SMS checkbox registration
+[prepared] Professional SMS privacy and terms copy; existing URLs preserved.
+[pending] Policy publication, keyword reply verification and owner resubmission.
+[pending] Verify Wix checkbox controls customer SMS permission in MAYA.
+
 SEPTEMBER 26: V3 foundation, V4 information-dense extension
 [prepared] Original V3 retained as primary canon. Two-page V4 extension and shared
     CSS across all 11 served page sources. Jost functional text/tabular metrics;

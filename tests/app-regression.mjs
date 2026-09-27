@@ -2106,6 +2106,15 @@ ok('v14.33: the studio line knows its owner by caller id; clients get guardrails
   PHONE_SOURCE.includes("name: 'log_note'") &&
   PHONE_SOURCE.includes("silence_duration_ms: Number(process.env.PHONE_VAD_SILENCE_MS || 420)") &&
   SERVER_SOURCE.includes("appendMayaFeatureFrom(t, 'Fromsa, on the phone', 'phone')"));
+ok('SMS policy revision matches the published optional inquiry/appointment checkbox without changing routes',
+  ['backend/privacy.html', 'backend/terms.html'].every(path => {
+    const text = readFileSync(join(ROOT, path), 'utf8');
+    return text.includes('September 26, 2026') && text.includes('manasiyo.com/design') &&
+      text.includes('not a condition of purchase or of requesting a callback') &&
+      text.includes('one confirmation of your opt-out') && text.includes('worldofsiyo@gmail.com');
+  }) && ['privacy', 'terms'].every(page =>
+    FIREBASE_JSON.includes('"/' + page + '.html"')));
+
 ok('v14.32: the texting paperwork: Privacy Policy and Terms carry the SMS section the carriers require',
   readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').includes('<h1>Privacy Policy</h1>') &&
   readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').includes('third parties, affiliates, or lead generators for their marketing or promotional use.') &&

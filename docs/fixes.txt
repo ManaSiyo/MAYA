@@ -1,3 +1,8 @@
+SEPTEMBER 26: A2P privacy rejection follow-up (OPEN)
+Owner published optional SMS checkbox at manasiyo.com/design. Policy copy refined
+locally for inquiry/appointment messages. No Twilio submission or live settings
+changed; provider approval and consent enforcement remain unverified.
+
 SEPTEMBER 26: visual rules drifting from original V3 canon
 [prepared, 14.40] Repeated serif data/metrics, local frost and late Systems Map
     overrides consolidated into maya-canon.css. Original V3 remains primary.

@@ -8,6 +8,20 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## Twilio checkbox registration copy, September 26
+
+Owner has published the optional unchecked SMS consent at https://manasiyo.com/design
+and returned to the customer inquiry/appointment use case. Revised SMS sections in
+backend/privacy.html and backend/terms.html locally, preserving /privacy.html and
+/terms.html and page styling. Clarified program, manual staff messaging through MAYA,
+Wix/Google/Twilio processing, no marketing sharing, optional consent, STOP confirmation,
+HELP/support, rates/frequency and retention. No provider settings or credentials changed.
+Tests/app-regression.mjs adds a policy/route assertion. Focused old/new policy checks
+and git diff validation pass. Not pushed or deployed in this task; no registration submitted.
+Next: owner pushes reviewed copy, verifies public pages, verifies Twilio keyword replies,
+then resubmits with the public design form URL. Wix checkbox-to-MAYA send authorization
+is NOT verified; do not enable form-triggered SMS without verifying that gate.
+
 ## V4 canon implementation prepared, September 26 (14.40)
 
 Owner explicitly restored original `docs/Aesthetics.pdf` V3 as primary reference
