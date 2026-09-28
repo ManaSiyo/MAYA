@@ -33,6 +33,7 @@ steps:
         node tests/proxy-policy.mjs
         node tests/outbound.mjs
         node tests/crm-intelligence.mjs
+        node tests/owner-crm.mjs
         node tests/profile-crm.mjs
         node tests/maya-mcp.mjs
         node tests/maya-feedback.mjs

@@ -8,6 +8,48 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## September 28: owner CRM commands and deployment gate repair
+
+1d01d9a was pushed with Fromsa's approval via GitHub Desktop (CLI has no GitHub
+credentials). Cloud Build 438db907-af37-4e0f-87f9-95b71fd97c1e FAILED in
+crm-failure-ui.mjs:53 before server/hosting deployment; production remains
+298aea5. Fixed Outbound initial load to await both workspace and intelligence
+authorization before rendering either. Fault suite now passes.
+
+Prepared in this change:
+- Owner SMS tools: signed Twilio From must match configured FROMSA_PHONE, and
+  an allowlisted owner Admin login must explicitly enable/bind the feature.
+  Natural-language add/update becomes a preview; YES plus a six-character code
+  within ten minutes commits. No arbitrary admin, email sending, or delete tool.
+  Duplicate events/commits are idempotent; STOP/HELP bypass commands. The parser
+  shares that owner's $1/day CRM text AI budget and has an eight-second timeout.
+- Owner calls: confirmed read-back before saving; different people in one call
+  no longer overwrite the previous lead. Explicit returned lead_id corrects the
+  same person. Customer-call behavior is unchanged.
+- Systems Owner tools: enable text commands, bounded non-sensitive Gemini test,
+  Gmail connection link, review new correspondents and add one to Lead Station.
+  Gmail review uses the same account's up-to-two OAuth mailboxes with its own
+  incremental cursor. Outgoing/automated messages are excluded; humans review
+  candidates before they become leads. No emails are sent.
+- Manual lead metadata preserves idempotency records. Owner writes use GCS
+  generation checks. Consumer frontend/Playground unchanged. No credentials,
+  IAM, billing or production environment changes.
+
+Live inspection: Outbound showed ZERO connected Gmail mailboxes and hourly
+updates paused. Chrome Gmail login is not a MAYA OAuth connection. Gmail review
+cannot operate until Fromsa connects the mailboxes; server OAuth readiness must
+be checked. Not claiming Gmail is active or Gemini inference has succeeded yet.
+
+Validation: 51 phone fixture checks, 54 SMS checks, owner identity/confirmation/
+expiry/dedup unit checks, Gmail candidate filtering, owner setup/Gemini/Gmail UI
+fixture, 19 CRM intelligence checks, full app regression, CRM fault-injection
+suite, 10,000-contact/seven-width CRM suite, syntax and diff whitespace pass.
+
+Next: deploy gate repair and owner tools; verify build then click Test Gemini.
+Owner must enable their number in Systems using their chosen Admin account.
+Connect both Gmail mailboxes after required OAuth setup/consent. Verify an actual
+owner SMS and call with Fromsa; local fixtures are not carrier delivery proof.
+
 ## September 28: Vertex Gemini and visible meter refresh (prepared locally)
 
 Based on deployed/pushed 298aea5. In owner Chrome (worldofsiyo@gmail.com),
@@ -40,8 +82,7 @@ Claude still reports Not connected; it was not authorized/configured here.
 Validation: 19 CRM intelligence checks, full app regression and 10,000-contact
 CRM browser suite at seven widths pass. Syntax and whitespace checks pass.
 
-Next: Owner must explicitly authorize a push or
-push themselves under AGENTS.md. After Cloud Build, verify Gemini Vertex row,
+Next: Push was authorized and attempted; see failed build and repair above. Verify Gemini Vertex row,
 Refresh completion and one bounded reviewed Gemini test. Do not claim live
 connection from configuration or IAM role alone.
 

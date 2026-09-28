@@ -61,7 +61,9 @@ ok('a foreign or bad number is refused before Twilio', (await sendSms(tdeps, { t
 const app = express();
 const AUTH = 'tok';
 const calls = [];
+const ownerCommands=[];
 mountMessages(app, {
+  ownerCommand:async input=>{ownerCommands.push(input);return input.from==='+15105550199'?'Preview: A & B <lead>. Reply YES abc123':'';},
   store, readStatus: (sid, to) => readSmsStatus(tdeps, sid, to), sendSms: (to, text) => sendSms(tdeps, { to, text }), authToken: AUTH, publicHost: 'maya-api-53947659283.us-west1.run.app', webhookHosts: ['maya.manasiyo.com'],
   requireAdmin: async (req) => { if (req.get('authorization') === 'Bearer admin') return { email: 'worldofsiyo@gmail.com' }; const e = new Error('no'); e.status = 401; throw e; },
   json: express.json(), urlencoded: express.urlencoded({ extended: false }),
@@ -171,5 +173,17 @@ ok('untrusted forwarded hosts cannot authorize a webhook',(await signedPost('/ap
 ok('Cloud Run delivery callbacks validate too',(await signedPost('/api/phone/sms/status','maya-api-53947659283.us-west1.run.app',delivery)).status===204);
 
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + ' (' + passed + ' ok)');
+const ownerParams={From:'+15105550199',Body:'Add A and B',MessageSid:'SMowner'};
+const ownerPost=async(params,signed=true)=>fetch(base+'/api/phone/sms',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded',...(signed?{'X-Twilio-Signature':sign('https://maya.manasiyo.com/api/phone/sms',params)}:{})},body:new URLSearchParams(params)});
+const beforeCommands=ownerCommands.length;
+await ownerPost(ownerParams,false);
+ok('unsigned messages never invoke owner tools',ownerCommands.length===beforeCommands);
+const ownerResponse=await ownerPost(ownerParams);
+ok('signed owner command replies are escaped TwiML',/A &amp; B &lt;lead&gt;/.test(await ownerResponse.text()));
+const commandCount=ownerCommands.length;
+await ownerPost({...ownerParams,MessageSid:'SMownerstop',Body:'STOP'});
+ok('STOP never invokes owner command tools',ownerCommands.length===commandCount);
+await ownerPost({...ownerParams,MessageSid:'SMownerblocked',Body:'Add another lead'});
+ok('an opted-out owner receives no command reply',ownerCommands.length===commandCount);
 twSrv.close(); server.close();
 process.exit(failed ? 1 : 0);

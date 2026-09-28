@@ -22,8 +22,8 @@ export function createCrmAI(deps) {
   const totals=value=>Object.values(value.calls||{}).reduce((r,c)=>{r.spentUsd+=c.actual??0;r.reservedUsd+=c.actual==null?c.reserve:0;r.providers[c.provider]=(r.providers[c.provider]||0)+(c.actual??0);return r;},{spentUsd:0,reservedUsd:0,providers:{}});
   return {
     connected,
-    async meter(uid){const day=budgetDay(clock()),{value}=await db.get(path(uid,day),{calls:{}});return {day,timeZone:'America/Los_Angeles',limitUsd:1,scope:'Outbound AI',basis:'Provider token usage × published rates; not a provider invoice',...totals(value),models:connected(),updatedAt:clock().toISOString()};},
-    async complete(uid,instructions,data,preferred='auto') {
+    async meter(uid){const day=budgetDay(clock()),{value}=await db.get(path(uid,day),{calls:{}});return {day,timeZone:'America/Los_Angeles',limitUsd:1,scope:'CRM text AI',basis:'Provider token usage × published rates; not a provider invoice',...totals(value),models:connected(),updatedAt:clock().toISOString()};},
+    async complete(uid,instructions,data,preferred='auto',options={}) {
       const input=JSON.stringify(data);if(Buffer.byteLength(input)>32000)throw problem('AI input is too large. Use a smaller selection.');
       const choices=connected().filter(p=>p.connected&&(preferred==='auto'||preferred===p.provider));
       if(!choices.length)throw problem('No connected AI provider is available for this choice.',503);
@@ -47,7 +47,7 @@ export function createCrmAI(deps) {
         body={systemInstruction:{parts:[{text:instructions}]},contents:[{role:'user',parts:[{text:input}]}],generationConfig:{maxOutputTokens:maxOutput,thinkingConfig:{thinkingBudget:0}}};
       }
       let response;
-      try{response=await fetcher(url,{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(45000)});}
+      try{response=await fetcher(url,{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(options.timeoutMs||45000)});}
       catch{throw problem('AI did not confirm completion. Its reserved cost remains counted today.',502);}
       if(!response.ok){
         // Refusals before inference are free. Ambiguous server failures retain their reserve.

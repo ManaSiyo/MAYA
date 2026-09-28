@@ -251,6 +251,15 @@ ok('the call is gone from the live count', stEnd.calls === 0);
     su.session.tools.map(t => t.name).join(',') === 'find_lead,list_leads,note_lead,save_lead,set_tier,log_note,end_call' &&
     su.session.audio.input.turn_detection.silence_duration_ms === 420, su && su.session.tools.map(t => t.name).join(','));
   const sk = ai.sockets[n0].sock; const say = o => sk.send(JSON.stringify(o));
+  const beforeOwner=leads.length;
+  const saveOwner=async(args)=>{const g=ai.got.length;say({type:'response.function_call_arguments.done',call_id:'owner_'+g,name:'save_lead',arguments:JSON.stringify(args)});await until(()=>ai.got.slice(g).some(m=>m.type==='conversation.item.create'));return JSON.parse(ai.got.slice(g).find(m=>m.type==='conversation.item.create').item.output);};
+  await saveOwner({name:'Pat'});
+  ok('owner lead saves require a confirmed read-back',leads.length===beforeOwner);
+  const pat=await saveOwner({name:'Pat',phone:'+14155550190',wrote:'Blue suit',confirmed:true});
+  const sam=await saveOwner({name:'Sam',phone:'+14155550191',wrote:'Green jacket',confirmed:true});
+  ok('two people on one owner call get separate lead records',pat.ok&&sam.ok&&pat.id!==sam.id&&leads.length===beforeOwner+2);
+  const corrected=await saveOwner({name:'Pat',phone:'+14155550190',wrote:'Navy suit',confirmed:true,lead_id:pat.id});
+  ok('an explicit correction updates only the previously saved person',corrected.ok&&corrected.id===pat.id);
   const g1 = ai.got.length;
   say({ type: 'response.function_call_arguments.done', call_id: 'c_log', name: 'log_note', arguments: JSON.stringify({ text: 'the fabrics tab loads slowly on the iPad' }) });
   await until(() => ai.got.slice(g1).some(m => m.type === 'conversation.item.create'));

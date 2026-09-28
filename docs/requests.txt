@@ -1,3 +1,11 @@
+SEPTEMBER 28: Owner calls/texts update Lead Station; Gmail leads
+[prepared] Only the configured owner number can issue SMS lead commands after Admin activation.
+[verified fixtures] Preview + YES code, deduplication, expiry, STOP handling and account binding.
+[fixed] Multiple people in one owner call no longer overwrite the first lead.
+[prepared] Systems Gmail review feeds confirmed correspondents into Lead Station.
+[blocked setup] Live account has zero connected mailboxes; connect both owner Gmails.
+[pending live] Gemini test, carrier SMS/call test and mailbox OAuth verification.
+
 SEPTEMBER 28: Connect Gemini through Vertex and repair Refresh meter
 [verified] Vertex API already enabled; Cloud Run default identity has existing Editor role.
 [prepared] Vertex Gemini uses Cloud Run identity; no new keys or permissions.

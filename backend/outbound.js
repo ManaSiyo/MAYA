@@ -61,7 +61,7 @@ async function run(fn){
  try{await fn();}catch(e){if(epoch===authEpoch)notice(e.message,true);}
  finally{busy=false;syncBusyControls();if(reloadPending){reloadPending=false;run(load);}}
 }
-async function load(){const epoch=authEpoch;try{const j=await api();state=j.state;caps=j.capabilities;accountId=j.accountId||'';session=token();$('signin').hidden=true;if(!state.campaigns.some(c=>c.id===campaignId))campaignId=state.campaigns[0]?.id||'';render();notice('Workspace ready.');refreshIntelligence();if(state.settings.sheetId)await syncWorkbook();}catch(e){if(epoch===authEpoch){if(!token())$('signin').hidden=false;notice(e.message,true);}}}
+async function load(){const epoch=authEpoch;try{const [j,checked]=await Promise.all([api(),api('/intelligence')]);if(epoch!==authEpoch)return;intelligence={mailboxes:[],crm:{},...checked};state=j.state;caps=j.capabilities;accountId=j.accountId||'';session=token();$('signin').hidden=true;if(!state.campaigns.some(c=>c.id===campaignId))campaignId=state.campaigns[0]?.id||'';render();renderIntelligence();notice('Workspace ready.');if(state.settings.sheetId)await syncWorkbook();}catch(e){if(epoch===authEpoch){if(!token())$('signin').hidden=false;notice(e.message,true);}}}
 const campaign=()=>master?{id:'master',name:todo?'To Do':'All prospects',status:'active'}:state.campaigns.find(c=>c.id===campaignId);
 const contacts=()=>state.contacts.filter(c=>master||member(c,campaignId));
 async function save(body){if(body.type!=='contact'&&!leaveDraft())throw Error('Save your draft before continuing.');const j=await api('/save',body);state=j.state;render();notice('Saved.');return j;}

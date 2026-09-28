@@ -933,7 +933,7 @@ if (IS_AFFILIATES) {
       <div id="msg-feedback" role="status" aria-live="polite"></div><div class="msg-consent" id="msg-consent"></div>
     </div>
   </div>
-  <maya-ai-meter></maya-ai-meter><h3>Model snapshot</h3><div id="model-snapshot">Sign in to load the current server configuration.</div><h3>The vault</h3>
+  <maya-ai-meter></maya-ai-meter><maya-owner-crm></maya-owner-crm><h3>Model snapshot</h3><div id="model-snapshot">Sign in to load the current server configuration.</div><h3>The vault</h3>
   <a href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank">Firebase<small>Boards, projects, pictures and submissions. Delete a collection here to truly destroy it.</small></a>
   <h3 class="tint">Behind the scenes</h3>
   <a href="https://console.cloud.google.com/run/detail/us-west1/maya-api/metrics?project=pro-maya" target="_blank">Cloud Run<small>The whole API: logs, revisions, keys, environment and credit burn.</small></a>
@@ -3850,5 +3850,5 @@ setInterval(()=>{ if(_idTok && document.visibilityState==='visible') loadMkt(); 
   setTimeout(checkAdminUpdate, 8000);   // catch a tab opened already-stale
 })();
 </script>
-<script type="module" src="/aesthetics/ui/ai-meter.js?v=2"></script></body>
+<script type="module" src="/aesthetics/ui/ai-meter.js?v=2"></script><script type="module" src="/aesthetics/ui/owner-crm.js?v=1"></script></body>
 </html>

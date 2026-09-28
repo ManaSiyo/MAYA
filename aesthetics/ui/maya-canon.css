@@ -502,3 +502,8 @@ html[data-maya-surface="dense"] .people-table .sheet-subject {overflow:hidden;te
 
 /* Meter confirmation uses the existing quiet metadata scale. */
 .ai-meter-checked{font:400 11px/1.4 var(--maya-font-ui);color:var(--maya-secondary);margin:4px 0;}
+/* Owner commands stay within the same compact Systems typography. */
+maya-owner-crm{display:block;font:400 12px/1.5 var(--maya-font-ui,Jost,sans-serif)}
+maya-owner-crm button{font:inherit;margin:4px 4px 4px 0}
+maya-owner-crm .gmail-candidates{max-height:280px;overflow:auto;overflow-wrap:anywhere}
+maya-owner-crm .gmail-candidates input{box-sizing:border-box;max-width:100%;font:inherit}

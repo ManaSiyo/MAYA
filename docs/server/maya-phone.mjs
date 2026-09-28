@@ -103,7 +103,7 @@ export function briefInstructions({ character, nowLA, reason, inbound }) {
     'He may ask what the latest leads look like: call list_leads and tell him the newest ones in plain words, shortest ' +
     'first. For a particular person or their phone number, call find_lead, which searches the whole station. ' +
     'Read the returned phone number when he asks; never infer a missing number or say it is unavailable without checking. ' +
-    'If the lookup is ambiguous, ask which person. He may tell you about a person to save: call save_lead. He may ask you to note something on a lead: call ' +
+    'If the lookup is ambiguous, ask which person. He may tell you about a person to save: read back their name, number and interest, ask him to confirm, then call save_lead with confirmed=true. For corrections during this call, supply the lead_id returned by the earlier save. Never reuse that ID for a different person. He may ask you to note something on a lead: call ' +
     'note_lead. When he says what a lead went with ("Kristi went with signature"), call set_tier. He may report a bug, an idea or anything for the studio inbox ("log this", "there is a bug", "remember ' +
     'to"): call log_note with his original wording, including corrections and specifics. This is the primary feedback queue. Do not wait for him to say log this when he reports a problem or requests a change. Only confirm it is logged after the tool succeeds; never claim the fix is implemented. When he says that is all, or goodbye, say one ' +
     'short goodbye and call end_call. If nobody speaks for a long while, say goodbye and call end_call.';
@@ -151,9 +151,9 @@ export const BRIEF_TOOLS = [
       note: { type: 'string', description: 'the note in Fromsa\'s words' } },
       required: ['lead', 'note'] } },
   { type: 'function', name: 'save_lead',
-    description: 'Save a person Fromsa tells you about into the Lead Station.',
+    description: 'Save a person Fromsa tells you about into the Lead Station after he confirms the read-back. Supply lead_id only to correct the same previously saved person.',
     parameters: { type: 'object', properties: {
-      name: { type: 'string' }, phone: { type: 'string' }, email: { type: 'string' },
+      name: { type: 'string' }, phone: { type: 'string' }, email: { type: 'string' }, confirmed: {type:'boolean'}, lead_id: {type:'string'},
       wrote: { type: 'string', description: 'what they want' }, tier: { type: 'string' } },
       required: ['name'] } },
   { type: 'function', name: 'set_tier',
@@ -399,14 +399,18 @@ export function mountMayaPhone(app, server, deps) {
           }
           if (m.name === 'save_lead') {
             try {
+              const ownerCall=call.mode==='brief'||call.mode==='admin';
+              if(ownerCall&&args.confirmed!==true)throw new Error('Owner confirmation required');
               call.leadCalls += 1;
               if (call.leadCalls > 4) { output = { ok: false, say: 'the lead is already saved' }; }
               else {
                 const lead = { source: 'phone', name: args.name, phone: args.phone || (call.mode === 'inbound' ? call.from : ''), email: args.email || '', tier: args.tier || '', wrote: args.wrote || '' };
                 if (!deps.saveLead) throw new Error('lead storage unavailable');
-                call.saved = await deps.saveLead(lead, call.saved ? call.saved.id : null);
+                if(ownerCall&&args.lead_id&&!(call.ownerLeadIds||[]).includes(args.lead_id))throw new Error('Unknown lead ID on this call');
+                call.saved = await deps.saveLead(lead, ownerCall?(args.lead_id||null):(call.saved ? call.saved.id : null));
+                if(ownerCall&&call.saved?.id)(call.ownerLeadIds||=[]).push(call.saved.id);
                 if (!call.saved?.id) throw new Error('lead was not saved');
-                output = { ok: true, say: 'Saved. Offer to connect them now, or keep their callback request.' };
+                output = { ok: true, id:call.saved.id, say: ownerCall?'Saved in the Lead Station.':'Saved. Offer to connect them now, or keep their callback request.' };
               }
             } catch (e) { log('save_lead failed', e.message); output = { ok: false, say: 'The request could not be saved. Do not claim it was saved or promise a callback.' }; }
           } else if (m.name === 'transfer_to_owner') {

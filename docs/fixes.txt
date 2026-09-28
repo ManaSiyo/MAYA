@@ -1,3 +1,11 @@
+SEPTEMBER 28: Deployment gate and owner-call overwrite
+Cloud Build 438db907 for 1d01d9a stopped at CRM authorization-expiry browser check.
+Initial Outbound render now waits for workspace plus intelligence authorization;
+local fault injection passes. No failed-build code reached production.
+Owner save_lead used call.saved for every person: a second contact could overwrite
+its predecessor. Owner saves now return IDs and only explicit corrections reuse
+one; read-back confirmation required. Customer caller updates remain unchanged.
+
 SEPTEMBER 28: Gemini reported disconnected despite existing Google Cloud setup
 The CRM only recognized GEMINI_API_KEY, ignoring Cloud Run service identity.
 Prepared Vertex transport with existing identity and isolated $1 daily accounting.

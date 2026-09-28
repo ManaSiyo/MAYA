@@ -97,7 +97,7 @@ export function createMessageStore(deps) {
         const rec = await read();
         const t = thread(rec, from);
         if (!t) return null;
-        if (sid && t.messages.some(m => m.id === sid)) return { number: t.number, duplicate: true };
+        if (sid && t.messages.some(m => m.id === sid)) return { number: t.number, duplicate: true,consent:t.consent,blocked:!!t.blocked };
         if (t.blocked) return { number: t.number, blocked: true };
         if (t.nameSource !== 'manual' && (!t.name || /^caller$/i.test(t.name))) {
           const name = introducedName(text);
@@ -251,10 +251,17 @@ export function mountMessages(app, deps) {
   app.post('/api/phone/sms', deps.urlencoded, async (req, res) => {
     const params = req.body || {};
     if (!signedWebhook(req, params)) { log('sms rejected: bad signature'); return res.status(403).send('forbidden'); }
-    try { await deps.store.inbound({ from: params.From, text: params.Body, sid: params.MessageSid, optOutType: params.OptOutType }); }
+    let incoming,reply='';
+    try {
+      incoming=await deps.store.inbound({ from: params.From, text: params.Body, sid: params.MessageSid, optOutType: params.OptOutType });
+      if(deps.ownerCommand&&incoming&&!incoming.blocked&&incoming.consent!=='stop'&&!params.OptOutType&&!/^(?:STOP|STOPALL|CANCEL|END|QUIT|UNSUBSCRIBE|REVOKE|OPTOUT|HELP|INFO|START|UNSTOP)$/i.test(String(params.Body||'').trim())) {
+        reply=await deps.ownerCommand({from:params.From,text:params.Body,sid:params.MessageSid});
+        if(reply&&!incoming.duplicate)await deps.store.outbound({to:params.From,text:reply,sid:'owner-reply-'+params.MessageSid,status:'accepted',by:'maya-owner'});
+      }
+    }
     catch (e) { log('inbound store failed', e.message); return res.status(503).send('storage unavailable'); }
     res.set('Content-Type', 'text/xml');
-    res.send('<?xml version="1.0" encoding="UTF-8"?><Response></Response>');
+    res.send('<?xml version="1.0" encoding="UTF-8"?><Response>'+(reply?'<Message>'+String(reply).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]))+'</Message>':'')+'</Response>');
   });
 
   app.post('/api/phone/sms/status', deps.urlencoded, async (req, res) => {
