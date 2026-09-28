@@ -1,36 +1,37 @@
 Summary:
-[Codex][v14.40] Add intelligent Outbound and a combined AI meter
+[Codex][v14.40] Fix responsive drawers and CRM failure paths
 
 Description:
 
-Upgrade Mana Siyo's Outbound with a 10,000-contact master list, shared campaign
-memberships, paginated views, two Gmail OAuth mailboxes and explicitly reviewed
-email sending. Reconcile incremental Gmail history, the master Sheet and existing
-Twilio activity through an OIDC-protected hourly worker; bound optional Hunter
-lookups and summarize only changed contacts. Preserve account isolation, encrypt
-refresh tokens and guard uncertain sends against automatic duplicate retries.
+Repair mobile overflow in Operation Room and its pattern labels, contain the
+Brief settings pane, and match its glass to the frontend. Normalize Outbound
+names, tables, dialogs and drawer links to the existing compact type scale.
+Keep the approved consumer and Playground styling unchanged.
 
-Add a shared Admin/Outbound speedometer and combined $1/day Outbound text AI
-allowance for priced OpenAI, Claude and Gemini models. Reserve costs before calls
-and settle with provider token usage. Values are estimates, not provider invoices;
-voice, images, other MAYA AI and non-AI services remain outside this cap.
+Preserve drafts during background refresh; open Connections when Sheet Refresh
+has no configured sheet; keep paginated contact selection correct without an
+email address. Lock editable controls during writes, isolate late account
+responses, clear expired data, bound requests, recover the AI meter after
+reattachment/failure and let other CRM sources proceed if Gmail listing fails.
 
-Apply compatible Gemini audit suggestions using existing V3 chrome and compact
-type. Bound long history/feature panels; improve wrapping, spacing and meter tab
-isolation. Preserve consumer/Playground. Document Gmail processing in the existing
-privacy URL. Add release gates and owner activation instructions.
+Add a CRM fault-recovery release gate and strengthen visual checks for real page
+and drawer overflow, short dialogs and pattern-label overlap. Update obsolete
+app-regression expectations to approved behavior and repair its offline SDK
+fixture. Correct live asset checks that previously accepted an HTML fallback.
 
 Validation:
-- CRM intelligence 16, Outbound/model 28, Admin UI contracts 11.
-- Phone 48, messages 50, transfer and feedback fixture suites.
-- Routing, fabric sourcing, admin commands, proxy, profile CRM and MCP checks.
-- Populated CRM/new Outbound interactions and actual-font 11-source visual sweep
-  at seven widths, 320 through 1920. Screenshots inspected, syntax/diff checks clean.
-- Broad historical app-regression is NOT green: 14 older failures and an abort
-  reading removed status-v13.19.css. New request assertions pass. No live calls,
-  emails, SMS, provider charges, credentials or environment changes performed.
+- All 44 JavaScript/module files pass syntax checks; git diff --check clean.
+- Full app-regression and frontend/Playground hands suites pass.
+- CRM intelligence 17, Outbound/model 28, Admin UI contract 11; routing, fabric,
+  commands, proxy, profile CRM, MCP, feedback and server smoke pass.
+- Phone 48, messages 50 and transfer provider fixtures pass.
+- 11 page sources across seven widths (320-1920), open drawers/settings, actual
+  fonts, frontend glass parity, reduced motion and reviewed screenshots.
+- 10,000-contact populated CRM; two simulated senders; draft/sample/send flows;
+  delayed write/account/expiry/meter failures; 320x568 and 844x390 dialogs.
+- Read-only live v14.40 public routes/assets and protected API checks pass.
 
-Local commit only. Do not push automatically. After owner push/deploy, follow
-OUTBOUND-SETUP.md for OAuth/provider settings, both Gmail authorizations, the
-Scheduler job, master-sheet validation and self-addressed live round trips.
-The scope of a cap covering all other MAYA AI remains an open owner decision.
+Local commit only; no push or deployment. No credentials, environment, billing,
+real communications or paid provider calls changed. After owner Push/deploy,
+verify signed-in layouts and authenticated Gmail, Sheet, Scheduler and Twilio
+round trips. The existing $1 meter/cap still covers Outbound text AI only.

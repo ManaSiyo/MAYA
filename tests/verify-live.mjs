@@ -29,7 +29,7 @@ const ok = (name, cond, detail) => {
 };
 const get = async (path) => {
   const r = await fetch(SITE + path + (path.includes('?') ? '&' : '?') + 'cb=' + Date.now(),
-    { headers: { 'Cache-Control': 'no-cache' } });
+    { headers: { 'Cache-Control': 'no-cache' }, signal:AbortSignal.timeout(15000) });
   return { status: r.status, contentType:r.headers.get('content-type')||'', text: await r.text() };
 };
 const versionOf = (t) => (t.match(/name="maya-version" content="([\d.]+)"/) || [])[1] || 'none';
@@ -74,12 +74,14 @@ let h = {};
 try { h = JSON.parse(health.text); } catch (_) {}
 ok('server answers', health.status === 200 && h.ok === true, h.service || health.status);
 ok('OpenAI key is configured on the server', !!(h.configured && h.configured.openai));
-ok('Drive is configured on the server', !!(h.configured && h.configured.drive));
-console.log('  note   configured is not the same as working. Drive authorisation is only');
-console.log('         provable from a signed-in Systems Map or /api/healthz/deep.');
+ok('Submission storage is configured', !!h.configured?.submissions);
+console.log('  note   configuration does not prove authenticated provider access.');
 
-const css = await get('/aesthetics/ui/status-v13.19.css');
-ok('scoped Systems Map stylesheet is served', css.status === 200);
+const css = await get('/aesthetics/ui/maya-canon.css');
+ok('shared canon CSS is served, not an HTML fallback', css.status === 200 && /text\/css/.test(css.contentType) && css.text.includes('--maya-font-ui'));
+const meter = await get('/aesthetics/ui/ai-meter.js');
+ok('AI meter module is served', meter.status === 200 && /javascript/.test(meter.contentType) && meter.text.includes('class MayaAIMeter'));
+for(const path of ['/api/admin/outbound','/api/admin/outbound/intelligence','/api/admin/ai-meter']){const route=await get(path);ok(path+' exists and requires sign-in',route.status===401 && /json/.test(route.contentType));}
 const rules = await get('/docs/server/firestore.rules');
 ok('internal files are NOT published', rules.status === 404 || rules.text.includes('<!DOCTYPE'));
 

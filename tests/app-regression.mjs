@@ -41,6 +41,7 @@ const SERVER_DOCKER = readFileSync(join(ROOT, 'docs/server/Dockerfile'), 'utf8')
 const BUILD_SOURCE = readFileSync(join(ROOT, 'cloudbuild.yaml'), 'utf8');
 const PHONE_SOURCE = existsSync(join(ROOT, 'docs/server/maya-phone.mjs'))
   ? readFileSync(join(ROOT, 'docs/server/maya-phone.mjs'), 'utf8') : '';   // v14.30
+const CANON_SOURCE = readFileSync(join(ROOT, 'aesthetics/ui/maya-canon.css'), 'utf8');
 const MAP_SOURCE = readFileSync(join(ROOT, AT.status), 'utf8');
 const STORAGE_RULES = existsSync(join(ROOT, 'docs/server/storage.rules'))
   ? readFileSync(join(ROOT, 'docs/server/storage.rules'), 'utf8') : '';
@@ -113,6 +114,21 @@ const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name);
  ok('Mailbox privacy explains scope and processors without changing its URL',readFileSync(join(ROOT,'backend/privacy.html'),'utf8').includes('Connected business mailboxes and Outbound') && readFileSync(join(ROOT,'backend/privacy.html'),'utf8').includes('Anthropic Claude or Google Gemini'));
  ok('Sample emails distinguish editable name company and offer',ui.includes('template-person') && ui.includes('template-company') && ui.includes('template-offer'));
  ok('Gemini audit keeps histories bounded while preserving compact controls',css.includes('max-height:420px') && css.includes('max-height:380px') && css.includes('font-size:11px;padding:6px 10px;min-height:30px;'));
+}
+
+// September 27 follow-up audit: keep the actual responsive and failure paths gated.
+{
+ const ui=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');
+ const meter=readFileSync(join(ROOT,'aesthetics/ui/ai-meter.js'),'utf8');
+ const crm=readFileSync(join(ROOT,'docs/server/crm-intelligence.mjs'),'utf8');
+ ok('Operation Room stacks narrow columns and contains pattern labels',CANON_SOURCE.includes('.cols {grid-template-columns:minmax(0,1fr);}') && CANON_SOURCE.includes('.stage-badge {position:static;'));
+ ok('Outbound data and dialogs use compact functional type',CANON_SOURCE.includes('.people-table :is(th,td,.person-link) {font-size:var(--maya-text-table);}') && CANON_SOURCE.includes('#modal-title,.empty h2) {font-size:16px;'));
+ ok('Drawer settings stay within the Brief and out of focus when closed',CANON_SOURCE.includes('#drawer-settings {transform:none;visibility:hidden;'));
+ ok('Late account responses and expired sessions cannot restore another workspace',ui.includes('epoch!==authEpoch') && ui.includes('authEpoch++;clearWorkspace();'));
+ ok('Pending requests lock edits and background reloads preserve drafts',ui.includes("querySelectorAll('button,input,select,textarea')") && ui.includes('const fresh=await api();if(!hasUnsavedDraft()&&!busy)'));
+ ok('Meter requests have cancellation and clear stale values on failure',meter.includes('this.request?.abort()') && meter.includes("if(current())this.reset("));
+ ok('Independent CRM sources continue when Gmail listing fails',crm.includes("await runPart('Gmail connections'"));
+ ok('CRM fault recovery is checked in the release gate',BUILD_SOURCE.includes('node tests/crm-failure-ui.mjs'));
 }
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium' });
@@ -947,7 +963,7 @@ ok('robots.txt is a real file, so nothing asks the app for it',
 ok('aesthetics holds only what the web serves',
   !existsSync(join(ROOT, 'aesthetics/Aesthetics.pdf')) &&
   !existsSync(join(ROOT, 'aesthetics/one-pager-preview.html')) &&
-  existsSync(join(ROOT, 'aesthetics/ui/status-v13.19.css')));
+  existsSync(join(ROOT, 'aesthetics/ui/maya-canon.css')));
 ok('the handoff lives where both agents look',
   existsSync(join(ROOT, 'AGENTS.md')) && existsSync(join(ROOT, 'CLAUDE.md')) &&
   readFileSync(join(ROOT, 'AGENTS.md'), 'utf8').includes('frontend/index.html') &&
@@ -1357,7 +1373,7 @@ ok('the D W M chips sit close together',
 ok('the today ticker marquees in the top bar, in Jost, no raw dates',
   MKT_SOURCE.includes('id="ticker-inner"') &&
   MKT_SOURCE.includes('@keyframes tickerslide') &&
-  /#ticker-inner\{[^}]*font-family:'Jost'/.test(MKT_SOURCE.replace(/\n\s*/g, '')) &&
+  /#ticker-inner\{[^}]*font-family:var\(--maya-font-ui\)/.test(MKT_SOURCE.replace(/\n\s*/g, '')) &&
   MKT_SOURCE.includes("replace(/cost per link click/ig, 'CPL')") &&
   MKT_SOURCE.includes('vs yesterday'));
 // v13.59: campaigns merged INTO the ads fold ("Ad campaigns"), so four
@@ -1513,9 +1529,9 @@ ok('v13.84: Pinterest wall is edge-to-edge and caches the session',
   INDEX_SOURCE.includes('#pinterest-drawer { position: relative; padding: 0; }') &&
   INDEX_SOURCE.includes('let _pinPicsCache = {}') &&
   INDEX_SOURCE.includes("if (_pinLoaded && body && body.querySelector('.pin-grid'))"));
-ok('v13.78: the Admin logo has no ring until Maya is live',
-  MAP_SOURCE.includes('background:transparent;border:0.5px solid transparent') &&
-  MAP_SOURCE.includes('body.maya-live .maya-logo-wrap{border-color:rgba(169,201,255,0.95);animation:voicepulse 0.85s'));
+ok('Admin logo uses the borderless circular asset, including while live',
+  MAP_SOURCE.includes('class="maya-logo-mark" src="/aesthetics/ui/logo-circle.png"') &&
+  CANON_SOURCE.includes('#voice-btn.live {animation:none;border:0;box-shadow:none;}'));
 ok('v13.78: Operations Room beta sits to the right',
   !OPS_SOURCE || OPS_SOURCE.includes('.brand .brand-words{display:flex;flex-direction:row;align-items:baseline'));
 ok('v13.79: the drawer shows Maya\'s conversation as copyable text',
@@ -1533,13 +1549,9 @@ ok('v13.84: "Bring in" floats over the cards, only while pictures are selected',
   INDEX_SOURCE.includes('_pinSetFoot(_pinPicked.size > 0)'));
 ok('v13.84: Ad Campaigns gets breathing room above the money section',
   MAP_SOURCE.includes('#adm-mkt #ads-fold{margin-top:40px}'));
-ok('v13.87: the Lead Station is a custom CRM — every field edits in place, rows delete, WIX badge by the name',
-  MAP_SOURCE.includes("label: 'Latest Notes'") &&   // v13.95: header is column-driven now
-  MAP_SOURCE.includes('async function saveLeadField(') &&
-  MAP_SOURCE.includes('async function deleteLeadRow(') &&
-  MAP_SOURCE.includes('function reloadLeads(') &&
-  MAP_SOURCE.includes('cell(i, x, \'name\', x.name') &&
-  !MAP_SOURCE.includes('&#9998;'));   // the pencil is gone
+ok('Lead Station opens conversations by name and retains editable notes',
+  MAP_SOURCE.includes("label: 'Latest Notes'") && MAP_SOURCE.includes('async function saveLeadField(') &&
+  MAP_SOURCE.includes('class="lead-open"') && MAP_SOURCE.includes('function reloadLeads('));
 ok('v13.87: server can update or delete any lead, Wix via override/tombstone',
   SERVER_SOURCE.includes('async function updateLead(') &&
   SERVER_SOURCE.includes('async function deleteLead(') &&
@@ -1580,9 +1592,9 @@ ok('ops: Plan B mirrors Plan A, photo left, closest CLO reference right, honest 
 // ── v13.64 · the room joins the family for real, and the numbers tell the day ─
 ok('ops: family header with the logo, the plan line switches plans, no dead pill',
   !OPS_SOURCE || (
-    OPS_SOURCE.includes('logo-208.png') &&
-    OPS_SOURCE.includes('<h1>Operations Room</h1>') &&
-    OPS_SOURCE.includes('<span class="sub">Beta</span>') &&
+    OPS_SOURCE.includes('logo-circle.png') &&
+    OPS_SOURCE.includes('<h1>Operation Room</h1>') &&
+    !OPS_SOURCE.includes('<span class="sub">Beta</span>') &&
     !OPS_SOURCE.includes('id="plan-btn"') &&
     OPS_SOURCE.includes(`onclick="setPlan(getPlan()==='A'?'B':'A')"`) &&
     /#toast\{[^}]*visibility:hidden/.test(OPS_SOURCE)));
@@ -1782,9 +1794,9 @@ ok('Maya has the new tools: add lead, add person, journal, read the internal ops
 ok('the Visualize pill stays above the climbing cards, like the hamburger and logo',
   /#voice-wrap \{[^}]*z-index: 9000/.test(INDEX_SOURCE));
 // v13.83 quick wins
-ok('Lead Station header says Status, submissions are "My submissions", fabric spec de-dupes the name',
+ok('Lead Station header says Status, submissions are "Submissions", fabric spec de-dupes the name',
   MAP_SOURCE.includes("label:'Status'") &&   // v13.95: column-driven header; v14.24: Contact, phone first
-  MAP_SOURCE.includes('My submissions <span id="subs-count"') &&
+  MAP_SOURCE.includes('Submissions <span id="subs-count"') &&
   INDEX_SOURCE.includes('!nm.includes(String(t).toLowerCase())'));
 
 // ── v13.88 ──
@@ -1862,14 +1874,14 @@ ok('v13.90: the drawer type scales down for phones (Apple-style desktop→mobile
   INDEX_SOURCE.includes('#notes-drawer .pg-gauge-value { font-size: 22px; }'));
 
 // ── v13.91 (Admin) ──
-ok('v13.91: Lead Station notes ride a marquee, email matches the notes font',
+ok('Lead Station note summaries and contact controls use functional typography',
   MAP_SOURCE.includes('class="lead-note-vp"') &&
   MAP_SOURCE.includes('function _leadMarquees(') &&
   MAP_SOURCE.includes('@keyframes leadmq') &&
-  MAP_SOURCE.includes('.lead-edit.lead-email-edit{font-family:\'Cormorant Garamond\',serif'));
-ok('v13.91: the call CTA is a real smartphone glyph, not a telephone handset',
+  CANON_SOURCE.includes('var(--maya-text-table)/1.5 var(--maya-font-ui)'));
+ok('Lead Station has a single handset action and opens Messages',
   MAP_SOURCE.includes('const PHONE_SVG =') &&
-  MAP_SOURCE.includes('PHONE_SVG + ') &&
+  MAP_SOURCE.includes('leadOpenThread(') &&
   !MAP_SOURCE.includes('\'call\')" title="Call \' + esc(x.phone) + \'">&#9742;'));
 ok('v13.91/v14.03: the Bottom Line is one shell; the Sources of traffic table is hidden inside it since v14.03',
   MAP_SOURCE.includes('id="bottom-fold"') &&
@@ -1881,7 +1893,7 @@ ok('v13.94: the Admin drawer is an exact copy of the frontend — native horizon
   MAP_SOURCE.includes('class="hpane hpane-main"') &&
   /#adm-hscroll\{[^}]*scroll-snap-type:x mandatory/.test(MAP_SOURCE) &&
   /#adm-hscroll\{[^}]*overscroll-behavior-x:contain/.test(MAP_SOURCE) &&
-  MAP_SOURCE.includes("hs.scrollTo({ left: target, behavior: 'smooth' })") &&
+  MAP_SOURCE.includes("hs.scrollTo({ left: target, behavior: matchMedia('(prefers-reduced-motion: reduce)')") &&
   !MAP_SOURCE.includes('let wAccum'));
 
 // ── v13.92 ──
@@ -1899,8 +1911,8 @@ ok('v13.92: the favorite card is held centered — the caption slot is a fixed t
   /\[data-mode="submit"\] #viewer-piece-summary \{[^}]*height: 2\.9em/.test(INDEX_SOURCE));
 ok('v13.92, then v14.06: the favorites nav arrows are the canon pill, a step in from the edges (42px)',
   INDEX_SOURCE.includes("b.style[d < 0 ? 'left' : 'right'] = '42px'"));
-ok('v13.92: the avatar name opens the switcher too (bigger hit target than the caret)',
-  INDEX_SOURCE.includes('id="drawer-avatar-name" onclick="toggleAvatarSwitcher()"'));
+ok('Avatar name is keyboard-accessible for the approved inline rename action',
+  INDEX_SOURCE.includes('id="drawer-avatar-name" role="button" tabindex="0" onclick="pgRenameClient()"'));
 
 // ── v13.93 ──
 ok('CRM columns: frozen identity, tier and inline actions, no separate actions or invoice columns',
@@ -1924,18 +1936,10 @@ ok('v13.93: the server persists the new CRM columns (company, quote, both invoic
 // ── v13.94 ──
 ok('v13.94: the drawer section headings are centered',
   /#drawer h3\{[^}]*text-align:center/.test(MAP_SOURCE));
-ok('v13.94/v13.98: hovering ADMIN drops JUST the sheet beneath the wordmark, close and clickable',
-  MAP_SOURCE.includes('class="brand-chips"') &&
-  MAP_SOURCE.includes('>the sheet</a>') &&
-  !/brand-chips">\s*<a[^>]*>operations room/.test(MAP_SOURCE) &&
-  /#top-left-brand \.brand-chips\{[^}]*left:50%;transform:translateX\(-50%\)/.test(MAP_SOURCE) &&
-  /#top-left-brand \.brand-chips\{[^}]*padding-top:2px/.test(MAP_SOURCE) &&
-  /transition:opacity \.18s ease \.9s/.test(MAP_SOURCE) &&
-  /#top-left-brand:hover \.brand-chips/.test(MAP_SOURCE));
-ok('CRM tier: editable beneath the name; columns centered; no delete X in the row',
-  MAP_SOURCE.includes("cell(i, x, 'tier', String(x.tier || x.company || '').replace(") &&   // v14.34: the middle dot becomes a comma
-  MAP_SOURCE.includes('class="lead-identity"') &&
-  /#adm-mkt #leads-table td\{[^}]*text-align:center/.test(MAP_SOURCE) &&
+ok('Admin has no obsolete floating Sheet chip',
+  !MAP_SOURCE.includes('class="brand-chips"') && !MAP_SOURCE.includes('>the sheet</a>'));
+ok('CRM category is a label, not an editable control; no delete X in the row',
+  !MAP_SOURCE.includes("cell(i, x, 'tier'") && MAP_SOURCE.includes('class="lead-identity"') &&
   !MAP_SOURCE.includes('class="lead-cta lead-del" onclick="deleteLeadRow'));
 
 // ── v13.95 ──
@@ -2113,12 +2117,12 @@ ok('v14.36: the audit: a lead is found by phone too, the thread learns the name 
   ADMIN_COMMAND_SOURCE.includes('phoneDigits') && SERVER_SOURCE.includes('resolveLeadExact') &&
   SERVER_SOURCE.includes("await _messages.name(lead.phone, lead.name);"));
 ok('v14.35: Messages: the drawer tabs, the thread store, the sms webhook, Maya calls a client from the station',
-  SERVER_SOURCE.includes("import { createMessageStore, sendSms, readSmsStatus, mountMessages, THREADS_PATH } from './maya-messages.mjs';") &&
+  /import \{[^}]*createMessageStore[^}]*THREADS_PATH[^}]*\} from '\.\/maya-messages\.mjs'/.test(SERVER_SOURCE) &&
   SERVER_SOURCE.includes("onCallEnd: async (rec) => { await _messages.call(rec); },") &&
   SERVER_DOCKER.includes('COPY maya-messages.mjs ./') &&
   BUILD_SOURCE.includes('node tests/maya-messages.mjs') &&
   MAP_SOURCE.includes('id="adm-tabrow"') && MAP_SOURCE.includes('id="drawer-messages"') &&
-  MAP_SOURCE.includes("onclick=\"leadMayaCall(' + i + ')\"") && MAP_SOURCE.includes("onclick=\"leadOpenThread(' + i + ')\"") &&
+  MAP_SOURCE.includes('function leadMayaCall(') && MAP_SOURCE.includes('function leadOpenThread(') &&
   !MAP_SOURCE.includes('href="tel:') &&
   PHONE_SOURCE.includes('export function clientCallInstructions(') && PHONE_SOURCE.includes("return { live, wss, callFromsa, callClient };") &&
   existsSync(join(ROOT, 'docs/server/maya-messages.mjs')) && existsSync(join(ROOT, 'tests/maya-messages.mjs')));
@@ -2523,8 +2527,8 @@ ok('v14.04: the Admin fold reads in two rooms with a shipped check; the stale cs
   MAP_SOURCE.includes("section('Admin side, what we ask'") &&
   MAP_SOURCE.includes('async function markFeatureDone(') &&
   SERVER_SOURCE.includes("app.post('/api/admin/maya-feature-done'") &&
-  !readFileSync(join(ROOT, 'aesthetics/ui/status-v13.19.css'), 'utf8').includes('width: 36px') &&
-  MAP_SOURCE.includes('status-v13.19.css?v=1405'));
+  !existsSync(join(ROOT, 'aesthetics/ui/status-v13.19.css')) &&
+  MAP_SOURCE.includes('/aesthetics/ui/maya-canon.css?v='));
 
 ok('v14.01: the wall mirrors the hearts by force (reconcile sweep on entry)',
   INDEX_SOURCE.includes('async reconcile()') &&
@@ -2538,6 +2542,7 @@ const stagedBehavior = await pg.evaluate(async () => {
   let saved = null; const notices = [];
   showToast = message => notices.push(message);
   _avatarLibCache = [];
+  window.firebase ||= {}; // Network SDK is deliberately absent in these fixtures.
   firebase.firestore = () => ({runTransaction: async fn => fn({get: doc => doc.get(), set: (doc, data) => doc.set(data)})});
   _avatarsDoc = () => ({ get: async () => ({ exists:false }), set: async data => { saved = data; } });
   projectStore.uploadImage = async () => ({url:'https://example.com/new-face.jpg',path:'test/avatars/face.jpg'});
@@ -2656,7 +2661,7 @@ ok('Outbound imports summary-prefixed corporate sheets without losing names or s
 
 const outboundUI=readFileSync(join(ROOT,'backend/outbound.html'),'utf8');
 const outboundJS=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');
-ok('Outbound matches Maya fonts/logo and guards unsaved drafts',outboundUI.includes('/aesthetics/ui/logo-208.png') && outboundUI.includes('Cormorant+Garamond') && outboundUI.includes('Jost:') && outboundUI.includes(':focus-visible') && outboundJS.includes('function hasUnsavedDraft()') && outboundJS.includes("if(!leaveDraft())return;selected="));
+ok('Outbound matches Maya fonts/logo and guards unsaved drafts',outboundUI.includes('/aesthetics/ui/logo-circle.png') && outboundUI.includes('Cormorant+Garamond') && outboundUI.includes('Jost:') && outboundUI.includes(':focus-visible') && outboundJS.includes('function hasUnsavedDraft()') && outboundJS.includes("if(!leaveDraft())return;selected="));
 const suppressionState={campaigns:[{id:'audit'}],contacts:[{campaignId:'audit',email:'a@example.com',stage:'contacted'}]};
 mergeContacts(suppressionState,rowsToContacts([['Email','Status'],['a@example.com','Bounced']]),'audit');
 ok('Reimported bounced contacts suppress existing outreach',suppressionState.contacts[0].stage==='suppressed');

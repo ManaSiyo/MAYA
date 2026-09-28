@@ -102,8 +102,10 @@ Outbound implementation: docs/server/outbound.mjs plus crm-intelligence.mjs,
 crm-gmail.mjs, crm-ai.mjs and crm-store.mjs in docs/server. The shared Admin/Outbound
 meter is aesthetics/ui/ai-meter.js. Mailbox secrets and cost ledgers are server-only
 private/outbound/<kind>/<account> objects; never expose them via client Storage rules.
-Run tests/crm-intelligence.mjs and tests/crm-ui.mjs for these paths; both are release
-gates. Hourly updates require owner-configured Cloud Scheduler, not a browser timer.
+Run tests/crm-intelligence.mjs, tests/crm-ui.mjs and tests/crm-failure-ui.mjs for
+these paths; all are release gates. The failure suite covers account isolation,
+pending edits, drawer dialogs and meter recovery with fake providers.
+Hourly updates require owner-configured Cloud Scheduler, not a browser timer.
 The $1 cap covers Outbound text AI only, not all MAYA or provider invoices.
 
 Model defaults and chat
@@ -119,6 +121,7 @@ See docs/OUTBOUND-SETUP.md for owner-only connection and launch steps.
 
 `docs/Aesthetics.pdf` (V3) is the primary aesthetic reference.
 `docs/MAYA-V4-CANON.md` extends it for dense interfaces; it does not replace V3.
-All served pages load `aesthetics/ui/maya-canon.css`. Change shared tokens and
-components there, not a new per-page visual system. Jost is functional; Cormorant
+Backend pages load `aesthetics/ui/maya-canon.css`; consumer and Playground retain
+their approved frontend styling as the reference. Change backend tokens and
+components in the shared CSS, not a new per-page visual system. Jost is functional; Cormorant
 is reserved for branding/display. Data and metrics use Jost with tabular numerals.

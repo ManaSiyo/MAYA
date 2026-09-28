@@ -80,7 +80,8 @@ export function mountCrmIntelligence(app,deps) {
     try{
       const runPart=async(name,fn)=>{try{await fn();report.push(name+' updated');}catch(e){errors.push({source:name,message:e.status?e.message:'Update failed. Retry from the menu.'});}};
       if(claim.state.settings.sheetId)await runPart('Google Sheet',()=>deps.syncSheet(uid));
-      const mailboxes=await deps.gmail?.list(uid)||[];
+      let mailboxes=[];
+      await runPart('Gmail connections',async()=>{mailboxes=await deps.gmail?.list(uid)||[];});
       for(const mailbox of mailboxes)await runPart(mailbox.email,async()=>{
         const {state}=await load(uid),previous=state.crm.mailboxes[mailbox.id];
         const cursor=previous?.connectedAt===mailbox.connectedAt?previous.cursor:{};

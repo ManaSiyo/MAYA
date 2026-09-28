@@ -43,9 +43,10 @@ steps:
           node tests/maya-hands-smoke.mjs
           node tests/outbound-ui.mjs
           node tests/crm-ui.mjs
+          node tests/crm-failure-ui.mjs
           node tests/canon-ui.mjs
         else
-          echo "WARNING browser unavailable in CI, maya-hands-smoke skipped"
+          echo "WARNING browser unavailable in CI; hands, Outbound, CRM and visual checks skipped"
         fi
         # v14.30: the phone line, against a fake Twilio and a fake OpenAI.
         if npm install --no-save express ws >/dev/null 2>&1; then

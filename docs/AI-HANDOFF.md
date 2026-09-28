@@ -8,70 +8,70 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
-## September 27: intelligent Outbound and combined AI allowance (local only)
+## September 27: responsive and integration audit (local fixes, not deployed)
 
-Prepared on maya-v2, based on 72cb70c. No push, production configuration, credential
-access, real provider call, SMS or email send was performed. Consumer/Playground
-are unchanged. Fromsa approved both Gmail mailboxes and $1/day combined across
-OpenAI, Claude and Gemini. The current cap/meter explicitly covers Outbound text AI;
-whether to cap all other MAYA image/voice/consumer AI is still unanswered.
+Prepared on maya-v2 from dbcc247 (v14.40). No push, credentials, production
+configuration, real sends or paid provider calls. Public production still reports
+14.40 and responds to read-only checks. Consumer and Playground sources unchanged.
 
-Implemented:
-- 10,000-contact master list; shared campaign memberships; 50-item pagination;
-  per-campaign draft context; color-coded editable email sample and reviewed send.
-- Two encrypted account-scoped Gmail OAuth connections, resumable metadata/history
-  sync, manual-Gmail sent/reply reconciliation, new-correspondent review. Cookie
-  uses Hosting-forwarded __session, restricted to the OAuth callback path.
-- OIDC-protected hourly worker, per-account leases/cursors, master Sheet refresh,
-  exact-number Twilio activity, bounded opt-in Hunter domain prospecting. No
-  automatic email sends. Pending/failed SMS does not advance contact stage.
-- Shared Admin/Outbound AI speedometer. Provider token counts × fixed checked rates,
-  with upfront CAS cost reservations and $1 per-account LA-calendar-day cap.
-  This is an estimate, not provider-account billed spending. Unknown costs remain
-  reserved; no paid automatic retry. Unchanged activity does not call AI.
-- Gemini suggestions reviewed against V3. Accepted bounded Changes/Feature rooms,
-  ticker fade, prompt wrapping, bottom clearance and aligned fold headings. Kept
-  compact type, semantic colors, frosted frontend chrome and quiet geometry.
-  CSS v7 on backend sources. Meter is hidden in Messages/Logs, shown in Systems.
-- Privacy copy describes authorized mailbox access and configured AI processors;
-  existing policy URL and SMS language retained.
+Fixed:
+- Operation Room columns/trace cards overflowed mobile widths; they now stack.
+  Pattern labels occupy their own space instead of covering instructions/images.
+- Brief drawer now shares frontend glass; closed settings cannot expand horizontal
+  scroll or receive keyboard focus. Compact titles, wrapping and nonitalic data.
+- Outbound tables, names, dialogs and drawer links use the compact shared scale.
+  Link controls no longer inherit capsule shadows. Shorter empty-state copy.
+- Outbound dialogs preserve the underlying drawer; Escape closes only the top
+  layer. Pending writes lock data/navigation controls, including newly rendered
+  ones, while menu dismissal remains available. Sheet Refresh opens Connections
+  when no sheet is configured. Background refresh cannot overwrite a new draft.
+- Account change/expiry immediately clears contacts, mailbox senders and meter
+  values. Late responses cannot restore old account data. Requests time out;
+  uncertain sends direct the owner to check Gmail Sent before retrying.
+- People -> Emails keeps the selected record across pagination, including a
+  prospect without email. Meter reconnects after reattachment and clears failed
+  spending reads. Gmail listing failure no longer aborts independent CRM sources.
+- Admin Changes version marker corrected to 14.40. Backend CSS cache URLs use v8.
 
-Files: backend/outbound.html/js, backend/status.html and privacy.html;
-aesthetics/ui/ai-meter.js and maya-canon.css; cache links in backend/backend,
-marketing, operations, terms, verify and aesthetics/operations/index.html;
-docs/server/outbound.mjs, server.js, Dockerfile and new crm-store/crm-gmail/
-crm-ai/crm-intelligence modules; Cloud Build; focused tests; setup/audit and
-continuity files. AGENTS/CLAUDE document the new modules and gates.
+Validation:
+- All 44 JavaScript/module files pass syntax checks; diff whitespace clean.
+- Actual-font 11-source visual sweep: seven widths, 320–1920; document and open
+  drawer bounds/content, Brief settings, pattern-label clearance, frontend glass
+  parity and reduced motion. Screenshots reviewed. Dialogs also fit 320x568 and
+  844x390. These are browser fixtures, not every physical device.
+- Full historical app-regression now passes. Obsolete assertions were updated to
+  approved current behavior (removed Sheet chip, round logo, labels, current CRM
+  markup); the offline Firebase stub was repaired. No old behavior restored.
+- CRM intelligence 17; Outbound/model 28; Admin contract 11; routing, fabric,
+  admin commands, proxy, profile CRM, MCP, feedback and server smoke all passed.
+- Phone 48, messages 50, transfer and frontend/Playground hands fixtures pass.
+- Populated CRM: 10,000 contacts, bounded pagination, both senders, sample draft,
+  simulated send and seven widths. New crm-failure-ui covers delayed writes,
+  account switches/expiry, draft preservation, missing-sheet setup, dialog
+  layering and meter recovery; it is now a Cloud Build release gate.
+- Read-only live smoke: public app/Admin/Outbound, real CSS/JS content types,
+  health and protected API rejection pass. The old CSS-path test had accepted
+  Hosting's HTML fallback and is corrected. No authenticated provider round trip.
 
-Validation: 16 CRM intelligence checks, 28 Outbound/model checks, 11 Admin
-contracts; routing, fabric sourcing, admin commands, proxy, profile CRM, MCP,
-feedback, phone (48), messages (50) and transfer fixtures. Populated browser checks cover
-10,000 contacts, pagination, two senders, sample personalization, simulated send,
-AI meter, original CRM actions, drawer tabs and seven widths (320–1920). Actual-font
-11-source visual sweep and screenshots inspected. Syntax/diff checks completed.
-No live integration smoke test is implied by fixture success.
+Changed paths: aesthetics/ui/maya-canon.css and ai-meter.js; backend/outbound.js,
+outbound.html and status.html; CSS cache links in other backend pages and
+aesthetics/operations/index.html; docs/server/crm-intelligence.mjs; tests,
+cloudbuild.yaml and continuity/tooling documents. Other backend HTML changes are
+cache-link-only. See COMMIT-REVIEW.txt for the prepared local commit.
 
-Broader historical app-regression was run: the new request checks pass, but the
-suite has 14 stale/legacy failures (including removed Sheet chip, old labels and
-old CRM/phone markup) and aborts reading removed status-v13.19.css. It is not the
-release gate and is NOT claimed green. Its previously unreachable compact-menu
-assertions now execute before browser fixtures. Do not restore obsolete styling
-or promise a bug-free entire repository to satisfy old assertions.
+Exact next step: Fromsa pushes the local audit commit from GitHub Desktop. After
+successful deployment, validate signed-in drawers/tables and follow
+OUTBOUND-SETUP.md for both Gmail authorizations and the OIDC hourly Scheduler.
+Verify the actual master Sheet data and self-addressed email/SMS round trips.
+Agents must not change credentials, billing or production environment settings.
 
-Exact next step: Fromsa reviews and pushes the local commit. Then follow
-OUTBOUND-SETUP.md: owner supplies OAuth/provider configuration, authorizes both
-Gmail mailboxes from one admin workspace, configures the hourly OIDC Scheduler,
-and verifies live Sheet data and self-addressed email round trips. Existing
-Twilio inbound webhook/receipt is still a separate live check. No agent may edit
-credentials, billing or production environment settings under current rules.
-
-Limits: Gmail backfill is last 30 days / 100 messages per mailbox per run, metadata
-and snippets only; AI summaries process eight changed contacts per run; recent
-activity retained at 2,000, unmatched review at 100. Source mail remains in Gmail.
-Legacy campaign copies are retained rather than destructively merged. New entries
-share master identity. Scheduled Hunter is saved-domain prospecting, up to one
-lookup/run and selected daily allowance; manual discovery remains available.
-See design/OUTBOUND-INTELLIGENCE-AUDIT.md for accepted/rejected design findings.
+Existing Outbound limits remain: two encrypted account-scoped Gmail connections;
+metadata/snippets backfill 30 days, 100 messages/mailbox/run; eight changed-contact
+AI summaries/run; activity retained at 2,000 and unmatched review at 100. Hunter
+is opt-in saved-domain discovery, one lookup/run within its separate daily cap.
+No automatic email sends. The combined $1/day cap and meter cover Outbound text
+AI across OpenAI/Claude/Gemini only; they are token-cost estimates, not provider
+invoices or all MAYA image/voice usage. All-MAYA budget scope remains unresolved.
 
 ## The rules, in one place
 

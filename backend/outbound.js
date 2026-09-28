@@ -1,7 +1,16 @@
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let state={campaigns:[],contacts:[],companies:[],settings:{}},caps={},campaignId='',selected='',view='people',busy=false,session='',titleFilter='',master=false,page=0;
-let intelligence={mailboxes:[],crm:{}},accountId='';
+let intelligence={mailboxes:[],crm:{}},accountId='',authEpoch=0,reloadPending=false,intelligenceLoading=false;
+const busyControls=new Map();
+function syncBusyControls(){
+ if(busy){document.querySelectorAll('button,input,select,textarea').forEach(el=>{if(el.matches('#menu-toggle,#close-drawer,#drawer-workspace-tab,#drawer-help-tab,#close-modal,#cancel-modal')||busyControls.has(el))return;busyControls.set(el,el.disabled);el.disabled=true;});}
+ else{for(const [el,disabled] of busyControls)if(el.isConnected)el.disabled=disabled;busyControls.clear();$('connect-gmail').disabled=intelligence.mailboxes.length>=2;}
+}
+function clearWorkspace(){
+ state={campaigns:[],contacts:[],companies:[],settings:{}};caps={};intelligence={mailboxes:[],crm:{}};accountId=campaignId=selected=titleFilter='';master=false;page=0;
+ $('search').value='';$('stage-filter').value='';$('modal').close();$('signin').hidden=false;render();renderIntelligence();
+}
 const PAGE_SIZE=50;
 const member=(p,id)=>(p.campaignIds||[p.campaignId]).includes(id);
 const pageItems=list=>{page=Math.min(page,Math.max(0,Math.ceil(list.length/PAGE_SIZE)-1));return list.slice(page*PAGE_SIZE,(page+1)*PAGE_SIZE);};
@@ -10,33 +19,47 @@ function leaveDraft(){return !hasUnsavedDraft()||confirm('Discard your unsaved d
 window.addEventListener('beforeunload',e=>{if(hasUnsavedDraft()){e.preventDefault();e.returnValue='';}});
 function notice(message,error=false){$('notice').textContent=message;$('notice').classList.toggle('error',error);}
 function token(){return localStorage.getItem('maya_admin_tok')||'';}
-async function api(path='',body){const auth=token();if(!auth)throw Error('Sign in to Maya Admin first.');const r=await fetch('/api/admin/outbound'+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+auth,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});if(token()!==auth)throw Error('Your account changed. Reload this page.');const j=await r.json();if(!r.ok){if([401,403].includes(r.status)){$('signin').hidden=false;state={campaigns:[],contacts:[],companies:[],settings:{}};render();}throw Error(j.error||'Request failed.');}return j;}
-async function run(fn){if(busy)return;busy=true;const controls=[...document.querySelectorAll('button')].filter(b=>!b.matches('#menu-toggle,#close-drawer,[role=tab],#close-modal,#cancel-modal'));const disabled=controls.map(b=>b.disabled);controls.forEach(b=>b.disabled=true);try{await fn();}catch(e){notice(e.message,true);}finally{busy=false;controls.forEach((b,i)=>{if(b.isConnected)b.disabled=disabled[i];});$('connect-gmail').disabled=(intelligence.mailboxes||[]).length>=2;}}
-async function load(){try{const j=await api();state=j.state;caps=j.capabilities;accountId=j.accountId||'';session=token();$('signin').hidden=true;if(!state.campaigns.some(c=>c.id===campaignId))campaignId=state.campaigns[0]?.id||'';render();notice('Workspace ready. Changes save to your account.');refreshIntelligence();if(state.settings.sheetId&&!state.campaigns.length)await syncWorkbook();}catch(e){if(!token())$('signin').hidden=false;notice(e.message,true);}}
+async function api(path='',body){
+ const auth=token(),epoch=authEpoch;if(!auth)throw Error('Sign in to Maya Admin first.');
+ let r;try{r=await fetch('/api/admin/outbound'+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+auth,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(70000)});}catch(e){if(e.name==='TimeoutError')throw Error(path==='/send'?'Send unconfirmed. Check Gmail Sent before retrying.':'Request timed out. Check the latest state before retrying.');throw e;}
+ let j;try{j=await r.json();}catch{j={error:r.status===504?'Update is still running. Check again shortly.':'The server could not respond. Try again.'};}
+ if(token()!==auth||epoch!==authEpoch)throw Error('Your account changed. Reloading.');
+ if(!r.ok){if([401,403].includes(r.status)){authEpoch++;clearWorkspace();notice('Sign in to Maya Admin again.',true);}throw Error(j.error||'Request failed.');}
+ if(j.error&&!j.ok)throw Error(j.error);return j;
+}
+async function run(fn){
+ if(busy)return;const epoch=authEpoch;busy=true;syncBusyControls();
+ try{await fn();}catch(e){if(epoch===authEpoch)notice(e.message,true);}
+ finally{busy=false;syncBusyControls();if(reloadPending){reloadPending=false;run(load);}}
+}
+async function load(){const epoch=authEpoch;try{const j=await api();state=j.state;caps=j.capabilities;accountId=j.accountId||'';session=token();$('signin').hidden=true;if(!state.campaigns.some(c=>c.id===campaignId))campaignId=state.campaigns[0]?.id||'';render();notice('Workspace ready.');refreshIntelligence();if(state.settings.sheetId&&!state.campaigns.length)await syncWorkbook();}catch(e){if(epoch===authEpoch){if(!token())$('signin').hidden=false;notice(e.message,true);}}}
 const campaign=()=>master?{id:'master',name:'All prospects',status:'active'}:state.campaigns.find(c=>c.id===campaignId);
 const contacts=()=>state.contacts.filter(c=>master||member(c,campaignId));
 async function save(body){if(body.type!=='contact'&&!leaveDraft())throw Error('Save your draft before continuing.');const j=await api('/save',body);state=j.state;render();notice('Saved.');return j;}
-function modal(title,html,submit,label='Save'){$('modal-title').textContent=title;$('modal-body').innerHTML=html;$('modal-submit').textContent=label;$('modal-form').onsubmit=e=>{e.preventDefault();run(async()=>{await submit(new FormData(e.target));$('modal').close();});};$('modal').showModal();}
+function modal(title,html,submit,label='Save'){$('modal-title').textContent=title;$('modal-body').innerHTML=html;$('modal-submit').textContent=label;$('modal-form').onsubmit=e=>{e.preventDefault();const data=new FormData(e.target);run(async()=>{await submit(data);$('modal').close();});};$('modal').showModal();}
 function field(name,label,value='',type='input'){return `<label for="field-${name}">${esc(label)}</label>${type==='textarea'?`<textarea id="field-${name}" name="${name}">${esc(value)}</textarea>`:`<input id="field-${name}" name="${name}" value="${esc(value)}">`}`;}
 function editCampaign(existing){modal(existing?'Edit campaign':'New campaign',field('name','Campaign name',existing?.name)+field('audience','Who do you want to reach?',existing?.audience,'textarea')+field('pain','Customer pain and buying trigger',existing?.pain,'textarea')+field('criteria','Qualification criteria',existing?.criteria,'textarea')+field('objective','Offer and objective',existing?.objective,'textarea')+field('competitors','Competitor names or domains (research notes)',existing?.competitors,'textarea')+`<label>Status</label><select name="status"><option value="active">Active</option><option value="paused" ${existing?.status==='paused'?'selected':''}>Paused</option></select>`,async data=>{const j=await save({type:'campaign',id:existing?.id,...Object.fromEntries(data)});if(!existing)campaignId=j.state.campaigns.at(-1).id;render();});}
 function render(){
+ try{
+ $('master-list').classList.toggle('active',master);$('master-list').setAttribute('aria-pressed',String(master));
  const c=campaign(),people=contacts(),count=stage=>people.filter(p=>p.stage===stage).length;
  $('campaigns').innerHTML=state.campaigns.map(c=>`<button class="campaign ${!master&&c.id===campaignId?'active':''}" data-campaign="${esc(c.id)}">${esc(c.name)}<small>${state.contacts.filter(p=>member(p,c.id)).length} prospects · ${esc(c.status)}</small></button>`).join('')||'<p class="muted small" style="margin-top:18px">Start with a campaign for your ideal customers.</p>';
  document.querySelectorAll('[data-campaign]').forEach(b=>b.onclick=()=>{if(!leaveDraft())return;campaignId=b.dataset.campaign;master=false;page=0;selected='';render();});
- $('competitors').textContent=c?[c.pain&&'PAIN\n'+c.pain,c.criteria&&'CRITERIA\n'+c.criteria,c.competitors&&'RESEARCH\n'+c.competitors].filter(Boolean).join('\n\n')||'Add pain, criteria and research notes.':'Choose a campaign.';$('campaign-title').textContent=c?.name||'Your next conversation starts here.';
+ $('competitors').textContent=c?[c.pain&&'PAIN\n'+c.pain,c.criteria&&'CRITERIA\n'+c.criteria,c.competitors&&'RESEARCH\n'+c.competitors].filter(Boolean).join('\n\n')||'Add pain, criteria and research notes.':'Choose a campaign.';$('campaign-title').textContent=c?.name||'Choose a campaign';
  $('providers').textContent=`Hunter: ${caps.hunter?'configured':'needs connection'}\nGoogle Sheets: ${state.settings.sheetId?'selected':'choose a sheet'}\nMaya: ${caps.ai?'configured':'needs connection'}`;$('providers').style.whiteSpace='pre-line';$('drawer-providers').textContent=$('providers').textContent;$('drawer-providers').style.whiteSpace='pre-line';
  $('steps').innerHTML=['Define audience','Find companies','Find people','Verify','Draft','Review & reach out'].map((s,i)=>`<span class="step ${[!!c,state.companies.some(x=>x.campaignId===campaignId),!!people.length,people.some(p=>p.verification==='valid'),people.some(p=>p.body),people.some(p=>p.stage==='contacted')][i]?'done':''}"><b>${i+1}</b>${s}</span>`).join('<span class="muted">·</span>');
  $('stats').innerHTML=[['Prospects',people.length],['Verified',people.filter(p=>p.verification==='valid').length],['Contacted',people.filter(p=>['contacted','replied','meeting','closed'].includes(p.stage)).length],['Meetings',count('meeting')],['Closed',count('closed')]].map(([label,n])=>`<div class="stat"><strong>${n}</strong><span>${label}</span></div>`).join('');
  document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('active',b.dataset.view===view);b.setAttribute('aria-selected',String(b.dataset.view===view));});
- if(!c){$('content').innerHTML='<div class="empty"><h2>A thoughtful introduction goes further.</h2>Create a campaign, import your sheet, or discover companies with Hunter.<br>Only real imported or discovered records appear here.</div>';return;}
+ if(!c){$('content').innerHTML='<div class="empty"><h2>Start a campaign</h2>Import your Google Sheet or find prospects with Hunter.</div>';return;}
  if(view==='activity'){renderActivity();return;}
  if(view==='results'){renderResults();return;}
  if(view==='companies'){renderCompanies();return;}
  if(view==='people'){renderPeople();return;}
- const query=$('search').value.toLowerCase(),stageFilter=$('stage-filter').value;const list=people.filter(p=>(!stageFilter||p.stage===stageFilter)&&[p.name,p.company,p.email,p.notes].join(' ').toLowerCase().includes(query)&&(!titleFilter||(p.title||'Not recorded')===titleFilter)&&(view!=='emails'||p.email||p.body));
+ const query=$('search').value.toLowerCase(),stageFilter=$('stage-filter').value;const list=people.filter(p=>(!stageFilter||p.stage===stageFilter)&&[p.name,p.company,p.email,p.notes].join(' ').toLowerCase().includes(query)&&(!titleFilter||(p.title||'Not recorded')===titleFilter)&&(view!=='emails'||p.email||p.body||p.id===selected));
  if(!pageItems(list).some(p=>p.id===selected))selected=pageItems(list)[0]?.id||'';
  $('content').innerHTML=`<div class="workspace"><div><div class="row spread" style="margin-bottom:12px"><span class="muted small">${list.length} prospects</span><button id="add-person">+ Add person</button><button id="export">Export CSV</button></div><div class="list">${pageItems(list).map(p=>`<button class="person ${p.id===selected?'active':''}" data-person="${esc(p.id)}"><div class="row"><span class="avatar">${esc((p.name||p.company||'?').slice(0,2).toUpperCase())}</span><div><h3>${esc(p.name||p.company)}</h3><div class="muted small">${esc(p.title||p.company||p.domain)}</div></div></div><span class="badge">${esc(p.source)}</span><span class="badge ${p.verification==='valid'?'valid':''}">${esc(p.verification)}</span><span class="badge">${esc(p.stage)}</span><p class="small muted" style="margin-top:9px">${esc(p.email||'Email not found yet')}</p></button>`).join('')||'<div class="empty">Import prospects or add a person to begin.</div>'}</div></div><div id="detail"></div></div>`;
  document.querySelectorAll('[data-person]').forEach(b=>b.onclick=()=>{if(!leaveDraft())return;selected=b.dataset.person;render();});$('add-person').onclick=addPerson;$('export').onclick=exportCSV;renderDetail();renderPager(list.length);
+ }finally{syncBusyControls();}
 }
 function renderPeople(){
  const q=$('search').value.toLowerCase(),stage=$('stage-filter').value;
@@ -46,7 +69,7 @@ function renderPeople(){
  renderPager(list.length);
  $('assign-segment').onclick=assignSegment;
  $('title-filter').onchange=e=>{titleFilter=e.target.value;page=0;render();};$('add-person').onclick=addPerson;$('export').onclick=exportCSV;
- document.querySelectorAll('[data-person]').forEach(b=>b.onclick=()=>{selected=b.dataset.person;view='emails';render();});
+ document.querySelectorAll('[data-person]').forEach(b=>b.onclick=()=>{selected=b.dataset.person;view='emails';const eligible=list.filter(p=>p.email||p.body||p.id===selected);page=Math.max(0,Math.floor(eligible.findIndex(p=>p.id===selected)/PAGE_SIZE));render();});
 }
 function renderDetail(){const p=state.contacts.find(p=>p.id===selected);if(!p){$('detail').innerHTML='<div class="empty">Select a prospect to see their details and email draft.</div>';return;}
  const blocked=p.stage==='suppressed';$('detail').innerHTML=`<section class="detail"><div class="row spread"><div><h2>${esc(p.name||p.company)}</h2><p class="muted">${esc(p.company)} · ${esc(p.title)}</p></div><span class="avatar">✦</span></div><div class="actions"><button id="find-email">Find email</button><button id="verify-email">Verify email</button><button id="generate" class="primary">Draft with Maya</button></div><label for="stage">Relationship stage</label><select id="stage">${['new','ready','contacted','replied','meeting','closed','suppressed'].map(s=>`<option ${s===p.stage?'selected':''}>${s}</option>`).join('')}</select>${p.intelligence?`<div class="crm-insight"><strong>AI suggestion</strong><p>${esc(p.intelligence.summary)}</p><p>${esc(p.intelligence.nextAction)}</p><small>${esc(p.intelligence.provider)} · ${esc(new Date(p.intelligence.updatedAt).toLocaleString())}</small></div>`:''}<label for="notes">Research and latest notes</label><textarea id="notes" class="notes">${esc(p.notes)}</textarea><label>To</label><p style="margin-top:9px">${esc(p.email||'Find an email first')}</p><label for="mail-sender">Send from</label><select id="mail-sender">${intelligence.mailboxes.map(m=>`<option value="${esc(m.id)}">${esc(m.email)}</option>`).join('')||'<option value="">Connect Gmail in the menu</option>'}</select><label for="subject">Subject</label><input id="subject" value="${esc(p.subject)}" placeholder="Your introduction"><label for="body">Email draft</label><textarea id="body" placeholder="Generate or write a personal introduction.">${esc(p.body)}</textarea><div class="actions"><button id="save-draft">Save draft & notes</button><button id="sample-email">Sample email</button><button id="send-email" class="primary">Review &amp; send</button><button id="compose">Open in Gmail ↗</button></div><p class="small muted" style="margin-top:14px">${blocked?'This person is suppressed. Outreach is disabled.':'Emails send only after your confirmation. Mailbox updates reconcile messages sent here or directly in Gmail.'}</p></section>`;
@@ -72,12 +95,16 @@ export function parseCSV(value){const rows=[];let row=[],cell='',quoted=false;fo
 function exportCSV(){const rows=[['Name','Email','Company','Domain','Title','Stage','Verification','Notes','Subject','Body'],...contacts().map(p=>[p.name,p.email,p.company,p.domain,p.title,p.stage,p.verification,p.notes,p.subject,p.body])];const safe=v=>'"'+(/^[=+@\-\t\r]/.test(String(v))?"'":'')+String(v??'').replace(/"/g,'""')+'"';const blob=new Blob([rows.map(r=>r.map(safe).join(',')).join('\r\n')],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='maya-outbound.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 $('stage-filter').onchange=()=>{if(leaveDraft()){page=0;render();}};
 $('new-campaign').onclick=()=>editCampaign();$('edit-campaign').onclick=()=>master?notice('Choose a campaign to edit.',true):editCampaign(campaign());$('search').onchange=()=>{if(leaveDraft()){page=0;render();}};document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{if(!leaveDraft())return;view=b.dataset.view;page=0;render();});
-$('connections').onclick=()=>modal('Connections',field('sheetId','Google Sheet URL or ID',state.settings.sheetId||'https://docs.google.com/spreadsheets/d/1G2zfqopOyZNHf78nuEeNdLgRY7ON0JTeegkhhZ4azyg/edit')+field('tab','Single-tab import (optional)',state.settings.tab)+field('business','Studio facts Maya may use in drafts',state.settings.business,'textarea')+'<p class="small muted" style="margin-top:14px">Share the sheet with your Cloud Run service account. Hunter credentials stay on the server; never paste a key here.</p>',async data=>{await save({type:'settings',...Object.fromEntries(data)});await syncWorkbook();});
+function openConnections(){modal('Connections',field('sheetId','Google Sheet URL or ID',state.settings.sheetId||'https://docs.google.com/spreadsheets/d/1G2zfqopOyZNHf78nuEeNdLgRY7ON0JTeegkhhZ4azyg/edit')+field('tab','Single-tab import (optional)',state.settings.tab)+field('business','Studio facts Maya may use in drafts',state.settings.business,'textarea')+'<p class="small muted" style="margin-top:14px">Share the sheet with your Cloud Run service account. Hunter credentials stay on the server; never paste a key here.</p>',async data=>{await save({type:'settings',...Object.fromEntries(data)});await syncWorkbook();});}
+$('connections').onclick=openConnections;
 $('import').onclick=()=>{if(!leaveDraft())return;if(master||!campaign())return notice('Choose a campaign first.',true);modal('Import prospects','<label>Source</label><select name="source"><option value="sheet">Connected Google Sheet</option><option value="csv">Paste CSV</option><option value="domain">Hunter company domain</option></select>'+field('csv','CSV with headers: Name, Email, Company, Domain, Title, Notes','','textarea')+field('domain','Company domain (Hunter only)')+'<p class="muted small">Sheet import reads up to 10,000 rows. Existing emails gain campaign membership without another prospect record. Hunter lookup may use credits.</p>',async data=>{let j;if(data.get('source')==='sheet')j=await api('/sheets',{campaignId});else if(data.get('source')==='domain')j=await api('/hunter',{action:'domain',domain:data.get('domain'),campaignId,confirm:true});else j=await api('/save',{type:'import',rows:parseCSV(data.get('csv')),campaignId});state=j.state;render();notice(`${j.result??0} new prospects imported.`);},'Import');};
 $('discover').onclick=()=>{if(!leaveDraft())return;if(master||!campaign())return notice('Choose a campaign first.',true);modal('Discover companies',field('query','Describe your target companies',campaign()?.audience,'textarea')+field('offset','Result offset (0 for first page)','0'),async data=>{const j=await api('/hunter',{action:'discover',query:data.get('query'),offset:Number(data.get('offset')),campaignId});state=j.state;view='companies';render();notice(`${j.found} companies returned.`);},'Search Hunter');};
-$('close-modal').onclick=$('cancel-modal').onclick=()=>$('modal').close();$('reload').onclick=()=>run(load);
-window.addEventListener('storage',e=>{if(e.key==='maya_admin_tok'&&token()!==session){state={campaigns:[],contacts:[],companies:[],settings:{}};campaignId=selected='';intelligence={mailboxes:[],crm:{}};accountId='';master=false;page=0;renderIntelligence();$('modal').close();render();run(load);}});
-load();
+$('close-modal').onclick=$('cancel-modal').onclick=()=>$('modal').close();$('reload').onclick=()=>{if(leaveDraft())run(load);};
+window.addEventListener('storage',e=>{if((e.key==='maya_admin_tok'||e.key===null)&&token()!==session){
+ authEpoch++;session=token();clearWorkspace();notice(token()?'Loading your workspace...':'Sign in to Maya Admin first.');
+ if(busy)reloadPending=true;else run(load);
+}});
+run(load);
 
 $('research').onclick=()=>run(async()=>{
   const c=campaign();if(master||!c)throw Error('Choose a campaign first.');
@@ -90,18 +117,18 @@ $('research').onclick=()=>run(async()=>{
 
 async function syncWorkbook(){
  if(!leaveDraft())return;
- if(!state.settings.sheetId){$('connections').click();return;}
+ if(!state.settings.sheetId){openConnections();return;}
  notice('Reading campaign tabs from Google Sheets...');
  const j=await api('/sheets/sync',{});state=j.state;
  if(!campaignId)campaignId=state.campaigns.find(c=>c.sheetTab)?.id||state.campaigns[0]?.id||'';
  view='people';render();notice(j.result.map(r=>r.tab+': '+r.total+' prospects ('+r.added+' new)').join(' · '));
 }
 $('sync-sheet').onclick=$('sync-drawer').onclick=()=>run(syncWorkbook);
-function closeDrawer(){$('outbound-drawer').hidden=true;$('menu-toggle').setAttribute('aria-expanded','false');$('menu-toggle').focus();}
+function closeDrawer(){if($('outbound-drawer').hidden)return;$('outbound-drawer').hidden=true;$('menu-toggle').setAttribute('aria-expanded','false');$('menu-toggle').focus();}
 $('menu-toggle').onclick=()=>{const open=$('outbound-drawer').hidden;$('outbound-drawer').hidden=!open;$('menu-toggle').setAttribute('aria-expanded',String(open));};
 $('close-drawer').onclick=closeDrawer;
-document.addEventListener('click',e=>{if(!$('outbound-drawer').hidden&&!$('outbound-drawer').contains(e.target)&&!$('menu-toggle').contains(e.target))closeDrawer();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+document.addEventListener('click',e=>{if(!$('modal').open&&!$('outbound-drawer').hidden&&!$('outbound-drawer').contains(e.target)&&!$('menu-toggle').contains(e.target))closeDrawer();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('modal').open)closeDrawer();});
 $('modal').addEventListener('click',e=>{const r=$('modal').getBoundingClientRect();if(e.target===$('modal')&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))$('modal').close();});
 
 // The same compact menu behavior: tabs, keyboard dismissal, and horizontal swipe.
@@ -129,12 +156,21 @@ function renderPager(total){
 }
 $('master-list').onclick=()=>{if(!leaveDraft())return;master=true;page=0;view='people';render();};
 function assignSegment(){const ids=[...document.querySelectorAll('[data-select]:checked')].map(el=>el.dataset.select);if(!ids.length)return notice('Select prospects first.',true);modal('Add to campaign','<label>Campaign</label><select name="campaignId">'+state.campaigns.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('')+'</select>',async data=>{const result=await api('/segment',{ids,campaignId:data.get('campaignId')});state=result.state;render();});}
-async function refreshIntelligence(){try{intelligence={mailboxes:[],crm:{},...await api('/intelligence')};if(intelligence.crm.lastRunAt&&intelligence.crm.lastRunAt!==state.crm?.lastRunAt&&!hasUnsavedDraft()&&!busy){const fresh=await api();state=fresh.state;render();}renderIntelligence();}catch(e){$('automation-status').textContent=e.message;}}
+async function refreshIntelligence(){
+ if(intelligenceLoading)return;intelligenceLoading=true;const epoch=authEpoch;
+ try{
+  const result=await api('/intelligence');intelligence={mailboxes:[],crm:{},...result};
+  if(intelligence.crm.lastRunAt&&intelligence.crm.lastRunAt!==state.crm?.lastRunAt&&!hasUnsavedDraft()&&!busy){const fresh=await api();if(!hasUnsavedDraft()&&!busy){state=fresh.state;render();}}
+  renderIntelligence();
+ }catch(e){if(epoch===authEpoch)$('automation-status').textContent=e.message;}
+ finally{intelligenceLoading=false;if(epoch!==authEpoch&&token()&&$('signin').hidden)refreshIntelligence();}
+}
 function renderIntelligence(){
  const crm=intelligence.crm||{},mailboxes=intelligence.mailboxes||[];
  $('mailboxes').innerHTML=mailboxes.map(m=>`<div class="mailbox-row"><span>${esc(m.email)}</span><button data-disconnect="${esc(m.id)}" aria-label="Disconnect ${esc(m.email)}">Disconnect</button></div>`).join('');
  document.querySelectorAll('[data-disconnect]').forEach(b=>b.onclick=()=>run(async()=>{if(!confirm('Disconnect this mailbox from Outbound?'))return;await api('/gmail/disconnect',{id:b.dataset.disconnect});await refreshIntelligence();}));
  $('connect-gmail').disabled=mailboxes.length>=2;const sender=$('mail-sender');if(sender){const previous=sender.value;sender.innerHTML=mailboxes.map(m=>`<option value="${esc(m.id)}">${esc(m.email)}</option>`).join('')||'<option value="">Connect Gmail in the menu</option>';if(mailboxes.some(m=>m.id===previous))sender.value=previous;}
+ syncBusyControls();
  const scheduled=crm.lastScheduledRunAt;
  const schedule=!crm.enabled?'Hourly updates paused':!intelligence.schedulerReady?'Hourly updates requested · server scheduler setup needed':!scheduled?'Hourly updates enabled · awaiting first scheduled run':Date.now()-Date.parse(scheduled)>2*3600000?'Hourly updates overdue · check scheduler':'Hourly updates running';
  $('automation-status').textContent=schedule+(crm.lastRunAt?' · Last run '+new Date(crm.lastRunAt).toLocaleString():' · No update has run yet');
@@ -146,7 +182,7 @@ $('sync-all').onclick=()=>run(async()=>{if(!leaveDraft())return;notice('Updating
 $('automation-settings').onclick=()=>modal('Hourly updates & spending',`<label><input type="checkbox" name="enabled" ${intelligence.crm?.enabled?'checked':''}> Update this CRM every hour</label><p class="small muted">Requires the server scheduler. Sheet and mailbox updates do not use AI credits. AI summaries and drafts share a $1 daily allowance across providers, resetting at midnight in Los Angeles.</p><label>AI provider</label><select name="aiProvider">${['auto','openai','anthropic','gemini'].map(p=>`<option value="${p}" ${intelligence.crm?.aiProvider===p?'selected':''}>${p==='auto'?'Lowest cost connected provider':p}</option>`).join('')}</select>${field('hunterDailyLimit','Hunter lookups per day (0 disables automatic discovery)',String(intelligence.crm?.hunterDailyLimit||0))}<p class="small muted">Hunter has its own credits, separate from the $1 AI limit. Each lookup finds up to 25 people from one saved company. Emails are never sent on a schedule.</p><p class="small muted">Workspace reference: ${esc(accountId||'Reload to obtain your workspace reference')}</p>`,async data=>{await api('/schedule',{enabled:data.has('enabled'),aiProvider:data.get('aiProvider'),hunterDailyLimit:Number(data.get('hunterDailyLimit'))});await refreshIntelligence();});
 async function sendEmail(p){
  if(p.stage==='suppressed'||$('stage').value==='suppressed')throw Error('This contact is suppressed.');
- const mailboxId=$('mail-sender').value,subject=$('subject').value.trim(),body=$('body').value.trim();
+ const mailboxId=$('mail-sender').value,subject=$('subject').value.trim(),body=$('body').value.trim(),notes=$('notes').value;
  if(!mailboxId)throw Error('Connect a Gmail mailbox in the menu first.');
  if(!subject||!body)throw Error('Add a subject and message.');
  if(/\{\{[^}]+\}\}/.test(subject+body))throw Error('Replace the template fields before sending.');
@@ -155,7 +191,7 @@ async function sendEmail(p){
  const digest=[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify([accountId,p.id,mailboxId,subject,body]))))].map(v=>v.toString(16).padStart(2,'0')).join('');
  const key='maya-send-'+digest,requestId=localStorage.getItem(key)||crypto.randomUUID();localStorage.setItem(key,requestId);
  const j=await api('/send',{id:p.id,mailboxId,subject,body,requestId,confirm:true});
- if(j.state){state=j.state;const saved=await api('/save',{type:'contact',id:p.id,subject,body,notes:$('notes').value});state=saved.state;render();}
+ if(j.state){state=j.state;const saved=await api('/save',{type:'contact',id:p.id,subject,body,notes});state=saved.state;render();}
  notice(j.delivery?.status==='sent'?'Email sent. Gmail activity is recorded.':'This send is '+j.delivery?.status+'. Check Gmail Sent before attempting another.',j.delivery?.status!=='sent');await refreshIntelligence();
 }
 function sampleEmail(p){

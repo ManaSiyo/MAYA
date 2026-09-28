@@ -72,7 +72,7 @@ html[data-maya-surface="dense"] :is(button,.primary,.tabs .active) { background:
 html[data-maya-surface="dense"] button:hover { background:var(--maya-hover); }
 html[data-maya-surface="dense"] :is(button.active,[aria-selected="true"],.person.active) { background:var(--maya-selected);border-color:var(--maya-line-hover); }
 /* Strong frost is for navigation and temporary layers, not every card. */
-html[data-maya-surface="dense"] :is(#drawer,#outbound-drawer,dialog,.lead-filter>div,#lead-inv-modal .inv-card) {
+html[data-maya-surface="dense"] :is(#drawer,#outbound-drawer,#clients-drawer,dialog,.lead-filter>div,#lead-inv-modal .inv-card) {
   background:var(--maya-drawer-glass);border:var(--maya-hairline) solid var(--maya-line);
   border-radius:18px;box-shadow:var(--maya-drawer-shadow);backdrop-filter:var(--maya-drawer-frost);-webkit-backdrop-filter:var(--maya-drawer-frost);
 }
@@ -118,7 +118,7 @@ html[data-maya-surface="dense"] :is(.sdot,.new-dot,.model-group) {box-shadow:non
 /* No serif data, including inline output from legacy templates. */
 html[data-maya-surface] :is(table,input,select,textarea,.pg-stat-num,.model-group,.msg-number) {font-family:var(--maya-font-ui)!important;}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
-  html[data-maya-surface] :is(#drawer,#outbound-drawer,dialog,.lead-filter>div,.panel,.detail,.stat) {background:rgba(7,10,20,.92);}
+  html[data-maya-surface] :is(#drawer,#outbound-drawer,#clients-drawer,dialog,.lead-filter>div,.panel,.detail,.stat) {background:rgba(7,10,20,.92);}
 }
 @media(prefers-reduced-motion:reduce) {
   html[data-maya-surface] *,html[data-maya-surface] *::before,html[data-maya-surface] *::after {
@@ -196,7 +196,7 @@ html[data-maya-surface="dense"] #maya-logs-list .maya-log p {font-size:12px;}
 html[data-maya-surface="dense"] body.maya-live .maya-logo-wrap,
 html[data-maya-surface="dense"] #voice-btn.live {animation:none;border:0;box-shadow:none;}
 
-html[data-maya-surface="dense"] :is(#adm-tabtitle,#outbound-drawer > .row h2) {
+html[data-maya-surface="dense"] :is(#adm-tabtitle,#outbound-drawer > .row h2,#clients-drawer .drawer-title) {
   font-family:var(--maya-font-brand);font-size:19px;font-weight:400;font-style:normal;
 }
 
@@ -287,3 +287,48 @@ html[data-maya-surface="dense"] .layout :is(button.person,button.campaign){borde
 
 #drawer.msgs > maya-ai-meter{display:none;}
 html[data-maya-surface] #drawer .ai-meter h3{font:11px var(--maya-font-ui);letter-spacing:.16em;}
+
+/* Outbound uses the same compact functional scale as the other back rooms. */
+html[data-maya-surface="dense"] body:has(#outbound-drawer) {font-size:12px;}
+html[data-maya-surface="dense"] #campaign-title {font-size:18px;}
+html[data-maya-surface="dense"] :is(.detail h2,#modal-title,.empty h2) {font-size:16px;line-height:1.4;}
+html[data-maya-surface="dense"] .people-table :is(th,td,.person-link) {font-size:var(--maya-text-table);}
+html[data-maya-surface="dense"] .people-table :is(th,td) {padding:8px 12px;}
+html[data-maya-surface="dense"] :is(.link-button,.person-link) {box-shadow:none;background:transparent;border:0;}
+html[data-maya-surface="dense"] .link-button:hover {background:transparent;text-decoration:underline;}
+html[data-maya-surface="dense"] #modal-title {min-width:0;overflow-wrap:anywhere;}
+html[data-maya-surface="dense"] :is(#close-modal,#close-drawer) {flex:none;}
+html[data-maya-surface="dense"] #outbound-drawer .drawer-link {font-size:12px;padding:8px;}
+html[data-maya-surface="dense"] .people-table th {z-index:1;}
+
+/* Keep the Brief's inactive settings pane inside its drawer and out of tab order. */
+html[data-maya-surface="dense"] #drawer-settings {transform:none;visibility:hidden;opacity:0;transition:opacity var(--maya-duration) var(--maya-ease);}
+html[data-maya-surface="dense"] #drawer-settings.open {visibility:visible;opacity:1;}
+html[data-maya-surface="dense"] #clients-drawer :is(.client-item,.info-row) {overflow-wrap:anywhere;}
+html[data-maya-surface="dense"] #drawer-settings .info-row {gap:12px;}
+html[data-maya-surface="dense"] #drawer-settings .info-row>span {min-width:0;}
+html[data-maya-surface="dense"] #clients-drawer .drawer-settings-link {box-shadow:none;}
+html[data-maya-surface="dense"] #clients-drawer :is(.client-date,.key-row label,.info-row .lbl) {font-style:normal;}
+html[data-maya-surface="dense"] #drawer-settings .settings-title {font:400 19px var(--maya-font-brand);letter-spacing:.04em;text-transform:none;}
+
+/* Pattern workspaces must shrink and stack rather than force a desktop canvas. */
+html[data-maya-surface="dense"] body:has(#plan-a-view) .cols {grid-template-columns:minmax(0,34fr) minmax(0,66fr);}
+html[data-maya-surface="dense"] body:has(#plan-a-view) :is(.panel,.trace-card,.row2>div) {min-width:0;overflow-wrap:anywhere;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .trace-grid {grid-template-columns:repeat(4,minmax(0,1fr));}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .pattern-stage {flex-direction:column;align-items:flex-start;justify-content:flex-end;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .stage-badge {position:static;max-width:calc(100% - 28px);margin:12px 14px;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .pattern-stage>img {margin-top:auto;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .hero-frame img:not([src]) {display:none;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) :is(.drawer label,.sec-title) {font-style:normal;letter-spacing:.12em;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .drawer-head h3 {font:400 19px var(--maya-font-brand);letter-spacing:.04em;}
+@media(max-width:768px) {
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .cols {grid-template-columns:minmax(0,1fr);}
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .trace-grid {grid-template-columns:repeat(2,minmax(0,1fr));}
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .wrap {padding:24px 16px 48px;}
+}
+@media(max-width:420px) {
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .trace-grid {grid-template-columns:minmax(0,1fr);}
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .brand h1 {font-size:16px;letter-spacing:.12em;}
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .hpane-drawer {width:calc(100vw - 16px);right:8px;}
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .drawer {left:0;right:0;top:8px;bottom:8px;padding:16px;}
+}

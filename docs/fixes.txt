@@ -1,8 +1,18 @@
+SEPTEMBER 27: Follow-up audit fixes (local, awaiting owner push)
+Mobile Operation Room overflow and overlaid stage labels; Brief settings offscreen overflow/focus;
+Outbound oversized headings/names, inherited link-button shadows and modal/drawer dismissal;
+missing-sheet Refresh no-op; background draft overwrite; wrong paginated record when email absent;
+busy edits and late responses across accounts; stale/reconnected AI meter; Gmail listing failure
+aborting other integrations. All repaired with focused browser/source assertions.
+Historical app-regression expected removed CSS/Sheet/labels and lacked its offline Firebase stub;
+updated to approved behavior and now green. Live checker now rejects HTML posing as stylesheet.
+Shared backend CSS v8; frontend/Playground unchanged. No live provider round trip is implied.
+
 SEPTEMBER 27: Outbound integration and visual review
 Fixed master Companies filtering, unbounded prospect rendering, segment-specific drafting,
 Gmail callback cookie forwarding through Firebase Hosting, uncertain-send duplicate protection,
 queued/failed SMS advancement, delivery status refresh, meter/value overlap and drawer tab bleed.
-Stale historical app-regression checks remain; current targeted release gates cover new paths.
+Historical assertions were repaired in the follow-up audit above; the broad suite now passes.
 No production changes. Owner activation: docs/OUTBOUND-SETUP.md (linked console steps).
 
 SEPTEMBER 27: responsive and drawer regressions

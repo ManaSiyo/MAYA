@@ -8,6 +8,7 @@ const root=resolve('.'),dir=join(tmpdir(),'maya-canon-qa');mkdirSync(dir,{recurs
 const browser=await chromium.launch({headless:true,executablePath:process.env.PW_CHROMIUM});
 try {
 const page=await browser.newPage({viewport:{width:1440,height:1000}});
+await page.emulateMedia({reducedMotion:'reduce'});
 await page.route('**/*',async r=>{
  const u=new URL(r.request().url());
  if(process.env.MAYA_FONT_DIR && u.hostname==='fonts.googleapis.com'){
@@ -35,7 +36,31 @@ for(const path of canonPages){
  for(const width of [320,390,650,768,1024,1440,1920]) {
  await page.setViewportSize({width,height:844});
  assert.equal(await page.evaluate(()=>getComputedStyle(document.body).fontFamily.includes('Jost')),true,path);
- await page.screenshot({animations:'disabled',timeout:60000,path:join(dir,path.replaceAll('/','-')+'-'+page.viewportSize().width+'.png')});}
+ const overflow=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}));
+ assert.ok(overflow.scroll<=overflow.width+1,path+' horizontal page overflow at '+width+': '+JSON.stringify(overflow));
+ await page.screenshot({animations:'disabled',timeout:60000,path:join(dir,path.replaceAll('/','-')+'-'+page.viewportSize().width+'.png')});
+ if(!path.startsWith('frontend/')&&!path.startsWith('playground/')){
+  const drawer=await page.evaluate(()=>{
+   const el=document.querySelector('#drawer,#outbound-drawer,#clients-drawer');if(!el)return null;
+   el.hidden=false;el.classList.add('open');el.closest('.hpane-drawer')?.classList.add('open');
+   const host=document.querySelector('#adm-hscroll');if(host)host.scrollLeft=host.scrollWidth-host.clientWidth;
+   const r=el.getBoundingClientRect();return {x:r.left,right:r.right,top:r.top,bottom:r.bottom,overflow:el.scrollWidth-el.clientWidth};
+  });
+  if(drawer){assert.ok(drawer.x>=-1&&drawer.right<=width+1&&drawer.top>=0&&drawer.bottom<=844,path+' drawer bounds at '+width+': '+JSON.stringify(drawer));assert.ok(drawer.overflow<=1,path+' drawer content overflows at '+width);}
+  const settings=page.locator('#drawer-settings');
+  if(await settings.count()){
+   assert.equal(await settings.evaluate(el=>getComputedStyle(el).visibility),'hidden');
+   await settings.evaluate(el=>el.classList.add('open'));
+   assert.ok(await settings.evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Brief settings fit at '+width);
+   await settings.evaluate(el=>el.classList.remove('open'));
+  }
+  if(await page.locator('#stage-empty').count())assert.ok(await page.evaluate(()=>{
+   const a=document.querySelector('#badge-grounded').getBoundingClientRect(),b=document.querySelector('#stage-empty').getBoundingClientRect();return a.bottom<=b.top;
+  }),'Pattern label does not overlap its instructions at '+width);
+  await page.evaluate(()=>{const el=document.querySelector('#drawer,#outbound-drawer,#clients-drawer');if(!el)return;el.classList.remove('open');el.closest('.hpane-drawer')?.classList.remove('open');if(el.id==='outbound-drawer')el.hidden=true;const host=document.querySelector('#adm-hscroll');if(host)host.scrollLeft=0;});
+ }
+ }
+
  await page.setViewportSize({width:1440,height:1000});
 }
 // Compare the actual frontend master with backend chrome, not guessed values.
@@ -55,6 +80,8 @@ await page.screenshot({animations:'disabled',path:join(dir,'backend-drawer-parit
 assert.equal(await page.locator('#maya-toggle .mt-switch').evaluate(el=>getComputedStyle(el).width),'34px');
 await page.goto('https://maya.test/backend/outbound.html');
 assert.deepEqual(await chromeStyle('#outbound-drawer'),master,'Outbound drawer matches frontend');
+await page.goto('https://maya.test/backend/backend.html');
+assert.deepEqual(await chromeStyle('#clients-drawer'),master,'Brief drawer matches frontend');
 await page.emulateMedia({reducedMotion:'reduce'});
 assert.equal(await page.locator('body').evaluate(el=>getComputedStyle(el).animationName),'none');
 console.log('V4 canon rendered checks: 11 pages, 7 widths (320–1920), desktop/mobile, metric typography, capsule styles and reduced motion passed');
