@@ -22,7 +22,7 @@ try {
   const path=u.pathname==='/outbound.html'?'/backend/outbound.html':u.pathname;
   try{return route.fulfill({body:readFileSync(root+path),contentType:({'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png'})[extname(path)]||'text/plain'});}catch{return route.abort();}
  });
- await page.goto('https://maya.test/outbound.html');await page.getByText('First person',{exact:true}).click();
+ await page.goto('https://maya.test/outbound.html');await page.locator('.people-table [data-person="p"]').click();
  await page.locator('#menu-toggle').click();await page.locator('#sync-drawer').click();await page.locator('#modal-title').filter({hasText:'Connections'}).waitFor();assert.ok(await page.locator('#field-sheetId').isEnabled(),'Unconfigured sheet refresh opens usable connections');await page.keyboard.press('Escape');
  await page.locator('#automation-settings').click();
  await page.locator('#field-hunterDailyLimit').fill('2');assert.ok(await page.locator('#outbound-drawer').isVisible(),'Dialog interactions preserve drawer');

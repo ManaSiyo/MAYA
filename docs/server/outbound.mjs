@@ -1,7 +1,8 @@
-import {mountCrmIntelligence, inCampaign} from './crm-intelligence.mjs';
+import {mountCrmIntelligence, inCampaign, hydrateOutboundHistory} from './crm-intelligence.mjs';
 import {randomUUID} from 'node:crypto';
 const text = (v,n=500) => String(v ?? '').trim().slice(0,n);
 const fail = (message,status=400) => Object.assign(new Error(message),{status});
+const contactIdentity=c=>c.email?'email:'+c.email.toLowerCase():'person:'+String(c.company||c.domain||'').toLowerCase()+'|'+String(c.name||'').toLowerCase();
 export const STAGES = ['new','ready','contacted','replied','meeting','closed','suppressed'];
 export function domain(value) {
   const raw=text(value,250).toLowerCase().replace(/^https?:\/\//,'').split('/')[0];
@@ -18,7 +19,7 @@ export function contact(input) {
 export function rowsToContacts(rows) {
   if (!Array.isArray(rows)||rows.length>10001) throw fail('Import up to 10,000 rows at a time.');
   const normalize=h=>text(h).toLowerCase().replace(/[^a-z]/g,'');
-  const columns={name:['name','fullname','contactname','contact'],email:['email','emailaddress','workemail'],company:['company','companyname','organization'],domain:['domain','website','companydomain'],phone:['phone','phonenumber','mobile'],title:['title','jobtitle','position','role'],notes:['notes','note','description'],subject:['subject','emailsubjectthread']};
+  const columns={name:['name','fullname','contactname','contact'],email:['email','emailaddress','workemail'],company:['company','companyname','organization'],domain:['domain','website','companydomain'],phone:['phone','phonenumber','mobile'],title:['title','jobtitle','position','role'],notes:['notes','note','description'],subject:['subject','emailsubjectthread'],category:['category'],lastEmail:['lastemail'],sheetStatus:['status'],relevance:['relevance']};
   // Summary rows may precede the actual contact table. Never import a strategy tab.
   const start=rows.slice(0,10).findIndex(row=>Array.isArray(row)&&row.map(normalize).some(h=>columns.email.includes(h)));
   if(start<0)throw fail('Choose a contacts tab with an Email header, not a strategy or summary tab.');
@@ -35,16 +36,19 @@ export function rowsToContacts(rows) {
     if(notes.length>4000)throw fail(`Row ${start+index+2}: Notes exceed 4,000 characters; shorten before importing.`);
     try{
       const result=contact({...obj,notes});result.subject=text(obj.subject,500);
-      const status=text(row[headers.indexOf('status')]).toLowerCase();
-      if(/bounced|unsubscribed|do not contact/.test(status))result.stage='suppressed';
-      else if(!/not sent|unsent/.test(status)&&/\bsent\b|\btouch\b/.test(status))result.stage='contacted';
+      Object.assign(result,{category:text(obj.category,160),lastEmail:text(obj.lastEmail,80),sheetStatus:text(obj.sheetStatus,500),relevance:text(obj.relevance,80)});
+      const status=result.sheetStatus.toLowerCase();
+      if(/bounced|unsubscribed|do not contact|declined|left company|\bstop\b/.test(status))result.stage='suppressed';
+      else if(/\breplied\b/.test(status))result.stage='replied';
+      else if(!/not sent|unsent|never contacted|not contacted/.test(status)&&/\bsent\b|\btouch(?:es)?\b/.test(status))result.stage='contacted';
+      result.sheetPaused=/\bpause\b|\booo\b|\bon leave\b|maternity leave/.test(status);
       return [result];
     }catch(e){throw fail(`Row ${start+index+2}: ${e.message}`);}
   });
 }
 export function mergeContacts(state, incoming, campaignId) {
-  if (!state.campaigns.some(c=>c.id===campaignId)) throw fail('Choose a campaign first.');
-  const identity=c=>c.email?'email:'+c.email:'person:'+c.domain+'|'+c.name;
+  if (campaignId!==null&&!state.campaigns.some(c=>c.id===campaignId)) throw fail('Choose a campaign first.');
+  const identity=contactIdentity;
   const index=new Map(state.contacts.map(c=>[identity(c),c]));
   let added=0;
   for(const c of incoming){
@@ -52,11 +56,21 @@ export function mergeContacts(state, incoming, campaignId) {
     if(existing){
       existing.campaignIds=[...new Set([...(existing.campaignIds||[existing.campaignId]),campaignId].filter(Boolean))];
       if(c.stage==='suppressed')existing.stage='suppressed';
-      if(c.sheetData){for(const field of ['name','company','title','phone','notes','subject'])if(existing.sheetData&&existing[field]===existing.sheetData[field])existing[field]=c[field];existing.sheetData=c.sheetData;}
+      if(c.sheetData){
+        // Refreshing an unchanged Sheet must not move the counting baseline
+        // past a same-day email that MAYA already observed after that snapshot.
+        if(existing.sheetData&&existing.sheetStatus===c.sheetStatus&&existing.lastEmail===c.lastEmail)c.sheetData.outreachBaselineAt=existing.sheetData.outreachBaselineAt||existing.sheetData.syncedAt;
+        for(const field of ['name','company','title','phone','notes','subject'])if(existing.sheetData&&existing[field]===existing.sheetData[field])existing[field]=c[field];
+        for(const field of ['category','lastEmail','sheetStatus','relevance','sheetPaused'])existing[field]=c[field];
+        // Source status may advance an untouched relationship, never erase a
+        // local decision, a reply, a meeting, or confirmed communication history.
+        if(!existing.stageManualAt&&['new','ready','contacted'].includes(existing.stage)&&c.stage!=='new')existing.stage=c.stage;
+        existing.sheetData=c.sheetData;
+      }
       continue;
     }
     if(state.contacts.length>=10000)throw fail('The master list holds 10,000 contacts.');
-    const next={...c,campaignId,campaignIds:[campaignId]};state.contacts.push(next);index.set(identity(c),next);added++;
+    const next={...c,campaignId:campaignId||'',campaignIds:campaignId?[campaignId]:[]};state.contacts.push(next);index.set(identity(c),next);added++;
   }
   // Legacy copies remain readable; suppression must still apply to every copy.
   const suppressed=new Set(state.contacts.filter(c=>c.stage==='suppressed'&&c.email).map(c=>c.email));
@@ -66,7 +80,7 @@ export function mergeContacts(state, incoming, campaignId) {
 export function mountOutbound(app,deps) {
   const empty=()=>({campaigns:[],contacts:[],companies:[],settings:{sheetId:'',tab:'',business:'Mana Siyo, a bespoke fashion studio in San Francisco.'}});
   const key=uid=>'maya/outbound/'+encodeURIComponent(uid)+'.json';
-  async function load(uid){const o=await deps.read(key(uid));if(!o.ok){if(o.status===404)return {state:empty(),generation:'0'};throw fail('Outbound storage is unavailable.',503);}if(!o.generation)throw fail('Storage revision unavailable. Retry later.',503);const state=JSON.parse(o.buf.toString());return {state,generation:o.generation};}
+  async function load(uid){const o=await deps.read(key(uid));if(!o.ok){if(o.status===404)return {state:empty(),generation:'0'};throw fail('Outbound storage is unavailable.',503);}if(!o.generation)throw fail('Storage revision unavailable. Retry later.',503);const state=JSON.parse(o.buf.toString());hydrateOutboundHistory(state);return {state,generation:o.generation};}
   async function change(uid,fn){for(let i=0;i<4;i++){const {state,generation}=await load(uid);const result=fn(state);try{await deps.write(key(uid),Buffer.from(JSON.stringify(state)),'application/json',generation);return {state,result};}catch(e){if(e.status!==412)throw e;}}throw fail('Another update is in progress. Reload and try again.',409);}
   const handler=fn=>async(req,res)=>{let user;try{user=await deps.requireAdmin(req);}catch(e){return res.status(e.status||401).json({ok:false,error:'Sign in with an admin account.'});}try{if(!user.sub)throw fail('Sign in again.',401);res.set('Cache-Control','no-store');if(req.method!=='GET'&&!deps.allow(user))throw fail('Please wait before trying again.',429);await fn(req,res,user);}catch(e){res.status(e.status||502).json({ok:false,error:e.status?e.message:'Outbound could not complete the request. Please retry.'});}};
   const api='/api/admin/outbound';
@@ -141,18 +155,27 @@ export function mountOutbound(app,deps) {
     // Read and validate every source before changing storage. A failed tab cannot
     // leave an apparently successful partial import.
     const imports=[];
-    for(const tab of campaignTabs){const rows=await deps.sheetRows(sheetId,"'"+tab.replace(/'/g,"''")+"'!A1:AA10001");imports.push({tab,contacts:rowsToContacts(rows)});}
+    // Funnel is the owner's current master. Read it last so its columns win
+    // over campaign copies. Others are retained without inventing a campaign.
+    const sourceTabs=[...campaignTabs,...(tabs.includes('Funnel')?['Funnel']:tabs.includes('Others')?['Others']:[])];
+    const syncedAt=new Date().toISOString();
+    for(const tab of sourceTabs){const rows=await deps.sheetRows(sheetId,"'"+tab.replace(/'/g,"''")+"'!A1:I10001");imports.push({tab,contacts:rowsToContacts(rows)});}
+    const masterRows=new Map((imports.find(e=>e.tab==='Funnel')?.contacts||[]).map(p=>[contactIdentity(p),p]));
     const result=await change(uid,s=>{
       if(s.settings.sheetId!==sheetId)throw fail('Workbook changed while syncing. Try again.',409);
       const report=[];
       for(const entry of imports){
-        let c=s.campaigns.find(c=>c.sheetId===sheetId&&c.sheetTab===entry.tab);
-        if(!c){if(s.campaigns.length>=100)throw fail('Campaign limit reached.');c={id:randomUUID(),name:entry.tab,status:'active',sheetId,sheetTab:entry.tab,createdAt:new Date().toISOString()};s.campaigns.push(c);}
-        const added=mergeContacts(s,entry.contacts.map(c=>({...c,source:entry.tab,sheetData:{name:c.name,company:c.company,title:c.title,phone:c.phone,notes:c.notes,subject:c.subject}})),c.id);
-        c.syncedAt=new Date().toISOString();
-        report.push({tab:entry.tab,read:entry.contacts.length,added,total:s.contacts.filter(p=>inCampaign(p,c.id)).length});
+        const isCampaign=campaignTabs.includes(entry.tab);
+        let c=isCampaign?s.campaigns.find(c=>c.sheetId===sheetId&&c.sheetTab===entry.tab):null;
+        if(isCampaign&&!c){if(s.campaigns.length>=100)throw fail('Campaign limit reached.');c={id:randomUUID(),name:entry.tab,status:'active',sheetId,sheetTab:entry.tab,createdAt:syncedAt};s.campaigns.push(c);}
+        const added=mergeContacts(s,entry.contacts.map(source=>{
+          const master=masterRows.get(contactIdentity(source)),p=master||source,tab=master?'Funnel':entry.tab;
+          return {...p,source:tab,sheetData:{sheetId,tab,syncedAt,outreachBaselineAt:syncedAt,name:p.name,company:p.company,title:p.title,phone:p.phone,notes:p.notes,subject:p.subject}};
+        }),c?.id||null);
+        if(c)c.syncedAt=syncedAt;
+        report.push({tab:entry.tab,read:entry.contacts.length,added,total:entry.contacts.length});
       }
-      s.settings.lastSyncedAt=new Date().toISOString();return report;
+      s.settings.lastSyncedAt=syncedAt;s.settings.sheetReport=report;return report;
     });return result;
   }
   app.post(api+'/sheets/sync',handler(async(req,res,user)=>res.json({ok:true,...await syncSheet(user.sub)})));
@@ -175,8 +198,8 @@ export function mountOutbound(app,deps) {
     const b=req.body||{};if(b.confirm!==true)throw fail('Confirm generation first.');
     const {state}=await load(user.sub);const c=state.contacts.find(x=>x.id===b.id);if(!c)throw fail('Contact not found.',404);
     if(c.stage==='suppressed')throw fail('This contact is suppressed.');
-    const chosenId=req.body?.campaignId||c.campaignId;
-    const campaign=state.campaigns.find(x=>x.id===chosenId&&inCampaign(c,x.id));
+    const chosenId=req.body?.campaignId||c.campaignId||c.campaignIds?.[0];
+    const campaign=chosenId?state.campaigns.find(x=>x.id===chosenId&&inCampaign(c,x.id)):{name:'All prospects',audience:c.category||'',status:'active'};
     if(!campaign)throw fail('Choose a campaign containing this contact.');
     if(campaign?.status==='paused')throw fail('Resume this campaign before drafting.');
     const draft=await intelligence.draft(user.sub,{business:state.settings.business,campaign,contact:c});

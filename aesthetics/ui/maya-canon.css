@@ -66,7 +66,7 @@ html[data-maya-surface="dense"] :is(button,input:not([type="checkbox"]):not([typ
   font-family:var(--maya-font-ui);font-weight:400;color:var(--maya-ink);
   border-width:var(--maya-hairline);border-color:var(--maya-line);
 }
-html[data-maya-surface="dense"] :is(button,input:not([type="checkbox"]):not([type="radio"]),select) { border-radius:var(--maya-radius-pill); }
+html[data-maya-surface="dense"] :is(button:not(.person-link):not(.link-button),input:not([type="checkbox"]):not([type="radio"]),select) { border-radius:var(--maya-radius-pill); }
 html[data-maya-surface="dense"] textarea { border-radius:var(--maya-radius-panel); }
 html[data-maya-surface="dense"] :is(button,.primary,.tabs .active) { background:transparent;color:var(--maya-ink);box-shadow:var(--maya-control-shadow); }
 html[data-maya-surface="dense"] button:hover { background:var(--maya-hover); }
@@ -323,7 +323,7 @@ html[data-maya-surface="dense"] #campaign-title {font-size:18px;}
 html[data-maya-surface="dense"] :is(.detail h2,#modal-title,.empty h2) {font-size:16px;line-height:1.4;}
 html[data-maya-surface="dense"] .people-table :is(th,td,.person-link) {font-size:var(--maya-text-table);}
 html[data-maya-surface="dense"] .people-table :is(th,td) {padding:8px 12px;}
-html[data-maya-surface="dense"] :is(.link-button,.person-link) {box-shadow:none;background:transparent;border:0;}
+html[data-maya-surface="dense"] :is(.link-button,.person-link) {box-shadow:none;background:transparent;border:0;border-radius:0;backdrop-filter:none;-webkit-backdrop-filter:none;}
 html[data-maya-surface="dense"] .link-button:hover {background:transparent;text-decoration:underline;}
 html[data-maya-surface="dense"] #modal-title {min-width:0;overflow-wrap:anywhere;}
 html[data-maya-surface="dense"] :is(#close-modal,#close-drawer) {flex:none;}
@@ -361,3 +361,78 @@ html[data-maya-surface="dense"] body:has(#plan-a-view) .drawer-head h3 {font:400
  html[data-maya-surface="dense"] body:has(#plan-a-view) .hpane-drawer {width:calc(100vw - 16px);right:8px;}
  html[data-maya-surface="dense"] body:has(#plan-a-view) .drawer {left:0;right:0;top:8px;bottom:8px;padding:16px;}
 }
+
+/* Outbound priority workspace: compact source rows, quiet follow-up chart. */
+html[data-maya-surface="dense"] body:has(#outbound-drawer) .layout {gap:16px;grid-template-columns:216px minmax(0,1fr);}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) .layout>aside {padding:16px;}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) main {padding:16px;}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) .section {padding-bottom:16px;margin-bottom:16px;}
+html[data-maya-surface="dense"] .layout button.campaign {padding:8px 12px;border-radius:12px;font-size:12px;}
+html[data-maya-surface="dense"] .layout button.campaign small {font-size:11px;margin-top:2px;}
+html[data-maya-surface="dense"] #new-campaign {width:32px;height:32px;min-width:32px;padding:0;display:grid;place-items:center;flex:none;aspect-ratio:1;border-radius:50%;}
+.outbound-icon {width:16px;height:16px;display:inline-block;flex:none;vertical-align:middle;}
+html[data-maya-surface="dense"] .people-table .person-link {border:0;border-radius:0;box-shadow:none;background:none;padding:0;font-weight:500;}
+html[data-maya-surface="dense"] .person-link:hover {text-decoration:underline;}
+.outbound-workflow,.outbound-results {margin:0 0 8px;font-size:11px;color:var(--maya-secondary);}
+.outbound-workflow summary,.outbound-results summary {cursor:pointer;width:fit-content;}
+.outbound-workflow .steps {margin:8px 0;}
+.outbound-results .stats {margin:8px 0;}
+#sheet-freshness {margin:4px 0 12px;font-size:11px;}
+.followup-panel {padding:12px;margin:8px 0 12px;border:var(--maya-hairline) solid var(--maya-line);border-radius:var(--maya-radius-panel);background:var(--maya-surface);font-size:11px;}
+.followup-panel>.row {flex-wrap:wrap;gap:8px;}
+.followup-panel strong,.followup-legend b {font-weight:500;font-size:12px;}
+.followup-chart {display:flex;gap:3px;height:6px;margin:12px 0;border-radius:6px;overflow:hidden;background:var(--maya-hover);}
+.followup-segment {min-width:2px;}
+.followup-legend {display:flex;flex-wrap:wrap;gap:8px 16px;color:var(--maya-secondary);}
+.followup-legend>span {display:inline-flex;align-items:center;gap:5px;}
+.followup-legend i {width:6px;height:6px;border-radius:50%;}
+.followup-chart .uncontacted,.followup-legend .uncontacted {background:var(--maya-progress);}
+.followup-chart .first,.followup-legend .first {background:var(--maya-accent);}
+.followup-chart .f1,.followup-legend .f1 {background:var(--maya-booked);}
+.followup-chart .f2,.followup-legend .f2 {background:var(--maya-ink);}
+.followup-chart .review,.followup-legend .review {background:var(--maya-secondary);}
+.followup-chart .held,.followup-legend .held {background:var(--maya-tertiary);}
+.followup-note {margin-top:12px;font-size:11px;}
+html[data-maya-surface="dense"] .followup-note button {font-size:11px;padding:0;}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) .toolbar {margin-bottom:8px;gap:8px;}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) :is(.toolbar button,.actions button) {font-size:11px;padding:6px 10px;}
+html[data-maya-surface="dense"] .people-actions {margin-top:8px;align-items:center;}
+html[data-maya-surface="dense"] #title-filter {font-size:11px;width:180px;max-width:100%;padding:6px 10px;margin-left:auto;}
+html[data-maya-surface="dense"] .people-scroll {margin-top:8px;max-height:65vh;overscroll-behavior:contain;scrollbar-width:thin;}
+html[data-maya-surface="dense"] .people-table {min-width:1600px;table-layout:auto;}
+html[data-maya-surface="dense"] .people-table :is(td,th) {padding:8px;line-height:1.4;vertical-align:middle;min-width:100px;}
+html[data-maya-surface="dense"] .people-table :is(td,th):first-child {min-width:32px;width:32px;}
+html[data-maya-surface="dense"] .people-table input[type="checkbox"] {width:14px;height:14px;margin:0;}
+html[data-maya-surface="dense"] .people-table :is(.sheet-subject,.sheet-status) {min-width:160px;max-width:220px;overflow-wrap:anywhere;}
+html[data-maya-surface="dense"] .people-table small {display:block;font-size:10px;margin-top:4px;}
+html[data-maya-surface="dense"] .people-table :is(.date-cell,.write-email) {white-space:nowrap;}
+html[data-maya-surface="dense"] .people-table .write-email {display:inline-flex;align-items:center;gap:6px;padding:6px 10px;font-size:11px;}
+.priority-label {display:inline-flex;align-items:center;gap:4px;font-size:11px;white-space:nowrap;}
+.priority-label.hot {color:var(--maya-progress);}
+.queue-caption {margin:8px 0;color:var(--maya-secondary);font-size:11px;}
+@media(max-width:900px){
+ html[data-maya-surface="dense"] body:has(#outbound-drawer) .layout {grid-template-columns:180px minmax(0,1fr);}
+ html[data-maya-surface="dense"] body:has(#outbound-drawer) main>.row {flex-wrap:wrap;}
+}
+@media(max-width:650px){
+ html[data-maya-surface="dense"] body:has(#outbound-drawer) .layout {display:block;}
+ html[data-maya-surface="dense"] body:has(#outbound-drawer) .layout>aside {margin-bottom:12px;}
+ html[data-maya-surface="dense"] #campaigns {display:block;}
+ html[data-maya-surface="dense"] .layout button.campaign {min-width:0;margin-top:4px;}
+ .followup-legend {gap:8px;}
+ html[data-maya-surface="dense"] #title-filter {margin-left:0;}
+}
+
+.priority-next {padding-bottom:12px;margin-bottom:12px;border-bottom:var(--maya-hairline) solid var(--maya-line);}
+html[data-maya-surface="dense"] .priority-next button {font-size:11px;}
+.priority-next>.row,.priority-next>span {min-width:0;overflow-wrap:anywhere;}
+
+.outbound-tools {font-size:11px;color:var(--maya-secondary);}
+.outbound-tools summary {cursor:pointer;}
+html[data-maya-surface="dense"] .todo-table {min-width:780px;}
+html[data-maya-surface="dense"] .todo-table :is([data-sheet-col="0"],[data-sheet-col="3"],[data-sheet-col="4"],[data-sheet-col="5"],[data-sheet-col="7"]) {display:none;}
+html[data-maya-surface="dense"] .people-scroll:has(.todo-table) {scrollbar-width:thin;}
+
+html[data-maya-surface="dense"] body:has(#outbound-drawer) .toolbar>.row {flex:1 1 360px;min-width:0;justify-content:flex-end;gap:8px;}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) #search {width:200px;max-width:240px;min-width:120px;flex:1 1 160px;}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) :is(#search,#stage-filter) {font-size:11px;padding:6px 10px;}

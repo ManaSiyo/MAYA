@@ -1,3 +1,4 @@
+import {auditOutboundPriority} from './outbound-priority-ui.mjs';
 import {chromium} from 'playwright';
 import {auditLeadFilter} from './lead-filter-ui.mjs';
 import {readFileSync} from 'node:fs';
@@ -15,11 +16,12 @@ if(process.env.MAYA_FONT_DIR && u.hostname==='fonts.googleapis.com')return route
 if(u.pathname.startsWith('/__fonts/') && process.env.MAYA_FONT_DIR)return route.fulfill({body:readFileSync(join(process.env.MAYA_FONT_DIR,u.pathname.split('/').pop())),contentType:'font/ttf'});
 if(u.hostname!=='maya.test')return route.abort();if(u.pathname.endsWith('/sheets/sync'))syncCount++;if(u.pathname.startsWith('/api/'))return route.fulfill({json:{ok:true,result:[{tab:'9/23 Ceremonial',total:1,added:0}],state,capabilities:{sheets:true},models:{'Frontend text':'gpt-6-luna','Admin text':'gpt-6-luna','Image':'image-test'},checkedAt:new Date().toISOString()}});let p=u.pathname==='/outbound.html'?'/backend/outbound.html':u.pathname==='/status.html'?'/backend/status.html':u.pathname;try{await route.fulfill({body:readFileSync(root+p),contentType:({'.js':'text/javascript','.html':'text/html','.png':'image/png','.css':'text/css'})[extname(p)]||'text/plain'});}catch{await route.abort();}});
 try{
-await page.goto('https://maya.test/outbound.html');await page.getByText('Example Person',{exact:true}).waitFor();
+await auditOutboundPriority(browser);
+await page.goto('https://maya.test/outbound.html');await page.locator('.people-table [data-person="p"]').waitFor();
 assert.match(await page.evaluate(()=>getComputedStyle(document.body).backgroundImage),/birth-of-a-star/);
 await page.getByRole('button',{name:'Open Outbound menu'}).click();assert.ok(await page.locator('#outbound-drawer').isVisible());await page.locator('#campaign-title').click();assert.ok(await page.locator('#outbound-drawer').isHidden());
 await page.getByRole('button',{name:'Open Outbound menu'}).click();await page.keyboard.press('Escape');assert.ok(await page.locator('#outbound-drawer').isHidden());
-await page.getByText('Example Person',{exact:true}).click();assert.ok(await page.getByRole('button',{name:'Open in Gmail'}).isVisible());
+await page.locator('.people-table [data-person="p"]').click();assert.ok(await page.getByRole('button',{name:'Open in Gmail'}).isVisible());
 await page.screenshot({path:join(tmpdir(),'maya-outbound-revised.png')});
 for(const width of [320,390,650,768,1024,1440,1920]){
  await page.setViewportSize({width,height:844});
@@ -30,7 +32,7 @@ for(const width of [320,390,650,768,1024,1440,1920]){
  const drawer=await page.locator('#outbound-drawer').boundingBox();assert.ok(drawer.x>=0&&drawer.x+drawer.width<=width+1);
  await page.keyboard.press('Escape');assert.ok(await page.locator('#menu-toggle').evaluate(e=>e===document.activeElement));
 }
-await page.locator('#menu-toggle').click();await page.locator('#sync-drawer').click();await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('prospects ('));assert.equal(syncCount,1);await page.keyboard.press('Escape');
+await page.locator('#menu-toggle').click();await page.locator('#sync-drawer').click();await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('prospects ('));assert.equal(syncCount,2);await page.keyboard.press('Escape');
 await page.setViewportSize({width:1440,height:1000});
 await page.goto('https://maya.test/status.html');
 await page.evaluate(()=>{document.querySelectorAll('#gate,#auth-gate').forEach(e=>e.remove());document.querySelector('#adm-mkt').style.display='block';paintLeads({connected:true,list:[{id:'fixture',name:'Example Person',phone:'+15555550100',tier:'Signature',wrote:'A custom suit for a ceremony',createdAt:'2026-09-23',stage:'new'}]});});

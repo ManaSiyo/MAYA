@@ -1,35 +1,39 @@
 Summary:
-[Codex][v14.40] Fix Lead Station filter layering
+[Codex][v14.40] Add Outbound priorities and Sheet follow-up tracking
 
 Description:
 
-Fix the open status filter showing table text through its glass and clipping
-inside sticky/scrollable table layers. Give it a compact dark frosted surface,
-place it in the browser top layer with a body-portal fallback, and scope section
-caret styles so they cannot leak onto the rounded filter gear.
+Add To Do alongside All prospects and campaigns. Rank uncontacted prospects by
+relevance, review unknown dates, then follow up oldest-first. Show recorded first
+email/F1/F2+ history, last contacted and a direct Write an email action. Preserve
+reviewed sending and exclude replies, bounces, do-not-contact and paused records
+from the outreach queue.
 
-Keep options usable over empty/short results and after column reordering.
-Reposition on scroll/resize, dismiss when the anchor is obscured, preserve
-checkbox focus across rendering, and support keyboard entry/exit plus outside
-click and Escape dismissal. Status data, row sizing and 11px type remain intact.
-Remove duplicated local filter styles; backend CSS cache URLs advance to v9.
-Consumer frontend, Playground, provider APIs and production settings unchanged.
+Import the Funnel master plus campaign memberships, keeping the nine real Sheet
+columns, relevance, original status and last-email date. Funnel values take
+precedence over campaign copies. Refresh connected Sheets on opening, show sync
+time and preserve local drafts/manual stages. Persist confirmed email/contact
+history, backfill existing activity, and avoid double-counting events or erasing
+same-day follow-ups
+on refresh. Master-only contacts can draft/send without a fabricated campaign;
+assigned paused campaigns still block sending. No automatic contact deletion.
 
-The previous audit covered filtering/dismissal and empty-page dimensions but
-missed the populated open-menu visual state. Add that coverage to the existing
-outbound-ui release gate via tests/lead-filter-ui.mjs. Align source contracts with
-the scoped summary and portal behavior; remove a stale Admin CSS-v7 assertion.
+Compact the workspace, add a circular plus, remove name pill styling and use
+consistent original outline icons. To Do emphasizes actionable columns; All
+prospects retains all source columns and CSV export. Shared stylesheet v10;
+consumer frontend/Playground and production configuration remain unchanged.
 
 Validation:
-- Populated/empty/one-row tables; 7 widths (320-1920); 320x568 and 844x390;
-  open-menu resize, vertical/horizontal scroll, frozen/reordered columns,
-  Affiliates, real pointer/keyboard actions and no-Popover fallback passed.
-- Actual-font screenshots reviewed; no row text bleeding through options.
-- Shared canon visual sweep: 11 page sources, 7 widths, drawer parity and
-  reduced motion passed. Canon source contract and Admin contract (11) passed.
-- Full app-regression passed; 5 edited/new test modules and 9 Admin inline
-  scripts pass syntax checks; git diff --check clean.
+- Live read-only Sheet inspection: 262 unique master rows, nine source columns.
+- 29 Outbound/model checks plus priority/date/F1/F2/source-baseline assertions.
+- 18 CRM intelligence/provider tests, including master-only and paused sends.
+- Populated To Do, existing Outbound/Admin filter UI, 10,000-contact CRM UI and
+  draft/account failure tests. Seven widths; desktop/mobile screenshots reviewed.
+- 11-page/seven-width canon sweep and full app regression.
+- Phone 48, SMS 50, transfer, feedback and server smoke fixture checks.
+- 12 changed/new JS modules syntax-checked; clean diff whitespace.
 
-Local commit only. Fromsa must push and verify the open filter after deployment.
-No real contacts were changed or contacted. Physical Safari/iOS and signed-in
-production have not been validated by these local Chromium fixtures.
+Local commit only. Fromsa must push; deployment and signed-in Sheet/Gmail behavior
+still need verification. No Sheet edits, real messages, credentials or environment
+changes. Yearless dates use their most recent occurrence at sync; unknown historic
+touches remain marked for review. No automatic follow-up schedule was invented.

@@ -72,6 +72,14 @@ await test('send needs confirmation, selected connected sender and idempotent co
  assert.equal((await call('/send',{...draft,confirm:true,body:'Different'})).status,409);assert.equal(sends,1);
  user='other';assert.equal((await call('/send',{...draft,confirm:true})).status,400);user='owner';
 });
+await test('master-only prospect can draft and send manually while paused campaign remains blocked',async()=>{
+ const imported=await call('/save',{type:'import',campaignId:null,contact:{email:'master@example.com',name:'Master'}});const p=imported.state.contacts.find(c=>c.email==='master@example.com');
+ assert.equal((await call('/draft',{id:p.id,confirm:true})).status,200);assert.equal(lastAIData.campaign.name,'All prospects');
+ const mail={id:p.id,mailboxId:'one',subject:'Personal introduction',body:'A reviewed message',requestId:'master-only-send-0001',confirm:true};
+ assert.equal((await call('/send',mail)).delivery.status,'sent');
+ const paused=await call('/save',{type:'campaign',name:'Paused',status:'paused'});const pausedId=paused.state.campaigns.at(-1).id;
+ await call('/segment',{ids:[p.id],campaignId:pausedId});assert.equal((await call('/send',{...mail,requestId:'master-only-send-0002'})).status,400);
+});
 await test('hourly sync commits cursors with activity and exposes provider failures',async()=>{
  await call('/schedule',{enabled:true,hunterDailyLimit:0});let run=await call('/sync',{});assert.equal(run.state.crm.mailboxes.one.cursor.historyId,'10');assert.equal(run.state.contacts[0].stage,'replied');
  gmailFail=true;run=await call('/sync',{});assert.equal(run.errors.length,2);assert.equal(run.state.crm.mailboxes.one.cursor.historyId,'10');gmailFail=false;

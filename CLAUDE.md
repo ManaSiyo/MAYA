@@ -50,6 +50,7 @@ backend/marketing.html     Marketing          → /marketing.html
 backend/operations.html    Operation Room     → /operations.html
 backend/outbound.html      Outbound           → /outbound.html
 backend/outbound.js        Outbound UI logic (served alongside its page)
+backend/outbound-priority.js  Pure priority/follow-up calculations (public, no secrets)
 backend/backend.html       the Brief          → /backend.html
 backend/privacy.html       privacy policy     → /privacy.html
 backend/verify.html        deploy check       → /verify.html
@@ -127,3 +128,9 @@ Backend pages load `aesthetics/ui/maya-canon.css`; consumer and Playground retai
 their approved frontend styling as the reference. Change backend tokens and
 components in the shared CSS, not a new per-page visual system. Jost is functional; Cormorant
 is reserved for branding/display. Data and metrics use Jost with tabular numerals.
+
+Outbound source-of-truth columns and priority rules are regression-tested in
+`tests/outbound-priority.mjs` (invoked by outbound/app-regression) and populated
+`tests/outbound-priority-ui.mjs` (invoked by outbound-ui). Keep unknown follow-up
+history explicit. Refreshing a Sheet must not erase draft edits or re-count a
+recorded send. No automatic email sending is part of the To Do queue.

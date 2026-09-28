@@ -1,3 +1,14 @@
+SEPTEMBER 28: Outbound source data and priority presentation
+The importer only read three campaign tabs, omitted Funnel-only contacts, and
+folded category, relevance, last-email date and status into notes. Reply/decline
+variants could appear as new prospects. Names inherited the generic capsule
+radius; campaign + dimensions were unequal and the workspace had excessive gaps.
+Prepared locally: authoritative Funnel values plus campaign memberships, structured
+columns, conservative exclusions, deterministic To Do and confirmed F1/F2 evidence.
+Same-day follow-up counts survive unchanged source refresh; unknown history stays
+unknown. Compact chart/table/controls and explicit plain-link styles verified over
+populated desktop/mobile fixtures. Shared CSS v10; no push or production writes.
+
 SEPTEMBER 28: Open status-filter text bleed and clipping
 Drawer-only transparent fill was reused inside a sticky, scrolling table with
 nested backdrop contexts. Row text remained readable through the options; broad

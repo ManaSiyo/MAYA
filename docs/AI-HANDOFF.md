@@ -8,57 +8,78 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
-## September 28: Lead Station filter layering (local, not deployed)
+## September 28: Outbound priorities and follow-ups (local, not deployed)
 
-Based on 15cb89d, which matched origin/maya-v2 before this fix. No push or live
-configuration changes. Consumer/Playground sources and backend data APIs unchanged.
+Based on eee9213, matching origin/maya-v2 at task start. No push, credentials,
+production settings, real sends, or Sheet writes. Consumer/Playground unchanged.
 
-Fromsa's screenshot exposed a missed audit state: the populated table with its
-status filter open. The earlier checks exercised filtering/dismissal but did not
-inspect this overlay; the broad layout sweep used empty tables. Drawer glass had
-no dark backing, nested table/panel backdrop contexts let row text show through,
-and broad fold-summary selectors leaked a caret and square focus geometry.
+Live read of the owner's Outbound workbook confirmed 262 unique Funnel rows:
+76 Ceremonial, 128 Corporate, 44 Fashion House and 14 Others. The nine columns are
+Category, Company, Full Name, Email, Job Title, Subject, Last email, Status,
+Relevance. Do not commit private source rows; fixtures use invented contacts.
 
-Fixed in backend/status.html and aesthetics/ui/maya-canon.css:
-- Filter uses its own dark translucent/frosted surface outside the scroll panel,
-  with native top-layer placement and a body-portal fallback.
-- Position follows scroll/resize, flips at the viewport edge, and closes if its
-  gear is hidden by a frozen column. Short/empty results cannot clip options.
-- Rounded gear focus; fold caret styles target section headings only. Removed
-  duplicate local filter CSS. Compact rows, status colors and fonts preserved.
-- Outside/Escape dismissal, keyboard entry/exit and checkbox focus survive
-  table rerendering; filter selections and status persistence are unchanged.
-- Backend stylesheet URLs use v9; other page HTML edits are cache-link-only.
+Implemented:
+- backend/outbound.js/html: All prospects and To Do share the campaign sidebar.
+  Uncontacted sorts first by relevance, unknown dates next for review, then oldest
+  to newest confirmed contact. Replies, suppressed and Sheet-paused contacts stay
+  outside To Do. A visible next-person action and row actions open the existing
+  draft editor; sending still requires explicit confirmation.
+- backend/outbound-priority.js: deterministic queue and follow-up chart, including
+  initial email, F1 (second email), F2+ (third or later), unknown and held states.
+  Last contacted uses confirmed outbound activity; Last email stays email-specific.
+- All prospects/campaign tables and CSV retain the nine source columns plus
+  priority/next touch. To Do hides secondary columns for a compact action view.
+  Full columns remain available in All prospects. Tables scroll internally on
+  narrow screens and still page 50 records at a time.
+- docs/server/outbound.mjs: structured Sheet fields, reply/decline/bounce/pause
+  handling; campaign memberships plus Funnel master rows (Others fallback only
+  when Funnel is absent). Funnel values win over campaign copies, imports are
+  atomic and deduplicated, local drafts/manual stages remain protected. No
+  automatic deletion of existing CRM contacts. Refresh runs when opening a
+  connected workspace and manually; last-sync time/report is visible.
+- docs/server/crm-intelligence.mjs: last confirmed outbound/email timestamps and
+  bounded 50-message email evidence, deduplicated by provider ID. Existing saved
+  activity is backfilled without changing relationship stages. Queued/failed
+  SMS and automated email do not advance follow-up history. Unchanged Sheet
+  refreshes retain the baseline for counting newer same-day emails. Master-only
+  prospects may draft/send after normal review without an invented campaign;
+  explicitly assigned paused campaigns still block sending.
+- aesthetics/ui/maya-canon.css: compact spacing, collapsed auxiliary totals/workflow,
+  circular plus, consistent original outline icons, plain name links. Fixed the
+  high-specificity generic capsule radius leaking onto name/link controls. Other
+  backend page edits only update the shared CSS cache URL to v10.
 
 Validation:
-- tests/outbound-ui.mjs now invokes tests/lead-filter-ui.mjs in the existing
-  release gate: actual pointer/keyboard actions over populated, empty and short
-  tables, seven widths (320–1920), short portrait/landscape, resize, scroll,
-  reordered/frozen columns, Affiliates and no-Popover fallback.
-- Actual-font menu screenshots reviewed. Shared canon visual sweep: 11 page
-  sources, seven widths, drawer parity and reduced motion passed.
-- Admin source contract (11) and full app-regression passed. Updated source
-  assertions for scoped summaries/portal dismissal; removed the Admin contract's
-  obsolete v7 cache pin (canon-contract owns the current version check).
-- Five edited/new test modules and nine Admin inline scripts pass syntax checks;
-  diff whitespace is clean.
-- Local browser fixtures only; physical Safari/iOS and signed-in production
-  still need validation after owner deployment.
+- tests/outbound.mjs (29), including tests/outbound-priority.mjs: source fields,
+  ordering, F1/F2, yearless/invalid dates, same-day sends and refresh, suppression,
+  Funnel union, idempotence, atomic failure, and local-edit preservation.
+- tests/crm-intelligence.mjs (18): reviewed master-only sending, paused segments,
+  idempotence, account isolation, source failures and existing provider controls.
+- Populated priority browser fixture added through existing outbound-ui release
+  gate: all nine headers, order, chart, correct draft selection, no send on Write,
+  round plus, borderless 11px names, compact rows and seven widths (320-1920).
+- Outbound/Admin filter UI, 10,000-contact CRM UI, draft/account failure UI,
+  11-page/seven-width canon sweep and full app regression passed locally.
+- Phone (48), messages (50), transfer, feedback and server smoke fixtures passed.
+  Twelve changed/new JS modules pass syntax checks; diff whitespace clean.
+- Desktop/mobile populated screenshots inspected with local font files.
 
-Changed files: status.html, shared canon CSS, backend stylesheet cache links,
-lead-filter-ui.mjs, outbound-ui.mjs, canon/admin/app regression contracts and
-continuity documents. See COMMIT-REVIEW.txt for commit/verification details.
+Limits: Sheet MM/DD dates have no year; ordering uses the most recent occurrence
+at sync, disclosed by the date tooltip. Same-day messages before the first source
+snapshot cannot prove an additional touch, and unknown historic counts stay
+unknown. No assumed follow-up cadence or automatic sends. Imports retain existing
+CRM history rather than deleting contacts removed from a Sheet. Native Safari/
+iOS and authenticated production remain unverified by local Chromium fixtures.
 
-Exact next step: Fromsa pushes the prepared local commit in GitHub Desktop, then
-checks the open status filter on the deployed Admin table. Do not claim this
-local repair is already live. Agents must not push without an explicit request.
+Exact next step: Fromsa pushes the prepared local commit in GitHub Desktop. After
+Cloud Build succeeds, open Outbound; its existing saved Sheet refresh should show
+current Funnel data. Verify To Do and one reviewed self-addressed email with a
+connected Gmail mailbox. Agents must not push without an explicit request.
 
-Existing Outbound setup/limits remain: owner authorization for both Gmail
-mailboxes and OIDC hourly Scheduler; actual Sheet sync and self-addressed SMS/mail
-round trips still require live verification. No automatic email sends. The
-combined $1/day cap/meter covers Outbound text AI only, across OpenAI/Claude/Gemini;
-these are token-cost estimates, not provider invoices or all MAYA image/voice
-usage. Credentials, billing and production environment remain owner-only.
+Existing setup remains owner-only: both Gmail OAuth authorizations and OIDC
+Scheduler, provider credentials and live communication checks. The combined
+$1/day cap/meter covers Outbound text AI, not every MAYA image/voice call or provider
+invoices. See docs/OUTBOUND-SETUP.md and COMMIT-REVIEW.txt.
 
 ## The rules, in one place
 

@@ -5,7 +5,25 @@ export const inCampaign=(contact,id)=>(contact.campaignIds||[contact.campaignId]
 const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const phone=value=>{let n=String(value||'').replace(/\D/g,'');if(n.length===10)n='1'+n;return n;};
 const initial=()=>({enabled:false,mailboxes:{},activity:[],unmatched:[],deliveries:{},hunterClaims:{},pendingAI:[]});
+function recordOutbound(c,event,confirmed){
+  if(!confirmed||event.automated||event.direction!=='out')return;
+  if(!c.lastOutboundAt||event.ts>c.lastOutboundAt)c.lastOutboundAt=event.ts;
+  if(event.provider==='gmail'){
+    if(!c.lastEmailAt||event.ts>c.lastEmailAt)c.lastEmailAt=event.ts;
+    const history=c.emailHistory||=[];
+    if(!history.some(e=>e.id===event.id))history.push({id:event.id,ts:event.ts});
+    c.emailHistory=history.sort((a,b)=>a.ts.localeCompare(b.ts)).slice(-50);
+  }
+}
+const confirmedOutbound=e=>e.provider!=='twilio'||(e.kind==='call'?e.seconds>0:e.direction==='in'||['sent','delivered','read'].includes(e.status));
+export function hydrateOutboundHistory(state){
+  const crm=state.crm;if(!crm||crm.followupEvidenceVersion===1)return;
+  const contacts=new Map(state.contacts.map(c=>[c.id,c]));
+  for(const event of crm.activity||[])for(const id of event.contactIds||[]){const c=contacts.get(id);if(c)recordOutbound(c,event,confirmedOutbound(event));}
+  crm.followupEvidenceVersion=1;
+}
 export function reconcile(state,events) {
+  hydrateOutboundHistory(state);
   const crm=state.crm||=initial(),emails=new Map(),phones=new Map();
   for(const c of state.contacts){if(c.email){const key=c.email.toLowerCase();emails.set(key,[...(emails.get(key)||[]),c]);}if(c.phone){const key=phone(c.phone);phones.set(key,[...(phones.get(key)||[]),c]);}}
   const seen=new Map(crm.activity.map(e=>[e.id,e])),unmatched=new Set((crm.unmatched||[]).map(e=>e.id)),changed=new Set();
@@ -15,9 +33,10 @@ export function reconcile(state,events) {
     const matches=[...new Set(event.phone?(phones.get(phone(event.phone))||[]):(event.peers||[]).flatMap(e=>emails.get(e.toLowerCase())||[]))];
     if(!matches.length){if(event.provider==='gmail'&&!unmatched.has(event.id)){crm.unmatched.push(event);unmatched.add(event.id);}continue;}
     const entry={...event,contactIds:matches.map(c=>c.id)};if(previous)Object.assign(previous,entry);else{crm.activity.push(entry);seen.set(event.id,entry);}
-    const confirmed=event.provider!=='twilio'||(event.kind==='call'?event.seconds>0:event.direction==='in'||['sent','delivered','read'].includes(event.status));
+    const confirmed=confirmedOutbound(event);
     for(const c of matches){
       if(!c.lastActivityAt||event.ts>=c.lastActivityAt){c.lastActivityAt=event.ts;c.lastActivity={kind:event.kind,direction:event.direction,summary:event.summary,ts:event.ts};}
+      recordOutbound(c,event,confirmed);
       if(!['suppressed','closed','meeting'].includes(c.stage)&&(!c.stageManualAt||event.ts>c.stageManualAt)&&!event.automated&&confirmed){
         if(event.direction==='in')c.stage='replied';else if(['new','ready'].includes(c.stage))c.stage='contacted';
       }
@@ -61,7 +80,8 @@ export function mountCrmIntelligence(app,deps) {
       if(previous){if(previous.fingerprint!==fingerprint)throw problem('Send reference already belongs to another message.',409);return {previous};}
       const c=s.contacts.find(c=>c.id===b.id);if(!c?.email)throw problem('This contact needs an email.');
       if(s.contacts.some(x=>x.email===c.email&&x.stage==='suppressed'))throw problem('This contact is suppressed.');
-      if(!s.campaigns.some(campaign=>inCampaign(c,campaign.id)&&campaign.status!=='paused'))throw problem('Resume a campaign before sending.');
+      const membership=(c.campaignIds||[c.campaignId]).filter(Boolean);
+      if(membership.length&&!s.campaigns.some(campaign=>inCampaign(c,campaign.id)&&campaign.status!=='paused'))throw problem('Resume a campaign before sending.');
       crm.deliveries[b.requestId]={fingerprint,status:'pending',contactId:c.id,mailboxId:b.mailboxId,to:c.email,subject,ts:now()};return {to:c.email};
     });
     if(claim.result.previous)return res.json({ok:true,delivery:claim.result.previous});

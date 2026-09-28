@@ -1,3 +1,12 @@
+SEPTEMBER 28: Outbound To Do, Sheet columns, relevance and follow-ups
+[verified] Live Sheet: Funnel 262; Ceremonial 76, Corporate 128, Fashion House 44, Others 14.
+[prepared] To Do alongside campaigns: uncontacted/relevance first, oldest follow-ups next, recent last.
+[prepared] Follow-up chart with recorded F1/F2, last-contact summary and reviewed Write an email action.
+[prepared] Nine source columns plus priority; Funnel import, automatic opening refresh and sync timestamp.
+[prepared] Compact priority table, circular plus, borderless names, consistent outline icons and glass.
+[verified] Populated seven-width tests, 10,000-contact UI, provider fixtures and full regression.
+[pending] Owner push/deploy; signed-in Sheet/Gmail verification. No real messages sent.
+
 SEPTEMBER 28: Status filter CSS missed by the audit
 [prepared] Readable frosted menu above table layers; rounded gear; no inherited caret.
 [prepared] Preserve filter/keyboard focus through rerenders, scrolling and short results.
