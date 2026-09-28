@@ -1,16 +1,9 @@
-[Codex][v14.40] Add owner CRM commands and repair deployment authorization gate
+[Codex][v14.40] Refresh owner setup when Systems opens
 
-Bind owner text commands to an allowlisted Admin login and configured phone.
-Signed SMS produces a reviewed lead change; YES code commits idempotently.
-Keep STOP handling and customer permissions intact. Separate different people
-saved in one owner call. Add Systems setup, bounded Gemini test and reviewed
-Gmail-to-Lead-Station import, using the same account's connected mailboxes.
+Refresh the owner panel when Systems is selected after login. Keep the SMS test
+summary after all checks and document owner tests and shared CRM text spending
+in AGENTS/CLAUDE. Prepared owner CRM implementation remains in a118d81.
 
-Fix Outbound initial-load authorization ordering that failed Cloud Build.
-No credentials, environment, IAM or billing edits. Consumer frontend unchanged.
-
-Validation: owner unit/UI fixtures, 51 phone, 54 SMS, 19 CRM intelligence,
-CRM fault injection, full app regression, 10k/seven-width CRM suite, syntax.
-Live Gmail has zero connections. Owner activation, mailbox OAuth and actual
-carrier tests remain necessary. The previous Vertex deployment failed at the
-release test gate and did not reach production.
+Validated owner UI fixture, existing full regression and owner phone/SMS tests;
+added a regression assertion for Systems refresh. Live activation and Gmail
+OAuth still require owner setup. No credentials or production settings changed.

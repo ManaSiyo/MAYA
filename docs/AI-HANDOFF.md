@@ -16,6 +16,10 @@ crm-failure-ui.mjs:53 before server/hosting deployment; production remains
 298aea5. Fixed Outbound initial load to await both workspace and intelligence
 authorization before rendering either. Fault suite now passes.
 
+Prepared in a118d81 and follow-up:
+- Systems tab refreshes owner setup state after login; test summary includes all SMS checks.
+- AGENTS/CLAUDE document the shared CRM text allowance and owner-specific tests.
+
 Prepared in this change:
 - Owner SMS tools: signed Twilio From must match configured FROMSA_PHONE, and
   an allowlisted owner Admin login must explicitly enable/bind the feature.

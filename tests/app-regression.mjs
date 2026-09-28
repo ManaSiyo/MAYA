@@ -2697,6 +2697,7 @@ ok('Live verifier checks moved pages and Outbound module type',liveVerifier.incl
 ok('CRM status column hides contact numbers and opens the thread by name',MAP_SOURCE.includes("['name', 'stage', 'note']") && MAP_SOURCE.includes('function leadStage(x)') && MAP_SOURCE.includes('function leadSummary(x)') && MAP_SOURCE.includes('function msgInvoice()'));
 ok('Model snapshot uses authenticated server config',MAP_SOURCE.includes('/api/admin/models') && SERVER_SOURCE.includes("app.get('/api/admin/models', requireAuthHeader"));
 ok('Owner CRM uses an authenticated setup and confirmation-only SMS lead writes', MAP_SOURCE.includes('<maya-owner-crm>') && SERVER_SOURCE.includes('ownerCommand: input => ownerCRM.handle(input)') && readFileSync(join(ROOT,'docs/server/owner-crm.mjs'),'utf8').includes('pending.code.toLowerCase()'));
+ok('Opening Systems refreshes owner connection state',MAP_SOURCE.includes("document.querySelector('maya-owner-crm')?.load?.()"));
 assertOutboundPriority();
 ok('Outbound preserves Sheet columns and ranks To Do with recorded F1/F2 follow-ups',outboundUI.includes('id="todo-list"') && outboundUI.includes('id="followups"') && outboundJS.includes('Write an email') && outboundJS.includes('renderFollowups(people)'));
 ok('Outbound preserves campaign pain and criteria and provides a people table',outboundJS.includes("field('pain'") && outboundJS.includes("field('criteria'") && outboundJS.includes('function renderPeople()'));

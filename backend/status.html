@@ -3200,7 +3200,7 @@ function admTab(t) {
   document.getElementById('adm-tab-logs').classList.toggle('on', t === 'logs');
   document.getElementById('adm-tab-logs').setAttribute('aria-selected', String(t === 'logs'));
   if (t === 'logs') loadMayaLogs();
-  if (t === 'systems') loadModelSnapshot();
+  if (t === 'systems') { loadModelSnapshot(); document.querySelector('maya-owner-crm')?.load?.(); }
   const d = document.getElementById('drawer');
   d.classList.toggle('msgs', t !== 'systems');
   document.getElementById('adm-tab-systems').classList.toggle('on', t === 'systems');

@@ -3,6 +3,7 @@ SEPTEMBER 28: Owner calls/texts update Lead Station; Gmail leads
 [verified fixtures] Preview + YES code, deduplication, expiry, STOP handling and account binding.
 [fixed] Multiple people in one owner call no longer overwrite the first lead.
 [prepared] Systems Gmail review feeds confirmed correspondents into Lead Station.
+[prepared] Reopening Systems refreshes owner connection state after login.
 [blocked setup] Live account has zero connected mailboxes; connect both owner Gmails.
 [pending live] Gemini test, carrier SMS/call test and mailbox OAuth verification.
 

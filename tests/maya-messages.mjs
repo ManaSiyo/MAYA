@@ -172,7 +172,6 @@ ok('signed inbound route forwards OptOutType to the consent store',await store.c
 ok('untrusted forwarded hosts cannot authorize a webhook',(await signedPost('/api/phone/sms','attacker.example',cloudInbound,{'X-Forwarded-Host':'attacker.example'})).status===403);
 ok('Cloud Run delivery callbacks validate too',(await signedPost('/api/phone/sms/status','maya-api-53947659283.us-west1.run.app',delivery)).status===204);
 
-console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + ' (' + passed + ' ok)');
 const ownerParams={From:'+15105550199',Body:'Add A and B',MessageSid:'SMowner'};
 const ownerPost=async(params,signed=true)=>fetch(base+'/api/phone/sms',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded',...(signed?{'X-Twilio-Signature':sign('https://maya.manasiyo.com/api/phone/sms',params)}:{})},body:new URLSearchParams(params)});
 const beforeCommands=ownerCommands.length;
@@ -185,5 +184,6 @@ await ownerPost({...ownerParams,MessageSid:'SMownerstop',Body:'STOP'});
 ok('STOP never invokes owner command tools',ownerCommands.length===commandCount);
 await ownerPost({...ownerParams,MessageSid:'SMownerblocked',Body:'Add another lead'});
 ok('an opted-out owner receives no command reply',ownerCommands.length===commandCount);
+console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + ' (' + passed + ' ok)');
 twSrv.close(); server.close();
 process.exit(failed ? 1 : 0);

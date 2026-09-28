@@ -107,7 +107,11 @@ Run tests/crm-intelligence.mjs, tests/crm-ui.mjs and tests/crm-failure-ui.mjs fo
 these paths; all are release gates. The failure suite covers account isolation,
 pending edits, drawer dialogs and meter recovery with fake providers.
 Hourly updates require owner-configured Cloud Scheduler, not a browser timer.
-The $1 cap covers Outbound text AI only, not all MAYA or provider invoices.
+The $1 cap covers CRM text AI (Outbound plus owner SMS parsing), not voice, images or provider invoices.
+Owner commands: docs/server/owner-crm.mjs and aesthetics/ui/owner-crm.js. Run
+tests/owner-crm.mjs and tests/owner-crm-ui.mjs. Owner activation binds a verified
+allowlisted Admin account to the configured phone; never accept a phone or UID
+from SMS text. Gmail candidates stay account scoped until the owner adds a lead.
 
 Model defaults and chat
 compatibility: docs/server/model-config.mjs. Outbound stores each admin's
