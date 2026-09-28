@@ -72,7 +72,7 @@ html[data-maya-surface="dense"] :is(button,.primary,.tabs .active) { background:
 html[data-maya-surface="dense"] button:hover { background:var(--maya-hover); }
 html[data-maya-surface="dense"] :is(button.active,[aria-selected="true"],.person.active) { background:var(--maya-selected);border-color:var(--maya-line-hover); }
 /* Strong frost is for navigation and temporary layers, not every card. */
-html[data-maya-surface="dense"] :is(#drawer,#outbound-drawer,#clients-drawer,dialog,.lead-filter>div,#lead-inv-modal .inv-card) {
+html[data-maya-surface="dense"] :is(#drawer,#outbound-drawer,#clients-drawer,dialog,#lead-inv-modal .inv-card) {
   background:var(--maya-drawer-glass);border:var(--maya-hairline) solid var(--maya-line);
   border-radius:18px;box-shadow:var(--maya-drawer-shadow);backdrop-filter:var(--maya-drawer-frost);-webkit-backdrop-filter:var(--maya-drawer-frost);
 }
@@ -104,7 +104,7 @@ html[data-maya-surface] #adm-mkt #leads-table :is(.lead-note,.lead-note-vp,.lead
 html[data-maya-surface] #adm-mkt #leads-table :is(.lead-src,.lead-sig-edit,.lead-when,.lead-subline) {
   font:400 var(--maya-text-meta)/1.5 var(--maya-font-ui);color:var(--maya-tertiary);letter-spacing:0;
 }
-html[data-maya-surface] #adm-mkt #leads-table :is(th,.lead-filter label) {
+html[data-maya-surface] #adm-mkt #leads-table th {
   font:500 var(--maya-text-meta)/1.5 var(--maya-font-ui);letter-spacing:.06em;color:var(--maya-ink);
 }
 html[data-maya-surface] #adm-mkt #leads-table td {padding-top:var(--maya-space);padding-bottom:var(--maya-space);}
@@ -112,13 +112,42 @@ html[data-maya-surface] #adm-mkt #leads-table .lead-stage {color:var(--maya-inac
 html[data-maya-surface] #adm-mkt #leads-table .lead-stage:has(option[value="in_progress"]:checked) {color:var(--maya-progress);}
 html[data-maya-surface] #adm-mkt #leads-table .lead-stage:has(option[value="booked"]:checked) {color:var(--maya-booked);}
 html[data-maya-surface] #adm-mkt #leads-table .lead-stage:has(option[value="canceled"]:checked) {color:var(--maya-cancelled);}
-html[data-maya-surface] .lead-filter>div {color:var(--maya-ink);}
+/* Dense popovers need a dark backing as well as frost; drawer glass alone
+   allows table text to compete with the menu, even when blur is supported. */
+html[data-maya-surface] .lead-filter {
+  display:inline-block;vertical-align:middle;margin-left:8px;color:var(--maya-ink);
+}
+html[data-maya-surface] .lead-filter>summary {
+  display:flex;align-items:center;justify-content:center;width:28px;height:28px;
+  padding:0;list-style:none;cursor:pointer;border-radius:var(--maya-radius-pill);
+}
+html[data-maya-surface] .lead-filter>summary::-webkit-details-marker {display:none;}
+html[data-maya-surface] .lead-filter>summary:hover,
+html[data-maya-surface] .lead-filter[open]>summary {background:var(--maya-selected);}
+html[data-maya-surface] .lead-filter svg {width:16px;height:16px;}
+html[data-maya-surface] .lead-status-menu {
+  position:fixed;inset:auto;margin:0;z-index:1000;box-sizing:border-box;
+  width:185px;max-width:calc(100vw - 16px);padding:8px;overflow:auto;
+  color:var(--maya-ink);background:rgba(7,10,20,.88);
+  border:var(--maya-hairline) solid var(--maya-line);border-radius:var(--maya-radius-panel);
+  box-shadow:var(--maya-floating-shadow);backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
+  font:400 var(--maya-text-meta)/1.5 var(--maya-font-ui);letter-spacing:normal;text-transform:none;
+  overscroll-behavior:contain;
+}
+html[data-maya-surface] .lead-status-menu[hidden] {display:none;}
+html[data-maya-surface] .lead-status-menu label {
+  display:flex;align-items:center;gap:8px;min-height:28px;padding:2px 8px;
+  border-radius:8px;white-space:nowrap;cursor:pointer;
+}
+html[data-maya-surface] .lead-status-menu label:hover {background:var(--maya-hover);}
+html[data-maya-surface] .lead-status-menu input {margin:0;accent-color:var(--maya-accent);}
+html[data-maya-surface] .lead-status-menu::backdrop {background:transparent;}
 html[data-maya-surface] .affiliate-avatar {background:transparent;border-color:var(--maya-line);box-shadow:none;}
 html[data-maya-surface="dense"] :is(.sdot,.new-dot,.model-group) {box-shadow:none;}
 /* No serif data, including inline output from legacy templates. */
 html[data-maya-surface] :is(table,input,select,textarea,.pg-stat-num,.model-group,.msg-number) {font-family:var(--maya-font-ui)!important;}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
-  html[data-maya-surface] :is(#drawer,#outbound-drawer,#clients-drawer,dialog,.lead-filter>div,.panel,.detail,.stat) {background:rgba(7,10,20,.92);}
+  html[data-maya-surface] :is(#drawer,#outbound-drawer,#clients-drawer,dialog,.lead-status-menu,.panel,.detail,.stat) {background:rgba(7,10,20,.92);}
 }
 @media(prefers-reduced-motion:reduce) {
   html[data-maya-surface] *,html[data-maya-surface] *::before,html[data-maya-surface] *::after {

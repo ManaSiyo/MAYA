@@ -85,6 +85,12 @@ let failed = 0;
 assertCanon(); // Backend follows frontend chrome; consumer styling stays isolated from V4.
 const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name); if (!cond) failed++; };
 
+// September 28: populated status popovers must escape the table's clipping layer.
+ok('Lead status filter has an isolated readable layer and scoped section carets',
+  MAP_SOURCE.includes('document.body.append(menu)') && MAP_SOURCE.includes('menu.showPopover()') &&
+  MAP_SOURCE.includes('details.fold>summary::after') && !MAP_SOURCE.includes('details.fold summary::after') &&
+  CANON_SOURCE.includes('color:var(--maya-ink);background:rgba(7,10,20,.88)'));
+
 // September 27: compact Systems and master-sheet menu contracts.
 {
  const admin=readFileSync(join(ROOT,'backend/status.html'),'utf8');
@@ -530,7 +536,7 @@ ok('embedded Marketing keeps the approved page-like presentation inside Admin',
   s.marketingVisual.tickerInTopbar &&
   MAP_SOURCE.includes('id="mkt-ticker"') &&
   MAP_SOURCE.includes('id="mkt-wix-tiles"') &&
-  MAP_SOURCE.includes('#adm-mkt details.fold:not([open]) summary::after') &&
+  MAP_SOURCE.includes('#adm-mkt details.fold:not([open])>summary::after') &&
   MAP_SOURCE.includes('#mkt-ticker-inner'));
 ok('embedded Marketing keeps the standalone chart and refresh interactions',
   MAP_SOURCE.includes('function paintVisitors(') &&
@@ -2671,7 +2677,7 @@ ok('CRM status column hides contact numbers and opens the thread by name',MAP_SO
 ok('Model snapshot uses authenticated server config',MAP_SOURCE.includes('/api/admin/models') && SERVER_SOURCE.includes("app.get('/api/admin/models', requireAuthHeader"));
 ok('Outbound preserves campaign pain and criteria and provides a people table',outboundJS.includes("field('pain'") && outboundJS.includes("field('criteria'") && outboundJS.includes('function renderPeople()'));
 await browser.close(); if (served) srv.close();
-ok('CRM uses four owner statuses and dismisses the filter outside or on Escape',MAP_SOURCE.includes("booked:'Booked'") && MAP_SOURCE.includes("canceled:'Cancelled'") && MAP_SOURCE.includes("if(!d.contains(e.target))d.open=false") && MAP_SOURCE.includes('window.filterLeadStatus = filterLeadStatus'));
+ok('CRM uses four owner statuses and dismisses the filter outside or on Escape',MAP_SOURCE.includes("booked:'Booked'") && MAP_SOURCE.includes("canceled:'Cancelled'") && MAP_SOURCE.includes("!_leadFilterOwner.contains(e.target) && !_leadFilterMenu.contains(e.target)") && MAP_SOURCE.includes("if(e.key==='Escape' && _leadFilterOwner)") && MAP_SOURCE.includes('window.filterLeadStatus = filterLeadStatus'));
 ok('Lead rows use one phone icon, date and tier beneath the linked name',MAP_SOURCE.includes('class="lead-subline"') && MAP_SOURCE.includes('function leadSignup') && !MAP_SOURCE.slice(MAP_SOURCE.indexOf('function _actionsCell'),MAP_SOURCE.indexOf('function _leadColDefs')).includes('PAY_SVG'));
 ok('Model snapshot groups shared models by their roles',MAP_SOURCE.includes('const groups=new Map()') && MAP_SOURCE.includes('roles.join'));
 const outboundRevampUI=readFileSync(join(ROOT,'backend/outbound.html'),'utf8'),outboundRevampJS=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');

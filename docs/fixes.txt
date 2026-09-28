@@ -1,3 +1,13 @@
+SEPTEMBER 28: Open status-filter text bleed and clipping
+Drawer-only transparent fill was reused inside a sticky, scrolling table with
+nested backdrop contexts. Row text remained readable through the options; broad
+fold selectors added a caret and square focus outline. Prior audits tested
+filter logic and empty-page dimensions, missing the populated open-menu state.
+Fixed locally: body/top-layer popover, dark frost, scoped fold styles, rounded
+focus, viewport placement and keyboard/focus preservation. Expanded fixture gate
+covers populated/empty/short tables, seven widths and old-browser fallback.
+Cache URL v9. No push/deployment; production still needs owner verification.
+
 SEPTEMBER 27: Follow-up audit fixes (local, awaiting owner push)
 Mobile Operation Room overflow and overlaid stage labels; Brief settings offscreen overflow/focus;
 Outbound oversized headings/names, inherited link-button shadows and modal/drawer dismissal;

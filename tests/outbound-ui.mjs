@@ -1,4 +1,5 @@
 import {chromium} from 'playwright';
+import {auditLeadFilter} from './lead-filter-ui.mjs';
 import {readFileSync} from 'node:fs';
 import {resolve,extname,join} from 'node:path';
 import {tmpdir} from 'node:os';
@@ -9,7 +10,10 @@ const pageErrors=[];page.on('pageerror',e=>pageErrors.push(e.message));
 let syncCount=0;
 const state={campaigns:[{id:'c',name:'9/23 Ceremonial',status:'active',pain:'Custom ceremony garments',criteria:'Local event planners'}],contacts:[{id:'p',campaignId:'c',name:'Example Person',company:'Example Studio',title:'Director',email:'example@example.com',stage:'new',verification:'unverified',source:'Sheet',notes:'Ceremony inquiry',subject:'',body:''}],companies:[],settings:{sheetId:'abcdefghijklmnopqrstuvwx'}};
 await page.addInitScript(()=>localStorage.setItem('maya_admin_tok','fixture'));
-await page.route('**/*',async route=>{const u=new URL(route.request().url());if(u.hostname!=='maya.test')return route.abort();if(u.pathname.endsWith('/sheets/sync'))syncCount++;if(u.pathname.startsWith('/api/'))return route.fulfill({json:{ok:true,result:[{tab:'9/23 Ceremonial',total:1,added:0}],state,capabilities:{sheets:true},models:{'Frontend text':'gpt-6-luna','Admin text':'gpt-6-luna','Image':'image-test'},checkedAt:new Date().toISOString()}});let p=u.pathname==='/outbound.html'?'/backend/outbound.html':u.pathname==='/status.html'?'/backend/status.html':u.pathname;try{await route.fulfill({body:readFileSync(root+p),contentType:({'.js':'text/javascript','.html':'text/html','.png':'image/png','.css':'text/css'})[extname(p)]||'text/plain'});}catch{await route.abort();}});
+await page.route('**/*',async route=>{const u=new URL(route.request().url());
+if(process.env.MAYA_FONT_DIR && u.hostname==='fonts.googleapis.com')return route.fulfill({contentType:'text/css',body:['Jost','CormorantGaramond'].flatMap(family=>[400,500,600].map(weight=>`@font-face{font-family:'${family==='Jost'?'Jost':'Cormorant Garamond'}';font-style:normal;font-weight:${weight};src:url('https://maya.test/__fonts/${family}-normal-${weight}.ttf')}`)).join('\n')});
+if(u.pathname.startsWith('/__fonts/') && process.env.MAYA_FONT_DIR)return route.fulfill({body:readFileSync(join(process.env.MAYA_FONT_DIR,u.pathname.split('/').pop())),contentType:'font/ttf'});
+if(u.hostname!=='maya.test')return route.abort();if(u.pathname.endsWith('/sheets/sync'))syncCount++;if(u.pathname.startsWith('/api/'))return route.fulfill({json:{ok:true,result:[{tab:'9/23 Ceremonial',total:1,added:0}],state,capabilities:{sheets:true},models:{'Frontend text':'gpt-6-luna','Admin text':'gpt-6-luna','Image':'image-test'},checkedAt:new Date().toISOString()}});let p=u.pathname==='/outbound.html'?'/backend/outbound.html':u.pathname==='/status.html'?'/backend/status.html':u.pathname;try{await route.fulfill({body:readFileSync(root+p),contentType:({'.js':'text/javascript','.html':'text/html','.png':'image/png','.css':'text/css'})[extname(p)]||'text/plain'});}catch{await route.abort();}});
 try{
 await page.goto('https://maya.test/outbound.html');await page.getByText('Example Person',{exact:true}).waitFor();
 assert.match(await page.evaluate(()=>getComputedStyle(document.body).backgroundImage),/birth-of-a-star/);
@@ -59,10 +63,9 @@ await page.setViewportSize({width:1440,height:1000});
 
 assert.deepEqual(report.options,['Not contacted','In progress','Booked','Cancelled']);assert.equal(report.size,report.noteSize);assert.equal(report.color,'rgb(181, 189, 200)');assert.equal(report.actions,1);
 for(const [value,color] of [['in_progress','rgb(251, 191, 36)'],['booked','rgb(74, 222, 128)'],['canceled','rgb(253, 164, 175)']]){assert.equal(await page.locator('.lead-stage').evaluate((el,value)=>{el.value=value;return getComputedStyle(el).color;},value),color);}await page.locator('.lead-stage').evaluate(el=>el.value='new');
-await page.evaluate(()=>{document.querySelector('.lead-filter').open=true;document.querySelector('.lead-filter input').click();});
-assert.equal(await page.locator('#lead-tr-0').count(),0);
-await page.evaluate(()=>document.querySelector('.lead-filter input').click());assert.equal(await page.locator('#lead-tr-0').count(),1);
-await page.evaluate(()=>document.querySelector('.lead-filter').open=true);await page.evaluate(()=>document.body.click());assert.equal(await page.locator('.lead-filter').getAttribute('open'),null);
+await page.evaluate(()=>document.fonts.ready);
+await auditLeadFilter(page);
+await page.evaluate(()=>paintLeads({connected:true,list:[{id:'fixture',name:'Example Person',phone:'+15555550100',tier:'Signature',wrote:'A custom suit for a ceremony',createdAt:'2026-09-23',stage:'new'}]}));
 await page.evaluate(()=>admTab('messages'));assert.ok(await page.locator('#drawer maya-ai-meter').isHidden(),'Systems meter stays out of Messages');
 await page.evaluate(()=>admTab('logs'));assert.ok(await page.locator('#drawer maya-ai-meter').isHidden(),'Systems meter stays out of Logs');
 await page.evaluate(()=>admTab('systems'));assert.equal(await page.locator('#drawer .ai-meter h3').evaluate(el=>getComputedStyle(el).fontSize),'11px');

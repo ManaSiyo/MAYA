@@ -39,7 +39,7 @@ await test('Admin embeds every approved Marketing surface under its shell', () =
 await test('Admin keeps Marketing spacing, table, folds, ticker and chart hover behavior', () => {
   assert.match(admin, /#adm-mkt \.panel\{[^}]*border-radius:18px[^}]*padding:16px 18px/);
   assert.match(admin, /#adm-mkt table\{width:100%/);
-  assert.ok(admin.includes('#adm-mkt details.fold:not([open]) summary::after'));
+  assert.ok(admin.includes('#adm-mkt details.fold:not([open])>summary::after'));
   assert.ok(admin.includes('function bindChartHover('));
   assert.ok(admin.includes("addEventListener('touchmove'"));
   assert.ok(admin.includes('function buildTicker('));
@@ -82,7 +82,7 @@ await test('v14.01 drawer floor: circular logo, Hey Maya toggle beside it', () =
 await test('v14.01 admin drawer: full-bleed, no floating Sheet link, glued hamburger, one-click invoice', () => {
   // v14.01: the drawer is the frontend's exact glass card, not full-bleed
   assert.match(admin, /#drawer\{position:absolute;top:10px;right:18px;bottom:10px;left:0/, 'drawer wears the app glass geometry');
-  assert.ok(admin.includes('/aesthetics/ui/maya-canon.css?v=7'), 'shared V3 frost, not a page-specific gradient');
+  assert.ok(/href="\/aesthetics\/ui\/maya-canon\.css\?v=\d+"/.test(admin), 'shared V3 frost, not a page-specific gradient');
   assert.ok(admin.includes('.top-btn.hamburger{transition:opacity .25s'), 'no transform transition: the lag fix');
   assert.ok(admin.includes("hs.addEventListener('scroll', update, { passive: true })"), 'synchronous glue, like the app');
   assert.ok(!admin.includes('>the sheet</a>'), 'owner removed the floating Sheet link');

@@ -408,10 +408,10 @@ try {
 
   /* Collapsible sections: the heading is the handle, tap to open */
   details.fold{margin:14px 0 8px}
-  details.fold summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
-  details.fold summary::-webkit-details-marker{display:none}
-  details.fold summary h2.grp{margin:0}
-  details.fold summary::after{content:'\25BE';font-family:var(--maya-font-ui);font-size:11px;color:var(--faint);transition:transform .2s}
+  details.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+  details.fold>summary::-webkit-details-marker{display:none}
+  details.fold>summary h2.grp{margin:0}
+  details.fold>summary::after{content:'\25BE';font-family:var(--maya-font-ui);font-size:11px;color:var(--faint);transition:transform .2s}
   /* A small green light when something has shipped that you have not read yet.
      It goes out the moment the section is opened. */
   .fr-list{display:grid;gap:6px}
@@ -430,9 +430,9 @@ try {
   .new-dot{width:7px;height:7px;border-radius:50%;background:var(--green);
            box-shadow:0 0 10px rgba(74,222,128,0.85);display:none;flex:0 0 auto;
            animation:newpulse 2.4s ease-in-out infinite}
-  details.fold.unseen summary .new-dot{display:inline-block}
+  details.fold.unseen>summary .new-dot{display:inline-block}
   @keyframes newpulse{50%{opacity:0.45;box-shadow:0 0 4px rgba(74,222,128,0.5)}}
-  details.fold[open] summary::after{transform:rotate(180deg)}
+  details.fold[open]>summary::after{transform:rotate(180deg)}
   details.fold .fold-body{margin-top:10px}
   .changelog{border:var(--maya-hairline) solid var(--line);border-radius:16px;background:rgba(10,16,34,0.55);
              backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
@@ -583,9 +583,9 @@ try {
   #adm-mkt details.fold{margin:16px 0 8px;position:relative}
   /* v13.84: more breathing room before Ad Campaigns, where the money section starts. */
   #adm-mkt #ads-fold{margin-top:40px}
-  #adm-mkt details.fold summary{gap:8px}
-  #adm-mkt details.fold[open] summary::after{transform:none}
-  #adm-mkt details.fold:not([open]) summary::after{transform:rotate(-90deg)}
+  #adm-mkt details.fold>summary{gap:8px}
+  #adm-mkt details.fold[open]>summary::after{transform:none}
+  #adm-mkt details.fold:not([open])>summary::after{transform:rotate(-90deg)}
   #adm-mkt h2.grp{margin:22px 0 8px}
   #adm-mkt .tiles{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:6px}
   #adm-mkt .tile{padding:6px 14px;box-shadow:none}
@@ -801,8 +801,6 @@ try {
 #adm-mkt #leads-table td,#drawer .msg-number,#model-snapshot{font-family:var(--maya-font-ui);font-variant-numeric:tabular-nums}
 .lead-open{background:none;border:0;color:inherit;font:inherit;cursor:pointer;text-align:left;padding:0}
 #adm-mkt #leads-table .lead-h-stage{width:160px}.lead-stage{max-width:145px;}
-.lead-filter{display:inline-block;position:relative;margin-left:8px;font:var(--maya-text-caption) var(--maya-font-ui);letter-spacing:normal;text-transform:none}
-.lead-filter summary{cursor:pointer;list-style:none}.lead-filter svg{width:16px;height:16px}.lead-filter>div{position:absolute;z-index:10;padding:12px;min-width:185px;border:var(--maya-hairline) solid #ffffff30;border-radius:12px}.lead-filter label{display:block;margin:8px 0;white-space:nowrap}
 #model-snapshot{font-size:11px;text-align:left;padding:12px;overflow-wrap:anywhere}#drawer.msgs #model-snapshot{display:none}
 
 /* Shared Admin/Affiliates CRM typography and translucent controls. */
@@ -813,10 +811,6 @@ try {
 #adm-mkt #leads-table .lead-identity{justify-content:center}
 .lead-subline{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:7px;color:#fff;font:var(--maya-text-caption) var(--maya-font-ui)}
 #adm-mkt #leads-table .lead-src,#adm-mkt #leads-table .lead-sig-edit{color:#fff;font:var(--maya-text-caption) var(--maya-font-ui)}
-.lead-filter{vertical-align:middle;line-height:1;letter-spacing:normal;color:#fff}
-.lead-filter summary{display:flex;align-items:center;padding:3px}.lead-filter summary::-webkit-details-marker{display:none}
-.lead-filter>div{right:0;text-align:left;padding:14px}
-.lead-filter label{font:13px/1.5 var(--maya-font-ui);color:#fff;display:flex;align-items:center;gap:8px}.lead-filter input{accent-color:#adcdf8}
 #model-snapshot{text-align:center;padding:0;font-family:var(--maya-font-ui)}.model-group{padding:12px;border-radius:12px;margin:4px 0;}.model-group strong{display:block;font:var(--maya-text-section) var(--maya-font-ui);color:#fff}.model-group small{display:block;font:11px/1.5 var(--maya-font-ui);color:var(--dim)}.model-note{font:10px var(--maya-font-ui);color:var(--dim);padding:8px}
 </style>
 <style>
@@ -841,7 +835,7 @@ try {
   .lead-stage option{background:#0d1120}
   @media(max-width:640px){.affiliate-stats{grid-template-columns:repeat(2,1fr)}.affiliates-view #adm-scroll{padding-top:80px}.affiliate-avatar{width:96px;height:96px}}
 </style>
-<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=8">
+<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=9">
 </head>
 <body class="systems-map">
 
@@ -2730,6 +2724,9 @@ function paintLeads(l) {
   const tb = document.querySelector('#leads-table tbody');
   const note = document.getElementById('leads-note');
   if (!tb) return;
+  const filterOpen = !!_leadFilterOwner?.open;
+  const focusedStatus = _leadFilterMenu?.contains(document.activeElement) ? document.activeElement.dataset.status : null;
+  closeLeadFilter();
   if (!l.connected) {
     tb.innerHTML = '<tr><td style="color:var(--dim)">Not connected. ' + esc(l.why || '') +
       ' The Wix API key needs the Forms read permission.</td></tr>';
@@ -2774,7 +2771,7 @@ function paintLeads(l) {
     return '<th class="' + cls + '" draggable="true" data-col="' + k + '"' +
       ' ondragstart="_leadColDragStart(event,\'' + k + '\')" ondragover="_leadColDragOver(event)"' +
       ' ondragleave="_leadColDragLeave(event)" ondrop="_leadColDrop(event,\'' + k + '\')"' +
-      ' ondragend="_leadColDragEnd(event)" title="Drag to reorder">' + d.label + (k==='stage'?'<details class="lead-filter" onclick="event.stopPropagation()"><summary aria-label="Filter lead status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 3-.5 2-2 1-2-.5-2 3.5L4.5 11v2L3 15l2 3.5 2-.5 2 1 .5 2h5l.5-2 2-1 2 .5 2-3.5-1.5-2v-2L21 9l-2-3.5-2 .5-2-1-.5-2z"/><circle cx="12" cy="12" r="3"/></svg></summary><div>'+Object.entries(LEAD_STAGES).map(([key,label])=>'<label><input type="checkbox" '+(leadStatusFilter.has(key)?'checked':'')+' onchange="filterLeadStatus(\''+key+'\',this.checked)"> '+label+'</label>').join('')+'</div></details>':'') + '</th>';
+      ' ondragend="_leadColDragEnd(event)" title="Drag to reorder">' + d.label + (k==='stage'?'<details class="lead-filter" onclick="event.stopPropagation()"><summary aria-label="Filter lead status" title="Filter lead status" aria-controls="lead-status-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 3-.5 2-2 1-2-.5-2 3.5L4.5 11v2L3 15l2 3.5 2-.5 2 1 .5 2h5l.5-2 2-1 2 .5 2-3.5-1.5-2v-2L21 9l-2-3.5-2 .5-2-1-.5-2z"/><circle cx="12" cy="12" r="3"/></svg></summary><div id="lead-status-menu" class="lead-status-menu" popover="manual" role="group" aria-label="Visible lead statuses" hidden>'+Object.entries(LEAD_STAGES).map(([key,label])=>'<label><input type="checkbox" data-status="'+key+'" '+(leadStatusFilter.has(key)?'checked':'')+' onchange="filterLeadStatus(\''+key+'\',this.checked)"> '+label+'</label>').join('')+'</div></details>':'') + '</th>';
   };
   tb.innerHTML =
     '<tr>' + order.map(thHtml).join('') + '</tr>' +
@@ -2785,6 +2782,12 @@ function paintLeads(l) {
         return '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + d.render(x, i) + '</td>';
       }).join('') + '</tr>'
     ).join('');
+  if (filterOpen) {
+    const filter = tb.querySelector('.lead-filter');
+    filter.open = true;
+    openLeadFilter(filter);
+    if (focusedStatus) _leadFilterMenu?.querySelector('[data-status="'+focusedStatus+'"]')?.focus({preventScroll:true});
+  }
   try { _leadMarquees(); } catch (_) {}
 }
 // Telephone handset for the call action.
@@ -2825,11 +2828,81 @@ function _leadColDefs(){
 const LEAD_STAGES={new:'Not contacted',in_progress:'In progress',booked:'Booked',canceled:'Cancelled'};
 let leadStatusFilter=new Set(Object.keys(LEAD_STAGES));
 function leadStage(x){if(LEAD_STAGES[x.stage])return x.stage;if(['closed','passed'].includes(x.stage))return x.stage;if(['in_process','contacted'].includes(x.stage))return 'in_progress';if(x.stage==='meeting')return 'booked';if(/^cancel(?:led|ed)[.!]?$/i.test(String(x.note||'').trim()))return 'canceled';return x.lastContact?'in_progress':'new';}
-// Dismiss filter menus without changing their selected values.
-document.addEventListener('click',e=>{document.querySelectorAll('.lead-filter[open]').forEach(d=>{if(!d.contains(e.target))d.open=false;});});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.lead-filter[open]').forEach(d=>d.open=false);});
+// Keep temporary menus outside the sticky table's clipping/backdrop context.
+// Popover supplies the top layer; the body portal also works without Popover support.
+let _leadFilterOwner = null, _leadFilterMenu = null, _leadFilterFrame = 0;
+function closeLeadFilter(restoreFocus=false){
+  const owner=_leadFilterOwner, menu=_leadFilterMenu;
+  _leadFilterOwner=null; _leadFilterMenu=null;
+  if(menu){
+    if(menu.hidePopover && menu.matches(':popover-open'))menu.hidePopover();
+    menu.hidden=true;
+    if(owner?.isConnected)owner.append(menu);else menu.remove();
+  }
+  if(owner){owner.open=false;if(restoreFocus)owner.querySelector('summary')?.focus({preventScroll:true});}
+}
+function positionLeadFilter(){
+  const owner=_leadFilterOwner, menu=_leadFilterMenu;
+  if(!owner?.isConnected || !owner.open || !menu)return closeLeadFilter();
+  const anchor=owner.querySelector('summary').getBoundingClientRect();
+  const panel=owner.closest('.panel').getBoundingClientRect();
+  const edge=8, gap=8, width=document.documentElement.clientWidth, height=innerHeight;
+  if(anchor.right<=Math.max(0,panel.left) || anchor.left>=Math.min(width,panel.right) || anchor.bottom<=0 || anchor.top>=height)return closeLeadFilter();
+  menu.style.maxHeight=Math.max(0,height-edge*2)+'px';
+  const size=menu.getBoundingClientRect();
+  const below=height-anchor.bottom-gap-edge, above=anchor.top-gap-edge;
+  const up=below<size.height && above>below;
+  menu.style.maxHeight=Math.max(0,up?above:below)+'px';
+  menu.style.left=Math.max(edge,Math.min(anchor.right-size.width,width-size.width-edge))+'px';
+  menu.style.top=Math.max(edge,up?anchor.top-gap-menu.getBoundingClientRect().height:anchor.bottom+gap)+'px';
+  // A frozen column or another overlay can cover the anchor during horizontal scroll.
+  if(!owner.contains(document.elementFromPoint(anchor.x+anchor.width/2,anchor.y+anchor.height/2)))closeLeadFilter();
+}
+function openLeadFilter(owner){
+  if(_leadFilterOwner===owner)return positionLeadFilter();
+  closeLeadFilter();
+  const menu=owner.querySelector('.lead-status-menu');
+  if(!menu)return;
+  _leadFilterOwner=owner; _leadFilterMenu=menu;
+  document.body.append(menu); menu.hidden=false;
+  if(menu.showPopover)menu.showPopover();else menu.removeAttribute('popover');
+  positionLeadFilter();
+}
+document.addEventListener('toggle',e=>{
+  if(!e.target.matches('.lead-filter'))return;
+  if(e.target.open)openLeadFilter(e.target);
+  else if(_leadFilterOwner===e.target)closeLeadFilter();
+},true);
+document.addEventListener('click',e=>{
+  if(_leadFilterOwner && !_leadFilterOwner.contains(e.target) && !_leadFilterMenu.contains(e.target))closeLeadFilter();
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && _leadFilterOwner){e.preventDefault();closeLeadFilter(true);return;}
+  const summary=e.target.closest('.lead-filter>summary');
+  if(summary && ['Enter',' ','ArrowDown'].includes(e.key)){
+    e.preventDefault();
+    const owner=summary.parentElement;
+    if(owner.open && e.key!=='ArrowDown')return closeLeadFilter(true);
+    owner.open=true;openLeadFilter(owner);_leadFilterMenu?.querySelector('input')?.focus({preventScroll:true});
+  }else if(e.key==='Tab' && _leadFilterMenu){
+    const inputs=[..._leadFilterMenu.querySelectorAll('input')];
+    if(summary && !e.shiftKey){e.preventDefault();inputs[0]?.focus();}
+    else if((e.shiftKey && e.target===inputs[0]) || (!e.shiftKey && e.target===inputs.at(-1))){
+      if(e.shiftKey)e.preventDefault();closeLeadFilter(true);
+    }
+  }
+});
+document.addEventListener('focusin',e=>{
+  if(_leadFilterOwner && !_leadFilterOwner.contains(e.target) && !_leadFilterMenu.contains(e.target))closeLeadFilter();
+});
+function scheduleLeadFilterPosition(e){
+  if(!_leadFilterMenu || (e.target instanceof Node && _leadFilterMenu.contains(e.target)) || _leadFilterFrame)return;
+  _leadFilterFrame=requestAnimationFrame(()=>{_leadFilterFrame=0;positionLeadFilter();});
+}
+document.addEventListener('scroll',scheduleLeadFilterPosition,true);
+window.addEventListener('resize',scheduleLeadFilterPosition);
 function leadSummary(x){let value=String(x.wrote||x.note||'').replace(/^(?:Signature|Help me decide)\s*[·,:-]?\s*(?:\$[\d,.]+)?\s*[,·:]?\s*/i,'').replace(/\s+/g,' ').trim();if(/^(?:cancel(?:led|ed)|in progress|passed|not contacted)[.!]?$/i.test(value))return 'Request details not recorded';return value.length>120?value.slice(0,117).replace(/\s+\S*$/,'')+'...':value||'Request details not recorded';}
-function filterLeadStatus(key,checked){if(checked)leadStatusFilter.add(key);else leadStatusFilter.delete(key);paintLeads({connected:true,list:_leadList});const menu=document.querySelector('.lead-filter');if(menu)menu.open=true;}
+function filterLeadStatus(key,checked){if(checked)leadStatusFilter.add(key);else leadStatusFilter.delete(key);paintLeads({connected:true,list:_leadList});}
 const LEAD_COLS_DEFAULT = ['name', 'stage', 'note'];   // v14.34: Last Quote is gone; the tier under the name says what they went with
 function _loadLeadColOrder(){
   try {

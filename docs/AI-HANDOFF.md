@@ -8,70 +8,57 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
-## September 27: responsive and integration audit (local fixes, not deployed)
+## September 28: Lead Station filter layering (local, not deployed)
 
-Prepared on maya-v2 from dbcc247 (v14.40). No push, credentials, production
-configuration, real sends or paid provider calls. Public production still reports
-14.40 and responds to read-only checks. Consumer and Playground sources unchanged.
+Based on 15cb89d, which matched origin/maya-v2 before this fix. No push or live
+configuration changes. Consumer/Playground sources and backend data APIs unchanged.
 
-Fixed:
-- Operation Room columns/trace cards overflowed mobile widths; they now stack.
-  Pattern labels occupy their own space instead of covering instructions/images.
-- Brief drawer now shares frontend glass; closed settings cannot expand horizontal
-  scroll or receive keyboard focus. Compact titles, wrapping and nonitalic data.
-- Outbound tables, names, dialogs and drawer links use the compact shared scale.
-  Link controls no longer inherit capsule shadows. Shorter empty-state copy.
-- Outbound dialogs preserve the underlying drawer; Escape closes only the top
-  layer. Pending writes lock data/navigation controls, including newly rendered
-  ones, while menu dismissal remains available. Sheet Refresh opens Connections
-  when no sheet is configured. Background refresh cannot overwrite a new draft.
-- Account change/expiry immediately clears contacts, mailbox senders and meter
-  values. Late responses cannot restore old account data. Requests time out;
-  uncertain sends direct the owner to check Gmail Sent before retrying.
-- People -> Emails keeps the selected record across pagination, including a
-  prospect without email. Meter reconnects after reattachment and clears failed
-  spending reads. Gmail listing failure no longer aborts independent CRM sources.
-- Admin Changes version marker corrected to 14.40. Backend CSS cache URLs use v8.
+Fromsa's screenshot exposed a missed audit state: the populated table with its
+status filter open. The earlier checks exercised filtering/dismissal but did not
+inspect this overlay; the broad layout sweep used empty tables. Drawer glass had
+no dark backing, nested table/panel backdrop contexts let row text show through,
+and broad fold-summary selectors leaked a caret and square focus geometry.
+
+Fixed in backend/status.html and aesthetics/ui/maya-canon.css:
+- Filter uses its own dark translucent/frosted surface outside the scroll panel,
+  with native top-layer placement and a body-portal fallback.
+- Position follows scroll/resize, flips at the viewport edge, and closes if its
+  gear is hidden by a frozen column. Short/empty results cannot clip options.
+- Rounded gear focus; fold caret styles target section headings only. Removed
+  duplicate local filter CSS. Compact rows, status colors and fonts preserved.
+- Outside/Escape dismissal, keyboard entry/exit and checkbox focus survive
+  table rerendering; filter selections and status persistence are unchanged.
+- Backend stylesheet URLs use v9; other page HTML edits are cache-link-only.
 
 Validation:
-- All 44 JavaScript/module files pass syntax checks; diff whitespace clean.
-- Actual-font 11-source visual sweep: seven widths, 320–1920; document and open
-  drawer bounds/content, Brief settings, pattern-label clearance, frontend glass
-  parity and reduced motion. Screenshots reviewed. Dialogs also fit 320x568 and
-  844x390. These are browser fixtures, not every physical device.
-- Full historical app-regression now passes. Obsolete assertions were updated to
-  approved current behavior (removed Sheet chip, round logo, labels, current CRM
-  markup); the offline Firebase stub was repaired. No old behavior restored.
-- CRM intelligence 17; Outbound/model 28; Admin contract 11; routing, fabric,
-  admin commands, proxy, profile CRM, MCP, feedback and server smoke all passed.
-- Phone 48, messages 50, transfer and frontend/Playground hands fixtures pass.
-- Populated CRM: 10,000 contacts, bounded pagination, both senders, sample draft,
-  simulated send and seven widths. New crm-failure-ui covers delayed writes,
-  account switches/expiry, draft preservation, missing-sheet setup, dialog
-  layering and meter recovery; it is now a Cloud Build release gate.
-- Read-only live smoke: public app/Admin/Outbound, real CSS/JS content types,
-  health and protected API rejection pass. The old CSS-path test had accepted
-  Hosting's HTML fallback and is corrected. No authenticated provider round trip.
+- tests/outbound-ui.mjs now invokes tests/lead-filter-ui.mjs in the existing
+  release gate: actual pointer/keyboard actions over populated, empty and short
+  tables, seven widths (320–1920), short portrait/landscape, resize, scroll,
+  reordered/frozen columns, Affiliates and no-Popover fallback.
+- Actual-font menu screenshots reviewed. Shared canon visual sweep: 11 page
+  sources, seven widths, drawer parity and reduced motion passed.
+- Admin source contract (11) and full app-regression passed. Updated source
+  assertions for scoped summaries/portal dismissal; removed the Admin contract's
+  obsolete v7 cache pin (canon-contract owns the current version check).
+- Five edited/new test modules and nine Admin inline scripts pass syntax checks;
+  diff whitespace is clean.
+- Local browser fixtures only; physical Safari/iOS and signed-in production
+  still need validation after owner deployment.
 
-Changed paths: aesthetics/ui/maya-canon.css and ai-meter.js; backend/outbound.js,
-outbound.html and status.html; CSS cache links in other backend pages and
-aesthetics/operations/index.html; docs/server/crm-intelligence.mjs; tests,
-cloudbuild.yaml and continuity/tooling documents. Other backend HTML changes are
-cache-link-only. See COMMIT-REVIEW.txt for the prepared local commit.
+Changed files: status.html, shared canon CSS, backend stylesheet cache links,
+lead-filter-ui.mjs, outbound-ui.mjs, canon/admin/app regression contracts and
+continuity documents. See COMMIT-REVIEW.txt for commit/verification details.
 
-Exact next step: Fromsa pushes the local audit commit from GitHub Desktop. After
-successful deployment, validate signed-in drawers/tables and follow
-OUTBOUND-SETUP.md for both Gmail authorizations and the OIDC hourly Scheduler.
-Verify the actual master Sheet data and self-addressed email/SMS round trips.
-Agents must not change credentials, billing or production environment settings.
+Exact next step: Fromsa pushes the prepared local commit in GitHub Desktop, then
+checks the open status filter on the deployed Admin table. Do not claim this
+local repair is already live. Agents must not push without an explicit request.
 
-Existing Outbound limits remain: two encrypted account-scoped Gmail connections;
-metadata/snippets backfill 30 days, 100 messages/mailbox/run; eight changed-contact
-AI summaries/run; activity retained at 2,000 and unmatched review at 100. Hunter
-is opt-in saved-domain discovery, one lookup/run within its separate daily cap.
-No automatic email sends. The combined $1/day cap and meter cover Outbound text
-AI across OpenAI/Claude/Gemini only; they are token-cost estimates, not provider
-invoices or all MAYA image/voice usage. All-MAYA budget scope remains unresolved.
+Existing Outbound setup/limits remain: owner authorization for both Gmail
+mailboxes and OIDC hourly Scheduler; actual Sheet sync and self-addressed SMS/mail
+round trips still require live verification. No automatic email sends. The
+combined $1/day cap/meter covers Outbound text AI only, across OpenAI/Claude/Gemini;
+these are token-cost estimates, not provider invoices or all MAYA image/voice
+usage. Credentials, billing and production environment remain owner-only.
 
 ## The rules, in one place
 

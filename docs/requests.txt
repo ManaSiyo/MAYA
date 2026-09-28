@@ -1,3 +1,9 @@
+SEPTEMBER 28: Status filter CSS missed by the audit
+[prepared] Readable frosted menu above table layers; rounded gear; no inherited caret.
+[prepared] Preserve filter/keyboard focus through rerenders, scrolling and short results.
+[verified] Populated open-menu coverage added to the existing browser release gate.
+[pending] Owner push and deployed-table verification. Consumer frontend unchanged.
+
 SEPTEMBER 27: Repeat full visual and integration audit
 [prepared] Compact Outbound type/links; consistent Brief glass/settings; responsive Operation Room.
 [prepared] Draft protection, usable unconfigured Sheet Refresh, correct page-two contact selection.
