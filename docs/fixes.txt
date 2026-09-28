@@ -1,3 +1,8 @@
+SEPTEMBER 27: responsive and drawer regressions
+Fixed narrow Outbound header overlap, menu controls disabled during sync,
+model snapshot requiring a second Systems click, oversized model titles and
+footer spacing. Shared CSS v6 avoids stale style URLs. Local validation only.
+
 SEPTEMBER 27: cached visual fixes
 UI stylesheet inherited seven-day asset caching under unchanged v=4 URL. Backend
 now requests v=5; stylesheet has explicit no-cache. Logo uses circular source asset.

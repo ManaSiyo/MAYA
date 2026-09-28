@@ -8,6 +8,27 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## September 27: responsive UI and drawer follow-up (local, not deployed)
+
+Shared CSS v6: compact Bottom Line values and pills, 12px model titles, 42px
+borderless footer mark, closer Hey Maya grouping and smaller divider gap. Admin
+label is Submissions. Model snapshot initializes after authentication and on
+first Systems drawer open, with request deduplication and a one-minute cache.
+Outbound has Workspace / How it works tabs, Refresh from Google Sheet using the
+existing sync endpoint, footer navigation, Escape/focus return and touch dismissal.
+Refresh no longer disables menu controls. Fixed 320px header overlap and removed
+nested card blur for less rendering work. Consumer styling is unchanged.
+
+Validation: actual-font 11-source visual suite at 320,390,650,768,1024,1440,1920; populated
+Outbound header/overflow/menu/tab/Sheet-refresh assertions at these widths;
+CRM filter dismissal, invoice and model rendering; zero uncaught errors in this
+fixture suite; 11 Admin contracts. Tests use fixtures, not live customers.
+Not a claim that every code path or real device is bug-free. Live deployment,
+Safari/touch-device review, production Sheet sync and performance profiling remain.
+Next: owner reviews and pushes; then verify deployed v6 and signed-in live UI.
+No Twilio/credential/environment changes in this visual task. Outbound SMS was
+confirmed delivered earlier; incoming SMS still needs webhook verification.
+
 ## September 27: compact rows, circular asset and Pinterest
 
 Backend uses existing logo-circle.png rather than square logo-208.png. Shared CSS

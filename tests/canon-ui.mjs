@@ -32,9 +32,11 @@ for(const path of canonPages){
  }
  await page.evaluate(()=>{document.querySelectorAll('#gate,#auth-gate,#signin-panel').forEach(x=>x.style.display='none');});
  await page.screenshot({animations:'disabled',timeout:60000,path:join(dir,path.replaceAll('/','-')+'.png')});
- await page.setViewportSize({width:390,height:844});
+ for(const width of [320,390,650,768,1024,1440,1920]) {
+ await page.setViewportSize({width,height:844});
  assert.equal(await page.evaluate(()=>getComputedStyle(document.body).fontFamily.includes('Jost')),true,path);
- await page.screenshot({animations:'disabled',timeout:60000,path:join(dir,path.replaceAll('/','-')+'-mobile.png')});await page.setViewportSize({width:1440,height:1000});
+ await page.screenshot({animations:'disabled',timeout:60000,path:join(dir,path.replaceAll('/','-')+'-'+page.viewportSize().width+'.png')});}
+ await page.setViewportSize({width:1440,height:1000});
 }
 // Compare the actual frontend master with backend chrome, not guessed values.
 const chromeStyle=async(selector)=>page.locator(selector).evaluate(el=>{
@@ -55,5 +57,5 @@ await page.goto('https://maya.test/backend/outbound.html');
 assert.deepEqual(await chromeStyle('#outbound-drawer'),master,'Outbound drawer matches frontend');
 await page.emulateMedia({reducedMotion:'reduce'});
 assert.equal(await page.locator('body').evaluate(el=>getComputedStyle(el).animationName),'none');
-console.log('V4 canon rendered checks: 11 pages, desktop/mobile, metric typography, capsule styles and reduced motion passed');
+console.log('V4 canon rendered checks: 11 pages, 7 widths (320–1920), desktop/mobile, metric typography, capsule styles and reduced motion passed');
 }finally{await browser.close();}

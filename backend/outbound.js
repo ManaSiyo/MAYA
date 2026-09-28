@@ -7,7 +7,7 @@ window.addEventListener('beforeunload',e=>{if(hasUnsavedDraft()){e.preventDefaul
 function notice(message,error=false){$('notice').textContent=message;$('notice').classList.toggle('error',error);}
 function token(){return localStorage.getItem('maya_admin_tok')||'';}
 async function api(path='',body){const auth=token();if(!auth)throw Error('Sign in to Maya Admin first.');const r=await fetch('/api/admin/outbound'+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+auth,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});if(token()!==auth)throw Error('Your account changed. Reload this page.');const j=await r.json();if(!r.ok){if([401,403].includes(r.status)){$('signin').hidden=false;state={campaigns:[],contacts:[],companies:[],settings:{}};render();}throw Error(j.error||'Request failed.');}return j;}
-async function run(fn){if(busy)return;busy=true;document.querySelectorAll('button').forEach(b=>b.disabled=true);try{await fn();}catch(e){notice(e.message,true);}finally{busy=false;document.querySelectorAll('button').forEach(b=>b.disabled=false);}}
+async function run(fn){if(busy)return;busy=true;const controls=[...document.querySelectorAll('button')].filter(b=>!b.matches('#menu-toggle,#close-drawer,[role=tab],#close-modal,#cancel-modal'));const disabled=controls.map(b=>b.disabled);controls.forEach(b=>b.disabled=true);try{await fn();}catch(e){notice(e.message,true);}finally{busy=false;controls.forEach((b,i)=>{if(b.isConnected)b.disabled=disabled[i];});}}
 async function load(){try{const j=await api();state=j.state;caps=j.capabilities;session=token();$('signin').hidden=true;if(!state.campaigns.some(c=>c.id===campaignId))campaignId=state.campaigns[0]?.id||'';render();notice('Workspace ready. Changes save to your account.');if(state.settings.sheetId&&!state.campaigns.length)await syncWorkbook();}catch(e){if(!token())$('signin').hidden=false;notice(e.message,true);}}
 const campaign=()=>state.campaigns.find(c=>c.id===campaignId);
 const contacts=()=>state.contacts.filter(c=>c.campaignId===campaignId);
@@ -88,9 +88,28 @@ async function syncWorkbook(){
  view='people';render();notice(j.result.map(r=>r.tab+': '+r.total+' prospects ('+r.added+' new)').join(' · '));
 }
 $('sync-sheet').onclick=$('sync-drawer').onclick=()=>run(syncWorkbook);
-function closeDrawer(){$('outbound-drawer').hidden=true;$('menu-toggle').setAttribute('aria-expanded','false');}
+function closeDrawer(){$('outbound-drawer').hidden=true;$('menu-toggle').setAttribute('aria-expanded','false');$('menu-toggle').focus();}
 $('menu-toggle').onclick=()=>{const open=$('outbound-drawer').hidden;$('outbound-drawer').hidden=!open;$('menu-toggle').setAttribute('aria-expanded',String(open));};
 $('close-drawer').onclick=closeDrawer;
 document.addEventListener('click',e=>{if(!$('outbound-drawer').hidden&&!$('outbound-drawer').contains(e.target)&&!$('menu-toggle').contains(e.target))closeDrawer();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
 $('modal').addEventListener('click',e=>{const r=$('modal').getBoundingClientRect();if(e.target===$('modal')&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))$('modal').close();});
+
+// The same compact menu behavior: tabs, keyboard dismissal, and horizontal swipe.
+for (const name of ['workspace','help']) {
+ $('drawer-'+name+'-tab').onclick=()=>{
+  for(const other of ['workspace','help']) {
+   $('drawer-'+other).hidden=other!==name;
+   $('drawer-'+other+'-tab').setAttribute('aria-selected',String(other===name));
+  }
+ };
+}
+let drawerTouch=null;
+document.addEventListener('touchstart',e=>{const t=e.touches[0];drawerTouch={x:t.clientX,y:t.clientY};},{passive:true});
+document.addEventListener('touchend',e=>{
+ if(!drawerTouch)return;const t=e.changedTouches[0],dx=t.clientX-drawerTouch.x,dy=t.clientY-drawerTouch.y;
+ if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*2){
+  if(dx>0&&!$('outbound-drawer').hidden)closeDrawer();
+  else if(dx<0&&drawerTouch.x>innerWidth-32&&$('outbound-drawer').hidden)$('menu-toggle').click();
+ }drawerTouch=null;
+},{passive:true});

@@ -2643,3 +2643,16 @@ ok('Outbound uses the Admin background and functioning drawer',outboundRevampUI.
 ok('Outbound syncs real workbook campaigns and reviews drafts in Gmail',outboundRevampJS.includes("api('/sheets/sync'")&&outboundRevampJS.includes('mail.google.com/mail/?view=cm'));
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);
+
+// September 27: compact Systems and master-sheet menu contracts.
+{
+ const admin=readFileSync(join(ROOT,'backend/status.html'),'utf8');
+ if(!admin.includes('>Submissions <span') || !admin.includes('_fbBridge(t); window.loadModelSnapshot?.();')) throw Error('Submissions/initial model snapshot regression');
+ const outbound=readFileSync(join(ROOT,'backend/outbound.html'),'utf8');
+ const chrome=readFileSync(join(ROOT,'aesthetics/ui/maya-canon.css'),'utf8');
+ if(!chrome.includes('#voice-btn {width:42px;height:42px;')) throw Error('Footer logo size regression');
+ if(!chrome.includes('.model-group strong {font-size:12px;')) throw Error('Model typography regression');
+ if(!chrome.includes('.bl-step .v) {font-size:20px;')) throw Error('Bottom Line size regression');
+ if(!chrome.includes('font-size:11px;padding:6px 10px;min-height:30px;')) throw Error('Compact pills regression');
+ if(!outbound.includes('Refresh from Google Sheet') || !outbound.includes('id="drawer-help"')) throw Error('Outbound menu regression');
+}

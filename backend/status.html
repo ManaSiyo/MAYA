@@ -841,7 +841,7 @@ try {
   .lead-stage option{background:#0d1120}
   @media(max-width:640px){.affiliate-stats{grid-template-columns:repeat(2,1fr)}.affiliates-view #adm-scroll{padding-top:80px}.affiliate-avatar{width:96px;height:96px}}
 </style>
-<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=5">
+<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=6">
 </head>
 <body class="systems-map">
 
@@ -939,7 +939,7 @@ if (IS_AFFILIATES) {
       <div id="msg-feedback" role="status" aria-live="polite"></div><div class="msg-consent" id="msg-consent"></div>
     </div>
   </div>
-  <h3>Model snapshot</h3><div id="model-snapshot">Open Systems to load the current server configuration.</div><h3>The vault</h3>
+  <h3>Model snapshot</h3><div id="model-snapshot">Sign in to load the current server configuration.</div><h3>The vault</h3>
   <a href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank">Firebase<small>Boards, projects, pictures and submissions. Delete a collection here to truly destroy it.</small></a>
   <h3 class="tint">Behind the scenes</h3>
   <a href="https://console.cloud.google.com/run/detail/us-west1/maya-api/metrics?project=pro-maya" target="_blank">Cloud Run<small>The whole API: logs, revisions, keys, environment and credit burn.</small></a>
@@ -1041,7 +1041,7 @@ if (IS_AFFILIATES) {
     <span id="gsi-slot" style="margin:0 0 0 auto"></span>
   </div>
 
-  <h2 class="grp">My submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span></h2>
+  <h2 class="grp">Submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span></h2>
   <div id="subs-strip" style="display:none"></div>
   <div id="subs-note-inline">Waiting for the one sign in at the top of the page.</div>
 
@@ -1443,7 +1443,8 @@ function toggleDrawer(force) {
   if (force === true) target = max;
   else if (force === false) target = 0;
   else target = isOpen ? 0 : max;
-  hs.scrollTo({ left: target, behavior: 'smooth' });
+  if (target > 0 && !IS_AFFILIATES && document.getElementById('adm-tab-systems')?.classList.contains('on')) window.loadModelSnapshot?.();
+  hs.scrollTo({ left: target, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   const btn = document.querySelector('.top-btn.hamburger');
   if (btn) btn.setAttribute('aria-expanded', target > 0 ? 'true' : 'false');
 }
@@ -1479,6 +1480,7 @@ document.addEventListener('pointerdown', (e) => {
 }, true);
 function setDot(id,s){document.getElementById(id).className='sdot '+s}
 let _idTok = null;
+let _modelsLoading = false, _modelsAuth = null, _modelsChecked = 0;
 let _healthSeq = 0;
 async function _statusFetch(url, options, timeoutMs) {
   const controller = new AbortController();
@@ -1627,7 +1629,7 @@ function _adoptToken(t, firstLoad) {
     if (window.loadAffiliateLeads) window.loadAffiliateLeads();
     return;
   }
-  runChecks(); loadTraffic(); loadSubmissions(); _fbBridge(t);
+  runChecks(); loadTraffic(); loadSubmissions(); _fbBridge(t); window.loadModelSnapshot?.();
   try{ if(window.loadMkt) window.loadMkt(); }catch(_){}
   try{ loadFeatureRequests(); }catch(_){}
   try{ if(window.loadMayaCommand) window.loadMayaCommand(); }catch(_){}
@@ -3135,10 +3137,13 @@ function admTab(t) {
   else if (_msgTimer) { clearInterval(_msgTimer); _msgTimer = null; }
 }
 async function loadModelSnapshot(){
+ if (!_idTok || _modelsLoading || (_modelsAuth === _idTok && Date.now() - _modelsChecked < 60000)) return;
+ _modelsLoading = true;
  const host=document.getElementById('model-snapshot');host.textContent='Loading model configuration...';
  const auth=_idTok;
- try{const r=await fetch('/api/admin/models',{headers:{Authorization:'Bearer '+auth}});const j=await r.json();if(auth!==_idTok)return;if(!r.ok)throw Error('Model snapshot unavailable.');const groups=new Map();for(const [role,model] of Object.entries(j.models)){if(!groups.has(model))groups.set(model,[]);groups.get(model).push(role);}host.innerHTML=[...groups].map(([model,roles])=>'<div class="model-group"><strong>'+esc(model.replace(/^gpt-/,'GPT-').replace('luna','Luna'))+'</strong><small>'+esc(roles.join(' · '))+'</small></div>').join('')+'<p class="model-note">Configured models · '+esc(new Date(j.checkedAt).toLocaleTimeString())+'</p>' ;}
+ try{const r=await fetch('/api/admin/models',{headers:{Authorization:'Bearer '+auth}});const j=await r.json();if(auth!==_idTok)return;if(!r.ok)throw Error('Model snapshot unavailable.');_modelsAuth=auth;_modelsChecked=Date.now();const groups=new Map();for(const [role,model] of Object.entries(j.models)){if(!groups.has(model))groups.set(model,[]);groups.get(model).push(role);}host.innerHTML=[...groups].map(([model,roles])=>'<div class="model-group"><strong>'+esc(model.replace(/^gpt-/,'GPT-').replace('luna','Luna'))+'</strong><small>'+esc(roles.join(' · '))+'</small></div>').join('')+'<p class="model-note">Configured models · '+esc(new Date(j.checkedAt).toLocaleTimeString())+'</p>' ;}
  catch(e){if(auth===_idTok)host.textContent=e.message;}
+ finally{_modelsLoading=false;}
 }
 async function loadMayaLogs() {
   const host = document.getElementById('maya-logs-list');
@@ -3320,7 +3325,8 @@ function leadMayaCall(i) {
 // the unread badge stays honest even while the Systems tab shows
 setInterval(() => { if (_idTok && _msgTab !== 'messages') loadThreads(); }, 60000);
 // this module is sealed in an IIFE; the drawer's onclicks need these on window
-Object.assign(window, { loadMayaLogs, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, msgInvoice, leadOpenThread, leadMayaCall, loadThreads, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
+Object.assign(window, { loadModelSnapshot, loadMayaLogs, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, msgInvoice, leadOpenThread, leadMayaCall, loadThreads, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
+if (_idTok) loadModelSnapshot();
 function leadContact(i, type) {
   const x = _leadList[i]; if (!x || !x.email) return;
   fetch('/api/admin/lead-note', {
