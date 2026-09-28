@@ -7,6 +7,7 @@ RUN npm install --omit=dev
 COPY server.js ./
 COPY model-config.mjs ./
 COPY outbound.mjs ./
+COPY crm-store.mjs crm-gmail.mjs crm-ai.mjs crm-intelligence.mjs ./
 COPY proxy-policy.mjs ./
 COPY admin-command.mjs ./
 COPY fabric-sourcing.js ./

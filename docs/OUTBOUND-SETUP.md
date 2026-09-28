@@ -1,100 +1,120 @@
-# Maya Outbound · v14.39 prepared
+# Mana Siyo's Outbound: activation
 
-Prepared locally, not deployed by Codex. Opens at `/outbound.html` from the
-right-side Maya menu. Operation Room and Playground stay alongside it.
+Prepared locally on September 27, 2026. Not deployed or connected to live Gmail by
+this change. Consumer MAYA and Playground are unchanged.
 
-## What works in code
+## Included
 
-- Account-scoped campaigns, audience/offer/competitor notes, contacts and drafts.
-- Hunter Discover (25 companies/page), Domain Search (25 contacts/page), named
-  Email Finder and Email Verifier. Offset controls support later result pages.
-- Google Sheets read/import up to 1,000 rows, pasted CSV import and CSV export.
-  Expected headers: Name, Email, Company, Domain, Title, Notes. Email is optional.
-- Per-campaign deduplication; suppression propagates across matching emails in
-  the owner's workspace and applies when importing into another campaign.
-- Maya market research with web search; editable email drafts grounded in saved
-  studio facts and contact/campaign data. Explicit actions initiate billable work.
-- Gmail compose handoff for human review. No automatic sends, inbox/reply sync,
-  scheduled sequences, mailbox warming or calendar booking. Results reflect
-  manually recorded stages, not observed email delivery/open/click events.
-- GCS generation preconditions protect concurrent writes; failed storage reads
-  never become an empty overwrite. Every endpoint requires admin authorization.
+- A master list of up to 10,000 contacts, 50 results per page, reusable campaign
+  membership, campaign-specific drafting and explicit reviewed sending.
+- Two independently authorized Gmail mailboxes in the same signed-in admin
+  workspace. Connect worldofsiyo@gmail.com and fromsa@manasiyo.com there; signing
+  into Admin as a different Google account still opens a separate workspace.
+- Hourly Sheet, Gmail, existing Twilio activity and bounded Hunter reconciliation.
+  New Gmail correspondents require review before becoming prospects. No automatic
+  email sends, automatic bookings or automatic changes to closed/suppressed stages.
+- Shared Admin/Outbound AI meter: a combined $1/day **Outbound text AI** allowance,
+  resetting at midnight America/Los_Angeles. This does not cap consumer generation,
+  images, voice, other MAYA AI calls, Hunter, Twilio or Google infrastructure.
+- Green person, blue company and yellow offer fields in the editable sample email.
 
-## Owner connection steps
+## Owner-only setup
 
-1. Open Outbound → hamburger → Connections after deployment. Save the owner
-   workbook URL, then Sync Sheet. It discovers the three 9/23 campaign tabs and
-   creates their campaigns. If access is denied, share the workbook as Viewer
-   with the Cloud Run service account shown in the error. Keep the sheet private.
-2. If Hunter is not configured, attach its key as `HUNTER_API_KEY` to Maya's
-   Cloud Run service through your existing secret-management process. Never put
-   the key in this repository, a browser field or chat. No credentials or service
-   environment settings were inspected or changed during this implementation.
-3. Save your real studio facts in Connections. Check the synced campaigns: 51
-   Ceremonial, 128 Corporates and 20 Fashion Houses contacts at inspection. Sync
-   refreshes untouched source fields; local edits/drafts/stages survive. Bounces
-   suppress outreach. There is no automatic Sheets writeback or row deletion.
-4. Review Hunter/OpenAI account access and balances before clicking paid actions.
-   Provider adapters are tested against fakes; production credentials and model
-   entitlement still need owner verification after deployment.
-5. Review drafts in Gmail. This opens compose, not a mailbox API connection. Record Contacted/Replied/
-   Meeting/Closed after those events occur. Use Suppressed for do-not-contact.
+Repository instructions reserve credentials and production environment changes to
+Fromsa. No secrets were read or changed during implementation.
 
-## Models and economics, checked September 23
+1. **Deploy:** Push the prepared commit from GitHub Desktop and wait for Cloud
+   Build to pass. Keep all private credentials in your existing secret manager.
+2. **Google Sheet:** Outbound → Connections → save the workbook → Refresh from
+   Google Sheet. Share Viewer access with the Cloud Run service account shown by
+   a denied-access error. The three supported tabs are `9/23 Ceremonial`,
+   `9/23 Corporates`, and `9/23 Fashion Houses`. This is read-only: local edits win,
+   drafts remain, bounced contacts are suppressed, source deletions aren't erased.
+3. **Gmail API:** In [Google Cloud](https://console.cloud.google.com/apis/library/gmail.googleapis.com?project=pro-maya),
+   enable Gmail API and configure a Web application OAuth client. Authorized
+   redirect URI: `https://maya.manasiyo.com/api/outbound/gmail/callback`.
+   Required scopes are `https://www.googleapis.com/auth/gmail.readonly` and
+   `https://www.googleapis.com/auth/gmail.send`. Complete the Google consent-screen
+   requirements applicable to your app. External testing-mode authorization can
+   expire; production use needs the appropriate publishing/verification status.
+4. **Server configuration:** Attach `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`,
+   `GMAIL_REDIRECT_URI` and a dedicated `GMAIL_TOKEN_ENCRYPTION_KEY` (32 random bytes
+   represented as 64 hexadecimal characters). Keep that encryption key stable;
+   replacing it requires reconnecting mailboxes. Optional provider credentials:
+   `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `HUNTER_API_KEY`.
+   A provider with no credential is shown as not connected, never as zero usage.
+5. **Connect both:** In the Outbound drawer, use Connect Gmail mailbox once per
+   mailbox and approve the scopes. This application authorization is separate
+   from Gmail access granted to ChatGPT/Codex. Disconnect removes MAYA's stored
+   refresh token; Google account access can also be revoked in Google settings.
+6. **Hourly worker:** Create one [Cloud Scheduler](https://console.cloud.google.com/cloudscheduler?project=pro-maya)
+   HTTP POST job for this workspace. Use cron `0 * * * *`, timezone
+   `America/Los_Angeles`, URL
+   `https://maya-api-53947659283.us-west1.run.app/api/tasks/outbound-sync`,
+   `Content-Type: application/json`, and body `{"accountId":"WORKSPACE_REFERENCE"}`.
+   Copy the workspace reference from Outbound → Hourly updates & spending.
+   Use an owner-selected service account and OIDC authentication. Set its exact
+   email as `OUTBOUND_SCHEDULER_EMAIL` and set `OUTBOUND_SCHEDULER_AUDIENCE` to the
+   exact OIDC audience configured on the job (normally the target URL). Use the
+   direct Cloud Run URL, not Firebase Hosting, for long-running scheduled work.
+   Allow a 900-second attempt deadline and compatible Cloud Run request timeout.
+   The endpoint verifies Google's signature, audience, expiry and service-account
+   email. It rejects browser/admin tokens. Enable hourly updates in the drawer.
+   The UI reports awaiting, running or overdue based on actual scheduled runs.
+7. **Hunter:** Default automatic lookup allowance is zero until selected. A run
+   can discover up to 25 people from one saved active-campaign company domain;
+   configure 0–20 lookups/day. Failed/uncertain calls retain their daily claim.
+   Hunter credits are separate from the AI allowance. Manual Hunter actions are
+   explicit. No unsupported automated company-discovery prompt is invented.
 
-- Default text/vision reasoning: `gpt-6-luna`. Standard short-context text rates
-  from its model page are $0.10 input / $0.50 output per million tokens. Example:
-  2,000 input + 500 output tokens is about $0.00045, excluding web tools, cached
-  input, long context and retries. This is an estimate, not a latency benchmark.
-- Chat Completions uses `reasoning_effort: none` for tool compatibility; Responses
-  market research uses low reasoning. Expensive text tiers are not defaults.
-  Existing owner-set MODEL_TERRA/MODEL_LUNA/MODEL_SOL/RANK_MODEL overrides win.
-- Image default: `gpt-image-2.5-flare`, documented as the faster everyday option.
-  Existing image quality/size settings stay. It is not guaranteed cheaper for
-  every render; token usage depends on quality, size and reference images.
-  Legacy `gpt-image-2` community records remain accepted alongside Flare.
-- Voice default: `gpt-realtime-2.1-mini`, with separate phone/environment
-  overrides preserved. Audio rates: $10 input / $20 output per million audio
-  tokens; text rates differ. No live audio quality or latency test was run.
-- Embeddings and transcription remain specialized models. No Astra default was
-  introduced. Account access must be confirmed before relying on new models.
+## Verify after activation
 
-The existing dashboard spend meter is still a coarse per-call estimate; it is
-not a token-accurate invoice. Internal drafts/research now record usage metadata
-and increment that estimate. Use OpenAI billing for actual account charges.
+- Refresh the master Sheet and compare campaign counts with the workbook.
+- Connect both mailboxes; run Update CRM now. Send a message from each mailbox to
+  your own test address through reviewed send, reply, and update again. Also send
+  a message directly in Gmail and verify it is reconciled. Do not use a prospect
+  as a delivery test. Gmail accepting a send is not proof of recipient delivery.
+- Make a separately approved test call/SMS. Existing stored Twilio events match
+  contacts by exact normalized phone number; this does not change consent or
+  repair Twilio webhooks. Live incoming SMS remains a separate verification item.
+- Run the Scheduler job once and inspect its HTTP response plus the drawer's last
+  scheduled run. After an hour, verify another run. Turning the UI switch on alone
+  cannot create a Cloud Scheduler job.
+- Request one AI draft with each connected provider; verify the meter changes.
+  Exhausted/uncertain allowance blocks new AI calls while deterministic sync works.
 
-Sources:
-- https://developers.openai.com/api/docs/models/gpt-6-luna
-- https://developers.openai.com/api/docs/guides/image-generation
-- https://developers.openai.com/api/docs/models/gpt-realtime-2.1-mini
-- https://hunter.io/api-documentation/v2
-- https://explee.com/ (workflow reference, not a service dependency)
+## Cost basis and limits
 
-## Validation and launch limits
+Meter amounts are provider-reported token counts multiplied by checked text rates,
+not billing-account totals or provider invoices. Reservations are taken before
+requests using a conservative input bound and a fixed output-token limit; parallel
+requests share the same account/day ledger. Unknown completion/usage keeps its
+reservation for the day. There is no paid automatic fallback/retry.
 
-Offline Outbound/model tests cover auth, account isolation, deduplication,
-suppression, CSV mapping, generation conflicts, failed writes, confirmation
-requirements and draft review. Existing API, phone/SMS, transfer, feedback,
-proxy policy, routing, ranking and admin contracts pass. No computer use,
-paid API requests, calls, emails or SMS were performed. Visual/browser checks,
-Firestore emulator checks and real provider smoke tests remain outstanding.
+| Provider | Economy model | Input / output per million tokens | 2,000 input + 500 output |
+|---|---|---|---|
+| OpenAI | gpt-5-nano | $0.05 / $0.40 | $0.00030 |
+| Claude | claude-haiku-4-5-20251001 | $1 / $5 | $0.00450 |
+| Gemini | gemini-2.5-flash-lite | $0.10 / $0.40 | $0.00040 |
 
-v14.38 is deployed. The v14.39 sync and UI revisions are prepared locally; owner
-push and successful deployment are required. Local mocked UI checks pass, including
-filter clicks, drawer dismissal and the message invoice action. Real server Sheet
-access and Gmail API integration remain unverified/unimplemented respectively.
+Examples exclude tax, provider price changes and unrelated API use. Actual token
+usage varies; reservations reduce usable headroom temporarily. Auto chooses the
+lowest estimated-cost configured model. Provider access must be verified live.
+A $1 allowance is not a promise of a fixed number of successful messages.
 
-## Owner workbook inspected
-Workbook: https://docs.google.com/spreadsheets/d/1G2zfqopOyZNHf78nuEeNdLgRY7ON0JTeegkhhZ4azyg/edit
-The supplied gid points to Principles (sales framework), not a contacts table.
-Sync Sheet discovers these active tabs automatically:
-- 9/23 Ceremonial
-- 9/23 Corporates
-- 9/23 Fashion Houses
-August SDR remains available through the optional single-tab import.
-Corporates uses row 3 for headers; the importer detects it automatically. Research,
-original status, date and other extra columns are retained in contact notes.
-Sheet Hunter status does not automatically count as current email verification.
-Incomplete historical addresses stay in notes; bounced addresses are suppressed.
-This is a read-only import, not ongoing two-way sync. The original workbook was
-not modified. Cloud Run service-account access still needs verification.
+Gmail backfill covers the last 30 days, up to 100 messages per mailbox per run,
+with bounded batches and resumable history cursors. Large inboxes may need several
+runs. Only metadata/snippets are summarized, not entire threads or attachments.
+AI briefs process up to eight changed contacts per run. The dashboard retains
+2,000 recent matched events and 100 unmatched review items; source mail remains
+in Gmail. Legacy campaign copies are retained to avoid losing notes or drafts;
+new imports reuse a master identity. This is not an archival migration tool.
+
+Sources checked September 27, 2026:
+[Gmail incremental sync](https://developers.google.com/workspace/gmail/api/guides/sync),
+[Google OAuth](https://developers.google.com/identity/protocols/oauth2/web-server),
+[Scheduler OIDC](https://docs.cloud.google.com/scheduler/docs/http-target-auth),
+[Firebase cookie forwarding](https://firebase.google.com/docs/hosting/manage-cache#using_cookies),
+[OpenAI rates](https://developers.openai.com/api/docs/models/gpt-5-nano),
+[Claude rates](https://platform.claude.com/docs/en/about-claude/pricing),
+[Gemini rates](https://ai.google.dev/gemini-api/docs/pricing).

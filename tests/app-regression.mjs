@@ -84,6 +84,37 @@ let failed = 0;
 assertCanon(); // Backend follows frontend chrome; consumer styling stays isolated from V4.
 const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name); if (!cond) failed++; };
 
+// September 27: compact Systems and master-sheet menu contracts.
+{
+ const admin=readFileSync(join(ROOT,'backend/status.html'),'utf8');
+ if(!admin.includes('>Submissions <span') || !admin.includes('_fbBridge(t); window.loadModelSnapshot?.();')) throw Error('Submissions/initial model snapshot regression');
+ const outbound=readFileSync(join(ROOT,'backend/outbound.html'),'utf8');
+ const chrome=readFileSync(join(ROOT,'aesthetics/ui/maya-canon.css'),'utf8');
+ if(!chrome.includes('#voice-btn {width:42px;height:42px;')) throw Error('Footer logo size regression');
+ if(!chrome.includes('.model-group strong {font-size:12px;')) throw Error('Model typography regression');
+ if(!chrome.includes('.bl-step .v) {font-size:20px;')) throw Error('Bottom Line size regression');
+ if(!chrome.includes('font-size:11px;padding:6px 10px;min-height:30px;')) throw Error('Compact pills regression');
+ if(!outbound.includes('Refresh from Google Sheet') || !outbound.includes('id="drawer-help"')) throw Error('Outbound menu regression');
+}
+
+// September 27: Outbound CRM and shared meter contracts (run before browser fixtures).
+{
+ const crm=readFileSync(join(ROOT,'docs/server/crm-intelligence.mjs'),'utf8');
+ const gmail=readFileSync(join(ROOT,'docs/server/crm-gmail.mjs'),'utf8');
+ const ai=readFileSync(join(ROOT,'docs/server/crm-ai.mjs'),'utf8');
+ const ui=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');
+ const css=readFileSync(join(ROOT,'aesthetics/ui/maya-canon.css'),'utf8');
+ ok('Outbound supports two encrypted account-scoped Gmail connections',gmail.includes('length>=2') && gmail.includes('aes-256-gcm') && gmail.includes('setAAD(Buffer.from(uid))'));
+ ok('Hourly CRM sync is authenticated and checkpoints incremental mail with contact activity',crm.includes('/api/tasks/outbound-sync') && crm.includes('await deps.verifyScheduler(req)') && gmail.includes('startHistoryId:next.historyId'));
+ ok('Master prospects use bounded rendering and reusable campaign membership',ui.includes('const PAGE_SIZE=50') && crm.includes("api+'/segment'") && crm.includes('c.campaignIds='));
+ ok('Reviewed mail sends have durable duplicate protection',crm.includes('b.confirm!==true') && crm.includes('crm.deliveries[b.requestId]') && crm.includes("status='unknown'"));
+ ok('Daily AI allowance combines OpenAI Claude Gemini without paid retries',ai.includes('anthropic:') && ai.includes('gemini:') && ai.includes('sum.spentUsd+sum.reservedUsd+reserve>1') && ai.includes('No automatic paid retry'));
+ ok('Admin and Outbound share the AI meter',MAP_SOURCE.includes('<maya-ai-meter>') && readFileSync(join(ROOT,'backend/outbound.html'),'utf8').includes('<maya-ai-meter>'));
+ ok('Mailbox privacy explains scope and processors without changing its URL',readFileSync(join(ROOT,'backend/privacy.html'),'utf8').includes('Connected business mailboxes and Outbound') && readFileSync(join(ROOT,'backend/privacy.html'),'utf8').includes('Anthropic Claude or Google Gemini'));
+ ok('Sample emails distinguish editable name company and offer',ui.includes('template-person') && ui.includes('template-company') && ui.includes('template-offer'));
+ ok('Gemini audit keeps histories bounded while preserving compact controls',css.includes('max-height:420px') && css.includes('max-height:380px') && css.includes('font-size:11px;padding:6px 10px;min-height:30px;'));
+}
+
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium' });
 const pg = await browser.newPage();
 const errs = [];
@@ -2109,7 +2140,7 @@ ok('v14.33: the studio line knows its owner by caller id; clients get guardrails
 ok('SMS policy revision matches the published optional inquiry/appointment checkbox without changing routes',
   ['backend/privacy.html', 'backend/terms.html'].every(path => {
     const text = readFileSync(join(ROOT, path), 'utf8');
-    return text.includes('September 26, 2026') && text.includes('manasiyo.com/design') &&
+    return text.includes(path.includes('privacy')?'September 27, 2026':'September 26, 2026') && text.includes('manasiyo.com/design') &&
       text.includes('not a condition of purchase or of requesting a callback') &&
       text.includes('one confirmation of your opt-out') && text.includes('worldofsiyo@gmail.com');
   }) && ['privacy', 'terms'].every(page =>
@@ -2643,16 +2674,3 @@ ok('Outbound uses the Admin background and functioning drawer',outboundRevampUI.
 ok('Outbound syncs real workbook campaigns and reviews drafts in Gmail',outboundRevampJS.includes("api('/sheets/sync'")&&outboundRevampJS.includes('mail.google.com/mail/?view=cm'));
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);
-
-// September 27: compact Systems and master-sheet menu contracts.
-{
- const admin=readFileSync(join(ROOT,'backend/status.html'),'utf8');
- if(!admin.includes('>Submissions <span') || !admin.includes('_fbBridge(t); window.loadModelSnapshot?.();')) throw Error('Submissions/initial model snapshot regression');
- const outbound=readFileSync(join(ROOT,'backend/outbound.html'),'utf8');
- const chrome=readFileSync(join(ROOT,'aesthetics/ui/maya-canon.css'),'utf8');
- if(!chrome.includes('#voice-btn {width:42px;height:42px;')) throw Error('Footer logo size regression');
- if(!chrome.includes('.model-group strong {font-size:12px;')) throw Error('Model typography regression');
- if(!chrome.includes('.bl-step .v) {font-size:20px;')) throw Error('Bottom Line size regression');
- if(!chrome.includes('font-size:11px;padding:6px 10px;min-height:30px;')) throw Error('Compact pills regression');
- if(!outbound.includes('Refresh from Google Sheet') || !outbound.includes('id="drawer-help"')) throw Error('Outbound menu regression');
-}

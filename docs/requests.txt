@@ -1,3 +1,13 @@
+SEPTEMBER 27: Mana Siyo intelligent Outbound, both Gmail mailboxes, $1 AI meter
+[prepared] Two Gmail mailbox authorizations and reviewed sending; encrypted isolated credentials.
+[prepared] 10,000-contact master list, campaign memberships, pagination and personalized sample.
+[prepared] Hourly worker: master Sheet, incremental mail, existing call/SMS logs, bounded Hunter.
+[prepared] Admin/Outbound speedometer; OpenAI + Claude + Gemini token-cost estimates and combined
+    $1/day Outbound AI guard. Other MAYA AI is outside this cap pending scope clarification.
+[prepared] Compatible Gemini layout fixes; frontend unchanged. Policy explains mailbox processing.
+[verified] Fixture/unit/browser checks, seven widths; known historical suite failures documented.
+[pending] Owner push, OAuth/provider settings and both authorizations, Scheduler job, live smoke.
+
 SEPTEMBER 27: Responsive consistency and menu audit
 [prepared] Compact Bottom Line/pills/models; Submissions label; larger closer footer logo.
 [prepared] Models load on authentication/first drawer open; Outbound help tabs and Sheet Refresh.

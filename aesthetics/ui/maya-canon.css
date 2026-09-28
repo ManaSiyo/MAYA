@@ -1,6 +1,7 @@
 /* MAYA V4: V3 is the foundation. Dense information gets quieter, not heavier.
    Source: docs/Aesthetics.pdf. Page 1 is canon; every screen shares these controls. */
 :root {
+  --maya-accent: #adcdf8;
   --maya-font-ui: 'Jost', sans-serif;
   --maya-font-brand: 'Cormorant Garamond', serif;
   --maya-text-caption: 12px;
@@ -233,3 +234,56 @@ html[data-maya-surface="dense"] :is(.person,.stat,.model-group) {backdrop-filter
  html[data-maya-surface="dense"] body:has(#outbound-drawer) .brand .mark {width:38px;height:38px;}
  html[data-maya-surface="dense"] #outbound-drawer {right:8px;top:8px;bottom:8px;width:calc(100vw - 16px);max-height:calc(100dvh - 16px);}
 }
+
+/* Outbound intelligence: the same compact Jost, quiet surfaces and restrained color. */
+.outbound-brief{margin:0 28px 8px;font:11px/1.5 var(--maya-font-ui);color:var(--maya-secondary);overflow-wrap:anywhere;}
+.crm-pagination{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:16px;font-size:11px;}
+.crm-pagination button{padding:6px 10px;}
+.people-table input[type="checkbox"]{width:16px;height:16px;accent-color:var(--maya-accent);}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
+.mailbox-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;padding:8px 0;}
+.mailbox-row span{min-width:0;overflow-wrap:anywhere;}.mailbox-row button{font-size:10px;padding:4px 6px;}
+#automation-status{line-height:1.6;margin:12px 0;}
+#modal-form label:has(input[type="checkbox"]){display:flex;gap:8px;align-items:center;}
+#modal-form input[type="checkbox"]{width:16px;}
+.template-preview{margin-top:16px;white-space:normal;font:12px/1.7 var(--maya-font-ui);}
+.template-person,.template-person label{color:var(--maya-booked);}
+.template-company,.template-company label{color:var(--maya-accent);}
+.template-offer,.template-offer label{color:var(--maya-progress);}
+.crm-activity article,.review-correspondent{padding:12px 0;border-bottom:var(--maya-hairline) solid var(--maya-line);overflow-wrap:anywhere;}
+.crm-activity strong{font-size:12px;font-weight:500;}.crm-activity small,.review-correspondent small{display:block;color:var(--maya-secondary);font-size:10px;margin:4px 0;}
+.crm-activity p{font-size:11px;color:var(--maya-secondary);line-height:1.6;}
+.review-correspondent button{margin:8px 0;}
+maya-ai-meter{display:block;min-width:0;}
+.ai-meter{padding:12px 8px;text-align:center;font:11px/1.5 var(--maya-font-ui);color:var(--maya-ink);}
+html[data-maya-surface] .ai-meter h3{font:11px var(--maya-font-ui);letter-spacing:.16em;margin:12px 0 0;}
+.ai-meter svg{display:block;width:190px;max-width:100%;margin:0 auto;color:var(--maya-accent);overflow:visible;}
+.ai-track,.ai-fill{fill:none;stroke-width:3;stroke-linecap:round;}.ai-track{stroke:var(--maya-line);}.ai-fill{stroke:currentColor;stroke-dasharray:0 100;}
+.ai-needle{stroke:var(--maya-ink);stroke-width:1.5;transform-origin:110px 106px;}.ai-meter circle{fill:var(--maya-ink);}
+.ai-meter text{font:10px var(--maya-font-ui);fill:var(--maya-secondary);}
+html[data-maya-surface] .ai-meter .ai-meter-value{font:500 20px var(--maya-font-ui);font-variant-numeric:tabular-nums;margin:4px 0 2px;position:relative;}
+.ai-meter-label{margin:0 0 16px;font-size:10px;}.ai-meter-detail{color:var(--maya-secondary);font-size:10px;line-height:1.5;}
+.ai-meter-providers{padding:0;margin:12px 0;list-style:none;}.ai-meter-providers li{display:flex;justify-content:space-between;gap:8px;padding:3px 0;font-variant-numeric:tabular-nums;}
+.ai-meter-refresh{font-size:10px;padding:5px 10px;}
+/* Accepted Gemini audit findings, mapped to existing elements. V3 geometry and
+   owner-approved type sizes/status colors remain authoritative. */
+html[data-maya-surface="dense"] #changes-fold>.fold-body{max-height:420px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:16px;}
+html[data-maya-surface="dense"] #features-list .fr-room{max-height:380px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;}
+html[data-maya-surface="dense"] #pe-framing{white-space:pre-wrap;overflow-wrap:anywhere;background:rgba(0,0,0,.15);padding:12px;color:var(--maya-secondary);}
+html[data-maya-surface="dense"] #mkt-ticker{mask-image:linear-gradient(to right,transparent,#000 8%,#000 92%,transparent);}
+html[data-maya-surface="dense"] :is(.arch>.col,.pe-live){min-width:0;overflow-wrap:anywhere;}
+html[data-maya-surface="dense"] #adm-scroll{scroll-padding-bottom:104px;}
+html[data-maya-surface="dense"] .map-footer{padding-bottom:104px;}
+html[data-maya-surface="dense"] .fold>summary .grp{display:inline-flex;align-items:center;gap:8px;}
+@media(max-width:650px){.outbound-brief{margin-inline:16px;}.crm-pagination{gap:8px;}.mailbox-row{flex-wrap:wrap;}}
+
+#features-list:has(.fr-room){grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
+#features-list .fr-room{min-width:0;padding:8px;}
+.crm-insight{margin:12px 0;padding:12px;background:var(--maya-selected);border-radius:12px;font-size:11px;line-height:1.6;}
+.crm-insight small{color:var(--maya-secondary);font-size:10px;}
+@media(max-width:650px){#features-list:has(.fr-room){grid-template-columns:1fr;}}
+
+html[data-maya-surface="dense"] .layout :is(button.person,button.campaign){border-radius:16px;box-shadow:none;padding:12px;text-align:left;}
+
+#drawer.msgs > maya-ai-meter{display:none;}
+html[data-maya-surface] #drawer .ai-meter h3{font:11px var(--maya-font-ui);letter-spacing:.16em;}

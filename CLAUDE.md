@@ -98,7 +98,15 @@ live call audio, SMS delivery and owner transfer acceptance still need an owner
 verification after deployment. Avatar/Pinterest changes stay in Playground until
 Fromsa approves promotion.
 
-Outbound implementation: docs/server/outbound.mjs, model defaults and chat
+Outbound implementation: docs/server/outbound.mjs plus crm-intelligence.mjs,
+crm-gmail.mjs, crm-ai.mjs and crm-store.mjs in docs/server. The shared Admin/Outbound
+meter is aesthetics/ui/ai-meter.js. Mailbox secrets and cost ledgers are server-only
+private/outbound/<kind>/<account> objects; never expose them via client Storage rules.
+Run tests/crm-intelligence.mjs and tests/crm-ui.mjs for these paths; both are release
+gates. Hourly updates require owner-configured Cloud Scheduler, not a browser timer.
+The $1 cap covers Outbound text AI only, not all MAYA or provider invoices.
+
+Model defaults and chat
 compatibility: docs/server/model-config.mjs. Outbound stores each admin's
 workspace under maya/outbound/<encoded Google sub>.json with GCS generation
 preconditions. Never replace that account-scoped key with a shared file.

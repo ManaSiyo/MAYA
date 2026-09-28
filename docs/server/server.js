@@ -28,6 +28,8 @@
 import express from 'express';
 import { TEXT_MODEL, IMAGE_MODEL, chatBody } from './model-config.mjs';
 import { mountOutbound } from './outbound.mjs';
+import { createGmail } from './crm-gmail.mjs';
+import { createCrmAI } from './crm-ai.mjs';
 import crypto from 'node:crypto';
 import { Readable } from 'node:stream';
 import { evaluateProxyPolicy } from './proxy-policy.mjs';
@@ -36,7 +38,7 @@ import { createMayaMcp } from './maya-mcp.mjs';
 import { createFeedbackStore } from './maya-feedback.mjs';
 import { mountTransfers } from './maya-transfer.mjs';
 import { mountMayaPhone } from './maya-phone.mjs';   // v14.30: Maya on the studio phone number
-import { createMessageStore, sendSms, readSmsStatus, mountMessages, THREADS_PATH } from './maya-messages.mjs';   // v14.35: the studio's text threads
+import { createMessageStore, sendSms, readSmsStatus, mountMessages, THREADS_PATH, e164 } from './maya-messages.mjs';   // v14.35: the studio's text threads
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname as pathDirname, join as pathJoin } from 'node:path';
@@ -4720,8 +4722,29 @@ app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' })
 })().catch(e => console.error('[phone] mount failed', e.message));
 
 // Outbound uses the signed-in admin's own workspace; no browser-supplied owner ID.
-app.use('/api/admin/outbound', express.json({limit:'1mb'}));
+app.use('/api/admin/outbound', express.json({limit:'16mb'}));
+app.use('/api/tasks/outbound-sync', express.json({limit:'2kb'}));
+const crmStorage={read:gcsGet,write:gcsPut};
+const crmGmail=createGmail({...crmStorage,config:{clientId:process.env.GMAIL_CLIENT_ID,clientSecret:process.env.GMAIL_CLIENT_SECRET,redirectUri:process.env.GMAIL_REDIRECT_URI,encryptionKey:process.env.GMAIL_TOKEN_ENCRYPTION_KEY}});
+const crmAI=createCrmAI({...crmStorage,keys:{openai:process.env.OPENAI_API_KEY,anthropic:process.env.ANTHROPIC_API_KEY,gemini:process.env.GEMINI_API_KEY}});
 mountOutbound(app, {
+  gmail:crmGmail, ai:crmAI,
+  schedulerReady:!!(process.env.OUTBOUND_SCHEDULER_EMAIL&&process.env.OUTBOUND_SCHEDULER_AUDIENCE),
+  verifyScheduler:async req=>{
+    try{
+      const bearer=(req.headers.authorization||'').match(/^Bearer (.+)$/)?.[1];
+      if(!bearer)throw Error('missing token');
+      const p=await verifyGoogleJwt(bearer,process.env.OUTBOUND_SCHEDULER_AUDIENCE);
+      if(!p.email_verified||p.email!==process.env.OUTBOUND_SCHEDULER_EMAIL||!Number.isFinite(p.exp))throw Error('wrong service account');
+    }catch{throw Object.assign(new Error('Scheduler identity was not verified.'),{status:401});}
+  },
+  phoneEvents:async (contacts,since)=>{
+    const o=await gcsGet(THREADS_PATH);if(!o.ok){if(o.status===404)return [];throw Error('Phone log unavailable');}
+    const numbers=new Set(contacts.map(c=>e164(c.phone)).filter(Boolean));
+    const cutoff=since?Date.parse(since)-60000:Date.now()-30*86400000;
+    return Object.values(JSON.parse(o.buf.toString()).threads||{}).filter(t=>numbers.has(t.number)&&!t.deleted&&(Date.parse(t.updatedAt||'')>=cutoff||(t.messages||[]).some(m=>Date.parse(m.ts)>=cutoff)))
+      .flatMap(t=>(t.messages||[]).map(m=>({id:'twilio:'+m.id,provider:'twilio',phone:t.number,kind:m.kind,direction:m.dir,summary:String(m.text||'').slice(0,800),status:m.status||'',seconds:m.seconds||0,ts:m.ts})));
+  },
   requireAdmin, read:gcsGet, write:gcsPut,
   allow:user=>rateLimit(user.sub,user.email,2).ok,
   fetch:(...args)=>fetch(...args), hunterKey:process.env.HUNTER_API_KEY,

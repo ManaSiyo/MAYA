@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {mountOutbound,rowsToContacts,contact,domain,mergeContacts} from '../docs/server/outbound.mjs';
+import {inCampaign} from '../docs/server/crm-intelligence.mjs';
 import {chatBody,TEXT_MODEL,IMAGE_MODEL} from '../docs/server/model-config.mjs';
 import {evaluateProxyPolicy} from '../docs/server/proxy-policy.mjs';
 const handlers=new Map(),store=new Map();let user='owner',failWrite=false,conflict=false,providerCalls=0,failSheet=false,sheetName='Sheet Person';
@@ -65,7 +66,7 @@ await test('campaign pain and qualification criteria persist',async()=>{
 await test('workbook sync creates three campaigns, preserves drafts and is idempotent',async()=>{
  const j=await call('/sheets/sync',{});assert.equal(j.status,200);assert.equal(j.result.length,3);
  const campaigns=j.state.campaigns.filter(c=>c.sheetTab);assert.equal(campaigns.length,3);
- const p=j.state.contacts.find(p=>p.campaignId===campaigns[0].id);
+ const p=j.state.contacts.find(p=>inCampaign(p,campaigns[0].id));
  await call('/save',{type:'contact',id:p.id,body:'Owner draft',stage:'replied'});
  const next=await call('/sheets/sync',{});assert.ok(next.result.every(r=>r.added===0));
  assert.equal(next.state.contacts.find(x=>x.id===p.id).body,'Owner draft');
@@ -78,7 +79,7 @@ await test('failed workbook tab leaves all stored campaigns unchanged',async()=>
  assert.equal(JSON.stringify((await call()).state),before);
 });
 await test('source edits refresh untouched fields and preserve local edits',async()=>{
- const current=(await call()).state, c=current.campaigns.find(c=>c.sheetTab), p=current.contacts.find(p=>p.campaignId===c.id);
+ const current=(await call()).state, c=current.campaigns.find(c=>c.sheetTab), p=current.contacts.find(p=>inCampaign(p,c.id));
  sheetName='Updated source name';let j=await call('/sheets/sync',{});
  assert.equal(j.state.contacts.find(x=>x.id===p.id).name,sheetName);
  await call('/save',{type:'contact',id:p.id,notes:'Local notes'});sheetName='Another source name';

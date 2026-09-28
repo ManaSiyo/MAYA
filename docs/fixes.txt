@@ -1,3 +1,10 @@
+SEPTEMBER 27: Outbound integration and visual review
+Fixed master Companies filtering, unbounded prospect rendering, segment-specific drafting,
+Gmail callback cookie forwarding through Firebase Hosting, uncertain-send duplicate protection,
+queued/failed SMS advancement, delivery status refresh, meter/value overlap and drawer tab bleed.
+Stale historical app-regression checks remain; current targeted release gates cover new paths.
+No production changes. Owner activation: docs/OUTBOUND-SETUP.md (linked console steps).
+
 SEPTEMBER 27: responsive and drawer regressions
 Fixed narrow Outbound header overlap, menu controls disabled during sync,
 model snapshot requiring a second Systems click, oversized model titles and

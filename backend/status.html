@@ -841,7 +841,7 @@ try {
   .lead-stage option{background:#0d1120}
   @media(max-width:640px){.affiliate-stats{grid-template-columns:repeat(2,1fr)}.affiliates-view #adm-scroll{padding-top:80px}.affiliate-avatar{width:96px;height:96px}}
 </style>
-<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=6">
+<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=7">
 </head>
 <body class="systems-map">
 
@@ -939,7 +939,7 @@ if (IS_AFFILIATES) {
       <div id="msg-feedback" role="status" aria-live="polite"></div><div class="msg-consent" id="msg-consent"></div>
     </div>
   </div>
-  <h3>Model snapshot</h3><div id="model-snapshot">Sign in to load the current server configuration.</div><h3>The vault</h3>
+  <maya-ai-meter></maya-ai-meter><h3>Model snapshot</h3><div id="model-snapshot">Sign in to load the current server configuration.</div><h3>The vault</h3>
   <a href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank">Firebase<small>Boards, projects, pictures and submissions. Delete a collection here to truly destroy it.</small></a>
   <h3 class="tint">Behind the scenes</h3>
   <a href="https://console.cloud.google.com/run/detail/us-west1/maya-api/metrics?project=pro-maya" target="_blank">Cloud Run<small>The whole API: logs, revisions, keys, environment and credit burn.</small></a>
@@ -1387,7 +1387,7 @@ async function loadFeatureRequests(){
     const row=i=>'<div class="fr'+(i.done?' done':'')+'" title="'+esc(i.text)+'"'+(i.id?' data-fid="'+esc(i.id)+'"':'')+'>'+
       '<span class="who">'+esc(i.who||'someone')+'</span><span class="ask">'+esc(short(i.text))+'</span>'+
       '<span class="when">'+esc(day(i.ts))+(i.id?'<button class="fr-done" title="Mark shipped" onclick="markFeatureDone(this)">\u2713</button>':'')+'</span></div>';
-    const section=(t,arr)=>arr.length?('<div class="fr-sec">'+esc(t)+'</div>'+arr.map(row).join('')):'';
+    const section=(t,arr)=>arr.length?('<section class="fr-room"><div class="fr-sec">'+esc(t)+'</div>'+arr.map(row).join('')+'</section>'):'';
     host.innerHTML=(section('Front end, what users ask',front)+section('Admin side, what we ask',adminSide))||'<div class="note">Nothing asked yet. Everything anyone asks Maya for lands here.</div>';
     const f=document.getElementById('features-fold');
     const newest=front[0]||adminSide[0];
@@ -3775,5 +3775,5 @@ setInterval(()=>{ if(_idTok && document.visibilityState==='visible') loadMkt(); 
   setTimeout(checkAdminUpdate, 8000);   // catch a tab opened already-stale
 })();
 </script>
-</body>
+<script type="module" src="/aesthetics/ui/ai-meter.js"></script></body>
 </html>

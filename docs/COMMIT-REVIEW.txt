@@ -1,22 +1,36 @@
 Summary:
-[Codex][v14.39] Align CRM styling and sync Outbound campaigns
+[Codex][v14.40] Add intelligent Outbound and a combined AI meter
 
 Description:
 
-Match Outbound to Admin and connect campaign workbook sync.
+Upgrade Mana Siyo's Outbound with a 10,000-contact master list, shared campaign
+memberships, paginated views, two Gmail OAuth mailboxes and explicitly reviewed
+email sending. Reconcile incremental Gmail history, the master Sheet and existing
+Twilio activity through an OIDC-protected hourly worker; bound optional Hunter
+lookups and summarize only changed contacts. Preserve account isolation, encrypt
+refresh tokens and guard uncertain sends against automatic duplicate retries.
 
-- Four CRM statuses, matching white Jost text, dismissible translucent filter.
-- One phone action beneath names; tier/date retained; invoice in Messages.
-- Group configured models by model name.
-- Admin background, glass panels and hamburger drawer in Outbound.
-- Sync 9/23 Ceremonial, Corporates and Fashion Houses into account-scoped campaigns.
-- Companies from imported contacts; Gmail compose review (no automatic send/replies).
+Add a shared Admin/Outbound speedometer and combined $1/day Outbound text AI
+allowance for priced OpenAI, Claude and Gemini models. Reserve costs before calls
+and settle with provider token usage. Values are estimates, not provider invoices;
+voice, images, other MAYA AI and non-AI services remain outside this cap.
 
-Validated source data: 199 contacts, including 3 suppressed bounces. No contact data
-committed. Local tests: Outbound 28, profile 28 plus CRM assertions, Admin UI 11,
-mocked browser UI, nine release-contract suites and syntax. The broad historical
-app-regression suite still has stale assertions and a Firebase fixture failure. Live Sheets authorization remains to be verified.
+Apply compatible Gemini audit suggestions using existing V3 chrome and compact
+type. Bound long history/feature panels; improve wrapping, spacing and meter tab
+isolation. Preserve consumer/Playground. Document Gmail processing in the existing
+privacy URL. Add release gates and owner activation instructions.
 
-Push, wait for successful deployment, then Sync Sheet. If denied, the UI names the
-Cloud Run service account needing Viewer access. Gmail API integration still needs
-owner Google authorization and implementation; compose is the current capability.
+Validation:
+- CRM intelligence 16, Outbound/model 28, Admin UI contracts 11.
+- Phone 48, messages 50, transfer and feedback fixture suites.
+- Routing, fabric sourcing, admin commands, proxy, profile CRM and MCP checks.
+- Populated CRM/new Outbound interactions and actual-font 11-source visual sweep
+  at seven widths, 320 through 1920. Screenshots inspected, syntax/diff checks clean.
+- Broad historical app-regression is NOT green: 14 older failures and an abort
+  reading removed status-v13.19.css. New request assertions pass. No live calls,
+  emails, SMS, provider charges, credentials or environment changes performed.
+
+Local commit only. Do not push automatically. After owner push/deploy, follow
+OUTBOUND-SETUP.md for OAuth/provider settings, both Gmail authorizations, the
+Scheduler job, master-sheet validation and self-addressed live round trips.
+The scope of a cap covering all other MAYA AI remains an open owner decision.

@@ -8,127 +8,70 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
-## September 27: responsive UI and drawer follow-up (local, not deployed)
+## September 27: intelligent Outbound and combined AI allowance (local only)
 
-Shared CSS v6: compact Bottom Line values and pills, 12px model titles, 42px
-borderless footer mark, closer Hey Maya grouping and smaller divider gap. Admin
-label is Submissions. Model snapshot initializes after authentication and on
-first Systems drawer open, with request deduplication and a one-minute cache.
-Outbound has Workspace / How it works tabs, Refresh from Google Sheet using the
-existing sync endpoint, footer navigation, Escape/focus return and touch dismissal.
-Refresh no longer disables menu controls. Fixed 320px header overlap and removed
-nested card blur for less rendering work. Consumer styling is unchanged.
+Prepared on maya-v2, based on 72cb70c. No push, production configuration, credential
+access, real provider call, SMS or email send was performed. Consumer/Playground
+are unchanged. Fromsa approved both Gmail mailboxes and $1/day combined across
+OpenAI, Claude and Gemini. The current cap/meter explicitly covers Outbound text AI;
+whether to cap all other MAYA image/voice/consumer AI is still unanswered.
 
-Validation: actual-font 11-source visual suite at 320,390,650,768,1024,1440,1920; populated
-Outbound header/overflow/menu/tab/Sheet-refresh assertions at these widths;
-CRM filter dismissal, invoice and model rendering; zero uncaught errors in this
-fixture suite; 11 Admin contracts. Tests use fixtures, not live customers.
-Not a claim that every code path or real device is bug-free. Live deployment,
-Safari/touch-device review, production Sheet sync and performance profiling remain.
-Next: owner reviews and pushes; then verify deployed v6 and signed-in live UI.
-No Twilio/credential/environment changes in this visual task. Outbound SMS was
-confirmed delivered earlier; incoming SMS still needs webhook verification.
+Implemented:
+- 10,000-contact master list; shared campaign memberships; 50-item pagination;
+  per-campaign draft context; color-coded editable email sample and reviewed send.
+- Two encrypted account-scoped Gmail OAuth connections, resumable metadata/history
+  sync, manual-Gmail sent/reply reconciliation, new-correspondent review. Cookie
+  uses Hosting-forwarded __session, restricted to the OAuth callback path.
+- OIDC-protected hourly worker, per-account leases/cursors, master Sheet refresh,
+  exact-number Twilio activity, bounded opt-in Hunter domain prospecting. No
+  automatic email sends. Pending/failed SMS does not advance contact stage.
+- Shared Admin/Outbound AI speedometer. Provider token counts × fixed checked rates,
+  with upfront CAS cost reservations and $1 per-account LA-calendar-day cap.
+  This is an estimate, not provider-account billed spending. Unknown costs remain
+  reserved; no paid automatic retry. Unchanged activity does not call AI.
+- Gemini suggestions reviewed against V3. Accepted bounded Changes/Feature rooms,
+  ticker fade, prompt wrapping, bottom clearance and aligned fold headings. Kept
+  compact type, semantic colors, frosted frontend chrome and quiet geometry.
+  CSS v7 on backend sources. Meter is hidden in Messages/Logs, shown in Systems.
+- Privacy copy describes authorized mailbox access and configured AI processors;
+  existing policy URL and SMS language retained.
 
-## September 27: compact rows, circular asset and Pinterest
+Files: backend/outbound.html/js, backend/status.html and privacy.html;
+aesthetics/ui/ai-meter.js and maya-canon.css; cache links in backend/backend,
+marketing, operations, terms, verify and aesthetics/operations/index.html;
+docs/server/outbound.mjs, server.js, Dockerfile and new crm-store/crm-gmail/
+crm-ai/crm-intelligence modules; Cloud Build; focused tests; setup/audit and
+continuity files. AGENTS/CLAUDE document the new modules and gates.
 
-Backend uses existing logo-circle.png rather than square logo-208.png. Shared CSS
-now v=5 on every backend surface; explicit no-cache rule for the stylesheet avoids
-the previous seven-day UI asset cache. Rows use 4px vertical padding, 2px subline
-spacing, 22px phone control; data 11px, metrics unchanged. Drawer titles match
-frontend Profile at upright Cormorant 19px; quiet backend labels retain small Jost.
+Validation: 16 CRM intelligence checks, 28 Outbound/model checks, 11 Admin
+contracts; routing, fabric sourcing, admin commands, proxy, profile CRM, MCP,
+feedback, phone (48), messages (50) and transfer fixtures. Populated browser checks cover
+10,000 contacts, pagination, two senders, sample personalization, simulated send,
+AI meter, original CRM actions, drawer tabs and seven widths (320–1920). Actual-font
+11-source visual sweep and screenshots inspected. Syntax/diff checks completed.
+No live integration smoke test is implied by fixture success.
 
-Frontend/Playground change only Pinterest: All saves, Boards and global search;
-no scope dropdown. IntersectionObserver loads saved-pin pages automatically,
-stops repeated cursors, deduplicates pins and checks account identity. Retry is
-shown only after failures. Search typing is debounced and uses global scope.
-Validation passed: focused Pinterest pagination/debounced global search suite on
-both surfaces; CRM/Outbound browser suite (rows under 60px); 11-page actual-font
-desktop/mobile canon checks; 11 Admin contracts; Maya hands on both surfaces.
-Diff checked and screenshots inspected. Full historical regression not claimed. No push or provider changes.
-Next: owner pushes commit, then verify new CSS URL and published circular logo.
+Broader historical app-regression was run: the new request checks pass, but the
+suite has 14 stale/legacy failures (including removed Sheet chip, old labels and
+old CRM/phone markup) and aborts reading removed status-v13.19.css. It is not the
+release gate and is NOT claimed green. Its previously unreachable compact-menu
+assertions now execute before browser fixtures. Do not restore obsolete styling
+or promise a bug-free entire repository to satisfy old assertions.
 
-## Frontend-master backend chrome, September 26
+Exact next step: Fromsa reviews and pushes the local commit. Then follow
+OUTBOUND-SETUP.md: owner supplies OAuth/provider configuration, authorizes both
+Gmail mailboxes from one admin workspace, configures the hourly OIDC Scheduler,
+and verifies live Sheet data and self-addressed email round trips. Existing
+Twilio inbound webhook/receipt is still a separate live check. No agent may edit
+credentials, billing or production environment settings under current rules.
 
-Applied frontend drawer gradient, 18px corners, frost and inset/drop shadows to
-backend drawers, dialogs and popovers. Restored capsule depth, selected tab rings,
-quiet frosted inputs and compact frontend-style footer/switch geometry. All backend
-pages inherit aesthetics/ui/maya-canon.css; Admin/Affiliates share one source.
-Campaign data stays 11px; CRM data now also 11px per the latest owner correction.
-Restored frontend/index.html and playground/index.html to 3af43c3 styling (last
-commit before today), retaining 14.40 metadata. All scripts match byte-for-byte.
-Consumer pages no longer load backend canon CSS. Removed floating Sheet link;
-round-clipped logos and hamburger are borderless; log metadata white/details gray;
-Mana Siyo/MAYA door labels use Admin brand Cormorant. Backend scripts unchanged. No new consumer-only
-Tip/Feedback actions were added to Admin. Brand sizes remain compact as requested.
-
-Validation: source contract, 11-page desktop/mobile canon checks including exact
-frontend/Admin/Outbound drawer and selected-tab computed-style parity; Outbound/CRM
-interaction checks; all 11 Admin contracts; Maya hands smoke on frontend and
-Playground; actual-font screenshot inspection and git diff check. Verified consumer
-source equals 3af43c3 except version metadata. Historical full regression suite not claimed green.
-Changed: shared CSS; canon-contract.mjs, canon-ui.mjs, outbound-ui.mjs, admin-ui-contract.mjs,
-app-regression.mjs; handoff,
-requests, fixes and V4 canon clarification. Next: owner pushes the local commit,
-then verify the signed-in live drawers. No push/deploy or provider changes performed.
-
-## Compact Admin correction, September 26
-
-Owner rejected enlarged V4 typography/density. Restored 141 increased size
-settings against 3af43c3 across backend/status.html, marketing.html and outbound.html,
-keeping current font families and semantic colors. Mana Siyo/MAYA navigation is
-20px (16px mobile), ticker 10px, campaign data 11px/headers 8.5px. Lead Station
-uses 13px data, 11px metadata, 8px vertical padding and 4px subline gap; Affiliates
-inherits it. Removed generic opaque table-header fill while retaining sticky CRM
-headers. Tier/Signature is escaped plain text, no inline editor; name/phone actions
-remain. Shared adjustments live in aesthetics/ui/maya-canon.css.
-
-Validation: canon source contract, Outbound/CRM browser suite including compact
-sizes, transparent campaign header, noninteractive tier, status/filter/message/invoice
-behavior, mobile and Affiliates density; git diff check. Full historical regression
-suite not claimed green. Existing app-regression tier assertions updated.
-Next: owner pushes this local commit; verify production at normal browser zoom.
-No push, credentials, provider setting changes or live messages in this task.
-
-## Twilio checkbox registration copy, September 26
-
-Owner has published the optional unchecked SMS consent at https://manasiyo.com/design
-and returned to the customer inquiry/appointment use case. Revised SMS sections in
-backend/privacy.html and backend/terms.html locally, preserving /privacy.html and
-/terms.html and page styling. Clarified program, manual staff messaging through MAYA,
-Wix/Google/Twilio processing, no marketing sharing, optional consent, STOP confirmation,
-HELP/support, rates/frequency and retention. No provider settings or credentials changed.
-Tests/app-regression.mjs adds a policy/route assertion. Focused old/new policy checks
-and git diff validation pass. Not pushed or deployed in this task; no registration submitted.
-Next: owner pushes reviewed copy, verifies public pages, verifies Twilio keyword replies,
-then resubmits with the public design form URL. Wix checkbox-to-MAYA send authorization
-is NOT verified; do not enable form-triggered SMS without verifying that gate.
-
-## V4 canon implementation prepared, September 26 (14.40)
-
-Owner explicitly restored original `docs/Aesthetics.pdf` V3 as primary reference
-and authorized consolidation around a dense-interface V4 extension. Original PDF
-unchanged. `docs/MAYA-V4-CANON.md` and the two-page
-`docs/output/pdf/MAYA-V4-Canon.pdf` supersede the earlier long review proposal.
-
-11 served HTML sources now load `aesthetics/ui/maya-canon.css`; tokens replace
-2,540 authored declarations, including 184 functional serif uses. Jost 400/500/600,
-tabular metrics, four functional sizes, bone-white capsules, 0.5px hairlines,
-strong navigation frost, quieter tables and labeled semantic CRM colors.
-Removed 38 superseded local declarations and old status-v13.19.css. All 37 inline
-scripts remain byte-identical; routes/APIs/account isolation/actions untouched.
-Version metadata prepared at 14.40; nothing pushed/deployed.
-
-Validation: canon source contract; 11 pages desktop/mobile, actual-font visual
-pass; Outbound/CRM interaction suite; 11 Admin contracts; Maya hands on frontend
-and Playground; script syntax/diff check; two-page PDF rendered/inspected.
-Tests added to Cloud Build. Full historical app-regression is not claimed green.
-Detailed files, evidence and remaining template/native-control/visual limits:
-`docs/design/MAYA-V4-AUDIT.md`. Audit inventories in the same directory.
-
-Exact next step: owner reviews V4 and local UI changes, then pushes the prepared
-commit. Verify signed-in real-data layout and deployment afterwards; no live
-provider setup or credentials were touched. Old font sample PDF is a pre-migration
-reference, not the current design source of truth.
+Limits: Gmail backfill is last 30 days / 100 messages per mailbox per run, metadata
+and snippets only; AI summaries process eight changed contacts per run; recent
+activity retained at 2,000, unmatched review at 100. Source mail remains in Gmail.
+Legacy campaign copies are retained rather than destructively merged. New entries
+share master identity. Scheduled Hunter is saved-domain prospecting, up to one
+lookup/run and selected daily allowance; manual discovery remains available.
+See design/OUTBOUND-INTELLIGENCE-AUDIT.md for accepted/rejected design findings.
 
 ## The rules, in one place
 
@@ -171,7 +114,7 @@ reference, not the current design source of truth.
    limiter is per Cloud Run instance and resets on restart; community
    provenance is app level only; submissions filed before Aug 17 may still be
    in the old Drive folder; Realtime availability still depends on the OpenAI
-   account; no Gmail read integration exists.
+   account; the new Gmail integration needs owner setup and live verification.
 
 ## The playground rule, August 21
 

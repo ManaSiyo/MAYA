@@ -15,7 +15,7 @@ await page.goto('https://maya.test/outbound.html');await page.getByText('Example
 assert.match(await page.evaluate(()=>getComputedStyle(document.body).backgroundImage),/birth-of-a-star/);
 await page.getByRole('button',{name:'Open Outbound menu'}).click();assert.ok(await page.locator('#outbound-drawer').isVisible());await page.locator('#campaign-title').click();assert.ok(await page.locator('#outbound-drawer').isHidden());
 await page.getByRole('button',{name:'Open Outbound menu'}).click();await page.keyboard.press('Escape');assert.ok(await page.locator('#outbound-drawer').isHidden());
-await page.getByText('Example Person',{exact:true}).click();assert.ok(await page.getByRole('button',{name:'Review in Gmail'}).isVisible());
+await page.getByText('Example Person',{exact:true}).click();assert.ok(await page.getByRole('button',{name:'Open in Gmail'}).isVisible());
 await page.screenshot({path:join(tmpdir(),'maya-outbound-revised.png')});
 for(const width of [320,390,650,768,1024,1440,1920]){
  await page.setViewportSize({width,height:844});
@@ -63,6 +63,9 @@ await page.evaluate(()=>{document.querySelector('.lead-filter').open=true;docume
 assert.equal(await page.locator('#lead-tr-0').count(),0);
 await page.evaluate(()=>document.querySelector('.lead-filter input').click());assert.equal(await page.locator('#lead-tr-0').count(),1);
 await page.evaluate(()=>document.querySelector('.lead-filter').open=true);await page.evaluate(()=>document.body.click());assert.equal(await page.locator('.lead-filter').getAttribute('open'),null);
+await page.evaluate(()=>admTab('messages'));assert.ok(await page.locator('#drawer maya-ai-meter').isHidden(),'Systems meter stays out of Messages');
+await page.evaluate(()=>admTab('logs'));assert.ok(await page.locator('#drawer maya-ai-meter').isHidden(),'Systems meter stays out of Logs');
+await page.evaluate(()=>admTab('systems'));assert.equal(await page.locator('#drawer .ai-meter h3').evaluate(el=>getComputedStyle(el).fontSize),'11px');
 assert.equal(await page.evaluate(()=>{const original=window.loadModelSnapshot;let calls=0;window.loadModelSnapshot=()=>calls++;toggleDrawer(true);window.loadModelSnapshot=original;return calls;}),1,'Systems loads on first drawer open');
 await page.evaluate(()=>document.querySelector('.lead-open').click());
 await page.waitForFunction(()=>document.querySelector('#msg-number').textContent==='+15555550100');

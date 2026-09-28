@@ -10,6 +10,20 @@ This file is the canonical model and routing map. It describes what is live,
 what is only a foundation, and what evidence is required before a model moves
 into production.
 
+## Outbound economy adapter (September 27, locally prepared)
+
+Outbound alone now uses `crm-ai.mjs` to choose among configured OpenAI gpt-5-nano,
+Claude Haiku 4.5 and Gemini 2.5 Flash-Lite for text summaries/drafts. It reserves
+estimated cost before calling, settles from token usage and enforces a combined
+$1 per admin account per Los Angeles calendar day. There is no paid retry or web
+tool use in this adapter. Existing consumer, image, voice and other Admin model
+routing is unchanged and outside this allowance. Models with absent credentials
+are unavailable. The original global routing sections below are historical;
+`model-config.mjs` remains the authority for those current defaults.
+
+See [Outbound activation and verified rate sources](OUTBOUND-SETUP.md). Provider
+entitlement and live cost reporting still require owner configuration and testing.
+
 ## The production boundary
 
 The real workflow is:
