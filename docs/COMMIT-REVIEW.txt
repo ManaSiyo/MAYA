@@ -1,9 +1,6 @@
-[Codex][v14.40] Refresh owner setup when Systems opens
+[Codex][v14.40] Record owner deployment approval boundary
 
-Refresh the owner panel when Systems is selected after login. Keep the SMS test
-summary after all checks and document owner tests and shared CRM text spending
-in AGENTS/CLAUDE. Prepared owner CRM implementation remains in a118d81.
-
-Validated owner UI fixture, existing full regression and owner phone/SMS tests;
-added a regression assertion for Systems refresh. Live activation and Gmail
-OAuth still require owner setup. No credentials or production settings changed.
+Record that automatic approval review blocked the two prepared follow-up commits:
+prior authorization covered only the Gemini commit. Wait for explicit approval
+before pushing the repair and owner tools. No application behavior changed.
+The preceding implementation and test results are recorded in AI-HANDOFF.md.
