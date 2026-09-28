@@ -92,6 +92,14 @@ ok('Lead status filter has an isolated readable layer and scoped section carets'
   MAP_SOURCE.includes('details.fold>summary::after') && !MAP_SOURCE.includes('details.fold summary::after') &&
   CANON_SOURCE.includes('color:var(--maya-ink);background:rgba(7,10,20,.88)'));
 
+// September 28: Gemini uses the existing Cloud Run identity; meter refresh is visible.
+{
+ const ai=readFileSync(join(ROOT,'docs/server/crm-ai.mjs'),'utf8');
+ const meter=readFileSync(join(ROOT,'aesthetics/ui/ai-meter.js'),'utf8');
+ ok('Gemini supports Vertex without a browser API key',ai.includes('aiplatform.googleapis.com/v1/projects/') && SERVER_SOURCE.includes('vertex:(process.env.K_SERVICE||process.env.VERTEX_PROJECT)'));
+ ok('AI meter confirms refresh and names the Vertex transport',meter.includes("button.textContent='Refreshing…'") && meter.includes("textContent='Checked '") && meter.includes('Gemini') && meter.includes('Vertex AI'));
+}
+
 // September 28: compact source-data workspace and distinct Contacted status.
 {
  const ui=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');

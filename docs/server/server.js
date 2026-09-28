@@ -4726,7 +4726,7 @@ app.use('/api/admin/outbound', express.json({limit:'16mb'}));
 app.use('/api/tasks/outbound-sync', express.json({limit:'2kb'}));
 const crmStorage={read:gcsGet,write:gcsPut};
 const crmGmail=createGmail({...crmStorage,config:{clientId:process.env.GMAIL_CLIENT_ID,clientSecret:process.env.GMAIL_CLIENT_SECRET,redirectUri:process.env.GMAIL_REDIRECT_URI,encryptionKey:process.env.GMAIL_TOKEN_ENCRYPTION_KEY}});
-const crmAI=createCrmAI({...crmStorage,keys:{openai:process.env.OPENAI_API_KEY,anthropic:process.env.ANTHROPIC_API_KEY,gemini:process.env.GEMINI_API_KEY}});
+const crmAI=createCrmAI({...crmStorage,vertex:(process.env.K_SERVICE||process.env.VERTEX_PROJECT)?{project:vertexProject,token:()=>serviceToken('https://www.googleapis.com/auth/cloud-platform'),location:process.env.CRM_VERTEX_LOCATION||'global'}:null,keys:{openai:process.env.OPENAI_API_KEY,anthropic:process.env.ANTHROPIC_API_KEY,gemini:process.env.GEMINI_API_KEY}});
 mountOutbound(app, {
   gmail:crmGmail, ai:crmAI,
   schedulerReady:!!(process.env.OUTBOUND_SCHEDULER_EMAIL&&process.env.OUTBOUND_SCHEDULER_AUDIENCE),

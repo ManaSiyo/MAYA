@@ -1,3 +1,9 @@
+SEPTEMBER 28: Connect Gemini through Vertex and repair Refresh meter
+[verified] Vertex API already enabled; Cloud Run default identity has existing Editor role.
+[prepared] Vertex Gemini uses Cloud Run identity; no new keys or permissions.
+[prepared] Visible meter refresh, checked timestamp, clear errors and Vertex label.
+[pending] Deploy and confirm a real Gemini inference; Claude remains unconfigured.
+
 SEPTEMBER 28: Mockup styling, Contacted and repeat audit
 [prepared] Contacted in Admin Lead Station, with persisted/filterable blue status pill.
 [prepared] Shared semantic pills, dark glass, left-aligned 44px rows and sticky headers.

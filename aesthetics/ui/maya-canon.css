@@ -499,3 +499,6 @@ html[data-maya-surface="dense"] .people-table .sheet-subject {overflow:hidden;te
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
   html[data-maya-surface="dense"] body:has(#outbound-drawer) :is(main,.layout>aside,.stat,.followup-panel) {background:rgb(3 15 29 / 94%);}
 }
+
+/* Meter confirmation uses the existing quiet metadata scale. */
+.ai-meter-checked{font:400 11px/1.4 var(--maya-font-ui);color:var(--maya-secondary);margin:4px 0;}

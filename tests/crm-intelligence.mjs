@@ -42,6 +42,17 @@ await test('daily allowance aggregates three providers, keeps unknown costs rese
  const key=[...storage.objects.keys()][0];storage.objects.get(key).value.calls.full={provider:'openai',reserve:1,actual:1};const before=providerCalls;await assert.rejects(ai.complete('one','Summarize',{}),/daily/);assert.equal(providerCalls,before);
  assert.equal(budgetDay(new Date('2026-09-28T06:59:00Z')),'2026-09-27');assert.equal(budgetDay(new Date('2026-09-28T07:00:00Z')),'2026-09-28');
 });
+await test('Vertex uses Cloud Run identity, meters Gemini and releases definite refusals',async()=>{
+ const storage=memory();let request,denied=false,tokenFailed=false;
+ const ai=createCrmAI({...storage,vertex:{project:async()=> 'pro-maya',token:async()=>{if(tokenFailed)throw Error('metadata');return 'fixture-token';}},fetch:async(url,options)=>{request={url,options};return {ok:!denied,status:denied?403:200,json:async()=>({candidates:[{content:{parts:[{text:'Ready'}]}}],usageMetadata:{promptTokenCount:100,candidatesTokenCount:50,thoughtsTokenCount:10}})};}});
+ assert.equal(ai.connected().find(m=>m.provider==='gemini').transport,'vertex');
+ assert.equal((await ai.complete('owner','Test',{},'gemini')).text,'Ready');
+ assert.match(request.url,/aiplatform.googleapis.com\/v1\/projects\/pro-maya\/locations\/global\/publishers\/google\/models\/gemini-2.5-flash-lite:generateContent$/);
+ assert.equal(request.options.headers.Authorization,'Bearer fixture-token');assert.equal(request.options.headers['x-goog-api-key'],undefined);
+ const meter=await ai.meter('owner');assert.equal(meter.reservedUsd,0);assert.equal(meter.spentUsd,(100*.1+60*.4)/1e6);assert.equal((await ai.meter('other')).spentUsd,0);
+ denied=true;await assert.rejects(ai.complete('owner','Test',{},'gemini'),/403/);assert.equal((await ai.meter('owner')).reservedUsd,0);
+ tokenFailed=true;const before=JSON.stringify([...storage.objects]);await assert.rejects(ai.complete('owner','Test',{},'gemini'),/identity/);assert.equal(JSON.stringify([...storage.objects]),before);
+});
 await test('simultaneous calls cannot spend the same remaining budget',async()=>{
  const storage=memory(),day=budgetDay(),key='private/outbound/usage/owner/'+day+'.json';storage.objects.set(key,{n:1,value:{calls:{existing:{provider:'openai',actual:.999,reserve:0}}}});let calls=0;
  const ai=createCrmAI({...storage,keys:{openai:'test'},fetch:async()=>{calls++;return {ok:true,json:async()=>({output:[{content:[{type:'output_text',text:'x'}]}],usage:{input_tokens:10,output_tokens:20}})}}});

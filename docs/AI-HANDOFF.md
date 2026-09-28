@@ -8,6 +8,43 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## September 28: Vertex Gemini and visible meter refresh (prepared locally)
+
+Based on deployed/pushed 298aea5. In owner Chrome (worldofsiyo@gmail.com),
+verified pro-maya aiplatform.googleapis.com Enabled and maya-api/us-west1 using
+Default compute service account. IAM lists 53947659283-compute@developer.gserviceaccount.com
+with existing Editor role. No IAM, keys, billing or environment changes made.
+Cloud Run showed a successful deployment during inspection. No live Gemini
+inference has been verified for this new adapter until it is deployed.
+
+Changed:
+- docs/server/crm-ai.mjs and server.js: Cloud Run Gemini uses Vertex REST with
+  existing metadata project and short-lived service identity. Global text
+  endpoint by default; optional CRM_VERTEX_LOCATION. Existing standalone Gemini
+  key path is retained outside Cloud Run. No credential reaches the browser.
+- Authentication failures occur before a budget reservation. Definite provider
+  refusals release reservations; uncertain calls remain counted. Gemini thinking
+  tokens join output usage. Combined $1/account/day Outbound cap is unchanged.
+- Shared ai-meter.js: visible Refreshing state, disabled duplicate request,
+  checked timestamp and actionable session/HTTP errors. Gemini row identifies
+  Vertex AI; tooltip distinguishes configured from verified inference.
+- Admin/Outbound meter script cache v2; timestamp uses quiet shared metadata.
+- Tests cover Vertex endpoint/identity, isolated spending, auth/refusal recovery,
+  refresh feedback and existing CRM workflows.
+
+Important scope: meter tracks Outbound text AI only, not consumer images, voice,
+other Admin calls or provider-wide invoices. Live refresh previously showed
+$0.000 and no visual completion signal. Unchanged totals are not proof of failure.
+Claude still reports Not connected; it was not authorized/configured here.
+
+Validation: 19 CRM intelligence checks, full app regression and 10,000-contact
+CRM browser suite at seven widths pass. Syntax and whitespace checks pass.
+
+Next: Owner must explicitly authorize a push or
+push themselves under AGENTS.md. After Cloud Build, verify Gemini Vertex row,
+Refresh completion and one bounded reviewed Gemini test. Do not claim live
+connection from configuration or IAM role alone.
+
 ## September 28: compact Admin/Outbound and repeat audit (local, not deployed)
 
 Based on 4b70187, equal to origin/maya-v2 at task start. No push, production

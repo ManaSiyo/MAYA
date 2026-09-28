@@ -54,7 +54,7 @@ try{
  for(const width of [320,390,650,768,1024,1440,1920]){
   await page.setViewportSize({width,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'No overflow at '+width);
   await page.locator('#menu-toggle').click();await page.locator('.ai-meter-value').waitFor();await page.locator('.ai-meter-refresh').click();await page.waitForFunction(()=>document.querySelector('.ai-meter-value').textContent==='$0.120');
-  assert.equal(await page.locator('.ai-meter-providers li').count(),3);const bounds=await page.locator('#outbound-drawer').boundingBox();assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1);await page.keyboard.press('Escape');
+  assert.equal(await page.locator('.ai-meter-providers li').count(),3);assert.match(await page.locator('.ai-meter-checked').innerText(),/^Checked /);await page.waitForFunction(()=>!document.querySelector('.ai-meter-refresh').disabled);assert.equal(await page.locator('.ai-meter-refresh').innerText(),'Refresh meter');const bounds=await page.locator('#outbound-drawer').boundingBox();assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1);await page.keyboard.press('Escape');
  }
  await page.setViewportSize({width:1440,height:1000});await page.locator('#menu-toggle').click();await page.screenshot({path:'/private/tmp/maya-outbound-intelligence.png'});
  await page.addInitScript(()=>window.IntersectionObserver=undefined);await page.reload();await page.waitForFunction(()=>document.querySelectorAll('.people-table tbody tr').length===250);

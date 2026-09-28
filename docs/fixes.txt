@@ -1,3 +1,9 @@
+SEPTEMBER 28: Gemini reported disconnected despite existing Google Cloud setup
+The CRM only recognized GEMINI_API_KEY, ignoring Cloud Run service identity.
+Prepared Vertex transport with existing identity and isolated $1 daily accounting.
+Refresh gave no completion signal when usage stayed $0; now shows progress and
+checked time. Meter covers Outbound text only, not all provider spending.
+
 SEPTEMBER 28: Compact CRM and audit coverage gaps
 Prepared: Admin Contacted no longer becomes In progress; shared status pills and
 44px rows. Outbound uses 250-record appends and full-dataset filtering. Search

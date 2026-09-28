@@ -42,7 +42,11 @@ Fromsa. No secrets were read or changed during implementation.
    represented as 64 hexadecimal characters). Keep that encryption key stable;
    replacing it requires reconnecting mailboxes. Optional provider credentials:
    `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `HUNTER_API_KEY`.
-   A provider with no credential is shown as not connected, never as zero usage.
+   On Cloud Run, Gemini uses Vertex AI through the existing service identity,
+   without GEMINI_API_KEY. Vertex API must be enabled and the service identity
+   must have model invocation permission. Text uses global (override only via
+   CRM_VERTEX_LOCATION when required). The key path remains for non-Cloud-Run
+   deployments. Configured availability is not a successful inference check.
 5. **Connect both:** In the Outbound drawer, use Connect Gmail mailbox once per
    mailbox and approve the scopes. This application authorization is separate
    from Gmail access granted to ChatGPT/Codex. Disconnect removes MAYA's stored
@@ -118,3 +122,8 @@ Sources checked September 27, 2026:
 [OpenAI rates](https://developers.openai.com/api/docs/models/gpt-5-nano),
 [Claude rates](https://platform.claude.com/docs/en/about-claude/pricing),
 [Gemini rates](https://ai.google.dev/gemini-api/docs/pricing).
+
+Vertex setup inspected September 28 in pro-maya: API enabled; default compute
+service identity has Editor already. No permissions or secrets changed.
+[Cloud Run identity](https://docs.cloud.google.com/run/docs/securing/service-identity),
+[Vertex text pricing](https://cloud.google.com/vertex-ai/generative-ai/pricing).

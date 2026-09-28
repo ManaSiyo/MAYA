@@ -17,7 +17,9 @@ Claude Haiku 4.5 and Gemini 2.5 Flash-Lite for text summaries/drafts. It reserve
 estimated cost before calling, settles from token usage and enforces a combined
 $1 per admin account per Los Angeles calendar day. There is no paid retry or web
 tool use in this adapter. Existing consumer, image, voice and other Admin model
-routing is unchanged and outside this allowance. Models with absent credentials
+routing is unchanged and outside this allowance. Cloud Run Gemini now supports Vertex with its existing service identity;
+non-Cloud-Run deployments retain the API-key path. Configured availability does
+not certify a successful live inference. Providers without either mechanism
 are unavailable. The original global routing sections below are historical;
 `model-config.mjs` remains the authority for those current defaults.
 
