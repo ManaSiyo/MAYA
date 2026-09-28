@@ -835,7 +835,7 @@ try {
   .lead-stage option{background:#0d1120}
   @media(max-width:640px){.affiliate-stats{grid-template-columns:repeat(2,1fr)}.affiliates-view #adm-scroll{padding-top:80px}.affiliate-avatar{width:96px;height:96px}}
 </style>
-<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=10">
+<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=11">
 </head>
 <body class="systems-map">
 
@@ -2819,15 +2819,15 @@ function _leadColDefs(){
     name: { label: 'Full name', h: 'lead-h-name', td: 'lead-td-name',
       render: (x, i) => '<div class="lead-identity"><button class="lead-open" onclick="leadOpenThread('+i+')">'+esc(x.name || 'Unnamed')+'</button></div><div class="lead-subline"><span class="lead-src wix">'+esc(String(x.tier || x.company || '').replace(/\s*[·,]?\s*\$[\d,.]+.*$/,'').trim())+'</span><time>'+esc(leadSignup(x))+'</time>'+_actionsCell(i,x)+'</div>' },
     // v14.24: Contact, the phone first (that is what gets used), the email when there is none.
-    stage: {label:'Status',h:'lead-h-stage',render:(x,i)=>'<select class="lead-stage" aria-label="Lead status" onchange="setLeadStage('+i+',this)">'+(['closed','passed'].includes(x.stage)?'<option value="'+x.stage+'" selected disabled>'+ (x.stage==='closed'?'Closed':'Passed')+' (previous)</option>':'')+Object.entries(LEAD_STAGES).map(([k,v])=>'<option value="'+k+'"'+(leadStage(x)===k?' selected':'')+'>'+v+'</option>').join('')+'</select>'},
+    stage: {label:'Status',h:'lead-h-stage',render:(x,i)=>'<span class="status-pill lead-status"><span class="status-text" aria-hidden="true">'+esc(LEAD_STAGES[leadStage(x)]|| (x.stage==='closed'?'Closed':'Passed')+' (previous)')+'</span><select class="lead-stage" aria-label="Lead status" onchange="setLeadStage('+i+',this)">'+(['closed','passed'].includes(x.stage)?'<option value="'+x.stage+'" selected disabled>'+ (x.stage==='closed'?'Closed':'Passed')+' (previous)</option>':'')+Object.entries(LEAD_STAGES).map(([k,v])=>'<option value="'+k+'"'+(leadStage(x)===k?' selected':'')+'>'+v+'</option>').join('')+'</select></span>'},
     note: { label: 'Latest Notes', h: 'lead-h-note', td: 'lead-note',
       render: (x, i) => '<div class="lead-note-vp">' + '<span title="'+esc(x.wrote || x.note || '')+'">'+esc(leadSummary(x))+'</span>' + '</div>' },
     // v14.34: no quote column; a stored order that still names it is filtered by these defs
   };
 }
-const LEAD_STAGES={new:'Not contacted',in_progress:'In progress',booked:'Booked',canceled:'Cancelled'};
+const LEAD_STAGES={new:'Not contacted',contacted:'Contacted',in_progress:'In progress',booked:'Booked',canceled:'Cancelled'};
 let leadStatusFilter=new Set(Object.keys(LEAD_STAGES));
-function leadStage(x){if(LEAD_STAGES[x.stage])return x.stage;if(['closed','passed'].includes(x.stage))return x.stage;if(['in_process','contacted'].includes(x.stage))return 'in_progress';if(x.stage==='meeting')return 'booked';if(/^cancel(?:led|ed)[.!]?$/i.test(String(x.note||'').trim()))return 'canceled';return x.lastContact?'in_progress':'new';}
+function leadStage(x){if(LEAD_STAGES[x.stage])return x.stage;if(['closed','passed'].includes(x.stage))return x.stage;if(x.stage==='in_process')return 'in_progress';if(x.stage==='meeting')return 'booked';if(/^cancel(?:led|ed)[.!]?$/i.test(String(x.note||'').trim()))return 'canceled';return x.lastContact?'contacted':'new';}
 // Keep temporary menus outside the sticky table's clipping/backdrop context.
 // Popover supplies the top layer; the body portal also works without Popover support.
 let _leadFilterOwner = null, _leadFilterMenu = null, _leadFilterFrame = 0;
@@ -3121,12 +3121,14 @@ async function setLeadStage(index, select) {
   const lead = _leadList[index]; if (!lead) return;
   const previous = leadStage(lead);
   const stage = select.value; select.disabled = true;
+  const label=select.parentElement.querySelector('.status-text');
+  if(label)label.textContent=LEAD_STAGES[stage];
   try {
     const response = await fetch('/api/admin/lead-update', {method:'POST',headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({id:lead.id,stage})});
     if (!response.ok) throw new Error('Lead status did not save.');
     lead.stage = stage;
     await loadMkt();
-  } catch (error) { select.value = previous; alert(error.message); }
+  } catch (error) { select.value = previous; if(label)label.textContent=LEAD_STAGES[previous]||previous; alert(error.message); }
   finally { select.disabled = false; }
 }
 window.setLeadStage = setLeadStage; window.filterLeadStatus = filterLeadStatus;

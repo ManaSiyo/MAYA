@@ -23,6 +23,9 @@ try {
   try{return route.fulfill({body:readFileSync(root+path),contentType:({'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png'})[extname(path)]||'text/plain'});}catch{return route.abort();}
  });
  await page.goto('https://maya.test/outbound.html');await page.locator('.people-table [data-person="p"]').click();
+ await page.locator('#notes').fill('Keep this draft');page.once('dialog',d=>d.dismiss());
+ await page.locator('#stage-filter').selectOption('contacted');assert.equal(await page.locator('#stage-filter').inputValue(),'','Cancelled filter change restores its displayed value');assert.equal(await page.locator('#notes').inputValue(),'Keep this draft');
+ await page.locator('#notes').fill('');
  await page.locator('#menu-toggle').click();await page.locator('#sync-drawer').click();await page.locator('#modal-title').filter({hasText:'Connections'}).waitFor();assert.ok(await page.locator('#field-sheetId').isEnabled(),'Unconfigured sheet refresh opens usable connections');await page.keyboard.press('Escape');
  await page.locator('#automation-settings').click();
  await page.locator('#field-hunterDailyLimit').fill('2');assert.ok(await page.locator('#outbound-drawer').isVisible(),'Dialog interactions preserve drawer');
@@ -40,7 +43,7 @@ try {
  meterFail=true;await page.locator('.ai-meter-refresh').click();await page.waitForFunction(()=>document.querySelector('.ai-meter-value').textContent==='—');assert.equal(await page.locator('.ai-meter-providers li').count(),0,'Failed refresh clears stale spending');meterFail=false;
  await page.keyboard.press('Escape');
  crmStamp='2026-09-27T18:00:00Z';pauseLoad=true;await page.evaluate(()=>window.auditRefresh());await waitingLoad;await page.locator('#notes').fill('Keep this note');await pendingLoad();await page.waitForFunction(()=>document.querySelector('#automation-status').textContent.includes('Last run'));assert.equal(await page.locator('#notes').inputValue(),'Keep this note','Background refresh preserves a draft started during its request');await page.locator('#save-draft').click();
- await page.waitForFunction(()=>document.querySelector('#notes').disabled);assert.ok(await page.locator('[data-view=people]').isDisabled(),'Navigation cannot change the edited contact during a save');
+ await page.waitForFunction(()=>document.querySelector('#notes').disabled);assert.ok(await page.locator('#view-menu').isDisabled(),'Navigation cannot change the edited contact during a save');
  await page.evaluate(()=>{localStorage.setItem('maya_admin_tok','Second');dispatchEvent(new StorageEvent('storage',{key:'maya_admin_tok'}));});
  assert.equal(await page.getByText('First person',{exact:true}).count(),0,'Account switch immediately removes private contact');
  await pendingSave();await page.getByText('Second person',{exact:true}).first().waitFor();assert.equal(await page.getByText('First person',{exact:true}).count(),0,'Old response cannot restore prior account');

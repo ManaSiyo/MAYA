@@ -134,3 +134,9 @@ Outbound source-of-truth columns and priority rules are regression-tested in
 `tests/outbound-priority-ui.mjs` (invoked by outbound-ui). Keep unknown follow-up
 history explicit. Refreshing a Sheet must not erase draft edits or re-count a
 recorded send. No automatic email sending is part of the To Do queue.
+
+Admin/Outbound compact workspace: Lead Station includes Contacted as a distinct
+persisted status. Outbound uses 250-record continuous batches and a compact view
+menu, never page-switch navigation. Keep full-dataset filters ahead of batching.
+The full regression HTTP fixture must serve CSS as text/css so the shared canon
+is actually tested. tests/crm-ui.mjs covers append identity, selection and search.

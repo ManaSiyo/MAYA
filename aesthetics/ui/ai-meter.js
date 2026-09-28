@@ -6,7 +6,9 @@ class MayaAIMeter extends HTMLElement {
     this.innerHTML=`<section class="ai-meter" aria-label="AI meter"><h3>AI meter</h3><svg viewBox="0 0 220 126" aria-hidden="true"><path class="ai-track" d="M25 106 A85 85 0 0 1 195 106"/><path class="ai-fill" d="M25 106 A85 85 0 0 1 195 106" pathLength="100"/><path class="ai-needle" d="M110 106 L45 106"/><circle cx="110" cy="106" r="4"/><text x="24" y="123">$0</text><text x="179" y="123">$1</text></svg><p class="ai-meter-value">—</p><p class="ai-meter-label">Today · Outbound AI</p><p class="ai-meter-detail" role="status">Sign in to see daily spending.</p><ul class="ai-meter-providers"></ul><button class="ai-meter-refresh" type="button">Refresh meter</button></section>`;
     this.querySelector('button').onclick=()=>this.refresh(true);
     }
-    this.observer=new IntersectionObserver(entries=>{this.visible=entries.some(e=>e.isIntersecting);if(this.visible)this.refresh();});this.observer.observe(this);
+    if(typeof IntersectionObserver==='function'){
+      this.observer=new IntersectionObserver(entries=>{this.visible=entries.some(e=>e.isIntersecting);if(this.visible)this.refresh();});this.observer.observe(this);
+    }else this.visible=false; // Manual refresh remains available without background polling.
     this.timer=setInterval(()=>{if(this.visible&&!document.hidden)this.refresh();},15000);
     this.onStorage=e=>{if(e.key==='maya_admin_tok'||e.key===null){this.reset();if(this.visible)this.refresh();}};window.addEventListener('storage',this.onStorage);
   }

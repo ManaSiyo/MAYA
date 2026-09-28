@@ -8,78 +8,79 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
-## September 28: Outbound priorities and follow-ups (local, not deployed)
+## September 28: compact Admin/Outbound and repeat audit (local, not deployed)
 
-Based on eee9213, matching origin/maya-v2 at task start. No push, credentials,
-production settings, real sends, or Sheet writes. Consumer/Playground unchanged.
+Based on 4b70187, equal to origin/maya-v2 at task start. No push, production
+changes, credentials, live messages or Sheet writes. Consumer and Playground
+files remain unchanged. Fromsa must push the prepared commit.
 
-Live read of the owner's Outbound workbook confirmed 262 unique Funnel rows:
-76 Ceremonial, 128 Corporate, 44 Fashion House and 14 Others. The nine columns are
-Category, Company, Full Name, Email, Job Title, Subject, Last email, Status,
-Relevance. Do not commit private source rows; fixtures use invented contacts.
+Changed:
+- backend/status.html: Contacted is a fifth distinct Lead Station option, saved
+  through the existing API (which already accepts it), filtered and retained on
+  repaint. Historical contacted values no longer display as In progress.
+- backend/outbound.js/html: centered heading/actions/filters; visible content-width
+  metric pills; native compact view menu retains People, Companies, Emails,
+  Results and Activity. No tab strip or Previous/Next page controls.
+- Collections start at 250 and append batches in place. Existing row nodes,
+  checkbox selections and keyboard focus survive appends. Search covers all
+  fields/all records before slicing; relationship/title filters cover the full
+  dataset. Scroll works with pointer/keyboard and without IntersectionObserver.
+  Disposed collections cannot append after a view/account change.
+- Fixed search blur rerender swallowing a result click; debounced input search
+  works without leaving the field. Cancelling a filter change keeps the draft
+  and restores the displayed filter. Direct email actions retain the selected
+  record even outside the first batch or when it has no email yet.
+- aesthetics/ui/maya-canon.css: shared dot-and-text semantic status chips,
+  left-aligned 44px rows, sticky headers, compact controls, restrained dark glass,
+  centered content-sized metrics. Admin and Outbound drawer geometry/type stays
+  consistent; their white glass gradient is replaced by a dark translucent fill
+  per the new mockup. Focus rings/reduced motion/fallbacks remain. Other backend
+  page changes only refresh stylesheet URLs to v11; Outbound script cache is v3.
+- tests/app-regression.mjs now serves CSS as text/css. Its prior wrong MIME type
+  meant that suite checked inline styles rather than the final shared stylesheet.
+  Updated stale center-alignment/40px-logo assertions to the approved left-aligned
+  table and existing 42px footer. Other visual suites already served CSS correctly.
+- tests/profile-crm.mjs VM now supplies window.addEventListener used by the filter;
+  this was a pre-existing release-gate failure. Contacted API persistence added.
+- aesthetics/ui/ai-meter.js now tolerates missing IntersectionObserver: manual
+  refresh remains available without hidden background polling.
 
-Implemented:
-- backend/outbound.js/html: All prospects and To Do share the campaign sidebar.
-  Uncontacted sorts first by relevance, unknown dates next for review, then oldest
-  to newest confirmed contact. Replies, suppressed and Sheet-paused contacts stay
-  outside To Do. A visible next-person action and row actions open the existing
-  draft editor; sending still requires explicit confirmation.
-- backend/outbound-priority.js: deterministic queue and follow-up chart, including
-  initial email, F1 (second email), F2+ (third or later), unknown and held states.
-  Last contacted uses confirmed outbound activity; Last email stays email-specific.
-- All prospects/campaign tables and CSV retain the nine source columns plus
-  priority/next touch. To Do hides secondary columns for a compact action view.
-  Full columns remain available in All prospects. Tables scroll internally on
-  narrow screens and still page 50 records at a time.
-- docs/server/outbound.mjs: structured Sheet fields, reply/decline/bounce/pause
-  handling; campaign memberships plus Funnel master rows (Others fallback only
-  when Funnel is absent). Funnel values win over campaign copies, imports are
-  atomic and deduplicated, local drafts/manual stages remain protected. No
-  automatic deletion of existing CRM contacts. Refresh runs when opening a
-  connected workspace and manually; last-sync time/report is visible.
-- docs/server/crm-intelligence.mjs: last confirmed outbound/email timestamps and
-  bounded 50-message email evidence, deduplicated by provider ID. Existing saved
-  activity is backfilled without changing relationship stages. Queued/failed
-  SMS and automated email do not advance follow-up history. Unchanged Sheet
-  refreshes retain the baseline for counting newer same-day emails. Master-only
-  prospects may draft/send after normal review without an invented campaign;
-  explicitly assigned paused campaigns still block sending.
-- aesthetics/ui/maya-canon.css: compact spacing, collapsed auxiliary totals/workflow,
-  circular plus, consistent original outline icons, plain name links. Fixed the
-  high-specificity generic capsule radius leaking onto name/link controls. Other
-  backend page edits only update the shared CSS cache URL to v10.
+Reverified repeated requests:
+- Circular logo assets without border/frame; 42px drawer-footer logo; grouped
+  compact model snapshot loading on first Systems open; Submissions label.
+- 11px Jost table data, compact rows, plain names and noninteractive tier text,
+  one phone action; title/details hierarchy; consistent drawers and compact pills.
+- To Do/relevance ordering, nine source columns, F1/F2 chart, last-contact summary,
+  reviewed Write an email, circular campaign plus, Sheet opening/manual refresh.
+- Filter top layer, outside/Escape dismissal, keyboard focus and scroll anchoring.
 
-Validation:
-- tests/outbound.mjs (29), including tests/outbound-priority.mjs: source fields,
-  ordering, F1/F2, yearless/invalid dates, same-day sends and refresh, suppression,
-  Funnel union, idempotence, atomic failure, and local-edit preservation.
-- tests/crm-intelligence.mjs (18): reviewed master-only sending, paused segments,
-  idempotence, account isolation, source failures and existing provider controls.
-- Populated priority browser fixture added through existing outbound-ui release
-  gate: all nine headers, order, chart, correct draft selection, no send on Write,
-  round plus, borderless 11px names, compact rows and seven widths (320-1920).
-- Outbound/Admin filter UI, 10,000-contact CRM UI, draft/account failure UI,
-  11-page/seven-width canon sweep and full app regression passed locally.
-- Phone (48), messages (50), transfer, feedback and server smoke fixtures passed.
-  Twelve changed/new JS modules pass syntax checks; diff whitespace clean.
-- Desktop/mobile populated screenshots inspected with local font files.
+Validation (local fake-provider fixtures, no live sends):
+- Outbound/Admin UI and populated priority/filter tests: 320, 390, 650, 768,
+  1024, 1440 and 1920px; exact 44px rows, saved Contacted and keyboard focus.
+- CRM UI: 10,000 records; 250/500/750 append, preserved DOM/selection, sticky
+  headers, search/status filter reaching record 9,999, all menu views, two
+  senders and reviewed send. Draft/account/error tests pass, including cancelled
+  filter changes and late responses after account switch.
+- Canon sweep: 11 pages x seven widths; desktop/mobile images inspected.
+- Full app regression; all release unit contracts; server smoke; phone 48,
+  SMS 50, transfer/feedback; frontend and Playground hands fixtures pass.
+- Diff whitespace clean. No consumer/Playground source changes.
 
-Limits: Sheet MM/DD dates have no year; ordering uses the most recent occurrence
-at sync, disclosed by the date tooltip. Same-day messages before the first source
-snapshot cannot prove an additional touch, and unknown historic counts stay
-unknown. No assumed follow-up cadence or automatic sends. Imports retain existing
-CRM history rather than deleting contacts removed from a Sheet. Native Safari/
-iOS and authenticated production remain unverified by local Chromium fixtures.
+Limits: native Safari/iOS and authenticated production are not verified by these
+Chromium fixtures. The nine-column Sheet table deliberately scrolls horizontally
+on narrow screens. Status chips retain original Sheet status in tooltips and
+screen-reader text; CSV retains it verbatim. No invented Follow-up due dates.
+The prior Sheet import/queue rules remain: unknown history stays unknown,
+yearless dates use the most recent occurrence at sync; no automatic outreach.
 
-Exact next step: Fromsa pushes the prepared local commit in GitHub Desktop. After
-Cloud Build succeeds, open Outbound; its existing saved Sheet refresh should show
-current Funnel data. Verify To Do and one reviewed self-addressed email with a
-connected Gmail mailbox. Agents must not push without an explicit request.
+Exact next step: Fromsa pushes in GitHub Desktop, waits for Cloud Build, then
+opens Admin and Outbound. Confirm Contacted persists, Sheet refresh shows current
+records, and scrolling appends beyond 250. Production communication verification
+requires a reviewed owner test. Agents must not push without an explicit request.
 
-Existing setup remains owner-only: both Gmail OAuth authorizations and OIDC
-Scheduler, provider credentials and live communication checks. The combined
-$1/day cap/meter covers Outbound text AI, not every MAYA image/voice call or provider
-invoices. See docs/OUTBOUND-SETUP.md and COMMIT-REVIEW.txt.
+Both Gmail OAuth grants and the OIDC scheduler remain owner setup if incomplete.
+The combined $1/day meter covers Outbound text AI, not every image/voice call or
+provider invoice. See OUTBOUND-SETUP.md and COMMIT-REVIEW.txt.
 
 ## The rules, in one place
 

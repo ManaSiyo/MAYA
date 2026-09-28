@@ -60,7 +60,7 @@ const FAVORITE_PULSE_SOURCE = INDEX_SOURCE.slice(
   INDEX_SOURCE.indexOf('@keyframes maya-favorite-pulse'),
   INDEX_SOURCE.indexOf('@keyframes maya-favorite-pulse') + 500,
 );
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json' };
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.css':'text/css', '.png':'image/png', '.svg':'image/svg+xml' };
 const srv = http.createServer((req, res) => {
   let p = decodeURIComponent(req.url.split('?')[0]);
   if (p.endsWith('/')) p += 'index.html';
@@ -92,6 +92,18 @@ ok('Lead status filter has an isolated readable layer and scoped section carets'
   MAP_SOURCE.includes('details.fold>summary::after') && !MAP_SOURCE.includes('details.fold summary::after') &&
   CANON_SOURCE.includes('color:var(--maya-ink);background:rgba(7,10,20,.88)'));
 
+// September 28: compact source-data workspace and distinct Contacted status.
+{
+ const ui=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');
+ const html=readFileSync(join(ROOT,'backend/outbound.html'),'utf8');
+ ok('Contacted is a distinct selectable Lead Station status',MAP_SOURCE.includes("contacted:'Contacted'") && !MAP_SOURCE.includes("['in_process','contacted'].includes(x.stage)"));
+ ok('Outbound appends 250-record batches without page switches',ui.includes('const BATCH_SIZE=250') && ui.includes('function mountCollection') && !ui.includes('renderPager'));
+ ok('Every former Outbound view remains in a compact menu',html.includes('id="view-menu"') && ['people','companies','emails','results','activity'].every(v=>html.includes('value="'+v+'"')) && !html.includes('data-view='));
+ ok('Full-record searching precedes incremental rendering',ui.includes('searchText(p).includes(q)') && ui.includes('mountCollection(list,document.querySelector'));
+ ok('Admin and Outbound share dark semantic status pills',MAP_SOURCE.includes('status-pill lead-status') && ui.includes('function statusPill') && CANON_SOURCE.includes('--maya-contacted:'));
+ ok('Compact table rows and content-width metrics share central styling',CANON_SOURCE.includes('.people-table td {height:44px') && CANON_SOURCE.includes('flex:0 0 auto;') && CANON_SOURCE.includes('.workspace-actions,.toolbar,.people-actions'));
+}
+
 // September 27: compact Systems and master-sheet menu contracts.
 {
  const admin=readFileSync(join(ROOT,'backend/status.html'),'utf8');
@@ -114,7 +126,7 @@ ok('Lead status filter has an isolated readable layer and scoped section carets'
  const css=readFileSync(join(ROOT,'aesthetics/ui/maya-canon.css'),'utf8');
  ok('Outbound supports two encrypted account-scoped Gmail connections',gmail.includes('length>=2') && gmail.includes('aes-256-gcm') && gmail.includes('setAAD(Buffer.from(uid))'));
  ok('Hourly CRM sync is authenticated and checkpoints incremental mail with contact activity',crm.includes('/api/tasks/outbound-sync') && crm.includes('await deps.verifyScheduler(req)') && gmail.includes('startHistoryId:next.historyId'));
- ok('Master prospects use bounded rendering and reusable campaign membership',ui.includes('const PAGE_SIZE=50') && crm.includes("api+'/segment'") && crm.includes('c.campaignIds='));
+ ok('Master prospects use bounded rendering and reusable campaign membership',ui.includes('const BATCH_SIZE=250') && crm.includes("api+'/segment'") && crm.includes('c.campaignIds='));
  ok('Reviewed mail sends have durable duplicate protection',crm.includes('b.confirm!==true') && crm.includes('crm.deliveries[b.requestId]') && crm.includes("status='unknown'"));
  ok('Daily AI allowance combines OpenAI Claude Gemini without paid retries',ai.includes('anthropic:') && ai.includes('gemini:') && ai.includes('sum.spentUsd+sum.reservedUsd+reserve>1') && ai.includes('No automatic paid retry'));
  ok('Admin and Outbound share the AI meter',MAP_SOURCE.includes('<maya-ai-meter>') && readFileSync(join(ROOT,'backend/outbound.html'),'utf8').includes('<maya-ai-meter>'));
@@ -675,7 +687,7 @@ const messageRefinements = await pg.evaluate(async () => {
   } finally { window.fetch = oldFetch; }
 });
 ok('Messages: top circular gear/chat tabs match frontend spacing and the voice button is compact',
-  messageRefinements.padding === '16px' && messageRefinements.voiceSize === '40px' && messageRefinements.gear && messageRefinements.bubble);
+  messageRefinements.padding === '16px' && messageRefinements.voiceSize === '42px' && messageRefinements.gear && messageRefinements.bubble);
 ok('Messages: contact rename saves and carrier feedback survives inbox polling', messageRefinements.renameSaved && messageRefinements.feedbackPersists && messageRefinements.callLabel === 'Call');
 const { introducedName: smsIntroducedName } = await import('../docs/server/maya-messages.mjs');
 ok('Messages: explicit SMS introductions produce a contact name without treating inquiries as names',
@@ -2656,7 +2668,7 @@ const leadAlignment = await affiliatePage.evaluate(()=>{
     fixed:getComputedStyle(document.querySelector('#leads-table')).tableLayout,
     icon:getComputedStyle(document.querySelector('.lead-cta svg')).width};
 });
-ok('Lead rows center names/actions, left-align notes and retain keyboard horizontal scrolling',leadAlignment.name==='center' && leadAlignment.actions==='center' && leadAlignment.note==='left' && leadAlignment.middle==='middle' && leadAlignment.header==='sticky' && leadAlignment.fixed==='fixed' && leadAlignment.scroll==='auto' && leadAlignment.focus===0 && leadAlignment.icon==='10px');
+ok('Lead rows left-align names/actions/notes and retain keyboard horizontal scrolling',leadAlignment.name==='flex-start' && leadAlignment.actions==='flex-start' && leadAlignment.note==='left' && leadAlignment.middle==='middle' && leadAlignment.header==='sticky' && leadAlignment.fixed==='fixed' && leadAlignment.scroll==='auto' && leadAlignment.focus===0 && leadAlignment.icon==='10px');
 await affiliatePage.close();
 const smsSource=readFileSync(join(ROOT,'docs/server/maya-messages.mjs'),'utf8');
 ok('SMS audit fixes preserve opt-in, carrier reasons and trusted-host signature checks',
@@ -2668,7 +2680,7 @@ ok('Outbound imports summary-prefixed corporate sheets without losing names or s
 
 const outboundUI=readFileSync(join(ROOT,'backend/outbound.html'),'utf8');
 const outboundJS=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');
-ok('Outbound matches Maya fonts/logo and guards unsaved drafts',outboundUI.includes('/aesthetics/ui/logo-circle.png') && outboundUI.includes('Cormorant+Garamond') && outboundUI.includes('Jost:') && outboundUI.includes(':focus-visible') && outboundJS.includes('function hasUnsavedDraft()') && outboundJS.includes("if(!leaveDraft())return;selected="));
+ok('Outbound matches Maya fonts/logo and guards unsaved drafts',outboundUI.includes('/aesthetics/ui/logo-circle.png') && outboundUI.includes('Cormorant+Garamond') && outboundUI.includes('Jost:') && outboundUI.includes(':focus-visible') && outboundJS.includes('function hasUnsavedDraft()') && outboundJS.includes("if(!leaveDraft())return;\n selected=id;view='emails'"));
 const suppressionState={campaigns:[{id:'audit'}],contacts:[{campaignId:'audit',email:'a@example.com',stage:'contacted'}]};
 mergeContacts(suppressionState,rowsToContacts([['Email','Status'],['a@example.com','Bounced']]),'audit');
 ok('Reimported bounced contacts suppress existing outreach',suppressionState.contacts[0].stage==='suppressed');
@@ -2680,7 +2692,7 @@ assertOutboundPriority();
 ok('Outbound preserves Sheet columns and ranks To Do with recorded F1/F2 follow-ups',outboundUI.includes('id="todo-list"') && outboundUI.includes('id="followups"') && outboundJS.includes('Write an email') && outboundJS.includes('renderFollowups(people)'));
 ok('Outbound preserves campaign pain and criteria and provides a people table',outboundJS.includes("field('pain'") && outboundJS.includes("field('criteria'") && outboundJS.includes('function renderPeople()'));
 await browser.close(); if (served) srv.close();
-ok('CRM uses four owner statuses and dismisses the filter outside or on Escape',MAP_SOURCE.includes("booked:'Booked'") && MAP_SOURCE.includes("canceled:'Cancelled'") && MAP_SOURCE.includes("!_leadFilterOwner.contains(e.target) && !_leadFilterMenu.contains(e.target)") && MAP_SOURCE.includes("if(e.key==='Escape' && _leadFilterOwner)") && MAP_SOURCE.includes('window.filterLeadStatus = filterLeadStatus'));
+ok('CRM uses five owner statuses and dismisses the filter outside or on Escape',MAP_SOURCE.includes("booked:'Booked'") && MAP_SOURCE.includes("canceled:'Cancelled'") && MAP_SOURCE.includes("!_leadFilterOwner.contains(e.target) && !_leadFilterMenu.contains(e.target)") && MAP_SOURCE.includes("if(e.key==='Escape' && _leadFilterOwner)") && MAP_SOURCE.includes('window.filterLeadStatus = filterLeadStatus'));
 ok('Lead rows use one phone icon, date and tier beneath the linked name',MAP_SOURCE.includes('class="lead-subline"') && MAP_SOURCE.includes('function leadSignup') && !MAP_SOURCE.slice(MAP_SOURCE.indexOf('function _actionsCell'),MAP_SOURCE.indexOf('function _leadColDefs')).includes('PAY_SVG'));
 ok('Model snapshot groups shared models by their roles',MAP_SOURCE.includes('const groups=new Map()') && MAP_SOURCE.includes('roles.join'));
 const outboundRevampUI=readFileSync(join(ROOT,'backend/outbound.html'),'utf8'),outboundRevampJS=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');

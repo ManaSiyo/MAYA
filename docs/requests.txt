@@ -1,3 +1,14 @@
+SEPTEMBER 28: Mockup styling, Contacted and repeat audit
+[prepared] Contacted in Admin Lead Station, with persisted/filterable blue status pill.
+[prepared] Shared semantic pills, dark glass, left-aligned 44px rows and sticky headers.
+[prepared] Centered Outbound title/actions/filters; content-width metric pills.
+[prepared] Compact view menu replaces tabs; 250-record batches append without paging.
+[verified] 10,000-record search/filter, preserved selection, reviewed email actions.
+[verified] Repeated logo/row/type/drawer/menu requests; 11 pages at seven widths.
+[fixed] Search redraw swallowed result clicks; cancelled filters displayed wrong value.
+[fixed] Broad regression served CSS with wrong MIME type; profile fixture lacked window.
+[pending] Owner push/deploy and signed-in production verification. Frontend unchanged.
+
 SEPTEMBER 28: Outbound To Do, Sheet columns, relevance and follow-ups
 [verified] Live Sheet: Funnel 262; Ceremonial 76, Corporate 128, Fashion House 44, Others 14.
 [prepared] To Do alongside campaigns: uncontacted/relevance first, oldest follow-ups next, recent last.

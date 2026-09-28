@@ -5,7 +5,7 @@ this change. Consumer MAYA and Playground are unchanged.
 
 ## Included
 
-- A master list of up to 10,000 contacts, 50 results per page, reusable campaign
+- A master list of up to 10,000 contacts, 250-record scrolling batches, reusable campaign
   membership, campaign-specific drafting and explicit reviewed sending.
 - Two independently authorized Gmail mailboxes in the same signed-in admin
   workspace. Connect worldofsiyo@gmail.com and fromsa@manasiyo.com there; signing

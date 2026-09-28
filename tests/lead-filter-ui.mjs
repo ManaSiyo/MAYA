@@ -11,7 +11,7 @@ export async function auditLeadFilter(page){
       paintLeads({connected:true,list:Array.from({length:count},(_,i)=>({
         id:'fixture-'+i,name:'Example Person '+i,phone:'+15555550100',tier:'Signature',
         wrote:'A custom suit for a ceremony, with a carefully tailored fit.',createdAt:'2026-09-23',
-        stage:['new','in_progress','booked','canceled'][i%4]
+        stage:['new','contacted','in_progress','booked','canceled'][i%5]
       }))});
       document.querySelector('#leads-fold').scrollIntoView();
     },count);
@@ -52,16 +52,16 @@ export async function auditLeadFilter(page){
   await menu.waitFor({state:'visible'});assert.equal(await rows.count(),9);
   assert.equal(await page.evaluate(()=>document.activeElement.dataset.status),'new','Rerender preserves checkbox focus');
   await page.keyboard.press('Space');await menu.waitFor({state:'visible'});assert.equal(await rows.count(),12);
-  for(const key of ['new','in_progress','booked','canceled'])await menu.locator('[data-status="'+key+'"]').uncheck();
+  for(const key of ['new','contacted','in_progress','booked','canceled'])await menu.locator('[data-status="'+key+'"]').uncheck();
   assert.equal(await rows.count(),0);await bounds(); // Empty results shrink the scroll panel, not the popover.
-  for(const key of ['new','in_progress','booked','canceled'])await menu.locator('[data-status="'+key+'"]').check();
+  for(const key of ['new','contacted','in_progress','booked','canceled'])await menu.locator('[data-status="'+key+'"]').check();
   await page.mouse.click(8,400);await menu.waitFor({state:'hidden'});
   await gear.focus();await page.keyboard.press('Enter');await menu.waitFor({state:'visible'});
   assert.equal(await page.evaluate(()=>document.activeElement.dataset.status),'new');
   await page.keyboard.press('Shift+Tab');await menu.waitFor({state:'hidden'});
   assert.ok(await gear.evaluate(el=>el===document.activeElement));
   await page.keyboard.press('ArrowDown');await menu.waitFor({state:'visible'});
-  for(let i=0;i<4;i++)await page.keyboard.press('Tab');
+  for(let i=0;i<5;i++)await page.keyboard.press('Tab');
   await menu.waitFor({state:'hidden'});
   assert.ok(await page.locator('.lead-open').first().evaluate(el=>el===document.activeElement),'Tab continues into the first table row');
 

@@ -46,7 +46,7 @@ const compact = await page.evaluate(()=>({
   ticker:getComputedStyle(document.querySelector('#mkt-ticker-inner')).fontSize,
   header:getComputedStyle(document.querySelector('#campaigns-table th')).backgroundColor
 }));
-assert.equal(report.size,'11px');assert.equal(compact.padding,'4px');assert.ok(compact.row<60);
+assert.equal(report.size,'11px');assert.equal(compact.padding,'4px');assert.equal(compact.row,44);
 assert.equal(await page.locator('#top-left-brand .brand-chips').count(),0);
 assert.equal(await page.locator('#top-left-brand .maya-logo-mark').getAttribute('src'),'/aesthetics/ui/logo-circle.png');
 assert.equal(await page.locator('.maya-logo-wrap').evaluate(e=>getComputedStyle(e).borderTopWidth),'0px');
@@ -63,9 +63,20 @@ assert.equal(await page.locator('#lead-tr-0 td').first().evaluate(el=>getCompute
 await page.evaluate(()=>document.body.classList.remove('affiliates-view'));
 await page.setViewportSize({width:1440,height:1000});
 
-assert.deepEqual(report.options,['Not contacted','In progress','Booked','Cancelled']);assert.equal(report.size,report.noteSize);assert.equal(report.color,'rgb(181, 189, 200)');assert.equal(report.actions,1);
-for(const [value,color] of [['in_progress','rgb(251, 191, 36)'],['booked','rgb(74, 222, 128)'],['canceled','rgb(253, 164, 175)']]){assert.equal(await page.locator('.lead-stage').evaluate((el,value)=>{el.value=value;return getComputedStyle(el).color;},value),color);}await page.locator('.lead-stage').evaluate(el=>el.value='new');
+assert.deepEqual(report.options,['Not contacted','Contacted','In progress','Booked','Cancelled']);assert.equal(report.size,report.noteSize);assert.equal(report.color,'rgb(181, 189, 200)');assert.equal(report.actions,1);
+for(const [value,color] of [['contacted','rgb(138, 188, 242)'],['in_progress','rgb(251, 191, 36)'],['booked','rgb(74, 222, 128)'],['canceled','rgb(253, 164, 175)']]){assert.equal(await page.locator('.lead-stage').evaluate((el,value)=>{el.value=value;return getComputedStyle(el).color;},value),color);}await page.locator('.lead-stage').evaluate(el=>el.value='new');
 await page.evaluate(()=>document.fonts.ready);
+let statusUpdate;
+await page.route('**/api/admin/lead-update',route=>{statusUpdate=route.request().postDataJSON();return route.fulfill({json:{ok:true}});});
+await page.evaluate(async()=>{
+ const original=loadMkt;loadMkt=async()=>paintLeads({connected:true,list:_leadList});
+ try{const select=document.querySelector('.lead-stage');select.value='contacted';await setLeadStage(0,select);}finally{loadMkt=original;}
+});
+assert.equal(statusUpdate.stage,'contacted');assert.equal(await page.locator('.lead-stage').inputValue(),'contacted');
+assert.equal(await page.locator('.status-text').textContent(),'Contacted','Saved status survives repaint');
+await page.locator('.lead-stage').focus();
+assert.notEqual(await page.locator('.lead-status').evaluate(e=>getComputedStyle(e).outlineStyle),'none','Native status control retains visible keyboard focus');
+await page.unroute('**/api/admin/lead-update');
 await auditLeadFilter(page);
 await page.evaluate(()=>paintLeads({connected:true,list:[{id:'fixture',name:'Example Person',phone:'+15555550100',tier:'Signature',wrote:'A custom suit for a ceremony',createdAt:'2026-09-23',stage:'new'}]}));
 await page.evaluate(()=>admTab('messages'));assert.ok(await page.locator('#drawer maya-ai-meter').isHidden(),'Systems meter stays out of Messages');

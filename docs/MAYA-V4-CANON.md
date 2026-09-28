@@ -33,7 +33,7 @@ Opaque fallback is permitted only when backdrop blur is unavailable, for readabi
 
 Names primary; status immediate; notes secondary; category/date tertiary.
 Booked/Delivering: existing green `#4ade80`. In progress: amber `#fbbf24`.
-Cancelled/error: restrained red `#fda4af`. Inactive: gray `#b5bdc8`.
+Contacted: restrained blue `#8abcf2`. Cancelled/error: restrained red `#fda4af`. Inactive: gray `#b5bdc8`.
 Selected: subtle MAYA blue tint; no painted blue chrome. Always retain text labels.
 
 ## Implementation
@@ -57,3 +57,10 @@ handles are borderless. Log headings are white and details secondary gray.
 September 27: backend drawer titles follow frontend Profile (Cormorant 19px,
 upright). Data remains Jost 11px; metric sizes unchanged. CRM row padding is 4px.
 Use logo-circle.png directly, with no frame or border.
+
+September 28 mockup refinement (Admin and Outbound only): dark translucent fills
+replace white drawer gradients; keep the same drawer geometry and typography.
+Center titles, controls and content-width metrics. Tables stay left aligned with
+44px rows and sticky headers. Status capsules use a small semantic dot plus text,
+never color alone. Outbound uses a compact view menu and 250-record appends,
+with search/filtering across all records. Consumer frontend remains untouched.

@@ -1,39 +1,41 @@
 Summary:
-[Codex][v14.40] Add Outbound priorities and Sheet follow-up tracking
+[Codex][v14.40] Compact Admin and Outbound with continuous lead scrolling
 
 Description:
 
-Add To Do alongside All prospects and campaigns. Rank uncontacted prospects by
-relevance, review unknown dates, then follow up oldest-first. Show recorded first
-email/F1/F2+ history, last contacted and a direct Write an email action. Preserve
-reviewed sending and exclude replies, bounces, do-not-contact and paused records
-from the outreach queue.
+Add Contacted as a distinct saved and filterable Admin Lead Station status.
+Use shared dot-and-text status pills, compact left-aligned 44px rows, sticky
+headers and restrained dark glass. Center Outbound heading, actions, filters
+and content-width metric pills without changing the galaxy, fonts or logo.
+Keep all five workspace views in a compact menu instead of horizontal tabs.
 
-Import the Funnel master plus campaign memberships, keeping the nine real Sheet
-columns, relevance, original status and last-email date. Funnel values take
-precedence over campaign copies. Refresh connected Sheets on opening, show sync
-time and preserve local drafts/manual stages. Persist confirmed email/contact
-history, backfill existing activity, and avoid double-counting events or erasing
-same-day follow-ups
-on refresh. Master-only contacts can draft/send without a fabricated campaign;
-assigned paused campaigns still block sending. No automatic contact deletion.
+Replace 50-record page switches with 250-record batches appended in place.
+Search and filters cover the entire dataset; checkbox selection and existing
+rows survive appends. Preserve To Do ordering, Sheet columns, follow-up chart,
+Gmail review/send controls and account isolation. No automatic messages.
+Fix search redraws swallowing result clicks and cancelled filter changes
+leaving the wrong displayed value. Dispose old observers on view/account change.
+Handle missing IntersectionObserver in scrolling and the shared AI meter;
+manual meter refresh remains available without hidden polling.
 
-Compact the workspace, add a circular plus, remove name pill styling and use
-consistent original outline icons. To Do emphasizes actionable columns; All
-prospects retains all source columns and CSV export. Shared stylesheet v10;
-consumer frontend/Playground and production configuration remain unchanged.
+Correct the full regression server's missing CSS MIME type so it tests the
+actual shared stylesheet. Update stale alignment/logo assertions and the
+profile fixture's missing window event stub. Shared CSS cache v11, UI script v3.
+Consumer frontend, Playground, server integrations and production settings unchanged.
 
 Validation:
-- Live read-only Sheet inspection: 262 unique master rows, nine source columns.
-- 29 Outbound/model checks plus priority/date/F1/F2/source-baseline assertions.
-- 18 CRM intelligence/provider tests, including master-only and paused sends.
-- Populated To Do, existing Outbound/Admin filter UI, 10,000-contact CRM UI and
-  draft/account failure tests. Seven widths; desktop/mobile screenshots reviewed.
-- 11-page/seven-width canon sweep and full app regression.
-- Phone 48, SMS 50, transfer, feedback and server smoke fixture checks.
-- 12 changed/new JS modules syntax-checked; clean diff whitespace.
+- Populated Admin/Outbound UI at seven widths: exact row heights, compact metrics,
+  Contacted persistence, native keyboard focus, filter layering and dismissal.
+- 10,000-contact fixture: 250/500/750 appends, preserved row identity/selection,
+  full-data search/filter, selected record beyond the first batch, all menu views,
+  two sender choices, reviewed send and no-IntersectionObserver fallback.
+- Draft/account/error recovery, including cancelled filters and late responses.
+- 11-page/seven-width canon sweep; desktop/mobile screenshots inspected.
+- Full app regression and release unit contracts; 30 profile checks.
+- Phone 48, SMS 50, transfer, feedback, server smoke, frontend/Playground hands.
+- Clean diff whitespace; handoff, requests, fixes and canon notes updated.
 
-Local commit only. Fromsa must push; deployment and signed-in Sheet/Gmail behavior
-still need verification. No Sheet edits, real messages, credentials or environment
-changes. Yearless dates use their most recent occurrence at sync; unknown historic
-touches remain marked for review. No automatic follow-up schedule was invented.
+Local commit only; Fromsa pushes. Authenticated production and native Safari/iOS
+remain unverified. The full Sheet table scrolls horizontally on narrow screens.
+Original Sheet statuses remain in tooltips, accessible text and CSV. Follow-up
+due dates are not invented. No credentials, Sheet writes or real messages used.

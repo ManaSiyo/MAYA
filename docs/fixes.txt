@@ -1,3 +1,16 @@
+SEPTEMBER 28: Compact CRM and audit coverage gaps
+Prepared: Admin Contacted no longer becomes In progress; shared status pills and
+44px rows. Outbound uses 250-record appends and full-dataset filtering. Search
+blur could replace a clicked result before its click handler ran; deduped,
+debounced search now preserves the action. Declined filter changes restore UI.
+The full regression's local server omitted the CSS MIME type, so Chromium did
+not apply the shared stylesheet. Fixed MIME and stale alignment/logo assertions.
+The profile VM omitted window.addEventListener after the filter portal addition;
+fixed the fixture and verified Contacted persistence for both manual/Wix records.
+Missing IntersectionObserver no longer throws in scrolling or the AI meter;
+scroll events append records and manual meter refresh remains available.
+Local unit/browser/communication checks pass. CSS v11, Outbound JS v3. No push.
+
 SEPTEMBER 28: Outbound source data and priority presentation
 The importer only read three campaign tabs, omitted Funnel-only contacts, and
 folded category, relevance, last-email date and status into notes. Reply/decline

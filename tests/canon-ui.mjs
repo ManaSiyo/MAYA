@@ -73,13 +73,16 @@ const masterTitle=await page.locator('.pg-tabtitle').first().evaluate(el=>({font
 const masterTab=await chromeStyle('#notes-drawer .pg-tab.on');
 await page.goto('https://maya.test/backend/status.html');
 assert.deepEqual(await page.locator('#adm-tabtitle').evaluate(el=>({font:getComputedStyle(el).fontFamily,size:getComputedStyle(el).fontSize})),masterTitle);
-assert.deepEqual(await chromeStyle('#drawer'),master,'Admin drawer matches frontend');
+const adminGlass=await chromeStyle('#drawer');
+assert.equal(adminGlass.blur,master.blur);assert.equal(adminGlass.radius,master.radius);
+assert.equal(adminGlass.background,'none','Admin uses the requested dark glass without white gradients');
+assert.equal(await page.locator('#drawer').evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(3, 15, 29, 0.82)');
 assert.deepEqual(await chromeStyle('.adm-tab.on'),masterTab,'Admin selected tab matches frontend');
 await page.locator('#drawer').evaluate(el=>{document.body.append(el);Object.assign(el.style,{position:'fixed',left:'auto',width:'360px',zIndex:'999'});});
 await page.screenshot({animations:'disabled',path:join(dir,'backend-drawer-parity.png')});
 assert.equal(await page.locator('#maya-toggle .mt-switch').evaluate(el=>getComputedStyle(el).width),'34px');
 await page.goto('https://maya.test/backend/outbound.html');
-assert.deepEqual(await chromeStyle('#outbound-drawer'),master,'Outbound drawer matches frontend');
+assert.deepEqual(await chromeStyle('#outbound-drawer'),adminGlass,'Outbound and Admin share the same quiet glass');
 await page.goto('https://maya.test/backend/backend.html');
 assert.deepEqual(await chromeStyle('#clients-drawer'),master,'Brief drawer matches frontend');
 await page.emulateMedia({reducedMotion:'reduce'});
