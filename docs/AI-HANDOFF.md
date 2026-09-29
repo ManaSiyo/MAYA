@@ -8,20 +8,24 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
-## September 29: page architecture and liquid-glass preview
+## September 29: interactive finish and typography review
 
-Preview now has two main sections: current/proposed pill comparison with compact
-Admin examples, and all 12 page files grouped into client/admin/utility-preview
-roles. Links use physical paths on localhost and hosted URLs in production.
-Affiliates remains an Admin view. Fonts/reference, states and settings collapse.
-Proposed brighter curved highlights are gallery-only; measured master unchanged.
-10px pill text, 12px counts and centered SVG icons remain. Explicit font loading
-allows comparison samples to load even inside collapsed reference details.
-Changed: playground/components/{index.html,gallery.js,gallery.css},
+Gallery now has Glass / Typography / Page map. Eleven visible type roles show
+family/size/weight/location, including circular logo + MAYA wordmark, paragraphs,
+headings, compact metrics and technical text. Font comparison remains expandable.
+Current/Proposed/Clearer buttons select material for all component examples,
+including detached drawer/filter dialogs, Outbound controls and state samples.
+Clearer uses 7% base fill and 7% tint with the same proposed hue/edge highlights.
+Numbered layer values are generated from the rendering presets; transparency is
+explicitly base-fill transparency, not composite transparency. Toggle and sliders
+allow live edits; export includes selected finish metadata. Finish edits reset
+on reload; existing advanced token persistence remains.
+Plus circle follows adjacent pill height using ResizeObserver. Live pages unchanged.
+Changed: playground/components/{index.html,gallery.js,gallery.css,finishes.js},
 tests/component-gallery.mjs, design.md and continuity docs.
-Validation: seven-width gallery checks and full app regression; visual browser
-review. No production changes or push. Next: Fromsa reviews ?review=3 before any
-global material migration.
+Validation: seven-width tests for selection/slider output/icon height, overlays,
+font selector and baseline; real-font visual review; full regression.
+Next: owner reviews ?review=4 before global rollout. No push.
 
 ## September 29: sole design specification and component review gallery
 

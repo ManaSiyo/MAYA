@@ -9,7 +9,7 @@ await page.route('**/*',async r=>{const u=new URL(r.request().url());if(u.hostna
 try{
  await page.goto('https://maya.test/playground/components/index.html');await page.locator('#tokens input').first().waitFor({state:'attached'});
  const baseline=JSON.parse(readFileSync(root+'/docs/design-archive/tap-to-listen-computed.json'));
- const pill=page.locator('[data-finish="current"]');
+ const pill=page.locator('.comparison [data-finish="current"]');
  const actual=await pill.evaluate(e=>{const c=getComputedStyle(e);return Object.fromEntries(['paddingTop','paddingRight','borderRadius','borderTopWidth','backgroundColor','backdropFilter','boxShadow','fontSize','fontWeight','letterSpacing'].map(k=>[k,c[k]]));});
  for(const k of ['paddingTop','paddingRight','borderRadius','borderTopWidth','backgroundColor','backdropFilter','boxShadow'])assert.equal(actual[k],baseline.pill[k],k);
  for(const k of ['fontSize','fontWeight','letterSpacing'])assert.equal(actual[k],baseline.label[k],k);
@@ -26,12 +26,29 @@ try{
  const iconCenter=await page.locator('.maya-icon-button').first().evaluate(e=>{const b=e.getBoundingClientRect(),s=e.querySelector('svg').getBoundingClientRect();return Math.abs((b.x+b.width/2)-(s.x+s.width/2))+Math.abs((b.y+b.height/2)-(s.y+s.height/2));});assert.ok(iconCenter<1);
  await page.locator('#preview-font').selectOption('Arial, sans-serif');assert.match(await page.locator('#buttons .maya-pill').first().evaluate(e=>getComputedStyle(e).fontFamily),/Arial/);
  assert.equal(await page.locator('.font-card').count(),3);assert.match(await page.locator('#pages').textContent(),/12 page files/);
- assert.equal(await page.locator('#gallery > section').count(),2);
+ assert.equal(await page.locator('#gallery > section').count(),3);
  assert.equal(await page.locator('.page-map .page-link').count(),12);
  assert.equal(await page.locator('[data-finish="liquid"].maya-pill').first().evaluate(e=>getComputedStyle(e).fontSize),'10px');
  assert.match(await page.locator('[data-finish="liquid"].maya-pill').first().evaluate(e=>getComputedStyle(e).backgroundImage),/linear-gradient/);
+ assert.ok(await page.locator('#fonts').isVisible());
+ assert.equal(await page.locator('.type-row').count(),11);
+ for(const name of ['Current','Proposed liquid glass','Clearer glass']){
+  await page.getByRole('button',{name,exact:true}).click();
+  const finish=await page.locator('#buttons .maya-pill').first().getAttribute('data-finish');
+  assert.equal(finish,{'Current':'current','Proposed liquid glass':'liquid','Clearer glass':'clear'}[name]);
+  assert.ok(await page.locator('#buttons .maya-glass').evaluateAll((es,f)=>es.every(e=>e.dataset.finish===f),finish));
+  await page.getByRole('button',{name:'Open drawer',exact:true}).click();assert.equal(await page.locator('.maya-drawer').getAttribute('data-finish'),finish);await page.keyboard.press('Escape');
+ }
+ await page.locator('#clear-glass').uncheck();assert.equal(await page.locator('#buttons .maya-pill').first().getAttribute('data-finish'),'liquid');
+ await page.getByText('Adjust selected finish',{exact:true}).click();
+ await page.getByRole('slider',{name:'Base transparency',exact:true}).fill('95');
+ await page.waitForFunction(()=>getComputedStyle(document.querySelector('#buttons .maya-pill')).backgroundColor==='rgba(3, 15, 29, 0.05)');
+ assert.match(await page.locator('.finish-sample[data-selected="true"] .finish-numbers').textContent(),/95% transparent/);
+ await page.getByRole('button',{name:'Reset',exact:true}).click();
  for(const width of [320,390,650,768,1024,1440,1920]){
-  await page.setViewportSize({width,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'overflow '+width);
+  await page.setViewportSize({width,height:844});await page.waitForTimeout(50);
+  const heights=await page.locator('#buttons .preview-row').first().evaluate(e=>[e.querySelector('.maya-pill').getBoundingClientRect().height,e.querySelector('.maya-icon-button').getBoundingClientRect().height]);assert.ok(Math.abs(heights[0]-heights[1])<1,'icon height matches pill '+width);
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'overflow '+width);
   const open=page.getByRole('button',{name:'Open drawer',exact:true});await open.click();const dialog=page.locator('.maya-drawer');assert.ok(await dialog.isVisible());let box=await dialog.boundingBox();assert.ok(box.x>=0&&box.x+box.width<=width+1);
   await page.keyboard.press('Tab');assert.ok(await dialog.evaluate(d=>d.contains(document.activeElement)));
   await page.keyboard.press('Escape');assert.ok(await dialog.isHidden());assert.ok(await open.evaluate(e=>e===document.activeElement));

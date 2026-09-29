@@ -1,3 +1,8 @@
+SEPTEMBER 29: Preview icon height and inert material selection
+Fixed 32px preview icon size could exceed the adjacent pill. Preview now measures
+the pill and sizes circles to match. Material choices now control all examples;
+detached dialogs receive selection before opening. Covered by browser checks.
+
 SEPTEMBER 29: Preview typography and icon alignment
 Metric token wrongly retained 28px despite compact UI direction. Corrected to
 12px. Font-glyph plus icons replaced with centered SVG geometry; explicit browser

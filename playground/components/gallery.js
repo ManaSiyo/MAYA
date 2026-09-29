@@ -1,9 +1,10 @@
+import {setupFinishes} from './finishes.js';
 import {Pill,GlassSurface,IconButton,Drawer,FilterPopover,Metric} from '/aesthetics/ui/components/components.js';
 const gallery=document.querySelector('#gallery'),feedback=document.querySelector('#feedback');
 const say=s=>feedback.textContent=s;
 function section(title,id,description){const s=document.createElement('section');s.id=id;s.className='preview-section';const h=document.createElement('h2');h.textContent=title;s.append(h);if(description){const p=document.createElement('p');p.textContent=description;s.append(p);}gallery.append(s);return s;}
 function row(parent){const r=document.createElement('div');r.className='preview-row';parent.append(r);return r;}
-const fonts=section('Fonts','fonts','Tap to listen uses Jost: 10px, light weight 300, spaced uppercase letters. Compare Arial at the same size.');
+const fonts=section('Typography','fonts','The text hierarchy, with examples and where each style belongs. Interface font choices also update these samples; branding stays Cormorant.');
 const cards=document.createElement('div');cards.className='font-grid';fonts.append(cards);
 for(const [name,family,use] of [['Jost',"'Jost', sans-serif",'Current: buttons, navigation, forms and data.'],['Arial','Arial, sans-serif','Comparison only. Regular weight; not a new site font.'],['Cormorant Garamond',"'Cormorant Garamond', serif",'Current: MAYA / Mana Siyo branding and editorial titles.']]){
  const card=document.createElement('article');card.className='font-card';const h=document.createElement('h3');h.textContent=name;const p=document.createElement('p');p.textContent=use;
@@ -36,14 +37,36 @@ const flow=document.createElement('p');flow.className='page-flow';flow.textConte
 // Two primary sections; technical examples stay available without crowding the review.
 const preview=section('Glass pill preview','pill-preview','Proposed finish, using MAYA’s galaxy. Small text stays small. Examples only.');
 const comparison=document.createElement('div');comparison.className='comparison';preview.append(comparison);
-for(const [title,finish] of [['Current','current'],['Proposed liquid glass','liquid']]){const sample=document.createElement('div');sample.className='finish-sample';const label=document.createElement('h3');label.textContent=title;const button=Pill({label:'Tap to listen',purpose:'listen',onClick:()=>say('Preview only — no microphone activated.')});button.dataset.finish=finish;sample.append(label,button);comparison.append(sample);}
-buttons.querySelector('h2').textContent='In Admin & Outbound';buttons.querySelector('p').textContent='The same finish on actions, add buttons and compact counts.';
+buttons.querySelector('h2').textContent='In Admin & Outbound';buttons.querySelector('p').textContent='Your selected finish applies to every example below, including menus and states.';
+const contextActions=buttons.querySelector('.preview-row');contextActions.querySelector('.maya-pill').textContent='Tap to listen';
+const outbound=row(buttons);outbound.classList.add('outbound-example');const caption=document.createElement('span');caption.textContent='Outbound';outbound.append(caption,Pill({label:'Write an email',onClick:()=>say('Email button example only.')}),Pill({label:'Refresh',onClick:()=>say('Refresh example only.')}));
 preview.append(buttons);
 const menuRow=row(preview);menuRow.append(openDrawer,openFilter);
-const extra=document.createElement('details');extra.innerHTML='<summary>Fonts & reference</summary>';extra.append(fonts,guide,menus);preview.append(extra);
-for(const e of preview.querySelectorAll('.maya-pill,.maya-icon-button,.maya-metric'))if(!e.dataset.finish)e.dataset.finish='liquid';
-for(const e of document.querySelectorAll('dialog .maya-pill,dialog .maya-icon-button,dialog .maya-metric'))e.dataset.finish='liquid';
-gallery.replaceChildren(preview,pages);
+const extra=document.createElement('details');extra.innerHTML='<summary>Panels & glossary</summary>';extra.append(menus,glossary);preview.append(extra);
+// Visible hierarchy: sourced roles, with preview choices clearly distinguished from live styles.
+const hierarchy=document.createElement('div');hierarchy.className='type-hierarchy';fonts.prepend(hierarchy);
+const roles=[
+ ['Brand','MAYA','Cormorant Garamond',24,500,'Client top-left wordmark','brand'],
+ ['Editorial headline','Your next design','Cormorant Garamond',26,300,'Client dialog heading · existing .modal-card h2','editorial'],
+ ['Page headline','All prospects','Jost',18,500,'Outbound campaign title','headline'],
+ ['Subheadline','Campaign details','Jost',16,500,'Outbound detail and dialog titles','subheadline'],
+ ['Body text','Your next appointment','Jost',14,400,'General UI body scale','body'],
+ ['Paragraph','Add your ideas and references. MAYA keeps the details together for your next conversation.','Jost',12,300,'Client dialog help text · 1.7 line spacing','paragraph'],
+ ['Label & count','Contacted 12','Jost',12,500,'Compact preview totals · proposed metric scale','label'],
+ ['Table text','Name · Category · Notes','Jost',11,400,'Admin and Outbound lead rows','table'],
+ ['Pill & field label','TAP TO LISTEN','Jost',10,300,'Voice pill and client form labels · 1.5px spacing','pill'],
+ ['Small caption','PAID CLICKS · 7D','Jost',8.5,400,'Admin bottom-line captions','caption'],
+ ['Technical text','request_id · 10:30','Menlo',11,400,'Logs and technical identifiers','technical']
+];
+for(const [role,text,family,size,weight,where,key] of roles){const item=document.createElement('article');item.className='type-row';item.dataset.type=key;const meta=document.createElement('div');const title=document.createElement('h3');title.textContent=role;const note=document.createElement('p');note.textContent=where;meta.append(title,note);const example=document.createElement('div');example.className='type-example';example.style.fontFamily=family==='Jost'?'var(--ui-font)':family==='Menlo'?'Menlo, monospace':"'Cormorant Garamond', serif";example.style.fontSize=size+'px';example.style.fontWeight=weight;example.style.lineHeight=key==='paragraph'?'1.7':'1.4';if(key==='pill')example.style.letterSpacing='1.5px';if(key==='brand'){example.style.letterSpacing='.22em';const logo=document.createElement('img');logo.src='/aesthetics/ui/logo-208.png';logo.alt='';logo.className='type-logo';example.append(logo);}example.append(document.createTextNode(text));const spec=document.createElement('small');spec.textContent=family+' · '+size+'px · '+weight;spec.dataset.family=family;spec.dataset.size=size;spec.dataset.weight=weight;item.append(meta,example,spec);hierarchy.append(item);}
+fonts.insertBefore(fonts.querySelector('h2'),hierarchy);fonts.insertBefore(fonts.querySelector(':scope > p'),hierarchy);
+const compareFonts=document.createElement('details');compareFonts.innerHTML='<summary>Compare font families</summary>';compareFonts.append(cards,fontNote,technical);fonts.append(compareFonts);
+guide.remove();
+gallery.replaceChildren(preview,fonts,pages);
+const finishes=setupFinishes({comparison,preview,drawer,filter,say});
+// Keep circular action buttons exactly as tall as the adjacent live pill, including font changes.
+const sizeReference=contextActions.querySelector('.maya-pill');
+new ResizeObserver(()=>{document.documentElement.style.setProperty('--preview-control-height',sizeReference.getBoundingClientRect().height+'px');}).observe(sizeReference);
 const source=await (await fetch('/aesthetics/ui/components/tokens.css')).text();
 const defaults=Object.fromEntries([...source.matchAll(/(--ui-[\w-]+):\s*([^;]+);/g)].map(m=>[m[1],m[2].trim()]));
 const storageKey='maya-component-gallery-tokens-v2';let saved={};try{saved=JSON.parse(localStorage.getItem(storageKey)||'{}');}catch{}
@@ -59,7 +82,7 @@ const form=document.querySelector('#tokens');
 for(const [key,value] of Object.entries(defaults)){const label=document.createElement('label'),input=document.createElement('input');label.textContent=({'--ui-font':'Interface font','--ui-pill-font-size':'Button text size','--ui-pill-padding-x':'Button side padding','--ui-pill-padding-y':'Button top/bottom padding','--ui-metric-size':'Count text size','--ui-pill-weight':'Button text weight','--ui-pill-tracking':'Letter spacing','--ui-pill-radius':'Button roundness','--ui-blur':'Background blur'})[key]||key.replace('--ui-','').replaceAll('-',' ');input.name=key;input.value=valid(key,saved[key]||'')?saved[key]:value;
  if(input.value!==value){overrides[key]=input.value;document.documentElement.style.setProperty(key,input.value);}input.addEventListener('input',()=>{const value=input.value.trim();const ok=valid(key,value);input.setAttribute('aria-invalid',String(!ok));if(!ok)return;overrides[key]=value;document.documentElement.style.setProperty(key,value);try{localStorage.setItem(storageKey,JSON.stringify(overrides));}catch{say('Preview updated; browser storage unavailable.');}});label.append(input);form.append(label);}
 document.querySelector('#fallback').addEventListener('change',e=>document.body.classList.toggle('no-blur',e.target.checked));
-document.querySelector('#reset').addEventListener('click',()=>{for(const key of Object.keys(defaults))document.documentElement.style.removeProperty(key);overrides={};try{localStorage.removeItem(storageKey);}catch{}for(const input of form.elements){input.value=defaults[input.name];input.removeAttribute('aria-invalid');}document.querySelector('#preview-font').value=defaults['--ui-font'];say('Defaults restored.');});
-document.querySelector('#export').addEventListener('click',()=>{const css='/* MAYA preview tokens. Review before global application. */\n:root {\n'+Object.entries({...defaults,...overrides}).map(([k,v])=>'  '+k+': '+v+';').join('\n')+'\n}\n';const url=URL.createObjectURL(new Blob([css],{type:'text/css'}));const a=document.createElement('a');a.href=url;a.download='maya-tokens.css';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);say('Tokens exported. Live pages are unchanged.');});
+document.querySelector('#reset').addEventListener('click',()=>{for(const key of Object.keys(defaults))document.documentElement.style.removeProperty(key);overrides={};try{localStorage.removeItem(storageKey);}catch{}for(const input of form.elements){input.value=defaults[input.name];input.removeAttribute('aria-invalid');}document.querySelector('#preview-font').value=defaults['--ui-font'];finishes.reset();say('Defaults restored.');});
+document.querySelector('#export').addEventListener('click',()=>{const css='/* MAYA preview tokens. Review before global application. Finish: '+JSON.stringify(finishes.settings())+' */\n:root {\n'+Object.entries({...defaults,...overrides}).map(([k,v])=>'  '+k+': '+v+';').join('\n')+'\n}\n';const url=URL.createObjectURL(new Blob([css],{type:'text/css'}));const a=document.createElement('a');a.href=url;a.download='maya-tokens.css';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);say('Tokens exported. Live pages are unchanged.');});
 
-const choice=document.querySelector('#preview-font');choice.value=overrides['--ui-font']||defaults['--ui-font'];choice.addEventListener('change',()=>{const input=form.elements.namedItem('--ui-font');input.value=choice.value;input.dispatchEvent(new Event('input'));say(choice.selectedOptions[0].text+' selected for the examples. Font comparison cards stay fixed.');});
+const choice=document.querySelector('#preview-font');choice.value=overrides['--ui-font']||defaults['--ui-font'];choice.addEventListener('change',()=>{const input=form.elements.namedItem('--ui-font');input.value=choice.value;input.dispatchEvent(new Event('input'));document.querySelectorAll('.type-row small[data-family="Jost"]').forEach(e=>{e.textContent=(choice.value.startsWith('Arial')?'Arial':'Jost')+' · '+e.dataset.size+'px · '+e.dataset.weight;});say(choice.selectedOptions[0].text+' selected for the examples. Font comparison cards stay fixed.');});

@@ -122,3 +122,17 @@ curved rim and soft inset highlights over the galaxy; typography and geometry
 stay measured and compact. It is scoped to the gallery via data-finish, not an
 approved replacement for the master. Fonts, states and settings remain expandable.
 Global application still follows owner review.
+
+## Interactive finish and typography review
+
+The gallery exposes Typography as a primary section: brand, editorial headline,
+page headline, subheadline, body, paragraph, count, table, pill, caption and log
+examples, each labeled with family/size/weight and usage. Existing 24px wordmark
+and 26px editorial heading are references, not a global type-size increase.
+Current / Proposed / Clearer are selectable finishes applied across all gallery
+components and states. Clearer keeps the proposed hue/rim/highlight, reducing
+base fill from 18% to 7% and tint from 16% to 7%. Displayed percentages describe
+individual layers, never total composited transparency. Overlay backing remains
+at least 90%; quiet data surfaces at least 45%. Simple sliders edit the selected
+finish; the clearer toggle switches presets. This remains preview-only.
+Preview icon circles follow the measured adjacent pill height via ResizeObserver.

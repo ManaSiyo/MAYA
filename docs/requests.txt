@@ -1,3 +1,9 @@
+SEPTEMBER 29: Typography and interactive glass choices
+[prepared] Visible typography hierarchy with usage, font family, size and weight.
+[prepared] Third clearer finish, numbered layer settings, toggle and live sliders.
+[prepared] Finish selection updates every component/state, including menu dialogs.
+[fixed] Plus circle tracks adjacent pill height, including font changes.
+
 SEPTEMBER 29: Page map and new glass preview
 [prepared] Two primary sections: glass comparison/context and 12-file page map.
 [prepared] Brighter liquid-glass pill proposal; live styles unchanged.
