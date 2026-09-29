@@ -1,3 +1,8 @@
+SEPTEMBER 28 late: Less crowded drawers and clear Gmail connection
+[prepared] Owner setup collapsed in Systems and removed from Messages; spaced controls.
+[prepared] Shorter copy; direct Gmail links from Admin and composer; OAuth setup guide.
+[blocked owner setup] Gmail reports server OAuth incomplete; no mailbox connected.
+
 SEPTEMBER 28: Missing Owner tools / connect Gemini
 [fixed locally] Container packaging omitted owner-crm.mjs; staged startup now passes.
 [pending] Owner push, successful Cloud Run + Hosting build, then real Gemini test.

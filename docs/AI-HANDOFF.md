@@ -8,6 +8,30 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## September 28 late: drawer cleanup and Gmail connection guidance (local)
+
+Owner tools leaked into Messages because .msgs hid the meter but not the new
+custom element. Shared CSS now hides owner setup there; setup is collapsed in
+Systems, with consistent 12px controls, margins and wrapping. Shortened status
+copy, follow-up legend explanation and Outbound help/buttons. Consumer unchanged.
+Shared CSS cache v12 across backend pages; owner widget v2; Outbound JS v4.
+
+Admin Connect Gmail links to /outbound.html#gmail and opens/focuses the Gmail
+control. Composer also links there when no mailbox exists. Outbound shows actual
+gmailReady; when false, Connect opens a compact OAuth setup guide instead of a
+known failing request. Existing approved OAuth and reviewed send flows unchanged.
+
+User's live screenshot shows zero mailboxes and gmailReady false. This is NOT
+fixed by CSS: Fromsa must configure the OAuth client and four GMAIL_* values per
+docs/OUTBOUND-SETUP.md. Repo forbids us touching credentials/environment without
+Fromsa handling the step. No secrets read/changed; no real mail sent or connected.
+Vertex is now shown configured live, but successful Gemini inference unverified.
+Validation: styled owner UI fixture checks collapsed setup and Messages isolation;
+Outbound UI/seven widths, CRM 10k/two-sender flow, CRM failure injection, 29 Outbound
+unit checks, 19 intelligence checks and full app regression pass (fake providers).
+Next: owner push; complete Gmail OAuth setup, then connect both mailboxes in the
+same Admin workspace and verify reviewed test sends with Fromsa.
+
 ## September 28: Cloud Run startup packaging repair (prepared locally)
 
 Build 650f4d64-2b42-4b68-a4bc-40b37e0fc40c for 23b6458 passed the release tests

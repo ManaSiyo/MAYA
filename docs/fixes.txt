@@ -1,3 +1,8 @@
+SEPTEMBER 28 late: Owner tools leaked into Messages; Gmail link was indirect
+Prepared scoped tab visibility and consistent compact controls. Admin link now
+opens Outbound Gmail directly; missing OAuth configuration opens setup steps.
+Server credentials still need owner configuration. Fixture checks pass; not live.
+
 SEPTEMBER 28: Cloud Run image omitted owner CRM module
 [prepared] Build 650f4d64 failed server startup after release tests passed.
 Dockerfile now copies owner-crm.mjs. Prior COPY set reproduced module-not-found;

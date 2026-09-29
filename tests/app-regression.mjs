@@ -86,6 +86,7 @@ const PAGE_ROOT = served ? 'http://127.0.0.1:8899/' : pathToFileURL(ROOT + '/').
 let failed = 0;
 assertCanon(); // Backend follows frontend chrome; consumer styling stays isolated from V4.
 assertContainer(); // Missing runtime files must fail before deploying Cloud Run.
+if(!CANON_SOURCE.includes('#drawer.msgs > maya-owner-crm') || !readFileSync(join(ROOT,'aesthetics/ui/owner-crm.js'),'utf8').includes('/outbound.html#gmail'))throw Error('Owner setup must stay in Systems and link directly to Gmail');
 const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name); if (!cond) failed++; };
 
 // September 28: populated status popovers must escape the table's clipping layer.
@@ -124,7 +125,7 @@ ok('Lead status filter has an isolated readable layer and scoped section carets'
  if(!chrome.includes('.model-group strong {font-size:12px;')) throw Error('Model typography regression');
  if(!chrome.includes('.bl-step .v) {font-size:20px;')) throw Error('Bottom Line size regression');
  if(!chrome.includes('font-size:11px;padding:6px 10px;min-height:30px;')) throw Error('Compact pills regression');
- if(!outbound.includes('Refresh from Google Sheet') || !outbound.includes('id="drawer-help"')) throw Error('Outbound menu regression');
+ if(!outbound.includes('Refresh Sheet') || !outbound.includes('id="drawer-help"')) throw Error('Outbound menu regression');
 }
 
 // September 27: Outbound CRM and shared meter contracts (run before browser fixtures).

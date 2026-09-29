@@ -1,9 +1,8 @@
-[Codex][v14.40] Include owner CRM module in Cloud Run image
+[Codex][v14.40] Simplify owner drawer and clarify Gmail connection
 
-Fix startup failure by shipping the statically imported owner-crm.mjs.
-Add a local import packaging check to Cloud Build and app regression so repository
-unit tests cannot hide missing image files. Update shared handoff and incident notes.
-Validation: packaging gate; reproduce old missing-module failure; corrected staged
-server health 200 with external fetch disabled; full app regression.
-Not deployed. Push triggers production build; verify all steps then Test Gemini.
-No keys, IAM, production variables, billing, or consumer UI changes.
+Hide owner setup in Messages, collapse it in Systems, and standardize its spacing.
+Shorten Outbound copy. Link Admin/composer directly to Gmail controls and expose
+owner setup guidance when server OAuth is incomplete. Refresh shared CSS cache.
+Verified styled owner fixture, full regression, responsive Outbound/CRM and
+failure suites, Outbound/intelligence unit tests. No actual email or credentials.
+Gmail remains blocked on owner configuration; push/deploy remains owner action.

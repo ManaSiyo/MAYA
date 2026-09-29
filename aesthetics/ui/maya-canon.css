@@ -507,3 +507,17 @@ maya-owner-crm{display:block;font:400 12px/1.5 var(--maya-font-ui,Jost,sans-seri
 maya-owner-crm button{font:inherit;margin:4px 4px 4px 0}
 maya-owner-crm .gmail-candidates{max-height:280px;overflow:auto;overflow-wrap:anywhere}
 maya-owner-crm .gmail-candidates input{box-sizing:border-box;max-width:100%;font:inherit}
+
+/* Keep account setup out of conversation tabs; calm, consistently spaced controls. */
+#drawer.msgs > maya-owner-crm{display:none!important}
+html[data-maya-surface] #drawer maya-owner-crm{margin:24px 0;padding:0 8px}
+html[data-maya-surface] #drawer .owner-settings summary{cursor:pointer;font:500 12px/1.5 var(--maya-font-ui);color:var(--maya-ink);padding:12px 0}
+html[data-maya-surface] #drawer maya-owner-crm p{margin:12px 0;line-height:1.6;color:var(--maya-secondary)}
+html[data-maya-surface] #drawer maya-owner-crm button,
+html[data-maya-surface] #drawer maya-owner-crm a.drawer-link{display:inline-flex;align-items:center;justify-content:center;max-width:100%;padding:8px 12px;margin:4px 8px 8px 0;border:0.5px solid var(--maya-line,rgba(255,255,255,.18));border-radius:999px;background:rgba(3,15,29,.45);color:var(--maya-ink);font:400 12px/1.5 var(--maya-font-ui);text-decoration:none;white-space:normal}
+#outbound-drawer #drawer-workspace>button{margin-block:6px}
+#outbound-drawer p{line-height:1.6;margin-block:12px}
+#gmail-status{overflow-wrap:anywhere}
+.followup-legend{row-gap:8px}
+
+#gmail-setup{margin:12px 0;font:400 12px/1.6 var(--maya-font-ui);overflow-wrap:anywhere}#gmail-setup summary{cursor:pointer}#gmail-setup code{font:inherit;word-break:break-word}.connect-sender{display:inline-block;margin:8px 0}.connect-sender[hidden]{display:none}

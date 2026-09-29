@@ -60,5 +60,6 @@ try{
  await page.addInitScript(()=>window.IntersectionObserver=undefined);await page.reload();await page.waitForFunction(()=>document.querySelectorAll('.people-table tbody tr').length===250);
  await page.locator('.people-scroll').evaluate(e=>e.scrollTop=e.scrollHeight);await page.waitForFunction(()=>document.querySelectorAll('.people-table tbody tr').length===500);
  await page.locator('#menu-toggle').click();await page.locator('.ai-meter-refresh').click();await page.waitForFunction(()=>document.querySelector('.ai-meter-value').textContent==='$0.120');
+ await page.keyboard.press('Escape');await page.evaluate(()=>location.hash='gmail');await page.locator('#connect-gmail').waitFor({state:'visible'});assert.equal(await page.locator('#drawer-workspace-tab').getAttribute('aria-selected'),'true');
  assert.deepEqual(errors,[]);console.log('10,000-contact continuous scrolling, full-dataset search, two senders, sample personalization, reviewed send, AI meter and seven responsive widths passed.');
 }finally{await browser.close();}
