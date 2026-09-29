@@ -1,9 +1,7 @@
-[Codex][v14.40] Simplify style preview and compare fonts
+[Codex][v14.40] Preview liquid glass and map MAYA pages
 
-Replace dense token sidebar with font samples, contextual examples and a text
-guide. Add fixed Jost/Arial/Cormorant comparison, technical font disclosure and
-page inventory. Collapse advanced controls and state variants. Use 12px counts
-and centered SVG icons. Keep all changes preview-only.
-Validation: gallery at seven widths, type/icon geometry, font selection, settings
-persistence/export, overlays and accessibility. Full regression passes; actual web-font loading and screenshot verified.
-No global font/material rollout or push.
+Simplify gallery to two sections: current/proposed pills in context and a
+12-file page map. Keep fonts/reference and settings expandable. New curved
+highlights stay gallery-only; preserve small text and centered icons.
+Validation: seven-width gallery checks and full regression, visual review.
+No live styling changes or push.

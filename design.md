@@ -113,3 +113,12 @@ Acceptance: 320/390/650/768/1024/1440/1920px; no page overflow, long labels, act
 keyboard focus, disabled controls, open overlays, readable text, reduced motion,
 forced colors and no-blur fallback. Tokens own appearance; components own shape
 and semantics; pages own layout/data. No page-specific material overrides.
+
+## Liquid glass review (September 29)
+
+The component preview presents two sections: a current/proposed pill comparison
+and a 12-file page map grouped by audience. The proposed finish uses a brighter
+curved rim and soft inset highlights over the galaxy; typography and geometry
+stay measured and compact. It is scoped to the gallery via data-finish, not an
+approved replacement for the master. Fonts, states and settings remain expandable.
+Global application still follows owner review.

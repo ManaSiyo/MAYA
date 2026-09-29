@@ -9,7 +9,7 @@ await page.route('**/*',async r=>{const u=new URL(r.request().url());if(u.hostna
 try{
  await page.goto('https://maya.test/playground/components/index.html');await page.locator('#tokens input').first().waitFor({state:'attached'});
  const baseline=JSON.parse(readFileSync(root+'/docs/design-archive/tap-to-listen-computed.json'));
- const pill=page.locator('.maya-pill').first();
+ const pill=page.locator('[data-finish="current"]');
  const actual=await pill.evaluate(e=>{const c=getComputedStyle(e);return Object.fromEntries(['paddingTop','paddingRight','borderRadius','borderTopWidth','backgroundColor','backdropFilter','boxShadow','fontSize','fontWeight','letterSpacing'].map(k=>[k,c[k]]));});
  for(const k of ['paddingTop','paddingRight','borderRadius','borderTopWidth','backgroundColor','backdropFilter','boxShadow'])assert.equal(actual[k],baseline.pill[k],k);
  for(const k of ['fontSize','fontWeight','letterSpacing'])assert.equal(actual[k],baseline.label[k],k);
@@ -26,6 +26,10 @@ try{
  const iconCenter=await page.locator('.maya-icon-button').first().evaluate(e=>{const b=e.getBoundingClientRect(),s=e.querySelector('svg').getBoundingClientRect();return Math.abs((b.x+b.width/2)-(s.x+s.width/2))+Math.abs((b.y+b.height/2)-(s.y+s.height/2));});assert.ok(iconCenter<1);
  await page.locator('#preview-font').selectOption('Arial, sans-serif');assert.match(await page.locator('#buttons .maya-pill').first().evaluate(e=>getComputedStyle(e).fontFamily),/Arial/);
  assert.equal(await page.locator('.font-card').count(),3);assert.match(await page.locator('#pages').textContent(),/12 page files/);
+ assert.equal(await page.locator('#gallery > section').count(),2);
+ assert.equal(await page.locator('.page-map .page-link').count(),12);
+ assert.equal(await page.locator('[data-finish="liquid"].maya-pill').first().evaluate(e=>getComputedStyle(e).fontSize),'10px');
+ assert.match(await page.locator('[data-finish="liquid"].maya-pill').first().evaluate(e=>getComputedStyle(e).backgroundImage),/linear-gradient/);
  for(const width of [320,390,650,768,1024,1440,1920]){
   await page.setViewportSize({width,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'overflow '+width);
   const open=page.getByRole('button',{name:'Open drawer',exact:true});await open.click();const dialog=page.locator('.maya-drawer');assert.ok(await dialog.isVisible());let box=await dialog.boundingBox();assert.ok(box.x>=0&&box.x+box.width<=width+1);
