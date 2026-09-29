@@ -1,3 +1,8 @@
+SEPTEMBER 29: Action material had separate frontend/backend definitions
+Shared maya-buttons.css now supplies the action finish on all canon pages, loaded
+after local styles. No table/link/logo blanket treatment; design.md records scope.
+Existing drawer structure differs and remains an explicit follow-up, not claimed fixed.
+
 SEPTEMBER 29: Outbound visual drift and missing Category
 Old To Do CSS hid source columns, including Category. Retired that view and its
 rules. Competing campaign selectors overrode centered capsule styling; removed

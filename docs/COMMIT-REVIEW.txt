@@ -1,8 +1,9 @@
-[Codex][v14.40] Simplify Outbound and add column filters
+[Codex][v14.40] Establish design master and shared Liquid Glass buttons
 
-Four primary lists, fewer repeated headings/actions, centered frontend-glass
-campaign controls, four metrics, and sidebar Email History percentage dial.
-All source columns persist; sort, contains and value filters precede batching.
-Secondary views remain in drawer More. Document remaining drawer mismatches.
-Validated responsive populated UI, 10k CRM, failure/session, app regression and
-Outbound/intelligence units. No live providers, secrets or data writes. Not pushed.
+- Add root design.md with frontend/backend rules and linked button reference.
+- Share action material across all 11 pages without changing sizes or behavior.
+- Preserve plain logo/handle/link treatments and add accessible state/fallback rules.
+- Point agent instructions at master; exclude it from public hosting.
+Validation: design contract, full app regression, seven-width Outbound/Lead Station
+fixture suite; desktop visual inspection. No production push or provider changes.
+Remaining: drawer markup differs; live Gmail/Gemini verification remains pending.

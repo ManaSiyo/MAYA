@@ -1,3 +1,9 @@
+SEPTEMBER 29: Master design.md and Liquid Glass
+[prepared] Root design.md separates client frontend and all backend aesthetics.
+[prepared] One shared Liquid Glass action stylesheet on all 11 pages; compact sizes retained.
+[verified] Responsive fixtures, source coverage and frontend reduced-motion behavior.
+[pending] Owner push and deployed visual review; drawer markup differences documented.
+
 SEPTEMBER 29: Simplify Outbound and compare frontend aesthetics
 [prepared] All/Ceremonial/Corporate/Fashion House; removed To Do and repeated headings.
 [prepared] Centered frontend-glass campaign capsules; reload icon; four useful totals.

@@ -1,3 +1,4 @@
+import './design-contract.mjs';
 import {assertOutboundPriority} from './outbound-priority.mjs';
 import {assertCanon} from './canon-contract.mjs';
 import {assertContainer} from './container-contract.mjs';
@@ -171,6 +172,12 @@ await pg.route('**/*', rt => rt.request().url().startsWith(PAGE_ROOT) ? rt.conti
 console.log('\nMAYA app regression\n');
 await pg.goto(PAGE_ROOT + AT.index, { waitUntil: 'domcontentloaded' });
 await pg.waitForTimeout(2500);
+const glass = await pg.locator('#voice-bar').evaluate(el=>({frost:getComputedStyle(el).backdropFilter,shadow:getComputedStyle(el).boxShadow}));
+ok('Client action loads shared Liquid Glass material',glass.frost==='blur(22px) saturate(1.8)' && glass.shadow.includes('inset'));
+await pg.emulateMedia({reducedMotion:'reduce'});
+ok('Shared glass respects reduced motion',await pg.locator('#voice-bar').evaluate(el=>getComputedStyle(el).transitionDuration)==='0s');
+await pg.emulateMedia({reducedMotion:'no-preference'});
+
 
 const r = await pg.evaluate(async () => {
   const out = {};

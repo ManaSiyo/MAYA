@@ -1,5 +1,7 @@
 # MAYA
 
+Aesthetic master: [design.md](../design.md), covering client frontend and all backend pages.
+
 The whole system, written for a fresh conversation. If you are an assistant
 picking this up with no memory of what came before, read this file first and
 then `AI-HANDOFF.md` for the current task and `history.txt` for the older

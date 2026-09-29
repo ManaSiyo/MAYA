@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {canonPages} from './canon-contract.mjs';
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+for(const page of canonPages) assert.equal((read(page).match(/maya-buttons\.css\?v=1/g)||[]).length,1,page);
+const design=read('design.md'),css=read('aesthetics/ui/maya-buttons.css');
+assert.match(design,/## Frontend/);assert.match(design,/## Backend/);
+assert.match(design,/jahed\/components\/glass-button/);
+assert.match(css,/prefers-reduced-motion/);assert.match(css,/forced-colors/);assert.match(css,/@supports not/);
+assert.match(css,/:focus-visible/);assert.match(css,/aria-disabled/);
+assert.ok(JSON.parse(read('docs/firebase.json')).hosting.ignore.includes('design.md'));
+assert.match(read('AGENTS.md'),/Read root `design.md`/);
+assert.equal(read('AGENTS.md'),read('CLAUDE.md'));
+console.log('Design master and shared Liquid Glass coverage passed');

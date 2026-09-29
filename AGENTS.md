@@ -126,6 +126,10 @@ See docs/OUTBOUND-SETUP.md for owner-only connection and launch steps.
 
 ## Visual canon
 
+Read root `design.md` before any aesthetic change. It is the master specification
+for client frontend and every backend page. Shared action chrome lives in
+`aesthetics/ui/maya-buttons.css`; keep page geometry and behavior separate.
+
 `docs/Aesthetics.pdf` (V3) is the primary aesthetic reference.
 `docs/MAYA-V4-CANON.md` extends it for dense interfaces; it does not replace V3.
 Backend pages load `aesthetics/ui/maya-canon.css`; consumer and Playground retain

@@ -8,6 +8,28 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## September 29: master design specification and shared Liquid Glass
+
+Root design.md is the master aesthetic document: shared identity/buttons, separate
+client frontend and all backend scope, compact type/density, semantic colors,
+accessibility and remaining drawer markup differences. AGENTS/CLAUDE point to it.
+Firebase excludes design.md from Hosting; served URLs are unchanged.
+
+New aesthetics/ui/maya-buttons.css supplies one native Liquid Glass action finish
+across all 11 canon pages, including frontend/Playground and the embedded Operations
+engine. Loaded last; existing font sizes, geometry, behavior and semantic colors
+remain page-owned. Excludes plain links, logo/hamburger handles, image tiles,
+column filters and switches. Includes selected/hover/disabled/focus, reduced motion,
+forced colors and no-backdrop fallback. Inspired by owner-linked Jahed Glass Button;
+not a copied React dependency. No provider/credential/data changes.
+
+Validation: design-contract imported by app-regression; all 11 stylesheet links,
+master rules and hosting exclusion checked. Full app regression and populated
+Outbound/Lead Station seven-width suite pass; desktop screenshot inspected.
+Frontend computed frost/shadow and reduced-motion assertions added.
+Next: owner push and visual review on deployed client/Admin/Outbound. No push here.
+Drawer markup parity and live Gmail/owner/Gemini verification remain open below.
+
 ## September 29: compact Outbound lists, history and column filters (local)
 
 Changed backend/outbound.html/js and shared maya-canon.css (cache v13 across
