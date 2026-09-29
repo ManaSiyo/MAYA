@@ -46,7 +46,6 @@ address onto its new file, so every URL that ever worked still works.
 frontend/index.html        the app            → served at /
 backend/status.html        Systems Map        → /status.html
                            Affiliates Beta    → /affiliates.html (admin-only route view)
-backend/marketing.html     Marketing          → /marketing.html
 backend/operations.html    Operation Room     → /operations.html
 backend/outbound.html      Outbound           → /outbound.html
 backend/outbound.js        Outbound UI logic (served alongside its page)
@@ -153,3 +152,7 @@ is actually tested. tests/crm-ui.mjs covers append identity, selection and searc
 Container packaging: tests/container-contract.mjs checks local runtime imports
 against docs/server/Dockerfile COPY sources before the image is built. Run it
 when adding server modules or changing the Dockerfile.
+
+Standalone Marketing was retired September 29. `/marketing.html` and
+`/backend/marketing.html` redirect to Admin; keep its embedded marketing modules
+and server endpoints intact.

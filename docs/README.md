@@ -52,11 +52,13 @@ plan. A tip button exists purely as proof that payment plumbing works.
 
 ## 2. The served screens
 
+Standalone Marketing is retired. Its old URLs redirect to Admin, which owns
+the marketing charts and lead station.
+
 | File | What it is | Who sees it |
 |---|---|---|
 | `frontend/index.html` | The MAYA app. Moodboard, community wall, favorites and the approved filing cabinet. | Clients |
 | `backend/status.html` | Admin. Command briefing, health, traffic, Marketing, submissions, prompting and changelog. | Admins only |
-| `backend/marketing.html` | Standalone Marketing page, retained as the approved fallback. | Admins only |
 | `backend/backend.html` | The Brief plus the embedded Operations Room. One submission, opened from Admin. | Admins only |
 | `backend/outbound.html` | Outbound campaigns, Hunter/Sheets imports, research and drafts. | Admins, account-scoped |
 | `backend/operations.html` | The standalone Operation Room, the beta bench for pattern experiments. | Admins only |

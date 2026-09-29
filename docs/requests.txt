@@ -1,3 +1,8 @@
+SEPTEMBER 29: Remove standalone Marketing
+[prepared] Removed duplicate page after verifying Admin owns its functionality.
+[prepared] Old Marketing URLs redirect to Admin; gallery count is 11.
+[unchanged] Admin charts/leads and marketing server endpoints. Not deployed.
+
 SEPTEMBER 29: Typography and interactive glass choices
 [prepared] Visible typography hierarchy with usage, font family, size and weight.
 [prepared] Third clearer finish, numbered layer settings, toggle and live sliders.

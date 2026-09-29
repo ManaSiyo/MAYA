@@ -25,9 +25,9 @@ try{
  assert.equal(await page.locator('.maya-metric-value').first().evaluate(e=>getComputedStyle(e).fontSize),'12px');
  const iconCenter=await page.locator('.maya-icon-button').first().evaluate(e=>{const b=e.getBoundingClientRect(),s=e.querySelector('svg').getBoundingClientRect();return Math.abs((b.x+b.width/2)-(s.x+s.width/2))+Math.abs((b.y+b.height/2)-(s.y+s.height/2));});assert.ok(iconCenter<1);
  await page.locator('#preview-font').selectOption('Arial, sans-serif');assert.match(await page.locator('#buttons .maya-pill').first().evaluate(e=>getComputedStyle(e).fontFamily),/Arial/);
- assert.equal(await page.locator('.font-card').count(),3);assert.match(await page.locator('#pages').textContent(),/12 page files/);
+ assert.equal(await page.locator('.font-card').count(),3);assert.match(await page.locator('#pages').textContent(),/11 page files/);
  assert.equal(await page.locator('#gallery > section').count(),3);
- assert.equal(await page.locator('.page-map .page-link').count(),12);
+ assert.equal(await page.locator('.page-map .page-link').count(),11);
  assert.equal(await page.locator('[data-finish="liquid"].maya-pill').first().evaluate(e=>getComputedStyle(e).fontSize),'10px');
  assert.match(await page.locator('[data-finish="liquid"].maya-pill').first().evaluate(e=>getComputedStyle(e).backgroundImage),/linear-gradient/);
  assert.ok(await page.locator('#fonts').isVisible());

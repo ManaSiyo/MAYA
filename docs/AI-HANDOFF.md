@@ -8,6 +8,19 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## September 29: retired standalone Marketing
+
+Owner approved removal if independent. Confirmed status.html already contains
+its marketing renderers, chart, leads, sources and API loading, without loading
+marketing.html. Deleted backend/marketing.html only; Admin and server unchanged.
+docs/firebase.json replaces its rewrite with 301 redirects from /marketing.html
+and /backend/marketing.html to /status.html. Gallery lists 11 files.
+Updated AGENTS/CLAUDE, README, design.md and test inventories. Legacy Marketing
+assertions now check active Admin code; obsolete standalone-only layout tests
+retired, server-data checks retained. Added file absence/redirect assertions.
+Validation: full regression (including Admin browser fixtures and gallery).
+No push/deploy. Next: owner can review locally; deployment requires explicit push.
+
 ## September 29: interactive finish and typography review
 
 Gallery now has Glass / Typography / Page map. Eleven visible type roles show

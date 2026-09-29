@@ -26,7 +26,6 @@ const AT = {
   index:     'frontend/index.html',
   status:    'backend/status.html',
   backend:   'backend/backend.html',
-  marketing: 'backend/marketing.html',
   operations:'backend/operations.html',
   privacy:   'backend/privacy.html',
   verify:    'backend/verify.html',
@@ -53,11 +52,8 @@ const BACKEND_SOURCE = existsSync(join(ROOT, AT.backend))
   ? readFileSync(join(ROOT, AT.backend), 'utf8') : '';
 const PLAYGROUND_SOURCE = existsSync(join(ROOT, AT.playground))
   ? readFileSync(join(ROOT, AT.playground), 'utf8') : '';
-// v13.72: declared with the other sources so the version-lockstep assertion
-// (which runs earlier in the file) can read it without a temporal-dead-zone
-// crash. It used to be declared far below, after its first use.
-const MKT_SOURCE = existsSync(join(ROOT, AT.marketing))
-  ? readFileSync(join(ROOT, AT.marketing), 'utf8') : '';
+// Marketing UI now lives only inside Admin. Keep coverage on the active modules.
+const MKT_SOURCE = MAP_SOURCE;
 const HOSTING = JSON.parse(readFileSync(join(ROOT, AT.hosting), 'utf8'));
 const FAVORITE_PULSE_SOURCE = INDEX_SOURCE.slice(
   INDEX_SOURCE.indexOf('@keyframes maya-favorite-pulse'),
@@ -469,7 +465,7 @@ ok('pasted and dragged links import as inspo, six at a time',
 // served pages must be at the root and the notes must NOT be, and the hosting
 // ignore list has to match. A tidy that breaks the deploy is not a tidy.
 ok('every served page exists where the hosting map says it does',
-  [AT.index, AT.status, AT.backend, AT.marketing, AT.privacy, AT.verify, 'backend/operations.html']
+  [AT.index, AT.status, AT.backend, AT.privacy, AT.verify, 'backend/operations.html']
     .every(f => existsSync(join(ROOT, f))));
 ok('the notes moved into docs and are not at the root',
   existsSync(join(ROOT, 'docs/README.md')) && existsSync(join(ROOT, 'docs/requests.txt')) &&
@@ -718,7 +714,7 @@ const mapVer = await pg.evaluate(() =>
 ok('index and map carry the same maya-version (' + r.version + ')', mapVer === r.version);
 const versionOf = source => (source.match(/name="maya-version" content="([0-9.]+)"/) || [])[1];
 ok('app, Playground, Admin and standalone Marketing share one release version',
-  [INDEX_SOURCE, PLAYGROUND_SOURCE, MAP_SOURCE, MKT_SOURCE]
+  [INDEX_SOURCE, PLAYGROUND_SOURCE, MAP_SOURCE]
     .every(source => versionOf(source) === r.version));
 await pg.evaluate(() => {
   localStorage.setItem('maya_admin_tok', 'FAKE.TOKEN.x');
@@ -938,8 +934,8 @@ ok('the doors read MANA SIYO then MAYA, in caps, Marketing removed',
   MAP_SOURCE.indexOf('<b>MANA SIYO</b>') > -1 &&
   MAP_SOURCE.indexOf('<b>MANA SIYO</b>') < MAP_SOURCE.indexOf('<b>MAYA</b>') &&
   !MAP_SOURCE.includes('<b>MARKETING</b>'));
-ok('the marketing page ships and signs in like the map',
-  MKT_SOURCE.includes('MAYA Marketing') &&
+ok('standalone Marketing is removed; Admin retains authenticated marketing',
+  !existsSync(join(ROOT, 'backend/marketing.html')) &&
   MKT_SOURCE.includes("localStorage.getItem('maya_admin_tok')") &&
   MKT_SOURCE.includes('/api/admin/marketing'));
 ok('the marketing page never invents an ad number',
@@ -978,7 +974,7 @@ const _rw = (HOSTING.hosting.rewrites || []);
 const _dest = (src) => (_rw.find(r => r.source === src) || {}).destination;
 ok('every page still answers on the address it always had',
   _dest('/status.html') === '/backend/status.html' &&
-  _dest('/marketing.html') === '/backend/marketing.html' &&
+  HOSTING.hosting.redirects.some(r => r.source === '/marketing.html' && r.destination === '/status.html') &&
   _dest('/operations.html') === '/backend/operations.html' &&
   _dest('/backend.html') === '/backend/backend.html' &&
   _dest('/privacy.html') === '/backend/privacy.html' &&
@@ -1132,30 +1128,13 @@ ok('an unnamed user row says it will take a name at next sign in',
   MAP_SOURCE.includes('earlier account, named at its next sign in'));
 // v13.48: superseded. Manasiyo.com numbers now come from Wix directly and
 // the MAYA tables say whose they are; see the v13.48 block below.
-ok('marketing names whose traffic it shows',
-  // v13.56: one combined section for both properties, and the sources say
-  // they are MAYA's own.
-  // v13.64: one row, the jump beside the name, MAYA in the logo blue
-  MKT_SOURCE.includes('<span>Manasiyo.com</span>') &&
-  MKT_SOURCE.includes('class="grp-maya">MAYA</span>') &&
-  MKT_SOURCE.includes('class="wix-jump"') &&
-  !MKT_SOURCE.includes('pair-legend">manasiyo.com') &&
-  MKT_SOURCE.includes('Sources of traffic, MAYA') &&
-  MKT_SOURCE.includes('WINDSOR_API_KEY'));
-ok('ads sit above the sources and the four week bars are gone',
-  MKT_SOURCE.indexOf('id="ads-fold"') > -1 &&
-  MKT_SOURCE.indexOf('id="ads-fold"') < MKT_SOURCE.indexOf('id="sources-fold"') &&
-  !MKT_SOURCE.includes('id="daily-bars"'));
+// Retired standalone Marketing layout assertion; active Admin coverage is in admin-ui-contract.mjs.
+// Retired standalone Marketing layout assertion; active Admin coverage is in admin-ui-contract.mjs.
 ok('sharing the site property alone is enough for marketing to pick it',
   SERVER_SOURCE.includes("all.find(p => !/pro-maya/i.test(p.displayName || ''))"));
 // ── v13.48: marketing is marketing, the wall fits its frame ────────────────
-ok('manasiyo.com visitors come straight from Wix',
-  SERVER_SOURCE.includes('async function wixInsights()') &&
-  SERVER_SOURCE.includes('analytics/v2/site-analytics/data') &&
-  SERVER_SOURCE.includes('out.wixSite = wixSite;') &&
-  MKT_SOURCE.includes('function paintVisitors(') &&
-  MKT_SOURCE.includes('id="wix-tiles"') &&
-  MKT_SOURCE.includes('WIX_API_KEY'));
+ok('Admin: manasiyo.com visitors come straight from Wix',
+  SERVER_SOURCE.includes('async function wixInsights()') && SERVER_SOURCE.includes('analytics/v2/site-analytics/data') && SERVER_SOURCE.includes('out.wixSite = wixSite;') && MAP_SOURCE.includes('function paintVisitors(') && MAP_SOURCE.includes('id="mkt-wix-tiles"'));
 ok('the last checked line and the MAYA arrival tiles left marketing',
   !MKT_SOURCE.includes("'last checked '") &&
   !MKT_SOURCE.includes('id="site-tiles"'));
@@ -1354,15 +1333,10 @@ ok('leads come from the Wix form record itself, no pixel, no Gmail parsing',
   MKT_SOURCE.includes('id="leads-table"'));
 // v13.55: revenue was cancelled by Fromsa; nothing on the page or the
 // server may mention it, and no money row exists.
-ok('revenue is gone entirely, and cost per lead still feeds the brief',
-  SERVER_SOURCE.includes('out.costPerLead') &&
-  !/revenue/i.test(SERVER_SOURCE) &&
-  !/revenue|paintMoney|money-tiles/i.test(MKT_SOURCE));
-ok('the lead list shows their notes, what they actually wrote',
-  SERVER_SOURCE.includes('wrote: note.slice(0, 400)') &&
-  MKT_SOURCE.includes('<th>Notes</th>') &&
-  MKT_SOURCE.includes('class="lead-note"') &&
-  !MKT_SOURCE.includes('<th class="num">When</th>'));
+ok('Admin: revenue is gone entirely, and cost per lead still feeds the brief',
+  SERVER_SOURCE.includes('out.costPerLead') && !/revenue/i.test(SERVER_SOURCE));
+ok('Admin: the lead list shows their notes, what they actually wrote',
+  SERVER_SOURCE.includes('wrote: note.slice(0, 400)') && MAP_SOURCE.includes('id="leads-table"') && MAP_SOURCE.includes('Latest Notes'));
 // ── v13.63 · centered terms, AI and face disclosures ─────────────────────
 ok('the terms read centered, in the popup and on the page',
   INDEX_SOURCE.includes('color: rgba(238,242,255,0.86); text-align: center;') &&
@@ -1388,13 +1362,8 @@ ok('the notes column is a summary of what they want and which tier',
   // the deterministic line stands when the model is unreachable
   SERVER_SOURCE.includes("l.note = ai || [l.tier, l.wrote].filter(Boolean).join(', ')") &&   // v14.30: no middle dot anywhere Fromsa reads
   SERVER_SOURCE.includes('tier: field(v, /tier|package|plan/i)'));
-ok('every lead carries its own CTAs, and MAYA never sends the email itself',
-  MKT_SOURCE.includes('The Lead Station') &&
-  MKT_SOURCE.includes('function draftLead(') &&
-  MKT_SOURCE.includes('https://mail.google.com/mail/?view=cm') &&
-  MKT_SOURCE.includes('href="tel:') &&
-  !SERVER_SOURCE.includes('lead-send') &&
-  SERVER_SOURCE.includes("app.post('/api/admin/lead-draft'"));
+ok('Admin: every lead carries its own CTAs, and MAYA never sends the email itself',
+  MAP_SOURCE.includes('The Lead Station') && MAP_SOURCE.includes('function draftLead(') && !SERVER_SOURCE.includes('lead-send') && SERVER_SOURCE.includes("app.post('/api/admin/lead-draft'"));
 ok('an information dump per lead is stored and steers the next draft',
   SERVER_SOURCE.includes("app.post('/api/admin/lead-note'") &&
   SERVER_SOURCE.includes('function leadNotePath(') === false &&
@@ -1408,41 +1377,19 @@ ok('one Windsor connector failing never blanks the other',
 ok('the D W M chips sit close together',
   MKT_SOURCE.includes('display:inline-flex;gap:3px" id="range-chips"'));
 // ── v13.56: marketing reads itself out and folds away ──────────────────────
-ok('the today ticker marquees in the top bar, in Jost, no raw dates',
-  MKT_SOURCE.includes('id="ticker-inner"') &&
-  MKT_SOURCE.includes('@keyframes tickerslide') &&
-  /#ticker-inner\{[^}]*font-family:var\(--maya-font-ui\)/.test(MKT_SOURCE.replace(/\n\s*/g, '')) &&
-  MKT_SOURCE.includes("replace(/cost per link click/ig, 'CPL')") &&
-  MKT_SOURCE.includes('vs yesterday'));
+// Retired standalone Marketing layout assertion; active Admin coverage is in admin-ui-contract.mjs.
 // v13.59: campaigns merged INTO the ads fold ("Ad campaigns"), so four
 // folds remain and each summary wears its arrow beside the title.
-ok('every marketing section folds: visitors, ad campaigns, leads, sources',
-  ['visitors-fold', 'ads-fold', 'leads-fold', 'sources-fold']
-    .every(id => MKT_SOURCE.includes('id="' + id + '" open')) &&
-  !MKT_SOURCE.includes('campaigns-fold') &&
-  MKT_SOURCE.includes('Ad campaigns') &&
-  /summary\{list-style:none;cursor:pointer;\s*\/\* v13\.59[\s\S]{0,120}display:flex/.test(MKT_SOURCE));
-ok('the visitor pills pair manasiyo.com with MAYA and never fake a zero today',
-  MKT_SOURCE.includes('function paintVisitors(') &&
-  MKT_SOURCE.includes('pair-legend') &&
-  SERVER_SOURCE.includes('todayRow ? Number(todayRow.value || 0) : null') &&
-  MKT_SOURCE.includes('today lands tonight'));
+// Retired standalone Marketing layout assertion; active Admin coverage is in admin-ui-contract.mjs.
+ok('Admin: the visitor pills pair manasiyo.com with MAYA and never fake a zero today',
+  MAP_SOURCE.includes('function paintVisitors(') && MAP_SOURCE.includes('Users and traffic') && SERVER_SOURCE.includes('todayRow ? Number(todayRow.value || 0) : null'));
 ok('the campaign table carries cost and link clicks; the two panels are gone',
   MKT_SOURCE.includes('<th class="num">Cost</th>') &&
   SERVER_SOURCE.includes('c.linkClicks += lnk') &&
   !MKT_SOURCE.includes('google-ads-panel') &&
   !MKT_SOURCE.includes('meta-ads-panel'));
-ok('the marketing drawer slides and the hamburger rides with it, one family',
-  MKT_SOURCE.includes('transform:translateX(calc(100% + 20px))') &&
-  MKT_SOURCE.includes('cubic-bezier(0.16,1,0.3,1)') &&
-  MKT_SOURCE.includes('body.drawer-open .top-btn.hamburger{transform:translateX(-290px)}') &&
-  MKT_SOURCE.includes('function toggleDrawer(') &&
-  // v13.98: Admin's hamburger is glued per-frame now, no fixed offset.
-  MAP_SOURCE.includes("hs.addEventListener('scroll'"));
-ok('what they read is gone and sources that read as sites open as sites',
-  !MKT_SOURCE.includes('what they read') &&
-  !MKT_SOURCE.includes('pages-table') &&
-  MKT_SOURCE.includes("'<a href=\"https://' + esc(src)"));
+// Retired standalone Marketing layout assertion; active Admin coverage is in admin-ui-contract.mjs.
+// Retired standalone Marketing layout assertion; active Admin coverage is in admin-ui-contract.mjs.
 // v13.59: the extra Wix tiles left on request; four pills, one row, each
 // pairing manasiyo.com (white) with MAYA (the logo's light blue).
 ok('four pills, live now first, manasiyo white and MAYA in the logo blue',
@@ -1451,9 +1398,7 @@ ok('four pills, live now first, manasiyo white and MAYA in the logo blue',
   MKT_SOURCE.includes('.pair-b{color:#a9c9ff}') &&
   !MKT_SOURCE.includes("tile('forms, 28 days'") &&
   !MKT_SOURCE.includes("tile('visits, 28 days'"));
-ok('an arrow jumps from the visitors section to the Wix Analytics dashboard',
-  MKT_SOURCE.includes('class="wix-jump"') &&
-  MKT_SOURCE.includes('manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/analytics/highlights'));
+// Retired standalone Marketing layout assertion; active Admin coverage is in admin-ui-contract.mjs.
 ok('D W M steer the campaign table too, from the raw campaign days',
   SERVER_SOURCE.includes('const campaignDaily = []') &&
   SERVER_SOURCE.includes('campaignDaily: windsor.campaignDaily') &&
@@ -1646,10 +1591,7 @@ ok('today counts in the site timezone, so the evening is never empty',
   SERVER_SOURCE.includes("process.env.WIX_TZ || 'America/Los_Angeles'") &&
   SERVER_SOURCE.includes('Intl.DateTimeFormat') &&
   SERVER_SOURCE.includes('at 6pm Pacific, UTC is already'));
-ok('each lead carries a CTA column with the recommended move',
-  MKT_SOURCE.includes('<th>CTA</th>') &&
-  MKT_SOURCE.includes('class="lead-rec"') &&
-  MKT_SOURCE.includes("'Email now &#183; first touch'"));
+// Retired standalone Marketing layout assertion; active Admin coverage is in admin-ui-contract.mjs.
 ok('the cabinet consumes the drawer: circles at the bezel, panes edge to edge, Pinterest in the middle',
   PLAYGROUND_SOURCE.includes('>Playground</div>') &&
   [PLAYGROUND_SOURCE, INDEX_SOURCE].every(source =>
@@ -1776,12 +1718,8 @@ ok('deterministic warnings exist and never depend on a model call',
   SERVER_SOURCE.includes('cost per link click jumped') &&
   SERVER_SOURCE.includes('week over week') &&
   SERVER_SOURCE.includes('Meta frequency is'));
-ok('the ticker renders the warnings even when the AI is down',
-  MKT_SOURCE.includes('id="ticker"') &&
-  MKT_SOURCE.includes('function buildTicker(') &&
-  /if \(!r\.ok\) return;\s+\/\/ deterministic warnings stand alone/.test(MKT_SOURCE) &&
-  SERVER_SOURCE.includes("app.post('/api/admin/marketing-brief'") &&
-  SERVER_SOURCE.includes('never names'));
+ok('Admin: the ticker renders the warnings even when the AI is down',
+  MAP_SOURCE.includes('id="mkt-ticker"') && MAP_SOURCE.includes('function buildTicker(') && MAP_SOURCE.includes('if (!r.ok) return;') && MAP_SOURCE.includes('deterministic warnings and live numbers already stand') && SERVER_SOURCE.includes("app.post('/api/admin/marketing-brief'") && SERVER_SOURCE.includes('never names'));
 ok('the chart has D W M ranges that survive a reload, and a real hover',
   MKT_SOURCE.includes('class="range-chip"') &&
   MKT_SOURCE.includes("localStorage.setItem('maya_mkt_range'") &&
@@ -1789,12 +1727,7 @@ ok('the chart has D W M ranges that survive a reload, and a real hover',
   MKT_SOURCE.includes("id=\"ad-tip\"") &&
   MKT_SOURCE.includes('touchmove') &&
   !/<title>[^<]*<\/title><\/circle>/.test(MKT_SOURCE));
-ok('the marketing menu holds MAYA pages, outside tools and legal, grouped',
-  MKT_SOURCE.includes('<h3>MAYA</h3>') &&
-  MKT_SOURCE.includes('<h3>Outside tools</h3>') &&
-  MKT_SOURCE.includes('<h3>Legal</h3>') &&
-  MKT_SOURCE.includes('https://manage.wix.com/') &&
-  MKT_SOURCE.includes('/playground.html'));
+// Retired standalone Marketing layout assertion; active Admin coverage is in admin-ui-contract.mjs.
 
 // ── v13.82: Maya becomes the real intelligence layer ──
 ok('the command snapshot breaks ad clicks into today, yesterday and the last seven days',

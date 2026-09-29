@@ -79,7 +79,7 @@ Playground is the review surface, not a second aesthetic specification.
 
 ## Backend
 
-All operational pages: Admin/Systems/Affiliates, Outbound, Marketing, Brief,
+All operational pages: Admin/Systems/Affiliates, Outbound, Brief,
 Operation Room and its embedded engine. Privacy, Terms and verification share the
 same visual vocabulary. Their existing access rules remain unchanged.
 
@@ -117,7 +117,7 @@ and semantics; pages own layout/data. No page-specific material overrides.
 ## Liquid glass review (September 29)
 
 The component preview presents two sections: a current/proposed pill comparison
-and a 12-file page map grouped by audience. The proposed finish uses a brighter
+and an 11-file page map grouped by audience. The proposed finish uses a brighter
 curved rim and soft inset highlights over the galaxy; typography and geometry
 stay measured and compact. It is scoped to the gallery via data-finish, not an
 approved replacement for the master. Fonts, states and settings remain expandable.

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-export const canonPages=['frontend/index.html','playground/index.html','backend/status.html','backend/outbound.html','backend/marketing.html','backend/operations.html','backend/backend.html','backend/privacy.html','backend/terms.html','backend/verify.html','aesthetics/operations/index.html'];
+export const canonPages=['frontend/index.html','playground/index.html','backend/status.html','backend/outbound.html','backend/operations.html','backend/backend.html','backend/privacy.html','backend/terms.html','backend/verify.html','aesthetics/operations/index.html'];
 export function assertCanon(){
  const css=readFileSync(new URL('../aesthetics/ui/maya-canon.css',import.meta.url),'utf8');
  for(const path of canonPages){const s=readFileSync(new URL('../'+path,import.meta.url),'utf8');if(path.startsWith('frontend/')||path.startsWith('playground/')){assert.doesNotMatch(s,/maya-canon\.css/);assert.match(s,/Jost:wght@200;300;400/);continue;}assert.equal((s.match(/href="\/aesthetics\/ui\/maya-canon.css\?v=13"/g)||[]).length,1,path);assert.match(s,/data-maya-surface="(?:consumer|dense)"/);assert.doesNotMatch(s,/href="[^\"]*status-v13.19.css/);}
@@ -15,4 +15,4 @@ export function assertCanon(){
  assert.match(css,/clip-path:circle\(50%\)/);
  return true;
 }
-assertCanon();console.log('V4 canon source contract: 11 pages, typography, glass and accessibility passed');
+assertCanon();console.log('V4 canon source contract: 10 pages, typography, glass and accessibility passed');

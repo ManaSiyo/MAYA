@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = path => readFileSync(join(root, path), 'utf8');
 const admin = read('backend/status.html');
-const marketing = read('backend/marketing.html');
+
 const app = read('frontend/index.html');
 const playground = read('playground/index.html');
 
@@ -19,11 +19,12 @@ const test = async (name, fn) => {
 
 console.log('\nMAYA Admin UI contract\n');
 
-await test('standalone Marketing remains served as its own complete fallback', () => {
-  for (const token of ['id="ticker"', 'id="visitors-fold"', 'id="campaigns-table"',
-    'id="ad-chart"', 'id="leads-table"', 'id="sources-table"', 'id="bottom-fold"']) {
-    assert.ok(marketing.includes(token), token);
-  }
+await test('retired Marketing URLs redirect to Admin without a standalone file', () => {
+  assert.ok(!existsSync(join(root,'backend/marketing.html')));
+  const hosting=JSON.parse(read('docs/firebase.json')).hosting;
+  for(const source of ['/marketing.html','/backend/marketing.html'])
+    assert.ok(hosting.redirects.some(r=>r.source===source && r.destination==='/status.html' && r.type===301));
+  assert.ok(!hosting.rewrites.some(r=>r.destination==='/backend/marketing.html'));
 });
 
 await test('Admin embeds every approved Marketing surface under its shell', () => {
@@ -63,9 +64,9 @@ await test('the approved filing cabinet is promoted without removing Playground'
   assert.ok(playground.includes('>Playground</div>'));
 });
 
-await test('all four release surfaces carry v14.40', () => {
+await test('all three release surfaces carry v14.40', () => {
   const version = source => (source.match(/name="maya-version" content="([0-9.]+)"/) || [])[1];
-  assert.deepEqual([app, playground, admin, marketing].map(version), ['14.40', '14.40', '14.40', '14.40']);
+  assert.deepEqual([app, playground, admin].map(version), ['14.40', '14.40', '14.40']);
 });
 
 await test('v14.01 drawer floor: circular logo, Hey Maya toggle beside it', () => {

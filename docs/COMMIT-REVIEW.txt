@@ -1,7 +1,7 @@
-[Codex][v14.40] Add typography and interactive glass finish preview
+[Codex][v14.40] Retire standalone Marketing in favor of Admin
 
-Show eleven typography roles with usage and sizes. Add clearer glass, numbered
-layer values, preset selection, toggle and sliders affecting all preview states
-and overlays. Match plus circle height to its adjacent pill.
-Validation: seven-width browser checks, full regression, real-font visual review.
-Preview only; no live changes or push.
+Delete the duplicate Marketing page; preserve its two old URLs with redirects
+to Admin. Admin modules and API endpoints stay untouched. Update the page map,
+repository layout docs and regression coverage to the retained Admin surfaces.
+Validation: full app regression including Admin fixtures and component gallery.
+Local change only; no push or deployment.
