@@ -1,3 +1,8 @@
+SEPTEMBER 29: Preview typography and icon alignment
+Metric token wrongly retained 28px despite compact UI direction. Corrected to
+12px. Font-glyph plus icons replaced with centered SVG geometry; explicit browser
+checks now cover both. Simplified gallery exposes locations and font comparisons.
+
 SEPTEMBER 29: Competing specifications and page-level glass recipes
 Archived older aesthetic authorities. Computed master-pill extraction resolves the
 parent-versus-label typography mismatch; explicit material intensity prevents

@@ -1,3 +1,9 @@
+SEPTEMBER 29: Make the style preview understandable
+[prepared] Font comparison (Jost/Arial/Cormorant), where-used labels, text glossary.
+[prepared] Removed token sidebar and duplicate samples; advanced controls collapsed.
+[fixed] 12px counts and centered SVG plus/close/refresh icons, preview only.
+[verified] 12 HTML page files; Affiliates is a separate Admin view, not a file.
+
 SEPTEMBER 29: Sole design authority and preview-first components
 [prepared] design.md sole active spec; historical V3/V4 archived.
 [verified] Existing Tap to listen computed properties extracted with provenance.

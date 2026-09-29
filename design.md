@@ -12,7 +12,8 @@ gets quieter. No white haze, heavy borders, decorative sweeps or generic dashboa
 
 Jost is functional. Cormorant is reserved for MAYA/Mana Siyo branding and rare
 editorial moments. Numbers use Jost and tabular numerals, never serif. Preserve
-approved sizes: 11px dense data, 12–14px UI, 18px sections, 28px major metrics.
+approved sizes: 11px dense data, 12–14px UI and 18px sections. Compact metric labels and
+values are both 12px; use weight 500 for numbers instead of enlarging them.
 The measured master pill is the explicit small-label exception below.
 
 Use an 8px spacing rhythm, with 4px for dense internals. Circular logo cutout only:
@@ -52,7 +53,7 @@ Native DOM factories preserve semantics without a framework or provider calls.
 |---|---|
 | Pill | Capsule; centered label; hover, focus, selected, pressed, disabled/loading states |
 | GlassSurface | 16px panel corners; material only, no invented interaction |
-| IconButton | True 32px circle; accessible name required; no label-sized oval |
+| IconButton | True 32px circle with centered SVG; accessible name required; no label-sized oval |
 | Drawer | Rounded side panel; shared header/body/footer; Escape, focus containment/return |
 | FilterPopover | Rounded compact overlay; anchored/clamped to viewport; native top layer; selection + Apply |
 | Metric | Content-width capsule; quiet label, tabular value; zero and unavailable are distinct |
@@ -95,8 +96,12 @@ in the sidebar. Keep API behavior, account isolation and live data intact.
 ## Preview, then promote
 
 Open [component gallery](playground/components/index.html) through the local server.
-Edit any token, inspect states and both contexts, test drawers/filters, toggle no
-blur, reset or export CSS. Changes persist only in this browser's gallery storage.
+Start with Fonts: fixed Jost/Arial comparisons and Cormorant branding samples.
+A plain-language text guide maps each style to where it is used. Buttons and menus
+show real contexts; repeated states and fine adjustments stay collapsed. Arial is
+a preview alternative, not a global font change. Technical fonts are documented
+as Menlo/system monospace with SF Mono/generic fallbacks.
+Edit optional settings, test drawers/filters, reset or export CSS. Changes persist only in this browser's gallery storage.
 They cannot update live pages or production settings.
 
 This build replaces conflicting component recipes in the gallery only. Existing

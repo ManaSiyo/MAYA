@@ -8,6 +8,26 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## September 29: simplified style preview and font comparison
+
+Owner rejected large sample metrics and dense token sidebar. Updated preview only:
+removed sidebar, added Fonts/Buttons/Menus/Text guide/Pages navigation. Fixed Jost
+and Arial Tap to listen samples, Cormorant branding and technical-font disclosure;
+font readiness reports fallback honestly. Simple font selector changes component
+examples; comparison cards stay fixed. States/settings/glossary collapsed.
+
+Counts now 12px/500, labels 12px. Replaced plus/close/refresh text glyphs with SVG,
+centered by layout. Token storage bumped v2 so prior oversized edits do not persist.
+Includes where-used descriptions and repo page count: 12 HTML files (1 frontend,
+8 backend, 1 embedded engine, 2 previews); Affiliates is an Admin route view.
+Source changes: playground/components/*, shared preview components/tokens and
+component-gallery test. design.md reflects the corrected compact metric rule.
+Validation: gallery 7 widths, computed 12px count, subpixel SVG centering, Arial
+selection, settings persistence/export and overlay/accessibility behavior pass.
+Full app regression passes. A real local browser load confirmed Jost and Cormorant
+loaded; screenshot reviewed. No production styling changed. Next: owner reviews
+refreshed local gallery at ?review=2.
+
 ## September 29: sole design specification and component review gallery
 
 Root design.md is now the sole active aesthetic specification. V3 PDF, V4 canon

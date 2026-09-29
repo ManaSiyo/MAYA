@@ -46,3 +46,5 @@
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.maya-glass{background:rgb(7 15 27 / .96)}}
 @media(prefers-reduced-motion:reduce){.maya-ui{transition:none;animation:none}}
 @media(forced-colors:active){.maya-glass{background:Canvas;color:CanvasText;border:1px solid CanvasText;box-shadow:none;backdrop-filter:none}.maya-ui:focus-visible{outline-color:Highlight}.maya-metric-label{color:CanvasText}}
+
+.maya-icon-button>span{display:grid;place-items:center;line-height:0}.maya-icon-button svg{display:block;stroke-linecap:round;stroke-linejoin:round}
