@@ -1,3 +1,9 @@
+SEPTEMBER 28: Cloud Run image omitted owner CRM module
+[prepared] Build 650f4d64 failed server startup after release tests passed.
+Dockerfile now copies owner-crm.mjs. Prior COPY set reproduced module-not-found;
+corrected set starts and serves /healthz 200 offline. New import-packaging gate
+runs before image build; production deployment and Gemini test remain pending.
+
 SEPTEMBER 28: Deployment gate and owner-call overwrite
 Cloud Build 438db907 for 1d01d9a stopped at CRM authorization-expiry browser check.
 Initial Outbound render now waits for workspace plus intelligence authorization;

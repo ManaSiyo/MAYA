@@ -1,3 +1,7 @@
+SEPTEMBER 28: Missing Owner tools / connect Gemini
+[fixed locally] Container packaging omitted owner-crm.mjs; staged startup now passes.
+[pending] Owner push, successful Cloud Run + Hosting build, then real Gemini test.
+
 SEPTEMBER 28: Owner calls/texts update Lead Station; Gmail leads
 [prepared] Only the configured owner number can issue SMS lead commands after Admin activation.
 [verified fixtures] Preview + YES code, deduplication, expiry, STOP handling and account binding.

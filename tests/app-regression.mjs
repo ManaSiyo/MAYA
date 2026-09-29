@@ -1,5 +1,6 @@
 import {assertOutboundPriority} from './outbound-priority.mjs';
 import {assertCanon} from './canon-contract.mjs';
+import {assertContainer} from './container-contract.mjs';
 // MAYA app regression test. Companion to smoke.mjs (which covers the server).
 // Boots the real pages headlessly and asserts the behaviors Fromsa has asked
 // for stay true, so a fixed thing failing again is caught BEFORE a push.
@@ -84,6 +85,7 @@ const PAGE_ROOT = served ? 'http://127.0.0.1:8899/' : pathToFileURL(ROOT + '/').
 
 let failed = 0;
 assertCanon(); // Backend follows frontend chrome; consumer styling stays isolated from V4.
+assertContainer(); // Missing runtime files must fail before deploying Cloud Run.
 const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name); if (!cond) failed++; };
 
 // September 28: populated status popovers must escape the table's clipping layer.

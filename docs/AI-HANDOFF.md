@@ -8,6 +8,25 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## September 28: Cloud Run startup packaging repair (prepared locally)
+
+Build 650f4d64-2b42-4b68-a4bc-40b37e0fc40c for 23b6458 passed the release tests
+and image build but failed Deploy server. Hosting was skipped. The Dockerfile
+omitted owner-crm.mjs, which server.js statically imports. Reproduced the prior
+COPY file set locally: ERR_MODULE_NOT_FOUND for owner-crm.mjs. Including it boots
+the staged server and /healthz returns 200 with external fetch disabled. This is
+a local packaging smoke check, not a successful production deployment.
+
+Changed docs/server/Dockerfile; added tests/container-contract.mjs to validate
+all local static/literal dynamic imports against Docker COPY sources. Invoked in
+cloudbuild.yaml before other tests and in tests/app-regression.mjs. No credentials,
+permissions, environment, provider logic or frontend styling changes.
+Validation: packaging contract, staged startup reproduction, full app regression
+and git diff --check pass. Live Gemini inference remains unverified.
+Next: owner pushes this repair in GitHub Desktop, await all deployment steps,
+then Admin > Systems > Owner tools > Test Gemini. Do not retry the old build: its
+source still omits the module.
+
 ## September 28: owner CRM commands and deployment gate repair
 
 1d01d9a was pushed with Fromsa's approval via GitHub Desktop (CLI has no GitHub
@@ -49,13 +68,11 @@ expiry/dedup unit checks, Gmail candidate filtering, owner setup/Gemini/Gmail UI
 fixture, 19 CRM intelligence checks, full app regression, CRM fault-injection
 suite, 10,000-contact/seven-width CRM suite, syntax and diff whitespace pass.
 
-Next: explicitly obtain owner approval to push a118d81 and a8d23fa (plus this
-handoff-only commit). Automatic approval review rejected pushing them because
-the previous yes covered only 1d01d9a. Do not retry through another tool.
-After approval, deploy gate repair and owner tools; verify build then click Test Gemini.
-Owner must enable their number in Systems using their chosen Admin account.
-Connect both Gmail mailboxes after required OAuth setup/consent. Verify an actual
-owner SMS and call with Fromsa; local fixtures are not carrier delivery proof.
+Next: Fromsa subsequently pushed through 23b6458. Build 650f4d64 passed release
+contracts but failed Cloud Run startup; see packaging repair below. No further
+push is authorized by the diagnostic screenshot. After owner pushes the repair,
+verify the entire build, then Test Gemini in Systems. Owner activation and Gmail
+OAuth connections remain separate owner steps; live tests are still pending.
 
 ## September 28: Vertex Gemini and visible meter refresh (prepared locally)
 

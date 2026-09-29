@@ -1,6 +1,9 @@
-[Codex][v14.40] Record owner deployment approval boundary
+[Codex][v14.40] Include owner CRM module in Cloud Run image
 
-Record that automatic approval review blocked the two prepared follow-up commits:
-prior authorization covered only the Gemini commit. Wait for explicit approval
-before pushing the repair and owner tools. No application behavior changed.
-The preceding implementation and test results are recorded in AI-HANDOFF.md.
+Fix startup failure by shipping the statically imported owner-crm.mjs.
+Add a local import packaging check to Cloud Build and app regression so repository
+unit tests cannot hide missing image files. Update shared handoff and incident notes.
+Validation: packaging gate; reproduce old missing-module failure; corrected staged
+server health 200 with external fetch disabled; full app regression.
+Not deployed. Push triggers production build; verify all steps then Test Gemini.
+No keys, IAM, production variables, billing, or consumer UI changes.

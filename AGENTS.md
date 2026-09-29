@@ -144,3 +144,7 @@ persisted status. Outbound uses 250-record continuous batches and a compact view
 menu, never page-switch navigation. Keep full-dataset filters ahead of batching.
 The full regression HTTP fixture must serve CSS as text/css so the shared canon
 is actually tested. tests/crm-ui.mjs covers append identity, selection and search.
+
+Container packaging: tests/container-contract.mjs checks local runtime imports
+against docs/server/Dockerfile COPY sources before the image is built. Run it
+when adding server modules or changing the Dockerfile.

@@ -25,6 +25,7 @@ steps:
     args:
       - '-ceu'
       - |
+        node tests/container-contract.mjs
         node tests/canon-contract.mjs
         node tests/ai-routing.mjs
         node tests/fabric-sourcing.mjs
