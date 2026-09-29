@@ -1,5 +1,5 @@
 /* MAYA V4: V3 is the foundation. Dense information gets quieter, not heavier.
-   Source: docs/Aesthetics.pdf. Page 1 is canon; every screen shares these controls. */
+   Legacy runtime adapter. Sole active specification: design.md. */
 :root {
   --maya-accent: #adcdf8;
   --maya-font-ui: 'Jost', sans-serif;

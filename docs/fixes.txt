@@ -1,3 +1,9 @@
+SEPTEMBER 29: Competing specifications and page-level glass recipes
+Archived older aesthetic authorities. Computed master-pill extraction resolves the
+parent-versus-label typography mismatch; explicit material intensity prevents
+transparent filters over data. New component library replaces recipes in preview.
+Legacy runtime overrides are inventoried and retained until owner reviews tokens.
+
 SEPTEMBER 29: Action material had separate frontend/backend definitions
 Shared maya-buttons.css now supplies the action finish on all canon pages, loaded
 after local styles. No table/link/logo blanket treatment; design.md records scope.

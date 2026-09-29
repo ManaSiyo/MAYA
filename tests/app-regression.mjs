@@ -1,3 +1,4 @@
+import './component-gallery.mjs';
 import './design-contract.mjs';
 import {assertOutboundPriority} from './outbound-priority.mjs';
 import {assertCanon} from './canon-contract.mjs';

@@ -1,0 +1,3511 @@
+[
+  {
+    "file": "aesthetics/operations/index.html",
+    "rules": [
+      {
+        "selector": ".icon-btn",
+        "declarations": {
+          "border-radius": "50%",
+          "border": "var(--maya-hairline) solid var(--hair)",
+          "background": "transparent",
+          "font-size": "15px",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "var(--pill-shadow)"
+        }
+      },
+      {
+        "selector": "/* Front End hamburger, capsule glass pill (copied from .top-btn), not a circle */\n  .icon-btn.hamburger",
+        "declarations": {
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "0",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),inset 0 -1px 1px rgba(0,0,0,0.18),0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* pills, every interactive surface */\n  .pill",
+        "declarations": {
+          "border": "var(--maya-hairline) solid var(--hair)",
+          "background": "transparent",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "6px 14px",
+          "font-weight": "400",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": ".15em",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "var(--pill-shadow)"
+        }
+      },
+      {
+        "selector": ".stage-badge",
+        "declarations": {
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": ".2em",
+          "background": "rgba(0,0,0,.4)",
+          "border": "var(--maya-hairline) solid var(--hair)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "5px 12px",
+          "backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": "/* test-folder header control, Section role (Cormorant 300), centered */\n  .head-select",
+        "declarations": {
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid var(--hair)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "5px 12px",
+          "font-weight": "400",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": ".12em",
+          "backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": "/* view dropdown follows the Pill role: Jost 300 \u00b7 10px \u00b7 0.15em \u00b7 UPPER */\n  .pill-select",
+        "declarations": {
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid var(--hair)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "6px 14px",
+          "font-weight": "400",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": ".15em",
+          "backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": "/* live critique console */\n  .live",
+        "declarations": {
+          "border": "var(--maya-hairline) solid var(--hair)",
+          "border-radius": "14px",
+          "background": "rgba(0,0,0,0.32)",
+          "backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": ".live .dot",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "var(--good)",
+          "box-shadow": "0 0 8px var(--good)"
+        }
+      },
+      {
+        "selector": "/* the drawer is a floating glass panel inside its pane (top 60 \u00b7 right 18 \u00b7 bottom 22) */\n  .drawer",
+        "declarations": {
+          "border-radius": "18px",
+          "background": "linear-gradient(180deg,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0.03) 25%,rgba(255,255,255,0.02) 65%,rgba(255,255,255,0.07) 100%),rgba(6,8,16,0.45)",
+          "border": "var(--maya-hairline) solid var(--hair)",
+          "padding": "22px 22px 28px",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.30),0 4px 28px rgba(0,0,0,0.4)"
+        }
+      },
+      {
+        "selector": "/* toast */\n  #toast",
+        "declarations": {
+          "background": "rgba(8,10,20,0.96)",
+          "border": "var(--maya-hairline) solid var(--hair-hi)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "11px 22px",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": ".04em",
+          "backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "var(--pill-shadow)"
+        }
+      }
+    ]
+  },
+  {
+    "file": "aesthetics/ui/ai-meter.js",
+    "rules": []
+  },
+  {
+    "file": "aesthetics/ui/maya-buttons.css",
+    "rules": [
+      {
+        "selector": "tton.campaign,button.dissect-start,button.upload-btn,button.fab-src-pill,button.piece-pill,button.quality-pill,.dialog-actions button,.actions button,.toolbar button,maya-ai-meter button,maya-owner-crm button,#voice-bar)",
+        "declarations": {
+          "background": "var(--maya-button-fill)",
+          "border": ".5px solid var(--maya-button-edge)",
+          "box-shadow": "var(--maya-button-shadow)",
+          "backdrop-filter": "var(--maya-button-frost)",
+          "-webkit-backdrop-filter": "var(--maya-button-frost)"
+        }
+      },
+      {
+        "selector": "tton.upload-btn,button.fab-src-pill,button.piece-pill,button.quality-pill,.dialog-actions button,.actions button,.toolbar button,maya-ai-meter button,maya-owner-crm button,#voice-bar):is(:disabled,[aria-disabled=\"true\"])",
+        "declarations": {
+          "box-shadow": "none"
+        }
+      },
+      {
+        "selector": "tton.campaign,button.dissect-start,button.upload-btn,button.fab-src-pill,button.piece-pill,button.quality-pill,.dialog-actions button,.actions button,.toolbar button,maya-ai-meter button,maya-owner-crm button,#voice-bar)",
+        "declarations": {
+          "background": "ButtonFace",
+          "border": "1px solid ButtonText",
+          "box-shadow": "none",
+          "backdrop-filter": "none"
+        }
+      }
+    ]
+  },
+  {
+    "file": "aesthetics/ui/maya-canon.css",
+    "rules": [
+      {
+        "selector": "atment. Layout and control behavior remain owned by pages. */\n:where(html[data-maya-surface]) :is(.pill,.top-btn,.inv-btn,.msg-call,.primary,.dialog-actions button,.tabs button,.lead-tool,.lead-cta,button[type=\"submit\"])",
+        "declarations": {
+          "font-weight": "400",
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid var(--maya-line)",
+          "border-radius": "var(--maya-radius-pill)",
+          "box-shadow": "var(--maya-control-shadow)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface=\"dense\"] :is(button,.primary,.tabs .active)",
+        "declarations": {
+          "background": "transparent",
+          "box-shadow": "var(--maya-control-shadow)"
+        }
+      },
+      {
+        "selector": "/* Strong frost is for navigation and temporary layers, not every card. */\nhtml[data-maya-surface=\"dense\"] :is(#drawer,#outbound-drawer,#clients-drawer,dialog,#lead-inv-modal .inv-card)",
+        "declarations": {
+          "background": "var(--maya-drawer-glass)",
+          "border": "var(--maya-hairline) solid var(--maya-line)",
+          "border-radius": "18px",
+          "box-shadow": "var(--maya-drawer-shadow)",
+          "backdrop-filter": "var(--maya-drawer-frost)",
+          "-webkit-backdrop-filter": "var(--maya-drawer-frost)"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface=\"dense\"] :is(.panel,.tile,.stat,.affiliate-stat,.detail,.metric-row,.person,.empty,.layout>aside,main,.people-scroll,.model-group,.chart-wrap)",
+        "declarations": {
+          "background": "var(--maya-surface)",
+          "box-shadow": "none",
+          "backdrop-filter": "var(--maya-quiet-frost)",
+          "-webkit-backdrop-filter": "var(--maya-quiet-frost)"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface] #adm-mkt #leads-table .lead-stage",
+        "declarations": {
+          "background": "transparent",
+          "box-shadow": "none"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface] .lead-status-menu",
+        "declarations": {
+          "padding": "8px",
+          "background": "rgba(7,10,20,.88)",
+          "border": "var(--maya-hairline) solid var(--maya-line)",
+          "border-radius": "var(--maya-radius-panel)",
+          "box-shadow": "var(--maya-floating-shadow)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "letter-spacing": "normal"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface] .affiliate-avatar",
+        "declarations": {
+          "background": "transparent",
+          "box-shadow": "none"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface=\"dense\"] :is(.sdot,.new-dot,.model-group)",
+        "declarations": {
+          "box-shadow": "none"
+        }
+      },
+      {
+        "selector": "drawer glass, never a pill or data-panel fill. */\nhtml[data-maya-surface=\"dense\"] :is(.pill,.top-btn,.inv-btn,.msg-call,.primary,.dialog-actions button,.tabs button,.lead-tool,.lead-cta,button.wide,button[type=\"submit\"])",
+        "declarations": {
+          "box-shadow": "var(--maya-control-shadow)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface=\"dense\"] :is(.adm-tab.on,.tabs button.active)",
+        "declarations": {
+          "box-shadow": "0 0 0 1px rgba(255,255,255,.10)"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface=\"dense\"] :is(input:not([type=\"checkbox\"]):not([type=\"radio\"]),textarea,select)",
+        "declarations": {
+          "background": "rgba(255,255,255,.04)",
+          "box-shadow": "inset 0 1px 2px rgba(0,0,0,.18)"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface=\"dense\"] #maya-toggle",
+        "declarations": {
+          "font-size": "10px",
+          "box-shadow": "none"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface=\"dense\"] :is(.link-button,.msg-rename,.lead-open)",
+        "declarations": {
+          "box-shadow": "none",
+          "backdrop-filter": "none"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface=\"dense\"] #drawer .adm-tab",
+        "declarations": {
+          "border-radius": "50%",
+          "box-shadow": "none"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface=\"dense\"] #drawer .adm-tab.on",
+        "declarations": {
+          "box-shadow": "0 0 0 1px rgba(255,255,255,.10)"
+        }
+      },
+      {
+        "selector": "ieter log details. */\nhtml[data-maya-surface=\"dense\"] :is(.maya-logo-wrap,#voice-btn,.top-btn.hamburger,#menu-toggle),\nhtml[data-maya-surface=\"dense\"] :is(.maya-logo-wrap,#voice-btn,.top-btn.hamburger,#menu-toggle):hover",
+        "declarations": {
+          "border": "0",
+          "box-shadow": "none",
+          "background": "transparent"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface=\"dense\"] #top-left-brand .maya-logo-mark,\nhtml[data-maya-surface=\"dense\"] .brand .mark",
+        "declarations": {
+          "border-radius": "50%",
+          "border": "0",
+          "box-shadow": "none"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface=\"dense\"] body.maya-live .maya-logo-wrap,\nhtml[data-maya-surface=\"dense\"] #voice-btn.live",
+        "declarations": {
+          "border": "0",
+          "box-shadow": "none"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface=\"dense\"] #adm-mkt #leads-table .lead-open",
+        "declarations": {
+          "border": "0",
+          "box-shadow": "none",
+          "background": "transparent"
+        }
+      },
+      {
+        "selector": "/* Avoid stacking expensive blur layers inside already frosted content panels. */\nhtml[data-maya-surface=\"dense\"] :is(.person,.stat,.model-group)",
+        "declarations": {
+          "backdrop-filter": "none",
+          "-webkit-backdrop-filter": "none"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface=\"dense\"] .layout button.person",
+        "declarations": {
+          "border-radius": "16px",
+          "box-shadow": "none",
+          "padding": "12px"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface=\"dense\"] :is(.link-button,.person-link)",
+        "declarations": {
+          "box-shadow": "none",
+          "background": "transparent",
+          "border": "0",
+          "border-radius": "0",
+          "backdrop-filter": "none",
+          "-webkit-backdrop-filter": "none"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface=\"dense\"] #clients-drawer .drawer-settings-link",
+        "declarations": {
+          "box-shadow": "none"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface=\"dense\"] .people-table .person-link",
+        "declarations": {
+          "border": "0",
+          "border-radius": "0",
+          "box-shadow": "none",
+          "background": "none",
+          "padding": "0",
+          "font-weight": "500"
+        }
+      },
+      {
+        "selector": "/* Outbound: the frontend glass-pill recipe, with a quiet spreadsheet workspace. */\nhtml[data-maya-surface] .layout .campaign",
+        "declarations": {
+          "background": "transparent",
+          "border": ".5px solid rgba(255,255,255,.22)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,.28),inset 0 -1px 1px rgba(0,0,0,.18),0 4px 16px rgba(0,0,0,.22)",
+          "padding": "10px 16px",
+          "border-radius": "100px"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface] .followup-panel",
+        "declarations": {
+          "padding": "16px 0",
+          "border": "0",
+          "background": "none",
+          "box-shadow": "none"
+        }
+      },
+      {
+        "selector": "html[data-maya-surface] .people-table .column-filter",
+        "declarations": {
+          "padding": "4px 0",
+          "border": "0",
+          "background": "none",
+          "box-shadow": "none",
+          "border-radius": "0"
+        }
+      }
+    ]
+  },
+  {
+    "file": "aesthetics/ui/owner-crm.js",
+    "rules": []
+  },
+  {
+    "file": "backend/backend.html",
+    "rules": [
+      {
+        "selector": "/* v10.13: dissecting status pill, pulses softly while the LLM runs. */\n  .status-pill",
+        "declarations": {
+          "padding": "4px 12px",
+          "border-radius": "var(--maya-radius-pill)",
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.42)",
+          "font-weight": "400",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": "0.32em",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": "0%, 100%",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 0 12px 1px rgba(200,222,255,0.30)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.40),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 0 22px 3px rgba(200,222,255,0.55)"
+        }
+      },
+      {
+        "selector": ".top-btn",
+        "declarations": {
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "6px 14px",
+          "font-size": "var(--maya-text-caption)",
+          "font-weight": "400",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".op-image-frame",
+        "declarations": {
+          "padding": "12px",
+          "background": "rgba(255,255,255,0.02)",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "16px",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 8px 32px rgba(0,0,0,0.42)"
+        }
+      },
+      {
+        "selector": ".op-name-pill",
+        "declarations": {
+          "padding": "8px 22px",
+          "border-radius": "var(--maya-radius-pill)",
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "font-weight": "400",
+          "font-size": "var(--maya-text-section)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".piece-pill",
+        "declarations": {
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "6px 14px",
+          "font-weight": "400",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".piece-swiper .dissect-btn",
+        "declarations": {
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "8px 22px",
+          "font-weight": "400",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* v0.12: 3D viewer frame. Same glass treatment as op-room-frame so the\n     two left-column windows read as a matched pair. */\n  .op-room-3d-frame",
+        "declarations": {
+          "background": "rgba(0,0,0,0.32)",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "16px",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 8px 32px rgba(0,0,0,0.42)",
+          "padding": "0"
+        }
+      },
+      {
+        "selector": ".op-room-frame",
+        "declarations": {
+          "background": "rgba(255,255,255,0.02)",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "16px",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 8px 32px rgba(0,0,0,0.42)",
+          "padding": "18px"
+        }
+      },
+      {
+        "selector": "--in variable (live-computed = swiper-height / 40).\n     Minor lines every 1 inch (alpha 0.04), major lines every 5 inches\n     (alpha 0.10). A slightly heavier vertical band at left = ruler edge. */\n  .op-pattern-swiper",
+        "declarations": {
+          "background-color": "rgba(255,255,255,0.02)",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "16px",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 8px 32px rgba(0,0,0,0.42)"
+        }
+      },
+      {
+        "selector": "/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 v0.31: Fabrics sourcing, lives in the Brief, clean glass frame \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  .brief-fabrics",
+        "declarations": {
+          "padding": "16px",
+          "background": "rgba(255,255,255,0.02)",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "16px",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 8px 32px rgba(0,0,0,0.42)"
+        }
+      },
+      {
+        "selector": ".fab-heart.on",
+        "declarations": {
+          "background": "rgba(255,160,200,0.18)",
+          "box-shadow": "0 0 10px rgba(255,160,200,0.25)"
+        }
+      },
+      {
+        "selector": ".fab-match-score",
+        "declarations": {
+          "padding": "3px 7px",
+          "border-radius": "var(--maya-radius-pill)",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": "0.04em",
+          "background": "rgba(245,250,255,0.9)",
+          "box-shadow": "0 2px 10px rgba(0,0,0,0.25)"
+        }
+      },
+      {
+        "selector": "/* v13.53: a gradient-only card can ask Nano Banana for an illustration. */\n  .fab-visualize",
+        "declarations": {
+          "padding": "3px 8px",
+          "border-radius": "var(--maya-radius-pill)",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": "0.08em",
+          "background": "rgba(10,14,26,0.72)",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.28)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": ".fab-inhouse",
+        "declarations": {
+          "padding": "20px 18px",
+          "border-radius": "16px",
+          "background": "rgba(255,255,255,0.05)",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.14)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": "/* v0.12: button chrome quieted, same liquid-glass shell as the pills,\n     no starlight halo, no breathing animation. The window is the hero,\n     the buttons sit underneath. */\n  .op-dissect-btn",
+        "declarations": {
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.32)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "9px 24px",
+          "font-weight": "400",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": "0.18em",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "lient list underneath doesn't\n     bleed through. The drawer itself uses backdrop-filter on transparent;\n     the sub-panel needs its own dark fill PLUS its own blur to feel like\n     a layer above. */\n  #drawer-settings",
+        "declarations": {
+          "padding": "22px 22px 18px",
+          "background": "rgba(8, 10, 20, 0.96)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "border-radius": "inherit",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.18)"
+        }
+      },
+      {
+        "selector": "#drawer-settings .settings-back",
+        "declarations": {
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "5px 12px",
+          "font-weight": "400",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": "0.18em",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": "#drawer-settings .quality-pill",
+        "declarations": {
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "5px 12px",
+          "font-weight": "400",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": "0.10em",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": ".nest-field",
+        "declarations": {
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "6px 14px",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".nest-panel-chip",
+        "declarations": {
+          "padding": "5px 12px",
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "var(--maya-radius-pill)",
+          "font-weight": "400",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": "0.10em",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": ".figure-overlay:hover,\n  .figure-overlay.active",
+        "declarations": {
+          "background": "rgba(180,210,255,0.08)",
+          "box-shadow": "0 0 24px rgba(180,210,255,0.30)"
+        }
+      },
+      {
+        "selector": ".piece-card",
+        "declarations": {
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "16px",
+          "padding": "22px 24px",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".piece-card.active",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.40),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 0 18px 3px rgba(200,222,255,0.40),\n      0 0 38px 8px rgba(200,222,255,0.20),\n      0 8px 32px rgba(0,0,0,0.42)"
+        }
+      },
+      {
+        "selector": "/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 v0.25: page indicator, smaller (~20% slimmer) + pushed\n     further left so it doesn't kiss the window edges. */\n  #page-indicator",
+        "declarations": {
+          "padding": "9px 5px",
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "var(--maya-radius-pill)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 v10.15: clients drawer (matches Maya's hamburger drawer) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  #clients-drawer",
+        "declarations": {
+          "background": "linear-gradient(180deg,\n        rgba(255,255,255,0.10) 0%,\n        rgba(255,255,255,0.03) 25%,\n        rgba(255,255,255,0.02) 65%,\n        rgba(255,255,255,0.07) 100%)",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "18px",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.30),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 12px 48px rgba(0,0,0,0.38)",
+          "padding": "28px 22px 22px"
+        }
+      },
+      {
+        "selector": "#clients-drawer .client-item",
+        "declarations": {
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "10px 18px",
+          "font-size": "var(--maya-text-caption)",
+          "font-weight": "400",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".upload-gate .upload-btn",
+        "declarations": {
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "14px 38px",
+          "font-size": "var(--maya-text-caption)",
+          "font-weight": "400",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.42),\n      inset 0 -1px 1px rgba(0,0,0,0.22),\n      0 0 18px 3px rgba(200,222,255,0.40),\n      0 0 38px 8px rgba(200,222,255,0.20),\n      0 8px 32px rgba(0,0,0,0.42)"
+        }
+      },
+      {
+        "selector": "0%, 100%",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.45),\n      inset 0 -1px 1px rgba(0,0,0,0.22),\n      0 0 7px 1px rgba(200,222,255,0.45),\n      0 0 12px 2px rgba(200,222,255,0.22)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.45),\n      inset 0 -1px 1px rgba(0,0,0,0.22),\n      0 0 10px 2px rgba(220,232,255,0.65),\n      0 0 16px 3px rgba(220,232,255,0.32)"
+        }
+      }
+    ]
+  },
+  {
+    "file": "backend/marketing.html",
+    "rules": [
+      {
+        "selector": ".top-btn",
+        "declarations": {
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid var(--line)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "6px 14px",
+          "font-size": "10px",
+          "font-weight": "400",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": ".tile",
+        "declarations": {
+          "border": "var(--maya-hairline) solid var(--line)",
+          "border-radius": "var(--maya-radius-pill)",
+          "background": "rgba(10,16,34,0.55)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "padding": "6px 14px"
+        }
+      },
+      {
+        "selector": "/* v13.54: the chart hover layer. */\n  #ad-tip",
+        "declarations": {
+          "padding": "8px 11px",
+          "border-radius": "12px",
+          "border": "var(--maya-hairline) solid var(--line)",
+          "background": "rgba(8,12,26,0.92)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "font-size": "10.5px",
+          "letter-spacing": "0.04em"
+        }
+      }
+    ]
+  },
+  {
+    "file": "backend/operations.html",
+    "rules": [
+      {
+        "selector": ".icon-btn",
+        "declarations": {
+          "border-radius": "50%",
+          "border": "var(--maya-hairline) solid var(--hair)",
+          "background": "transparent",
+          "font-size": "15px",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "var(--pill-shadow)"
+        }
+      },
+      {
+        "selector": "/* Front End hamburger, capsule glass pill (copied from .top-btn), not a circle */\n  .icon-btn.hamburger",
+        "declarations": {
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "0",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),inset 0 -1px 1px rgba(0,0,0,0.18),0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* pills, every interactive surface */\n  .pill",
+        "declarations": {
+          "border": "var(--maya-hairline) solid var(--hair)",
+          "background": "transparent",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "6px 14px",
+          "font-weight": "400",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": ".15em",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "var(--pill-shadow)"
+        }
+      },
+      {
+        "selector": ".stage-badge",
+        "declarations": {
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": ".2em",
+          "background": "rgba(0,0,0,.4)",
+          "border": "var(--maya-hairline) solid var(--hair)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "5px 12px",
+          "backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": "/* test-folder header control, Section role (Cormorant 300), centered */\n  .head-select",
+        "declarations": {
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid var(--hair)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "5px 12px",
+          "font-weight": "400",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": ".12em",
+          "backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": "/* view dropdown follows the Pill role: Jost 300 \u00b7 10px \u00b7 0.15em \u00b7 UPPER */\n  .pill-select",
+        "declarations": {
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid var(--hair)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "6px 14px",
+          "font-weight": "400",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": ".15em",
+          "backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": "/* live critique console */\n  .live",
+        "declarations": {
+          "border": "var(--maya-hairline) solid var(--hair)",
+          "border-radius": "14px",
+          "background": "rgba(0,0,0,0.32)",
+          "backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": ".live .dot",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "var(--good)",
+          "box-shadow": "0 0 8px var(--good)"
+        }
+      },
+      {
+        "selector": "/* the drawer is a floating glass panel inside its pane (top 60 \u00b7 right 18 \u00b7 bottom 22) */\n  /* v13.44: full height, like every drawer in MAYA now. */\n  .drawer",
+        "declarations": {
+          "border-radius": "18px",
+          "background": "linear-gradient(180deg,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0.03) 25%,rgba(255,255,255,0.02) 65%,rgba(255,255,255,0.07) 100%),rgba(6,8,16,0.45)",
+          "border": "var(--maya-hairline) solid var(--hair)",
+          "padding": "22px 22px 28px",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.30),0 4px 28px rgba(0,0,0,0.4)"
+        }
+      },
+      {
+        "selector": "/* toast */\n  #toast",
+        "declarations": {
+          "background": "rgba(8,10,20,0.96)",
+          "border": "var(--maya-hairline) solid var(--hair-hi)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "11px 22px",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": ".04em",
+          "backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "var(--pill-shadow)"
+        }
+      }
+    ]
+  },
+  {
+    "file": "backend/outbound-priority.js",
+    "rules": []
+  },
+  {
+    "file": "backend/outbound.html",
+    "rules": [
+      {
+        "selector": "dialog::backdrop",
+        "declarations": {
+          "background": "#000a",
+          "backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": ".layout>aside,main",
+        "declarations": {
+          "background": "rgba(4,13,32,.76)",
+          "backdrop-filter": "var(--maya-frost)",
+          "border": "var(--maya-hairline) solid #ffffff26",
+          "border-radius": "22px"
+        }
+      }
+    ]
+  },
+  {
+    "file": "backend/outbound.js",
+    "rules": []
+  },
+  {
+    "file": "backend/privacy.html",
+    "rules": [
+      {
+        "selector": ".sheet",
+        "declarations": {
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.18)",
+          "border-radius": "22px",
+          "background": "rgba(8,12,26,0.72)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "padding": "44px 40px 48px",
+          "box-shadow": "0 18px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.10)"
+        }
+      }
+    ]
+  },
+  {
+    "file": "backend/status.html",
+    "rules": [
+      {
+        "selector": ".top-btn",
+        "declarations": {
+          "background": "transparent",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "border-radius": "var(--maya-radius-pill)",
+          "padding": "6px 14px",
+          "font-size": "10px",
+          "font-weight": "400",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": "0%,100%",
+        "declarations": {
+          "box-shadow": "0 0 0 0 rgba(169,201,255,0.35)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "0 0 0 14px rgba(169,201,255,0)"
+        }
+      },
+      {
+        "selector": ".adm-tab.on",
+        "declarations": {
+          "box-shadow": "0 0 0 1px rgba(255,255,255,0.10)"
+        }
+      },
+      {
+        "selector": "#maya-toggle .mt-switch",
+        "declarations": {
+          "border-radius": "var(--maya-radius-pill)",
+          "background": "rgba(255,255,255,0.10)",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.22)",
+          "box-shadow": "inset 0 1px 2px rgba(0,0,0,0.35)"
+        }
+      },
+      {
+        "selector": "#maya-toggle .mt-knob",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "#fff",
+          "box-shadow": "0 1px 3px rgba(0,0,0,0.45)"
+        }
+      },
+      {
+        "selector": "#voice-chip",
+        "declarations": {
+          "padding": "9px 15px 9px 12px",
+          "border-radius": "var(--maya-radius-pill)",
+          "background": "rgba(8,12,26,0.94)",
+          "border": "var(--maya-hairline) solid rgba(169,201,255,0.6)",
+          "backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "0 8px 30px rgba(0,0,0,0.5)",
+          "font-size": "10px",
+          "letter-spacing": "0.12em"
+        }
+      },
+      {
+        "selector": "0%,35%",
+        "declarations": {
+          "box-shadow": "0 0 0 2px rgba(169,201,255,0.65),0 0 32px rgba(169,201,255,0.22)"
+        }
+      },
+      {
+        "selector": "100%",
+        "declarations": {
+          "box-shadow": "none"
+        }
+      },
+      {
+        "selector": ".status-bar",
+        "declarations": {
+          "border": "var(--maya-hairline) solid var(--line)",
+          "border-radius": "16px",
+          "padding": "13px 18px",
+          "background": "rgba(10,16,34,0.55)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": ".sdot.ok",
+        "declarations": {
+          "background": "var(--green)",
+          "box-shadow": "0 0 6px rgba(74,222,128,0.5)"
+        }
+      },
+      {
+        "selector": ".sdot.bad",
+        "declarations": {
+          "background": "var(--rose)",
+          "box-shadow": "0 0 6px rgba(253,164,175,0.5)"
+        }
+      },
+      {
+        "selector": ".sub-tile",
+        "declarations": {
+          "border-radius": "22px",
+          "border": "var(--maya-hairline) solid rgba(255,255,255,0.28)",
+          "background": "rgba(4,7,16,0.75)",
+          "box-shadow": "0 10px 34px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12)"
+        }
+      },
+      {
+        "selector": ".sub-tile:hover",
+        "declarations": {
+          "box-shadow": "0 14px 48px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.12)"
+        }
+      },
+      {
+        "selector": "/* v13.8: way thinner per Fromsa, one line per tile. */\n  .tile",
+        "declarations": {
+          "border": "var(--maya-hairline) solid var(--line)",
+          "border-radius": "var(--maya-radius-pill)",
+          "background": "rgba(10,16,34,0.55)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18)",
+          "padding": "5px 14px"
+        }
+      },
+      {
+        "selector": "#users-pop",
+        "declarations": {
+          "border": "var(--maya-hairline) solid var(--line)",
+          "border-radius": "14px",
+          "background": "rgba(8,13,30,0.96)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "padding": "10px 12px",
+          "box-shadow": "0 12px 40px rgba(0,0,0,0.5)"
+        }
+      },
+      {
+        "selector": ".new-dot",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "var(--green)",
+          "box-shadow": "0 0 10px rgba(74,222,128,0.85)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "0 0 4px rgba(74,222,128,0.5)"
+        }
+      },
+      {
+        "selector": ".changelog",
+        "declarations": {
+          "border": "var(--maya-hairline) solid var(--line)",
+          "border-radius": "16px",
+          "background": "rgba(10,16,34,0.55)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18)",
+          "padding": "12px 18px"
+        }
+      },
+      {
+        "selector": "/* Prompting engine */\n  .pe-panel",
+        "declarations": {
+          "border": "var(--maya-hairline) solid var(--line)",
+          "border-radius": "16px",
+          "background": "rgba(10,16,34,0.55)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "padding": "12px 14px",
+          "box-shadow": "inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": ".grid.doors .card",
+        "declarations": {
+          "border": "0",
+          "background": "none",
+          "box-shadow": "none",
+          "padding": "6px 2px"
+        }
+      },
+      {
+        "selector": "#adm-mkt .tile",
+        "declarations": {
+          "padding": "6px 14px",
+          "box-shadow": "none"
+        }
+      },
+      {
+        "selector": "#adm-mkt .panel",
+        "declarations": {
+          "border": "var(--maya-hairline) solid var(--line)",
+          "border-radius": "18px",
+          "background": "rgba(8,12,26,0.55)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "padding": "16px 18px"
+        }
+      },
+      {
+        "selector": "#adm-mkt #ad-tip",
+        "declarations": {
+          "padding": "8px 11px",
+          "border-radius": "12px",
+          "border": "var(--maya-hairline) solid var(--line)",
+          "background": "rgba(8,12,26,0.92)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "font-size": "10.5px",
+          "letter-spacing": "0.04em"
+        }
+      },
+      {
+        "selector": "#adm-mkt #leads-table th.lead-col-drop",
+        "declarations": {
+          "box-shadow": "inset 2px 0 0 rgba(169,201,255,0.9)"
+        }
+      },
+      {
+        "selector": "#adm-mkt #leads-table .lead-col-first",
+        "declarations": {
+          "background": "#0d1120",
+          "box-shadow": "1px 0 0 var(--line)"
+        }
+      },
+      {
+        "selector": "#lead-inv-modal .inv-scrim",
+        "declarations": {
+          "background": "rgba(4,7,16,0.66)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)"
+        }
+      },
+      {
+        "selector": "#lead-inv-modal .inv-card",
+        "declarations": {
+          "background": "#0d1120",
+          "border": "var(--maya-hairline) solid var(--line)",
+          "border-radius": "18px",
+          "padding": "24px 24px 22px",
+          "box-shadow": "0 30px 80px rgba(0,0,0,0.6)"
+        }
+      },
+      {
+        "selector": "/* v13.87: the whole station edits in place, like a sheet. */\n  #adm-mkt #leads-table .lead-edit",
+        "declarations": {
+          "border-radius": "5px",
+          "padding": "1px 4px"
+        }
+      },
+      {
+        "selector": "#adm-mkt #leads-table .lead-edit:focus",
+        "declarations": {
+          "background": "rgba(169,201,255,0.10)",
+          "box-shadow": "0 0 0 1px rgba(169,201,255,0.5)"
+        }
+      },
+      {
+        "selector": "#adm-mkt #leads-table .lead-edit.lead-saved",
+        "declarations": {
+          "background": "rgba(120,220,150,0.16)",
+          "box-shadow": "0 0 0 1px rgba(120,220,150,0.5)"
+        }
+      },
+      {
+        "selector": "#adm-mkt #leads-table .lead-edit.lead-save-err",
+        "declarations": {
+          "background": "rgba(248,113,113,0.16)",
+          "box-shadow": "0 0 0 1px rgba(248,113,113,0.55)"
+        }
+      },
+      {
+        "selector": ".affiliate-avatar",
+        "declarations": {
+          "border-radius": "50%",
+          "border": "var(--maya-hairline) solid rgba(169,201,255,.6)",
+          "background": "radial-gradient(circle at 35% 25%,#294c75,#091527)",
+          "box-shadow": "0 0 40px #5f9fe51c"
+        }
+      }
+    ]
+  },
+  {
+    "file": "backend/terms.html",
+    "rules": [
+      {
+        "selector": ".sheet",
+        "declarations": {
+          "border-radius": "22px",
+          "background": "rgba(8,12,26,0.72)",
+          "backdrop-filter": "var(--maya-frost)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "padding": "44px 40px 48px",
+          "box-shadow": "0 18px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.10)"
+        }
+      }
+    ]
+  },
+  {
+    "file": "backend/verify.html",
+    "rules": [
+      {
+        "selector": ".verdict",
+        "declarations": {
+          "border-radius": "16px",
+          "padding": "20px 22px",
+          "border": "var(--maya-hairline) solid rgba(220,232,255,0.42)",
+          "background": "rgba(255,255,255,0.03)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "backdrop-filter": "var(--maya-frost)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28), 0 8px 32px rgba(0,0,0,0.42)"
+        }
+      },
+      {
+        "selector": "button",
+        "declarations": {
+          "font-weight": "400",
+          "font-size": "var(--maya-text-caption)",
+          "letter-spacing": "0.22em",
+          "padding": "11px 20px",
+          "border-radius": "11px",
+          "border": "var(--maya-hairline) solid rgba(220,232,255,0.5)",
+          "background": "rgba(255,255,255,0.04)",
+          "-webkit-backdrop-filter": "var(--maya-frost)",
+          "backdrop-filter": "var(--maya-frost)"
+        }
+      }
+    ]
+  },
+  {
+    "file": "frontend/index.html",
+    "rules": [
+      {
+        "selector": "v8.9: shared liquid-glass recipe. Any pill/button/card surface gets\n     this with `class=\"\u2026 glass-pill\"`. Individual rules can still add\n     element-specific size/typography, but the chrome lives here. */\n  .glass-pill",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* v7.2: all top-bar pills, liquid glass. Same gradient + backdrop blur\n     + specular shadow on every variant. */\n  .top-btn",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "6px 14px",
+          "font-size": "10px",
+          "font-weight": "300",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* notes-dot was originally scoped to #notes-toggle, also apply to hamburger\n     so a draft consultation still glows when there's something worth saving. */\n  #hamburger-toggle .notes-dot",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "rgba(200,220,255,0.85)",
+          "box-shadow": "0 0 8px rgba(200,220,255,0.6)"
+        }
+      },
+      {
+        "selector": "(visualize / one-pager, inline beside voice bar) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  /* v7.2: Visualize, liquid glass pill. Heavy backdrop blur + saturate,\n     layered top sheen, inner specular highlight, soft outer shadow. */\n  .action-btn",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "6px 14px",
+          "font-size": "10px",
+          "font-weight": "300",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".action-btn:hover",
+        "declarations": {
+          "background": "rgba(255,255,255,0.04)",
+          "box-shadow": "inset 0 1px 2px rgba(255,255,255,0.62),\n      inset 0 -1px 1px rgba(0,0,0,0.28),\n      0 6px 22px rgba(0,0,0,0.38)"
+        }
+      },
+      {
+        "selector": "/* v7.2: voice bar, liquid glass pill. */\n  #voice-bar",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "6px 14px",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".upload-choose-card",
+        "declarations": {
+          "padding": "14px 16px",
+          "border": "0.5px solid rgba(255,255,255,0.2)",
+          "border-radius": "14px",
+          "background": "rgba(10,14,24,0.85)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)"
+        }
+      },
+      {
+        "selector": "#share-link-modal .share-card",
+        "declarations": {
+          "padding": "20px 22px",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "16px",
+          "background": "rgba(10,14,24,0.9)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)"
+        }
+      },
+      {
+        "selector": "/* v7.2: reference cards, liquid glass. Same family as every pill and\n     the drawer panel. Card-internal typography (Cormorant title, tag in\n     caps) is preserved. */\n  .item-card",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "11px",
+          "padding": "3px 10px 4px",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".item-card:hover",
+        "declarations": {
+          "background": "rgba(255,255,255,0.04)",
+          "box-shadow": "inset 0 1px 2px rgba(255,255,255,0.40),\n      inset 0 -1px 1px rgba(0,0,0,0.22),\n      0 8px 28px rgba(0,0,0,0.32)"
+        }
+      },
+      {
+        "selector": "igns vs. references. Uploaded inspos do NOT glow. */\n  /* v8.2: only the LATEST visualized card glows. .is-vision identifies a\n     Maya render; .is-latest is added only to the newest. */\n  .item-card.is-vision.is-latest",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.45),\n      inset 0 -1px 1px rgba(0,0,0,0.22),\n      0 0 8px 1px rgba(200,222,255,0.40),\n      0 0 14px 2px rgba(200,222,255,0.16)"
+        }
+      },
+      {
+        "selector": ".item-card.is-vision.is-latest:hover",
+        "declarations": {
+          "box-shadow": "inset 0 1px 2px rgba(255,255,255,0.62),\n      inset 0 -1px 1px rgba(0,0,0,0.28),\n      0 0 12px 2px rgba(220,232,255,0.55),\n      0 0 20px 4px rgba(220,232,255,0.30)"
+        }
+      },
+      {
+        "selector": "0%, 100%",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.45),\n      inset 0 -1px 1px rgba(0,0,0,0.22),\n      0 0 7px 1px rgba(200,222,255,0.33),\n      0 0 12px 2px rgba(200,222,255,0.16)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.45),\n      inset 0 -1px 1px rgba(0,0,0,0.22),\n      0 0 10px 2px rgba(220,232,255,0.47),\n      0 0 16px 3px rgba(220,232,255,0.23)"
+        }
+      },
+      {
+        "selector": ".item-card.fav .fav-btn,\n  .item-card .fav-btn.is-fav",
+        "declarations": {
+          "background": "rgba(255,160,200,0.18)",
+          "box-shadow": "0 0 10px rgba(255,160,200,0.25)"
+        }
+      },
+      {
+        "selector": "90% transparent (no white sheen), only a faint hairline\n     border to define the edge. The card's corner sits at the center of\n     the circle so the handle visually wraps around it. */\n  .item-card.inspo .resize-handle",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "rgba(40,50,70,0.18)",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "backdrop-filter": "blur(8px)",
+          "-webkit-backdrop-filter": "blur(8px)"
+        }
+      },
+      {
+        "selector": "/* v10.2: small action buttons, canon glass chrome. Color comes from\n     the border (red for delete, white for stack/dissect), not from a\n     solid fill. */\n  .item-card .delete-btn",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,140,140,0.55)",
+          "font-size": "14px",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* Stack button, only meaningful on image cards (inspo) */\n  .item-card .stack-btn",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "font-size": "13px",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* v5.1: Dissect button, only on UPLOADED inspo cards (not Maya visions).\n     v10.2: canon pill chrome. */\n  .item-card .dissect-btn",
+        "declarations": {
+          "padding": "0 12px",
+          "border-radius": "100px",
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "font-size": "10px",
+          "letter-spacing": "0.15em",
+          "font-weight": "300",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "0%, 100%",
+        "declarations": {
+          "box-shadow": "0 0 0 1px var(--card-tint, transparent),\n                           0 0 0  0 var(--card-tint, transparent)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "0 0 0 1px var(--card-tint, transparent),\n                           0 0 14px 2px var(--card-tint, transparent)"
+        }
+      },
+      {
+        "selector": "/* v13.1: the tip amounts. These were using a class that does not exist here,\n     so they rendered as plain white browser buttons sitting on the glass. */\n  .tip-amt",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "9px 20px",
+          "font-weight": "300",
+          "font-size": "12px",
+          "letter-spacing": "0.12em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.22), inset 0 -1px 1px rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": ".item-card.tinted",
+        "declarations": {
+          "box-shadow": "0 0 0 1px var(--card-tint, transparent)"
+        }
+      },
+      {
+        "selector": "/* toast, v10: pulled into the page-1 glass-pill canon. */\n  #toast",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "8px 22px",
+          "font-weight": "300",
+          "font-size": "10px",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 garment modal (visualize, moodboard mode) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  .modal",
+        "declarations": {
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)",
+          "padding": "40px 0 24px"
+        }
+      },
+      {
+        "selector": "/* v10: .modal-close now carries the canon pill chrome. */\n  .modal-close",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "6px 14px",
+          "font-size": "10px",
+          "font-weight": "300",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": " a floating round liquid-glass pill that pops OUT of the\n     top-right corner. Same recipe as the drawer \u00d7, round, sits above the\n     panel edge, not flush. v10: canon-normalized. */\n  #garment-image-wrap .viewer-close",
+        "declarations": {
+          "padding": "0",
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "50%",
+          "font-size": "16px",
+          "letter-spacing": "0",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* v7.2: Listen / Modify / Switch fabric, liquid glass pill. */\n  .modal-text-btn",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "6px 14px",
+          "font-size": "10px",
+          "font-weight": "300",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* v8.3: wrap auto-sizes to the image, no dark margins around the\n     visualized image. Liquid glass shell wraps the actual content edge. */\n  #garment-image-wrap",
+        "declarations": {
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "16px",
+          "background": "transparent",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 6px 24px rgba(0,0,0,0.32)"
+        }
+      },
+      {
+        "selector": "/* v10: nav arrows canon-normalized, same recipe as round close \u00d7. */\n  #viewer-version-nav .nav-arrow",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "50%",
+          "font-size": "14px",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* v10: viewer ref chip, canon glass pill. v11.10: one notch smaller. */\n  .viewer-ref-chip",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "5px 12px",
+          "font-weight": "300",
+          "font-size": "9px",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 modal card (paste / settings / pickers), v10: glass canon \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  .modal-card",
+        "declarations": {
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "18px",
+          "padding": "32px",
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 12px 48px rgba(0,0,0,0.38)"
+        }
+      },
+      {
+        "selector": ".modal-card input",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "12px 18px",
+          "font-size": "11px",
+          "font-weight": "300",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": ".modal-card textarea",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "16px",
+          "padding": "14px 18px",
+          "font-size": "12px",
+          "font-weight": "300",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": "/* v10.2: canon glass pill. Was opaque dark + blue-tinted border. */\n  .ref-chip",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "font-size": "8px",
+          "font-weight": "300",
+          "letter-spacing": "0.12em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* v10.2: numbered badge, glass pill instead of opaque blue */\n  .picker-thumb .picker-badge",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.42)",
+          "font-size": "11px",
+          "font-weight": "300",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".picker-thumb.selected",
+        "declarations": {
+          "box-shadow": "0 0 24px rgba(255,255,255,0.18)"
+        }
+      },
+      {
+        "selector": "#notes-toggle .notes-dot",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "rgba(200,220,255,0.85)",
+          "box-shadow": "0 0 8px rgba(200,220,255,0.6)"
+        }
+      },
+      {
+        "selector": "S\n     toggle / transform slide; visibility is purely a function of where\n     #hscroll is scrolled. The floating-bubble margins are preserved by\n     positioning the drawer absolutely within its pane. */\n  #notes-drawer",
+        "declarations": {
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "18px",
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.30),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 12px 48px rgba(0,0,0,0.38)",
+          "padding": "16px 12px 16px"
+        }
+      },
+      {
+        "selector": "#notes-drawer .avatar-switch-row.active",
+        "declarations": {
+          "background": "rgba(180,210,255,0.10)",
+          "box-shadow": "inset 2px 0 0 rgba(160,200,255,0.55)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .pg-project-beside.on",
+        "declarations": {
+          "box-shadow": "inset 0 0 0 0.5px rgba(169,201,255,0.35)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .drawer-avatar-face",
+        "declarations": {
+          "border-radius": "50%",
+          "background-color": "rgba(255,255,255,0.04)",
+          "border": "0.5px solid rgba(255,255,255,0.32)",
+          "backdrop-filter": "blur(12px)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .pg-tab.on",
+        "declarations": {
+          "box-shadow": "0 0 0 1px rgba(255,255,255,0.10)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .pg-pane > #fabrics-drawer,\n  #notes-drawer .pg-pane > #pinterest-drawer",
+        "declarations": {
+          "background": "none",
+          "border": "none",
+          "border-radius": "0",
+          "box-shadow": "none",
+          "backdrop-filter": "none",
+          "-webkit-backdrop-filter": "none"
+        }
+      },
+      {
+        "selector": " Canon hairline pill, quiet until wanted. */\n  /* v14.20: a real magnifying glass, in the same circle; the box is longer and\n     its word sits centered. Enter searches everything saved on Pinterest. */\n  .pin-search-btn",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "0",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .pg-pane > #pinterest-drawer > .pin-drawer-foot .drawer-fabrics",
+        "declarations": {
+          "padding": "9px 22px",
+          "border-radius": "100px",
+          "background": "rgba(18,24,38,0.5)",
+          "border": "0.5px solid rgba(255,255,255,0.28)",
+          "backdrop-filter": "blur(16px) saturate(160%)",
+          "-webkit-backdrop-filter": "blur(16px) saturate(160%)",
+          "box-shadow": "0 6px 22px rgba(0,0,0,0.38)"
+        }
+      },
+      {
+        "selector": "/* v13.89: the out-of-credits popup. */\n  #maya-credits-popup",
+        "declarations": {
+          "padding": "24px",
+          "background": "rgba(8,12,24,0.38)",
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)"
+        }
+      },
+      {
+        "selector": "/* v14.04: drawer glass, the Bible */\n  #maya-credits-popup .mcp-card",
+        "declarations": {
+          "padding": "28px 24px 22px",
+          "border-radius": "18px",
+          "background": "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%)",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18), 0 12px 48px rgba(0,0,0,0.38)"
+        }
+      },
+      {
+        "selector": "/* v13.90: the Mana Siyo made-to-order confirm. */\n  #maya-manasiyo-popup",
+        "declarations": {
+          "padding": "24px",
+          "background": "rgba(8,12,24,0.38)",
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)"
+        }
+      },
+      {
+        "selector": "/* v14.04: the drawer is the Bible; this card wears its glass too. */\n  #maya-manasiyo-popup .mmp-card",
+        "declarations": {
+          "padding": "28px 24px 22px",
+          "border-radius": "18px",
+          "background": "linear-gradient(180deg,\n      rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%,\n      rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%)",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18), 0 12px 48px rgba(0,0,0,0.38)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .meas-row input",
+        "declarations": {
+          "background": "none",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "3px 10px",
+          "font-size": "11px",
+          "letter-spacing": "0.04em",
+          "backdrop-filter": "blur(20px)",
+          "-webkit-backdrop-filter": "blur(20px)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .meas-row.recommended input",
+        "declarations": {
+          "box-shadow": "inset 0 0 0 1px rgba(180,210,255,0.18), 0 0 10px rgba(180,210,255,0.15)"
+        }
+      },
+      {
+        "selector": "ing tightened on both axes (8/18 \u2192 3/12) so the pill hugs\n     the name. Line-height also dropped from 1.5 \u2192 1.2 to remove vertical\n     slack so the capsule feels close to the text. */\n  #notes-drawer .drawer-client-big",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "3px 12px",
+          "font-size": "18px",
+          "font-weight": "300",
+          "letter-spacing": "0.04em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .drawer-sessions-toggle",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "8px 16px",
+          "font-size": "10px",
+          "font-weight": "300",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(20px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(20px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 3px 12px rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .drawer-sessions-list",
+        "declarations": {
+          "border": "0.5px solid rgba(255,255,255,0.10)",
+          "border-radius": "12px",
+          "background": "rgba(255,255,255,0.02)",
+          "backdrop-filter": "blur(20px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(20px) saturate(180%)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .session-item.active",
+        "declarations": {
+          "background": "rgba(180,210,255,0.10)",
+          "box-shadow": "inset 2px 0 0 rgba(160,200,255,0.55)"
+        }
+      },
+      {
+        "selector": "/* v7.2: drawer top pills, liquid glass. */\n  #notes-drawer .drawer-fabrics",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "6px 14px",
+          "font-size": "10px",
+          "font-weight": "300",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(20px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(20px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 3px 12px rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": "/* v7.2: bottom action row, liquid glass. */\n  #notes-drawer .drawer-action",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "6px 14px",
+          "font-size": "10px",
+          "font-weight": "300",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(20px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(20px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 3px 12px rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": "/* full-canvas drop hint when dragging audio over the page */\n  #canvas-drop-hint",
+        "declarations": {
+          "background": "rgba(20,16,40,0.85)",
+          "backdrop-filter": "blur(20px)",
+          "-webkit-backdrop-filter": "blur(20px)",
+          "border": "1px dashed rgba(200,220,255,0.5)"
+        }
+      },
+      {
+        "selector": "f 420px), same gradient shell. */\n  /* v11.23: scrim removed, the main screen must NOT fade when Fabrics opens.\n     The drawer keeps the same glass recipe as the hamburger drawer. */\n  #fabrics-drawer, #pinterest-drawer",
+        "declarations": {
+          "background": "linear-gradient(180deg,\n        rgba(255,255,255,0.10) 0%,\n        rgba(255,255,255,0.03) 25%,\n        rgba(255,255,255,0.02) 65%,\n        rgba(255,255,255,0.07) 100%)",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "18px",
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.30),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 12px 48px rgba(0,0,0,0.38)"
+        }
+      },
+      {
+        "selector": "/* v10.2: canon glass + white-alpha hover. */\n  .mode-choose",
+        "declarations": {
+          "padding": "22px 18px",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "16px",
+          "background": "transparent",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".fabric-pick.selected",
+        "declarations": {
+          "box-shadow": "0 0 24px rgba(255,255,255,0.18)"
+        }
+      },
+      {
+        "selector": "/* v10.2: glass-pill badge instead of opaque blue. */\n  .fabric-pick .order-badge",
+        "declarations": {
+          "border-radius": "50%",
+          "border": "0.5px solid rgba(255,255,255,0.65)",
+          "font-size": "10px",
+          "font-weight": "300",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* v10: viewer fabric chip, canon glass pill (swatch hugs left). */\n  .viewer-fabric-chip",
+        "declarations": {
+          "border-radius": "100px",
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "font-weight": "300",
+          "font-size": "9px",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "0%, 100%",
+        "declarations": {
+          "box-shadow": "0 0 0 0 rgba(255,255,255,0.0)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "0 0 6px 0 rgba(255,255,255,0.18)"
+        }
+      },
+      {
+        "selector": "  empty canvas, lets her type a single fashion term that Maya then\n     categorizes and places as a card. */\n  /* v7.6: narrower, centered text, pill matches the unified liquid-glass\n     language. */\n  #manual-ref-input",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.42)",
+          "border-radius": "100px",
+          "padding": "6px 14px",
+          "font-size": "12px",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "0 6px 18px rgba(0,0,0,0.35)"
+        }
+      },
+      {
+        "selector": ".item-card .card-fabric-dot",
+        "declarations": {
+          "border-radius": "50%",
+          "background-color": "rgba(0,0,0,0.4)",
+          "border": "1px solid rgba(255,255,255,0.6)",
+          "box-shadow": "0 1px 3px rgba(0,0,0,0.4)"
+        }
+      },
+      {
+        "selector": "#onboarding-hints .hint-card",
+        "declarations": {
+          "padding": "22px 22px 24px",
+          "border-radius": "16px",
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "#community-empty",
+        "declarations": {
+          "padding": "22px 22px 24px",
+          "border-radius": "16px",
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "  glass, same starlight border and halo, nothing white behind the\n     picture. The 6% white plate v13.17 used read as a lit column between\n     the pictures whenever a render did not fill its frame. */\n  .community-card",
+        "declarations": {
+          "border-radius": "16px",
+          "background": "transparent",
+          "border": "0.5px solid rgba(220,232,255,0.40)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.32),\n      inset 0 -1px 1px rgba(0,0,0,0.20),\n      0 0 9px 1.7px rgba(220,232,255,0.285),\n      0 0 13.6px 2.55px rgba(220,232,255,0.152),\n      0 8px 32px rgba(0,0,0,0.42)"
+        }
+      },
+      {
+        "selector": "#community-lightbox",
+        "declarations": {
+          "background": "rgba(3,6,16,0.86)",
+          "-webkit-backdrop-filter": "blur(18px)",
+          "backdrop-filter": "blur(18px)",
+          "padding": "40px"
+        }
+      },
+      {
+        "selector": "#community-lightbox img",
+        "declarations": {
+          "border-radius": "14px",
+          "border": "0.5px solid rgba(220,232,255,0.30)",
+          "box-shadow": "0 0 30px 6px rgba(200,222,255,0.20), 0 14px 44px rgba(0,0,0,0.5)"
+        }
+      },
+      {
+        "selector": ".favorite-card",
+        "declarations": {
+          "border-radius": "16px",
+          "background": "transparent",
+          "border": "0.5px solid rgba(220,232,255,0.40)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.32),\n      inset 0 -1px 1px rgba(0,0,0,0.20),\n      0 0 9px 1.7px rgba(220,232,255,0.285),\n      0 0 13.6px 2.55px rgba(220,232,255,0.152),\n      0 8px 32px rgba(0,0,0,0.42)"
+        }
+      },
+      {
+        "selector": ".favorite-card::after",
+        "declarations": {
+          "border-radius": "inherit",
+          "box-shadow": "inset 0 0 18px 2px rgba(220,232,255,0.36)"
+        }
+      },
+      {
+        "selector": "wo favorites pills read like the X and heart glass icons \u2014\n     subtle 0.22 border, calm, no attention-pulse \u2014 just smaller and wearing a\n     word. Tighter padding and a lighter type, per Fromsa. */\n  .viewer-submit-btn",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "5px 14px",
+          "font-size": "9.5px",
+          "font-weight": "300",
+          "letter-spacing": "0.14em",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.24),\n      inset 0 -1px 1px rgba(0,0,0,0.16),\n      0 3px 12px rgba(0,0,0,0.20)"
+        }
+      },
+      {
+        "selector": " v13.36: the heart on the picture, opposite the close. */\n  /* v13.42: the exact mirror of the close. Same 30px circle, same corner\n     offset, opposite side, so the two read as a pair on the picture. */\n  .viewer-heart",
+        "declarations": {
+          "padding": "0",
+          "background": "rgba(8,12,24,0.45)",
+          "border": "0.5px solid rgba(255,255,255,0.28)",
+          "border-radius": "50%",
+          "-webkit-backdrop-filter": "blur(14px)",
+          "backdrop-filter": "blur(14px)"
+        }
+      },
+      {
+        "selector": ".staged-chip",
+        "declarations": {
+          "border-radius": "50%",
+          "border": "0.5px solid rgba(220,232,255,0.40)",
+          "background-color": "rgba(255,255,255,0.06)",
+          "box-shadow": "0 2px 10px rgba(0,0,0,0.4)"
+        }
+      },
+      {
+        "selector": "/* v11.18: collapsible \"Attributes\", ref tags hide behind a toggle pill.\n     Collapsed by default; opens when #garment-modal gets .attrs-open. */\n  .attributes-toggle",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "5px 16px",
+          "font-weight": "300",
+          "font-size": "9px",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "0%, 100%",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.3),\n      0 0 4px 0 rgba(205,225,255,0.42)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.3),\n      0 0 7px 1px rgba(225,238,255,0.6)"
+        }
+      },
+      {
+        "selector": "/* v11.12: \u00d7 close, small circular glass button. Sits next to Submit.\n     Was a \"\u2190 Back\" text link in v11.10; the user reads it as a toggle-out\n     of modify mode, not a navigation step. */\n  .modify-back-link",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "50%",
+          "padding": "0",
+          "font-size": "14px",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "0%, 100%",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 0 12px 1px rgba(200,222,255,0.16),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.40),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 0 22px 3px rgba(200,222,255,0.40),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* \"rendering 360\u00b0\u2026\" badge while Runway is still generating the clip. */\n  .favorite-card .fc-rendering",
+        "declarations": {
+          "font-size": "9px",
+          "font-weight": "300",
+          "letter-spacing": "0.18em",
+          "background": "rgba(0,0,0,0.45)",
+          "padding": "5px 11px",
+          "border-radius": "100px",
+          "backdrop-filter": "blur(8px)",
+          "-webkit-backdrop-filter": "blur(8px)"
+        }
+      },
+      {
+        "selector": "/* v10.9: construction dissection panel, hidden under the card, slides\n     up on hover. Shows garment type, panels, complexity, fabric source. */\n  .favorite-card .fc-dissection",
+        "declarations": {
+          "padding": "14px 18px 16px",
+          "background": "linear-gradient(180deg, rgba(8,10,18,0.0) 0%, rgba(8,10,18,0.55) 30%, rgba(8,10,18,0.85) 100%)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)"
+        }
+      },
+      {
+        "selector": ".favorite-card .fc-tag",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "3px 11px",
+          "font-weight": "300",
+          "font-size": "9px",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": "isualize / Listen pills) so it reads as \"two screens here,\n     swipe up/down\" instead of a stray pair of dots. Margins kept thin so the\n     pill stays close to the dots, it's a frame, not a button. */\n  #page-indicator",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 0 rgba(255,255,255,0.28),\n      inset 0 -1px 0 rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".page-dot.active",
+        "declarations": {
+          "background": "rgba(255,255,255,1.0)",
+          "box-shadow": "0 0 6px rgba(255,255,255,0.45)"
+        }
+      },
+      {
+        "selector": "-rush keyframes), the gate markup and JS are gone too. */\n\n  /* v9.13: thank-you overlay, same liquid-glass family as splash, hidden\n     by default. Shown by #thankyou.show; dismissed by ANY click or key. */\n  #thankyou",
+        "declarations": {
+          "background": "rgba(8,10,18,0.55)",
+          "-webkit-backdrop-filter": "blur(40px) saturate(180%)",
+          "backdrop-filter": "blur(40px) saturate(180%)"
+        }
+      },
+      {
+        "selector": "/* v13.58: the terms popup. First sign in only; Agree wakes at the end of\n     the text. Same glass as everything else. */\n  #tos-modal",
+        "declarations": {
+          "background": "rgba(2,4,10,0.66)",
+          "backdrop-filter": "blur(10px)",
+          "-webkit-backdrop-filter": "blur(10px)",
+          "padding": "20px"
+        }
+      },
+      {
+        "selector": "#tos-modal .tos-sheet",
+        "declarations": {
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "22px",
+          "background": "rgba(8,12,26,0.92)",
+          "backdrop-filter": "blur(26px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(26px) saturate(180%)",
+          "box-shadow": "0 18px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.10)",
+          "padding": "26px 26px 20px"
+        }
+      },
+      {
+        "selector": "/* lighter glass on phones, blur is the priciest effect on mobile GPUs;\n       this is the single biggest smoothness win per frame. */\n    .item-card",
+        "declarations": {
+          "backdrop-filter": "blur(12px) saturate(160%)",
+          "-webkit-backdrop-filter": "blur(12px) saturate(160%)"
+        }
+      },
+      {
+        "selector": "/* lighter GPU load: soften the heaviest glass effects */\n    .modal",
+        "declarations": {
+          "backdrop-filter": "blur(18px)",
+          "-webkit-backdrop-filter": "blur(18px)"
+        }
+      },
+      {
+        "selector": ".item-card",
+        "declarations": {
+          "backdrop-filter": "blur(12px) saturate(160%)",
+          "-webkit-backdrop-filter": "blur(12px) saturate(160%)"
+        }
+      },
+      {
+        "selector": ".modal",
+        "declarations": {
+          "backdrop-filter": "blur(18px)",
+          "-webkit-backdrop-filter": "blur(18px)"
+        }
+      },
+      {
+        "selector": "#notes-drawer, #fabrics-drawer, #pinterest-drawer",
+        "declarations": {
+          "backdrop-filter": "blur(20px) saturate(170%)",
+          "-webkit-backdrop-filter": "blur(20px) saturate(170%)"
+        }
+      },
+      {
+        "selector": "#voice-bar",
+        "declarations": {
+          "backdrop-filter": "blur(14px) saturate(170%)",
+          "-webkit-backdrop-filter": "blur(14px) saturate(170%)"
+        }
+      },
+      {
+        "selector": ".pg-bg-thumb.on",
+        "declarations": {
+          "box-shadow": "inset 0 0 0 1.5px rgba(169,201,255,0.9)"
+        }
+      },
+      {
+        "selector": "body.pg-zoomed .item-card",
+        "declarations": {
+          "backdrop-filter": "none",
+          "-webkit-backdrop-filter": "none",
+          "background": "rgba(10,14,28,0.55)"
+        }
+      },
+      {
+        "selector": "#pg-maya-toggle .mt-switch",
+        "declarations": {
+          "border-radius": "100px",
+          "background": "rgba(255,255,255,0.10)",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "box-shadow": "inset 0 1px 2px rgba(0,0,0,0.35)"
+        }
+      },
+      {
+        "selector": "#pg-maya-toggle .mt-knob",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "#fff",
+          "box-shadow": "0 1px 3px rgba(0,0,0,0.45)"
+        }
+      },
+      {
+        "selector": "#pg-maya-toggle.live .mt-knob",
+        "declarations": {
+          "box-shadow": "0 0 0 3px rgba(169,201,255,0.35), 0 1px 3px rgba(0,0,0,0.45)"
+        }
+      },
+      {
+        "selector": "#feedback-modal .modal-card",
+        "declarations": {
+          "border-radius": "18px",
+          "padding": "30px 28px 26px",
+          "background": "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%,\n      rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%)",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18), 0 12px 48px rgba(0,0,0,0.38)"
+        }
+      },
+      {
+        "selector": "/* Maya live: a small chip at the bottom right, and her last lines above the voice bar */\n  #pg-maya-chip",
+        "declarations": {
+          "padding": "8px 14px 8px 11px",
+          "border-radius": "100px",
+          "background": "rgba(8,12,26,0.85)",
+          "border": "0.5px solid rgba(169,201,255,0.6)",
+          "backdrop-filter": "blur(20px)",
+          "-webkit-backdrop-filter": "blur(20px)",
+          "font-size": "9px",
+          "letter-spacing": "0.15em",
+          "box-shadow": "0 8px 30px rgba(0,0,0,0.5)"
+        }
+      },
+      {
+        "selector": "0%,100%",
+        "declarations": {
+          "box-shadow": "0 0 0 0 rgba(169,201,255,0.35)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "0 0 0 8px rgba(169,201,255,0)"
+        }
+      },
+      {
+        "selector": "0%, 100%",
+        "declarations": {
+          "box-shadow": "0 0 0 0 rgba(169,201,255,0.0), 0 0 18px 2px rgba(169,201,255,0.18)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "0 0 0 5px rgba(169,201,255,0.10), 0 0 26px 4px rgba(169,201,255,0.30)"
+        }
+      }
+    ]
+  },
+  {
+    "file": "playground/index.html",
+    "rules": [
+      {
+        "selector": "v8.9: shared liquid-glass recipe. Any pill/button/card surface gets\n     this with `class=\"\u2026 glass-pill\"`. Individual rules can still add\n     element-specific size/typography, but the chrome lives here. */\n  .glass-pill",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* v7.2: all top-bar pills, liquid glass. Same gradient + backdrop blur\n     + specular shadow on every variant. */\n  .top-btn",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "6px 14px",
+          "font-size": "10px",
+          "font-weight": "300",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* notes-dot was originally scoped to #notes-toggle, also apply to hamburger\n     so a draft consultation still glows when there's something worth saving. */\n  #hamburger-toggle .notes-dot",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "rgba(200,220,255,0.85)",
+          "box-shadow": "0 0 8px rgba(200,220,255,0.6)"
+        }
+      },
+      {
+        "selector": "(visualize / one-pager, inline beside voice bar) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  /* v7.2: Visualize, liquid glass pill. Heavy backdrop blur + saturate,\n     layered top sheen, inner specular highlight, soft outer shadow. */\n  .action-btn",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "6px 14px",
+          "font-size": "10px",
+          "font-weight": "300",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".action-btn:hover",
+        "declarations": {
+          "background": "rgba(255,255,255,0.04)",
+          "box-shadow": "inset 0 1px 2px rgba(255,255,255,0.62),\n      inset 0 -1px 1px rgba(0,0,0,0.28),\n      0 6px 22px rgba(0,0,0,0.38)"
+        }
+      },
+      {
+        "selector": "/* v7.2: voice bar, liquid glass pill. */\n  #voice-bar",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "6px 14px",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".upload-choose-card",
+        "declarations": {
+          "padding": "14px 16px",
+          "border": "0.5px solid rgba(255,255,255,0.2)",
+          "border-radius": "14px",
+          "background": "rgba(10,14,24,0.85)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)"
+        }
+      },
+      {
+        "selector": "#share-link-modal .share-card",
+        "declarations": {
+          "padding": "20px 22px",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "16px",
+          "background": "rgba(10,14,24,0.9)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)"
+        }
+      },
+      {
+        "selector": "/* v7.2: reference cards, liquid glass. Same family as every pill and\n     the drawer panel. Card-internal typography (Cormorant title, tag in\n     caps) is preserved. */\n  .item-card",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "11px",
+          "padding": "3px 10px 4px",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".item-card:hover",
+        "declarations": {
+          "background": "rgba(255,255,255,0.04)",
+          "box-shadow": "inset 0 1px 2px rgba(255,255,255,0.40),\n      inset 0 -1px 1px rgba(0,0,0,0.22),\n      0 8px 28px rgba(0,0,0,0.32)"
+        }
+      },
+      {
+        "selector": "igns vs. references. Uploaded inspos do NOT glow. */\n  /* v8.2: only the LATEST visualized card glows. .is-vision identifies a\n     Maya render; .is-latest is added only to the newest. */\n  .item-card.is-vision.is-latest",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.45),\n      inset 0 -1px 1px rgba(0,0,0,0.22),\n      0 0 8px 1px rgba(200,222,255,0.40),\n      0 0 14px 2px rgba(200,222,255,0.16)"
+        }
+      },
+      {
+        "selector": ".item-card.is-vision.is-latest:hover",
+        "declarations": {
+          "box-shadow": "inset 0 1px 2px rgba(255,255,255,0.62),\n      inset 0 -1px 1px rgba(0,0,0,0.28),\n      0 0 12px 2px rgba(220,232,255,0.55),\n      0 0 20px 4px rgba(220,232,255,0.30)"
+        }
+      },
+      {
+        "selector": "0%, 100%",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.45),\n      inset 0 -1px 1px rgba(0,0,0,0.22),\n      0 0 7px 1px rgba(200,222,255,0.33),\n      0 0 12px 2px rgba(200,222,255,0.16)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.45),\n      inset 0 -1px 1px rgba(0,0,0,0.22),\n      0 0 10px 2px rgba(220,232,255,0.47),\n      0 0 16px 3px rgba(220,232,255,0.23)"
+        }
+      },
+      {
+        "selector": ".item-card.fav .fav-btn,\n  .item-card .fav-btn.is-fav",
+        "declarations": {
+          "background": "rgba(255,160,200,0.18)",
+          "box-shadow": "0 0 10px rgba(255,160,200,0.25)"
+        }
+      },
+      {
+        "selector": "90% transparent (no white sheen), only a faint hairline\n     border to define the edge. The card's corner sits at the center of\n     the circle so the handle visually wraps around it. */\n  .item-card.inspo .resize-handle",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "rgba(40,50,70,0.18)",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "backdrop-filter": "blur(8px)",
+          "-webkit-backdrop-filter": "blur(8px)"
+        }
+      },
+      {
+        "selector": "/* v10.2: small action buttons, canon glass chrome. Color comes from\n     the border (red for delete, white for stack/dissect), not from a\n     solid fill. */\n  .item-card .delete-btn",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,140,140,0.55)",
+          "font-size": "14px",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* Stack button, only meaningful on image cards (inspo) */\n  .item-card .stack-btn",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "font-size": "13px",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* v5.1: Dissect button, only on UPLOADED inspo cards (not Maya visions).\n     v10.2: canon pill chrome. */\n  .item-card .dissect-btn",
+        "declarations": {
+          "padding": "0 12px",
+          "border-radius": "100px",
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "font-size": "10px",
+          "letter-spacing": "0.15em",
+          "font-weight": "300",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "0%, 100%",
+        "declarations": {
+          "box-shadow": "0 0 0 1px var(--card-tint, transparent),\n                           0 0 0  0 var(--card-tint, transparent)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "0 0 0 1px var(--card-tint, transparent),\n                           0 0 14px 2px var(--card-tint, transparent)"
+        }
+      },
+      {
+        "selector": "/* v13.1: the tip amounts. These were using a class that does not exist here,\n     so they rendered as plain white browser buttons sitting on the glass. */\n  .tip-amt",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "9px 20px",
+          "font-weight": "300",
+          "font-size": "12px",
+          "letter-spacing": "0.12em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.22), inset 0 -1px 1px rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": ".item-card.tinted",
+        "declarations": {
+          "box-shadow": "0 0 0 1px var(--card-tint, transparent)"
+        }
+      },
+      {
+        "selector": "/* toast, v10: pulled into the page-1 glass-pill canon. */\n  #toast",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "8px 22px",
+          "font-weight": "300",
+          "font-size": "10px",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 garment modal (visualize, moodboard mode) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  .modal",
+        "declarations": {
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)",
+          "padding": "40px 0 24px"
+        }
+      },
+      {
+        "selector": "/* v10: .modal-close now carries the canon pill chrome. */\n  .modal-close",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "6px 14px",
+          "font-size": "10px",
+          "font-weight": "300",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": " a floating round liquid-glass pill that pops OUT of the\n     top-right corner. Same recipe as the drawer \u00d7, round, sits above the\n     panel edge, not flush. v10: canon-normalized. */\n  #garment-image-wrap .viewer-close",
+        "declarations": {
+          "padding": "0",
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "50%",
+          "font-size": "16px",
+          "letter-spacing": "0",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* v7.2: Listen / Modify / Switch fabric, liquid glass pill. */\n  .modal-text-btn",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "6px 14px",
+          "font-size": "10px",
+          "font-weight": "300",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* v8.3: wrap auto-sizes to the image, no dark margins around the\n     visualized image. Liquid glass shell wraps the actual content edge. */\n  #garment-image-wrap",
+        "declarations": {
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "16px",
+          "background": "transparent",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 6px 24px rgba(0,0,0,0.32)"
+        }
+      },
+      {
+        "selector": "#pg-flip",
+        "declarations": {
+          "border-radius": "50%",
+          "padding": "0",
+          "background": "rgba(8,12,26,0.72)",
+          "border": "0.5px solid rgba(255,255,255,0.3)",
+          "backdrop-filter": "blur(14px)",
+          "-webkit-backdrop-filter": "blur(14px)"
+        }
+      },
+      {
+        "selector": "/* the back of the card: the drawer's glass, the notes centered */\n  #pg-card-back",
+        "declarations": {
+          "border-radius": "16px",
+          "padding": "34px 40px",
+          "background": "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%), rgba(8,12,26,0.92)",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": "#pg-callouts .pgc-label",
+        "declarations": {
+          "padding": "6px 11px",
+          "border-radius": "999px",
+          "background": "rgba(8,12,26,0.78)",
+          "border": "0.5px solid rgba(255,255,255,0.28)",
+          "backdrop-filter": "blur(14px)",
+          "-webkit-backdrop-filter": "blur(14px)"
+        }
+      },
+      {
+        "selector": "/* v10: nav arrows canon-normalized, same recipe as round close \u00d7. */\n  #viewer-version-nav .nav-arrow",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "50%",
+          "font-size": "14px",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* v10: viewer ref chip, canon glass pill. v11.10: one notch smaller. */\n  .viewer-ref-chip",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "5px 12px",
+          "font-weight": "300",
+          "font-size": "9px",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 modal card (paste / settings / pickers), v10: glass canon \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */\n  .modal-card",
+        "declarations": {
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "18px",
+          "padding": "32px",
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 12px 48px rgba(0,0,0,0.38)"
+        }
+      },
+      {
+        "selector": ".modal-card input",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "12px 18px",
+          "font-size": "11px",
+          "font-weight": "300",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": ".modal-card textarea",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "16px",
+          "padding": "14px 18px",
+          "font-size": "12px",
+          "font-weight": "300",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": "/* v10.2: canon glass pill. Was opaque dark + blue-tinted border. */\n  .ref-chip",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "font-size": "8px",
+          "font-weight": "300",
+          "letter-spacing": "0.12em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* v10.2: numbered badge, glass pill instead of opaque blue */\n  .picker-thumb .picker-badge",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.42)",
+          "font-size": "11px",
+          "font-weight": "300",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".picker-thumb.selected",
+        "declarations": {
+          "box-shadow": "0 0 24px rgba(255,255,255,0.18)"
+        }
+      },
+      {
+        "selector": "#notes-toggle .notes-dot",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "rgba(200,220,255,0.85)",
+          "box-shadow": "0 0 8px rgba(200,220,255,0.6)"
+        }
+      },
+      {
+        "selector": "S\n     toggle / transform slide; visibility is purely a function of where\n     #hscroll is scrolled. The floating-bubble margins are preserved by\n     positioning the drawer absolutely within its pane. */\n  #notes-drawer",
+        "declarations": {
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "18px",
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.30),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 12px 48px rgba(0,0,0,0.38)",
+          "padding": "16px 12px 16px"
+        }
+      },
+      {
+        "selector": "#notes-drawer .avatar-switch-row.active",
+        "declarations": {
+          "background": "rgba(180,210,255,0.10)",
+          "box-shadow": "inset 2px 0 0 rgba(160,200,255,0.55)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .pg-project-beside.on",
+        "declarations": {
+          "box-shadow": "inset 0 0 0 0.5px rgba(169,201,255,0.35)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .drawer-avatar-face",
+        "declarations": {
+          "border-radius": "50%",
+          "background-color": "rgba(255,255,255,0.04)",
+          "border": "0.5px solid rgba(255,255,255,0.32)",
+          "backdrop-filter": "blur(12px)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .pg-tab.on",
+        "declarations": {
+          "box-shadow": "0 0 0 1px rgba(255,255,255,0.10)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .pg-pane > #fabrics-drawer,\n  #notes-drawer .pg-pane > #pinterest-drawer",
+        "declarations": {
+          "background": "none",
+          "border": "none",
+          "border-radius": "0",
+          "box-shadow": "none",
+          "backdrop-filter": "none",
+          "-webkit-backdrop-filter": "none"
+        }
+      },
+      {
+        "selector": " Canon hairline pill, quiet until wanted. */\n  /* v14.20: a real magnifying glass, in the same circle; the box is longer and\n     its word sits centered. Enter searches everything saved on Pinterest. */\n  .pin-search-btn",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "0",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .pg-pane > #pinterest-drawer > .pin-drawer-foot .drawer-fabrics",
+        "declarations": {
+          "padding": "9px 22px",
+          "border-radius": "100px",
+          "background": "rgba(18,24,38,0.5)",
+          "border": "0.5px solid rgba(255,255,255,0.28)",
+          "backdrop-filter": "blur(16px) saturate(160%)",
+          "-webkit-backdrop-filter": "blur(16px) saturate(160%)",
+          "box-shadow": "0 6px 22px rgba(0,0,0,0.38)"
+        }
+      },
+      {
+        "selector": "/* v13.89: the out-of-credits popup. */\n  #maya-credits-popup",
+        "declarations": {
+          "padding": "24px",
+          "background": "rgba(8,12,24,0.38)",
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)"
+        }
+      },
+      {
+        "selector": "/* v14.04: drawer glass, the Bible */\n  #maya-credits-popup .mcp-card",
+        "declarations": {
+          "padding": "28px 24px 22px",
+          "border-radius": "18px",
+          "background": "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%)",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18), 0 12px 48px rgba(0,0,0,0.38)"
+        }
+      },
+      {
+        "selector": "/* v13.90: the Mana Siyo made-to-order confirm. */\n  #maya-manasiyo-popup",
+        "declarations": {
+          "padding": "24px",
+          "background": "rgba(8,12,24,0.38)",
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)"
+        }
+      },
+      {
+        "selector": "/* v14.04: the drawer is the Bible; this card wears its glass too. */\n  #maya-manasiyo-popup .mmp-card",
+        "declarations": {
+          "padding": "28px 24px 22px",
+          "border-radius": "18px",
+          "background": "linear-gradient(180deg,\n      rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%,\n      rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%)",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18), 0 12px 48px rgba(0,0,0,0.38)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .meas-row input",
+        "declarations": {
+          "background": "none",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "3px 10px",
+          "font-size": "11px",
+          "letter-spacing": "0.04em",
+          "backdrop-filter": "blur(20px)",
+          "-webkit-backdrop-filter": "blur(20px)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .meas-row.recommended input",
+        "declarations": {
+          "box-shadow": "inset 0 0 0 1px rgba(180,210,255,0.18), 0 0 10px rgba(180,210,255,0.15)"
+        }
+      },
+      {
+        "selector": "ing tightened on both axes (8/18 \u2192 3/12) so the pill hugs\n     the name. Line-height also dropped from 1.5 \u2192 1.2 to remove vertical\n     slack so the capsule feels close to the text. */\n  #notes-drawer .drawer-client-big",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "3px 12px",
+          "font-size": "18px",
+          "font-weight": "300",
+          "letter-spacing": "0.04em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .drawer-sessions-toggle",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "8px 16px",
+          "font-size": "10px",
+          "font-weight": "300",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(20px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(20px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 3px 12px rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .drawer-sessions-list",
+        "declarations": {
+          "border": "0.5px solid rgba(255,255,255,0.10)",
+          "border-radius": "12px",
+          "background": "rgba(255,255,255,0.02)",
+          "backdrop-filter": "blur(20px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(20px) saturate(180%)"
+        }
+      },
+      {
+        "selector": "#notes-drawer .session-item.active",
+        "declarations": {
+          "background": "rgba(180,210,255,0.10)",
+          "box-shadow": "inset 2px 0 0 rgba(160,200,255,0.55)"
+        }
+      },
+      {
+        "selector": "/* v7.2: drawer top pills, liquid glass. */\n  #notes-drawer .drawer-fabrics",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "6px 14px",
+          "font-size": "10px",
+          "font-weight": "300",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(20px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(20px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 3px 12px rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": "/* v7.2: bottom action row, liquid glass. */\n  #notes-drawer .drawer-action",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "6px 14px",
+          "font-size": "10px",
+          "font-weight": "300",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(20px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(20px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 3px 12px rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": "/* full-canvas drop hint when dragging audio over the page */\n  #canvas-drop-hint",
+        "declarations": {
+          "background": "rgba(20,16,40,0.85)",
+          "backdrop-filter": "blur(20px)",
+          "-webkit-backdrop-filter": "blur(20px)",
+          "border": "1px dashed rgba(200,220,255,0.5)"
+        }
+      },
+      {
+        "selector": "f 420px), same gradient shell. */\n  /* v11.23: scrim removed, the main screen must NOT fade when Fabrics opens.\n     The drawer keeps the same glass recipe as the hamburger drawer. */\n  #fabrics-drawer, #pinterest-drawer",
+        "declarations": {
+          "background": "linear-gradient(180deg,\n        rgba(255,255,255,0.10) 0%,\n        rgba(255,255,255,0.03) 25%,\n        rgba(255,255,255,0.02) 65%,\n        rgba(255,255,255,0.07) 100%)",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "18px",
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.30),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 12px 48px rgba(0,0,0,0.38)"
+        }
+      },
+      {
+        "selector": "/* v10.2: canon glass + white-alpha hover. */\n  .mode-choose",
+        "declarations": {
+          "padding": "22px 18px",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "16px",
+          "background": "transparent",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".fabric-pick.selected",
+        "declarations": {
+          "box-shadow": "0 0 24px rgba(255,255,255,0.18)"
+        }
+      },
+      {
+        "selector": "/* v10.2: glass-pill badge instead of opaque blue. */\n  .fabric-pick .order-badge",
+        "declarations": {
+          "border-radius": "50%",
+          "border": "0.5px solid rgba(255,255,255,0.65)",
+          "font-size": "10px",
+          "font-weight": "300",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* v10: viewer fabric chip, canon glass pill (swatch hugs left). */\n  .viewer-fabric-chip",
+        "declarations": {
+          "border-radius": "100px",
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "font-weight": "300",
+          "font-size": "9px",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "0%, 100%",
+        "declarations": {
+          "box-shadow": "0 0 0 0 rgba(255,255,255,0.0)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "0 0 6px 0 rgba(255,255,255,0.18)"
+        }
+      },
+      {
+        "selector": "  empty canvas, lets her type a single fashion term that Maya then\n     categorizes and places as a card. */\n  /* v7.6: narrower, centered text, pill matches the unified liquid-glass\n     language. */\n  #manual-ref-input",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.42)",
+          "border-radius": "100px",
+          "padding": "6px 14px",
+          "font-size": "12px",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "0 6px 18px rgba(0,0,0,0.35)"
+        }
+      },
+      {
+        "selector": ".item-card .card-fabric-dot",
+        "declarations": {
+          "border-radius": "50%",
+          "background-color": "rgba(0,0,0,0.4)",
+          "border": "1px solid rgba(255,255,255,0.6)",
+          "box-shadow": "0 1px 3px rgba(0,0,0,0.4)"
+        }
+      },
+      {
+        "selector": "#onboarding-hints .hint-card",
+        "declarations": {
+          "padding": "22px 22px 24px",
+          "border-radius": "16px",
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "#community-empty",
+        "declarations": {
+          "padding": "22px 22px 24px",
+          "border-radius": "16px",
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "  glass, same starlight border and halo, nothing white behind the\n     picture. The 6% white plate v13.17 used read as a lit column between\n     the pictures whenever a render did not fill its frame. */\n  .community-card",
+        "declarations": {
+          "border-radius": "16px",
+          "background": "transparent",
+          "border": "0.5px solid rgba(220,232,255,0.40)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.32),\n      inset 0 -1px 1px rgba(0,0,0,0.20),\n      0 0 9px 1.7px rgba(220,232,255,0.285),\n      0 0 13.6px 2.55px rgba(220,232,255,0.152),\n      0 8px 32px rgba(0,0,0,0.42)"
+        }
+      },
+      {
+        "selector": "#community-lightbox",
+        "declarations": {
+          "background": "rgba(3,6,16,0.86)",
+          "-webkit-backdrop-filter": "blur(18px)",
+          "backdrop-filter": "blur(18px)",
+          "padding": "40px"
+        }
+      },
+      {
+        "selector": "#community-lightbox img",
+        "declarations": {
+          "border-radius": "14px",
+          "border": "0.5px solid rgba(220,232,255,0.30)",
+          "box-shadow": "0 0 30px 6px rgba(200,222,255,0.20), 0 14px 44px rgba(0,0,0,0.5)"
+        }
+      },
+      {
+        "selector": ".favorite-card",
+        "declarations": {
+          "border-radius": "16px",
+          "background": "transparent",
+          "border": "0.5px solid rgba(220,232,255,0.40)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.32),\n      inset 0 -1px 1px rgba(0,0,0,0.20),\n      0 0 9px 1.7px rgba(220,232,255,0.285),\n      0 0 13.6px 2.55px rgba(220,232,255,0.152),\n      0 8px 32px rgba(0,0,0,0.42)"
+        }
+      },
+      {
+        "selector": ".favorite-card::after",
+        "declarations": {
+          "border-radius": "inherit",
+          "box-shadow": "inset 0 0 18px 2px rgba(220,232,255,0.36)"
+        }
+      },
+      {
+        "selector": "wo favorites pills read like the X and heart glass icons \u2014\n     subtle 0.22 border, calm, no attention-pulse \u2014 just smaller and wearing a\n     word. Tighter padding and a lighter type, per Fromsa. */\n  .viewer-submit-btn",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "5px 14px",
+          "font-size": "9.5px",
+          "font-weight": "300",
+          "letter-spacing": "0.14em",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.24),\n      inset 0 -1px 1px rgba(0,0,0,0.16),\n      0 3px 12px rgba(0,0,0,0.20)"
+        }
+      },
+      {
+        "selector": " v13.36: the heart on the picture, opposite the close. */\n  /* v13.42: the exact mirror of the close. Same 30px circle, same corner\n     offset, opposite side, so the two read as a pair on the picture. */\n  .viewer-heart",
+        "declarations": {
+          "padding": "0",
+          "background": "rgba(8,12,24,0.45)",
+          "border": "0.5px solid rgba(255,255,255,0.28)",
+          "border-radius": "50%",
+          "-webkit-backdrop-filter": "blur(14px)",
+          "backdrop-filter": "blur(14px)"
+        }
+      },
+      {
+        "selector": ".staged-chip",
+        "declarations": {
+          "border-radius": "50%",
+          "border": "0.5px solid rgba(220,232,255,0.40)",
+          "background-color": "rgba(255,255,255,0.06)",
+          "box-shadow": "0 2px 10px rgba(0,0,0,0.4)"
+        }
+      },
+      {
+        "selector": "/* v11.18: collapsible \"Attributes\", ref tags hide behind a toggle pill.\n     Collapsed by default; opens when #garment-modal gets .attrs-open. */\n  .attributes-toggle",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "5px 16px",
+          "font-weight": "300",
+          "font-size": "9px",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "0%, 100%",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.3),\n      0 0 4px 0 rgba(205,225,255,0.42)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.3),\n      0 0 7px 1px rgba(225,238,255,0.6)"
+        }
+      },
+      {
+        "selector": "/* v11.12: \u00d7 close, small circular glass button. Sits next to Submit.\n     Was a \"\u2190 Back\" text link in v11.10; the user reads it as a toggle-out\n     of modify mode, not a navigation step. */\n  .modify-back-link",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "50%",
+          "padding": "0",
+          "font-size": "14px",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "0%, 100%",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 0 12px 1px rgba(200,222,255,0.16),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.40),\n      inset 0 -1px 1px rgba(0,0,0,0.18),\n      0 0 22px 3px rgba(200,222,255,0.40),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": "/* \"rendering 360\u00b0\u2026\" badge while Runway is still generating the clip. */\n  .favorite-card .fc-rendering",
+        "declarations": {
+          "font-size": "9px",
+          "font-weight": "300",
+          "letter-spacing": "0.18em",
+          "background": "rgba(0,0,0,0.45)",
+          "padding": "5px 11px",
+          "border-radius": "100px",
+          "backdrop-filter": "blur(8px)",
+          "-webkit-backdrop-filter": "blur(8px)"
+        }
+      },
+      {
+        "selector": "/* v10.9: construction dissection panel, hidden under the card, slides\n     up on hover. Shows garment type, panels, complexity, fabric source. */\n  .favorite-card .fc-dissection",
+        "declarations": {
+          "padding": "14px 18px 16px",
+          "background": "linear-gradient(180deg, rgba(8,10,18,0.0) 0%, rgba(8,10,18,0.55) 30%, rgba(8,10,18,0.85) 100%)",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)"
+        }
+      },
+      {
+        "selector": ".favorite-card .fc-tag",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "padding": "3px 11px",
+          "font-weight": "300",
+          "font-size": "9px",
+          "letter-spacing": "0.15em",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.28),\n      inset 0 -1px 1px rgba(0,0,0,0.18)"
+        }
+      },
+      {
+        "selector": "isualize / Listen pills) so it reads as \"two screens here,\n     swipe up/down\" instead of a stray pair of dots. Margins kept thin so the\n     pill stays close to the dots, it's a frame, not a button. */\n  #page-indicator",
+        "declarations": {
+          "background": "transparent",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "100px",
+          "backdrop-filter": "blur(22px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(22px) saturate(180%)",
+          "box-shadow": "inset 0 1px 0 rgba(255,255,255,0.28),\n      inset 0 -1px 0 rgba(0,0,0,0.18),\n      0 4px 16px rgba(0,0,0,0.22)"
+        }
+      },
+      {
+        "selector": ".page-dot.active",
+        "declarations": {
+          "background": "rgba(255,255,255,1.0)",
+          "box-shadow": "0 0 6px rgba(255,255,255,0.45)"
+        }
+      },
+      {
+        "selector": "-rush keyframes), the gate markup and JS are gone too. */\n\n  /* v9.13: thank-you overlay, same liquid-glass family as splash, hidden\n     by default. Shown by #thankyou.show; dismissed by ANY click or key. */\n  #thankyou",
+        "declarations": {
+          "background": "rgba(8,10,18,0.55)",
+          "-webkit-backdrop-filter": "blur(40px) saturate(180%)",
+          "backdrop-filter": "blur(40px) saturate(180%)"
+        }
+      },
+      {
+        "selector": "/* v13.58: the terms popup. First sign in only; Agree wakes at the end of\n     the text. Same glass as everything else. */\n  #tos-modal",
+        "declarations": {
+          "background": "rgba(2,4,10,0.66)",
+          "backdrop-filter": "blur(10px)",
+          "-webkit-backdrop-filter": "blur(10px)",
+          "padding": "20px"
+        }
+      },
+      {
+        "selector": "#tos-modal .tos-sheet",
+        "declarations": {
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "border-radius": "22px",
+          "background": "rgba(8,12,26,0.92)",
+          "backdrop-filter": "blur(26px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(26px) saturate(180%)",
+          "box-shadow": "0 18px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.10)",
+          "padding": "26px 26px 20px"
+        }
+      },
+      {
+        "selector": "/* lighter glass on phones, blur is the priciest effect on mobile GPUs;\n       this is the single biggest smoothness win per frame. */\n    .item-card",
+        "declarations": {
+          "backdrop-filter": "blur(12px) saturate(160%)",
+          "-webkit-backdrop-filter": "blur(12px) saturate(160%)"
+        }
+      },
+      {
+        "selector": "/* lighter GPU load: soften the heaviest glass effects */\n    .modal",
+        "declarations": {
+          "backdrop-filter": "blur(18px)",
+          "-webkit-backdrop-filter": "blur(18px)"
+        }
+      },
+      {
+        "selector": ".item-card",
+        "declarations": {
+          "backdrop-filter": "blur(12px) saturate(160%)",
+          "-webkit-backdrop-filter": "blur(12px) saturate(160%)"
+        }
+      },
+      {
+        "selector": ".modal",
+        "declarations": {
+          "backdrop-filter": "blur(18px)",
+          "-webkit-backdrop-filter": "blur(18px)"
+        }
+      },
+      {
+        "selector": "#notes-drawer, #fabrics-drawer, #pinterest-drawer",
+        "declarations": {
+          "backdrop-filter": "blur(20px) saturate(170%)",
+          "-webkit-backdrop-filter": "blur(20px) saturate(170%)"
+        }
+      },
+      {
+        "selector": "#voice-bar",
+        "declarations": {
+          "backdrop-filter": "blur(14px) saturate(170%)",
+          "-webkit-backdrop-filter": "blur(14px) saturate(170%)"
+        }
+      },
+      {
+        "selector": ".pg-bg-thumb.on",
+        "declarations": {
+          "box-shadow": "inset 0 0 0 1.5px rgba(169,201,255,0.9)"
+        }
+      },
+      {
+        "selector": "body.pg-zoomed .item-card",
+        "declarations": {
+          "backdrop-filter": "none",
+          "-webkit-backdrop-filter": "none",
+          "background": "rgba(10,14,28,0.55)"
+        }
+      },
+      {
+        "selector": "#pg-maya-toggle .mt-switch",
+        "declarations": {
+          "border-radius": "100px",
+          "background": "rgba(255,255,255,0.10)",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "box-shadow": "inset 0 1px 2px rgba(0,0,0,0.35)"
+        }
+      },
+      {
+        "selector": "#pg-maya-toggle .mt-knob",
+        "declarations": {
+          "border-radius": "50%",
+          "background": "#fff",
+          "box-shadow": "0 1px 3px rgba(0,0,0,0.45)"
+        }
+      },
+      {
+        "selector": "#pg-maya-toggle.live .mt-knob",
+        "declarations": {
+          "box-shadow": "0 0 0 3px rgba(169,201,255,0.35), 0 1px 3px rgba(0,0,0,0.45)"
+        }
+      },
+      {
+        "selector": "#feedback-modal .modal-card",
+        "declarations": {
+          "border-radius": "18px",
+          "padding": "30px 28px 26px",
+          "background": "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 25%,\n      rgba(255,255,255,0.02) 65%, rgba(255,255,255,0.07) 100%)",
+          "border": "0.5px solid rgba(255,255,255,0.22)",
+          "backdrop-filter": "blur(28px) saturate(180%)",
+          "-webkit-backdrop-filter": "blur(28px) saturate(180%)",
+          "box-shadow": "inset 0 1px 1px rgba(255,255,255,0.30), inset 0 -1px 1px rgba(0,0,0,0.18), 0 12px 48px rgba(0,0,0,0.38)"
+        }
+      },
+      {
+        "selector": "/* Maya live: a small chip at the bottom right, and her last lines above the voice bar */\n  #pg-maya-chip",
+        "declarations": {
+          "padding": "8px 14px 8px 11px",
+          "border-radius": "100px",
+          "background": "rgba(8,12,26,0.85)",
+          "border": "0.5px solid rgba(169,201,255,0.6)",
+          "backdrop-filter": "blur(20px)",
+          "-webkit-backdrop-filter": "blur(20px)",
+          "font-size": "9px",
+          "letter-spacing": "0.15em",
+          "box-shadow": "0 8px 30px rgba(0,0,0,0.5)"
+        }
+      },
+      {
+        "selector": "0%,100%",
+        "declarations": {
+          "box-shadow": "0 0 0 0 rgba(169,201,255,0.35)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "0 0 0 8px rgba(169,201,255,0)"
+        }
+      },
+      {
+        "selector": "0%, 100%",
+        "declarations": {
+          "box-shadow": "0 0 0 0 rgba(169,201,255,0.0), 0 0 18px 2px rgba(169,201,255,0.18)"
+        }
+      },
+      {
+        "selector": "50%",
+        "declarations": {
+          "box-shadow": "0 0 0 5px rgba(169,201,255,0.10), 0 0 26px 4px rgba(169,201,255,0.30)"
+        }
+      }
+    ]
+  }
+]

@@ -126,16 +126,13 @@ See docs/OUTBOUND-SETUP.md for owner-only connection and launch steps.
 
 ## Visual canon
 
-Read root `design.md` before any aesthetic change. It is the master specification
-for client frontend and every backend page. Shared action chrome lives in
-`aesthetics/ui/maya-buttons.css`; keep page geometry and behavior separate.
-
-`docs/Aesthetics.pdf` (V3) is the primary aesthetic reference.
-`docs/MAYA-V4-CANON.md` extends it for dense interfaces; it does not replace V3.
-Backend pages load `aesthetics/ui/maya-canon.css`; consumer and Playground retain
-their approved frontend styling as the reference. Change backend tokens and
-components in the shared CSS, not a new per-page visual system. Jost is functional; Cormorant
-is reserved for branding/display. Data and metrics use Jost with tabular numerals.
+Read root `design.md` before any aesthetic change. It is the sole active design
+specification. V3/V4 references in docs/design-archive are historical only.
+The shared component system is aesthetics/ui/components/{tokens.css,components.css,
+components.js}. Preview/edit it in playground/components/index.html before global
+promotion. Do not load preview tokens on live pages without owner review.
+Existing maya-buttons.css/maya-canon.css are legacy runtime adapters until that
+promotion, not independent design authority. Run tests/component-gallery.mjs.
 
 Outbound source-of-truth columns and priority rules are regression-tested in
 `tests/outbound-priority.mjs` (invoked by outbound/app-regression) and populated

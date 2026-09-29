@@ -1,9 +1,11 @@
-[Codex][v14.40] Establish design master and shared Liquid Glass buttons
+[Codex][v14.40] Establish measured component system and token preview
 
-- Add root design.md with frontend/backend rules and linked button reference.
-- Share action material across all 11 pages without changing sizes or behavior.
-- Preserve plain logo/handle/link treatments and add accessible state/fallback rules.
-- Point agent instructions at master; exclude it from public hosting.
-Validation: design contract, full app regression, seven-width Outbound/Lead Station
-fixture suite; desktop visual inspection. No production push or provider changes.
-Remaining: drawer markup differs; live Gmail/Gemini verification remains pending.
+Make design.md the sole active aesthetic specification; archive V3/V4 and prior
+rules. Record actual computed Tap to listen styles, including typography and DPR.
+Build shared Pill, GlassSurface, IconButton, Drawer, FilterPopover and Metric with
+one material and explicit intensity variants. Add editable local-only gallery,
+state previews, CSS export and frontend/backend examples.
+Audit legacy duplicates/inline styles and document staged replacement after review.
+Validation: baseline computed match, token edit/persist/reset/export, seven widths,
+focus and overlay interactions, reduced motion/forced colors; full app regression.
+No global component rollout, production change, credentials, API changes or push.

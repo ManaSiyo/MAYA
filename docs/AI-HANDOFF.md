@@ -8,6 +8,41 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## September 29: sole design specification and component review gallery
+
+Root design.md is now the sole active aesthetic specification. V3 PDF, V4 canon
+and previous design.md are archived in docs/design-archive; old V4 path is a
+historical pointer. AGENTS/CLAUDE updated. Legacy runtime CSS is not authority.
+
+Measured #voice-bar and #voice-text at 149314e using actual local HTML/styles in
+Chromium: 6px/14px padding, 100px radius, 22px blur, Jost label 10px/300, 1.5px
+tracking, 1px computed border at DPR 1 (source .5px). Full computed JSON includes
+provenance and external-font blocking limitation. No live auth/provider access.
+
+New aesthetics/ui/components tokens.css/components.css/components.js implements
+Pill, GlassSurface, IconButton, Drawer, FilterPopover, Metric. One material with
+quiet/standard/overlay intensity, purpose-specific shapes, native dialog keyboard
+semantics, focus restoration, viewport clamping, disabled/selected/loading previews,
+reduced motion, forced colors and no-blur fallback. No framework or API changes.
+
+playground/components/index.html + gallery.css/js provides all token controls,
+local-only persistence, reset/export, state samples and frontend/backend contexts.
+Local preview http://127.0.0.1:8767/playground/components/index.html (Python server
+started for owner review). Opened in Codex browser. No tokens imported globally.
+
+Audit: tests/design-audit.py generated inventory of 17 files, 475 inline styles,
+474 repeated declaration groups (heuristic candidates, not all bugs). Archived
+legacy material-rule evidence. docs/DESIGN-MIGRATION-AUDIT.md identifies actual
+cascade conflicts and ordered replacement plan. Component gallery has no legacy
+page overrides. Live declaration removal is deliberately deferred until review.
+
+Validation: tests/component-gallery.mjs passes measured baseline, edit/persist/
+reset/export, 7 widths, native drawer/filter focus, reduced motion/forced colors.
+Integrated into tests/app-regression.mjs; full suite passes. Source design contract
+updated. Desktop gallery screenshot reviewed. No push or deployed visual changes.
+Exact next step: owner reviews/exports gallery tokens, then approve component
+promotion across existing pages, removing replaced rules family by family.
+
 ## September 29: master design specification and shared Liquid Glass
 
 Root design.md is the master aesthetic document: shared identity/buttons, separate

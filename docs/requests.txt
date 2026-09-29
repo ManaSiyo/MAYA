@@ -1,3 +1,11 @@
+SEPTEMBER 29: Sole design authority and preview-first components
+[prepared] design.md sole active spec; historical V3/V4 archived.
+[verified] Existing Tap to listen computed properties extracted with provenance.
+[prepared] Shared Pill, GlassSurface, IconButton, Drawer, FilterPopover and Metric.
+[verified] Token gallery: editing/persistence/export, states, seven widths, accessibility.
+[audited] Legacy inline/styles/override inventory and staged replacement plan recorded.
+[pending owner review] Global adoption/removal of legacy CSS, after gallery review.
+
 SEPTEMBER 29: Master design.md and Liquid Glass
 [prepared] Root design.md separates client frontend and all backend aesthetics.
 [prepared] One shared Liquid Glass action stylesheet on all 11 pages; compact sizes retained.

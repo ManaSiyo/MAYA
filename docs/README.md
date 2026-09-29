@@ -1,6 +1,7 @@
 # MAYA
 
-Aesthetic master: [design.md](../design.md), covering client frontend and all backend pages.
+Sole active aesthetic specification: [design.md](../design.md).
+Token/component review: [gallery](../playground/components/index.html), served locally.
 
 The whole system, written for a fresh conversation. If you are an assistant
 picking this up with no memory of what came before, read this file first and

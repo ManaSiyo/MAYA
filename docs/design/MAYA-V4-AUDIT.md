@@ -1,7 +1,7 @@
 # MAYA V4 implementation audit
 
 Prepared locally, September 26. Not deployed.
-Primary reference: original `docs/Aesthetics.pdf`, all three pages, unchanged.
+Primary reference: original `docs/design-archive/Aesthetics-V3.pdf`, all three pages, unchanged.
 V4 extends that canon; the earlier V4 review proposal is superseded.
 
 ## What changed
