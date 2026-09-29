@@ -1,7 +1,8 @@
 import {SHEET_COLUMNS,priorityInfo,priorityQueue,followupSummary} from './outbound-priority.js?v=1';
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let state={campaigns:[],contacts:[],companies:[],settings:{}},caps={},campaignId='',selected='',view='people',busy=false,session='',titleFilter='',master=true,todo=false,visibleLimit=250;
+let state={campaigns:[],contacts:[],companies:[],settings:{}},caps={},campaignId='',selected='',view='people',busy=false,session='',titleFilter='',master=true,visibleLimit=250;
+let columnFilters={},columnSort=null;
 let intelligence={mailboxes:[],crm:{}},accountId='',authEpoch=0,reloadPending=false,intelligenceLoading=false;
 const busyControls=new Map();
 function syncBusyControls(){
@@ -9,7 +10,7 @@ function syncBusyControls(){
  else{for(const [el,disabled] of busyControls)if(el.isConnected)el.disabled=disabled;busyControls.clear();$('connect-gmail').disabled=intelligence.mailboxes.length>=2;}
 }
 function clearWorkspace(){
- state={campaigns:[],contacts:[],companies:[],settings:{}};caps={};intelligence={mailboxes:[],crm:{}};accountId=campaignId=selected=titleFilter='';master=true;todo=false;visibleLimit=BATCH_SIZE;
+ state={campaigns:[],contacts:[],companies:[],settings:{}};caps={};intelligence={mailboxes:[],crm:{}};accountId=campaignId=selected=titleFilter='';columnFilters={};columnSort=null;master=true;visibleLimit=BATCH_SIZE;
  $('search').value='';$('stage-filter').value='';$('modal').close();$('signin').hidden=false;render();renderIntelligence();
 }
 const BATCH_SIZE=250;
@@ -61,40 +62,38 @@ async function run(fn){
  try{await fn();}catch(e){if(epoch===authEpoch)notice(e.message,true);}
  finally{busy=false;syncBusyControls();if(reloadPending){reloadPending=false;run(load);}}
 }
-async function load(){const epoch=authEpoch;try{const [j,checked]=await Promise.all([api(),api('/intelligence')]);if(epoch!==authEpoch)return;intelligence={mailboxes:[],crm:{},...checked};state=j.state;caps=j.capabilities;accountId=j.accountId||'';session=token();$('signin').hidden=true;if(!state.campaigns.some(c=>c.id===campaignId))campaignId=state.campaigns[0]?.id||'';render();renderIntelligence();notice('Workspace ready.');if(state.settings.sheetId)await syncWorkbook();}catch(e){if(epoch===authEpoch){if(!token())$('signin').hidden=false;notice(e.message,true);}}}
-const campaign=()=>master?{id:'master',name:todo?'To Do':'All prospects',status:'active'}:state.campaigns.find(c=>c.id===campaignId);
+async function load(){const epoch=authEpoch;try{const [j,checked]=await Promise.all([api(),api('/intelligence')]);if(epoch!==authEpoch)return;intelligence={mailboxes:[],crm:{},...checked};state=j.state;caps=j.capabilities;accountId=j.accountId||'';session=token();$('signin').hidden=true;if(!state.campaigns.some(c=>c.id===campaignId))campaignId=state.campaigns[0]?.id||'';render();renderIntelligence();notice('');if(state.settings.sheetId)await syncWorkbook();}catch(e){if(epoch===authEpoch){if(!token())$('signin').hidden=false;notice(e.message,true);}}}
+const campaign=()=>master?{id:'master',name:'All',status:'active'}:state.campaigns.find(c=>c.id===campaignId);
 const contacts=()=>state.contacts.filter(c=>master||member(c,campaignId));
 async function save(body){if(body.type!=='contact'&&!leaveDraft())throw Error('Save your draft before continuing.');const j=await api('/save',body);state=j.state;render();notice('Saved.');return j;}
 function modal(title,html,submit,label='Save'){$('modal-title').textContent=title;$('modal-body').innerHTML=html;$('modal-submit').textContent=label;$('modal-form').onsubmit=e=>{e.preventDefault();const data=new FormData(e.target);run(async()=>{await submit(data);$('modal').close();});};$('modal').showModal();}
 function field(name,label,value='',type='input'){return `<label for="field-${name}">${esc(label)}</label>${type==='textarea'?`<textarea id="field-${name}" name="${name}">${esc(value)}</textarea>`:`<input id="field-${name}" name="${name}" value="${esc(value)}">`}`;}
-function editCampaign(existing){modal(existing?'Edit campaign':'New campaign',field('name','Campaign name',existing?.name)+field('audience','Who do you want to reach?',existing?.audience,'textarea')+field('pain','Customer pain and buying trigger',existing?.pain,'textarea')+field('criteria','Qualification criteria',existing?.criteria,'textarea')+field('objective','Offer and objective',existing?.objective,'textarea')+field('competitors','Competitor names or domains (research notes)',existing?.competitors,'textarea')+`<label>Status</label><select name="status"><option value="active">Active</option><option value="paused" ${existing?.status==='paused'?'selected':''}>Paused</option></select>`,async data=>{const j=await save({type:'campaign',id:existing?.id,...Object.fromEntries(data)});if(!existing){campaignId=j.state.campaigns.at(-1).id;master=false;todo=false;view='people';visibleLimit=BATCH_SIZE;}render();});}
+function editCampaign(existing){modal(existing?'Edit campaign':'New campaign',field('name','Campaign name',existing?.name)+field('audience','Who do you want to reach?',existing?.audience,'textarea')+field('pain','Customer pain and buying trigger',existing?.pain,'textarea')+field('criteria','Qualification criteria',existing?.criteria,'textarea')+field('objective','Offer and objective',existing?.objective,'textarea')+field('competitors','Competitor names or domains (research notes)',existing?.competitors,'textarea')+`<label>Status</label><select name="status"><option value="active">Active</option><option value="paused" ${existing?.status==='paused'?'selected':''}>Paused</option></select>`,async data=>{const j=await save({type:'campaign',id:existing?.id,...Object.fromEntries(data)});if(!existing){campaignId=j.state.campaigns.at(-1).id;master=false;view='people';visibleLimit=BATCH_SIZE;}render();});}
 function render(){
  stopCollection();
  appliedSearch=$('search').value;
  appliedStage=$('stage-filter').value;
  try{
- $('master-list').classList.toggle('active',master&&!todo);$('master-list').setAttribute('aria-pressed',String(master&&!todo));
- $('todo-list').classList.toggle('active',todo);$('todo-list').setAttribute('aria-pressed',String(todo));$('todo-count').textContent=priorityQueue(state.contacts).length+' to contact';
+ $('master-list').classList.toggle('active',master);$('master-list').setAttribute('aria-pressed',String(master));
  $('targeting-panel').hidden=master;$('discover').hidden=master;$('import').hidden=master;
  const c=campaign(),people=contacts(),count=stage=>people.filter(p=>p.stage===stage).length;
- $('campaigns').innerHTML=state.campaigns.map(c=>`<button class="campaign ${!master&&c.id===campaignId?'active':''}" data-campaign="${esc(c.id)}">${esc(c.name.replace(/^9\/23 /,'').replace(/^Corporates$/,'Corporate').replace(/^Fashion Houses$/,'Fashion house'))}<small>${state.contacts.filter(p=>member(p,c.id)).length} prospects · ${esc(c.status)}</small></button>`).join('')||'<p class="muted small" style="margin-top:18px">Start with a campaign for your ideal customers.</p>';
- document.querySelectorAll('[data-campaign]').forEach(b=>b.onclick=()=>{if(!leaveDraft())return;campaignId=b.dataset.campaign;master=false;todo=false;visibleLimit=BATCH_SIZE;selected='';render();});
- $('competitors').textContent=c?[c.pain&&'PAIN\n'+c.pain,c.criteria&&'CRITERIA\n'+c.criteria,c.competitors&&'RESEARCH\n'+c.competitors].filter(Boolean).join('\n\n')||'Add pain, criteria and research notes.':'Choose a campaign.';$('campaign-title').textContent=c?.name||'Choose a campaign';
+ $('campaigns').innerHTML=state.campaigns.filter(c=>/ceremonial|corporate|fashion house/i.test(c.name)).map(c=>`<button class="campaign ${!master&&c.id===campaignId?'active':''}" data-campaign="${esc(c.id)}">${esc(c.name.replace(/^9\/23 /,'').replace(/^Corporates$/,'Corporate').replace(/^Fashion Houses$/,'Fashion house'))}</button>`).join('')||'<p class="muted small" style="margin-top:18px">Start with a campaign for your ideal customers.</p>';
+ document.querySelectorAll('[data-campaign]').forEach(b=>b.onclick=()=>{if(!leaveDraft())return;campaignId=b.dataset.campaign;master=false;visibleLimit=BATCH_SIZE;selected='';render();});
+ $('competitors').textContent=c?[c.pain&&'PAIN\n'+c.pain,c.criteria&&'CRITERIA\n'+c.criteria,c.competitors&&'RESEARCH\n'+c.competitors].filter(Boolean).join('\n\n')||'Add pain, criteria and research notes.':'Choose a campaign.';
  $('providers').textContent=`Hunter: ${caps.hunter?'configured':'needs connection'}\nGoogle Sheets: ${state.settings.sheetId?'selected':'choose a sheet'}\nMaya: ${caps.ai?'configured':'needs connection'}`;$('providers').style.whiteSpace='pre-line';$('drawer-providers').textContent=$('providers').textContent;$('drawer-providers').style.whiteSpace='pre-line';
- $('steps').innerHTML=['Define audience','Find companies','Find people','Verify','Draft','Review & reach out'].map((s,i)=>`<span class="step ${[!!c,state.companies.some(x=>x.campaignId===campaignId),!!people.length,people.some(p=>p.verification==='valid'),people.some(p=>p.body),people.some(p=>p.stage==='contacted')][i]?'done':''}"><b>${i+1}</b>${s}</span>`).join('<span class="muted">·</span>');
  renderFollowups(people);
- $('stats').innerHTML=[['Prospects',people.length],['Verified',people.filter(p=>p.verification==='valid').length],['Contacted',people.filter(p=>['contacted','replied','meeting','closed'].includes(p.stage)).length],['Meetings',count('meeting')],['Closed',count('closed')]].map(([label,n])=>`<div class="stat"><strong>${n}</strong><span>${label}</span></div>`).join('');
+ $('stats').innerHTML=[['All',people.length],['Contacted',people.filter(p=>['contacted','replied','meeting','closed'].includes(p.stage)).length],['Replied',count('replied')],['Meetings booked',count('meeting')]].map(([label,n])=>`<div class="stat"><strong>${n}</strong><span>${label}</span></div>`).join('');
  $('view-menu').value=view;
  if(!c){$('content').innerHTML='<div class="empty"><h2>Start a campaign</h2>Import your Google Sheet or find prospects with Hunter.</div>';return;}
  if(view==='activity'){renderActivity();return;}
  if(view==='results'){renderResults();return;}
  if(view==='companies'){renderCompanies();return;}
  if(view==='people'){renderPeople();return;}
- const query=$('search').value.toLowerCase(),stageFilter=$('stage-filter').value;const list=(todo?priorityQueue(people):people).filter(p=>(!stageFilter||p.stage===stageFilter)&&searchText(p).includes(query)&&(!titleFilter||(p.title||'Not recorded')===titleFilter)&&(view!=='emails'||p.email||p.body||p.id===selected));
+ const query=$('search').value.toLowerCase(),stageFilter=$('stage-filter').value;const list=people.filter(p=>(!stageFilter||p.stage===stageFilter)&&searchText(p).includes(query)&&(!titleFilter||(p.title||'Not recorded')===titleFilter)&&(view!=='emails'||p.email||p.body||p.id===selected));
  if(!list.some(p=>p.id===selected))selected=list[0]?.id||'';
- $('content').innerHTML=`<div class="workspace"><div><div class="row spread" style="margin-bottom:12px"><span class="muted small">${list.length} prospects</span><button id="add-person">+ Add person</button><button id="export">Export CSV</button></div><div class="list"></div></div><div id="detail"></div></div>`;
+ $('content').innerHTML=`<div class="workspace"><div><div class="row spread" style="margin-bottom:12px"><span class="muted small">${list.length} prospects</span></div><div class="list"></div></div><div id="detail"></div></div>`;
  mountCollection(list,document.querySelector('.list'),p=>`<button class="person ${p.id===selected?'active':''}" data-person="${esc(p.id)}"><div class="row"><span class="avatar">${esc((p.name||p.company||'?').slice(0,2).toUpperCase())}</span><div><h3>${esc(p.name||p.company)}</h3><div class="muted small">${esc(p.title||p.company||p.domain)}</div></div></div><span class="badge">${esc(p.source)}</span><span class="badge ${p.verification==='valid'?'valid':''}">${esc(p.verification)}</span>${statusPill(p)}<p class="small muted" style="margin-top:9px">${esc(p.email||'Email not found yet')}</p></button>`,document.querySelector('.list'));
- $('add-person').onclick=addPerson;$('export').onclick=exportCSV;renderDetail();
+ renderDetail();
  }finally{syncBusyControls();}
 }
 const icon=(name)=>`<svg class="outbound-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${name==='fire'?'<path d="M13 3c1 5-4 5-3 9-2-1-3-2-3-4-5 5-3 13 5 13 7 0 10-9 4-13 0 3-2 4-3 4 2-3 2-6 0-9Z"/>':'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/>'}</svg>`;
@@ -102,33 +101,46 @@ const shortDate=ts=>ts?new Date(ts).toLocaleDateString('en-US',{month:'short',da
 function renderFollowups(people){
  const {counts,latest}=followupSummary(people),total=people.length,next=priorityQueue(people)[0];
  const buckets=[['uncontacted','Not contacted'],['first','First email sent'],['f1','F1 sent'],['f2','F2+ sent'],['review','Review history'],['held','Replied / on hold']];
- $('followups').innerHTML=`${next?'<div class="priority-next row spread"><span>'+icon('fire')+' Next: <button class="person-link" id="next-contact">'+esc(next.name||next.company)+'</button> · '+esc(priorityInfo(next).next)+'</span><button id="write-next" class="write-email">'+icon('email')+' Write an email</button></div>':''}<div class="row spread"><strong>Follow-ups</strong><span class="muted small" title="F1: second email. F2: third email.">Email history</span></div><div class="followup-chart" role="img" aria-label="${buckets.map(([key,label])=>label+': '+counts[key]).join(', ')}">${buckets.filter(([key])=>counts[key]).map(([key,label])=>`<span class="followup-segment ${key}" style="flex:${counts[key]}" title="${esc(label)}: ${counts[key]}"></span>`).join('')}</div><div class="followup-legend">${buckets.map(([key,label])=>`<span><i class="${key}" aria-hidden="true"></i>${label} <b>${counts[key]}</b></span>`).join('')}</div><div class="row spread followup-note"><span>${latest?'Last contacted: <button class="person-link" id="last-contact">'+esc(latest.p.name||latest.p.company)+'</button> · '+shortDate(latest.at):'No contact date recorded'}</span><span class="muted">${total} prospects · Oldest follow-ups first</span></div>`;
- if(next)$('write-next').onclick=$('next-contact').onclick=()=>openEmail(next.id);
- if(latest)$('last-contact').onclick=()=>openEmail(latest.p.id);
- $('sheet-freshness').textContent=state.settings.lastSyncedAt?'Sheet synced '+new Date(state.settings.lastSyncedAt).toLocaleString():'Sheet not synced yet';
+ let offset=0;
+ const segments=buckets.map(([key,label])=>{const n=counts[key]||0,percent=total?100*n/total:0,start=offset;offset+=percent;return {key,label,n,percent,start};});
+ $('followups').innerHTML=`<h3>Email History</h3><svg class="history-dial" viewBox="0 0 120 120" role="group" aria-label="Email history"><circle class="history-track" cx="60" cy="60" r="44"/>${segments.filter(x=>x.n).map(x=>`<circle class="history-segment ${x.key}" cx="60" cy="60" r="44" pathLength="100" stroke-dasharray="${x.percent} ${100-x.percent}" stroke-dashoffset="${-x.start}" tabindex="0" aria-label="${x.label}: ${x.n}, ${x.percent.toFixed(1)}%"><title>${x.label}: ${x.percent.toFixed(1)}%</title></circle>`).join('')}<text x="60" y="64" text-anchor="middle">${total}</text></svg><div class="followup-legend">${segments.map(x=>`<span title="${x.percent.toFixed(1)}%"><i class="${x.key}" aria-hidden="true"></i>${x.label} <b>${x.n}</b></span>`).join('')}</div><p class="history-detail" aria-live="polite">Hover for percentage</p>`;
+ $('followups').querySelectorAll('.history-segment').forEach(el=>{const show=()=>{$('followups').querySelector('.history-detail').textContent=el.getAttribute('aria-label');};el.onmouseenter=show;el.onfocus=show;el.onclick=show;});
+ $('sync-sheet').title=$('sheet-freshness').textContent=state.settings.lastSyncedAt?'Sheet synced '+new Date(state.settings.lastSyncedAt).toLocaleString():'Sheet not synced yet';
 }
 function openEmail(id){
  if(!leaveDraft())return;
  selected=id;view='emails';
  // A direct action must open that person, regardless of old table filters.
  $('search').value='';$('stage-filter').value='';titleFilter='';
- if(todo&&!priorityInfo(state.contacts.find(p=>p.id===id)).actionable)todo=false;
  visibleLimit=BATCH_SIZE;render();$('subject')?.focus();
 }
+function columnValue(p,key){const i=priorityInfo(p);return key==='priority'?i.label:key==='next'?i.next:[p.category,p.company||p.domain,p.name,p.email,p.title,p.sheetData?.subject??p.subject,i.lastEmailAt?shortDate(i.lastEmailAt):p.lastEmail,stageLabel(p.stage),p.relevance][Number(key)]||'Not recorded';}
+function filterColumns(people){
+ const list=people.filter(p=>Object.entries(columnFilters).every(([key,f])=>(!f.text||String(columnValue(p,key)).toLowerCase().includes(f.text.toLowerCase()))&&(!f.values||f.values.includes(String(columnValue(p,key))))));
+ if(columnSort){const {key,direction}=columnSort;list.sort((a,b)=>{const av=key==='6'?priorityInfo(a).lastEmailAt:columnValue(a,key),bv=key==='6'?priorityInfo(b).lastEmailAt:columnValue(b,key);return (typeof av==='number'&&typeof bv==='number'?av-bv:String(av??'').localeCompare(String(bv??''),undefined,{numeric:true,sensitivity:'base'}))*(direction==='asc'?1:-1);});}
+ return list;
+}
+function columnMenu(key,label){
+ const f=columnFilters[key]||{},values=[...new Set(contacts().map(p=>String(columnValue(p,key))))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+ modal(label,`<label for="column-order">Sort</label><select name="order" id="column-order"><option value="">Original order</option><option value="asc" ${columnSort?.key===key&&columnSort.direction==='asc'?'selected':''}>A → Z / Low → High</option><option value="desc" ${columnSort?.key===key&&columnSort.direction==='desc'?'selected':''}>Z → A / High → Low</option></select><label for="column-text">Contains</label><input id="column-text" name="text" value="${esc(f.text||'')}"><details><summary>Values</summary><p class="small">Select values, or leave empty for all.</p><select name="values" aria-label="Filter values" multiple size="8">${values.map(v=>`<option ${f.values?.includes(v)?'selected':''}>${esc(v)}</option>`).join('')}</select></details>`,async data=>{const text=String(data.get('text')||'').trim(),selectedValues=data.getAll('values');if(text||selectedValues.length)columnFilters[key]={text,values:selectedValues.length?selectedValues:null};else delete columnFilters[key];const direction=data.get('order');if(direction)columnSort={key,direction};else if(columnSort?.key===key)columnSort=null;visibleLimit=BATCH_SIZE;render();},'Apply');
+}
+$('clear-columns').onclick=()=>{columnFilters={};columnSort=null;visibleLimit=BATCH_SIZE;render();};
 function renderPeople(){
  const q=$('search').value.toLowerCase(),stage=$('stage-filter').value;
- const people=contacts(),titles=[...new Set(people.map(p=>p.title||'Not recorded'))].sort();
- const list=(todo?priorityQueue(people):people).filter(p=>(!stage||p.stage===stage)&&(!titleFilter||(p.title||'Not recorded')===titleFilter)&&searchText(p).includes(q));
- const headers=SHEET_COLUMNS.map((h,i)=>'<th scope="col" data-sheet-col="'+i+'">'+h+'</th>').join('');
- $('content').innerHTML=`<div class="actions people-actions"><button id="add-person">+ Add person</button><button id="export">Export CSV</button><button id="assign-segment">Add selected to campaign</button><label for="title-filter" class="sr-only">Job title</label><select id="title-filter" aria-label="Job title"><option value="">All job titles</option>${titles.map(t=>'<option '+(t===titleFilter?'selected':'')+'>'+esc(t)+'</option>').join('')}</select></div>${todo?'<p class="queue-caption">Not contacted first, ranked by relevance. Then oldest follow-ups. Full Sheet columns and paused contacts are in All prospects.</p>':''}<div class="people-scroll" role="region" aria-label="Prospect table; scroll horizontally for all Sheet columns" tabindex="0"><table class="people-table ${todo?'todo-table':''}"><thead><tr><th scope="col"><span class="sr-only">Select</span></th><th scope="col">Priority</th>${headers}<th scope="col">Next touch</th><th scope="col">Action</th></tr></thead><tbody></tbody></table></div>${list.length?'':'<p class="empty">'+(todo?'No prospects to contact in this view.':'No prospects match these filters.')+'</p>'}`;
+ const people=contacts();
+ const list=filterColumns(people.filter(p=>(!stage||p.stage===stage)&&searchText(p).includes(q)));
+ const head=(key,label)=>`<th scope="col" aria-sort="${columnSort?.key===key?(columnSort.direction==='asc'?'ascending':'descending'):'none'}"><button class="column-filter ${columnFilters[key]?'filtered':''}" data-column="${key}" aria-label="Filter ${label}">${label}<span aria-hidden="true">⌄</span></button></th>`;
+ const headers=SHEET_COLUMNS.map((h,i)=>head(String(i),h)).join('');
+ $('content').innerHTML=`<div class="people-scroll" role="region" aria-label="Prospect table; scroll horizontally for all Sheet columns" tabindex="0"><table class="people-table"><thead><tr><th scope="col"><span class="sr-only">Select</span></th>${head('priority','Priority')}${headers}${head('next','Next touch')}<th scope="col">Action</th></tr></thead><tbody></tbody></table></div>${list.length?'':'<p class="empty">No matches</p>'}`;
+ $('clear-columns').hidden=!Object.keys(columnFilters).length&&!columnSort;
+ document.querySelectorAll('[data-column]').forEach(b=>b.onclick=()=>columnMenu(b.dataset.column,b.textContent.replace('⌄','').trim()));
  mountCollection(list,document.querySelector('.people-table tbody'),p=>{
  const info=priorityInfo(p),status=p.sheetStatus||({new:'Not contacted',ready:'Ready',contacted:'Contacted',replied:'Replied',suppressed:'Do not contact'}[p.stage]||p.stage);
  const sourceSubject=p.sheetData?.subject??p.subject;
  const lastEmail=info.lastEmailAt?shortDate(info.lastEmailAt):p.lastEmail||'Not recorded';
  return `<tr data-contact-row="${esc(p.id)}"><td><input type="checkbox" data-select="${esc(p.id)}" aria-label="Select ${esc(p.name||p.email)}"></td><td><span class="priority-label ${info.hot?'hot':''}">${info.hot?icon('fire'):''}${esc(info.label)}</span></td><td data-sheet-col="0">${esc(p.category||'Not recorded')}</td><td data-sheet-col="1">${esc(p.company||p.domain)}</td><td data-sheet-col="2"><button class="person-link" data-person="${esc(p.id)}">${esc(p.name||p.email||'Unnamed')}</button></td><td data-sheet-col="3">${esc(p.email||'Not recorded')}</td><td data-sheet-col="4">${esc(p.title||'Not recorded')}</td><td data-sheet-col="5" class="sheet-subject">${esc(sourceSubject||'Not recorded')}</td><td data-sheet-col="6" class="date-cell" title="Sheet: ${esc(p.lastEmail||'not recorded')}. Yearless dates use their most recent occurrence at sync.">${esc(lastEmail)}</td><td data-sheet-col="7" class="sheet-status" title="${esc(status)}">${statusPill(p)}${p.sheetStatus?'<span class="sr-only"> Sheet: '+esc(p.sheetStatus)+'</span>':''}</td><td data-sheet-col="8">${esc(p.relevance||'Not recorded')}</td><td>${info.actionable?esc(info.next):'On hold'}</td><td><button class="write-email" data-write="${esc(p.id)}" ${p.stage==='suppressed'?'disabled':''}>${icon('email')}Write an email</button></td></tr>`;
  },document.querySelector('.people-scroll'));
- $('assign-segment').onclick=assignSegment;
- $('title-filter').onchange=e=>{titleFilter=e.target.value;visibleLimit=BATCH_SIZE;render();};$('add-person').onclick=addPerson;$('export').onclick=exportCSV;
+
 
 }
 $('content').addEventListener('click',e=>{
@@ -158,7 +170,7 @@ function renderCompanies(){
 function domainSearch(d){if(master)return notice('Choose a campaign before finding new people.',true);modal('Find people',field('domain','Company domain',d)+field('offset','Result offset (0 for first page)','0')+'<p class="muted small">Up to 25 contacts per lookup. Hunter credits may apply.</p>',async data=>{const j=await api('/hunter',{action:'domain',campaignId,domain:data.get('domain'),offset:Number(data.get('offset')),confirm:true});state=j.state;view='people';render();notice(`${j.result} new contacts imported.`);},'Find people');}
 function renderResults(){const cards=state.campaigns.map(c=>{const p=state.contacts.filter(x=>member(x,c.id)),sent=p.filter(x=>['contacted','replied','meeting','closed'].includes(x.stage)).length,replies=p.filter(x=>['replied','meeting','closed'].includes(x.stage)).length;return `<article class="metric-row"><div class="row spread"><h3>${esc(c.name)}</h3><span class="badge">${esc(c.status)}</span></div><p class="muted" style="margin-top:9px">${sent} contacted · ${replies} replied · ${p.filter(x=>x.stage==='meeting').length} meetings · ${p.filter(x=>x.stage==='closed').length} closed</p><p class="small muted">${sent?Math.round(replies/sent*100)+'% recorded reply rate':'No recorded outreach yet'}</p></article>`;});$('content').innerHTML='<p class="muted small" style="margin-bottom:14px">Results combine recorded stages with synchronized contact activity. AI recommendations do not change booked or closed stages.</p><div class="metrics">'+cards.join('')+'</div>';}
 export function parseCSV(value){const rows=[];let row=[],cell='',quoted=false;for(let i=0;i<value.length;i++){const c=value[i];if(c==='"'){if(quoted&&value[i+1]==='"'){cell+='"';i++;}else quoted=!quoted;}else if(c===','&&!quoted){row.push(cell);cell='';}else if(c==='\n'&&!quoted){row.push(cell.replace(/\r$/,''));rows.push(row);row=[];cell='';}else cell+=c;}if(quoted)throw Error('CSV has an unclosed quoted field.');if(cell||row.length){row.push(cell);rows.push(row);}return rows;}
-function exportCSV(){const rows=[['Priority',...SHEET_COLUMNS,'Next touch'],...(todo?priorityQueue(contacts()):contacts()).map(p=>{const i=priorityInfo(p);return [i.label,p.category,p.company,p.name,p.email,p.title,p.sheetData?.subject??p.subject,p.lastEmail,p.sheetStatus||p.stage,p.relevance,i.next];})];const safe=v=>'"'+(/^[=+@\-\t\r]/.test(String(v))?"'":'')+String(v??'').replace(/"/g,'""')+'"';const blob=new Blob([rows.map(r=>r.map(safe).join(',')).join('\r\n')],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='maya-outbound.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function exportCSV(){const rows=[['Priority',...SHEET_COLUMNS,'Next touch'],...contacts().map(p=>{const i=priorityInfo(p);return [i.label,p.category,p.company,p.name,p.email,p.title,p.sheetData?.subject??p.subject,p.lastEmail,p.sheetStatus||p.stage,p.relevance,i.next];})];const safe=v=>'"'+(/^[=+@\-\t\r]/.test(String(v))?"'":'')+String(v??'').replace(/"/g,'""')+'"';const blob=new Blob([rows.map(r=>r.map(safe).join(',')).join('\r\n')],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='maya-outbound.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 function applySearch(){if($('search').value===appliedSearch)return;if(!leaveDraft()){$('search').value=appliedSearch;return;}visibleLimit=BATCH_SIZE;render();}
 $('stage-filter').onchange=()=>{if(leaveDraft()){visibleLimit=BATCH_SIZE;render();}else $('stage-filter').value=appliedStage;};
 $('new-campaign').onclick=()=>editCampaign();$('edit-campaign').onclick=()=>master?notice('Choose a campaign to edit.',true):editCampaign(campaign());$('search').onchange=applySearch;$('search').oninput=()=>{clearTimeout(searchTimer);searchTimer=setTimeout(applySearch,180);};$('view-menu').onchange=e=>{if(!leaveDraft()){e.target.value=view;return;}view=e.target.value;visibleLimit=BATCH_SIZE;render();};
@@ -217,8 +229,7 @@ document.addEventListener('touchend',e=>{
  }drawerTouch=null;
 },{passive:true});
 
-$('master-list').onclick=()=>{if(!leaveDraft())return;master=true;todo=false;visibleLimit=BATCH_SIZE;view='people';render();};
-$('todo-list').onclick=()=>{if(!leaveDraft())return;master=true;todo=true;visibleLimit=BATCH_SIZE;view='people';selected='';$('search').value='';$('stage-filter').value='';titleFilter='';render();};
+$('master-list').onclick=()=>{if(!leaveDraft())return;master=true;visibleLimit=BATCH_SIZE;view='people';render();};
 function assignSegment(){const ids=[...document.querySelectorAll('[data-select]:checked')].map(el=>el.dataset.select);if(!ids.length)return notice('Select prospects first.',true);modal('Add to campaign','<label>Campaign</label><select name="campaignId">'+state.campaigns.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('')+'</select>',async data=>{const result=await api('/segment',{ids,campaignId:data.get('campaignId')});state=result.state;render();});}
 async function refreshIntelligence(){
  if(intelligenceLoading)return;intelligenceLoading=true;const epoch=authEpoch;

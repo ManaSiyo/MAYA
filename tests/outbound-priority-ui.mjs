@@ -22,29 +22,34 @@ export async function auditOutboundPriority(browser){
  try{
   await page.goto('https://maya.test/outbound.html');await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('Funnel:'));
   assert.equal(syncs,1,'Every opening refreshes the connected Sheet');
-  const allHeaders=await page.locator('.people-table th:visible').allTextContents();assert.deepEqual(allHeaders.slice(2,11),['Category','Company','Full Name','Email','Job Title','Subject','Last email','Status','Relevance']);
-  await page.screenshot({path:'/private/tmp/maya-outbound-all-1440.png',fullPage:true});
-  await page.locator('#todo-list').click();
-  assert.deepEqual(await page.locator('.people-table tbody tr').evaluateAll(rows=>rows.map(r=>r.dataset.contactRow)),['New-high','New-low','Old','Recent']);
-  const headers=await page.locator('.people-table th:visible').allTextContents();assert.ok(headers.includes('Full Name')&&headers.includes('Relevance')&&headers.includes('Action'));
-  assert.match(await page.locator('[data-contact-row="Old"]').textContent(),/F1/);assert.match(await page.locator('[data-contact-row="Recent"]').textContent(),/F2/);
-  assert.match(await page.locator('.followup-chart').getAttribute('aria-label'),/F1 sent: 1/);
-  await page.locator('#write-next').click();assert.equal(await page.locator('#detail h2').textContent(),'New-high');assert.equal(sends,0,'Write opens a draft, never sends');
-  await page.locator('#todo-list').click();await page.locator('#sync-sheet').click();await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('Funnel:'));assert.equal(await page.locator('#campaign-title').textContent(),'To Do');
+  const headerText=()=>page.locator('.people-table th').allTextContents().then(xs=>xs.map(x=>x.replace('⌄','').trim()));
+  assert.deepEqual((await headerText()).slice(2,11),['Category','Company','Full Name','Email','Job Title','Subject','Last email','Status','Relevance']);
+  assert.equal(await page.locator('#todo-list').count(),0);
+  assert.equal(await page.locator('#master-list').innerText(),'All');
+  assert.equal(await page.locator('#followups').evaluate(e=>!!e.closest('.layout>aside')),true);
+  await page.locator('.history-segment.f1').focus();assert.match(await page.locator('.history-detail').innerText(),/%/);
+  await page.locator('[data-column="8"]').click();await page.locator('#column-order').selectOption('desc');await page.locator('#modal-submit').click();
+  assert.equal(await page.locator('.people-table tbody tr').first().getAttribute('data-contact-row'),'New-high');
+  await page.locator('[data-column="4"]').click();await page.locator('#column-text').fill('director');await page.locator('#modal-submit').click();assert.equal(await page.locator('.people-table tbody tr').count(),7);
+  await page.locator('[data-column="2"]').click();await page.locator('#column-text').fill('New-');await page.locator('#modal-submit').click();assert.equal(await page.locator('.people-table tbody tr').count(),2,'Column filters combine');
+  await page.locator('#clear-columns').click();assert.equal(await page.locator('.people-table tbody tr').count(),7);
+  await page.locator('[data-campaign="c"]').click();assert.deepEqual((await headerText()).slice(2,11),['Category','Company','Full Name','Email','Job Title','Subject','Last email','Status','Relevance']);
+  await page.locator('#master-list').click();
   for(const width of [320,390,650,768,1024,1440,1920]){
    await page.setViewportSize({width,height:844});await page.evaluate(()=>document.fonts.ready);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'Document fits '+width);
+   assert.equal(await page.locator('#master-list').evaluate(e=>getComputedStyle(e).textAlign),'center');assert.equal(await page.locator('#master-list').evaluate(e=>getComputedStyle(e).borderRadius),'100px');
    const plus=await page.locator('#new-campaign').boundingBox();assert.equal(plus.width,plus.height,'Circular campaign control');
    const style=await page.locator('.people-table .person-link').first().evaluate(e=>{const s=getComputedStyle(e);return {border:s.borderTopWidth,shadow:s.boxShadow,radius:s.borderRadius,font:s.fontSize};});assert.equal(style.border,'0px');assert.equal(style.shadow,'none');assert.equal(style.radius,'0px');assert.equal(style.font,'11px');
    assert.equal((await page.locator('.people-table tbody tr').first().boundingBox()).height,44,'44px rows '+width);
    const pills=await page.locator('#stats .stat').evaluateAll(items=>items.map(el=>({width:el.getBoundingClientRect().width,grow:getComputedStyle(el).flexGrow})));assert.ok(pills.every(p=>p.width<180&&p.grow==='0'),'Metrics stay content width');
    assert.equal(await page.locator('.people-table th').first().evaluate(e=>getComputedStyle(e).textAlign),'left');
-   await page.locator('#title-filter').selectOption('Director');assert.equal(await page.locator('.people-table tbody tr').count(),4);
-   await page.locator('.people-scroll').evaluate(e=>e.scrollLeft=e.scrollWidth);await page.locator('[data-write="Recent"]').click();assert.equal(await page.locator('#detail h2').textContent(),'Recent');await page.locator('#todo-list').click();
+
+   await page.locator('.people-scroll').evaluate(e=>e.scrollLeft=e.scrollWidth);await page.locator('[data-write="Recent"]').click();assert.equal(await page.locator('#detail h2').textContent(),'Recent');await page.locator('#master-list').click();
    if([390,1440].includes(width))await page.screenshot({path:'/private/tmp/maya-outbound-todo-'+width+'.png',fullPage:true});
   }
-  await page.locator('#new-campaign').click();await page.locator('#field-name').fill('New segment');await page.locator('#modal-submit').click();await page.locator('#modal').waitFor({state:'hidden'});assert.equal(await page.locator('#campaign-title').textContent(),'New segment');
+  await page.locator('#new-campaign').click();await page.locator('#field-name').fill('New segment');await page.locator('#modal-submit').click();await page.locator('#modal').waitFor({state:'hidden'});assert.equal(state.campaigns.at(-1).name,'New segment');
   assert.deepEqual(errors,[]);assert.equal(sends,0);
-  console.log('Populated To Do: source columns, ordered follow-ups, draft action, compact styling and seven widths passed.');
+  console.log('Column filters and sorting, stable source columns, sidebar email history, draft action, compact styling and seven widths passed.');
  }finally{await page.close();}
 }

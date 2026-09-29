@@ -137,7 +137,11 @@ Outbound source-of-truth columns and priority rules are regression-tested in
 `tests/outbound-priority.mjs` (invoked by outbound/app-regression) and populated
 `tests/outbound-priority-ui.mjs` (invoked by outbound-ui). Keep unknown follow-up
 history explicit. Refreshing a Sheet must not erase draft edits or re-count a
-recorded send. No automatic email sending is part of the To Do queue.
+recorded send. No automatic email sending is part of the priority workflow.
+
+Outbound September 29: four primary lists (All, Ceremonial, Corporate, Fashion House);
+Email History dial in sidebar; all source columns use sort/contains/value filters
+before batching. To Do and the global filter/action rows were retired.
 
 Admin/Outbound compact workspace: Lead Station includes Contacted as a distinct
 persisted status. Outbound uses 250-record continuous batches and a compact view

@@ -2702,7 +2702,7 @@ ok('Model snapshot uses authenticated server config',MAP_SOURCE.includes('/api/a
 ok('Owner CRM uses an authenticated setup and confirmation-only SMS lead writes', MAP_SOURCE.includes('<maya-owner-crm>') && SERVER_SOURCE.includes('ownerCommand: input => ownerCRM.handle(input)') && readFileSync(join(ROOT,'docs/server/owner-crm.mjs'),'utf8').includes('pending.code.toLowerCase()'));
 ok('Opening Systems refreshes owner connection state',MAP_SOURCE.includes("document.querySelector('maya-owner-crm')?.load?.()"));
 assertOutboundPriority();
-ok('Outbound preserves Sheet columns and ranks To Do with recorded F1/F2 follow-ups',outboundUI.includes('id="todo-list"') && outboundUI.includes('id="followups"') && outboundJS.includes('Write an email') && outboundJS.includes('renderFollowups(people)'));
+ok('Outbound preserves Sheet columns and filters all campaigns with recorded F1/F2 history',!outboundUI.includes('id="todo-list"') && outboundJS.includes('filterColumns') && outboundUI.includes('id="followups"') && outboundJS.includes('Write an email') && outboundJS.includes('renderFollowups(people)'));
 ok('Outbound preserves campaign pain and criteria and provides a people table',outboundJS.includes("field('pain'") && outboundJS.includes("field('criteria'") && outboundJS.includes('function renderPeople()'));
 await browser.close(); if (served) srv.close();
 ok('CRM uses five owner statuses and dismisses the filter outside or on Escape',MAP_SOURCE.includes("booked:'Booked'") && MAP_SOURCE.includes("canceled:'Cancelled'") && MAP_SOURCE.includes("!_leadFilterOwner.contains(e.target) && !_leadFilterMenu.contains(e.target)") && MAP_SOURCE.includes("if(e.key==='Escape' && _leadFilterOwner)") && MAP_SOURCE.includes('window.filterLeadStatus = filterLeadStatus'));

@@ -8,6 +8,35 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## September 29: compact Outbound lists, history and column filters (local)
+
+Changed backend/outbound.html/js and shared maya-canon.css (cache v13 across
+backend pages; Outbound JS v5). Removed To Do, duplicate main campaign title,
+Outreach workspace/workflow strip and visible global filter/action rows. Primary
+campaign buttons show All plus named Ceremonial/Corporate/Fashion House campaigns;
+other records remain in All. Secondary views retained in drawer More. Metrics:
+All, Contacted, Replied, Meetings booked. No fake verification count.
+
+Email History is a sidebar SVG dial with matching legend and percentage on hover,
+keyboard focus or tap. Mobile uses a compact two-column history layout. Buttons
+now use the frontend Tap to listen glass recipe and centered labels. Deleted old
+campaign radius/alignment overrides and retired To Do rules that hid Category.
+Same Sheet columns in every list. Each data header opens native dialog controls
+for ascending/descending sort, contains text and selected values; multiple column
+filters combine before 250-row batching. Clear filters restores original order.
+No data/credential/API changes; consumer frontend untouched.
+
+Audit: docs/OUTBOUND-AESTHETIC-AUDIT.md records remaining drawer markup differences
+(text tabs/Admin footer versus frontend icon tabs/voice footer) and competing CSS
+as the drift source. This is not a claim all drawer components are unified.
+
+Validation: populated Outbound/priority/lead-filter browser suite at seven widths,
+computed centered capsule geometry, desktop/mobile screenshots; 10k CRM filters,
+reviewed send/two senders; failure/session suite; app regression and 29 Outbound/
+19 intelligence unit checks pass. All data/providers are fixtures.
+Next: owner push, verify deployment and live Sheet data. Gmail still requires
+owner OAuth setup as previously recorded. No real messages sent.
+
 ## September 28 late: drawer cleanup and Gmail connection guidance (local)
 
 Owner tools leaked into Messages because .msgs hid the meter but not the new

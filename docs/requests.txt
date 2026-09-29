@@ -1,3 +1,11 @@
+SEPTEMBER 29: Simplify Outbound and compare frontend aesthetics
+[prepared] All/Ceremonial/Corporate/Fashion House; removed To Do and repeated headings.
+[prepared] Centered frontend-glass campaign capsules; reload icon; four useful totals.
+[prepared] Sidebar Email History dial with hover/focus/tap percentages.
+[prepared] Same columns everywhere; column sort, contains and value filtering across full dataset.
+[verified fixtures] Seven widths, 10k contacts, reviewed sending and session isolation.
+[audited] Remaining drawer component differences documented in OUTBOUND-AESTHETIC-AUDIT.md.
+
 SEPTEMBER 28 late: Less crowded drawers and clear Gmail connection
 [prepared] Owner setup collapsed in Systems and removed from Messages; spaced controls.
 [prepared] Shorter copy; direct Gmail links from Admin and composer; OAuth setup guide.

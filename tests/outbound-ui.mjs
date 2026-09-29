@@ -19,7 +19,7 @@ try{
 await auditOutboundPriority(browser);
 await page.goto('https://maya.test/outbound.html');await page.locator('.people-table [data-person="p"]').waitFor();
 assert.match(await page.evaluate(()=>getComputedStyle(document.body).backgroundImage),/birth-of-a-star/);
-await page.getByRole('button',{name:'Open Outbound menu'}).click();assert.ok(await page.locator('#outbound-drawer').isVisible());await page.locator('#campaign-title').click();assert.ok(await page.locator('#outbound-drawer').isHidden());
+await page.getByRole('button',{name:'Open Outbound menu'}).click();assert.ok(await page.locator('#outbound-drawer').isVisible());await page.locator('#search').click();assert.ok(await page.locator('#outbound-drawer').isHidden());
 await page.getByRole('button',{name:'Open Outbound menu'}).click();await page.keyboard.press('Escape');assert.ok(await page.locator('#outbound-drawer').isHidden());
 await page.locator('.people-table [data-person="p"]').click();assert.ok(await page.getByRole('button',{name:'Open in Gmail'}).isVisible());
 await page.screenshot({path:join(tmpdir(),'maya-outbound-revised.png')});

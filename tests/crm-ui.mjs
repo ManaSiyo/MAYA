@@ -37,15 +37,15 @@ try{
  await page.waitForFunction(()=>document.querySelectorAll('.people-table tbody tr').length>=750);
  const geometry=await page.locator('.people-scroll').evaluate(e=>({top:e.getBoundingClientRect().top,header:e.querySelector('th').getBoundingClientRect().top,row:e.querySelector('tbody tr').getBoundingClientRect().height}));
  assert.ok(Math.abs(geometry.header-geometry.top)<3,'Table headers stay sticky');assert.equal(geometry.row,44);
- await page.locator('#stage-filter').selectOption('contacted');assert.equal(await page.locator('.people-table tbody tr').count(),1,'Status filter covers all 10k contacts');
- await page.locator('#stage-filter').selectOption('');
+ await page.locator('[data-column="7"]').click();await page.locator('#modal details summary').click();await page.getByLabel('Filter values').selectOption('Contacted');await page.locator('#modal-submit').click();assert.equal(await page.locator('.people-table tbody tr').count(),1,'Status filter covers all 10k contacts');
+ await page.locator('#clear-columns').click();
  await page.locator('#search').fill('Prospect 09999');await page.waitForFunction(()=>document.querySelectorAll('.people-table tbody tr').length===1);
  assert.equal(await page.locator('.people-table tbody tr').count(),1,'Search covers the entire 10k dataset');
  await page.locator('.people-table [data-person="p9999"]').click();assert.equal(await page.locator('#detail h2').textContent(),'Prospect 09999','A record beyond the first batch opens correctly');
  await page.locator('#master-list').click();await page.locator('#search').fill('');await page.locator('#search').dispatchEvent('change');
  assert.equal(await page.locator('.people-table tbody tr').count(),250);
  await page.locator('.people-table [data-person="p50"]').click();assert.equal(await page.locator('#detail h2').textContent(),'Prospect 00050','Prospect without email opens correctly');
- for(const view of ['companies','results','activity','emails','people']){await page.locator('#view-menu').selectOption(view);assert.equal(await page.locator('#view-menu').inputValue(),view);}
+ await page.locator('#menu-toggle').click();await page.locator('.outbound-more summary').click();for(const view of ['companies','results','activity','emails','people']){await page.locator('#view-menu').selectOption(view);assert.equal(await page.locator('#view-menu').inputValue(),view);}await page.keyboard.press('Escape');
  await page.locator('#master-list').click();assert.equal(await page.locator('.people-table tbody tr').count(),250);
  await page.locator('[data-person]').first().click();await page.locator('#mail-sender option').nth(1).waitFor({state:'attached'});assert.equal(await page.locator('#mail-sender option').count(),2);
  await page.locator('#sample-email').click();await page.locator('[name=name]').fill('Alex');await page.locator('[name=company]').fill('Example');await page.locator('[name=offer]').fill('A small capsule collection');await page.locator('#modal-submit').click();

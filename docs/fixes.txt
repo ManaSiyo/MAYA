@@ -1,3 +1,8 @@
+SEPTEMBER 29: Outbound visual drift and missing Category
+Old To Do CSS hid source columns, including Category. Retired that view and its
+rules. Competing campaign selectors overrode centered capsule styling; removed
+them and added computed geometry checks. Column filters now replace global ones.
+
 SEPTEMBER 28 late: Owner tools leaked into Messages; Gmail link was indirect
 Prepared scoped tab visibility and consistent compact controls. Admin link now
 opens Outbound Gmail directly; missing OAuth configuration opens setup steps.

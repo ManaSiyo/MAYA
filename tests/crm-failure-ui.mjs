@@ -24,7 +24,7 @@ try {
  });
  await page.goto('https://maya.test/outbound.html');await page.locator('.people-table [data-person="p"]').click();
  await page.locator('#notes').fill('Keep this draft');page.once('dialog',d=>d.dismiss());
- await page.locator('#stage-filter').selectOption('contacted');assert.equal(await page.locator('#stage-filter').inputValue(),'','Cancelled filter change restores its displayed value');assert.equal(await page.locator('#notes').inputValue(),'Keep this draft');
+ await page.locator('#stage-filter').selectOption('contacted',{force:true});assert.equal(await page.locator('#stage-filter').inputValue(),'','Cancelled filter change restores its displayed value');assert.equal(await page.locator('#notes').inputValue(),'Keep this draft');
  await page.locator('#notes').fill('');
  await page.locator('#menu-toggle').click();await page.locator('#sync-drawer').click();await page.locator('#modal-title').filter({hasText:'Connections'}).waitFor();assert.ok(await page.locator('#field-sheetId').isEnabled(),'Unconfigured sheet refresh opens usable connections');await page.keyboard.press('Escape');
  await page.locator('#automation-settings').click();
