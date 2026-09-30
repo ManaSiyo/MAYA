@@ -136,13 +136,14 @@ export function createMessageStore(deps) {
       });
     },
     // a call, either way
-    async call({ number, dir, seconds, mode, summary, name }) {
+    async call({ number, dir, seconds, mode, summary, name, transcript }) {
       return locked(async () => {
         const rec = await read();
         const t = thread(rec, number, name);
         if (!t) return null;
         const ts = new Date().toISOString();
-        push(t, { id: crypto.randomBytes(6).toString('hex'), dir, kind: 'call', seconds: Number(seconds) || 0, mode: mode || '', text: String(summary || '').slice(0, 400), ts });
+        push(t, { id: crypto.randomBytes(6).toString('hex'), dir, kind: 'call', seconds: Number(seconds) || 0, mode: mode || '', text: String(summary || '').slice(0, 400),
+          transcript:Array.isArray(transcript)?transcript.slice(0,300).map(line=>({who:line.who==='maya'?'maya':'caller',text:String(line.text||'').slice(0,4000)})):[],ts });
         await write(rec);
         return { number: t.number };
       });

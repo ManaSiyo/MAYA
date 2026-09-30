@@ -31,6 +31,8 @@ import { mountOutbound } from './outbound.mjs';
 import { createGmail } from './crm-gmail.mjs';
 import { createCrmAI } from './crm-ai.mjs';
 import { createOwnerCRM, gmailCandidates } from './owner-crm.mjs';
+import { createLeadAlerts } from './lead-alerts.mjs';
+import { createBookingLinks } from './booking-link.mjs';
 import { jsonStore } from './crm-store.mjs';
 import crypto from 'node:crypto';
 import { Readable } from 'node:stream';
@@ -2716,9 +2718,9 @@ function guessFormName(v) {
   return 'Form';
 }
 let _leadsCache = { ts: 0, data: null };
-async function wixLeads() {
+async function wixLeads({fresh=false,summaries=true}={}) {
   if (!WIX_KEY) return { connected: false, why: 'no WIX_API_KEY set' };
-  if (_leadsCache.data && Date.now() - _leadsCache.ts < 10 * 60 * 1000) return _leadsCache.data;
+  if (!fresh && _leadsCache.data && Date.now() - _leadsCache.ts < 10 * 60 * 1000) return _leadsCache.data;
   try {
     const sinceMs = Date.now() - LEADS_DAYS * 86400000;
     const formNames = await wixFormNames();
@@ -2774,7 +2776,7 @@ async function wixLeads() {
     // model is unreachable the deterministic line (tier + their own words)
     // stands instead; never a guess, never a blank.
     await Promise.all(list.map(async (l, i) => {
-      const ai = i < 20 ? await summarizeLead(l).catch(() => null) : null;   // v14.30: the model reads the newest twenty; older rows keep their own words
+      const ai = summaries && i < 20 ? await summarizeLead(l).catch(() => null) : null;   // v14.30: the model reads the newest twenty; older rows keep their own words
       l.note = ai || [l.tier, l.wrote].filter(Boolean).join(', ').slice(0, 220)
         || 'No note on the form.';
     }));
@@ -2782,7 +2784,7 @@ async function wixLeads() {
       today: within(86400000), d7: within(7 * 86400000), d28: within(28 * 86400000), year: leads.length,
       lastLeadTs: leads.length ? leads[0].ts : null,
       list };
-    _leadsCache = { ts: Date.now(), data };
+    if(summaries)_leadsCache = { ts: Date.now(), data };
     return data;
   } catch (e) {
     return { connected: false, why: String(e.message).slice(0, 200) };
@@ -4574,6 +4576,8 @@ const _httpServer = app.listen(port, () => {
 // routes say so. The webhook takes Twilio's form encoded POST.
 const PHONE_TRANSCRIPTS = 'maya/phone/';
 let _phone = null;
+let _leadAlerts = null;
+let _booking = null;
 // v14.35: one thread per number in maya/sms/threads.json, read and written
 // through the same storage helpers as everything else.
 const _messages = createMessageStore({
@@ -4721,6 +4725,8 @@ app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' })
     },
     // v14.35: every call lands in the number's thread, next to the texts.
     onCallEnd: async (rec) => { await _messages.call(rec); },
+    bookingPreview: (query,options) => _booking?.preview(query,options),
+    bookingConfirm: id => _booking?.confirm(id),
   });
   // v14.35: the text threads and the routes behind the drawer's Messages tab.
   const twilioDeps = { accountSid: process.env.TWILIO_ACCOUNT_SID || '', authToken: process.env.TWILIO_AUTH_TOKEN || '',
@@ -4741,7 +4747,48 @@ app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' })
     urlencoded: express.urlencoded({ extended: false, limit: '32kb' }),
     callClient: (x) => (_phone && _phone.callClient) ? _phone.callClient(x) : { ok: false, why: 'the phone line is off' },
   });
+  _booking=createBookingLinks({read:gcsGet,write:gcsPut,
+    findLead:_phoneFindLead,
+    findById:async id=>(await loadLeadFeed()).list?.find(l=>l.id===id),
+    contactState:to=>_messages.get(to),
+    sendSms:(to,text)=>sendSms(twilioDeps,{to,text}),
+    recordSms:record=>_messages.outbound(record),
+    notifyOwner:async text=>{
+      const to=process.env.FROMSA_PHONE||'+15104917540';
+      const sent=await sendSms(twilioDeps,{to,text});
+      if(sent.ok)await _messages.outbound({to,text,sid:sent.sid,status:sent.status,by:'maya-booking-preview'});
+      return sent;
+    },
+  });
+  _leadAlerts=createLeadAlerts({read:gcsGet,write:gcsPut,
+    fetchLeads:()=>wixLeads({fresh:true,summaries:false}),
+    textOwner:async text=>{
+      const to=process.env.FROMSA_PHONE||'+15104917540';
+      const sent=await sendSms(twilioDeps,{to,text});
+      if(sent.ok)await _messages.outbound({to,text,sid:sent.sid,status:sent.status,by:'maya-signup'});
+      return sent;
+    },
+    callOwner:reason=>_phone?.callFromsa?.(reason)||{ok:false,why:'phone line unavailable'},
+  });
 })().catch(e => console.error('[phone] mount failed', e.message));
+
+app.post('/api/admin/lead-alerts/check',requireAuthHeader,async(req,res)=>{
+  try{await requireAdmin(req);if(!_leadAlerts)return res.status(503).json({ok:false,error:'Phone line is starting.'});
+    res.set('Cache-Control','no-store').json({ok:true,...await _leadAlerts.run()});
+  }catch(e){res.status(e.status||503).json({ok:false,error:e.status?e.message:'Could not check new signups.'});}
+});
+app.get('/api/admin/booking/pending',requireAuthHeader,async(req,res)=>{
+  try{await requireAdmin(req);if(!_booking)return res.status(503).json({ok:false});res.set('Cache-Control','no-store').json({ok:true,items:await _booking.pending()});}
+  catch(e){res.status(e.status||503).json({ok:false,error:'Booking previews unavailable.'});}
+});
+app.post('/api/admin/booking/preview',requireAuthHeader,express.json({limit:'2kb'}),async(req,res)=>{
+  try{await requireAdmin(req);if(!_booking)return res.status(503).json({ok:false});res.json({ok:true,proposal:await _booking.preview(req.body?.query)});}
+  catch(e){res.status(e.status||503).json({ok:false,error:e.status?e.message:'Booking preview unavailable.'});}
+});
+app.post('/api/admin/booking/confirm',requireAuthHeader,express.json({limit:'2kb'}),async(req,res)=>{
+  try{await requireAdmin(req);if(!_booking)return res.status(503).json({ok:false});res.json(await _booking.confirm(String(req.body?.id||'')));}
+  catch(e){res.status(e.status||503).json({ok:false,error:e.status?e.message:'Booking delivery uncertain. Check Messages before retrying.'});}
+});
 
 // Outbound uses the signed-in admin's own workspace; no browser-supplied owner ID.
 app.use('/api/admin/outbound', express.json({limit:'16mb'}));
@@ -4775,7 +4822,8 @@ const ownerCRM=createOwnerCRM({...crmStorage,
       const result={id,name};s.ownerRequests[requestId]=result;return result;
     },{items:[],overrides:{},tombstones:[]});
     _leadsCache={ts:0,data:null};return result;
-  }
+  },
+  booking:{preview:query=>_booking?.preview(query),confirmCode:code=>_booking?.confirmCode(code)},
 });
 app.get('/api/admin/owner-crm',requireAuthHeader,async(req,res)=>{try{const user=await requireAdmin(req);res.set('Cache-Control','no-store').json({ok:true,...await ownerCRM.status(user),gmailReady:crmGmail.ready(),mailboxes:await crmGmail.list(user.sub)});}catch(e){res.status(e.status||503).json({error:e.status?e.message:'Owner tools unavailable.'});}});
 app.post('/api/admin/owner-crm/enable',requireAuthHeader,async(req,res)=>{try{const user=await requireAdmin(req);await ownerCRM.bind(user);res.json({ok:true,...await ownerCRM.status(user)});}catch(e){res.status(e.status||503).json({error:e.status?e.message:'Owner tools unavailable.'});}});
@@ -4803,6 +4851,7 @@ app.post('/api/admin/owner-crm/gmail-add',requireAuthHeader,express.json({limit:
 
 mountOutbound(app, {
   gmail:crmGmail, ai:crmAI,
+  onScheduledSync:()=>_leadAlerts?.run(),
   schedulerReady:!!(process.env.OUTBOUND_SCHEDULER_EMAIL&&process.env.OUTBOUND_SCHEDULER_AUDIENCE),
   verifyScheduler:async req=>{
     try{

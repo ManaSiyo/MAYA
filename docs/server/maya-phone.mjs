@@ -103,6 +103,7 @@ export function briefInstructions({ character, nowLA, reason, inbound }) {
     'He may ask what the latest leads look like: call list_leads and tell him the newest ones in plain words, shortest ' +
     'first. For a particular person or their phone number, call find_lead, which searches the whole station. ' +
     'Read the returned phone number when he asks; never infer a missing number or say it is unavailable without checking. ' +
+    'When he asks to send a booking link, call preview_booking for the exact lead. Read the recipient and message to him; mention the owner text preview only if the tool says it was accepted. Ask if he approves. Only after he explicitly says yes, call send_booking with that preview ID and confirmed true. This is a consultation booking link, never an invoice. If he says no or changes the recipient, do not send; make a fresh preview. ' +
     'If the lookup is ambiguous, ask which person. He may tell you about a person to save: read back their name, number and interest, ask him to confirm, then call save_lead with confirmed=true. For corrections during this call, supply the lead_id returned by the earlier save. Never reuse that ID for a different person. He may ask you to note something on a lead: call ' +
     'note_lead. When he says what a lead went with ("Kristi went with signature"), call set_tier. He may report a bug, an idea or anything for the studio inbox ("log this", "there is a bug", "remember ' +
     'to"): call log_note with his original wording, including corrections and specifics. This is the primary feedback queue. Do not wait for him to say log this when he reports a problem or requests a change. Only confirm it is logged after the tool succeeds; never claim the fix is implemented. When he says that is all, or goodbye, say one ' +
@@ -144,6 +145,12 @@ export const BRIEF_TOOLS = [
   { type: 'function', name: 'list_leads',
     description: 'The newest leads in the studio Lead Station: who, from where, and what they want. Call it when Fromsa asks about leads, sign ups, or who came in.',
     parameters: { type: 'object', properties: { count: { type: 'integer', description: 'how many, default 6' } } } },
+  { type:'function', name:'preview_booking',
+    description:'Prepare the exact consultation booking text for one Lead Station contact and text the preview to Fromsa. Never sends to the client.',
+    parameters:{type:'object',properties:{query:{type:'string'}},required:['query']} },
+  { type:'function', name:'send_booking',
+    description:'Send the previously previewed booking text to that client only after Fromsa explicitly approved it on this call.',
+    parameters:{type:'object',properties:{preview_id:{type:'string'},confirmed:{type:'boolean'}},required:['preview_id','confirmed']} },
   { type: 'function', name: 'note_lead',
     description: 'Add a note to a lead in the station, by the name Fromsa says.',
     parameters: { type: 'object', properties: {
@@ -313,7 +320,7 @@ export function mountMayaPhone(app, server, deps) {
 
   wss.on('connection', (tw) => {
     const call = { callSid: '', streamSid: '', from: '', ai: null, open: false, started: Date.now(),
-                   transcript: [], saved: null, leadCalls: 0, timers: [], done: false, mode: 'inbound', reason: '', name: '', earlyAudio: [], aiReady: false, transferring: false };
+                   transcript: [], saved: null, leadCalls: 0, timers: [], done: false, mode: 'inbound', reason: '', name: '', earlyAudio: [], aiReady: false, transferring: false, pendingBookingId:'', bookingApprovalAt:0 };
     const send = (obj) => { try { if (tw.readyState === 1) tw.send(JSON.stringify(obj)); } catch (_) {} };
     const aiSend = (obj) => { try { if (call.ai && call.ai.readyState === 1) call.ai.send(JSON.stringify(obj)); } catch (_) {} };
     const finish = async (why) => {
@@ -334,7 +341,7 @@ export function mountMayaPhone(app, server, deps) {
       try {
         if (deps.onCallEnd && call.open) await deps.onCallEnd({
           number: call.from, dir: call.mode === 'client' || call.mode === 'brief' ? 'out' : 'in', seconds, mode: call.mode, name: call.mode === 'brief' || call.mode === 'admin' ? 'Fromsa' : call.name,
-          summary: call.transcript.filter(t => t.who === 'caller').map(t => t.text).join(' ').slice(0, 400) });
+          summary: call.transcript.filter(t => t.who === 'caller').map(t => t.text).join(' ').slice(0, 400),transcript:call.transcript });
       } catch (e) { log('thread note failed', e.message); }
       try {
         if (deps.saveTranscript && call.callSid && call.open) await deps.saveTranscript(call.callSid, {
@@ -427,6 +434,23 @@ export function mountMayaPhone(app, server, deps) {
           } else if (m.name === 'find_lead') {
             try { output = deps.findLead ? await deps.findLead(String(args.query || '')) : { ok: false, why: 'the station lookup is unavailable' }; }
             catch (_) { output = { ok: false, why: 'the station did not answer' }; }
+          } else if (m.name === 'preview_booking') {
+            try{
+              if(!deps.bookingPreview)throw Error('booking unavailable');
+              const draft=await deps.bookingPreview(String(args.query||''),{notifyOwner:true});
+              call.pendingBookingId=draft.id;call.bookingApprovalAt=call.transcript.length;
+              output={ok:true,preview_id:draft.id,to:draft.to,name:draft.name,text:draft.text,
+                ownerTextAccepted:!!draft.ownerPreview?.ok,say:'Read this exact preview to Fromsa and ask for explicit approval. Nothing went to the client.'};
+            }catch(e){output={ok:false,say:e.status?e.message:'Booking preview is unavailable.'};}
+          } else if (m.name === 'send_booking') {
+            const approved=call.transcript.slice(call.bookingApprovalAt).some(t=>t.who==='caller'&&/\b(?:yes|approve|go ahead|send it|send the link)\b/i.test(t.text));
+            if(!args.confirmed||!approved||!call.pendingBookingId||args.preview_id!==call.pendingBookingId){
+              output={ok:false,say:'Ask Fromsa to approve the exact booking preview before sending.'};
+            }else{
+              const id=call.pendingBookingId;call.pendingBookingId='';
+              try{output=await deps.bookingConfirm(id);output.say=output.ok?'The carrier accepted the booking text. Delivery is not yet confirmed.':'The booking text was not sent.';}
+              catch(e){output={ok:false,say:e.status?e.message:'The delivery result is uncertain. Check Messages before trying again.'};}
+            }
           } else if (m.name === 'list_leads') {
             try {
               const n = Math.max(1, Math.min(12, Number(args.count) || 6));

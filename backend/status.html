@@ -197,6 +197,11 @@ try {
   .msg-call-line{align-self:center;font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);
     border:0.5px dashed var(--line);border-radius:var(--maya-radius-pill);padding:4px 10px;margin:4px 0;max-width:92%;text-align:center}
   .msg-call-line small{display:block;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0;text-transform:none;color:var(--faint);margin-top:2px;font-style:italic;white-space:normal}
+  .msg-call-line details{max-width:min(340px,78vw);margin-top:6px;text-align:left;letter-spacing:0;text-transform:none;font-size:var(--maya-text-caption);line-height:1.45}
+  .msg-call-line summary{cursor:pointer;color:#fff}
+  .msg-call-line details p{margin:6px 0;color:var(--dim);white-space:pre-wrap}
+  .booking-preview{margin:8px 10px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:rgba(3,15,29,.45);font:300 var(--maya-text-body)/1.45 var(--maya-font-ui)}
+  .booking-preview strong{display:block;color:#fff;font-weight:400}.booking-preview p{margin:6px 0;white-space:pre-wrap;color:var(--dim)}
   .msg-compose{display:flex;gap:6px;align-items:flex-end;padding-top:8px;border-top:var(--maya-hairline) solid var(--line);flex:none}
   #msg-input{flex:1;resize:none;max-height:96px;border-radius:14px;border:var(--maya-hairline) solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.04);
     color:var(--ink);font-family:var(--maya-font-ui);font-size:var(--maya-text-body);padding:8px 12px;outline:none}
@@ -920,12 +925,13 @@ if (IS_AFFILIATES) {
   </div>
   <div id="drawer-logs" hidden><div class="msg-controls"><button onclick="loadMayaLogs()">Refresh logs</button></div><p class="note">Feedback given to Maya, in the original wording. Logged requests remain open until marked shipped.</p><div id="maya-logs-list" aria-live="polite"></div></div>
   <div id="drawer-messages" hidden>
+    <div id="booking-pending" aria-live="polite"></div>
     <div id="msg-list"></div>
     <div id="msg-thread" hidden>
       <div class="msg-head">
         <button class="msg-back" onclick="msgBack()" title="All threads">&#8249;</button>
         <div class="msg-who"><div class="msg-name-edit"><input class="msg-name" id="msg-name" aria-label="Contact name" placeholder="Caller" title="Click to name this contact; Enter saves" maxlength="120" onblur="msgRename()" onkeydown="if(event.key==='Enter')this.blur()"><button class="msg-rename" aria-label="Edit contact name" onclick="document.getElementById('msg-name').focus()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 16-1 5 5-1L21 7l-4-4zM14 6l4 4"/></svg></button></div><div class="msg-number" id="msg-number"></div></div>
-        <button class="msg-call" onclick="msgInvoice()" title="Invoice this lead">Invoice</button><button class="msg-call" id="msg-call" onclick="msgCall()" title="Call this person">Call</button>
+        <button class="msg-call" onclick="msgBooking()" title="Preview the consultation booking link">Booking</button><button class="msg-call" onclick="msgInvoice()" title="Invoice this lead">Invoice</button><button class="msg-call" id="msg-call" onclick="msgCall()" title="Call this person">Call</button>
       </div>
       <div class="msg-controls"><button onclick="msgCheckDelivery()" title="Check the last five outgoing texts with the carrier">Check delivery</button><button id="msg-block" onclick="msgBlock()">Block</button><button onclick="msgDelete()">Delete conversation</button></div><div class="msg-scroll" id="msg-scroll"></div>
       <div class="msg-compose">
@@ -1096,7 +1102,7 @@ if (IS_AFFILIATES) {
 
   <details class="fold" id="leads-fold" open>
     <summary><h2 class="grp">The Lead Station</h2></summary>
-    <div id="leads-bar"><span class="lead-tool" aria-current="page">Forms</span><button class="lead-tool" onclick="event.preventDefault();reloadLeads()" title="Reload leads" aria-label="Reload leads">&#8635;</button><button class="lead-tool" onclick="event.preventDefault();addLeadManual()" title="Add lead" aria-label="Add lead">+</button></div>
+    <div id="leads-bar"><span class="lead-tool" aria-current="page">Forms</span><button class="lead-tool" onclick="event.preventDefault();reloadLeads()" title="Reload leads" aria-label="Reload leads">&#8635;</button><button class="lead-tool" onclick="event.preventDefault();checkLeadAlerts()" title="Check new signups and notify me" aria-label="Check new signups and notify me">Alerts</button><button class="lead-tool" onclick="event.preventDefault();addLeadManual()" title="Add lead" aria-label="Add lead">+</button></div>
     <div class="panel" tabindex="0" role="region" aria-label="Lead Station, scroll horizontally for more columns"><table id="leads-table"><tbody></tbody></table></div>
     <div id="leads-note" class="note" style="display:none"></div>
   </details>
@@ -3173,6 +3179,12 @@ async function deleteLeadRow(i) {
   } catch (_) { reloadLeads(); }
 }
 function reloadLeads() { if (IS_AFFILIATES) return window.loadAffiliateLeads(); try { if (window.loadMkt) loadMkt(); } catch (_) {} try { loadMayaCommand(); } catch (_) {} }
+async function checkLeadAlerts(){
+  const note=document.getElementById('leads-note');note.style.display='block';note.textContent='Checking new signups...';
+  try{const r=await fetch('/api/admin/lead-alerts/check',{method:'POST',headers:{Authorization:'Bearer '+_idTok}});const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||'Alert check failed.');
+    note.textContent=`Checked ${j.checked} recent signups · ${j.texts} texts accepted · ${j.calls} calls placed`+(j.failed?.length?` · ${j.failed.length} failed; see server logs`:'');reloadLeads();
+  }catch(e){note.textContent=e.message;}
+}
 window.reloadLeads = reloadLeads;
 async function addLeadManual() {
   const name = prompt('New lead. Name:'); if (name == null || !name.trim()) return;
@@ -3211,7 +3223,7 @@ function admTab(t) {
   document.getElementById('adm-tab-systems').setAttribute('aria-selected', t === 'systems' ? 'true' : 'false');
   document.getElementById('adm-tab-messages').setAttribute('aria-selected', t === 'messages' ? 'true' : 'false');
   document.getElementById('drawer-messages').hidden = t !== 'messages';
-  if (t === 'messages') { loadThreads(); if (!_msgTimer) _msgTimer = setInterval(() => { if (_msgOpen) loadThread(_msgOpen.number, true); else loadThreads(); }, 15000); }
+  if (t === 'messages') { loadThreads(); loadBookingPending(); if (!_msgTimer) _msgTimer = setInterval(() => { if (_msgOpen) loadThread(_msgOpen.number, true); else loadThreads(); loadBookingPending(); }, 8000); }
   else if (_msgTimer) { clearInterval(_msgTimer); _msgTimer = null; }
 }
 async function loadModelSnapshot(){
@@ -3305,7 +3317,7 @@ function paintThread(t, quiet) {
   document.getElementById('msg-call').disabled = !!t.blocked;
   const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
     box.innerHTML = (t.messages || []).map(m => m.kind === 'call'
-      ? '<div class="msg-call-line">' + (m.dir === 'out' ? 'Maya called' : 'They called Maya') + (m.seconds ? ', ' + Math.max(1, Math.round(m.seconds / 60)) + ' min' : '') + ' <span>' + esc(_msgWhen(m.ts)) + '</span>' + (m.text ? '<small>' + esc(m.text) + '</small>' : '') + '</div>'
+      ? '<div class="msg-call-line">' + (m.dir === 'out' ? 'Maya called' : 'They called Maya') + (m.seconds ? ', ' + Math.max(1, Math.round(m.seconds / 60)) + ' min' : '') + ' <span>' + esc(_msgWhen(m.ts)) + '</span>' + (Array.isArray(m.transcript)&&m.transcript.length ? '<details><summary>Transcript</summary>' + m.transcript.map(line=>'<p><b>'+esc(line.who==='maya'?'MAYA':'You')+':</b> '+esc(line.text)+'</p>').join('') + '</details>' : m.text ? '<small>' + esc(m.text) + '</small>' : '') + '</div>'
       : '<div class="bub ' + (m.dir === 'out' ? 'out' : 'in') + '">' + esc(m.text || '') + '<div class="bub-when">' + esc(_msgWhen(m.ts)) + (m.dir === 'out' && m.status ? ', ' + esc(m.status) + (m.errorCode ? ' (carrier error ' + esc(m.errorCode) + (String(m.errorCode) === '30034' ? ': sending number needs approved A2P registration' : '') + ')' : '') : '') + '</div></div>'
     ).join('') || '<div class="msg-empty">No messages yet. Send a text to start the conversation.</div>';
     if (!quiet || atBottom) box.scrollTop = box.scrollHeight;
@@ -3388,6 +3400,27 @@ async function _mayaCallClient(number, name, reason) {
   } catch (e) { alert('The call did not go out.'); }
 }
 function msgInvoice(){const number=String(_msgOpen?.number||'').replace(/\D/g,'');const index=_leadList.findIndex(x=>String(x.phone||'').replace(/\D/g,'')===number);if(index<0)return alert('Add this contact to Lead Station before creating an invoice.');leadInvoice(index);}
+async function loadBookingPending(){
+  const host=document.getElementById('booking-pending');if(!host||!_idTok||_msgTab!=='messages')return;
+  try{const r=await fetch('/api/admin/booking/pending',{headers:{Authorization:'Bearer '+_idTok},cache:'no-store'});const j=await r.json();if(!r.ok)throw Error('preview unavailable');
+    host.innerHTML=(j.items||[]).slice(0,3).map(p=>'<div class="booking-preview"><strong>Booking preview · '+esc(p.name)+'</strong><p>To '+esc(p.to)+'\n'+esc(p.text)+'</p><button class="msg-call" data-booking-id="'+esc(p.id)+'">Approve &amp; send</button></div>').join('');
+    host.querySelectorAll('[data-booking-id]').forEach(button=>button.onclick=()=>confirmBooking(button.dataset.bookingId));
+  }catch{host.textContent='';}
+}
+async function confirmBooking(id){
+  const host=document.getElementById('booking-pending');const card=[...host.querySelectorAll('[data-booking-id]')].find(b=>b.dataset.bookingId===id)?.closest('.booking-preview');
+  if(!card||!confirm('Send this exact booking message to the client?\n\n'+card.querySelector('p').textContent))return;
+  try{const r=await fetch('/api/admin/booking/confirm',{method:'POST',headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({id})});const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||'The text was not sent.');
+    document.getElementById('msg-feedback').textContent=j.warning||'Accepted by carrier. Check delivery in Messages.';await loadBookingPending();if(_msgOpen)await loadThread(_msgOpen.number,true);
+  }catch(e){alert(e.message);await loadBookingPending();}
+}
+async function msgBooking(){
+  if(!_msgOpen)return;
+  const number=String(_msgOpen.number||'').replace(/\D/g,'');const lead=_leadList.find(x=>String(x.phone||'').replace(/\D/g,'')===number);
+  if(!lead)return alert('Add this contact to the Lead Station before sending a booking link.');
+  try{const r=await fetch('/api/admin/booking/preview',{method:'POST',headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({query:lead.email||lead.name||lead.phone})});const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||'Preview unavailable.');await loadBookingPending();}
+  catch(e){alert(e.message);}
+}
 function leadOpenThread(i) {
   const x = _leadList[i]; if (!x || !x.phone) return;
   toggleDrawer(true); admTab('messages'); openThread(x.phone, x.name || '');

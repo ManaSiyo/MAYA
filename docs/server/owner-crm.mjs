@@ -44,6 +44,17 @@ export function createOwnerCRM(deps){
       if(claim.result.cached)return claim.result.cached;
       let reply;
       try{
+        const bookingApproval=t.match(/^BOOK\s+([a-f0-9]{6})$/i);
+        const bookingRequest=t.match(/^(?:please\s+)?send\s+(?:the\s+|a\s+)?(?:booking|consultation)\s+link\s+to\s+(.+?)[.!]?$/i);
+        if(bookingApproval){
+          if(!deps.booking)throw problem('Booking is unavailable.');
+          const sent=await deps.booking.confirmCode(bookingApproval[1]);
+          reply=sent.ok?'Booking link accepted by carrier. Check Messages for delivery.':'Booking text was not sent.';
+        }else if(bookingRequest){
+          if(!deps.booking)throw problem('Booking is unavailable.');
+          const draft=await deps.booking.preview(bookingRequest[1]);
+          reply=`Preview for ${draft.name} (${draft.to}):\n${draft.text}\nReply BOOK ${draft.code} within 10 minutes to send. Nothing has gone to the client.`;
+        }else{
         const confirm=t.match(/^YES\s+([a-f0-9]{6})$/i);
         if(confirm){
           const pending=claim.result.pending;
@@ -60,7 +71,8 @@ export function createOwnerCRM(deps){
           reply=(command.action==='add'?'Add: ':'Update: ')+detail+'\nReply YES '+code+' within 10 minutes to save. Nothing has changed yet.';
           await db.update(key,s=>{s.pending={id,code,command,expires:now()+600000};});
         }
-      }catch(e){reply=e.status?e.message:'I could not complete that request. Nothing is confirmed saved. Please check Admin before retrying.';}
+        }
+      }catch(e){reply=e.status?e.message:'I could not confirm the result. Check Admin before retrying.';}
       await db.update(key,s=>{s.messages[sid].reply=reply;});
       return reply;
     }
