@@ -165,3 +165,12 @@ colors. Clear glass highlight is now 15%. These choices remain preview-only.
 Use real labels and page locations: “Name this project” in the client project-name
 dialog and “OUTBOUND” in Outbound’s top-left header. “Your next design” was sample
 copy, and the former “All prospects” page title is retired.
+
+## Review page structure
+
+Typography is ordered by descending font size, keeping Brand first among 24px
+examples. The preview shell uses the proposed hierarchy: Garamond 24/300 titles,
+Jost 12/300 body and 12/400 labels. Glass Pill Review, Icons and Page Map use
+native collapsible sections with compact triangular arrows; navigation opens
+its target section. Clear glass: 0px blur, 180% saturation, 10% rim, 15% highlight,
+zero fill/tint. This supersedes previous clear preset values, preview only.

@@ -1,5 +1,6 @@
-[Codex][v14.40] Align preview typography and identify real headings
+[Codex][v14.40] Organize style review hierarchy and collapsible sections
 
-Unify heading/body examples, neutral white RGB, and clear highlight15.
-Replace fictional/stale headline examples with actual page locations.
-Validation: responsive gallery, typography/color and overlay checks. Preview only.
+Sort typography by size and apply the proposed type to the preview shell.
+Add collapsible Glass Pill Review, Icons and Page Map; refine clear preset.
+Validation: seven-width gallery, collapse/ordering/material/icon checks, visual review.
+Preview only; no push.

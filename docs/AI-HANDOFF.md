@@ -8,6 +8,18 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## September 29: ordered type and collapsible review
+
+Preview ?review=8 sorts all type samples largest-to-smallest, Brand first.
+Preview shell headings use Garamond 24/300, body Jost12/300, labels12/400.
+Glass Pill Review is a native details section open initially. Icons and Page Map
+are initially collapsed; nav links open their destinations. Six shared icon
+examples added. Hidden pill measurement no longer shrinks icons to zero.
+Clear preset now fill/tint0, rim10, highlight15, blur0px, saturation180%.
+Validation: gallery seven widths, collapse toggles, type sorting, icon geometry,
+material controls and overlay checks; real-font visual review. No push.
+Next: owner reviews local preview before global style migration.
+
 ## September 29: type hierarchy and actual locations
 
 Preview ?review=7: Brand/dialog/page headings Cormorant 24/300; paragraph/table

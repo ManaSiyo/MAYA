@@ -50,3 +50,11 @@
 .type-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.7fr) minmax(0,1fr);gap:24px;color:#aab5c4;font-size:11px;padding:12px 0}.type-row a{display:inline-block;margin-top:8px;font-size:11px}@media(max-width:700px){.type-columns{display:none}}
 /* Preview white uses neutral RGB channels; gray reference colors stay intact. */
 :root{--ui-ink:rgba(255,255,255,.85)}
+
+/* The review page follows its own proposed hierarchy. */
+body{font-family:var(--ui-font);font-size:12px;font-weight:300;line-height:1.7}
+h1,h2{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;color:rgb(255,255,255);line-height:1.25}
+h3,.controls label,.finish-choice{font-size:12px;font-weight:400}
+.controls button,.controls select{font-family:var(--ui-font);font-size:10px;font-weight:300;letter-spacing:1.5px;padding:6px 14px;border-radius:100px;backdrop-filter:blur(22px) saturate(180%);background:rgb(3 15 29 / .18);border:1px solid #ffffff38}
+.review-fold{margin:0}.review-fold>summary{display:flex;align-items:center;gap:12px;list-style:none;padding:0;color:#fff}.review-fold>summary::-webkit-details-marker{display:none}.review-fold>summary::after{content:'';width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid #aab5c4;transform:rotate(-90deg);flex:none}.review-fold[open]>summary::after{transform:none}.review-fold>summary h2{margin:0}.review-fold-body{padding-top:16px;min-width:0}.review-fold-body>#buttons{padding:16px 0;border:0;background:none}.review-fold-body>p:first-child{margin-top:0}
+.icon-example{display:grid;justify-items:center;gap:8px;font-size:12px}.icon-example .maya-icon-button{width:var(--preview-control-height,28px);height:var(--preview-control-height,28px)}

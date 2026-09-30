@@ -26,12 +26,17 @@ try{
  const iconCenter=await page.locator('.maya-icon-button').first().evaluate(e=>{const b=e.getBoundingClientRect(),s=e.querySelector('svg').getBoundingClientRect();return Math.abs((b.x+b.width/2)-(s.x+s.width/2))+Math.abs((b.y+b.height/2)-(s.y+s.height/2));});assert.ok(iconCenter<1);
  await page.locator('#preview-font').selectOption('Arial, sans-serif');assert.match(await page.locator('#buttons .maya-pill').first().evaluate(e=>getComputedStyle(e).fontFamily),/Arial/);
  assert.equal(await page.locator('.font-card').count(),3);assert.match(await page.locator('#pages').textContent(),/11 page files/);
- assert.equal(await page.locator('#gallery > section').count(),3);
+ assert.equal(await page.locator('#gallery > section').count(),4);
  assert.equal(await page.locator('.page-map .page-link').count(),11);
  assert.equal(await page.locator('[data-finish="liquid"].maya-pill').first().evaluate(e=>getComputedStyle(e).fontSize),'10px');
  assert.match(await page.locator('[data-finish="liquid"].maya-pill').first().evaluate(e=>getComputedStyle(e).backgroundImage),/linear-gradient/);
  assert.ok(await page.locator('#fonts').isVisible());
  assert.equal(await page.locator('.type-row').count(),16);
+ const sizes=await page.locator('.type-example').evaluateAll(es=>es.map(e=>parseFloat(getComputedStyle(e).fontSize)));assert.deepEqual(sizes,[...sizes].sort((a,b)=>b-a));
+ assert.equal(await page.locator('.gallery-header h1').evaluate(e=>getComputedStyle(e).fontSize),'24px');
+ for(const id of ['pill-preview','icons','pages']){const fold=page.locator(`#${id} > details`);await fold.locator(':scope > summary').click();assert.equal(await fold.evaluate(e=>e.open),id!=='pill-preview');await fold.locator(':scope > summary').click();}
+ assert.equal(await page.locator('#icons .maya-icon-button').count(),6);
+
  for(const key of ['brand','editorial','headline']){const style=await page.locator(`[data-type="${key}"] .type-example`).evaluate(e=>{const c=getComputedStyle(e);return [c.fontFamily,c.fontSize,c.fontWeight,c.color];});assert.match(style[0],/Cormorant/);assert.equal(style[1],'24px');assert.equal(style[2],'300');assert.match(style[3],/255, 255, 255/);}
  for(const key of ['paragraph','table','label']){const style=await page.locator(`[data-type="${key}"] .type-example`).evaluate(e=>{const c=getComputedStyle(e);return [c.fontSize,c.fontWeight,c.lineHeight];});assert.deepEqual(style,['12px',key==='label'?'400':'300','20.4px']);}
  assert.match(await page.locator('[data-type="editorial"]').textContent(),/Name this project/);
@@ -40,7 +45,7 @@ try{
  assert.equal(await page.locator('.status-example').count(),11);
  assert.equal(await page.locator('[data-weight="350"]').evaluate(e=>getComputedStyle(e).fontWeight),'350');
  const clearStyle=await page.locator('.comparison [data-finish="clear"]').evaluate(e=>{const c=getComputedStyle(e);return [c.backgroundColor,c.backdropFilter,c.getPropertyValue('--finish-rim').trim(),c.getPropertyValue('--finish-highlight').trim()];});
- assert.deepEqual(clearStyle,['rgba(3, 15, 29, 0)','blur(5px) saturate(0.9)','0.2','0.15']);
+ assert.deepEqual(clearStyle,['rgba(3, 15, 29, 0)','blur(0px) saturate(1.8)','0.1','0.15']);
  assert.match(await page.locator('#source-styles').textContent(),/11 pages/);
  assert.ok((await page.locator('.type-color').allTextContents()).every(t=>/^(White|Gray) ·/.test(t)));
 

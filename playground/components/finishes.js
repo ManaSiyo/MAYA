@@ -1,7 +1,7 @@
 import {Pill} from '/aesthetics/ui/components/components.js';
 // Gallery-only presets. Transparency describes the base fill, not the composited image.
 export function setupFinishes({comparison,preview,drawer,filter,say}){
- const presets={current:{name:'Current',fill:18,tint:0,rim:22,highlight:28,blur:22,saturation:180},liquid:{name:'Proposed liquid glass',fill:18,tint:16,rim:48,highlight:65,blur:22,saturation:180},clear:{name:'Clearer glass',fill:0,tint:0,rim:20,highlight:15,blur:5,saturation:90}};
+ const presets={current:{name:'Current',fill:18,tint:0,rim:22,highlight:28,blur:22,saturation:180},liquid:{name:'Proposed liquid glass',fill:18,tint:16,rim:48,highlight:65,blur:22,saturation:180},clear:{name:'Clearer glass',fill:0,tint:0,rim:10,highlight:15,blur:0,saturation:180}};
  let selected='liquid';const values=structuredClone(presets),samples=new Map();
  const targets=()=>[...document.querySelectorAll('#gallery .maya-glass'),drawer,...drawer.querySelectorAll('.maya-glass'),filter,...filter.querySelectorAll('.maya-glass')].filter(e=>!e.closest('.comparison'));
  function paint(el,key){el.dataset.finish=key;const v=values[key];el.style.backgroundImage=key==='current'&&v.tint===0?'none':'';for(const [k,value] of Object.entries(v)){if(k==='name')continue;el.style.setProperty('--finish-'+k,k==='blur'?value+'px':k==='saturation'?value+'%':String(value/100));}}

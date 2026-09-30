@@ -1,3 +1,8 @@
+SEPTEMBER 29: Organize the review page
+[prepared] Descending type hierarchy and matching preview-page typography.
+[prepared] Collapsible Glass Pill Review, Icons and Page Map with arrows.
+[prepared] Clear glass blur0, saturation180, rim10, highlight15 retained.
+
 SEPTEMBER 29: Unify preview typography
 [prepared] Cormorant 24/300 headings, Jost 12/300 paragraph/table, 12/400 labels.
 [prepared] White RGB 255; clear highlight15; actual heading locations linked.
