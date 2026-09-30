@@ -8,6 +8,21 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## September 29: colors, Admin styles and clear glass
+
+Preview ?review=5: Clear preset fill/tint 0%, rim20%, highlight30%, blur10px,
+saturation180%. Labels distinguish fill transparency from composite appearance.
+Sixteen type roles display named color + CSS value separately from size/weight;
+Admin sections/drawer/log/model/dashboard examples included. Eleven semantic
+status pills and six email-history colors are visible. Jost variable font range
+300..600 supports true 350 beside 300 in the comparison.
+Added style-reference.js and generated style-inventory.json; regenerate with
+python3 tests/style-inventory.py. Scan covers 11 HTML pages, inline style
+attributes/style blocks and linked CSS (16 files, 897 unique entries). Inventory
+is source-only, with legacy/cascade caveat, lazily displayed per file.
+Validation: expanded gallery tests and full regression, real-font visual review.
+No live styling changes or push. Next: owner reviews finishes/type before rollout.
+
 ## September 29: retired standalone Marketing
 
 Owner approved removal if independent. Confirmed status.html already contains

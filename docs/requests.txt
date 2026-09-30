@@ -1,3 +1,9 @@
+SEPTEMBER 29: Color labels, Admin examples and transparent glass
+[prepared] Clear: 0% fill/tint, 20% rim, 30% highlight, 10px blur, 180% saturation.
+[prepared] Text colors, Admin status pills, email-history colors, more type roles.
+[prepared] True variable Jost 350 vs 300; collapsed source style inventory.
+[scope] Preview-only; design.md stays the sole active design specification.
+
 SEPTEMBER 29: Remove standalone Marketing
 [prepared] Removed duplicate page after verifying Admin owns its functionality.
 [prepared] Old Marketing URLs redirect to Admin; gallery count is 11.

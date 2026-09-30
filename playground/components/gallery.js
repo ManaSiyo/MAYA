@@ -1,3 +1,4 @@
+import {addStyleReference} from './style-reference.js';
 import {setupFinishes} from './finishes.js';
 import {Pill,GlassSurface,IconButton,Drawer,FilterPopover,Metric} from '/aesthetics/ui/components/components.js';
 const gallery=document.querySelector('#gallery'),feedback=document.querySelector('#feedback');
@@ -12,7 +13,7 @@ for(const [name,family,use] of [['Jost',"'Jost', sans-serif",'Current: buttons, 
  const sample=document.createElement('div');sample.className='font-sample';sample.style.fontFamily=family;sample.textContent='MAYA 123 · Contacted · Your next appointment';card.append(sample);cards.append(card);
 }
 const fontNote=document.createElement('p');fontNote.id='font-status';fontNote.textContent='Loading font samples…';fonts.append(fontNote);
-Promise.all([document.fonts.load('300 10px Jost'),document.fonts.load('400 18px "Cormorant Garamond"')]).then(()=>document.fonts.ready).then(()=>{const loaded=[...document.fonts].filter(f=>f.status==='loaded').map(f=>f.family.replaceAll('"','').replaceAll("'",''));fontNote.textContent=['Jost','Cormorant Garamond'].every(n=>loaded.includes(n))?'Jost and Cormorant loaded. Arial uses your system font.':'Web fonts unavailable or still loading; samples may show fallback fonts.';}).catch(()=>{fontNote.textContent='Web fonts unavailable; samples show fallback fonts.';});
+Promise.all([document.fonts.load('300 10px Jost'),document.fonts.load('350 10px Jost'),document.fonts.load('400 18px "Cormorant Garamond"')]).then(()=>document.fonts.ready).then(()=>{const loaded=[...document.fonts].filter(f=>f.status==='loaded').map(f=>f.family.replaceAll('"','').replaceAll("'",''));fontNote.textContent=['Jost','Cormorant Garamond'].every(n=>loaded.includes(n))?'Jost and Cormorant loaded. Arial uses your system font.':'Web fonts unavailable or still loading; samples may show fallback fonts.';}).catch(()=>{fontNote.textContent='Web fonts unavailable; samples show fallback fonts.';});
 const technical=document.createElement('details');technical.innerHTML='<summary>Other fonts in the code</summary><p>Menlo / system monospace: technical logs, IDs and code. SF Mono and generic monospace are fallbacks, not extra brand fonts. System sans-serif is the fallback for Jost.</p><div class="mono-sample">MAYA 123 · request_id · 10:30</div>';fonts.append(technical);
 const buttons=section('Buttons','buttons','Used in client MAYA, Admin and Outbound. Same small type, no oversized numbers.');
 row(buttons).append(Pill({label:'Tap to listen',purpose:'listen',onClick:()=>say('Voice button example')}),IconButton({label:'Add example',onClick:()=>say('Add button example')}),Metric({label:'Contacted',value:12}));
@@ -56,6 +57,11 @@ const roles=[
  ['Table text','Name · Category · Notes','Jost',11,400,'Admin and Outbound lead rows','table'],
  ['Pill & field label','TAP TO LISTEN','Jost',10,300,'Voice pill and client form labels · 1.5px spacing','pill'],
  ['Small caption','PAID CLICKS · 7D','Jost',8.5,400,'Admin bottom-line captions','caption'],
+ ['Admin section','THE LEAD STATION','Jost',11,400,'Admin section headings','adminsection'],
+ ['Drawer title','SYSTEMS','Cormorant Garamond',19,400,'Admin and Outbound drawer headings','drawer'],
+ ['Log information','Updated the appointment notes.','Jost',12,400,'Admin log body · secondary gray','log'],
+ ['Model label','Configured model','Jost',12,500,'Admin Systems model snapshot','model'],
+ ['Dashboard number','12','Jost',20,500,'Existing Admin bottom-line total · not the compact pill scale','dashboard'],
  ['Technical text','request_id · 10:30','Menlo',11,400,'Logs and technical identifiers','technical']
 ];
 for(const [role,text,family,size,weight,where,key] of roles){const item=document.createElement('article');item.className='type-row';item.dataset.type=key;const meta=document.createElement('div');const title=document.createElement('h3');title.textContent=role;const note=document.createElement('p');note.textContent=where;meta.append(title,note);const example=document.createElement('div');example.className='type-example';example.style.fontFamily=family==='Jost'?'var(--ui-font)':family==='Menlo'?'Menlo, monospace':"'Cormorant Garamond', serif";example.style.fontSize=size+'px';example.style.fontWeight=weight;example.style.lineHeight=key==='paragraph'?'1.7':'1.4';if(key==='pill')example.style.letterSpacing='1.5px';if(key==='brand'){example.style.letterSpacing='.22em';const logo=document.createElement('img');logo.src='/aesthetics/ui/logo-208.png';logo.alt='';logo.className='type-logo';example.append(logo);}example.append(document.createTextNode(text));const spec=document.createElement('small');spec.textContent=family+' · '+size+'px · '+weight;spec.dataset.family=family;spec.dataset.size=size;spec.dataset.weight=weight;item.append(meta,example,spec);hierarchy.append(item);}
@@ -63,6 +69,7 @@ fonts.insertBefore(fonts.querySelector('h2'),hierarchy);fonts.insertBefore(fonts
 const compareFonts=document.createElement('details');compareFonts.innerHTML='<summary>Compare font families</summary>';compareFonts.append(cards,fontNote,technical);fonts.append(compareFonts);
 guide.remove();
 gallery.replaceChildren(preview,fonts,pages);
+await addStyleReference(fonts,compareFonts);
 const finishes=setupFinishes({comparison,preview,drawer,filter,say});
 // Keep circular action buttons exactly as tall as the adjacent live pill, including font changes.
 const sizeReference=contextActions.querySelector('.maya-pill');
@@ -73,7 +80,7 @@ const storageKey='maya-component-gallery-tokens-v2';let saved={};try{saved=JSON.
 let overrides={};
 function valid(key,value){if(!value||/[;{}<>]|url\s*\(|var\s*\(/i.test(value))return false;
  if(/alpha|fill$|highlight$/.test(key))return /^0(?:\.\d+)?$|^1(?:\.0+)?$|^\.\d+$/.test(value);
- if(key==='--ui-pill-weight')return /^(300|400|500|600)$/.test(value);
+ if(key==='--ui-pill-weight')return /^(300|350|400|500|600)$/.test(value);
  if(/(?:size|width|radius|blur|padding-[xy]|gap|space|tracking|shadow-y)$/.test(key))return /^\d+(?:\.\d+)?px$/.test(value)&&parseFloat(value)<=500;
  const property=key.endsWith('saturation')?'width':key.endsWith('duration')?'transition-duration':key.endsWith('easing')?'transition-timing-function':key.endsWith('transform')?'text-transform':key.endsWith('height')?'line-height':key.endsWith('font')?'font-family':'color';
  return CSS.supports(property,value);

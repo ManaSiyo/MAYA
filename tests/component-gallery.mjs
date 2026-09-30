@@ -31,7 +31,14 @@ try{
  assert.equal(await page.locator('[data-finish="liquid"].maya-pill').first().evaluate(e=>getComputedStyle(e).fontSize),'10px');
  assert.match(await page.locator('[data-finish="liquid"].maya-pill').first().evaluate(e=>getComputedStyle(e).backgroundImage),/linear-gradient/);
  assert.ok(await page.locator('#fonts').isVisible());
- assert.equal(await page.locator('.type-row').count(),11);
+ assert.equal(await page.locator('.type-row').count(),16);
+ assert.equal(await page.locator('.type-color').count(),16);
+ assert.equal(await page.locator('.status-example').count(),11);
+ assert.equal(await page.locator('[data-weight="350"]').evaluate(e=>getComputedStyle(e).fontWeight),'350');
+ const clearStyle=await page.locator('.comparison [data-finish="clear"]').evaluate(e=>{const c=getComputedStyle(e);return [c.backgroundColor,c.backdropFilter,c.getPropertyValue('--finish-rim').trim(),c.getPropertyValue('--finish-highlight').trim()];});
+ assert.deepEqual(clearStyle,['rgba(3, 15, 29, 0)','blur(10px) saturate(1.8)','0.2','0.3']);
+ assert.match(await page.locator('#source-styles').textContent(),/11 pages/);
+
  for(const name of ['Current','Proposed liquid glass','Clearer glass']){
   await page.getByRole('button',{name,exact:true}).click();
   const finish=await page.locator('#buttons .maya-pill').first().getAttribute('data-finish');

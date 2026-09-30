@@ -1,9 +1,9 @@
 import {Pill} from '/aesthetics/ui/components/components.js';
 // Gallery-only presets. Transparency describes the base fill, not the composited image.
 export function setupFinishes({comparison,preview,drawer,filter,say}){
- const presets={current:{name:'Current',fill:18,tint:0,rim:22,highlight:28,blur:22,saturation:180},liquid:{name:'Proposed liquid glass',fill:18,tint:16,rim:48,highlight:65,blur:22,saturation:180},clear:{name:'Clearer glass',fill:7,tint:7,rim:48,highlight:65,blur:22,saturation:180}};
+ const presets={current:{name:'Current',fill:18,tint:0,rim:22,highlight:28,blur:22,saturation:180},liquid:{name:'Proposed liquid glass',fill:18,tint:16,rim:48,highlight:65,blur:22,saturation:180},clear:{name:'Clearer glass',fill:0,tint:0,rim:20,highlight:30,blur:10,saturation:180}};
  let selected='liquid';const values=structuredClone(presets),samples=new Map();
- const targets=()=>[...preview.querySelectorAll('.maya-glass'),drawer,...drawer.querySelectorAll('.maya-glass'),filter,...filter.querySelectorAll('.maya-glass')].filter(e=>!e.closest('.comparison'));
+ const targets=()=>[...document.querySelectorAll('#gallery .maya-glass'),drawer,...drawer.querySelectorAll('.maya-glass'),filter,...filter.querySelectorAll('.maya-glass')].filter(e=>!e.closest('.comparison'));
  function paint(el,key){el.dataset.finish=key;const v=values[key];el.style.backgroundImage=key==='current'&&v.tint===0?'none':'';for(const [k,value] of Object.entries(v)){if(k==='name')continue;el.style.setProperty('--finish-'+k,k==='blur'?value+'px':k==='saturation'?value+'%':String(value/100));}}
  const controls=document.createElement('div');controls.className='finish-controls';controls.innerHTML='<p id="finish-status" role="status"></p><label class="clear-toggle"><input type="checkbox" id="clear-glass"> Clearer glass</label><details><summary>Adjust selected finish</summary><div class="finish-sliders"></div></details><p class="effect-note">Percentages describe separate layers, not total visual transparency. Menus keep a dark backing so text stays readable.</p>';comparison.after(controls);
  const sliders=[];

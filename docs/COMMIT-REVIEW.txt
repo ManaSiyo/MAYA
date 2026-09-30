@@ -1,7 +1,7 @@
-[Codex][v14.40] Retire standalone Marketing in favor of Admin
+[Codex][v14.40] Preview text colors, Admin states and clear glass
 
-Delete the duplicate Marketing page; preserve its two old URLs with redirects
-to Admin. Admin modules and API endpoints stay untouched. Update the page map,
-repository layout docs and regression coverage to the retained Admin surfaces.
-Validation: full app regression including Admin fixtures and component gallery.
-Local change only; no push or deployment.
+Add named typography colors, Admin/Outbound status and history examples,
+Jost 350 comparison and generated source style inventory. Set clear glass to
+zero fill/tint, 20% rim, 30% highlight, 10px blur and 180% saturation.
+Validation: expanded gallery checks, full regression and real-font review.
+Preview only; no push.
