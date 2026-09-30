@@ -36,8 +36,9 @@ try{
  assert.equal(await page.locator('.status-example').count(),11);
  assert.equal(await page.locator('[data-weight="350"]').evaluate(e=>getComputedStyle(e).fontWeight),'350');
  const clearStyle=await page.locator('.comparison [data-finish="clear"]').evaluate(e=>{const c=getComputedStyle(e);return [c.backgroundColor,c.backdropFilter,c.getPropertyValue('--finish-rim').trim(),c.getPropertyValue('--finish-highlight').trim()];});
- assert.deepEqual(clearStyle,['rgba(3, 15, 29, 0)','blur(10px) saturate(1.8)','0.2','0.3']);
+ assert.deepEqual(clearStyle,['rgba(3, 15, 29, 0)','blur(5px) saturate(0.9)','0.2','0.3']);
  assert.match(await page.locator('#source-styles').textContent(),/11 pages/);
+ assert.ok((await page.locator('.type-color').allTextContents()).every(t=>/^(White|Gray) ·/.test(t)));
 
  for(const name of ['Current','Proposed liquid glass','Clearer glass']){
   await page.getByRole('button',{name,exact:true}).click();
@@ -51,6 +52,8 @@ try{
  await page.getByRole('slider',{name:'Base transparency',exact:true}).fill('95');
  await page.waitForFunction(()=>getComputedStyle(document.querySelector('#buttons .maya-pill')).backgroundColor==='rgba(3, 15, 29, 0.05)');
  assert.match(await page.locator('.finish-sample[data-selected="true"] .finish-numbers').textContent(),/95% transparent/);
+ await page.getByRole('slider',{name:'Saturation',exact:true}).fill('0');
+ assert.equal(await page.locator('#buttons .maya-pill').first().evaluate(e=>getComputedStyle(e).backdropFilter),'blur(22px) saturate(0)');
  await page.getByRole('button',{name:'Reset',exact:true}).click();
  for(const width of [320,390,650,768,1024,1440,1920]){
   await page.setViewportSize({width,height:844});await page.waitForTimeout(50);

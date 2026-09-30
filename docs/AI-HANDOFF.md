@@ -10,8 +10,9 @@ If this file disagrees with chat memory, this file is right.
 
 ## September 29: colors, Admin styles and clear glass
 
-Preview ?review=5: Clear preset fill/tint 0%, rim20%, highlight30%, blur10px,
-saturation180%. Labels distinguish fill transparency from composite appearance.
+Preview ?review=6: Clear preset fill/tint 0%, rim20%, highlight30%, blur5px,
+saturation90%. Added saturation slider (0–200%) with an explanation. Neutral
+text color names are White/Gray, retaining exact CSS values. Labels distinguish fill transparency from composite appearance.
 Sixteen type roles display named color + CSS value separately from size/weight;
 Admin sections/drawer/log/model/dashboard examples included. Eleven semantic
 status pills and six email-history colors are visible. Jost variable font range

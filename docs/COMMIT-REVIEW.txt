@@ -1,7 +1,6 @@
-[Codex][v14.40] Preview text colors, Admin states and clear glass
+[Codex][v14.40] Refine clear glass blur and saturation
 
-Add named typography colors, Admin/Outbound status and history examples,
-Jost 350 comparison and generated source style inventory. Set clear glass to
-zero fill/tint, 20% rim, 30% highlight, 10px blur and 180% saturation.
-Validation: expanded gallery checks, full regression and real-font review.
-Preview only; no push.
+Set Clear Glass to 5px blur and 90% saturation. Add saturation slider and
+explanation; use White/Gray neutral text labels. Preview only.
+Validation: gallery across seven widths, preset values and saturation control.
+No push.

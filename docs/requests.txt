@@ -1,3 +1,7 @@
+SEPTEMBER 29: Clear glass refinement
+[prepared] 5px blur, 90% saturation, adjustable saturation with plain explanation.
+[prepared] Neutral typography color labels simplified to White or Gray.
+
 SEPTEMBER 29: Color labels, Admin examples and transparent glass
 [prepared] Clear: 0% fill/tint, 20% rim, 30% highlight, 10px blur, 180% saturation.
 [prepared] Text colors, Admin status pills, email-history colors, more type roles.
