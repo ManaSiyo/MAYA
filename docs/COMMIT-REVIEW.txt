@@ -1,6 +1,5 @@
-[Codex][v14.40] Refine clear glass blur and saturation
+[Codex][v14.40] Align preview typography and identify real headings
 
-Set Clear Glass to 5px blur and 90% saturation. Add saturation slider and
-explanation; use White/Gray neutral text labels. Preview only.
-Validation: gallery across seven widths, preset values and saturation control.
-No push.
+Unify heading/body examples, neutral white RGB, and clear highlight15.
+Replace fictional/stale headline examples with actual page locations.
+Validation: responsive gallery, typography/color and overlay checks. Preview only.

@@ -1,6 +1,6 @@
 {
   "pages": 11,
-  "count": 897,
+  "count": 894,
   "files": [
     {
       "path": "aesthetics/operations/index.html",
@@ -3366,7 +3366,7 @@
       "styles": [
         {
           "property": "color",
-          "value": "#edf2f8",
+          "value": "#ffffff",
           "line": 1
         },
         {
@@ -3435,11 +3435,6 @@
           "line": 1
         },
         {
-          "property": "color",
-          "value": "#eaf1ff",
-          "line": 1
-        },
-        {
           "property": "font-weight",
           "value": "400",
           "line": 1
@@ -3475,11 +3470,6 @@
           "line": 9
         },
         {
-          "property": "color",
-          "value": "#d9e5f4",
-          "line": 33
-        },
-        {
           "property": "font",
           "value": "500 12px Jost,sans-serif",
           "line": 33
@@ -3498,11 +3488,6 @@
           "property": "color",
           "value": "#d0d9e6",
           "line": 35
-        },
-        {
-          "property": "color",
-          "value": "#eaf0f8",
-          "line": 38
         },
         {
           "property": "color",

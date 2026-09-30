@@ -155,3 +155,13 @@ overrides and does not claim computed coverage of every runtime state.
 Clear preset: 5px blur and 90% saturation; other settings unchanged. The preview
 provides a 0–200% saturation slider and explains 0% grayscale / 100% unchanged.
 Neutral text labels use only White or Gray; exact CSS values remain visible.
+
+## Typography review refinement
+
+Preview brand, dialog headline and page headline use Cormorant Garamond 24px/300.
+Paragraph/table use Jost 12px/300 and 1.7 line height; label/count uses 12px/400.
+White text RGB channels are 255/255/255; preserve the displayed opacity and gray
+colors. Clear glass highlight is now 15%. These choices remain preview-only.
+Use real labels and page locations: “Name this project” in the client project-name
+dialog and “OUTBOUND” in Outbound’s top-left header. “Your next design” was sample
+copy, and the former “All prospects” page title is retired.

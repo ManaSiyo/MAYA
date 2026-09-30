@@ -8,6 +8,17 @@ incidents in `fixes.txt`, Fromsa's asks in `requests.txt`.
 Whoever finishes a piece of work updates this file in the SAME commit.
 If this file disagrees with chat memory, this file is right.
 
+## September 29: type hierarchy and actual locations
+
+Preview ?review=7: Brand/dialog/page headings Cormorant 24/300; paragraph/table
+Jost 12/300 with 1.7 line height; labels/count 12/400. White preview text channels
+255/255/255; gray remains gray. Clear highlight reduced to15%.
+Typography columns say Applies to / Example / Preview settings. Real examples:
+Name this project (client naming dialog) and OUTBOUND (page header), with page
+links. Corrected prior fictional “Your next design” and retired All prospects title.
+Validated gallery at seven widths, type/color assertions and overlay behavior.
+Preview-only, no push. Next: owner reviews before global migration.
+
 ## September 29: colors, Admin styles and clear glass
 
 Preview ?review=6: Clear preset fill/tint 0%, rim20%, highlight30%, blur5px,

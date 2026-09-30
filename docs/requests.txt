@@ -1,3 +1,7 @@
+SEPTEMBER 29: Unify preview typography
+[prepared] Cormorant 24/300 headings, Jost 12/300 paragraph/table, 12/400 labels.
+[prepared] White RGB 255; clear highlight15; actual heading locations linked.
+
 SEPTEMBER 29: Clear glass refinement
 [prepared] 5px blur, 90% saturation, adjustable saturation with plain explanation.
 [prepared] Neutral typography color labels simplified to White or Gray.

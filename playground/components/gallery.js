@@ -45,16 +45,16 @@ preview.append(buttons);
 const menuRow=row(preview);menuRow.append(openDrawer,openFilter);
 const extra=document.createElement('details');extra.innerHTML='<summary>Panels & glossary</summary>';extra.append(menus,glossary);preview.append(extra);
 // Visible hierarchy: sourced roles, with preview choices clearly distinguished from live styles.
-const hierarchy=document.createElement('div');hierarchy.className='type-hierarchy';fonts.prepend(hierarchy);
+const hierarchy=document.createElement('div');hierarchy.className='type-hierarchy';fonts.prepend(hierarchy);const columns=document.createElement('div');columns.className='type-columns';columns.innerHTML='<span>Applies to</span><span>Example</span><span>Preview settings</span>';hierarchy.append(columns);
 const roles=[
- ['Brand','MAYA','Cormorant Garamond',24,500,'Client top-left wordmark','brand'],
- ['Editorial headline','Your next design','Cormorant Garamond',26,300,'Client dialog heading · existing .modal-card h2','editorial'],
- ['Page headline','All prospects','Jost',18,500,'Outbound campaign title','headline'],
+ ['Brand','MAYA','Cormorant Garamond',24,300,'Client top-left wordmark · proposed weight 300','brand'],
+ ['Dialog headline','Name this project','Cormorant Garamond',24,300,'Client app → Projects → new project / project-name dialog','editorial'],
+ ['Page headline','OUTBOUND','Cormorant Garamond',24,300,'Outbound → top-left page heading; All prospects title was retired','headline'],
  ['Subheadline','Campaign details','Jost',16,500,'Outbound detail and dialog titles','subheadline'],
  ['Body text','Your next appointment','Jost',14,400,'General UI body scale','body'],
  ['Paragraph','Add your ideas and references. MAYA keeps the details together for your next conversation.','Jost',12,300,'Client dialog help text · 1.7 line spacing','paragraph'],
- ['Label & count','Contacted 12','Jost',12,500,'Compact preview totals · proposed metric scale','label'],
- ['Table text','Name · Category · Notes','Jost',11,400,'Admin and Outbound lead rows','table'],
+ ['Label & count','Contacted 12','Jost',12,400,'Compact preview totals · proposed metric scale','label'],
+ ['Table text','Name · Category · Notes','Jost',12,300,'Admin and Outbound lead rows','table'],
  ['Pill & field label','TAP TO LISTEN','Jost',10,300,'Voice pill and client form labels · 1.5px spacing','pill'],
  ['Small caption','PAID CLICKS · 7D','Jost',8.5,400,'Admin bottom-line captions','caption'],
  ['Admin section','THE LEAD STATION','Jost',11,400,'Admin section headings','adminsection'],
@@ -64,7 +64,7 @@ const roles=[
  ['Dashboard number','12','Jost',20,500,'Existing Admin bottom-line total · not the compact pill scale','dashboard'],
  ['Technical text','request_id · 10:30','Menlo',11,400,'Logs and technical identifiers','technical']
 ];
-for(const [role,text,family,size,weight,where,key] of roles){const item=document.createElement('article');item.className='type-row';item.dataset.type=key;const meta=document.createElement('div');const title=document.createElement('h3');title.textContent=role;const note=document.createElement('p');note.textContent=where;meta.append(title,note);const example=document.createElement('div');example.className='type-example';example.style.fontFamily=family==='Jost'?'var(--ui-font)':family==='Menlo'?'Menlo, monospace':"'Cormorant Garamond', serif";example.style.fontSize=size+'px';example.style.fontWeight=weight;example.style.lineHeight=key==='paragraph'?'1.7':'1.4';if(key==='pill')example.style.letterSpacing='1.5px';if(key==='brand'){example.style.letterSpacing='.22em';const logo=document.createElement('img');logo.src='/aesthetics/ui/logo-208.png';logo.alt='';logo.className='type-logo';example.append(logo);}example.append(document.createTextNode(text));const spec=document.createElement('small');spec.textContent=family+' · '+size+'px · '+weight;spec.dataset.family=family;spec.dataset.size=size;spec.dataset.weight=weight;item.append(meta,example,spec);hierarchy.append(item);}
+for(const [role,text,family,size,weight,where,key] of roles){const item=document.createElement('article');item.className='type-row';item.dataset.type=key;const meta=document.createElement('div');const title=document.createElement('h3');title.textContent=role;const note=document.createElement('p');note.textContent=where;meta.append(title,note);if(['editorial','headline','brand'].includes(key)){const link=document.createElement('a');const client=key!=='headline';link.href=client?'/frontend/index.html':'/backend/outbound.html';link.target='_blank';link.rel='noopener';link.textContent=client?'Open client page':'Open Outbound';meta.append(link);}const example=document.createElement('div');example.className='type-example';example.style.fontFamily=family==='Jost'?'var(--ui-font)':family==='Menlo'?'Menlo, monospace':"'Cormorant Garamond', serif";example.style.fontSize=size+'px';example.style.fontWeight=weight;example.style.lineHeight=['paragraph','table','label'].includes(key)?'1.7':'1.4';if(key==='pill')example.style.letterSpacing='1.5px';if(key==='brand'){example.style.letterSpacing='.22em';const logo=document.createElement('img');logo.src='/aesthetics/ui/logo-208.png';logo.alt='';logo.className='type-logo';example.append(logo);}example.append(document.createTextNode(text));const spec=document.createElement('small');spec.textContent=family+' · '+size+'px · '+weight;spec.dataset.family=family;spec.dataset.size=size;spec.dataset.weight=weight;item.append(meta,example,spec);hierarchy.append(item);}
 fonts.insertBefore(fonts.querySelector('h2'),hierarchy);fonts.insertBefore(fonts.querySelector(':scope > p'),hierarchy);
 const compareFonts=document.createElement('details');compareFonts.innerHTML='<summary>Compare font families</summary>';compareFonts.append(cards,fontNote,technical);fonts.append(compareFonts);
 guide.remove();

@@ -32,11 +32,15 @@ try{
  assert.match(await page.locator('[data-finish="liquid"].maya-pill').first().evaluate(e=>getComputedStyle(e).backgroundImage),/linear-gradient/);
  assert.ok(await page.locator('#fonts').isVisible());
  assert.equal(await page.locator('.type-row').count(),16);
+ for(const key of ['brand','editorial','headline']){const style=await page.locator(`[data-type="${key}"] .type-example`).evaluate(e=>{const c=getComputedStyle(e);return [c.fontFamily,c.fontSize,c.fontWeight,c.color];});assert.match(style[0],/Cormorant/);assert.equal(style[1],'24px');assert.equal(style[2],'300');assert.match(style[3],/255, 255, 255/);}
+ for(const key of ['paragraph','table','label']){const style=await page.locator(`[data-type="${key}"] .type-example`).evaluate(e=>{const c=getComputedStyle(e);return [c.fontSize,c.fontWeight,c.lineHeight];});assert.deepEqual(style,['12px',key==='label'?'400':'300','20.4px']);}
+ assert.match(await page.locator('[data-type="editorial"]').textContent(),/Name this project/);
+
  assert.equal(await page.locator('.type-color').count(),16);
  assert.equal(await page.locator('.status-example').count(),11);
  assert.equal(await page.locator('[data-weight="350"]').evaluate(e=>getComputedStyle(e).fontWeight),'350');
  const clearStyle=await page.locator('.comparison [data-finish="clear"]').evaluate(e=>{const c=getComputedStyle(e);return [c.backgroundColor,c.backdropFilter,c.getPropertyValue('--finish-rim').trim(),c.getPropertyValue('--finish-highlight').trim()];});
- assert.deepEqual(clearStyle,['rgba(3, 15, 29, 0)','blur(5px) saturate(0.9)','0.2','0.3']);
+ assert.deepEqual(clearStyle,['rgba(3, 15, 29, 0)','blur(5px) saturate(0.9)','0.2','0.15']);
  assert.match(await page.locator('#source-styles').textContent(),/11 pages/);
  assert.ok((await page.locator('.type-color').allTextContents()).every(t=>/^(White|Gray) ·/.test(t)));
 
