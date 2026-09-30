@@ -41,6 +41,7 @@ import { createFeedbackStore } from './maya-feedback.mjs';
 import { mountTransfers } from './maya-transfer.mjs';
 import { mountMayaPhone } from './maya-phone.mjs';   // v14.30: Maya on the studio phone number
 import { createMessageStore, sendSms, readSmsStatus, mountMessages, THREADS_PATH, e164 } from './maya-messages.mjs';   // v14.35: the studio's text threads
+import { DESIGN_PATH, validDesign } from './design-config.mjs';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname as pathDirname, join as pathJoin } from 'node:path';
@@ -1524,6 +1525,23 @@ async function requireAdmin(req) {
   }
   return user;
 }
+
+// Typography Controls: one owner-saved, public design document. Only numeric
+// style values and a fixed set of role keys are accepted; no CSS is stored.
+app.get('/api/design', async (_req,res) => {
+  try { const found = await gcsGet(DESIGN_PATH);
+    res.set('Cache-Control','no-store');
+    return res.json(found.ok ? JSON.parse(found.buf.toString('utf8')) : {});
+  } catch { return res.status(503).json({error:'design_unavailable'}); }
+});
+app.post('/api/admin/design', requireAuthHeader, express.json({limit:'8kb'}), async (req,res) => {
+  try { await requireAdmin(req); }
+  catch(e) { return res.status(e.status || 403).json({error:'admin_required'}); }
+  if (!validDesign(req.body)) return res.status(400).json({error:'invalid_design'});
+  try { await gcsPut(DESIGN_PATH,Buffer.from(JSON.stringify(req.body)),'application/json');
+    res.set('Cache-Control','no-store'); return res.json({ok:true});
+  } catch { return res.status(503).json({error:'save_failed'}); }
+});
 
 // ═══════════════════════════════════════════════════════════════════════════
 // GET /api/imgproxy?u=<picture address> — v13.26. Read one of MAYA's own

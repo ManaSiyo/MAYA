@@ -1,6 +1,6 @@
 # MAYA assistant instructions
 
-This repository is worked on by both Codex and Claude. The repository files,
+This repository is worked on by Codex. The repository files,
 not chat memory, are the shared source of continuity.
 
 Before changing anything:
@@ -67,7 +67,7 @@ cloudbuild.yaml            Cloud Build reads it at the root, leave it there
 tests/                     the suite resolves the repo root from its own folder
 docs/MAYA-INDEPENDENCE.md  the roadmap for Maya as an entity; read it before
                            touching her voice, memory, tools or the door
-AGENTS.md / CLAUDE.md      this contract, one text under two names
+AGENTS.md                  active assistant instructions at the repository root
 ```
 
 - `aesthetics/` CANNOT move into `docs/`: `docs/**` is in the hosting ignore
@@ -89,8 +89,8 @@ Every commit that changes behaviour updates, in the same commit:
 4. `tests/app-regression.mjs`: one assertion per completed request. A change
    with no assertion is a regression waiting to happen.
 
-`AGENTS.md` and `CLAUDE.md` are the same text under two names, because Codex
-reads one and Claude reads the other. Change one, copy it to the other.
+`AGENTS.md` stays at the repository root so Codex loads it automatically.
+The retired Claude duplicate is in `_to_delete/`.
 
 Communications changes also run `tests/maya-phone.mjs`, `tests/maya-messages.mjs`,
 `tests/maya-transfer.mjs` and `tests/maya-feedback.mjs`. These use fake providers;
@@ -125,13 +125,15 @@ See docs/OUTBOUND-SETUP.md for owner-only connection and launch steps.
 
 ## Visual canon
 
-Read root `design.md` before any aesthetic change. It is the sole active design
-specification. V3/V4 references in docs/design-archive are historical only.
+Read `docs/design.md` before any aesthetic change. It is the sole active design
+specification. Retired V3/V4 reports are under `_to_delete/`.
 The shared component system is aesthetics/ui/components/{tokens.css,components.css,
-components.js}. Preview/edit it in playground/components/index.html before global
-promotion. Do not load preview tokens on live pages without owner review.
-Existing maya-buttons.css/maya-canon.css are legacy runtime adapters until that
-promotion, not independent design authority. Run tests/component-gallery.mjs.
+components.js}. Owner-approved Aesthetic Control lives at
+aesthetics/aesthetic-control.html and is linked from Admin → Systems. Saving
+on the live site requires Admin auth and persists through /api/admin/design;
+all served pages load aesthetics/ui/typography-controls.js. Local Save affects
+only same-origin local pages. Old maya-buttons.css/maya-canon.css are adapters,
+not independent design authorities. Run tests/component-gallery.mjs.
 
 Outbound source-of-truth columns and priority rules are regression-tested in
 `tests/outbound-priority.mjs` (invoked by outbound/app-regression) and populated

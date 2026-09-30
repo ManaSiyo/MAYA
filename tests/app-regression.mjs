@@ -1,5 +1,6 @@
 import './component-gallery.mjs';
 import './design-contract.mjs';
+import './design-config.mjs';
 import {assertOutboundPriority} from './outbound-priority.mjs';
 import {assertCanon} from './canon-contract.mjs';
 import {assertContainer} from './container-contract.mjs';
@@ -472,7 +473,7 @@ ok('the notes moved into docs and are not at the root',
   existsSync(join(ROOT, 'docs/fixes.txt')) && existsSync(join(ROOT, 'docs/history.txt')) &&
   !existsSync(join(ROOT, 'README.md')) && !existsSync(join(ROOT, 'requests.txt')));
 ok('the build still finds what it needs at the root',
-  existsSync(join(ROOT, 'cloudbuild.yaml')) && existsSync(join(ROOT, 'CLAUDE.md')) &&
+  existsSync(join(ROOT, 'cloudbuild.yaml')) && existsSync(join(ROOT, 'docs/design.md')) &&
   existsSync(join(ROOT, 'AGENTS.md')) && existsSync(join(ROOT, 'tests')));
 ok('hosting publishes the pages and hides everything else', (() => {
   const cfg = JSON.parse(readFileSync(join(ROOT, 'docs/firebase.json'), 'utf8'));
@@ -998,8 +999,15 @@ ok('aesthetics holds only what the web serves',
   !existsSync(join(ROOT, 'aesthetics/Aesthetics.pdf')) &&
   !existsSync(join(ROOT, 'aesthetics/one-pager-preview.html')) &&
   existsSync(join(ROOT, 'aesthetics/ui/maya-canon.css')));
+ok('Aesthetic Control is the single served design entry, with the old preview URL preserved',
+  existsSync(join(ROOT, 'aesthetics/aesthetic-control.html')) &&
+  existsSync(join(ROOT, 'docs/design.md')) &&
+  !existsSync(join(ROOT, 'playground/components/index.html')) &&
+  !existsSync(join(ROOT, 'design.md')) &&
+  HOSTING.hosting.rewrites.some(r => r.source === '/playground/components/index.html' && r.destination === '/aesthetics/aesthetic-control.html') &&
+  readFileSync(join(ROOT, 'backend/status.html'), 'utf8').includes('href="/aesthetics/aesthetic-control.html"'));
 ok('the handoff lives where both agents look',
-  existsSync(join(ROOT, 'AGENTS.md')) && existsSync(join(ROOT, 'CLAUDE.md')) &&
+  existsSync(join(ROOT, 'AGENTS.md')) && existsSync(join(ROOT, 'docs/design.md')) &&
   readFileSync(join(ROOT, 'AGENTS.md'), 'utf8').includes('frontend/index.html') &&
   readFileSync(join(ROOT, 'AGENTS.md'), 'utf8').includes('backend/status.html'));
 
@@ -2190,7 +2198,7 @@ ok('v14.26: demo readiness: fabric thumbnails, Pinterest answers in words, the v
   PLAYGROUND_SOURCE.includes('#notes-drawer #drawer-avatar-rename { display: inline-flex; }') &&
   PLAYGROUND_SOURCE.includes('#notes-drawer .avatar-switch-row.active .avatar-switch-rename { opacity: 1; }') &&
   PLAYGROUND_SOURCE.includes("if (!strict) return;") &&
-  PLAYGROUND_SOURCE.includes('.note-group-title { color: rgba(255,255,255,0.98); font-weight: 600; margin: 0 0 3px; }') &&
+  PLAYGROUND_SOURCE.includes('.note-group-title { color: rgba(255,255,255,0.98); font-weight: 400; margin: 0 0 3px; }') &&
   PLAYGROUND_SOURCE.includes("if (a.confirm !== true) return { ok: false, needsConfirmation: true, change: t.slice(0, 140),") &&
   INDEX_SOURCE.includes("if (a.confirm !== true) return { ok: false, needsConfirmation: true, change: t.slice(0, 140),") &&
   PLAYGROUND_SOURCE.includes('} else if (typeof _zCounter !== \'undefined\') {') &&
@@ -2652,5 +2660,7 @@ ok('Model snapshot groups shared models by their roles',MAP_SOURCE.includes('con
 const outboundRevampUI=readFileSync(join(ROOT,'backend/outbound.html'),'utf8'),outboundRevampJS=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');
 ok('Outbound uses the Admin background and functioning drawer',outboundRevampUI.includes('birth-of-a-star.png')&&outboundRevampUI.includes('outbound-drawer')&&outboundRevampJS.includes('function closeDrawer'));
 ok('Outbound syncs real workbook campaigns and reviews drafts in Gmail',outboundRevampJS.includes("api('/sheets/sync'")&&outboundRevampJS.includes('mail.google.com/mail/?view=cm'));
+const typeUsage=JSON.parse(readFileSync(join(ROOT,'aesthetics/aesthetic-control/typography-usage.json'),'utf8'));
+ok('Typography role counts include real H1 and generated Admin numbers',typeUsage.categories.H1.locations.some(x=>x.id==='client-name-modal-title') && typeUsage.categories.H1.locations.some(x=>x.id==='brand-title') && typeUsage.categories.H4.roles.dashboard.count>=2 && typeUsage.categories.P2.count>0);
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

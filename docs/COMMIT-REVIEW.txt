@@ -1,6 +1,12 @@
-[Codex][v14.40] Organize style review hierarchy and collapsible sections
+[Codex] Consolidate Aesthetic Control and clean MAYA repository
 
-Sort typography by size and apply the proposed type to the preview shell.
-Add collapsible Glass Pill Review, Icons and Page Map; refine clear preset.
-Validation: seven-width gallery, collapse/ordering/material/icon checks, visual review.
-Preview only; no push.
+Aesthetic Control is a standalone HTML page in `aesthetics/`, linked from Admin.
+Its scripts and generated inventories moved beside it, while `docs/design.md`
+is the sole written specification. The former preview URL still resolves through
+Firebase Hosting. Retired audits, duplicate Claude instructions, long histories
+and dormant research moved to local `_to_delete/` with a restoration map. Root
+build files, active Playground and tests remain at their required paths.
+
+Validation: design contract, role audit, source inventory, container contract,
+seven-width gallery browser test and full app regression passed locally.
+Production Save remains unverified until an owner-requested push. No push made.

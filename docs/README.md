@@ -1,7 +1,8 @@
 # MAYA
 
-Sole active aesthetic specification: [design.md](../design.md).
-Token/component review: [gallery](../playground/components/index.html), served locally.
+Sole active written aesthetic specification: [design.md](design.md).
+Owner design controls: [Aesthetic Control](../aesthetics/aesthetic-control.html), linked from Admin → Systems.
+See [REPO-MAP.md](REPO-MAP.md) for the folder map and cleanup decisions.
 
 The whole system, written for a fresh conversation. If you are an assistant
 picking this up with no memory of what came before, read this file first and
@@ -10,8 +11,7 @@ narrative.
 
 Owner: Fromsa, founder of Mana Siyo.
 Live site: https://maya.manasiyo.com
-Also read, all beside this file in `docs/`: `AI-HANDOFF.md` (the current
-Claude/Codex handoff), `history.txt` (the story), `fixes.txt` (fix attempts,
+Also read, all beside this file in `docs/`: `AI-HANDOFF.md` (the current Codex handoff), `history.txt` (the story), `fixes.txt` (fix attempts,
 especially ones outside git), `requests.txt` (Fromsa's own asks and noticed
 bugs, with status marks; re-verify its entries every session), and
 `MAYA-AI-ARCHITECTURE.md` (the provider-neutral intelligence and production
@@ -32,7 +32,7 @@ a push has landed).
 
 > v14.02 (Aug 27 2026): Maya has a door (`POST /mcp`, `docs/server/maya-mcp.mjs`)
 > and a character (`docs/server/maya-character.md`). Roadmap:
-> `docs/MAYA-INDEPENDENCE.md`. Audit: `docs/AUDIT-2026-08-27.md`.
+> `docs/MAYA-INDEPENDENCE.md`. Historical audits were moved to `_to_delete/`.
 
 ## 1. What MAYA is
 
@@ -66,8 +66,8 @@ the marketing charts and lead station.
 
 `aesthetics/` holds everything visual, including the Operations Room engine
 that `backend.html` embeds. `docs/` holds everything else: the server source,
-`firebase.json`, pattern R&D, `Vision.pdf`, `Strategy-A.md`, and `_to_delete`
-which is the trash can.
+`firebase.json`, `design.md`, current runbooks, `Vision.pdf`, and `Strategy-A.md`.
+Retired reports and prototype research are in root `_to_delete/`, excluded from Hosting.
 
 ### The MAYA app is three vertical screens
 
@@ -388,7 +388,7 @@ These are not preferences, they are conditions.
 - **Keep replies short.** He has said "I'm not reading this, what's the next
   step?" Lead with the answer.
 - **No em dashes or en dashes in anything that appears on the site.**
-- Claude and Codex may both edit this repository. Use `docs/AI-HANDOFF.md` and
+- Codex uses root `AGENTS.md` and `docs/AI-HANDOFF.md` and
   Git commits as shared memory; never depend on private chat history alone.
 - Push only when Fromsa explicitly asks. He may push through GitHub Desktop, or
   an assistant may push when specifically instructed and after validation.

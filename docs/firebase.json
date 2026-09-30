@@ -4,14 +4,12 @@
     "ignore": [
       "firebase.json",
       "AGENTS.md",
-      "CLAUDE.md",
       "cloudbuild.yaml",
       "tests/**",
       "docs/**",
       "**/.*",
       "**/node_modules/**",
-      "_to_delete/**",
-      "design.md"
+      "_to_delete/**"
     ],
     "redirects": [
       {
@@ -77,6 +75,10 @@
       {
         "source": "/playground.html",
         "destination": "/playground/index.html"
+      },
+      {
+        "source": "/playground/components/index.html",
+        "destination": "/aesthetics/aesthetic-control.html"
       },
       {
         "source": "/affiliates.html",

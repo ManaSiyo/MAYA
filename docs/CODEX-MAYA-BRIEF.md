@@ -62,7 +62,7 @@ read these first so the second pass builds on them instead of repeating them.
   after any change to the agent: `node tests/maya-hands-smoke.mjs`.
 - `tests/app-regression.mjs`: 401 assertions, the release contract.
 - `docs/AI-HANDOFF.md`: state file, newest version at the top.
-- `AGENTS.md` / `CLAUDE.md`: the house rules. Version lockstep across four
+- `AGENTS.md`: the active house rules. Version lockstep across four
   surfaces, one assertion per shipped item, Fromsa presses Push, no em dashes.
 
 ## 4. What the field already knows (the ground that has been laid)

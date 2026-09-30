@@ -2,7 +2,7 @@
 from pathlib import Path
 import json,re
 root=Path(__file__).resolve().parent.parent
-pages=sorted([*root.glob('frontend/*.html'),*root.glob('backend/*.html'),*root.glob('playground/*.html'),root/'playground/components/index.html',root/'aesthetics/operations/index.html'])
+pages=sorted([*root.glob('frontend/*.html'),*root.glob('backend/*.html'),*root.glob('playground/*.html'),root/'aesthetics/aesthetic-control.html',root/'aesthetics/operations/index.html'])
 files={};pending=[]
 def scan(path):
     if path in files or not path.is_file() or not path.is_relative_to(root):return
@@ -23,5 +23,5 @@ def scan(path):
 for p in pages:scan(p)
 while pending:scan(pending.pop().resolve())
 report={'pages':len(pages),'count':sum(len(f['styles']) for f in files.values()),'files':sorted(files.values(),key=lambda f:f['path'])}
-(root/'playground/components/style-inventory.json').write_text(json.dumps(report,indent=2)+'\n')
+(root/'aesthetics/aesthetic-control/style-inventory.json').write_text(json.dumps(report,indent=2)+'\n')
 print(f"Scanned {report['pages']} pages, {len(files)} files, {report['count']} entries")

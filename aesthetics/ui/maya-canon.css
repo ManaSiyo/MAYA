@@ -1,12 +1,12 @@
 /* MAYA V4: V3 is the foundation. Dense information gets quieter, not heavier.
-   Legacy runtime adapter. Sole active specification: design.md. */
+   Legacy runtime adapter. Sole active specification: docs/design.md. */
 :root {
   --maya-accent: #adcdf8;
   --maya-font-ui: 'Jost', sans-serif;
   --maya-font-brand: 'Cormorant Garamond', serif;
   --maya-text-caption: 12px;
   --maya-text-body: 14px;
-  --maya-text-table: 11px;
+  --maya-text-table: 12px;
   --maya-text-meta: 11px;
   --maya-text-section: 18px;
   --maya-text-metric: 28px;
@@ -89,26 +89,26 @@ html[data-maya-surface="dense"] :is(th,td) { border-color:rgba(255,255,255,.1);b
 html[data-maya-surface="dense"] tbody tr:hover { background:var(--maya-hover); }
 /* Metrics use weight and alignment rather than a decorative typeface. */
 html[data-maya-surface] :is(.tile .v,.money,.bl-step .v,.bl-tile .v,.stat strong,.affiliate-stat strong,.pg-stat-num,.pg-plan-num,.pg-plan-price,.funnel .v) {
-  font-family:var(--maya-font-ui);font-weight:500;font-style:normal;
+  font-family:var(--maya-font-ui);font-weight:400;font-style:normal;
   font-variant-numeric:tabular-nums;letter-spacing:0;color:var(--maya-ink);
   text-shadow:none;animation:none;
 }
 html[data-maya-surface="dense"] :is(.affiliate-stat strong,.stat strong,.money) {font-size:var(--maya-text-metric);}
 html[data-maya-surface="dense"] :is(#adm-tabtitle,#drawer h3,#outbound-drawer h3,.model-group strong,h2,h3,h4) {
-  font-family:var(--maya-font-ui);font-weight:500;font-style:normal;color:var(--maya-ink);
+  font-family:var(--maya-font-ui);font-weight:400;font-style:normal;color:var(--maya-ink);
 }
-html[data-maya-surface="dense"] .model-group strong {font-size:12px;font-weight:500;}
+html[data-maya-surface="dense"] .model-group strong {font-size:12px;font-weight:400;}
 /* Lead Station is the dense canon example; all actions and persistence are unchanged. */
 html[data-maya-surface] #adm-mkt #leads-table :is(td,.lead-note-vp,.lead-stage,.lead-open) {
   font:400 var(--maya-text-table)/1.5 var(--maya-font-ui);font-variant-numeric:tabular-nums;
 }
-html[data-maya-surface] #adm-mkt #leads-table .lead-open {font-weight:500;color:var(--maya-ink);}
+html[data-maya-surface] #adm-mkt #leads-table .lead-open {font-weight:400;color:var(--maya-ink);}
 html[data-maya-surface] #adm-mkt #leads-table :is(.lead-note,.lead-note-vp,.lead-note-edit) {color:var(--maya-secondary);font-style:normal;}
 html[data-maya-surface] #adm-mkt #leads-table :is(.lead-src,.lead-sig-edit,.lead-when,.lead-subline) {
   font:400 var(--maya-text-meta)/1.5 var(--maya-font-ui);color:var(--maya-tertiary);letter-spacing:0;
 }
 html[data-maya-surface] #adm-mkt #leads-table th {
-  font:500 var(--maya-text-meta)/1.5 var(--maya-font-ui);letter-spacing:.06em;color:var(--maya-ink);
+  font:400 var(--maya-text-meta)/1.5 var(--maya-font-ui);letter-spacing:.06em;color:var(--maya-ink);
 }
 html[data-maya-surface] #adm-mkt #leads-table td {padding-top:var(--maya-space);padding-bottom:var(--maya-space);}
 html[data-maya-surface] #adm-mkt #leads-table .lead-stage {color:var(--maya-inactive);background:transparent;box-shadow:none;}
@@ -159,7 +159,7 @@ html[data-maya-surface] :is(table,input,select,textarea,.pg-stat-num,.model-grou
 }
 /* V3 branding is deliberately exempt from functional heading normalization. */
 html[data-maya-surface] :is(#top-left-brand .brand-title,.brand h1,#brand,.brand-title) {
-  font-family:var(--maya-font-brand);font-weight:500;
+  font-family:var(--maya-font-brand);font-weight:400;
 }
 
 /* Owner-approved compact Admin scale; keep V4 fonts and semantic colors. */
@@ -208,10 +208,10 @@ html[data-maya-surface="dense"] :is(.maya-logo-wrap,#voice-btn) {overflow:hidden
 html[data-maya-surface="dense"] #top-left-brand .maya-logo-mark,
 html[data-maya-surface="dense"] .brand .mark {border-radius:50%;clip-path:circle(50%);border:0;box-shadow:none;}
 html[data-maya-surface="dense"] .grid.doors .card b {
-  font-family:var(--maya-font-brand);font-weight:500;letter-spacing:.22em;
+  font-family:var(--maya-font-brand);font-weight:400;letter-spacing:.22em;
 }
 html[data-maya-surface="dense"] #maya-logs-list .maya-log small {
-  color:var(--maya-ink);font-weight:500;
+  color:var(--maya-ink);font-weight:400;
 }
 html[data-maya-surface="dense"] #maya-logs-list .maya-log p {color:var(--maya-secondary);font-weight:400;}
 
@@ -236,7 +236,7 @@ html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-open {border:0;box-s
 
 /* Dense surfaces keep controls and model information at the same quiet scale. */
 html[data-maya-surface="dense"] #model-snapshot .model-group {padding:6px 8px;margin:2px 0;}
-html[data-maya-surface="dense"] :is(#adm-mkt .bl-step .v,.bl-step .v) {font-size:20px;font-weight:500;}
+html[data-maya-surface="dense"] :is(#adm-mkt .bl-step .v,.bl-step .v) {font-size:20px;font-weight:400;}
 html[data-maya-surface="dense"] :is(#adm-mkt .bl-tile .v,.bl-tile .v) {font-size:14px;}
 html[data-maya-surface="dense"] :is(.pill,.range-chips button,.metric-chips button,.tabs button,button.wide) {font-size:11px;padding:6px 10px;min-height:30px;}
 html[data-maya-surface="dense"] :is(dialog,#outbound-drawer) {max-height:calc(100dvh - 28px);overscroll-behavior:contain;}
@@ -281,7 +281,7 @@ html[data-maya-surface="dense"] :is(.person,.stat,.model-group) {backdrop-filter
 .template-company,.template-company label{color:var(--maya-accent);}
 .template-offer,.template-offer label{color:var(--maya-progress);}
 .crm-activity article,.review-correspondent{padding:12px 0;border-bottom:var(--maya-hairline) solid var(--maya-line);overflow-wrap:anywhere;}
-.crm-activity strong{font-size:12px;font-weight:500;}.crm-activity small,.review-correspondent small{display:block;color:var(--maya-secondary);font-size:10px;margin:4px 0;}
+.crm-activity strong{font-size:12px;font-weight:400;}.crm-activity small,.review-correspondent small{display:block;color:var(--maya-secondary);font-size:10px;margin:4px 0;}
 .crm-activity p{font-size:11px;color:var(--maya-secondary);line-height:1.6;}
 .review-correspondent button{margin:8px 0;}
 maya-ai-meter{display:block;min-width:0;}
@@ -291,7 +291,7 @@ html[data-maya-surface] .ai-meter h3{font:11px var(--maya-font-ui);letter-spacin
 .ai-track,.ai-fill{fill:none;stroke-width:3;stroke-linecap:round;}.ai-track{stroke:var(--maya-line);}.ai-fill{stroke:currentColor;stroke-dasharray:0 100;}
 .ai-needle{stroke:var(--maya-ink);stroke-width:1.5;transform-origin:110px 106px;}.ai-meter circle{fill:var(--maya-ink);}
 .ai-meter text{font:10px var(--maya-font-ui);fill:var(--maya-secondary);}
-html[data-maya-surface] .ai-meter .ai-meter-value{font:500 20px var(--maya-font-ui);font-variant-numeric:tabular-nums;margin:4px 0 2px;position:relative;}
+html[data-maya-surface] .ai-meter .ai-meter-value{font:400 20px var(--maya-font-ui);font-variant-numeric:tabular-nums;margin:4px 0 2px;position:relative;}
 .ai-meter-label{margin:0 0 16px;font-size:10px;}.ai-meter-detail{color:var(--maya-secondary);font-size:10px;line-height:1.5;}
 .ai-meter-providers{padding:0;margin:12px 0;list-style:none;}.ai-meter-providers li{display:flex;justify-content:space-between;gap:8px;padding:3px 0;font-variant-numeric:tabular-nums;}
 .ai-meter-refresh{font-size:10px;padding:5px 10px;}
@@ -372,7 +372,7 @@ html[data-maya-surface="dense"] .layout button.campaign {font-size:12px;}
 html[data-maya-surface="dense"] .layout button.campaign small {font-size:11px;margin-top:2px;}
 html[data-maya-surface="dense"] #new-campaign {width:32px;height:32px;min-width:32px;padding:0;display:grid;place-items:center;flex:none;aspect-ratio:1;border-radius:50%;}
 .outbound-icon {width:16px;height:16px;display:inline-block;flex:none;vertical-align:middle;}
-html[data-maya-surface="dense"] .people-table .person-link {border:0;border-radius:0;box-shadow:none;background:none;padding:0;font-weight:500;}
+html[data-maya-surface="dense"] .people-table .person-link {border:0;border-radius:0;box-shadow:none;background:none;padding:0;font-weight:400;}
 html[data-maya-surface="dense"] .person-link:hover {text-decoration:underline;}
 .outbound-workflow {margin:0 0 8px;font-size:11px;color:var(--maya-secondary);}
 .outbound-workflow summary {cursor:pointer;width:fit-content;}
@@ -380,7 +380,7 @@ html[data-maya-surface="dense"] .person-link:hover {text-decoration:underline;}
 #sheet-freshness {margin:4px 0 12px;font-size:11px;}
 .followup-panel {padding:12px;margin:8px 0 12px;border:var(--maya-hairline) solid var(--maya-line);border-radius:var(--maya-radius-panel);background:var(--maya-surface);font-size:11px;}
 .followup-panel>.row {flex-wrap:wrap;gap:8px;}
-.followup-panel strong,.followup-legend b {font-weight:500;font-size:12px;}
+.followup-panel strong,.followup-legend b {font-weight:400;font-size:12px;}
 .followup-legend {display:flex;flex-wrap:wrap;gap:8px 16px;color:var(--maya-secondary);}
 .followup-legend>span {display:inline-flex;align-items:center;gap:5px;}
 .followup-legend i {width:6px;height:6px;border-radius:50%;}
@@ -496,7 +496,7 @@ maya-owner-crm .gmail-candidates input{box-sizing:border-box;max-width:100%;font
 /* Keep account setup out of conversation tabs; calm, consistently spaced controls. */
 #drawer.msgs > maya-owner-crm{display:none!important}
 html[data-maya-surface] #drawer maya-owner-crm{margin:24px 0;padding:0 8px}
-html[data-maya-surface] #drawer .owner-settings summary{cursor:pointer;font:500 12px/1.5 var(--maya-font-ui);color:var(--maya-ink);padding:12px 0}
+html[data-maya-surface] #drawer .owner-settings summary{cursor:pointer;font:400 12px/1.5 var(--maya-font-ui);color:var(--maya-ink);padding:12px 0}
 html[data-maya-surface] #drawer maya-owner-crm p{margin:12px 0;line-height:1.6;color:var(--maya-secondary)}
 html[data-maya-surface] #drawer maya-owner-crm button,
 html[data-maya-surface] #drawer maya-owner-crm a.drawer-link{display:inline-flex;align-items:center;justify-content:center;max-width:100%;padding:8px 12px;margin:4px 8px 8px 0;border:0.5px solid var(--maya-line,rgba(255,255,255,.18));border-radius:999px;background:rgba(3,15,29,.45);color:var(--maya-ink);font:400 12px/1.5 var(--maya-font-ui);text-decoration:none;white-space:normal}
@@ -523,7 +523,7 @@ html[data-maya-surface] .followup-panel{padding:16px 0;margin:0 0 16px;border:0;
 .history-segment{transform:rotate(-90deg);transform-origin:60px 60px;stroke:var(--maya-secondary)}
 .history-segment.uncontacted{stroke:#94a3b8}.history-segment.first{stroke:#8bb8f8}.history-segment.f1{stroke:#e0b35e}.history-segment.f2{stroke:#bb98db}.history-segment.review{stroke:#b6b6bb}.history-segment.held{stroke:#75c895}
 .history-segment:hover,.history-segment:focus{stroke-width:16;outline:none;filter:brightness(1.2)}
-.history-dial text{fill:var(--maya-ink);font:500 16px var(--maya-font-ui)}
+.history-dial text{fill:var(--maya-ink);font:400 16px var(--maya-font-ui)}
 html[data-maya-surface] .followup-legend{display:grid;gap:8px;text-align:left;font-size:11px}
 .followup-legend>span{display:flex;gap:8px;align-items:center}.followup-legend b{margin-left:auto}
 .history-detail{font-size:11px;color:var(--maya-secondary);min-height:32px;margin-top:12px!important}

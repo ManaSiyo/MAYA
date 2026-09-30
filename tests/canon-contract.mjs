@@ -10,7 +10,7 @@ export function assertCanon(){
  assert.match(css,/#voice-dock \.voice-row/);
  assert.match(css,/box-shadow:var\(--maya-drawer-shadow\)/);
  assert.match(css,/\.adm-tab\.on,\.tabs button\.active/);
- assert.match(css,/--maya-text-table: 11px/);
+ assert.match(css,/--maya-text-table: 12px/);
  assert.match(css,/#maya-logs-list \.maya-log small/);
  assert.match(css,/clip-path:circle\(50%\)/);
  return true;

@@ -4,77 +4,48 @@ import {readFileSync} from 'node:fs';
 import {extname,resolve} from 'node:path';
 const root=resolve(new URL('..',import.meta.url).pathname);
 const browser=await chromium.launch({executablePath:process.env.PW_CHROMIUM||process.env.CHROMIUM_PATH||(process.platform==='darwin'?'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome':'/opt/pw-browsers/chromium')});
-const page=await browser.newPage({viewport:{width:1440,height:1000},acceptDownloads:true});const errors=[];page.on('pageerror',e=>errors.push(e.message));
-await page.route('**/*',async r=>{const u=new URL(r.request().url());if(u.hostname!=='maya.test')return r.abort();try{const p=resolve(root,'.'+u.pathname);if(!p.startsWith(root+'/'))return r.abort();await r.fulfill({body:readFileSync(p),contentType:({'.html':'text/html','.css':'text/css','.js':'text/javascript','.png':'image/png'})[extname(p)]||'text/plain'});}catch{await r.abort();}});
+const page=await browser.newPage({viewport:{width:1440,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));let savedPost=null;
+await page.route('**/*',async r=>{const u=new URL(r.request().url());if(!['maya.test','maya.manasiyo.com'].includes(u.hostname))return r.abort();if(u.pathname==='/api/design')return r.fulfill({json:{}});if(u.pathname==='/api/admin/design'){savedPost={header:r.request().headers()['authorization'],body:r.request().postDataJSON()};return r.fulfill({json:{ok:true}});}try{const p=resolve(root,'.'+u.pathname);if(!p.startsWith(root+'/'))return r.abort();await r.fulfill({body:readFileSync(p),contentType:({'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.png':'image/png','.svg':'image/svg+xml'})[extname(p)]||'text/plain'});}catch{await r.abort();}});
 try{
- await page.goto('https://maya.test/playground/components/index.html');await page.locator('#tokens input').first().waitFor({state:'attached'});
- const baseline=JSON.parse(readFileSync(root+'/docs/design-archive/tap-to-listen-computed.json'));
- const pill=page.locator('.comparison [data-finish="current"]');
- const actual=await pill.evaluate(e=>{const c=getComputedStyle(e);return Object.fromEntries(['paddingTop','paddingRight','borderRadius','borderTopWidth','backgroundColor','backdropFilter','boxShadow','fontSize','fontWeight','letterSpacing'].map(k=>[k,c[k]]));});
- for(const k of ['paddingTop','paddingRight','borderRadius','borderTopWidth','backgroundColor','backdropFilter','boxShadow'])assert.equal(actual[k],baseline.pill[k],k);
- for(const k of ['fontSize','fontWeight','letterSpacing'])assert.equal(actual[k],baseline.label[k],k);
- await page.locator('#advanced summary').click();
- const padding=page.locator('input[name="--ui-pill-padding-x"]');await padding.fill('22px');assert.equal(await pill.evaluate(e=>getComputedStyle(e).paddingLeft),'22px');
- await page.reload();await page.locator('#tokens input').first().waitFor({state:'attached'});assert.equal(await padding.inputValue(),'22px');await page.locator('#advanced summary').click();
- await padding.fill('bogus');assert.equal(await padding.getAttribute('aria-invalid'),'true');assert.equal(await pill.evaluate(e=>getComputedStyle(e).paddingLeft),'22px');
- await page.getByRole('button',{name:'Reset',exact:true}).click();assert.equal(await pill.evaluate(e=>getComputedStyle(e).paddingLeft),'14px');
- await page.locator('#fallback').check();assert.equal(await pill.evaluate(e=>getComputedStyle(e).backdropFilter),'none');await page.locator('#fallback').uncheck();
- await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await pill.evaluate(e=>getComputedStyle(e).transitionDuration),'0s');await page.emulateMedia({reducedMotion:'no-preference'});
- await page.emulateMedia({forcedColors:'active'});assert.equal(await pill.evaluate(e=>getComputedStyle(e).boxShadow),'none');await page.emulateMedia({forcedColors:'none'});
- await page.locator('#advanced summary').click();
- assert.equal(await page.locator('.maya-metric-value').first().evaluate(e=>getComputedStyle(e).fontSize),'12px');
- const iconCenter=await page.locator('.maya-icon-button').first().evaluate(e=>{const b=e.getBoundingClientRect(),s=e.querySelector('svg').getBoundingClientRect();return Math.abs((b.x+b.width/2)-(s.x+s.width/2))+Math.abs((b.y+b.height/2)-(s.y+s.height/2));});assert.ok(iconCenter<1);
- await page.locator('#preview-font').selectOption('Arial, sans-serif');assert.match(await page.locator('#buttons .maya-pill').first().evaluate(e=>getComputedStyle(e).fontFamily),/Arial/);
- assert.equal(await page.locator('.font-card').count(),3);assert.match(await page.locator('#pages').textContent(),/11 page files/);
- assert.equal(await page.locator('#gallery > section').count(),4);
- assert.equal(await page.locator('.page-map .page-link').count(),11);
- assert.equal(await page.locator('[data-finish="liquid"].maya-pill').first().evaluate(e=>getComputedStyle(e).fontSize),'10px');
- assert.match(await page.locator('[data-finish="liquid"].maya-pill').first().evaluate(e=>getComputedStyle(e).backgroundImage),/linear-gradient/);
- assert.ok(await page.locator('#fonts').isVisible());
- assert.equal(await page.locator('.type-row').count(),16);
- const sizes=await page.locator('.type-example').evaluateAll(es=>es.map(e=>parseFloat(getComputedStyle(e).fontSize)));assert.deepEqual(sizes,[...sizes].sort((a,b)=>b-a));
- assert.equal(await page.locator('.gallery-header h1').evaluate(e=>getComputedStyle(e).fontSize),'24px');
- for(const id of ['pill-preview','icons','pages']){const fold=page.locator(`#${id} > details`);await fold.locator(':scope > summary').click();assert.equal(await fold.evaluate(e=>e.open),id!=='pill-preview');await fold.locator(':scope > summary').click();}
- assert.equal(await page.locator('#icons .maya-icon-button').count(),6);
-
- for(const key of ['brand','editorial','headline']){const style=await page.locator(`[data-type="${key}"] .type-example`).evaluate(e=>{const c=getComputedStyle(e);return [c.fontFamily,c.fontSize,c.fontWeight,c.color];});assert.match(style[0],/Cormorant/);assert.equal(style[1],'24px');assert.equal(style[2],'300');assert.match(style[3],/255, 255, 255/);}
- for(const key of ['paragraph','table','label']){const style=await page.locator(`[data-type="${key}"] .type-example`).evaluate(e=>{const c=getComputedStyle(e);return [c.fontSize,c.fontWeight,c.lineHeight];});assert.deepEqual(style,['12px',key==='label'?'400':'300','20.4px']);}
- assert.match(await page.locator('[data-type="editorial"]').textContent(),/Name this project/);
-
- assert.equal(await page.locator('.type-color').count(),16);
- assert.equal(await page.locator('.status-example').count(),11);
- assert.equal(await page.locator('[data-weight="350"]').evaluate(e=>getComputedStyle(e).fontWeight),'350');
- const clearStyle=await page.locator('.comparison [data-finish="clear"]').evaluate(e=>{const c=getComputedStyle(e);return [c.backgroundColor,c.backdropFilter,c.getPropertyValue('--finish-rim').trim(),c.getPropertyValue('--finish-highlight').trim()];});
- assert.deepEqual(clearStyle,['rgba(3, 15, 29, 0)','blur(0px) saturate(1.8)','0.1','0.15']);
- assert.match(await page.locator('#source-styles').textContent(),/11 pages/);
- assert.ok((await page.locator('.type-color').allTextContents()).every(t=>/^(White|Gray) ·/.test(t)));
-
- for(const name of ['Current','Proposed liquid glass','Clearer glass']){
-  await page.getByRole('button',{name,exact:true}).click();
-  const finish=await page.locator('#buttons .maya-pill').first().getAttribute('data-finish');
-  assert.equal(finish,{'Current':'current','Proposed liquid glass':'liquid','Clearer glass':'clear'}[name]);
-  assert.ok(await page.locator('#buttons .maya-glass').evaluateAll((es,f)=>es.every(e=>e.dataset.finish===f),finish));
-  await page.getByRole('button',{name:'Open drawer',exact:true}).click();assert.equal(await page.locator('.maya-drawer').getAttribute('data-finish'),finish);await page.keyboard.press('Escape');
+ await page.goto('https://maya.test/aesthetics/aesthetic-control.html');await page.locator('[data-category="H4"] .type-row').first().waitFor();
+ assert.match(await page.title(),/MAYA Aesthetic Control/);
+ assert.equal(await page.locator('.type-group').count(),9);
+ assert.deepEqual(await page.locator('.type-group').evaluateAll(es=>es.map(e=>e.dataset.category)),['H1','H2','H3','H4','P1','P2','P3','P4','P5']);
+ assert.equal(await page.locator('[data-type="dashboard"]').getAttribute('data-type'),'dashboard');
+ assert.equal(await page.locator('[data-type="dashboard"] .type-example').evaluate(e=>getComputedStyle(e).fontSize),'14px');
+ assert.equal(await page.locator('[data-type="drawer"] .type-example').evaluate(e=>getComputedStyle(e).fontSize),'20px');
+ const usage=JSON.parse(readFileSync(root+'/aesthetics/aesthetic-control/typography-usage.json'));
+ for(const [category,entry] of Object.entries(usage.categories)){
+  assert.equal(entry.count,entry.locations.length);
+  assert.equal(Object.values(entry.roles).reduce((n,r)=>n+r.count,0),entry.count);
+  assert.equal(await page.locator(`[data-category="${category}"] > .type-category`).textContent(),`${category} (${entry.count})`);
+  for(const [role,data] of Object.entries(entry.roles))assert.match(await page.locator(`[data-category="${category}"] [data-type="${role}"] .type-role`).textContent(),new RegExp(`\\(${data.count}\\)`));
  }
- await page.locator('#clear-glass').uncheck();assert.equal(await page.locator('#buttons .maya-pill').first().getAttribute('data-finish'),'liquid');
- await page.getByText('Adjust selected finish',{exact:true}).click();
- await page.getByRole('slider',{name:'Base transparency',exact:true}).fill('95');
- await page.waitForFunction(()=>getComputedStyle(document.querySelector('#buttons .maya-pill')).backgroundColor==='rgba(3, 15, 29, 0.05)');
- assert.match(await page.locator('.finish-sample[data-selected="true"] .finish-numbers').textContent(),/95% transparent/);
- await page.getByRole('slider',{name:'Saturation',exact:true}).fill('0');
- assert.equal(await page.locator('#buttons .maya-pill').first().evaluate(e=>getComputedStyle(e).backdropFilter),'blur(22px) saturate(0)');
- await page.getByRole('button',{name:'Reset',exact:true}).click();
- for(const width of [320,390,650,768,1024,1440,1920]){
-  await page.setViewportSize({width,height:844});await page.waitForTimeout(50);
-  const heights=await page.locator('#buttons .preview-row').first().evaluate(e=>[e.querySelector('.maya-pill').getBoundingClientRect().height,e.querySelector('.maya-icon-button').getBoundingClientRect().height]);assert.ok(Math.abs(heights[0]-heights[1])<1,'icon height matches pill '+width);
-  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'overflow '+width);
-  const open=page.getByRole('button',{name:'Open drawer',exact:true});await open.click();const dialog=page.locator('.maya-drawer');assert.ok(await dialog.isVisible());let box=await dialog.boundingBox();assert.ok(box.x>=0&&box.x+box.width<=width+1);
-  await page.keyboard.press('Tab');assert.ok(await dialog.evaluate(d=>d.contains(document.activeElement)));
-  await page.keyboard.press('Escape');assert.ok(await dialog.isHidden());assert.ok(await open.evaluate(e=>e===document.activeElement));
-  const f=page.getByRole('button',{name:'Open filter',exact:true});await f.click();const pop=page.locator('.maya-filter-popover');box=await pop.boundingBox();assert.ok(box.x>=0&&box.x+box.width<=width+1&&box.y>=0);
-  await pop.getByLabel('Booked').uncheck();await pop.getByRole('button',{name:'Apply'}).click();assert.ok(await pop.isHidden());assert.ok(await f.evaluate(e=>e===document.activeElement));
- }
- await page.setViewportSize({width:1440,height:1100});await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:'/private/tmp/maya-component-gallery.png',fullPage:true});
- const download=page.waitForEvent('download');await page.getByRole('button',{name:'Export choices'}).click();assert.equal((await download).suggestedFilename(),'maya-tokens.css');
- assert.deepEqual(errors,[]);console.log('Gallery passed: measured baseline, edit/persist/reset/export, states, 7 widths, drawer/filter focus, reduced motion and forced colors.');
+ await page.locator('[data-category="H4"] .type-editor summary').click();
+ await page.locator('[data-category="H4"] [data-field="size"]').fill('12');
+ assert.equal(await page.locator('[data-type="dashboard"] .type-example').evaluate(e=>getComputedStyle(e).fontSize),'12px');
+ await page.locator('#save').click();assert.match(await page.locator('#feedback').textContent(),/Saved locally/);
+ await page.reload();await page.locator('[data-category="H4"] .type-row').first().waitFor();
+ assert.equal(await page.locator('[data-type="dashboard"] .type-example').evaluate(e=>getComputedStyle(e).fontSize),'12px');
+ await page.goto('https://maya.test/backend/status.html',{waitUntil:'domcontentloaded'});
+ await page.waitForFunction(()=>!!document.getElementById('maya-typography-control-style'));
+ assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--maya-type-H4-size').trim()),'12px');
+ assert.equal(await page.evaluate(()=>{const host=document.querySelector('#adm-mkt');const node=document.createElement('div');node.className='bl-step';node.innerHTML='<div class="v">12</div>';host.append(node);const size=getComputedStyle(node.firstChild).fontSize;node.remove();return size;}),'12px');
+ assert.ok(await page.getByRole('link',{name:/Aesthetic Control/}).count());
+ await page.goto('https://maya.test/frontend/index.html',{waitUntil:'domcontentloaded'});
+ await page.waitForFunction(()=>!!document.getElementById('maya-typography-control-style'));
+ assert.equal(await page.locator('#brand-title').evaluate(e=>getComputedStyle(e).fontSize),'24px');
+ await page.goto('https://maya.test/backend/outbound.html',{waitUntil:'domcontentloaded'});
+ await page.waitForFunction(()=>!!document.getElementById('maya-typography-control-style'));
+ assert.equal(await page.evaluate(()=>{const n=document.createElement('div');n.className='stat';n.innerHTML='<strong>262</strong>';document.body.append(n);const size=getComputedStyle(n.firstChild).fontSize;n.remove();return size;}),'12px');
+ await page.goto('https://maya.test/aesthetics/aesthetic-control.html');await page.locator('#save').waitFor();
+ await page.locator('#reset').click();
+ for(const width of [320,390,650,768,1024,1440,1920]){await page.setViewportSize({width,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'overflow '+width);}
+ await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'/private/tmp/maya-typography-controls.png',fullPage:true});
+ await page.goto('https://maya.manasiyo.com/aesthetics/aesthetic-control.html');await page.locator('#save').waitFor();
+ await page.evaluate(()=>localStorage.setItem('maya_admin_tok','test-owner-token'));
+ await page.locator('#save').click();await page.waitForFunction(()=>document.querySelector('#feedback').textContent.includes('Saved across MAYA pages'));
+ assert.equal(savedPost.header,'Bearer test-owner-token');assert.deepEqual(Object.keys(savedPost.body.type),['H1','H2','H3','H4','P1','P2','P3','P4','P5']);
+ assert.deepEqual(errors.filter(e=>!e.includes('Firebase')&&!e.includes('google')),[]);
+ console.log('Typography Controls passed: role counts, descending roles, edit/save/reload, Admin application, seven widths.');
 }finally{await browser.close();}

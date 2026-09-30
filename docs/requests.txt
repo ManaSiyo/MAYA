@@ -1,3 +1,21 @@
+SEPTEMBER 29: Correct typography counts
+[prepared] Replace exact-font counts with mapped role locations including JS templates.
+[prepared] Expand file/line evidence; unknown P2 remains unmapped, not falsely zero.
+
+SEPTEMBER 29: Shorter settings and usage counts
+[prepared] Alignment icon, bare line-height px, compact vertical padding.
+[prepared] H/P counts audited across10 page files, with scope and evidence.
+
+SEPTEMBER 29: Group typography for review
+[prepared] H1–H4 then P1–P6; role names left; P3 consistent12/300.
+[prepared] Three-line location/settings with alignment and vertical spacing.
+[prepared] Remove typography page links and Arial; Current glass on preview panels.
+
+SEPTEMBER 29: Simplify typography and review both glass layers
+[prepared] Collapsible Typography, H/P categories, combined location/settings and links.
+[prepared] Maximum preview weight400; measured X/Y pill padding captions.
+[prepared] Independent live information-panel glass controls with reset/export.
+
 SEPTEMBER 29: Organize the review page
 [prepared] Descending type hierarchy and matching preview-page typography.
 [prepared] Collapsible Glass Pill Review, Icons and Page Map with arrows.
@@ -2520,3 +2538,19 @@ SEPTEMBER 19, 2026: economics and intelligence layer
 [ ] Replace Windsor reporting with direct Google Ads, Meta and GA4 integrations.
 [ ] Active CRM: instant owner call/SMS for new leads, structured follow-ups, pipeline,
     unified history and campaign-to-paid-order attribution. See AUDIT-2026-09-19.md.
+
+SEPTEMBER 29, 2026: Typography Controls standard (LOCAL, NOT DEPLOYED)
+[x] Make current style preview the sole typography/glass design anchor; link it
+    from Admin and add Save. H1–H4 descend; Dashboard Number becomes H4 14px;
+    Systems drawer title 20px; no weight >400 or odd category sizes.
+[x] Show role-specific source counts under each category and remove unused rows.
+[x] Remove obsolete aesthetic PDFs; preserve served aesthetics assets.
+[ ] After an explicit push, verify live Cloud Run /api/admin/design Save and
+    computed styles on client, Admin and Outbound.
+
+SEPTEMBER 29, 2026: repository cleanup and Aesthetic Control (LOCAL, NOT DEPLOYED)
+[x] Put the approved visual control at `aesthetics/aesthetic-control.html`, link it from Admin, and preserve the old preview URL through Hosting.
+[x] Move the sole written aesthetic specification to `docs/design.md`; retire the duplicate Claude instruction file and obsolete design/audit material into local `_to_delete/repo-cleanup-2026-09-29/`.
+[x] Make the folder map readable; keep root build files, active Playground and release tests at their required paths.
+[x] Verify design Save preview, typography counts, container packaging and full app regression locally.
+[ ] After an explicit push, verify the live Aesthetic Control route and authenticated Save. No push or production configuration change was made here.

@@ -76,10 +76,10 @@ window.addEventListener('message', function(e){
   .wrap{max-width:1320px;margin:0 auto;padding:24px 28px 64px}
   header.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
   .brand{display:flex;align-items:baseline;gap:14px}
-  .brand h1{font-family:var(--maya-font-brand);font-size:24px;letter-spacing:.22em;font-weight:500;margin:0;color:rgba(255,255,255,0.92)}
+  .brand h1{font-family:var(--maya-font-brand);font-size:24px;letter-spacing:.22em;font-weight:400;margin:0;color:rgba(255,255,255,0.92)}
   .brand .sub{font-size:var(--maya-text-caption);letter-spacing:.32em;color:var(--faint);text-transform:uppercase}
   .room-title{text-align:center;margin:18px 0 24px}
-  .room-title .ct{font-family:var(--maya-font-ui);font-weight:500;font-size:var(--maya-text-metric);letter-spacing:.18em;
+  .room-title .ct{font-family:var(--maya-font-ui);font-weight:400;font-size:var(--maya-text-metric);letter-spacing:.18em;
     text-transform:uppercase;color:rgba(255,255,255,0.92)}
   .room-title .cs{display:block;margin-top:4px;font-size:var(--maya-text-caption);letter-spacing:.42em;text-transform:uppercase;color:var(--faint)}
   .icon-btn{width:38px;height:38px;border-radius:50%;border:var(--maya-hairline) solid var(--hair);
@@ -237,7 +237,7 @@ window.addEventListener('message', function(e){
     backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
     box-shadow:inset 0 1px 1px rgba(255,255,255,0.30),0 4px 28px rgba(0,0,0,0.4)}
   .drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-  .drawer-head h3{font-family:var(--maya-font-ui);font-weight:500;font-size:var(--maya-text-section);letter-spacing:.18em;
+  .drawer-head h3{font-family:var(--maya-font-ui);font-weight:400;font-size:var(--maya-text-section);letter-spacing:.18em;
     text-transform:uppercase;color:rgba(245,250,255,0.95);margin:0}
   .sec{margin-top:8px;padding-top:14px;border-top:0.25px solid rgba(255,255,255,0.18)}
   .sec:first-of-type{border-top:none;padding-top:0}
@@ -274,6 +274,7 @@ window.addEventListener('message', function(e){
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
+<script src="/aesthetics/ui/typography-controls.js?v=1"></script>
 </head>
 <body>
 <!-- Front End drawer model: horizontal scroll-snap with a main pane + a drawer pane.

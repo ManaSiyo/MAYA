@@ -31,12 +31,12 @@
 .maya-surface{border-radius:var(--ui-surface-radius);padding:calc(var(--ui-space)*2);min-width:0}
 .maya-metric{display:inline-flex;align-items:center;gap:var(--ui-space);border-radius:var(--ui-pill-radius);padding:var(--ui-pill-padding-y) var(--ui-pill-padding-x);width:max-content;max-width:100%}
 .maya-metric-label{font-size:var(--ui-body-size);color:var(--ui-muted)}
-.maya-metric-value{font-size:var(--ui-metric-size);font-weight:500;font-variant-numeric:tabular-nums}
+.maya-metric-value{font-size:var(--ui-metric-size);font-weight:400;font-variant-numeric:tabular-nums}
 .maya-drawer,.maya-filter-popover{font-size:var(--ui-body-size);border-radius:var(--ui-surface-radius);padding:calc(var(--ui-space)*2);max-height:calc(100dvh - 32px);overflow:auto}
 .maya-drawer{position:fixed;inset:16px 16px 16px auto;margin:0;width:min(var(--ui-drawer-width),calc(100vw - 32px));height:calc(100dvh - 32px)}
 .maya-drawer::backdrop,.maya-filter-popover::backdrop{background:rgba(0,0,0,.2)}
 .maya-component-header{display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space);margin-bottom:calc(var(--ui-space)*2)}
-.maya-component-title{font-size:var(--ui-body-size);font-weight:500;margin:0}
+.maya-component-title{font-size:var(--ui-body-size);font-weight:400;margin:0}
 .maya-component-body{display:grid;gap:calc(var(--ui-space)*2)}
 .maya-component-footer{margin-top:calc(var(--ui-space)*3);padding-top:var(--ui-space);border-top:var(--ui-border-width) solid rgb(255 255 255 / var(--ui-border-alpha));display:flex;gap:var(--ui-space);flex-wrap:wrap}
 .maya-filter-popover{position:fixed;inset:auto;margin:0;width:min(280px,calc(100vw - 32px))}

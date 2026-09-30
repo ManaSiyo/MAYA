@@ -1,4 +1,4 @@
-/* MAYA Liquid Glass. Master specification: /design.md.
+/* MAYA Liquid Glass. Master specification: /docs/design.md.
    One action-button finish for client and backend; pages own size and behavior.
    Inspired by Hossain Jahed's Glass Button, adapted to MAYA's V3 restraint. */
 :root {

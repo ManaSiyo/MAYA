@@ -172,7 +172,7 @@ try {
     border:var(--maya-hairline) solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.05);font-family:var(--maya-font-ui);font-size:var(--maya-text-body);color:var(--ink)}
   .msg-main{flex:1;min-width:0}
   .msg-title{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-  .msg-title b{font-weight:500;font-size:var(--maya-text-body);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .msg-title b{font-weight:400;font-size:var(--maya-text-body);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .msg-title small{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.08em;color:var(--faint);white-space:nowrap}
   .msg-last{font-family:var(--maya-font-ui);font-size:13px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .msg-row.unread .msg-last{color:var(--ink)}
@@ -183,7 +183,7 @@ try {
   .msg-head{display:flex;align-items:center;gap:8px;padding:0 0 8px;border-bottom:var(--maya-hairline) solid var(--line);flex:none}
   .msg-back{width:28px;height:28px;border-radius:50%;border:var(--maya-hairline) solid var(--line);background:transparent;color:var(--ink);font-size:var(--maya-text-section);line-height:1;cursor:pointer}
   .msg-who{flex:1;min-width:0}
-  .msg-name{font-size:var(--maya-text-body);font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .msg-name{font-size:var(--maya-text-body);font-weight:400;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .msg-number{font-family:var(--maya-font-ui);font-size:9.5px;letter-spacing:0.08em;color:var(--faint)}
   .msg-call{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink);
     border:var(--maya-hairline) solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.04);border-radius:var(--maya-radius-pill);padding:6px 11px;cursor:pointer;white-space:nowrap}
@@ -299,8 +299,8 @@ try {
   #head-tiles .pair-bar{margin:0 6px;color:var(--faint);font-weight:400}
   /* v13.68: the numbers pop. manasiyo.com white and bold, MAYA in the logo
      blue and bold, like the big figures, stronger than the labels. */
-  #head-tiles .tile .v{color:#fff;font-weight:500}
-  #head-tiles .pair-b{color:#a9c9ff;font-weight:500}
+  #head-tiles .tile .v{color:#fff;font-weight:400}
+  #head-tiles .pair-b{color:#a9c9ff;font-weight:400}
   .traffic-legend{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#fff;margin-left:10px;font-weight:400}
   .traffic-legend .lg-b{color:#a9c9ff}
   /* v13.45: the hamburger never disappears. It slides left with the drawer
@@ -440,7 +440,7 @@ try {
              padding:12px 18px;text-align:center}
   .chg{padding:7px 0;font-size:var(--maya-text-body);color:var(--dim);line-height:1.5;border-bottom:var(--maya-hairline) solid rgba(255,255,255,0.07)}
   .chg:last-child{border-bottom:0}
-  .chg b{color:var(--ink);font-weight:500;margin-right:8px;font-family:var(--maya-font-ui);font-size:9.5px;
+  .chg b{color:var(--ink);font-weight:400;margin-right:8px;font-family:var(--maya-font-ui);font-size:9.5px;
          letter-spacing:0.14em;text-transform:uppercase}
 
   /* Prompting engine */
@@ -460,7 +460,7 @@ try {
   .pe-live h4{font-family:var(--maya-font-ui);font-weight:400;font-size:9.5px;letter-spacing:0.2em;
               text-transform:uppercase;color:var(--grp);margin-bottom:9px}
   .pe-live p{font-size:13.5px;line-height:1.65;color:var(--dim);margin-bottom:10px}
-  .pe-live p b{color:var(--ink);font-weight:500}
+  .pe-live p b{color:var(--ink);font-weight:400}
   .pe-live pre{text-align:left;font-family:Menlo,monospace;font-size:10px;line-height:1.65;color:rgba(238,242,255,0.72);
                white-space:pre-wrap;background:rgba(255,255,255,0.045);border:var(--maya-hairline) solid var(--line);
                border-radius:10px;padding:11px 13px;margin-bottom:10px}
@@ -680,7 +680,7 @@ try {
   #lead-inv-modal .inv-close{position:absolute;top:12px;right:14px;background:transparent;border:none;color:var(--dim);
     font-size:20px;line-height:1;cursor:pointer}
   #lead-inv-modal .inv-close:hover{color:var(--ink)}
-  #lead-inv-modal h4{font-family:var(--maya-font-ui);font-weight:500;font-size:var(--maya-text-section);color:var(--ink);margin:0 20px 6px 0}
+  #lead-inv-modal h4{font-family:var(--maya-font-ui);font-weight:400;font-size:var(--maya-text-section);color:var(--ink);margin:0 20px 6px 0}
   #lead-inv-modal .inv-lede{font-family:var(--maya-font-ui);font-size:11.5px;line-height:1.5;color:var(--dim);margin:0 0 14px}
   #lead-inv-modal .inv-label{display:block;font-family:var(--maya-font-ui);font-size:8.5px;letter-spacing:0.18em;
     text-transform:uppercase;color:var(--faint);margin:0 0 5px}
@@ -712,7 +712,7 @@ try {
     outline:none;cursor:text;transition:background .15s,box-shadow .15s;white-space:normal}
   #adm-mkt #leads-table .lead-edit:hover{background:rgba(255,255,255,0.04)}
   #adm-mkt #leads-table .lead-edit:focus{background:rgba(169,201,255,0.10);box-shadow:0 0 0 1px rgba(169,201,255,0.5)}
-  #adm-mkt #leads-table .lead-edit.lead-name-edit{font-weight:500}
+  #adm-mkt #leads-table .lead-edit.lead-name-edit{font-weight:400}
   #adm-mkt #leads-table .lead-edit.lead-note-edit{font-family:var(--maya-font-ui);color:var(--dim)}
   #adm-mkt #leads-table .lead-edit.lead-note-edit:empty::before{content:'add a note';color:var(--faint);font-style:italic}
   /* v13.91: the Email reads in the same face and size as the Latest Notes,
@@ -805,7 +805,7 @@ try {
 
 /* Shared Admin/Affiliates CRM typography and translucent controls. */
 #adm-mkt #leads-table td,#adm-mkt #leads-table .lead-note-vp,#adm-mkt #leads-table .lead-stage,#adm-mkt #leads-table .lead-open{font:400 13px/1.55 var(--maya-font-ui);color:#fff;font-variant-numeric:tabular-nums}
-#adm-mkt #leads-table th{font:500 11px var(--maya-font-ui);letter-spacing:.12em;vertical-align:middle;color:#fff}
+#adm-mkt #leads-table th{font:400 11px var(--maya-font-ui);letter-spacing:.12em;vertical-align:middle;color:#fff}
 #adm-mkt #leads-table .lead-stage{max-width:none;width:150px;text-align:center;text-align-last:center;padding:6px;background:transparent;border:0}
 #adm-mkt #leads-table .lead-h-stage{width:180px;white-space:nowrap}
 #adm-mkt #leads-table .lead-identity{justify-content:center}
@@ -837,6 +837,7 @@ try {
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
+<script src="/aesthetics/ui/typography-controls.js?v=1"></script>
 </head>
 <body class="systems-map">
 
@@ -934,6 +935,7 @@ if (IS_AFFILIATES) {
       <div id="msg-feedback" role="status" aria-live="polite"></div><div class="msg-consent" id="msg-consent"></div>
     </div>
   </div>
+  <a href="/aesthetics/aesthetic-control.html" target="_blank" rel="noopener">Aesthetic Control<small>Adjust MAYA’s shared type and glass, then Save.</small></a>
   <maya-ai-meter></maya-ai-meter><maya-owner-crm></maya-owner-crm><h3>Model snapshot</h3><div id="model-snapshot">Sign in to load the current server configuration.</div><h3>The vault</h3>
   <a href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank">Firebase<small>Boards, projects, pictures and submissions. Delete a collection here to truly destroy it.</small></a>
   <h3 class="tint">Behind the scenes</h3>

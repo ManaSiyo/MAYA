@@ -1,3 +1,10 @@
+SEPTEMBER 29: Misleading typography usage zeros
+Root cause: exact matches to proposed font settings were labeled role usage;
+static DOM scan also omitted JS number templates. Replaced with mapped source
+locations and expandable file/line evidence. Unknown P2 mapping shown as unmapped.
+Counts describe code locations, not live records or exhaustive runtime totals.
+Verified source evidence and known H1/P1 regressions.
+
 SEPTEMBER 29: Preview icon height and inert material selection
 Fixed 32px preview icon size could exceed the adjacent pill. Preview now measures
 the pill and sizes circles to match. Material choices now control all examples;
@@ -367,3 +374,11 @@ one. Admin renders the notice as a campaign with zero delivery; generated ticker
 incorrectly infers ads are paused. Reject diagnostic rows and mark reporting
 unavailable. Actual ad delivery has not been verified. No credentials or plan
 changed. See AUDIT-2026-09-19.md for evidence and direct-integration replacement.
+
+SEPTEMBER 29, 2026: design preview persistence gap (LOCAL FIX)
+The style preview previously saved only browser preview tokens; live pages
+loaded independent legacy CSS. Added an Admin-authenticated fixed-key design
+save/read API and a shared style runtime on every served page. Role audit counts
+now show per-role subtotals instead of ambiguous zero categories. Local browser
+and mocked production Save tests pass. Live deployment remains unverified; no
+push or production settings changed.

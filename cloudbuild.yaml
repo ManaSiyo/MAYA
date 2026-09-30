@@ -26,6 +26,7 @@ steps:
       - '-ceu'
       - |
         node tests/container-contract.mjs
+        node tests/design-config.mjs
         node tests/canon-contract.mjs
         node tests/ai-routing.mjs
         node tests/fabric-sourcing.mjs
