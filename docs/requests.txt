@@ -1,6 +1,11 @@
 SEPTEMBER 30: Summarize the pending push for continuity
 [done locally] Added a pre-push checkpoint to AI-HANDOFF.md with the failed release cause, pending commits, live Chrome evidence, local validation, and exact post-push checks. Fromsa plans to push himself; Codex did not push.
 
+SEPTEMBER 30: Verify live release and expose Aesthetic Control in Admin
+[verified live] /release.json identifies f1a36b5 as published; the Aesthetic Control URL and existing Admin → Systems link open. Saving the unchanged approved values wrote /api/design and updated an already-open Admin tab. Design values save live without deployment; editor, runtime and menu code changes still require a normal deploy. The read-only production verification script passes.
+[fixed locally] Make the Systems link a visible glass quick link and correct the deploy checker's stale wall-hover CSS selector. Component-gallery and full app-regression browser suites pass. Neither fix is live yet; no push.
+[pending] Owner-only Gmail, Scheduler, booking and operational logs and actual call/text delivery remain unverified. A one-session MAYA Chrome approval was received, but Chrome reported that Fromsa changed the app as checks began, so control stopped. No messages or calls were sent.
+
 SEPTEMBER 30: Ask before Chrome access
 [standing rule] Notify Fromsa and wait for explicit approval before each new Chrome access session. The MAYA and World of CEO profiles are separate; do not assume either sign-in or past approval covers the other. Do not use Chrome while he is working.
 [recorded] Root AGENTS.md and the current handoff preserve this rule for MAYA; ~/.codex/AGENTS.md preserves it for future Codex projects.

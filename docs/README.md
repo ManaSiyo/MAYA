@@ -23,10 +23,10 @@ in `frontend/`, the back rooms live in `backend/`, pictures stay in
 Every note, the server and the rules live in `docs/`.
 Google project: `pro-maya`
 Repo: `ManaSiyo/MAYA` on GitHub, working folder `~/Desktop/MAYA-new`
-Live display version: **14.40**. On September 30 the public Admin/Frontend bytes
-still match files shared by `149314e`–`3168ded`; later commits have not reached
-Hosting. The display version can stay the same across pushes. After the next
-successful Hosting deploy, `/release.json` identifies the actual published commit.
+Live display version: **14.40**. On September 30, Hosting published
+`f1a36b5a52997f1f630ff471c1bf72f86e61d4f3` at 2026-10-01 02:30:54 UTC.
+The display version can stay the same across pushes; `/release.json` identifies
+the actual published commit. Check that endpoint before treating a push as live.
 
 ---
 
@@ -106,9 +106,10 @@ problem took the whole website down with it. Now the site always ships first
 and a rules failure is loud but harmless to what is already live.
 
 **Do not conclude a push succeeded because GitHub shows a green Vercel check.**
-The Google Cloud Build check is separate. The September 30 `f38b2fe` build
-failed at its browser contract before server or Hosting deployment. After a
-successful release, check the published commit and API health:
+The Google Cloud Build check is separate. The September 30 `f38b2fe` and
+`0d0ec66` builds failed at browser contracts before server or Hosting deployment;
+a later release published `f1a36b5`. After a successful release, check the
+published commit and API health:
 
 ```
 curl -fsS https://maya.manasiyo.com/release.json

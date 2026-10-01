@@ -802,6 +802,9 @@ ok('deploy check asks the real Drive question',
   VERIFY_SOURCE.includes('/api/healthz/deep'));
 ok('deploy check never prints the sign in token',
   !/textContent\s*=\s*tok/.test(VERIFY_SOURCE) && !VERIFY_SOURCE.includes('innerHTML = tok'));
+const WALL_META_RULE = /\.community-card\s+\.cc-meta\s*\{[^}]*opacity:\s*0\s*;/;
+ok('deploy check recognizes the wall details rule it is testing',
+  WALL_META_RULE.test(INDEX_SOURCE) && VERIFY_SOURCE.includes(WALL_META_RULE.source));
 
 
 // ── v13.33, Aug 19 ─────────────────────────────────────────────────────────

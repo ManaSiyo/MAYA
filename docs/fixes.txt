@@ -400,3 +400,12 @@ locally. Seventeen non-browser contracts and the available full browser suites
 pass in isolated headless Chromium. Live Admin still starts its notes at Sep 16;
 Aesthetic Control is not served yet. The live verify page has a separate wall
 hover attention. No push or live call/text was made. Recheck after deployment.
+
+SEPTEMBER 30, 2026: live release recovered; deploy checker false positive (LOCAL FIX)
+Hosting now identifies f1a36b5, and the read-only live verification suite passes.
+The live /verify.html wall-hover warning was caused by its test matching the
+obsolete `.cc-meta {` selector while the frontend uses `.community-card .cc-meta`.
+The frontend rule is present and hides details until hover. Corrected the
+selector and added a regression assertion locally; the corrected checker needs
+the next authorized push before it appears live. No actual wall behavior was
+changed.

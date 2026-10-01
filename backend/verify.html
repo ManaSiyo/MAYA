@@ -130,7 +130,7 @@ async function run() {
   add('The wall', 'each frame takes its own picture shape',
     app.text.includes('aspect-ratio: var(--cc-ar, 3 / 2)') && app.text.includes('communityBoard.fit(this)') ? 'pass' : 'fail');
   add('The wall', 'details stay hidden until hover',
-    /\.cc-meta \{[\s\S]{0,300}?opacity: 0;/.test(app.text) ? 'pass' : 'fail');
+    /\.community-card\s+\.cc-meta\s*\{[^}]*opacity:\s*0\s*;/.test(app.text) ? 'pass' : 'fail');
   add('The wall', 'no click handlers written into the markup',
     !app.text.includes("communityBoard.openPost('") ? 'pass' : 'fail');
 

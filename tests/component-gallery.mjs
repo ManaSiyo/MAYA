@@ -31,7 +31,9 @@ try{
  await page.waitForFunction(()=>!!document.getElementById('maya-typography-control-style'));
  assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--maya-type-H4-size').trim()),'12px');
  assert.equal(await page.evaluate(()=>{const host=document.querySelector('#adm-mkt');const node=document.createElement('div');node.className='bl-step';node.innerHTML='<div class="v">12</div>';host.append(node);const size=getComputedStyle(node.firstChild).fontSize;node.remove();return size;}),'12px');
- assert.ok(await page.getByRole('link',{name:/Aesthetic Control/}).count());
+ const designLink=page.getByRole('link',{name:'Aesthetic Control',exact:true});
+ assert.equal(await designLink.getAttribute('href'),'/aesthetics/aesthetic-control.html');
+ assert.equal(await designLink.evaluate(e=>getComputedStyle(e).borderRadius),'100px');
  await page.goto('https://maya.test/frontend/index.html',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>!!document.getElementById('maya-typography-control-style'));
  assert.equal(await page.locator('#brand-title').evaluate(e=>getComputedStyle(e).fontSize),'24px');

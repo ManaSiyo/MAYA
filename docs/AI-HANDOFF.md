@@ -2,65 +2,64 @@
 
 ## Release status
 
-`maya-v2` and `origin/maya-v2` both point to `0d0ec66`. That push **did not
-reach production**: Cloud Build `fbbce9f4-deb5-4a24-b82b-ee1c2e76bdc6`
-failed in **Test release contracts**, before the server and Hosting deploys.
-The remaining failure expected an Outbound person link to be 11px; the approved
-typography sets it to 12px. Related stale 11px and 500-weight assertions were
-corrected locally. The full local release and browser checks now pass, but the
-fixes in this handoff have not been pushed. Do not describe the current live
-site as carrying this HEAD.
+`maya-v2` and `origin/maya-v2` both point to `f1a36b5`. The live
+`/release.json` names that exact commit, published 2026-10-01 02:30:54 UTC.
+The live Aesthetic Control page opens, and its link appears near the top of
+Admin → Systems. Public `/api/healthz` reports a healthy `maya-api` with
+OpenAI, submissions, Drive and Stripe configured; configuration alone does
+not prove an end-to-end provider action. The repository's read-only live
+verification script passes all checks. Live `/verify.html` still shows one
+wall-hover warning because its selector was stale; the frontend actually has
+the hidden-until-hover rule. This false-positive checker is fixed locally.
 
-On the live site, Admin Recent Changes still begins September 16 and the new
-`/aesthetics/aesthetic-control.html` URL falls back to the client sign-in.
-Live Outbound does show 262 prospects, a September 30 Sheet sync, its columns,
-filters and Email History dial. The data can refresh without the latest page
-code. Live `/verify.html` reports version 14.40 with one attention item (wall
-hover detail); it does not compare deployed commits. An unauthenticated
-browser cannot verify owner Save, Gmail, calls, texts, booking approval, or
-Cloud Scheduler. No real message or call was sent during this audit.
+Aesthetic Control Save was tested against production without changing any
+design value: it accepted the approved default configuration, `/api/design`
+returned that exact configuration, and an already-open Admin tab had the
+24px H1 and 18% glass tokens. The saved values apply without a code deploy:
+same-origin open tabs receive a BroadcastChannel update, and new page loads
+fetch `/api/design` without caching. Another browser needs a refresh. Changes
+to the editor, style runtime or menu markup still require a normal deploy.
+
+The independent browser could not verify owner-only Gmail, Twilio delivery,
+booking approval, lead alerts, Cloud Scheduler or operational logs. Admin's
+Owner tools asked for owner sign-in. Fromsa explicitly approved one MAYA Chrome
+session. The Chrome UI reported that the user changed the app as owner checks
+started, so interaction stopped immediately; no owner-only state was read.
+Fresh permission and an idle window are required for another session. No real
+email, call or text was sent.
 
 ## Local changes prepared for the next push
 
-- Updated outdated assertions in `tests/outbound-priority-ui.mjs`,
-  `tests/outbound-ui.mjs`, and `tests/canon-ui.mjs` to the approved 12px
-  Outbound text and maximum 400 font weight.
-- Updated the `wixLeads` source assertion in `tests/app-regression.mjs` to
-  recognize its current optional-arguments signature. Functional lead tests
-  remain in place.
-- Regenerated `aesthetics/aesthetic-control/style-inventory.json` and
-  `typography-usage.json` so the visual editor's counts and source locations
-  reflect the current files.
-- Removed the temporary test-only `tests/node_modules` symlinks after testing.
-  No product behavior, credentials, billing, or production configuration was
-  changed in this audit.
+- `backend/status.html`: the existing Aesthetic Control link becomes a clear
+  glass quick link directly under the Systems checks. Its long helper line is
+  removed; the shared live glass tokens still control its finish.
+- `backend/verify.html`: match the actual `.community-card .cc-meta` selector
+  so a working wall no longer appears broken.
+- `tests/component-gallery.mjs` checks the quick link destination and shape.
+  `tests/app-regression.mjs` checks that the deploy checker recognizes the
+  frontend wall rule. No credential, billing or production environment change.
 
 ## Validation
 
-All 17 non-browser Cloud Build release contracts passed locally. The full
-`tests/maya-hands-smoke.mjs`, `tests/app-regression.mjs`,
-`tests/outbound-ui.mjs`, `tests/component-gallery.mjs`, `tests/crm-ui.mjs`,
-`tests/crm-failure-ui.mjs`, and `tests/canon-ui.mjs` browser suites passed in
-an isolated headless Chromium. The Canon UI suite covered 11 pages at seven
-widths; CRM UI covered 10,000-record continuous scrolling, dataset-wide
-search, reviewed sending and meter behavior. `tests/maya-messages.mjs` passed
-55 fake-carrier checks and `tests/maya-transfer.mjs` passed. These are local
-tests, not proof of live carrier or Gmail delivery. The live site was checked
-in a separate Codex browser. Fromsa was using his Chrome, so no further
-Chrome access occurred. `tests/maya-phone.mjs` remains unrun locally because
-the optional `ws` test dependency is absent; this should run in Cloud Build.
+Current `tests/component-gallery.mjs` and full `tests/app-regression.mjs`
+pass in isolated headless Chromium. `tests/verify-live.mjs` passes against
+production. The previous audit also passed all 17 non-browser release
+contracts, the frontend/Playground hands battery, CRM, Outbound and Canon UI
+browser suites, 55 fake-carrier message checks and transfer tests. None of
+these is proof of actual Gmail or carrier delivery. `tests/maya-phone.mjs`
+remains unrun locally because the optional `ws` test dependency is absent;
+Cloud Build runs it when that dependency installs. Temporary test symlinks
+were removed after testing.
 
 ## Exact next step
 
-Fromsa plans to review the summary and push himself. **Do not push without his
-explicit request.** After the next push, watch the Google Cloud Build check
-through server and Hosting deploy, then verify `/release.json` equals the
-pushed commit and live Admin shows the September 30 notes. Recheck the
-Aesthetic Control route and authenticated Save, owner-only CRM and Gmail
-connections, Cloud Scheduler, and one controlled alert/booking approval with
-carrier delivery evidence. Investigate the live verify page's wall hover
-attention if it remains after deployment. The signup-alert endpoint may send
-a real notification; do not probe it casually.
+**Do not push without Fromsa's explicit request.** After the next push, check
+Cloud Build and `/release.json`, then confirm the glass quick link and corrected
+`/verify.html` warning live. With a newly approved, idle MAYA Chrome
+session, inspect owner-only Gmail connections, Scheduler/alert status, booking
+previews and operational logs without sending to anyone. A controlled real
+call/text test needs an explicitly chosen recipient. The signup-alert endpoint
+may send a real notification; do not probe it casually.
 
 ## Standing constraints and repository map
 
@@ -80,5 +79,5 @@ and hosting. Obsolete local material remains recoverable in ignored
 `_to_delete/repo-cleanup-2026-09-29/`. Do not move served images into `docs/`.
 
 The approved booking URL is `https://wix.to/wT2lSqE`. Owner-controlled booking
-preview and alert code are prepared locally from earlier work but have not
-been verified in production. Phone-driven invoice preview is not implemented.
+preview and alert code are in the deployed release but have not been verified
+end to end in production. Phone-driven invoice preview is not implemented.

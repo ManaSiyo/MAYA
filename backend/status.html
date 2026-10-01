@@ -330,6 +330,13 @@ try {
             border-radius:10px;transition:background .2s}
   #drawer a:hover{background:rgba(255,255,255,0.07)}
   #drawer a small{display:block;font-family:var(--maya-font-ui);font-size:10px;color:var(--dim)}
+  #drawer a.design-quicklink{display:inline-flex;align-items:center;justify-content:center;align-self:center;
+    width:max-content;max-width:100%;min-height:32px;margin:6px 0 12px;padding:6px 16px;
+    border:.5px solid var(--maya-button-edge);border-radius:100px;background:var(--maya-button-fill);
+    box-shadow:var(--maya-button-shadow);backdrop-filter:var(--maya-button-frost);
+    -webkit-backdrop-filter:var(--maya-button-frost);font-size:var(--maya-type-P4-size,10px);
+    font-weight:var(--maya-type-P4-weight,300);letter-spacing:.12em;text-transform:uppercase}
+  #drawer a.design-quicklink:focus-visible{outline:2px solid #adcdf8;outline-offset:3px}
 
   .status-bar{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;margin:6px 0 8px;
               border:var(--maya-hairline) solid var(--line);border-radius:16px;padding:13px 18px;background:rgba(10,16,34,0.55);backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost)}
@@ -945,7 +952,7 @@ if (IS_AFFILIATES) {
       <div id="msg-feedback" role="status" aria-live="polite"></div><div class="msg-consent" id="msg-consent"></div>
     </div>
   </div>
-  <a href="/aesthetics/aesthetic-control.html" target="_blank" rel="noopener">Aesthetic Control<small>Adjust MAYA’s shared type and glass, then Save.</small></a>
+  <a class="maya-glass-button design-quicklink" href="/aesthetics/aesthetic-control.html" target="_blank" rel="noopener" title="Open the live design editor">Aesthetic Control</a>
   <maya-ai-meter></maya-ai-meter><maya-owner-crm></maya-owner-crm><h3>Model snapshot</h3><div id="model-snapshot">Sign in to load the current server configuration.</div><h3>The vault</h3>
   <a href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank">Firebase<small>Boards, projects, pictures and submissions. Delete a collection here to truly destroy it.</small></a>
   <h3 class="tint">Behind the scenes</h3>
