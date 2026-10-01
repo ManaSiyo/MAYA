@@ -1,3 +1,9 @@
+SEPTEMBER 30, 2026: Newer GitHub commits not live (LOCAL FIX, LIVE OPEN)
+Live Hosting files are byte-for-byte from 3168ded even though release branch points to c388619. Live API lacks booking and signup-alert routes (404), while existing protected routes answer 401. Reproduced c388619's release-gate failure: server.js imports lead-alerts.mjs and booking-link.mjs but its Dockerfile omits them. The local Dockerfile fixes this; 16 non-browser release contracts pass. Aesthetic Control live URL falls back to the client homepage. Cloud Build/Run logs and Admin MAYA feedback entries remain unread because they require owner authentication; no Chrome, credentials, push or deployment were used.
+
+SEPTEMBER 30, 2026: Wix signup reached Lead Station but did not trigger owner notification (LOCAL FIX, LIVE OPEN)
+The newest Call back form submission used the same Wix form as earlier leads; the server fetched leads only when an Admin/API read occurred and had no signup alert path. Added a fresh submission checker with durable text/call claims and integrated it with the scheduled Outbound task plus foreground Admin fallback. Phone/SMS provider status and production scheduler could not be inspected because Cloud Console required owner sign-in. No live message or call sent; local fake-provider tests pass. Verify scheduler configuration, carrier acceptance and actual receipt after deployment.
+
 SEPTEMBER 29: Misleading typography usage zeros
 Root cause: exact matches to proposed font settings were labeled role usage;
 static DOM scan also omitted JS number templates. Replaced with mapped source

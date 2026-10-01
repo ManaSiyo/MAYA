@@ -21,6 +21,13 @@ While working:
 - Keep changes focused and verify every edited path.
 - Never push unless Fromsa explicitly asks. The current Cloud Build trigger can
   deploy a pushed branch to production.
+- Before connecting to or controlling any of Fromsa's Chrome windows, tabs, or
+  profiles, send a permission notification and wait for his explicit answer.
+  Ask again for each new Chrome access session, even if a previous task had
+  access. Silence is not permission. Never use either Chrome while he says he
+  is working in it. The MAYA and World of CEO Chrome sign-ins are separate;
+  do not assume access to one grants access to the other. Use non-Chrome tools
+  when possible, and do not switch profiles without that session's approval.
 - Fromsa authorizes local commits of completed, verified requested work. Prepare
   an accurate commit summary and description covering changes, validation and
   remaining limitations, then commit the task's files so only Push remains for

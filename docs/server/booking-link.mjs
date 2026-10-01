@@ -1,4 +1,4 @@
-// Owner-reviewed consultation links. Oracle!M5 in the owner-shared 2026 Sheet.
+// Owner-reviewed consultation links. Use the exact URL Fromsa provided.
 // A proposal is durable and one-use; an uncertain carrier result is never retried.
 import {randomBytes,randomUUID} from 'node:crypto';
 import {jsonStore,problem} from './crm-store.mjs';

@@ -1,6 +1,6 @@
 {
   "pages": 11,
-  "count": 887,
+  "count": 888,
   "files": [
     {
       "path": "aesthetics/aesthetic-control.html",
@@ -1924,299 +1924,304 @@
           "line": 199
         },
         {
-          "property": "font-size",
-          "value": "8px",
-          "line": 227
-        },
-        {
-          "property": "letter-spacing",
-          "value": "0.2em",
-          "line": 228
-        },
-        {
-          "property": "color",
-          "value": "rgba(169,201,255,0.9)",
-          "line": 240
-        },
-        {
-          "property": "color",
-          "value": "rgba(169,201,255,0.95)",
-          "line": 245
-        },
-        {
           "property": "line-height",
           "value": "1.45",
-          "line": 260
-        },
-        {
-          "property": "letter-spacing",
-          "value": "0.16em",
-          "line": 263
-        },
-        {
-          "property": "color",
-          "value": "var(--amber)",
-          "line": 276
-        },
-        {
-          "property": "color",
-          "value": "rgba(255,230,180,0.9)",
-          "line": 280
-        },
-        {
-          "property": "color",
-          "value": "rgba(255,195,205,0.95)",
-          "line": 281
-        },
-        {
-          "property": "letter-spacing",
-          "value": "0.1em",
-          "line": 284
-        },
-        {
-          "property": "color",
-          "value": "#a9c9ff !important",
-          "line": 297
+          "line": 200
         },
         {
           "property": "color",
           "value": "#fff",
+          "line": 201
+        },
+        {
+          "property": "font",
+          "value": "300 var(--maya-text-body)/1.45 var(--maya-font-ui)",
+          "line": 203
+        },
+        {
+          "property": "font-size",
+          "value": "8px",
+          "line": 232
+        },
+        {
+          "property": "letter-spacing",
+          "value": "0.2em",
+          "line": 233
+        },
+        {
+          "property": "color",
+          "value": "rgba(169,201,255,0.9)",
+          "line": 245
+        },
+        {
+          "property": "color",
+          "value": "rgba(169,201,255,0.95)",
+          "line": 250
+        },
+        {
+          "property": "letter-spacing",
+          "value": "0.16em",
+          "line": 268
+        },
+        {
+          "property": "color",
+          "value": "var(--amber)",
+          "line": 281
+        },
+        {
+          "property": "color",
+          "value": "rgba(255,230,180,0.9)",
+          "line": 285
+        },
+        {
+          "property": "color",
+          "value": "rgba(255,195,205,0.95)",
+          "line": 286
+        },
+        {
+          "property": "letter-spacing",
+          "value": "0.1em",
+          "line": 289
+        },
+        {
+          "property": "color",
+          "value": "#a9c9ff !important",
           "line": 302
         },
         {
           "property": "letter-spacing",
           "value": "0.24em",
-          "line": 318
+          "line": 323
         },
         {
           "property": "color",
           "value": "var(--grp)",
-          "line": 319
+          "line": 324
         },
         {
           "property": "color",
           "value": "rgba(238,242,255,0.75)",
-          "line": 337
+          "line": 342
         },
         {
           "property": "font-size",
           "value": "11.5px",
-          "line": 339
+          "line": 344
         },
         {
           "property": "letter-spacing",
           "value": "0.26em",
-          "line": 339
+          "line": 344
         },
         {
           "property": "color",
           "value": "rgba(238,242,255,0.9)",
-          "line": 343
+          "line": 348
         },
         {
           "property": "font-size",
           "value": "12.5px",
-          "line": 362
+          "line": 367
         },
         {
           "property": "line-height",
           "value": "1.15",
-          "line": 362
+          "line": 367
         },
         {
           "property": "font-size",
           "value": "7.5px",
-          "line": 363
+          "line": 368
         },
         {
           "property": "color",
           "value": "#0b1408",
-          "line": 365
+          "line": 370
         },
         {
           "property": "color",
           "value": "#241503",
-          "line": 368
+          "line": 373
         },
         {
           "property": "line-height",
           "value": "1.7",
-          "line": 372
+          "line": 377
         },
         {
           "property": "color",
           "value": "var(--green)",
-          "line": 381
+          "line": 386
         },
         {
           "property": "font-size",
           "value": "10.5px",
-          "line": 388
+          "line": 393
         },
         {
           "property": "font-family",
           "value": "'Jost',sans-serif",
-          "line": 396
+          "line": 401
         },
         {
           "property": "letter-spacing",
           "value": "0.18em",
-          "line": 396
+          "line": 401
         },
         {
           "property": "font-family",
           "value": "Menlo,monospace",
-          "line": 405
+          "line": 410
         },
         {
           "property": "font-size",
           "value": "13.5px",
-          "line": 453
+          "line": 458
         },
         {
           "property": "line-height",
           "value": "1.65",
-          "line": 462
+          "line": 467
         },
         {
           "property": "color",
           "value": "rgba(238,242,255,0.72)",
-          "line": 464
+          "line": 469
         },
         {
           "property": "line-height",
           "value": "1.9",
-          "line": 481
+          "line": 486
         },
         {
           "property": "color",
           "value": "var(--rose)",
-          "line": 529
+          "line": 534
         },
         {
           "property": "line-height",
           "value": "1.8",
-          "line": 530
+          "line": 535
         },
         {
           "property": "font-size",
           "value": "15px",
-          "line": 537
+          "line": 542
         },
         {
           "property": "font-size",
           "value": "16px",
-          "line": 543
+          "line": 548
         },
         {
           "property": "color",
           "value": "var(--blue)",
-          "line": 572
+          "line": 577
         },
         {
           "property": "line-height",
           "value": "28px",
-          "line": 572
+          "line": 577
         },
         {
           "property": "color",
           "value": "#f87171",
-          "line": 576
+          "line": 581
         },
         {
           "property": "letter-spacing",
           "value": "0.05em",
-          "line": 698
+          "line": 703
         },
         {
           "property": "color",
           "value": "#b8f0c8",
-          "line": 708
+          "line": 713
         },
         {
           "property": "font-size",
           "value": "24px",
-          "line": 746
+          "line": 751
         },
         {
           "property": "line-height",
           "value": "1.6",
-          "line": 757
+          "line": 762
         },
         {
           "property": "color",
           "value": "inherit",
-          "line": 802
-        },
-        {
-          "property": "font",
-          "value": "400 13px/1.55 var(--maya-font-ui)",
           "line": 807
         },
         {
           "property": "font",
-          "value": "400 11px var(--maya-font-ui)",
-          "line": 808
-        },
-        {
-          "property": "letter-spacing",
-          "value": ".12em",
-          "line": 808
-        },
-        {
-          "property": "font",
-          "value": "var(--maya-text-caption) var(--maya-font-ui)",
+          "value": "400 13px/1.55 var(--maya-font-ui)",
           "line": 812
         },
         {
           "property": "font",
+          "value": "400 11px var(--maya-font-ui)",
+          "line": 813
+        },
+        {
+          "property": "letter-spacing",
+          "value": ".12em",
+          "line": 813
+        },
+        {
+          "property": "font",
+          "value": "var(--maya-text-caption) var(--maya-font-ui)",
+          "line": 817
+        },
+        {
+          "property": "font",
           "value": "var(--maya-text-section) var(--maya-font-ui)",
-          "line": 814
+          "line": 819
         },
         {
           "property": "font",
           "value": "11px/1.5 var(--maya-font-ui)",
-          "line": 814
+          "line": 819
         },
         {
           "property": "font",
           "value": "10px var(--maya-font-ui)",
-          "line": 814
+          "line": 819
         },
         {
           "property": "color",
           "value": "#dbe8ff",
-          "line": 822
+          "line": 827
         },
         {
           "property": "font",
           "value": "var(--maya-text-metric) var(--maya-font-ui)",
-          "line": 822
+          "line": 827
         },
         {
           "property": "font-size",
           "value": "36px",
-          "line": 823
+          "line": 828
         },
         {
           "property": "letter-spacing",
           "value": ".18em",
-          "line": 824
+          "line": 829
         },
         {
           "property": "font",
           "value": "var(--maya-text-caption)/1.7 var(--maya-font-ui)",
-          "line": 825
+          "line": 830
         },
         {
           "property": "font",
           "value": "9px var(--maya-font-ui)",
-          "line": 830
+          "line": 835
         },
         {
           "property": "font-size",
           "value": "14.5px",
-          "line": 1037
+          "line": 1043
         }
       ]
     },

@@ -6,7 +6,9 @@ const deps={ownerNumber:'+15105550100',ownerEmails:['owner@example.com'],now:()=
  write:async(key,buf,type,expected)=>{assert.equal(expected,files.get(key)?.generation||'0');files.set(key,{value:JSON.parse(buf),generation:String(++generation)});},
  parse:async(uid,text)=>{parses++;assert.equal(uid,'owner');return JSON.parse(text);},
  find:async query=>query==='Pat'?{ok:true,lead:{id:'m_pat',name:'Pat'}}:{ok:false,why:'Choose the exact lead.'},
- commit:async(c,id)=>{if(!saved.has(id)){commits++;saved.set(id,{name:c.name||c.displayName});}return saved.get(id);}};
+ commit:async(c,id)=>{if(!saved.has(id)){commits++;saved.set(id,{name:c.name||c.displayName});}return saved.get(id);},
+ booking:{preview:async query=>({name:query,to:'+15105550140',text:'Hi Nick, booking link https://wix.to/wT2lSqE',code:'a1b2c3'}),
+  confirmCode:async code=>({ok:code==='a1b2c3'})}};
 const crm=createOwnerCRM(deps),user={sub:'owner',email:'owner@example.com'};
 await assert.rejects(crm.bind({sub:'attacker',email:'other@example.com'}));
 assert.equal(await crm.handle({from:deps.ownerNumber,text:'anything',sid:'SMoff'}),'');
@@ -27,6 +29,10 @@ assert.throws(()=>cleanCommand({action:'delete',query:'everyone'}));
 assert.throws(()=>cleanCommand({action:'add',name:'Pat',phone:'123'}));
 assert.throws(()=>cleanCommand({action:'update',query:'Pat'}));
 assert.match(await crm.handle({...input,sid:'SMupdate',text:JSON.stringify({action:'update',query:'Pat',note:'Interested in tailoring'})}),/Update: Pat/);
+const booking=await crm.handle({from:deps.ownerNumber,text:'Send the booking link to Nick',sid:'SMbook'});
+assert.match(booking,/wix.to\/wT2lSqE/);assert.match(booking,/Nothing has gone to the client/);
+assert.match(await crm.handle({from:deps.ownerNumber,text:'BOOK a1b2c3',sid:'SMbookYes'}),/accepted by carrier/);
+assert.equal(await crm.handle({from:'+15105550101',text:'BOOK a1b2c3',sid:'SMstrangerBook'}),'');
 console.log('Owner CRM: identity, account binding, preview, confirmation, expiry, duplicate and validation checks passed.');
 
 const candidates=gmailCandidates([{direction:'in',peers:['pat@example.com'],subject:'Suit inquiry',summary:'Blue suit',ts:'2026-09-28'}, {direction:'out',peers:['out@example.com']},{direction:'in',automated:true,peers:['bot@example.com']}]);

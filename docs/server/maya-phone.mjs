@@ -443,7 +443,9 @@ export function mountMayaPhone(app, server, deps) {
                 ownerTextAccepted:!!draft.ownerPreview?.ok,say:'Read this exact preview to Fromsa and ask for explicit approval. Nothing went to the client.'};
             }catch(e){output={ok:false,say:e.status?e.message:'Booking preview is unavailable.'};}
           } else if (m.name === 'send_booking') {
-            const approved=call.transcript.slice(call.bookingApprovalAt).some(t=>t.who==='caller'&&/\b(?:yes|approve|go ahead|send it|send the link)\b/i.test(t.text));
+            const lastOwnerReply=call.transcript.slice(call.bookingApprovalAt).filter(t=>t.who==='caller').at(-1)?.text||'';
+            const approved=/\b(?:yes|approve|go ahead|send it|send the link)\b/i.test(lastOwnerReply)&&
+              !/\b(?:no|don't|do not|wait|stop|cancel|hold on)\b/i.test(lastOwnerReply);
             if(!args.confirmed||!approved||!call.pendingBookingId||args.preview_id!==call.pendingBookingId){
               output={ok:false,say:'Ask Fromsa to approve the exact booking preview before sending.'};
             }else{

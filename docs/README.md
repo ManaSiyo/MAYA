@@ -23,7 +23,7 @@ in `frontend/`, the back rooms live in `backend/`, pictures stay in
 Every note, the server and the rules live in `docs/`.
 Google project: `pro-maya`
 Repo: `ManaSiyo/MAYA` on GitHub, working folder `~/Desktop/MAYA-new`
-Live version: **14.38** (public Hosting/API verified September 24) (the number lives in a `maya-version` meta tag in
+Live version: **14.40** (public Hosting files matched commit `3168ded` on September 30; later Git commits have not reached Hosting) (the number lives in a `maya-version` meta tag in
 `frontend/index.html`, and the running site's number is the fastest way to tell whether
 a push has landed).
 

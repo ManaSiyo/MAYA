@@ -14,6 +14,21 @@ const alerts=createLeadAlerts({...store,now:()=>now,fetchLeads:async()=>({connec
 assert.deepEqual(await alerts.run(),{checked:1,texts:1,calls:1,failed:[]});
 assert.deepEqual(await alerts.run(),{checked:1,texts:0,calls:0,failed:[]});
 assert.equal(texts,1);assert.equal(calls,1);
+let retryNow=now,attempts=0;
+const retry=createLeadAlerts({...store,now:()=>retryNow,fetchLeads:async()=>({connected:true,list:[
+  {id:'retry',source:'wix',name:'Retry',ts:'2026-09-30T18:25:49Z'},
+]}),textOwner:async()=>({ok:++attempts>1}),callOwner:async()=>({ok:true})});
+assert.equal((await retry.run()).failed.length,1);
+assert.equal((await retry.run()).texts,0);
+retryNow+=15*60000;
+assert.equal((await retry.run()).texts,1);
+assert.equal(attempts,2);
+const uncertain=createLeadAlerts({...store,now:()=>retryNow,fetchLeads:async()=>({connected:true,list:[
+  {id:'uncertain',source:'wix',name:'Uncertain',ts:'2026-09-30T18:25:49Z'},
+]}),textOwner:async()=>({ok:false,why:'Twilio did not answer: timeout'}),callOwner:async()=>({ok:true})});
+assert.equal((await uncertain.run()).failed.length,1);
+retryNow+=15*60000;
+assert.equal((await uncertain.run()).texts,0);
 const disconnected=createLeadAlerts({...store,now:()=>now,fetchLeads:async()=>({connected:false})});
 await assert.rejects(disconnected.run(),/unavailable/);
 console.log('Lead alerts: new Call back submission, deduplication, old/manual exclusion, outage.');

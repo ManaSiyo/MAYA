@@ -3179,13 +3179,17 @@ async function deleteLeadRow(i) {
   } catch (_) { reloadLeads(); }
 }
 function reloadLeads() { if (IS_AFFILIATES) return window.loadAffiliateLeads(); try { if (window.loadMkt) loadMkt(); } catch (_) {} try { loadMayaCommand(); } catch (_) {} }
-async function checkLeadAlerts(){
-  const note=document.getElementById('leads-note');note.style.display='block';note.textContent='Checking new signups...';
+async function checkLeadAlerts(quiet=false){
+  const note=document.getElementById('leads-note');if(!quiet){note.style.display='block';note.textContent='Checking new signups...';}
   try{const r=await fetch('/api/admin/lead-alerts/check',{method:'POST',headers:{Authorization:'Bearer '+_idTok}});const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||'Alert check failed.');
-    note.textContent=`Checked ${j.checked} recent signups · ${j.texts} texts accepted · ${j.calls} calls placed`+(j.failed?.length?` · ${j.failed.length} failed; see server logs`:'');reloadLeads();
-  }catch(e){note.textContent=e.message;}
+    if(!quiet||j.texts||j.calls||j.failed?.length){note.style.display='block';note.textContent=`Checked ${j.checked} recent signups · ${j.texts} texts accepted · ${j.calls} calls placed`+(j.failed?.length?' · '+j.failed.map(x=>x.channel+': '+x.why).join('; ').slice(0,240):'');}
+    if(!quiet||j.texts||j.calls)reloadLeads();
+  }catch(e){if(!quiet){note.style.display='block';note.textContent=e.message;}}
 }
 window.reloadLeads = reloadLeads;
+// The server scheduler works without an open browser. This owner-only check
+// shortens the delay while Admin is in the foreground and remains deduplicated.
+setInterval(()=>{if(!IS_AFFILIATES&&_idTok&&document.visibilityState==='visible')checkLeadAlerts(true);},300000);
 async function addLeadManual() {
   const name = prompt('New lead. Name:'); if (name == null || !name.trim()) return;
   const email = prompt('Email (optional):') || '';
@@ -3317,7 +3321,7 @@ function paintThread(t, quiet) {
   document.getElementById('msg-call').disabled = !!t.blocked;
   const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
     box.innerHTML = (t.messages || []).map(m => m.kind === 'call'
-      ? '<div class="msg-call-line">' + (m.dir === 'out' ? 'Maya called' : 'They called Maya') + (m.seconds ? ', ' + Math.max(1, Math.round(m.seconds / 60)) + ' min' : '') + ' <span>' + esc(_msgWhen(m.ts)) + '</span>' + (Array.isArray(m.transcript)&&m.transcript.length ? '<details><summary>Transcript</summary>' + m.transcript.map(line=>'<p><b>'+esc(line.who==='maya'?'MAYA':'You')+':</b> '+esc(line.text)+'</p>').join('') + '</details>' : m.text ? '<small>' + esc(m.text) + '</small>' : '') + '</div>'
+      ? '<div class="msg-call-line">' + (m.dir === 'out' ? 'Maya called' : 'They called Maya') + (m.seconds ? ', ' + Math.max(1, Math.round(m.seconds / 60)) + ' min' : '') + ' <span>' + esc(_msgWhen(m.ts)) + '</span>' + (Array.isArray(m.transcript)&&m.transcript.length ? '<details><summary>Transcript</summary>' + m.transcript.map(line=>'<p><b>'+esc(line.who==='maya'?'MAYA':m.dir==='out'?'Fromsa':'Caller')+':</b> '+esc(line.text)+'</p>').join('') + '</details>' : m.text ? '<small>' + esc(m.text) + '</small>' : '') + '</div>'
       : '<div class="bub ' + (m.dir === 'out' ? 'out' : 'in') + '">' + esc(m.text || '') + '<div class="bub-when">' + esc(_msgWhen(m.ts)) + (m.dir === 'out' && m.status ? ', ' + esc(m.status) + (m.errorCode ? ' (carrier error ' + esc(m.errorCode) + (String(m.errorCode) === '30034' ? ': sending number needs approved A2P registration' : '') + ')' : '') : '') + '</div></div>'
     ).join('') || '<div class="msg-empty">No messages yet. Send a text to start the conversation.</div>';
     if (!quiet || atBottom) box.scrollTop = box.scrollHeight;
@@ -3418,7 +3422,7 @@ async function msgBooking(){
   if(!_msgOpen)return;
   const number=String(_msgOpen.number||'').replace(/\D/g,'');const lead=_leadList.find(x=>String(x.phone||'').replace(/\D/g,'')===number);
   if(!lead)return alert('Add this contact to the Lead Station before sending a booking link.');
-  try{const r=await fetch('/api/admin/booking/preview',{method:'POST',headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({query:lead.email||lead.name||lead.phone})});const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||'Preview unavailable.');await loadBookingPending();}
+  try{const r=await fetch('/api/admin/booking/preview',{method:'POST',headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({query:lead.id})});const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||'Preview unavailable.');await loadBookingPending();}
   catch(e){alert(e.message);}
 }
 function leadOpenThread(i) {

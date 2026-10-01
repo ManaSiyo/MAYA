@@ -1,6 +1,8 @@
 import './component-gallery.mjs';
 import './design-contract.mjs';
 import './design-config.mjs';
+import './booking-link.mjs';
+import './lead-alerts.mjs';
 import {assertOutboundPriority} from './outbound-priority.mjs';
 import {assertCanon} from './canon-contract.mjs';
 import {assertContainer} from './container-contract.mjs';
@@ -2650,6 +2652,20 @@ ok('CRM status column hides contact numbers and opens the thread by name',MAP_SO
 ok('Model snapshot uses authenticated server config',MAP_SOURCE.includes('/api/admin/models') && SERVER_SOURCE.includes("app.get('/api/admin/models', requireAuthHeader"));
 ok('Owner CRM uses an authenticated setup and confirmation-only SMS lead writes', MAP_SOURCE.includes('<maya-owner-crm>') && SERVER_SOURCE.includes('ownerCommand: input => ownerCRM.handle(input)') && readFileSync(join(ROOT,'docs/server/owner-crm.mjs'),'utf8').includes('pending.code.toLowerCase()'));
 ok('Opening Systems refreshes owner connection state',MAP_SOURCE.includes("document.querySelector('maya-owner-crm')?.load?.()"));
+ok('A new Wix Call back lead can alert the owner through the scheduled check and Admin',
+  SERVER_SOURCE.includes("fetchLeads:()=>wixLeads({fresh:true,summaries:false})") &&
+  SERVER_SOURCE.includes("onScheduledSync:()=>_leadAlerts?.run()") &&
+  MAP_SOURCE.includes("/api/admin/lead-alerts/check") &&
+  MAP_SOURCE.includes('checkLeadAlerts(true);},300000)'));
+ok('Booking uses the owner-shared link, exact lead and confirmation before client SMS',
+  readFileSync(join(ROOT,'docs/server/booking-link.mjs'),'utf8').includes("https://wix.to/wT2lSqE") &&
+  MAP_SOURCE.includes("body:JSON.stringify({query:lead.id})") &&
+  PHONE_SOURCE.includes("args.preview_id!==call.pendingBookingId") &&
+  MAP_SOURCE.includes("/api/admin/booking/confirm"));
+ok('Phone calls show their transcript in the Messages drawer',
+  MAP_SOURCE.includes('<details><summary>Transcript</summary>') &&
+  PHONE_SOURCE.includes('transcript:call.transcript') &&
+  readFileSync(join(ROOT,'docs/server/maya-messages.mjs'),'utf8').includes('Array.isArray(transcript)?transcript.map'));
 assertOutboundPriority();
 ok('Outbound preserves Sheet columns and filters all campaigns with recorded F1/F2 history',!outboundUI.includes('id="todo-list"') && outboundJS.includes('filterColumns') && outboundUI.includes('id="followups"') && outboundJS.includes('Write an email') && outboundJS.includes('renderFollowups(people)'));
 ok('Outbound preserves campaign pain and criteria and provides a people table',outboundJS.includes("field('pain'") && outboundJS.includes("field('criteria'") && outboundJS.includes('function renderPeople()'));

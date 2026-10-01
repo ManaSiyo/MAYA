@@ -29,7 +29,7 @@ const AUTH = 'test-twilio-auth-token';
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 const server = http.createServer(app);
-const leads = [], transcripts = [], spends = [], notes = [];
+const leads = [], transcripts = [], spends = [], notes = [], bookingSends = [];
 // a fake Twilio REST API for the calls Maya places
 const twSrv = http.createServer((req, res) => { let b = ''; req.on('data', c => b += c); req.on('end', () => { twRest.push({ url: req.url, auth: req.headers.authorization || '', form: Object.fromEntries(new URLSearchParams(b)) }); res.setHeader('Content-Type', 'application/json'); res.statusCode = 201; res.end(JSON.stringify({ sid: 'CAOUT1', status: 'queued' })); }); });
 const twRest = [];
@@ -49,6 +49,8 @@ const phoneDeps = {
   noteLead: async (lead, note) => { notes.push({ lead, note }); return /tori/i.test(lead) ? { ok: true, name: 'Tori' } : { ok: false, why: 'no lead named ' + lead }; },
   logNote: async (text) => { inbox.push(text); return { ok: true }; },
   onCallEnd: async (rec) => { threadCalls.push(rec); },
+  bookingPreview: async query => ({id:'preview-nick',name:query,to:'+15105550140',text:'Hi Nick, book at https://wix.to/wT2lSqE',ownerPreview:{ok:true}}),
+  bookingConfirm: async id => { bookingSends.push(id);return {ok:true,status:'queued'}; },
   setTier: async (lead, tier) => { tiers.push({ lead, tier }); return /tori/i.test(lead) ? { ok: true, name: 'Tori' } : { ok: false, why: 'no lead named ' + lead }; },
 };
 const phone = mountMayaPhone(app, server, phoneDeps);
@@ -210,9 +212,9 @@ ok('the call is gone from the live count', stEnd.calls === 0);
   tw.send(JSON.stringify({ event: 'start', streamSid: 'MZ3', start: { callSid: 'CAOUT1', customParameters: { token: callToken(AUTH, 'CAOUT1', '+15104917540'), from: '+15104917540', callSid: 'CAOUT1' } } }));
   await until(() => ai.sockets.length === n0 + 1 && ai.got.slice(g0).some(m => m.type === 'response.create'));
   const su = ai.got.slice(g0).find(m => m.type === 'session.update');
-  ok('on Fromsa\'s side Maya is his secretary: the reason is in her brief, she opens with his name, and she has list_leads, note_lead, save_lead, end_call',
+  ok('on Fromsa\'s side Maya has lead and reviewable booking tools',
     !!su && /WHY YOU ARE CALLING: Fromsa asked for a test call from Admin\./.test(su.session.instructions) && /Hey Fromsa, it is Maya/.test(su.session.instructions) &&
-    su.session.tools.map(t => t.name).join(',') === 'find_lead,list_leads,note_lead,save_lead,set_tier,log_note,end_call' && !/[\u2014\u2013]/.test(su.session.instructions), su && su.session.tools.map(t => t.name).join(','));
+    su.session.tools.map(t => t.name).join(',') === 'find_lead,list_leads,preview_booking,send_booking,note_lead,save_lead,set_tier,log_note,end_call' && !/[\u2014\u2013]/.test(su.session.instructions), su && su.session.tools.map(t => t.name).join(','));
   const s3 = ai.sockets[n0].sock; const say = o => s3.send(JSON.stringify(o));
   const g1 = ai.got.length;
   say({ type: 'response.function_call_arguments.done', call_id: 'c_l', name: 'list_leads', arguments: JSON.stringify({ count: 2 }) });
@@ -224,6 +226,15 @@ ok('the call is gone from the live count', stEnd.calls === 0);
   await until(() => ai.got.slice(g2).some(m => m.type === 'conversation.item.create'));
   const no = JSON.parse(ai.got.slice(g2).find(m => m.type === 'conversation.item.create').item.output);
   ok('note_lead writes his words onto the lead', no.ok === true && notes.length === 1 && notes[0].note === 'call her Thursday', JSON.stringify([no, notes]));
+  const bookingTool=async(name,args)=>{const g=ai.got.length;say({type:'response.function_call_arguments.done',call_id:'book_'+g,name,arguments:JSON.stringify(args)});await until(()=>ai.got.slice(g).some(m=>m.type==='conversation.item.create'));return JSON.parse(ai.got.slice(g).find(m=>m.type==='conversation.item.create').item.output);};
+  const bp=await bookingTool('preview_booking',{query:'Nick'});
+  ok('booking is previewed to the owner before client delivery',bp.ok&&bp.text.includes('wix.to/wT2lSqE')&&bookingSends.length===0);
+  const denied=await bookingTool('send_booking',{preview_id:bp.preview_id,confirmed:true});
+  ok('booking cannot send without a spoken approval after the preview',denied.ok===false&&bookingSends.length===0);
+  say({type:'conversation.item.input_audio_transcription.completed',transcript:'Yes, send that exact booking link to Nick.'});
+  await wait(50);
+  const delivered=await bookingTool('send_booking',{preview_id:bp.preview_id,confirmed:true});
+  ok('spoken approval releases the exact preview once',delivered.ok&&bookingSends.length===1&&bookingSends[0]===bp.preview_id);
   let closed = false; tw.on('close', () => { closed = true; });
   const nl = leads.length;
   say({ type: 'response.function_call_arguments.done', call_id: 'c_e', name: 'end_call', arguments: '{}' });
@@ -248,7 +259,7 @@ ok('the call is gone from the live count', stEnd.calls === 0);
   const su = ai.got.slice(g0).find(m => m.type === 'session.update');
   ok('by caller id, not by his word: the session is the admin brief with the inbox tool and the snappier turn taking',
     !!su && /verified his number/.test(su.session.instructions) && /Hey Fromsa, it is Maya\. What do you need\?/.test(su.session.instructions) &&
-    su.session.tools.map(t => t.name).join(',') === 'find_lead,list_leads,note_lead,save_lead,set_tier,log_note,end_call' &&
+    su.session.tools.map(t => t.name).join(',') === 'find_lead,list_leads,preview_booking,send_booking,note_lead,save_lead,set_tier,log_note,end_call' &&
     su.session.audio.input.turn_detection.silence_duration_ms === 420, su && su.session.tools.map(t => t.name).join(','));
   const sk = ai.sockets[n0].sock; const say = o => sk.send(JSON.stringify(o));
   const beforeOwner=leads.length;

@@ -1,3 +1,18 @@
+SEPTEMBER 30: Ask before Chrome access
+[standing rule] Notify Fromsa and wait for explicit approval before each new Chrome access session. The MAYA and World of CEO profiles are separate; do not assume either sign-in or past approval covers the other. Do not use Chrome while he is working.
+[recorded] Root AGENTS.md and the current handoff preserve this rule for MAYA; ~/.codex/AGENTS.md preserves it for future Codex projects.
+
+SEPTEMBER 30: Verify recent MAYA ships and Admin logs
+[verified live] Frontend, Admin and Outbound HTML match commit 3168ded; remote branch c388619 is newer. Aesthetic Control is not served at its URL; new booking and signup-alert API routes are absent (404). Existing API is healthy.
+[verified local] Corrected packaging and all 16 non-browser release contract tests pass. No Chrome was used.
+[pending live] Cloud Build/Run logs and authenticated MAYA feedback entries require owner access. Push/deploy requires Fromsa's explicit request.
+
+SEPTEMBER 30: New signup alert and MAYA booking command
+[prepared] Fresh Wix Call back submissions alert Fromsa by text and voice, with durable per-channel deduplication and definite-failure retry. Existing scheduler runs the check; Admin has manual and foreground checks.
+[prepared] MAYA knows the exact owner-provided booking URL https://wix.to/wT2lSqE. SMS, voice and Admin preview the recipient and exact text before an explicit owner approval sends it.
+[prepared] Full call transcripts appear in Messages after the call. Aesthetic Control contracts remain passing locally.
+[pending live] Owner-authorized deployment; production scheduler, Twilio status, Aesthetic Control and real receipt tests. No client text was sent.
+
 SEPTEMBER 29: Correct typography counts
 [prepared] Replace exact-font counts with mapped role locations including JS templates.
 [prepared] Expand file/line evidence; unknown P2 remains unmapped, not falsely zero.

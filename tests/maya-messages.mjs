@@ -37,7 +37,9 @@ await store.outbound({ to: '646-996-6115', text: 'Hi Kristi, it\'s Mana Siyo. We
 ok('the first text asks, and the thread waits on the answer', (await store.consent('+16469966115')) === 'asked' && (await store.get('+16469966115')).name === 'Kristi Lugo');
 await store.inbound({ from: '+16469966115', text: 'Yes of course', sid: 'SM2' });
 ok('a reply that is not a no is consent; the thread counts one unread', (await store.consent('+16469966115')) === 'yes' && (await store.get('+16469966115')).unread === 1);
-await store.call({ number: '+16469966115', dir: 'out', seconds: 95, mode: 'client', summary: 'Thursday at three is perfect.' });
+await store.call({ number: '+16469966115', dir: 'out', seconds: 95, mode: 'client', summary: 'Thursday at three is perfect.',
+  transcript:Array.from({length:310},(_,i)=>({who:i%2?'maya':'caller',text:'Line '+i})) });
+ok('a call keeps its full text transcript in the Messages thread',(await store.get('+16469966115')).messages.at(-1).transcript.length===310);
 const list = await store.list();
 ok('the thread list carries name, unread and the last thing that happened', list.length === 1 && list[0].name === 'Kristi Lugo' && list[0].unread === 1 && list[0].last.kind === 'call' && list[0].last.seconds === 95, JSON.stringify(list));
 await store.markRead('+16469966115');

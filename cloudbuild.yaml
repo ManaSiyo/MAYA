@@ -36,6 +36,8 @@ steps:
         node tests/outbound.mjs
         node tests/crm-intelligence.mjs
         node tests/owner-crm.mjs
+        node tests/booking-link.mjs
+        node tests/lead-alerts.mjs
         node tests/profile-crm.mjs
         node tests/maya-mcp.mjs
         node tests/maya-feedback.mjs
