@@ -1,65 +1,81 @@
-# MAYA handoff — September 30, 2026
+# MAYA handoff — October 1, 2026
 
 ## Release status
 
-`maya-v2` and `origin/maya-v2` both point to `f1a36b5`. The live
-`/release.json` names that exact commit, published 2026-10-01 02:30:54 UTC.
-The live Aesthetic Control page opens, and its link appears near the top of
-Admin → Systems. Public `/api/healthz` reports a healthy `maya-api` with
-OpenAI, submissions, Drive and Stripe configured; configuration alone does
-not prove an end-to-end provider action. The repository's read-only live
-verification script passes all checks. Live `/verify.html` still shows one
-wall-hover warning because its selector was stale; the frontend actually has
-the hidden-until-hover rule. This false-positive checker is fixed locally.
+The last pushed `origin/maya-v2` is `f66e7c1`. Public `/release.json`
+confirms that exact full commit, published 2026-10-01 04:29:16 UTC
+(September 30, 9:29 p.m. Pacific). Public `/api/healthz` is healthy;
+OpenAI, submissions, Drive and Stripe report configured. This does not
+prove Gmail OAuth, Gemini inference, SMS or calls.
 
-Aesthetic Control Save was tested against production without changing any
-design value: it accepted the approved default configuration, `/api/design`
-returned that exact configuration, and an already-open Admin tab had the
-24px H1 and 18% glass tokens. The saved values apply without a code deploy:
-same-origin open tabs receive a BroadcastChannel update, and new page loads
-fetch `/api/design` without caching. Another browser needs a refresh. Changes
-to the editor, style runtime or menu markup still require a normal deploy.
+## Current prepared change
 
-The independent browser could not verify owner-only Gmail, Twilio delivery,
-booking approval, lead alerts, Cloud Scheduler or operational logs. Admin's
-Owner tools asked for owner sign-in. Fromsa explicitly approved one MAYA Chrome
-session. The Chrome UI reported that the user changed the app as owner checks
-started, so interaction stopped immediately; no owner-only state was read.
-Fresh permission and an idle window are required for another session. No real
-email, call or text was sent.
+Aesthetic Control now has H1–H4 and P1–P4. The old standalone technical
+P3 is merged into P1 while preserving monospace examples; old P4 pills
+become P3 and old P5 captions become P4. Existing saved settings migrate
+on read without a production write. The API accepts both old and new
+schemas so an already-open old editor can still save.
 
-## Local changes prepared for the next push
+Typography rows use 6px vertical padding and show role, sample and location.
+Each category has one Edit dropdown beside its heading and one settings
+summary on the right. Repeated per-row appearance/spacing copy is removed.
+Usage evidence, font comparison, status history and source inventory collapse.
+Settings panel separately controls the edit rectangle fill/rim/radius/padding.
+The review page starts centered; every role has a Centered/Left button with
+aria-pressed. Explicit role alignment applies to shared selectors only after
+Save. The populated table preview follows P1/P2/P3/P4 edits and alignment.
+Shared runtime URLs are bumped to v2 across all 11 served pages and Hosting
+now marks that runtime no-cache, preventing a week-old role mapping after deploy.
+No live design Save, provider configuration or push occurred.
 
-- `backend/status.html`: the existing Aesthetic Control link becomes a clear
-  glass quick link directly under the Systems checks. Its long helper line is
-  removed; the shared live glass tokens still control its finish.
-- `backend/verify.html`: match the actual `.community-card .cc-meta` selector
-  so a working wall no longer appears broken.
-- `tests/component-gallery.mjs` checks the quick link destination and shape.
-  `tests/app-regression.mjs` checks that the deploy checker recognizes the
-  frontend wall rule. No credential, billing or production environment change.
+Changed paths: aesthetics/aesthetic-control.html; gallery.js/gallery.css,
+overlay.js/style-reference.js and typography-usage.json in its support folder;
+aesthetics/ui/typography-controls.js; docs/server/design-config.mjs;
+tests/component-gallery.mjs, design-config.mjs, app-regression.mjs and
+typography-role-usage.py. Design/README/requests/fixes/handoff/commit review
+are updated in the same local commit. The other served HTML pages only change
+the shared runtime version; docs/firebase.json adds its no-cache rule and
+tests/design-contract.mjs verifies both.
 
-## Validation
+## Environment and validation
 
-Current `tests/component-gallery.mjs` and full `tests/app-regression.mjs`
-pass in isolated headless Chromium. `tests/verify-live.mjs` passes against
-production. The previous audit also passed all 17 non-browser release
-contracts, the frontend/Playground hands battery, CRM, Outbound and Canon UI
-browser suites, 55 fake-carrier message checks and transfer tests. None of
-these is proof of actual Gmail or carrier delivery. `tests/maya-phone.mjs`
-remains unrun locally because the optional `ws` test dependency is absent;
-Cloud Build runs it when that dependency installs. Temporary test symlinks
-were removed after testing.
+Use bundled Node at
+/Users/fromsa/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.
+Isolated headless Chromium is available at
+/private/tmp/maya-pw-browsers/chromium_headless_shell-1234/chrome-headless-shell-mac-arm64/chrome-headless-shell.
+It uses temporary test profiles, never Fromsa's Chrome. The temporary ESM
+loader /private/tmp/maya-oct1-loader.mjs resolves Playwright and Express/ws
+without adding repository dependencies. It is a local convenience, not a
+repository or production requirement. Browser/server tests need sandbox
+approval for macOS browser processes or loopback listeners.
 
-## Exact next step
+Passed: full app-regression including component-gallery/design contracts;
+design validation for old/new schemas, alignment and editor ranges;
+owner-crm and crm-intelligence fake-provider checks; owner-crm-ui Gmail/Gemini
+fixtures. Gallery checks cover legacy role conversion, single settings summary,
+center/left preview, housing updates, table data, Save/reload, shared Admin/
+frontend/Outbound application and seven widths (320–1920), including open
+settings dropdowns. Server smoke, role evidence audit, Outbound UI, CRM UI,
+CRM failure UI and Canon UI also pass. Syntax and whitespace
+checks are recorded in the commit review. No real mail, call or text sent.
 
-**Do not push without Fromsa's explicit request.** After the next push, check
-Cloud Build and `/release.json`, then confirm the glass quick link and corrected
-`/verify.html` warning live. With a newly approved, idle MAYA Chrome
-session, inspect owner-only Gmail connections, Scheduler/alert status, booking
-previews and operational logs without sending to anyone. A controlled real
-call/text test needs an explicitly chosen recipient. The signup-alert endpoint
-may send a real notification; do not probe it casually.
+## Open risks and exact next step
+
+**Do not push without Fromsa's explicit request.** Review the local editor,
+then push the prepared commit from GitHub Desktop when desired. Verify Cloud
+Build and release.json before treating editor changes as live. Live Save requires
+Admin auth and can change typography/alignment across shared text selectors;
+no production design changes were made in this session.
+
+Chrome permission notification was sent for a fresh MAYA session; no explicit
+approval has arrived, so Chrome was not accessed. Owner-authenticated Gmail
+connection readiness/mailboxes and a real Test Gemini response remain pending.
+After explicit approval and confirmation that the MAYA Chrome window is idle,
+inspect Systems → Owner tools and Outbound → Gmail. Read state and use the
+existing Test Gemini action; do not send email or reconnect/configure credentials
+without the owner handling those steps. Keep Worldofsiyo separate.
+Booking, Scheduler/alerts, operational logs and actual call/text receipt remain
+unverified, as in the previous handoff.
 
 ## Standing constraints and repository map
 
@@ -81,3 +97,7 @@ and hosting. Obsolete local material remains recoverable in ignored
 The approved booking URL is `https://wix.to/wT2lSqE`. Owner-controlled booking
 preview and alert code are in the deployed release but have not been verified
 end to end in production. Phone-driven invoice preview is not implemented.
+
+Local review URL: http://127.0.0.1:8767/aesthetics/aesthetic-control.html.
+A Python loopback-only server was started for review; Codex browser opening
+was queued. Restart with the bundled Python http.server if the session ends.

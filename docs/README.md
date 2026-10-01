@@ -24,7 +24,7 @@ Every note, the server and the rules live in `docs/`.
 Google project: `pro-maya`
 Repo: `ManaSiyo/MAYA` on GitHub, working folder `~/Desktop/MAYA-new`
 Live display version: **14.40**. On September 30, Hosting published
-`f1a36b5a52997f1f630ff471c1bf72f86e61d4f3` at 2026-10-01 02:30:54 UTC.
+`f66e7c13486f3d2ff260495ff0bbfb71b2514d4c` at 2026-10-01 04:29:16 UTC.
 The display version can stay the same across pushes; `/release.json` identifies
 the actual published commit. Check that endpoint before treating a push as live.
 

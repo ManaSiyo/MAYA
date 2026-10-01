@@ -1,3 +1,12 @@
+OCTOBER 1: Aesthetic Control repeated settings and excess spacing (LOCAL FIX)
+Each sample repeated category settings and Edit occupied its own glass row.
+Use one compact category header/dropdown/summary, reduce row padding to 6px,
+and expose the dropdown housing material separately. Remove the standalone
+technical paragraph role while preserving old saved settings. Add accessible
+alignment toggles and a responsive populated table preview. Full app and
+focused design/provider-fixture checks pass. Not pushed; live provider checks
+await a fresh explicit MAYA Chrome approval. No credentials/settings changed.
+
 SEPTEMBER 30, 2026: Newer GitHub commits not live (LOCAL FIX, LIVE OPEN)
 Live Hosting files are byte-for-byte from 3168ded even though release branch points to c388619. Live API lacks booking and signup-alert routes (404), while existing protected routes answer 401. Reproduced c388619's release-gate failure: server.js imports lead-alerts.mjs and booking-link.mjs but its Dockerfile omits them. The local Dockerfile fixes this; 16 non-browser release contracts pass. Aesthetic Control live URL falls back to the client homepage. Cloud Build/Run logs and Admin MAYA feedback entries remain unread because they require owner authentication; no Chrome, credentials, push or deployment were used.
 

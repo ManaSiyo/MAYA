@@ -80,3 +80,29 @@ h3,.controls label,.finish-choice{font-size:12px;font-weight:400}
 .save-bar{position:sticky;bottom:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px max(16px,calc((100vw - 1040px)/2));background:rgb(2 11 21 / .94);border-top:1px solid #ffffff33;backdrop-filter:blur(16px);font-size:12px}
 .save-bar button{min-width:100px;padding:9px 24px;border:1px solid #ffffff55;border-radius:100px;background:rgb(3 15 29 / .4);color:#fff;cursor:pointer;font:400 12px Jost,sans-serif}
 .save-bar button:disabled{opacity:.5;cursor:wait}
+
+/* Compact owner review. Shared page layout is unaffected by these rules. */
+body{text-align:center;line-height:1.4}
+.gallery-header nav,.controls,.preview-row,.review-fold>summary{justify-content:center}
+.preview-section{padding:14px}p{margin:6px auto 10px}details p{margin-inline:auto}
+.type-hierarchy{margin-top:12px}.type-group{padding:8px 0}.type-group-head{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;position:relative}
+.type-group-head .type-category{margin:0;font:400 14px var(--ui-font)}
+.type-editor{margin:0;padding:0;position:relative;background:transparent;border:0}
+.type-editor>summary{padding:3px 8px;font-size:10px;list-style:none;border:1px solid #ffffff33;border-radius:100px}
+.type-editor>summary::after{content:' ▾'}.type-editor>summary::-webkit-details-marker{display:none}
+.type-editor-fields{position:absolute;top:100%;left:50%;transform:translateX(-50%);z-index:5;display:flex;gap:8px;padding:var(--type-editor-padding,8px);border:1px solid rgb(255 255 255 / var(--type-editor-rim,.14));border-radius:var(--type-editor-radius,12px);background:linear-gradient(rgb(3 15 29 / var(--type-editor-fill,.3)),rgb(3 15 29 / var(--type-editor-fill,.3))),#020b15;box-shadow:0 4px 16px #0008}
+.type-editor label{margin:0;font-size:10px}.type-editor :is(input,select){min-width:0;width:70px;padding:4px;font-size:11px}
+.category-setting{margin-left:auto;font-size:11px;color:#aab5c4}
+.type-align{padding:3px 8px;border:1px solid #ffffff33;border-radius:100px;background:transparent;color:#aab5c4;font:10px Jost,sans-serif;cursor:pointer}
+.type-align[aria-pressed=true]{color:#fff;border-color:#adcdf8}
+.type-row{padding:6px 0;gap:12px}.type-setting{display:block;font-size:10px;line-height:1.4;color:#aab5c4}.type-columns{padding:6px 0;font-size:10px}
+.type-example{justify-content:center}.usage-evidence{margin:4px 0}.usage-evidence p{margin:2px auto}.usage-note{margin:6px auto}
+.housing-editor{margin:8px 0}.housing-editor label{display:inline-grid;gap:4px;margin:4px 6px;font-size:10px}.housing-editor input{width:60px;padding:4px;background:#071522;color:#fff;border:1px solid #ffffff44;border-radius:6px}
+.text-guide th,.text-guide td{text-align:center;padding:8px 4px}.text-guide .maya-pill{display:inline-flex;justify-content:center;padding:3px 8px}.text-guide+small{display:block;margin-top:6px}
+.finish-numbers{text-align:center}.state-sample{justify-items:center}.finish-controls label,.overlay-controls>label{justify-content:center}.source-style-list>div{justify-content:center}.page-link{padding:8px 0}.review-fold-body{padding-top:10px}
+.gallery-header h1::before{content:'H1 · ';font:400 10px Jost,sans-serif;color:#aab5c4}
+.preview-section h2::before{content:'H2 · ';font:400 10px Jost,sans-serif;color:#aab5c4}
+.preview-section h3:not(.type-category)::before{content:'H3 · ';font:400 10px Jost,sans-serif;color:#aab5c4}
+@media(max-width:700px){.category-setting{margin-left:0;flex-basis:100%}.type-row{grid-template-columns:minmax(0,1fr);gap:4px}.type-editor-fields{left:0;transform:none}.type-setting{grid-column:auto}.type-columns{display:none}}
+.preview-section h2{font-size:20px}.preview-section h3:not(.type-category){font-size:16px}.text-guide th{width:25%}
+@media(max-width:700px){.type-editor{position:static}.type-editor-fields{left:50%;transform:translateX(-50%);max-width:100%}}

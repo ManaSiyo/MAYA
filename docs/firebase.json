@@ -145,6 +145,10 @@
         ]
       },
       {
+        "source": "/aesthetics/ui/typography-controls.js",
+        "headers": [{"key": "Cache-Control", "value": "no-cache"}]
+      },
+      {
         "source": "/aesthetics/ui/maya-canon.css",
         "headers": [
           {

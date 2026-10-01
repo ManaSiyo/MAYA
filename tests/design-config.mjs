@@ -15,3 +15,8 @@ for(const bad of [
  {...good,extra:'unapproved'}
 ])assert.equal(validDesign(bad),false);
 console.log('Design validation passed: hierarchy, even sizes, weight cap, fixed colors and numeric glass.');
+
+const compact=structuredClone(good);compact.type.P3=compact.type.P4;compact.type.P4=compact.type.P5;delete compact.type.P5;
+compact.type.P1.align='center';compact.editor={fill:30,rim:14,radius:12,padding:8};
+assert.equal(validDesign(compact),true);
+for(const patch of [{editor:{...compact.editor,padding:21}},{editor:{...compact.editor,fill:'red'}},{type:{...compact.type,P1:{...compact.type.P1,align:'right'}}}])assert.equal(validDesign({...compact,...patch}),false);

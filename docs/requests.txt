@@ -1,3 +1,10 @@
+OCTOBER 1: Compact Aesthetic Control and verify providers
+[done locally] H1–H4/P1–P4, old technical P3 merged into P1, old P4/P5 mapped to P3/P4. Legacy saved designs remain readable and older editors can still save.
+[done locally] One Edit dropdown beside each category, one right-side settings summary, 6px sample-row padding, shorter copy and collapsed references.
+[done locally] Independent edit-panel fill/border/corner/padding controls, centered review, Centered/Left buttons and populated responsive table preview. Save/reload verified with fixtures.
+[verified local] Full app regression, design schemas, owner CRM, Gmail OAuth/isolation and Vertex Gemini fake-provider checks pass.
+[pending live] Chrome permission notification sent; no explicit approval yet. No Chrome accessed. Owner Gmail connections and real Gemini inference remain unchecked. No push or live design Save.
+
 SEPTEMBER 30: Summarize the pending push for continuity
 [done locally] Added a pre-push checkpoint to AI-HANDOFF.md with the failed release cause, pending commits, live Chrome evidence, local validation, and exact post-push checks. Fromsa plans to push himself; Codex did not push.
 

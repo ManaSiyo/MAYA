@@ -2688,5 +2688,9 @@ ok('Outbound uses the Admin background and functioning drawer',outboundRevampUI.
 ok('Outbound syncs real workbook campaigns and reviews drafts in Gmail',outboundRevampJS.includes("api('/sheets/sync'")&&outboundRevampJS.includes('mail.google.com/mail/?view=cm'));
 const typeUsage=JSON.parse(readFileSync(join(ROOT,'aesthetics/aesthetic-control/typography-usage.json'),'utf8'));
 ok('Typography role counts include real H1 and generated Admin numbers',typeUsage.categories.H1.locations.some(x=>x.id==='client-name-modal-title') && typeUsage.categories.H1.locations.some(x=>x.id==='brand-title') && typeUsage.categories.H4.roles.dashboard.count>=2 && typeUsage.categories.P2.count>0);
+const compactGallery=readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.js'),'utf8');
+ok('Aesthetic Control uses eight roles with one compact settings dropdown per category',compactGallery.includes("technical:'P1',pill:'P3',caption:'P4'") && compactGallery.includes("head.append(edit)") && !compactGallery.includes('type-appearance'));
+ok('Aesthetic Control exposes centered alignment with a populated table preview',compactGallery.includes("align.setAttribute('aria-pressed'") && compactGallery.includes("guide.id='table-preview'") && compactGallery.includes('data-preview-category="P1"'));
+ok('Aesthetic Control saves the settings housing separately from section glass',compactGallery.includes('editor:editorSettings') && compactGallery.includes('input.dataset.editorField=key'));
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

@@ -3,7 +3,7 @@ from pathlib import Path
 import re,json
 root=Path(__file__).resolve().parent.parent
 files=sorted(p for folder in ['frontend','backend','playground','aesthetics'] for p in (root/folder).rglob('*') if p.suffix in ['.html','.js'] and 'aesthetics/aesthetic-control' not in str(p) and p.name!='aesthetic-control.html' and 'aesthetics/ui/components' not in str(p))
-categories={k:{'count':0,'locations':[],'roles':{}} for k in ['H1','H2','H3','H4','P1','P2','P3','P4','P5']}
+categories={k:{'count':0,'locations':[],'roles':{}} for k in ['H1','H2','H3','H4','P1','P2','P3','P4']}
 for path in files:
  text=path.read_text()
  # Preserve source line numbers. Exclude comments, retain JS-rendered markup.
@@ -20,9 +20,9 @@ for path in files:
   elif path.name=='status.html' and tag=='div' and 'v' in cls and ('bl-step' in context or 'bl-tile' in context):category,role='H4','dashboard'
   elif tag=='strong' and ('class="stat"' in context or 'class="affiliate-stat"' in context):category,role='H4','dashboard'
   elif tag=='span' and ('class="stat"' in context or 'class="affiliate-stat"' in context):category,role='P2','label'
-  elif tag in ['code','pre']:category,role='P3','technical'
-  elif tag=='small' or cls & {'k','caption','bub-when','brand-status'}:category,role='P5','caption'
-  elif tag in ['button','label'] or cls & {'status-pill','top-btn','caps'}:category,role='P4','pill'
+  elif tag in ['code','pre']:category,role='P1','technical'
+  elif tag=='small' or cls & {'k','caption','bub-when','brand-status'}:category,role='P4','caption'
+  elif tag in ['button','label'] or cls & {'status-pill','top-btn','caps'}:category,role='P3','pill'
   elif tag=='p':category,role='P1','paragraph'
   elif tag in ['td','th']:category,role='P1','table'
   elif cls & {'modal-hint','model-group','msg-main','note'}:category,role='P1','log' if 'msg-main' in cls else 'model' if 'model-group' in cls else 'paragraph'
@@ -36,7 +36,7 @@ for path in files:
   categories[category]['locations'].append(entry)
  # JS createElement headings/paragraphs are separate authored locations.
  for m in re.finditer(r'createElement\(\s*[\'"](h[1-6]|p|small|code|pre|button|label|td|th)[\'"]\s*\)',clean):
-  tag=m[1];category='H1' if tag=='h1' else 'H3' if tag.startswith('h') else 'P3' if tag in ['code','pre'] else 'P5' if tag=='small' else 'P4' if tag in ['button','label'] else 'P1';role='headline' if tag=='h1' else 'subheadline' if tag.startswith('h') else 'technical' if tag in ['code','pre'] else 'caption' if tag=='small' else 'pill' if tag in ['button','label'] else 'paragraph'
+  tag=m[1];category='H1' if tag=='h1' else 'H3' if tag.startswith('h') else 'P1' if tag in ['code','pre'] else 'P4' if tag=='small' else 'P3' if tag in ['button','label'] else 'P1';role='headline' if tag=='h1' else 'subheadline' if tag.startswith('h') else 'technical' if tag in ['code','pre'] else 'caption' if tag=='small' else 'pill' if tag in ['button','label'] else 'paragraph'
   categories[category]['locations'].append({'page':str(path.relative_to(root)),'line':clean[:m.start()].count('\n')+1,'tag':tag,'id':None,'class':'','reason':'JavaScript-created '+tag,'role':role,'snippet':m[0]})
  # The second bottom-line number is assembled with an interpolated class and
  # cannot be parsed as a static opening tag. Count its authored template once.

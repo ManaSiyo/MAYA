@@ -1,7 +1,7 @@
 // Review containers are a separate material layer from the action pills.
 export function setupOverlay(comparison){
  const defaults={fill:18,rim:22,blur:22,saturation:180},values={...defaults};let enabled=true;
- const panel=document.createElement('details');panel.className='overlay-controls';panel.innerHTML='<summary>Information panels · overlay settings</summary><p>The large panels behind Typography, Icons and this review. Adjust this layer separately from the pills.</p><label><input id="overlay-enabled" type="checkbox" checked> Show panel glass</label><div class="finish-sliders"></div>';
+ const panel=document.createElement('details');panel.className='overlay-controls';panel.innerHTML='<summary>Panels</summary><p>Section backgrounds.</p><label><input id="overlay-enabled" type="checkbox" checked> Show panel glass</label><div class="finish-sliders"></div>';
  comparison.parentElement.querySelector('.finish-controls').after(panel);
  const fields=[];
  for(const [key,label,max,unit] of [['fill','Panel fill',100,'%'],['rim','Panel rim',100,'%'],['blur','Panel blur',40,'px'],['saturation','Panel saturation',200,'%']]){

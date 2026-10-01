@@ -1,22 +1,26 @@
-[Codex] Repair MAYA release gate and expose the published build
+[Codex] Compact Aesthetic Control and add alignment previews
 
-The latest pushed Cloud Build stopped before Cloud Run or Firebase Hosting:
-its card-editor browser test still expected font weight 600 after the approved
-typography cap became 400. Align that assertion with the actual design rule.
+Reduce typography to H1–H4/P1–P4, merging the standalone technical role into
+P1 and migrating old pill/caption settings without writing production data.
+Keep legacy API saves compatible with already-open editors.
 
-Admin release notes now include September 30/29/28 changes. Cloud Build stamps
-the deployed commit and time into release.json and the three main HTML pages.
-Admin shows the published commit, while open Admin and client tabs detect a new
-commit even when the display version stays 14.40.
+Move Edit beside each category, show one settings summary, remove repeated
+row settings and reduce sample padding to 6px. Collapse technical references.
+Add separate editor housing fill/border/corner/padding controls, centered
+review and per-role Centered/Left buttons, plus a populated table preview.
+Save preserves alignment and housing settings. Shared typography runtime
+URLs move to v2 on all 11 served pages; Hosting revalidates the runtime.
 
-Validation: the public GitHub Cloud Build check identifies the one failed
-assertion and confirms later deploy steps were queued. Sixteen non-browser
-release contracts, release-stamp, Admin, design and container checks pass
-locally; edited inline scripts parse. The browser battery cannot run locally
-without Playwright. An owner-authorized live Admin check confirmed Sep 16
-release notes alongside a Sep 30 lead and same-afternoon feedback logs. Chrome
-control stopped when Fromsa took focus. No live messages, credentials or push.
+Validation: full app-regression; component-gallery with open-dropdown checks
+at seven widths, legacy migration, save/reload and shared-page application;
+design-config/design-contract; typography source evidence; server smoke;
+CRM intelligence and owner CRM unit/UI fixtures; Outbound UI, CRM UI,
+CRM failure UI and Canon UI. JavaScript syntax and git diff --check pass.
+Browser tests use isolated temporary headless Chromium profiles.
 
-Next: push this commit only when Fromsa explicitly asks, then confirm Google
-Cloud Build succeeds, release.json names the new commit, Admin shows its notes,
-and protected MAYA logs and booking/alert delivery work in an owner session.
+Last pushed/live release verified as f66e7c1 with public API healthy.
+Gmail and Gemini passed fake-provider routing/OAuth/isolation/UI checks only.
+Live mailbox access and real Gemini inference await explicit MAYA Chrome
+approval. No user Chrome, credentials, billing, production design Save,
+email, call, text, push or deployment was used. Review the local preview,
+then owner Push is the next release step; verify Cloud Build/release.json.
