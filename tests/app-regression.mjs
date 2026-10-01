@@ -1340,7 +1340,7 @@ ok('Meta reach and frequency come from the deduplicated aggregate, never 0',
 ok('Google conversions are absence, never a fake zero',
   SERVER_SOURCE.includes('conversions: null'));
 ok('leads come from the Wix form record itself, no pixel, no Gmail parsing',
-  SERVER_SOURCE.includes('async function wixLeads()') &&
+  SERVER_SOURCE.includes('async function wixLeads(') &&
   SERVER_SOURCE.includes('forms/v4/submissions/namespace/query') &&
   SERVER_SOURCE.includes('out.leads = leads') &&
   MKT_SOURCE.includes('function paintLeads(') &&

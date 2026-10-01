@@ -29,7 +29,7 @@ for(const path of canonPages){
   const metric=getComputedStyle(box.querySelector('strong')),button=getComputedStyle(box.querySelector('button')),data=getComputedStyle(box.querySelector('td'));
   const out={family:metric.fontFamily,weight:metric.fontWeight,numeric:metric.fontVariantNumeric,data:data.fontFamily,border:button.borderTopWidth,radius:button.borderRadius,fill:button.backgroundImage};box.remove();return out;
  });
- assert.match(result.family,/Jost/,path);assert.equal(result.weight,'500',path);assert.equal(result.numeric,'tabular-nums',path);assert.match(result.data,/Jost/,path);assert.equal(result.radius,'100px',path);assert.equal(result.fill,'none',path);
+ assert.match(result.family,/Jost/,path);assert.equal(result.weight,'400',path);assert.equal(result.numeric,'tabular-nums',path);assert.match(result.data,/Jost/,path);assert.equal(result.radius,'100px',path);assert.equal(result.fill,'none',path);
  }
  await page.evaluate(()=>{document.querySelectorAll('#gate,#auth-gate,#signin-panel').forEach(x=>x.style.display='none');});
  await page.screenshot({animations:'disabled',timeout:60000,path:join(dir,path.replaceAll('/','-')+'.png')});

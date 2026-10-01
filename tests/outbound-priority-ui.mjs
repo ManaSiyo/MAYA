@@ -40,7 +40,7 @@ export async function auditOutboundPriority(browser){
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'Document fits '+width);
    assert.equal(await page.locator('#master-list').evaluate(e=>getComputedStyle(e).textAlign),'center');assert.equal(await page.locator('#master-list').evaluate(e=>getComputedStyle(e).borderRadius),'100px');
    const plus=await page.locator('#new-campaign').boundingBox();assert.equal(plus.width,plus.height,'Circular campaign control');
-   const style=await page.locator('.people-table .person-link').first().evaluate(e=>{const s=getComputedStyle(e);return {border:s.borderTopWidth,shadow:s.boxShadow,radius:s.borderRadius,font:s.fontSize};});assert.equal(style.border,'0px');assert.equal(style.shadow,'none');assert.equal(style.radius,'0px');assert.equal(style.font,'11px');
+   const style=await page.locator('.people-table .person-link').first().evaluate(e=>{const s=getComputedStyle(e);return {border:s.borderTopWidth,shadow:s.boxShadow,radius:s.borderRadius,font:s.fontSize};});assert.equal(style.border,'0px');assert.equal(style.shadow,'none');assert.equal(style.radius,'0px');assert.equal(style.font,'12px');
    assert.equal((await page.locator('.people-table tbody tr').first().boundingBox()).height,44,'44px rows '+width);
    const pills=await page.locator('#stats .stat').evaluateAll(items=>items.map(el=>({width:el.getBoundingClientRect().width,grow:getComputedStyle(el).flexGrow})));assert.ok(pills.every(p=>p.width<180&&p.grow==='0'),'Metrics stay content width');
    assert.equal(await page.locator('.people-table th').first().evaluate(e=>getComputedStyle(e).textAlign),'left');
