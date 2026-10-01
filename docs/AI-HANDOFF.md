@@ -7,8 +7,9 @@ new access session** to either of his Chrome profiles. Never treat a prior yes,
 silence, or a sign-in on the MAYA profile as permission for World of CEO (or
 vice versa). Do not use Chrome while he is working in it. This is recorded in
 root `AGENTS.md` for future MAYA tasks and `~/.codex/AGENTS.md` for future
-Codex projects. The current release audit used local
-tools and read-only APIs, not Chrome.
+Codex projects. The initial release audit used local tools and read-only APIs.
+On September 30 Fromsa explicitly authorized one MAYA Chrome session for live
+Admin verification. That permission does not carry to another session.
 
 ## Live release audit — September 30
 
@@ -41,19 +42,21 @@ Admin shows that commit above the notes after deployment. The same stamped
 commit lets Admin and Frontend detect a new build even with an unchanged
 display version, while their existing active-work safeguards remain. The
 release-stamp test, Admin contract and container contract pass. Full `app-regression.mjs`
-could not start locally because Playwright is absent; no Chrome was used.
+could not start locally because Playwright is absent. These fixes are saved in
+one local commit ahead of `origin/maya-v2`; nothing was pushed.
 
 Admin's MAYA Logs tab calls `/api/admin/maya-features` and sorts real feedback
-newest first. The live endpoint is authenticated; its entries and Cloud Run
-logs were not readable without an owner session. The latest Cloud Build log
-was read from its public GitHub check. Do not present protected Admin entries
-or Cloud Run logs as checked. Next step: only after Fromsa explicitly requests
-a push, publish the prepared local commit, verify Build/Run/Hosting and the new
-API routes, then inspect authenticated Admin logs and actual notification
-delivery. Owner
-permission to inspect MAYA Chrome was requested but is no longer needed for
-the build failure: GitHub's public check supplied the failing step and test.
-Do not open Chrome without a fresh explicit answer.
+newest first. In the owner-authorized MAYA Chrome session, the live Admin page
+still opened Recent Changes with Sep 16 first. Its Lead Station displayed a
+Sep 30 lead, and Logs displayed entries from that afternoon. This confirms
+live data can change while Hosting serves old page code; the Logs tab is an
+owner-feedback list, not Cloud Run operational logs. Chrome control stopped
+when Fromsa took focus; do not resume without a new explicit invitation. The
+latest Cloud Build log was read from its public GitHub check. Cloud Run logs
+and actual notification delivery remain unchecked. Next step: only after
+Fromsa explicitly requests a push, publish the local release fix, verify Build/Run/Hosting
+and the new API routes, then test actual notification delivery. Do not open
+Chrome without a fresh explicit answer for a later session.
 
 ## Current request: missed signup call and owner-approved booking link
 

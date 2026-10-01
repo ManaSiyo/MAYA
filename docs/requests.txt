@@ -4,8 +4,9 @@ SEPTEMBER 30: Ask before Chrome access
 
 SEPTEMBER 30: Verify recent MAYA ships and Admin logs
 [verified live] Frontend, Admin and Outbound HTML match bytes shared by 149314e–3168ded; remote branch f38b2fe is newer. Aesthetic Control is not served at its URL; booking-pending returns 404. Existing API is healthy. Signup-alert POST was not retried after automatic safety rejection.
-[verified local] Corrected packaging and all 16 non-browser release contract tests pass. No Chrome was used.
-[pending live] Cloud Build/Run logs and authenticated MAYA feedback entries require owner access. Push/deploy requires Fromsa's explicit request.
+[verified local] Corrected packaging and all 16 non-browser release contract tests pass.
+[verified live] A later owner-authorized Chrome session showed Admin Logs had same-afternoon feedback entries and a Sep 30 lead while the page code still listed Sep 16 changes first. Chrome control stopped when Fromsa took focus.
+[pending live] Cloud Run operational logs and actual call/text delivery remain unchecked. Push/deploy requires Fromsa's explicit request.
 
 SEPTEMBER 30: New signup alert and MAYA booking command
 [prepared] Fresh Wix Call back submissions alert Fromsa by text and voice, with durable per-channel deduplication and definite-failure retry. Existing scheduler runs the check; Admin has manual and foreground checks.

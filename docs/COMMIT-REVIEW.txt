@@ -13,7 +13,9 @@ Validation: the public GitHub Cloud Build check identifies the one failed
 assertion and confirms later deploy steps were queued. Sixteen non-browser
 release contracts, release-stamp, Admin, design and container checks pass
 locally; edited inline scripts parse. The browser battery cannot run locally
-without Playwright. No Chrome access, live messages, credentials or push.
+without Playwright. An owner-authorized live Admin check confirmed Sep 16
+release notes alongside a Sep 30 lead and same-afternoon feedback logs. Chrome
+control stopped when Fromsa took focus. No live messages, credentials or push.
 
 Next: push this commit only when Fromsa explicitly asks, then confirm Google
 Cloud Build succeeds, release.json names the new commit, Admin shows its notes,
