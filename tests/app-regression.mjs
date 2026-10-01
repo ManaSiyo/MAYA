@@ -309,6 +309,10 @@ ok('voice extraction carries the initiating project context', r.voiceCarriesCont
 ok('stale revision blocks a destructive flush', r.staleFlushBlocked);
 ok('community posts use the captured project id', INDEX_SOURCE.includes('pid: projectId'));
 ok('update watchdog respects a cancelled sign out', INDEX_SOURCE.includes('canReload = (await window.mayaSignOut()) !== false'));
+ok('frontend and Admin detect new commits even when the display version stays unchanged',
+  INDEX_SOURCE.includes('build[1] !== _RUNNING_BUILD') &&
+  MAP_SOURCE.includes('build[1] !== RUN_BUILD') &&
+  [INDEX_SOURCE, MAP_SOURCE].every(source => source.includes('<meta name="maya-build" content="local">')));
 ok('project deletion batches wall posts before Storage cleanup',
   INDEX_SOURCE.indexOf('communityDocs.forEach(ref => batch.delete(ref))') < INDEX_SOURCE.indexOf('this._cleanupDeletedAssets(id, paths, uid)'));
 ok('Storage cleanup is pinned to the deleting account',
@@ -2446,7 +2450,10 @@ ok('v14.05: the door is reachable from the public domain: /mcp is rewritten to C
   JSON.stringify(HOSTING.hosting.rewrites).includes('"source":"/mcp"') &&
   SERVER_SOURCE.includes("app.post(['/mcp', '/api/mcp']") &&
   SERVER_SOURCE.includes("app.get(['/mcp', '/api/mcp']"));
-ok('v14.03: the changelog is stamped with the shipping version, so a push cannot leave it stale',
+ok('Admin release notes name the latest entry and show the published Hosting commit',
+  (MAP_SOURCE.match(/id="changes-fold"[^>]*data-latest="(\d{4}-\d{2}-\d{2})[^\"]*"/) || [])[1] === '2026-09-30' &&
+  MAP_SOURCE.includes('<div class="chg"><b>Sep 30</b>Booking links') &&
+  MAP_SOURCE.includes("fetch('/release.json',{cache:'no-store'})") &&
   (MAP_SOURCE.match(/id="changes-fold"[^>]*data-version="([0-9.]+)"/) || [])[1] === versionOf(MAP_SOURCE));
 ok('v14.03: Admin hamburger is the app\'s pill to the pixel (shadow, hover, 44px target)',
   MAP_SOURCE.includes('box-shadow:inset 0 1px 1px rgba(255,255,255,0.28), inset 0 -1px 1px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.22)}') &&

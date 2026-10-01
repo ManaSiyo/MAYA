@@ -1,12 +1,20 @@
-[Codex] Consolidate Aesthetic Control and clean MAYA repository
+[Codex] Repair MAYA release gate and expose the published build
 
-Aesthetic Control is a standalone HTML page in `aesthetics/`, linked from Admin.
-Its scripts and generated inventories moved beside it, while `docs/design.md`
-is the sole written specification. The former preview URL still resolves through
-Firebase Hosting. Retired audits, duplicate Claude instructions, long histories
-and dormant research moved to local `_to_delete/` with a restoration map. Root
-build files, active Playground and tests remain at their required paths.
+The latest pushed Cloud Build stopped before Cloud Run or Firebase Hosting:
+its card-editor browser test still expected font weight 600 after the approved
+typography cap became 400. Align that assertion with the actual design rule.
 
-Validation: design contract, role audit, source inventory, container contract,
-seven-width gallery browser test and full app regression passed locally.
-Production Save remains unverified until an owner-requested push. No push made.
+Admin release notes now include September 30/29/28 changes. Cloud Build stamps
+the deployed commit and time into release.json and the three main HTML pages.
+Admin shows the published commit, while open Admin and client tabs detect a new
+commit even when the display version stays 14.40.
+
+Validation: the public GitHub Cloud Build check identifies the one failed
+assertion and confirms later deploy steps were queued. Sixteen non-browser
+release contracts, release-stamp, Admin, design and container checks pass
+locally; edited inline scripts parse. The browser battery cannot run locally
+without Playwright. No Chrome access, live messages, credentials or push.
+
+Next: push this commit only when Fromsa explicitly asks, then confirm Google
+Cloud Build succeeds, release.json names the new commit, Admin shows its notes,
+and protected MAYA logs and booking/alert delivery work in an owner session.

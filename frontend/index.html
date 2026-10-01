@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Maya · Mana Siyo</title>
 <meta name="maya-version" content="14.40">
+<meta name="maya-build" content="local">
 <!-- v11.35: real icons, favicon/home-screen requests previously fell through
      the SPA rewrite and downloaded the whole app HTML as the "icon". -->
 <link rel="icon" type="image/png" sizes="48x48" href="/aesthetics/ui/favicon.png">
@@ -6775,18 +6776,20 @@ function brandTitleClick() {
 
 
 // ════════════════════════════════════════════════════════════
-// v11.46: UPDATE WATCHDOG, when a new MAYA version is deployed, this tab
+// UPDATE WATCHDOG: when a new MAYA build is deployed, this tab
 // signs the user out and reloads so nobody keeps running stale code against
 // fresh data (the "little glitchiness" fix). Checks every 5 minutes and
 // whenever the tab comes back into focus.
 // ════════════════════════════════════════════════════════════
 const _RUNNING_VERSION = (document.querySelector('meta[name="maya-version"]') || {}).content || '';
+const _RUNNING_BUILD = (document.querySelector('meta[name="maya-build"]') || {}).content || '';
 let _updateReloading = false;
 async function _checkForUpdate() {
   if (_updateReloading || !_RUNNING_VERSION) return;
   try {
     const t = await (await fetch('/?uv=' + Date.now(), { cache: 'no-store' })).text();
     const m = t.match(/maya-version" content="([0-9.]+)"/);
+    const build = t.match(/maya-build" content="([0-9a-f]{40})"/);
     // v12.7: only reload for a version that is genuinely NEWER. It used to
     // reload on ANY difference, so while two server versions were briefly live
     // during a deploy a tab could see the older one, sign out, reload, see the
@@ -6799,7 +6802,7 @@ async function _checkForUpdate() {
       }
       return false;
     };
-    if (m && _newer(m[1], _RUNNING_VERSION)) {
+    if ((build && build[1] !== _RUNNING_BUILD) || (m && _newer(m[1], _RUNNING_VERSION))) {
       // v11.48: never yank the rug mid-consultation, retry in a minute.
       if ((typeof isListening !== 'undefined' && isListening) ||
           (typeof isThinking  !== 'undefined' && isThinking) ||
@@ -6809,7 +6812,7 @@ async function _checkForUpdate() {
         setTimeout(_checkForUpdate, 60000);
         return;
       }
-      console.log('[maya] new version deployed (' + m[1] + '), signing out & refreshing');
+      console.log('[maya] new build deployed, signing out & refreshing');
       let canReload = true;
       try { if (window.mayaSignOut) canReload = (await window.mayaSignOut()) !== false; } catch (_) { canReload = false; }
       if (!canReload) {

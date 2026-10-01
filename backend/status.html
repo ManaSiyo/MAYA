@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAYA Admin</title>
 <meta name="maya-version" content="14.40">
-<!-- v13.6: keep this number in step with index.html's maya-version.
-     A version change signs the map out on load, per Fromsa: every deploy
-     must be unmistakable. The regression test asserts the two match. -->
+<meta name="maya-build" content="local">
+<!-- Keep the display version in step with the app. Cloud Build stamps
+     maya-build with the published commit so same-number pushes are visible. -->
 <script>
 const IS_AFFILIATES = location.pathname === '/affiliates.html';
 if (IS_AFFILIATES) {
@@ -16,7 +16,9 @@ if (IS_AFFILIATES) {
 }
 
 try {
-  const _vNow = (document.querySelector('meta[name="maya-version"]') || {}).content || '';
+  const _buildNow = (document.querySelector('meta[name="maya-build"]') || {}).content || '';
+  const _vNow = ((document.querySelector('meta[name="maya-version"]') || {}).content || '') +
+    (/^[0-9a-f]{40}$/.test(_buildNow) ? '@' + _buildNow : '');
   const _vSeen = localStorage.getItem('maya_seen_version_map');
   if (_vSeen && _vSeen !== _vNow) {
     localStorage.removeItem('maya_admin_tok');
@@ -443,6 +445,8 @@ try {
              backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
              box-shadow:inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.18);
              padding:12px 18px;text-align:center}
+  .release-stamp{padding:4px 0 9px;color:var(--dim);font:300 var(--maya-text-caption) var(--maya-font-ui)}
+  .release-stamp a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
   .chg{padding:7px 0;font-size:var(--maya-text-body);color:var(--dim);line-height:1.5;border-bottom:var(--maya-hairline) solid rgba(255,255,255,0.07)}
   .chg:last-child{border-bottom:0}
   .chg b{color:var(--ink);font-weight:400;margin-right:8px;font-family:var(--maya-font-ui);font-size:9.5px;
@@ -1125,9 +1129,13 @@ if (IS_AFFILIATES) {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-09-16e" data-version="14.40">
+  <details class="fold" id="changes-fold" data-latest="2026-09-30a" data-version="14.40">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
   <div class="fold-body changelog">
+    <div class="release-stamp" id="release-stamp" hidden></div>
+    <div class="chg"><b>Sep 30</b>Booking links now have a recipient and message preview before owner approval; call transcripts appear in Messages. Signup alert checks were added. Scheduled delivery and carrier receipt still need live verification.</div>
+    <div class="chg"><b>Sep 29</b>Aesthetic Control is the shared typography and glass editor, accessible from Systems. Its Save control applies the design across pages.</div>
+    <div class="chg"><b>Sep 28</b>Outbound gained priority and follow-up views, Sheet-based history and column filters. Systems gained Gemini usage and owner CRM controls.</div>
     <div class="chg"><b>Sep 16</b>The audit. Everything green on both machines: the voice battery on both surfaces, the regression, the contract, the phone and messaging checks; the live pages arrive compressed in about a third of a second. Two small fixes from reading the new code with a hostile eye: a note from Maya's client call finds the lead by phone number when the lead has no name yet, and a thread learns the name Maya heard on the call the moment she saves it.</div>
     <div class="chg"><b>Sep 16</b>Messages. The drawer thinks in tabs now, Systems and Messages, and Messages is a phone: one thread per number, texts both ways from the studio number, every call Maya took or placed written into the same thread, an unread badge on the tab, and a composer at the bottom that texts as Mana Siyo. The first text to a number is the one that asks if it is okay to text them; nothing else goes out until they answer, and STOP closes the thread to texts for good. In the Lead Station the phone icon asks Maya to call the lead for you, in her voice, about whatever you type in one line, and the new chat icon opens their thread. Texts go live the day the carrier registration clears; calls work today.</div>
     <div class="chg"><b>Sep 16</b>The Lead Station, trimmed. It is the Call back form from manasiyo.com/design only now, no other forms; Last Quote is gone, the tier under the name is what they went with, and Maya sets it by voice, in Admin or on the phone: "Kristi went with signature". The frozen header covers the top of the box so rows never show through above it, the name column is narrower, and the phone line no longer makes "Caller" rows out of transcripts: a lead is what Maya saved by name.</div>
@@ -1407,6 +1415,25 @@ async function markFeatureDone(btn){
     if(r.ok) rowEl.classList.toggle('done',!undone);
   }catch(_){ }
 }
+// Show the commit actually published by Hosting; GitHub/Vercel success alone
+// does not mean this site's Firebase release completed.
+(async function _publishedRelease(){
+  const host=document.getElementById('release-stamp');
+  if(!host)return;
+  try{
+    const response=await fetch('/release.json',{cache:'no-store'});
+    if(!response.ok)return;
+    const release=await response.json();
+    if(!/^[0-9a-f]{40}$/.test(release.commit)||Number.isNaN(Date.parse(release.publishedAt)))return;
+    const date=new Intl.DateTimeFormat('en-US',{dateStyle:'medium',timeStyle:'short',timeZone:'America/Los_Angeles'}).format(new Date(release.publishedAt));
+    const link=document.createElement('a');
+    link.href='https://github.com/ManaSiyo/MAYA/commit/'+release.commit;
+    link.target='_blank';link.rel='noopener';
+    link.textContent='Published '+date+' · '+release.commit.slice(0,7);
+    host.replaceChildren(link);host.hidden=false;
+  }catch(_){ }
+})();
+
 // v12.8: light the green dot when the newest entry has not been read on this
 // device, and put it out the moment the section is opened.
 (function _changesDot(){
@@ -3853,12 +3880,12 @@ setInterval(()=>{ if(_idTok && document.visibilityState==='visible') loadMkt(); 
 </script>
 <script>
 // v13.97: the Systems Map refreshes itself on a new deploy, the way the app
-// already does. Before this it only read the version ON LOAD, so an open admin
-// tab would sit on an old build for a whole day of shipping and look unchanged.
-// Now it checks every few minutes and on refocus, and reloads to the new build
+// already does. It checks every few minutes and on refocus, and reloads on a
+// new commit even when the human-facing version number is unchanged.
 // (the on-load block at the top then clears the token / signs out cleanly).
 (function(){
   const RUN = (document.querySelector('meta[name="maya-version"]') || {}).content || '';
+  const RUN_BUILD = (document.querySelector('meta[name="maya-build"]') || {}).content || '';
   if (!RUN) return;
   let reloading = false;
   const newer = (a, b) => {
@@ -3871,11 +3898,12 @@ setInterval(()=>{ if(_idTok && document.visibilityState==='visible') loadMkt(); 
     try {
       const t = await (await fetch('/status.html?uv=' + Date.now(), { cache: 'no-store' })).text();
       const m = t.match(/maya-version" content="([0-9.]+)"/);
-      if (m && newer(m[1], RUN)) {
+      const build = t.match(/maya-build" content="([0-9a-f]{40})"/);
+      if ((build && build[1] !== RUN_BUILD) || (m && newer(m[1], RUN))) {
         // never reload while Maya is live on the line
         if (document.body.classList.contains('maya-live')) { setTimeout(checkAdminUpdate, 60000); return; }
         reloading = true;
-        try { if (typeof showToast === 'function') showToast('Updating to ' + m[1] + '…'); } catch (_) {}
+        try { if (typeof showToast === 'function') showToast('Updating MAYA…'); } catch (_) {}
         setTimeout(() => location.reload(), 900);
       }
     } catch (_) { /* offline, try later */ }

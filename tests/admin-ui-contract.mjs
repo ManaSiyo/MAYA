@@ -113,7 +113,9 @@ await test('CRM actions: only Call below the name, invoice in Messages', () => {
 
 await test('v14.01 the admin auto-refreshes on a new deploy (no more stale tab)', () => {
   assert.ok(admin.includes('function checkAdminUpdate'), 'admin has an update poller');
-  assert.ok(admin.includes("fetch('/status.html?uv='"), 'poller fetches the live version');
+  assert.ok(admin.includes("fetch('/status.html?uv='"), 'poller fetches the live page');
+  assert.ok(admin.includes('build[1] !== RUN_BUILD'), 'same-number releases still refresh by commit');
+  assert.ok(admin.includes("fetch('/release.json',{cache:'no-store'})"), 'Admin shows the published Hosting commit');
   assert.ok(admin.includes('setInterval(checkAdminUpdate'), 'poller runs on an interval');
   assert.ok(admin.includes('The lag is dead'), 'recent changes list is current');
 });

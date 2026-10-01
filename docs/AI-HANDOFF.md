@@ -12,27 +12,48 @@ tools and read-only APIs, not Chrome.
 
 ## Live release audit — September 30
 
-Read-only live requests, with no Chrome use, found `frontend/index.html`,
-`backend/status.html`, and `backend/outbound.html` byte-for-byte identical to
-commit `3168ded`. The GitHub release branch is at `c388619`, but the two newer
-commits have not reached Hosting. The Aesthetic Control URL returns the client
-homepage fallback rather than its own page. `/api/healthz` is healthy, but the
-new booking and signup-alert API routes return 404; the existing protected
-models and MAYA feedback routes return 401 when no token is supplied.
+The remote `maya-v2` head is now `f38b2fe` (Sep 30, 5:25 PM Pacific). GitHub
+reports a Vercel deployment success for that SHA, which is not the Firebase
+Hosting/Cloud Run release. Cache-bypassed public HTML (Firebase `x-cache: MISS`)
+still has the old Admin, Frontend and Outbound bytes shared by `149314e` through
+`3168ded`; the public component preview is older still (`8901d44`, gallery v4).
+The new Aesthetic Control URL serves the client homepage fallback. The new
+authenticated booking-pending route answers 404 without a token, while
+`/api/healthz` is healthy. The signup-alert POST was not probed: automatic
+approval review rejected it because it could send a call or text.
 
-The current remote commit `c388619` fails its own container-contract check:
-`server.js` imports `lead-alerts.mjs` and `booking-link.mjs`, while that commit's
-Dockerfile copies neither. Its Cloud Build cannot pass the release gate. The
-corrected *local, uncommitted* Dockerfile includes both modules, and all 16
-non-browser release contract tests passed. This is a reproduced source/build
-failure, not a claim to have read Cloud Build's protected logs.
+`c388619` had a reproduced container packaging failure (missing new modules).
+`f38b2fe` includes that Dockerfile correction. Its public GitHub Cloud Build
+check, build `8bc3a65d-7572-4d38-9e69-f08194f6a935`, failed in step 1,
+**Test release contracts**, at 5:29 PM Pacific. All server and Hosting steps
+remained queued. The sole test failure was `maya-hands-smoke.mjs` expecting the
+card-editor heading's computed font weight to be at least 600, after the
+approved Aesthetic Control change capped it at 400. The build log showed the
+other two checks in that assertion were true. The local test now expects the
+approved 400 weight. All 16 non-browser release contracts pass locally.
+Admin's September 16 changelog is hard-coded even in `f38b2fe` and therefore
+a separate stale-content bug. Also, the open-tab update watchdog compared only
+the `14.40` display version, unchanged across these pushes, so an already open
+tab would not refresh automatically even after a successful same-version deploy.
+Locally prepared Admin notes now start September 30, and the Hosting step
+creates a public `release.json` with the actual published commit and time.
+Admin shows that commit above the notes after deployment. The same stamped
+commit lets Admin and Frontend detect a new build even with an unchanged
+display version, while their existing active-work safeguards remain. The
+release-stamp test, Admin contract and container contract pass. Full `app-regression.mjs`
+could not start locally because Playwright is absent; no Chrome was used.
 
 Admin's MAYA Logs tab calls `/api/admin/maya-features` and sorts real feedback
-newest first. The live endpoint is authenticated; its entries and Cloud Run or
-Cloud Build logs were not readable without an owner session. Do not present
-them as checked. Next step: after explicit owner authorization to push, commit
-the tested fixes, push `maya-v2`, verify Build/Run/Hosting and the new API routes,
-then inspect authenticated Admin logs and actual notification delivery.
+newest first. The live endpoint is authenticated; its entries and Cloud Run
+logs were not readable without an owner session. The latest Cloud Build log
+was read from its public GitHub check. Do not present protected Admin entries
+or Cloud Run logs as checked. Next step: only after Fromsa explicitly requests
+a push, publish the prepared local commit, verify Build/Run/Hosting and the new
+API routes, then inspect authenticated Admin logs and actual notification
+delivery. Owner
+permission to inspect MAYA Chrome was requested but is no longer needed for
+the build failure: GitHub's public check supplied the failing step and test.
+Do not open Chrome without a fresh explicit answer.
 
 ## Current request: missed signup call and owner-approved booking link
 

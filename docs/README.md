@@ -23,9 +23,10 @@ in `frontend/`, the back rooms live in `backend/`, pictures stay in
 Every note, the server and the rules live in `docs/`.
 Google project: `pro-maya`
 Repo: `ManaSiyo/MAYA` on GitHub, working folder `~/Desktop/MAYA-new`
-Live version: **14.40** (public Hosting files matched commit `3168ded` on September 30; later Git commits have not reached Hosting) (the number lives in a `maya-version` meta tag in
-`frontend/index.html`, and the running site's number is the fastest way to tell whether
-a push has landed).
+Live display version: **14.40**. On September 30 the public Admin/Frontend bytes
+still match files shared by `149314e`–`3168ded`; later commits have not reached
+Hosting. The display version can stay the same across pushes. After the next
+successful Hosting deploy, `/release.json` identifies the actual published commit.
 
 ---
 
@@ -90,25 +91,27 @@ separate horizontal scroll-snap pane, not an overlay.
 ## 3. How a deploy happens
 
 **One action: push `maya-v2` to origin.** Google reads `cloudbuild.yaml` at the
-repo root and runs six steps, taking about four minutes:
+repo root and runs seven steps, taking about four minutes:
 
 1. Refuse the build unless the branch is exactly `maya-v2`
-2. Build server (Docker, from `docs/server`)
-3. Push image
-4. Deploy server to Cloud Run (`maya-api`, region `us-west1`)
-5. Deploy website (Firebase Hosting, `--only hosting`)
-6. Deploy rules (`--only firestore:rules,storage`)
+2. Test release contracts, including the browser battery when Chromium installs
+3. Build server (Docker, from `docs/server`)
+4. Push image
+5. Deploy server to Cloud Run (`maya-api`, region `us-west1`)
+6. Stamp the commit and deploy the website (Firebase Hosting, `--only hosting`)
+7. Deploy rules (`--only firestore:rules,storage`)
 
-Steps 5 and 6 are deliberately separate. When they were one command a rules
+Steps 6 and 7 are deliberately separate. When they were one command a rules
 problem took the whole website down with it. Now the site always ships first
 and a rules failure is loud but harmless to what is already live.
 
-**Do not conclude a push failed just because the site looks unchanged.** Twice
-Fromsa reported "none of the changes applied" and both times the build was
-simply still running. Check the version:
+**Do not conclude a push succeeded because GitHub shows a green Vercel check.**
+The Google Cloud Build check is separate. The September 30 `f38b2fe` build
+failed at its browser contract before server or Hosting deployment. After a
+successful release, check the published commit and API health:
 
 ```
-curl -s https://maya.manasiyo.com/ | grep -o 'maya-version" content="[0-9.]*"'
+curl -fsS https://maya.manasiyo.com/release.json
 curl -s https://maya.manasiyo.com/api/healthz
 ```
 

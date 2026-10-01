@@ -567,7 +567,7 @@ const c8 = await page.evaluate(async () => {
   const cs = detail && getComputedStyle(detail);
   out.detailWhite = !!cs && cs.color === 'rgba(222, 230, 245, 0.74)' && cs.fontStyle === 'normal';   // v14.26: the value softer, the title bright
   const gt = host.querySelector('.vn-profile .note-item .note-group-title');
-  out.titleBright = !!gt && getComputedStyle(gt).color === 'rgba(255, 255, 255, 0.98)' && Number(getComputedStyle(gt).fontWeight) >= 600;
+  out.titleBright = !!gt && getComputedStyle(gt).color === 'rgba(255, 255, 255, 0.98)' && Number(getComputedStyle(gt).fontWeight) === 400;
   // all of Pinterest: the third room
   const ev = await _pinWideSearch('gloves', 'everywhere');
   out.ev = ev;
@@ -590,7 +590,7 @@ const c8 = await page.evaluate(async () => {
 ok('the pencil sits beside the name, and every saved client has a pencil and an x', c8.pencilByName === true && c8.rowPencils === 2 && c8.rowXs === 2, JSON.stringify([c8.pencilByName, c8.rowPencils, c8.rowXs]));
 ok('renaming a saved client rewrites the roster and the board follows', c8.rowBox === true && c8.libRenamed === true && c8.boardFollows === true, JSON.stringify([c8.rowBox, c8.libRenamed, c8.boardFollows]));
 ok('Randomize fills the numbers, the face, and the fold you can see', c8.randHeight === true && c8.randFace === true && c8.randInput === true, JSON.stringify([c8.randHeight, c8.randFace, c8.randInput]));
-ok('the card editor notes lose the Notes subheader; the title bright and bold, the value softer (v14.26)', c8.noNotesTitle === true && c8.detailWhite === true && c8.titleBright === true, JSON.stringify([c8.noNotesTitle, c8.detailWhite, c8.titleBright]));
+ok('the card editor notes lose the Notes subheader; the title is white at the approved 400 weight, the value softer', c8.noNotesTitle === true && c8.detailWhite === true && c8.titleBright === true, JSON.stringify([c8.noNotesTitle, c8.detailWhite, c8.titleBright]));
 ok('all of Pinterest is the third room', c8.ev && c8.ev.ok === true && c8.ev.matches === 3 && c8.ev.scope === 'everywhere' && c8.evWall === 3 && /all of Pinterest/.test(c8.evSub), JSON.stringify(c8.ev));
 ok('a search of what is saved offers all of Pinterest in one pill', c8.pillAfterSaved === true && c8.pillGone === true);
 ok('when all of Pinterest is not switched on, she says exactly that', c8.off && c8.off.ok === false && c8.off.needs === 'access', JSON.stringify(c8.off));

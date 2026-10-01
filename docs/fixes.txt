@@ -388,3 +388,5 @@ save/read API and a shared style runtime on every served page. Role audit counts
 now show per-role subtotals instead of ambiguous zero categories. Local browser
 and mocked production Save tests pass. Live deployment remains unverified; no
 push or production settings changed.
+SEPTEMBER 30, 2026: Latest pushed MAYA release not on Firebase (OPEN)
+Remote maya-v2 is f38b2fe and GitHub shows Vercel success, but a cache-bypassed Firebase Hosting request still serves the older Admin/Frontend and gallery v4. Aesthetic Control falls back to the homepage; booking-pending is absent. The public GitHub Cloud Build check reports that build 8bc3a65d-7572-4d38-9e69-f08194f6a935 failed in step 1, before server/Hosting: the sole smoke failure expected card-editor heading weight >=600 after Aesthetic Control capped it at 400. Corrected that outdated test locally. The previous c388619 container omission is already fixed in f38b2fe. Independently, the Admin changelog was hard-coded to Sep 16 in current source, and open tabs watched only the unchanged 14.40 version. Prepared concise new entries, a generated public release.json stamp, and commit-aware update checks; not pushed.
