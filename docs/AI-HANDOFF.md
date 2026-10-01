@@ -11,6 +11,32 @@ Codex projects. The initial release audit used local tools and read-only APIs.
 On September 30 Fromsa explicitly authorized one MAYA Chrome session for live
 Admin verification. That permission does not carry to another session.
 
+## Pre-push checkpoint — read this first
+
+Fromsa plans to push `maya-v2` himself. Before this summary commit, local HEAD
+was `049a669`, two commits ahead of the last observed remote head `f38b2fe`;
+the worktree was clean. This checkpoint adds a third local commit. **Do not
+treat the live site as updated yet.**
+
+- `9a92762` fixes the Cloud Build browser assertion that expected weight 600
+  after the approved cap became 400. It adds Sep 30/29/28 Admin release notes,
+  a deployed-commit stamp (`/release.json`), and same-version tab refresh.
+- `049a669` records the owner-authorized live Admin check: the Sep 16 notes
+  remained, while a Sep 30 lead and same-afternoon feedback logs were present.
+  This proves live data is fresher than the page code, not that the new release
+  landed.
+- Local release contracts (16 non-browser suites), release-stamp, Admin UI and
+  container checks passed. The full browser regression could not run locally
+  without Playwright; the failed public Cloud Build log identified the exact
+  stale assertion. No production SMS, call or booking send was tested.
+
+After Fromsa pushes, check that **Google Cloud Build** (not only Vercel) passes,
+`/release.json` names the pushed HEAD, and live Admin shows the Sep 30 notes and
+published timestamp. Then verify Aesthetic Control, the new booking/alert API
+routes, Cloud Scheduler, and controlled call/text delivery. The signup-alert
+POST can send a real notification; do not probe it casually. Ask anew before
+any later Chrome session.
+
 ## Live release audit — September 30
 
 The remote `maya-v2` head is now `f38b2fe` (Sep 30, 5:25 PM Pacific). GitHub
@@ -42,8 +68,9 @@ Admin shows that commit above the notes after deployment. The same stamped
 commit lets Admin and Frontend detect a new build even with an unchanged
 display version, while their existing active-work safeguards remain. The
 release-stamp test, Admin contract and container contract pass. Full `app-regression.mjs`
-could not start locally because Playwright is absent. These fixes are saved in
-one local commit ahead of `origin/maya-v2`; nothing was pushed.
+could not start locally because Playwright is absent. The fix, live-verification
+notes and this checkpoint are three local commits ahead of `origin/maya-v2`;
+nothing was pushed.
 
 Admin's MAYA Logs tab calls `/api/admin/maya-features` and sorts real feedback
 newest first. In the owner-authorized MAYA Chrome session, the live Admin page

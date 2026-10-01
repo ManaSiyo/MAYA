@@ -1,3 +1,6 @@
+SEPTEMBER 30: Summarize the pending push for continuity
+[done locally] Added a pre-push checkpoint to AI-HANDOFF.md with the failed release cause, pending commits, live Chrome evidence, local validation, and exact post-push checks. Fromsa plans to push himself; Codex did not push.
+
 SEPTEMBER 30: Ask before Chrome access
 [standing rule] Notify Fromsa and wait for explicit approval before each new Chrome access session. The MAYA and World of CEO profiles are separate; do not assume either sign-in or past approval covers the other. Do not use Chrome while he is working.
 [recorded] Root AGENTS.md and the current handoff preserve this rule for MAYA; ~/.codex/AGENTS.md preserves it for future Codex projects.
