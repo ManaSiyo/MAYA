@@ -33,6 +33,7 @@ steps:
         node tests/fabric-sourcing.mjs
         node tests/admin-command.mjs
         node tests/admin-ui-contract.mjs
+        node tests/admin-wake.mjs
         node tests/proxy-policy.mjs
         node tests/outbound.mjs
         node tests/crm-intelligence.mjs

@@ -44,6 +44,8 @@ try{
  await page.locator('[data-editor="inner"] summary').click();await page.locator('[data-padding-debug="inner"]').click();
  await page.locator('[data-editor="inner"] [data-field="paddingX"]').fill('22');
  assert.equal(await page.locator('#panels .inner-panel.show-padding').count(),2);
+ assert.equal(await page.locator('#panels .inner-panel>h3').count(),2,'Panel heading is inside its padded content');
+ assert.equal(await page.locator('#panels .context-grid>.maya-surface').evaluateAll(es=>es.every(e=>e.contains(e.querySelector('.inner-panel')))),true);
  assert.equal(await page.locator('#panels .inner-panel').first().evaluate(e=>getComputedStyle(e,'::after').borderLeftWidth),'22px');
  await page.locator('[data-padding-debug="inner"]').click();
  await page.locator('.control-size-editor summary').click();await page.locator('[data-field="iconSize"]').fill('36');await page.locator('[data-field="dropdownHeight"]').fill('32');
@@ -79,6 +81,9 @@ try{
  await surface('inner','paddingX','30');await surface('inner','paddingY','20');await surface('inner','width','80');
  assert.equal(await page.locator('.inner-panel').first().evaluate(e=>getComputedStyle(e).padding),'20px 30px');
  await surface('filter','width','330');await surface('filter','paddingX','24');
+ await surface('table','background','black');await surface('table','fill','100');await surface('header','background','black');await surface('first-column','background','black');
+ assert.equal(await page.locator('#table-preview table').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(0, 0, 0)');
+ assert.equal(await page.locator('#table-preview .lead-open').first().evaluate(e=>[...e.children].map(n=>n.tagName==='TIME'?'date':n.className).join(',')),'lead-identity,date,category-badge');
  await surface('header','background','blue');await surface('header','opacity','80');await surface('header','font','cormorant');await surface('header','size','14');
  await surface('first-column','background','pink');await surface('first-column','opacity','60');
  await surface('column-0','font','cormorant');await surface('column-0','align','right');await surface('column-0','vertical','top');
@@ -148,17 +153,25 @@ try{
    await editor.locator('summary').click();
   }
   await page.locator('#pill-preview > .review-fold').evaluate(e=>e.open=true);
+  const outerEditor=page.locator('.overlay-controls');await outerEditor.locator('summary').click();
+  assert.ok(await outerEditor.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect(),a=e.parentElement.querySelector('summary').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&a.left<=r.right&&a.right>=r.left;}),'Outer editor anchor '+width);await page.keyboard.press('Escape');
   for(const id of ['inner','filter','table','header','first-column','column-0','column-1','column-2']){
    const editor=page.locator(`[data-editor="${id}"] .type-editor`);await editor.locator('summary').click();
-   const fits=await editor.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&[...e.querySelectorAll('input,select')].every(c=>{const b=c.getBoundingClientRect();return b.left>=r.left&&b.right<=r.right;});});
-   assert.ok(fits,`${id} popup/controls at ${width}`);await page.keyboard.press('Escape');
+   const fits=await editor.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect(),a=e.parentElement.querySelector('summary').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&a.left<=r.right&&a.right>=r.left&&Math.min(Math.abs(r.top-a.bottom),Math.abs(a.top-r.bottom))<=8&&getComputedStyle(e).backgroundColor==='rgb(0, 0, 0)'&&[...e.querySelectorAll('input,select')].every(c=>{const b=c.getBoundingClientRect();return b.left>=r.left&&b.right<=r.right;});});
+   assert.ok(fits,`${id} popup/controls at ${width}`);
+   assert.ok(await editor.locator('.type-editor-fields').evaluate(panel=>{const box=panel.getBoundingClientRect();return [...panel.querySelectorAll('input,select')].every(e=>{const b=e.getBoundingClientRect(),y=b.top+b.height/2;if(y<box.top||y>box.bottom)return true;const hit=document.elementFromPoint(b.left+b.width/2,y);return hit===e||e.contains(hit);});}),`${id} visible fields stay above the following section at ${width}`);
+   await page.keyboard.press('Escape');
   }
   const sizeEditor=page.locator('.control-size-editor');await sizeEditor.locator('summary').click();assert.ok(await sizeEditor.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth;}),'Size editor fits '+width);await page.keyboard.press('Escape');
   await page.locator('#pill-preview > .review-fold').evaluate(e=>e.open=false);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'overflow '+width);
  }
  await page.evaluate(()=>localStorage.clear());await page.reload();await page.locator('#save').waitFor();
- await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'/private/tmp/maya-typography-controls.png',fullPage:true});
+ await page.setViewportSize({width:1440,height:1000});
+ assert.equal(await page.locator('.panel-editors .surface-edit-row').evaluateAll(es=>new Set(es.map(e=>Math.round(e.getBoundingClientRect().top))).size),1,'Panel controls share one desktop row');
+ assert.equal(await page.locator('#table-editors .surface-edit-row').evaluateAll(es=>new Set(es.map(e=>Math.round(e.getBoundingClientRect().top))).size),1,'Table controls share one desktop row');
+ assert.equal(await page.locator('#table-preview .lead-open').first().evaluate(e=>new Set([...e.children].map(n=>Math.round(n.getBoundingClientRect().top+n.getBoundingClientRect().height/2))).size),1,'Name, date and category share one row');
+ await page.screenshot({path:'/private/tmp/maya-typography-controls.png',fullPage:true});
  await page.goto('https://maya.manasiyo.com/aesthetics/aesthetic-control.html');await page.locator('#save').waitFor();
  await page.evaluate(()=>localStorage.setItem('maya_admin_tok','test-owner-token'));
  await page.locator('#save').click();await page.waitForFunction(()=>document.querySelector('#feedback').textContent.includes('Saved across MAYA pages'));

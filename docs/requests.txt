@@ -1,3 +1,16 @@
+OCTOBER 2 afternoon — detached editors, black table controls, correct padding and Hey MAYA
+[local fix] Editors stay above adjacent glass sections and open beside their own Edit buttons with black backgrounds;
+Table, Top row and First column offer Black. Desktop panel/table control sets
+share a single row; narrow screens wrap. Client identity is name, date, category.
+[local fix] Inner padding surrounds the heading and Contacts together; outer
+padding surrounds their inner panel. Both X/Y settings and green debug bands
+remain live and independent.
+[verified locally] Gallery 11 widths plus short/landscape, full regression, canon,
+Outbound/CRM gates, Admin wake/UI, both hands and fake communications pass.
+[local fix] Wake recognizers recover from synchronous/network failures; Admin
+failed voice startup resumes wake listening and clears Connecting. Actual
+listening/waiting state is visible. Live microphone behavior remains unverified.
+
 OCTOBER 2 — Outbound Sheet parity and shared aesthetic master [main implementation shipped]
 All five active workbook tabs already match the requested A:J order. Code now
 includes Reason/Relevance, Last email first, supports 9/29 Corporate sync and

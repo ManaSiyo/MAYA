@@ -833,6 +833,9 @@ try {
 #adm-scroll{scroll-padding-top:76px}#adm-mkt #leads-fold{scroll-margin-top:76px}#adm-mkt #leads-fold>summary::after{position:static;align-self:center;line-height:1;transform:none}
 #adm-mkt #leads-table td.lead-td-name{cursor:pointer}
 #adm-mkt #leads-table .lead-open{display:block;width:100%;height:100%;text-align:inherit}
+#adm-mkt #leads-table .lead-open{display:flex!important;align-items:center;gap:8px;white-space:nowrap}
+#adm-mkt #leads-table .lead-open time,#adm-mkt #leads-table .category-badge{flex:none}
+#adm-mkt #leads-table .lead-identity{display:block!important;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
 #adm-mkt #leads-table .category-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;border:1px solid var(--line);border-radius:100px;color:var(--dim);font:10px var(--maya-font-ui)}
 .affiliate-reload{border:1px solid var(--line);border-radius:100px;background:transparent;color:var(--ink);cursor:pointer}
 </style>
@@ -860,7 +863,7 @@ try {
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=5"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=6"></script>
 </head>
 <body class="systems-map">
 
@@ -2498,32 +2501,34 @@ async function toggleMayaVoice(){
     try{ pendingPc&&pendingPc.close(); }catch(_){}
     try{ (pendingMic&&pendingMic.getTracks()||[]).forEach(t=>t.stop()); }catch(_){}
     try{ if(pendingAudio) pendingAudio.srcObject=null; }catch(_){}
-    _voiceStop();
+    _voiceStop();_voiceLive(false);
     // v13.72: a human line instead of a raw error code. The details go to the
     // console; the drawer just says what it means for Fromsa.
     const raw=String(e&&e.message||e);
     let human='the voice line did not connect, try again';
     if(/\b429\b/.test(raw)) human='Maya is resting a moment, try again shortly';
+    else if(/voice_credit/.test(raw)) human='the studio OpenAI credit has run out';
     else if(/token|401|403/.test(raw)) human='the voice line is not set up yet';
     else if(/getUserMedia|Permission|NotAllowed/i.test(raw)) human='let the browser use the microphone, then try again';
     _voiceWord(human);
     mayaCommandState(human,'waiting');
     console.warn('[maya voice]',e);
-  }finally{ _voiceStarting=false; }
+  }finally{ _voiceStarting=false; if(!_voice&&_wakeWantOn)_wakeSchedule(800); }
 }
 
 // ═══ v13.88: "Hey Maya" wake word. A background recognizer listens for the
 // phrase and taps the voice line for you. Off by default (it needs the mic);
 // flip it on and it remembers. It pauses while Maya is already live, and
 // restarts itself if the browser stops it. ═══
-let _wakeRec=null, _wakeOn=false, _wakeWantOn=false;
+let _wakeRec=null, _wakeOn=false, _wakeWantOn=false, _wakeRetry=null;
+function _wakeSchedule(delay=800){clearTimeout(_wakeRetry);if(_wakeWantOn&&!_voice&&!_voiceStarting)_wakeRetry=setTimeout(_wakeStart,delay);}
 function _wakeSupported(){ return !!(window.SpeechRecognition||window.webkitSpeechRecognition); }
 function _wakeLabel(){
   const b=document.getElementById('wake-toggle');
-  if(b){ b.textContent='Hey Maya: '+(_wakeWantOn?'on':'off'); b.classList.toggle('on',_wakeWantOn); }
+  if(b){ b.textContent='Hey Maya: '+(!_wakeWantOn?'off':_wakeOn?'listening':'waiting'); b.classList.toggle('on',_wakeWantOn); }
   // v13.98: the drawer-floor pill is the same toggle, reading as an action.
   const mt=document.getElementById('maya-toggle');
-  if(mt){ mt.classList.toggle('live',_wakeWantOn); mt.setAttribute('aria-pressed',_wakeWantOn?'true':'false'); }
+  if(mt){ mt.classList.toggle('live',_wakeWantOn); mt.setAttribute('aria-pressed',_wakeWantOn?'true':'false'); mt.setAttribute('aria-checked',String(_wakeWantOn));mt.title=_wakeOn?'Listening for Hey Maya':_wakeWantOn?'Wake listener is waiting':'Enable Hey Maya'; }
   // v14.02: the word is always "Hey Maya"; the switch carries the state.
 }
 let _wakeBusy=false;
@@ -2542,14 +2547,15 @@ async function toggleWakeWord(){
   catch(_){ _wakeWantOn=false; try{localStorage.setItem('maya_wake','0');}catch(__){} _wakeLabel(); _voiceWord('let the browser use the microphone for Hey Maya'); _wakeBusy=false; return; }
   _wakeBusy=false;
   _wakeStart();
-  _voiceWord('say Hey Maya');
 }
 function _wakeStart(){
   if(!_wakeWantOn || _wakeOn || !_wakeSupported()) return;
-  if(_voice){ return; }               // already live; wait until she hangs up
+  if(_voice || _voiceStarting || _wakeRec){ return; }               // already live; wait until she hangs up
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   try{
     _wakeRec=new SR(); _wakeRec.continuous=true; _wakeRec.interimResults=true; _wakeRec.lang='en-US';
+    const rec=_wakeRec;
+    rec.onstart=()=>{if(_wakeRec!==rec)return;_wakeOn=true;_wakeLabel();_voiceWord('say Hey Maya');};
     _wakeRec.onresult=(e)=>{
       for(let i=e.resultIndex;i<e.results.length;i++){
         const t=(e.results[i][0].transcript||'').toLowerCase();
@@ -2562,15 +2568,17 @@ function _wakeStart(){
     _wakeRec.onerror=(ev)=>{
       const err=ev&&ev.error||'';
       if(err==='not-allowed'||err==='service-not-allowed'){ _wakeWantOn=false; try{localStorage.setItem('maya_wake','0');}catch(_){}; _wakeLabel(); _voiceWord('the microphone was refused, Hey Maya is off'); }
-      // aborted, no-speech, network: transient; onend restarts the listener
+      if(err==='network'||err==='audio-capture')_voiceWord(err==='network'?'wake listener lost its connection; retrying':'wake listener could not hear the microphone; retrying');
+      // Release a failed recognizer even if the provider never sends onend.
+      if(_wakeRec===rec){_wakeStop();_wakeLabel();_wakeSchedule(2000);}
     };
-    _wakeRec.onend=()=>{ _wakeOn=false; if(_wakeWantOn && !_voice){ setTimeout(_wakeStart,600); } };
-    _wakeRec.start(); _wakeOn=true;
-  }catch(_){ _wakeOn=false; }
+    _wakeRec.onend=()=>{if(_wakeRec!==rec)return;_wakeRec=null;_wakeOn=false;_wakeLabel();_wakeSchedule(800);};
+    _wakeRec.start();
+  }catch(_){_wakeStop();_wakeLabel();_voiceWord('wake listener did not start; retrying');_wakeSchedule(2000);}
 }
-function _wakeStop(){ _wakeOn=false; try{ if(_wakeRec){ _wakeRec.onend=null; _wakeRec.stop(); } }catch(_){} _wakeRec=null; }
+function _wakeStop(){clearTimeout(_wakeRetry);_wakeRetry=null;_wakeOn=false;const rec=_wakeRec;_wakeRec=null;try{if(rec){rec.onend=null;rec.onstart=null;rec.onresult=null;rec.onerror=null;rec.abort();}}catch(_){} _wakeLabel();}
 // resume the wake listener after a live session ends
-window.addEventListener('maya-voice-ended',()=>{ if(_wakeWantOn) setTimeout(_wakeStart,800); });
+window.addEventListener('maya-voice-ended',()=>_wakeSchedule(800));
 try{ if(localStorage.getItem('maya_wake')==='1'){ _wakeWantOn=true; _wakeLabel(); setTimeout(_wakeStart,1200); } }catch(_){}
 </script>
 
@@ -2873,7 +2881,7 @@ function leadSignup(x){const value=x.createdAt||x.ts||x.date;const d=value?new D
 function _leadColDefs(){
   return {
     name: { label: 'Full name', h: 'lead-h-name', td: 'lead-td-name',
-      render: (x, i) => '<button class="lead-open" aria-label="Open conversation with '+esc(x.name||'Unnamed')+'"><span class="lead-identity">'+esc(x.name || 'Unnamed')+'</span><span class="lead-subline">'+_actionsCell(i,x)+'<time>'+esc(leadSignup(x))+'</time></span></button>' },
+      render: (x, i) => '<button class="lead-open" aria-label="Open conversation with '+esc(x.name||'Unnamed')+'"><span class="lead-identity">'+esc(x.name || 'Unnamed')+'</span><time>'+esc(leadSignup(x))+'</time>'+_actionsCell(i,x)+'</button>' },
     // v14.24: Contact, the phone first (that is what gets used), the email when there is none.
     stage: {label:'Status',h:'lead-h-stage',render:(x,i)=>'<span class="status-pill lead-status"><span class="status-text" aria-hidden="true">'+esc(LEAD_STAGES[leadStage(x)]|| (x.stage==='closed'?'Closed':'Passed')+' (previous)')+'</span><select class="lead-stage" aria-label="Lead status" onchange="setLeadStage('+i+',this)">'+(['closed','passed'].includes(x.stage)?'<option value="'+x.stage+'" selected disabled>'+ (x.stage==='closed'?'Closed':'Passed')+' (previous)</option>':'')+Object.entries(LEAD_STAGES).map(([k,v])=>'<option value="'+k+'"'+(leadStage(x)===k?' selected':'')+'>'+v+'</option>').join('')+'</select></span>'},
     note: { label: 'Latest Notes', h: 'lead-h-note', td: 'lead-note',

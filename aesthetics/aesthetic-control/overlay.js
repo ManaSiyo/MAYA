@@ -1,7 +1,7 @@
 // Review containers are a separate material layer from the action pills.
 export function setupOverlay(comparison){
  const defaults={fill:18,rim:22,blur:22,saturation:180,paddingX:16,paddingY:16},values={...defaults};let enabled=true;
- const panel=document.createElement('details');panel.className='overlay-controls';panel.innerHTML='<summary>Edit panels</summary><label><input id="overlay-enabled" type="checkbox" checked> Glass</label><div class="finish-sliders"></div><button type="button" class="padding-debug" data-padding-debug="outer" aria-pressed="false">Show padding</button>';
+ const panel=document.createElement('details');panel.className='overlay-controls type-editor';panel.innerHTML='<summary>Edit</summary><div class="type-editor-fields"><label><input id="overlay-enabled" type="checkbox" checked> Glass</label><div class="finish-sliders"></div><button type="button" class="padding-debug" data-padding-debug="outer" aria-pressed="false">Show padding</button></div>';
  comparison.parentElement.querySelector('.finish-controls').after(panel);
  const fields=[];
  for(const [key,label,max,unit] of [['fill','Fill',100,'%'],['rim','Border',100,'%'],['blur','Blur',40,'px'],['saturation','Saturation',200,'%'],['paddingX','Padding X',40,'px'],['paddingY','Padding Y',40,'px']]){

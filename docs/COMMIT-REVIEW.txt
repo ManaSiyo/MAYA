@@ -1,11 +1,24 @@
-[Codex] Record confirmed October 2 production shipment
+[Codex] Fix editor anchoring, panel padding and Hey MAYA recovery
 
-Google Cloud Build 9bd43347-4fbe-43ef-9c86-0a58a7df0230 succeeded for the owner-pushed
-f436f37. Public release.json confirms f436f379fe028b1bf4acb1319ce2b020b9b331bb at
-2026-10-02T17:18:57.758Z; public editor loads gallery v19/runtime v5. Update handoff,
-requests, incidents and meaningful shipped history to remove stale open-deploy
-claims. Final verified fixes add0e06 still await explicit owner Push.
+Owner screenshots showed dropdowns detached from centered Edit controls, stacked
+control labels, padding around Contacts alone, two-line client identities and
+Hey MAYA silently failing. Anchor popups to their own button using containing-block
+offsets; clamp/flip at screen edges and raise the active glass section above its
+neighbors. Use solid black popup/field backing and validated Black table, header
+and first-column options. Panel/table control sets share desktop rows and wrap on
+small screens. Client rows are name, date, category. Inner padding surrounds heading
+and Contacts; outer padding surrounds that panel, with independent live X/Y debug.
 
-Validation: GitHub Google check-run success; public release marker and editor
-asset references read back; git diff --check. No code/provider/configuration
-changes or push. Live Admin Save/log review remains owner verification.
+Admin failed voice startup resumes wake recognition, clears Connecting and reports
+actual listening/waiting state. App/Playground recover recognizer start/network
+failure and avoid duplicate listeners; permission refusal stops retries. Add a
+fake-recognition release gate; update shared runtime references to v6/gallery v20.
+
+Validation: app-regression, component-gallery (11 widths 320–1920, trigger proximity,
+black backing, input hit testing, Save/reload, padding geometry, one-row controls),
+canon-ui (11 pages/7 widths), Outbound/UI/filter/priority, CRM UI/failure/intelligence,
+design-config/contract, Admin UI/wake, both hands batteries and fake phone/messages/
+transfer/feedback. Real-font visual review and three short/landscape popup sizes.
+Syntax and git diff --check. No personal Chrome, live microphone/provider session,
+client messages, credential/environment/billing changes or push. Actual speech and
+live Admin Save require owner verification after deployment. Only Push remains.

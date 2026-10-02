@@ -46,6 +46,8 @@ const compact = await page.evaluate(()=>({
   ticker:getComputedStyle(document.querySelector('#mkt-ticker-inner')).fontSize,
   header:getComputedStyle(document.querySelector('#campaigns-table th')).backgroundColor
 }));
+assert.equal(await page.locator('#leads-table .lead-open').first().evaluate(e=>[...e.children].map(n=>n.tagName==='TIME'?'date':n.className).join(',')),'lead-identity,date,category-badge');
+assert.ok(await page.locator('#leads-table .lead-open').first().evaluate(e=>{const centers=[...e.children].map(n=>{const r=n.getBoundingClientRect();return r.top+r.height/2;});return Math.max(...centers)-Math.min(...centers)<1;}),'Lead metadata shares one row');
 assert.equal(report.size,'12px');assert.equal(compact.padding,'4px');assert.equal(compact.row,44);
 assert.equal(await page.locator('#top-left-brand .brand-chips').count(),0);
 assert.equal(await page.locator('#top-left-brand .maya-logo-mark').getAttribute('src'),'/aesthetics/ui/logo-circle.png');

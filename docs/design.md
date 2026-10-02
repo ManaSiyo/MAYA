@@ -63,14 +63,18 @@ A divider separates Panels, another separates Table. Panels have independent
 outer padding/material; Inner panel has opacity, border, corners, X/Y padding
 and percentage width. Filter has independent material/padding and pixel width.
 The preview includes working drawer/filter controls and nested panel examples.
+The inner panel contains both its heading and Contacts; inner padding surrounds
+that complete content. Outer padding surrounds the inner panel. Each green
+debug band belongs to its own container. Panel and table Edit controls share
+one row at desktop widths and wrap when needed on narrow screens.
 
 Table previews the actual Lead Station columns: Full name, Status, Latest Notes.
 Top row has its own font, case, size, weight, color, horizontal/vertical alignment,
 background color and opacity. First column has independent background/opacity;
-each column has independent type and alignment. A Table Edit sets fill, border
+each column has independent type and alignment. A Table Edit sets background color, fill, border
 and X/Y cell padding. These settings apply to the real Lead Station and its
 preview, using data-col keys so fonts follow semantic columns when reordered.
-Status colors stay semantic. Background choices are Gray, Blue, Yellow, Green,
+Status colors stay semantic. Background choices are Black, Gray, Blue, Yellow, Green,
 Pink. Full names default to Cormorant; other data defaults to Jost.
 
 Typography shows H1–H4/P1–P4 with one preview and one Edit per role. H3 previews
@@ -81,6 +85,8 @@ removed. Legacy editor housing settings remain readable for saved compatibility.
 Save is centered. History is not introduced in this change; Reset is removed.
 Temporary Edit controls close on outside click, focus leaving, Escape or another
 Edit. Section folds and persistent States remain open until explicitly toggled.
+Popup backings and fields are solid black. The popup opens beside its button,
+clamps horizontally and opens upward when the footer leaves insufficient space.
 All popups and their fields stay inside their section at 320–1920px widths.
 At 420px and below, they use two columns. Font/case and material defaults fill
 in older saved designs without a migration write. Only an authenticated Admin
@@ -90,7 +96,7 @@ Lead Station has no floating Forms/Reload/Alerts/Add toolbar. Its section caret
 is on the same horizontal line as the title. Each whole name cell opens the
 client's Messages thread, including clicks in cell padding. A keyboard-accessible
 name button preserves normal Tab activation. The four category badges are ?
-(Help me decide), SI (Signature), CE (Ceremonial), SU (Suit). Category/date replace
+(Help me decide), SI (Signature), CE (Ceremonial), SU (Suit). Name, date, then category appear on one line. Category/date replace
 the long tier pill and call icon; calls remain available inside Messages. A lead
 with no phone opens Messages and states the missing number. Affiliates retains
 its own reload within its profile, outside Admin's Lead Station toolbar.
@@ -115,12 +121,12 @@ The preview lives in `aesthetics/aesthetic-control.html` with support files in `
 `aesthetics/ui/components/`; global application in
 `aesthetics/ui/typography-controls.js`. The Admin-authenticated save and public
 read endpoints are in `docs/server/server.js`; `docs/server/design-config.mjs`
-validates the settings. Served pages load runtime v5; Hosting revalidates this
+validates the settings. Served pages load runtime v6; Hosting revalidates this
 script instead of caching role mappings for a week. Old aesthetic PDFs were removed;
 the inactive style-inventory viewer, generated report and generator were removed;
 the active typography role audit remains. No page should introduce a competing design specification.
 
-Typography Edit popups anchor to the full category row, stay within the section
+All temporary Edit popups anchor to their own Edit button, stay within the section
 and viewport at every width, and constrain every input/select to the popup.
 At 420px and below, use two columns so maximum editor padding stays usable.
 

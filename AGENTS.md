@@ -160,7 +160,7 @@ only same-origin local pages. Old maya-buttons.css/maya-canon.css are adapters,
 not independent design authorities. Typography offers one preview per role, with validated Jost/Cormorant and
 Normal/ALL CAPS choices. Visuals groups button/icon glass before panel/table
 controls. Preserve old saved schemas and semantic status colors when applying
-shared text settings. Served pages load typography runtime v3.
+shared text settings. Served pages load typography runtime v6.
 Run tests/component-gallery.mjs. Design saves atomically include a private audit trail;
 /api/design must strip _history and /api/admin/design-history must stay Admin-gated.
 Padding debug highlights are preview-only, never saved.
@@ -190,8 +190,15 @@ Standalone Marketing was retired September 29. `/marketing.html` and
 and server endpoints intact.
 
 Aesthetic Control live surface editors: aesthetics/aesthetic-control/surface-editors.js.
-Runtime v4 saves independent inner/filter geometry and three Lead Station column
+Runtime v6 saves independent inner/filter geometry and three Lead Station column
 styles, top-row and first-column materials via validated optional design keys.
 Keep preview/live table data-col keys in sync so drag reordering preserves column
 settings. Run component-gallery, design-config/design-contract and outbound-ui
 (including lead-filter-ui) for these controls and Lead Station interactions.
+
+October 2 controls: temporary editors anchor to their own trigger, with black popup
+backings and validated Black table/header/first-column background choices. Inner
+panel previews contain heading and metric together; outer padding surrounds them.
+Panel/table controls and lead name/date/category share desktop rows. Wake changes
+run tests/admin-wake.mjs (fake recognition; no microphone) in the release gate,
+plus the existing communications and both frontend/Playground hands batteries.

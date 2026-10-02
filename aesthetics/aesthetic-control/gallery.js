@@ -27,13 +27,13 @@ for(const state of ['default','hover','focus','selected','pressed','disabled','l
 const divider=document.createElement('hr');divider.className='visual-divider';preview.append(divider);
 const panels=document.createElement('div');panels.id='panels';preview.append(panels);heading(panels,'Panels');
 const surfaces=document.createElement('div');surfaces.className='context-grid';panels.append(surfaces);
-for(const title of ['Lead Station','Campaign details']){const content=document.createElement('div');const h=document.createElement('h3');h.textContent=title;h.dataset.previewCategory='H3';const metric=Metric({label:'Contacts',value:12});const inner=document.createElement('div');inner.className='inner-panel';inner.append(metric);content.append(h,inner);surfaces.append(GlassSurface({content,intensity:'quiet'}));}
+for(const title of ['Lead Station','Campaign details']){const content=document.createElement('div');const h=document.createElement('h3');h.textContent=title;h.dataset.previewCategory='H3';const metric=Metric({label:'Contacts',value:12});const inner=document.createElement('div');inner.className='inner-panel';inner.append(h,metric);content.append(inner);surfaces.append(GlassSurface({content,intensity:'quiet'}));}
 const drawer=Drawer({title:'Systems',content:[Metric({label:'AI today',value:'$0.12'})]}),filter=FilterPopover({title:'Filter',values:['Gray','Blue','Green'],onApply:v=>say(v.join(', ')||'None')});
 let openDrawer,openFilter;openDrawer=Pill({label:'Drawer',onClick:()=>drawer.showFrom(openDrawer)});openFilter=Pill({label:'Filter',onClick:()=>filter.showFrom(openFilter)});row(panels).append(openDrawer,openFilter);
 const guide=document.createElement('div');guide.id='table-preview';guide.tabIndex=0;guide.setAttribute('role','region');guide.setAttribute('aria-label','Lead Station table preview');panels.append(guide);
 const table=document.createElement('table');table.className='text-guide';table.innerHTML='<thead><tr><th data-col="name">Full name</th><th data-col="stage">Status</th><th data-col="note">Latest Notes</th></tr></thead><tbody></tbody>';guide.append(table);
 for(const [name,badge,date,status,color,note] of [['Angela','?','Oct 1','Not contacted','#b5bdc8','Wedding, gala, or ceremony'],['Mary','SI','Sep 4','In progress','#fbbf24','A custom suit with a tailored fit']]){
- const tr=document.createElement('tr');tr.innerHTML='<td data-col="name" class="lead-col-first"><button class="lead-open"><span class="lead-identity">'+name+'</span><span class="lead-subline"><span class="category-badge">'+badge+'</span><time>'+date+'</time></span></button></td><td data-col="stage"><span class="status-pill lead-status" style="--status-color:'+color+'">'+status+'</span></td><td data-col="note"><div class="lead-note-vp"><span>'+note+'</span></div></td>';tr.querySelector('.lead-open').addEventListener('click',()=>drawer.showFrom(tr.querySelector('.lead-open')));table.tBodies[0].append(tr);
+ const tr=document.createElement('tr');tr.innerHTML='<td data-col="name" class="lead-col-first"><button class="lead-open"><span class="lead-identity">'+name+'</span><time>'+date+'</time><span class="category-badge">'+badge+'</span></button></td><td data-col="stage"><span class="status-pill lead-status" style="--status-color:'+color+'">'+status+'</span></td><td data-col="note"><div class="lead-note-vp"><span>'+note+'</span></div></td>';tr.querySelector('.lead-open').addEventListener('click',()=>drawer.showFrom(tr.querySelector('.lead-open')));table.tBodies[0].append(tr);
 }
 const surfacesEditor=setupSurfaceEditors({panels,guide,design:storedDesign});
 const fonts=section('Typography','fonts'),hierarchy=document.createElement('div');hierarchy.className='type-hierarchy';fonts.append(hierarchy);
@@ -57,7 +57,9 @@ function collapsible(section){const h=section.querySelector(':scope > h2'),detai
 collapsible(preview);collapsible(fonts);
 for(const link of document.querySelectorAll('.gallery-header nav a'))link.addEventListener('click',()=>{const fold=document.querySelector(link.getAttribute('href')+' > .review-fold');if(fold)fold.open=true;});
 const finishes=setupFinishes({comparison,preview,drawer,filter,say});
-const overlay=setupOverlay(comparison);panels.prepend(document.querySelector('.overlay-controls'));panels.prepend(panels.querySelector('h3'));
+const overlay=setupOverlay(comparison);const panelToolbar=document.createElement('div');panelToolbar.className='panel-editors';
+const outerControl=document.createElement('div');outerControl.className='surface-edit-row';outerControl.append(document.createTextNode('Outer panel'),document.querySelector('.overlay-controls'));
+panelToolbar.append(outerControl,...panels.querySelectorAll(':scope > .surface-edit-row'));surfaces.before(panelToolbar);
 const advanced=document.querySelector('#advanced');buttons.querySelector('.finish-controls details').append(advanced.querySelector('#tokens'));advanced.remove();
 if(storedDesign?.glass)finishes.set({finish:storedDesign.finish,...storedDesign.glass});if(storedDesign?.overlay)overlay.set(storedDesign.overlay);
 for(const pill of document.querySelectorAll('.maya-pill'))pill.dataset.previewCategory='P3';for(const label of document.querySelectorAll('.maya-metric-label,.maya-metric-value'))label.dataset.previewCategory='P2';for(const group of hierarchy.querySelectorAll('.type-group'))group.renderType();

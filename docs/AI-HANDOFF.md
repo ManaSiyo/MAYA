@@ -1,5 +1,50 @@
 # MAYA handoff — October 2, 2026
 
+## Current requested fix: October 2 afternoon
+
+Owner screenshots show table dropdowns detached from their Edit buttons, stacked
+control labels, wrong inner-padding target, two-line client identities, and an
+unresponsive Hey MAYA. Corrected locally, not pushed:
+
+- gallery v20/shared runtime v6: editors anchor to their own summary, clamp to
+  section/viewport and flip upward above the Save bar. Glass backdrop-filter
+  creates a containing block, so popup offsets use the actual editor origin.
+  Black popup/field backings; more readable 440px editors, mobile two-column fields.
+  Active section rises above neighboring glass stacking contexts; visible fields
+  are hit-tested so the following section cannot cover the bottom of an editor.
+- Panel toolbar groups Outer panel, Inner panel and Filter. Table toolbar groups
+  Table, Top row, First column, Full name, Status and Latest Notes in one desktop
+  row, wrapping at narrow widths. Table/header/first-column support validated Black
+  backgrounds; old designs remain accepted.
+- Inner preview contains heading plus Contacts. Inner debug padding surrounds
+  that whole content; outer debug padding surrounds the inner panel. Both remain
+  independent live X/Y controls. Lead Station/preview names are name/date/category
+  in one row; long names truncate within the full conversation-opening button.
+- Admin restores wake recognition after failed voice startup, clears failed
+  Connecting UI, reports actual listening/waiting state, retries recognizer start
+  and network failures. App/Playground share retry/single-recognizer protection.
+  Permission refusal turns listening off. No microphone, provider session or
+  client communication used during testing.
+
+Changed paths: aesthetics/aesthetic-control/{gallery.js,gallery.css,overlay.js,
+surface-editors.js}, shared typography-controls.js, design-config.mjs, Admin/app/
+Playground voice, ten served HTML runtime references, tests/admin-wake.mjs,
+component-gallery/design-config/design-contract/outbound-ui/app-regression,
+cloudbuild.yaml and design/continuity records.
+
+Validation: full app-regression; component-gallery at 11 widths 320–1920 with
+trigger proximity, black backing, field bounds/layering, correct heading padding,
+single-row controls/client identity and Save/reload; canon-ui 11 pages/7 widths;
+Outbound/UI/populated filters; CRM UI/failure/intelligence; design validation;
+admin-wake; admin-ui-contract; both frontend/Playground hands; fake phone/messages/
+transfer/feedback. Actual Google-font visual review and 844x390,1024x540,320x568
+short popup bounds pass. Final gallery layering recheck passed; all visible editor fields remain clickable.
+
+Exact next step: owner Push the verified local commit, confirm Google Cloud Build
+and release.json, then review live controls and test Hey MAYA with microphone.
+Live speech still needs an owner microphone test after deployment. No Chrome
+profile was accessed. Push requires an explicit owner request.
+
 ## Release status
 
 Owner committed and pushed the requested implementation as f436f37 during the
@@ -18,8 +63,8 @@ actual Google build log without Chrome or credentials.
 
 Owner push f436f37 started Google build 9bd43347-4fbe-43ef-9c86-0a58a7df0230.
 It completed successfully; its commit agrees with public release.json. Main
-implementation is shipped. Final fixes are committed locally as add0e06 and
-await explicit owner push approval. Codex has not pushed or deployed.
+implementation is shipped. Final fixes add0e06 and shipment record c9d01a6 are now on origin. The afternoon
+controls/wake changes above are local and await explicit owner push approval. Codex has not pushed or deployed.
 
 ## October 2 verified implementation and follow-up
 

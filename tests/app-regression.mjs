@@ -679,10 +679,10 @@ const adminInteractions = await pg.evaluate(async () => {
   const name = document.querySelector('.lead-identity');
   admTab('logs');
   const logsTab = !document.getElementById('drawer-logs').hidden && document.getElementById('drawer-messages').hidden && document.getElementById('adm-tab-logs').getAttribute('aria-selected') === 'true';
-  return { logsTab, noInjectedImage, exactName, deliveryVisible, tier: name?.nextElementSibling?.textContent,
-    actionsBelow: !!name?.nextElementSibling?.classList.contains('lead-subline'),
-    actions: name?.nextElementSibling?.querySelectorAll('button').length,
-    tierField: !!name?.nextElementSibling?.querySelector('[data-field="tier"]') };
+  return { logsTab, noInjectedImage, exactName, deliveryVisible, tier: name?.parentElement?.querySelector('.category-badge')?.textContent,
+    actionsInline: name?.nextElementSibling?.tagName==='TIME'&&name?.nextElementSibling?.nextElementSibling?.classList.contains('category-badge'),
+    actions: name?.parentElement?.querySelectorAll('.category-badge button').length,
+    tierField: !!name?.parentElement?.querySelector('[data-field="tier"]') };
 });
 ok('Admin behavior: Logs is a separate accessible drawer tab', adminInteractions.logsTab);
 ok('Admin behavior: punctuation in names is safe; failed delivery exposes carrier error', adminInteractions.noInjectedImage && adminInteractions.exactName && adminInteractions.deliveryVisible);
@@ -715,7 +715,7 @@ const { introducedName: smsIntroducedName } = await import('../docs/server/maya-
 ok('Messages: explicit SMS introductions produce a contact name without treating inquiries as names',
   smsIntroducedName('Hi, my name is Mary Ingram, I need a fitting') === 'Mary Ingram' && !smsIntroducedName('I am interested in a fitting'));
 ok('CRM behavior: category badge has no price or call action and remains a noninteractive label',
-  adminInteractions.tier.includes('SI') && !adminInteractions.tier.includes('$') && adminInteractions.actionsBelow && adminInteractions.actions === 0 && !adminInteractions.tierField);
+  adminInteractions.tier.includes('SI') && !adminInteractions.tier.includes('$') && adminInteractions.actionsInline && adminInteractions.actions === 0 && !adminInteractions.tierField);
 const mapVer = await pg.evaluate(() =>
   (document.querySelector('meta[name="maya-version"]') || {}).content || 'missing');
 ok('index and map carry the same maya-version (' + r.version + ')', mapVer === r.version);
@@ -2465,7 +2465,7 @@ ok('v14.03: Admin hamburger is the app\'s pill to the pixel (shadow, hover, 44px
 ok('v14.03: the Hey Maya switch primes the microphone on the click and never snaps back on a transient error',
   MAP_SOURCE.includes('async function toggleWakeWord()') &&
   MAP_SOURCE.includes("navigator.mediaDevices.getUserMedia({audio:true}); m.getTracks().forEach(t=>t.stop());") &&
-  MAP_SOURCE.includes('// aborted, no-speech, network: transient'));
+  MAP_SOURCE.includes('_wakeSchedule(2000)'));
 ok('v14.03: Feature requests fold reads Maya\'s inbox; Sources of traffic is gone from the Bottom Line',
   MAP_SOURCE.includes('id="features-fold"') && MAP_SOURCE.includes('async function loadFeatureRequests()') &&
   MAP_SOURCE.includes("fetch('/api/admin/maya-features'") &&
@@ -2632,8 +2632,8 @@ const leadAlignment = await affiliatePage.evaluate(()=>{
   paintLeads({connected:true,list:[{id:'fixture',name:'Example',phone:'4155550123',tier:'Signature',note:'A long form response that should start on the left',ts:new Date().toISOString()}]});
   const panel=document.querySelector('#leads-fold .panel');
   return {scroll:getComputedStyle(panel).overflowX,focus:panel.tabIndex,
-    name:getComputedStyle(document.querySelector('.lead-identity')).justifyContent,
-    actions:getComputedStyle(document.querySelector('.lead-subline')).justifyContent,
+    name:getComputedStyle(document.querySelector('.lead-open')).justifyContent,
+    actions:getComputedStyle(document.querySelector('.lead-open')).justifyContent,
     note:getComputedStyle(document.querySelector('td.lead-note')).textAlign,
     middle:getComputedStyle(document.querySelector('td.lead-note')).verticalAlign,
     header:getComputedStyle(document.querySelector('.lead-h-note')).position,
@@ -2681,7 +2681,7 @@ ok('Outbound preserves Sheet columns and filters all campaigns with recorded F1/
 ok('Outbound preserves campaign pain and criteria and provides a people table',outboundJS.includes("field('pain'") && outboundJS.includes("field('criteria'") && outboundJS.includes('function renderPeople()'));
 await browser.close(); if (served) srv.close();
 ok('CRM uses five owner statuses and dismisses the filter outside or on Escape',MAP_SOURCE.includes("booked:'Booked'") && MAP_SOURCE.includes("canceled:'Cancelled'") && MAP_SOURCE.includes("!_leadFilterOwner.contains(e.target) && !_leadFilterMenu.contains(e.target)") && MAP_SOURCE.includes("if(e.key==='Escape' && _leadFilterOwner)") && MAP_SOURCE.includes('window.filterLeadStatus = filterLeadStatus'));
-ok('Lead rows use one phone icon, date and tier beneath the linked name',MAP_SOURCE.includes('class="lead-subline"') && MAP_SOURCE.includes('function leadSignup') && !MAP_SOURCE.slice(MAP_SOURCE.indexOf('function _actionsCell'),MAP_SOURCE.indexOf('function _leadColDefs')).includes('PAY_SVG'));
+ok('Lead rows put name then date then category in one row',MAP_SOURCE.includes("<time>'+esc(leadSignup(x))+'</time>'+_actionsCell(i,x)") && MAP_SOURCE.includes('function leadSignup') && !MAP_SOURCE.slice(MAP_SOURCE.indexOf('function _actionsCell'),MAP_SOURCE.indexOf('function _leadColDefs')).includes('PAY_SVG'));
 ok('Model snapshot groups shared models by their roles',MAP_SOURCE.includes('const groups=new Map()') && MAP_SOURCE.includes('roles.join'));
 const outboundRevampUI=readFileSync(join(ROOT,'backend/outbound.html'),'utf8'),outboundRevampJS=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');
 ok('Outbound uses the Admin background and functioning drawer',outboundRevampUI.includes('birth-of-a-star.png')&&outboundRevampUI.includes('outbound-drawer')&&outboundRevampJS.includes('function closeDrawer'));
@@ -2704,7 +2704,7 @@ ok('Aesthetic Control groups buttons/icons and panels/tables before single-row t
 ok('Typography exposes saved font family and capitalization per role',compactGallery.includes('data-field="font"') && compactGallery.includes('data-field="case"') && readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8').includes("['none','uppercase']"));
 
 const galleryCss=readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.css'),'utf8');
-ok('Typography dropdowns anchor inside the full row and constrain control widths',galleryCss.includes('.type-editor{margin:0;padding:0;position:static;') && galleryCss.includes('top:100%;left:0;z-index:5;') && galleryCss.includes('max-width:100%;box-sizing:border-box') && !galleryCss.includes('translateX(-50%)'));
+ok('Typography dropdowns anchor to their Edit control and constrain widths',galleryCss.includes('.type-editor{margin:0;padding:0;position:relative;') && galleryCss.includes('max-width:calc(100vw - 32px)') && !galleryCss.includes('translateX(-50%)'));
 
 const surfaceEditors=readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8');
 ok('Edit dropdowns dismiss on outside click, focus leaving and Escape',surfaceEditors.includes("document.addEventListener('click'")&&surfaceEditors.includes("document.addEventListener('focusin'")&&surfaceEditors.includes("e.key!=='Escape'"));
@@ -2724,5 +2724,12 @@ ok('Outbound uses the owner ten-column Sheet schema including Reason',readFileSy
 
 ok('Lead Station navigation leaves room for the fixed top bar',MAP_SOURCE.includes('#adm-scroll{scroll-padding-top:76px}') && MAP_SOURCE.includes('#leads-fold{scroll-margin-top:76px}'));
 ok('Renamed source tabs preserve campaign identities and draft membership',readFileSync(join(ROOT,'docs/server/outbound.mjs'),'utf8').includes('!campaignTabs.includes(c.sheetTab)') && readFileSync(join(ROOT,'tests/outbound.mjs'),'utf8').includes('rebound.id,c.id'));
+// October 2: editor anchors, panel content padding and wake recovery.
+const surfaceEditorSource=readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8');
+const galleryScript=readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.js'),'utf8');
+ok('Surface editors anchor to their own trigger and keep black available',surfaceEditorSource.includes("trigger.getBoundingClientRect()")&&surfaceEditorSource.includes("['black','gray'")&&surfaceEditorSource.includes("['background','Background',backgrounds]"));
+ok('Inner panel padding surrounds heading and Contacts together',galleryScript.includes('inner.append(h,metric);content.append(inner)'));
+ok('Admin failed voice starts resume the wake listener',MAP_SOURCE.includes('if(!_voice&&_wakeWantOn)_wakeSchedule(800)')&&MAP_SOURCE.includes('rec.onstart=')&&MAP_SOURCE.includes('wake listener did not start; retrying'));
+
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

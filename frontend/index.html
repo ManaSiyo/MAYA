@@ -4189,7 +4189,7 @@
   gtag('config', 'G-ETTJ6PXEMM');
 </script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=5"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=6"></script>
 </head>
 <body>
 <!-- v14.21: this is the Playground, promoted whole. The amber badge is the
@@ -19234,11 +19234,12 @@ function pgMayaFeedback() {
     _pgVoice.dc.send(JSON.stringify({ type: 'response.create' })); } catch (_) {} }, 400); });
 }
 // ── the wake word ──
-let _pgWakeRec = null, _pgWakeOn = false, _pgWakeWant = false, _pgWakePaused = false;
+let _pgWakeRec = null, _pgWakeOn = false, _pgWakeWant = false, _pgWakePaused = false, _pgWakeRetry = null;
+function _pgWakeSchedule(delay=800) { clearTimeout(_pgWakeRetry); if (_pgWakeWant && !_pgWakePaused && !_pgVoice) _pgWakeRetry=setTimeout(_pgWakeStart,delay); }
 function _pgWakeSupported() { return !!(window.SpeechRecognition || window.webkitSpeechRecognition); }
 function _pgWakeLabel() {
   const t = document.getElementById('pg-maya-toggle');
-  if (t) { t.classList.toggle('on', _pgWakeWant); t.setAttribute('aria-checked', _pgWakeWant ? 'true' : 'false'); }
+  if (t) { t.classList.toggle('on', _pgWakeWant); t.setAttribute('aria-checked', _pgWakeWant ? 'true' : 'false'); t.title=_pgWakeOn?'Listening for Hey Maya':_pgWakeWant?'Wake listener is waiting':'Enable Hey Maya'; }
 }
 // v14.27: a phone. Touch only, no hover: the wake word is a poor fit there
 // (Safari chimes on every restart of the recognizer, Chrome on iPhone has no
@@ -19266,11 +19267,13 @@ async function pgToggleWake() {
 }
 function _pgWakeStart() {
   if (_pgPhone()) return;   // v14.27: the switch is the line on a phone
-  if (!_pgWakeWant || _pgWakeOn || _pgWakePaused || _pgVoice || !_pgWakeSupported()) return;
+  if (!_pgWakeWant || _pgWakeOn || _pgWakePaused || _pgVoice || _pgVoiceStarting || _pgWakeRec || !_pgWakeSupported()) return;
   if (typeof isListening !== 'undefined' && isListening) return;   // the moodboard owns the engine right now
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   try {
     _pgWakeRec = new SR(); _pgWakeRec.continuous = true; _pgWakeRec.interimResults = true; _pgWakeRec.lang = 'en-US';
+    const rec = _pgWakeRec;
+    rec.onstart = () => { if (_pgWakeRec===rec) { _pgWakeOn=true; _pgWakeLabel(); } };
     _pgWakeRec.onresult = (e) => {
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const t = (e.results[i][0].transcript || '').toLowerCase();
@@ -19281,15 +19284,16 @@ function _pgWakeStart() {
       if (ev && (ev.error === 'not-allowed' || ev.error === 'service-not-allowed')) {
         _pgWakeWant = false; try { localStorage.setItem('maya_pg_wake', '0'); } catch (_) {}
         _pgWakeLabel(); showToast('The microphone was refused, Hey Maya is off.');
-      }
+      } else if (ev?.error==='network' || ev?.error==='audio-capture') showToast('Wake listener interrupted; retrying.');
+      if (_pgWakeRec===rec) { _pgWakeStop(); _pgWakeSchedule(2000); }
     };
-    _pgWakeRec.onend = () => { _pgWakeOn = false; if (_pgWakeWant && !_pgWakePaused && !_pgVoice) setTimeout(_pgWakeStart, 600); };
-    _pgWakeRec.start(); _pgWakeOn = true;
-  } catch (_) { _pgWakeOn = false; }
+    _pgWakeRec.onend = () => { if (_pgWakeRec!==rec)return; _pgWakeRec=null; _pgWakeOn=false; _pgWakeLabel(); _pgWakeSchedule(); };
+    _pgWakeRec.start();
+  } catch (_) { _pgWakeStop(); showToast('Wake listener did not start; retrying.'); _pgWakeSchedule(2000); }
 }
-function _pgWakeStop() { _pgWakeOn = false; try { if (_pgWakeRec) { _pgWakeRec.onend = null; _pgWakeRec.stop(); } } catch (_) {} _pgWakeRec = null; }
+function _pgWakeStop() { clearTimeout(_pgWakeRetry); _pgWakeRetry=null; _pgWakeOn=false; const rec=_pgWakeRec; _pgWakeRec=null; try { if (rec) { rec.onend=null; rec.onstart=null; rec.onresult=null; rec.onerror=null; rec.abort(); } } catch (_) {} _pgWakeLabel(); }
 function _pgWakePause() { _pgWakePaused = true; _pgWakeStop(); }
-function _pgWakeResume() { _pgWakePaused = false; if (_pgWakeWant) setTimeout(_pgWakeStart, 700); }
+function _pgWakeResume() { _pgWakePaused = false; _pgWakeSchedule(700); }
 // the moodboard's Tap to Listen and the feedback listener use the same engine: step aside, come back
 if (typeof startListening === 'function') { const _o = startListening; startListening = function () { _pgWakePause(); return _o.apply(this, arguments); }; }
 if (typeof stopListening === 'function') { const _o = stopListening; stopListening = function () { const r = _o.apply(this, arguments); _pgWakeResume(); return r; }; }

@@ -1,3 +1,16 @@
+OCTOBER 2 afternoon — CSS editor anchoring/padding mismatch; wake silence
+Screenshot showed surface editors anchored to full rows' left edge, detached
+from centered Edit buttons. Earlier bounds-only checks missed this. Trigger-relative
+positioning now accounts for the glass backdrop-filter containing block and
+checks proximity, not merely viewport fit. Raise the active glass section above
+its neighbors and hit-test visible controls; bounds alone missed occlusion. Inner preview formerly padded only
+Contacts because the heading was outside it; move heading into the inner panel.
+Black editor backing/fields and table background choices; single-line toolbars
+and name/date/category. Admin voice startup failure stopped wake recognition
+but left intent on; finally restores recognition and clears Connecting. Start
+and network errors now recover instead of silently leaving a dead recognizer.
+Fake recognition tests cover wake phrase, token failure and permission refusal.
+
 OCTOBER 2 — deployment blocker identified; responsive shared-style follow-up
 Cloud Build c461f1e2-3143-4608-ab0c-72e9d7a29645 for 594cf57 failed at
 admin-ui-contract: it required the phone icon that the owner explicitly retired.

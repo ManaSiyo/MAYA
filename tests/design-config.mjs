@@ -32,6 +32,9 @@ compact.inner={fill:18,rim:22,radius:12,paddingX:30,paddingY:20,width:100};compa
 compact.table={fill:18,rim:22,paddingX:12,paddingY:14,header:{...type,background:'blue',opacity:80},firstColumn:{background:'pink',opacity:60},columns:[type,type,type]};
 assert.equal(validDesign(compact),true);
 for(const patch of [{filter:{...compact.filter,width:159}},{inner:{...compact.inner,paddingY:41}},{table:{...compact.table,columns:[type]}},{table:{...compact.table,header:{...compact.table.header,background:'url(evil)'}}},{table:{...compact.table,columns:[{...type,vertical:'sideways'},type,type]}}])assert.equal(validDesign({...compact,...patch}),false);
+for(const target of ['header','firstColumn'])assert.equal(validDesign({...compact,table:{...compact.table,[target]:{...compact.table[target],background:'black'}}}),true);
+assert.equal(validDesign({...compact,table:{...compact.table,background:'black'}}),true);
+assert.equal(validDesign({...compact,table:{...compact.table,background:'url(evil)'}}),false);
 console.log('Saved inner/filter/table controls validate bounded geometry, fixed backgrounds and independent column typography.');
 
 const {saveDesign}=await import('../docs/server/design-config.mjs');
