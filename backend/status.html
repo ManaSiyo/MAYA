@@ -828,6 +828,13 @@ try {
 .lead-subline{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:7px;color:#fff;font:var(--maya-text-caption) var(--maya-font-ui)}
 #adm-mkt #leads-table .lead-src,#adm-mkt #leads-table .lead-sig-edit{color:#fff;font:var(--maya-text-caption) var(--maya-font-ui)}
 #model-snapshot{text-align:center;padding:0;font-family:var(--maya-font-ui)}.model-group{padding:12px;border-radius:12px;margin:4px 0;}.model-group strong{display:block;font:var(--maya-text-section) var(--maya-font-ui);color:#fff}.model-group small{display:block;font:11px/1.5 var(--maya-font-ui);color:var(--dim)}.model-note{font:10px var(--maya-font-ui);color:var(--dim);padding:8px}
+
+#adm-mkt #leads-fold>summary{display:flex!important;flex-direction:row;align-items:center!important;justify-content:center;gap:8px}
+#adm-mkt #leads-fold>summary::after{position:static;align-self:center;line-height:1;transform:none}
+#adm-mkt #leads-table td.lead-td-name{cursor:pointer}
+#adm-mkt #leads-table .lead-open{display:block;width:100%;height:100%;text-align:inherit}
+#adm-mkt #leads-table .category-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;border:1px solid var(--line);border-radius:100px;color:var(--dim);font:10px var(--maya-font-ui)}
+.affiliate-reload{border:1px solid var(--line);border-radius:100px;background:transparent;color:var(--ink);cursor:pointer}
 </style>
 <style>
   #affiliate-profile{display:none}
@@ -853,7 +860,7 @@ try {
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=3"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=4"></script>
 </head>
 <body class="systems-map">
 
@@ -1039,6 +1046,7 @@ if (IS_AFFILIATES) {
 
 
   <section id="affiliate-profile" aria-label="Affiliates dashboard">
+<button class="affiliate-reload" onclick="reloadLeads()" title="Reload leads" aria-label="Reload leads">&#8635;</button>
     <div class="affiliate-avatar" aria-label="Fromsa profile">F</div>
     <div class="affiliate-beta">Affiliates</div>
     <h1>Fromsa</h1>
@@ -1113,7 +1121,7 @@ if (IS_AFFILIATES) {
 
   <details class="fold" id="leads-fold" open>
     <summary><h2 class="grp">The Lead Station</h2></summary>
-    <div id="leads-bar"><span class="lead-tool" aria-current="page">Forms</span><button class="lead-tool" onclick="event.preventDefault();reloadLeads()" title="Reload leads" aria-label="Reload leads">&#8635;</button><button class="lead-tool" onclick="event.preventDefault();checkLeadAlerts()" title="Check new signups and notify me" aria-label="Check new signups and notify me">Alerts</button><button class="lead-tool" onclick="event.preventDefault();addLeadManual()" title="Add lead" aria-label="Add lead">+</button></div>
+
     <div class="panel" tabindex="0" role="region" aria-label="Lead Station, scroll horizontally for more columns"><table id="leads-table"><tbody></tbody></table></div>
     <div id="leads-note" class="note" style="display:none"></div>
   </details>
@@ -2822,7 +2830,7 @@ function paintLeads(l) {
       '<tr id="lead-tr-' + i + '">' + order.map((k, ci) => {
         const d = defs[k];
         const cls = [d.td || '', ci === 0 ? 'lead-col-first' : ''].filter(Boolean).join(' ');
-        return '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + d.render(x, i) + '</td>';
+        return '<td data-col="' + k + '"' + (k==='name'?' onclick="leadOpenThread('+i+')"':'') + (cls ? ' class="' + cls + '"' : '') + '>' + d.render(x, i) + '</td>';
       }).join('') + '</tr>'
     ).join('');
   if (filterOpen) {
@@ -2851,16 +2859,21 @@ function _leadTierNum(x){ const m = String(x.tier || x.company || '').match(/([0
 // v14.34: the Last Quote column is gone. The tier under the name is what they
 // went with, and Maya sets it by voice ("Kristi went with signature").
 // Actions: email, phone, pay-link. No recommendation text, no delete X.
-function _actionsCell(i, x){
-  return x.phone ? '<button class="lead-cta" onclick="leadMayaCall('+i+')" aria-label="Call" title="Call">'+PHONE_SVG+'</button>' : '';
+function leadCategory(x){
+ const value=String(x.tier||x.company||'').trim().toLowerCase();
+ if(/^signature\b/.test(value))return {code:'SI',label:'Signature'};
+ if(/^ceremonial\b/.test(value))return {code:'CE',label:'Ceremonial'};
+ if(/^suit\b/.test(value))return {code:'SU',label:'Suit'};
+ return {code:'?',label:'Help me decide'};
 }
+function _actionsCell(i,x){const category=leadCategory(x);return '<span class="category-badge" aria-label="'+category.label+'" title="'+category.label+'">'+category.code+'</span>';}
 function leadSignup(x){const value=x.createdAt||x.ts||x.date;const d=value?new Date(value):null;return d&&!Number.isNaN(d.getTime())?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';}
 // v13.95: the column catalogue. `render` closes over the shared `cell`. The name
 // column carries the WIX badge and the signature line; order lives in localStorage.
 function _leadColDefs(){
   return {
     name: { label: 'Full name', h: 'lead-h-name', td: 'lead-td-name',
-      render: (x, i) => '<div class="lead-identity"><button class="lead-open" onclick="leadOpenThread('+i+')">'+esc(x.name || 'Unnamed')+'</button></div><div class="lead-subline"><span class="lead-src wix">'+esc(String(x.tier || x.company || '').replace(/\s*[·,]?\s*\$[\d,.]+.*$/,'').trim())+'</span><time>'+esc(leadSignup(x))+'</time>'+_actionsCell(i,x)+'</div>' },
+      render: (x, i) => '<button class="lead-open" aria-label="Open conversation with '+esc(x.name||'Unnamed')+'"><span class="lead-identity">'+esc(x.name || 'Unnamed')+'</span><span class="lead-subline">'+_actionsCell(i,x)+'<time>'+esc(leadSignup(x))+'</time></span></button>' },
     // v14.24: Contact, the phone first (that is what gets used), the email when there is none.
     stage: {label:'Status',h:'lead-h-stage',render:(x,i)=>'<span class="status-pill lead-status"><span class="status-text" aria-hidden="true">'+esc(LEAD_STAGES[leadStage(x)]|| (x.stage==='closed'?'Closed':'Passed')+' (previous)')+'</span><select class="lead-stage" aria-label="Lead status" onchange="setLeadStage('+i+',this)">'+(['closed','passed'].includes(x.stage)?'<option value="'+x.stage+'" selected disabled>'+ (x.stage==='closed'?'Closed':'Passed')+' (previous)</option>':'')+Object.entries(LEAD_STAGES).map(([k,v])=>'<option value="'+k+'"'+(leadStage(x)===k?' selected':'')+'>'+v+'</option>').join('')+'</select></span>'},
     note: { label: 'Latest Notes', h: 'lead-h-note', td: 'lead-note',
@@ -2944,6 +2957,7 @@ function scheduleLeadFilterPosition(e){
 }
 document.addEventListener('scroll',scheduleLeadFilterPosition,true);
 window.addEventListener('resize',scheduleLeadFilterPosition);
+document.addEventListener('maya-design-applied',scheduleLeadFilterPosition);
 function leadSummary(x){let value=String(x.wrote||x.note||'').replace(/^(?:Signature|Help me decide)\s*[·,:-]?\s*(?:\$[\d,.]+)?\s*[,·:]?\s*/i,'').replace(/\s+/g,' ').trim();if(/^(?:cancel(?:led|ed)|in progress|passed|not contacted)[.!]?$/i.test(value))return 'Request details not recorded';return value.length>120?value.slice(0,117).replace(/\s+\S*$/,'')+'...':value||'Request details not recorded';}
 function filterLeadStatus(key,checked){if(checked)leadStatusFilter.add(key);else leadStatusFilter.delete(key);paintLeads({connected:true,list:_leadList});}
 const LEAD_COLS_DEFAULT = ['name', 'stage', 'note'];   // v14.34: Last Quote is gone; the tier under the name says what they went with
@@ -3240,8 +3254,7 @@ window.addLeadManual = addLeadManual;
 
 // ═══ v14.35: MESSAGES. The drawer's second tab: one thread per number, texts
 // both ways from the studio number, calls Maya took or placed, and a composer.
-// The station's phone icon asks Maya to call the lead; the chat icon opens the
-// thread here. Polls every 15 s while the tab is open.
+// The whole name cell opens this lead's Messages thread. Polls every 15 s while the tab is open.
 let _msgSending = false;
 let _msgTab = 'systems', _msgOpen = null, _msgTimer = null, _msgThreads = [];
 function admTab(t) {
@@ -3460,8 +3473,9 @@ async function msgBooking(){
   catch(e){alert(e.message);}
 }
 function leadOpenThread(i) {
-  const x = _leadList[i]; if (!x || !x.phone) return;
-  toggleDrawer(true); admTab('messages'); openThread(x.phone, x.name || '');
+  const x = _leadList[i]; if (!x) return;
+  toggleDrawer(true); admTab('messages');
+  if(x.phone)openThread(x.phone,x.name||'');else{msgBack();document.getElementById('msg-feedback').textContent='No phone number recorded for '+(x.name||'this lead')+'.';}
 }
 function leadMayaCall(i) {
   const x = _leadList[i]; if (!x || !x.phone) return;

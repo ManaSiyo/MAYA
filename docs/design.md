@@ -57,30 +57,43 @@ and long content must remain accessible at 320–1920px widths.
 
 ## Owner review controls
 
-Visuals is first, headed Glass Panels and Tables. One dropdown contains Glass
-Section (preset buttons, active material sliders/padding, icons, five distinct
-pill colors and collapsed states), a divider, then Panels (panel controls,
-surfaces, working drawer/filter previews and a populated table). Glossary,
-page descriptions, source-style inventory, font comparison, usage rows and
-email-history/status reference rows are removed from the editor. The evidence
-files remain available to maintainers. Status examples show only Gray, Blue,
-Yellow, Green and Pink, without repeating operational status names.
+The first dropdown is Glass, Panels and Tables. Glass Section groups presets,
+material sliders, X/Y padding, icons, five pill colors and button States.
+A divider separates Panels, another separates Table. Panels have independent
+outer padding/material; Inner panel has opacity, border, corners, X/Y padding
+and percentage width. Filter has independent material/padding and pixel width.
+The preview includes working drawer/filter controls and nested panel examples.
 
-Typography shows H1–H4/P1–P4 with exactly one preview and one Edit dropdown
-per role. H3 previews Campaign details and labels its Lead Station/campaign
-context. Edit includes font family, Normal/ALL CAPS, size, weight and color.
-The single right-side summary shows size/weight. Each role retains its
-Centered/Left button; the review starts centered, and Save applies explicit
-alignment to shared selectors. Sample rows retain 6px padding.
+Table previews the actual Lead Station columns: Full name, Status, Latest Notes.
+Top row has its own font, case, size, weight, color, horizontal/vertical alignment,
+background color and opacity. First column has independent background/opacity;
+each column has independent type and alignment. A Table Edit sets fill, border
+and X/Y cell padding. These settings apply to the real Lead Station and its
+preview, using data-col keys so fonts follow semantic columns when reordered.
+Status colors stay semantic. Background choices are Gray, Blue, Yellow, Green,
+Pink. Full names default to Cormorant; other data defaults to Jost.
 
-Editor panel controls independently set the dropdown rectangle fill, border,
-corners and padding. Glass changes apply to actual shared buttons/icons;
-information-panel changes apply separately. Font, case and neutral text color
-apply consistently to mapped roles. Semantic status colors remain intact and
-technical identifiers retain their monospace exception. Old saved designs
-without font/case receive the role defaults on read; the API accepts both
-old and extended schemas. No migration writes production settings.
+Typography shows H1–H4/P1–P4 with one preview and one Edit per role. H3 previews
+Campaign details. Edit includes font, Normal/ALL CAPS, size, weight, color,
+Left/Centered/Right and Top/Middle/Bottom. Alignment buttons are removed.
+The navigation links, Reset, applied-status copy and Editor panel controls are
+removed. Legacy editor housing settings remain readable for saved compatibility.
+Save is centered. History is not introduced in this change; Reset is removed.
+Temporary Edit controls close on outside click, focus leaving, Escape or another
+Edit. Section folds and persistent States remain open until explicitly toggled.
+All popups and their fields stay inside their section at 320–1920px widths.
+At 420px and below, they use two columns. Font/case and material defaults fill
+in older saved designs without a migration write. Only an authenticated Admin
+Save writes the live design.
 
+Lead Station has no floating Forms/Reload/Alerts/Add toolbar. Its section caret
+is on the same horizontal line as the title. Each whole name cell opens the
+client's Messages thread, including clicks in cell padding. A keyboard-accessible
+name button preserves normal Tab activation. The four category badges are ?
+(Help me decide), SI (Signature), CE (Ceremonial), SU (Suit). Category/date replace
+the long tier pill and call icon; calls remain available inside Messages. A lead
+with no phone opens Messages and states the missing number. Affiliates retains
+its own reload within its profile, outside Admin's Lead Station toolbar.
 
 ## Frontend
 

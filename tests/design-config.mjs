@@ -19,9 +19,17 @@ console.log('Design validation passed: hierarchy, even sizes, weight cap, fixed 
 const compact=structuredClone(good);compact.type.P3=compact.type.P4;compact.type.P4=compact.type.P5;delete compact.type.P5;
 compact.type.P1.align='center';compact.editor={fill:30,rim:14,radius:12,padding:8};
 assert.equal(validDesign(compact),true);
-for(const patch of [{editor:{...compact.editor,padding:21}},{editor:{...compact.editor,fill:'red'}},{type:{...compact.type,P1:{...compact.type.P1,align:'right'}}}])assert.equal(validDesign({...compact,...patch}),false);
+for(const patch of [{editor:{...compact.editor,padding:21}},{editor:{...compact.editor,fill:'red'}},{type:{...compact.type,P1:{...compact.type.P1,align:'justify'}}}])assert.equal(validDesign({...compact,...patch}),false);
 
 compact.type.H1.font='jost';compact.type.H1.case='uppercase';compact.type.H2.font='cormorant';compact.type.H2.case='none';
 assert.equal(validDesign(compact),true);
 for(const field of [{font:'Arial'},{font:'url(evil)'},{case:'capitalize'},{case:'uppercase;display:none'}])assert.equal(validDesign({...compact,type:{...compact.type,H3:{...compact.type.H3,...field}}}),false);
 console.log('Design font/case validation accepts only the two supported families and Normal/ALL CAPS; old saved schemas remain compatible.');
+
+compact.type.H3.align='right';compact.type.H3.vertical='middle';assert.equal(validDesign(compact),true);
+const type={font:'jost',size:13,weight:400,color:'white',case:'none',align:'right',vertical:'top'};
+compact.inner={fill:18,rim:22,radius:12,paddingX:30,paddingY:20,width:100};compact.filter={...compact.inner,width:330};
+compact.table={fill:18,rim:22,paddingX:12,paddingY:14,header:{...type,background:'blue',opacity:80},firstColumn:{background:'pink',opacity:60},columns:[type,type,type]};
+assert.equal(validDesign(compact),true);
+for(const patch of [{filter:{...compact.filter,width:159}},{inner:{...compact.inner,paddingY:41}},{table:{...compact.table,columns:[type]}},{table:{...compact.table,header:{...compact.table.header,background:'url(evil)'}}},{table:{...compact.table,columns:[{...type,vertical:'sideways'},type,type]}}])assert.equal(validDesign({...compact,...patch}),false);
+console.log('Saved inner/filter/table controls validate bounded geometry, fixed backgrounds and independent column typography.');

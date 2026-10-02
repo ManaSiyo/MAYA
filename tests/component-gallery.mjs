@@ -30,6 +30,9 @@ try{
  await page.locator('.overlay-controls summary').click();
  await page.getByRole('slider',{name:'Fill',exact:true}).fill('35');
  assert.match(await page.locator('#panels .maya-surface').first().evaluate(e=>getComputedStyle(e).backgroundColor),/0.35/);
+ await page.getByRole('slider',{name:'Padding X',exact:true}).fill('24');
+ await page.getByRole('slider',{name:'Padding Y',exact:true}).fill('14');
+ assert.equal(await page.locator('#panels .maya-surface').first().evaluate(e=>getComputedStyle(e).padding),'14px 24px');
  await page.locator('.overlay-controls summary').click();
 
  assert.equal(await page.locator('#gallery > section').first().getAttribute('id'),'pill-preview');
@@ -46,33 +49,41 @@ try{
  await page.locator('[data-category="H3"] .type-editor summary').click();
  assert.equal(await page.locator('.type-row .type-appearance,.type-row .type-spacing').count(),0);
  assert.equal(await page.locator('.category-setting').count(),8);
- assert.equal(await page.locator('.type-align[aria-pressed="true"]').count(),8);
+ assert.equal(await page.locator('.type-align,.housing-editor,#reset,.gallery-header nav').count(),0);
  assert.equal(await page.locator('[data-type="brand"] .type-example').evaluate(e=>getComputedStyle(e).textAlign),'center');
- await page.locator('[data-category="P1"] .type-editor summary').click();
- await page.locator('[data-category="P1"] [data-field="color"]').selectOption('white');
- await page.locator('[data-category="P1"] .type-editor summary').click();
- await page.getByRole('button',{name:'Center align P1',exact:true}).click();
- assert.equal(await page.locator('[data-type="paragraph"] .type-example').evaluate(e=>getComputedStyle(e).textAlign),'left');
- assert.equal(await page.locator('#table-preview td[data-preview-category="P1"]').first().evaluate(e=>getComputedStyle(e).textAlign),'left');
- await page.getByRole('button',{name:'Center align P1',exact:true}).click();
- await page.locator('.housing-editor summary').click();
- await page.locator('[data-editor-field="radius"]').fill('20');
- await page.locator('[data-editor-field="fill"]').fill('45');
- await page.locator('[data-category="H1"] .type-editor summary').click();
- assert.equal(await page.locator('[data-category="H1"] .type-editor-fields').evaluate(e=>getComputedStyle(e).borderRadius),'20px');
- assert.equal(await page.locator('[data-category="H1"] .type-row').first().evaluate(e=>getComputedStyle(e).paddingTop),'6px');
- await page.locator('[data-category="H1"] .type-editor summary').click();
+ const edit=async(role,field,value)=>{const group=page.locator(`[data-category="${role}"] .type-editor`);if(!await group.evaluate(e=>e.open))await group.locator('summary').click();await group.locator(`[data-field="${field}"]`).selectOption(value);};
+ await edit('P1','color','white');await edit('P1','align','right');
+ assert.equal(await page.locator('[data-type="paragraph"] .type-example').evaluate(e=>getComputedStyle(e).textAlign),'right');
+ await edit('P1','align','center');
+ await page.locator('.gallery-header h1').click();
+ assert.equal(await page.locator('.type-editor[open]').count(),0,'Outside click dismisses');
+ await edit('H1','align','right');await page.keyboard.press('Escape');
+ assert.equal(await page.locator('.type-editor[open]').count(),0,'Escape dismisses');
+ const surface=async(id,field,value)=>{const group=page.locator(`[data-editor="${id}"] .type-editor`);if(!await group.evaluate(e=>e.open)){await page.keyboard.press('Escape');await group.locator('summary').click();}const input=group.locator(`[data-field="${field}"]`);if(await input.evaluate(e=>e.tagName==='SELECT'))await input.selectOption(value);else await input.fill(value);};
+ await surface('inner','paddingX','30');await surface('inner','paddingY','20');await surface('inner','width','80');
+ assert.equal(await page.locator('.inner-panel').first().evaluate(e=>getComputedStyle(e).padding),'20px 30px');
+ await surface('filter','width','330');await surface('filter','paddingX','24');
+ await surface('header','background','blue');await surface('header','opacity','80');await surface('header','font','cormorant');await surface('header','size','14');
+ await surface('first-column','background','pink');await surface('first-column','opacity','60');
+ await surface('column-0','font','cormorant');await surface('column-0','align','right');await surface('column-0','vertical','top');
+ await surface('column-2','size','15');await surface('table','paddingY','14');
+ assert.match(await page.locator('#table-preview th').first().evaluate(e=>getComputedStyle(e).backgroundColor),/0.8/);
+ assert.match(await page.locator('#table-preview td[data-col="name"]').first().evaluate(e=>getComputedStyle(e).backgroundColor),/0.6/);
+ assert.equal(await page.locator('#table-preview td[data-col="name"]').first().evaluate(e=>getComputedStyle(e).textAlign),'right');
+ assert.equal(await page.locator('#table-preview td[data-col="note"]').first().evaluate(e=>getComputedStyle(e).fontSize),'15px');
  assert.equal(await page.locator('#table-preview tbody tr').count(),2);
+ await page.locator('.gallery-header h1').click();
  await page.locator('[data-category="H4"] .type-editor summary').click();
  await page.locator('[data-category="H4"] [data-field="size"]').fill('12');
  assert.equal(await page.locator('[data-type="dashboard"] .type-example').evaluate(e=>getComputedStyle(e).fontSize),'12px');
  await page.locator('#save').click();await page.waitForFunction(()=>document.querySelector('#feedback').textContent.includes('Saved locally'));assert.match(await page.locator('#feedback').textContent(),/Saved locally/);
  await page.reload();await page.locator('[data-category="H4"] .type-row').first().waitFor();
  assert.equal(await page.locator('[data-type="dashboard"] .type-example').evaluate(e=>getComputedStyle(e).fontSize),'12px');
- assert.equal(await page.locator('[data-editor-field="radius"]').inputValue(),'20');
  assert.equal(await page.locator('[data-category="H3"] [data-field="case"]').inputValue(),'uppercase');
  assert.equal(await page.locator('[data-category="H3"] [data-field="font"]').inputValue(),'cormorant');
- assert.equal(await page.locator('#table-preview td[data-preview-category="P1"]').first().evaluate(e=>getComputedStyle(e).textAlign),'center');
+ assert.equal(await page.locator('#table-preview td[data-col="stage"]').first().evaluate(e=>getComputedStyle(e).textAlign),'center');
+ assert.equal(await page.locator('#table-preview td[data-col="note"]').first().evaluate(e=>getComputedStyle(e).fontSize),'15px');
+ assert.equal(await page.locator('.inner-panel').first().evaluate(e=>getComputedStyle(e).padding),'20px 30px');
  await page.goto('https://maya.test/backend/status.html',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>!!document.getElementById('maya-typography-control-style'));
  assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--maya-type-H4-size').trim()),'12px');
@@ -81,6 +92,14 @@ try{
  assert.match(await page.locator('h2.grp').first().evaluate(e=>getComputedStyle(e).fontFamily),/Cormorant/);
  assert.match(await page.evaluate(()=>{const n=document.createElement('button');n.className='maya-icon-button';document.body.append(n);const color=getComputedStyle(n).backgroundColor;n.remove();return color;}),/0.4/);
  assert.equal(await page.evaluate(()=>{const n=document.createElement('p');n.textContent='Body preview';document.body.append(n);const c=getComputedStyle(n).color;n.remove();return c;}),'rgb(255, 255, 255)');
+ const liveTable=await page.evaluate(()=>{
+  const table=document.querySelector('#leads-table');table.innerHTML='<tbody><tr><th>Full name</th><th>Status</th><th>Latest Notes</th></tr><tr><td class="lead-col-first" data-col="name"><button class="lead-open">Angela</button></td><td data-col="stage"><span class="status-pill">Not contacted</span></td><td data-col="note"><div class="lead-note-vp"><span>Fixture note</span></div></td></tr></tbody>';
+  const note=getComputedStyle(table.querySelector('td[data-col="note"] .lead-note-vp>span'));
+  const name=getComputedStyle(table.querySelector('.lead-open'));
+  const filter=document.createElement('div');filter.className='lead-status-menu';document.body.append(filter);const width=getComputedStyle(filter).width;filter.remove();
+  return {noteSize:note.fontSize,nameFont:name.fontFamily,nameAlign:name.textAlign,header:getComputedStyle(table.querySelector('th')).backgroundColor,filterWidth:width,inner:getComputedStyle(document.querySelector('#leads-fold .panel')).padding};
+ });
+ assert.equal(liveTable.noteSize,'15px');assert.match(liveTable.nameFont,/Cormorant/);assert.equal(liveTable.nameAlign,'right');assert.match(liveTable.header,/0.8/);assert.equal(liveTable.filterWidth,'330px');assert.equal(liveTable.inner,'20px 30px');
  const designLink=page.getByRole('link',{name:'Aesthetic Control',exact:true});
  assert.equal(await designLink.getAttribute('href'),'/aesthetics/aesthetic-control.html');
  assert.equal(await designLink.evaluate(e=>getComputedStyle(e).borderRadius),'100px');
@@ -91,13 +110,10 @@ try{
  await page.waitForFunction(()=>!!document.getElementById('maya-typography-control-style'));
  assert.equal(await page.evaluate(()=>{const n=document.createElement('div');n.className='stat';n.innerHTML='<strong>262</strong>';document.body.append(n);const size=getComputedStyle(n.firstChild).fontSize;n.remove();return size;}),'12px');
  await page.goto('https://maya.test/aesthetics/aesthetic-control.html');await page.locator('#save').waitFor();
- await page.locator('#reset').click();
+ await page.evaluate(()=>localStorage.clear());await page.reload();await page.locator('#save').waitFor();
  // Negative left overflow does not increase scrollWidth: inspect actual bounds.
  await page.locator('#pill-preview > .review-fold > summary').click();
- await page.locator('[data-category="H1"] .type-align').click();
- await page.locator('.housing-editor summary').click();
- await page.locator('[data-editor-field="padding"]').fill('20');
- await page.locator('[data-editor-field="padding"]').dispatchEvent('input');
+ await page.evaluate(()=>document.documentElement.style.setProperty('--type-editor-padding','20px'));
  for(const width of [320,390,420,650,700,701,768,1024,1100,1440,1920]){
   await page.setViewportSize({width,height:844});
   for(const role of ['H1','H2','H3','H4','P1','P2','P3','P4']){
@@ -115,14 +131,21 @@ try{
    if(width===1100&&role==='H1')await page.screenshot({path:'/private/tmp/maya-dropdown-fixed.png'});
    await editor.locator('summary').click();
   }
+  await page.locator('#pill-preview > .review-fold').evaluate(e=>e.open=true);
+  for(const id of ['inner','filter','table','header','first-column','column-0','column-1','column-2']){
+   const editor=page.locator(`[data-editor="${id}"] .type-editor`);await editor.locator('summary').click();
+   const fits=await editor.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&[...e.querySelectorAll('input,select')].every(c=>{const b=c.getBoundingClientRect();return b.left>=r.left&&b.right<=r.right;});});
+   assert.ok(fits,`${id} popup/controls at ${width}`);await page.keyboard.press('Escape');
+  }
+  await page.locator('#pill-preview > .review-fold').evaluate(e=>e.open=false);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'overflow '+width);
  }
- await page.locator('#reset').click();
+ await page.evaluate(()=>localStorage.clear());await page.reload();await page.locator('#save').waitFor();
  await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'/private/tmp/maya-typography-controls.png',fullPage:true});
  await page.goto('https://maya.manasiyo.com/aesthetics/aesthetic-control.html');await page.locator('#save').waitFor();
  await page.evaluate(()=>localStorage.setItem('maya_admin_tok','test-owner-token'));
  await page.locator('#save').click();await page.waitForFunction(()=>document.querySelector('#feedback').textContent.includes('Saved across MAYA pages'));
- const {validDesign}=await import('../docs/server/design-config.mjs');assert.equal(validDesign(savedPost.body),true);assert.equal(savedPost.body.editor.radius,12);assert.equal(savedPost.body.type.P1.align,'center');assert.equal(savedPost.header,'Bearer test-owner-token');assert.deepEqual(Object.keys(savedPost.body.type),['H1','H2','H3','H4','P1','P2','P3','P4']);
+ const {validDesign}=await import('../docs/server/design-config.mjs');assert.equal(validDesign(savedPost.body),true,JSON.stringify(savedPost.body));assert.equal(savedPost.body.editor.radius,12);assert.equal(savedPost.body.table.columns.length,3);assert.equal(savedPost.body.type.P1.align,'center');assert.equal(savedPost.header,'Bearer test-owner-token');assert.deepEqual(Object.keys(savedPost.body.type),['H1','H2','H3','H4','P1','P2','P3','P4']);
  assert.deepEqual(errors.filter(e=>!e.includes('Firebase')&&!e.includes('google')),[]);
  console.log('Typography Controls passed: role counts, descending roles, edit/save/reload, Admin application, eleven widths with all popup and control bounds.');
 }finally{await browser.close();}

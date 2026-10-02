@@ -186,3 +186,10 @@ when adding server modules or changing the Dockerfile.
 Standalone Marketing was retired September 29. `/marketing.html` and
 `/backend/marketing.html` redirect to Admin; keep its embedded marketing modules
 and server endpoints intact.
+
+Aesthetic Control live surface editors: aesthetics/aesthetic-control/surface-editors.js.
+Runtime v4 saves independent inner/filter geometry and three Lead Station column
+styles, top-row and first-column materials via validated optional design keys.
+Keep preview/live table data-col keys in sync so drag reordering preserves column
+settings. Run component-gallery, design-config/design-contract and outbound-ui
+(including lead-filter-ui) for these controls and Lead Station interactions.

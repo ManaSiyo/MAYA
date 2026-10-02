@@ -1,3 +1,12 @@
+OCTOBER 1: Editor lacked dismissal and preview differed from Lead Station (LOCAL FIX)
+Native details Edit controls stayed open outside their bounds. Preview had four
+columns unrelated to the real table, no independent inner/filter/table controls,
+and Lead Station repeated long tiers/call icons under client names. Add temporary
+editor dismissal, a three-column preview and validated saved presentation applied
+to both tables; full-cell thread activation and four category badges. Preserve
+account boundaries, consent, server communication tools and carrier records.
+No live Save, call/text or deployment occurred.
+
 OCTOBER 1: Typography dropdown clipped beyond the page (LOCAL FIX)
 Desktop CSS centered a 320px popup on the small Edit button, sending its left
 edge outside the browser content. Conflicting mobile overrides hid the defect

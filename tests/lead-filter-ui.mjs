@@ -30,10 +30,15 @@ export async function auditLeadFilter(page){
     assert.ok(data.portal && data.top,'Filter escapes sticky/scroll clipping');
     assert.ok(data.x>=8 && data.right<=data.width-7 && data.y>=0 && data.bottom<=data.height-7,JSON.stringify(data));
     assert.ok(data.points.every(Boolean),'All options receive pointer hits, above table cells');
-    assert.equal(data.background,'rgba(7, 10, 20, 0.88)','Glass has a readable backing');
+    assert.equal(data.background,'rgba(3, 15, 29, 0.88)','Glass has a readable backing');
     assert.match(data.blur,/blur\(22px\)/);
     assert.equal(data.fontSize,'11px','Filter retains the compact table scale');
   };
+  await page.evaluate(()=>paintLeads({connected:true,list:['Help me decide','Signature','Ceremonial','Suit'].map((tier,i)=>({id:'badge-'+i,name:'Category '+i,phone:'+15555550100',tier,createdAt:'2026-10-01'}))}));
+  assert.deepEqual(await page.locator('.category-badge').allTextContents(),['?','SI','CE','SU']);
+  assert.equal(await page.locator('#leads-bar,#leads-table [aria-label="Call"],#leads-table .lead-src').count(),0);
+  const clicked=await page.evaluate(()=>{const original=window.leadOpenThread;let index;window.leadOpenThread=i=>index=i;document.querySelectorAll('td[data-col="name"]')[2].click();window.leadOpenThread=original;return index;});
+  assert.equal(clicked,2,'Full name cell opens its exact client, including its padding');
   await paint(12);
   for(const width of [320,390,650,768,1024,1440,1920]){
     await page.setViewportSize({width,height:844});

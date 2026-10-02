@@ -714,8 +714,8 @@ ok('Messages: contact rename saves and carrier feedback survives inbox polling',
 const { introducedName: smsIntroducedName } = await import('../docs/server/maya-messages.mjs');
 ok('Messages: explicit SMS introductions produce a contact name without treating inquiries as names',
   smsIntroducedName('Hi, my name is Mary Ingram, I need a fitting') === 'Mary Ingram' && !smsIntroducedName('I am interested in a fitting'));
-ok('CRM behavior: tier has no price; one phone action below identity; tier is a noninteractive label',
-  adminInteractions.tier.includes('Signature') && !adminInteractions.tier.includes('$') && adminInteractions.actionsBelow && adminInteractions.actions === 1 && !adminInteractions.tierField);
+ok('CRM behavior: category badge has no price or call action and remains a noninteractive label',
+  adminInteractions.tier.includes('SI') && !adminInteractions.tier.includes('$') && adminInteractions.actionsBelow && adminInteractions.actions === 0 && !adminInteractions.tierField);
 const mapVer = await pg.evaluate(() =>
   (document.querySelector('meta[name="maya-version"]') || {}).content || 'missing');
 ok('index and map carry the same maya-version (' + r.version + ')', mapVer === r.version);
@@ -1761,7 +1761,7 @@ ok('the Lead Station is dynamic: hand-added leads merge with Wix, each lead sour
   SERVER_SOURCE.includes("source: 'wix'") &&
   SERVER_SOURCE.includes('async function appendManualLead(') &&
   SERVER_SOURCE.includes("app.post('/api/admin/lead-add'") &&
-  MAP_SOURCE.includes('lead-src wix'));
+  MAP_SOURCE.includes('category-badge'));
 ok('tapping the voice logo no longer forces the Admin drawer open',
   !MAP_SOURCE.includes("if(d && !d.classList.contains('open')) toggleDrawer(true)") &&
   MAP_SOURCE.includes('must NOT pull the drawer open'));
@@ -2071,8 +2071,8 @@ ok('reception: approved greeting, explicit handoff, no unsolicited sales transfe
   PHONE_SOURCE.includes("name: 'transfer_to_owner'") && PHONE_SOURCE.includes('args.confirmed !== true') && PHONE_SOURCE.includes('Unsolicited business sales'));
 ok('phone feedback preserves original wording and owners are included in message history',
   PHONE_SOURCE.includes('primary feedback queue') && !PHONE_SOURCE.includes("call.mode !== 'brief' && call.mode !== 'admin'"));
-ok('CRM: Forms tab, plus lead action, handset, tier field and hidden scrolling',
-  MAP_SOURCE.includes('aria-current="page">Forms') && MAP_SOURCE.includes('aria-label="Add lead">+') &&
+ok('CRM: obsolete Forms/Add toolbar is removed and compact scrolling remains',
+  !MAP_SOURCE.includes('aria-current="page">Forms') && !MAP_SOURCE.includes('aria-label="Add lead">+') &&
   !MAP_SOURCE.includes("cell(i, x, 'tier'") && MAP_SOURCE.includes('scrollbar-width:none') && !MAP_SOURCE.includes('<rect x="7" y="2.5"'));
 ok('Messages: names use bound events; carrier errors and history warnings are visible',
   MAP_SOURCE.includes('data-thread-index') && MAP_SOURCE.includes('row.onclick = () => openThread') &&
@@ -2159,7 +2159,7 @@ ok('v14.30: Maya on the phone and a year of leads: the phone module, the station
   SERVER_SOURCE.includes("const LEADS_DAYS = Number(process.env.WIX_LEADS_DAYS || 365);") &&
   SERVER_SOURCE.includes("source: (lead && lead.source === 'phone') ? 'phone' : 'maya'") &&
   SERVER_SOURCE.includes("app.use('/api/phone/incoming', express.urlencoded({ extended: false, limit: '32kb' }));") &&
-  MAP_SOURCE.includes('class="lead-src wix"') &&
+  MAP_SOURCE.includes('category-badge') &&
   PHONE_SOURCE.includes("app.post('/api/phone/incoming', incoming);") &&
   PHONE_SOURCE.includes("new deps.WebSocketServer({ server, path: '/api/phone/stream' })") &&
   PHONE_SOURCE.includes("format: { type: 'audio/pcmu' }") &&
@@ -2599,7 +2599,7 @@ const affiliateBehavior=await affiliatePage.evaluate(async()=>{
   const populated=document.querySelector('#leads-table').textContent.includes('Mary Example') &&
     document.getElementById('affiliate-total').textContent==='2' && document.getElementById('affiliate-week').textContent==='1' &&
     document.getElementById('affiliate-contacted').textContent==='1' && document.getElementById('affiliate-closed').textContent==='1';
-  const actions=!!document.querySelector('#leads-table [aria-label="Call"]')&&!document.querySelector('#leads-table [aria-label="Invoice"]');
+  const actions=!!document.querySelector('#leads-table .category-badge')&&!document.querySelector('#leads-table [aria-label="Call"],#leads-table [aria-label="Invoice"]');
   mode='denied'; await loadAffiliateLeads();
   const denied=!document.querySelector('#leads-table').textContent.includes('Mary Example') && document.getElementById('affiliate-status').textContent.includes('admins only');
   mode='slow'; const pending=loadAffiliateLeads();
@@ -2609,7 +2609,7 @@ const affiliateBehavior=await affiliatePage.evaluate(async()=>{
   await loadTraffic();await loadSubmissions();
   return {layout,populated,actions,denied,stale,onlyLeads:calls.every(c=>c.url==='/api/admin/leads' && c.auth==='Bearer fictional-admin')};
 });
-ok('Affiliates displays profile, real loaded stats and shared phone-only row action',affiliateBehavior.layout && affiliateBehavior.populated && affiliateBehavior.actions);
+ok('Affiliates displays profile, real loaded stats and shared category badge',affiliateBehavior.layout && affiliateBehavior.populated && affiliateBehavior.actions);
 ok('Affiliates clears denied data, ignores stale responses and skips unrelated reports',affiliateBehavior.denied && affiliateBehavior.stale && affiliateBehavior.onlyLeads && !affiliateRequests.some(u=>/marketing|submissions|traffic|maya-command/.test(u)));
 ok('Affiliates boots without JavaScript errors',affiliateErrors.length===0);
 const affiliateChrome=await affiliatePage.evaluate(()=>({
@@ -2638,9 +2638,9 @@ const leadAlignment = await affiliatePage.evaluate(()=>{
     middle:getComputedStyle(document.querySelector('td.lead-note')).verticalAlign,
     header:getComputedStyle(document.querySelector('.lead-h-note')).position,
     fixed:getComputedStyle(document.querySelector('#leads-table')).tableLayout,
-    icon:getComputedStyle(document.querySelector('.lead-cta svg')).width};
+    badge:document.querySelector('.category-badge').textContent};
 });
-ok('Lead rows left-align names/actions/notes and retain keyboard horizontal scrolling',leadAlignment.name==='flex-start' && leadAlignment.actions==='flex-start' && leadAlignment.note==='left' && leadAlignment.middle==='middle' && leadAlignment.header==='sticky' && leadAlignment.fixed==='fixed' && leadAlignment.scroll==='auto' && leadAlignment.focus===0 && leadAlignment.icon==='10px');
+ok('Lead rows left-align names/actions/notes and retain keyboard horizontal scrolling',leadAlignment.name==='flex-start' && leadAlignment.actions==='flex-start' && leadAlignment.note==='left' && leadAlignment.middle==='middle' && leadAlignment.header==='sticky' && leadAlignment.fixed==='fixed' && leadAlignment.scroll==='auto' && leadAlignment.focus===0 && leadAlignment.badge==='SI');
 await affiliatePage.close();
 const smsSource=readFileSync(join(ROOT,'docs/server/maya-messages.mjs'),'utf8');
 ok('SMS audit fixes preserve opt-in, carrier reasons and trusted-host signature checks',
@@ -2690,8 +2690,8 @@ const typeUsage=JSON.parse(readFileSync(join(ROOT,'aesthetics/aesthetic-control/
 ok('Typography role counts include real H1 and generated Admin numbers',typeUsage.categories.H1.locations.some(x=>x.id==='client-name-modal-title') && typeUsage.categories.H1.locations.some(x=>x.id==='brand-title') && typeUsage.categories.H4.roles.dashboard.count>=2 && typeUsage.categories.P2.count>0);
 const compactGallery=readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.js'),'utf8');
 ok('Aesthetic Control uses eight roles with one compact settings dropdown per category',compactGallery.includes("head.append(edit)") && compactGallery.includes("['H1','brand'") && !compactGallery.includes('type-appearance'));
-ok('Aesthetic Control exposes centered alignment with a populated table preview',compactGallery.includes("align.setAttribute('aria-pressed'") && compactGallery.includes("guide.id='table-preview'") && compactGallery.includes('data-preview-category="P1"'));
-ok('Aesthetic Control saves the settings housing separately from section glass',compactGallery.includes('editor:editorSettings') && compactGallery.includes('input.dataset.editorField=key'));
+ok('Aesthetic Control exposes centered alignment with a populated table preview',compactGallery.includes('data-field="align"') && compactGallery.includes("guide.id='table-preview'") && compactGallery.includes('data-col="note"'));
+ok('Aesthetic Control saves the settings housing separately from section glass',compactGallery.includes('editor:editorSettings') && compactGallery.includes('renderEditor()'));
 const ownerConversationSource=readFileSync(join(ROOT,'docs/server/owner-conversation.mjs'),'utf8');
 ok('Owner texts support normal conversation and runtime preferences instead of lead-only extraction',SERVER_SOURCE.includes('converse:(uid,text)=>ownerConversation.decide(uid,text)') && ownerConversationSource.includes('You are not just a lead extractor') && ownerConversationSource.includes('private/owner-conversation/'));
 ok('Owner calls share saved text memory and can apply verified owner preferences',PHONE_SOURCE.includes('ownerContext=await Promise.race') && PHONE_SOURCE.includes("if(m.name==='owner_control')") && SERVER_SOURCE.includes('ownerConversation.phoneControl(from,decision,id)'));
@@ -2700,11 +2700,18 @@ const smsAccessSource=readFileSync(join(ROOT,'docs/server/owner-sms-access.mjs')
 ok('Owner can read client texts/calls and recorded actions over SMS without AI',SERVER_SOURCE.includes('direct:(uid,text,id)=>ownerSMSAccess.direct(uid,text,id)') && smsAccessSource.includes("d.action==='client_history'") && smsAccessSource.includes("d.action==='sms_actions'") && smsAccessSource.includes('Next: MORE'));
 ok('SMS client replies require an exact confirmation code and retained consent',smsAccessSource.includes('Nothing sent. Reply SEND') && smsAccessSource.includes("contact?.consent==='stop'") && smsAccessSource.includes("p.status='attempted'"));
 ok('Messages archive overflow before trimming the live inbox',SERVER_SOURCE.includes('archive:createMessageArchive') && readFileSync(join(ROOT,'docs/server/maya-messages.mjs'),'utf8').includes('await deps.archive.append'));
-ok('Aesthetic Control groups buttons/icons and panels/tables before single-row typography',compactGallery.includes("section('Glass Panels and Tables'") && compactGallery.includes("divider.className='visual-divider'") && !compactGallery.includes('glossary') && !compactGallery.includes('addStyleReference'));
+ok('Aesthetic Control groups buttons/icons and panels/tables before single-row typography',compactGallery.includes("section('Glass, Panels and Tables'") && compactGallery.includes("divider.className='visual-divider'") && !compactGallery.includes('glossary') && !compactGallery.includes('addStyleReference'));
 ok('Typography exposes saved font family and capitalization per role',compactGallery.includes('data-field="font"') && compactGallery.includes('data-field="case"') && readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8').includes("['none','uppercase']"));
 
 const galleryCss=readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.css'),'utf8');
 ok('Typography dropdowns anchor inside the full row and constrain control widths',galleryCss.includes('.type-editor{margin:0;padding:0;position:static;') && galleryCss.includes('top:100%;left:0;z-index:5;') && galleryCss.includes('max-width:100%;box-sizing:border-box') && !galleryCss.includes('translateX(-50%)'));
 
+const surfaceEditors=readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8');
+ok('Edit dropdowns dismiss on outside click, focus leaving and Escape',surfaceEditors.includes("document.addEventListener('click'")&&surfaceEditors.includes("document.addEventListener('focusin'")&&surfaceEditors.includes("e.key!=='Escape'"));
+ok('Aesthetic Control removes navigation, Reset and editor housing controls and centers Save',!readFileSync(join(ROOT,'aesthetics/aesthetic-control.html'),'utf8').includes('id="reset"')&&!compactGallery.includes('housing-editor')&&galleryCss.includes('.save-bar{justify-content:center}'));
+ok('Inner panel and filter have independently saved live geometry',surfaceEditors.includes("'Inner panel','inner'")&&surfaceEditors.includes("['width','Width'")&&compactGallery.includes('...surfacesEditor.settings()'));
+ok('Table has its own divider, header/first-column material and per-column type/alignment',surfaceEditors.includes("'Top row','header'")&&surfaceEditors.includes("'First column','first-column'")&&surfaceEditors.includes("'column-'+i")&&surfaceEditors.includes("['vertical','Vertical'"));
+ok('Lead Station removes floating tools and opens conversation from full name cells',!MAP_SOURCE.includes('id="leads-bar"')&&MAP_SOURCE.includes("k==='name'?' onclick=\"leadOpenThread("));
+ok('Lead categories replace phone/tier pills with four compact badges',MAP_SOURCE.includes("code:'SI'")&&MAP_SOURCE.includes("code:'CE'")&&MAP_SOURCE.includes("code:'SU'")&&MAP_SOURCE.includes("code:'?'"));
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

@@ -1,3 +1,10 @@
+OCTOBER 1: Simplify editor and control real Lead Station panels/table
+[done locally] Edit closes on outside click/focus/Escape. Remove header Visuals/Typography links, Reset, applied-status text and Editor panel controls. Center Save; rename Glass, Panels and Tables.
+[done locally] Outer/inner panels have live X/Y padding; inner panel has opacity/border/corners/percentage width. Filter has separate material/padding/pixel-width Edit. Table has its own divider, material/padding, top-row type/background/opacity, first-column background/opacity and three column font/case/size/weight/color/alignment editors.
+[done locally] Move Left/Centered/Right and Top/Middle/Bottom into typography Edit. Persist separate controls and apply them to the real Lead Station, retaining semantic status colors and column styles after drag reorder.
+[done locally] Remove floating Lead Station toolbar; align section caret. Replace tier/call pills with ?, SI, CE, SU category badges plus date. Whole name cell opens the client's Messages thread; keyboard name button remains; missing phone is explicit. Affiliates retains profile reload.
+[pending] Owner review local preview; Push only when requested. Live Admin Save and real client-thread/provider behavior remain owner checks. Design history is deferred; Reset removed as requested.
+
 OCTOBER 1: Fix clipped Aesthetic Control dropdowns
 [done locally] Edit popups stay inside Typography; all fields fit even at maximum padding. Remove contradictory positioning rules and use two columns on small phones.
 [verified locally] All eight editors checked at eleven widths from 320 to 1920px, including breakpoint edges and the reported desktop layout.

@@ -42,7 +42,7 @@ const compact = await page.evaluate(()=>({
   row:document.querySelector('#lead-tr-0').getBoundingClientRect().height,
   padding:getComputedStyle(document.querySelector('#lead-tr-0 td')).paddingTop,
   tierInteractive:!!document.querySelector('.lead-src [contenteditable],.lead-src button,.lead-src a'),
-  tier:document.querySelector('.lead-src').textContent,
+  tier:document.querySelector('.category-badge').textContent,
   ticker:getComputedStyle(document.querySelector('#mkt-ticker-inner')).fontSize,
   header:getComputedStyle(document.querySelector('#campaigns-table th')).backgroundColor
 }));
@@ -52,7 +52,7 @@ assert.equal(await page.locator('#top-left-brand .maya-logo-mark').getAttribute(
 assert.equal(await page.locator('.maya-logo-wrap').evaluate(e=>getComputedStyle(e).borderTopWidth),'0px');
 assert.equal(await page.locator('.top-btn.hamburger').evaluate(e=>getComputedStyle(e).boxShadow),'none');
 assert.match(await page.locator('.grid.doors .card b').first().evaluate(e=>getComputedStyle(e).fontFamily),/Cormorant/);
-assert.equal(compact.tierInteractive,false);assert.equal(compact.tier,'Signature');
+assert.equal(compact.tierInteractive,false);assert.equal(compact.tier,'SI');
 assert.equal(compact.ticker,'10px');assert.equal(compact.header,'rgba(0, 0, 0, 0)');
 await page.evaluate(()=>document.querySelector('#leads-fold').scrollIntoView());
 await page.screenshot({path:join(tmpdir(),'maya-admin-compact.png')});
@@ -63,7 +63,7 @@ assert.equal(await page.locator('#lead-tr-0 td').first().evaluate(el=>getCompute
 await page.evaluate(()=>document.body.classList.remove('affiliates-view'));
 await page.setViewportSize({width:1440,height:1000});
 
-assert.deepEqual(report.options,['Not contacted','Contacted','In progress','Booked','Cancelled']);assert.equal(report.size,report.noteSize);assert.equal(report.color,'rgb(181, 189, 200)');assert.equal(report.actions,1);
+assert.deepEqual(report.options,['Not contacted','Contacted','In progress','Booked','Cancelled']);assert.equal(report.size,report.noteSize);assert.equal(report.color,'rgb(181, 189, 200)');assert.equal(report.actions,0);
 for(const [value,color] of [['contacted','rgb(138, 188, 242)'],['in_progress','rgb(251, 191, 36)'],['booked','rgb(74, 222, 128)'],['canceled','rgb(253, 164, 175)']]){assert.equal(await page.locator('.lead-stage').evaluate((el,value)=>{el.value=value;return getComputedStyle(el).color;},value),color);}await page.locator('.lead-stage').evaluate(el=>el.value='new');
 await page.evaluate(()=>document.fonts.ready);
 let statusUpdate;

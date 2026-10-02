@@ -427,3 +427,10 @@ These are not preferences, they are conditions.
 - Make the GitHub repo private. Advised, not confirmed done.
 - There are stale `.git/lock-*.stale` files in the repo from a tool that
   could not delete them. Harmless, delete when convenient.
+
+Aesthetic Control (October 1): Glass, Panels and Tables / Typography, centered
+Save, dismissible Edit controls. surface-editors.js controls inner panels,
+filters and the actual three-column Lead Station table. typography-controls.js
+v4 applies saved presentation; server/design-config.mjs validates bounded numeric
+geometry, fixed backgrounds, font/case and alignment. Preview and Lead Station
+share column keys. No Reset or design history UI is active.
