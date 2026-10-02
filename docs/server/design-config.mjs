@@ -40,10 +40,11 @@ export function validDesign(body) {
     const t=body.table,types=['font','size','weight','color','case','align','vertical'],backgrounds=['background','opacity'];
     const typeValid=s=>s&&['jost','cormorant'].includes(s.font)&&['none','uppercase'].includes(s.case)&&['white','gray'].includes(s.color)&&['left','center','right'].includes(s.align)&&['top','middle','bottom'].includes(s.vertical)&&Number.isInteger(s.size)&&s.size>=8&&s.size<=32&&[300,350,400].includes(s.weight);
     const bgValid=s=>s&&['black','gray','blue','yellow','green','pink'].includes(s.background)&&Number.isInteger(s.opacity)&&s.opacity>=0&&s.opacity<=100;
-    if(!numeric(t,{fill:100,rim:100,paddingX:40,paddingY:40})||Object.keys(t).some(k=>!['background','fill','rim','paddingX','paddingY','header','firstColumn','columns'].includes(k)))return false;
+    if(!numeric(t,{fill:100,rim:100,paddingX:40,paddingY:40})||Object.keys(t).some(k=>!['background','fill','rim','paddingX','paddingY','header','firstColumn','columns','cells'].includes(k)))return false;
     if(t.background!==undefined&&!['black','gray','blue','yellow','green','pink'].includes(t.background))return false;
     if(!typeValid(t.header)||!bgValid(t.header)||Object.keys(t.header).some(k=>![...types,...backgrounds].includes(k)))return false;
     if(!bgValid(t.firstColumn)||Object.keys(t.firstColumn).some(k=>!backgrounds.includes(k)))return false;
+    if(t.cells!==undefined&&(!t.cells||Array.isArray(t.cells)||typeof t.cells!=='object'||Object.keys(t.cells).length>100||Object.entries(t.cells).some(([key,s])=>!/^(stage|note)-(0|[1-9][0-9]?)$/.test(key)||!typeValid(s)||!bgValid(s)||Object.keys(s).some(k=>![...types,...backgrounds].includes(k)))))return false;
     if(!Array.isArray(t.columns)||t.columns.length!==3||t.columns.some(s=>!typeValid(s)||Object.keys(s).some(k=>!types.includes(k))))return false;
   }
   return ['current','liquid','clear'].includes(body.finish) &&

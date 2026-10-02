@@ -19,10 +19,10 @@
   defaults.table={background:'black',fill:18,rim:22,paddingX:12,paddingY:4,
     header:{...tableType,color:'gray',align:'center',background:'gray',opacity:100},
     firstColumn:{background:'gray',opacity:100},
-    columns:[{...tableType,font:'cormorant'},{...tableType,align:'center'},{...tableType}]};
+    cells:{},columns:[{...tableType,font:'cormorant'},{...tableType,align:'center'},{...tableType}]};
   function normalizeSurfaces(v){
     v.iconSize ??= defaults.iconSize;v.dropdownHeight ??= defaults.dropdownHeight;v.inner={...defaults.inner,...v.inner};v.filter={...defaults.filter,...v.filter};
-    const t=v.table||{};v.table={...defaults.table,...t,header:{...defaults.table.header,...t.header},firstColumn:{...defaults.table.firstColumn,...t.firstColumn},columns:defaults.table.columns.map((c,i)=>({...c,...t.columns?.[i]}))};
+    const t=v.table||{};v.table={...defaults.table,...t,cells:{...t.cells},header:{...defaults.table.header,...t.header},firstColumn:{...defaults.table.firstColumn,...t.firstColumn},columns:defaults.table.columns.map((c,i)=>({...c,...t.columns?.[i]}))};
     return v;
   }
   function applySurfaces(value){
@@ -32,7 +32,7 @@
     const bg=s=>`rgb(${palette[s.background]||palette.gray} / ${n(s.opacity,100)/100})`;
     const material=s=>`background-color:rgb(3 15 29 / ${n(s.fill,100)/100})!important;border:1px solid rgb(255 255 255 / ${n(s.rim,100)/100})!important;border-radius:${n(s.radius,24)}px!important;backdrop-filter:var(--maya-frost,blur(22px) saturate(180%))!important;-webkit-backdrop-filter:var(--maya-frost,blur(22px) saturate(180%))!important;padding:${n(s.paddingY,40)}px ${n(s.paddingX,40)}px!important;`;
     let css=`html body :is(#leads-fold .panel,#panels .inner-panel,html[data-maya-surface="dense"] .panel,html[data-maya-surface="dense"] .model-group,html[data-maya-surface="dense"] .detail){${material(v.inner)}width:${n(v.inner.width,100)}%!important;max-width:100%;margin-inline:auto;box-sizing:border-box;}`;
-    css+=`html body :is(.lead-status-menu,.maya-filter-popover){${material(v.filter)}width:${n(v.filter.width,600)}px!important;max-width:calc(100vw - 32px)!important;box-sizing:border-box;}`;
+    css+=`html body :is(.lead-status-menu,.maya-filter-popover,.filter-preview){${material(v.filter)}width:${n(v.filter.width,600)}px!important;max-width:calc(100vw - 32px)!important;box-sizing:border-box;}`;
     const scope='html body table';
     const t=v.table;
     const typography=s=>`font-family:${s.font==='cormorant'?"'Cormorant Garamond',serif":"'Jost',sans-serif"}!important;font-size:${n(s.size,32)}px!important;font-weight:${[300,350,400].includes(s.weight)?s.weight:400}!important;color:${color(s.color)}!important;text-transform:${s.case==='uppercase'?'uppercase':'none'}!important;text-align:${['left','center','right'].includes(s.align)?s.align:'left'}!important;`;
@@ -50,6 +50,17 @@
     css+=`html body .people-table td{${typography(t.columns[2])}}html body .people-table td[data-sheet-col=\"3\"],html body .people-table .person-link{${typography(t.columns[0])}}html body .people-table td[data-sheet-col=\"7\"]{${typography(t.columns[1])}}`;
     css+=`${scope} th button{${typography(t.header)}}`;
     css+=`${scope} th{${typography(t.header)}vertical-align:${['top','middle','bottom'].includes(t.header.vertical)?t.header.vertical:'middle'}!important;background-color:${bg(t.header)}!important;}`;
+    // Row slots describe presentation, never customer identity or account data.
+    for(const [key,c] of Object.entries(t.cells||{})){
+      const match=/^(stage|note)-(\d{1,2})$/.exec(key);if(!match)continue;
+      const cell=`${scope} td[data-col="${match[1]}"][data-design-row="${Number(match[2])}"]`;
+      css+=`${cell},${cell} :is(.lead-note-vp,.lead-note-vp>span){${typography(c)}}${cell}{background-color:${bg(c)}!important;vertical-align:${['top','middle','bottom'].includes(c.vertical)?c.vertical:'middle'}!important;}`;
+      if(match[1]==='stage')css+=`${cell} :is(.status-pill,.status-text,.lead-stage){${typography(c).replace(/color:[^;]+!important;/,'')}}`;
+    }
+    if(Object.keys(t.cells||{}).length){
+      const annotate=()=>document.querySelectorAll('table').forEach(table=>{let row=0;for(const tr of table.rows)if(tr.querySelector('td')){for(const td of tr.querySelectorAll('td[data-col]'))td.dataset.designRow=String(row);row++;}});
+      annotate();if(!window.__mayaCellObserver){window.__mayaCellObserver=new MutationObserver(annotate);window.__mayaCellObserver.observe(document.documentElement,{childList:true,subtree:true});}
+    }
     let style=document.getElementById('maya-surface-control-style');if(!style){style=document.createElement('style');style.id='maya-surface-control-style';document.head.append(style);}style.textContent=css;
   }
   const local = ['localhost','127.0.0.1','maya.test'].includes(location.hostname);

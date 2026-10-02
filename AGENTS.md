@@ -161,7 +161,7 @@ not independent design authorities. Typography offers one preview per role, with
 Normal/ALL CAPS choices. Visuals groups button/icon glass before panel/table
 controls. Preserve old saved schemas and semantic status colors when applying
 shared text settings. Served pages load typography runtime v6.
-Run tests/component-gallery.mjs. Design saves atomically include a private audit trail;
+Run tests/component-gallery.mjs. Table preview cells use a fixed formatting toolbar; saved individual styles are semantic visible-row presentation slots, never client identities. Every Edit restore returns to its last successful Save. Padding highlights are automatic and preview-only. Role counts are authored-template counts; regenerate with tests/typography-role-usage.py. Design saves atomically include a private audit trail;
 /api/design must strip _history and /api/admin/design-history must stay Admin-gated.
 Padding debug highlights are preview-only, never saved.
 

@@ -1,5 +1,8 @@
+import {addRestore,highlightPadding} from './restore-controls.js';
+import {setupTableCellEditor} from './table-cell-editor.js';
 // Live, saved presentation controls; no account data or provider operations.
 const fonts=[['jost','Jost'],['cormorant','Cormorant']],colors=[['white','White'],['gray','Gray']],backgrounds=['black','gray','blue','yellow','green','pink'].map(v=>[v,v[0].toUpperCase()+v.slice(1)]);
+export {backgrounds};
 export function fields(parent,values,specs,onChange){
  for(const [key,title,options] of specs){
   const label=document.createElement('label');label.append(document.createTextNode(title));
@@ -14,23 +17,26 @@ function editor(parent,label,id,values,specs,render){
  const host=document.createElement('div');host.className='surface-edit-row';host.dataset.editor=id;
  const title=document.createElement('span');title.textContent=label;
  const edit=document.createElement('details');edit.className='type-editor';edit.innerHTML='<summary>Edit</summary><div class="type-editor-fields"></div>';
- host.append(title,edit);parent.append(host);fields(edit.lastChild,values,specs,render);return host;
+ host.append(title,edit);parent.append(host);fields(edit.lastChild,values,specs,render);
+ addRestore(edit,{label,read:()=>Object.fromEntries(specs.map(([key])=>[key,values[key]])),write:v=>{Object.assign(values,v);for(const input of edit.querySelectorAll('[data-field]'))input.value=values[input.dataset.field];render();edit.dispatchEvent(new Event('input',{bubbles:true}));}});return host;
 }
 export function setupSurfaceEditors({panels,guide,design}){
  const settings={inner:structuredClone(design.inner),filter:structuredClone(design.filter),table:structuredClone(design.table)};
- const render=()=>{window.MayaTypographyControls.previewSurfaces(settings);for(const el of document.querySelectorAll('#panels .inner-panel')){el.style.setProperty('--padding-debug-x',settings.inner.paddingX+'px');el.style.setProperty('--padding-debug-y',settings.inner.paddingY+'px');}};
+ let cellEditor;
+ const render=()=>{window.MayaTypographyControls.previewSurfaces(settings);cellEditor?.refresh();for(const el of document.querySelectorAll('#panels .inner-panel')){el.style.setProperty('--padding-debug-x',settings.inner.paddingX+'px');el.style.setProperty('--padding-debug-y',settings.inner.paddingY+'px');}};
  const panelFields=[['fill','Opacity',{max:100}],['rim','Border',{max:100}],['radius','Corners',{max:24}],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]];
- const inner=editor(panels,'Inner panel','inner',settings.inner,[...panelFields,['width','Width %',{min:20,max:100}]],render);panels.querySelector('.context-grid').before(inner);
- const debug=document.createElement('button');debug.type='button';debug.className='padding-debug';debug.dataset.paddingDebug='inner';debug.textContent='Show padding';debug.setAttribute('aria-pressed','false');debug.onclick=()=>{const on=debug.getAttribute('aria-pressed')!=='true';debug.setAttribute('aria-pressed',String(on));debug.textContent=on?'Hide padding':'Show padding';document.querySelectorAll('#panels .inner-panel').forEach(el=>el.classList.toggle('show-padding',on));};inner.querySelector('.type-editor-fields').append(debug);
+ const inner=editor(panels,'Inner panel','inner',settings.inner,[...panelFields,['width','Width %',{min:20,max:100}]],render);panels.querySelector('.panel-preview').before(inner);
+ highlightPadding(inner.querySelector('details'),()=>[...panels.querySelectorAll('.inner-panel')],()=>({x:settings.inner.paddingX,y:settings.inner.paddingY}));
  const filter=editor(panels,'Filter','filter',settings.filter,[...panelFields,['width','Width',{min:160,max:600}]],render);inner.after(filter);
+ const filterPreview=panels.querySelector('.filter-preview');const filterEdit=filter.querySelector('details');
+ highlightPadding(filterEdit,()=>[filterPreview],()=>({x:settings.filter.paddingX,y:settings.filter.paddingY}));
+ new MutationObserver(()=>{filterPreview.hidden=!filterEdit.open;}).observe(filterEdit,{attributes:true,attributeFilter:['open']});
  const divider=document.createElement('hr');divider.className='visual-divider';guide.before(divider);
  const title=document.createElement('h3');title.textContent='Table';guide.before(title);
  const controls=document.createElement('div');controls.id='table-editors';guide.before(controls);
  editor(controls,'Table','table',settings.table,[['background','Background',backgrounds],['fill','Opacity',{max:100}],['rim','Border',{max:100}],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]],render);
- const bg=[['background','Background',backgrounds],['opacity','Opacity',{max:100}]];
- editor(controls,'Top row','header',settings.table.header,[...typeFields,...bg],render);
- editor(controls,'First column','first-column',settings.table.firstColumn,bg,render);
- settings.table.columns.forEach((col,i)=>editor(controls,['Full name','Status','Latest Notes'][i],'column-'+i,col,typeFields,render));
+ cellEditor=setupTableCellEditor({guide,controls,settings:settings.table,render});
+ highlightPadding(controls.querySelector('details'),()=>[...guide.querySelectorAll('td,th')],()=>({x:settings.table.paddingX,y:settings.table.paddingY}));
  render();return {settings:()=>settings};
 }
 // Edit controls close on outside click, focus leaving, Escape, or another Edit.

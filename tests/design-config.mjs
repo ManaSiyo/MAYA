@@ -47,3 +47,8 @@ assert.equal(outcome.savedAt,'2026-10-02T20:00:00Z');assert.equal(saved.iconSize
 await saveDesign(store,{...compact,iconSize:36},'owner@example.com');assert.equal(saved._history.length,2);assert.match(saved._history[1].text,/unchanged/);
 unavailable=true;await assert.rejects(()=>saveDesign(store,compact,'owner'),/storage unavailable/);assert.equal(saved._history.length,2);
 console.log('Atomic design saves audit changes and no-op saves, retry concurrent writes and reject unavailable storage.');
+
+const cell={...type,background:'black',opacity:90};
+assert.equal(validDesign({...compact,table:{...compact.table,cells:{'note-0':cell,'stage-99':cell}}}),true);
+for(const cells of [{'name-0':cell},{'note-100':cell},{'note-01':cell},{'note-0':{...cell,size:99}},{'note-0':{...cell,background:'url(evil)'}},[],null])assert.equal(validDesign({...compact,table:{...compact.table,cells}}),false);
+console.log('Cell presentation overrides accept bounded semantic row slots and fixed styles only.');

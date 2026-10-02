@@ -1,70 +1,47 @@
 # MAYA handoff — October 2, 2026
 
-## Current requested fix: October 2 afternoon
+## Current request: cell-based Aesthetic Control
 
-Owner screenshots show table dropdowns detached from their Edit buttons, stacked
-control labels, wrong inner-padding target, two-line client identities, and an
-unresponsive Hey MAYA. Corrected locally, not pushed:
+Prepared locally, not pushed: gallery v21/shared runtime v7. Table preview uses
+one fixed formatting row. Full name corner selects top row + first column; other
+headers select top row; names select first column; other cells select individually.
+Only whole-table Edit remains. Type, case, size, colors, horizontal/vertical
+alignment and background opacity update live. Keyboard selection and arrows work.
+Optional table.cells overrides validate semantic stage/note row slots 0–99 (max
+100 overrides), no identity/customer data. Matching Lead Station slots receive
+saved styles after re-render/filtering; Outbound retains shared table/header/type
+settings without mapping individual slots to unrelated source fields.
 
-- gallery v20/shared runtime v6: editors anchor to their own summary, clamp to
-  section/viewport and flip upward above the Save bar. Glass backdrop-filter
-  creates a containing block, so popup offsets use the actual editor origin.
-  Black popup/field backings; more readable 440px editors, mobile two-column fields.
-  Active section rises above neighboring glass stacking contexts; visible fields
-  are hit-tested so the following section cannot cover the bottom of an editor.
-- Panel toolbar groups Outer panel, Inner panel and Filter. Table toolbar groups
-  Table, Top row, First column, Full name, Status and Latest Notes in one desktop
-  row, wrapping at narrow widths. Table/header/first-column support validated Black
-  backgrounds; old designs remain accepted.
-- Inner preview contains heading plus Contacts. Inner debug padding surrounds
-  that whole content; outer debug padding surrounds the inner panel. Both remain
-  independent live X/Y controls. Lead Station/preview names are name/date/category
-  in one row; long names truncate within the full conversation-opening button.
-- Admin restores wake recognition after failed voice startup, clears failed
-  Connecting UI, reports actual listening/waiting state, retries recognizer start
-  and network failures. App/Playground share retry/single-recognizer protection.
-  Permission refusal turns listening off. No microphone, provider session or
-  client communication used during testing.
+One outer preview contains two direct inner panels, each heading + Contacts pill.
+Opening an editor automatically highlights its actual padding, including glass,
+outer, inner, filter preview and table. No manual debug toggle or extra material
+wrapper. Restore beside every Edit and the fixed cell toolbar returns to that
+editor's last successful Save; it does not reset other editors. Role labels show
+regenerated authored-use counts. Used icons only. Selected finish shows checkmark
+and outlined card. Saved cell runtime handles scripts loaded before body exists.
 
-Changed paths: aesthetics/aesthetic-control/{gallery.js,gallery.css,overlay.js,
-surface-editors.js}, shared typography-controls.js, design-config.mjs, Admin/app/
-Playground voice, ten served HTML runtime references, tests/admin-wake.mjs,
-component-gallery/design-config/design-contract/outbound-ui/app-regression,
-cloudbuild.yaml and design/continuity records.
+Changed: gallery, CSS, finishes, overlay, surface editors; new restore-controls.js
+and table-cell-editor.js; shared typography runtime and all served cache references;
+server design validation; role audit; gallery/design/app regression tests; design,
+AGENTS and continuity records.
 
-Validation: full app-regression; component-gallery at 11 widths 320–1920 with
-trigger proximity, black backing, field bounds/layering, correct heading padding,
-single-row controls/client identity and Save/reload; canon-ui 11 pages/7 widths;
-Outbound/UI/populated filters; CRM UI/failure/intelligence; design validation;
-admin-wake; admin-ui-contract; both frontend/Playground hands; fake phone/messages/
-transfer/feedback. Actual Google-font visual review and 844x390,1024x540,320x568
-short popup bounds pass. Final gallery layering recheck passed; all visible editor fields remain clickable.
+Validation: design-config/contract; component-gallery 11 widths 320–1920 with
+cell selection, independent cell styles, saved restore, Save/reload, actual Admin
+propagation, popup bounds/proximity/hit testing and nonwrapping formatting row;
+full app regression; canon-ui 11 pages/7 widths; Outbound UI/populated filters;
+CRM UI/failure/intelligence. Real-font visual review of selected table/padding.
+No personal Chrome, provider calls/messages, credentials or environment changes.
 
-Exact next step: owner Push the verified local commit, confirm Google Cloud Build
-and release.json, then review live controls and test Hey MAYA with microphone.
-Live speech still needs an owner microphone test after deployment. No Chrome
-profile was accessed. Push requires an explicit owner request.
+Exact next step: owner Push from GitHub Desktop. Then compare /release.json with
+the new commit and verify authenticated Save and desired cell/panel settings.
+Nothing in this task has been pushed or saved to the live design API.
 
 ## Release status
 
-Owner committed and pushed the requested implementation as f436f37 during the
-October 2 work. This follow-up prepares the final scroll-margin fix, renamed
-Corporate-tab identity preservation, validation and continuity records.
-
-Public Hosting now confirms f436f379fe028b1bf4acb1319ce2b020b9b331bb, published
-2026-10-02T17:18:57.758Z (October 2, 10:18 AM Pacific). Public editor HTML
-loads gallery v19 and typography runtime v5.
-The prior 594cf57 Cloud Build c461f1e2-3143-4608-ab0c-72e9d7a29645 FAILED before
-server/website deployment: admin-ui-contract still required the removed phone
-icon below each lead. That gate now verifies ?/SI/CE/SU category badges, the whole
-name-cell conversation link and retained Messages invoice controls. Vercel success
-was not production deployment success. GitHub check-run details exposed the
-actual Google build log without Chrome or credentials.
-
-Owner push f436f37 started Google build 9bd43347-4fbe-43ef-9c86-0a58a7df0230.
-It completed successfully; its commit agrees with public release.json. Main
-implementation is shipped. Final fixes add0e06 and shipment record c9d01a6 are now on origin. The afternoon
-controls/wake changes above are local and await explicit owner push approval. Codex has not pushed or deployed.
+Public /release.json read October 2 confirms the owner's previous push:
+3ecfc8ddf256f269bc3332c9f1e64769660fa18c, published 2026-10-02T20:57:21.849Z.
+That release contains the prior anchoring/padding/wake recovery fix. The current
+cell-editor request is a new local change. Codex has not pushed or deployed.
 
 ## October 2 verified implementation and follow-up
 
@@ -197,16 +174,12 @@ Temporary runtimes are not deployment requirements; CI installs dependencies.
 
 ## Exact next step and open risks
 
-Main implementation f436f37 is shipped; add0e06 final fixes await owner Push.
-Follow the October 2 exact next step above; older shipment markers are historical.
-Do not infer deployment from a successful Push or healthz. Code passed local
-responsive checks; the current deployed site still contains the known clipping
-bug. This verification/incident documentation is committed locally; no push is
-authorized in this request. After deployment, save the desired live Admin design.
-No live Save was performed. Designs lacking the optional inner/filter/table keys
-receive bounded defaults on read without production migration writes. New default
-name font/inner geometry/table styling should be reviewed before live Save.
-History/undo is deferred; Reset is removed as requested.
+Follow the current request above. Prior release markers below are historical.
+Local restore is now supported per editor; it restores saved settings, not a
+chronological undo history. Individual cell styles follow visible row slots after
+sorting/filtering, not a customer. Authenticated live Save and real microphone
+wake behavior still need owner verification after the owner pushes this change.
+No live design save or client/provider operation was performed.
 
 Prior SMS access from 259c824 still needs live owner verification: MAYA HELP,
 INBOX, THREAD Nick, MORE pages, ACTIONS, normal memory recall and separately

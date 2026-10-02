@@ -10,6 +10,9 @@ try{
  await page.goto('https://maya.test/aesthetics/aesthetic-control.html');await page.locator('[data-category="H4"] .type-row').first().waitFor();
  assert.match(await page.title(),/MAYA Aesthetic Control/);
  assert.equal(await page.locator('.type-group').count(),8);
+ assert.ok(await page.locator('.type-category').evaluateAll(es=>es.every(e=>/^[HP][1-4] \(\d+\)$/.test(e.textContent))),'Every role shows an authored usage count');
+ assert.equal(await page.locator('.restore-editor').count(),15,'Each editor plus selected cell formatting has a restore');
+ assert.equal(await page.locator('.icon-row [aria-label="Download"]').count(),0,'Unused icon preview removed');
  assert.deepEqual(await page.locator('.type-group').evaluateAll(es=>es.map(e=>e.dataset.category)),['H1','H2','H3','H4','P1','P2','P3','P4']);
  assert.equal(await page.locator('[data-type="dashboard"]').getAttribute('data-type'),'dashboard');
  assert.equal(await page.locator('[data-type="dashboard"] .type-example').evaluate(e=>getComputedStyle(e).fontSize),'14px');
@@ -18,6 +21,7 @@ try{
  assert.equal(legacy.type.P3.weight,350);assert.equal(legacy.type.P4.size,8);assert.equal(legacy.type.P5,undefined);
  assert.equal(await page.locator('.type-row').count(),8);
  await page.locator('.finish-choice').filter({hasText:'Liquid'}).click();
+ assert.match(await page.locator('.finish-choice[aria-pressed=true]').innerText(),/Liquid ✓/);
  const liquid=await page.locator('.finish-sample .maya-pill').nth(1).evaluate(e=>getComputedStyle(e).borderColor);
  const clear=await page.locator('.finish-sample .maya-pill').nth(2).evaluate(e=>getComputedStyle(e).borderColor);
  assert.notEqual(liquid,clear);
@@ -36,18 +40,16 @@ try{
  await page.locator('.overlay-controls summary').click();
 
  await page.locator('.overlay-controls summary').click();
- await page.locator('[data-padding-debug="outer"]').click();
- assert.equal(await page.locator('#panels .maya-surface.show-padding').count(),2);
+ assert.equal(await page.locator('#panels .maya-surface.show-padding').count(),1);
  assert.equal(await page.locator('#panels .maya-surface').first().evaluate(e=>getComputedStyle(e,'::after').borderTopWidth),'14px');
  assert.equal(await page.locator('#panels .maya-surface').first().evaluate(e=>getComputedStyle(e,'::after').borderLeftWidth),'24px');
- await page.locator('[data-padding-debug="outer"]').click();
- await page.locator('[data-editor="inner"] summary').click();await page.locator('[data-padding-debug="inner"]').click();
+ await page.locator('[data-editor="inner"] summary').click();
  await page.locator('[data-editor="inner"] [data-field="paddingX"]').fill('22');
  assert.equal(await page.locator('#panels .inner-panel.show-padding').count(),2);
  assert.equal(await page.locator('#panels .inner-panel>h3').count(),2,'Panel heading is inside its padded content');
- assert.equal(await page.locator('#panels .context-grid>.maya-surface').evaluateAll(es=>es.every(e=>e.contains(e.querySelector('.inner-panel')))),true);
+ assert.equal(await page.locator('#panels .panel-preview>.context-grid>.inner-panel').evaluateAll(es=>es.length===2&&es.every(e=>e.querySelector('h3')&&e.querySelector('.maya-metric'))),true);
  assert.equal(await page.locator('#panels .inner-panel').first().evaluate(e=>getComputedStyle(e,'::after').borderLeftWidth),'22px');
- await page.locator('[data-padding-debug="inner"]').click();
+ await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.querySelector('#panels .show-padding'));
  await page.locator('.control-size-editor summary').click();await page.locator('[data-field="iconSize"]').fill('36');await page.locator('[data-field="dropdownHeight"]').fill('32');
  assert.equal(await page.locator('.icon-row .maya-icon-button').first().evaluate(e=>getComputedStyle(e).width),'36px');
  assert.equal(await page.locator('.dropdown-preview').evaluate(e=>getComputedStyle(e).minHeight),'32px');
@@ -81,13 +83,21 @@ try{
  await surface('inner','paddingX','30');await surface('inner','paddingY','20');await surface('inner','width','80');
  assert.equal(await page.locator('.inner-panel').first().evaluate(e=>getComputedStyle(e).padding),'20px 30px');
  await surface('filter','width','330');await surface('filter','paddingX','24');
- await surface('table','background','black');await surface('table','fill','100');await surface('header','background','black');await surface('first-column','background','black');
+ const cell=async(selector,field,value)=>{await page.locator('#table-preview '+selector).first().click();const input=page.locator('#cell-format-toolbar [data-field="'+field+'"]');if(await input.evaluate(e=>e.tagName==='SELECT'))await input.selectOption(value);else await input.fill(value);};
+ assert.equal(await page.locator('#table-editors .type-editor').count(),1,'Only whole-table Edit remains');
+ await surface('table','background','black');await surface('table','fill','100');
+ await cell('th[data-col="stage"]','background','black');await cell('td[data-col="name"]','background','black');
  assert.equal(await page.locator('#table-preview table').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(0, 0, 0)');
  assert.equal(await page.locator('#table-preview .lead-open').first().evaluate(e=>[...e.children].map(n=>n.tagName==='TIME'?'date':n.className).join(',')),'lead-identity,date,category-badge');
- await surface('header','background','blue');await surface('header','opacity','80');await surface('header','font','cormorant');await surface('header','size','14');
- await surface('first-column','background','pink');await surface('first-column','opacity','60');
- await surface('column-0','font','cormorant');await surface('column-0','align','right');await surface('column-0','vertical','top');
- await surface('column-2','size','15');await surface('table','paddingY','14');
+ await cell('th[data-col="stage"]','background','blue');await cell('th[data-col="stage"]','opacity','80');await cell('th[data-col="stage"]','font','cormorant');await cell('th[data-col="stage"]','size','14');
+ assert.equal(await page.locator('#cell-selection').innerText(),'Top row');assert.equal(await page.locator('#table-preview .cell-selected').count(),3);
+ await cell('td[data-col="name"]','background','pink');await cell('td[data-col="name"]','opacity','60');await cell('td[data-col="name"]','font','cormorant');await cell('td[data-col="name"]','align','right');await cell('td[data-col="name"]','vertical','top');
+ assert.equal(await page.locator('#cell-selection').innerText(),'First column');assert.equal(await page.locator('#table-preview .cell-selected').count(),2);
+ await cell('td[data-col="note"]','size','15');
+ assert.equal(await page.locator('#cell-selection').innerText(),'Cell C2');
+ assert.equal(await page.locator('#table-preview td[data-col="note"]').nth(1).evaluate(e=>getComputedStyle(e).fontSize),'12px','Individual cell does not alter other rows');
+ await page.locator('#cell-format-toolbar .restore-editor').click();assert.equal(await page.locator('#table-preview td[data-col="note"]').first().evaluate(e=>getComputedStyle(e).fontSize),'12px');
+ await cell('td[data-col="note"]','size','15');await surface('table','paddingY','14');
  assert.match(await page.locator('#table-preview th').first().evaluate(e=>getComputedStyle(e).backgroundColor),/0.8/);
  assert.match(await page.locator('#table-preview td[data-col="name"]').first().evaluate(e=>getComputedStyle(e).backgroundColor),/0.6/);
  assert.equal(await page.locator('#table-preview td[data-col="name"]').first().evaluate(e=>getComputedStyle(e).textAlign),'right');
@@ -105,6 +115,7 @@ try{
  assert.equal(await page.locator('#table-preview td[data-col="stage"]').first().evaluate(e=>getComputedStyle(e).textAlign),'center');
  assert.equal(await page.locator('#table-preview td[data-col="note"]').first().evaluate(e=>getComputedStyle(e).fontSize),'15px');
  assert.equal(await page.locator('.inner-panel').first().evaluate(e=>getComputedStyle(e).padding),'20px 30px');assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('maya-typography-controls-v1')).iconSize),36);
+ await surface('inner','paddingX','10');await page.locator('[data-editor="inner"] .restore-editor').click();assert.equal(await page.locator('.inner-panel').first().evaluate(e=>getComputedStyle(e).padding),'20px 30px','Restore uses saved baseline after reload');
  await page.goto('https://maya.test/backend/status.html',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>!!document.getElementById('maya-typography-control-style'));
  assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--maya-type-H4-size').trim()),'12px');
@@ -113,8 +124,9 @@ try{
  assert.match(await page.locator('h2.grp').first().evaluate(e=>getComputedStyle(e).fontFamily),/Cormorant/);
  assert.match(await page.evaluate(()=>{const n=document.createElement('button');n.className='maya-icon-button';document.body.append(n);const color=getComputedStyle(n).backgroundColor;n.remove();return color;}),/0.4/);
  assert.equal(await page.evaluate(()=>{const n=document.createElement('p');n.textContent='Body preview';document.body.append(n);const c=getComputedStyle(n).color;n.remove();return c;}),'rgb(255, 255, 255)');
- const liveTable=await page.evaluate(()=>{
+ const liveTable=await page.evaluate(async()=>{
   const table=document.querySelector('#leads-table');table.innerHTML='<tbody><tr><th>Full name</th><th>Status</th><th>Latest Notes</th></tr><tr><td class="lead-col-first" data-col="name"><button class="lead-open">Angela</button></td><td data-col="stage"><span class="status-pill">Not contacted</span></td><td data-col="note"><div class="lead-note-vp"><span>Fixture note</span></div></td></tr></tbody>';
+  await new Promise(resolve=>requestAnimationFrame(resolve));
   const note=getComputedStyle(table.querySelector('td[data-col="note"] .lead-note-vp>span'));
   const name=getComputedStyle(table.querySelector('.lead-open'));
   const filter=document.createElement('div');filter.className='lead-status-menu';document.body.append(filter);const width=getComputedStyle(filter).width;filter.remove();
@@ -155,7 +167,7 @@ try{
   await page.locator('#pill-preview > .review-fold').evaluate(e=>e.open=true);
   const outerEditor=page.locator('.overlay-controls');await outerEditor.locator('summary').click();
   assert.ok(await outerEditor.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect(),a=e.parentElement.querySelector('summary').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&a.left<=r.right&&a.right>=r.left;}),'Outer editor anchor '+width);await page.keyboard.press('Escape');
-  for(const id of ['inner','filter','table','header','first-column','column-0','column-1','column-2']){
+  for(const id of ['inner','filter','table']){
    const editor=page.locator(`[data-editor="${id}"] .type-editor`);await editor.locator('summary').click();
    const fits=await editor.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect(),a=e.parentElement.querySelector('summary').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&a.left<=r.right&&a.right>=r.left&&Math.min(Math.abs(r.top-a.bottom),Math.abs(a.top-r.bottom))<=8&&getComputedStyle(e).backgroundColor==='rgb(0, 0, 0)'&&[...e.querySelectorAll('input,select')].every(c=>{const b=c.getBoundingClientRect();return b.left>=r.left&&b.right<=r.right;});});
    assert.ok(fits,`${id} popup/controls at ${width}`);
@@ -163,6 +175,7 @@ try{
    await page.keyboard.press('Escape');
   }
   const sizeEditor=page.locator('.control-size-editor');await sizeEditor.locator('summary').click();assert.ok(await sizeEditor.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth;}),'Size editor fits '+width);await page.keyboard.press('Escape');
+  await page.locator('#cell-format-toolbar').evaluate(e=>{const r=e.getBoundingClientRect();if(r.left<0||r.right>innerWidth)throw Error('Cell toolbar overflow');const fields=e.querySelector('.cell-format-fields');if(new Set([...fields.children].map(c=>Math.round(c.getBoundingClientRect().top))).size!==1)throw Error('Cell toolbar wraps');});
   await page.locator('#pill-preview > .review-fold').evaluate(e=>e.open=false);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'overflow '+width);
  }
@@ -175,7 +188,7 @@ try{
  await page.goto('https://maya.manasiyo.com/aesthetics/aesthetic-control.html');await page.locator('#save').waitFor();
  await page.evaluate(()=>localStorage.setItem('maya_admin_tok','test-owner-token'));
  await page.locator('#save').click();await page.waitForFunction(()=>document.querySelector('#feedback').textContent.includes('Saved across MAYA pages'));
- const {validDesign}=await import('../docs/server/design-config.mjs');assert.equal(validDesign(savedPost.body),true,JSON.stringify(savedPost.body));assert.equal(savedPost.body.iconSize,28);assert.equal(savedPost.body.dropdownHeight,28);assert.equal(JSON.stringify(savedPost.body).includes("show-padding"),false);assert.equal(savedPost.body.editor.radius,12);assert.equal(savedPost.body.table.columns.length,3);assert.equal(savedPost.body.type.P1.align,'center');assert.equal(savedPost.header,'Bearer test-owner-token');assert.deepEqual(Object.keys(savedPost.body.type),['H1','H2','H3','H4','P1','P2','P3','P4']);
+ const {validDesign}=await import('../docs/server/design-config.mjs');const invalid=structuredClone(savedPost.body);invalid.table.cells={'note-100':{...invalid.table.header}};assert.equal(validDesign(invalid),false,'Cell row limits are validated');assert.equal(validDesign({...savedPost.body,table:{...savedPost.body.table,cells:{'note-0':{...savedPost.body.table.header}}}}),true);assert.equal(validDesign(savedPost.body),true,JSON.stringify(savedPost.body));assert.equal(savedPost.body.iconSize,28);assert.equal(savedPost.body.dropdownHeight,28);assert.equal(JSON.stringify(savedPost.body).includes("show-padding"),false);assert.equal(savedPost.body.editor.radius,12);assert.equal(savedPost.body.table.columns.length,3);assert.equal(savedPost.body.type.P1.align,'center');assert.equal(savedPost.header,'Bearer test-owner-token');assert.deepEqual(Object.keys(savedPost.body.type),['H1','H2','H3','H4','P1','P2','P3','P4']);
  assert.deepEqual(errors.filter(e=>!e.includes('Firebase')&&!e.includes('google')),[]);
  console.log('Typography Controls passed: role counts, descending roles, edit/save/reload, Admin application, eleven widths with all popup and control bounds.');
 }finally{await browser.close();}

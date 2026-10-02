@@ -2710,12 +2710,12 @@ const surfaceEditors=readFileSync(join(ROOT,'aesthetics/aesthetic-control/surfac
 ok('Edit dropdowns dismiss on outside click, focus leaving and Escape',surfaceEditors.includes("document.addEventListener('click'")&&surfaceEditors.includes("document.addEventListener('focusin'")&&surfaceEditors.includes("e.key!=='Escape'"));
 ok('Aesthetic Control removes navigation, Reset and editor housing controls and centers Save',!readFileSync(join(ROOT,'aesthetics/aesthetic-control.html'),'utf8').includes('id="reset"')&&!compactGallery.includes('housing-editor')&&galleryCss.includes('.save-bar{justify-content:center}'));
 ok('Inner panel and filter have independently saved live geometry',surfaceEditors.includes("'Inner panel','inner'")&&surfaceEditors.includes("['width','Width'")&&compactGallery.includes('...surfacesEditor.settings()'));
-ok('Table has its own divider, header/first-column material and per-column type/alignment',surfaceEditors.includes("'Top row','header'")&&surfaceEditors.includes("'First column','first-column'")&&surfaceEditors.includes("'column-'+i")&&surfaceEditors.includes("['vertical','Vertical'"));
+ok('Table has its own divider, header/first-column material and per-column type/alignment',surfaceEditors.includes('setupTableCellEditor')&&surfaceEditors.includes("'Table','table'")&&surfaceEditors.includes("['vertical','Vertical'"));
 ok('Lead Station removes floating tools and opens conversation from full name cells',!MAP_SOURCE.includes('id="leads-bar"')&&MAP_SOURCE.includes("k==='name'?' onclick=\"leadOpenThread("));
 ok('Lead categories replace phone/tier pills with four compact badges',MAP_SOURCE.includes("code:'SI'")&&MAP_SOURCE.includes("code:'CE'")&&MAP_SOURCE.includes("code:'SU'")&&MAP_SOURCE.includes("code:'?'"));
 const ownerDesignRuntime=readFileSync(join(ROOT,'aesthetics/ui/typography-controls.js'),'utf8');
 const ownerDesignConfig=readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8');
-ok('Outer and inner padding have live visual debug controls',compactGallery.includes('controlSizes') && readFileSync(join(ROOT,'aesthetics/aesthetic-control/overlay.js'),'utf8').includes('data-padding-debug="outer"') && readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes("dataset.paddingDebug='inner'"));
+ok('Outer and inner padding have live visual debug controls',compactGallery.includes('controlSizes') && readFileSync(join(ROOT,'aesthetics/aesthetic-control/overlay.js'),'utf8').includes('highlightPadding(panel') && readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes('highlightPadding(inner'));
 ok('Aesthetic Control owns saved icon and dropdown dimensions',ownerDesignConfig.includes("['iconSize','dropdownHeight']") && ownerDesignRuntime.includes('--maya-control-dropdown-height'));
 ok('Saved design settings and audit entries commit atomically',ownerDesignConfig.includes('_history:history') && ownerDesignConfig.includes("found.ok ? found.generation : '0'") && readFileSync(join(ROOT,'docs/server/server.js'),'utf8').includes('/api/admin/design-history'));
 ok('Admin Logs include successful Aesthetic Control saves',readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('/api/admin/design-history') && readFileSync(join(ROOT,'backend/status.html'),'utf8').includes("item.state==='saved'"));
@@ -2728,8 +2728,15 @@ ok('Renamed source tabs preserve campaign identities and draft membership',readF
 const surfaceEditorSource=readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8');
 const galleryScript=readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.js'),'utf8');
 ok('Surface editors anchor to their own trigger and keep black available',surfaceEditorSource.includes("trigger.getBoundingClientRect()")&&surfaceEditorSource.includes("['black','gray'")&&surfaceEditorSource.includes("['background','Background',backgrounds]"));
-ok('Inner panel padding surrounds heading and Contacts together',galleryScript.includes('inner.append(h,metric);content.append(inner)'));
+ok('Inner panel padding surrounds heading and Contacts together',galleryScript.includes('inner.append(h,metric);surfaces.append(inner)'));
 ok('Admin failed voice starts resume the wake listener',MAP_SOURCE.includes('if(!_voice&&_wakeWantOn)_wakeSchedule(800)')&&MAP_SOURCE.includes('rec.onstart=')&&MAP_SOURCE.includes('wake listener did not start; retrying'));
+
+const cellEditorSource=readFileSync(join(ROOT,'aesthetics/aesthetic-control/table-cell-editor.js'),'utf8');
+ok('Table cells use one fixed formatting row with header, corner, column and cell selections',cellEditorSource.includes("bar.id='cell-format-toolbar'")&&cellEditorSource.includes("'corner':'header'")&&cellEditorSource.includes("settings.cells[key]")&&galleryCss.includes('.cell-format-fields{display:flex;'));
+ok('Only one table dropdown remains and cell overrides are bounded on the server',!surfaceEditors.includes("'Top row','header'")&&ownerDesignConfig.includes("Object.keys(t.cells).length>100")&&ownerDesignRuntime.includes('data-design-row'));
+ok('Panel preview uses one outer container with direct inner panels and pills',galleryScript.includes('content:surfaces')&&galleryScript.includes('surfaces.append(inner)')&&!galleryScript.includes('content.append(inner)'));
+ok('Each editor restores the saved baseline, all roles show counts, and finish choice is explicit',galleryScript.includes('usage.categories?.[category]?.count')&&galleryScript.includes('addRestore(edit')&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/restore-controls.js'),'utf8').includes('maya-gallery-saved')&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/finishes.js'),'utf8').includes("' ✓'"));
+ok('Icon previews are limited to current controls',galleryScript.includes('activeIcons.has(label)'));
 
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

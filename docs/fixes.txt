@@ -1,3 +1,13 @@
+OCTOBER 2 — table editor duplication and misleading padding preview (LOCAL)
+Replace six table dropdowns with one table editor plus click-selected cell/range
+formatting. Remove repeated per-example outer wrappers; one outer contains two
+inner panels, each heading/Contacts. Highlight actual padding only while its
+editor is open. Saved cell styles validate fixed semantic row slots; attach row
+metadata after dynamic rendering and observe documentElement so head-loaded
+scripts do not fail before body exists. Test individual-cell independence,
+Save/reload and actual Admin propagation. All requested local checks pass.
+Previous 3ecfc8d release is publicly confirmed; this follow-up is not pushed.
+
 OCTOBER 2 afternoon — CSS editor anchoring/padding mismatch; wake silence
 Screenshot showed surface editors anchored to full rows' left edge, detached
 from centered Edit buttons. Earlier bounds-only checks missed this. Trigger-relative

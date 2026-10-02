@@ -1,3 +1,15 @@
+OCTOBER 2 — cell-formatting Aesthetic Control (LOCAL, NOT PUSHED)
+[x] Click preview cells; one fixed formatting row with font/case/size/weight/color,
+    alignment/background/opacity. Corner selects header + name column; headers
+    select top row, names select first column, other cells independently.
+[x] Keep only whole-table Edit; save bounded presentation slots without client data.
+[x] Three preview layers: outer panel, direct inner panel, Contacts pill.
+[x] Automatically highlight padding while its editor is open; restore icons beside
+    every Edit return to last saved values. No global Reset/history introduced.
+[x] H1–H4/P1–P4 show authored-use counts; unused icon previews removed; selected
+    finish has a checkmark and full outline. Responsive/shared tests pass.
+[ ] Owner Push, verify release marker, then authenticated live Save/preview.
+
 OCTOBER 2 afternoon — detached editors, black table controls, correct padding and Hey MAYA
 [local fix] Editors stay above adjacent glass sections and open beside their own Edit buttons with black backgrounds;
 Table, Top row and First column offer Black. Desktop panel/table control sets
