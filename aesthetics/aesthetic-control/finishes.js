@@ -3,7 +3,7 @@ import {Pill} from '/aesthetics/ui/components/components.js';
 export function setupFinishes({comparison,preview,drawer,filter,say}){
  const presets={current:{name:'Current',fill:18,tint:0,rim:22,highlight:28,blur:22,saturation:180},liquid:{name:'Liquid',fill:18,tint:16,rim:48,highlight:65,blur:22,saturation:180},clear:{name:'Clear',fill:0,tint:0,rim:10,highlight:15,blur:0,saturation:180}};
  let selected='current';const values=structuredClone(presets),samples=new Map();
- const targets=()=>[...document.querySelectorAll('#gallery .maya-glass'),drawer,...drawer.querySelectorAll('.maya-glass'),filter,...filter.querySelectorAll('.maya-glass')].filter(e=>!e.closest('.comparison'));
+ const targets=()=>[...document.querySelectorAll('#gallery .maya-glass,#save'),drawer,...drawer.querySelectorAll('.maya-glass'),filter,...filter.querySelectorAll('.maya-glass')].filter(e=>!e.closest('.comparison'));
  function paint(el,key){el.dataset.finish=key;const v=values[key];el.style.backgroundImage=key==='current'&&v.tint===0?'none':'';for(const [k,value] of Object.entries(v)){if(k==='name')continue;el.style.setProperty('--finish-'+k,k==='blur'?value+'px':k==='saturation'?value+'%':String(value/100));}}
  const controls=document.createElement('div');controls.className='finish-controls';controls.innerHTML='<p id="finish-status" role="status"></p><details><summary>Edit glass</summary><div class="finish-sliders"></div></details>';comparison.after(controls);
  const sliders=[];

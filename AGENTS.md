@@ -161,7 +161,9 @@ not independent design authorities. Typography offers one preview per role, with
 Normal/ALL CAPS choices. Visuals groups button/icon glass before panel/table
 controls. Preserve old saved schemas and semantic status colors when applying
 shared text settings. Served pages load typography runtime v3.
-Run tests/component-gallery.mjs.
+Run tests/component-gallery.mjs. Design saves atomically include a private audit trail;
+/api/design must strip _history and /api/admin/design-history must stay Admin-gated.
+Padding debug highlights are preview-only, never saved.
 
 Outbound source-of-truth columns and priority rules are regression-tested in
 `tests/outbound-priority.mjs` (invoked by outbound/app-regression) and populated

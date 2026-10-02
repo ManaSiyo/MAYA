@@ -46,7 +46,7 @@ import { createFeedbackStore } from './maya-feedback.mjs';
 import { mountTransfers } from './maya-transfer.mjs';
 import { mountMayaPhone } from './maya-phone.mjs';   // v14.30: Maya on the studio phone number
 import { createMessageStore, sendSms, readSmsStatus, mountMessages, THREADS_PATH, e164 } from './maya-messages.mjs';   // v14.35: the studio's text threads
-import { DESIGN_PATH, validDesign } from './design-config.mjs';
+import { DESIGN_PATH, validDesign, saveDesign } from './design-config.mjs';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname as pathDirname, join as pathJoin } from 'node:path';
@@ -1544,15 +1544,24 @@ async function requireOwner(req) {
 app.get('/api/design', async (_req,res) => {
   try { const found = await gcsGet(DESIGN_PATH);
     res.set('Cache-Control','no-store');
-    return res.json(found.ok ? JSON.parse(found.buf.toString('utf8')) : {});
+    const {_history,...design}=found.ok ? JSON.parse(found.buf.toString('utf8')) : {};
+    return res.json(design);
   } catch { return res.status(503).json({error:'design_unavailable'}); }
 });
+app.get('/api/admin/design-history', async (req,res) => {
+  try { await requireAdmin(req); } catch(e) { return res.status(e.status || 403).json({error:'admin_required'}); }
+  try { const found=await gcsGet(DESIGN_PATH); if(!found.ok&&found.status!==404)throw Error('unavailable');
+    const items=found.ok?JSON.parse(found.buf.toString('utf8'))._history||[]:[];
+    res.set('Cache-Control','no-store');res.json({ok:true,items});
+  } catch { res.status(503).json({error:'history_unavailable'}); }
+});
 app.post('/api/admin/design', requireAuthHeader, express.json({limit:'8kb'}), async (req,res) => {
-  try { await requireAdmin(req); }
+  let user;
+  try { user=await requireAdmin(req); }
   catch(e) { return res.status(e.status || 403).json({error:'admin_required'}); }
   if (!validDesign(req.body)) return res.status(400).json({error:'invalid_design'});
-  try { await gcsPut(DESIGN_PATH,Buffer.from(JSON.stringify(req.body)),'application/json');
-    res.set('Cache-Control','no-store'); return res.json({ok:true});
+  try { const result=await saveDesign({read:gcsGet,write:gcsPut},req.body,user.email||user.sub);
+    res.set('Cache-Control','no-store'); return res.json({ok:true,...result});
   } catch { return res.status(503).json({error:'save_failed'}); }
 });
 

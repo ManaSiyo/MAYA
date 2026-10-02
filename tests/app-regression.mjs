@@ -141,7 +141,7 @@ ok('Lead status filter has an isolated readable layer and scoped section carets'
  ok('Master prospects use bounded rendering and reusable campaign membership',ui.includes('const BATCH_SIZE=250') && crm.includes("api+'/segment'") && crm.includes('c.campaignIds='));
  ok('Reviewed mail sends have durable duplicate protection',crm.includes('b.confirm!==true') && crm.includes('crm.deliveries[b.requestId]') && crm.includes("status='unknown'"));
  ok('Daily AI allowance combines OpenAI Claude Gemini without paid retries',ai.includes('anthropic:') && ai.includes('gemini:') && ai.includes('sum.spentUsd+sum.reservedUsd+reserve>1') && ai.includes('No automatic paid retry'));
- ok('Admin and Outbound share the AI meter',MAP_SOURCE.includes('<maya-ai-meter>') && readFileSync(join(ROOT,'backend/outbound.html'),'utf8').includes('<maya-ai-meter>'));
+ ok('Admin and Outbound share the AI meter',MAP_SOURCE.includes('<maya-ai-meter') && readFileSync(join(ROOT,'backend/outbound.html'),'utf8').includes('<maya-ai-meter'));
  ok('Mailbox privacy explains scope and processors without changing its URL',readFileSync(join(ROOT,'backend/privacy.html'),'utf8').includes('Connected business mailboxes and Outbound') && readFileSync(join(ROOT,'backend/privacy.html'),'utf8').includes('Anthropic Claude or Google Gemini'));
  ok('Sample emails distinguish editable name company and offer',ui.includes('template-person') && ui.includes('template-company') && ui.includes('template-offer'));
  ok('Gemini audit keeps histories bounded while preserving compact controls',css.includes('max-height:420px') && css.includes('max-height:380px') && css.includes('font-size:11px;padding:6px 10px;min-height:30px;'));
@@ -564,10 +564,10 @@ ok('the marketing modules are migrated into Admin under Users and traffic',
   MAP_SOURCE.includes('id="bl-funnel"') &&
   MAP_SOURCE.includes('async function loadMkt(') &&
   MAP_SOURCE.includes('function metricVal('));
-ok('embedded Marketing keeps the approved page-like presentation inside Admin',
+ok('embedded Marketing uses shared inner panel geometry and retains Admin content',
   !!s.marketingVisual &&
-  s.marketingVisual.panelPadding === '16px 18px' &&
-  s.marketingVisual.panelRadius === '18px' &&
+  s.marketingVisual.panelPadding === '12px 16px' &&
+  s.marketingVisual.panelRadius === '12px' &&
   s.marketingVisual.tickerInTopbar &&
   MAP_SOURCE.includes('id="mkt-ticker"') &&
   MAP_SOURCE.includes('id="mkt-wix-tiles"') &&
@@ -2713,5 +2713,14 @@ ok('Inner panel and filter have independently saved live geometry',surfaceEditor
 ok('Table has its own divider, header/first-column material and per-column type/alignment',surfaceEditors.includes("'Top row','header'")&&surfaceEditors.includes("'First column','first-column'")&&surfaceEditors.includes("'column-'+i")&&surfaceEditors.includes("['vertical','Vertical'"));
 ok('Lead Station removes floating tools and opens conversation from full name cells',!MAP_SOURCE.includes('id="leads-bar"')&&MAP_SOURCE.includes("k==='name'?' onclick=\"leadOpenThread("));
 ok('Lead categories replace phone/tier pills with four compact badges',MAP_SOURCE.includes("code:'SI'")&&MAP_SOURCE.includes("code:'CE'")&&MAP_SOURCE.includes("code:'SU'")&&MAP_SOURCE.includes("code:'?'"));
+const ownerDesignRuntime=readFileSync(join(ROOT,'aesthetics/ui/typography-controls.js'),'utf8');
+const ownerDesignConfig=readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8');
+ok('Outer and inner padding have live visual debug controls',compactGallery.includes('controlSizes') && readFileSync(join(ROOT,'aesthetics/aesthetic-control/overlay.js'),'utf8').includes('data-padding-debug="outer"') && readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes("dataset.paddingDebug='inner'"));
+ok('Aesthetic Control owns saved icon and dropdown dimensions',ownerDesignConfig.includes("['iconSize','dropdownHeight']") && ownerDesignRuntime.includes('--maya-control-dropdown-height'));
+ok('Saved design settings and audit entries commit atomically',ownerDesignConfig.includes('_history:history') && ownerDesignConfig.includes("found.ok ? found.generation : '0'") && readFileSync(join(ROOT,'docs/server/server.js'),'utf8').includes('/api/admin/design-history'));
+ok('Admin Logs include successful Aesthetic Control saves',readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('/api/admin/design-history') && readFileSync(join(ROOT,'backend/status.html'),'utf8').includes("item.state==='saved'"));
+ok('Model Snapshot contains the meter and omits inactive Claude',readFileSync(join(ROOT,'backend/status.html'),'utf8').indexOf('<h3>Model Snapshot</h3>')<readFileSync(join(ROOT,'backend/status.html'),'utf8').indexOf('<maya-ai-meter>') && !readFileSync(join(ROOT,'aesthetics/ui/ai-meter.js'),'utf8').includes("anthropic:'Claude'"));
+ok('Outbound uses the owner ten-column Sheet schema including Reason',readFileSync(join(ROOT,'backend/outbound-priority.js'),'utf8').includes("['Last email','Category','Company','Full name','Email','Job title','Subject','Status','Reason','Relevance']") && readFileSync(join(ROOT,'docs/server/outbound.mjs'),'utf8').includes('A1:J10001'));
+
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

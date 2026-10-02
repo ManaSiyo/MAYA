@@ -1,5 +1,5 @@
 // Deterministic, read-only queue. No AI calls, scheduling, or sending here.
-export const SHEET_COLUMNS=['Category','Company','Full Name','Email','Job Title','Subject','Last email','Status','Relevance'];
+export const SHEET_COLUMNS=['Last email','Category','Company','Full name','Email','Job title','Subject','Status','Reason','Relevance'];
 const DAY=86400000;
 export function sheetDate(value,reference=Date.now()) {
   const raw=String(value||'').trim();if(!raw)return null;

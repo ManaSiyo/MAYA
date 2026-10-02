@@ -7,7 +7,7 @@ assert.match(design,/sole active design specification/);
 assert.match(design,/Aesthetic Control/);
 assert.match(design,/H1.*H4/);
 assert.match(design,/Save/);
-for(const page of canonPages)assert.equal((read(page).match(/\/aesthetics\/ui\/typography-controls\.js\?v=4/g)||[]).length,1,page);
+for(const page of canonPages)assert.equal((read(page).match(/\/aesthetics\/ui\/typography-controls\.js\?v=5/g)||[]).length,1,page);
 assert.match(read('backend/status.html'),/href="\/aesthetics\/aesthetic-control.html"/);
 assert.match(read('docs/server/server.js'),/app\.post\('\/api\/admin\/design', requireAuthHeader/);
 assert.match(read('docs/server/server.js'),/await requireAdmin\(req\)/);

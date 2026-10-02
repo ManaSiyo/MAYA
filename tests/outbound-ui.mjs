@@ -53,7 +53,7 @@ assert.equal(await page.locator('.maya-logo-wrap').evaluate(e=>getComputedStyle(
 assert.equal(await page.locator('.top-btn.hamburger').evaluate(e=>getComputedStyle(e).boxShadow),'none');
 assert.match(await page.locator('.grid.doors .card b').first().evaluate(e=>getComputedStyle(e).fontFamily),/Cormorant/);
 assert.equal(compact.tierInteractive,false);assert.equal(compact.tier,'SI');
-assert.equal(compact.ticker,'10px');assert.equal(compact.header,'rgba(0, 0, 0, 0)');
+assert.equal(compact.ticker,'10px');assert.equal(compact.header,'rgb(13, 17, 32)','Shared table header background');
 await page.evaluate(()=>document.querySelector('#leads-fold').scrollIntoView());
 await page.screenshot({path:join(tmpdir(),'maya-admin-compact.png')});
 await page.setViewportSize({width:390,height:844});

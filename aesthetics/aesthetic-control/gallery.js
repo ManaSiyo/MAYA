@@ -1,4 +1,4 @@
-import {setupSurfaceEditors,setupDismissal} from './surface-editors.js';
+import {setupSurfaceEditors,setupDismissal,fields} from './surface-editors.js';
 import {setupOverlay} from './overlay.js';
 import {setupFinishes} from './finishes.js';
 import {Pill,GlassSurface,IconButton,Drawer,FilterPopover,Metric} from '/aesthetics/ui/components/components.js';
@@ -14,7 +14,12 @@ const comparison=document.createElement('div');comparison.className='comparison'
 const contextActions=row(buttons);contextActions.append(Pill({label:'Tap to listen',purpose:'listen',onClick:()=>say('Button preview')}));
 const iconRow=row(buttons);iconRow.classList.add('icon-row');
 for(const [label,icon] of [['Add','+'],['Close','×'],['Refresh','↻']])iconRow.append(IconButton({label,icon,onClick:()=>say(label+' preview')}));
-for(const [label,path] of [['Menu','M4 6h16M4 12h16M4 18h16'],['Search','M10 4a6 6 0 1 0 0 12a6 6 0 0 0 0-12M15 15l5 5'],['Dropdown','M6 9l6 6 6-6']]){const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');const line=document.createElementNS(svg.namespaceURI,'path');line.setAttribute('d',path);svg.append(line);iconRow.append(IconButton({label,icon:svg,onClick:()=>say(label+' preview')}));}
+for(const [label,path] of [['Menu','M4 6h16M4 12h16M4 18h16'],['Search','M10 4a6 6 0 1 0 0 12a6 6 0 0 0 0-12M15 15l5 5'],['Dropdown','M6 9l6 6 6-6'],['Phone','M6 3h4l2 6-3 2a16 16 0 0 0 4 4l2-3 6 2v4c0 5-18-1-18-12z'],['Email','M3 5h18v14H3zM3 5l9 8 9-8'],['Microphone','M9 4a3 3 0 0 1 6 0v8a3 3 0 0 1-6 0zM6 10v2a6 6 0 0 0 12 0v-2M12 18v4M8 22h8'],['Copy','M8 8h12v13H8zM4 16V3h12'],['Download','M12 3v12M7 10l5 5 5-5M4 17v4h16v-4'],['Favorite','M12 20S2 14 2 8a5 5 0 0 1 10-3 5 5 0 0 1 10 3c0 6-10 12-10 12z'],['Expand','M3 9V3h6M15 3h6v6M21 15v6h-6M9 21H3v-6'],['Edit','M4 16l12-12 4 4L8 20H4zM14 6l4 4'],['Upload','M12 16V3M7 8l5-5 5 5M4 17v4h16v-4'],['Send','M3 3l18 9-18 9 3-9zM6 12h15'],['Invoice','M6 3h12v18l-3-2-3 2-3-2-3 2zM9 7h6M9 11h6M9 15h4'],['History','M3 10a9 9 0 1 1 2 8M3 4v6h6M12 7v5l3 2'],['Help','M9 8a3 3 0 1 1 5 2c-2 1-2 2-2 4M12 18v1'],['Stop','M5 5h14v14H5z'],['Settings','M12 4V2M12 22v-2M4 12H2M22 12h-2M6 6L4 4M20 20l-2-2M6 18l-2 2M20 4l-2 2M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10']]){const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');const line=document.createElementNS(svg.namespaceURI,'path');line.setAttribute('d',path);svg.append(line);iconRow.append(IconButton({label,icon:svg,onClick:()=>say(label+' preview')}));}
+const controlSizes={iconSize:storedDesign.iconSize,dropdownHeight:storedDesign.dropdownHeight};
+const sizeEdit=document.createElement('details');sizeEdit.className='type-editor control-size-editor';sizeEdit.innerHTML='<summary>Icons and dropdown</summary><div class="type-editor-fields"></div>';buttons.append(sizeEdit);
+const sizeRender=()=>{document.documentElement.style.setProperty('--preview-control-height',controlSizes.iconSize+'px');document.documentElement.style.setProperty('--maya-control-icon-size',controlSizes.iconSize+'px');document.documentElement.style.setProperty('--maya-control-dropdown-height',controlSizes.dropdownHeight+'px');};
+fields(sizeEdit.lastChild,controlSizes,[['iconSize','Icon size',{min:24,max:48}],['dropdownHeight','Dropdown height',{min:24,max:48}]],sizeRender);
+const dropdown=document.createElement('select');dropdown.className='dropdown-preview';dropdown.setAttribute('aria-label','Dropdown preview');dropdown.innerHTML='<option>Signature</option><option>Ceremonial</option><option>Suit</option><option>Help me decide</option>';dropdown.onchange=()=>say(dropdown.value+' preview');row(buttons).append(dropdown);sizeRender();
 const colors=row(buttons);colors.id='pill-colors';
 for(const [label,color] of [['Gray','#b5bdc8'],['Blue','#8abcf2'],['Yellow','#fbbf24'],['Green','#4ade80'],['Pink','#fda4af']]){const pill=Pill({label,onClick:()=>say(label+' preview')});pill.classList.add('status-example');pill.style.setProperty('--status-color',color);pill.setAttribute('aria-label',label+' pill');colors.append(pill);}
 const states=document.createElement('details');states.innerHTML='<summary>States</summary>';buttons.append(states);const stateRow=row(states);
@@ -56,7 +61,7 @@ const overlay=setupOverlay(comparison);panels.prepend(document.querySelector('.o
 const advanced=document.querySelector('#advanced');buttons.querySelector('.finish-controls details').append(advanced.querySelector('#tokens'));advanced.remove();
 if(storedDesign?.glass)finishes.set({finish:storedDesign.finish,...storedDesign.glass});if(storedDesign?.overlay)overlay.set(storedDesign.overlay);
 for(const pill of document.querySelectorAll('.maya-pill'))pill.dataset.previewCategory='P3';for(const label of document.querySelectorAll('.maya-metric-label,.maya-metric-value'))label.dataset.previewCategory='P2';for(const group of hierarchy.querySelectorAll('.type-group'))group.renderType();
-const sizeReference=contextActions.querySelector('.maya-pill');new ResizeObserver(()=>{const height=sizeReference.getBoundingClientRect().height;if(height>0)document.documentElement.style.setProperty('--preview-control-height',height+'px');}).observe(sizeReference);
+
 const source=await (await fetch('/aesthetics/ui/components/tokens.css')).text();
 const defaults=Object.fromEntries([...source.matchAll(/(--ui-[\w-]+):\s*([^;]+);/g)].map(m=>[m[1],m[2].trim()]));
 const storageKey='maya-component-gallery-tokens-v2';let saved={};try{saved=JSON.parse(localStorage.getItem(storageKey)||'{}');}catch{}
@@ -78,7 +83,7 @@ document.querySelector('#save').addEventListener('click',async()=>{
  if(sizes.slice(0,4).some((n,i)=>i&&n>=sizes[i-1])||sizes.slice(4).some((n,i)=>i&&n>sizes[i+3])){say('Headlines must descend in size; paragraphs must not grow down the list.');return;}
  const pillX=parseInt(form.querySelector('[name="--ui-pill-padding-x"]').value,10),pillY=parseInt(form.querySelector('[name="--ui-pill-padding-y"]').value,10);
  if(!Number.isInteger(pillX)||pillX<4||pillX>32||!Number.isInteger(pillY)||pillY<2||pillY>16){say('Pill padding must stay within 4–32px sideways and 2–16px vertically.');return;}
- const glass=finishes.settings();const value={type:typeSettings,finish:glass.finish,glass:Object.fromEntries(['fill','tint','rim','highlight','blur','saturation'].map(k=>[k,glass[k]])),overlay:overlay.settings(),editor:editorSettings,...surfacesEditor.settings(),pillX:parseInt(form.querySelector('[name="--ui-pill-padding-x"]').value,10),pillY:parseInt(form.querySelector('[name="--ui-pill-padding-y"]').value,10)};
+ const glass=finishes.settings();const value={...controlSizes,type:typeSettings,finish:glass.finish,glass:Object.fromEntries(['fill','tint','rim','highlight','blur','saturation'].map(k=>[k,glass[k]])),overlay:overlay.settings(),editor:editorSettings,...surfacesEditor.settings(),pillX:parseInt(form.querySelector('[name="--ui-pill-padding-x"]').value,10),pillY:parseInt(form.querySelector('[name="--ui-pill-padding-y"]').value,10)};
  const button=document.querySelector('#save');button.disabled=true;say('Saving…');try{say(await window.MayaTypographyControls.save(value));}catch(e){say(e.message||'Save failed.');}finally{button.disabled=false;}
 });
 

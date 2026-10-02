@@ -33,3 +33,14 @@ compact.table={fill:18,rim:22,paddingX:12,paddingY:14,header:{...type,background
 assert.equal(validDesign(compact),true);
 for(const patch of [{filter:{...compact.filter,width:159}},{inner:{...compact.inner,paddingY:41}},{table:{...compact.table,columns:[type]}},{table:{...compact.table,header:{...compact.table.header,background:'url(evil)'}}},{table:{...compact.table,columns:[{...type,vertical:'sideways'},type,type]}}])assert.equal(validDesign({...compact,...patch}),false);
 console.log('Saved inner/filter/table controls validate bounded geometry, fixed backgrounds and independent column typography.');
+
+const {saveDesign}=await import('../docs/server/design-config.mjs');
+for(const size of [23,49,NaN,'28'])assert.equal(validDesign({...compact,iconSize:size}),false);
+assert.equal(validDesign({...compact,iconSize:36,dropdownHeight:32}),true);
+let saved=structuredClone(compact),generation=1,conflict=true,unavailable=false;
+const store={read:async()=>unavailable?{ok:false,status:503}:{ok:true,buf:Buffer.from(JSON.stringify(saved)),generation:String(generation)},write:async(_,buf,type,expected)=>{assert.equal(expected,String(generation));if(conflict){conflict=false;generation++;throw Object.assign(Error('conflict'),{status:412});}saved=JSON.parse(buf);generation++;}};
+const outcome=await saveDesign(store,{...compact,iconSize:36},'owner@example.com',()=> '2026-10-02T20:00:00Z');
+assert.equal(outcome.savedAt,'2026-10-02T20:00:00Z');assert.equal(saved.iconSize,36);assert.equal(saved._history.length,1);assert.equal(saved._history[0].source,'design');assert.match(saved._history[0].text,/iconSize/);assert.equal(saved._history[0].who,'owner@example.com');
+await saveDesign(store,{...compact,iconSize:36},'owner@example.com');assert.equal(saved._history.length,2);assert.match(saved._history[1].text,/unchanged/);
+unavailable=true;await assert.rejects(()=>saveDesign(store,compact,'owner'),/storage unavailable/);assert.equal(saved._history.length,2);
+console.log('Atomic design saves audit changes and no-op saves, retry concurrent writes and reject unavailable storage.');

@@ -102,9 +102,12 @@ await test('v14.01 Lead Station: no Invoice columns, no Last Quote (v14.34), dra
   assert.ok(!admin.includes("'<div class=\"lead-when\">"), 'day-count line under the name removed');
 });
 
-await test('CRM actions: only Call below the name, invoice in Messages', () => {
+await test('CRM actions: category badge and whole name cell open Messages; invoice remains in Messages', () => {
   const actions = admin.slice(admin.indexOf('function _actionsCell'), admin.indexOf('function _leadColDefs'));
-  assert.ok(actions.includes('PHONE_SVG') && !actions.includes('CHAT_SVG') && !actions.includes('PAY_SVG'), 'one requested action');
+  assert.ok(actions.includes('category-badge') && actions.includes('leadCategory(x)'), 'category replaces retired phone action');
+  for(const code of ['SI','CE','SU','?'])assert.ok(admin.includes("code:'"+code+"'"),'category '+code);
+  assert.ok(!actions.includes('PHONE_SVG') && !actions.includes('CHAT_SVG') && !actions.includes('PAY_SVG'), 'no retired action icons');
+  assert.ok(admin.includes("(k==='name'?' onclick=\"leadOpenThread("), 'whole name cell opens conversation');
   assert.ok(!actions.includes('EMAIL_SVG') && !actions.includes('leadEmail'), 'no email icon');
   assert.ok(admin.includes('function leadInvoice'), 'invoice composer');
   assert.ok(admin.includes('lead-inv-modal'), 'invoice modal');

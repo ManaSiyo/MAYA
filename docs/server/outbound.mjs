@@ -19,7 +19,7 @@ export function contact(input) {
 export function rowsToContacts(rows) {
   if (!Array.isArray(rows)||rows.length>10001) throw fail('Import up to 10,000 rows at a time.');
   const normalize=h=>text(h).toLowerCase().replace(/[^a-z]/g,'');
-  const columns={name:['name','fullname','contactname','contact'],email:['email','emailaddress','workemail'],company:['company','companyname','organization'],domain:['domain','website','companydomain'],phone:['phone','phonenumber','mobile'],title:['title','jobtitle','position','role'],notes:['notes','note','description'],subject:['subject','emailsubjectthread'],category:['category'],lastEmail:['lastemail'],sheetStatus:['status'],relevance:['relevance']};
+  const columns={name:['name','fullname','contactname','contact'],email:['email','emailaddress','workemail'],company:['company','companyname','organization'],domain:['domain','website','companydomain'],phone:['phone','phonenumber','mobile'],title:['title','jobtitle','position','role'],notes:['notes','note','description'],subject:['subject','emailsubjectthread'],category:['category'],lastEmail:['lastemail'],sheetStatus:['status'],reason:['reason'],relevance:['relevance']};
   // Summary rows may precede the actual contact table. Never import a strategy tab.
   const start=rows.slice(0,10).findIndex(row=>Array.isArray(row)&&row.map(normalize).some(h=>columns.email.includes(h)));
   if(start<0)throw fail('Choose a contacts tab with an Email header, not a strategy or summary tab.');
@@ -36,7 +36,7 @@ export function rowsToContacts(rows) {
     if(notes.length>4000)throw fail(`Row ${start+index+2}: Notes exceed 4,000 characters; shorten before importing.`);
     try{
       const result=contact({...obj,notes});result.subject=text(obj.subject,500);
-      Object.assign(result,{category:text(obj.category,160),lastEmail:text(obj.lastEmail,80),sheetStatus:text(obj.sheetStatus,500),relevance:text(obj.relevance,80)});
+      Object.assign(result,{category:text(obj.category,160),lastEmail:text(obj.lastEmail,80),sheetStatus:text(obj.sheetStatus,500),reason:text(obj.reason,4000),relevance:text(obj.relevance,80)});
       const status=result.sheetStatus.toLowerCase();
       if(/bounced|unsubscribed|do not contact|declined|left company|\bstop\b/.test(status))result.stage='suppressed';
       else if(/\breplied\b/.test(status))result.stage='replied';
@@ -61,7 +61,7 @@ export function mergeContacts(state, incoming, campaignId) {
         // past a same-day email that MAYA already observed after that snapshot.
         if(existing.sheetData&&existing.sheetStatus===c.sheetStatus&&existing.lastEmail===c.lastEmail)c.sheetData.outreachBaselineAt=existing.sheetData.outreachBaselineAt||existing.sheetData.syncedAt;
         for(const field of ['name','company','title','phone','notes','subject'])if(existing.sheetData&&existing[field]===existing.sheetData[field])existing[field]=c[field];
-        for(const field of ['category','lastEmail','sheetStatus','relevance','sheetPaused'])existing[field]=c[field];
+        for(const field of ['category','lastEmail','sheetStatus','reason','relevance','sheetPaused'])existing[field]=c[field];
         // Source status may advance an untouched relationship, never erase a
         // local decision, a reply, a meeting, or confirmed communication history.
         if(!existing.stageManualAt&&['new','ready','contacted'].includes(existing.stage)&&c.stage!=='new')existing.stage=c.stage;
@@ -150,8 +150,8 @@ export function mountOutbound(app,deps) {
     const {state}=await load(uid),sheetId=state.settings.sheetId;
     if(!sheetId)throw fail('Save your workbook URL in Connections first.');
     const tabs=await deps.sheetTabs(sheetId);
-    const campaignTabs=tabs.filter(t=>/^9\/23 (Ceremonial|Corporates|Fashion Houses)$/.test(t));
-    if(!campaignTabs.length)throw fail('No 9/23 campaign tabs found in this workbook.');
+    const campaignTabs=tabs.filter(t=>/^9\/(?:23|29) (Ceremonial|Corporates|Fashion Houses)$/.test(t));
+    if(!campaignTabs.length)throw fail('No supported campaign tabs found in this workbook.');
     // Read and validate every source before changing storage. A failed tab cannot
     // leave an apparently successful partial import.
     const imports=[];
@@ -159,7 +159,7 @@ export function mountOutbound(app,deps) {
     // over campaign copies. Others are retained without inventing a campaign.
     const sourceTabs=[...campaignTabs,...(tabs.includes('Funnel')?['Funnel']:tabs.includes('Others')?['Others']:[])];
     const syncedAt=new Date().toISOString();
-    for(const tab of sourceTabs){const rows=await deps.sheetRows(sheetId,"'"+tab.replace(/'/g,"''")+"'!A1:I10001");imports.push({tab,contacts:rowsToContacts(rows)});}
+    for(const tab of sourceTabs){const rows=await deps.sheetRows(sheetId,"'"+tab.replace(/'/g,"''")+"'!A1:J10001");imports.push({tab,contacts:rowsToContacts(rows)});}
     const masterRows=new Map((imports.find(e=>e.tab==='Funnel')?.contacts||[]).map(p=>[contactIdentity(p),p]));
     const result=await change(uid,s=>{
       if(s.settings.sheetId!==sheetId)throw fail('Workbook changed while syncing. Try again.',409);

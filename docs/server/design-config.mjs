@@ -3,7 +3,8 @@ export const DESIGN_PATH = 'config/typography-controls.json';
 const DESIGN_ROLES = new Set(['H1','H2','H3','H4','P1','P2','P3','P4']);
 export function validDesign(body) {
   if (!body || typeof body !== 'object' || !body.type || !body.glass || !body.overlay) return false;
-  if (Object.keys(body).some(k => !['type','glass','overlay','finish','pillX','pillY','editor','inner','filter','table'].includes(k))) return false;
+  if (Object.keys(body).some(k => !['type','glass','overlay','finish','pillX','pillY','editor','inner','filter','table','iconSize','dropdownHeight'].includes(k))) return false;
+  for(const k of ['iconSize','dropdownHeight'])if(body[k]!==undefined&&(!Number.isInteger(body[k])||body[k]<24||body[k]>48))return false;
   const legacy=Object.hasOwn(body.type,'P5');
   const roles=legacy?new Set([...DESIGN_ROLES,'P5']):DESIGN_ROLES;
   if (Object.keys(body.type).length !== roles.size ||
@@ -47,4 +48,24 @@ export function validDesign(body) {
   return ['current','liquid','clear'].includes(body.finish) &&
     Number.isInteger(body.pillX) && body.pillX >= 4 && body.pillX <= 32 &&
     Number.isInteger(body.pillY) && body.pillY >= 2 && body.pillY <= 16;
+}
+
+// Settings and their audit trail share one atomic, generation-checked object.
+// The public design route strips the owner-only history before responding.
+export async function saveDesign(store, value, who, now = () => new Date().toISOString()) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const found = await store.read(DESIGN_PATH);
+    if (!found.ok && found.status !== 404) throw new Error('design storage unavailable');
+    if (found.ok && !found.generation) throw new Error('design revision unavailable');
+    const previous = found.ok ? JSON.parse(found.buf.toString('utf8')) : {};
+    const changed = Object.keys(value).filter(key => JSON.stringify(value[key]) !== JSON.stringify(previous[key]));
+    const savedAt = now();
+    const history = [...(Array.isArray(previous._history) ? previous._history : []),
+      {ts:savedAt,who:String(who || 'Admin').slice(0,160),source:'design',state:'saved',
+       text:'Aesthetic Control saved' + (changed.length ? ': ' + changed.join(', ') : ' · settings unchanged')}].slice(-100);
+    try {
+      await store.write(DESIGN_PATH, Buffer.from(JSON.stringify({...value,_history:history})), 'application/json', found.ok ? found.generation : '0');
+      return {savedAt};
+    } catch (e) { if (e.status !== 412 || attempt === 4) throw e; }
+  }
 }

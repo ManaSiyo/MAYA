@@ -827,7 +827,7 @@ try {
 #adm-mkt #leads-table .lead-identity{justify-content:center}
 .lead-subline{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:7px;color:#fff;font:var(--maya-text-caption) var(--maya-font-ui)}
 #adm-mkt #leads-table .lead-src,#adm-mkt #leads-table .lead-sig-edit{color:#fff;font:var(--maya-text-caption) var(--maya-font-ui)}
-#model-snapshot{text-align:center;padding:0;font-family:var(--maya-font-ui)}.model-group{padding:12px;border-radius:12px;margin:4px 0;}.model-group strong{display:block;font:var(--maya-text-section) var(--maya-font-ui);color:#fff}.model-group small{display:block;font:11px/1.5 var(--maya-font-ui);color:var(--dim)}.model-note{font:10px var(--maya-font-ui);color:var(--dim);padding:8px}
+#drawer:is(.msgs,.logs) .model-snapshot-group{display:none}#model-snapshot{text-align:center;padding:0;font-family:var(--maya-font-ui)}.model-group{padding:12px;border-radius:12px;margin:4px 0;}.model-group strong{display:block;font:var(--maya-text-section) var(--maya-font-ui);color:#fff}.model-group small{display:block;font:11px/1.5 var(--maya-font-ui);color:var(--dim)}.model-note{font:10px var(--maya-font-ui);color:var(--dim);padding:8px}
 
 #adm-mkt #leads-fold>summary{display:flex!important;flex-direction:row;align-items:center!important;justify-content:center;gap:8px}
 #adm-mkt #leads-fold>summary::after{position:static;align-self:center;line-height:1;transform:none}
@@ -860,7 +860,7 @@ try {
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=4"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=5"></script>
 </head>
 <body class="systems-map">
 
@@ -941,7 +941,7 @@ if (IS_AFFILIATES) {
     <button class="adm-tab on" id="adm-tab-systems" onclick="admTab('systems')" role="tab" aria-selected="true" aria-label="Systems" title="Systems"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 3-.5 2-2 1-2-.5-2 3.5L4.5 11v2L3 15l2 3.5 2-.5 2 1 .5 2h5l.5-2 2-1 2 .5 2-3.5-1.5-2v-2L21 9l-2-3.5-2 .5-2-1-.5-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
     <button class="adm-tab" id="adm-tab-messages" onclick="admTab('messages')" role="tab" aria-selected="false" aria-label="Messages" title="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path fill="currentColor" stroke="none" d="M12 3C6.5 3 2 6.6 2 11c0 2.6 1.6 4.9 4 6.4L5 21l4.4-2.3c.8.2 1.7.3 2.6.3 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg><span class="adm-unread" id="adm-unread" hidden>0</span></button><button class="adm-tab" id="adm-tab-logs" onclick="admTab('logs')" role="tab" aria-selected="false" aria-label="Logs" title="Logs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18H5zM8 7h8M8 11h8M8 15h5"/></svg></button><span id="adm-tabtitle">Systems</span>
   </div>
-  <div id="drawer-logs" hidden><div class="msg-controls"><button onclick="loadMayaLogs()">Refresh logs</button></div><p class="note">Feedback given to Maya, in the original wording. Logged requests remain open until marked shipped.</p><div id="maya-logs-list" aria-live="polite"></div></div>
+  <div id="drawer-logs" hidden><div class="msg-controls"><button onclick="loadMayaLogs()">Refresh logs</button></div><p class="note">Maya requests and saved aesthetic changes.</p><div id="maya-logs-list" aria-live="polite"></div></div>
   <div id="drawer-messages" hidden>
     <div id="booking-pending" aria-live="polite"></div>
     <div id="msg-list"></div>
@@ -960,7 +960,7 @@ if (IS_AFFILIATES) {
     </div>
   </div>
   <a class="maya-glass-button design-quicklink" href="/aesthetics/aesthetic-control.html" target="_blank" rel="noopener" title="Open the live design editor">Aesthetic Control</a>
-  <maya-ai-meter></maya-ai-meter><maya-owner-crm></maya-owner-crm><h3>Model snapshot</h3><div id="model-snapshot">Sign in to load the current server configuration.</div><h3>The vault</h3>
+  <section class="model-snapshot-group"><h3>Model Snapshot</h3><div id="model-snapshot">Sign in to load the current server configuration.</div><maya-ai-meter></maya-ai-meter></section><maya-owner-crm></maya-owner-crm><h3>The vault</h3>
   <a href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank">Firebase<small>Boards, projects, pictures and submissions. Delete a collection here to truly destroy it.</small></a>
   <h3 class="tint">Behind the scenes</h3>
   <a href="https://console.cloud.google.com/run/detail/us-west1/maya-api/metrics?project=pro-maya" target="_blank">Cloud Run<small>The whole API: logs, revisions, keys, environment and credit burn.</small></a>
@@ -3291,11 +3291,15 @@ async function loadMayaLogs() {
   if (!_idTok) { host.textContent = 'Sign in to read Maya’s feedback.'; return; }
   host.textContent = 'Loading feedback...';
   try {
-    const r = await fetch('/api/admin/maya-features', {headers:{Authorization:'Bearer '+_idTok}});
-    const j = await r.json();
+    const auth=_idTok;
+    const [r,designResponse] = await Promise.all([fetch('/api/admin/maya-features', {headers:{Authorization:'Bearer '+auth}}),fetch('/api/admin/design-history', {headers:{Authorization:'Bearer '+auth},cache:'no-store'})]);
+    const [j,designLog]=await Promise.all([r.json(),designResponse.json()]);
+    if(auth!==_idTok)return;
+    if(!designResponse.ok||!designLog.ok)throw Error('Saved aesthetic history could not be loaded.');
+    j.items=[...(j.items||[]),...(designLog.items||[])];
     if (!r.ok || !j.ok) throw new Error('The feedback inbox could not be loaded.');
     host.innerHTML = (j.items || []).slice().sort((a,b)=>String(b.ts).localeCompare(String(a.ts))).map(item =>
-      '<article class="maya-log"><small>' + esc(item.who || 'Maya') + ' · ' + esc(item.source || 'voice') + ' · ' + esc(_msgWhen(item.ts)) + ' · ' + (item.done ? 'Shipped' : 'Open') + '</small><p>' + esc(item.text || '') + '</p></article>').join('') || '<p class="note">No feedback logged yet.</p>';
+      '<article class="maya-log"><small>' + esc(item.who || 'Maya') + ' · ' + esc(item.source || 'voice') + ' · ' + esc(_msgWhen(item.ts)) + ' · ' + (item.state==='saved' ? 'Saved' : item.done ? 'Shipped' : 'Open') + '</small><p>' + esc(item.text || '') + '</p></article>').join('') || '<p class="note">No feedback logged yet.</p>';
   } catch(e) { host.textContent = e.message; }
 }
 function _msgWhen(ts) {
@@ -3939,5 +3943,5 @@ setInterval(()=>{ if(_idTok && document.visibilityState==='visible') loadMkt(); 
   setTimeout(checkAdminUpdate, 8000);   // catch a tab opened already-stale
 })();
 </script>
-<script type="module" src="/aesthetics/ui/ai-meter.js?v=2"></script><script type="module" src="/aesthetics/ui/owner-crm.js?v=2"></script></body>
+<script type="module" src="/aesthetics/ui/ai-meter.js?v=3"></script><script type="module" src="/aesthetics/ui/owner-crm.js?v=2"></script></body>
 </html>

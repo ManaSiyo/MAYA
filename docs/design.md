@@ -115,11 +115,34 @@ The preview lives in `aesthetics/aesthetic-control.html` with support files in `
 `aesthetics/ui/components/`; global application in
 `aesthetics/ui/typography-controls.js`. The Admin-authenticated save and public
 read endpoints are in `docs/server/server.js`; `docs/server/design-config.mjs`
-validates the settings. Served pages load runtime v3; Hosting revalidates this
+validates the settings. Served pages load runtime v5; Hosting revalidates this
 script instead of caching role mappings for a week. Old aesthetic PDFs were removed;
-archived source inventories are evidence only and never override this file or
-the saved controls. No page should introduce a competing design specification.
+the inactive style-inventory viewer, generated report and generator were removed;
+the active typography role audit remains. No page should introduce a competing design specification.
 
 Typography Edit popups anchor to the full category row, stay within the section
 and viewport at every width, and constrain every input/select to the popup.
 At 420px and below, use two columns so maximum editor padding stays usable.
+
+## October 2: shared saved controls and audit
+
+Inner and outer panel editors each have Show padding. Light green bands show the
+actual X/Y padding without changing dimensions or intercepting clicks. Debug
+highlights are preview-only and never saved. Icon size and dropdown height are
+saved independently (24–48px). The preview includes a working native dropdown,
+phone, email, microphone, copy, download, favorite and expand icons alongside
+the existing controls. Save uses the selected glass finish.
+
+Runtime v5 drives the shared legacy material/typography variables, including
+drawer frost and dense inner panels. Outbound tables share the saved table
+header, background, cell padding and type defaults while keeping their ten
+source columns; Full name and Status use the corresponding semantic roles.
+
+Authenticated design saves atomically persist settings and a bounded private
+audit trail with generation preconditions in config/typography-controls.json.
+The public design route strips the trail; /api/admin/design-history requires
+Admin auth. Admin Logs show Saved separately from open/shipped feature requests.
+Earlier saves have no recoverable audit timestamp. Local saves remain local.
+Model Snapshot contains the AI meter; inactive Claude is excluded from its
+provider display. GPT-6 Luna and GPT Image 2.5 Flare (Medium default) remain
+configured for cost-conscious routine work. No environment changes are implied.

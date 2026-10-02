@@ -23,17 +23,17 @@ export async function auditOutboundPriority(browser){
   await page.goto('https://maya.test/outbound.html');await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('Funnel:'));
   assert.equal(syncs,1,'Every opening refreshes the connected Sheet');
   const headerText=()=>page.locator('.people-table th').allTextContents().then(xs=>xs.map(x=>x.replace('⌄','').trim()));
-  assert.deepEqual((await headerText()).slice(2,11),['Category','Company','Full Name','Email','Job Title','Subject','Last email','Status','Relevance']);
+  assert.deepEqual((await headerText()).slice(2,12),['Last email','Category','Company','Full name','Email','Job title','Subject','Status','Reason','Relevance']);
   assert.equal(await page.locator('#todo-list').count(),0);
-  assert.equal(await page.locator('#master-list').innerText(),'All');
+  assert.equal(await page.locator('#master-list').textContent(),'All');
   assert.equal(await page.locator('#followups').evaluate(e=>!!e.closest('.layout>aside')),true);
   await page.locator('.history-segment.f1').focus();assert.match(await page.locator('.history-detail').innerText(),/%/);
-  await page.locator('[data-column="8"]').click();await page.locator('#column-order').selectOption('desc');await page.locator('#modal-submit').click();
+  await page.locator('[data-column="9"]').click();await page.locator('#column-order').selectOption('desc');await page.locator('#modal-submit').click();
   assert.equal(await page.locator('.people-table tbody tr').first().getAttribute('data-contact-row'),'New-high');
-  await page.locator('[data-column="4"]').click();await page.locator('#column-text').fill('director');await page.locator('#modal-submit').click();assert.equal(await page.locator('.people-table tbody tr').count(),7);
-  await page.locator('[data-column="2"]').click();await page.locator('#column-text').fill('New-');await page.locator('#modal-submit').click();assert.equal(await page.locator('.people-table tbody tr').count(),2,'Column filters combine');
+  await page.locator('[data-column="5"]').click();await page.locator('#column-text').fill('director');await page.locator('#modal-submit').click();assert.equal(await page.locator('.people-table tbody tr').count(),7);
+  await page.locator('[data-column="3"]').click();await page.locator('#column-text').fill('New-');await page.locator('#modal-submit').click();assert.equal(await page.locator('.people-table tbody tr').count(),2,'Column filters combine');
   await page.locator('#clear-columns').click();assert.equal(await page.locator('.people-table tbody tr').count(),7);
-  await page.locator('[data-campaign="c"]').click();assert.deepEqual((await headerText()).slice(2,11),['Category','Company','Full Name','Email','Job Title','Subject','Last email','Status','Relevance']);
+  await page.locator('[data-campaign="c"]').click();assert.deepEqual((await headerText()).slice(2,12),['Last email','Category','Company','Full name','Email','Job title','Subject','Status','Reason','Relevance']);
   await page.locator('#master-list').click();
   for(const width of [320,390,650,768,1024,1440,1920]){
    await page.setViewportSize({width,height:844});await page.evaluate(()=>document.fonts.ready);
@@ -43,7 +43,7 @@ export async function auditOutboundPriority(browser){
    const style=await page.locator('.people-table .person-link').first().evaluate(e=>{const s=getComputedStyle(e);return {border:s.borderTopWidth,shadow:s.boxShadow,radius:s.borderRadius,font:s.fontSize};});assert.equal(style.border,'0px');assert.equal(style.shadow,'none');assert.equal(style.radius,'0px');assert.equal(style.font,'12px');
    assert.equal((await page.locator('.people-table tbody tr').first().boundingBox()).height,44,'44px rows '+width);
    const pills=await page.locator('#stats .stat').evaluateAll(items=>items.map(el=>({width:el.getBoundingClientRect().width,grow:getComputedStyle(el).flexGrow})));assert.ok(pills.every(p=>p.width<180&&p.grow==='0'),'Metrics stay content width');
-   assert.equal(await page.locator('.people-table th').first().evaluate(e=>getComputedStyle(e).textAlign),'left');
+   assert.equal(await page.locator('.people-table th').first().evaluate(e=>getComputedStyle(e).textAlign),'center');
 
    await page.locator('.people-scroll').evaluate(e=>e.scrollLeft=e.scrollWidth);await page.locator('[data-write="Recent"]').click();assert.equal(await page.locator('#detail h2').textContent(),'Recent');await page.locator('#master-list').click();
    if([390,1440].includes(width))await page.screenshot({path:'/private/tmp/maya-outbound-todo-'+width+'.png',fullPage:true});

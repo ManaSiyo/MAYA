@@ -3,7 +3,7 @@ import {priorityInfo,priorityQueue,followupSummary,sheetDate,SHEET_COLUMNS} from
 import {rowsToContacts,mergeContacts} from '../docs/server/outbound.mjs';
 import {reconcile,hydrateOutboundHistory} from '../docs/server/crm-intelligence.mjs';
 const now=Date.parse('2026-09-28T19:00:00Z');
-const row=(id,status,date='',score='80')=>({...rowsToContacts([SHEET_COLUMNS,['Corporate','Example '+id,id,id+'@example.com','Director','Hello',date,status,score]])[0],id,sheetData:{syncedAt:'2026-09-28T19:00:00Z'}});
+const row=(id,status,date='',score='80')=>({...rowsToContacts([SHEET_COLUMNS,[date,'Corporate','Example '+id,id,id+'@example.com','Director','Hello',status,'Owner reason',score]])[0],id,sheetData:{syncedAt:'2026-09-28T19:00:00Z'}});
 export function assertOutboundPriority(){
  const low=row('low','Never contacted','','55'),high=row('high','Never contacted','','91'),old=row('old','1st touch, no reply','06/03'),recent=row('recent','2nd touch, sent','09/27'),held=row('hold','1st touch, sent; OOO','09/23'),reply=row('reply','Replied, active','09/26'),stop=row('stop','Replied, declined','09/20'),unknown=row('unknown','Multiple touches, no reply');
  assert.deepEqual(priorityQueue([recent,low,old,held,reply,high,stop,unknown],now).map(p=>p.id),['high','low','unknown','old','recent']);

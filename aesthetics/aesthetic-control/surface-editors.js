@@ -18,9 +18,10 @@ function editor(parent,label,id,values,specs,render){
 }
 export function setupSurfaceEditors({panels,guide,design}){
  const settings={inner:structuredClone(design.inner),filter:structuredClone(design.filter),table:structuredClone(design.table)};
- const render=()=>window.MayaTypographyControls.previewSurfaces(settings);
+ const render=()=>{window.MayaTypographyControls.previewSurfaces(settings);for(const el of document.querySelectorAll('#panels .inner-panel')){el.style.setProperty('--padding-debug-x',settings.inner.paddingX+'px');el.style.setProperty('--padding-debug-y',settings.inner.paddingY+'px');}};
  const panelFields=[['fill','Opacity',{max:100}],['rim','Border',{max:100}],['radius','Corners',{max:24}],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]];
  const inner=editor(panels,'Inner panel','inner',settings.inner,[...panelFields,['width','Width %',{min:20,max:100}]],render);panels.querySelector('.context-grid').before(inner);
+ const debug=document.createElement('button');debug.type='button';debug.className='padding-debug';debug.dataset.paddingDebug='inner';debug.textContent='Show padding';debug.setAttribute('aria-pressed','false');debug.onclick=()=>{const on=debug.getAttribute('aria-pressed')!=='true';debug.setAttribute('aria-pressed',String(on));debug.textContent=on?'Hide padding':'Show padding';document.querySelectorAll('#panels .inner-panel').forEach(el=>el.classList.toggle('show-padding',on));};inner.querySelector('.type-editor-fields').append(debug);
  const filter=editor(panels,'Filter','filter',settings.filter,[...panelFields,['width','Width',{min:160,max:600}]],render);inner.after(filter);
  const divider=document.createElement('hr');divider.className='visual-divider';guide.before(divider);
  const title=document.createElement('h3');title.textContent='Table';guide.before(title);
@@ -37,6 +38,6 @@ export function setupSurfaceEditors({panels,guide,design}){
 export function setupDismissal(){
  const selector='.type-editor,.overlay-controls,.finish-controls>details';
  document.addEventListener('click',e=>{for(const el of document.querySelectorAll(selector))if(el.open&&!el.contains(e.target))el.open=false;});
- document.addEventListener('focusin',e=>{for(const el of document.querySelectorAll(selector))if(el.open&&!el.contains(e.target))el.open=false;});
+ document.addEventListener('focusin',e=>{if(e.target.matches('summary')&&e.target.closest(selector))return;for(const el of document.querySelectorAll(selector))if(el.open&&!el.contains(e.target))el.open=false;});
  document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;const opened=[...document.querySelectorAll(selector)].filter(el=>el.open);for(const el of opened)el.open=false;opened.at(-1)?.querySelector('summary')?.focus();});
 }

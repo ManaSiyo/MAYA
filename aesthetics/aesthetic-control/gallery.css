@@ -134,3 +134,10 @@ body{text-align:center;line-height:1.4}
 #table-preview .lead-identity{display:flex}#table-preview .lead-subline{display:flex;align-items:center;gap:8px;margin-top:4px}
 .category-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;border:1px solid #ffffff33;border-radius:100px;font:10px Jost,sans-serif;color:#aab5c4}
 .inner-panel{border:1px solid #ffffff33;border-radius:12px}
+
+/* Padding is a debug overlay, excluded from saved settings. */
+.show-padding{position:relative}.show-padding::after{content:'';position:absolute;inset:0;box-sizing:border-box;border:solid rgb(160 235 180 / .3);border-width:var(--padding-debug-y,0px) var(--padding-debug-x,0px);border-radius:inherit;pointer-events:none;z-index:1}
+.padding-debug{border:1px solid #a0ebb455;border-radius:100px;background:#a0ebb41a;color:#c7f5d3;padding:4px 10px;cursor:pointer}.padding-debug[aria-pressed=true]{background:#a0ebb433}
+.control-size-editor{position:relative;width:min(420px,100%);margin:8px auto}.control-size-editor .type-editor-fields{width:100%}
+.dropdown-preview{min-height:var(--maya-control-dropdown-height,28px);background:var(--maya-button-fill);color:#fff;border:1px solid var(--maya-button-edge);border-radius:100px;padding:4px 12px}
+.save-bar button{background:var(--maya-button-fill);border-color:var(--maya-button-edge);backdrop-filter:var(--maya-button-frost)}

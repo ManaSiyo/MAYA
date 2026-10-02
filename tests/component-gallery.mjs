@@ -35,6 +35,22 @@ try{
  assert.equal(await page.locator('#panels .maya-surface').first().evaluate(e=>getComputedStyle(e).padding),'14px 24px');
  await page.locator('.overlay-controls summary').click();
 
+ await page.locator('.overlay-controls summary').click();
+ await page.locator('[data-padding-debug="outer"]').click();
+ assert.equal(await page.locator('#panels .maya-surface.show-padding').count(),2);
+ assert.equal(await page.locator('#panels .maya-surface').first().evaluate(e=>getComputedStyle(e,'::after').borderTopWidth),'14px');
+ assert.equal(await page.locator('#panels .maya-surface').first().evaluate(e=>getComputedStyle(e,'::after').borderLeftWidth),'24px');
+ await page.locator('[data-padding-debug="outer"]').click();
+ await page.locator('[data-editor="inner"] summary').click();await page.locator('[data-padding-debug="inner"]').click();
+ await page.locator('[data-editor="inner"] [data-field="paddingX"]').fill('22');
+ assert.equal(await page.locator('#panels .inner-panel.show-padding').count(),2);
+ assert.equal(await page.locator('#panels .inner-panel').first().evaluate(e=>getComputedStyle(e,'::after').borderLeftWidth),'22px');
+ await page.locator('[data-padding-debug="inner"]').click();
+ await page.locator('.control-size-editor summary').click();await page.locator('[data-field="iconSize"]').fill('36');await page.locator('[data-field="dropdownHeight"]').fill('32');
+ assert.equal(await page.locator('.icon-row .maya-icon-button').first().evaluate(e=>getComputedStyle(e).width),'36px');
+ assert.equal(await page.locator('.dropdown-preview').evaluate(e=>getComputedStyle(e).minHeight),'32px');
+ await page.locator('.gallery-header h1').click();
+ assert.equal(await page.locator('#save').evaluate(e=>getComputedStyle(e).backgroundColor),await page.locator('#buttons>.preview-row .maya-pill').first().evaluate(e=>getComputedStyle(e).backgroundColor));
  assert.equal(await page.locator('#gallery > section').first().getAttribute('id'),'pill-preview');
  assert.equal(await page.locator('#pill-colors .status-example').count(),5);
  assert.equal(await page.locator('#status-reference,#source-styles,#pages,#icons').count(),0);
@@ -83,7 +99,7 @@ try{
  assert.equal(await page.locator('[data-category="H3"] [data-field="font"]').inputValue(),'cormorant');
  assert.equal(await page.locator('#table-preview td[data-col="stage"]').first().evaluate(e=>getComputedStyle(e).textAlign),'center');
  assert.equal(await page.locator('#table-preview td[data-col="note"]').first().evaluate(e=>getComputedStyle(e).fontSize),'15px');
- assert.equal(await page.locator('.inner-panel').first().evaluate(e=>getComputedStyle(e).padding),'20px 30px');
+ assert.equal(await page.locator('.inner-panel').first().evaluate(e=>getComputedStyle(e).padding),'20px 30px');assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('maya-typography-controls-v1')).iconSize),36);
  await page.goto('https://maya.test/backend/status.html',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>!!document.getElementById('maya-typography-control-style'));
  assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--maya-type-H4-size').trim()),'12px');
@@ -137,6 +153,7 @@ try{
    const fits=await editor.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&[...e.querySelectorAll('input,select')].every(c=>{const b=c.getBoundingClientRect();return b.left>=r.left&&b.right<=r.right;});});
    assert.ok(fits,`${id} popup/controls at ${width}`);await page.keyboard.press('Escape');
   }
+  const sizeEditor=page.locator('.control-size-editor');await sizeEditor.locator('summary').click();assert.ok(await sizeEditor.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth;}),'Size editor fits '+width);await page.keyboard.press('Escape');
   await page.locator('#pill-preview > .review-fold').evaluate(e=>e.open=false);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'overflow '+width);
  }
@@ -145,7 +162,7 @@ try{
  await page.goto('https://maya.manasiyo.com/aesthetics/aesthetic-control.html');await page.locator('#save').waitFor();
  await page.evaluate(()=>localStorage.setItem('maya_admin_tok','test-owner-token'));
  await page.locator('#save').click();await page.waitForFunction(()=>document.querySelector('#feedback').textContent.includes('Saved across MAYA pages'));
- const {validDesign}=await import('../docs/server/design-config.mjs');assert.equal(validDesign(savedPost.body),true,JSON.stringify(savedPost.body));assert.equal(savedPost.body.editor.radius,12);assert.equal(savedPost.body.table.columns.length,3);assert.equal(savedPost.body.type.P1.align,'center');assert.equal(savedPost.header,'Bearer test-owner-token');assert.deepEqual(Object.keys(savedPost.body.type),['H1','H2','H3','H4','P1','P2','P3','P4']);
+ const {validDesign}=await import('../docs/server/design-config.mjs');assert.equal(validDesign(savedPost.body),true,JSON.stringify(savedPost.body));assert.equal(savedPost.body.iconSize,28);assert.equal(savedPost.body.dropdownHeight,28);assert.equal(JSON.stringify(savedPost.body).includes("show-padding"),false);assert.equal(savedPost.body.editor.radius,12);assert.equal(savedPost.body.table.columns.length,3);assert.equal(savedPost.body.type.P1.align,'center');assert.equal(savedPost.header,'Bearer test-owner-token');assert.deepEqual(Object.keys(savedPost.body.type),['H1','H2','H3','H4','P1','P2','P3','P4']);
  assert.deepEqual(errors.filter(e=>!e.includes('Firebase')&&!e.includes('google')),[]);
  console.log('Typography Controls passed: role counts, descending roles, edit/save/reload, Admin application, eleven widths with all popup and control bounds.');
 }finally{await browser.close();}
