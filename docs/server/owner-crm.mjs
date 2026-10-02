@@ -44,6 +44,8 @@ export function createOwnerCRM(deps){
       if(claim.result.cached)return claim.result.cached;
       let reply;
       try{
+        const direct=deps.direct?await deps.direct(b.uid,t,'sms_'+sid):null;
+        if(direct){reply=direct.reply;}else{
         const bookingApproval=t.match(/^BOOK\s+([a-f0-9]{6})$/i);
         const bookingRequest=t.match(/^(?:please\s+)?send\s+(?:the\s+|a\s+)?(?:booking|consultation)\s+link\s+to\s+(.+?)[.!]?$/i);
         if(bookingApproval){
@@ -79,7 +81,8 @@ export function createOwnerCRM(deps){
           }
         }
         }
-      }catch(e){reply=e.status?e.message:'I could not confirm the result. Check Admin before retrying.';}
+        }
+      }catch(e){reply=e.status?e.message:'I could not confirm the result. Use STATUS or ACTIONS by SMS before retrying.';}
       await db.update(key,s=>{s.messages[sid].reply=reply;});
       return reply;
     }

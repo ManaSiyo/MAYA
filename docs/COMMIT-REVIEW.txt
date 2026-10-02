@@ -1,25 +1,33 @@
-[Codex] Enable owner conversation and shared text/voice preferences
+[Codex] Add SMS-only owner supervision and client reply controls
 
-Replace the lead-only owner SMS parser with ordinary conversation grounded in
-recent Messages, bounded lead context and durable account-bound owner memory.
-Apply explicit remembered facts, response style and signup SMS format at runtime.
-Use the same context and owner controls on verified owner calls. A requested
-voice summary texts only the configured owner number. Unsupported new tools
-are logged honestly; lead changes and client booking sends retain confirmation.
+Let the bound owner retrieve retained client texts in both directions, actual
+recipients/timestamps/delivery states and stored call transcripts through SMS.
+Add AI-free THREAD/INBOX/ACTIONS/FEATURES/STATUS/LEAD/MAYA HELP commands,
+natural history aliases and durable MORE code/page snapshots. Normal owner
+conversation and verified owner voice can request the same records. Source
+failures and missing transcripts are stated rather than invented as empty data.
 
-Render signup texts from live owner templates and actual lead values; default
-to callback greeting, name/phone and category/quoted request. Preserve alert
-claims/retries. Use generation preconditions, idempotency, fail-safe storage
-reads, bounded UTF-8 context and non-retryable uncertain send/log attempts.
-Package the new module and add its Cloud Build release gate. Update continuity,
-owner setup, character and roadmap documentation with the runtime scope.
+Add exact client reply previews via REPLY name: text. Only a raw signed owner
+SMS SEND code confirms the preview within 10 minutes. Revalidate recipient and
+STOP/block, claim before sending, persist results and never retry unknown sends.
+Expose recorded communications, booking/alert outcomes, reply states,
+preferences and feature requests without claiming exhaustive internal auditing.
 
-Validation passed: owner-conversation; owner-crm; lead-alerts; maya-phone (57);
-maya-messages (55); maya-transfer; maya-feedback; crm-intelligence (19);
-container-contract; local server smoke; full app-regression in isolated
-headless Chromium; edited JavaScript syntax; git diff --check.
-Providers are fake. Live model routing quality, SMS delivery and call audio
-require owner verification after deployment. No real texts/calls or production
-preferences changed. Chrome, credentials, billing and environment untouched.
-No push or deployment. One owner Push installs the handler; later supported
-preferences need no code release. The existing CRM text spending cap remains.
+Archive messages privately per contact/epoch before trimming the 400-entry
+live inbox. Failures do not trim history; generation retries deduplicate.
+Late delivery callbacks update archives; explicit history deletion rotates
+visibility. Old records discarded before this implementation are unrecoverable.
+Package both new modules and gate owner-sms-access in Cloud Build. Update
+setup, character, roadmap and handoff documentation in the same commit.
+
+Validation passed: owner-sms-access including account isolation, paging across
+restarts/new messages, full retained history, ambiguity, confirmation, changed
+recipients, STOP/block, expiry, uncertain sends and archive/storage/conflict
+failures; owner-conversation; owner-crm; container-contract; maya-phone (57);
+maya-messages (55); maya-transfer; maya-feedback; local server smoke; full
+app-regression in isolated headless Chromium; JavaScript syntax; diff checks.
+Providers are fake. Actual live SMS/carrier delivery and inference intent quality
+need owner checks after deployment. No real text/call, production write, Chrome,
+credentials, environment change, push or deployment. Supported controls require
+one deployment, then owner uses SMS without a laptop or mobile internet. SMS
+carrier service and MAYA's server must remain available.

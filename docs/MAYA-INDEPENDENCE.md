@@ -122,3 +122,18 @@ Maya reads the diff summary back; Fromsa still presses Push.
 - Fromsa presses Push. Claude and Codex commit.
 - The sealed project rule: nothing crosses a project or an account.
 - The only limit on Maya is the credit meter, and it is honest.
+
+
+## October 1: owner SMS supervision (local implementation)
+
+Phone-only supervision reads retained Messages exchanges and call transcripts,
+inbox activity, booking/alert states, owner reply outcomes and feature requests.
+Explicit SMS read commands and reply preview/confirmation bypass paid AI; normal
+conversation can still translate natural intent through the configured provider.
+Owner phone tools share those reads, but client reply SEND confirmation comes
+from the signed owner SMS text only. Account-scoped durable report pages survive
+instance changes. Private per-contact overflow archives preserve history before
+live inbox trimming; an explicit deletion rotates the visible archive epoch.
+This covers recorded communication/control state, not arbitrary code changes
+or an exhaustive event trace. Carrier/server outages and already-discarded
+records cannot be solved by conversational memory.

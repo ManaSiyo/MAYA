@@ -74,7 +74,13 @@ export function createMessageStore(deps) {
     if (!j.threads || typeof j.threads !== 'object') throw new Error('invalid message store');
     return structuredClone(j);
   }
-  async function write(rec) { await deps.save(rec); }
+  async function write(rec) {
+    if(deps.archive)for(const t of Object.values(rec.threads))if(t.messages.length>MAX_MESSAGES){
+      await deps.archive.append(t.number,t.historyEpoch,t.messages.slice(0,-MAX_MESSAGES));
+      t.hasArchive=true;t.messages=t.messages.slice(-MAX_MESSAGES);
+    }
+    await deps.save(rec);
+  }
 
   function thread(rec, number, name) {
     const key = e164(number);
@@ -86,10 +92,17 @@ export function createMessageStore(deps) {
   }
   function push(t, m) {
     t.messages.push(m);
-    if (t.messages.length > MAX_MESSAGES) t.messages = t.messages.slice(-MAX_MESSAGES);
+    if (!deps.archive && t.messages.length > MAX_MESSAGES) t.messages = t.messages.slice(-MAX_MESSAGES);
     t.updatedAt = m.ts; t.deleted = false;
   }
 
+  async function expandHistory(t,rec){
+    const older=deps.archive&&t.hasArchive?await deps.archive.read(t.number,t.historyEpoch):[];
+    const all=new Map(older.map(m=>[m.id,m]));for(const m of t.messages)all.set(m.id,m);
+    const messages=[...all.values()].map(m=>{const update=rec.pendingStatuses?.[m.id];if(update)applyStatus(m,update);return m;})
+      .sort((a,b)=>String(a.ts).localeCompare(String(b.ts)));
+    return {...t,messages};
+  }
   return {
     // a text that came in through Twilio
     async inbound({ from, text, sid, optOutType }) {
@@ -155,7 +168,7 @@ export function createMessageStore(deps) {
       return locked(async () => { const rec = await read(); const t = thread(rec, number); if (!t) throw new Error('invalid number'); t.blocked = blocked; await write(rec); });
     },
     async remove(number) {
-      return locked(async () => { const rec = await read(); const t = thread(rec, number); if (!t) throw new Error('invalid number'); t.messages = []; t.unread = 0; t.deleted = true; await write(rec); });
+      return locked(async () => { const rec = await read(); const t = thread(rec, number); if (!t) throw new Error('invalid number'); t.messages = []; t.hasArchive=false; t.historyEpoch=crypto.randomBytes(12).toString('hex'); t.unread = 0; t.deleted = true; await write(rec); });
     },
     async status({ sid, status, errorCode }) {
       if (!Object.hasOwn(STATUS_RANK, status) || !/^SM[a-zA-Z0-9]+$/.test(String(sid || ''))) return;
@@ -167,6 +180,7 @@ export function createMessageStore(deps) {
           await write(rec);
           return;
         }
+        if(deps.archive)for(const t of Object.values(rec.threads))if(t.hasArchive&&await deps.archive.status(t.number,t.historyEpoch,{sid,status,errorCode}))return;
         const pending = rec.pendingStatuses || {};
         const update = pending[sid] || { ts: Date.now() };
         applyStatus(update, { status, errorCode });
@@ -188,6 +202,20 @@ export function createMessageStore(deps) {
     async get(number) {
       const rec = await read();
       return rec.threads[e164(number)] || null;
+    },
+    async history(number) {
+      const rec=await read(),t=rec.threads[e164(number)];
+      if(!t||t.deleted)return null;
+      return expandHistory(t,rec);
+    },
+    async histories(excludeNumber){
+      const rec=await read(),items=Object.values(rec.threads).filter(t=>!t.deleted&&t.number!==e164(excludeNumber)),out=[];
+      // One live-store snapshot; bounded parallel archive reads avoid an SMS
+      // request performing one sequential storage round trip per contact.
+      for(let i=0;i<items.length;i+=5)out.push(...await Promise.all(items.slice(i,i+5).map(async t=>{
+        try{return await expandHistory(t,rec);}catch{return {number:t.number,unavailable:true};}
+      })));
+      return out;
     },
     async consent(number) {
       const rec = await read();

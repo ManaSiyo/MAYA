@@ -114,6 +114,16 @@ these paths; all are release gates. The failure suite covers account isolation,
 pending edits, drawer dialogs and meter recovery with fake providers.
 Hourly updates require owner-configured Cloud Scheduler, not a browser timer.
 The $1 cap covers CRM text AI (Outbound plus owner SMS parsing), not voice, images or provider invoices.
+Owner SMS access: docs/server/owner-sms-access.mjs provides AI-free history,
+inbox, recorded actions, help/status and exact client-reply previews. Only raw
+owner SMS SEND code authorizes a previewed client send; model/voice tools cannot
+confirm it. Preserve recipient revalidation, block/STOP checks, expiry and the
+non-retryable claim before provider calls. Reports are account-scoped snapshots
+with explicit page commands. Read reports never mark client messages read.
+Messages overflow archives privately via docs/server/message-archive.mjs before
+the 400-entry live inbox is trimmed. Failed archive writes must not trim history;
+explicit history deletion starts a new archive epoch. Run tests/owner-sms-access.mjs
+and all communications suites; new runtime imports must ship in Dockerfile.
 Owner conversation: docs/server/owner-conversation.mjs shares recent Messages
 history and private account-bound memory/preferences across signed owner SMS and
 owner phone calls. Supported runtime changes are remembered facts, response

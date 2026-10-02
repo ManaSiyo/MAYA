@@ -2,13 +2,46 @@
 
 ## Release status
 
-The current checkout and origin/maya-v2 were both 25e8091 before this task.
-That commit contains the compact Aesthetic Control work. Production release
+This task began at local 9480a64, one commit ahead of origin/maya-v2 (25e8091).
+9480a64 adds owner conversation/memory; 25e8091 contains compact Aesthetic Control. Production release
 was not rechecked during this implementation; do not infer live deployment
-from the remote branch. The new owner conversation changes are local only.
+from the remote branch. Owner conversation and the additional SMS access changes are local only.
 No push, production preference write, real SMS or real call was performed.
 
 ## Current prepared change
+
+The additional SMS access implementation provides THREAD/CONVERSATION/HISTORY,
+INBOX, ACTIONS, FEATURES, STATUS, LEAD, MAYA HELP/COMMANDS and explicit MORE
+code/page requests. "Where/what/when did you text Nick?" is a deterministic
+history alias. Exact commands bypass AI; reads still work when inference/cost
+limits prevent normal chat. Source-backed reports include message direction,
+recipient, actor, time, delivery status/error and full stored call transcript.
+Ambiguous contacts require an exact name/number. Reports are private hashed-UID
+snapshots with 24-hour expiry and explicit paging; they do not mark client
+messages read. Normal intent and owner phone controls can retrieve those records.
+
+REPLY Nick: text creates a durable exact recipient/message preview. Only raw
+owner SMS SEND code confirms it. The model and voice tool cannot invoke that
+confirmation. It expires after 10 minutes, rechecks lead phone and STOP/block,
+and claims before the provider call. Unknown results never retry automatically.
+Accepted sends record carrier status and Messages; a failed history write is
+reported accurately without repeating the send. ACTIONS includes these outcomes.
+Global ACTIONS covers retained client communications, booking/alert results,
+owner preferences, reply drafts/results and feature requests. It excludes the
+owner's own report echo thread, and is not an exhaustive internal event trace.
+
+Messages now archive overflow privately per contact/epoch before reducing the
+live window to 400 entries. Archive failures preserve the live record; generation
+retries do not duplicate overflow. Late delivery callbacks update archived
+messages. Explicit Delete history rotates the visible epoch, preserving deletion
+behavior when a contact returns. Already-discarded messages cannot be recovered.
+Existing private SMS report snapshots expire separately after 24 hours.
+
+Additional changed paths: owner-sms-access.mjs and message-archive.mjs (new),
+maya-messages.mjs, owner-conversation.mjs, owner-crm.mjs, maya-phone.mjs, server.js,
+Dockerfile, cloudbuild.yaml, tests/owner-sms-access.mjs and app-regression.mjs.
+AGENTS.md, character, roadmap, setup and continuity files describe the scope.
+
 
 Verified owner SMS is now a conversation flow instead of a lead-only parser.
 It reads recent Messages history, bounded lead context and durable owner
@@ -43,7 +76,11 @@ record the current scope and deployment requirements.
 
 ## Validation
 
-Passed: owner-conversation (ordinary replies, text/voice recall, durable storage,
+Passed: owner-sms-access (history both ways, archived overflow, stored call
+transcripts, delivery states, AI-free commands, cross-account paging isolation,
+snapshots across restarts/new messages, ambiguity, exact reply confirmation,
+changed recipients, STOP/block, expiry, uncertain sends, archive/storage failure
+and generation-conflict preservation); owner-conversation (ordinary replies, text/voice recall, durable storage,
 account binding/isolation, formatting with actual contact data, lead confirmation,
 idempotency, uncertain sends, conflicts, storage failures, bounded Unicode
 context and unconfirmed feature logging); owner-crm; lead-alerts;
@@ -68,9 +105,12 @@ After deployment, verify Cloud Build and /release.json. The existing enabled
 owner binding needs no reactivation; otherwise enable text commands in Admin
 once using the allowlisted owner account. Then owner-test a normal greeting,
 a remembered fact and follow-up, the signup format request, and a phone call
-that recalls it and texts a requested summary. Inspect actual carrier delivery.
+that recalls it and texts a requested summary. Also test MAYA HELP, INBOX, THREAD
+Nick, explicit MORE pages and ACTIONS from the owner phone with mobile internet
+off. Use a separately authorized test client reply to verify REPLY/SEND and
+actual delivery; do not test on an arbitrary client. Inspect actual carrier delivery.
 Supported preferences then apply without another code deployment. Arbitrary
-new tools/code still need implementation. SMS conversation retains the combined
+new tools/code still need implementation. Explicit SMS read/reply commands need no inference. Normal SMS conversation retains the combined
 $1/day CRM text AI cap and current provider selection; voice uses its own meter.
 
 Earlier live Admin Messages inspection found the owner's signup-format request

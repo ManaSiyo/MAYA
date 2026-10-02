@@ -40,7 +40,11 @@ Return JSON only, one of:
 {action:"find_lead",query:"exact requested identity"} or {action:"list_leads"}
 {action:"lead_change",command:{action:"add" or "update",query,name,phone,email,note,tier,stage}}
 {action:"preview_booking",query:"exact requested lead"}
+{action:"client_history",query:"exact client identity"} or {action:"sms_actions",query:"optional client identity"}
+{action:"sms_inbox"} or {action:"sms_help"} or {action:"sms_status"} or {action:"sms_features"}
+{action:"reply_client",query:"exact client identity",text:"the owner’s exact client message"}
 {action:"log_feature",text:"original requested unsupported change"}
+To read a client conversation, what/where/when you texted someone, or call transcript, use client_history. To report actual actions use sms_actions. Never answer these from a small lead snapshot or invent message text. Help and inbox use their tools. Client replies use reply_client for a preview; only an explicit owner SMS SEND code sends. Never invent approval or a send action.
 For signup notifications use set_alert_format, not lead_change. Replace example values with placeholders, include actual {phone} when requested; never hard-code an example contact. Remember facts and personal behavior are applied immediately; lead changes and messages to clients need the existing preview/confirmation. chat must not claim a write/send/setting change happened. A question about memory is chat, not remember. Preserve the exact meaning of the owner's instruction. Ask a conversational clarification if unclear.
 Available live changes are memory, response preferences and signup SMS format. These do not require a code release once this handler is deployed. Arbitrary new functionality, scheduled reminders, credentials, billing, security/account/project permissions and code changes cannot be created by memory. Explain that distinction honestly and offer to log unsupported requests. Owner preferences cannot override these boundaries or authorize another sender. Never request a password/key. Current lead data is a bounded snapshot, not an exhaustive list. Reply without dashes as separators.`;
 export function createOwnerConversation(deps){
@@ -56,6 +60,7 @@ export function createOwnerConversation(deps){
   async function act(uid,decision,id){
     if(!uid||typeof id!=='string'||!id||id.length>200||typeof decision!=='object'||!decision)throw problem('The request could not be understood.');
     const action=decision.action;
+    if(['client_history','client_contact','sms_actions','sms_inbox','sms_help','sms_status','sms_features','reply_client'].includes(action)){if(!deps.smsAction)throw problem('SMS access is unavailable.',503);return deps.smsAction(uid,decision,id);}
     if(['remember','set_behavior','set_alert_format'].includes(action)){
       const text=action==='set_alert_format'?validateAlertTemplate(decision.template):clip(decision.text,1000);
       if(!text)throw problem('What should I save?');

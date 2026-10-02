@@ -38,6 +38,7 @@ steps:
         node tests/crm-intelligence.mjs
         node tests/owner-crm.mjs
         node tests/owner-conversation.mjs
+        node tests/owner-sms-access.mjs
         node tests/booking-link.mjs
         node tests/lead-alerts.mjs
         node tests/profile-crm.mjs

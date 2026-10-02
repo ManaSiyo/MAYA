@@ -2696,5 +2696,9 @@ const ownerConversationSource=readFileSync(join(ROOT,'docs/server/owner-conversa
 ok('Owner texts support normal conversation and runtime preferences instead of lead-only extraction',SERVER_SOURCE.includes('converse:(uid,text)=>ownerConversation.decide(uid,text)') && ownerConversationSource.includes('You are not just a lead extractor') && ownerConversationSource.includes('private/owner-conversation/'));
 ok('Owner calls share saved text memory and can apply verified owner preferences',PHONE_SOURCE.includes('ownerContext=await Promise.race') && PHONE_SOURCE.includes("if(m.name==='owner_control')") && SERVER_SOURCE.includes('ownerConversation.phoneControl(from,decision,id)'));
 ok('Signup texts render live owner format with actual contact details',SERVER_SOURCE.includes('formatText:lead=>ownerConversation.alert(lead)') && ownerConversationSource.includes("phone:clean(lead.phone||'Phone unavailable'"));
+const smsAccessSource=readFileSync(join(ROOT,'docs/server/owner-sms-access.mjs'),'utf8');
+ok('Owner can read client texts/calls and recorded actions over SMS without AI',SERVER_SOURCE.includes('direct:(uid,text,id)=>ownerSMSAccess.direct(uid,text,id)') && smsAccessSource.includes("d.action==='client_history'") && smsAccessSource.includes("d.action==='sms_actions'") && smsAccessSource.includes('Next: MORE'));
+ok('SMS client replies require an exact confirmation code and retained consent',smsAccessSource.includes('Nothing sent. Reply SEND') && smsAccessSource.includes("contact?.consent==='stop'") && smsAccessSource.includes("p.status='attempted'"));
+ok('Messages archive overflow before trimming the live inbox',SERVER_SOURCE.includes('archive:createMessageArchive') && readFileSync(join(ROOT,'docs/server/maya-messages.mjs'),'utf8').includes('await deps.archive.append'));
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

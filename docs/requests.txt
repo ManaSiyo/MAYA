@@ -1,3 +1,10 @@
+OCTOBER 1: Owner SMS-only supervision of MAYA and client conversations
+[done locally] THREAD Nick (including "Where did you text Nick?") returns retained texts in both directions, actual recipient, recorded delivery status and stored call transcripts. Durable MORE code/page snapshots expose long history without clipping or relying on AI/laptop/mobile internet.
+[done locally] INBOX, ACTIONS, FEATURES, STATUS, LEAD and MAYA HELP/COMMANDS expose supported control/state over SMS without inference. Natural conversation/voice tools can request the same records. REPLY Nick: text previews a client reply; only exact owner SMS SEND code sends it, with expiry, recipient/STOP/block checks and non-retryable claims.
+[done locally] Archive overflow before trimming the 400-entry live Messages window; storage/revision failures cannot silently lose old history. Explicit deletion rotates archive visibility. Previously discarded records cannot be recovered.
+[verified locally] Owner SMS access, account/paging/confirmation/archival failure tests, prior owner conversation/CRM, communications suites, packaging, server smoke and full app-regression pass with fake providers. No live text/call or production change.
+[pending] Owner Push/deployment, then verify actual owner SMS HELP/THREAD/MORE/ACTIONS and a separately authorized client reply. Carrier/service availability and retained records define access; no claim of total availability or arbitrary code control.
+
 OCTOBER 1: Normal owner conversation and live text/voice preferences
 [done locally] Replace lead-only owner SMS routing with ordinary conversation using recent Messages and account-bound persistent memory. Explicit owner facts, response style and signup text format save at runtime; phone calls load the same context and expose the same supported controls.
 [done locally] A voice-requested owner summary can text only the configured owner number. Signup formatting uses actual lead name/phone/category/request, with the requested callback layout by default. Unsupported functionality is logged without claiming it exists. Lead/client confirmations remain.

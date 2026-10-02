@@ -30,6 +30,8 @@ import { TEXT_MODEL, IMAGE_MODEL, chatBody } from './model-config.mjs';
 import { mountOutbound } from './outbound.mjs';
 import { createGmail } from './crm-gmail.mjs';
 import { createCrmAI } from './crm-ai.mjs';
+import { createMessageArchive } from './message-archive.mjs';
+import { createOwnerSMSAccess } from './owner-sms-access.mjs';
 import { createOwnerConversation } from './owner-conversation.mjs';
 import { createOwnerCRM, gmailCandidates } from './owner-crm.mjs';
 import { createLeadAlerts } from './lead-alerts.mjs';
@@ -4590,6 +4592,7 @@ let _booking = null;
 // v14.35: one thread per number in maya/sms/threads.json, read and written
 // through the same storage helpers as everything else.
 const _messages = createMessageStore({
+  archive:createMessageArchive({read:gcsGet,write:gcsPut}),
   load: async () => { const o = await gcsGet(THREADS_PATH); if (o.status === 404) return {threads:{},_generation:'0'}; if (!o.ok || !o.generation) throw new Error('message storage unavailable'); return {...JSON.parse(o.buf.toString('utf8')), _generation:o.generation}; },
   save: async ({_generation, ...rec}) => { await gcsPut(THREADS_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json', _generation); },
 });
@@ -4814,7 +4817,31 @@ app.use('/api/tasks/outbound-sync', express.json({limit:'2kb'}));
 const crmStorage={read:gcsGet,write:gcsPut};
 const crmGmail=createGmail({...crmStorage,config:{clientId:process.env.GMAIL_CLIENT_ID,clientSecret:process.env.GMAIL_CLIENT_SECRET,redirectUri:process.env.GMAIL_REDIRECT_URI,encryptionKey:process.env.GMAIL_TOKEN_ENCRYPTION_KEY}});
 const crmAI=createCrmAI({...crmStorage,vertex:(process.env.K_SERVICE||process.env.VERTEX_PROJECT)?{project:vertexProject,token:()=>serviceToken('https://www.googleapis.com/auth/cloud-platform'),location:process.env.CRM_VERTEX_LOCATION||'global'}:null,keys:{openai:process.env.OPENAI_API_KEY,anthropic:process.env.ANTHROPIC_API_KEY,gemini:process.env.GEMINI_API_KEY}});
+const ownerSMSAccess=createOwnerSMSAccess({...crmStorage,ownerNumber:process.env.FROMSA_PHONE||'+15104917540',threads:_messages,find:_phoneFindLead,
+  leadById:async id=>(await loadLeadFeed()).list?.find(l=>l.id===id),
+  sendClient:async(to,text)=>{
+    const sent=await sendSms({accountSid:process.env.TWILIO_ACCOUNT_SID||'',authToken:process.env.TWILIO_AUTH_TOKEN||'',fromNumber:process.env.TWILIO_FROM_NUMBER||'+15109909223',messagingSid:process.env.TWILIO_MESSAGING_SID||'',
+      statusCallback:'https://'+(process.env.PHONE_PUBLIC_HOST||'maya-api-53947659283.us-west1.run.app')+'/api/phone/sms/status',twilioApi:process.env.TWILIO_API_URL||''},{to,text});
+    if(sent.ok)try{await _messages.outbound({to,text,sid:sent.sid,status:sent.status,by:'owner-sms'});}catch{return {...sent,warning:'Carrier accepted, but history could not be saved. Do not resend.'};}
+    return sent;
+  },
+  features:async()=>{const s=await _feedback.read();return s.items.map(f=>`${f.ts} | ${f.done?'marked complete':'requested'} | ${f.who}\n${f.text}`);},
+  audit:async uid=>{
+    const reads=await Promise.allSettled([jsonStore(crmStorage).get('private/owner-crm/booking-proposals.json'),jsonStore(crmStorage).get('private/lead-alerts/callbacks.json'),_feedback.read(),ownerConversation.context(uid)]),lines=[];
+    const labels=['Booking','Signup alerts','Feature inbox','Owner preferences'];
+    reads.forEach((r,i)=>{if(r.status==='rejected'){lines.push(labels[i]+': records unavailable. Try again.');return;}
+      const s=r.value.value||r.value;
+      if(i===0)for(const p of Object.values(s.items||{}))lines.push(`Booking for ${p.name} (${p.to}): ${p.status} | ${new Date(p.at).toISOString()}${p.sid?' | '+p.sid:''}`);
+      if(i===1)for(const p of Object.values(s.items||{}))lines.push(`Signup ${p.name} | ${p.at} | text: ${p.text||'no result'} | call: ${p.call||'no result'}`);
+      if(i===2)for(const f of s.items)lines.push(`Feature ${f.ts}: ${f.done?'marked complete':'requested'}: ${f.text}`);
+      if(i===3){for(const m of [...s.memory,...s.behavior])lines.push(`Owner preference ${m.ts}: ${m.text}`);lines.push('Current signup format: '+s.alertTemplate);}
+    });return lines;
+  },
+  status:async uid=>{let meter;try{const m=await crmAI.meter(uid);meter=`CRM text AI: $${m.spentUsd.toFixed(4)} spent, $${m.reservedUsd.toFixed(4)} reserved of $${m.limitUsd}/day.`;}catch{meter='Text AI meter unavailable.';}
+    return `MAYA answered this SMS. Recorded history commands do not use text AI.\nPhone service: ${_phone?'initialized':'unavailable'}. SMS sender: ${process.env.TWILIO_ACCOUNT_SID&&process.env.TWILIO_AUTH_TOKEN?'configured':'not configured'}. Configuration does not prove delivery.\n${meter}\nUse MAYA HELP, INBOX, THREAD Nick or ACTIONS. If a command fails, retry the read; never repeat an uncertain send.`;},
+});
 const ownerConversation=createOwnerConversation({...crmStorage,
+  smsAction:(uid,decision,id)=>ownerSMSAccess.act(uid,decision,id),
   ownerNumber:process.env.FROMSA_PHONE||'+15104917540',
   complete:async(uid,instructions,data)=>{
     const result=await crmAI.complete(uid,instructions,data,'auto',{timeoutMs:8000});
@@ -4844,6 +4871,7 @@ const ownerCRM=createOwnerCRM({...crmStorage,
   ownerNumber:process.env.FROMSA_PHONE||'+15104917540',
   ownerEmails:OWNER_TOOL_EMAILS,
   find:_phoneFindLead,
+  direct:(uid,text,id)=>ownerSMSAccess.direct(uid,text,id),
   converse:(uid,text)=>ownerConversation.decide(uid,text),
   ownerAction:(uid,decision,id)=>ownerConversation.act(uid,decision,id),
   commit:async(command,requestId)=>{

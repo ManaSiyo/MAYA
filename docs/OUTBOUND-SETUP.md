@@ -154,3 +154,53 @@ not capabilities created by memory. SMS conversation uses the existing shared
 $1/day CRM text AI allowance and provider availability; voice keeps its own
 meter. This implementation needs one deployment before live owner texts/calls
 can use it. No credentials or production environment changes are required.
+
+
+## SMS access without a laptop or mobile internet
+
+After deploying the owner SMS access handler, use the studio number from the
+already-bound owner number. Carrier SMS service is sufficient on the owner's
+phone; MAYA's server and messaging carrier must still be reachable. No browser,
+new login or internet connection on the owner's device is needed per command.
+
+- MAYA HELP or COMMANDS: available controls. Standalone HELP remains reserved
+  for carrier consent/help behavior.
+- THREAD Nick, CONVERSATION Nick, or "Where did you text Nick?": retained text
+  exchanges in both directions, actual recipient number, timestamps, recorded
+  delivery states and full stored call transcript. Records are newest first.
+- INBOX: contacts, latest recorded activity and unread count. Reading an SMS
+  report does not mark a client's messages read in Admin.
+- ACTIONS: recorded client communications, booking proposals/outcomes, signup
+  alert outcomes, owner reply drafts/results, preferences and feature requests.
+  ACTIONS Nick restricts to that contact's recorded communications/reply drafts.
+  This is recorded activity, not an exhaustive trace of every internal operation.
+- FEATURES: request text and recorded completion state.
+- STATUS: initialized/configured services and the current text AI meter; it
+  does not infer real delivery from configuration.
+- LEAD Nick: identify the contact and phone.
+- REPLY Nick: Thursday works for your fitting. Returns the exact recipient and
+  message preview. SEND <displayed code> within 10 minutes sends that exact text.
+  Blocks/STOP are checked again. A changed lead phone invalidates the preview.
+  No model action or voice argument can invoke this SEND confirmation.
+- MORE <report code> <page>: copy the next command displayed. Reports expire
+  after 24 hours, retain their snapshot across new messages/service restarts,
+  and can be restarted from source history with THREAD/INBOX/ACTIONS.
+
+These explicit commands require no paid text AI, so history remains available
+when the shared AI limit is reached or inference is unavailable. Normal chat,
+natural wording outside the recognized read aliases, and lead-change extraction
+still require a working AI provider. Existing YES and BOOK confirmations remain.
+
+Long reports are paged rather than silently clipped. Missing transcripts and
+unavailable data are stated. Carrier acceptance is separate from delivery.
+Repeated confirmations never resend; uncertain outcomes require a read/check,
+not an automatic retry. All replies return through the signed owner SMS request;
+voice-requested reports can use the existing fixed-owner text tool.
+
+Archive overflow now persists before messages leave the 400-entry live window.
+Retention begins with this handler: records already discarded cannot be
+reconstructed. An explicit Delete history starts a new archive epoch; prior
+messages are not exposed again when that contact texts anew. Existing report
+snapshots are private to the bound owner and expire after 24 hours.
+No feature promises access during a server/carrier outage or to activity that
+was never recorded. Live owner SMS/call verification remains necessary.

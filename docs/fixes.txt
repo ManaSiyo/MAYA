@@ -1,3 +1,13 @@
+OCTOBER 1: Client history inaccessible to owner over SMS, oldest Messages trimmed (LOCAL FIX)
+Owner chat had memory and lead lookup but no client Messages retrieval, action
+read tools or SMS-only client reply flow. The live thread discarded entries
+beyond 400. Added source-backed paged SMS history/actions/inbox/help/status,
+AI-free exact commands, shared owner voice reads and confirmed client replies.
+Private overflow archives write before trimming; archived delivery callbacks
+retain carrier outcomes. Failures preserve history and never automatically
+repeat a send. SMS reports state missing/uncertain records. Tests pass locally;
+previously discarded records and live delivery remain outside fixture proof.
+
 OCTOBER 1: Owner signup-format request rejected as a lead edit (LOCAL FIX)
 The signed owner SMS route sent every message to a lead-only extraction prompt;
 non-lead requests became an empty object and cleanCommand's add/update question.
