@@ -167,6 +167,9 @@ export function mountOutbound(app,deps) {
       for(const entry of imports){
         const isCampaign=campaignTabs.includes(entry.tab);
         let c=isCampaign?s.campaigns.find(c=>c.sheetId===sheetId&&c.sheetTab===entry.tab):null;
+        // Rebind a renamed dated tab without duplicating its campaign or draft membership.
+        if(isCampaign&&!c)c=s.campaigns.find(c=>c.sheetId===sheetId&&c.sheetTab&&!campaignTabs.includes(c.sheetTab)&&c.sheetTab.replace(/^9\/(?:23|29) /,'')===entry.tab.replace(/^9\/(?:23|29) /,''));
+        if(c&&c.sheetTab!==entry.tab){if(c.name===c.sheetTab)c.name=entry.tab;c.sheetTab=entry.tab;}
         if(isCampaign&&!c){if(s.campaigns.length>=100)throw fail('Campaign limit reached.');c={id:randomUUID(),name:entry.tab,status:'active',sheetId,sheetTab:entry.tab,createdAt:syncedAt};s.campaigns.push(c);}
         const added=mergeContacts(s,entry.contacts.map(source=>{
           const master=masterRows.get(contactIdentity(source)),p=master||source,tab=master?'Funnel':entry.tab;

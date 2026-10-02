@@ -50,6 +50,7 @@ export async function auditLeadFilter(page){
     assert.equal(await gear.evaluate(el=>getComputedStyle(el).borderRadius),'100px');
   }
   await page.setViewportSize({width:1440,height:1000});
+  await page.evaluate(()=>document.querySelector('#leads-fold').scrollIntoView());
   await open();
   await page.locator('#leads-fold .panel').evaluate(el=>el.scrollTop=200);
   await bounds(); // Still anchored to the sticky header when rows scroll.

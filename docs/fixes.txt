@@ -1,3 +1,17 @@
+OCTOBER 2 — deployment blocker identified; responsive shared-style follow-up
+Cloud Build c461f1e2-3143-4608-ab0c-72e9d7a29645 for 594cf57 failed at
+admin-ui-contract: it required the phone icon that the owner explicitly retired.
+No server or Hosting step ran. Updated gate checks compact category badges and
+whole name-cell Messages access, retaining invoice behavior. Owner push f436f37
+started build 9bd43347-4fbe-43ef-9c86-0a58a7df0230 (in progress at last check).
+An additional populated responsive test found the filter could scroll behind
+the fixed top bar after resizing: reserve 76px with scroll-padding/scroll-margin.
+All narrow UI checks and 18-width/landscape margin checks pass. Corporate source
+tab rename keeps campaign IDs and drafts. Earlier design saves were unaudited;
+new successful live saves atomically include Admin-only audit entries. Production
+was still 4970660 when checked; a passing Vercel check is insufficient. Owner
+Push the final follow-up, verify Google build/public stamp, then Admin Save/log.
+
 OCTOBER 2: Latest pushed changes absent from live Hosting (VERIFIED, OPEN)
 Remote maya-v2 is 601784c; repeated cache-bypassed release.json reads are 4970660,
 published October 1 at 9:45 PM Pacific. Public editor HTML is still v16/v3 with

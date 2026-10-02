@@ -2722,5 +2722,7 @@ ok('Admin Logs include successful Aesthetic Control saves',readFileSync(join(ROO
 ok('Model Snapshot contains the meter and omits inactive Claude',readFileSync(join(ROOT,'backend/status.html'),'utf8').indexOf('<h3>Model Snapshot</h3>')<readFileSync(join(ROOT,'backend/status.html'),'utf8').indexOf('<maya-ai-meter>') && !readFileSync(join(ROOT,'aesthetics/ui/ai-meter.js'),'utf8').includes("anthropic:'Claude'"));
 ok('Outbound uses the owner ten-column Sheet schema including Reason',readFileSync(join(ROOT,'backend/outbound-priority.js'),'utf8').includes("['Last email','Category','Company','Full name','Email','Job title','Subject','Status','Reason','Relevance']") && readFileSync(join(ROOT,'docs/server/outbound.mjs'),'utf8').includes('A1:J10001'));
 
+ok('Lead Station navigation leaves room for the fixed top bar',MAP_SOURCE.includes('#adm-scroll{scroll-padding-top:76px}') && MAP_SOURCE.includes('#leads-fold{scroll-margin-top:76px}'));
+ok('Renamed source tabs preserve campaign identities and draft membership',readFileSync(join(ROOT,'docs/server/outbound.mjs'),'utf8').includes('!campaignTabs.includes(c.sheetTab)') && readFileSync(join(ROOT,'tests/outbound.mjs'),'utf8').includes('rebound.id,c.id'));
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

@@ -1,17 +1,21 @@
-[Codex] Record shipment freshness and responsive margin audit
+[Codex] Finish shared aesthetics verification and release recovery
 
-Update handoff, owner requests and incident record with October 2 verification.
-Actual remote/local source matches 601784c, but cache-bypassed public Hosting
-release remains 4970660 (October 1 9:45 PM Pacific); deployed editor keeps Reset
-and v16/v3 assets. Isolated live browser reproduces H1 popup -69px left overflow
-at 1100px. Public healthz is alive; build/deployment cause is not established.
+Owner commit f436f37 contains the requested ten-column Outbound parity, shared
+runtime v5, green padding debug previews, icon/dropdown controls, design audit,
+Model Snapshot/meter grouping, cleanup and obsolete phone-icon gate correction.
+This follow-up reserves fixed-header scroll margins so the populated Lead Station
+filter remains clickable after resizing and preserves campaign IDs/memberships
+when the Corporate source tab changes from 9/23 to 9/29. Updates tests and the
+handoff/request/incident records with exact build evidence and remaining steps.
 
-Passed full app-regression, canon-ui, component-gallery and outbound-ui. Additional
-isolated shell audit passes ten served pages at 18 widths 320–2560px and five
-short/landscape sizes, using active runtime, public saved design and actual fonts.
-Covers document overflow and open drawer bounds; populated menus/tables are covered
-by separate fake-provider checks. The initial adapted audit's non-margin glass
-master comparison differed (28px vs saved Admin 22px); no unrelated fix was made.
-No application source changes, user Chrome, authenticated production UI, live Save,
-credentials/environment change, push or deploy. Owner next: inspect build/deploy
-current code, verify release marker/assets, then review and save the live design.
+Validation: app-regression, component-gallery, canon-ui, Outbound/UI/filter/priority,
+CRM UI/failure/intelligence, all non-browser release contracts, both hands batteries
+and fake phone/messages/transfer/feedback. Additional active-runtime margin audit:
+10 pages, 18 widths 320–2560, five short/landscape sizes with saved public design
+and real fonts. Native Sheet A:J headers already correct; no workbook edits.
+
+Prior production build failed at an obsolete phone-icon assertion; gate repaired.
+Owner f436f37 build was in progress at last check. Codex did not push/deploy or
+perform a live Admin Save. Owner Push follow-up; verify Google build/release stamp,
+then Save the live design and check Admin Logs. Earlier save timestamps cannot be
+reconstructed. Live signed-in Gmail/Gemini/provider outcomes remain unverified.

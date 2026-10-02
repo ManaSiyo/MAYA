@@ -2,20 +2,77 @@
 
 ## Release status
 
-Current checked source and actual remote maya-v2 both equal 601784c12b4a124f9d6bfae6c25d38263c360c17.
-The owner pushed the final handoff as well as implementation 19ff3a1. The working
-tree started clean for the October 2 shipment/margin audit.
+Owner committed and pushed the requested implementation as f436f37 during the
+October 2 work. This follow-up prepares the final scroll-margin fix, renamed
+Corporate-tab identity preservation, validation and continuity records.
 
-LIVE HOSTING IS STALE: repeated cache-bypassed public release.json reads report
-497066020b006f59c5e7b21a7a441f66397b02e6, published 2026-10-02T04:45:16.127Z
-(October 1, 9:45 PM Pacific). Deployed editor HTML still has Reset, gallery CSS/JS
-v16 and typography runtime v3, rather than current v18/v4. Isolated live-browser
-read reproduces H1 editor clipping at 1100px: left=-69.265625px, right=250.734375px.
-No authenticated production browser or user Chrome was accessed. Public healthz
-returns ok:true; liveness does not prove build freshness or provider readiness.
-Cloud Build/deploy cause was not established. No Codex push/deploy or live Save.
+Public Hosting was still 497066020b006f59c5e7b21a7a441f66397b02e6, published
+2026-10-02T04:45:16.127Z (October 1, 9:45 PM Pacific), when checked this turn.
+The prior 594cf57 Cloud Build c461f1e2-3143-4608-ab0c-72e9d7a29645 FAILED before
+server/website deployment: admin-ui-contract still required the removed phone
+icon below each lead. That gate now verifies ?/SI/CE/SU category badges, the whole
+name-cell conversation link and retained Messages invoice controls. Vercel success
+was not production deployment success. GitHub check-run details exposed the
+actual Google build log without Chrome or credentials.
 
-## Current prepared change
+Owner push f436f37 started Google build 9bd43347-4fbe-43ef-9c86-0a58a7df0230.
+It was in progress at the last check. Do not call this release shipped until its
+Cloud Build result and public release.json agree. Codex has not pushed or deployed.
+
+## October 2 verified implementation and follow-up
+
+Live Outbound workbook 1G2zfqopOyZNHf78nuEeNdLgRY7ON0JTeegkhhZ4azyg already has
+Last email, Category, Company, Full Name, Email, Job Title, Subject, Status, Reason,
+Relevance in A:J on Funnel, 9/29 Corporates, 9/23 Fashion Houses, 9/23 Ceremonial
+and Others. Native cell inspection preserved hyperlinks, formulas and formats;
+no live Sheet edits were needed. Code now reads A:J, imports Reason independently,
+and displays/filters/exports the ten source columns in that order. Sync accepts
+9/29 Corporate tabs; a renamed dated tab reuses its campaign ID/memberships/drafts
+instead of creating a duplicate. Account-scoped CAS storage remains unchanged.
+
+Aesthetic runtime v5 is loaded by all served pages. Saved material variables now
+drive legacy surfaces and drawer frost; saved table styles also apply to other
+real tables and Outbound's semantic Full name/Status columns. Shared action buttons
+use P3 font/case settings. Preview has inner/outer Show padding debug buttons with
+light green X/Y bands, excluded from saved settings. Icon size and dropdown height
+(24–48px) persist, a native dropdown works, and 21 icon types are represented.
+Save follows the selected button finish. Popup focus no longer shifts another
+editor before its initiating click. Inactive style-reference.js, style-inventory.json
+and tests/style-inventory.py were removed; active adapters/images/role audit remain.
+
+Model Snapshot contains AI meter in Systems; Outbound's meter also begins with the
+snapshot. Claude is omitted from its display, with historical billing totals
+retained. Owner chose cost/speed; existing GPT-6 Luna text and GPT Image 2.5 Flare,
+Medium default, remain. No credentials/environment/billing/model-provider changes.
+
+Design settings and a bounded private audit trail are written together using GCS
+generation preconditions. /api/design strips _history; /api/admin/design-history is
+Admin-only. Logs merge saved design entries with feature requests and label Saved
+separately. Successful live Save notifies that it was recorded. Earlier saves had
+no audit trail; their exact time/identity cannot be reconstructed. Local saves stay
+same-origin local. No authenticated production Save was performed this turn.
+
+Final follow-up: #adm-scroll scroll-padding-top and Lead Station scroll-margin-top
+reserve 76px for the fixed top bar. Populated filter tests navigate after resizing;
+headers and filter triggers stay clickable. No provider calls or client messages
+were sent during verification.
+
+Validation: app-regression; component-gallery (including live padding highlights,
+Save/restore and 17 temporary editor/control bounds at 11 widths); canon-ui (11
+pages, seven widths 320–1920); Outbound UI/filter/priority; CRM UI/failure/intelligence;
+30 Outbound/model unit checks; all non-browser Cloud Build gates; frontend and
+Playground hands batteries; fake phone/messages/transfer/feedback suites. An extra
+active-runtime margin audit using the public saved design and actual Google fonts
+passes 10 pages at 18 widths 320–2560 and five short/landscape sizes. Syntax and
+git diff checks pass. Logs: /private/tmp/maya-followup-<suite>.log.
+
+Exact next step: owner Push this follow-up, check its Google Cloud Build result,
+then verify public release.json and v19 gallery/v5 runtime assets. Review the live
+Aesthetic Control and Save once as Admin; verify the Saved entry in Logs. Live
+signed-in Gmail/Gemini inference/delivery remain owner verification, not proven by
+fake-provider tests or a model snapshot.
+
+## Previously verified October 1 implementation
 
 Aesthetic Control removes header Visuals/Typography links, Reset, applied-status
 copy and Editor panel controls. Glass, Panels and Tables has the requested comma.
@@ -94,8 +151,7 @@ Temporary runtimes are not deployment requirements; CI installs dependencies.
 ## Exact next step and open risks
 
 Latest code is pushed, but public Hosting is still at 4970660. Owner next step:
-inspect Cloud Build/deployment for 19ff3a1 and 601784c, publish the current code,
-then verify release.json, v18/v4 editor assets and the live dropdown/table behavior.
+follow the October 2 exact next step above; older shipment markers are historical.
 Do not infer deployment from a successful Push or healthz. Code passed local
 responsive checks; the current deployed site still contains the known clipping
 bug. This verification/incident documentation is committed locally; no push is
