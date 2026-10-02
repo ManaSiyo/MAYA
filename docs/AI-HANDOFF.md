@@ -2,105 +2,90 @@
 
 ## Release status
 
-This task began clean at 4970660, matching origin/maya-v2. The owner pushed
-the aesthetic simplification; production deployment was not rechecked.
-The dropdown positioning fix is local only. No push, production Save, real
-text/call, credentials/environment change or user Chrome access occurred.
-
-## Dropdown clipping fix
-
-The popup was centered on the tiny Edit button on desktop, producing negative
-left overflow that document scrollWidth never detected. Conflicting mobile
-overrides are removed. Anchor to the full category row at left:0, constrain
-popup/control widths, and use two columns at 420px and below. CSS cache v17.
-Changed gallery.css, aesthetic-control.html, component-gallery/app-regression
-tests, design/requests/fixes/handoff/commit review.
-
-Validation: component-gallery passed actual bounds of all eight popups and
-fields at eleven widths (320–1920px), 700/701px breakpoint, maximum padding,
-left alignment, collapsed Visuals and working case selection. Save/reload and
-shared page checks also pass. Screenshot /private/tmp/maya-dropdown-fixed.png
-visually reviewed. Full app-regression passed, including the dropdown regression assertion;
-git diff --check passed.
+Started at 12073dc, clean and one local commit ahead of origin/maya-v2 (4970660).
+During verification the owner committed implementation as 19ff3a1 (message "y")
+and pushed it; HEAD now matches origin/maya-v2. Final tests ran against that code.
+Codex did not push/deploy, save a production design, access user Chrome, change
+credentials/environment or send a real customer call/text. Deployment remains
+unverified. The final verification/handoff documentation is committed locally.
 
 ## Current prepared change
 
-Visuals is first: Glass Panels and Tables is one dropdown. Glass Section holds
-preset buttons, material/padding controls, icons, five distinct pill colors and
-collapsed states. A divider separates Panels, with independent controls,
-surface previews, working drawer/filter dialogs and a populated table.
-Remove glossary, email-history/status reference lists, page descriptors, usage
-rows, source inventories and font-comparison copy from the UI. Evidence files
-and the retired style-reference module remain unlinked maintainer resources.
+Aesthetic Control removes header Visuals/Typography links, Reset, applied-status
+copy and Editor panel controls. Glass, Panels and Tables has the requested comma.
+Save is centered. Typography's alignment choices are inside Edit: Left, Centered,
+Right and Top/Middle/Bottom. Temporary Edit controls close on outside click,
+focus leaving and Escape; section folds and States remain explicitly controlled.
+Legacy editor housing settings remain readable, without a separate control UI.
 
-Typography has one sample and one Edit beside each H1–H4/P1–P4. H3 previews
-Campaign details with Lead Station context. Font offers Jost/Cormorant; Case
-Normal/ALL CAPS. H1 defaults uppercase, H2/H3/H4 Normal, P3/P4 uppercase and
-P1/P2 Normal. Normal preserves authored text while overriding CSS uppercase.
-Font/case are validated enums, optional for older saved designs and completed
-with role defaults on read. No production migration write is needed.
+Outer panels have X/Y padding. Inner panel has opacity, border, corners, X/Y
+padding and percentage width. Filter has separate material/padding/pixel width.
+A divider precedes Table. Preview matches Lead Station's Full name, Status,
+Latest Notes columns. Table material/padding, top-row type/background/opacity,
+first-column background/opacity and each column's font/case/size/weight/color/
+horizontal/vertical alignment are independently saved. Names default Cormorant;
+other data Jost. Settings apply to actual Lead Station cells keyed by data-col,
+so semantic column styles survive reorder. Status colors remain semantic.
 
-Preserve Centered/Left controls and the separately adjustable editor rectangle.
-Neutral paragraph/label/caption colors and shared family/case settings now
-actually apply to mapped roles; status colors and technical monospace remain.
-Shared buttons and icons receive saved glass fill/rim/frost/tint/highlight.
-Gallery finish samples retain their separate local preset styling, and panel
-controls affect separate surfaces/table. Padding is moved into Edit glass;
-the preview-only fallback toggle and detached Fine adjustments area are removed.
+Lead Station removes Forms/Reload/Alerts/Add floating toolbar and aligns the
+section caret with its title. Category/date replace long tier/call icons: ? for
+Help me decide, SI Signature, CE Ceremonial, SU Suit. The full name cell, including
+its padding, opens the exact client's Messages thread. A name button preserves
+keyboard activation. Missing phone opens Messages with explicit feedback.
+Calls still exist inside Messages. Affiliates retains its own profile reload.
 
-Changed paths: aesthetics/aesthetic-control.html; gallery.js/gallery.css,
-finishes.js/overlay.js; aesthetics/ui/typography-controls.js; server/design-config;
-tests/component-gallery/design-config/design-contract/app-regression; design,
-README, AGENTS, requests/fixes/handoff/commit review. All 11 served HTML pages
-bump typography runtime to v3; editor CSS/JS bump to v16. Existing Hosting
-no-cache policy continues. No served page moved or URL changed.
+Changed files: aesthetic-control.html; gallery.js/gallery.css, finishes.js,
+overlay.js and new surface-editors.js; typography-controls.js runtime v4;
+server/design-config.mjs; backend/status.html; all served runtime HTML cache refs;
+component-gallery, design-config/design-contract, outbound-ui, lead-filter-ui,
+app-regression; AGENTS, README, design, requests/fixes/handoff/commit review.
+Gallery assets v18; shared runtime v4. No served page moved or URL changed.
 
 ## Validation and preview
 
-Passed design-config and design-contract (legacy compatibility, enum rejection,
-shared runtime); component-gallery (single-row roles, five unique colors,
-working material/panel controls, font/case/color, alignment/housing, local
-Save/reload, shared Admin/client/Outbound application, authenticated save fixture,
-eleven widths 320–1920px with all editor/control bounds); full app-regression; local server
-smoke; edited JavaScript syntax and diff checks. Browser fixtures use isolated
-headless Chromium and fake provider/auth data. Google web fonts are blocked in
-fixtures, so live font loading/rendering still needs owner review.
-Screenshot reviewed at /private/tmp/maya-typography-controls.png.
+Component-gallery passed Save/reload, authenticated Save fixture, live inner/
+filter/table settings and actual Admin table application. All eight typography
+and eight surface Edit popups/fields checked at eleven widths (320–1920px),
+including 700/701px, maximum housing padding, collapsed Visuals and outside/Escape
+dismissal. Shared role/font/case/color/material checks continue to pass.
+Design-config and design-contract passed legacy compatibility and rejection of
+invalid geometry, backgrounds, fonts and alignments. CRM intelligence/UI/failure
+and fake phone/messages/transfer/feedback suites passed. Full app-regression and outbound-ui passed, including populated/empty tables,
+seven widths, scroll/reorder, pointer/keyboard, fallback and exact name-cell routing.
+JavaScript syntax checks and git diff --check passed.
+Screenshot /private/tmp/maya-typography-controls.png reviewed; fonts are blocked
+in browser fixtures, so live web-font rendering remains an owner review item.
 
-Local preview: http://127.0.0.1:8767/aesthetics/aesthetic-control.html.
-An existing loopback server returns the updated v17 CSS/v16 JS/v3 runtime HTML; Codex browser
-opening was queued. No user Chrome is involved. If the server stops, restart
-with the bundled Python http.server bound to 127.0.0.1, repository as cwd.
-
+Preview: http://127.0.0.1:8767/aesthetics/aesthetic-control.html and
+http://127.0.0.1:8767/status.html. Existing loopback server serves current sources.
 Bundled Node: /Users/fromsa/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.
-Resolver: /private/tmp/maya-oct1-loader.mjs maps express, Playwright and bundled
-WebSockets. Chromium: /private/tmp/maya-pw-browsers/chromium_headless_shell-1234/chrome-headless-shell-mac-arm64/chrome-headless-shell.
-Temporary runtime files are not deployment requirements; CI installs dependencies.
+Resolver: /private/tmp/maya-oct1-loader.mjs; Chromium:
+/private/tmp/maya-pw-browsers/chromium_headless_shell-1234/chrome-headless-shell-mac-arm64/chrome-headless-shell.
+Browser checks use isolated Chromium, fake auth/providers and local files.
+Temporary runtimes are not deployment requirements; CI installs dependencies.
 
 ## Exact next step and open risks
 
-Do not push without Fromsa's explicit request. Completed verified work is
-committed locally so only owner Push remains in GitHub Desktop. Review the
-preview, push when desired, then verify Cloud Build and /release.json. A live
-Admin Save is needed to persist owner-selected values across shared pages;
-no live save was performed. Older designs get new role font/case defaults on
-read, so check default capitalization after deployment as well as saved edits.
-The runtime changes text/material presentation and does not change account
-boundaries, data, communication behavior or permissions.
+Code is already committed/pushed by the owner at 19ff3a1. Commit this final
+verification/handoff documentation locally. Do not push without explicit request.
+Owner refresh/review previews, check Cloud Build and release.json, then save the
+desired live Admin design. Final docs Push remains available in GitHub Desktop.
+No live Save was performed. Designs lacking the optional inner/filter/table keys
+receive bounded defaults on read without production migration writes. New default
+name font/inner geometry/table styling should be reviewed before live Save.
+History/undo is deferred; Reset is removed as requested.
 
-Owner SMS access from 259c824 still needs live verification: MAYA HELP, INBOX,
-THREAD Nick, MORE pages, ACTIONS, normal memory recall and a separately authorized
-client REPLY/SEND test. Explicit controls bypass inference; normal conversation
-uses existing AI availability/$1 CRM text cap. Record history and actual carrier
-receipt remain separate; prior discarded records cannot be recovered.
-Gmail owner mailbox readiness, real Gemini inference, scheduler/booking/signup
-alerts and live call audio remain owner verification items.
+Prior SMS access from 259c824 still needs live owner verification: MAYA HELP,
+INBOX, THREAD Nick, MORE pages, ACTIONS, normal memory recall and separately
+authorized client REPLY/SEND. Explicit commands bypass AI; normal conversation
+uses AI availability/$1 CRM text cap. Lost old records cannot be recovered.
+Gmail mailbox readiness, real Gemini inference, scheduler/booking/signup alerts,
+live audio/SMS/carrier receipt and owner transfer remain owner verification items.
 
 ## Standing constraints
 
-Before every Chrome session ask and wait for explicit session approval. Do not
-use Chrome while Fromsa works in it. MAYA and Worldofsiyo profiles are separate.
-Keep project/account data sealed; never touch credentials, billing, production
-variables or legacy migration/Storage cleanup paths. docs/design.md is the sole
-active visual specification. Root AGENTS.md preserves layout/checks. The approved
-booking URL remains https://wix.to/wT2lSqE.
+Ask and wait before each user Chrome session; never use Chrome while Fromsa works
+in it. MAYA and Worldofsiyo profiles are separate. Keep project/account data
+sealed; no credentials, billing, production variables or legacy migration/Storage
+cleanup changes. docs/design.md is the sole active design specification.
+Approved booking URL: https://wix.to/wT2lSqE.

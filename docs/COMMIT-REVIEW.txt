@@ -1,14 +1,17 @@
-[Codex] Keep typography dropdowns inside Aesthetic Control
+[Codex] Record verified table controls and Lead Station handoff
 
-Anchor Edit popups to the full category row instead of centering on the tiny
-Edit button. Remove contradictory responsive positioning, constrain popup and
-field widths, and use two columns at 420px and below for maximum padding.
-Bump gallery CSS to v17 and update visual specification/continuity documents.
+Update handoff, owner requests and commit review with final validation for the
+surface/editor and Lead Station implementation already committed/pushed by the
+owner as 19ff3a1 (message "y"). Record independent panel/filter/table controls,
+dismissible Edit, typography alignment, category badges and whole-cell routing.
 
-Validation: component-gallery checks all eight dropdowns and field bounds at
-11 widths (320–1920px), breakpoint edges, maximum padding, left alignment,
-collapsed Visuals and case selection. Existing Save/reload and shared-page
-checks pass. Screenshot reviewed. Full app-regression and git diff --check passed.
+Passed full app-regression; component-gallery Save/reload, authenticated fixture,
+actual shared-table application and 16 dropdowns at eleven widths; design validator/
+contract; outbound-ui populated/empty filters, scroll/reorder, keyboard/pointer,
+status persistence and fallback; CRM intelligence/UI/failure; fake phone/messages/
+transfer/feedback; JS syntax and diff checks. Screenshots visually reviewed.
 
-No push, production Save/deploy, credentials change or user Chrome access.
-Owner next step: refresh local preview, review, then Push when ready.
+No Codex push/deploy, live Admin Save, user Chrome, credentials/environment change
+or real customer call/text. Deployment/font rendering and live provider behavior
+remain owner checks. Owner next step: review previews and release, save desired
+live design; Push this final documentation when ready. History/undo is deferred.
