@@ -1,13 +1,19 @@
-# MAYA handoff — October 1, 2026
+# MAYA handoff — October 2, 2026
 
 ## Release status
 
-Started at 12073dc, clean and one local commit ahead of origin/maya-v2 (4970660).
-During verification the owner committed implementation as 19ff3a1 (message "y")
-and pushed it; HEAD now matches origin/maya-v2. Final tests ran against that code.
-Codex did not push/deploy, save a production design, access user Chrome, change
-credentials/environment or send a real customer call/text. Deployment remains
-unverified. The final verification/handoff documentation is committed locally.
+Current checked source and actual remote maya-v2 both equal 601784c12b4a124f9d6bfae6c25d38263c360c17.
+The owner pushed the final handoff as well as implementation 19ff3a1. The working
+tree started clean for the October 2 shipment/margin audit.
+
+LIVE HOSTING IS STALE: repeated cache-bypassed public release.json reads report
+497066020b006f59c5e7b21a7a441f66397b02e6, published 2026-10-02T04:45:16.127Z
+(October 1, 9:45 PM Pacific). Deployed editor HTML still has Reset, gallery CSS/JS
+v16 and typography runtime v3, rather than current v18/v4. Isolated live-browser
+read reproduces H1 editor clipping at 1100px: left=-69.265625px, right=250.734375px.
+No authenticated production browser or user Chrome was accessed. Public healthz
+returns ok:true; liveness does not prove build freshness or provider readiness.
+Cloud Build/deploy cause was not established. No Codex push/deploy or live Save.
 
 ## Current prepared change
 
@@ -43,6 +49,27 @@ Gallery assets v18; shared runtime v4. No served page moved or URL changed.
 
 ## Validation and preview
 
+October 2 recheck: full app-regression, canon-ui, component-gallery and
+outbound-ui all passed. Canon verifies 11 rendered surfaces at seven widths;
+gallery verifies all 16 temporary editor popups/fields at eleven widths;
+populated Lead Station filters/table have seven-width clipping, pointer,
+keyboard, scroll/reorder and fallback coverage.
+Additional isolated margin audit passed all ten canon pages at 18 widths
+(320,360,375,390,420,568,640,650,700,701,768,900,1024,1100,1280,1440,1920,2560)
+and five short/landscape sizes (568x320,667x375,844x390,1024x600,1440x720).
+It keeps runtime v4 enabled, uses public saved design values and actual Google
+fonts, and checks document overflow plus open drawer bounds/content. Application
+scripts are stripped in this broad shell audit; populated interactions are
+covered separately by the suites above. Temporary audit source/log:
+/private/tmp/maya-runtime-margins.mjs and /private/tmp/maya-runtime-margins.log.
+The non-margin master-material probe in the first adapted audit observed saved
+Admin blur 22px versus frontend master 28px; it was excluded from the margin-only
+pass and did not prompt an unrelated presentation change.
+Public live screenshot: /private/tmp/maya-deployed-dropdown.png.
+All local check logs: /private/tmp/maya-release-<suite>.log.
+No application source changed during this verification.
+
+
 Component-gallery passed Save/reload, authenticated Save fixture, live inner/
 filter/table settings and actual Admin table application. All eight typography
 and eight surface Edit popups/fields checked at eleven widths (320–1920px),
@@ -66,10 +93,13 @@ Temporary runtimes are not deployment requirements; CI installs dependencies.
 
 ## Exact next step and open risks
 
-Code is already committed/pushed by the owner at 19ff3a1. Commit this final
-verification/handoff documentation locally. Do not push without explicit request.
-Owner refresh/review previews, check Cloud Build and release.json, then save the
-desired live Admin design. Final docs Push remains available in GitHub Desktop.
+Latest code is pushed, but public Hosting is still at 4970660. Owner next step:
+inspect Cloud Build/deployment for 19ff3a1 and 601784c, publish the current code,
+then verify release.json, v18/v4 editor assets and the live dropdown/table behavior.
+Do not infer deployment from a successful Push or healthz. Code passed local
+responsive checks; the current deployed site still contains the known clipping
+bug. This verification/incident documentation is committed locally; no push is
+authorized in this request. After deployment, save the desired live Admin design.
 No live Save was performed. Designs lacking the optional inner/filter/table keys
 receive bounded defaults on read without production migration writes. New default
 name font/inner geometry/table styling should be reviewed before live Save.

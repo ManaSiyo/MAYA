@@ -1,3 +1,14 @@
+OCTOBER 2: Latest pushed changes absent from live Hosting (VERIFIED, OPEN)
+Remote maya-v2 is 601784c; repeated cache-bypassed release.json reads are 4970660,
+published October 1 at 9:45 PM Pacific. Public editor HTML is still v16/v3 with
+Reset. Live isolated Chromium reproduces negative H1 popup left bound -69px at
+1100px. Public healthz is alive but does not prove release freshness. Current
+local code passes full regression, canon/gallery/populated-table checks and an
+18-width/5-landscape shell margin audit with saved design and real fonts.
+Cloud Build/deploy cause is not established; no deploy, Save or credentials
+changes were attempted. Next: owner inspect build/deploy latest, then verify
+release marker and editor assets before treating the shipment as complete.
+
 OCTOBER 1: Editor lacked dismissal and preview differed from Lead Station (LOCAL FIX)
 Native details Edit controls stayed open outside their bounds. Preview had four
 columns unrelated to the real table, no independent inner/filter/table controls,
