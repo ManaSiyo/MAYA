@@ -1,5 +1,7 @@
 MAYA RECENT HISTORY
 
+October 2, 2026 — Shipped f436f37: shared Aesthetic Control runtime, inner/outer padding previews, icon/dropdown sizing, ten-column Outbound parity, Model Snapshot/meter grouping and private design-save audit. Google Cloud Build passed; public release marker and editor v19/v5 confirm deployment. Final filter-margin/campaign-rename fixes remain local; live Admin Save/log review remains.
+
 September 29, 2026 — Local, not deployed: Aesthetic Control became the single visual design editor under `aesthetics/`; `docs/design.md` holds the written rules. Old audits and dormant research were moved into local `_to_delete/`. The prior full history is preserved there.
 
 September 29, 2026 — Local, not deployed: shared design Save, typography roles H1–H4/P1–P5, compact Outbound lists and filter controls passed regression tests. Live Save remains to be verified after an owner-requested push.

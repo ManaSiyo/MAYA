@@ -6,8 +6,9 @@ Owner committed and pushed the requested implementation as f436f37 during the
 October 2 work. This follow-up prepares the final scroll-margin fix, renamed
 Corporate-tab identity preservation, validation and continuity records.
 
-Public Hosting was still 497066020b006f59c5e7b21a7a441f66397b02e6, published
-2026-10-02T04:45:16.127Z (October 1, 9:45 PM Pacific), when checked this turn.
+Public Hosting now confirms f436f379fe028b1bf4acb1319ce2b020b9b331bb, published
+2026-10-02T17:18:57.758Z (October 2, 10:18 AM Pacific). Public editor HTML
+loads gallery v19 and typography runtime v5.
 The prior 594cf57 Cloud Build c461f1e2-3143-4608-ab0c-72e9d7a29645 FAILED before
 server/website deployment: admin-ui-contract still required the removed phone
 icon below each lead. That gate now verifies ?/SI/CE/SU category badges, the whole
@@ -16,8 +17,9 @@ was not production deployment success. GitHub check-run details exposed the
 actual Google build log without Chrome or credentials.
 
 Owner push f436f37 started Google build 9bd43347-4fbe-43ef-9c86-0a58a7df0230.
-It was in progress at the last check. Do not call this release shipped until its
-Cloud Build result and public release.json agree. Codex has not pushed or deployed.
+It completed successfully; its commit agrees with public release.json. Main
+implementation is shipped. Final fixes are committed locally as add0e06 and
+await explicit owner push approval. Codex has not pushed or deployed.
 
 ## October 2 verified implementation and follow-up
 
@@ -150,8 +152,8 @@ Temporary runtimes are not deployment requirements; CI installs dependencies.
 
 ## Exact next step and open risks
 
-Latest code is pushed, but public Hosting is still at 4970660. Owner next step:
-follow the October 2 exact next step above; older shipment markers are historical.
+Main implementation f436f37 is shipped; add0e06 final fixes await owner Push.
+Follow the October 2 exact next step above; older shipment markers are historical.
 Do not infer deployment from a successful Push or healthz. Code passed local
 responsive checks; the current deployed site still contains the known clipping
 bug. This verification/incident documentation is committed locally; no push is

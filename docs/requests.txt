@@ -1,4 +1,4 @@
-OCTOBER 2 — Outbound Sheet parity and shared aesthetic master [verified locally]
+OCTOBER 2 — Outbound Sheet parity and shared aesthetic master [main implementation shipped]
 All five active workbook tabs already match the requested A:J order. Code now
 includes Reason/Relevance, Last email first, supports 9/29 Corporate sync and
 preserves campaign identity on a dated-tab rename. Shared runtime v5 governs
@@ -8,13 +8,14 @@ with meter and no Claude display are implemented. Successful live design saves
 atomically record private Admin Logs entries. Keep GPT-6 Luna and Image 2.5 Flare
 Medium for cost/speed. Remove only inactive style-inventory tooling; preserve
 active adapters, images and migrations. Owner committed main work as f436f37;
-final follow-up requires owner Push and live Save/log review. Live provider
+Google build passed and public release.json confirms it; final follow-up add0e06
+requires owner Push and live Save/log review. Live provider
 verification is still separate from fake-provider/browser validation.
 
 OCTOBER 2: Check latest shipment and CSS adaptability across screen margins
 [verified] Actual remote head and local source match 601784c. Current code passes full regression, canon, all 16 gallery dropdowns and populated Lead Station/Outbound browser checks.
 [verified] Ten served shells with active runtime, deployed saved design and real Google fonts fit 18 widths from 320–2560px and five short/landscape sizes; open drawer bounds/content pass. Populated tables/menus are covered separately by fake-provider fixtures.
-[open incident] Public Hosting still serves 4970660 with v16/v3 assets and Reset. Cache bypass confirms this; live H1 popup clips 69px off-page at 1100px. Owner must inspect Cloud Build/deploy latest, then verify release.json and live assets. No deployment or live Save was attempted.
+[resolved shipment] Google build 9bd43347-4fbe-43ef-9c86-0a58a7df0230 succeeded; public release.json confirms f436f37 and editor loads v19/v5. Final follow-up add0e06 awaits owner Push. Live Admin Save/log review remains.
 
 OCTOBER 1: Simplify editor and control real Lead Station panels/table
 [done locally] Edit closes on outside click/focus/Escape. Remove header Visuals/Typography links, Reset, applied-status text and Editor panel controls. Center Save; rename Glass, Panels and Tables.
