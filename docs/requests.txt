@@ -1,3 +1,7 @@
+OCTOBER 1: Fix clipped Aesthetic Control dropdowns
+[done locally] Edit popups stay inside Typography; all fields fit even at maximum padding. Remove contradictory positioning rules and use two columns on small phones.
+[verified locally] All eight editors checked at eleven widths from 320 to 1920px, including breakpoint edges and the reported desktop layout.
+
 OCTOBER 1: Simplify Aesthetic Control and add per-role font/case
 [done locally] Visuals first: Glass Panels and Tables contains Glass Section with buttons/icons, active material/padding controls, five distinct pill colors and collapsed button states, then a divider and Panels/table preview. Remove glossary, email-history/status reference lists, page descriptors, usage/source inventories and font-comparison copy from the UI.
 [done locally] One preview/Edit per H1–H4/P1–P4. H3 previews Campaign details with Lead Station context. Add saved Jost/Cormorant and Normal/ALL CAPS to each role; H1 defaults uppercase and H2 Normal. Preserve alignment/editor housing, old saved designs, status colors and monospace identifiers.

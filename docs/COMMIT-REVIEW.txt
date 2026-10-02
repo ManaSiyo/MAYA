@@ -1,28 +1,14 @@
-[Codex] Simplify Aesthetic Control and add font/case editing
+[Codex] Keep typography dropdowns inside Aesthetic Control
 
-Group Visuals first under Glass Panels and Tables. Glass Section keeps buttons,
-icons, material/padding controls, five distinct pill colors and collapsed states;
-a divider precedes independent Panels controls, surfaces, dialogs and the table.
-Remove glossary, repeated status/email history, page/usage/source descriptors
-and font comparison from the editor. Keep evidence files unlinked.
+Anchor Edit popups to the full category row instead of centering on the tiny
+Edit button. Remove contradictory responsive positioning, constrain popup and
+field widths, and use two columns at 420px and below for maximum padding.
+Bump gallery CSS to v17 and update visual specification/continuity documents.
 
-Show one preview/Edit per H1–H4/P1–P4, with H3 Campaign details and Lead Station
-context. Add saved Jost/Cormorant and Normal/ALL CAPS choices; H1 defaults caps
-and H2 Normal. Preserve alignment/housing, legacy designs, status colors and
-technical monospace. Apply shared font/case/neutral color and actual button/icon
-glass settings; keep gallery preset styling separate from saved runtime material.
-Bump shared runtime to v3 on all 11 served pages and editor assets to v16.
-Update design specification and continuity documents in the same commit.
+Validation: component-gallery checks all eight dropdowns and field bounds at
+11 widths (320–1920px), breakpoint edges, maximum padding, left alignment,
+collapsed Visuals and case selection. Existing Save/reload and shared-page
+checks pass. Screenshot reviewed. Full app-regression and git diff --check passed.
 
-Validation passed: design-config/design-contract; component-gallery covering
-save/reload, active glass/panel controls, font/case/color/alignment/housing,
-shared page application, authenticated save fixture and seven viewport widths;
-full app-regression; local server smoke; JS syntax and git diff --check.
-Screenshot visually reviewed. Fonts/auth/providers are fixtures; live Google
-font loading and owner Admin Save remain post-deployment checks.
-
-No user Chrome, production Save, credential/environment change, push or deploy.
-Local preview http://127.0.0.1:8767/aesthetics/aesthetic-control.html is available
-inside Codex. Owner review/Push is next; confirm Cloud Build/release.json before
-considering the editor live. Existing settings read new case/font defaults;
-no production migration write is performed.
+No push, production Save/deploy, credentials change or user Chrome access.
+Owner next step: refresh local preview, review, then Push when ready.

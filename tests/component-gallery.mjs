@@ -92,14 +92,37 @@ try{
  assert.equal(await page.evaluate(()=>{const n=document.createElement('div');n.className='stat';n.innerHTML='<strong>262</strong>';document.body.append(n);const size=getComputedStyle(n.firstChild).fontSize;n.remove();return size;}),'12px');
  await page.goto('https://maya.test/aesthetics/aesthetic-control.html');await page.locator('#save').waitFor();
  await page.locator('#reset').click();
- await page.locator('[data-category="H1"] .type-editor summary').click();
- for(const width of [320,390,650,768,1024,1440,1920]){await page.setViewportSize({width,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'overflow '+width);}
- await page.locator('[data-category="H1"] .type-editor summary').click();
+ // Negative left overflow does not increase scrollWidth: inspect actual bounds.
+ await page.locator('#pill-preview > .review-fold > summary').click();
+ await page.locator('[data-category="H1"] .type-align').click();
+ await page.locator('.housing-editor summary').click();
+ await page.locator('[data-editor-field="padding"]').fill('20');
+ await page.locator('[data-editor-field="padding"]').dispatchEvent('input');
+ for(const width of [320,390,420,650,700,701,768,1024,1100,1440,1920]){
+  await page.setViewportSize({width,height:844});
+  for(const role of ['H1','H2','H3','H4','P1','P2','P3','P4']){
+   const editor=page.locator(`[data-category="${role}"] .type-editor`);
+   await editor.locator('summary').click();
+   const geometry=await editor.locator('.type-editor-fields').evaluate(panel=>{
+    const section=panel.closest('.preview-section').getBoundingClientRect();
+    const popup=panel.getBoundingClientRect();
+    return {left:popup.left,right:popup.right,sectionLeft:section.left,sectionRight:section.right,
+     controls:[...panel.querySelectorAll('input,select')].map(e=>{const r=e.getBoundingClientRect();return {left:r.left,right:r.right,width:r.width};})};
+   });
+   assert.ok(geometry.left>=Math.max(0,geometry.sectionLeft)&&geometry.right<=Math.min(width,geometry.sectionRight),`${role} popup outside section at ${width}: ${JSON.stringify(geometry)}`);
+   assert.ok(geometry.controls.every(r=>r.width>0&&r.left>=geometry.left&&r.right<=geometry.right),`${role} controls outside popup at ${width}`);
+   await editor.locator('[data-field="case"]').selectOption('none');
+   if(width===1100&&role==='H1')await page.screenshot({path:'/private/tmp/maya-dropdown-fixed.png'});
+   await editor.locator('summary').click();
+  }
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'overflow '+width);
+ }
+ await page.locator('#reset').click();
  await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'/private/tmp/maya-typography-controls.png',fullPage:true});
  await page.goto('https://maya.manasiyo.com/aesthetics/aesthetic-control.html');await page.locator('#save').waitFor();
  await page.evaluate(()=>localStorage.setItem('maya_admin_tok','test-owner-token'));
  await page.locator('#save').click();await page.waitForFunction(()=>document.querySelector('#feedback').textContent.includes('Saved across MAYA pages'));
  const {validDesign}=await import('../docs/server/design-config.mjs');assert.equal(validDesign(savedPost.body),true);assert.equal(savedPost.body.editor.radius,12);assert.equal(savedPost.body.type.P1.align,'center');assert.equal(savedPost.header,'Bearer test-owner-token');assert.deepEqual(Object.keys(savedPost.body.type),['H1','H2','H3','H4','P1','P2','P3','P4']);
  assert.deepEqual(errors.filter(e=>!e.includes('Firebase')&&!e.includes('google')),[]);
- console.log('Typography Controls passed: role counts, descending roles, edit/save/reload, Admin application, seven widths.');
+ console.log('Typography Controls passed: role counts, descending roles, edit/save/reload, Admin application, eleven widths with all popup and control bounds.');
 }finally{await browser.close();}

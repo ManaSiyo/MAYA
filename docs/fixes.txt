@@ -1,3 +1,11 @@
+OCTOBER 1: Typography dropdown clipped beyond the page (LOCAL FIX)
+Desktop CSS centered a 320px popup on the small Edit button, sending its left
+edge outside the browser content. Conflicting mobile overrides hid the defect
+at narrow widths; scrollWidth checks missed negative left overflow. Anchor to
+the full row with left:0 and constrained widths. Use two columns on small phones.
+Verify actual popup/control bounds for all eight roles at eleven widths,
+including 700/701px, screenshot width, maximum padding and left alignment.
+
 OCTOBER 1: Aesthetic Control redundant sections and inconsistent heading caps (LOCAL FIX)
 Review jumped between glass, buttons and panels and repeated status meanings,
 page/source descriptors and multiple samples within one typography role. Font

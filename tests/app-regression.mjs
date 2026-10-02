@@ -2702,5 +2702,9 @@ ok('SMS client replies require an exact confirmation code and retained consent',
 ok('Messages archive overflow before trimming the live inbox',SERVER_SOURCE.includes('archive:createMessageArchive') && readFileSync(join(ROOT,'docs/server/maya-messages.mjs'),'utf8').includes('await deps.archive.append'));
 ok('Aesthetic Control groups buttons/icons and panels/tables before single-row typography',compactGallery.includes("section('Glass Panels and Tables'") && compactGallery.includes("divider.className='visual-divider'") && !compactGallery.includes('glossary') && !compactGallery.includes('addStyleReference'));
 ok('Typography exposes saved font family and capitalization per role',compactGallery.includes('data-field="font"') && compactGallery.includes('data-field="case"') && readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8').includes("['none','uppercase']"));
+
+const galleryCss=readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.css'),'utf8');
+ok('Typography dropdowns anchor inside the full row and constrain control widths',galleryCss.includes('.type-editor{margin:0;padding:0;position:static;') && galleryCss.includes('top:100%;left:0;z-index:5;') && galleryCss.includes('max-width:100%;box-sizing:border-box') && !galleryCss.includes('translateX(-50%)'));
+
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

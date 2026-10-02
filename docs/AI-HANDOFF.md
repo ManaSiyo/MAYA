@@ -2,11 +2,26 @@
 
 ## Release status
 
-This task began clean at 259c824, matching origin/maya-v2. Earlier owner
-conversation and SMS access commits are now pushed by the owner; production
-release was not rechecked here. Do not infer live deployment from origin.
-This Aesthetic Control update is local only. No push, production design Save,
-real text/call, credentials/environment change or Chrome access occurred.
+This task began clean at 4970660, matching origin/maya-v2. The owner pushed
+the aesthetic simplification; production deployment was not rechecked.
+The dropdown positioning fix is local only. No push, production Save, real
+text/call, credentials/environment change or user Chrome access occurred.
+
+## Dropdown clipping fix
+
+The popup was centered on the tiny Edit button on desktop, producing negative
+left overflow that document scrollWidth never detected. Conflicting mobile
+overrides are removed. Anchor to the full category row at left:0, constrain
+popup/control widths, and use two columns at 420px and below. CSS cache v17.
+Changed gallery.css, aesthetic-control.html, component-gallery/app-regression
+tests, design/requests/fixes/handoff/commit review.
+
+Validation: component-gallery passed actual bounds of all eight popups and
+fields at eleven widths (320–1920px), 700/701px breakpoint, maximum padding,
+left alignment, collapsed Visuals and working case selection. Save/reload and
+shared page checks also pass. Screenshot /private/tmp/maya-dropdown-fixed.png
+visually reviewed. Full app-regression passed, including the dropdown regression assertion;
+git diff --check passed.
 
 ## Current prepared change
 
@@ -46,14 +61,14 @@ Passed design-config and design-contract (legacy compatibility, enum rejection,
 shared runtime); component-gallery (single-row roles, five unique colors,
 working material/panel controls, font/case/color, alignment/housing, local
 Save/reload, shared Admin/client/Outbound application, authenticated save fixture,
-seven widths 320–1920px with editor open); full app-regression; local server
+eleven widths 320–1920px with all editor/control bounds); full app-regression; local server
 smoke; edited JavaScript syntax and diff checks. Browser fixtures use isolated
 headless Chromium and fake provider/auth data. Google web fonts are blocked in
 fixtures, so live font loading/rendering still needs owner review.
 Screenshot reviewed at /private/tmp/maya-typography-controls.png.
 
 Local preview: http://127.0.0.1:8767/aesthetics/aesthetic-control.html.
-An existing loopback server returns the updated v16/v3 HTML; Codex browser
+An existing loopback server returns the updated v17 CSS/v16 JS/v3 runtime HTML; Codex browser
 opening was queued. No user Chrome is involved. If the server stops, restart
 with the bundled Python http.server bound to 127.0.0.1, repository as cwd.
 

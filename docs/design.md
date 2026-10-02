@@ -106,3 +106,7 @@ validates the settings. Served pages load runtime v3; Hosting revalidates this
 script instead of caching role mappings for a week. Old aesthetic PDFs were removed;
 archived source inventories are evidence only and never override this file or
 the saved controls. No page should introduce a competing design specification.
+
+Typography Edit popups anchor to the full category row, stay within the section
+and viewport at every width, and constrain every input/select to the popup.
+At 420px and below, use two columns so maximum editor padding stays usable.
