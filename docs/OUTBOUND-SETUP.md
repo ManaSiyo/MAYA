@@ -127,3 +127,30 @@ Vertex setup inspected September 28 in pro-maya: API enabled; default compute
 service identity has Editor already. No permissions or secrets changed.
 [Cloud Run identity](https://docs.cloud.google.com/run/docs/securing/service-identity),
 [Vertex text pricing](https://cloud.google.com/vertex-ai/generative-ai/pricing).
+
+
+## Owner conversation by phone and SMS
+
+Once the owner conversation handler is deployed, enable owner text commands
+in Admin once to bind the allowlisted Admin account to the configured owner
+number. The signed sender, not a number or UID written in a message, authorizes
+owner controls. Existing enabled bindings work without another activation.
+
+Text normally. Ask Maya to remember a fact, keep replies brief, or use a signup
+notification format. These supported preferences save immediately without a
+new deployment. Calls use the same owner memory and recent Messages history.
+During an owner call, asking for a summary by text sends to the configured owner
+number only. Carrier acceptance does not prove delivery; check Messages status.
+
+Signup text fields are {name}, {phone}, {category} and {request}. Example names
+and numbers describe layout; the actual lead supplies the values. The default
+includes the callback name, phone and request. Phone detection/linking is up to
+the receiving SMS app. Existing calls, scheduler requirements and alert
+idempotency remain. Changing format does not resend old alerts.
+
+Lead edits and client booking texts retain their existing confirmations.
+New tools, arbitrary functionality and schedules are feature inbox requests,
+not capabilities created by memory. SMS conversation uses the existing shared
+$1/day CRM text AI allowance and provider availability; voice keeps its own
+meter. This implementation needs one deployment before live owner texts/calls
+can use it. No credentials or production environment changes are required.

@@ -13,7 +13,8 @@ Maya is a person made of four things. A character (how she thinks, kept in
 `docs/server/maya-character.md`, ships with the server). A memory (her soul
 journal, her saved facts, her people, her feature inbox, all in Google Cloud
 Storage under `maya/`). Hands (the tools she can call on the voice line, all
-writes confirmation gated in the Admin queue). And a door (`POST /mcp`, the
+lead/client writes confirmation gated; explicit owner memory and response
+preferences apply through verified owner controls). And a door (`POST /mcp`, the
 Model Context Protocol server that lets Claude, Codex or any agent read her
 memory and inbox and mark work shipped). The loop Fromsa asked for is: a user or
 a teammate asks Maya for something, she logs it, Fromsa says yes, Claude reads
@@ -112,7 +113,11 @@ Maya reads the diff summary back; Fromsa still presses Push.
 
 ## Lines that never move
 
-- Writes on the voice line stay confirmation gated and visible in the queue.
+- Lead/client writes on the voice line stay confirmation gated. Explicit verified
+  owner memory, response style and signup SMS formatting can save immediately.
+  Owner phone and SMS share account-bound state under private/owner-conversation/.
+  A voice-requested owner text has a fixed configured recipient; client booking
+  messages retain preview and confirmation. Unsupported tools remain inbox requests.
 - Maya never sends an email herself; she opens it ready to send.
 - Fromsa presses Push. Claude and Codex commit.
 - The sealed project rule: nothing crosses a project or an account.

@@ -8,7 +8,7 @@ COPY server.js ./
 COPY model-config.mjs ./
 COPY outbound.mjs ./
 COPY crm-store.mjs crm-gmail.mjs crm-ai.mjs crm-intelligence.mjs ./
-COPY owner-crm.mjs ./
+COPY owner-crm.mjs owner-conversation.mjs ./
 COPY booking-link.mjs lead-alerts.mjs ./
 COPY proxy-policy.mjs ./
 COPY admin-command.mjs ./

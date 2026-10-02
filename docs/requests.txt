@@ -1,3 +1,9 @@
+OCTOBER 1: Normal owner conversation and live text/voice preferences
+[done locally] Replace lead-only owner SMS routing with ordinary conversation using recent Messages and account-bound persistent memory. Explicit owner facts, response style and signup text format save at runtime; phone calls load the same context and expose the same supported controls.
+[done locally] A voice-requested owner summary can text only the configured owner number. Signup formatting uses actual lead name/phone/category/request, with the requested callback layout by default. Unsupported functionality is logged without claiming it exists. Lead/client confirmations remain.
+[verified locally] Owner conversation, communications, lead alerts, CRM intelligence, packaging, smoke and full app regression pass with fake providers. No live SMS/call or production write.
+[pending] One deployment is necessary to install this handler; subsequent supported preferences need no Push. Owner must verify normal text conversation, recall across calls and actual delivery after deployment. Existing $1/day CRM text AI cap remains.
+
 OCTOBER 1: Compact Aesthetic Control and verify providers
 [done locally] H1–H4/P1–P4, old technical P3 merged into P1, old P4/P5 mapped to P3/P4. Legacy saved designs remain readable and older editors can still save.
 [done locally] One Edit dropdown beside each category, one right-side settings summary, 6px sample-row padding, shorter copy and collapsed references.

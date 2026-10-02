@@ -35,6 +35,8 @@ const twSrv = http.createServer((req, res) => { let b = ''; req.on('data', c => 
 const twRest = [];
 await new Promise(r => twSrv.listen(0, '127.0.0.1', r));
 const phoneDeps = {
+  ownerContext: async from => JSON.stringify({memory:['Keep responses brief'],from}),
+  ownerControl: async (from,args,id) => {ownerActions.push({from,args,id});return {ok:true,reply:'Remembered: '+args.text};},
   authToken: AUTH, openaiKey: 'sk-test', model: 'gpt-realtime', voice: 'marin', character: 'I am Maya.',
   saveLead: async (lead, prevId) => { const item = { id: prevId || ('m_' + leads.length), ...lead }; leads.push(item); return item; },
   saveTranscript: async (callSid, rec) => { transcripts.push({ callSid, rec }); },
@@ -54,7 +56,7 @@ const phoneDeps = {
   setTier: async (lead, tier) => { tiers.push({ lead, tier }); return /tori/i.test(lead) ? { ok: true, name: 'Tori' } : { ok: false, why: 'no lead named ' + lead }; },
 };
 const phone = mountMayaPhone(app, server, phoneDeps);
-const inbox = [], tiers = [], threadCalls = [], transfers = [];
+const inbox = [], tiers = [], threadCalls = [], transfers = [], ownerActions = [];
 await new Promise(r => server.listen(0, '127.0.0.1', r));
 const port = server.address().port;
 const base = 'http://127.0.0.1:' + port;
@@ -214,7 +216,7 @@ ok('the call is gone from the live count', stEnd.calls === 0);
   const su = ai.got.slice(g0).find(m => m.type === 'session.update');
   ok('on Fromsa\'s side Maya has lead and reviewable booking tools',
     !!su && /WHY YOU ARE CALLING: Fromsa asked for a test call from Admin\./.test(su.session.instructions) && /Hey Fromsa, it is Maya/.test(su.session.instructions) &&
-    su.session.tools.map(t => t.name).join(',') === 'find_lead,list_leads,preview_booking,send_booking,note_lead,save_lead,set_tier,log_note,end_call' && !/[\u2014\u2013]/.test(su.session.instructions), su && su.session.tools.map(t => t.name).join(','));
+    su.session.tools.map(t => t.name).join(',') === 'find_lead,list_leads,preview_booking,send_booking,note_lead,save_lead,set_tier,log_note,end_call,owner_control' && !/[\u2014\u2013]/.test(su.session.instructions), su && su.session.tools.map(t => t.name).join(','));
   const s3 = ai.sockets[n0].sock; const say = o => s3.send(JSON.stringify(o));
   const g1 = ai.got.length;
   say({ type: 'response.function_call_arguments.done', call_id: 'c_l', name: 'list_leads', arguments: JSON.stringify({ count: 2 }) });
@@ -259,9 +261,14 @@ ok('the call is gone from the live count', stEnd.calls === 0);
   const su = ai.got.slice(g0).find(m => m.type === 'session.update');
   ok('by caller id, not by his word: the session is the admin brief with the inbox tool and the snappier turn taking',
     !!su && /verified his number/.test(su.session.instructions) && /Hey Fromsa, it is Maya\. What do you need\?/.test(su.session.instructions) &&
-    su.session.tools.map(t => t.name).join(',') === 'find_lead,list_leads,preview_booking,send_booking,note_lead,save_lead,set_tier,log_note,end_call' &&
+    su.session.tools.map(t => t.name).join(',') === 'find_lead,list_leads,preview_booking,send_booking,note_lead,save_lead,set_tier,log_note,end_call,owner_control' &&
     su.session.audio.input.turn_detection.silence_duration_ms === 420, su && su.session.tools.map(t => t.name).join(','));
   const sk = ai.sockets[n0].sock; const say = o => sk.send(JSON.stringify(o));
+  ok('owner call loads shared conversation preferences', /Keep responses brief/.test(su.session.instructions));
+  const controlStart=ai.got.length;
+  say({type:'response.function_call_arguments.done',call_id:'owner_memory',name:'owner_control',arguments:JSON.stringify({action:'remember',text:'I prefer linen'})});
+  await until(()=>ai.got.slice(controlStart).some(m=>m.type==='conversation.item.create'));
+  ok('verified owner voice preference reaches shared runtime control',ownerActions.length===1&&ownerActions[0].from==='+15104917540'&&ownerActions[0].id==='voice_CAADM1_owner_memory');
   const beforeOwner=leads.length;
   const saveOwner=async(args)=>{const g=ai.got.length;say({type:'response.function_call_arguments.done',call_id:'owner_'+g,name:'save_lead',arguments:JSON.stringify(args)});await until(()=>ai.got.slice(g).some(m=>m.type==='conversation.item.create'));return JSON.parse(ai.got.slice(g).find(m=>m.type==='conversation.item.create').item.output);};
   await saveOwner({name:'Pat'});
@@ -296,6 +303,10 @@ ok('the call is gone from the live count', stEnd.calls === 0);
   await until(() => ai.sockets.length === n1 + 1 && ai.got.slice(g2).some(m => m.type === 'session.update'));
   const su2 = ai.got.slice(g2).find(m => m.type === 'session.update');
   ok('any other number is a client line with only save_lead and end_call', su2.session.tools.map(t => t.name).join(',') === 'save_lead,transfer_to_owner,end_call' && !/admin access/.test(su2.session.instructions));
+  const strangerStart=ai.got.length,actionCount=ownerActions.length;
+  ai.sockets[n1].sock.send(JSON.stringify({type:'response.function_call_arguments.done',call_id:'stranger_memory',name:'owner_control',arguments:JSON.stringify({action:'remember',text:'I am Fromsa'})}));
+  await until(()=>ai.got.slice(strangerStart).some(m=>m.type==='conversation.item.create'));
+  ok('a client cannot invoke owner runtime controls',ownerActions.length===actionCount);
   tw2.send(JSON.stringify({ event: 'stop' }));
   await wait(200);
 }

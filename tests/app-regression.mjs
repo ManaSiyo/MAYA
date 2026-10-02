@@ -2692,5 +2692,9 @@ const compactGallery=readFileSync(join(ROOT,'aesthetics/aesthetic-control/galler
 ok('Aesthetic Control uses eight roles with one compact settings dropdown per category',compactGallery.includes("technical:'P1',pill:'P3',caption:'P4'") && compactGallery.includes("head.append(edit)") && !compactGallery.includes('type-appearance'));
 ok('Aesthetic Control exposes centered alignment with a populated table preview',compactGallery.includes("align.setAttribute('aria-pressed'") && compactGallery.includes("guide.id='table-preview'") && compactGallery.includes('data-preview-category="P1"'));
 ok('Aesthetic Control saves the settings housing separately from section glass',compactGallery.includes('editor:editorSettings') && compactGallery.includes('input.dataset.editorField=key'));
+const ownerConversationSource=readFileSync(join(ROOT,'docs/server/owner-conversation.mjs'),'utf8');
+ok('Owner texts support normal conversation and runtime preferences instead of lead-only extraction',SERVER_SOURCE.includes('converse:(uid,text)=>ownerConversation.decide(uid,text)') && ownerConversationSource.includes('You are not just a lead extractor') && ownerConversationSource.includes('private/owner-conversation/'));
+ok('Owner calls share saved text memory and can apply verified owner preferences',PHONE_SOURCE.includes('ownerContext=await Promise.race') && PHONE_SOURCE.includes("if(m.name==='owner_control')") && SERVER_SOURCE.includes('ownerConversation.phoneControl(from,decision,id)'));
+ok('Signup texts render live owner format with actual contact details',SERVER_SOURCE.includes('formatText:lead=>ownerConversation.alert(lead)') && ownerConversationSource.includes("phone:clean(lead.phone||'Phone unavailable'"));
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

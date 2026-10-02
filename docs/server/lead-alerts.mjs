@@ -1,5 +1,6 @@
 // Owner alerts for new client Call back submissions. The Wix form remains the
 // source of truth; a durable claim prevents scheduler retries from ringing twice.
+import {formatSignupAlert} from './owner-conversation.mjs';
 import {jsonStore} from './crm-store.mjs';
 
 export const LEAD_ALERTS_PATH='private/lead-alerts/callbacks.json';
@@ -15,7 +16,7 @@ export function createLeadAlerts(deps){
     for(const lead of recent.reverse()){
       const id=String(lead.id),name=String(lead.name||'New client').slice(0,120);
       const summary=String(lead.note||lead.wrote||'').replace(/\s+/g,' ').slice(0,180);
-      const message='New Call back request: '+name+(summary?'. '+summary:'')+'. Open the Lead Station for details.';
+      const message=deps.formatText?await deps.formatText(lead):formatSignupAlert(lead);
       for(const [channel,send,payload] of [
         ['text',deps.textOwner,message],
         ['call',deps.callOwner,'New Call back request from '+name+(summary?'. They wrote: '+summary:'')+'. Tell Fromsa the lead is in the Lead Station.'],

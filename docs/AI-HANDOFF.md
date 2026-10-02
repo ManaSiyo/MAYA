@@ -2,102 +2,93 @@
 
 ## Release status
 
-The last pushed `origin/maya-v2` is `f66e7c1`. Public `/release.json`
-confirms that exact full commit, published 2026-10-01 04:29:16 UTC
-(September 30, 9:29 p.m. Pacific). Public `/api/healthz` is healthy;
-OpenAI, submissions, Drive and Stripe report configured. This does not
-prove Gmail OAuth, Gemini inference, SMS or calls.
+The current checkout and origin/maya-v2 were both 25e8091 before this task.
+That commit contains the compact Aesthetic Control work. Production release
+was not rechecked during this implementation; do not infer live deployment
+from the remote branch. The new owner conversation changes are local only.
+No push, production preference write, real SMS or real call was performed.
 
 ## Current prepared change
 
-Aesthetic Control now has H1–H4 and P1–P4. The old standalone technical
-P3 is merged into P1 while preserving monospace examples; old P4 pills
-become P3 and old P5 captions become P4. Existing saved settings migrate
-on read without a production write. The API accepts both old and new
-schemas so an already-open old editor can still save.
+Verified owner SMS is now a conversation flow instead of a lead-only parser.
+It reads recent Messages history, bounded lead context and durable owner
+memory/response preferences. An ordinary conversation produces a reply.
+Explicit remembered facts, response style and signup SMS formatting save at
+runtime. Unsupported new functionality is logged honestly in the feature
+inbox. Lead changes retain the existing YES confirmation; client booking
+messages retain BOOK/voice preview and confirmation.
 
-Typography rows use 6px vertical padding and show role, sample and location.
-Each category has one Edit dropdown beside its heading and one settings
-summary on the right. Repeated per-row appearance/spacing copy is removed.
-Usage evidence, font comparison, status history and source inventory collapse.
-Settings panel separately controls the edit rectangle fill/rim/radius/padding.
-The review page starts centered; every role has a Centered/Left button with
-aria-pressed. Explicit role alignment applies to shared selectors only after
-Save. The populated table preview follows P1/P2/P3/P4 edits and alignment.
-Shared runtime URLs are bumped to v2 across all 11 served pages and Hosting
-now marks that runtime no-cache, preventing a week-old role mapping after deploy.
-No live design Save, provider configuration or push occurred.
+Owner phone calls read the same memory/preferences and recent text/call history.
+Only owner brief/admin calls expose owner_control; clients cannot call it.
+Controls save memory/style/format, read settings, or text a requested summary
+to the fixed configured owner number. The signed sender and existing enabled
+Admin account binding establish identity. A UID or phone in text cannot grant
+access. State uses private/owner-conversation/<hashed uid>.json with generation
+preconditions and idempotency. Uncertain text/feature attempts do not repeat.
+Long UTF-8 context is bounded; unavailable lead/history reads do not prevent
+ordinary conversation, but unavailable memory storage fails safely.
 
-Changed paths: aesthetics/aesthetic-control.html; gallery.js/gallery.css,
-overlay.js/style-reference.js and typography-usage.json in its support folder;
-aesthetics/ui/typography-controls.js; docs/server/design-config.mjs;
-tests/component-gallery.mjs, design-config.mjs, app-regression.mjs and
-typography-role-usage.py. Design/README/requests/fixes/handoff/commit review
-are updated in the same local commit. The other served HTML pages only change
-the shared runtime version; docs/firebase.json adds its no-cache rule and
-tests/design-contract.mjs verifies both.
+Signup texts use the live owner template and actual lead values. The default
+is the requested greeting, name/phone, and category/quoted request. Example
+contacts are placeholders, never lead edits. Formatting does not resend old
+alerts. SMS auto-linking of the number depends on the receiving phone app.
+The existing text/call alerts and scheduler requirements remain.
 
-## Environment and validation
+Changed runtime paths: docs/server/owner-conversation.mjs (new), owner-crm.mjs,
+server.js, maya-phone.mjs, lead-alerts.mjs and maya-character.md. Dockerfile
+ships the new module; Cloud Build gates it with tests/owner-conversation.mjs.
+Tests/maya-phone.mjs and app-regression.mjs add coverage. AGENTS.md,
+MAYA-INDEPENDENCE.md, OUTBOUND-SETUP.md, requests/fixes and commit review
+record the current scope and deployment requirements.
 
-Use bundled Node at
-/Users/fromsa/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.
-Isolated headless Chromium is available at
+## Validation
+
+Passed: owner-conversation (ordinary replies, text/voice recall, durable storage,
+account binding/isolation, formatting with actual contact data, lead confirmation,
+idempotency, uncertain sends, conflicts, storage failures, bounded Unicode
+context and unconfirmed feature logging); owner-crm; lead-alerts;
+maya-phone (57 checks); maya-messages (55); maya-transfer; maya-feedback;
+crm-intelligence (19); container-contract; real local server smoke; full
+app-regression in isolated headless Chromium; edited JavaScript syntax and
+git diff --check. All messaging/inference checks use fake providers.
+No real SMS delivery, live audio or model intent quality is proven by fixtures.
+
+Bundled Node: /Users/fromsa/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.
+Local dependency resolver: /private/tmp/maya-oct1-loader.mjs maps express,
+Playwright and WebSockets. WebSockets use the bundled Playwright utilsBundle
+through /private/tmp/maya-oct1-ws.mjs. Those temporary files are not deployment
+requirements. CI installs express/ws normally. Isolated Chromium executable:
 /private/tmp/maya-pw-browsers/chromium_headless_shell-1234/chrome-headless-shell-mac-arm64/chrome-headless-shell.
-It uses temporary test profiles, never Fromsa's Chrome. The temporary ESM
-loader /private/tmp/maya-oct1-loader.mjs resolves Playwright and Express/ws
-without adding repository dependencies. It is a local convenience, not a
-repository or production requirement. Browser/server tests need sandbox
-approval for macOS browser processes or loopback listeners.
-
-Passed: full app-regression including component-gallery/design contracts;
-design validation for old/new schemas, alignment and editor ranges;
-owner-crm and crm-intelligence fake-provider checks; owner-crm-ui Gmail/Gemini
-fixtures. Gallery checks cover legacy role conversion, single settings summary,
-center/left preview, housing updates, table data, Save/reload, shared Admin/
-frontend/Outbound application and seven widths (320–1920), including open
-settings dropdowns. Server smoke, role evidence audit, Outbound UI, CRM UI,
-CRM failure UI and Canon UI also pass. Syntax and whitespace
-checks are recorded in the commit review. No real mail, call or text sent.
 
 ## Open risks and exact next step
 
-**Do not push without Fromsa's explicit request.** Review the local editor,
-then push the prepared commit from GitHub Desktop when desired. Verify Cloud
-Build and release.json before treating editor changes as live. Live Save requires
-Admin auth and can change typography/alignment across shared text selectors;
-no production design changes were made in this session.
+Do not push without Fromsa's explicit request. The verified requested work is
+committed locally; owner Push from GitHub Desktop is the next release step.
+After deployment, verify Cloud Build and /release.json. The existing enabled
+owner binding needs no reactivation; otherwise enable text commands in Admin
+once using the allowlisted owner account. Then owner-test a normal greeting,
+a remembered fact and follow-up, the signup format request, and a phone call
+that recalls it and texts a requested summary. Inspect actual carrier delivery.
+Supported preferences then apply without another code deployment. Arbitrary
+new tools/code still need implementation. SMS conversation retains the combined
+$1/day CRM text AI cap and current provider selection; voice uses its own meter.
 
-Chrome permission notification was sent for a fresh MAYA session; no explicit
-approval has arrived, so Chrome was not accessed. Owner-authenticated Gmail
-connection readiness/mailboxes and a real Test Gemini response remain pending.
-After explicit approval and confirmation that the MAYA Chrome window is idle,
-inspect Systems → Owner tools and Outbound → Gmail. Read state and use the
-existing Test Gemini action; do not send email or reconnect/configure credentials
-without the owner handling those steps. Keep Worldofsiyo separate.
-Booking, Scheduler/alerts, operational logs and actual call/text receipt remain
-unverified, as in the previous handoff.
+Earlier live Admin Messages inspection found the owner's signup-format request
+answered with the lead parser's add/update clarification. That was a routing
+limitation, not evidence of missing owner authorization or an API inability to
+converse. The new handler addresses it. No conversation was sent during review.
 
-## Standing constraints and repository map
+Gmail owner mailbox readiness and real Gemini inference still need owner live
+verification. Chrome has not been accessed in this chat. Before any Chrome
+session ask for explicit approval and verify Fromsa is idle in that window.
+MAYA and Worldofsiyo profiles remain separate. Prefer the Codex browser and
+non-Chrome tools. Booking/scheduler/alerts and actual call/text receipt need
+owner checks after deployment; no credentials/environment changes were made.
 
-Before each new access session to Fromsa's Chrome, send a permission
-notification and wait for an explicit answer. MAYA and World of CEO profiles
-are separate; do not use Chrome while he is working. Do not touch credentials,
-billing, production variables, or legacy migration/Storage cleanup paths.
-Keep project and account data sealed. See root `AGENTS.md` and
-`docs/REPO-MAP.md`.
+## Standing constraints
 
-The visual design anchor is `aesthetics/aesthetic-control.html`, supported by
-`aesthetics/aesthetic-control/`; `docs/design.md` is the sole written design
-specification. Main folders are `frontend/`, `backend/`, `docs/`,
-`aesthetics/`, `playground/`, and `tests/`. Root `AGENTS.md`,
-`cloudbuild.yaml`, `robots.txt`, and `.firebaserc` stay at the root for build
-and hosting. Obsolete local material remains recoverable in ignored
-`_to_delete/repo-cleanup-2026-09-29/`. Do not move served images into `docs/`.
-
-The approved booking URL is `https://wix.to/wT2lSqE`. Owner-controlled booking
-preview and alert code are in the deployed release but have not been verified
-end to end in production. Phone-driven invoice preview is not implemented.
-
-Local review URL: http://127.0.0.1:8767/aesthetics/aesthetic-control.html.
-A Python loopback-only server was started for review; Codex browser opening
-was queued. Restart with the bundled Python http.server if the session ends.
+Keep account/project data sealed. Never touch credentials, billing, production
+variables or legacy migration/Storage cleanup paths. See root AGENTS.md for
+served layout and checks. docs/design.md remains the sole visual specification;
+Aesthetic Control and its compact typography work remain in 25e8091.
+The approved booking URL remains https://wix.to/wT2lSqE.

@@ -114,6 +114,13 @@ these paths; all are release gates. The failure suite covers account isolation,
 pending edits, drawer dialogs and meter recovery with fake providers.
 Hourly updates require owner-configured Cloud Scheduler, not a browser timer.
 The $1 cap covers CRM text AI (Outbound plus owner SMS parsing), not voice, images or provider invoices.
+Owner conversation: docs/server/owner-conversation.mjs shares recent Messages
+history and private account-bound memory/preferences across signed owner SMS and
+owner phone calls. Supported runtime changes are remembered facts, response
+style and signup SMS format; they do not execute code or alter authorization.
+Owner phone `owner_control` is unavailable to clients. Signup formats use actual
+lead fields, never example contacts. Run tests/owner-conversation.mjs plus the
+communications suites. It is also a Cloud Build release gate.
 Owner commands: docs/server/owner-crm.mjs and aesthetics/ui/owner-crm.js. Run
 tests/owner-crm.mjs and tests/owner-crm-ui.mjs. Owner activation binds a verified
 allowlisted Admin account to the configured phone; never accept a phone or UID

@@ -1,3 +1,14 @@
+OCTOBER 1: Owner signup-format request rejected as a lead edit (LOCAL FIX)
+The signed owner SMS route sent every message to a lead-only extraction prompt;
+non-lead requests became an empty object and cleanCommand's add/update question.
+Owner authorization was already established, but no conversational/memory or
+runtime-preference route existed. Added ordinary replies with recent history,
+durable account-bound memory/style/alert formatting, shared owner phone tools,
+and accurate unsupported-feature logging. Fixed recipient, generation checks,
+idempotency, account isolation and existing client confirmations remain.
+Fake-provider tests, full app regression and server smoke pass. Live inference,
+call audio and carrier delivery await owner verification after deployment.
+
 OCTOBER 1: Aesthetic Control repeated settings and excess spacing (LOCAL FIX)
 Each sample repeated category settings and Edit occupied its own glass row.
 Use one compact category header/dropdown/summary, reduce row padding to 6px,

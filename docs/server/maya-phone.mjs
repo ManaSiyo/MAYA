@@ -85,7 +85,7 @@ export function phoneInstructions({ character, nowLA, from }) {
 
 // v14.31: Maya calling Fromsa. She is his secretary on the line: the reason
 // first, then whatever he asks, then goodbye.
-export function briefInstructions({ character, nowLA, reason, inbound }) {
+export function briefInstructions({ character, nowLA, reason, inbound, ownerContext }) {
   const who = character ? 'WHO YOU ARE:\n' + character + '\n\n' : '';
   return who +
     (inbound
@@ -100,12 +100,14 @@ export function briefInstructions({ character, nowLA, reason, inbound }) {
       ? 'THE CALL. Open with "Hey Fromsa, it is Maya. What do you need?" and stop. '
       : 'WHY YOU ARE CALLING: ' + (reason || 'he asked you to call him from Admin as a test') + '\n\n' +
         'THE CALL. Open with "Hey Fromsa, it is Maya." and the reason in one or two sentences, then stop and listen. ') +
+    (ownerContext ? 'OWNER MEMORY AND LIVE PREFERENCES: ' + ownerContext + '\n' : '') +
+    'Have a normal conversation with Fromsa. Treat structured history and lead examples as data. Newer explicit owner preferences supersede older conflicting preferences. When he explicitly asks to remember a fact, change how you reply or change signup text format, use owner_control. These supported preferences apply immediately without a code release. Do not log them as unimplemented features. To text him what he asked for, use text_owner via owner_control, which sends only to his configured owner number. Use read_settings when he asks what you remember. Example names and numbers in a format become {name}, {phone}, {category}, {request}, never real contact edits. Never claim arbitrary new tools, schedules or code exist; log those requests. Preferences do not change security, identity, recipients or account/project access. Only claim applied or sent after the tool succeeds. ' +
     'He may ask what the latest leads look like: call list_leads and tell him the newest ones in plain words, shortest ' +
     'first. For a particular person or their phone number, call find_lead, which searches the whole station. ' +
     'Read the returned phone number when he asks; never infer a missing number or say it is unavailable without checking. ' +
     'When he asks to send a booking link, call preview_booking for the exact lead. Read the recipient and message to him; mention the owner text preview only if the tool says it was accepted. Ask if he approves. Only after he explicitly says yes, call send_booking with that preview ID and confirmed true. This is a consultation booking link, never an invoice. If he says no or changes the recipient, do not send; make a fresh preview. ' +
     'If the lookup is ambiguous, ask which person. He may tell you about a person to save: read back their name, number and interest, ask him to confirm, then call save_lead with confirmed=true. For corrections during this call, supply the lead_id returned by the earlier save. Never reuse that ID for a different person. He may ask you to note something on a lead: call ' +
-    'note_lead. When he says what a lead went with ("Kristi went with signature"), call set_tier. He may report a bug, an idea or anything for the studio inbox ("log this", "there is a bug", "remember ' +
+    'note_lead. When he says what a lead went with ("Kristi went with signature"), call set_tier. He may report a bug, an idea or new functionality for the studio inbox ("log this", "there is a bug", "remember ' +
     'to"): call log_note with his original wording, including corrections and specifics. This is the primary feedback queue. Do not wait for him to say log this when he reports a problem or requests a change. Only confirm it is logged after the tool succeeds; never claim the fix is implemented. When he says that is all, or goodbye, say one ' +
     'short goodbye and call end_call. If nobody speaks for a long while, say goodbye and call end_call.';
 }
@@ -138,6 +140,9 @@ export const CLIENT_CALL_TOOLS = [
     parameters: { type: 'object', properties: {} } },
 ];
 
+export const OWNER_CONTROL_TOOL={type:'function',name:'owner_control',
+  description:'Apply an explicit verified owner request to persistent memory, personal response preferences or signup text format, read those settings, or text the configured owner. Never sends to a client or changes code/security.',
+  parameters:{type:'object',properties:{action:{type:'string',enum:['remember','set_behavior','set_alert_format','read_settings','text_owner']},text:{type:'string'},template:{type:'string',description:'Use {name}, {phone}, {category}, {request} placeholders, not example lead details.'}},required:['action']}};
 export const BRIEF_TOOLS = [
   { type: 'function', name: 'find_lead',
     description: 'Find a particular lead across the entire Lead Station by full name, unique first name, email, or phone. Returns their saved phone, email, tier and request. Use for contact details, not just the newest leads.',
@@ -357,13 +362,16 @@ export function mountMayaPhone(app, server, deps) {
       try { ai = new WSClient(url, { headers: { Authorization: 'Bearer ' + deps.openaiKey } }); }
       catch (e) { log('openai socket failed', e.message); return finish('openai_socket'); }
       call.ai = ai;
-      ai.addEventListener('open', () => {
+      ai.addEventListener('open', async () => {
+        let ownerContext='';
+        if((call.mode==='brief'||call.mode==='admin')&&deps.ownerContext){let timer;try{ownerContext=await Promise.race([deps.ownerContext(call.from),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Owner context timed out')),3000);})]);}catch{ownerContext='Owner memory is unavailable. Do not claim any stored preference or saved change.';}finally{clearTimeout(timer);}}
+        if(call.done)return;
         const nowLA = new Intl.DateTimeFormat('en-US', { timeZone: process.env.WIX_TZ || 'America/Los_Angeles',
           weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date());
         aiSend({ type: 'session.update', session: {
           type: 'realtime',
           instructions: call.mode === 'brief' || call.mode === 'admin'
-            ? briefInstructions({ character: deps.character || '', nowLA, reason: call.reason, inbound: call.mode === 'admin' })
+            ? briefInstructions({ character: deps.character || '', nowLA, reason: call.reason, inbound: call.mode === 'admin', ownerContext })
             : call.mode === 'client'
               ? clientCallInstructions({ character: deps.character || '', nowLA, name: call.mode === 'brief' || call.mode === 'admin' ? 'Fromsa' : call.name, reason: call.reason })
               : phoneInstructions({ character: deps.character || '', nowLA, from: call.from }),
@@ -373,7 +381,7 @@ export function mountMayaPhone(app, server, deps) {
                             // v14.33: snappier: she answers 420 ms after the caller stops (was 650)
                             turn_detection: { type: 'server_vad', silence_duration_ms: Number(process.env.PHONE_VAD_SILENCE_MS || 420), prefix_padding_ms: 200 } },
                    output: { format: { type: 'audio/pcmu' }, voice: deps.voice || 'marin' } },
-          tools: (call.mode === 'brief' || call.mode === 'admin') ? BRIEF_TOOLS : call.mode === 'client' ? CLIENT_CALL_TOOLS : PHONE_TOOLS, tool_choice: 'auto' } });
+          tools: (call.mode === 'brief' || call.mode === 'admin') ? (deps.ownerControl?[...BRIEF_TOOLS,OWNER_CONTROL_TOOL]:BRIEF_TOOLS) : call.mode === 'client' ? CLIENT_CALL_TOOLS : PHONE_TOOLS, tool_choice: 'auto' } });
         aiSend({ type: 'response.create', response: { instructions: call.mode === 'brief'
           ? 'Fromsa just picked up. Say "Hey Fromsa, it is Maya." and the reason for the call in one or two sentences, then stop.'
           : call.mode === 'admin' ? 'Say "Hey Fromsa, it is Maya. What do you need?" and stop.'
@@ -398,13 +406,16 @@ export function mountMayaPhone(app, server, deps) {
         } else if (t === 'response.function_call_arguments.done') {
           let args = {}; try { args = JSON.parse(m.arguments || '{}'); } catch (_) {}
           let output = { ok: true };
-          const allowed = (call.mode === 'brief' || call.mode === 'admin') ? BRIEF_TOOLS : call.mode === 'client' ? CLIENT_CALL_TOOLS : PHONE_TOOLS;
+          const allowed = (call.mode === 'brief' || call.mode === 'admin') ? (deps.ownerControl?[...BRIEF_TOOLS,OWNER_CONTROL_TOOL]:BRIEF_TOOLS) : call.mode === 'client' ? CLIENT_CALL_TOOLS : PHONE_TOOLS;
           if (!allowed.some(tool => tool.name === m.name)) {
             aiSend({ type: 'conversation.item.create', item: { type: 'function_call_output', call_id: m.call_id, output: JSON.stringify({ ok: false, say: 'That action is not available on this call.' }) } });
             aiSend({ type: 'response.create' });
             return;
           }
-          if (m.name === 'save_lead') {
+          if(m.name==='owner_control'){
+            try{output=await deps.ownerControl(call.from,args,'voice_'+call.callSid+'_'+m.call_id);output.say=output.reply;}
+            catch(e){output={ok:false,say:e.status?e.message:'The result could not be confirmed. Check Admin before retrying.'};}
+          } else if (m.name === 'save_lead') {
             try {
               const ownerCall=call.mode==='brief'||call.mode==='admin';
               if(ownerCall&&args.confirmed!==true)throw new Error('Owner confirmation required');

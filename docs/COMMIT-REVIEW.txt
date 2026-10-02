@@ -1,26 +1,25 @@
-[Codex] Compact Aesthetic Control and add alignment previews
+[Codex] Enable owner conversation and shared text/voice preferences
 
-Reduce typography to H1–H4/P1–P4, merging the standalone technical role into
-P1 and migrating old pill/caption settings without writing production data.
-Keep legacy API saves compatible with already-open editors.
+Replace the lead-only owner SMS parser with ordinary conversation grounded in
+recent Messages, bounded lead context and durable account-bound owner memory.
+Apply explicit remembered facts, response style and signup SMS format at runtime.
+Use the same context and owner controls on verified owner calls. A requested
+voice summary texts only the configured owner number. Unsupported new tools
+are logged honestly; lead changes and client booking sends retain confirmation.
 
-Move Edit beside each category, show one settings summary, remove repeated
-row settings and reduce sample padding to 6px. Collapse technical references.
-Add separate editor housing fill/border/corner/padding controls, centered
-review and per-role Centered/Left buttons, plus a populated table preview.
-Save preserves alignment and housing settings. Shared typography runtime
-URLs move to v2 on all 11 served pages; Hosting revalidates the runtime.
+Render signup texts from live owner templates and actual lead values; default
+to callback greeting, name/phone and category/quoted request. Preserve alert
+claims/retries. Use generation preconditions, idempotency, fail-safe storage
+reads, bounded UTF-8 context and non-retryable uncertain send/log attempts.
+Package the new module and add its Cloud Build release gate. Update continuity,
+owner setup, character and roadmap documentation with the runtime scope.
 
-Validation: full app-regression; component-gallery with open-dropdown checks
-at seven widths, legacy migration, save/reload and shared-page application;
-design-config/design-contract; typography source evidence; server smoke;
-CRM intelligence and owner CRM unit/UI fixtures; Outbound UI, CRM UI,
-CRM failure UI and Canon UI. JavaScript syntax and git diff --check pass.
-Browser tests use isolated temporary headless Chromium profiles.
-
-Last pushed/live release verified as f66e7c1 with public API healthy.
-Gmail and Gemini passed fake-provider routing/OAuth/isolation/UI checks only.
-Live mailbox access and real Gemini inference await explicit MAYA Chrome
-approval. No user Chrome, credentials, billing, production design Save,
-email, call, text, push or deployment was used. Review the local preview,
-then owner Push is the next release step; verify Cloud Build/release.json.
+Validation passed: owner-conversation; owner-crm; lead-alerts; maya-phone (57);
+maya-messages (55); maya-transfer; maya-feedback; crm-intelligence (19);
+container-contract; local server smoke; full app-regression in isolated
+headless Chromium; edited JavaScript syntax; git diff --check.
+Providers are fake. Live model routing quality, SMS delivery and call audio
+require owner verification after deployment. No real texts/calls or production
+preferences changed. Chrome, credentials, billing and environment untouched.
+No push or deployment. One owner Push installs the handler; later supported
+preferences need no code release. The existing CRM text spending cap remains.

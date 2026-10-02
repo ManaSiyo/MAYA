@@ -1,4 +1,4 @@
-// Owner-only SMS proposals. Phone identity comes from a signed Twilio webhook,
+// Owner-only conversations and CRM proposals. Phone identity comes from a signed Twilio webhook,
 // never the message text. A separate confirmation commits the proposed change.
 import {createHash,randomBytes} from 'node:crypto';
 import {jsonStore,problem,clip} from './crm-store.mjs';
@@ -63,13 +63,20 @@ export function createOwnerCRM(deps){
           reply='Saved '+result.name+' in the Lead Station.';
           await db.update(key,s=>{if(s.pending?.id===pending.id)delete s.pending;});
         }else{
-          const answer=await deps.parse(b.uid,t);
-          const command=cleanCommand(answer);
-          if(command.action==='update'){const found=await deps.find(command.query);if(!found.ok)throw problem(found.why||'Use the exact lead name or email.');command.id=found.lead.id;command.displayName=found.lead.name;}
-          const code=randomBytes(3).toString('hex'),id='sms_'+sid;
-          const detail=[command.name||command.displayName,command.phone,command.email,command.note,command.tier,command.stage].filter(Boolean).join(' · ').slice(0,1100);
-          reply=(command.action==='add'?'Add: ':'Update: ')+detail+'\nReply YES '+code+' within 10 minutes to save. Nothing has changed yet.';
-          await db.update(key,s=>{s.pending={id,code,command,expires:now()+600000};});
+          const answer=deps.converse?await deps.converse(b.uid,t):await deps.parse(b.uid,t);
+          if(deps.converse&&answer.action==='chat'){
+            reply=clip(answer.reply,1600)||'What would you like to talk about?';
+          }else if(deps.converse&&answer.action!=='lead_change'){
+            const result=await deps.ownerAction(b.uid,answer,'sms_'+sid);
+            reply=result.reply;
+          }else{
+            const command=cleanCommand(deps.converse?answer.command:answer);
+            if(command.action==='update'){const found=await deps.find(command.query);if(!found.ok)throw problem(found.why||'Use the exact lead name or email.');command.id=found.lead.id;command.displayName=found.lead.name;}
+            const code=randomBytes(3).toString('hex'),id='sms_'+sid;
+            const detail=[command.name||command.displayName,command.phone,command.email,command.note,command.tier,command.stage].filter(Boolean).join(' · ').slice(0,1100);
+            reply=(command.action==='add'?'Add: ':'Update: ')+detail+'\nReply YES '+code+' within 10 minutes to save. Nothing has changed yet.';
+            await db.update(key,s=>{s.pending={id,code,command,expires:now()+600000};});
+          }
         }
         }
       }catch(e){reply=e.status?e.message:'I could not confirm the result. Check Admin before retrying.';}
