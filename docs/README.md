@@ -2,6 +2,9 @@
 
 Sole active written aesthetic specification: [design.md](design.md).
 Owner design controls: [Aesthetic Control](../aesthetics/aesthetic-control.html), linked from Admin → Systems.
+Aesthetic Control groups Visuals (Glass Panels and Tables) before single-preview
+Typography. Each role can select Jost/Cormorant and Normal/ALL CAPS. See docs/design.md.
+
 See [REPO-MAP.md](REPO-MAP.md) for the folder map and cleanup decisions.
 
 The whole system, written for a fresh conversation. If you are an assistant

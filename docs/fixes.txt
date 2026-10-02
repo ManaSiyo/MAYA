@@ -1,3 +1,13 @@
+OCTOBER 1: Aesthetic Control redundant sections and inconsistent heading caps (LOCAL FIX)
+Review jumped between glass, buttons and panels and repeated status meanings,
+page/source descriptors and multiple samples within one typography role. Font
+family and CSS capitalization were fixed outside the editor. Consolidate Visuals
+into Glass Section then divider/Panels/table; reduce to five distinct pill colors
+and one sample per role; remove the glossary and inactive reference rows.
+Persist validated font/case options and apply them to shared selectors. Neutral
+paragraph/caption colors and component/icon glass now respond to saved values;
+semantic status colors and technical monospace remain. No live design write.
+
 OCTOBER 1: Client history inaccessible to owner over SMS, oldest Messages trimmed (LOCAL FIX)
 Owner chat had memory and lead lookup but no client Messages retrieval, action
 read tools or SMS-only client reply flow. The live thread discarded entries

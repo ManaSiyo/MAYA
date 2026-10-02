@@ -2689,7 +2689,7 @@ ok('Outbound syncs real workbook campaigns and reviews drafts in Gmail',outbound
 const typeUsage=JSON.parse(readFileSync(join(ROOT,'aesthetics/aesthetic-control/typography-usage.json'),'utf8'));
 ok('Typography role counts include real H1 and generated Admin numbers',typeUsage.categories.H1.locations.some(x=>x.id==='client-name-modal-title') && typeUsage.categories.H1.locations.some(x=>x.id==='brand-title') && typeUsage.categories.H4.roles.dashboard.count>=2 && typeUsage.categories.P2.count>0);
 const compactGallery=readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.js'),'utf8');
-ok('Aesthetic Control uses eight roles with one compact settings dropdown per category',compactGallery.includes("technical:'P1',pill:'P3',caption:'P4'") && compactGallery.includes("head.append(edit)") && !compactGallery.includes('type-appearance'));
+ok('Aesthetic Control uses eight roles with one compact settings dropdown per category',compactGallery.includes("head.append(edit)") && compactGallery.includes("['H1','brand'") && !compactGallery.includes('type-appearance'));
 ok('Aesthetic Control exposes centered alignment with a populated table preview',compactGallery.includes("align.setAttribute('aria-pressed'") && compactGallery.includes("guide.id='table-preview'") && compactGallery.includes('data-preview-category="P1"'));
 ok('Aesthetic Control saves the settings housing separately from section glass',compactGallery.includes('editor:editorSettings') && compactGallery.includes('input.dataset.editorField=key'));
 const ownerConversationSource=readFileSync(join(ROOT,'docs/server/owner-conversation.mjs'),'utf8');
@@ -2700,5 +2700,7 @@ const smsAccessSource=readFileSync(join(ROOT,'docs/server/owner-sms-access.mjs')
 ok('Owner can read client texts/calls and recorded actions over SMS without AI',SERVER_SOURCE.includes('direct:(uid,text,id)=>ownerSMSAccess.direct(uid,text,id)') && smsAccessSource.includes("d.action==='client_history'") && smsAccessSource.includes("d.action==='sms_actions'") && smsAccessSource.includes('Next: MORE'));
 ok('SMS client replies require an exact confirmation code and retained consent',smsAccessSource.includes('Nothing sent. Reply SEND') && smsAccessSource.includes("contact?.consent==='stop'") && smsAccessSource.includes("p.status='attempted'"));
 ok('Messages archive overflow before trimming the live inbox',SERVER_SOURCE.includes('archive:createMessageArchive') && readFileSync(join(ROOT,'docs/server/maya-messages.mjs'),'utf8').includes('await deps.archive.append'));
+ok('Aesthetic Control groups buttons/icons and panels/tables before single-row typography',compactGallery.includes("section('Glass Panels and Tables'") && compactGallery.includes("divider.className='visual-divider'") && !compactGallery.includes('glossary') && !compactGallery.includes('addStyleReference'));
+ok('Typography exposes saved font family and capitalization per role',compactGallery.includes('data-field="font"') && compactGallery.includes('data-field="case"') && readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8').includes("['none','uppercase']"));
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

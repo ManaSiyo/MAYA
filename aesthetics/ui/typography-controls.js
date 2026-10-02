@@ -11,6 +11,7 @@
     finish:'current',glass:{fill:18,tint:0,rim:22,highlight:28,blur:22,saturation:180},
     overlay:{fill:18,rim:22,blur:22,saturation:180},editor:{fill:30,rim:14,radius:12,padding:8},pillX:14,pillY:6
   };
+  for(const [role,t] of Object.entries(defaults.type))Object.assign(t,{font:['H1','H2'].includes(role)?'cormorant':'jost',case:role==='H1'||role==='P3'||role==='P4'?'uppercase':'none'});
   const local = ['localhost','127.0.0.1','maya.test'].includes(location.hostname);
   const key = 'maya-typography-controls-v1';
   const channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('maya-typography-controls') : null;
@@ -22,6 +23,7 @@
     if (!value?.type || !value?.glass || !value?.overlay) return structuredClone(defaults);
     const v=structuredClone(value);
     if(v.type.P5){v.type.P3=v.type.P4;v.type.P4=v.type.P5;delete v.type.P5;}
+    for(const [role,t] of Object.entries(defaults.type))v.type[role]={...t,font:['H1','H2'].includes(role)?'cormorant':'jost',case:role==='H1'||role==='P3'||role==='P4'?'uppercase':'none',...v.type[role]};
     v.editor={...defaults.editor,...v.editor};
     return v;
   }
@@ -30,7 +32,7 @@
     let css=':root{';
     for (const [role,t] of Object.entries(v.type)) {
       if (!defaults.type[role] || !Number.isInteger(t.size) || ![300,350,400].includes(t.weight) || !['white','gray'].includes(t.color)) continue;
-      css+=`--maya-type-${role}-align:${t.align==='center'?'center':'left'};--maya-type-${role}-size:${t.size}px;--maya-type-${role}-weight:${t.weight};--maya-type-${role}-color:${color(t.color)};--maya-type-${role}-font:${font(role)};`;
+      css+=`--maya-type-${role}-align:${t.align==='center'?'center':'left'};--maya-type-${role}-size:${t.size}px;--maya-type-${role}-weight:${t.weight};--maya-type-${role}-color:${color(t.color)};--maya-type-${role}-font:${t.font==='cormorant'?"'Cormorant Garamond',serif":t.font==='jost'?"'Jost',sans-serif":font(role)};--maya-type-${role}-case:${t.case==='uppercase'?'uppercase':'none'};`;
     }
     const g=v.glass,o=v.overlay;
     for(const [k,n,max] of [['fill',g.fill,100],['tint',g.tint,100],['rim',g.rim,100],['highlight',g.highlight,100],['blur',g.blur,40],['saturation',g.saturation,200],['pillX',v.pillX,32],['pillY',v.pillY,16]]) if(Number.isInteger(n)&&n>=0&&n<=max) css+=`--maya-control-${k}:${n}${['blur','pillX','pillY'].includes(k)?'px':k==='saturation'?'%':'%'};`;
@@ -47,10 +49,13 @@
     css+=`html body :is(.maya-glass-button,.maya-pill,#voice-bar){font-size:var(--maya-type-P3-size)!important;font-weight:var(--maya-type-P3-weight)}`;
     css+=`html body :is(small,.caption,.bl-step .k,.bl-tile .k){font-size:var(--maya-type-P4-size)!important;font-weight:var(--maya-type-P4-weight)}`;
     css+=`html body :is(#drawer,#outbound-drawer,#notes-drawer){background-color:rgb(3 15 29 / max(.90,var(--maya-review-panel-fill)));border-color:rgb(255 255 255 / var(--maya-review-panel-rim));backdrop-filter:blur(var(--maya-review-panel-blur)) saturate(var(--maya-review-panel-saturation));}`;
-    css+=`html body :is(.stat,.metric-row,#adm-mkt .bl-tile){background-color:rgb(3 15 29 / var(--maya-review-panel-fill));border-color:rgb(255 255 255 / var(--maya-review-panel-rim));backdrop-filter:blur(var(--maya-review-panel-blur)) saturate(var(--maya-review-panel-saturation));}`;
-    css+=`html body :is(.maya-glass-button,.maya-pill,#voice-bar){background-image:linear-gradient(125deg,rgb(255 255 255 / var(--maya-control-tint)),transparent 55%);box-shadow:inset 0 1px 1px rgb(255 255 255 / var(--maya-control-highlight)),0 4px 16px rgb(0 0 0 / .22)}`;
-    const selectors={H1:'h1,#brand-title,.brand-title,#client-name-modal-title',H2:'#adm-tabtitle,.pg-tabtitle,.drawer-title,.drawer-head-title',H3:'h2.grp,.section-title,.subheadline',H4:'.dashboard-number,.stat strong,.affiliate-stat strong',P1:'p,td,th,.note,.msg-main,.model-group',P2:'.metric-label,.metric-value,.label-count,.status-pill',P3:'.maya-pill,.maya-glass-button,#voice-bar',P4:'small,.caption,.bl-step .k,.bl-tile .k'};
+    css+=`html body :is(.stat,.metric-row,.maya-surface,#adm-mkt .bl-tile){background-color:rgb(3 15 29 / var(--maya-review-panel-fill));border-color:rgb(255 255 255 / var(--maya-review-panel-rim));backdrop-filter:blur(var(--maya-review-panel-blur)) saturate(var(--maya-review-panel-saturation));}`;
+    css+=`html body :is(.maya-glass-button,.maya-pill,.maya-icon-button,#voice-bar):not([data-finish]){background-color:var(--maya-button-fill);border-color:var(--maya-button-edge);backdrop-filter:var(--maya-button-frost);-webkit-backdrop-filter:var(--maya-button-frost);background-image:linear-gradient(125deg,rgb(255 255 255 / var(--maya-control-tint)),transparent 55%);box-shadow:inset 0 1px 1px rgb(255 255 255 / var(--maya-control-highlight)),0 4px 16px rgb(0 0 0 / .22)}`;
+    const selectors={H1:'h1,#brand-title,.brand-title,#client-name-modal-title,.signin-wordmark',H2:'#adm-tabtitle,.pg-tabtitle,.drawer-title,.drawer-head-title',H3:'h2.grp,.section-title,.subheadline',H4:'#adm-mkt .bl-step .v,#adm-mkt .bl-tile .v,.dashboard-number,.stat strong,.affiliate-stat strong',P1:'p,td,th,.note,.msg-main,.model-group',P2:'.metric-label,.metric-value,.maya-metric-label,.maya-metric-value,.label-count,.status-pill,.stat span,.affiliate-stat span',P3:'.maya-pill,.maya-glass-button,#voice-bar',P4:'small,.caption,.bl-step .k,.bl-tile .k'};
+    for(const [role,selector] of Object.entries(selectors))css+=`html body :is(${selector}){font-size:var(--maya-type-${role}-size)!important;font-weight:var(--maya-type-${role}-weight)!important;font-family:var(--maya-type-${role}-font)!important;text-transform:var(--maya-type-${role}-case)!important}`;
+    for(const [role,selector] of Object.entries(selectors))if(role.startsWith('P'))css+=`html body :is(${selector}):not(.status-pill):not(.status-example){color:var(--maya-type-${role}-color)!important}`;
     for(const [role,selector] of Object.entries(selectors))if(['left','center'].includes(v.type[role]?.align))css+=`html body :is(${selector}){text-align:var(--maya-type-${role}-align)!important}`;
+    css+='html body :is(code,pre,.technical-text){font-family:Menlo,monospace!important}';
     let style=document.getElementById('maya-typography-control-style');if(!style){style=document.createElement('style');style.id='maya-typography-control-style';document.head.append(style);}style.textContent=css;
     document.dispatchEvent(new CustomEvent('maya-design-applied',{detail:v}));
   }

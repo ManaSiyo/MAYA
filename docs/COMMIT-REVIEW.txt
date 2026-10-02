@@ -1,33 +1,28 @@
-[Codex] Add SMS-only owner supervision and client reply controls
+[Codex] Simplify Aesthetic Control and add font/case editing
 
-Let the bound owner retrieve retained client texts in both directions, actual
-recipients/timestamps/delivery states and stored call transcripts through SMS.
-Add AI-free THREAD/INBOX/ACTIONS/FEATURES/STATUS/LEAD/MAYA HELP commands,
-natural history aliases and durable MORE code/page snapshots. Normal owner
-conversation and verified owner voice can request the same records. Source
-failures and missing transcripts are stated rather than invented as empty data.
+Group Visuals first under Glass Panels and Tables. Glass Section keeps buttons,
+icons, material/padding controls, five distinct pill colors and collapsed states;
+a divider precedes independent Panels controls, surfaces, dialogs and the table.
+Remove glossary, repeated status/email history, page/usage/source descriptors
+and font comparison from the editor. Keep evidence files unlinked.
 
-Add exact client reply previews via REPLY name: text. Only a raw signed owner
-SMS SEND code confirms the preview within 10 minutes. Revalidate recipient and
-STOP/block, claim before sending, persist results and never retry unknown sends.
-Expose recorded communications, booking/alert outcomes, reply states,
-preferences and feature requests without claiming exhaustive internal auditing.
+Show one preview/Edit per H1–H4/P1–P4, with H3 Campaign details and Lead Station
+context. Add saved Jost/Cormorant and Normal/ALL CAPS choices; H1 defaults caps
+and H2 Normal. Preserve alignment/housing, legacy designs, status colors and
+technical monospace. Apply shared font/case/neutral color and actual button/icon
+glass settings; keep gallery preset styling separate from saved runtime material.
+Bump shared runtime to v3 on all 11 served pages and editor assets to v16.
+Update design specification and continuity documents in the same commit.
 
-Archive messages privately per contact/epoch before trimming the 400-entry
-live inbox. Failures do not trim history; generation retries deduplicate.
-Late delivery callbacks update archives; explicit history deletion rotates
-visibility. Old records discarded before this implementation are unrecoverable.
-Package both new modules and gate owner-sms-access in Cloud Build. Update
-setup, character, roadmap and handoff documentation in the same commit.
+Validation passed: design-config/design-contract; component-gallery covering
+save/reload, active glass/panel controls, font/case/color/alignment/housing,
+shared page application, authenticated save fixture and seven viewport widths;
+full app-regression; local server smoke; JS syntax and git diff --check.
+Screenshot visually reviewed. Fonts/auth/providers are fixtures; live Google
+font loading and owner Admin Save remain post-deployment checks.
 
-Validation passed: owner-sms-access including account isolation, paging across
-restarts/new messages, full retained history, ambiguity, confirmation, changed
-recipients, STOP/block, expiry, uncertain sends and archive/storage/conflict
-failures; owner-conversation; owner-crm; container-contract; maya-phone (57);
-maya-messages (55); maya-transfer; maya-feedback; local server smoke; full
-app-regression in isolated headless Chromium; JavaScript syntax; diff checks.
-Providers are fake. Actual live SMS/carrier delivery and inference intent quality
-need owner checks after deployment. No real text/call, production write, Chrome,
-credentials, environment change, push or deployment. Supported controls require
-one deployment, then owner uses SMS without a laptop or mobile internet. SMS
-carrier service and MAYA's server must remain available.
+No user Chrome, production Save, credential/environment change, push or deploy.
+Local preview http://127.0.0.1:8767/aesthetics/aesthetic-control.html is available
+inside Codex. Owner review/Push is next; confirm Cloud Build/release.json before
+considering the editor live. Existing settings read new case/font defaults;
+no production migration write is performed.

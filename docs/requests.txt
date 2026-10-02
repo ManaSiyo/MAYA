@@ -1,3 +1,10 @@
+OCTOBER 1: Simplify Aesthetic Control and add per-role font/case
+[done locally] Visuals first: Glass Panels and Tables contains Glass Section with buttons/icons, active material/padding controls, five distinct pill colors and collapsed button states, then a divider and Panels/table preview. Remove glossary, email-history/status reference lists, page descriptors, usage/source inventories and font-comparison copy from the UI.
+[done locally] One preview/Edit per H1–H4/P1–P4. H3 previews Campaign details with Lead Station context. Add saved Jost/Cormorant and Normal/ALL CAPS to each role; H1 defaults uppercase and H2 Normal. Preserve alignment/editor housing, old saved designs, status colors and monospace identifiers.
+[fixed locally] Shared font/case/neutral text colors and button/icon glass changes are actually applied by runtime v3. Panel sliders affect their separate sample surfaces. Existing served pages revalidate/load the new runtime.
+[verified locally] Design validator/contracts and browser edit/save/reload/shared-page/responsiveness checks pass; full regression and local server checks recorded in handoff. No production Save or push.
+[pending] Owner review the local preview and Push when ready. Live font loading/rendering and an Admin Save should be checked after deployment.
+
 OCTOBER 1: Owner SMS-only supervision of MAYA and client conversations
 [done locally] THREAD Nick (including "Where did you text Nick?") returns retained texts in both directions, actual recipient, recorded delivery status and stored call transcripts. Durable MORE code/page snapshots expose long history without clipping or relying on AI/laptop/mobile internet.
 [done locally] INBOX, ACTIONS, FEATURES, STATUS, LEAD and MAYA HELP/COMMANDS expose supported control/state over SMS without inference. Natural conversation/voice tools can request the same records. REPLY Nick: text previews a client reply; only exact owner SMS SEND code sends it, with expiry, recipient/STOP/block checks and non-retryable claims.

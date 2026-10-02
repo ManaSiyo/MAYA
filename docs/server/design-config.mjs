@@ -9,7 +9,9 @@ export function validDesign(body) {
   if (Object.keys(body.type).length !== roles.size ||
       Object.keys(body.type).some(k => !roles.has(k))) return false;
   for (const v of Object.values(body.type)) {
-    if (Object.keys(v || {}).some(k => !['size','weight','color','align'].includes(k))) return false;
+    if (Object.keys(v || {}).some(k => !['size','weight','color','align','font','case'].includes(k))) return false;
+    if(v?.font!==undefined&&!['jost','cormorant'].includes(v.font))return false;
+    if(v?.case!==undefined&&!['none','uppercase'].includes(v.case))return false;
     if (v?.align!==undefined && !['left','center'].includes(v.align)) return false;
     if (!v || !Number.isInteger(v.size) || v.size < 8 || v.size > 32 || v.size % 2 ||
         ![300,350,400].includes(v.weight) || !['white','gray'].includes(v.color)) return false;

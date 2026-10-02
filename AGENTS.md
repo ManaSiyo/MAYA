@@ -157,7 +157,11 @@ aesthetics/aesthetic-control.html and is linked from Admin → Systems. Saving
 on the live site requires Admin auth and persists through /api/admin/design;
 all served pages load aesthetics/ui/typography-controls.js. Local Save affects
 only same-origin local pages. Old maya-buttons.css/maya-canon.css are adapters,
-not independent design authorities. Run tests/component-gallery.mjs.
+not independent design authorities. Typography offers one preview per role, with validated Jost/Cormorant and
+Normal/ALL CAPS choices. Visuals groups button/icon glass before panel/table
+controls. Preserve old saved schemas and semantic status colors when applying
+shared text settings. Served pages load typography runtime v3.
+Run tests/component-gallery.mjs.
 
 Outbound source-of-truth columns and priority rules are regression-tested in
 `tests/outbound-priority.mjs` (invoked by outbound/app-regression) and populated

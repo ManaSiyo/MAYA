@@ -20,3 +20,8 @@ const compact=structuredClone(good);compact.type.P3=compact.type.P4;compact.type
 compact.type.P1.align='center';compact.editor={fill:30,rim:14,radius:12,padding:8};
 assert.equal(validDesign(compact),true);
 for(const patch of [{editor:{...compact.editor,padding:21}},{editor:{...compact.editor,fill:'red'}},{type:{...compact.type,P1:{...compact.type.P1,align:'right'}}}])assert.equal(validDesign({...compact,...patch}),false);
+
+compact.type.H1.font='jost';compact.type.H1.case='uppercase';compact.type.H2.font='cormorant';compact.type.H2.case='none';
+assert.equal(validDesign(compact),true);
+for(const field of [{font:'Arial'},{font:'url(evil)'},{case:'capitalize'},{case:'uppercase;display:none'}])assert.equal(validDesign({...compact,type:{...compact.type,H3:{...compact.type.H3,...field}}}),false);
+console.log('Design font/case validation accepts only the two supported families and Normal/ALL CAPS; old saved schemas remain compatible.');
