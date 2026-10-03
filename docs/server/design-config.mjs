@@ -6,20 +6,20 @@ export function validDesign(body) {
   if (Object.keys(body).some(k => !['type','glass','overlay','finish','pillX','pillY','editor','inner','filter','table','iconSize','dropdownHeight'].includes(k))) return false;
   for(const k of ['iconSize','dropdownHeight'])if(body[k]!==undefined&&(!Number.isInteger(body[k])||body[k]<24||body[k]>48))return false;
   const legacy=Object.hasOwn(body.type,'P5');
-  const roles=legacy?new Set([...DESIGN_ROLES,'P5']):DESIGN_ROLES;
+  const roles=new Set([...DESIGN_ROLES,...(legacy?['P5']:[]),...(Object.hasOwn(body.type,'H0')?['H0']:[])]);
   if (Object.keys(body.type).length !== roles.size ||
       Object.keys(body.type).some(k => !roles.has(k))) return false;
-  for (const v of Object.values(body.type)) {
+  for (const [role,v] of Object.entries(body.type)) {
     if (Object.keys(v || {}).some(k => !['size','weight','color','align','font','case','vertical','style'].includes(k))) return false;
     if(v?.style!==undefined&&!['normal','italic'].includes(v.style))return false;
     if(v?.font!==undefined&&!['jost','cormorant'].includes(v.font))return false;
     if(v?.case!==undefined&&!['none','uppercase'].includes(v.case))return false;
     if(v?.vertical!==undefined&&!['top','middle','bottom'].includes(v.vertical))return false;
     if (v?.align!==undefined && !['left','center','right'].includes(v.align)) return false;
-    if (!v || !Number.isInteger(v.size) || v.size < 8 || v.size > 32 || v.size % 2 ||
+    if (!v || !Number.isInteger(v.size) || v.size < (role==='H0'?24:8) || v.size > (role==='H0'?160:32) || v.size % 2 ||
         (!Number.isInteger(v.weight)||v.weight<200||v.weight>500) || !['white','gray'].includes(v.color)) return false;
   }
-  const sizes=[...roles].map(k=>body.type[k].size);
+  const sizes=[...DESIGN_ROLES,...(legacy?['P5']:[])].map(k=>body.type[k].size);
   if (sizes.slice(0,4).some((n,i)=>i&&n>=sizes[i-1]) ||
       sizes.slice(4).some((n,i)=>i&&n>sizes[i+3])) return false;
   for (const [obj,keys] of [[body.glass,['fill','tint','rim','highlight','blur','saturation']],

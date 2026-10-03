@@ -1,26 +1,20 @@
-[Codex] Unify aesthetic dropdowns and shared panel styling
+[Codex] Restore icon Save and independent sign-in typography
 
-The fixed table formatting housing now follows Inner panel opacity, border, corners,
-X/Y padding and width rather than a hard-coded black style. Enclosing review panels
-share outer material/corners/padding. Glass and Outer Edit use the shared numeric
-input/select grid instead of drag sliders; every popup shares that editor style.
-Glass padding is numeric pixels. Popup padding splits into X/Y with compatible
-legacy single-padding reads and server validation. Add outer corners and propagate
-saved black/white borders consistently.
+Replace Aesthetic Control's black text Save footer with an accessible shared Save
+SVG icon and quiet success status. Match Admin's viewport-left fixed header and
+logo dimensions; enforce full viewport embedded dialog with no container outline.
+Retain authenticated design saving and private Admin audit logs.
 
-Remove unused gallery Filter button/preview/editor while retaining existing filter
-configuration and functional Admin/Outbound filters. Apply H2 to main section titles
-and H3 to Glass Section/Panels/Table. Remove Save rim/shadow, keep keyboard focus,
-and put logo/title on a left-aligned row like Admin. Preserve embedded Save/return,
-column selection, restores and account/project isolation. Bump gallery v24/runtime
-v10 across served pages. Update canonical design and continuity records.
+Propagate successful Save immediately via BroadcastChannel and Storage fallback,
+revalidate ordinary pages on focus/visibility, retain applied settings on failure,
+and reject stale pending loads. Keep draft editor focus from reloading settings.
+Add H0 only to the main sign-in wordmark: independent responsive 104px default,
+even 24–160px editing, backward-compatible validator and accurate usage inventory.
+Bump gallery v25/runtime v11 across served pages. Update design and continuity docs.
 
-Validation: design-config/contract; component-gallery 11 widths (320–1920) including
-material equality, outer color/corners, numeric edits, legacy/split padding, left
-header and borderless Save, Save/reload and embedded Admin Save/return; full
-app-regression; canon-ui 11 pages/7 widths; Outbound UI/populated filters; CRM
-UI/failure/intelligence; actual-font visuals; syntax and git diff checks.
-
-Limitations: public release and authenticated live Save require verification after
-owner Push. No personal Chrome, live Save, communications, credentials/environment,
-push or deployment performed. Only owner Push remains.
+Validation: design-config/contract; gallery 11 widths (320–1920), embedded Admin
+bounds/return, icon Save, H0 and no-refresh Storage propagation, save/load race;
+full app-regression; canon-ui 11 pages/7 widths; Outbound UI/populated filters;
+CRM UI/failure/intelligence; actual-font screenshots; git diff check.
+Limitations: live authenticated Save and deployment need owner verification after
+Push. No personal Chrome access, production writes, secrets, Push or deployment.

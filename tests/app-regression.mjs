@@ -2754,5 +2754,10 @@ ok('Table formatting housing follows shared inner material',ownerDesignRuntime.i
 ok('Gallery uses H2 section titles, H3 subsections, and removes the Filter preview',galleryScript.includes("h.className='gallery-section-title'")&&galleryScript.includes("h.className='gallery-subsection-title'")&&!galleryScript.includes("label:'Filter'"));
 ok('Save has no rim/shadow and the logo/title align left',galleryCss.includes('html body #save{border:0!important;box-shadow:none!important}')&&galleryCss.includes('grid-template-columns:40px minmax(0,1fr)'));
 
+// Icon Save, independent sign-in role and immediate cross-page presentation updates.
+ok('Aesthetic Save is icon-only',readFileSync(join(ROOT,'aesthetics/aesthetic-control.html'),'utf8').includes('aria-label="Save"><svg'));
+ok('H0 is scoped to main sign-in',INDEX_SOURCE.includes('signin-wordmark maya-signin-h0')&&!PLAYGROUND_SOURCE.includes('maya-signin-h0'));
+ok('Saved aesthetics propagate without refreshing',readFileSync(join(ROOT,'aesthetics/ui/typography-controls.js'),'utf8').includes("window.addEventListener('storage'")&&readFileSync(join(ROOT,'aesthetics/ui/typography-controls.js'),'utf8').includes("window.addEventListener('focus',revalidate)"));
+
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

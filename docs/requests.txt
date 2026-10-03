@@ -1,3 +1,8 @@
+OCTOBER 2, 2026: icon Save, Admin header and sign-in H0
+[completed locally] Restore icon-only Save; quiet visible status but retain Admin audit logs. Match viewport-left Admin logo/title. Cover Admin fully in its editor. Update open pages immediately on Save without refresh, including Storage fallback and stale-load protection. Add main sign-in-only H0 with responsive size and independent typography.
+[validation] Eleven gallery widths, eleven canon pages/seven widths, embedded Admin, no-refresh peer updates, H0 and race tests; full regression and shared CRM/Outbound checks.
+[next] Owner Push, verify release and authenticated live Save. No push by Codex.
+
 OCTOBER 2 night — one dropdown convention and shared panel styling (LOCAL)
 [x] Table formatting housing follows Inner panel material, padding and width.
 [x] Outer review panels share color, border/corners and padding.

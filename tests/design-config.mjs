@@ -66,3 +66,6 @@ assert.equal(validDesign({...compact,editor:{fill:100,rim:22,radius:12,paddingX:
 for(const patch of [{paddingX:41},{paddingY:-1},{paddingX:'20'},{paddingY:null}])assert.equal(validDesign({...compact,editor:{fill:100,rim:22,radius:12,paddingX:24,paddingY:10,...patch}}),false);
 
 assert.equal(validDesign({...compact,overlay:{...compact.overlay,radius:20}}),true);assert.equal(validDesign({...compact,overlay:{...compact.overlay,radius:25}}),false);
+
+const withH0={...compact,type:{...compact.type,H0:{size:104,weight:400,color:'white',font:'cormorant',case:'uppercase'}}};
+assert.equal(validDesign(withH0),true);for(const size of [22,105,162])assert.equal(validDesign({...withH0,type:{...withH0.type,H0:{...withH0.type.H0,size}}}),false);assert.equal(validDesign(compact),true,'Existing designs need no migration to add H0');

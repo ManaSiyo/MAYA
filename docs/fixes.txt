@@ -1,3 +1,7 @@
+OCTOBER 2, 2026: Admin statistics peek below Aesthetic Control; oversized Save footer
+[fixed locally] Full viewport dialog bounds, no container focus outline; floating icon Save without black footer or success prose. Fixed header at Admin geometry. Same-origin saved design fallback and revision guard remove the refresh requirement; failed reads keep the current applied design. H0 prevents ordinary H1 settings from resizing the main sign-in wordmark.
+[verification] Fixture browser bounds, cross-page Storage updates, delayed-read race, H0 independence, eleven gallery widths and broader shared UI regression. Production verification follows owner Push.
+
 OCTOBER 2 night — hard-coded table housing and inconsistent Edit controls (LOCAL)
 The fixed table toolbar had a separate black backing. It now uses shared inner-panel
 material/geometry. Remove Glass/Outer range inputs and unit-text padding fields;

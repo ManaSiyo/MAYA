@@ -18,6 +18,7 @@ the list. Each compact role heading shows its source usage count in parentheses.
 
 | Role | Font | Size | Weight | Color | Examples |
 |---|---|---:|---:|---|---|
+| H0 | Cormorant Garamond | 104px responsive (max 18vw) | 400 | white | Main sign-in MAYA wordmark only |
 | H1 | Cormorant Garamond | 24px | 300 | white | Brand, dialog and page headline |
 | H2 | Cormorant Garamond | 20px | 400 | white | Drawer title, including Systems |
 | H3 | Jost | 16px | 400 | white | Section and supporting headline |
@@ -167,3 +168,12 @@ Earlier saves have no recoverable audit timestamp. Local saves remain local.
 Model Snapshot contains the AI meter; inactive Claude is excluded from its
 provider display. GPT-6 Luna and GPT Image 2.5 Flare (Medium default) remain
 configured for cost-conscious routine work. No environment changes are implied.
+
+October 2: H0 is independent of H1–H4 hierarchy and only marks the main frontend
+sign-in wordmark (not Playground). H0 supports even sizes 24–160px; default 104px,
+responsive at 18vw. Aesthetic Control uses Admin's fixed viewport-left logo/title
+geometry. Save is an accessible shared icon in a transparent floating footer;
+success status is quiet, errors remain visible and server audit events remain.
+The embedded Admin editor fills the viewport. Saves update open same-origin pages
+via BroadcastChannel and Storage fallback, with focus/visibility revalidation on
+ordinary pages and stale-load protection. Draft editors do not reload on focus.

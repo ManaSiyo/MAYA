@@ -3,6 +3,7 @@
 (() => {
   const defaults = {
     type: {
+      H0:{size:104,weight:400,color:'white'},
       H1:{size:24,weight:300,color:'white'}, H2:{size:20,weight:400,color:'white'},
       H3:{size:16,weight:400,color:'white'}, H4:{size:14,weight:400,color:'white'},
       P1:{size:12,weight:300,color:'gray'}, P2:{size:12,weight:400,color:'white'},
@@ -11,7 +12,7 @@
     finish:'current',glass:{fill:18,tint:0,rim:22,highlight:28,blur:22,saturation:180},
     overlay:{fill:18,rim:22,blur:22,saturation:180,radius:12},editor:{fill:100,rim:14,radius:12,paddingX:8,paddingY:8,background:'black',borderColor:'white'},pillX:14,pillY:6,iconSize:28,dropdownHeight:28
   };
-  for(const [role,t] of Object.entries(defaults.type))Object.assign(t,{style:'normal',font:['H1','H2'].includes(role)?'cormorant':'jost',case:role==='H1'||role==='P3'||role==='P4'?'uppercase':'none'});
+  for(const [role,t] of Object.entries(defaults.type))Object.assign(t,{style:'normal',font:['H0','H1','H2'].includes(role)?'cormorant':'jost',case:role==='H0'||role==='H1'||role==='P3'||role==='P4'?'uppercase':'none'});
   const surfaceDefaults={fill:18,rim:22,radius:12,paddingX:16,paddingY:12};
   defaults.inner={borderColor:'white',...surfaceDefaults,width:100};
   defaults.filter={borderColor:'white',...surfaceDefaults,fill:88,width:280};
@@ -66,19 +67,19 @@
   const key = 'maya-typography-controls-v1';
   const channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('maya-typography-controls') : null;
   const color = name => name === 'white' ? 'rgb(255 255 255)' : 'rgb(170 181 196)';
-  const font = role => ['H1','H2'].includes(role) ? "'Cormorant Garamond',serif" : "'Jost',sans-serif";
+  const font = role => ['H0','H1','H2'].includes(role) ? "'Cormorant Garamond',serif" : "'Jost',sans-serif";
   // Older saved designs retain all four headings and map the retired P3
   // technical role into P1, old P4 pills into P3, and old P5 captions into P4.
   function normalize(value) {
     if (!value?.type || !value?.glass || !value?.overlay) return structuredClone(defaults);
     const v=structuredClone(value);
     if(v.type.P5){v.type.P3=v.type.P4;v.type.P4=v.type.P5;delete v.type.P5;}
-    for(const [role,t] of Object.entries(defaults.type))v.type[role]={...t,font:['H1','H2'].includes(role)?'cormorant':'jost',case:role==='H1'||role==='P3'||role==='P4'?'uppercase':'none',...v.type[role]};
+    for(const [role,t] of Object.entries(defaults.type))v.type[role]={...t,font:['H0','H1','H2'].includes(role)?'cormorant':'jost',case:role==='H0'||role==='H1'||role==='P3'||role==='P4'?'uppercase':'none',...v.type[role]};
     v.editor={...defaults.editor,...v.editor,paddingX:v.editor?.paddingX??v.editor?.padding??defaults.editor.paddingX,paddingY:v.editor?.paddingY??v.editor?.padding??defaults.editor.paddingY};delete v.editor.padding;
     return normalizeSurfaces(v);
   }
   function apply(value) {
-    const v=normalize(value);
+    const v=normalize(value);currentDesign=v;revision++;
     let css=':root{';
     for (const [role,t] of Object.entries(v.type)) {
       if (!defaults.type[role] || !Number.isInteger(t.size) || (!Number.isInteger(t.weight)||t.weight<200||t.weight>500) || !['white','gray'].includes(t.color)) continue;
@@ -92,7 +93,7 @@
     css+=`--review-panel-border-rgb:${o.borderColor==='black'?'0 0 0':'255 255 255'};--maya-review-panel-radius:${Number.isInteger(o.radius)?o.radius:12}px;--maya-review-panel-fill:${o.enabled===false?0:o.fill/100};--maya-review-panel-rim:${o.enabled===false?0:o.rim/100};--maya-review-panel-blur:${o.enabled===false?0:o.blur}px;--maya-review-panel-saturation:${o.enabled===false?100:o.saturation}%;}`;
     css+=`html body :is(.maya-icon-button,#menu-toggle,#sync-sheet,#new-campaign){width:var(--maya-control-icon-size)!important;height:var(--maya-control-icon-size)!important;min-width:0!important;padding:0!important}html body :is(select,.lead-filter>summary,.column-filter){min-height:var(--maya-control-dropdown-height)!important}html body .maya-icon-button svg{width:60%;height:60%}`;
     css+=`.maya-glass-button,.maya-pill,#voice-bar{padding-inline:var(--maya-control-pillX,14px);padding-block:var(--maya-control-pillY,6px);}`;
-    css+=`html body :is(h1,#client-name-modal-title,#top-left-brand .brand-title,#brand-title,.signin-wordmark,.brand-title){font-family:var(--maya-type-H1-font)!important;font-size:var(--maya-type-H1-size)!important;font-weight:var(--maya-type-H1-weight)!important;color:var(--maya-type-H1-color)}`;
+    css+=`html body :is(h1,#client-name-modal-title,#top-left-brand .brand-title,#brand-title,.signin-wordmark:not(.maya-signin-h0),.brand-title){font-family:var(--maya-type-H1-font)!important;font-size:var(--maya-type-H1-size)!important;font-weight:var(--maya-type-H1-weight)!important;color:var(--maya-type-H1-color)}`;
     css+=`.gallery-section-title,#adm-tabtitle,.pg-tabtitle,.drawer-head-title,.drawer-title{font-family:var(--maya-type-H2-font)!important;font-size:var(--maya-type-H2-size)!important;font-weight:var(--maya-type-H2-weight)!important;color:var(--maya-type-H2-color)}`;
     css+=`.gallery-subsection-title,h2.grp,.section-title,.subheadline{font-family:var(--maya-type-H3-font)!important;font-size:var(--maya-type-H3-size)!important;font-weight:var(--maya-type-H3-weight)!important;color:var(--maya-type-H3-color)}`;
     css+=`#adm-mkt .bl-step .v,#adm-mkt .bl-tile .v,.dashboard-number,.stat strong,.affiliate-stat strong{font-family:var(--maya-type-H4-font)!important;font-size:var(--maya-type-H4-size)!important;font-weight:var(--maya-type-H4-weight)!important;color:var(--maya-type-H4-color)}`;
@@ -104,11 +105,12 @@
     css+=`html body :is(#drawer,#outbound-drawer,#notes-drawer){background-color:rgb(3 15 29 / max(.90,var(--maya-review-panel-fill)));border-color:rgb(var(--review-panel-border-rgb,255 255 255) / var(--maya-review-panel-rim));backdrop-filter:blur(var(--maya-review-panel-blur)) saturate(var(--maya-review-panel-saturation));}`;
     css+=`html body :is(.preview-section,.stat,.metric-row,.maya-surface,#adm-mkt .bl-tile){border-radius:var(--review-panel-radius,var(--maya-review-panel-radius))!important;background-color:rgb(3 15 29 / var(--maya-review-panel-fill));border-color:rgb(var(--review-panel-border-rgb,255 255 255) / var(--maya-review-panel-rim));backdrop-filter:blur(var(--maya-review-panel-blur)) saturate(var(--maya-review-panel-saturation));}`;
     css+=`html body :is(.maya-glass-button,.maya-pill,.maya-icon-button,#voice-bar):not([data-finish]){background-color:var(--maya-button-fill);border-color:var(--maya-button-edge);backdrop-filter:var(--maya-button-frost);-webkit-backdrop-filter:var(--maya-button-frost);background-image:linear-gradient(125deg,rgb(255 255 255 / var(--maya-control-tint)),transparent 55%);box-shadow:inset 0 1px 1px rgb(255 255 255 / var(--maya-control-highlight)),0 4px 16px rgb(0 0 0 / .22)}`;
-    const selectors={H1:'h1,#brand-title,.brand-title,#client-name-modal-title,.signin-wordmark',H2:'.gallery-section-title,#adm-tabtitle,.pg-tabtitle,.drawer-title,.drawer-head-title',H3:'.gallery-subsection-title,h2.grp,.section-title,.subheadline',H4:'#adm-mkt .bl-step .v,#adm-mkt .bl-tile .v,.dashboard-number,.stat strong,.affiliate-stat strong',P1:'p,td,th,.note,.msg-main,.model-group',P2:'.metric-label,.metric-value,.maya-metric-label,.maya-metric-value,.label-count,.status-pill,.stat span,.affiliate-stat span',P3:'.maya-pill,.maya-glass-button,button.glass-pill,button.action-btn,button.modal-text-btn,button.drawer-action,button.pin-cta,button.tos-agree,button.tos-decline,button.upload-choose-btn,button.tip-amt,button.primary,button.pill,button.inv-btn,button.msg-call,button.msg-send,button.lead-tool,button.lead-cta,button.range-chip,button.metric-chip,button.wide,button.campaign,button.dissect-start,button.upload-btn,button.fab-src-pill,button.piece-pill,button.quality-pill,.dialog-actions button,.actions button,maya-ai-meter button,maya-owner-crm button,#voice-bar',P4:'small,.caption,.bl-step .k,.bl-tile .k'};
+    const selectors={H0:'.maya-signin-h0',H1:'h1,#brand-title,.brand-title,#client-name-modal-title,.signin-wordmark:not(.maya-signin-h0)',H2:'.gallery-section-title,#adm-tabtitle,.pg-tabtitle,.drawer-title,.drawer-head-title',H3:'.gallery-subsection-title,h2.grp,.section-title,.subheadline',H4:'#adm-mkt .bl-step .v,#adm-mkt .bl-tile .v,.dashboard-number,.stat strong,.affiliate-stat strong',P1:'p,td,th,.note,.msg-main,.model-group',P2:'.metric-label,.metric-value,.maya-metric-label,.maya-metric-value,.label-count,.status-pill,.stat span,.affiliate-stat span',P3:'.maya-pill,.maya-glass-button,button.glass-pill,button.action-btn,button.modal-text-btn,button.drawer-action,button.pin-cta,button.tos-agree,button.tos-decline,button.upload-choose-btn,button.tip-amt,button.primary,button.pill,button.inv-btn,button.msg-call,button.msg-send,button.lead-tool,button.lead-cta,button.range-chip,button.metric-chip,button.wide,button.campaign,button.dissect-start,button.upload-btn,button.fab-src-pill,button.piece-pill,button.quality-pill,.dialog-actions button,.actions button,maya-ai-meter button,maya-owner-crm button,#voice-bar',P4:'small,.caption,.bl-step .k,.bl-tile .k'};
     for(const [role,selector] of Object.entries(selectors))css+=`html body :is(${selector}){font-size:var(--maya-type-${role}-size)!important;font-weight:var(--maya-type-${role}-weight)!important;font-style:var(--maya-type-${role}-style)!important;font-family:var(--maya-type-${role}-font)!important;text-transform:var(--maya-type-${role}-case)!important}`;
     for(const [role,selector] of Object.entries(selectors))if(role.startsWith('P'))css+=`html body :is(${selector}):not(.status-pill):not(.status-example){color:var(--maya-type-${role}-color)!important}`;
     for(const [role,selector] of Object.entries(selectors))if(['left','center','right'].includes(v.type[role]?.align))css+=`html body :is(${selector}){text-align:var(--maya-type-${role}-align)!important}`;
     for(const [role,selector] of Object.entries(selectors))if(['top','middle','bottom'].includes(v.type[role]?.vertical))css+=`html body :is(${selector}){vertical-align:${v.type[role].vertical}!important}`;
+    css+='html body #signin-gate .maya-signin-h0{font-size:min(18vw,var(--maya-type-H0-size))!important;color:var(--maya-type-H0-color)!important}';
     css+='html body :is(code,pre,.technical-text){font-family:Menlo,monospace!important}';
     let style=document.getElementById('maya-typography-control-style');if(!style){style=document.createElement('style');style.id='maya-typography-control-style';document.head.append(style);}style.textContent=css;
     if(Number.isInteger(o.paddingX)&&Number.isInteger(o.paddingY))style.textContent+=`html body :is(.preview-section,.maya-surface,.stat,#adm-mkt .bl-tile,html[data-maya-surface="dense"] .layout>aside,html[data-maya-surface="dense"] .layout>main){padding:var(--review-panel-paddingY,${o.paddingY}px) var(--review-panel-paddingX,${o.paddingX}px)!important}`;
@@ -121,14 +123,18 @@
     let node=document.getElementById('maya-editor-control-style');if(!node){node=document.createElement('style');node.id='maya-editor-control-style';document.head.append(node);}
     node.textContent=`html body .type-editor-fields{background:rgb(${palette[e.background]||palette.black} / ${e.fill/100})!important;border:1px solid rgb(${e.borderColor==='black'?'0 0 0':'255 255 255'} / ${e.rim/100})!important;border-radius:${e.radius}px!important;padding:${e.paddingY??e.padding??8}px ${e.paddingX??e.padding??8}px!important;}`;
   }
-  async function load(){if(local){let value;try{value=JSON.parse(localStorage.getItem(key)||'null')||defaults;}catch{value=defaults;}value=normalize(value);apply(value);return value;}
-    try{const r=await fetch('/api/design',{cache:'no-store'});if(!r.ok)throw Error('design');const value=normalize(await r.json());apply(value);return value;}catch{apply(defaults);return defaults;}
+  let revision=0,currentDesign;
+  async function load(){const started=revision;if(local){let value;try{value=JSON.parse(localStorage.getItem(key)||'null')||defaults;}catch{value=defaults;}value=normalize(value);apply(value);return value;}
+    try{const r=await fetch('/api/design',{cache:'no-store'});if(!r.ok)throw Error('design');const value=normalize(await r.json());if(started===revision)apply(value);return currentDesign||value;}catch{if(!currentDesign)apply(defaults);return currentDesign||defaults;}
   }
-  async function save(value){if(local){localStorage.setItem(key,JSON.stringify(value));apply(value);channel?.postMessage(value);return 'Saved locally. Production changes require deployment and an Admin save on the live site.';}
+  async function save(value){if(local){localStorage.setItem(key,JSON.stringify(value));apply(value);channel?.postMessage(value);return 'Saved locally.';}
     const token=localStorage.getItem('maya_admin_tok');if(!token)throw Error('Sign in to Admin before saving.');
     const r=await fetch('/api/admin/design',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(value)});
-    if(!r.ok)throw Error(r.status===403?'Admin access required.':'Save failed ('+r.status+').');const result=await r.json();apply(value);channel?.postMessage(value);document.dispatchEvent(new CustomEvent('maya-design-saved',{detail:{savedAt:result.savedAt}}));return 'Saved across MAYA pages · recorded in Admin Logs.';
+    if(!r.ok)throw Error(r.status===403?'Admin access required.':'Save failed ('+r.status+').');const result=await r.json();localStorage.setItem(key,JSON.stringify(value));apply(value);channel?.postMessage(value);document.dispatchEvent(new CustomEvent('maya-design-saved',{detail:{savedAt:result.savedAt}}));return 'Saved.';
   }
+  window.addEventListener('storage',e=>{if(e.key===key&&e.newValue){try{const v=JSON.parse(e.newValue);if(v?.type&&v?.glass)apply(v);}catch{}}});
+  const revalidate=()=>{if(!location.pathname.endsWith('aesthetic-control.html'))void load();};
+  window.addEventListener('focus',revalidate);document.addEventListener('visibilitychange',()=>{if(!document.hidden)revalidate();});
   if(channel)channel.onmessage=e=>{if(e.data?.type&&e.data?.glass)apply(e.data);};
   window.MayaTypographyControls={defaults,normalize,apply,previewSurfaces:applySurfaces,previewEditor,load,save,ready:load()};
 })();

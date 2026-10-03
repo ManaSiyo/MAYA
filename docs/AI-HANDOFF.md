@@ -1,45 +1,44 @@
 # MAYA handoff — October 2, 2026
 
-## Current request: consistent numeric dropdowns and panel materials
+## Current request: quiet Save, Admin header and independent sign-in H0
 
-Local follow-up to 4a01a51, not pushed: gallery v24/shared runtime v10.
-Glass/Outer Edit now use shared fields() numeric input/select grids like Inner Edit,
-with no drag sliders. Glass padding is numeric pixels, both X and Y. Popup settings
-have independent paddingX/Y (0–40px); legacy padding maps to both axes on read,
-never writes production state. Server accepts old and new schemas and optional
-outer radius (0–24px). Restore and validation retain saved baselines.
+Prepared locally after 99bc08f (local/origin matched before work); not pushed.
+Gallery v25 and shared typography runtime v11. Aesthetic Control uses Admin's
+viewport-left fixed 60px header, logo dimensions and title typography. Save is a
+shared floppy SVG icon, represented in the icon gallery, with an accessible Save
+label. Its floating transparent footer replaces the black text pill/bar. Status
+is screen-reader-only except concise errors; server audit logging remains intact.
+Admin's embedded dialog enforces full viewport dimensions, zero padding/border
+and no container focus outline, so underlying Admin statistics cannot peek below.
+Interactive keyboard focus stays available.
 
-The fixed table-formatting toolbar is an actual shared inner panel: opacity, border,
-corners, X/Y padding and width follow Inner panel settings live and after reload.
-The enclosing Glass/Types review panels share outer fill/border/corners/padding;
-shared saved border colors now propagate to outer surfaces and drawers. There is
-still no intermediate wrapper. Popup material remains separately editable through
-Edit dropdown, with the same anchored numeric grid for every Edit menu.
+Saving applies immediately and broadcasts to open same-origin pages; a Storage
+listener supplies the fallback without BroadcastChannel. Ordinary pages revalidate
+when focused or visible again; the editor avoids focus reloads that overwrite draft
+edits. Revision checks prevent an older pending GET from undoing a newer Save.
+Failed reloads preserve the applied design. Live save retains Admin authentication,
+atomic server persistence and private audit events; no live save performed here.
 
-Unused gallery Filter preview, button and editor are removed. Existing saved filter
-configuration is retained unchanged for the functional Admin/Outbound data filters.
-Glass, Panels and Tables and Typography use H2; Glass Section, Panels and Table use
-H3 through the shared typography runtime. Save loses its rim/shadow while preserving
-keyboard focus feedback. Logo/title sit on one left-aligned header row like Admin.
-Admin embedded Save and logo return remain unchanged; all served pages load v10.
+H0 is only frontend/index.html's main sign-in MAYA wordmark. Default Cormorant,
+104px, weight 400, uppercase; editable even sizes 24–160px and existing type tools.
+Its font size is capped responsively at 18vw; H1 changes do not affect H0. Older
+8-role and legacy P5 saves remain accepted and read with an H0 default. Authored
+usage inventory lists H0 once, H1 thirteen times. Playground sign-in remains H1.
+Changed: gallery HTML/JS/CSS/usage, component icon map, typography runtime/all
+served cache references, Admin dialog CSS, frontend sign-in class, design validator,
+role audit script, browser/design/app regression assertions and continuity docs.
 
-Changed: gallery/finishes/overlay/surface editors/CSS; shared runtime and all served
-references; design validator; component/design/app tests; design/AGENTS/continuity.
-Validation: design-config/contract; component-gallery 11 widths (320–1920), matching
-inner/toolbar material, shared outer color/corners, all numeric menus, split padding
-and legacy reads, borderless Save/left header, Save/reload and embedded Admin return;
-full app-regression; canon-ui 11 pages/7 widths; Outbound UI and populated filters;
-CRM UI/failure/intelligence; actual-font visual review; JS syntax/diff checks.
-
-Exact next step: owner Push in GitHub Desktop, check release marker, verify live
-Inner panel/table toolbar, consistent dropdowns, X/Y padding and authenticated Save.
-No personal Chrome, live design Save, provider messages, credentials/config edits,
-push or deployment performed. Cormorant still uses available 300/400/500 faces;
-usage counts remain authored templates rather than dynamic customer occurrences.
+Validation: design-config/contract, component-gallery at eleven widths (320–1920),
+embedded Admin bounds/return, icon Save, H0 usage, no-refresh Storage propagation,
+stale-load protection, full app-regression; canon-ui eleven pages/seven widths;
+Outbound UI/populated filters; CRM UI/failure/intelligence; actual-font layout capture; diff check.
+Exact next step: Fromsa Push in GitHub Desktop, verify Cloud Build and release.json,
+then verify authenticated Save, immediate Admin styling and sign-in H0 live.
+No personal Chrome, production writes, credentials/config changes, Push or deploy.
 
 ## Release status
 
-Local and origin matched 4a01a51 before this task. This follow-up is local only.
+99bc08f was already pushed before this request. This follow-up is local only.
 Older implementation/shipment notes below are historical.
 
 ## October 2 verified implementation and follow-up

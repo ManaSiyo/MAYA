@@ -3,7 +3,7 @@ from pathlib import Path
 import re,json
 root=Path(__file__).resolve().parent.parent
 files=sorted(p for folder in ['frontend','backend','playground','aesthetics'] for p in (root/folder).rglob('*') if p.suffix in ['.html','.js'] and 'aesthetics/aesthetic-control' not in str(p) and p.name!='aesthetic-control.html' and 'aesthetics/ui/components' not in str(p))
-categories={k:{'count':0,'locations':[],'roles':{}} for k in ['H1','H2','H3','H4','P1','P2','P3','P4']}
+categories={k:{'count':0,'locations':[],'roles':{}} for k in ['H0','H1','H2','H3','H4','P1','P2','P3','P4']}
 for path in files:
  text=path.read_text()
  # Preserve source line numbers. Exclude comments, retain JS-rendered markup.
@@ -12,7 +12,8 @@ for path in files:
   tag=m[1].lower();attrs=m[2].replace('\\"','"').replace("\\'","'");names={k.lower():v for k,q,v in re.findall(r'\b(id|class)\s*=\s*([\'"])(.*?)\2',attrs,re.S)}
   ident=names.get('id','');cls=set(names.get('class','').split());context=clean[max(0,m.start()-100):m.end()];category=None;reason=None
   role=None
-  if tag=='h1' or cls & {'brand-title','signin-wordmark','brand-sample'} or ident=='client-name-modal-title':
+  if 'maya-signin-h0' in cls:category,role='H0','signin'
+  elif tag=='h1' or cls & {'brand-title','signin-wordmark','brand-sample'} or ident=='client-name-modal-title':
    category='H1';role='editorial' if ident=='client-name-modal-title' else 'brand' if cls & {'brand-title','signin-wordmark','brand-sample'} else 'headline'
   elif ident=='adm-tabtitle' or cls & {'pg-tabtitle','drawer-title','drawer-head-title'} or (tag=='h2' and 'outbound-drawer' in context):category,role='H2','drawer'
   elif cls & {'grp','section-title'}:category,role='H3','adminsection'

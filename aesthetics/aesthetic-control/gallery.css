@@ -208,3 +208,16 @@ html body .gallery-header h1{text-align:left!important;margin:0}.gallery-header 
 .type-editor-fields label{display:grid;gap:4px;min-width:0}.type-editor-fields :is(input,select){width:100%;min-width:0}
 
 .type-editor-fields label{justify-content:normal;grid-column:auto}
+
+/* Admin chrome: viewport-aligned header and a quiet floating Save icon. */
+.gallery-header{position:fixed;inset:0 0 auto;width:100%;height:60px;margin:0;padding:0 28px;display:flex;gap:10px;z-index:50}
+.gallery-header #admin-back{display:flex;align-items:center;justify-content:center;width:52px;height:52px;margin-left:-8px;flex:none}
+.gallery-header #admin-back img{width:44px;height:44px;object-fit:contain;opacity:.94}
+.gallery-header h1{letter-spacing:.22em;color:rgba(255,255,255,.9)}
+#feedback{position:absolute!important;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);min-height:0;margin:0}
+#feedback.save-error{position:fixed!important;top:64px;left:16px;width:auto;height:auto;clip-path:none;background:#020a13;padding:8px;max-width:calc(100vw - 32px)}
+main#gallery{padding-top:76px;padding-bottom:76px}
+.save-bar{position:fixed;inset:auto 0 0;height:60px;padding:0;background:transparent;border:0;backdrop-filter:none;pointer-events:none}
+.save-bar #save{pointer-events:auto;min-width:0;padding:0;display:inline-flex;align-items:center;justify-content:center}
+#save svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:640px){.gallery-header{padding-inline:12px}.gallery-header #admin-back{width:42px;height:42px}.gallery-header #admin-back img{width:34px;height:34px}.gallery-header h1{letter-spacing:.22em}}

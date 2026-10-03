@@ -22,8 +22,34 @@
     "playground/index.html"
   ],
   "categories": {
+    "H0": {
+      "count": 1,
+      "locations": [
+        {
+          "page": "frontend/index.html",
+          "line": 4518,
+          "tag": "div",
+          "id": null,
+          "class": "signin-wordmark maya-signin-h0",
+          "reason": "signin",
+          "role": "signin",
+          "snippet": "<div class=\"signin-wordmark maya-signin-h0\">MAYA</div>"
+        }
+      ],
+      "roles": {
+        "signin": {
+          "count": 1,
+          "locations": [
+            {
+              "page": "frontend/index.html",
+              "line": 4518
+            }
+          ]
+        }
+      }
+    },
     "H1": {
-      "count": 14,
+      "count": 13,
       "locations": [
         {
           "page": "aesthetics/operations/index.html",
@@ -104,16 +130,6 @@
           "reason": "headline",
           "role": "headline",
           "snippet": "<h1>Deploy check</h1>"
-        },
-        {
-          "page": "frontend/index.html",
-          "line": 4518,
-          "tag": "div",
-          "id": null,
-          "class": "signin-wordmark",
-          "reason": "brand",
-          "role": "brand",
-          "snippet": "<div class=\"signin-wordmark\">MAYA</div>"
         },
         {
           "page": "frontend/index.html",
@@ -201,15 +217,11 @@
           ]
         },
         "brand": {
-          "count": 5,
+          "count": 4,
           "locations": [
             {
               "page": "backend/status.html",
               "line": 881
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 4518
             },
             {
               "page": "frontend/index.html",
