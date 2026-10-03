@@ -23,7 +23,12 @@
   function normalizeSurfaces(v){
     v.iconSize ??= defaults.iconSize;v.dropdownHeight ??= defaults.dropdownHeight;v.inner={...defaults.inner,...v.inner};v.filter={...defaults.filter,...v.filter};
     const t=v.table||{};v.table={...defaults.table,...t,cells:{...t.cells},header:{...defaults.table.header,...t.header},firstColumn:{...defaults.table.firstColumn,...t.firstColumn},columns:defaults.table.columns.map((c,i)=>({...c,...t.columns?.[i]}))};
-    return v;
+    // Legacy cell saves now become whole-column settings in preview, not writes.
+    for(const [i,col] of [[1,'stage'],[2,'note']]){
+      const first=Object.entries(v.table.cells).filter(([key])=>new RegExp('^'+col+'-(0|[1-9][0-9]?)$').test(key)).sort(([a],[b])=>Number(a.split('-')[1])-Number(b.split('-')[1]))[0];
+      if(first)Object.assign(v.table.columns[i],first[1]);
+    }
+    v.table.cells={};return v;
   }
   function applySurfaces(value){
     const v=normalizeSurfaces(structuredClone(value));
@@ -43,24 +48,15 @@
       const col=['name','stage','note'][i];
       const cell=`${scope} td[data-col="${col}"]`;
       css+=`${cell},${cell} :is(.lead-open,.lead-note-vp,.lead-note-vp>span){${typography(c)}}`;
+      if(c.background!==undefined)css+=`${cell}{background-color:${bg(c)}!important;}`;
       css+=`${cell}{vertical-align:${['top','middle','bottom'].includes(c.vertical)?c.vertical:'middle'}!important;}`;
       if(i===1)css+=`${cell} :is(.status-pill,.status-text,.lead-stage){${typography(c).replace(/color:[^;]+!important;/,'')}}`;
       if(i===0)css+=`${cell} .lead-open{justify-content:${c.align==='right'?'flex-end':c.align==='center'?'center':'flex-start'}!important;}`;
     });
     css+=`html body .people-table td{${typography(t.columns[2])}}html body .people-table td[data-sheet-col=\"3\"],html body .people-table .person-link{${typography(t.columns[0])}}html body .people-table td[data-sheet-col=\"7\"]{${typography(t.columns[1])}}`;
+    if(t.columns[1].background!==undefined)css+=`html body .people-table td[data-sheet-col="7"]{background-color:${bg(t.columns[1])}!important;}`;
     css+=`${scope} th button{${typography(t.header)}}`;
     css+=`${scope} th{${typography(t.header)}vertical-align:${['top','middle','bottom'].includes(t.header.vertical)?t.header.vertical:'middle'}!important;background-color:${bg(t.header)}!important;}`;
-    // Row slots describe presentation, never customer identity or account data.
-    for(const [key,c] of Object.entries(t.cells||{})){
-      const match=/^(stage|note)-(\d{1,2})$/.exec(key);if(!match)continue;
-      const cell=`${scope} td[data-col="${match[1]}"][data-design-row="${Number(match[2])}"]`;
-      css+=`${cell},${cell} :is(.lead-note-vp,.lead-note-vp>span){${typography(c)}}${cell}{background-color:${bg(c)}!important;vertical-align:${['top','middle','bottom'].includes(c.vertical)?c.vertical:'middle'}!important;}`;
-      if(match[1]==='stage')css+=`${cell} :is(.status-pill,.status-text,.lead-stage){${typography(c).replace(/color:[^;]+!important;/,'')}}`;
-    }
-    if(Object.keys(t.cells||{}).length){
-      const annotate=()=>document.querySelectorAll('table').forEach(table=>{let row=0;for(const tr of table.rows)if(tr.querySelector('td')){for(const td of tr.querySelectorAll('td[data-col]'))td.dataset.designRow=String(row);row++;}});
-      annotate();if(!window.__mayaCellObserver){window.__mayaCellObserver=new MutationObserver(annotate);window.__mayaCellObserver.observe(document.documentElement,{childList:true,subtree:true});}
-    }
     let style=document.getElementById('maya-surface-control-style');if(!style){style=document.createElement('style');style.id='maya-surface-control-style';document.head.append(style);}style.textContent=css;
   }
   const local = ['localhost','127.0.0.1','maya.test'].includes(location.hostname);
@@ -103,7 +99,7 @@
     css+=`html body :is(.maya-glass-button,.maya-pill,#voice-bar){font-size:var(--maya-type-P3-size)!important;font-weight:var(--maya-type-P3-weight)}`;
     css+=`html body :is(small,.caption,.bl-step .k,.bl-tile .k){font-size:var(--maya-type-P4-size)!important;font-weight:var(--maya-type-P4-weight)}`;
     css+=`html body :is(#drawer,#outbound-drawer,#notes-drawer){background-color:rgb(3 15 29 / max(.90,var(--maya-review-panel-fill)));border-color:rgb(255 255 255 / var(--maya-review-panel-rim));backdrop-filter:blur(var(--maya-review-panel-blur)) saturate(var(--maya-review-panel-saturation));}`;
-    css+=`html body :is(.stat,.metric-row,.maya-surface,#adm-mkt .bl-tile){background-color:rgb(3 15 29 / var(--maya-review-panel-fill));border-color:rgb(255 255 255 / var(--maya-review-panel-rim));backdrop-filter:blur(var(--maya-review-panel-blur)) saturate(var(--maya-review-panel-saturation));}`;
+    css+=`html body :is(.preview-section,.stat,.metric-row,.maya-surface,#adm-mkt .bl-tile){background-color:rgb(3 15 29 / var(--maya-review-panel-fill));border-color:rgb(255 255 255 / var(--maya-review-panel-rim));backdrop-filter:blur(var(--maya-review-panel-blur)) saturate(var(--maya-review-panel-saturation));}`;
     css+=`html body :is(.maya-glass-button,.maya-pill,.maya-icon-button,#voice-bar):not([data-finish]){background-color:var(--maya-button-fill);border-color:var(--maya-button-edge);backdrop-filter:var(--maya-button-frost);-webkit-backdrop-filter:var(--maya-button-frost);background-image:linear-gradient(125deg,rgb(255 255 255 / var(--maya-control-tint)),transparent 55%);box-shadow:inset 0 1px 1px rgb(255 255 255 / var(--maya-control-highlight)),0 4px 16px rgb(0 0 0 / .22)}`;
     const selectors={H1:'h1,#brand-title,.brand-title,#client-name-modal-title,.signin-wordmark',H2:'#adm-tabtitle,.pg-tabtitle,.drawer-title,.drawer-head-title',H3:'h2.grp,.section-title,.subheadline',H4:'#adm-mkt .bl-step .v,#adm-mkt .bl-tile .v,.dashboard-number,.stat strong,.affiliate-stat strong',P1:'p,td,th,.note,.msg-main,.model-group',P2:'.metric-label,.metric-value,.maya-metric-label,.maya-metric-value,.label-count,.status-pill,.stat span,.affiliate-stat span',P3:'.maya-pill,.maya-glass-button,button.glass-pill,button.action-btn,button.modal-text-btn,button.drawer-action,button.pin-cta,button.tos-agree,button.tos-decline,button.upload-choose-btn,button.tip-amt,button.primary,button.pill,button.inv-btn,button.msg-call,button.msg-send,button.lead-tool,button.lead-cta,button.range-chip,button.metric-chip,button.wide,button.campaign,button.dissect-start,button.upload-btn,button.fab-src-pill,button.piece-pill,button.quality-pill,.dialog-actions button,.actions button,maya-ai-meter button,maya-owner-crm button,#voice-bar',P4:'small,.caption,.bl-step .k,.bl-tile .k'};
     for(const [role,selector] of Object.entries(selectors))css+=`html body :is(${selector}){font-size:var(--maya-type-${role}-size)!important;font-weight:var(--maya-type-${role}-weight)!important;font-family:var(--maya-type-${role}-font)!important;text-transform:var(--maya-type-${role}-case)!important}`;
@@ -112,7 +108,7 @@
     for(const [role,selector] of Object.entries(selectors))if(['top','middle','bottom'].includes(v.type[role]?.vertical))css+=`html body :is(${selector}){vertical-align:${v.type[role].vertical}!important}`;
     css+='html body :is(code,pre,.technical-text){font-family:Menlo,monospace!important}';
     let style=document.getElementById('maya-typography-control-style');if(!style){style=document.createElement('style');style.id='maya-typography-control-style';document.head.append(style);}style.textContent=css;
-    if(Number.isInteger(o.paddingX)&&Number.isInteger(o.paddingY))style.textContent+=`html body :is(.maya-surface,.stat,#adm-mkt .bl-tile,html[data-maya-surface="dense"] .layout>aside,html[data-maya-surface="dense"] .layout>main){padding:var(--review-panel-paddingY,${o.paddingY}px) var(--review-panel-paddingX,${o.paddingX}px)!important}`;
+    if(Number.isInteger(o.paddingX)&&Number.isInteger(o.paddingY))style.textContent+=`html body :is(.preview-section,.maya-surface,.stat,#adm-mkt .bl-tile,html[data-maya-surface="dense"] .layout>aside,html[data-maya-surface="dense"] .layout>main){padding:var(--review-panel-paddingY,${o.paddingY}px) var(--review-panel-paddingX,${o.paddingX}px)!important}`;
     applySurfaces(v);
     document.dispatchEvent(new CustomEvent('maya-design-applied',{detail:v}));
   }

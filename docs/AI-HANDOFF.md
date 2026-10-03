@@ -1,47 +1,45 @@
 # MAYA handoff — October 2, 2026
 
-## Current request: cell-based Aesthetic Control
+## Current request: whole columns and the marked outer panel
 
-Prepared locally, not pushed: gallery v21/shared runtime v7. Table preview uses
-one fixed formatting row. Full name corner selects top row + first column; other
-headers select top row; names select first column; other cells select individually.
-Only whole-table Edit remains. Type, case, size, colors, horizontal/vertical
-alignment and background opacity update live. Keyboard selection and arrows work.
-Optional table.cells overrides validate semantic stage/note row slots 0–99 (max
-100 overrides), no identity/customer data. Matching Lead Station slots receive
-saved styles after re-render/filtering; Outbound retains shared table/header/type
-settings without mapping individual slots to unrelated source fields.
+Local follow-up to d63d20b, not pushed: gallery v22/shared runtime v8. Full name
+corner retains top row + first column; other headers select only top row. Any
+body cell selects all body cells in its semantic column, labeled First/Second/
+Third column. Fixed formatting row edits the entire column, including validated
+background/opacity. Restore uses last successful Save. Legacy row-slot overrides
+normalize using the lowest saved row per stage/note column, becoming column styles;
+load never writes production state. Old schemas remain server-readable.
 
-One outer preview contains two direct inner panels, each heading + Contacts pill.
-Opening an editor automatically highlights its actual padding, including glass,
-outer, inner, filter preview and table. No manual debug toggle or extra material
-wrapper. Restore beside every Edit and the fixed cell toolbar returns to that
-editor's last successful Save; it does not reset other editors. Role labels show
-regenerated authored-use counts. Used icons only. Selected finish shows checkmark
-and outlined card. Saved cell runtime handles scripts loaded before body exists.
+Outer panel is the review section enclosing Glass, Panels and Tables (and the
+Typography section's same material). Remove the intermediate rectangle around the
+two examples; direct inner panels contain Lead Station/Campaign details + Contacts.
+Opening Outer Edit highlights the enclosing section's real X/Y padding; inner
+highlight remains on each inner panel. Responsive popup positioning still uses
+the actual trigger and section bounds.
 
-Changed: gallery, CSS, finishes, overlay, surface editors; new restore-controls.js
-and table-cell-editor.js; shared typography runtime and all served cache references;
-server design validation; role audit; gallery/design/app regression tests; design,
-AGENTS and continuity records.
+Typography role descriptors include linked, comma-separated rendered page names.
+A bounded expandable list shows every authored location: source path/line,
+selector, safe text excerpt. All 14 H1 uses are listed; counts are roles/templates,
+not occurrences of the preview text. JS-generated controls link to rendered pages
+(Outbound module to Outbound, AI meter to Admin/Outbound, owner CRM to Admin).
 
-Validation: design-config/contract; component-gallery 11 widths 320–1920 with
-cell selection, independent cell styles, saved restore, Save/reload, actual Admin
-propagation, popup bounds/proximity/hit testing and nonwrapping formatting row;
-full app regression; canon-ui 11 pages/7 widths; Outbound UI/populated filters;
-CRM UI/failure/intelligence. Real-font visual review of selected table/padding.
-No personal Chrome, provider calls/messages, credentials or environment changes.
+Changed: gallery/overlay/CSS/table selection, shared runtime, optional column
+material validator, served cache references; gallery/design/app regression;
+AGENTS/design/continuity records. Validation: component-gallery 11 widths with
+whole-column formatting/restore, black anchored popups, all H1 evidence, no extra
+wrapper, marked outer-padding geometry, Save/reload and Admin propagation;
+design-config/contract; app-regression; canon-ui 11 pages/7 widths; Outbound UI/
+populated filters; CRM UI/failure/intelligence. Isolated actual-font visual review.
 
-Exact next step: owner Push from GitHub Desktop. Then compare /release.json with
-the new commit and verify authenticated Save and desired cell/panel settings.
-Nothing in this task has been pushed or saved to the live design API.
+Exact next step: owner Push in GitHub Desktop, check release marker, then verify
+live authenticated design Save. No Chrome profile, live Save, messaging/provider,
+credentials, production configuration or push was performed.
 
 ## Release status
 
-Public /release.json read October 2 confirms the owner's previous push:
-3ecfc8ddf256f269bc3332c9f1e64769660fa18c, published 2026-10-02T20:57:21.849Z.
-That release contains the prior anchoring/padding/wake recovery fix. The current
-cell-editor request is a new local change. Codex has not pushed or deployed.
+Local and origin matched d63d20b before this task; owner has pushed the prior
+cell-editor commit. Current whole-column/outer-panel change is local. Codex has
+not pushed or deployed. Older implementation/shipment notes below are historical.
 
 ## October 2 verified implementation and follow-up
 
@@ -176,8 +174,8 @@ Temporary runtimes are not deployment requirements; CI installs dependencies.
 
 Follow the current request above. Prior release markers below are historical.
 Local restore is now supported per editor; it restores saved settings, not a
-chronological undo history. Individual cell styles follow visible row slots after
-sorting/filtering, not a customer. Authenticated live Save and real microphone
+chronological undo history. Body selections now edit complete columns; legacy row-slot saves are converted
+in the preview and persist only on owner Save. Authenticated live Save and real microphone
 wake behavior still need owner verification after the owner pushes this change.
 No live design save or client/provider operation was performed.
 

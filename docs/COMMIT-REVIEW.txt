@@ -1,27 +1,29 @@
-[Codex] Edit aesthetic tables through selected cells
+[Codex] Format whole columns and target actual outer panels
 
-Replace repeated header/column dropdowns with one fixed formatting row above the
-Lead Station preview. Full name corner selects header plus first column; other
-headers select top row; body names select first column; other cells independently.
-Keep one whole-table Edit. Save bounded semantic row-slot presentation overrides;
-apply matching Lead Station styles after dynamic rendering, including pages with
-head-loaded design scripts. Preserve status colors and Outbound source columns.
+Body clicks in the table preview select their complete semantic column, labeled
+First/Second/Third column. Other headers select Top row; Full name retains the
+combined Top row + first column. Fixed formatting edits all column rows, including
+validated background/opacity. Legacy row saves normalize into whole-column styles
+using the lowest saved row per stage/note column; reading never writes live state.
+Preserve saved restore, semantic status colors and shared Outbound Status material.
 
-Simplify preview to one outer panel containing two inner panels and Contacts
-pills. Opening padding editors highlights the actual component automatically;
-closing hides it. Add per-editor restores to last successful Save, visible role
-usage counts, current icon previews, and checkmark/full-card selected finish.
-Update gallery v21/runtime v7 references, validation and continuity records.
+Remove the intermediate wrapper around Lead Station/Campaign details. Outer Edit
+now controls the enclosing review sections marked by the owner; Inner Edit targets
+the heading/Contacts panels. Automatic highlights show those actual padding edges.
+Typography descriptors have concise linked page lists and bounded expandable source
+locations with selectors and text excerpts; all 14 H1 uses are discoverable.
+Shared JS locations link to the pages that render them. Gallery v22/runtime v8.
 
-Validation: design-config/contract, full app-regression, component-gallery
-(11 widths 320–1920, cell independence, saved restores, Save/reload, real Admin
-propagation, anchored black popups and field hit testing, one-row formatting),
-canon-ui (11 pages/7 widths), Outbound UI/populated filters, CRM UI/failure/
-intelligence; regenerated usage audit; actual-font visual inspection; diff check.
+Validation: component-gallery at 11 widths (320–1920): complete column selection,
+combined corner, separate header, column material/restore, legacy normalization,
+correct outer/inner geometry, absence of extra wrapper, 14 H1 locations, anchored
+black popups and hit testing, Save/reload and actual Admin propagation. Full
+app-regression; design-config/contract; canon-ui 11 pages/7 widths; Outbound UI and
+populated filters; CRM UI/failure/intelligence; refreshed role audit; actual-font
+visual review of column, outer/inner padding and H1 locations; syntax/diff check.
 
-Limitations: individual styles follow visible row slots after sorting/filtering,
-not customer identities. Restores use last saved values, not chronological undo.
-Public marker confirms prior 3ecfc8d release. This work is local and not pushed;
-live authenticated Save and microphone behavior still need owner verification.
-No personal Chrome, live client/provider calls, credentials/environment/billing
-changes or deployment. Only owner Push remains.
+Limitations: counts refer to authored role templates, not repetitions of the
+preview word or dynamic customer rows. Old per-cell saves are converted in the
+preview; live changes require owner Save after deployment. No personal Chrome,
+client/provider communication, live design Save, credentials/environment/billing
+change, push or deployment. Only owner Push remains.

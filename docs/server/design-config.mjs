@@ -45,7 +45,7 @@ export function validDesign(body) {
     if(!typeValid(t.header)||!bgValid(t.header)||Object.keys(t.header).some(k=>![...types,...backgrounds].includes(k)))return false;
     if(!bgValid(t.firstColumn)||Object.keys(t.firstColumn).some(k=>!backgrounds.includes(k)))return false;
     if(t.cells!==undefined&&(!t.cells||Array.isArray(t.cells)||typeof t.cells!=='object'||Object.keys(t.cells).length>100||Object.entries(t.cells).some(([key,s])=>!/^(stage|note)-(0|[1-9][0-9]?)$/.test(key)||!typeValid(s)||!bgValid(s)||Object.keys(s).some(k=>![...types,...backgrounds].includes(k)))))return false;
-    if(!Array.isArray(t.columns)||t.columns.length!==3||t.columns.some(s=>!typeValid(s)||Object.keys(s).some(k=>!types.includes(k))))return false;
+    if(!Array.isArray(t.columns)||t.columns.length!==3||t.columns.some(s=>!typeValid(s)||(s.background!==undefined||s.opacity!==undefined)&&!bgValid(s)||Object.keys(s).some(k=>![...types,...backgrounds].includes(k))))return false;
   }
   return ['current','liquid','clear'].includes(body.finish) &&
     Number.isInteger(body.pillX) && body.pillX >= 4 && body.pillX <= 32 &&

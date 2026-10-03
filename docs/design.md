@@ -61,9 +61,9 @@ material sliders, X/Y padding, icons, five pill colors and button States.
 A divider separates Panels, another separates Table. Panels have independent
 outer padding/material; Inner panel has opacity, border, corners, X/Y padding
 and percentage width. Filter has independent material/padding and pixel width.
-The preview has one outer container, two direct inner panels, and a Contacts pill
+The preview has the enclosing review section as outer panel, two direct inner panels, and a Contacts pill
 inside each inner panel: three material layers maximum. Inner padding surrounds
-heading plus Contacts; outer padding surrounds the inner panels. Opening an Edit
+heading plus Contacts; outer padding surrounds the inner panels. There is no wrapper around the pair of inner panels. Opening an Edit
 highlights its actual padding automatically; closing it removes the green band.
 No debug toggle or preview wrapper adds another material layer.
 
@@ -72,20 +72,25 @@ whole table's background, opacity, border and X/Y padding. Clicking a cell selec
 its formatting target in a fixed, single-row toolbar above the preview: font,
 case, size, weight, color, horizontal/vertical alignment, background and opacity.
 The toolbar scrolls horizontally on small screens. Full name corner selects both
-top row and first column; other headers select the top row; body names select the
-first column; other body cells select individually. Highlight the selection and
-show its target label. Keyboard Enter/Space selects; arrows navigate cells.
+top row and first column; other headers select the top row; every body cell
+selects its entire semantic column (First/Second/Third column). Highlight all body
+cells in that column. Font, case, alignment, background and opacity apply together
+to the full column. Keyboard Enter/Space selects; arrows navigate cells.
 
-Saved individual cell styles use semantic stage/note and bounded visible row
-slots, never customer identity or account data. Matching Lead Station slots use
-these styles after rendering/filtering; a style follows the presentation slot,
-not a particular customer. Global table/header/name settings also apply to
-Outbound's matching columns; individual Lead Station slots do not map to unrelated
-Outbound fields. Status colors remain semantic. Background choices are Black,
-Gray, Blue, Yellow, Green and Pink. Full names default to Cormorant.
+Legacy individual-cell saves are read compatibly: the lowest saved body row in
+each stage/note column becomes its column formatting, and row overrides disappear
+from the normalized preview. No migration write is performed on load; owner Save
+persists the new column settings. This avoids mixed styles within a column.
+Status colors remain semantic. Column material accepts bounded opacity and the
+fixed Black/Gray/Blue/Yellow/Green/Pink palette. Shared matching Outbound Status
+formatting includes its column background. Full names default to Cormorant.
 
 Typography shows H1–H4/P1–P4 with one preview and one Edit per role. H3 previews
-Campaign details. Edit includes font, Normal/ALL CAPS, size, weight, color,
+Campaign details. Beside each role description, show a comma-separated list of
+linked rendered pages. An expandable bounded location list exposes every authored
+use with source path, line, selector and text excerpt; shared JS modules link to
+the pages that render them. Counts describe authored role uses, not repeated
+customer rows or occurrences of the preview word. Edit includes font, Normal/ALL CAPS, size, weight, color,
 Left/Centered/Right and Top/Middle/Bottom. Alignment buttons are removed.
 Each Edit has a restore icon returning only that editor to its last successfully
 saved values; selected-cell formatting also has a restore. Save updates this
@@ -148,7 +153,7 @@ only currently used icon controls: add, close, refresh, menu, search, dropdown,
 phone, email, microphone, copy, favorite, edit, send and settings. Save uses the selected glass finish. The chosen preset shows a checkmark and a
 full outlined card; an underline alone is insufficient.
 
-Runtime v7 drives the shared legacy material/typography variables, including
+Runtime v8 drives the shared legacy material/typography variables, including
 drawer frost and dense inner panels. Outbound tables share the saved table
 header, background, cell padding and type defaults while keeping their ten
 source columns; Full name and Status use the corresponding semantic roles.

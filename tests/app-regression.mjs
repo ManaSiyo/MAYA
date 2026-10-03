@@ -2715,7 +2715,7 @@ ok('Lead Station removes floating tools and opens conversation from full name ce
 ok('Lead categories replace phone/tier pills with four compact badges',MAP_SOURCE.includes("code:'SI'")&&MAP_SOURCE.includes("code:'CE'")&&MAP_SOURCE.includes("code:'SU'")&&MAP_SOURCE.includes("code:'?'"));
 const ownerDesignRuntime=readFileSync(join(ROOT,'aesthetics/ui/typography-controls.js'),'utf8');
 const ownerDesignConfig=readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8');
-ok('Outer and inner padding have live visual debug controls',compactGallery.includes('controlSizes') && readFileSync(join(ROOT,'aesthetics/aesthetic-control/overlay.js'),'utf8').includes('highlightPadding(panel') && readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes('highlightPadding(inner'));
+ok('Outer and inner padding have live visual debug controls',compactGallery.includes('controlSizes') && readFileSync(join(ROOT,'aesthetics/aesthetic-control/overlay.js'),'utf8').includes("'#gallery>.preview-section'") && readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes('highlightPadding(inner'));
 ok('Aesthetic Control owns saved icon and dropdown dimensions',ownerDesignConfig.includes("['iconSize','dropdownHeight']") && ownerDesignRuntime.includes('--maya-control-dropdown-height'));
 ok('Saved design settings and audit entries commit atomically',ownerDesignConfig.includes('_history:history') && ownerDesignConfig.includes("found.ok ? found.generation : '0'") && readFileSync(join(ROOT,'docs/server/server.js'),'utf8').includes('/api/admin/design-history'));
 ok('Admin Logs include successful Aesthetic Control saves',readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('/api/admin/design-history') && readFileSync(join(ROOT,'backend/status.html'),'utf8').includes("item.state==='saved'"));
@@ -2732,11 +2732,13 @@ ok('Inner panel padding surrounds heading and Contacts together',galleryScript.i
 ok('Admin failed voice starts resume the wake listener',MAP_SOURCE.includes('if(!_voice&&_wakeWantOn)_wakeSchedule(800)')&&MAP_SOURCE.includes('rec.onstart=')&&MAP_SOURCE.includes('wake listener did not start; retrying'));
 
 const cellEditorSource=readFileSync(join(ROOT,'aesthetics/aesthetic-control/table-cell-editor.js'),'utf8');
-ok('Table cells use one fixed formatting row with header, corner, column and cell selections',cellEditorSource.includes("bar.id='cell-format-toolbar'")&&cellEditorSource.includes("'corner':'header'")&&cellEditorSource.includes("settings.cells[key]")&&galleryCss.includes('.cell-format-fields{display:flex;'));
-ok('Only one table dropdown remains and cell overrides are bounded on the server',!surfaceEditors.includes("'Top row','header'")&&ownerDesignConfig.includes("Object.keys(t.cells).length>100")&&ownerDesignRuntime.includes('data-design-row'));
-ok('Panel preview uses one outer container with direct inner panels and pills',galleryScript.includes('content:surfaces')&&galleryScript.includes('surfaces.append(inner)')&&!galleryScript.includes('content.append(inner)'));
+ok('Table cells use one fixed formatting row with header, corner, column and cell selections',cellEditorSource.includes("bar.id='cell-format-toolbar'")&&cellEditorSource.includes("'corner':'header'")&&cellEditorSource.includes("[column]")&&galleryCss.includes('.cell-format-fields{display:flex;'));
+ok('Only one table dropdown remains and cell overrides are bounded on the server',!surfaceEditors.includes("'Top row','header'")&&ownerDesignConfig.includes("Object.keys(t.cells).length>100")&&ownerDesignRuntime.includes('Legacy cell saves now become whole-column'));
+ok('Panel preview uses one outer container with direct inner panels and pills',galleryScript.includes('const outer=surfaces')&&galleryScript.includes('surfaces.append(inner)')&&!galleryScript.includes('content.append(inner)'));
 ok('Each editor restores the saved baseline, all roles show counts, and finish choice is explicit',galleryScript.includes('usage.categories?.[category]?.count')&&galleryScript.includes('addRestore(edit')&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/restore-controls.js'),'utf8').includes('maya-gallery-saved')&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/finishes.js'),'utf8').includes("' ✓'"));
 ok('Icon previews are limited to current controls',galleryScript.includes('activeIcons.has(label)'));
+
+ok('Body selections style whole columns and typography reveals authored locations',cellEditorSource.includes("'Second column','Third column'")&&galleryScript.includes("evidence.className='role-locations'")&&galleryScript.includes('renderedPages'));
 
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

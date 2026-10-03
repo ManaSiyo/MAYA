@@ -1,3 +1,11 @@
+OCTOBER 2 evening — wrong outer-panel target and cell/column mismatch (LOCAL)
+Owner marked the enclosing review section as outer; the pair wrapper was an extra
+rectangle. Remove it, apply outer material/padding to review sections and highlight
+those actual edges. Body clicks now edit complete columns, not row slots; retain
+independent Top row plus the Full name corner combination. Old row overrides
+normalize into the lowest-row column style, preventing mixed saved cell formats.
+Typography evidence now lists rendered pages and every authored source use.
+
 OCTOBER 2 — table editor duplication and misleading padding preview (LOCAL)
 Replace six table dropdowns with one table editor plus click-selected cell/range
 formatting. Remove repeated per-example outer wrappers; one outer contains two

@@ -52,3 +52,6 @@ const cell={...type,background:'black',opacity:90};
 assert.equal(validDesign({...compact,table:{...compact.table,cells:{'note-0':cell,'stage-99':cell}}}),true);
 for(const cells of [{'name-0':cell},{'note-100':cell},{'note-01':cell},{'note-0':{...cell,size:99}},{'note-0':{...cell,background:'url(evil)'}},[],null])assert.equal(validDesign({...compact,table:{...compact.table,cells}}),false);
 console.log('Cell presentation overrides accept bounded semantic row slots and fixed styles only.');
+
+assert.equal(validDesign({...compact,table:{...compact.table,columns:[type,{...type,background:'green',opacity:50},type]}}),true);
+assert.equal(validDesign({...compact,table:{...compact.table,columns:[type,{...type,background:'url(evil)',opacity:50},type]}}),false);

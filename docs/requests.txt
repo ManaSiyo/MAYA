@@ -1,3 +1,13 @@
+OCTOBER 2 evening — complete column selections and marked outer panel (LOCAL)
+[x] Body cell clicks select First/Second/Third column; format/highlight all body rows.
+    Headers select Top row; Full name retains Top row + first column.
+[x] Add concise linked page lists beside typography role descriptors and expandable
+    source locations/text excerpts; all 14 H1 uses are discoverable.
+[x] Outer means the large enclosing review section. Delete the intermediate wrapper;
+    inner means Lead Station/Campaign details around heading + Contacts.
+[x] Convert old saved row formats into whole-column formats without live writes.
+[ ] Owner Push and authenticated live Save/preview verification.
+
 OCTOBER 2 — cell-formatting Aesthetic Control (LOCAL, NOT PUSHED)
 [x] Click preview cells; one fixed formatting row with font/case/size/weight/color,
     alignment/background/opacity. Corner selects header + name column; headers
