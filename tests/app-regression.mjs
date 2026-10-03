@@ -2709,7 +2709,7 @@ ok('Typography dropdowns anchor to their Edit control and constrain widths',gall
 const surfaceEditors=readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8');
 ok('Edit dropdowns dismiss on outside click, focus leaving and Escape',surfaceEditors.includes("document.addEventListener('click'")&&surfaceEditors.includes("document.addEventListener('focusin'")&&surfaceEditors.includes("e.key!=='Escape'"));
 ok('Aesthetic Control removes navigation, Reset and editor housing controls and centers Save',!readFileSync(join(ROOT,'aesthetics/aesthetic-control.html'),'utf8').includes('id="reset"')&&!compactGallery.includes('housing-editor')&&galleryCss.includes('.save-bar{justify-content:center}'));
-ok('Inner panel and filter have independently saved live geometry',surfaceEditors.includes("'Inner panel','inner'")&&surfaceEditors.includes("['width','Width'")&&compactGallery.includes('...surfacesEditor.settings()'));
+ok('Inner panel keeps live geometry and inactive Filter editor is removed',surfaceEditors.includes("'Inner panel','inner'")&&!surfaceEditors.includes("'Filter','filter'")&&compactGallery.includes('...surfacesEditor.settings()'));
 ok('Table has its own divider, header/first-column material and per-column type/alignment',surfaceEditors.includes('setupTableCellEditor')&&surfaceEditors.includes("'Table','table'")&&surfaceEditors.includes("['vertical','Vertical'"));
 ok('Lead Station removes floating tools and opens conversation from full name cells',!MAP_SOURCE.includes('id="leads-bar"')&&MAP_SOURCE.includes("k==='name'?' onclick=\"leadOpenThread("));
 ok('Lead categories replace phone/tier pills with four compact badges',MAP_SOURCE.includes("code:'SI'")&&MAP_SOURCE.includes("code:'CE'")&&MAP_SOURCE.includes("code:'SU'")&&MAP_SOURCE.includes("code:'?'"));
@@ -2745,6 +2745,14 @@ ok('Shared typography supports bounded 200–500 weights and italic',ownerDesign
 ok('Restore uses the shared Refresh SVG and padding only highlights its active field',readFileSync(join(ROOT,'aesthetics/aesthetic-control/restore-controls.js'),'utf8').includes("IconButton({label:'Restore saved '")&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/restore-controls.js'),'utf8').includes('edit.open&&active'));
 ok('Dropdown material has a saved live editor with border colors',galleryScript.includes("popupEdit.className='type-editor popup-editor'")&&galleryScript.includes("['borderColor','Border color',borders]")&&ownerDesignRuntime.includes('previewEditor'));
 ok('Aesthetic Control opens inside Admin and its logo returns to Admin',!MAP_SOURCE.includes('aesthetic-control.html" target="_blank"')&&readFileSync(join(ROOT,'aesthetics/ui/admin-design.js'),'utf8').includes('dialog.showModal()')&&galleryScript.includes('maya-design-close'));
+
+
+
+// October 2: one numeric editor convention and shared table settings panel.
+ok('All surface edits use numeric fields and split padding axes',!readFileSync(join(ROOT,'aesthetics/aesthetic-control/overlay.js'),'utf8').includes("input.type='range'")&&!readFileSync(join(ROOT,'aesthetics/aesthetic-control/finishes.js'),'utf8').includes("input.type='range'")&&galleryScript.includes("['paddingX','Padding X'")&&galleryScript.includes("['paddingY','Padding Y'"));
+ok('Table formatting housing follows shared inner material',ownerDesignRuntime.includes('#panels .inner-panel,#cell-format-toolbar'));
+ok('Gallery uses H2 section titles, H3 subsections, and removes the Filter preview',galleryScript.includes("h.className='gallery-section-title'")&&galleryScript.includes("h.className='gallery-subsection-title'")&&!galleryScript.includes("label:'Filter'"));
+ok('Save has no rim/shadow and the logo/title align left',galleryCss.includes('html body #save{border:0!important;box-shadow:none!important}')&&galleryCss.includes('grid-template-columns:40px minmax(0,1fr)'));
 
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

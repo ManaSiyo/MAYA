@@ -1,26 +1,26 @@
-[Codex] Fix header formatting and unify aesthetic editors within Admin
+[Codex] Unify aesthetic dropdowns and shared panel styling
 
-Make header typography override body-role rules so first-row font, size, weight,
-case, color and alignment change visibly. Add bounded 200–500 weights, italic,
-Bold/Italic and font-size plus/minus controls with matching icon previews. Replace
-restore glyphs with centered shared Refresh SVGs. Add black/white border colors
-for glass, panels, filters, tables and editor popups. Edit dropdown now controls the
-actual popup backing; Edit glass uses the same anchored popover. Padding highlights
-track active padding fields only and never persist.
+The fixed table formatting housing now follows Inner panel opacity, border, corners,
+X/Y padding and width rather than a hard-coded black style. Enclosing review panels
+share outer material/corners/padding. Glass and Outer Edit use the shared numeric
+input/select grid instead of drag sliders; every popup shares that editor style.
+Glass padding is numeric pixels. Popup padding splits into X/Y with compatible
+legacy single-padding reads and server validation. Add outer corners and propagate
+saved black/white borders consistently.
 
-Open Aesthetic Control in a same-origin Admin dialog, retain its Save/auth behavior,
-and return through the logo with origin/source-checked messaging. All served pages
-load runtime v9; gallery v23 and mutable script cache rules avoid stale editor code.
-Preserve existing whole-column selection, marked outer/inner hierarchy, role evidence,
-legacy design compatibility and account/project isolation. Update continuity docs.
+Remove unused gallery Filter button/preview/editor while retaining existing filter
+configuration and functional Admin/Outbound filters. Apply H2 to main section titles
+and H3 to Glass Section/Panels/Table. Remove Save rim/shadow, keep keyboard focus,
+and put logo/title on a left-aligned row like Admin. Preserve embedded Save/return,
+column selection, restores and account/project isolation. Bump gallery v24/runtime
+v10 across served pages. Update canonical design and continuity records.
 
-Validation: design-config/contract; component-gallery 11 widths with actual header
-styles, B/I/size controls, popup material/border, padding focus transitions, Save/reload
-and embedded Admin Save/logo return; full app-regression; canon-ui 11 pages/7 widths;
-Outbound UI/populated filters; CRM UI/failure/intelligence; refreshed role audit;
-actual-font screenshots; JS syntax and git diff checks.
+Validation: design-config/contract; component-gallery 11 widths (320–1920) including
+material equality, outer color/corners, numeric edits, legacy/split padding, left
+header and borderless Save, Save/reload and embedded Admin Save/return; full
+app-regression; canon-ui 11 pages/7 widths; Outbound UI/populated filters; CRM
+UI/failure/intelligence; actual-font visuals; syntax and git diff checks.
 
-Limits: Cormorant loads available 300/400/500 faces and uses the closest available
-face for lighter requested weights. Live authenticated Save/deployment verification
-remains after owner Push. No personal Chrome, live Save, communications, credentials,
-production configuration, push or deployment performed. Only owner Push remains.
+Limitations: public release and authenticated live Save require verification after
+owner Push. No personal Chrome, live Save, communications, credentials/environment,
+push or deployment performed. Only owner Push remains.

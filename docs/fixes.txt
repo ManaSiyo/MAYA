@@ -1,3 +1,11 @@
+OCTOBER 2 night — hard-coded table housing and inconsistent Edit controls (LOCAL)
+The fixed table toolbar had a separate black backing. It now uses shared inner-panel
+material/geometry. Remove Glass/Outer range inputs and unit-text padding fields;
+all menus use shared numeric/select controls. Popup padding splits into X/Y while
+old single-padding remains readable. Optional outer corners and black/white borders
+propagate to enclosing review sections. Remove unused gallery Filter controls,
+use shared H2/H3 hierarchy and align the logo/title. Save rim/shadow removed.
+
 OCTOBER 2 night — uneditable header, mismatched restore and padding state (LOCAL)
 General text-role CSS beat the header's font rules; explicit header/descendant scope
 now gives saved table-header settings priority. Restore is the shared Refresh SVG,

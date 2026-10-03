@@ -10,7 +10,7 @@ export function fields(parent,values,specs,onChange){
   const input=document.createElement(Array.isArray(options)?'select':'input');input.dataset.field=key;
   if(Array.isArray(options))for(const [value,text] of options){const option=document.createElement('option');option.value=value;option.textContent=text;input.append(option);}
   else{input.type='number';input.min=options.min??0;input.max=options.max;input.step=options.step??1;}
-  input.value=values[key];input.addEventListener('input',()=>{const value=Array.isArray(options)&&key!=='weight'?input.value:Number(input.value);if(!Array.isArray(options)&&(!Number.isInteger(value)||value<Number(input.min)||value>Number(input.max)))return;values[key]=value;onChange();});label.append(input);parent.append(label);
+  input.value=values[key];input.addEventListener('input',()=>{const value=key==='enabled'?input.value==='true':Array.isArray(options)&&key!=='weight'?input.value:Number(input.value);if(!Array.isArray(options)&&(!Number.isInteger(value)||value<Number(input.min)||value>Number(input.max)))return;values[key]=value;onChange();});label.append(input);parent.append(label);
  }
 }
 export const typeFields=[['font','Font',fonts],['case','Case',[['none','Normal'],['uppercase','ALL CAPS']]],['size','Size',{min:8,max:32}],['weight','Weight',Array.from({length:7},(_,i)=>[String(200+i*50),String(200+i*50)])],['style','Style',[['normal','Normal'],['italic','Italic']]],['color','Color',colors],['align','Alignment',[['left','Left'],['center','Centered'],['right','Right']]],['vertical','Vertical',[['top','Top'],['middle','Middle'],['bottom','Bottom']]]];
@@ -27,13 +27,9 @@ export function setupSurfaceEditors({panels,guide,design}){
  const render=()=>{window.MayaTypographyControls.previewSurfaces(settings);cellEditor?.refresh();for(const el of document.querySelectorAll('#panels .inner-panel')){el.style.setProperty('--padding-debug-x',settings.inner.paddingX+'px');el.style.setProperty('--padding-debug-y',settings.inner.paddingY+'px');}};
  const panelFields=[['fill','Opacity',{max:100}],['rim','Border',{max:100}],['borderColor','Border color',borders],['radius','Corners',{max:24}],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]];
  const inner=editor(panels,'Inner panel','inner',settings.inner,[...panelFields,['width','Width %',{min:20,max:100}]],render);panels.querySelector('.panel-preview').before(inner);
- highlightPadding(inner.querySelector('details'),()=>[...panels.querySelectorAll('.inner-panel')],()=>({x:settings.inner.paddingX,y:settings.inner.paddingY}));
- const filter=editor(panels,'Filter','filter',settings.filter,[...panelFields,['width','Width',{min:160,max:600}]],render);inner.after(filter);
- const filterPreview=panels.querySelector('.filter-preview');const filterEdit=filter.querySelector('details');
- highlightPadding(filterEdit,()=>[filterPreview],()=>({x:settings.filter.paddingX,y:settings.filter.paddingY}));
- new MutationObserver(()=>{filterPreview.hidden=!filterEdit.open;}).observe(filterEdit,{attributes:true,attributeFilter:['open']});
+ highlightPadding(inner.querySelector('details'),()=>[...panels.querySelectorAll('.inner-panel'),document.querySelector('#cell-format-toolbar')],()=>({x:settings.inner.paddingX,y:settings.inner.paddingY}));
  const divider=document.createElement('hr');divider.className='visual-divider';guide.before(divider);
- const title=document.createElement('h3');title.textContent='Table';guide.before(title);
+ const title=document.createElement('h3');title.textContent='Table';title.className='gallery-subsection-title';guide.before(title);
  const controls=document.createElement('div');controls.id='table-editors';guide.before(controls);
  editor(controls,'Table','table',settings.table,[['background','Background',backgrounds],['fill','Opacity',{max:100}],['rim','Border',{max:100}],['borderColor','Border color',borders],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]],render);
  cellEditor=setupTableCellEditor({guide,controls,settings:settings.table,render});

@@ -33,10 +33,10 @@
 .finish-choice{display:block;margin:0 auto 16px;background:none;border:1px solid transparent;border-radius:100px;color:#ffffff;cursor:pointer;padding:4px 12px;font:400 12px Jost,sans-serif}
 .finish-choice[aria-pressed="true"]{border-color:#adcdf8;background:#adcdf833;color:white}
 .finish-numbers{text-align:left;font-size:11px;line-height:1.8;margin:16px 0 0;color:#d0d9e6}
-.finish-controls{padding:4px 0 12px}.finish-controls p{margin:8px 0}.finish-controls label{display:flex;gap:10px;align-items:center}.finish-controls input{accent-color:#adcdf8}.finish-sliders{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:12px 0}.finish-sliders label{display:grid;grid-template-columns:1fr 45px}.finish-sliders input{grid-row:2;min-width:0;width:100%}.finish-sliders output{grid-row:2}.effect-note{font-size:11px;max-width:650px}
+.finish-controls{padding:4px 0 12px}.finish-controls p{margin:8px 0}.finish-controls input{accent-color:#adcdf8}.effect-note{font-size:11px;max-width:650px}
 #pill-preview .maya-icon-button,dialog .maya-icon-button{width:var(--preview-control-height,28px);height:var(--preview-control-height,28px)}
 .type-hierarchy{margin-top:24px}.type-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.7fr) minmax(0,1fr);gap:24px;align-items:center;padding:20px 0;border-top:1px solid #ffffff18}.type-row p{font-size:11px;margin:4px 0 0}.type-row small{font-size:11px;color:#aab5c4}.type-example{color:#ffffff;overflow-wrap:anywhere}.type-row[data-type="paragraph"] .type-example{color:#aab5c4}.type-row[data-type="brand"] .type-example{display:flex;align-items:center;gap:12px}.type-logo{width:42px;height:42px;object-fit:cover;border-radius:50%;border:0}.outbound-example>span{font-size:11px;color:#aab5c4}
-@media(max-width:700px){.comparison{grid-template-columns:1fr}.finish-sample{padding:12px 0}.finish-numbers{text-align:center;max-width:340px;margin:12px auto}.type-row{grid-template-columns:1fr;gap:10px}.finish-sliders{grid-template-columns:1fr}}
+@media(max-width:700px){.comparison{grid-template-columns:1fr}.finish-sample{padding:12px 0}.finish-numbers{text-align:center;max-width:340px;margin:12px auto}.type-row{grid-template-columns:1fr;gap:10px}}
 .no-blur .maya-glass[data-finish]{background:#071522;backdrop-filter:none;-webkit-backdrop-filter:none}
 @media(forced-colors:active){.maya-glass[data-finish]{background:Canvas;box-shadow:none;border-color:CanvasText;backdrop-filter:none}.finish-choice[aria-pressed="true"]{border-color:Highlight}}
 
@@ -99,7 +99,7 @@ body{text-align:center;line-height:1.4}
 .type-example{justify-content:center}.usage-evidence{margin:4px 0}.usage-evidence p{margin:2px auto}.usage-note{margin:6px auto}
 .housing-editor{margin:8px 0}.housing-editor label{display:inline-grid;gap:4px;margin:4px 6px;font-size:10px}.housing-editor input{width:60px;padding:4px;background:#071522;color:#fff;border:1px solid #ffffff44;border-radius:6px}
 .text-guide th,.text-guide td{text-align:center;padding:8px 4px}.text-guide .maya-pill{display:inline-flex;justify-content:center;padding:3px 8px}.text-guide+small{display:block;margin-top:6px}
-.finish-numbers{text-align:center}.state-sample{justify-items:center}.finish-controls label,.overlay-controls>label{justify-content:center}.source-style-list>div{justify-content:center}.page-link{padding:8px 0}.review-fold-body{padding-top:10px}
+.finish-numbers{text-align:center}.state-sample{justify-items:center}.source-style-list>div{justify-content:center}.page-link{padding:8px 0}.review-fold-body{padding-top:10px}
 .gallery-header h1::before{content:'H1 · ';font:400 10px Jost,sans-serif;color:#aab5c4}
 .preview-section h2::before{content:'H2 · ';font:400 10px Jost,sans-serif;color:#aab5c4}
 .preview-section h3:not(.type-category)::before{content:'H3 · ';font:400 10px Jost,sans-serif;color:#aab5c4}
@@ -117,7 +117,7 @@ body{text-align:center;line-height:1.4}
 .preview-section h2::before,.preview-section h3::before,.gallery-header h1::before{content:none!important}
 .finish-numbers:empty,#finish-status{display:none}.comparison{gap:12px}.finish-sample{padding:4px 0}.finish-controls{margin:0}.finish-controls details{margin-top:8px}
 #tokens{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:8px}.overlay-controls{border:0;margin-top:0;padding:0}
-#gallery>.preview-section{background-color:rgb(3 15 29 / var(--review-panel-fill))!important;border:1px solid rgb(var(--review-panel-border-rgb,255 255 255) / var(--review-panel-rim))!important;border-radius:12px;padding:var(--review-panel-paddingY,16px) var(--review-panel-paddingX,16px);backdrop-filter:var(--review-panel-filter)!important;-webkit-backdrop-filter:var(--review-panel-filter)!important}
+#gallery>.preview-section{background-color:rgb(3 15 29 / var(--review-panel-fill))!important;border:1px solid rgb(var(--review-panel-border-rgb,255 255 255) / var(--review-panel-rim))!important;border-radius:var(--review-panel-radius,12px);padding:var(--review-panel-paddingY,16px) var(--review-panel-paddingX,16px);backdrop-filter:var(--review-panel-filter)!important;-webkit-backdrop-filter:var(--review-panel-filter)!important}
 #table-preview{margin-top:12px;padding:8px;overflow-x:auto}.context-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.housing-editor{margin:4px 0}
 @media(max-width:700px){.type-row{grid-template-columns:1fr}.context-grid{grid-template-columns:1fr}}
 
@@ -156,11 +156,7 @@ body{text-align:center;line-height:1.4}
 
 .panel-editors{display:flex;justify-content:center;align-items:center;gap:12px 20px;flex-wrap:wrap;margin:12px 0}
 .panel-editors .surface-edit-row{margin:0;white-space:nowrap}
-.overlay-controls .type-editor-fields>label,.overlay-controls .finish-sliders{grid-column:1/-1}
-.overlay-controls .finish-sliders{padding:0;gap:12px;grid-template-columns:1fr 1fr}
-.overlay-controls .finish-sliders label{display:grid;grid-template-columns:1fr 45px;white-space:normal}
-.overlay-controls input[type=range]{padding:0;min-height:24px}
-.overlay-controls #overlay-enabled{width:auto;min-height:0}
+
 
 /* Glass sections create stacking contexts; the active editor must clear the next section. */
 .preview-section:has(.type-editor[open]){position:relative;z-index:20}
@@ -189,7 +185,7 @@ body{text-align:center;line-height:1.4}
 html body .type-setting,html body .type-setting :is(a,summary){text-transform:none!important}
 
 .restore-editor.maya-icon-button{width:24px;height:24px;padding:0;line-height:1;box-sizing:border-box}.restore-editor span{display:flex;align-items:center;justify-content:center}.restore-editor svg{width:14px;height:14px}
-.finish-controls .finish-sliders{grid-column:1/-1}.popup-editor{margin:0}.format-tools{display:flex;align-items:center;gap:4px}.format-tools .maya-icon-button{width:28px;height:28px;padding:0}.format-tools [aria-pressed=true]{outline:1px solid #adcdf8;background:#adcdf833}
+.popup-editor{margin:0}.format-tools{display:flex;align-items:center;gap:4px}.format-tools .maya-icon-button{width:28px;height:28px;padding:0}.format-tools [aria-pressed=true]{outline:1px solid #adcdf8;background:#adcdf833}
 .size-controls{display:flex;align-items:center;gap:4px}.size-controls .maya-icon-button{width:24px;height:24px;padding:0;flex:none}.size-controls input{min-width:42px!important}
 .cell-format-fields label:has(.size-controls){flex-basis:140px}.cell-format-fields>.format-tools{align-self:end;padding-bottom:2px}
 #admin-back{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;margin-bottom:8px}#admin-back img{width:100%;height:100%;object-fit:contain}
@@ -201,3 +197,14 @@ html body .type-setting,html body .type-setting :is(a,summary){text-transform:no
 .format-mark{display:inline-block;width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle}.cell-format-fields .format-mark{position:absolute}.cell-format-fields label:has(.format-mark){position:relative}.cell-format-fields label:has(.format-mark){text-indent:18px}.cell-format-fields select{text-indent:0}
 
 .type-editor-fields .format-mark{position:absolute;top:0;left:0}.type-editor-fields label:has(.format-mark){position:relative;text-indent:18px}.type-editor-fields :is(select,input){text-indent:0}
+
+/* Shared panel and numeric editor geometry. */
+html body #cell-format-toolbar{box-shadow:none;min-width:0}
+html body #save{border:0!important;box-shadow:none!important}
+.gallery-header{display:grid;grid-template-columns:40px minmax(0,1fr);align-items:center;column-gap:16px;text-align:left}
+html body .gallery-header h1{text-align:left!important;margin:0}.gallery-header #admin-back{margin:0}.gallery-header #feedback{grid-column:2;text-align:left}
+.type-editor-fields #tokens{display:contents}.type-editor-fields label{margin:0}.type-editor-fields #tokens input{font:12px Jost,sans-serif}
+
+.type-editor-fields label{display:grid;gap:4px;min-width:0}.type-editor-fields :is(input,select){width:100%;min-width:0}
+
+.type-editor-fields label{justify-content:normal;grid-column:auto}

@@ -3,14 +3,14 @@ import {addRestore,highlightPadding} from './restore-controls.js';
 import {setupSurfaceEditors,setupDismissal,fields,backgrounds,borders} from './surface-editors.js';
 import {setupOverlay} from './overlay.js';
 import {setupFinishes} from './finishes.js';
-import {Pill,IconButton,Drawer,FilterPopover,Metric} from '/aesthetics/ui/components/components.js';
+import {Pill,IconButton,Drawer,Metric} from '/aesthetics/ui/components/components.js';
 document.querySelector('#admin-back').addEventListener('click',e=>{if(window.parent!==window){e.preventDefault();window.parent.postMessage({type:'maya-design-close'},location.origin);}});
 const gallery=document.querySelector('#gallery'),feedback=document.querySelector('#feedback');
 const say=s=>feedback.textContent=s;
 const storedDesign=await window.MayaTypographyControls.ready;
-function section(title,id){const s=document.createElement('section');s.id=id;s.className='preview-section';const h=document.createElement('h2');h.textContent=title;s.append(h);gallery.append(s);return s;}
+function section(title,id){const s=document.createElement('section');s.id=id;s.className='preview-section';const h=document.createElement('h2');h.textContent=title;h.className='gallery-section-title';s.append(h);gallery.append(s);return s;}
 function row(parent){const r=document.createElement('div');r.className='preview-row';parent.append(r);return r;}
-function heading(parent,title){const h=document.createElement('h3');h.textContent=title;parent.append(h);}
+function heading(parent,title){const h=document.createElement('h3');h.textContent=title;h.className='gallery-subsection-title';parent.append(h);}
 const preview=section('Glass, Panels and Tables','pill-preview');
 const buttons=document.createElement('div');buttons.id='buttons';preview.append(buttons);heading(buttons,'Glass Section');
 const comparison=document.createElement('div');comparison.className='comparison';buttons.append(comparison);
@@ -34,8 +34,8 @@ const divider=document.createElement('hr');divider.className='visual-divider';pr
 const panels=document.createElement('div');panels.id='panels';preview.append(panels);heading(panels,'Panels');
 const surfaces=document.createElement('div');surfaces.className='context-grid';const outer=surfaces;outer.classList.add('panel-preview');panels.append(outer);
 for(const title of ['Lead Station','Campaign details']){const h=document.createElement('h3');h.textContent=title;h.dataset.previewCategory='H3';const metric=Metric({label:'Contacts',value:12});const inner=document.createElement('div');inner.className='inner-panel';inner.append(h,metric);surfaces.append(inner);}
-const drawer=Drawer({title:'Systems',content:[Metric({label:'AI today',value:'$0.12'})]}),filter=FilterPopover({title:'Filter',values:['Gray','Blue','Green'],onApply:v=>say(v.join(', ')||'None')});
-let openDrawer,openFilter;openDrawer=Pill({label:'Drawer',onClick:()=>drawer.showFrom(openDrawer)});openFilter=Pill({label:'Filter',onClick:()=>filter.showFrom(openFilter)});row(panels).append(openDrawer,openFilter);const filterPreview=document.createElement('div');filterPreview.className='filter-preview';filterPreview.hidden=true;filterPreview.textContent='Filter';panels.append(filterPreview);
+const drawer=Drawer({title:'Systems',content:[Metric({label:'AI today',value:'$0.12'})]});
+let openDrawer;openDrawer=Pill({label:'Drawer',onClick:()=>drawer.showFrom(openDrawer)});row(panels).append(openDrawer);
 const guide=document.createElement('div');guide.id='table-preview';guide.tabIndex=0;guide.setAttribute('role','region');guide.setAttribute('aria-label','Lead Station table preview');panels.append(guide);
 const table=document.createElement('table');table.className='text-guide';table.innerHTML='<thead><tr><th data-col="name">Full name</th><th data-col="stage">Status</th><th data-col="note">Latest Notes</th></tr></thead><tbody></tbody>';guide.append(table);
 for(const [name,badge,date,status,color,note] of [['Angela','?','Oct 1','Not contacted','#b5bdc8','Wedding, gala, or ceremony'],['Mary','SI','Sep 4','In progress','#fbbf24','A custom suit with a tailored fit']]){
@@ -68,42 +68,29 @@ for(const [category,key,text,where] of roles){
 function collapsible(section){const h=section.querySelector(':scope > h2'),details=document.createElement('details'),summary=document.createElement('summary'),body=document.createElement('div');details.className='review-fold';details.open=true;summary.append(h);body.className='review-fold-body';body.append(...section.childNodes);details.append(summary,body);section.append(details);}
 collapsible(preview);collapsible(fonts);
 for(const link of document.querySelectorAll('.gallery-header nav a'))link.addEventListener('click',()=>{const fold=document.querySelector(link.getAttribute('href')+' > .review-fold');if(fold)fold.open=true;});
-const finishes=setupFinishes({comparison,preview,drawer,filter,say});
+const finishes=setupFinishes({comparison,preview,drawer,say});
 const overlay=setupOverlay(comparison);const panelToolbar=document.createElement('div');panelToolbar.className='panel-editors';
 const outerControl=document.createElement('div');outerControl.className='surface-edit-row';outerControl.append(document.createTextNode('Outer panel'),document.querySelector('.overlay-controls'));
 panelToolbar.append(outerControl,...panels.querySelectorAll(':scope > .surface-edit-row'));outer.before(panelToolbar);
-const popupEdit=document.createElement('details');popupEdit.className='type-editor popup-editor';popupEdit.innerHTML='<summary>Edit dropdown</summary><div class="type-editor-fields"></div>';const popupRow=row(buttons);popupRow.append(popupEdit);fields(popupEdit.lastChild,editorSettings,[['background','Background',backgrounds],['fill','Opacity',{max:100}],['rim','Border',{max:100}],['borderColor','Border color',borders],['radius','Corners',{max:24}],['padding','Padding',{max:20}]],renderEditor);highlightPadding(popupEdit,()=>[popupEdit.querySelector('.type-editor-fields')],()=>({x:editorSettings.padding,y:editorSettings.padding}));addRestore(popupEdit,{label:'dropdown',read:()=>editorSettings,write:v=>{Object.assign(editorSettings,v);for(const input of popupEdit.querySelectorAll('[data-field]'))input.value=editorSettings[input.dataset.field];renderEditor();}});
-const advanced=document.querySelector('#advanced');buttons.querySelector('.finish-controls details').append(advanced.querySelector('#tokens'));advanced.remove();
+const popupEdit=document.createElement('details');popupEdit.className='type-editor popup-editor';popupEdit.innerHTML='<summary>Edit dropdown</summary><div class="type-editor-fields"></div>';const popupRow=row(buttons);popupRow.append(popupEdit);fields(popupEdit.lastChild,editorSettings,[['background','Background',backgrounds],['fill','Opacity',{max:100}],['rim','Border',{max:100}],['borderColor','Border color',borders],['radius','Corners',{max:24}],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]],renderEditor);highlightPadding(popupEdit,()=>[popupEdit.querySelector('.type-editor-fields')],()=>({x:editorSettings.paddingX,y:editorSettings.paddingY}));addRestore(popupEdit,{label:'dropdown',read:()=>editorSettings,write:v=>{Object.assign(editorSettings,v);for(const input of popupEdit.querySelectorAll('[data-field]'))input.value=editorSettings[input.dataset.field];renderEditor();}});
+const form=document.createElement('div');form.id='tokens';buttons.querySelector('.finish-controls .type-editor-fields').append(form);
 if(storedDesign?.glass)finishes.set({finish:storedDesign.finish,...storedDesign.glass});if(storedDesign?.overlay)overlay.set(storedDesign.overlay);
 addRestore(document.querySelector('.overlay-controls'),{label:'outer panel',read:overlay.settings,write:overlay.set});
 
 for(const pill of document.querySelectorAll('.maya-pill'))pill.dataset.previewCategory='P3';for(const label of document.querySelectorAll('.maya-metric-label,.maya-metric-value'))label.dataset.previewCategory='P2';for(const group of hierarchy.querySelectorAll('.type-group'))group.renderType();
 
-const source=await (await fetch('/aesthetics/ui/components/tokens.css')).text();
-const defaults=Object.fromEntries([...source.matchAll(/(--ui-[\w-]+):\s*([^;]+);/g)].map(m=>[m[1],m[2].trim()]));
-const storageKey='maya-component-gallery-tokens-v2';let saved={};try{saved=JSON.parse(localStorage.getItem(storageKey)||'{}');}catch{}
-let overrides={};
-function valid(key,value){if(!value||/[;{}<>]|url\s*\(|var\s*\(/i.test(value))return false;
- if(/alpha|fill$|highlight$/.test(key))return /^0(?:\.\d+)?$|^1(?:\.0+)?$|^\.\d+$/.test(value);
- if(key==='--ui-pill-weight')return /^(300|350|400)$/.test(value);
- if(/(?:size|width|radius|blur|padding-[xy]|gap|space|tracking|shadow-y)$/.test(key))return /^\d+(?:\.\d+)?px$/.test(value)&&parseFloat(value)<=500;
- const property=key.endsWith('saturation')?'width':key.endsWith('duration')?'transition-duration':key.endsWith('easing')?'transition-timing-function':key.endsWith('transform')?'text-transform':key.endsWith('height')?'line-height':key.endsWith('font')?'font-family':'color';
- return CSS.supports(property,value);
-}
-const form=document.querySelector('#tokens');
-for(const [key,value] of Object.entries(defaults).filter(([k])=>['--ui-pill-padding-x','--ui-pill-padding-y'].includes(k))){const label=document.createElement('label'),input=document.createElement('input');label.textContent=key.endsWith('-x')?'Side padding':'Vertical padding';input.name=key;input.value=valid(key,saved[key]||'')?saved[key]:value;
- if(key==='--ui-font')input.value=value;
- if(input.value!==value){overrides[key]=input.value;document.documentElement.style.setProperty(key,input.value);}input.addEventListener('input',()=>{const value=input.value.trim();const ok=valid(key,value);input.setAttribute('aria-invalid',String(!ok));if(!ok)return;overrides[key]=value;document.documentElement.style.setProperty(key,value);try{localStorage.setItem(storageKey,JSON.stringify(overrides));}catch{say('Preview updated; browser storage unavailable.');}});label.append(input);form.append(label);}
-for(const [key,value] of [['--ui-pill-padding-x',storedDesign.pillX],['--ui-pill-padding-y',storedDesign.pillY]])if(Number.isInteger(value)){const input=form.querySelector(`[name="${key}"]`);if(input){input.value=value+'px';document.documentElement.style.setProperty(key,value+'px');}}
+const pillPadding={paddingX:storedDesign.pillX,paddingY:storedDesign.pillY};
+function renderPillPadding(){for(const [axis,key] of [['x','paddingX'],['y','paddingY']])document.documentElement.style.setProperty('--ui-pill-padding-'+axis,pillPadding[key]+'px');}
+fields(form,pillPadding,[['paddingX','Padding X',{min:4,max:32}],['paddingY','Padding Y',{min:2,max:16}]],renderPillPadding);renderPillPadding();
 document.querySelector('#save').addEventListener('click',async()=>{
  const sizes=['H1','H2','H3','H4','P1','P2','P3','P4'].map(k=>typeSettings[k].size);
  if(sizes.slice(0,4).some((n,i)=>i&&n>=sizes[i-1])||sizes.slice(4).some((n,i)=>i&&n>sizes[i+3])){say('Headlines must descend in size; paragraphs must not grow down the list.');return;}
- const pillX=parseInt(form.querySelector('[name="--ui-pill-padding-x"]').value,10),pillY=parseInt(form.querySelector('[name="--ui-pill-padding-y"]').value,10);
+ const pillX=pillPadding.paddingX,pillY=pillPadding.paddingY;
  if(!Number.isInteger(pillX)||pillX<4||pillX>32||!Number.isInteger(pillY)||pillY<2||pillY>16){say('Pill padding must stay within 4–32px sideways and 2–16px vertically.');return;}
- const glass=finishes.settings();const value={...controlSizes,type:typeSettings,finish:glass.finish,glass:Object.fromEntries(['fill','tint','rim','highlight','blur','saturation','borderColor'].map(k=>[k,glass[k]])),overlay:overlay.settings(),editor:editorSettings,...surfacesEditor.settings(),pillX:parseInt(form.querySelector('[name="--ui-pill-padding-x"]').value,10),pillY:parseInt(form.querySelector('[name="--ui-pill-padding-y"]').value,10)};
+ const glass=finishes.settings();const value={...controlSizes,type:typeSettings,finish:glass.finish,glass:Object.fromEntries(['fill','tint','rim','highlight','blur','saturation','borderColor'].map(k=>[k,glass[k]])),overlay:overlay.settings(),editor:editorSettings,...surfacesEditor.settings(),pillX:pillPadding.paddingX,pillY:pillPadding.paddingY};
  const button=document.querySelector('#save');button.disabled=true;say('Saving…');try{say(await window.MayaTypographyControls.save(value));document.dispatchEvent(new Event('maya-gallery-saved'));}catch(e){say(e.message||'Save failed.');}finally{button.disabled=false;}
 });
 
-addRestore(document.querySelector('.finish-controls details'),{label:'glass',read:()=>({...finishes.settings(),pillX:form.querySelector('[name="--ui-pill-padding-x"]').value,pillY:form.querySelector('[name="--ui-pill-padding-y"]').value}),write:v=>{finishes.set(v);for(const [axis,key] of [['x','pillX'],['y','pillY']]){const input=form.querySelector('[name="--ui-pill-padding-'+axis+'"]');input.value=v[key];input.dispatchEvent(new Event('input',{bubbles:true}));}}});
-highlightPadding(document.querySelector('.finish-controls details'),()=>[...document.querySelectorAll('.maya-pill')],()=>({x:parseInt(form.querySelector('[name="--ui-pill-padding-x"]').value,10),y:parseInt(form.querySelector('[name="--ui-pill-padding-y"]').value,10)}));
+addRestore(document.querySelector('.finish-controls details'),{label:'glass',read:()=>({...finishes.settings(),pillX:pillPadding.paddingX,pillY:pillPadding.paddingY}),write:v=>{finishes.set(v);Object.assign(pillPadding,{paddingX:v.pillX,paddingY:v.pillY});for(const input of form.querySelectorAll('[data-field]'))input.value=pillPadding[input.dataset.field];renderPillPadding();}});
+highlightPadding(document.querySelector('.finish-controls details'),()=>[...document.querySelectorAll('.maya-pill')],()=>({x:pillPadding.paddingX,y:pillPadding.paddingY}));
 setupDismissal();

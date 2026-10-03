@@ -1,48 +1,46 @@
 # MAYA handoff — October 2, 2026
 
-## Current request: working header and unified editor controls
+## Current request: consistent numeric dropdowns and panel materials
 
-Local follow-up to 2ca4a7c, not pushed: gallery v23/shared runtime v9.
-First-row formatting now overrides general body-role CSS, including descendants.
-Role/table fonts accept bounded weights 200–500 and normal/italic. Shared formatting
-controls add Bold/Italic, size plus/minus and icon-marked alignment/color dropdowns.
-Restore uses the previewed shared Refresh SVG, centered beside each editor.
+Local follow-up to 4a01a51, not pushed: gallery v24/shared runtime v10.
+Glass/Outer Edit now use shared fields() numeric input/select grids like Inner Edit,
+with no drag sliders. Glass padding is numeric pixels, both X and Y. Popup settings
+have independent paddingX/Y (0–40px); legacy padding maps to both axes on read,
+never writes production state. Server accepts old and new schemas and optional
+outer radius (0–24px). Restore and validation retain saved baselines.
 
-Glass, outer/inner panels, filter, table and popup editors have black/white border
-colors. Edit dropdown changes actual popup background/opacity/border/corners/padding;
-Edit glass uses the same anchored popover as other edits. Padding bands appear only
-while a padding field is active and vanish on other fields/close; never persisted.
-Existing enclosing outer section, direct inner panels, whole-column selection and
-linked typography-location evidence are preserved. Optional old schemas still load.
+The fixed table-formatting toolbar is an actual shared inner panel: opacity, border,
+corners, X/Y padding and width follow Inner panel settings live and after reload.
+The enclosing Glass/Types review panels share outer fill/border/corners/padding;
+shared saved border colors now propagate to outer surfaces and drawers. There is
+still no intermediate wrapper. Popup material remains separately editable through
+Edit dropdown, with the same anchored numeric grid for every Edit menu.
 
-Admin quicklink opens a same-origin fullscreen dialog with Aesthetic Control iframe.
-Logo closes back to Admin with origin AND iframe-source checks; fallback goes to
-/status.html in the same tab. Save remains inside the view, reuses normal Admin auth
-and broadcasts updated settings. All served pages load shared runtime v9. Mutable
-component/Admin embed scripts receive no-cache Hosting headers.
+Unused gallery Filter preview, button and editor are removed. Existing saved filter
+configuration is retained unchanged for the functional Admin/Outbound data filters.
+Glass, Panels and Tables and Typography use H2; Glass Section, Panels and Table use
+H3 through the shared typography runtime. Save loses its rim/shadow while preserving
+keyboard focus feedback. Logo/title sit on one left-aligned header row like Admin.
+Admin embedded Save and logo return remain unchanged; all served pages load v10.
 
-Changed: gallery/finishes/overlay/surface/table/restore/format-tools/CSS; shared
-components/runtime and new admin-design module; Admin/served references, Hosting
-headers; design validator; design/component/app regression tests and role audit;
-AGENTS/design/request/fix/review continuity records. Tests: design-config/contract,
-component-gallery at 11 widths (320–1920) with visible header changes, B/I/size buttons,
-popup material/border and padding-focus transitions, saved reload and embedded Admin
-Save/return; full app-regression; canon-ui 11 pages/7 widths; Outbound UI/populated
-filters; CRM UI/failure/intelligence; isolated actual-font visual review; syntax/diff.
+Changed: gallery/finishes/overlay/surface editors/CSS; shared runtime and all served
+references; design validator; component/design/app tests; design/AGENTS/continuity.
+Validation: design-config/contract; component-gallery 11 widths (320–1920), matching
+inner/toolbar material, shared outer color/corners, all numeric menus, split padding
+and legacy reads, borderless Save/left header, Save/reload and embedded Admin return;
+full app-regression; canon-ui 11 pages/7 widths; Outbound UI and populated filters;
+CRM UI/failure/intelligence; actual-font visual review; JS syntax/diff checks.
 
-Limitations: Cormorant has 300/400/500 native faces, so lighter requested weights use
-the closest face. Role usage counts are authored templates, not dynamic row counts.
-Public release/live authenticated Save still need owner verification after Push.
-No personal Chrome, live design Save, provider messaging, credentials/config change,
-push or deployment performed.
-
-Exact next step: owner Push in GitHub Desktop, check release marker, then verify
-live Admin → Aesthetic Control, header edits, popup style, Save and logo return.
+Exact next step: owner Push in GitHub Desktop, check release marker, verify live
+Inner panel/table toolbar, consistent dropdowns, X/Y padding and authenticated Save.
+No personal Chrome, live design Save, provider messages, credentials/config edits,
+push or deployment performed. Cormorant still uses available 300/400/500 faces;
+usage counts remain authored templates rather than dynamic customer occurrences.
 
 ## Release status
 
-Local and origin matched 2ca4a7c before this task. The changes described above are
-local only; older implementation/shipment notes below are historical.
+Local and origin matched 4a01a51 before this task. This follow-up is local only.
+Older implementation/shipment notes below are historical.
 
 ## October 2 verified implementation and follow-up
 

@@ -61,3 +61,8 @@ assert.equal(validDesign({...compact,type:{...compact.type,H1:{...compact.type.H
 assert.equal(validDesign({...compact,type:{...compact.type,H1:{...compact.type.H1,style:'oblique'}}}),false);
 assert.equal(validDesign({...compact,glass:{...compact.glass,borderColor:'black'},overlay:{...compact.overlay,borderColor:'white'},editor:{...compact.editor,background:'black',borderColor:'black'},table:{...compact.table,borderColor:'black'}}),true);
 assert.equal(validDesign({...compact,editor:{...compact.editor,borderColor:'red'}}),false);
+
+assert.equal(validDesign({...compact,editor:{fill:100,rim:22,radius:12,paddingX:24,paddingY:10}}),true);
+for(const patch of [{paddingX:41},{paddingY:-1},{paddingX:'20'},{paddingY:null}])assert.equal(validDesign({...compact,editor:{fill:100,rim:22,radius:12,paddingX:24,paddingY:10,...patch}}),false);
+
+assert.equal(validDesign({...compact,overlay:{...compact.overlay,radius:20}}),true);assert.equal(validDesign({...compact,overlay:{...compact.overlay,radius:25}}),false);

@@ -57,11 +57,11 @@ and long content must remain accessible at 320–1920px widths.
 
 ## Owner review controls
 
-The first dropdown is Glass, Panels and Tables. Glass Section groups presets,
-material sliders, X/Y padding, icons, five pill colors and button States.
+Glass, Panels and Tables and Typography headings use H2; Glass Section, Panels and Table use H3. The first dropdown is Glass, Panels and Tables. Glass Section groups presets,
+numeric material controls, X/Y padding, icons, five pill colors and button States.
 A divider separates Panels, another separates Table. Panels have independent
-outer padding/material; Inner panel has opacity, border, corners, X/Y padding
-and percentage width. Filter has independent material/padding and pixel width.
+outer padding/material/corners; Inner panel has opacity, border, corners, X/Y padding
+and percentage width. The fixed table-formatting toolbar uses these same inner-panel settings. The unused Filter preview/button/editor are removed; saved filter data and functional Admin/Outbound filters remain compatible.
 The preview has the enclosing review section as outer panel, two direct inner panels, and a Contacts pill
 inside each inner panel: three material layers maximum. Inner padding surrounds
 heading plus Contacts; outer padding surrounds the inner panels. There is no wrapper around the pair of inner panels. Focusing or changing a padding field
@@ -95,11 +95,11 @@ customer rows or occurrences of the preview word. Edit includes font, Normal/ALL
 Left/Centered/Right and Top/Middle/Bottom. Alignment and color dropdowns show matching icon marks; Bold/Italic and font-size plus/minus controls are included.
 Each Edit has the shared, centered Refresh SVG as its restore icon returning only that editor to its last successfully
 saved values; selected-cell formatting also has a restore. Save updates this
-baseline. The global Reset, navigation and applied-status copy remain removed. Edit dropdown now controls the actual popup backing: palette background, opacity, black/white border color, border opacity, corners and padding. Old optional fields remain readable for saved compatibility.
-Save is centered. History is not introduced in this change; Reset is removed.
+baseline. The global Reset, navigation and applied-status copy remain removed. Edit dropdown now controls the actual popup backing: palette background, opacity, black/white border color, border opacity, corners and independent X/Y padding. Legacy single padding maps to both axes on read, without a migration write. Old optional fields remain readable for saved compatibility.
+Save is centered with no rim or shadow. The logo and Aesthetic Control title form a left-aligned header row like Admin. History is not introduced in this change; Reset is removed.
 Temporary Edit controls close on outside click, focus leaving, Escape or another
 Edit. Section folds and persistent States remain open until explicitly toggled.
-Popup backings and fields default to solid black; saved popup material customizes the backing. Edit glass uses the same anchored dropdown as Edit table. The popup opens beside its button,
+Popup backings and fields default to solid black; saved popup material customizes the backing. All Edit dropdowns use the same anchored grid and numeric input/select style as Inner panel; there are no drag sliders. Glass padding uses numeric pixels. Edit glass uses the same anchored dropdown as Edit table. The popup opens beside its button,
 clamps horizontally and opens upward when the footer leaves insufficient space.
 All popups and their fields stay inside their section at 320–1920px widths.
 At 420px and below, they use two columns. Font/case and material defaults fill
@@ -135,7 +135,7 @@ The preview lives in `aesthetics/aesthetic-control.html` with support files in `
 `aesthetics/ui/components/`; global application in
 `aesthetics/ui/typography-controls.js`. The Admin-authenticated save and public
 read endpoints are in `docs/server/server.js`; `docs/server/design-config.mjs`
-validates the settings. Served pages load runtime v6; Hosting revalidates this
+validates the settings. Served pages load runtime v10; Hosting revalidates this
 script instead of caching role mappings for a week. Old aesthetic PDFs were removed;
 the inactive style-inventory viewer, generated report and generator were removed;
 the active typography role audit remains. No page should introduce a competing design specification.
@@ -154,7 +154,7 @@ only currently used icon controls: add, close, refresh, menu, search, dropdown,
 phone, email, microphone, copy, favorite, edit, send and settings, plus the used minus, Bold, Italic, alignment, text-color and background controls. Save uses the selected glass finish. The chosen preset shows a checkmark and a
 full outlined card; an underline alone is insufficient.
 
-Runtime v8 drives the shared legacy material/typography variables, including
+Runtime v10 drives the shared legacy material/typography variables, including
 drawer frost and dense inner panels. Outbound tables share the saved table
 header, background, cell padding and type defaults while keeping their ten
 source columns; Full name and Status use the corresponding semantic roles.

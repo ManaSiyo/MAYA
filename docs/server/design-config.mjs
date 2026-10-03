@@ -24,14 +24,16 @@ export function validDesign(body) {
       sizes.slice(4).some((n,i)=>i&&n>sizes[i+3])) return false;
   for (const [obj,keys] of [[body.glass,['fill','tint','rim','highlight','blur','saturation']],
                             [body.overlay,['fill','rim','blur','saturation']]]) {
+    if(obj===body.overlay&&obj.radius!==undefined&&(!Number.isInteger(obj.radius)||obj.radius<0||obj.radius>24))return false;
     if(obj===body.overlay)for(const k of ['paddingX','paddingY'])if(obj[k]!==undefined&&(!Number.isInteger(obj[k])||obj[k]<0||obj[k]>40))return false;
-    if (Object.keys(obj).some(k => !keys.includes(k) && !(k==='borderColor'&&['black','white'].includes(obj[k])) && !(obj===body.overlay&&['paddingX','paddingY'].includes(k)) && !(obj===body.overlay && k==='enabled' && typeof obj.enabled==='boolean'))) return false;
+    if (Object.keys(obj).some(k => !keys.includes(k) && !(k==='borderColor'&&['black','white'].includes(obj[k])) && !(obj===body.overlay&&['paddingX','paddingY','radius'].includes(k)) && !(obj===body.overlay && k==='enabled' && typeof obj.enabled==='boolean'))) return false;
     for (const k of keys) if (!Number.isInteger(obj[k]) || obj[k] < 0 || obj[k] > (k === 'saturation' ? 200 : k === 'blur' ? 40 : 100)) return false;
   }
   if(body.editor!==undefined){
-    if(!body.editor || Object.keys(body.editor).some(k=>!['fill','rim','radius','padding','background','borderColor'].includes(k)))return false;
-    for(const [k,max] of [['fill',100],['rim',100],['radius',24],['padding',20]])if(!Number.isInteger(body.editor[k])||body.editor[k]<0||body.editor[k]>max)return false;
+    if(!body.editor || Object.keys(body.editor).some(k=>!['fill','rim','radius','padding','paddingX','paddingY','background','borderColor'].includes(k)))return false;
+    for(const [k,max] of [['fill',100],['rim',100],['radius',24]])if(!Number.isInteger(body.editor[k])||body.editor[k]<0||body.editor[k]>max)return false;
   }
+  if(body.editor!==undefined){const e=body.editor;if(e.padding!==undefined&&(!Number.isInteger(e.padding)||e.padding<0||e.padding>20))return false;for(const k of ['paddingX','paddingY'])if(!Number.isInteger(e[k]??e.padding)||(e[k]??e.padding)<0||(e[k]??e.padding)>40)return false;}
   if(body.editor?.background!==undefined&&!['black','gray','blue','yellow','green','pink'].includes(body.editor.background))return false;
   if(body.editor?.borderColor!==undefined&&!['black','white'].includes(body.editor.borderColor))return false;
   const numeric=(obj,ranges)=>obj&&Object.entries(ranges).every(([k,max])=>Number.isInteger(obj[k])&&obj[k]>=0&&obj[k]<=max);
