@@ -3,6 +3,7 @@ import {setupTableCellEditor} from './table-cell-editor.js';
 // Live, saved presentation controls; no account data or provider operations.
 const fonts=[['jost','Jost'],['cormorant','Cormorant']],colors=[['white','White'],['gray','Gray']],backgrounds=['black','gray','blue','yellow','green','pink'].map(v=>[v,v[0].toUpperCase()+v.slice(1)]);
 export {backgrounds};
+export const borders=[['white','White'],['black','Black']];
 export function fields(parent,values,specs,onChange){
  for(const [key,title,options] of specs){
   const label=document.createElement('label');label.append(document.createTextNode(title));
@@ -12,7 +13,7 @@ export function fields(parent,values,specs,onChange){
   input.value=values[key];input.addEventListener('input',()=>{const value=Array.isArray(options)&&key!=='weight'?input.value:Number(input.value);if(!Array.isArray(options)&&(!Number.isInteger(value)||value<Number(input.min)||value>Number(input.max)))return;values[key]=value;onChange();});label.append(input);parent.append(label);
  }
 }
-export const typeFields=[['font','Font',fonts],['case','Case',[['none','Normal'],['uppercase','ALL CAPS']]],['size','Size',{min:8,max:32}],['weight','Weight',[['300','300'],['350','350'],['400','400']]],['color','Color',colors],['align','Alignment',[['left','Left'],['center','Centered'],['right','Right']]],['vertical','Vertical',[['top','Top'],['middle','Middle'],['bottom','Bottom']]]];
+export const typeFields=[['font','Font',fonts],['case','Case',[['none','Normal'],['uppercase','ALL CAPS']]],['size','Size',{min:8,max:32}],['weight','Weight',Array.from({length:7},(_,i)=>[String(200+i*50),String(200+i*50)])],['style','Style',[['normal','Normal'],['italic','Italic']]],['color','Color',colors],['align','Alignment',[['left','Left'],['center','Centered'],['right','Right']]],['vertical','Vertical',[['top','Top'],['middle','Middle'],['bottom','Bottom']]]];
 function editor(parent,label,id,values,specs,render){
  const host=document.createElement('div');host.className='surface-edit-row';host.dataset.editor=id;
  const title=document.createElement('span');title.textContent=label;
@@ -24,7 +25,7 @@ export function setupSurfaceEditors({panels,guide,design}){
  const settings={inner:structuredClone(design.inner),filter:structuredClone(design.filter),table:structuredClone(design.table)};
  let cellEditor;
  const render=()=>{window.MayaTypographyControls.previewSurfaces(settings);cellEditor?.refresh();for(const el of document.querySelectorAll('#panels .inner-panel')){el.style.setProperty('--padding-debug-x',settings.inner.paddingX+'px');el.style.setProperty('--padding-debug-y',settings.inner.paddingY+'px');}};
- const panelFields=[['fill','Opacity',{max:100}],['rim','Border',{max:100}],['radius','Corners',{max:24}],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]];
+ const panelFields=[['fill','Opacity',{max:100}],['rim','Border',{max:100}],['borderColor','Border color',borders],['radius','Corners',{max:24}],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]];
  const inner=editor(panels,'Inner panel','inner',settings.inner,[...panelFields,['width','Width %',{min:20,max:100}]],render);panels.querySelector('.panel-preview').before(inner);
  highlightPadding(inner.querySelector('details'),()=>[...panels.querySelectorAll('.inner-panel')],()=>({x:settings.inner.paddingX,y:settings.inner.paddingY}));
  const filter=editor(panels,'Filter','filter',settings.filter,[...panelFields,['width','Width',{min:160,max:600}]],render);inner.after(filter);
@@ -34,7 +35,7 @@ export function setupSurfaceEditors({panels,guide,design}){
  const divider=document.createElement('hr');divider.className='visual-divider';guide.before(divider);
  const title=document.createElement('h3');title.textContent='Table';guide.before(title);
  const controls=document.createElement('div');controls.id='table-editors';guide.before(controls);
- editor(controls,'Table','table',settings.table,[['background','Background',backgrounds],['fill','Opacity',{max:100}],['rim','Border',{max:100}],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]],render);
+ editor(controls,'Table','table',settings.table,[['background','Background',backgrounds],['fill','Opacity',{max:100}],['rim','Border',{max:100}],['borderColor','Border color',borders],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]],render);
  cellEditor=setupTableCellEditor({guide,controls,settings:settings.table,render});
  highlightPadding(controls.querySelector('details'),()=>[...guide.querySelectorAll('td,th')],()=>({x:settings.table.paddingX,y:settings.table.paddingY}));
  render();return {settings:()=>settings};

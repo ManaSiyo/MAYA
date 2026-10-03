@@ -1,3 +1,13 @@
+OCTOBER 2 night — header formatting and unified controls (LOCAL)
+[x] Make first-row font/size/weight/case/color/alignment visibly editable.
+[x] Use centered shared Refresh SVG for restore; preview every used formatting icon.
+[x] Weight 200–500, Bold/Italic, font-size plus/minus and alignment/color dropdowns.
+[x] Black/white border colors; actual popup material editor and anchored Glass Edit.
+[x] Padding highlight only while focusing/modifying padding, not other settings.
+[x] Open Aesthetic Control within Admin; logo returns, embedded Save still works.
+[x] Shared runtime loaded across served pages, cache invalidation and regression checks.
+[ ] Owner Push and live authenticated Admin Save verification.
+
 OCTOBER 2 evening — complete column selections and marked outer panel (LOCAL)
 [x] Body cell clicks select First/Second/Third column; format/highlight all body rows.
     Headers select Top row; Full name retains Top row + first column.

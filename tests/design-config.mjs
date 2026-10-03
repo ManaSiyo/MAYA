@@ -9,7 +9,7 @@ assert.equal(validDesign(good),true);
 for(const bad of [
  {...good,type:{...good.type,H4:{...good.type.H4,size:20}}},
  {...good,type:{...good.type,P1:{...good.type.P1,size:11}}},
- {...good,type:{...good.type,P1:{...good.type.P1,weight:500}}},
+ {...good,type:{...good.type,P1:{...good.type.P1,weight:501}}},
  {...good,type:{...good.type,P1:{...good.type.P1,color:'red'}}},
  {...good,glass:{...good.glass,fill:'0);body{display:none}' }},
  {...good,extra:'unapproved'}
@@ -55,3 +55,9 @@ console.log('Cell presentation overrides accept bounded semantic row slots and f
 
 assert.equal(validDesign({...compact,table:{...compact.table,columns:[type,{...type,background:'green',opacity:50},type]}}),true);
 assert.equal(validDesign({...compact,table:{...compact.table,columns:[type,{...type,background:'url(evil)',opacity:50},type]}}),false);
+
+for(const weight of [200,250,450,500])assert.equal(validDesign({...compact,type:{...compact.type,H1:{...compact.type.H1,weight,style:'italic'}}}),true);
+assert.equal(validDesign({...compact,type:{...compact.type,H1:{...compact.type.H1,weight:199}}}),false);
+assert.equal(validDesign({...compact,type:{...compact.type,H1:{...compact.type.H1,style:'oblique'}}}),false);
+assert.equal(validDesign({...compact,glass:{...compact.glass,borderColor:'black'},overlay:{...compact.overlay,borderColor:'white'},editor:{...compact.editor,background:'black',borderColor:'black'},table:{...compact.table,borderColor:'black'}}),true);
+assert.equal(validDesign({...compact,editor:{...compact.editor,borderColor:'red'}}),false);

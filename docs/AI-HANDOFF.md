@@ -1,45 +1,48 @@
 # MAYA handoff — October 2, 2026
 
-## Current request: whole columns and the marked outer panel
+## Current request: working header and unified editor controls
 
-Local follow-up to d63d20b, not pushed: gallery v22/shared runtime v8. Full name
-corner retains top row + first column; other headers select only top row. Any
-body cell selects all body cells in its semantic column, labeled First/Second/
-Third column. Fixed formatting row edits the entire column, including validated
-background/opacity. Restore uses last successful Save. Legacy row-slot overrides
-normalize using the lowest saved row per stage/note column, becoming column styles;
-load never writes production state. Old schemas remain server-readable.
+Local follow-up to 2ca4a7c, not pushed: gallery v23/shared runtime v9.
+First-row formatting now overrides general body-role CSS, including descendants.
+Role/table fonts accept bounded weights 200–500 and normal/italic. Shared formatting
+controls add Bold/Italic, size plus/minus and icon-marked alignment/color dropdowns.
+Restore uses the previewed shared Refresh SVG, centered beside each editor.
 
-Outer panel is the review section enclosing Glass, Panels and Tables (and the
-Typography section's same material). Remove the intermediate rectangle around the
-two examples; direct inner panels contain Lead Station/Campaign details + Contacts.
-Opening Outer Edit highlights the enclosing section's real X/Y padding; inner
-highlight remains on each inner panel. Responsive popup positioning still uses
-the actual trigger and section bounds.
+Glass, outer/inner panels, filter, table and popup editors have black/white border
+colors. Edit dropdown changes actual popup background/opacity/border/corners/padding;
+Edit glass uses the same anchored popover as other edits. Padding bands appear only
+while a padding field is active and vanish on other fields/close; never persisted.
+Existing enclosing outer section, direct inner panels, whole-column selection and
+linked typography-location evidence are preserved. Optional old schemas still load.
 
-Typography role descriptors include linked, comma-separated rendered page names.
-A bounded expandable list shows every authored location: source path/line,
-selector, safe text excerpt. All 14 H1 uses are listed; counts are roles/templates,
-not occurrences of the preview text. JS-generated controls link to rendered pages
-(Outbound module to Outbound, AI meter to Admin/Outbound, owner CRM to Admin).
+Admin quicklink opens a same-origin fullscreen dialog with Aesthetic Control iframe.
+Logo closes back to Admin with origin AND iframe-source checks; fallback goes to
+/status.html in the same tab. Save remains inside the view, reuses normal Admin auth
+and broadcasts updated settings. All served pages load shared runtime v9. Mutable
+component/Admin embed scripts receive no-cache Hosting headers.
 
-Changed: gallery/overlay/CSS/table selection, shared runtime, optional column
-material validator, served cache references; gallery/design/app regression;
-AGENTS/design/continuity records. Validation: component-gallery 11 widths with
-whole-column formatting/restore, black anchored popups, all H1 evidence, no extra
-wrapper, marked outer-padding geometry, Save/reload and Admin propagation;
-design-config/contract; app-regression; canon-ui 11 pages/7 widths; Outbound UI/
-populated filters; CRM UI/failure/intelligence. Isolated actual-font visual review.
+Changed: gallery/finishes/overlay/surface/table/restore/format-tools/CSS; shared
+components/runtime and new admin-design module; Admin/served references, Hosting
+headers; design validator; design/component/app regression tests and role audit;
+AGENTS/design/request/fix/review continuity records. Tests: design-config/contract,
+component-gallery at 11 widths (320–1920) with visible header changes, B/I/size buttons,
+popup material/border and padding-focus transitions, saved reload and embedded Admin
+Save/return; full app-regression; canon-ui 11 pages/7 widths; Outbound UI/populated
+filters; CRM UI/failure/intelligence; isolated actual-font visual review; syntax/diff.
+
+Limitations: Cormorant has 300/400/500 native faces, so lighter requested weights use
+the closest face. Role usage counts are authored templates, not dynamic row counts.
+Public release/live authenticated Save still need owner verification after Push.
+No personal Chrome, live design Save, provider messaging, credentials/config change,
+push or deployment performed.
 
 Exact next step: owner Push in GitHub Desktop, check release marker, then verify
-live authenticated design Save. No Chrome profile, live Save, messaging/provider,
-credentials, production configuration or push was performed.
+live Admin → Aesthetic Control, header edits, popup style, Save and logo return.
 
 ## Release status
 
-Local and origin matched d63d20b before this task; owner has pushed the prior
-cell-editor commit. Current whole-column/outer-panel change is local. Codex has
-not pushed or deployed. Older implementation/shipment notes below are historical.
+Local and origin matched 2ca4a7c before this task. The changes described above are
+local only; older implementation/shipment notes below are historical.
 
 ## October 2 verified implementation and follow-up
 

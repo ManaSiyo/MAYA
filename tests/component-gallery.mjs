@@ -11,7 +11,7 @@ try{
  assert.match(await page.title(),/MAYA Aesthetic Control/);
  assert.equal(await page.locator('.type-group').count(),8);
  assert.ok(await page.locator('.type-category').evaluateAll(es=>es.every(e=>/^[HP][1-4] \(\d+\)$/.test(e.textContent))),'Every role shows an authored usage count');
- assert.equal(await page.locator('.restore-editor').count(),15,'Each editor plus selected cell formatting has a restore');
+ assert.equal(await page.locator('.restore-editor').count(),16,'Each editor plus selected cell formatting has a restore');
  assert.equal(await page.locator('.icon-row [aria-label="Download"]').count(),0,'Unused icon preview removed');
  assert.deepEqual(await page.locator('.type-group').evaluateAll(es=>es.map(e=>e.dataset.category)),['H1','H2','H3','H4','P1','P2','P3','P4']);
  assert.equal(await page.locator('[data-type="dashboard"]').getAttribute('data-type'),'dashboard');
@@ -41,9 +41,11 @@ try{
  await page.locator('.overlay-controls summary').click();
 
  await page.locator('.overlay-controls summary').click();
+ assert.equal(await page.locator('#pill-preview.show-padding').count(),0,'Opening an editor does not highlight padding');await page.getByRole('slider',{name:'Padding X',exact:true}).focus();
  assert.equal(await page.locator('#pill-preview.show-padding').count(),1);
  assert.equal(await page.locator('#pill-preview').first().evaluate(e=>getComputedStyle(e,'::after').borderTopWidth),'14px');
  assert.equal(await page.locator('#pill-preview').first().evaluate(e=>getComputedStyle(e,'::after').borderLeftWidth),'24px');
+ await page.getByRole('slider',{name:'Fill',exact:true}).focus();assert.equal(await page.locator('#pill-preview.show-padding').count(),0,'Moving to material hides padding');
  await page.locator('[data-editor="inner"] summary').click();
  await page.locator('[data-editor="inner"] [data-field="paddingX"]').fill('22');
  assert.equal(await page.locator('#panels .inner-panel.show-padding').count(),2);
@@ -55,6 +57,7 @@ try{
  assert.equal(await page.locator('.icon-row .maya-icon-button').first().evaluate(e=>getComputedStyle(e).width),'36px');
  assert.equal(await page.locator('.dropdown-preview').evaluate(e=>getComputedStyle(e).minHeight),'32px');
  await page.locator('.gallery-header h1').click();
+ assert.ok(await page.locator('.restore-editor').first().evaluate(e=>e.querySelector('svg')?.querySelector('path')?.getAttribute('d')===document.querySelector('.icon-row [aria-label="Refresh"] path').getAttribute('d')),'Restore uses the previewed Refresh SVG');
  assert.equal(await page.locator('#save').evaluate(e=>getComputedStyle(e).backgroundColor),await page.locator('#buttons>.preview-row .maya-pill').first().evaluate(e=>getComputedStyle(e).backgroundColor));
  assert.equal(await page.locator('#gallery > section').first().getAttribute('id'),'pill-preview');
  assert.equal(await page.locator('#pill-colors .status-example').count(),5);
@@ -92,6 +95,7 @@ try{
  assert.equal(await page.locator('#table-preview .lead-open').first().evaluate(e=>[...e.children].map(n=>n.tagName==='TIME'?'date':n.className).join(',')),'lead-identity,date,category-badge');
  await cell('th[data-col="stage"]','background','blue');await cell('th[data-col="stage"]','opacity','80');await cell('th[data-col="stage"]','font','cormorant');await cell('th[data-col="stage"]','size','14');
  assert.equal(await page.locator('#cell-selection').innerText(),'Top row');assert.equal(await page.locator('#table-preview .cell-selected').count(),3);
+ assert.equal(await page.locator('#table-preview th').first().evaluate(e=>getComputedStyle(e).fontSize),'14px','Header size actually changes');assert.match(await page.locator('#table-preview th').first().evaluate(e=>getComputedStyle(e).fontFamily),/Cormorant/);await cell('th[data-col="stage"]','weight','500');await cell('th[data-col="stage"]','color','white');await cell('th[data-col="stage"]','case','uppercase');await cell('th[data-col="stage"]','align','right');assert.equal(await page.locator('#table-preview th').first().evaluate(e=>getComputedStyle(e).color),'rgb(255, 255, 255)');assert.equal(await page.locator('#table-preview th').first().evaluate(e=>getComputedStyle(e).fontWeight),'500');assert.equal(await page.locator('#table-preview th').first().evaluate(e=>getComputedStyle(e).textAlign),'right');
  await cell('td[data-col="name"]','background','pink');await cell('td[data-col="name"]','opacity','60');await cell('td[data-col="name"]','font','cormorant');await cell('td[data-col="name"]','align','right');await cell('td[data-col="name"]','vertical','top');
  assert.equal(await page.locator('#cell-selection').innerText(),'First column');assert.equal(await page.locator('#table-preview .cell-selected').count(),2);
  await cell('td[data-col="note"]','size','15');
@@ -111,9 +115,12 @@ try{
  assert.equal(await page.locator('[data-category="H1"] .role-locations a').count(),14,'Every authored H1 is listed');
  assert.ok(await page.locator('[data-category="H1"] .type-setting').innerText().then(text=>text.toLowerCase().includes('app')&&text.toLowerCase().includes('status')));
  await page.locator('.gallery-header h1').click();
+ await page.locator('#cell-format-toolbar [aria-label="Increase font size"]').click();assert.equal(await page.locator('#table-preview td[data-col="stage"]').first().evaluate(e=>getComputedStyle(e).fontSize),'13px');await page.locator('#cell-format-toolbar [aria-label="Decrease font size"]').click();assert.equal(await page.locator('#table-preview td[data-col="stage"]').first().evaluate(e=>getComputedStyle(e).fontSize),'12px');await page.locator('#cell-format-toolbar [aria-label="Bold"]').click();assert.equal(await page.locator('#table-preview td[data-col="stage"]').first().evaluate(e=>getComputedStyle(e).fontWeight),'500');await page.locator('#cell-format-toolbar [aria-label="Bold"]').click();
+ await page.locator('#cell-format-toolbar [aria-label="Italic"]').click();assert.equal(await page.locator('#table-preview td[data-col="stage"]').first().evaluate(e=>getComputedStyle(e).fontStyle),'italic');
  await page.locator('[data-category="H4"] .type-editor summary').click();
  await page.locator('[data-category="H4"] [data-field="size"]').fill('12');
  assert.equal(await page.locator('[data-type="dashboard"] .type-example').evaluate(e=>getComputedStyle(e).fontSize),'12px');
+ await page.locator('.popup-editor summary').click();await page.locator('.popup-editor [data-field="background"]').selectOption('blue');assert.match(await page.locator('.popup-editor .type-editor-fields').evaluate(e=>getComputedStyle(e).backgroundColor),/35, 76, 125/);await page.locator('.popup-editor [data-field="borderColor"]').selectOption('black');assert.match(await page.locator('.popup-editor .type-editor-fields').evaluate(e=>getComputedStyle(e).borderColor),/0, 0, 0/);await page.locator('.popup-editor [data-field="borderColor"]').selectOption('white');await page.locator('.popup-editor [data-field="background"]').selectOption('black');await page.locator('.popup-editor [data-field="fill"]').fill('100');await page.keyboard.press('Escape');
  await page.locator('#save').click();await page.waitForFunction(()=>document.querySelector('#feedback').textContent.includes('Saved locally'));assert.match(await page.locator('#feedback').textContent(),/Saved locally/);
  await page.reload();await page.locator('[data-category="H4"] .type-row').first().waitFor();
  assert.equal(await page.locator('[data-type="dashboard"] .type-example').evaluate(e=>getComputedStyle(e).fontSize),'12px');
@@ -143,6 +150,7 @@ try{
  const designLink=page.getByRole('link',{name:'Aesthetic Control',exact:true});
  assert.equal(await designLink.getAttribute('href'),'/aesthetics/aesthetic-control.html');
  assert.equal(await designLink.evaluate(e=>getComputedStyle(e).borderRadius),'100px');
+ await designLink.click();await page.locator('#admin-design[open]').waitFor();await page.frameLocator('#admin-design iframe').locator('#cell-format-toolbar').waitFor();await page.frameLocator('#admin-design iframe').locator('#save').click();await page.frameLocator('#admin-design iframe').locator('#feedback').filter({hasText:'Saved locally'}).waitFor();await page.frameLocator('#admin-design iframe').locator('#admin-back').click();await page.waitForFunction(()=>!document.querySelector('#admin-design').open);assert.equal(await page.locator('#admin-design').evaluate(e=>e.open),false,'Logo returns to same Admin');assert.equal(new URL(page.url()).pathname,'/backend/status.html');
  await page.goto('https://maya.test/frontend/index.html',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>!!document.getElementById('maya-typography-control-style'));
  assert.equal(await page.locator('#brand-title').evaluate(e=>getComputedStyle(e).fontSize),'24px');
@@ -181,8 +189,9 @@ try{
    assert.ok(await editor.locator('.type-editor-fields').evaluate(panel=>{const box=panel.getBoundingClientRect();return [...panel.querySelectorAll('input,select')].every(e=>{const b=e.getBoundingClientRect(),y=b.top+b.height/2;if(y<box.top||y>box.bottom)return true;const hit=document.elementFromPoint(b.left+b.width/2,y);return hit===e||e.contains(hit);});}),`${id} visible fields stay above the following section at ${width}`);
    await page.keyboard.press('Escape');
   }
+  for(const selector of ['.popup-editor','.finish-controls .type-editor']){const popup=page.locator(selector);await popup.locator('summary').click();assert.ok(await popup.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.width>0;}),selector+' fits '+width);await page.keyboard.press('Escape');}
   const sizeEditor=page.locator('.control-size-editor');await sizeEditor.locator('summary').click();assert.ok(await sizeEditor.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth;}),'Size editor fits '+width);await page.keyboard.press('Escape');
-  await page.locator('#cell-format-toolbar').evaluate(e=>{const r=e.getBoundingClientRect();if(r.left<0||r.right>innerWidth)throw Error('Cell toolbar overflow');const fields=e.querySelector('.cell-format-fields');if(new Set([...fields.children].map(c=>Math.round(c.getBoundingClientRect().top))).size!==1)throw Error('Cell toolbar wraps');});
+  await page.locator('#cell-format-toolbar').evaluate(e=>{const r=e.getBoundingClientRect();if(r.left<0||r.right>innerWidth)throw Error('Cell toolbar overflow');const fields=e.querySelector('.cell-format-fields');if(new Set([...fields.querySelectorAll(':scope>label')].filter(e=>getComputedStyle(e).display!=='none').map(c=>Math.round(c.getBoundingClientRect().top))).size!==1)throw Error('Cell toolbar wraps');});
   await page.locator('#pill-preview > .review-fold').evaluate(e=>e.open=false);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'overflow '+width);
  }

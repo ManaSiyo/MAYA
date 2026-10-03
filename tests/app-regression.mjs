@@ -2740,5 +2740,11 @@ ok('Icon previews are limited to current controls',galleryScript.includes('activ
 
 ok('Body selections style whole columns and typography reveals authored locations',cellEditorSource.includes("'Second column','Third column'")&&galleryScript.includes("evidence.className='role-locations'")&&galleryScript.includes('renderedPages'));
 
+ok('Header formatting wins over the general text role',ownerDesignRuntime.includes("const headerScope=")&&ownerDesignRuntime.includes('font-style:${s.style'));
+ok('Shared typography supports bounded 200–500 weights and italic',ownerDesignConfig.includes('v.weight<200||v.weight>500')&&galleryScript.includes('<option>500</option>')&&galleryScript.includes('formatTools'));
+ok('Restore uses the shared Refresh SVG and padding only highlights its active field',readFileSync(join(ROOT,'aesthetics/aesthetic-control/restore-controls.js'),'utf8').includes("IconButton({label:'Restore saved '")&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/restore-controls.js'),'utf8').includes('edit.open&&active'));
+ok('Dropdown material has a saved live editor with border colors',galleryScript.includes("popupEdit.className='type-editor popup-editor'")&&galleryScript.includes("['borderColor','Border color',borders]")&&ownerDesignRuntime.includes('previewEditor'));
+ok('Aesthetic Control opens inside Admin and its logo returns to Admin',!MAP_SOURCE.includes('aesthetic-control.html" target="_blank"')&&readFileSync(join(ROOT,'aesthetics/ui/admin-design.js'),'utf8').includes('dialog.showModal()')&&galleryScript.includes('maya-design-close'));
+
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

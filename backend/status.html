@@ -860,10 +860,11 @@ try {
   .lead-stage{background:transparent;border:0;max-width:86px}
   .lead-stage option{background:#0d1120}
   @media(max-width:640px){.affiliate-stats{grid-template-columns:repeat(2,1fr)}.affiliates-view #adm-scroll{padding-top:80px}.affiliate-avatar{width:96px;height:96px}}
+#admin-design{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#000}#admin-design iframe{display:block;width:100%;height:100%;border:0}
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=8"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=9"></script>
 </head>
 <body class="systems-map">
 
@@ -962,7 +963,7 @@ if (IS_AFFILIATES) {
       <div id="msg-feedback" role="status" aria-live="polite"></div><div class="msg-consent" id="msg-consent"></div>
     </div>
   </div>
-  <a class="maya-glass-button design-quicklink" href="/aesthetics/aesthetic-control.html" target="_blank" rel="noopener" title="Open the live design editor">Aesthetic Control</a>
+  <a class="maya-glass-button design-quicklink" href="/aesthetics/aesthetic-control.html" title="Open Aesthetic Control within Admin">Aesthetic Control</a>
   <section class="model-snapshot-group"><h3>Model Snapshot</h3><div id="model-snapshot">Sign in to load the current server configuration.</div><maya-ai-meter></maya-ai-meter></section><maya-owner-crm></maya-owner-crm><h3>The vault</h3>
   <a href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank">Firebase<small>Boards, projects, pictures and submissions. Delete a collection here to truly destroy it.</small></a>
   <h3 class="tint">Behind the scenes</h3>
@@ -3951,5 +3952,5 @@ setInterval(()=>{ if(_idTok && document.visibilityState==='visible') loadMkt(); 
   setTimeout(checkAdminUpdate, 8000);   // catch a tab opened already-stale
 })();
 </script>
-<script type="module" src="/aesthetics/ui/ai-meter.js?v=3"></script><script type="module" src="/aesthetics/ui/owner-crm.js?v=2"></script></body>
+<script type="module" src="/aesthetics/ui/ai-meter.js?v=3"></script><script type="module" src="/aesthetics/ui/owner-crm.js?v=2"></script><script type="module" src="/aesthetics/ui/admin-design.js?v=1"></script></body>
 </html>

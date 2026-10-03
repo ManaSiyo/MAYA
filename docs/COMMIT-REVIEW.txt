@@ -1,29 +1,26 @@
-[Codex] Format whole columns and target actual outer panels
+[Codex] Fix header formatting and unify aesthetic editors within Admin
 
-Body clicks in the table preview select their complete semantic column, labeled
-First/Second/Third column. Other headers select Top row; Full name retains the
-combined Top row + first column. Fixed formatting edits all column rows, including
-validated background/opacity. Legacy row saves normalize into whole-column styles
-using the lowest saved row per stage/note column; reading never writes live state.
-Preserve saved restore, semantic status colors and shared Outbound Status material.
+Make header typography override body-role rules so first-row font, size, weight,
+case, color and alignment change visibly. Add bounded 200–500 weights, italic,
+Bold/Italic and font-size plus/minus controls with matching icon previews. Replace
+restore glyphs with centered shared Refresh SVGs. Add black/white border colors
+for glass, panels, filters, tables and editor popups. Edit dropdown now controls the
+actual popup backing; Edit glass uses the same anchored popover. Padding highlights
+track active padding fields only and never persist.
 
-Remove the intermediate wrapper around Lead Station/Campaign details. Outer Edit
-now controls the enclosing review sections marked by the owner; Inner Edit targets
-the heading/Contacts panels. Automatic highlights show those actual padding edges.
-Typography descriptors have concise linked page lists and bounded expandable source
-locations with selectors and text excerpts; all 14 H1 uses are discoverable.
-Shared JS locations link to the pages that render them. Gallery v22/runtime v8.
+Open Aesthetic Control in a same-origin Admin dialog, retain its Save/auth behavior,
+and return through the logo with origin/source-checked messaging. All served pages
+load runtime v9; gallery v23 and mutable script cache rules avoid stale editor code.
+Preserve existing whole-column selection, marked outer/inner hierarchy, role evidence,
+legacy design compatibility and account/project isolation. Update continuity docs.
 
-Validation: component-gallery at 11 widths (320–1920): complete column selection,
-combined corner, separate header, column material/restore, legacy normalization,
-correct outer/inner geometry, absence of extra wrapper, 14 H1 locations, anchored
-black popups and hit testing, Save/reload and actual Admin propagation. Full
-app-regression; design-config/contract; canon-ui 11 pages/7 widths; Outbound UI and
-populated filters; CRM UI/failure/intelligence; refreshed role audit; actual-font
-visual review of column, outer/inner padding and H1 locations; syntax/diff check.
+Validation: design-config/contract; component-gallery 11 widths with actual header
+styles, B/I/size controls, popup material/border, padding focus transitions, Save/reload
+and embedded Admin Save/logo return; full app-regression; canon-ui 11 pages/7 widths;
+Outbound UI/populated filters; CRM UI/failure/intelligence; refreshed role audit;
+actual-font screenshots; JS syntax and git diff checks.
 
-Limitations: counts refer to authored role templates, not repetitions of the
-preview word or dynamic customer rows. Old per-cell saves are converted in the
-preview; live changes require owner Save after deployment. No personal Chrome,
-client/provider communication, live design Save, credentials/environment/billing
-change, push or deployment. Only owner Push remains.
+Limits: Cormorant loads available 300/400/500 faces and uses the closest available
+face for lighter requested weights. Live authenticated Save/deployment verification
+remains after owner Push. No personal Chrome, live Save, communications, credentials,
+production configuration, push or deployment performed. Only owner Push remains.

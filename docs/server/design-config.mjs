@@ -10,13 +10,14 @@ export function validDesign(body) {
   if (Object.keys(body.type).length !== roles.size ||
       Object.keys(body.type).some(k => !roles.has(k))) return false;
   for (const v of Object.values(body.type)) {
-    if (Object.keys(v || {}).some(k => !['size','weight','color','align','font','case','vertical'].includes(k))) return false;
+    if (Object.keys(v || {}).some(k => !['size','weight','color','align','font','case','vertical','style'].includes(k))) return false;
+    if(v?.style!==undefined&&!['normal','italic'].includes(v.style))return false;
     if(v?.font!==undefined&&!['jost','cormorant'].includes(v.font))return false;
     if(v?.case!==undefined&&!['none','uppercase'].includes(v.case))return false;
     if(v?.vertical!==undefined&&!['top','middle','bottom'].includes(v.vertical))return false;
     if (v?.align!==undefined && !['left','center','right'].includes(v.align)) return false;
     if (!v || !Number.isInteger(v.size) || v.size < 8 || v.size > 32 || v.size % 2 ||
-        ![300,350,400].includes(v.weight) || !['white','gray'].includes(v.color)) return false;
+        (!Number.isInteger(v.weight)||v.weight<200||v.weight>500) || !['white','gray'].includes(v.color)) return false;
   }
   const sizes=[...roles].map(k=>body.type[k].size);
   if (sizes.slice(0,4).some((n,i)=>i&&n>=sizes[i-1]) ||
@@ -24,23 +25,26 @@ export function validDesign(body) {
   for (const [obj,keys] of [[body.glass,['fill','tint','rim','highlight','blur','saturation']],
                             [body.overlay,['fill','rim','blur','saturation']]]) {
     if(obj===body.overlay)for(const k of ['paddingX','paddingY'])if(obj[k]!==undefined&&(!Number.isInteger(obj[k])||obj[k]<0||obj[k]>40))return false;
-    if (Object.keys(obj).some(k => !keys.includes(k) && !(obj===body.overlay&&['paddingX','paddingY'].includes(k)) && !(obj===body.overlay && k==='enabled' && typeof obj.enabled==='boolean'))) return false;
+    if (Object.keys(obj).some(k => !keys.includes(k) && !(k==='borderColor'&&['black','white'].includes(obj[k])) && !(obj===body.overlay&&['paddingX','paddingY'].includes(k)) && !(obj===body.overlay && k==='enabled' && typeof obj.enabled==='boolean'))) return false;
     for (const k of keys) if (!Number.isInteger(obj[k]) || obj[k] < 0 || obj[k] > (k === 'saturation' ? 200 : k === 'blur' ? 40 : 100)) return false;
   }
   if(body.editor!==undefined){
-    if(!body.editor || Object.keys(body.editor).some(k=>!['fill','rim','radius','padding'].includes(k)))return false;
+    if(!body.editor || Object.keys(body.editor).some(k=>!['fill','rim','radius','padding','background','borderColor'].includes(k)))return false;
     for(const [k,max] of [['fill',100],['rim',100],['radius',24],['padding',20]])if(!Number.isInteger(body.editor[k])||body.editor[k]<0||body.editor[k]>max)return false;
   }
+  if(body.editor?.background!==undefined&&!['black','gray','blue','yellow','green','pink'].includes(body.editor.background))return false;
+  if(body.editor?.borderColor!==undefined&&!['black','white'].includes(body.editor.borderColor))return false;
   const numeric=(obj,ranges)=>obj&&Object.entries(ranges).every(([k,max])=>Number.isInteger(obj[k])&&obj[k]>=0&&obj[k]<=max);
   for(const key of ['inner','filter'])if(body[key]!==undefined){
     const ranges={fill:100,rim:100,radius:24,paddingX:40,paddingY:40,width:key==='filter'?600:100};
-    if(!numeric(body[key],ranges)||Object.keys(body[key]).some(k=>!Object.hasOwn(ranges,k))||body[key].width<(key==='filter'?160:20))return false;
+    if(!numeric(body[key],ranges)||Object.keys(body[key]).some(k=>!Object.hasOwn(ranges,k)&&!(k==='borderColor'&&['black','white'].includes(body[key][k])))||body[key].width<(key==='filter'?160:20))return false;
   }
   if(body.table!==undefined){
-    const t=body.table,types=['font','size','weight','color','case','align','vertical'],backgrounds=['background','opacity'];
-    const typeValid=s=>s&&['jost','cormorant'].includes(s.font)&&['none','uppercase'].includes(s.case)&&['white','gray'].includes(s.color)&&['left','center','right'].includes(s.align)&&['top','middle','bottom'].includes(s.vertical)&&Number.isInteger(s.size)&&s.size>=8&&s.size<=32&&[300,350,400].includes(s.weight);
+    const t=body.table,types=['font','size','weight','color','case','align','vertical','style'],backgrounds=['background','opacity'];
+    const typeValid=s=>s&&['jost','cormorant'].includes(s.font)&&['none','uppercase'].includes(s.case)&&['white','gray'].includes(s.color)&&['left','center','right'].includes(s.align)&&['top','middle','bottom'].includes(s.vertical)&&Number.isInteger(s.size)&&s.size>=8&&s.size<=32&&Number.isInteger(s.weight)&&s.weight>=200&&s.weight<=500&&(s.style===undefined||['normal','italic'].includes(s.style));
     const bgValid=s=>s&&['black','gray','blue','yellow','green','pink'].includes(s.background)&&Number.isInteger(s.opacity)&&s.opacity>=0&&s.opacity<=100;
-    if(!numeric(t,{fill:100,rim:100,paddingX:40,paddingY:40})||Object.keys(t).some(k=>!['background','fill','rim','paddingX','paddingY','header','firstColumn','columns','cells'].includes(k)))return false;
+    if(!numeric(t,{fill:100,rim:100,paddingX:40,paddingY:40})||Object.keys(t).some(k=>!['background','fill','rim','paddingX','paddingY','header','firstColumn','columns','cells','borderColor'].includes(k)))return false;
+    if(t.borderColor!==undefined&&!['black','white'].includes(t.borderColor))return false;
     if(t.background!==undefined&&!['black','gray','blue','yellow','green','pink'].includes(t.background))return false;
     if(!typeValid(t.header)||!bgValid(t.header)||Object.keys(t.header).some(k=>![...types,...backgrounds].includes(k)))return false;
     if(!bgValid(t.firstColumn)||Object.keys(t.firstColumn).some(k=>!backgrounds.includes(k)))return false;

@@ -3,7 +3,8 @@
 This is the **sole active design specification** for the client app, Admin,
 Outbound, Brief, Operations and supporting pages. The interactive
 [Aesthetic Control](/aesthetics/aesthetic-control.html) is the visual anchor.
-Admin → Systems → Aesthetic Control opens it. The owner can edit the preview
+Admin → Systems → Aesthetic Control opens it within a same-origin Admin dialog.
+The logo returns to Admin; the centered Save remains available inside that view. The owner can edit the preview
 and press **Save** at the bottom. On the live site Save requires an Admin sign-in
 and stores only validated presentation settings; all pages load those settings.
 On localhost Save affects local pages on that browser origin. No change here
@@ -26,8 +27,8 @@ the list. Each compact role heading shows its source usage count in parentheses.
 | P3 | Jost | 10px | 300 | white | Pill and small field label |
 | P4 | Jost | 10px | 400 | gray | Caption |
 
-White means RGB 255/255/255. Gray is RGB 170/181/196. No weight exceeds 400.
-Sizes use even pixels. Weights 300, 350 and 400 remain available. Each role can select Jost or
+White means RGB 255/255/255. Gray is RGB 170/181/196. Saved weights range from 200 to 500; selectors offer 200, 250, 300, 350, 400, 450 and 500.
+Sizes use even pixels for hierarchy roles. Bold selects 500 and toggles back to the previous weight; Italic toggles the saved normal/italic style. Font size has shared plus/minus controls. Jost loads variable roman/italic weights 200–500; Cormorant uses available 300/400/500 faces (lighter requested values use the nearest available face). Each role can select Jost or
 Cormorant Garamond. H1 defaults to ALL CAPS; H2/H3/H4 default to Normal.
 P3/P4 retain uppercase defaults, and P1/P2 use Normal. Case is one saved option
 per role, not a separate capitalized/uncapitalized row. Normal preserves authored
@@ -63,15 +64,15 @@ outer padding/material; Inner panel has opacity, border, corners, X/Y padding
 and percentage width. Filter has independent material/padding and pixel width.
 The preview has the enclosing review section as outer panel, two direct inner panels, and a Contacts pill
 inside each inner panel: three material layers maximum. Inner padding surrounds
-heading plus Contacts; outer padding surrounds the inner panels. There is no wrapper around the pair of inner panels. Opening an Edit
-highlights its actual padding automatically; closing it removes the green band.
+heading plus Contacts; outer padding surrounds the inner panels. There is no wrapper around the pair of inner panels. Focusing or changing a padding field
+highlights its actual padding; moving to another field or closing removes the green band.
 No debug toggle or preview wrapper adds another material layer.
 
 Table previews Full name, Status and Latest Notes. Keep one Table Edit for the
-whole table's background, opacity, border and X/Y padding. Clicking a cell selects
+whole table's background, opacity, border, black/white border color and X/Y padding. Clicking a cell selects
 its formatting target in a fixed, single-row toolbar above the preview: font,
 case, size, weight, color, horizontal/vertical alignment, background and opacity.
-The toolbar scrolls horizontally on small screens. Full name corner selects both
+The toolbar scrolls horizontally on small screens. Header font, size, weight, case, color and alignment explicitly override the general body role so every first-row edit is visible. Full name corner selects both
 top row and first column; other headers select the top row; every body cell
 selects its entire semantic column (First/Second/Third column). Highlight all body
 cells in that column. Font, case, alignment, background and opacity apply together
@@ -91,14 +92,14 @@ linked rendered pages. An expandable bounded location list exposes every authore
 use with source path, line, selector and text excerpt; shared JS modules link to
 the pages that render them. Counts describe authored role uses, not repeated
 customer rows or occurrences of the preview word. Edit includes font, Normal/ALL CAPS, size, weight, color,
-Left/Centered/Right and Top/Middle/Bottom. Alignment buttons are removed.
-Each Edit has a restore icon returning only that editor to its last successfully
+Left/Centered/Right and Top/Middle/Bottom. Alignment and color dropdowns show matching icon marks; Bold/Italic and font-size plus/minus controls are included.
+Each Edit has the shared, centered Refresh SVG as its restore icon returning only that editor to its last successfully
 saved values; selected-cell formatting also has a restore. Save updates this
-baseline. The global Reset, navigation and applied-status copy remain removed. Legacy editor housing settings remain readable for saved compatibility.
+baseline. The global Reset, navigation and applied-status copy remain removed. Edit dropdown now controls the actual popup backing: palette background, opacity, black/white border color, border opacity, corners and padding. Old optional fields remain readable for saved compatibility.
 Save is centered. History is not introduced in this change; Reset is removed.
 Temporary Edit controls close on outside click, focus leaving, Escape or another
 Edit. Section folds and persistent States remain open until explicitly toggled.
-Popup backings and fields are solid black. The popup opens beside its button,
+Popup backings and fields default to solid black; saved popup material customizes the backing. Edit glass uses the same anchored dropdown as Edit table. The popup opens beside its button,
 clamps horizontally and opens upward when the footer leaves insufficient space.
 All popups and their fields stay inside their section at 320–1920px widths.
 At 420px and below, they use two columns. Font/case and material defaults fill
@@ -145,12 +146,12 @@ At 420px and below, use two columns so maximum editor padding stays usable.
 
 ## October 2: shared saved controls and audit
 
-Every editor with padding highlights it automatically while open. Light green bands show the
+Every editor with padding highlights it only while its padding field is focused/modified. Light green bands show the
 actual X/Y padding without changing dimensions or intercepting clicks. Debug
 highlights are preview-only and never saved. Icon size and dropdown height are
 saved independently (24–48px). The preview includes a working native dropdown,
 only currently used icon controls: add, close, refresh, menu, search, dropdown,
-phone, email, microphone, copy, favorite, edit, send and settings. Save uses the selected glass finish. The chosen preset shows a checkmark and a
+phone, email, microphone, copy, favorite, edit, send and settings, plus the used minus, Bold, Italic, alignment, text-color and background controls. Save uses the selected glass finish. The chosen preset shows a checkmark and a
 full outlined card; an underline alone is insufficient.
 
 Runtime v8 drives the shared legacy material/typography variables, including
