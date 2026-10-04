@@ -1,0 +1,551 @@
+OCTOBER 3: table/Inner panel coupling
+[fixed locally] Remove Inner material/width/padding from table housing and toolbar. Add table-only corners and shared Gray borders excluding Table. One table border/fill; contain wide sticky-cell painting in the scroll housing to prevent mobile page overflow. Existing graph styling and functional filter portals stay intact.
+[validation] Gallery isolation/restore/save, Admin geometry, mobile populated Outbound scroll/filter and shared regression checks.
+
+OCTOBER 2, 2026: Admin statistics peek below Aesthetic Control; oversized Save footer
+[fixed locally] Full viewport dialog bounds, no container focus outline; floating icon Save without black footer or success prose. Fixed header at Admin geometry. Same-origin saved design fallback and revision guard remove the refresh requirement; failed reads keep the current applied design. H0 prevents ordinary H1 settings from resizing the main sign-in wordmark.
+[verification] Fixture browser bounds, cross-page Storage updates, delayed-read race, H0 independence, eleven gallery widths and broader shared UI regression. Production verification follows owner Push.
+
+OCTOBER 2 night — hard-coded table housing and inconsistent Edit controls (LOCAL)
+The fixed table toolbar had a separate black backing. It now uses shared inner-panel
+material/geometry. Remove Glass/Outer range inputs and unit-text padding fields;
+all menus use shared numeric/select controls. Popup padding splits into X/Y while
+old single-padding remains readable. Optional outer corners and black/white borders
+propagate to enclosing review sections. Remove unused gallery Filter controls,
+use shared H2/H3 hierarchy and align the logo/title. Save rim/shadow removed.
+
+OCTOBER 2 night — uneditable header, mismatched restore and padding state (LOCAL)
+General text-role CSS beat the header's font rules; explicit header/descendant scope
+now gives saved table-header settings priority. Restore is the shared Refresh SVG,
+not a text glyph. Padding state follows active padding fields only. Popup settings
+now paint the actual backing instead of unused variables. Admin embeds the page
+without opening another tab and validates same-origin iframe close requests.
+Browser gates verify visible header edits, formatting controls, popup border/material,
+padding focus transitions, eleven viewport widths and embedded Save/return.
+
+OCTOBER 2 evening — wrong outer-panel target and cell/column mismatch (LOCAL)
+Owner marked the enclosing review section as outer; the pair wrapper was an extra
+rectangle. Remove it, apply outer material/padding to review sections and highlight
+those actual edges. Body clicks now edit complete columns, not row slots; retain
+independent Top row plus the Full name corner combination. Old row overrides
+normalize into the lowest-row column style, preventing mixed saved cell formats.
+Typography evidence now lists rendered pages and every authored source use.
+
+OCTOBER 2 — table editor duplication and misleading padding preview (LOCAL)
+Replace six table dropdowns with one table editor plus click-selected cell/range
+formatting. Remove repeated per-example outer wrappers; one outer contains two
+inner panels, each heading/Contacts. Highlight actual padding only while its
+editor is open. Saved cell styles validate fixed semantic row slots; attach row
+metadata after dynamic rendering and observe documentElement so head-loaded
+scripts do not fail before body exists. Test individual-cell independence,
+Save/reload and actual Admin propagation. All requested local checks pass.
+Previous 3ecfc8d release is publicly confirmed; this follow-up is not pushed.
+
+OCTOBER 2 afternoon — CSS editor anchoring/padding mismatch; wake silence
+Screenshot showed surface editors anchored to full rows' left edge, detached
+from centered Edit buttons. Earlier bounds-only checks missed this. Trigger-relative
+positioning now accounts for the glass backdrop-filter containing block and
+checks proximity, not merely viewport fit. Raise the active glass section above
+its neighbors and hit-test visible controls; bounds alone missed occlusion. Inner preview formerly padded only
+Contacts because the heading was outside it; move heading into the inner panel.
+Black editor backing/fields and table background choices; single-line toolbars
+and name/date/category. Admin voice startup failure stopped wake recognition
+but left intent on; finally restores recognition and clears Connecting. Start
+and network errors now recover instead of silently leaving a dead recognizer.
+Fake recognition tests cover wake phrase, token failure and permission refusal.
+
+OCTOBER 2 — deployment blocker identified; responsive shared-style follow-up
+Cloud Build c461f1e2-3143-4608-ab0c-72e9d7a29645 for 594cf57 failed at
+admin-ui-contract: it required the phone icon that the owner explicitly retired.
+No server or Hosting step ran. Updated gate checks compact category badges and
+whole name-cell Messages access, retaining invoice behavior. Owner push f436f37
+started build 9bd43347-4fbe-43ef-9c86-0a58a7df0230 (completed successfully).
+An additional populated responsive test found the filter could scroll behind
+the fixed top bar after resizing: reserve 76px with scroll-padding/scroll-margin.
+All narrow UI checks and 18-width/landscape margin checks pass. Corporate source
+tab rename keeps campaign IDs and drafts. Earlier design saves were unaudited;
+new successful live saves atomically include Admin-only audit entries. Production
+now confirms f436f37 with v19/v5 editor assets; Google build passed. Owner
+Push the final follow-up, verify Google build/public stamp, then Admin Save/log.
+
+OCTOBER 2: Latest pushed changes absent from live Hosting (RESOLVED)
+Resolution: owner-pushed f436f37 passed Google build; public release.json confirms
+it at 2026-10-02T17:18:57.758Z and public editor loads v19/v5. Original evidence:
+Remote maya-v2 is 601784c; repeated cache-bypassed release.json reads are 4970660,
+published October 1 at 9:45 PM Pacific. Public editor HTML is still v16/v3 with
+Reset. Live isolated Chromium reproduces negative H1 popup left bound -69px at
+1100px. Public healthz is alive but does not prove release freshness. Current
+local code passes full regression, canon/gallery/populated-table checks and an
+18-width/5-landscape shell margin audit with saved design and real fonts.
+Cloud Build/deploy cause is not established; no deploy, Save or credentials
+changes were attempted. Next: owner inspect build/deploy latest, then verify
+release marker and editor assets before treating the shipment as complete.
+
+OCTOBER 1: Editor lacked dismissal and preview differed from Lead Station (LOCAL FIX)
+Native details Edit controls stayed open outside their bounds. Preview had four
+columns unrelated to the real table, no independent inner/filter/table controls,
+and Lead Station repeated long tiers/call icons under client names. Add temporary
+editor dismissal, a three-column preview and validated saved presentation applied
+to both tables; full-cell thread activation and four category badges. Preserve
+account boundaries, consent, server communication tools and carrier records.
+No live Save, call/text or deployment occurred.
+
+OCTOBER 1: Typography dropdown clipped beyond the page (LOCAL FIX)
+Desktop CSS centered a 320px popup on the small Edit button, sending its left
+edge outside the browser content. Conflicting mobile overrides hid the defect
+at narrow widths; scrollWidth checks missed negative left overflow. Anchor to
+the full row with left:0 and constrained widths. Use two columns on small phones.
+Verify actual popup/control bounds for all eight roles at eleven widths,
+including 700/701px, screenshot width, maximum padding and left alignment.
+
+OCTOBER 1: Aesthetic Control redundant sections and inconsistent heading caps (LOCAL FIX)
+Review jumped between glass, buttons and panels and repeated status meanings,
+page/source descriptors and multiple samples within one typography role. Font
+family and CSS capitalization were fixed outside the editor. Consolidate Visuals
+into Glass Section then divider/Panels/table; reduce to five distinct pill colors
+and one sample per role; remove the glossary and inactive reference rows.
+Persist validated font/case options and apply them to shared selectors. Neutral
+paragraph/caption colors and component/icon glass now respond to saved values;
+semantic status colors and technical monospace remain. No live design write.
+
+OCTOBER 1: Client history inaccessible to owner over SMS, oldest Messages trimmed (LOCAL FIX)
+Owner chat had memory and lead lookup but no client Messages retrieval, action
+read tools or SMS-only client reply flow. The live thread discarded entries
+beyond 400. Added source-backed paged SMS history/actions/inbox/help/status,
+AI-free exact commands, shared owner voice reads and confirmed client replies.
+Private overflow archives write before trimming; archived delivery callbacks
+retain carrier outcomes. Failures preserve history and never automatically
+repeat a send. SMS reports state missing/uncertain records. Tests pass locally;
+previously discarded records and live delivery remain outside fixture proof.
+
+OCTOBER 1: Owner signup-format request rejected as a lead edit (LOCAL FIX)
+The signed owner SMS route sent every message to a lead-only extraction prompt;
+non-lead requests became an empty object and cleanCommand's add/update question.
+Owner authorization was already established, but no conversational/memory or
+runtime-preference route existed. Added ordinary replies with recent history,
+durable account-bound memory/style/alert formatting, shared owner phone tools,
+and accurate unsupported-feature logging. Fixed recipient, generation checks,
+idempotency, account isolation and existing client confirmations remain.
+Fake-provider tests, full app regression and server smoke pass. Live inference,
+call audio and carrier delivery await owner verification after deployment.
+
+OCTOBER 1: Aesthetic Control repeated settings and excess spacing (LOCAL FIX)
+Each sample repeated category settings and Edit occupied its own glass row.
+Use one compact category header/dropdown/summary, reduce row padding to 6px,
+and expose the dropdown housing material separately. Remove the standalone
+technical paragraph role while preserving old saved settings. Add accessible
+alignment toggles and a responsive populated table preview. Full app and
+focused design/provider-fixture checks pass. Not pushed; live provider checks
+await a fresh explicit MAYA Chrome approval. No credentials/settings changed.
+
+SEPTEMBER 30, 2026: Newer GitHub commits not live (LOCAL FIX, LIVE OPEN)
+Live Hosting files are byte-for-byte from 3168ded even though release branch points to c388619. Live API lacks booking and signup-alert routes (404), while existing protected routes answer 401. Reproduced c388619's release-gate failure: server.js imports lead-alerts.mjs and booking-link.mjs but its Dockerfile omits them. The local Dockerfile fixes this; 16 non-browser release contracts pass. Aesthetic Control live URL falls back to the client homepage. Cloud Build/Run logs and Admin MAYA feedback entries remain unread because they require owner authentication; no Chrome, credentials, push or deployment were used.
+
+SEPTEMBER 30, 2026: Wix signup reached Lead Station but did not trigger owner notification (LOCAL FIX, LIVE OPEN)
+The newest Call back form submission used the same Wix form as earlier leads; the server fetched leads only when an Admin/API read occurred and had no signup alert path. Added a fresh submission checker with durable text/call claims and integrated it with the scheduled Outbound task plus foreground Admin fallback. Phone/SMS provider status and production scheduler could not be inspected because Cloud Console required owner sign-in. No live message or call sent; local fake-provider tests pass. Verify scheduler configuration, carrier acceptance and actual receipt after deployment.
+
+SEPTEMBER 29: Misleading typography usage zeros
+Root cause: exact matches to proposed font settings were labeled role usage;
+static DOM scan also omitted JS number templates. Replaced with mapped source
+locations and expandable file/line evidence. Unknown P2 mapping shown as unmapped.
+Counts describe code locations, not live records or exhaustive runtime totals.
+Verified source evidence and known H1/P1 regressions.
+
+SEPTEMBER 29: Preview icon height and inert material selection
+Fixed 32px preview icon size could exceed the adjacent pill. Preview now measures
+the pill and sizes circles to match. Material choices now control all examples;
+detached dialogs receive selection before opening. Covered by browser checks.
+
+SEPTEMBER 29: Preview typography and icon alignment
+Metric token wrongly retained 28px despite compact UI direction. Corrected to
+12px. Font-glyph plus icons replaced with centered SVG geometry; explicit browser
+checks now cover both. Simplified gallery exposes locations and font comparisons.
+
+SEPTEMBER 29: Competing specifications and page-level glass recipes
+Archived older aesthetic authorities. Computed master-pill extraction resolves the
+parent-versus-label typography mismatch; explicit material intensity prevents
+transparent filters over data. New component library replaces recipes in preview.
+Legacy runtime overrides are inventoried and retained until owner reviews tokens.
+
+SEPTEMBER 29: Action material had separate frontend/backend definitions
+Shared maya-buttons.css now supplies the action finish on all canon pages, loaded
+after local styles. No table/link/logo blanket treatment; design.md records scope.
+Existing drawer structure differs and remains an explicit follow-up, not claimed fixed.
+
+SEPTEMBER 29: Outbound visual drift and missing Category
+Old To Do CSS hid source columns, including Category. Retired that view and its
+rules. Competing campaign selectors overrode centered capsule styling; removed
+them and added computed geometry checks. Column filters now replace global ones.
+
+SEPTEMBER 28 late: Owner tools leaked into Messages; Gmail link was indirect
+Prepared scoped tab visibility and consistent compact controls. Admin link now
+opens Outbound Gmail directly; missing OAuth configuration opens setup steps.
+Server credentials still need owner configuration. Fixture checks pass; not live.
+
+SEPTEMBER 28: Cloud Run image omitted owner CRM module
+[prepared] Build 650f4d64 failed server startup after release tests passed.
+Dockerfile now copies owner-crm.mjs. Prior COPY set reproduced module-not-found;
+corrected set starts and serves /healthz 200 offline. New import-packaging gate
+runs before image build; production deployment and Gemini test remain pending.
+
+SEPTEMBER 28: Deployment gate and owner-call overwrite
+Cloud Build 438db907 for 1d01d9a stopped at CRM authorization-expiry browser check.
+Initial Outbound render now waits for workspace plus intelligence authorization;
+local fault injection passes. No failed-build code reached production.
+Owner save_lead used call.saved for every person: a second contact could overwrite
+its predecessor. Owner saves now return IDs and only explicit corrections reuse
+one; read-back confirmation required. Customer caller updates remain unchanged.
+
+SEPTEMBER 28: Gemini reported disconnected despite existing Google Cloud setup
+The CRM only recognized GEMINI_API_KEY, ignoring Cloud Run service identity.
+Prepared Vertex transport with existing identity and isolated $1 daily accounting.
+Refresh gave no completion signal when usage stayed $0; now shows progress and
+checked time. Meter covers Outbound text only, not all provider spending.
+
+SEPTEMBER 28: Compact CRM and audit coverage gaps
+Prepared: Admin Contacted no longer becomes In progress; shared status pills and
+44px rows. Outbound uses 250-record appends and full-dataset filtering. Search
+blur could replace a clicked result before its click handler ran; deduped,
+debounced search now preserves the action. Declined filter changes restore UI.
+The full regression's local server omitted the CSS MIME type, so Chromium did
+not apply the shared stylesheet. Fixed MIME and stale alignment/logo assertions.
+The profile VM omitted window.addEventListener after the filter portal addition;
+fixed the fixture and verified Contacted persistence for both manual/Wix records.
+Missing IntersectionObserver no longer throws in scrolling or the AI meter;
+scroll events append records and manual meter refresh remains available.
+Local unit/browser/communication checks pass. CSS v11, Outbound JS v3. No push.
+
+SEPTEMBER 28: Outbound source data and priority presentation
+The importer only read three campaign tabs, omitted Funnel-only contacts, and
+folded category, relevance, last-email date and status into notes. Reply/decline
+variants could appear as new prospects. Names inherited the generic capsule
+radius; campaign + dimensions were unequal and the workspace had excessive gaps.
+Prepared locally: authoritative Funnel values plus campaign memberships, structured
+columns, conservative exclusions, deterministic To Do and confirmed F1/F2 evidence.
+Same-day follow-up counts survive unchanged source refresh; unknown history stays
+unknown. Compact chart/table/controls and explicit plain-link styles verified over
+populated desktop/mobile fixtures. Shared CSS v10; no push or production writes.
+
+SEPTEMBER 28: Open status-filter text bleed and clipping
+Drawer-only transparent fill was reused inside a sticky, scrolling table with
+nested backdrop contexts. Row text remained readable through the options; broad
+fold selectors added a caret and square focus outline. Prior audits tested
+filter logic and empty-page dimensions, missing the populated open-menu state.
+Fixed locally: body/top-layer popover, dark frost, scoped fold styles, rounded
+focus, viewport placement and keyboard/focus preservation. Expanded fixture gate
+covers populated/empty/short tables, seven widths and old-browser fallback.
+Cache URL v9. No push/deployment; production still needs owner verification.
+
+SEPTEMBER 27: Follow-up audit fixes (local, awaiting owner push)
+Mobile Operation Room overflow and overlaid stage labels; Brief settings offscreen overflow/focus;
+Outbound oversized headings/names, inherited link-button shadows and modal/drawer dismissal;
+missing-sheet Refresh no-op; background draft overwrite; wrong paginated record when email absent;
+busy edits and late responses across accounts; stale/reconnected AI meter; Gmail listing failure
+aborting other integrations. All repaired with focused browser/source assertions.
+Historical app-regression expected removed CSS/Sheet/labels and lacked its offline Firebase stub;
+updated to approved behavior and now green. Live checker now rejects HTML posing as stylesheet.
+Shared backend CSS v8; frontend/Playground unchanged. No live provider round trip is implied.
+
+SEPTEMBER 27: Outbound integration and visual review
+Fixed master Companies filtering, unbounded prospect rendering, segment-specific drafting,
+Gmail callback cookie forwarding through Firebase Hosting, uncertain-send duplicate protection,
+queued/failed SMS advancement, delivery status refresh, meter/value overlap and drawer tab bleed.
+Historical assertions were repaired in the follow-up audit above; the broad suite now passes.
+No production changes. Owner activation: docs/OUTBOUND-SETUP.md (linked console steps).
+
+SEPTEMBER 27: responsive and drawer regressions
+Fixed narrow Outbound header overlap, menu controls disabled during sync,
+model snapshot requiring a second Systems click, oversized model titles and
+footer spacing. Shared CSS v6 avoids stale style URLs. Local validation only.
+
+SEPTEMBER 27: cached visual fixes
+UI stylesheet inherited seven-day asset caching under unchanged v=4 URL. Backend
+now requests v=5; stylesheet has explicit no-cache. Logo uses circular source asset.
+No production deployment performed here.
+
+SEPTEMBER 26: Consumer style rollback and backend cleanup
+Restored consumer and Playground source from 3af43c3 except version metadata;
+all scripts unchanged. Detached consumer from backend CSS. Round logo clipping
+removes square corners, border/shadow reset removes bezels; Sheet hover removed.
+CRM now matches 11px campaign data, log headings white/details gray.
+
+SEPTEMBER 26: Backend chrome drift
+Dense overrides had flattened capsule depth and replaced frontend glass. Shared
+backend treatment now matches the frontend drawer and tab finish; compact tables
+retained. Local changes only; signed-in production remains to be checked.
+
+SEPTEMBER 26: V4 typography/density regression
+Shared header fill introduced a dark campaign strip; fixed by leaving nonsticky
+headers transparent. Size normalization inflated labels and CRM padding; compact
+sizes restored locally. Provider/data behavior unchanged; production unverified.
+
+SEPTEMBER 26: A2P privacy rejection follow-up (OPEN)
+Owner published optional SMS checkbox at manasiyo.com/design. Policy copy refined
+locally for inquiry/appointment messages. No Twilio submission or live settings
+changed; provider approval and consent enforcement remain unverified.
+
+SEPTEMBER 26: visual rules drifting from original V3 canon
+[prepared, 14.40] Repeated serif data/metrics, local frost and late Systems Map
+    overrides consolidated into maya-canon.css. Original V3 remains primary.
+    See design/MAYA-V4-AUDIT.md for verification and remaining limits. Not deployed.
+
+SEPTEMBER 24: 14.39 CRM styling and empty Outbound
+Legacy CSS below the prior patch overrode status size/color. Strong scoped rules
+now match campaign typography. Native details needed explicit outside/Escape close.
+Outbound required a campaign and exact single-tab setup; sync now discovers the
+three owner campaign tabs and imports atomically, with actionable access errors.
+Two existing inline controls (status filter and message invoice) were missing
+window bindings. Both are now exported and exercised through actual button clicks.
+Focused tests pass; Cloud Run workbook access is not proven by connector access.
+
+SEPTEMBER 24: release recovery verified
+9395417 pushed; public frontend/Admin report 14.38, Outbound page/module are real,
+API healthy. Legacy live hover assertion repaired without changing UI behavior.
+Final Cloud Build/rules status and signed-in provider flows still unverified.
+
+SEPTEMBER 24: deployment root cause identified
+Cloud Build bc53725d-a5fb-4dfa-abe4-ed34be0d190f for 2e1b47c failed at
+tests/maya-hands-smoke.mjs:716: old avatar fixtures/DOM expectations. Build and
+deploy never ran. Updated fixtures with account identity, stable IDs and explicit
+unsaved preview; no release gate removed.
+
+SEPTEMBER 24: live Outbound missing despite origin containing changes
+Public HTTP: /outbound.html and /backend/outbound.js returned frontend HTML v14.36.
+Local routing is correct; Cloud Build failure/trigger cause not established.
+Fixed deployment verifier old file paths and added explicit Outbound/MIME checks.
+Also fixed local unsaved draft loss and suppression on duplicate imports.
+
+SEPTEMBER 23: Outbound sheet mapping
+Owner workbook uses row-3 headers for Corporates and nonstandard Contact/Role
+columns. Importer now detects those headers and retains outreach subjects and
+research/status fields. Historical truncated emails are retained only as notes.
+22 offline checks pass; production import remains unverified.
+
+SEPTEMBER 23: Mana hover still below on live site
+Read-only HTTP fetch confirmed deployed Admin had left:50%/top:100% CSS. Local
+branch already contained right:100%/top:50%. Prepared v14.37 adds explicit left
+reset and version bump; owner must confirm a successful hosting deployment.
+No claim that the production bug is fixed before that deployment.
+Model update also preserves legacy image records and extends Firestore's strict
+model allowlist so new Flare images are not rejected when posting to community.
+
+SEPTEMBER 22 22:59: local fixes, not deployed
+Mana flyout had moved below the heading: restored left placement and delayed
+hide. Reload/plus glyph size raised 39%; gear forced square/nonshrinking.
+Affiliates extra Admin link and brand hover navigation removed; logo still
+returns Admin. Its visible drawer is Messages, not Systems/Logs.
+Live avatar controls lagged Playground. Both now expose explicit transactional
+Save-as-new; a changed same-name photo no longer replaces its saved predecessor.
+Current unsaved photo stays visible in the dropdown; name is editable.
+Validation: profile-crm 22, admin UI 11, admin-command 6, syntax/whitespace pass.
+No browser/computer use or external paid tests. Visual review remains pending.
+
+SEPTEMBER 22 LATE: lead layout and Affiliates navigation, local
+Constrain the table with fixed layout, keeping long notes inside their viewport;
+notes start left and sit vertically centered; headers retain top sticky position.
+Affiliates opens new tab; route brand now identifies Affiliates and logo links
+back to Admin, replacing its inherited voice trigger. Remove unnecessary copy.
+Admin contract and inline syntax validated; browser checks not run per owner.
+
+SEPTEMBER 22 EVENING: SMS carrier blocker CONFIRMED by owner screenshots
+Account is Active, brand complete, campaign rejected: compliant privacy policy
+cannot be verified. Twilio overview reports 30034. Outbound 'hello' 17:00 is
+Undelivered; inbound 'Hi.' 09:46 is Received at Twilio. Missing inbound in Maya
+remains a separate webhook/storage investigation, not proved by A2P rejection.
+Public policy/terms are accessible (200); exact submitted URLs/opt-in flow unknown.
+Policy wording edits and registration guide are local drafts, not resubmitted.
+Mana menu also lost pointer events immediately on pointer departure despite a
+visible delayed fade; changed to delayed visibility, focus support and below-Mana
+placement. Affiliates public route is deployed. No authenticated/visual checks
+under owner's no-computer-use restriction. 50 SMS and 11 admin checks pass;
+phone/transfer/feedback pass and inline scripts parse. Nothing pushed here.
+
+SEPTEMBER 22, 2026: code-first SMS audit (FIXED LOCALLY, not deployed)
+Reproduced and corrected ordinary 'No problem' being treated as STOP, START not
+restoring opt-in, and late carrier error codes being lost on terminal statuses.
+Signed OptOutType START/STOP/HELP is passed into consent handling. Owner blocks
+remain independent. Both known Maya and Cloud Run webhook URLs are explicitly
+allowed in server wiring; arbitrary/forwarded host signatures remain rejected.
+50 SMS tests now cover these defects with fake providers. 443 browser checks and
+related phone/transfer/feedback/admin/API suites passed. Live inbound/outbound
+failure is still OPEN: native Chrome reached Twilio login, signed out; carrier
+logs remain unread. The owner sign-in tab is open.
+No credentials, provider configuration, real message, commit or push changed.
+Next: owner review and deploy; inspect Twilio inbound result and outgoing SID
+status/error, then confirm receipt in both directions before declaring resolution.
+
+SEPTEMBER 22, 2026: SMS delivery failure after reported unsuspension (OPEN)
+Owner reports neither phone-to-Maya nor Admin-to-phone texts arrive. Live Admin
+still shows old text-pill tabs because the previous build stopped before deploy.
+Twilio Console was signed out, then Chrome access disconnected; actual account
+state, carrier errors and inbound webhook result could not be inspected. Do not
+attribute this incident to A2P, suspension or a webhook mismatch without logs.
+Local UI now preserves visible send/delivery errors during polling and has clearer
+contact editing. SMS introductions can label unnamed contacts without AI spend.
+38 message checks, phone/transfer/feedback, 11 UI contracts, 438 browser checks
+passed. No live message sent, credentials/configuration changed or push performed.
+Next: owner sign-in, inspect both directions in Twilio, deploy reviewed code,
+verify receipt and history. The account being active alone is not delivery proof.
+
+SEPTEMBER 22, 2026: Cloud Build failed before deployment
+Commit ae8704f, build 1b827272-c2f5-4b64-809d-285caafd9ce0, PR #1.
+GitHub check logs identify one failed maya-hands-smoke assertion: the avatar
+dropdown test expected Randomize/Replace only, while Playground now also has
+the requested Save control. Corrected the exact expected list per surface;
+frontend still requires two buttons. Verified locally: 172 Playground and 171
+frontend hands assertions, seven other release suites and phone/Messages/transfer
+all passed. No deployment rerun, push or credentials
+changed. Production build/deploy steps never started for this commit.
+
+SEPTEMBER 21, 2026, LOCAL REMEDIATION (not deployed)
+Fixed locally: feedback source race and unsafe empty-store fallback; outbound
+call briefing lost between Cloud Run instances; mutable stream caller identity;
+early voice audio dropped during startup; SMS callback before history saved;
+contact-name inline JavaScript; tier edited into the wrong field; hidden blocked
+contacts with no unblock path; missing Pinterest saved-pin pagination (Playground).
+Added signed owner transfer acceptance and explicit carrier-status reconciliation.
+Actual SMS non-delivery cause is NOT established; ask for provider status/error.
+Real GCS/Firestore persistence, transfer/no-answer behavior and telephone audio
+need owner live verification after a separately reviewed deploy. No credentials
+or production settings were changed. See REVIEW-2026-09-21.md.
+
+MAYA FIXES AND SETUP STEPS
+Fix attempts and setup work that lives OUTSIDE git: Cloud Run env vars, the
+Google and Firebase consoles, credentials, external accounts. Symptom, cause,
+action, status. Newest on top. Fromsa does every credential step himself.
+
+SEPTEMBER 21, 2026: Admin/phone audit, not a release
+Open: in-memory outbound call state; feature-inbox read failures/concurrent writes
+can lose requests; owner calls excluded from Messages; incomplete blocking and
+delivery handling; inline contact-name handler escaping; ticker CPC called CPL;
+inaccurate consent/warning UI. See AUDIT-2026-09-21.md for evidence and test results.
+Messages draft passes 29 checks; phone and browser regressions are not all green.
+Live feature inbox read successfully. Latest owner requests remain open.
+
+AUGUST 27, 2026, OPEN MAYA'S DOOR (v14.02, after the push)
+
+Maya's MCP server is live at POST https://maya.manasiyo.com/mcp once v14.02 is
+deployed, but it stays CLOSED (503) until a token exists. Two green steps.
+
+🟢 1. Make a token and set it on Cloud Run.
+   Any long random string works (32+ characters, letters and digits). Open
+   https://console.cloud.google.com/run/detail/us-west1/maya-api/revisions?project=pro-maya
+   then "Edit & deploy new revision" > Variables & Secrets > Add variable:
+   name MAYA_MCP_TOKEN, value = the token. Deploy. Keep the token somewhere
+   private; it is the only key to the door.
+🟢 2. Add Maya to Claude as a custom connector.
+   claude.ai > Settings > Connectors > Add custom connector. Name: Maya. URL:
+   https://maya.manasiyo.com/api/mcp?token=YOUR_TOKEN (the query form exists for
+   connectors that cannot send a header; /api/mcp is the address, the bare /mcp
+   only works from v14.05 on). Save. In any chat or Cowork
+   session, Maya's eight tools appear (maya_soul, maya_inbox, ...).
+   Claude Code / Codex: same URL as an MCP server of type http.
+
+Check it worked: ask Claude "read maya_status". It answers with the version
+and the number of open feature requests. If you see maya_door_closed, the env
+var did not land; if unauthorized, the token in the URL does not match.
+
+AUGUST 24, 2026, FINAL ADMIN RELEASE REMEDIATION (v13.71)
+
+- A1 proxy security hardening: DONE in v13.70 and retained.
+- Release contracts: command, proxy, AI router and fabric suites now gate the
+  Cloud Build source step; server and helper syntax remain gated. A hermetic
+  Express/Chromium build-test image is still deferred.
+- Voice action safety: exact or explicitly ambiguous lead resolution, visible
+  confirmation queue, no automatic send, truthful Gmail popup/failure state,
+  single-flight Realtime setup and failed microphone cleanup are DONE.
+- Admin data consistency: command snapshot now uses direct Meta/Google feeds
+  when Windsor is absent, and strips lead contact details from the Realtime
+  prompt. DONE.
+- Marketing parity regression: the modules were functionally present but the
+  Admin copy lacked the approved page spacing, ticker, Wix visitor row, chart
+  hover/state restoration and visible refresh errors. Fixed in v13.71. The
+  standalone page remains the live fallback.
+- A3 Vertex image/Realtime compatibility, A5 legacy deletion/authorization,
+  distributed rate limiting, client error reporting and provider evals remain
+  deferred. They require separate risk domains or owner configuration.
+
+AUGUST 24, 2026, SET UP THE API FOR FROMSA (the to-do list, in order)
+
+These are the console and environment steps only Fromsa can do. Each is a
+green step; none is code. Do them in this order.
+
+[ ] 1. PIN THE ANALYTICS PROPERTY (fixes the "3" and the "..." that look low).
+    The MAYA app's Google Analytics is G-ETTJ6PXEMM. The server was guessing
+    which GA4 property to read and likely reading manasiyo.com's, not MAYA's.
+    - Google Analytics -> Admin -> Property settings on the MAYA property
+      (the one whose data stream is G-ETTJ6PXEMM). Copy the numeric PROPERTY ID.
+    - Cloud Run -> maya-api -> Edit & deploy new revision -> Variables:
+      set MARKETING_GA_PROPERTY_ID and GA_PROPERTY_ID both to that number.
+    - Also confirm the Cloud Run service account is added as a Viewer on that
+      property (Analytics -> Admin -> Property Access Management).
+
+[ ] 2. BILLING CAPS (so a bill can never surprise you).
+    - OpenAI: you are already prepaid at ~$10 with no auto-refill, which is
+      itself a spend cap; keep auto-refill OFF. Set a usage alert at $8.
+    - Google Cloud: Billing -> Budgets & alerts -> create a budget with email
+      + phone alerts at $8 and $15. Vertex image work is admin-only, so this
+      is a safety net, not a live risk.
+
+[ ] 3. INSTANT DOWN / FAILURE ALERT (the ping OpenAI will not send you).
+    - Google Cloud -> Monitoring -> Alerting -> create a policy on the Cloud
+      Run maya-api ERROR RATE, notify your email + phone.
+    - Add a second policy on the billing budget from step 2.
+    (If you would rather MAYA email you directly when a user's image fails,
+    give Claude a Slack or Discord webhook and it will push it server-side.)
+
+[ ] 4. APP CHECK (only your real site can reach the database).
+    The client code is already wired and dormant. To turn it on:
+    - Google Cloud -> reCAPTCHA -> create a reCAPTCHA Enterprise site key for
+      maya.manasiyo.com. Copy the SITE KEY.
+    - In frontend/index.html and playground/index.html, set
+      MAYA_APPCHECK_SITE_KEY = 'your-site-key' (one line, near FIREBASE_CONFIG).
+      Ask Claude to make this edit and push; confirm the app still signs in.
+    - Firebase console -> App Check -> register the web app with that key.
+    - ONLY after the app works with App Check active: App Check -> APIs ->
+      set Firestore and Storage to ENFORCE.
+
+[ ] 5. THE VOICE MODEL (so Maya actually speaks).
+    - OpenAI: confirm the Realtime model 'gpt-realtime' is available on the
+      account (or set OPENAI_REALTIME_MODEL on Cloud Run to the one you have).
+
+[ ] 6. OPTIONAL, THE CLO LIBRARY (Plan B real search).
+    - CLO-SET dashboard -> issue an API token -> set CLOSET_API_TOKEN and
+      CLOSET_SEARCH_URL on Cloud Run, then tell Claude to wire the exact
+      search endpoint from their docs.
+\n[v14.14] MCP door scopes: /api/mcp?token=... is now READ ONLY (status,\ninbox, soul, people). maya_leads, maya_memory, maya_journal and\nmaya_feature_done need the token as an Authorization: Bearer header.\nA connector that cannot send headers keeps read access unchanged.\n
+SEPTEMBER 19, 2026: live marketing reporting incident (OPEN)
+Windsor returns an account-limit notice: five connected accounts, free plan allows
+one. Admin renders the notice as a campaign with zero delivery; generated ticker
+incorrectly infers ads are paused. Reject diagnostic rows and mark reporting
+unavailable. Actual ad delivery has not been verified. No credentials or plan
+changed. See AUDIT-2026-09-19.md for evidence and direct-integration replacement.
+
+SEPTEMBER 29, 2026: design preview persistence gap (LOCAL FIX)
+The style preview previously saved only browser preview tokens; live pages
+loaded independent legacy CSS. Added an Admin-authenticated fixed-key design
+save/read API and a shared style runtime on every served page. Role audit counts
+now show per-role subtotals instead of ambiguous zero categories. Local browser
+and mocked production Save tests pass. Live deployment remains unverified; no
+push or production settings changed.
+SEPTEMBER 30, 2026: Latest pushed MAYA release not on Firebase (OPEN)
+Remote maya-v2 is f38b2fe and GitHub shows Vercel success, but a cache-bypassed Firebase Hosting request still serves the older Admin/Frontend and gallery v4. Aesthetic Control falls back to the homepage; booking-pending is absent. The public GitHub Cloud Build check reports that build 8bc3a65d-7572-4d38-9e69-f08194f6a935 failed in step 1, before server/Hosting: the sole smoke failure expected card-editor heading weight >=600 after Aesthetic Control capped it at 400. Corrected that outdated test locally. The previous c388619 container omission is already fixed in f38b2fe. Independently, the Admin changelog was hard-coded to Sep 16 in current source, and open tabs watched only the unchanged 14.40 version. Prepared concise new entries, a generated public release.json stamp, and commit-aware update checks; not pushed.
+
+SEPTEMBER 30, 2026: pushed release 0d0ec66 blocked in Cloud Build (LOCAL FIX)
+Cloud Build fbbce9f4-deb5-4a24-b82b-ee1c2e76bdc6 stopped in Test release
+contracts before deployment. The Outbound UI assertion still expected an 11px
+person link, while the approved style is 12px. Related 11px lead-stage and
+500-weight assertions, and a stale exact wixLeads signature check, are fixed
+locally. Seventeen non-browser contracts and the available full browser suites
+pass in isolated headless Chromium. Live Admin still starts its notes at Sep 16;
+Aesthetic Control is not served yet. The live verify page has a separate wall
+hover attention. No push or live call/text was made. Recheck after deployment.
+
+SEPTEMBER 30, 2026: live release recovered; deploy checker false positive (LOCAL FIX)
+Hosting now identifies f1a36b5, and the read-only live verification suite passes.
+The live /verify.html wall-hover warning was caused by its test matching the
+obsolete `.cc-meta {` selector while the frontend uses `.community-card .cc-meta`.
+The frontend rule is present and hides details until hover. Corrected the
+selector and added a regression assertion locally; the corrected checker needs
+the next authorized push before it appears live. No actual wall behavior was
+changed.

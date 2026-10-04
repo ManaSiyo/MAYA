@@ -1,0 +1,18 @@
+[Codex] Separate table styling and add gray shared borders
+
+Add Gray to Glass, Outer, Inner, popup and retained filter border controls and
+validators, excluding Table. Preserve fixed RGB values and existing save schemas.
+
+Table owns its border/color, background/opacity, radius and X/Y cell padding.
+Add bounded optional corners 0–24px, default 12px for existing saved designs.
+Remove Inner styling from Admin/gallery/Outbound table housing and formatting
+workspace. Toolbar follows Outer material/padding; table wrappers have their own
+single border/fill with zero housing padding. Keep sticky content paint-contained
+within horizontal scrolling, retain filter portal/keyboard behavior and graph styling.
+Bump gallery v26/runtime v12 across served pages and update continuity/design docs.
+
+Validation: design-config/contract; gallery 11 widths 320–1920, independent Inner/
+Table controls, saved Admin corners; full app-regression; canon-ui 11 pages/7 widths;
+Outbound populated scrolling/filter tests; shared CRM UI/failure/intelligence checks; actual-font visual review and syntax/diff checks.
+Limitations: owner Push and authenticated live Save verification remain. No personal
+Chrome access, production writes, credentials, Push or deployment.

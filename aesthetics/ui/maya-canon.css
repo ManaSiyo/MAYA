@@ -1,0 +1,547 @@
+/* MAYA V4: V3 is the foundation. Dense information gets quieter, not heavier.
+   Legacy runtime adapter. Sole active specification: docs/design.md. */
+:root {
+  --maya-accent: #adcdf8;
+  --maya-font-ui: 'Jost', sans-serif;
+  --maya-font-brand: 'Cormorant Garamond', serif;
+  --maya-text-caption: 12px;
+  --maya-text-body: 14px;
+  --maya-text-table: 12px;
+  --maya-text-meta: 11px;
+  --maya-text-section: 18px;
+  --maya-text-metric: 28px;
+  --maya-ink: rgba(245,250,255,.92);
+  --maya-secondary: rgba(245,250,255,.72);
+  --maya-tertiary: rgba(245,250,255,.58);
+  --maya-line: rgba(255,255,255,.22);
+  --maya-line-hover: rgba(255,255,255,.42);
+  --maya-hairline: .5px;
+  --maya-radius-pill: 100px;
+  --maya-radius-panel: 16px;
+  --maya-space: 8px;
+  --maya-surface: rgba(7,10,20,.48);
+  --maya-glass: rgba(7,10,20,.62);
+  --maya-hover: rgba(255,255,255,.04);
+  --maya-selected: rgba(180,210,255,.08);
+  --maya-frost: blur(22px) saturate(180%);
+  --maya-quiet-frost: blur(12px) saturate(110%);
+  --maya-inset: inset 0 1px 1px rgba(255,255,255,.12), inset 0 -1px 1px rgba(255,255,255,.06);
+  --maya-drawer-frost: blur(28px) saturate(180%);
+  --maya-drawer-glass: linear-gradient(180deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,.03) 25%,rgba(255,255,255,.02) 65%,rgba(255,255,255,.07) 100%);
+  --maya-control-shadow: inset 0 1px 1px rgba(255,255,255,.28),inset 0 -1px 1px rgba(0,0,0,.18),0 4px 16px rgba(0,0,0,.22);
+  --maya-drawer-shadow: inset 0 1px 1px rgba(255,255,255,.30),inset 0 -1px 1px rgba(0,0,0,.18),0 12px 48px rgba(0,0,0,.38);
+  --maya-floating-shadow: var(--maya-inset), 0 4px 16px rgba(0,0,0,.22);
+  --maya-booked: #4ade80;
+  --maya-progress: #fbbf24;
+  --maya-cancelled: #fda4af;
+  --maya-inactive: #b5bdc8;
+  --maya-contacted: #8abcf2;
+  --maya-glass-dark: rgb(3 15 29 / 45%);
+  --maya-glass-edge: rgb(145 190 225 / 24%);
+  --maya-duration: 180ms;
+  --maya-ease: ease-out;
+  --ink: var(--maya-ink); --dim: var(--maya-secondary); --faint: var(--maya-tertiary);
+  --line: var(--maya-line); --panel: var(--maya-surface);
+  --green: var(--maya-booked); --amber: var(--maya-progress); --rose: var(--maya-cancelled);
+  --mint: var(--maya-booked); --blue: var(--maya-ink);
+}
+body { font-family:var(--maya-font-ui);font-weight:400;color:var(--maya-ink); }
+/* Font inheritance must also cover dynamically created forms and data. */
+:where(button,input,select,textarea,table,time,.msg-number,.model-group,.model-note) {
+  font-family:var(--maya-font-ui);font-variant-numeric:tabular-nums;
+}
+:where(button,input,select,textarea) { color:var(--maya-ink); }
+:where(button,[role="button"],input,select,textarea,summary,a):focus-visible {
+  outline:1px solid rgba(245,250,255,.85);outline-offset:3px;
+}
+/* Reusable capsule treatment. Layout and control behavior remain owned by pages. */
+:where(html[data-maya-surface]) :is(.pill,.top-btn,.inv-btn,.msg-call,.primary,.dialog-actions button,.tabs button,.lead-tool,.lead-cta,button[type="submit"]) {
+  font-family:var(--maya-font-ui);font-weight:400;
+  color:var(--maya-ink);background:transparent;
+  border:var(--maya-hairline) solid var(--maya-line);border-radius:var(--maya-radius-pill);
+  box-shadow:var(--maya-control-shadow);backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
+  transition:background var(--maya-duration) var(--maya-ease),border-color var(--maya-duration) var(--maya-ease);
+}
+:where(html[data-maya-surface]) :is(.pill,.top-btn,.inv-btn,.msg-call,.primary,.dialog-actions button,.tabs button,.lead-tool,.lead-cta):hover {
+  background:var(--maya-hover);color:var(--maya-ink);border-color:var(--maya-line-hover);
+}
+html[data-maya-surface="dense"] :is(button,input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
+  font-family:var(--maya-font-ui);font-weight:400;color:var(--maya-ink);
+  border-width:var(--maya-hairline);border-color:var(--maya-line);
+}
+html[data-maya-surface="dense"] :is(button:not(.person-link):not(.link-button),input:not([type="checkbox"]):not([type="radio"]),select) { border-radius:var(--maya-radius-pill); }
+html[data-maya-surface="dense"] textarea { border-radius:var(--maya-radius-panel); }
+html[data-maya-surface="dense"] :is(button,.primary,.tabs .active) { background:transparent;color:var(--maya-ink);box-shadow:var(--maya-control-shadow); }
+html[data-maya-surface="dense"] button:hover { background:var(--maya-hover); }
+html[data-maya-surface="dense"] :is(button.active,[aria-selected="true"],.person.active) { background:var(--maya-selected);border-color:var(--maya-line-hover); }
+/* Strong frost is for navigation and temporary layers, not every card. */
+html[data-maya-surface="dense"] :is(#drawer,#outbound-drawer,#clients-drawer,dialog,#lead-inv-modal .inv-card) {
+  background:var(--maya-drawer-glass);border:var(--maya-hairline) solid var(--maya-line);
+  border-radius:18px;box-shadow:var(--maya-drawer-shadow);backdrop-filter:var(--maya-drawer-frost);-webkit-backdrop-filter:var(--maya-drawer-frost);
+}
+html[data-maya-surface="dense"] :is(.panel,.tile,.stat,.affiliate-stat,.detail,.metric-row,.person,.empty,.layout>aside,main,.people-scroll,.model-group,.chart-wrap) {
+  background:var(--maya-surface);border-width:var(--maya-hairline);border-color:var(--maya-line);
+  box-shadow:none;backdrop-filter:var(--maya-quiet-frost);-webkit-backdrop-filter:var(--maya-quiet-frost);
+}
+html[data-maya-surface="dense"] :is(table,th,td,input,select,textarea) { font-family:var(--maya-font-ui);font-variant-numeric:tabular-nums; }
+html[data-maya-surface="dense"] :is(th,td) { border-color:rgba(255,255,255,.1);border-width:var(--maya-hairline); }
+/* Table headers inherit their panel; sticky Lead Station headers keep their own fill. */
+html[data-maya-surface="dense"] tbody tr:hover { background:var(--maya-hover); }
+/* Metrics use weight and alignment rather than a decorative typeface. */
+html[data-maya-surface] :is(.tile .v,.money,.bl-step .v,.bl-tile .v,.stat strong,.affiliate-stat strong,.pg-stat-num,.pg-plan-num,.pg-plan-price,.funnel .v) {
+  font-family:var(--maya-font-ui);font-weight:400;font-style:normal;
+  font-variant-numeric:tabular-nums;letter-spacing:0;color:var(--maya-ink);
+  text-shadow:none;animation:none;
+}
+html[data-maya-surface="dense"] :is(.affiliate-stat strong,.stat strong,.money) {font-size:var(--maya-text-metric);}
+html[data-maya-surface="dense"] :is(#adm-tabtitle,#drawer h3,#outbound-drawer h3,.model-group strong,h2,h3,h4) {
+  font-family:var(--maya-font-ui);font-weight:400;font-style:normal;color:var(--maya-ink);
+}
+html[data-maya-surface="dense"] .model-group strong {font-size:12px;font-weight:400;}
+/* Lead Station is the dense canon example; all actions and persistence are unchanged. */
+html[data-maya-surface] #adm-mkt #leads-table :is(td,.lead-note-vp,.lead-stage,.lead-open) {
+  font:400 var(--maya-text-table)/1.5 var(--maya-font-ui);font-variant-numeric:tabular-nums;
+}
+html[data-maya-surface] #adm-mkt #leads-table .lead-open {font-weight:400;color:var(--maya-ink);}
+html[data-maya-surface] #adm-mkt #leads-table :is(.lead-note,.lead-note-vp,.lead-note-edit) {color:var(--maya-secondary);font-style:normal;}
+html[data-maya-surface] #adm-mkt #leads-table :is(.lead-src,.lead-sig-edit,.lead-when,.lead-subline) {
+  font:400 var(--maya-text-meta)/1.5 var(--maya-font-ui);color:var(--maya-tertiary);letter-spacing:0;
+}
+html[data-maya-surface] #adm-mkt #leads-table th {
+  font:400 var(--maya-text-meta)/1.5 var(--maya-font-ui);letter-spacing:.06em;color:var(--maya-ink);
+}
+html[data-maya-surface] #adm-mkt #leads-table td {padding-top:var(--maya-space);padding-bottom:var(--maya-space);}
+html[data-maya-surface] #adm-mkt #leads-table .lead-stage {color:var(--maya-inactive);background:transparent;box-shadow:none;}
+html[data-maya-surface] #adm-mkt #leads-table .lead-stage:has(option[value="in_progress"]:checked) {color:var(--maya-progress);}
+html[data-maya-surface] #adm-mkt #leads-table .lead-stage:has(option[value="booked"]:checked) {color:var(--maya-booked);}
+html[data-maya-surface] #adm-mkt #leads-table .lead-stage:has(option[value="canceled"]:checked) {color:var(--maya-cancelled);}
+/* Dense popovers need a dark backing as well as frost; drawer glass alone
+   allows table text to compete with the menu, even when blur is supported. */
+html[data-maya-surface] .lead-filter {
+  display:inline-block;vertical-align:middle;margin-left:8px;color:var(--maya-ink);
+}
+html[data-maya-surface] .lead-filter>summary {
+  display:flex;align-items:center;justify-content:center;width:28px;height:28px;
+  padding:0;list-style:none;cursor:pointer;border-radius:var(--maya-radius-pill);
+}
+html[data-maya-surface] .lead-filter>summary::-webkit-details-marker {display:none;}
+html[data-maya-surface] .lead-filter>summary:hover,
+html[data-maya-surface] .lead-filter[open]>summary {background:var(--maya-selected);}
+html[data-maya-surface] .lead-filter svg {width:16px;height:16px;}
+html[data-maya-surface] .lead-status-menu {
+  position:fixed;inset:auto;margin:0;z-index:1000;box-sizing:border-box;
+  width:185px;max-width:calc(100vw - 16px);padding:8px;overflow:auto;
+  color:var(--maya-ink);background:rgba(7,10,20,.88);
+  border:var(--maya-hairline) solid var(--maya-line);border-radius:var(--maya-radius-panel);
+  box-shadow:var(--maya-floating-shadow);backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
+  font:400 var(--maya-text-meta)/1.5 var(--maya-font-ui);letter-spacing:normal;text-transform:none;
+  overscroll-behavior:contain;
+}
+html[data-maya-surface] .lead-status-menu[hidden] {display:none;}
+html[data-maya-surface] .lead-status-menu label {
+  display:flex;align-items:center;gap:8px;min-height:28px;padding:2px 8px;
+  border-radius:8px;white-space:nowrap;cursor:pointer;
+}
+html[data-maya-surface] .lead-status-menu label:hover {background:var(--maya-hover);}
+html[data-maya-surface] .lead-status-menu input {margin:0;accent-color:var(--maya-accent);}
+html[data-maya-surface] .lead-status-menu::backdrop {background:transparent;}
+html[data-maya-surface] .affiliate-avatar {background:transparent;border-color:var(--maya-line);box-shadow:none;}
+html[data-maya-surface="dense"] :is(.sdot,.new-dot,.model-group) {box-shadow:none;}
+/* No serif data, including inline output from legacy templates. */
+html[data-maya-surface] :is(table,input,select,textarea,.pg-stat-num,.model-group,.msg-number) {font-family:var(--maya-font-ui)!important;}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  html[data-maya-surface] :is(#drawer,#outbound-drawer,#clients-drawer,dialog,.lead-status-menu,.panel,.detail,.stat) {background:rgba(7,10,20,.92);}
+}
+@media(prefers-reduced-motion:reduce) {
+  html[data-maya-surface] *,html[data-maya-surface] *::before,html[data-maya-surface] *::after {
+    animation:none!important;transition:none!important;scroll-behavior:auto!important;
+  }
+}
+/* V3 branding is deliberately exempt from functional heading normalization. */
+html[data-maya-surface] :is(#top-left-brand .brand-title,.brand h1,#brand,.brand-title) {
+  font-family:var(--maya-font-brand);font-weight:400;
+}
+
+/* Owner-approved compact Admin scale; keep V4 fonts and semantic colors. */
+html[data-maya-surface] #adm-mkt #leads-table .lead-subline {margin-top:4px;gap:8px;}
+html[data-maya-surface] #adm-mkt #leads-table .lead-src {cursor:default;}
+
+/* Frontend is the component master. Backend retains its compact data scale.
+   The gradient is the frontend drawer glass, never a pill or data-panel fill. */
+html[data-maya-surface="dense"] :is(.pill,.top-btn,.inv-btn,.msg-call,.primary,.dialog-actions button,.tabs button,.lead-tool,.lead-cta,button.wide,button[type="submit"]) {
+  box-shadow:var(--maya-control-shadow);backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
+}
+html[data-maya-surface="dense"] :is(.adm-tab,.tabs button) {
+  background:rgba(255,255,255,.04);border-color:var(--maya-line);font-weight:400;
+}
+html[data-maya-surface="dense"] :is(.adm-tab.on,.tabs button.active) {
+  border-color:rgba(255,255,255,.62);box-shadow:0 0 0 1px rgba(255,255,255,.10);
+}
+html[data-maya-surface="dense"] #adm-tabtitle {font-weight:400;}
+html[data-maya-surface="dense"] :is(input:not([type="checkbox"]):not([type="radio"]),textarea,select) {
+  background:rgba(255,255,255,.04);box-shadow:inset 0 1px 2px rgba(0,0,0,.18);
+}
+html[data-maya-surface="dense"] #voice-dock {
+  margin-bottom:0;padding:8px 4px 0;gap:4px;
+  border-top:var(--maya-hairline) solid rgba(255,255,255,.06);
+}
+html[data-maya-surface="dense"] #voice-dock .voice-row {
+  width:100%;justify-content:center;gap:16px;
+}
+html[data-maya-surface="dense"] #voice-btn {width:42px;height:42px;flex:none;}
+html[data-maya-surface="dense"] #voice-btn img {width:42px;height:42px;}
+html[data-maya-surface="dense"] #maya-toggle {font-size:10px;gap:9px;box-shadow:none;}
+html[data-maya-surface="dense"] #maya-toggle .mt-switch {width:34px;height:20px;}
+html[data-maya-surface="dense"] #maya-toggle .mt-knob {width:16px;height:16px;}
+html[data-maya-surface="dense"] #maya-toggle.live .mt-knob {transform:translateX(14px);}
+html[data-maya-surface="dense"] :is(.link-button,.msg-rename,.lead-open) {box-shadow:none;backdrop-filter:none;}
+
+html[data-maya-surface="dense"] #drawer .adm-tab {border-radius:50%;box-shadow:none;}
+html[data-maya-surface="dense"] #drawer .adm-tab.on {box-shadow:0 0 0 1px rgba(255,255,255,.10);}
+
+/* September 26 owner refinements: borderless round marks and quieter log details. */
+html[data-maya-surface="dense"] :is(.maya-logo-wrap,#voice-btn,.top-btn.hamburger,#menu-toggle),
+html[data-maya-surface="dense"] :is(.maya-logo-wrap,#voice-btn,.top-btn.hamburger,#menu-toggle):hover {
+  border:0;box-shadow:none;background:transparent;
+}
+html[data-maya-surface="dense"] :is(.maya-logo-wrap,#voice-btn) {overflow:hidden;border-radius:50%;}
+html[data-maya-surface="dense"] #top-left-brand .maya-logo-mark,
+html[data-maya-surface="dense"] .brand .mark {border-radius:50%;clip-path:circle(50%);border:0;box-shadow:none;}
+html[data-maya-surface="dense"] .grid.doors .card b {
+  font-family:var(--maya-font-brand);font-weight:400;letter-spacing:.22em;
+}
+html[data-maya-surface="dense"] #maya-logs-list .maya-log small {
+  color:var(--maya-ink);font-weight:400;
+}
+html[data-maya-surface="dense"] #maya-logs-list .maya-log p {color:var(--maya-secondary);font-weight:400;}
+
+/* Compact backend matches the frontend's small controls; metric sizes stay intact. */
+html[data-maya-surface="dense"] #adm-mkt #leads-table td {padding-top:4px;padding-bottom:4px;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-subline {margin-top:2px;gap:6px;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-stage {padding-top:2px;padding-bottom:2px;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table :is(.lead-note-vp,.lead-note-edit) {line-height:1.35;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-cta {width:22px;height:22px;padding:3px;}
+html[data-maya-surface="dense"] :is(#adm-tabtitle,#drawer h3,#outbound-drawer h3) {font-weight:400;}
+html[data-maya-surface="dense"] :is(.bl-step .k,.bl-tile .k,.bl-target,.bl-summary) {font-size:8.5px;font-style:normal;}
+html[data-maya-surface="dense"] :is(.grp,.section-title) {font-size:11px;font-weight:400;font-style:normal;}
+html[data-maya-surface="dense"] #maya-logs-list .maya-log p {font-size:12px;}
+html[data-maya-surface="dense"] body.maya-live .maya-logo-wrap,
+html[data-maya-surface="dense"] #voice-btn.live {animation:none;border:0;box-shadow:none;}
+
+html[data-maya-surface="dense"] :is(#adm-tabtitle,#outbound-drawer > .row h2,#clients-drawer .drawer-title) {
+  font-family:var(--maya-font-brand);font-size:19px;font-weight:400;font-style:normal;
+}
+
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-open {border:0;box-shadow:none;background:transparent;}
+
+/* Dense surfaces keep controls and model information at the same quiet scale. */
+html[data-maya-surface="dense"] #model-snapshot .model-group {padding:6px 8px;margin:2px 0;}
+html[data-maya-surface="dense"] :is(#adm-mkt .bl-step .v,.bl-step .v) {font-size:20px;font-weight:400;}
+html[data-maya-surface="dense"] :is(#adm-mkt .bl-tile .v,.bl-tile .v) {font-size:14px;}
+html[data-maya-surface="dense"] :is(.pill,.range-chips button,.metric-chips button,.tabs button,button.wide) {font-size:11px;padding:6px 10px;min-height:30px;}
+html[data-maya-surface="dense"] :is(dialog,#outbound-drawer) {max-height:calc(100dvh - 28px);overscroll-behavior:contain;}
+html[data-maya-surface="dense"] #outbound-drawer {display:flex;flex-direction:column;padding:16px;}
+html[data-maya-surface="dense"] #outbound-drawer[hidden] {display:none;}
+#outbound-drawer [role="tabpanel"][hidden] {display:none;}
+#outbound-drawer .drawer-footer {margin-top:auto;padding-top:8px;border-top:var(--maya-hairline) solid var(--maya-line);text-align:center;font-size:11px;}
+#outbound-drawer .drawer-footer img {width:42px;height:42px;vertical-align:middle;margin-right:12px;}
+#outbound-drawer .drawer-tabs {display:flex;gap:8px;margin:12px 0;}
+#outbound-drawer .drawer-tabs button {flex:1;font-size:11px;padding:6px;}
+#outbound-drawer .drawer-tabs [aria-selected="true"] {border-color:var(--maya-ink);}
+#outbound-drawer [role="tabpanel"] {min-height:0;overflow:auto;flex:1;}
+@media(max-width:650px) {
+ html[data-maya-surface="dense"] .layout .row {flex-wrap:wrap;}
+ html[data-maya-surface="dense"] .layout .stats {grid-template-columns:repeat(2,minmax(0,1fr));}
+ html[data-maya-surface="dense"] .layout .stat {min-width:0;padding:10px;overflow-wrap:anywhere;}
+ html[data-maya-surface="dense"] .layout .tabs {width:100%;}
+ html[data-maya-surface="dense"] .layout .search {min-width:0;width:100%;}
+}
+
+/* Avoid stacking expensive blur layers inside already frosted content panels. */
+html[data-maya-surface="dense"] :is(.person,.stat,.model-group) {backdrop-filter:none;-webkit-backdrop-filter:none;}
+@media(max-width:650px) {
+ html[data-maya-surface="dense"] body:has(#outbound-drawer) header {flex-wrap:nowrap;gap:8px;min-height:72px;height:72px;}
+ html[data-maya-surface="dense"] body:has(#outbound-drawer) .brand {gap:8px;min-width:0;}
+ html[data-maya-surface="dense"] body:has(#outbound-drawer) .brand h1 {font-size:18px;letter-spacing:.12em;}
+ html[data-maya-surface="dense"] body:has(#outbound-drawer) .brand .mark {width:38px;height:38px;}
+ html[data-maya-surface="dense"] #outbound-drawer {right:8px;top:8px;bottom:8px;width:calc(100vw - 16px);max-height:calc(100dvh - 16px);}
+}
+
+/* Outbound intelligence: the same compact Jost, quiet surfaces and restrained color. */
+.outbound-brief{margin:0 28px 8px;font:11px/1.5 var(--maya-font-ui);color:var(--maya-secondary);overflow-wrap:anywhere;}
+.people-table input[type="checkbox"]{width:16px;height:16px;accent-color:var(--maya-accent);}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
+.mailbox-row{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;padding:8px 0;}
+.mailbox-row span{min-width:0;overflow-wrap:anywhere;}.mailbox-row button{font-size:10px;padding:4px 6px;}
+#automation-status{line-height:1.6;margin:12px 0;}
+#modal-form label:has(input[type="checkbox"]){display:flex;gap:8px;align-items:center;}
+#modal-form input[type="checkbox"]{width:16px;}
+.template-preview{margin-top:16px;white-space:normal;font:12px/1.7 var(--maya-font-ui);}
+.template-person,.template-person label{color:var(--maya-booked);}
+.template-company,.template-company label{color:var(--maya-accent);}
+.template-offer,.template-offer label{color:var(--maya-progress);}
+.crm-activity article,.review-correspondent{padding:12px 0;border-bottom:var(--maya-hairline) solid var(--maya-line);overflow-wrap:anywhere;}
+.crm-activity strong{font-size:12px;font-weight:400;}.crm-activity small,.review-correspondent small{display:block;color:var(--maya-secondary);font-size:10px;margin:4px 0;}
+.crm-activity p{font-size:11px;color:var(--maya-secondary);line-height:1.6;}
+.review-correspondent button{margin:8px 0;}
+maya-ai-meter{display:block;min-width:0;}
+.ai-meter{padding:12px 8px;text-align:center;font:11px/1.5 var(--maya-font-ui);color:var(--maya-ink);}
+html[data-maya-surface] .ai-meter h3{font:11px var(--maya-font-ui);letter-spacing:.16em;margin:12px 0 0;}
+.ai-meter svg{display:block;width:190px;max-width:100%;margin:0 auto;color:var(--maya-accent);overflow:visible;}
+.ai-track,.ai-fill{fill:none;stroke-width:3;stroke-linecap:round;}.ai-track{stroke:var(--maya-line);}.ai-fill{stroke:currentColor;stroke-dasharray:0 100;}
+.ai-needle{stroke:var(--maya-ink);stroke-width:1.5;transform-origin:110px 106px;}.ai-meter circle{fill:var(--maya-ink);}
+.ai-meter text{font:10px var(--maya-font-ui);fill:var(--maya-secondary);}
+html[data-maya-surface] .ai-meter .ai-meter-value{font:400 20px var(--maya-font-ui);font-variant-numeric:tabular-nums;margin:4px 0 2px;position:relative;}
+.ai-meter-label{margin:0 0 16px;font-size:10px;}.ai-meter-detail{color:var(--maya-secondary);font-size:10px;line-height:1.5;}
+.ai-meter-providers{padding:0;margin:12px 0;list-style:none;}.ai-meter-providers li{display:flex;justify-content:space-between;gap:8px;padding:3px 0;font-variant-numeric:tabular-nums;}
+.ai-meter-refresh{font-size:10px;padding:5px 10px;}
+/* Accepted Gemini audit findings, mapped to existing elements. V3 geometry and
+   owner-approved type sizes/status colors remain authoritative. */
+html[data-maya-surface="dense"] #changes-fold>.fold-body{max-height:420px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:16px;}
+html[data-maya-surface="dense"] #features-list .fr-room{max-height:380px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;}
+html[data-maya-surface="dense"] #pe-framing{white-space:pre-wrap;overflow-wrap:anywhere;background:rgba(0,0,0,.15);padding:12px;color:var(--maya-secondary);}
+html[data-maya-surface="dense"] #mkt-ticker{mask-image:linear-gradient(to right,transparent,#000 8%,#000 92%,transparent);}
+html[data-maya-surface="dense"] :is(.arch>.col,.pe-live){min-width:0;overflow-wrap:anywhere;}
+html[data-maya-surface="dense"] #adm-scroll{scroll-padding-bottom:104px;}
+html[data-maya-surface="dense"] .map-footer{padding-bottom:104px;}
+html[data-maya-surface="dense"] .fold>summary .grp{display:inline-flex;align-items:center;gap:8px;}
+@media(max-width:650px){.outbound-brief{margin-inline:16px;}.mailbox-row{flex-wrap:wrap;}}
+
+#features-list:has(.fr-room){grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
+#features-list .fr-room{min-width:0;padding:8px;}
+.crm-insight{margin:12px 0;padding:12px;background:var(--maya-selected);border-radius:12px;font-size:11px;line-height:1.6;}
+.crm-insight small{color:var(--maya-secondary);font-size:10px;}
+@media(max-width:650px){#features-list:has(.fr-room){grid-template-columns:1fr;}}
+
+html[data-maya-surface="dense"] .layout button.person{border-radius:16px;box-shadow:none;padding:12px;text-align:left;}
+
+#drawer.msgs > maya-ai-meter{display:none;}
+html[data-maya-surface] #drawer .ai-meter h3{font:11px var(--maya-font-ui);letter-spacing:.16em;}
+
+/* Outbound uses the same compact functional scale as the other back rooms. */
+html[data-maya-surface="dense"] body:has(#outbound-drawer) {font-size:12px;}
+html[data-maya-surface="dense"] #campaign-title {font-size:18px;}
+html[data-maya-surface="dense"] :is(.detail h2,#modal-title,.empty h2) {font-size:16px;line-height:1.4;}
+html[data-maya-surface="dense"] .people-table :is(th,td,.person-link) {font-size:var(--maya-text-table);}
+html[data-maya-surface="dense"] .people-table :is(th,td) {padding:8px 12px;}
+html[data-maya-surface="dense"] :is(.link-button,.person-link) {box-shadow:none;background:transparent;border:0;border-radius:0;backdrop-filter:none;-webkit-backdrop-filter:none;}
+html[data-maya-surface="dense"] .link-button:hover {background:transparent;text-decoration:underline;}
+html[data-maya-surface="dense"] #modal-title {min-width:0;overflow-wrap:anywhere;}
+html[data-maya-surface="dense"] :is(#close-modal,#close-drawer) {flex:none;}
+html[data-maya-surface="dense"] #outbound-drawer .drawer-link {font-size:12px;padding:8px;}
+html[data-maya-surface="dense"] .people-table th {z-index:1;}
+
+/* Keep the Brief's inactive settings pane inside its drawer and out of tab order. */
+html[data-maya-surface="dense"] #drawer-settings {transform:none;visibility:hidden;opacity:0;transition:opacity var(--maya-duration) var(--maya-ease);}
+html[data-maya-surface="dense"] #drawer-settings.open {visibility:visible;opacity:1;}
+html[data-maya-surface="dense"] #clients-drawer :is(.client-item,.info-row) {overflow-wrap:anywhere;}
+html[data-maya-surface="dense"] #drawer-settings .info-row {gap:12px;}
+html[data-maya-surface="dense"] #drawer-settings .info-row>span {min-width:0;}
+html[data-maya-surface="dense"] #clients-drawer .drawer-settings-link {box-shadow:none;}
+html[data-maya-surface="dense"] #clients-drawer :is(.client-date,.key-row label,.info-row .lbl) {font-style:normal;}
+html[data-maya-surface="dense"] #drawer-settings .settings-title {font:400 19px var(--maya-font-brand);letter-spacing:.04em;text-transform:none;}
+
+/* Pattern workspaces must shrink and stack rather than force a desktop canvas. */
+html[data-maya-surface="dense"] body:has(#plan-a-view) .cols {grid-template-columns:minmax(0,34fr) minmax(0,66fr);}
+html[data-maya-surface="dense"] body:has(#plan-a-view) :is(.panel,.trace-card,.row2>div) {min-width:0;overflow-wrap:anywhere;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .trace-grid {grid-template-columns:repeat(4,minmax(0,1fr));}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .pattern-stage {flex-direction:column;align-items:flex-start;justify-content:flex-end;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .stage-badge {position:static;max-width:calc(100% - 28px);margin:12px 14px;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .pattern-stage>img {margin-top:auto;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .hero-frame img:not([src]) {display:none;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) :is(.drawer label,.sec-title) {font-style:normal;letter-spacing:.12em;}
+html[data-maya-surface="dense"] body:has(#plan-a-view) .drawer-head h3 {font:400 19px var(--maya-font-brand);letter-spacing:.04em;}
+@media(max-width:768px) {
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .cols {grid-template-columns:minmax(0,1fr);}
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .trace-grid {grid-template-columns:repeat(2,minmax(0,1fr));}
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .wrap {padding:24px 16px 48px;}
+}
+@media(max-width:420px) {
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .trace-grid {grid-template-columns:minmax(0,1fr);}
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .brand h1 {font-size:16px;letter-spacing:.12em;}
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .hpane-drawer {width:calc(100vw - 16px);right:8px;}
+ html[data-maya-surface="dense"] body:has(#plan-a-view) .drawer {left:0;right:0;top:8px;bottom:8px;padding:16px;}
+}
+
+/* Outbound priority workspace: compact source rows, quiet follow-up chart. */
+html[data-maya-surface="dense"] body:has(#outbound-drawer) .layout {gap:16px;grid-template-columns:216px minmax(0,1fr);}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) .layout>aside {padding:16px;}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) main {padding:16px;}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) .section {padding-bottom:16px;margin-bottom:16px;}
+html[data-maya-surface="dense"] .layout button.campaign {font-size:12px;}
+html[data-maya-surface="dense"] .layout button.campaign small {font-size:11px;margin-top:2px;}
+html[data-maya-surface="dense"] #new-campaign {width:32px;height:32px;min-width:32px;padding:0;display:grid;place-items:center;flex:none;aspect-ratio:1;border-radius:50%;}
+.outbound-icon {width:16px;height:16px;display:inline-block;flex:none;vertical-align:middle;}
+html[data-maya-surface="dense"] .people-table .person-link {border:0;border-radius:0;box-shadow:none;background:none;padding:0;font-weight:400;}
+html[data-maya-surface="dense"] .person-link:hover {text-decoration:underline;}
+.outbound-workflow {margin:0 0 8px;font-size:11px;color:var(--maya-secondary);}
+.outbound-workflow summary {cursor:pointer;width:fit-content;}
+.outbound-workflow .steps {margin:8px 0;}
+#sheet-freshness {margin:4px 0 12px;font-size:11px;}
+.followup-panel {padding:12px;margin:8px 0 12px;border:var(--maya-hairline) solid var(--maya-line);border-radius:var(--maya-radius-panel);background:var(--maya-surface);font-size:11px;}
+.followup-panel>.row {flex-wrap:wrap;gap:8px;}
+.followup-panel strong,.followup-legend b {font-weight:400;font-size:12px;}
+.followup-legend {display:flex;flex-wrap:wrap;gap:8px 16px;color:var(--maya-secondary);}
+.followup-legend>span {display:inline-flex;align-items:center;gap:5px;}
+.followup-legend i {width:6px;height:6px;border-radius:50%;}
+.followup-note {margin-top:12px;font-size:11px;}
+html[data-maya-surface="dense"] .followup-note button {font-size:11px;padding:0;}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) .toolbar {margin-bottom:8px;gap:8px;}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) :is(.toolbar button,.actions button) {font-size:11px;padding:6px 10px;}
+html[data-maya-surface="dense"] .people-actions {margin-top:8px;align-items:center;}
+html[data-maya-surface="dense"] #title-filter {font-size:11px;width:180px;max-width:100%;padding:6px 10px;margin-left:0;}
+html[data-maya-surface="dense"] .people-scroll {margin-top:8px;max-height:65vh;overscroll-behavior:contain;scrollbar-width:thin;}
+html[data-maya-surface="dense"] .people-table {min-width:1600px;table-layout:auto;}
+html[data-maya-surface="dense"] .people-table :is(td,th) {padding:4px 8px;line-height:1.4;vertical-align:middle;min-width:100px;}
+html[data-maya-surface="dense"] .people-table :is(td,th):first-child {min-width:32px;width:32px;}
+html[data-maya-surface="dense"] .people-table input[type="checkbox"] {width:14px;height:14px;margin:0;}
+html[data-maya-surface="dense"] .people-table :is(.sheet-subject,.sheet-status) {min-width:160px;max-width:220px;}
+html[data-maya-surface="dense"] .people-table small {display:block;font-size:10px;margin-top:4px;}
+html[data-maya-surface="dense"] .people-table :is(.date-cell,.write-email) {white-space:nowrap;}
+html[data-maya-surface="dense"] .people-table .write-email {display:inline-flex;align-items:center;gap:6px;padding:6px 10px;font-size:11px;}
+.priority-label {display:inline-flex;align-items:center;gap:4px;font-size:11px;white-space:nowrap;}
+.priority-label.hot {color:var(--maya-progress);}
+@media(max-width:900px){
+ html[data-maya-surface="dense"] body:has(#outbound-drawer) .layout {grid-template-columns:180px minmax(0,1fr);}
+ html[data-maya-surface="dense"] body:has(#outbound-drawer) main>.row {flex-wrap:wrap;}
+}
+@media(max-width:650px){
+ html[data-maya-surface="dense"] body:has(#outbound-drawer) .layout {display:block;}
+ html[data-maya-surface="dense"] body:has(#outbound-drawer) .layout>aside {margin-bottom:12px;}
+ html[data-maya-surface="dense"] #campaigns {display:block;}
+ html[data-maya-surface="dense"] .layout button.campaign {min-width:0;margin-top:4px;}
+ .followup-legend {gap:8px;}
+ html[data-maya-surface="dense"] #title-filter {margin-left:0;}
+}
+
+
+.outbound-tools {font-size:11px;color:var(--maya-secondary);}
+.outbound-tools summary {cursor:pointer;}
+
+html[data-maya-surface="dense"] body:has(#outbound-drawer) .toolbar>.row {flex:0 1 auto;min-width:0;justify-content:center;gap:8px;}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) #search {width:200px;max-width:240px;min-width:120px;flex:1 1 160px;}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) :is(#search,#stage-filter) {font-size:11px;padding:6px 10px;}
+
+/* Admin + Outbound: compact dark glass, shared semantic status chips. */
+html[data-maya-surface="dense"] body:has(:is(#adm-mkt,#outbound-drawer)) {
+  --maya-control-shadow:none;
+  --maya-drawer-glass:rgba(3,15,29,.82);
+  --maya-drawer-shadow:0 8px 24px rgba(0,0,0,.25);
+}
+.status-pill {
+  --status-color:var(--maya-inactive);
+  display:inline-flex;align-items:center;gap:6px;position:relative;
+  width:max-content;max-width:100%;padding:3px 10px;border-radius:999px;
+  color:var(--status-color);background:var(--maya-glass-dark);
+  border:var(--maya-hairline) solid var(--maya-glass-edge);
+  border-color:color-mix(in srgb,var(--status-color) 32%,transparent);
+  font:400 var(--maya-text-table)/1.5 var(--maya-font-ui);white-space:nowrap;
+}
+.status-pill::before {content:'';width:6px;height:6px;flex:none;border-radius:50%;background:var(--status-color);}
+.status-pill:is([data-status="contacted"],:has(option[value="contacted"]:checked)) {--status-color:var(--maya-contacted);}
+.status-pill:is([data-status="in_progress"],[data-status="follow_up_due"],:has(option[value="in_progress"]:checked)) {--status-color:var(--maya-progress);}
+.status-pill:is([data-status="replied"],[data-status="meeting"],[data-status="booked"],[data-status="closed"],:has(option[value="booked"]:checked)) {--status-color:var(--maya-booked);}
+.status-pill:is([data-status="suppressed"],[data-status="canceled"],:has(option[value="canceled"]:checked)) {--status-color:var(--maya-cancelled);}
+.lead-status {padding-right:22px;}
+.lead-status::after {content:'';position:absolute;right:10px;width:4px;height:4px;border-right:1px solid currentColor;border-bottom:1px solid currentColor;transform:rotate(45deg) translateY(-2px);}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-stage {
+  position:absolute;inset:0;width:100%;height:100%;max-width:none;opacity:0;cursor:pointer;
+  color:var(--status-color);padding:0;
+}
+.lead-status:has(:focus-visible) {outline:1px solid var(--maya-ink);outline-offset:3px;}
+.lead-status:has(:disabled) {opacity:.6;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table :is(th,td) {text-align:left;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table td {height:44px;box-sizing:border-box;vertical-align:middle;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table tr:last-child td {padding-bottom:4px;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-open {line-height:14px;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-cta {width:18px;height:18px;padding:2px;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table :is(.lead-identity,.lead-subline) {justify-content:flex-start;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-open {text-align:left;}
+html[data-maya-surface="dense"] #adm-mkt #leads-table .lead-note-vp {max-height:30px;}
+html[data-maya-surface="dense"] #adm-mkt :is(#leads-bar,#metric-chips) {justify-content:center;}
+html[data-maya-surface="dense"] body:has(#adm-mkt) .tiles {display:flex;justify-content:center;flex-wrap:wrap;gap:12px;}
+html[data-maya-surface="dense"] body:has(#adm-mkt) .tile {flex:0 0 auto;width:auto;background:var(--maya-glass-dark);border-color:var(--maya-glass-edge);}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) :is(.workspace-heading,#sheet-freshness,#notice,#outbound-brief) {text-align:center;}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) :is(.stats,.workspace-actions,.toolbar,.people-actions,.followup-panel>.row) {
+  display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:12px;
+}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) .stats {margin:16px 0;}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) .stat {
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;flex:0 0 auto;
+  width:auto;padding:8px 16px;border-radius:999px;
+  background:var(--maya-glass-dark);border:var(--maya-hairline) solid var(--maya-glass-edge);
+}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) .stat strong {font-size:18px;order:1;}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) .stat span {font-size:12px;}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) :is(main,.layout>aside) {background:var(--maya-glass-dark);border-color:var(--maya-glass-edge);}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) #view-menu {width:auto;max-width:100%;font-size:11px;padding:6px 12px;}
+html[data-maya-surface="dense"] body:has(#outbound-drawer) .workspace-actions {margin:12px 0 8px;}
+html[data-maya-surface="dense"] .people-table :is(th,td) {text-align:left;white-space:nowrap;}
+html[data-maya-surface="dense"] .people-table td {height:44px;box-sizing:border-box;}
+html[data-maya-surface="dense"] .people-table th {z-index:2;background:rgba(3,15,29,.94);}
+html[data-maya-surface="dense"] .people-table .sheet-subject {overflow:hidden;text-overflow:ellipsis;}
+.collection-progress {padding:8px;text-align:center;font-size:11px;color:var(--maya-secondary);}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  html[data-maya-surface="dense"] body:has(#outbound-drawer) :is(main,.layout>aside,.stat,.followup-panel) {background:rgb(3 15 29 / 94%);}
+}
+
+/* Meter confirmation uses the existing quiet metadata scale. */
+.ai-meter-checked{font:400 11px/1.4 var(--maya-font-ui);color:var(--maya-secondary);margin:4px 0;}
+/* Owner commands stay within the same compact Systems typography. */
+maya-owner-crm{display:block;font:400 12px/1.5 var(--maya-font-ui,Jost,sans-serif)}
+maya-owner-crm button{font:inherit;margin:4px 4px 4px 0}
+maya-owner-crm .gmail-candidates{max-height:280px;overflow:auto;overflow-wrap:anywhere}
+maya-owner-crm .gmail-candidates input{box-sizing:border-box;max-width:100%;font:inherit}
+
+/* Keep account setup out of conversation tabs; calm, consistently spaced controls. */
+#drawer.msgs > maya-owner-crm{display:none!important}
+html[data-maya-surface] #drawer maya-owner-crm{margin:24px 0;padding:0 8px}
+html[data-maya-surface] #drawer .owner-settings summary{cursor:pointer;font:400 12px/1.5 var(--maya-font-ui);color:var(--maya-ink);padding:12px 0}
+html[data-maya-surface] #drawer maya-owner-crm p{margin:12px 0;line-height:1.6;color:var(--maya-secondary)}
+html[data-maya-surface] #drawer maya-owner-crm button,
+html[data-maya-surface] #drawer maya-owner-crm a.drawer-link{display:inline-flex;align-items:center;justify-content:center;max-width:100%;padding:8px 12px;margin:4px 8px 8px 0;border:0.5px solid var(--maya-line,rgba(255,255,255,.18));border-radius:999px;background:rgba(3,15,29,.45);color:var(--maya-ink);font:400 12px/1.5 var(--maya-font-ui);text-decoration:none;white-space:normal}
+#outbound-drawer #drawer-workspace>button{margin-block:6px}
+#outbound-drawer p{line-height:1.6;margin-block:12px}
+#gmail-status{overflow-wrap:anywhere}
+.followup-legend{row-gap:8px}
+
+#gmail-setup{margin:12px 0;font:400 12px/1.6 var(--maya-font-ui);overflow-wrap:anywhere}#gmail-setup summary{cursor:pointer}#gmail-setup code{font:inherit;word-break:break-word}.connect-sender{display:inline-block;margin:8px 0}.connect-sender[hidden]{display:none}
+
+/* Outbound: the frontend glass-pill recipe, with a quiet spreadsheet workspace. */
+html[data-maya-surface] .layout .campaign{
+ text-align:center;background:transparent;border:.5px solid rgba(255,255,255,.22);
+ backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+ box-shadow:inset 0 1px 1px rgba(255,255,255,.28),inset 0 -1px 1px rgba(0,0,0,.18),0 4px 16px rgba(0,0,0,.22);
+ padding:10px 16px;min-height:40px;border-radius:100px;
+}
+html[data-maya-surface] .layout .campaign:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.42)}
+html[data-maya-surface] .layout .campaign.active{border-color:var(--maya-accent)}
+html[data-maya-surface] .followup-panel{padding:16px 0;margin:0 0 16px;border:0;background:none;box-shadow:none;text-align:center}
+.history-dial{display:block;width:144px;max-width:100%;margin:8px auto}
+.history-track,.history-segment{fill:none;stroke-width:12}
+.history-track{stroke:rgba(255,255,255,.1)}
+.history-segment{transform:rotate(-90deg);transform-origin:60px 60px;stroke:var(--maya-secondary)}
+.history-segment.uncontacted{stroke:#94a3b8}.history-segment.first{stroke:#8bb8f8}.history-segment.f1{stroke:#e0b35e}.history-segment.f2{stroke:#bb98db}.history-segment.review{stroke:#b6b6bb}.history-segment.held{stroke:#75c895}
+.history-segment:hover,.history-segment:focus{stroke-width:16;outline:none;filter:brightness(1.2)}
+.history-dial text{fill:var(--maya-ink);font:400 16px var(--maya-font-ui)}
+html[data-maya-surface] .followup-legend{display:grid;gap:8px;text-align:left;font-size:11px}
+.followup-legend>span{display:flex;gap:8px;align-items:center}.followup-legend b{margin-left:auto}
+.history-detail{font-size:11px;color:var(--maya-secondary);min-height:32px;margin-top:12px!important}
+html[data-maya-surface] .people-table .column-filter{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:4px 0;border:0;background:none;box-shadow:none;border-radius:0;font:inherit;text-align:left;color:inherit}
+.column-filter.filtered{color:var(--maya-accent)!important}
+html[data-maya-surface] .layout main>.workspace-heading{justify-content:center;margin:0}
+#sync-sheet{width:32px;height:32px;padding:0;border-radius:50%;font-size:20px}
+#outbound-brief,#sheet-freshness{display:none}
+#notice:empty{display:none}
+.outbound-more{margin:16px 0}.outbound-more summary{cursor:pointer;margin-bottom:8px}
+@supports not (backdrop-filter:blur(1px)){html[data-maya-surface] .layout .campaign{background:rgba(3,15,29,.9)}}
+
+.followup-legend .uncontacted{background:#94a3b8}.followup-legend .first{background:#8bb8f8}.followup-legend .f1{background:#e0b35e}.followup-legend .f2{background:#bb98db}.followup-legend .review{background:#b6b6bb}.followup-legend .held{background:#75c895}
+
+@media(max-width:650px){
+ html[data-maya-surface] .layout #followups{display:grid;grid-template-columns:104px minmax(0,1fr);align-items:center;gap:8px 12px;margin:0;padding:12px 0}
+ #followups h3,#followups .history-detail{grid-column:1/-1}
+ #followups .history-dial{width:104px;margin:0}
+ #followups .followup-legend{font-size:10px;gap:6px}
+ #followups .history-detail{min-height:18px;margin:0!important}
+}

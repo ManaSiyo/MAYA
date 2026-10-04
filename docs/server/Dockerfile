@@ -1,0 +1,25 @@
+# MAYA API — Cloud Run container
+FROM node:20-slim
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package.json ./
+RUN npm install --omit=dev
+COPY server.js ./
+COPY model-config.mjs ./
+COPY outbound.mjs ./
+COPY crm-store.mjs crm-gmail.mjs crm-ai.mjs crm-intelligence.mjs ./
+COPY owner-crm.mjs owner-conversation.mjs owner-sms-access.mjs message-archive.mjs ./
+COPY booking-link.mjs lead-alerts.mjs ./
+COPY proxy-policy.mjs ./
+COPY admin-command.mjs ./
+COPY fabric-sourcing.js ./
+COPY ai-router.js ./
+COPY design-config.mjs ./
+COPY maya-mcp.mjs ./
+COPY maya-phone.mjs ./
+COPY maya-messages.mjs ./
+COPY maya-feedback.mjs ./
+COPY maya-transfer.mjs ./
+COPY maya-character.md ./
+EXPOSE 8080
+CMD ["node", "server.js"]
