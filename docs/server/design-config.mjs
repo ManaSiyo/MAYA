@@ -26,7 +26,7 @@ export function validDesign(body) {
                             [body.overlay,['fill','rim','blur','saturation']]]) {
     if(obj===body.overlay&&obj.radius!==undefined&&(!Number.isInteger(obj.radius)||obj.radius<0||obj.radius>24))return false;
     if(obj===body.overlay)for(const k of ['paddingX','paddingY'])if(obj[k]!==undefined&&(!Number.isInteger(obj[k])||obj[k]<0||obj[k]>40))return false;
-    if (Object.keys(obj).some(k => !keys.includes(k) && !(k==='borderColor'&&['black','white'].includes(obj[k])) && !(obj===body.overlay&&['paddingX','paddingY','radius'].includes(k)) && !(obj===body.overlay && k==='enabled' && typeof obj.enabled==='boolean'))) return false;
+    if (Object.keys(obj).some(k => !keys.includes(k) && !(k==='borderColor'&&['black','white','gray'].includes(obj[k])) && !(obj===body.overlay&&['paddingX','paddingY','radius'].includes(k)) && !(obj===body.overlay && k==='enabled' && typeof obj.enabled==='boolean'))) return false;
     for (const k of keys) if (!Number.isInteger(obj[k]) || obj[k] < 0 || obj[k] > (k === 'saturation' ? 200 : k === 'blur' ? 40 : 100)) return false;
   }
   if(body.editor!==undefined){
@@ -35,17 +35,18 @@ export function validDesign(body) {
   }
   if(body.editor!==undefined){const e=body.editor;if(e.padding!==undefined&&(!Number.isInteger(e.padding)||e.padding<0||e.padding>20))return false;for(const k of ['paddingX','paddingY'])if(!Number.isInteger(e[k]??e.padding)||(e[k]??e.padding)<0||(e[k]??e.padding)>40)return false;}
   if(body.editor?.background!==undefined&&!['black','gray','blue','yellow','green','pink'].includes(body.editor.background))return false;
-  if(body.editor?.borderColor!==undefined&&!['black','white'].includes(body.editor.borderColor))return false;
+  if(body.editor?.borderColor!==undefined&&!['black','white','gray'].includes(body.editor.borderColor))return false;
   const numeric=(obj,ranges)=>obj&&Object.entries(ranges).every(([k,max])=>Number.isInteger(obj[k])&&obj[k]>=0&&obj[k]<=max);
   for(const key of ['inner','filter'])if(body[key]!==undefined){
     const ranges={fill:100,rim:100,radius:24,paddingX:40,paddingY:40,width:key==='filter'?600:100};
-    if(!numeric(body[key],ranges)||Object.keys(body[key]).some(k=>!Object.hasOwn(ranges,k)&&!(k==='borderColor'&&['black','white'].includes(body[key][k])))||body[key].width<(key==='filter'?160:20))return false;
+    if(!numeric(body[key],ranges)||Object.keys(body[key]).some(k=>!Object.hasOwn(ranges,k)&&!(k==='borderColor'&&['black','white','gray'].includes(body[key][k])))||body[key].width<(key==='filter'?160:20))return false;
   }
   if(body.table!==undefined){
     const t=body.table,types=['font','size','weight','color','case','align','vertical','style'],backgrounds=['background','opacity'];
     const typeValid=s=>s&&['jost','cormorant'].includes(s.font)&&['none','uppercase'].includes(s.case)&&['white','gray'].includes(s.color)&&['left','center','right'].includes(s.align)&&['top','middle','bottom'].includes(s.vertical)&&Number.isInteger(s.size)&&s.size>=8&&s.size<=32&&Number.isInteger(s.weight)&&s.weight>=200&&s.weight<=500&&(s.style===undefined||['normal','italic'].includes(s.style));
     const bgValid=s=>s&&['black','gray','blue','yellow','green','pink'].includes(s.background)&&Number.isInteger(s.opacity)&&s.opacity>=0&&s.opacity<=100;
-    if(!numeric(t,{fill:100,rim:100,paddingX:40,paddingY:40})||Object.keys(t).some(k=>!['background','fill','rim','paddingX','paddingY','header','firstColumn','columns','cells','borderColor'].includes(k)))return false;
+    if(t.radius!==undefined&&(!Number.isInteger(t.radius)||t.radius<0||t.radius>24))return false;
+    if(!numeric(t,{fill:100,rim:100,paddingX:40,paddingY:40})||Object.keys(t).some(k=>!['background','fill','rim','paddingX','paddingY','header','firstColumn','columns','cells','borderColor','radius'].includes(k)))return false;
     if(t.borderColor!==undefined&&!['black','white'].includes(t.borderColor))return false;
     if(t.background!==undefined&&!['black','gray','blue','yellow','green','pink'].includes(t.background))return false;
     if(!typeValid(t.header)||!bgValid(t.header)||Object.keys(t.header).some(k=>![...types,...backgrounds].includes(k)))return false;

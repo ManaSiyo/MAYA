@@ -564,9 +564,9 @@ ok('the marketing modules are migrated into Admin under Users and traffic',
   MAP_SOURCE.includes('id="bl-funnel"') &&
   MAP_SOURCE.includes('async function loadMkt(') &&
   MAP_SOURCE.includes('function metricVal('));
-ok('embedded Marketing uses shared inner panel geometry and retains Admin content',
+ok('embedded Marketing uses independent table geometry and retains Admin content',
   !!s.marketingVisual &&
-  s.marketingVisual.panelPadding === '12px 16px' &&
+  s.marketingVisual.panelPadding === '0px' &&
   s.marketingVisual.panelRadius === '12px' &&
   s.marketingVisual.tickerInTopbar &&
   MAP_SOURCE.includes('id="mkt-ticker"') &&
@@ -2750,7 +2750,8 @@ ok('Aesthetic Control opens inside Admin and its logo returns to Admin',!MAP_SOU
 
 // October 2: one numeric editor convention and shared table settings panel.
 ok('All surface edits use numeric fields and split padding axes',!readFileSync(join(ROOT,'aesthetics/aesthetic-control/overlay.js'),'utf8').includes("input.type='range'")&&!readFileSync(join(ROOT,'aesthetics/aesthetic-control/finishes.js'),'utf8').includes("input.type='range'")&&galleryScript.includes("['paddingX','Padding X'")&&galleryScript.includes("['paddingY','Padding Y'"));
-ok('Table formatting housing follows shared inner material',ownerDesignRuntime.includes('#panels .inner-panel,#cell-format-toolbar'));
+ok('Tables and their formatting toolbar exclude Inner material',!ownerDesignRuntime.includes('#panels .inner-panel,#cell-format-toolbar')&&ownerDesignRuntime.includes("const tableHousing=")&&ownerDesignRuntime.includes('.preview-section,#cell-format-toolbar'));
+ok('Shared borders include gray while tables have separate borders and corners',readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes("export const borders=[...tableBorders,['gray','Gray']]")&&ownerDesignConfig.includes('t.radius!==undefined')&&ownerDesignRuntime.includes('defaults.table={radius:12'));
 ok('Gallery uses H2 section titles, H3 subsections, and removes the Filter preview',galleryScript.includes("h.className='gallery-section-title'")&&galleryScript.includes("h.className='gallery-subsection-title'")&&!galleryScript.includes("label:'Filter'"));
 ok('Save has no rim/shadow and the logo/title align left',galleryCss.includes('html body #save{border:0!important;box-shadow:none!important}')&&galleryCss.includes('grid-template-columns:40px minmax(0,1fr)'));
 

@@ -94,12 +94,16 @@ try{
  await surface('inner','paddingX','30');await surface('inner','paddingY','20');await surface('inner','width','80');
  assert.equal(await page.locator('.inner-panel').first().evaluate(e=>getComputedStyle(e).padding),'20px 30px');
  assert.equal(await page.locator('[data-editor="filter"],.filter-preview').count(),0,'Unused Filter controls removed');
- const panelMatch=await page.locator('#cell-format-toolbar').evaluate(e=>{const a=getComputedStyle(e),b=getComputedStyle(document.querySelector('.inner-panel'));return ['backgroundColor','borderColor','borderRadius','padding'].every(k=>a[k]===b[k]);});assert.ok(panelMatch,'Table toolbar shares inner-panel settings');
+ const panelMatch=await page.locator('#cell-format-toolbar').evaluate(e=>{const a=getComputedStyle(e),b=getComputedStyle(document.querySelector('#pill-preview'));return ['backgroundColor','borderColor','borderRadius','padding'].every(k=>a[k]===b[k]);});assert.ok(panelMatch,'Table toolbar follows outer housing, independently from Inner');
+ assert.equal(await page.locator('[data-editor="table"] [data-field="borderColor"] option[value="gray"]').count(),0,'Table excludes gray');
+ for(const target of ['.finish-controls','.overlay-controls','.popup-editor','[data-editor="inner"]'])assert.equal(await page.locator(target+' [data-field="borderColor"] option[value="gray"]').count(),1,'Shared borders offer gray: '+target);
+ await surface('inner','borderColor','gray');assert.match(await page.locator('.inner-panel').first().evaluate(e=>getComputedStyle(e).borderColor),/170, 181, 196/);await surface('inner','borderColor','white');
+ await surface('table','radius','20');await surface('table','borderColor','black');assert.equal(await page.locator('#table-preview').evaluate(e=>getComputedStyle(e).borderRadius),'20px');assert.match(await page.locator('#table-preview').evaluate(e=>getComputedStyle(e).borderColor),/0, 0, 0/);await surface('inner','radius','4');assert.equal(await page.locator('#table-preview').evaluate(e=>getComputedStyle(e).borderRadius),'20px','Inner corners cannot resize table corners');await surface('inner','radius','12');await surface('table','borderColor','white');
  const cell=async(selector,field,value)=>{await page.locator('#table-preview '+selector).first().click();const input=page.locator('#cell-format-toolbar [data-field="'+field+'"]');if(await input.evaluate(e=>e.tagName==='SELECT'))await input.selectOption(value);else await input.fill(value);};
  assert.equal(await page.locator('#table-editors .type-editor').count(),1,'Only whole-table Edit remains');
  await surface('table','background','black');await surface('table','fill','100');
  await cell('th[data-col="stage"]','background','black');await cell('td[data-col="name"]','background','black');
- assert.equal(await page.locator('#table-preview table').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(0, 0, 0)');
+ assert.equal(await page.locator('#table-preview').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(0, 0, 0)');
  assert.equal(await page.locator('#table-preview .lead-open').first().evaluate(e=>[...e.children].map(n=>n.tagName==='TIME'?'date':n.className).join(',')),'lead-identity,date,category-badge');
  await cell('th[data-col="stage"]','background','blue');await cell('th[data-col="stage"]','opacity','80');await cell('th[data-col="stage"]','font','cormorant');await cell('th[data-col="stage"]','size','14');
  assert.equal(await page.locator('#cell-selection').innerText(),'Top row');assert.equal(await page.locator('#table-preview .cell-selected').count(),3);
@@ -154,7 +158,7 @@ try{
   const filter=document.createElement('div');filter.className='lead-status-menu';document.body.append(filter);const width=getComputedStyle(filter).width;filter.remove();
   return {noteSize:note.fontSize,nameFont:name.fontFamily,nameAlign:name.textAlign,header:getComputedStyle(table.querySelector('th')).backgroundColor,filterWidth:width,inner:getComputedStyle(document.querySelector('#leads-fold .panel')).padding};
  });
- assert.equal(liveTable.noteSize,'15px');assert.match(liveTable.nameFont,/Cormorant/);assert.equal(liveTable.nameAlign,'right');assert.match(liveTable.header,/0.8/);assert.equal(liveTable.filterWidth,'280px');assert.equal(liveTable.inner,'20px 30px');
+ assert.equal(liveTable.noteSize,'15px');assert.match(liveTable.nameFont,/Cormorant/);assert.equal(liveTable.nameAlign,'right');assert.match(liveTable.header,/0.8/);assert.equal(liveTable.filterWidth,'280px');assert.equal(liveTable.inner,'0px','Admin table housing excludes Inner padding');assert.equal(await page.locator('#leads-fold .panel').evaluate(e=>getComputedStyle(e).borderRadius),'20px','Saved table corners apply to Admin');
  const designLink=page.getByRole('link',{name:'Aesthetic Control',exact:true});
  assert.equal(await designLink.getAttribute('href'),'/aesthetics/aesthetic-control.html');
  assert.equal(await designLink.evaluate(e=>getComputedStyle(e).borderRadius),'100px');

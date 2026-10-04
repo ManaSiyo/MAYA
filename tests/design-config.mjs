@@ -69,3 +69,7 @@ assert.equal(validDesign({...compact,overlay:{...compact.overlay,radius:20}}),tr
 
 const withH0={...compact,type:{...compact.type,H0:{size:104,weight:400,color:'white',font:'cormorant',case:'uppercase'}}};
 assert.equal(validDesign(withH0),true);for(const size of [22,105,162])assert.equal(validDesign({...withH0,type:{...withH0.type,H0:{...withH0.type.H0,size}}}),false);assert.equal(validDesign(compact),true,'Existing designs need no migration to add H0');
+
+for(const role of ['glass','overlay','editor','inner','filter'])assert.equal(validDesign({...compact,[role]:{...compact[role],borderColor:'gray'}}),true,role+' gray border');
+assert.equal(validDesign({...compact,table:{...compact.table,borderColor:'gray'}}),false);
+assert.equal(validDesign({...compact,table:{...compact.table,radius:20}}),true);for(const radius of [-1,25,1.5,'12'])assert.equal(validDesign({...compact,table:{...compact.table,radius}}),false);

@@ -1,3 +1,8 @@
+OCTOBER 3: separate tables from Inner panels; gray borders
+[completed locally] Gray for Glass/Outer/Inner/dropdown/filter borders, excluding Table. Table owns its border/color, radius, background/opacity and cell X/Y padding in the enclosing Outer section. Table scroll housings/formatting toolbar no longer inherit Inner styling. Graphs unchanged.
+[validation] Independent live/saved table geometry, server color/radius bounds, eleven gallery widths, shared pages and populated Outbound/CRM UI checks.
+[next] Owner Push and authenticated live Save verification.
+
 OCTOBER 2, 2026: icon Save, Admin header and sign-in H0
 [completed locally] Restore icon-only Save; quiet visible status but retain Admin audit logs. Match viewport-left Admin logo/title. Cover Admin fully in its editor. Update open pages immediately on Save without refresh, including Storage fallback and stale-load protection. Add main sign-in-only H0 with responsive size and independent typography.
 [validation] Eleven gallery widths, eleven canon pages/seven widths, embedded Admin, no-refresh peer updates, H0 and race tests; full regression and shared CRM/Outbound checks.

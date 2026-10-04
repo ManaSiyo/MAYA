@@ -1,3 +1,7 @@
+OCTOBER 3: table/Inner panel coupling
+[fixed locally] Remove Inner material/width/padding from table housing and toolbar. Add table-only corners and shared Gray borders excluding Table. One table border/fill; contain wide sticky-cell painting in the scroll housing to prevent mobile page overflow. Existing graph styling and functional filter portals stay intact.
+[validation] Gallery isolation/restore/save, Admin geometry, mobile populated Outbound scroll/filter and shared regression checks.
+
 OCTOBER 2, 2026: Admin statistics peek below Aesthetic Control; oversized Save footer
 [fixed locally] Full viewport dialog bounds, no container focus outline; floating icon Save without black footer or success prose. Fixed header at Admin geometry. Same-origin saved design fallback and revision guard remove the refresh requirement; failed reads keep the current applied design. H0 prevents ordinary H1 settings from resizing the main sign-in wordmark.
 [verification] Fixture browser bounds, cross-page Storage updates, delayed-read race, H0 independence, eleven gallery widths and broader shared UI regression. Production verification follows owner Push.

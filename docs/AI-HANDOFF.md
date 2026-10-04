@@ -1,44 +1,36 @@
-# MAYA handoff — October 2, 2026
+# MAYA handoff — October 3, 2026
 
-## Current request: quiet Save, Admin header and independent sign-in H0
+## Current request: independent tables and gray shared borders
 
-Prepared locally after 99bc08f (local/origin matched before work); not pushed.
-Gallery v25 and shared typography runtime v11. Aesthetic Control uses Admin's
-viewport-left fixed 60px header, logo dimensions and title typography. Save is a
-shared floppy SVG icon, represented in the icon gallery, with an accessible Save
-label. Its floating transparent footer replaces the black text pill/bar. Status
-is screen-reader-only except concise errors; server audit logging remains intact.
-Admin's embedded dialog enforces full viewport dimensions, zero padding/border
-and no container focus outline, so underlying Admin statistics cannot peek below.
-Interactive keyboard focus stays available.
+Prepared locally after b3758cb (local/origin matched at start); not pushed.
+Gallery v26/runtime v12. Shared border selectors now offer Gray RGB 170/181/196
+for Glass, Outer, Inner, popup and retained filter settings. Table deliberately
+retains White/Black only. All renderers, restore reads and server validators accept
+gray for the relevant surfaces; arbitrary colors are rejected.
 
-Saving applies immediately and broadcasts to open same-origin pages; a Storage
-listener supplies the fallback without BroadcastChannel. Ordinary pages revalidate
-when focused or visible again; the editor avoids focus reloads that overwrite draft
-edits. Revision checks prevent an older pending GET from undoing a newer Save.
-Failed reloads preserve the applied design. Live save retains Admin authentication,
-atomic server persistence and private audit events; no live save performed here.
+Table owns background, opacity, border/color, corners 0–24px, and X/Y cell padding.
+Optional radius reads default 12px for old saves. Admin/Outbound/gallery table
+scroll housings have zero container padding, their own border/radius and no Inner
+material/width/frost. Wrapped tables are transparent/borderless to avoid stacking
+fill or doubling borders. Paint containment keeps wide sticky cells within the
+scroll housing at 320px. The formatting toolbar follows Outer material/padding,
+not Inner. Inner padding debugging excludes tables and the table toolbar. No DOM
+move, extra visual layer or graph behavior change. Functional table popovers retain
+portal/keyboard behavior; data, accounts and authentication are unchanged.
 
-H0 is only frontend/index.html's main sign-in MAYA wordmark. Default Cormorant,
-104px, weight 400, uppercase; editable even sizes 24–160px and existing type tools.
-Its font size is capped responsively at 18vw; H1 changes do not affect H0. Older
-8-role and legacy P5 saves remain accepted and read with an H0 default. Authored
-usage inventory lists H0 once, H1 thirteen times. Playground sign-in remains H1.
-Changed: gallery HTML/JS/CSS/usage, component icon map, typography runtime/all
-served cache references, Admin dialog CSS, frontend sign-in class, design validator,
-role audit script, browser/design/app regression assertions and continuity docs.
-
-Validation: design-config/contract, component-gallery at eleven widths (320–1920),
-embedded Admin bounds/return, icon Save, H0 usage, no-refresh Storage propagation,
-stale-load protection, full app-regression; canon-ui eleven pages/seven widths;
-Outbound UI/populated filters; CRM UI/failure/intelligence; actual-font layout capture; diff check.
-Exact next step: Fromsa Push in GitHub Desktop, verify Cloud Build and release.json,
-then verify authenticated Save, immediate Admin styling and sign-in H0 live.
-No personal Chrome, production writes, credentials/config changes, Push or deploy.
+Changed: shared runtime and served cache refs, surface editors, finishes/overlay,
+gallery CSS, server design validator, gallery/design/app/contract regression checks,
+canonical design and continuity records. No server environment/credentials changes.
+Validation: design-config/contract; gallery eleven widths 320–1920 with independent
+inner/table corners and saved Admin table geometry; full app-regression; canon-ui
+11 pages/7 widths; Outbound populated filters and scrolling; shared CRM UI/failure/intelligence checks;
+actual-font visual review and syntax/diff checks. Exact next step: Fromsa Push, verify Cloud Build/release.json,
+then authenticate and save Gray shared borders and independent Table corners live.
+No personal Chrome, production writes, Push or deployment performed.
 
 ## Release status
 
-99bc08f was already pushed before this request. This follow-up is local only.
+b3758cb was pushed before this request. This follow-up is local only.
 Older implementation/shipment notes below are historical.
 
 ## October 2 verified implementation and follow-up

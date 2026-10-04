@@ -62,7 +62,7 @@ Glass, Panels and Tables and Typography headings use H2; Glass Section, Panels a
 numeric material controls, X/Y padding, icons, five pill colors and button States.
 A divider separates Panels, another separates Table. Panels have independent
 outer padding/material/corners; Inner panel has opacity, border, corners, X/Y padding
-and percentage width. The fixed table-formatting toolbar uses these same inner-panel settings. The unused Filter preview/button/editor are removed; saved filter data and functional Admin/Outbound filters remain compatible.
+and percentage width. Tables and the fixed formatting toolbar are outside Inner panel styling. The toolbar follows outer-panel housing; tables have independent material, border and corners. The unused Filter preview/button/editor are removed; saved filter data and functional Admin/Outbound filters remain compatible.
 The preview has the enclosing review section as outer panel, two direct inner panels, and a Contacts pill
 inside each inner panel: three material layers maximum. Inner padding surrounds
 heading plus Contacts; outer padding surrounds the inner panels. There is no wrapper around the pair of inner panels. Focusing or changing a padding field
@@ -70,7 +70,7 @@ highlights its actual padding; moving to another field or closing removes the gr
 No debug toggle or preview wrapper adds another material layer.
 
 Table previews Full name, Status and Latest Notes. Keep one Table Edit for the
-whole table's background, opacity, border, black/white border color and X/Y padding. Clicking a cell selects
+whole table's background, opacity, border, black/white border color, corners (0–24px) and X/Y cell padding. Clicking a cell selects
 its formatting target in a fixed, single-row toolbar above the preview: font,
 case, size, weight, color, horizontal/vertical alignment, background and opacity.
 The toolbar scrolls horizontally on small screens. Header font, size, weight, case, color and alignment explicitly override the general body role so every first-row edit is visible. Full name corner selects both
@@ -155,7 +155,7 @@ only currently used icon controls: add, close, refresh, menu, search, dropdown,
 phone, email, microphone, copy, favorite, edit, send and settings, plus the used minus, Bold, Italic, alignment, text-color and background controls. Save uses the selected glass finish. The chosen preset shows a checkmark and a
 full outlined card; an underline alone is insufficient.
 
-Runtime v10 drives the shared legacy material/typography variables, including
+Runtime v12 drives the shared legacy material/typography variables, including
 drawer frost and dense inner panels. Outbound tables share the saved table
 header, background, cell padding and type defaults while keeping their ten
 source columns; Full name and Status use the corresponding semantic roles.
@@ -177,3 +177,14 @@ success status is quiet, errors remain visible and server audit events remain.
 The embedded Admin editor fills the viewport. Saves update open same-origin pages
 via BroadcastChannel and Storage fallback, with focus/visibility revalidation on
 ordinary pages and stale-load protection. Draft editors do not reload on focus.
+
+October 3: Shared Glass, Outer, Inner, dropdown and filter border colors include
+White, Black and Gray (RGB 170/181/196). Table border colors remain White/Black.
+The table's scroll housing uses Table background/opacity/border/corners, with zero
+housing padding and cell X/Y padding; there is one border, not nested borders.
+Table radius defaults 12px and is independently editable from 0–24px. Old saves
+read this default without writing migration state. Tables stay inside the enclosing
+Outer section; table wrappers and the formatting toolbar cannot inherit Inner
+width, padding, corners or opacity. Graphs retain their existing panel behavior.
+The toolbar follows outer material and padding. Scroll housings contain painting
+to keep wide sticky table content within its horizontal scroll region.

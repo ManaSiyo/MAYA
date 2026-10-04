@@ -3,7 +3,8 @@ import {setupTableCellEditor} from './table-cell-editor.js';
 // Live, saved presentation controls; no account data or provider operations.
 const fonts=[['jost','Jost'],['cormorant','Cormorant']],colors=[['white','White'],['gray','Gray']],backgrounds=['black','gray','blue','yellow','green','pink'].map(v=>[v,v[0].toUpperCase()+v.slice(1)]);
 export {backgrounds};
-export const borders=[['white','White'],['black','Black']];
+export const tableBorders=[['white','White'],['black','Black']];
+export const borders=[...tableBorders,['gray','Gray']];
 export function fields(parent,values,specs,onChange){
  for(const [key,title,options] of specs){
   const label=document.createElement('label');label.append(document.createTextNode(title));
@@ -27,11 +28,11 @@ export function setupSurfaceEditors({panels,guide,design}){
  const render=()=>{window.MayaTypographyControls.previewSurfaces(settings);cellEditor?.refresh();for(const el of document.querySelectorAll('#panels .inner-panel')){el.style.setProperty('--padding-debug-x',settings.inner.paddingX+'px');el.style.setProperty('--padding-debug-y',settings.inner.paddingY+'px');}};
  const panelFields=[['fill','Opacity',{max:100}],['rim','Border',{max:100}],['borderColor','Border color',borders],['radius','Corners',{max:24}],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]];
  const inner=editor(panels,'Inner panel','inner',settings.inner,[...panelFields,['width','Width %',{min:20,max:100}]],render);panels.querySelector('.panel-preview').before(inner);
- highlightPadding(inner.querySelector('details'),()=>[...panels.querySelectorAll('.inner-panel'),document.querySelector('#cell-format-toolbar')],()=>({x:settings.inner.paddingX,y:settings.inner.paddingY}));
+ highlightPadding(inner.querySelector('details'),()=>[...panels.querySelectorAll('.inner-panel')],()=>({x:settings.inner.paddingX,y:settings.inner.paddingY}));
  const divider=document.createElement('hr');divider.className='visual-divider';guide.before(divider);
  const title=document.createElement('h3');title.textContent='Table';title.className='gallery-subsection-title';guide.before(title);
  const controls=document.createElement('div');controls.id='table-editors';guide.before(controls);
- editor(controls,'Table','table',settings.table,[['background','Background',backgrounds],['fill','Opacity',{max:100}],['rim','Border',{max:100}],['borderColor','Border color',borders],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]],render);
+ editor(controls,'Table','table',settings.table,[['background','Background',backgrounds],['fill','Opacity',{max:100}],['rim','Border',{max:100}],['borderColor','Border color',tableBorders],['radius','Corners',{max:24}],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]],render);
  cellEditor=setupTableCellEditor({guide,controls,settings:settings.table,render});
  highlightPadding(controls.querySelector('details'),()=>[...guide.querySelectorAll('td,th')],()=>({x:settings.table.paddingX,y:settings.table.paddingY}));
  render();return {settings:()=>settings};

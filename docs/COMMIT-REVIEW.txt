@@ -1,20 +1,18 @@
-[Codex] Restore icon Save and independent sign-in typography
+[Codex] Separate table styling and add gray shared borders
 
-Replace Aesthetic Control's black text Save footer with an accessible shared Save
-SVG icon and quiet success status. Match Admin's viewport-left fixed header and
-logo dimensions; enforce full viewport embedded dialog with no container outline.
-Retain authenticated design saving and private Admin audit logs.
+Add Gray to Glass, Outer, Inner, popup and retained filter border controls and
+validators, excluding Table. Preserve fixed RGB values and existing save schemas.
 
-Propagate successful Save immediately via BroadcastChannel and Storage fallback,
-revalidate ordinary pages on focus/visibility, retain applied settings on failure,
-and reject stale pending loads. Keep draft editor focus from reloading settings.
-Add H0 only to the main sign-in wordmark: independent responsive 104px default,
-even 24–160px editing, backward-compatible validator and accurate usage inventory.
-Bump gallery v25/runtime v11 across served pages. Update design and continuity docs.
+Table owns its border/color, background/opacity, radius and X/Y cell padding.
+Add bounded optional corners 0–24px, default 12px for existing saved designs.
+Remove Inner styling from Admin/gallery/Outbound table housing and formatting
+workspace. Toolbar follows Outer material/padding; table wrappers have their own
+single border/fill with zero housing padding. Keep sticky content paint-contained
+within horizontal scrolling, retain filter portal/keyboard behavior and graph styling.
+Bump gallery v26/runtime v12 across served pages and update continuity/design docs.
 
-Validation: design-config/contract; gallery 11 widths (320–1920), embedded Admin
-bounds/return, icon Save, H0 and no-refresh Storage propagation, save/load race;
-full app-regression; canon-ui 11 pages/7 widths; Outbound UI/populated filters;
-CRM UI/failure/intelligence; actual-font screenshots; git diff check.
-Limitations: live authenticated Save and deployment need owner verification after
-Push. No personal Chrome access, production writes, secrets, Push or deployment.
+Validation: design-config/contract; gallery 11 widths 320–1920, independent Inner/
+Table controls, saved Admin corners; full app-regression; canon-ui 11 pages/7 widths;
+Outbound populated scrolling/filter tests; shared CRM UI/failure/intelligence checks; actual-font visual review and syntax/diff checks.
+Limitations: owner Push and authenticated live Save verification remain. No personal
+Chrome access, production writes, credentials, Push or deployment.
