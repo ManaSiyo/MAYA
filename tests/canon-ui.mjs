@@ -77,7 +77,7 @@ const adminGlass=await chromeStyle('#drawer');
 assert.equal(adminGlass.blur,master.blur);assert.equal(adminGlass.radius,master.radius);
 assert.equal(adminGlass.background,'none','Admin uses the requested dark glass without white gradients');
 assert.equal(await page.locator('#drawer').evaluate(el=>getComputedStyle(el).backgroundColor),'rgba(3, 15, 29, 0.82)');
-assert.deepEqual(await chromeStyle('.adm-tab.on'),masterTab,'Admin selected tab matches frontend');
+const adminTab=await chromeStyle('.adm-tab.on');assert.equal(adminTab.radius,masterTab.radius,'Admin retains centered round tabs');assert.match(adminTab.background,/linear-gradient/,'Admin tabs use the requested glass bubble');assert.match(adminTab.shadow,/inset/,'Admin bubble has the shared highlight');
 await page.locator('#drawer').evaluate(el=>{document.body.append(el);Object.assign(el.style,{position:'fixed',left:'auto',width:'360px',zIndex:'999'});});
 await page.screenshot({animations:'disabled',path:join(dir,'backend-drawer-parity.png')});
 assert.equal(await page.locator('#maya-toggle .mt-switch').evaluate(el=>getComputedStyle(el).width),'34px');

@@ -106,12 +106,13 @@ verification after deployment. Avatar/Pinterest changes stay in Playground until
 Fromsa approves promotion.
 
 Outbound implementation: docs/server/outbound.mjs plus crm-intelligence.mjs,
-crm-gmail.mjs, crm-ai.mjs and crm-store.mjs in docs/server. The shared Admin/Outbound
-meter is aesthetics/ui/ai-meter.js. Mailbox secrets and cost ledgers are server-only
+crm-gmail.mjs, crm-ai.mjs and crm-store.mjs in docs/server. Admin provider hover
+cards are aesthetics/ui/admin-systems.{js,css}; live pages no longer load the legacy
+ai-meter.js component. Mailbox secrets and cost ledgers are server-only
 private/outbound/<kind>/<account> objects; never expose them via client Storage rules.
 Run tests/crm-intelligence.mjs, tests/crm-ui.mjs and tests/crm-failure-ui.mjs for
 these paths; all are release gates. The failure suite covers account isolation,
-pending edits, drawer dialogs and meter recovery with fake providers.
+pending edits, drawer dialogs and retired-meter absence with fake providers.
 Hourly updates require owner-configured Cloud Scheduler, not a browser timer.
 The $1 cap covers CRM text AI (Outbound plus owner SMS parsing), not voice, images or provider invoices.
 Owner SMS access: docs/server/owner-sms-access.mjs provides AI-free history,
@@ -202,3 +203,7 @@ panel previews contain heading and metric together; outer padding surrounds them
 Panel/table controls and lead name/date/category share desktop rows. Wake changes
 run tests/admin-wake.mjs (fake recognition; no microphone) in the release gate,
 plus the existing communications and both frontend/Playground hands batteries.
+
+Admin Systems changes run tests/admin-systems-ui.mjs (also in app-regression).
+Provider hover cards expose authenticated configuration, not inference verification.
+Owner approvals remain gated in a dashboard dialog; conversation stays inside Logs.

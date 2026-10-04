@@ -1,18 +1,22 @@
-[Codex] Separate table styling and add gray shared borders
+[Codex] Reorganize Admin Systems and provider hover details
 
-Add Gray to Glass, Outer, Inner, popup and retained filter border controls and
-validators, excluding Table. Preserve fixed RGB values and existing save schemas.
+Put Leads before Ads and rename Bottom line to Insights. Consolidate external tools
+into compact Vault links, including owner Gmail setup, Vertex, provider usage and
+billing. Remove the live Admin/Outbound AI meter and manual Test Gemini button;
+retain server budget/account ledgers and existing provider models.
 
-Table owns its border/color, background/opacity, radius and X/Y cell padding.
-Add bounded optional corners 0–24px, default 12px for existing saved designs.
-Remove Inner styling from Admin/gallery/Outbound table housing and formatting
-workspace. Toolbar follows Outer material/padding; table wrappers have their own
-single border/fill with zero housing padding. Keep sticky content paint-contained
-within horizontal scrolling, retain filter portal/keyboard behavior and graph styling.
-Bump gallery v26/runtime v12 across served pages and update continuity/design docs.
+Show actual authenticated model configuration, provider transport and endpoints in
+Systems/API/Images hover/focus cards. Clamp popups to mobile/landscape viewports,
+support keyboard/touch/outside dismissal, and share saved dropdown housing settings.
+Move MAYA conversation/briefing to Logs, isolate Systems links from other tabs, and
+place pending confirmations in a dashboard dialog without changing action gates.
+Lower voice dock, use glass tab bubbles and centered shared dropdown SVGs across
+served pages. Bump runtime v13, refresh typography location audit/cache headers.
 
-Validation: design-config/contract; gallery 11 widths 320–1920, independent Inner/
-Table controls, saved Admin corners; full app-regression; canon-ui 11 pages/7 widths;
-Outbound populated scrolling/filter tests; shared CRM UI/failure/intelligence checks; actual-font visual review and syntax/diff checks.
-Limitations: owner Push and authenticated live Save verification remain. No personal
-Chrome access, production writes, credentials, Push or deployment.
+Validation: full app-regression/gallery, Admin seven widths and short landscapes;
+canon-ui 11 pages/7 widths; Outbound populated filter/scrolling tests; CRM UI/failure/
+intelligence; owner-crm UI/unit; Outbound/model unit; phone/messages/transfer/feedback
+fake-provider checks; container contract; source syntax and diff checks.
+Remaining: fresh Chrome approval and owner Gmail OAuth/live Gemini verification;
+owner Push, Cloud Build and release verification. No personal Chrome, production
+writes, provider inference charges, credentials/environment/billing edits or Push.

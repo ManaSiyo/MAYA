@@ -63,6 +63,8 @@ try{
  await page.locator('.control-size-editor summary').click();await page.locator('[data-field="iconSize"]').fill('36');await page.locator('[data-field="dropdownHeight"]').fill('32');
  assert.equal(await page.locator('.icon-row .maya-icon-button').first().evaluate(e=>getComputedStyle(e).width),'36px');
  assert.equal(await page.locator('.dropdown-preview').evaluate(e=>getComputedStyle(e).minHeight),'32px');
+ assert.equal(await page.locator('.dropdown-preview').evaluate(e=>getComputedStyle(e).backgroundPosition),'calc(100% - 10px) 50%','Native chevron is vertically centered');
+ assert.match(await page.locator('.control-size-editor>summary').evaluate(e=>getComputedStyle(e,'::after').maskImage),/data:image\/svg/,'Edit and preview use the shared dropdown chevron');
  await page.locator('.gallery-header h1').click();
  assert.ok(await page.locator('.restore-editor').first().evaluate(e=>e.querySelector('svg')?.querySelector('path')?.getAttribute('d')===document.querySelector('.icon-row [aria-label="Refresh"] path').getAttribute('d')),'Restore uses the previewed Refresh SVG');
  assert.equal(await page.locator('#save').evaluate(e=>getComputedStyle(e).backgroundColor),await page.locator('#buttons>.preview-row .maya-pill').first().evaluate(e=>getComputedStyle(e).backgroundColor));

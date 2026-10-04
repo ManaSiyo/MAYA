@@ -37,10 +37,7 @@ try {
  }
  await page.setViewportSize({width:390,height:720});
  await page.keyboard.press('Escape');assert.ok(await page.locator('#modal').isHidden());assert.ok(await page.locator('#outbound-drawer').isVisible(),'Escape closes only the top layer');
- await page.locator('.ai-meter-refresh').click();await page.waitForFunction(()=>document.querySelector('.ai-meter-value').textContent==='$0.120');
- const before=meterCalls;await page.evaluate(()=>{const m=document.querySelector('maya-ai-meter'),parent=m.parentNode;m.remove();parent.append(m);});
- await page.locator('maya-ai-meter').scrollIntoViewIfNeeded();await page.locator('.ai-meter-refresh').click();assert.ok(meterCalls>before,'Reattached meter refreshes');
- meterFail=true;await page.locator('.ai-meter-refresh').click();await page.waitForFunction(()=>document.querySelector('.ai-meter-value').textContent==='—');assert.equal(await page.locator('.ai-meter-providers li').count(),0,'Failed refresh clears stale spending');meterFail=false;
+ assert.equal(await page.locator('maya-ai-meter').count(),0,'Retired meter cannot display stale spending');assert.equal(meterCalls,0,'Drawer does not request retired meter');
  await page.keyboard.press('Escape');
  crmStamp='2026-09-27T18:00:00Z';pauseLoad=true;await page.evaluate(()=>window.auditRefresh());await waitingLoad;await page.locator('#notes').fill('Keep this note');await pendingLoad();await page.waitForFunction(()=>document.querySelector('#automation-status').textContent.includes('Last run'));assert.equal(await page.locator('#notes').inputValue(),'Keep this note','Background refresh preserves a draft started during its request');await page.locator('#save-draft').click();
  await page.waitForFunction(()=>document.querySelector('#notes').disabled);assert.ok(await page.locator('#view-menu').isDisabled(),'Navigation cannot change the edited contact during a save');
@@ -52,5 +49,5 @@ try {
  await page.locator('#signin').waitFor();await page.waitForFunction(()=>!document.querySelector('#mailboxes').textContent.trim());
  assert.equal(await page.locator('[data-person]').count(),0,'Expired authorization clears contacts');
  assert.equal(await page.locator('#mail-sender').count(),0,'Expired authorization clears senders');
- assert.deepEqual(errors,[]);console.log('Dialog layering, compact type, meter reconnect/failure, busy controls and account/expiry isolation passed.');
+ assert.deepEqual(errors,[]);console.log('Dialog layering, compact type, retired meter absence, busy controls and account/expiry isolation passed.');
 } finally {await browser.close();}

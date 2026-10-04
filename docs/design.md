@@ -165,9 +165,11 @@ audit trail with generation preconditions in config/typography-controls.json.
 The public design route strips the trail; /api/admin/design-history requires
 Admin auth. Admin Logs show Saved separately from open/shipped feature requests.
 Earlier saves have no recoverable audit timestamp. Local saves remain local.
-Model Snapshot contains the AI meter; inactive Claude is excluded from its
-provider display. GPT-6 Luna and GPT Image 2.5 Flare (Medium default) remain
-configured for cost-conscious routine work. No environment changes are implied.
+Admin Model Snapshot is an authenticated hover/focus card on Systems, API and
+Images. It reports configured models, provider transport and endpoints; configuration
+is not proof of successful inference. Admin and Outbound do not display an AI meter.
+Vault links to actual provider usage/billing consoles. Server cost accounting and
+account-scoped CRM limits remain intact. Routine model settings are unchanged.
 
 October 2: H0 is independent of H1–H4 hierarchy and only marks the main frontend
 sign-in wordmark (not Playground). H0 supports even sizes 24–160px; default 104px,
@@ -188,3 +190,14 @@ Outer section; table wrappers and the formatting toolbar cannot inherit Inner
 width, padding, corners or opacity. Graphs retain their existing panel behavior.
 The toolbar follows outer material and padding. Scroll housings contain painting
 to keep wide sticky table content within its horizontal scroll region.
+
+
+October 3 Admin: Leads precedes Ads and Insights. Owner tools precede the compact
+Vault. Aesthetic Control stays in Systems only. MAYA conversation and briefing live
+inside Logs; pending owner actions appear in a native dashboard approval dialog,
+with the existing Confirm/Dismiss gates. Closing it leaves pending actions reviewable
+in Logs. Voice chooses Logs without opening the drawer. Tabs use shared glass bubble
+highlights and the voice dock sits at the bottom. Shared native dropdowns and Edit/
+section chevrons use the same centered SVG; the gallery previews their saved height.
+Model hover cards use the saved dropdown housing material and X/Y padding. Tables
+retain independent materials and borders; this change does not affect their scope.

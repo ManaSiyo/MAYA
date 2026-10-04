@@ -1,3 +1,8 @@
+OCTOBER 3: Admin Systems, provider details and compact Vault
+[completed locally] Leads first, then Ads and Insights. Model Snapshot becomes Systems/API/Images hover/focus cards with actual server models and endpoints. Remove live AI meter and Test Gemini button. Owner tools precede compact Vault, including OpenAI usage/billing, Gemini/Vertex, Gmail and existing tools. Conversation in Logs; approvals in dashboard popup; hide Aesthetic Control from Logs. Lower Hey Maya dock, glass tab bubbles, shared centered dropdown SVG/height preview across served pages.
+[validation] Full regression/gallery, responsive Admin hover/approval checks including short landscape, all-page CSS, Outbound/CRM/owner UI and unit suites, fake communications checks.
+[open] Fresh Chrome approval, owner Gmail OAuth/live Gemini inference, owner Push and live release verification. No credentials/environment/billing changes.
+
 OCTOBER 3: separate tables from Inner panels; gray borders
 [completed locally] Gray for Glass/Outer/Inner/dropdown/filter borders, excluding Table. Table owns its border/color, radius, background/opacity and cell X/Y padding in the enclosing Outer section. Table scroll housings/formatting toolbar no longer inherit Inner styling. Graphs unchanged.
 [validation] Independent live/saved table geometry, server color/radius bounds, eleven gallery widths, shared pages and populated Outbound/CRM UI checks.

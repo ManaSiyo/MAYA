@@ -1,36 +1,51 @@
 # MAYA handoff — October 3, 2026
 
-## Current request: independent tables and gray shared borders
+## Current request: compact Admin Systems and provider hover cards
 
-Prepared locally after b3758cb (local/origin matched at start); not pushed.
-Gallery v26/runtime v12. Shared border selectors now offer Gray RGB 170/181/196
-for Glass, Outer, Inner, popup and retained filter settings. Table deliberately
-retains White/Black only. All renderers, restore reads and server validators accept
-gray for the relevant surfaces; arbitrary colors are rejected.
+Started clean at afadb6b, matching origin/maya-v2. Prepared locally; not pushed.
+Runtime v13 loads across served pages. Admin reads Leads, Ads and Insights, with
+Leads first in the marketing group. Systems contains Aesthetic Control, Owner tools
+and one compact Vault (Gmail, Firebase, Cloud Run, Vertex, OpenAI usage/billing,
+Gemini usage, Cloud billing, Ads, Wix and Privacy). Redundant Vault descriptors and
+headings were removed. No live page loads/displays the AI meter; its legacy module
+and server-only account ledgers/budget enforcement remain for compatibility.
 
-Table owns background, opacity, border/color, corners 0–24px, and X/Y cell padding.
-Optional radius reads default 12px for old saves. Admin/Outbound/gallery table
-scroll housings have zero container padding, their own border/radius and no Inner
-material/width/frost. Wrapped tables are transparent/borderless to avoid stacking
-fill or doubling borders. Paint containment keeps wide sticky cells within the
-scroll housing at 320px. The formatting toolbar follows Outer material/padding,
-not Inner. Inner padding debugging excludes tables and the table toolbar. No DOM
-move, extra visual layer or graph behavior change. Functional table popovers retain
-portal/keyboard behavior; data, accounts and authentication are unchanged.
+Authenticated /api/admin/models adds actual configured CRM/image model, transport
+and endpoint metadata. Systems/API/Images hover/focus cards use the shared editable
+popup material and clamp to the viewport, support keyboard/touch and close outside
+or on Escape. Gemini/Vertex details expand on hover/focus; no guessed model aliases.
+Main/CRM providers are distinguished (routine GPT-6 Luna, CRM GPT-5 Nano, Gemini
+2.5 Flash Lite, OpenAI image GPT Image 2.5 Flare and Vertex image configuration).
+Configured is explicitly not a successful inference test. No models, keys, billing
+settings or production environment variables were changed.
 
-Changed: shared runtime and served cache refs, surface editors, finishes/overlay,
-gallery CSS, server design validator, gallery/design/app/contract regression checks,
-canonical design and continuity records. No server environment/credentials changes.
-Validation: design-config/contract; gallery eleven widths 320–1920 with independent
-inner/table corners and saved Admin table geometry; full app-regression; canon-ui
-11 pages/7 widths; Outbound populated filters and scrolling; shared CRM UI/failure/intelligence checks;
-actual-font visual review and syntax/diff checks. Exact next step: Fromsa Push, verify Cloud Build/release.json,
-then authenticate and save Gray shared borders and independent Table corners live.
-No personal Chrome, production writes, Push or deployment performed.
+MAYA conversation and briefing now live in Logs. Systems links cannot leak into
+Messages/Logs. Voice chooses Logs while preserving the closed-drawer rule. Pending
+owner actions open a native dashboard dialog outside the drawer; Confirm/Dismiss
+handlers/auth/review gates remain intact. Escape/close preserves pending actions
+for Review approvals in Logs. The voice dock moves lower; tab circles use shared
+glass highlights. Shared native selects and Edit/fold arrows use a centered SVG,
+including the gallery dropdown height preview. Tables stay independent of Inner.
+
+Changed: backend/status.html and outbound.html; admin-systems JS/CSS; owner-crm UI;
+shared runtime and served cache refs; additive server models metadata; hosting cache
+headers; generated typography usage; regression checks and design/continuity docs.
+Validation: app-regression (gallery 11 widths plus Admin 7 widths/3 short-landscape
+sizes); canon-ui 11 pages/7 widths; populated Outbound/filters; CRM UI/failure and
+intelligence; owner-crm UI/unit; Outbound/model unit; phone/messages/transfer/feedback
+fake-provider suites; container contract; syntax/diff checks.
+
+Open: no personal Chrome access, authenticated production OAuth/Save/provider call,
+Push or deployment. Fresh MAYA Chrome permission was requested and is pending.
+Gmail's existing owner-consent connection flow is linked, not newly authorized.
+Live Gemini inference and Gmail mailbox connection/delivery are not established
+by fixture tests. Exact next step: Fromsa Push in GitHub Desktop, verify Cloud Build
+and release.json; approve a new MAYA Chrome session for owner Gmail OAuth and live
+provider verification. Owner handles any missing server secrets/configuration.
 
 ## Release status
 
-b3758cb was pushed before this request. This follow-up is local only.
+Local start afadb6b matched origin; this Admin follow-up is not shipped.
 Older implementation/shipment notes below are historical.
 
 ## October 2 verified implementation and follow-up

@@ -157,7 +157,7 @@ try {
   .adm-unread{position:absolute;top:-6px;right:-4px;min-width:16px;height:16px;padding:0 4px;border-radius:var(--maya-radius-pill);
     background:#a9c9ff;color:#0d1120;font-size:9px;letter-spacing:0;line-height:16px;text-align:center}
   #drawer.msgs > h3, #drawer.msgs > a, #drawer.msgs > #top-lights{display:none}
-  body.maya-live #adm-tabrow, body.maya-live #drawer-messages{display:none}
+  /* Voice keeps the active drawer tab visible. */
   #drawer-messages{flex:1;min-height:0;display:flex;flex-direction:column;text-align:left}
   #drawer-messages[hidden],#drawer-logs[hidden]{display:none}
   #drawer-logs{flex:1;min-height:0;overflow:auto;scrollbar-width:none;text-align:left}
@@ -166,7 +166,7 @@ try {
   #drawer-logs > .note{font-size:13px;line-height:1.5;color:var(--dim)}
   .maya-log p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:var(--maya-text-body);line-height:1.5;margin:6px 0}
   .maya-log small{color:var(--dim);font-size:11px}
-  body.maya-live #drawer-logs{display:none}
+
   #msg-list{flex:1;min-height:0;overflow-y:auto;margin:0 -4px}
   .msg-row{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:12px;cursor:pointer;transition:background .2s}
   .msg-row:hover{background:rgba(255,255,255,0.06)}
@@ -252,15 +252,8 @@ try {
     font-family:var(--maya-font-ui);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(169,201,255,0.95)}
   #voice-chip.show{display:flex}
   #voice-chip .dot{width:9px;height:9px;border-radius:50%;background:#a9c9ff;animation:voicepulse 1.6s ease-in-out infinite}
-  /* v13.72: Maya's command is her private line now. It lives in the drawer and
-     only appears when the voice star is on; then it takes the whole drawer,
-     hiding the links, and the star at the floor hangs her up. A transcription
-     of the state, the grounded brief and anything she needs approved. */
-  #drawer-command{display:none;flex:1;min-height:0;overflow:auto;text-align:left;padding:2px 2px 6px}
-  body.maya-live #drawer-command{display:flex;flex-direction:column}
-  body.maya-live #drawer > h3,
-  body.maya-live #drawer > a,
-  body.maya-live #drawer > #top-lights{display:none}
+  /* Maya conversation and briefing live within Logs; approvals use a dashboard dialog. */
+  #drawer-command{display:flex;flex-direction:column;min-height:0;text-align:left;padding:2px 2px 6px}
   /* v13.79: the on-screen conversation. Maya's lines and yours, each copyable. */
   #maya-chat{display:none;flex-direction:column;gap:8px;margin:6px 0 12px;max-height:42vh;overflow:auto}
   #maya-chat.show{display:flex}
@@ -864,7 +857,8 @@ try {
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=12"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=13"></script>
+<link rel="stylesheet" href="/aesthetics/ui/admin-systems.css?v=1">
 </head>
 <body class="systems-map">
 
@@ -945,7 +939,31 @@ if (IS_AFFILIATES) {
     <button class="adm-tab on" id="adm-tab-systems" onclick="admTab('systems')" role="tab" aria-selected="true" aria-label="Systems" title="Systems"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 3-.5 2-2 1-2-.5-2 3.5L4.5 11v2L3 15l2 3.5 2-.5 2 1 .5 2h5l.5-2 2-1 2 .5 2-3.5-1.5-2v-2L21 9l-2-3.5-2 .5-2-1-.5-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
     <button class="adm-tab" id="adm-tab-messages" onclick="admTab('messages')" role="tab" aria-selected="false" aria-label="Messages" title="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path fill="currentColor" stroke="none" d="M12 3C6.5 3 2 6.6 2 11c0 2.6 1.6 4.9 4 6.4L5 21l4.4-2.3c.8.2 1.7.3 2.6.3 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg><span class="adm-unread" id="adm-unread" hidden>0</span></button><button class="adm-tab" id="adm-tab-logs" onclick="admTab('logs')" role="tab" aria-selected="false" aria-label="Logs" title="Logs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18H5zM8 7h8M8 11h8M8 15h5"/></svg></button><span id="adm-tabtitle">Systems</span>
   </div>
-  <div id="drawer-logs" hidden><div class="msg-controls"><button onclick="loadMayaLogs()">Refresh logs</button></div><p class="note">Maya requests and saved aesthetic changes.</p><div id="maya-logs-list" aria-live="polite"></div></div>
+  <div id="drawer-logs" hidden><div class="msg-controls"><button onclick="loadMayaLogs()">Refresh logs</button></div><p class="note">Maya requests and saved aesthetic changes.</p><div id="maya-logs-list" aria-live="polite"></div>
+  <div id="drawer-command" aria-live="polite" aria-label="Maya command line">
+    <div class="maya-command-head">
+      <span class="maya-command-title">Maya</span>
+      <span id="maya-command-state">sign in to ground the briefing</span>
+      <button id="wake-toggle" onclick="toggleWakeWord()" title="When on, just say &quot;Hey Maya&quot; to wake her">Hey Maya: off</button>
+    </div>
+
+    <!-- v13.79: the conversation reads on screen too, so it is never voice-only.
+         Each line can be copied. -->
+    <div id="maya-chat" aria-label="Maya conversation"></div>
+    <div id="maya-command-brief">Today and attention will appear here from the same sources as Admin.</div>
+    <div id="maya-command-attention"></div>
+    <div class="maya-command-nav" aria-label="Admin panel shortcuts">
+      <button onclick="mayaShowPanel('submissions')">Submissions</button>
+      <button onclick="mayaShowPanel('traffic')">Traffic</button>
+      <button onclick="mayaShowPanel('ads')">Ads</button>
+      <button onclick="mayaShowPanel('leads')">Leads</button>
+      <button onclick="mayaShowPanel('sources')">Sources</button>
+      <button onclick="mayaShowPanel('bottom')">Insights</button>
+      <button onclick="loadMayaCommand()">Refresh</button>
+    </div>
+    <button id="maya-review-approvals" type="button" hidden onclick="document.getElementById('maya-confirmation').showModal()">Review approvals</button>
+  </div>
+</div>
   <div id="drawer-messages" hidden>
     <div id="booking-pending" aria-live="polite"></div>
     <div id="msg-list"></div>
@@ -963,41 +981,24 @@ if (IS_AFFILIATES) {
       <div id="msg-feedback" role="status" aria-live="polite"></div><div class="msg-consent" id="msg-consent"></div>
     </div>
   </div>
-  <a class="maya-glass-button design-quicklink" href="/aesthetics/aesthetic-control.html" title="Open Aesthetic Control within Admin">Aesthetic Control</a>
-  <section class="model-snapshot-group"><h3>Model Snapshot</h3><div id="model-snapshot">Sign in to load the current server configuration.</div><maya-ai-meter></maya-ai-meter></section><maya-owner-crm></maya-owner-crm><h3>The vault</h3>
-  <a href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank">Firebase<small>Boards, projects, pictures and submissions. Delete a collection here to truly destroy it.</small></a>
-  <h3 class="tint">Behind the scenes</h3>
-  <a href="https://console.cloud.google.com/run/detail/us-west1/maya-api/metrics?project=pro-maya" target="_blank">Cloud Run<small>The whole API: logs, revisions, keys, environment and credit burn.</small></a>
-  <h3>The outside tools</h3>
-  <a href="https://ads.google.com/aw/overview" target="_blank">Google Ads manager<small>The paid search campaigns.</small></a>
-  <a href="https://adsmanager.facebook.com/adsmanager" target="_blank">Meta Ads manager<small>The Facebook and Instagram campaigns.</small></a>
-  <a href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/home" target="_blank">Wix dashboard<small>Manasiyo.com itself: forms, pages, analytics.</small></a>
-  <h3>What MAYA promises</h3>
-  <a href="/privacy.html" target="_blank">Privacy policy<small>What MAYA keeps, what is public, how to have it deleted.</small></a>
-  <!-- v13.72: Maya's private command line. Hidden until the star is on. -->
-  <div id="drawer-command" aria-live="polite" aria-label="Maya command line">
-    <div class="maya-command-head">
-      <span class="maya-command-title">Maya</span>
-      <span id="maya-command-state">sign in to ground the briefing</span>
-      <button id="wake-toggle" onclick="toggleWakeWord()" title="When on, just say &quot;Hey Maya&quot; to wake her">Hey Maya: off</button>
-    </div>
-    <div class="maya-command-caption">Her private line. She talks, she asks, you approve.</div>
-    <!-- v13.79: the conversation reads on screen too, so it is never voice-only.
-         Each line can be copied. -->
-    <div id="maya-chat" aria-label="Maya conversation"></div>
-    <div id="maya-command-brief">Today and attention will appear here from the same sources as Admin.</div>
-    <div id="maya-command-attention"></div>
-    <div class="maya-command-nav" aria-label="Admin panel shortcuts">
-      <button onclick="mayaShowPanel('submissions')">Submissions</button>
-      <button onclick="mayaShowPanel('traffic')">Traffic</button>
-      <button onclick="mayaShowPanel('ads')">Ads</button>
-      <button onclick="mayaShowPanel('leads')">Leads</button>
-      <button onclick="mayaShowPanel('sources')">Sources</button>
-      <button onclick="mayaShowPanel('bottom')">Bottom line</button>
-      <button onclick="loadMayaCommand()">Refresh</button>
-    </div>
-    <div id="maya-action-queue" aria-label="Actions waiting for confirmation"></div>
+  <div id="drawer-systems">
+  <a class="maya-glass-button design-quicklink" href="/aesthetics/aesthetic-control.html">Aesthetic Control</a>
+  <maya-owner-crm></maya-owner-crm>
+  <h3>Vault</h3>
+  <a href="/outbound.html#gmail">Gmail</a>
+  <a href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank" rel="noopener">Firebase</a>
+  <a href="https://console.cloud.google.com/run/detail/us-west1/maya-api/metrics?project=pro-maya" target="_blank" rel="noopener">Cloud Run</a>
+  <a href="https://console.cloud.google.com/vertex-ai?project=pro-maya" target="_blank" rel="noopener">Vertex AI</a>
+  <a href="https://platform.openai.com/settings/organization/usage" target="_blank" rel="noopener">OpenAI usage</a>
+  <a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener">OpenAI billing</a>
+  <a href="https://aistudio.google.com/usage" target="_blank" rel="noopener">Gemini usage</a>
+  <a href="https://console.cloud.google.com/billing?project=pro-maya" target="_blank" rel="noopener">Google Cloud billing</a>
+  <a href="https://ads.google.com/aw/overview" target="_blank" rel="noopener">Google Ads Manager</a>
+  <a href="https://adsmanager.facebook.com/adsmanager" target="_blank" rel="noopener">Meta Ads Manager</a>
+  <a href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/home" target="_blank" rel="noopener">Wix</a>
+  <a href="/privacy.html">Privacy policy</a>
   </div>
+
   <!-- v13.67: Maya's voice, pinned at the floor. -->
   <div id="voice-dock">
     <div class="voice-row">
@@ -1090,6 +1091,13 @@ if (IS_AFFILIATES) {
        feed still paints into these hidden holders so paintSite stays happy. -->
   <div id="mkt-wix-tiles" class="tiles" style="display:none"></div>
   <div id="mkt-wix-note" class="note" style="display:none"></div>
+  <details class="fold" id="leads-fold" open>
+    <summary><h2 class="grp">Leads</h2></summary>
+
+    <div class="panel" tabindex="0" role="region" aria-label="Leads, scroll horizontally for more columns"><table id="leads-table"><tbody></tbody></table></div>
+    <div id="leads-note" class="note" style="display:none"></div>
+  </details>
+
   <details class="fold" id="ads-fold" open>
   <summary><h2 class="grp">Ad campaigns</h2></summary>
   <div class="metric-chips" style="margin:10px 0 8px">
@@ -1123,18 +1131,13 @@ if (IS_AFFILIATES) {
   </div>
   </details>
 
-  <details class="fold" id="leads-fold" open>
-    <summary><h2 class="grp">The Lead Station</h2></summary>
 
-    <div class="panel" tabindex="0" role="region" aria-label="Lead Station, scroll horizontally for more columns"><table id="leads-table"><tbody></tbody></table></div>
-    <div id="leads-note" class="note" style="display:none"></div>
-  </details>
 
   <!-- v13.91: Sources of traffic and The bottom line share one shell now, per
        Fromsa — one fold, the funnel and tiles up top, the traffic sources under
        a divider below. -->
   <details class="fold" id="bottom-fold" open>
-    <summary><h2 class="grp">The bottom line</h2></summary>
+    <summary><h2 class="grp">Insights</h2></summary>
     <div class="panel">
       <div id="bl-funnel" class="bl-funnel"></div>
       <div id="bl-tiles" class="bl-tiles"></div>
@@ -1713,6 +1716,7 @@ let _expiredAt = 0;
 function _expired() {
   if (IS_AFFILIATES && window.clearAffiliateLeads) window.clearAffiliateLeads('Sign in again to load leads.');
   _idTok = null;
+  delete window.MAYA_MODEL_SNAPSHOT;window.dispatchEvent(new CustomEvent("maya-model-clear"));
   try{ if(window.mayaCommandState) window.mayaCommandState('signed out', 'waiting'); }catch(_){}
   try { localStorage.removeItem('maya_admin_tok'); } catch (_) {}
   runChecks();
@@ -2189,6 +2193,10 @@ function _mayaRenderActions(){
     no.onclick=()=>mayaDismissAction(action.id);
     controls.append(yes,no); row.append(meta,copy,controls); host.appendChild(row);
   });
+  document.getElementById('maya-review-approvals').hidden=!_mayaActions.length;
+  const dialog=document.getElementById('maya-confirmation');
+  if(_mayaActions.length && !dialog.open){toggleDrawer(false);dialog.showModal();}
+  else if(!_mayaActions.length && dialog.open)dialog.close();
   mayaCommandState(_mayaActions.length?'action waiting for confirmation':'ready',_mayaActions.length?'waiting':'');
 }
 function _mayaQueueAction(action){
@@ -2284,10 +2292,11 @@ function _voiceLive(on, word){
   // _wakeLabel); the live-voice state shows only on the logo ring + chip.
   const chip=document.getElementById('voice-chip'); if(chip) chip.classList.toggle('show', on);
   const cw=document.getElementById('voice-chip-word'); if(cw && word) cw.textContent=word;
-  // v13.72: the drawer becomes Maya's command line while she is live.
+  // Voice conversation stays in Logs, without forcing the drawer open.
   // v13.82: but tapping the voice logo must NOT pull the drawer open. The drawer
   // stays closed unless Fromsa opens it himself (or asks Maya to, via show_drawer).
   document.body.classList.toggle('maya-live', on);
+  if(on && !IS_AFFILIATES)admTab('logs');
 }
 function _voiceStop(){
   if(!_voice) return;
@@ -3272,6 +3281,7 @@ function admTab(t) {
   _msgTab = t;
   document.getElementById('adm-tabtitle').textContent = t === 'messages' ? 'Messages' : t === 'logs' ? 'Logs' : 'Systems';
   document.getElementById('drawer-logs').hidden = t !== 'logs';
+  document.getElementById('drawer-systems').hidden = t !== 'systems';
   document.getElementById('adm-tab-logs').classList.toggle('on', t === 'logs');
   document.getElementById('adm-tab-logs').setAttribute('aria-selected', String(t === 'logs'));
   if (t === 'logs') loadMayaLogs();
@@ -3291,7 +3301,8 @@ async function loadModelSnapshot(){
  _modelsLoading = true;
  const host=document.getElementById('model-snapshot');host.textContent='Loading model configuration...';
  const auth=_idTok;
- try{const r=await fetch('/api/admin/models',{headers:{Authorization:'Bearer '+auth}});const j=await r.json();if(auth!==_idTok)return;if(!r.ok)throw Error('Model snapshot unavailable.');_modelsAuth=auth;_modelsChecked=Date.now();const groups=new Map();for(const [role,model] of Object.entries(j.models)){if(!groups.has(model))groups.set(model,[]);groups.get(model).push(role);}host.innerHTML=[...groups].map(([model,roles])=>'<div class="model-group"><strong>'+esc(model.replace(/^gpt-/,'GPT-').replace('luna','Luna'))+'</strong><small>'+esc(roles.join(' · '))+'</small></div>').join('')+'<p class="model-note">Configured models · '+esc(new Date(j.checkedAt).toLocaleTimeString())+'</p>' ;}
+ try{const r=await fetch('/api/admin/models',{headers:{Authorization:'Bearer '+auth}});const j=await r.json();if(auth!==_idTok)return;if(!r.ok)throw Error('Model snapshot unavailable.');_modelsAuth=auth;_modelsChecked=Date.now();window.MAYA_MODEL_SNAPSHOT=j;window.dispatchEvent(new CustomEvent('maya-model-snapshot',{detail:j}));}
+
  catch(e){if(auth===_idTok)host.textContent=e.message;}
  finally{_modelsLoading=false;}
 }
@@ -3952,5 +3963,5 @@ setInterval(()=>{ if(_idTok && document.visibilityState==='visible') loadMkt(); 
   setTimeout(checkAdminUpdate, 8000);   // catch a tab opened already-stale
 })();
 </script>
-<script type="module" src="/aesthetics/ui/ai-meter.js?v=3"></script><script type="module" src="/aesthetics/ui/owner-crm.js?v=2"></script><script type="module" src="/aesthetics/ui/admin-design.js?v=1"></script></body>
+<dialog class="maya-surface" id="maya-confirmation" aria-labelledby="maya-confirmation-title"><div class="confirmation-head"><h2 id="maya-confirmation-title">Maya approval</h2><button type="button" aria-label="Close approvals" onclick="this.closest('dialog').close()">×</button></div><div id="maya-action-queue" aria-label="Actions waiting for confirmation"></div></dialog><script type="module" src="/aesthetics/ui/admin-systems.js?v=1"></script><script type="module" src="/aesthetics/ui/owner-crm.js?v=3"></script><script type="module" src="/aesthetics/ui/admin-design.js?v=1"></script></body>
 </html>

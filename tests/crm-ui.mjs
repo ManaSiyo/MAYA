@@ -53,13 +53,12 @@ try{
  await page.locator('#mail-sender').selectOption('b');await page.locator('#send-email').click();await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('Email sent'));assert.equal(sends,1);assert.equal(lastSend.mailboxId,'b');assert.equal(lastSend.confirm,true);
  for(const width of [320,390,650,768,1024,1440,1920]){
   await page.setViewportSize({width,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'No overflow at '+width);
-  await page.locator('#menu-toggle').click();await page.locator('.ai-meter-value').waitFor();await page.locator('.ai-meter-refresh').click();await page.waitForFunction(()=>document.querySelector('.ai-meter-value').textContent==='$0.120');
-  assert.equal(await page.locator('.ai-meter-providers li').count(),2);assert.ok(!(await page.locator('maya-ai-meter').innerText()).includes('Claude'));assert.equal(await page.locator('maya-ai-meter>h3').textContent(),'Model Snapshot');assert.equal(await page.locator('.ai-model-snapshot li').count(),2);assert.match(await page.locator('.ai-meter-checked').innerText(),/^Checked /);await page.waitForFunction(()=>!document.querySelector('.ai-meter-refresh').disabled);assert.equal(await page.locator('.ai-meter-refresh').textContent(),'Refresh meter');const bounds=await page.locator('#outbound-drawer').boundingBox();assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1);await page.keyboard.press('Escape');
+  await page.locator('#menu-toggle').click();assert.equal(await page.locator('maya-ai-meter').count(),0);const bounds=await page.locator('#outbound-drawer').boundingBox();assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1);await page.keyboard.press('Escape');
  }
  await page.setViewportSize({width:1440,height:1000});await page.locator('#menu-toggle').click();await page.screenshot({path:'/private/tmp/maya-outbound-intelligence.png'});
  await page.addInitScript(()=>window.IntersectionObserver=undefined);await page.reload();await page.waitForFunction(()=>document.querySelectorAll('.people-table tbody tr').length===250);
  await page.locator('.people-scroll').evaluate(e=>e.scrollTop=e.scrollHeight);await page.waitForFunction(()=>document.querySelectorAll('.people-table tbody tr').length===500);
- await page.locator('#menu-toggle').click();await page.locator('.ai-meter-refresh').click();await page.waitForFunction(()=>document.querySelector('.ai-meter-value').textContent==='$0.120');
+ await page.locator('#menu-toggle').click();assert.equal(await page.locator('maya-ai-meter').count(),0);
  await page.keyboard.press('Escape');await page.evaluate(()=>location.hash='gmail');await page.locator('#connect-gmail').waitFor({state:'visible'});assert.equal(await page.locator('#drawer-workspace-tab').getAttribute('aria-selected'),'true');
- assert.deepEqual(errors,[]);console.log('10,000-contact continuous scrolling, full-dataset search, two senders, sample personalization, reviewed send, AI meter and seven responsive widths passed.');
+ assert.deepEqual(errors,[]);console.log('10,000-contact continuous scrolling, full-dataset search, two senders, sample personalization, reviewed send, connection drawer and seven responsive widths passed.');
 }finally{await browser.close();}

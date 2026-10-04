@@ -1,3 +1,7 @@
+OCTOBER 3: Systems links leak into Logs; voice takes over Systems; scattered provider tools
+[fixed locally] Isolate Systems content by selected drawer tab. Move voice transcript/briefing into Logs and pending approvals outside the drawer into a native dialog. Replace persistent meter/snapshot with viewport-clamped authenticated hover cards; standardize centered dropdown chevrons, saved popup material and glass tab highlights. Keep account-scoped ledgers and confirmation gates.
+[verification] Seven responsive widths and three short/landscape sizes, outside/Escape/keyboard, dismissed actions make no writes, shared regression and provider/communication fixtures. Live owner OAuth/provider verification pending approval.
+
 OCTOBER 3: table/Inner panel coupling
 [fixed locally] Remove Inner material/width/padding from table housing and toolbar. Add table-only corners and shared Gray borders excluding Table. One table border/fill; contain wide sticky-cell painting in the scroll housing to prevent mobile page overflow. Existing graph styling and functional filter portals stay intact.
 [validation] Gallery isolation/restore/save, Admin geometry, mobile populated Outbound scroll/filter and shared regression checks.

@@ -1,3 +1,5 @@
+import './admin-models.mjs';
+import './admin-systems-ui.mjs';
 import './component-gallery.mjs';
 import './design-contract.mjs';
 import './design-config.mjs';
@@ -141,7 +143,7 @@ ok('Lead status filter has an isolated readable layer and scoped section carets'
  ok('Master prospects use bounded rendering and reusable campaign membership',ui.includes('const BATCH_SIZE=250') && crm.includes("api+'/segment'") && crm.includes('c.campaignIds='));
  ok('Reviewed mail sends have durable duplicate protection',crm.includes('b.confirm!==true') && crm.includes('crm.deliveries[b.requestId]') && crm.includes("status='unknown'"));
  ok('Daily AI allowance combines OpenAI Claude Gemini without paid retries',ai.includes('anthropic:') && ai.includes('gemini:') && ai.includes('sum.spentUsd+sum.reservedUsd+reserve>1') && ai.includes('No automatic paid retry'));
- ok('Admin and Outbound share the AI meter',MAP_SOURCE.includes('<maya-ai-meter') && readFileSync(join(ROOT,'backend/outbound.html'),'utf8').includes('<maya-ai-meter'));
+ ok('Admin and Outbound retire the AI meter UI',!MAP_SOURCE.includes('<maya-ai-meter') && !readFileSync(join(ROOT,'backend/outbound.html'),'utf8').includes('<maya-ai-meter'));
  ok('Mailbox privacy explains scope and processors without changing its URL',readFileSync(join(ROOT,'backend/privacy.html'),'utf8').includes('Connected business mailboxes and Outbound') && readFileSync(join(ROOT,'backend/privacy.html'),'utf8').includes('Anthropic Claude or Google Gemini'));
  ok('Sample emails distinguish editable name company and offer',ui.includes('template-person') && ui.includes('template-company') && ui.includes('template-offer'));
  ok('Gemini audit keeps histories bounded while preserving compact controls',css.includes('max-height:420px') && css.includes('max-height:380px') && css.includes('font-size:11px;padding:6px 10px;min-height:30px;'));
@@ -554,7 +556,7 @@ ok('an image costs more of the budget than a chat call',
 ok('the map light reads Submissions', s.lights.includes('Submissions') && !s.lights.includes('Drive'));
 
 ok('Admin folds: users, the migrated marketing modules, then changes/feature requests/architecture (the prompting engine back since v14.24)',
-  s.order === 'users-fold,ads-fold,leads-fold,bottom-fold,changes-fold,features-fold,pe-fold,arch-fold' &&
+  s.order === 'users-fold,leads-fold,ads-fold,bottom-fold,changes-fold,features-fold,pe-fold,arch-fold' &&
   /<details class="fold" id="pe-fold">/.test(MAP_SOURCE));
 ok('the marketing modules are migrated into Admin under Users and traffic',
   MAP_SOURCE.includes('id="adm-mkt"') &&
@@ -610,7 +612,7 @@ ok('v13.72: the five health lights moved into the drawer',
 ok('v13.72: Maya command left the page center and became the drawer voice line',
   !MAP_SOURCE.includes('<section id="maya-command"') &&
   MAP_SOURCE.includes('id="drawer-command"') &&
-  MAP_SOURCE.includes('body.maya-live #drawer-command{display:flex') &&
+  MAP_SOURCE.includes('#drawer-command{display:flex') &&
   MAP_SOURCE.includes("classList.toggle('maya-live', on)"));
 ok('v13.72: MANA SIYO mirrors MAYA with left-hanging Design Studio and Wix Studio',
   MAP_SOURCE.includes('class="card card-mana"') &&
@@ -922,7 +924,7 @@ ok('one row, five numbers, users first, each window paired manasiyo | MAYA',
   MAP_SOURCE.includes('#head-tiles .pair-b') && MAP_SOURCE.includes('d.wixSite') &&
   SERVER_SOURCE.includes('ranges, countries, accounts: accounts || null, wixSite'));
 ok('the map hamburger links the privacy policy',
-  MAP_SOURCE.includes('<a href="/privacy.html" target="_blank">Privacy policy'));
+  MAP_SOURCE.includes('<a href="/privacy.html">Privacy policy'));
 ok('unique accounts are counted by MAYA itself',
   SERVER_SOURCE.includes("const USERS_PREFIX = 'metrics/users/'") &&
   SERVER_SOURCE.includes('function noteUser(sub, email)') &&
@@ -1648,9 +1650,9 @@ ok('her recent memory stays outside the bounded snapshot and she knows the backb
 ok('the Admin drawer consolidates: firebase one line, Cloud Run, the outside managers',
   MAP_SOURCE.includes('>Firebase<') &&
   MAP_SOURCE.includes('>Cloud Run<') &&
-  MAP_SOURCE.includes('>Google Ads manager<') &&
-  MAP_SOURCE.includes('>Meta Ads manager<') &&
-  MAP_SOURCE.includes('class="tint">Behind the scenes') &&
+  MAP_SOURCE.includes('>Google Ads Manager<') &&
+  MAP_SOURCE.includes('>Meta Ads Manager<') &&
+  MAP_SOURCE.includes('<h3>Vault</h3>') &&
   !MAP_SOURCE.includes('>Design Studio<') && !MAP_SOURCE.includes('>Credits<'));
 ok('the voice and visible UI read the same bounded Admin snapshot',
   SERVER_SOURCE.includes("app.get('/api/admin/command-snapshot'") &&
@@ -2682,7 +2684,7 @@ ok('Outbound preserves campaign pain and criteria and provides a people table',o
 await browser.close(); if (served) srv.close();
 ok('CRM uses five owner statuses and dismisses the filter outside or on Escape',MAP_SOURCE.includes("booked:'Booked'") && MAP_SOURCE.includes("canceled:'Cancelled'") && MAP_SOURCE.includes("!_leadFilterOwner.contains(e.target) && !_leadFilterMenu.contains(e.target)") && MAP_SOURCE.includes("if(e.key==='Escape' && _leadFilterOwner)") && MAP_SOURCE.includes('window.filterLeadStatus = filterLeadStatus'));
 ok('Lead rows put name then date then category in one row',MAP_SOURCE.includes("<time>'+esc(leadSignup(x))+'</time>'+_actionsCell(i,x)") && MAP_SOURCE.includes('function leadSignup') && !MAP_SOURCE.slice(MAP_SOURCE.indexOf('function _actionsCell'),MAP_SOURCE.indexOf('function _leadColDefs')).includes('PAY_SVG'));
-ok('Model snapshot groups shared models by their roles',MAP_SOURCE.includes('const groups=new Map()') && MAP_SOURCE.includes('roles.join'));
+ok('Model snapshot shows server roles through accessible hover cards',MAP_SOURCE.includes("new CustomEvent('maya-model-snapshot'") && readFileSync(join(ROOT,'aesthetics/ui/admin-systems.js'),'utf8').includes('Object.entries(snapshot.models'));
 const outboundRevampUI=readFileSync(join(ROOT,'backend/outbound.html'),'utf8'),outboundRevampJS=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');
 ok('Outbound uses the Admin background and functioning drawer',outboundRevampUI.includes('birth-of-a-star.png')&&outboundRevampUI.includes('outbound-drawer')&&outboundRevampJS.includes('function closeDrawer'));
 ok('Outbound syncs real workbook campaigns and reviews drafts in Gmail',outboundRevampJS.includes("api('/sheets/sync'")&&outboundRevampJS.includes('mail.google.com/mail/?view=cm'));
@@ -2719,7 +2721,7 @@ ok('Outer and inner padding have live visual debug controls',compactGallery.incl
 ok('Aesthetic Control owns saved icon and dropdown dimensions',ownerDesignConfig.includes("['iconSize','dropdownHeight']") && ownerDesignRuntime.includes('--maya-control-dropdown-height'));
 ok('Saved design settings and audit entries commit atomically',ownerDesignConfig.includes('_history:history') && ownerDesignConfig.includes("found.ok ? found.generation : '0'") && readFileSync(join(ROOT,'docs/server/server.js'),'utf8').includes('/api/admin/design-history'));
 ok('Admin Logs include successful Aesthetic Control saves',readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('/api/admin/design-history') && readFileSync(join(ROOT,'backend/status.html'),'utf8').includes("item.state==='saved'"));
-ok('Model Snapshot contains the meter and omits inactive Claude',readFileSync(join(ROOT,'backend/status.html'),'utf8').indexOf('<h3>Model Snapshot</h3>')<readFileSync(join(ROOT,'backend/status.html'),'utf8').indexOf('<maya-ai-meter>') && !readFileSync(join(ROOT,'aesthetics/ui/ai-meter.js'),'utf8').includes("anthropic:'Claude'"));
+ok('Model Snapshot is a hover card with provider usage in Vault',MAP_SOURCE.includes('admin-systems.js') && MAP_SOURCE.includes('https://platform.openai.com/settings/organization/usage') && !MAP_SOURCE.includes('<maya-ai-meter>'));
 ok('Outbound uses the owner ten-column Sheet schema including Reason',readFileSync(join(ROOT,'backend/outbound-priority.js'),'utf8').includes("['Last email','Category','Company','Full name','Email','Job title','Subject','Status','Reason','Relevance']") && readFileSync(join(ROOT,'docs/server/outbound.mjs'),'utf8').includes('A1:J10001'));
 
 ok('Lead Station navigation leaves room for the fixed top bar',MAP_SOURCE.includes('#adm-scroll{scroll-padding-top:76px}') && MAP_SOURCE.includes('#leads-fold{scroll-margin-top:76px}'));
