@@ -2725,3 +2725,5 @@ SEPTEMBER 30, 2026: pre-new-chat live and repository verification
 October 5, 2026 — Audit controls: combine table geometry/formatting; independent inner/outer border colors/thickness; active header/column backgrounds/opacity; shared Outbound pills; dropdown padding/anchoring; Inner usage links; grouped Vault <=4-word descriptions; retire Owner tools UI; truthful account Gmail/provider hover status. Prepared locally after regression; owner Push required.
 
 October 5, 2026 — Remove table-wide background/opacity controls; retain selection material controls. Split Outer and Inner border settings into two stacked rows. Implemented locally; gallery Save/reload/eleven widths and full app-regression passed. Not pushed.
+
+October 5, 2026 — Messages should fill the known person name from Leads/phone, never erase it with Caller; compact Model Snapshot to model plus uses. Full regression, seven-width hover cards and communications tests passed. Local commit; not pushed.

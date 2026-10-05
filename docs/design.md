@@ -215,3 +215,5 @@ and account-specific mailbox status load independently, with loading/error feedb
 configured models do not claim an inference test. Existing Gmail mailbox connections
 are displayed before setup/reconnection warnings. Cached live gallery modules must
 revalidate so mixed stylesheet/editor versions cannot persist.
+
+Admin Model Snapshot uses compact model lines with comma-separated uses; repeated models are grouped. Provider transport is on the summary line; endpoints expand only on click, never hover. The card is at most 340px wide and remains viewport bounded.

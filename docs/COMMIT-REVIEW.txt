@@ -1,13 +1,18 @@
-[Codex] Simplify table material controls into two border rows
+[Codex] Preserve known message names and compact model snapshots
 
-Remove table-wide Background and Opacity inputs from Aesthetic Control. Keep
-selection Background and Opacity editing and legacy saved material compatibility.
-Stack Outer border settings with corners and X/Y padding above Inner border
-settings. Each row scrolls independently on narrow screens. Advance gallery refs
-from v27 to v28; runtime remains v14.
+Keep the Lead name when Messages returns blank or generic Caller identity.
+Resolve unnamed threads against an unambiguous exact phone in current loaded
+Leads; retain real/manual thread names. Show client names in call transcripts.
+No automatic rename writes or changes to message authorization.
 
-Validation: component-gallery Save/reload, selection materials and eleven-width
-bounds passed. Full app-regression including the new request assertion passed; git diff checks passed.
+Group repeated models onto a single model/use line. Compress hover cards to
+340px with provider/model/transport summaries and click-only endpoint details.
+Advance Admin Systems asset refs to v3; configured models remain unchanged.
 
-Limitations: local only, not pushed. Provider/Chrome verification is outside this
-UI-only change. No server, credentials, production saves or environment edits.
+Validation: model cards at seven widths and landscapes; authenticated known-name,
+blank/Caller polling, normalized phone and transcript regression; full
+app-regression passed. Fake phone (57), messages (55), transfer and feedback
+suites passed. Git diff checks passed. No personal Chrome or live providers used.
+
+Limitations: local commit only, not pushed. Production behavior needs owner Push
+and deployment verification. No credentials, environment changes or client sends.

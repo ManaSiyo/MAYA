@@ -5,29 +5,28 @@ card.setAttribute('role','region');card.setAttribute('aria-label','Model Snapsho
 document.body.append(card);
 let active=null, kind='systems', closeTimer, snapshot=null, loading=false, failure='';
 const text=(tag,value)=>{const el=document.createElement(tag);el.textContent=value;return el;};
+function modelLabel(model){return String(model).replace(/^gpt-/i,'GPT-').replace(/-(luna|sol|terra|nano|flare)$/i,(_,tier)=>' '+tier[0].toUpperCase()+tier.slice(1)).replace(/^gemini-/,'Gemini-');}
 function render(){
  card.replaceChildren(text('h2',kind==='submissions'?'Submissions':'Model Snapshot'));
  if(kind==='submissions'){card.append(text('p','Website submissions synced into Leads.'));card.append(text('p','Connection: '+(document.querySelector('#d-drive')?.classList.contains('ok')?'Available':document.querySelector('#d-drive')?.classList.contains('bad')?'Unavailable':'Checking')));position();return;}
  if(!snapshot){card.append(text('p',failure||(loading?'Loading current configuration…':'Sign in to load current models.')));position();return;}
  if(failure)card.append(text('p',failure+' · Last configuration shown.'));
  if(kind==='systems'||kind==='api'){
+  const grouped=new Map();
   for(const [role,model] of Object.entries(snapshot.models||{})){
    if(kind==='api'&&role.toLowerCase().includes('image'))continue;
-   const row=text('p',role+' · '+model);card.append(row);
+   if(!grouped.has(model))grouped.set(model,[]);grouped.get(model).push(role.replace(/ text$/i,''));
   }
+  for(const [model,roles] of grouped){const row=text('p',modelLabel(model)+' · '+roles.join(', '));row.className='model-role';row.title=model;card.append(row);}
  }
  const providers=kind==='images'?snapshot.images||[]:snapshot.connections||[];
  for(const provider of providers){
   const details=document.createElement('details');details.className='model-provider';
-  const summary=text('summary',provider.provider+' · '+provider.model);
-  summary.addEventListener('mouseenter',()=>{details.open=true;position();});
-  summary.addEventListener('focus',()=>{details.open=true;position();});
+  const summary=text('summary',provider.provider+' · '+modelLabel(provider.model)+' · '+(provider.configured?(provider.transport||'API'):'Unavailable'));
   details.append(summary);
-  details.append(text('p',(provider.configured?'Configured':'Unavailable')+' · '+(provider.transport||'API')));
   details.append(text('p',provider.endpoint||''));card.append(details);
  }
  if(kind==='api'||kind==='systems')for(const integration of snapshot.integrations||[]){const row=document.createElement('p');row.append(text('strong',integration.provider+' · '),text('span',integration.status));card.append(row);}
- card.append(text('small','Configuration · '+new Date(snapshot.checkedAt).toLocaleTimeString()));
  position();
 }
 function position(){

@@ -858,7 +858,7 @@ try {
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/typography-controls.js?v=14"></script>
-<link rel="stylesheet" href="/aesthetics/ui/admin-systems.css?v=2">
+<link rel="stylesheet" href="/aesthetics/ui/admin-systems.css?v=3">
 </head>
 <body class="systems-map">
 
@@ -970,7 +970,7 @@ if (IS_AFFILIATES) {
     <div id="msg-thread" hidden>
       <div class="msg-head">
         <button class="msg-back" onclick="msgBack()" title="All threads">&#8249;</button>
-        <div class="msg-who"><div class="msg-name-edit"><input class="msg-name" id="msg-name" aria-label="Contact name" placeholder="Caller" title="Click to name this contact; Enter saves" maxlength="120" onblur="msgRename()" onkeydown="if(event.key==='Enter')this.blur()"><button class="msg-rename" aria-label="Edit contact name" onclick="document.getElementById('msg-name').focus()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 16-1 5 5-1L21 7l-4-4zM14 6l4 4"/></svg></button></div><div class="msg-number" id="msg-number"></div></div>
+        <div class="msg-who"><div class="msg-name-edit"><input class="msg-name" id="msg-name" aria-label="Contact name" placeholder="Contact name" title="Click to name this contact; Enter saves" maxlength="120" onblur="msgRename()" onkeydown="if(event.key==='Enter')this.blur()"><button class="msg-rename" aria-label="Edit contact name" onclick="document.getElementById('msg-name').focus()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 16-1 5 5-1L21 7l-4-4zM14 6l4 4"/></svg></button></div><div class="msg-number" id="msg-number"></div></div>
         <button class="msg-call" onclick="msgBooking()" title="Preview the consultation booking link">Booking</button><button class="msg-call" onclick="msgInvoice()" title="Invoice this lead">Invoice</button><button class="msg-call" id="msg-call" onclick="msgCall()" title="Call this person">Call</button>
       </div>
       <div class="msg-controls"><button onclick="msgCheckDelivery()" title="Check the last five outgoing texts with the carrier">Check delivery</button><button id="msg-block" onclick="msgBlock()">Block</button><button onclick="msgDelete()">Delete conversation</button></div><div class="msg-scroll" id="msg-scroll"></div>
@@ -3373,12 +3373,20 @@ function paintThreads(list) {
   });
 }
 
+function _msgKnownName(number, ...names) {
+  const named=value=>String(value||'').trim()&&!/^caller$/i.test(String(value).trim());
+  const supplied=names.find(named);if(supplied)return String(supplied).trim();
+  const phone=value=>{const digits=String(value||'').replace(/\D/g,'');return digits.length===11&&digits.startsWith('1')?digits.slice(1):digits;};
+  const key=phone(number);if(!key)return '';
+  const matches=[...new Set(_leadList.filter(lead=>phone(lead.phone)===key&&named(lead.name)).map(lead=>lead.name.trim()))];
+  return matches.length===1?matches[0]:'';
+}
 async function openThread(number, name) {
-  _msgOpen = { number, name: name || '' };
+  _msgOpen = { number, name: _msgKnownName(number,name) };
   document.getElementById('msg-feedback').textContent = '';
   document.getElementById('msg-list').hidden = true;
   document.getElementById('msg-thread').hidden = false;
-  document.getElementById('msg-name').value = name || '';
+  document.getElementById('msg-name').value = _msgOpen.name;
   document.getElementById('msg-number').textContent = number;
   await loadThread(number);
   const inp = document.getElementById('msg-input'); if (inp) inp.focus();
@@ -3396,14 +3404,14 @@ async function loadThread(number, quiet) {
 }
 function paintThread(t, quiet) {
   const box = document.getElementById('msg-scroll'); if (!box) return;
-  if (_msgOpen) { _msgOpen.blocked = !!t.blocked; _msgOpen.consent = t.consent; if (!_msgOpen.renaming) _msgOpen.name = t.name || '';  }
+  if (_msgOpen) { _msgOpen.blocked = !!t.blocked; _msgOpen.consent = t.consent; if (!_msgOpen.renaming) _msgOpen.name = _msgKnownName(_msgOpen.number,t.name,_msgOpen.name);  }
   const nameInput = document.getElementById('msg-name');
   if (document.activeElement !== nameInput && !(_msgOpen && _msgOpen.renaming)) nameInput.value = (_msgOpen && _msgOpen.name) || '';
   document.getElementById('msg-block').textContent = t.blocked ? 'Unblock' : 'Block';
   document.getElementById('msg-call').disabled = !!t.blocked;
   const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
     box.innerHTML = (t.messages || []).map(m => m.kind === 'call'
-      ? '<div class="msg-call-line">' + (m.dir === 'out' ? 'Maya called' : 'They called Maya') + (m.seconds ? ', ' + Math.max(1, Math.round(m.seconds / 60)) + ' min' : '') + ' <span>' + esc(_msgWhen(m.ts)) + '</span>' + (Array.isArray(m.transcript)&&m.transcript.length ? '<details><summary>Transcript</summary>' + m.transcript.map(line=>'<p><b>'+esc(line.who==='maya'?'MAYA':m.dir==='out'?'Fromsa':'Caller')+':</b> '+esc(line.text)+'</p>').join('') + '</details>' : m.text ? '<small>' + esc(m.text) + '</small>' : '') + '</div>'
+      ? '<div class="msg-call-line">' + (m.dir === 'out' ? 'Maya called' : 'They called Maya') + (m.seconds ? ', ' + Math.max(1, Math.round(m.seconds / 60)) + ' min' : '') + ' <span>' + esc(_msgWhen(m.ts)) + '</span>' + (Array.isArray(m.transcript)&&m.transcript.length ? '<details><summary>Transcript</summary>' + m.transcript.map(line=>'<p><b>'+esc(line.who==='maya'?'MAYA':(_msgOpen?.name||_msgOpen?.number||'Contact'))+':</b> '+esc(line.text)+'</p>').join('') + '</details>' : m.text ? '<small>' + esc(m.text) + '</small>' : '') + '</div>'
       : '<div class="bub ' + (m.dir === 'out' ? 'out' : 'in') + '">' + esc(m.text || '') + '<div class="bub-when">' + esc(_msgWhen(m.ts)) + (m.dir === 'out' && m.status ? ', ' + esc(m.status) + (m.errorCode ? ' (carrier error ' + esc(m.errorCode) + (String(m.errorCode) === '30034' ? ': sending number needs approved A2P registration' : '') + ')' : '') : '') + '</div></div>'
     ).join('') || '<div class="msg-empty">No messages yet. Send a text to start the conversation.</div>';
     if (!quiet || atBottom) box.scrollTop = box.scrollHeight;
@@ -3974,5 +3982,5 @@ setInterval(()=>{ if(_idTok && document.visibilityState==='visible') loadMkt(); 
   setTimeout(checkAdminUpdate, 8000);   // catch a tab opened already-stale
 })();
 </script>
-<dialog class="maya-surface" id="maya-confirmation" aria-labelledby="maya-confirmation-title"><div class="confirmation-head"><h2 id="maya-confirmation-title">Maya approval</h2><button type="button" aria-label="Close approvals" onclick="this.closest('dialog').close()">×</button></div><div id="maya-action-queue" aria-label="Actions waiting for confirmation"></div></dialog><script type="module" src="/aesthetics/ui/admin-systems.js?v=2"></script><script type="module" src="/aesthetics/ui/lead-stage-menu.js?v=1"></script><script type="module" src="/aesthetics/ui/admin-design.js?v=1"></script></body>
+<dialog class="maya-surface" id="maya-confirmation" aria-labelledby="maya-confirmation-title"><div class="confirmation-head"><h2 id="maya-confirmation-title">Maya approval</h2><button type="button" aria-label="Close approvals" onclick="this.closest('dialog').close()">×</button></div><div id="maya-action-queue" aria-label="Actions waiting for confirmation"></div></dialog><script type="module" src="/aesthetics/ui/admin-systems.js?v=3"></script><script type="module" src="/aesthetics/ui/lead-stage-menu.js?v=1"></script><script type="module" src="/aesthetics/ui/admin-design.js?v=1"></script></body>
 </html>

@@ -8,7 +8,7 @@ try{
  const errors=[];page.on('pageerror',e=>errors.push(e.message));let writes=0;
  await page.route('**/*',async route=>{
   const u=new URL(route.request().url());if(u.hostname!=='maya.test')return route.abort();
-  if(u.pathname==='/api/admin/models')return route.fulfill({json:{checkedAt:'2026-10-03T12:00:00Z',models:{'Admin text':'gpt-6-luna','Image default':'gpt-image-2.5-flare'},connections:[{provider:'OpenAI',model:'gpt-5-nano',configured:true,transport:'api',endpoint:'https://api.openai.com/v1/responses'},{provider:'gemini',model:'gemini-2.5-flash-lite',configured:true,transport:'vertex',endpoint:'https://aiplatform.googleapis.com/v1/projects/{project}/locations/global/publishers/google/models/gemini-2.5-flash-lite:generateContent'}],images:[{provider:'OpenAI',model:'gpt-image-2.5-flare',configured:true,endpoint:'https://api.openai.com/v1/images/generations'}]}});
+  if(u.pathname==='/api/admin/models')return route.fulfill({json:{checkedAt:'2026-10-03T12:00:00Z',models:{'Frontend text':'gpt-6-luna','Admin text':'gpt-6-luna','Fast text':'gpt-6-luna','Image default':'gpt-image-2.5-flare'},connections:[{provider:'OpenAI',model:'gpt-5-nano',configured:true,transport:'api',endpoint:'https://api.openai.com/v1/responses'},{provider:'gemini',model:'gemini-2.5-flash-lite',configured:true,transport:'vertex',endpoint:'https://aiplatform.googleapis.com/v1/projects/{project}/locations/global/publishers/google/models/gemini-2.5-flash-lite:generateContent'}],images:[{provider:'OpenAI',model:'gpt-image-2.5-flare',configured:true,endpoint:'https://api.openai.com/v1/images/generations'}]}});
   if(u.pathname==='/api/admin/owner-crm')return route.fulfill({json:{ok:true,gmailReady:false,mailboxes:[{id:'fixture-mailbox',email:'fixture@example.com'}]}});
   if(u.pathname.startsWith('/api/')){if(route.request().method()==='POST')writes++;return route.fulfill({json:{ok:true,items:[],list:[],mailboxes:[]}});}
   let path=u.pathname==='/status.html'?'/backend/status.html':u.pathname;
@@ -26,14 +26,14 @@ try{
  for(const width of [320,390,650,768,1024,1440,1920]){
   await page.setViewportSize({width,height:844});await page.evaluate(()=>{admTab('systems');toggleDrawer(true);});
   await page.getByRole('button',{name:'API model details',exact:true}).focus();
-  await page.waitForFunction(()=>document.querySelector('#model-snapshot').textContent.includes('gpt-5-nano'));
-  assert.match(await page.locator('#model-snapshot').textContent(),/gpt-6-luna/);await page.waitForFunction(()=>document.querySelector('#model-snapshot').textContent.includes('1 mailbox connected to this account'));
-  assert.doesNotMatch(await page.locator('#model-snapshot').textContent(),/gpt-image-2.5-flare/);
-  await page.locator('.model-provider summary').filter({hasText:'gemini'}).focus();assert.match(await page.locator('#model-snapshot').textContent(),/aiplatform.googleapis.com/);
+  await page.waitForFunction(()=>document.querySelector('#model-snapshot').textContent.includes('GPT-5 Nano'));
+  assert.equal(await page.locator('.model-provider[open]').count(),0,'Hover stays compact until details are clicked');assert.match(await page.locator('#model-snapshot').textContent(),/GPT-6 Luna · Frontend, Admin, Fast/);await page.waitForFunction(()=>document.querySelector('#model-snapshot').textContent.includes('1 mailbox connected to this account'));
+  assert.doesNotMatch(await page.locator('#model-snapshot').textContent(),/GPT-image-2.5 Flare/);
+  await page.locator('.model-provider summary').filter({hasText:'Gemini'}).click();assert.match(await page.locator('#model-snapshot').textContent(),/aiplatform.googleapis.com/);
   if(width===1440)await page.screenshot({path:'/private/tmp/maya-admin-systems-preview.png'});
-  let b=await page.locator('#model-snapshot').boundingBox();assert.ok(b.x>=0&&b.x+b.width<=width+1&&b.y>=0&&b.y+b.height<=844,'Model popup fits '+width);
+  let b=await page.locator('#model-snapshot').boundingBox();assert.ok(b.width<=340,'Compact card width');assert.ok(b.x>=0&&b.x+b.width<=width+1&&b.y>=0&&b.y+b.height<=844,'Model popup fits '+width);
   await page.keyboard.press('Escape');assert.ok(await page.locator('#model-snapshot').isHidden());
-  await page.getByRole('button',{name:'Image model details',exact:true}).click();assert.match(await page.locator('#model-snapshot').textContent(),/gpt-image-2.5-flare/);
+  await page.getByRole('button',{name:'Image model details',exact:true}).click();assert.match(await page.locator('#model-snapshot').textContent(),/GPT-image-2.5 Flare/);
   await page.keyboard.press('Escape');
   await page.evaluate(()=>admTab('logs'));assert.ok(await page.locator('#drawer-systems').isHidden());
   assert.equal(await page.locator('#drawer-logs #drawer-command #maya-chat').count(),1);
@@ -48,7 +48,7 @@ try{
   await page.setViewportSize({width,height});await page.evaluate(()=>{admTab('systems');toggleDrawer(true);});
   await page.getByRole('button',{name:'API model details',exact:true}).focus();
   await page.getByRole('button',{name:'API model details',exact:true}).press('Enter');
-  await page.locator('.model-provider summary').filter({hasText:'gemini'}).focus();
+  await page.locator('.model-provider summary').filter({hasText:'Gemini'}).click();
   await page.waitForTimeout(30);const b=await page.locator('#model-snapshot').boundingBox();
   assert.ok(b.x>=0&&b.y>=0&&b.x+b.width<=width+1&&b.y+b.height<=height+1,'Expanded model hover fits landscape');
   await page.keyboard.press('Escape');

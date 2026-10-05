@@ -557,3 +557,5 @@ changed.
 October 5, 2026 — Local fixes for split Table controls, ineffective Outbound column backgrounds, native Leads picker positioning, inconsistent drawer pill classes and Gmail setup warning precedence. Shared runtime v14/gallery v27; account/auth protections retained. Live provider/mailbox verification blocked by Chrome tool availability; no credentials or production variables changed.
 
 October 5, 2026 — Simplified the table formatting toolbar: removed duplicate table-wide material inputs and separated outline/grid controls into two responsive rows. Legacy saved materials stay compatible. Gallery Save/reload/eleven widths and full app-regression passed. Not pushed.
+
+October 5, 2026 — Message polling replaced known Lead names with empty thread names; preserve known identity and label client transcripts consistently. Model hover duplicated roles and expanded on hover; group models and expand details only on click. Full regression and required communications suites passed; local only, not pushed.

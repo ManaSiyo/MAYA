@@ -1,33 +1,35 @@
 # MAYA handoff — October 5, 2026
 
-## Current request: simplify table material controls
+## Current request: known message names and compact model hover cards
 
-Started clean at e920e3c, matching origin/maya-v2. The table-wide Background and
-Opacity inputs are removed. Selected top-row/column Background and Opacity remain
-editable and saved. Existing table-wide material fields remain readable for saved
-schema compatibility; no migration or automatic material reset occurs.
+Started clean at 1311620, matching origin/maya-v2. Messages preserve the known
+Lead name when an inbox response has a blank or generic Caller name. Unnamed
+threads resolve an exact phone match from the current account's loaded Leads,
+with US country-code normalization and no guessed name when matches conflict.
+Manual/real thread names remain preferred. Call transcripts label client turns
+with that same known name (or phone), including outbound client calls.
+No automatic rename write or authorization change is introduced.
 
-Table geometry now has two stacked rows: Outer border thickness/color/opacity,
-corners and X/Y padding; then Inner border thickness/color/opacity. Each row scrolls
-horizontally at narrow widths. The fixed selection formatting row stays below them.
-Gallery cache refs advance to v28; shared runtime remains v14.
+Model Snapshot groups repeated models into one model line with comma-separated
+uses. Provider summaries include model/transport; endpoint details expand only
+on click, not hover/focus. Compact cards cap at 340px and remain viewport bounded.
+Admin Systems asset refs advance to v3; no configured models are changed.
 
 ## Changed paths and validation
 
-Gallery table-cell-editor.js/css and HTML cache refs; component-gallery and
-app-regression assertions; AGENTS/design/requests/fixes/COMMIT-REVIEW.
-Validation passed: gallery Save/reload, selection materials and eleven-width
-bounds; full app-regression including the new two-row/material assertion. Git
-diff checks passed. Logs: /private/tmp/maya-border-rows-{gallery,regression}.log.
-No server, credentials, provider, account-bound data or production environment edits.
+backend/status.html; aesthetics/ui/admin-systems.js/css; admin-systems-ui and
+app-regression; design/requests/fixes/COMMIT-REVIEW. Validation passed: full
+app-regression, compact cards at seven widths/landscapes, authenticated name
+retention/phone matching/transcript labels; fake phone (57), messages (55),
+transfer and feedback suites. Git diff checks passed. Logs are in
+/private/tmp/maya-name-{hover-regression,phone,communications}.log.
 
 ## Exact next step and remaining live verification
 
-This request is verified and prepared as a local commit. Fromsa pushes from
-GitHub Desktop; no push is authorized in this turn. After deployment, verify
-release.json and the two border rows with selected Background/Opacity controls.
-Actual Gmail mailbox connection and Gemini/image inference remain unverified.
-Personal Chrome access needs fresh session approval; no Chrome is needed here.
+Verified changes are prepared as a local commit. Fromsa pushes
+from GitHub Desktop; no push is authorized. After deployment, verify lead-name
+message navigation and compact provider hover cards. Actual Gmail connection and
+Gemini/image inference remain unverified. No personal Chrome session used here.
 
 Prior live owner verification remains: MAYA HELP/INBOX/THREAD Nick/MORE/ACTIONS,
 normal memory recall and separately authorized client REPLY/SEND; scheduler/signup/

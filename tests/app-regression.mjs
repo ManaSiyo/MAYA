@@ -713,6 +713,13 @@ const messageRefinements = await pg.evaluate(async () => {
 ok('Messages: top circular gear/chat tabs match frontend spacing and the voice button is compact',
   messageRefinements.padding === '16px' && messageRefinements.voiceSize === '42px' && messageRefinements.gear && messageRefinements.bubble);
 ok('Messages: contact rename saves and carrier feedback survives inbox polling', messageRefinements.renameSaved && messageRefinements.feedbackPersists && messageRefinements.callLabel === 'Call');
+const knownMessageName=await pg.evaluate(async()=>{
+ const original=window.fetch,auth=_idTok;_idTok='fixture';paintLeads({connected:true,list:[{name:'Mary Example',phone:'+14155550123'}]});
+ window.fetch=async(url,options)=>String(url).startsWith('/api/admin/messages/thread')?{ok:true,json:async()=>({thread:{name:'Caller',messages:[{kind:'call',dir:'in',transcript:[{who:'caller',text:'Hello'}]}]}})}:original(url,options);
+ try{await openThread('+14155550123','Mary Example');const first=document.getElementById('msg-name').value;_msgPaintThread({name:'',messages:[]},true);const retained=document.getElementById('msg-name').value;await openThread('4155550123','');return {first,retained,matched:document.getElementById('msg-name').value,transcript:document.getElementById('msg-scroll').textContent};}finally{window.fetch=original;_idTok=auth;}
+});
+ok('Messages preserve the lead name through blank/Caller responses and resolve the associated phone',knownMessageName.first==='Mary Example'&&knownMessageName.retained==='Mary Example'&&knownMessageName.matched==='Mary Example'&&knownMessageName.transcript.includes('Mary Example: Hello')&&!knownMessageName.transcript.includes('Caller:'));
+
 const { introducedName: smsIntroducedName } = await import('../docs/server/maya-messages.mjs');
 ok('Messages: explicit SMS introductions produce a contact name without treating inquiries as names',
   smsIntroducedName('Hi, my name is Mary Ingram, I need a fitting') === 'Mary Ingram' && !smsIntroducedName('I am interested in a fitting'));
