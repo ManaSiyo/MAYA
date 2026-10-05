@@ -2727,3 +2727,5 @@ October 5, 2026 — Audit controls: combine table geometry/formatting; independe
 October 5, 2026 — Remove table-wide background/opacity controls; retain selection material controls. Split Outer and Inner border settings into two stacked rows. Implemented locally; gallery Save/reload/eleven widths and full app-regression passed. Not pushed.
 
 October 5, 2026 — Messages should fill the known person name from Leads/phone, never erase it with Caller; compact Model Snapshot to model plus uses. Full regression, seven-width hover cards and communications tests passed. Local commit; not pushed.
+
+October 5, 2026 — Fix glitchy lingering Model Snapshot hover cards. Separate pointer dismissal from keyboard focus and close on outside wheel/resize. Seven-width Admin UI and full regression passed. Local only; not pushed.

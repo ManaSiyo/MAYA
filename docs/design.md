@@ -217,3 +217,5 @@ are displayed before setup/reconnection warnings. Cached live gallery modules mu
 revalidate so mixed stylesheet/editor versions cannot persist.
 
 Admin Model Snapshot uses compact model lines with comma-separated uses; repeated models are grouped. Provider transport is on the summary line; endpoints expand only on click, never hover. The card is at most 340px wide and remains viewport bounded.
+
+Model cards dismiss after a 100ms pointer-exit grace period across trigger/card, including mouse-focused controls. Keyboard focus keeps cards usable until focus exits or Escape. Outside scrolling/resizing closes cards; internal card scrolling remains usable.

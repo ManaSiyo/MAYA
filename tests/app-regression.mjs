@@ -2774,5 +2774,6 @@ ok('Table formatting includes independently saved inner and outer borders',cellE
 
 ok('Lead status picker shares dropdown material and preserves native save',MAP_SOURCE.includes('lead-stage-menu.js')&&ownerDesignRuntime.includes('.maya-filter-popover,.lead-stage-menu'));
 ok('Table material controls use two border rows while background and opacity stay with selections',cellEditorSource.includes("['Outer border settings',outerSpecs],['Inner border settings',innerSpecs]")&&!cellEditorSource.includes('Table background')&&!cellEditorSource.includes('Table opacity')&&cellEditorSource.includes("['opacity','Opacity',{max:100}]"));
+ok('Model hover dismissal separates pointer exit from keyboard focus',readFileSync(join(ROOT,'aesthetics/ui/admin-systems.js'),'utf8').includes("interaction==='pointer'||!focused"));
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

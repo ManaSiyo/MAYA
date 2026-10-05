@@ -1,18 +1,15 @@
-[Codex] Preserve known message names and compact model snapshots
+[Codex] Dismiss model hover cards after pointer exit
 
-Keep the Lead name when Messages returns blank or generic Caller identity.
-Resolve unnamed threads against an unambiguous exact phone in current loaded
-Leads; retain real/manual thread names. Show client names in call transcripts.
-No automatic rename writes or changes to message authorization.
+Separate mouse interaction from keyboard focus so clicked triggers and provider
+details cannot pin Model Snapshot cards. Close after a 100ms grace period when
+the pointer leaves both trigger/card, using coordinates rather than stale browser
+:hover flags. Keep keyboard focus and Escape behavior.
+Dismiss on outside wheel/touch scrolling and resize; retain internal scrolling.
+Advance Admin Systems JS cache ref to v4.
 
-Group repeated models onto a single model/use line. Compress hover cards to
-340px with provider/model/transport summaries and click-only endpoint details.
-Advance Admin Systems asset refs to v3; configured models remain unchanged.
+Validation: responsive Admin UI (seven widths/landscapes) and full app-regression passed. New fixtures
+cover trigger click/exit, provider click/exit, keyboard retention/Escape and
+outside scroll/resize. No personal Chrome, live provider or message actions.
 
-Validation: model cards at seven widths and landscapes; authenticated known-name,
-blank/Caller polling, normalized phone and transcript regression; full
-app-regression passed. Fake phone (57), messages (55), transfer and feedback
-suites passed. Git diff checks passed. No personal Chrome or live providers used.
-
-Limitations: local commit only, not pushed. Production behavior needs owner Push
-and deployment verification. No credentials, environment changes or client sends.
+Limitations: local commit only, not pushed. Owner Push includes the preceding
+known-name/compact-card commit. No model or production configuration changes.

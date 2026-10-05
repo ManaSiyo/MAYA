@@ -3,7 +3,7 @@ const card=document.createElement('section');
 card.id='model-snapshot';card.className='maya-model-popover';card.hidden=true;
 card.setAttribute('role','region');card.setAttribute('aria-label','Model Snapshot');
 document.body.append(card);
-let active=null, kind='systems', closeTimer, snapshot=null, loading=false, failure='';
+let active=null, pointer=null, interaction='pointer', kind='systems', closeTimer, snapshot=null, loading=false, failure='';
 const text=(tag,value)=>{const el=document.createElement(tag);el.textContent=value;return el;};
 function modelLabel(model){return String(model).replace(/^gpt-/i,'GPT-').replace(/-(luna|sol|terra|nano|flare)$/i,(_,tier)=>' '+tier[0].toUpperCase()+tier.slice(1)).replace(/^gemini-/,'Gemini-');}
 function render(){
@@ -37,33 +37,35 @@ function position(){
  const top=below+h<=innerHeight-8?below:Math.max(8,r.top-h-8);
  card.style.left=left+'px';card.style.top=top+'px';
 }
-function hide(){if(active)active.setAttribute('aria-expanded','false');active=null;card.hidden=true;}
-function open(trigger,selected){
- clearTimeout(closeTimer);if(active!==trigger)hide();active=trigger;kind=selected;
+function hide(){clearTimeout(closeTimer);closeTimer=null;if(active)active.setAttribute('aria-expanded','false');active=null;card.hidden=true;}
+function open(trigger,selected,mode='pointer'){
+ clearTimeout(closeTimer);closeTimer=null;if(active!==trigger)hide();active=trigger;kind=selected;interaction=mode;
  active.setAttribute('aria-expanded','true');card.hidden=false;snapshot=window.MAYA_MODEL_SNAPSHOT||snapshot;
  render();position();if(selected!=='submissions')window.loadModelSnapshot?.();
 }
-function scheduleClose(){clearTimeout(closeTimer);closeTimer=setTimeout(()=>{if(!card.matches(':hover')&&!card.contains(document.activeElement)&&!active?.matches(':hover')&&document.activeElement!==active)hide();},180);}
+function pointerWithin(el){if(!el||!pointer)return false;const r=el.getBoundingClientRect();return pointer.x>=r.left&&pointer.x<=r.right&&pointer.y>=r.top&&pointer.y<=r.bottom;}
+function scheduleClose(){clearTimeout(closeTimer);closeTimer=setTimeout(()=>{closeTimer=null;const focused=card.contains(document.activeElement)||document.activeElement===active;if(!pointerWithin(card)&&!pointerWithin(active)&&(interaction==='pointer'||!focused))hide();},100);}
+document.addEventListener('pointermove',e=>{pointer={x:e.clientX,y:e.clientY};if(!active)return;interaction='pointer';if(pointerWithin(card)||pointerWithin(active)){clearTimeout(closeTimer);closeTimer=null;}else if(!closeTimer) scheduleClose();});
 for(const [trigger,selected] of [[document.querySelector('#d-api')?.closest('.status-item'),'api'],[document.querySelector('#d-assets')?.closest('.status-item'),'images'],[document.querySelector('#d-drive')?.closest('.status-item'),'submissions'],[document.querySelector('#adm-tab-systems'),'systems'],[document.querySelector('#adm-tabtitle'),'systems']]){
  if(!trigger)continue;
  trigger.tabIndex=0;trigger.setAttribute('aria-controls',card.id);trigger.setAttribute('aria-expanded','false');
  trigger.addEventListener('mouseenter',()=>{if(selected==='systems'&&document.querySelector('#adm-tabtitle').textContent!=='Systems')return;open(trigger,selected);});
  trigger.addEventListener('mouseleave',scheduleClose);
- trigger.addEventListener('focus',()=>{if(selected!=='systems'||document.querySelector('#adm-tabtitle').textContent==='Systems')open(trigger,selected);});
+ trigger.addEventListener('focus',()=>{if(selected!=='systems'||document.querySelector('#adm-tabtitle').textContent==='Systems')open(trigger,selected,'keyboard');});
  trigger.addEventListener('blur',scheduleClose);
  if(selected!=='systems'){
   trigger.setAttribute('role','button');trigger.setAttribute('aria-label',selected==='api'?'API model details':selected==='images'?'Image model details':'Submission connection details');
   trigger.addEventListener('click',e=>{e.stopPropagation();open(trigger,selected);});
-  trigger.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open(trigger,selected);}});
+  trigger.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open(trigger,selected,'keyboard');}});
  }
 }
 card.addEventListener('toggle',position,true);
-card.addEventListener('mouseenter',()=>clearTimeout(closeTimer));card.addEventListener('mouseleave',scheduleClose);card.addEventListener('focusout',scheduleClose);
+card.addEventListener('mouseenter',()=>{clearTimeout(closeTimer);closeTimer=null;});card.addEventListener('mouseleave',scheduleClose);card.addEventListener('focusout',scheduleClose);
 window.addEventListener('maya-model-loading',()=>{loading=true;failure='';render();});
 window.addEventListener('maya-model-error',e=>{loading=false;failure=e.detail;render();});
 window.addEventListener('maya-model-snapshot',e=>{snapshot=e.detail;loading=false;failure='';render();});
 window.addEventListener('maya-model-clear',()=>{snapshot=null;loading=false;failure='';hide();card.replaceChildren();});
 window.addEventListener('storage',e=>{if(e.key==='maya_admin_tok'||e.key===null){snapshot=null;delete window.MAYA_MODEL_SNAPSHOT;hide();}});
-document.addEventListener('pointerdown',e=>{if(!card.contains(e.target)&&!active?.contains(e.target))hide();});
+document.addEventListener('pointerdown',e=>{interaction='pointer';if(!card.contains(e.target)&&!active?.contains(e.target))hide();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!card.hidden){const trigger=active;hide();trigger?.focus({preventScroll:true});hide();}});
-window.addEventListener('resize',position);document.addEventListener('scroll',position,true);
+window.addEventListener('resize',hide);for(const event of ['wheel','touchmove'])document.addEventListener(event,e=>{if(!card.contains(e.target))hide();},{capture:true,passive:true});

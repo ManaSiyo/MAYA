@@ -559,3 +559,5 @@ October 5, 2026 — Local fixes for split Table controls, ineffective Outbound c
 October 5, 2026 — Simplified the table formatting toolbar: removed duplicate table-wide material inputs and separated outline/grid controls into two responsive rows. Legacy saved materials stay compatible. Gallery Save/reload/eleven widths and full app-regression passed. Not pushed.
 
 October 5, 2026 — Message polling replaced known Lead names with empty thread names; preserve known identity and label client transcripts consistently. Model hover duplicated roles and expanded on hover; group models and expand details only on click. Full regression and required communications suites passed; local only, not pushed.
+
+October 5, 2026 — Hover close guard let clicked trigger/detail focus pin the Model Snapshot indefinitely. Pointer exit now ignores retained focus, while keyboard interaction stays accessible. Pointer-coordinate checks avoid stale hover flags. Responsive Admin UI and full regression passed; not pushed.

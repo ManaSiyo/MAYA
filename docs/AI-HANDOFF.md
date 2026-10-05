@@ -1,35 +1,28 @@
 # MAYA handoff — October 5, 2026
 
-## Current request: known message names and compact model hover cards
+## Current request: dismiss lingering model hover cards
 
-Started clean at 1311620, matching origin/maya-v2. Messages preserve the known
-Lead name when an inbox response has a blank or generic Caller name. Unnamed
-threads resolve an exact phone match from the current account's loaded Leads,
-with US country-code normalization and no guessed name when matches conflict.
-Manual/real thread names remain preferred. Call transcripts label client turns
-with that same known name (or phone), including outbound client calls.
-No automatic rename write or authorization change is introduced.
-
-Model Snapshot groups repeated models into one model line with comma-separated
-uses. Provider summaries include model/transport; endpoint details expand only
-on click, not hover/focus. Compact cards cap at 340px and remain viewport bounded.
-Admin Systems asset refs advance to v3; no configured models are changed.
+Started clean at 21fd7f7, one local commit ahead of origin/maya-v2. The hover
+close guard treated mouse-click focus as keyboard focus and left cards pinned.
+Pointer interactions now use actual pointer coordinates (not stale :hover state)
+and dismiss 100ms after leaving both trigger and card,
+even when the clicked trigger/detail retains focus. Keyboard interaction keeps
+its focus behavior; Escape closes and returns focus. Outside wheel/touch scroll and resize also
+closes; scrolling inside the card remains usable. Pending model data cannot open
+an already closed card. Admin Systems JS ref advances to v4.
 
 ## Changed paths and validation
 
-backend/status.html; aesthetics/ui/admin-systems.js/css; admin-systems-ui and
-app-regression; design/requests/fixes/COMMIT-REVIEW. Validation passed: full
-app-regression, compact cards at seven widths/landscapes, authenticated name
-retention/phone matching/transcript labels; fake phone (57), messages (55),
-transfer and feedback suites. Git diff checks passed. Logs are in
-/private/tmp/maya-name-{hover-regression,phone,communications}.log.
+admin-systems.js, backend/status.html, admin-systems-ui and app-regression;
+design/requests/fixes/COMMIT-REVIEW. Validation passed: pointer leave after trigger/detail clicks, keyboard/Escape,
+outside wheel/resize, seven widths and landscapes; full app-regression.
+Log: /private/tmp/maya-hover-dismiss-regression.log. Git diff checks passed.
 
-## Exact next step and remaining live verification
+## Exact next step
 
-Verified changes are prepared as a local commit. Fromsa pushes
-from GitHub Desktop; no push is authorized. After deployment, verify lead-name
-message navigation and compact provider hover cards. Actual Gmail connection and
-Gemini/image inference remain unverified. No personal Chrome session used here.
+Verified work is prepared as a local commit. Fromsa pushes the two local commits; no push is
+authorized. After deployment check live model hover dismissal. No Chrome,
+credentials, production env, model configuration or client sends used here.
 
 Prior live owner verification remains: MAYA HELP/INBOX/THREAD Nick/MORE/ACTIONS,
 normal memory recall and separately authorized client REPLY/SEND; scheduler/signup/
