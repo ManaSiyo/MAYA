@@ -30,11 +30,8 @@ export function setupSurfaceEditors({panels,guide,design}){
  const inner=editor(panels,'Inner panel','inner',settings.inner,[...panelFields,['width','Width %',{min:20,max:100}]],render);panels.querySelector('.panel-preview').before(inner);
  highlightPadding(inner.querySelector('details'),()=>[...panels.querySelectorAll('.inner-panel')],()=>({x:settings.inner.paddingX,y:settings.inner.paddingY}));
  const divider=document.createElement('hr');divider.className='visual-divider';guide.before(divider);
- const title=document.createElement('h3');title.textContent='Table';title.className='gallery-subsection-title';guide.before(title);
- const controls=document.createElement('div');controls.id='table-editors';guide.before(controls);
- editor(controls,'Table','table',settings.table,[['background','Background',backgrounds],['fill','Opacity',{max:100}],['rim','Border',{max:100}],['borderColor','Border color',tableBorders],['radius','Corners',{max:24}],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]],render);
- cellEditor=setupTableCellEditor({guide,controls,settings:settings.table,render});
- highlightPadding(controls.querySelector('details'),()=>[...guide.querySelectorAll('td,th')],()=>({x:settings.table.paddingX,y:settings.table.paddingY}));
+ const title=document.createElement('h2');title.textContent='Table';title.className='gallery-section-title';guide.before(title);
+ cellEditor=setupTableCellEditor({guide,settings:settings.table,render});
  render();return {settings:()=>settings};
 }
 // Edit controls close on outside click, focus leaving, Escape, or another Edit.

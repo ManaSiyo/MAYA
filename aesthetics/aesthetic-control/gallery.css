@@ -223,3 +223,9 @@ main#gallery{padding-top:76px;padding-bottom:76px}
 @media(max-width:640px){.gallery-header{padding-inline:12px}.gallery-header #admin-back{width:42px;height:42px}.gallery-header #admin-back img{width:34px;height:34px}.gallery-header h1{letter-spacing:.22em}}
 
 html body #cell-format-toolbar{width:100%;backdrop-filter:var(--maya-frost);border-width:1px;border-style:solid}
+
+.table-material-fields{border-bottom:1px solid #ffffff33;margin-bottom:10px}.table-material-fields label{flex-basis:100px}
+html body :is(.finish-controls,.popup-editor)>summary{font-family:var(--maya-type-H3-font);font-size:var(--maya-type-H3-size);font-weight:var(--maya-type-H3-weight)}
+.panel-usage{font-size:11px;color:#aab5c4;text-transform:none}
+
+.type-row[data-type=signin]{grid-template-columns:minmax(0,1fr)}.type-row[data-type=signin] .type-example{white-space:nowrap;font-size:clamp(24px,18vw,var(--maya-type-H0-size))!important}

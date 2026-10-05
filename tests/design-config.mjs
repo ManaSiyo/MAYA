@@ -73,3 +73,6 @@ assert.equal(validDesign(withH0),true);for(const size of [22,105,162])assert.equ
 for(const role of ['glass','overlay','editor','inner','filter'])assert.equal(validDesign({...compact,[role]:{...compact[role],borderColor:'gray'}}),true,role+' gray border');
 assert.equal(validDesign({...compact,table:{...compact.table,borderColor:'gray'}}),false);
 assert.equal(validDesign({...compact,table:{...compact.table,radius:20}}),true);for(const radius of [-1,25,1.5,'12'])assert.equal(validDesign({...compact,table:{...compact.table,radius}}),false);
+
+assert.equal(validDesign({...compact,table:{...compact.table,outerWidth:4,innerWidth:2,innerRim:50,innerBorderColor:'black'}}),true);
+for(const patch of [{outerWidth:9},{innerWidth:-1},{innerBorderColor:'red'},{innerRim:101}])assert.equal(validDesign({...compact,table:{...compact.table,...patch}}),false);

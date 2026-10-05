@@ -15,7 +15,7 @@ try {
   const u=new URL(route.request().url());if(u.hostname!=='maya.test')return route.abort();
   const owner=(route.request().headers().authorization||'').replace('Bearer ','');
   if(u.pathname==='/api/admin/ai-meter'){meterCalls++;return route.fulfill({status:meterFail?503:200,json:{ok:!meterFail,spentUsd:.12,reservedUsd:0,limitUsd:1,scope:'Outbound AI',models:[{provider:'openai',connected:true}],providers:{openai:.12}}});}
-  if(u.pathname.endsWith('/intelligence'))return route.fulfill({status:expire?401:200,json:{ok:!expire,mailboxes:[{id:owner,email:owner+'@example.com'}],crm:{lastRunAt:crmStamp},gmailReady:true}});
+  if(u.pathname.endsWith('/intelligence'))return route.fulfill({status:expire?401:200,json:{ok:!expire,mailboxes:[{id:owner,email:owner+'@example.com'}],crm:{lastRunAt:crmStamp},gmailReady:false}});
   if(u.pathname.endsWith('/save')){pendingSave=()=>route.fulfill({json:{ok:true,state:stateFor(owner)}});return;}
   if(u.pathname==='/api/admin/outbound'&&pauseLoad){pauseLoad=false;pendingLoad=()=>route.fulfill({json:{ok:true,state:stateFor(owner),accountId:owner,capabilities:{}}});loadStarted();return;}
   if(u.pathname.startsWith('/api/'))return route.fulfill({json:{ok:true,state:stateFor(owner),accountId:owner,capabilities:{}}});
@@ -23,6 +23,8 @@ try {
   try{return route.fulfill({body:readFileSync(root+path),contentType:({'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png'})[extname(path)]||'text/plain'});}catch{return route.abort();}
  });
  await page.goto('https://maya.test/outbound.html');await page.locator('.people-table [data-person="p"]').click();
+ await page.waitForFunction(()=>document.querySelector('#gmail-status').textContent.includes('1 of 2 accounts connected'));assert.match(await page.locator('#gmail-status').textContent(),/Reconnection setup needed/);
+
  await page.locator('#notes').fill('Keep this draft');page.once('dialog',d=>d.dismiss());
  await page.locator('#stage-filter').selectOption('contacted',{force:true});assert.equal(await page.locator('#stage-filter').inputValue(),'','Cancelled filter change restores its displayed value');assert.equal(await page.locator('#notes').inputValue(),'Keep this draft');
  await page.locator('#notes').fill('');

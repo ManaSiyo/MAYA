@@ -46,7 +46,9 @@ export function validDesign(body) {
     const typeValid=s=>s&&['jost','cormorant'].includes(s.font)&&['none','uppercase'].includes(s.case)&&['white','gray'].includes(s.color)&&['left','center','right'].includes(s.align)&&['top','middle','bottom'].includes(s.vertical)&&Number.isInteger(s.size)&&s.size>=8&&s.size<=32&&Number.isInteger(s.weight)&&s.weight>=200&&s.weight<=500&&(s.style===undefined||['normal','italic'].includes(s.style));
     const bgValid=s=>s&&['black','gray','blue','yellow','green','pink'].includes(s.background)&&Number.isInteger(s.opacity)&&s.opacity>=0&&s.opacity<=100;
     if(t.radius!==undefined&&(!Number.isInteger(t.radius)||t.radius<0||t.radius>24))return false;
-    if(!numeric(t,{fill:100,rim:100,paddingX:40,paddingY:40})||Object.keys(t).some(k=>!['background','fill','rim','paddingX','paddingY','header','firstColumn','columns','cells','borderColor','radius'].includes(k)))return false;
+    if(!numeric(t,{fill:100,rim:100,paddingX:40,paddingY:40})||Object.keys(t).some(k=>!['background','fill','rim','paddingX','paddingY','header','firstColumn','columns','cells','borderColor','radius','outerWidth','innerWidth','innerBorderColor','innerRim'].includes(k)))return false;
+    for(const [key,max] of [['outerWidth',8],['innerWidth',8],['innerRim',100]])if(t[key]!==undefined&&(!Number.isInteger(t[key])||t[key]<0||t[key]>max))return false;
+    if(t.innerBorderColor!==undefined&&!['white','black'].includes(t.innerBorderColor))return false;
     if(t.borderColor!==undefined&&!['black','white'].includes(t.borderColor))return false;
     if(t.background!==undefined&&!['black','gray','blue','yellow','green','pink'].includes(t.background))return false;
     if(!typeValid(t.header)||!bgValid(t.header)||Object.keys(t.header).some(k=>![...types,...backgrounds].includes(k)))return false;

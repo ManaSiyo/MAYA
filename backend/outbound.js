@@ -247,7 +247,7 @@ function renderIntelligence(){
  $('connect-gmail').disabled=mailboxes.length>=2;const sender=$('mail-sender');if(sender){const previous=sender.value;sender.innerHTML=mailboxes.map(m=>`<option value="${esc(m.id)}">${esc(m.email)}</option>`).join('')||'<option value="">No Gmail connected</option>';if(mailboxes.some(m=>m.id===previous))sender.value=previous;}
  syncBusyControls();
  $('gmail-setup').hidden=intelligence.gmailReady!==false;
- $('gmail-status').textContent=intelligence.gmailReady===false?'Gmail setup is incomplete. Configure Google OAuth before connecting.':mailboxes.length?mailboxes.length+' of 2 accounts connected.':'Choose your Google account to connect.';
+ $('gmail-status').textContent=mailboxes.length?mailboxes.length+' of 2 accounts connected.'+(intelligence.gmailReady===false?' · Reconnection setup needed.':''):intelligence.gmailReady===false?'Gmail setup is incomplete. Configure Google OAuth before connecting.':'No mailbox connected to this MAYA account. Choose your Google account to connect.';
  const scheduled=crm.lastScheduledRunAt;
  const schedule=!crm.enabled?'Hourly updates paused':!intelligence.schedulerReady?'Hourly updates requested · server scheduler setup needed':!scheduled?'Hourly updates enabled · awaiting first scheduled run':Date.now()-Date.parse(scheduled)>2*3600000?'Hourly updates overdue · check scheduler':'Hourly updates running';
  $('automation-status').textContent=schedule+(crm.lastRunAt?' · Last run '+new Date(crm.lastRunAt).toLocaleString():' · No update has run yet');

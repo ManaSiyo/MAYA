@@ -1,197 +1,79 @@
-# MAYA handoff — October 3, 2026
+# MAYA handoff — October 5, 2026
 
-## Current request: compact Admin Systems and provider hover cards
+## Current request: audit active aesthetics, tables, dropdowns and Systems
 
-Started clean at afadb6b, matching origin/maya-v2. Prepared locally; not pushed.
-Runtime v13 loads across served pages. Admin reads Leads, Ads and Insights, with
-Leads first in the marketing group. Systems contains Aesthetic Control, Owner tools
-and one compact Vault (Gmail, Firebase, Cloud Run, Vertex, OpenAI usage/billing,
-Gemini usage, Cloud billing, Ads, Wix and Privacy). Redundant Vault descriptors and
-headings were removed. No live page loads/displays the AI meter; its legacy module
-and server-only account ledgers/budget enforcement remain for compatibility.
+Started clean at 2cbd234, matching origin/maya-v2. Public release.json also reports
+2cbd2344f1726f3975cdaefbe0184501247b0e5d (published 2026-10-05T03:41:56.501Z).
+This request is prepared and committed locally; not pushed. Runtime v14 and gallery
+v27 are referenced across served pages; gallery modules/new status picker revalidate.
 
-Authenticated /api/admin/models adds actual configured CRM/image model, transport
-and endpoint metadata. Systems/API/Images hover/focus cards use the shared editable
-popup material and clamp to the viewport, support keyboard/touch and close outside
-or on Escape. Gemini/Vertex details expand on hover/focus; no guessed model aliases.
-Main/CRM providers are distinguished (routine GPT-6 Luna, CRM GPT-5 Nano, Gemini
-2.5 Flash Lite, OpenAI image GPT Image 2.5 Flare and Vertex image configuration).
-Configured is explicitly not a successful inference test. No models, keys, billing
-settings or production environment variables were changed.
+Table material/geometry is now the first row of the fixed formatting toolbar,
+above selection typography/background/opacity. The separate Table Edit is removed.
+Table outer/grid border widths (0–8px), colors/opacity, radius and X/Y cell padding
+are independent. Existing rim/borderColor saves remain compatible. Outbound name,
+status and other body-column backgrounds now apply; semantic status colors remain.
+Header and body column settings visibly apply and survive Save/reload. Table housing
+and formatting toolbar remain independent of Inner material. Inner usage links
+identify actual preview/Outbound/Operation Room/Pattern Operations locations.
+H2 sections and H3 Edit labels match shared typography; H0 preview stays on one line.
 
-MAYA conversation and briefing now live in Logs. Systems links cannot leak into
-Messages/Logs. Voice chooses Logs while preserving the closed-drawer rule. Pending
-owner actions open a native dashboard dialog outside the drawer; Confirm/Dismiss
-handlers/auth/review gates remain intact. Escape/close preserves pending actions
-for Review approvals in Logs. The voice dock moves lower; tab circles use shared
-glass highlights. Shared native selects and Edit/fold arrows use a centered SVG,
-including the gallery dropdown height preview. Tables stay independent of Inner.
+Outbound drawer actions share pill material. Navigation tabs/Close keep their roles.
+Owner tools is removed from live Admin, while SMS/server owner capabilities remain.
+Vault grouping is restored with <=4-word descriptions. Existing connected mailbox
+counts take precedence over OAuth setup/reconnection warnings, scoped to the owner.
+Systems/API/Images show authenticated configured models and transports; models
+load independently of mailbox lookup. Loading/error states and Submissions details
+are explicit. Configuration metadata does not claim successful inference.
 
-Changed: backend/status.html and outbound.html; admin-systems JS/CSS; owner-crm UI;
-shared runtime and served cache refs; additive server models metadata; hosting cache
-headers; generated typography usage; regression checks and design/continuity docs.
-Validation: app-regression (gallery 11 widths plus Admin 7 widths/3 short-landscape
-sizes); canon-ui 11 pages/7 widths; populated Outbound/filters; CRM UI/failure and
-intelligence; owner-crm UI/unit; Outbound/model unit; phone/messages/transfer/feedback
-fake-provider suites; container contract; syntax/diff checks.
+Both the Leads header filter and row status picker anchor to their trigger's left
+edge when space permits, clamp/flip to viewport bounds, and use shared dropdown
+material and X/Y padding. New aesthetics/ui/lead-stage-menu.js retains the native
+select and its authenticated save/rollback handler. Picker keyboard arrows,
+Enter/Space, Escape/focus return, scrolling and actual status persistence are tested.
+Padding debug remains active-field-only and preview-only.
 
-Open: no personal Chrome access, authenticated production OAuth/Save/provider call,
-Push or deployment. Fresh MAYA Chrome permission was requested and is pending.
-Gmail's existing owner-consent connection flow is linked, not newly authorized.
-Live Gemini inference and Gmail mailbox connection/delivery are not established
-by fixture tests. Exact next step: Fromsa Push in GitHub Desktop, verify Cloud Build
-and release.json; approve a new MAYA Chrome session for owner Gmail OAuth and live
-provider verification. Owner handles any missing server secrets/configuration.
+## Changed paths
 
-## Release status
+Aesthetic gallery: gallery.js/css, finishes.js, restore-controls.js,
+surface-editors.js, table-cell-editor.js, typography-usage.json and gallery HTML.
+Shared runtime: typography-controls.js, admin-systems.js/css, lead-stage-menu.js.
+Admin/Outbound: backend/status.html, outbound.js; served HTML cache version refs.
+Server validation: docs/server/design-config.mjs; hosting cache rules: firebase.json.
+Regression: component-gallery, admin-systems-ui, outbound-ui, lead-filter-ui,
+crm-failure-ui, design-config/contract and app-regression. AGENTS/design/requests/
+fixes/COMMIT-REVIEW reflect this task. No secrets or production environment changed.
 
-Local start afadb6b matched origin; this Admin follow-up is not shipped.
-Older implementation/shipment notes below are historical.
+## Validation
 
-## October 2 verified implementation and follow-up
+Passed full app-regression (including gallery eleven widths and Admin hover seven
+widths/short landscapes); Outbound populated filters, status picker saved change,
+shared padding, seven widths and keyboard/scroll/fallback; canon 11 pages/7 widths
+320–1920; CRM 10,000-contact UI, failure/account isolation and 19 intelligence
+checks; design schema/contract and container contract through full regression.
+Source syntax and git diff checks passed. All operational providers/auth are fixtures.
 
-Live Outbound workbook 1G2zfqopOyZNHf78nuEeNdLgRY7ON0JTeegkhhZ4azyg already has
-Last email, Category, Company, Full Name, Email, Job Title, Subject, Status, Reason,
-Relevance in A:J on Funnel, 9/29 Corporates, 9/23 Fashion Houses, 9/23 Ceremonial
-and Others. Native cell inspection preserved hyperlinks, formulas and formats;
-no live Sheet edits were needed. Code now reads A:J, imports Reason independently,
-and displays/filters/exports the ten source columns in that order. Sync accepts
-9/29 Corporate tabs; a renamed dated tab reuses its campaign ID/memberships/drafts
-instead of creating a duplicate. Account-scoped CAS storage remains unchanged.
+Test Node: /Users/fromsa/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.
+Loader: /private/tmp/maya-audit-loader.mjs. Both PW_CHROMIUM and CHROMIUM_PATH:
+/private/tmp/maya-audit-browsers/chromium_headless_shell-1234/chrome-headless-shell-mac-arm64/chrome-headless-shell.
+Isolated browsers use local fixtures, never personal Chrome. Temporary test runtime
+is not a deployment requirement. Logs: /private/tmp/maya-*-audit.log.
 
-Aesthetic runtime v5 is loaded by all served pages. Saved material variables now
-drive legacy surfaces and drawer frost; saved table styles also apply to other
-real tables and Outbound's semantic Full name/Status columns. Shared action buttons
-use P3 font/case settings. Preview has inner/outer Show padding debug buttons with
-light green X/Y bands, excluded from saved settings. Icon size and dropdown height
-(24–48px) persist, a native dropdown works, and 21 icon types are represented.
-Save follows the selected button finish. Popup focus no longer shifts another
-editor before its initiating click. Inactive style-reference.js, style-inventory.json
-and tests/style-inventory.py were removed; active adapters/images/role audit remain.
+## Exact next step and remaining live verification
 
-Model Snapshot contains AI meter in Systems; Outbound's meter also begins with the
-snapshot. Claude is omitted from its display, with historical billing totals
-retained. Owner chose cost/speed; existing GPT-6 Luna text and GPT Image 2.5 Flare,
-Medium default, remain. No credentials/environment/billing/model-provider changes.
+Fromsa pushes this local commit from GitHub Desktop; Cloud Build can deploy it.
+Then verify release.json matches that commit and live authenticated Save/provider
+cards/status dropdowns. User approved MAYA Chrome session access this turn, but
+Chrome tab binding was unavailable. Automatic review rejected broad Google Chrome
+app access because it could expose another profile/window. A narrower window/profile
+inventory permission request is pending; no personal Chrome page was inspected.
+Actual Gmail mailbox connection and Gemini/image inference remain unverified here.
+No OAuth grants, credentials, client messages, production saves or env changes ran.
 
-Design settings and a bounded private audit trail are written together using GCS
-generation preconditions. /api/design strips _history; /api/admin/design-history is
-Admin-only. Logs merge saved design entries with feature requests and label Saved
-separately. Successful live Save notifies that it was recorded. Earlier saves had
-no audit trail; their exact time/identity cannot be reconstructed. Local saves stay
-same-origin local. No authenticated production Save was performed this turn.
-
-Final follow-up: #adm-scroll scroll-padding-top and Lead Station scroll-margin-top
-reserve 76px for the fixed top bar. Populated filter tests navigate after resizing;
-headers and filter triggers stay clickable. No provider calls or client messages
-were sent during verification.
-
-Validation: app-regression; component-gallery (including live padding highlights,
-Save/restore and 17 temporary editor/control bounds at 11 widths); canon-ui (11
-pages, seven widths 320–1920); Outbound UI/filter/priority; CRM UI/failure/intelligence;
-30 Outbound/model unit checks; all non-browser Cloud Build gates; frontend and
-Playground hands batteries; fake phone/messages/transfer/feedback suites. An extra
-active-runtime margin audit using the public saved design and actual Google fonts
-passes 10 pages at 18 widths 320–2560 and five short/landscape sizes. Syntax and
-git diff checks pass. Logs: /private/tmp/maya-followup-<suite>.log.
-
-Exact next step: owner Push this follow-up, check its Google Cloud Build result,
-then verify public release.json and v19 gallery/v5 runtime assets. Review the live
-Aesthetic Control and Save once as Admin; verify the Saved entry in Logs. Live
-signed-in Gmail/Gemini inference/delivery remain owner verification, not proven by
-fake-provider tests or a model snapshot.
-
-## Previously verified October 1 implementation
-
-Aesthetic Control removes header Visuals/Typography links, Reset, applied-status
-copy and Editor panel controls. Glass, Panels and Tables has the requested comma.
-Save is centered. Typography's alignment choices are inside Edit: Left, Centered,
-Right and Top/Middle/Bottom. Temporary Edit controls close on outside click,
-focus leaving and Escape; section folds and States remain explicitly controlled.
-Legacy editor housing settings remain readable, without a separate control UI.
-
-Outer panels have X/Y padding. Inner panel has opacity, border, corners, X/Y
-padding and percentage width. Filter has separate material/padding/pixel width.
-A divider precedes Table. Preview matches Lead Station's Full name, Status,
-Latest Notes columns. Table material/padding, top-row type/background/opacity,
-first-column background/opacity and each column's font/case/size/weight/color/
-horizontal/vertical alignment are independently saved. Names default Cormorant;
-other data Jost. Settings apply to actual Lead Station cells keyed by data-col,
-so semantic column styles survive reorder. Status colors remain semantic.
-
-Lead Station removes Forms/Reload/Alerts/Add floating toolbar and aligns the
-section caret with its title. Category/date replace long tier/call icons: ? for
-Help me decide, SI Signature, CE Ceremonial, SU Suit. The full name cell, including
-its padding, opens the exact client's Messages thread. A name button preserves
-keyboard activation. Missing phone opens Messages with explicit feedback.
-Calls still exist inside Messages. Affiliates retains its own profile reload.
-
-Changed files: aesthetic-control.html; gallery.js/gallery.css, finishes.js,
-overlay.js and new surface-editors.js; typography-controls.js runtime v4;
-server/design-config.mjs; backend/status.html; all served runtime HTML cache refs;
-component-gallery, design-config/design-contract, outbound-ui, lead-filter-ui,
-app-regression; AGENTS, README, design, requests/fixes/handoff/commit review.
-Gallery assets v18; shared runtime v4. No served page moved or URL changed.
-
-## Validation and preview
-
-October 2 recheck: full app-regression, canon-ui, component-gallery and
-outbound-ui all passed. Canon verifies 11 rendered surfaces at seven widths;
-gallery verifies all 16 temporary editor popups/fields at eleven widths;
-populated Lead Station filters/table have seven-width clipping, pointer,
-keyboard, scroll/reorder and fallback coverage.
-Additional isolated margin audit passed all ten canon pages at 18 widths
-(320,360,375,390,420,568,640,650,700,701,768,900,1024,1100,1280,1440,1920,2560)
-and five short/landscape sizes (568x320,667x375,844x390,1024x600,1440x720).
-It keeps runtime v4 enabled, uses public saved design values and actual Google
-fonts, and checks document overflow plus open drawer bounds/content. Application
-scripts are stripped in this broad shell audit; populated interactions are
-covered separately by the suites above. Temporary audit source/log:
-/private/tmp/maya-runtime-margins.mjs and /private/tmp/maya-runtime-margins.log.
-The non-margin master-material probe in the first adapted audit observed saved
-Admin blur 22px versus frontend master 28px; it was excluded from the margin-only
-pass and did not prompt an unrelated presentation change.
-Public live screenshot: /private/tmp/maya-deployed-dropdown.png.
-All local check logs: /private/tmp/maya-release-<suite>.log.
-No application source changed during this verification.
-
-
-Component-gallery passed Save/reload, authenticated Save fixture, live inner/
-filter/table settings and actual Admin table application. All eight typography
-and eight surface Edit popups/fields checked at eleven widths (320–1920px),
-including 700/701px, maximum housing padding, collapsed Visuals and outside/Escape
-dismissal. Shared role/font/case/color/material checks continue to pass.
-Design-config and design-contract passed legacy compatibility and rejection of
-invalid geometry, backgrounds, fonts and alignments. CRM intelligence/UI/failure
-and fake phone/messages/transfer/feedback suites passed. Full app-regression and outbound-ui passed, including populated/empty tables,
-seven widths, scroll/reorder, pointer/keyboard, fallback and exact name-cell routing.
-JavaScript syntax checks and git diff --check passed.
-Screenshot /private/tmp/maya-typography-controls.png reviewed; fonts are blocked
-in browser fixtures, so live web-font rendering remains an owner review item.
-
-Preview: http://127.0.0.1:8767/aesthetics/aesthetic-control.html and
-http://127.0.0.1:8767/status.html. Existing loopback server serves current sources.
-Bundled Node: /Users/fromsa/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.
-Resolver: /private/tmp/maya-oct1-loader.mjs; Chromium:
-/private/tmp/maya-pw-browsers/chromium_headless_shell-1234/chrome-headless-shell-mac-arm64/chrome-headless-shell.
-Browser checks use isolated Chromium, fake auth/providers and local files.
-Temporary runtimes are not deployment requirements; CI installs dependencies.
-
-## Exact next step and open risks
-
-Follow the current request above. Prior release markers below are historical.
-Local restore is now supported per editor; it restores saved settings, not a
-chronological undo history. Body selections now edit complete columns; legacy row-slot saves are converted
-in the preview and persist only on owner Save. Authenticated live Save and real microphone
-wake behavior still need owner verification after the owner pushes this change.
-No live design save or client/provider operation was performed.
-
-Prior SMS access from 259c824 still needs live owner verification: MAYA HELP,
-INBOX, THREAD Nick, MORE pages, ACTIONS, normal memory recall and separately
-authorized client REPLY/SEND. Explicit commands bypass AI; normal conversation
-uses AI availability/$1 CRM text cap. Lost old records cannot be recovered.
-Gmail mailbox readiness, real Gemini inference, scheduler/booking/signup alerts,
-live audio/SMS/carrier receipt and owner transfer remain owner verification items.
+Prior live owner verification remains: MAYA HELP/INBOX/THREAD Nick/MORE/ACTIONS,
+normal memory recall and separately authorized client REPLY/SEND; scheduler/signup/
+booking alerts, microphone wake/audio, SMS delivery/carrier receipt and owner transfer.
+Read docs/OUTBOUND-SETUP.md for owner-only connection/setup steps. No automatic
+sending was introduced; account/project boundaries remain sealed.
 
 ## Standing constraints
 

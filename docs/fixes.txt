@@ -553,3 +553,5 @@ The frontend rule is present and hides details until hover. Corrected the
 selector and added a regression assertion locally; the corrected checker needs
 the next authorized push before it appears live. No actual wall behavior was
 changed.
+
+October 5, 2026 — Local fixes for split Table controls, ineffective Outbound column backgrounds, native Leads picker positioning, inconsistent drawer pill classes and Gmail setup warning precedence. Shared runtime v14/gallery v27; account/auth protections retained. Live provider/mailbox verification blocked by Chrome tool availability; no credentials or production variables changed.

@@ -30,7 +30,7 @@ export async function auditLeadFilter(page){
     assert.ok(data.portal && data.top,'Filter escapes sticky/scroll clipping');
     assert.ok(data.x>=8 && data.right<=data.width-7 && data.y>=0 && data.bottom<=data.height-7,JSON.stringify(data));
     assert.ok(data.points.every(Boolean),'All options receive pointer hits, above table cells');
-    assert.equal(data.background,'rgba(3, 15, 29, 0.88)','Glass has a readable backing');
+    assert.equal(data.background,'rgb(0, 0, 0)','Functional filters follow the editable dropdown backing');
     assert.match(data.blur,/blur\(22px\)/);
     assert.equal(data.fontSize,'11px','Filter retains the compact table scale');
   };
@@ -43,6 +43,7 @@ export async function auditLeadFilter(page){
   for(const width of [320,390,650,768,1024,1440,1920]){
     await page.setViewportSize({width,height:844});
     await open();await bounds();
+    assert.ok(await menu.evaluate(el=>{const a=document.querySelector('.lead-filter>summary').getBoundingClientRect(),r=el.getBoundingClientRect();return a.left+r.width>innerWidth-8||Math.abs(a.left-r.left)<1;}),'Lead filter starts at its trigger when there is room');
     assert.equal(await gear.evaluate(el=>getComputedStyle(el,'::after').content),'none','No inherited section caret');
     await page.screenshot({path:join(tmpdir(),'maya-lead-filter-'+width+'.png')});
     await page.keyboard.press('Escape');await menu.waitFor({state:'hidden'});

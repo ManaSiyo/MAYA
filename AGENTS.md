@@ -161,7 +161,7 @@ only same-origin local pages. Old maya-buttons.css/maya-canon.css are adapters,
 not independent design authorities. Typography offers one preview per role, with validated Jost/Cormorant and
 Normal/ALL CAPS choices. Visuals groups button/icon glass before panel/table
 controls. Preserve old saved schemas and semantic status colors when applying
-shared text settings. Served pages load typography runtime v6.
+shared text settings. Served pages load typography runtime v14.
 Aesthetic Control opens within Admin through aesthetics/ui/admin-design.js; same-origin/source-checked close messages return via its logo. All Edit menus use the shared numeric input/select grid; popup padding has X/Y axes and legacy single-padding reads remain compatible. The fixed table formatting toolbar follows shared inner-panel material. Gallery Filter previews are retired; functional data filters remain. The saved editor material controls actual popups; formatting offers 200–500 weights and italic. Padding debug highlights exist only while a padding field is active. Restore uses the shared Refresh SVG. Run tests/component-gallery.mjs. Table preview cells use a fixed formatting toolbar; body selections edit complete semantic columns. Legacy row styles normalize to column settings without writing on load. The review section itself is the outer panel; never add a wrapper around its inner-panel pair. Every Edit restore returns to its last successful Save. Padding highlights are automatic and preview-only. Role counts are authored-template counts with linked pages and expandable source locations; regenerate with tests/typography-role-usage.py. Design saves atomically include a private audit trail;
 /api/design must strip _history and /api/admin/design-history must stay Admin-gated.
 Padding debug highlights are preview-only, never saved.
@@ -191,7 +191,7 @@ Standalone Marketing was retired September 29. `/marketing.html` and
 and server endpoints intact.
 
 Aesthetic Control live surface editors: aesthetics/aesthetic-control/surface-editors.js.
-Runtime v6 saves independent inner/filter geometry and three Lead Station column
+Runtime v14 saves independent inner/filter geometry and three Lead Station column
 styles, top-row and first-column materials via validated optional design keys.
 Keep preview/live table data-col keys in sync so drag reordering preserves column
 settings. Run component-gallery, design-config/design-contract and outbound-ui
@@ -207,3 +207,16 @@ plus the existing communications and both frontend/Playground hands batteries.
 Admin Systems changes run tests/admin-systems-ui.mjs (also in app-regression).
 Provider hover cards expose authenticated configuration, not inference verification.
 Owner approvals remain gated in a dashboard dialog; conversation stays inside Logs.
+
+October 5 audit: Table geometry lives in the fixed formatting toolbar above the
+selection formatting row. Legacy rim/borderColor remain outer-border opacity/color;
+optional outerWidth, innerWidth, innerBorderColor and innerRim validate bounded
+independent outlines/grid lines. Grid edges do not double the outside outline.
+Functional Leads status choices use aesthetics/ui/lead-stage-menu.js with the
+shared Edit dropdown material/X/Y padding, trigger anchoring, top layer and keyboard
+navigation. The native select remains the authenticated save source. Systems no
+longer loads Owner tools; underlying SMS access stays intact. Provider hover cards
+load authenticated models independently of mailbox status and show explicit errors.
+Vault restores compact grouping and descriptions of at most four words. Run
+component-gallery, admin-systems-ui, outbound-ui/lead-filter-ui, design-config,
+design-contract, CRM suites and app-regression for these changes.

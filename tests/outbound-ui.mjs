@@ -29,6 +29,7 @@ for(const width of [320,390,650,768,1024,1440,1920]){
  assert.ok(bounds.fits,'Outbound header at '+width);assert.equal(bounds.overflow,false,'Outbound document overflow at '+width);
  await page.locator('#menu-toggle').click();await page.locator('#drawer-help-tab').click();assert.ok(await page.locator('#drawer-help').isVisible());
  await page.locator('#drawer-workspace-tab').click();assert.ok(await page.locator('#sync-drawer').isVisible());
+ assert.ok(await page.locator('#outbound-drawer button:not([role=tab]):not(#close-drawer)').evaluateAll(es=>es.every(e=>getComputedStyle(e).borderRadius==='100px'&&getComputedStyle(e).borderTopStyle==='solid')),'Drawer actions all follow the shared pill');
  const drawer=await page.locator('#outbound-drawer').boundingBox();assert.ok(drawer.x>=0&&drawer.x+drawer.width<=width+1);
  await page.keyboard.press('Escape');assert.ok(await page.locator('#menu-toggle').evaluate(e=>e===document.activeElement));
 }
@@ -78,7 +79,11 @@ assert.equal(statusUpdate.stage,'contacted');assert.equal(await page.locator('.l
 assert.equal(await page.locator('.status-text').textContent(),'Contacted','Saved status survives repaint');
 await page.locator('.lead-stage').focus();
 assert.notEqual(await page.locator('.lead-status').evaluate(e=>getComputedStyle(e).outlineStyle),'none','Native status control retains visible keyboard focus');
+await page.evaluate(()=>{window.fixtureLoadMkt=loadMkt;loadMkt=async()=>paintLeads({connected:true,list:_leadList});});
+await page.locator('.lead-stage').press('ArrowDown');await page.locator('#lead-stage-options').getByRole('option',{name:'Booked',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.lead-stage').value==='booked'&&!document.querySelector('.lead-stage').disabled);assert.equal(statusUpdate.stage,'booked');assert.equal(await page.locator('.status-text').textContent(),'Booked');await page.evaluate(()=>{loadMkt=window.fixtureLoadMkt;delete window.fixtureLoadMkt;});
 await page.unroute('**/api/admin/lead-update');
+for(const width of [320,390,650,768,1024,1440,1920]){await page.setViewportSize({width,height:844});const select=page.locator('.lead-stage').first();await select.scrollIntoViewIfNeeded();await select.focus();await select.press('ArrowDown');const menu=page.locator('#lead-stage-options');assert.ok(await menu.isVisible(),JSON.stringify(await select.evaluate(e=>({width:innerWidth,disabled:e.disabled,rect:e.getBoundingClientRect().toJSON(),panel:e.closest('.panel').getBoundingClientRect().toJSON()}))));const b=await menu.boundingBox();assert.ok(b.x>=8&&b.x+b.width<=width-7&&b.y>=0&&b.y+b.height<=837,'Status picker fits '+width+' '+JSON.stringify(b));assert.equal(await menu.evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(0, 0, 0)');await page.keyboard.press('ArrowDown');assert.equal(await menu.locator(':focus').count(),1);await page.keyboard.press('Escape');assert.ok(await menu.isHidden());assert.ok(await select.evaluate(e=>e===document.activeElement));}
+await page.evaluate(()=>MayaTypographyControls.previewEditor({...MayaTypographyControls.defaults.editor,paddingX:21,paddingY:13}));await page.locator('.lead-stage').first().press('ArrowDown');assert.equal(await page.locator('#lead-stage-options').evaluate(e=>getComputedStyle(e).padding),'13px 21px');await page.keyboard.press('Escape');await page.evaluate(()=>MayaTypographyControls.previewEditor(MayaTypographyControls.defaults.editor));
 await auditLeadFilter(page);
 await page.evaluate(()=>paintLeads({connected:true,list:[{id:'fixture',name:'Example Person',phone:'+15555550100',tier:'Signature',wrote:'A custom suit for a ceremony',createdAt:'2026-09-23',stage:'new'}]}));
 await page.evaluate(()=>admTab('messages'));assert.ok(await page.locator('#drawer-systems').isHidden(),'Systems tools stay out of Messages');

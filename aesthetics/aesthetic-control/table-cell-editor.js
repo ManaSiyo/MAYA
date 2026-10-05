@@ -1,12 +1,18 @@
 import {IconButton} from '/aesthetics/ui/components/components.js';
+import {highlightPadding,addRestore} from './restore-controls.js';
 import {formatTools} from './format-tools.js';
-import {fields,typeFields,backgrounds} from './surface-editors.js';
+import {fields,typeFields,backgrounds,tableBorders} from './surface-editors.js';
 // Preview cells are presentation templates, never editable client records.
-export function setupTableCellEditor({guide,controls,settings,render}){
+export function setupTableCellEditor({guide,settings,render}){
  const table=guide.querySelector('table'),baseline=structuredClone(settings),bar=document.createElement('div');bar.id='cell-format-toolbar';bar.setAttribute('role','group');bar.setAttribute('aria-label','Selected cell formatting');
  const heading=document.createElement('div');heading.className='cell-selection-heading';const title=document.createElement('span');title.id='cell-selection';title.setAttribute('role','status');
  const restore=IconButton({label:'Restore saved selected cells',icon:'↻'});restore.classList.add('restore-editor');heading.append(title,restore);
- const form=document.createElement('div');form.className='cell-format-fields';form.tabIndex=0;form.setAttribute('role','group');form.setAttribute('aria-label','Cell format options');bar.append(heading,form);guide.before(bar);
+ const form=document.createElement('div');form.className='cell-format-fields';form.tabIndex=0;form.setAttribute('role','group');form.setAttribute('aria-label','Cell format options');const geometry=document.createElement('div');geometry.className='cell-format-fields table-material-fields';geometry.dataset.editor='table';
+ const specs=[['background','Table background',backgrounds],['fill','Table opacity',{max:100}],['outerWidth','Outer border px',{max:8}],['borderColor','Outer border color',tableBorders],['rim','Outer border opacity',{max:100}],['innerWidth','Inner border px',{max:8}],['innerBorderColor','Inner border color',tableBorders],['innerRim','Inner border opacity',{max:100}],['radius','Corners',{max:24}],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]];
+ fields(geometry,settings,specs,render);
+ const materialRestore=document.createElement('details');materialRestore.hidden=true;geometry.append(materialRestore);addRestore(materialRestore,{label:'table border and padding',read:()=>Object.fromEntries(specs.map(([key])=>[key,settings[key]])),write:v=>{Object.assign(settings,v);for(const input of geometry.querySelectorAll('[data-field]'))input.value=settings[input.dataset.field];render();}});materialRestore.remove();
+ highlightPadding(geometry,()=>[...table.querySelectorAll('td,th')],()=>({x:settings.paddingX,y:settings.paddingY}));
+ bar.append(geometry,heading,form);guide.before(bar);
  let selected,kind='corner',column=0,values={};
  const material=[['background','Background',backgrounds],['opacity','Opacity',{max:100}]];
  const columnStyle=()=>({background:settings.background,opacity:settings.fill,...settings.columns[column],...(column===0?settings.firstColumn:{})});
@@ -14,6 +20,7 @@ export function setupTableCellEditor({guide,controls,settings,render}){
   selected=cell;column=cell.cellIndex;
   kind=cell.tagName==='TH'?(cell.dataset.col==='name'?'corner':'header'):'column';
   values=kind==='header'||kind==='corner'?{...settings.header}:columnStyle();
+  form.querySelector('[data-field="color"]')?.setAttribute('title',kind==='column'&&column===1?'Status pills retain their status colors.':'Selected text color');
   title.textContent=kind==='corner'?'Top row + first column':kind==='header'?'Top row':['First column','Second column','Third column'][column];
   for(const e of table.querySelectorAll('td,th')){const on=kind==='corner'?e.tagName==='TH'||e.dataset.col==='name':kind==='header'?e.tagName==='TH':e.tagName==='TD'&&e.cellIndex===column;e.classList.toggle('cell-selected',on);e.setAttribute('aria-selected',String(on));}
   for(const input of form.querySelectorAll('[data-field]'))input.value=values[input.dataset.field];

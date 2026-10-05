@@ -18,3 +18,6 @@
 #maya-confirmation .maya-action-controls{display:flex;flex-wrap:wrap;gap:8px}
 html[data-maya-surface="dense"] details.fold>summary{display:flex;align-items:center;justify-content:center;gap:8px}
 html[data-maya-surface="dense"] details.fold>summary::after{position:static;display:inline-flex;align-self:center;margin:0;transform:none}
+
+#drawer-systems a small{display:block;font-size:10px;color:var(--dim);margin-top:3px}
+.lead-stage-menu{position:fixed;inset:auto;margin:0;z-index:10021;box-sizing:border-box;width:min(260px,calc(100vw - 16px));overflow:auto;color:#fff}.lead-stage-menu[hidden]{display:none!important}.lead-stage-menu::backdrop{background:transparent}.lead-stage-menu button{font:inherit;display:block;width:100%;text-align:left;border:0;border-radius:6px;padding:6px 10px;background:transparent;color:inherit;cursor:pointer}.lead-stage-menu button:is(:hover,:focus-visible,[aria-selected=true]){background:#adcdf822;outline:1px solid #adcdf855}

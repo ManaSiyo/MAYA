@@ -2721,3 +2721,5 @@ SEPTEMBER 30, 2026: pre-new-chat live and repository verification
 [ ] Latest push 0d0ec66 is not deployed. After Fromsa's next explicit push,
     confirm Cloud Build success and live /release.json commit, then check owner
     Save, Gmail, Twilio alerts, booking approval and Scheduler in production.
+
+October 5, 2026 — Audit controls: combine table geometry/formatting; independent inner/outer border colors/thickness; active header/column backgrounds/opacity; shared Outbound pills; dropdown padding/anchoring; Inner usage links; grouped Vault <=4-word descriptions; retire Owner tools UI; truthful account Gmail/provider hover status. Prepared locally after regression; owner Push required.

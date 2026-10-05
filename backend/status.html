@@ -857,8 +857,8 @@ try {
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=13"></script>
-<link rel="stylesheet" href="/aesthetics/ui/admin-systems.css?v=1">
+<script src="/aesthetics/ui/typography-controls.js?v=14"></script>
+<link rel="stylesheet" href="/aesthetics/ui/admin-systems.css?v=2">
 </head>
 <body class="systems-map">
 
@@ -983,20 +983,22 @@ if (IS_AFFILIATES) {
   </div>
   <div id="drawer-systems">
   <a class="maya-glass-button design-quicklink" href="/aesthetics/aesthetic-control.html">Aesthetic Control</a>
-  <maya-owner-crm></maya-owner-crm>
   <h3>Vault</h3>
-  <a href="/outbound.html#gmail">Gmail</a>
-  <a href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank" rel="noopener">Firebase</a>
-  <a href="https://console.cloud.google.com/run/detail/us-west1/maya-api/metrics?project=pro-maya" target="_blank" rel="noopener">Cloud Run</a>
-  <a href="https://console.cloud.google.com/vertex-ai?project=pro-maya" target="_blank" rel="noopener">Vertex AI</a>
-  <a href="https://platform.openai.com/settings/organization/usage" target="_blank" rel="noopener">OpenAI usage</a>
-  <a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener">OpenAI billing</a>
-  <a href="https://aistudio.google.com/usage" target="_blank" rel="noopener">Gemini usage</a>
-  <a href="https://console.cloud.google.com/billing?project=pro-maya" target="_blank" rel="noopener">Google Cloud billing</a>
-  <a href="https://ads.google.com/aw/overview" target="_blank" rel="noopener">Google Ads Manager</a>
-  <a href="https://adsmanager.facebook.com/adsmanager" target="_blank" rel="noopener">Meta Ads Manager</a>
-  <a href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/home" target="_blank" rel="noopener">Wix</a>
-  <a href="/privacy.html">Privacy policy</a>
+  <a href="/outbound.html#gmail">Gmail<small>Account mailboxes</small></a>
+  <a href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank" rel="noopener">Firebase<small>Data and hosting</small></a>
+  <h3>Behind the scenes</h3>
+  <a href="https://console.cloud.google.com/run/detail/us-west1/maya-api/metrics?project=pro-maya" target="_blank" rel="noopener">Cloud Run<small>API logs and revisions</small></a>
+  <a href="https://console.cloud.google.com/vertex-ai?project=pro-maya" target="_blank" rel="noopener">Vertex AI<small>Google model console</small></a>
+  <a href="https://platform.openai.com/settings/organization/usage" target="_blank" rel="noopener">OpenAI usage<small>Tokens and usage</small></a>
+  <a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener">OpenAI billing<small>Invoices and credits</small></a>
+  <a href="https://aistudio.google.com/usage" target="_blank" rel="noopener">Gemini usage<small>Google model usage</small></a>
+  <a href="https://console.cloud.google.com/billing?project=pro-maya" target="_blank" rel="noopener">Google Cloud billing<small>Cloud costs</small></a>
+  <h3>Outside tools</h3>
+  <a href="https://ads.google.com/aw/overview" target="_blank" rel="noopener">Google Ads Manager<small>Search campaigns</small></a>
+  <a href="https://adsmanager.facebook.com/adsmanager" target="_blank" rel="noopener">Meta Ads Manager<small>Social campaigns</small></a>
+  <a href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/home" target="_blank" rel="noopener">Wix<small>Website and forms</small></a>
+  <h3>Privacy</h3>
+  <a href="/privacy.html">Privacy policy<small>Data privacy terms</small></a>
   </div>
 
   <!-- v13.67: Maya's voice, pinned at the floor. -->
@@ -2927,7 +2929,7 @@ function positionLeadFilter(){
   const below=height-anchor.bottom-gap-edge, above=anchor.top-gap-edge;
   const up=below<size.height && above>below;
   menu.style.maxHeight=Math.max(0,up?above:below)+'px';
-  menu.style.left=Math.max(edge,Math.min(anchor.right-size.width,width-size.width-edge))+'px';
+  menu.style.left=Math.max(edge,Math.min(anchor.left,width-size.width-edge))+'px';
   menu.style.top=Math.max(edge,up?anchor.top-gap-menu.getBoundingClientRect().height:anchor.bottom+gap)+'px';
   // A frozen column or another overlay can cover the anchor during horizontal scroll.
   if(!owner.contains(document.elementFromPoint(anchor.x+anchor.width/2,anchor.y+anchor.height/2)))closeLeadFilter();
@@ -3285,7 +3287,7 @@ function admTab(t) {
   document.getElementById('adm-tab-logs').classList.toggle('on', t === 'logs');
   document.getElementById('adm-tab-logs').setAttribute('aria-selected', String(t === 'logs'));
   if (t === 'logs') loadMayaLogs();
-  if (t === 'systems') { loadModelSnapshot(); document.querySelector('maya-owner-crm')?.load?.(); }
+  if (t === 'systems') { loadModelSnapshot(); }
   const d = document.getElementById('drawer');
   d.classList.toggle('msgs', t !== 'systems');
   document.getElementById('adm-tab-systems').classList.toggle('on', t === 'systems');
@@ -3299,11 +3301,20 @@ function admTab(t) {
 async function loadModelSnapshot(){
  if (!_idTok || _modelsLoading || (_modelsAuth === _idTok && Date.now() - _modelsChecked < 60000)) return;
  _modelsLoading = true;
- const host=document.getElementById('model-snapshot');host.textContent='Loading model configuration...';
+ window.dispatchEvent(new CustomEvent('maya-model-loading'));
  const auth=_idTok;
- try{const r=await fetch('/api/admin/models',{headers:{Authorization:'Bearer '+auth}});const j=await r.json();if(auth!==_idTok)return;if(!r.ok)throw Error('Model snapshot unavailable.');_modelsAuth=auth;_modelsChecked=Date.now();window.MAYA_MODEL_SNAPSHOT=j;window.dispatchEvent(new CustomEvent('maya-model-snapshot',{detail:j}));}
+ try{
+  const headers={Authorization:'Bearer '+auth};
+  const ownerRequest=fetch('/api/admin/owner-crm',{headers,cache:'no-store',signal:AbortSignal.timeout(10000)}).then(async r=>r.ok?await r.json():null).catch(()=>null);
+  const r=await fetch('/api/admin/models',{headers,cache:'no-store',signal:AbortSignal.timeout(10000)}),j=await r.json();
+  if(auth!==_idTok)return;if(!r.ok)throw Error('Model snapshot unavailable.');
+  _modelsAuth=auth;_modelsChecked=Date.now();window.MAYA_MODEL_SNAPSHOT=j;window.dispatchEvent(new CustomEvent('maya-model-snapshot',{detail:j}));
+  const owner=await ownerRequest;if(auth!==_idTok)return;
+  j.integrations=[{provider:'Gmail',status:owner?owner.mailboxes?.length?owner.mailboxes.length+' mailbox'+(owner.mailboxes.length===1?'':'es')+' connected to this account':owner.gmailReady?'No mailbox connected to this account':'OAuth setup incomplete':'Mailbox status unavailable',endpoint:'/outbound.html#gmail'}];
+  window.dispatchEvent(new CustomEvent('maya-model-snapshot',{detail:j}));
+ }
 
- catch(e){if(auth===_idTok)host.textContent=e.message;}
+ catch(e){if(auth===_idTok)window.dispatchEvent(new CustomEvent('maya-model-error',{detail:e.message}));}
  finally{_modelsLoading=false;}
 }
 async function loadMayaLogs() {
@@ -3963,5 +3974,5 @@ setInterval(()=>{ if(_idTok && document.visibilityState==='visible') loadMkt(); 
   setTimeout(checkAdminUpdate, 8000);   // catch a tab opened already-stale
 })();
 </script>
-<dialog class="maya-surface" id="maya-confirmation" aria-labelledby="maya-confirmation-title"><div class="confirmation-head"><h2 id="maya-confirmation-title">Maya approval</h2><button type="button" aria-label="Close approvals" onclick="this.closest('dialog').close()">×</button></div><div id="maya-action-queue" aria-label="Actions waiting for confirmation"></div></dialog><script type="module" src="/aesthetics/ui/admin-systems.js?v=1"></script><script type="module" src="/aesthetics/ui/owner-crm.js?v=3"></script><script type="module" src="/aesthetics/ui/admin-design.js?v=1"></script></body>
+<dialog class="maya-surface" id="maya-confirmation" aria-labelledby="maya-confirmation-title"><div class="confirmation-head"><h2 id="maya-confirmation-title">Maya approval</h2><button type="button" aria-label="Close approvals" onclick="this.closest('dialog').close()">×</button></div><div id="maya-action-queue" aria-label="Actions waiting for confirmation"></div></dialog><script type="module" src="/aesthetics/ui/admin-systems.js?v=2"></script><script type="module" src="/aesthetics/ui/lead-stage-menu.js?v=1"></script><script type="module" src="/aesthetics/ui/admin-design.js?v=1"></script></body>
 </html>

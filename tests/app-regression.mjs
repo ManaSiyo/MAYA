@@ -89,7 +89,7 @@ const PAGE_ROOT = served ? 'http://127.0.0.1:8899/' : pathToFileURL(ROOT + '/').
 let failed = 0;
 assertCanon(); // Backend follows frontend chrome; consumer styling stays isolated from V4.
 assertContainer(); // Missing runtime files must fail before deploying Cloud Run.
-if(!CANON_SOURCE.includes('#drawer.msgs > maya-owner-crm') || !readFileSync(join(ROOT,'aesthetics/ui/owner-crm.js'),'utf8').includes('/outbound.html#gmail'))throw Error('Owner setup must stay in Systems and link directly to Gmail');
+if(MAP_SOURCE.includes('<maya-owner-crm>'))throw Error('Retired Owner tools must not appear in Systems');
 const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name); if (!cond) failed++; };
 
 // September 28: populated status popovers must escape the table's clipping layer.
@@ -2662,8 +2662,8 @@ const liveVerifier=readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8');
 ok('Live verifier checks moved pages and Outbound module type',liveVerifier.includes("localVersion('frontend/index.html')") && liveVerifier.includes('outboundScript.contentType'));
 ok('CRM status column hides contact numbers and opens the thread by name',MAP_SOURCE.includes("['name', 'stage', 'note']") && MAP_SOURCE.includes('function leadStage(x)') && MAP_SOURCE.includes('function leadSummary(x)') && MAP_SOURCE.includes('function msgInvoice()'));
 ok('Model snapshot uses authenticated server config',MAP_SOURCE.includes('/api/admin/models') && SERVER_SOURCE.includes("app.get('/api/admin/models', requireAuthHeader"));
-ok('Owner CRM uses an authenticated setup and confirmation-only SMS lead writes', MAP_SOURCE.includes('<maya-owner-crm>') && SERVER_SOURCE.includes('ownerCommand: input => ownerCRM.handle(input)') && readFileSync(join(ROOT,'docs/server/owner-crm.mjs'),'utf8').includes('pending.code.toLowerCase()'));
-ok('Opening Systems refreshes owner connection state',MAP_SOURCE.includes("document.querySelector('maya-owner-crm')?.load?.()"));
+ok('Owner CRM uses an authenticated setup and confirmation-only SMS lead writes', !MAP_SOURCE.includes('<maya-owner-crm>') && SERVER_SOURCE.includes('ownerCommand: input => ownerCRM.handle(input)') && readFileSync(join(ROOT,'docs/server/owner-crm.mjs'),'utf8').includes('pending.code.toLowerCase()'));
+ok('Dead Owner tools removed; Gmail connection remains account-scoped',!MAP_SOURCE.includes('<maya-owner-crm>')&&MAP_SOURCE.includes("fetch('/api/admin/owner-crm'"));
 ok('A new Wix Call back lead can alert the owner through the scheduled check and Admin',
   SERVER_SOURCE.includes("fetchLeads:()=>wixLeads({fresh:true,summaries:false})") &&
   SERVER_SOURCE.includes("onScheduledSync:()=>_leadAlerts?.run()") &&
@@ -2712,7 +2712,7 @@ const surfaceEditors=readFileSync(join(ROOT,'aesthetics/aesthetic-control/surfac
 ok('Edit dropdowns dismiss on outside click, focus leaving and Escape',surfaceEditors.includes("document.addEventListener('click'")&&surfaceEditors.includes("document.addEventListener('focusin'")&&surfaceEditors.includes("e.key!=='Escape'"));
 ok('Aesthetic Control removes navigation, Reset and editor housing controls and centers Save',!readFileSync(join(ROOT,'aesthetics/aesthetic-control.html'),'utf8').includes('id="reset"')&&!compactGallery.includes('housing-editor')&&galleryCss.includes('.save-bar{justify-content:center}'));
 ok('Inner panel keeps live geometry and inactive Filter editor is removed',surfaceEditors.includes("'Inner panel','inner'")&&!surfaceEditors.includes("'Filter','filter'")&&compactGallery.includes('...surfacesEditor.settings()'));
-ok('Table has its own divider, header/first-column material and per-column type/alignment',surfaceEditors.includes('setupTableCellEditor')&&surfaceEditors.includes("'Table','table'")&&surfaceEditors.includes("['vertical','Vertical'"));
+ok('Table has its own divider, header/first-column material and per-column type/alignment',surfaceEditors.includes('setupTableCellEditor')&&surfaceEditors.includes("title.textContent='Table'")&&surfaceEditors.includes("['vertical','Vertical'"));
 ok('Lead Station removes floating tools and opens conversation from full name cells',!MAP_SOURCE.includes('id="leads-bar"')&&MAP_SOURCE.includes("k==='name'?' onclick=\"leadOpenThread("));
 ok('Lead categories replace phone/tier pills with four compact badges',MAP_SOURCE.includes("code:'SI'")&&MAP_SOURCE.includes("code:'CE'")&&MAP_SOURCE.includes("code:'SU'")&&MAP_SOURCE.includes("code:'?'"));
 const ownerDesignRuntime=readFileSync(join(ROOT,'aesthetics/ui/typography-controls.js'),'utf8');
@@ -2729,7 +2729,7 @@ ok('Renamed source tabs preserve campaign identities and draft membership',readF
 // October 2: editor anchors, panel content padding and wake recovery.
 const surfaceEditorSource=readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8');
 const galleryScript=readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.js'),'utf8');
-ok('Surface editors anchor to their own trigger and keep black available',surfaceEditorSource.includes("trigger.getBoundingClientRect()")&&surfaceEditorSource.includes("['black','gray'")&&surfaceEditorSource.includes("['background','Background',backgrounds]"));
+ok('Surface editors anchor to their own trigger and keep black available',surfaceEditorSource.includes("trigger.getBoundingClientRect()")&&surfaceEditorSource.includes("['black','gray'")&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/table-cell-editor.js'),'utf8').includes("['background','Table background',backgrounds]"));
 ok('Inner panel padding surrounds heading and Contacts together',galleryScript.includes('inner.append(h,metric);surfaces.append(inner)'));
 ok('Admin failed voice starts resume the wake listener',MAP_SOURCE.includes('if(!_voice&&_wakeWantOn)_wakeSchedule(800)')&&MAP_SOURCE.includes('rec.onstart=')&&MAP_SOURCE.includes('wake listener did not start; retrying'));
 
@@ -2744,7 +2744,7 @@ ok('Body selections style whole columns and typography reveals authored location
 
 ok('Header formatting wins over the general text role',ownerDesignRuntime.includes("const headerScope=")&&ownerDesignRuntime.includes('font-style:${s.style'));
 ok('Shared typography supports bounded 200–500 weights and italic',ownerDesignConfig.includes('v.weight<200||v.weight>500')&&galleryScript.includes('<option>500</option>')&&galleryScript.includes('formatTools'));
-ok('Restore uses the shared Refresh SVG and padding only highlights its active field',readFileSync(join(ROOT,'aesthetics/aesthetic-control/restore-controls.js'),'utf8').includes("IconButton({label:'Restore saved '")&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/restore-controls.js'),'utf8').includes('edit.open&&active'));
+ok('Restore uses the shared Refresh SVG and padding only highlights its active field',readFileSync(join(ROOT,'aesthetics/aesthetic-control/restore-controls.js'),'utf8').includes("IconButton({label:'Restore saved '")&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/restore-controls.js'),'utf8').includes("edit.tagName!=='DETAILS'||edit.open"));
 ok('Dropdown material has a saved live editor with border colors',galleryScript.includes("popupEdit.className='type-editor popup-editor'")&&galleryScript.includes("['borderColor','Border color',borders]")&&ownerDesignRuntime.includes('previewEditor'));
 ok('Aesthetic Control opens inside Admin and its logo returns to Admin',!MAP_SOURCE.includes('aesthetic-control.html" target="_blank"')&&readFileSync(join(ROOT,'aesthetics/ui/admin-design.js'),'utf8').includes('dialog.showModal()')&&galleryScript.includes('maya-design-close'));
 
@@ -2753,8 +2753,8 @@ ok('Aesthetic Control opens inside Admin and its logo returns to Admin',!MAP_SOU
 // October 2: one numeric editor convention and shared table settings panel.
 ok('All surface edits use numeric fields and split padding axes',!readFileSync(join(ROOT,'aesthetics/aesthetic-control/overlay.js'),'utf8').includes("input.type='range'")&&!readFileSync(join(ROOT,'aesthetics/aesthetic-control/finishes.js'),'utf8').includes("input.type='range'")&&galleryScript.includes("['paddingX','Padding X'")&&galleryScript.includes("['paddingY','Padding Y'"));
 ok('Tables and their formatting toolbar exclude Inner material',!ownerDesignRuntime.includes('#panels .inner-panel,#cell-format-toolbar')&&ownerDesignRuntime.includes("const tableHousing=")&&ownerDesignRuntime.includes('.preview-section,#cell-format-toolbar'));
-ok('Shared borders include gray while tables have separate borders and corners',readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes("export const borders=[...tableBorders,['gray','Gray']]")&&ownerDesignConfig.includes('t.radius!==undefined')&&ownerDesignRuntime.includes('defaults.table={radius:12'));
-ok('Gallery uses H2 section titles, H3 subsections, and removes the Filter preview',galleryScript.includes("h.className='gallery-section-title'")&&galleryScript.includes("h.className='gallery-subsection-title'")&&!galleryScript.includes("label:'Filter'"));
+ok('Shared borders include gray while tables have separate borders and corners',readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes("export const borders=[...tableBorders,['gray','Gray']]")&&ownerDesignConfig.includes('t.radius!==undefined')&&ownerDesignRuntime.includes('defaults.table={outerWidth:1'));
+ok('Gallery uses H2 section titles, H3 subsections, and removes the Filter preview',galleryScript.includes("h.className='gallery-section-title'")&&galleryScript.includes('class="gallery-subsection-title">Edit dropdown')&&!galleryScript.includes("label:'Filter'"));
 ok('Save has no rim/shadow and the logo/title align left',galleryCss.includes('html body #save{border:0!important;box-shadow:none!important}')&&galleryCss.includes('grid-template-columns:40px minmax(0,1fr)'));
 
 // Icon Save, independent sign-in role and immediate cross-page presentation updates.
@@ -2762,5 +2762,9 @@ ok('Aesthetic Save is icon-only',readFileSync(join(ROOT,'aesthetics/aesthetic-co
 ok('H0 is scoped to main sign-in',INDEX_SOURCE.includes('signin-wordmark maya-signin-h0')&&!PLAYGROUND_SOURCE.includes('maya-signin-h0'));
 ok('Saved aesthetics propagate without refreshing',readFileSync(join(ROOT,'aesthetics/ui/typography-controls.js'),'utf8').includes("window.addEventListener('storage'")&&readFileSync(join(ROOT,'aesthetics/ui/typography-controls.js'),'utf8').includes("window.addEventListener('focus',revalidate)"));
 
+
+ok('Table formatting includes independently saved inner and outer borders',cellEditorSource.includes("['outerWidth','Outer border px'")&&cellEditorSource.includes("['innerWidth','Inner border px'"));
+
+ok('Lead status picker shares dropdown material and preserves native save',MAP_SOURCE.includes('lead-stage-menu.js')&&ownerDesignRuntime.includes('.maya-filter-popover,.lead-stage-menu'));
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

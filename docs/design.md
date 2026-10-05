@@ -58,7 +58,7 @@ and long content must remain accessible at 320–1920px widths.
 
 ## Owner review controls
 
-Glass, Panels and Tables and Typography headings use H2; Glass Section, Panels and Table use H3. The first dropdown is Glass, Panels and Tables. Glass Section groups presets,
+Glass, Panels and Tables, Typography, Glass Section, Panels and Table headings use H2; Edit glass and Edit dropdown use H3. The first dropdown is Glass, Panels and Tables. Glass Section groups presets,
 numeric material controls, X/Y padding, icons, five pill colors and button States.
 A divider separates Panels, another separates Table. Panels have independent
 outer padding/material/corners; Inner panel has opacity, border, corners, X/Y padding
@@ -69,8 +69,7 @@ heading plus Contacts; outer padding surrounds the inner panels. There is no wra
 highlights its actual padding; moving to another field or closing removes the green band.
 No debug toggle or preview wrapper adds another material layer.
 
-Table previews Full name, Status and Latest Notes. Keep one Table Edit for the
-whole table's background, opacity, border, black/white border color, corners (0–24px) and X/Y cell padding. Clicking a cell selects
+Table previews Full name, Status and Latest Notes. The fixed toolbar combines table-wide material/geometry with selection formatting. Its first row edits table background/opacity, outer outline thickness/color/opacity, inner grid thickness/color/opacity, corners (0–24px), and X/Y cell padding. No separate Table Edit popup remains. Border widths are 0–8px; zero removes that border. Outer and inner borders use Black/White, and grid edges never double the outline. Clicking a cell selects
 its formatting target in a fixed, single-row toolbar above the preview: font,
 case, size, weight, color, horizontal/vertical alignment, background and opacity.
 The toolbar scrolls horizontally on small screens. Header font, size, weight, case, color and alignment explicitly override the general body role so every first-row edit is visible. Full name corner selects both
@@ -192,8 +191,7 @@ The toolbar follows outer material and padding. Scroll housings contain painting
 to keep wide sticky table content within its horizontal scroll region.
 
 
-October 3 Admin: Leads precedes Ads and Insights. Owner tools precede the compact
-Vault. Aesthetic Control stays in Systems only. MAYA conversation and briefing live
+October 5 Admin: Leads precedes Ads and Insights. Owner tools UI is retired. Vault groups hosting, behind-the-scenes providers/billing, outside tools and privacy; each link has a description of at most four words. Aesthetic Control stays in Systems only. MAYA conversation and briefing live
 inside Logs; pending owner actions appear in a native dashboard approval dialog,
 with the existing Confirm/Dismiss gates. Closing it leaves pending actions reviewable
 in Logs. Voice chooses Logs without opening the drawer. Tabs use shared glass bubble
@@ -201,3 +199,18 @@ highlights and the voice dock sits at the bottom. Shared native dropdowns and Ed
 section chevrons use the same centered SVG; the gallery previews their saved height.
 Model hover cards use the saved dropdown housing material and X/Y padding. Tables
 retain independent materials and borders; this change does not affect their scope.
+
+October 5 audit: Outbound drawer actions use one shared pill material; tabs and the
+Close icon retain their navigation/icon roles. Table header and column backgrounds
+and opacity apply on Admin and Outbound, independently of Inner panels. Status pill
+colors retain semantic meaning. Aesthetic Control links the actual Inner panel
+locations. H0 preview follows the sign-in responsive cap and stays on one line.
+The same saved Edit dropdown material and X/Y padding style provider cards, header
+filters, Outbound filters and the Leads status picker. Status choices are a top-layer
+portal anchored to the select's left edge when space permits, clamped and flipped
+within the viewport. Native select values and existing authenticated save remain
+unchanged. Pointer/keyboard/outside/Escape paths dismiss correctly. Provider metadata
+and account-specific mailbox status load independently, with loading/error feedback;
+configured models do not claim an inference test. Existing Gmail mailbox connections
+are displayed before setup/reconnection warnings. Cached live gallery modules must
+revalidate so mixed stylesheet/editor versions cannot persist.

@@ -92,7 +92,7 @@ try{
  assert.equal(await page.locator('.type-editor[open]').count(),0,'Outside click dismisses');
  await edit('H1','align','right');await page.keyboard.press('Escape');
  assert.equal(await page.locator('.type-editor[open]').count(),0,'Escape dismisses');
- const surface=async(id,field,value)=>{const group=page.locator(`[data-editor="${id}"] .type-editor`);if(!await group.evaluate(e=>e.open)){await page.keyboard.press('Escape');await group.locator('summary').click();}const input=group.locator(`[data-field="${field}"]`);if(await input.evaluate(e=>e.tagName==='SELECT'))await input.selectOption(value);else await input.fill(value);};
+ const surface=async(id,field,value)=>{let group;if(id==='table')group=page.locator('.table-material-fields');else{group=page.locator(`[data-editor="${id}"] .type-editor`);if(!await group.evaluate(e=>e.open)){await page.keyboard.press('Escape');await group.locator('summary').click();}}const input=group.locator(`[data-field="${field}"]`);if(await input.evaluate(e=>e.tagName==='SELECT'))await input.selectOption(value);else await input.fill(value);};
  await surface('inner','paddingX','30');await surface('inner','paddingY','20');await surface('inner','width','80');
  assert.equal(await page.locator('.inner-panel').first().evaluate(e=>getComputedStyle(e).padding),'20px 30px');
  assert.equal(await page.locator('[data-editor="filter"],.filter-preview').count(),0,'Unused Filter controls removed');
@@ -101,8 +101,10 @@ try{
  for(const target of ['.finish-controls','.overlay-controls','.popup-editor','[data-editor="inner"]'])assert.equal(await page.locator(target+' [data-field="borderColor"] option[value="gray"]').count(),1,'Shared borders offer gray: '+target);
  await surface('inner','borderColor','gray');assert.match(await page.locator('.inner-panel').first().evaluate(e=>getComputedStyle(e).borderColor),/170, 181, 196/);await surface('inner','borderColor','white');
  await surface('table','radius','20');await surface('table','borderColor','black');assert.equal(await page.locator('#table-preview').evaluate(e=>getComputedStyle(e).borderRadius),'20px');assert.match(await page.locator('#table-preview').evaluate(e=>getComputedStyle(e).borderColor),/0, 0, 0/);await surface('inner','radius','4');assert.equal(await page.locator('#table-preview').evaluate(e=>getComputedStyle(e).borderRadius),'20px','Inner corners cannot resize table corners');await surface('inner','radius','12');await surface('table','borderColor','white');
- const cell=async(selector,field,value)=>{await page.locator('#table-preview '+selector).first().click();const input=page.locator('#cell-format-toolbar [data-field="'+field+'"]');if(await input.evaluate(e=>e.tagName==='SELECT'))await input.selectOption(value);else await input.fill(value);};
- assert.equal(await page.locator('#table-editors .type-editor').count(),1,'Only whole-table Edit remains');
+ const cell=async(selector,field,value)=>{await page.locator('#table-preview '+selector).first().click();const input=page.locator('#cell-format-toolbar [aria-label="Cell format options"] [data-field="'+field+'"]');if(await input.evaluate(e=>e.tagName==='SELECT'))await input.selectOption(value);else await input.fill(value);};
+ assert.equal(await page.locator('#table-editors .type-editor').count(),0,'Table material lives in the fixed formatting toolbar');
+ await surface('table','outerWidth','4');await surface('table','innerWidth','2');await surface('table','innerBorderColor','black');assert.equal(await page.locator('#table-preview').evaluate(e=>getComputedStyle(e).borderTopWidth),'4px');assert.equal(await page.locator('#table-preview th').first().evaluate(e=>getComputedStyle(e).borderRightWidth),'2px');assert.equal(await page.locator('#table-preview th').last().evaluate(e=>getComputedStyle(e).borderRightWidth),'0px');
+ await surface('table','innerBorderColor','white');
  await surface('table','background','black');await surface('table','fill','100');
  await cell('th[data-col="stage"]','background','black');await cell('td[data-col="name"]','background','black');
  assert.equal(await page.locator('#table-preview').evaluate(e=>getComputedStyle(e).backgroundColor),'rgb(0, 0, 0)');
@@ -115,7 +117,7 @@ try{
  await cell('td[data-col="note"]','size','15');
  assert.equal(await page.locator('#cell-selection').innerText(),'Third column');
  assert.equal(await page.locator('#table-preview td[data-col="note"]').nth(1).evaluate(e=>getComputedStyle(e).fontSize),'15px','Every body row follows its column');
- await page.locator('#cell-format-toolbar .restore-editor').click();assert.equal(await page.locator('#table-preview td[data-col="note"]').first().evaluate(e=>getComputedStyle(e).fontSize),'12px');
+ await page.locator('#cell-format-toolbar .cell-selection-heading .restore-editor').click();assert.equal(await page.locator('#table-preview td[data-col="note"]').first().evaluate(e=>getComputedStyle(e).fontSize),'12px');
  await cell('td[data-col="note"]','size','15');await surface('table','paddingY','14');
  assert.match(await page.locator('#table-preview th').first().evaluate(e=>getComputedStyle(e).backgroundColor),/0.8/);
  assert.match(await page.locator('#table-preview td[data-col="name"]').first().evaluate(e=>getComputedStyle(e).backgroundColor),/0.6/);
@@ -196,7 +198,7 @@ try{
   await page.locator('#pill-preview > .review-fold').evaluate(e=>e.open=true);
   const outerEditor=page.locator('.overlay-controls');await outerEditor.locator('summary').click();assert.ok(await outerEditor.locator('.type-editor-fields').evaluate(e=>{const widths=[...e.querySelectorAll(':scope>label')].map(x=>x.getBoundingClientRect().width);return widths.length>2&&Math.max(...widths)<e.getBoundingClientRect().width*.6;}),'Outer fields use the common multi-column grid');
   assert.ok(await outerEditor.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect(),a=e.parentElement.querySelector('summary').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&a.left<=r.right&&a.right>=r.left;}),'Outer editor anchor '+width);await page.keyboard.press('Escape');
-  for(const id of ['inner','table']){
+  for(const id of ['inner']){
    const editor=page.locator(`[data-editor="${id}"] .type-editor`);await editor.locator('summary').click();
    const fits=await editor.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect(),a=e.parentElement.querySelector('summary').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&a.left<=r.right&&a.right>=r.left&&Math.min(Math.abs(r.top-a.bottom),Math.abs(a.top-r.bottom))<=8&&getComputedStyle(e).backgroundColor==='rgb(0, 0, 0)'&&[...e.querySelectorAll('input,select')].every(c=>{const b=c.getBoundingClientRect();return b.left>=r.left&&b.right<=r.right;});});
    assert.ok(fits,`${id} popup/controls at ${width}`);
@@ -212,7 +214,7 @@ try{
  await page.evaluate(()=>localStorage.clear());await page.reload();await page.locator('#save').waitFor();
  await page.setViewportSize({width:1440,height:1000});
  assert.equal(await page.locator('.panel-editors .surface-edit-row').evaluateAll(es=>new Set(es.map(e=>Math.round(e.getBoundingClientRect().top))).size),1,'Panel controls share one desktop row');
- assert.equal(await page.locator('#table-editors .surface-edit-row').evaluateAll(es=>new Set(es.map(e=>Math.round(e.getBoundingClientRect().top))).size),1,'Table controls share one desktop row');
+ assert.equal(await page.locator('.table-material-fields').evaluate(e=>new Set([...e.querySelectorAll('label')].map(x=>Math.round(x.getBoundingClientRect().top))).size),1,'Table geometry shares one scrollable row');
  assert.equal(await page.locator('#table-preview .lead-open').first().evaluate(e=>new Set([...e.children].map(n=>Math.round(n.getBoundingClientRect().top+n.getBoundingClientRect().height/2))).size),1,'Name, date and category share one row');
  const peer=await page.context().newPage();await peer.route('**/*',async route=>{const u=new URL(route.request().url());if(u.hostname!=='maya.test')return route.abort();if(u.pathname==='/api/design')return route.fulfill({json:{}});try{const p=resolve(root,'.'+(u.pathname==='/'?'/frontend/index.html':u.pathname));return route.fulfill({body:readFileSync(p),contentType:({'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.png':'image/png'})[extname(p)]||'text/plain'});}catch{return route.abort();}});await peer.addInitScript(()=>{window.BroadcastChannel=undefined;});await peer.goto('https://maya.test/frontend/index.html');await peer.waitForFunction(()=>window.MayaTypographyControls);const before=await peer.locator('.maya-signin-h0').evaluate(e=>getComputedStyle(e).fontSize);assert.equal(before,'104px');await page.evaluate(async()=>{const d=structuredClone(window.MayaTypographyControls.defaults);d.type.H0.size=80;await window.MayaTypographyControls.save(d);});await peer.waitForFunction(()=>getComputedStyle(document.querySelector('.maya-signin-h0')).fontSize==='80px');await peer.close();
  await page.screenshot({path:'/private/tmp/maya-typography-controls.png',fullPage:true});

@@ -1,22 +1,24 @@
-[Codex] Reorganize Admin Systems and provider hover details
+[Codex] Audit table formatting and shared Admin controls
 
-Put Leads before Ads and rename Bottom line to Insights. Consolidate external tools
-into compact Vault links, including owner Gmail setup, Vertex, provider usage and
-billing. Remove the live Admin/Outbound AI meter and manual Test Gemini button;
-retain server budget/account ledgers and existing provider models.
+Combine Table material and selection formatting into one fixed toolbar. Add
+independent inner-grid/outer-outline thickness, color and opacity, keeping old
+saved schemas compatible. Apply Outbound column backgrounds, unify drawer pills,
+link Inner panel usage and align section/Edit typography.
 
-Show actual authenticated model configuration, provider transport and endpoints in
-Systems/API/Images hover/focus cards. Clamp popups to mobile/landscape viewports,
-support keyboard/touch/outside dismissal, and share saved dropdown housing settings.
-Move MAYA conversation/briefing to Logs, isolate Systems links from other tabs, and
-place pending confirmations in a dashboard dialog without changing action gates.
-Lower voice dock, use glass tab bubbles and centered shared dropdown SVGs across
-served pages. Bump runtime v13, refresh typography location audit/cache headers.
+Use an anchored, viewport-safe Leads status picker with shared dropdown X/Y
+padding, preserving native values and the existing authenticated save/rollback.
+Remove Owner tools UI, restore grouped Vault descriptions, prioritize connected
+Gmail mailboxes over setup warnings and expose explicit provider loading/errors.
+Models load independently of mailbox lookup; Submissions has connection details.
+Bump runtime v14/gallery v27 and revalidate editor modules to avoid stale mixes.
 
-Validation: full app-regression/gallery, Admin seven widths and short landscapes;
-canon-ui 11 pages/7 widths; Outbound populated filter/scrolling tests; CRM UI/failure/
-intelligence; owner-crm UI/unit; Outbound/model unit; phone/messages/transfer/feedback
-fake-provider checks; container contract; source syntax and diff checks.
-Remaining: fresh Chrome approval and owner Gmail OAuth/live Gemini verification;
-owner Push, Cloud Build and release verification. No personal Chrome, production
-writes, provider inference charges, credentials/environment/billing edits or Push.
+Validation: full app-regression; gallery 11 widths; Admin 7 widths/landscape;
+Outbound populated filters and saved picker change; canon 11 pages/7 widths;
+CRM 10,000-record UI, failure/isolation and 19 intelligence checks; design/schema,
+container contract, source syntax and diff checks. All provider operations mocked.
+
+Limitations: prepared locally, not pushed. Public live release is still 2cbd234.
+Actual Gmail/Gemini/image verification remains open: approved MAYA Chrome tab was
+unavailable and automatic review rejected broader Chrome app inspection because
+it could expose another profile. Inventory-only approval request remains pending.
+No credentials, billing, production variables, client sends or live saves changed.

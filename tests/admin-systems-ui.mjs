@@ -9,6 +9,7 @@ try{
  await page.route('**/*',async route=>{
   const u=new URL(route.request().url());if(u.hostname!=='maya.test')return route.abort();
   if(u.pathname==='/api/admin/models')return route.fulfill({json:{checkedAt:'2026-10-03T12:00:00Z',models:{'Admin text':'gpt-6-luna','Image default':'gpt-image-2.5-flare'},connections:[{provider:'OpenAI',model:'gpt-5-nano',configured:true,transport:'api',endpoint:'https://api.openai.com/v1/responses'},{provider:'gemini',model:'gemini-2.5-flash-lite',configured:true,transport:'vertex',endpoint:'https://aiplatform.googleapis.com/v1/projects/{project}/locations/global/publishers/google/models/gemini-2.5-flash-lite:generateContent'}],images:[{provider:'OpenAI',model:'gpt-image-2.5-flare',configured:true,endpoint:'https://api.openai.com/v1/images/generations'}]}});
+  if(u.pathname==='/api/admin/owner-crm')return route.fulfill({json:{ok:true,gmailReady:false,mailboxes:[{id:'fixture-mailbox',email:'fixture@example.com'}]}});
   if(u.pathname.startsWith('/api/')){if(route.request().method()==='POST')writes++;return route.fulfill({json:{ok:true,items:[],list:[],mailboxes:[]}});}
   let path=u.pathname==='/status.html'?'/backend/status.html':u.pathname;
   try{return route.fulfill({body:readFileSync(root+path),contentType:({'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png'})[extname(path)]||'text/plain'});}catch{return route.abort();}
@@ -20,11 +21,13 @@ try{
  assert.equal(await page.locator('#leads-fold h2').evaluate(e=>getComputedStyle(e).marginTop),'0px','Section text and chevron share a centered line');
  assert.equal(await page.locator('maya-ai-meter').count(),0);assert.equal(await page.locator('.test-gemini').count(),0);
  assert.equal(await page.locator('#drawer-systems a').filter({hasText:'OpenAI usage'}).getAttribute('href'),'https://platform.openai.com/settings/organization/usage');
+ assert.equal(await page.locator('maya-owner-crm').count(),0);assert.ok(await page.locator('#drawer-systems a small').evaluateAll(es=>es.every(e=>e.textContent.split(/\s+/).length<=4)));
+
  for(const width of [320,390,650,768,1024,1440,1920]){
   await page.setViewportSize({width,height:844});await page.evaluate(()=>{admTab('systems');toggleDrawer(true);});
   await page.getByRole('button',{name:'API model details',exact:true}).focus();
   await page.waitForFunction(()=>document.querySelector('#model-snapshot').textContent.includes('gpt-5-nano'));
-  assert.match(await page.locator('#model-snapshot').textContent(),/gpt-6-luna/);
+  assert.match(await page.locator('#model-snapshot').textContent(),/gpt-6-luna/);await page.waitForFunction(()=>document.querySelector('#model-snapshot').textContent.includes('1 mailbox connected to this account'));
   assert.doesNotMatch(await page.locator('#model-snapshot').textContent(),/gpt-image-2.5-flare/);
   await page.locator('.model-provider summary').filter({hasText:'gemini'}).focus();assert.match(await page.locator('#model-snapshot').textContent(),/aiplatform.googleapis.com/);
   if(width===1440)await page.screenshot({path:'/private/tmp/maya-admin-systems-preview.png'});
@@ -50,6 +53,7 @@ try{
   assert.ok(b.x>=0&&b.y>=0&&b.x+b.width<=width+1&&b.y+b.height<=height+1,'Expanded model hover fits landscape');
   await page.keyboard.press('Escape');
  }
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('maya-model-error',{detail:'Configuration request failed'})));await page.getByRole('button',{name:'API model details',exact:true}).focus();assert.match(await page.locator('#model-snapshot').textContent(),/Configuration request failed.*Last configuration shown/);await page.keyboard.press('Escape');
  assert.equal(writes,0,'Hover and dismiss never perform an owner action');
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('maya-model-clear')));assert.ok(await page.locator('#model-snapshot').isHidden());assert.equal(await page.locator('#model-snapshot').textContent(),'');
  assert.deepEqual(errors,[]);console.log('Admin hierarchy, provider hover details, Vault, Logs conversation and dashboard approvals passed at seven widths.');
