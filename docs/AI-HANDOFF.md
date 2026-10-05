@@ -1,28 +1,40 @@
 # MAYA handoff — October 5, 2026
 
-## Current request: dismiss lingering model hover cards
+## Current request: owner SMS lead access and usable phone-to-text numbers
 
-Started clean at 21fd7f7, one local commit ahead of origin/maya-v2. The hover
-close guard treated mouse-click focus as keyboard focus and left cards pinned.
-Pointer interactions now use actual pointer coordinates (not stale :hover state)
-and dismiss 100ms after leaving both trigger and card,
-even when the clicked trigger/detail retains focus. Keyboard interaction keeps
-its focus behavior; Escape closes and returns focus. Outside wheel/touch scroll and resize also
-closes; scrolling inside the card remains usable. Pending model data cannot open
-an already closed card. Admin Systems JS ref advances to v4.
+Started clean at 5ce96f0, two local commits ahead of origin/maya-v2. Screenshot
+shows "Send me the last 5 leads" returning a generic uncertain-result reply and
+phone-requested numbers arriving as spoken words. No live trace was accessed, so
+the exact provider failure behind that SMS is not proven.
+
+Common newest-lead/count and contact-number SMS requests now bypass text AI.
+Examples: Send me the last 5 leads, LEADS 5, Text me the latest five leads,
+What's Nick's phone number? Requested counts are validated 1–20, default 5.
+Owner binding/signature checks remain; no client write/send is authorized by a
+read phrase. Lead lists use durable account-scoped report pages with MORE.
+
+Phone owner_control text_owner now offers live leads/contact report selectors;
+the server fetches numeric contact fields instead of accepting dictated contact
+prose. Generic legacy owner text normalizes complete spoken plus-number sequences
+into digits. Voice/audio style is explicitly separate from SMS formatting.
+Non-retryable send claims and fixed owner recipient remain; carrier acceptance
+still does not prove delivery. Conversational AI failures identify the unavailable
+chat path and the working direct read commands instead of implying a failed send.
 
 ## Changed paths and validation
 
-admin-systems.js, backend/status.html, admin-systems-ui and app-regression;
-design/requests/fixes/COMMIT-REVIEW. Validation passed: pointer leave after trigger/detail clicks, keyboard/Escape,
-outside wheel/resize, seven widths and landscapes; full app-regression.
-Log: /private/tmp/maya-hover-dismiss-regression.log. Git diff checks passed.
+owner-conversation.mjs, owner-sms-access.mjs, maya-phone.mjs; tests for conversation,
+SMS access and app-regression; AGENTS/requests/fixes/COMMIT-REVIEW.
+Passed: AI-down natural lead reads, requested count, numeric contacts, paginated
+continuations, grounded owner phone text and duplicate-send prevention; owner-crm,
+phone (57), messages (55), transfer/feedback and container contract. Full app-regression passed; final focused conversation/SMS suites also passed. All providers fake; no real SMS/call, credentials or production changes.
 
 ## Exact next step
 
-Verified work is prepared as a local commit. Fromsa pushes the two local commits; no push is
-authorized. After deployment check live model hover dismissal. No Chrome,
-credentials, production env, model configuration or client sends used here.
+Verified changes are prepared as a local commit. Fromsa pushes all three local commits.
+After Cloud Build deploys, verify live release.json, then SMS "Send me the last 5
+leads" and request a lead-number text on an owner call. Live delivery/voice model
+choice still requires owner verification. No personal Chrome session used here.
 
 Prior live owner verification remains: MAYA HELP/INBOX/THREAD Nick/MORE/ACTIONS,
 normal memory recall and separately authorized client REPLY/SEND; scheduler/signup/

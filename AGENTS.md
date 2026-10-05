@@ -221,3 +221,11 @@ load authenticated models independently of mailbox status and show explicit erro
 Vault restores compact grouping and descriptions of at most four words. Run
 component-gallery, admin-systems-ui, outbound-ui/lead-filter-ui, design-config,
 design-contract, CRM suites and app-regression for these changes.
+
+Owner lead SMS reads: owner-conversation.mjs routes common newest-lead/count and
+contact-number requests without text AI; the verified owner binding still gates
+entry. Lead lists use durable owner-sms-access report pages. Phone owner_control
+text_owner reports fetch live lead/contact fields rather than voice-formatted
+prose; generic text normalizes spoken phone digits. Requested counts are 1–20.
+Preserve non-retryable send claims, fixed owner recipient and client SEND gates.
+Run owner-conversation, owner-sms-access, owner-crm, communications and app-regression.

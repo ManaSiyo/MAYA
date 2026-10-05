@@ -2729,3 +2729,5 @@ October 5, 2026 — Remove table-wide background/opacity controls; retain select
 October 5, 2026 — Messages should fill the known person name from Leads/phone, never erase it with Caller; compact Model Snapshot to model plus uses. Full regression, seven-width hover cards and communications tests passed. Local commit; not pushed.
 
 October 5, 2026 — Fix glitchy lingering Model Snapshot hover cards. Separate pointer dismissal from keyboard focus and close on outside wheel/resize. Seven-width Admin UI and full regression passed. Local only; not pushed.
+
+October 5, 2026 — Owner should get the latest 5 leads and phone details by SMS, without a call; phone-requested SMS must contain numeric phone fields, not spoken digits. Common read routing bypasses AI, requested counts and report continuation work; grounded phone owner reports and number formatting implemented locally. Full regression, owner conversation/SMS/CRM, phone/messages/transfer/feedback and container checks passed. Not pushed.

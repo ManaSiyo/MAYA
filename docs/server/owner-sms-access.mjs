@@ -14,6 +14,7 @@ STATUS: service readiness and limits.
 REPLY Nick: your exact message. Review, then SEND the code to send it.
 MORE code page: continue a report. Copy the next command shown.
 LEAD Nick: contact details.
+LEADS 5 or Send me the last 5 leads: newest names and numeric phone numbers, without text AI.
 Send the booking link to Nick: preview, then BOOK code.
 Add/update a lead: preview, then YES code.
 You can also talk normally, remember facts and change response/alert preferences.
@@ -75,6 +76,7 @@ export function createOwnerSMSAccess(deps){
   }
   async function act(uid,d,id){
     if(!uid)throw problem('Owner binding required.',403);
+    if(d.action==='sms_leads'){const leads=d.leads||[];return report(uid,'Latest leads',leads.length?leads.map(l=>[l.name||'Unnamed',l.phone||'Phone unavailable',l.email,l.tier,l.wants||l.note||l.wrote].filter(Boolean).join('\n')):['No leads returned by the station.']);}
     if(d.action==='sms_help')return report(uid,'SMS help',[HELP]);
     if(d.action==='sms_more')return readPage(uid,clip(d.code,20),Number(d.page));
     if(d.action==='reply_client')return preview(uid,d.query,d.text,id);

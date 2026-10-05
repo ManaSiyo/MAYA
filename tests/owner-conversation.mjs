@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
-import {createOwnerConversation,formatSignupAlert,validateAlertTemplate,OWNER_CONVERSATION_INSTRUCTIONS} from '../docs/server/owner-conversation.mjs';
+import {createOwnerConversation,formatSignupAlert,validateAlertTemplate,OWNER_CONVERSATION_INSTRUCTIONS,ownerLeadRead,numericOwnerText} from '../docs/server/owner-conversation.mjs';
 import {createOwnerCRM} from '../docs/server/owner-crm.mjs';
-const files=new Map();let revision=0,decision,seen,completions=0,sends=0,features=0,commits=0,conflict=false;
+const files=new Map();let revision=0,decision,seen,completions=0,sends=0,sentBody,listCount,features=0,commits=0,conflict=false;
 const storage={read:async key=>files.has(key)?{ok:true,buf:Buffer.from(JSON.stringify(files.get(key).value)),generation:files.get(key).generation}:{ok:false,status:404},
  write:async(key,buf,type,expected)=>{if(conflict){conflict=false;throw Object.assign(new Error('conflict'),{status:412});}assert.equal(expected,files.get(key)?.generation||'0');files.set(key,{value:JSON.parse(buf),generation:String(++revision)});}};
 const ownerNumber='+15105550100',lead={name:'Actual Client',phone:'+14155550140',tier:'Help me decide',note:'A refined blue suit'};
-const deps={...storage,ownerNumber,history:async()=>[{who:'owner',text:'Earlier we discussed a refined suit.'}],list:async()=>[lead],find:async()=>({ok:true,lead}),
+const deps={...storage,ownerNumber,history:async()=>[{who:'owner',text:'Earlier we discussed a refined suit.'}],list:async count=>{listCount=count;return [lead]},find:async()=>({ok:true,lead}),
  complete:async(uid,instructions,data)=>{assert.equal(uid,'owner');assert.equal(instructions,OWNER_CONVERSATION_INSTRUCTIONS);seen=data;completions++;return decision;},
- booking:async()=>({name:lead.name,to:lead.phone,text:'Booking link',code:'a1b2c3'}),logFeature:async()=>{features++;return 1;},textOwner:async()=>{sends++;return {ok:true};}};
+ booking:async()=>({name:lead.name,to:lead.phone,text:'Booking link',code:'a1b2c3'}),logFeature:async()=>{features++;return 1;},textOwner:async text=>{sentBody=text;sends++;return {ok:true};}};
 const conversation=createOwnerConversation(deps);
 const crm=createOwnerCRM({...storage,ownerNumber,ownerEmails:['owner@example.com'],converse:conversation.decide,ownerAction:conversation.act,
  find:deps.find,commit:async()=>{commits++;return {name:'Actual Client'};}});
@@ -60,3 +60,17 @@ const loaded=JSON.parse(await createOwnerConversation(deps).phoneContext(ownerNu
 const unconfirmed=createOwnerConversation({...deps,logFeature:async()=>0});
 await assert.rejects(unconfirmed.act('owner',{action:'log_feature',text:'Unsupported tool'},'not_logged'),/did not confirm/);
 console.log('Long Unicode memory stays inside the model input budget and survives service recreation; feature failures never claim success.');
+
+for(const text of ['Send me the last 5 leads','Text me the latest five leads','LEADS 5','latest leads'])assert.deepEqual(ownerLeadRead(text),{action:'list_leads',count:5});
+assert.equal(ownerLeadRead('Send the last 5 leads to Nick'),null);assert.equal(ownerLeadRead('Update Nick to five leads'),null);
+assert.deepEqual(ownerLeadRead("What's Nick's phone number?"),{action:'find_lead',query:'Nick'});
+const aiBefore=completions;assert.match(await sms('Send me the last 5 leads','SMlastfive'),/Actual Client.*\+14155550140/);assert.equal(listCount,5);assert.equal(completions,aiBefore);
+await sms('LEADS 5','SMlastfive');assert.equal(completions,aiBefore);
+assert.equal(numericOwnerText('Actual Client plus one four one five five five five zero one four zero.'),'Actual Client +14155550140.');
+assert.equal(numericOwnerText('We have five leads.'),'We have five leads.');
+const priorSends=sends;await conversation.phoneControl(ownerNumber,{action:'text_owner',report:'leads',count:5,text:'Invented contact plus one two three four five six seven eight nine zero'},'voice_report');assert.match(sentBody,/Actual Client.*\+14155550140/);assert.doesNotMatch(sentBody,/Invented|plus one/);assert.equal(listCount,5);
+await conversation.phoneControl(ownerNumber,{action:'text_owner',report:'leads',count:5},'voice_report');assert.equal(sends,priorSends+1);
+const providerDown=createOwnerConversation({...deps,complete:async()=>{throw Error('provider down');}});assert.deepEqual(await providerDown.decide('owner','Send me the last 5 leads'),{action:'list_leads',count:5});await assert.rejects(providerDown.decide('owner','Hello'),/Lead reads still work/);
+console.log('Owner lead reads bypass AI, preserve requested count/numeric contacts and ground phone-to-SMS reports without duplicate sends.');
+
+await assert.rejects(conversation.act('owner',{action:'list_leads',count:0},'bad_count'),/Choose 1 to 20/);assert.throws(()=>ownerLeadRead('LEADS 21'),/Choose 1 to 20/);

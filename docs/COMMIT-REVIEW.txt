@@ -1,15 +1,22 @@
-[Codex] Dismiss model hover cards after pointer exit
+[Codex] Make owner lead SMS reads reliable and format numeric phone reports
 
-Separate mouse interaction from keyboard focus so clicked triggers and provider
-details cannot pin Model Snapshot cards. Close after a 100ms grace period when
-the pointer leaves both trigger/card, using coordinates rather than stale browser
-:hover flags. Keep keyboard focus and Escape behavior.
-Dismiss on outside wheel/touch scrolling and resize; retain internal scrolling.
-Advance Admin Systems JS cache ref to v4.
+Route common newest-lead/count and contact-number SMS reads without text AI.
+Validate requested counts (1–20, default 5); use account-scoped durable report
+pages and MORE continuations. Model chat failures distinguish unavailable AI
+from uncertain writes and point to direct lead-read commands.
 
-Validation: responsive Admin UI (seven widths/landscapes) and full app-regression passed. New fixtures
-cover trigger click/exit, provider click/exit, keyboard retention/Escape and
-outside scroll/resize. No personal Chrome, live provider or message actions.
+Add live leads/contact selectors to owner phone text_owner. Format reports from
+stored numeric contact fields, keeping audio style separate from SMS. Normalize
+legacy spoken plus-number sequences into digits for generic owner text. Preserve
+verified owner binding, fixed recipient, non-retryable send claims and client
+preview/SEND/STOP gates. No model settings or credentials changed.
 
-Limitations: local commit only, not pushed. Owner Push includes the preceding
-known-name/compact-card commit. No model or production configuration changes.
+Validation: full app-regression; owner-conversation, owner-sms-access, owner-crm;
+phone (57), messages (55), transfer, feedback and container contract. Fixtures
+cover AI outages, requested count, numeric contacts, pagination, forged sender,
+grounded voice text and duplicate-send prevention. Git diff checks passed.
+
+Limitations: local only, not pushed. Screenshot's exact live provider failure
+was not observed in a server trace. Owner must verify latest release after Push,
+then SMS Send me the last 5 leads and request a contact text by phone. Real model
+tool choice and carrier delivery remain live verification; no real sends ran.

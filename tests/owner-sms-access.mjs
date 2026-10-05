@@ -82,3 +82,12 @@ await conflictStore.inbound({from:client,text:'Survives retry',sid:'SMconflict'}
 assert.equal((await conflictStore.history(client)).messages.filter(m=>m.id==='conflict0').length,1);
 assert.equal((await conflictStore.history(client)).messages.filter(m=>m.id==='SMconflict').length,1);
 console.log('Archive-before-trim survives a live inbox revision conflict without duplicating history.');
+
+let ownerTexts=0,requested;
+const leadReader=createOwnerConversation({...storage,ownerNumber:owner,smsAction:access.act,find:deps.find,list:async n=>{requested=n;return Array.from({length:n},(_,i)=>({name:'Contact '+i,phone:client,note:'A saved request '.repeat(20)}));},complete:async()=>{throw Error('AI unavailable');},textOwner:async text=>{ownerTexts++;assert.match(text,/Contact 0\n\+14155550100/);return {ok:true};}});
+const readCRM=createOwnerCRM({...storage,ownerNumber:owner,ownerEmails:['owner@example.com'],direct:access.direct,converse:leadReader.decide,ownerAction:leadReader.act});
+const leadReply=await readCRM.handle({from:owner,text:'Send me the last 5 leads',sid:'SMlatestleadread'});assert.equal(requested,5);assert.match(leadReply,/Latest leads.*page 1\//);assert.match(leadReply,/Contact 0\n\+14155550100/);
+const continuation=leadReply.match(/Next: (MORE [a-f0-9]{8} 2)/)[1];assert.match(await readCRM.handle({from:owner,text:continuation,sid:'SMmoreleads'}),/Contact 4/);
+await leadReader.phoneControl(owner,{action:'text_owner',report:'leads',count:5},'voice_live_leads');await leadReader.phoneControl(owner,{action:'text_owner',report:'leads',count:5},'voice_live_leads');assert.equal(ownerTexts,1);
+assert.equal(await readCRM.handle({from:'+15105550101',text:'Send me the last 5 leads',sid:'SMnotownerleads'}),'');
+console.log('Natural SMS lead reads and grounded phone texts work with AI down and durable report pagination, without client sends.');
