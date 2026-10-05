@@ -555,3 +555,5 @@ the next authorized push before it appears live. No actual wall behavior was
 changed.
 
 October 5, 2026 — Local fixes for split Table controls, ineffective Outbound column backgrounds, native Leads picker positioning, inconsistent drawer pill classes and Gmail setup warning precedence. Shared runtime v14/gallery v27; account/auth protections retained. Live provider/mailbox verification blocked by Chrome tool availability; no credentials or production variables changed.
+
+October 5, 2026 — Simplified the table formatting toolbar: removed duplicate table-wide material inputs and separated outline/grid controls into two responsive rows. Legacy saved materials stay compatible. Gallery Save/reload/eleven widths and full app-regression passed. Not pushed.

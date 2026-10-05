@@ -1,73 +1,33 @@
 # MAYA handoff — October 5, 2026
 
-## Current request: audit active aesthetics, tables, dropdowns and Systems
+## Current request: simplify table material controls
 
-Started clean at 2cbd234, matching origin/maya-v2. Public release.json also reports
-2cbd2344f1726f3975cdaefbe0184501247b0e5d (published 2026-10-05T03:41:56.501Z).
-This request is prepared and committed locally; not pushed. Runtime v14 and gallery
-v27 are referenced across served pages; gallery modules/new status picker revalidate.
+Started clean at e920e3c, matching origin/maya-v2. The table-wide Background and
+Opacity inputs are removed. Selected top-row/column Background and Opacity remain
+editable and saved. Existing table-wide material fields remain readable for saved
+schema compatibility; no migration or automatic material reset occurs.
 
-Table material/geometry is now the first row of the fixed formatting toolbar,
-above selection typography/background/opacity. The separate Table Edit is removed.
-Table outer/grid border widths (0–8px), colors/opacity, radius and X/Y cell padding
-are independent. Existing rim/borderColor saves remain compatible. Outbound name,
-status and other body-column backgrounds now apply; semantic status colors remain.
-Header and body column settings visibly apply and survive Save/reload. Table housing
-and formatting toolbar remain independent of Inner material. Inner usage links
-identify actual preview/Outbound/Operation Room/Pattern Operations locations.
-H2 sections and H3 Edit labels match shared typography; H0 preview stays on one line.
+Table geometry now has two stacked rows: Outer border thickness/color/opacity,
+corners and X/Y padding; then Inner border thickness/color/opacity. Each row scrolls
+horizontally at narrow widths. The fixed selection formatting row stays below them.
+Gallery cache refs advance to v28; shared runtime remains v14.
 
-Outbound drawer actions share pill material. Navigation tabs/Close keep their roles.
-Owner tools is removed from live Admin, while SMS/server owner capabilities remain.
-Vault grouping is restored with <=4-word descriptions. Existing connected mailbox
-counts take precedence over OAuth setup/reconnection warnings, scoped to the owner.
-Systems/API/Images show authenticated configured models and transports; models
-load independently of mailbox lookup. Loading/error states and Submissions details
-are explicit. Configuration metadata does not claim successful inference.
+## Changed paths and validation
 
-Both the Leads header filter and row status picker anchor to their trigger's left
-edge when space permits, clamp/flip to viewport bounds, and use shared dropdown
-material and X/Y padding. New aesthetics/ui/lead-stage-menu.js retains the native
-select and its authenticated save/rollback handler. Picker keyboard arrows,
-Enter/Space, Escape/focus return, scrolling and actual status persistence are tested.
-Padding debug remains active-field-only and preview-only.
-
-## Changed paths
-
-Aesthetic gallery: gallery.js/css, finishes.js, restore-controls.js,
-surface-editors.js, table-cell-editor.js, typography-usage.json and gallery HTML.
-Shared runtime: typography-controls.js, admin-systems.js/css, lead-stage-menu.js.
-Admin/Outbound: backend/status.html, outbound.js; served HTML cache version refs.
-Server validation: docs/server/design-config.mjs; hosting cache rules: firebase.json.
-Regression: component-gallery, admin-systems-ui, outbound-ui, lead-filter-ui,
-crm-failure-ui, design-config/contract and app-regression. AGENTS/design/requests/
-fixes/COMMIT-REVIEW reflect this task. No secrets or production environment changed.
-
-## Validation
-
-Passed full app-regression (including gallery eleven widths and Admin hover seven
-widths/short landscapes); Outbound populated filters, status picker saved change,
-shared padding, seven widths and keyboard/scroll/fallback; canon 11 pages/7 widths
-320–1920; CRM 10,000-contact UI, failure/account isolation and 19 intelligence
-checks; design schema/contract and container contract through full regression.
-Source syntax and git diff checks passed. All operational providers/auth are fixtures.
-
-Test Node: /Users/fromsa/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.
-Loader: /private/tmp/maya-audit-loader.mjs. Both PW_CHROMIUM and CHROMIUM_PATH:
-/private/tmp/maya-audit-browsers/chromium_headless_shell-1234/chrome-headless-shell-mac-arm64/chrome-headless-shell.
-Isolated browsers use local fixtures, never personal Chrome. Temporary test runtime
-is not a deployment requirement. Logs: /private/tmp/maya-*-audit.log.
+Gallery table-cell-editor.js/css and HTML cache refs; component-gallery and
+app-regression assertions; AGENTS/design/requests/fixes/COMMIT-REVIEW.
+Validation passed: gallery Save/reload, selection materials and eleven-width
+bounds; full app-regression including the new two-row/material assertion. Git
+diff checks passed. Logs: /private/tmp/maya-border-rows-{gallery,regression}.log.
+No server, credentials, provider, account-bound data or production environment edits.
 
 ## Exact next step and remaining live verification
 
-Fromsa pushes this local commit from GitHub Desktop; Cloud Build can deploy it.
-Then verify release.json matches that commit and live authenticated Save/provider
-cards/status dropdowns. User approved MAYA Chrome session access this turn, but
-Chrome tab binding was unavailable. Automatic review rejected broad Google Chrome
-app access because it could expose another profile/window. A narrower window/profile
-inventory permission request is pending; no personal Chrome page was inspected.
-Actual Gmail mailbox connection and Gemini/image inference remain unverified here.
-No OAuth grants, credentials, client messages, production saves or env changes ran.
+This request is verified and prepared as a local commit. Fromsa pushes from
+GitHub Desktop; no push is authorized in this turn. After deployment, verify
+release.json and the two border rows with selected Background/Opacity controls.
+Actual Gmail mailbox connection and Gemini/image inference remain unverified.
+Personal Chrome access needs fresh session approval; no Chrome is needed here.
 
 Prior live owner verification remains: MAYA HELP/INBOX/THREAD Nick/MORE/ACTIONS,
 normal memory recall and separately authorized client REPLY/SEND; scheduler/signup/

@@ -69,7 +69,7 @@ heading plus Contacts; outer padding surrounds the inner panels. There is no wra
 highlights its actual padding; moving to another field or closing removes the green band.
 No debug toggle or preview wrapper adds another material layer.
 
-Table previews Full name, Status and Latest Notes. The fixed toolbar combines table-wide material/geometry with selection formatting. Its first row edits table background/opacity, outer outline thickness/color/opacity, inner grid thickness/color/opacity, corners (0–24px), and X/Y cell padding. No separate Table Edit popup remains. Border widths are 0–8px; zero removes that border. Outer and inner borders use Black/White, and grid edges never double the outline. Clicking a cell selects
+Table previews Full name, Status and Latest Notes. The fixed toolbar combines table-wide material/geometry with selection formatting. Two stacked rows edit border geometry: Outer border thickness/color/opacity, corners (0–24px) and X/Y cell padding; then Inner border thickness/color/opacity. Background and opacity are edited only through selection formatting; legacy table-wide saved materials remain readable. No separate Table Edit popup remains. Border widths are 0–8px; zero removes that border. Outer and inner borders use Black/White, and grid edges never double the outline. Clicking a cell selects
 its formatting target in a fixed, single-row toolbar above the preview: font,
 case, size, weight, color, horizontal/vertical alignment, background and opacity.
 The toolbar scrolls horizontally on small screens. Header font, size, weight, case, color and alignment explicitly override the general body role so every first-row edit is visible. Full name corner selects both
@@ -181,8 +181,9 @@ ordinary pages and stale-load protection. Draft editors do not reload on focus.
 
 October 3: Shared Glass, Outer, Inner, dropdown and filter border colors include
 White, Black and Gray (RGB 170/181/196). Table border colors remain White/Black.
-The table's scroll housing uses Table background/opacity/border/corners, with zero
-housing padding and cell X/Y padding; there is one border, not nested borders.
+The table's scroll housing retains legacy saved background/opacity and independent
+borders/corners, with zero housing padding and cell X/Y padding. Background/opacity
+are now edited only for selections. The outline and internal grid have separate controls.
 Table radius defaults 12px and is independently editable from 0–24px. Old saves
 read this default without writing migration state. Tables stay inside the enclosing
 Outer section; table wrappers and the formatting toolbar cannot inherit Inner

@@ -208,8 +208,9 @@ Admin Systems changes run tests/admin-systems-ui.mjs (also in app-regression).
 Provider hover cards expose authenticated configuration, not inference verification.
 Owner approvals remain gated in a dashboard dialog; conversation stays inside Logs.
 
-October 5 audit: Table geometry lives in the fixed formatting toolbar above the
-selection formatting row. Legacy rim/borderColor remain outer-border opacity/color;
+October 5 audit: Table geometry lives in two stacked Outer/Inner border rows in
+the fixed formatting toolbar above selection formatting. Table background/opacity
+inputs are retired; selection material editing and legacy saved reads remain. Legacy rim/borderColor remain outer-border opacity/color;
 optional outerWidth, innerWidth, innerBorderColor and innerRim validate bounded
 independent outlines/grid lines. Grid edges do not double the outside outline.
 Functional Leads status choices use aesthetics/ui/lead-stage-menu.js with the

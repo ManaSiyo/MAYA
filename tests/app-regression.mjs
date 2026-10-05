@@ -2729,7 +2729,7 @@ ok('Renamed source tabs preserve campaign identities and draft membership',readF
 // October 2: editor anchors, panel content padding and wake recovery.
 const surfaceEditorSource=readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8');
 const galleryScript=readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.js'),'utf8');
-ok('Surface editors anchor to their own trigger and keep black available',surfaceEditorSource.includes("trigger.getBoundingClientRect()")&&surfaceEditorSource.includes("['black','gray'")&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/table-cell-editor.js'),'utf8').includes("['background','Table background',backgrounds]"));
+ok('Surface editors anchor to their own trigger and keep black available',surfaceEditorSource.includes("trigger.getBoundingClientRect()")&&surfaceEditorSource.includes("['black','gray'")&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/table-cell-editor.js'),'utf8').includes("['background','Background',backgrounds]"));
 ok('Inner panel padding surrounds heading and Contacts together',galleryScript.includes('inner.append(h,metric);surfaces.append(inner)'));
 ok('Admin failed voice starts resume the wake listener',MAP_SOURCE.includes('if(!_voice&&_wakeWantOn)_wakeSchedule(800)')&&MAP_SOURCE.includes('rec.onstart=')&&MAP_SOURCE.includes('wake listener did not start; retrying'));
 
@@ -2766,5 +2766,6 @@ ok('Saved aesthetics propagate without refreshing',readFileSync(join(ROOT,'aesth
 ok('Table formatting includes independently saved inner and outer borders',cellEditorSource.includes("['outerWidth','Outer border px'")&&cellEditorSource.includes("['innerWidth','Inner border px'"));
 
 ok('Lead status picker shares dropdown material and preserves native save',MAP_SOURCE.includes('lead-stage-menu.js')&&ownerDesignRuntime.includes('.maya-filter-popover,.lead-stage-menu'));
+ok('Table material controls use two border rows while background and opacity stay with selections',cellEditorSource.includes("['Outer border settings',outerSpecs],['Inner border settings',innerSpecs]")&&!cellEditorSource.includes('Table background')&&!cellEditorSource.includes('Table opacity')&&cellEditorSource.includes("['opacity','Opacity',{max:100}]"));
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);
