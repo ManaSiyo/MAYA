@@ -9,6 +9,7 @@
 // live site served the old one, and nobody knew until Fromsa noticed. Never
 // again: after every push, run this. It needs the internet, so it runs from
 // ~/Desktop/MAYA-new, not from an agent sandbox.
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,6 +17,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SITE = process.env.MAYA_SITE || 'https://maya.manasiyo.com';
 const WAIT = process.argv.includes('--wait');
+const WANT_COMMIT = (process.env.MAYA_COMMIT || execFileSync('git',['rev-parse','HEAD'],{cwd:ROOT,encoding:'utf8'})).trim();
+if(!/^[0-9a-f]{40}$/.test(WANT_COMMIT))throw Error('Expected a full release commit SHA.');
 
 const localVersion = (src) => (readFileSync(join(ROOT, src), 'utf8')
   .match(/name="maya-version" content="([\d.]+)"/) || [])[1];
@@ -37,17 +40,20 @@ const versionOf = (t) => (t.match(/name="maya-version" content="([\d.]+)"/) || [
 console.log('\nMAYA live verification, ' + SITE + '\n');
 ok('the two local pages carry the same version (' + WANT + ')', WANT === WANT_MAP, WANT_MAP);
 
-// Cloud Build takes about four minutes. --wait polls instead of failing early.
-let app = await get('/index.html');
-if (WAIT) {
-  for (let i = 0; i < 36 && versionOf(app.text) !== WANT; i++) {
-    process.stdout.write('  ..   waiting for the deploy, live is ' + versionOf(app.text) + '\r');
-    await new Promise(r => setTimeout(r, 10_000));
-    app = await get('/index.html');
+// Display versions can remain unchanged across pushes: wait for the actual commit.
+const readRelease=async()=>{const r=await get('/release.json');try{return r.status===200?JSON.parse(r.text):{};}catch{return {};}};
+let release=await readRelease();
+if(WAIT){
+  for(let i=0;i<36 && release.commit!==WANT_COMMIT;i++){
+    console.log('  ..   waiting for '+WANT_COMMIT.slice(0,7)+', live '+String(release.commit||'unknown').slice(0,7));
+    await new Promise(r=>setTimeout(r,10000));release=await readRelease();
   }
-  process.stdout.write('                                                          \r');
 }
+ok('live published commit matches the requested release',release.commit === WANT_COMMIT,'live '+(release.commit||'missing')+'; expected '+WANT_COMMIT);
+const app = await get('/index.html');
 const map = await get('/status.html');
+const buildOf=t=>(t.match(/name="maya-build" content="([0-9a-f]{40})"/)||[])[1];
+ok('app and Admin carry the exact published build',buildOf(app.text)===WANT_COMMIT && buildOf(map.text)===WANT_COMMIT);
 ok('live app is the version in this folder', versionOf(app.text) === WANT, 'live ' + versionOf(app.text));
 ok('live Systems Map is the same version', versionOf(map.text) === WANT, 'live ' + versionOf(map.text));
 

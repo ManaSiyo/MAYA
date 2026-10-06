@@ -102,16 +102,17 @@ await test('v14.01 Lead Station: no Invoice columns, no Last Quote (v14.34), dra
   assert.ok(!admin.includes("'<div class=\"lead-when\">"), 'day-count line under the name removed');
 });
 
-await test('CRM actions: category badge and whole name cell open Messages; invoice remains in Messages', () => {
-  const actions = admin.slice(admin.indexOf('function _actionsCell'), admin.indexOf('function _leadColDefs'));
-  assert.ok(actions.includes('category-badge') && actions.includes('leadCategory(x)'), 'category replaces retired phone action');
-  for(const code of ['SI','CE','SU','?'])assert.ok(admin.includes("code:'"+code+"'"),'category '+code);
-  assert.ok(!actions.includes('PHONE_SVG') && !actions.includes('CHAT_SVG') && !actions.includes('PAY_SVG'), 'no retired action icons');
+await test('CRM Leads: Contact, editable notes and H5/H6; message actions stay reviewed', () => {
+  assert.ok(!admin.includes('function _actionsCell') && !admin.includes('function leadCategory'), 'retired category badges do not render');
+  assert.ok(admin.includes("['name', 'contact', 'stage', 'note']"), 'stored Contact has its own column');
+  assert.ok(admin.includes('class="lead-identity"') && admin.includes('class="lead-signup"'), 'separate name/date roles');
   assert.ok(admin.includes("(k==='name'?' onclick=\"leadOpenThread("), 'whole name cell opens conversation');
-  assert.ok(!actions.includes('EMAIL_SVG') && !actions.includes('leadEmail'), 'no email icon');
-  assert.ok(admin.includes('function leadInvoice'), 'invoice composer');
-  assert.ok(admin.includes('lead-inv-modal'), 'invoice modal');
-  assert.ok(!/lead-rec">'\s*\+\s*rec\(x\)/.test(admin), 'recommendation text dropped from actions');
+  assert.ok(admin.includes("k==='note'?' onclick=\"editLatestLeadNote("), 'whole note cell edits a reviewed draft');
+  assert.ok(admin.includes('function leadInvoice') && admin.includes('lead-inv-modal'), 'invoice stays in Messages');
+  assert.ok(admin.includes('id="msg-call"') && admin.includes('aria-label="Call this person"'), 'accessible handset action');
+  const booking=admin.slice(admin.indexOf('function msgBooking()'),admin.indexOf('let _leadNoteDialog'));
+  assert.ok(booking.includes('https://wix.to/wT2lSqE') && booking.includes('input.value+='), 'approved booking link enters composer');
+  assert.ok(!booking.includes('fetch('), 'booking draft never sends');
 });
 
 await test('v14.01 the admin auto-refreshes on a new deploy (no more stale tab)', () => {

@@ -1,6 +1,31 @@
 # MAYA handoff — October 5, 2026
 
-## Current request: editable Leads notes, Contact, name/date roles and message actions
+## Current request: pushed changes missing from production
+
+October 5 deployment audit: local/origin maya-v2 both at dd7ba48. Cache-bypassed
+public release.json still reports 13116205e54e5b6ebd9d80347ef800b3b3b3bed1,
+published 2026-10-05T23:20:06.325Z. Live Admin has no editLatestLeadNote, and
+shared typography/gallery assets differ from the pushed source.
+
+Public GitHub Cloud Build check 5912fb44-0764-46af-9328-ef423bd879fe failed
+at Test release contracts (admin-ui-contract.mjs), before server/website deploy.
+The outdated contract required category badges removed at the owner's request.
+Vercel was successful; that did not publish Firebase Hosting.
+
+Updated that contract to assert Contact/H5/H6, full-cell notes and reviewed
+Messages actions. Added design-contract, note persistence and note UI checks to
+the Cloud Build gate. Live verification now compares release.json and page build
+stamps to the exact Git commit; unchanged 14.40 is no longer sufficient. A local
+HTTP fixture proves older same-version commits fail and matching commits pass.
+
+Validation: 25 pre-existing/updated unit and communications deployment contracts
+passed, plus the new exact-commit verifier fixture. All six browser checks passed: both hands batteries, Outbound, reviewed notes,
+10,000-contact CRM, account/expiry failure UI and 11-page canon. Including the new
+verifier fixture, 26 deployment unit/communications checks pass. Public live
+verification correctly fails for 1311620. Full app-regression passed.
+No personal Chrome, credentials, production settings, push or deploy used.
+
+## Previous request: editable Leads notes, Contact, name/date roles and message actions
 
 Started clean at c9d43df, matching origin/maya-v2. Prior owner SMS/numeric-phone
 fix is now pushed; no live trace or delivery verification was accessed here.
@@ -46,7 +71,7 @@ billing or production environment changes. Shared cache references and diff chec
 passed.
 ## Exact next step
 
-Verified changes are prepared as a local commit for Fromsa to Push. Never push automatically.
+The verified deployment-gate fix is prepared as a local commit for Fromsa to Push. dd7ba48 is already pushed but failed deployment. Never push automatically.
 After Cloud Build deploys, verify release.json; check note typing/dictation,
 Save/reload, H5/H6 changes, contact numbers and an unsent Booking Link draft.
 Owner must verify actual microphone capture and explicit SMS/call delivery;

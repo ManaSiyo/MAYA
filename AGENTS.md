@@ -239,3 +239,11 @@ on the client. Run tests/lead-notes-ui.mjs and tests/lead-note-persistence.mjs
 refresh precedence and unsent Booking Link drafts. Auth changes close note
 editors; dictation must pause/release Hey Maya recognition. Note edits use
 lead-update by stable ID; timestamps preserve reviewed edits over older notes.
+
+Deployment verification: run the exact tests listed in cloudbuild.yaml, including
+admin-ui-contract, before declaring a release ready. app-regression alone does
+not cover that separate gate. Category badges are retired; the gate asserts
+Contact/H5/H6 and reviewed message actions instead. tests/verify-release.mjs
+proves tests/verify-live.mjs rejects an older commit even when maya-version is
+unchanged. Verify release.json and page build stamps after the owner's Push;
+Vercel success does not establish Firebase/Cloud Run deployment success.

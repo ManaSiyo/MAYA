@@ -30,6 +30,8 @@ Live display version: **14.40**. On September 30, Hosting published
 `f66e7c13486f3d2ff260495ff0bbfb71b2514d4c` at 2026-10-01 04:29:16 UTC.
 The display version can stay the same across pushes; `/release.json` identifies
 the actual published commit. Check that endpoint before treating a push as live.
+`node tests/verify-live.mjs` requires release.json and App/Admin build stamps to
+match Git HEAD; `--wait` waits for that exact commit, not the display version.
 
 ---
 

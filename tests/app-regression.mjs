@@ -2776,6 +2776,8 @@ ok('Lead status picker shares dropdown material and preserves native save',MAP_S
 ok('Table material controls use two border rows while background and opacity stay with selections',cellEditorSource.includes("['Outer border settings',outerSpecs],['Inner border settings',innerSpecs]")&&!cellEditorSource.includes('Table background')&&!cellEditorSource.includes('Table opacity')&&cellEditorSource.includes("['opacity','Opacity',{max:100}]"));
 ok('Model hover dismissal separates pointer exit from keyboard focus',readFileSync(join(ROOT,'aesthetics/ui/admin-systems.js'),'utf8').includes("interaction==='pointer'||!focused"));
 ok('Owner lead SMS reads bypass AI and phone reports use live numeric contacts',ownerConversationSource.includes('const direct=ownerLeadRead(text);if(direct)return direct;')&&ownerConversationSource.includes("decision.report==='leads'")&&PHONE_SOURCE.includes("enum:['leads','contact']"));
+await import('./verify-release.mjs');
+ok('Live release verification rejects unchanged versions from older commits',true);
 await import('./lead-note-persistence.mjs');
 await import('./lead-notes-ui.mjs');
 ok('Leads: reviewed note dictation, persisted edits, Contact/H5/H6 and booking composer drafts',true);
