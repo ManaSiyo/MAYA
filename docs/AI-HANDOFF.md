@@ -1,6 +1,49 @@
-# MAYA handoff - October 5, 2026
+# MAYA handoff - October 6, 2026
 
-## Current request: Completed status and consistent icon alignment
+## Current request: missed callback owner SMS and call
+
+Started clean at 9de4fd7, matching origin/maya-v2 and the verified live release.
+Wix connector and live Admin confirm Julia Lokey submitted the enabled Call back
+form at October 6, 4:04:16 PM Pacific (id f779663a-b287-45d5-b64d-68c32d891d84).
+Google Cloud console for pro-maya showed Cloud Scheduler API disabled (Enable
+button); enabled it and confirmed zero jobs. Existing callback checks depended on hourly Outbound plus a visible
+Admin five-minute fallback. Exact provider outcome for Julia is still unknown;
+old logs show requests/design saves, not the private dispatch ledger.
+
+Repair: dedicated authenticated POST /api/tasks/lead-alerts without Outbound
+account dependency; owner-only read GET /api/admin/lead-alerts/status. Shared
+existing Scheduler identity verification, no new credentials. Durable health,
+provider IDs/status/errors, independent SMS/call, deterministic format fallback,
+no retry after ambiguous sends or history-write failures. Unresolved claims
+stay visible as failures. Both scheduled routes return 503 for callback failure.
+Admin reports feed/provider/setup/pending/stale-worker failures and no longer
+silences quiet check errors. No new background browser timer.
+
+Changed: docs/server/{lead-alerts.mjs,server.js,crm-intelligence.mjs},
+backend/status.html, tests/{lead-alerts,app-regression,smoke}.mjs and continuity
+/runbook documents. No shared visual tokens or unrelated aesthetic changes.
+
+Validation: all 33 Cloud Build gates, full app-regression and real server smoke
+passed. Final lead-alerts tests include overlapping generation claims, storage
+failures, persistent uncertainty, owner/Scheduler guards and late-account UI
+responses. Authored typography source locations regenerated after HTML shifts.
+Public verify-live passed against deployed 9de4fd7. No live SMS/call sent.
+
+Limitations: not pushed/deployed; Scheduler API enabled, but dedicated job still needs owner configuration.
+Production environment variables, credentials, tokens and billing untouched.
+MAYA Chrome session approved, but Chrome browser connector unavailable; read-only
+verification used existing IAB Admin, Google Cloud console and Wix connector.
+No Worldofsiyo Chrome controls used. Carrier delivery and call audio remain
+unverified. Do not describe this repair as live or fully operational yet.
+Exact next step: owner pushes prepared commit, verifies Cloud Build/release, then
+follows docs/CALLBACK-ALERTS.md to configure the dedicated two-minute job
+and verify actual owner SMS and ringing call with Admin closed. Owner must handle
+any missing production environment values. Review existing 72-hour ledger before
+catch-up; never clear uncertain claims to force a retry.
+
+## Prior handoff - October 5, 2026
+
+## Previous request: Completed status and consistent icon alignment
 
 Started clean at fa4ba1b, one local commit ahead of origin/maya-v2. Leads now accepts Completed through Admin, owner CRM and the server update path. Filters and status pickers include it; its visible pill, dot and border use the existing green semantic color. Refreshed lead data retains the owner-set status.
 

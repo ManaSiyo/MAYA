@@ -1,25 +1,24 @@
-[Codex] Add Completed and center shared icons with editable spacing
+[Codex] Repair callback alert scheduling and expose delivery failures
 
-Add Completed to Leads pickers, filters, server updates and owner CRM commands.
-Use the existing green status material for its visible pill, dot and border;
-retain manual status through refreshed lead data and count completed as closed.
+Separate owner callback checks from Outbound through Scheduler-authenticated
+/api/tasks/lead-alerts. Add read-only owner notification status, durable worker
+health and channel SID/status/error evidence. Attempt SMS and voice independently;
+fallback when formatting preferences fail. Preserve claims after uncertain
+provider results or history failures. Report unresolved attempts as failures,
+return 503 from scheduled checks, and show quiet errors/stale setup in Admin.
 
-Center icons vertically in their assigned row regardless of text baseline or
-saved typography alignment. Group the Status header text/gear without changing
-table-cell layout. Save independent inside-pill and beside-text gaps (0–32px,
-defaults 6/8), validate them server-side and apply them through shared runtime
-v18 on every served page. Preserve old saves. Update gallery v31 with active
-spacing samples that open real editors; fix same-click outside dismissal. Remove
-the invented Drawer AI cost metric and use the actual gear shape.
+Incident: Julia Lokey's October 6 callback exists in Wix and live Admin. The live
+release matched 9de4fd7. Cloud Scheduler API was disabled; enabled it through the
+Google Cloud console and confirmed there are no jobs. No credentials, environment
+variables or billing settings changed. No live SMS/calls sent. Exact historical
+Twilio outcome remains unverified.
 
-Validation: all 33 exact Cloud Build gates, full app-regression and local server
-smoke passed. Gallery editors fit eleven widths; populated status filters cover
-seven. Tests check Completed persistence, actual visible green status material,
-independent saved gaps, live Admin application and centering even with Top text
-alignment. Final editor-preview click regression passed. Role inventory
-regenerated; isolated screenshots reviewed; git diff --check clean.
+Validation: all 33 Cloud Build gates, full app-regression and real server smoke
+passed; callback tests cover duplicate/concurrent claims, storage failure,
+format fallback, independent channels, uncertainty, read-only diagnostics,
+authorization and late-account UI responses. Public live verification passed
+against 9de4fd7. Regenerated typography source locations; diff check clean.
 
-Limitations: fake providers and isolated Chromium only. No personal Chrome,
-production credentials, live calls/SMS or provider connection checks. Local
-commit only, not pushed/deployed. Fromsa must Push, confirm Cloud Build and
-verify release.json for the exact commit before checking the live controls.
+Limitations: local commit only. Push/deploy plus owner-configured dedicated
+2-minute Scheduler job and actual owner SMS/call verification still required.
+Exact setup and catch-up/reconciliation cautions: docs/CALLBACK-ALERTS.md.

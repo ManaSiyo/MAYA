@@ -1146,6 +1146,7 @@ if (IS_AFFILIATES) {
 
     <div class="panel" tabindex="0" role="region" aria-label="Leads, scroll horizontally for more columns"><table id="leads-table"><tbody></tbody></table></div>
     <div id="leads-note" class="note" style="display:none"></div>
+    <div id="callback-alert-note" class="note" role="status" style="display:none"></div>
   </details>
 
   <details class="fold" id="ads-fold" open>
@@ -3292,12 +3293,36 @@ async function deleteLeadRow(i) {
   } catch (_) { reloadLeads(); }
 }
 function reloadLeads() { if (IS_AFFILIATES) return window.loadAffiliateLeads(); try { if (window.loadMkt) loadMkt(); } catch (_) {} try { loadMayaCommand(); } catch (_) {} }
+let _callbackStatusBusy=false;
+async function loadLeadAlertStatus(){
+  if(IS_AFFILIATES||!_idTok||_callbackStatusBusy)return;
+  const note=document.getElementById('callback-alert-note');if(!note)return;
+  _callbackStatusBusy=true;const auth=_idTok;
+  try{
+    const r=await fetch('/api/admin/lead-alerts/status',{headers:{Authorization:'Bearer '+_idTok},cache:'no-store'}),j=await r.json();
+    if(!r.ok||!j.ok)throw Error(j.error||'Callback notification status unavailable.');
+    if(auth!==_idTok)return;
+    const warnings=[],scheduled=Date.parse(j.health?.lastScheduledAt||'');
+    if(!j.readiness?.schedulerConfigured)warnings.push('Automatic callback checks are not configured.');
+    else if(!Number.isFinite(scheduled)||Date.now()-scheduled>5*60000)warnings.push('No recent automatic callback check. Verify the dedicated Scheduler job.');
+    if(!j.feed?.connected)warnings.push('Callback form feed is unavailable.');
+    if(!j.readiness?.smsConfigured)warnings.push('Callback SMS provider is not configured.');
+    if(!j.readiness?.voiceConfigured)warnings.push('Callback voice bridge is not configured.');
+    if(!j.readiness?.ownerNumberConfigured)warnings.push('Owner callback number is not explicitly configured.');
+    if(j.pending)warnings.push(j.pending+' recent callback request(s) still need an alert check.');
+    for(const item of j.items||[])for(const channel of ['text','call'])if(['failed','uncertain','claimed'].includes(item[channel]))warnings.push((item.name||'Callback')+': '+channel+' '+item[channel]+(item[channel+'Error']?' ('+item[channel+'Error']+')':''));
+    for(const item of j.items||[])for(const channel of ['text','call'])if(item[channel+'RecordingError'])warnings.push(item[channel+'RecordingError']);
+    if(j.health?.lastError)warnings.push(j.health.lastError);
+    note.textContent=warnings.join(' ').slice(0,900);note.style.display=warnings.length?'block':'none';
+  }catch(e){if(auth===_idTok){note.textContent='Callback notifications: '+e.message;note.style.display='block';}}
+  finally{_callbackStatusBusy=false;}
+}
 async function checkLeadAlerts(quiet=false){
   const note=document.getElementById('leads-note');if(!quiet){note.style.display='block';note.textContent='Checking new signups...';}
-  try{const r=await fetch('/api/admin/lead-alerts/check',{method:'POST',headers:{Authorization:'Bearer '+_idTok}});const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||'Alert check failed.');
+  try{const r=await fetch('/api/admin/lead-alerts/check',{method:'POST',headers:{Authorization:'Bearer '+_idTok}});const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||j.failed?.map(x=>x.channel+': '+x.why).join('; ')||'Alert check failed.');
     if(!quiet||j.texts||j.calls||j.failed?.length){note.style.display='block';note.textContent=`Checked ${j.checked} recent signups · ${j.texts} texts accepted · ${j.calls} calls placed`+(j.failed?.length?' · '+j.failed.map(x=>x.channel+': '+x.why).join('; ').slice(0,240):'');}
     if(!quiet||j.texts||j.calls)reloadLeads();
-  }catch(e){if(!quiet){note.style.display='block';note.textContent=e.message;}}
+  }catch(e){note.style.display='block';note.textContent=e.message;}finally{loadLeadAlertStatus();}
 }
 window.reloadLeads = reloadLeads;
 // The server scheduler works without an open browser. This owner-only check
@@ -3978,6 +4003,7 @@ function clearAffiliateLeads(message) {
   if (window.MAYA_ADMIN_DATA?.marketing) delete window.MAYA_ADMIN_DATA.marketing.leads;
   document.querySelector('#leads-table tbody').replaceChildren();
   document.getElementById('leads-note').style.display = 'none';
+  loadLeadAlertStatus();
   for (const key of ['total','week','contacted','closed']) document.getElementById('affiliate-'+key).textContent = '·';
   document.getElementById('affiliate-status').textContent = message;
 }

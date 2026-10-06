@@ -2673,9 +2673,13 @@ ok('Owner CRM uses an authenticated setup and confirmation-only SMS lead writes'
 ok('Dead Owner tools removed; Gmail connection remains account-scoped',!MAP_SOURCE.includes('<maya-owner-crm>')&&MAP_SOURCE.includes("fetch('/api/admin/owner-crm'"));
 ok('A new Wix Call back lead can alert the owner through the scheduled check and Admin',
   SERVER_SOURCE.includes("fetchLeads:()=>wixLeads({fresh:true,summaries:false})") &&
-  SERVER_SOURCE.includes("onScheduledSync:()=>_leadAlerts?.run()") &&
+  SERVER_SOURCE.includes("return _leadAlerts.run({source:'scheduled'})") &&
   MAP_SOURCE.includes("/api/admin/lead-alerts/check") &&
   MAP_SOURCE.includes('checkLeadAlerts(true);},300000)'));
+ok('Callback alerts have independent authenticated scheduling and visible failures',
+  SERVER_SOURCE.includes('mountLeadAlertRoutes(app,') &&
+  readFileSync(join(ROOT,'docs/server/lead-alerts.mjs'),'utf8').includes("app.post('/api/tasks/lead-alerts'") &&
+  MAP_SOURCE.includes('/api/admin/lead-alerts/status') && MAP_SOURCE.includes('callback-alert-note'));
 ok('Booking uses the owner-shared link, exact lead and confirmation before client SMS',
   readFileSync(join(ROOT,'docs/server/booking-link.mjs'),'utf8').includes("https://wix.to/wT2lSqE") &&
   MAP_SOURCE.includes("const link='https://wix.to/wT2lSqE'") &&

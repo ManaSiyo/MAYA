@@ -250,3 +250,11 @@ October 5 inline Leads and drawer: Latest Notes edits within its cell; Enter/blu
 Messages hierarchy: keep #adm-tabtitle (H2) fixed and visible when opening contacts; #msg-name is plain H3 with a hover/focus pencil. Systems Automations opens the drawer view, not a browser tab. docs/server/text-automations.mjs stores owner-account draft rules, uses the shared CRM AI budget, and has no send/timer capability. Only explicit Messages Send submits texts. Run tests/text-automations.mjs and tests/lead-notes-ui.mjs plus communications suites. Opening suggestions must not overwrite composer drafts; ignore stale account/recipient responses.
 
 October 5 icon/status controls: icons always center vertically on their assigned rows; saved text vertical alignment must not move row icons. Optional iconPillGap/iconTextGap (0–32px, defaults 6/8) are shared saved design keys. Gallery samples open their actual settings and may not invent live metrics. Leads supports Completed through Admin and owner CRM with existing green semantic status styling. Run component-gallery, profile-crm, owner-crm, outbound-ui/lead-filter-ui and communications gates for these paths.
+
+Callback notifications: docs/server/lead-alerts.mjs owns durable independent SMS
+and call claims plus health. /api/tasks/lead-alerts is Scheduler-authenticated
+and independent of Outbound accountId; /api/admin/lead-alerts/status is read-only
+and owner-gated. Reuse verified Scheduler identity; production setup remains
+owner-only. Accepted is not delivered. Never retry claimed/uncertain alerts
+without provider reconciliation. Read docs/CALLBACK-ALERTS.md and run
+tests/lead-alerts.mjs plus communications, app-regression and smoke checks.

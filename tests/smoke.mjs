@@ -9,6 +9,8 @@
 import assert from 'node:assert';
 
 process.env.GOOGLE_CLIENT_ID = 'smoke-test.apps.googleusercontent.com';
+process.env.OUTBOUND_SCHEDULER_EMAIL = '';
+process.env.OUTBOUND_SCHEDULER_AUDIENCE = '';
 process.env.PORT = process.env.PORT || '8791';
 process.env.MAYA_MCP_TOKEN = process.env.MAYA_MCP_TOKEN || 'smoke-token';
 const BASE = 'http://127.0.0.1:' + process.env.PORT;
@@ -36,6 +38,8 @@ const get  = (p, o = {}) => () => fetch(BASE + p, o);
 const AUTH = { headers: { Authorization: 'Bearer not-a-real-token' } };
 
 console.log('\nMAYA smoke test\n');
+await check('Callback status rejects unauthenticated reads',get('/api/admin/lead-alerts/status'),401);
+await check('Callback worker refuses incomplete Scheduler setup',post('/api/tasks/lead-alerts'),503);
 await check('Automation settings reject unauthenticated reads',get('/api/admin/text-automations'),401);
 await check('Automation settings reject unauthenticated saves',post('/api/admin/text-automations'),401);
 await check('Message ideas reject unauthenticated requests',post('/api/admin/messages/suggest'),401);

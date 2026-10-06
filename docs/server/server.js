@@ -35,7 +35,7 @@ import { createMessageArchive } from './message-archive.mjs';
 import { createOwnerSMSAccess } from './owner-sms-access.mjs';
 import { createOwnerConversation } from './owner-conversation.mjs';
 import { createOwnerCRM, gmailCandidates } from './owner-crm.mjs';
-import { createLeadAlerts } from './lead-alerts.mjs';
+import { createLeadAlerts, mountLeadAlertRoutes } from './lead-alerts.mjs';
 import { createBookingLinks } from './booking-link.mjs';
 import { jsonStore } from './crm-store.mjs';
 import crypto from 'node:crypto';
@@ -4802,16 +4802,27 @@ app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' })
     textOwner:async text=>{
       const to=process.env.FROMSA_PHONE||'+15104917540';
       const sent=await sendSms(twilioDeps,{to,text});
-      if(sent.ok)await _messages.outbound({to,text,sid:sent.sid,status:sent.status,by:'maya-signup'});
+      if(sent.ok){try{await _messages.outbound({to,text,sid:sent.sid,status:sent.status,by:'maya-signup'});}catch{sent.recordingError='Text accepted, but Messages history could not be saved. Check Twilio before resending.';}}
       return sent;
     },
     callOwner:reason=>_phone?.callFromsa?.(reason)||{ok:false,why:'phone line unavailable'},
   });
 })().catch(e => console.error('[phone] mount failed', e.message));
 
+async function verifyCallbackScheduler(req){
+    if(!process.env.OUTBOUND_SCHEDULER_EMAIL||!process.env.OUTBOUND_SCHEDULER_AUDIENCE)throw Object.assign(new Error('Scheduler setup is incomplete.'),{status:503});
+    try{
+      const bearer=(req.headers.authorization||'').match(/^Bearer (.+)$/)?.[1];
+      if(!bearer)throw Error('missing token');
+      const p=await verifyGoogleJwt(bearer,process.env.OUTBOUND_SCHEDULER_AUDIENCE);
+      if(!p.email_verified||p.email!==process.env.OUTBOUND_SCHEDULER_EMAIL||!Number.isFinite(p.exp))throw Error('wrong service account');
+    }catch{throw Object.assign(new Error('Scheduler identity was not verified.'),{status:401});}
+}
+mountLeadAlertRoutes(app,{requireAuthHeader,requireOwner,getAlerts:()=>_leadAlerts,verifyScheduler:verifyCallbackScheduler,readiness:()=>({schedulerConfigured:!!(process.env.OUTBOUND_SCHEDULER_EMAIL&&process.env.OUTBOUND_SCHEDULER_AUDIENCE),smsConfigured:!!(process.env.TWILIO_ACCOUNT_SID&&process.env.TWILIO_AUTH_TOKEN),voiceConfigured:!!(_phone&&process.env.OPENAI_API_KEY&&process.env.TWILIO_ACCOUNT_SID&&process.env.TWILIO_AUTH_TOKEN),ownerNumberConfigured:!!process.env.FROMSA_PHONE})});
+
 app.post('/api/admin/lead-alerts/check',requireAuthHeader,async(req,res)=>{
   try{await requireOwner(req);if(!_leadAlerts)return res.status(503).json({ok:false,error:'Phone line is starting.'});
-    res.set('Cache-Control','no-store').json({ok:true,...await _leadAlerts.run()});
+    const result=await _leadAlerts.run({source:'admin'});res.set('Cache-Control','no-store').status(result.failed.length?503:200).json({ok:!result.failed.length,...result});
   }catch(e){res.status(e.status||503).json({ok:false,error:e.status?e.message:'Could not check new signups.'});}
 });
 app.get('/api/admin/booking/pending',requireAuthHeader,async(req,res)=>{
@@ -4943,16 +4954,9 @@ app.post('/api/admin/owner-crm/gmail-add',requireAuthHeader,express.json({limit:
 
 mountOutbound(app, {
   gmail:crmGmail, ai:crmAI,
-  onScheduledSync:()=>_leadAlerts?.run(),
+  onScheduledSync:()=>{if(!_leadAlerts)throw Error('Callback notification service is unavailable.');return _leadAlerts.run({source:'scheduled'});},
   schedulerReady:!!(process.env.OUTBOUND_SCHEDULER_EMAIL&&process.env.OUTBOUND_SCHEDULER_AUDIENCE),
-  verifyScheduler:async req=>{
-    try{
-      const bearer=(req.headers.authorization||'').match(/^Bearer (.+)$/)?.[1];
-      if(!bearer)throw Error('missing token');
-      const p=await verifyGoogleJwt(bearer,process.env.OUTBOUND_SCHEDULER_AUDIENCE);
-      if(!p.email_verified||p.email!==process.env.OUTBOUND_SCHEDULER_EMAIL||!Number.isFinite(p.exp))throw Error('wrong service account');
-    }catch{throw Object.assign(new Error('Scheduler identity was not verified.'),{status:401});}
-  },
+  verifyScheduler:verifyCallbackScheduler,
   phoneEvents:async (contacts,since)=>{
     const o=await gcsGet(THREADS_PATH);if(!o.ok){if(o.status===404)return [];throw Error('Phone log unavailable');}
     const numbers=new Set(contacts.map(c=>e164(c.phone)).filter(Boolean));

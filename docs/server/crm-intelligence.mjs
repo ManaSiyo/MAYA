@@ -138,7 +138,9 @@ export function mountCrmIntelligence(app,deps) {
       // Owner signup alerts are independent of Gmail and Hunter failures.
       const [crm,alerts]=await Promise.allSettled([sync(uid,true),deps.onScheduledSync?.()]);
       if(crm.status==='rejected')throw crm.reason;
-      res.json({ok:true,...crm.value,state:undefined,leadAlerts:alerts.status==='fulfilled'?alerts.value:{ok:false,error:'Signup alert check failed.'}});
+      const leadAlerts=alerts.status==='fulfilled'?alerts.value:{ok:false,error:'Signup alert check failed.'};
+      const alertFailed=alerts.status==='rejected'||!!leadAlerts?.failed?.length;
+      res.status(alertFailed?503:200).json({...crm.value,ok:!alertFailed,state:undefined,leadAlerts});
     }
     catch(e){res.status(e.status||502).json({ok:false,error:e.status?e.message:'Scheduled update failed.'});}
   });
