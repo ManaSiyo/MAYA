@@ -681,8 +681,8 @@ const adminInteractions = await pg.evaluate(async () => {
   const name = document.querySelector('.lead-identity');
   admTab('logs');
   const logsTab = !document.getElementById('drawer-logs').hidden && document.getElementById('drawer-messages').hidden && document.getElementById('adm-tab-logs').getAttribute('aria-selected') === 'true';
-  return { logsTab, noInjectedImage, exactName, deliveryVisible, tier: name?.parentElement?.querySelector('.category-badge')?.textContent,
-    actionsInline: name?.nextElementSibling?.tagName==='TIME'&&name?.nextElementSibling?.nextElementSibling?.classList.contains('category-badge'),
+  return { logsTab, noInjectedImage, exactName, deliveryVisible, tier: name?.parentElement?.querySelector('.category-badge')?.textContent||'',
+    actionsInline: name?.nextElementSibling?.tagName==='TIME'&&!name?.parentElement?.querySelector('.category-badge'),
     actions: name?.parentElement?.querySelectorAll('.category-badge button').length,
     tierField: !!name?.parentElement?.querySelector('[data-field="tier"]') };
 });
@@ -712,7 +712,7 @@ const messageRefinements = await pg.evaluate(async () => {
 });
 ok('Messages: top circular gear/chat tabs match frontend spacing and the voice button is compact',
   messageRefinements.padding === '16px' && messageRefinements.voiceSize === '42px' && messageRefinements.gear && messageRefinements.bubble);
-ok('Messages: contact rename saves and carrier feedback survives inbox polling', messageRefinements.renameSaved && messageRefinements.feedbackPersists && messageRefinements.callLabel === 'Call');
+ok('Messages: contact rename saves and carrier feedback survives inbox polling', messageRefinements.renameSaved && messageRefinements.feedbackPersists && messageRefinements.callLabel === '');
 const knownMessageName=await pg.evaluate(async()=>{
  const original=window.fetch,auth=_idTok;_idTok='fixture';paintLeads({connected:true,list:[{name:'Mary Example',phone:'+14155550123'}]});
  window.fetch=async(url,options)=>String(url).startsWith('/api/admin/messages/thread')?{ok:true,json:async()=>({thread:{name:'Caller',messages:[{kind:'call',dir:'in',transcript:[{who:'caller',text:'Hello'}]}]}})}:original(url,options);
@@ -723,8 +723,8 @@ ok('Messages preserve the lead name through blank/Caller responses and resolve t
 const { introducedName: smsIntroducedName } = await import('../docs/server/maya-messages.mjs');
 ok('Messages: explicit SMS introductions produce a contact name without treating inquiries as names',
   smsIntroducedName('Hi, my name is Mary Ingram, I need a fitting') === 'Mary Ingram' && !smsIntroducedName('I am interested in a fitting'));
-ok('CRM behavior: category badge has no price or call action and remains a noninteractive label',
-  adminInteractions.tier.includes('SI') && !adminInteractions.tier.includes('$') && adminInteractions.actionsInline && adminInteractions.actions === 0 && !adminInteractions.tierField);
+ok('CRM behavior: category badges are removed and dates remain under names',
+  adminInteractions.tier==='' && adminInteractions.actionsInline && adminInteractions.actions === 0 && !adminInteractions.tierField);
 const mapVer = await pg.evaluate(() =>
   (document.querySelector('meta[name="maya-version"]') || {}).content || 'missing');
 ok('index and map carry the same maya-version (' + r.version + ')', mapVer === r.version);
@@ -1770,7 +1770,7 @@ ok('the Lead Station is dynamic: hand-added leads merge with Wix, each lead sour
   SERVER_SOURCE.includes("source: 'wix'") &&
   SERVER_SOURCE.includes('async function appendManualLead(') &&
   SERVER_SOURCE.includes("app.post('/api/admin/lead-add'") &&
-  MAP_SOURCE.includes('category-badge'));
+  MAP_SOURCE.includes('class="lead-signup"'));
 ok('tapping the voice logo no longer forces the Admin drawer open',
   !MAP_SOURCE.includes("if(d && !d.classList.contains('open')) toggleDrawer(true)") &&
   MAP_SOURCE.includes('must NOT pull the drawer open'));
@@ -1872,7 +1872,7 @@ ok('v13.90: the drawer type scales down for phones (Apple-style desktop→mobile
 
 // ── v13.91 (Admin) ──
 ok('Lead Station note summaries and contact controls use functional typography',
-  MAP_SOURCE.includes('class="lead-note-vp"') &&
+  MAP_SOURCE.includes('class="lead-note-vp lead-note-edit"') &&
   MAP_SOURCE.includes('function _leadMarquees(') &&
   MAP_SOURCE.includes('@keyframes leadmq') &&
   CANON_SOURCE.includes('var(--maya-text-table)/1.5 var(--maya-font-ui)'));
@@ -1950,7 +1950,7 @@ ok('v13.95/v13.98: the drawer floor is a smaller tighter circle, lower, with the
 ok('v14.34: Last Quote is gone; the tier price helper stays for the pay link',
   !MAP_SOURCE.includes('function _quoteCell') &&
   MAP_SOURCE.includes('function _leadTierNum') &&
-  MAP_SOURCE.includes("const LEAD_COLS_DEFAULT = ['name', 'stage', 'note'];"));
+  MAP_SOURCE.includes("const LEAD_COLS_DEFAULT = ['name', 'contact', 'stage', 'note'];"));
 ok('v13.95: the Invoice 1 / Invoice 2 columns and the day-count line under the name are gone',
   !MAP_SOURCE.includes("label: 'Invoice") &&
   !MAP_SOURCE.includes("cell(i, x, 'invoice1'") &&
@@ -1960,8 +1960,8 @@ ok('v13.95: columns drag to reorder, the order persists, the first column stays 
   MAP_SOURCE.includes('_leadColDrop') &&
   MAP_SOURCE.includes("localStorage.setItem('maya.leadCols'") &&
   MAP_SOURCE.includes('lead-col-first'));
-ok('CRM: row action is phone only, invoicing composer remains inside Messages',
-  MAP_SOURCE.includes('function _actionsCell') &&
+ok('CRM: phone icon and invoicing remain inside Messages',
+  MAP_SOURCE.includes('id="msg-call"') &&
   MAP_SOURCE.includes('onclick="msgInvoice()"') &&
   MAP_SOURCE.includes('function leadInvoice') &&
   MAP_SOURCE.includes('lead-inv-modal') &&
@@ -2168,7 +2168,7 @@ ok('v14.30: Maya on the phone and a year of leads: the phone module, the station
   SERVER_SOURCE.includes("const LEADS_DAYS = Number(process.env.WIX_LEADS_DAYS || 365);") &&
   SERVER_SOURCE.includes("source: (lead && lead.source === 'phone') ? 'phone' : 'maya'") &&
   SERVER_SOURCE.includes("app.use('/api/phone/incoming', express.urlencoded({ extended: false, limit: '32kb' }));") &&
-  MAP_SOURCE.includes('category-badge') &&
+  MAP_SOURCE.includes('class="lead-signup"') &&
   PHONE_SOURCE.includes("app.post('/api/phone/incoming', incoming);") &&
   PHONE_SOURCE.includes("new deps.WebSocketServer({ server, path: '/api/phone/stream' })") &&
   PHONE_SOURCE.includes("format: { type: 'audio/pcmu' }") &&
@@ -2608,7 +2608,7 @@ const affiliateBehavior=await affiliatePage.evaluate(async()=>{
   const populated=document.querySelector('#leads-table').textContent.includes('Mary Example') &&
     document.getElementById('affiliate-total').textContent==='2' && document.getElementById('affiliate-week').textContent==='1' &&
     document.getElementById('affiliate-contacted').textContent==='1' && document.getElementById('affiliate-closed').textContent==='1';
-  const actions=!!document.querySelector('#leads-table .category-badge')&&!document.querySelector('#leads-table [aria-label="Call"],#leads-table [aria-label="Invoice"]');
+  const actions=!document.querySelector('#leads-table .category-badge')&&!document.querySelector('#leads-table [aria-label="Call"],#leads-table [aria-label="Invoice"]');
   mode='denied'; await loadAffiliateLeads();
   const denied=!document.querySelector('#leads-table').textContent.includes('Mary Example') && document.getElementById('affiliate-status').textContent.includes('admins only');
   mode='slow'; const pending=loadAffiliateLeads();
@@ -2647,9 +2647,9 @@ const leadAlignment = await affiliatePage.evaluate(()=>{
     middle:getComputedStyle(document.querySelector('td.lead-note')).verticalAlign,
     header:getComputedStyle(document.querySelector('.lead-h-note')).position,
     fixed:getComputedStyle(document.querySelector('#leads-table')).tableLayout,
-    badge:document.querySelector('.category-badge').textContent};
+    badge:document.querySelector('.category-badge')?.textContent||''};
 });
-ok('Lead rows left-align names/actions/notes and retain keyboard horizontal scrolling',leadAlignment.name==='flex-start' && leadAlignment.actions==='flex-start' && leadAlignment.note==='left' && leadAlignment.middle==='middle' && leadAlignment.header==='sticky' && leadAlignment.fixed==='fixed' && leadAlignment.scroll==='auto' && leadAlignment.focus===0 && leadAlignment.badge==='SI');
+ok('Lead rows left-align names/actions/notes and retain keyboard horizontal scrolling',leadAlignment.name==='flex-start' && leadAlignment.actions==='flex-start' && leadAlignment.note==='left' && leadAlignment.middle==='middle' && leadAlignment.header==='sticky' && leadAlignment.fixed==='fixed' && leadAlignment.scroll==='auto' && leadAlignment.focus===0 && leadAlignment.badge==='');
 await affiliatePage.close();
 const smsSource=readFileSync(join(ROOT,'docs/server/maya-messages.mjs'),'utf8');
 ok('SMS audit fixes preserve opt-in, carrier reasons and trusted-host signature checks',
@@ -2667,7 +2667,7 @@ mergeContacts(suppressionState,rowsToContacts([['Email','Status'],['a@example.co
 ok('Reimported bounced contacts suppress existing outreach',suppressionState.contacts[0].stage==='suppressed');
 const liveVerifier=readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8');
 ok('Live verifier checks moved pages and Outbound module type',liveVerifier.includes("localVersion('frontend/index.html')") && liveVerifier.includes('outboundScript.contentType'));
-ok('CRM status column hides contact numbers and opens the thread by name',MAP_SOURCE.includes("['name', 'stage', 'note']") && MAP_SOURCE.includes('function leadStage(x)') && MAP_SOURCE.includes('function leadSummary(x)') && MAP_SOURCE.includes('function msgInvoice()'));
+ok('CRM has a separate Contact column and opens the thread by name',MAP_SOURCE.includes("['name', 'contact', 'stage', 'note']") && MAP_SOURCE.includes('function leadStage(x)') && MAP_SOURCE.includes('function leadSummary(x)') && MAP_SOURCE.includes('function msgInvoice()'));
 ok('Model snapshot uses authenticated server config',MAP_SOURCE.includes('/api/admin/models') && SERVER_SOURCE.includes("app.get('/api/admin/models', requireAuthHeader"));
 ok('Owner CRM uses an authenticated setup and confirmation-only SMS lead writes', !MAP_SOURCE.includes('<maya-owner-crm>') && SERVER_SOURCE.includes('ownerCommand: input => ownerCRM.handle(input)') && readFileSync(join(ROOT,'docs/server/owner-crm.mjs'),'utf8').includes('pending.code.toLowerCase()'));
 ok('Dead Owner tools removed; Gmail connection remains account-scoped',!MAP_SOURCE.includes('<maya-owner-crm>')&&MAP_SOURCE.includes("fetch('/api/admin/owner-crm'"));
@@ -2678,7 +2678,7 @@ ok('A new Wix Call back lead can alert the owner through the scheduled check and
   MAP_SOURCE.includes('checkLeadAlerts(true);},300000)'));
 ok('Booking uses the owner-shared link, exact lead and confirmation before client SMS',
   readFileSync(join(ROOT,'docs/server/booking-link.mjs'),'utf8').includes("https://wix.to/wT2lSqE") &&
-  MAP_SOURCE.includes("body:JSON.stringify({query:lead.id})") &&
+  MAP_SOURCE.includes("const link='https://wix.to/wT2lSqE'") &&
   PHONE_SOURCE.includes("args.preview_id!==call.pendingBookingId") &&
   MAP_SOURCE.includes("/api/admin/booking/confirm"));
 ok('Phone calls show their transcript in the Messages drawer',
@@ -2690,7 +2690,7 @@ ok('Outbound preserves Sheet columns and filters all campaigns with recorded F1/
 ok('Outbound preserves campaign pain and criteria and provides a people table',outboundJS.includes("field('pain'") && outboundJS.includes("field('criteria'") && outboundJS.includes('function renderPeople()'));
 await browser.close(); if (served) srv.close();
 ok('CRM uses five owner statuses and dismisses the filter outside or on Escape',MAP_SOURCE.includes("booked:'Booked'") && MAP_SOURCE.includes("canceled:'Cancelled'") && MAP_SOURCE.includes("!_leadFilterOwner.contains(e.target) && !_leadFilterMenu.contains(e.target)") && MAP_SOURCE.includes("if(e.key==='Escape' && _leadFilterOwner)") && MAP_SOURCE.includes('window.filterLeadStatus = filterLeadStatus'));
-ok('Lead rows put name then date then category in one row',MAP_SOURCE.includes("<time>'+esc(leadSignup(x))+'</time>'+_actionsCell(i,x)") && MAP_SOURCE.includes('function leadSignup') && !MAP_SOURCE.slice(MAP_SOURCE.indexOf('function _actionsCell'),MAP_SOURCE.indexOf('function _leadColDefs')).includes('PAY_SVG'));
+ok('Lead rows show H5 names above H6 dates without category badges',MAP_SOURCE.includes('class="lead-signup"')&&MAP_SOURCE.includes('flex-direction:column;align-items:stretch')&&!MAP_SOURCE.includes('function leadCategory'));
 ok('Model snapshot shows server roles through accessible hover cards',MAP_SOURCE.includes("new CustomEvent('maya-model-snapshot'") && readFileSync(join(ROOT,'aesthetics/ui/admin-systems.js'),'utf8').includes('Object.entries(snapshot.models'));
 const outboundRevampUI=readFileSync(join(ROOT,'backend/outbound.html'),'utf8'),outboundRevampJS=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');
 ok('Outbound uses the Admin background and functioning drawer',outboundRevampUI.includes('birth-of-a-star.png')&&outboundRevampUI.includes('outbound-drawer')&&outboundRevampJS.includes('function closeDrawer'));
@@ -2721,7 +2721,7 @@ ok('Aesthetic Control removes navigation, Reset and editor housing controls and 
 ok('Inner panel keeps live geometry and inactive Filter editor is removed',surfaceEditors.includes("'Inner panel','inner'")&&!surfaceEditors.includes("'Filter','filter'")&&compactGallery.includes('...surfacesEditor.settings()'));
 ok('Table has its own divider, header/first-column material and per-column type/alignment',surfaceEditors.includes('setupTableCellEditor')&&surfaceEditors.includes("title.textContent='Table'")&&surfaceEditors.includes("['vertical','Vertical'"));
 ok('Lead Station removes floating tools and opens conversation from full name cells',!MAP_SOURCE.includes('id="leads-bar"')&&MAP_SOURCE.includes("k==='name'?' onclick=\"leadOpenThread("));
-ok('Lead categories replace phone/tier pills with four compact badges',MAP_SOURCE.includes("code:'SI'")&&MAP_SOURCE.includes("code:'CE'")&&MAP_SOURCE.includes("code:'SU'")&&MAP_SOURCE.includes("code:'?'"));
+ok('Leads remove category badges and include stored phone contacts',!MAP_SOURCE.includes('function _actionsCell')&&MAP_SOURCE.includes('class="lead-phone"'));
 const ownerDesignRuntime=readFileSync(join(ROOT,'aesthetics/ui/typography-controls.js'),'utf8');
 const ownerDesignConfig=readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8');
 ok('Outer and inner padding have live visual debug controls',compactGallery.includes('controlSizes') && readFileSync(join(ROOT,'aesthetics/aesthetic-control/overlay.js'),'utf8').includes("'#gallery>.preview-section'") && readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes('highlightPadding(inner'));
@@ -2776,5 +2776,8 @@ ok('Lead status picker shares dropdown material and preserves native save',MAP_S
 ok('Table material controls use two border rows while background and opacity stay with selections',cellEditorSource.includes("['Outer border settings',outerSpecs],['Inner border settings',innerSpecs]")&&!cellEditorSource.includes('Table background')&&!cellEditorSource.includes('Table opacity')&&cellEditorSource.includes("['opacity','Opacity',{max:100}]"));
 ok('Model hover dismissal separates pointer exit from keyboard focus',readFileSync(join(ROOT,'aesthetics/ui/admin-systems.js'),'utf8').includes("interaction==='pointer'||!focused"));
 ok('Owner lead SMS reads bypass AI and phone reports use live numeric contacts',ownerConversationSource.includes('const direct=ownerLeadRead(text);if(direct)return direct;')&&ownerConversationSource.includes("decision.report==='leads'")&&PHONE_SOURCE.includes("enum:['leads','contact']"));
+await import('./lead-note-persistence.mjs');
+await import('./lead-notes-ui.mjs');
+ok('Leads: reviewed note dictation, persisted edits, Contact/H5/H6 and booking composer drafts',true);
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

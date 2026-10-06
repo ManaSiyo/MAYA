@@ -37,9 +37,9 @@ for(const title of ['Lead Station','Campaign details']){const h=document.createE
 const drawer=Drawer({title:'Systems',content:[Metric({label:'AI today',value:'$0.12'})]});
 let openDrawer;openDrawer=Pill({label:'Drawer',onClick:()=>drawer.showFrom(openDrawer)});row(panels).append(openDrawer);
 const guide=document.createElement('div');guide.id='table-preview';guide.tabIndex=0;guide.setAttribute('role','region');guide.setAttribute('aria-label','Lead Station table preview');panels.append(guide);
-const table=document.createElement('table');table.className='text-guide';table.innerHTML='<thead><tr><th data-col="name">Full name</th><th data-col="stage">Status</th><th data-col="note">Latest Notes</th></tr></thead><tbody></tbody>';guide.append(table);
-for(const [name,badge,date,status,color,note] of [['Angela','?','Oct 1','Not contacted','#b5bdc8','Wedding, gala, or ceremony'],['Mary','SI','Sep 4','In progress','#fbbf24','A custom suit with a tailored fit']]){
- const tr=document.createElement('tr');tr.innerHTML='<td data-col="name" class="lead-col-first"><button class="lead-open"><span class="lead-identity">'+name+'</span><time>'+date+'</time><span class="category-badge">'+badge+'</span></button></td><td data-col="stage"><span class="status-pill lead-status" style="--status-color:'+color+'">'+status+'</span></td><td data-col="note"><div class="lead-note-vp"><span>'+note+'</span></div></td>';table.tBodies[0].append(tr);
+const table=document.createElement('table');table.className='text-guide';table.innerHTML='<thead><tr><th data-col="name">Full name</th><th data-col="contact">Contact</th><th data-col="stage">Status</th><th data-col="note">Latest Notes</th></tr></thead><tbody></tbody>';guide.append(table);
+for(const [name,phone,date,status,color,note] of [['Angela','+1 415 555 0101','Oct 1','Not contacted','#b5bdc8','Wedding, gala, or ceremony'],['Mary','+1 415 555 0102','Sep 4','In progress','#fbbf24','A custom suit with a tailored fit']]){
+ const tr=document.createElement('tr');tr.innerHTML='<td data-col="name" class="lead-col-first"><button class="lead-open"><span class="lead-identity" data-preview-category="H5">'+name+'</span><time class="lead-signup" data-preview-category="H6">'+date+'</time></button></td><td data-col="contact">'+phone+'</td><td data-col="stage"><span class="status-pill lead-status" style="--status-color:'+color+'">'+status+'</span></td><td data-col="note"><div class="lead-note-vp"><span>'+note+'</span></div></td>';table.tBodies[0].append(tr);
 }
 const surfacesEditor=setupSurfaceEditors({panels,guide,design:storedDesign});
 const fonts=section('Typography','fonts'),hierarchy=document.createElement('div');hierarchy.className='type-hierarchy';fonts.append(hierarchy);
@@ -48,7 +48,7 @@ const usage=await fetch('/aesthetics/aesthetic-control/typography-usage.json').t
 const editorSettings={...window.MayaTypographyControls.defaults.editor,...storedDesign.editor};
 function renderEditor(){window.MayaTypographyControls.previewEditor(editorSettings);}
 renderEditor();
-const roles=[['H0','signin','Maya','Sign-in'],['H1','brand','Maya','Brand'],['H2','drawer','Systems','Drawer'],['H3','subheadline','Campaign details','Lead Station / campaign details'],['H4','dashboard','12','Dashboard'],['P1','paragraph','Your next appointment.','Body / tables'],['P2','label','Contacts 12','Labels'],['P3','field','Name','Buttons / fields'],['P4','caption','Example data','Captions']];
+const roles=[['H0','signin','Maya','Sign-in'],['H1','brand','Maya','Brand'],['H2','drawer','Systems','Drawer'],['H3','subheadline','Campaign details','Lead Station / campaign details'],['H4','dashboard','12','Dashboard'],['H5','leadname','Angela','Lead name'],['H6','leaddate','Oct 4','Lead date'],['P1','paragraph','Your next appointment.','Body / tables'],['P2','label','Contacts 12','Labels'],['P3','field','Name','Buttons / fields'],['P4','caption','Example data','Captions']];
 for(const [category,key,text,where] of roles){
  typeSettings[category].align||='center';typeSettings[category].vertical||='middle';
  const group=document.createElement('section');group.className='type-group';group.dataset.category=category;

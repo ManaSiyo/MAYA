@@ -43,19 +43,19 @@ const compact = await page.evaluate(()=>({
   row:document.querySelector('#lead-tr-0').getBoundingClientRect().height,
   padding:getComputedStyle(document.querySelector('#lead-tr-0 td')).paddingTop,
   tierInteractive:!!document.querySelector('.lead-src [contenteditable],.lead-src button,.lead-src a'),
-  tier:document.querySelector('.category-badge').textContent,
+  tier:document.querySelector('.category-badge')?.textContent||'',
   ticker:getComputedStyle(document.querySelector('#mkt-ticker-inner')).fontSize,
   header:getComputedStyle(document.querySelector('#campaigns-table th')).backgroundColor
 }));
-assert.equal(await page.locator('#leads-table .lead-open').first().evaluate(e=>[...e.children].map(n=>n.tagName==='TIME'?'date':n.className).join(',')),'lead-identity,date,category-badge');
-assert.ok(await page.locator('#leads-table .lead-open').first().evaluate(e=>{const centers=[...e.children].map(n=>{const r=n.getBoundingClientRect();return r.top+r.height/2;});return Math.max(...centers)-Math.min(...centers)<1;}),'Lead metadata shares one row');
-assert.equal(report.size,'12px');assert.equal(compact.padding,'4px');assert.equal(compact.row,44);
+assert.equal(await page.locator('#leads-table .lead-open').first().evaluate(e=>[...e.children].map(n=>n.tagName==='TIME'?'date':n.className).join(',')),'lead-identity,date');
+assert.ok(await page.locator('#leads-table .lead-open').first().evaluate(e=>{const centers=[...e.children].map(n=>{const r=n.getBoundingClientRect();return r.top+r.height/2;});return centers[1]>centers[0];}),'Date appears below the name');
+assert.equal(report.size,'12px');assert.equal(compact.padding,'4px');assert.ok(compact.row>=44&&compact.row<=56,'Compact two-line name/date');
 assert.equal(await page.locator('#top-left-brand .brand-chips').count(),0);
 assert.equal(await page.locator('#top-left-brand .maya-logo-mark').getAttribute('src'),'/aesthetics/ui/logo-circle.png');
 assert.equal(await page.locator('.maya-logo-wrap').evaluate(e=>getComputedStyle(e).borderTopWidth),'0px');
 assert.equal(await page.locator('.top-btn.hamburger').evaluate(e=>getComputedStyle(e).boxShadow),'none');
 assert.match(await page.locator('.grid.doors .card b').first().evaluate(e=>getComputedStyle(e).fontFamily),/Cormorant/);
-assert.equal(compact.tierInteractive,false);assert.equal(compact.tier,'SI');
+assert.equal(compact.tierInteractive,false);assert.equal(compact.tier,'');
 assert.equal(compact.ticker,'10px');assert.equal(compact.header,'rgb(13, 17, 32)','Shared table header background');
 await page.evaluate(()=>document.querySelector('#leads-fold').scrollIntoView());
 await page.screenshot({path:join(tmpdir(),'maya-admin-compact.png')});
@@ -95,7 +95,7 @@ await page.evaluate(()=>document.querySelector('.lead-open').click());
 await page.waitForFunction(()=>document.querySelector('#msg-number').textContent==='+15555550100');
 await page.evaluate(()=>document.querySelector('[onclick="msgInvoice()"]').click());
 assert.ok(await page.locator('#lead-inv-modal').evaluate(e=>e.classList.contains('show')));
-const admin=readFileSync(root+'/backend/status.html','utf8');const modelCode='let _modelsLoading=false,_modelsAuth=null,_modelsChecked=0;'+admin.slice(admin.indexOf('async function loadModelSnapshot'),admin.indexOf('async function loadMayaLogs'));await page.evaluate(async code=>{const esc=v=>String(v).replace(/[&<>]/g,'');const _idTok='fixture';return eval(code+';loadModelSnapshot()');},modelCode);assert.match(await page.locator('#model-snapshot').textContent(),/gpt-6-luna/);
+const admin=readFileSync(root+'/backend/status.html','utf8');const modelCode='let _modelsLoading=false,_modelsAuth=null,_modelsChecked=0;'+admin.slice(admin.indexOf('async function loadModelSnapshot'),admin.indexOf('async function loadMayaLogs'));await page.evaluate(async code=>{const esc=v=>String(v).replace(/[&<>]/g,'');const _idTok='fixture';return eval(code+';loadModelSnapshot()');},modelCode);assert.match(await page.locator('#model-snapshot').textContent(),/GPT-6 Luna/);
 assert.deepEqual(pageErrors,[],'No uncaught UI errors');
 console.log('Outbound drawer, fixture data rendering, Gmail handoff, CRM styles/statuses/filter dismissal and grouped models passed.');
 }finally{await browser.close();}

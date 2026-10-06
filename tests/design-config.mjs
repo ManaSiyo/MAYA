@@ -76,3 +76,5 @@ assert.equal(validDesign({...compact,table:{...compact.table,radius:20}}),true);
 
 assert.equal(validDesign({...compact,table:{...compact.table,outerWidth:4,innerWidth:2,innerRim:50,innerBorderColor:'black'}}),true);
 for(const patch of [{outerWidth:9},{innerWidth:-1},{innerBorderColor:'red'},{innerRim:101}])assert.equal(validDesign({...compact,table:{...compact.table,...patch}}),false);
+
+const extended=structuredClone(compact);extended.type.H5={size:14,weight:400,color:"white",font:"jost",case:"none"};extended.type.H6={size:10,weight:300,color:"gray",font:"jost",case:"none"};extended.table.columns.push({...type});assert.equal(validDesign(extended),true);assert.equal(validDesign({...extended,type:{...extended.type,H6:{...extended.type.H6,color:"red"}}}),false);assert.equal(validDesign({...extended,table:{...extended.table,columns:[...extended.table.columns,type]}}),false);

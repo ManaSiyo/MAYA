@@ -35,7 +35,7 @@ export async function auditLeadFilter(page){
     assert.equal(data.fontSize,'11px','Filter retains the compact table scale');
   };
   await page.evaluate(()=>paintLeads({connected:true,list:['Help me decide','Signature','Ceremonial','Suit'].map((tier,i)=>({id:'badge-'+i,name:'Category '+i,phone:'+15555550100',tier,createdAt:'2026-10-01'}))}));
-  assert.deepEqual(await page.locator('.category-badge').allTextContents(),['?','SI','CE','SU']);
+  assert.equal(await page.locator('.category-badge').count(),0);assert.equal(await page.locator('td[data-col="contact"]').count(),4);
   assert.equal(await page.locator('#leads-bar,#leads-table [aria-label="Call"],#leads-table .lead-src').count(),0);
   const clicked=await page.evaluate(()=>{const original=window.leadOpenThread;let index;window.leadOpenThread=i=>index=i;document.querySelectorAll('td[data-col="name"]')[2].click();window.leadOpenThread=original;return index;});
   assert.equal(clicked,2,'Full name cell opens its exact client, including its padding');

@@ -229,3 +229,5 @@ html body :is(.finish-controls,.popup-editor)>summary{font-family:var(--maya-typ
 .panel-usage{font-size:11px;color:#aab5c4;text-transform:none}
 
 .type-row[data-type=signin]{grid-template-columns:minmax(0,1fr)}.type-row[data-type=signin] .type-example{white-space:nowrap;font-size:clamp(24px,18vw,var(--maya-type-H0-size))!important}
+
+#table-preview .lead-open{flex-direction:column;align-items:stretch;gap:3px;white-space:normal}

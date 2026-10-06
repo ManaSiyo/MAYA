@@ -6,6 +6,7 @@
       H0:{size:104,weight:400,color:'white'},
       H1:{size:24,weight:300,color:'white'}, H2:{size:20,weight:400,color:'white'},
       H3:{size:16,weight:400,color:'white'}, H4:{size:14,weight:400,color:'white'},
+      H5:{size:14,weight:400,color:'white'}, H6:{size:10,weight:300,color:'gray'},
       P1:{size:12,weight:300,color:'gray'}, P2:{size:12,weight:400,color:'white'},
       P3:{size:10,weight:300,color:'white'}, P4:{size:10,weight:400,color:'gray'}
     },
@@ -20,7 +21,7 @@
   defaults.table={outerWidth:1,innerWidth:1,innerBorderColor:'white',innerRim:22,radius:12,borderColor:'white',background:'black',fill:18,rim:22,paddingX:12,paddingY:4,
     header:{...tableType,color:'gray',align:'center',background:'gray',opacity:100},
     firstColumn:{background:'gray',opacity:100},
-    cells:{},columns:[{...tableType,font:'cormorant'},{...tableType,align:'center'},{...tableType}]};
+    cells:{},columns:[{...tableType,font:'cormorant'},{...tableType,align:'center'},{...tableType},{...tableType}]};
   function normalizeSurfaces(v){
     v.iconSize ??= defaults.iconSize;v.dropdownHeight ??= defaults.dropdownHeight;v.inner={...defaults.inner,...v.inner};v.filter={...defaults.filter,...v.filter};
     const t=v.table||{};v.table={...defaults.table,...t,innerRim:t.innerRim??t.rim??defaults.table.innerRim,innerBorderColor:t.innerBorderColor??t.borderColor??defaults.table.innerBorderColor,cells:{...t.cells},header:{...defaults.table.header,...t.header},firstColumn:{...defaults.table.firstColumn,...t.firstColumn},columns:defaults.table.columns.map((c,i)=>({...c,...t.columns?.[i]}))};
@@ -52,7 +53,7 @@
     css+=`${scope} :is(td,th){padding:${n(t.paddingY,40)}px ${n(t.paddingX,40)}px!important;}`;
     css+=`html body table:not(.people-table) :is(td.lead-col-first,td:first-child),html body .people-table td[data-sheet-col=\"0\"]{background-color:${bg(t.firstColumn)}!important;}`;
     t.columns.forEach((c,i)=>{
-      const col=['name','stage','note'][i];
+      const col=['name','stage','note','contact'][i];
       const cell=`${scope} td[data-col="${col}"]`;
       css+=`${cell},${cell} :is(.lead-open,.lead-note-vp,.lead-note-vp>span){${typography(c)}}`;
       if(c.background!==undefined)css+=`${cell}{background-color:${bg(c)}!important;}`;
@@ -117,9 +118,9 @@
     css+=`html body :is(#drawer,#outbound-drawer,#notes-drawer){background-color:rgb(3 15 29 / max(.90,var(--maya-review-panel-fill)));border-color:rgb(var(--review-panel-border-rgb,255 255 255) / var(--maya-review-panel-rim));backdrop-filter:blur(var(--maya-review-panel-blur)) saturate(var(--maya-review-panel-saturation));}`;
     css+=`html body :is(.preview-section,#cell-format-toolbar,.stat,.metric-row,.maya-surface,#adm-mkt .bl-tile){border-radius:var(--review-panel-radius,var(--maya-review-panel-radius))!important;background-color:rgb(3 15 29 / var(--maya-review-panel-fill));border-color:rgb(var(--review-panel-border-rgb,255 255 255) / var(--maya-review-panel-rim));backdrop-filter:blur(var(--maya-review-panel-blur)) saturate(var(--maya-review-panel-saturation));}`;
     css+=`html body :is(.maya-glass-button,.maya-pill,.maya-icon-button,#voice-bar,#outbound-drawer button:not([role=tab]):not(#close-drawer)):not([data-finish]){background-color:var(--maya-button-fill);border-color:var(--maya-button-edge);backdrop-filter:var(--maya-button-frost);-webkit-backdrop-filter:var(--maya-button-frost);background-image:linear-gradient(125deg,rgb(255 255 255 / var(--maya-control-tint)),transparent 55%);box-shadow:inset 0 1px 1px rgb(255 255 255 / var(--maya-control-highlight)),0 4px 16px rgb(0 0 0 / .22)}`;
-    const selectors={H0:'.maya-signin-h0',H1:'h1,#brand-title,.brand-title,#client-name-modal-title,.signin-wordmark:not(.maya-signin-h0)',H2:'.gallery-section-title,#adm-tabtitle,.pg-tabtitle,.drawer-title,.drawer-head-title',H3:'.gallery-subsection-title,h2.grp,.section-title,.subheadline',H4:'#adm-mkt .bl-step .v,#adm-mkt .bl-tile .v,.dashboard-number,.stat strong,.affiliate-stat strong',P1:'p,td,th,.note,.msg-main,.model-group',P2:'.metric-label,.metric-value,.maya-metric-label,.maya-metric-value,.label-count,.status-pill,.stat span,.affiliate-stat span',P3:'.maya-pill,.maya-glass-button,button.glass-pill,button.action-btn,button.modal-text-btn,button.drawer-action,button.pin-cta,button.tos-agree,button.tos-decline,button.upload-choose-btn,button.tip-amt,button.primary,button.pill,button.inv-btn,button.msg-call,button.msg-send,button.lead-tool,button.lead-cta,button.range-chip,button.metric-chip,button.wide,button.campaign,button.dissect-start,button.upload-btn,button.fab-src-pill,button.piece-pill,button.quality-pill,.dialog-actions button,.actions button,maya-ai-meter button,maya-owner-crm button,#voice-bar',P4:'small,.caption,.bl-step .k,.bl-tile .k'};
+    const selectors={H0:'.maya-signin-h0',H1:'h1,#brand-title,.brand-title,#client-name-modal-title,.signin-wordmark:not(.maya-signin-h0)',H2:'.gallery-section-title,#adm-tabtitle,.pg-tabtitle,.drawer-title,.drawer-head-title',H3:'.gallery-subsection-title,h2.grp,.section-title,.subheadline',H5:'.lead-identity',H6:'.lead-signup',H4:'#adm-mkt .bl-step .v,#adm-mkt .bl-tile .v,.dashboard-number,.stat strong,.affiliate-stat strong',P1:'p,td,th,.note,.msg-main,.model-group',P2:'.metric-label,.metric-value,.maya-metric-label,.maya-metric-value,.label-count,.status-pill,.stat span,.affiliate-stat span',P3:'.maya-pill,.maya-glass-button,button.glass-pill,button.action-btn,button.modal-text-btn,button.drawer-action,button.pin-cta,button.tos-agree,button.tos-decline,button.upload-choose-btn,button.tip-amt,button.primary,button.pill,button.inv-btn,button.msg-call,button.msg-send,button.lead-tool,button.lead-cta,button.range-chip,button.metric-chip,button.wide,button.campaign,button.dissect-start,button.upload-btn,button.fab-src-pill,button.piece-pill,button.quality-pill,.dialog-actions button,.actions button,maya-ai-meter button,maya-owner-crm button,#voice-bar',P4:'small,.caption,.bl-step .k,.bl-tile .k'};
     for(const [role,selector] of Object.entries(selectors))css+=`html body :is(${selector}){font-size:var(--maya-type-${role}-size)!important;font-weight:var(--maya-type-${role}-weight)!important;font-style:var(--maya-type-${role}-style)!important;font-family:var(--maya-type-${role}-font)!important;text-transform:var(--maya-type-${role}-case)!important}`;
-    for(const [role,selector] of Object.entries(selectors))if(role.startsWith('P'))css+=`html body :is(${selector}):not(.status-pill):not(.status-example){color:var(--maya-type-${role}-color)!important}`;
+    for(const [role,selector] of Object.entries(selectors))if(role.startsWith('P')||['H5','H6'].includes(role))css+=`html body :is(${selector}):not(.status-pill):not(.status-example){color:var(--maya-type-${role}-color)!important}`;
     for(const [role,selector] of Object.entries(selectors))if(['left','center','right'].includes(v.type[role]?.align))css+=`html body :is(${selector}){text-align:var(--maya-type-${role}-align)!important}`;
     for(const [role,selector] of Object.entries(selectors))if(['top','middle','bottom'].includes(v.type[role]?.vertical))css+=`html body :is(${selector}){vertical-align:${v.type[role].vertical}!important}`;
     css+='html body #signin-gate .maya-signin-h0{font-size:min(18vw,var(--maya-type-H0-size))!important;color:var(--maya-type-H0-color)!important}';

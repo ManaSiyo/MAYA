@@ -2731,3 +2731,5 @@ October 5, 2026 — Messages should fill the known person name from Leads/phone,
 October 5, 2026 — Fix glitchy lingering Model Snapshot hover cards. Separate pointer dismissal from keyboard focus and close on outside wheel/resize. Seven-width Admin UI and full regression passed. Local only; not pushed.
 
 October 5, 2026 — Owner should get the latest 5 leads and phone details by SMS, without a call; phone-requested SMS must contain numeric phone fields, not spoken digits. Common read routing bypasses AI, requested counts and report continuation work; grounded phone owner reports and number formatting implemented locally. Full regression, owner conversation/SMS/CRM, phone/messages/transfer/feedback and container checks passed. Not pushed.
+
+October 5, 2026 — Leads: click Latest Notes to edit/dictate, review then save; H5 name and H6 date below, remove category badges, add Contact phone column. Messages: phone icon for Call, retain known contact names, Booking Link inserts visible unsent text. Implemented locally; full regression, responsive gallery/Leads, communications, design/container and both hands batteries passed. Owner Push required.

@@ -14,6 +14,7 @@ function fixture(source,extra=''){
 const html=read('backend/status.html');
 const voice=html.slice(html.indexOf('let _voice = null;'),html.indexOf('</script>',html.indexOf('let _voice = null;')));
 const f=fixture(voice);
+f.run('_wakeWantOn=true;window.mayaNoteDictating=true;_wakeStart()');assert.equal(f.run('_wakeRec'),null,'Note dictation owns recognition');f.run('window.mayaNoteDictating=false');
 f.run('_wakeWantOn=true;_wakeStart()');assert.equal(f.run('_wakeOn'),true);assert.equal(f.nodes.get('wake-toggle').textContent,'Hey Maya: listening');
 f.run('_wakeRec.onerror({error:"network"})');assert.equal(f.run('_wakeOn'),false);assert.equal(f.timers.size,1);assert.equal(f.run('_wakeWantOn'),true);
 const retry=[...f.timers.values()][0];f.timers.clear();retry();assert.equal(f.run('_wakeOn'),true);

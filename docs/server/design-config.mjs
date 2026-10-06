@@ -6,7 +6,7 @@ export function validDesign(body) {
   if (Object.keys(body).some(k => !['type','glass','overlay','finish','pillX','pillY','editor','inner','filter','table','iconSize','dropdownHeight'].includes(k))) return false;
   for(const k of ['iconSize','dropdownHeight'])if(body[k]!==undefined&&(!Number.isInteger(body[k])||body[k]<24||body[k]>48))return false;
   const legacy=Object.hasOwn(body.type,'P5');
-  const roles=new Set([...DESIGN_ROLES,...(legacy?['P5']:[]),...(Object.hasOwn(body.type,'H0')?['H0']:[])]);
+  const roles=new Set([...DESIGN_ROLES,...(legacy?['P5']:[]),...['H0','H5','H6'].filter(k=>Object.hasOwn(body.type,k))]);
   if (Object.keys(body.type).length !== roles.size ||
       Object.keys(body.type).some(k => !roles.has(k))) return false;
   for (const [role,v] of Object.entries(body.type)) {
@@ -54,7 +54,7 @@ export function validDesign(body) {
     if(!typeValid(t.header)||!bgValid(t.header)||Object.keys(t.header).some(k=>![...types,...backgrounds].includes(k)))return false;
     if(!bgValid(t.firstColumn)||Object.keys(t.firstColumn).some(k=>!backgrounds.includes(k)))return false;
     if(t.cells!==undefined&&(!t.cells||Array.isArray(t.cells)||typeof t.cells!=='object'||Object.keys(t.cells).length>100||Object.entries(t.cells).some(([key,s])=>!/^(stage|note)-(0|[1-9][0-9]?)$/.test(key)||!typeValid(s)||!bgValid(s)||Object.keys(s).some(k=>![...types,...backgrounds].includes(k)))))return false;
-    if(!Array.isArray(t.columns)||t.columns.length!==3||t.columns.some(s=>!typeValid(s)||(s.background!==undefined||s.opacity!==undefined)&&!bgValid(s)||Object.keys(s).some(k=>![...types,...backgrounds].includes(k))))return false;
+    if(!Array.isArray(t.columns)||![3,4].includes(t.columns.length)||t.columns.some(s=>!typeValid(s)||(s.background!==undefined||s.opacity!==undefined)&&!bgValid(s)||Object.keys(s).some(k=>![...types,...backgrounds].includes(k))))return false;
   }
   return ['current','liquid','clear'].includes(body.finish) &&
     Number.isInteger(body.pillX) && body.pillX >= 4 && body.pillX <= 32 &&

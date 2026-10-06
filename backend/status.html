@@ -647,7 +647,7 @@ try {
   #adm-mkt #leads-table th.lead-col-first,#adm-mkt #leads-table td.lead-col-first{padding-left:18px}
   #adm-mkt #leads-table th:last-child,#adm-mkt #leads-table td:last-child{padding-right:18px}
   #adm-mkt #leads-table tr:last-child td{padding-bottom:14px}
-  #adm-mkt #leads-table{table-layout:fixed;width:100%;min-width:720px;border-collapse:separate;border-spacing:0}
+  #adm-mkt #leads-table{table-layout:fixed;width:100%;min-width:840px;border-collapse:separate;border-spacing:0}
   /* v13.94: every column is centered, per Fromsa. */
   #adm-mkt #leads-table th{position:sticky;top:0;z-index:3;background:#0d1120;
     font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;
@@ -735,7 +735,7 @@ try {
   #adm-mkt #leads-table .lead-h-contact{width:170px}
   #adm-mkt #leads-table .lead-note-vp{overflow:hidden;width:100%}
   #adm-mkt #leads-table .lead-note-vp:focus-within{overflow:auto}
-  #adm-mkt #leads-table .lead-note-vp .lead-note-edit{display:inline-block;white-space:nowrap;margin:0}
+  #adm-mkt #leads-table .lead-note-vp>span{display:inline-block;white-space:nowrap;margin:0}
   #adm-mkt #leads-table .lead-note-vp.mq .lead-note-edit{animation:leadmq 9s ease-in-out infinite alternate}
   #adm-mkt #leads-table .lead-note-vp:hover .lead-note-edit,
   #adm-mkt #leads-table .lead-note-vp:focus-within .lead-note-edit{animation-play-state:paused}
@@ -831,6 +831,16 @@ try {
 #adm-mkt #leads-table .lead-identity{display:block!important;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
 #adm-mkt #leads-table .category-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;border:1px solid var(--line);border-radius:100px;color:var(--dim);font:10px var(--maya-font-ui)}
 .affiliate-reload{border:1px solid var(--line);border-radius:100px;background:transparent;color:var(--ink);cursor:pointer}
+
+  #adm-mkt #leads-table .lead-open{flex-direction:column;align-items:stretch!important;gap:3px;white-space:normal}
+  .lead-note-edit{display:block;width:100%;text-align:inherit;font:inherit;color:inherit;border:0;background:none;cursor:text;padding:0}
+  .lead-phone{white-space:nowrap}
+  #adm-mkt #leads-table .lead-h-contact{width:160px}
+  #msg-call{display:inline-flex;align-items:center;justify-content:center}
+  #lead-note-dialog{width:min(560px,calc(100vw - 32px));max-height:calc(100dvh - 32px);box-sizing:border-box;color:var(--maya-text,#fff);overflow:auto}
+  #lead-note-dialog::backdrop{background:rgb(0 0 0 / .6)}
+  #lead-note-dialog textarea{width:100%;box-sizing:border-box;resize:vertical;font:inherit;color:inherit;background:rgb(0 0 0 / .25);border:1px solid rgb(170 181 196 / .5);border-radius:8px;padding:12px}
+  #lead-note-dialog .dialog-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 </style>
 <style>
   #affiliate-profile{display:none}
@@ -857,7 +867,7 @@ try {
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=14"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=15"></script>
 <link rel="stylesheet" href="/aesthetics/ui/admin-systems.css?v=3">
 </head>
 <body class="systems-map">
@@ -971,7 +981,7 @@ if (IS_AFFILIATES) {
       <div class="msg-head">
         <button class="msg-back" onclick="msgBack()" title="All threads">&#8249;</button>
         <div class="msg-who"><div class="msg-name-edit"><input class="msg-name" id="msg-name" aria-label="Contact name" placeholder="Contact name" title="Click to name this contact; Enter saves" maxlength="120" onblur="msgRename()" onkeydown="if(event.key==='Enter')this.blur()"><button class="msg-rename" aria-label="Edit contact name" onclick="document.getElementById('msg-name').focus()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 16-1 5 5-1L21 7l-4-4zM14 6l4 4"/></svg></button></div><div class="msg-number" id="msg-number"></div></div>
-        <button class="msg-call" onclick="msgBooking()" title="Preview the consultation booking link">Booking</button><button class="msg-call" onclick="msgInvoice()" title="Invoice this lead">Invoice</button><button class="msg-call" id="msg-call" onclick="msgCall()" title="Call this person">Call</button>
+        <button class="msg-call" onclick="msgBooking()" title="Add booking link to draft">Booking Link</button><button class="msg-call" onclick="msgInvoice()" title="Invoice this lead">Invoice</button><button class="msg-call" id="msg-call" onclick="msgCall()" title="Call this person" aria-label="Call this person"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2z"/></svg></button>
       </div>
       <div class="msg-controls"><button onclick="msgCheckDelivery()" title="Check the last five outgoing texts with the carrier">Check delivery</button><button id="msg-block" onclick="msgBlock()">Block</button><button onclick="msgDelete()">Delete conversation</button></div><div class="msg-scroll" id="msg-scroll"></div>
       <div class="msg-compose">
@@ -1674,6 +1684,7 @@ function _renewNow() {
 function _adoptToken(t, firstLoad) {
   if (t === _idTok) return;          // v12.9: the same token twice is not news
   _renewTries = 0;
+  window.dispatchEvent(new Event('maya-owner-session-changed'));
   _idTok = t;
   _cacheTok(t);
   _showSignin(false);
@@ -1717,6 +1728,7 @@ function _cmdBlock(label) {
 let _expiredAt = 0;
 function _expired() {
   if (IS_AFFILIATES && window.clearAffiliateLeads) window.clearAffiliateLeads('Sign in again to load leads.');
+  window.dispatchEvent(new Event('maya-owner-session-changed'));
   _idTok = null;
   delete window.MAYA_MODEL_SNAPSHOT;window.dispatchEvent(new CustomEvent("maya-model-clear"));
   try{ if(window.mayaCommandState) window.mayaCommandState('signed out', 'waiting'); }catch(_){}
@@ -2533,7 +2545,7 @@ async function toggleMayaVoice(){
 // flip it on and it remembers. It pauses while Maya is already live, and
 // restarts itself if the browser stops it. ═══
 let _wakeRec=null, _wakeOn=false, _wakeWantOn=false, _wakeRetry=null;
-function _wakeSchedule(delay=800){clearTimeout(_wakeRetry);if(_wakeWantOn&&!_voice&&!_voiceStarting)_wakeRetry=setTimeout(_wakeStart,delay);}
+function _wakeSchedule(delay=800){clearTimeout(_wakeRetry);if(_wakeWantOn&&!_voice&&!_voiceStarting&&!window.mayaNoteDictating)_wakeRetry=setTimeout(_wakeStart,delay);}
 function _wakeSupported(){ return !!(window.SpeechRecognition||window.webkitSpeechRecognition); }
 function _wakeLabel(){
   const b=document.getElementById('wake-toggle');
@@ -2562,7 +2574,7 @@ async function toggleWakeWord(){
 }
 function _wakeStart(){
   if(!_wakeWantOn || _wakeOn || !_wakeSupported()) return;
-  if(_voice || _voiceStarting || _wakeRec){ return; }               // already live; wait until she hangs up
+  if(_voice || _voiceStarting || _wakeRec || window.mayaNoteDictating){ return; }               // already live; wait until she hangs up
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   try{
     _wakeRec=new SR(); _wakeRec.continuous=true; _wakeRec.interimResults=true; _wakeRec.lang='en-US';
@@ -2591,6 +2603,7 @@ function _wakeStart(){
 function _wakeStop(){clearTimeout(_wakeRetry);_wakeRetry=null;_wakeOn=false;const rec=_wakeRec;_wakeRec=null;try{if(rec){rec.onend=null;rec.onstart=null;rec.onresult=null;rec.onerror=null;rec.abort();}}catch(_){} _wakeLabel();}
 // resume the wake listener after a live session ends
 window.addEventListener('maya-voice-ended',()=>_wakeSchedule(800));
+window.addEventListener('maya-note-dictation-ended',()=>_wakeSchedule(800));
 try{ if(localStorage.getItem('maya_wake')==='1'){ _wakeWantOn=true; _wakeLabel(); setTimeout(_wakeStart,1200); } }catch(_){}
 </script>
 
@@ -2850,7 +2863,7 @@ function paintLeads(l) {
       '<tr id="lead-tr-' + i + '">' + order.map((k, ci) => {
         const d = defs[k];
         const cls = [d.td || '', ci === 0 ? 'lead-col-first' : ''].filter(Boolean).join(' ');
-        return '<td data-col="' + k + '"' + (k==='name'?' onclick="leadOpenThread('+i+')"':'') + (cls ? ' class="' + cls + '"' : '') + '>' + d.render(x, i) + '</td>';
+        return '<td data-col="' + k + '"' + (k==='name'?' onclick="leadOpenThread('+i+')"':k==='note'?' onclick="editLatestLeadNote('+i+')"':'') + (cls ? ' class="' + cls + '"' : '') + '>' + d.render(x, i) + '</td>';
       }).join('') + '</tr>'
     ).join('');
   if (filterOpen) {
@@ -2879,25 +2892,18 @@ function _leadTierNum(x){ const m = String(x.tier || x.company || '').match(/([0
 // v14.34: the Last Quote column is gone. The tier under the name is what they
 // went with, and Maya sets it by voice ("Kristi went with signature").
 // Actions: email, phone, pay-link. No recommendation text, no delete X.
-function leadCategory(x){
- const value=String(x.tier||x.company||'').trim().toLowerCase();
- if(/^signature\b/.test(value))return {code:'SI',label:'Signature'};
- if(/^ceremonial\b/.test(value))return {code:'CE',label:'Ceremonial'};
- if(/^suit\b/.test(value))return {code:'SU',label:'Suit'};
- return {code:'?',label:'Help me decide'};
-}
-function _actionsCell(i,x){const category=leadCategory(x);return '<span class="category-badge" aria-label="'+category.label+'" title="'+category.label+'">'+category.code+'</span>';}
 function leadSignup(x){const value=x.createdAt||x.ts||x.date;const d=value?new Date(value):null;return d&&!Number.isNaN(d.getTime())?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';}
 // v13.95: the column catalogue. `render` closes over the shared `cell`. The name
 // column carries the WIX badge and the signature line; order lives in localStorage.
 function _leadColDefs(){
   return {
     name: { label: 'Full name', h: 'lead-h-name', td: 'lead-td-name',
-      render: (x, i) => '<button class="lead-open" aria-label="Open conversation with '+esc(x.name||'Unnamed')+'"><span class="lead-identity">'+esc(x.name || 'Unnamed')+'</span><time>'+esc(leadSignup(x))+'</time>'+_actionsCell(i,x)+'</button>' },
+      render: (x, i) => '<button class="lead-open" aria-label="Open conversation with '+esc(x.name||'Unnamed')+'"><span class="lead-identity">'+esc(x.name || 'Unnamed')+'</span><time class="lead-signup">'+esc(leadSignup(x))+'</time></button>' },
+    contact: {label:'Contact',h:'lead-h-contact',td:'lead-contact',render:x=>'<span class="lead-phone">'+esc(x.phone||'No phone recorded')+'</span>'},
     // v14.24: Contact, the phone first (that is what gets used), the email when there is none.
     stage: {label:'Status',h:'lead-h-stage',render:(x,i)=>'<span class="status-pill lead-status"><span class="status-text" aria-hidden="true">'+esc(LEAD_STAGES[leadStage(x)]|| (x.stage==='closed'?'Closed':'Passed')+' (previous)')+'</span><select class="lead-stage" aria-label="Lead status" onchange="setLeadStage('+i+',this)">'+(['closed','passed'].includes(x.stage)?'<option value="'+x.stage+'" selected disabled>'+ (x.stage==='closed'?'Closed':'Passed')+' (previous)</option>':'')+Object.entries(LEAD_STAGES).map(([k,v])=>'<option value="'+k+'"'+(leadStage(x)===k?' selected':'')+'>'+v+'</option>').join('')+'</select></span>'},
     note: { label: 'Latest Notes', h: 'lead-h-note', td: 'lead-note',
-      render: (x, i) => '<div class="lead-note-vp">' + '<span title="'+esc(x.wrote || x.note || '')+'">'+esc(leadSummary(x))+'</span>' + '</div>' },
+      render: (x, i) => '<button class="lead-note-vp lead-note-edit" aria-label="Edit latest note for '+esc(x.name||'Unnamed')+'">' + '<span title="'+esc(x.wrote || x.note || '')+'">'+esc(leadSummary(x)||'Add note')+'</span>' + '</button>' },
     // v14.34: no quote column; a stored order that still names it is filtered by these defs
   };
 }
@@ -2980,14 +2986,14 @@ window.addEventListener('resize',scheduleLeadFilterPosition);
 document.addEventListener('maya-design-applied',scheduleLeadFilterPosition);
 function leadSummary(x){let value=String(x.wrote||x.note||'').replace(/^(?:Signature|Help me decide)\s*[·,:-]?\s*(?:\$[\d,.]+)?\s*[,·:]?\s*/i,'').replace(/\s+/g,' ').trim();if(/^(?:cancel(?:led|ed)|in progress|passed|not contacted)[.!]?$/i.test(value))return 'Request details not recorded';return value.length>120?value.slice(0,117).replace(/\s+\S*$/,'')+'...':value||'Request details not recorded';}
 function filterLeadStatus(key,checked){if(checked)leadStatusFilter.add(key);else leadStatusFilter.delete(key);paintLeads({connected:true,list:_leadList});}
-const LEAD_COLS_DEFAULT = ['name', 'stage', 'note'];   // v14.34: Last Quote is gone; the tier under the name says what they went with
+const LEAD_COLS_DEFAULT = ['name', 'contact', 'stage', 'note'];   // Name/date, stored phone, status and reviewed latest note.
 function _loadLeadColOrder(){
   try {
     const s = JSON.parse(localStorage.getItem('maya.leadCols') || 'null');
     if (Array.isArray(s) && s.length){
       const known = new Set(LEAD_COLS_DEFAULT);
       const ord = s.map(k=>k==='email'?'stage':k).filter(k => known.has(k));
-      LEAD_COLS_DEFAULT.forEach(k => { if (!ord.includes(k)) ord.push(k); });
+      LEAD_COLS_DEFAULT.forEach(k => { if (!ord.includes(k)) { if(k==='contact')ord.splice(Math.max(0,ord.indexOf('name')+1),0,k);else ord.push(k); } });
       return ord;
     }
   } catch (_) {}
@@ -3177,7 +3183,7 @@ async function _saveInvoiceLink(){
 function _leadMarquees() {
   const SPEED = 34;  // px per second, one pace for all rows
   document.querySelectorAll('#leads-table .lead-note-vp').forEach(vp => {
-    const sp = vp.querySelector('.lead-note-edit');
+    const sp = vp.querySelector(':scope>span');
     if (!sp) return;
     const over = sp.scrollWidth - vp.clientWidth;
     if (over > 8) {
@@ -3508,12 +3514,60 @@ async function confirmBooking(id){
     document.getElementById('msg-feedback').textContent=j.warning||'Accepted by carrier. Check delivery in Messages.';await loadBookingPending();if(_msgOpen)await loadThread(_msgOpen.number,true);
   }catch(e){alert(e.message);await loadBookingPending();}
 }
-async function msgBooking(){
+function msgBooking(){
   if(!_msgOpen)return;
-  const number=String(_msgOpen.number||'').replace(/\D/g,'');const lead=_leadList.find(x=>String(x.phone||'').replace(/\D/g,'')===number);
-  if(!lead)return alert('Add this contact to the Lead Station before sending a booking link.');
-  try{const r=await fetch('/api/admin/booking/preview',{method:'POST',headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({query:lead.id})});const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||'Preview unavailable.');await loadBookingPending();}
-  catch(e){alert(e.message);}
+  const input=document.getElementById('msg-input'),feedback=document.getElementById('msg-feedback');
+  if(input.disabled){feedback.textContent='This contact cannot receive messages.';return;}
+  const link='https://wix.to/wT2lSqE';
+  if(!input.value.includes(link)){
+    const name=_msgKnownName(_msgOpen.number,_msgOpen.name).split(/\s+/)[0];
+    const draft=(name?'Hi '+name+', here':'Here')+' is our consultation booking link: '+link;
+    input.value+=(input.value.trim()?'\n':'')+draft;
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+  feedback.textContent='Booking link added to draft. Review it, then press Send.';input.focus();
+}
+let _leadNoteDialog=null,_leadNoteRec=null,_leadNoteSaving=false;
+window.addEventListener('maya-owner-session-changed',()=>{stopLeadNoteDictation();if(_leadNoteDialog){_leadNoteDialog.close();_leadNoteDialog.remove();_leadNoteDialog=null;}});
+function stopLeadNoteDictation(){
+  const rec=_leadNoteRec;_leadNoteRec=null;if(rec){rec.onresult=null;rec.onend=null;rec.onerror=null;try{rec.abort();}catch(_){}}
+  window.mayaNoteDictating=false;window.dispatchEvent(new Event('maya-note-dictation-ended'));
+}
+function editLatestLeadNote(i){
+  const lead=_leadList[i];if(!lead?.id||!_idTok)return;
+  if(_leadNoteDialog){stopLeadNoteDictation();_leadNoteDialog.close();_leadNoteDialog.remove();_leadNoteDialog=null;}
+  const id=lead.id,token=_idTok,dialog=document.createElement('dialog');_leadNoteDialog=dialog;
+  dialog.id='lead-note-dialog';dialog.className='maya-surface';dialog.setAttribute('aria-labelledby','lead-note-title');
+  dialog.innerHTML='<h2 id="lead-note-title" class="drawer-title">Latest note — '+esc(lead.name||'Unnamed')+'</h2><label for="lead-note-input">Note</label><textarea id="lead-note-input" maxlength="2000" rows="6"></textarea><p id="lead-note-feedback" role="status"></p><div class="dialog-actions"><button type="button" id="lead-note-dictate" class="msg-call" aria-label="Dictate latest note">Dictate</button><button type="button" id="lead-note-cancel" class="msg-call">Cancel</button><button type="button" id="lead-note-save" class="msg-call">Save note</button></div>';
+  const input=dialog.querySelector('textarea'),feedback=dialog.querySelector('[role="status"]'),dictate=dialog.querySelector('#lead-note-dictate');input.value=lead.wrote||lead.note||'';
+  const close=()=>{if(_leadNoteDialog===dialog){stopLeadNoteDictation();_leadNoteDialog=null;}dialog.remove();};dialog.addEventListener('close',close);
+  dialog.addEventListener('cancel',e=>{if(_leadNoteSaving)e.preventDefault();});
+  dialog.querySelector('#lead-note-cancel').onclick=()=>{dialog.close();close();};
+  dictate.onclick=()=>{
+    if(_leadNoteRec){stopLeadNoteDictation();dictate.textContent='Dictate';return;}
+    if(_voice||_voiceStarting){feedback.textContent='Finish the Maya call before dictating a note.';return;}
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!SR){feedback.textContent='Use keyboard dictation or type your note; browser dictation is unavailable.';return;}
+    window.mayaNoteDictating=true;_wakeStop();
+    const rec=new SR();_leadNoteRec=rec;rec.lang='en-US';rec.continuous=true;rec.interimResults=false;
+    rec.onresult=e=>{if(_leadNoteRec!==rec||!dialog.open)return;for(let j=e.resultIndex;j<e.results.length;j++)if(e.results[j].isFinal){input.value=(input.value.trim()?input.value.trim()+' ':'')+e.results[j][0].transcript.trim();input.value=input.value.slice(0,2000);}feedback.textContent='Review the note, then Save note. Nothing has been saved.';};
+    rec.onerror=e=>{if(_leadNoteRec!==rec)return;feedback.textContent=e.error==='not-allowed'?'Microphone permission is needed. You can still type your note.':'Dictation stopped. Review or type your note.';stopLeadNoteDictation();dictate.textContent='Dictate';};
+    rec.onend=()=>{if(_leadNoteRec!==rec)return;stopLeadNoteDictation();dictate.textContent='Dictate';};
+    try{rec.start();dictate.textContent='Stop dictation';feedback.textContent='Listening. Speech fills this draft only.';}catch(_){stopLeadNoteDictation();dictate.textContent='Dictate';feedback.textContent='Dictation could not start. You can still type your note.';}
+  };
+  dialog.querySelector('#lead-note-save').onclick=async()=>{
+    if(_leadNoteSaving)return;stopLeadNoteDictation();dictate.textContent='Dictate';
+    const note=input.value.trim();_leadNoteSaving=true;for(const b of dialog.querySelectorAll('button'))b.disabled=true;input.disabled=true;feedback.textContent='Saving…';
+    try{
+      if(!token||token!==_idTok)throw Error('Sign in again before saving.');
+      const r=await fetch('/api/admin/lead-update',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({id,note})});const result=await r.json();
+      if(!r.ok||!result.ok)throw Error(result.error||'The note was not saved. Try again.');
+      if(token===_idTok){const current=_leadList.find(x=>x.id===id);if(current){current.note=note;current.wrote=note;paintLeads({connected:true,list:_leadList});}}
+      dialog.close();close();
+    }catch(e){feedback.textContent=e.message;}
+    finally{_leadNoteSaving=false;for(const b of dialog.querySelectorAll('button'))b.disabled=false;input.disabled=false;}
+  };
+  document.body.append(dialog);dialog.showModal();input.focus();
 }
 function leadOpenThread(i) {
   const x = _leadList[i]; if (!x) return;
@@ -3531,7 +3585,7 @@ function leadMayaCall(i) {
 // the unread badge stays honest even while the Systems tab shows
 setInterval(() => { if (_idTok && _msgTab !== 'messages') loadThreads(); }, 60000);
 // this module is sealed in an IIFE; the drawer's onclicks need these on window
-Object.assign(window, { loadModelSnapshot, loadMayaLogs, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, msgInvoice, leadOpenThread, leadMayaCall, loadThreads, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
+Object.assign(window, { loadModelSnapshot, loadMayaLogs, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, msgInvoice, msgBooking, editLatestLeadNote, leadOpenThread, leadMayaCall, loadThreads, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
 if (_idTok) loadModelSnapshot();
 function leadContact(i, type) {
   const x = _leadList[i]; if (!x || !x.email) return;

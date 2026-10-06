@@ -219,3 +219,14 @@ revalidate so mixed stylesheet/editor versions cannot persist.
 Admin Model Snapshot uses compact model lines with comma-separated uses; repeated models are grouped. Provider transport is on the summary line; endpoints expand only on click, never hover. The card is at most 340px wide and remains viewport bounded.
 
 Model cards dismiss after a 100ms pointer-exit grace period across trigger/card, including mouse-focused controls. Keyboard focus keeps cards usable until focus exits or Escape. Outside scrolling/resizing closes cards; internal card scrolling remains usable.
+
+October 5 Leads: H5 is the lead name; H6 is the signup date below it. Remove
+category badges from this table. Contact is a separate stored phone column.
+The gallery mirrors the four semantic columns; old three-column saves retain
+Name/Status/Notes styles and gain a separate Contact style. Formatting selections
+follow data-col identity rather than visual position. H5/H6 remain separate
+shared roles, with their own font/size/color/case/alignment controls.
+Latest Notes opens a shared-material review dialog from the whole cell; typing
+or browser dictation edits a draft, and Save note persists it. Message Call uses
+the handset SVG in the existing pill. Booking Link inserts the approved URL into
+the unsent composer; it neither sends nor creates an owner-send preview.

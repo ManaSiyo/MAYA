@@ -3700,7 +3700,7 @@ async function updateLead(id, patch) {
   if (has('paylink')) clean.paylink = String(next.paylink || '').trim().slice(0, 400);
   // note is the fallback path for a lead with no email (email leads note through
   // the email-keyed note store instead); sets both the display note and wrote.
-  if (has('note')) { clean.note = String(next.note || '').trim().slice(0, 2000); clean.wrote = clean.note; }
+  if (has('note')) { clean.note = String(next.note || '').trim().slice(0, 2000); clean.wrote = clean.note; clean.noteUpdatedAt = new Date().toISOString(); }
   if (!key || !Object.keys(clean).length) return null;
   const rec = await loadManualLeads();
   if (key.startsWith('m_')) {
@@ -3737,6 +3737,12 @@ async function deleteLead(id) {
 }
 // The single lead feed the UI and the voice both read: Wix + hand-added,
 // newest first, each tagged with its source so the station can label them.
+// A reviewed replacement survives refresh; newer recorded notes supersede it.
+function applyLatestLeadNote(lead,note){
+  if(!note?.text)return;
+  if(lead.noteUpdatedAt && !(Date.parse(note.ts)>Date.parse(lead.noteUpdatedAt)))return;
+  lead.note=String(note.text).slice(0,2000);lead.wrote=lead.note;
+}
 async function loadLeadFeed() {
   const [wix, manual] = await Promise.all([
     wixLeads().catch(() => null),
@@ -3766,7 +3772,7 @@ async function loadLeadFeed() {
     if (!rec) return;
     const note = rec.notes.length ? rec.notes[rec.notes.length - 1] : null;
     const contact = rec.contacts.length ? rec.contacts[rec.contacts.length - 1] : null;
-    if (note && note.text) lead.note = String(note.text).slice(0, 2000);
+    applyLatestLeadNote(lead,note);
     lead.noteCount = rec.notes.length;
     lead.lastTouch = [note && note.ts, contact && contact.ts, lead.updatedAt, lead.ts]
       .filter(Boolean).sort().slice(-1)[0] || lead.ts;

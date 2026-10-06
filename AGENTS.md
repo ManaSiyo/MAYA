@@ -229,3 +229,13 @@ text_owner reports fetch live lead/contact fields rather than voice-formatted
 prose; generic text normalizes spoken phone digits. Requested counts are 1–20.
 Preserve non-retryable send claims, fixed owner recipient and client SEND gates.
 Run owner-conversation, owner-sms-access, owner-crm, communications and app-regression.
+
+October 5 Leads edits: Contact is the stored phone column; H5 names and H6 dates
+are independently styled, date below name, with no category badges. Gallery and
+live cells share semantic data-col keys. Old three-column design saves remain
+valid; a fourth Contact column style is optional on the server and normalized
+on the client. Run tests/lead-notes-ui.mjs and tests/lead-note-persistence.mjs
+(both in app-regression) for reviewed note typing/dictation, save failures,
+refresh precedence and unsent Booking Link drafts. Auth changes close note
+editors; dictation must pause/release Hey Maya recognition. Note edits use
+lead-update by stable ID; timestamps preserve reviewed edits over older notes.

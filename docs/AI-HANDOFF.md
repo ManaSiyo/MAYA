@@ -1,51 +1,63 @@
 # MAYA handoff — October 5, 2026
 
-## Current request: owner SMS lead access and usable phone-to-text numbers
+## Current request: editable Leads notes, Contact, name/date roles and message actions
 
-Started clean at 5ce96f0, two local commits ahead of origin/maya-v2. Screenshot
-shows "Send me the last 5 leads" returning a generic uncertain-result reply and
-phone-requested numbers arriving as spoken words. No live trace was accessed, so
-the exact provider failure behind that SMS is not proven.
+Started clean at c9d43df, matching origin/maya-v2. Prior owner SMS/numeric-phone
+fix is now pushed; no live trace or delivery verification was accessed here.
 
-Common newest-lead/count and contact-number SMS requests now bypass text AI.
-Examples: Send me the last 5 leads, LEADS 5, Text me the latest five leads,
-What's Nick's phone number? Requested counts are validated 1–20, default 5.
-Owner binding/signature checks remain; no client write/send is authorized by a
-read phrase. Lead lists use durable account-scoped report pages with MORE.
+Leads now shows Full name, Contact (stored phone), Status and Latest Notes.
+Existing saved column orders retain their order and gain Contact after Name.
+Names use H5, dates use H6 below the name; category ?/SI/CE/SU badges are removed.
+Aesthetic Control previews the same four columns and exposes H5/H6 with authored
+source locations. Shared runtime v15/gallery v29 preserve old saves and semantic
+column indexes; Contact adds a fourth optional saved column style.
 
-Phone owner_control text_owner now offers live leads/contact report selectors;
-the server fetches numeric contact fields instead of accepting dictated contact
-prose. Generic legacy owner text normalizes complete spoken plus-number sequences
-into digits. Voice/audio style is explicitly separate from SMS formatting.
-Non-retryable send claims and fixed owner recipient remain; carrier acceptance
-still does not prove delivery. Conversational AI failures identify the unavailable
-chat path and the working direct read commands instead of implying a failed send.
+Click anywhere in a Latest Notes cell to open its reviewed textarea. Dictate
+starts browser recognition only on a click, fills the unsaved draft and pauses
+Hey Maya recognition. Cancel/close stops recognition; auth changes close the
+editor. Save uses authenticated lead-update with the exact stable lead ID and
+only paints success after the server accepts it. Failures retain the draft.
+Reviewed note replacements are timestamped; refresh cannot overwrite them with
+older recorded notes. A newer recorded touchpoint updates both note and wrote,
+so dashboard and Maya read the same enriched feed.
+
+Messages preserves known Lead names through empty/Caller provider responses.
+Call is now the existing handset SVG in its pill, with accessible label and
+existing explicit call confirmation. Booking Link puts the approved consultation
+URL into the visible unsent composer, retains existing text and avoids duplicate
+links. It does not call the booking preview or send endpoints; blocked/STOP
+contacts cannot receive that draft action. Explicit Send and carrier-status
+checks remain. Existing separately approved booking workflows are preserved.
 
 ## Changed paths and validation
 
-owner-conversation.mjs, owner-sms-access.mjs, maya-phone.mjs; tests for conversation,
-SMS access and app-regression; AGENTS/requests/fixes/COMMIT-REVIEW.
-Passed: AI-down natural lead reads, requested count, numeric contacts, paginated
-continuations, grounded owner phone text and duplicate-send prevention; owner-crm,
-phone (57), messages (55), transfer/feedback and container contract. Full app-regression passed; final focused conversation/SMS suites also passed. All providers fake; no real SMS/call, credentials or production changes.
+backend/status.html; docs/server/server.js and design-config.mjs; shared typography
+runtime and cache references on served pages; gallery/editor/CSS/usage inventory;
+focused lead note UI/persistence suites and updated affected regression fixtures;
+AGENTS/design/requests/fixes/COMMIT-REVIEW.
 
+Passed: full app-regression (gallery at eleven widths and lead note editor at
+four widths); outbound-ui/lead-filter-ui at seven widths; phone (57), messages
+(55), transfer/feedback, owner conversation/SMS, wake, design and container checks;
+frontend/Playground hands batteries. Note persistence fixtures cover manual/Wix
+replacements, older-note refresh precedence and newer touchpoints. All providers
+are fake and Chromium is isolated; no personal Chrome, live calls/SMS, credentials,
+billing or production environment changes. Shared cache references and diff checks
+passed.
 ## Exact next step
 
-Verified changes are prepared as a local commit. Fromsa pushes all three local commits.
-After Cloud Build deploys, verify live release.json, then SMS "Send me the last 5
-leads" and request a lead-number text on an owner call. Live delivery/voice model
-choice still requires owner verification. No personal Chrome session used here.
-
-Prior live owner verification remains: MAYA HELP/INBOX/THREAD Nick/MORE/ACTIONS,
-normal memory recall and separately authorized client REPLY/SEND; scheduler/signup/
-booking alerts, microphone wake/audio, SMS delivery/carrier receipt and owner transfer.
-Read docs/OUTBOUND-SETUP.md for owner-only connection/setup steps. No automatic
-sending was introduced; account/project boundaries remain sealed.
+Verified changes are prepared as a local commit for Fromsa to Push. Never push automatically.
+After Cloud Build deploys, verify release.json; check note typing/dictation,
+Save/reload, H5/H6 changes, contact numbers and an unsent Booking Link draft.
+Owner must verify actual microphone capture and explicit SMS/call delivery;
+carrier acceptance is not delivery confirmation. Prior owner SMS verification:
+"Send me the last 5 leads", THREAD Nick/MORE/ACTIONS and phone-requested numeric
+contact texts. No real sends ran in this task.
 
 ## Standing constraints
 
-Ask and wait before each user Chrome session; never use Chrome while Fromsa works
-in it. MAYA and Worldofsiyo profiles are separate. Keep project/account data
-sealed; no credentials, billing, production variables or legacy migration/Storage
-cleanup changes. docs/design.md is the sole active design specification.
-Approved booking URL: https://wix.to/wT2lSqE.
+Ask and wait before each personal Chrome session; MAYA and Worldofsiyo are
+separate. Preserve account/project boundaries, client preview/SEND/STOP gates,
+non-retryable claims, private archives, migrations and Storage cleanup paths.
+No credentials, billing or production variables. docs/design.md is the sole
+active aesthetic specification; local commits are authorized, pushes are not.

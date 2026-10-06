@@ -19,12 +19,12 @@ export function setupTableCellEditor({guide,settings,render}){
  const material=[['background','Background',backgrounds],['opacity','Opacity',{max:100}]];
  const columnStyle=()=>({background:settings.background,opacity:settings.fill,...settings.columns[column],...(column===0?settings.firstColumn:{})});
  function select(cell){
-  selected=cell;column=cell.cellIndex;
+  selected=cell;column=['name','stage','note','contact'].indexOf(cell.dataset.col);
   kind=cell.tagName==='TH'?(cell.dataset.col==='name'?'corner':'header'):'column';
   values=kind==='header'||kind==='corner'?{...settings.header}:columnStyle();
   form.querySelector('[data-field="color"]')?.setAttribute('title',kind==='column'&&column===1?'Status pills retain their status colors.':'Selected text color');
-  title.textContent=kind==='corner'?'Top row + first column':kind==='header'?'Top row':['First column','Second column','Third column'][column];
-  for(const e of table.querySelectorAll('td,th')){const on=kind==='corner'?e.tagName==='TH'||e.dataset.col==='name':kind==='header'?e.tagName==='TH':e.tagName==='TD'&&e.cellIndex===column;e.classList.toggle('cell-selected',on);e.setAttribute('aria-selected',String(on));}
+  title.textContent=kind==='corner'?'Top row + first column':kind==='header'?'Top row':['First column','Second column','Third column','Fourth column'][cell.cellIndex];
+  for(const e of table.querySelectorAll('td,th')){const on=kind==='corner'?e.tagName==='TH'||e.dataset.col==='name':kind==='header'?e.tagName==='TH':e.tagName==='TD'&&e.dataset.col===cell.dataset.col;e.classList.toggle('cell-selected',on);e.setAttribute('aria-selected',String(on));}
   for(const input of form.querySelectorAll('[data-field]'))input.value=values[input.dataset.field];
  }
  function change(){
@@ -33,7 +33,7 @@ export function setupTableCellEditor({guide,settings,render}){
    const index=kind==='corner'?0:column;for(const key of ['font','case','size','weight','color','align','vertical','style'])settings.columns[index][key]=values[key];
    if(index===0)Object.assign(settings.firstColumn,{background:values.background,opacity:values.opacity});else Object.assign(settings.columns[index],{background:values.background,opacity:values.opacity});
    // The owner now edits full columns; discard obsolete row-slot overrides there.
-   for(const key of Object.keys(settings.cells||{}))if(key.startsWith(['name','stage','note'][index]+'-'))delete settings.cells[key];
+   for(const key of Object.keys(settings.cells||{}))if(key.startsWith(['name','stage','note','contact'][index]+'-'))delete settings.cells[key];
   }
   render();
  }
@@ -45,7 +45,7 @@ export function setupTableCellEditor({guide,settings,render}){
   if(kind==='header'||kind==='corner')settings.header=structuredClone(baseline.header);
   if(kind==='column'||kind==='corner'){
    const index=kind==='corner'?0:column;settings.columns[index]=structuredClone(baseline.columns[index]);if(index===0)settings.firstColumn=structuredClone(baseline.firstColumn);
-   const prefix=['name','stage','note'][index]+'-';for(const key of Object.keys(settings.cells||{}))if(key.startsWith(prefix))delete settings.cells[key];
+   const prefix=['name','stage','note','contact'][index]+'-';for(const key of Object.keys(settings.cells||{}))if(key.startsWith(prefix))delete settings.cells[key];
    for(const [key,value] of Object.entries(baseline.cells||{}))if(key.startsWith(prefix)){settings.cells||={};settings.cells[key]=structuredClone(value);}
   }
   render();sync(selected);

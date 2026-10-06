@@ -1,22 +1,29 @@
-[Codex] Make owner lead SMS reads reliable and format numeric phone reports
+[Codex] Add reviewed lead note edits, Contact and unsent booking drafts
 
-Route common newest-lead/count and contact-number SMS reads without text AI.
-Validate requested counts (1–20, default 5); use account-scoped durable report
-pages and MORE continuations. Model chat failures distinguish unavailable AI
-from uncertain writes and point to direct lead-read commands.
+Make the whole Latest Notes cell open a review editor with typing and optional
+browser dictation. Speech edits an unsaved draft; explicit Save persists by stable
+lead ID and failures retain the draft. Pause/release Hey Maya recognition during
+dictation; close editors on auth changes. Timestamp reviewed replacements so
+older note history cannot overwrite them on refresh; newer notes update both
+note and wrote in the shared feed.
 
-Add live leads/contact selectors to owner phone text_owner. Format reports from
-stored numeric contact fields, keeping audio style separate from SMS. Normalize
-legacy spoken plus-number sequences into digits for generic owner text. Preserve
-verified owner binding, fixed recipient, non-retryable send claims and client
-preview/SEND/STOP gates. No model settings or credentials changed.
+Add stored phone Contact column, H5 names and H6 dates beneath them; remove
+category badges. Mirror four semantic columns and new roles in Aesthetic
+Control. Preserve old saved design schemas and Name/Status/Notes indexes.
+Bump shared runtime/gallery cache versions across served pages.
 
-Validation: full app-regression; owner-conversation, owner-sms-access, owner-crm;
-phone (57), messages (55), transfer, feedback and container contract. Fixtures
-cover AI outages, requested count, numeric contacts, pagination, forged sender,
-grounded voice text and duplicate-send prevention. Git diff checks passed.
+Use the handset icon for Messages Call; keep known names and explicit call
+confirmation. Booking Link inserts the approved URL into the visible unsent
+composer, retaining existing text and respecting blocked/STOP contacts. It
+makes no preview/send request. Existing approved booking and delivery checks stay.
 
-Limitations: local only, not pushed. Screenshot's exact live provider failure
-was not observed in a server trace. Owner must verify latest release after Push,
-then SMS Send me the last 5 leads and request a contact text by phone. Real model
-tool choice and carrier delivery remain live verification; no real sends ran.
+Validation: full app-regression (including gallery at eleven widths and note
+editor at four), outbound-ui/lead-filter-ui at seven widths; manual/Wix note
+persistence; phone 57, messages 55, transfer/feedback, owner conversation/SMS,
+wake, design/container; frontend and Playground hands batteries. Isolated local
+Chromium and fake providers only; no personal Chrome or real sends/calls.
+
+Limitations: local commit, not pushed. After owner Push/deploy, verify release,
+note Save/reload and actual microphone dictation, Contact/H5/H6, unsent Booking
+Link drafts, explicit calls/SMS and real carrier delivery. No credentials,
+billing, production variables or unrelated edits.

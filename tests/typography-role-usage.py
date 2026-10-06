@@ -3,16 +3,18 @@ from pathlib import Path
 import re,json
 root=Path(__file__).resolve().parent.parent
 files=sorted(p for folder in ['frontend','backend','playground','aesthetics'] for p in (root/folder).rglob('*') if p.suffix in ['.html','.js'] and 'aesthetics/aesthetic-control' not in str(p) and p.name!='aesthetic-control.html' and 'aesthetics/ui/components' not in str(p))
-categories={k:{'count':0,'locations':[],'roles':{}} for k in ['H0','H1','H2','H3','H4','P1','P2','P3','P4']}
+categories={k:{'count':0,'locations':[],'roles':{}} for k in ['H0','H1','H2','H3','H4','H5','H6','P1','P2','P3','P4']}
 for path in files:
  text=path.read_text()
  # Preserve source line numbers. Exclude comments, retain JS-rendered markup.
  clean=re.sub(r'<!--.*?-->|(?m:^[ \t]*/\*).*?\*/|(?m:^[ \t]*//[^\n]*)',lambda m:'\n'*m[0].count('\n'),text,flags=re.S)
- for m in re.finditer(r'<(h[1-6]|span|div|p|small|label|button|a|td|th|code|pre|strong|b)\b([^<>]*?)>',clean,re.I):
+ for m in re.finditer(r'<(h[1-6]|time|span|div|p|small|label|button|a|td|th|code|pre|strong|b)\b([^<>]*?)>',clean,re.I):
   tag=m[1].lower();attrs=m[2].replace('\\"','"').replace("\\'","'");names={k.lower():v for k,q,v in re.findall(r'\b(id|class)\s*=\s*([\'"])(.*?)\2',attrs,re.S)}
   ident=names.get('id','');cls=set(names.get('class','').split());context=clean[max(0,m.start()-100):m.end()];category=None;reason=None
   role=None
-  if 'maya-signin-h0' in cls:category,role='H0','signin'
+  if 'lead-identity' in cls:category,role='H5','leadname'
+  elif 'lead-signup' in cls:category,role='H6','leaddate'
+  elif 'maya-signin-h0' in cls:category,role='H0','signin'
   elif tag=='h1' or cls & {'brand-title','signin-wordmark','brand-sample'} or ident=='client-name-modal-title':
    category='H1';role='editorial' if ident=='client-name-modal-title' else 'brand' if cls & {'brand-title','signin-wordmark','brand-sample'} else 'headline'
   elif ident=='adm-tabtitle' or cls & {'pg-tabtitle','drawer-title','drawer-head-title'} or (tag=='h2' and 'outbound-drawer' in context):category,role='H2','drawer'
