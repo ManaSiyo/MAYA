@@ -1,32 +1,31 @@
-[Codex] Edit Leads inline and unify panel materials with saved column widths
+[Codex] Keep Messages fixed and add reviewed text automation drafts
 
-Replace the Latest Notes modal with a cell textarea. Enter/blur/Save submit the
-authenticated stable lead update; Escape/Cancel discard, failed saves preserve
-the draft, refresh cannot overwrite it and explicit Dictate pauses wake listening.
-Release the frozen first column during editing so phone-width controls remain
-reachable. Preserve note enrichment and consent boundaries.
+Restore Messages to its original H2 tab-title position before and after contact
+selection. Show a plain H3 contact name below it with no panel/pill backing;
+show its pencil only on hover or keyboard focus. Preserve circular actions and
+the bottom voice dock. Update shared typography runtime v17 across served pages,
+apply Inner material to Automation cards and regenerate source role locations.
 
-Messages puts known names in H1 above H2 Messages without duplicate phone text.
-Circular Share offers unsent booking drafts and the reviewed Invoice flow;
-Phone retains call confirmation. Expand the visible composer for draft review.
-Keep the voice dock at the drawer floor with independent scrolling and hidden
-scrollbars. Include Share in the icon preview.
+Add Systems Automations as a drawer view. Save owner-account first/second text
+examples, fixed triggers, earliest Los Angeles draft times and follow-up days
+with private generation-checked storage. Preview a contextual AI idea using the
+exact studio lead and recent texts under the existing CRM AI allowance. Use draft
+appends without sending; only explicit Messages Send contacts the SMS provider.
+Suppress drafts for ambiguous leads, STOP/blocked contacts, replies, two existing
+outgoing texts and early times. Protect composer drafts across contact changes
+and reject late account/recipient responses. Clear private previews on session
+changes. Ship the new server module in Docker and its tests in Cloud Build.
 
-Group Outer Panel, Inner Panel and Table Edit dropdowns under Panels. Add
-independent backgrounds, blur and saturation, while cell formatting stays in its
-fixed toolbar following Inner material. Drag column edges or use arrow keys for
-bounded semantic widths that Save/Restore applies to preview and live Leads,
-overriding old Name-column limits. Preserve legacy saves and independent table
-borders. Ship runtime v16/gallery v30 references across pages and regenerated
-role locations. Update design docs, handoff and regression assertions together.
+Validation: all 33 exact Cloud Build checks, full app-regression and real local
+server smoke passed. Final drawer fixture checks four widths, fixed heading
+coordinates, shared hierarchy, transparent name, hover pencil, unsent drafts,
+saved settings and failures. Unit tests cover account isolation, validation,
+lead grounding, no-reply timing and STOP/blocked contacts. Smoke rejects
+unauthenticated configuration and draft requests. Screenshots visually reviewed;
+git diff --check clean. Existing communications/provider/filter suites pass.
 
-Validation: all 32 exact Cloud Build checks passed, plus full app-regression and
-local server smoke. Gallery checks 11 widths, save/reload and pointer resizing;
-Leads checks typing/dictation, failed drafts, Enter/blur save, 4 widths, drawer
-layout and exact live column widths. Outbound/filter checks pass at 7 widths;
-CRM tests 10,000 records and account/expiry failures. Fake providers and isolated
-Chromium only. Drawer screenshot reviewed; git diff --check clean.
-
-Limitations: local commit only, not pushed/deployed. Owner Push and exact-commit
-live verification remain. No personal Chrome, live microphone, client sends,
-credentials or production configuration accessed.
+Limitations: fake providers and isolated Chromium; no live AI inference, personal
+Chrome, microphone, SMS or calls verified. These are reviewed draft rules, not
+scheduled client sends; existing signup alerts are unchanged. Local commit only,
+not pushed/deployed. Owner Push, exact-commit deployment verification and a live
+reviewed first-message check remain.

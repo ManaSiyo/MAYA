@@ -2781,6 +2781,9 @@ ok('Model hover dismissal separates pointer exit from keyboard focus',readFileSy
 ok('Owner lead SMS reads bypass AI and phone reports use live numeric contacts',ownerConversationSource.includes('const direct=ownerLeadRead(text);if(direct)return direct;')&&ownerConversationSource.includes("decision.report==='leads'")&&PHONE_SOURCE.includes("enum:['leads','contact']"));
 await import('./verify-release.mjs');
 ok('Live release verification rejects unchanged versions from older commits',true);
+await import('./text-automations.mjs');
+ok('Automations save isolated draft rules and never send client texts',true);
+ok('Messages keeps its original heading; contact is plain and pencil is hover-only',!MAP_SOURCE.includes('contact-open #adm-tabtitle')&&MAP_SOURCE.includes('.msg-name-edit:hover .msg-rename')&&MAP_SOURCE.includes('id="drawer-automations"'));
 await import('./lead-note-persistence.mjs');
 await import('./lead-notes-ui.mjs');
 ok('Leads: reviewed note dictation, persisted edits, Contact/H5/H6 and booking composer drafts',true);

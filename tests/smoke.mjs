@@ -36,6 +36,10 @@ const get  = (p, o = {}) => () => fetch(BASE + p, o);
 const AUTH = { headers: { Authorization: 'Bearer not-a-real-token' } };
 
 console.log('\nMAYA smoke test\n');
+await check('Automation settings reject unauthenticated reads',get('/api/admin/text-automations'),401);
+await check('Automation settings reject unauthenticated saves',post('/api/admin/text-automations'),401);
+await check('Message ideas reject unauthenticated requests',post('/api/admin/messages/suggest'),401);
+
 // v14.02: Maya's door. Closed without a token, unauthorized with a wrong one,
 // open with the right one (set below, before the server booted? no: env is read
 // at boot, so the smoke run exports MAYA_MCP_TOKEN=smoke before importing).

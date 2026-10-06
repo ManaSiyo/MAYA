@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {createTextAutomations,DEFAULT_TEXT_AUTOMATIONS as defaults,validateTextAutomations} from '../docs/server/text-automations.mjs';
+const files=new Map();let calls=0,seen,thread={messages:[]},date=new Date('2026-10-05T20:00:00Z');
+const api=createTextAutomations({read:async key=>files.has(key)?{ok:true,buf:Buffer.from(JSON.stringify(files.get(key).value)),generation:files.get(key).generation}:{ok:false,status:404},write:async(key,buf,type,generation)=>{assert.equal(generation,files.get(key)?.generation||'0');files.set(key,{value:JSON.parse(buf),generation:String(Number(generation)+1)});},now:()=>date,lead:async number=>number==='+14155550101'?{name:'Angela',note:'A green suit'}:null,thread:async()=>thread,complete:async(uid,instructions,data)=>{calls++;seen={uid,instructions,data};return {text:JSON.stringify({text:'Hi Angela, thank you for reaching out about your green suit. Would you like to talk?'})};}});
+assert.deepEqual(await api.settings('a'),defaults);const changed=structuredClone(defaults);changed.second.enabled=true;changed.second.days=2;await api.save('a',changed);assert.equal((await api.settings('b')).second.enabled,false,'Accounts do not share rules');
+assert.throws(()=>validateTextAutomations({...changed,second:{...changed.second,time:'28:00'}}));assert.throws(()=>validateTextAutomations({...changed,first:{...changed.first,text:'Hi {phone}'}}));
+await assert.rejects(api.draft('a','+14155550999'),/unambiguous/);assert.equal(calls,0);
+thread.blocked=true;await assert.rejects(api.draft('a','+14155550101'),/cannot receive/);thread={consent:'stop',messages:[]};await assert.rejects(api.draft('a','+14155550101'),/cannot receive/);assert.equal(calls,0);
+thread={messages:[]};assert.equal((await api.draft('a','+14155550101')).stage,'first');assert.equal(seen.uid,'a');assert.equal(seen.data.lead.context,'A green suit');
+thread={messages:[{dir:'out',ts:'2026-10-04T20:00:00Z',text:'Hello'}]};assert.equal((await api.draft('a','+14155550101')).eligible,false);assert.equal(calls,1);
+thread.messages[0].ts='2026-10-01T20:00:00Z';assert.equal((await api.draft('a','+14155550101')).stage,'second');assert.equal(seen.data.history[0].text,'Hello');
+thread.messages.push({dir:'in',ts:'2026-10-03T20:00:00Z',text:'Yes'});assert.equal((await api.draft('a','+14155550101')).eligible,false);assert.equal(calls,2);
+thread={messages:[{dir:'out',ts:'2026-10-01T20:00:00Z',text:'Hi'},{dir:'out',ts:'2026-10-02T20:00:00Z',text:'Follow up'}]};assert.equal((await api.draft('a','+14155550101')).eligible,false);assert.equal(calls,2);
+thread={messages:[]};date=new Date('2026-10-05T15:00:00Z');assert.equal((await api.draft('a','+14155550101')).eligible,false,'Configured earliest time is respected');assert.equal(calls,2);
+console.log('Text automations: isolated saved settings, valid times, lead grounding, STOP/blocked, no-reply timing and draft-only AI passed.');

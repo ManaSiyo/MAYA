@@ -842,8 +842,13 @@ try {
   #drawer{overflow:hidden;scrollbar-width:none}#drawer::-webkit-scrollbar,#drawer *::-webkit-scrollbar{display:none}
   #drawer-systems{flex:1;min-height:0;overflow:auto;scrollbar-width:none}#drawer-systems[hidden]{display:none}
   #voice-dock{margin-top:8px;margin-bottom:0;padding-bottom:env(safe-area-inset-bottom,0px)}
-  .contact-open #adm-tabtitle{visibility:hidden}.msg-head{flex-wrap:wrap}.msg-who{flex-basis:calc(100% - 40px)}
-  html body #msg-name{font:var(--maya-type-H1-weight) var(--maya-type-H1-size) var(--maya-type-H1-font)!important;color:var(--maya-type-H1-color)!important;text-transform:var(--maya-type-H1-case)!important}
+  .msg-head{flex-wrap:wrap}.msg-who{flex-basis:calc(100% - 40px)}
+  html body #msg-name{font:var(--maya-type-H3-weight) var(--maya-type-H3-size) var(--maya-type-H3-font)!important;color:var(--maya-type-H3-color)!important;text-transform:var(--maya-type-H3-case)!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;backdrop-filter:none!important;padding:0!important}
+  .msg-rename{opacity:0;pointer-events:none}.msg-name-edit:hover .msg-rename,.msg-name-edit:focus-within .msg-rename{opacity:1;pointer-events:auto}
+  #drawer-automations{flex:1;min-height:0;overflow:auto;scrollbar-width:none}#drawer-automations[hidden]{display:none}
+  .automation-rule{padding:12px;margin:10px 0;border:1px solid var(--maya-line);border-radius:var(--maya-inner-radius,12px);background:var(--maya-inner-fill,transparent)}
+  .automation-rule label{display:grid;gap:4px;margin:10px 0;font:var(--maya-type-P3-weight) var(--maya-type-P3-size) var(--maya-type-P3-font);color:var(--maya-type-P3-color)}.automation-rule label:has(input[type=checkbox]){display:flex;align-items:center;gap:6px}.automation-rule select{width:100%;box-sizing:border-box}#drawer-automations .subheadline{letter-spacing:normal;text-align:left}.automation-rule textarea{width:100%;box-sizing:border-box;min-height:100px}.automation-rule input[type=time],.automation-rule input[type=number]{max-width:140px}
+  #msg-idea{padding:8px 0}#msg-idea[hidden]{display:none}#msg-idea-text{white-space:pre-wrap;margin:6px 0}#msg-idea-status{color:var(--dim)}
   .msg-thread-heading{font:var(--maya-type-H2-weight) var(--maya-type-H2-size) var(--maya-type-H2-font);color:var(--maya-type-H2-color);margin-top:4px}
   #msg-call,#msg-share{aspect-ratio:1;border-radius:50%!important;display:inline-flex;align-items:center;justify-content:center;padding:0!important;flex:none}
   .msg-share{position:relative;margin-left:auto}#msg-share-menu{position:absolute;right:0;top:100%;z-index:5;background:var(--maya-surface);backdrop-filter:var(--maya-frost);border:1px solid var(--maya-line);border-radius:12px;padding:8px;min-width:140px}
@@ -876,7 +881,7 @@ try {
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=16"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=17"></script>
 <link rel="stylesheet" href="/aesthetics/ui/admin-systems.css?v=3">
 </head>
 <body class="systems-map">
@@ -989,10 +994,11 @@ if (IS_AFFILIATES) {
     <div id="msg-thread" hidden>
       <div class="msg-head">
         <button class="msg-back" onclick="msgBack()" title="All threads">&#8249;</button>
-        <div class="msg-who"><div class="msg-name-edit"><input class="msg-name" id="msg-name" aria-label="Contact name" placeholder="Contact name" title="Click to name this contact; Enter saves" maxlength="120" onblur="msgRename()" onkeydown="if(event.key==='Enter')this.blur()"><button class="msg-rename" aria-label="Edit contact name" onclick="document.getElementById('msg-name').focus()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 16-1 5 5-1L21 7l-4-4zM14 6l4 4"/></svg></button></div><div class="msg-number" id="msg-number" hidden></div><div class="msg-thread-heading">Messages</div></div>
+        <div class="msg-who"><div class="msg-name-edit"><input class="msg-name" id="msg-name" aria-label="Contact name" placeholder="Contact name" title="Click to name this contact; Enter saves" maxlength="120" onblur="msgRename()" onkeydown="if(event.key==='Enter')this.blur()"><button class="msg-rename" aria-label="Edit contact name" onclick="document.getElementById('msg-name').focus()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 16-1 5 5-1L21 7l-4-4zM14 6l4 4"/></svg></button></div><div class="msg-number" id="msg-number" hidden></div></div>
         <div class="msg-share"><button class="msg-call maya-icon-button" id="msg-share" type="button" aria-label="Share" aria-expanded="false" onclick="msgShare(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V3m-4 4 4-4 4 4M5 12v8h14v-8"/></svg></button><div id="msg-share-menu" hidden><button onclick="msgShare(false);msgBooking()">Booking link</button><button onclick="msgShare(false);msgInvoice()">Invoice</button></div></div><button class="msg-call maya-icon-button" id="msg-call" onclick="msgCall()" title="Call this person" aria-label="Call this person"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2z"/></svg></button>
       </div>
-      <div class="msg-controls"><button onclick="msgCheckDelivery()" title="Check the last five outgoing texts with the carrier">Check delivery</button><button id="msg-block" onclick="msgBlock()">Block</button><button onclick="msgDelete()">Delete conversation</button></div><div class="msg-scroll" id="msg-scroll"></div>
+      <div class="msg-controls"><button id="msg-suggest" onclick="msgSuggest()">Message idea</button><button onclick="msgCheckDelivery()" title="Check the last five outgoing texts with the carrier">Check delivery</button><button id="msg-block" onclick="msgBlock()">Block</button><button onclick="msgDelete()">Delete conversation</button></div><div class="msg-scroll" id="msg-scroll"></div>
+      <div id="msg-idea" hidden><small id="msg-idea-status" role="status" aria-live="polite"></small><p id="msg-idea-text"></p><button class="maya-glass-button" id="msg-idea-use" onclick="msgUseIdea()" hidden>Use draft</button></div>
       <div class="msg-compose">
         <textarea id="msg-input" oninput="this.style.height='auto';this.style.height=Math.min(96,this.scrollHeight+2)+'px'" rows="1" placeholder="Text them as Mana Siyo" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();msgSend();}"></textarea>
         <button class="msg-send" onclick="msgSend()" title="Send">Send</button>
@@ -1002,6 +1008,7 @@ if (IS_AFFILIATES) {
   </div>
   <div id="drawer-systems">
   <a class="maya-glass-button design-quicklink" href="/aesthetics/aesthetic-control.html">Aesthetic Control</a>
+  <button class="maya-glass-button design-quicklink" onclick="admTab('automations')">Automations</button>
   <h3>Vault</h3>
   <a href="/outbound.html#gmail">Gmail<small>Account mailboxes</small></a>
   <a href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank" rel="noopener">Firebase<small>Data and hosting</small></a>
@@ -1018,6 +1025,28 @@ if (IS_AFFILIATES) {
   <a href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/home" target="_blank" rel="noopener">Wix<small>Website and forms</small></a>
   <h3>Privacy</h3>
   <a href="/privacy.html">Privacy policy<small>Data privacy terms</small></a>
+  </div>
+
+  <div id="drawer-automations" hidden>
+    <button class="maya-glass-button" onclick="admTab('systems')">Back to Systems</button>
+    <h3 class="subheadline">Text automations</h3><p>Drafts appear when you open a conversation. Review, then Send. No scheduled sends.</p>
+    <form id="text-automations-form" onsubmit="event.preventDefault();saveTextAutomations()">
+      <section class="automation-rule"><h3 class="subheadline">First text</h3>
+        <label><input id="automation-first-enabled" type="checkbox"> Suggest first text</label>
+        <label>Example<textarea id="automation-first-text" maxlength="1000" required></textarea></label>
+        <label>Trigger<select id="automation-first-trigger"><option value="new_lead">New lead, no outgoing texts</option></select></label>
+        <label>Earliest draft time<input id="automation-first-time" type="time" required></label>
+      </section>
+      <section class="automation-rule"><h3 class="subheadline">Second text</h3>
+        <label><input id="automation-second-enabled" type="checkbox"> Suggest follow-up</label>
+        <label>Example<textarea id="automation-second-text" maxlength="1000" required></textarea></label>
+        <label>Trigger<select id="automation-second-trigger"><option value="no_reply">No reply after first text</option></select></label>
+        <label>Wait days<input id="automation-second-days" type="number" min="1" max="30" required></label>
+        <label>Earliest draft time<input id="automation-second-time" type="time" required></label>
+      </section>
+      <p>Times: Los Angeles. Examples use {name} and {context}; AI uses the actual lead and conversation.</p>
+      <button class="maya-glass-button" id="automation-save" type="submit" disabled>Save</button>
+    </form><p id="automation-status" role="status" aria-live="polite"></p>
   </div>
 
   <!-- v13.67: Maya's voice, pinned at the floor. -->
@@ -3295,9 +3324,11 @@ let _msgSending = false;
 let _msgTab = 'systems', _msgOpen = null, _msgTimer = null, _msgThreads = [];
 function admTab(t) {
   if (IS_AFFILIATES) t = 'messages';
-  if (!['systems','messages','logs'].includes(t)) return;
+  if (!['systems','messages','logs','automations'].includes(t)) return;
   _msgTab = t;
-  document.getElementById('adm-tabtitle').textContent = t === 'messages' ? 'Messages' : t === 'logs' ? 'Logs' : 'Systems';
+  document.getElementById('adm-tabtitle').textContent = t === 'messages' ? 'Messages' : t === 'logs' ? 'Logs' : t === 'automations' ? 'Automations' : 'Systems';
+  document.getElementById('drawer-automations').hidden = t !== 'automations';
+  if(t==='automations')loadTextAutomations();
   document.getElementById('drawer-logs').hidden = t !== 'logs';
   document.getElementById('drawer-systems').hidden = t !== 'systems';
   document.getElementById('adm-tab-logs').classList.toggle('on', t === 'logs');
@@ -3306,9 +3337,9 @@ function admTab(t) {
   if (t === 'systems') { loadModelSnapshot(); }
   const d = document.getElementById('drawer');
   d.classList.toggle('msgs', t !== 'systems');
-  document.getElementById('adm-tab-systems').classList.toggle('on', t === 'systems');
+  document.getElementById('adm-tab-systems').classList.toggle('on', t === 'systems'||t==='automations');
   document.getElementById('adm-tab-messages').classList.toggle('on', t === 'messages');
-  document.getElementById('adm-tab-systems').setAttribute('aria-selected', t === 'systems' ? 'true' : 'false');
+  document.getElementById('adm-tab-systems').setAttribute('aria-selected', t === 'systems'||t==='automations' ? 'true' : 'false');
   document.getElementById('adm-tab-messages').setAttribute('aria-selected', t === 'messages' ? 'true' : 'false');
   document.getElementById('drawer-messages').hidden = t !== 'messages';
   if (t === 'messages') { loadThreads(); loadBookingPending(); if (!_msgTimer) _msgTimer = setInterval(() => { if (_msgOpen) loadThread(_msgOpen.number, true); else loadThreads(); loadBookingPending(); }, 8000); }
@@ -3389,6 +3420,36 @@ function paintThreads(list) {
   });
 }
 
+let _msgIdea=null,_ideaSequence=0;const _msgDrafts=new Map();
+let _automationSequence=0;
+function automationFields(settings){
+ for(const key of ['first','second'])for(const [field,value] of Object.entries(settings[key])){const el=document.getElementById('automation-'+key+'-'+field);if(el){if(field==='enabled')el.checked=value;else el.value=value;}}
+}
+async function loadTextAutomations(){
+ const seq=++_automationSequence,auth=_idTok,status=document.getElementById('automation-status'),form=document.getElementById('text-automations-form');
+ form.hidden=true;document.getElementById('automation-save').disabled=true;status.textContent='Loading…';
+ try{const r=await fetch('/api/admin/text-automations',{headers:{Authorization:'Bearer '+auth},cache:'no-store'}),j=await r.json();if(seq!==_automationSequence||auth!==_idTok)return;if(!r.ok||!j.ok)throw Error(j.error||'Settings unavailable.');automationFields(j.settings);form.hidden=false;document.getElementById('automation-save').disabled=false;status.textContent='';}
+ catch(e){if(seq===_automationSequence&&auth===_idTok)status.textContent=e.message;}
+}
+async function saveTextAutomations(){
+ const auth=_idTok,seq=_automationSequence,settings={},status=document.getElementById('automation-status'),btn=document.getElementById('automation-save');
+ for(const key of ['first','second']){settings[key]={};for(const field of ['enabled','text','trigger','time',...(key==='second'?['days']:[])]){const el=document.getElementById('automation-'+key+'-'+field);settings[key][field]=field==='enabled'?el.checked:field==='days'?Number(el.value):el.value;}}
+ btn.disabled=true;status.textContent='Saving…';
+ try{const r=await fetch('/api/admin/text-automations',{method:'POST',headers:{Authorization:'Bearer '+auth,'Content-Type':'application/json'},body:JSON.stringify(settings)}),j=await r.json();if(auth!==_idTok||seq!==_automationSequence)return;if(!r.ok||!j.ok)throw Error(j.error||'Settings did not save.');status.textContent='Saved. Messages remain drafts until you press Send.';}
+ catch(e){if(auth===_idTok&&seq===_automationSequence)status.textContent=e.message;}finally{if(auth===_idTok&&seq===_automationSequence)btn.disabled=false;}
+}
+async function msgSuggest(){
+ if(!_msgOpen||!_idTok||document.getElementById('msg-input').disabled)return;
+ const number=_msgOpen.number,auth=_idTok,seq=++_ideaSequence,box=document.getElementById('msg-idea'),status=document.getElementById('msg-idea-status'),use=document.getElementById('msg-idea-use');
+ _msgIdea=null;box.hidden=false;use.hidden=true;document.getElementById('msg-idea-text').textContent='';status.textContent='Preparing message idea…';
+ try{const r=await fetch('/api/admin/messages/suggest',{method:'POST',headers:{Authorization:'Bearer '+auth,'Content-Type':'application/json'},body:JSON.stringify({number})}),j=await r.json();if(auth!==_idTok||seq!==_ideaSequence||_msgOpen?.number!==number)return;if(!r.ok||!j.ok)throw Error(j.error||'Message idea unavailable.');if(!j.eligible){status.textContent=j.reason;return;}if(!j.text)throw Error('No message idea returned.');_msgIdea={number,text:j.text};document.getElementById('msg-idea-text').textContent=j.text;status.textContent=j.stage==='second'?'Follow-up idea':'First text idea';use.hidden=false;}
+ catch(e){if(auth===_idTok&&seq===_ideaSequence&&_msgOpen?.number===number)status.textContent=e.message;}
+}
+function msgUseIdea(){
+ if(!_msgIdea||_msgIdea.number!==_msgOpen?.number)return;const inp=document.getElementById('msg-input');if(inp.disabled)return;
+ inp.value=[inp.value.trim(),_msgIdea.text].filter(Boolean).join('\n');inp.dispatchEvent(new Event('input'));inp.focus();document.getElementById('msg-idea').hidden=true;_msgIdea=null;
+}
+window.addEventListener('maya-owner-session-changed',()=>{++_ideaSequence;++_automationSequence;_msgIdea=null;_msgDrafts.clear();_msgOpen=null;document.getElementById('msg-input').value='';document.getElementById('msg-thread').hidden=true;document.getElementById('msg-list').hidden=false;document.getElementById('msg-idea').hidden=true;document.getElementById('text-automations-form').hidden=true;document.getElementById('msg-name').value='';document.getElementById('msg-scroll').replaceChildren();document.getElementById('msg-list').replaceChildren();document.getElementById('msg-idea-text').textContent='';document.getElementById('automation-status').textContent='';document.getElementById('text-automations-form').reset();});
 function _msgKnownName(number, ...names) {
   const named=value=>String(value||'').trim()&&!/^caller$/i.test(String(value).trim());
   const supplied=names.find(named);if(supplied)return String(supplied).trim();
@@ -3398,6 +3459,11 @@ function _msgKnownName(number, ...names) {
   return matches.length===1?matches[0]:'';
 }
 async function openThread(number, name) {
+  ++_ideaSequence;
+  if(_msgOpen) _msgDrafts.set(_msgOpen.number,document.getElementById('msg-input').value);
+  _msgIdea=null;document.getElementById('msg-idea').hidden=true;
+  document.getElementById('msg-input').value=_msgDrafts.get(number)||'';
+  document.getElementById('msg-input').disabled=true;
   _msgOpen = { number, name: _msgKnownName(number,name) };
   document.getElementById('drawer').classList.add('contact-open');msgShare(false);
   document.getElementById('msg-feedback').textContent = '';
@@ -3406,18 +3472,20 @@ async function openThread(number, name) {
   document.getElementById('msg-name').value = _msgOpen.name;
   document.getElementById('msg-number').textContent = number;
   await loadThread(number);
-  const inp = document.getElementById('msg-input'); if (inp) inp.focus();
+  const inp = document.getElementById('msg-input'); if (inp) {inp.dispatchEvent(new Event('input'));inp.focus();}
+  if(_msgOpen?.number===number&&!inp.value&&!inp.disabled)msgSuggest();
 }
-function msgBack() { document.getElementById('drawer').classList.remove('contact-open');msgShare(false);_msgOpen = null; document.getElementById('msg-thread').hidden = true; document.getElementById('msg-list').hidden = false; loadThreads(); }
+function msgBack() { ++_ideaSequence;if(_msgOpen)_msgDrafts.set(_msgOpen.number,document.getElementById('msg-input').value);_msgIdea=null; document.getElementById('drawer').classList.remove('contact-open');msgShare(false);_msgOpen = null; document.getElementById('msg-thread').hidden = true; document.getElementById('msg-list').hidden = false; loadThreads(); }
 async function loadThread(number, quiet) {
   const box = document.getElementById('msg-scroll'); if (!box || !_idTok) return;
+  const auth=_idTok;
   try {
     const r = await fetch('/api/admin/messages/thread?number=' + encodeURIComponent(number), { headers: { 'Authorization': 'Bearer ' + _idTok } });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || r.status);
-    if (!_msgOpen || _msgOpen.number !== number) return;
+    if (auth!==_idTok || !_msgOpen || _msgOpen.number !== number) return;
     paintThread(j.thread || { messages: [] }, quiet);
-  } catch (e) { if (!quiet) box.innerHTML = '<div class="msg-empty">The thread did not load. ' + esc(e.message) + '</div>'; }
+  } catch (e) { if (!quiet&&auth===_idTok&&_msgOpen?.number===number) box.innerHTML = '<div class="msg-empty">The thread did not load. ' + esc(e.message) + '</div>'; }
 }
 function paintThread(t, quiet) {
   const box = document.getElementById('msg-scroll'); if (!box) return;
@@ -3447,7 +3515,7 @@ async function msgSend() {
       body: JSON.stringify({ to: target.number, text, name: target.name || '' }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.ok) throw new Error(j.why || j.error || ('send ' + r.status));
-    if (_msgOpen && _msgOpen.number === target.number) { inp.value = ''; await loadThread(target.number); if (j.warning) { document.getElementById('msg-feedback').textContent = j.warning; } else { document.getElementById('msg-feedback').textContent = 'Accepted by carrier. Delivery is not yet confirmed; use Check delivery.'; } }
+    if (_msgOpen && _msgOpen.number === target.number) { inp.value = '';_msgDrafts.delete(target.number);document.getElementById('msg-idea').hidden=true; await loadThread(target.number); if (j.warning) { document.getElementById('msg-feedback').textContent = j.warning; } else { document.getElementById('msg-feedback').textContent = 'Accepted by carrier. Delivery is not yet confirmed; use Check delivery.'; } }
   } catch (e) { if (_msgOpen && _msgOpen.number === target.number) document.getElementById('msg-feedback').textContent = String(e.message); }
   _msgSending = false; btn.disabled = !!(_msgOpen && (_msgOpen.blocked || _msgOpen.consent === 'stop'));
 }
@@ -3603,7 +3671,7 @@ function leadMayaCall(i) {
 // the unread badge stays honest even while the Systems tab shows
 setInterval(() => { if (_idTok && _msgTab !== 'messages') loadThreads(); }, 60000);
 // this module is sealed in an IIFE; the drawer's onclicks need these on window
-Object.assign(window, { loadModelSnapshot, loadMayaLogs, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, msgInvoice, msgBooking, msgShare, editLatestLeadNote, leadOpenThread, leadMayaCall, loadThreads, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
+Object.assign(window, { loadModelSnapshot, loadMayaLogs, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, msgInvoice, msgBooking, msgShare, msgSuggest, msgUseIdea, loadTextAutomations, saveTextAutomations, editLatestLeadNote, leadOpenThread, leadMayaCall, loadThreads, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
 if (_idTok) loadModelSnapshot();
 function leadContact(i, type) {
   const x = _leadList[i]; if (!x || !x.email) return;

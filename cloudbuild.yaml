@@ -31,6 +31,7 @@ steps:
         node tests/design-config.mjs
         node tests/design-contract.mjs
         node tests/lead-note-persistence.mjs
+          node tests/text-automations.mjs
         node tests/canon-contract.mjs
         node tests/ai-routing.mjs
         node tests/fabric-sourcing.mjs

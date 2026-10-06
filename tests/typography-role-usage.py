@@ -12,13 +12,13 @@ for path in files:
   tag=m[1].lower();attrs=m[2].replace('\\"','"').replace("\\'","'");names={k.lower():v for k,q,v in re.findall(r'\b(id|class)\s*=\s*([\'"])(.*?)\2',attrs,re.S)}
   ident=names.get('id','');cls=set(names.get('class','').split());context=clean[max(0,m.start()-100):m.end()];category=None;reason=None
   role=None
-  if ident=='msg-name':category,role='H1','contact'
+  if ident=='msg-name':category,role='H3','contact'
   elif 'lead-identity' in cls:category,role='H5','leadname'
   elif 'lead-signup' in cls:category,role='H6','leaddate'
   elif 'maya-signin-h0' in cls:category,role='H0','signin'
   elif tag=='h1' or cls & {'brand-title','signin-wordmark','brand-sample'} or ident=='client-name-modal-title':
    category='H1';role='editorial' if ident=='client-name-modal-title' else 'brand' if cls & {'brand-title','signin-wordmark','brand-sample'} else 'headline'
-  elif ident=='adm-tabtitle' or cls & {'msg-thread-heading','pg-tabtitle','drawer-title','drawer-head-title'} or (tag=='h2' and 'outbound-drawer' in context):category,role='H2','drawer'
+  elif ident=='adm-tabtitle' or cls & {'pg-tabtitle','drawer-title','drawer-head-title'} or (tag=='h2' and 'outbound-drawer' in context):category,role='H2','drawer'
   elif cls & {'grp','section-title'}:category,role='H3','adminsection'
   elif tag in ['h2','h3','h4','h5','h6']:category,role='H3','subheadline'
   elif path.name=='status.html' and tag=='div' and 'v' in cls and ('bl-step' in context or 'bl-tile' in context):category,role='H4','dashboard'

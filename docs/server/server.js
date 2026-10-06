@@ -29,6 +29,7 @@ import express from 'express';
 import { TEXT_MODEL, IMAGE_MODEL, chatBody } from './model-config.mjs';
 import { mountOutbound } from './outbound.mjs';
 import { createGmail } from './crm-gmail.mjs';
+import {createTextAutomations} from './text-automations.mjs';
 import { createCrmAI } from './crm-ai.mjs';
 import { createMessageArchive } from './message-archive.mjs';
 import { createOwnerSMSAccess } from './owner-sms-access.mjs';
@@ -4832,6 +4833,12 @@ app.use('/api/tasks/outbound-sync', express.json({limit:'2kb'}));
 const crmStorage={read:gcsGet,write:gcsPut};
 const crmGmail=createGmail({...crmStorage,config:{clientId:process.env.GMAIL_CLIENT_ID,clientSecret:process.env.GMAIL_CLIENT_SECRET,redirectUri:process.env.GMAIL_REDIRECT_URI,encryptionKey:process.env.GMAIL_TOKEN_ENCRYPTION_KEY}});
 const crmAI=createCrmAI({...crmStorage,vertex:(process.env.K_SERVICE||process.env.VERTEX_PROJECT)?{project:vertexProject,token:()=>serviceToken('https://www.googleapis.com/auth/cloud-platform'),location:process.env.CRM_VERTEX_LOCATION||'global'}:null,keys:{openai:process.env.OPENAI_API_KEY,anthropic:process.env.ANTHROPIC_API_KEY,gemini:process.env.GEMINI_API_KEY}});
+const textAutomations=createTextAutomations({...crmStorage,
+  lead:async number=>{const key=e164(number),feed=await loadLeadFeed();const matches=(feed.list||[]).filter(l=>e164(l.phone)===key);return key&&matches.length===1?matches[0]:null;},
+  thread:number=>_messages.get(number),complete:(uid,instructions,data)=>crmAI.complete(uid,instructions,data,'auto',{timeoutMs:15000})});
+app.get('/api/admin/text-automations',requireAuthHeader,async(req,res)=>{try{const user=await requireOwner(req);res.set('Cache-Control','no-store').json({ok:true,settings:await textAutomations.settings(user.sub),mode:'review',timeZone:'America/Los_Angeles'});}catch(e){res.status(e.status||503).json({error:e.status?e.message:'Automation settings unavailable.'});}});
+app.post('/api/admin/text-automations',requireAuthHeader,express.json({limit:'8kb'}),async(req,res)=>{try{const user=await requireOwner(req);res.json({ok:true,settings:await textAutomations.save(user.sub,req.body)});}catch(e){res.status(e.status||503).json({error:e.status?e.message:'Automation settings did not save.'});}});
+app.post('/api/admin/messages/suggest',requireAuthHeader,express.json({limit:'2kb'}),async(req,res)=>{try{const user=await requireOwner(req);const number=e164(req.body?.number);if(!number)return res.status(400).json({error:'Select a valid phone number.'});const rl=rateLimit(user.sub,user.email);if(!rl.ok)return res.status(429).json({error:'Please wait before requesting another draft.'});res.set('Cache-Control','no-store').json(await textAutomations.draft(user.sub,number));}catch(e){res.status(e.status||503).json({error:e.status?e.message:'Message idea unavailable. You can still write your own text.'});}});
 const ownerSMSAccess=createOwnerSMSAccess({...crmStorage,ownerNumber:process.env.FROMSA_PHONE||'+15104917540',threads:_messages,find:_phoneFindLead,
   leadById:async id=>(await loadLeadFeed()).list?.find(l=>l.id===id),
   sendClient:async(to,text)=>{
