@@ -1,25 +1,32 @@
-[Codex] Repair deployment gate and verify exact published commits
+[Codex] Edit Leads inline and unify panel materials with saved column widths
 
-Owner pushed dd7ba48 but Firebase Hosting still serves 1311620. Public Cloud
-Build 5912fb44-0764-46af-9328-ef423bd879fe failed Test release contracts before
-server/website deployment: admin-ui-contract still required removed category
-badges. Vercel success did not publish MAYA's Firebase/Cloud Run release.
+Replace the Latest Notes modal with a cell textarea. Enter/blur/Save submit the
+authenticated stable lead update; Escape/Cancel discard, failed saves preserve
+the draft, refresh cannot overwrite it and explicit Dictate pauses wake listening.
+Release the frozen first column during editing so phone-width controls remain
+reachable. Preserve note enrichment and consent boundaries.
 
-Update that contract to require Contact, H5/H6, whole-cell note editing and
-reviewed Messages actions. Add design-contract, note persistence and note UI
-suites to Cloud Build. Keep branch/deploy and safety gates intact.
+Messages puts known names in H1 above H2 Messages without duplicate phone text.
+Circular Share offers unsent booking drafts and the reviewed Invoice flow;
+Phone retains call confirmation. Expand the visible composer for draft review.
+Keep the voice dock at the drawer floor with independent scrolling and hidden
+scrollbars. Include Share in the icon preview.
 
-Make verify-live compare release.json and App/Admin build stamps with exact
-Git HEAD (or explicit MAYA_COMMIT). --wait now waits for that commit, not the
-unchanged display version. New HTTP fixtures prove old same-version releases
-fail and exact release/page stamps pass; include these in CI/app-regression.
+Group Outer Panel, Inner Panel and Table Edit dropdowns under Panels. Add
+independent backgrounds, blur and saturation, while cell formatting stays in its
+fixed toolbar following Inner material. Drag column edges or use arrow keys for
+bounded semantic widths that Save/Restore applies to preview and live Leads,
+overriding old Name-column limits. Preserve legacy saves and independent table
+borders. Ship runtime v16/gallery v30 references across pages and regenerated
+role locations. Update design docs, handoff and regression assertions together.
 
-Validation: all 26 deployment unit/communications checks and all six browser
-checks passed locally, including both hands batteries, responsive Outbound,
-reviewed notes, 10,000-contact CRM, account/expiry failure UI and 11-page canon.
-Exact-commit fixture passed; public live verifier correctly fails for 1311620.
-Full app-regression passed. Fake providers/isolated Chromium only.
+Validation: all 32 exact Cloud Build checks passed, plus full app-regression and
+local server smoke. Gallery checks 11 widths, save/reload and pointer resizing;
+Leads checks typing/dictation, failed drafts, Enter/blur save, 4 widths, drawer
+layout and exact live column widths. Outbound/filter checks pass at 7 widths;
+CRM tests 10,000 records and account/expiry failures. Fake providers and isolated
+Chromium only. Drawer screenshot reviewed; git diff --check clean.
 
-Limitations: prepared locally, not pushed or deployed. Owner must Push this
-fix, then verify Cloud Build success and exact live release commit. No personal
-Chrome, credential access, production settings or unrelated code changes.
+Limitations: local commit only, not pushed/deployed. Owner Push and exact-commit
+live verification remain. No personal Chrome, live microphone, client sends,
+credentials or production configuration accessed.

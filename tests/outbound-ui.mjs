@@ -93,7 +93,7 @@ await page.evaluate(()=>admTab('systems'));
 assert.equal(await page.evaluate(()=>{const original=window.loadModelSnapshot;let calls=0;window.loadModelSnapshot=()=>calls++;toggleDrawer(true);window.loadModelSnapshot=original;return calls;}),1,'Systems loads on first drawer open');
 await page.evaluate(()=>document.querySelector('.lead-open').click());
 await page.waitForFunction(()=>document.querySelector('#msg-number').textContent==='+15555550100');
-await page.evaluate(()=>document.querySelector('[onclick="msgInvoice()"]').click());
+await page.evaluate(()=>document.querySelector('#msg-share-menu [onclick*="msgInvoice()"]').click());
 assert.ok(await page.locator('#lead-inv-modal').evaluate(e=>e.classList.contains('show')));
 const admin=readFileSync(root+'/backend/status.html','utf8');const modelCode='let _modelsLoading=false,_modelsAuth=null,_modelsChecked=0;'+admin.slice(admin.indexOf('async function loadModelSnapshot'),admin.indexOf('async function loadMayaLogs'));await page.evaluate(async code=>{const esc=v=>String(v).replace(/[&<>]/g,'');const _idTok='fixture';return eval(code+';loadModelSnapshot()');},modelCode);assert.match(await page.locator('#model-snapshot').textContent(),/GPT-6 Luna/);
 assert.deepEqual(pageErrors,[],'No uncaught UI errors');

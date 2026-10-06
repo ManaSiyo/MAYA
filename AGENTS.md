@@ -208,11 +208,8 @@ Admin Systems changes run tests/admin-systems-ui.mjs (also in app-regression).
 Provider hover cards expose authenticated configuration, not inference verification.
 Owner approvals remain gated in a dashboard dialog; conversation stays inside Logs.
 
-October 5 audit: Table geometry lives in two stacked Outer/Inner border rows in
-the fixed formatting toolbar above selection formatting. Table background/opacity
-inputs are retired; selection material editing and legacy saved reads remain. Legacy rim/borderColor remain outer-border opacity/color;
-optional outerWidth, innerWidth, innerBorderColor and innerRim validate bounded
-independent outlines/grid lines. Grid edges do not double the outside outline.
+October 5 audit: Table geometry lives in
+the Table Edit dropdown under Panels. Outer, Inner and Table share numeric/select material controls including background, blur, saturation and X/Y padding. The fixed cell formatting toolbar follows Inner material; Table remains independent. Optional semantic columnWidths (80–800px, name/contact/stage/note) apply to preview and live Leads; resize handles support pointer dragging and arrow keys. Legacy saves remain valid.
 Functional Leads status choices use aesthetics/ui/lead-stage-menu.js with the
 shared Edit dropdown material/X/Y padding, trigger anchoring, top layer and keyboard
 navigation. The native select remains the authenticated save source. Systems no
@@ -247,3 +244,5 @@ Contact/H5/H6 and reviewed message actions instead. tests/verify-release.mjs
 proves tests/verify-live.mjs rejects an older commit even when maya-version is
 unchanged. Verify release.json and page build stamps after the owner's Push;
 Vercel success does not establish Firebase/Cloud Run deployment success.
+
+October 5 inline Leads and drawer: Latest Notes edits within its cell; Enter/blur/Save persist, Escape/Cancel discard and failed saves keep the draft. Active edits resist refresh and release the frozen first column to keep controls reachable. Dictation retains explicit microphone start and wake pause. Messages displays known names (H1) above Messages (H2), hides duplicate numbers, and uses circular Phone/Share icons. Share contains booking drafts and reviewed invoices; never send automatically. Drawer scroll regions flex above its bottom voice dock. Run lead-notes-ui, component-gallery, outbound-ui, design-config/design-contract, communications and the exact Cloud Build test list before handoff.

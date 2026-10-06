@@ -430,9 +430,4 @@ These are not preferences, they are conditions.
 - There are stale `.git/lock-*.stale` files in the repo from a tool that
   could not delete them. Harmless, delete when convenient.
 
-Aesthetic Control (October 1): Glass, Panels and Tables / Typography, centered
-Save, dismissible Edit controls. surface-editors.js controls inner panels,
-filters and the actual three-column Lead Station table. typography-controls.js
-v4 applies saved presentation; server/design-config.mjs validates bounded numeric
-geometry, fixed backgrounds, font/case and alignment. Preview and Lead Station
-share column keys. No Reset or design history UI is active.
+Aesthetic Control (October 5): Panels groups Outer panel, Inner panel and Table material editors using the shared numeric/select dropdown grid, including blur, saturation and X/Y padding. Table cell formatting stays in its own fixed toolbar following Inner material. Column edges resize saved semantic widths for preview/live Leads. Runtime v16/gallery v30 preserve old design saves. Notes edit inline; Messages uses known names above its heading, circular Share/Phone actions and a bottom voice dock. Live Save still requires authenticated Admin and records its audit trail.

@@ -78,3 +78,12 @@ assert.equal(validDesign({...compact,table:{...compact.table,outerWidth:4,innerW
 for(const patch of [{outerWidth:9},{innerWidth:-1},{innerBorderColor:'red'},{innerRim:101}])assert.equal(validDesign({...compact,table:{...compact.table,...patch}}),false);
 
 const extended=structuredClone(compact);extended.type.H5={size:14,weight:400,color:"white",font:"jost",case:"none"};extended.type.H6={size:10,weight:300,color:"gray",font:"jost",case:"none"};extended.table.columns.push({...type});assert.equal(validDesign(extended),true);assert.equal(validDesign({...extended,type:{...extended.type,H6:{...extended.type.H6,color:"red"}}}),false);assert.equal(validDesign({...extended,table:{...extended.table,columns:[...extended.table.columns,type]}}),false);
+
+for(const target of ['inner','filter','table']){
+ const value={...compact,[target]:{...compact[target],background:'blue',blur:8,saturation:120}};assert.equal(validDesign(value),true);
+ for(const patch of [{blur:41},{saturation:201},{background:'url(evil)'}])assert.equal(validDesign({...value,[target]:{...value[target],...patch}}),false);
+}
+assert.equal(validDesign({...compact,overlay:{...compact.overlay,background:'blue'}}),true);
+assert.equal(validDesign({...compact,table:{...compact.table,columnWidths:{name:300,contact:180,stage:200,note:400}}}),true);
+for(const columnWidths of [{name:79},{note:801},{name:'300'},{alien:300},[],null])assert.equal(validDesign({...compact,table:{...compact.table,columnWidths}}),false);
+console.log('Independent panel materials and semantic column widths validate bounded values; older schemas remain valid.');

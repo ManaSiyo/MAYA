@@ -1,20 +1,12 @@
 import {IconButton} from '/aesthetics/ui/components/components.js';
-import {highlightPadding,addRestore} from './restore-controls.js';
 import {formatTools} from './format-tools.js';
-import {fields,typeFields,backgrounds,tableBorders} from './surface-editors.js';
+import {fields,typeFields,backgrounds} from './surface-editors.js';
 // Preview cells are presentation templates, never editable client records.
 export function setupTableCellEditor({guide,settings,render}){
  const table=guide.querySelector('table'),baseline=structuredClone(settings),bar=document.createElement('div');bar.id='cell-format-toolbar';bar.setAttribute('role','group');bar.setAttribute('aria-label','Selected cell formatting');
  const heading=document.createElement('div');heading.className='cell-selection-heading';const title=document.createElement('span');title.id='cell-selection';title.setAttribute('role','status');
  const restore=IconButton({label:'Restore saved selected cells',icon:'↻'});restore.classList.add('restore-editor');heading.append(title,restore);
- const form=document.createElement('div');form.className='cell-format-fields';form.tabIndex=0;form.setAttribute('role','group');form.setAttribute('aria-label','Cell format options');const geometry=document.createElement('div');geometry.className='table-material-fields';geometry.dataset.editor='table';
- const outerSpecs=[['outerWidth','Outer border px',{max:8}],['borderColor','Outer border color',tableBorders],['rim','Outer border opacity',{max:100}],['radius','Corners',{max:24}],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]];
- const innerSpecs=[['innerWidth','Inner border px',{max:8}],['innerBorderColor','Inner border color',tableBorders],['innerRim','Inner border opacity',{max:100}]];
- const specs=[...outerSpecs,...innerSpecs];
- for(const [label,rowSpecs] of [['Outer border settings',outerSpecs],['Inner border settings',innerSpecs]]){const row=document.createElement('div');row.className='cell-format-fields table-border-row';row.setAttribute('role','group');row.setAttribute('aria-label',label);fields(row,settings,rowSpecs,render);geometry.append(row);}
- const materialRestore=document.createElement('details');materialRestore.hidden=true;geometry.append(materialRestore);addRestore(materialRestore,{label:'table border and padding',read:()=>Object.fromEntries(specs.map(([key])=>[key,settings[key]])),write:v=>{Object.assign(settings,v);for(const input of geometry.querySelectorAll('[data-field]'))input.value=settings[input.dataset.field];render();}});materialRestore.remove();
- highlightPadding(geometry,()=>[...table.querySelectorAll('td,th')],()=>({x:settings.paddingX,y:settings.paddingY}));
- bar.append(geometry,heading,form);guide.before(bar);
+ const form=document.createElement('div');form.className='cell-format-fields';form.tabIndex=0;form.setAttribute('role','group');form.setAttribute('aria-label','Cell format options');bar.append(heading,form);guide.before(bar);
  let selected,kind='corner',column=0,values={};
  const material=[['background','Background',backgrounds],['opacity','Opacity',{max:100}]];
  const columnStyle=()=>({background:settings.background,opacity:settings.fill,...settings.columns[column],...(column===0?settings.firstColumn:{})});
@@ -50,6 +42,15 @@ export function setupTableCellEditor({guide,settings,render}){
   }
   render();sync(selected);
  };
+ // Widths belong to semantic columns so reordering keeps the saved geometry.
+ settings.columnWidths||={};
+ for(const cell of table.querySelectorAll('th')){
+  const handle=document.createElement('button');handle.className='column-resize';handle.type='button';handle.setAttribute('aria-label','Resize '+cell.textContent.trim()+' column');handle.title='Drag to resize; arrow keys adjust width';cell.append(handle);
+  const setWidth=w=>{settings.columnWidths[cell.dataset.col]=Math.max(80,Math.min(800,Math.round(w)));render();handle.setAttribute('aria-valuenow',String(settings.columnWidths[cell.dataset.col]));};
+  handle.addEventListener('click',e=>e.stopPropagation());
+  handle.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();e.stopPropagation();setWidth(cell.getBoundingClientRect().width+(e.key==='ArrowLeft'?-10:10));}});
+  handle.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();const start=e.clientX,width=cell.getBoundingClientRect().width;for(const th of table.querySelectorAll('th'))settings.columnWidths[th.dataset.col]=Math.max(80,Math.min(800,Math.round(th.getBoundingClientRect().width)));handle.setPointerCapture(e.pointerId);const move=event=>setWidth(width+event.clientX-start),end=()=>{handle.removeEventListener('pointermove',move);handle.removeEventListener('pointerup',end);handle.removeEventListener('pointercancel',end);};handle.addEventListener('pointermove',move);handle.addEventListener('pointerup',end);handle.addEventListener('pointercancel',end);});
+ }
  document.addEventListener('maya-gallery-saved',()=>{for(const key of Object.keys(baseline))delete baseline[key];Object.assign(baseline,structuredClone(settings));});
  formatSync=formatTools(form,()=>stable);sync(table.querySelector('th'));return {refresh:()=>sync(selected)};
 }

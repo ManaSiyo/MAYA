@@ -1,29 +1,18 @@
 # MAYA handoff — October 5, 2026
 
-## Current request: pushed changes missing from production
+## Current request: inline notes, simpler drawer and consistent panel/table controls
 
-October 5 deployment audit: local/origin maya-v2 both at dd7ba48. Cache-bypassed
-public release.json still reports 13116205e54e5b6ebd9d80347ef800b3b3b3bed1,
-published 2026-10-05T23:20:06.325Z. Live Admin has no editLatestLeadNote, and
-shared typography/gallery assets differ from the pushed source.
+Started clean at 5ab0aef, matching origin/maya-v2. Latest Notes now opens a textarea directly within its cell. Enter/blur/Save persist through authenticated lead-update; Escape/Cancel discard; failed saves retain the draft. Explicit Dictate still pauses Hey Maya and never saves speech automatically. Active refresh preserves the draft; frozen Name cells release while editing to avoid covering controls at phone widths.
 
-Public GitHub Cloud Build check 5912fb44-0764-46af-9328-ef423bd879fe failed
-at Test release contracts (admin-ui-contract.mjs), before server/website deploy.
-The outdated contract required category badges removed at the owner's request.
-Vercel was successful; that did not publish Firebase Hosting.
+Messages has circular Share and Phone actions. Share reveals booking link (unsent composer draft) and existing reviewed Invoice. Known names use H1 above H2 Messages, with phone hidden from the header but retained as recipient. Content scrolls independently above the bottom voice dock; drawer scrollbars are hidden.
 
-Updated that contract to assert Contact/H5/H6, full-cell notes and reviewed
-Messages actions. Added design-contract, note persistence and note UI checks to
-the Cloud Build gate. Live verification now compares release.json and page build
-stamps to the exact Git commit; unchanged 14.40 is no longer sufficient. A local
-HTTP fixture proves older same-version commits fail and matching commits pass.
+Panels now groups Outer panel, Inner panel and Table with shared numeric/select Edit grids. Material controls include background, opacity, border, corners, blur, saturation and X/Y padding; Table remains independent and its formatting bar follows Inner. Table section edits selected row/column text and cell colors. Drag header edges or use arrow keys to set 80–800px semantic widths; Save persists and applies them to live Leads, preserving reordering and old schemas. Table restore includes widths. Runtime v16/gallery v30 load across served pages; authored role locations regenerated.
 
-Validation: 25 pre-existing/updated unit and communications deployment contracts
-passed, plus the new exact-commit verifier fixture. All six browser checks passed: both hands batteries, Outbound, reviewed notes,
-10,000-contact CRM, account/expiry failure UI and 11-page canon. Including the new
-verifier fixture, 26 deployment unit/communications checks pass. Public live
-verification correctly fails for 1311620. Full app-regression passed.
-No personal Chrome, credentials, production settings, push or deploy used.
+Changed paths: backend/status.html; aesthetics/aesthetic-control/{gallery.js,gallery.css,overlay.js,surface-editors.js,table-cell-editor.js,typography-usage.json}; typography-controls.js and served HTML cache revisions; docs/server/design-config.mjs; targeted regression fixtures and project documentation.
+
+Validation: all 32 exact Cloud Build checks pass (26 unit/communications plus six browser suites), along with full app-regression and local server smoke. Gallery covers eleven widths, save/reload and pointer resizing; Leads covers four widths, typing/dictation, failed drafts, Enter/blur save, drawer floor/circles and exact live widths. Outbound/status filters pass seven widths; CRM exercises 10,000 contacts and account/expiry failures. Drawer screenshot visually reviewed. git diff --check passes.
+Limitations: fake providers and isolated Chromium only; no personal Chrome, microphone, actual SMS/calls, credentials or production settings accessed. Local changes need owner Push and exact-commit live verification after Cloud Build finishes. No push/deploy performed.
+Exact next step: Fromsa presses Push in GitHub Desktop for the prepared local commit. Check Cloud Build success and run tests/verify-live.mjs --wait for that exact commit.
 
 ## Previous request: editable Leads notes, Contact, name/date roles and message actions
 

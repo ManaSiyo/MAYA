@@ -20,15 +20,17 @@ function editor(parent,label,id,values,specs,render){
  const title=document.createElement('span');title.textContent=label;
  const edit=document.createElement('details');edit.className='type-editor';edit.innerHTML='<summary>Edit</summary><div class="type-editor-fields"></div>';
  host.append(title,edit);parent.append(host);fields(edit.lastChild,values,specs,render);
- addRestore(edit,{label,read:()=>Object.fromEntries(specs.map(([key])=>[key,values[key]])),write:v=>{Object.assign(values,v);for(const input of edit.querySelectorAll('[data-field]'))input.value=values[input.dataset.field];render();edit.dispatchEvent(new Event('input',{bubbles:true}));}});return host;
+ addRestore(edit,{label,read:()=>({...Object.fromEntries(specs.map(([key])=>[key,values[key]])),...(id==='table'?{columnWidths:{...values.columnWidths}}:{})}),write:v=>{Object.assign(values,v);for(const input of edit.querySelectorAll('[data-field]'))input.value=values[input.dataset.field];render();edit.dispatchEvent(new Event('input',{bubbles:true}));}});return host;
 }
 export function setupSurfaceEditors({panels,guide,design}){
  const settings={inner:structuredClone(design.inner),filter:structuredClone(design.filter),table:structuredClone(design.table)};
  let cellEditor;
  const render=()=>{window.MayaTypographyControls.previewSurfaces(settings);cellEditor?.refresh();for(const el of document.querySelectorAll('#panels .inner-panel')){el.style.setProperty('--padding-debug-x',settings.inner.paddingX+'px');el.style.setProperty('--padding-debug-y',settings.inner.paddingY+'px');}};
- const panelFields=[['fill','Opacity',{max:100}],['rim','Border',{max:100}],['borderColor','Border color',borders],['radius','Corners',{max:24}],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]];
+ const panelFields=[['background','Background',backgrounds],['fill','Opacity',{max:100}],['blur','Blur',{max:40}],['saturation','Saturation',{max:200}],['rim','Border',{max:100}],['borderColor','Border color',borders],['radius','Corners',{max:24}],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]];
  const inner=editor(panels,'Inner panel','inner',settings.inner,[...panelFields,['width','Width %',{min:20,max:100}]],render);panels.querySelector('.panel-preview').before(inner);
  highlightPadding(inner.querySelector('details'),()=>[...panels.querySelectorAll('.inner-panel')],()=>({x:settings.inner.paddingX,y:settings.inner.paddingY}));
+ const tablePanel=editor(panels,'Table','table',settings.table,[...panelFields.map(spec=>spec[0]==='borderColor'?[...spec.slice(0,2),tableBorders]:spec),['outerWidth','Outer border px',{max:8}],['innerWidth','Inner border px',{max:8}],['innerBorderColor','Inner border color',tableBorders],['innerRim','Inner border opacity',{max:100}]],render);
+ highlightPadding(tablePanel,()=>[...guide.querySelectorAll('td,th')],()=>({x:settings.table.paddingX,y:settings.table.paddingY}));
  const divider=document.createElement('hr');divider.className='visual-divider';guide.before(divider);
  const title=document.createElement('h2');title.textContent='Table';title.className='gallery-section-title';guide.before(title);
  cellEditor=setupTableCellEditor({guide,settings:settings.table,render});

@@ -1962,7 +1962,7 @@ ok('v13.95: columns drag to reorder, the order persists, the first column stays 
   MAP_SOURCE.includes('lead-col-first'));
 ok('CRM: phone icon and invoicing remain inside Messages',
   MAP_SOURCE.includes('id="msg-call"') &&
-  MAP_SOURCE.includes('onclick="msgInvoice()"') &&
+  MAP_SOURCE.includes('msgShare(false);msgInvoice()') &&
   MAP_SOURCE.includes('function leadInvoice') &&
   MAP_SOURCE.includes('lead-inv-modal') &&
   !/lead-rec">'\s*\+\s*rec\(x\)/.test(MAP_SOURCE));
@@ -2736,7 +2736,7 @@ ok('Renamed source tabs preserve campaign identities and draft membership',readF
 // October 2: editor anchors, panel content padding and wake recovery.
 const surfaceEditorSource=readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8');
 const galleryScript=readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.js'),'utf8');
-ok('Surface editors anchor to their own trigger and keep black available',surfaceEditorSource.includes("trigger.getBoundingClientRect()")&&surfaceEditorSource.includes("['black','gray'")&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/table-cell-editor.js'),'utf8').includes("['background','Background',backgrounds]"));
+ok('Surface editors anchor to their own trigger and keep black available',readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes("trigger.getBoundingClientRect()")&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes("['black','gray'")&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/table-cell-editor.js'),'utf8').includes("['background','Background',backgrounds]"));
 ok('Inner panel padding surrounds heading and Contacts together',galleryScript.includes('inner.append(h,metric);surfaces.append(inner)'));
 ok('Admin failed voice starts resume the wake listener',MAP_SOURCE.includes('if(!_voice&&_wakeWantOn)_wakeSchedule(800)')&&MAP_SOURCE.includes('rec.onstart=')&&MAP_SOURCE.includes('wake listener did not start; retrying'));
 
@@ -2759,8 +2759,8 @@ ok('Aesthetic Control opens inside Admin and its logo returns to Admin',!MAP_SOU
 
 // October 2: one numeric editor convention and shared table settings panel.
 ok('All surface edits use numeric fields and split padding axes',!readFileSync(join(ROOT,'aesthetics/aesthetic-control/overlay.js'),'utf8').includes("input.type='range'")&&!readFileSync(join(ROOT,'aesthetics/aesthetic-control/finishes.js'),'utf8').includes("input.type='range'")&&galleryScript.includes("['paddingX','Padding X'")&&galleryScript.includes("['paddingY','Padding Y'"));
-ok('Tables and their formatting toolbar exclude Inner material',!ownerDesignRuntime.includes('#panels .inner-panel,#cell-format-toolbar')&&ownerDesignRuntime.includes("const tableHousing=")&&ownerDesignRuntime.includes('.preview-section,#cell-format-toolbar'));
-ok('Shared borders include gray while tables have separate borders and corners',readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes("export const borders=[...tableBorders,['gray','Gray']]")&&ownerDesignConfig.includes('t.radius!==undefined')&&ownerDesignRuntime.includes('defaults.table={outerWidth:1'));
+ok('Table housing stays independent while formatting toolbar shares Inner material',ownerDesignRuntime.includes('#panels .inner-panel,#cell-format-toolbar')&&ownerDesignRuntime.includes("const tableHousing="));
+ok('Shared borders include gray while tables have separate borders and corners',readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes("export const borders=[...tableBorders,['gray','Gray']]")&&ownerDesignConfig.includes('t.radius!==undefined')&&ownerDesignRuntime.includes('outerWidth:1,innerWidth:1'));
 ok('Gallery uses H2 section titles, H3 subsections, and removes the Filter preview',galleryScript.includes("h.className='gallery-section-title'")&&galleryScript.includes('class="gallery-subsection-title">Edit dropdown')&&!galleryScript.includes("label:'Filter'"));
 ok('Save has no rim/shadow and the logo/title align left',galleryCss.includes('html body #save{border:0!important;box-shadow:none!important}')&&galleryCss.includes('grid-template-columns:40px minmax(0,1fr)'));
 
@@ -2770,10 +2770,13 @@ ok('H0 is scoped to main sign-in',INDEX_SOURCE.includes('signin-wordmark maya-si
 ok('Saved aesthetics propagate without refreshing',readFileSync(join(ROOT,'aesthetics/ui/typography-controls.js'),'utf8').includes("window.addEventListener('storage'")&&readFileSync(join(ROOT,'aesthetics/ui/typography-controls.js'),'utf8').includes("window.addEventListener('focus',revalidate)"));
 
 
-ok('Table formatting includes independently saved inner and outer borders',cellEditorSource.includes("['outerWidth','Outer border px'")&&cellEditorSource.includes("['innerWidth','Inner border px'"));
+ok('Table formatting includes independently saved inner and outer borders',readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes("['outerWidth','Outer border px'")&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes("['innerWidth','Inner border px'"));
 
 ok('Lead status picker shares dropdown material and preserves native save',MAP_SOURCE.includes('lead-stage-menu.js')&&ownerDesignRuntime.includes('.maya-filter-popover,.lead-stage-menu'));
-ok('Table material controls use two border rows while background and opacity stay with selections',cellEditorSource.includes("['Outer border settings',outerSpecs],['Inner border settings',innerSpecs]")&&!cellEditorSource.includes('Table background')&&!cellEditorSource.includes('Table opacity')&&cellEditorSource.includes("['opacity','Opacity',{max:100}]"));
+ok('Panel materials share dropdowns; table selection formatting stays separate',readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes("editor(panels,'Table','table'")&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes("['blur','Blur'")&&cellEditorSource.includes("['opacity','Opacity',{max:100}]"));
+ok('Table columns resize with persisted semantic widths',cellEditorSource.includes("handle.addEventListener('pointerdown'")&&cellEditorSource.includes('settings.columnWidths[cell.dataset.col]')&&readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8').includes('t.columnWidths'));
+ok('Lead notes edit inline; Messages uses circular Share and phone actions',MAP_SOURCE.includes("dialog.id='lead-note-editor'")&&MAP_SOURCE.includes('cell.replaceChildren(dialog)')&&MAP_SOURCE.includes('id="msg-share"')&&MAP_SOURCE.includes('class="msg-call maya-icon-button" id="msg-call"'));
+
 ok('Model hover dismissal separates pointer exit from keyboard focus',readFileSync(join(ROOT,'aesthetics/ui/admin-systems.js'),'utf8').includes("interaction==='pointer'||!focused"));
 ok('Owner lead SMS reads bypass AI and phone reports use live numeric contacts',ownerConversationSource.includes('const direct=ownerLeadRead(text);if(direct)return direct;')&&ownerConversationSource.includes("decision.report==='leads'")&&PHONE_SOURCE.includes("enum:['leads','contact']"));
 await import('./verify-release.mjs');

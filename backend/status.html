@@ -837,10 +837,19 @@ try {
   .lead-phone{white-space:nowrap}
   #adm-mkt #leads-table .lead-h-contact{width:160px}
   #msg-call{display:inline-flex;align-items:center;justify-content:center}
-  #lead-note-dialog{width:min(560px,calc(100vw - 32px));max-height:calc(100dvh - 32px);box-sizing:border-box;color:var(--maya-text,#fff);overflow:auto}
-  #lead-note-dialog::backdrop{background:rgb(0 0 0 / .6)}
-  #lead-note-dialog textarea{width:100%;box-sizing:border-box;resize:vertical;font:inherit;color:inherit;background:rgb(0 0 0 / .25);border:1px solid rgb(170 181 196 / .5);border-radius:8px;padding:12px}
-  #lead-note-dialog .dialog-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+
+
+  #drawer{overflow:hidden;scrollbar-width:none}#drawer::-webkit-scrollbar,#drawer *::-webkit-scrollbar{display:none}
+  #drawer-systems{flex:1;min-height:0;overflow:auto;scrollbar-width:none}#drawer-systems[hidden]{display:none}
+  #voice-dock{margin-top:8px;margin-bottom:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .contact-open #adm-tabtitle{visibility:hidden}.msg-head{flex-wrap:wrap}.msg-who{flex-basis:calc(100% - 40px)}
+  html body #msg-name{font:var(--maya-type-H1-weight) var(--maya-type-H1-size) var(--maya-type-H1-font)!important;color:var(--maya-type-H1-color)!important;text-transform:var(--maya-type-H1-case)!important}
+  .msg-thread-heading{font:var(--maya-type-H2-weight) var(--maya-type-H2-size) var(--maya-type-H2-font);color:var(--maya-type-H2-color);margin-top:4px}
+  #msg-call,#msg-share{aspect-ratio:1;border-radius:50%!important;display:inline-flex;align-items:center;justify-content:center;padding:0!important;flex:none}
+  .msg-share{position:relative;margin-left:auto}#msg-share-menu{position:absolute;right:0;top:100%;z-index:5;background:var(--maya-surface);backdrop-filter:var(--maya-frost);border:1px solid var(--maya-line);border-radius:12px;padding:8px;min-width:140px}
+  #msg-share-menu button{display:block;width:100%;border:0;border-radius:8px;padding:8px;text-align:left;background:transparent;color:var(--ink);cursor:pointer}#msg-share-menu button:hover{background:#ffffff14}
+  #adm-mkt #leads-table:has(.lead-note-inline) .lead-col-first{position:static!important}
+  .lead-note-inline{width:100%;text-align:left}.lead-note-inline textarea{box-sizing:border-box;width:100%;resize:vertical;font:inherit;color:inherit;background:transparent;border:1px solid var(--maya-line);border-radius:6px;padding:6px;min-height:60px}.lead-note-inline p{margin:4px 0}.lead-note-inline .dialog-actions{display:flex;justify-content:flex-end;gap:4px;flex-wrap:wrap}
 </style>
 <style>
   #affiliate-profile{display:none}
@@ -867,7 +876,7 @@ try {
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=15"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=16"></script>
 <link rel="stylesheet" href="/aesthetics/ui/admin-systems.css?v=3">
 </head>
 <body class="systems-map">
@@ -980,12 +989,12 @@ if (IS_AFFILIATES) {
     <div id="msg-thread" hidden>
       <div class="msg-head">
         <button class="msg-back" onclick="msgBack()" title="All threads">&#8249;</button>
-        <div class="msg-who"><div class="msg-name-edit"><input class="msg-name" id="msg-name" aria-label="Contact name" placeholder="Contact name" title="Click to name this contact; Enter saves" maxlength="120" onblur="msgRename()" onkeydown="if(event.key==='Enter')this.blur()"><button class="msg-rename" aria-label="Edit contact name" onclick="document.getElementById('msg-name').focus()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 16-1 5 5-1L21 7l-4-4zM14 6l4 4"/></svg></button></div><div class="msg-number" id="msg-number"></div></div>
-        <button class="msg-call" onclick="msgBooking()" title="Add booking link to draft">Booking Link</button><button class="msg-call" onclick="msgInvoice()" title="Invoice this lead">Invoice</button><button class="msg-call" id="msg-call" onclick="msgCall()" title="Call this person" aria-label="Call this person"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2z"/></svg></button>
+        <div class="msg-who"><div class="msg-name-edit"><input class="msg-name" id="msg-name" aria-label="Contact name" placeholder="Contact name" title="Click to name this contact; Enter saves" maxlength="120" onblur="msgRename()" onkeydown="if(event.key==='Enter')this.blur()"><button class="msg-rename" aria-label="Edit contact name" onclick="document.getElementById('msg-name').focus()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 16-1 5 5-1L21 7l-4-4zM14 6l4 4"/></svg></button></div><div class="msg-number" id="msg-number" hidden></div><div class="msg-thread-heading">Messages</div></div>
+        <div class="msg-share"><button class="msg-call maya-icon-button" id="msg-share" type="button" aria-label="Share" aria-expanded="false" onclick="msgShare(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V3m-4 4 4-4 4 4M5 12v8h14v-8"/></svg></button><div id="msg-share-menu" hidden><button onclick="msgShare(false);msgBooking()">Booking link</button><button onclick="msgShare(false);msgInvoice()">Invoice</button></div></div><button class="msg-call maya-icon-button" id="msg-call" onclick="msgCall()" title="Call this person" aria-label="Call this person"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2z"/></svg></button>
       </div>
       <div class="msg-controls"><button onclick="msgCheckDelivery()" title="Check the last five outgoing texts with the carrier">Check delivery</button><button id="msg-block" onclick="msgBlock()">Block</button><button onclick="msgDelete()">Delete conversation</button></div><div class="msg-scroll" id="msg-scroll"></div>
       <div class="msg-compose">
-        <textarea id="msg-input" rows="1" placeholder="Text them as Mana Siyo" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();msgSend();}"></textarea>
+        <textarea id="msg-input" oninput="this.style.height='auto';this.style.height=Math.min(96,this.scrollHeight+2)+'px'" rows="1" placeholder="Text them as Mana Siyo" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();msgSend();}"></textarea>
         <button class="msg-send" onclick="msgSend()" title="Send">Send</button>
       </div>
       <div id="msg-feedback" role="status" aria-live="polite"></div><div class="msg-consent" id="msg-consent"></div>
@@ -2804,6 +2813,7 @@ async function fetchBrief(d) {
 }
 
 function paintLeads(l) {
+  if(document.getElementById('lead-note-input'))return; // Keep an active or failed inline draft intact during refresh.
   _leadList = l.connected ? (l.list || []) : [];
   const tb = document.querySelector('#leads-table tbody');
   const note = document.getElementById('leads-note');
@@ -3389,6 +3399,7 @@ function _msgKnownName(number, ...names) {
 }
 async function openThread(number, name) {
   _msgOpen = { number, name: _msgKnownName(number,name) };
+  document.getElementById('drawer').classList.add('contact-open');msgShare(false);
   document.getElementById('msg-feedback').textContent = '';
   document.getElementById('msg-list').hidden = true;
   document.getElementById('msg-thread').hidden = false;
@@ -3397,7 +3408,7 @@ async function openThread(number, name) {
   await loadThread(number);
   const inp = document.getElementById('msg-input'); if (inp) inp.focus();
 }
-function msgBack() { _msgOpen = null; document.getElementById('msg-thread').hidden = true; document.getElementById('msg-list').hidden = false; loadThreads(); }
+function msgBack() { document.getElementById('drawer').classList.remove('contact-open');msgShare(false);_msgOpen = null; document.getElementById('msg-thread').hidden = true; document.getElementById('msg-list').hidden = false; loadThreads(); }
 async function loadThread(number, quiet) {
   const box = document.getElementById('msg-scroll'); if (!box || !_idTok) return;
   try {
@@ -3499,6 +3510,11 @@ async function _mayaCallClient(number, name, reason) {
     if (c) c.textContent = 'Maya is calling ' + (name || number) + ' now.';
   } catch (e) { alert('The call did not go out.'); }
 }
+function msgShare(open){const button=document.getElementById('msg-share'),menu=document.getElementById('msg-share-menu');const show=open??menu.hidden;menu.hidden=!show;button.setAttribute('aria-expanded',String(show));}
+document.addEventListener('click',e=>{if(!e.target.closest('.msg-share'))msgShare(false);});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')msgShare(false);});
+document.querySelector('.msg-share').addEventListener('mouseenter',()=>msgShare(true));
+document.querySelector('.msg-share').addEventListener('mouseleave',e=>{if(!e.currentTarget.contains(document.activeElement))msgShare(false);});
 function msgInvoice(){const number=String(_msgOpen?.number||'').replace(/\D/g,'');const index=_leadList.findIndex(x=>String(x.phone||'').replace(/\D/g,'')===number);if(index<0)return alert('Add this contact to Lead Station before creating an invoice.');leadInvoice(index);}
 async function loadBookingPending(){
   const host=document.getElementById('booking-pending');if(!host||!_idTok||_msgTab!=='messages')return;
@@ -3528,21 +3544,21 @@ function msgBooking(){
   feedback.textContent='Booking link added to draft. Review it, then press Send.';input.focus();
 }
 let _leadNoteDialog=null,_leadNoteRec=null,_leadNoteSaving=false;
-window.addEventListener('maya-owner-session-changed',()=>{stopLeadNoteDictation();if(_leadNoteDialog){_leadNoteDialog.close();_leadNoteDialog.remove();_leadNoteDialog=null;}});
+window.addEventListener('maya-owner-session-changed',()=>{stopLeadNoteDictation();if(_leadNoteDialog){_leadNoteDialog.remove();_leadNoteDialog=null;}});
 function stopLeadNoteDictation(){
   const rec=_leadNoteRec;_leadNoteRec=null;if(rec){rec.onresult=null;rec.onend=null;rec.onerror=null;try{rec.abort();}catch(_){}}
   window.mayaNoteDictating=false;window.dispatchEvent(new Event('maya-note-dictation-ended'));
 }
 function editLatestLeadNote(i){
   const lead=_leadList[i];if(!lead?.id||!_idTok)return;
-  if(_leadNoteDialog){stopLeadNoteDictation();_leadNoteDialog.close();_leadNoteDialog.remove();_leadNoteDialog=null;}
-  const id=lead.id,token=_idTok,dialog=document.createElement('dialog');_leadNoteDialog=dialog;
-  dialog.id='lead-note-dialog';dialog.className='maya-surface';dialog.setAttribute('aria-labelledby','lead-note-title');
-  dialog.innerHTML='<h2 id="lead-note-title" class="drawer-title">Latest note — '+esc(lead.name||'Unnamed')+'</h2><label for="lead-note-input">Note</label><textarea id="lead-note-input" maxlength="2000" rows="6"></textarea><p id="lead-note-feedback" role="status"></p><div class="dialog-actions"><button type="button" id="lead-note-dictate" class="msg-call" aria-label="Dictate latest note">Dictate</button><button type="button" id="lead-note-cancel" class="msg-call">Cancel</button><button type="button" id="lead-note-save" class="msg-call">Save note</button></div>';
+  if(_leadNoteDialog||_leadNoteSaving)return;
+  const id=lead.id,token=_idTok,dialog=document.createElement('div');_leadNoteDialog=dialog;
+  dialog.id='lead-note-editor';dialog.className='lead-note-inline';dialog.open=true;
+  dialog.innerHTML='<textarea id="lead-note-input" aria-label="Latest note" maxlength="2000" rows="3"></textarea><p id="lead-note-feedback" role="status"></p><div class="dialog-actions"><button type="button" id="lead-note-dictate" class="msg-call" aria-label="Dictate latest note">Dictate</button><button type="button" id="lead-note-cancel" class="msg-call">Cancel</button><button type="button" id="lead-note-save" class="msg-call">Save</button></div>';
   const input=dialog.querySelector('textarea'),feedback=dialog.querySelector('[role="status"]'),dictate=dialog.querySelector('#lead-note-dictate');input.value=lead.wrote||lead.note||'';
-  const close=()=>{if(_leadNoteDialog===dialog){stopLeadNoteDictation();_leadNoteDialog=null;}dialog.remove();};dialog.addEventListener('close',close);
+  const close=()=>{dialog.open=false;if(_leadNoteDialog===dialog){stopLeadNoteDictation();_leadNoteDialog=null;}dialog.remove();paintLeads({connected:true,list:_leadList});};
   dialog.addEventListener('cancel',e=>{if(_leadNoteSaving)e.preventDefault();});
-  dialog.querySelector('#lead-note-cancel').onclick=()=>{dialog.close();close();};
+  dialog.querySelector('#lead-note-cancel').onclick=()=>{close();};
   dictate.onclick=()=>{
     if(_leadNoteRec){stopLeadNoteDictation();dictate.textContent='Dictate';return;}
     if(_voice||_voiceStarting){feedback.textContent='Finish the Maya call before dictating a note.';return;}
@@ -3562,12 +3578,14 @@ function editLatestLeadNote(i){
       if(!token||token!==_idTok)throw Error('Sign in again before saving.');
       const r=await fetch('/api/admin/lead-update',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({id,note})});const result=await r.json();
       if(!r.ok||!result.ok)throw Error(result.error||'The note was not saved. Try again.');
-      if(token===_idTok){const current=_leadList.find(x=>x.id===id);if(current){current.note=note;current.wrote=note;paintLeads({connected:true,list:_leadList});}}
-      dialog.close();close();
+      if(token===_idTok){const current=_leadList.find(x=>x.id===id);if(current){current.note=note;current.wrote=note;}}
+      close();
     }catch(e){feedback.textContent=e.message;}
     finally{_leadNoteSaving=false;for(const b of dialog.querySelectorAll('button'))b.disabled=false;input.disabled=false;}
   };
-  document.body.append(dialog);dialog.showModal();input.focus();
+  const cell=document.getElementById('lead-tr-'+i)?.querySelector('[data-col="note"]');if(!cell)return;cell.replaceChildren(dialog);dialog.addEventListener('click',e=>e.stopPropagation());
+  input.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();close();}else if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();dialog.querySelector('#lead-note-save').click();}});
+  input.addEventListener('blur',e=>{if(!dialog.contains(e.relatedTarget)&&!_leadNoteRec&&input.value.trim()!==String(lead.wrote||lead.note||'').trim())dialog.querySelector('#lead-note-save').click();});input.focus();
 }
 function leadOpenThread(i) {
   const x = _leadList[i]; if (!x) return;
@@ -3585,7 +3603,7 @@ function leadMayaCall(i) {
 // the unread badge stays honest even while the Systems tab shows
 setInterval(() => { if (_idTok && _msgTab !== 'messages') loadThreads(); }, 60000);
 // this module is sealed in an IIFE; the drawer's onclicks need these on window
-Object.assign(window, { loadModelSnapshot, loadMayaLogs, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, msgInvoice, msgBooking, editLatestLeadNote, leadOpenThread, leadMayaCall, loadThreads, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
+Object.assign(window, { loadModelSnapshot, loadMayaLogs, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, msgInvoice, msgBooking, msgShare, editLatestLeadNote, leadOpenThread, leadMayaCall, loadThreads, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
 if (_idTok) loadModelSnapshot();
 function leadContact(i, type) {
   const x = _leadList[i]; if (!x || !x.email) return;

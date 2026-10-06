@@ -61,15 +61,14 @@ and long content must remain accessible at 320–1920px widths.
 Glass, Panels and Tables, Typography, Glass Section, Panels and Table headings use H2; Edit glass and Edit dropdown use H3. The first dropdown is Glass, Panels and Tables. Glass Section groups presets,
 numeric material controls, X/Y padding, icons, five pill colors and button States.
 A divider separates Panels, another separates Table. Panels have independent
-outer padding/material/corners; Inner panel has opacity, border, corners, X/Y padding
-and percentage width. Tables and the fixed formatting toolbar are outside Inner panel styling. The toolbar follows outer-panel housing; tables have independent material, border and corners. The unused Filter preview/button/editor are removed; saved filter data and functional Admin/Outbound filters remain compatible.
+outer padding/material/corners; Outer panel, Inner panel and Table appear together under Panels using the same Edit dropdown grid. All offer background, opacity, border color/opacity, corners, blur, saturation and X/Y padding. Inner also offers percentage width; Table offers independent outside/inside border thickness and grid color/opacity. Tables stay outside Inner material, while the cell formatting toolbar follows Inner material. The unused Filter preview/button/editor are removed; saved filter data and functional Admin/Outbound filters remain compatible.
 The preview has the enclosing review section as outer panel, two direct inner panels, and a Contacts pill
 inside each inner panel: three material layers maximum. Inner padding surrounds
 heading plus Contacts; outer padding surrounds the inner panels. There is no wrapper around the pair of inner panels. Focusing or changing a padding field
 highlights its actual padding; moving to another field or closing removes the green band.
 No debug toggle or preview wrapper adds another material layer.
 
-Table previews Full name, Status and Latest Notes. The fixed toolbar combines table-wide material/geometry with selection formatting. Two stacked rows edit border geometry: Outer border thickness/color/opacity, corners (0–24px) and X/Y cell padding; then Inner border thickness/color/opacity. Background and opacity are edited only through selection formatting; legacy table-wide saved materials remain readable. No separate Table Edit popup remains. Border widths are 0–8px; zero removes that border. Outer and inner borders use Black/White, and grid edges never double the outline. Clicking a cell selects
+Table previews Full name, Contact, Status and Latest Notes. The Table popup under Panels owns its independent material and geometry. The fixed toolbar below the Table divider edits only selected row/column typography and cell backgrounds/opacity. Drag a header's right edge to resize its semantic column; arrow keys on the resize handle adjust by 10px. Save persists 80–800px widths by name/contact/stage/note, applied to preview and live Leads regardless of reordered columns. Restore Table restores its saved widths too. Border widths are 0–8px; zero removes that border. Outer and inner borders use Black/White, and grid edges never double the outline. Clicking a cell selects
 its formatting target in a fixed, single-row toolbar above the preview: font,
 case, size, weight, color, horizontal/vertical alignment, background and opacity.
 The toolbar scrolls horizontally on small screens. Header font, size, weight, case, color and alignment explicitly override the general body role so every first-row edit is visible. Full name corner selects both
@@ -86,7 +85,7 @@ Status colors remain semantic. Column material accepts bounded opacity and the
 fixed Black/Gray/Blue/Yellow/Green/Pink palette. Shared matching Outbound Status
 formatting includes its column background. Full names default to Cormorant.
 
-Typography shows H1–H4/P1–P4 with one preview and one Edit per role. H3 previews
+Typography shows H0–H6/P1–P4 with one preview and one Edit per role. H3 previews
 Campaign details. Beside each role description, show a comma-separated list of
 linked rendered pages. An expandable bounded location list exposes every authored
 use with source path, line, selector and text excerpt; shared JS modules link to
@@ -230,3 +229,5 @@ Latest Notes opens a shared-material review dialog from the whole cell; typing
 or browser dictation edits a draft, and Save note persists it. Message Call uses
 the handset SVG in the existing pill. Booking Link inserts the approved URL into
 the unsent composer; it neither sends nor creates an owner-send preview.
+
+October 5 drawer and note editing: Latest Notes opens a textarea inside the clicked cell, never a modal. Enter, leaving a changed field, or Save submits the authenticated update; Escape/Cancel discards, failures keep the draft, and active refresh cannot replace it. Dictate remains explicit and pauses wake recognition. During an edit the frozen first column is released so it cannot cover the note controls on narrow screens. Contact name uses H1 above an H2 Messages label, with no visible duplicate phone number. Circular Phone and Share use shared icon dimensions/glass. Share reveals Booking link and Invoice; booking only fills the unsent composer, while calls retain confirmation. Drawer content scrolls independently of its bottom voice dock with hidden scrollbars.
