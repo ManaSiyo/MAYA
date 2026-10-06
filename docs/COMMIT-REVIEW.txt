@@ -1,24 +1,17 @@
-[Codex] Repair callback alert scheduling and expose delivery failures
+[Codex] Simplify Latest Notes to Save and Cancel
 
-Separate owner callback checks from Outbound through Scheduler-authenticated
-/api/tasks/lead-alerts. Add read-only owner notification status, durable worker
-health and channel SID/status/error evidence. Attempt SMS and voice independently;
-fallback when formatting preferences fail. Preserve claims after uncertain
-provider results or history failures. Report unresolved attempts as failures,
-return 503 from scheduled checks, and show quiet errors/stale setup in Admin.
+Remove the Dictate button and its speech-recognition lifecycle from the inline
+Latest Notes editor. Keep Save and Cancel, preserve Enter as keyboard Save,
+and discard unsaved drafts on outside clicks or Escape. Remove automatic
+blur-save. Detach outside handlers on close/session changes. Preserve failed
+Save drafts and allow already-started saves to finish without duplicate writes.
 
-Incident: Julia Lokey's October 6 callback exists in Wix and live Admin. The live
-release matched 9de4fd7. Cloud Scheduler API was disabled; enabled it through the
-Google Cloud console and confirmed there are no jobs. No credentials, environment
-variables or billing settings changed. No live SMS/calls sent. Exact historical
-Twilio outcome remains unverified.
+Validation: four-width lead-notes UI checks prove exact actions, Cancel and
+outside-click discard with zero writes, no blur save, and explicit successful/
+failed persistence. Full app-regression, local server smoke, admin-wake and
+maya-phone/messages/transfer/feedback passed with fake providers/recognition.
+Regenerated typography locations after removing the button; diff check clean.
 
-Validation: all 33 Cloud Build gates, full app-regression and real server smoke
-passed; callback tests cover duplicate/concurrent claims, storage failure,
-format fallback, independent channels, uncertainty, read-only diagnostics,
-authorization and late-account UI responses. Public live verification passed
-against 9de4fd7. Regenerated typography source locations; diff check clean.
-
-Limitations: local commit only. Push/deploy plus owner-configured dedicated
-2-minute Scheduler job and actual owner SMS/call verification still required.
-Exact setup and catch-up/reconciliation cautions: docs/CALLBACK-ALERTS.md.
+No personal Chrome, microphone, live calls/messages or production configuration
+accessed. Local commit only; no push/deploy. The preceding callback repair in
+9f68d17 also remains local and needs owner deployment/Scheduler activation.

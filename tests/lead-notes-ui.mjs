@@ -26,10 +26,11 @@ try{
  const name=await page.locator('.lead-identity').boundingBox(),date=await page.locator('.lead-signup').boundingBox();assert.ok(date.y>=name.y+name.height-1,'Date sits under name');
  assert.equal(await page.locator('.lead-identity').evaluate(e=>getComputedStyle(e).fontSize),'14px');assert.equal(await page.locator('.lead-signup').evaluate(e=>getComputedStyle(e).fontSize),'10px');
  await page.getByRole('button',{name:'Edit latest note for Angela Example'}).click();await page.locator('#lead-note-input').fill('Changed by typing');await page.locator('#lead-note-cancel').click();assert.equal(writes.length,0);assert.equal(await page.locator('.lead-note-vp').textContent(),'Original note');
- await page.getByRole('button',{name:'Edit latest note for Angela Example'}).click();await page.locator('#lead-note-input').fill('');await page.locator('#lead-note-dictate').click();
- await page.evaluate(()=>{const result=[{transcript:'A green suit for October'}];result.isFinal=true;fixtureRecognition.at(-1).onresult({resultIndex:0,results:[result]});});
- assert.equal(await page.locator('#lead-note-input').inputValue(),'A green suit for October');assert.equal(writes.length,0,'Dictation is a draft');
- fail=true;await page.locator('#lead-note-save').click();await page.getByText('Save unavailable',{exact:true}).waitFor();assert.equal(await page.locator('dialog#lead-note-dialog').count(),0);assert.equal(await page.locator('#lead-note-input').inputValue(),'A green suit for October');assert.equal(await page.evaluate(()=>fixtureRecognition.at(-1).aborted),true);
+ await page.getByRole('button',{name:'Edit latest note for Angela Example'}).click();
+ assert.deepEqual(await page.locator('#lead-note-editor button').allTextContents(),['Cancel','Save']);
+ assert.equal(await page.locator('#lead-note-dictate').count(),0);
+ await page.locator('#lead-note-input').fill('A green suit for October');
+ fail=true;await page.locator('#lead-note-save').click();await page.getByText('Save unavailable',{exact:true}).waitFor();assert.equal(await page.locator('#lead-note-input').inputValue(),'A green suit for October');
  fail=false;await page.locator('#lead-note-save').click();await page.locator('#lead-note-editor').waitFor({state:'detached'});assert.equal(await page.locator('.lead-note-vp').textContent(),'A green suit for October');assert.deepEqual(writes.at(-1),{path:'/api/admin/lead-update',body:{id:'m_1',note:'A green suit for October'},auth:'Bearer fixture-owner'});
  await page.evaluate(()=>{toggleDrawer(true);admTab('messages');});await page.waitForTimeout(350);const headingBefore=await page.locator('#adm-tabtitle').boundingBox();
  await page.evaluate(()=>{leadOpenThread(0);});await page.waitForTimeout(80);assert.equal(await page.locator('#msg-name').inputValue(),'Angela Example');
@@ -42,7 +43,7 @@ try{
   await page.setViewportSize({width,height});await page.evaluate(()=>editLatestLeadNote(0));const bounds=await page.locator('#lead-note-editor').boundingBox();assert.ok(bounds.width>0,'Inline note editor remains inside its cell at '+width);await page.locator('#lead-note-cancel').click();
  }
  await page.setViewportSize({width:1440,height:900});await page.evaluate(()=>editLatestLeadNote(0));await page.locator('#lead-note-input').fill('Inline Enter saves');await page.locator('#lead-note-input').press('Enter');await page.locator('#lead-note-editor').waitFor({state:'detached'});assert.equal(await page.locator('.lead-note-vp').textContent(),'Inline Enter saves');assert.equal(await page.locator('dialog#lead-note-dialog').count(),0);
- await page.evaluate(()=>editLatestLeadNote(0));await page.locator('#lead-note-input').fill('Blur saves');await page.locator('.lead-identity').click();await page.locator('#lead-note-editor').waitFor({state:'detached'});assert.equal(await page.locator('.lead-note-vp').textContent(),'Blur saves');
+ await page.evaluate(()=>editLatestLeadNote(0));await page.locator('#lead-note-input').fill('Discard this draft');const beforeOutside=writes.length;await page.locator('#lead-note-input').blur();assert.equal(writes.length,beforeOutside,'Blur must never save');await page.locator('#leads-table th[data-col=note]').click();await page.locator('#lead-note-editor').waitFor({state:'detached'});assert.equal(writes.length,beforeOutside,'Outside click cancels without a write');assert.equal(await page.locator('.lead-note-vp').textContent(),'Inline Enter saves');
  assert.equal(await page.locator('#msg-number').isVisible(),false,'Known contact displays name only');assert.equal(await page.locator('#msg-name').inputValue(),'Angela Example');assert.ok(await page.locator('#msg-name').evaluate(e=>parseFloat(getComputedStyle(e).fontSize)<parseFloat(getComputedStyle(document.querySelector('#adm-tabtitle')).fontSize)),'Messages has stronger hierarchy than the contact');assert.equal(await page.locator('.msg-thread-heading').count(),0);
  for(const selector of ['#msg-call','#msg-share'])assert.ok(await page.locator(selector).evaluate(e=>{const r=e.getBoundingClientRect();return Math.abs(r.width-r.height)<1&&getComputedStyle(e).borderRadius==='50%';}),'Circular action '+selector);
  assert.equal(await page.locator('#drawer').evaluate(e=>getComputedStyle(e).scrollbarWidth),'none');const dock=await page.locator('#voice-dock').boundingBox(),drawer=await page.locator('#drawer').boundingBox();assert.ok(drawer.y+drawer.height-dock.y-dock.height<25,'Wake controls stay at the drawer floor');
@@ -53,5 +54,5 @@ try{
  fail=true;await page.locator('#automation-first-text').fill('Keep my draft {name}');await page.locator('#automation-save').click();await page.getByText('Save unavailable',{exact:true}).waitFor();assert.equal(await page.locator('#automation-first-text').inputValue(),'Keep my draft {name}');fail=false;
  await page.evaluate(()=>admTab('messages'));await page.setViewportSize({width:1440,height:900});
  await page.locator('#drawer').screenshot({path:'/private/tmp/maya-drawer-reviewed.png'});
- assert.deepEqual(errors,[]);console.log('Lead note typing/dictation, confirmed persistence, H5/H6, Contact and unsent Booking Link drafts passed at four widths.');
+ assert.deepEqual(errors,[]);console.log('Lead note Save/Cancel, outside-click discard, confirmed persistence, H5/H6, Contact and unsent Booking Link drafts passed at four widths.');
 }finally{await browser.close();}

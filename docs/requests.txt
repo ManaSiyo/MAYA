@@ -2743,3 +2743,5 @@ October 5: Inline Latest Notes; circular Share/Phone; name-first Messages hierar
 October 5 — Completed status; hard vertical icon centering; separate editable inside-pill and beside-text gaps. Implemented locally in runtime v18/gallery v31 with active editor previews and status persistence checks. Not pushed/deployed.
 
 [LOCAL FIX; ACTIVATION OPEN] October 6: callback form must text and call Fromsa without an open Admin page. Independent Scheduler endpoint and visible health/errors implemented; deploy and owner Scheduler setup plus real delivery test remain. See CALLBACK-ALERTS.md.
+
+October 6 [local]: Latest Notes has only Save and Cancel. Removed Dictate; clicking outside without saving cancels the draft and blur never saves. Verified with fake API/browser checks; not pushed.

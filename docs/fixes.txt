@@ -575,3 +575,5 @@ October 5: Inline editor uses lead row IDs (table headings also live in tbody). 
 October 5 — Status header gear baseline offset and unavailable Completed status fixed. Independent icon gaps validate/save/apply through shared runtime; preview editor clicks no longer immediately dismiss themselves. Removed fabricated Drawer AI cost metric. Local verification only; owner Push remains.
 
 October 6, callback incident: latest Julia Lokey at 4:04 PM Pacific reached Wix and live Admin. Live release 9de4fd7 current. Cloud Scheduler API disabled in pro-maya; autonomous scheduling unavailable. Local repair separates callback task from Outbound, persists provider/health evidence, isolates channels, preserves uncertain claims and exposes quiet failures. Exact Julia provider outcome not proven. Scheduler API enabled and zero scheduled jobs confirmed. Job/environment setup reserved for owner; no push or live sends. See CALLBACK-ALERTS.md.
+
+October 6: Removed Latest Notes recognition/button and accidental blur-save. Outside pointer clicks cancel without a write; cleanup on close/session change. Explicit Save failures preserve the draft.

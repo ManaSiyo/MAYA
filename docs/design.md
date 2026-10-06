@@ -225,12 +225,13 @@ The gallery mirrors the four semantic columns; old three-column saves retain
 Name/Status/Notes styles and gain a separate Contact style. Formatting selections
 follow data-col identity rather than visual position. H5/H6 remain separate
 shared roles, with their own font/size/color/case/alignment controls.
-Latest Notes opens a shared-material review dialog from the whole cell; typing
-or browser dictation edits a draft, and Save note persists it. Message Call uses
+Latest Notes opens a shared-material inline editor from the whole cell; typing
+edits a draft; Save persists it and Cancel, Escape or a click outside discards it.
+The editor has only Save and Cancel; blur never saves and no Dictate control remains. Message Call uses
 the handset SVG in the existing pill. Booking Link inserts the approved URL into
 the unsent composer; it neither sends nor creates an owner-send preview.
 
-October 5 drawer and note editing: Latest Notes opens a textarea inside the clicked cell, never a modal. Enter, leaving a changed field, or Save submits the authenticated update; Escape/Cancel discards, failures keep the draft, and active refresh cannot replace it. Dictate remains explicit and pauses wake recognition. During an edit the frozen first column is released so it cannot cover the note controls on narrow screens. Messages stays at H2 in the original tab-title location before and after selecting a contact. The plain contact name below uses H3 with no panel or pill backing and no duplicate number; its pencil appears only on hover or keyboard focus. Circular Phone and Share use shared icon dimensions/glass. Share reveals Booking link and Invoice; booking only fills the unsent composer, while calls retain confirmation. Drawer content scrolls independently of its bottom voice dock with hidden scrollbars.
+October 5 drawer and note editing: Latest Notes opens a textarea inside the clicked cell, never a modal. Enter or Save submits the authenticated update; Escape, Cancel or clicking outside discards the draft. Blur never saves, failures keep the draft, and active refresh cannot replace it. The editor offers only Save and Cancel. During an edit the frozen first column is released so it cannot cover the note controls on narrow screens. Messages stays at H2 in the original tab-title location before and after selecting a contact. The plain contact name below uses H3 with no panel or pill backing and no duplicate number; its pencil appears only on hover or keyboard focus. Circular Phone and Share use shared icon dimensions/glass. Share reveals Booking link and Invoice; booking only fills the unsent composer, while calls retain confirmation. Drawer content scrolls independently of its bottom voice dock with hidden scrollbars.
 
 Automations opens a drawer view from Systems, beside Aesthetic Control. First and second text examples, triggers, earliest Los Angeles draft time and follow-up wait days persist privately for the signed-in owner. These are review-only draft rules, not scheduled client sends. Opening Messages can show an AI idea grounded in the selected lead and recent texts; Use draft appends it without overwriting existing text, and only Send invokes the SMS provider. STOP/blocked contacts, ambiguous leads, replies and two existing outgoing texts suppress suggestions. Automation cards share Inner panel material.
 

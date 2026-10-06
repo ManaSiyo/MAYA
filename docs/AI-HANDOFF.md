@@ -1,6 +1,25 @@
 # MAYA handoff - October 6, 2026
 
-## Current request: missed callback owner SMS and call
+## Current request: Latest Notes Save/Cancel only
+
+Started clean at 9f68d17, one local commit ahead of origin. Latest Notes remains
+an inline textarea with only Cancel and Save. Removed the dedicated dictation
+button and recognition lifecycle. Outside pointer clicks discard unsaved drafts;
+blur never saves. Escape cancels; Enter remains an intentional keyboard Save.
+Outside listeners detach on close and owner-session changes. An in-flight Save
+finishes normally; failed saves preserve the draft for retry or cancellation.
+
+Changed backend/status.html, tests/lead-notes-ui.mjs, tests/app-regression.mjs,
+design/continuity docs and regenerated typography source locations. Focused
+four-width browser tests cover exact actions, Cancel/outside discard with zero
+writes, no blur save and successful/failed explicit persistence. Full
+app-regression, real local server smoke, admin-wake and all four required
+communications suites passed with fake providers. No personal
+Chrome, microphone, live messages or deployment used for this change.
+Exact next step: owner pushes prepared commits when ready. Callback repair below
+still requires deployment, Scheduler job setup and actual owner delivery checks.
+
+## Pending activation: missed callback owner SMS and call
 
 Started clean at 9de4fd7, matching origin/maya-v2 and the verified live release.
 Wix connector and live Admin confirm Julia Lokey submitted the enabled Call back

@@ -3636,49 +3636,40 @@ function msgBooking(){
   }
   feedback.textContent='Booking link added to draft. Review it, then press Send.';input.focus();
 }
-let _leadNoteDialog=null,_leadNoteRec=null,_leadNoteSaving=false;
-window.addEventListener('maya-owner-session-changed',()=>{stopLeadNoteDictation();if(_leadNoteDialog){_leadNoteDialog.remove();_leadNoteDialog=null;}});
-function stopLeadNoteDictation(){
-  const rec=_leadNoteRec;_leadNoteRec=null;if(rec){rec.onresult=null;rec.onend=null;rec.onerror=null;try{rec.abort();}catch(_){}}
-  window.mayaNoteDictating=false;window.dispatchEvent(new Event('maya-note-dictation-ended'));
-}
+let _leadNoteDialog=null,_leadNoteSaving=false,_closeLeadNote=null;
+window.addEventListener('maya-owner-session-changed',()=>_closeLeadNote?.(true));
 function editLatestLeadNote(i){
-  const lead=_leadList[i];if(!lead?.id||!_idTok)return;
-  if(_leadNoteDialog||_leadNoteSaving)return;
+  const lead=_leadList[i];if(!lead?.id||!_idTok||_leadNoteDialog||_leadNoteSaving)return;
+  const cell=document.getElementById('lead-tr-'+i)?.querySelector('[data-col="note"]');if(!cell)return;
   const id=lead.id,token=_idTok,dialog=document.createElement('div');_leadNoteDialog=dialog;
   dialog.id='lead-note-editor';dialog.className='lead-note-inline';dialog.open=true;
-  dialog.innerHTML='<textarea id="lead-note-input" aria-label="Latest note" maxlength="2000" rows="3"></textarea><p id="lead-note-feedback" role="status"></p><div class="dialog-actions"><button type="button" id="lead-note-dictate" class="msg-call" aria-label="Dictate latest note">Dictate</button><button type="button" id="lead-note-cancel" class="msg-call">Cancel</button><button type="button" id="lead-note-save" class="msg-call">Save</button></div>';
-  const input=dialog.querySelector('textarea'),feedback=dialog.querySelector('[role="status"]'),dictate=dialog.querySelector('#lead-note-dictate');input.value=lead.wrote||lead.note||'';
-  const close=()=>{dialog.open=false;if(_leadNoteDialog===dialog){stopLeadNoteDictation();_leadNoteDialog=null;}dialog.remove();paintLeads({connected:true,list:_leadList});};
-  dialog.addEventListener('cancel',e=>{if(_leadNoteSaving)e.preventDefault();});
-  dialog.querySelector('#lead-note-cancel').onclick=()=>{close();};
-  dictate.onclick=()=>{
-    if(_leadNoteRec){stopLeadNoteDictation();dictate.textContent='Dictate';return;}
-    if(_voice||_voiceStarting){feedback.textContent='Finish the Maya call before dictating a note.';return;}
-    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-    if(!SR){feedback.textContent='Use keyboard dictation or type your note; browser dictation is unavailable.';return;}
-    window.mayaNoteDictating=true;_wakeStop();
-    const rec=new SR();_leadNoteRec=rec;rec.lang='en-US';rec.continuous=true;rec.interimResults=false;
-    rec.onresult=e=>{if(_leadNoteRec!==rec||!dialog.open)return;for(let j=e.resultIndex;j<e.results.length;j++)if(e.results[j].isFinal){input.value=(input.value.trim()?input.value.trim()+' ':'')+e.results[j][0].transcript.trim();input.value=input.value.slice(0,2000);}feedback.textContent='Review the note, then Save note. Nothing has been saved.';};
-    rec.onerror=e=>{if(_leadNoteRec!==rec)return;feedback.textContent=e.error==='not-allowed'?'Microphone permission is needed. You can still type your note.':'Dictation stopped. Review or type your note.';stopLeadNoteDictation();dictate.textContent='Dictate';};
-    rec.onend=()=>{if(_leadNoteRec!==rec)return;stopLeadNoteDictation();dictate.textContent='Dictate';};
-    try{rec.start();dictate.textContent='Stop dictation';feedback.textContent='Listening. Speech fills this draft only.';}catch(_){stopLeadNoteDictation();dictate.textContent='Dictate';feedback.textContent='Dictation could not start. You can still type your note.';}
+  dialog.innerHTML='<textarea id="lead-note-input" aria-label="Latest note" maxlength="2000" rows="3"></textarea><p id="lead-note-feedback" role="status"></p><div class="dialog-actions"><button type="button" id="lead-note-cancel" class="msg-call">Cancel</button><button type="button" id="lead-note-save" class="msg-call">Save</button></div>';
+  const input=dialog.querySelector('textarea'),feedback=dialog.querySelector('[role="status"]');input.value=lead.wrote||lead.note||'';
+  const outside=e=>{if(!dialog.contains(e.target))close();};
+  const close=(force=false)=>{
+    if(_leadNoteSaving&&!force)return;
+    dialog.open=false;document.removeEventListener('pointerdown',outside,true);
+    if(_leadNoteDialog===dialog){_leadNoteDialog=null;_closeLeadNote=null;}
+    dialog.remove();paintLeads({connected:true,list:_leadList});
   };
+  _closeLeadNote=close;
+  dialog.querySelector('#lead-note-cancel').onclick=()=>close();
   dialog.querySelector('#lead-note-save').onclick=async()=>{
-    if(_leadNoteSaving)return;stopLeadNoteDictation();dictate.textContent='Dictate';
+    if(_leadNoteSaving)return;
     const note=input.value.trim();_leadNoteSaving=true;for(const b of dialog.querySelectorAll('button'))b.disabled=true;input.disabled=true;feedback.textContent='Saving…';
     try{
       if(!token||token!==_idTok)throw Error('Sign in again before saving.');
       const r=await fetch('/api/admin/lead-update',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({id,note})});const result=await r.json();
       if(!r.ok||!result.ok)throw Error(result.error||'The note was not saved. Try again.');
       if(token===_idTok){const current=_leadList.find(x=>x.id===id);if(current){current.note=note;current.wrote=note;}}
-      close();
+      close(true);
     }catch(e){feedback.textContent=e.message;}
     finally{_leadNoteSaving=false;for(const b of dialog.querySelectorAll('button'))b.disabled=false;input.disabled=false;}
   };
-  const cell=document.getElementById('lead-tr-'+i)?.querySelector('[data-col="note"]');if(!cell)return;cell.replaceChildren(dialog);dialog.addEventListener('click',e=>e.stopPropagation());
+  cell.replaceChildren(dialog);dialog.addEventListener('click',e=>e.stopPropagation());
+  document.addEventListener('pointerdown',outside,true);
   input.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();close();}else if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();dialog.querySelector('#lead-note-save').click();}});
-  input.addEventListener('blur',e=>{if(!dialog.contains(e.relatedTarget)&&!_leadNoteRec&&input.value.trim()!==String(lead.wrote||lead.note||'').trim())dialog.querySelector('#lead-note-save').click();});input.focus();
+  input.focus();
 }
 function leadOpenThread(i) {
   const x = _leadList[i]; if (!x) return;
