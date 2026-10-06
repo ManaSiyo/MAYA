@@ -881,7 +881,7 @@ try {
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=17"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=18"></script>
 <link rel="stylesheet" href="/aesthetics/ui/admin-systems.css?v=3">
 </head>
 <body class="systems-map">
@@ -2894,7 +2894,7 @@ function paintLeads(l) {
     return '<th class="' + cls + '" draggable="true" data-col="' + k + '"' +
       ' ondragstart="_leadColDragStart(event,\'' + k + '\')" ondragover="_leadColDragOver(event)"' +
       ' ondragleave="_leadColDragLeave(event)" ondrop="_leadColDrop(event,\'' + k + '\')"' +
-      ' ondragend="_leadColDragEnd(event)" title="Drag to reorder">' + d.label + (k==='stage'?'<details class="lead-filter" onclick="event.stopPropagation()"><summary aria-label="Filter lead status" title="Filter lead status" aria-controls="lead-status-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 3-.5 2-2 1-2-.5-2 3.5L4.5 11v2L3 15l2 3.5 2-.5 2 1 .5 2h5l.5-2 2-1 2 .5 2-3.5-1.5-2v-2L21 9l-2-3.5-2 .5-2-1-.5-2z"/><circle cx="12" cy="12" r="3"/></svg></summary><div id="lead-status-menu" class="lead-status-menu" popover="manual" role="group" aria-label="Visible lead statuses" hidden>'+Object.entries(LEAD_STAGES).map(([key,label])=>'<label><input type="checkbox" data-status="'+key+'" '+(leadStatusFilter.has(key)?'checked':'')+' onchange="filterLeadStatus(\''+key+'\',this.checked)"> '+label+'</label>').join('')+'</div></details>':'') + '</th>';
+      ' ondragend="_leadColDragEnd(event)" title="Drag to reorder">' + (k==='stage'?'<span class="maya-icon-row lead-heading"><span>'+d.label+'</span>':d.label) + (k==='stage'?'<details class="lead-filter" onclick="event.stopPropagation()"><summary aria-label="Filter lead status" title="Filter lead status" aria-controls="lead-status-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 3-.5 2-2 1-2-.5-2 3.5L4.5 11v2L3 15l2 3.5 2-.5 2 1 .5 2h5l.5-2 2-1 2 .5 2-3.5-1.5-2v-2L21 9l-2-3.5-2 .5-2-1-.5-2z"/><circle cx="12" cy="12" r="3"/></svg></summary><div id="lead-status-menu" class="lead-status-menu" popover="manual" role="group" aria-label="Visible lead statuses" hidden>'+Object.entries(LEAD_STAGES).map(([key,label])=>'<label><input type="checkbox" data-status="'+key+'" '+(leadStatusFilter.has(key)?'checked':'')+' onchange="filterLeadStatus(\''+key+'\',this.checked)"> '+label+'</label>').join('')+'</div></details></span>':'') + '</th>';
   };
   tb.innerHTML =
     '<tr>' + order.map(thHtml).join('') + '</tr>' +
@@ -2946,7 +2946,7 @@ function _leadColDefs(){
     // v14.34: no quote column; a stored order that still names it is filtered by these defs
   };
 }
-const LEAD_STAGES={new:'Not contacted',contacted:'Contacted',in_progress:'In progress',booked:'Booked',canceled:'Cancelled'};
+const LEAD_STAGES={new:'Not contacted',contacted:'Contacted',in_progress:'In progress',booked:'Booked',completed:'Completed',canceled:'Cancelled'};
 let leadStatusFilter=new Set(Object.keys(LEAD_STAGES));
 function leadStage(x){if(LEAD_STAGES[x.stage])return x.stage;if(['closed','passed'].includes(x.stage))return x.stage;if(x.stage==='in_process')return 'in_progress';if(x.stage==='meeting')return 'booked';if(/^cancel(?:led|ed)[.!]?$/i.test(String(x.note||'').trim()))return 'canceled';return x.lastContact?'contacted':'new';}
 // Keep temporary menus outside the sticky table's clipping/backdrop context.
@@ -4002,7 +4002,7 @@ async function loadAffiliateLeads() {
     paintLeads({...data,list:leads});
     const weekAgo = Date.now()-7*86400000;
     const stats = {total:leads.length,week:leads.filter(l=>new Date(l.ts).getTime()>=weekAgo && new Date(l.ts).getTime()<=Date.now()).length,
-      contacted:leads.filter(l=>l.lastContact || ['contacted','closed','passed','in_process','in_progress','booked'].includes(l.stage)).length,closed:leads.filter(l=>['closed','passed'].includes(l.stage)).length};
+      contacted:leads.filter(l=>l.lastContact || ['contacted','closed','passed','in_process','in_progress','booked','completed'].includes(l.stage)).length,closed:leads.filter(l=>['closed','passed','completed'].includes(l.stage)).length};
     for (const [key,value] of Object.entries(stats)) document.getElementById('affiliate-'+key).textContent = value;
     status.textContent = data.why ? 'Some lead sources are unavailable.' : '';
   } catch (error) {

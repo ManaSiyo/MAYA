@@ -39,3 +39,5 @@ const candidates=gmailCandidates([{direction:'in',peers:['pat@example.com'],subj
 assert.equal(candidates.length,1);assert.equal(candidates[0].email,'pat@example.com');
 assert.equal(gmailCandidates([{direction:'in',peers:['pat@example.com'],subject:'Updated',ts:'2026-09-29'}],candidates).length,1);
 console.log('Gmail review excludes outgoing/automated messages and deduplicates correspondents.');
+
+assert.equal(cleanCommand({action:'update',query:'Exact client',stage:'completed'}).stage,'completed');

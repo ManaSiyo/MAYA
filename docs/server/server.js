@@ -3688,7 +3688,7 @@ async function updateLead(id, patch) {
   if (has('phone')) clean.phone = String(next.phone || '').trim().slice(0, 60);
   if (has('tier')) clean.tier = String(next.tier || '').trim().slice(0, 80);
   if (has('stage')) {
-    if (!['new','contacted','closed','passed','in_process','in_progress','booked','canceled'].includes(next.stage)) return null;
+    if (!['new','contacted','closed','passed','in_process','in_progress','booked','completed','canceled'].includes(next.stage)) return null;
     clean.stage = next.stage;
   }
   // v13.93: Hunter-style CRM columns. Company/title, the quote, and the two

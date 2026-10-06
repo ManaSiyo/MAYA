@@ -11,7 +11,7 @@ export async function auditLeadFilter(page){
       paintLeads({connected:true,list:Array.from({length:count},(_,i)=>({
         id:'fixture-'+i,name:'Example Person '+i,phone:'+15555550100',tier:'Signature',
         wrote:'A custom suit for a ceremony, with a carefully tailored fit.',createdAt:'2026-09-23',
-        stage:['new','contacted','in_progress','booked','canceled'][i%5]
+        stage:['new','contacted','in_progress','booked','completed','canceled'][i%6]
       }))});
       document.querySelector('#leads-fold').scrollIntoView();
     },count);
@@ -43,6 +43,8 @@ export async function auditLeadFilter(page){
   for(const width of [320,390,650,768,1024,1440,1920]){
     await page.setViewportSize({width,height:844});
     await open();await bounds();
+    assert.ok(await gear.evaluate(el=>{const label=el.closest('.lead-heading').querySelector(':scope>span').getBoundingClientRect(),icon=el.querySelector('svg').getBoundingClientRect();return Math.abs(label.y+label.height/2-icon.y-icon.height/2)<1;}),'Status label and gear centers align at '+width);
+    assert.equal(await menu.locator('[data-status=completed]').count(),1);
     assert.ok(await menu.evaluate(el=>{const a=document.querySelector('.lead-filter>summary').getBoundingClientRect(),r=el.getBoundingClientRect();return a.left+r.width>innerWidth-8||Math.abs(a.left-r.left)<1;}),'Lead filter starts at its trigger when there is room');
     assert.equal(await gear.evaluate(el=>getComputedStyle(el,'::after').content),'none','No inherited section caret');
     await page.screenshot({path:join(tmpdir(),'maya-lead-filter-'+width+'.png')});
@@ -56,19 +58,19 @@ export async function auditLeadFilter(page){
   await page.locator('#leads-fold .panel').evaluate(el=>el.scrollTop=200);
   await bounds(); // Still anchored to the sticky header when rows scroll.
   await menu.locator('[data-status="new"]').uncheck();
-  await menu.waitFor({state:'visible'});assert.equal(await rows.count(),9);
+  await menu.waitFor({state:'visible'});assert.equal(await rows.count(),10);
   assert.equal(await page.evaluate(()=>document.activeElement.dataset.status),'new','Rerender preserves checkbox focus');
   await page.keyboard.press('Space');await menu.waitFor({state:'visible'});assert.equal(await rows.count(),12);
-  for(const key of ['new','contacted','in_progress','booked','canceled'])await menu.locator('[data-status="'+key+'"]').uncheck();
+  for(const key of ['new','contacted','in_progress','booked','completed','canceled'])await menu.locator('[data-status="'+key+'"]').uncheck();
   assert.equal(await rows.count(),0);await bounds(); // Empty results shrink the scroll panel, not the popover.
-  for(const key of ['new','contacted','in_progress','booked','canceled'])await menu.locator('[data-status="'+key+'"]').check();
+  for(const key of ['new','contacted','in_progress','booked','completed','canceled'])await menu.locator('[data-status="'+key+'"]').check();
   await page.mouse.click(8,400);await menu.waitFor({state:'hidden'});
   await gear.focus();await page.keyboard.press('Enter');await menu.waitFor({state:'visible'});
   assert.equal(await page.evaluate(()=>document.activeElement.dataset.status),'new');
   await page.keyboard.press('Shift+Tab');await menu.waitFor({state:'hidden'});
   assert.ok(await gear.evaluate(el=>el===document.activeElement));
   await page.keyboard.press('ArrowDown');await menu.waitFor({state:'visible'});
-  for(let i=0;i<5;i++)await page.keyboard.press('Tab');
+  const choiceCount=await menu.locator('input').count();for(let i=0;i<choiceCount;i++)await page.keyboard.press('Tab');
   await menu.waitFor({state:'hidden'});
   assert.ok(await page.locator('.lead-open').first().evaluate(el=>el===document.activeElement),'Tab continues into the first table row');
 

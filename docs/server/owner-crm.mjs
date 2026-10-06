@@ -23,7 +23,7 @@ export function cleanCommand(value){
   for(const [k,n] of Object.entries({query:180,name:120,phone:60,email:180,note:2000,tier:80,stage:30}))if(typeof value[k]==='string'&&value[k].trim())c[k]=clip(value[k],n);
   if(c.phone){const d=number(c.phone);if(!/^\d{10}$/.test(d))throw problem('Please include a complete 10-digit phone number.');c.phone='+1'+d;}
   if(c.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email))throw problem('Please check the email address.');
-  if(c.stage&&!['new','contacted','in_progress','booked','canceled'].includes(c.stage))throw problem('Use Not contacted, Contacted, In progress, Booked or Cancelled.');
+  if(c.stage&&!['new','contacted','in_progress','booked','completed','canceled'].includes(c.stage))throw problem('Use Not contacted, Contacted, In progress, Booked, Completed or Cancelled.');
   if(c.action==='add'&&!c.name)throw problem('What is the person’s name? Send the complete lead details again.');
   if(c.action==='update'&&!c.query)throw problem('Which existing lead should I update? Include their name or email.');
   if(c.action==='update'&&!Object.keys(c).some(k=>!['action','query'].includes(k)))throw problem('What should I change on that lead?');

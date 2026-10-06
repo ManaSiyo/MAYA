@@ -1,31 +1,25 @@
-[Codex] Keep Messages fixed and add reviewed text automation drafts
+[Codex] Add Completed and center shared icons with editable spacing
 
-Restore Messages to its original H2 tab-title position before and after contact
-selection. Show a plain H3 contact name below it with no panel/pill backing;
-show its pencil only on hover or keyboard focus. Preserve circular actions and
-the bottom voice dock. Update shared typography runtime v17 across served pages,
-apply Inner material to Automation cards and regenerate source role locations.
+Add Completed to Leads pickers, filters, server updates and owner CRM commands.
+Use the existing green status material for its visible pill, dot and border;
+retain manual status through refreshed lead data and count completed as closed.
 
-Add Systems Automations as a drawer view. Save owner-account first/second text
-examples, fixed triggers, earliest Los Angeles draft times and follow-up days
-with private generation-checked storage. Preview a contextual AI idea using the
-exact studio lead and recent texts under the existing CRM AI allowance. Use draft
-appends without sending; only explicit Messages Send contacts the SMS provider.
-Suppress drafts for ambiguous leads, STOP/blocked contacts, replies, two existing
-outgoing texts and early times. Protect composer drafts across contact changes
-and reject late account/recipient responses. Clear private previews on session
-changes. Ship the new server module in Docker and its tests in Cloud Build.
+Center icons vertically in their assigned row regardless of text baseline or
+saved typography alignment. Group the Status header text/gear without changing
+table-cell layout. Save independent inside-pill and beside-text gaps (0–32px,
+defaults 6/8), validate them server-side and apply them through shared runtime
+v18 on every served page. Preserve old saves. Update gallery v31 with active
+spacing samples that open real editors; fix same-click outside dismissal. Remove
+the invented Drawer AI cost metric and use the actual gear shape.
 
-Validation: all 33 exact Cloud Build checks, full app-regression and real local
-server smoke passed. Final drawer fixture checks four widths, fixed heading
-coordinates, shared hierarchy, transparent name, hover pencil, unsent drafts,
-saved settings and failures. Unit tests cover account isolation, validation,
-lead grounding, no-reply timing and STOP/blocked contacts. Smoke rejects
-unauthenticated configuration and draft requests. Screenshots visually reviewed;
-git diff --check clean. Existing communications/provider/filter suites pass.
+Validation: all 33 exact Cloud Build gates, full app-regression and local server
+smoke passed. Gallery editors fit eleven widths; populated status filters cover
+seven. Tests check Completed persistence, actual visible green status material,
+independent saved gaps, live Admin application and centering even with Top text
+alignment. Final editor-preview click regression passed. Role inventory
+regenerated; isolated screenshots reviewed; git diff --check clean.
 
-Limitations: fake providers and isolated Chromium; no live AI inference, personal
-Chrome, microphone, SMS or calls verified. These are reviewed draft rules, not
-scheduled client sends; existing signup alerts are unchanged. Local commit only,
-not pushed/deployed. Owner Push, exact-commit deployment verification and a live
-reviewed first-message check remain.
+Limitations: fake providers and isolated Chromium only. No personal Chrome,
+production credentials, live calls/SMS or provider connection checks. Local
+commit only, not pushed/deployed. Fromsa must Push, confirm Cloud Build and
+verify release.json for the exact commit before checking the live controls.

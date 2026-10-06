@@ -11,7 +11,7 @@
       P3:{size:10,weight:300,color:'white'}, P4:{size:10,weight:400,color:'gray'}
     },
     finish:'current',glass:{fill:18,tint:0,rim:22,highlight:28,blur:22,saturation:180},
-    overlay:{fill:18,rim:22,blur:22,saturation:180,radius:12},editor:{fill:100,rim:14,radius:12,paddingX:8,paddingY:8,background:'black',borderColor:'white'},pillX:14,pillY:6,iconSize:28,dropdownHeight:28
+    overlay:{fill:18,rim:22,blur:22,saturation:180,radius:12},editor:{fill:100,rim:14,radius:12,paddingX:8,paddingY:8,background:'black',borderColor:'white'},pillX:14,pillY:6,iconSize:28,dropdownHeight:28,iconPillGap:6,iconTextGap:8
   };
   for(const [role,t] of Object.entries(defaults.type))Object.assign(t,{style:'normal',font:['H0','H1','H2'].includes(role)?'cormorant':'jost',case:role==='H0'||role==='H1'||role==='P3'||role==='P4'?'uppercase':'none'});
   const surfaceDefaults={background:'black',blur:22,saturation:180,fill:18,rim:22,radius:12,paddingX:16,paddingY:12};
@@ -23,7 +23,7 @@
     firstColumn:{background:'gray',opacity:100},
     cells:{},columns:[{...tableType,font:'cormorant'},{...tableType,align:'center'},{...tableType},{...tableType}]};
   function normalizeSurfaces(v){
-    v.iconSize ??= defaults.iconSize;v.dropdownHeight ??= defaults.dropdownHeight;v.inner={...defaults.inner,...v.inner};v.filter={...defaults.filter,...v.filter};
+    v.iconPillGap ??= defaults.iconPillGap;v.iconTextGap ??= defaults.iconTextGap;v.iconSize ??= defaults.iconSize;v.dropdownHeight ??= defaults.dropdownHeight;v.inner={...defaults.inner,...v.inner};v.filter={...defaults.filter,...v.filter};
     const t=v.table||{};v.table={...defaults.table,...t,innerRim:t.innerRim??t.rim??defaults.table.innerRim,innerBorderColor:t.innerBorderColor??t.borderColor??defaults.table.innerBorderColor,columnWidths:{...t.columnWidths},cells:{...t.cells},header:{...defaults.table.header,...t.header},firstColumn:{...defaults.table.firstColumn,...t.firstColumn},columns:defaults.table.columns.map((c,i)=>({...c,...t.columns?.[i]}))};
     // Legacy cell saves now become whole-column settings in preview, not writes.
     for(const [i,col] of [[1,'stage'],[2,'note']]){
@@ -97,7 +97,7 @@
     }
     const g=v.glass,o=v.overlay;const paletteOverlay=k=>({black:'0 0 0',gray:'13 17 32',blue:'35 76 125',yellow:'120 91 15',green:'23 91 59',pink:'115 46 70'})[k]||'3 15 29';
     for(const [k,n,max] of [['fill',g.fill,100],['tint',g.tint,100],['rim',g.rim,100],['highlight',g.highlight,100],['blur',g.blur,40],['saturation',g.saturation,200],['pillX',v.pillX,32],['pillY',v.pillY,16]]) if(Number.isInteger(n)&&n>=0&&n<=max) css+=`--maya-control-${k}:${n}${['blur','pillX','pillY'].includes(k)?'px':k==='saturation'?'%':'%'};`;
-    css+=`--maya-control-icon-size:${v.iconSize}px;--maya-control-dropdown-height:${v.dropdownHeight}px;--maya-text-body:var(--maya-type-P1-size);--maya-text-table:var(--maya-type-P1-size);--maya-text-section:var(--maya-type-H3-size);--maya-text-metric:var(--maya-type-H4-size);--maya-text-caption:var(--maya-type-P4-size);--ui-font:var(--maya-type-P1-font);--ui-pill-font-size:var(--maya-type-P3-size);--ui-pill-weight:var(--maya-type-P3-weight);--ui-pill-padding-x:${v.pillX}px;--ui-pill-padding-y:${v.pillY}px;`;
+    css+=`--maya-icon-pill-gap:${v.iconPillGap}px;--maya-icon-text-gap:${v.iconTextGap}px;--maya-control-icon-size:${v.iconSize}px;--maya-control-dropdown-height:${v.dropdownHeight}px;--maya-text-body:var(--maya-type-P1-size);--maya-text-table:var(--maya-type-P1-size);--maya-text-section:var(--maya-type-H3-size);--maya-text-metric:var(--maya-type-H4-size);--maya-text-caption:var(--maya-type-P4-size);--ui-font:var(--maya-type-P1-font);--ui-pill-font-size:var(--maya-type-P3-size);--ui-pill-weight:var(--maya-type-P3-weight);--ui-pill-padding-x:${v.pillX}px;--ui-pill-padding-y:${v.pillY}px;`;
     css+=`--maya-button-fill:rgb(3 15 29 / var(--maya-control-fill));--maya-button-edge:rgb(${g.borderColor==='black'?'0 0 0':g.borderColor==='gray'?'170 181 196':'255 255 255'} / var(--maya-control-rim));--maya-button-frost:blur(var(--maya-control-blur)) saturate(var(--maya-control-saturation));`;
     css+=`--maya-frost:blur(${o.blur}px) saturate(${o.saturation}%);--maya-quiet-frost:var(--maya-frost);--maya-drawer-frost:var(--maya-frost);--maya-surface:rgb(3 15 29 / ${o.enabled===false?0:o.fill/100});--maya-line:rgb(${o.borderColor==='black'?'0 0 0':o.borderColor==='gray'?'170 181 196':'255 255 255'} / ${o.enabled===false?0:o.rim/100});`;
     css+=`--review-panel-border-rgb:${o.borderColor==='black'?'0 0 0':o.borderColor==='gray'?'170 181 196':'255 255 255'};--maya-review-panel-radius:${Number.isInteger(o.radius)?o.radius:12}px;--maya-review-panel-fill:${o.enabled===false?0:o.fill/100};--maya-review-panel-rim:${o.enabled===false?0:o.rim/100};--maya-review-panel-blur:${o.enabled===false?0:o.blur}px;--maya-review-panel-saturation:${o.enabled===false?100:o.saturation}%;}`;
@@ -107,6 +107,20 @@
     css+=`html body :is(.review-fold,html[data-maya-surface="dense"] details.fold)>summary>:is(h2,h3){margin-block:0!important}`;
     css+=`html body :is(.maya-icon-button,#menu-toggle,#sync-sheet,#new-campaign){width:var(--maya-control-icon-size)!important;height:var(--maya-control-icon-size)!important;min-width:0!important;padding:0!important}html body :is(select,.lead-filter>summary,.column-filter){min-height:var(--maya-control-dropdown-height)!important}html body .maya-icon-button svg{width:60%;height:60%}`;
     css+=`.maya-glass-button,.maya-pill,#voice-bar{padding-inline:var(--maya-control-pillX,14px);padding-block:var(--maya-control-pillY,6px);}`;
+    // Icons center on their row, never on the text baseline. Two independent gaps.
+    css+=`html body :is(button,a,summary,label,h1,h2,h3,.maya-pill,.status-pill):has(>svg){display:inline-flex!important;align-items:center!important;vertical-align:middle;gap:var(--maya-icon-pill-gap);}
+html body :is(.maya-icon-row,.msg-name-edit){display:inline-flex;align-items:center!important;gap:var(--maya-icon-text-gap)!important;vertical-align:middle;}
+html body .maya-icon-row>*{align-self:center!important}html body .maya-icon-row>span{line-height:1}html body .maya-icon-row .lead-filter{margin:0!important;vertical-align:middle;}
+html body :is(.maya-icon-button,.maya-inline-icon,.adm-tab,.msg-rename,.lead-filter>summary){display:inline-flex!important;align-items:center!important;justify-content:center!important;line-height:1;padding-block:0;}
+html body :is(button,a,summary,.maya-icon-row) svg{display:block;flex-shrink:0;align-self:center;margin-block:0;vertical-align:middle;}
+html body .maya-inline-icon{background:transparent;border:0;border-radius:0;box-shadow:none;padding:0;color:inherit;cursor:pointer;}html body :is(.maya-inline-icon,.maya-icon-row) svg,html body .maya-pill>svg{width:calc(var(--maya-control-icon-size)*.6);height:calc(var(--maya-control-icon-size)*.6);}
+html body :is(.maya-pill,.maya-glass-button,.status-pill){gap:var(--maya-icon-pill-gap)!important;}
+html body .status-pill:is([data-status="completed"],:has(option[value="completed"]:checked)){--status-color:var(--maya-booked);}
+html body .lead-status{padding-right:calc(10px + var(--maya-icon-pill-gap) + var(--maya-control-icon-size)*.45)!important;}
+html body .lead-status::after{top:50%;right:10px;width:calc(var(--maya-control-icon-size)*.45);height:calc(var(--maya-control-icon-size)*.45);border:0;background:currentColor;transform:translateY(-50%);mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;}
+html body select{padding-right:calc(22px + var(--maya-icon-pill-gap))!important;}
+html body :is(.type-editor,.finish-controls details,.overlay-controls details)>summary{gap:var(--maya-icon-text-gap)!important;}
+html body #adm-mkt #leads-table .lead-stage:has(option[value="completed"]:checked){color:var(--maya-booked);}`;
     css+=`html body #outbound-drawer button:not([role=tab]):not(#close-drawer){border:1px solid var(--maya-button-edge);border-radius:100px;padding:var(--ui-pill-padding-y) var(--ui-pill-padding-x);color:var(--maya-type-P3-color)}`;
     css+=`html body :is(h1,#client-name-modal-title,#top-left-brand .brand-title,#brand-title,.signin-wordmark:not(.maya-signin-h0),.brand-title){font-family:var(--maya-type-H1-font)!important;font-size:var(--maya-type-H1-size)!important;font-weight:var(--maya-type-H1-weight)!important;color:var(--maya-type-H1-color)}`;
     css+=`.gallery-section-title,#adm-tabtitle,.pg-tabtitle,.drawer-head-title,.drawer-title{font-family:var(--maya-type-H2-font)!important;font-size:var(--maya-type-H2-size)!important;font-weight:var(--maya-type-H2-weight)!important;color:var(--maya-type-H2-color)}`;

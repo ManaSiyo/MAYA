@@ -1,6 +1,19 @@
 # MAYA handoff - October 5, 2026
 
-## Current request: fixed Messages hierarchy and reviewed text automations
+## Current request: Completed status and consistent icon alignment
+
+Started clean at fa4ba1b, one local commit ahead of origin/maya-v2. Leads now accepts Completed through Admin, owner CRM and the server update path. Filters and status pickers include it; its visible pill, dot and border use the existing green semantic color. Refreshed lead data retains the owner-set status.
+
+Icons center vertically on their assigned row, independent of text baseline or saved text vertical alignment. The Status header keeps real table-cell layout and groups its text/gear explicitly. Aesthetic Control → Icons and dropdown now saves Inside pill gap (6px default) and Beside text gap (8px default), each 0–32px; legacy saves get defaults. Active pill/gear and bare text/gear previews open their actual editors. Existing used icons are retained; the invented Drawer AI cost metric is removed. Five unique status-color examples remain five, with Completed shown in the table preview.
+
+Shared runtime v18/gallery v31 references updated on every served page. Server design validation accepts bounded optional gaps. Changed paths include backend/status.html, shared typography runtime, gallery, design-config/server/owner-crm, served cache references, focused status/filter/gallery/design tests and continuity documents.
+
+Validation: all 33 exact Cloud Build gates, full app-regression and real local server smoke passed. Responsive status filters cover seven widths, and gallery editors cover eleven widths. Tests cover Completed persistence, picker/filter entries, actual visible green status material, hard icon centering even when text is set to Top, independent saved gaps and live Admin token application. Isolated screenshots reviewed. The final preview-click check caught and fixed immediate outside-click dismissal; the focused gallery rerun passed.
+
+Limitations: isolated Chromium and fake providers only. No personal Chrome, production credentials, live calls/SMS or provider connections accessed. No push/deploy performed. The preceding reviewed automation work remains in fa4ba1b and is also unpushed.
+Exact next step: Fromsa presses Push in GitHub Desktop for the prepared local commit. After Cloud Build succeeds, verify release.json for the exact commit and check Completed and both icon gaps live.
+
+## Previous request: fixed Messages hierarchy and reviewed text automations
 
 Started clean at 3ec09fa, matching origin/maya-v2. Messages stays in its original H2 tab-title location before and after selecting a contact. The contact below is H3, plain text without a pill/panel backing or duplicate phone number; pencil is hover/focus only. Circular Share/Phone, inline lead notes, saved column widths, independent table material and the bottom voice dock remain intact.
 

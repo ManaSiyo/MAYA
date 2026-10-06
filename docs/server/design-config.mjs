@@ -3,8 +3,9 @@ export const DESIGN_PATH = 'config/typography-controls.json';
 const DESIGN_ROLES = new Set(['H1','H2','H3','H4','P1','P2','P3','P4']);
 export function validDesign(body) {
   if (!body || typeof body !== 'object' || !body.type || !body.glass || !body.overlay) return false;
-  if (Object.keys(body).some(k => !['type','glass','overlay','finish','pillX','pillY','editor','inner','filter','table','iconSize','dropdownHeight'].includes(k))) return false;
+  if (Object.keys(body).some(k => !['type','glass','overlay','finish','pillX','pillY','editor','inner','filter','table','iconSize','dropdownHeight','iconPillGap','iconTextGap'].includes(k))) return false;
   for(const k of ['iconSize','dropdownHeight'])if(body[k]!==undefined&&(!Number.isInteger(body[k])||body[k]<24||body[k]>48))return false;
+  for(const k of ['iconPillGap','iconTextGap'])if(body[k]!==undefined&&(!Number.isInteger(body[k])||body[k]<0||body[k]>32))return false;
   const legacy=Object.hasOwn(body.type,'P5');
   const roles=new Set([...DESIGN_ROLES,...(legacy?['P5']:[]),...['H0','H5','H6'].filter(k=>Object.hasOwn(body.type,k))]);
   if (Object.keys(body.type).length !== roles.size ||

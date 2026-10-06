@@ -20,7 +20,7 @@ await page.route('**/*',async route=>{const req=route.request(),u=new URL(req.ur
 try{
  await page.goto('https://maya.test/backend/status.html');await page.waitForFunction(()=>typeof paintLeads==='function'&&typeof editLatestLeadNote==='function');
  await page.evaluate(()=>{_idTok='fixture-owner';paintLeads({connected:true,list:[{id:'m_1',name:'Angela Example',phone:'+14155550101',createdAt:'2026-10-04T12:00:00Z',wrote:'Original note',stage:'new'}]});});
- assert.deepEqual(await page.locator('#leads-table th').evaluateAll(es=>es.map(e=>e.childNodes[0].textContent.trim())),['Full name','Contact','Status','Latest Notes']);
+ assert.deepEqual(await page.locator('#leads-table th').evaluateAll(es=>es.map(e=>(e.querySelector('.lead-heading>span')||e.childNodes[0]).textContent.trim())),['Full name','Contact','Status','Latest Notes']);
  assert.equal(await page.locator('#leads-table .category-badge').count(),0);
  assert.equal(await page.locator('[data-col="contact"]').last().textContent(),'+14155550101');
  const name=await page.locator('.lead-identity').boundingBox(),date=await page.locator('.lead-signup').boundingBox();assert.ok(date.y>=name.y+name.height-1,'Date sits under name');

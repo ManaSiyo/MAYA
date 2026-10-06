@@ -66,8 +66,8 @@ assert.equal(await page.locator('#lead-tr-0 td').first().evaluate(el=>getCompute
 await page.evaluate(()=>document.body.classList.remove('affiliates-view'));
 await page.setViewportSize({width:1440,height:1000});
 
-assert.deepEqual(report.options,['Not contacted','Contacted','In progress','Booked','Cancelled']);assert.equal(report.size,report.noteSize);assert.equal(report.color,'rgb(181, 189, 200)');assert.equal(report.actions,0);
-for(const [value,color] of [['contacted','rgb(138, 188, 242)'],['in_progress','rgb(251, 191, 36)'],['booked','rgb(74, 222, 128)'],['canceled','rgb(253, 164, 175)']]){assert.equal(await page.locator('.lead-stage').evaluate((el,value)=>{el.value=value;return getComputedStyle(el).color;},value),color);}await page.locator('.lead-stage').evaluate(el=>el.value='new');
+assert.deepEqual(report.options,['Not contacted','Contacted','In progress','Booked','Completed','Cancelled']);assert.equal(report.size,report.noteSize);assert.equal(report.color,'rgb(181, 189, 200)');assert.equal(report.actions,0);
+for(const [value,color] of [['contacted','rgb(138, 188, 242)'],['in_progress','rgb(251, 191, 36)'],['booked','rgb(74, 222, 128)'],['completed','rgb(74, 222, 128)'],['canceled','rgb(253, 164, 175)']]){assert.equal(await page.locator('.lead-stage').evaluate((el,value)=>{el.value=value;return getComputedStyle(el).color;},value),color);}await page.locator('.lead-stage').evaluate(el=>el.value='completed');assert.equal(await page.locator('.lead-status').evaluate(e=>getComputedStyle(e,'::before').backgroundColor),'rgb(74, 222, 128)','Completed label/dot/border use green, not just hidden select');await page.locator('.lead-stage').evaluate(el=>el.value='new');
 await page.evaluate(()=>document.fonts.ready);
 let statusUpdate;
 await page.route('**/api/admin/lead-update',route=>{statusUpdate=route.request().postDataJSON();return route.fulfill({json:{ok:true}});});

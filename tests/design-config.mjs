@@ -87,3 +87,6 @@ assert.equal(validDesign({...compact,overlay:{...compact.overlay,background:'blu
 assert.equal(validDesign({...compact,table:{...compact.table,columnWidths:{name:300,contact:180,stage:200,note:400}}}),true);
 for(const columnWidths of [{name:79},{note:801},{name:'300'},{alien:300},[],null])assert.equal(validDesign({...compact,table:{...compact.table,columnWidths}}),false);
 console.log('Independent panel materials and semantic column widths validate bounded values; older schemas remain valid.');
+
+for(const gap of [0,8,32])assert.equal(validDesign({...compact,iconPillGap:gap,iconTextGap:gap}),true);
+for(const gap of [-1,33,1.5,'8'])assert.equal(validDesign({...compact,iconPillGap:gap}),false);
