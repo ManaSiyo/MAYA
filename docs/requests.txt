@@ -1,3 +1,8 @@
+OCTOBER 7: typed-number Messages and shared presentation controls
+[completed locally] Begin texting accepts a typed number and optional saved name; starts an unsent composer or confirmed US call. Status header uses a dropdown; six status colors/opacity/weights, icon color/stroke and Admin vertical spacing have active saved Aesthetic Control editors.
+[verified locally] All 46 Cloud Build suites, full app-regression and server smoke pass, including fake-provider messaging, design/schema, gallery and communications. Final Aesthetic Control check covers saved settings at six widths plus visual review. No push.
+[next] Owner Push and exact deployment verification, then owner-reviewed live SMS/call and authenticated design Save.
+
 OCTOBER 7: parallel audit, then implement after the other task finishes
 [authorized] Started read-only, grouped by area with Admin first. Fromsa then asked to wait for the other agent and implement; waited for deb7081 and began from a clean tree. Preserved prior c09328e messaging/UI and deb7081 fabric work.
 [completed locally] Admin account/session races, invoice link recovery/save-only retry/internal drafts and durable approval IDs; validated concurrent lead/note writes and submission ownership/pagination; STOP/archive status preservation; Outbound reviewed-recipient binding and missing-date follow-up counts; account-bound project saves/shares and Playground-only avatar lifetime; Brief save/retry and Operation garment/run isolation; immutable Aesthetic Save; reproducible mandatory release gates and server commit verification. Current aesthetic instructions are reconciled with H5/H6 names/dates, H3 Messages contact, no category badges/dictation/blur-save and Inner toolbar material.

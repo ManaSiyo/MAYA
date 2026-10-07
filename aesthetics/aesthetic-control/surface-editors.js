@@ -10,8 +10,8 @@ export function fields(parent,values,specs,onChange){
   const label=document.createElement('label');label.append(document.createTextNode(title));
   const input=document.createElement(Array.isArray(options)?'select':'input');input.dataset.field=key;
   if(Array.isArray(options))for(const [value,text] of options){const option=document.createElement('option');option.value=value;option.textContent=text;input.append(option);}
-  else{input.type='number';input.min=options.min??0;input.max=options.max;input.step=options.step??1;}
-  input.value=values[key];input.addEventListener('input',()=>{const value=key==='enabled'?input.value==='true':Array.isArray(options)&&key!=='weight'?input.value:Number(input.value);if(!Array.isArray(options)&&(!Number.isInteger(value)||value<Number(input.min)||value>Number(input.max)))return;values[key]=value;onChange();});label.append(input);parent.append(label);
+  else{input.type=options.type||'number';input.min=options.min??0;input.max=options.max;input.step=options.step??1;}
+  input.value=values[key];input.addEventListener('input',()=>{const value=input.type==='color'?input.value:key==='enabled'?input.value==='true':Array.isArray(options)&&key!=='weight'?input.value:Number(input.value);if(input.type!=='color'&&!Array.isArray(options)&&(!Number.isInteger(value)||value<Number(input.min)||value>Number(input.max)))return;values[key]=value;onChange();});label.append(input);parent.append(label);
  }
 }
 export const typeFields=[['font','Font',fonts],['case','Case',[['none','Normal'],['uppercase','ALL CAPS']]],['size','Size',{min:8,max:32}],['weight','Weight',Array.from({length:7},(_,i)=>[String(200+i*50),String(200+i*50)])],['style','Style',[['normal','Normal'],['italic','Italic']]],['color','Color',colors],['align','Alignment',[['left','Left'],['center','Centered'],['right','Right']]],['vertical','Vertical',[['top','Top'],['middle','Middle'],['bottom','Bottom']]]];

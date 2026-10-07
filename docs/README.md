@@ -16,6 +16,10 @@ Unresolved mismatches block completion. See [AGENTS.md](../AGENTS.md) for the
 mandatory workflow and [design.md](design.md) for the sole presentation canon.
 
 Conversational fabric search and sealed lookbooks: [FABRIC-SEARCH.md](FABRIC-SEARCH.md).
+Messages → Begin texting accepts a typed number and optional saved name. Send is
+reviewed; phone actions are confirmed. Aesthetic Control also governs individual
+status colors/weights, icon color/stroke and Admin section spacing.
+
 Owner design controls: [Aesthetic Control](../aesthetics/aesthetic-control.html), linked from Admin → Systems.
 Aesthetic Control groups Visuals (Glass Panels and Tables) before single-preview
 Typography. Each role can select Jost/Cormorant and Normal/ALL CAPS. See docs/design.md.

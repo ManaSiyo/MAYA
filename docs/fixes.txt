@@ -1,3 +1,6 @@
+OCTOBER 7: new-message guard and responsive editor audit
+[fixed locally] STOP now guards the Messages Send handler as well as UI/server. Cancel/account/recipient changes invalidate pending typed-number starts. Closed floating editor fields cannot create invisible phone overflow; H0 preview respects its responsive size clamp. Verified with fake providers; live delivery remains owner acceptance after deployment.
+
 OCTOBER 7: parallel audit implementation after fabrics task completion
 [fixed locally / Admin] Account changes could accept old feeds/voice/actions while same-user token renewal discarded drafts. Bind async work to account/session, preserve renewal drafts/IDs, remove persisted customer-data cache and clear old private state. Invoice results are tied to stable leads; preserve a created-but-unsaved URL and retry attachment. Text opens an unsent internal draft. Duplicate/uncertain lead approvals retain request IDs.
 [fixed locally / Backend] Shared legacy lead/note writers now use validated generation-checked mutations; failures cannot silently overwrite with empty data. Submission upload ownership fails closed and feed enumeration paginates. Persist blocked STOP and merge terminal delivery state into archived records across CAS retries.

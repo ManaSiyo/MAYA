@@ -42,6 +42,24 @@ try{
   await page.waitForFunction(()=>{const r=document.getElementById('drawer').getBoundingClientRect();return r.right<=innerWidth+1&&r.left>=0;});
   assert.ok(await page.locator('#drawer-automations').evaluate(e=>e.scrollWidth<=e.clientWidth+1),'Automations overflow at '+width);
  }
+ await page.setViewportSize({width:1440,height:900});
+ await page.evaluate(()=>{admTab('messages');msgNewToggle(true);paintLeads({connected:true,list:[{id:'fixture',name:'New Person',phone:'+14155550123',createdAt:'2026-10-07',stage:'completed',wrote:'Fixture'}]});});
+ assert.equal(await page.locator('#msg-new-number').evaluate(e=>getComputedStyle(e).fontSize),'12px');
+ assert.equal(await page.locator('#msg-new-number').evaluate(e=>getComputedStyle(e).paddingLeft),'19px');
+ assert.equal(await page.locator('#msg-new').evaluate(e=>getComputedStyle(e).paddingLeft),'23px');
+ await page.evaluate(()=>{const d=structuredClone(MayaTypographyControls.defaults);d.iconColor='#123abc';d.iconOpacity=65;d.iconStroke=3;d.sectionSpacing={submissions:48,leads:32,ads:56,insights:64,headingGap:26};d.statusStyles.completed={color:'#123abc',opacity:65,weight:450};MayaTypographyControls.apply(d);});
+ assert.deepEqual(await page.locator('#msg-begin svg').evaluate(e=>{const s=getComputedStyle(e);return [s.color,s.opacity,s.strokeWidth]}),['rgb(18, 58, 188)','0.65','3px']);
+ for(const [id,value] of [['submissions-heading',48],['leads-fold',32],['ads-fold',56],['bottom-fold',64]])assert.equal(await page.locator('#'+id).evaluate(e=>getComputedStyle(e).marginTop),value+'px',id+' saved spacing');
+ assert.equal(await page.locator('#leads-fold > summary + *').evaluate(e=>getComputedStyle(e).marginTop),'26px');
+ assert.equal(await page.locator('#leads-table select.lead-stage').evaluate(e=>getComputedStyle(e).fontWeight),'450','Status weight applies to live selection');
+ assert.match(await page.locator('#leads-table select.lead-stage').evaluate(e=>getComputedStyle(e).color),/0.65/,'Status color strength applies to live selection');
+ for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:900});assert.ok(await page.locator('#msg-new').evaluate(e=>e.scrollWidth<=e.clientWidth+1),'Begin texting fits '+width);}
+ await page.setViewportSize({width:1440,height:900});if(process.env.MAYA_AESTHETIC_SCREENSHOT)await page.locator('#drawer').screenshot({path:process.env.MAYA_AESTHETIC_SCREENSHOT.replace('.png','-messages.png')});
+ await page.goto('https://maya.test/aesthetics/aesthetic-control.html');await page.locator('[data-category="P4"] .type-row').waitFor();await page.waitForFunction(()=>document.getElementById('maya-surface-control-style')?.textContent.includes('#table-preview'));
+ for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:900});assert.ok(await page.locator('body').evaluate(e=>e.scrollWidth<=innerWidth+1),'Aesthetic Control fits '+width);}
+
+ await page.setViewportSize({width:1440,height:900});await page.locator('.status-style-preview').filter({has:page.locator('[data-status="completed"]')}).locator('summary').click();
+ if(process.env.MAYA_AESTHETIC_SCREENSHOT)await page.locator('#pill-colors').screenshot({path:process.env.MAYA_AESTHETIC_SCREENSHOT.replace('.png','-statuses.png')});
  assert.deepEqual(errors,[]);assert.equal(writes.length,0,'Style verification must not submit messages or rules');
- console.log('Aesthetic authority passed: Automations roles, saved colors/fonts/material/X-Y padding and six viewport widths.');
+ console.log('Aesthetic authority passed: Automations roles, saved colors/fonts/material/X-Y padding section spacing, icon/status colors, Begin texting and six viewport widths.');
 }finally{await browser.close();}

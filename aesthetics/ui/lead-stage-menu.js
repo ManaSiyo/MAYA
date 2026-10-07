@@ -12,7 +12,7 @@ function position(){
 }
 function open(select){
  close();active=select;const style=getComputedStyle(select);menu.style.fontFamily=style.fontFamily;menu.style.fontSize=style.fontSize;select.setAttribute('aria-controls',menu.id);select.setAttribute('aria-expanded','true');menu.replaceChildren();
- for(const option of select.options){const button=document.createElement('button');button.type='button';button.setAttribute('role','option');button.setAttribute('aria-selected',String(option.selected));button.textContent=option.textContent;button.disabled=option.disabled;button.onclick=()=>{select.value=option.value;close(true);select.dispatchEvent(new Event('change',{bubbles:true}));};menu.append(button);}
+ for(const option of select.options){const button=document.createElement('button');button.type='button';button.dataset.status=option.value;button.setAttribute('role','option');button.setAttribute('aria-selected',String(option.selected));button.textContent=option.textContent;button.disabled=option.disabled;button.onclick=()=>{select.value=option.value;close(true);select.dispatchEvent(new Event('change',{bubbles:true}));};menu.append(button);}
  menu.hidden=false;if(menu.showPopover)menu.showPopover();else menu.removeAttribute('popover');position();(menu.querySelector('[aria-selected=true]:not(:disabled)')||menu.querySelector('button:not(:disabled)'))?.focus({preventScroll:true});
 }
 document.addEventListener('mousedown',e=>{if(e.button!==0)return;const select=e.target.closest('select.lead-stage');if(select&&!select.disabled){e.preventDefault();open(select);}});

@@ -79,6 +79,7 @@ steps:
         node --check docs/server/proxy-policy.mjs
         node --check docs/server/server.js
         # Governing rule: Aesthetic Control is the final completion gate.
+        node tests/message-compose-ui.mjs
         node tests/aesthetic-authority.mjs
   - id: Build server
     name: gcr.io/cloud-builders/docker

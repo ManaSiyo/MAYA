@@ -1,18 +1,17 @@
-[Codex] Make Aesthetic Control the final repository-wide completion gate
+[Codex] Add typed-number messaging and governed status/spacing controls
 
-Establish the owner's governing rule in AGENTS.md, docs/README.md and design.md;
-point the repository map and historical engineer brief to it. Require shared
-settings and active previews for new visible UI, coverage for changed surfaces,
-functional checks first and aesthetic verification last. Later presentation edits
-invalidate the check and unresolved mismatches block completion. Backend/docs-only
-work records no visible UI impact and still runs the shared gate.
+Messages Begin texting accepts a typed phone number and optional contact name,
+opens a reviewed draft or confirmed US call through existing authenticated routes.
+Keep STOP, account and recipient boundaries, duplicate-send claims and draft review.
 
-Move aesthetic-authority to the end of Cloud Build release checks and app-regression.
-Add release-order and governing-document assertions plus an owner-request assertion.
-Update handoff and requests. No runtime/UI behavior, providers, credentials or
-production settings changed; no personal Chrome or push.
+Aesthetic Control edits six semantic status colors/opacity/weights, icon color,
+opacity/stroke and Admin section spacing with active previews and last-Save restore.
+Use a Status chevron, preserve shared gaps and schemas, hide closed floating fields.
+Runtime v23/gallery v33 references cover all served pages. Add a messaging fixture
+and extend design, gallery and final authority gates; update docs and handoff.
 
-Validation passed: release-contract, design-contract and full app-regression,
-ending with the saved-settings/responsive aesthetic authority test. Diff check passed.
-Next: owner review/Push and exact live release verification. Earlier implementation
-and provider/migration limitations remain documented in AI-HANDOFF.md.
+Validation: all 46 Cloud Build suites, full app-regression and server smoke pass;
+syntax and diff checks pass. Final Aesthetic Control computed-style and screenshot
+review covers defaults and saved changes across phone/tablet/desktop widths. No push, production settings, live calls or
+SMS. Calls remain US-only; international SMS acceptance depends on provider setup.
+Owner next: review/Push, verify exact release, then reviewed live SMS/call and Save.

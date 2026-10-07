@@ -140,7 +140,7 @@ The preview lives in `aesthetics/aesthetic-control.html` with support files in `
 `aesthetics/ui/components/`; global application in
 `aesthetics/ui/typography-controls.js`. The Admin-authenticated save and public
 read endpoints are in `docs/server/server.js`; `docs/server/design-config.mjs`
-validates the settings. Served pages load runtime v22 and gallery v32; Hosting revalidates this
+validates the settings. Served pages load runtime v23 and gallery v33; Hosting revalidates this
 script instead of caching role mappings for a week. Old aesthetic PDFs were removed;
 the inactive style-inventory viewer, generated report and generator were removed;
 the active typography role audit remains. No page should introduce a competing design specification.
@@ -241,7 +241,7 @@ October 5 drawer and note editing: Latest Notes opens a textarea inside the clic
 
 Automations opens a drawer view from Systems, beside Aesthetic Control. First and second text examples, triggers, earliest Los Angeles draft time and follow-up wait days persist privately for the signed-in owner. These are review-only draft rules, not scheduled client sends. Opening Messages can show an AI idea grounded in the selected lead and recent texts; Use draft appends it without overwriting existing text, and only Send invokes the SMS provider. STOP/blocked contacts, ambiguous leads, replies and two existing outgoing texts suppress suggestions. Automation cards share Inner panel material.
 
-October 5 statuses and icon audit: Leads offers Not contacted, Contacted, In progress, Booked, Completed and Cancelled. Completed persists for manual/Wix leads and owner commands, uses existing green pill material, and is available in filters. No new duplicate color pill is added. Settings preview uses the same gear silhouette as live Status. Drawer preview no longer fabricates AI usage; it contains a working Aesthetic Control action. All previews remain style samples whose shared controls affect real UI, not claims of live data or provider activity. Runtime v18/gallery v31 ship these controls across served pages.
+October 5 statuses and icon audit: Leads offers Not contacted, Contacted, In progress, Booked, Completed and Cancelled. Completed persists for manual/Wix leads and owner commands, uses existing green pill material, and is available in filters. Each status has an active semantic color preview. Status uses the shared dropdown chevron; Settings retains the gear. Drawer preview no longer fabricates AI usage; it contains a working Aesthetic Control action. All previews remain style samples whose shared controls affect real UI, not claims of live data or provider activity. Runtime v18/gallery v31 ship these controls across served pages.
 
 October 6: runtime v19 excludes form labels from generic SVG flex centering.
 Editor labels retain their grid; fields use responsive columns with a 110px
@@ -256,8 +256,8 @@ selectors use :where() so shared typography never outranks table selection style
 October 7 Save consistency: snapshot settings before any asynchronous work and
 lock preview editors during the save. The posted, cached and applied settings
 are the same snapshot. Only a successful acknowledgement updates Restore; an
-error unlocks editing and retains the prior saved baseline. Runtime v22/gallery
-v32 carry this behavior without changing the visual canon.
+error unlocks editing and retains the prior saved baseline. Runtime v23/gallery
+v33 carry this behavior without changing the visual canon.
 
 
 ## Enforcement when coding
@@ -287,3 +287,27 @@ valid typography, colors, field material/padding and Inner padding at six widths
 (320–1920px). Extend its coverage for subsequent UI work. It runs both in
 app-regression and Cloud Build. Keep the active compatibility adapters; remove
 specific competing declarations rather than deleting working page layout.
+
+
+October 7 typed-number Messages and presentation controls: Begin texting opens an
+Inner-material form with P3 labels/actions and P1 fields. US numbers normalize to
++1; international SMS numbers require an explicit +country code. An optional name
+is saved through the existing account-bound contact endpoint. Opening a contact
+never sends; only Send submits the reviewed draft, and calls retain confirmation.
+The current call provider supports US numbers only. Cancel/account changes discard
+pending navigation; drafts stay with their recipient. STOP is checked in the Send
+handler as well as the server and disabled controls.
+
+Status colors are independent of generic text color: Not contacted gray, Contacted
+strong blue (#60a5fa), In progress pink (#f9a8d4), Booked green, Completed bold green
+(#22c55e, weight 500), Cancelled red (#f87171). Each active preview edits hex color,
+color strength (opacity) and 200–500 text weight. statusStyles is optional in saved
+schemas; absent fields receive these defaults. iconColor, iconOpacity and iconStroke
+(1–3) govern actual SVG icons and dropdown chevrons, including native select arrows.
+The existing icon gap controls remain independent of stroke/color.
+
+sectionSpacing uses 0–160px numeric controls for Mana Siyo→Submissions, before
+Leads/Ad campaigns/Insights and heading→content. These are vertical spacing, never
+panel padding. Its labeled preview shares the saved values with Admin. All new
+editors use the shared grid, dismissal and last-Save restore. Closed editor fields
+must not create invisible overflow. Runtime v23/gallery v33 ship to all served pages.

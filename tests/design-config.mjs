@@ -90,3 +90,6 @@ console.log('Independent panel materials and semantic column widths validate bou
 
 for(const gap of [0,8,32])assert.equal(validDesign({...compact,iconPillGap:gap,iconTextGap:gap}),true);
 for(const gap of [-1,33,1.5,'8'])assert.equal(validDesign({...compact,iconPillGap:gap}),false);
+
+for(const patch of [{iconColor:'#123abc',iconOpacity:65,iconStroke:3},{sectionSpacing:{submissions:32,headingGap:24}},{statusStyles:{completed:{color:'#123abc',opacity:75,weight:500}}}])assert.equal(validDesign({...compact,...patch}),true);
+for(const patch of [{iconColor:'red'},{iconOpacity:101},{iconStroke:4},{sectionSpacing:{headingGap:-1}},{sectionSpacing:{alien:12}},{statusStyles:{completed:{color:'url(evil)',opacity:75,weight:500}}},{statusStyles:{completed:{color:'#123abc',opacity:75,weight:600}}},{statusStyles:{alien:{color:'#123abc',opacity:75,weight:500}}}])assert.equal(validDesign({...compact,...patch}),false);

@@ -842,6 +842,7 @@ try {
   .msg-head{flex-wrap:wrap}.msg-who{flex-basis:calc(100% - 40px)}
   html body #msg-name{font:var(--maya-type-H3-weight) var(--maya-type-H3-size) var(--maya-type-H3-font)!important;color:var(--maya-type-H3-color)!important;text-transform:var(--maya-type-H3-case)!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;backdrop-filter:none!important;padding:0!important}
   .msg-rename{opacity:0;pointer-events:none}.msg-name-edit:hover .msg-rename,.msg-name-edit:focus-within .msg-rename{opacity:1;pointer-events:auto}
+  #msg-new{box-sizing:border-box;margin:8px 0}#msg-new[hidden]{display:none}#msg-new label{display:grid;gap:4px;margin:8px 0}#msg-new input{box-sizing:border-box;width:100%;min-width:0}#msg-new .msg-new-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}#msg-begin svg{width:16px;height:16px}#msg-begin{align-self:flex-start}#drawer-messages:has(#msg-thread:not([hidden]))>:is(#msg-begin,#msg-new){display:none}
   #drawer-automations{flex:1;min-height:0;overflow:auto;scrollbar-width:none}#drawer-automations[hidden]{display:none}
   .automation-rule{margin:10px 0}
   .automation-rule label{display:grid;gap:4px;margin:10px 0;}.automation-rule label:has(input[type=checkbox]){display:flex;align-items:center;gap:6px}.automation-rule select{width:100%;box-sizing:border-box}#drawer-automations .subheadline{letter-spacing:normal;text-align:left}.automation-rule textarea{width:100%;box-sizing:border-box;min-height:100px}.automation-rule input[type=time],.automation-rule input[type=number]{max-width:140px}
@@ -878,7 +879,7 @@ try {
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=14">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=22"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=23"></script>
 <link rel="stylesheet" href="/aesthetics/ui/admin-systems.css?v=3">
 </head>
 <body class="systems-map">
@@ -986,6 +987,13 @@ if (IS_AFFILIATES) {
   </div>
 </div>
   <div id="drawer-messages" hidden>
+    <button id="msg-begin" class="maya-glass-button" data-maya-type="P3" type="button" onclick="msgNewToggle()" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Begin texting</button>
+    <form id="msg-new" hidden onsubmit="event.preventDefault();msgBegin()" data-maya-panel="inner">
+      <label data-maya-type="P3">Phone number<input id="msg-new-number" data-maya-type="P1" data-maya-control="field" type="tel" autocomplete="tel" placeholder="+1 415 555 0101" required></label>
+      <label data-maya-type="P3">Name (optional)<input id="msg-new-name" data-maya-type="P1" data-maya-control="field" autocomplete="name" maxlength="120" placeholder="Save contact name"></label>
+      <div class="msg-new-actions"><button id="msg-new-start" class="maya-glass-button" data-maya-type="P3" type="submit">Begin texting</button><button id="msg-new-call" class="maya-icon-button" type="button" aria-label="Call entered number" onclick="msgBegin(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M6 3h4l2 6-3 2a16 16 0 0 0 4 4l2-3 6 2v4c0 5-18-1-18-12z"/></svg></button><button class="maya-glass-button" data-maya-type="P3" type="button" onclick="msgNewToggle(false)" data-msg-cancel>Cancel</button></div>
+      <p id="msg-new-feedback" data-maya-type="P1" role="status" aria-live="polite"></p>
+    </form>
     <div id="msg-list-feedback" role="status" aria-live="polite"></div>
     <div id="booking-pending" aria-live="polite"></div>
     <div id="msg-list"></div>
@@ -1116,7 +1124,7 @@ if (IS_AFFILIATES) {
     <span id="gsi-slot" style="margin:0 0 0 auto"></span>
   </div>
 
-  <h2 class="grp">Submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span></h2>
+  <h2 class="grp" id="submissions-heading">Submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span></h2>
   <div id="subs-strip" style="display:none"></div>
   <div id="subs-note-inline">Waiting for the one sign in at the top of the page.</div>
 
@@ -2942,7 +2950,7 @@ function paintLeads(l) {
     return '<th class="' + cls + '" draggable="true" data-col="' + k + '"' +
       ' ondragstart="_leadColDragStart(event,\'' + k + '\')" ondragover="_leadColDragOver(event)"' +
       ' ondragleave="_leadColDragLeave(event)" ondrop="_leadColDrop(event,\'' + k + '\')"' +
-      ' ondragend="_leadColDragEnd(event)" title="Drag to reorder">' + (k==='stage'?'<span class="maya-icon-row lead-heading"><span>'+d.label+'</span>':d.label) + (k==='stage'?'<details class="lead-filter" onclick="event.stopPropagation()"><summary aria-label="Filter lead status" title="Filter lead status" aria-controls="lead-status-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 3-.5 2-2 1-2-.5-2 3.5L4.5 11v2L3 15l2 3.5 2-.5 2 1 .5 2h5l.5-2 2-1 2 .5 2-3.5-1.5-2v-2L21 9l-2-3.5-2 .5-2-1-.5-2z"/><circle cx="12" cy="12" r="3"/></svg></summary><div id="lead-status-menu" class="lead-status-menu" popover="manual" role="group" aria-label="Visible lead statuses" hidden>'+Object.entries(LEAD_STAGES).map(([key,label])=>'<label><input type="checkbox" data-status="'+key+'" '+(leadStatusFilter.has(key)?'checked':'')+' onchange="filterLeadStatus(\''+key+'\',this.checked)"> '+label+'</label>').join('')+'</div></details></span>':'') + '</th>';
+      ' ondragend="_leadColDragEnd(event)" title="Drag to reorder">' + (k==='stage'?'<span class="maya-icon-row lead-heading"><span>'+d.label+'</span>':d.label) + (k==='stage'?'<details class="lead-filter" onclick="event.stopPropagation()"><summary aria-label="Filter lead status" title="Filter lead status" aria-controls="lead-status-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary><div id="lead-status-menu" class="lead-status-menu" popover="manual" role="group" aria-label="Visible lead statuses" hidden>'+Object.entries(LEAD_STAGES).map(([key,label])=>'<label><input type="checkbox" data-status="'+key+'" '+(leadStatusFilter.has(key)?'checked':'')+' onchange="filterLeadStatus(\''+key+'\',this.checked)"> '+label+'</label>').join('')+'</div></details></span>':'') + '</th>';
   };
   tb.innerHTML =
     '<tr>' + order.map(thHtml).join('') + '</tr>' +
@@ -3537,7 +3545,7 @@ function msgUseIdea(){
  if(!_msgIdea||_msgIdea.number!==_msgOpen?.number)return;const inp=document.getElementById('msg-input');if(inp.disabled)return;
  inp.value=[inp.value.trim(),_msgIdea.text].filter(Boolean).join('\n');inp.dispatchEvent(new Event('input'));inp.focus();document.getElementById('msg-idea').hidden=true;_msgIdea=null;
 }
-window.addEventListener('maya-owner-session-changed',()=>{++_msgListSequence;++_msgThreadSequence;_msgThreads=[];document.getElementById('adm-unread').hidden=true;++_ideaSequence;++_automationSequence;_msgIdea=null;_msgDrafts.clear();_msgAttempts.clear();_msgSending=false;_msgOpen=null;document.getElementById('msg-list-feedback').textContent='';document.getElementById('booking-pending').replaceChildren();document.getElementById('msg-input').value='';document.getElementById('msg-thread').hidden=true;document.getElementById('msg-list').hidden=false;document.getElementById('msg-idea').hidden=true;document.getElementById('text-automations-form').hidden=true;document.getElementById('msg-name').value='';document.getElementById('msg-scroll').replaceChildren();document.getElementById('msg-scroll')._messageMarkup=null;document.getElementById('msg-list').replaceChildren();document.getElementById('msg-idea-text').textContent='';document.getElementById('automation-status').textContent='';document.getElementById('text-automations-form').reset();});
+window.addEventListener('maya-owner-session-changed',()=>{++_msgNewSequence;document.getElementById('msg-new').reset();delete document.getElementById('msg-new').dataset.busy;document.getElementById('msg-new').querySelectorAll('button').forEach(b=>b.disabled=false);msgNewToggle(false);document.getElementById('msg-new-feedback').textContent='';++_msgListSequence;++_msgThreadSequence;_msgThreads=[];document.getElementById('adm-unread').hidden=true;++_ideaSequence;++_automationSequence;_msgIdea=null;_msgDrafts.clear();_msgAttempts.clear();_msgSending=false;_msgOpen=null;document.getElementById('msg-list-feedback').textContent='';document.getElementById('booking-pending').replaceChildren();document.getElementById('msg-input').value='';document.getElementById('msg-thread').hidden=true;document.getElementById('msg-list').hidden=false;document.getElementById('msg-idea').hidden=true;document.getElementById('text-automations-form').hidden=true;document.getElementById('msg-name').value='';document.getElementById('msg-scroll').replaceChildren();document.getElementById('msg-scroll')._messageMarkup=null;document.getElementById('msg-list').replaceChildren();document.getElementById('msg-idea-text').textContent='';document.getElementById('automation-status').textContent='';document.getElementById('text-automations-form').reset();});
 function _msgKnownName(number, ...names) {
   const named=value=>{const text=String(value||'').trim();return text&&!/^(caller|unknown|unnamed contact)$/i.test(text)&&!/^\+?[\d\s().-]+$/.test(text);};
   const supplied=names.find(named);if(supplied)return String(supplied).trim();
@@ -3546,7 +3554,20 @@ function _msgKnownName(number, ...names) {
   const matches=[...new Set(_leadList.filter(lead=>phone(lead.phone)===key&&named(lead.name)).map(lead=>lead.name.trim()))];
   return matches.length===1?matches[0]:'';
 }
-async function openThread(number, name) {
+function msgNewToggle(show,completed=false){const form=document.getElementById('msg-new');form.hidden=!(show??form.hidden);document.getElementById('msg-begin').setAttribute('aria-expanded',String(!form.hidden));if(form.hidden&&!completed){++_msgNewSequence;delete form.dataset.busy;form.querySelectorAll('button').forEach(b=>b.disabled=false);}if(!form.hidden)document.getElementById('msg-new-number').focus();}
+function msgTypedNumber(value){const raw=String(value||'').trim();if(!/^\+?[\d\s().-]+$/.test(raw))return '';let digits=raw.replace(/\D/g,'');if(!raw.startsWith('+')&&digits.length===10)digits='1'+digits;else if(!raw.startsWith('+')&&!(digits.length===11&&digits.startsWith('1')))return '';return /^[1-9]\d{7,14}$/.test(digits)?'+'+digits:'';}
+let _msgNewSequence=0;
+async function msgBegin(call=false){
+ const form=document.getElementById('msg-new'),feedback=document.getElementById('msg-new-feedback'),number=msgTypedNumber(document.getElementById('msg-new-number').value),name=document.getElementById('msg-new-name').value.trim();
+ if(!_idTok){feedback.textContent='Sign in to Admin first.';return;}if(!number){feedback.textContent='Enter a valid number; include +country code outside the US.';return;}if(call&&!/^\+1\d{10}$/.test(number)){feedback.textContent='MAYA calls currently support US numbers only.';return;}
+ if(form.dataset.busy==='true')return;const context=_adminContext(),seq=++_msgNewSequence;form.dataset.busy='true';form.querySelectorAll('button:not([data-msg-cancel])').forEach(b=>b.disabled=true);feedback.textContent='';
+ try{
+  if(name){const r=await fetch('/api/admin/messages/name',{method:'POST',headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({number,name})}),j=await r.json();if(!_adminContextCurrent(context)||seq!==_msgNewSequence)return;if(!r.ok||!j.ok)throw Error(j.error||'Contact name could not be saved.');}
+  if(!_adminContextCurrent(context)||seq!==_msgNewSequence)return;await openThread(number,name,seq);if(!_adminContextCurrent(context)||seq!==_msgNewSequence||_msgOpen?.number!==number)return;msgNewToggle(false,true);if(call)await msgCall();
+ }catch(e){if(_adminContextCurrent(context)&&seq===_msgNewSequence)feedback.textContent=e.message;}finally{if(seq===_msgNewSequence){delete form.dataset.busy;form.querySelectorAll('button').forEach(b=>b.disabled=false);}}
+}
+async function openThread(number, name, newSequence) {
+  if(newSequence===undefined)msgNewToggle(false);
   document.getElementById('msg-list-feedback').textContent='';
   ++_ideaSequence;
   if(_msgOpen) _msgDrafts.set(_msgOpen.number,document.getElementById('msg-input').value);
@@ -3565,7 +3586,7 @@ async function openThread(number, name) {
   const inp = document.getElementById('msg-input'); if (inp) {inp.dispatchEvent(new Event('input'));inp.focus();}
   if(_msgOpen?.number===number&&!inp.value&&!inp.disabled)msgSuggest();
 }
-function msgBack() { ++_ideaSequence;if(_msgOpen)_msgDrafts.set(_msgOpen.number,document.getElementById('msg-input').value);_msgIdea=null; document.getElementById('drawer').classList.remove('contact-open');msgShare(false);_msgOpen = null; document.getElementById('msg-thread').hidden = true; document.getElementById('msg-list').hidden = false; loadThreads(); }
+function msgBack() { msgNewToggle(false);++_ideaSequence;if(_msgOpen)_msgDrafts.set(_msgOpen.number,document.getElementById('msg-input').value);_msgIdea=null; document.getElementById('drawer').classList.remove('contact-open');msgShare(false);_msgOpen = null; document.getElementById('msg-thread').hidden = true; document.getElementById('msg-list').hidden = false; loadThreads(); }
 async function loadThread(number, quiet) {
   const box = document.getElementById('msg-scroll'); if (!box || !_idTok) return;
   const auth=_idTok,sequence=++_msgThreadSequence;
@@ -3623,7 +3644,7 @@ function paintThread(t, quiet) {
     document.querySelector('.msg-send').disabled = _msgSending || !!t.blocked || t.consent === 'stop';
 }
 async function msgSend() {
-  if (!_msgOpen || _msgOpen.blocked || _msgSending) return;
+  if (!_msgOpen || _msgOpen.blocked || _msgOpen.consent==='stop' || _msgSending) return;
   const target = { ..._msgOpen }, context=_adminContext();
   const inp = document.getElementById('msg-input'); const draft=inp.value || '',text=draft.trim(); if (!text) return;
   if(text.length>1600){document.getElementById('msg-feedback').textContent='This text has '+text.length+' characters. Shorten it to 1,600 before sending; nothing was sent.';return;}
@@ -3791,7 +3812,7 @@ function leadMayaCall(i) {
 // the unread badge stays honest even while the Systems tab shows
 setInterval(() => { if (_idTok && _msgTab !== 'messages') loadThreads(); }, 60000);
 // this module is sealed in an IIFE; the drawer's onclicks need these on window
-Object.assign(window, { loadModelSnapshot, loadMayaLogs, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, msgInvoice, msgBooking, msgShare, msgSuggest, msgUseIdea, loadTextAutomations, saveTextAutomations, editLatestLeadNote, leadOpenThread, leadMayaCall, loadThreads, msgLoadOlder, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
+Object.assign(window, { loadModelSnapshot, loadMayaLogs, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, msgInvoice, msgBooking, msgShare, msgSuggest, msgUseIdea, loadTextAutomations, saveTextAutomations, editLatestLeadNote, leadOpenThread, leadMayaCall, loadThreads, msgLoadOlder, msgNewToggle, msgBegin, msgTypedNumber, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
 if (_idTok) loadModelSnapshot();
 function leadContact(i, type) {
   const x = _leadList[i]; if (!x || !x.email) return;
@@ -4238,5 +4259,5 @@ setInterval(()=>{ if(_idTok && document.visibilityState==='visible') loadMkt(); 
   setTimeout(checkAdminUpdate, 8000);   // catch a tab opened already-stale
 })();
 </script>
-<dialog class="maya-surface" id="maya-confirmation" aria-labelledby="maya-confirmation-title"><div class="confirmation-head"><h2 id="maya-confirmation-title">Maya approval</h2><button type="button" aria-label="Close approvals" onclick="this.closest('dialog').close()">×</button></div><div id="maya-action-queue" aria-label="Actions waiting for confirmation"></div></dialog><script type="module" src="/aesthetics/ui/admin-systems.js?v=4"></script><script type="module" src="/aesthetics/ui/lead-stage-menu.js?v=1"></script><script type="module" src="/aesthetics/ui/admin-design.js?v=1"></script></body>
+<dialog class="maya-surface" id="maya-confirmation" aria-labelledby="maya-confirmation-title"><div class="confirmation-head"><h2 id="maya-confirmation-title">Maya approval</h2><button type="button" aria-label="Close approvals" onclick="this.closest('dialog').close()">×</button></div><div id="maya-action-queue" aria-label="Actions waiting for confirmation"></div></dialog><script type="module" src="/aesthetics/ui/admin-systems.js?v=4"></script><script type="module" src="/aesthetics/ui/lead-stage-menu.js?v=2"></script><script type="module" src="/aesthetics/ui/admin-design.js?v=1"></script></body>
 </html>

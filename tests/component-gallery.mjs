@@ -19,7 +19,7 @@ try{
  assert.ok(await page.locator('.gallery-header').evaluate(e=>{const logo=e.querySelector('#admin-back').getBoundingClientRect(),title=e.querySelector('h1').getBoundingClientRect();return logo.left<title.left&&Math.abs((logo.top+logo.height/2)-(title.top+title.height/2))<2&&getComputedStyle(e.querySelector('h1')).textAlign==='left';}),'Logo and title form a left-aligned row');
  assert.equal(await page.locator('.gallery-section-title').first().evaluate(e=>getComputedStyle(e).fontSize),'20px');assert.equal(await page.locator('.gallery-subsection-title').first().evaluate(e=>getComputedStyle(e).fontSize),'16px');
  const legacyPopup=await page.evaluate(()=>{const d=structuredClone(window.MayaTypographyControls.defaults);d.editor={fill:100,rim:14,radius:12,padding:11};return window.MayaTypographyControls.normalize(d).editor;});assert.equal(legacyPopup.paddingX,11);assert.equal(legacyPopup.paddingY,11);assert.equal(legacyPopup.padding,undefined);
- assert.equal(await page.locator('.restore-editor').count(),18,'Each editor plus selected cell formatting has a restore');
+ assert.equal(await page.locator('.restore-editor').count(),25,'Each editor plus selected cell formatting has a restore');
  assert.equal(await page.locator('.icon-row [aria-label="Download"]').count(),0,'Unused icon preview removed');
  assert.deepEqual(await page.locator('.type-group').evaluateAll(es=>es.map(e=>e.dataset.category)),['H0','H1','H2','H3','H4','H5','H6','P1','P2','P3','P4']);
  assert.equal(await page.locator('[data-type="dashboard"]').getAttribute('data-type'),'dashboard');
@@ -78,7 +78,10 @@ try{
  assert.ok(await page.locator('.restore-editor').first().evaluate(e=>e.querySelector('svg')?.querySelector('path')?.getAttribute('d')===document.querySelector('.icon-row [aria-label="Refresh"] path').getAttribute('d')),'Restore uses the previewed Refresh SVG');
  assert.equal(await page.locator('#save').evaluate(e=>getComputedStyle(e).backgroundColor),await page.locator('#buttons>.preview-row .maya-pill').first().evaluate(e=>getComputedStyle(e).backgroundColor));
  assert.equal(await page.locator('#gallery > section').first().getAttribute('id'),'pill-preview');
- assert.equal(await page.locator('#pill-colors .status-example').count(),5);
+ const completed=page.locator('.status-style-preview').filter({has:page.locator('[data-status="completed"]')});await completed.locator('summary').click();await completed.locator('[data-field=color]').fill('#123abc');await completed.locator('[data-field=opacity]').fill('65');await completed.locator('[data-field=weight]').selectOption('450');
+ assert.equal(await completed.locator('.status-pill').evaluate(e=>getComputedStyle(e).fontWeight),'450');assert.match(await completed.locator('.status-pill').evaluate(e=>getComputedStyle(e).color),/0.65/);await page.locator('.gallery-header h1').click();
+ await page.locator('.spacing-controls summary').click();await page.locator('.spacing-controls [data-field=leads]').fill('38');assert.equal(await page.locator('.spacing-preview [data-spacing=leads]').evaluate(e=>getComputedStyle(e).marginTop),'38px');await page.locator('.gallery-header h1').click();
+ assert.equal(await page.locator('#pill-colors .status-pill').count(),6);
  assert.equal(await page.locator('#status-reference,#source-styles,#pages,#icons').count(),0);
  assert.ok(!(await page.locator('body').innerText()).includes('glossary'));
  assert.equal(await page.locator('[data-category="H1"] .type-example').evaluate(e=>getComputedStyle(e).textTransform),'uppercase');
@@ -158,6 +161,7 @@ try{
  await page.goto('https://maya.test/backend/status.html',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>!!document.getElementById('maya-typography-control-style'));
  assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--maya-type-H4-size').trim()),'12px');
+ assert.equal(await page.locator('#leads-fold').evaluate(e=>getComputedStyle(e).marginTop),'38px','Saved section spacing applies on Admin');
  assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--maya-icon-text-gap').trim()),'18px','Saved icon gap applies on live Admin');
  assert.equal(await page.evaluate(()=>{const host=document.querySelector('#adm-mkt');const node=document.createElement('div');node.className='bl-step';node.innerHTML='<div class="v">12</div>';host.append(node);const size=getComputedStyle(node.firstChild).fontSize;node.remove();return size;}),'12px');
  assert.equal(await page.locator('h2.grp').first().evaluate(e=>getComputedStyle(e).textTransform),'uppercase');

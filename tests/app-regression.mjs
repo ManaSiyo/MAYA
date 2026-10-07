@@ -2828,6 +2828,9 @@ ok('Release gates verify the API commit as well as Hosting',readFileSync(join(RO
 ok('Repository-wide additions finish with the governing Aesthetic Control gate',
   ['AGENTS.md','docs/README.md','docs/design.md'].every(path=>readFileSync(join(ROOT,path),'utf8').includes('Aesthetic Control is the final completion gate.')));
 // Keep this last: functional checks precede the governing aesthetic verification.
+ok('Messages accepts typed numbers through reviewed Send and confirmed Call',readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('function msgBegin')&&readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('msgTypedNumber'));
+ok('Saved aesthetic status colors, icon weight and section spacing have active previews',readFileSync(join(ROOT,'aesthetics/aesthetic-control/presentation-controls.js'),'utf8').includes('statusStyles')&&readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8').includes('sectionSpacing'));
+await import('./message-compose-ui.mjs');
 await import('./aesthetic-authority.mjs');
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

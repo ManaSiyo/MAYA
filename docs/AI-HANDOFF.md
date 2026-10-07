@@ -1,6 +1,32 @@
 # Current handoff — October 7, 2026
 
-## Current request — Repository-wide governing rule (October 7)
+## Current request — Typed numbers, status colors and vertical spacing (October 7)
+
+Implemented locally: Messages Begin texting form (optional saved name, normalized
+phone input, unsent composer and confirmed US Call); account/cancel/recipient
+invalidation and STOP handler guard. Aesthetic Control adds all six status color,
+opacity and weight editors, icon color/opacity/stroke, section spacing with active
+previews. Status header gear is replaced by the shared chevron. Shared runtime v23,
+gallery v33 cache references apply across all served pages. New validator fields
+are optional for old saves. Closed editors no longer create invisible overflow.
+
+Changed implementation: backend/status.html, typography-controls.js,
+lead-stage-menu.js, gallery.js/css, surface-editors.js and new
+presentation-controls.js; server design validator only (no provider changes).
+New message-compose-ui fixture joins Cloud Build/app-regression; aesthetic-authority
+is extended and stays last. Design/schema and component-gallery cover new settings.
+Validation: all 46 Cloud Build test suites, full app-regression and server smoke
+passed with fake providers. Gallery checks eleven widths; final authority checks
+new shared roles, Inner/dropdown material, semantic color/weight, icon controls and
+section spacing at six widths. Required syntax/diff checks and final screenshot
+review complete before commit. Mobile H0 preview now respects its responsive clamp.
+Open risks: real SMS/call acceptance needs owner verification after deployment;
+existing call provider is US-only. No live messages/calls, personal Chrome, secrets,
+production configuration or Push. Exact next step: owner review/Push this local
+commit, verify exact Firebase/Cloud Run release, then review and send a test SMS and
+confirm a US call; save a distinct color/spacing in authenticated Aesthetic Control.
+
+## Previous request — Repository-wide governing rule (October 7)
 
 Owner requires Aesthetic Control to be the last check for every new addition.
 AGENTS.md, docs/README.md and docs/design.md now explicitly govern every folder,

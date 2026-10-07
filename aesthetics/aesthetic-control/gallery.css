@@ -232,3 +232,7 @@ html body :is(.finish-controls,.popup-editor)>summary{font-family:var(--maya-typ
 #table-preview .lead-open{flex-direction:column;align-items:stretch;gap:3px;white-space:normal}
 
 #table-preview th{position:relative}.column-resize{position:absolute;right:0;top:0;bottom:0;width:8px;cursor:col-resize;touch-action:none;background:transparent;border:0;padding:0;z-index:2}.column-resize:focus-visible,.column-resize:hover{background:#a9c9ff66}
+
+.status-style-preview{display:flex;align-items:center;gap:6px;position:relative}.spacing-controls{margin-top:24px}.spacing-preview{box-sizing:border-box;max-width:100%;margin-top:12px}.spacing-preview table{width:100%}.spacing-preview h3{margin-bottom:0}.spacing-controls>.type-editor{display:inline-block}
+/* Closed floating editors must not contribute invisible overflow on phones. */
+.type-editor:not([open])>.type-editor-fields{display:none}

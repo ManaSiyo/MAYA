@@ -3,9 +3,13 @@ export const DESIGN_PATH = 'config/typography-controls.json';
 const DESIGN_ROLES = new Set(['H1','H2','H3','H4','P1','P2','P3','P4']);
 export function validDesign(body) {
   if (!body || typeof body !== 'object' || !body.type || !body.glass || !body.overlay) return false;
-  if (Object.keys(body).some(k => !['type','glass','overlay','finish','pillX','pillY','editor','inner','filter','table','iconSize','dropdownHeight','iconPillGap','iconTextGap'].includes(k))) return false;
+  if (Object.keys(body).some(k => !['type','glass','overlay','finish','pillX','pillY','editor','inner','filter','table','iconSize','dropdownHeight','iconPillGap','iconTextGap','statusStyles','sectionSpacing','iconColor','iconOpacity','iconStroke'].includes(k))) return false;
   for(const k of ['iconSize','dropdownHeight'])if(body[k]!==undefined&&(!Number.isInteger(body[k])||body[k]<24||body[k]>48))return false;
   for(const k of ['iconPillGap','iconTextGap'])if(body[k]!==undefined&&(!Number.isInteger(body[k])||body[k]<0||body[k]>32))return false;
+  if(body.iconColor!==undefined&&!/^#[0-9a-f]{6}$/i.test(body.iconColor))return false;
+  for(const [key,min,max] of [['iconOpacity',0,100],['iconStroke',1,3]])if(body[key]!==undefined&&(!Number.isInteger(body[key])||body[key]<min||body[key]>max))return false;
+  if(body.sectionSpacing!==undefined){if(!body.sectionSpacing||Array.isArray(body.sectionSpacing)||typeof body.sectionSpacing!=='object'||Object.entries(body.sectionSpacing).some(([k,v])=>!['submissions','leads','ads','insights','headingGap'].includes(k)||!Number.isInteger(v)||v<0||v>160))return false;}
+  if(body.statusStyles!==undefined){if(!body.statusStyles||Array.isArray(body.statusStyles)||typeof body.statusStyles!=='object'||Object.entries(body.statusStyles).some(([k,v])=>!['new','contacted','in_progress','booked','completed','canceled'].includes(k)||!v||Array.isArray(v)||Object.keys(v).some(f=>!['color','opacity','weight'].includes(f))||!/^#[0-9a-f]{6}$/i.test(v.color)||!Number.isInteger(v.opacity)||v.opacity<0||v.opacity>100||!Number.isInteger(v.weight)||v.weight<200||v.weight>500))return false;}
   const legacy=Object.hasOwn(body.type,'P5');
   const roles=new Set([...DESIGN_ROLES,...(legacy?['P5']:[]),...['H0','H5','H6'].filter(k=>Object.hasOwn(body.type,k))]);
   if (Object.keys(body.type).length !== roles.size ||
