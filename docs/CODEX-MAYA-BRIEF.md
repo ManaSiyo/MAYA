@@ -1,6 +1,10 @@
 # MAYA voice agent: the understanding problem
 ### A brief for Codex (or any second engineer), written Aug 29 2026
 
+> Current governing workflow: root AGENTS.md and docs/design.md take precedence
+> over this historical brief. Aesthetic Control is the final completion gate
+> for every addition/change; finish functional tests before that final check.
+
 ## 1. What Fromsa is going through, in plain words
 
 Maya is the voice consultant inside maya.manasiyo.com. She can already do a

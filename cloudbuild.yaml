@@ -62,7 +62,6 @@ steps:
         # Browser and communications contracts are mandatory release gates.
         node tests/maya-hands-smoke.mjs
         node tests/outbound-ui.mjs
-        node tests/aesthetic-authority.mjs
         node tests/lead-notes-ui.mjs
         node tests/admin-state-races.mjs
         node tests/message-races.mjs
@@ -79,6 +78,8 @@ steps:
         node --check docs/server/admin-command.mjs
         node --check docs/server/proxy-policy.mjs
         node --check docs/server/server.js
+        # Governing rule: Aesthetic Control is the final completion gate.
+        node tests/aesthetic-authority.mjs
   - id: Build server
     name: gcr.io/cloud-builders/docker
     args:

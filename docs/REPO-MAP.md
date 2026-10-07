@@ -28,3 +28,7 @@ The earlier request and fix logs remain because they contain unresolved work. `d
 To restore any moved item before it is intentionally discarded, copy it from the matching path beneath `_to_delete/repo-cleanup-2026-09-29/`. Tracked files are also recoverable from Git history. No push or production deploy is part of this cleanup.
 
 A byte-for-byte hash scan of the active product and documentation folders found no remaining identical files. Similar CSS files were retained where one is an active compatibility adapter; removing an adapter without migrating its selectors would change the served UI.
+
+Governing completion rule for every folder: Aesthetic Control is the final
+completion gate. Follow root AGENTS.md and docs/design.md; no folder-specific
+workflow overrides that requirement.

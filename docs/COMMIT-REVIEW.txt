@@ -1,24 +1,18 @@
-[Codex] Enforce Aesthetic Control in Automations and release checks
+[Codex] Make Aesthetic Control the final repository-wide completion gate
 
-Bind Automations headings, labels, actions and form values to explicit shared
-H2/H3/P1/P3 roles. Use saved Inner material for rule cards and saved Edit backing,
-border, radius and X/Y padding for fields. Remove duplicated local form styling,
-forced blue drawer headings and the legacy font override on explicitly typed
-fields. Apply saved heading colors through the shared runtime. Retain semantic
-status colors, independent table settings and necessary compatibility adapters.
+Establish the owner's governing rule in AGENTS.md, docs/README.md and design.md;
+point the repository map and historical engineer brief to it. Require shared
+settings and active previews for new visible UI, coverage for changed surfaces,
+functional checks first and aesthetic verification last. Later presentation edits
+invalidate the check and unresolved mismatches block completion. Backend/docs-only
+work records no visible UI impact and still runs the shared gate.
 
-Add a computed-style mutation browser gate for default and changed typography,
-colors, field material, Inner material and six viewport widths (320–1920px).
-Require it in app-regression and Cloud Build. Replace the obsolete regression
-requiring fixed blue drawer headings. Document the mandatory final aesthetic
-check in AGENTS.md/design.md, bump runtime v22/adapter v14 references and
-regenerate the authored typography inventory.
+Move aesthetic-authority to the end of Cloud Build release checks and app-regression.
+Add release-order and governing-document assertions plus an owner-request assertion.
+Update handoff and requests. No runtime/UI behavior, providers, credentials or
+production settings changed; no personal Chrome or push.
 
-Validation: 45 Cloud Build suites, required syntax checks and isolated browser
-visual review, full app regression, smoke and diff checks passed.
-No personal Chrome, external messages, provider calls, credentials, production
-configuration or push. This is a local repair, not proof of live deployment.
-
-Next: owner review/Push, exact release verification with verify-live.mjs --wait,
-then authenticated live Admin Save confirmation. Existing provider activation,
-invoice reconciliation and legacy migration risks remain in AI-HANDOFF.md.
+Validation passed: release-contract, design-contract and full app-regression,
+ending with the saved-settings/responsive aesthetic authority test. Diff check passed.
+Next: owner review/Push and exact live release verification. Earlier implementation
+and provider/migration limitations remain documented in AI-HANDOFF.md.

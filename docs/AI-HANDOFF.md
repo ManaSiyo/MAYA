@@ -1,6 +1,26 @@
 # Current handoff — October 7, 2026
 
-## Current request — Aesthetic Control enforcement (October 7)
+## Current request — Repository-wide governing rule (October 7)
+
+Owner requires Aesthetic Control to be the last check for every new addition.
+AGENTS.md, docs/README.md and docs/design.md now explicitly govern every folder,
+including backend-generated UI and shared aesthetics on functionally excluded
+pages. New visible components require active previews and saved-setting coverage;
+new settings extend controls, validation, runtime and tests together. Functional
+checks precede the final aesthetic check. Later presentation edits invalidate it;
+unresolved mismatches block completion. Backend/docs-only work records no visible
+impact and still runs the shared authority gate.
+
+cloudbuild.yaml and app-regression run aesthetic-authority last. release-contract
+asserts release ordering and rule presence; app-regression asserts the owner
+request. REPO-MAP and the historical CODEX-MAYA-BRIEF point to the governing rule.
+This follow-up changes instructions and verification ordering, with no UI/runtime
+behavior change. Validation: release/design contracts and full app-regression
+passed, ending with the aesthetic authority gate. No Chrome or push.
+Next: owner review/Push both local commits, verify exact deployment, then confirm
+live Admin Save. Previous implementation and open risks remain below.
+
+## Previous request — Aesthetic Control enforcement (October 7)
 
 Fromsa asked why Automations bypasses Aesthetic Control, requested removal of
 conflicts and a mandatory internal final aesthetic check. Repaired locally:

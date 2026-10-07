@@ -309,21 +309,39 @@ baked by MAYA_BUILD_COMMIT (not a production environment setting), and public
 health reports it. Run tests/release-contract.mjs and tests/verify-release.mjs.
 
 
-## Mandatory aesthetic completion gate
+## Governing rule: Aesthetic Control
 
-Every UI task must read docs/design.md, reuse the shared material and assign a
-shared typography role. New markup uses data-maya-type; form fields use
-data-maya-control="field" and inner surfaces use data-maya-panel="inner".
-Page CSS may define layout, not competing fonts, colors or materials. Preserve
-semantic status colors and independent table settings. Remove conflicting rules;
-do not delete active adapters, migration paths or files merely because they are old.
+Aesthetic Control is the final completion gate.
 
-Before a UI task is complete, test the changed elements with defaults AND visibly
-different valid saved settings. Assert computed font, size, weight, case, color,
-material and X/Y padding, then inspect responsive layout, menus, focus and Save
-at phone, tablet and desktop widths. Extend tests/aesthetic-authority.mjs for
-new/changed surfaces; stylesheet presence alone is not proof. Run that gate,
-component-gallery and the exact Cloud Build checks. The last aesthetic check is
-that every changed element responds to its assigned Aesthetic Control setting,
-without clipping or a local override. Report local versus live verification
-accurately. A passing local test does not establish production deployment.
+This governing rule applies to every addition or change anywhere in MAYA-new,
+including Admin, frontend, backend-generated UI, Outbound, Playground, Affiliates
+and supporting pages. Functional exclusions never exempt shared aesthetics.
+Backend-only or documentation-only work must record that it adds no visible UI;
+it still preserves this rule and runs the shared authority gate.
+
+Before implementation, read docs/design.md and identify the shared typography,
+material, icon, dropdown and table settings the change uses. Every new visible
+component must be represented by an active Aesthetic Control preview and governed
+by its saved settings. Reuse existing controls; extend the control, validation,
+runtime and tests together if a genuinely new presentation setting is needed.
+Do not introduce an independent visual authority or a competing local override.
+
+Complete functional tests first. The last verification before declaring work
+complete, preparing a commit or handing off is the Aesthetic Control check:
+- Verify defaults and visibly different valid saved settings on every new or
+  changed visible element, using computed styles and visual inspection.
+- Check hierarchy, colors, materials, borders, icons, dropdowns, X/Y padding,
+  table independence, active previews, Save propagation and responsive layout.
+- Check phone, tablet and desktop widths and applicable open/focus/error states.
+- Extend tests/aesthetic-authority.mjs for the changed surface; run it last.
+  A loaded stylesheet, a screenshot alone or an unchanged fixture is insufficient.
+
+Any subsequent change affecting presentation invalidates the check: rerun it.
+An unresolved mismatch blocks completion; report the actual limitation instead
+of claiming it passed. Local verification never proves the deployed release.
+
+New markup uses data-maya-type for its role, data-maya-control="field" for fields
+and data-maya-panel="inner" for inner surfaces. Page CSS owns layout, not a
+competing visual standard. Preserve semantic status colors and independent table
+settings. Remove conflicting declarations, not necessary active adapters or
+unconfirmed migration paths. Follow docs/design.md for the implementation canon.

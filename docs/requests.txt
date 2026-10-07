@@ -2772,3 +2772,8 @@ now explicitly uses shared H2/H3/P1/P3, Inner and Edit field settings. Remove
 specific conflicting overrides rather than deleting active layout adapters.
 Final computed-style mutation/responsive gate is required by AGENTS.md and CI;
 new UI must extend it. Owner Push/live Save confirmation remains next.
+
+2026-10-07 [local] Owner made Aesthetic Control a governing rule for every
+addition/change in MAYA-new. README/AGENTS/design and supporting engineer entry
+points now require it as the final completion check; tests and release ordering
+enforce it. Backend/docs-only work records no visible UI impact and runs the gate.

@@ -1,6 +1,20 @@
 # MAYA
 
 Sole active written aesthetic specification: [design.md](design.md).
+## Governing completion rule
+
+Aesthetic Control is the final completion gate.
+
+Every addition or change in MAYA-new must preserve this rule. New visible UI
+must use the shared settings and have an active Aesthetic Control preview.
+Finish functional tests first; the last verification before completion, commit
+or handoff is the Aesthetic Control check, including saved-settings mutations,
+visual inspection and phone/tablet/desktop layouts. Extend the authority test
+for new surfaces. A later presentation change requires checking again.
+Backend/docs-only work records no visible UI impact and runs the shared gate.
+Unresolved mismatches block completion. See [AGENTS.md](../AGENTS.md) for the
+mandatory workflow and [design.md](design.md) for the sole presentation canon.
+
 Conversational fabric search and sealed lookbooks: [FABRIC-SEARCH.md](FABRIC-SEARCH.md).
 Owner design controls: [Aesthetic Control](../aesthetics/aesthetic-control.html), linked from Admin → Systems.
 Aesthetic Control groups Visuals (Glass Panels and Tables) before single-preview

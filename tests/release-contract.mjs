@@ -20,3 +20,10 @@ for(const dir of ['', 'docs/server/']){
 const hosting=JSON.parse(read('docs/firebase.json')).hosting.ignore;
 assert.ok(hosting.includes('package.json')&&hosting.includes('package-lock.json'));
 console.log('Mandatory release dependencies, reproducible runtime packages and API build identity passed.');
+
+const releaseChecks=build.slice(build.indexOf('  - id: Test release contracts'),build.indexOf('  - id: Build server'));
+const commands=[...releaseChecks.matchAll(/^\s+node (.+)$/gm)].map(m=>m[1]);
+assert.equal(commands.at(-1),'tests/aesthetic-authority.mjs','Aesthetic Control must be the last release verification');
+assert.equal(commands.filter(c=>c==='tests/aesthetic-authority.mjs').length,1);
+for(const path of ['AGENTS.md','docs/README.md','docs/design.md'])assert.ok(read(path).includes('Aesthetic Control is the final completion gate.'),path);
+console.log('Repository-wide Aesthetic Control governing rule and final release gate order passed.');

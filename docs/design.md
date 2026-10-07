@@ -262,6 +262,17 @@ v32 carry this behavior without changing the visual canon.
 
 ## Enforcement when coding
 
+Aesthetic Control is the final completion gate.
+
+This governs every addition/change across MAYA-new. All new visible UI must have
+an active preview and respond to shared saved settings. Complete functional
+validation first, then perform the Aesthetic Control check last before completion,
+commit or handoff. Extend the authority test to cover each changed surface;
+verify computed styles, visual hierarchy, Save propagation and responsive states.
+Any later presentation change invalidates that result. Unresolved mismatches
+block completion. Backend/docs-only work records no visible impact and runs the
+shared authority gate. AGENTS.md defines the mandatory workflow.
+
 Aesthetic Control owns presentation; page CSS owns layout. New text declares
 `data-maya-type="H2"` (or its appropriate role), editable fields declare
 `data-maya-control="field"`, and inner surfaces declare `data-maya-panel="inner"`.
