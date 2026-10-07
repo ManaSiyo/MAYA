@@ -111,9 +111,9 @@ body{text-align:center;line-height:1.4}
 .visual-divider{border:0;border-top:1px solid #ffffff33;margin:16px 0}
 #buttons,#panels{min-width:0}.icon-row .maya-icon-button{width:var(--preview-control-height,28px);height:var(--preview-control-height,28px)}
 .type-row{grid-template-columns:minmax(0,1fr) minmax(120px,.6fr);align-items:center}.type-example{line-height:1.4;overflow-wrap:anywhere}
-.type-editor-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:440px;max-width:calc(100vw - 32px);box-sizing:border-box}.type-editor-fields select{width:100%}
+.type-editor-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(110px,100%),1fr));width:440px;max-width:calc(100vw - 32px);box-sizing:border-box}.type-editor-fields select{width:100%}
 .type-editor-fields label{min-width:0}.type-editor-fields :is(input,select){width:100%;box-sizing:border-box}
-@media(max-width:420px){.type-editor-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 .preview-section h2::before,.preview-section h3::before,.gallery-header h1::before{content:none!important}
 .finish-numbers:empty,#finish-status{display:none}.comparison{gap:12px}.finish-sample{padding:4px 0}.finish-controls{margin:0}.finish-controls details{margin-top:8px}
 #tokens{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:8px}.overlay-controls{border:0;margin-top:0;padding:0}

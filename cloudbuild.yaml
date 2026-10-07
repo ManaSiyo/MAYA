@@ -46,6 +46,8 @@ steps:
         node tests/owner-sms-access.mjs
         node tests/booking-link.mjs
         node tests/lead-alerts.mjs
+        node tests/event-triggers.mjs
+        node tests/lead-feed-latency.mjs
         node tests/profile-crm.mjs
         node tests/maya-mcp.mjs
         node tests/maya-feedback.mjs

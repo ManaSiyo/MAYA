@@ -15,23 +15,22 @@ export function createLeadAlerts(deps){
       items:recent.map(l=>({id:l.id,name:l.name,ts:l.ts,...ledger.items?.[l.id]})),
       pending:recent.filter(l=>!ledger.items?.[l.id]?.text||!ledger.items?.[l.id]?.call).length};
   }
-  async function run({source='manual'}={}){
+  async function run({source='manual',submissionId=''}={}){
     const startedAt=new Date(now()).toISOString();
     await db.update(LEAD_ALERT_HEALTH_PATH,s=>{s.lastStartedAt=startedAt;s.lastSource=source;});
     try{
-      const feed=await deps.fetchLeads();
+      const feed=await deps.fetchLeads(submissionId);
       if(!feed?.connected)throw new Error('Wix Call back submissions are unavailable.');
-      const recent=recentLeads(feed,now()),result={checked:recent.length,texts:0,calls:0,failed:[]};
+      const recent=recentLeads(feed,now()).filter(l=>!submissionId||l.id===submissionId),result={checked:recent.length,texts:0,calls:0,failed:[]};
       for(const lead of [...recent].reverse()){
         const id=String(lead.id),name=String(lead.name||'New client').slice(0,120);
         const summary=String(lead.wrote||lead.note||'').replace(/\s+/g,' ').slice(0,180);
-        // A preference-storage failure must not suppress the independent call.
-        let message=formatSignupAlert(lead);
-        try{if(deps.formatText)message=await deps.formatText(lead);}catch{/* Grounded deterministic fallback. */}
-        for(const [channel,send,payload] of [
-          ['text',deps.textOwner,message],
-          ['call',deps.callOwner,'New Call back request from '+name+(summary?'. They wrote: '+summary:'')+'. Tell Fromsa the lead is in Leads.'],
-        ]){
+        // Dispatch independent channels together: a slow SMS preference read or
+        // provider must never delay the owner's ring. Durable claims stay separate.
+        await Promise.all([
+          ['text',deps.textOwner,async()=>{const fallback=formatSignupAlert(lead);if(!deps.formatText)return fallback;let timer;try{return await Promise.race([Promise.resolve().then(()=>deps.formatText(lead)),new Promise(resolve=>{timer=setTimeout(()=>resolve(fallback),deps.formatTimeoutMs??750);})]);}catch{return fallback;}finally{clearTimeout(timer);}}],
+          ['call',deps.callOwner,async()=>'New Call back request from '+name+(summary?'. They wrote: '+summary:'')+'. Tell Fromsa the lead is in Leads.'],
+        ].map(async([channel,send,payload])=>{
           let claimed=false;
           try{
             const claim=await db.update(LEAD_ALERTS_PATH,s=>{
@@ -47,14 +46,18 @@ export function createLeadAlerts(deps){
             if(!claim.result){
               const item=claim.value.items[id];
               if(item[channel]!=='accepted')result.failed.push({id,channel,why:item[channel+'Error']||('Previous '+item[channel]+' attempt needs review before retrying.')});
-              continue;
+              return;
             }
             claimed=true;
             let outcome;
-            try{outcome=await send(payload);}catch{outcome={ok:false,uncertain:true,why:'Provider result uncertain; check delivery before retrying.'};}
+            const prepared=await payload(),dispatchedAt=now();
+            try{outcome=await send(prepared);}catch{outcome={ok:false,uncertain:true,why:'Provider result uncertain; check delivery before retrying.'};}
             const uncertain=!outcome?.ok&&(outcome?.uncertain||/^Twilio did not answer/i.test(String(outcome?.why||'')));
             await db.update(LEAD_ALERTS_PATH,s=>{
               const item=s.items[id];item[channel]=outcome?.ok?'accepted':uncertain?'uncertain':'failed';
+              item[channel+'DispatchMs']=Math.max(0,dispatchedAt-Date.parse(startedAt));
+              item[channel+'LeadAgeMs']=Math.max(0,dispatchedAt-Date.parse(lead.ts));
+              item[channel+'ProviderMs']=Math.max(0,now()-dispatchedAt);
               item[channel+'Sid']=String(outcome?.sid||'').slice(0,100);
               item[channel+'Status']=String(outcome?.status||(outcome?.ok?'accepted':'' )).slice(0,80);
               item[channel+'Error']=String(outcome?.why||'').slice(0,300);
@@ -66,7 +69,7 @@ export function createLeadAlerts(deps){
           }catch{
             result.failed.push({id,channel,why:claimed?'Alert outcome could not be saved; do not resend before checking the provider.':'Alert claim could not be saved; no send attempted.'});
           }
-        }
+        }));
       }
       await db.update(LEAD_ALERT_HEALTH_PATH,s=>{if(s.lastStartedAt!==startedAt)return;s.lastFinishedAt=new Date(now()).toISOString();s.lastResult=result;s.lastError='';if(!result.failed.length)s.lastSuccessAt=s.lastFinishedAt;if(source==='scheduled')s.lastScheduledAt=s.lastFinishedAt;});
       return result;

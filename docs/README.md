@@ -5,6 +5,8 @@ Owner design controls: [Aesthetic Control](../aesthetics/aesthetic-control.html)
 Aesthetic Control groups Visuals (Glass Panels and Tables) before single-preview
 Typography. Each role can select Jost/Cormorant and Normal/ALL CAPS. See docs/design.md.
 
+Immediate Wix/Gmail event activation and OpenAI latency audit: [EVENT-TRIGGERS.md](EVENT-TRIGGERS.md).
+
 Callback owner SMS/call setup and incident verification: [CALLBACK-ALERTS.md](CALLBACK-ALERTS.md).
 
 See [REPO-MAP.md](REPO-MAP.md) for the folder map and cleanup decisions.

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { buildAdminCommandSnapshot, buildRealtimeCommandContext, resolveLeadExact } from '../docs/server/admin-command.mjs';
+import { buildAdminCommandSnapshot, buildRealtimeCommandContext, resolveLeadExact, withinVoiceBudget } from '../docs/server/admin-command.mjs';
 
 let passed = 0;
 let failed = 0;
@@ -9,6 +9,14 @@ async function test(name, fn) {
 }
 
 console.log('\nMAYA Admin command test\n');
+
+await test('Voice startup bounds optional context and keeps unavailability explicit', async () => {
+  const missing=buildAdminCommandSnapshot();
+  assert.equal(await withinVoiceBudget(Promise.resolve('ready'),missing,10),'ready');
+  assert.equal(await withinVoiceBudget(Promise.reject(Error('offline')),missing,10),missing);
+  const started=Date.now();assert.equal(await withinVoiceBudget(new Promise(()=>{}),missing,20),missing);
+  assert.ok(Date.now()-started<800);assert.ok(missing.attention.some(x=>x.panel==='leads'));
+});
 
 const leads = [
   { id: '1', name: 'Ari Jones', email: 'ari@example.com', note: 'Black suit for October' },

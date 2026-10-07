@@ -10,6 +10,15 @@ const normalize = value => text(value, 200).toLowerCase()
   .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
   .replace(/[^a-z0-9@._+ -]/g, '').replace(/\s+/g, ' ').trim();
 
+// Optional dashboard context must not hold voice startup behind slow analytics.
+// Fall back to explicit unavailability; a late result never changes instructions.
+export async function withinVoiceBudget(work, fallback, ms=1200) {
+  let timer;
+  try { return await Promise.race([Promise.resolve(work).catch(()=>fallback),
+    new Promise(resolve=>{timer=setTimeout(()=>resolve(fallback),ms);})]); }
+  finally { clearTimeout(timer); }
+}
+
 export const ADMIN_PANEL_KEYS = Object.freeze([
   'today', 'submissions', 'traffic', 'ads', 'leads', 'sources', 'bottom', 'changes',
 ]);

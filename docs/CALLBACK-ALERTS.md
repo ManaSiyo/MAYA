@@ -19,6 +19,14 @@ provide autonomous callback notifications while Admin is closed. Exact Julia
 Twilio outcomes were not available in the old Admin logs, so carrier rejection,
 voice readiness and prior alert claims remain unverified.
 
+## Immediate trigger update — October 6
+
+Use the signed Wix event → durable Cloud Tasks path in [EVENT-TRIGGERS.md](EVENT-TRIGGERS.md)
+as the primary trigger. Calls now dispatch independently of SMS formatting and
+delivery. The two-minute job below is reconciliation only; it cannot meet the
+owner's low-latency requirement by itself. Neither queue nor webhook has been
+activated in production by this task.
+
 ## Owner activation after deployment
 
 Production environment variables and credentials are owner-only under AGENTS.md.

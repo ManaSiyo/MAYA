@@ -65,6 +65,25 @@ await test('Gmail OAuth is single-use, encrypted, supports two inboxes and isola
  assert.doesNotMatch(JSON.stringify([...storage.objects.values()]),/never-public/);assert.doesNotMatch(JSON.stringify(await gmail.list('owner')),/secret|refreshToken/);
  await gmail.disconnect('owner',(await gmail.list('owner'))[0].id);assert.equal((await gmail.list('owner')).length,1);
 });
+await test('Gmail watch binds private account, renews expiry and preserves the history cursor',async()=>{
+ const storage=memory(),requests=[];let expiration=Date.now()+1000;
+ const gmail=createGmail({...storage,config:{clientId:'id',clientSecret:'secret',redirectUri:'https://maya.test/callback',encryptionKey:'b'.repeat(64)},fetch:async(url,options)=>{
+  requests.push({url:String(url),body:options.body});const u=String(url);
+  if(u.includes('oauth2'))return {ok:true,json:async()=>({access_token:'access',refresh_token:'refresh',scope:'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send'})};
+  if(u.endsWith('/watch'))return {ok:true,json:async()=>({historyId:'99999',expiration:String(expiration)})};
+  if(u.includes('/history?'))return {ok:true,json:async()=>({historyId:'30',history:[]})};
+  return {ok:true,json:async()=>({emailAddress:'one@example.com',historyId:'10'})};
+ }});
+ await gmail.callback(new URL(await gmail.begin('owner')).searchParams.get('state'),'code');const mailbox=(await gmail.list('owner'))[0];
+ await assert.rejects(gmail.watch('other',mailbox.id,'projects/pro-maya/topics/mail'),/Connect/);
+ await gmail.watch('owner',mailbox.id,'projects/pro-maya/topics/mail');
+ assert.deepEqual((await gmail.watchBindings('one@example.com')).map(x=>x.uid),['owner']);assert.deepEqual(await gmail.watchBindings('someone@example.com'),[]);
+ const watch=JSON.parse(requests.find(r=>r.url.endsWith('/watch')).body);assert.deepEqual(watch.labelIds,['INBOX']);assert.equal(watch.labelFilterBehavior,'INCLUDE');
+ expiration=Date.now()+7*86400000;await gmail.sync('owner',mailbox,{historyId:'20'});
+ assert.equal(requests.filter(r=>r.url.endsWith('/watch')).length,2,'Daily renewal through fallback sync');
+ assert.ok(requests.some(r=>r.url.includes('startHistoryId=20')),'Watch history must never skip saved mail history');
+ await gmail.disconnect('owner',mailbox.id);assert.deepEqual(await gmail.watchBindings('one@example.com'),[]);
+});
 await test('Gmail history pagination retains start ID; expired history safely restarts backfill',async()=>{
  const storage=memory();let expired=false;const calls=[];const gmail=createGmail({...storage,config:{clientId:'id',clientSecret:'secret',redirectUri:'https://maya.test/api/outbound/gmail/callback',encryptionKey:'b'.repeat(64)},fetch:async url=>{const u=String(url);calls.push(u);if(u.includes('oauth2'))return {ok:true,json:async()=>({access_token:'access',refresh_token:'refresh',scope:'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send'})};if(u.includes('history?'))return expired?{ok:false,status:404}:{ok:true,json:async()=>({historyId:'30',nextPageToken:'page2',history:[{messagesAdded:[{message:{id:'m1'}}]}]})};if(u.includes('/messages/m1'))return {ok:true,json:async()=>({id:'m1',internalDate:'1000',payload:{headers:[{name:'From',value:'a@example.com'}]}})};return {ok:true,json:async()=>({emailAddress:'one@example.com',historyId:'10'})};}});
  await gmail.callback(new URL(await gmail.begin('owner')).searchParams.get('state'),'code');const mailbox=(await gmail.list('owner'))[0];
@@ -72,7 +91,7 @@ await test('Gmail history pagination retains start ID; expired history safely re
 });
 const storage=memory(),routes=new Map();let user='owner',sends=0,gmailFail=false,mailboxListFail=false,phoneReads=0,sendFail=false,aiCalls=0,lastAIData;
 const mailboxes=[{id:'one',email:'one@example.com',connectedAt:'2026-09-27'},{id:'two',email:'two@example.com',connectedAt:'2026-09-27'}];
-mountOutbound({get:(p,h)=>routes.set('GET '+p,h),post:(p,h)=>routes.set('POST '+p,h)},{...storage,requireAdmin:async()=>({sub:user}),allow:()=>true,gmail:{ready:()=>true,begin:async()=> 'https://accounts.google.com/o/oauth2/v2/auth?state='+ 'a'.repeat(64),callback:async()=>({uid:'owner'}),list:async uid=>{if(mailboxListFail)throw Error('unavailable');return uid==='owner'?mailboxes:[];},sync:async()=>{if(gmailFail)throw Error('provider');return {events:[{id:'gmail-event',provider:'gmail',kind:'email',direction:'in',peers:['person@example.com'],summary:'Hello',ts:'2026-09-27T18:00:00Z'}],cursor:{historyId:'10'}};},send:async()=>{sends++;if(sendFail)throw Error('uncertain');return {id:'sent1'};}},ai:{meter:async()=>({}),complete:async(uid,instructions,data)=>{aiCalls++;lastAIData=data;return {text:Array.isArray(data)?JSON.stringify({contacts:data.map(c=>({id:c.id,summary:'Fixture summary',nextAction:'Review'}))}):JSON.stringify({subject:'Fixture subject',body:'Fixture body'}),provider:'openai'};}},phoneEvents:async()=>{phoneReads++;return [];},schedulerReady:true,verifyScheduler:async req=>{if(req.headers.authorization!=='Bearer scheduler')throw Object.assign(Error('Denied'),{status:401});},draft:async()=>({}),fetch:async()=>{},sheetTabs:async()=>[]});
+const runtime=mountOutbound({get:(p,h)=>routes.set('GET '+p,h),post:(p,h)=>routes.set('POST '+p,h)},{...storage,requireAdmin:async()=>({sub:user}),allow:()=>true,gmail:{ready:()=>true,begin:async()=> 'https://accounts.google.com/o/oauth2/v2/auth?state='+ 'a'.repeat(64),callback:async()=>({uid:'owner'}),list:async uid=>{if(mailboxListFail)throw Error('unavailable');return uid==='owner'?mailboxes:[];},sync:async()=>{if(gmailFail)throw Error('provider');return {events:[{id:'gmail-event',provider:'gmail',kind:'email',direction:'in',peers:['person@example.com'],summary:'Hello',ts:'2026-09-27T18:00:00Z'}],cursor:{historyId:'10'}};},send:async()=>{sends++;if(sendFail)throw Error('uncertain');return {id:'sent1'};}},ai:{meter:async()=>({}),complete:async(uid,instructions,data)=>{aiCalls++;lastAIData=data;return {text:Array.isArray(data)?JSON.stringify({contacts:data.map(c=>({id:c.id,summary:'Fixture summary',nextAction:'Review'}))}):JSON.stringify({subject:'Fixture subject',body:'Fixture body'}),provider:'openai'};}},phoneEvents:async()=>{phoneReads++;return [];},schedulerReady:true,verifyScheduler:async req=>{if(req.headers.authorization!=='Bearer scheduler')throw Object.assign(Error('Denied'),{status:401});},draft:async()=>({}),fetch:async()=>{},sheetTabs:async()=>[]});
 async function call(path='',body,task=false){let status=200,data;const res={set(){},status(n){status=n;return res;},json(v){data=v;},send(v){data=v;}};await routes.get((body?'POST ':'GET ')+(task?path:'/api/admin/outbound'+path))({body,method:body?'POST':'GET',headers:{authorization:task?'Bearer scheduler':''}},res);return {status,...data};}
 const created=await call('/save',{type:'campaign',name:'Test'}),campaignId=created.state.campaigns[0].id;
 const imported=await call('/save',{type:'import',campaignId,contact:{email:'person@example.com',name:'Person'}}),id=imported.state.contacts[0].id;
@@ -99,6 +118,12 @@ await test('hourly sync commits cursors with activity and exposes provider failu
 await test('mailbox connection failure does not prevent phone synchronization',async()=>{
  mailboxListFail=true;const before=phoneReads;const result=await call('/sync',{});mailboxListFail=false;
  assert.equal(result.ok,true);assert.ok(result.errors.some(e=>e.source==='Gmail connections'));assert.equal(phoneReads,before+1);assert.ok(result.state.crm.phoneSyncedAt);
+});
+await test('Inbound push syncs only its mailbox, with no AI, discovery, sheet or sends',async()=>{
+ const beforeAI=aiCalls,beforePhone=phoneReads,beforeSends=sends,previousAttempt=(await call('/intelligence')).crm.lastAttempt;
+ const result=await runtime.syncMailbox('owner','one');assert.equal(result.errors.length,0);
+ assert.equal(aiCalls,beforeAI);assert.equal(phoneReads,beforePhone);assert.equal(sends,beforeSends);assert.equal(result.state.crm.lastAttempt,previousAttempt,'Push must not postpone the hourly full sync');
+ await assert.rejects(runtime.syncMailbox('other','one'),/disconnected/);
 });
 await test('OAuth callback requires the Hosting-compatible browser cookie',async()=>{
  let cookie='',status=200,redirect='';const res={set(k,v){if(k==='Set-Cookie')cookie=v;return res;},status(n){status=n;return res;},json(){},send(){},redirect(v){redirect=v;}};

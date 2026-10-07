@@ -34,6 +34,7 @@ const leads = [], transcripts = [], spends = [], notes = [], bookingSends = [];
 const twSrv = http.createServer((req, res) => { let b = ''; req.on('data', c => b += c); req.on('end', () => { twRest.push({ url: req.url, auth: req.headers.authorization || '', form: Object.fromEntries(new URLSearchParams(b)) }); res.setHeader('Content-Type', 'application/json'); res.statusCode = 201; res.end(JSON.stringify({ sid: 'CAOUT1', status: 'queued' })); }); });
 const twRest = [];
 await new Promise(r => twSrv.listen(0, '127.0.0.1', r));
+const latencyLogs=[];
 const phoneDeps = {
   ownerContext: async from => JSON.stringify({memory:['Keep responses brief'],from}),
   ownerControl: async (from,args,id) => {ownerActions.push({from,args,id});return {ok:true,reply:'Remembered: '+args.text};},
@@ -42,7 +43,7 @@ const phoneDeps = {
   saveTranscript: async (callSid, rec) => { transcripts.push({ callSid, rec }); },
   noteSpend: () => spends.push(1),
   openaiUrl: 'ws://127.0.0.1:' + aiPort + '/v1/realtime',
-  WebSocketServer, WebSocketClient: WebSocket, publicHost: 'maya.manasiyo.com', log: () => {},
+  WebSocketServer, WebSocketClient: WebSocket, publicHost: 'maya.manasiyo.com', log: (...args) => latencyLogs.push(args),
   accountSid: 'ACtest', fromNumber: '+15109909223', fromsaPhone: '+15104917540', twilioApi: 'http://127.0.0.1:' + twSrv.address().port,
   isBlocked: async n => n === '+14155559999',
   findLead: async query => ({ ok: true, lead: { name: query, phone: '+14155550100' } }),
@@ -262,7 +263,7 @@ ok('the call is gone from the live count', stEnd.calls === 0);
   ok('by caller id, not by his word: the session is the admin brief with the inbox tool and the snappier turn taking',
     !!su && /verified his number/.test(su.session.instructions) && /Hey Fromsa, it is Maya\. What do you need\?/.test(su.session.instructions) &&
     su.session.tools.map(t => t.name).join(',') === 'find_lead,list_leads,preview_booking,send_booking,note_lead,save_lead,set_tier,log_note,end_call,owner_control' &&
-    su.session.audio.input.turn_detection.silence_duration_ms === 420, su && su.session.tools.map(t => t.name).join(','));
+    su.session.audio.input.turn_detection.silence_duration_ms === 300, su && su.session.tools.map(t => t.name).join(','));
   const sk = ai.sockets[n0].sock; const say = o => sk.send(JSON.stringify(o));
   ok('owner call loads shared conversation preferences', /Keep responses brief/.test(su.session.instructions));
   const controlStart=ai.got.length;
@@ -368,6 +369,21 @@ ok('the call is gone from the live count', stEnd.calls === 0);
   ok('signed stream context preserves the outbound reason without in-memory call state',session?.session.instructions.includes(reason));
   socket.close(); await wait(80);
   receiver.wss.close(); receiverServer.close();
+}
+// Slow/unavailable owner memory has a bounded startup and no invented preference.
+{
+ const oldContext=phoneDeps.ownerContext;phoneDeps.ownerContext=()=>new Promise(()=>{});phoneDeps.contextTimeoutMs=40;
+ const tw=new WebSocket('ws://127.0.0.1:'+port+'/api/phone/stream');await new Promise(r=>tw.on('open',r));
+ const g0=ai.got.length,n0=ai.sockets.length,started=Date.now();
+ tw.send(JSON.stringify({event:'start',streamSid:'MZslow',start:{callSid:'CASLOW',customParameters:{token:callToken(AUTH,'CASLOW','+15104917540'),from:'+15104917540',callSid:'CASLOW'}}}));
+ await until(()=>ai.got.slice(g0).some(m=>m.type==='response.create'));
+ const su=ai.got.slice(g0).find(m=>m.type==='session.update');
+ ok('owner context timeout does not stall greeting or invent remembered preferences',Date.now()-started<800&&su?.session.instructions.includes('Owner memory is unavailable'));
+ const sock=ai.sockets[n0].sock;
+ for(const event of [{type:'input_audio_buffer.speech_stopped'},{type:'response.created',response:{id:'timed'}},{type:'response.output_audio.delta',delta:'BBBB'},{type:'response.output_audio.delta',delta:'CCCC'}])sock.send(JSON.stringify(event));
+ await until(()=>latencyLogs.some(x=>x[0]==='latency turn_first_audio'&&x[1]==='CASLOW'));
+ ok('first audio timings log once per response and turn without transcript content',latencyLogs.filter(x=>x[0]==='latency response_first_audio'&&x[1]==='CASLOW').length===1&&latencyLogs.filter(x=>x[0]==='latency turn_first_audio'&&x[1]==='CASLOW').length===1);
+ tw.close();await wait(80);phoneDeps.ownerContext=oldContext;delete phoneDeps.contextTimeoutMs;
 }
 ok('phoneInstructions reads the character first', phoneInstructions({ character: 'X', nowLA: 'now', from: '' }).startsWith('WHO YOU ARE:\nX'));
 

@@ -881,7 +881,7 @@ try {
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=18"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=19"></script>
 <link rel="stylesheet" href="/aesthetics/ui/admin-systems.css?v=3">
 </head>
 <body class="systems-map">
@@ -3303,6 +3303,7 @@ async function loadLeadAlertStatus(){
     if(!r.ok||!j.ok)throw Error(j.error||'Callback notification status unavailable.');
     if(auth!==_idTok)return;
     const warnings=[],scheduled=Date.parse(j.health?.lastScheduledAt||'');
+    if(!j.readiness?.eventConfigured)warnings.push('Immediate Wix callback trigger is not configured.');
     if(!j.readiness?.schedulerConfigured)warnings.push('Automatic callback checks are not configured.');
     else if(!Number.isFinite(scheduled)||Date.now()-scheduled>5*60000)warnings.push('No recent automatic callback check. Verify the dedicated Scheduler job.');
     if(!j.feed?.connected)warnings.push('Callback form feed is unavailable.');

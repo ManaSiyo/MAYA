@@ -161,7 +161,7 @@ only same-origin local pages. Old maya-buttons.css/maya-canon.css are adapters,
 not independent design authorities. Typography offers one preview per role, with validated Jost/Cormorant and
 Normal/ALL CAPS choices. Visuals groups button/icon glass before panel/table
 controls. Preserve old saved schemas and semantic status colors when applying
-shared text settings. Served pages load typography runtime v14.
+shared text settings. Served pages load typography runtime v19.
 Aesthetic Control opens within Admin through aesthetics/ui/admin-design.js; same-origin/source-checked close messages return via its logo. All Edit menus use the shared numeric input/select grid; popup padding has X/Y axes and legacy single-padding reads remain compatible. The fixed table formatting toolbar follows shared inner-panel material. Gallery Filter previews are retired; functional data filters remain. The saved editor material controls actual popups; formatting offers 200–500 weights and italic. Padding debug highlights exist only while a padding field is active. Restore uses the shared Refresh SVG. Run tests/component-gallery.mjs. Table preview cells use a fixed formatting toolbar; body selections edit complete semantic columns. Legacy row styles normalize to column settings without writing on load. The review section itself is the outer panel; never add a wrapper around its inner-panel pair. Every Edit restore returns to its last successful Save. Padding highlights are automatic and preview-only. Role counts are authored-template counts with linked pages and expandable source locations; regenerate with tests/typography-role-usage.py. Design saves atomically include a private audit trail;
 /api/design must strip _history and /api/admin/design-history must stay Admin-gated.
 Padding debug highlights are preview-only, never saved.
@@ -258,3 +258,12 @@ and owner-gated. Reuse verified Scheduler identity; production setup remains
 owner-only. Accepted is not delivered. Never retry claimed/uncertain alerts
 without provider reconciliation. Read docs/CALLBACK-ALERTS.md and run
 tests/lead-alerts.mjs plus communications, app-regression and smoke checks.
+
+October 6 latency/event ingress: docs/server/event-triggers.mjs verifies Wix JWTs,
+enqueues durable Cloud Tasks and accepts authenticated Gmail Pub/Sub events.
+Owner-only setup is in docs/EVENT-TRIGGERS.md; code alone does not activate providers.
+Never acknowledge Wix before durable enqueue. Preserve exact installation/form
+scope, OIDC audience, private mailbox bindings and independent durable SMS/call
+claims. Run tests/event-triggers.mjs, tests/lead-feed-latency.mjs, admin-command,
+CRM intelligence and all communications suites. Raw lead reads bypass AI and
+cache for ten seconds; optional voice context has an explicit unavailable fallback.

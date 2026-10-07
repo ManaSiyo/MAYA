@@ -4,7 +4,7 @@ const files=new Map();let seq=0,texts=0,calls=0;
 const now=Date.parse('2026-09-30T19:00:00Z');
 const store={
   read:async key=>files.has(key)?{ok:true,buf:Buffer.from(JSON.stringify(files.get(key).value)),generation:files.get(key).generation}:{ok:false,status:404},
-  write:async(key,buf,_,expected)=>{assert.equal(expected,files.get(key)?.generation||'0');files.set(key,{value:JSON.parse(buf),generation:String(++seq)});},
+  write:async(key,buf,_,expected)=>{if(expected!==(files.get(key)?.generation||'0'))throw Object.assign(Error('conflict'),{status:412});files.set(key,{value:JSON.parse(buf),generation:String(++seq)});},
 };
 const alerts=createLeadAlerts({...store,now:()=>now,fetchLeads:async()=>({connected:true,list:[
   {id:'new',source:'wix',name:'Nick',ts:'2026-09-30T18:25:49Z',wrote:'A custom suit'},
@@ -78,6 +78,16 @@ const admin=await readFile(new URL('../backend/status.html',import.meta.url),'ut
 const statusFunction=admin.slice(admin.indexOf('let _callbackStatusBusy=false;'),admin.indexOf('async function checkLeadAlerts('));
 const note={style:{},textContent:''};let resolveStatus;
 const context={IS_AFFILIATES:false,_idTok:'owner-a',document:{getElementById:()=>note},Date,fetch:async()=>({ok:true,json:async()=>({ok:true,readiness:{schedulerConfigured:false,smsConfigured:true,voiceConfigured:true,ownerNumberConfigured:true},feed:{connected:true},items:[{name:'Julia',text:'failed',textError:'provider refused',call:'accepted'}]})})};
-runInNewContext(statusFunction,context);await context.loadLeadAlertStatus();assert.match(note.textContent,/not configured/);assert.match(note.textContent,/Julia: text failed/);assert.equal(note.style.display,'block');
+runInNewContext(statusFunction,context);await context.loadLeadAlertStatus();assert.match(note.textContent,/Immediate Wix callback trigger is not configured/);assert.match(note.textContent,/Julia: text failed/);assert.equal(note.style.display,'block');
 context.fetch=()=>new Promise(resolve=>{resolveStatus=resolve;});const late=context.loadLeadAlertStatus();context._idTok='owner-b';const oldText=note.textContent;resolveStatus({ok:true,json:async()=>({ok:true,readiness:{},feed:{},items:[{name:'Other account'}]})});await late;assert.equal(note.textContent,oldText);
 console.log('Concurrent claims, storage failure, persistent uncertainty and account-safe Admin warnings passed.');
+
+// A blocked SMS formatter/provider cannot hold up the independent owner call.
+let releaseText,ringed=false;
+const fast=createLeadAlerts({...parallelStore,now:()=>now,fetchLeads:async id=>({connected:true,list:[{id:'fast',source:'wix',name:'Fast',ts:new Date(now).toISOString()},{id:'unrelated',source:'wix',name:'Unrelated',ts:new Date(now).toISOString()}]}),formatText:()=>new Promise(resolve=>{releaseText=resolve;}),textOwner:async()=>({ok:true}),callOwner:async()=>{ringed=true;return {ok:true};}});
+const running=fast.run({source:'wix-event',submissionId:'fast'});
+for(let i=0;i<50&&!ringed;i++)await new Promise(r=>setTimeout(r,1));
+assert.equal(ringed,true,'Owner rings before SMS formatting resolves');releaseText('Fast');
+assert.equal((await running).checked,1,'Immediate event sends only its verified submission');
+const timing=(await fast.status()).items.find(l=>l.id==='fast');assert.equal(timing.callLeadAgeMs,0);assert.equal(timing.callProviderMs,0);
+console.log('Immediate submission scoping, parallel owner ring and durable dispatch timing passed.');

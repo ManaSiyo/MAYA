@@ -201,12 +201,17 @@ try{
    });
    assert.ok(geometry.left>=Math.max(0,geometry.sectionLeft)&&geometry.right<=Math.min(width,geometry.sectionRight),`${role} popup outside section at ${width}: ${JSON.stringify(geometry)}`);
    assert.ok(geometry.controls.every(r=>r.width>0&&r.left>=geometry.left&&r.right<=geometry.right),`${role} controls outside popup at ${width}`);
+   const readable=await editor.locator('.type-editor-fields label:has(> .format-mark)').evaluateAll(labels=>labels.every(label=>{
+    const control=label.querySelector('select'),r=control.getBoundingClientRect(),parent=label.getBoundingClientRect();
+    return getComputedStyle(label).display==='grid'&&r.width>=Math.min(110,parent.width)-1;
+   }));
+   assert.ok(readable,`${role} icon labels must not collapse selects at ${width}`);
    await editor.locator('[data-field="case"]').selectOption('none');
    if(width===1100&&role==='H1')await page.screenshot({path:'/private/tmp/maya-dropdown-fixed.png'});
    await editor.locator('summary').click();
   }
   await page.locator('#pill-preview > .review-fold').evaluate(e=>e.open=true);
-  const outerEditor=page.locator('.overlay-controls');await outerEditor.locator('summary').click();assert.ok(await outerEditor.locator('.type-editor-fields').evaluate(e=>{const widths=[...e.querySelectorAll(':scope>label')].map(x=>x.getBoundingClientRect().width);return widths.length>2&&Math.max(...widths)<e.getBoundingClientRect().width*.6;}),'Outer fields use the common multi-column grid');
+  const outerEditor=page.locator('.overlay-controls');await outerEditor.locator('summary').click();assert.ok(await outerEditor.locator('.type-editor-fields').evaluate(e=>{const widths=[...e.querySelectorAll(':scope>label')].map(x=>x.getBoundingClientRect().width);const available=e.clientWidth-parseFloat(getComputedStyle(e).paddingLeft)-parseFloat(getComputedStyle(e).paddingRight);return widths.length>2&&widths.every(w=>w>=Math.min(110,available)-1&&w<=available+1)&&(available<232||Math.max(...widths)<available*.6);}),'Outer fields use the common multi-column grid');
   assert.ok(await outerEditor.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect(),a=e.parentElement.querySelector('summary').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&a.left<=r.right&&a.right>=r.left;}),'Outer editor anchor '+width);await page.keyboard.press('Escape');
   for(const id of ['inner','table']){
    const editor=page.locator(`[data-editor="${id}"] .type-editor`);await editor.locator('summary').click();

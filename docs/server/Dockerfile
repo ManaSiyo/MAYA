@@ -9,7 +9,7 @@ COPY model-config.mjs ./
 COPY outbound.mjs ./
 COPY crm-store.mjs crm-gmail.mjs crm-ai.mjs crm-intelligence.mjs ./
 COPY owner-crm.mjs owner-conversation.mjs owner-sms-access.mjs message-archive.mjs ./
-COPY booking-link.mjs lead-alerts.mjs text-automations.mjs ./
+COPY booking-link.mjs lead-alerts.mjs text-automations.mjs event-triggers.mjs ./
 COPY proxy-policy.mjs ./
 COPY admin-command.mjs ./
 COPY fabric-sourcing.js ./

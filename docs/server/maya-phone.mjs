@@ -356,6 +356,11 @@ export function mountMayaPhone(app, server, deps) {
     };
 
     const openAi = () => {
+      // Load owner context while the socket handshakes, rather than after it.
+      // Bound startup; a missing memory must remain explicit in the instructions.
+      const contextStarted=Date.now();
+      const contextPromise=(call.mode==='brief'||call.mode==='admin')&&deps.ownerContext
+        ? Promise.resolve().then(()=>deps.ownerContext(call.from)).catch(()=>null) : Promise.resolve('');
       const url = (deps.openaiUrl || 'wss://api.openai.com/v1/realtime') + '?model=' + encodeURIComponent(deps.model || 'gpt-realtime');
       let ai;
       const WSClient = deps.WebSocketClient || globalThis.WebSocket;
@@ -364,7 +369,7 @@ export function mountMayaPhone(app, server, deps) {
       call.ai = ai;
       ai.addEventListener('open', async () => {
         let ownerContext='';
-        if((call.mode==='brief'||call.mode==='admin')&&deps.ownerContext){let timer;try{ownerContext=await Promise.race([deps.ownerContext(call.from),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Owner context timed out')),3000);})]);}catch{ownerContext='Owner memory is unavailable. Do not claim any stored preference or saved change.';}finally{clearTimeout(timer);}}
+        if((call.mode==='brief'||call.mode==='admin')&&deps.ownerContext){let timer;try{ownerContext=await Promise.race([contextPromise,new Promise(resolve=>{timer=setTimeout(()=>resolve(null),Math.max(0,(deps.contextTimeoutMs??1200)-(Date.now()-contextStarted)));})]);if(ownerContext===null)ownerContext='Owner memory is unavailable. Do not claim any stored preference or saved change.';}finally{clearTimeout(timer);}}
         if(call.done)return;
         const nowLA = new Intl.DateTimeFormat('en-US', { timeZone: process.env.WIX_TZ || 'America/Los_Angeles',
           weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date());
@@ -378,8 +383,8 @@ export function mountMayaPhone(app, server, deps) {
           output_modalities: ['audio'],
           audio: { input: { format: { type: 'audio/pcmu' },
                             transcription: { model: process.env.PHONE_TRANSCRIBE_MODEL || 'gpt-4o-mini-transcribe' },
-                            // v14.33: snappier: she answers 420 ms after the caller stops (was 650)
-                            turn_detection: { type: 'server_vad', silence_duration_ms: Number(process.env.PHONE_VAD_SILENCE_MS || 420), prefix_padding_ms: 200 } },
+                            // End-of-speech detection budget only; model/network latency is measured separately.
+                            turn_detection: { type: 'server_vad', silence_duration_ms: Math.max(250,Math.min(1500,Number(process.env.PHONE_VAD_SILENCE_MS)||300)), prefix_padding_ms: 200 } },
                    output: { format: { type: 'audio/pcmu' }, voice: deps.voice || 'marin' } },
           tools: (call.mode === 'brief' || call.mode === 'admin') ? (deps.ownerControl?[...BRIEF_TOOLS,OWNER_CONTROL_TOOL]:BRIEF_TOOLS) : call.mode === 'client' ? CLIENT_CALL_TOOLS : PHONE_TOOLS, tool_choice: 'auto' } });
         aiSend({ type: 'response.create', response: { instructions: call.mode === 'brief'
@@ -387,6 +392,7 @@ export function mountMayaPhone(app, server, deps) {
           : call.mode === 'admin' ? 'Say "Hey Fromsa, it is Maya. What do you need?" and stop.'
           : call.mode === 'client' ? 'They just picked up. Open exactly as THE CALL says, then the reason in one sentence and your question, then stop.'
           : 'Greet the caller now, exactly as THE CALL says, then listen.' } });
+        log('latency session_ready',call.callSid,Date.now()-contextStarted);
         call.aiReady = true;
         for (const audio of call.earlyAudio.splice(0)) aiSend({ type: 'input_audio_buffer.append', audio });
         try { if (deps.noteSpend) deps.noteSpend(); } catch (_) {}
@@ -394,7 +400,11 @@ export function mountMayaPhone(app, server, deps) {
       ai.addEventListener('message', async (ev) => {
         let m; try { m = JSON.parse(typeof ev.data === 'string' ? ev.data : Buffer.from(ev.data).toString('utf8')); } catch (_) { return; }
         const t = m.type || '';
+        if(t==='input_audio_buffer.speech_stopped'){call.turnStoppedAt=Date.now();call.firstAudioSeen=false;}
+        if(t==='response.created'){call.responseStartedAt=Date.now();call.audioResponseId=m.response?.id||'';call.responseAudioSeen=false;}
         if (t === 'response.output_audio.delta' || t === 'response.audio.delta') {
+          if(m.delta&&!call.responseAudioSeen){call.responseAudioSeen=true;log('latency response_first_audio',call.callSid,Date.now()-(call.responseStartedAt||contextStarted));}
+          if(m.delta&&call.turnStoppedAt&&!call.firstAudioSeen){call.firstAudioSeen=true;log('latency turn_first_audio',call.callSid,Date.now()-call.turnStoppedAt);}
           if (call.streamSid && m.delta) send({ event: 'media', streamSid: call.streamSid, media: { payload: m.delta } });
         } else if (t === 'input_audio_buffer.speech_started') {
           if (call.streamSid) send({ event: 'clear', streamSid: call.streamSid });

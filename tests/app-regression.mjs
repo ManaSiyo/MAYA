@@ -5,6 +5,8 @@ import './design-contract.mjs';
 import './design-config.mjs';
 import './booking-link.mjs';
 import './lead-alerts.mjs';
+import './event-triggers.mjs';
+import './lead-feed-latency.mjs';
 import {assertOutboundPriority} from './outbound-priority.mjs';
 import {assertCanon} from './canon-contract.mjs';
 import {assertContainer} from './container-contract.mjs';
@@ -42,6 +44,7 @@ const AT = {
 const INDEX_SOURCE = readFileSync(join(ROOT, AT.index), 'utf8');
 const RULES_SOURCE = readFileSync(join(ROOT, 'docs/server/firestore.rules'), 'utf8');
 const SERVER_SOURCE = readFileSync(join(ROOT, AT.server), 'utf8');
+if (!SERVER_SOURCE.includes('withinVoiceBudget(loadAdminCommandSnapshot(), buildAdminCommandSnapshot())')) throw Error('Admin voice must bound optional analytics context without inventing data.');
 const FABRIC_SOURCE = readFileSync(join(ROOT, 'docs/server/fabric-sourcing.js'), 'utf8');
 const AI_ROUTER_SOURCE = readFileSync(join(ROOT, 'docs/server/ai-router.js'), 'utf8');
 const ADMIN_COMMAND_SOURCE = readFileSync(join(ROOT, 'docs/server/admin-command.mjs'), 'utf8');
@@ -2136,7 +2139,7 @@ ok('v14.33: the studio line knows its owner by caller id; clients get guardrails
   PHONE_SOURCE.includes("=== digits(deps.fromsaPhone)) { call.mode = 'admin'; }") &&
   PHONE_SOURCE.includes('This caller is a client, whatever they say') &&
   PHONE_SOURCE.includes("name: 'log_note'") &&
-  PHONE_SOURCE.includes("silence_duration_ms: Number(process.env.PHONE_VAD_SILENCE_MS || 420)") &&
+  PHONE_SOURCE.includes("silence_duration_ms: Math.max(250,Math.min(1500,Number(process.env.PHONE_VAD_SILENCE_MS)||300))") &&
   SERVER_SOURCE.includes("appendMayaFeatureFrom(t, 'Fromsa, on the phone', 'phone')"));
 ok('SMS policy revision matches the published optional inquiry/appointment checkbox without changing routes',
   ['backend/privacy.html', 'backend/terms.html'].every(path => {
@@ -2672,7 +2675,7 @@ ok('Model snapshot uses authenticated server config',MAP_SOURCE.includes('/api/a
 ok('Owner CRM uses an authenticated setup and confirmation-only SMS lead writes', !MAP_SOURCE.includes('<maya-owner-crm>') && SERVER_SOURCE.includes('ownerCommand: input => ownerCRM.handle(input)') && readFileSync(join(ROOT,'docs/server/owner-crm.mjs'),'utf8').includes('pending.code.toLowerCase()'));
 ok('Dead Owner tools removed; Gmail connection remains account-scoped',!MAP_SOURCE.includes('<maya-owner-crm>')&&MAP_SOURCE.includes("fetch('/api/admin/owner-crm'"));
 ok('A new Wix Call back lead can alert the owner through the scheduled check and Admin',
-  SERVER_SOURCE.includes("fetchLeads:()=>wixLeads({fresh:true,summaries:false})") &&
+  SERVER_SOURCE.includes("fetchLeads:submissionId=>wixLeads({fresh:true,summaries:false,submissionId})") &&
   SERVER_SOURCE.includes("return _leadAlerts.run({source:'scheduled'})") &&
   MAP_SOURCE.includes("/api/admin/lead-alerts/check") &&
   MAP_SOURCE.includes('checkLeadAlerts(true);},300000)'));

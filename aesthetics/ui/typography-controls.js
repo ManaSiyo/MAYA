@@ -108,7 +108,7 @@
     css+=`html body :is(.maya-icon-button,#menu-toggle,#sync-sheet,#new-campaign){width:var(--maya-control-icon-size)!important;height:var(--maya-control-icon-size)!important;min-width:0!important;padding:0!important}html body :is(select,.lead-filter>summary,.column-filter){min-height:var(--maya-control-dropdown-height)!important}html body .maya-icon-button svg{width:60%;height:60%}`;
     css+=`.maya-glass-button,.maya-pill,#voice-bar{padding-inline:var(--maya-control-pillX,14px);padding-block:var(--maya-control-pillY,6px);}`;
     // Icons center on their row, never on the text baseline. Two independent gaps.
-    css+=`html body :is(button,a,summary,label,h1,h2,h3,.maya-pill,.status-pill):has(>svg){display:inline-flex!important;align-items:center!important;vertical-align:middle;gap:var(--maya-icon-pill-gap);}
+    css+=`html body :is(button,a,summary,h1,h2,h3,.maya-pill,.status-pill):has(>svg),html body label:not(:has(input,select,textarea)):has(>svg){display:inline-flex!important;align-items:center!important;vertical-align:middle;gap:var(--maya-icon-pill-gap);}
 html body :is(.maya-icon-row,.msg-name-edit){display:inline-flex;align-items:center!important;gap:var(--maya-icon-text-gap)!important;vertical-align:middle;}
 html body .maya-icon-row>*{align-self:center!important}html body .maya-icon-row>span{line-height:1}html body .maya-icon-row .lead-filter{margin:0!important;vertical-align:middle;}
 html body :is(.maya-icon-button,.maya-inline-icon,.adm-tab,.msg-rename,.lead-filter>summary){display:inline-flex!important;align-items:center!important;justify-content:center!important;line-height:1;padding-block:0;}

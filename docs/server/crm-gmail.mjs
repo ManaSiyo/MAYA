@@ -26,14 +26,36 @@ export function createGmail(deps) {
   async function oauth(params){const r=await fetcher('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({...params,client_id:config.clientId,client_secret:config.clientSecret}),signal:AbortSignal.timeout(20000)});if(!r.ok)throw problem('Gmail authorization expired or was refused. Reconnect this mailbox.',409);const token=await r.json();if(!token.access_token)throw problem('Gmail authorization returned no access token. Reconnect.',409);return token;}
   async function request(token,path,body){const r=await fetcher('https://gmail.googleapis.com/gmail/v1/users/me/'+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+token,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(20000)});if(!r.ok)throw problem('Gmail request failed ('+r.status+').',r.status===404?404:502);return r.json();}
   async function access(uid,id){if(!ready())throw problem('Gmail server setup is not complete.',503);const {value}=await db.get(credentials(uid),{mailboxes:{}}),entry=value.mailboxes[id];if(!entry)throw problem('Connect this Gmail mailbox first.',409);const secret=unseal(entry.secret,uid),token=await oauth({grant_type:'refresh_token',refresh_token:secret.refreshToken});return {token:token.access_token,entry};}
+  const watchKey=mail=>'private/outbound/gmail-watch/'+hash(email(mail))+'.json';
+  async function registerWatch(uid,id,topic,provided){
+    if(!/^projects\/[a-z0-9-]+\/topics\/[A-Za-z][\w.-]*$/.test(topic||''))throw problem('Gmail push topic is not configured.',503);
+    const {token,entry}=provided||await access(uid,id);
+    await db.update(watchKey(entry.email),s=>{s.bindings||={};s.bindings[uid+':'+id]={uid,id,connectedAt:entry.connectedAt};});
+    const result=await request(token,'watch',{topicName:topic,labelIds:['INBOX'],labelFilterBehavior:'INCLUDE'});
+    if(!/^\d+$/.test(result.historyId||'')||!Number.isFinite(Number(result.expiration))||Number(result.expiration)<=Date.now())throw problem('Gmail returned an invalid watch.',502);
+    // Register the private mapping before acknowledging setup. Watch historyId
+    // is not a sync cursor: replacing the saved cursor would skip unread mail.
+    await db.update(credentials(uid),s=>{const current=s.mailboxes?.[id];if(current?.connectedAt!==entry.connectedAt)throw problem('Mailbox changed during watch setup.',409);current.watch={topic,expiration:Number(result.expiration)};});
+    return {expiration:Number(result.expiration)};
+  }
   return {
     ready,
+    watch:registerWatch,
+    async watchBindings(mail){
+      const {value}=await db.get(watchKey(mail)),active=[];
+      for(const binding of Object.values(value.bindings||{})){
+        const {value:credentialsValue}=await db.get(credentials(binding.uid),{mailboxes:{}}),entry=credentialsValue.mailboxes?.[binding.id];
+        if(entry&&entry.email===email(mail)&&entry.connectedAt===binding.connectedAt)active.push(binding);
+      }
+      return active;
+    },
     async list(uid){const {value}=await db.get(credentials(uid),{mailboxes:{}});return Object.values(value.mailboxes).map(({id,email,connectedAt})=>({id,email,connectedAt}));},
     async begin(uid){if(!ready())throw problem('Gmail needs server OAuth configuration before it can connect.',503);const state=randomBytes(32).toString('hex');await db.update('private/outbound/oauth/'+hash(state)+'.json',s=>Object.assign(s,{uid,expires:Date.now()+600000,used:false}));const url=new URL('https://accounts.google.com/o/oauth2/v2/auth');url.search=new URLSearchParams({client_id:config.clientId,redirect_uri:config.redirectUri,response_type:'code',scope:SCOPES.join(' '),access_type:'offline',prompt:'consent select_account',state}).toString();return url.toString();},
     async callback(state,code){if(!ready()||!/^\w{64}$/.test(state||'')||!code)throw problem('Invalid Gmail authorization.');const {result:uid}=await db.update('private/outbound/oauth/'+hash(state)+'.json',s=>{if(!s.uid||s.used||s.expires<Date.now())throw problem('Gmail authorization expired. Start again.');s.used=true;return s.uid;});const token=await oauth({code,grant_type:'authorization_code',redirect_uri:config.redirectUri});if(!token.refresh_token||!SCOPES.every(s=>(token.scope||'').split(' ').includes(s)))throw problem('Approve Gmail read and send access, then reconnect.');const profile=await request(token.access_token,'profile'),mail=email(profile.emailAddress);if(!mail)throw problem('Gmail did not identify this mailbox.');const id=hash(mail).slice(0,24);await db.update(credentials(uid),s=>{s.mailboxes||={};if(!s.mailboxes[id]&&Object.keys(s.mailboxes).length>=2)throw problem('Two mailboxes are already connected. Disconnect one first.');s.mailboxes[id]={id,email:mail,connectedAt:new Date().toISOString(),secret:seal({refreshToken:token.refresh_token},uid)};});return {uid,id,email:mail};},
     async disconnect(uid,id){await db.update(credentials(uid),s=>{delete s.mailboxes?.[id];});},
     async sync(uid,mailbox,cursor={}) {
       const {token,entry}=await access(uid,mailbox.id);if(entry.connectedAt!==mailbox.connectedAt)throw problem('Mailbox changed. Retry sync.',409);
+      if(entry.watch&&entry.watch.expiration<Date.now()+86400000)await registerWatch(uid,mailbox.id,entry.watch.topic,{token,entry});
       let next={...cursor},response,ids;
       if(next.pendingIds?.length){ids=next.pendingIds;next=next.afterPending;}
       else if(!next.historyId){

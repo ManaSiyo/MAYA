@@ -210,4 +210,5 @@ export function mountOutbound(app,deps) {
     // Return a reviewable draft; saving is explicit and cannot overwrite concurrent edits.
     res.json({ok:true,draft:{subject:text(draft.subject,200),body:text(draft.body,12000)},model:deps.model});
   }));
+  return intelligence;
 }

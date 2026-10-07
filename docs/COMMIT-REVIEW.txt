@@ -1,17 +1,32 @@
-[Codex] Simplify Latest Notes to Save and Cancel
+[Codex] Add immediate event ingress and reduce MAYA latency
 
-Remove the Dictate button and its speech-recognition lifecycle from the inline
-Latest Notes editor. Keep Save and Cancel, preserve Enter as keyboard Save,
-and discard unsaved drafts on outside clicks or Escape. Remove automatic
-blur-save. Detach outside handlers on close/session changes. Preserve failed
-Save drafts and allow already-started saves to finish without duplicate writes.
+Wix callback webhooks verify RS256 signatures, exact app installation and callback
+form, enqueue named durable Cloud Tasks before acknowledgement and fetch the exact
+saved submission in an authenticated worker. Ring/SMS dispatch independently with
+separate durable claims, bounded formatting and dispatch/provider/lead-age timing.
 
-Validation: four-width lead-notes UI checks prove exact actions, Cancel and
-outside-click discard with zero writes, no blur save, and explicit successful/
-failed persistence. Full app-regression, local server smoke, admin-wake and
-maya-phone/messages/transfer/feedback passed with fake providers/recognition.
-Regenerated typography locations after removing the button; diff check clean.
+Add owner-authenticated Gmail watch registration, private mailbox bindings,
+authenticated Pub/Sub ingress and mailbox-only CRM sync. Preserve history cursors,
+account isolation, leases, replays and hourly reconciliation. No automatic client
+sending. Owner-controlled provider setup documented in EVENT-TRIGGERS.md.
 
-No personal Chrome, microphone, live calls/messages or production configuration
-accessed. Local commit only; no push/deploy. The preceding callback repair in
-9f68d17 also remains local and needs owner deployment/Scheduler activation.
+Remove optional AI summary waits from ordinary lead/contact reads, use a short
+raw cache and callback invalidation. Bound optional web voice context; overlap
+phone memory with socket setup, bound startup and reduce end-of-speech wait.
+Keep verified cost-first model defaults and images; add truthful latency logs.
+
+Fix SVG form labels shrinking Color/Alignment fields. Shared runtime v19 and
+responsive readable popup grids apply across served pages. Add regression tests,
+Docker/runtime packaging and owner-visible setup warnings; update handoff/runbooks.
+
+Validation: all 35 Cloud Build test commands; complete app-regression; real local
+server smoke with event/auth guards; 11-width gallery/readability and screenshot
+review; 7-width Outbound/lead menus; 4-width note/drawer checks; communications,
+CRM intelligence/UI/failure, hands, design/container/release checks passed. Final
+callback and Admin voice-context fixtures rerun after last changes. Fake providers,
+isolated Chromium; no personal Chrome, live sends, credentials/billing/env changes.
+
+Not pushed. Owner must Push, verify exact deployed commit, configure Wix/Tasks/
+Gmail push and Scheduler reconciliation, then verify real owner SMS/call/email.
+No live response-time benchmark or carrier delivery certification. Cold starts,
+provider outages and missing scheduled renewal remain operational limitations.

@@ -236,3 +236,8 @@ October 5 drawer and note editing: Latest Notes opens a textarea inside the clic
 Automations opens a drawer view from Systems, beside Aesthetic Control. First and second text examples, triggers, earliest Los Angeles draft time and follow-up wait days persist privately for the signed-in owner. These are review-only draft rules, not scheduled client sends. Opening Messages can show an AI idea grounded in the selected lead and recent texts; Use draft appends it without overwriting existing text, and only Send invokes the SMS provider. STOP/blocked contacts, ambiguous leads, replies and two existing outgoing texts suppress suggestions. Automation cards share Inner panel material.
 
 October 5 statuses and icon audit: Leads offers Not contacted, Contacted, In progress, Booked, Completed and Cancelled. Completed persists for manual/Wix leads and owner commands, uses existing green pill material, and is available in filters. No new duplicate color pill is added. Settings preview uses the same gear silhouette as live Status. Drawer preview no longer fabricates AI usage; it contains a working Aesthetic Control action. All previews remain style samples whose shared controls affect real UI, not claims of live data or provider activity. Runtime v18/gallery v31 ship these controls across served pages.
+
+October 6: runtime v19 excludes form labels from generic SVG flex centering.
+Editor labels retain their grid; fields use responsive columns with a 110px
+readable minimum when available, including saved large popup X/Y padding.
+Icon centering still applies to actions and text labels without form fields.
