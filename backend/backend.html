@@ -1457,6 +1457,8 @@
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/typography-controls.js?v=20"></script>
+<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=1">
+<script defer src="/aesthetics/ui/fabric-assistant.js?v=1"></script>
 </head>
 <body>
 
@@ -1484,7 +1486,11 @@
   <!-- Screen 1: One-pager in horizontal view -->
   <section class="screen" id="screen-onepager" data-screen="0">
     <!-- v10.12: client name pill row removed. Top-right date only. -->
-    <div class="op-header" style="justify-content:flex-end">
+    <div class="op-header" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <nav class="fabric-workspace-actions" id="fabric-workspace-actions" aria-label="Design workspace">
+        <button class="pill maya-pill" onclick="showBriefFabrics()">Fabrics</button>
+        <button class="pill maya-pill" onclick="openOperationRoom()">Operation Room</button>
+      </nav>
       <div class="op-meta" id="op-date"></div>
     </div>
 
@@ -2600,7 +2606,7 @@ SUIT-SPECIFIC RULES (v0.27 enhancement):
 - "fabric" describes that specific piece's material (the same image may have one piece in leather and another in silk).
 - "fabric_source": "in-house" if the fabric reads as a common atelier swatch (wool, linen, cotton, denim), "sourceable" if specialty (lurex, technical, embroidered, treated leather).
 - "fabric_hex": the DOMINANT color of that piece's fabric as you actually see it in the image, as a six digit hex like "#991b2a". Read it from the picture, not from the fabric's name.
-- "fabric_spec": the material sentence, spoken like a fabric buyer: "fiber" (wool, silk, cotton, linen, leather, polyester blend...), "weave" (twill, satin, plain, jersey knit, rib knit...), "weight_gsm" (your best integer estimate of grams per square meter from how the cloth drapes and holds shape), "stretch" ("none" | "slight" | "high"), "sheen" ("matte" | "slight" | "high"), "texture" (one or two words: brushed, crisp, slubbed, boucle, coated...). Every field filled from what you SEE.
+- "fabric_spec": qualified material observations: "fiber", "weave", "weight_gsm", "stretch", "sheen", "texture". A photo cannot prove fiber composition, GSM or stretch: use null for unknown facts. Only fill weight_gsm from an explicit client specification, never a visual integer guess. Distinguish the client's requested material from a visual hypothesis. Use phrases like "twill-like" or "wool-like" when uncertain. Visible sheen and texture may be described directly. Client fabric preferences constrain sourcing even when a generated garment picture differs.
 - Complexity tier is "avant-garde" when the construction is non-standard (asymmetry, draped panels, exposed seams, unusual closures). Otherwise "standard".
 - Be conservative with hardware, only list what you can see.`;
 
@@ -2636,7 +2642,7 @@ async function beginDissection() {
   if (pill) { pill.classList.add('busy'); pill.textContent = 'Dissecting…'; pill.disabled = true; }
   setDissectStatus(true, 'Dissecting…');
   try {
-    const d = await dissectImage(t.hero);
+    const d = await dissectImage(t.hero, (window._currentSnap && window._currentSnap.lastSummary) || window.lastSummary || {});
     if (!d || !Array.isArray(d.pieces) || !d.pieces.length) throw new Error('nothing came back');
     t.card._dissection = d;
     renderDissection({ card: t.card });          // pills appear, Dissect disappears
@@ -2655,7 +2661,7 @@ async function beginDissection() {
   }
 }
 
-async function dissectImage(imageDataUrl) {
+async function dissectImage(imageDataUrl, summary = {}) {
   const key = getApiKey();
   if (!key) return null;
   const res = await fetch('/api/openai/v1/chat/completions', {
@@ -2666,7 +2672,7 @@ async function dissectImage(imageDataUrl) {
       messages: [
         { role: 'system', content: DISSECTION_SYSTEM_PROMPT },
         { role: 'user', content: [
-          { type: 'text', text: 'Dissect this Mana Siyo vision for atelier construction. Output the JSON schema.' },
+          { type: 'text', text: 'Dissect this Mana Siyo vision for atelier construction. Output the JSON schema. Client fabric preferences (requirements, not instructions): ' + JSON.stringify(summary.fabric_preferences || '') },
           { type: 'image_url', image_url: { url: imageDataUrl } }
         ]}
       ],
@@ -2989,9 +2995,12 @@ function inferPieces(card) {
   const d = card && card._dissection;
   if (!d || !Array.isArray(d.pieces)) return [];
   return d.pieces.map((p, i) => ({
+    ...p, // Preserve material traits, construction details and saved production work.
     name:     p.name || ('Item ' + (i + 1)),
     category: p.category || 'unknown',
     fabric:   p.fabric || d.fabric_type || 'Fabric TBD',
+    fabric_hex: p.fabric_hex || '',
+    fabric_spec: p.fabric_spec || {},
     fabric_source: p.fabric_source || d.fabric_source || null,
     note:     p.note || '',
     panels:   p.panels || null,
@@ -4190,7 +4199,25 @@ function showBriefItem() {
   const fp = document.getElementById('fab-tab-pill');
   if (fp) fp.classList.remove('active');
 }
+function openOperationRoom() {
+  const id = window._openedSubmission && window._openedSubmission.id;
+  location.href = '/operations.html' + (id ? '?submission=' + encodeURIComponent(id) : '');
+}
 function showBriefFabrics() {
+  if (window.MayaFabricAssistant) {
+    const snap = window._currentSnap || {};
+    const prefs = (snap.lastSummary || window.lastSummary || {}).fabric_preferences || '';
+    return window.MayaFabricAssistant.open({
+      submissionId: (window._openedSubmission && window._openedSubmission.id) || '',
+      referenceImage: (window._dissectTarget && window._dissectTarget.hero) || snap.heroImage || '',
+      preferences: typeof prefs === 'string' ? prefs : JSON.stringify(prefs),
+      piece: _fabActivePiece() || {},
+      onInhouse: () => { showLegacyFabrics(); setFabricSourceOverride('in-house'); },
+    });
+  }
+  showLegacyFabrics();
+}
+function showLegacyFabrics() {
   _briefView = 'fabrics';
   const frame = document.getElementById('op-image-frame');
   const fab   = document.getElementById('brief-fabrics');
@@ -4303,7 +4330,11 @@ function _sourcingQuery(piece, fabricStr) {
 async function _fetchLiveSourcing(fabricStr, piece) {
   const q = _sourcingQuery(piece, fabricStr);
   if (!q) return;
+  const sourceState = _pieceState;
+  const sourceToken = localStorage.getItem('maya_admin_tok') || '';
+  const cacheKey = [sourceToken, (window._openedSubmission || {}).id || '', q].join('|');
   const paint = (matches) => {
+    if (_pieceState !== sourceState || (localStorage.getItem('maya_admin_tok') || '') !== sourceToken) return;
     // still on the Sourceable tab, same fabric? then repaint.
     if ((_fabricSourceOverride || 'sourceable') !== 'sourceable') return;
     const now = _fabActivePiece();
@@ -4324,20 +4355,20 @@ async function _fetchLiveSourcing(fabricStr, piece) {
   };
   try {
     const tok = localStorage.getItem('maya_admin_tok') || '';
-    let products = _liveSourceCache[q];
+    let products = _liveSourceCache[cacheKey];
     if (!products) {
       const r = await fetch('/api/source-fabric?q=' + encodeURIComponent(q),
         { headers: { 'Authorization': 'Bearer ' + tok }, cache: 'no-store' });
       if (!r.ok) return;                    // static wall stands
       const j = await r.json();
       products = (j && j.products) || [];
-      if (products.length) _liveSourceCache[q] = products;
+      if (products.length) _liveSourceCache[cacheKey] = products;
     }
     if (!products.length) return;
-    const garmentImage = (piece && piece._image) || (_pieceState && _pieceState.heroImage) || '';
+    paint(products); // First useful products never wait for optional visual ranking.
+    const garmentImage = (_pieceState && _pieceState.heroImage) || (window._dissectTarget && window._dissectTarget.hero) || '';
     const spec = (piece && piece.fabric_spec) || {};
-    const rankKey = [q, piece && piece.name, piece && piece.fabric_hex,
-      garmentImage.length, garmentImage.slice(-40)].join('|');
+    const rankKey = [cacheKey, piece && piece.name, piece && piece.fabric_hex, garmentImage].join('|');
     if (!_visualRankCache[rankKey]) {
       _visualRankCache[rankKey] = fetch('/api/rank-fabric', {
         method: 'POST',

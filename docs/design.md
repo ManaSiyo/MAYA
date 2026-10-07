@@ -128,6 +128,12 @@ roles and material. Dense tables and menus stay legible. Keep account and
 project data sealed, and maintain existing integration/auth behavior. Page
 layout and content can differ; typography and shared controls do not.
 
+The shared Fabrics dialog in Brief/Operation Room uses Outer surface material,
+Inner product cards, shared pills and H2/H3/P1 roles. One composer accepts text,
+photo or explicit dictation. Initial results remain visible during discovery;
+the lookbook shares the same dialog. Seller facts and qualified visual matching
+are separate text. Missing product photos have no generated replacement.
+
 ## Implementation and verification
 
 The preview lives in `aesthetics/aesthetic-control.html` with support files in `aesthetics/aesthetic-control/`; shared components and tokens in

@@ -107,6 +107,9 @@ await check('admin subfile needs a token',        get('/api/admin/subfile?id=abc
 await check('savepieces needs a token',           post('/api/admin/savepieces'), 401);
 await check('analytics needs a token',            get('/api/admin/analytics'), 401);
 await check('fabric sourcing needs a token',      get('/api/source-fabric?q=wool'), 401);
+await check('conversational fabric search needs a token', post('/api/admin/fabrics/search', { headers: { 'Content-Type':'application/json' }, body:'{}' }), 401);
+await check('fabric lookbook read needs a token', get('/api/admin/fabrics/lookbook?submissionId=project-A'), 401);
+await check('fabric lookbook save needs a token', post('/api/admin/fabrics/lookbook', { headers: { 'Content-Type':'application/json' }, body:'{}' }), 401);
 await check('fabric ranking needs a token',       post('/api/rank-fabric', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
 await check('fabric visualizing needs a token',   post('/api/visualize-fabric', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
 await check('marketing brief needs a token',      post('/api/admin/marketing-brief', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);

@@ -35,6 +35,7 @@ steps:
         node tests/canon-contract.mjs
         node tests/ai-routing.mjs
         node tests/fabric-sourcing.mjs
+        node tests/fabric-search.mjs
         node tests/admin-command.mjs
         node tests/admin-ui-contract.mjs
         node tests/admin-wake.mjs
@@ -58,6 +59,7 @@ steps:
           node tests/maya-hands-smoke.mjs
           node tests/outbound-ui.mjs
           node tests/lead-notes-ui.mjs
+          node tests/fabric-search-ui.mjs
           node tests/crm-ui.mjs
           node tests/crm-failure-ui.mjs
           node tests/canon-ui.mjs

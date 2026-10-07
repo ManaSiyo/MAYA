@@ -1190,11 +1190,11 @@ ok('the sourcing study lives in docs',
   existsSync(join(ROOT, 'docs/fabric-sourcing-study.md')) &&
   readFileSync(join(ROOT, 'docs/fabric-sourcing-study.md'), 'utf8').includes('SWATCHON'));
 // ── v13.50: the live merchant window ───────────────────────────────────────
-ok('the server asks real merchants and seeds the catalog',
+ok('legacy merchant searches retain real feeds without sharing private queries',
   SERVER_SOURCE.includes("app.get('/api/source-fabric'") &&
   SERVER_SOURCE.includes('const SOURCE_MERCHANTS') &&
   SERVER_SOURCE.includes('search/suggest.json') &&
-  SERVER_SOURCE.includes("gcsPut('catalog/queries/"));
+  !SERVER_SOURCE.includes("gcsPut('catalog/queries/") && SERVER_SOURCE.includes("user.sub + '|' + q.toLowerCase()"));
 // v13.76: the sourceable wall fills from live merchant photos, not color
 // swatches; the static color wall was dropped per Fromsa.
 ok('the sourceable wall fills from live merchant photos',
@@ -2801,5 +2801,8 @@ ok('Messaging preserves names, newer drafts, session privacy and unseen arrivals
 ok('Hidden drawer polling cannot mark unseen messages read',MAP_SOURCE.includes('if (_msgOpen&&visible) loadThread'));
 ok('Messages shares typography and popup styling',ownerDesignRuntime.includes(':where(#msg-share-menu)')&&ownerDesignRuntime.includes('.bub,:where(#msg-input)'));
 ok('Messages exposes archived history',MAP_SOURCE.includes('async function msgLoadOlder()'));
+await import('./fabric-search.mjs');
+await import('./fabric-search-ui.mjs');
+ok('Fabric search preserves material context, streams products, and seals saved lookbooks',true);
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

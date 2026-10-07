@@ -1,80 +1,78 @@
-# Current handoff — October 6, 2026
+# Current handoff — October 7, 2026
 
-## Latest request and deployment state
+## Current request
 
-Fromsa requested a messaging/MAYA/CSS robustness audit, responsive phone/iPad/
-desktop checks, shared aesthetics everywhere, and provider verification. Outbound,
-Playground and Affiliates functionality is excluded; shared style regression gates
-still run. Fresh personal MAYA Chrome approval was requested and remains pending.
-No Chrome profile was accessed. No push, live send, credentials, production env
-or billing changes occurred.
+Fromsa approved implementation of the backend/fabric audit: one conversational
+photo/text search, original reference plus client preferences, local shops and
+Amazon discovery, accurate seller descriptions, faster results and a shared
+project lookbook in Brief/Operation Room. No push, production configuration,
+credentials, billing, live model calls or personal Chrome access occurred.
 
-Public verify-live found production e82b2072dd7b203acbc870a6de0863a19559ad8b,
-while origin/maya-v2 is 71c9ce9939e4f64ffa3f0e4c244a542fe67456c3. Both carry
-14.40, so version equality does NOT establish a deployment. Investigate Cloud
-Build before declaring the earlier event/latency shipment live.
+## Prepared locally
 
-## Local audit fixes
-
-- backend/status.html: common known-name resolution for inbox/conversation;
-  reject phone strings/Caller placeholders, preserve newer drafts during send,
-  guard list/thread responses by auth and request sequence, preserve unchanged
-  transcript DOM/open state, load earlier archived history in 100-message pages.
-  Hidden drawer/background polling no longer reads/marks a conversation read.
-- docs/server/maya-messages.mjs: durable account/request-bound send claims before
-  provider calls, replay receipts, no automatic retry after uncertain outcomes,
-  explicit 1,600-character rejection instead of truncating reviewed drafts.
-  Read acknowledgements preserve concurrent arrivals. History pagination never
-  marks read. Signed owner reply callbacks bind the real SMS SID and status.
-- docs/server/owner-conversation.mjs and server.js: optional conversational
-  context budget 800ms; browser voice/remember/forget share account-bound owner
-  memory with SMS/phone. Legacy memory is preserved, now fails closed on invalid/
-  unavailable reads and uses generation preconditions for writes. No automatic
-  migration of the legacy global notebook into individual owner accounts.
-- Shared typography runtime v20: messages/composer P1, timestamps P4, Share menu
-  follows saved popup material/XY padding, expanded transcripts use Inner panel
-  material instead of an enormous pill. Low-specificity composer selector keeps
-  table formatting authoritative. All served references bumped, usage regenerated.
-  Composer/name/transcript flex bounds and long-text wrapping repaired.
+- aesthetics/ui/fabric-assistant.{js,css}: shared responsive dialog; typed,
+  pasted/uploaded photo and optional explicit dictation input; six-turn refinement;
+  first results while searching; truthful errors; account/context abort guards;
+  Save/Use for design/Remove with a private submission lookbook. Shared Outer,
+  Inner, pill and typography roles. Actions sit below the fixed mobile header.
+- docs/server/fabric-search.mjs: Admin-only NDJSON search and GET/POST lookbook;
+  one bounded Responses web-search request on existing configured model/key,
+  parallel initial retailer feeds, source-backed URLs and deterministic seller
+  parsing. Britex/Stonemountain/Harts/Amazon plus four existing shops. Exact-host
+  redirects, size/time limits, no private query cache, stock/unit/variant checks,
+  explicit unknowns for blocked listings, CAS writes per account/submission.
+- backend/backend.html: preserve dissection traits and construction fields,
+  pass client fabric preferences, stop requiring invented GSM/fiber/stretch,
+  prefer original garment image, paint legacy results before ranking and isolate
+  its browser caches. Fabrics works before dissection. Operation Room link carries
+  the selected submission ID; in-house/legacy migration paths remain.
+- backend/operations.html: restore that submission's garment and saved material
+  without running AI or using sample garments. Shared fabric selection informs
+  the existing grounded pattern prompt; account changes clear the private input.
+  This does not certify pattern fit, sewability or laser readiness.
+- Server registration/container packaging, two new release gates and behavioral
+  app-regression/smoke coverage. Generated typography locations refreshed.
+  FABRIC-SEARCH.md documents architecture, limitations and ten owner eval cases.
 
 ## Validation
 
-All 35 Cloud Build gates passed during this audit, with final affected tests rerun
-following the last changes. Full app-regression and local server smoke passed.
-Gallery: eleven widths/all popup and field bounds, save/reload. Messages: nine
-widths (320–1920), names, archive loading, preserved transcripts, saved typography,
-Share material, composer overflow; screenshot reviewed. Communications suites use
-fake providers; memory/read/send/session races have new behavioral fixtures in
-message-races.mjs. Owner forget remains account isolated. See COMMIT-REVIEW.txt.
+All 37 Cloud Build test suites passed, along with full app-regression and server
+smoke (39 suite invocations), and the exact syntax checks. Affected fabric/app
+tests were rerun after the final changes. New tests execute the real dissection
+handoff and prove first paint before ranking, combined input/refinement, cited
+URL validation, seller variant/unit/stock correctness, retry, account/project
+isolation, CAS conflicts, stale UI responses, cross-screen selection and six
+viewport sizes. Isolated headless Chromium/fake providers only. Desktop/phone
+screenshots were inspected; microphone recognition itself was not exercised.
 
-Official OpenAI latency guidance supports removing optional blocking work. Keep
-current configured model choices; no unsupported model rename or premium tier
-was introduced. Actual carrier/voice p50/p95 and authenticated Gmail/Gemini
-inference have NOT been measured in this audit. Fabric, AI routing and CRM
-connection failure fixtures passed; these do not establish live provider health.
+Public real listing checks: Britex's $3 swatch is distinguished from $69.99 USD
+per yard on the brushed wool listing; Stonemountain's burgundy melton is excluded
+as out of stock. These checks do not prove every merchant feed or live AI health.
+No private client example or paid inference was used.
 
-## Open risks / exact next step
+## Exact next step / remaining limits
 
-1. Owner Push only when ready; investigate why 71c9ce9 is absent from production.
-   Verify exact release.json commit and both deployed pages after Cloud Build.
-2. Approve a fresh MAYA Chrome session to inspect authenticated connection state,
-   deployment history and actual saved styling; never infer live health from mocks.
-3. Prior immediate Wix/Tasks/Gmail/Scheduler setup remains owner-controlled. Follow
-   EVENT-TRIGGERS.md. Missing setup cannot be solved by a model upgrade.
-4. Real owner SMS reply/delivery callback and owner phone/browser memory checks
-   after deployment. Historical synthetic SMS IDs cannot be retroactively recovered
-   without carrier records. A callback arriving after its synthetic reply archived
-   still needs archive SID reconciliation; current binding covers live records.
-5. Send ledger fails closed at 10,000 requests, with no unsafe claim eviction.
-   Add archival before this capacity is reached. Older cached send clients must
-   reload once: send request IDs are now required. Uncertain sends stay nonretryable;
-   never blindly retry or certify delivery without carrier evidence.
-6. Legacy global memory remains for existing MCP compatibility. Review a scoped
-   migration with Fromsa before deleting it; old facts are not implicitly copied
-   into every owner's private memory. No data was flushed or deleted.
+1. Owner reviews the local commit then Pushes when ready. The prior messaging/UI
+   commit c09328e was already local and unpushed before this task. Do not push
+   automatically. Verify Cloud Build, release.json and both deployed build stamps
+   against the pushed HEAD; Vercel success or version 14.40 alone is insufficient.
+2. After deployment, run an authenticated description/photo search and saved
+   lookbook round trip, then compare the same owner-approved ten cases with
+   ChatGPT using FABRIC-SEARCH.md. Live OpenAI tool compatibility, actual relevance,
+   latency and dictation need owner verification. No claim of ChatGPT parity.
+3. Amazon uses web discovery, not an Associates/Creators API integration. Retailers
+   can block verification; those cards state unknown facts. Britex's store-only
+   inventory is not searchable here. No pickup/arrival date is invented.
+4. Existing event/Tasks/Gmail/Scheduler setup remains owner-only (EVENT-TRIGGERS.md).
+   The October 6 audit reported production e82b207 while origin was 71c9ce9; that
+   deployment discrepancy was not rechecked here. Its live SMS/voice verification,
+   archived synthetic reply SID reconciliation, 10,000-send ledger capacity and
+   scoped legacy memory migration remain open. None of that work was removed.
 
-## Standing constraints
+## Standing boundaries
 
-No automatic pushes. Local verified commits authorized. Sealed accounts/projects,
-raw SMS SEND approvals, STOP/block gates, archives and migration paths preserved.
-Only Fromsa handles credentials, billing and production environment configuration.
+Only Fromsa handles production credentials, billing and environment settings.
+Fresh explicit permission is required for each personal Chrome session; none was
+used. Private accounts/projects, explicit SMS SEND gates, STOP/block rules,
+archives and legacy migration paths remain intact. Local verified commits are
+authorized; pushes are not.

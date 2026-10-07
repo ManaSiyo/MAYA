@@ -13,6 +13,7 @@ COPY booking-link.mjs lead-alerts.mjs text-automations.mjs event-triggers.mjs ./
 COPY proxy-policy.mjs ./
 COPY admin-command.mjs ./
 COPY fabric-sourcing.js ./
+COPY fabric-search.mjs ./
 COPY ai-router.js ./
 COPY design-config.mjs ./
 COPY maya-mcp.mjs ./

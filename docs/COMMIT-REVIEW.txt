@@ -1,21 +1,27 @@
-[Codex] Harden messaging and unify saved UI settings
+[Codex] Add conversational fabric search and sealed lookbooks
 
-Resolve known contact names consistently, preserve drafts and expanded transcripts,
-guard stale session responses, expose earlier history, and stop hidden conversation
-polls from clearing unread messages. Prevent duplicate dashboard sends with durable
-request claims and reject oversized drafts without truncation. Bind signed owner
-reply callbacks to carrier IDs. Share owner memory across browser voice/SMS/phone;
-fail closed on legacy memory reads and version writes; bound optional chat context.
+Let the designer describe fabric, provide a photo, or combine them without
+dissection. Share one fabric assistant between Brief and Operation Room, preserve
+submission material intent and original reference, and retain extracted traits.
+Stream initial retailer results while bounded OpenAI web discovery checks Britex,
+Stonemountain, Harts, Amazon and other supported shops. Accept only source-backed
+URLs; derive facts from seller pages, distinguish swatches/yardage and known
+out-of-stock listings, and label unverified prices/availability explicitly.
 
-Apply saved typography to message text/composer/timestamps, dropdown material to
-Share and Inner material to expanded transcripts. Fix responsive flex overflow,
-bump shared runtime v20 on all served pages, regenerate typography locations.
+Save and select fabrics per authenticated account/submission with generation
+preconditions. Restore the submitted garment and selected material in Operation
+Room without spending on AI or loading sample garments. Keep client inputs out
+of shared caches and reject stale account/project UI responses. Preserve legacy
+in-house/migration paths; include the new server module in the container.
 
-Validation: all 35 release gates, complete app-regression, local smoke, 11-width
-component gallery, 9-width messaging checks, communications and memory/send/session
-race tests. Isolated Chromium/fake providers only. No live sends or personal Chrome.
+Validation: all 37 Cloud Build suites plus full app-regression and local server
+smoke passed; affected tests rerun after final changes. Eleven focused behavioral
+checks, six responsive viewports, inspected desktop/phone screenshots, public
+Britex price/variant and Stonemountain stock parser checks. Isolated Chromium and
+fake providers only; no personal Chrome, private client eval or paid inference.
 
-Not pushed. Live still reports e82b207 while origin is 71c9ce9. Provider verification
-and deployment investigation await fresh Chrome approval. Owner event/provider
-configuration remains required. Send ledger has a safe 10,000-request capacity;
-legacy memory migration and archived synthetic reply SID reconciliation remain open.
+Remaining: owner Push/deployment verification, authenticated live search and
+lookbook acceptance, ten-case ChatGPT comparison and real dictation check.
+Amazon is web discovery; blocked sellers retain source links with unknown facts.
+No new credentials, production settings, automatic sends or pushes. Previous
+unrelated messaging/UI work at c09328e is preserved.

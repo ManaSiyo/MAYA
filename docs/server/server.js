@@ -31,6 +31,7 @@ import { mountOutbound } from './outbound.mjs';
 import { createGmail } from './crm-gmail.mjs';
 import {createEventQueue,mountEventTriggers} from './event-triggers.mjs';
 import {createTextAutomations} from './text-automations.mjs';
+import { mountFabricSearch } from './fabric-search.mjs';
 import { createCrmAI } from './crm-ai.mjs';
 import { createMessageArchive } from './message-archive.mjs';
 import { createOwnerSMSAccess } from './owner-sms-access.mjs';
@@ -2239,14 +2240,19 @@ app.post('/api/admin/savepieces', requireAuthHeader, express.json({ limit: '30mb
   }
 });
 
-// ── v13.50: /api/source-fabric, the live merchant window ───────────────────
+mountFabricSearch(app, { requireAdmin, requireAuthHeader, json: express.json,
+  rateLimit, read: gcsGet, write: gcsPut, apiKey: () => process.env.OPENAI_API_KEY,
+  model: process.env.MODEL_TERRA || TEXT_MODEL });
+
+// ── v13.50: /api/source-fabric, the legacy merchant window ────────────────
 // The Brief asks with the dissected fabric string; this endpoint asks a
 // handful of retail fabric merchants' own public Shopify search feeds, in
 // parallel, and returns real products with real prices and pictures. A
 // merchant that fails to answer is skipped, never fatal. Results are cached
-// for a day per query, and every answer is also seeded into catalog/ in the
-// bucket: the corpus that future visual matching will search.
+// briefly per account/query. Private search phrases are never seeded into a
+// shared catalog. The conversational fabric assistant uses /admin/fabrics/search.
 const SOURCE_MERCHANTS = [
+  { name: 'Britex Fabrics', place: 'San Francisco', host: 'https://britexfabrics.com', eta: 0, currency: 'USD' },
   { name: 'Mood Fabrics', place: 'New York', host: 'https://www.moodfabrics.com', eta: 5, currency: 'USD' },
   { name: 'Blackbird Fabrics', place: 'Vancouver', host: 'https://www.blackbirdfabrics.com', eta: 7, currency: 'CAD' },
   { name: 'Miss Matatabi', place: 'Tokyo', host: 'https://shop.missmatatabi.com', eta: 9, currency: 'JPY' },
@@ -2256,13 +2262,15 @@ const SOURCE_MERCHANTS = [
 ];
 const _sourceCache = new Map();
 app.get('/api/source-fabric', async (req, res) => {
-  try { await requireAdmin(req); }
+  let user;
+  try { user = await requireAdmin(req); }
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
   const q = String(req.query.q || '').trim().slice(0, 120);
   if (!q) return res.status(400).json({ error: 'missing_q' });
-  const key = q.toLowerCase();
+  const key = user.sub + '|' + q.toLowerCase();
   const hit = _sourceCache.get(key);
-  if (hit && Date.now() - hit.ts < 24 * 3600 * 1000) return res.json(hit.body);
+  res.set('Cache-Control', 'no-store');
+  if (hit && Date.now() - hit.ts < 5 * 60 * 1000) return res.json(hit.body);
   const enc = encodeURIComponent(q);
   const results = await Promise.all(SOURCE_MERCHANTS.map(async (m) => {
     try {
@@ -2286,11 +2294,10 @@ app.get('/api/source-fabric', async (req, res) => {
   const { products, misses } = collectRetailerResults(results);
   const body = { ok: true, q, products: products.slice(0, 60), misses,
     fetchedAt: new Date().toISOString() };
-  _sourceCache.set(key, { ts: Date.now(), body });
-  try {
-    gcsPut('catalog/queries/' + key.replace(/[^a-z0-9]+/g, '-').slice(0, 60) + '.json',
-      JSON.stringify(body), 'application/json').catch(() => {});
-  } catch (_) {}
+  if (products.length) {
+    if (_sourceCache.size >= 250) _sourceCache.clear();
+    _sourceCache.set(key, { ts: Date.now(), body });
+  }
   res.json(body);
 });
 

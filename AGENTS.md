@@ -1,5 +1,14 @@
 # MAYA assistant instructions
 
+Conversational fabric sourcing: docs/server/fabric-search.mjs and the shared
+aesthetics/ui/fabric-assistant.{js,css}, used by Brief and Operation Room. Read
+docs/FABRIC-SEARCH.md. Preserve original photo + client words, qualified visual
+traits, source-backed product URLs, seller-only price/unit/stock facts, and
+account/submission-scoped lookbooks with generation preconditions. Never cache
+private requests/images in the shared catalog or equate swatch price with yardage.
+Run tests/fabric-search.mjs and tests/fabric-search-ui.mjs (release gates), existing
+fabric-sourcing/ai-routing, container-contract, app-regression and smoke.
+
 This repository is worked on by Codex. The repository files,
 not chat memory, are the shared source of continuity.
 

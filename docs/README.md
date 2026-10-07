@@ -1,6 +1,7 @@
 # MAYA
 
 Sole active written aesthetic specification: [design.md](design.md).
+Conversational fabric search and sealed lookbooks: [FABRIC-SEARCH.md](FABRIC-SEARCH.md).
 Owner design controls: [Aesthetic Control](../aesthetics/aesthetic-control.html), linked from Admin → Systems.
 Aesthetic Control groups Visuals (Glass Panels and Tables) before single-preview
 Typography. Each role can select Jost/Cormorant and Normal/ALL CAPS. See docs/design.md.
@@ -69,7 +70,7 @@ the marketing charts and lead station.
 |---|---|---|
 | `frontend/index.html` | The MAYA app. Moodboard, community wall, favorites and the approved filing cabinet. | Clients |
 | `backend/status.html` | Admin. Command briefing, health, traffic, Marketing, submissions, prompting and changelog. | Admins only |
-| `backend/backend.html` | The Brief plus the embedded Operations Room. One submission, opened from Admin. | Admins only |
+| `backend/backend.html` | The Brief, fabric assistant and a submission-preserving link to the Operation Room. | Admins only |
 | `backend/outbound.html` | Outbound campaigns, Hunter/Sheets imports, research and drafts. | Admins, account-scoped |
 | `backend/operations.html` | The standalone Operation Room, the beta bench for pattern experiments. | Admins only |
 | `playground/index.html` | Private staging copy; never promote a design without Fromsa's approval. | Admins only |
@@ -150,6 +151,8 @@ Firebase Hosting rewrites `/api/**` to it, so the browser only ever talks to
 | `/api/openai/*` | proxy to OpenAI, allowlisted paths only |
 | `/api/source-fabric` | admin-only real retailer inventory search |
 | `/api/rank-fabric` | admin-only garment-to-thumbnail visual ranking through the task router |
+| `/api/admin/fabrics/search` | admin-only conversational photo/text discovery with streamed seller results |
+| `/api/admin/fabrics/lookbook` | account/submission-scoped saved fabrics and material selection |
 | `/api/fal/*`, `/api/falstorage/*` | fal.ai proxy, dormant, no key set |
 | `/api/runway` | Runway proxy, dormant on purpose |
 | `/api/submit` | client submission into MAYA's Storage bucket, filename allowlist |

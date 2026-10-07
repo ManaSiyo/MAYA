@@ -1,5 +1,18 @@
 # MAYA AI architecture
 
+## October 7: conversational fabric search
+
+The owner approved replacing the fabric-only feed workflow with conversational
+photo/text discovery. `fabric-search.mjs` uses one bounded Responses web-search
+request on the configured Terra/text tier while eligible direct retailer queries
+run in parallel. Source-backed URLs are deterministically verified against seller
+pages; the model does not supply authoritative prices, stock or composition.
+`store:false`, no private query cache, account/submission lookbooks and abort/stale
+response guards preserve the production boundary. The legacy visual-rank route
+remains compatible and now paints products before ranking. See FABRIC-SEARCH.md.
+The v13.x model/routing descriptions below are historical; model-config.mjs and
+current runtime modules remain authoritative. No model default changed here.
+
 MAYA means Most Advanced Yet Acceptable. It is the provider-neutral
 intelligence layer that turns a client's creative intent into explainable,
 pattern-ready and fabric-sourced production decisions. Mana Siyo is the
@@ -181,9 +194,11 @@ perceived speed and avoids silently sending sensitive material to two vendors.
 
 ## Regression rules
 
-- Never move retailer retrieval into an LLM.
+- Web search may discover source-backed retailer URLs. Seller facts must come
+  from verified public records; never accept AI-invented inventory or prices.
 - Never call a retailer product an exact match.
-- Never remove the static-first fabric fallback.
+- Show initial retailer results without waiting for optional ranking. Empty or
+  failed searches must be explicit; static references are not live inventory.
 - Never log private task inputs or outputs.
 - Never add a fallback for a safety refusal.
 - Never change image quality, size or anchor behavior as part of a model-name
