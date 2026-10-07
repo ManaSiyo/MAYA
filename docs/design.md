@@ -140,7 +140,7 @@ The preview lives in `aesthetics/aesthetic-control.html` with support files in `
 `aesthetics/ui/components/`; global application in
 `aesthetics/ui/typography-controls.js`. The Admin-authenticated save and public
 read endpoints are in `docs/server/server.js`; `docs/server/design-config.mjs`
-validates the settings. Served pages load runtime v21 and gallery v32; Hosting revalidates this
+validates the settings. Served pages load runtime v22 and gallery v32; Hosting revalidates this
 script instead of caching role mappings for a week. Old aesthetic PDFs were removed;
 the inactive style-inventory viewer, generated report and generator were removed;
 the active typography role audit remains. No page should introduce a competing design specification.
@@ -256,5 +256,23 @@ selectors use :where() so shared typography never outranks table selection style
 October 7 Save consistency: snapshot settings before any asynchronous work and
 lock preview editors during the save. The posted, cached and applied settings
 are the same snapshot. Only a successful acknowledgement updates Restore; an
-error unlocks editing and retains the prior saved baseline. Runtime v21/gallery
+error unlocks editing and retains the prior saved baseline. Runtime v22/gallery
 v32 carry this behavior without changing the visual canon.
+
+
+## Enforcement when coding
+
+Aesthetic Control owns presentation; page CSS owns layout. New text declares
+`data-maya-type="H2"` (or its appropriate role), editable fields declare
+`data-maya-control="field"`, and inner surfaces declare `data-maya-panel="inner"`.
+Automations uses H2 for the fixed drawer title, H3 for section headings, P3 for
+labels/actions and P1 for field values/explanations. Its fields use the saved
+Edit dropdown backing, border, radius and X/Y padding; rule cards use Inner.
+Native select option windows remain browser/platform rendered.
+
+The final check is a computed-style saved-settings mutation, not a stylesheet
+link check. `tests/aesthetic-authority.mjs` verifies Automations against changed
+valid typography, colors, field material/padding and Inner padding at six widths
+(320–1920px). Extend its coverage for subsequent UI work. It runs both in
+app-regression and Cloud Build. Keep the active compatibility adapters; remove
+specific competing declarations rather than deleting working page layout.

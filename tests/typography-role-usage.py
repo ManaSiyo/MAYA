@@ -8,11 +8,13 @@ for path in files:
  text=path.read_text()
  # Preserve source line numbers. Exclude comments, retain JS-rendered markup.
  clean=re.sub(r'<!--.*?-->|(?m:^[ \t]*/\*).*?\*/|(?m:^[ \t]*//[^\n]*)',lambda m:'\n'*m[0].count('\n'),text,flags=re.S)
- for m in re.finditer(r'<(h[1-6]|input|time|span|div|p|small|label|button|a|td|th|code|pre|strong|b)\b([^<>]*?)>',clean,re.I):
+ for m in re.finditer(r'<(h[1-6]|textarea|select|input|time|span|div|p|small|label|button|a|td|th|code|pre|strong|b)\b([^<>]*?)>',clean,re.I):
   tag=m[1].lower();attrs=m[2].replace('\\"','"').replace("\\'","'");names={k.lower():v for k,q,v in re.findall(r'\b(id|class)\s*=\s*([\'"])(.*?)\2',attrs,re.S)}
   ident=names.get('id','');cls=set(names.get('class','').split());context=clean[max(0,m.start()-100):m.end()];category=None;reason=None
   role=None
-  if ident=='msg-name':category,role='H3','contact'
+  explicit=re.search(r'data-maya-type=[\'"]([^\'"]+)',attrs)
+  if explicit and explicit[1] in categories:category,role=explicit[1],'field' if tag in ['input','select','textarea'] else 'label' if tag=='label' else 'drawer' if ident=='adm-tabtitle' else 'subheadline' if tag.startswith('h') else 'pill' if tag=='button' else 'paragraph'
+  elif ident=='msg-name':category,role='H3','contact'
   elif 'lead-identity' in cls:category,role='H5','leadname'
   elif 'lead-signup' in cls:category,role='H6','leaddate'
   elif 'maya-signin-h0' in cls:category,role='H0','signin'

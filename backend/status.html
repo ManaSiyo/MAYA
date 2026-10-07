@@ -291,10 +291,7 @@ try {
   .maya-action-btn.confirm{border-color:rgba(169,201,255,0.55);color:#a9c9ff}
   .maya-spotlight{animation:mayaSpot 2.2s ease-out}
   @keyframes mayaSpot{0%,35%{box-shadow:0 0 0 2px rgba(169,201,255,0.65),0 0 32px rgba(169,201,255,0.22)}100%{box-shadow:none}}
-  /* v13.67: a light blue section title in the drawer, per Fromsa. */
-  /* v13.68: every drawer section title in the logo blue, they are headlines. */
-  /* v13.77: the drawer section titles read as titles, in the logo blue. */
-  #drawer h3, #drawer h3.tint{color:#a9c9ff !important}
+  /* Drawer headings follow the saved H3 role in Aesthetic Control. */
   /* v13.67: the manasiyo | MAYA pairing, matching Marketing. */
   #head-tiles .pair-bar{margin:0 6px;color:var(--faint);font-weight:400}
   /* v13.68: the numbers pop. manasiyo.com white and bold, MAYA in the logo
@@ -846,8 +843,8 @@ try {
   html body #msg-name{font:var(--maya-type-H3-weight) var(--maya-type-H3-size) var(--maya-type-H3-font)!important;color:var(--maya-type-H3-color)!important;text-transform:var(--maya-type-H3-case)!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;backdrop-filter:none!important;padding:0!important}
   .msg-rename{opacity:0;pointer-events:none}.msg-name-edit:hover .msg-rename,.msg-name-edit:focus-within .msg-rename{opacity:1;pointer-events:auto}
   #drawer-automations{flex:1;min-height:0;overflow:auto;scrollbar-width:none}#drawer-automations[hidden]{display:none}
-  .automation-rule{padding:12px;margin:10px 0;border:1px solid var(--maya-line);border-radius:var(--maya-inner-radius,12px);background:var(--maya-inner-fill,transparent)}
-  .automation-rule label{display:grid;gap:4px;margin:10px 0;font:var(--maya-type-P3-weight) var(--maya-type-P3-size) var(--maya-type-P3-font);color:var(--maya-type-P3-color)}.automation-rule label:has(input[type=checkbox]){display:flex;align-items:center;gap:6px}.automation-rule select{width:100%;box-sizing:border-box}#drawer-automations .subheadline{letter-spacing:normal;text-align:left}.automation-rule textarea{width:100%;box-sizing:border-box;min-height:100px}.automation-rule input[type=time],.automation-rule input[type=number]{max-width:140px}
+  .automation-rule{margin:10px 0}
+  .automation-rule label{display:grid;gap:4px;margin:10px 0;}.automation-rule label:has(input[type=checkbox]){display:flex;align-items:center;gap:6px}.automation-rule select{width:100%;box-sizing:border-box}#drawer-automations .subheadline{letter-spacing:normal;text-align:left}.automation-rule textarea{width:100%;box-sizing:border-box;min-height:100px}.automation-rule input[type=time],.automation-rule input[type=number]{max-width:140px}
   #msg-idea{padding:8px 0}#msg-idea[hidden]{display:none}#msg-idea-text{white-space:pre-wrap;margin:6px 0}#msg-idea-status{color:var(--dim)}
   .msg-thread-heading{font:var(--maya-type-H2-weight) var(--maya-type-H2-size) var(--maya-type-H2-font);color:var(--maya-type-H2-color);margin-top:4px}
   #msg-call,#msg-share{aspect-ratio:1;border-radius:50%!important;display:inline-flex;align-items:center;justify-content:center;padding:0!important;flex:none}
@@ -879,9 +876,9 @@ try {
   @media(max-width:640px){.affiliate-stats{grid-template-columns:repeat(2,1fr)}.affiliates-view #adm-scroll{padding-top:80px}.affiliate-avatar{width:96px;height:96px}}
 #admin-design{outline:none!important;box-sizing:border-box;position:fixed;inset:0;width:100vw;height:100dvh!important;max-width:100vw!important;max-height:100dvh!important;margin:0!important;padding:0!important;border:0!important;background:#000}#admin-design::backdrop{background:#000}#admin-design iframe{display:block;width:100%;height:100%;border:0;outline:none}
 </style>
-<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
+<link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=14">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=21"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=22"></script>
 <link rel="stylesheet" href="/aesthetics/ui/admin-systems.css?v=3">
 </head>
 <body class="systems-map">
@@ -961,7 +958,7 @@ if (IS_AFFILIATES) {
        older checks expect them. -->
   <div id="adm-tabrow" role="tablist">
     <button class="adm-tab on" id="adm-tab-systems" onclick="admTab('systems')" role="tab" aria-selected="true" aria-label="Systems" title="Systems"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 3-.5 2-2 1-2-.5-2 3.5L4.5 11v2L3 15l2 3.5 2-.5 2 1 .5 2h5l.5-2 2-1 2 .5 2-3.5-1.5-2v-2L21 9l-2-3.5-2 .5-2-1-.5-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
-    <button class="adm-tab" id="adm-tab-messages" onclick="admTab('messages')" role="tab" aria-selected="false" aria-label="Messages" title="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path fill="currentColor" stroke="none" d="M12 3C6.5 3 2 6.6 2 11c0 2.6 1.6 4.9 4 6.4L5 21l4.4-2.3c.8.2 1.7.3 2.6.3 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg><span class="adm-unread" id="adm-unread" hidden>0</span></button><button class="adm-tab" id="adm-tab-logs" onclick="admTab('logs')" role="tab" aria-selected="false" aria-label="Logs" title="Logs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18H5zM8 7h8M8 11h8M8 15h5"/></svg></button><span id="adm-tabtitle">Systems</span>
+    <button class="adm-tab" id="adm-tab-messages" onclick="admTab('messages')" role="tab" aria-selected="false" aria-label="Messages" title="Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path fill="currentColor" stroke="none" d="M12 3C6.5 3 2 6.6 2 11c0 2.6 1.6 4.9 4 6.4L5 21l4.4-2.3c.8.2 1.7.3 2.6.3 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg><span class="adm-unread" id="adm-unread" hidden>0</span></button><button class="adm-tab" id="adm-tab-logs" onclick="admTab('logs')" role="tab" aria-selected="false" aria-label="Logs" title="Logs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18H5zM8 7h8M8 11h8M8 15h5"/></svg></button><span id="adm-tabtitle" data-maya-type="H2">Systems</span>
   </div>
   <div id="drawer-logs" hidden><div class="msg-controls"><button onclick="loadMayaLogs()">Refresh logs</button></div><p class="note">Maya requests and saved aesthetic changes.</p><div id="maya-logs-list" aria-live="polite"></div>
   <div id="drawer-command" aria-live="polite" aria-label="Maya command line">
@@ -1029,25 +1026,25 @@ if (IS_AFFILIATES) {
   </div>
 
   <div id="drawer-automations" hidden>
-    <button class="maya-glass-button" onclick="admTab('systems')">Back to Systems</button>
-    <h3 class="subheadline">Text automations</h3><p>Drafts appear when you open a conversation. Review, then Send. No scheduled sends.</p>
+    <button data-maya-type="P3" class="maya-glass-button" onclick="admTab('systems')">Back to Systems</button>
+    <h3 class="subheadline" data-maya-type="H3">Text automations</h3><p data-maya-type="P1">Drafts appear when you open a conversation. Review, then Send. No scheduled sends.</p>
     <form id="text-automations-form" onsubmit="event.preventDefault();saveTextAutomations()">
-      <section class="automation-rule"><h3 class="subheadline">First text</h3>
-        <label><input id="automation-first-enabled" type="checkbox"> Suggest first text</label>
-        <label>Example<textarea id="automation-first-text" maxlength="1000" required></textarea></label>
-        <label>Trigger<select id="automation-first-trigger"><option value="new_lead">New lead, no outgoing texts</option></select></label>
-        <label>Earliest draft time<input id="automation-first-time" type="time" required></label>
+      <section class="automation-rule" data-maya-panel="inner"><h3 class="subheadline" data-maya-type="H3">First text</h3>
+        <label data-maya-type="P3"><input id="automation-first-enabled" type="checkbox"> Suggest first text</label>
+        <label data-maya-type="P3">Example<textarea data-maya-type="P1" data-maya-control="field" id="automation-first-text" maxlength="1000" required></textarea></label>
+        <label data-maya-type="P3">Trigger<select data-maya-type="P1" data-maya-control="field" id="automation-first-trigger"><option value="new_lead">New lead, no outgoing texts</option></select></label>
+        <label data-maya-type="P3">Earliest draft time<input data-maya-type="P1" data-maya-control="field" id="automation-first-time" type="time" required></label>
       </section>
-      <section class="automation-rule"><h3 class="subheadline">Second text</h3>
-        <label><input id="automation-second-enabled" type="checkbox"> Suggest follow-up</label>
-        <label>Example<textarea id="automation-second-text" maxlength="1000" required></textarea></label>
-        <label>Trigger<select id="automation-second-trigger"><option value="no_reply">No reply after first text</option></select></label>
-        <label>Wait days<input id="automation-second-days" type="number" min="1" max="30" required></label>
-        <label>Earliest draft time<input id="automation-second-time" type="time" required></label>
+      <section class="automation-rule" data-maya-panel="inner"><h3 class="subheadline" data-maya-type="H3">Second text</h3>
+        <label data-maya-type="P3"><input id="automation-second-enabled" type="checkbox"> Suggest follow-up</label>
+        <label data-maya-type="P3">Example<textarea data-maya-type="P1" data-maya-control="field" id="automation-second-text" maxlength="1000" required></textarea></label>
+        <label data-maya-type="P3">Trigger<select data-maya-type="P1" data-maya-control="field" id="automation-second-trigger"><option value="no_reply">No reply after first text</option></select></label>
+        <label data-maya-type="P3">Wait days<input data-maya-type="P1" data-maya-control="field" id="automation-second-days" type="number" min="1" max="30" required></label>
+        <label data-maya-type="P3">Earliest draft time<input data-maya-type="P1" data-maya-control="field" id="automation-second-time" type="time" required></label>
       </section>
-      <p>Times: Los Angeles. Examples use {name} and {context}; AI uses the actual lead and conversation.</p>
-      <button class="maya-glass-button" id="automation-save" type="submit" disabled>Save</button>
-    </form><p id="automation-status" role="status" aria-live="polite"></p>
+      <p data-maya-type="P1">Times: Los Angeles. Examples use {name} and {context}; AI uses the actual lead and conversation.</p>
+      <button data-maya-type="P3" class="maya-glass-button" id="automation-save" type="submit" disabled>Save</button>
+    </form><p data-maya-type="P1" id="automation-status" role="status" aria-live="polite"></p>
   </div>
 
   <!-- v13.67: Maya's voice, pinned at the floor. -->

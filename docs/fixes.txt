@@ -603,3 +603,13 @@ and expanded transcript panel; responsive flex wrapping verified.
 Public release mismatch: live e82b207 vs pushed 71c9ce9; equal version 14.40 hid it.
 No deployment/live provider certification. Synthetic reply binding after archival,
 legacy owner-memory migration and send-ledger archival remain documented risks.
+
+2026-10-07 — Aesthetic authority gap (local)
+Automations fields lacked saved roles; local labels/card rules and fixed legacy
+font/blue headings allowed stylesheet presence checks to pass with wrong pixels.
+Removed competing declarations, added explicit shared contracts and a computed
+font/color/material/X-Y-padding mutation gate at six widths. Retained necessary
+active adapters and independent table/semantic status styling. No files deleted
+or production/push performed. Broader 45 release suites passed.
+An obsolete v13.77 regression also REQUIRED forced blue headings; replaced that
+assertion with the saved-role authority rule instead of retaining the conflict.

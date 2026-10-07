@@ -147,8 +147,8 @@ html[data-maya-surface] .lead-status-menu input {margin:0;accent-color:var(--may
 html[data-maya-surface] .lead-status-menu::backdrop {background:transparent;}
 html[data-maya-surface] .affiliate-avatar {background:transparent;border-color:var(--maya-line);box-shadow:none;}
 html[data-maya-surface="dense"] :is(.sdot,.new-dot,.model-group) {box-shadow:none;}
-/* No serif data, including inline output from legacy templates. */
-html[data-maya-surface] :is(table,input,select,textarea,.pg-stat-num,.model-group,.msg-number) {font-family:var(--maya-font-ui)!important;}
+/* Legacy unclassified fields use the UI font; explicit saved roles take precedence. */
+html[data-maya-surface] :is(table,input,select,textarea,.pg-stat-num,.model-group,.msg-number):not([data-maya-type]) {font-family:var(--maya-font-ui)!important;}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
   html[data-maya-surface] :is(#drawer,#outbound-drawer,#clients-drawer,dialog,.lead-status-menu,.panel,.detail,.stat) {background:rgba(7,10,20,.92);}
 }

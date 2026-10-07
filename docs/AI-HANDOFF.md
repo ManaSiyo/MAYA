@@ -1,6 +1,30 @@
 # Current handoff — October 7, 2026
 
-## Current request
+## Current request — Aesthetic Control enforcement (October 7)
+
+Fromsa asked why Automations bypasses Aesthetic Control, requested removal of
+conflicts and a mandatory internal final aesthetic check. Repaired locally:
+- backend/status.html: explicit H2/H3/P1/P3 Automations roles; shared field and
+  Inner material; removed duplicated form styling and forced blue drawer headings.
+- typography-controls.js v22: explicit role/field/inner contracts; all heading
+  colors follow saved roles. Semantic status colors and table settings retained.
+- maya-canon.css v14: legacy fixed field font yields to explicit roles. Active
+  adapters remain necessary; no migration paths or served files were deleted.
+- tests/aesthetic-authority.mjs: computed-style mutation checks typography,
+  field backing/border/radius/X-Y padding, Inner material and six viewport widths.
+  Required in app-regression and Cloud Build. Role inventory regenerated; runtime
+  and adapter cache versions updated on served pages. Retired the obsolete
+  v13.77 assertion requiring fixed blue headings. AGENTS.md/design.md define
+  the last aesthetic completion check and require extending coverage for new UI.
+
+Validation: 45 Cloud Build test suites passed; isolated Automations screenshot
+reviewed. Full app regression, smoke, required syntax and diff checks passed.
+No personal Chrome access, production changes or push. Exact next step: owner
+Push, then verify the exact release with tests/verify-live.mjs --wait and confirm
+saved settings on authenticated live Admin. Local verification is not deployment.
+Previous audit/open provider and migration risks below remain applicable.
+
+## Previous request
 
 Fromsa first requested a parallel read-only audit, grouped by area and prioritizing
 Admin, then explicitly asked to wait for the other agent and implement the fixes.

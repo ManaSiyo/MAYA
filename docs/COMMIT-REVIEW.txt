@@ -1,41 +1,24 @@
-[Codex] Repair Admin state races and audit persistence gaps
+[Codex] Enforce Aesthetic Control in Automations and release checks
 
-Keep Admin drafts and send IDs across same-account token renewal while rejecting
-stale account/feed/voice/action responses. Tie invoice results to stable leads,
-retain created links after attachment failures, offer save-only retry and draft
-invoice texts inside Messages. Preserve customer data only in the signed-in page
-session and make missing-phone feedback visible.
+Bind Automations headings, labels, actions and form values to explicit shared
+H2/H3/P1/P3 roles. Use saved Inner material for rule cards and saved Edit backing,
+border, radius and X/Y padding for fields. Remove duplicated local form styling,
+forced blue drawer headings and the legacy font override on explicitly typed
+fields. Apply saved heading colors through the shared runtime. Retain semantic
+status colors, independent table settings and necessary compatibility adapters.
 
-Use validated generation-checked lead/note writes across Admin, phone and owner
-commands, with account-bound Admin add receipts. Deny submission uploads without
-verified ownership, complete feed pagination, persist blocked STOP consent and
-preserve archived terminal delivery state. Bind Outbound sends to the reviewed
-email and avoid recounting follow-ups when source dates are missing.
+Add a computed-style mutation browser gate for default and changed typography,
+colors, field material, Inner material and six viewport widths (320–1920px).
+Require it in app-regression and Cloud Build. Replace the obsolete regression
+requiring fixed blue drawer headings. Document the mandatory final aesthetic
+check in AGENTS.md/design.md, bump runtime v22/adapter v14 references and
+regenerate the authored typography inventory.
 
-Pin client project operations to account generation, preserve edits through
-initial saves/uploads and give shares independent image copies. Keep the avatar
-lifetime correction in Playground. Preserve the prior fabric work while fixing
-Brief save acknowledgements/retries, local-folder transitions and raw pattern
-persistence. Bind Operation measurements and asynchronous runs to the selected
-account/submission/garment, freeze inputs and discard stale output.
+Validation: 45 Cloud Build suites, required syntax checks and isolated browser
+visual review, full app regression, smoke and diff checks passed.
+No personal Chrome, external messages, provider calls, credentials, production
+configuration or push. This is a local repair, not proof of live deployment.
 
-Snapshot Aesthetic Save, lock editing until acknowledgement and retain Restore
-on failure. Reconcile active design instructions and refresh typography evidence.
-Pin test/container dependencies, make all release gates mandatory, bake the API
-commit and verify it alongside Hosting. No production environment change.
-
-Validation: all 44 Cloud Build suites plus full app-regression and server smoke
-pass; required syntax and diff checks pass. Corrected the Outbound status fixture
-to exercise a fake authenticated session and real refresh, then reran it. New
-race tests exercise actual handlers, deferred writes and account/project changes.
-Gallery passes eleven widths; populated Leads/Outbound covers seven widths.
-Local Node 24.19.0, pinned dependencies, isolated headless Chromium and fake
-providers only. No personal Chrome; actual Cloud Build remains after owner Push.
-
-Remaining: owner review/Push and exact deployment verification, then authenticated
-live/provider acceptance. Public MAYA is reachable but still serves e82b207.
-Unknown invoice creation requires checking Wix; page recovery is not a durable
-provider ledger. Admin add/send ledgers need eventual archival; historical avatar
-references and scoped legacy memory migration remain open. No push, paid live
-inference, real message or production credentials/billing/settings changes.
-Preserves preceding local commits c09328e and deb7081.
+Next: owner review/Push, exact release verification with verify-live.mjs --wait,
+then authenticated live Admin Save confirmation. Existing provider activation,
+invoice reconciliation and legacy migration risks remain in AI-HANDOFF.md.

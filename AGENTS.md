@@ -170,7 +170,7 @@ only same-origin local pages. Old maya-buttons.css/maya-canon.css are adapters,
 not independent design authorities. Typography offers one preview per role, with validated Jost/Cormorant and
 Normal/ALL CAPS choices. Visuals groups button/icon glass before panel/table
 controls. Preserve old saved schemas and semantic status colors when applying
-shared text settings. Served pages load typography runtime v21 (gallery v32).
+shared text settings. Served pages load typography runtime v22 (gallery v32).
 Aesthetic Control opens within Admin through aesthetics/ui/admin-design.js; same-origin/source-checked close messages return via its logo. All Edit menus use the shared numeric input/select grid; popup padding has X/Y axes and legacy single-padding reads remain compatible. The fixed table formatting toolbar follows shared inner-panel material. Gallery Filter previews are retired; functional data filters remain. The saved editor material controls actual popups; formatting offers 200–500 weights and italic. Padding debug highlights exist only while a padding field is active. Restore uses the shared Refresh SVG. Run tests/component-gallery.mjs. Table preview cells use a fixed formatting toolbar; body selections edit complete semantic columns. Legacy row styles normalize to column settings without writing on load. The review section itself is the outer panel; never add a wrapper around its inner-panel pair. Every Edit restore returns to its last successful Save. Padding highlights are automatic and preview-only. Role counts are authored-template counts with linked pages and expandable source locations; regenerate with tests/typography-role-usage.py. Design saves atomically include a private audit trail;
 /api/design must strip _history and /api/admin/design-history must stay Admin-gated.
 Padding debug highlights are preview-only, never saved.
@@ -307,3 +307,23 @@ and docs/server/package-lock.json for the container. Run npm ci; Cloud Build mus
 fail if Chromium or communications dependencies cannot install. Build metadata is
 baked by MAYA_BUILD_COMMIT (not a production environment setting), and public
 health reports it. Run tests/release-contract.mjs and tests/verify-release.mjs.
+
+
+## Mandatory aesthetic completion gate
+
+Every UI task must read docs/design.md, reuse the shared material and assign a
+shared typography role. New markup uses data-maya-type; form fields use
+data-maya-control="field" and inner surfaces use data-maya-panel="inner".
+Page CSS may define layout, not competing fonts, colors or materials. Preserve
+semantic status colors and independent table settings. Remove conflicting rules;
+do not delete active adapters, migration paths or files merely because they are old.
+
+Before a UI task is complete, test the changed elements with defaults AND visibly
+different valid saved settings. Assert computed font, size, weight, case, color,
+material and X/Y padding, then inspect responsive layout, menus, focus and Save
+at phone, tablet and desktop widths. Extend tests/aesthetic-authority.mjs for
+new/changed surfaces; stylesheet presence alone is not proof. Run that gate,
+component-gallery and the exact Cloud Build checks. The last aesthetic check is
+that every changed element responds to its assigned Aesthetic Control setting,
+without clipping or a local override. Report local versus live verification
+accurately. A passing local test does not establish production deployment.
