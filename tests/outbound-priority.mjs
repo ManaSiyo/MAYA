@@ -23,6 +23,10 @@ export function assertOutboundPriority(){
  const newSend=row('today','1st touch, sent','09/28');newSend.emailHistory=[{id:'later',ts:'2026-09-28T19:01:00Z'}];assert.equal(priorityInfo(newSend,now).touches,2,'Confirmed email after the Sheet snapshot advances F1 on the same day');
  mergeContacts({campaigns:[],contacts:[newSend]},[{...newSend,sheetData:{syncedAt:'2026-09-28T20:00:00Z'}}],null);assert.equal(priorityInfo(newSend,now).touches,2,'Refreshing unchanged source does not erase a recorded same-day follow-up');
  unknown.emailHistory=[{id:'new',ts:mail.ts}];assert.equal(priorityInfo(unknown,now).touches,null);
+ const undated=row('undated','1st touch, no reply');undated.emailHistory=[{id:'old',ts:'2026-09-20T19:00:00Z'}];
+ assert.equal(priorityInfo(undated,now).touches,1,'Undated source history must not count old Gmail evidence again');
+ undated.emailHistory.push({id:'new',ts:'2026-09-28T19:01:00Z'});assert.equal(priorityInfo(undated,now).touches,2,'Only post-snapshot sends advance undated source counts');
+ delete undated.sheetData;assert.equal(priorityInfo(undated,now).touches,1,'No overlap boundary means retain the source count');
  const master={campaigns:[{id:'c'}],contacts:[]};mergeContacts(master,[low],null);assert.deepEqual(master.contacts[0].campaignIds,[]);mergeContacts(master,[{...low,id:'copy'}],'c');assert.equal(master.contacts.length,1);assert.deepEqual(master.contacts[0].campaignIds,['c']);
  const missingEmail=[{...low,id:'a',name:'Alex',company:'A',email:''},{...low,id:'b',name:'Alex',company:'B',email:''}];mergeContacts(master,missingEmail,'c');assert.equal(master.contacts.length,3);
 }

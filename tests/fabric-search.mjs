@@ -106,7 +106,7 @@ await test('lookbooks isolate accounts and submissions, persist selection and re
 await test('real dissection handoff preserves all traits; original photo and early paint reach ranking',async()=>{
   const source=readFileSync(new URL('../backend/backend.html',import.meta.url),'utf8');
   const extract=(start,end)=>source.slice(source.indexOf(start),source.indexOf(end,source.indexOf(start)));
-  const code=extract('function inferPieces(card)', '// v0.9: focusPiece')+extract('function _sourcingQuery(piece, fabricStr)', '// ── v13.53: Nano Banana');
+  const code=extract('const _pieceSources = new WeakMap()', '// v0.9: focusPiece')+extract('function _sourcingQuery(piece, fabricStr)', '// ── v13.53: Nano Banana');
   const paints=[],calls=[];let resolveRank;
   const rank=new Promise(r=>resolveRank=r);
   const piece={name:'Coat',fabric:'Crimson wool',fabric_hex:'#991b2a',fabric_spec:{fiber:'wool',weave:'twill',sheen:'matte',stretch:'none',texture:'brushed',weight_gsm:null},_image:'generated-piece',jacket_construction:'double-breasted'};

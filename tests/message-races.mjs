@@ -17,6 +17,7 @@ runInNewContext(source.slice(source.indexOf('async function loadThreads()'),sour
 const pending=ctx.loadThreads();ctx._idTok='B';release({ok:true,json:async()=>({threads:[{name:'Private A'}]})});await pending;assert.equal(painted.length,0);
 const input={value:'Sent draft'},button={},feedback={};
 const sendCtx={crypto:{randomUUID:()=> 'fixture-send-00002'},_msgAttempts:new Map(),_idTok:'A',_msgOpen:{number,name:'Person'},_msgSending:false,_msgDrafts:new Map(),document:{querySelector:()=>button,getElementById:id=>id==='msg-input'?input:id==='msg-feedback'?feedback:{}},fetch:()=>new Promise(r=>release=r),loadThread:async()=>{}};
+sendCtx._adminContext=()=>({token:sendCtx._idTok});sendCtx._adminContextCurrent=context=>context.token===sendCtx._idTok;
 runInNewContext(source.slice(source.indexOf('async function msgSend()'),source.indexOf('async function msgUpdate(')),sendCtx);
 const sending=sendCtx.msgSend();input.value='New unsent draft';release({ok:true,json:async()=>({ok:true})});await sending;assert.equal(input.value,'New unsent draft');
 const nameCtx={_leadList:[{name:'Angela Example',phone:number}]};runInNewContext(source.slice(source.indexOf('function _msgKnownName('),source.indexOf('async function openThread(')),nameCtx);

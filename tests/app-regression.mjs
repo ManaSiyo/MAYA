@@ -7,6 +7,11 @@ import './booking-link.mjs';
 import './lead-alerts.mjs';
 import './event-triggers.mjs';
 import './lead-feed-latency.mjs';
+import './lead-store.mjs';
+import './admin-storage.mjs';
+import './project-lifecycle.mjs';
+import './brief-operation-races.mjs';
+import './release-contract.mjs';
 import {assertOutboundPriority} from './outbound-priority.mjs';
 import {assertCanon} from './canon-contract.mjs';
 import {assertContainer} from './container-contract.mjs';
@@ -20,6 +25,7 @@ import {assertContainer} from './container-contract.mjs';
 // Needs Playwright + Chromium. Claude runs this in its workspace as part of
 // the pre-push loop: smoke.mjs, then this, then the push is prepared.
 import { rowsToContacts, mergeContacts } from '../docs/server/outbound.mjs';
+import { cleanLeadPatch } from '../docs/server/lead-store.mjs';
 import { chromium } from 'playwright';
 import http from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
@@ -44,6 +50,7 @@ const AT = {
 const INDEX_SOURCE = readFileSync(join(ROOT, AT.index), 'utf8');
 const RULES_SOURCE = readFileSync(join(ROOT, 'docs/server/firestore.rules'), 'utf8');
 const SERVER_SOURCE = readFileSync(join(ROOT, AT.server), 'utf8');
+const LEAD_STORE_SOURCE = readFileSync(join(ROOT, 'docs/server/lead-store.mjs'), 'utf8');
 if (!SERVER_SOURCE.includes('withinVoiceBudget(loadAdminCommandSnapshot(), buildAdminCommandSnapshot())')) throw Error('Admin voice must bound optional analytics context without inventing data.');
 const FABRIC_SOURCE = readFileSync(join(ROOT, 'docs/server/fabric-sourcing.js'), 'utf8');
 const AI_ROUTER_SOURCE = readFileSync(join(ROOT, 'docs/server/ai-router.js'), 'utf8');
@@ -331,7 +338,7 @@ ok('Storage cleanup is pinned to the deleting account',
 const p = await pg.evaluate(() => ({
   savesPinned: projectStore.save.toString().includes('this.ownerUid') &&
     projectStore._commit.toString().includes("reason: 'auth-changed'") &&
-    projectStore.uploadImage.toString().includes('this._uid() !== uid'),
+    projectStore.uploadImage.toString().includes('this._requireAccount(ctx)'),
   cardStateComplete: _cardState.toString().includes('c.height') &&
     _cardState.toString().includes('c.stacked') &&
     projectStore._sig.toString().includes('Math.round(s.x || 0)'),
@@ -417,11 +424,17 @@ const s = await pg.evaluate(() => ({
     };
   })(),
   commandQueue: (() => {
-    const result = _mayaQueueAction({ kind: 'remember', text: 'browser regression fact' });
-    const row = document.querySelector('[data-action-id="' + result.actionId + '"]');
-    const labels = row ? [...row.querySelectorAll('button')].map(button => button.textContent) : [];
-    mayaDismissAction(result.actionId);
-    return result.queued === true && labels.includes('Confirm') && labels.includes('Dismiss');
+    const previous=_idTok;
+    try {
+      _idTok='';
+      if(_mayaQueueAction({kind:'remember',text:'signed-out fixture'}).queued===true)return false;
+      _idTok='fixture-admin-context';
+      const result = _mayaQueueAction({ kind: 'remember', text: 'browser regression fact' });
+      const row = document.querySelector('[data-action-id="' + result.actionId + '"]');
+      const labels = row ? [...row.querySelectorAll('button')].map(button => button.textContent) : [];
+      mayaDismissAction(result.actionId);
+      return result.queued === true && labels.includes('Confirm') && labels.includes('Dismiss');
+    } finally { _idTok=previous; }
   })(),
 }));
 // v13.26: the map speaks about SUBMISSIONS, not Google plumbing.
@@ -1049,7 +1062,8 @@ ok('Escape closes feedback like any other panel',
 ok('a submission can only be written by whoever opened it',
   SERVER_SOURCE.includes('async function subOwner(subId)') &&
   SERVER_SOURCE.includes("res.status(403).json({ error: 'not_your_submission' })") &&
-  SERVER_SOURCE.includes('_subOwners.set(subId, user.email);'));
+  SERVER_SOURCE.includes("_subOwners.set(subId, String(user.email||'').trim().toLowerCase());") &&
+  SERVER_SOURCE.includes("submission_owner_unavailable") && SERVER_SOURCE.includes('if (!owner || owner !=='));
 ok('Pinterest import runs two at a time and reports honestly',
   INDEX_SOURCE.includes('await Promise.all([worker(), worker()])') &&
   INDEX_SOURCE.includes("'Bringing in ' + (landed + failed) + ' of '") &&
@@ -1568,8 +1582,8 @@ ok('v13.87: server can update or delete any lead, Wix via override/tombstone',
   SERVER_SOURCE.includes('async function updateLead(') &&
   SERVER_SOURCE.includes('async function deleteLead(') &&
   SERVER_SOURCE.includes("app.post('/api/admin/lead-delete'") &&
-  SERVER_SOURCE.includes('rec.overrides[key] = {') &&
-  SERVER_SOURCE.includes('rec.tombstones.push(key)') &&
+  readFileSync(join(ROOT,'docs/server/lead-store.mjs'),'utf8').includes('s.overrides[id]=') &&
+  readFileSync(join(ROOT,'docs/server/lead-store.mjs'),'utf8').includes('s.tombstones.push(key)') &&
   SERVER_SOURCE.includes("name: 'update_lead'") &&
   SERVER_SOURCE.includes("name: 'delete_lead'") &&
   MAP_SOURCE.includes("name==='update_lead'") &&
@@ -1928,10 +1942,7 @@ ok('CRM columns: frozen identity, tier and inline actions, no separate actions o
 ok('v13.93: the note marquee runs one shared speed for every row',
   MAP_SOURCE.includes('sp.style.animationDuration = Math.max(6, shift / SPEED)'));
 ok('v13.93: the server persists the new CRM columns (company, quote, both invoices)',
-  SERVER_SOURCE.includes("has('company')") &&
-  SERVER_SOURCE.includes("has('quote')") &&
-  SERVER_SOURCE.includes("has('invoice1')") &&
-  SERVER_SOURCE.includes("has('invoice2')"));
+  ['company','quote','invoice1','invoice2'].every(key=>cleanLeadPatch({[key]:' reviewed '})[key]==='reviewed'));
 
 // ── v13.94 ──
 ok('v13.94: the drawer section headings are centered',
@@ -1970,7 +1981,7 @@ ok('CRM: phone icon and invoicing remain inside Messages',
   MAP_SOURCE.includes('lead-inv-modal') &&
   !/lead-rec">'\s*\+\s*rec\(x\)/.test(MAP_SOURCE));
 ok('v13.95: a saved pay link persists on the lead and rides the next email draft',
-  SERVER_SOURCE.includes("has('paylink')") &&
+  cleanLeadPatch({paylink:' https://example.test/pay '}).paylink==='https://example.test/pay' &&
   MAP_SOURCE.includes("? ('\\n\\nPay here: ' + String(x.paylink).trim())"));
 
 // ── v13.96 ──
@@ -2072,11 +2083,13 @@ ok('v14.00: the Playground label rides beside the wordmark; the halo is quieter'
   PLAYGROUND_SOURCE.includes('id="pg-badge"') &&
   PLAYGROUND_SOURCE.includes('brand.appendChild(b)') &&
   PLAYGROUND_SOURCE.includes('rgba(200,222,255,0.40)'));
-ok('v14.00: the invoice composer emails or texts the lead by name',
+ok('v14.00: invoice actions draft email or internal Messages by lead name',
   MAP_SOURCE.includes('function _invEmailLead') &&
   MAP_SOURCE.includes('function _invTextLead') &&
-  MAP_SOURCE.includes("'sms:' + num + '?&body='") &&
-  MAP_SOURCE.includes("be.textContent = x.email ? ('Email ' + fn)"));
+  MAP_SOURCE.includes("await openThread(number,x.name||'')") &&
+  MAP_SOURCE.includes("_msgDrafts.set(number,draft)") &&
+  MAP_SOURCE.includes("textContent=x.email?'Email '+first") &&
+  MAP_SOURCE.includes('Review it, then press Send.'));
 
 ok('reception: approved greeting, explicit handoff, no unsolicited sales transfers',
   PHONE_SOURCE.includes('Hi this is Maya from Mana Siyo. How may I direct your call?') &&
@@ -2101,7 +2114,7 @@ ok('September 22: Mana links sit left, lead tools grow, gear stays square',
 ok('September 22: standalone Affiliates removes extra admin navigation and records real stages',
   !MAP_SOURCE.includes('class="affiliate-back"') && MAP_SOURCE.includes('.affiliates-view #top-left-brand .brand-chips') &&
   MAP_SOURCE.includes('id="affiliate-contacted"') && MAP_SOURCE.includes('id="affiliate-closed"') &&
-  MAP_SOURCE.includes('aria-label="Lead status"') && SERVER_SOURCE.includes("clean.stage = next.stage"));
+  MAP_SOURCE.includes('aria-label="Lead status"') && cleanLeadPatch({stage:'completed'}).stage==='completed');
 ok('September 22: frontend and Playground share explicit new-avatar Save, slower zoom and Pinterest scopes',
   [INDEX_SOURCE, PLAYGROUND_SOURCE].every(source =>
     source.includes('id:crypto.randomUUID()') && source.includes('runTransaction(async transaction') &&
@@ -2169,7 +2182,7 @@ ok('v14.31: Maya calls Fromsa: the outbound route, the brief persona, call_me in
 ok('v14.30: Maya on the phone and a year of leads: the phone module, the station badges, the CI test',
   SERVER_SOURCE.includes("import { mountMayaPhone } from './maya-phone.mjs';") &&
   SERVER_SOURCE.includes("const LEADS_DAYS = Number(process.env.WIX_LEADS_DAYS || 365);") &&
-  SERVER_SOURCE.includes("source: (lead && lead.source === 'phone') ? 'phone' : 'maya'") &&
+  LEAD_STORE_SOURCE.includes("source:lead.source==='phone'?'phone':'maya'") &&
   SERVER_SOURCE.includes("app.use('/api/phone/incoming', express.urlencoded({ extended: false, limit: '32kb' }));") &&
   MAP_SOURCE.includes('class="lead-signup"') &&
   PHONE_SOURCE.includes("app.post('/api/phone/incoming', incoming);") &&
@@ -2348,14 +2361,16 @@ ok('v14.17: Pinterest search for fingers and voice, the continuous glide, and po
   SERVER_SOURCE.includes("name: 'search_pins'") &&
   SERVER_SOURCE.includes("'down', 'up', 'stop'") &&
   SERVER_SOURCE.includes("pos: String(c.pos || '').slice(0, 24)"));
-ok('v14.16: the studio gauge tells the truth and the Admin paints from cache first',
+ok('v14.16: the studio gauge is truthful; private Marketing stays in the authenticated session',
   PLAYGROUND_SOURCE.includes("setA('pg-gauge-value', 'Studio');") &&
   INDEX_SOURCE.includes("setA('pg-gauge-value', 'Studio');") &&
   PLAYGROUND_SOURCE.includes('admin: !!j.admin,') &&
   INDEX_SOURCE.includes('admin: !!j.admin,') &&
   MAP_SOURCE.includes('function _paintMkt(d, alsoBrief)') &&
-  MAP_SOURCE.includes("localStorage.setItem('maya_mkt_cache'") &&
-  MAP_SOURCE.includes('_mktWarmPaint'));
+  !MAP_SOURCE.includes("localStorage.setItem('maya_mkt_cache'") &&
+  !MAP_SOURCE.includes('_mktWarmPaint') &&
+  MAP_SOURCE.includes("localStorage.removeItem('maya_mkt_cache')") &&
+  MAP_SOURCE.includes("window.addEventListener('maya-owner-session-changed',_clearMarketing)"));
 ok('v14.15: the feedback round: brevity, live feedback typing, plural tolerant pins, honest dissect',
   SERVER_SOURCE.includes('never recap what you just did') &&
   SERVER_SOURCE.includes('typed live while you keep talking') &&
@@ -2794,6 +2809,7 @@ ok('Automations save isolated draft rules and never send client texts',true);
 ok('Messages keeps its original heading; contact is plain and pencil is hover-only',!MAP_SOURCE.includes('contact-open #adm-tabtitle')&&MAP_SOURCE.includes('.msg-name-edit:hover .msg-rename')&&MAP_SOURCE.includes('id="drawer-automations"'));
 await import('./lead-note-persistence.mjs');
 await import('./lead-notes-ui.mjs');
+await import('./admin-state-races.mjs');
 ok('Latest Notes offers Save/Cancel and outside-click discard without Dictate or blur-save', !MAP_SOURCE.includes('lead-note-dictate') && MAP_SOURCE.includes("document.addEventListener('pointerdown',outside,true)") && !MAP_SOURCE.includes("input.addEventListener('blur'"));
 ok('Leads: persisted note edits, Contact/H5/H6 and booking composer drafts',true);
 await import('./message-races.mjs');
@@ -2804,5 +2820,9 @@ ok('Messages exposes archived history',MAP_SOURCE.includes('async function msgLo
 await import('./fabric-search.mjs');
 await import('./fabric-search-ui.mjs');
 ok('Fabric search preserves material context, streams products, and seals saved lookbooks',true);
+ok('Design Save freezes the submitted snapshot and restore baseline',ownerDesignRuntime.includes('value=structuredClone(value)')&&compactGallery.includes('editors.forEach(el=>el.inert=true)'));
+ok('Outbound confirms the reviewed recipient in its atomic send claim',readFileSync(join(ROOT,'docs/server/crm-intelligence.mjs'),'utf8').includes('c.email.trim().toLowerCase()!==expectedEmail'));
+ok('Brief save retry preserves generated work without paid regeneration',BACKEND_SOURCE.includes('async function retryDissectionSave()')&&BACKEND_SOURCE.includes('id="dissect-missing-pill"'));
+ok('Release gates verify the API commit as well as Hosting',readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8').includes('h.commit===WANT_COMMIT'));
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

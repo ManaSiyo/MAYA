@@ -881,7 +881,7 @@ try {
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=20"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=21"></script>
 <link rel="stylesheet" href="/aesthetics/ui/admin-systems.css?v=3">
 </head>
 <body class="systems-map">
@@ -989,6 +989,7 @@ if (IS_AFFILIATES) {
   </div>
 </div>
   <div id="drawer-messages" hidden>
+    <div id="msg-list-feedback" role="status" aria-live="polite"></div>
     <div id="booking-pending" aria-live="polite"></div>
     <div id="msg-list"></div>
     <div id="msg-thread" hidden>
@@ -1440,7 +1441,9 @@ if (IS_AFFILIATES) {
 <script>
 // v14.03: Feature requests, Maya's inbox on the page. Who asked, what, when.
 // The ask is trimmed to one line; hover carries the whole of it.
+let _featureSequence=0;
 async function loadFeatureRequests(){
+  const context=_adminContext(),sequence=++_featureSequence;
   const host=document.getElementById('features-list'); if(!host||!_idTok) return;
   try{
     // v14.04: one stream, two rooms. The front end (users in the app, and their
@@ -1454,6 +1457,7 @@ async function loadFeatureRequests(){
     const j=await frR.json().catch(()=>({}));
     if(!frR.ok) throw new Error(j.error||('http '+frR.status));
     const fb=fbR?await fbR.json().catch(()=>({})):{};
+    if(sequence!==_featureSequence||!_adminContextCurrent(context))return;
     const esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     const day=ts=>{ try{ return new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric'}).format(new Date(ts)); }catch(_){ return ''; } };
     const short=t=>{ t=String(t||'').replace(/\s+/g,' ').trim(); return t.length>110?t.slice(0,107).replace(/\s\S*$/,'')+'\u2026':t; };
@@ -1478,14 +1482,14 @@ async function loadFeatureRequests(){
     if(f&&newest){ const latest=String(newest.id||newest.ts||''); let seen=''; try{ seen=localStorage.getItem('maya_features_seen')||''; }catch(_){}
       f.classList.toggle('unseen', seen!==latest);
       f.addEventListener('toggle',()=>{ if(f.open){ f.classList.remove('unseen'); try{ localStorage.setItem('maya_features_seen',latest); }catch(_){} } },{once:true}); }
-  }catch(e){ host.innerHTML='<div class="note">Maya\'s inbox did not answer: '+String(e.message||e).replace(/[<>]/g,'')+'</div>'; }
+  }catch(e){ if(sequence!==_featureSequence||!_adminContextCurrent(context))return;host.innerHTML='<div class="note">Maya\'s inbox did not answer: '+String(e.message||e).replace(/[<>]/g,'')+'</div>'; }
 }
 async function markFeatureDone(btn){
   const rowEl=btn.closest('.fr'); const id=rowEl&&rowEl.getAttribute('data-fid'); if(!id||!_idTok) return;
-  const undone=rowEl.classList.contains('done');
+  const undone=rowEl.classList.contains('done'),context=_adminContext();
   try{
     const r=await fetch('/api/admin/maya-feature-done',{method:'POST',headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({id,undone})});
-    if(r.ok) rowEl.classList.toggle('done',!undone);
+    if(r.ok&&_adminContextCurrent(context))rowEl.classList.toggle('done',!undone);
   }catch(_){ }
 }
 // Show the commit actually published by Hosting; GitHub/Vercel success alone
@@ -1583,6 +1587,14 @@ document.addEventListener('pointerdown', (e) => {
 }, true);
 function setDot(id,s){document.getElementById(id).className='sdot '+s}
 let _idTok = null;
+let _adminSession = 0;
+// JWT claims identify a browser session only; every API still verifies Admin access.
+function _adminSubject(token){
+  try { const p=JSON.parse(atob(String(token).split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); return typeof p.sub==='string'?p.sub:''; }
+  catch(_){ return ''; }
+}
+function _adminContext(){return {session:_adminSession,subject:_adminSubject(_idTok),token:_idTok};}
+function _adminContextCurrent(context){return !!context?.token&&!!_idTok&&context.session===_adminSession&&(context.token===_idTok||!!context.subject&&context.subject===_adminSubject(_idTok));}
 let _modelsLoading = false, _modelsAuth = null, _modelsChecked = 0;
 let _healthSeq = 0;
 async function _statusFetch(url, options, timeoutMs) {
@@ -1722,9 +1734,10 @@ function _renewNow() {
 }
 function _adoptToken(t, firstLoad) {
   if (t === _idTok) return;          // v12.9: the same token twice is not news
+  const sameAccount=!!_idTok&&!!_adminSubject(t)&&_adminSubject(t)===_adminSubject(_idTok);
   _renewTries = 0;
-  window.dispatchEvent(new Event('maya-owner-session-changed'));
   _idTok = t;
+  if(!sameAccount){_adminSession++;window.dispatchEvent(new Event('maya-owner-session-changed'));}
   _cacheTok(t);
   _showSignin(false);
   _scheduleRenew(t);
@@ -1765,10 +1778,11 @@ function _cmdBlock(label) {
     '<span style="color:var(--faint)">Paste that into Terminal on the Mac once, traffic and submissions both switch on, no other steps.</span>';
 }
 let _expiredAt = 0;
-function _expired() {
+function _expired(expectedToken) {
+  if(expectedToken&&expectedToken!==_idTok)return;
   if (IS_AFFILIATES && window.clearAffiliateLeads) window.clearAffiliateLeads('Sign in again to load leads.');
-  window.dispatchEvent(new Event('maya-owner-session-changed'));
   _idTok = null;
+  _adminSession++;window.dispatchEvent(new Event('maya-owner-session-changed'));
   delete window.MAYA_MODEL_SNAPSHOT;window.dispatchEvent(new CustomEvent("maya-model-clear"));
   try{ if(window.mayaCommandState) window.mayaCommandState('signed out', 'waiting'); }catch(_){}
   try { localStorage.removeItem('maya_admin_tok'); } catch (_) {}
@@ -1796,7 +1810,7 @@ function _subsNote(html) {
 let _subsSeq = 0;
 async function loadSubmissions() {
   if (IS_AFFILIATES) return;
-  const requestSeq = ++_subsSeq;
+  const requestSeq = ++_subsSeq,context=_adminContext(),auth=_idTok;
   const strip = document.getElementById('subs-strip');
   if (!_idTok) {
     // v12.8: if submissions are already on screen, leave them there. A lapsed
@@ -1806,19 +1820,20 @@ async function loadSubmissions() {
     return;
   }
   let r;
-  try { r = await _statusFetch('/api/admin/submissions?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + _idTok }, cache: 'no-store' }); }
+  try { r = await _statusFetch('/api/admin/submissions?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + auth }, cache: 'no-store' }); }
   catch (_) {
-    if (requestSeq !== _subsSeq) return;
+    if (requestSeq !== _subsSeq || !_adminContextCurrent(context)) return;
     _subsNote('The request was blocked or timed out before the API answered. Check the connection or pause blockers for this site.'); return;
   }
-  if (requestSeq !== _subsSeq) return;
+  if (requestSeq !== _subsSeq || !_adminContextCurrent(context)) return;
   if (r.status === 404) { _subsNote(_cmdBlock('<b>FEED PENDING, one command switches it on:</b>')); return; }
-  if (r.status === 401) { _expired(); return; }
-  if (r.status === 403) { _subsNote('This Google account is not on the admin list.'); return; }
+  if (r.status === 401) { _expired(auth); return; }
+  if (r.status === 403) { _expired(auth); _subsNote('This Google account is not on the admin list.'); return; }
   if (!r.ok) {
     // v13.5: say what the server actually said. A 500 here used to leave the
     // default "waiting for sign in" note on screen, pointing at the wrong fault.
     let j = {}; try { j = await r.json(); } catch (_) {}
+    if(requestSeq!==_subsSeq||!_adminContextCurrent(context))return;
     const d = String(j.detail || '');
     if (j.code === 'drive_auth' || /invalid_grant|expired or revoked|oauth/i.test(d)) {
       _subsNote('Submissions cannot be reached: the folder they live in is refusing the server, so new ones will not land and past ones cannot be listed. This is an authorisation Fromsa renews, step by step in fixes.txt, dated Aug 16.');
@@ -1831,8 +1846,8 @@ async function loadSubmissions() {
   }
   let data;
   try { data = await r.json(); }
-  catch (_) { _subsNote('The submissions response was incomplete. It will retry automatically.'); return; }
-  if (requestSeq !== _subsSeq) return;
+  catch (_) { if(!_adminContextCurrent(context))return;_subsNote('The submissions response was incomplete. It will retry automatically.'); return; }
+  if (requestSeq !== _subsSeq || !_adminContextCurrent(context)) return;
   window.MAYA_ADMIN_DATA = window.MAYA_ADMIN_DATA || {};
   window.MAYA_ADMIN_DATA.submissions = data;
   document.getElementById('subs-count').textContent = data.total ? data.total + ' total' : '';
@@ -1897,7 +1912,7 @@ async function loadSubmissions() {
 const _thumbUrls = new Map();
 async function _paintThumbs() {
   const nodes = Array.from(document.querySelectorAll('#subs-strip img[data-thumb]'));
-  const token = _idTok;
+  const token = _idTok,context=_adminContext();
   await Promise.all(nodes.map(async n => {
     const id = n.dataset.thumb;
     if (!id || n.dataset.done) return;
@@ -1908,9 +1923,11 @@ async function _paintThumbs() {
     try {
       const r = await _statusFetch('/api/admin/subthumb?id=' + encodeURIComponent(id) + '&w=480',
         { headers: { 'Authorization': 'Bearer ' + token } });
-      if (r.status === 401) { _expired(); return; }
+      if(!_adminContextCurrent(context))return;
+      if (r.status === 401) { _expired(token); return; }
       if (!r.ok) { n.remove(); return; }
-      const u = URL.createObjectURL(await r.blob());
+      const blob=await r.blob();if(!_adminContextCurrent(context))return;
+      const u = URL.createObjectURL(blob);
       _thumbUrls.set(id, u);
       n.src = u;
     } catch (_) { try { n.remove(); } catch (_) {} }
@@ -1945,24 +1962,25 @@ document.addEventListener('visibilitychange', () => {
 let _trafficSeq = 0;
 async function loadTraffic() {
   if (IS_AFFILIATES) return;
-  const requestSeq = ++_trafficSeq;
+  const requestSeq = ++_trafficSeq,context=_adminContext(),auth=_idTok;
   const tiles = document.getElementById('traffic-tiles');
   if (!_idTok) { _note('Waiting for the one sign in at the top of the page.'); return; }
   let r;
-  try { r = await _statusFetch('/api/admin/analytics?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + _idTok }, cache: 'no-store' }); }
-  catch (_) { if (requestSeq === _trafficSeq) _note('Could not reach the API before the request timed out.'); return; }
-  if (requestSeq !== _trafficSeq) return;
+  try { r = await _statusFetch('/api/admin/analytics?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + auth }, cache: 'no-store' }); }
+  catch (_) { if (requestSeq === _trafficSeq && _adminContextCurrent(context)) _note('Could not reach the API before the request timed out.'); return; }
+  if (requestSeq !== _trafficSeq || !_adminContextCurrent(context)) return;
   if (r.status === 404) { _note(_cmdBlock('<b>TRAFFIC PENDING, one command switches it on:</b>')); return; }
-  if (r.status === 401) { _expired(); return; }
-  if (r.status === 403) { _note('This Google account is not on the admin list.'); return; }
+  if (r.status === 401) { _expired(auth); return; }
+  if (r.status === 403) { _expired(auth); _note('This Google account is not on the admin list.'); return; }
   if (!r.ok) { _note('Traffic unavailable right now (' + r.status + ').'); return; }
   let d;
   try { d = await r.json(); }
-  catch (_) { _note('Traffic returned an incomplete response. It will retry automatically.'); return; }
-  if (requestSeq !== _trafficSeq) return;
+  catch (_) { if(!_adminContextCurrent(context))return;_note('Traffic returned an incomplete response. It will retry automatically.'); return; }
+  if (requestSeq !== _trafficSeq || !_adminContextCurrent(context)) return;
   window.MAYA_ADMIN_DATA = window.MAYA_ADMIN_DATA || {};
   window.MAYA_ADMIN_DATA.traffic = d;
   _paintHeadTiles(d);
+  if(!tiles)return; // The current workspace uses the heading metrics; the legacy tile row is optional.
   if (!d.ok) {
     _note('<b>Connect Google Analytics (one time):</b> Google Analytics &#8594; Admin &#8594; Property access management &#8594; add <b>'
       + (d.saEmail || 'the Cloud Run service account') + '</b> as Viewer. Numbers appear a minute later.');
@@ -2023,6 +2041,7 @@ function _wireUsersPop() {
   tile._popWired = true;
   tile.style.position = 'relative';
   tile.addEventListener('mouseenter', async () => {
+    const context=_adminContext();if(!_adminContextCurrent(context))return;
     let pop = document.getElementById('users-pop');
     if (!pop) {
       pop = document.createElement('div');
@@ -2034,9 +2053,10 @@ function _wireUsersPop() {
       pop.innerHTML = '<div class="up-row dim">looking&#8230;</div>';
       try {
         const r = await _statusFetch('/api/admin/users', { headers: { 'Authorization': 'Bearer ' + _idTok } });
-        if (r.ok) { _usersPopData = await r.json(); _usersPopAt = Date.now(); }
+        if (r.ok) { const data=await r.json();if(!_adminContextCurrent(context))return;_usersPopData=data;_usersPopAt=Date.now(); }
       } catch (_) {}
     }
+    if(!_adminContextCurrent(context))return;
     const d = _usersPopData;
     if (!d || !d.ok) { pop.innerHTML = '<div class="up-row dim">could not read the list</div>'; return; }
     const when = (ms) => {
@@ -2124,6 +2144,15 @@ setInterval(() => { if (_idTok && document.visibilityState === 'visible') loadTr
 // ═══ v13.71: THE VISIBLE ADMIN COMMAND LAYER. Deterministic briefing,
 // grounded panel reads, exact lead identity and click-confirmed writes. ═══
 window.MAYA_ADMIN_DATA = window.MAYA_ADMIN_DATA || {};
+window.addEventListener('maya-owner-session-changed',()=>{
+  ++_subsSeq;++_trafficSeq;++_featureSequence;_usersPopData=null;_usersPopAt=0;
+  for(const url of _thumbUrls.values())URL.revokeObjectURL(url);_thumbUrls.clear();
+  _modelsAuth=null;_modelsChecked=0;delete window.MAYA_MODEL_SNAPSHOT;window.dispatchEvent(new CustomEvent('maya-model-clear'));
+  for(const id of ['subs-strip','subs-count','features-list','head-tiles','traffic-tiles','maya-logs-list']){
+    const el=document.getElementById(id);if(el){el.replaceChildren();delete el.dataset.sig;}
+  }
+  for(const id of ['subs-note-inline','traffic-note']){const el=document.getElementById(id);if(el)el.textContent='Sign in to load this account.';}
+});
 let _mayaActions = [];
 let _mayaActionSeq = 0;
 
@@ -2192,27 +2221,33 @@ function _mayaRenderCommand(snapshot){
     });
   }
 }
+let _mayaCommandSequence=0;
 async function loadMayaCommand(){
+  const context=_adminContext(),sequence=++_mayaCommandSequence,auth=_idTok;
   if(!_idTok){ mayaCommandState('sign in to ground the briefing','waiting'); return null; }
   mayaCommandState('refreshing today','busy');
   try{
-    const r=await fetch('/api/admin/command-snapshot?t='+Date.now(),{headers:{'Authorization':'Bearer '+_idTok},cache:'no-store'});
+    const r=await fetch('/api/admin/command-snapshot?t='+Date.now(),{headers:{'Authorization':'Bearer '+auth},cache:'no-store'});
     const j=await r.json().catch(()=>({}));
-    if(r.status===401){ _expired(); return null; }
+    if(sequence!==_mayaCommandSequence||!_adminContextCurrent(context))return null;
+    if(r.status===401){ _expired(auth); return null; }
     if(!r.ok||!j.ok) throw new Error(j.error||('snapshot '+r.status));
     window.MAYA_ADMIN_DATA.command=j; _mayaRenderCommand(j);
     mayaCommandState(_mayaActions.length?'action waiting for confirmation':'ready',_mayaActions.length?'waiting':'');
     return j;
-  }catch(e){ mayaCommandState('briefing unavailable','waiting'); return null; }
+  }catch(e){ if(sequence===_mayaCommandSequence&&_adminContextCurrent(context))mayaCommandState('briefing unavailable','waiting'); return null; }
 }
 window.loadMayaCommand=loadMayaCommand;
 
-async function _mayaLeadLookup(query){
+async function _mayaLeadLookup(query,context=_adminContext()){
+  if(!_adminContextCurrent(context))return {ok:false,status:'session_changed',matches:[]};
+  const auth=_idTok;
   const r=await fetch('/api/admin/lead-lookup',{method:'POST',
-    headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
+    headers:{'Authorization':'Bearer '+auth,'Content-Type':'application/json'},
     body:JSON.stringify({query:query||''})});
   const j=await r.json().catch(()=>({}));
-  if(r.status===401){ _expired(); return {ok:false,status:'signed_out',matches:[]}; }
+  if(!_adminContextCurrent(context))return {ok:false,status:'session_changed',matches:[]};
+  if(r.status===401){ _expired(auth); return {ok:false,status:'signed_out',matches:[]}; }
   if(!r.ok) return {ok:false,status:j.error||('lookup '+r.status),matches:[]};
   return j;
 }
@@ -2237,12 +2272,13 @@ function _mayaRenderActions(){
   host.innerHTML='';
   _mayaActions.forEach(action=>{
     const row=document.createElement('div'); row.className='maya-action'; row.dataset.actionId=action.id;
-    const meta=document.createElement('div'); meta.className='maya-action-meta'; meta.textContent='Waiting for your confirmation';
+    const meta=document.createElement('div'); meta.className='maya-action-meta'; meta.textContent=action.message||(action.status==='inflight'?'Saving…':action.status==='uncertain'?'Result unconfirmed. Check the saved data before trying again.':'Waiting for your confirmation');
     const copy=document.createElement('div'); copy.className='maya-action-copy'; copy.textContent=_mayaActionLabel(action);
     const controls=document.createElement('div'); controls.className='maya-action-controls';
-    const yes=document.createElement('button'); yes.type='button'; yes.className='maya-action-btn confirm'; yes.textContent='Confirm';
+    const yes=document.createElement('button'); yes.type='button'; yes.className='maya-action-btn confirm'; yes.textContent=action.status==='uncertain'&&action.kind==='add_lead'?'Check result':'Confirm';
+    yes.disabled=action.status==='inflight'||(action.status==='uncertain'&&action.kind!=='add_lead');
     yes.onclick=()=>mayaConfirmAction(action.id);
-    const no=document.createElement('button'); no.type='button'; no.className='maya-action-btn'; no.textContent='Dismiss';
+    const no=document.createElement('button'); no.type='button'; no.className='maya-action-btn'; no.textContent='Dismiss';no.disabled=action.status==='inflight';
     no.onclick=()=>mayaDismissAction(action.id);
     controls.append(yes,no); row.append(meta,copy,controls); host.appendChild(row);
   });
@@ -2252,76 +2288,70 @@ function _mayaRenderActions(){
   else if(!_mayaActions.length && dialog.open)dialog.close();
   mayaCommandState(_mayaActions.length?'action waiting for confirmation':'ready',_mayaActions.length?'waiting':'');
 }
-function _mayaQueueAction(action){
-  const rec={...action,id:'maya-action-'+(++_mayaActionSeq)};
-  _mayaActions.push(rec); _mayaActions=_mayaActions.slice(-8); _mayaRenderActions();
+function _mayaQueueAction(action,context=_adminContext()){
+  if(!_adminContextCurrent(context))return {ok:false,error:'session_changed'};
+  if(_mayaActions.length>=8)return {ok:false,error:'Review the pending actions before adding another.'};
+  const rec={...action,id:'maya-action-'+(++_mayaActionSeq),requestId:crypto.randomUUID(),context,status:'pending'};
+  _mayaActions.push(rec);_mayaRenderActions();
   document.getElementById('maya-action-queue')?.scrollIntoView({block:'nearest'});
   return {ok:true,queued:true,actionId:rec.id,message:'Waiting for Fromsa to confirm on the Admin page.'};
 }
-function mayaDismissAction(id){ _mayaActions=_mayaActions.filter(a=>a.id!==id); _mayaRenderActions(); }
+function mayaDismissAction(id){_mayaActions=_mayaActions.filter(a=>a.id!==id||a.status==='inflight');_mayaRenderActions();}
 window.mayaDismissAction=mayaDismissAction;
-
+window.addEventListener('maya-owner-session-changed',()=>{
+  ++_mayaCommandSequence;_mayaActions=[];_mayaRenderActions();
+  window.MAYA_ADMIN_DATA={};_mayaRenderCommand({});_mayaChatClear();
+});
 async function mayaConfirmAction(id){
-  const action=_mayaActions.find(a=>a.id===id); if(!action) return;
-  const row=document.querySelector('[data-action-id="'+CSS.escape(id)+'"]');
-  const buttons=row?row.querySelectorAll('button'):[]; buttons.forEach(b=>b.disabled=true);
+  const action=_mayaActions.find(a=>a.id===id);
+  if(!action||!_adminContextCurrent(action.context)||action.status==='inflight'||(action.status==='uncertain'&&action.kind!=='add_lead'))return;
+  action.status='inflight';action.message='';_mayaRenderActions();
   mayaCommandState('confirming '+action.kind,'busy');
-  // Open the review window inside the trusted click before the async draft call.
-  let mailWindow=null;
-  if(action.kind==='email'){
-    try{ mailWindow=window.open('about:blank','_blank'); if(mailWindow) mailWindow.opener=null; }catch(_){}
-  }
+  let mailWindow=null,dispatched=false,definiteFailure=false;
   try{
-    if(action.kind==='email'&&!mailWindow) throw new Error('Allow popups, then confirm the email draft again.');
-    let r,j;
-    if(action.kind==='remember'||action.kind==='forget'){
-      r=await fetch('/api/admin/maya-'+action.kind,{method:'POST',headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
-        body:JSON.stringify({text:action.text})}); j=await r.json().catch(()=>({}));
-    }else if(action.kind==='lead_note'){
-      r=await fetch('/api/admin/lead-note',{method:'POST',headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
-        body:JSON.stringify({email:action.lead.email,note:action.note,contact:action.contact||''})}); j=await r.json().catch(()=>({}));
-    }else if(action.kind==='email'){
-      r=await fetch('/api/admin/lead-draft',{method:'POST',headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
-        body:JSON.stringify({email:action.lead.email,name:action.lead.name,
-          summary:action.lead.summary||'',goal:action.request||''})}); j=await r.json().catch(()=>({}));
-      if(!r.ok||!j.subject) throw new Error(j.error||('draft '+r.status));
-      const url='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(action.lead.email)+
-        '&su='+encodeURIComponent(j.subject)+'&body='+encodeURIComponent(j.body||'');
-      mailWindow.location.href=url;
-    }else if(action.kind==='add_lead'){
-      r=await fetch('/api/admin/lead-add',{method:'POST',headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
-        body:JSON.stringify({name:action.lead.name,email:action.lead.email||'',phone:action.lead.phone||'',note:action.lead.note||''})}); j=await r.json().catch(()=>({}));
-    }else if(action.kind==='add_person'){
-      r=await fetch('/api/admin/maya-person',{method:'POST',headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
-        body:JSON.stringify({name:action.person.name,role:action.person.role||'',note:action.person.note||''})}); j=await r.json().catch(()=>({}));
-    }else if(action.kind==='update_lead'){
-      r=await fetch('/api/admin/lead-update',{method:'POST',headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
-        body:JSON.stringify({id:action.lead.id,...(action.patch||{})})}); j=await r.json().catch(()=>({}));
-    }else if(action.kind==='delete_lead'){
-      r=await fetch('/api/admin/lead-delete',{method:'POST',headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
-        body:JSON.stringify({id:action.lead.id})}); j=await r.json().catch(()=>({}));
+    if(action.kind==='email'){
+      mailWindow=window.open('about:blank','_blank');if(mailWindow)mailWindow.opener=null;
+      if(!mailWindow)throw Error('Allow popups, then confirm the email draft again.');
     }
-    if(!r||!r.ok||j.ok===false) throw new Error((j&&j.error)||('action '+(r&&r.status)));
-    _mayaActions=_mayaActions.filter(a=>a.id!==id); _mayaRenderActions();
+    let path,body;
+    if(action.kind==='remember'||action.kind==='forget'){path='maya-'+action.kind;body={text:action.text};}
+    else if(action.kind==='lead_note'){path='lead-note';body={email:action.lead.email,note:action.note,contact:action.contact||''};}
+    else if(action.kind==='email'){path='lead-draft';body={email:action.lead.email,name:action.lead.name,summary:action.lead.summary||'',goal:action.request||''};}
+    else if(action.kind==='add_lead'){path='lead-add';body={name:action.lead.name,email:action.lead.email||'',phone:action.lead.phone||'',note:action.lead.note||'',requestId:action.requestId};}
+    else if(action.kind==='add_person'){path='maya-person';body={name:action.person.name,role:action.person.role||'',note:action.person.note||''};}
+    else if(action.kind==='update_lead'){path='lead-update';body={id:action.lead.id,...(action.patch||{})};}
+    else if(action.kind==='delete_lead'){path='lead-delete';body={id:action.lead.id};}
+    if(!path)throw Error('Unknown action.');
+    dispatched=true;
+    const r=await fetch('/api/admin/'+path,{method:'POST',headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    definiteFailure=r.status>=400&&r.status<500;
+    const j=await r.json().catch(()=>({}));
+    if(!_adminContextCurrent(action.context)){if(mailWindow)mailWindow.close();return;}
+    if(!r.ok||j.ok===false||(action.kind==='email'&&!j.subject))throw Error(j.error||('action '+r.status));
+    if(mailWindow)mailWindow.location.href='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(action.lead.email)+'&su='+encodeURIComponent(j.subject)+'&body='+encodeURIComponent(j.body||'');
+    _mayaActions=_mayaActions.filter(a=>a.id!==id);_mayaRenderActions();
     mayaCommandState(action.kind==='email'?'draft opened for review':'action saved','');
-    if(['lead_note','add_lead','update_lead','delete_lead'].includes(action.kind)){ try{ if(window.loadMkt) window.loadMkt(); }catch(_){} try{ loadMayaCommand(); }catch(_){} }
+    if(['lead_note','add_lead','update_lead','delete_lead'].includes(action.kind)){try{window.loadMkt?.();loadMayaCommand();}catch(_){}}
   }catch(e){
-    try{ if(mailWindow) mailWindow.close(); }catch(_){}
-    if(row){ const meta=row.querySelector('.maya-action-meta'); if(meta) meta.textContent='Could not complete: '+String(e.message||e).slice(0,90); }
-    buttons.forEach(b=>b.disabled=false); mayaCommandState('action still waiting','waiting');
+    try{if(mailWindow)mailWindow.close();}catch(_){}
+    if(!_adminContextCurrent(action.context))return;
+    action.status=dispatched&&!definiteFailure?'uncertain':'pending';
+    action.message=action.status==='uncertain'?(action.kind==='add_lead'?'Result unconfirmed. Check result safely using the same request.':'Result unconfirmed. Check the saved data; this action will not be repeated.'):'Could not complete: '+String(e.message||e).slice(0,100);
+    _mayaRenderActions();mayaCommandState('action needs review','waiting');
   }
 }
 window.mayaConfirmAction=mayaConfirmAction;
 
-async function _mayaQueueLeadAction(query,kind,note,request,contact){
-  const found=await _mayaLeadLookup(query);
+async function _mayaQueueLeadAction(query,kind,note,request,contact,context=_adminContext()){
+  const found=await _mayaLeadLookup(query,context);
+  if(!_adminContextCurrent(context))return {ok:false,error:'session_changed'};
   if(!found.ok){
     const choices=(found.matches||[]).map(x=>x.name+' <'+x.email+'>');
     return {ok:false,error:found.status||'lead_not_found',matches:choices,
       instruction:choices.length?'Ask Fromsa which exact lead.':'Ask for the exact lead name or email.'};
   }
   return _mayaQueueAction({kind,lead:found.lead,note:_mayaEscText(note).slice(0,2000),
-    request:_mayaEscText(request).slice(0,400),contact:contact||''});
+    request:_mayaEscText(request).slice(0,400),contact:contact||''},context);
 }
 if(!IS_AFFILIATES && _idTok) loadMayaCommand();
 setInterval(()=>{ if(!IS_AFFILIATES && _idTok&&document.visibilityState==='visible') loadMayaCommand(); },120000);
@@ -2337,6 +2367,7 @@ setInterval(()=>{ if(!IS_AFFILIATES && _idTok&&document.visibilityState==='visib
 // the tap is the gesture both the microphone and the speaker need. ═══
 let _voice = null;   // { pc, mic, audio, dc }
 let _voiceStarting = false;
+let _voiceGeneration=0;
 let _voiceToolChain = Promise.resolve();
 function _voiceWord(t){ const el=document.getElementById('voice-word'); if(el) el.innerHTML=t||''; }
 function _voiceLive(on, word){
@@ -2352,7 +2383,8 @@ function _voiceLive(on, word){
   if(on && !IS_AFFILIATES)admTab('logs');
 }
 function _voiceStop(){
-  if(!_voice) return;
+  ++_voiceGeneration;_voiceStarting=false;
+  if(!_voice){_voiceLive(false);_voiceWord('');return;}
   try{ _voice.pc.close(); }catch(_){}
   try{ (_voice.mic&&_voice.mic.getTracks()||[]).forEach(t=>t.stop()); }catch(_){}
   try{ _voice.audio.srcObject=null; }catch(_){}
@@ -2361,10 +2393,14 @@ function _voiceStop(){
   try{ window.dispatchEvent(new Event('maya-voice-ended')); }catch(_){}   // v13.88: resume wake word
 }
 // Run one of Maya's tools and hand the result back to the conversation.
-async function _voiceTool(name, args){
+async function _voiceTool(name, args,context=_adminContext()){
+  if(!_adminContextCurrent(context))return {ok:false,error:'session_changed'};
+  const queue=action=>_mayaQueueAction(action,context);
   try{
     if(name==='get_briefing'){
-      const snap=await loadMayaCommand()||window.MAYA_ADMIN_DATA.command;
+      const fresh=await loadMayaCommand();
+      if(!_adminContextCurrent(context))return {ok:false,error:'session_changed'};
+      const snap=fresh||window.MAYA_ADMIN_DATA.command;
       if(!snap) return {ok:false,error:'briefing_unavailable'};
       // v13.82: hand back today/yesterday ad clicks structured, not just prose.
       const ads=((snap.panels||{}).ads)||null;
@@ -2380,6 +2416,7 @@ async function _voiceTool(name, args){
         const r=await fetch('/api/admin/maya-log-feature',{method:'POST',
           headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},
           body:JSON.stringify({text:t, who:args.who||'fromsa'})});
+        if(!_adminContextCurrent(context))return {ok:false,error:'session_changed'};
         if(!r.ok) return {ok:false,error:'log_failed'};
         _mayaChatAdd('maya','Logged in Maya’s feedback queue: '+t);
         return {ok:true, logged:true};
@@ -2396,30 +2433,30 @@ async function _voiceTool(name, args){
         return {ok:true, open:items.filter(i=>!i.done).length, items};
       }catch(e){ return {ok:false,error:'digest_failed'}; }
     }
-    if(name==='find_lead') return await _mayaLeadLookup(args.query||'');
+    if(name==='find_lead') return await _mayaLeadLookup(args.query||'',context);
     if(name==='add_lead'){
       const nm=_mayaEscText(args.name).slice(0,120); if(!nm) return {ok:false,error:'name_required'};
-      return _mayaQueueAction({kind:'add_lead',lead:{name:nm,email:_mayaEscText(args.email||'').slice(0,180),
+      return queue({kind:'add_lead',lead:{name:nm,email:_mayaEscText(args.email||'').slice(0,180),
         phone:_mayaEscText(args.phone||'').slice(0,60),note:_mayaEscText(args.note||'').slice(0,400)}});
     }
     if(name==='add_person'){
       const nm=_mayaEscText(args.name).slice(0,80); if(!nm) return {ok:false,error:'name_required'};
-      return _mayaQueueAction({kind:'add_person',person:{name:nm,role:_mayaEscText(args.role||'').slice(0,120),
+      return queue({kind:'add_person',person:{name:nm,role:_mayaEscText(args.role||'').slice(0,120),
         note:_mayaEscText(args.note||'').slice(0,240)}});
     }
     if(name==='update_lead'){
-      const found=await _mayaLeadLookup(args.lead||'');
+      const found=await _mayaLeadLookup(args.lead||'',context);
       if(!found.ok){ const c=(found.matches||[]).map(x=>x.name+' <'+x.email+'>');
         return {ok:false,error:found.status||'lead_not_found',matches:c,instruction:c.length?'Ask which exact lead.':'Ask for the exact lead name or email.'}; }
       const patch={}; ['name','email','phone','tier'].forEach(k=>{ const v=_mayaEscText(args[k]||''); if(v) patch[k]=v; });
       if(!Object.keys(patch).length) return {ok:false,error:'nothing_to_change'};
-      return _mayaQueueAction({kind:'update_lead',lead:found.lead,patch});
+      return queue({kind:'update_lead',lead:found.lead,patch});
     }
     if(name==='delete_lead'){
-      const found=await _mayaLeadLookup(args.lead||'');
+      const found=await _mayaLeadLookup(args.lead||'',context);
       if(!found.ok){ const c=(found.matches||[]).map(x=>x.name+' <'+x.email+'>');
         return {ok:false,error:found.status||'lead_not_found',matches:c,instruction:c.length?'Ask which exact lead.':'Ask for the exact lead name or email.'}; }
-      return _mayaQueueAction({kind:'delete_lead',lead:found.lead});
+      return queue({kind:'delete_lead',lead:found.lead});
     }
     if(name==='journal'){
       const t=_mayaEscText(args.text).slice(0,1000); if(!t) return {ok:false,error:'text_required'};
@@ -2447,26 +2484,28 @@ async function _voiceTool(name, args){
     }
     if(name==='remember'){
       const t=_mayaEscText(args.text).slice(0,4000);
-      return t?_mayaQueueAction({kind:'remember',text:t}):{ok:false,error:'text_required'};
+      return t?queue({kind:'remember',text:t}):{ok:false,error:'text_required'};
     }
     if(name==='note_lead'){
       return await _mayaQueueLeadAction(args.lead||'','lead_note',args.note||'','',
-        (args.contact&&args.contact!=='none')?args.contact:'');
+        (args.contact&&args.contact!=='none')?args.contact:'',context);
     }
     if(name==='forget'){
       const t=_mayaEscText(args.text).slice(0,4000);
-      return t?_mayaQueueAction({kind:'forget',text:t}):{ok:false,error:'text_required'};
+      return t?queue({kind:'forget',text:t}):{ok:false,error:'text_required'};
     }
     if(name==='draft_email'){
-      return await _mayaQueueLeadAction(args.lead||'','email','',''+(args.request||''),'');
+      return await _mayaQueueLeadAction(args.lead||'','email','',''+(args.request||''),'',context);
     }
   }catch(e){ return {ok:false, error:String(e&&e.message||e)}; }
   return {ok:false, error:'unknown tool'};
 }
-async function _voiceRunCall(dc, name, call_id, argStr){
+async function _voiceRunCall(dc, name, call_id, argStr,context=_adminContext(),generation=_voiceGeneration){
+  if(!_adminContextCurrent(context)||generation!==_voiceGeneration)return;
   let args={}; try{ args=JSON.parse(argStr||'{}'); }catch(_){}
   mayaCommandState('Maya is checking '+String(name||'a tool').replace(/_/g,' '),'busy');
-  const out=await _voiceTool(name, args);
+  const out=await _voiceTool(name, args,context);
+  if(!_adminContextCurrent(context)||generation!==_voiceGeneration)return;
   try{
     // An explicit, authenticated lookup must preserve the contact Fromsa asked for.
     // Broad dashboard snapshots still omit contact details.
@@ -2494,9 +2533,10 @@ function _mayaChatAdd(who, text){
 }
 window._mayaChatAdd=_mayaChatAdd;
 function _mayaChatClear(){ const h=document.getElementById('maya-chat'); if(h){ h.innerHTML=''; h.classList.remove('show'); } }
-function _voiceOnMessage(dc){
+function _voiceOnMessage(dc,context=_adminContext(),generation=_voiceGeneration){
   const seen=new Set();
   return (ev)=>{
+    if(!_adminContextCurrent(context)||generation!==_voiceGeneration)return;
     let m; try{ m=JSON.parse(ev.data); }catch(_){ return; }
     if(m.type==='input_audio_buffer.speech_started') mayaCommandState('listening','busy');
     if(m.type==='response.created') mayaCommandState('Maya is thinking','busy');
@@ -2508,7 +2548,7 @@ function _voiceOnMessage(dc){
     // primary path: the arguments-done event
     if(m.type==='response.function_call_arguments.done' && m.call_id && !seen.has(m.call_id)){
       seen.add(m.call_id);
-      _voiceToolChain=_voiceToolChain.then(()=>_voiceRunCall(dc,m.name,m.call_id,m.arguments)).catch(()=>{});
+      _voiceToolChain=_voiceToolChain.then(()=>_voiceRunCall(dc,m.name,m.call_id,m.arguments,context,generation)).catch(()=>{});
       return;
     }
     // fallback: scan a completed response for any function_call items
@@ -2516,7 +2556,7 @@ function _voiceOnMessage(dc){
       for(const it of m.response.output){
         if(it.type==='function_call' && it.call_id && !seen.has(it.call_id)){
           seen.add(it.call_id);
-          _voiceToolChain=_voiceToolChain.then(()=>_voiceRunCall(dc,it.name,it.call_id,it.arguments)).catch(()=>{});
+          _voiceToolChain=_voiceToolChain.then(()=>_voiceRunCall(dc,it.name,it.call_id,it.arguments,context,generation)).catch(()=>{});
         }
       }
     }
@@ -2528,6 +2568,9 @@ async function toggleMayaVoice(){
   if(!_idTok){ _voiceWord('sign in first'); return; }
   try{ if(typeof _wakeStop==='function') _wakeStop(); }catch(_){}   // v13.88: free the mic while she's live
   _voiceStarting=true;
+  const context=_adminContext(),generation=++_voiceGeneration;
+  const current=()=>_adminContextCurrent(context)&&generation===_voiceGeneration;
+  const check=()=>{if(!current())throw Error('session_changed');};
   _mayaChatClear();   // v13.79: a fresh conversation each time she connects
   let pendingMic=null,pendingPc=null,pendingAudio=null;
   try{
@@ -2539,24 +2582,25 @@ async function toggleMayaVoice(){
     mayaCommandState('opening the live voice line','busy');
     const tr=await fetch('/api/admin/voice-token',{method:'POST',
       headers:{'Authorization':'Bearer '+_idTok,'Content-Type':'application/json'},body:'{}'});
-    const tj=await tr.json().catch(()=>({}));
+    const tj=await tr.json().catch(()=>({}));check();
     if(!tr.ok||!tj.value) throw new Error(tj.error||('token '+tr.status));
-    pendingMic=await navigator.mediaDevices.getUserMedia({audio:true});
+    pendingMic=await navigator.mediaDevices.getUserMedia({audio:true});check();
     pendingPc=new RTCPeerConnection();
     pendingMic.getTracks().forEach(t=>pendingPc.addTrack(t,pendingMic));
     pendingAudio=new Audio(); pendingAudio.autoplay=true;
     pendingPc.ontrack=e=>{ pendingAudio.srcObject=e.streams[0]; };
     const dc=pendingPc.createDataChannel('oai-events');
     dc.onopen=()=>{ try{ dc.send(JSON.stringify({type:'response.create'})); }catch(_){} };
-    dc.onmessage=_voiceOnMessage(dc);
+    dc.onmessage=_voiceOnMessage(dc,context,generation);
     pendingPc.onconnectionstatechange=()=>{
-      if(['failed','disconnected','closed'].includes(pendingPc.connectionState) && _voice) _voiceStop();
+      if(current()&&['failed','disconnected','closed'].includes(pendingPc.connectionState) && _voice) _voiceStop();
     };
-    const offer=await pendingPc.createOffer(); await pendingPc.setLocalDescription(offer);
+    const offer=await pendingPc.createOffer();check(); await pendingPc.setLocalDescription(offer);check();
     const cr=await fetch('https://api.openai.com/v1/realtime/calls?model='+encodeURIComponent(tj.model),{
       method:'POST',headers:{'Authorization':'Bearer '+tj.value,'Content-Type':'application/sdp'},body:offer.sdp});
-    if(!cr.ok) throw new Error('call '+cr.status);
-    await pendingPc.setRemoteDescription({type:'answer',sdp:await cr.text()});
+    check();if(!cr.ok) throw new Error('call '+cr.status);
+    const answer=await cr.text();check();
+    await pendingPc.setRemoteDescription({type:'answer',sdp:answer});check();
     _voice={pc:pendingPc,mic:pendingMic,audio:pendingAudio,dc};
     _voiceLive(true, 'Maya is listening');
     _voiceWord('listening \u00b7 tap to hang up');
@@ -2564,6 +2608,7 @@ async function toggleMayaVoice(){
     try{ pendingPc&&pendingPc.close(); }catch(_){}
     try{ (pendingMic&&pendingMic.getTracks()||[]).forEach(t=>t.stop()); }catch(_){}
     try{ if(pendingAudio) pendingAudio.srcObject=null; }catch(_){}
+    if(!current())return;
     _voiceStop();_voiceLive(false);
     // v13.72: a human line instead of a raw error code. The details go to the
     // console; the drawer just says what it means for Fromsa.
@@ -2575,9 +2620,12 @@ async function toggleMayaVoice(){
     else if(/getUserMedia|Permission|NotAllowed/i.test(raw)) human='let the browser use the microphone, then try again';
     _voiceWord(human);
     mayaCommandState(human,'waiting');
+    if(_wakeWantOn)_wakeSchedule(800);
     console.warn('[maya voice]',e);
-  }finally{ _voiceStarting=false; if(!_voice&&_wakeWantOn)_wakeSchedule(800); }
+  }finally{ if(generation===_voiceGeneration){_voiceStarting=false;if(!_voice&&_wakeWantOn)_wakeSchedule(800);} }
 }
+
+window.addEventListener('maya-owner-session-changed',()=>{_wakeWantOn=false;_wakeStop();_wakeLabel();_voiceStop();_voiceToolChain=Promise.resolve();_mayaChatClear();});
 
 // ═══ v13.88: "Hey Maya" wake word. A background recognizer listens for the
 // phrase and taps the voice line for you. Off by default (it needs the mic);
@@ -2827,6 +2875,7 @@ function buildTicker(d) {
   el.style.animationDuration = Math.max(20, Math.min(80, Math.round(chars / 4.5))) + 's';
 }
 async function fetchBrief(d) {
+  const context=_adminContext();
   const hour = new Date().toISOString().slice(0, 13);
   if (_briefHour === hour && _brief) return;
   try {
@@ -2838,7 +2887,8 @@ async function fetchBrief(d) {
       body: JSON.stringify({ data: payload }),
     });
     if (!r.ok) return;
-    _brief = await r.json(); _briefHour = hour; buildTicker(d);
+    const brief=await r.json();if(!_adminContextCurrent(context))return;
+    _brief=brief;_briefHour=hour;buildTicker(d);
   } catch (_) { /* deterministic warnings and live numbers already stand */ }
 }
 
@@ -3090,7 +3140,7 @@ function _invModalEl(){
     '<div class="inv-card">' +
       '<button class="inv-close" onclick="_closeInvoiceModal()" aria-label="Close">&#215;</button>' +
       '<h4 id="inv-title">Invoice</h4>' +
-      '<p class="inv-lede">One click builds a real Wix pay link: single use, service tax, the Mana Siyo logo as the item image until a MAYA render is attached. It saves onto the lead and rides the next email draft.</p>' +
+      '<p class="inv-lede">One click builds a real Wix pay link: single use, service tax, the Mana Siyo logo as the item image until a MAYA render is attached. Review the result below to confirm whether it was saved on the lead.</p>' +
       '<label class="inv-label">Link name</label>' +
       '<input id="inv-name" class="inv-input" type="text" maxlength="50" />' +
       '<label class="inv-label" style="margin-top:10px">Price, USD</label>' +
@@ -3111,110 +3161,115 @@ function _invModalEl(){
   document.body.appendChild(m);
   return m;
 }
-let _invIdx = -1;
+let _invoiceState = null;
+const _invoiceByLead=new Map();
+function _invoiceCurrent(state){return !!state&&state===_invoiceState&&_adminContextCurrent(state.context);}
+function _invoiceLead(state=_invoiceState){
+  if(!_invoiceCurrent(state))return null;
+  const lead=_leadList.find(x=>x.id===state.leadId);
+  if(!lead){const msg=document.getElementById('inv-msg');if(msg)msg.textContent='This lead is no longer available. Close this invoice and select the lead again.';}
+  return lead||null;
+}
+function _invoiceControls(state){
+  if(!_invoiceCurrent(state))return;
+  for(const id of ['inv-save','inv-email','inv-text'])document.getElementById(id).disabled=state.busy;
+  document.getElementById('inv-create').disabled=state.busy||state.created||state.uncertain;
+  document.getElementById('inv-save').textContent=state.created&&!state.saved?'Retry saving this link':'Save link to lead';
+}
 function _openInvoiceModal(i, x, price, title, desc){
-  _invIdx = i;
+  _invoiceState=_invoiceByLead.get(x.id)||{leadId:x.id,context:_adminContext(),busy:false,created:false,saved:!!x.paylink,uncertain:false};
+  _invoiceByLead.set(x.id,_invoiceState);
+  const state=_invoiceState;
   const m = _invModalEl();
   m.querySelector('#inv-title').textContent = 'Invoice, ' + (x.name ? x.name.trim() : 'lead');
-  m.querySelector('#inv-name').value = title || '';
-  m.querySelector('#inv-price').value = price || '';
-  m.querySelector('#inv-brief').value = desc || '';
-  const link = (x.paylink && String(x.paylink).trim()) || '';
-  const inp = m.querySelector('#inv-link'); inp.value = link;
-  const ex = m.querySelector('#inv-existing');
-  if (link){
-    ex.style.display = '';
-    ex.innerHTML = 'On file: <a href="' + esc(link) + '" target="_blank" rel="noopener">' + esc(link) + '</a>. It is added to the email draft automatically.';
-  } else { ex.style.display = 'none'; ex.innerHTML = ''; }
-  m.querySelector('#inv-msg').textContent = '';
-  // v14.00: the send buttons wear the lead's own name.
-  const fn = _leadFirst(x.name);
-  const be = m.querySelector('#inv-email'); if (be) be.textContent = x.email ? ('Email ' + fn) : 'No email on file';
-  const bt = m.querySelector('#inv-text'); if (bt) bt.textContent = x.phone ? ('Text ' + fn) : 'No phone on file';
-  m.classList.add('show');
+  m.querySelector('#inv-name').value = state.title??title??'';
+  m.querySelector('#inv-price').value = state.price??price??'';
+  m.querySelector('#inv-brief').value = state.description??desc??'';
+  const link = state.link??((x.paylink && String(x.paylink).trim()) || '');
+  m.querySelector('#inv-link').value=link;
+  const ex=m.querySelector('#inv-existing');ex.style.display=link?'':'none';
+  ex.innerHTML=link?'On file: <a href="'+esc(link)+'" target="_blank" rel="noopener">'+esc(link)+'</a>.':'';
+  m.querySelector('#inv-msg').textContent=state.message||'';
+  const first=_leadFirst(x.name);
+  m.querySelector('#inv-email').textContent=x.email?'Email '+first:'No email on file';
+  m.querySelector('#inv-text').textContent=x.phone?'Text '+first:'No phone on file';
+  _invoiceControls(_invoiceState);m.classList.add('show');
 }
-function _closeInvoiceModal(){ const m = document.getElementById('lead-inv-modal'); if (m) m.classList.remove('show'); _invIdx = -1; }
-// v14.00: send the pay link straight from the composer. Email opens a Gmail
-// draft (never auto-sends); Text opens Messages with the link prefilled.
+function _closeInvoiceModal(){
+  const m=document.getElementById('lead-inv-modal'),state=_invoiceState;
+  if(m&&state){state.title=m.querySelector('#inv-name').value;state.price=m.querySelector('#inv-price').value;state.description=m.querySelector('#inv-brief').value;state.link=m.querySelector('#inv-link').value;}
+  if(m)m.classList.remove('show');_invoiceState=null;
+}
+window.addEventListener('maya-owner-session-changed',()=>{_closeInvoiceModal();document.getElementById('lead-inv-modal')?.remove();_invoiceByLead.clear();});
 function _invCurrentLink(){
-  const x = _leadList[_invIdx] || {};
-  const typed = (document.getElementById('inv-link') || {}).value || '';
-  return (typed.trim() || (x.paylink || '')).trim();
+  const x=_invoiceLead();if(!x)return '';
+  return ((document.getElementById('inv-link')?.value||'').trim()||x.paylink||'').trim();
 }
 function _invEmailLead(){
-  const x = _leadList[_invIdx]; const msg = document.getElementById('inv-msg');
-  if (!x || !x.email){ if (msg) msg.textContent = 'This lead has no email.'; return; }
-  const link = _invCurrentLink();
-  if (!link){ if (msg) msg.textContent = 'Create the pay link first.'; return; }
-  const fn = _leadFirst(x.name);
-  const body = 'Hi ' + fn + ',\n\nYour piece is ready to reserve. Pay here:\n' + link +
-    '\n\nKind Regards,\nFromsa';
-  window.open('https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(x.email) +
-    '&su=' + encodeURIComponent('Your Mana Siyo Piece') + '&body=' + encodeURIComponent(body), '_blank');
-  if (msg) msg.textContent = 'Draft opened in Gmail. Nothing has been sent yet.';
+  const state=_invoiceState,x=_invoiceLead(state),msg=document.getElementById('inv-msg');
+  if(!x||state.busy)return;
+  if(!x.email){msg.textContent='This lead has no email.';return;}
+  const link=_invCurrentLink();if(!link){msg.textContent='Create or paste the pay link first.';return;}
+  const body='Hi '+_leadFirst(x.name)+',\n\nYour piece is ready to reserve. Pay here:\n'+link+'\n\nKind Regards,\nFromsa';
+  window.open('https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(x.email)+'&su='+encodeURIComponent('Your Mana Siyo Piece')+'&body='+encodeURIComponent(body),'_blank','noopener');
+  msg.textContent='Draft opened in Gmail. Nothing has been sent yet.';
 }
-function _invTextLead(){
-  const x = _leadList[_invIdx]; const msg = document.getElementById('inv-msg');
-  if (!x || !x.phone){ if (msg) msg.textContent = 'This lead has no phone.'; return; }
-  const link = _invCurrentLink();
-  if (!link){ if (msg) msg.textContent = 'Create the pay link first.'; return; }
-  const fn = _leadFirst(x.name);
-  const num = String(x.phone).replace(/[^+0-9]/g, '');
-  if (msg) msg.textContent = 'Messages opened with the text prefilled. Nothing has been sent yet.';
-  location.href = 'sms:' + num + '?&body=' + encodeURIComponent('Hi ' + fn + ', your Mana Siyo pay link: ' + link);
-}
-// v13.98: one click creates the real Wix pay link through the server (the
-// invoicing skill's exact recipe) and saves it onto the lead.
-async function _createInvoiceNow(){
-  const i = _invIdx; const x = _leadList[i]; if (!x) return;
-  const msg = document.getElementById('inv-msg');
-  const btn = document.getElementById('inv-create');
-  const title = (document.getElementById('inv-name').value || '').trim().slice(0, 50);
-  const price = (document.getElementById('inv-price').value || '').replace(/[^0-9.]/g, '');
-  const desc = (document.getElementById('inv-brief').value || '').trim().slice(0, 600);
-  if (!title){ if (msg) msg.textContent = 'Give the link a name.'; return; }
-  if (!(Number(price) > 0)){ if (msg) msg.textContent = 'Set a price.'; return; }
-  if (btn) btn.disabled = true;
-  if (msg) msg.textContent = 'Creating the link…';
-  try {
-    const r = await fetch('/api/admin/invoice-create', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ leadId: x.id, title, price, description: desc }),
-    });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok || !j.url) throw new Error(j.detail || j.error || ('create ' + r.status));
-    x.paylink = j.url;
-    const inp = document.getElementById('inv-link'); if (inp) inp.value = j.url;
-    if (msg) msg.textContent = 'Created. It is saved on the lead and rides the next email.';
-    const ex = document.getElementById('inv-existing');
-    if (ex){ ex.style.display = ''; ex.innerHTML = 'Live: <a href="' + esc(j.url) + '" target="_blank" rel="noopener">' + esc(j.url) + '</a>' + (j.imageOk ? '' : ' (check the item image in Wix)'); }
-    try { paintLeads({ connected: true, list: _leadList }); } catch (_) {}
-  } catch (e) {
-    if (msg) msg.textContent = 'Could not create it (' + String(e.message || e).slice(0, 60) + ').';
+const _invoicePhone=value=>{let digits=String(value||'').replace(/\D/g,'');if(digits.length===10)digits='1'+digits;return digits?'+'+digits:'';};
+async function _invTextLead(){
+  const state=_invoiceState,x=_invoiceLead(state),msg=document.getElementById('inv-msg');
+  if(!x||state.busy)return;
+  const number=_invoicePhone(x.phone),link=_invCurrentLink();
+  if(!number){msg.textContent='This lead has no phone.';return;}
+  if(!link){msg.textContent='Create or paste the pay link first.';return;}
+  const existing=_msgOpen&&_invoicePhone(_msgOpen.number)===number?document.getElementById('msg-input').value:_msgDrafts.get(number)||'';
+  const text='Hi '+_leadFirst(x.name)+', your Mana Siyo pay link: '+link;
+  const draft=existing.includes(link)?existing:existing+(existing&&!existing.endsWith('\n')?'\n':'')+text;
+  _msgDrafts.set(number,draft);
+  // openThread saves the current composer before opening; retain the appended draft.
+  if(_msgOpen&&_msgOpen.number===number)document.getElementById('msg-input').value=draft;
+  _closeInvoiceModal();toggleDrawer(true);admTab('messages');await openThread(number,x.name||'');
+  if(_adminContextCurrent(state.context)&&_msgOpen?.number===number){
+    document.getElementById('msg-feedback').textContent='Invoice link added to draft. Review it, then press Send.';
   }
-  if (btn) btn.disabled = false;
+}
+async function _createInvoiceNow(){
+  const state=_invoiceState,x=_invoiceLead(state);if(!x||state.busy||state.created||state.uncertain)return;
+  const msg=document.getElementById('inv-msg');
+  const title=document.getElementById('inv-name').value.trim().slice(0,50);
+  const price=document.getElementById('inv-price').value.replace(/[^0-9.]/g,'');
+  const description=document.getElementById('inv-brief').value.trim().slice(0,600);
+  if(!title){msg.textContent='Give the link a name.';return;}
+  if(!(Number(price)>0)){msg.textContent='Set a price.';return;}
+  state.title=title;state.price=price;state.description=description;state.busy=true;state.message='Creating the link…';_invoiceControls(state);msg.textContent=state.message;
+  let definiteFailure=false;
+  try{
+    const r=await fetch('/api/admin/invoice-create',{method:'POST',headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({leadId:state.leadId,title,price,description})});
+    definiteFailure=r.status>=400&&r.status<500;
+    const j=await r.json();if(!_adminContextCurrent(state.context))return;
+    if(!r.ok||!j.url)throw Error(j.detail||j.error||('create '+r.status));
+    state.created=true;state.saved=j.saved===true;state.linkId=j.linkId||'';state.link=j.url;
+    if(state.saved){const current=_leadList.find(x=>x.id===state.leadId);if(current)current.paylink=j.url;}
+    state.message=state.saved?'Created and saved on this lead.':'Created, but not saved on the lead. Use Retry saving this link; do not create another invoice.';
+    if(!_invoiceCurrent(state))return;
+    document.getElementById('inv-link').value=j.url;msg.textContent=state.message;
+    const ex=document.getElementById('inv-existing');ex.style.display='';
+    ex.innerHTML='Created: <a href="'+esc(j.url)+'" target="_blank" rel="noopener">'+esc(j.url)+'</a>'+(j.imageOk?'':' (check the item image in Wix)');
+  }catch(e){if(_adminContextCurrent(state.context)){state.uncertain=!definiteFailure;state.message=definiteFailure?'Could not create it ('+String(e.message).slice(0,80)+').':'Creation is unconfirmed. Check Wix before creating another link; paste an existing link here to save it.';if(_invoiceCurrent(state))msg.textContent=state.message;}}
+  finally{state.busy=false;_invoiceControls(state);}
 }
 async function _saveInvoiceLink(){
-  const i = _invIdx; const x = _leadList[i]; if (!x) return;
-  const inp = document.getElementById('inv-link'); const msg = document.getElementById('inv-msg');
-  const link = (inp && inp.value || '').trim();
-  if (link && !/^https?:\/\//i.test(link)){ if (msg) msg.textContent = 'That does not look like a link.'; return; }
-  if (msg) msg.textContent = 'Saving…';
-  try {
-    const r = await fetch('/api/admin/lead-update', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: x.id, paylink: link }),
-    });
-    if (!r.ok) throw new Error('save ' + r.status);
-    x.paylink = link;
-    if (msg) msg.textContent = link ? 'Saved. It will ride the next email.' : 'Cleared.';
-    try { paintLeads({ connected: true, list: _leadList }); } catch (_) {}
-    setTimeout(_closeInvoiceModal, 900);
-  } catch (e) {
-    if (msg) msg.textContent = 'Did not save (' + String(e.message || e).slice(0, 40) + ').';
-  }
+  const state=_invoiceState,x=_invoiceLead(state);if(!x||state.busy)return;
+  const link=document.getElementById('inv-link').value.trim(),msg=document.getElementById('inv-msg');
+  if(link&&!/^https?:\/\//i.test(link)){msg.textContent='That does not look like a link.';return;}
+  state.link=link;state.busy=true;state.message='Saving this link…';_invoiceControls(state);msg.textContent=state.message;
+  try{
+    const r=await fetch('/api/admin/lead-update',{method:'POST',headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({id:state.leadId,paylink:link})});
+    const j=await r.json();if(!_adminContextCurrent(state.context))return;
+    if(!r.ok||j.ok===false)throw Error(j.error||('save '+r.status));
+    const current=_leadList.find(x=>x.id===state.leadId);if(current)current.paylink=link;
+    state.saved=true;state.message=link?'Link saved on this lead.':'Link cleared.';if(_invoiceCurrent(state))msg.textContent=state.message;
+  }catch(e){if(_adminContextCurrent(state.context)){state.message='Link not saved. Your existing link is kept here; retry saving it. '+String(e.message).slice(0,60);if(_invoiceCurrent(state))msg.textContent=state.message;}}
+  finally{state.busy=false;_invoiceControls(state);}
 }
 // Turn on the note marquee only where the text actually overruns the column.
 // v13.93: every marquee scrolls at the SAME SPEED (~34 px/s), so a long note and
@@ -3242,27 +3297,31 @@ function _leadCellKey(e, el) {
 }
 async function setLeadStage(index, select) {
   const lead = _leadList[index]; if (!lead) return;
+  const context=_adminContext();if(!_adminContextCurrent(context))return;
   const previous = leadStage(lead);
   const stage = select.value; select.disabled = true;
   const label=select.parentElement.querySelector('.status-text');
   if(label)label.textContent=LEAD_STAGES[stage];
   try {
     const response = await fetch('/api/admin/lead-update', {method:'POST',headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({id:lead.id,stage})});
+    if(!_adminContextCurrent(context))return;
     if (!response.ok) throw new Error('Lead status did not save.');
-    lead.stage = stage;
+    const current=_leadList.find(x=>x.id===lead.id);if(current)current.stage=stage;
     await loadMkt();
-  } catch (error) { select.value = previous; if(label)label.textContent=LEAD_STAGES[previous]||previous; alert(error.message); }
-  finally { select.disabled = false; }
+  } catch (error) { if(!_adminContextCurrent(context))return;select.value = previous; if(label)label.textContent=LEAD_STAGES[previous]||previous; alert(error.message); }
+  finally { if(_adminContextCurrent(context))select.disabled = false; }
 }
 window.setLeadStage = setLeadStage; window.filterLeadStatus = filterLeadStatus;
 async function saveLeadField(el) {
-  const id = el.dataset.id, field = el.dataset.field, i = el.dataset.idx;
+  const id = el.dataset.id, field = el.dataset.field,context=_adminContext();
+  if(!_adminContextCurrent(context))return;
   const val = (el.textContent || '').replace(/\s+/g, ' ').trim();
   if ((el.dataset.orig || '') === val) return;
-  const x = _leadList[i] || {};
+  const x = _leadList.find(lead=>lead.id===id);if(!x)return;
+  const appendNote=field==='note'&&x.email;
   try {
     let r;
-    if (field === 'note' && x.email) {
+    if (appendNote) {
       r = await fetch('/api/admin/lead-note', { method: 'POST',
         headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: x.email, note: val }) });
@@ -3271,12 +3330,14 @@ async function saveLeadField(el) {
       r = await fetch('/api/admin/lead-update', { method: 'POST',
         headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
         body: JSON.stringify(body) });
-      if (field) x[field] = val;   // v13.93: keep the local row fresh for any column
     }
+    if(!_adminContextCurrent(context))return;
     if (!r.ok) throw new Error('save ' + r.status);
+    if(!appendNote){const current=_leadList.find(lead=>lead.id===id);if(current&&field)current[field]=val;}
     el.dataset.orig = val;
     el.classList.add('lead-saved'); setTimeout(() => el.classList.remove('lead-saved'), 900);
   } catch (_) {
+    if(!_adminContextCurrent(context))return;
     el.classList.add('lead-save-err'); setTimeout(() => el.classList.remove('lead-save-err'), 1600);
   }
 }
@@ -3391,6 +3452,7 @@ async function loadModelSnapshot(){
  finally{_modelsLoading=false;}
 }
 async function loadMayaLogs() {
+  const context=_adminContext();
   const host = document.getElementById('maya-logs-list');
   if (!_idTok) { host.textContent = 'Sign in to read Maya’s feedback.'; return; }
   host.textContent = 'Loading feedback...';
@@ -3404,7 +3466,7 @@ async function loadMayaLogs() {
     if (!r.ok || !j.ok) throw new Error('The feedback inbox could not be loaded.');
     host.innerHTML = (j.items || []).slice().sort((a,b)=>String(b.ts).localeCompare(String(a.ts))).map(item =>
       '<article class="maya-log"><small>' + esc(item.who || 'Maya') + ' · ' + esc(item.source || 'voice') + ' · ' + esc(_msgWhen(item.ts)) + ' · ' + (item.state==='saved' ? 'Saved' : item.done ? 'Shipped' : 'Open') + '</small><p>' + esc(item.text || '') + '</p></article>').join('') || '<p class="note">No feedback logged yet.</p>';
-  } catch(e) { host.textContent = e.message; }
+  } catch(e) { if(_adminContextCurrent(context))host.textContent = e.message; }
 }
 function _msgWhen(ts) {
   if (!ts) return '';
@@ -3461,11 +3523,11 @@ async function loadTextAutomations(){
  catch(e){if(seq===_automationSequence&&auth===_idTok)status.textContent=e.message;}
 }
 async function saveTextAutomations(){
- const auth=_idTok,seq=_automationSequence,settings={},status=document.getElementById('automation-status'),btn=document.getElementById('automation-save');
+ const context=_adminContext(),auth=_idTok,seq=_automationSequence,settings={},status=document.getElementById('automation-status'),btn=document.getElementById('automation-save');
  for(const key of ['first','second']){settings[key]={};for(const field of ['enabled','text','trigger','time',...(key==='second'?['days']:[])]){const el=document.getElementById('automation-'+key+'-'+field);settings[key][field]=field==='enabled'?el.checked:field==='days'?Number(el.value):el.value;}}
  btn.disabled=true;status.textContent='Saving…';
- try{const r=await fetch('/api/admin/text-automations',{method:'POST',headers:{Authorization:'Bearer '+auth,'Content-Type':'application/json'},body:JSON.stringify(settings)}),j=await r.json();if(auth!==_idTok||seq!==_automationSequence)return;if(!r.ok||!j.ok)throw Error(j.error||'Settings did not save.');status.textContent='Saved. Messages remain drafts until you press Send.';}
- catch(e){if(auth===_idTok&&seq===_automationSequence)status.textContent=e.message;}finally{if(auth===_idTok&&seq===_automationSequence)btn.disabled=false;}
+ try{const r=await fetch('/api/admin/text-automations',{method:'POST',headers:{Authorization:'Bearer '+auth,'Content-Type':'application/json'},body:JSON.stringify(settings)}),j=await r.json();if(!_adminContextCurrent(context)||seq!==_automationSequence)return;if(!r.ok||!j.ok)throw Error(j.error||'Settings did not save.');status.textContent='Saved. Messages remain drafts until you press Send.';}
+ catch(e){if(_adminContextCurrent(context)&&seq===_automationSequence)status.textContent=e.message;}finally{if(_adminContextCurrent(context)&&seq===_automationSequence)btn.disabled=false;}
 }
 async function msgSuggest(){
  if(!_msgOpen||!_idTok||document.getElementById('msg-input').disabled)return;
@@ -3478,7 +3540,7 @@ function msgUseIdea(){
  if(!_msgIdea||_msgIdea.number!==_msgOpen?.number)return;const inp=document.getElementById('msg-input');if(inp.disabled)return;
  inp.value=[inp.value.trim(),_msgIdea.text].filter(Boolean).join('\n');inp.dispatchEvent(new Event('input'));inp.focus();document.getElementById('msg-idea').hidden=true;_msgIdea=null;
 }
-window.addEventListener('maya-owner-session-changed',()=>{++_msgListSequence;++_msgThreadSequence;_msgThreads=[];document.getElementById('adm-unread').hidden=true;++_ideaSequence;++_automationSequence;_msgIdea=null;_msgDrafts.clear();_msgAttempts.clear();_msgOpen=null;document.getElementById('msg-input').value='';document.getElementById('msg-thread').hidden=true;document.getElementById('msg-list').hidden=false;document.getElementById('msg-idea').hidden=true;document.getElementById('text-automations-form').hidden=true;document.getElementById('msg-name').value='';document.getElementById('msg-scroll').replaceChildren();document.getElementById('msg-scroll')._messageMarkup=null;document.getElementById('msg-list').replaceChildren();document.getElementById('msg-idea-text').textContent='';document.getElementById('automation-status').textContent='';document.getElementById('text-automations-form').reset();});
+window.addEventListener('maya-owner-session-changed',()=>{++_msgListSequence;++_msgThreadSequence;_msgThreads=[];document.getElementById('adm-unread').hidden=true;++_ideaSequence;++_automationSequence;_msgIdea=null;_msgDrafts.clear();_msgAttempts.clear();_msgSending=false;_msgOpen=null;document.getElementById('msg-list-feedback').textContent='';document.getElementById('booking-pending').replaceChildren();document.getElementById('msg-input').value='';document.getElementById('msg-thread').hidden=true;document.getElementById('msg-list').hidden=false;document.getElementById('msg-idea').hidden=true;document.getElementById('text-automations-form').hidden=true;document.getElementById('msg-name').value='';document.getElementById('msg-scroll').replaceChildren();document.getElementById('msg-scroll')._messageMarkup=null;document.getElementById('msg-list').replaceChildren();document.getElementById('msg-idea-text').textContent='';document.getElementById('automation-status').textContent='';document.getElementById('text-automations-form').reset();});
 function _msgKnownName(number, ...names) {
   const named=value=>{const text=String(value||'').trim();return text&&!/^(caller|unknown|unnamed contact)$/i.test(text)&&!/^\+?[\d\s().-]+$/.test(text);};
   const supplied=names.find(named);if(supplied)return String(supplied).trim();
@@ -3488,6 +3550,7 @@ function _msgKnownName(number, ...names) {
   return matches.length===1?matches[0]:'';
 }
 async function openThread(number, name) {
+  document.getElementById('msg-list-feedback').textContent='';
   ++_ideaSequence;
   if(_msgOpen) _msgDrafts.set(_msgOpen.number,document.getElementById('msg-input').value);
   _msgIdea=null;document.getElementById('msg-idea').hidden=true;
@@ -3564,7 +3627,7 @@ function paintThread(t, quiet) {
 }
 async function msgSend() {
   if (!_msgOpen || _msgOpen.blocked || _msgSending) return;
-  const target = { ..._msgOpen }, auth=_idTok;
+  const target = { ..._msgOpen }, context=_adminContext();
   const inp = document.getElementById('msg-input'); const draft=inp.value || '',text=draft.trim(); if (!text) return;
   if(text.length>1600){document.getElementById('msg-feedback').textContent='This text has '+text.length+' characters. Shorten it to 1,600 before sending; nothing was sent.';return;}
   const attemptKey=target.number+'\n'+text;
@@ -3576,12 +3639,12 @@ async function msgSend() {
       body: JSON.stringify({ to: target.number, text, name: target.name || '', requestId }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.ok) throw new Error(j.why || j.error || ('send ' + r.status));
-    if(auth!==_idTok){_msgSending=false;return;}
+    if(!_adminContextCurrent(context))return;
     _msgAttempts.delete(attemptKey);
     if(_msgDrafts.get(target.number)===draft)_msgDrafts.delete(target.number);
-    if (_msgOpen && _msgOpen.number === target.number) { if(inp.value===draft){inp.value = '';inp.dispatchEvent(new Event('input'));}document.getElementById('msg-idea').hidden=true; await loadThread(target.number); if (j.warning) { document.getElementById('msg-feedback').textContent = j.warning; } else { document.getElementById('msg-feedback').textContent = 'Accepted by carrier. Delivery is not yet confirmed; use Check delivery.'; } }
-  } catch (e) { if (auth===_idTok && _msgOpen && _msgOpen.number === target.number) document.getElementById('msg-feedback').textContent = String(e.message); }
-  _msgSending = false; btn.disabled = !!(_msgOpen && (_msgOpen.blocked || _msgOpen.consent === 'stop'));
+    if (_msgOpen && _msgOpen.number === target.number) { if(inp.value===draft){inp.value = '';inp.dispatchEvent(new Event('input'));}document.getElementById('msg-idea').hidden=true; await loadThread(target.number);if(!_adminContextCurrent(context)||_msgOpen?.number!==target.number)return; if (j.warning) { document.getElementById('msg-feedback').textContent = j.warning; } else { document.getElementById('msg-feedback').textContent = 'Accepted by carrier. Delivery is not yet confirmed; use Check delivery.'; } }
+  } catch (e) { if (_adminContextCurrent(context) && _msgOpen && _msgOpen.number === target.number) document.getElementById('msg-feedback').textContent = String(e.message); }
+  finally{if(_adminContextCurrent(context)){_msgSending=false;btn.disabled=!!(_msgOpen&&(_msgOpen.blocked||_msgOpen.consent==='stop'));}}
 }
 async function msgUpdate(action, extra = {}) {
   if (!_msgOpen) return;
@@ -3602,28 +3665,30 @@ async function msgRename() {
 }
 async function msgBlock() {
   if (!_msgOpen) return;
-  try { const number = await msgUpdate('block',{blocked:!_msgOpen.blocked}); await loadThread(number); }
-  catch(e) { document.getElementById('msg-consent').textContent = e.message; }
+  const target=_msgOpen,context=_adminContext();
+  try { const number = await msgUpdate('block',{blocked:!target.blocked});if(_adminContextCurrent(context)&&target===_msgOpen)await loadThread(number); }
+  catch(e) { if(_adminContextCurrent(context)&&target===_msgOpen)document.getElementById('msg-consent').textContent = e.message; }
 }
 async function msgDelete() {
   if (!_msgOpen || !confirm('Delete this conversation history? This cannot be undone. Blocking and opt-out settings are kept.')) return;
-  try { const number = await msgUpdate('delete'); if (_msgOpen && _msgOpen.number === number) msgBack(); }
-  catch(e) { document.getElementById('msg-consent').textContent = e.message; }
+  const target=_msgOpen,context=_adminContext();
+  try { await msgUpdate('delete');if(_adminContextCurrent(context)&&target===_msgOpen)msgBack(); }
+  catch(e) { if(_adminContextCurrent(context)&&target===_msgOpen)document.getElementById('msg-consent').textContent = e.message; }
 }
 async function msgCheckDelivery() {
   if (!_msgOpen) return;
-  const number = _msgOpen.number;
+  const target=_msgOpen,context=_adminContext(),number=target.number;
   const status = document.getElementById('msg-feedback');
   status.textContent = 'Checking carrier delivery...';
   try {
     const r = await fetch('/api/admin/messages/check-delivery', { method:'POST', headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({number}) });
     const j = await r.json();
     if (!r.ok) throw new Error(j.error || 'Delivery lookup failed.');
-    if (_msgOpen && _msgOpen.number === number) {
-      await loadThread(number);
+    if (_adminContextCurrent(context)&&target===_msgOpen) {
+      await loadThread(number);if(!_adminContextCurrent(context)||target!==_msgOpen)return;
       status.textContent = j.warning || (j.checked ? 'Carrier statuses updated below.' : 'No outgoing texts to check.');
     }
-  } catch(e) { if (_msgOpen && _msgOpen.number === number) status.textContent = e.message; }
+  } catch(e) { if (_adminContextCurrent(context)&&target===_msgOpen) status.textContent = e.message; }
 }
 async function msgCall() {
   if (!_msgOpen) return;
@@ -3633,34 +3698,37 @@ async function msgCall() {
   await _mayaCallClient(_msgOpen.number, _msgOpen.name || '', reason || '');
 }
 async function _mayaCallClient(number, name, reason) {
+  const context=_adminContext();
   try {
     const r = await fetch('/api/admin/phone/call-client', { method: 'POST', headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
       body: JSON.stringify({ to: number, name, reason }) });
     const j = await r.json().catch(() => ({}));
+    if(!_adminContextCurrent(context)||_msgOpen?.number!==number)return;
     const c = document.getElementById('msg-consent');
     if (!r.ok || !j.ok) { if (c) c.textContent = j.why || 'the call did not go out'; alert('The call did not go out: ' + (j.why || r.status)); return; }
     if (c) c.textContent = 'Maya is calling ' + (name || number) + ' now.';
-  } catch (e) { alert('The call did not go out.'); }
+  } catch (e) { if(_adminContextCurrent(context)&&_msgOpen?.number===number)alert('The call did not go out.'); }
 }
 function msgShare(open){const button=document.getElementById('msg-share'),menu=document.getElementById('msg-share-menu');const show=open??menu.hidden;menu.hidden=!show;button.setAttribute('aria-expanded',String(show));}
 document.addEventListener('click',e=>{if(!e.target.closest('.msg-share'))msgShare(false);});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')msgShare(false);});
 document.querySelector('.msg-share').addEventListener('mouseenter',()=>msgShare(true));
 document.querySelector('.msg-share').addEventListener('mouseleave',e=>{if(!e.currentTarget.contains(document.activeElement))msgShare(false);});
-function msgInvoice(){const number=String(_msgOpen?.number||'').replace(/\D/g,'');const index=_leadList.findIndex(x=>String(x.phone||'').replace(/\D/g,'')===number);if(index<0)return alert('Add this contact to Lead Station before creating an invoice.');leadInvoice(index);}
+function msgInvoice(){const number=_invoicePhone(_msgOpen?.number);const matches=_leadList.filter(x=>number&&_invoicePhone(x.phone)===number);if(matches.length!==1)return alert(matches.length?'More than one lead has this phone. Open the invoice from the exact lead.':'Add this contact to Lead Station before creating an invoice.');leadInvoice(_leadList.indexOf(matches[0]));}
 async function loadBookingPending(){
-  const host=document.getElementById('booking-pending');if(!host||!_idTok||_msgTab!=='messages')return;
-  try{const r=await fetch('/api/admin/booking/pending',{headers:{Authorization:'Bearer '+_idTok},cache:'no-store'});const j=await r.json();if(!r.ok)throw Error('preview unavailable');
+  const host=document.getElementById('booking-pending'),context=_adminContext();if(!host||!_idTok||_msgTab!=='messages')return;
+  try{const r=await fetch('/api/admin/booking/pending',{headers:{Authorization:'Bearer '+_idTok},cache:'no-store'});const j=await r.json();if(!_adminContextCurrent(context))return;if(!r.ok)throw Error('preview unavailable');
     host.innerHTML=(j.items||[]).slice(0,3).map(p=>'<div class="booking-preview"><strong>Booking preview · '+esc(p.name)+'</strong><p>To '+esc(p.to)+'\n'+esc(p.text)+'</p><button class="msg-call" data-booking-id="'+esc(p.id)+'">Approve &amp; send</button></div>').join('');
     host.querySelectorAll('[data-booking-id]').forEach(button=>button.onclick=()=>confirmBooking(button.dataset.bookingId));
-  }catch{host.textContent='';}
+  }catch{if(_adminContextCurrent(context))host.textContent='';}
 }
 async function confirmBooking(id){
+  const context=_adminContext();
   const host=document.getElementById('booking-pending');const card=[...host.querySelectorAll('[data-booking-id]')].find(b=>b.dataset.bookingId===id)?.closest('.booking-preview');
   if(!card||!confirm('Send this exact booking message to the client?\n\n'+card.querySelector('p').textContent))return;
-  try{const r=await fetch('/api/admin/booking/confirm',{method:'POST',headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({id})});const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||'The text was not sent.');
+  try{const r=await fetch('/api/admin/booking/confirm',{method:'POST',headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({id})});const j=await r.json();if(!_adminContextCurrent(context))return;if(!r.ok||!j.ok)throw Error(j.error||'The text was not sent.');
     document.getElementById('msg-feedback').textContent=j.warning||'Accepted by carrier. Check delivery in Messages.';await loadBookingPending();if(_msgOpen)await loadThread(_msgOpen.number,true);
-  }catch(e){alert(e.message);await loadBookingPending();}
+  }catch(e){if(_adminContextCurrent(context)){alert(e.message);await loadBookingPending();}}
 }
 function msgBooking(){
   if(!_msgOpen)return;
@@ -3680,7 +3748,7 @@ window.addEventListener('maya-owner-session-changed',()=>_closeLeadNote?.(true))
 function editLatestLeadNote(i){
   const lead=_leadList[i];if(!lead?.id||!_idTok||_leadNoteDialog||_leadNoteSaving)return;
   const cell=document.getElementById('lead-tr-'+i)?.querySelector('[data-col="note"]');if(!cell)return;
-  const id=lead.id,token=_idTok,dialog=document.createElement('div');_leadNoteDialog=dialog;
+  const id=lead.id,context=_adminContext(),dialog=document.createElement('div');_leadNoteDialog=dialog;
   dialog.id='lead-note-editor';dialog.className='lead-note-inline';dialog.open=true;
   dialog.innerHTML='<textarea id="lead-note-input" aria-label="Latest note" maxlength="2000" rows="3"></textarea><p id="lead-note-feedback" role="status"></p><div class="dialog-actions"><button type="button" id="lead-note-cancel" class="msg-call">Cancel</button><button type="button" id="lead-note-save" class="msg-call">Save</button></div>';
   const input=dialog.querySelector('textarea'),feedback=dialog.querySelector('[role="status"]');input.value=lead.wrote||lead.note||'';
@@ -3697,10 +3765,10 @@ function editLatestLeadNote(i){
     if(_leadNoteSaving)return;
     const note=input.value.trim();_leadNoteSaving=true;for(const b of dialog.querySelectorAll('button'))b.disabled=true;input.disabled=true;feedback.textContent='Saving…';
     try{
-      if(!token||token!==_idTok)throw Error('Sign in again before saving.');
-      const r=await fetch('/api/admin/lead-update',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({id,note})});const result=await r.json();
+      if(!_adminContextCurrent(context))throw Error('Sign in again before saving.');
+      const r=await fetch('/api/admin/lead-update',{method:'POST',headers:{Authorization:'Bearer '+_idTok,'Content-Type':'application/json'},body:JSON.stringify({id,note})});const result=await r.json();
       if(!r.ok||!result.ok)throw Error(result.error||'The note was not saved. Try again.');
-      if(token===_idTok){const current=_leadList.find(x=>x.id===id);if(current){current.note=note;current.wrote=note;}}
+      if(_adminContextCurrent(context)){const current=_leadList.find(x=>x.id===id);if(current){current.note=note;current.wrote=note;}}
       close(true);
     }catch(e){feedback.textContent=e.message;}
     finally{_leadNoteSaving=false;for(const b of dialog.querySelectorAll('button'))b.disabled=false;input.disabled=false;}
@@ -3713,7 +3781,7 @@ function editLatestLeadNote(i){
 function leadOpenThread(i) {
   const x = _leadList[i]; if (!x) return;
   toggleDrawer(true); admTab('messages');
-  if(x.phone)openThread(x.phone,x.name||'');else{msgBack();document.getElementById('msg-feedback').textContent='No phone number recorded for '+(x.name||'this lead')+'.';}
+  if(x.phone)openThread(x.phone,x.name||'');else{msgBack();document.getElementById('msg-list-feedback').textContent='No phone number recorded for '+(x.name||'this lead')+'.';}
 }
 function leadMayaCall(i) {
   const x = _leadList[i]; if (!x || !x.phone) return;
@@ -4055,6 +4123,7 @@ async function loadAffiliateLeads() {
     const leads = Array.isArray(data.list) ? data.list : [];
     window.MAYA_ADMIN_DATA = window.MAYA_ADMIN_DATA || {};
     window.MAYA_ADMIN_DATA.marketing = {leads:{...data,list:leads}};
+    document.getElementById('adm-mkt').hidden=false;
     paintLeads({...data,list:leads});
     const weekAgo = Date.now()-7*86400000;
     const stats = {total:leads.length,week:leads.filter(l=>new Date(l.ts).getTime()>=weekAgo && new Date(l.ts).getTime()<=Date.now()).length,
@@ -4068,28 +4137,34 @@ async function loadAffiliateLeads() {
 window.loadAffiliateLeads=loadAffiliateLeads;
 window.clearAffiliateLeads=clearAffiliateLeads;
 
+let _marketingSequence=0;
+function _clearMarketing(){
+  ++_marketingSequence;_leadList=[];_adData=null;_brief=null;_briefHour='';
+  if(window.MAYA_ADMIN_DATA)delete window.MAYA_ADMIN_DATA.marketing;
+  document.getElementById('adm-mkt').hidden=true;
+  document.querySelector('#leads-table tbody').replaceChildren();
+  document.getElementById('mkt-ticker-inner')?.replaceChildren();
+  try{localStorage.removeItem('maya_mkt_cache');}catch(_){}
+}
+window.addEventListener('maya-owner-session-changed',_clearMarketing);
 async function loadMkt(){
-  if (IS_AFFILIATES) return loadAffiliateLeads();
-  // v13.71: _idTok is a top-level lexical binding, not a property on the window
-  // object. Reading it off the global made the migrated Admin panels return
-  // before every fetch even after sign in.
-  const status=document.getElementById('mkt-status');
-  if(!_idTok){ if(status) status.textContent='Sign in to load Marketing.'; return; }
-  if(status) status.textContent='Refreshing Marketing';
+  if(IS_AFFILIATES)return loadAffiliateLeads();
+  const status=document.getElementById('mkt-status'),context=_adminContext(),auth=_idTok,sequence=++_marketingSequence;
+  const current=()=>sequence===_marketingSequence&&_adminContextCurrent(context);
+  if(!auth){if(status)status.textContent='Sign in to load Marketing.';return;}
+  if(status)status.textContent='Refreshing Marketing';
   let r;
-  try{ r=await fetch('/api/admin/marketing?t='+Date.now(),
-    {headers:{'Authorization':'Bearer '+_idTok},cache:'no-store'}); }
-  catch(_){ if(status) status.textContent='Could not reach Marketing. Existing numbers remain on screen.'; return; }
-  if(r.status===401){ if(status) status.textContent='Admin sign in expired.'; _expired(); return; }
-  if(r.status===403){ if(status) status.textContent='This account is not on the Admin list.'; return; }
-  if(!r.ok){ if(status) status.textContent='Marketing data unavailable ('+r.status+'). Existing numbers remain on screen.'; return; }
-  let d; try{ d=await r.json(); }catch(_){ if(status) status.textContent='Marketing returned an unreadable response.'; return; }
-  window.MAYA_ADMIN_DATA = window.MAYA_ADMIN_DATA || {};
-  window.MAYA_ADMIN_DATA.marketing = d;
-  if(status) status.textContent='';
-  // v14.16: remember tonight's numbers so tomorrow opens instantly.
-  try{ localStorage.setItem('maya_mkt_cache', JSON.stringify({ ts: Date.now(), d })); }catch(_){ }
-  _paintMkt(d, true);
+  try{r=await fetch('/api/admin/marketing?t='+Date.now(),{headers:{Authorization:'Bearer '+auth},cache:'no-store'});}
+  catch(_){if(current()&&status)status.textContent='Could not reach Marketing. Existing numbers remain on screen.';return;}
+  if(!current())return;
+  if(r.status===401||r.status===403){if(auth===_idTok)_expired(auth);return;}
+  if(!r.ok){if(status)status.textContent='Marketing data unavailable ('+r.status+'). Existing numbers remain on screen.';return;}
+  let d;try{d=await r.json();}catch(_){if(current()&&status)status.textContent='Marketing returned an unreadable response.';return;}
+  if(!current())return;
+  window.MAYA_ADMIN_DATA=window.MAYA_ADMIN_DATA||{};window.MAYA_ADMIN_DATA.marketing=d;
+  document.getElementById('adm-mkt').hidden=false;
+  if(status)status.textContent='';
+  _paintMkt(d,true);
 }
 // v14.16: one paint path for fresh and cached data. The brief only runs on a
 // fresh fetch, never off the cache, so no double AI call.
@@ -4119,20 +4194,8 @@ window._invEmailLead=_invEmailLead; window._invTextLead=_invTextLead;
 window._leadColDragStart=_leadColDragStart; window._leadColDragOver=_leadColDragOver;
 window._leadColDragLeave=_leadColDragLeave; window._leadColDrop=_leadColDrop;
 window._leadColDragEnd=_leadColDragEnd; window.paintLeads=paintLeads;
-// v14.16: the fast open. If this browser was signed in before, paint the
-// cached numbers immediately (no waiting on the aggregator) and let the real
-// fetch repaint when it lands. Two days is the staleness ceiling.
-(function _mktWarmPaint(){
-  if (IS_AFFILIATES) return;
-  try{
-    if(!localStorage.getItem('maya_admin_tok')) return;
-    const c = JSON.parse(localStorage.getItem('maya_mkt_cache')||'null');
-    if(c && c.d && Date.now()-c.ts < 48*3600*1000){
-      _paintMkt(c.d, false);
-      const s=document.getElementById('mkt-status'); if(s) s.textContent='Refreshing Marketing';
-    }
-  }catch(_){ }
-})();
+// Customer data stays in the authenticated page session, never in browser storage.
+try{localStorage.removeItem('maya_mkt_cache');}catch(_){}
 // fire when signed in, and refresh with the traffic tick
 if(_idTok) loadMkt();
 setInterval(()=>{ if(_idTok && document.visibilityState==='visible') loadMkt(); }, 120000);

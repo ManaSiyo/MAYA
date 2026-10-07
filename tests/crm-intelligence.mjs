@@ -96,16 +96,24 @@ async function call(path='',body,task=false){let status=200,data;const res={set(
 const created=await call('/save',{type:'campaign',name:'Test'}),campaignId=created.state.campaigns[0].id;
 const imported=await call('/save',{type:'import',campaignId,contact:{email:'person@example.com',name:'Person'}}),id=imported.state.contacts[0].id;
 await test('send needs confirmation, selected connected sender and idempotent content',async()=>{
- const draft={id,mailboxId:'two',subject:'Hello',body:'A personal note',requestId:'12345678-1234-1234'};
+ const draft={id,expectedEmail:'person@example.com',mailboxId:'two',subject:'Hello',body:'A personal note',requestId:'12345678-1234-1234'};
  assert.equal((await call('/send',draft)).status,400);assert.equal(sends,0);
  assert.equal((await call('/send',{...draft,confirm:true})).delivery.status,'sent');assert.equal((await call('/send',{...draft,confirm:true})).delivery.status,'sent');assert.equal(sends,1);
  assert.equal((await call('/send',{...draft,confirm:true,body:'Different'})).status,409);assert.equal(sends,1);
  user='other';assert.equal((await call('/send',{...draft,confirm:true})).status,400);user='owner';
 });
+await test('reviewed recipient is revalidated inside the send claim',async()=>{
+ const key='maya/outbound/owner.json',state=storage.objects.get(key).value,c=state.contacts.find(c=>c.id===id),before=sends;
+ const reviewed={id,expectedEmail:c.email,mailboxId:'two',subject:'Reviewed',body:'For the original address',requestId:'recipient-race-123456',confirm:true};
+ const original=c.email;c.email='changed@example.com';
+ assert.equal((await call('/send',reviewed)).status,409);assert.equal(sends,before);assert.equal(state.crm.deliveries[reviewed.requestId],undefined);
+ c.email=original;assert.equal((await call('/send',reviewed)).delivery.status,'sent');assert.equal(sends,before+1);
+ assert.equal((await call('/send',{...reviewed,expectedEmail:'changed@example.com'})).status,409);assert.equal(sends,before+1);
+});
 await test('master-only prospect can draft and send manually while paused campaign remains blocked',async()=>{
  const imported=await call('/save',{type:'import',campaignId:null,contact:{email:'master@example.com',name:'Master'}});const p=imported.state.contacts.find(c=>c.email==='master@example.com');
  assert.equal((await call('/draft',{id:p.id,confirm:true})).status,200);assert.equal(lastAIData.campaign.name,'All prospects');
- const mail={id:p.id,mailboxId:'one',subject:'Personal introduction',body:'A reviewed message',requestId:'master-only-send-0001',confirm:true};
+ const mail={id:p.id,expectedEmail:p.email,mailboxId:'one',subject:'Personal introduction',body:'A reviewed message',requestId:'master-only-send-0001',confirm:true};
  assert.equal((await call('/send',mail)).delivery.status,'sent');
  const paused=await call('/save',{type:'campaign',name:'Paused',status:'paused'});const pausedId=paused.state.campaigns.at(-1).id;
  await call('/segment',{ids:[p.id],campaignId:pausedId});assert.equal((await call('/send',{...mail,requestId:'master-only-send-0002'})).status,400);
@@ -146,10 +154,10 @@ await test('campaign segments use their own draft context and validate membershi
  await call('/segment',{ids:[id],campaignId:cid});assert.equal((await call('/draft',{id,campaignId:cid,confirm:true})).status,200);assert.equal(lastAIData.campaign.id,cid);
 });
 await test('ambiguous Gmail send is not retried',async()=>{
- sendFail=true;const body={id,mailboxId:'one',subject:'Follow up',body:'A new note',requestId:'uncertain-send-123456',confirm:true};
+ sendFail=true;const body={id,expectedEmail:'person@example.com',mailboxId:'one',subject:'Follow up',body:'A new note',requestId:'uncertain-send-123456',confirm:true};
  assert.equal((await call('/send',body)).status,502);const before=sends;assert.equal((await call('/send',body)).delivery.status,'unknown');assert.equal(sends,before);sendFail=false;
 });
 await test('suppression blocks sending even if another campaign is active',async()=>{
- await call('/save',{type:'contact',id,stage:'suppressed'});const before=sends;assert.equal((await call('/send',{id,mailboxId:'one',subject:'Hello',body:'no',requestId:'another-send-123456',confirm:true})).status,400);assert.equal(sends,before);
+ await call('/save',{type:'contact',id,stage:'suppressed'});const before=sends;assert.equal((await call('/send',{id,expectedEmail:'person@example.com',mailboxId:'one',subject:'Hello',body:'no',requestId:'another-send-123456',confirm:true})).status,400);assert.equal(sends,before);
 });
 console.log(`${checks} CRM intelligence checks passed. All providers are fixtures; no real mail, keys or spending.`);

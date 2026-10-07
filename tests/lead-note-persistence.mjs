@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {Script,createContext} from 'node:vm';
+import {createLeadStore} from '../docs/server/lead-store.mjs';
 const source=readFileSync(new URL('../docs/server/server.js',import.meta.url),'utf8');
 const context=createContext({Buffer,Date,JSON,MAYA_LEADS_PATH:'fixture',record:{items:[{id:'m_1',name:'Example',note:'Original'}],overrides:{}},written:null});
-context.loadManualLeads=async()=>context.record;context.gcsPut=async(_key,body)=>{context.written=JSON.parse(body.toString());};
+let generation=1;
+context._leadStore=createLeadStore({read:async()=>({ok:true,generation:String(generation),buf:Buffer.from(JSON.stringify(context.record))}),write:async(_key,body,_type,expected)=>{assert.equal(expected,String(generation));generation++;context.written=JSON.parse(body.toString());context.record=context.written;}});
 new Script(source.slice(source.indexOf('async function updateLead('),source.indexOf('// v13.87: delete ANY lead.'))).runInContext(context);
 const helper=source.slice(source.indexOf('function applyLatestLeadNote('),source.indexOf('async function loadLeadFeed('));new Script(helper).runInContext(context);
 await new Script("updateLead('m_1',{note:'Reviewed note'})").runInContext(context);

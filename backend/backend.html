@@ -1456,7 +1456,7 @@
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=20"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=21"></script>
 <link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=1">
 <script defer src="/aesthetics/ui/fabric-assistant.js?v=1"></script>
 </head>
@@ -1860,9 +1860,11 @@ function _subAuthBoot() {
   tryGsi();
   if (cached) { _subScheduleRenew(); _loadSubmission(cached); }
 }
+let _submissionLoadSequence=0;
 async function _loadSubmission(tok) {
+  const sequence=++_submissionLoadSequence,sid=window._openedSubmission?.id,account=_piecesAccount(tok);
+  const current=()=>sequence===_submissionLoadSequence&&sid===window._openedSubmission?.id&&account===_piecesAccount(_subCachedTok()||'');
   try {
-    const sid = window._openedSubmission.id;
     const r = await fetch('/api/admin/submissions?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + tok }, cache: 'no-store' });
     if (!r.ok) return void console.warn('[submission] list', r.status);
     const data = await r.json();
@@ -1883,15 +1885,17 @@ async function _loadSubmission(tok) {
     }
     // v0.35: a saved pieces.json means this submission was already dissected
     // and rendered once. Load it so nothing is paid for twice.
-    window._cachedPieces = null;
+    let loadedPieces = null;
     const pcsFile = files.find(f => /^pieces\.json$/i.test(f.name || ''));
     if (pcsFile) {
       try {
         const pj = await (await fetch('/api/admin/subfile?id=' + encodeURIComponent(pcsFile.id) + '&v=' + (pcsFile.size || 0), { headers: { 'Authorization': 'Bearer ' + tok } })).json();
-        if (pj && Array.isArray(pj.pieces)) window._cachedPieces = pj;
+        if (pj && Array.isArray(pj.pieces)) loadedPieces = pj;
       } catch (_) {}
     }
-    if (!summary && !heroImage) return;
+    if (!current() || (!summary && !heroImage)) return;
+    const retained=_retainedDissection;
+    window._cachedPieces=retained&&retained.context.sid===sid&&retained.context.account===account&&retained.context.hero===heroImage?retained.dissection:loadedPieces;
     const snap = {
       currentClientName: (summary && summary.client && summary.client.name) || window._openedSubmission.name,
       lastSummary: summary || {},
@@ -2226,6 +2230,7 @@ function toggleClientsDrawer(force) {
 }
 
 async function loadClient(folderName) {
+  const loadSequence=++_briefFolderLoadSequence,account=_piecesAccount(_subCachedTok()||'');
   const maya = await getMayaFolder();
   if (!maya) return;
   let clientsDir, clientDir;
@@ -2243,10 +2248,11 @@ async function loadClient(folderName) {
     console.warn('[Backend] open client', e);
     return;
   }
+  if(loadSequence!==_briefFolderLoadSequence||account!==_piecesAccount(_subCachedTok()||''))return;
   currentClientName = folderName;
   try { localStorage.setItem('maya-backend-last-client', folderName); } catch (_) {}
   toggleClientsDrawer(false);
-  await loadFromFolder(clientDir);
+  await loadFromFolder(clientDir,loadSequence);
 }
 
 async function readJson(dir, filename) {
@@ -2294,10 +2300,13 @@ async function findFirstImage(dir) {
   return null;
 }
 
-async function loadFromFolder(dir) {
+async function loadFromFolder(dir,loadSequence=++_briefFolderLoadSequence) {
+  const account=_piecesAccount(_subCachedTok()||'');
+
   const moodboard = await readJson(dir, 'moodboard.json');
   const summary   = await readJson(dir, 'summary.json');
   if (!moodboard && !summary) {
+    if(loadSequence!==_briefFolderLoadSequence)return;
     const err = document.getElementById('upload-error');
     if (err) { err.style.display = 'block'; err.textContent = 'This folder doesn\'t look like a Maya client folder (no moodboard.json or summary.json).'; }
     return;
@@ -2313,6 +2322,11 @@ async function loadFromFolder(dir) {
   let heroImage = await readBlobAsDataUrl(dir, 'dream-garment.png');
   if (!heroImage) heroImage = await readBlobAsDataUrl(dir, 'hero.png');
   if (!heroImage) heroImage = await findFirstImage(dir);
+  if(loadSequence!==_briefFolderLoadSequence||account!==_piecesAccount(_subCachedTok()||''))return;
+  // Only a valid, current folder replaces the current brief and its save target.
+  _briefLocalSequence++;_submissionLoadSequence++;
+  window._openedSubmission=null;window._cachedPieces=null;window._dissectTarget=null;
+  _unsavedDissection=null;_retainedDissection=null;window._lastOpsPieces=[];
   const snap = {
     currentClientName: (summary && summary.client && summary.client.name) || (dir.name || 'Client').split(' ')[0],
     lastSummary: summary,
@@ -2370,6 +2384,8 @@ function render(snap) {
     .concat(summary.silhouette_preferences || [])
     .concat(summary.details || [])
     .concat(summary.color_palette || []);
+  document.getElementById('op-chips-section').style.display = 'none';
+  document.getElementById('op-chips').innerHTML = '';
   if (chips.length) {
     document.getElementById('op-chips-section').style.display = '';
     document.getElementById('op-chips').innerHTML = chips
@@ -2386,6 +2402,8 @@ function render(snap) {
   const measEl = document.getElementById('op-measurements');
   const m = (summary && summary._measurements) || {};
   if (measEl) {
+    document.getElementById('op-measurements-section').style.display = 'none';
+    measEl.innerHTML = '';
     const filledCount = Object.keys(m).filter(k => m[k] != null && m[k] !== '').length;
     if (filledCount) {
       document.getElementById('op-measurements-section').style.display = '';
@@ -2429,6 +2447,7 @@ function render(snap) {
       cardForDissect._dissection = window._cachedPieces;
       cardWithImg._dissection = window._cachedPieces;
     }
+    window._dissectTarget = { card: cardWithImg, hero: heroSrc };
     renderDissection({ card: cardWithImg });
 
     // ── v0.37: NOTHING FIRES BY ITSELF ────────────────────────────────
@@ -2438,24 +2457,18 @@ function render(snap) {
     // Now: if this client was dissected before, the saved work is painted
     // straight from their folder and nothing is generated. If they were not,
     // the Dissect pill waits to be pressed.
-    window._dissectTarget = { card: cardWithImg, hero: heroSrc };
     if (cardForDissect._dissection && Array.isArray(cardForDissect._dissection.pieces)) {
       const ps = cardForDissect._dissection.pieces;
       _postPiecesToOps(ps);
-      // Fill in only what is genuinely missing, one piece at a time, never
-      // the whole set. A piece that already has its picture is left alone.
-      const missing = ps.filter(p => p && !p.skip && !p._image);
-      if (missing.length && getApiKey()) {
-        setDissectStatus(true, 'Finishing ' + missing.length + ' piece' + (missing.length === 1 ? '' : 's') + '…');
-        renderAllPieces(heroSrc, missing).then(() => {
-          renderDissection({ card: cardWithImg });
-          _postPiecesToOps(ps);
-          _savePiecesToDrive(cardForDissect._dissection);
-        }).finally(() => setDissectStatus(false));
-      }
+      // Missing images remain visible as an explicit Render missing pieces action.
+      // Reading a saved submission must never start paid generation.
+
     }
   } else {
-    // v0.9: no element to update, the empty state is the placeholder text already in #op-image-frame.
+    window._dissectTarget=null;window._lastOpsPieces=[];
+    document.getElementById('op-image-frame').innerHTML='';
+    renderDissection({card:{image:''}});
+    const swiper=document.getElementById('piece-swiper');if(swiper)swiper.style.display='none';
   }
 }
 
@@ -2488,45 +2501,64 @@ function _shrinkDataUrl(dataUrl, maxW) {
   });
 }
 
-let _savingPieces = false;
-async function _savePiecesToDrive(dissection) {
-  try {
-    const sid = window._openedSubmission && window._openedSubmission.id;
-    const tok = _subCachedTok();
-    if (!sid || !tok || !dissection || !Array.isArray(dissection.pieces)) return;
-    if (_savingPieces) return;
-    _savingPieces = true;
-    const clean = JSON.parse(JSON.stringify(dissection, (k, v) =>
-      (k === '_patternPending' || k === '_virtual') ? undefined : v));
-    for (const p of (clean.pieces || [])) {
-      if (p._image)   p._image   = await _shrinkDataUrl(p._image, 1280);
-      if (p._pattern) p._pattern = await _shrinkDataUrl(p._pattern, 1600);
+let _briefLocalSequence = 0;
+let _briefFolderLoadSequence = 0;
+let _piecesSaveChain = Promise.resolve();
+let _unsavedDissection = null;
+let _retainedDissection = null;
+let _dissectionBusy = false;
+function _piecesAccount(token) {
+  try { return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub || token; } catch { return token; }
+}
+function _piecesContext() { return {sid:String(window._openedSubmission?.id||''),local:_briefLocalSequence,hero:String(window._dissectTarget?.hero||''),account:_piecesAccount(_subCachedTok()||'')}; }
+function _piecesContextCurrent(context) { const current=_piecesContext();return !!context.account && context.sid===current.sid && context.local===current.local && context.hero===current.hero && context.account===current.account; }
+function _savePiecesToDrive(dissection, context=_piecesContext()) {
+  if (!context.sid || !context.account || !Array.isArray(dissection?.pieces)) return Promise.reject(Error('Sign in and open this submission before saving.'));
+  const clean=JSON.parse(JSON.stringify(dissection,(k,v)=>(k==='_patternPending'||k==='_virtual')?undefined:v));
+  // Every caller keeps its own snapshot/context. A simultaneous save queues instead
+  // of returning an unacknowledged success or dropping the newer piece image.
+  const task=_piecesSaveChain.catch(()=>{}).then(async()=>{
+    if (!_piecesContextCurrent(context)) throw Error('Submission or account changed. Reopen the original submission to save.');
+    for (const piece of clean.pieces) {
+      if (piece._image) piece._image=await _shrinkDataUrl(piece._image,1280);
+      if (piece._pattern) piece._pattern=await _shrinkDataUrl(piece._pattern,1600);
     }
-    let body = JSON.stringify({ folderId: sid, data: clean });
-    if (body.length > 27 * 1024 * 1024) {
-      (clean.pieces || []).forEach(p => { delete p._pattern; });
-      body = JSON.stringify({ folderId: sid, data: clean });
-    }
-    const r = await fetch('/api/admin/savepieces', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
-      body,
-    });
-    if (!r.ok) {
-      const d = await r.text().catch(() => '');
-      console.warn('[pieces save]', r.status, d.slice(0, 200));
-      // Say it out loud. A silent failure here is what made the same client
-      // get dissected and rendered over and over.
-      showBackendToast('Could not save this dissection (' + r.status + '), it may run again next time.');
-    } else {
-      console.log('[pieces save] ok,', Math.round(body.length / 1024) + 'kb');
-    }
-  } catch (e) {
-    console.warn('[pieces save]', e);
-    showBackendToast('Could not save this dissection, it may run again next time.');
-  } finally {
-    _savingPieces = false;
-  }
+    let body=JSON.stringify({folderId:context.sid,data:clean});
+    if(body.length>27*1024*1024){clean.pieces.forEach(piece=>delete piece._pattern);body=JSON.stringify({folderId:context.sid,data:clean});}
+    if (!_piecesContextCurrent(context)) throw Error('Submission or account changed before saving.');
+    const response=await fetch('/api/admin/savepieces',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_subCachedTok()},body});
+    if (!response.ok) throw Error('Could not save this dissection ('+response.status+').');
+    const result=await response.json();if(result.ok!==true)throw Error('The server did not confirm this save.');
+    return {saved:true,submissionId:context.sid};
+  });
+  _piecesSaveChain=task;return task;
+}
+async function _persistDissection(dissection,context=_piecesContext()) {
+  if(!_piecesContextCurrent(context))throw Error('Submission or account changed. Reopen the original submission to save.');
+  if(!context.sid){_unsavedDissection=null;if(_piecesContextCurrent(context)&&window._dissectTarget)renderDissection({card:window._dissectTarget.card});return {saved:false,local:true};}
+  const pending={dissection,context};_unsavedDissection=pending;_retainedDissection=pending;
+  try {const result=await _savePiecesToDrive(dissection,context);if(_unsavedDissection===pending)_unsavedDissection=null;return result;}
+  finally {if(_piecesContextCurrent(context)&&window._dissectTarget){window._dissectTarget.card._dissection=dissection;renderDissection({card:window._dissectTarget.card});}}
+}
+async function retryDissectionSave() {
+  if(_dissectionBusy||!_unsavedDissection||!_piecesContextCurrent(_unsavedDissection.context))return;
+  const pending=_unsavedDissection;let notice='';
+  _dissectionBusy=true;setDissectStatus(true,'Saving…');
+  try{await _persistDissection(pending.dissection,pending.context);notice='Dissection saved.';}
+  catch(error){notice=error.message+' Generated pieces remain here; use Save dissection to retry.';}
+  finally{_dissectionBusy=false;setDissectStatus(false);if(notice&&_piecesContextCurrent(pending.context))showBackendToast(notice);}
+}
+async function renderMissingPieces() {
+  if(_dissectionBusy)return;
+  const target=window._dissectTarget,context=_piecesContext(),dissection=target?.card?._dissection;
+  const missing=dissection?.pieces?.filter(piece=>piece&&!piece.skip&&!piece._image)||[];
+  if(!missing.length)return;
+  if(!getApiKey())return showBackendToast('Sign in before rendering pieces.');
+  let notice='';
+  _dissectionBusy=true;setDissectStatus(true,'Rendering missing pieces…');
+  try{await renderAllPieces(target.hero,missing);if(!_piecesContextCurrent(context))return;const result=await _persistDissection(dissection,context);notice=result.saved?'Rendered pieces saved.':'Generated in this page only. Open a saved submission to save online.';}
+  catch(error){notice=error.message+' Use Save dissection to retry the save.';}
+  finally{_dissectionBusy=false;setDissectStatus(false);if(notice&&_piecesContextCurrent(context))showBackendToast(notice);}
 }
 
 // v12.9: hand the dissected, rendered pieces to the embedded Operations Room.
@@ -2635,29 +2667,39 @@ function setDissectStatus(on, label) {
 // result, including every rendered piece, is written back to that client's
 // Drive folder, so reopening them costs nothing and the pill never returns.
 async function beginDissection() {
-  const t = window._dissectTarget;
+  if(_dissectionBusy)return;
+  const t = window._dissectTarget,context=_piecesContext();
+  if(t?.card?._dissection)return retryDissectionSave();
   if (!t || !t.hero) return showBackendToast('No garment loaded yet.');
   if (!getApiKey()) return showBackendToast('Sign in on the Systems Map first, then reload.');
+  let notice='';
+  _dissectionBusy=true;
   const pill = document.getElementById('dissect-start-pill');
   if (pill) { pill.classList.add('busy'); pill.textContent = 'Dissecting…'; pill.disabled = true; }
   setDissectStatus(true, 'Dissecting…');
   try {
     const d = await dissectImage(t.hero, (window._currentSnap && window._currentSnap.lastSummary) || window.lastSummary || {});
     if (!d || !Array.isArray(d.pieces) || !d.pieces.length) throw new Error('nothing came back');
+    if(!_piecesContextCurrent(context))return;
     t.card._dissection = d;
+    _unsavedDissection={dissection:d,context};_retainedDissection=_unsavedDissection;
     renderDissection({ card: t.card });          // pills appear, Dissect disappears
     setDissectStatus(true, 'Rendering pieces…');
     await renderAllPieces(t.hero, d.pieces);
+    if(!_piecesContextCurrent(context))return;
     renderDissection({ card: t.card });          // repaint with the piece pictures
     _postPiecesToOps(d.pieces);
-    await _savePiecesToDrive(d);                 // saved to this client, once, forever
-    showBackendToast('Dissected and saved. This client will not be charged again.');
+    const saved=await _persistDissection(d,context);
+    notice=saved.saved?'Dissection saved. Missing piece images can be rendered when you choose.':'Generated in this page only. Open a saved submission to save online.';
   } catch (e) {
     console.warn('[dissect]', e);
-    showBackendToast('Dissection failed: ' + ((e && e.message) || 'try again'));
+    notice=(t.card._dissection?'Generated pieces remain here. Use Save dissection to retry. ':'Dissection failed: ')+((e&&e.message)||'Try again');
     if (pill) { pill.classList.remove('busy'); pill.textContent = 'Dissect'; pill.disabled = false; }
   } finally {
+    _dissectionBusy=false;
+    if(_piecesContextCurrent(context))renderDissection({card:t.card});
     setDissectStatus(false, 'Dissecting…');
+    if(notice&&_piecesContextCurrent(context))showBackendToast(notice);
   }
 }
 
@@ -2950,6 +2992,8 @@ function renderDissection(visionItem) {
       // client has never been dissected, and it removes itself the moment it
       // is pressed, so the spend is always something you chose.
       (hasDissection ? '' : '<button class="piece-pill dissect-start" id="dissect-start-pill" onclick="beginDissection()">Dissect</button>') +
+      (hasDissection && visionItem.card._dissection.pieces.some(p=>p&&!p.skip&&!p._image) ? '<button class="piece-pill" id="dissect-missing-pill" onclick="renderMissingPieces()">Render missing pieces</button>' : '') +
+      (_unsavedDissection && _piecesContextCurrent(_unsavedDissection.context) ? '<button class="piece-pill" id="dissect-save-pill" onclick="retryDissectionSave()">Save dissection</button>' : '') +
       '<button class="piece-pill" id="fab-tab-pill" onclick="showBriefFabrics()">Fabrics</button>';
     const frame = document.getElementById('op-image-frame');
     if (frame && !frame.dataset.swipeWired) {
@@ -2991,10 +3035,11 @@ function renderDissection(visionItem) {
 // no heuristic Top/Bottom/Base fallback, no region bounding boxes. If
 // there's no dissection yet, return empty and the swiper stays at Full
 // view until dissection lands.
+const _pieceSources = new WeakMap();
 function inferPieces(card) {
   const d = card && card._dissection;
   if (!d || !Array.isArray(d.pieces)) return [];
-  return d.pieces.map((p, i) => ({
+  return d.pieces.map((p, i) => {const view={
     ...p, // Preserve material traits, construction details and saved production work.
     name:     p.name || ('Item ' + (i + 1)),
     category: p.category || 'unknown',
@@ -3006,7 +3051,7 @@ function inferPieces(card) {
     panels:   p.panels || null,
     skip:     !!p.skip,
     _image:   p._image || null,    // populated by renderAllPieces
-  }));
+  };_pieceSources.set(view,p);return view;});
 }
 
 // v0.9: focusPiece no longer used in operating room (no piece cards).
@@ -3107,6 +3152,8 @@ async function dissectActivePieceForPattern() {
   }
   const hero = _pieceState.heroImage;
   if (!hero) { showBackendToast('No reference garment loaded.'); return; }
+  const context=_piecesContext(),dissection=window._dissectTarget?.card?._dissection,source=_pieceSources.get(piece);
+  if(!source||!dissection?.pieces?.includes(source)||!_piecesContextCurrent(context))return;
   const btn = document.getElementById('op-dissect-btn');
   const emptyEl = document.getElementById('pattern-empty');
   const imgEl   = document.getElementById('pattern-image');
@@ -3116,16 +3163,27 @@ async function dissectActivePieceForPattern() {
     if (imgEl) { imgEl.src = piece._pattern; imgEl.style.display = ''; }
     return;
   }
+  if(source._patternPending)return;
+  source._patternPending=true;piece._patternPending=true;
+  _retainedDissection={dissection,context};
   if (btn) { btn.classList.add('busy'); btn.textContent = 'Dissecting…'; }
   try {
     const pat = await generatePattern(hero, piece);
-    piece._pattern = pat;
-    if (emptyEl) emptyEl.style.display = 'none';
-    if (imgEl) { imgEl.src = pat; imgEl.style.display = ''; }
+    if(!_piecesContextCurrent(context)||!pat)return;
+    source._pattern=pat;piece._pattern=pat;
+    const active=_pieceState.pieces[_pieceState.idx];
+    if(_pieceSources.get(active)===source){
+      active._pattern=pat;
+      if (emptyEl) emptyEl.style.display = 'none';
+      if (imgEl) { imgEl.src = pat; imgEl.style.display = ''; }
+    }
+    await _persistDissection(dissection,context);
   } catch (e) {
     console.warn('[Backend pattern]', e);
-    showBackendToast('Pattern generation failed: ' + (e.message || 'unknown'));
+    if(_piecesContextCurrent(context))showBackendToast((source._pattern?'Pattern remains here. Use Save dissection to retry. ':'Pattern generation failed: ')+(e.message || 'unknown'));
   } finally {
+    source._patternPending=false;piece._patternPending=false;
+    _pieceState.pieces.forEach(view=>{if(_pieceSources.get(view)===source)view._patternPending=false;});
     if (btn) { btn.classList.remove('busy'); btn.textContent = 'Dissect'; }
   }
 }
@@ -3190,16 +3248,9 @@ function _syncOpRoom() {
   // v0.37: a pattern is drawn the first time you actually open this piece,
   // not for every piece the moment a client is opened.
   if (isGarmentPiece && !piece._pattern && !piece._patternPending && getApiKey()) {
-    piece._patternPending = true;
-    dissectActivePieceForPattern()
-      .then(() => {
-        // v0.37: save it the moment it exists, so this pattern is only ever
-        // paid for once, however many times the piece is opened again.
-        const t = window._dissectTarget;
-        if (t && t.card && t.card._dissection) _savePiecesToDrive(t.card._dissection);
-      })
-      .catch(() => {})
-      .finally(() => { piece._patternPending = false; });
+    // The handler retains the originating raw piece and submission through both
+    // generation and persistence, including a same-submission auth refresh.
+    dissectActivePieceForPattern().catch(error=>console.warn('[Backend pattern]',error));
   }
 
   // ── Pattern Window (right, 70%) ──

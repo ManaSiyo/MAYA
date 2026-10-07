@@ -74,11 +74,14 @@ export function mountCrmIntelligence(app,deps) {
     const subject=clip(b.subject,200),body=clip(b.body,12000);if(!subject||!body)throw problem('Add a subject and message.');
     if(/\{\{[^}]+\}\}/.test(subject+body))throw problem('Replace all highlighted template fields before sending.');
     const mailboxes=await deps.gmail?.list(user.sub)||[];if(!mailboxes.some(m=>m.id===b.mailboxId))throw problem('Choose a connected sender.');
-    const fingerprint=hash([b.id,b.mailboxId,subject,body]);
+    const expectedEmail=clip(b.expectedEmail,320).toLowerCase();
+    if(!expectedEmail)throw problem('Reload this contact and review the recipient before sending.',409);
+    const fingerprint=hash([b.id,expectedEmail,b.mailboxId,subject,body]);
     const claim=await change(user.sub,s=>{
       const crm=s.crm||=initial(),previous=crm.deliveries[b.requestId];
       if(previous){if(previous.fingerprint!==fingerprint)throw problem('Send reference already belongs to another message.',409);return {previous};}
       const c=s.contacts.find(c=>c.id===b.id);if(!c?.email)throw problem('This contact needs an email.');
+      if(c.email.trim().toLowerCase()!==expectedEmail)throw problem('The recipient changed. Reload the contact and review the email again.',409);
       if(s.contacts.some(x=>x.email===c.email&&x.stage==='suppressed'))throw problem('This contact is suppressed.');
       const membership=(c.campaignIds||[c.campaignId]).filter(Boolean);
       if(membership.length&&!s.campaigns.some(campaign=>inCampaign(c,campaign.id)&&campaign.status!=='paused'))throw problem('Resume a campaign before sending.');

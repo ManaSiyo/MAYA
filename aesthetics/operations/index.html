@@ -31,10 +31,11 @@ window.addEventListener('message', function(e){
   // website could open it and swap in its own image as the pipeline input.
   try { if (e.origin && e.origin !== location.origin) return; } catch (_) { return; }
   if (e.data.maya === 'ops-drawer') { try { toggleDrawer(true); } catch(_) {} }
-  if (e.data.maya === 'ops-pieces' && Array.isArray(e.data.pieces)) {
+  if (e.data.maya === 'ops-pieces' && e.source === window.parent && Array.isArray(e.data.pieces)) {
     try {
       var incoming = e.data.pieces.filter(function(p){ return p && p.image; });
       if (!incoming.length) return;
+      if(typeof invalidateOperation==='function')invalidateOperation();
       var T = window.MAYA_TESTS = window.MAYA_TESTS || {};
       Object.keys(T).forEach(function(k){ delete T[k]; });
       incoming.forEach(function(p){ T[p.name || 'Piece'] = { front: p.image }; });
@@ -274,7 +275,7 @@ window.addEventListener('message', function(e){
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=20"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=21"></script>
 </head>
 <body>
 <!-- Front End drawer model: horizontal scroll-snap with a main pane + a drawer pane.
@@ -480,30 +481,64 @@ const $ = id => document.getElementById(id);
 // the OpenAI key; this returns the Google sign in token that authorises them.
 function getKey(){ try{ return localStorage.getItem('maya_admin_tok')||''; }catch{ return ''; } }
 function saveKey(){ /* v12.5: retired, there is no key to type in any more */ }
-function getQuality(){ try{ return localStorage.getItem(Q_NAME)||'medium'; }catch{ return 'medium'; } }
+function getQuality(){ if(RUNNING&&_runQuality)return _runQuality;try{ return localStorage.getItem(Q_NAME)||'medium'; }catch{ return 'medium'; } }
 
 /* ---- measurements & derived dimensions ---- */
 function num(v){ const n=parseFloat(v); return isFinite(n)&&n>0 ? n : null; }
-function getMeasures(){
-  try{ return {
-    waist:num(localStorage.getItem(MW_NAME)), length:num(localStorage.getItem(ML_NAME)),
-    hip:num(localStorage.getItem(MH_NAME)), crotch:num(localStorage.getItem(MC_NAME)),
-    inseam:num(localStorage.getItem(MI_NAME)) };
-  } catch{ return {waist:null,length:null,hip:null,crotch:null,inseam:null}; }
+let _measurementGarment='',_garmentSequence=0,_garmentReady=Promise.resolve(),_runMeasures=null,_runQuality=null,_lockedOperationInputs=[];
+function operationAccount(){const token=getKey();try{return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub||token;}catch{return token;}}
+function operationSubmission(){return new URLSearchParams(location.search).get('submission')||'standalone';}
+function operationContext(){return {run:RUN,account:operationAccount(),submission:operationSubmission(),garment:_garmentSequence,token:getKey()};}
+function operationGarmentCurrent(context){return context.account===operationAccount()&&context.submission===operationSubmission()&&context.garment===_garmentSequence;}
+function operationCurrent(context){return context.run===RUN&&operationGarmentCurrent(context);}
+function requireOperation(context){if(!operationCurrent(context))throw Error('The operation changed. Start again with the current garment.');}
+function measurementKey(){const account=operationAccount();return account&&_measurementGarment?'maya_measures_v2:'+encodeURIComponent(account)+':'+encodeURIComponent(operationSubmission())+':'+_measurementGarment:'';}
+function storedMeasures(){
+  const key=measurementKey();let saved={};try{if(key)saved=JSON.parse(sessionStorage.getItem(key)||'{}')||{};}catch{}
+  return Object.fromEntries(['waist','length','hip','crotch','inseam'].map(key=>[key,num(saved[key])]));
+}
+function getMeasures(){return RUNNING&&_runMeasures?{..._runMeasures}:storedMeasures();}
+function selectOperationGarment(image){
+  _garmentSequence++;_measurementGarment='';syncMeasures();
+  const context=operationContext();
+  // Names such as “Coat” are reused; measurements belong to this exact image.
+  _garmentReady=(async()=>{
+    const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(String(image||'')));
+    if(!operationGarmentCurrent(context))return;
+    _measurementGarment=Array.from(new Uint8Array(digest),value=>value.toString(16).padStart(2,'0')).join('');
+    if(RUNNING)_runMeasures=storedMeasures();
+    syncMeasures();
+  })().catch(error=>{if(operationGarmentCurrent(context))toast('Measurements could not be loaded: '+error.message);});
+  return _garmentReady;
 }
 function saveMeasures(){
-  try{
-    localStorage.setItem(MW_NAME, $('m-waist').value); localStorage.setItem(ML_NAME, $('m-length').value);
-    localStorage.setItem(MH_NAME, $('m-hip').value);   localStorage.setItem(MC_NAME, $('m-crotch').value);
-    localStorage.setItem(MI_NAME, $('m-inseam').value);
-  }catch{}
+  if(RUNNING){syncMeasures();return;}
+  const key=measurementKey();if(!key)return;
+  try{sessionStorage.setItem(key,JSON.stringify(Object.fromEntries(['waist','length','hip','crotch','inseam'].map(key=>[key,$('m-'+key).value]))));}catch{}
   renderDimDerived();
 }
-function syncMeasures(){ const m=getMeasures();
-  if(m.waist!=null)$('m-waist').value=m.waist; if(m.length!=null)$('m-length').value=m.length;
-  if(m.hip!=null)$('m-hip').value=m.hip; if(m.crotch!=null)$('m-crotch').value=m.crotch; if(m.inseam!=null)$('m-inseam').value=m.inseam;
-  renderDimDerived();
+function syncMeasures(){const measures=getMeasures();for(const key of ['waist','length','hip','crotch','inseam'])if($('m-'+key))$('m-'+key).value=measures[key]??'';renderDimDerived();}
+function setOperationRunning(on){
+  if(on){_runMeasures=getMeasures();_runQuality=getQuality();}
+  RUNNING=on;
+  if(on){_lockedOperationInputs=[...document.querySelectorAll('input,select,[data-q],#logic-save-btn,#logic-reset-btn,#operation-fabrics')].map(el=>[el,el.disabled]);_lockedOperationInputs.forEach(([el])=>el.disabled=true);}
+  else{_lockedOperationInputs.forEach(([el,disabled])=>el.disabled=disabled);_lockedOperationInputs=[];_runMeasures=null;_runQuality=null;}
 }
+function invalidateOperation(){
+  RUN++;_garmentSequence++;_garmentReady=Promise.resolve();_measurementGarment='';
+  setOperationRunning(false);HERO=null;ANSWER=null;RD=null;RD_PROMISE=null;RD_IS_RAW=false;TRACE=null;PASSES=[];LAST={type:null,garment:null};ACTIVE_TEST=null;FILES={};_tv=null;
+  for(const id of ['hero-img','hero-img-b','img-grounded','img-rd']){const image=$(id);if(image){image.removeAttribute('src');image.style.display='none';}}
+  for(const id of ['clo-result','live-log','live-status','t-type','t-chapter','t-panels','t-fixes','t-chunks','trace-view'])if($(id))$(id).textContent='';
+  if($('live'))$('live').classList.remove('on');
+  if($('hero-empty'))$('hero-empty').style.display='';
+  if($('hero-empty-b'))$('hero-empty-b').style.display='';
+  if($('start-test'))$('start-test').textContent='Start';
+  syncMeasures();applyView();
+}
+let _operationAccount=operationAccount();
+function operationAuthChanged(){const next=operationAccount();if(next===_operationAccount)return;_operationAccount=next;invalidateOperation();for(const name of Object.keys(TESTS))delete TESTS[name];initTests();}
+window.addEventListener('storage',event=>{if(event.key==='maya_admin_tok')operationAuthChanged();});
+window.addEventListener('maya-owner-session-changed',()=>queueMicrotask(operationAuthChanged));
 
 // PANT MEASUREMENT MODEL (Fromsa's, grounded in Ch.26):
 //  waist, hip, crotch length, inseam, pant length.
@@ -511,8 +546,8 @@ function syncMeasures(){ const m=getMeasures();
 //  crotch length = yoke + back panel + waistband (along centre-back).
 //  rise (crotch depth) = pant length − inseam.
 //  book quarter split (p.662): front waist W/4+1/4, back W/4−1/4; front hip H/4−1/4, back H/4+1/4.
-function computeDims(){
-  const m=getMeasures();
+function computeDims(measures){
+  const m=measures||getMeasures();
   if(m.waist==null && m.length==null && m.hip==null) return null;
   const d={ waist:m.waist, length:m.length, hip:m.hip, crotch:m.crotch, inseam:m.inseam };
   if(m.waist!=null){
@@ -600,7 +635,7 @@ function renderLogic(){
   $('logic-edit').value = logicToText(list);
 }
 function editLogic(){ $('logic').classList.add('editing'); $('logic-edit-btn').style.display='none'; $('logic-save-btn').style.display=''; }
-function saveLogic(){
+function saveLogic(){ if(RUNNING){toast('Finish the current run before changing its inputs.');return;}
   setLogic(LOGIC_TYPE, parseLogic($('logic-edit').value));
   LAST.bestGrounded=null; LAST.bestHero=null;              // piece set changed, the carried best is stale
   $('logic').classList.remove('editing'); $('logic-edit-btn').style.display=''; $('logic-save-btn').style.display='none';
@@ -608,7 +643,7 @@ function saveLogic(){
   LAST.cutlist=buildCutList(LAST.garment,LAST.garmentGram);   // re-lock from new logic
   toast('Pattern logic saved, applied to every render.');
 }
-function resetLogic(){
+function resetLogic(){ if(RUNNING){toast('Finish the current run before changing its inputs.');return;}
   try{ localStorage.removeItem(LOGIC_PREFIX+LOGIC_TYPE); }catch{}
   LAST.bestGrounded=null; LAST.bestHero=null;              // piece set changed, the carried best is stale
   $('logic').classList.remove('editing'); $('logic-edit-btn').style.display=''; $('logic-save-btn').style.display='none';
@@ -620,7 +655,7 @@ function resetLogic(){
    so eval runs measure what the pipeline generalises, not what Fromsa taught it. */
 const LOCK_NAME='maya_logic_locked';
 function logicLocked(){ try{ return localStorage.getItem(LOCK_NAME)==='1'; }catch{ return false; } }
-function toggleLogicLock(){
+function toggleLogicLock(){ if(RUNNING){toast('Finish the current run before changing its inputs.');return;}
   try{ localStorage.setItem(LOCK_NAME, logicLocked()?'0':'1'); }catch{}
   LAST.bestGrounded=null; LAST.bestHero=null;              // authority changed, the carried best is stale
   renderLogic();
@@ -650,7 +685,7 @@ document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') toggleDrawer(fal
 const PLAN_NAME='maya_plan';
 const PLAN_SUBS={ A:'Plan A · Grounded Pattern Pipeline', B:'Plan B · CLO Route' };
 function getPlan(){ try{ return localStorage.getItem(PLAN_NAME)||'A'; }catch{ return 'A'; } }
-function setPlan(p){ try{ localStorage.setItem(PLAN_NAME,p); }catch{} syncPlan(); toggleDrawer(false); }
+function setPlan(p){ if(RUNNING){toast('Finish the current run before changing its inputs.');return;} try{ localStorage.setItem(PLAN_NAME,p); }catch{} syncPlan(); toggleDrawer(false); }
 function syncPlan(){
   const p=getPlan();
   document.querySelectorAll('[data-plan]').forEach(el=>el.classList.toggle('active',el.dataset.plan===p));
@@ -661,7 +696,7 @@ function syncPlan(){
 }
 
 
-function setQuality(q){ try{ localStorage.setItem(Q_NAME,q); }catch{} syncQuality(); }
+function setQuality(q){ if(RUNNING){toast('Finish the current run before changing its inputs.');return;} try{ localStorage.setItem(Q_NAME,q); }catch{} syncQuality(); }
 function syncQuality(){ const q=getQuality(); document.querySelectorAll('[data-q]').forEach(el=>el.classList.toggle('active',el.dataset.q===q)); }
 
 window.addEventListener('DOMContentLoaded',()=>{
@@ -677,20 +712,28 @@ function onFile(e){
   const f=e.target.files[0]; if(!f) return;
   if(RUNNING){ toast('A run is already going, let it finish.'); return; }
   const r=new FileReader();
+  const fileContext=operationContext();
   r.onload=async()=>{
+    if(RUNNING||!operationCurrent(fileContext))return;
     setHero(r.result);
     RUN++; ANSWER=null; RD=null; RD_IS_RAW=false; RD_PROMISE=null; TRACE=null; _tv=null; PASSES=[]; BEST_IDX=0;
     LAST.bestGrounded=null; LAST.bestHero=null;                     // uploaded image has no answer key or carry-over
     $('img-grounded').removeAttribute('src'); $('img-rd').removeAttribute('src');
     if(!getKey()){ toast('Sign in on the Systems Map first, then reload this page.'); return; }
-    RUNNING=true;
-    try{ await runGrounded(); }   // upload → run grounded immediately
-    finally{ RUNNING=false; }
+    const started=RUN;setOperationRunning(true);
+    const context=operationContext();
+    try{ await _garmentReady;if(operationCurrent(context))await runGrounded(); }   // upload → run grounded immediately
+    finally{ if(started===RUN)setOperationRunning(false); }
   };
   r.readAsDataURL(f);
 }
 // show a garment on the hero frame (session-only, tests reload from tests-data.js anyway)
 function setHero(dataUrl){
+  if(RUNNING)return;
+  selectOperationGarment(dataUrl);
+  ACTIVE_TEST=null;FILES={};
+  if($('test-picker'))$('test-picker').value='';
+  if($('test-view'))$('test-view').value='front';
   HERO=dataUrl;
   $('hero-img').src=HERO; $('hero-img').style.display='block';
   $('hero-empty').style.display='none';
@@ -764,6 +807,7 @@ let RD_PROMISE = null;    // pending redraw, runs in parallel with the pipeline;
 function shortLabel(name){ const m=name.match(/^(test\s*\d+)/i); return m?m[1].replace(/\s+/,' '):name; }
 
 function initTests(){
+  if(RUNNING)invalidateOperation();
   const p=$('test-picker'); if(!p) return;
   // v0.37: the built in sample garments (the placeholder trousers) no longer
   // load themselves. When this room is embedded in a client's Brief it waits
@@ -782,12 +826,15 @@ function initTests(){
 }
 function onPickTest(val){ pickTest(val); }
 function pickTest(name){
+  if(RUNNING){if($('test-picker'))$('test-picker').value=ACTIVE_TEST;return;}
   ACTIVE_TEST=name; FILES=TESTS[name]||{};
+  selectOperationGarment(FILES.front||'');
   if($('test-view')) $('test-view').value='front';
   showView('front');
 }
 // Show one of the test's images on the left; non-answer views also become the pipeline input.
 function showView(which){
+  if(RUNNING)return;
   if(!ACTIVE_TEST) return;
   const data=FILES[which]; if(!data){ toast('No "'+which+'" image in this test.'); return; }
   $('hero-img').src=data; $('hero-img').style.display='block'; $('hero-empty').style.display='none';
@@ -796,48 +843,55 @@ function showView(which){
 // Start → redraw the answer (RD), then Raw, then Grounded (scored vs RD). Answer/RD shown left for side-by-side.
 async function startTest(){
   if(RUNNING){ toast('A run is already going, let it finish.'); return; }
-  if(!ACTIVE_TEST){ toast('Pick a test first.'); return; }
+  if(!ACTIVE_TEST&&!HERO){toast('Pick a test or upload a garment first.');return;}
   if(!getKey()){ toast('Sign in on the Systems Map first, then reload this page.'); return; }
-  if(!EMB){ toast('Building embeddings first…'); await buildEmbeddings(); if(!EMB) return; }
-  RUNNING=true; RUN++;
+  RUN++;const started=RUN;setOperationRunning(true);
+  const context=operationContext();
   const btn=$('start-test'); const orig=btn.textContent; btn.innerHTML='<span class="spinner"></span>Running…';
   try{
+    await _garmentReady;requireOperation(context);
+    if(!_measurementGarment)throw Error('The garment is not ready. Select it again.');
+    if(!EMB){toast('Building embeddings first…');await buildEmbeddings(context);requireOperation(context);if(!EMB)return;}
     // pipeline input = whatever view is picked on the left (answer isn't an input, falls back to front)
     const pick=$('test-view').value;
-    HERO = (pick!=='answer' && FILES[pick]) ? FILES[pick] : FILES.front;
-    ANSWER = FILES.answer || null;
+    if(ACTIVE_TEST)HERO=(pick!=='answer'&&FILES[pick])?FILES[pick]:FILES.front;
+    ANSWER=ACTIVE_TEST?(FILES.answer||null):null;
     liveOpen('test loaded');
-    liveLine(`${shortLabel(ACTIVE_TEST)} · input: ${pick==='answer'?'front':pick}${ANSWER?' · answer loaded':' · no answer'}`);
+    liveLine(`${shortLabel(ACTIVE_TEST||'Upload')} · input: ${pick==='answer'?'front':pick}${ANSWER?' · answer loaded':' · no answer'}`);
     TRACE=null; _tv=null; PASSES=[]; RD=null; RD_IS_RAW=false;
     $('img-rd').removeAttribute('src'); $('img-grounded').removeAttribute('src');
-    RD_PROMISE = runRD();   // 1 · redraw the answer (frozen per test), runs IN PARALLEL with the pipeline; scoring awaits it
+    const redraw=runRD();RD_PROMISE=redraw; // Keep this run's redraw even if the next run replaces global state.
     await runGrounded();    // 2 · book + measurements, refined over Mark One → Mark Two, scored vs both answers
-    await RD_PROMISE.catch(()=>{});
+    await redraw.catch(()=>{});
     // the left frame stays on whatever view the user picked, the redrawn answer never hijacks it
-  }catch(e){ toast('Start failed: '+e.message); console.error(e); liveLine('Start failed: '+e.message); }
-  finally{ btn.textContent=orig; RUNNING=false; }
+  }catch(e){ if(operationCurrent(context)){toast('Start failed: '+e.message);console.error(e);liveLine('Start failed: '+e.message);} }
+  finally{ if(started===RUN){btn.textContent=orig;setOperationRunning(false);} }
 }
 
 /* ---------- RD · GPT redraws the answer into a clean flat pattern (the scoring target) ---------- */
 function hashStr(s){ let h=5381; for(let i=0;i<s.length;i++){ h=((h<<5)+h+s.charCodeAt(i))|0; } return (h>>>0).toString(36); }
-function rdCacheKey(){ return 'rd_'+(ACTIVE_TEST||'upload')+'_'+hashStr(ANSWER.slice(0,4096)+':'+ANSWER.length); }
+async function rdCacheKey(answer){
+  const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(answer));
+  return 'rd_v2_'+encodeURIComponent(operationAccount())+'_'+encodeURIComponent(operationSubmission())+'_'+_measurementGarment+'_'+Array.from(new Uint8Array(digest),value=>value.toString(16).padStart(2,'0')).join('');
+}
 
 async function runRD(){
   if(!ANSWER){ liveLine('No answer image, skipping the redraw.'); return; }
-  const myRun=RUN;
+  const context=operationContext(),answer=ANSWER;let cacheKey;
   // FROZEN TARGET, reuse the cached redraw for this exact test+answer so scores are
   // comparable across runs (and an image call is saved). KB "Clear" wipes it too.
   try{
-    if(!DB) await openDB();
-    const cached = await dbGet(rdCacheKey());
+    cacheKey=await rdCacheKey(answer);requireOperation(context);
+    if(!DB) await openDB();requireOperation(context);
+    const cached = await dbGet(cacheKey);requireOperation(context);
     if(cached){
-      if(myRun!==RUN) return;
+      if(!operationCurrent(context))return;
       RD=cached; RD_IS_RAW=false;
       $('img-rd').src=RD; applyView();
       liveLine('Redrawn answer loaded from cache, frozen scoring target, comparable across runs.');
       return;
     }
-  }catch{}
+  }catch{if(!operationCurrent(context))return;}
   view('rd'); liveStatus('redrawing the answer…');
   try{
     const prompt =
@@ -846,13 +900,14 @@ async function runRD(){
       'closed dark-grey outline (1-1.5px), a centered dashed grainline, triangular notches at seam pairs, a small '+
       'uppercase label per piece, laid flat on a 1-inch grid like a marker sheet. Ignore the 3D garment entirely. '+
       'No body, no shading, no 3D, just the clean flat pattern.';
-    const out = await gptImageEdit(ANSWER, prompt);
-    if(myRun!==RUN) return;                       // a newer run took over, drop this result
+    const out = await gptImageEdit(answer, prompt,context);
+    if(!operationCurrent(context))return;
     RD = out; RD_IS_RAW=false;
-    try{ await dbPut(rdCacheKey(), RD); }catch{}
+    try{if(cacheKey)await dbPut(cacheKey,RD);}catch{}
+    if(!operationCurrent(context))return;
     $('img-rd').src=RD; applyView();
     liveLine('Redrawn answer ready + frozen for this test, future runs score against this exact target.');
-  }catch(e){ if(myRun!==RUN) return; RD=ANSWER; RD_IS_RAW=true; $('img-rd').src=RD;
+  }catch(e){ if(!operationCurrent(context))return;RD=answer;RD_IS_RAW=true;$('img-rd').src=RD;
     liveLine('Redraw failed, scoring against the RAW CLO answer (the grader is told it is a raw screenshot): '+e.message); }
 }
 
@@ -863,13 +918,13 @@ let BEST_IDX = 0;  // index of the pass the answer-free book critique likes best
 async function runGrounded(){
   if(!HERO){ toast('Load an image first.'); return; }
   if(!EMB){ toast('Build embeddings first (Settings ≡).'); toggleDrawer(true); return; }
-  const myRun=RUN;
+  const myRun=RUN,inputHero=HERO,inputAccount=operationAccount();
   PASSES=[]; BEST_IDX=0; viewGrounded(0); liveOpen('grounding…');
   try{
     // 1 · VISION, classify + read construction
     liveStatus('reading garment…');
-    const g = await classifyGarment(HERO);
-    if(myRun!==RUN) return;
+    const g = await classifyGarment(inputHero);
+    if(myRun!==RUN||inputAccount!==operationAccount()) return;
     LAST.garment=g;
     const typeKey = resolveType(g.type);
     LAST.type=typeKey; LOGIC_TYPE=typeKey; renderLogic();
@@ -893,6 +948,7 @@ async function runGrounded(){
     // 4 · RETRIEVE
     const query = buildQuery(g, typeKey, gram);
     const qvec = await embedTexts([query]).then(v=>v[0]);
+    if(myRun!==RUN||inputAccount!==operationAccount())return;
     const hits = retrieve(qvec, typeKey, 5);
     renderChunks(hits);
 
@@ -902,14 +958,14 @@ async function runGrounded(){
 
     // 6 · MARK ONE, base grounded, or CONTINUE from the previous run's best pass of this same input
     let img;
-    if(LAST.bestGrounded && LAST.bestHero===HERO){
+    if(LAST.bestGrounded && LAST.bestHero===inputHero){
       liveLine('Continuing from the previous run\u2019s best pass, refining, not restarting.');
       img = LAST.bestGrounded;
       PASSES=[{ img, badge:'carried · best of previous run', acc:null }];
     } else {
       liveStatus('drawing Mark One…');
-      img = await gptImageEdit(HERO, basePrompt);
-      if(myRun!==RUN) return;
+      img = await gptImageEdit(inputHero, basePrompt);
+      if(myRun!==RUN||inputAccount!==operationAccount()) return;
       PASSES=[{ img, badge:'base grounded', acc:null }];
     }
     viewGrounded(0);
@@ -921,11 +977,11 @@ async function runGrounded(){
       liveStatus(`${mk}: reading the book…`);
       const cq = critiqueQuery(g, typeKey, gram);
       const cqvec = await embedTexts([cq]).then(v=>v[0]);
-      if(myRun!==RUN) return;
+      if(myRun!==RUN||inputAccount!==operationAccount()) return;
       const bookHits = retrieveBlended(cqvec, typeKey, 8);
       liveStatus(`${mk}: critiquing…`);
-      const crit = await critiquePattern(img, HERO, typeKey, gram, g, bookHits, mk);
-      if(myRun!==RUN) return;
+      const crit = await critiquePattern(img, inputHero, typeKey, gram, g, bookHits, mk);
+      if(myRun!==RUN||inputAccount!==operationAccount()) return;
       if(crit.ok){ PASSES[PASSES.length-1].critDefects=0; liveLine(`Passed the book critique after ${p-1} pass(es).`); break; }
       if(!crit.fixes.length && !crit.defects.length){
         liveLine('Critique came back unusable (no defects, no fixes), skipping the redraw, keeping '+markLabel(p-2)+'.');
@@ -935,7 +991,7 @@ async function runGrounded(){
       liveStatus(`${mk}: redrawing to fix…`);
       const refinePrompt = composeRefinePrompt(basePrompt, crit, gram);
       img = await gptImageEdit(img, refinePrompt);
-      if(myRun!==RUN) return;
+      if(myRun!==RUN||inputAccount!==operationAccount()) return;
       PASSES.push({ img, badge:'refined from book critique', acc:null });
       viewGrounded(PASSES.length-1);
       if(ANSWER) scoreGrounded(PASSES[PASSES.length-1]);
@@ -949,12 +1005,12 @@ async function runGrounded(){
       try{
         const vq = critiqueQuery(g, typeKey, gram);
         const vqvec = await embedTexts([vq]).then(v=>v[0]);
-        if(myRun!==RUN) return;
+        if(myRun!==RUN||inputAccount!==operationAccount()) return;
         const vHits = retrieveBlended(vqvec, typeKey, 8);
-        const vc = await critiquePattern(fin.img, HERO, typeKey, gram, g, vHits, markLabel(PASSES.length-1)+' · verify');
-        if(myRun!==RUN) return;
+        const vc = await critiquePattern(fin.img, inputHero, typeKey, gram, g, vHits, markLabel(PASSES.length-1)+' · verify');
+        if(myRun!==RUN||inputAccount!==operationAccount()) return;
         fin.critDefects = vc.ok ? 0 : vc.defects.length;
-      }catch(e){ liveLine('Verify critique failed, keeping the newest pass by default: '+e.message); }
+      }catch(e){if(myRun!==RUN||inputAccount!==operationAccount())return;liveLine('Verify critique failed, keeping the newest pass by default: '+e.message);}
     }
     let bestIdx = PASSES.length-1;
     if(PASSES.length>1){
@@ -970,26 +1026,27 @@ async function runGrounded(){
     }
     BEST_IDX=bestIdx;
     PASSES[bestIdx].badge+=' · best';
-    LAST.bestGrounded=PASSES[bestIdx].img; LAST.bestHero=HERO;   // the next run of this same input continues from here
+    LAST.bestGrounded=PASSES[bestIdx].img; LAST.bestHero=inputHero;   // the next run of this same input continues from here
     viewGrounded(bestIdx);
     liveStatus('done');
     TRACE=null; buildSVGfromGrounded(PASSES[bestIdx].img);   // SVG follows the BEST pass, not blindly the latest
-  }catch(e){ toast('Grounded failed: '+e.message); console.error(e); liveLine('Grounded failed: '+e.message); }
+  }catch(e){ if(myRun!==RUN||inputAccount!==operationAccount())return;toast('Grounded failed: '+e.message); console.error(e); liveLine('Grounded failed: '+e.message); }
 }
 
 /* ---------- ACCURACY · vision grades a grounded pass vs BOTH answers ----------
    HUD score = vs the redrawn answer (clean target). A second grade vs the RAW CLO
    answer is logged alongside, if the two diverge hard, the redraw is distorting
    the target and the HUD number can't be trusted. Breaks the circularity. */
-async function gradePair(target, candidate, targetNote){
+async function gradePair(target, candidate, targetNote,context=operationContext(),measurements=getMeasures(),cutlist=LAST.cutlist){
+  requireOperation(context);
   // rubric vocabulary comes from the LOCKED CUT-LIST (answer-free), not a hardcoded pants list
-  const cut = LAST.cutlist;
+  const cut = cutlist;
   const pieceVocab = (cut && cut.length)
     ? cut.map(p=>p.label.toLowerCase()+'×'+p.qty).join(', ')
     : 'the panels expected for this garment type';
   // the candidate is drafted to the DESIGNER'S measurements, grade MEASURE against those
   // numbers (readable off the 1-inch grid), not against the answer garment's unknown size
-  const d = computeDims();
+  const d = computeDims(measurements);
   let dimNote='';
   if(d){
     dimNote='\nTARGET MEASUREMENTS the CANDIDATE was drafted to (inches, read them off the 1-inch grid in the CANDIDATE, origin bottom-left):';
@@ -1018,39 +1075,41 @@ async function gradePair(target, candidate, targetNote){
       {type:'text', text:'CANDIDATE (the AI pattern to grade):'}, {type:'image_url', image_url:{url:candidate}}
     ]}
   ]};
-  const res=await fetch('/api/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+getKey()},body:JSON.stringify(body)});
+  const res=await fetch('/api/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+context.token},body:JSON.stringify(body)});
   if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||('score '+res.status)); }
   const o=JSON.parse((await res.json()).choices[0].message.content);
   const clamp=v=>v==null?null:Math.max(0,Math.min(100,Math.round(v)));
   return { design:clamp(o.design), measure:clamp(o.measure) };
 }
 // median-of-3 grading, vision grades are jittery; three samples + per-axis median stabilises the number
-async function gradeMedian(target, candidate, note){
-  const rs = await Promise.allSettled([0,1,2].map(()=>gradePair(target, candidate, note)));
+async function gradeMedian(target, candidate, note,context,measurements,cutlist){
+  const rs = await Promise.allSettled([0,1,2].map(()=>gradePair(target,candidate,note,context,measurements,cutlist)));
   const ok = rs.filter(r=>r.status==='fulfilled').map(r=>r.value);
   if(!ok.length) throw new Error((rs[0].reason&&rs[0].reason.message)||'all grade samples failed');
   const med=k=>{ const v=ok.map(o=>o[k]).filter(x=>x!=null).sort((a,b)=>a-b); return v.length?v[Math.floor(v.length/2)]:null; };
   return { design:med('design'), measure:med('measure'), samples:ok.length };
 }
 async function scoreGrounded(pass){
+  const context=operationContext(),measurements=getMeasures(),cutlist=LAST.cutlist?structuredClone(LAST.cutlist):null;
   if(RD_PROMISE){ try{ await RD_PROMISE; }catch{} }   // the redraw runs in parallel, wait for it before picking the target
+  if(!operationCurrent(context))return;
   const TARGET = RD || ANSWER;
   if(!TARGET || !pass) return;
-  const myRun=RUN, mk=markLabel(Math.max(0,PASSES.indexOf(pass)));
+  const mk=markLabel(Math.max(0,PASSES.indexOf(pass)));
   pass.acc={design:null, measure:null};
   if(CUR.kind==='grounded' && PASSES[CUR.idx]===pass) renderPassPills();
   try{
     const RAW_NOTE='a CLO3D screenshot containing the correct flat pattern (ignore any 3D garment in it)';
     const cleanNote = RD_IS_RAW ? RAW_NOTE : 'a clean redrawn flat pattern';   // never mislabel the target
-    const vsClean = await gradeMedian(TARGET, pass.img, cleanNote);
-    if(myRun!==RUN) return;                        // a newer run owns the HUD now
+    const vsClean = await gradeMedian(TARGET,pass.img,cleanNote,context,measurements,cutlist);
+    if(!operationCurrent(context))return;
     pass.accClean=vsClean;
     let acc=vsClean;
     let line=`${mk}, vs ${RD_IS_RAW?'RAW answer (redraw failed)':'redrawn'}: design ${vsClean.design}% · measure ${vsClean.measure}% (median of ${vsClean.samples})`;
     if(RD && ANSWER && RD!==ANSWER){               // second opinion vs the raw CLO answer
       try{
-        const vsRaw = await gradeMedian(ANSWER, pass.img, RAW_NOTE);
-        if(myRun!==RUN) return;
+        const vsRaw = await gradeMedian(ANSWER,pass.img,RAW_NOTE,context,measurements,cutlist);
+        if(!operationCurrent(context))return;
         pass.accRaw=vsRaw;
         line+=` · vs raw answer: ${vsRaw.design}%/${vsRaw.measure}%`;
         const gap=Math.abs((vsClean.design??0)-(vsRaw.design??0));
@@ -1060,21 +1119,23 @@ async function scoreGrounded(pass){
         const lo=(a,b)=>a==null?b:b==null?a:Math.min(a,b);
         acc={design:lo(vsClean.design,vsRaw.design), measure:lo(vsClean.measure,vsRaw.measure), samples:vsClean.samples};
         line+=' · HUD = lower of the two';
-      }catch(e){ line+=' · raw-answer grade failed: '+e.message; }
+      }catch(e){if(!operationCurrent(context))return;line+=' · raw-answer grade failed: '+e.message;}
     }
     pass.acc=acc;
     liveLine(line);
-  }catch(e){ if(myRun===RUN){ pass.acc={design:null, measure:null}; liveLine('Scoring failed: '+e.message); } }
-  if(myRun===RUN && CUR.kind==='grounded' && PASSES[CUR.idx]===pass) renderPassPills();
+  }catch(e){if(operationCurrent(context)){pass.acc={design:null,measure:null};liveLine('Scoring failed: '+e.message);}}
+  if(operationCurrent(context)&&CUR.kind==='grounded'&&PASSES[CUR.idx]===pass)renderPassPills();
 }
 
 /* ---------- SVG · vectorise the grounded pattern (image + math) ---------- */
 function buildSVGfromGrounded(src){
+  const context=operationContext();
   if(typeof ImageTracer==='undefined'){ liveLine('Tracer not loaded, SVG unavailable.'); return; }
   src = src || (PASSES[BEST_IDX] && PASSES[BEST_IDX].img) || ($('img-grounded') && $('img-grounded').src);
   if(!src) return;
   const imgEl=new Image();
   const make=()=>{
+    if(!operationCurrent(context))return;
     let imgd;
     try{ const c=document.createElement('canvas'); c.width=imgEl.naturalWidth; c.height=imgEl.naturalHeight;
       const ctx=c.getContext('2d'); ctx.drawImage(imgEl,0,0); imgd=ctx.getImageData(0,0,c.width,c.height); }
@@ -1188,15 +1249,16 @@ function liveLog(line, replace){ const el=$('live-log'); if(replace) el.textCont
 function liveLine(line){ liveLog((($('live-log').textContent && !$('live-log').textContent.endsWith('\n'))?'\n':'')+line+'\n'); }
 
 /* ---- streaming chat: shows the model's answer as it generates ---- */
-async function streamChat(messages, onDelta){
+async function streamChat(messages, onDelta,context=operationContext()){
+  requireOperation(context);
   const res = await fetch('/api/openai/v1/chat/completions',{
-    method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+getKey()},
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+context.token},
     body:JSON.stringify({ model:'gpt-4.1', stream:true, response_format:{type:'json_object'}, messages })
   });
   if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||('critique '+res.status)); }
   const reader=res.body.getReader(); const dec=new TextDecoder(); let buf='', full='';
   while(true){
-    const {done,value}=await reader.read(); if(done) break;
+    const {done,value}=await reader.read();if(!operationCurrent(context)){await reader.cancel();throw Error('Operation changed.');}if(done)break;
     buf+=dec.decode(value,{stream:true});
     const lines=buf.split('\n'); buf=lines.pop();
     for(const ln of lines){
@@ -1273,6 +1335,7 @@ STRINGENCY, this must be production-perfect, not 'good enough':
 }
 
 async function critiquePattern(draftImg, refImg, typeKey, gram, g, bookHits, passLabel){
+  const context=operationContext();
   liveLine(`── ${passLabel}: critiquing draft against ${bookHits.length} book passage(s) ──`);
   liveStatus('reading the book…');
   const full = await streamChat(
@@ -1281,9 +1344,9 @@ async function critiquePattern(draftImg, refImg, typeKey, gram, g, bookHits, pas
        {type:'text',text:'FIRST = reference garment. SECOND = generated draft pattern. Critique the draft strictly against the book passages.'},
        {type:'image_url',image_url:{url:refImg}},
        {type:'image_url',image_url:{url:draftImg}}]}],
-    (delta)=>liveLog(delta)
+    (delta)=>{if(operationCurrent(context))liveLog(delta);},context
   );
-  liveLog('\n');
+  requireOperation(context);liveLog('\n');
   let c; try{ c=JSON.parse(full); }catch{ c={ok:false,defects:[],fixes:[],verdict:'(unparseable critique)'}; }
   c.defects=c.defects||[]; c.fixes=c.fixes||[]; c.annotations=c.annotations||[]; c.sources=bookHits.map(h=>({ch:h.ch,page:h.page,score:h.score}));
   return c;
@@ -1495,16 +1558,18 @@ function composeGroundedPrompt(g, typeKey, gram, hits){
 }
 
 /* ---- gpt-image-2 edit ---- */
-async function gptImageEdit(img, prompt){
+async function gptImageEdit(img, prompt,context=operationContext()){
+  requireOperation(context);const quality=getQuality();
   const form=new FormData();
   form.append('model','gpt-image-2');
   form.append('prompt',prompt);
   const blob=await(await fetch(img)).blob();
+  requireOperation(context);
   form.append('image',blob,'hero.png');
   form.append('size','1536x1024');
-  form.append('quality',getQuality());
+  form.append('quality',quality);
   form.append('n','1');
-  const res=await fetch('/api/openai/v1/images/edits',{method:'POST',headers:{'Authorization':'Bearer '+getKey()},body:form});
+  const res=await fetch('/api/openai/v1/images/edits',{method:'POST',headers:{'Authorization':'Bearer '+context.token},body:form});
   if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||('image '+res.status)); }
   const d=await res.json(); const it=d.data&&d.data[0];
   if(it?.b64_json) return 'data:image/png;base64,'+it.b64_json;
@@ -1560,7 +1625,9 @@ async function embedTexts(texts){
   return d.data.map(x=>Float32Array.from(x.embedding));
 }
 
-async function buildEmbeddings(){
+async function buildEmbeddings(context){
+  if(RUNNING&&!context){toast('Finish the current run before rebuilding embeddings.');return;}
+  context=context||operationContext();
   if(!getKey()){ toast('Sign in on the Systems Map first.'); return; }
   const chunks=KB.chunks; const dim=1536; const total=chunks.length;
   const vecs=new Float32Array(total*dim);
@@ -1569,7 +1636,9 @@ async function buildEmbeddings(){
   try{
     for(let i=0;i<total;i+=B){
       const batch=chunks.slice(i,i+B).map(c=>c.text);
+      requireOperation(context);
       const out=await embedTexts(batch);
+      requireOperation(context);
       for(let j=0;j<out.length;j++){
         const v=out[j]; let nrm=0; for(let d=0;d<dim;d++) nrm+=v[d]*v[d]; nrm=Math.sqrt(nrm)||1;
         const off=(i+j)*dim; for(let d=0;d<dim;d++) vecs[off+d]=v[d]/nrm;   // store normalised
@@ -1579,11 +1648,13 @@ async function buildEmbeddings(){
     }
     EMB={count:total,dim,vecs};
     await dbPut('vecs_v1',{count:total,dim,buf:vecs.buffer});
+    requireOperation(context);
     $('kb-bar').style.width='100%'; toast('Knowledge base embedded & cached.');
     refreshKbStatus();
-  }catch(e){ $('kb-status').textContent='Failed: '+e.message; toast('Embedding failed: '+e.message); }
+  }catch(e){if(operationCurrent(context)){$('kb-status').textContent='Failed: '+e.message;toast('Embedding failed: '+e.message);}}
 }
 async function clearEmbeddings(){
+  if(RUNNING){toast('Finish the current run before clearing embeddings.');return;}
   await new Promise(res=>{ const t=DB.transaction('emb','readwrite'); t.objectStore('emb').clear(); t.oncomplete=()=>res(); t.onerror=()=>res(); });
   EMB=null; $('kb-bar').style.width='0'; refreshKbStatus();
   toast('Cache cleared, embeddings AND frozen redrawn answers.');

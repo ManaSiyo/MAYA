@@ -35,8 +35,9 @@ Live display version: **14.40**. On September 30, Hosting published
 `f66e7c13486f3d2ff260495ff0bbfb71b2514d4c` at 2026-10-01 04:29:16 UTC.
 The display version can stay the same across pushes; `/release.json` identifies
 the actual published commit. Check that endpoint before treating a push as live.
-`node tests/verify-live.mjs` requires release.json and App/Admin build stamps to
-match Git HEAD; `--wait` waits for that exact commit, not the display version.
+`node tests/verify-live.mjs` requires release.json, App/Admin build stamps and the
+API health commit to match Git HEAD; `--wait` waits for that exact commit, not
+the display version.
 
 ---
 
@@ -75,8 +76,9 @@ the marketing charts and lead station.
 | `backend/operations.html` | The standalone Operation Room, the beta bench for pattern experiments. | Admins only |
 | `playground/index.html` | Private staging copy; never promote a design without Fromsa's approval. | Admins only |
 
-`aesthetics/` holds everything visual, including the Operations Room engine
-that `backend.html` embeds. `docs/` holds everything else: the server source,
+`aesthetics/` holds everything visual, including the legacy Operations bench.
+The Brief links to the standalone Operation Room with its submission ID.
+`docs/` holds everything else: the server source,
 `firebase.json`, `design.md`, current runbooks, `Vision.pdf`, and `Strategy-A.md`.
 Retired reports and prototype research are in root `_to_delete/`, excluded from Hosting.
 
@@ -104,7 +106,8 @@ separate horizontal scroll-snap pane, not an overlay.
 repo root and runs seven steps, taking about four minutes:
 
 1. Refuse the build unless the branch is exactly `maya-v2`
-2. Test release contracts, including the browser battery when Chromium installs
+2. Install pinned test dependencies and Chromium, then run every release contract;
+   dependency or browser installation failures block deployment
 3. Build server (Docker, from `docs/server`)
 4. Push image
 5. Deploy server to Cloud Run (`maya-api`, region `us-west1`)
@@ -126,7 +129,7 @@ curl -fsS https://maya.manasiyo.com/release.json
 curl -s https://maya.manasiyo.com/api/healthz
 ```
 
-`/api/healthz` is public and reports
+`/api/healthz` is public and reports the server's baked `commit` as well as
 `configured: {openai, submissions, fal, stripe}`. `/api/healthz/deep` is admin
 gated and verifies that the submission bucket answers.
 
@@ -180,6 +183,12 @@ ADMIN_EMAILS            RL_PER_DAY / RL_PER_MIN / RL_ADMIN_PER_DAY / RL_ADMIN_PE
 Admin emails default in code to
 `fromsa@manasiyo.com, worldofsiyo@gmail.com`.
 Rate limit is 50 calls per person per day, images counting as 4, admins 6000.
+
+Tests install with root `npm ci`; the container installs production dependencies
+with its own committed lockfile and `npm ci --omit=dev --ignore-scripts`.
+Cloud Build passes its commit as a Docker build argument, without changing
+production environment settings. Release verification rejects a current website
+served with an older API commit.
 
 **Auth** is Google Identity Services. Client id
 `90396949475-7cen4909qftr8hf4la86nuhus38isid1.apps.googleusercontent.com`.
@@ -437,4 +446,4 @@ These are not preferences, they are conditions.
 - There are stale `.git/lock-*.stale` files in the repo from a tool that
   could not delete them. Harmless, delete when convenient.
 
-Aesthetic Control (October 5): Panels groups Outer panel, Inner panel and Table material editors using the shared numeric/select dropdown grid, including blur, saturation and X/Y padding. Table cell formatting stays in its own fixed toolbar following Inner material. Column edges resize saved semantic widths for preview/live Leads. Runtime v18/gallery v31 preserve old design saves. Leads includes Completed; icons always center on their rows, with separately saved inside-pill and beside-text gaps in Icons and dropdown. Notes edit inline; Messages keeps its original H2 heading above the plain H3 contact name, circular Share/Phone actions and a bottom voice dock. Systems Automations stores owner-scoped first/follow-up draft rules and grounded AI message ideas; it does not schedule client sends. Live Save still requires authenticated Admin and records its audit trail.
+Aesthetic Control (October 5): Panels groups Outer panel, Inner panel and Table material editors using the shared numeric/select dropdown grid, including blur, saturation and X/Y padding. Table cell formatting stays in its own fixed toolbar following Inner material. Column edges resize saved semantic widths for preview/live Leads. Runtime v21/gallery v32 preserve old design saves. Save locks editing around an immutable payload; Restore changes only after successful acknowledgement. Leads includes Completed; icons always center on their rows, with separately saved inside-pill and beside-text gaps in Icons and dropdown. Notes edit inline; Messages keeps its original H2 heading above the plain H3 contact name, circular Share/Phone actions and a bottom voice dock. Systems Automations stores owner-scoped first/follow-up draft rules and grounded AI message ideas; it does not schedule client sends. Live Save still requires authenticated Admin and records its audit trail.

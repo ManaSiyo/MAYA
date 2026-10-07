@@ -2,72 +2,104 @@
 
 ## Current request
 
-Fromsa approved implementation of the backend/fabric audit: one conversational
-photo/text search, original reference plus client preferences, local shops and
-Amazon discovery, accurate seller descriptions, faster results and a shared
-project lookbook in Brief/Operation Room. No push, production configuration,
-credentials, billing, live model calls or personal Chrome access occurred.
+Fromsa first requested a parallel read-only audit, grouped by area and prioritizing
+Admin, then explicitly asked to wait for the other agent and implement the fixes.
+Wait completed: Backend and fabrics — Fabrics and design finished at deb7081;
+implementation began from its clean tree, preserving c09328e and deb7081.
+No push, production configuration, credentials, billing, live provider call or
+personal Chrome access occurred.
 
-## Prepared locally
+## Prepared locally, by area
 
-- aesthetics/ui/fabric-assistant.{js,css}: shared responsive dialog; typed,
-  pasted/uploaded photo and optional explicit dictation input; six-turn refinement;
-  first results while searching; truthful errors; account/context abort guards;
-  Save/Use for design/Remove with a private submission lookbook. Shared Outer,
-  Inner, pill and typography roles. Actions sit below the fixed mobile header.
-- docs/server/fabric-search.mjs: Admin-only NDJSON search and GET/POST lookbook;
-  one bounded Responses web-search request on existing configured model/key,
-  parallel initial retailer feeds, source-backed URLs and deterministic seller
-  parsing. Britex/Stonemountain/Harts/Amazon plus four existing shops. Exact-host
-  redirects, size/time limits, no private query cache, stock/unit/variant checks,
-  explicit unknowns for blocked listings, CAS writes per account/submission.
-- backend/backend.html: preserve dissection traits and construction fields,
-  pass client fabric preferences, stop requiring invented GSM/fiber/stretch,
-  prefer original garment image, paint legacy results before ranking and isolate
-  its browser caches. Fabrics works before dissection. Operation Room link carries
-  the selected submission ID; in-house/legacy migration paths remain.
-- backend/operations.html: restore that submission's garment and saved material
-  without running AI or using sample garments. Shared fabric selection informs
-  the existing grounded pattern prompt; account changes clear the private input.
-  This does not certify pattern fit, sewability or laser readiness.
-- Server registration/container packaging, two new release gates and behavioral
-  app-regression/smoke coverage. Generated typography locations refreshed.
-  FABRIC-SEARCH.md documents architecture, limitations and ten owner eval cases.
+- **Admin (backend/status.html):** async requests and approvals bind to account/
+  session and stable lead IDs. Same-account token renewal preserves drafts,
+  pending send IDs and notes; actual account changes clear private state and
+  cancel stale voice/results. Remove persisted customer-data marketing cache.
+  Invoices retain created links when lead attachment fails, offer save-only
+  retry, survive dialog reopen and insert internal unsent Text drafts. Missing
+  phone feedback is visible. tests/admin-state-races.mjs covers interleavings.
+- **Backend storage/communications:** docs/server/lead-store.mjs shares validated,
+  generation-checked lead/note writes across Admin, phone and owner commands;
+  unreadable storage fails instead of becoming an empty overwrite. Admin lead-add
+  retries retain account-bound receipts, phone updates return the complete lead,
+  and owner notes carry timestamps. Submission uploads deny unknown ownership;
+  feeds finish pagination before limiting. Blocked STOP persists consent and
+  archived delivery statuses survive overflow retries. New lead-store/admin-storage
+  fixtures and existing communications suites cover these paths.
+- **Outbound:** reviewed sends include expectedEmail in the confirmation/request
+  fingerprint and revalidate the current recipient at the durable claim. A changed
+  address requires fresh review. Missing Sheet history/baselines no longer
+  double-count locally recorded sends. Four primary lists remain unchanged.
+- **Client projects (frontend + Playground):** account generation and UID pin async
+  reads/writes, migrations and share publication. Initial saves/queued edits retain
+  dirty work; pending uploads cannot replace newer pictures/summary. Shares own
+  independent image copies. Project-face copies for avatar lifetime remain
+  Playground-only. tests/project-lifecycle.mjs executes these races.
+- **Brief / Operation Room:** queued immutable dissection saves require server
+  acknowledgement, preserve generated work on failure and offer save-only retry.
+  Opening saved work does not trigger paid missing-image generation. Operations
+  measurements bind to account/submission/exact garment, run inputs freeze, and
+  startup, CLO, redraw, scoring, SVG and streaming reject stale contexts. The new
+  fabric assistant/lookbooks from deb7081 are preserved. tests/brief-operation-races.mjs
+  covers save/context and run interleavings. Local folder reads cannot adopt old
+  cloud pieces; same-submission reloads retain pending work and generated patterns
+  save on their original raw pieces. Invalid folders preserve the prior save target.
+- **Aesthetic Control:** snapshot before async Save; lock preview editing until
+  acknowledgement; keep the prior Restore baseline after failure. Runtime v21 /
+  gallery v32 preserve the approved visual canon. Correct active documentation
+  conflicts about category badges, H5/H6/H3, note blur/dictation and Inner toolbar
+  material. Regenerate the authored typography usage inventory after final code.
+- **Release:** pinned root/server lockfiles and mandatory Chromium/communications
+  dependency installation. No release gate may be silently skipped. Docker bakes
+  the commit without production environment changes; public health reports it.
+  verify-live requires the site and API to match HEAD; old-API rejection is tested.
+  New gates run in cloudbuild.yaml and app-regression.
 
 ## Validation
 
-All 37 Cloud Build test suites passed, along with full app-regression and server
-smoke (39 suite invocations), and the exact syntax checks. Affected fabric/app
-tests were rerun after the final changes. New tests execute the real dissection
-handoff and prove first paint before ranking, combined input/refinement, cited
-URL validation, seller variant/unit/stock correctness, retry, account/project
-isolation, CAS conflicts, stale UI responses, cross-screen selection and six
-viewport sizes. Isolated headless Chromium/fake providers only. Desktop/phone
-screenshots were inspected; microphone recognition itself was not exercised.
+All 44 suites listed in cloudbuild.yaml pass, plus full app-regression and server
+smoke (46 suite invocations), required syntax checks and git diff --check. The
+final Outbound UI fixture was rerun after replacing an unauthenticated/stubbed
+status setup with a fake authenticated session and the real refresh path; it
+passes populated filtering, saved statuses and seven viewport widths. Gallery
+covers eleven widths and immutable Save, Admin races cover identity/drafts/
+approvals, project lifecycle covers delayed cloud writes, and Brief/Operations
+cover local transitions and stale paid-work continuations. The authored typography
+inventory was regenerated. Local Node 24.19.0 with pinned installed dependencies,
+isolated headless Chromium and fake providers only; no personal Chrome or live
+sends. Actual Cloud Build/Node 20 deployment remains an owner Push step.
 
-Public real listing checks: Britex's $3 swatch is distinguished from $69.99 USD
-per yard on the brushed wool listing; Stonemountain's burgundy melton is excluded
-as out of stock. These checks do not prove every merchant feed or live AI health.
-No private client example or paid inference was used.
+## Live evidence / exact next step
 
-## Exact next step / remaining limits
+Public read-only checks on October 7 at 08:49 Pacific: release.json, Admin
+and API health returned HTTP 200. Hosting still reported
+`e82b2072dd7b203acbc870a6de0863a19559ad8b`, published October 7 00:44:24 UTC;
+the old API health response had no commit field. Availability does not prove the
+pending local code is live. The Google Cloud Build check for pushed 71c9ce9 failed
+at Test release contracts before deployment; available evidence did not identify
+its exact failing assertion. Vercel success is not Firebase/Cloud Run success.
 
-1. Owner reviews the local commit then Pushes when ready. The prior messaging/UI
-   commit c09328e was already local and unpushed before this task. Do not push
-   automatically. Verify Cloud Build, release.json and both deployed build stamps
-   against the pushed HEAD; Vercel success or version 14.40 alone is insufficient.
-2. After deployment, run an authenticated description/photo search and saved
-   lookbook round trip, then compare the same owner-approved ten cases with
-   ChatGPT using FABRIC-SEARCH.md. Live OpenAI tool compatibility, actual relevance,
-   latency and dictation need owner verification. No claim of ChatGPT parity.
-3. Amazon uses web discovery, not an Associates/Creators API integration. Retailers
-   can block verification; those cards state unknown facts. Britex's store-only
-   inventory is not searchable here. No pickup/arrival date is invented.
-4. Existing event/Tasks/Gmail/Scheduler setup remains owner-only (EVENT-TRIGGERS.md).
-   The October 6 audit reported production e82b207 while origin was 71c9ce9; that
-   deployment discrepancy was not rechecked here. Its live SMS/voice verification,
-   archived synthetic reply SID reconciliation, 10,000-send ledger capacity and
-   scoped legacy memory migration remain open. None of that work was removed.
+1. Owner reviews the prepared local commit and Pushes when ready. c09328e and
+   deb7081 were already local and unpushed when implementation began. Never push
+   automatically. After deployment run `node tests/verify-live.mjs --wait` for
+   the exact pushed HEAD, including its API commit.
+2. Verify authenticated Admin renewal/account changes, a reviewed invoice link,
+   design Save, and fabric search/lookbook round trip. Real provider acceptance,
+   delivery, voice and live AI relevance/latency still need owner verification.
+   Use FABRIC-SEARCH.md for the ten owner-approved comparison cases; no claim of
+   ChatGPT parity or production-ready pattern fit/sewability/laser output.
+3. Avatar behavior remains in Playground until Fromsa approves promotion. Existing
+   already-broken avatar references are not repaired by the forward-looking fix.
+   Legacy migration/Storage cleanup remains; no data migration was run.
+4. Admin invoice recovery is retained in the page session. An unknown provider
+   creation outcome requires checking Wix before creating another link; this is
+   not an exactly-once invoice ledger. Admin lead-add receipts fail closed at
+   10,000 entries and need a future archival path. Lead history is preserved
+   rather than silently dropping old records; monitor its eventual object size.
+5. Existing event/Tasks/Gmail/Scheduler setup remains owner-only. Prior open work:
+   archived synthetic owner reply SID reconciliation, 10,000-send ledger archival
+   and scoped legacy memory migration. Amazon remains web discovery; blocked
+   merchants show unknown facts and Britex store-only inventory is unavailable.
 
 ## Standing boundaries
 
@@ -75,4 +107,4 @@ Only Fromsa handles production credentials, billing and environment settings.
 Fresh explicit permission is required for each personal Chrome session; none was
 used. Private accounts/projects, explicit SMS SEND gates, STOP/block rules,
 archives and legacy migration paths remain intact. Local verified commits are
-authorized; pushes are not.
+authorized; pushes are not. docs/COMMIT-REVIEW.txt describes the new commit.

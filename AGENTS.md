@@ -170,7 +170,7 @@ only same-origin local pages. Old maya-buttons.css/maya-canon.css are adapters,
 not independent design authorities. Typography offers one preview per role, with validated Jost/Cormorant and
 Normal/ALL CAPS choices. Visuals groups button/icon glass before panel/table
 controls. Preserve old saved schemas and semantic status colors when applying
-shared text settings. Served pages load typography runtime v20.
+shared text settings. Served pages load typography runtime v21 (gallery v32).
 Aesthetic Control opens within Admin through aesthetics/ui/admin-design.js; same-origin/source-checked close messages return via its logo. All Edit menus use the shared numeric input/select grid; popup padding has X/Y axes and legacy single-padding reads remain compatible. The fixed table formatting toolbar follows shared inner-panel material. Gallery Filter previews are retired; functional data filters remain. The saved editor material controls actual popups; formatting offers 200–500 weights and italic. Padding debug highlights exist only while a padding field is active. Restore uses the shared Refresh SVG. Run tests/component-gallery.mjs. Table preview cells use a fixed formatting toolbar; body selections edit complete semantic columns. Legacy row styles normalize to column settings without writing on load. The review section itself is the outer panel; never add a wrapper around its inner-panel pair. Every Edit restore returns to its last successful Save. Padding highlights are automatic and preview-only. Role counts are authored-template counts with linked pages and expandable source locations; regenerate with tests/typography-role-usage.py. Design saves atomically include a private audit trail;
 /api/design must strip _history and /api/admin/design-history must stay Admin-gated.
 Padding debug highlights are preview-only, never saved.
@@ -209,7 +209,7 @@ settings. Run component-gallery, design-config/design-contract and outbound-ui
 October 2 controls: temporary editors anchor to their own trigger, with black popup
 backings and validated Black table/header/first-column background choices. Inner
 panel previews contain heading and metric together; outer padding surrounds them.
-Panel/table controls and lead name/date/category share desktop rows. Wake changes
+Panel/table controls share desktop rows; Leads uses the later H5/H6 hierarchy below. Wake changes
 run tests/admin-wake.mjs (fake recognition; no microphone) in the release gate,
 plus the existing communications and both frontend/Playground hands batteries.
 
@@ -241,9 +241,9 @@ are independently styled, date below name, with no category badges. Gallery and
 live cells share semantic data-col keys. Old three-column design saves remain
 valid; a fourth Contact column style is optional on the server and normalized
 on the client. Run tests/lead-notes-ui.mjs and tests/lead-note-persistence.mjs
-(both in app-regression) for reviewed note typing/dictation, save failures,
-refresh precedence and unsent Booking Link drafts. Auth changes close note
-editors; dictation must pause/release Hey Maya recognition. Note edits use
+(both in app-regression) for reviewed note typing, save failures,
+refresh precedence and unsent Booking Link drafts. Actual account changes close note
+editors; same-account token renewal preserves them. Note dictation is retired. Note edits use
 lead-update by stable ID; timestamps preserve reviewed edits over older notes.
 
 Deployment verification: run the exact tests listed in cloudbuild.yaml, including
@@ -251,10 +251,10 @@ admin-ui-contract, before declaring a release ready. app-regression alone does
 not cover that separate gate. Category badges are retired; the gate asserts
 Contact/H5/H6 and reviewed message actions instead. tests/verify-release.mjs
 proves tests/verify-live.mjs rejects an older commit even when maya-version is
-unchanged. Verify release.json and page build stamps after the owner's Push;
+unchanged. Verify release.json, page build stamps and /api/healthz commit after the owner's Push;
 Vercel success does not establish Firebase/Cloud Run deployment success.
 
-October 5 inline Leads and drawer: Latest Notes edits within its cell; Enter/blur/Save persist, Escape/Cancel discard and failed saves keep the draft. Active edits resist refresh and release the frozen first column to keep controls reachable. Dictation retains explicit microphone start and wake pause. Messages displays known names (H1) above Messages (H2), hides duplicate numbers, and uses circular Phone/Share icons. Share contains booking drafts and reviewed invoices; never send automatically. Drawer scroll regions flex above its bottom voice dock. Run lead-notes-ui, component-gallery, outbound-ui, design-config/design-contract, communications and the exact Cloud Build test list before handoff.
+October 5 inline Leads and drawer, updated by the October 6 review: Latest Notes edits within its cell; Enter/Save persist, blur/outside/Escape/Cancel discard and failed saves keep the draft. Active edits resist refresh and release the frozen first column to keep controls reachable. Notes have no Dictate control. Messages keeps its H2 heading above the plain H3 contact name, hides duplicate numbers, and uses circular Phone/Share icons. Share contains booking drafts and reviewed invoices; never send automatically. Drawer scroll regions flex above its bottom voice dock. Run lead-notes-ui, component-gallery, outbound-ui, design-config/design-contract, communications and the exact Cloud Build test list before handoff.
 
 Messages hierarchy: keep #adm-tabtitle (H2) fixed and visible when opening contacts; #msg-name is plain H3 with a hover/focus pencil. Systems Automations opens the drawer view, not a browser tab. docs/server/text-automations.mjs stores owner-account draft rules, uses the shared CRM AI budget, and has no send/timer capability. Only explicit Messages Send submits texts. Run tests/text-automations.mjs and tests/lead-notes-ui.mjs plus communications suites. Opening suggestions must not overwrite composer drafts; ignore stale account/recipient responses.
 
@@ -276,3 +276,34 @@ scope, OIDC audience, private mailbox bindings and independent durable SMS/call
 claims. Run tests/event-triggers.mjs, tests/lead-feed-latency.mjs, admin-command,
 CRM intelligence and all communications suites. Raw lead reads bypass AI and
 cache for ten seconds; optional voice context has an explicit unavailable fallback.
+
+October 7 parallel audit: Admin async work binds to account/session and stable lead
+IDs. Same-account token renewal preserves drafts and request IDs; an actual account
+change clears private state and cancels stale voice/results. Invoice creation and
+lead attachment are separate outcomes: keep a created URL and retry attachment
+without recreating the link. Invoice Text creates an unsent Messages draft. Run
+tests/admin-state-races.mjs and tests/message-races.mjs.
+
+docs/server/lead-store.mjs owns generation-checked legacy lead/note mutations and
+account-bound lead-add receipts. Preserve failed-read/invalid-data failures and
+legacy deletion tombstones; never overwrite an unreadable store with an empty one.
+Admin lead-add receipts fail closed at capacity instead of evicting accepted requests. Run
+tests/lead-store.mjs, tests/admin-storage.mjs and all communications suites.
+
+Client project async writes pin UID/account generation and preserve edits newer
+than an initial save/upload. Shared images require independent Storage copies;
+avatar lifetime fixes remain Playground-only pending promotion. Run
+tests/project-lifecycle.mjs. Brief generation/save retry and Operations account,
+garment and run identity are covered by tests/brief-operation-races.mjs. Reading
+a saved dissection must never generate missing pieces automatically.
+
+Outbound sends include the reviewed expectedEmail in the request fingerprint and
+revalidate it at the durable claim; a changed recipient requires fresh review.
+Design Save snapshots its payload before awaiting and locks preview editing until
+acknowledgement; failed saves must not replace the Restore baseline.
+
+Release tooling uses the root package-lock.json for mandatory test dependencies
+and docs/server/package-lock.json for the container. Run npm ci; Cloud Build must
+fail if Chromium or communications dependencies cannot install. Build metadata is
+baked by MAYA_BUILD_COMMIT (not a production environment setting), and public
+health reports it. Run tests/release-contract.mjs and tests/verify-release.mjs.

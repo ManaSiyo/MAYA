@@ -40,6 +40,8 @@ import { createOwnerCRM, gmailCandidates } from './owner-crm.mjs';
 import { createLeadAlerts, mountLeadAlertRoutes } from './lead-alerts.mjs';
 import { createBookingLinks } from './booking-link.mjs';
 import { jsonStore } from './crm-store.mjs';
+import { createLeadStore, createLeadNoteStore } from './lead-store.mjs';
+import { BUILD_COMMIT } from './build-info.mjs';
 import crypto from 'node:crypto';
 import { Readable } from 'node:stream';
 import { evaluateProxyPolicy } from './proxy-policy.mjs';
@@ -147,7 +149,7 @@ app.use((req, res, next) => {
 function _healthz(_req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.json({
-    ok: true, service: 'maya-api', ts: new Date().toISOString(),
+    ok: true, service: 'maya-api', commit: BUILD_COMMIT, ts: new Date().toISOString(),
     configured: {
       openai: !!process.env.OPENAI_API_KEY,
       // v13.27: submissions live in MAYA's own bucket now. `drive` is kept as
@@ -653,7 +655,7 @@ app.post('/api/submit', requireAuthHeader, express.json({ limit: '30mb' }), asyn
         client: clientName, openedAtMs: Date.now(), openedBy: user.email, schema: 'v13.27',
       }), 'utf8'), 'application/json');
       _subsCache = { ts: 0, body: null };     // show up on the Systems Map immediately
-      _subOwners.set(subId, user.email);
+      _subOwners.set(subId, String(user.email||'').trim().toLowerCase());
       console.log('[submit] init OK —', subId);
       return res.json({ ok: true, folder_id: subId, folder_name: safeClient + '-' + stamp });
     } catch (e) {
@@ -676,8 +678,10 @@ app.post('/api/submit', requireAuthHeader, express.json({ limit: '30mb' }), asyn
     // in account used to be able to overwrite files in any submission it
     // could name; now the marker written at init is the lock, checked here
     // and remembered so one submission costs one read, not one per file.
-    const owner = await subOwner(subId);
-    if (owner && owner !== user.email) {
+    let owner;
+    try { owner=await subOwner(subId); }
+    catch(e) { return res.status(e.status||503).json({error:e.status===403?'submission_owner_missing':'submission_owner_unavailable'}); }
+    if (!owner || owner !== String(user.email||'').trim().toLowerCase()) {
       console.warn('[submit] blocked cross-account upload into', subId, 'by', user.email);
       return res.status(403).json({ error: 'not_your_submission' });
     }
@@ -730,12 +734,14 @@ const SUB_ID = /^[A-Za-z0-9_-]{3,120}$/;
 // every upload costs one storage read per submission, not per file. Bounded.
 const _subOwners = new Map();
 async function subOwner(subId) {
-  if (_subOwners.has(subId)) return _subOwners.get(subId);
-  let owner = null;
-  try {
-    const m = await gcsGet(SUB_PREFIX + subId + '/submission.json');
-    if (m.ok) owner = String((JSON.parse(m.buf.toString('utf8')) || {}).openedBy || '') || null;
-  } catch (_) {}
+  const cached=_subOwners.get(subId);
+  if(typeof cached==='string'&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cached))return cached;
+  const m=await gcsGet(SUB_PREFIX+subId+'/submission.json');
+  if(m.status===404)throw Object.assign(new Error('Submission owner is missing.'),{status:403});
+  if(!m.ok)throw Object.assign(new Error('Submission owner is unavailable.'),{status:503});
+  let owner;
+  try{const marker=JSON.parse(m.buf.toString('utf8'));if(typeof marker?.openedBy==='string')owner=marker.openedBy.trim().toLowerCase();}catch{}
+  if(!owner||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(owner))throw Object.assign(new Error('Submission owner is invalid.'),{status:503});
   if (_subOwners.size > 5000) _subOwners.clear();
   _subOwners.set(subId, owner);
   return owner;
@@ -780,20 +786,24 @@ async function gcsPut(path, bytes, contentType, generation) {
 }
 
 async function gcsListSubmissions() {
-  // ONE request for the whole feed: every object under submissions/, grouped in
-  // memory. The Drive version fanned out into forty calls per refresh.
+  // Complete the object listing before consumers group, sort and limit the feed.
   const tok = await serviceToken(STORAGE_SCOPE);
   const qs = new URLSearchParams({
     prefix: SUB_PREFIX, maxResults: '1000',
     fields: 'items(name,size,contentType,timeCreated),nextPageToken',
   });
-  const r = await fetch('https://storage.googleapis.com/storage/v1/b/' +
-    encodeURIComponent(SUBMISSIONS_BUCKET) + '/o?' + qs.toString(), {
-    headers: { 'Authorization': 'Bearer ' + tok },
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!r.ok) throw new Error('storage list ' + r.status + ': ' + (await r.text()).slice(0, 300));
-  return (await r.json()).items || [];
+  const items=[],seen=new Set();let page='';
+  do{
+    if(page)qs.set('pageToken',page);
+    const r=await fetch('https://storage.googleapis.com/storage/v1/b/'+encodeURIComponent(SUBMISSIONS_BUCKET)+'/o?'+qs.toString(),{
+      headers:{Authorization:'Bearer '+tok},signal:AbortSignal.timeout(15000),
+    });
+    if(!r.ok)throw new Error('storage list '+r.status);
+    const data=await r.json();items.push(...(data.items||[]));page=data.nextPageToken||'';
+    if(page&&seen.has(page))throw new Error('Submission pagination did not advance.');
+    if(page)seen.add(page);
+  }while(page);
+  return items;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -3514,27 +3524,19 @@ async function summarizeLead(l) {
 const leadNotePath = email =>
   LEADNOTE_PREFIX + crypto.createHash('sha256').update(String(email).trim().toLowerCase()).digest('hex').slice(0, 32) + '.json';
 
+const _leadNotes=createLeadNoteStore({read:gcsGet,write:gcsPut,path:leadNotePath});
 async function loadLeadNotes(email) {
-  const key = String(email).trim().toLowerCase();
-  const cached = _leadNoteCache.get(key);
-  if (cached && Date.now() - cached.ts < 15000) return cached.value;
-  const o = await gcsGet(leadNotePath(key)).catch(() => ({ ok: false }));
-  if (!o.ok) {
-    const value = { email: key, notes: [], contacts: [] };
-    _leadNoteCache.set(key, { ts: Date.now(), value });
-    return value;
-  }
-  try {
-    const j = JSON.parse(o.buf.toString('utf8'));
-    const value = { email: key,
-      notes: Array.isArray(j.notes) ? j.notes : [], contacts: Array.isArray(j.contacts) ? j.contacts : [] };
-    _leadNoteCache.set(key, { ts: Date.now(), value });
-    return value;
-  } catch {
-    const value = { email: key, notes: [], contacts: [] };
-    _leadNoteCache.set(key, { ts: Date.now(), value });
-    return value;
-  }
+  const key=String(email).trim().toLowerCase(),cached=_leadNoteCache.get(key);
+  if(cached&&Date.now()-cached.ts<15000)return structuredClone(cached.value);
+  const value=await _leadNotes.read(key);
+  _leadNoteCache.set(key,{ts:Date.now(),value:structuredClone(value)});
+  return value;
+}
+async function appendLeadNote(email,entry){
+  const key=String(email).trim().toLowerCase();
+  const value=await _leadNotes.append(key,entry);
+  _leadNoteCache.delete(key);
+  return value;
 }
 
 // One store per lead, keyed by email: free-text notes Fromsa dumps in, and
@@ -3662,100 +3664,12 @@ app.get('/api/admin/maya-features', requireAuthHeader, async (req, res) => {
 // in GCS and merge with the Wix form feed, so the station is a live workspace,
 // not a read-only mirror of Wix. Every lead carries its source. ──
 const MAYA_LEADS_PATH = 'maya/leads.json';
-async function loadManualLeads() {
-  const o = await gcsGet(MAYA_LEADS_PATH).catch(() => ({ ok: false }));
-  const empty = { items: [], overrides: {}, tombstones: [] };
-  if (!o.ok) return empty;
-  try {
-    const j = JSON.parse(o.buf.toString('utf8'));
-    return {
-      ...j,
-      items: Array.isArray(j.items) ? j.items : [],
-      // v13.87: the station is a custom CRM. Edits to a Wix lead are stored as an
-      // override (keyed by id), and a deleted Wix lead is a tombstone, so the Wix
-      // feed still flows in but the station is fully modifiable on top of it.
-      overrides: (j.overrides && typeof j.overrides === 'object') ? j.overrides : {},
-      tombstones: Array.isArray(j.tombstones) ? j.tombstones : [],
-    };
-  } catch { return empty; }
-}
-async function appendManualLead(lead) {
-  const rec = await loadManualLeads();
-  const item = {
-    id: 'm_' + crypto.randomBytes(6).toString('hex'),
-    ts: new Date().toISOString(), source: (lead && lead.source === 'phone') ? 'phone' : 'maya',
-    name: String((lead && lead.name) || '').trim().slice(0, 120) || 'Unnamed',
-    email: String((lead && lead.email) || '').trim().toLowerCase().slice(0, 180),
-    phone: String((lead && lead.phone) || '').trim().slice(0, 60),
-    tier: String((lead && lead.tier) || '').trim().slice(0, 80),
-    wrote: String((lead && (lead.wrote || lead.note)) || '').trim().slice(0, 400),
-  };
-  item.note = item.wrote || 'Added by hand.';
-  rec.items.push(item);
-  rec.items = rec.items.slice(-200);
-  await gcsPut(MAYA_LEADS_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
-  return item;
-}
-// v13.87: update ANY lead by id. Manual leads (m_*) are edited in place; a Wix
-// lead is patched through an override so the change survives the next Wix refresh.
-async function updateLead(id, patch) {
-  const key = String(id || '').trim();
-  const next = patch || {};
-  const has = k => Object.prototype.hasOwnProperty.call(next, k);
-  const clean = {};
-  if (has('name')) clean.name = String(next.name || '').trim().slice(0, 120);
-  if (has('email')) clean.email = String(next.email || '').trim().toLowerCase().slice(0, 180);
-  if (has('phone')) clean.phone = String(next.phone || '').trim().slice(0, 60);
-  if (has('tier')) clean.tier = String(next.tier || '').trim().slice(0, 80);
-  if (has('stage')) {
-    if (!['new','contacted','closed','passed','in_process','in_progress','booked','completed','canceled'].includes(next.stage)) return null;
-    clean.stage = next.stage;
-  }
-  // v13.93: Hunter-style CRM columns. Company/title, the quote, and the two
-  // invoice halves (first + second payment) all edit and persist like any field.
-  if (has('company')) clean.company = String(next.company || '').trim().slice(0, 120);
-  if (has('quote')) clean.quote = String(next.quote || '').trim().slice(0, 40);
-  if (has('invoice1')) clean.invoice1 = String(next.invoice1 || '').trim().slice(0, 40);
-  if (has('invoice2')) clean.invoice2 = String(next.invoice2 || '').trim().slice(0, 40);
-  // v13.95: a pay link (invoice) saved on the lead, folded into the email draft.
-  if (has('paylink')) clean.paylink = String(next.paylink || '').trim().slice(0, 400);
-  // note is the fallback path for a lead with no email (email leads note through
-  // the email-keyed note store instead); sets both the display note and wrote.
-  if (has('note')) { clean.note = String(next.note || '').trim().slice(0, 2000); clean.wrote = clean.note; clean.noteUpdatedAt = new Date().toISOString(); }
-  if (!key || !Object.keys(clean).length) return null;
-  const rec = await loadManualLeads();
-  if (key.startsWith('m_')) {
-    const item = rec.items.find(x => String(x && x.id) === key);
-    if (!item) return null;
-    Object.assign(item, clean);
-    if (clean.name === '') item.name = 'Unnamed';
-    item.updatedAt = new Date().toISOString();
-  } else {
-    if (!rec.overrides || typeof rec.overrides !== 'object') rec.overrides = {};
-    rec.overrides[key] = { ...(rec.overrides[key] || {}), ...clean, updatedAt: new Date().toISOString() };
-  }
-  await gcsPut(MAYA_LEADS_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
-  return { ok: true, id: key, patch: clean };
-}
-// v13.87: delete ANY lead. Manual leads are removed; a Wix lead is tombstoned so
-// it stops flowing into the station (it stays in Wix; the CRM just hides it).
-async function deleteLead(id) {
-  const key = String(id || '').trim();
-  if (!key) return null;
-  const rec = await loadManualLeads();
-  if (key.startsWith('m_')) {
-    const before = rec.items.length;
-    rec.items = rec.items.filter(x => String(x && x.id) !== key);
-    if (rec.items.length === before) return null;
-  } else {
-    if (!Array.isArray(rec.tombstones)) rec.tombstones = [];
-    if (!rec.tombstones.includes(key)) rec.tombstones.push(key);
-    rec.tombstones = rec.tombstones.slice(-1000);
-    if (rec.overrides) delete rec.overrides[key];
-  }
-  await gcsPut(MAYA_LEADS_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
-  return { ok: true, id: key };
-}
+const _leadStore=createLeadStore({read:gcsGet,write:gcsPut,path:MAYA_LEADS_PATH});
+async function loadManualLeads(){ return _leadStore.read(); }
+async function appendManualLead(lead,options){ return _leadStore.add(lead,options); }
+async function updateLead(id,patch){ return _leadStore.update(id,patch); }
+// v13.87: delete ANY lead. Manual leads are removed; a Wix lead is tombstoned.
+async function deleteLead(id){ return _leadStore.remove(id); }
 // The single lead feed the UI and the voice both read: Wix + hand-added,
 // newest first, each tagged with its source so the station can label them.
 // A reviewed replacement survives refresh; newer recorded notes supersede it.
@@ -3767,7 +3681,7 @@ function applyLatestLeadNote(lead,note){
 async function loadLeadFeed() {
   const [wix, manual] = await Promise.all([
     wixLeads().catch(() => null),
-    loadManualLeads().catch(() => ({ items: [] })),
+    loadManualLeads(),
   ]);
   const manualItems = (manual.items || []).map(m => ({ ...m, source: m.source === 'phone' ? 'phone' : 'maya' }));   // v14.30: a lead Maya took on the phone says so
   const wixConnected = !!(wix && wix.connected);
@@ -3830,8 +3744,8 @@ app.post('/api/admin/lead-add', requireAuthHeader, express.json({ limit: '8kb' }
   const b = req.body || {};
   if (!String(b.name || '').trim() && !String(b.email || '').trim())
     return res.status(400).json({ error: 'name_or_email_required' });
-  try { _leadsCache = { ts: 0, data: null }; const item = await appendManualLead(b); return res.json({ ok: true, lead: item }); }
-  catch (e) { console.error('[lead-add]', e.message); return res.status(502).json({ error: 'lead_add_failed' }); }
+  try { _leadsCache = { ts: 0, data: null }; const item = await appendManualLead(b,{uid:user.sub,requestId:b.requestId}); return res.json({ ok: true, lead: item }); }
+  catch (e) { console.error('[lead-add]', e.message); return res.status(e.status||502).json({ error:e.status?e.message:'lead_add_failed' }); }
 });
 app.post('/api/admin/lead-update', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
   let user;
@@ -3926,9 +3840,13 @@ app.post('/api/admin/invoice-create', requireAuthHeader, express.json({ limit: '
     } catch (_) {}
     if (!url) return res.status(502).json({ error: 'no_link_returned' });
     // save the link on the lead so it rides the next email draft
-    if (leadId) { try { _leadsCache = { ts: 0, data: null }; await updateLead(leadId, { paylink: url }); } catch (_) {} }
+    let saved=false,saveError='Choose an existing lead to save this created link.';
+    if(leadId){
+      try{_leadsCache={ts:0,data:null};const result=await updateLead(leadId,{paylink:url});saved=!!result;saveError=saved?'':'The lead no longer exists. The link was created but was not saved.';}
+      catch{saveError='The link was created, but saving it to the lead failed. Retry Save link, not Create.';}
+    }
     console.log('[invoice-create]', user.email, title, '$' + price, url);
-    return res.json({ ok: true, url, linkId, imageOk });
+    return res.json({ ok: true, url, linkId, imageOk, saved, ...(saved?{}:{saveError}) });
   } catch (e) {
     console.error('[invoice-create]', e.message);
     return res.status(502).json({ error: 'invoice_failed' });
@@ -4100,18 +4018,8 @@ app.post('/api/admin/lead-note', requireAuthHeader, express.json({ limit: '64kb'
   }
   if (!email || !/@/.test(email)) return res.status(400).json({ error: 'lead_not_found' });
   try {
-    const rec = await loadLeadNotes(email);
-    const note = String((req.body && req.body.note) || '').trim().slice(0, 2000);
-    const contact = String((req.body && req.body.contact) || '').trim();
-    let changed = false;
-    if (note) { rec.notes.push({ ts: new Date().toISOString(), text: note }); rec.notes = rec.notes.slice(-50); changed = true; }
-    if (contact === 'email' || contact === 'call') {
-      rec.contacts.push({ type: contact, ts: new Date().toISOString() }); rec.contacts = rec.contacts.slice(-100); changed = true;
-    }
-    if (changed) {
-      await gcsPut(leadNotePath(email), Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
-      _leadNoteCache.set(email, { ts: Date.now(), value: rec });
-    }
+    const note=String(req.body?.note||'').trim().slice(0,2000),contact=String(req.body?.contact||'').trim();
+    const rec=await appendLeadNote(email,{note,contact});
     return res.json({ ok: true, notes: rec.notes, contacts: rec.contacts });
   } catch (e) {
     console.error('[lead-note] failed —', String(e.message).slice(0, 200));
@@ -4744,10 +4652,7 @@ app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' })
       const text = String(note || '').trim().slice(0, 2000);
       if (!text) return { ok: false, why: 'nothing to note' };
       if (lead.email) {
-        const rec = await loadLeadNotes(lead.email);
-        rec.notes.push({ ts: new Date().toISOString(), text }); rec.notes = rec.notes.slice(-50);
-        await gcsPut(leadNotePath(lead.email), Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
-        _leadNoteCache.set(lead.email, { ts: Date.now(), value: rec });
+        await appendLeadNote(lead.email,{note:text});
       } else if (lead.id) {
         await updateLead(lead.id, { note: text });
       } else return { ok: false, why: 'that lead has no id to note on' };
@@ -4762,7 +4667,7 @@ app.post('/api/phone/call-me', requireAuthHeader, express.json({ limit: '8kb' })
         const patch = { name: lead.name, phone: lead.phone, tier: lead.tier, note: lead.wrote };
         if (lead.email) patch.email = lead.email;
         const updated = await updateLead(prevId, patch);
-        if (updated) return updated;
+        if (updated) return {...lead,...updated.lead,id:updated.id};
       }
       const item = await appendManualLead({ ...lead, source: 'phone' });
       // v14.36: the thread for that number learns the name Maya heard
@@ -4928,22 +4833,7 @@ const ownerCRM=createOwnerCRM({...crmStorage,
   converse:(uid,text)=>ownerConversation.decide(uid,text),
   ownerAction:(uid,decision,id)=>ownerConversation.act(uid,decision,id),
   commit:async(command,requestId)=>{
-    const {result}=await jsonStore(crmStorage).update(MAYA_LEADS_PATH,s=>{
-      s.items||=[];s.overrides||={};s.ownerRequests||={};
-      if(s.ownerRequests[requestId])return s.ownerRequests[requestId];
-      const patch={};for(const k of ['name','phone','email','tier','stage','note'])if(command[k])patch[k]=command[k];
-      if(patch.note)patch.wrote=patch.note;
-      let id=command.id,name=command.name||command.displayName;
-      if(command.action==='add'){
-        id='m_'+crypto.createHash('sha256').update(requestId).digest('hex').slice(0,20);
-        if(!s.items.some(l=>l.id===id))s.items.push({id,ts:new Date().toISOString(),source:command.source==='gmail'?'gmail':'phone',...patch});
-      }else{
-        if(!id||(s.tombstones||[]).includes(id))throw Object.assign(new Error('That lead was removed. Send a new request.'),{status:409});
-        if(id.startsWith('m_')){const item=s.items.find(l=>l.id===id);if(!item)throw Object.assign(new Error('That lead no longer exists.'),{status:409});Object.assign(item,patch);}
-        else s.overrides[id]={...(s.overrides[id]||{}),...patch};
-      }
-      const result={id,name};s.ownerRequests[requestId]=result;return result;
-    },{items:[],overrides:{},tombstones:[]});
+    const result=await _leadStore.ownerCommit(command,requestId);
     _leadsCache={ts:0,data:null};return result;
   },
   booking:{preview:query=>_booking?.preview(query),confirmCode:code=>_booking?.confirmCode(code)},

@@ -160,6 +160,16 @@ ok('UNSTOP restores an explicit opt-out',await consentStore.consent(consentNumbe
 await consentStore.block(consentNumber,true);
 await consentStore.inbound({from:consentNumber,text:'START',sid:'blockedstart',optOutType:'START'});
 ok('START cannot remove an owner block',(await consentStore.get(consentNumber)).blocked);
+for(const stop of [{text:'STOP'},{text:'custom unsubscribe',optOutType:'STOP'}]){
+  let stoppedBucket=null;
+  const stoppedStore=createMessageStore({load:async()=>stoppedBucket,save:async r=>{stoppedBucket=structuredClone(r);}});
+  await stoppedStore.inbound({from:consentNumber,text:'Hello',sid:'SMbeforeblock'});
+  await stoppedStore.block(consentNumber,true);
+  await stoppedStore.inbound({from:consentNumber,sid:'SMblockedstop',...stop});
+  await stoppedStore.block(consentNumber,false);
+  const stoppedThread=await stoppedStore.get(consentNumber);
+  ok('STOP received during a block survives unblocking ('+(stop.optOutType||'body')+')',stoppedThread.consent==='stop'&&!stoppedThread.blocked&&stoppedThread.messages.length===1&&stoppedThread.unread===1);
+}
 await store.outbound({to:'+14155550100',text:'test',sid:'SMlatecode',status:'undelivered'});
 await store.status({sid:'SMlatecode',status:'undelivered',errorCode:'30034'});
 await store.status({sid:'SMlatecode',status:'delivered'});

@@ -25,13 +25,20 @@ steps:
     args:
       - '-ceu'
       - |
+        npm ci --ignore-scripts --no-audit --no-fund
+        npx --no-install playwright install --with-deps chromium
         node tests/container-contract.mjs
+        node tests/release-contract.mjs
+        node tests/lead-store.mjs
+        node tests/admin-storage.mjs
+        node tests/project-lifecycle.mjs
+        node tests/brief-operation-races.mjs
         node tests/release-stamp.mjs
         node tests/verify-release.mjs
         node tests/design-config.mjs
         node tests/design-contract.mjs
         node tests/lead-note-persistence.mjs
-          node tests/text-automations.mjs
+        node tests/text-automations.mjs
         node tests/canon-contract.mjs
         node tests/ai-routing.mjs
         node tests/fabric-sourcing.mjs
@@ -52,28 +59,19 @@ steps:
         node tests/profile-crm.mjs
         node tests/maya-mcp.mjs
         node tests/maya-feedback.mjs
-        # v14.14: the voice agent battery runs in the gate when a browser can
-        # be installed. An install failure skips loudly (infra, not code); a
-        # test failure fails the build.
-        if npm install --no-save playwright >/dev/null 2>&1 && npx playwright install --with-deps chromium >/dev/null 2>&1; then
-          node tests/maya-hands-smoke.mjs
-          node tests/outbound-ui.mjs
-          node tests/lead-notes-ui.mjs
-          node tests/fabric-search-ui.mjs
-          node tests/crm-ui.mjs
-          node tests/crm-failure-ui.mjs
-          node tests/canon-ui.mjs
-        else
-          echo "WARNING browser unavailable in CI; hands, Outbound, CRM and visual checks skipped"
-        fi
-        # v14.30: the phone line, against a fake Twilio and a fake OpenAI.
-        if npm install --no-save express ws >/dev/null 2>&1; then
-          node tests/maya-phone.mjs
-          node tests/maya-messages.mjs
-          node tests/maya-transfer.mjs
-        else
-          echo "WARNING express or ws unavailable in CI, maya-phone skipped"
-        fi
+        # Browser and communications contracts are mandatory release gates.
+        node tests/maya-hands-smoke.mjs
+        node tests/outbound-ui.mjs
+        node tests/lead-notes-ui.mjs
+        node tests/admin-state-races.mjs
+        node tests/message-races.mjs
+        node tests/fabric-search-ui.mjs
+        node tests/crm-ui.mjs
+        node tests/crm-failure-ui.mjs
+        node tests/canon-ui.mjs
+        node tests/maya-phone.mjs
+        node tests/maya-messages.mjs
+        node tests/maya-transfer.mjs
         node --check docs/server/maya-phone.mjs
         node --check docs/server/maya-messages.mjs
         node --check docs/server/maya-mcp.mjs
@@ -84,6 +82,8 @@ steps:
     name: gcr.io/cloud-builders/docker
     args:
       - build
+      - '--build-arg'
+      - 'MAYA_BUILD_COMMIT=$COMMIT_SHA'
       - '-t'
       - 'us-west1-docker.pkg.dev/pro-maya/cloud-run-source-deploy/maya-api:$COMMIT_SHA'
       - docs/server

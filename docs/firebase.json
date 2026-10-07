@@ -5,6 +5,8 @@
       "firebase.json",
       "AGENTS.md",
       "cloudbuild.yaml",
+      "package.json",
+      "package-lock.json",
       "tests/**",
       "docs/**",
       "**/.*",

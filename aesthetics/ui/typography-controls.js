@@ -156,7 +156,7 @@ html body #adm-mkt #leads-table .lead-stage:has(option[value="completed"]:checke
   async function load(){const started=revision;if(local){let value;try{value=JSON.parse(localStorage.getItem(key)||'null')||defaults;}catch{value=defaults;}value=normalize(value);apply(value);return value;}
     try{const r=await fetch('/api/design',{cache:'no-store'});if(!r.ok)throw Error('design');const value=normalize(await r.json());if(started===revision)apply(value);return currentDesign||value;}catch{if(!currentDesign)apply(defaults);return currentDesign||defaults;}
   }
-  async function save(value){if(local){localStorage.setItem(key,JSON.stringify(value));apply(value);channel?.postMessage(value);return 'Saved locally.';}
+  async function save(value){value=structuredClone(value);if(local){localStorage.setItem(key,JSON.stringify(value));apply(value);channel?.postMessage(value);return 'Saved locally.';}
     const token=localStorage.getItem('maya_admin_tok');if(!token)throw Error('Sign in to Admin before saving.');
     const r=await fetch('/api/admin/design',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(value)});
     if(!r.ok)throw Error(r.status===403?'Admin access required.':'Save failed ('+r.status+').');const result=await r.json();localStorage.setItem(key,JSON.stringify(value));apply(value);channel?.postMessage(value);document.dispatchEvent(new CustomEvent('maya-design-saved',{detail:{savedAt:result.savedAt}}));return 'Saved.';

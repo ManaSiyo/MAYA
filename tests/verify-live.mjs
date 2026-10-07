@@ -79,6 +79,7 @@ const health = await get('/api/healthz');
 let h = {};
 try { h = JSON.parse(health.text); } catch (_) {}
 ok('server answers', health.status === 200 && h.ok === true, h.service || health.status);
+ok('API carries the exact published build',h.commit===WANT_COMMIT,'live '+(h.commit||'missing')+'; expected '+WANT_COMMIT);
 ok('OpenAI key is configured on the server', !!(h.configured && h.configured.openai));
 ok('Submission storage is configured', !!h.configured?.submissions);
 console.log('  note   configuration does not prove authenticated provider access.');

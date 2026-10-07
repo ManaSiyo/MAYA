@@ -83,6 +83,31 @@ assert.equal((await conflictStore.history(client)).messages.filter(m=>m.id==='co
 assert.equal((await conflictStore.history(client)).messages.filter(m=>m.id==='SMconflict').length,1);
 console.log('Archive-before-trim survives a live inbox revision conflict without duplicating history.');
 
+// A callback can update the live message after another instance archives it,
+// but before that instance saves its trimmed inbox. Retrying must carry the
+// newer delivery result into the already-created archive entry.
+for(const result of [{status:'delivered'},{status:'undelivered',errorCode:'30034'}]){
+  const epoch='overflow'+result.status;
+  let liveGeneration=1,interleave=true;
+  let live={threads:{[client]:{number:client,historyEpoch:epoch,messages:Array.from({length:400},(_,i)=>({id:i?'overflow'+i:'SMoverflow',dir:'out',status:'queued',text:'Original '+i,ts:'2026-10-01'}))}}};
+  const instance=beforeSave=>{let generation;return createMessageStore({archive,
+    load:async()=>{generation=liveGeneration;return structuredClone(live);},
+    save:async value=>{if(beforeSave)await beforeSave();if(generation!==liveGeneration)throw Object.assign(new Error('revision conflict'),{status:412});live=structuredClone(value);liveGeneration++;},
+  });};
+  const callback=instance();
+  const overflowing=instance(async()=>{if(interleave){interleave=false;await callback.status({sid:'SMoverflow',...result});}});
+  await overflowing.inbound({from:client,text:'Causes overflow',sid:'SMoverflownew'});
+  const archived=(await archive.read(client,epoch)).find(m=>m.id==='SMoverflow');
+  assert.equal(archived.status,result.status);assert.equal(archived.errorCode,result.errorCode);
+  assert.equal(live.threads[client].messages.length,400);
+  assert.equal((await overflowing.history(client)).messages.length,401);
+  await archive.append(client,epoch,[{id:'SMoverflow',status:'sent',text:'Stale copy'}]);
+  await archive.status(client,epoch,{sid:'SMoverflow',status:result.status==='delivered'?'failed':'delivered'});
+  const retained=(await archive.read(client,epoch)).find(m=>m.id==='SMoverflow');
+  assert.equal(retained.status,result.status);assert.equal(retained.text,'Original 0');
+}
+console.log('Overflow retries preserve concurrent terminal delivery results and reject stale/contradictory status.');
+
 let ownerTexts=0,requested;
 const leadReader=createOwnerConversation({...storage,ownerNumber:owner,smsAction:access.act,find:deps.find,list:async n=>{requested=n;return Array.from({length:n},(_,i)=>({name:'Contact '+i,phone:client,note:'A saved request '.repeat(20)}));},complete:async()=>{throw Error('AI unavailable');},textOwner:async text=>{ownerTexts++;assert.match(text,/Contact 0\n\+14155550100/);return {ok:true};}});
 const readCRM=createOwnerCRM({...storage,ownerNumber:owner,ownerEmails:['owner@example.com'],direct:access.direct,converse:leadReader.decide,ownerAction:leadReader.act});

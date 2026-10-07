@@ -263,11 +263,11 @@ async function sendEmail(p){
  if(!mailboxId)throw Error('Connect a Gmail mailbox in the menu first.');
  if(!subject||!body)throw Error('Add a subject and message.');
  if(/\{\{[^}]+\}\}/.test(subject+body))throw Error('Replace the template fields before sending.');
- const sender=intelligence.mailboxes.find(m=>m.id===mailboxId)?.email;
- if(!confirm(`Send this email now?\nFrom: ${sender}\nTo: ${p.email}\nSubject: ${subject}\n\n${body}`))return;
- const digest=[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify([accountId,p.id,mailboxId,subject,body]))))].map(v=>v.toString(16).padStart(2,'0')).join('');
+ const sender=intelligence.mailboxes.find(m=>m.id===mailboxId)?.email,expectedEmail=String(p.email||'').trim().toLowerCase();
+ if(!confirm(`Send this email now?\nFrom: ${sender}\nTo: ${expectedEmail}\nSubject: ${subject}\n\n${body}`))return;
+ const digest=[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify([accountId,p.id,expectedEmail,mailboxId,subject,body]))))].map(v=>v.toString(16).padStart(2,'0')).join('');
  const key='maya-send-'+digest,requestId=localStorage.getItem(key)||crypto.randomUUID();localStorage.setItem(key,requestId);
- const j=await api('/send',{id:p.id,mailboxId,subject,body,requestId,confirm:true});
+ const j=await api('/send',{id:p.id,expectedEmail,mailboxId,subject,body,requestId,confirm:true});
  if(j.state){state=j.state;const saved=await api('/save',{type:'contact',id:p.id,subject,body,notes});state=saved.state;render();}
  notice(j.delivery?.status==='sent'?'Email sent. Gmail activity is recorded.':'This send is '+j.delivery?.status+'. Check Gmail Sent before attempting another.',j.delivery?.status!=='sent');await refreshIntelligence();
 }

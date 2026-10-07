@@ -108,9 +108,9 @@ Save writes the live design.
 Lead Station has no floating Forms/Reload/Alerts/Add toolbar. Its section caret
 is on the same horizontal line as the title. Each whole name cell opens the
 client's Messages thread, including clicks in cell padding. A keyboard-accessible
-name button preserves normal Tab activation. The four category badges are ?
-(Help me decide), SI (Signature), CE (Ceremonial), SU (Suit). Name, date, then category appear on one line. Category/date replace
-the long tier pill and call icon; calls remain available inside Messages. A lead
+name button preserves normal Tab activation. The H5 name appears above its H6
+signup date, with independent role settings and no category badge. Contact is a
+separate stored phone column; calls remain available inside Messages. A lead
 with no phone opens Messages and states the missing number. Affiliates retains
 its own reload within its profile, outside Admin's Lead Station toolbar.
 
@@ -140,7 +140,7 @@ The preview lives in `aesthetics/aesthetic-control.html` with support files in `
 `aesthetics/ui/components/`; global application in
 `aesthetics/ui/typography-controls.js`. The Admin-authenticated save and public
 read endpoints are in `docs/server/server.js`; `docs/server/design-config.mjs`
-validates the settings. Served pages load runtime v10; Hosting revalidates this
+validates the settings. Served pages load runtime v21 and gallery v32; Hosting revalidates this
 script instead of caching role mappings for a week. Old aesthetic PDFs were removed;
 the inactive style-inventory viewer, generated report and generator were removed;
 the active typography role audit remains. No page should introduce a competing design specification.
@@ -159,7 +159,7 @@ only currently used icon controls: add, close, refresh, menu, search, dropdown,
 phone, email, microphone, copy, favorite, edit, send and settings, plus the used minus, Bold, Italic, alignment, text-color and background controls. Save uses the selected glass finish. The chosen preset shows a checkmark and a
 full outlined card; an underline alone is insufficient.
 
-Runtime v12 drives the shared legacy material/typography variables, including
+The shared runtime drives the legacy material/typography variables, including
 drawer frost and dense inner panels. Outbound tables share the saved table
 header, background, cell padding and type defaults while keeping their ten
 source columns; Full name and Status use the corresponding semantic roles.
@@ -191,9 +191,9 @@ borders/corners, with zero housing padding and cell X/Y padding. Background/opac
 are now edited only for selections. The outline and internal grid have separate controls.
 Table radius defaults 12px and is independently editable from 0–24px. Old saves
 read this default without writing migration state. Tables stay inside the enclosing
-Outer section; table wrappers and the formatting toolbar cannot inherit Inner
-width, padding, corners or opacity. Graphs retain their existing panel behavior.
-The toolbar follows outer material and padding. Scroll housings contain painting
+Outer section; table wrappers cannot inherit Inner width, padding, corners or
+opacity. Graphs retain their existing panel behavior. The formatting toolbar
+follows Inner material and padding, independently of the Table. Scroll housings contain painting
 to keep wide sticky table content within its horizontal scroll region.
 
 
@@ -252,3 +252,9 @@ October 6 audit: runtime v20 applies P1 to message bubbles/composer and P4 to
 message timestamps. Share uses saved dropdown material and X/Y padding. Expanded
 call transcripts use Inner panel material/corners, not pill geometry. Composer
 selectors use :where() so shared typography never outranks table selection styles.
+
+October 7 Save consistency: snapshot settings before any asynchronous work and
+lock preview editors during the save. The posted, cached and applied settings
+are the same snapshot. Only a successful acknowledgement updates Restore; an
+error unlocks editing and retains the prior saved baseline. Runtime v21/gallery
+v32 carry this behavior without changing the visual canon.

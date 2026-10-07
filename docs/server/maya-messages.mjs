@@ -122,7 +122,11 @@ export function createMessageStore(deps) {
         const t = thread(rec, from);
         if (!t) return null;
         if (sid && t.messages.some(m => m.id === sid)) return { number: t.number, duplicate: true,consent:t.consent,blocked:!!t.blocked };
-        if (t.blocked) return { number: t.number, blocked: true };
+        if (t.blocked) {
+          // Blocking hides incoming conversation, but must never discard opt-out.
+          if (optOutType === 'STOP' || (!optOutType && isNo(text))) { t.consent='stop'; await write(rec); }
+          return { number: t.number, blocked: true, consent:t.consent };
+        }
         if (t.nameSource !== 'manual' && (!t.name || /^caller$/i.test(t.name))) {
           const name = introducedName(text);
           if (name) { t.name = name; t.nameSource = 'sms'; }

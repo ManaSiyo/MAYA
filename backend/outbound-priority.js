@@ -23,7 +23,12 @@ export function priorityInfo(p,now=Date.now()) {
   // A yearless Sheet date has day precision: same-day messages cannot safely
   // be counted again. Keep recorded touch count; add only later-day evidence.
   const snapshot=Date.parse(p.sheetData?.outreachBaselineAt||p.sheetData?.syncedAt)||0;
-  const afterSource=emails.filter(e=>sourceDate===null||Date.parse(e.ts)>=sourceDate+DAY||(snapshot&&Date.parse(e.ts)>snapshot&&Date.parse(e.ts)>=sourceDate));
+  // A missing source date does not make old imported history a new follow-up.
+  // With an existing touch count, only evidence newer than the source snapshot
+  // can advance it. Without either boundary, retain the known count.
+  const afterSource=emails.filter(e=>sourceDate===null
+    ? touches===0||!!snapshot&&Date.parse(e.ts)>snapshot
+    : Date.parse(e.ts)>=sourceDate+DAY||(snapshot&&Date.parse(e.ts)>snapshot&&Date.parse(e.ts)>=sourceDate));
   if(touches!==null)touches+=afterSource.length;
   else if(!p.sheetStatus&&!p.lastEmail&&emails.length)touches=emails.length;
   const emailDate=Math.max(0,...emails.map(e=>Date.parse(e.ts)),Date.parse(p.lastEmailAt)||0);

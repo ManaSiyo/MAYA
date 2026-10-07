@@ -1,27 +1,41 @@
-[Codex] Add conversational fabric search and sealed lookbooks
+[Codex] Repair Admin state races and audit persistence gaps
 
-Let the designer describe fabric, provide a photo, or combine them without
-dissection. Share one fabric assistant between Brief and Operation Room, preserve
-submission material intent and original reference, and retain extracted traits.
-Stream initial retailer results while bounded OpenAI web discovery checks Britex,
-Stonemountain, Harts, Amazon and other supported shops. Accept only source-backed
-URLs; derive facts from seller pages, distinguish swatches/yardage and known
-out-of-stock listings, and label unverified prices/availability explicitly.
+Keep Admin drafts and send IDs across same-account token renewal while rejecting
+stale account/feed/voice/action responses. Tie invoice results to stable leads,
+retain created links after attachment failures, offer save-only retry and draft
+invoice texts inside Messages. Preserve customer data only in the signed-in page
+session and make missing-phone feedback visible.
 
-Save and select fabrics per authenticated account/submission with generation
-preconditions. Restore the submitted garment and selected material in Operation
-Room without spending on AI or loading sample garments. Keep client inputs out
-of shared caches and reject stale account/project UI responses. Preserve legacy
-in-house/migration paths; include the new server module in the container.
+Use validated generation-checked lead/note writes across Admin, phone and owner
+commands, with account-bound Admin add receipts. Deny submission uploads without
+verified ownership, complete feed pagination, persist blocked STOP consent and
+preserve archived terminal delivery state. Bind Outbound sends to the reviewed
+email and avoid recounting follow-ups when source dates are missing.
 
-Validation: all 37 Cloud Build suites plus full app-regression and local server
-smoke passed; affected tests rerun after final changes. Eleven focused behavioral
-checks, six responsive viewports, inspected desktop/phone screenshots, public
-Britex price/variant and Stonemountain stock parser checks. Isolated Chromium and
-fake providers only; no personal Chrome, private client eval or paid inference.
+Pin client project operations to account generation, preserve edits through
+initial saves/uploads and give shares independent image copies. Keep the avatar
+lifetime correction in Playground. Preserve the prior fabric work while fixing
+Brief save acknowledgements/retries, local-folder transitions and raw pattern
+persistence. Bind Operation measurements and asynchronous runs to the selected
+account/submission/garment, freeze inputs and discard stale output.
 
-Remaining: owner Push/deployment verification, authenticated live search and
-lookbook acceptance, ten-case ChatGPT comparison and real dictation check.
-Amazon is web discovery; blocked sellers retain source links with unknown facts.
-No new credentials, production settings, automatic sends or pushes. Previous
-unrelated messaging/UI work at c09328e is preserved.
+Snapshot Aesthetic Save, lock editing until acknowledgement and retain Restore
+on failure. Reconcile active design instructions and refresh typography evidence.
+Pin test/container dependencies, make all release gates mandatory, bake the API
+commit and verify it alongside Hosting. No production environment change.
+
+Validation: all 44 Cloud Build suites plus full app-regression and server smoke
+pass; required syntax and diff checks pass. Corrected the Outbound status fixture
+to exercise a fake authenticated session and real refresh, then reran it. New
+race tests exercise actual handlers, deferred writes and account/project changes.
+Gallery passes eleven widths; populated Leads/Outbound covers seven widths.
+Local Node 24.19.0, pinned dependencies, isolated headless Chromium and fake
+providers only. No personal Chrome; actual Cloud Build remains after owner Push.
+
+Remaining: owner review/Push and exact deployment verification, then authenticated
+live/provider acceptance. Public MAYA is reachable but still serves e82b207.
+Unknown invoice creation requires checking Wix; page recovery is not a durable
+provider ledger. Admin add/send ledgers need eventual archival; historical avatar
+references and scoped legacy memory migration remain open. No push, paid live
+inference, real message or production credentials/billing/settings changes.
+Preserves preceding local commits c09328e and deb7081.

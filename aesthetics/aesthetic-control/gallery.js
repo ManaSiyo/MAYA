@@ -96,7 +96,11 @@ document.querySelector('#save').addEventListener('click',async()=>{
  const pillX=pillPadding.paddingX,pillY=pillPadding.paddingY;
  if(!Number.isInteger(pillX)||pillX<4||pillX>32||!Number.isInteger(pillY)||pillY<2||pillY>16){say('Pill padding must stay within 4–32px sideways and 2–16px vertically.');return;}
  const glass=finishes.settings();const value={...controlSizes,type:typeSettings,finish:glass.finish,glass:Object.fromEntries(['fill','tint','rim','highlight','blur','saturation','borderColor'].map(k=>[k,glass[k]])),overlay:overlay.settings(),editor:editorSettings,...surfacesEditor.settings(),pillX:pillPadding.paddingX,pillY:pillPadding.paddingY};
- const button=document.querySelector('#save');button.disabled=true;say('Saving…');try{say(await window.MayaTypographyControls.save(value));document.dispatchEvent(new Event('maya-gallery-saved'));}catch(e){say(e.message||'Save failed.');}finally{button.disabled=false;}
+ const button=document.querySelector('#save'),editors=[gallery,document.querySelector('#cell-format-toolbar')].filter(Boolean);
+ const previousInert=editors.map(el=>el.inert);button.disabled=true;editors.forEach(el=>el.inert=true);say('Saving…');
+ try{say(await window.MayaTypographyControls.save(structuredClone(value)));document.dispatchEvent(new Event('maya-gallery-saved'));}
+ catch(e){say(e.message||'Save failed.');}
+ finally{editors.forEach((el,i)=>el.inert=previousInert[i]);button.disabled=false;}
 });
 
 addRestore(document.querySelector('.finish-controls details'),{label:'glass',read:()=>({...finishes.settings(),pillX:pillPadding.paddingX,pillY:pillPadding.paddingY}),write:v=>{finishes.set(v);Object.assign(pillPadding,{paddingX:v.pillX,paddingY:v.pillY});for(const input of form.querySelectorAll('[data-field]'))input.value=pillPadding[input.dataset.field];renderPillPadding();}});

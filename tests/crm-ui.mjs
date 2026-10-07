@@ -50,7 +50,7 @@ try{
  await page.locator('[data-person]').first().click();await page.locator('#mail-sender option').nth(1).waitFor({state:'attached'});assert.equal(await page.locator('#mail-sender option').count(),2);
  await page.locator('#sample-email').click();await page.locator('[name=name]').fill('Alex');await page.locator('[name=company]').fill('Example');await page.locator('[name=offer]').fill('A small capsule collection');await page.locator('#modal-submit').click();
  assert.match(await page.locator('#body').inputValue(),/Hi Alex,\n\n/);assert.doesNotMatch(await page.locator('#body').inputValue(),/\{\{/);
- await page.locator('#mail-sender').selectOption('b');await page.locator('#send-email').click();await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('Email sent'));assert.equal(sends,1);assert.equal(lastSend.mailboxId,'b');assert.equal(lastSend.confirm,true);
+ await page.locator('#mail-sender').selectOption('b');await page.locator('#send-email').click();await page.waitForFunction(()=>document.querySelector('#notice').textContent.includes('Email sent'));assert.equal(sends,1);assert.equal(lastSend.mailboxId,'b');assert.equal(lastSend.confirm,true);assert.equal(lastSend.expectedEmail,'p0@example.com');
  for(const width of [320,390,650,768,1024,1440,1920]){
   await page.setViewportSize({width,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'No overflow at '+width);
   await page.locator('#menu-toggle').click();assert.equal(await page.locator('maya-ai-meter').count(),0);const bounds=await page.locator('#outbound-drawer').boundingBox();assert.ok(bounds.x>=0&&bounds.x+bounds.width<=width+1);await page.keyboard.press('Escape');

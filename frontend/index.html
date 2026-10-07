@@ -4189,7 +4189,7 @@
   gtag('config', 'G-ETTJ6PXEMM');
 </script>
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=20"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=21"></script>
 </head>
 <body>
 <!-- v14.21: this is the Playground, promoted whole. The amber badge is the
@@ -13437,16 +13437,15 @@ async function shareProjectById(id) {
   if (!id || id === projectStore.currentId) return shareCurrentProject();
   try {
     showToast('Making the link…');
-    const uid = projectStore._uid();
-    const doc = await firebase.firestore().collection('users').doc(uid)
-      .collection('projects').doc(id).get();
+    const ctx = projectStore._accountContext();
+    const doc = await projectStore._col(ctx.uid).doc(id).get();
+    projectStore._requireAccount(ctx);
     if (!doc.exists) { showError('That project no longer exists.'); return; }
     const v = doc.data() || {};
-    const name = (v.name && String(v.name).trim()) ||
-      ((typeof _googleEmail === 'string' && _googleEmail) ? _googleEmail.split('@')[0] : 'A MAYA project');
+    const name = (v.name && String(v.name).trim()) || 'A MAYA project';
     await _publishShare(id, JSON.parse(JSON.stringify(v.items || [])),
       v.lastSummary ? JSON.parse(JSON.stringify(v.lastSummary)) : null,
-      v.lastTranscript || null, name);
+      v.lastTranscript || null, name, ctx);
   } catch (e) {
     console.warn('[share]', e);
     showError('Could not make the link. ' + ((e && e.message) || 'Try again.'));
@@ -13459,82 +13458,101 @@ async function shareCurrentProject() {
       showError('Put something on the board first.');
       return;
     }
+    const ctx = projectStore._accountContext(), board = _opContext();
+    const pid = projectStore.currentId;
     showToast('Making the link…');
     const flushed = await projectStore.flush();
+    projectStore._requireAccount(ctx);
+    if (!_opStillValid(board) || projectStore.currentId !== pid) throw new Error('The open project changed. Please share again.');
     if (flushed === false) { showError('Could not save first, so no link was made. Check the connection.'); return; }
-    // v13.8: SPEED. The snapshot is taken from the board in memory (the flush
-    // above already uploaded every picture), instead of downloading the whole
-    // project document back from the cloud just to re-read what we have.
-    const pid = projectStore.currentId;
-    const snapItems = await projectStore._snapshotForCloud(pid);
-    const cloudSum = await projectStore._summaryForCloud(pid);
-    // Name rule: project name, else the client's name, else the sharer.
-    const shareName = (currentClientName && String(currentClientName).trim())
-      || ((typeof _googleEmail === 'string' && _googleEmail) ? _googleEmail.split('@')[0] : 'A MAYA project');
-    await _publishShare(pid, JSON.parse(JSON.stringify(snapItems || [])), cloudSum || null,
-      lastTranscript || null, shareName);
+    // Publish the acknowledged snapshot, never a moving board during uploads.
+    const doc = await projectStore._col(ctx.uid).doc(pid).get();
+    projectStore._requireAccount(ctx);
+    if (!doc.exists) throw new Error('That project no longer exists.');
+    const v = doc.data() || {};
+    await _publishShare(pid, JSON.parse(JSON.stringify(v.items || [])),
+      v.lastSummary ? JSON.parse(JSON.stringify(v.lastSummary)) : null,
+      v.lastTranscript || null, v.name || 'A MAYA project', ctx);
   } catch (e) {
     console.warn('[share]', e);
     showError('Could not make the link. ' + ((e && e.message) || 'Try again.'));
   }
 }
 
-// One place that builds a share: copy the pictures somewhere the recipient is
-// allowed to read, write the snapshot, show the link.
-async function _publishShare(pid, items, cloudSum, notes, shareName) {
-  {
-    for (const it of items) {
-      if (it && it.card) { delete it.card._communityId; delete it.card._imgId; }
-    }
-    const token = 'sh_' + Date.now().toString(36) +
-      Array.from(crypto.getRandomValues(new Uint8Array(9))).map(b => (b % 36).toString(36)).join('');
-
-    // v13.29 THE SHARE FIX. A share used to hand over the addresses of the
-    // sharer's OWN pictures, which only the sharer is allowed to read, so the
-    // person opening the link got 403 Forbidden and the copy failed. Every
-    // picture is now copied into a folder that belongs to the share itself,
-    // readable by anyone signed in, and deleted when the share is revoked.
-    const _uid = projectStore._uid();
-    const pidForShare = pid;
-    const _shareDir = 'shares/' + _uid + '/' + token + '/';
-    let _copied = 0;
+// Every share owns its copied pictures. Source URLs and paths never remain as
+// alternate image fields, so deleting a source card cannot break a shared copy.
+async function _publishShare(pid, items, cloudSum, notes, shareName, ctx = projectStore._accountContext()) {
+  projectStore._requireAccount(ctx);
+  const token = 'sh_' + Date.now().toString(36) +
+    Array.from(crypto.getRandomValues(new Uint8Array(9))).map(b => (b % 36).toString(36)).join('');
+  const _uid = ctx.uid;
+  const pidForShare = pid;
+  const _shareDir = 'shares/' + _uid + '/' + token + '/';
+  const uploaded = [];
+  let publicationAttempted = false;
+  try {
     const _publish = async (src, key) => {
-      if (!src || !String(src).startsWith('http')) return src;
+      projectStore._requireAccount(ctx);
       const blob = await blobFromPicture(src);
+      projectStore._requireAccount(ctx);
       const small = await compressBlobForUpload(blob, 1600, 0.9);
+      projectStore._requireAccount(ctx);
       const ref = firebase.storage().ref(_shareDir + key + '.jpg');
+      uploaded.push(ref);
       await ref.put(small, { contentType: 'image/jpeg', cacheControl: 'public,max-age=31536000,immutable' });
-      _copied++;
-      return await ref.getDownloadURL();
+      projectStore._requireAccount(ctx);
+      const url = await ref.getDownloadURL();
+      projectStore._requireAccount(ctx);
+      return url;
     };
     for (let i = 0; i < items.length; i++) {
       const c = items[i] && items[i].card;
-      if (!c || !c.image) continue;
-      try { c.image = await _publish(c.image, 'i' + i); }
-      catch (e) { console.warn('[share] picture ' + i + ' not copied,', e && e.message); delete c.image; }
+      if (!c) continue;
+      const src = c.imageUrl || c.image;
+      delete c.image; delete c.imageUrl; delete c.storagePath;
+      delete c._uploadedToCloud; delete c._communityId; delete c._imgId;
+      if (src) c.imageUrl = await _publish(src, 'i' + i);
     }
-    if (cloudSum && typeof cloudSum._face_photo === 'string') {
-      try { cloudSum._face_photo = await _publish(cloudSum._face_photo, 'face'); }
-      catch (_) { delete cloudSum._face_photo; }
+    if (cloudSum) {
+      const face = cloudSum._face_photo || cloudSum._face_photo_url;
+      delete cloudSum._face_photo; delete cloudSum._face_photo_url; delete cloudSum._face_photo_path;
+      if (face) cloudSum._face_photo = await _publish(face, 'face');
     }
-    await firebase.firestore().collection('shares').doc(token).set({
-      ownerUid: _uid,
-      pid: pidForShare,               // v13.12: so deleting the project revokes its shares
-      name: String(shareName).slice(0, 80),
-      items,
-      lastSummary: cloudSum || null,
-      notes: notes || null,
-      schema: 'v13.15',
-      ts: firebase.firestore.FieldValue.serverTimestamp(),
+    projectStore._requireAccount(ctx);
+    const share = firebase.firestore().collection('shares').doc(token);
+    const project = projectStore._col(ctx.uid).doc(pid);
+    const tombstone = projectStore._tombs(ctx.uid).doc(pid);
+    // Do not publish a share when its source was deleted during the copies.
+    await firebase.firestore().runTransaction(async tx => {
+      const source = await tx.get(project);
+      const deleted = await tx.get(tombstone);
+      projectStore._requireAccount(ctx);
+      if (!source.exists || deleted.exists) throw new Error('That project was deleted.');
+      publicationAttempted = true;
+      tx.set(share, {
+        ownerUid: _uid, pid: pidForShare, name: String(shareName).slice(0, 80),
+        items, lastSummary: cloudSum || null, notes: notes || null,
+        schema: 'v13.15', ts: firebase.firestore.FieldValue.serverTimestamp(),
+      });
     });
-    // Mark the project as shared in the index, so the projects list says so.
-    try { await projectStore._idxDoc().update({ ['items.' + pidForShare + '.shared']: true }); } catch (_) {}
+    projectStore._requireAccount(ctx);
+    try { await projectStore._idxDoc(ctx.uid).update({ ['items.' + pidForShare + '.shared']: true }); } catch (_) {}
+    projectStore._requireAccount(ctx);
     projectStore._idxTs = 0;
     const link = location.origin + '/?share=' + token;
     let copied = false;
     try { await navigator.clipboard.writeText(link); copied = true; } catch (_) {}
+    projectStore._requireAccount(ctx);
     _showShareModal(link, shareName, copied);
     if (typeof _renderSessionsDropdown === 'function') _renderSessionsDropdown();
+    return link;
+  } catch (e) {
+    // Clean pre-publication failures only. An uncertain commit must not lose
+    // the pictures of a share which the server may already have accepted.
+    if (!publicationAttempted && projectStore._accountValid(ctx)) {
+      await Promise.allSettled(uploaded.map(ref => ref.delete()));
+    }
+    throw e;
   }
 }
 
@@ -14525,14 +14543,15 @@ async function _hydrate(fn) {
   try { return await fn(); }
   finally {
     _hydrating = false;
-    clearTimeout(_persistTimer);          // drop anything the rebuild queued
+    clearTimeout(_persistTimer); _persistTimer = null; // drop anything the rebuild queued
   }
 }
 function _persistSession() {
   if (_hydrating) return;
   _autosaveDirty = true;
+  projectStore._markDirty();
   clearTimeout(_persistTimer);
-  _persistTimer = setTimeout(() => { _persistNow(); }, 400);
+  _persistTimer = setTimeout(() => { _persistTimer = null; _persistNow(); }, 400);
 }
 
 // v11.31: flush immediately when the tab is being hidden/closed, the 400ms
@@ -14579,7 +14598,7 @@ async function _persistNow(flush) {
       clearTimeout(projectStore._t);
       return void projectStore.save().catch(() => {});
     }
-    projectStore.queueSave();
+    projectStore._scheduleSave();
     return;
   }
     // No project open yet. The moment there is real content, open one so the
@@ -14900,10 +14919,13 @@ let _cloudBooted = false;
 async function _cloudBoot() {
   if (_cloudBooted) return;
   if (typeof projectStore === 'undefined' || !projectStore.ready()) return;
+  const ctx = projectStore._accountContext();
   _cloudBooted = true;
   try {
-    await _rescueLegacyProjects();          // one time, brings pre-cutover work across
-    const rows = await projectStore.list(true);
+    await _rescueLegacyProjects(ctx);          // one time, brings pre-cutover work across
+    projectStore._requireAccount(ctx);
+    const rows = await projectStore.list(true, ctx);
+    projectStore._requireAccount(ctx);
     if (!rows.length) return;
     if (projectStore.currentId) return;     // something already opened while we waited
     // v12.5: the same test _persistNow uses, so a name typed or a word dictated
@@ -14912,10 +14934,12 @@ async function _cloudBoot() {
                        currentClientName || lastTranscript || projectStore.currentId;
     if (busy()) return;
     const target = rows[0].id;
-    const doc = await projectStore._col().doc(target).get();   // fetch BEFORE checking again
+    const doc = await projectStore._col(ctx.uid).doc(target).get();
+    projectStore._requireAccount(ctx);   // fetch BEFORE checking again
     if (!doc.exists) return;
     if (busy()) return;                     // checked again right before the canvas is touched
-    await projectStore.open(target);
+    await projectStore.open(target, ctx);
+    projectStore._requireAccount(ctx);
     if (typeof _renderSessionsDropdown === 'function') _renderSessionsDropdown();
   } catch (e) {
     console.warn('[maya cloud boot]', e && e.message);
@@ -14926,24 +14950,29 @@ async function _cloudBoot() {
 // Everything saved before the cutover lived in users/{uid}/sessions. Those are
 // copied across into real projects once, so no client's work is left behind in
 // the old system, then the old system is never written to again.
-async function _rescueLegacyProjects() {
-  if (!projectStore.ready()) return;
-  const flagRef = firebase.firestore().collection('users').doc(projectStore._uid())
-                    .collection('settings').doc('migration');
+async function _rescueLegacyProjects(ctx = projectStore._accountContext()) {
+  if (!projectStore._accountValid(ctx)) return;
+  const root = firebase.firestore().collection('users').doc(ctx.uid);
+  const flagRef = root.collection('settings').doc('migration');
+  const projects = root.collection('projects');
   try {
     const flag = await flagRef.get();
+    projectStore._requireAccount(ctx);
     if (flag.exists && (flag.data() || {}).v12_5) return;
   } catch (_) { return; }
   let moved = 0, failed = 0;
   try {
-    const col = firebase.firestore().collection('users').doc(projectStore._uid()).collection('sessions');
-    const q = await col.get();
-    const dead = await projectStore._tombSet();
+    projectStore._requireAccount(ctx);
+    const q = await root.collection('sessions').get();
+    projectStore._requireAccount(ctx);
+    const dead = await projectStore._tombSet(ctx);
+    projectStore._requireAccount(ctx);
     // A partial migration may have copied some sessions before one later
     // session failed. Remember those copies so retrying cannot create another
     // project for the same legacy source.
     const recovered = new Set();
-    const existing = await projectStore._col().get();
+    const existing = await projects.get();
+    projectStore._requireAccount(ctx);
     existing.forEach(doc => {
       const source = (doc.data() || {}).recoveredFrom;
       if (source) recovered.add(String(source));
@@ -14966,7 +14995,8 @@ async function _rescueLegacyProjects() {
       if (sum && typeof sum._face_photo === 'string' && sum._face_photo.startsWith('data:')) delete sum._face_photo;
       const when = v.updatedAtMs || v.createdAtMs || Date.now();
       try {
-      await projectStore._col().doc(pid).set({
+      projectStore._requireAccount(ctx);
+      await projects.doc(pid).set({
         name: v.name || v.currentClientName || 'Recovered project',
         items: cleaned,
         lastSummary: sum,
@@ -14976,20 +15006,26 @@ async function _rescueLegacyProjects() {
         updatedAtMs: when, createdAtMs: v.createdAtMs || when,
         schema: 'v12', recoveredFrom: id,
       });
+      projectStore._requireAccount(ctx);
       recovered.add(id);
       moved++;
-      } catch (e) { failed++; console.warn('[maya rescue] could not move', id, e && e.message); }
+      } catch (e) {
+        if (!projectStore._accountValid(ctx)) return;
+        failed++; console.warn('[maya rescue] could not move', id, e && e.message);
+      }
       // v12.5: one bad old project must not abort the rest. Each is moved on
       // its own, and the pass is only marked done when every one came across.
     }
   } catch (e) { failed++; console.warn('[maya rescue]', e && e.message); }
+  if (!projectStore._accountValid(ctx)) return;
   if (failed) {
     console.warn('[maya rescue]', failed, 'project(s) could not be moved, will retry next load');
   } else {
     try { await flagRef.set({ v12_5: true, movedCount: moved, atMs: Date.now() }, { merge: true }); } catch (_) {}
   }
   if (moved) {
-    try { await projectStore._rebuildIndex(); } catch (_) {}
+    try { await projectStore._rebuildIndex(ctx); } catch (_) {}
+    if (!projectStore._accountValid(ctx)) return;
     showToast('Recovered ' + moved + ' earlier project' + (moved === 1 ? '' : 's'));
   }
 }
@@ -15337,55 +15373,66 @@ const projectStore = {
   _t: null,
   _idxCache: null,
   _idxTs: 0,
+  _idxContext: null,
+  _editGeneration: 0,
+  _createP: null,
 
   _uid() { try { return (firebase.auth().currentUser || {}).uid || null; } catch (_) { return null; } },
   ready() { return !!this._uid(); },
-  _col() { return firebase.firestore().collection('users').doc(this._uid()).collection('projects'); },
-  _tombs() { return firebase.firestore().collection('users').doc(this._uid()).collection('projectTombstones'); },
-  _idxDoc() { return firebase.firestore().collection('users').doc(this._uid()).collection('settings').doc('projectIndex'); },
+  _accountContext() { return { uid: this._uid(), auth: _authSeq }; },
+  _accountValid(ctx) { return !!ctx && !!ctx.uid && ctx.uid === this._uid() && ctx.auth === _authSeq; },
+  _requireAccount(ctx) { if (!this._accountValid(ctx)) throw new Error('auth-changed'); },
+  _col(uid = this._uid()) { return firebase.firestore().collection('users').doc(uid).collection('projects'); },
+  _tombs(uid = this._uid()) { return firebase.firestore().collection('users').doc(uid).collection('projectTombstones'); },
+  _idxDoc(uid = this._uid()) { return firebase.firestore().collection('users').doc(uid).collection('settings').doc('projectIndex'); },
   displayName() { return currentClientName || this.autoName || 'untitled'; },
 
   // ── Project list ─────────────────────────────────────────────────────────
   // v12.5 SPEED: the list used to download every project document in full,
   // every card and every summary, just to draw a row of names. It now reads a
   // single index document. The full scan only runs once, to build the index.
-  async list(force) {
-    if (!this.ready()) return [];
-    if (!force && this._idxCache && Date.now() - this._idxTs < 4000) return this._idxCache;
+  async list(force, ctx = this._accountContext()) {
+    if (!this._accountValid(ctx)) return [];
+    const cached = this._idxContext;
+    if (!force && cached && cached.uid === ctx.uid && cached.auth === ctx.auth &&
+        this._idxCache && Date.now() - this._idxTs < 4000) return this._idxCache;
     let rows = null;
     try {
-      const d = await this._idxDoc().get();
+      const d = await this._idxDoc(ctx.uid).get();
+      this._requireAccount(ctx);
       const v = d.exists ? (d.data() || {}) : {};
-      // Only an index that was built from a full pass over the projects can be
-      // trusted. Anything else is a partial index written by a single save.
       if (v.rebuiltAtMs && v.items) rows = Object.keys(v.items).map(id => ({ id, ...v.items[id], isProject: true }));
-    } catch (_) {}
-    if (!rows) rows = await this._rebuildIndex();
-    const dead = await this._tombSet();
+    } catch (e) { if (!this._accountValid(ctx)) return []; }
+    if (!rows) rows = await this._rebuildIndex(ctx);
+    this._requireAccount(ctx);
+    const dead = await this._tombSet(ctx);
+    this._requireAccount(ctx);
     rows = rows.filter(r => !dead.has(r.id));
     rows.sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
-    this._idxCache = rows; this._idxTs = Date.now();
+    this._idxCache = rows; this._idxTs = Date.now(); this._idxContext = ctx;
     return rows;
   },
 
-  // A full pass over the real projects, in the background. The drawer paints
-  // instantly from the index, then calls this; if the truth differs, it
-  // repaints. So a drifted index can never hide a project for long.
-  async reconcile() {
-    if (!this.ready()) return null;
+  // Reconcile the account that requested the drawer, even if auth changes mid-read.
+  async reconcile(ctx = this._accountContext()) {
+    if (!this._accountValid(ctx)) return null;
     try {
-      const fresh = await this._rebuildIndex();
-      const dead = await this._tombSet();
+      const fresh = await this._rebuildIndex(ctx);
+      const dead = await this._tombSet(ctx);
+      this._requireAccount(ctx);
       const rows = fresh.filter(r => !dead.has(r.id))
         .sort((a, b) => (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0));
-      const before = (this._idxCache || []).map(r => r.id).join(',');
-      this._idxCache = rows; this._idxTs = Date.now();
-      return before === rows.map(r => r.id).join(',') ? null : rows;
+      const before = JSON.stringify(this._idxCache || []);
+      this._idxCache = rows; this._idxTs = Date.now(); this._idxContext = ctx;
+      return before === JSON.stringify(rows) ? null : rows;
     } catch (_) { return null; }
   },
 
-  async _rebuildIndex() {
-    const q = await this._col().get();
+  async _rebuildIndex(ctx = this._accountContext()) {
+    this._requireAccount(ctx);
+    const projects = this._col(ctx.uid), index = this._idxDoc(ctx.uid);
+    const q = await projects.get();
+    this._requireAccount(ctx);
     const items = {};
     q.forEach(d => {
       const v = d.data() || {};
@@ -15394,13 +15441,14 @@ const projectStore = {
                       createdAt: v.createdAtMs || 0, cardCount: (v.items || []).length,
                       twoWord: v.twoWord || '' };
     });
-    try { await this._idxDoc().set({ items, rebuiltAtMs: Date.now(), count: Object.keys(items).length }); } catch (_) {}
+    try { await index.set({ items, rebuiltAtMs: Date.now(), count: Object.keys(items).length }); } catch (_) {}
+    this._requireAccount(ctx);
     return Object.keys(items).map(id => ({ id, ...items[id], isProject: true }));
   },
 
-  async _touchIndex(id, row, expectedUid) {
-    const uid = expectedUid || this._uid();
-    if (!uid || this._uid() !== uid) return;
+  async _touchIndex(id, row, expectedUid, ctx = this._accountContext()) {
+    const uid = expectedUid || ctx.uid;
+    if (uid !== ctx.uid || !this._accountValid(ctx)) return;
     this._idxTs = 0;
     const patch = {};
     // v13.8: write the row FIELD BY FIELD so flags other code put on the row
@@ -15413,14 +15461,16 @@ const projectStore = {
     } catch (_) {
       // No index yet, or it was never fully built. Build it properly rather
       // than leaving behind a one entry index the list would then believe.
-      if (this._uid() === uid) { try { await this._rebuildIndex(); } catch (_) {} }
+      if (this._accountValid(ctx)) { try { await this._rebuildIndex(ctx); } catch (_) {} }
     }
   },
 
-  async _tombSet() {
-    const uid = this._uid();
+  async _tombSet(ctx = this._accountContext()) {
+    const uid = ctx.uid;
+    this._requireAccount(ctx);
     try {
-      const q = await this._tombs().get();
+      const q = await this._tombs(uid).get();
+      this._requireAccount(ctx);
       const s = new Set();
       q.forEach(d => {
         s.add(d.id);
@@ -15429,8 +15479,8 @@ const projectStore = {
           this._cleanupDeletedAssets(d.id, value.cleanupPaths, uid).catch(() => {});
         }
       });
-      return this._uid() === uid ? s : new Set();
-    } catch (_) { return new Set(); }
+      return s;
+    } catch (e) { this._requireAccount(ctx); return new Set(); }
   },
 
   // ── Storage ──────────────────────────────────────────────────────────────
@@ -15438,19 +15488,23 @@ const projectStore = {
   // the designer switched projects mid-upload the old code wrote project A's
   // photographs into project B's folder, where nothing ever referenced them.
   async uploadImage(dataUrl, projectId, expectedUid) {
-    const uid = expectedUid || this._uid();
-    if (!uid || this._uid() !== uid) throw new Error('auth-changed');
+    const ctx = this._accountContext();
+    const uid = expectedUid || ctx.uid;
+    if (uid !== ctx.uid) throw new Error('auth-changed');
+    this._requireAccount(ctx);
     const assetId = 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     const path = 'users/' + uid + '/projects/' + projectId + '/images/' + assetId + '.jpg';
     const blob = await (await fetch(dataUrl)).blob();
-    if (this._uid() !== uid) throw new Error('auth-changed');
+    this._requireAccount(ctx);
     const ref = firebase.storage().ref(path);
     await ref.put(blob, { contentType: blob.type || 'image/jpeg', cacheControl: 'public,max-age=31536000,immutable' });
-    if (this._uid() !== uid) {
+    if (!this._accountValid(ctx)) {
       try { await ref.delete(); } catch (_) {}
       throw new Error('auth-changed');
     }
-    return { url: await ref.getDownloadURL(), path };
+    const url = await ref.getDownloadURL();
+    this._requireAccount(ctx);
+    return { url, path };
   },
 
   async deleteAsset(path) {
@@ -15527,7 +15581,8 @@ const projectStore = {
       if (sig && seen.has(sig)) continue;
       if (sig) seen.add(sig);
       const el = it.el;
-      const card = { ...it.card };
+      const source = it.card;
+      const card = { ...source };
       delete card._dissection; delete card._dissectionPending; delete card._showcasePending;
       if (card.image && String(card.image).startsWith('data:')) {
         // Already uploaded on an earlier save and unchanged since? Reuse it.
@@ -15536,7 +15591,10 @@ const projectStore = {
         } else {
           const up = await this.uploadImage(card.image, projectId, expectedUid);   // throws on failure
           card.imageUrl = up.url; card.storagePath = up.path;
-          it.card.imageUrl = up.url; it.card.storagePath = up.path; it.card._uploadedToCloud = true;
+          // A new image may replace this one while the upload is in flight.
+          if (it.card === source && source.image === card.image) {
+            source.imageUrl = up.url; source.storagePath = up.path; source._uploadedToCloud = true;
+          }
           delete card.image;
         }
       } else if (card.image) {
@@ -15556,8 +15614,9 @@ const projectStore = {
   // the screen still said Saved. It now lives in Storage like every other
   // picture and the document carries only its address.
   async _summaryForCloud(projectId, expectedUid) {
-    if (!lastSummary) return null;
-    const clone = JSON.parse(JSON.stringify(lastSummary));
+    const summary = lastSummary;
+    if (!summary) return null;
+    const clone = JSON.parse(JSON.stringify(summary));
     const face = clone._face_photo;
     const mine = '/projects/' + projectId + '/';
     // v13.0: the shared avatars folder counts as a good home too. Without this
@@ -15567,16 +15626,18 @@ const projectStore = {
     // is copied into every project's own folder on save, so a project carries
     // everything it needs and deleting one project never touches another.
     // The avatar roster keeps its own separate copy for the client list.
-    const p = lastSummary._face_photo_path || '';
+    const p = summary._face_photo_path || '';
     const haveHere = !!p && p.indexOf(mine) !== -1;
     if (typeof face === 'string' && face.startsWith('data:')) {
-      if (haveHere && lastSummary._face_photo_url) {
-        clone._face_photo = lastSummary._face_photo_url;
+      if (haveHere && summary._face_photo_url) {
+        clone._face_photo = summary._face_photo_url;
       } else {
         const up = await this.uploadImage(face, projectId, expectedUid);            // throws on failure
         clone._face_photo = up.url;
         clone._face_photo_url = up.url; clone._face_photo_path = up.path;
-        lastSummary._face_photo_url = up.url; lastSummary._face_photo_path = up.path;
+        if (lastSummary === summary && summary._face_photo === face) {
+          summary._face_photo_url = up.url; summary._face_photo_path = up.path;
+        }
       }
     } else if (typeof face === 'string' && face.startsWith('http') && !haveHere) {
       // v12.5: this face was uploaded under a DIFFERENT project (carried across
@@ -15588,7 +15649,9 @@ const projectStore = {
         const up = await this.uploadImage(face, projectId, expectedUid);
         clone._face_photo = up.url;
         clone._face_photo_url = up.url; clone._face_photo_path = up.path;
-        lastSummary._face_photo_url = up.url; lastSummary._face_photo_path = up.path;
+        if (lastSummary === summary && summary._face_photo === face) {
+          summary._face_photo_url = up.url; summary._face_photo_path = up.path;
+        }
       } catch (_) { /* keep the shared URL rather than lose the face entirely */ }
     }
     // Anything else oversized that slipped in (a stray base64 field) is dropped
@@ -15619,19 +15682,22 @@ const projectStore = {
   // the error travels only to the caller.
   save() {
     if (!this.currentId || !this.ready()) return Promise.resolve({ written: false, reason: 'no-project' });
+    this._dirty = true; // Explicit saves must also remain retryable after failure.
     const myId = this.currentId;
     const expectedUid = this.ownerUid;
-    const run = this._chain.then(() => this._commit(myId, expectedUid));
+    const ctx = this._accountContext();
+    const run = this._chain.then(() => this._commit(myId, expectedUid, ctx));
     this._chain = run.then(() => {}, () => {});
     return run;
   },
 
-  async _commit(myId, expectedUid) {
+  async _commit(myId, expectedUid, ctx = this._accountContext()) {
     {
-      if (!expectedUid || this.ownerUid !== expectedUid || this._uid() !== expectedUid) {
+      if (!this._accountValid(ctx) || !expectedUid || this.ownerUid !== expectedUid || this._uid() !== expectedUid) {
         return { written: false, reason: 'auth-changed' };
       }
       if (this.currentId !== myId) return { written: false, reason: 'switched' };
+      const generation = this._editGeneration;
       // v13.8: SPEED. This tombstone check was a full network round trip
       // before EVERY save. A tombstone can never be removed once written
       // (the rules forbid it), so the network is asked once per project per
@@ -15641,12 +15707,14 @@ const projectStore = {
       if (!this._tombChecked[tombKey]) {
         const tomb = await firebase.firestore().collection('users').doc(expectedUid)
           .collection('projectTombstones').doc(myId).get();
+        if (!this._accountValid(ctx) || this.currentId !== myId) return { written: false, reason: 'auth-changed' };
         if (tomb.exists) { this.detach(); return { written: false, reason: 'deleted' }; }
         this._tombChecked[tombKey] = true;
       }
       const snapItems  = await this._snapshotForCloud(myId, expectedUid);
+      if (!this._accountValid(ctx) || this.currentId !== myId) return { written: false, reason: 'switched' };
       const cloudSum   = await this._summaryForCloud(myId, expectedUid);
-      if (this._uid() !== expectedUid) return { written: false, reason: 'auth-changed' };
+      if (!this._accountValid(ctx)) return { written: false, reason: 'auth-changed' };
       if (this.currentId !== myId) return { written: false, reason: 'switched' };
       const docRef = firebase.firestore().collection('users').doc(expectedUid).collection('projects').doc(myId);
       const base = this.revision;
@@ -15673,6 +15741,8 @@ const projectStore = {
       try {
         await firebase.firestore().runTransaction(async tx => {
         const cur = await tx.get(docRef);
+        this._requireAccount(ctx);
+        if (this.currentId !== myId) throw new Error('project-changed');
         const rev = (cur.data() || {}).revision || 0;
         if (cur.exists && rev !== base) throw new Error('stale-revision');
         createdAtMs = (cur.data() || {}).createdAtMs || Date.now();
@@ -15691,6 +15761,8 @@ const projectStore = {
           updatedAtMs: Date.now(),
           createdAtMs,
           schema: 'v12',
+          // Keep the legacy source so deletion can tombstone the rescued session.
+          ...((cur.data() || {}).recoveredFrom ? { recoveredFrom: cur.data().recoveredFrom } : {}),
         });
         });
       } catch (e) {
@@ -15701,7 +15773,7 @@ const projectStore = {
           // again, which saved again, which lost again, forever. And when we
           // are on our way OUT of this project there is nothing to reload
           // into, so just stop.
-          this._dirty = true;
+          if (this._accountValid(ctx) && this.currentId === myId) this._dirty = true;
           // A conflict must never quietly become a successful exit. Keep the
           // local board intact and dirty; the caller blocks navigation until
           // the designer explicitly chooses to discard it.
@@ -15713,26 +15785,29 @@ const projectStore = {
       // The write may have finished at the same instant an account/project
       // transition began. It is safely stored under expectedUid, but no
       // follow-up metadata may touch whichever account is current now.
-      if (this._uid() !== expectedUid || this.ownerUid !== expectedUid || this.currentId !== myId) {
+      if (!this._accountValid(ctx) || this.ownerUid !== expectedUid || this.currentId !== myId) {
         return { written: true, reason: 'saved-before-context-change' };
       }
       this.revision = base + 1;
       this._lastWrote = base + 1;
-      this._dirty = false;
+      this._dirty = this._editGeneration !== generation;
       // v13.0: the project is now stored without those cards, so their
       // pictures can safely go.
       try {
         const _written = new Set((payloadItems || []).map(x => x && x.card && x.card.storagePath).filter(Boolean));
-        _drainAssetDeletes(myId, _written);
+        if (!this._dirty) _drainAssetDeletes(myId, _written);
       } catch (_) {}
       this._touchIndex(myId, { name, updatedAt: Date.now(), createdAt: createdAtMs,
-                               cardCount: payloadItems.length, twoWord }, expectedUid);
+                               cardCount: payloadItems.length, twoWord }, expectedUid, ctx);
       return { written: true };
     }
   },
 
-  queueSave() {
-    this._dirty = true;
+  _markDirty() { this._dirty = true; this._editGeneration++; },
+
+  queueSave() { this._markDirty(); this._scheduleSave(); },
+
+  _scheduleSave() {
     clearTimeout(this._t);
     // v12.7: 1.4s. Long enough that moving several cards in a row is one
     // write rather than one per card, short enough to feel immediate.
@@ -15740,18 +15815,18 @@ const projectStore = {
   },
 
   // ── Open ─────────────────────────────────────────────────────────────────
-  async open(id) {
+  async open(id, ctx = this._accountContext()) {
     // v12.9: two opens raced (a double tap in the list, or an open arriving
     // while the boot restore was still running) produced two paints of two
     // projects onto one canvas. Only the newest open is allowed to finish.
     // v13.0: claim the turn FIRST, then flush. Claiming after the flush meant a
     // second tap could take a lower number than the first and win, so tapping
     // one project could open a different one.
-    const expectedUid = this._uid();
-    if (!expectedUid) return false;
+    const expectedUid = ctx.uid;
+    if (!this._accountValid(ctx)) return false;
     const _my = ++this._openSeq;
     const _saved = await this.flush();       // never lose the project you are leaving
-    if (_my !== this._openSeq) return false;
+    if (_my !== this._openSeq || !this._accountValid(ctx)) return false;
     // v13.1: if the project you are leaving could not be saved, say so and let
     // the designer decide, rather than quietly navigating away from work that
     // exists nowhere but this screen.
@@ -15760,10 +15835,10 @@ const projectStore = {
     }
     const userRoot = firebase.firestore().collection('users').doc(expectedUid);
     const dead = await userRoot.collection('projectTombstones').doc(id).get();
-    if (_my !== this._openSeq) return false;
+    if (_my !== this._openSeq || !this._accountValid(ctx)) return false;
     if (dead.exists) { showToast('That project was deleted.'); return false; }
     const doc = await userRoot.collection('projects').doc(id).get();
-    if (_my !== this._openSeq || this._uid() !== expectedUid) return false;
+    if (_my !== this._openSeq || !this._accountValid(ctx)) return false;
     if (!doc.exists) { showToast('That project is gone.'); return false; }
     const v = doc.data() || {};
     this.detach();
@@ -15774,6 +15849,7 @@ const projectStore = {
       lastTranscript = v.lastTranscript || '';
       _paintItems(v.items);
     });
+    if (_my !== this._openSeq || !this._accountValid(ctx)) return false;
     this.currentId = id;
     this.ownerUid = expectedUid;
     this.revision = v.revision || 0;
@@ -15789,7 +15865,7 @@ const projectStore = {
     if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
     if (typeof renderNotesPanel === 'function') renderNotesPanel(lastSummary);
     if (typeof _renderAvatarBody === 'function') { try { _renderAvatarBody(); } catch (_) {} }
-    this._watch(id);
+    this._watch(id, ctx);
     return true;
   },
 
@@ -15816,12 +15892,12 @@ const projectStore = {
     })));
   },
 
-  _watch(id) {
+  _watch(id, ctx = this._accountContext()) {
     try {
       // v12.9: drop any listener already running before starting another.
       try { if (this._unsub) this._unsub(); } catch (_) {}
-      this._unsub = this._col().doc(id).onSnapshot(doc => {
-        if (this.currentId !== id) return;
+      this._unsub = this._col(ctx.uid).doc(id).onSnapshot(doc => {
+        if (!this._accountValid(ctx) || this.currentId !== id) return;
         // v12.7: THE REFRESH BUG. This listener had no idea which writes were
         // its own. Firestore reports a local write to you the instant you make
         // it, so every save came back as "someone changed this project" and the
@@ -15860,6 +15936,7 @@ const projectStore = {
           _paintItems(v.items);
           try { if (typeof _renderFavoritesScroller === 'function') _renderFavoritesScroller(); } catch (_) {}   // v13.14
         }).then(() => {
+          if (!this._accountValid(ctx) || this.currentId !== id) return;
           this.currentId = id;                            // _doClear must not orphan us
           if (typeof renderNotesPanel === 'function') renderNotesPanel(lastSummary);
           if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
@@ -15872,62 +15949,78 @@ const projectStore = {
   // v12.9: land anything still waiting before letting go of a project. Every
   // way out of a project goes through here, so this is the one barrier.
   async flush() {
-    if (!this.currentId || !this.ready()) return;
-    if (!this._dirty) return;
-    // v13.0: a second caller WAITS for the flush already running instead of
-    // sailing past it. Returning early made this barrier no barrier at all:
-    // the canvas could be cleared while the save was still reading it.
     if (this._flushing) return this._flushP;
+    const ctx = this._accountContext();
+    if (!this._accountValid(ctx)) return !this._dirty;
     this._flushing = true;
-    this._flushP = (async () => {
+    const pending = (async () => {
+      clearTimeout(_persistTimer); _persistTimer = null;
       clearTimeout(this._t);
       try {
-        const res = await this.save();
-        return !!(res && (res.written || res.reason === 'deleted'));
+        // Creation sets currentId before its first network step. Always await
+        // that first save, including when the caller arrives before debounce.
+        if (this._createP) await this._createP;
+        if (!this.currentId && ((items || []).length || currentClientName)) await this.createAuto();
+        this._requireAccount(ctx);
+        const id = this.currentId;
+        if (!id) return true;
+        await this._chain;
+        while (this._accountValid(ctx) && this.currentId === id) {
+          if (!this._dirty) return true;
+          clearTimeout(this._t);
+          const res = await this.save();
+          if (!res || !res.written) return !!(res && res.reason === 'deleted');
+          // An edit during the write stays dirty and needs another snapshot.
+        }
+        return false;
       } catch (e) {
-        // v13.1: report it. This used to swallow the error and let the
-        // designer navigate away, so "never lose work" was not true.
         console.warn('[projectStore] could not flush before leaving', e && e.message);
         return false;
-      } finally { this._flushing = false; }
+      }
     })();
-    return this._flushP;
+    this._flushP = pending;
+    try { return await pending; }
+    finally { if (this._flushP === pending) { this._flushing = false; this._flushP = null; } }
   },
 
   detach() {
     try { if (this._unsub) this._unsub(); } catch (_) {}
     this._unsub = null; this.currentId = null; this.ownerUid = null; this.revision = 0; this._lastWrote = 0;
-    this._dirty = false; this.autoName = null;
+    this._dirty = false; this._editGeneration++; this.autoName = null;
+    this._createP = null;
     clearTimeout(this._t);
   },
 
   // ── Create ───────────────────────────────────────────────────────────────
   _newId() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); },
 
-  // Named by the designer, from the Save flow.
-  async createFromCanvas(name) {
-    const id = this._newId();
-    this.detach();
-    this.currentId = id; this.ownerUid = this._uid(); this.revision = 0; this.autoName = null;
-    currentClientName = name || currentClientName || 'Untitled';
-    await this.save();
-    _activeSessionId = id;
-    this._watch(id);
-    return id;
-  },
+  createFromCanvas(name) { return this._createFromCanvas(name, false); },
+  createAuto() { return this._createFromCanvas(null, true); },
 
-  // Opened automatically the moment there is work on the canvas, so nothing
-  // ever lives only in the browser. Keeps currentClientName null so the Save
-  // button still asks for a real name.
-  async createAuto() {
-    const id = this._newId();
-    this.detach();
-    this.currentId = id; this.ownerUid = this._uid(); this.revision = 0;
-    this.autoName = _autoProjectName();
-    await this.save();
-    _activeSessionId = id;
-    this._watch(id);
-    return id;
+  async _createFromCanvas(name, automatic) {
+    if (this._createP) return this._createP;
+    const ctx = this._accountContext();
+    this._requireAccount(ctx);
+    // A retry keeps the same bin; it must not orphan an earlier failed save.
+    const id = this.currentId || this._newId();
+    if (!this.currentId) this.detach();
+    if (this.ownerUid && this.ownerUid !== ctx.uid) throw new Error('auth-changed');
+    this.currentId = id; this.ownerUid = ctx.uid;
+    if (automatic) this.autoName = this.autoName || _autoProjectName();
+    else { currentClientName = name || currentClientName || 'Untitled'; this.autoName = null; }
+    this._markDirty();
+    const pending = (async () => {
+      const res = await this.save();
+      if (!res || !res.written) throw new Error('Project was not saved. Please try again.');
+      this._requireAccount(ctx);
+      if (this.currentId !== id) throw new Error('project-changed');
+      _activeSessionId = id;
+      this._watch(id, ctx);
+      return id;
+    })();
+    this._createP = pending;
+    try { return await pending; }
+    finally { if (this._createP === pending) this._createP = null; }
   },
 
   // ── Delete ───────────────────────────────────────────────────────────────
@@ -16019,7 +16112,9 @@ const projectStore = {
     // (the save happens in mayaSignOut, before the account is dropped; by the
     //  time this runs there is no signed in user left to save as)
     this.detach();
-    this._idxCache = null; this._idxTs = 0; this._tombChecked = {};
+    this._openSeq++;
+    this._flushing = false; this._flushP = null;
+    this._idxCache = null; this._idxTs = 0; this._idxContext = null; this._tombChecked = {};
     try { _avatarLibCache = null; } catch (_) {}
     _activeSessionId = null;
     await _hydrate(async () => { _doClear(); });
@@ -16033,12 +16128,14 @@ const projectStore = {
 async function _renderSessionsDropdown() {
   const list = document.getElementById('drawer-sessions-list');
   if (!list) return;
+  const ctx = projectStore._accountContext();
   // v12.5: ONE source of truth, this account's cloud projects. No device-local
   // copies, no legacy sessions, nothing that can shadow the real project.
   let sessions = [];
   try {
-    if (typeof projectStore !== 'undefined' && projectStore.ready()) sessions = await projectStore.list();
+    if (typeof projectStore !== 'undefined' && projectStore.ready()) sessions = await projectStore.list(false, ctx);
   } catch (e) { console.warn('[maya sessions]', e && e.message); }
+  if (!projectStore._accountValid(ctx)) return;
   if (!sessions.length) {
     list.innerHTML = '<div class="sessions-empty">No projects yet.</div>' + _NEW_PROJECT_ROW;
   } else {
@@ -16053,9 +16150,9 @@ async function _renderSessionsDropdown() {
   if (drawerOpen && dueForCheck && !_reconcileInFlight) {
     _lastReconcileAt = Date.now();
     _reconcileInFlight = true;
-    projectStore.reconcile()
+    projectStore.reconcile(ctx)
       .then(fresh => {
-        if (fresh && document.getElementById('drawer-sessions-list')) {
+        if (projectStore._accountValid(ctx) && fresh && document.getElementById('drawer-sessions-list')) {
           document.getElementById('drawer-sessions-list').innerHTML =
             fresh.length ? _sessionRows(fresh)
                          : '<div class="sessions-empty">No projects yet.</div>' + _NEW_PROJECT_ROW;
