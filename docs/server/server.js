@@ -3237,7 +3237,7 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
   try {
     const [ctx, mem, people, soul] = await Promise.all([
       withinVoiceBudget(loadAdminCommandSnapshot(), buildAdminCommandSnapshot()),
-      withinVoiceBudget(loadMayaMemory(), { items: [{text:'Owner memory is temporarily unavailable. Do not claim stored facts or preferences.'}] }),
+      withinVoiceBudget(ownerConversation.context(user.sub).then(s=>({items:[...s.memory,...s.behavior,{text:'Signup SMS format: '+s.alertTemplate}]})), { items: [{text:'Owner memory is temporarily unavailable. Do not claim stored facts or preferences.'}] }),
       withinVoiceBudget(loadMayaPeople(), { items: [{name:'Saved people are temporarily unavailable; do not guess identities.'}] }),
       withinVoiceBudget(loadMayaSoul(), ''),
     ]);
@@ -3536,10 +3536,12 @@ async function loadLeadNotes(email) {
 // every voice call and added to by voice. Admin only. ──
 const MAYA_MEM_PATH = 'maya/memory.json';
 async function loadMayaMemory() {
-  const o = await gcsGet(MAYA_MEM_PATH).catch(() => ({ ok: false }));
-  if (!o.ok) return { items: [] };
-  try { const j = JSON.parse(o.buf.toString('utf8')); return { items: Array.isArray(j.items) ? j.items : [] }; }
-  catch { return { items: [] }; }
+  const o = await gcsGet(MAYA_MEM_PATH);
+  if (o.status === 404) return { items: [], _generation: '0' };
+  if (!o.ok || !o.generation) throw new Error('Owner memory is unavailable; existing memory was not changed.');
+  const j = JSON.parse(o.buf.toString('utf8'));
+  if (!Array.isArray(j.items)) throw new Error('Owner memory is invalid; existing memory was not changed.');
+  return { items: j.items, _generation: o.generation };
 }
 async function appendMayaMemory(text) { return withLock('memory', () => _appendMayaMemoryRaw(text)); }
 async function _appendMayaMemoryRaw(text) {
@@ -3548,7 +3550,7 @@ async function _appendMayaMemoryRaw(text) {
   const rec = await loadMayaMemory();
   rec.items.push({ ts: new Date().toISOString(), text: t });
   rec.items = rec.items.slice(-200);
-  await gcsPut(MAYA_MEM_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+  await gcsPut(MAYA_MEM_PATH, Buffer.from(JSON.stringify({items:rec.items}), 'utf8'), 'application/json', rec._generation);
   return rec.items.length;
 }
 async function forgetMayaMemory(text) { return withLock('memory', () => _forgetMayaMemoryRaw(text)); }
@@ -3561,7 +3563,7 @@ async function _forgetMayaMemoryRaw(text) {
     const t = String(i.text || '').toLowerCase();
     return !(t.includes(q) || (q.length > 12 && t.includes(q.slice(0, 12))));
   });
-  if (rec.items.length !== before) await gcsPut(MAYA_MEM_PATH, Buffer.from(JSON.stringify(rec), 'utf8'), 'application/json');
+  if (rec.items.length !== before) await gcsPut(MAYA_MEM_PATH, Buffer.from(JSON.stringify({items:rec.items}), 'utf8'), 'application/json', rec._generation);
   return before - rec.items.length;
 }
 app.post('/api/admin/maya-forget', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
@@ -3570,7 +3572,7 @@ app.post('/api/admin/maya-forget', requireAuthHeader, express.json({ limit: '8kb
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
   const rl = rateLimit(user.sub, user.email);
   if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
-  try { const n = await forgetMayaMemory((req.body || {}).text); return res.json({ ok: true, removed: n }); }
+  try { const before=await ownerConversation.context(user.sub);await ownerConversation.act(user.sub,{action:'forget',text:(req.body||{}).text},crypto.randomUUID());const after=await ownerConversation.context(user.sub);return res.json({ok:true,removed:before.memory.length-after.memory.length}); }
   catch (e) { console.error('[maya-forget]', e.message); return res.status(502).json({ error: 'forget_failed' }); }
 });
 app.post('/api/admin/maya-remember', requireAuthHeader, express.json({ limit: '8kb' }), async (req, res) => {
@@ -3579,7 +3581,7 @@ app.post('/api/admin/maya-remember', requireAuthHeader, express.json({ limit: '8
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized' }); }
   const rl = rateLimit(user.sub, user.email);
   if (!rl.ok) { res.setHeader('Retry-After', String(rl.retry)); return res.status(429).json({ error: 'rate_limited' }); }
-  try { const n = await appendMayaMemory((req.body || {}).text); return res.json({ ok: !!n, count: n || 0 }); }
+  try { await ownerConversation.act(user.sub,{action:'remember',text:(req.body||{}).text},crypto.randomUUID());const saved=await ownerConversation.context(user.sub);return res.json({ok:true,count:saved.memory.length}); }
   catch (e) { console.error('[maya-remember]', e.message); return res.status(502).json({ error: 'remember_failed' }); }
 });
 

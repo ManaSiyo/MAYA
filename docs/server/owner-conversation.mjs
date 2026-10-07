@@ -77,15 +77,16 @@ export function createOwnerConversation(deps){
     if(!uid||typeof id!=='string'||!id||id.length>200||typeof decision!=='object'||!decision)throw problem('The request could not be understood.');
     const action=decision.action;
     if(['client_history','client_contact','sms_actions','sms_inbox','sms_help','sms_status','sms_features','reply_client'].includes(action)){if(!deps.smsAction)throw problem('SMS access is unavailable.',503);return deps.smsAction(uid,decision,id);}
-    if(['remember','set_behavior','set_alert_format'].includes(action)){
+    if(['remember','forget','set_behavior','set_alert_format'].includes(action)){
       const text=action==='set_alert_format'?validateAlertTemplate(decision.template):clip(decision.text,1000);
       if(!text)throw problem('What should I save?');
       const {result}=await db.update(path(uid),s=>{
         s.requests||={};if(s.requests[id])return s.requests[id];
         const ts=new Date(now()).toISOString();
         if(action==='set_alert_format')s.alertTemplate=text;
+        else if(action==='forget'){s.memory=(s.memory||[]).filter(i=>!String(i.text).toLowerCase().includes(text.toLowerCase()));}
         else{const key=action==='remember'?'memory':'behavior';s[key]||=[];if(!s[key].some(i=>i.text===text))s[key].push({text,ts});s[key]=s[key].slice(-100);}
-        const reply=action==='set_alert_format'?'Saved. Future signup texts will use this format with each lead’s actual details:\n'+text:action==='remember'?'Remembered: '+text:'Saved for future texts and owner calls: '+text;
+        const reply=action==='forget'?'Removed matching saved facts from your owner memory.':action==='set_alert_format'?'Saved. Future signup texts will use this format with each lead’s actual details:\n'+text:action==='remember'?'Remembered: '+text:'Saved for future texts and owner calls: '+text;
         const outcome={ok:true,reply};s.requests[id]=outcome;
         // Keep bounded idempotency records; SMS transports retain their own cache too.
         prune(s);
@@ -138,7 +139,8 @@ export function createOwnerConversation(deps){
     async decide(uid,text){
       const direct=ownerLeadRead(text);if(direct)return direct;
       const settings=await context(uid);
-      const reads=await Promise.allSettled([deps.history(),deps.list(6)]);
+      const optional=async read=>{let timer;try{return await Promise.race([Promise.resolve().then(read),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('Optional context unavailable')),deps.contextBudgetMs??800);})]);}finally{clearTimeout(timer);}};
+      const reads=await Promise.allSettled([optional(()=>deps.history()),optional(()=>deps.list(6))]);
       const history=reads[0].status==='fulfilled'?reads[0].value:{available:false},leads=reads[1].status==='fulfilled'?reads[1].value:{available:false};
       let answer;try{answer=await deps.complete(uid,OWNER_CONVERSATION_INSTRUCTIONS,bounded({text:clip(text,1600),settings,history,leads,now:new Date(now()).toISOString()}));}catch(e){throw problem((e.status?e.message:'Conversational text AI is temporarily unavailable.')+' Lead reads still work: send LEADS 5 or LEAD Nick.',e.status||503);}
       if(!answer||typeof answer!=='object'||Array.isArray(answer))throw problem('I could not understand the response. Please try again.');

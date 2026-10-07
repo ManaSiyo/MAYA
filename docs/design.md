@@ -241,3 +241,8 @@ October 6: runtime v19 excludes form labels from generic SVG flex centering.
 Editor labels retain their grid; fields use responsive columns with a 110px
 readable minimum when available, including saved large popup X/Y padding.
 Icon centering still applies to actions and text labels without form fields.
+
+October 6 audit: runtime v20 applies P1 to message bubbles/composer and P4 to
+message timestamps. Share uses saved dropdown material and X/Y padding. Expanded
+call transcripts use Inner panel material/corners, not pill geometry. Composer
+selectors use :where() so shared typography never outranks table selection styles.

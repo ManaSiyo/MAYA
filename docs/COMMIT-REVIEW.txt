@@ -1,32 +1,21 @@
-[Codex] Add immediate event ingress and reduce MAYA latency
+[Codex] Harden messaging and unify saved UI settings
 
-Wix callback webhooks verify RS256 signatures, exact app installation and callback
-form, enqueue named durable Cloud Tasks before acknowledgement and fetch the exact
-saved submission in an authenticated worker. Ring/SMS dispatch independently with
-separate durable claims, bounded formatting and dispatch/provider/lead-age timing.
+Resolve known contact names consistently, preserve drafts and expanded transcripts,
+guard stale session responses, expose earlier history, and stop hidden conversation
+polls from clearing unread messages. Prevent duplicate dashboard sends with durable
+request claims and reject oversized drafts without truncation. Bind signed owner
+reply callbacks to carrier IDs. Share owner memory across browser voice/SMS/phone;
+fail closed on legacy memory reads and version writes; bound optional chat context.
 
-Add owner-authenticated Gmail watch registration, private mailbox bindings,
-authenticated Pub/Sub ingress and mailbox-only CRM sync. Preserve history cursors,
-account isolation, leases, replays and hourly reconciliation. No automatic client
-sending. Owner-controlled provider setup documented in EVENT-TRIGGERS.md.
+Apply saved typography to message text/composer/timestamps, dropdown material to
+Share and Inner material to expanded transcripts. Fix responsive flex overflow,
+bump shared runtime v20 on all served pages, regenerate typography locations.
 
-Remove optional AI summary waits from ordinary lead/contact reads, use a short
-raw cache and callback invalidation. Bound optional web voice context; overlap
-phone memory with socket setup, bound startup and reduce end-of-speech wait.
-Keep verified cost-first model defaults and images; add truthful latency logs.
+Validation: all 35 release gates, complete app-regression, local smoke, 11-width
+component gallery, 9-width messaging checks, communications and memory/send/session
+race tests. Isolated Chromium/fake providers only. No live sends or personal Chrome.
 
-Fix SVG form labels shrinking Color/Alignment fields. Shared runtime v19 and
-responsive readable popup grids apply across served pages. Add regression tests,
-Docker/runtime packaging and owner-visible setup warnings; update handoff/runbooks.
-
-Validation: all 35 Cloud Build test commands; complete app-regression; real local
-server smoke with event/auth guards; 11-width gallery/readability and screenshot
-review; 7-width Outbound/lead menus; 4-width note/drawer checks; communications,
-CRM intelligence/UI/failure, hands, design/container/release checks passed. Final
-callback and Admin voice-context fixtures rerun after last changes. Fake providers,
-isolated Chromium; no personal Chrome, live sends, credentials/billing/env changes.
-
-Not pushed. Owner must Push, verify exact deployed commit, configure Wix/Tasks/
-Gmail push and Scheduler reconciliation, then verify real owner SMS/call/email.
-No live response-time benchmark or carrier delivery certification. Cold starts,
-provider outages and missing scheduled renewal remain operational limitations.
+Not pushed. Live still reports e82b207 while origin is 71c9ce9. Provider verification
+and deployment investigation await fresh Chrome approval. Owner event/provider
+configuration remains required. Send ledger has a safe 10,000-request capacity;
+legacy memory migration and archived synthetic reply SID reconciliation remain open.

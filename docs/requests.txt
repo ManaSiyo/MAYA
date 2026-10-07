@@ -2747,3 +2747,11 @@ October 5 — Completed status; hard vertical icon centering; separate editable 
 October 6 [local]: Latest Notes has only Save and Cancel. Removed Dictate; clicking outside without saving cancels the draft and blur never saves. Verified with fake API/browser checks; not pushed.
 
 October 6 [verified locally; activation open]: Immediate Wix callback events through durable Cloud Tasks; independent ring/SMS; inbound Gmail push with private account binding and mailbox-only sync. Faster AI-free lead reads and bounded voice context; phone end-of-speech 300ms and measured timing logs. Official model audit recommends existing GPT-6 Luna/Realtime 2.1 Mini; no verified Sol Light; images unchanged. Fixed icon-labelled Color/Alignment CSS clipping and readable popup grids; 11-width gallery, 7-width Outbound/leads, all 35 release checks, full regression and smoke pass. Owner Push and EVENT-TRIGGERS.md provider setup/real delivery tests required before demo certification.
+
+2026-10-06 — Robustness/CSS audit (local, not shipped)
+Owner requested current UI consistency, names instead of phone labels, responsive
+messaging and a broad MAYA/provider audit, excluding Outbound/Playground/Affiliates
+functionality. Fixed shared message/dropdown styling, names, draft/session/history
+races, send claims, memory consistency and optional text latency. Nine messaging
+widths and eleven gallery widths verified. Fresh Chrome permission pending; live
+provider connections remain unverified. Exact production commit is behind origin.

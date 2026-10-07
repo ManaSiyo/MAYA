@@ -74,3 +74,9 @@ const providerDown=createOwnerConversation({...deps,complete:async()=>{throw Err
 console.log('Owner lead reads bypass AI, preserve requested count/numeric contacts and ground phone-to-SMS reports without duplicate sends.');
 
 await assert.rejects(conversation.act('owner',{action:'list_leads',count:0},'bad_count'),/Choose 1 to 20/);assert.throws(()=>ownerLeadRead('LEADS 21'),/Choose 1 to 20/);
+
+await conversation.act('owner',{action:'remember',text:'Temporary browser fact'},'browser-remember');
+await conversation.act('another-account',{action:'remember',text:'Temporary browser fact'},'other-remember');
+await conversation.act('owner',{action:'forget',text:'Temporary browser fact'},'browser-forget');
+assert.ok(!(await conversation.context('owner')).memory.some(i=>i.text==='Temporary browser fact'));
+assert.ok((await conversation.context('another-account')).memory.some(i=>i.text==='Temporary browser fact'));

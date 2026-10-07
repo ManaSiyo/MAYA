@@ -145,7 +145,7 @@ try {
   #adm-tabtitle{flex:1;min-width:0;text-align:left;padding-left:4px;font-family:var(--maya-font-ui);font-size:var(--maya-text-section);font-weight:400;text-transform:uppercase;letter-spacing:0.04em;color:rgba(245,250,255,0.92)}
   .msg-name{width:100%;border:0;background:transparent;font-family:inherit;padding:0;outline-offset:3px}
   .msg-name:focus{outline:1px solid rgba(169,201,255,0.65);border-radius:4px}
-  .msg-name-edit{display:flex;align-items:center;gap:5px}
+  .msg-name-edit{display:flex;align-items:center;gap:5px;min-width:0;width:100%}
   .msg-rename{border:0;background:transparent;color:var(--dim);cursor:pointer;padding:3px;flex:none;display:flex}
   .msg-rename svg{width:13px;height:13px}
   #msg-feedback{font-size:var(--maya-text-caption);color:#b9d5ff;line-height:1.4;padding-top:4px;white-space:normal}
@@ -190,7 +190,7 @@ try {
   .msg-call{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink);
     border:var(--maya-hairline) solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.04);border-radius:var(--maya-radius-pill);padding:6px 11px;cursor:pointer;white-space:nowrap}
   .msg-call:hover{background:rgba(255,255,255,0.09)}
-  .msg-scroll{flex:1;min-height:0;overflow-y:auto;padding:10px 2px;display:flex;flex-direction:column;gap:6px}
+  .msg-scroll{min-width:0;overflow-wrap:anywhere;flex:1;min-height:0;overflow-y:auto;padding:10px 2px;display:flex;flex-direction:column;gap:6px}
   .bub{max-width:82%;padding:8px 12px;border-radius:16px;font-family:var(--maya-font-ui);font-size:var(--maya-text-body);line-height:1.35;white-space:pre-wrap;word-break:break-word}
   .bub.in{align-self:flex-start;background:rgba(255,255,255,0.08);color:var(--ink);border-bottom-left-radius:5px}
   .bub.out{align-self:flex-end;background:rgba(169,201,255,0.22);color:var(--ink);border-bottom-right-radius:5px}
@@ -199,13 +199,13 @@ try {
   .msg-call-line{align-self:center;font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);
     border:0.5px dashed var(--line);border-radius:var(--maya-radius-pill);padding:4px 10px;margin:4px 0;max-width:92%;text-align:center}
   .msg-call-line small{display:block;font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:0;text-transform:none;color:var(--faint);margin-top:2px;font-style:italic;white-space:normal}
-  .msg-call-line details{max-width:min(340px,78vw);margin-top:6px;text-align:left;letter-spacing:0;text-transform:none;font-size:var(--maya-text-caption);line-height:1.45}
+  .msg-call-line details{overflow-wrap:anywhere;max-width:min(340px,78vw);margin-top:6px;text-align:left;letter-spacing:0;text-transform:none;font-size:var(--maya-text-caption);line-height:1.45}
   .msg-call-line summary{cursor:pointer;color:#fff}
   .msg-call-line details p{margin:6px 0;color:var(--dim);white-space:pre-wrap}
   .booking-preview{margin:8px 10px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:rgba(3,15,29,.45);font:300 var(--maya-text-body)/1.45 var(--maya-font-ui)}
   .booking-preview strong{display:block;color:#fff;font-weight:400}.booking-preview p{margin:6px 0;white-space:pre-wrap;color:var(--dim)}
   .msg-compose{display:flex;gap:6px;align-items:flex-end;padding-top:8px;border-top:var(--maya-hairline) solid var(--line);flex:none}
-  #msg-input{flex:1;resize:none;max-height:96px;border-radius:14px;border:var(--maya-hairline) solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.04);
+  #msg-input{min-width:0;box-sizing:border-box;flex:1;resize:none;max-height:96px;border-radius:14px;border:var(--maya-hairline) solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.04);
     color:var(--ink);font-family:var(--maya-font-ui);font-size:var(--maya-text-body);padding:8px 12px;outline:none}
   #msg-input:focus{border-color:rgba(169,201,255,0.6)}
   .msg-send{font-family:var(--maya-font-ui);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#0d1120;background:#a9c9ff;
@@ -881,7 +881,7 @@ try {
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=13">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=19"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=20"></script>
 <link rel="stylesheet" href="/aesthetics/ui/admin-systems.css?v=3">
 </head>
 <body class="systems-map">
@@ -997,7 +997,7 @@ if (IS_AFFILIATES) {
         <div class="msg-who"><div class="msg-name-edit"><input class="msg-name" id="msg-name" aria-label="Contact name" placeholder="Contact name" title="Click to name this contact; Enter saves" maxlength="120" onblur="msgRename()" onkeydown="if(event.key==='Enter')this.blur()"><button class="msg-rename" aria-label="Edit contact name" onclick="document.getElementById('msg-name').focus()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 16-1 5 5-1L21 7l-4-4zM14 6l4 4"/></svg></button></div><div class="msg-number" id="msg-number" hidden></div></div>
         <div class="msg-share"><button class="msg-call maya-icon-button" id="msg-share" type="button" aria-label="Share" aria-expanded="false" onclick="msgShare(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V3m-4 4 4-4 4 4M5 12v8h14v-8"/></svg></button><div id="msg-share-menu" hidden><button onclick="msgShare(false);msgBooking()">Booking link</button><button onclick="msgShare(false);msgInvoice()">Invoice</button></div></div><button class="msg-call maya-icon-button" id="msg-call" onclick="msgCall()" title="Call this person" aria-label="Call this person"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2z"/></svg></button>
       </div>
-      <div class="msg-controls"><button id="msg-suggest" onclick="msgSuggest()">Message idea</button><button onclick="msgCheckDelivery()" title="Check the last five outgoing texts with the carrier">Check delivery</button><button id="msg-block" onclick="msgBlock()">Block</button><button onclick="msgDelete()">Delete conversation</button></div><div class="msg-scroll" id="msg-scroll"></div>
+      <div class="msg-controls"><button id="msg-suggest" onclick="msgSuggest()">Message idea</button><button onclick="msgCheckDelivery()" title="Check the last five outgoing texts with the carrier">Check delivery</button><button id="msg-block" onclick="msgBlock()">Block</button><button onclick="msgDelete()">Delete conversation</button></div><button id="msg-older" class="msg-call" hidden onclick="msgLoadOlder()">Earlier messages</button><div class="msg-scroll" id="msg-scroll"></div>
       <div id="msg-idea" hidden><small id="msg-idea-status" role="status" aria-live="polite"></small><p id="msg-idea-text"></p><button class="maya-glass-button" id="msg-idea-use" onclick="msgUseIdea()" hidden>Use draft</button></div>
       <div class="msg-compose">
         <textarea id="msg-input" oninput="this.style.height='auto';this.style.height=Math.min(96,this.scrollHeight+2)+'px'" rows="1" placeholder="Text them as Mana Siyo" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();msgSend();}"></textarea>
@@ -3368,7 +3368,7 @@ function admTab(t) {
   document.getElementById('adm-tab-systems').setAttribute('aria-selected', t === 'systems'||t==='automations' ? 'true' : 'false');
   document.getElementById('adm-tab-messages').setAttribute('aria-selected', t === 'messages' ? 'true' : 'false');
   document.getElementById('drawer-messages').hidden = t !== 'messages';
-  if (t === 'messages') { loadThreads(); loadBookingPending(); if (!_msgTimer) _msgTimer = setInterval(() => { if (_msgOpen) loadThread(_msgOpen.number, true); else loadThreads(); loadBookingPending(); }, 8000); }
+  if (t === 'messages') { loadThreads(); loadBookingPending(); if (!_msgTimer) _msgTimer = setInterval(() => { const hs=document.getElementById('adm-hscroll');const visible=document.visibilityState==='visible'&&hs&&hs.scrollLeft>(hs.scrollWidth-hs.clientWidth)/2;if (_msgOpen&&visible) loadThread(_msgOpen.number, true); else loadThreads();if(visible)loadBookingPending(); }, 8000); }
   else if (_msgTimer) { clearInterval(_msgTimer); _msgTimer = null; }
 }
 async function loadModelSnapshot(){
@@ -3418,25 +3418,28 @@ function _msgLast(m) {
   if (m.kind === 'call') return (m.dir === 'out' ? 'Maya called' : 'They called') + (m.seconds ? ', ' + Math.max(1, Math.round(m.seconds / 60)) + ' min' : '');
   return (m.dir === 'out' ? 'You: ' : '') + (m.text || '');
 }
+let _msgListSequence=0, _msgThreadSequence=0;
 async function loadThreads() {
+  const auth=_idTok,sequence=++_msgListSequence;
   const host = document.getElementById('msg-list'); if (!host || !_idTok) return;
   try {
     const r = await fetch('/api/admin/messages', { headers: { 'Authorization': 'Bearer ' + _idTok } });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || r.status);
+    if(auth!==_idTok||sequence!==_msgListSequence)return;
     paintThreads(j.threads || []);
-  } catch (e) { host.innerHTML = '<div class="msg-empty">The threads did not load. ' + esc(e.message) + '</div>'; }
+  } catch (e) { if(auth!==_idTok||sequence!==_msgListSequence)return;host.innerHTML = '<div class="msg-empty">The threads did not load. ' + esc(e.message) + '</div>'; }
 }
 function paintThreads(list) {
   const host = document.getElementById('msg-list'); if (!host) return;
-  _msgThreads = list || [];
+  _msgThreads = (list || []).map(t=>({...t,name:_msgKnownName(t.number,t.name)}));
   const unread = _msgThreads.reduce((n, t) => n + (t.unread || 0), 0);
   const badge = document.getElementById('adm-unread'); badge.textContent = String(unread); badge.hidden = !unread;
   if (!_msgThreads.length) { host.innerHTML = '<div class="msg-empty">No texts yet. Tap a lead name, or wait for the first one to write in.</div>'; return; }
   host.innerHTML = _msgThreads.map((t, i) =>
       '<div class="msg-row' + (t.unread ? ' unread' : '') + '" role="button" tabindex="0" data-thread-index="' + i + '">' +
         '<div class="msg-ava">' + esc(_msgInitial(t)) + '</div>' +
-        '<div class="msg-main"><div class="msg-title"><b>' + esc(t.name || t.number) + '</b><small>' + esc(_msgWhen(t.updatedAt)) + '</small></div>' +
+        '<div class="msg-main"><div class="msg-title"><b>' + esc(t.name || 'Unnamed contact') + '</b><small>' + esc(_msgWhen(t.updatedAt)) + '</small></div>' +
         '<div class="msg-last">' + (t.blocked ? 'Blocked. ' : '') + esc(_msgLast(t.last)) + '</div></div>' +
         (t.unread ? '<span class="msg-dot"></span>' : '') + '</div>').join('');
   host.querySelectorAll('[data-thread-index]').forEach(row => {
@@ -3446,7 +3449,7 @@ function paintThreads(list) {
   });
 }
 
-let _msgIdea=null,_ideaSequence=0;const _msgDrafts=new Map();
+let _msgIdea=null,_ideaSequence=0;const _msgDrafts=new Map(),_msgAttempts=new Map();
 let _automationSequence=0;
 function automationFields(settings){
  for(const key of ['first','second'])for(const [field,value] of Object.entries(settings[key])){const el=document.getElementById('automation-'+key+'-'+field);if(el){if(field==='enabled')el.checked=value;else el.value=value;}}
@@ -3475,9 +3478,9 @@ function msgUseIdea(){
  if(!_msgIdea||_msgIdea.number!==_msgOpen?.number)return;const inp=document.getElementById('msg-input');if(inp.disabled)return;
  inp.value=[inp.value.trim(),_msgIdea.text].filter(Boolean).join('\n');inp.dispatchEvent(new Event('input'));inp.focus();document.getElementById('msg-idea').hidden=true;_msgIdea=null;
 }
-window.addEventListener('maya-owner-session-changed',()=>{++_ideaSequence;++_automationSequence;_msgIdea=null;_msgDrafts.clear();_msgOpen=null;document.getElementById('msg-input').value='';document.getElementById('msg-thread').hidden=true;document.getElementById('msg-list').hidden=false;document.getElementById('msg-idea').hidden=true;document.getElementById('text-automations-form').hidden=true;document.getElementById('msg-name').value='';document.getElementById('msg-scroll').replaceChildren();document.getElementById('msg-list').replaceChildren();document.getElementById('msg-idea-text').textContent='';document.getElementById('automation-status').textContent='';document.getElementById('text-automations-form').reset();});
+window.addEventListener('maya-owner-session-changed',()=>{++_msgListSequence;++_msgThreadSequence;_msgThreads=[];document.getElementById('adm-unread').hidden=true;++_ideaSequence;++_automationSequence;_msgIdea=null;_msgDrafts.clear();_msgAttempts.clear();_msgOpen=null;document.getElementById('msg-input').value='';document.getElementById('msg-thread').hidden=true;document.getElementById('msg-list').hidden=false;document.getElementById('msg-idea').hidden=true;document.getElementById('text-automations-form').hidden=true;document.getElementById('msg-name').value='';document.getElementById('msg-scroll').replaceChildren();document.getElementById('msg-scroll')._messageMarkup=null;document.getElementById('msg-list').replaceChildren();document.getElementById('msg-idea-text').textContent='';document.getElementById('automation-status').textContent='';document.getElementById('text-automations-form').reset();});
 function _msgKnownName(number, ...names) {
-  const named=value=>String(value||'').trim()&&!/^caller$/i.test(String(value).trim());
+  const named=value=>{const text=String(value||'').trim();return text&&!/^(caller|unknown|unnamed contact)$/i.test(text)&&!/^\+?[\d\s().-]+$/.test(text);};
   const supplied=names.find(named);if(supplied)return String(supplied).trim();
   const phone=value=>{const digits=String(value||'').replace(/\D/g,'');return digits.length===11&&digits.startsWith('1')?digits.slice(1):digits;};
   const key=phone(number);if(!key)return '';
@@ -3490,7 +3493,8 @@ async function openThread(number, name) {
   _msgIdea=null;document.getElementById('msg-idea').hidden=true;
   document.getElementById('msg-input').value=_msgDrafts.get(number)||'';
   document.getElementById('msg-input').disabled=true;
-  _msgOpen = { number, name: _msgKnownName(number,name) };
+  _msgOpen = { number, name: _msgKnownName(number,name),older:[] };
+  document.getElementById('msg-older').hidden=true;
   document.getElementById('drawer').classList.add('contact-open');msgShare(false);
   document.getElementById('msg-feedback').textContent = '';
   document.getElementById('msg-list').hidden = true;
@@ -3504,16 +3508,36 @@ async function openThread(number, name) {
 function msgBack() { ++_ideaSequence;if(_msgOpen)_msgDrafts.set(_msgOpen.number,document.getElementById('msg-input').value);_msgIdea=null; document.getElementById('drawer').classList.remove('contact-open');msgShare(false);_msgOpen = null; document.getElementById('msg-thread').hidden = true; document.getElementById('msg-list').hidden = false; loadThreads(); }
 async function loadThread(number, quiet) {
   const box = document.getElementById('msg-scroll'); if (!box || !_idTok) return;
-  const auth=_idTok;
+  const auth=_idTok,sequence=++_msgThreadSequence;
   try {
     const r = await fetch('/api/admin/messages/thread?number=' + encodeURIComponent(number), { headers: { 'Authorization': 'Bearer ' + _idTok } });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || r.status);
-    if (auth!==_idTok || !_msgOpen || _msgOpen.number !== number) return;
-    paintThread(j.thread || { messages: [] }, quiet);
-  } catch (e) { if (!quiet&&auth===_idTok&&_msgOpen?.number===number) box.innerHTML = '<div class="msg-empty">The thread did not load. ' + esc(e.message) + '</div>'; }
+    if (auth!==_idTok || sequence!==_msgThreadSequence || !_msgOpen || _msgOpen.number !== number) return;
+    const thread=j.thread || {messages:[]};
+    _msgOpen.latest=thread;
+    if(_msgOpen.hasMore===undefined)_msgOpen.hasMore=!!thread.hasArchive;
+    paintThread(thread, quiet);
+  } catch (e) { if (!quiet&&auth===_idTok&&sequence===_msgThreadSequence&&_msgOpen?.number===number) box.innerHTML = '<div class="msg-empty">The thread did not load. ' + esc(e.message) + '</div>'; }
+}
+async function msgLoadOlder(){
+  const target=_msgOpen,auth=_idTok,button=document.getElementById('msg-older');
+  if(!target||target.loadingOlder)return;
+  const before=(target.older?.[0]||target.latest?.messages?.[0])?.id;if(!before)return;
+  target.loadingOlder=true;button.disabled=true;
+  try{
+    const r=await fetch('/api/admin/messages/thread?number='+encodeURIComponent(target.number)+'&before='+encodeURIComponent(before),{headers:{Authorization:'Bearer '+auth}}),j=await r.json();
+    if(auth!==_idTok||target!==_msgOpen)return;
+    if(!r.ok)throw Error(j.error||'Earlier messages unavailable.');
+    target.older=[...(j.messages||[]),...(target.older||[])];target.hasMore=!!j.hasMore;
+    const box=document.getElementById('msg-scroll'),height=box.scrollHeight,top=box.scrollTop;
+    paintThread(target.latest,true);box.scrollTop=top+box.scrollHeight-height;
+  }catch(e){if(auth===_idTok&&target===_msgOpen)document.getElementById('msg-feedback').textContent=e.message;}
+  finally{target.loadingOlder=false;if(target===_msgOpen)button.disabled=false;}
 }
 function paintThread(t, quiet) {
+  const older=document.getElementById('msg-older');if(older)older.hidden=!_msgOpen?.hasMore;
+  if(_msgOpen?.older?.length){const all=new Map(_msgOpen.older.map(m=>[m.id,m]));for(const m of t.messages||[])all.set(m.id,m);t={...t,messages:[...all.values()]};}
   const box = document.getElementById('msg-scroll'); if (!box) return;
   if (_msgOpen) { _msgOpen.blocked = !!t.blocked; _msgOpen.consent = t.consent; if (!_msgOpen.renaming) _msgOpen.name = _msgKnownName(_msgOpen.number,t.name,_msgOpen.name);  }
   const nameInput = document.getElementById('msg-name');
@@ -3521,10 +3545,17 @@ function paintThread(t, quiet) {
   document.getElementById('msg-block').textContent = t.blocked ? 'Unblock' : 'Block';
   document.getElementById('msg-call').disabled = !!t.blocked;
   const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
-    box.innerHTML = (t.messages || []).map(m => m.kind === 'call'
-      ? '<div class="msg-call-line">' + (m.dir === 'out' ? 'Maya called' : 'They called Maya') + (m.seconds ? ', ' + Math.max(1, Math.round(m.seconds / 60)) + ' min' : '') + ' <span>' + esc(_msgWhen(m.ts)) + '</span>' + (Array.isArray(m.transcript)&&m.transcript.length ? '<details><summary>Transcript</summary>' + m.transcript.map(line=>'<p><b>'+esc(line.who==='maya'?'MAYA':(_msgOpen?.name||_msgOpen?.number||'Contact'))+':</b> '+esc(line.text)+'</p>').join('') + '</details>' : m.text ? '<small>' + esc(m.text) + '</small>' : '') + '</div>'
+    const markup = (t.messages || []).map(m => m.kind === 'call'
+      ? '<div class="msg-call-line" data-message-id="'+esc(m.id||m.ts)+'">' + (m.dir === 'out' ? 'Maya called' : 'They called Maya') + (m.seconds ? ', ' + Math.max(1, Math.round(m.seconds / 60)) + ' min' : '') + ' <span>' + esc(_msgWhen(m.ts)) + '</span>' + (Array.isArray(m.transcript)&&m.transcript.length ? '<details><summary>Transcript</summary>' + m.transcript.map(line=>'<p><b>'+esc(line.who==='maya'?'MAYA':(_msgOpen?.name||'Contact'))+':</b> '+esc(line.text)+'</p>').join('') + '</details>' : m.text ? '<small>' + esc(m.text) + '</small>' : '') + '</div>'
       : '<div class="bub ' + (m.dir === 'out' ? 'out' : 'in') + '">' + esc(m.text || '') + '<div class="bub-when">' + esc(_msgWhen(m.ts)) + (m.dir === 'out' && m.status ? ', ' + esc(m.status) + (m.errorCode ? ' (carrier error ' + esc(m.errorCode) + (String(m.errorCode) === '30034' ? ': sending number needs approved A2P registration' : '') + ')' : '') : '') + '</div></div>'
     ).join('') || '<div class="msg-empty">No messages yet. Send a text to start the conversation.</div>';
+    // Keep transcripts, text selections and scroll position during unchanged polls.
+    if(box._messageMarkup!==markup){
+      const expanded=new Set([...box.querySelectorAll('details[open]')].map(el=>el.closest('[data-message-id]')?.dataset.messageId));
+      const previousTop=box.scrollTop;box.innerHTML=markup;box._messageMarkup=markup;
+      box.querySelectorAll('details').forEach(el=>{if(expanded.has(el.closest('[data-message-id]')?.dataset.messageId))el.open=true;});
+      box.scrollTop=quiet&&!atBottom?previousTop:box.scrollHeight;
+    }
     if (!quiet || atBottom) box.scrollTop = box.scrollHeight;
     const c = document.getElementById('msg-consent');
     c.textContent = t.blocked ? 'Blocked. Unblock to call or text.' : t.consent === 'stop' ? 'They asked for no more texts. Calls are still fine.' : t.consent === 'asked' ? 'Consent request sent; no reply recorded.' : t.consent === 'yes' ? '' : 'Only text people who have agreed to hear from the studio.';
@@ -3533,16 +3564,23 @@ function paintThread(t, quiet) {
 }
 async function msgSend() {
   if (!_msgOpen || _msgOpen.blocked || _msgSending) return;
-  const target = { ..._msgOpen };
-  const inp = document.getElementById('msg-input'); const text = (inp.value || '').trim(); if (!text) return;
+  const target = { ..._msgOpen }, auth=_idTok;
+  const inp = document.getElementById('msg-input'); const draft=inp.value || '',text=draft.trim(); if (!text) return;
+  if(text.length>1600){document.getElementById('msg-feedback').textContent='This text has '+text.length+' characters. Shorten it to 1,600 before sending; nothing was sent.';return;}
+  const attemptKey=target.number+'\n'+text;
+  if(!_msgAttempts.has(attemptKey))_msgAttempts.set(attemptKey,crypto.randomUUID());
+  const requestId=_msgAttempts.get(attemptKey);
   const btn = document.querySelector('.msg-send'); btn.disabled = true; _msgSending = true;
   try {
     const r = await fetch('/api/admin/messages/send', { method: 'POST', headers: { 'Authorization': 'Bearer ' + _idTok, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ to: target.number, text, name: target.name || '' }) });
+      body: JSON.stringify({ to: target.number, text, name: target.name || '', requestId }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.ok) throw new Error(j.why || j.error || ('send ' + r.status));
-    if (_msgOpen && _msgOpen.number === target.number) { inp.value = '';_msgDrafts.delete(target.number);document.getElementById('msg-idea').hidden=true; await loadThread(target.number); if (j.warning) { document.getElementById('msg-feedback').textContent = j.warning; } else { document.getElementById('msg-feedback').textContent = 'Accepted by carrier. Delivery is not yet confirmed; use Check delivery.'; } }
-  } catch (e) { if (_msgOpen && _msgOpen.number === target.number) document.getElementById('msg-feedback').textContent = String(e.message); }
+    if(auth!==_idTok){_msgSending=false;return;}
+    _msgAttempts.delete(attemptKey);
+    if(_msgDrafts.get(target.number)===draft)_msgDrafts.delete(target.number);
+    if (_msgOpen && _msgOpen.number === target.number) { if(inp.value===draft){inp.value = '';inp.dispatchEvent(new Event('input'));}document.getElementById('msg-idea').hidden=true; await loadThread(target.number); if (j.warning) { document.getElementById('msg-feedback').textContent = j.warning; } else { document.getElementById('msg-feedback').textContent = 'Accepted by carrier. Delivery is not yet confirmed; use Check delivery.'; } }
+  } catch (e) { if (auth===_idTok && _msgOpen && _msgOpen.number === target.number) document.getElementById('msg-feedback').textContent = String(e.message); }
   _msgSending = false; btn.disabled = !!(_msgOpen && (_msgOpen.blocked || _msgOpen.consent === 'stop'));
 }
 async function msgUpdate(action, extra = {}) {
@@ -3688,7 +3726,7 @@ function leadMayaCall(i) {
 // the unread badge stays honest even while the Systems tab shows
 setInterval(() => { if (_idTok && _msgTab !== 'messages') loadThreads(); }, 60000);
 // this module is sealed in an IIFE; the drawer's onclicks need these on window
-Object.assign(window, { loadModelSnapshot, loadMayaLogs, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, msgInvoice, msgBooking, msgShare, msgSuggest, msgUseIdea, loadTextAutomations, saveTextAutomations, editLatestLeadNote, leadOpenThread, leadMayaCall, loadThreads, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
+Object.assign(window, { loadModelSnapshot, loadMayaLogs, msgCheckDelivery, msgRename, msgBlock, msgDelete, admTab, openThread, msgBack, msgSend, msgCall, msgInvoice, msgBooking, msgShare, msgSuggest, msgUseIdea, loadTextAutomations, saveTextAutomations, editLatestLeadNote, leadOpenThread, leadMayaCall, loadThreads, msgLoadOlder, _msgPaintThreads: paintThreads, _msgPaintThread: paintThread });
 if (_idTok) loadModelSnapshot();
 function leadContact(i, type) {
   const x = _leadList[i]; if (!x || !x.email) return;

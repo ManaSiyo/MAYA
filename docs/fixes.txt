@@ -579,3 +579,15 @@ October 6, callback incident: latest Julia Lokey at 4:04 PM Pacific reached Wix 
 October 6: Removed Latest Notes recognition/button and accidental blur-save. Outside pointer clicks cancel without a write; cleanup on close/session change. Explicit Save failures preserve the draft.
 
 October 6 [local, not shipped]: Callback delay existed before OpenAI: polling plus serial SMS work could defer the ring. Added signed exact-form Wix ingress, durable named tasks and independent durable channel dispatch with timing evidence. Gmail receives authenticated Pub/Sub events mapped through private connected-mailbox bindings. Ordinary contact reads previously waited for up to 20 AI summaries; now raw 10-second cached reads. Optional web/phone voice memory/context waits bounded to 1,200ms, phone VAD 420→300ms. Shared icon flex rule collapsed form controls despite popup bounds passing; runtime v19 excludes form labels, with actual readability assertions and visual review. All 35 release checks, full regression and smoke pass; no production environment or provider changes. Exact earlier carrier delay not measurable from prior evidence. Owner event setup and real phone/email verification remain; see EVENT-TRIGGERS.md.
+
+2026-10-06 — Inspector audit: local messaging/CSS repairs
+Reproduced and repaired raw phone/Caller labels, late inbox session responses,
+new-draft erasure, transcript collapse, archived history inaccessible in drawer,
+concurrent unread loss, hidden drawer marking read, duplicate dashboard sends,
+reviewed SMS truncation, optional chat context blocking, browser/phone memory split,
+legacy memory overwrite on failed read, and missing owner reply delivery binding.
+Shared runtime v20 covers composer/message/timestamp roles, Share dropdown material
+and expanded transcript panel; responsive flex wrapping verified.
+Public release mismatch: live e82b207 vs pushed 71c9ce9; equal version 14.40 hid it.
+No deployment/live provider certification. Synthetic reply binding after archival,
+legacy owner-memory migration and send-ledger archival remain documented risks.

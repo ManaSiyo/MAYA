@@ -86,7 +86,7 @@ const signed = await fetch(base + '/api/phone/sms', { method: 'POST', headers: {
 ok('an incoming text is accepted only with Twilio\'s signature and lands in the thread', unsigned.status === 403 && signed.status === 200 && /<Response><\/Response>/.test(await signed.text()) && (await store.get('+14155550100')).messages.length === 2);
 const th = await (await fetch(base + '/api/admin/messages/thread?number=%2B14155550100', { headers: H })).json();
 ok('opening a thread returns it and clears the unread count', th.ok && th.thread.messages.length === 2 && (await store.get('+14155550100')).unread === 0);
-const snd = await (await fetch(base + '/api/admin/messages/send', { method: 'POST', headers: H, body: JSON.stringify({ to: '+14155550100', text: 'Yes we do. What are you picturing?' }) })).json();
+const snd = await (await fetch(base + '/api/admin/messages/send', { method: 'POST', headers: H, body: JSON.stringify({ to: '+14155550100', text: 'Yes we do. What are you picturing?',requestId:'fixture-send-00001' }) })).json();
 ok('a text typed in Admin goes out and is kept in the thread', snd.ok === true && (await store.get('+14155550100')).messages.length === 3 && (await store.get('+14155550100')).messages[2].dir === 'out');
 const stopped = await fetch(base + '/api/admin/messages/send', { method: 'POST', headers: H, body: JSON.stringify({ to: '+16469966115', text: 'x' }) });
 ok('a thread that said STOP refuses to send', stopped.status === 409);

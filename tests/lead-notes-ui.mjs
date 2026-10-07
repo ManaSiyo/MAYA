@@ -7,13 +7,14 @@ const browser=await chromium.launch({executablePath:process.env.PW_CHROMIUM||pro
 const context=await browser.newContext({viewport:{width:1440,height:900}}),page=await context.newPage();
 const errors=[],writes=[];let fail=false;
 page.on('pageerror',e=>errors.push(e.message));
-await page.addInitScript(()=>{window.fixtureRecognition=[];class Recognition{constructor(){window.fixtureRecognition.push(this);}start(){}abort(){this.aborted=true;}}window.SpeechRecognition=Recognition;});
+await page.addInitScript(()=>{window.setInterval=()=>0;window.fixtureRecognition=[];class Recognition{constructor(){window.fixtureRecognition.push(this);}start(){}abort(){this.aborted=true;}}window.SpeechRecognition=Recognition;});
 await page.route('**/*',async route=>{const req=route.request(),u=new URL(req.url());if(u.hostname!=='maya.test')return route.abort();
  if(u.pathname.startsWith('/api/')){
+  if(u.pathname==='/api/admin/messages/thread'&&u.searchParams.has('before'))return route.fulfill({json:{ok:true,messages:[{id:'older-one',dir:'in',kind:'sms',text:'Archived conversation',ts:'2026-09-01'}],hasMore:false}});
   if(u.pathname==='/api/admin/messages/suggest')return route.fulfill({json:{ok:true,eligible:true,stage:'first',text:'Hi Angela, would you like to discuss your green suit?'}});
   if(u.pathname==='/api/admin/text-automations'&&req.method()==='GET')return route.fulfill({json:{ok:true,settings:{first:{enabled:true,text:'Hi {name}',trigger:'new_lead',time:'10:00'},second:{enabled:false,text:'Hi {name}',trigger:'no_reply',time:'10:00',days:3}}}});
   if(req.method()==='POST'){writes.push({path:u.pathname,body:req.postDataJSON(),auth:req.headers().authorization});return route.fulfill({status:fail?503:200,json:fail?{error:'Save unavailable'}:{ok:true}});}
-  return route.fulfill({json:{ok:true,connected:true,threads:[],thread:{number:'+14155550101',name:'Caller',messages:[],transcripts:[]}}});
+  return route.fulfill({json:{ok:true,connected:true,threads:[],thread:{number:'+14155550101',name:'Caller',hasArchive:true,messages:[{id:'fixture-live',dir:'in',kind:'sms',text:'Latest conversation',ts:'2026-10-06'}],transcripts:[]}}});
  }
  try{return route.fulfill({body:readFileSync(resolve(root,'.'+u.pathname)),contentType:({'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.png':'image/png'})[extname(u.pathname)]||'application/octet-stream'});}catch{return route.abort();}
 });
@@ -34,6 +35,7 @@ try{
  fail=false;await page.locator('#lead-note-save').click();await page.locator('#lead-note-editor').waitFor({state:'detached'});assert.equal(await page.locator('.lead-note-vp').textContent(),'A green suit for October');assert.deepEqual(writes.at(-1),{path:'/api/admin/lead-update',body:{id:'m_1',note:'A green suit for October'},auth:'Bearer fixture-owner'});
  await page.evaluate(()=>{toggleDrawer(true);admTab('messages');});await page.waitForTimeout(350);const headingBefore=await page.locator('#adm-tabtitle').boundingBox();
  await page.evaluate(()=>{leadOpenThread(0);});await page.waitForTimeout(80);assert.equal(await page.locator('#msg-name').inputValue(),'Angela Example');
+ await page.locator('#msg-older').click();await page.getByText('Archived conversation',{exact:false}).waitFor();assert.equal(await page.locator('#msg-older').isVisible(),false);
  assert.deepEqual(await page.locator('#adm-tabtitle').boundingBox(),headingBefore,'Messages never moves when a contact opens');assert.equal(await page.locator('#adm-tabtitle').textContent(),'Messages');await page.locator('#msg-idea-use').waitFor();assert.equal(await page.locator('#msg-input').inputValue(),'','Suggestion is separate from composer');const sendsBefore=writes.length;await page.locator('#msg-idea-use').click();assert.match(await page.locator('#msg-input').inputValue(),/green suit/);assert.equal(writes.length,sendsBefore,'Using AI idea never sends');
  assert.equal(await page.locator('#msg-call svg').count(),1);assert.equal(await page.locator('#msg-call').textContent(),'');
  await page.locator('#msg-input').fill('Existing draft');const before=writes.length;await page.evaluate(()=>msgShare(true));await page.getByRole('button',{name:'Booking link',exact:true}).click();assert.equal(writes.length,before,'Booking Link never calls send or preview providers');assert.ok(await page.locator('#msg-input').evaluate(e=>e.clientHeight>=Math.min(94,e.scrollHeight-2)),'Booking draft grows for review');
@@ -53,6 +55,21 @@ try{
  for(const width of [320,390,768,1440]){await page.setViewportSize({width,height:900});assert.ok(await page.locator('#drawer-automations').evaluate(e=>e.scrollWidth<=e.clientWidth+1),'Automation settings fit '+width);if(width===390)await page.locator('#drawer').screenshot({path:'/private/tmp/maya-automations-reviewed.png'});}
  fail=true;await page.locator('#automation-first-text').fill('Keep my draft {name}');await page.locator('#automation-save').click();await page.getByText('Save unavailable',{exact:true}).waitFor();assert.equal(await page.locator('#automation-first-text').inputValue(),'Keep my draft {name}');fail=false;
  await page.evaluate(()=>admTab('messages'));await page.setViewportSize({width:1440,height:900});
+ assert.match(await page.evaluate(()=>{_msgPaintThreads([{number:'+14155550101',name:'+14155550101',last:{text:'Hello'}}]);return document.querySelector('.msg-title b').textContent;}),/Angela Example/,'Inbox resolves phone labels to known lead names');
+
+ await page.evaluate(()=>_msgPaintThread({name:'Angela Example',messages:[{id:'call-fixture',kind:'call',ts:'2026-10-06',transcript:[{who:'caller',text:'A long conversation '+ 'x'.repeat(500)}]}]}));
+ await page.locator('#msg-scroll summary').click();
+ await page.evaluate(()=>_msgPaintThread({name:'Angela Example',messages:[{id:'call-fixture',kind:'call',ts:'2026-10-06',transcript:[{who:'caller',text:'A long conversation '+ 'x'.repeat(500)}]}]},true));
+ assert.equal(await page.locator('#msg-scroll details').getAttribute('open'),'','Polling preserves expanded transcripts');
+ assert.equal(await page.locator('.msg-call-line').evaluate(e=>getComputedStyle(e).borderRadius),'12px','Expanded transcript uses inner panel corners, not a giant pill');
+ await page.evaluate(()=>{const d=structuredClone(MayaTypographyControls.defaults);d.type.P1.size=16;d.editor.background='gray';d.editor.fill=55;d.editor.paddingX=17;MayaTypographyControls.apply(d);});
+ assert.equal(await page.locator('#msg-input').evaluate(e=>getComputedStyle(e).fontSize),'16px','Composer follows saved typography');
+ assert.equal(await page.locator('#msg-share-menu').evaluate(e=>getComputedStyle(e).paddingLeft),'17px','Share menu follows saved dropdown padding');
+ for(const width of [320,375,390,430,768,820,1024,1440,1920]){
+   await page.setViewportSize({width,height:900});
+   assert.ok(await page.locator('.msg-compose').evaluate(e=>e.scrollWidth<=e.clientWidth+1),'Composer fits '+width);
+   assert.ok(await page.locator('#msg-scroll').evaluate(e=>e.scrollWidth<=e.clientWidth+1),'Long transcript fits '+width);
+ }
  await page.locator('#drawer').screenshot({path:'/private/tmp/maya-drawer-reviewed.png'});
  assert.deepEqual(errors,[]);console.log('Lead note Save/Cancel, outside-click discard, confirmed persistence, H5/H6, Contact and unsent Booking Link drafts passed at four widths.');
 }finally{await browser.close();}

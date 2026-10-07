@@ -859,7 +859,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4142,
+          "line": 4181,
           "tag": "h2",
           "id": "maya-confirmation-title",
           "class": "",
@@ -1580,7 +1580,7 @@
             },
             {
               "page": "backend/status.html",
-              "line": 4142
+              "line": 4181
             },
             {
               "page": "backend/terms.html",
@@ -3403,7 +3403,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3405,
+          "line": 3406,
           "tag": "p",
           "id": null,
           "class": "",
@@ -3413,7 +3413,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3405,
+          "line": 3406,
           "tag": "p",
           "id": null,
           "class": "note",
@@ -3423,27 +3423,27 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3438,
+          "line": 3442,
           "tag": "div",
           "id": null,
           "class": "msg-main",
           "reason": "log",
           "role": "log",
-          "snippet": "<div class=\"msg-main\"><div class=\"msg-title\"><b>' + esc(t.name || t.number) + '</b><small>' + esc(_msgWhen(t.upd"
+          "snippet": "<div class=\"msg-main\"><div class=\"msg-title\"><b>' + esc(t.name || 'Unnamed contact') + '</b><small>' + esc(_msgW"
         },
         {
           "page": "backend/status.html",
-          "line": 3524,
+          "line": 3549,
           "tag": "p",
           "id": null,
           "class": "",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<p><b>'+esc(line.who==='maya'?'MAYA':(_msgOpen?.name||_msgOpen?.number||'Contact'))+':</b> '+"
+          "snippet": "<p><b>'+esc(line.who==='maya'?'MAYA':(_msgOpen?.name||'Contact'))+':</b> '+esc(line.text)+'</"
         },
         {
           "page": "backend/status.html",
-          "line": 3615,
+          "line": 3654,
           "tag": "p",
           "id": null,
           "class": "",
@@ -3453,7 +3453,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3646,
+          "line": 3685,
           "tag": "p",
           "id": "lead-note-feedback",
           "class": "",
@@ -3463,7 +3463,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3799,
+          "line": 3838,
           "tag": "code",
           "id": null,
           "class": "",
@@ -3473,7 +3473,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3964,
+          "line": 4003,
           "tag": "td",
           "id": null,
           "class": "",
@@ -3483,7 +3483,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3972,
+          "line": 4011,
           "tag": "th",
           "id": null,
           "class": "",
@@ -3493,7 +3493,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3972,
+          "line": 4011,
           "tag": "th",
           "id": null,
           "class": "",
@@ -3503,7 +3503,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3972,
+          "line": 4011,
           "tag": "th",
           "id": null,
           "class": "",
@@ -3513,7 +3513,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3973,
+          "line": 4012,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -3523,7 +3523,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3973,
+          "line": 4012,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -3533,7 +3533,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3973,
+          "line": 4012,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -3543,7 +3543,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3973,
+          "line": 4012,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -3553,7 +3553,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3973,
+          "line": 4012,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -3563,7 +3563,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3977,
+          "line": 4016,
           "tag": "td",
           "id": null,
           "class": "",
@@ -3573,7 +3573,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3979,
+          "line": 4018,
           "tag": "td",
           "id": null,
           "class": "",
@@ -3583,7 +3583,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3980,
+          "line": 4019,
           "tag": "td",
           "id": null,
           "class": "",
@@ -3593,7 +3593,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3981,
+          "line": 4020,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -3603,7 +3603,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3982,
+          "line": 4021,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -3613,7 +3613,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3983,
+          "line": 4022,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -3623,7 +3623,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3984,
+          "line": 4023,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -3633,7 +3633,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3985,
+          "line": 4024,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -4400,7 +4400,7 @@
             },
             {
               "page": "backend/status.html",
-              "line": 3799
+              "line": 3838
             }
           ]
         },
@@ -4821,23 +4821,23 @@
             },
             {
               "page": "backend/status.html",
-              "line": 3405
+              "line": 3406
             },
             {
               "page": "backend/status.html",
-              "line": 3405
+              "line": 3406
             },
             {
               "page": "backend/status.html",
-              "line": 3524
+              "line": 3549
             },
             {
               "page": "backend/status.html",
-              "line": 3615
+              "line": 3654
             },
             {
               "page": "backend/status.html",
-              "line": 3646
+              "line": 3685
             },
             {
               "page": "backend/terms.html",
@@ -5242,71 +5242,71 @@
             },
             {
               "page": "backend/status.html",
-              "line": 3964
+              "line": 4003
             },
             {
               "page": "backend/status.html",
-              "line": 3972
+              "line": 4011
             },
             {
               "page": "backend/status.html",
-              "line": 3972
+              "line": 4011
             },
             {
               "page": "backend/status.html",
-              "line": 3972
+              "line": 4011
             },
             {
               "page": "backend/status.html",
-              "line": 3973
+              "line": 4012
             },
             {
               "page": "backend/status.html",
-              "line": 3973
+              "line": 4012
             },
             {
               "page": "backend/status.html",
-              "line": 3973
+              "line": 4012
             },
             {
               "page": "backend/status.html",
-              "line": 3973
+              "line": 4012
             },
             {
               "page": "backend/status.html",
-              "line": 3973
+              "line": 4012
             },
             {
               "page": "backend/status.html",
-              "line": 3977
+              "line": 4016
             },
             {
               "page": "backend/status.html",
-              "line": 3979
+              "line": 4018
             },
             {
               "page": "backend/status.html",
-              "line": 3980
+              "line": 4019
             },
             {
               "page": "backend/status.html",
-              "line": 3981
+              "line": 4020
             },
             {
               "page": "backend/status.html",
-              "line": 3982
+              "line": 4021
             },
             {
               "page": "backend/status.html",
-              "line": 3983
+              "line": 4022
             },
             {
               "page": "backend/status.html",
-              "line": 3984
+              "line": 4023
             },
             {
               "page": "backend/status.html",
-              "line": 3985
+              "line": 4024
             }
           ]
         },
@@ -5315,7 +5315,7 @@
           "locations": [
             {
               "page": "backend/status.html",
-              "line": 3438
+              "line": 3442
             }
           ]
         }
@@ -5404,7 +5404,7 @@
       }
     },
     "P3": {
-      "count": 476,
+      "count": 477,
       "locations": [
         {
           "page": "aesthetics/operations/index.html",
@@ -6864,7 +6864,7 @@
           "class": "",
           "reason": "pill",
           "role": "pill",
-          "snippet": "<button id=\"msg-block\" onclick=\"msgBlock()\">Block</button><button onclick=\"msgDelete()\">Delete conversation</button></div><div class=\""
+          "snippet": "<button id=\"msg-block\" onclick=\"msgBlock()\">Block</button><button onclick=\"msgDelete()\">Delete conversation</button></div><button id=\""
         },
         {
           "page": "backend/status.html",
@@ -6874,7 +6874,17 @@
           "class": "",
           "reason": "pill",
           "role": "pill",
-          "snippet": "<button onclick=\"msgDelete()\">Delete conversation</button></div><div class=\"msg-scroll\" id=\"msg-scroll\"></div>"
+          "snippet": "<button onclick=\"msgDelete()\">Delete conversation</button></div><button id=\"msg-older\" class=\"msg-call\" hidden onclick=\""
+        },
+        {
+          "page": "backend/status.html",
+          "line": 1000,
+          "tag": "button",
+          "id": "msg-older",
+          "class": "msg-call",
+          "reason": "pill",
+          "role": "pill",
+          "snippet": "<button id=\"msg-older\" class=\"msg-call\" hidden onclick=\"msgLoadOlder()\">Earlier messages</button><div class=\"msg-scroll\" id=\"msg-scroll\"></div>"
         },
         {
           "page": "backend/status.html",
@@ -7308,7 +7318,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3615,
+          "line": 3654,
           "tag": "button",
           "id": "'+esc(p.id)+'",
           "class": "msg-call",
@@ -7318,7 +7328,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3646,
+          "line": 3685,
           "tag": "button",
           "id": "lead-note-cancel",
           "class": "msg-call",
@@ -7328,7 +7338,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3646,
+          "line": 3685,
           "tag": "button",
           "id": "lead-note-save",
           "class": "msg-call",
@@ -7338,7 +7348,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4142,
+          "line": 4181,
           "tag": "button",
           "id": null,
           "class": "",
@@ -10169,7 +10179,7 @@
       ],
       "roles": {
         "pill": {
-          "count": 476,
+          "count": 477,
           "locations": [
             {
               "page": "aesthetics/operations/index.html",
@@ -10761,6 +10771,10 @@
             },
             {
               "page": "backend/status.html",
+              "line": 1000
+            },
+            {
+              "page": "backend/status.html",
               "line": 1001
             },
             {
@@ -10933,19 +10947,19 @@
             },
             {
               "page": "backend/status.html",
-              "line": 3615
+              "line": 3654
             },
             {
               "page": "backend/status.html",
-              "line": 3646
+              "line": 3685
             },
             {
               "page": "backend/status.html",
-              "line": 3646
+              "line": 3685
             },
             {
               "page": "backend/status.html",
-              "line": 4142
+              "line": 4181
             },
             {
               "page": "backend/status.html",
@@ -12484,7 +12498,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3405,
+          "line": 3406,
           "tag": "small",
           "id": null,
           "class": "",
@@ -12494,7 +12508,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3438,
+          "line": 3442,
           "tag": "small",
           "id": null,
           "class": "",
@@ -12504,7 +12518,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3524,
+          "line": 3549,
           "tag": "small",
           "id": null,
           "class": "",
@@ -12514,7 +12528,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3525,
+          "line": 3550,
           "tag": "div",
           "id": null,
           "class": "bub-when",
@@ -12709,19 +12723,19 @@
             },
             {
               "page": "backend/status.html",
-              "line": 3405
+              "line": 3406
             },
             {
               "page": "backend/status.html",
-              "line": 3438
+              "line": 3442
             },
             {
               "page": "backend/status.html",
-              "line": 3524
+              "line": 3549
             },
             {
               "page": "backend/status.html",
-              "line": 3525
+              "line": 3550
             },
             {
               "page": "frontend/index.html",

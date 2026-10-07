@@ -104,6 +104,17 @@ export function createMessageStore(deps) {
     return {...t,messages};
   }
   return {
+    async claimSend(key, fingerprint) {
+      return locked(async()=>{const rec=await read();rec.sendRequests||={};
+        if(rec.sendRequests[key])return {claimed:false,...rec.sendRequests[key]};
+        if(Object.keys(rec.sendRequests).length>=10000)throw new Error('Send ledger needs archival; nothing was sent.');
+        rec.sendRequests[key]={fingerprint,result:{ok:false,why:'This send was already attempted. Check delivery before sending again.'}};
+        await write(rec);return {claimed:true};
+      });
+    },
+    async finishSend(key,result) {
+      return locked(async()=>{const rec=await read();if(!rec.sendRequests?.[key])throw new Error('Send claim missing');rec.sendRequests[key].result=result;await write(rec);});
+    },
     // a text that came in through Twilio
     async inbound({ from, text, sid, optOutType }) {
       return locked(async () => {
@@ -170,11 +181,12 @@ export function createMessageStore(deps) {
     async remove(number) {
       return locked(async () => { const rec = await read(); const t = thread(rec, number); if (!t) throw new Error('invalid number'); t.messages = []; t.hasArchive=false; t.historyEpoch=crypto.randomBytes(12).toString('hex'); t.unread = 0; t.deleted = true; await write(rec); });
     },
-    async status({ sid, status, errorCode }) {
+    async status({ sid, status, errorCode, replyTo }) {
       if (!Object.hasOwn(STATUS_RANK, status) || !/^SM[a-zA-Z0-9]+$/.test(String(sid || ''))) return;
       return locked(async () => { const rec = await read();
         for (const t of Object.values(rec.threads)) {
-          const m = t.messages.find(m => m.id === sid && m.dir === 'out');
+          const m = t.messages.find(m => m.dir === 'out' && (m.id === sid || (replyTo && (m.id === 'owner-reply-'+replyTo || m.replyTo === replyTo))));
+          if(m&&replyTo){if(m.replyTo&&m.id!==sid)throw new Error('Reply SID mismatch');m.replyTo=replyTo;m.id=sid;}
           if (!m) continue;
           applyStatus(m, { status, errorCode });
           await write(rec);
@@ -190,8 +202,14 @@ export function createMessageStore(deps) {
         await write(rec);
       });
     },
-    async markRead(number) {
-      return locked(async () => { const rec = await read(); const t = rec.threads[e164(number)]; if (t) { t.unread = 0; await write(rec); } });
+    async markRead(number, snapshot) {
+      if(snapshot===null)return;
+      return locked(async () => { const rec = await read(); const t = rec.threads[e164(number)]; if (t) {
+        // A concurrent inbound message must remain unread until it is displayed.
+        const visible=new Set((snapshot?.messages||[]).map(m=>m.id));
+        const unseen=snapshot?t.messages.filter(m=>m.dir==='in'&&!visible.has(m.id)).length:0;
+        t.unread=Math.min(t.unread||0,unseen);await write(rec);
+      } });
     },
     async list() {
       const rec = await read();
@@ -234,7 +252,8 @@ export async function sendSms(deps, { to, text }) {
   const body = String(text || '').trim();
   if (!body) return { ok: false, why: 'nothing to send' };
   const api = (deps.twilioApi || 'https://api.twilio.com') + '/2010-04-01/Accounts/' + encodeURIComponent(deps.accountSid) + '/Messages.json';
-  const form = new URLSearchParams({ To: dest, Body: body.slice(0, 1600) });
+  if(body.length>1600)return {ok:false,why:'Text exceeds 1,600 characters; nothing was sent.'};
+  const form = new URLSearchParams({ To: dest, Body: body });
   if (deps.statusCallback) form.set('StatusCallback', deps.statusCallback);
   if (deps.messagingSid) form.set('MessagingServiceSid', deps.messagingSid); else form.set('From', deps.fromNumber);
   let r, j;
@@ -290,13 +309,14 @@ export function mountMessages(app, deps) {
     }
     catch (e) { log('inbound store failed', e.message); return res.status(503).send('storage unavailable'); }
     res.set('Content-Type', 'text/xml');
-    res.send('<?xml version="1.0" encoding="UTF-8"?><Response>'+(reply?'<Message>'+String(reply).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]))+'</Message>':'')+'</Response>');
+    const callback='/api/phone/sms/status?replyTo='+encodeURIComponent(params.MessageSid||'');
+    res.send('<?xml version="1.0" encoding="UTF-8"?><Response>'+(reply?'<Message statusCallback="'+callback+'" action="'+callback+'" method="POST">'+String(reply).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]))+'</Message>':'')+'</Response>');
   });
 
   app.post('/api/phone/sms/status', deps.urlencoded, async (req, res) => {
     const params = req.body || {};
     if (!signedWebhook(req, params)) return res.status(403).send('forbidden');
-    try { await deps.store.status({sid:params.MessageSid,status:params.MessageStatus,errorCode:params.ErrorCode}); res.sendStatus(204); }
+    try { await deps.store.status({sid:params.MessageSid,status:params.MessageStatus,errorCode:params.ErrorCode,replyTo:/^SM[a-zA-Z0-9]+$/.test(req.query?.replyTo||'')?req.query.replyTo:undefined}); res.sendStatus(204); }
     catch(e) { log('status failed', e.message); res.sendStatus(503); }
   });
 
@@ -312,8 +332,16 @@ export function mountMessages(app, deps) {
     const number = e164(req.query.number);
     if (!number) return res.status(400).json({ error: 'number_required' });
     try {
+      const before=String(req.query.before||'');
+      if(before){
+        const history=await deps.store.history(number),messages=history?.messages||[];
+        const end=messages.findIndex(m=>m.id===before);
+        if(end<0)return res.status(409).json({error:'History changed. Reopen this conversation.'});
+        res.setHeader('Cache-Control','no-store');
+        return res.json({ok:true,messages:messages.slice(Math.max(0,end-100),end),hasMore:end>100});
+      }
       const t = await deps.store.get(number);
-      await deps.store.markRead(number);
+      await deps.store.markRead(number,t);
       res.setHeader('Cache-Control', 'no-store');
       res.json({ ok: true, thread: t || { number, name: '', messages: [], consent: 'none', unread: 0 } });
     } catch (e) { log('thread failed', e.message); res.status(502).json({ error: 'messages_failed' }); }
@@ -350,7 +378,8 @@ export function mountMessages(app, deps) {
     const user = await admin(req, res); if (!user) return;
     if (deps.rateLimit && !deps.rateLimit(user)) return res.status(429).json({ error: 'rate_limited' });
     const to = e164((req.body || {}).to);
-    const text = String((req.body || {}).text || '').trim().slice(0, 1600);
+    const text = String((req.body || {}).text || '').trim();
+    if(text.length>1600)return res.status(400).json({ok:false,error:'Text exceeds 1,600 characters. Shorten it before sending; nothing was sent.'});
     const name = String((req.body || {}).name || '').trim().slice(0, 120);
     if (!to || !text) return res.status(400).json({ error: 'to_and_text_required' });
     let contact;
@@ -360,10 +389,20 @@ export function mountMessages(app, deps) {
     if (consent === 'stop') return res.status(409).json({ ok: false, why: 'they asked for no more texts' });
     // An arbitrary admin message is not automatically a consent question.
     const asks = false;
-    const r = await deps.sendSms(to, text);
-    if (!r.ok) return res.status(502).json(r);
-    try { await deps.store.outbound({ to, text, sid: r.sid, status: r.status, asks, name, by: user.email || 'fromsa' }); } catch (e) { log('outbound store failed', e.message); return res.json({ok:true,sid:r.sid,status:r.status,warning:'Text accepted by carrier, but history could not be saved. Do not resend.'}); }
-    res.json({ ok: true, sid: r.sid, status:r.status, consent: asks ? 'asked' : consent });
+    const requestId=String(req.body?.requestId||'');
+    if(!/^[a-zA-Z0-9-]{16,80}$/.test(requestId))return res.status(400).json({ok:false,why:'Reload Messages before sending. A send request ID is required.'});
+    const key=crypto.createHash('sha256').update(String(user.sub||user.email)+'\0'+requestId).digest('hex');
+    const fingerprint=crypto.createHash('sha256').update(to+'\0'+text).digest('hex');
+    let claim;try{claim=await deps.store.claimSend(key,fingerprint);}catch{return res.status(503).json({ok:false,why:'Send could not be safely recorded; nothing was sent.'});}
+    if(!claim.claimed){if(claim.fingerprint!==fingerprint)return res.status(409).json({ok:false,why:'Send ID belongs to a different draft.'});return res.status(claim.result.ok?200:409).json(claim.result);}
+    let result;
+    try {
+      const r = await deps.sendSms(to, text);
+      result=r.ok?{ok:true,sid:r.sid,status:r.status,consent}:r;
+      if(r.ok)try{await deps.store.outbound({to,text,sid:r.sid,status:r.status,asks,name,by:user.email||'fromsa'});}catch(e){log('outbound store failed',e.message);result.warning='Text accepted by carrier, but history could not be saved. Do not resend.';}
+    } catch(e) {log('send outcome unknown',e.message);result={ok:false,why:'The send outcome is unknown. Check delivery before sending again.'};}
+    try{await deps.store.finishSend(key,result);}catch(e){log('send result storage failed',e.message);if(result.ok)result.warning='Text accepted by carrier; its send receipt could not be saved. Do not resend.';}
+    res.status(result.ok?200:502).json(result);
   });
   // v14.35: the phone icon in the station: Maya calls the client.
   app.post('/api/admin/phone/call-client', deps.json, async (req, res) => {
