@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+import {webcrypto} from 'node:crypto';
+import {createLeadStore} from '../docs/server/lead-store.mjs';
+const root = new URL('../', import.meta.url);
+const read = file => readFileSync(new URL(file, root), 'utf8');
+let checks = 0;
+for (const file of ['frontend/index.html','playground/index.html']) {
+ const source = read(file);
+ const extract = (start,end) => source.slice(source.indexOf(start),source.indexOf(end,source.indexOf(start)));
+ let uid='owner', list=[{id:'existing',name:'Taylor',face:'original'}], fail=false, upload;
+ const context=vm.createContext({crypto:webcrypto, projectStore:{_uid:()=>uid,_accountContext:()=>({uid,auth:0}),_accountValid:ctx=>ctx.uid===uid&&ctx.auth===0,ready:()=>true,uploadImage:async()=>{if(upload)await upload();return {url:'uploaded'};}},firebase:{firestore:()=>({runTransaction:async fn=>{if(fail)throw Error('offline');return fn({get:async()=>({exists:true,data:()=>({list})}),set:(_,data)=>{list=data.list;}});}})}});
+ vm.runInContext('let lastSummary={client:{name:"Taylor"},_face_photo:"changed"};let _avatarLibCache=null,_avatarLibCacheUid=null;function _avatarsDoc(){return {};}',context);
+ vm.runInContext(extract('function _avatarIdentity()', '// v12.5:')+extract('async function _saveCurrentAvatarToLibrary(', 'async function saveAvatarFromDrawer('),context);
+ await vm.runInContext('_saveCurrentAvatarToLibrary()',context);assert.equal(list.length,1);checks++;
+ await vm.runInContext('_saveCurrentAvatarToLibrary(true)',context);assert.equal(list.length,2);assert.equal(list[1].face,'original');assert.notEqual(list[0].id,'existing');checks++;
+ assert.ok(!vm.runInContext('JSON.stringify(lastSummary)',context).includes('_avatarSavedSignature'));checks++;
+ await vm.runInContext('_saveCurrentAvatarToLibrary(true)',context);assert.equal(list.length,2);checks++;
+ vm.runInContext('lastSummary._face_photo="another"',context);await vm.runInContext('_saveCurrentAvatarToLibrary(true)',context);assert.equal(list.length,3);checks++;
+ vm.runInContext('lastSummary.client.name="New name"',context);fail=true;await assert.rejects(vm.runInContext('_saveCurrentAvatarToLibrary(true)',context),/offline/);assert.equal(list.length,3);fail=false;checks++;
+ vm.runInContext('lastSummary._face_photo="data:image/png;base64,AAA"',context);upload=()=>{uid='other';};await assert.rejects(vm.runInContext('_saveCurrentAvatarToLibrary(true)',context),/changed/);assert.equal(list.length,3);checks++;
+ uid='owner';upload=()=>{vm.runInContext('lastSummary={client:{name:"different project"}}',context);};vm.runInContext('lastSummary._face_photo="data:image/png;base64,AAA"',context);await assert.rejects(vm.runInContext('_saveCurrentAvatarToLibrary(true)',context),/changed/);assert.equal(list.length,3);checks++;
+ for(const match of source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){if(!/\bsrc=|application\/ld\+json/.test(match[1]))new vm.Script(match[2],{filename:file});}checks++;
+ console.log(file+': avatar preservation, failure, isolation and syntax passed');
+}
+const server=read('docs/server/server.js');let record={items:[{id:'m_one',name:'A'}],overrides:{}};let writes=0;
+const checkedStore=createLeadStore({read:async()=>({ok:true,generation:String(writes+1),buf:Buffer.from(JSON.stringify(record))}),write:async(_,data,__,expected)=>{assert.equal(expected,String(writes+1));record=JSON.parse(data);writes++;}});
+const context=vm.createContext({_leadStore:checkedStore,Buffer});
+vm.runInContext(server.slice(server.indexOf('async function updateLead('),server.indexOf('// v13.87: delete ANY lead')),context);
+for(const id of ['m_one','w_one']){await vm.runInContext(`updateLead('${id}',{stage:'closed'})`,context);assert.equal(id==='m_one'?record.items[0].stage:record.overrides.w_one.stage,'closed');checks++;}
+for(const stage of ['contacted','passed','in_process','in_progress','booked','completed','canceled','new']){await vm.runInContext(`updateLead('m_one',{stage:'${stage}'})`,context);assert.equal(record.items[0].stage,stage);checks++;}
+await vm.runInContext("updateLead('w_one',{stage:'contacted'})",context);assert.equal(record.overrides.w_one.stage,'contacted');checks++;
+await vm.runInContext("updateLead('w_one',{stage:'completed'})",context);assert.equal(record.overrides.w_one.stage,'completed');checks++;
+assert.equal(await vm.runInContext("updateLead('m_one',{stage:'invalid'})",context),null);assert.equal(writes,12);checks++;
+const admin=read('backend/status.html');for(const match of admin.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){if(!/\bsrc=|application\/ld\+json/.test(match[1]))new vm.Script(match[2]);}checks++;
+console.log(`${checks} checks passed; no browser or external service used.`);
+
+const crm=vm.createContext({window:{addEventListener:()=>{}},document:{addEventListener:()=>{}}});vm.runInContext(admin.slice(admin.indexOf('const LEAD_STAGES='),admin.indexOf('const LEAD_COLS_DEFAULT')),crm);
+assert.equal(crm.leadStage({stage:'contacted'}),'contacted');assert.equal(crm.leadStage({stage:'completed'}),'completed');assert.equal(crm.leadStage({lastContact:'2026-09-28'}),'contacted');
+assert.equal(crm.leadStage({note:'Cancelled'}),'canceled');assert.equal(crm.leadStage({stage:'in_process'}),'in_progress');assert.equal(crm.leadStage({stage:'closed'}),'closed');
+assert.equal(crm.leadSummary({note:'Cancelled',wrote:'A velvet suit for a wedding'}),'A velvet suit for a wedding');assert.ok(crm.leadSummary({wrote:'long request '.repeat(30)}).length<=120);
+console.log('CRM stage migration and compact request summaries passed.');

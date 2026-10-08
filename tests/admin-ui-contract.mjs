@@ -1,0 +1,128 @@
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const read = path => readFileSync(join(root, path), 'utf8');
+const admin = read('backend/status.html');
+
+const app = read('frontend/index.html');
+const playground = read('playground/index.html');
+
+let passed = 0;
+let failed = 0;
+const test = async (name, fn) => {
+  try { await fn(); console.log('  ok   ' + name); passed++; }
+  catch (error) { console.log('  FAIL ' + name + ': ' + error.message); failed++; }
+};
+
+console.log('\nMAYA Admin UI contract\n');
+
+await test('retired Marketing URLs redirect to Admin without a standalone file', () => {
+  assert.ok(!existsSync(join(root,'backend/marketing.html')));
+  const hosting=JSON.parse(read('docs/firebase.json')).hosting;
+  for(const source of ['/marketing.html','/backend/marketing.html'])
+    assert.ok(hosting.redirects.some(r=>r.source===source && r.destination==='/status.html' && r.type===301));
+  assert.ok(!hosting.rewrites.some(r=>r.destination==='/backend/marketing.html'));
+});
+
+await test('Admin embeds every approved Marketing surface under its shell', () => {
+  // v13.72: the duplicate Manasiyo.com|MAYA visitor fold was removed from Admin
+  // (Users and traffic already pairs both), but its Wix holders remain so the
+  // paint stays safe.
+  for (const token of ['id="mkt-ticker"', 'id="mkt-wix-tiles"',
+    'id="campaigns-table"', 'id="ad-chart"', 'id="leads-table"',
+    'id="sources-table"', 'id="bottom-fold"']) assert.ok(admin.includes(token), token);
+  assert.ok(!admin.includes('id="visitors-fold"'), 'visitors-fold removed from Admin');
+});
+
+await test('Admin keeps Marketing spacing, table, folds, ticker and chart hover behavior', () => {
+  assert.match(admin, /#adm-mkt \.panel\{[^}]*border-radius:18px[^}]*padding:16px 18px/);
+  assert.match(admin, /#adm-mkt table\{width:100%/);
+  assert.ok(admin.includes('#adm-mkt details.fold:not([open])>summary::after'));
+  assert.ok(admin.includes('function bindChartHover('));
+  assert.ok(admin.includes("addEventListener('touchmove'"));
+  assert.ok(admin.includes('function buildTicker('));
+  assert.ok(admin.includes('function paintVisitors('));
+});
+
+await test('Admin refresh and command actions fail visibly and writes wait for confirmation', () => {
+  assert.ok(admin.includes('Existing numbers remain on screen'));
+  assert.ok(admin.includes('r.status===401'));
+  assert.ok(admin.includes('id="maya-action-queue"'));
+  assert.ok(admin.includes("yes.onclick=()=>mayaConfirmAction(action.id)"));
+  assert.ok(admin.includes('output:JSON.stringify(modelOut)'));
+});
+
+await test('the approved filing cabinet is promoted without removing Playground', () => {
+  for (const source of [app, playground]) {
+    for (const token of ['class="pg-tabrow"', 'id="pg-folder"', 'id="pg-pane-fabrics"',
+      'id="pg-pane-pinterest"', 'function pgShow(', 'fabPane.appendChild(fab)',
+      'pinPane.appendChild(pin)']) assert.ok(source.includes(token), token);
+  }
+  assert.ok(playground.includes('>Playground</div>'));
+});
+
+await test('all three release surfaces carry v14.40', () => {
+  const version = source => (source.match(/name="maya-version" content="([0-9.]+)"/) || [])[1];
+  assert.deepEqual([app, playground, admin].map(version), ['14.40', '14.40', '14.40']);
+});
+
+await test('v14.01 drawer floor: circular logo, Hey Maya toggle beside it', () => {
+  assert.ok(admin.includes('logo-circle.png'), 'circular logo file referenced');
+  assert.ok(admin.includes('id="maya-toggle"'), 'toggle pill present');
+  assert.ok(admin.includes('onclick="toggleWakeWord()"'), 'pill toggles the Hey Maya wake word');
+  // v14.02: the pill became an Apple-style switch; the word is always Hey Maya
+  assert.ok(admin.includes('class="mt-switch"') && admin.includes('class="mt-knob"'), 'switch markup present');
+  assert.ok(admin.includes('#maya-toggle.live .mt-knob{transform:translateX(12px)}'), 'compact knob slides within the smaller switch when on');
+  assert.ok(!admin.includes("'Turn on Hey Maya'"), 'no more Turn on / Turn off verb');
+  assert.ok(admin.includes('class="voice-row"'), 'toggle rides beside the logo');
+});
+
+await test('v14.01 admin drawer: full-bleed, no floating Sheet link, glued hamburger, one-click invoice', () => {
+  // v14.01: the drawer is the frontend's exact glass card, not full-bleed
+  assert.match(admin, /#drawer\{position:absolute;top:10px;right:18px;bottom:10px;left:0/, 'drawer wears the app glass geometry');
+  assert.ok(/href="\/aesthetics\/ui\/maya-canon\.css\?v=\d+"/.test(admin), 'shared V3 frost, not a page-specific gradient');
+  assert.ok(admin.includes('.top-btn.hamburger{transition:opacity .25s'), 'no transform transition: the lag fix');
+  assert.ok(admin.includes("hs.addEventListener('scroll', update, { passive: true })"), 'synchronous glue, like the app');
+  assert.ok(!admin.includes('>the sheet</a>'), 'owner removed the floating Sheet link');
+  assert.ok(admin.includes("hb.style.transform = 'translateX(' + (-Math.max(0, hs.scrollLeft - 18))"),
+    'hamburger glued to the drawer edge per frame');
+  assert.ok(!admin.includes('translateX(-356px)'), 'old CSS-transition slide removed');
+  assert.ok(admin.includes('function _createInvoiceNow'), 'one-click invoice in the composer');
+});
+
+await test('v14.01 Lead Station: no Invoice columns, no Last Quote (v14.34), draggable columns', () => {
+  assert.ok(!/'<th[^>]*>Invoice 1<\/th>'|>Invoice 1</.test(admin), 'Invoice 1 column removed');
+  assert.ok(!admin.includes("label: 'Invoice"), 'no invoice column def');
+  assert.ok(!admin.includes("label: 'Last Quote'"), 'Last Quote column gone; the tier under the name says what they went with');
+  assert.ok(admin.includes('_leadColDragStart'), 'columns are draggable');
+  assert.ok(admin.includes('lead-col-first'), 'first column stays frozen');
+  assert.ok(!admin.includes("'<div class=\"lead-when\">"), 'day-count line under the name removed');
+});
+
+await test('CRM Leads: Contact, editable notes and H4/H5; message actions stay reviewed', () => {
+  assert.ok(!admin.includes('function _actionsCell') && !admin.includes('function leadCategory'), 'retired category badges do not render');
+  assert.ok(admin.includes("['name', 'contact', 'stage', 'note']"), 'stored Contact has its own column');
+  assert.ok(admin.includes('class="lead-identity"') && admin.includes('class="lead-signup"'), 'separate name/date roles');
+  assert.ok(admin.includes("(k==='name'?' onclick=\"leadOpenThread("), 'whole name cell opens conversation');
+  assert.ok(admin.includes("k==='note'?' onclick=\"editLatestLeadNote("), 'whole note cell edits a reviewed draft');
+  assert.ok(admin.includes('function leadInvoice') && admin.includes('lead-inv-modal'), 'invoice stays in Messages');
+  assert.ok(admin.includes('id="msg-call"') && admin.includes('aria-label="Call this person"'), 'accessible handset action');
+  const booking=admin.slice(admin.indexOf('function msgBooking()'),admin.indexOf('let _leadNoteDialog'));
+  assert.ok(booking.includes('https://wix.to/wT2lSqE') && booking.includes('input.value+='), 'approved booking link enters composer');
+  assert.ok(!booking.includes('fetch('), 'booking draft never sends');
+});
+
+await test('v14.01 the admin auto-refreshes on a new deploy (no more stale tab)', () => {
+  assert.ok(admin.includes('function checkAdminUpdate'), 'admin has an update poller');
+  assert.ok(admin.includes("fetch('/status.html?uv='"), 'poller fetches the live page');
+  assert.ok(admin.includes('build[1] !== RUN_BUILD'), 'same-number releases still refresh by commit');
+  assert.ok(admin.includes("fetch('/release.json',{cache:'no-store'})"), 'Admin shows the published Hosting commit');
+  assert.ok(admin.includes('setInterval(checkAdminUpdate'), 'poller runs on an interval');
+  assert.ok(admin.includes('The lag is dead'), 'recent changes list is current');
+});
+
+console.log('\n' + (failed ? failed + ' FAILED' : passed + ' passed') + '\n');
+process.exit(failed ? 1 : 0);
