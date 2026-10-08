@@ -55,11 +55,24 @@ try{
  assert.match(await page.locator('#leads-table select.lead-stage').evaluate(e=>getComputedStyle(e).color),/0.65/,'Status color strength applies to live selection');
  for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:900});assert.ok(await page.locator('#msg-new').evaluate(e=>e.scrollWidth<=e.clientWidth+1),'Begin texting fits '+width);}
  await page.setViewportSize({width:1440,height:900});if(process.env.MAYA_AESTHETIC_SCREENSHOT)await page.locator('#drawer').screenshot({path:process.env.MAYA_AESTHETIC_SCREENSHOT.replace('.png','-messages.png')});
- await page.goto('https://maya.test/aesthetics/aesthetic-control.html');await page.locator('[data-category="P4"] .type-row').waitFor();await page.waitForFunction(()=>document.getElementById('maya-surface-control-style')?.textContent.includes('#table-preview'));
+ await page.goto('https://maya.test/aesthetics/aesthetic-control.html');await page.locator('[data-category="P3"] .type-row').waitFor();await page.waitForFunction(()=>document.getElementById('maya-surface-control-style')?.textContent.includes('#table-preview'));
+ const pillHeadings=page.locator('.finish-controls>h3,[data-pill-family=regular]>h3');
+ assert.equal(await pillHeadings.count(),2);
+ await page.locator('[data-category=H3] summary').first().click();
+ await page.locator('[data-category=H3] [data-field=font]').selectOption('cormorant');
+ await page.locator('[data-category=H3] [data-field=size]').fill('18');
+ await page.locator('[data-category=H3] [data-field=align]').selectOption('right');
+ for(const heading of await pillHeadings.all()){const style=await heading.evaluate(e=>{const s=getComputedStyle(e);return [s.fontFamily,s.fontSize,s.textAlign];});assert.match(style[0],/Cormorant/);assert.equal(style[1],'18px');assert.equal(style[2],'right','Each pill family follows the active H3 preview');}
+ await page.keyboard.press('Escape');
  for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:900});assert.ok(await page.locator('body').evaluate(e=>e.scrollWidth<=innerWidth+1),'Aesthetic Control fits '+width);}
 
  await page.setViewportSize({width:1440,height:900});await page.locator('.status-style-preview').filter({has:page.locator('[data-status="completed"]')}).locator('summary').click();
  if(process.env.MAYA_AESTHETIC_SCREENSHOT)await page.locator('#pill-colors').screenshot({path:process.env.MAYA_AESTHETIC_SCREENSHOT.replace('.png','-statuses.png')});
  assert.deepEqual(errors,[]);assert.equal(writes.length,0,'Style verification must not submit messages or rules');
- console.log('Aesthetic authority passed: Automations roles, saved colors/fonts/material/X-Y padding section spacing, icon/status colors, Begin texting and six viewport widths.');
+ console.log('Shared Automations, typography, icon/status and Begin texting authority checks passed at six widths.');
 }finally{await browser.close();}
+
+// Actual section and capsule geometry extend the shared authority check.
+await import('./presentation-consistency.mjs');
+await import('./pill-consistency.mjs');
+console.log('Aesthetic authority passed: shared roles/materials, all Admin heading gaps, real Glass/Regular pill geometry, active previews and saved settings across responsive pages.');

@@ -1,3 +1,11 @@
+OCTOBER 7 late: real padding/spacing, role cleanup and conversational owner lead SMS
+[completed locally] Apply heading-to-content spacing to all nine Admin groups and hide redundant Ad campaigns range copy. Glass/Regular pills have independent X/Y sizing/material and linked uses; uniform Edit controls, glass Save and bounded Save SVG. H4 names, H5 dates, P3 captions with old-save compatibility. Nine semantic statuses include Delivering/Pending/Rejected and show actual consumers.
+[completed locally] Natural 'Text me all the contacted leads', all-lead/status counts and lists bypass AI; filter full retained callback/manual data, page account-bound snapshots and identify incomplete reads. Structured provider output gives specific safe failure diagnostics. Full-source reads have a six-second read-only deadline; ordinary note reads remain parallel. No automatic paid retry or client send.
+[shipment checked] Public site/App/Admin/API match 707592d; published Oct 7 14:16:58 Pacific. This local change is not deployed.
+[cleanup recommendation] Retired unloaded aesthetics/ui/ai-meter.js, plus obsolete test references, is the clearest removable file. Retain server accounting endpoint; no deletion performed.
+[validation] All 46 Cloud Build suites, full regression, server smoke and final shared aesthetic checks pass; active previews, real geometry, saved propagation and phone/tablet/desktop visuals verified.
+[next] Owner reviews/Pushes the local commit, exact deployment verification, live owner SMS and design Save acceptance.
+
 OCTOBER 7: typed-number Messages and shared presentation controls
 [completed locally] Begin texting accepts a typed number and optional saved name; starts an unsent composer or confirmed US call. Status header uses a dropdown; six status colors/opacity/weights, icon color/stroke and Admin vertical spacing have active saved Aesthetic Control editors.
 [verified locally] All 46 Cloud Build suites, full app-regression and server smoke pass, including fake-provider messaging, design/schema, gallery and communications. Final Aesthetic Control check covers saved settings at six widths plus visual review. No push.

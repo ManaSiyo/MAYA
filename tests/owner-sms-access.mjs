@@ -73,6 +73,28 @@ let badRec={threads:{[client]:{number:client,messages:Array.from({length:400},(_
 const broken=createMessageStore({load:async()=>structuredClone(badRec),save:async r=>{badRec=r;},archive:{append:async()=>{throw new Error('archive unavailable');}}});
 await assert.rejects(broken.inbound({from:client,text:'Must not erase earlier history',sid:'SMfailure'}),/archive unavailable/);assert.equal(badRec.threads[client].messages.length,400);
 const noRead=createOwnerSMSAccess({...deps,threads:{list:async()=>{throw new Error('storage unavailable');}}});await assert.rejects(noRead.direct('owner','INBOX','bad'),/unavailable/);
+
+// Natural full status reports use the verified owner account and survive restarts.
+const reportLeads=Array.from({length:101},(_,i)=>({id:'full-'+i,name:'Report Client '+i,phone:'+1415555'+String(i).padStart(4,'0'),stage:i<60?'new':'contacted',note:'Actual requested garment '+i}));
+let fullReads=0,chatCalls=0;
+const ownerReports=createOwnerConversation({...storage,ownerNumber:owner,smsAction:access.act,listAll:async uid=>{assert.equal(uid,'owner');fullReads++;return {list:reportLeads,complete:true};},complete:async()=>{chatCalls++;throw Error('AI offline');}});
+const reportCRM=createOwnerCRM({...storage,ownerNumber:owner,ownerEmails:['owner@example.com'],direct:access.direct,converse:ownerReports.decide,ownerAction:ownerReports.act});
+const recordBefore=JSON.stringify(rec),sendsBefore=sends;
+let leadPage=await reportCRM.handle({from:owner,text:'Text me all the contacted leads',sid:'SMfullcontacted'});
+assert.match(leadPage,/Contacted leads/);assert.match(leadPage,/41 shown of 41/);assert.match(leadPage,/Status: Contacted/);assert.equal(chatCalls,0);assert.equal(fullReads,1);
+const restartedReports=createOwnerSMSAccess(deps),reportCode=leadPage.match(/MORE (\w+) /)[1];
+let combined=leadPage.split('\n').slice(1,-1).join('\n'),pageIndex=1;
+while(leadPage.match(/Next: (MORE \w+ \d+)/)){
+ leadPage=(await restartedReports.direct('owner',leadPage.match(/Next: (MORE \w+ \d+)/)[1],'readfull'+pageIndex++)).reply;
+ assert.ok(leadPage.length<1600);combined+=leadPage.split('\n').slice(1,-1).join('\n');
+}
+for(let i=60;i<101;i++)assert.ok(combined.includes('Report Client '+i+'\n'),String(i));
+assert.ok(!combined.includes('Report Client 59\n'));assert.equal(fullReads,1,'MORE reads one durable snapshot rather than refetching a shifted dataset');
+await assert.rejects(restartedReports.direct('another-owner','MORE '+reportCode+' 1','crossfull'),/expired or code/);
+assert.equal(await reportCRM.handle({from:'+15105550101',text:'ALL LEADS',sid:'SMfullforged'}),'');assert.equal(fullReads,1);
+assert.equal(JSON.stringify(rec),recordBefore,'Owner lead reports do not mark client messages read or alter history');assert.equal(sends,sendsBefore,'No client send is possible from a lead report');
+assert.equal(chatCalls,0);
+console.log('Natural contacted-lead reports page every real match beyond 60, survive recreation and preserve owner/client boundaries.');
 assert.ok(messageLines({number:client,messages:[{kind:'call',dir:'in',ts:'now'}]})[0].includes('No transcript recorded'));
 console.log('Owner SMS access: history both ways, call transcripts, AI-free controls, ambiguity, account-bound durable paging, confirmation, STOP/block, expiry, uncertain sends and archival preservation passed.');
 

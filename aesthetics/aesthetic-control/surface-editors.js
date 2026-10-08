@@ -7,8 +7,8 @@ export const tableBorders=[['white','White'],['black','Black']];
 export const borders=[...tableBorders,['gray','Gray']];
 export function fields(parent,values,specs,onChange){
  for(const [key,title,options] of specs){
-  const label=document.createElement('label');label.append(document.createTextNode(title));
-  const input=document.createElement(Array.isArray(options)?'select':'input');input.dataset.field=key;
+  const label=document.createElement('label');label.dataset.mayaType='P3';label.append(document.createTextNode(title));
+  const input=document.createElement(Array.isArray(options)?'select':'input');input.dataset.field=key;input.dataset.mayaType='P3';input.dataset.mayaControl='field';
   if(Array.isArray(options))for(const [value,text] of options){const option=document.createElement('option');option.value=value;option.textContent=text;input.append(option);}
   else{input.type=options.type||'number';input.min=options.min??0;input.max=options.max;input.step=options.step??1;}
   input.value=values[key];input.addEventListener('input',()=>{const value=input.type==='color'?input.value:key==='enabled'?input.value==='true':Array.isArray(options)&&key!=='weight'?input.value:Number(input.value);if(input.type!=='color'&&!Array.isArray(options)&&(!Number.isInteger(value)||value<Number(input.min)||value>Number(input.max)))return;values[key]=value;onChange();});label.append(input);parent.append(label);

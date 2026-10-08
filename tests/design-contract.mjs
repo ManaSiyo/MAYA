@@ -7,7 +7,7 @@ assert.match(design,/sole active design specification/);
 assert.match(design,/Aesthetic Control/);
 assert.match(design,/H1.*H4/);
 assert.match(design,/Save/);
-for(const page of canonPages)assert.equal((read(page).match(/\/aesthetics\/ui\/typography-controls\.js\?v=23/g)||[]).length,1,page);
+for(const page of canonPages)assert.equal((read(page).match(/\/aesthetics\/ui\/typography-controls\.js\?v=24/g)||[]).length,1,page);
 assert.match(read('backend/status.html'),/href="\/aesthetics\/aesthetic-control.html"/);
 assert.match(read('docs/server/server.js'),/app\.post\('\/api\/admin\/design', requireAuthHeader/);
 assert.match(read('docs/server/server.js'),/await requireAdmin\(req\)/);
@@ -17,3 +17,5 @@ assert.match(read('AGENTS.md'),/docs\/design\.md/);
 console.log('Design contract passed: one standard, shared runtime, owner save, retired PDFs.');
 
 const hosting=JSON.parse(read('docs/firebase.json')).hosting;assert.ok(hosting.headers.some(h=>h.source==='/aesthetics/ui/typography-controls.js' && h.headers.some(v=>v.key==='Cache-Control'&&v.value==='no-cache')));
+
+for(const helper of ['presentation-runtime','pill-runtime'])for(const page of canonPages){const source=read(page);assert.ok(source.includes('/aesthetics/ui/'+helper+'.js?v=1'),page+' '+helper);assert.ok(source.indexOf(helper+'.js')<source.indexOf('typography-controls.js'),page+' helper loads first');}

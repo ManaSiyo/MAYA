@@ -6,14 +6,15 @@
       H0:{size:104,weight:400,color:'white'},
       H1:{size:24,weight:300,color:'white'}, H2:{size:20,weight:400,color:'white'},
       H3:{size:16,weight:400,color:'white'}, H4:{size:14,weight:400,color:'white'},
-      H5:{size:14,weight:400,color:'white'}, H6:{size:10,weight:300,color:'gray'},
+      H5:{size:10,weight:300,color:'gray'},
       P1:{size:12,weight:300,color:'gray'}, P2:{size:12,weight:400,color:'white'},
-      P3:{size:10,weight:300,color:'white'}, P4:{size:10,weight:400,color:'gray'}
+      P3:{size:10,weight:300,color:'white'}
     },
+    typeVersion:2,regularPill:{fill:0,rim:22,borderColor:'white',background:'black',paddingX:14,paddingY:6},
     finish:'current',glass:{fill:18,tint:0,rim:22,highlight:28,blur:22,saturation:180},
     overlay:{fill:18,rim:22,blur:22,saturation:180,radius:12},editor:{fill:100,rim:14,radius:12,paddingX:8,paddingY:8,background:'black',borderColor:'white'},pillX:14,pillY:6,iconSize:28,dropdownHeight:28,iconPillGap:6,iconTextGap:8
   };
-  for(const [role,t] of Object.entries(defaults.type))Object.assign(t,{style:'normal',font:['H0','H1','H2'].includes(role)?'cormorant':'jost',case:role==='H0'||role==='H1'||role==='P3'||role==='P4'?'uppercase':'none'});
+  for(const [role,t] of Object.entries(defaults.type))Object.assign(t,{style:'normal',font:['H0','H1','H2'].includes(role)?'cormorant':'jost',case:role==='H0'||role==='H1'||role==='P3'?'uppercase':'none'});
   const surfaceDefaults={background:'black',blur:22,saturation:180,fill:18,rim:22,radius:12,paddingX:16,paddingY:12};
   defaults.inner={borderColor:'white',...surfaceDefaults,width:100};
   defaults.filter={borderColor:'white',...surfaceDefaults,fill:88,width:280};
@@ -23,26 +24,11 @@
     firstColumn:{background:'gray',opacity:100},
     cells:{},columns:[{...tableType,font:'cormorant'},{...tableType,align:'center'},{...tableType},{...tableType}]};
   defaults.iconColor='#aab5c4';defaults.iconOpacity=100;defaults.iconStroke=2;
-  defaults.sectionSpacing={submissions:24,leads:16,ads:40,insights:16,headingGap:10};
-  defaults.statusStyles={new:{color:'#b5bdc8',opacity:100,weight:300},contacted:{color:'#60a5fa',opacity:100,weight:400},in_progress:{color:'#f9a8d4',opacity:100,weight:400},booked:{color:'#4ade80',opacity:100,weight:400},completed:{color:'#22c55e',opacity:100,weight:500},canceled:{color:'#f87171',opacity:100,weight:400}};
-  function applyPresentation(value){
-    const v=normalizeSurfaces(structuredClone(value)),hex=c=>/^#[0-9a-f]{6}$/i.test(c)?c:'#aab5c4';
-    let css=':root{';const aliases={new:'inactive',contacted:'contacted',in_progress:'progress',booked:'booked',completed:'completed',canceled:'cancelled'};
-    for(const [key,state] of Object.entries(v.statusStyles)){const c=hex(state.color),rgb=[1,3,5].map(i=>parseInt(c.slice(i,i+2),16)).join(' ');css+=`--maya-${aliases[key]}:rgb(${rgb} / ${state.opacity/100});`;}
-    css+=`--maya-icon-color:${hex(v.iconColor)};--maya-icon-opacity:${v.iconOpacity/100};--maya-icon-stroke:${v.iconStroke};}`;
-    for(const [key,state] of Object.entries(v.statusStyles))css+=`html body :is(.status-pill[data-status="${key}"],.status-pill:has(option[value="${key}"]:checked)){--maya-status-weight:${state.weight};--status-color:var(--maya-${aliases[key]})!important;color:var(--maya-${aliases[key]})!important;font-weight:${state.weight}!important}html body :is(.status-pill:has(option[value="${key}"]:checked) select,.lead-stage-menu [data-status="${key}"]){color:var(--maya-${aliases[key]})!important;font-weight:${state.weight}!important}`;
-    const arrow=encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="${hex(v.iconColor)}" stroke-opacity="${v.iconOpacity/100}" stroke-width="${v.iconStroke}" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`);
-    css+=`html body :is(select,.type-editor-fields select,.dropdown-preview){background-image:url("data:image/svg+xml,${arrow}")!important}`;
-    const mask=encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="${v.iconStroke}" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`);
-    css+=`html body :is(.type-editor,.review-fold,.owner-settings,.outbound-more,.model-provider,details.fold)>summary::after{mask-image:url("data:image/svg+xml,${mask}");-webkit-mask-image:url("data:image/svg+xml,${mask}")}`;
-    const sp=v.sectionSpacing;
-    css+=`html body #submissions-heading{margin-top:${sp.submissions}px!important}html body #adm-mkt #leads-fold{margin-top:${sp.leads}px!important}html body #adm-mkt #ads-fold{margin-top:${sp.ads}px!important}html body #adm-mkt #bottom-fold{margin-top:${sp.insights}px!important}html body #adm-mkt :is(#leads-fold,#ads-fold,#bottom-fold)>summary+*{margin-top:${sp.headingGap}px!important}`;
-    css+=`html body :is(.maya-icon-button,.maya-inline-icon,.maya-pill,.adm-tab,#msg-begin,summary) svg{color:var(--maya-icon-color)!important;opacity:var(--maya-icon-opacity)!important;stroke-width:var(--maya-icon-stroke)!important}html body :is(.type-editor,.review-fold,.owner-settings,.outbound-more,.model-provider,details.fold)>summary::after{color:var(--maya-icon-color)!important;opacity:var(--maya-icon-opacity)!important}`;
-    css+=`html body .spacing-preview [data-spacing]{margin-top:var(--preview-spacing,0px)}html body .spacing-preview [data-heading-gap]{margin-top:${sp.headingGap}px}`;
-    let node=document.getElementById('maya-presentation-control-style');if(!node){node=document.createElement('style');node.id='maya-presentation-control-style';document.head.append(node);}node.textContent=css;
-    document.querySelectorAll('.spacing-preview [data-spacing]').forEach(e=>e.style.setProperty('--preview-spacing',sp[e.dataset.spacing]+'px'));
-  }
+  defaults.sectionSpacing=structuredClone(window.MayaPresentationControls.defaults.sectionSpacing);
+  defaults.statusStyles=structuredClone(window.MayaPresentationControls.defaults.statusStyles);
+  function applyPresentation(value){window.MayaPresentationControls.apply(normalizeSurfaces(structuredClone(value)));}
   function normalizeSurfaces(v){
+    v.regularPill={...defaults.regularPill,...v.regularPill};
     for(const key of ['iconColor','iconOpacity','iconStroke'])v[key]??=defaults[key];v.sectionSpacing={...defaults.sectionSpacing,...v.sectionSpacing};v.statusStyles=Object.fromEntries(Object.entries(defaults.statusStyles).map(([key,state])=>[key,{...state,...v.statusStyles?.[key]}]));
     v.iconPillGap ??= defaults.iconPillGap;v.iconTextGap ??= defaults.iconTextGap;v.iconSize ??= defaults.iconSize;v.dropdownHeight ??= defaults.dropdownHeight;v.inner={...defaults.inner,...v.inner};v.filter={...defaults.filter,...v.filter};
     const t=v.table||{};v.table={...defaults.table,...t,innerRim:t.innerRim??t.rim??defaults.table.innerRim,innerBorderColor:t.innerBorderColor??t.borderColor??defaults.table.innerBorderColor,columnWidths:{...t.columnWidths},cells:{...t.cells},header:{...defaults.table.header,...t.header},firstColumn:{...defaults.table.firstColumn,...t.firstColumn},columns:defaults.table.columns.map((c,i)=>({...c,...t.columns?.[i]}))};
@@ -100,12 +86,15 @@
   const color = name => name === 'white' ? 'rgb(255 255 255)' : 'rgb(170 181 196)';
   const font = role => ['H0','H1','H2'].includes(role) ? "'Cormorant Garamond',serif" : "'Jost',sans-serif";
   // Older saved designs retain all four headings and map the retired P3
-  // technical role into P1, old P4 pills into P3, and old P5 captions into P4.
+  // technical role into P1 and old P4 pills into P3. Version 2 merges captions
+  // into P3 and lead names into H4, retaining the former H6 date style as H5.
   function normalize(value) {
     if (!value?.type || !value?.glass || !value?.overlay) return structuredClone(defaults);
     const v=structuredClone(value);
-    if(v.type.P5){v.type.P3=v.type.P4;v.type.P4=v.type.P5;delete v.type.P5;}
-    for(const [role,t] of Object.entries(defaults.type))v.type[role]={...t,font:['H0','H1','H2'].includes(role)?'cormorant':'jost',case:role==='H0'||role==='H1'||role==='P3'||role==='P4'?'uppercase':'none',...v.type[role]};
+    if(v.type.P5){v.type.P3=v.type.P4;delete v.type.P5;}
+    if(v.typeVersion!==2)v.type.H5=v.type.H6||structuredClone(defaults.type.H5);
+    delete v.type.H6;delete v.type.P4;v.typeVersion=2;
+    for(const [role,t] of Object.entries(defaults.type))v.type[role]={...t,font:['H0','H1','H2'].includes(role)?'cormorant':'jost',case:role==='H0'||role==='H1'||role==='P3'?'uppercase':'none',...v.type[role]};
     v.editor={...defaults.editor,...v.editor,paddingX:v.editor?.paddingX??v.editor?.padding??defaults.editor.paddingX,paddingY:v.editor?.paddingY??v.editor?.padding??defaults.editor.paddingY};delete v.editor.padding;
     return normalizeSurfaces(v);
   }
@@ -118,7 +107,7 @@
     }
     const g=v.glass,o=v.overlay;const paletteOverlay=k=>({black:'0 0 0',gray:'13 17 32',blue:'35 76 125',yellow:'120 91 15',green:'23 91 59',pink:'115 46 70'})[k]||'3 15 29';
     for(const [k,n,max] of [['fill',g.fill,100],['tint',g.tint,100],['rim',g.rim,100],['highlight',g.highlight,100],['blur',g.blur,40],['saturation',g.saturation,200],['pillX',v.pillX,32],['pillY',v.pillY,16]]) if(Number.isInteger(n)&&n>=0&&n<=max) css+=`--maya-control-${k}:${n}${['blur','pillX','pillY'].includes(k)?'px':k==='saturation'?'%':'%'};`;
-    css+=`--maya-icon-pill-gap:${v.iconPillGap}px;--maya-icon-text-gap:${v.iconTextGap}px;--maya-control-icon-size:${v.iconSize}px;--maya-control-dropdown-height:${v.dropdownHeight}px;--maya-text-body:var(--maya-type-P1-size);--maya-text-table:var(--maya-type-P1-size);--maya-text-section:var(--maya-type-H3-size);--maya-text-metric:var(--maya-type-H4-size);--maya-text-caption:var(--maya-type-P4-size);--ui-font:var(--maya-type-P1-font);--ui-pill-font-size:var(--maya-type-P3-size);--ui-pill-weight:var(--maya-type-P3-weight);--ui-pill-padding-x:${v.pillX}px;--ui-pill-padding-y:${v.pillY}px;`;
+    css+=`--maya-icon-pill-gap:${v.iconPillGap}px;--maya-icon-text-gap:${v.iconTextGap}px;--maya-control-icon-size:${v.iconSize}px;--maya-control-dropdown-height:${v.dropdownHeight}px;--maya-text-body:var(--maya-type-P1-size);--maya-text-table:var(--maya-type-P1-size);--maya-text-section:var(--maya-type-H3-size);--maya-text-metric:var(--maya-type-H4-size);--maya-text-caption:var(--maya-type-P3-size);--ui-font:var(--maya-type-P1-font);--ui-pill-font-size:var(--maya-type-P3-size);--ui-pill-weight:var(--maya-type-P3-weight);--ui-pill-padding-x:${v.pillX}px;--ui-pill-padding-y:${v.pillY}px;`;
     css+=`--maya-button-fill:rgb(3 15 29 / var(--maya-control-fill));--maya-button-edge:rgb(${g.borderColor==='black'?'0 0 0':g.borderColor==='gray'?'170 181 196':'255 255 255'} / var(--maya-control-rim));--maya-button-frost:blur(var(--maya-control-blur)) saturate(var(--maya-control-saturation));`;
     css+=`--maya-frost:blur(${o.blur}px) saturate(${o.saturation}%);--maya-quiet-frost:var(--maya-frost);--maya-drawer-frost:var(--maya-frost);--maya-surface:rgb(3 15 29 / ${o.enabled===false?0:o.fill/100});--maya-line:rgb(${o.borderColor==='black'?'0 0 0':o.borderColor==='gray'?'170 181 196':'255 255 255'} / ${o.enabled===false?0:o.rim/100});`;
     css+=`--review-panel-border-rgb:${o.borderColor==='black'?'0 0 0':o.borderColor==='gray'?'170 181 196':'255 255 255'};--maya-review-panel-radius:${Number.isInteger(o.radius)?o.radius:12}px;--maya-review-panel-fill:${o.enabled===false?0:o.fill/100};--maya-review-panel-rim:${o.enabled===false?0:o.rim/100};--maya-review-panel-blur:${o.enabled===false?0:o.blur}px;--maya-review-panel-saturation:${o.enabled===false?100:o.saturation}%;}`;
@@ -126,7 +115,7 @@
     const chevron=`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`;
     css+=`html body :is(.type-editor,.review-fold,.owner-settings,.outbound-more,.model-provider,html[data-maya-surface="dense"] details.fold)>summary{display:flex;align-items:center;gap:6px;list-style:none}html body :is(.type-editor,.review-fold,.owner-settings,.outbound-more,.model-provider,html[data-maya-surface="dense"] details.fold)>summary::-webkit-details-marker{display:none}html body :is(.type-editor,.review-fold,.owner-settings,.outbound-more,.model-provider,html[data-maya-surface="dense"] details.fold)>summary::after{content:''!important;display:inline-block;width:14px!important;height:14px!important;flex:none;border:0!important;background:currentColor;mask:${chevron} center/contain no-repeat;-webkit-mask:${chevron} center/contain no-repeat;transform:rotate(-90deg)!important;align-self:center}html body :is(.type-editor,.review-fold,.owner-settings,.outbound-more,.model-provider,html[data-maya-surface="dense"] details.fold)[open]>summary::after{transform:none!important}`;
     css+=`html body :is(.review-fold,html[data-maya-surface="dense"] details.fold)>summary>:is(h2,h3){margin-block:0!important}`;
-    css+=`html body :is(.maya-icon-button,#menu-toggle,#sync-sheet,#new-campaign){width:var(--maya-control-icon-size)!important;height:var(--maya-control-icon-size)!important;min-width:0!important;padding:0!important}html body :is(select,.lead-filter>summary,.column-filter){min-height:var(--maya-control-dropdown-height)!important}html body .maya-icon-button svg{width:60%;height:60%}`;
+    css+=`html body :is(#menu-toggle):not(.maya-icon-button){width:var(--maya-control-icon-size)!important;height:var(--maya-control-icon-size)!important;min-width:0!important;padding:0!important}html body :is(select,.lead-filter>summary,.column-filter){min-height:var(--maya-control-dropdown-height)!important}`;
     css+=`.maya-glass-button,.maya-pill,#voice-bar{padding-inline:var(--maya-control-pillX,14px);padding-block:var(--maya-control-pillY,6px);}`;
     // Icons center on their row, never on the text baseline. Two independent gaps.
     css+=`html body :is(button,a,summary,h1,h2,h3,.maya-pill,.status-pill):has(>svg),html body label:not(:has(input,select,textarea)):has(>svg){display:inline-flex!important;align-items:center!important;vertical-align:middle;gap:var(--maya-icon-pill-gap);}
@@ -151,11 +140,11 @@ html body #adm-mkt #leads-table .lead-stage:has(option[value="completed"]:checke
     css+=`html body :is(.metric-label,.metric-value,.label-count,.status-pill,.stat span,.affiliate-stat span){font-size:var(--maya-type-P2-size)!important;font-weight:var(--maya-type-P2-weight)}`;
     css+=`html body :is(code,pre,.technical-text){font-size:var(--maya-type-P1-size)!important;font-weight:var(--maya-type-P1-weight)}`;
     css+=`html body :is(.maya-glass-button,.maya-pill,#voice-bar){font-size:var(--maya-type-P3-size)!important;font-weight:var(--maya-type-P3-weight)}`;
-    css+=`html body :is(small,.caption,.bl-step .k,.bl-tile .k){font-size:var(--maya-type-P4-size)!important;font-weight:var(--maya-type-P4-weight)}`;
+    css+=`html body :is(small,.caption,.bl-step .k,.bl-tile .k){font-size:var(--maya-type-P3-size)!important;font-weight:var(--maya-type-P3-weight)}`;
     css+=`html body :is(#drawer,#outbound-drawer,#notes-drawer){background-color:rgb(3 15 29 / max(.90,var(--maya-review-panel-fill)));border-color:rgb(var(--review-panel-border-rgb,255 255 255) / var(--maya-review-panel-rim));backdrop-filter:blur(var(--maya-review-panel-blur)) saturate(var(--maya-review-panel-saturation));}`;
     css+=`html body :is(.preview-section,.stat,.metric-row,.maya-surface,#adm-mkt .bl-tile){border-radius:var(--review-panel-radius,var(--maya-review-panel-radius))!important;background-color:rgb(${paletteOverlay(o.background)} / var(--maya-review-panel-fill));border-color:rgb(var(--review-panel-border-rgb,255 255 255) / var(--maya-review-panel-rim));backdrop-filter:blur(var(--maya-review-panel-blur)) saturate(var(--maya-review-panel-saturation));}`;
     css+=`html body :is(.maya-glass-button,.maya-pill,.maya-icon-button,#voice-bar,#outbound-drawer button:not([role=tab]):not(#close-drawer)):not([data-finish]){background-color:var(--maya-button-fill);border-color:var(--maya-button-edge);backdrop-filter:var(--maya-button-frost);-webkit-backdrop-filter:var(--maya-button-frost);background-image:linear-gradient(125deg,rgb(255 255 255 / var(--maya-control-tint)),transparent 55%);box-shadow:inset 0 1px 1px rgb(255 255 255 / var(--maya-control-highlight)),0 4px 16px rgb(0 0 0 / .22)}`;
-    const selectors={H0:'.maya-signin-h0',H1:'h1,#brand-title,.brand-title,#client-name-modal-title,.signin-wordmark:not(.maya-signin-h0)',H2:'.gallery-section-title,#adm-tabtitle,.pg-tabtitle,.drawer-title,.drawer-head-title',H3:'#msg-name,.gallery-subsection-title,h2.grp,.section-title,.subheadline',H5:'.lead-identity',H6:'.lead-signup',H4:'#adm-mkt .bl-step .v,#adm-mkt .bl-tile .v,.dashboard-number,.stat strong,.affiliate-stat strong',P1:'p,td,th,.note,.msg-main,.bub,:where(#msg-input),.model-group',P2:'.metric-label,.metric-value,.maya-metric-label,.maya-metric-value,.label-count,.status-pill,.stat span,.affiliate-stat span',P3:'.maya-pill,.maya-glass-button,button.glass-pill,button.action-btn,button.modal-text-btn,button.drawer-action,button.pin-cta,button.tos-agree,button.tos-decline,button.upload-choose-btn,button.tip-amt,button.primary,button.pill,button.inv-btn,button.msg-call,button.msg-send,button.lead-tool,button.lead-cta,button.range-chip,button.metric-chip,button.wide,button.campaign,button.dissect-start,button.upload-btn,button.fab-src-pill,button.piece-pill,button.quality-pill,.dialog-actions button,.actions button,maya-ai-meter button,maya-owner-crm button,#voice-bar',P4:'small,.caption,.bub-when,.bl-step .k,.bl-tile .k'};
+    const selectors={H0:'.maya-signin-h0',H1:'h1,#brand-title,.brand-title,#client-name-modal-title,.signin-wordmark:not(.maya-signin-h0)',H2:'.gallery-section-title,#adm-tabtitle,.pg-tabtitle,.drawer-title,.drawer-head-title',H3:'#msg-name,.gallery-subsection-title,h2.grp,.section-title,.subheadline',H5:'.lead-signup',H4:'.lead-identity,#adm-mkt .bl-step .v,#adm-mkt .bl-tile .v,.dashboard-number,.stat strong,.affiliate-stat strong',P1:'p,td,th,.note,.msg-main,.bub,:where(#msg-input),.model-group',P2:'.metric-label,.metric-value,.maya-metric-label,.maya-metric-value,.label-count,.status-pill,.stat span,.affiliate-stat span',P3:'.maya-pill,.maya-glass-button,button.glass-pill,button.action-btn,button.modal-text-btn,button.drawer-action,button.pin-cta,button.tos-agree,button.tos-decline,button.upload-choose-btn,button.tip-amt,button.primary,.pill,button.inv-btn,button.msg-call,button.msg-send,button.lead-tool,button.lead-cta,button.range-chip,button.metric-chip,button.wide,button.campaign,button.dissect-start,button.upload-btn,button.fab-src-pill,button.piece-pill,button.quality-pill,.dialog-actions button,.actions button,maya-ai-meter button,maya-owner-crm button,#voice-bar,small,.caption,.bub-when,.bl-step .k,.bl-tile .k,.type-editor>summary,.finish-choice'};
     for(const [role,selector] of Object.entries(selectors))css+=`html body :is(${selector}){font-size:var(--maya-type-${role}-size)!important;font-weight:var(--maya-status-weight,var(--maya-type-${role}-weight))!important;font-style:var(--maya-type-${role}-style)!important;font-family:var(--maya-type-${role}-font)!important;text-transform:var(--maya-type-${role}-case)!important}`;
     for(const [role,selector] of Object.entries(selectors))css+=`html body :is(${selector}):not(.status-pill):not(.status-example){color:var(--maya-type-${role}-color)!important}`;
     for(const [role,selector] of Object.entries(selectors))if(['left','center','right'].includes(v.type[role]?.align))css+=`html body :is(${selector}){text-align:var(--maya-type-${role}-align)!important}`;
@@ -168,6 +157,7 @@ html body #adm-mkt #leads-table .lead-stage:has(option[value="completed"]:checke
     if(Number.isInteger(o.paddingX)&&Number.isInteger(o.paddingY))style.textContent+=`html body :is(.preview-section,.maya-surface,.stat,#adm-mkt .bl-tile,html[data-maya-surface="dense"] .layout>aside,html[data-maya-surface="dense"] .layout>main){padding:var(--review-panel-paddingY,${o.paddingY}px) var(--review-panel-paddingX,${o.paddingX}px)!important}`;
     applySurfaces(v);
     applyPresentation(v);
+    window.MayaPillControls.apply(v);
     previewEditor(v.editor);
     document.dispatchEvent(new CustomEvent('maya-design-applied',{detail:v}));
   }
@@ -189,5 +179,5 @@ html body #adm-mkt #leads-table .lead-stage:has(option[value="completed"]:checke
   const revalidate=()=>{if(!location.pathname.endsWith('aesthetic-control.html'))void load();};
   window.addEventListener('focus',revalidate);document.addEventListener('visibilitychange',()=>{if(!document.hidden)revalidate();});
   if(channel)channel.onmessage=e=>{if(e.data?.type&&e.data?.glass)apply(e.data);};
-  window.MayaTypographyControls={defaults,normalize,apply,previewPresentation:applyPresentation,previewSurfaces:applySurfaces,previewEditor,load,save,ready:load()};
+  window.MayaTypographyControls={defaults,normalize,apply,previewPresentation:applyPresentation,previewPills:value=>window.MayaPillControls.apply(normalize(value)),previewSurfaces:applySurfaces,previewEditor,load,save,ready:load()};
 })();

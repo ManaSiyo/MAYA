@@ -21,8 +21,8 @@
  max-width:100%;white-space:normal;overflow-wrap:anywhere;cursor:pointer;
  transition:background-color var(--ui-duration) var(--ui-easing),border-color var(--ui-duration) var(--ui-easing);
 }
-.maya-pill[data-purpose="listen"]{min-width:min(var(--ui-listen-min-width),100%)}
-.maya-icon-button{width:var(--ui-icon-size);height:var(--ui-icon-size);flex:none;padding:0;border-radius:50%;letter-spacing:normal;font-size:16px}
+
+.maya-icon-button{width:max-content;height:auto;flex:none;border-radius:50%;letter-spacing:normal;font-size:16px}
 .maya-icon-button svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5}
 :is(.maya-pill,.maya-icon-button):is(:hover,[data-preview-state="hover"]):not(:disabled){background:rgb(255 255 255 / var(--ui-hover-alpha));border-color:rgba(255,255,255,.42)}
 :is(.maya-pill,.maya-icon-button):is([aria-pressed="true"],:active,[data-preview-state="pressed"]){background:rgb(173 205 248 / var(--ui-selected-alpha));border-color:var(--ui-accent)}

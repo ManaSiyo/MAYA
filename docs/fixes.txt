@@ -1,3 +1,9 @@
+OCTOBER 7 late: ineffective presentation controls and status-filtered owner SMS miss
+[fixed locally] Heading gaps only targeted summary+div, missing Ad campaigns controls and several other sections. Use explicit headings/content markers including empty states. Fixed-width listen pills and icon wrappers defeated padding; central content+padding capsule geometry now covers both saved pill families and bounded Save glyphs. Edit and Save materials no longer conflict with local overrides; names/dates/captions use merged roles. Delivering no longer inherits Booked's color through --green.
+[fixed locally] Owner direct parser missed 'all the contacted leads', and lead adapters dropped status/retained at most 60 records. Natural status/all/count reads use full retained source traversal and durable report pages. Explicit partial flags cover missing pages/status history; opaque model/provider JSON failures become safe typed diagnostics. Full-source reads have a six-second deadline without racing mutations; ordinary note enrichment remains parallel. Slow auth/storage can still delay the overall webhook. The actual live provider failure in the screenshot is unconfirmed.
+[validation] Exact release suites, full regression, server smoke, syntax/diff and the extended final Aesthetic Control gate pass with fake providers and isolated local browser fixtures.
+[production] Latest verified release 707592d remains live. No live sends, credentials, production settings or Push in this task.
+
 OCTOBER 7: new-message guard and responsive editor audit
 [fixed locally] STOP now guards the Messages Send handler as well as UI/server. Cancel/account/recipient changes invalidate pending typed-number starts. Closed floating editor fields cannot create invisible phone overflow; H0 preview respects its responsive size clamp. Verified with fake providers; live delivery remains owner acceptance after deployment.
 

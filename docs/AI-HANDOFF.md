@@ -1,30 +1,56 @@
 # Current handoff — October 7, 2026
 
-## Current request — Typed numbers, status colors and vertical spacing (October 7)
+## Current request — Late October 7 presentation and owner SMS review
 
-Implemented locally: Messages Begin texting form (optional saved name, normalized
-phone input, unsent composer and confirmed US Call); account/cancel/recipient
-invalidation and STOP handler guard. Aesthetic Control adds all six status color,
-opacity and weight editors, icon color/opacity/stroke, section spacing with active
-previews. Status header gear is replaced by the shared chevron. Shared runtime v23,
-gallery v33 cache references apply across all served pages. New validator fields
-are optional for old saves. Closed editors no longer create invisible overflow.
+Implemented and verified locally, based on shipped 707592d. The other task's
+changes are included in that baseline. Public release.json, App/Admin stamps and
+API health matched 707592d5b5b59e688d2ff31935224c3dfb3d1442 at October 7 23:27
+Pacific; published October 7 14:16:58 Pacific, all endpoints HTTP 200.
 
-Changed implementation: backend/status.html, typography-controls.js,
-lead-stage-menu.js, gallery.js/css, surface-editors.js and new
-presentation-controls.js; server design validator only (no provider changes).
-New message-compose-ui fixture joins Cloud Build/app-regression; aesthetic-authority
-is extended and stays last. Design/schema and component-gallery cover new settings.
-Validation: all 46 Cloud Build test suites, full app-regression and server smoke
-passed with fake providers. Gallery checks eleven widths; final authority checks
-new shared roles, Inner/dropdown material, semantic color/weight, icon controls and
-section spacing at six widths. Required syntax/diff checks and final screenshot
-review complete before commit. Mobile H0 preview now respects its responsive clamp.
-Open risks: real SMS/call acceptance needs owner verification after deployment;
-existing call provider is US-only. No live messages/calls, personal Chrome, secrets,
-production configuration or Push. Exact next step: owner review/Push this local
-commit, verify exact Firebase/Cloud Run release, then review and send a test SMS and
-confirm a US call; save a distinct color/spacing in authenticated Aesthetic Control.
+Admin: all nine heading→content gaps now measure from the visible heading to the
+first content, including Submissions empty state and Ad campaigns' D/W/M row.
+Redundant range copy is hidden. Nine status editors show meanings and consumers;
+Delivering is independently green by default and describes impressions in the
+selected range, not current provider enablement. Explicit saved colors survive.
+
+Shared aesthetics: Glass and Regular pills have independent saved padding/material
+and usage links. Real capsule dimensions follow content/glyph plus X/Y padding;
+fixed listen width and icon box conflicts are removed. Every Edit is Regular,
+Save/icons use Glass, and glyph dimensions cannot collapse inside their wrapper.
+Typography v2 merges names into H4, dates into H5, captions into P3. Old designs
+normalize without writes; validators accept legacy schemas. All served pages
+load presentation-runtime/pill-runtime before typography v24; gallery is v34.
+
+Owner SMS: natural all/status/count reads bypass AI, traverse retained callback
+and manual leads, filter before durable account-bound MORE reports and identify
+partial source/history results. The default Admin feed remains 60 rows with parallel note reads. Full owner
+reads have a six-second read-only deadline; late reads cannot create reports or
+sends. Slow auth/storage can still delay the overall SMS webhook. Provider
+JSON mode and typed response diagnostics replace opaque parse failures; paid
+retries are not added. Verified owner binding/client SEND gates remain intact.
+The screenshot proves a parser miss, not the underlying live AI failure reason.
+
+Changed areas: backend/status.html; shared UI runtime/components; Aesthetic
+Control modules, schema and generated role inventory; served runtime includes and
+Hosting cache headers; owner conversation/SMS access, CRM AI and server feed;
+regression fixtures and docs. No new server module or container copy needed.
+
+Validation: all 46 exact Cloud Build suites, full app-regression, server smoke,
+syntax and diff checks pass; root npm ci used the pinned lockfile. Final authority
+imports presentation-consistency and pill-consistency for actual geometry/materials,
+role mappings, defaults/saved settings, usage and six responsive widths. Gallery
+checks eleven widths. Default/saved, open editor, Save error and mobile screenshots
+were visually reviewed. The shared aesthetic gate is the final completion check. No live
+provider sends, personal Chrome, credentials, billing or environment changes.
+
+Cleanup recommendation only: aesthetics/ui/ai-meter.js (5,898 bytes) is unloaded
+by served pages. Remove it and obsolete test/usage-map references together when
+requested; retain server /api/admin/ai-meter accounting. No files deleted here.
+
+Exact next step: owner reviews/Pushes the prepared local commit, then verify the
+exact release with tests/verify-live.mjs --wait and test
+owner SMS 'Text me all the contacted leads' plus general conversation and live
+Aesthetic Control Save. Local checks do not prove deployed behavior.
 
 ## Previous request — Repository-wide governing rule (October 7)
 

@@ -93,3 +93,42 @@ for(const gap of [-1,33,1.5,'8'])assert.equal(validDesign({...compact,iconPillGa
 
 for(const patch of [{iconColor:'#123abc',iconOpacity:65,iconStroke:3},{sectionSpacing:{submissions:32,headingGap:24}},{statusStyles:{completed:{color:'#123abc',opacity:75,weight:500}}}])assert.equal(validDesign({...compact,...patch}),true);
 for(const patch of [{iconColor:'red'},{iconOpacity:101},{iconStroke:4},{sectionSpacing:{headingGap:-1}},{sectionSpacing:{alien:12}},{statusStyles:{completed:{color:'url(evil)',opacity:75,weight:500}}},{statusStyles:{completed:{color:'#123abc',opacity:75,weight:600}}},{statusStyles:{alien:{color:'#123abc',opacity:75,weight:500}}}])assert.equal(validDesign({...compact,...patch}),false);
+
+// Version 2 is an explicit canonical schema; versionless open editors stay valid.
+const canonical=structuredClone(extended);canonical.typeVersion=2;
+canonical.type.H0={...withH0.type.H0};canonical.type.H5={...extended.type.H6};
+delete canonical.type.H6;delete canonical.type.P4;delete canonical.type.P5;
+const canonicalBefore=JSON.stringify(canonical),legacyBefore=JSON.stringify(extended);
+assert.equal(validDesign(canonical),true);assert.equal(validDesign(extended),true);assert.equal(validDesign(good),true);
+assert.equal(JSON.stringify(canonical),canonicalBefore);assert.equal(JSON.stringify(extended),legacyBefore,'Validation never migrates or writes a legacy saved design');
+for(const role of ['H6','P4','P5','H7','P9'])assert.equal(validDesign({...canonical,type:{...canonical.type,[role]:{...canonical.type.P3}}}),false,'Canonical schema rejects '+role);
+for(const role of Object.keys(canonical.type)){
+ const missing=structuredClone(canonical);delete missing.type[role];assert.equal(validDesign(missing),false,'Canonical schema requires '+role);
+}
+for(const typeVersion of [null,undefined,1,3,'2',true])assert.equal(validDesign({...canonical,typeVersion}),false,'Only explicit numeric version 2 is supported');
+for(const type of [null,[],false,'roles'])assert.equal(validDesign({...canonical,type}),false);
+assert.equal(validDesign({...canonical,type:{...canonical.type,H4:{...canonical.type.H4,size:canonical.type.H3.size}}}),false);
+assert.equal(validDesign({...canonical,type:{...canonical.type,P3:{...canonical.type.P3,size:canonical.type.P2.size+2}}}),false);
+assert.equal(validDesign({...canonical,type:{...canonical.type,H5:{...canonical.type.H5,size:24}}}),true,'Date sizing remains independent, as in legacy H6');
+
+const regularPill={fill:25,rim:30,borderColor:'gray',background:'black',paddingX:12,paddingY:6};
+for(const design of [canonical,compact])assert.equal(validDesign({...design,regularPill}),true,'Regular pills are optional and independent of glass settings');
+for(const background of ['black','gray','blue','yellow','green','pink'])assert.equal(validDesign({...canonical,regularPill:{...regularPill,background}}),true);
+for(const borderColor of ['black','white','gray'])assert.equal(validDesign({...canonical,regularPill:{...regularPill,borderColor}}),true);
+for(const [key,min,max] of [['fill',0,100],['rim',0,100],['paddingX',4,32],['paddingY',2,16]]){
+ for(const value of [min,max])assert.equal(validDesign({...canonical,regularPill:{...regularPill,[key]:value}}),true,key+' boundary');
+ for(const value of [min-1,max+1,min+.5,String(min),null])assert.equal(validDesign({...canonical,regularPill:{...regularPill,[key]:value}}),false,key+' invalid value');
+}
+for(const key of Object.keys(regularPill)){
+ const partial={...regularPill};delete partial[key];assert.equal(validDesign({...canonical,regularPill:partial}),false,'Regular pill requires '+key);
+}
+for(const value of [null,[],false,'pill',{...regularPill,background:'url(evil)'},{...regularPill,borderColor:'red'},{...regularPill,blur:12}])assert.equal(validDesign({...canonical,regularPill:value}),false);
+
+for(const status of ['delivering','pending','rejected']){
+ const style={color:'#123abc',opacity:50,weight:400};
+ for(const design of [canonical,compact])assert.equal(validDesign({...design,statusStyles:{[status]:style}}),true,status+' accepts the shared status style');
+ for(const patch of [{color:'red'},{opacity:-1},{opacity:101},{opacity:'50'},{weight:199},{weight:501},{weight:300.5},{unknown:1}])assert.equal(validDesign({...canonical,statusStyles:{[status]:{...style,...patch}}}),false);
+ for(const key of Object.keys(style)){const partial={...style};delete partial[key];assert.equal(validDesign({...canonical,statusStyles:{[status]:partial}}),false);}
+}
+assert.equal(validDesign({...canonical,statusStyles:{unknown:{color:'#123abc',opacity:50,weight:400}}}),false);
+console.log('Canonical roles, legacy compatibility, complete regular-pill materials and extended semantic statuses validate without mutating saved settings.');

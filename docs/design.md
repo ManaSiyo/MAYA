@@ -22,22 +22,23 @@ the list. Each compact role heading shows its source usage count in parentheses.
 | H1 | Cormorant Garamond | 24px | 300 | white | Brand, dialog and page headline |
 | H2 | Cormorant Garamond | 20px | 400 | white | Drawer title, including Systems |
 | H3 | Jost | 16px | 400 | white | Section and supporting headline |
-| H4 | Jost | 14px | 400 | white | Dashboard number |
+| H4 | Jost | 14px | 400 | white | Lead name / dashboard number |
+| H5 | Jost | 10px | 300 | gray | Lead signup date |
 | P1 | Jost | 12px | 300 | gray | Paragraph, table, log and model text |
 | P2 | Jost | 12px | 400 | white | Label and count |
-| P3 | Jost | 10px | 300 | white | Pill and small field label |
-| P4 | Jost | 10px | 400 | gray | Caption |
+| P3 | Jost | 10px | 300 | white | Pill, small field label and caption |
 
 White means RGB 255/255/255. Gray is RGB 170/181/196. Saved weights range from 200 to 500; selectors offer 200, 250, 300, 350, 400, 450 and 500.
 Sizes use even pixels for hierarchy roles. Bold selects 500 and toggles back to the previous weight; Italic toggles the saved normal/italic style. Font size has shared plus/minus controls. Jost loads variable roman/italic weights 200–500; Cormorant uses available 300/400/500 faces (lighter requested values use the nearest available face). Each role can select Jost or
 Cormorant Garamond. H1 defaults to ALL CAPS; H2/H3/H4 default to Normal.
-P3/P4 retain uppercase defaults, and P1/P2 use Normal. Case is one saved option
+P3 retains its uppercase default, and P1/P2 use Normal. Case is one saved option
 per role, not a separate capitalized/uncapitalized row. Normal preserves authored
 letter case and removes CSS uppercase transformation.
 Role assignments are functional; equivalent settings share a category. Technical
-identifiers share P1 settings and retain their monospace font. Old saved P4/P5
-settings migrate to P3/P4 on read; the retired standalone technical role is
-merged into P1. The API accepts older designs for already-open editors.
+identifiers share P1 settings and retain their monospace font. Legacy five-paragraph designs map their old P4 pill settings to P3. Version 2
+merges captions into P3 and lead names into H4; legacy H6 dates become H5.
+Existing H4/P3 settings are retained. Normalization never writes on load.
+The API accepts versionless older designs for already-open editors.
 
 ## Glass and controls
 
@@ -49,8 +50,8 @@ selected validated values to the shared glass tokens. Information panels have
 separate fill/rim/blur/saturation controls. A surface can be quiet, standard or
 overlay intensity. Status colors retain their meaning.
 
-A Pill is a content-width capsule. IconButton is circular and matches the
-adjacent pill height. GlassSurface is a rounded information panel. Drawer is the
+A Pill is a content-width capsule. IconButton uses a bounded glyph plus the same X/Y padding; unequal padding
+can make its capsule oval. GlassSurface is a rounded information panel. Drawer is the
 hamburger panel with an overlay backing. FilterPopover stays readable above
 tables. Metric uses compact label/count type. Buttons keep visible keyboard
 focus, disabled and loading states. Table cells retain existing alignment until an explicit role alignment is saved; overflow
@@ -58,8 +59,10 @@ and long content must remain accessible at 320–1920px widths.
 
 ## Owner review controls
 
-Glass, Panels and Tables, Typography, Glass Section, Panels and Table headings use H2; Edit glass and Edit dropdown use H3. The first dropdown is Glass, Panels and Tables. Glass Section groups presets,
-numeric material controls, X/Y padding, icons, five pill colors and button States.
+Glass, Panels and Tables, Typography, Pills, Panels and Table headings use H2.
+Pill family headings use H3; every Edit trigger uses P3 and Regular pill material.
+Pills groups presets, separate Glass/Regular editors, X/Y padding, icons, nine
+semantic status previews with usage links, and button States.
 A divider separates Panels, another separates Table. Panels have independent
 outer padding/material/corners; Outer panel, Inner panel and Table appear together under Panels using the same Edit dropdown grid. All offer background, opacity, border color/opacity, corners, blur, saturation and X/Y padding. Inner also offers percentage width; Table offers independent outside/inside border thickness and grid color/opacity. Tables stay outside Inner material, while the cell formatting toolbar follows Inner material. The unused Filter preview/button/editor are removed; saved filter data and functional Admin/Outbound filters remain compatible.
 The preview has the enclosing review section as outer panel, two direct inner panels, and a Contacts pill
@@ -85,7 +88,7 @@ Status colors remain semantic. Column material accepts bounded opacity and the
 fixed Black/Gray/Blue/Yellow/Green/Pink palette. Shared matching Outbound Status
 formatting includes its column background. Full names default to Cormorant.
 
-Typography shows H0–H6/P1–P4 with one preview and one Edit per role. H3 previews
+Typography shows H0–H5/P1–P3 with one preview and one Edit per role. H3 previews
 Campaign details. Beside each role description, show a comma-separated list of
 linked rendered pages. An expandable bounded location list exposes every authored
 use with source path, line, selector and text excerpt; shared JS modules link to
@@ -95,7 +98,7 @@ Left/Centered/Right and Top/Middle/Bottom. Alignment and color dropdowns show ma
 Each Edit has the shared, centered Refresh SVG as its restore icon returning only that editor to its last successfully
 saved values; selected-cell formatting also has a restore. Save updates this
 baseline. The global Reset, navigation and applied-status copy remain removed. Edit dropdown now controls the actual popup backing: palette background, opacity, black/white border color, border opacity, corners and independent X/Y padding. Legacy single padding maps to both axes on read, without a migration write. Old optional fields remain readable for saved compatibility.
-Save is centered with no rim or shadow. The logo and Aesthetic Control title form a left-aligned header row like Admin. History is not introduced in this change; Reset is removed.
+Save is centered in the shared Glass pill, with its saved rim, shadow and X/Y padding. The logo and Aesthetic Control title form a left-aligned header row like Admin. History is not introduced in this change; Reset is removed.
 Temporary Edit controls close on outside click, focus leaving, Escape or another
 Edit. Section folds and persistent States remain open until explicitly toggled.
 Popup backings and fields default to solid black; saved popup material customizes the backing. All Edit dropdowns use the same anchored grid and numeric input/select style as Inner panel; there are no drag sliders. Glass padding uses numeric pixels. Edit glass uses the same anchored dropdown as Edit table. The popup opens beside its button,
@@ -108,7 +111,7 @@ Save writes the live design.
 Lead Station has no floating Forms/Reload/Alerts/Add toolbar. Its section caret
 is on the same horizontal line as the title. Each whole name cell opens the
 client's Messages thread, including clicks in cell padding. A keyboard-accessible
-name button preserves normal Tab activation. The H5 name appears above its H6
+name button preserves normal Tab activation. The H4 name appears above its H5
 signup date, with independent role settings and no category badge. Contact is a
 separate stored phone column; calls remain available inside Messages. A lead
 with no phone opens Messages and states the missing number. Affiliates retains
@@ -140,7 +143,7 @@ The preview lives in `aesthetics/aesthetic-control.html` with support files in `
 `aesthetics/ui/components/`; global application in
 `aesthetics/ui/typography-controls.js`. The Admin-authenticated save and public
 read endpoints are in `docs/server/server.js`; `docs/server/design-config.mjs`
-validates the settings. Served pages load runtime v23 and gallery v33; Hosting revalidates this
+validates the settings. Served pages load runtime v24 and gallery v34; Hosting revalidates this
 script instead of caching role mappings for a week. Old aesthetic PDFs were removed;
 the inactive style-inventory viewer, generated report and generator were removed;
 the active typography role audit remains. No page should introduce a competing design specification.
@@ -225,11 +228,11 @@ Admin Model Snapshot uses compact model lines with comma-separated uses; repeate
 
 Model cards dismiss after a 100ms pointer-exit grace period across trigger/card, including mouse-focused controls. Keyboard focus keeps cards usable until focus exits or Escape. Outside scrolling/resizing closes cards; internal card scrolling remains usable.
 
-October 5 Leads: H5 is the lead name; H6 is the signup date below it. Remove
+October 5 Leads: H4 is the lead name; H5 is the signup date below it. Remove
 category badges from this table. Contact is a separate stored phone column.
 The gallery mirrors the four semantic columns; old three-column saves retain
 Name/Status/Notes styles and gain a separate Contact style. Formatting selections
-follow data-col identity rather than visual position. H5/H6 remain separate
+follow data-col identity rather than visual position. H4/H5 remain separate
 shared roles, with their own font/size/color/case/alignment controls.
 Latest Notes opens a shared-material inline editor from the whole cell; typing
 edits a draft; Save persists it and Cancel, Escape or a click outside discards it.
@@ -237,7 +240,7 @@ The editor has only Save and Cancel; blur never saves and no Dictate control rem
 the handset SVG in the existing pill. Booking Link inserts the approved URL into
 the unsent composer; it neither sends nor creates an owner-send preview.
 
-October 5 drawer and note editing: Latest Notes opens a textarea inside the clicked cell, never a modal. Enter or Save submits the authenticated update; Escape, Cancel or clicking outside discards the draft. Blur never saves, failures keep the draft, and active refresh cannot replace it. The editor offers only Save and Cancel. During an edit the frozen first column is released so it cannot cover the note controls on narrow screens. Messages stays at H2 in the original tab-title location before and after selecting a contact. The plain contact name below uses H3 with no panel or pill backing and no duplicate number; its pencil appears only on hover or keyboard focus. Circular Phone and Share use shared icon dimensions/glass. Share reveals Booking link and Invoice; booking only fills the unsent composer, while calls retain confirmation. Drawer content scrolls independently of its bottom voice dock with hidden scrollbars.
+October 5 drawer and note editing: Latest Notes opens a textarea inside the clicked cell, never a modal. Enter or Save submits the authenticated update; Escape, Cancel or clicking outside discards the draft. Blur never saves, failures keep the draft, and active refresh cannot replace it. The editor offers only Save and Cancel. During an edit the frozen first column is released so it cannot cover the note controls on narrow screens. Messages stays at H2 in the original tab-title location before and after selecting a contact. The plain contact name below uses H3 with no panel or pill backing and no duplicate number; its pencil appears only on hover or keyboard focus. Phone and Share use shared glass and glyph-plus-padding dimensions. Share reveals Booking link and Invoice; booking only fills the unsent composer, while calls retain confirmation. Drawer content scrolls independently of its bottom voice dock with hidden scrollbars.
 
 Automations opens a drawer view from Systems, beside Aesthetic Control. First and second text examples, triggers, earliest Los Angeles draft time and follow-up wait days persist privately for the signed-in owner. These are review-only draft rules, not scheduled client sends. Opening Messages can show an AI idea grounded in the selected lead and recent texts; Use draft appends it without overwriting existing text, and only Send invokes the SMS provider. STOP/blocked contacts, ambiguous leads, replies and two existing outgoing texts suppress suggestions. Automation cards share Inner panel material.
 
@@ -248,7 +251,7 @@ Editor labels retain their grid; fields use responsive columns with a 110px
 readable minimum when available, including saved large popup X/Y padding.
 Icon centering still applies to actions and text labels without form fields.
 
-October 6 audit: runtime v20 applies P1 to message bubbles/composer and P4 to
+October 6 audit: runtime v20 applies P1 to message bubbles/composer and P3 to
 message timestamps. Share uses saved dropdown material and X/Y padding. Expanded
 call transcripts use Inner panel material/corners, not pill geometry. Composer
 selectors use :where() so shared typography never outranks table selection styles.
@@ -256,8 +259,8 @@ selectors use :where() so shared typography never outranks table selection style
 October 7 Save consistency: snapshot settings before any asynchronous work and
 lock preview editors during the save. The posted, cached and applied settings
 are the same snapshot. Only a successful acknowledgement updates Restore; an
-error unlocks editing and retains the prior saved baseline. Runtime v23/gallery
-v33 carry this behavior without changing the visual canon.
+error unlocks editing and retains the prior saved baseline. Runtime v24/gallery
+v34 carry this behavior without changing the visual canon.
 
 
 ## Enforcement when coding
@@ -299,8 +302,9 @@ pending navigation; drafts stay with their recipient. STOP is checked in the Sen
 handler as well as the server and disabled controls.
 
 Status colors are independent of generic text color: Not contacted gray, Contacted
-strong blue (#60a5fa), In progress pink (#f9a8d4), Booked green, Completed bold green
-(#22c55e, weight 500), Cancelled red (#f87171). Each active preview edits hex color,
+green (#4ade80), In progress soft green (#86efac), Booked/Pending yellow (#fbbf24),
+Completed bold green (#22c55e, weight 500), Delivering green, Cancelled/Rejected
+red (#f87171). Each active preview edits hex color,
 color strength (opacity) and 200–500 text weight. statusStyles is optional in saved
 schemas; absent fields receive these defaults. iconColor, iconOpacity and iconStroke
 (1–3) govern actual SVG icons and dropdown chevrons, including native select arrows.
@@ -310,4 +314,27 @@ sectionSpacing uses 0–160px numeric controls for Mana Siyo→Submissions, befo
 Leads/Ad campaigns/Insights and heading→content. These are vertical spacing, never
 panel padding. Its labeled preview shares the saved values with Admin. All new
 editors use the shared grid, dismissal and last-Save restore. Closed editor fields
-must not create invisible overflow. Runtime v23/gallery v33 ship to all served pages.
+must not create invisible overflow. Runtime v24/gallery v34 ship to all served pages.
+
+
+October 7 late review: two pill families share intrinsic geometry. Glass pills
+use the saved glass material; Regular pills use independent fill/rim/background
+and X/Y padding, without blur/highlight. Each family's editor lists rendered
+uses. Width and height equal content/glyph plus twice X/Y padding and borders;
+no fixed listen width or icon box may defeat this. Preserve semantic colors and
+native select input overlays. Save's glyph has explicit dimensions independent
+of its wrapper. Padding highlights are temporary overlays, never fills or saves.
+
+Section spacing's “All headings → content” means the vertical distance from an
+Admin section's heading box to its first visible content. All nine Admin groups,
+including Submissions empty states and Ad campaigns' D/W/M row, use that gap.
+Remove the redundant long date-range label. Panels retain independent padding.
+
+Default status meanings: neutral Not contacted; green Contacted and Delivering;
+soft-green In progress; yellow Booked/Pending; green Completed; red
+Cancelled/Rejected. Each shows actual usage beside its editable preview. Existing
+saved colors remain intentional overrides. Delivering indicates impressions in
+the selected range, not a claim that a provider currently enables the campaign.
+`presentation-runtime.js` owns those mappings; `pill-runtime.js` owns capsules.
+Both load before typography v24 and revalidate through Hosting. Final authority
+includes presentation-consistency and pill-consistency geometry fixtures.

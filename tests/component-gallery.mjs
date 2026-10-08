@@ -3,43 +3,57 @@ import {chromium} from 'playwright';
 import {readFileSync} from 'node:fs';
 import {extname,resolve} from 'node:path';
 const root=resolve(new URL('..',import.meta.url).pathname);
+const canonicalRoles=['H0','H1','H2','H3','H4','H5','P1','P2','P3'];
 const browser=await chromium.launch({executablePath:process.env.PW_CHROMIUM||process.env.CHROMIUM_PATH||(process.platform==='darwin'?'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome':'/opt/pw-browsers/chromium')});
 const context=await browser.newContext({viewport:{width:1440,height:1000}});const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));let savedPost=null;
 await page.route('**/*',async r=>{const u=new URL(r.request().url());if(!['maya.test','maya.manasiyo.com'].includes(u.hostname))return r.abort();if(u.pathname==='/api/design')return r.fulfill({json:{}});if(u.pathname==='/api/admin/design'){savedPost={header:r.request().headers()['authorization'],body:r.request().postDataJSON()};return r.fulfill({json:{ok:true}});}try{const p=resolve(root,'.'+u.pathname);if(!p.startsWith(root+'/'))return r.abort();await r.fulfill({body:readFileSync(p),contentType:({'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.png':'image/png','.svg':'image/svg+xml'})[extname(p)]||'text/plain'});}catch{await r.abort();}});
 try{
  await page.goto('https://maya.test/aesthetics/aesthetic-control.html');await page.locator('[data-category="H4"] .type-row').first().waitFor();
  assert.match(await page.title(),/MAYA Aesthetic Control/);
- assert.equal(await page.locator('.type-group').count(),11);assert.equal(await page.locator('#save').innerText(),'');assert.equal(await page.locator('#save svg').count(),1);assert.ok(await page.locator('#admin-back').evaluate(e=>e.getBoundingClientRect().left<30));assert.equal(await page.locator('[data-category="H0"] .role-locations a').count(),1);
- assert.ok(await page.locator('.type-category').evaluateAll(es=>es.every(e=>/^(?:H[0-6]|P[1-4]) \(\d+\)$/.test(e.textContent))),'Every role shows an authored usage count');
+ assert.equal(await page.locator('.type-group').count(),canonicalRoles.length);assert.equal(await page.locator('#save').innerText(),'');assert.equal(await page.locator('#save svg').count(),1);assert.ok(await page.locator('#admin-back').evaluate(e=>e.getBoundingClientRect().left<30));assert.equal(await page.locator('[data-category="H0"] .role-locations a').count(),1);
+ assert.ok(await page.locator('.type-category').evaluateAll(es=>es.every(e=>/^(?:H[0-5]|P[1-3]) \(\d+\)$/.test(e.textContent))),'Every role shows an authored usage count');
  assert.equal(await page.locator('input[type="range"]').count(),0,'Every Edit uses numeric controls, never sliders');
  await page.locator('.icon-row [aria-label=Settings]').click();assert.equal(await page.locator('.control-size-editor').evaluate(e=>e.open),true,'Preview icons open their actual saved settings');await page.locator('.gallery-header h1').click();
- await page.locator('#buttons>.preview-row .maya-pill').first().click();assert.equal(await page.locator('.finish-controls details').evaluate(e=>e.open),true,'Pill preview opens its glass settings');await page.locator('.gallery-header h1').click();
+ await page.locator('#buttons>.preview-row .maya-pill').first().click();assert.equal(await page.locator('.finish-controls>.type-editor').evaluate(e=>e.open),true,'Pill preview opens its glass settings');await page.locator('.gallery-header h1').click();
  assert.equal(await page.locator('.popup-editor [data-field="padding"]').count(),0,'Popup padding has separate axes');
- assert.equal(await page.locator('#save').evaluate(e=>getComputedStyle(e).borderWidth),'0px');assert.equal(await page.locator('#save').evaluate(e=>getComputedStyle(e).boxShadow),'none');
+ assert.equal(await page.locator('#save').evaluate(e=>getComputedStyle(e).borderWidth),'1px');assert.notEqual(await page.locator('#save').evaluate(e=>getComputedStyle(e).boxShadow),'none','Save retains the shared glass enclosure');
+ assert.equal(await page.locator('.finish-controls>.type-editor>summary').textContent(),'Edit glass pill');
+ const assertIconGeometry=async(selector,size)=>{const g=await page.locator(selector).first().evaluate(e=>{const s=getComputedStyle(e),box=e.getBoundingClientRect(),glyph=e.querySelector('svg').getBoundingClientRect();return {width:box.width,height:box.height,glyphWidth:glyph.width,glyphHeight:glyph.height,x:parseFloat(s.paddingLeft)+parseFloat(s.paddingRight)+parseFloat(s.borderLeftWidth)+parseFloat(s.borderRightWidth),y:parseFloat(s.paddingTop)+parseFloat(s.paddingBottom)+parseFloat(s.borderTopWidth)+parseFloat(s.borderBottomWidth)};});assert.ok(Math.abs(g.glyphWidth-size*.6)<.5&&Math.abs(g.glyphHeight-size*.6)<.5,selector+' scales its actual glyph '+JSON.stringify(g));assert.ok(Math.abs(g.width-g.glyphWidth-g.x)<.5&&Math.abs(g.height-g.glyphHeight-g.y)<.5,selector+' follows content plus X/Y padding '+JSON.stringify(g));};
+ await assertIconGeometry('#save',28);await assertIconGeometry('.icon-row .maya-icon-button',28);
  assert.ok(await page.locator('.gallery-header').evaluate(e=>{const logo=e.querySelector('#admin-back').getBoundingClientRect(),title=e.querySelector('h1').getBoundingClientRect();return logo.left<title.left&&Math.abs((logo.top+logo.height/2)-(title.top+title.height/2))<2&&getComputedStyle(e.querySelector('h1')).textAlign==='left';}),'Logo and title form a left-aligned row');
- assert.equal(await page.locator('.gallery-section-title').first().evaluate(e=>getComputedStyle(e).fontSize),'20px');assert.equal(await page.locator('.gallery-subsection-title').first().evaluate(e=>getComputedStyle(e).fontSize),'16px');
+ assert.equal(await page.locator('.gallery-section-title').first().evaluate(e=>getComputedStyle(e).fontSize),'20px');assert.equal(await page.locator('.finish-controls>h3[data-maya-type=H3]').evaluate(e=>getComputedStyle(e).fontSize),'16px');
  const legacyPopup=await page.evaluate(()=>{const d=structuredClone(window.MayaTypographyControls.defaults);d.editor={fill:100,rim:14,radius:12,padding:11};return window.MayaTypographyControls.normalize(d).editor;});assert.equal(legacyPopup.paddingX,11);assert.equal(legacyPopup.paddingY,11);assert.equal(legacyPopup.padding,undefined);
- assert.equal(await page.locator('.restore-editor').count(),25,'Each editor plus selected cell formatting has a restore');
+ assert.ok(await page.locator('.type-editor').evaluateAll(es=>es.every(e=>e.nextElementSibling?.classList.contains('restore-editor'))),'Every individual Edit has an adjacent Restore');assert.equal(await page.locator('#cell-format-toolbar .restore-editor').count(),1,'Selected cell formatting retains Restore');
  assert.equal(await page.locator('.icon-row [aria-label="Download"]').count(),0,'Unused icon preview removed');
- assert.deepEqual(await page.locator('.type-group').evaluateAll(es=>es.map(e=>e.dataset.category)),['H0','H1','H2','H3','H4','H5','H6','P1','P2','P3','P4']);
+ assert.deepEqual(await page.locator('.type-group').evaluateAll(es=>es.map(e=>e.dataset.category)),canonicalRoles);
  assert.equal(await page.locator('[data-type="dashboard"]').getAttribute('data-type'),'dashboard');
  assert.equal(await page.locator('[data-type="dashboard"] .type-example').evaluate(e=>getComputedStyle(e).fontSize),'14px');
  assert.equal(await page.locator('[data-type="drawer"] .type-example').evaluate(e=>getComputedStyle(e).fontSize),'20px');
- const legacy=await page.evaluate(()=>{const old=structuredClone(window.MayaTypographyControls.defaults);old.type.P5={size:8,weight:400,color:'gray'};old.type.P4={size:10,weight:350,color:'white'};old.type.P3={size:12,weight:400,color:'gray'};return window.MayaTypographyControls.normalize(old);});
+ const migrations=await page.evaluate(()=>{const controls=window.MayaTypographyControls,before=localStorage.getItem('maya-typography-controls-v1'),old=structuredClone(controls.defaults);delete old.typeVersion;old.type.H4.weight=450;old.type.H5={size:14,weight:500,color:'white'};old.type.H6={size:8,weight:250,color:'gray'};old.type.P3={size:10,weight:400,color:'white'};old.type.P4={size:8,weight:300,color:'gray'};const original=JSON.stringify(old),current=controls.normalize(old);const oldest=structuredClone(old);oldest.type.P5={size:8,weight:400,color:'gray'};oldest.type.P4={size:10,weight:350,color:'white'};oldest.type.P3={size:12,weight:400,color:'gray'};const canonical=structuredClone(controls.defaults);canonical.type.H5.weight=450;return {current,oldest:controls.normalize(oldest),canonical:controls.normalize(canonical),unchanged:original===JSON.stringify(old),noWrite:before===localStorage.getItem('maya-typography-controls-v1')};});
+ assert.equal(migrations.current.typeVersion,2);assert.deepEqual(Object.keys(migrations.current.type),canonicalRoles);assert.equal(migrations.current.type.H4.weight,450);assert.equal(migrations.current.type.H5.size,8);assert.equal(migrations.current.type.H5.weight,250);assert.equal(migrations.current.type.P3.weight,400,'An existing P3 setting wins the merged caption/pill role');assert.equal(migrations.canonical.type.H5.weight,450,'Version 2 dates are not remigrated');assert.ok(migrations.unchanged&&migrations.noWrite,'Legacy normalization changes neither input nor saved storage');
+ const legacy=migrations.oldest;
  const legacyCells=await page.evaluate(()=>{const d=structuredClone(window.MayaTypographyControls.defaults);d.table.cells={'stage-0':{...d.table.header,align:'right'}};return window.MayaTypographyControls.normalize(d).table;});assert.equal(legacyCells.columns[1].align,'right');assert.deepEqual(legacyCells.cells,{});
- assert.equal(legacy.type.P3.weight,350);assert.equal(legacy.type.P4.size,8);assert.equal(legacy.type.P5,undefined);
- assert.equal(await page.locator('.type-row').count(),11);
+ assert.equal(legacy.type.P3.weight,350,'Five-role legacy P4 pill settings migrate to canonical P3');assert.equal(legacy.type.P4,undefined);assert.equal(legacy.type.P5,undefined);assert.equal(legacy.type.H6,undefined);
+ assert.equal(await page.locator('.type-row').count(),canonicalRoles.length);
+ const regularSample=page.locator('[data-pill-family=regular] [data-maya-pill=regular]');
+ await page.waitForFunction(()=>getComputedStyle(document.querySelector('#buttons>.preview-row .maya-pill')).borderColor==='rgba(255, 255, 255, 0.22)');
+ const glassBeforeRegular=await page.locator('#buttons>.preview-row .maya-pill').first().evaluate(e=>{const s=getComputedStyle(e);return {background:s.backgroundColor,padding:s.padding,border:s.borderColor};});
+ await page.locator('.regular-pill-editor>summary').click();await page.locator('.regular-pill-editor [data-field=background]').selectOption('blue');await page.locator('.regular-pill-editor [data-field=fill]').fill('65');await page.locator('.regular-pill-editor [data-field=paddingX]').fill('22');await page.locator('.regular-pill-editor [data-field=paddingY]').fill('10');
+ await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-pill-family=regular] [data-maya-pill=regular]')).backgroundColor==='rgba(35, 76, 125, 0.65)');
+ assert.match(await regularSample.evaluate(e=>getComputedStyle(e).backgroundColor),/35, 76, 125, 0.65/);assert.equal(await regularSample.evaluate(e=>getComputedStyle(e).padding),'10px 22px');assert.equal(await regularSample.evaluate(e=>getComputedStyle(e).backdropFilter),'none');
+ assert.deepEqual(await page.locator('#buttons>.preview-row .maya-pill').first().evaluate(e=>{const s=getComputedStyle(e);return {background:s.backgroundColor,padding:s.padding,border:s.borderColor};}),glassBeforeRegular,'Regular pill edits do not change glass materials or geometry');
+ await page.locator('.regular-pill-editor + .restore-editor').click();assert.equal(await regularSample.evaluate(e=>getComputedStyle(e).padding),'6px 14px');await page.locator('.gallery-header h1').click();
  await page.locator('.finish-choice').filter({hasText:'Liquid'}).click();
- assert.match(await page.locator('.finish-choice[aria-pressed=true]').innerText(),/Liquid ✓/);
+ assert.equal(await page.locator('.finish-choice[aria-pressed=true]').innerText(),'LIQUID ✓');
  const liquid=await page.locator('.finish-sample .maya-pill').nth(1).evaluate(e=>getComputedStyle(e).borderColor);
  const clear=await page.locator('.finish-sample .maya-pill').nth(2).evaluate(e=>getComputedStyle(e).borderColor);
  assert.notEqual(liquid,clear);
  await page.locator('.finish-choice').filter({hasText:'Current'}).click();
- await page.locator('.finish-controls summary').click();
+ await page.locator('.finish-controls>.type-editor>summary').click();
  await page.locator('.finish-controls [data-field="fill"]').fill('40');
  await page.waitForFunction(()=>getComputedStyle(document.querySelector('.icon-row .maya-icon-button')).backgroundColor.includes('0.4'));
  assert.match(await page.locator('.icon-row .maya-icon-button').first().evaluate(e=>getComputedStyle(e).backgroundColor),/0.4/);
- await page.locator('.finish-controls summary').click();
+ await page.locator('.finish-controls>.type-editor>summary').click();
  await page.locator('.overlay-controls summary').click();
  await page.locator('.overlay-controls [data-field="fill"]').fill('35');
  assert.match(await page.locator('#pill-preview').first().evaluate(e=>getComputedStyle(e).backgroundColor),/0.35/);
@@ -63,7 +77,7 @@ try{
  assert.equal(await page.locator('#panels .inner-panel').first().evaluate(e=>getComputedStyle(e,'::after').borderLeftWidth),'22px');
  await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.querySelector('#gallery .show-padding'));
  await page.locator('.control-size-editor summary').click();await page.locator('[data-field="iconSize"]').fill('36');await page.locator('[data-field="dropdownHeight"]').fill('32');
- assert.equal(await page.locator('.icon-row .maya-icon-button').first().evaluate(e=>getComputedStyle(e).width),'36px');
+ await assertIconGeometry('.icon-row .maya-icon-button',36);await assertIconGeometry('#save',36);
  assert.equal(await page.locator('.dropdown-preview').evaluate(e=>getComputedStyle(e).minHeight),'32px');
  await page.locator('[data-field=iconPillGap]').fill('12');await page.locator('[data-field=iconTextGap]').fill('18');
  assert.equal(await page.locator('#icon-pill-preview').evaluate(e=>getComputedStyle(e).gap),'12px');assert.equal(await page.locator('#icon-text-preview').evaluate(e=>getComputedStyle(e).gap),'18px');
@@ -81,7 +95,9 @@ try{
  const completed=page.locator('.status-style-preview').filter({has:page.locator('[data-status="completed"]')});await completed.locator('summary').click();await completed.locator('[data-field=color]').fill('#123abc');await completed.locator('[data-field=opacity]').fill('65');await completed.locator('[data-field=weight]').selectOption('450');
  assert.equal(await completed.locator('.status-pill').evaluate(e=>getComputedStyle(e).fontWeight),'450');assert.match(await completed.locator('.status-pill').evaluate(e=>getComputedStyle(e).color),/0.65/);await page.locator('.gallery-header h1').click();
  await page.locator('.spacing-controls summary').click();await page.locator('.spacing-controls [data-field=leads]').fill('38');assert.equal(await page.locator('.spacing-preview [data-spacing=leads]').evaluate(e=>getComputedStyle(e).marginTop),'38px');await page.locator('.gallery-header h1').click();
- assert.equal(await page.locator('#pill-colors .status-pill').count(),6);
+ assert.equal(await page.locator('#pill-colors .status-pill').count(),9);
+ assert.deepEqual(await page.locator('#pill-colors .status-pill').evaluateAll(es=>es.map(e=>e.dataset.status)),['new','contacted','in_progress','booked','completed','canceled','delivering','pending','rejected']);
+ assert.ok(await page.locator('.status-style-preview').evaluateAll(es=>es.every(e=>e.querySelector('.status-meaning')?.textContent.trim()&&e.querySelector('.status-usage a[href]'))),'Every semantic status explains its meaning and links its actual usage');
  assert.equal(await page.locator('#status-reference,#source-styles,#pages,#icons').count(),0);
  assert.ok(!(await page.locator('body').innerText()).includes('glossary'));
  assert.equal(await page.locator('[data-category="H1"] .type-example').evaluate(e=>getComputedStyle(e).textTransform),'uppercase');
@@ -93,7 +109,7 @@ try{
  assert.equal(await page.locator('[data-category="H3"] .type-example').evaluate(e=>getComputedStyle(e).textTransform),'uppercase');
  await page.locator('[data-category="H3"] .type-editor summary').click();
  assert.equal(await page.locator('.type-row .type-appearance,.type-row .type-spacing').count(),0);
- assert.equal(await page.locator('.category-setting').count(),11);
+ assert.equal(await page.locator('.category-setting').count(),canonicalRoles.length);
  assert.equal(await page.locator('.type-align,.housing-editor,#reset,.gallery-header nav').count(),0);
  assert.equal(await page.locator('[data-type="brand"] .type-example').evaluate(e=>getComputedStyle(e).textAlign),'center');
  const edit=async(role,field,value)=>{const group=page.locator(`[data-category="${role}"] .type-editor`);if(!await group.evaluate(e=>e.open))await group.locator('summary').click();await group.locator(`[data-field="${field}"]`).selectOption(value);};
@@ -169,14 +185,14 @@ try{
  assert.match(await page.evaluate(()=>{const n=document.createElement('button');n.className='maya-icon-button';document.body.append(n);const color=getComputedStyle(n).backgroundColor;n.remove();return color;}),/0.4/);
  assert.equal(await page.evaluate(()=>{const n=document.createElement('p');n.textContent='Body preview';document.body.append(n);const c=getComputedStyle(n).color;n.remove();return c;}),'rgb(255, 255, 255)');
  const liveTable=await page.evaluate(async()=>{
-  const table=document.querySelector('#leads-table');table.innerHTML='<tbody><tr><th>Full name</th><th>Status</th><th>Latest Notes</th></tr><tr><td class="lead-col-first" data-col="name"><button class="lead-open">Angela</button></td><td data-col="stage"><span class="status-pill">Not contacted</span></td><td data-col="note"><div class="lead-note-vp"><span>Fixture note</span></div></td></tr></tbody>';
+  const table=document.querySelector('#leads-table');table.innerHTML='<tbody><tr><th>Full name</th><th>Status</th><th>Latest Notes</th></tr><tr><td class="lead-col-first" data-col="name"><button class="lead-open"><span class="lead-identity">Angela</span><span class="lead-signup">Oct 4</span></button></td><td data-col="stage"><span class="status-pill">Not contacted</span></td><td data-col="note"><div class="lead-note-vp"><span>Fixture note</span></div></td></tr></tbody>';
   await new Promise(resolve=>requestAnimationFrame(resolve));
   const note=getComputedStyle(table.querySelector('td[data-col="note"] .lead-note-vp>span'));
   const name=getComputedStyle(table.querySelector('.lead-open'));
   const filter=document.createElement('div');filter.className='lead-status-menu';document.body.append(filter);const width=getComputedStyle(filter).width;filter.remove();
-  return {noteSize:note.fontSize,nameFont:name.fontFamily,nameAlign:name.textAlign,header:getComputedStyle(table.querySelector('th')).backgroundColor,filterWidth:width,inner:getComputedStyle(document.querySelector('#leads-fold .panel')).padding};
+  return {leadNameSize:getComputedStyle(table.querySelector('.lead-identity')).fontSize,dateSize:getComputedStyle(table.querySelector('.lead-signup')).fontSize,noteSize:note.fontSize,nameFont:name.fontFamily,nameAlign:name.textAlign,header:getComputedStyle(table.querySelector('th')).backgroundColor,filterWidth:width,inner:getComputedStyle(document.querySelector('#leads-fold .panel')).padding};
  });
- assert.equal(liveTable.noteSize,'15px');assert.match(liveTable.nameFont,/Cormorant/);assert.equal(liveTable.nameAlign,'right');assert.match(liveTable.header,/0.8/);assert.equal(liveTable.filterWidth,'280px');assert.equal(liveTable.inner,'0px','Admin table housing excludes Inner padding');assert.equal(await page.locator('#leads-fold .panel').evaluate(e=>getComputedStyle(e).borderRadius),'20px','Saved table corners apply to Admin');
+ assert.equal(liveTable.leadNameSize,'12px','Lead names use the shared H4 setting');assert.equal(liveTable.dateSize,'10px','Signup dates use canonical H5');assert.equal(liveTable.noteSize,'15px');assert.match(liveTable.nameFont,/Cormorant/);assert.equal(liveTable.nameAlign,'right');assert.match(liveTable.header,/0.8/);assert.equal(liveTable.filterWidth,'280px');assert.equal(liveTable.inner,'0px','Admin table housing excludes Inner padding');assert.equal(await page.locator('#leads-fold .panel').evaluate(e=>getComputedStyle(e).borderRadius),'20px','Saved table corners apply to Admin');
  const designLink=page.getByRole('link',{name:'Aesthetic Control',exact:true});
  assert.equal(await designLink.getAttribute('href'),'/aesthetics/aesthetic-control.html');
  assert.equal(await designLink.evaluate(e=>getComputedStyle(e).borderRadius),'100px');
@@ -193,8 +209,8 @@ try{
  await page.locator('#pill-preview > .review-fold > summary').click();
  await page.evaluate(()=>{const d=window.MayaTypographyControls.normalize(JSON.parse(localStorage.getItem('maya-typography-controls-v1')));d.editor.paddingX=40;d.editor.paddingY=40;window.MayaTypographyControls.previewEditor(d.editor);});
  for(const width of [320,390,420,650,700,701,768,1024,1100,1440,1920]){
-  await page.setViewportSize({width,height:844});
-  for(const role of ['H0','H1','H2','H3','H4','H5','H6','P1','P2','P3','P4']){
+  await page.setViewportSize({width,height:844});await assertIconGeometry('#save',28);
+  for(const role of canonicalRoles){
    const editor=page.locator(`[data-category="${role}"] .type-editor`);
    await editor.locator('summary').click();
    const geometry=await editor.locator('.type-editor-fields').evaluate(panel=>{
@@ -224,7 +240,7 @@ try{
    assert.ok(await editor.locator('.type-editor-fields').evaluate(panel=>{const box=panel.getBoundingClientRect();return [...panel.querySelectorAll('input,select')].every(e=>{const b=e.getBoundingClientRect(),y=b.top+b.height/2;if(y<box.top||y>box.bottom)return true;const hit=document.elementFromPoint(b.left+b.width/2,y);return hit===e||e.contains(hit);});}),`${id} visible fields stay above the following section at ${width}`);
    await page.keyboard.press('Escape');
   }
-  for(const selector of ['.popup-editor','.finish-controls .type-editor']){const popup=page.locator(selector);await popup.locator('summary').click();assert.ok(await popup.locator('.type-editor-fields input').first().evaluate(e=>e.getBoundingClientRect().width>=e.closest('label').getBoundingClientRect().width-1),'Numeric fields fill their shared grid cell');assert.ok(await popup.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.width>0;}),selector+' fits '+width);await page.keyboard.press('Escape');}
+  for(const selector of ['.popup-editor','.finish-controls .type-editor','.regular-pill-editor']){const popup=page.locator(selector);await popup.locator('summary').click();assert.ok(await popup.locator('.type-editor-fields input').first().evaluate(e=>e.getBoundingClientRect().width>=e.closest('label').getBoundingClientRect().width-1),'Numeric fields fill their shared grid cell');assert.ok(await popup.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.width>0;}),selector+' fits '+width);await page.keyboard.press('Escape');}
   const sizeEditor=page.locator('.control-size-editor');await sizeEditor.locator('summary').click();assert.ok(await sizeEditor.locator('.type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth;}),'Size editor fits '+width);await page.keyboard.press('Escape');
   await page.locator('#cell-format-toolbar').evaluate(e=>{const r=e.getBoundingClientRect();if(r.left<0||r.right>innerWidth)throw Error('Cell toolbar overflow');for(const fields of e.querySelectorAll('.cell-format-fields'))if(new Set([...fields.querySelectorAll(':scope>label')].filter(e=>getComputedStyle(e).display!=='none').map(c=>Math.round(c.getBoundingClientRect().top))).size!==1)throw Error('Formatting row wraps');});
   await page.locator('#pill-preview > .review-fold').evaluate(e=>e.open=false);
@@ -246,7 +262,7 @@ try{
  await page.evaluate(()=>localStorage.setItem('maya_admin_tok','test-owner-token'));
  await page.locator('#save').click();await page.waitForFunction(()=>document.querySelector('#feedback').textContent==='Saved.');
  const savedDuringLoad=await page.evaluate(async()=>{const controls=window.MayaTypographyControls,original=window.fetch;let release;window.fetch=(url,opts)=>url==='/api/design'?new Promise(resolve=>{release=resolve;}):original(url,opts);try{const pending=controls.load(),d=structuredClone(controls.defaults);d.type.H0.size=80;d.type.P1.align='center';await controls.save(d);release(new Response('{}',{headers:{'Content-Type':'application/json'}}));await pending;return getComputedStyle(document.documentElement).getPropertyValue('--maya-type-H0-size').trim();}finally{window.fetch=original;}});assert.equal(savedDuringLoad,'80px','An older pending design response cannot undo a successful Save');
- const {validDesign}=await import('../docs/server/design-config.mjs');const invalid=structuredClone(savedPost.body);invalid.table.cells={'note-100':{...invalid.table.header}};assert.equal(validDesign(invalid),false,'Cell row limits are validated');assert.equal(validDesign({...savedPost.body,table:{...savedPost.body.table,cells:{'note-0':{...savedPost.body.table.header}}}}),true);assert.equal(validDesign(savedPost.body),true,JSON.stringify(savedPost.body));assert.equal(savedPost.body.iconSize,28);assert.equal(savedPost.body.iconPillGap,6);assert.equal(savedPost.body.iconTextGap,8);assert.equal(savedPost.body.dropdownHeight,28);assert.equal(JSON.stringify(savedPost.body).includes("show-padding"),false);assert.equal(savedPost.body.editor.radius,12);assert.equal(savedPost.body.editor.padding,undefined);assert.equal(savedPost.body.editor.paddingX,8);assert.equal(savedPost.body.editor.paddingY,8);assert.equal(savedPost.body.table.columns.length,4);assert.equal(savedPost.body.type.P1.align,'center');assert.equal(savedPost.header,'Bearer test-owner-token');assert.deepEqual(Object.keys(savedPost.body.type),['H0','H1','H2','H3','H4','H5','H6','P1','P2','P3','P4']);
+ const {validDesign}=await import('../docs/server/design-config.mjs');const invalid=structuredClone(savedPost.body);invalid.table.cells={'note-100':{...invalid.table.header}};assert.equal(validDesign(invalid),false,'Cell row limits are validated');assert.equal(validDesign({...savedPost.body,table:{...savedPost.body.table,cells:{'note-0':{...savedPost.body.table.header}}}}),true);assert.equal(validDesign(savedPost.body),true,JSON.stringify(savedPost.body));assert.equal(savedPost.body.iconSize,28);assert.equal(savedPost.body.iconPillGap,6);assert.equal(savedPost.body.iconTextGap,8);assert.equal(savedPost.body.dropdownHeight,28);assert.equal(JSON.stringify(savedPost.body).includes("show-padding"),false);assert.equal(savedPost.body.editor.radius,12);assert.equal(savedPost.body.editor.padding,undefined);assert.equal(savedPost.body.editor.paddingX,8);assert.equal(savedPost.body.editor.paddingY,8);assert.equal(savedPost.body.table.columns.length,4);assert.equal(savedPost.body.type.P1.align,'center');assert.equal(savedPost.header,'Bearer test-owner-token');assert.equal(savedPost.body.typeVersion,2);assert.deepEqual(Object.keys(savedPost.body.type),canonicalRoles);assert.deepEqual(savedPost.body.regularPill,{fill:0,rim:22,borderColor:'white',background:'black',paddingX:14,paddingY:6});
  const immutableSave=await page.evaluate(async()=>{
   const original=window.fetch,controls=window.MayaTypographyControls;let release,posted;
   window.fetch=(url,opts)=>url==='/api/admin/design'?new Promise(resolve=>{posted=JSON.parse(opts.body);release=resolve;}):original(url,opts);

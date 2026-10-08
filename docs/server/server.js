@@ -2757,16 +2757,17 @@ function guessFormName(v) {
   return 'Form';
 }
 let _leadsCache = { ts: 0, data: null };
-async function wixLeads({fresh=false,summaries=false,submissionId=''}={}) {
-  if (!WIX_KEY) return { connected: false, why: 'no WIX_API_KEY set' };
+async function wixLeads({fresh=false,summaries=false,submissionId='',all=false}={}) {
+  if (!WIX_KEY) return { connected: false, complete:false, why: 'Wix lead source is not configured.' };
   // Names, contacts and form notes never wait for AI summaries. Raw reads have
   // a short cache; explicitly requested summaries use a separate cache mode.
-  if (!submissionId && !fresh && _leadsCache.data && _leadsCache.summaries === summaries && Date.now() - _leadsCache.ts < (summaries ? 600000 : 10000)) return _leadsCache.data;
+  if (!submissionId && !fresh && _leadsCache.data && _leadsCache.summaries === summaries && _leadsCache.all === all && Date.now() - _leadsCache.ts < (summaries ? 600000 : 10000)) return _leadsCache.data;
   try {
     const sinceMs = Date.now() - LEADS_DAYS * 86400000;
     const formNames = await wixFormNames();
     const subs = [];
-    let cursor = null, guard = 0, done = false;
+    let cursor = null, guard = 0, done = false, complete = true, why = '';
+    const cursors = new Set(), deadline = Date.now() + 12000;
     if(submissionId){
       const r=await fetch('https://www.wixapis.com/form-submission-service/v4/submissions/'+encodeURIComponent(submissionId),{headers:{Authorization:WIX_KEY,'wix-site-id':WIX_SITE},signal:AbortSignal.timeout(12000)});
       if(!r.ok)throw Error('Wix event submission unavailable ('+r.status+').');
@@ -2779,20 +2780,28 @@ async function wixLeads({fresh=false,summaries=false,submissionId=''}={}) {
         : { query: { filter: { namespace: LEADS_NAMESPACE },
                      sort: [{ fieldName: 'createdDate', order: 'DESC' }],
                      cursorPaging: { limit: 100 } } };
-      const r = await fetch('https://www.wixapis.com/forms/v4/submissions/namespace/query', {
+      let j;
+      try {
+      const r = await fetch('https://www.wixapis.com/form-submission-service/v4/submissions/namespace/query', {
         method: 'POST',
         headers: { 'Authorization': WIX_KEY, 'wix-site-id': WIX_SITE, 'Content-Type': 'application/json' },
-        body: JSON.stringify(body), signal: AbortSignal.timeout(12000),
+        body: JSON.stringify(body), signal: AbortSignal.timeout(Math.max(1,deadline-Date.now())),
       });
-      const j = await r.json().catch(() => ({}));
+      j = await r.json();
       if (!r.ok) throw new Error((j && j.message) || ('wix forms ' + r.status));
-      for (const s of (j.submissions || [])) {
-        if (new Date(s.createdDate).getTime() < sinceMs) { done = true; break; }
+      if(!Array.isArray(j.submissions))throw Error('Wix returned no readable submission list.');
+      } catch (e) { if(!subs.length)throw e;complete=false;why='Some Wix lead pages are unavailable.';break; }
+      for (const s of j.submissions) {
+        if (!all && new Date(s.createdDate).getTime() < sinceMs) { done = true; break; }
         subs.push(s);
       }
-      cursor = (!done && j.metadata && j.metadata.hasNext && j.metadata.cursors && j.metadata.cursors.next)
-        ? j.metadata.cursors.next : null;
-    } while (cursor && ++guard < 10);
+      cursor = !done && j.metadata?.hasNext ? j.metadata.cursors?.next : null;
+      if(!done && j.metadata?.hasNext && (!cursor || cursors.has(cursor))){complete=false;why='Wix pagination did not confirm the next page.';break;}
+      // Older responses without paging metadata are readable, but cannot prove completeness.
+      if(!done && typeof j.metadata?.hasNext!=='boolean'){complete=false;why='Wix pagination metadata is unavailable.';}
+      if(cursor && (++guard >= (all?100:10) || Date.now()>=deadline)){complete=false;why='More Wix lead pages remain; this snapshot is partial.';break;}
+      if(cursor)cursors.add(cursor);
+    } while (cursor);
     const field = (obj, re) => {
       for (const k of Object.keys(obj || {})) if (re.test(k)) return String(obj[k] || '').trim();
       return '';
@@ -2817,7 +2826,7 @@ async function wixLeads({fresh=false,summaries=false,submissionId=''}={}) {
     }).filter(Boolean);
     const now = Date.now();
     const within = (ms) => leads.filter(l => now - new Date(l.ts).getTime() < ms).length;
-    const list = leads.slice(0, 60);   // v14.30: the whole year, newest first
+    const list = all ? leads : leads.slice(0, 60);
     // v13.62: the Notes column carries a summary of what they want and which
     // tier, written by the quick tier, cached a day per submission. When the
     // model is unreachable the deterministic line (tier + their own words)
@@ -2827,14 +2836,14 @@ async function wixLeads({fresh=false,summaries=false,submissionId=''}={}) {
       l.note = ai || [l.tier, l.wrote].filter(Boolean).join(', ').slice(0, 220)
         || 'No note on the form.';
     }));
-    const data = { connected: true,
+    const data = { connected: true, complete, why, scope:all?'All retained callback submissions':'Callback submissions from the last '+LEADS_DAYS+' days',
       today: within(86400000), d7: within(7 * 86400000), d28: within(28 * 86400000), year: leads.length,
       lastLeadTs: leads.length ? leads[0].ts : null,
       list };
-    _leadsCache = submissionId ? { ts: 0, data: null } : { ts: Date.now(), data, summaries };
+    _leadsCache = submissionId || !complete ? { ts: 0, data: null } : { ts: Date.now(), data, summaries, all };
     return data;
   } catch (e) {
-    return { connected: false, why: String(e.message).slice(0, 200) };
+    return { connected: false, complete:false, why: String(e.message).slice(0, 200) };
   }
 }
 
@@ -3678,9 +3687,9 @@ function applyLatestLeadNote(lead,note){
   if(lead.noteUpdatedAt && !(Date.parse(note.ts)>Date.parse(lead.noteUpdatedAt)))return;
   lead.note=String(note.text).slice(0,2000);lead.wrote=lead.note;
 }
-async function loadLeadFeed() {
+async function loadLeadFeed({all=false}={}) {
   const [wix, manual] = await Promise.all([
-    wixLeads().catch(() => null),
+    wixLeads({all}).catch(() => null),
     loadManualLeads(),
   ]);
   const manualItems = (manual.items || []).map(m => ({ ...m, source: m.source === 'phone' ? 'phone' : 'maya' }));   // v14.30: a lead Maya took on the phone says so
@@ -3693,17 +3702,21 @@ async function loadLeadFeed() {
   const tombstones = new Set(manual.tombstones || []);
   const merged = [...manualItems, ...wixList]
     .filter(l => !tombstones.has(String(l && l.id)))
-    .map(l => { const ov = overrides[String(l && l.id)]; return ov ? { ...l, ...ov } : l; })
+    .map(l => ({ ...l, ...overrides[String(l && l.id)] }))
     .sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
   const now = Date.now();
   const within = ms => merged.filter(l => now - new Date(l.ts).getTime() < ms).length;
-  const list = merged.slice(0, 60);   // v14.30: the whole year
+  const list = all ? merged : merged.slice(0, 60);
+  let notesComplete = true;
   // v13.83: Latest Notes means the latest real touchpoint, not the original
   // Wix form summary painted over every refresh. Both the page and Maya read
   // this one enriched feed, so a note spoken to Maya appears in the station.
-  await Promise.all(list.map(async lead => {
+  // Large owner reports use bounded batches; ordinary UI/phone reads retain
+  // their existing parallel enrichment rather than adding serial latency.
+  const noteBatchSize=all?20:Math.max(1,list.length);
+  for(let offset=0;offset<list.length;offset+=noteBatchSize)await Promise.all(list.slice(offset,offset+noteBatchSize).map(async lead => {
     if (!lead.email) return;
-    const rec = await loadLeadNotes(lead.email).catch(() => null);
+    const rec = await loadLeadNotes(lead.email).catch(() => {notesComplete=false;lead.statusUnavailable=true;return null;});
     if (!rec) return;
     const note = rec.notes.length ? rec.notes[rec.notes.length - 1] : null;
     const contact = rec.contacts.length ? rec.contacts[rec.contacts.length - 1] : null;
@@ -3715,7 +3728,9 @@ async function loadLeadFeed() {
   }));
   return {
     connected: true,
-    why: wixConnected ? '' : (wix && wix.why) || '',
+    complete: wixConnected && wix.complete===true && notesComplete,
+    why: [wix?.why||(!wixConnected?'Wix lead source is unavailable.':''),!notesComplete?'Some lead notes and contact history are unavailable.':''].filter(Boolean).join(' '),
+    scope: all ? 'All retained callback and manual leads' : 'Recent callback and manual leads',
     today: within(86400000), d7: within(7 * 86400000), d28: within(28 * 86400000), year: merged.length,
     lastLeadTs: merged.length ? merged[0].ts : null,
     manualCount: manualItems.length,
@@ -4801,10 +4816,8 @@ const ownerSMSAccess=createOwnerSMSAccess({...crmStorage,ownerNumber:process.env
 const ownerConversation=createOwnerConversation({...crmStorage,
   smsAction:(uid,decision,id)=>ownerSMSAccess.act(uid,decision,id),
   ownerNumber:process.env.FROMSA_PHONE||'+15104917540',
-  complete:async(uid,instructions,data)=>{
-    const result=await crmAI.complete(uid,instructions,data,'auto',{timeoutMs:8000});
-    return JSON.parse(result.text.replace(/^```(?:json)?\s*|\s*```$/g,''));
-  },
+  complete:(uid,instructions,data)=>crmAI.complete(uid,instructions,data,'auto',{timeoutMs:8000,json:true}),
+  log:(event,details)=>console.warn('[owner-conversation]',event,JSON.stringify(details)),
   history:async()=>{
     if(!_messages)throw new Error('Messages are starting.');
     const thread=await _messages.get(process.env.FROMSA_PHONE||'+15104917540');
@@ -4812,7 +4825,8 @@ const ownerConversation=createOwnerConversation({...crmStorage,
       ...(m.kind==='call'?{transcript:(m.transcript||[]).slice(-6).map(t=>({who:t.who,text:String(t.text||'').slice(0,300)}))}:{})}));
   },
   find:_phoneFindLead,
-  list:async n=>{const feed=await loadLeadFeed();return (feed.list||[]).slice(0,n).map(l=>({name:l.name,phone:l.phone||'',email:l.email||'',tier:l.tier||'',wants:String(l.note||l.wrote||'').slice(0,220)}));},
+  list:async n=>{const feed=await loadLeadFeed();if(!feed.connected)throw new Error('Lead source unavailable.');return (feed.list||[]).slice(0,n).map(l=>({...l,wants:String(l.note||l.wrote||'').slice(0,220)}));},
+  listAll:()=>loadLeadFeed({all:true}),
   booking:query=>{if(!_booking)throw new Error('Booking is starting.');return _booking.preview(query);},
   logFeature:text=>appendMayaFeatureFrom(text,'Fromsa, owner conversation','owner'),
   textOwner:async text=>{

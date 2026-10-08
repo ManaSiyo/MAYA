@@ -1,17 +1,34 @@
-[Codex] Add typed-number messaging and governed status/spacing controls
+[Codex] Unify pill sizing and owner lead SMS reports
 
-Messages Begin texting accepts a typed phone number and optional contact name,
-opens a reviewed draft or confirmed US call through existing authenticated routes.
-Keep STOP, account and recipient boundaries, duplicate-send claims and draft review.
+Admin section gaps now affect all nine groups and empty states, including Ad
+campaigns. Hide redundant range text; keep D/W/M. Nine semantic status editors
+show meanings and uses; Delivering has an independent default green. Preserve
+explicit saved colors. Merge lead names into H4, dates into H5, captions into P3
+with versioned validation and legacy normalization without migration writes.
 
-Aesthetic Control edits six semantic status colors/opacity/weights, icon color,
-opacity/stroke and Admin section spacing with active previews and last-Save restore.
-Use a Status chevron, preserve shared gaps and schemas, hide closed floating fields.
-Runtime v23/gallery v33 references cover all served pages. Add a messaging fixture
-and extend design, gallery and final authority gates; update docs and handoff.
+Add independent Glass/Regular pill controls with real content + X/Y padding
+sizing. Remove fixed box conflicts, align Edit/Restore, enclose Save in Glass and
+bound its SVG glyph. Cover shared controls across Admin, App, Outbound, Brief and
+Operation Room. Load shared presentation/pill helpers before typography v24,
+gallery v34; revalidate edited runtimes/components and update role inventory.
 
-Validation: all 46 Cloud Build suites, full app-regression and server smoke pass;
-syntax and diff checks pass. Final Aesthetic Control computed-style and screenshot
-review covers defaults and saved changes across phone/tablet/desktop widths. No push, production settings, live calls or
-SMS. Calls remain US-only; international SMS acceptance depends on provider setup.
-Owner next: review/Push, verify exact release, then reviewed live SMS/call and Save.
+Owner SMS understands all/status/count lead requests without AI, reads retained
+callback/manual records before filtering and uses durable account-bound MORE
+pages. Report incomplete source/history reads explicitly. Request structured AI
+output where supported and categorize unconfirmed/refused/malformed/incomplete
+responses without logging conversation/private data or retrying paid inference.
+Full-source reads stop awaiting after six seconds without racing report writes or
+sends; ordinary note reads stay parallel. Keep verified owner binding, shared
+budget and client SEND confirmation gates.
+
+Validation: root npm ci, all 46 Cloud Build suites, full app-regression, server
+smoke, syntax/diff checks and final aesthetic authority pass. Computed geometry,
+default/saved material, H3 preview changes, actual preview clicks, icon containment,
+Save failure/retry/reload and hidden actions are tested across six widths; gallery
+editors cover eleven widths. Screenshots reviewed for desktop/phone and open/error
+states. Slow authentication or durable storage can still delay the SMS webhook.
+No Push, production settings, credentials, personal Chrome or live provider sends.
+Latest checked live release is 707592d; this commit requires owner Push and exact
+Hosting/API verification. Live general conversation/SMS and authenticated design
+Save need owner acceptance after deployment. Unloaded ai-meter.js is only a
+cleanup recommendation; no files deleted and server accounting stays intact.

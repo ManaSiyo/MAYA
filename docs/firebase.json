@@ -156,6 +156,24 @@
         ]
       },
       {
+        "source": "/aesthetics/ui/pill-runtime.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/presentation-runtime.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
         "source": "/aesthetics/ui/maya-canon.css",
         "headers": [
           {
@@ -211,6 +229,15 @@
       },
       {
         "source": "/aesthetics/ui/lead-stage-menu.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/components/components.css",
         "headers": [
           {
             "key": "Cache-Control",

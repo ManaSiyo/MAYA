@@ -170,7 +170,7 @@ only same-origin local pages. Old maya-buttons.css/maya-canon.css are adapters,
 not independent design authorities. Typography offers one preview per role, with validated Jost/Cormorant and
 Normal/ALL CAPS choices. Visuals groups button/icon glass before panel/table
 controls. Preserve old saved schemas and semantic status colors when applying
-shared text settings. Served pages load typography runtime v23 (gallery v33).
+shared text settings. Served pages load typography runtime v24 (gallery v34).
 Aesthetic Control opens within Admin through aesthetics/ui/admin-design.js; same-origin/source-checked close messages return via its logo. All Edit menus use the shared numeric input/select grid; popup padding has X/Y axes and legacy single-padding reads remain compatible. The fixed table formatting toolbar follows shared inner-panel material. Gallery Filter previews are retired; functional data filters remain. The saved editor material controls actual popups; formatting offers 200–500 weights and italic. Padding debug highlights exist only while a padding field is active. Restore uses the shared Refresh SVG. Run tests/component-gallery.mjs. Table preview cells use a fixed formatting toolbar; body selections edit complete semantic columns. Legacy row styles normalize to column settings without writing on load. The review section itself is the outer panel; never add a wrapper around its inner-panel pair. Every Edit restore returns to its last successful Save. Padding highlights are automatic and preview-only. Role counts are authored-template counts with linked pages and expandable source locations; regenerate with tests/typography-role-usage.py. Design saves atomically include a private audit trail;
 /api/design must strip _history and /api/admin/design-history must stay Admin-gated.
 Padding debug highlights are preview-only, never saved.
@@ -209,7 +209,7 @@ settings. Run component-gallery, design-config/design-contract and outbound-ui
 October 2 controls: temporary editors anchor to their own trigger, with black popup
 backings and validated Black table/header/first-column background choices. Inner
 panel previews contain heading and metric together; outer padding surrounds them.
-Panel/table controls share desktop rows; Leads uses the later H5/H6 hierarchy below. Wake changes
+Panel/table controls share desktop rows; Leads uses the later H4/H5 hierarchy below. Wake changes
 run tests/admin-wake.mjs (fake recognition; no microphone) in the release gate,
 plus the existing communications and both frontend/Playground hands batteries.
 
@@ -236,7 +236,7 @@ prose; generic text normalizes spoken phone digits. Requested counts are 1–20.
 Preserve non-retryable send claims, fixed owner recipient and client SEND gates.
 Run owner-conversation, owner-sms-access, owner-crm, communications and app-regression.
 
-October 5 Leads edits: Contact is the stored phone column; H5 names and H6 dates
+October 5 Leads edits: Contact is the stored phone column; H4 names and H5 dates
 are independently styled, date below name, with no category badges. Gallery and
 live cells share semantic data-col keys. Old three-column design saves remain
 valid; a fourth Contact column style is optional on the server and normalized
@@ -249,7 +249,7 @@ lead-update by stable ID; timestamps preserve reviewed edits over older notes.
 Deployment verification: run the exact tests listed in cloudbuild.yaml, including
 admin-ui-contract, before declaring a release ready. app-regression alone does
 not cover that separate gate. Category badges are retired; the gate asserts
-Contact/H5/H6 and reviewed message actions instead. tests/verify-release.mjs
+Contact/H4/H5 and reviewed message actions instead. tests/verify-release.mjs
 proves tests/verify-live.mjs rejects an older commit even when maya-version is
 unchanged. Verify release.json, page build stamps and /api/healthz commit after the owner's Push;
 Vercel success does not establish Firebase/Cloud Run deployment success.
@@ -356,3 +356,25 @@ iconOpacity/iconStroke keys extend Aesthetic Control with validated defaults and
 active previews. Status header uses the shared dropdown chevron. Final
 tests/aesthetic-authority.mjs covers changed roles/materials, colors, icon weight,
 section spacing and six widths; keep it last after functional verification.
+
+
+October 7 late owner review: typography schema typeVersion 2 merges lead names
+into H4, moves old H6 dates to H5, and merges captions into P3. Legacy saves read
+without migration writes. presentation-runtime.js and pill-runtime.js load before
+typography runtime v24 (gallery v34). Capsules size from content/glyph + saved X/Y
+padding. Glass and Regular pills have independent material/padding and usage
+previews; all Edit triggers are Regular, Save/icons are Glass. Nine semantic status
+editors list consumers; saved colors remain explicit overrides. All nine Admin
+heading gaps include empty states and Ad campaigns' D/W/M row; redundant range
+copy stays hidden. Final aesthetic-authority imports presentation-consistency and
+pill-consistency, after functional gates and before commit/handoff.
+
+Owner natural SMS lists/counts read full retained callback/manual leads before
+status filtering; durable MORE snapshots remain account bound. Source/page/time
+limits and missing status history must be reported as partial, never all. Default
+Admin feed remains 60 rows with parallel note enrichment. Full-report reads have
+a six-second read-only timeout; never race report storage or send mutations. Conversation uses structured provider output with safe
+error categories and no automatic paid retry. Keep verified owner binding and
+client SEND gates. Run owner-conversation, owner-sms-access, lead-feed-latency,
+CRM intelligence and all communications suites. Production AI availability and
+SMS acceptance require deployed owner verification; fixtures do not establish it.

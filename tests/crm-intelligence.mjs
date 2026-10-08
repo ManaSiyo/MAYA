@@ -58,6 +58,24 @@ await test('simultaneous calls cannot spend the same remaining budget',async()=>
  const ai=createCrmAI({...storage,keys:{openai:'test'},fetch:async()=>{calls++;return {ok:true,json:async()=>({output:[{content:[{type:'output_text',text:'x'}]}],usage:{input_tokens:10,output_tokens:20}})}}});
  const results=await Promise.allSettled([ai.complete('owner','x',{}),ai.complete('owner','x',{})]);assert.equal(calls,1);assert.equal(results.filter(r=>r.status==='rejected').length,1);
 });
+await test('owner JSON mode uses provider controls without extra paid retries and accounts for incomplete output',async()=>{
+ const storage=memory();let request,kind='good',calls=0;
+ const ai=createCrmAI({...storage,keys:{openai:'fixture',gemini:'fixture',anthropic:'fixture'},fetch:async(url,options)=>{
+  request=JSON.parse(options.body);calls++;return {ok:true,json:async()=>{
+   if(kind==='malformed')throw new SyntaxError('private provider payload');
+   const text='{"action":"chat","reply":"Hello"}';
+   if(url.includes('openai'))return {status:kind==='incomplete'?'incomplete':'completed',output:[{content:[{type:'output_text',text}]}],usage:{input_tokens:20,output_tokens:30}};
+   if(url.includes('anthropic'))return {stop_reason:kind==='incomplete'?'max_tokens':'end_turn',content:[{type:'text',text}],usage:{input_tokens:20,output_tokens:30}};
+   return {candidates:[{finishReason:kind==='incomplete'?'MAX_TOKENS':'STOP',content:{parts:[{text}]}}],usageMetadata:{promptTokenCount:20,candidatesTokenCount:30}};
+  }};
+ }});
+ await ai.complete('owner','Return JSON',{},'openai',{json:true});assert.deepEqual(request.text,{format:{type:'json_object'}});
+ await ai.complete('owner','Return JSON',{},'gemini',{json:true});assert.equal(request.generationConfig.responseMimeType,'application/json');
+ await ai.complete('owner','Normal text',{},'openai');assert.equal(request.text,undefined,'Existing plain-text callers remain compatible');
+ kind='incomplete';for(const provider of ['openai','gemini','anthropic']){const before=calls;await assert.rejects(ai.complete('owner','Return JSON',{},provider,{json:true}),e=>e.code==='ai_output_incomplete'&&e.provider===provider&&e.status===502);assert.equal(calls,before+1);}
+ let meter=await ai.meter('owner');assert.ok(meter.spentUsd>0);assert.equal(meter.reservedUsd,0,'Usage is recorded even when structured output is incomplete');
+ kind='malformed';const before=calls;await assert.rejects(ai.complete('owner','Return JSON',{},'openai',{json:true}),e=>e.code==='ai_response_invalid'&&!e.message.includes('private'));assert.equal(calls,before+1);meter=await ai.meter('owner');assert.ok(meter.reservedUsd>0,'Unknown billed output retains its reservation');assert.equal((await ai.meter('another-owner')).spentUsd,0);
+});
 await test('Gmail OAuth is single-use, encrypted, supports two inboxes and isolates accounts',async()=>{
  const storage=memory();let mailbox='one@example.com';const gmail=createGmail({...storage,config:{clientId:'id',clientSecret:'secret',redirectUri:'https://maya.test/api/outbound/gmail/callback',encryptionKey:'a'.repeat(64)},fetch:async url=>({ok:true,json:async()=>String(url).includes('oauth2')?{access_token:'access',refresh_token:'never-public',scope:'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send'}:{emailAddress:mailbox,historyId:'10'}})});
  const one=new URL(await gmail.begin('owner')).searchParams.get('state');await gmail.callback(one,'code');await assert.rejects(gmail.callback(one,'code'),/expired/);

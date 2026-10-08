@@ -3,7 +3,12 @@ from pathlib import Path
 import re,json
 root=Path(__file__).resolve().parent.parent
 files=sorted(p for folder in ['frontend','backend','playground','aesthetics'] for p in (root/folder).rglob('*') if p.suffix in ['.html','.js'] and 'aesthetics/aesthetic-control' not in str(p) and p.name!='aesthetic-control.html' and 'aesthetics/ui/components' not in str(p))
-categories={k:{'count':0,'locations':[],'roles':{}} for k in ['H0','H1','H2','H3','H4','H5','H6','P1','P2','P3','P4']}
+categories={k:{'count':0,'locations':[],'roles':{}} for k in ['H0','H1','H2','H3','H4','H5','P1','P2','P3']}
+def canonical_explicit(role,classes):
+ # Semantic identities disambiguate old H5 lead names from canonical H5 dates.
+ if 'lead-identity' in classes:return 'H4'
+ if 'lead-signup' in classes:return 'H5'
+ return {'H6':'H5','P4':'P3','P5':'P3'}.get(role,role)
 for path in files:
  text=path.read_text()
  # Preserve source line numbers. Exclude comments, retain JS-rendered markup.
@@ -13,10 +18,11 @@ for path in files:
   ident=names.get('id','');cls=set(names.get('class','').split());context=clean[max(0,m.start()-100):m.end()];category=None;reason=None
   role=None
   explicit=re.search(r'data-maya-type=[\'"]([^\'"]+)',attrs)
-  if explicit and explicit[1] in categories:category,role=explicit[1],'field' if tag in ['input','select','textarea'] else 'label' if tag=='label' else 'drawer' if ident=='adm-tabtitle' else 'subheadline' if tag.startswith('h') else 'pill' if tag=='button' else 'paragraph'
+  explicit_category=canonical_explicit(explicit[1],cls) if explicit else None
+  if explicit_category in categories:category,role=explicit_category,'leadname' if 'lead-identity' in cls else 'leaddate' if 'lead-signup' in cls else 'field' if tag in ['input','select','textarea'] else 'label' if tag=='label' else 'drawer' if ident=='adm-tabtitle' else 'subheadline' if tag.startswith('h') else 'pill' if tag=='button' else 'caption' if tag=='small' or cls & {'k','caption','bub-when','brand-status'} else 'paragraph'
   elif ident=='msg-name':category,role='H3','contact'
-  elif 'lead-identity' in cls:category,role='H5','leadname'
-  elif 'lead-signup' in cls:category,role='H6','leaddate'
+  elif 'lead-identity' in cls:category,role='H4','leadname'
+  elif 'lead-signup' in cls:category,role='H5','leaddate'
   elif 'maya-signin-h0' in cls:category,role='H0','signin'
   elif tag=='h1' or cls & {'brand-title','signin-wordmark','brand-sample'} or ident=='client-name-modal-title':
    category='H1';role='editorial' if ident=='client-name-modal-title' else 'brand' if cls & {'brand-title','signin-wordmark','brand-sample'} else 'headline'
@@ -27,7 +33,7 @@ for path in files:
   elif tag=='strong' and ('class="stat"' in context or 'class="affiliate-stat"' in context):category,role='H4','dashboard'
   elif tag=='span' and ('class="stat"' in context or 'class="affiliate-stat"' in context):category,role='P2','label'
   elif tag in ['code','pre']:category,role='P1','technical'
-  elif tag=='small' or cls & {'k','caption','bub-when','brand-status'}:category,role='P4','caption'
+  elif tag=='small' or cls & {'k','caption','bub-when','brand-status'}:category,role='P3','caption'
   elif tag in ['button','label'] or cls & {'status-pill','top-btn','caps'}:category,role='P3','pill'
   elif tag=='p':category,role='P1','paragraph'
   elif tag in ['td','th']:category,role='P1','table'
@@ -42,7 +48,7 @@ for path in files:
   categories[category]['locations'].append(entry)
  # JS createElement headings/paragraphs are separate authored locations.
  for m in re.finditer(r'createElement\(\s*[\'"](h[1-6]|p|small|code|pre|button|label|td|th)[\'"]\s*\)',clean):
-  tag=m[1];category='H1' if tag=='h1' else 'H3' if tag.startswith('h') else 'P1' if tag in ['code','pre'] else 'P4' if tag=='small' else 'P3' if tag in ['button','label'] else 'P1';role='headline' if tag=='h1' else 'subheadline' if tag.startswith('h') else 'technical' if tag in ['code','pre'] else 'caption' if tag=='small' else 'pill' if tag in ['button','label'] else 'paragraph'
+  tag=m[1];category='H1' if tag=='h1' else 'H3' if tag.startswith('h') else 'P1' if tag in ['code','pre'] else 'P3' if tag in ['small','button','label'] else 'P1';role='headline' if tag=='h1' else 'subheadline' if tag.startswith('h') else 'technical' if tag in ['code','pre'] else 'caption' if tag=='small' else 'pill' if tag in ['button','label'] else 'paragraph'
   categories[category]['locations'].append({'page':str(path.relative_to(root)),'line':clean[:m.start()].count('\n')+1,'tag':tag,'id':None,'class':'','reason':'JavaScript-created '+tag,'role':role,'snippet':m[0]})
  # The second bottom-line number is assembled with an interpolated class and
  # cannot be parsed as a static opening tag. Count its authored template once.

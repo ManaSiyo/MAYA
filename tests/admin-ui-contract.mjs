@@ -102,7 +102,7 @@ await test('v14.01 Lead Station: no Invoice columns, no Last Quote (v14.34), dra
   assert.ok(!admin.includes("'<div class=\"lead-when\">"), 'day-count line under the name removed');
 });
 
-await test('CRM Leads: Contact, editable notes and H5/H6; message actions stay reviewed', () => {
+await test('CRM Leads: Contact, editable notes and H4/H5; message actions stay reviewed', () => {
   assert.ok(!admin.includes('function _actionsCell') && !admin.includes('function leadCategory'), 'retired category badges do not render');
   assert.ok(admin.includes("['name', 'contact', 'stage', 'note']"), 'stored Contact has its own column');
   assert.ok(admin.includes('class="lead-identity"') && admin.includes('class="lead-signup"'), 'separate name/date roles');

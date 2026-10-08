@@ -1,17 +1,26 @@
 // Validated owner design settings. No CSS strings or arbitrary paths.
 export const DESIGN_PATH = 'config/typography-controls.json';
 const DESIGN_ROLES = new Set(['H1','H2','H3','H4','P1','P2','P3','P4']);
+const DESIGN_ROLES_V2 = new Set(['H0','H1','H2','H3','H4','H5','P1','P2','P3']);
+const BACKGROUNDS = ['black','gray','blue','yellow','green','pink'];
 export function validDesign(body) {
-  if (!body || typeof body !== 'object' || !body.type || !body.glass || !body.overlay) return false;
-  if (Object.keys(body).some(k => !['type','glass','overlay','finish','pillX','pillY','editor','inner','filter','table','iconSize','dropdownHeight','iconPillGap','iconTextGap','statusStyles','sectionSpacing','iconColor','iconOpacity','iconStroke'].includes(k))) return false;
+  if (!body || typeof body !== 'object' || !body.type || typeof body.type!=='object' || Array.isArray(body.type) || !body.glass || !body.overlay) return false;
+  if (Object.keys(body).some(k => !['type','typeVersion','glass','regularPill','overlay','finish','pillX','pillY','editor','inner','filter','table','iconSize','dropdownHeight','iconPillGap','iconTextGap','statusStyles','sectionSpacing','iconColor','iconOpacity','iconStroke'].includes(k))) return false;
+  if(Object.hasOwn(body,'typeVersion')&&body.typeVersion!==2)return false;
   for(const k of ['iconSize','dropdownHeight'])if(body[k]!==undefined&&(!Number.isInteger(body[k])||body[k]<24||body[k]>48))return false;
   for(const k of ['iconPillGap','iconTextGap'])if(body[k]!==undefined&&(!Number.isInteger(body[k])||body[k]<0||body[k]>32))return false;
   if(body.iconColor!==undefined&&!/^#[0-9a-f]{6}$/i.test(body.iconColor))return false;
   for(const [key,min,max] of [['iconOpacity',0,100],['iconStroke',1,3]])if(body[key]!==undefined&&(!Number.isInteger(body[key])||body[key]<min||body[key]>max))return false;
   if(body.sectionSpacing!==undefined){if(!body.sectionSpacing||Array.isArray(body.sectionSpacing)||typeof body.sectionSpacing!=='object'||Object.entries(body.sectionSpacing).some(([k,v])=>!['submissions','leads','ads','insights','headingGap'].includes(k)||!Number.isInteger(v)||v<0||v>160))return false;}
-  if(body.statusStyles!==undefined){if(!body.statusStyles||Array.isArray(body.statusStyles)||typeof body.statusStyles!=='object'||Object.entries(body.statusStyles).some(([k,v])=>!['new','contacted','in_progress','booked','completed','canceled'].includes(k)||!v||Array.isArray(v)||Object.keys(v).some(f=>!['color','opacity','weight'].includes(f))||!/^#[0-9a-f]{6}$/i.test(v.color)||!Number.isInteger(v.opacity)||v.opacity<0||v.opacity>100||!Number.isInteger(v.weight)||v.weight<200||v.weight>500))return false;}
-  const legacy=Object.hasOwn(body.type,'P5');
-  const roles=new Set([...DESIGN_ROLES,...(legacy?['P5']:[]),...['H0','H5','H6'].filter(k=>Object.hasOwn(body.type,k))]);
+  if(body.statusStyles!==undefined){if(!body.statusStyles||Array.isArray(body.statusStyles)||typeof body.statusStyles!=='object'||Object.entries(body.statusStyles).some(([k,v])=>!['new','contacted','in_progress','booked','completed','canceled','delivering','pending','rejected'].includes(k)||!v||Array.isArray(v)||typeof v!=='object'||Object.keys(v).some(f=>!['color','opacity','weight'].includes(f))||!/^#[0-9a-f]{6}$/i.test(v.color)||!Number.isInteger(v.opacity)||v.opacity<0||v.opacity>100||!Number.isInteger(v.weight)||v.weight<200||v.weight>500))return false;}
+  if(body.regularPill!==undefined){
+    const p=body.regularPill,keys=['fill','rim','borderColor','background','paddingX','paddingY'];
+    if(!p||typeof p!=='object'||Array.isArray(p)||Object.keys(p).length!==keys.length||Object.keys(p).some(k=>!keys.includes(k)))return false;
+    if(!['black','white','gray'].includes(p.borderColor)||!BACKGROUNDS.includes(p.background))return false;
+    for(const [k,min,max] of [['fill',0,100],['rim',0,100],['paddingX',4,32],['paddingY',2,16]])if(!Number.isInteger(p[k])||p[k]<min||p[k]>max)return false;
+  }
+  const v2=body.typeVersion===2,legacy=!v2&&Object.hasOwn(body.type,'P5');
+  const roles=v2?DESIGN_ROLES_V2:new Set([...DESIGN_ROLES,...(legacy?['P5']:[]),...['H0','H5','H6'].filter(k=>Object.hasOwn(body.type,k))]);
   if (Object.keys(body.type).length !== roles.size ||
       Object.keys(body.type).some(k => !roles.has(k))) return false;
   for (const [role,v] of Object.entries(body.type)) {
@@ -24,7 +33,7 @@ export function validDesign(body) {
     if (!v || !Number.isInteger(v.size) || v.size < (role==='H0'?24:8) || v.size > (role==='H0'?160:32) || v.size % 2 ||
         (!Number.isInteger(v.weight)||v.weight<200||v.weight>500) || !['white','gray'].includes(v.color)) return false;
   }
-  const sizes=[...DESIGN_ROLES,...(legacy?['P5']:[])].map(k=>body.type[k].size);
+  const sizes=(v2?['H1','H2','H3','H4','P1','P2','P3']:[...DESIGN_ROLES,...(legacy?['P5']:[])]).map(k=>body.type[k].size);
   if (sizes.slice(0,4).some((n,i)=>i&&n>=sizes[i-1]) ||
       sizes.slice(4).some((n,i)=>i&&n>sizes[i+3])) return false;
   for (const [obj,keys] of [[body.glass,['fill','tint','rim','highlight','blur','saturation']],

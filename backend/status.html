@@ -324,8 +324,8 @@ try {
     width:max-content;max-width:100%;min-height:32px;margin:6px 0 12px;padding:6px 16px;
     border:.5px solid var(--maya-button-edge);border-radius:100px;background:var(--maya-button-fill);
     box-shadow:var(--maya-button-shadow);backdrop-filter:var(--maya-button-frost);
-    -webkit-backdrop-filter:var(--maya-button-frost);font-size:var(--maya-type-P4-size,10px);
-    font-weight:var(--maya-type-P4-weight,300);letter-spacing:.12em;text-transform:uppercase}
+    -webkit-backdrop-filter:var(--maya-button-frost);font-size:var(--maya-type-P3-size,10px);
+    font-weight:var(--maya-type-P3-weight,300);letter-spacing:.12em;text-transform:uppercase}
   #drawer a.design-quicklink:focus-visible{outline:2px solid #adcdf8;outline-offset:3px}
 
   .status-bar{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;margin:6px 0 8px;
@@ -848,7 +848,7 @@ try {
   .automation-rule label{display:grid;gap:4px;margin:10px 0;}.automation-rule label:has(input[type=checkbox]){display:flex;align-items:center;gap:6px}.automation-rule select{width:100%;box-sizing:border-box}#drawer-automations .subheadline{letter-spacing:normal;text-align:left}.automation-rule textarea{width:100%;box-sizing:border-box;min-height:100px}.automation-rule input[type=time],.automation-rule input[type=number]{max-width:140px}
   #msg-idea{padding:8px 0}#msg-idea[hidden]{display:none}#msg-idea-text{white-space:pre-wrap;margin:6px 0}#msg-idea-status{color:var(--dim)}
   .msg-thread-heading{font:var(--maya-type-H2-weight) var(--maya-type-H2-size) var(--maya-type-H2-font);color:var(--maya-type-H2-color);margin-top:4px}
-  #msg-call,#msg-share{aspect-ratio:1;border-radius:50%!important;display:inline-flex;align-items:center;justify-content:center;padding:0!important;flex:none}
+  #msg-call,#msg-share{display:inline-flex;align-items:center;justify-content:center;flex:none}
   .msg-share{position:relative;margin-left:auto}#msg-share-menu{position:absolute;right:0;top:100%;z-index:5;background:var(--maya-surface);backdrop-filter:var(--maya-frost);border:1px solid var(--maya-line);border-radius:12px;padding:8px;min-width:140px}
   #msg-share-menu button{display:block;width:100%;border:0;border-radius:8px;padding:8px;text-align:left;background:transparent;color:var(--ink);cursor:pointer}#msg-share-menu button:hover{background:#ffffff14}
   #adm-mkt #leads-table:has(.lead-note-inline) .lead-col-first{position:static!important}
@@ -879,7 +879,9 @@ try {
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=14">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
-<script src="/aesthetics/ui/typography-controls.js?v=23"></script>
+<script src="/aesthetics/ui/presentation-runtime.js?v=1"></script>
+<script src="/aesthetics/ui/pill-runtime.js?v=1"></script>
+<script src="/aesthetics/ui/typography-controls.js?v=24"></script>
 <link rel="stylesheet" href="/aesthetics/ui/admin-systems.css?v=3">
 </head>
 <body class="systems-map">
@@ -1124,15 +1126,15 @@ if (IS_AFFILIATES) {
     <span id="gsi-slot" style="margin:0 0 0 auto"></span>
   </div>
 
-  <h2 class="grp" id="submissions-heading">Submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span></h2>
-  <div id="subs-strip" style="display:none"></div>
-  <div id="subs-note-inline">Waiting for the one sign in at the top of the page.</div>
+  <h2 class="grp" id="submissions-heading" data-maya-section-heading>Submissions <span id="subs-count" style="color:var(--blue);letter-spacing:0.1em"></span></h2>
+  <div id="subs-strip" data-maya-section-content style="display:none"></div>
+  <div id="subs-note-inline" data-maya-section-content>Waiting for the one sign in at the top of the page.</div>
 
   <!-- v13.39: one row, five numbers, and nothing underneath. Users first,
        because that is the number that matters, then the site's own traffic. -->
-  <details class="fold" id="users-fold" open>
+  <details class="fold" data-maya-section id="users-fold" open>
     <summary><h2 class="grp">Users and traffic <span class="traffic-legend">manasiyo.com <span style="margin:0 3px">|</span> <span class="lg-b">maya</span></span></h2></summary>
-    <div class="fold-body"><div id="head-tiles" class="tiles hidden"></div></div>
+    <div data-maya-section-content class="fold-body"><div id="head-tiles" class="tiles hidden"></div></div>
   </details>
 
 
@@ -1147,18 +1149,18 @@ if (IS_AFFILIATES) {
        feed still paints into these hidden holders so paintSite stays happy. -->
   <div id="mkt-wix-tiles" class="tiles" style="display:none"></div>
   <div id="mkt-wix-note" class="note" style="display:none"></div>
-  <details class="fold" id="leads-fold" open>
+  <details class="fold" data-maya-section id="leads-fold" open>
     <summary><h2 class="grp">Leads</h2></summary>
 
-    <div class="panel" tabindex="0" role="region" aria-label="Leads, scroll horizontally for more columns"><table id="leads-table"><tbody></tbody></table></div>
+    <div data-maya-section-content class="panel" tabindex="0" role="region" aria-label="Leads, scroll horizontally for more columns"><table id="leads-table"><tbody></tbody></table></div>
     <div id="leads-note" class="note" style="display:none"></div>
     <div id="callback-alert-note" class="note" role="status" style="display:none"></div>
   </details>
 
-  <details class="fold" id="ads-fold" open>
+  <details class="fold" data-maya-section id="ads-fold" open>
   <summary><h2 class="grp">Ad campaigns</h2></summary>
-  <div class="metric-chips" style="margin:10px 0 8px">
-    <span id="range-word" style="font-family:'Jost',sans-serif;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--faint);align-self:center">last 7 days</span>
+  <div class="metric-chips" id="ad-range-controls" data-maya-section-content style="margin:0 0 8px">
+    <span id="range-word" hidden>last 7 days</span>
     <span style="margin-left:auto;display:inline-flex;gap:3px" id="range-chips">
       <button class="range-chip" data-r="D" onclick="setAdRange('D')" title="Today against yesterday">D</button>
       <button class="range-chip on" data-r="W" onclick="setAdRange('W')" title="Last 7 days">W</button>
@@ -1193,9 +1195,9 @@ if (IS_AFFILIATES) {
   <!-- v13.91: Sources of traffic and The bottom line share one shell now, per
        Fromsa — one fold, the funnel and tiles up top, the traffic sources under
        a divider below. -->
-  <details class="fold" id="bottom-fold" open>
+  <details class="fold" data-maya-section id="bottom-fold" open>
     <summary><h2 class="grp">Insights</h2></summary>
-    <div class="panel">
+    <div data-maya-section-content class="panel">
       <div id="bl-funnel" class="bl-funnel"></div>
       <div id="bl-tiles" class="bl-tiles"></div>
       <!-- v14.03: the Sources of traffic table is gone, per Fromsa (it was not
@@ -1208,9 +1210,9 @@ if (IS_AFFILIATES) {
   </div>
 
   <div class="map-footer">
-  <details class="fold" id="changes-fold" data-latest="2026-09-30a" data-version="14.40">
+  <details class="fold" data-maya-section id="changes-fold" data-latest="2026-09-30a" data-version="14.40">
   <summary><h2 class="grp">Recent changes, what has shipped <span class="new-dot"></span></h2></summary>
-  <div class="fold-body changelog">
+  <div data-maya-section-content class="fold-body changelog">
     <div class="release-stamp" id="release-stamp" hidden></div>
     <div class="chg"><b>Sep 30</b>Booking links now have a recipient and message preview before owner approval; call transcripts appear in Messages. Signup alert checks were added. Scheduled delivery and carrier receipt still need live verification.</div>
     <div class="chg"><b>Sep 29</b>Aesthetic Control is the shared typography and glass editor, accessible from Systems. Its Save control applies the design across pages.</div>
@@ -1368,18 +1370,18 @@ if (IS_AFFILIATES) {
 
   <!-- v14.03: Maya's history of everyone's requests. Who asked, then in a few
        words what they asked for, newest first. Read from her inbox. -->
-  <details class="fold" id="features-fold">
+  <details class="fold" data-maya-section id="features-fold">
   <summary><h2 class="grp">Feature requests <span class="new-dot"></span></h2></summary>
-  <div class="fold-body">
+  <div data-maya-section-content class="fold-body">
     <div id="features-list" class="fr-list"><div class="note">Waiting for the one sign in at the top of the page.</div></div>
   </div>
   </details>
 
   <!-- v14.03: the Prompting Engine stepped off the page. v14.24: back, per
        Fromsa, with a fourth field for the body (height, head size). -->
-  <details class="fold" id="pe-fold">
+  <details class="fold" data-maya-section id="pe-fold">
   <summary><h2 class="grp">MAYA Prompting Engine</h2></summary>
-  <div class="fold-body">
+  <div data-maya-section-content class="fold-body">
   <div class="pe-live">
     <h4>Fixed, baked into every render (not editable here)</h4>
     <p>Every image MAYA generates is built from four layers: the <b>design specification</b> from the consultation,
@@ -1414,9 +1416,9 @@ if (IS_AFFILIATES) {
   </div>
   </details>
 
-  <details class="fold" id="arch-fold">
+  <details class="fold" data-maya-section id="arch-fold">
   <summary><h2 class="grp" id="architecture">Architecture, local and online</h2></summary>
-  <div class="fold-body">
+  <div data-maya-section-content class="fold-body">
   <div class="arch">
     <div class="col">
       <h4>Your Mac, Desktop/MAYA-new</h4>
@@ -4099,7 +4101,7 @@ function paintCampaigns() {
     rows.map(c => {
       const on = Number(c.impressions) > 0;
       const lnk = c.linkClicks != null ? c.linkClicks : c.clicks;
-      return '<tr><td><span class="status-word ' + (on ? 'on' : 'off') + '">' +
+      return '<tr><td><span class="status-word ' + (on ? 'on' : 'off') + '" data-status="' + (on ? 'delivering' : 'new') + '" title="' + (on ? 'Impressions recorded in the selected window; this does not confirm the campaign is enabled now.' : 'No impressions recorded in the selected window.') + '">' +
         (on ? '&#9679; delivering' : '&#9675; no delivery') + '</span></td>' +
         '<td>' + esc(c.campaign) + '</td>' +
         '<td>' + esc(srcName(String(c.source || ''))) + '</td>' +

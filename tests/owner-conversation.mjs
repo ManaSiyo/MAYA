@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {createOwnerConversation,formatSignupAlert,validateAlertTemplate,OWNER_CONVERSATION_INSTRUCTIONS,ownerLeadRead,numericOwnerText} from '../docs/server/owner-conversation.mjs';
+import {createOwnerConversation,formatSignupAlert,validateAlertTemplate,OWNER_CONVERSATION_INSTRUCTIONS,ownerLeadRead,ownerLeadStage,numericOwnerText} from '../docs/server/owner-conversation.mjs';
 import {createOwnerCRM} from '../docs/server/owner-crm.mjs';
 const files=new Map();let revision=0,decision,seen,completions=0,sends=0,sentBody,listCount,features=0,commits=0,conflict=false;
 const storage={read:async key=>files.has(key)?{ok:true,buf:Buffer.from(JSON.stringify(files.get(key).value)),generation:files.get(key).generation}:{ok:false,status:404},
@@ -80,3 +80,57 @@ await conversation.act('another-account',{action:'remember',text:'Temporary brow
 await conversation.act('owner',{action:'forget',text:'Temporary browser fact'},'browser-forget');
 assert.ok(!(await conversation.context('owner')).memory.some(i=>i.text==='Temporary browser fact'));
 assert.ok((await conversation.context('another-account')).memory.some(i=>i.text==='Temporary browser fact'));
+
+for(const text of ['Text me all the contacted leads','Can you please show me all contacted leads?','contacted leads','List all leads with status contacted','Show me leads we have contacted','Which leads have we contacted?','What are the contacted leads?','Give me a list of contacted leads','Text me all of the leads marked as contacted'])assert.deepEqual(ownerLeadRead(text),{action:'list_leads',all:true,stage:'contacted'},text);
+for(const text of ['How many contacted leads do we have?','Count the contacted leads','How many leads have we contacted?']){
+ assert.deepEqual(ownerLeadRead(text),{action:'count_leads',stage:'contacted'},text);
+}
+assert.deepEqual(ownerLeadRead('Show the latest 3 in progress leads'),{action:'list_leads',count:3,stage:'in_progress'});
+assert.deepEqual(ownerLeadRead('All not contacted leads'),{action:'list_leads',all:true,stage:'new'});
+assert.deepEqual(ownerLeadRead('All cancelled leads'),{action:'list_leads',all:true,stage:'canceled'});
+assert.deepEqual(ownerLeadRead('ALL LEADS'),{action:'list_leads',all:true});
+for(const text of ['Text all contacted leads: Hello','Send all leads to Nick','Mark all leads contacted','Delete contacted leads','All leads except contacted'])assert.equal(ownerLeadRead(text),null,text);
+assert.equal(ownerLeadStage({stage:'new',lastContact:'email'}),'new');assert.equal(ownerLeadStage({lastContact:'email'}),'contacted');assert.equal(ownerLeadStage({stage:'meeting'}),'booked');assert.equal(ownerLeadStage({stage:'in_process'}),'in_progress');assert.equal(ownerLeadStage({note:'Cancelled.'}),'canceled');assert.equal(ownerLeadStage({statusUnavailable:true}),'unknown');
+let readAll=0;
+const records=Array.from({length:101},(_,i)=>({id:'record-'+i,name:'Client '+i,stage:i<60?'new':'contacted'}));
+const fullConversation=createOwnerConversation({...deps,listAll:async uid=>{assert.equal(uid,'owner');readAll++;return {list:records,complete:true};},smsAction:async(uid,d)=>({ok:true,reply:d.title+' '+d.leads.length})});
+const fullDecision=await fullConversation.decide('owner','Text me all the contacted leads');
+assert.equal((await fullConversation.act('owner',fullDecision,'full-list')).leads.length,41);assert.equal(readAll,1);
+assert.equal((await fullConversation.act('owner',{action:'list_leads',count:3,stage:'contacted'},'filtered')).leads[0].id,'record-60','Status filtering precedes requested count');
+assert.equal((await fullConversation.act('owner',{action:'count_leads',stage:'contacted'},'count')).total,41);
+const partialConversation=createOwnerConversation({...deps,listAll:async()=>({list:records,complete:false}),smsAction:async(uid,d)=>({ok:true,reply:d.warning})});
+assert.match((await partialConversation.act('owner',fullDecision,'partial')).reply,/partial snapshot/);
+assert.match((await partialConversation.act('owner',{action:'count_leads',stage:'contacted'},'partial-count')).reply,/partial snapshot/);
+await assert.rejects(conversation.act('owner',fullDecision,'missing-full-reader'),/Full lead reports are unavailable/);
+await assert.rejects(createOwnerConversation({...deps,listAll:async()=>({connected:false})}).act('owner',fullDecision,'unavailable'),/temporarily unavailable/);
+console.log('Natural owner reads filter full live data before count, retain canonical/legacy status meaning, and disclose incomplete sources.');
+
+const logs=[];let raw={text:'{"action":"chat","reply":"We can talk normally."}',provider:'fixture',model:'fixture-model'};
+const structuredConversation=createOwnerConversation({...deps,complete:async()=>raw,log:(event,detail)=>logs.push({event,...detail})});
+assert.equal((await structuredConversation.decide('owner','Hello Maya')).reply,'We can talk normally.');
+raw={...raw,text:'```JSON\n{"action":"chat","reply":"I remember our conversation."}\n```'};assert.equal((await structuredConversation.decide('owner','What did we discuss?')).reply,'I remember our conversation.');
+raw={...raw,text:'Private malformed owner text'};await assert.rejects(structuredConversation.decide('owner','Hello private owner'),/unreadable response.*No command was executed/);
+assert.deepEqual(logs.at(-1),{event:'decision_failed',code:'owner_response_invalid',status:502,provider:'fixture',model:'fixture-model'});assert.doesNotMatch(JSON.stringify(logs),/Private|private owner/);
+raw={...raw,text:'{"reply":"No action"}'};await assert.rejects(structuredConversation.decide('owner','Hello'),/no usable command/);
+assert.equal(commits,1,'Invalid conversational output cannot execute writes');
+console.log('Structured normal conversation preserves provider envelope and safely diagnoses malformed output without recording personal content.');
+
+// A slow full read returns before the webhook deadline; completing/rejecting
+// that pure reader later must never persist a report or send a message.
+const unhandled=[];const onUnhandled=error=>unhandled.push(error);process.on('unhandledRejection',onUnhandled);
+try{
+ for(const lateOutcome of ['resolve','reject'])for(const requestedAction of ['list_leads','text_owner']){
+  let finish,fail,reports=0,clientSends=0,writes=0;
+  const pending=new Promise((resolve,reject)=>{finish=resolve;fail=reject;});
+  const slow=createOwnerConversation({...deps,leadReadBudgetMs:10,listAll:()=>pending,write:async()=>{writes++;throw Error('No writes expected');},smsAction:async()=>{reports++;return {ok:true,reply:'Unexpected report'};},textOwner:async()=>{clientSends++;return {ok:true};}});
+  let guard;try{
+   await assert.rejects(Promise.race([slow.act('owner',{action:requestedAction,...(requestedAction==='text_owner'?{report:'leads'}:{}),all:true,stage:'contacted'},'slow-'+lateOutcome),new Promise((_,reject)=>{guard=setTimeout(()=>reject(Error('Full reader did not return promptly')),1000);})]),e=>e.status===503&&e.code==='owner_lead_read_timeout'&&/lead source is slow or unavailable/.test(e.message)&&!/AI/.test(e.message));
+  }finally{clearTimeout(guard);}
+  if(lateOutcome==='resolve')finish({list:records,complete:true});else fail(Error('Late source failure'));
+  await new Promise(resolve=>setImmediate(resolve));await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(reports,0);assert.equal(clientSends,0);assert.equal(writes,0);
+ }
+ assert.deepEqual(unhandled,[],'Timed-out reader rejection stays handled');
+}finally{process.off('unhandledRejection',onUnhandled);}
+assert.match((await fullConversation.act('owner',fullDecision,'fast-full-after-timeout')).reply,/Contacted leads 41/);
+console.log('Full lead reads have a six-second production budget; timeout and late completion cannot write reports or send.');

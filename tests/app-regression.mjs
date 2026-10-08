@@ -573,7 +573,7 @@ ok('the map light reads Submissions', s.lights.includes('Submissions') && !s.lig
 
 ok('Admin folds: users, the migrated marketing modules, then changes/feature requests/architecture (the prompting engine back since v14.24)',
   s.order === 'users-fold,leads-fold,ads-fold,bottom-fold,changes-fold,features-fold,pe-fold,arch-fold' &&
-  /<details class="fold" id="pe-fold">/.test(MAP_SOURCE));
+  /<details\b(?=[^>]*\bclass="[^\"]*\bfold\b)(?=[^>]*\bid="pe-fold")[^>]*>/.test(MAP_SOURCE));
 ok('the marketing modules are migrated into Admin under Users and traffic',
   MAP_SOURCE.includes('id="adm-mkt"') &&
   MAP_SOURCE.includes('id="campaigns-table"') &&
@@ -914,7 +914,7 @@ ok('the map is called Admin and drops its ceremony',
   !MAP_SOURCE.includes('Open the Operations Room &rarr;') &&
   !MAP_SOURCE.includes('Runs on Google credits'));
 ok('users and traffic folds, in place, open by default',
-  MAP_SOURCE.includes('<details class="fold" id="users-fold" open>'));
+  /<details\b(?=[^>]*\bclass="[^\"]*\bfold\b)(?=[^>]*\bid="users-fold")(?=[^>]*\sopen(?:\s|=|>))[^>]*>/.test(MAP_SOURCE));
 ok('submitting opens the folder while the PDF renders',
   INDEX_SOURCE.includes('const initPromise = fetch(\'/api/submit\'') &&
   INDEX_SOURCE.includes('const dgPromise = _dreamGarmentBytes(lastOnePagerImage)') &&
@@ -1371,7 +1371,7 @@ ok('Google conversions are absence, never a fake zero',
   SERVER_SOURCE.includes('conversions: null'));
 ok('leads come from the Wix form record itself, no pixel, no Gmail parsing',
   SERVER_SOURCE.includes('async function wixLeads(') &&
-  SERVER_SOURCE.includes('forms/v4/submissions/namespace/query') &&
+  SERVER_SOURCE.includes('https://www.wixapis.com/form-submission-service/v4/submissions/namespace/query') &&
   SERVER_SOURCE.includes('out.leads = leads') &&
   MKT_SOURCE.includes('function paintLeads(') &&
   MKT_SOURCE.includes('id="leads-table"'));
@@ -2270,7 +2270,7 @@ ok('v14.24: the 403 healed, the wall never reloads, uploads file the client, Con
   SERVER_SOURCE.includes("'gpt-4o':       MODEL_TERRA,") &&
   SERVER_SOURCE.includes('Never invent a card or a pin.') &&
   MAP_SOURCE.includes("label:'Status'") &&
-  MAP_SOURCE.includes('<details class="fold" id="pe-fold">') &&
+  /<details\b(?=[^>]*\bclass="[^\"]*\bfold\b)(?=[^>]*\bid="pe-fold")[^>]*>/.test(MAP_SOURCE) &&
   MAP_SOURCE.includes('id="pe-body"') &&
   MAP_SOURCE.includes("body: document.getElementById('pe-body').value.trim(),"));
 ok('v14.23: the pencil beside the name, Randomize repaints, white notes, all of Pinterest as the third room',
@@ -2713,7 +2713,8 @@ ok('Outbound preserves Sheet columns and filters all campaigns with recorded F1/
 ok('Outbound preserves campaign pain and criteria and provides a people table',outboundJS.includes("field('pain'") && outboundJS.includes("field('criteria'") && outboundJS.includes('function renderPeople()'));
 await browser.close(); if (served) srv.close();
 ok('CRM uses six owner statuses and dismisses the filter outside or on Escape',MAP_SOURCE.includes("booked:'Booked'") && MAP_SOURCE.includes("completed:'Completed'") && MAP_SOURCE.includes("canceled:'Cancelled'") && MAP_SOURCE.includes("!_leadFilterOwner.contains(e.target) && !_leadFilterMenu.contains(e.target)") && MAP_SOURCE.includes("if(e.key==='Escape' && _leadFilterOwner)") && MAP_SOURCE.includes('window.filterLeadStatus = filterLeadStatus'));
-ok('Lead rows show H5 names above H6 dates without category badges',MAP_SOURCE.includes('class="lead-signup"')&&MAP_SOURCE.includes('flex-direction:column;align-items:stretch')&&!MAP_SOURCE.includes('function leadCategory'));
+const activeTypeSource=readFileSync(join(ROOT,'aesthetics/ui/typography-controls.js'),'utf8');
+ok('Lead rows show H4 names above H5 dates without category badges',MAP_SOURCE.includes('class="lead-signup"')&&MAP_SOURCE.includes('flex-direction:column;align-items:stretch')&&!MAP_SOURCE.includes('function leadCategory')&&activeTypeSource.includes("H4:'.lead-identity,")&&activeTypeSource.includes("H5:'.lead-signup'"));
 ok('Model snapshot shows server roles through accessible hover cards',MAP_SOURCE.includes("new CustomEvent('maya-model-snapshot'") && readFileSync(join(ROOT,'aesthetics/ui/admin-systems.js'),'utf8').includes('Object.entries(snapshot.models'));
 const outboundRevampUI=readFileSync(join(ROOT,'backend/outbound.html'),'utf8'),outboundRevampJS=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');
 ok('Outbound uses the Admin background and functioning drawer',outboundRevampUI.includes('birth-of-a-star.png')&&outboundRevampUI.includes('outbound-drawer')&&outboundRevampJS.includes('function closeDrawer'));
@@ -2721,7 +2722,8 @@ ok('Outbound syncs real workbook campaigns and reviews drafts in Gmail',outbound
 const typeUsage=JSON.parse(readFileSync(join(ROOT,'aesthetics/aesthetic-control/typography-usage.json'),'utf8'));
 ok('Typography role counts include real H1 and generated Admin numbers',typeUsage.categories.H1.locations.some(x=>x.id==='client-name-modal-title') && typeUsage.categories.H1.locations.some(x=>x.id==='brand-title') && typeUsage.categories.H4.roles.dashboard.count>=2 && typeUsage.categories.P2.count>0);
 const compactGallery=readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.js'),'utf8');
-ok('Aesthetic Control uses eight roles with one compact settings dropdown per category',compactGallery.includes("head.append(edit)") && compactGallery.includes("['H1','brand'") && !compactGallery.includes('type-appearance'));
+const authoredRoles=[...(compactGallery.match(/const roles=(\[[\s\S]*?\]);/)?.[1]||'').matchAll(/\['([HP]\d+)',/g)].map(m=>m[1]);
+ok('Aesthetic Control uses nine canonical roles, merging names into H4 and captions into P3',JSON.stringify(authoredRoles)===JSON.stringify(['H0','H1','H2','H3','H4','H5','P1','P2','P3'])&&compactGallery.includes('head.append(edit)')&&activeTypeSource.includes('delete v.type.H6;delete v.type.P4;v.typeVersion=2;'));
 ok('Aesthetic Control exposes centered alignment with a populated table preview',compactGallery.includes('data-field="align"') && compactGallery.includes("guide.id='table-preview'") && compactGallery.includes('data-col="note"'));
 ok('Aesthetic Control saves the settings housing separately from section glass',compactGallery.includes('editor:editorSettings') && compactGallery.includes('renderEditor()'));
 const ownerConversationSource=readFileSync(join(ROOT,'docs/server/owner-conversation.mjs'),'utf8');
@@ -2785,8 +2787,9 @@ ok('Aesthetic Control opens inside Admin and its logo returns to Admin',!MAP_SOU
 ok('All surface edits use numeric fields and split padding axes',!readFileSync(join(ROOT,'aesthetics/aesthetic-control/overlay.js'),'utf8').includes("input.type='range'")&&!readFileSync(join(ROOT,'aesthetics/aesthetic-control/finishes.js'),'utf8').includes("input.type='range'")&&galleryScript.includes("['paddingX','Padding X'")&&galleryScript.includes("['paddingY','Padding Y'"));
 ok('Table housing stays independent while formatting toolbar shares Inner material',ownerDesignRuntime.includes('#panels .inner-panel,#cell-format-toolbar')&&ownerDesignRuntime.includes("const tableHousing="));
 ok('Shared borders include gray while tables have separate borders and corners',readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8').includes("export const borders=[...tableBorders,['gray','Gray']]")&&ownerDesignConfig.includes('t.radius!==undefined')&&ownerDesignRuntime.includes('outerWidth:1,innerWidth:1'));
-ok('Gallery uses H2 section titles, H3 subsections, and removes the Filter preview',galleryScript.includes("h.className='gallery-section-title'")&&galleryScript.includes('class="gallery-subsection-title">Edit dropdown')&&!galleryScript.includes("label:'Filter'"));
-ok('Save has no rim/shadow and the logo/title align left',galleryCss.includes('html body #save{border:0!important;box-shadow:none!important}')&&galleryCss.includes('grid-template-columns:40px minmax(0,1fr)'));
+ok('Gallery uses H2 sections, H3 pill families and P3 Edit summaries without a Filter preview',galleryScript.includes("h.className='gallery-section-title'")&&galleryScript.includes("regularTitle.dataset.mayaType='H3'")&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/finishes.js'),'utf8').includes("title.dataset.mayaType='H3'")&&galleryScript.includes('<summary>Edit dropdown</summary>')&&/P3:'[^']*\.type-editor>summary/.test(ownerDesignRuntime)&&!galleryScript.includes("label:'Filter'"));
+const pillRuntimeSource=readFileSync(join(ROOT,'aesthetics/ui/pill-runtime.js'),'utf8');
+ok('Save shares governed glass, padding and glyph sizing while the logo/title align left',readFileSync(join(ROOT,'aesthetics/aesthetic-control.html'),'utf8').includes('id="save" class="maya-ui maya-glass maya-icon-button"')&&pillRuntimeSource.includes('.maya-icon-button')&&pillRuntimeSource.includes('padding:var(--maya-pill-y) var(--maya-pill-x)')&&pillRuntimeSource.includes('box-shadow:inset 0 1px')&&pillRuntimeSource.includes('inline-size:var(--maya-icon-glyph)')&&!galleryCss.includes('html body #save{border:0!important;box-shadow:none!important}')&&galleryCss.includes('grid-template-columns:40px minmax(0,1fr)'));
 
 // Icon Save, independent sign-in role and immediate cross-page presentation updates.
 ok('Aesthetic Save is icon-only',readFileSync(join(ROOT,'aesthetics/aesthetic-control.html'),'utf8').includes('aria-label="Save"><svg'));
@@ -2803,6 +2806,14 @@ ok('Lead notes edit inline; Messages uses circular Share and phone actions',MAP_
 
 ok('Model hover dismissal separates pointer exit from keyboard focus',readFileSync(join(ROOT,'aesthetics/ui/admin-systems.js'),'utf8').includes("interaction==='pointer'||!focused"));
 ok('Owner lead SMS reads bypass AI and phone reports use live numeric contacts',ownerConversationSource.includes('const direct=ownerLeadRead(text);if(direct)return direct;')&&ownerConversationSource.includes("decision.report==='leads'")&&PHONE_SOURCE.includes("enum:['leads','contact']"));
+const {ownerLeadRead}=await import('../docs/server/owner-conversation.mjs');
+ok('Natural owner status requests route to full live reports before AI',JSON.stringify(ownerLeadRead('Text me all the contacted leads'))===JSON.stringify({action:'list_leads',all:true,stage:'contacted'})&&JSON.stringify(ownerLeadRead('How many contacted leads do we have?'))===JSON.stringify({action:'count_leads',stage:'contacted'})&&SERVER_SOURCE.includes('listAll:()=>loadLeadFeed({all:true})')&&ownerConversationSource.includes('leads.filter(lead=>!stage||ownerLeadStage(lead)===stage)')&&ownerConversationSource.includes('leads=all?matches:matches.slice(0,count)'));
+ok('Full owner snapshots retain paging and disclose missing lead or status records',SERVER_SOURCE.includes('const list = all ? leads : leads.slice(0, 60)')&&SERVER_SOURCE.includes('const list = all ? merged : merged.slice(0, 60)')&&SERVER_SOURCE.includes('lead.statusUnavailable=true')&&smsAccessSource.includes('Partial snapshot: some lead records or status history are unavailable.')&&smsAccessSource.includes('s.reports[code]={title,pages:content')&&smsAccessSource.includes('Next: MORE'));
+const crmAISource=readFileSync(join(ROOT,'docs/server/crm-ai.mjs'),'utf8');
+ok('Owner conversation requests structured output and diagnoses failures without paid retry',SERVER_SOURCE.includes("crmAI.complete(uid,instructions,data,'auto',{timeoutMs:8000,json:true})")&&ownerConversationSource.includes('parseOwnerDecision(await deps.complete')&&ownerConversationSource.includes("code:'owner_response_invalid'")&&ownerConversationSource.includes("deps.log?.('decision_failed'")&&crmAISource.includes("body.text={format:{type:'json_object'}}")&&crmAISource.includes("responseMimeType='application/json'")&&crmAISource.includes("'ai_output_incomplete'")&&crmAISource.includes("'ai_completion_unconfirmed'"));
+await import('./owner-conversation.mjs');
+await import('./owner-sms-access.mjs');
+ok('Full status reports survive restarts, preserve account isolation and never bypass client SEND',true);
 await import('./verify-release.mjs');
 ok('Live release verification rejects unchanged versions from older commits',true);
 await import('./text-automations.mjs');
@@ -2812,7 +2823,7 @@ await import('./lead-note-persistence.mjs');
 await import('./lead-notes-ui.mjs');
 await import('./admin-state-races.mjs');
 ok('Latest Notes offers Save/Cancel and outside-click discard without Dictate or blur-save', !MAP_SOURCE.includes('lead-note-dictate') && MAP_SOURCE.includes("document.addEventListener('pointerdown',outside,true)") && !MAP_SOURCE.includes("input.addEventListener('blur'"));
-ok('Leads: persisted note edits, Contact/H5/H6 and booking composer drafts',true);
+ok('Leads: persisted note edits, Contact/H4/H5 and booking composer drafts',true);
 await import('./message-races.mjs');
 ok('Messaging preserves names, newer drafts, session privacy and unseen arrivals',true);
 ok('Hidden drawer polling cannot mark unseen messages read',MAP_SOURCE.includes('if (_msgOpen&&visible) loadThread'));
@@ -2830,6 +2841,9 @@ ok('Repository-wide additions finish with the governing Aesthetic Control gate',
 // Keep this last: functional checks precede the governing aesthetic verification.
 ok('Messages accepts typed numbers through reviewed Send and confirmed Call',readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('function msgBegin')&&readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('msgTypedNumber'));
 ok('Saved aesthetic status colors, icon weight and section spacing have active previews',readFileSync(join(ROOT,'aesthetics/aesthetic-control/presentation-controls.js'),'utf8').includes('statusStyles')&&readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8').includes('sectionSpacing'));
+const presentationRuntimeSource=readFileSync(join(ROOT,'aesthetics/ui/presentation-runtime.js'),'utf8');
+const authoredStatuses=[...presentationRuntimeSource.matchAll(/\{key:'([^']+)',label:/g)].map(m=>m[1]);
+ok('Nine governed semantic statuses retain source usage and truthful ad delivery labels',JSON.stringify(authoredStatuses)===JSON.stringify(['new','contacted','in_progress','booked','completed','canceled','delivering','pending','rejected'])&&presentationRuntimeSource.includes('Impressions recorded in the selected D/W/M window. This does not confirm that the campaign is enabled now.')&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/presentation-controls.js'),'utf8').includes("locations.className='status-usage'"));
 await import('./message-compose-ui.mjs');
 await import('./aesthetic-authority.mjs');
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

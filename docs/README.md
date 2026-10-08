@@ -18,10 +18,12 @@ mandatory workflow and [design.md](design.md) for the sole presentation canon.
 Conversational fabric search and sealed lookbooks: [FABRIC-SEARCH.md](FABRIC-SEARCH.md).
 Messages → Begin texting accepts a typed number and optional saved name. Send is
 reviewed; phone actions are confirmed. Aesthetic Control also governs individual
-status colors/weights, icon color/stroke and Admin section spacing.
+status colors/weights with usage links, icon color/stroke and all Admin section gaps.
+Pills size from content plus saved X/Y padding; H4 covers names, H5 dates and P3 captions.
+Owner SMS understands all/status-filtered lead lists and counts with durable MORE pages.
 
 Owner design controls: [Aesthetic Control](../aesthetics/aesthetic-control.html), linked from Admin → Systems.
-Aesthetic Control groups Visuals (Glass Panels and Tables) before single-preview
+Aesthetic Control groups Visuals (Glass and Regular pills, Panels and Tables) before single-preview
 Typography. Each role can select Jost/Cormorant and Normal/ALL CAPS. See docs/design.md.
 
 Immediate Wix/Gmail event activation and OpenAI latency audit: [EVENT-TRIGGERS.md](EVENT-TRIGGERS.md).
