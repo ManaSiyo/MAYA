@@ -2812,6 +2812,8 @@ ok('Full owner snapshots retain paging and disclose missing lead or status recor
 const crmAISource=readFileSync(join(ROOT,'docs/server/crm-ai.mjs'),'utf8');
 ok('Owner conversation requests structured output and diagnoses failures without paid retry',SERVER_SOURCE.includes("crmAI.complete(uid,instructions,data,'auto',{timeoutMs:8000,json:true})")&&ownerConversationSource.includes('parseOwnerDecision(await deps.complete')&&ownerConversationSource.includes("code:'owner_response_invalid'")&&ownerConversationSource.includes("deps.log?.('decision_failed'")&&crmAISource.includes("body.text={format:{type:'json_object'}}")&&crmAISource.includes("responseMimeType='application/json'")&&crmAISource.includes("'ai_output_incomplete'")&&crmAISource.includes("'ai_completion_unconfirmed'"));
 await import('./owner-conversation.mjs');
+await import('./founder-conversation-stress.mjs');
+ok('Founder SMS audit executes at least 50 intents and 1000 variants with honest fake-provider scope',true);
 await import('./owner-sms-access.mjs');
 ok('Full status reports survive restarts, preserve account isolation and never bypass client SEND',true);
 await import('./verify-release.mjs');

@@ -1,34 +1,38 @@
-[Codex] Unify pill sizing and owner lead SMS reports
+[Codex] Audit founder conversations and messaging under stress
 
-Admin section gaps now affect all nine groups and empty states, including Ad
-campaigns. Hide redundant range text; keep D/W/M. Nine semantic status editors
-show meanings and uses; Delivering has an independent default green. Preserve
-explicit saved colors. Merge lead names into H4, dates into H5, captions into P3
-with versioned validation and legacy normalization without migration writes.
+Add a reproducible 60-intent owner-SMS corpus with 20 contextual variants,
+executed with unavailable AI and scripted actions (2,400 handler executions).
+Verify exact lead identity/cardinality, context/memory isolation, stable paged
+snapshots and reviewed client text. Ten multi-turn sessions cover 31 exchanges.
+Include the corpus in app-regression. Scripted routing is explicitly not a
+real-model comprehension score; all contacts/providers are synthetic.
 
-Add independent Glass/Regular pill controls with real content + X/Y padding
-sizing. Remove fixed box conflicts, align Edit/Restore, enclose Save in Glass and
-bound its SVG glyph. Cover shared controls across Admin, App, Outbound, Brief and
-Operation Room. Load shared presentation/pill helpers before typography v24,
-gallery v34; revalidate edited runtimes/components and update role inventory.
+Add a separate strict Messages transport/store diagnostic: 1,280 inbound events,
+241 status callbacks and 78 Admin Send requests through real routes and local
+fake Twilio. It intentionally fails four reproduced invariants: STOP/send race,
+archived inbound dedup, archived owner reply delivery reconciliation, and
+UI/server international SMS mismatch. 28 checks pass. Keep this diagnostic
+separate from passing release gates until runtime defects are fixed.
 
-Owner SMS understands all/status/count lead requests without AI, reads retained
-callback/manual records before filtering and uses durable account-bound MORE
-pages. Report incomplete source/history reads explicitly. Request structured AI
-output where supported and categorize unconfirmed/refused/malformed/incomplete
-responses without logging conversation/private data or retrying paid inference.
-Full-source reads stop awaiting after six seconds without racing report writes or
-sends; ordinary note reads stay parallel. Keep verified owner binding, shared
-budget and client SEND confirmation gates.
+Document all 60 prompts, fixture replies, measured scope, ranked defects,
+channel/access differences and prepared changes in FOUNDER-CONVERSATION-AUDIT.md.
+Record current state in AGENTS, AI-HANDOFF, requests and fixes. No history
+milestone: this audit changes no application behavior or visible UI.
+Correct one obsolete Outbound test from mandatory circles to the approved
+content + independent X/Y padding capsule geometry; verify glyph size,
+visibility, centering, borders and radius across seven widths.
 
-Validation: root npm ci, all 46 Cloud Build suites, full app-regression, server
-smoke, syntax/diff checks and final aesthetic authority pass. Computed geometry,
-default/saved material, H3 preview changes, actual preview clicks, icon containment,
-Save failure/retry/reload and hidden actions are tested across six widths; gallery
-editors cover eleven widths. Screenshots reviewed for desktop/phone and open/error
-states. Slow authentication or durable storage can still delay the SMS webhook.
-No Push, production settings, credentials, personal Chrome or live provider sends.
-Latest checked live release is 707592d; this commit requires owner Push and exact
-Hosting/API verification. Live general conversation/SMS and authenticated design
-Save need owner acceptance after deployment. Unloaded ai-meter.js is only a
-cleanup recommendation; no files deleted and server accounting stays intact.
+Validation: existing 46 Cloud Build test commands, full app-regression, server
+smoke and syntax/diff checks pass after the narrow Outbound test correction.
+The new transport diagnostic reproducibly remains red (28 pass / 4 fail);
+this audit is not a declaration that messaging is ready for production.
+Final standalone Aesthetic Control authority passed last, including default/saved
+computed geometry, six responsive widths and visual review of phone, desktop
+and Messages fixtures. No changed visible elements were added.
+
+No runtime changes, production settings, credentials, live provider inference,
+real SMS sends, personal Chrome or Push. Actual model quality, live binding,
+carrier delivery and production latency remain unverified. Next: review and
+repair the transport failures, then build the shared owner capability/continuity
+layer and evaluate the corpus against the actual configured model. Preserve
+owner binding, reviewed sends and sealed project/account data.

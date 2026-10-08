@@ -1,6 +1,59 @@
-# Current handoff — October 7, 2026
+# Current handoff — October 8, 2026
 
-## Current request — Late October 7 presentation and owner SMS review
+## Current request — Founder conversation and Messages stress audit
+
+Audit/test-only work on 2af5039, which matched origin/maya-v2 at task start.
+No application runtime or production configuration changed. No new visible UI;
+existing shared Aesthetic Control authority and account boundaries are preserved.
+No real model calls, provider sends, personal Chrome access or Push.
+
+Read docs/FOUNDER-CONVERSATION-AUDIT.md for the grouped findings, prepared fixes,
+all 60 founder prompts and observed fixture replies. tests/fixtures/founder-conversation-cases.mjs
+and tests/founder-conversation-stress.mjs execute 60 intents x 20 variants in
+AI-unavailable and scripted-action modes (2,400 real owner-handler executions),
+plus ten multi-turn sessions / 31 exchanges. This proves context/action/data
+contracts, not actual model semantic quality. The corpus is in app-regression.
+34 intents have tools, four are scripted chat, 22 have no SMS tool. Seven supported
+variants miss their oracle even with correct scripted routing available; direct
+commands absorb polite suffixes as contact identities. Plain chat can relay
+unverified completion/fact claims; conversational cancellation does not revoke
+pending approvals. Independent message previews intentionally remain separate.
+
+Standalone tests/message-stress.mjs uses real Messages HTTP/store/archive/SMS
+adapters with fake Twilio, auth and CAS memory storage. It intentionally exits 1:
+28 checks pass, four fail, reproduced twice across 1,280 inbound events, 241
+callbacks and 78 Admin sends. Failures: STOP/send race, archived inbound replay
+changing unread/chronology, archived owner reply missing delivered reconciliation,
+and UI-accepted international SMS rejected by sendSms. These remain OPEN; do not
+add the diagnostic to green release gates or weaken its assertions.
+
+Admin has voice transcripts but no founder text composer, and its conversation
+history/tools differ from owner SMS/phone. Worldofsiyo is a default permitted email,
+not proof of the production owner binding or sole Admin. New Admin founder chat
+must match the authenticated UID to that binding before reading owner-phone history.
+Full reports vs 60-row individual lookup, missing SMS service adapters, date/source
+filters, result synthesis, cancellation/continuation and partial-data reporting
+need separate bounded implementation. Real-provider intelligence and total reply
+latency remain unverified; local sub-millisecond/loopback timings are not a live SLA.
+
+Changed files: three stress/corpus test files, app-regression hook, this handoff,
+requests/fixes/commit review, AGENTS audit instructions and the detailed audit.
+Also corrected only the stale circle assertion in tests/outbound-priority-ui.mjs
+for approved content + independent X/Y padding capsule geometry. Runtime unchanged.
+The narrow Outbound suite passes after that test correction.
+
+Validation: the 46 existing Cloud Build test commands, full app-regression,
+server smoke, syntax and diff checks pass after correcting the stale Outbound
+test. The standalone final Aesthetic Control check passed last, including
+default/saved computed styles and visual review of phone, desktop and Messages
+fixtures. The Outbound retest also passed at all seven widths.
+The four red transport diagnostics are known application defects, not repaired
+or a claim of release readiness. Exact next step: review the audit, fix the four
+transport defects first, then implement a bound owner capability/continuity layer
+and run the same synthetic corpus against the actual configured model. Preserve
+reviewed sends, fixed owner identity and sealed project/account data throughout.
+
+## Previous request — Late October 7 presentation and owner SMS review
 
 Implemented and verified locally, based on shipped 707592d. The other task's
 changes are included in that baseline. Public release.json, App/Admin stamps and

@@ -39,7 +39,16 @@ export async function auditOutboundPriority(browser){
    await page.setViewportSize({width,height:844});await page.evaluate(()=>document.fonts.ready);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'Document fits '+width);
    assert.equal(await page.locator('#master-list').evaluate(e=>getComputedStyle(e).textAlign),'center');assert.equal(await page.locator('#master-list').evaluate(e=>getComputedStyle(e).borderRadius),'100px');
-   const plus=await page.locator('#new-campaign').boundingBox();assert.equal(plus.width,plus.height,'Circular campaign control');
+   const plus=await page.locator('#new-campaign').evaluate(el=>{
+    const s=getComputedStyle(el),r=el.getBoundingClientRect(),svg=el.querySelector('svg'),g=svg.getBoundingClientRect(),gs=getComputedStyle(svg),px=k=>parseFloat(s[k]);
+    return {width:r.width,height:r.height,padding:[px('paddingLeft'),px('paddingRight'),px('paddingTop'),px('paddingBottom')],border:[px('borderLeftWidth'),px('borderRightWidth'),px('borderTopWidth'),px('borderBottomWidth')],x:parseFloat(s.getPropertyValue('--maya-pill-x')),y:parseFloat(s.getPropertyValue('--maya-pill-y')),iconSize:parseFloat(s.getPropertyValue('--maya-control-icon-size')),radius:s.borderRadius,glyph:{width:g.width,height:g.height,centerX:g.x+g.width/2-r.x-r.width/2,centerY:g.y+g.height/2-r.y-r.height/2,visible:gs.display!=='none'&&gs.visibility==='visible'&&Number(gs.opacity)>0&&gs.stroke!=='none'&&!!svg.querySelector('path')}};
+   });
+   assert.deepEqual(plus.padding,[plus.x,plus.x,plus.y,plus.y],'Campaign control uses shared X/Y padding '+width);
+   assert.ok(Math.abs(plus.width-(plus.glyph.width+plus.padding[0]+plus.padding[1]+plus.border[0]+plus.border[1]))<.6,'Campaign width is glyph + X padding + borders '+width);
+   assert.ok(Math.abs(plus.height-(plus.glyph.height+plus.padding[2]+plus.padding[3]+plus.border[2]+plus.border[3]))<.6,'Campaign height is glyph + Y padding + borders '+width);
+   assert.ok(plus.glyph.visible&&plus.glyph.width>8&&plus.glyph.height>8&&Math.abs(plus.glyph.width-plus.iconSize*.6)<.6&&Math.abs(plus.glyph.height-plus.iconSize*.6)<.6,'Campaign glyph stays visible and follows shared icon size '+width);
+   assert.ok(Math.abs(plus.glyph.centerX)<.6&&Math.abs(plus.glyph.centerY)<.6,'Campaign glyph stays centered '+width);
+   assert.equal(plus.radius,'100px','Campaign control keeps the capsule radius '+width);
    const style=await page.locator('.people-table .person-link').first().evaluate(e=>{const s=getComputedStyle(e);return {border:s.borderTopWidth,shadow:s.boxShadow,radius:s.borderRadius,font:s.fontSize};});assert.equal(style.border,'0px');assert.equal(style.shadow,'none');assert.equal(style.radius,'0px');assert.equal(style.font,'12px');
    assert.equal((await page.locator('.people-table tbody tr').first().boundingBox()).height,44,'44px rows '+width);
    const pills=await page.locator('#stats .stat').evaluateAll(items=>items.map(el=>({width:el.getBoundingClientRect().width,grow:getComputedStyle(el).flexGrow})));assert.ok(pills.every(p=>p.width<180&&p.grow==='0'),'Metrics stay content width');

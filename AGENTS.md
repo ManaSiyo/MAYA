@@ -378,3 +378,13 @@ error categories and no automatic paid retry. Keep verified owner binding and
 client SEND gates. Run owner-conversation, owner-sms-access, lead-feed-latency,
 CRM intelligence and all communications suites. Production AI availability and
 SMS acceptance require deployed owner verification; fixtures do not establish it.
+
+October 8 founder audit: tests/founder-conversation-stress.mjs executes the
+60-intent synthetic owner-SMS corpus (also in app-regression). Scripted model
+actions prove execution/context contracts, never model semantic accuracy.
+tests/message-stress.mjs is a standalone diagnostic currently failing four real
+transport invariants; see docs/FOUNDER-CONVERSATION-AUDIT.md. Preserve its strict
+assertions when repairing STOP/send concurrency, archived dedup/delivery aliases
+and international SMS parity. It uses only fake providers and local storage.
+Backend/test/doc-only changes add no visible UI and still finish with the shared
+Aesthetic Control authority check.
