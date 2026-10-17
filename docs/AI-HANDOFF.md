@@ -1,5 +1,18 @@
 # Current handoff — October 17, 2026
 
+## Deployment follow-up
+
+Commit 62ca204 was pushed through GitHub Desktop's existing authenticated session
+(the Git CLI could not obtain authentication). The working tree was clean. Cloud
+Build 8e22c3a7-832a-4d24-9c64-766f2f7156ef failed in Test release contracts after
+3m24s; no server/Hosting/rules deployment ran. The public release still reports
+707592d. GitHub's build excerpt truncates at 62880 characters during the second
+hands surface, before the actual failure; Vercel success is not production success.
+This follow-up preserves every gate and fails closed, but redirects verbose
+browser-install and hands output to temporary logs and prints their failing tail.
+No visible UI is added. Re-run the release-contract and final aesthetic authority,
+commit the prepared follow-up, Push, then inspect the real CI failure and repair it.
+
 ## Request and release authority
 
 Fromsa explicitly requested implementation of the latest audit findings, with

@@ -423,3 +423,8 @@ STOP still persists at capacity. Archive failures must preserve history.
 New workspace/automation/Brief/voice tests are mandatory Cloud Build gates and
 app-regression imports. Final aesthetic-authority re-executes changed-surface
 fixtures after functional checks, including real Save propagation and six widths.
+
+CI diagnostics: browser dependency installation and both hands batteries keep full
+temporary logs and print a bounded failing tail. Preserve the failure exit status
+and every test; GitHub truncates verbose Cloud Build output before later errors.
+A passed Vercel check does not establish Firebase/Cloud Run success.

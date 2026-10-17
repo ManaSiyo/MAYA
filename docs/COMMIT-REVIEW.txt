@@ -1,49 +1,18 @@
-[Codex] Repair fabric matching, voice readiness and audit regressions
+[Codex] Expose failed release checks in bounded Cloud Build logs
 
-Make Brief and Operation Room use one saved-garment fabric workspace with stable
-piece IDs, inline/expanded tabs, retained selections and useful phone geometry.
-Separate positive traits from exclusions and latest refinements; reject apparel,
-notions and unrelated fabrics. Compare at most eight seller-verified products
-against the canonical selected garment crop with one bounded visual request.
-Preserve sourced facts, account/submission lookbooks and explicit empty/error
-results. Keep favorite actions usable without a photo; clear private workspace
-state and handle missing/later seller images without invented image URLs.
+Cloud Build stopped during mandatory release testing for 62ca204, before any
+deployment. GitHub's 62880-character excerpt ended inside the second hands surface
+and hid the actual error behind dependency-install and passing-test chatter.
 
-Prepare a bounded silent WebRTC session for enabled wake on client, Playground
-and Admin. Start mic capture immediately at activation, wait for server readiness,
-send current context before audio and release stale/cancelled/hidden sessions.
-Recover blocked playback through a reachable shared Glass/P3 button. Guard queued
-and awaited Admin voice tools after disconnect. Use shared concise delivery,
-300ms VAD, 1.05 speed, short optional context and one total token-mint deadline.
-Preserve auth/trial/spend gates and existing configured model/voice.
+Keep the same browser installation and both hands batteries. Capture verbose
+output in temporary logs, show the last 80/100 lines on failure and exit nonzero;
+show only the hands completion tail on success. Do not skip or weaken any gate.
+Add release-contract assertions preserving these failure diagnostics. Update the
+handoff and incident with the failed build identity and unchanged live release.
 
-Fix STOP/send concurrency, archived inbound dedup and owner delivery aliases,
-international SMS parity and deleted-history replay receipts. Retain durable
-non-retryable claims, recipient validation and reviewed SEND. Pin community
-unpublish to account generation and preserve Outbound drafts on token renewal.
-
-Fix explicit table typography priority, mobile request rows, hidden failed forms,
-real dock inset and misleading Automations Save races. Add active workspace
-previews and optional validated shared layout/semantic controls; preserve saved
-schema compatibility, table independence and sealed data. Include interrupted
-workspace/automation changes present at the task start.
-
-Validation: pinned root npm ci; all 55 functional Cloud Build suites plus smoke,
-full app-regression, both frontend/Playground hands batteries, exact release syntax
-and diff checks pass after focused repairs. Fabric search 20 and sourcing 10 pass;
-Messages stress 44/44 across 1293 signed inbounds, 242 callbacks and 84 Admin requests;
-realtime 15, Messages 59 and phone 62 checks pass. Founder corpus executes 60 intents,
-1200 phrasings twice plus 31 multi-turn exchanges using scripted/unavailable AI.
-Final standalone Aesthetic Control authority passes last: default/materially
-changed saved settings, real Save/failure/Restore, computed geometry, six widths,
-open/focus/error states and visual inspection on the changed actual surfaces.
-
-Limits: fake providers/auth/storage and isolated real-page UI fixtures do not
-prove live model relevance, audio quality, carrier delivery or production latency.
-The founder corpus still documents seven parser misses and 22 missing SMS tools;
-this repair does not claim cross-channel omniscience. Retailer image failures can
-produce an honest empty comparison. Receipt capacity fails closed at 10,000;
-legacy deleted/blocked SIDs predating receipts cannot be reconstructed. No private
-Chrome, live sends, new credentials, billing or production environment changes.
-Fromsa explicitly authorized Push after verification. Verify the exact commit on
-Firebase Hosting and Cloud Run after Push; no Vercel/GitHub-only success claim.
+Validation: release-contract and diff checks pass. Final shared Aesthetic Control
+authority runs last before committing; no visible UI or runtime change is added.
+All application functional gates passed locally in the preceding commit. This
+follow-up improves CI evidence; it does not claim the unknown failure is repaired.
+Push remains authorized. Inspect the new Cloud Build result and fix the actual
+error before claiming production deployment. No credentials/settings changed.

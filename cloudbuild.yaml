@@ -26,7 +26,8 @@ steps:
       - '-ceu'
       - |
         npm ci --ignore-scripts --no-audit --no-fund
-        npx --no-install playwright install --with-deps chromium
+        # Keep dependency chatter out of GitHub's bounded build-log excerpt.
+        npx --no-install playwright install --with-deps chromium > /tmp/maya-browser-install.log 2>&1 || { tail -80 /tmp/maya-browser-install.log; exit 1; }
         node tests/container-contract.mjs
         node tests/release-contract.mjs
         node tests/lead-store.mjs
@@ -60,7 +61,9 @@ steps:
         node tests/maya-mcp.mjs
         node tests/maya-feedback.mjs
         # Browser and communications contracts are mandatory release gates.
-        node tests/maya-hands-smoke.mjs
+        # Both surfaces remain mandatory; expose the actual failing tail in CI.
+        node tests/maya-hands-smoke.mjs > /tmp/maya-hands-release.log 2>&1 || { grep -E 'FAIL|THREW|HANG|Error:' /tmp/maya-hands-release.log || true; tail -100 /tmp/maya-hands-release.log; exit 1; }
+        tail -3 /tmp/maya-hands-release.log
         node tests/outbound-ui.mjs
         node tests/lead-notes-ui.mjs
         node tests/admin-state-races.mjs

@@ -4,6 +4,8 @@ const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const build=read('cloudbuild.yaml'),docker=read('docs/server/Dockerfile');
 assert.match(build,/npm ci --ignore-scripts/);
 assert.match(build,/npx --no-install playwright install --with-deps chromium/);
+assert.match(build,/playwright install --with-deps chromium > \/tmp\/maya-browser-install.log 2>&1 \|\| \{ tail -80 \/tmp\/maya-browser-install.log; exit 1; \}/,'Browser installation failures must expose their tail and fail the build');
+assert.match(build,/node tests\/maya-hands-smoke.mjs > \/tmp\/maya-hands-release.log 2>&1 \|\| \{ grep -E 'FAIL\|THREW\|HANG\|Error:' \/tmp\/maya-hands-release.log \|\| true; tail -100 \/tmp\/maya-hands-release.log; exit 1; \}/,'Both hands surfaces remain mandatory with failure lines and a visible failing tail');
 assert.doesNotMatch(build,/if npm install|checks skipped|maya-phone skipped/,'Required gates cannot fail open on dependency installation');
 assert.match(build,/MAYA_BUILD_COMMIT=\$COMMIT_SHA/);assert.match(docker,/ARG MAYA_BUILD_COMMIT/);
 assert.match(docker,/writeFileSync\('build-info.json'/);assert.match(docker,/npm ci --omit=dev/);
