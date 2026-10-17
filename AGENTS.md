@@ -424,7 +424,12 @@ New workspace/automation/Brief/voice tests are mandatory Cloud Build gates and
 app-regression imports. Final aesthetic-authority re-executes changed-surface
 fixtures after functional checks, including real Save propagation and six widths.
 
-CI diagnostics: browser dependency installation and both hands batteries keep full
-temporary logs and print a bounded failing tail. Preserve the failure exit status
-and every test; GitHub truncates verbose Cloud Build output before later errors.
-A passed Vercel check does not establish Firebase/Cloud Run success.
+CI diagnostics: every Node release gate keeps a full temporary log, emits compact
+success, and prints full-log failure lines plus a bounded tail on error. Preserve
+the original exit status and every gate. Escape shell dollars as $$ in Cloud Build
+YAML. The release-contract behavior probes cover success, nonzero exit and an
+earlier surface failure. Geometry fixtures must await the actual native drawer
+scroll destination before comparing coordinates; fixed delays are not settled
+layout evidence. Messages keeps exact heading equality with classic overflow at
+six widths/default and changed saved settings. A passed Vercel check does not
+establish Firebase/Cloud Run success.

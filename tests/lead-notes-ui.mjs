@@ -2,10 +2,14 @@ import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 import {readFileSync} from 'node:fs';
 import {extname,resolve} from 'node:path';
+import {validDesign} from '../docs/server/design-config.mjs';
 const root=resolve(new URL('..',import.meta.url).pathname);
 const browser=await chromium.launch({executablePath:process.env.PW_CHROMIUM||process.env.CHROMIUM_PATH});
 const context=await browser.newContext({viewport:{width:1440,height:900}}),page=await context.newPage();
 const errors=[],writes=[];let fail=false;
+// Compare content states after native drawer animation reaches its destination.
+// A wall-clock delay can sample the last few pixels of smooth scrolling in CI.
+const drawerSettled=()=>page.waitForFunction(()=>{const h=document.getElementById('adm-hscroll');return Math.abs(h.scrollLeft-(h.scrollWidth-h.clientWidth))<0.5;});
 page.on('pageerror',e=>errors.push(e.message));
 await page.addInitScript(()=>{window.setInterval=()=>0;window.fixtureRecognition=[];class Recognition{constructor(){window.fixtureRecognition.push(this);}start(){}abort(){this.aborted=true;}}window.SpeechRecognition=Recognition;});
 await page.route('**/*',async route=>{const req=route.request(),u=new URL(req.url());if(u.hostname!=='maya.test')return route.abort();
@@ -33,8 +37,8 @@ try{
  await page.locator('#lead-note-input').fill('A green suit for October');
  fail=true;await page.locator('#lead-note-save').click();await page.getByText('Save unavailable',{exact:true}).waitFor();assert.equal(await page.locator('#lead-note-input').inputValue(),'A green suit for October');
  fail=false;await page.locator('#lead-note-save').click();await page.locator('#lead-note-editor').waitFor({state:'detached'});assert.equal(await page.locator('.lead-note-vp').textContent(),'A green suit for October');assert.deepEqual(writes.at(-1),{path:'/api/admin/lead-update',body:{id:'m_1',note:'A green suit for October'},auth:'Bearer fixture-owner'});
- await page.evaluate(()=>{toggleDrawer(true);admTab('messages');});await page.waitForTimeout(350);const headingBefore=await page.locator('#adm-tabtitle').boundingBox();
- await page.evaluate(()=>{leadOpenThread(0);});await page.waitForTimeout(80);assert.equal(await page.locator('#msg-name').inputValue(),'Angela Example');
+ await page.evaluate(()=>{toggleDrawer(true);admTab('messages');});await drawerSettled();const headingBefore=await page.locator('#adm-tabtitle').boundingBox();
+ await page.evaluate(()=>{leadOpenThread(0);});await page.locator('#msg-older').waitFor({state:'visible'});assert.equal(await page.locator('#msg-name').inputValue(),'Angela Example');
  await page.locator('#msg-older').click();await page.getByText('Archived conversation',{exact:false}).waitFor();assert.equal(await page.locator('#msg-older').isVisible(),false);
  assert.deepEqual(await page.locator('#adm-tabtitle').boundingBox(),headingBefore,'Messages never moves when a contact opens');assert.equal(await page.locator('#adm-tabtitle').textContent(),'Messages');await page.locator('#msg-idea-use').waitFor();assert.equal(await page.locator('#msg-input').inputValue(),'','Suggestion is separate from composer');const sendsBefore=writes.length;await page.locator('#msg-idea-use').click();assert.match(await page.locator('#msg-input').inputValue(),/green suit/);assert.equal(writes.length,sendsBefore,'Using AI idea never sends');
  assert.equal(await page.locator('#msg-call svg').count(),1);assert.equal(await page.locator('#msg-call').textContent(),'');
@@ -71,5 +75,22 @@ try{
    assert.ok(await page.locator('#msg-scroll').evaluate(e=>e.scrollWidth<=e.clientWidth+1),'Long transcript fits '+width);
  }
  await page.locator('#drawer').screenshot({path:'/private/tmp/maya-drawer-reviewed.png'});
+ // Force classic 16px scrollbars even on macOS overlay-scrollbar hosts. Only
+ // the inbox/transcript owns this gutter; the fixed Messages title must not move.
+ const gutterStyle=await page.addStyleTag({content:'#drawer :is(#msg-list,#msg-scroll){scrollbar-width:auto!important;scrollbar-gutter:stable!important}#drawer :is(#msg-list,#msg-scroll)::-webkit-scrollbar{display:block!important;width:16px!important;height:16px!important}'});
+ for(const saved of [false,true]){
+  const design=await page.evaluate(saved=>{const d=structuredClone(MayaTypographyControls.defaults);if(saved){for(const [role,size]of Object.entries({H1:32,H2:28,H3:24,H4:20,P1:18,P2:16,P3:14}))d.type[role].size=size;Object.assign(d.type.H2,{weight:500,color:'gray',style:'italic'});Object.assign(d.glass,{fill:65,rim:70,blur:9,saturation:120});d.pillX=8;d.pillY=10;}MayaTypographyControls.apply(d);return d;},saved);assert.ok(validDesign(design),'Gutter coverage uses a valid shared design');
+  for(const width of [320,390,768,1024,1440,1920]){
+   await page.setViewportSize({width,height:900});await page.evaluate(async()=>{toggleDrawer(true);admTab('messages');msgBack();await loadThreads();_msgPaintThreads(Array.from({length:40},(_,i)=>({number:'+1415555'+String(1000+i),name:'Inbox contact '+i,last:{text:'A retained conversation',ts:'2026-10-17T00:00:00Z'}})));});await drawerSettled();
+   const before=await page.locator('#adm-tabtitle').boundingBox();
+   assert.ok(await page.locator('#msg-list').evaluate(e=>e.scrollHeight>e.clientHeight&&e.offsetWidth-e.clientWidth>=16),'Classic inbox gutter is actually exercised at '+width);
+   await page.evaluate(async()=>{await openThread('+14155550101','Angela Example');_msgPaintThread({number:'+14155550101',name:'Angela Example',consent:'yes',messages:Array.from({length:40},(_,i)=>({id:'gutter-'+i,dir:i%2?'out':'in',kind:'sms',text:'Retained conversation '+i+' with enough text to wrap naturally.',ts:'2026-10-17T00:00:00Z'})),transcripts:[]});const scroll=document.getElementById('msg-scroll');scroll.scrollTop=scroll.scrollHeight;document.getElementById('msg-input').focus();});
+   assert.ok(await page.locator('#msg-scroll').evaluate(e=>e.scrollHeight>e.clientHeight&&e.offsetWidth-e.clientWidth>=16),'Classic transcript gutter is actually exercised at '+width);
+   assert.deepEqual(await page.locator('#adm-tabtitle').boundingBox(),before,`Messages heading is fixed with classic gutters: ${saved?'saved':'default'} at ${width}`);
+   assert.equal(await page.locator('#adm-tabtitle').evaluate(e=>getComputedStyle(e).fontSize),saved?'28px':'20px');
+   if(width===390||width===1440)await page.locator('#drawer').screenshot({path:`/private/tmp/maya-messages-gutter-${saved?'saved':'default'}-${width}.png`});
+  }
+ }
+ await gutterStyle.evaluate(e=>e.remove());
  assert.deepEqual(errors,[]);console.log('Lead note Save/Cancel, outside-click discard, confirmed persistence, H4/H5, Contact and unsent Booking Link drafts passed at four widths.');
 }finally{await browser.close();}

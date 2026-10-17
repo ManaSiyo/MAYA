@@ -1,3 +1,7 @@
+OCTOBER 17 CI follow-up: Messages geometry baseline and complete failure evidence
+[reproduced] Build 2081fcda exposed an 8px heading comparison failure. A real-page CPU-throttled probe reproduced native drawer scrolling after the fixed 350ms baseline; the heading width never changed. Await the actual destination and retain exact equality, with classic overflow/default-saved checks at six widths. No runtime heading override added.
+[diagnostics] All Node gates retain full temporary logs and original exit codes with compact success output; failure lines from earlier surfaces remain visible alongside the tail. Cloud Build shell dollars remain escaped. Tests cover successful output suppression, exit 7 and an early failure followed by 200 later lines. No gate skipped; no new visible UI.
+
 OCTOBER 17 deployment follow-up: 62ca204 pushed, production deployment blocked
 [observed] Cloud Build 8e22c3a7 failed release testing before any deployment. GitHub truncates its excerpt before the actual error. Compact browser-install and successful hands output; keep full temporary logs, show failing tails and preserve nonzero exits. No application/UI change; investigate the revealed CI failure after the follow-up Push. Public release remains 707592d, not the green Vercel preview.
 

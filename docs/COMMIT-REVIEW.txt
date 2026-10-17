@@ -1,18 +1,23 @@
-[Codex] Expose failed release checks in bounded Cloud Build logs
+[Codex] Stabilize Messages geometry checks and preserve CI failure evidence
 
-Cloud Build stopped during mandatory release testing for 62ca204, before any
-deployment. GitHub's 62880-character excerpt ended inside the second hands surface
-and hid the actual error behind dependency-install and passing-test chatter.
+Cloud Build exposed an 8px Messages heading assertion after the earlier verbose
+logs were reduced. A throttled real-page probe reproduced a baseline taken while
+the native horizontal drawer was still moving; its fixed 350ms wait was invalid.
+Await the actual destination and keep the exact before/after geometry assertion.
+Exercise long inbox/transcript content with 16px classic gutters at six widths,
+under default and valid changed settings. No runtime heading/style override.
 
-Keep the same browser installation and both hands batteries. Capture verbose
-output in temporary logs, show the last 80/100 lines on failure and exit nonzero;
-show only the hands completion tail on success. Do not skip or weaken any gate.
-Add release-contract assertions preserving these failure diagnostics. Update the
-handoff and incident with the failed build identity and unchanged live release.
+Capture each Node release check in a full temporary log, emit a compact success,
+and preserve original failing exits plus full-log error lines and a bounded tail.
+Keep all commands and final Aesthetic Control order. Escape shell dollars through
+Cloud Build substitution. Behavioral tests prove success output suppression,
+exit 7 preservation and an earlier failure surviving 200 later passing lines.
 
-Validation: release-contract and diff checks pass. Final shared Aesthetic Control
-authority runs last before committing; no visible UI or runtime change is added.
-All application functional gates passed locally in the preceding commit. This
-follow-up improves CI evidence; it does not claim the unknown failure is repaired.
-Push remains authorized. Inspect the new Cloud Build result and fix the actual
-error before claiming production deployment. No credentials/settings changed.
+Validation: Messages UI, release-contract behavior and full app-regression pass.
+Final standalone Aesthetic Control authority passes last before commit. This
+follow-up adds no visible UI or application runtime behavior. Earlier application
+changes already passed the full local functional/app/hands/stress checks. The
+failed production builds deployed nothing; a Push or Vercel success is not proof
+that Firebase/Cloud Run has the fixes. Push remains explicitly authorized, then
+verify the exact release commit and diagnose any remaining CI failure.
+No credentials, billing, production environment or personal Chrome changed.

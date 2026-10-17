@@ -2,16 +2,31 @@
 
 ## Deployment follow-up
 
-Commit 62ca204 was pushed through GitHub Desktop's existing authenticated session
-(the Git CLI could not obtain authentication). The working tree was clean. Cloud
-Build 8e22c3a7-832a-4d24-9c64-766f2f7156ef failed in Test release contracts after
-3m24s; no server/Hosting/rules deployment ran. The public release still reports
-707592d. GitHub's build excerpt truncates at 62880 characters during the second
-hands surface, before the actual failure; Vercel success is not production success.
-This follow-up preserves every gate and fails closed, but redirects verbose
-browser-install and hands output to temporary logs and prints their failing tail.
-No visible UI is added. Re-run the release-contract and final aesthetic authority,
-commit the prepared follow-up, Push, then inspect the real CI failure and repair it.
+Commits 62ca204 (application repairs) and 384e327 (CI diagnostics) reached GitHub
+through Desktop's existing authenticated session; the CLI cannot obtain GitHub
+authentication. The first Cloud Build 8e22c3a7 failed release testing before any
+deployment; its bounded log hid the error. The next build 2081fcda exposed an exact
+Messages-heading assertion: x1258 before contact open, x1250 afterward, unchanged
+width. A throttled real-page probe reproduced a baseline captured before the
+native horizontal drawer animation finished. The 350ms test delay was invalid;
+no runtime heading/style change was justified.
+
+The fixture now waits for the actual scroll destination and keeps the original
+exact heading equality assertion. It also exercises long inbox/transcript content
+with forced 16px classic scrollbars at six widths and default/changed valid styles.
+Every Node CI gate keeps a temporary full log, reports a compact success and
+preserves the original failing exit plus error lines and tail. Shell dollars are
+escaped for Cloud Build substitution. Behavioral probes verify success, exit 7
+and an earlier surface failure hidden by later passing output. No visible UI is
+added by this follow-up, and no release gate is skipped or weakened.
+
+The corrected Messages UI, release-contract behavior and full integrated
+app-regression pass locally. Final standalone shared Aesthetic Control authority
+is the last check before commit. Commit the prepared follow-up and Push under
+the existing authorization. Verify its exact commit on Firebase and Cloud Run;
+the last public observation during the failed builds was 707592d. Vercel green
+and successful GitHub Push are not deployment proof. Existing owner/provider
+acceptance limitations below remain.
 
 ## Request and release authority
 

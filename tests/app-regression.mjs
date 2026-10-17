@@ -2873,6 +2873,7 @@ ok('Design Save freezes the submitted snapshot and restore baseline',ownerDesign
 ok('Outbound confirms the reviewed recipient in its atomic send claim',readFileSync(join(ROOT,'docs/server/crm-intelligence.mjs'),'utf8').includes('c.email.trim().toLowerCase()!==expectedEmail'));
 ok('Brief save retry preserves generated work without paid regeneration',BACKEND_SOURCE.includes('async function retryDissectionSave()')&&BACKEND_SOURCE.includes('id="dissect-missing-pill"'));
 ok('Release gates verify the API commit as well as Hosting',readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8').includes('h.commit===WANT_COMMIT'));
+ok('CI retains every gate and exposes failing exits and earlier surface errors',BUILD_SOURCE.includes('command node "$$@"')&&BUILD_SOURCE.includes('return "$$maya_check_status"')&&BUILD_SOURCE.includes("grep -E 'FAIL|THREW|HANG|Error:'")&&readFileSync(join(ROOT,'tests/lead-notes-ui.mjs'),'utf8').includes('await drawerSettled()'));
 ok('Repository-wide additions finish with the governing Aesthetic Control gate',
   ['AGENTS.md','docs/README.md','docs/design.md'].every(path=>readFileSync(join(ROOT,path),'utf8').includes('Aesthetic Control is the final completion gate.')));
 // Keep this last: functional checks precede the governing aesthetic verification.

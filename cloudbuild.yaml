@@ -25,6 +25,21 @@ steps:
     args:
       - '-ceu'
       - |
+        # A failed late suite must remain visible in GitHub's bounded excerpt.
+        # Each command keeps its full local log and its original exit status.
+        node() {
+          local maya_check_log
+          maya_check_log=$$(mktemp /tmp/maya-release-check.XXXXXX)
+          if command node "$$@" >"$$maya_check_log" 2>&1; then
+            printf 'PASS node %s\n' "$$1"
+          else
+            local maya_check_status=$$?
+            printf 'FAIL node %s (exit %s)\n' "$$1" "$$maya_check_status"
+            grep -E 'FAIL|THREW|HANG|Error:' "$$maya_check_log" || true
+            tail -100 "$$maya_check_log"
+            return "$$maya_check_status"
+          fi
+        }
         npm ci --ignore-scripts --no-audit --no-fund
         # Keep dependency chatter out of GitHub's bounded build-log excerpt.
         npx --no-install playwright install --with-deps chromium > /tmp/maya-browser-install.log 2>&1 || { tail -80 /tmp/maya-browser-install.log; exit 1; }
@@ -61,9 +76,7 @@ steps:
         node tests/maya-mcp.mjs
         node tests/maya-feedback.mjs
         # Browser and communications contracts are mandatory release gates.
-        # Both surfaces remain mandatory; expose the actual failing tail in CI.
-        node tests/maya-hands-smoke.mjs > /tmp/maya-hands-release.log 2>&1 || { grep -E 'FAIL|THREW|HANG|Error:' /tmp/maya-hands-release.log || true; tail -100 /tmp/maya-hands-release.log; exit 1; }
-        tail -3 /tmp/maya-hands-release.log
+        node tests/maya-hands-smoke.mjs
         node tests/outbound-ui.mjs
         node tests/lead-notes-ui.mjs
         node tests/admin-state-races.mjs
