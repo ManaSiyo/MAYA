@@ -435,3 +435,10 @@ scroll destination before comparing coordinates; fixed delays are not settled
 layout evidence. Messages keeps exact heading equality with classic overflow at
 six widths/default and changed saved settings. A passed Vercel check does not
 establish Firebase/Cloud Run success.
+
+Shared fabric/voice runtime delivery: fabric-assistant.js/css and
+voice-preparation.js have exact no-cache Hosting rules. Brief/Operations fabric
+references are v4 to bypass already-fresh week-cached v3 files. Preserve image
+caching/security headers and verify exact live asset bytes plus cache policy
+when shipping shared behavior. Config-only changes add no visible UI and still
+finish with the shared Aesthetic Control authority gate.

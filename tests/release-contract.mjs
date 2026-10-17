@@ -38,3 +38,15 @@ assert.equal(commands.at(-1),'tests/aesthetic-authority.mjs','Aesthetic Control 
 assert.equal(commands.filter(c=>c==='tests/aesthetic-authority.mjs').length,1);
 for(const path of ['AGENTS.md','docs/README.md','docs/design.md'])assert.ok(read(path).includes('Aesthetic Control is the final completion gate.'),path);
 console.log('Repository-wide Aesthetic Control governing rule and final release gate order passed.');
+
+const hostingHeaders=JSON.parse(read('docs/firebase.json')).hosting.headers;
+for(const asset of ['fabric-assistant.js','fabric-assistant.css','voice-preparation.js']){
+ const rule=hostingHeaders.find(r=>r.source==='/aesthetics/ui/'+asset);
+ assert.ok(rule?.headers.some(h=>h.key==='Cache-Control'&&h.value==='no-cache'),asset+' must revalidate shared behavior');
+}
+for(const page of ['backend/backend.html','backend/operations.html']){
+ const html=read(page);
+ for(const ext of ['js','css'])assert.ok(html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=4'),page+' must bypass retained v3 fabric assets');
+ assert.doesNotMatch(html,/fabric-assistant\.(?:js|css)\?v=3/);
+}
+console.log('Fabric asset URLs bypass retained v3 caches; shared fabric and voice runtime revalidate.');

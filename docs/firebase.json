@@ -244,6 +244,33 @@
             "value": "no-cache"
           }
         ]
+      },
+      {
+        "source": "/aesthetics/ui/fabric-assistant.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/fabric-assistant.css",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      },
+      {
+        "source": "/aesthetics/ui/voice-preparation.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
       }
     ]
   },

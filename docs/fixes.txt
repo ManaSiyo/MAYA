@@ -1,3 +1,7 @@
+OCTOBER 17 deployment: returning users can retain the obsolete fabric interface
+[confirmed publicly] fabric-assistant.js/css?v=3 both return Cache-Control: public, max-age=604800. Updated files retained their old URLs, so a normal reload could keep the previous matching/viewer behavior.
+[fixed locally] Brief and Operations request v4 JS/CSS. Exact no-cache rules cover both and voice-preparation.js; image caching/security headers stay intact. No visible UI or settings added. Verify actual new references through fabric/Brief fixtures, shared authority last, then exact deployed bytes and response headers after the authorized Push.
+
 OCTOBER 17 CI follow-up: actual voice recovery press dismisses its workspace
 [reproduced] Build 55ed5d8a passed earlier functional gates then failed real Admin recovery. A held pointer reproduced the outside-press handler closing the drawer and moving the chip 94px before mouseup, losing its click. Frontend/Playground also dismissed their drawers unnecessarily.
 [fixed locally] Exempt each recovery chip from its existing outside-pointer handler. Preserve drawer state and exact button bounds through actual held presses, then await successful playback without hanging up. All three surfaces use default and changed saved settings at six widths. No new markup, geometry or visual authority. Full app-regression and final standalone aesthetic checks are required before the follow-up commit/Push; production is still the older commit pending a successful Cloud Build.

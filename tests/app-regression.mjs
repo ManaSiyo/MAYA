@@ -2874,6 +2874,8 @@ ok('Outbound confirms the reviewed recipient in its atomic send claim',readFileS
 ok('Brief save retry preserves generated work without paid regeneration',BACKEND_SOURCE.includes('async function retryDissectionSave()')&&BACKEND_SOURCE.includes('id="dissect-missing-pill"'));
 ok('Release gates verify the API commit as well as Hosting',readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8').includes('h.commit===WANT_COMMIT'));
 ok('CI retains every gate and exposes failing exits and earlier surface errors',BUILD_SOURCE.includes('command node "$$@"')&&BUILD_SOURCE.includes('return "$$maya_check_status"')&&BUILD_SOURCE.includes("grep -E 'FAIL|THREW|HANG|Error:'")&&readFileSync(join(ROOT,'tests/lead-notes-ui.mjs'),'utf8').includes('await drawerSettled()'));
+ok('Brief and Operations bypass week-cached fabric v3 assets on reload',
+  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=4'))));
 ok('Repository-wide additions finish with the governing Aesthetic Control gate',
   ['AGENTS.md','docs/README.md','docs/design.md'].every(path=>readFileSync(join(ROOT,path),'utf8').includes('Aesthetic Control is the final completion gate.')));
 // Keep this last: functional checks precede the governing aesthetic verification.

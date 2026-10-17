@@ -18,13 +18,24 @@ exempt their own voice recovery button; no geometry/material override was added.
 Actual held-click tests preserve drawer state, exact button bounds, active call
 and successful playback under default/changed saved settings at six widths.
 
-Both actual voice UI suites and full integrated app-regression pass locally.
-Final standalone shared Aesthetic Control authority is the last check before
-commit. Publish the documented follow-up under the existing automatic Push
-authorization, then verify the exact commit on Firebase and Cloud Run. The last
-public observation remains 707592d: these failed builds deployed nothing. Vercel
-green and successful GitHub Push are not deployment proof. Existing owner/provider
-acceptance limitations below remain.
+Voice follow-up 3763c33 is published; its fresh Cloud Build eada4e06 is in
+progress at this handoff preparation. Both actual voice UI suites and full
+integrated app-regression passed locally, with standalone authority last.
+
+A public header check then confirmed fabric-assistant.js/css?v=3 both return
+Cache-Control: public, max-age=604800. Their unchanged URLs could retain the old
+interface after deployment. Brief and Operations now load v4 for both assets;
+exact no-cache rules govern fabric JS/CSS and the new voice preparation runtime.
+This changes asset delivery only, adds no visible UI or visual settings, and keeps
+image caching and existing security headers. Release-contract and regression
+assertions cover both pages and all three policies; actual fabric/Brief UI and the
+final shared authority check verify the new references still load correctly.
+
+Commit/Push the documented cache follow-up under the existing authorization,
+then verify exact release.json, App/Admin stamps, API commit, changed page/asset
+bytes and no-cache headers on Firebase/Cloud Run. The last public observation
+remains 707592d while release testing runs. GitHub Push and Vercel green are not
+deployment proof. Owner/provider acceptance limitations below remain.
 
 ## Request and release authority
 

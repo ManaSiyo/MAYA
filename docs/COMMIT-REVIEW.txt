@@ -1,21 +1,21 @@
-[Codex] Preserve open workspaces during voice playback recovery
+[Codex] Refresh cached fabric assets for returning clients
 
-Cloud Build exposed a real Admin recovery failure: the outside-pointer handler
-closed the drawer on pointerdown, moving the voice button 94px before mouseup
-could deliver a click. Frontend and Playground also dismissed their open drawer.
-Exempt each existing recovery button from its page's outside-pointer handler.
-Keep the active call and current workspace while resuming blocked audio.
+Public fabric JS and CSS still returned a seven-day cache lifetime under their
+unchanged v3 URLs. A successful deployment could therefore leave returning
+clients on the old viewer/matching workflow. Brief and Operations now request v4
+for both assets, bypassing already-fresh cached files. Add exact no-cache Hosting
+rules for fabric-assistant.js/css and voice-preparation.js. Preserve image caching,
+existing security headers and all saved Aesthetic Control settings.
 
-Exercise actual held pointer presses on all three real pages under default and
-valid changed saved settings at 320, 390, 768, 1024, 1440 and 1920px. Preserve exact
-button bounds and drawer state, and await actual playback completion. Ordinary
-recovery now also uses a real click rather than a direct handler evaluation.
-No markup, geometry, material setting, auth or provider change.
+This changes asset delivery only; no new visible UI, styling authority, auth or
+provider behavior. Release-contract and app-regression assertions guard both page
+references and the three runtime policies. Actual fabric-search and Brief UI
+fixtures pass, followed last by the standalone shared Aesthetic Control authority
+gate, including default/saved styles and six widths. Earlier full integrated
+regression, communications and voice checks passed with the recovery follow-up.
 
-Validation: Admin and both client voice UI suites, integrated app-regression,
-syntax and diff checks pass; final standalone Aesthetic Control authority passes
-last before commit. All earlier Linux gates through client voice passed before
-this newly revealed failure. The failed builds deployed nothing; verify the new
-exact commit on Firebase Hosting and Cloud Run after the authorized Push. Real
-owner audio, warm/cold latency, fabric relevance and carrier acceptance remain.
-No credentials, billing, production environment or personal Chrome changed.
+Push is explicitly authorized. Verify the final exact commit on Firebase and
+Cloud Run, deployed page/asset bytes and actual no-cache headers. A pushed branch
+or Vercel success does not prove production. Live model relevance, owner audio
+latency and carrier acceptance remain. No credentials, billing or environment
+changes; no personal Chrome access.
