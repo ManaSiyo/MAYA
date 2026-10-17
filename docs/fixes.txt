@@ -1,3 +1,7 @@
+OCTOBER 17 CI follow-up: fabric test deadline leaks between scenarios
+[reproduced] Build 6c4d5797 stopped before deployment: held-ack/submission-switch fixture counted 10 requests instead of 9. The preceding timeout probe left all later 15-second write deadlines shortened to 150ms. A 250ms slow interaction reproduces the failure while the project is still A; no post-switch cancellation bypass was found.
+[fixed test only] Restore native timeout after the one intended fault. Preserve exact cancellation/storage assertions, delay the independent interaction and await the released acknowledgement/network settling. Normal, 4x and 8x CPU runs pass. Runtime/UI unchanged. Final standalone authority and follow-up Push/deploy verification required; production still last verified 7015b99.
+
 OCTOBER 17 current verification
 [passed locally] All 65 Cloud Build test commands, full integrated app-regression (636 named checks plus other imported suite assertions), server smoke, syntax and diff checks. Current transport stress 44/44. Final standalone authority repeats last before commit. Synthetic providers/isolated browser only; exact deployed verification and private owner acceptance remain separate. No CSS/default appearance change; legacy Operations field authority gap preserved and reported.
 

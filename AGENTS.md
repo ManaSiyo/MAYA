@@ -494,3 +494,9 @@ session keys remain intact and may require re-entry. Run operation-save-failures
 brief-operation-races and final aesthetic-authority. Current owner constraint forbids
 appearance changes: legacy field/full-role authority gaps are explicitly documented
 in AI-HANDOFF and must not be claimed fixed by existing caption/pill/drawer checks.
+
+October 17 CI fixture isolation: shorten a timeout only for its intended request
+and restore the native API before independent scenarios. fabric-workflow-ui keeps
+its strict unsent-action counts/storage assertions with a 250ms slow interaction,
+explicit acknowledgement settling and optional MAYA_FABRIC_CPU_RATE for 4x/8x
+probes. Test-only fixes still run final aesthetic-authority before commit.

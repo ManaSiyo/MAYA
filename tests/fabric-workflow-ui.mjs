@@ -23,6 +23,7 @@ const user={sub:'owner-A'},searches=[],saves=[],errors=[];
 let searchProducts=[fur,leather],holdCatalog=true,catalogRoutes=[],holdAck=false,releaseAck,failSave=false,holdBook=false,releaseBook;
 const browser=await chromium.launch({executablePath:process.env.PW_CHROMIUM||process.env.CHROMIUM_PATH}),page=await browser.newPage({viewport:{width:1440,height:900}});
 page.on('pageerror',e=>errors.push(e.message));
+if(Number(process.env.MAYA_FABRIC_CPU_RATE)>1)await (await page.context().newCDPSession(page)).send('Emulation.setCPUThrottlingRate',{rate:Number(process.env.MAYA_FABRIC_CPU_RATE)});
 await page.addInitScript(t=>localStorage.setItem('maya_admin_tok',t),token(user.sub));
 await page.route('**/*',async route=>{
  const request=route.request(),url=new URL(request.url());
@@ -109,7 +110,7 @@ try{
  // A hung transport has a deadline; uncertain writes are reconciled, never replayed automatically.
  const stalled=makeProduct('stalled-fur','Stalled fur fabric','Brown acrylic fur fabric. Sold by the yard.','coat','Fur coat');products.push(stalled);searchProducts=[stalled];
  await open({piece:pieces[0],forceReset:true});
- await page.evaluate(()=>{const native=AbortSignal.timeout.bind(AbortSignal);AbortSignal.timeout=ms=>native(ms===15000?150:ms);const original=window.fetch;window.fetch=(url,options)=>{if(String(url).endsWith('/fabrics/lookbook')&&options?.method==='POST'){window.fetch=original;return new Promise((resolve,reject)=>options.signal.addEventListener('abort',()=>reject(options.signal.reason),{once:true}));}return original(url,options);};});
+ await page.evaluate(()=>{const native=AbortSignal.timeout;AbortSignal.timeout=ms=>{if(ms===15000){AbortSignal.timeout=native;return native.call(AbortSignal,150);}return native.call(AbortSignal,ms);};const original=window.fetch;window.fetch=(url,options)=>{if(String(url).endsWith('/fabrics/lookbook')&&options?.method==='POST'){window.fetch=original;return new Promise((resolve,reject)=>options.signal.addEventListener('abort',()=>reject(options.signal.reason),{once:true}));}return original(url,options);};});
  const attempts=saves.length;await card(stalled).getByRole('button',{name:'Save',exact:true}).click();
  await page.getByText('Save not confirmed. Check Favorites before retrying.',{exact:true}).waitFor();
  await page.waitForTimeout(250);assert.equal(saves.length,attempts,'No automatic replay after an uncertain write');
@@ -120,7 +121,10 @@ try{
  const unsent=makeProduct('unsent-fur','Unsent fur fabric','Brown acrylic faux fur fabric. Sold by the yard.','coat','Fur coat');products.push(late,unsent);searchProducts=[late,unsent];
  await open({piece:pieces[0],forceReset:true});holdAck=true;const before=saves.length;
  await card(late).getByRole('button',{name:'Save',exact:true}).click();await waitUntil(()=>!!releaseAck);await card(unsent).getByRole('button',{name:'Save',exact:true}).click();
- await open({submissionId:'project-B',piece:pieces[0],forceReset:true});releaseAck();releaseAck=null;await page.waitForTimeout(150);
+ await page.waitForTimeout(250); // Exercise a slow interaction after the independent timeout probe.
+ const acknowledgement=page.waitForResponse(response=>response.url().endsWith('/fabrics/lookbook')&&response.request().method()==='POST'&&response.request().postDataJSON().product.url===late.url);
+ await open({submissionId:'project-B',piece:pieces[0],forceReset:true});releaseAck();releaseAck=null;
+ await (await acknowledgement).finished();await page.waitForLoadState('networkidle');
  assert.equal(saves.length,before+1);assert.equal((await service.loadBook(user,'project-A')).items.some(p=>p.url===unsent.url),false);assert.equal((await service.loadBook(user,'project-B')).items.length,0);
  assert.equal(await page.evaluate(piece=>MayaFabricAssistant.selection(piece),pieces[0]),null);
  // Newly reachable saved/error states retain the same live typography authority.

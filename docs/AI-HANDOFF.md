@@ -16,6 +16,23 @@ checks. Standalone authority is repeated last before commit. No production succe
 be verified against this checkout's exact Git commit, release.json, App/Admin build
 stamps and Cloud Run health; a green Vercel preview is insufficient.
 
+## CI follow-up for the save audit
+
+Repair commit 1b3c01a reached GitHub. Cloud Build 6c4d5797 stopped in
+fabric-workflow-ui before deployment (10 save requests versus expected 9). A
+250ms slow-interaction probe reproduced it locally: the earlier hung-write test
+left every later 15000ms timeout shortened to 150ms. Its held acknowledgement
+expired, reconciliation succeeded and the next explicitly requested Save ran
+while project A was still active. No unsent task crossed an actual project switch.
+
+The follow-up makes that shortened timeout single-use, retains the strict counts
+and storage assertions, includes the slow interaction and waits for the exact
+released acknowledgement plus isolated network settling. It passes at normal,
+4x and 8x CPU throttling. Runtime code and appearance are unchanged. The previous
+release 7015b99 remains the last verified production build until the follow-up's
+full Cloud Build succeeds. Re-run standalone authority last, commit this test/doc
+follow-up, Push and verify both deployed commits and exact asset/page bytes.
+
 ## Request and release authority
 
 Fromsa explicitly requested implementation of the latest audit findings, with

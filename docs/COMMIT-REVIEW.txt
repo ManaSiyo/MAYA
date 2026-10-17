@@ -1,38 +1,23 @@
-[Codex] Fix fabric scope, stale refreshes and durable saves
+[Codex] Isolate the fabric timeout probe between save scenarios
 
-Fabric preferences, lookbook selections and Operations prompts now retain canonical
-garment identity. Private selection fingerprints reject reused IDs after a material
-change; fresh dissections use UUIDs. Browser requests carry bounded metadata instead
-of embedded production images. Optional inventory no longer blocks Sourceable.
-New saved products use verified seller facts; garment switches, initial hydration,
-rapid saves, failures and uncertain writes preserve reviewed intent.
+Cloud Build 6c4d5797 rejected the new fabric workflow test before deployment.
+Its hung-write probe permanently shortened subsequent 15-second write deadlines
+to 150ms. On slower interaction, a held write timed out and reconciliation drained
+a legitimate next Save while the original project was still active, producing 10
+requests instead of 9. A 250ms delay reproduces the exact failure locally.
 
-Brief saves require the reviewed Storage generation and publish only acknowledged
-data. Concurrent tabs cannot overwrite each other silently; mutable JSON bypasses
-stale file-size cache keys. Oversized patterns and client transcripts remain drafts
-instead of disappearing. Client/Playground queues coalesce covered saves, flush late
-edits before switching and keep truthful Save/rename/delete acknowledgements.
-Prompt Engine pins live/private saves to account identity and preserves typing.
-Outbound rejects pre-save snapshots and coalesces overlapping refreshes.
+Make the timeout override single-use and restore the native API. Keep every strict
+request-count and private-storage assertion. Include the slow interaction, await
+the exact released acknowledgement and settle isolated network activity before
+checking cancellation. Add optional CPU throttling for repeatable stress probes.
+No runtime, presentation, provider, authorization or build-gate change.
 
-Operations reports failed Logic Save/Reset/lock, isolates account settings and
-keeps current measurement values when session storage fails. Unsafe inputs stop
-before paid work. Remove 589 unreachable Brief sourcing lines, retaining migration
-paths. Shorten 30 helper passages from 597 to 486 words (18.6%); no styling/default changes.
+Validation: the reproduced failure becomes a pass at normal, 4x and 8x CPU rates.
+The unchanged application previously passed all 65 local Cloud Build test commands,
+full integrated regression, real-server smoke and shared authority. Repeat standalone
+Aesthetic Control last before this follow-up commit, then Push under Fromsa's
+existing authorization. The previous production release remains 7015b99 until
+Cloud Build succeeds and exact Firebase/Cloud Run verification confirms otherwise.
 
-Validation: pinned npm ci; all 65 Cloud Build Node test commands; full integrated
-app-regression (636 named checks plus other imported suite assertions); real-server smoke; 32 inline
-scripts parse; diff checks. Current transport stress 44/44. Final standalone
-Aesthetic Control runs last, with actual default/saved responsive and error-state
-inspection. Existing legacy Operations fields still lack complete Editor/P1/P3
-authority: deliberately preserved because the owner forbids appearance changes.
-
-Limits: old open Brief clients must reload for reviewed-generation saves. Conflicts
-require review and never auto-rebase retained drafts. Unsaved Logic may be discarded
-on explicit garment/account navigation; measurement fallback is page-local. Saved
-garment measurement keys require re-entry rather than adopting ambiguous old keys.
-The private fur/green-pants demo and real model/carrier/audio quality remain unverified;
-no personal Chrome, provider sends, credentials, billing or environment changes.
-
-Fromsa explicitly authorized automatic Push. Verify the exact Git commit on both
-Firebase Hosting and Cloud Run after Cloud Build; GitHub/Vercel success is not proof.
+Existing Operations field styling gaps and private model/carrier/audio acceptance
+remain documented in AI-HANDOFF. No personal Chrome or production settings touched.
