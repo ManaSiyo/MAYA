@@ -407,7 +407,9 @@ bound and capped at 120 seconds, without timer-driven reconnection or mic audio.
 Activation requests microphone permission immediately, waits for channel plus
 server session readiness, sends current context before attaching audio, and
 releases cancelled/hidden/expired sessions. Playback recovery must be reachable
-and must resume audio rather than hang up. Same-account token renewal preserves
+and must resume audio rather than hang up. Its pointer press must not dismiss an
+open drawer or move the button before click delivery; verify actual held clicks,
+not only direct JavaScript handler calls. Same-account token renewal preserves
 voice/drafts; real account/project change invalidates old results and tools.
 docs/server/realtime-voice.mjs owns shared concise delivery, Marin/configured
 voice, 1.05 speed, 300ms VAD and one total 10s token deadline. Context reads are 400ms

@@ -82,9 +82,22 @@ try{
    const label=`${saved?'saved':'default'} width=${width} drawer=${open}`;
    if((width===390||width===1440)&&open)await page.screenshot({path:`/private/tmp/maya-admin-voice-${saved?'saved':'default'}-${width}.png`});
    assert.equal(actual.tag,'BUTTON',label+' accessible recovery');assert.equal(actual.role,'P3');assert.equal(actual.size,saved?'14px':'10px');assert.equal(actual.color,saved?'rgb(170, 181, 196)':'rgb(255, 255, 255)');assert.equal(actual.x,saved?'24px':'14px');assert.equal(actual.y,saved?'12px':'6px');assert.equal(actual.background,saved?'rgba(3, 15, 29, 0.65)':'rgba(3, 15, 29, 0.18)');assert.equal(actual.blur,saved?'blur(9px) saturate(1.2)':'blur(22px) saturate(1.8)');assert.ok(actual.left>=0&&actual.right<=width&&actual.bottom<=900,label+' stays in viewport: '+JSON.stringify(actual));assert.ok(actual.focused&&actual.reachable,label+' focusable and reachable');if(open)assert.ok(actual.dockControls.every(x=>!x.overlap),label+' never covers a voice dock control: '+JSON.stringify(actual.dockControls));
+   if(open){
+    // Hold the real pointer long enough for outside-press scroll handlers to run.
+    // The recovery chip must stay under the pointer until its click is delivered.
+    await page.evaluate(()=>{fixture.blocked=false;});const before=await page.locator('#voice-chip').boundingBox();
+    await page.mouse.move(before.x+before.width/2,before.y+before.height/2);await page.mouse.down();await page.waitForTimeout(300);
+    assert.equal(await page.evaluate(()=>document.body.classList.contains('drawer-open')),true,label+' recovery press preserves the open drawer');
+    assert.deepEqual(await page.locator('#voice-chip').boundingBox(),before,label+' recovery control stays under a held pointer');
+    await page.mouse.up();await page.waitForFunction(()=>_voice?.playbackBlocked===false);
+    assert.equal(await page.evaluate(()=>!!_voice?.active),true,label+' held recovery click preserves the active call');
+    await page.evaluate(()=>{fixture.blocked=true;return _adminVoiceLine.resumePlayback();});
+   }
   }
  }
  await page.evaluate(()=>{fixture.blocked=false;});await page.locator('#voice-chip').click();
+ await page.waitForFunction(()=>_voice?.playbackBlocked===false);
+ assert.equal(await page.evaluate(()=>document.body.classList.contains('drawer-open')),true,'Recovery click leaves the open drawer in place');
  assert.equal(await page.evaluate(()=>!!_voice?.active),true,'Recovery click resumes instead of hanging up');assert.equal(await page.evaluate(()=>_voice.playbackBlocked),false);
  await page.evaluate(()=>{for(const type of ['response.audio_transcript.done','response.output_audio_transcript.done'])fixture.pcs[0].dc.onmessage({data:JSON.stringify({type,transcript:type})});fixture.pcs[0].dc.onmessage({data:JSON.stringify({type:'conversation.item.input_audio_transcription.completed',transcript:'Owner words'})});});
  assert.equal(await page.locator('#maya-chat .maya-msg').count(),3,'Legacy/GA Maya transcripts and owner transcription appear');

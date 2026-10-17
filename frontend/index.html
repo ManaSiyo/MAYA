@@ -9739,7 +9739,7 @@ document.addEventListener('pointerdown', (e) => {
   if (!document.body.classList.contains('drawer-open')) return;
   const t = e.target;
   if (t && t.closest && t.closest(
-    '#notes-drawer, #hamburger-toggle, #fabrics-drawer, #pinterest-drawer, #feedback-modal')) return;
+    '#notes-drawer, #hamburger-toggle, #fabrics-drawer, #pinterest-drawer, #feedback-modal, #pg-maya-chip')) return;
   toggleNotesDrawer(false);
 }, true);
 

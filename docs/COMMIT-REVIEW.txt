@@ -1,23 +1,21 @@
-[Codex] Stabilize Messages geometry checks and preserve CI failure evidence
+[Codex] Preserve open workspaces during voice playback recovery
 
-Cloud Build exposed an 8px Messages heading assertion after the earlier verbose
-logs were reduced. A throttled real-page probe reproduced a baseline taken while
-the native horizontal drawer was still moving; its fixed 350ms wait was invalid.
-Await the actual destination and keep the exact before/after geometry assertion.
-Exercise long inbox/transcript content with 16px classic gutters at six widths,
-under default and valid changed settings. No runtime heading/style override.
+Cloud Build exposed a real Admin recovery failure: the outside-pointer handler
+closed the drawer on pointerdown, moving the voice button 94px before mouseup
+could deliver a click. Frontend and Playground also dismissed their open drawer.
+Exempt each existing recovery button from its page's outside-pointer handler.
+Keep the active call and current workspace while resuming blocked audio.
 
-Capture each Node release check in a full temporary log, emit a compact success,
-and preserve original failing exits plus full-log error lines and a bounded tail.
-Keep all commands and final Aesthetic Control order. Escape shell dollars through
-Cloud Build substitution. Behavioral tests prove success output suppression,
-exit 7 preservation and an earlier failure surviving 200 later passing lines.
+Exercise actual held pointer presses on all three real pages under default and
+valid changed saved settings at 320, 390, 768, 1024, 1440 and 1920px. Preserve exact
+button bounds and drawer state, and await actual playback completion. Ordinary
+recovery now also uses a real click rather than a direct handler evaluation.
+No markup, geometry, material setting, auth or provider change.
 
-Validation: Messages UI, release-contract behavior and full app-regression pass.
-Final standalone Aesthetic Control authority passes last before commit. This
-follow-up adds no visible UI or application runtime behavior. Earlier application
-changes already passed the full local functional/app/hands/stress checks. The
-failed production builds deployed nothing; a Push or Vercel success is not proof
-that Firebase/Cloud Run has the fixes. Push remains explicitly authorized, then
-verify the exact release commit and diagnose any remaining CI failure.
+Validation: Admin and both client voice UI suites, integrated app-regression,
+syntax and diff checks pass; final standalone Aesthetic Control authority passes
+last before commit. All earlier Linux gates through client voice passed before
+this newly revealed failure. The failed builds deployed nothing; verify the new
+exact commit on Firebase Hosting and Cloud Run after the authorized Push. Real
+owner audio, warm/cold latency, fabric relevance and carrier acceptance remain.
 No credentials, billing, production environment or personal Chrome changed.

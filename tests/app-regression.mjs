@@ -1165,7 +1165,7 @@ ok('the Backend drawer slides open first and fills after',
 ok('Fabrics and Pinterest run the same full height as the main drawer',
   /#fabrics-drawer, #pinterest-drawer \{[\s\S]{0,200}top: 10px; right: 18px; bottom: 10px;/.test(INDEX_SOURCE));
 ok('Back in Fabrics or Pinterest keeps the main drawer open',
-  INDEX_SOURCE.includes("'#notes-drawer, #hamburger-toggle, #fabrics-drawer, #pinterest-drawer, #feedback-modal'"));
+  INDEX_SOURCE.includes("'#notes-drawer, #hamburger-toggle, #fabrics-drawer, #pinterest-drawer, #feedback-modal, #pg-maya-chip'"));
 // ── v13.47, the numbers audit ──────────────────────────────────────────────
 ok('the MAYA door chips can actually be reached and clicked',
   MAP_SOURCE.includes('padding-left:10px') &&
@@ -2889,6 +2889,7 @@ ok('Community unpublish pins identity across awaits and Outbound renewal preserv
 await import('./client-voice-ui.mjs');
 await import('./admin-voice-ui.mjs');
 ok('Actual client, Playground and Admin wake paths reuse a ready connection and recover playback without crossing accounts',true);
+ok('Held playback recovery clicks preserve open drawers and exact button bounds under default/saved styles at six widths',true);
 await import('./admin-automation-examples.mjs');
 ok('Automation failure hides unusable controls, Example and Save preserve drafts, and Admin spacing fits phones',true);
 await import('./brief-workspace-ui.mjs');

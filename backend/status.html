@@ -1575,7 +1575,7 @@ document.addEventListener('pointerdown', (e) => {
   const hs = document.getElementById('adm-hscroll');
   if (!hs || hs.scrollLeft <= (hs.scrollWidth - hs.clientWidth) / 2) return;
   const t = e.target;
-  if (t && t.closest && (t.closest('#drawer') || t.closest('.top-btn.hamburger'))) return;
+  if (t && t.closest && (t.closest('#drawer') || t.closest('.top-btn.hamburger') || t.closest('#voice-chip'))) return;
   toggleDrawer(false);
 }, true);
 function setDot(id,s){document.getElementById(id).className='sdot '+s}

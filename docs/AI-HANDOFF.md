@@ -2,30 +2,28 @@
 
 ## Deployment follow-up
 
-Commits 62ca204 (application repairs) and 384e327 (CI diagnostics) reached GitHub
-through Desktop's existing authenticated session; the CLI cannot obtain GitHub
-authentication. The first Cloud Build 8e22c3a7 failed release testing before any
-deployment; its bounded log hid the error. The next build 2081fcda exposed an exact
-Messages-heading assertion: x1258 before contact open, x1250 afterward, unchanged
-width. A throttled real-page probe reproduced a baseline captured before the
-native horizontal drawer animation finished. The 350ms test delay was invalid;
-no runtime heading/style change was justified.
+Application commit 62ca204 and diagnostic follow-ups reached GitHub. Build
+2081fcda exposed a Messages fixture capturing its baseline before native drawer
+scrolling settled. Follow-up 2b170f3 waits for the actual destination, retains exact
+heading equality and exercises classic overflow at six widths/default-saved styles.
+Every Node CI gate now retains a full temporary log and original exit status;
+compact output exposes failures without skipping or weakening checks.
 
-The fixture now waits for the actual scroll destination and keeps the original
-exact heading equality assertion. It also exercises long inbox/transcript content
-with forced 16px classic scrollbars at six widths and default/changed valid styles.
-Every Node CI gate keeps a temporary full log, reports a compact success and
-preserves the original failing exit plus error lines and tail. Shell dollars are
-escaped for Cloud Build substitution. Behavioral probes verify success, exit 7
-and an earlier surface failure hidden by later passing output. No visible UI is
-added by this follow-up, and no release gate is skipped or weakened.
+Cloud Build 55ed5d8a for 2b170f3 passed the functional gates through client voice,
+then exposed a real Admin playback recovery bug. A held-pointer real-page probe
+reproduced the button moving 94px after pointerdown closed the drawer, so mouseup
+never delivered its click. Frontend and Playground kept their button stationary
+but also wrongly dismissed the workspace. All three outside-pointer handlers now
+exempt their own voice recovery button; no geometry/material override was added.
+Actual held-click tests preserve drawer state, exact button bounds, active call
+and successful playback under default/changed saved settings at six widths.
 
-The corrected Messages UI, release-contract behavior and full integrated
-app-regression pass locally. Final standalone shared Aesthetic Control authority
-is the last check before commit. Commit the prepared follow-up and Push under
-the existing authorization. Verify its exact commit on Firebase and Cloud Run;
-the last public observation during the failed builds was 707592d. Vercel green
-and successful GitHub Push are not deployment proof. Existing owner/provider
+Both actual voice UI suites and full integrated app-regression pass locally.
+Final standalone shared Aesthetic Control authority is the last check before
+commit. Publish the documented follow-up under the existing automatic Push
+authorization, then verify the exact commit on Firebase and Cloud Run. The last
+public observation remains 707592d: these failed builds deployed nothing. Vercel
+green and successful GitHub Push are not deployment proof. Existing owner/provider
 acceptance limitations below remain.
 
 ## Request and release authority
@@ -68,7 +66,8 @@ Active linked workspace previews expose shared roles, Inner/Outer/fields/pills,
 semantic nonFabric color and label/field/dock spacing. All changed presentation
 uses saved Aesthetic Control settings, including new keyboard Glass/P3 recovery
 buttons on Admin, client and Playground. Admin recovery lives outside transformed
-horizontal panes so the drawer cannot scroll it offscreen.
+horizontal panes so the drawer cannot scroll it offscreen. Recovery presses do
+not dismiss or move any of the three surfaces' open drawers.
 
 Voice: shared bounded silent standby, only for enabled wake/visible authorized
 scope; no microphone track or response until wake/tap. Both channel and server
