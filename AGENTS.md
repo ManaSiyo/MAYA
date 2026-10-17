@@ -382,9 +382,44 @@ SMS acceptance require deployed owner verification; fixtures do not establish it
 October 8 founder audit: tests/founder-conversation-stress.mjs executes the
 60-intent synthetic owner-SMS corpus (also in app-regression). Scripted model
 actions prove execution/context contracts, never model semantic accuracy.
-tests/message-stress.mjs is a standalone diagnostic currently failing four real
-transport invariants; see docs/FOUNDER-CONVERSATION-AUDIT.md. Preserve its strict
-assertions when repairing STOP/send concurrency, archived dedup/delivery aliases
-and international SMS parity. It uses only fake providers and local storage.
+tests/message-stress.mjs now passes all 44 strict transport checks and is a
+mandatory release/app-regression gate. Preserve STOP/send concurrency guards,
+archived dedup/delivery aliases and international SMS parity. It uses only fake
+providers and local storage; see docs/FOUNDER-CONVERSATION-AUDIT.md for historical
+failures and the remaining founder capability gaps.
 Backend/test/doc-only changes add no visible UI and still finish with the shared
 Aesthetic Control authority check.
+
+
+October 17 audit repairs and voice readiness: Fabrics opens only for acknowledged
+saved dissections, uses stable garment IDs (legacy saved-piece array indices on
+read), and preserves the selected garment and client words across Brief/Operations.
+Never generate missing pieces on read. Sourceable results must be actual fabric
+listings with valid source-backed images and respect exclusions/replacements.
+The selected saved garment crop is the visual comparison target; retain the full
+photo for discovery. The existing fabric.visual_rank route gets at most eight
+candidates, one attempt and eight seconds; weak/failed comparison stays empty.
+Run fabric-search, fabric-sourcing, fabric-search-ui and brief-workspace-ui.
+
+Shared web voice preparation is aesthetics/ui/voice-preparation.js, used by
+Frontend, Playground and Admin. Silent standby is opt-in, visible/account/project
+bound and capped at 120 seconds, without timer-driven reconnection or mic audio.
+Activation requests microphone permission immediately, waits for channel plus
+server session readiness, sends current context before attaching audio, and
+releases cancelled/hidden/expired sessions. Playback recovery must be reachable
+and must resume audio rather than hang up. Same-account token renewal preserves
+voice/drafts; real account/project change invalidates old results and tools.
+docs/server/realtime-voice.mjs owns shared concise delivery, Marin/configured
+voice, 1.05 speed, 300ms VAD and one total 10s token deadline. Context reads are 400ms
+optional bounds, not a total latency SLA. Standby may expire; the next explicit
+interaction can prepare again. Do not claim mocked audio proves live voice quality.
+Run voice-preparation, realtime-voice, client-voice-ui, admin-voice-ui and
+client-account-races in addition to all communications and hands suites.
+
+Messages retains content-free inbound SID receipts through explicit history
+deletion; fail closed at 10000 receipts instead of evicting accepted identities.
+Legacy deleted/blocked events from before this receipt guard are unreconstructable.
+STOP still persists at capacity. Archive failures must preserve history.
+New workspace/automation/Brief/voice tests are mandatory Cloud Build gates and
+app-regression imports. Final aesthetic-authority re-executes changed-surface
+fixtures after functional checks, including real Save propagation and six widths.

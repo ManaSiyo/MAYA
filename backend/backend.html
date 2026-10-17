@@ -142,6 +142,7 @@
   /* ───────── screen 1, one-pager horizontal ─────────
      Same vocabulary as the one-pager PDF: glass pills, Cormorant
      headings, Jost labels, white-alpha hairlines on cosmos. */
+  #screen-onepager:has(#brief-fabrics[style*="flex"]) {height:auto;min-height:100dvh;overflow:visible;}
   #screen-onepager {
     display: flex; flex-direction: column; gap: 18px;
   }
@@ -357,7 +358,16 @@
      on the right. */
   #screen-operating {
     display: flex; flex-direction: column;
-    gap: 18px;
+    gap: 12px;
+  }
+  #operations-embed { width:100%; flex:1; min-height:0; border:0; background:transparent; }
+  .operations-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  @media(max-width:768px) {
+    .screen { padding-inline:16px; }
+    #screen-onepager { height:auto; overflow:visible; }
+    #screen-onepager .op-row { display:flex; flex-direction:column; gap:24px; }
+    #screen-onepager .op-info-col { overflow:visible; padding-right:0; }
+    #screen-onepager .op-hero { overflow-wrap:anywhere; }
   }
   .op-room-eyebrow {
     font-family:var(--maya-font-ui); font-weight:400;
@@ -573,21 +583,9 @@
 
   /* ───────── v0.31: Fabrics sourcing, lives in the Brief, clean glass frame ───────── */
   .brief-fabrics {
-    /* v13.48: the wall lives in EXACTLY the full view frame's footprint:
-       same width, same 70vh, definite height so the 4x3 page can size its
-       rows to fit instead of blowing the panel up. */
-    width: 100%; height: 70vh; max-height: 70vh; min-width: 0; box-sizing: border-box;
-    padding: 16px;
-    display: flex; flex-direction: column; gap: 14px;
-    background: rgba(255,255,255,0.02);
-    border:var(--maya-hairline) solid rgba(255,255,255,0.22);
-    border-radius:16px;
-    backdrop-filter:var(--maya-frost);
-    -webkit-backdrop-filter:var(--maya-frost);
-    box-shadow:
-      inset 0 1px 1px rgba(255,255,255,0.28),
-      inset 0 -1px 1px rgba(0,0,0,0.18),
-      0 8px 32px rgba(0,0,0,0.42);
+    /* The shared inline widget owns material and padding; this is only its viewer footprint. */
+    width:100%; height:max(540px,70dvh); max-height:none; min-width:0; min-height:0;
+    display:flex; flex-direction:column; box-sizing:border-box;
   }
   .fab-head {
     display: flex; align-items: center; justify-content: space-between;
@@ -1459,8 +1457,8 @@
 <script src="/aesthetics/ui/presentation-runtime.js?v=1"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=1"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=24"></script>
-<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=1">
-<script defer src="/aesthetics/ui/fabric-assistant.js?v=1"></script>
+<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=3">
+<script defer src="/aesthetics/ui/fabric-assistant.js?v=3"></script>
 </head>
 <body>
 
@@ -1480,9 +1478,7 @@
   </div>
 </div>
 
-<!-- v13.73: the backend Brief is a single slide now, per Fromsa. The embedded
-     Operations Room (screen 2) and its page dots were removed; the standalone
-     /operations.html remains. -->
+<!-- One submission, two native vertical screens. The standalone room stays available. -->
 
 <div id="screens">
   <!-- Screen 1: One-pager in horizontal view -->
@@ -1490,7 +1486,7 @@
     <!-- v10.12: client name pill row removed. Top-right date only. -->
     <div class="op-header" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
       <nav class="fabric-workspace-actions" id="fabric-workspace-actions" aria-label="Design workspace">
-        <button class="pill maya-pill" onclick="showBriefFabrics()">Fabrics</button>
+        <button class="pill maya-pill" id="brief-fabrics-button" onclick="showBriefFabrics()" disabled>Fabrics</button>
         <button class="pill maya-pill" onclick="openOperationRoom()">Operation Room</button>
       </nav>
       <div class="op-meta" id="op-date"></div>
@@ -1503,22 +1499,7 @@
         </div>
         <!-- v0.31: Fabrics sourcing frame, toggled by the "Fabrics" pill.
              Same glass frame as the item image, no grid, no nested bubble. -->
-        <div class="brief-fabrics" id="brief-fabrics" style="display:none">
-          <div class="fab-head">
-            <div class="fab-head-left">
-              <div class="fab-head-label" id="fab-head-label">Fabric</div>
-              <div class="fab-head-fabric" id="fab-head-fabric">…</div>
-            </div>
-            <div class="fab-source-toggle">
-              <button class="fab-src-pill" id="fab-src-sourceable" onclick="setFabricSourceOverride('sourceable')">Sourceable</button>
-              <button class="fab-src-pill" id="fab-src-inhouse" onclick="setFabricSourceOverride('in-house')">In-house</button>
-              <button class="fab-src-pill" id="fab-src-favorites" onclick="setFabricSourceOverride('favorites')">Favorites</button>
-              <button class="fab-icon-btn" id="fab-refresh" title="Re-scan the web" onclick="refreshFabricSourcing()" aria-label="Refresh">&#8635;</button>
-            </div>
-          </div>
-          <div class="fab-grid" id="fab-list"></div>
-          <div class="fab-page-dots" id="fab-page-dots"></div>
-        </div>
+        <div class="brief-fabrics" id="brief-fabrics" style="display:none" aria-label="Fabrics for this look"></div>
         <!-- v0.37: dissection no longer fires by itself. Opening a client
              used to spend on six image calls before anyone asked for
              anything. The Dissect pill sits beside Full view and starts it
@@ -1529,7 +1510,7 @@
       </div>
       <div class="op-info-col">
         <!-- v10.12: hero is the CLIENT name (was hard-coded MAYA). -->
-        <div class="op-hero" id="op-hero-name" style="font-size:36px">Client</div>
+        <div class="op-hero" id="op-hero-name" data-maya-type="H1">Client</div>
         <div class="op-section">
           <div class="op-eyebrow">Biography</div>
           <p class="op-text italic" id="op-biography">…</p>
@@ -1552,7 +1533,10 @@
       </div>
     </div>
   </section>
-
+  <section class="screen" id="screen-operating" data-screen="1" aria-labelledby="operations-heading">
+    <div class="operations-heading"><h2 id="operations-heading" data-maya-type="H2">Operation Room</h2><button class="pill maya-pill" data-maya-type="P3" onclick="goToScreen(0)">Brief</button></div>
+    <iframe id="operations-embed" src="/operations.html?embedded=brief" title="Operation Room for this submission"></iframe>
+  </section>
 </div>
 
 <!-- v10.15: first-run setup, only shown if we don't yet have a MAYA
@@ -1747,11 +1731,10 @@ function escapeHtml(s) {
 function goToScreen(n) {
   const host = document.getElementById('screens');
   if (!host) return;
-  // v13.73: the Brief is a single slide now. Clamp to the screens that exist
-  // so a stale goToScreen(1) can never scroll into empty space.
-  const count = host.querySelectorAll('section[data-screen]').length || 1;
-  const target = Math.max(0, Math.min(n, count - 1));
-  host.scrollTo({ top: target * window.innerHeight, behavior: 'smooth' });
+  // Brief can grow on a narrow screen; use actual section offsets.
+  const sections=host.querySelectorAll('section[data-screen]');
+  const target=sections[Math.max(0,Math.min(n,sections.length-1))];
+  if(target)host.scrollTo({top:target.offsetTop,behavior:'smooth'});
 }
 
 // v0.16: track current screen index + sync dot indicator + sync brand sub.
@@ -1765,8 +1748,8 @@ const SCREEN_LABELS = ['Brief', 'Operations Room'];
 (function () {
   try {
     const p = new URLSearchParams(location.search);
-    const nm = p.get('name');
-    if (!nm) return;
+    const nm = p.get('name') || 'Client';
+    if (!p.get('name') && !p.get('submission')) return;
     const dm = nm.match(/^(.*?)-(\d{2})-(\d{2})-(\d{4})\s*$/);
     const raw = (dm ? dm[1] : nm).trim();
     const pretty = raw.charAt(0).toUpperCase() + raw.slice(1);
@@ -1791,10 +1774,12 @@ const SCREEN_LABELS = ['Brief', 'Operations Room'];
       if (imgId && frame) {
         const tok = localStorage.getItem('maya_admin_tok') || localStorage.getItem('maya_google_token');
         if (tok) {
+          const thumbSubmission=window._openedSubmission.id,thumbAccount=_piecesAccount(tok);
           fetch('/api/admin/subthumb?id=' + encodeURIComponent(imgId) + '&w=1600',
                 { headers: { 'Authorization': 'Bearer ' + tok } })
             .then(r => r.ok ? r.blob() : Promise.reject(new Error('thumb ' + r.status)))
             .then(b => {
+              if(window._openedSubmission?.id!==thumbSubmission||_piecesAccount(_subCachedTok()||'')!==thumbAccount||window._currentSnap)return;
               const im = document.createElement('img');
               im.src = URL.createObjectURL(b);
               im.alt = '';
@@ -1854,8 +1839,9 @@ function _subAuthBoot() {
     google.accounts.id.initialize({ client_id: _SUB_CLIENT_ID, auto_select: true, use_fedcm_for_prompt: true,
       callback: r => { if (r && r.credential) {
         try { localStorage.setItem('maya_admin_tok', r.credential); } catch (_) {}
+        const changed=_briefAuthChanged();
         _subScheduleRenew();
-        _loadSubmission(r.credential);
+        if(!changed&&!window._currentSnap)_loadSubmission(r.credential);
       } } });
     if (!_subCachedTok()) google.accounts.id.prompt();
   };
@@ -1866,6 +1852,9 @@ let _submissionLoadSequence=0;
 async function _loadSubmission(tok) {
   const sequence=++_submissionLoadSequence,sid=window._openedSubmission?.id,account=_piecesAccount(tok);
   const current=()=>sequence===_submissionLoadSequence&&sid===window._openedSubmission?.id&&account===_piecesAccount(_subCachedTok()||'');
+  if(_savedOperation&&(_savedOperation.submissionId!==sid||_savedOperation.account!==account)){
+    _clearBriefPrivate();
+  }
   try {
     const r = await fetch('/api/admin/submissions?t=' + Date.now(), { headers: { 'Authorization': 'Bearer ' + tok }, cache: 'no-store' });
     if (!r.ok) return void console.warn('[submission] list', r.status);
@@ -1903,6 +1892,7 @@ async function _loadSubmission(tok) {
       lastSummary: summary || {},
       items: [],
       heroImage,
+      _savedDissection: loadedPieces,
       ts: new Date(folder.createdTime || Date.now()).getTime(),
     };
     window.lastSummary = snap.lastSummary;
@@ -1942,7 +1932,7 @@ function _updateBrandSub() {
       // v0.16: when the designer lands on the Op Room and the active
       // piece is still Full view, advance to the first real garment piece
       // so the work surfaces aren't waiting for a manual swipe.
-      if (n === 1) _autoAdvanceToFirstGarment();
+      // Navigation preserves the Operation Room's current garment and results.
     }
   }, { root: host, threshold: [0.25, 0.5, 0.75] });
   sections.forEach(s => io.observe(s));
@@ -2459,17 +2449,12 @@ function render(snap) {
     // Now: if this client was dissected before, the saved work is painted
     // straight from their folder and nothing is generated. If they were not,
     // the Dissect pill waits to be pressed.
-    if (cardForDissect._dissection && Array.isArray(cardForDissect._dissection.pieces)) {
-      const ps = cardForDissect._dissection.pieces;
-      _postPiecesToOps(ps);
-      // Missing images remain visible as an explicit Render missing pieces action.
-      // Reading a saved submission must never start paid generation.
-
-    }
+    _publishSavedOperations(snap._savedDissection || (!window._openedSubmission?.id ? cardForDissect._dissection : null));
   } else {
     window._dissectTarget=null;window._lastOpsPieces=[];
     document.getElementById('op-image-frame').innerHTML='';
     renderDissection({card:{image:''}});
+    _publishSavedOperations(null);
     const swiper=document.getElementById('piece-swiper');if(swiper)swiper.style.display='none';
   }
 }
@@ -2516,6 +2501,7 @@ function _piecesContext() { return {sid:String(window._openedSubmission?.id||'')
 function _piecesContextCurrent(context) { const current=_piecesContext();return !!context.account && context.sid===current.sid && context.local===current.local && context.hero===current.hero && context.account===current.account; }
 function _savePiecesToDrive(dissection, context=_piecesContext()) {
   if (!context.sid || !context.account || !Array.isArray(dissection?.pieces)) return Promise.reject(Error('Sign in and open this submission before saving.'));
+  dissection.pieces.forEach((piece,index)=>{if(piece&&!piece.id)piece.id='saved-piece-'+index;});
   const clean=JSON.parse(JSON.stringify(dissection,(k,v)=>(k==='_patternPending'||k==='_virtual')?undefined:v));
   // Every caller keeps its own snapshot/context. A simultaneous save queues instead
   // of returning an unacknowledged success or dropping the newer piece image.
@@ -2539,7 +2525,7 @@ async function _persistDissection(dissection,context=_piecesContext()) {
   if(!_piecesContextCurrent(context))throw Error('Submission or account changed. Reopen the original submission to save.');
   if(!context.sid){_unsavedDissection=null;if(_piecesContextCurrent(context)&&window._dissectTarget)renderDissection({card:window._dissectTarget.card});return {saved:false,local:true};}
   const pending={dissection,context};_unsavedDissection=pending;_retainedDissection=pending;
-  try {const result=await _savePiecesToDrive(dissection,context);if(_unsavedDissection===pending)_unsavedDissection=null;return result;}
+  try {const result=await _savePiecesToDrive(dissection,context);if(_unsavedDissection===pending)_unsavedDissection=null;if(_piecesContextCurrent(context)){(window._currentSnap||={})._savedDissection=JSON.parse(JSON.stringify(dissection));_publishSavedOperations(dissection,context);}return result;}
   finally {if(_piecesContextCurrent(context)&&window._dissectTarget){window._dissectTarget.card._dissection=dissection;renderDissection({card:window._dissectTarget.card});}}
 }
 async function retryDissectionSave() {
@@ -2563,25 +2549,51 @@ async function renderMissingPieces() {
   finally{_dissectionBusy=false;setDissectStatus(false);if(notice&&_piecesContextCurrent(context))showBackendToast(notice);}
 }
 
-// v12.9: hand the dissected, rendered pieces to the embedded Operations Room.
-function _postPiecesToOps(pieces) {
-  try {
-    if (Array.isArray(pieces)) window._lastOpsPieces = pieces;
-    const fr = document.getElementById('operations-embed');
-    if (!fr || !fr.contentWindow || !Array.isArray(pieces)) return;
-    const out = pieces.filter(p => p && !p.skip && p._image)
-      .map(p => ({ name: p.name || p.label || 'Piece', image: p._image }));
-    if (out.length) fr.contentWindow.postMessage({ maya: 'ops-pieces', pieces: out }, '*');
-  } catch (_) {}
+// Acknowledged saved snapshots are the only inputs published to Operations.
+// Neither scrolling nor selecting a garment generates images or patterns.
+let _savedOperation = null, _operationsRevision = 0;
+function _publishSavedOperations(dissection, context=_piecesContext()) {
+  const summary=window._currentSnap?.lastSummary||{};
+  const pieces=(dissection?.pieces||[]).flatMap((p,index)=>p&&!p.skip?[{...p,id:p.id||'saved-piece-'+index,name:p.name||p.label||'Item '+(index+1),fabric:p.fabric||dissection.fabric_type||'',fabric_spec:p.fabric_spec||{}}]:[]);
+  const next={account:context.account,submissionId:context.sid,local:context.local,referenceImage:context.hero,preferences:summary.fabric_preferences||'',pieces};
+  if(JSON.stringify(next)!==JSON.stringify(_savedOperation)){_savedOperation=JSON.parse(JSON.stringify(next));_operationsRevision++;window.MayaFabricAssistant?.reset();showBriefItem();}
+  window._lastOpsPieces=pieces;
+  const button=document.getElementById('brief-fabrics-button');if(button)button.disabled=!context.sid||!context.account||!pieces.length;
+  _postPiecesToOps();
 }
-// v0.35: cached pieces can be ready before the embedded Operations Room has
-// finished loading. Re-post once the iframe says it is alive.
-document.addEventListener('DOMContentLoaded', () => {
-  const fr = document.getElementById('operations-embed');
-  if (fr) fr.addEventListener('load', () => {
-    setTimeout(() => { if (window._lastOpsPieces) _postPiecesToOps(window._lastOpsPieces); }, 400);
-  });
+function _postPiecesToOps(selectionChanged=false) {
+  const frame=document.getElementById('operations-embed'),context=_piecesContext();
+  if(!frame?.contentWindow||!_savedOperation)return;
+  const valid=_savedOperation.account===context.account&&_savedOperation.submissionId===context.sid&&_savedOperation.local===context.local&&_savedOperation.referenceImage===context.hero;
+  const selected=_pieceState.pieces[_pieceState.idx];
+  frame.contentWindow.postMessage({maya:'ops-pieces',revision:_operationsRevision,selectionChanged:selectionChanged===true,selected:selected&&!selected._virtual?(selected.id||selected.name):'',context:valid?_savedOperation:{account:context.account,submissionId:context.sid,local:context.local,referenceImage:'',preferences:'',pieces:[]}},location.origin);
+}
+window.addEventListener('message',event=>{
+  const frame=document.getElementById('operations-embed');
+  if(event.origin!==location.origin||event.source!==frame?.contentWindow)return;
+  if(event.data?.maya==='ops-ready')_postPiecesToOps();
+  if(event.data?.maya==='ops-brief')goToScreen(0);
 });
+document.addEventListener('DOMContentLoaded',()=>document.getElementById('operations-embed')?.addEventListener('load',_postPiecesToOps));
+let _briefAccount = _piecesAccount(_subCachedTok()||'');
+function _clearBriefPrivate() {
+  window._cachedPieces=null;window._dissectTarget=null;window._currentSnap=null;window.lastSummary=null;currentClientName=null;
+  _unsavedDissection=null;_retainedDissection=null;_pieceState={pieces:[],idx:0};window._pieceState=_pieceState;
+  for(const id of ['op-date','op-hero-name','op-biography','op-vision','op-chips','op-measurements','op-image-frame','piece-pills']){const el=document.getElementById(id);if(el){el.innerHTML='';el.textContent='';}}
+  for(const id of ['op-chips-section','op-measurements-section','piece-swiper']){const el=document.getElementById(id);if(el)el.style.display='none';}
+  const selection=document.querySelector('#brand .sub');if(selection)selection.textContent='Brief';
+  _publishSavedOperations(null);window.MayaFabricAssistant?.reset();
+}
+function _briefAuthChanged(){
+  const next=_piecesAccount(_subCachedTok()||'');if(next===_briefAccount)return false;
+  _briefAccount=next;_submissionLoadSequence++;_briefLocalSequence++;
+  if(window._openedSubmission)window._openedSubmission={id:window._openedSubmission.id,name:''};
+  _clearBriefPrivate();
+  if(next&&window._openedSubmission?.id)_loadSubmission(_subCachedTok());
+  return true;
+}
+window.addEventListener('storage',event=>{if(event.key==='maya_admin_tok'||event.key===null)_briefAuthChanged();});
+window.addEventListener('maya-owner-session-changed',_briefAuthChanged);
 // ──── v10.13: auto-dissect on upload ────
 // If the loaded vision card doesn't already carry a _dissection field
 // (older folders, or one saved before dissection completed), fire the
@@ -2690,7 +2702,6 @@ async function beginDissection() {
     await renderAllPieces(t.hero, d.pieces);
     if(!_piecesContextCurrent(context))return;
     renderDissection({ card: t.card });          // repaint with the piece pictures
-    _postPiecesToOps(d.pieces);
     const saved=await _persistDissection(d,context);
     notice=saved.saved?'Dissection saved. Missing piece images can be rendered when you choose.':'Generated in this page only. Open a saved submission to save online.';
   } catch (e) {
@@ -2859,7 +2870,7 @@ function setActivePiece(idx) {
   // v0.9: keep the Op Room left pane + pills mirrored to whichever
   // piece is active. The right pane resets to blank unless this piece
   // already has a cached _pattern from a previous Dissect.
-  _syncOpRoom();
+  _syncOpRoom(true);
 }
 
 function _showActivePiece() {
@@ -2988,15 +2999,15 @@ function renderDissection(visionItem) {
     swiper.style.display = swiperPieces.length ? '' : 'none';
     pills.innerHTML = swiperPieces.map((p, i) => {
       const cls = 'piece-pill' + (i === 0 ? ' active' : '');
-      return '<button class="' + cls + '" onclick="setActivePiece(' + i + ')">' + escapeHtml(p.name) + '</button>';
+      const nonFabric=/\b(shoes?|boots?|sneakers?|footwear|loafers?|heels?|sandals?)\b/i.test([p.name,p.category].join(' '));
+      return '<button class="' + cls + (nonFabric?' piece-non-fabric':'') + '"'+(nonFabric?' data-maya-semantic="non-fabric"':'')+' onclick="setActivePiece(' + i + ')">' + escapeHtml(p.name) + '</button>';
     }).join('') +
       // v0.37: Dissect sits right beside Full view. It is only here when this
       // client has never been dissected, and it removes itself the moment it
       // is pressed, so the spend is always something you chose.
       (hasDissection ? '' : '<button class="piece-pill dissect-start" id="dissect-start-pill" onclick="beginDissection()">Dissect</button>') +
       (hasDissection && visionItem.card._dissection.pieces.some(p=>p&&!p.skip&&!p._image) ? '<button class="piece-pill" id="dissect-missing-pill" onclick="renderMissingPieces()">Render missing pieces</button>' : '') +
-      (_unsavedDissection && _piecesContextCurrent(_unsavedDissection.context) ? '<button class="piece-pill" id="dissect-save-pill" onclick="retryDissectionSave()">Save dissection</button>' : '') +
-      '<button class="piece-pill" id="fab-tab-pill" onclick="showBriefFabrics()">Fabrics</button>';
+      (_unsavedDissection && _piecesContextCurrent(_unsavedDissection.context) ? '<button class="piece-pill" id="dissect-save-pill" onclick="retryDissectionSave()">Save dissection</button>' : '');
     const frame = document.getElementById('op-image-frame');
     if (frame && !frame.dataset.swipeWired) {
       _wirePieceSwipe(frame);
@@ -3042,7 +3053,7 @@ function inferPieces(card) {
   const d = card && card._dissection;
   if (!d || !Array.isArray(d.pieces)) return [];
   return d.pieces.map((p, i) => {const view={
-    ...p, // Preserve material traits, construction details and saved production work.
+    ...p, id:p.id||'saved-piece-'+i, // Preserve material traits, construction details and saved production work.
     name:     p.name || ('Item ' + (i + 1)),
     category: p.category || 'unknown',
     fabric:   p.fabric || d.fabric_type || 'Fabric TBD',
@@ -3223,7 +3234,7 @@ function _opActiveRealIdx() {
   return _opRealPieces().indexOf(piece);
 }
 
-function _syncOpRoom() {
+function _syncOpRoom(selectionChanged=false) {
   const piece = _pieceState.pieces[_pieceState.idx];
   // v0.15: GARMENT-ONLY view. When the swiper is on "Full view" (the
   // virtual pseudo-piece), the Op Room work surfaces (3D, Pattern,
@@ -3246,14 +3257,8 @@ function _syncOpRoom() {
   // is the friction-free, always-available view.
   if (_3dMode !== 'cube') { _3dMode = 'cube'; _sync3DPills(); }
 
-  // Auto-fire pattern dissection for the active GARMENT piece only.
-  // v0.37: a pattern is drawn the first time you actually open this piece,
-  // not for every piece the moment a client is opened.
-  if (isGarmentPiece && !piece._pattern && !piece._patternPending && getApiKey()) {
-    // The handler retains the originating raw piece and submission through both
-    // generation and persistence, including a same-submission auth refresh.
-    dissectActivePieceForPattern().catch(error=>console.warn('[Backend pattern]',error));
-  }
+  // Reading/selecting a saved garment never starts generation. Operations Start
+  // remains the explicit action for the grounded pattern pipeline.
 
   // ── Pattern Window (right, 70%) ──
   // Page 1: pattern. Page 2: nest. Both swap based on active piece's cache.
@@ -3296,7 +3301,7 @@ function _syncOpRoom() {
   }
   _syncPatternPills();
   _syncNestUiVisibility();
-  if (_briefView === 'fabrics' && typeof renderFabricsPage === 'function') renderFabricsPage();
+  _postPiecesToOps(selectionChanged);
 }
 
 // v0.18: page label pill + per-page function buttons. Each page can now
@@ -4249,26 +4254,24 @@ function showBriefItem() {
   const fab   = document.getElementById('brief-fabrics');
   if (frame) frame.style.display = '';
   if (fab)   fab.style.display = 'none';
+  window.MayaFabricAssistant?.close();
   const fp = document.getElementById('fab-tab-pill');
   if (fp) fp.classList.remove('active');
 }
 function openOperationRoom() {
-  const id = window._openedSubmission && window._openedSubmission.id;
-  location.href = '/operations.html' + (id ? '?submission=' + encodeURIComponent(id) : '');
+  goToScreen(1);
 }
-function showBriefFabrics() {
-  if (window.MayaFabricAssistant) {
-    const snap = window._currentSnap || {};
-    const prefs = (snap.lastSummary || window.lastSummary || {}).fabric_preferences || '';
-    return window.MayaFabricAssistant.open({
-      submissionId: (window._openedSubmission && window._openedSubmission.id) || '',
-      referenceImage: (window._dissectTarget && window._dissectTarget.hero) || snap.heroImage || '',
-      preferences: typeof prefs === 'string' ? prefs : JSON.stringify(prefs),
-      piece: _fabActivePiece() || {},
-      onInhouse: () => { showLegacyFabrics(); setFabricSourceOverride('in-house'); },
-    });
-  }
-  showLegacyFabrics();
+async function showBriefFabrics() {
+  const context=_piecesContext(),saved=_savedOperation;
+  if(!saved?.pieces.length||!context.sid||saved.submissionId!==context.sid||saved.account!==context.account||saved.referenceImage!==context.hero)return showBackendToast('Dissect and save this look before opening Fabrics.');
+  if(!window.MayaFabricAssistant)return showBackendToast('Fabric search is still loading. Try again.');
+  const active=_pieceState.pieces[_pieceState.idx],piece=active&&!active._virtual?saved.pieces.find(p=>p.id===active.id):null;
+  _briefView='fabrics';
+  document.getElementById('op-image-frame').style.display='none';
+  const host=document.getElementById('brief-fabrics');host.style.display='flex';
+  const inhouse=await _loadInhouseFabrics();
+  if(!_piecesContextCurrent(context)||_briefView!=='fabrics'||saved!==_savedOperation)return;
+  return window.MayaFabricAssistant.open({host,automatic:true,submissionId:context.sid,referenceImage:saved.referenceImage,preferences:typeof saved.preferences==='string'?saved.preferences:JSON.stringify(saved.preferences),piece:piece||{},pieces:saved.pieces,inhouse,loadInhouse:()=>{_inhouseCache=null;return _loadInhouseFabrics();}});
 }
 function showLegacyFabrics() {
   _briefView = 'fabrics';

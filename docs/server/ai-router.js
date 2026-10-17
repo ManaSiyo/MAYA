@@ -131,9 +131,11 @@ export function createTaskRouter({ tasks = AI_TASKS, providers = {}, telemetry =
       // name, email or other accidental identifier is replaced before logs.
       const requestId = cleanRequestId(options.requestId);
       const fallbackOn = new Set(task.fallbackOn || DEFAULT_FALLBACK_CATEGORIES);
+      // Callers may tighten a foreground budget, never extend registered limits.
+      const attempts=Number.isInteger(options.maxAttempts)&&options.maxAttempts>0?Math.min(options.maxAttempts,task.routes.length):task.routes.length;
       let lastError;
 
-      for (let index = 0; index < task.routes.length; index++) {
+      for (let index = 0; index < attempts; index++) {
         const route = task.routes[index];
         const provider = providers[route.provider];
         if (!provider || typeof provider.execute !== 'function') {
@@ -157,9 +159,10 @@ export function createTaskRouter({ tasks = AI_TASKS, providers = {}, telemetry =
         const timeout = setTimeout(() => {
           timedOut = true;
           controller.abort();
-        }, Math.max(1, Number(route.timeoutMs) || 30_000));
+        }, Math.min(Math.max(1, Number(route.timeoutMs) || 30_000),Number.isInteger(options.timeoutMs)&&options.timeoutMs>0?options.timeoutMs:Infinity));
 
         try {
+          if(controller.signal.aborted)throw Object.assign(new Error('AI route cancelled'),{name:'AbortError'});
           const raw = await provider.execute({
             task: taskName,
             taskVersion: task.version,
@@ -202,7 +205,7 @@ export function createTaskRouter({ tasks = AI_TASKS, providers = {}, telemetry =
             fallback: index > 0, outcome: 'error', category: routedError.category,
             durationMs: Date.now() - startedAt,
           });
-          const hasNext = index + 1 < task.routes.length;
+          const hasNext = index + 1 < attempts;
           if (!hasNext || !fallbackOn.has(routedError.category)) throw routedError;
         } finally {
           clearTimeout(timeout);

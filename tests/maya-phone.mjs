@@ -115,6 +115,7 @@ ok('the session is mu-law both ways, server VAD, transcription on, with save_lea
   su.session.tools.map(t => t.name).join(',') === 'save_lead,transfer_to_owner,end_call' && /Hi this is Maya from Mana Siyo/.test(su.session.instructions) &&
   /calling from \+15105551234/.test(su.session.instructions), su && JSON.stringify(su.session.audio));
 ok('Maya greets first: a response.create follows the session', ai.got.findIndex(m => m.type === 'response.create') > ai.got.findIndex(m => m.type === 'session.update'));
+ok('phone voice keeps marin with brisk delivery and explicit interruptible 300ms turn detection',su.session.audio.output.voice==='marin'&&su.session.audio.output.speed===1.05&&su.session.audio.input.turn_detection.silence_duration_ms===300&&su.session.audio.input.turn_detection.prefix_padding_ms===250&&su.session.audio.input.turn_detection.create_response===true&&su.session.audio.input.turn_detection.interrupt_response===true&&su.session.instructions.includes('Start with the useful answer'));
 ok('the spend meter ticks once per call', spends.length === 1);
 ok('early caller audio is retained while the voice socket opens', ai.got.some(m => m.type === 'input_audio_buffer.append' && m.audio === 'EARLY'));
 ok('stream tokens bind caller identity as well as the call', callToken(AUTH, 'CA123', '+15104917540') !== token);
@@ -136,6 +137,7 @@ tw.send(JSON.stringify({ event: 'media', media: { payload: 'AAAA' } }));
 await until(() => ai.got.some(m => m.type === 'input_audio_buffer.append' && m.audio === 'AAAA'));
 ok('caller audio frames are appended to OpenAI as they are', ai.got.some(m => m.type === 'input_audio_buffer.append' && m.audio === 'AAAA'));
 // Maya's audio goes to Twilio untouched
+aiSay({ type: 'response.created', response: { id: 'before-interruption' } });
 aiSay({ type: 'response.output_audio.delta', delta: 'BBBB' });
 await until(() => twGot.some(m => m.event === 'media'));
 ok('Maya\'s audio frames reach Twilio on the stream', twGot.some(m => m.event === 'media' && m.streamSid === 'MZ1' && m.media.payload === 'BBBB'));
@@ -144,6 +146,11 @@ aiSay({ type: 'input_audio_buffer.speech_started' });
 await until(() => twGot.some(m => m.event === 'clear'));
 ok('when the caller starts talking Twilio\'s buffer is cleared and Maya\'s sentence is cancelled',
   twGot.some(m => m.event === 'clear' && m.streamSid === 'MZ1') && ai.got.some(m => m.type === 'response.cancel'));
+aiSay({type:'response.output_audio.delta',response_id:'before-interruption',delta:'LATE'});
+aiSay({type:'response.created',response:{id:'after-interruption'}});
+aiSay({type:'response.output_audio.delta',response_id:'after-interruption',delta:'NEW'});
+await until(()=>twGot.some(m=>m.media?.payload==='NEW'));
+ok('late cancelled response audio cannot refill the cleared buffer or suppress the next response',!twGot.some(m=>m.media?.payload==='LATE')&&twGot.some(m=>m.media?.payload==='NEW'));
 // transcript
 aiSay({ type: 'conversation.item.input_audio_transcription.completed', transcript: 'I want a red gown for a gala in October.' });
 aiSay({ type: 'response.output_audio_transcript.done', transcript: 'A red gown for October. What is your name?' });
@@ -386,6 +393,20 @@ ok('the call is gone from the live count', stEnd.calls === 0);
  tw.close();await wait(80);phoneDeps.ownerContext=oldContext;delete phoneDeps.contextTimeoutMs;
 }
 ok('phoneInstructions reads the character first', phoneInstructions({ character: 'X', nowLA: 'now', from: '' }).startsWith('WHO YOU ARE:\nX'));
+
+// A provider handshake that never opens releases the call instead of silently
+// buffering/dropping the caller for the full ten-minute call cap.
+{
+ const oldClient=phoneDeps.WebSocketClient;let providerClosed=false;
+ phoneDeps.WebSocketClient=class extends EventTarget {readyState=0;close(){providerClosed=true;this.readyState=3;}};
+ phoneDeps.startupTimeoutMs=40;
+ const socket=new WebSocket('ws://127.0.0.1:'+port+'/api/phone/stream');await new Promise(r=>socket.on('open',r));
+ let closed=false;socket.on('close',()=>{closed=true;});const started=Date.now();
+ socket.send(JSON.stringify({event:'start',streamSid:'MZhang',start:{callSid:'CAHANG',customParameters:{token:callToken(AUTH,'CAHANG','+15105551234'),from:'+15105551234'}}}));
+ await until(()=>closed,1000);
+ ok('stalled Realtime handshake closes both sockets within its configured startup deadline',closed&&providerClosed&&Date.now()-started<800&&!phone.live.has('CAHANG')&&latencyLogs.some(x=>x[0]==='call ended'&&x[2]==='openai_startup_timeout'));
+ phoneDeps.WebSocketClient=oldClient;delete phoneDeps.startupTimeoutMs;
+}
 
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + ' (' + passed + ' ok)');
 aiSrv.close(); twSrv.close(); server.close();

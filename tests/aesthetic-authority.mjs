@@ -76,3 +76,11 @@ try{
 await import('./presentation-consistency.mjs');
 await import('./pill-consistency.mjs');
 console.log('Aesthetic authority passed: shared roles/materials, all Admin heading gaps, real Glass/Regular pill geometry, active previews and saved settings across responsive pages.');
+
+// Re-execute changed-surface fixtures even when app-regression imported them earlier.
+await import('./workspace-authority.mjs?authority');
+await import('./admin-automation-examples.mjs?authority');
+await import('./brief-workspace-ui.mjs?authority');
+await import('./client-voice-ui.mjs?authority');
+await import('./admin-voice-ui.mjs?authority');
+console.log('Changed workspace, fabric and three voice surfaces passed the final shared authority gate.');

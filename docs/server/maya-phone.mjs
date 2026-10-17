@@ -23,6 +23,7 @@
 // No dashes of any kind in anything Maya says.
 
 import crypto from 'node:crypto';
+import { VOICE_DELIVERY, voiceTurnDetection } from './realtime-voice.mjs';
 
 const MAX_MINUTES = Number(process.env.PHONE_MAX_MINUTES || 10);
 const MAX_CALLS = Number(process.env.PHONE_MAX_CALLS || 3);
@@ -367,25 +368,28 @@ export function mountMayaPhone(app, server, deps) {
       try { ai = new WSClient(url, { headers: { Authorization: 'Bearer ' + deps.openaiKey } }); }
       catch (e) { log('openai socket failed', e.message); return finish('openai_socket'); }
       call.ai = ai;
+      const startupTimer=setTimeout(()=>finish('openai_startup_timeout'),deps.startupTimeoutMs??8000);
+      call.timers.push(startupTimer);
+      const interruptedResponses=new Set();
       ai.addEventListener('open', async () => {
         let ownerContext='';
-        if((call.mode==='brief'||call.mode==='admin')&&deps.ownerContext){let timer;try{ownerContext=await Promise.race([contextPromise,new Promise(resolve=>{timer=setTimeout(()=>resolve(null),Math.max(0,(deps.contextTimeoutMs??1200)-(Date.now()-contextStarted)));})]);if(ownerContext===null)ownerContext='Owner memory is unavailable. Do not claim any stored preference or saved change.';}finally{clearTimeout(timer);}}
+        if((call.mode==='brief'||call.mode==='admin')&&deps.ownerContext){let timer;try{ownerContext=await Promise.race([contextPromise,new Promise(resolve=>{timer=setTimeout(()=>resolve(null),Math.max(0,(deps.contextTimeoutMs??400)-(Date.now()-contextStarted)));})]);if(ownerContext===null)ownerContext='Owner memory is unavailable. Do not claim any stored preference or saved change.';}finally{clearTimeout(timer);}}
         if(call.done)return;
         const nowLA = new Intl.DateTimeFormat('en-US', { timeZone: process.env.WIX_TZ || 'America/Los_Angeles',
           weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date());
         aiSend({ type: 'session.update', session: {
           type: 'realtime',
-          instructions: call.mode === 'brief' || call.mode === 'admin'
+          instructions: (call.mode === 'brief' || call.mode === 'admin'
             ? briefInstructions({ character: deps.character || '', nowLA, reason: call.reason, inbound: call.mode === 'admin', ownerContext })
             : call.mode === 'client'
               ? clientCallInstructions({ character: deps.character || '', nowLA, name: call.mode === 'brief' || call.mode === 'admin' ? 'Fromsa' : call.name, reason: call.reason })
-              : phoneInstructions({ character: deps.character || '', nowLA, from: call.from }),
+              : phoneInstructions({ character: deps.character || '', nowLA, from: call.from }))+'\n\n'+VOICE_DELIVERY,
           output_modalities: ['audio'],
           audio: { input: { format: { type: 'audio/pcmu' },
                             transcription: { model: process.env.PHONE_TRANSCRIBE_MODEL || 'gpt-4o-mini-transcribe' },
                             // End-of-speech detection budget only; model/network latency is measured separately.
-                            turn_detection: { type: 'server_vad', silence_duration_ms: Math.max(250,Math.min(1500,Number(process.env.PHONE_VAD_SILENCE_MS)||300)), prefix_padding_ms: 200 } },
-                   output: { format: { type: 'audio/pcmu' }, voice: deps.voice || 'marin' } },
+                            turn_detection: voiceTurnDetection(process.env.PHONE_VAD_SILENCE_MS) },
+                   output: { format: { type: 'audio/pcmu' }, voice: deps.voice || 'marin', speed: 1.05 } },
           tools: (call.mode === 'brief' || call.mode === 'admin') ? (deps.ownerControl?[...BRIEF_TOOLS,OWNER_CONTROL_TOOL]:BRIEF_TOOLS) : call.mode === 'client' ? CLIENT_CALL_TOOLS : PHONE_TOOLS, tool_choice: 'auto' } });
         aiSend({ type: 'response.create', response: { instructions: call.mode === 'brief'
           ? 'Fromsa just picked up. Say "Hey Fromsa, it is Maya." and the reason for the call in one or two sentences, then stop.'
@@ -393,20 +397,26 @@ export function mountMayaPhone(app, server, deps) {
           : call.mode === 'client' ? 'They just picked up. Open exactly as THE CALL says, then the reason in one sentence and your question, then stop.'
           : 'Greet the caller now, exactly as THE CALL says, then listen.' } });
         log('latency session_ready',call.callSid,Date.now()-contextStarted);
+        clearTimeout(startupTimer);
         call.aiReady = true;
         for (const audio of call.earlyAudio.splice(0)) aiSend({ type: 'input_audio_buffer.append', audio });
         try { if (deps.noteSpend) deps.noteSpend(); } catch (_) {}
       });
       ai.addEventListener('message', async (ev) => {
+        if(call.done)return;
         let m; try { m = JSON.parse(typeof ev.data === 'string' ? ev.data : Buffer.from(ev.data).toString('utf8')); } catch (_) { return; }
         const t = m.type || '';
         if(t==='input_audio_buffer.speech_stopped'){call.turnStoppedAt=Date.now();call.firstAudioSeen=false;}
         if(t==='response.created'){call.responseStartedAt=Date.now();call.audioResponseId=m.response?.id||'';call.responseAudioSeen=false;}
         if (t === 'response.output_audio.delta' || t === 'response.audio.delta') {
+          // Cancellation and Twilio clear cross the network independently. Do
+          // not refill the cleared buffer with a late frame from that response.
+          if(m.response_id&&interruptedResponses.has(m.response_id))return;
           if(m.delta&&!call.responseAudioSeen){call.responseAudioSeen=true;log('latency response_first_audio',call.callSid,Date.now()-(call.responseStartedAt||contextStarted));}
           if(m.delta&&call.turnStoppedAt&&!call.firstAudioSeen){call.firstAudioSeen=true;log('latency turn_first_audio',call.callSid,Date.now()-call.turnStoppedAt);}
           if (call.streamSid && m.delta) send({ event: 'media', streamSid: call.streamSid, media: { payload: m.delta } });
         } else if (t === 'input_audio_buffer.speech_started') {
+          if(call.audioResponseId){interruptedResponses.add(call.audioResponseId);if(interruptedResponses.size>256)interruptedResponses.delete(interruptedResponses.values().next().value);}
           if (call.streamSid) send({ event: 'clear', streamSid: call.streamSid });
           aiSend({ type: 'response.cancel' });
         } else if (t === 'conversation.item.input_audio_transcription.completed') {
@@ -540,7 +550,8 @@ export function mountMayaPhone(app, server, deps) {
       } else if (ev === 'media') {
         if (call.open && m.media && m.media.payload) {
           if (call.aiReady) aiSend({ type: 'input_audio_buffer.append', audio: m.media.payload });
-          else if (call.earlyAudio.length < 150) call.earlyAudio.push(m.media.payload);
+          else if (call.earlyAudio.length < 400) call.earlyAudio.push(m.media.payload);
+          else finish('openai_startup_audio_overflow');
         }
       } else if (ev === 'stop') {
         finish('caller_hung_up');

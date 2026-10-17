@@ -131,11 +131,28 @@ roles and material. Dense tables and menus stay legible. Keep account and
 project data sealed, and maintain existing integration/auth behavior. Page
 layout and content can differ; typography and shared controls do not.
 
-The shared Fabrics dialog in Brief/Operation Room uses Outer surface material,
-Inner product cards, shared pills and H2/H3/P1 roles. One composer accepts text,
-photo or explicit dictation. Initial results remain visible during discovery;
-the lookbook shares the same dialog. Seller facts and qualified visual matching
-are separate text. Missing product photos have no generated replacement.
+The Brief is a vertical workspace: Brief first, Operation Room below. The embedded
+room receives only acknowledged saved dissection snapshots for the same account
+and submission; reading or selecting a garment never generates missing pieces.
+The standalone Operation Room route and Admin link remain available. Its duplicate
+header and voice dock are hidden only in the verified Brief embed.
+
+Fabrics opens inside the existing Brief/Operation Room viewer after a saved
+dissection. Search starts from the original look, client words and selected saved
+garment; Full view uses the saved garments together. Sourceable, In House and
+Favorites share this inline view. Expand moves the same view into an optional
+dialog and returns it intact. Refresh and a store filter stay in its toolbar.
+There is no second bottom Fabrics button, Dictate or Find Fabric workflow.
+Optional photo refinement remains in the shared assistant; no generated replacement
+is used for a missing seller photo.
+
+The fabric view uses Outer material, Inner product cards, Glass pills, shared
+fields, H2 title, H4 product names and P3 captions. Cards have two caption rows
+with a larger image, garment purpose and concise sourced facts. They omit duplicate
+In House/Atelier/stock labels and guessed arrival dates or match percentages.
+Shoes use the separate nonFabric semantic color (pale yellow by default), preserving
+their shared font/size and pill material. Seller facts and qualified visual
+matching stay distinct; an empty honest result beats unrelated tools or fabrics.
 
 ## Implementation and verification
 
@@ -338,3 +355,49 @@ the selected range, not a claim that a provider currently enables the campaign.
 `presentation-runtime.js` owns those mappings; `pill-runtime.js` owns capsules.
 Both load before typography v24 and revalidate through Hosting. Final authority
 includes presentation-consistency and pill-consistency geometry fixtures.
+
+
+October 8 workspace controls: Feature requests use H2 section titles, P1 request
+text, P3 owner/date and Inner rows. Prompting Engine uses H2/H3 headings, P1
+body/fields, P3 labels, shared field material and Inner panels. Architecture uses
+H2/H3 headings, P1 descriptions, P3 captions and Inner groups. Aesthetic Control
+contains active linked presentation samples for these areas, Automations, Logs,
+Brief/Operation Room, fabric cards and the existing frontend. These are style
+samples with no account data or provider activity; their Edit actions open the
+actual shared role/material editors. This inventory does not add section hiding
+or ordering controls.
+
+Saved layoutSpacing.labelGap (0–64px) separates a field label from its value;
+fieldGap (0–64px) separates field groups; drawerDockInset (0–32px, default 4)
+sets the bottom voice-dock inset. data-maya-field-row and data-maya-field-stack
+consume those tokens. Default page alignment is preserved unless a valid saved
+role alignment is present. Explicit data-maya-type roles take precedence over
+legacy inferred role selectors. Semantic colors take precedence over general
+caption/paragraph colors; presentation previews preserve them too.
+
+Automations sits beside Aesthetic Control in Systems. First and second texts
+have explicit Example and Refresh actions, owner-account draft-only AI and stale
+response guards. Opening/editing a field never generates text or sends a message.
+Earliest draft time centers under Trigger, Save centers in its row, Logs centers
+by default and still obeys saved H2 alignment. All these elements are represented
+by shared active previews and covered by default/saved computed styles, Save
+propagation, failure/focus states and phone/tablet/desktop checks.
+
+
+October 17 responsiveness and audit repairs: Admin, Frontend and Playground live
+voice/recovery chips are keyboard buttons using shared Glass and P3, represented
+in the active Logs workspace preview. Page CSS controls placement only. The Admin
+chip is outside the transformed horizontal pane and stays above its open drawer
+dock; client chips clear the Tap to listen dock on phones. No new independent
+voice material, font or padding authority is introduced.
+
+Generic inferred typography excludes explicitly authored data-maya-type roles
+with zero-specificity guards, preserving independent table-cell formatting.
+Feature Requests wrap owner/date above the request at phone widths. Hidden forms
+remain display:none even when shared field-stack layout is grid. Saved dock inset
+changes actual drawer padding including the safe area. Automations Save reports
+when later edits remain unsaved rather than claiming the current form was saved.
+Fabrics retain usable inline/expanded geometry, a readable responsive Operation
+Room heading, and management buttons when a saved image fails. Default and
+materially different saved settings on these actual surfaces are re-executed by
+the final aesthetic-authority gate at six viewport widths.

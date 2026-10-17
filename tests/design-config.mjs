@@ -132,3 +132,15 @@ for(const status of ['delivering','pending','rejected']){
 }
 assert.equal(validDesign({...canonical,statusStyles:{unknown:{color:'#123abc',opacity:50,weight:400}}}),false);
 console.log('Canonical roles, legacy compatibility, complete regular-pill materials and extended semantic statuses validate without mutating saved settings.');
+
+for(const design of [canonical,compact]){
+ for(const layoutSpacing of [{},{labelGap:0,fieldGap:64,drawerDockInset:32},{labelGap:64,fieldGap:0,drawerDockInset:0}])assert.equal(validDesign({...design,layoutSpacing}),true,'Optional workspace spacing preserves older designs');
+ assert.equal(validDesign({...design,semanticStyles:{nonFabric:{color:'#fde68a',opacity:0}}}),true);
+ assert.equal(validDesign({...design,semanticStyles:{nonFabric:{color:'#123abc',opacity:100}}}),true);
+}
+for(const layoutSpacing of [null,[],{labelGap:-1},{labelGap:65},{fieldGap:'4'},{fieldGap:1.5},{drawerDockInset:33},{unknown:4}])assert.equal(validDesign({...canonical,layoutSpacing}),false);
+for(const semanticStyles of [null,[],{unknown:{}},{nonFabric:null},{nonFabric:[]},{nonFabric:{color:'yellow',opacity:50}},{nonFabric:{color:'#123abc',opacity:101}},{nonFabric:{color:'#123abc',opacity:'50'}},{nonFabric:{color:'#123abc'}},{nonFabric:{color:'#123abc',opacity:50,weight:400}}])assert.equal(validDesign({...canonical,semanticStyles}),false);
+unavailable=false;
+await saveDesign(store,{...canonical,layoutSpacing:{labelGap:19,fieldGap:27,drawerDockInset:0},semanticStyles:{nonFabric:{color:'#123abc',opacity:65}}},'owner@example.com');
+assert.deepEqual(saved.layoutSpacing,{labelGap:19,fieldGap:27,drawerDockInset:0});assert.deepEqual(saved.semanticStyles,{nonFabric:{color:'#123abc',opacity:65}});assert.match(saved._history.at(-1).text,/layoutSpacing/);
+console.log('Workspace spacing and non-fabric semantic colors validate, preserve legacy saves and persist in the atomic design audit.');

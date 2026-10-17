@@ -26,24 +26,7 @@
 <meta charset="utf-8">
 <script>/* v12.5: embedded inside backend.html, outer page owns the banner + hamburger */
 if (self !== top) document.documentElement.classList.add('embedded');
-window.addEventListener('message', function(e){
-  if (!e || !e.data) return;
-  // v12.5: only MAYA's own pages may drive this room. Without this any
-  // website could open it and swap in its own image as the pipeline input.
-  try { if (e.origin && e.origin !== location.origin) return; } catch (_) { return; }
-  if (e.data.maya === 'ops-drawer') { try { toggleDrawer(true); } catch(_) {} }
-  if (e.data.maya === 'ops-pieces' && e.source === window.parent && Array.isArray(e.data.pieces)) {
-    try {
-      var incoming = e.data.pieces.filter(function(p){ return p && p.image; });
-      if (!incoming.length) return;
-      if(typeof invalidateOperation==='function')invalidateOperation();
-      var T = window.MAYA_TESTS = window.MAYA_TESTS || {};
-      Object.keys(T).forEach(function(k){ delete T[k]; });
-      incoming.forEach(function(p){ T[p.name || 'Piece'] = { front: p.image }; });
-      if (typeof initTests === 'function') setTimeout(initTests, 50);
-    } catch(err) { console.warn('[ops pieces]', err); }
-  }
-});</script>
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MAYA · Operation Room</title>
 <script src="/aesthetics/operations/kb/kb.js"></script>
@@ -79,10 +62,10 @@ window.addEventListener('message', function(e){
   }
   .wrap{max-width:1320px;margin:0 auto;padding:24px 28px 64px}
   /* v13.64: the same fixed top bar as Marketing and Admin, logo included. */
-  header.top{position:fixed;top:0;left:0;right:0;height:60px;z-index:50;display:flex;align-items:center;
-    justify-content:space-between;padding:0 28px;pointer-events:none}
+  header.top{position:relative;min-height:60px;height:auto;flex-wrap:wrap;z-index:50;display:flex;align-items:center;
+    justify-content:space-between;padding:0;pointer-events:none}
   header.top > *{pointer-events:auto}
-  .brand{display:flex;align-items:center;gap:10px;margin-left:-8px}
+  .brand{display:flex;align-items:center;gap:10px;margin-left:-8px;min-width:0;max-width:100%;flex:1}.brand .brand-words{min-width:0}.brand img{flex:none}.brand h1{overflow-wrap:anywhere}
   .brand img{width:52px;height:52px;object-fit:contain;opacity:0.92}
   /* v13.79: beta sits to the RIGHT of Operations Room, not underneath. */
   .brand .brand-words{display:flex;flex-direction:row;align-items:baseline;gap:9px}
@@ -297,21 +280,23 @@ window.addEventListener('message', function(e){
   /* v12.5: when embedded in backend.html the outer MAYA banner and outer
      hamburger are the only branding, hide the inner duplicates. The Plan
      chip stays (it still opens the drawer with settings + plan switch). */
-  html.embedded .top .brand{visibility:hidden}
-  /* v13.44: only the top bar duplicate hides; the drawer's own hamburger stays. */
-  html.embedded header .icon-btn.hamburger{display:none}
+  html.embedded .top{display:none}
+  html.embedded .wrap{padding:0 12px 24px}
+  html.embedded .room-title{margin:0 0 16px}
   html.embedded .pill.sm.plan-btn{display:none}
-  html.embedded .pill[onclick*="file"]{display:none}
   /* one background for the whole Backend: when embedded the outer page owns it */
   html.embedded body{background:#0000 !important}
+  .hero-frame:has(#operation-fabrics-host:not([hidden])){aspect-ratio:auto;height:max(540px,70dvh);align-items:stretch}
+  #operation-fabrics-host{width:100%;min-width:0;min-height:0;height:100%;overflow:hidden}
+  #operation-fabrics-host[hidden]{display:none}
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=14">
 <link rel="stylesheet" href="/aesthetics/ui/maya-buttons.css?v=1">
 <script src="/aesthetics/ui/presentation-runtime.js?v=1"></script>
 <script src="/aesthetics/ui/pill-runtime.js?v=1"></script>
 <script src="/aesthetics/ui/typography-controls.js?v=24"></script>
-<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=1">
-<script defer src="/aesthetics/ui/fabric-assistant.js?v=1"></script>
+<link rel="stylesheet" href="/aesthetics/ui/fabric-assistant.css?v=3">
+<script defer src="/aesthetics/ui/fabric-assistant.js?v=3"></script>
 </head>
 <body>
 <!-- Front End drawer model: horizontal scroll-snap with a main pane + a drawer pane.
@@ -329,7 +314,7 @@ window.addEventListener('message', function(e){
   </header>
   <!-- v13.64: the room's name lives top left with the logo now; this line is
        the PLAN, and clicking it switches to the other one. -->
-  <div class="room-title fabric-room-tools"><span class="cs" id="room-sub" onclick="setPlan(getPlan()==='A'?'B':'A')" style="cursor:pointer" title="Click to switch plan">Plan A · Grounded Pattern Pipeline</span><button class="pill maya-pill" onclick="openOperationFabrics()">Fabrics</button></div>
+  <div class="room-title fabric-room-tools"><span class="cs" id="room-sub" onclick="setPlan(getPlan()==='A'?'B':'A')" style="cursor:pointer" title="Click to switch plan">Plan A · Grounded Pattern Pipeline</span><button class="pill maya-pill" id="operation-fabrics" onclick="openOperationFabrics()" disabled>Fabrics</button><button class="pill maya-pill" data-maya-type="P3" onclick="toggleDrawer(true)">Measurements</button></div>
   <p id="operation-fabric-selection" hidden></p>
 
   <div id="plan-a-view">
@@ -337,7 +322,7 @@ window.addEventListener('message', function(e){
     <!-- LEFT: dream garment -->
     <div class="panel">
       <div class="col-head">
-        <select id="test-picker" class="head-select" onchange="onPickTest(this.value)" title="choose a test"></select>
+        <select id="test-picker" class="head-select" data-maya-control="field" data-maya-type="P1" onchange="onPickTest(this.value)" title="choose a test"></select>
       </div>
       <div class="hero-frame" id="hero-frame">
         <div class="hero-empty" id="hero-empty">
@@ -345,6 +330,7 @@ window.addEventListener('message', function(e){
           <span style="color:var(--faint)">Or Upload your own image to run it directly.</span>
         </div>
         <img id="hero-img" alt="garment">
+        <div id="operation-fabrics-host" hidden aria-label="Fabrics for the selected garment"></div>
       </div>
       <div class="left-actions">
         <select id="test-view" class="pill-select" onchange="showView(this.value)" title="which view to show / use">
@@ -529,31 +515,21 @@ const YOKE_DEPTH  = 3;     // back yoke height (in)
 const KB = { chunks: window.MAYA_KB_CHUNKS?.chunks || [], grammar: window.MAYA_KB_GRAMMAR || {types:{}},
              chapters: window.MAYA_KB_CHAPTERS || {} };
 let HERO = null;                 // dataURL of the loaded garment
+let _operationInputContext=null,_operationRevision=-1,_operationLoadSequence=0;
 function openOperationFabrics() {
-  const submissionId = new URLSearchParams(location.search).get('submission') || '';
-  window.MayaFabricAssistant.open({ submissionId, referenceImage: submissionId ? '' : (HERO || '') });
+  const context=_operationInputContext,piece=FILES.piece;
+  if(!context?.submissionId||context.account!==operationAccount()||!piece||!FILES.saved)return toast('Open a saved dissected garment before choosing Fabrics.');
+  const host=$('operation-fabrics-host');host.hidden=false;$('hero-img').style.display='none';$('hero-empty').style.display='none';
+  return window.MayaFabricAssistant.open({host,automatic:true,submissionId:context.submissionId,referenceImage:context.referenceImage,preferences:typeof context.preferences==='string'?context.preferences:JSON.stringify(context.preferences||''),piece,pieces:context.pieces});
 }
+function closeOperationFabrics(){window.MayaFabricAssistant?.close();const host=$('operation-fabrics-host');if(host)host.hidden=true;}
 window.addEventListener('maya:fabric-selected', event => {
-  const id = new URLSearchParams(location.search).get('submission') || '';
+  const id = _operationInputContext?.submissionId || '';
   if (event.detail.submissionId !== id) return;
   const p = event.detail.product;
   const el = document.getElementById('operation-fabric-selection');
   el.hidden = !p;
   el.textContent = p ? 'Selected fabric: ' + p.title + ' · ' + p.merchant + '. Review material and fit before pattern production.' : '';
-});
-window.addEventListener('maya:fabric-context', event => {
-  const id = new URLSearchParams(location.search).get('submission') || '';
-  if (!id || event.detail.submissionId !== id) return;
-  // A submission-linked room must never run a sample garment with a client's material.
-  invalidateOperation();
-  $('img-grounded').removeAttribute('src'); $('img-rd').removeAttribute('src');
-  if (event.detail.referenceImage) TESTS['Current submission']={front:event.detail.referenceImage};
-  else { delete TESTS['Current submission']; $('hero-img').removeAttribute('src'); }
-  initTests(); applyView();
-});
-window.addEventListener('DOMContentLoaded', () => {
-  const submissionId = new URLSearchParams(location.search).get('submission') || '';
-  if (submissionId) window.MayaFabricAssistant.prepare({submissionId});
 });
 let EMB = null;                  // { count, dim, vecs: Float32Array(count*dim) }  L2-normalised
 let LAST = { type:null, garment:null };
@@ -571,7 +547,7 @@ function getQuality(){ if(RUNNING&&_runQuality)return _runQuality;try{ return lo
 function num(v){ const n=parseFloat(v); return isFinite(n)&&n>0 ? n : null; }
 let _measurementGarment='',_garmentSequence=0,_garmentReady=Promise.resolve(),_runMeasures=null,_runQuality=null,_lockedOperationInputs=[];
 function operationAccount(){const token=getKey();try{return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub||token;}catch{return token;}}
-function operationSubmission(){return new URLSearchParams(location.search).get('submission')||'standalone';}
+function operationSubmission(){return _operationInputContext?.submissionId||(_operationInputContext?'local-'+_operationInputContext.local:new URLSearchParams(location.search).get('submission'))||'standalone';}
 function operationContext(){return {run:RUN,account:operationAccount(),submission:operationSubmission(),garment:_garmentSequence,token:getKey()};}
 function operationGarmentCurrent(context){return context.account===operationAccount()&&context.submission===operationSubmission()&&context.garment===_garmentSequence;}
 function operationCurrent(context){return context.run===RUN&&operationGarmentCurrent(context);}
@@ -612,7 +588,8 @@ function invalidateOperation(){
   RUN++;_garmentSequence++;_garmentReady=Promise.resolve();_measurementGarment='';
   setOperationRunning(false);HERO=null;ANSWER=null;RD=null;RD_PROMISE=null;RD_IS_RAW=false;TRACE=null;PASSES=[];LAST={type:null,garment:null};ACTIVE_TEST=null;FILES={};_tv=null;
   for(const id of ['hero-img','hero-img-b','img-grounded','img-rd']){const image=$(id);if(image){image.removeAttribute('src');image.style.display='none';}}
-  for(const id of ['clo-result','live-log','live-status','t-type','t-chapter','t-panels','t-fixes','t-chunks','trace-view'])if($(id))$(id).textContent='';
+  for(const id of ['clo-result','live-log','live-status','t-type','t-chapter','t-panels','t-fixes','t-chunks','t-prompt','trace-view','operation-fabric-selection'])if($(id))$(id).textContent='';
+  if($('operation-fabric-selection'))$('operation-fabric-selection').hidden=true;
   if($('live'))$('live').classList.remove('on');
   if($('hero-empty'))$('hero-empty').style.display='';
   if($('hero-empty-b'))$('hero-empty-b').style.display='';
@@ -620,9 +597,58 @@ function invalidateOperation(){
   syncMeasures();applyView();
 }
 let _operationAccount=operationAccount();
-function operationAuthChanged(){const next=operationAccount();if(next===_operationAccount)return;_operationAccount=next;invalidateOperation();for(const name of Object.keys(TESTS))delete TESTS[name];initTests();}
+function operationAuthChanged(){const next=operationAccount();if(next===_operationAccount)return;_operationAccount=next;_operationLoadSequence++;_operationInputContext=null;_operationRevision=-1;invalidateOperation();closeOperationFabrics();window.MayaFabricAssistant?.reset();for(const name of Object.keys(TESTS))delete TESTS[name];initTests();if(EMBEDDED)window.parent.postMessage({maya:'ops-ready'},location.origin);else if(next)loadSavedOperationSubmission();}
 window.addEventListener('storage',event=>{if(event.key==='maya_admin_tok')operationAuthChanged();});
 window.addEventListener('maya-owner-session-changed',()=>queueMicrotask(operationAuthChanged));
+
+function installOperationContext(context,selected=''){
+  invalidateOperation();closeOperationFabrics();window.MayaFabricAssistant?.reset();
+  _operationInputContext=context;
+  for(const key of Object.keys(TESTS))delete TESTS[key];
+  for(const [index,piece] of (context.pieces||[]).entries()){
+    const front=piece?._image||piece?.front||piece?.views?.front;
+    if(piece?.skip||typeof front!=='string'||!front)continue;
+    let name=piece.name||piece.label||'Item '+(index+1);if(TESTS[name])name+=' · '+(index+1);
+    TESTS[name]={front,back:piece._back||piece.back||piece.views?.back,side:piece._side||piece.side||piece.views?.side,piece,saved:true};
+  }
+  initTests();const selectedName=Object.keys(TESTS).find(name=>TESTS[name].piece?.id===selected)||selected;if(selectedName&&TESTS[selectedName])pickTest(selectedName);
+  if(context.submissionId&&context.pieces.length)window.MayaFabricAssistant?.prepare({submissionId:context.submissionId,referenceImage:context.referenceImage,preferences:context.preferences});
+}
+function receiveOperationContext(event){
+  if(!EMBEDDED||event.origin!==location.origin||event.source!==window.parent||event.data?.maya!=='ops-pieces')return;
+  const {context,revision,selected,selectionChanged}=event.data;
+  const selectedName=Object.keys(TESTS).find(name=>TESTS[name].piece?.id===selected)||selected;
+  if(!context||context.account!==operationAccount()||typeof context.submissionId!=='string'||!Number.isInteger(context.local)||!Array.isArray(context.pieces)||!Number.isInteger(revision)||revision<_operationRevision)return;
+  if(revision===_operationRevision){
+    if(_operationInputContext?.submissionId!==context.submissionId||_operationInputContext?.local!==context.local)return;
+    if(selectionChanged===true&&selectedName&&TESTS[selectedName]&&ACTIVE_TEST!==selectedName){invalidateOperation();pickTest(selectedName);}
+    return;
+  }
+  _operationRevision=revision;installOperationContext(context,selected);
+}
+window.addEventListener('message',receiveOperationContext);
+async function loadSavedOperationSubmission(){
+  const submissionId=new URLSearchParams(location.search).get('submission')||'';
+  if(EMBEDDED||!submissionId)return;
+  const sequence=++_operationLoadSequence,account=operationAccount(),token=getKey();
+  const current=()=>sequence===_operationLoadSequence&&account===operationAccount()&&submissionId===new URLSearchParams(location.search).get('submission');
+  installOperationContext({account,submissionId,local:0,referenceImage:'',preferences:'',pieces:[]});
+  try{
+    if(!token)throw Error('Sign in on Admin to load this submission.');
+    const headers={Authorization:'Bearer '+token};
+    const read=async id=>{const r=await fetch('/api/admin/subfile?id='+encodeURIComponent(id),{headers,cache:'no-store'});if(!r.ok)throw Error('Saved submission file is unavailable.');return r;};
+    const response=await fetch('/api/admin/submissions',{headers,cache:'no-store'});if(!response.ok)throw Error('Saved submissions are unavailable.');
+    const data=await response.json(),folder=(data.folders||[]).find(f=>f.id===submissionId);if(!folder)throw Error('This saved submission is unavailable.');
+    const files=folder.files||[],pieceFile=files.find(f=>/^pieces\.json$/i.test(f.name||'')),summaryFile=files.find(f=>/summary\.json$/i.test(f.name||'')),imageFile=files.find(f=>/dream-garment/i.test(f.name||''))||files.find(f=>/^image\//i.test(f.mime||''));
+    if(!pieceFile){if(current())$('hero-empty').textContent='Dissect and save this look in the Brief first.';return;}
+    const [dissection,summary,imageResponse]=await Promise.all([read(pieceFile.id).then(r=>r.json()),summaryFile?read(summaryFile.id).then(r=>r.json()):{},imageFile?read(imageFile.id):null]);
+    const referenceImage=imageResponse?await new Promise(async(resolve,reject)=>{try{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(await imageResponse.blob());}catch(error){reject(error);}}):'';
+    if(!current())return;
+    const pieces=(dissection.pieces||[]).flatMap((p,i)=>p&&!p.skip?[{...p,id:p.id||'saved-piece-'+i,name:p.name||p.label||'Item '+(i+1),fabric:p.fabric||dissection.fabric_type||'',fabric_spec:p.fabric_spec||{}}]:[]);
+    installOperationContext({account,submissionId,local:0,referenceImage,preferences:summary.fabric_preferences||'',pieces});
+  }catch(error){if(current())$('hero-empty').textContent=error.message;}
+}
+window.addEventListener('DOMContentLoaded',()=>{if(EMBEDDED)window.parent.postMessage({maya:'ops-ready'},location.origin);else loadSavedOperationSubmission();});
 
 // PANT MEASUREMENT MODEL (Fromsa's, grounded in Ch.26):
 //  waist, hip, crotch length, inseam, pant length.
@@ -920,9 +946,10 @@ function onFile(e){
 // show a garment on the hero frame (session-only, tests reload from tests-data.js anyway)
 function setHero(dataUrl){
   if(RUNNING)return;
+  closeOperationFabrics();if($('operation-fabrics'))$('operation-fabrics').disabled=true;
   selectOperationGarment(dataUrl);
   ACTIVE_TEST=null;FILES={};
-  if($('test-picker'))$('test-picker').value='';
+  if($('test-picker')){$('test-picker').value='';delete $('test-picker').dataset.mayaSemantic;}
   if($('test-view'))$('test-view').value='front';
   HERO=dataUrl;
   $('hero-img').src=HERO; $('hero-img').style.display='block';
@@ -1004,30 +1031,36 @@ function initTests(){
   // for that client's real pieces; the samples are only a fallback for the
   // standalone beta page.
   const submissionMode = !!new URLSearchParams(location.search).get('submission');
-  const names=Object.keys(TESTS).filter(n => submissionMode ? n === 'Current submission' : !EMBEDDED || !/^test\s*\d+/i.test(n));
+  const names=Object.keys(TESTS).filter(n => submissionMode||EMBEDDED ? TESTS[n].saved===true : true);
   if(!names.length){
-    p.innerHTML='<option>waiting for pieces…</option>';
+    p.innerHTML='<option>waiting for pieces…</option>';delete p.dataset.mayaSemantic;
     if($('hero-img')) $('hero-img').style.display='none';
-    if($('hero-empty')) { $('hero-empty').style.display=''; $('hero-empty').textContent=submissionMode ? 'Loading this submission’s garment. Open Fabrics to retry or check your Admin sign-in.' : 'Press Dissect in the Brief above to load this client\u2019s pieces.'; }
+    if($('hero-empty')) { $('hero-empty').style.display=''; $('hero-empty').textContent=submissionMode||EMBEDDED ? 'Dissect and save a garment in the Brief to work on it here.' : 'Pick a saved garment or upload an image.'; }
+    if($('operation-fabrics'))$('operation-fabrics').disabled=true;
     ACTIVE_TEST=null; FILES={}; HERO=null;
     return;
   }
-  p.innerHTML=names.map(n=>`<option value="${n.replace(/"/g,'&quot;')}">${shortLabel(n)}</option>`).join('');
+  p.innerHTML=names.map(n=>`<option value="${esc(n)}">${esc(shortLabel(n))}</option>`).join('');
   p.value=names[0]; pickTest(names[0]);
 }
 function onPickTest(val){ pickTest(val); }
 function pickTest(name){
   if(RUNNING){if($('test-picker'))$('test-picker').value=ACTIVE_TEST;return;}
+  if(ACTIVE_TEST!==name)invalidateOperation();
   ACTIVE_TEST=name; FILES=TESTS[name]||{};
+  if($('test-picker')){const picker=$('test-picker');picker.value=name;if(/\b(shoes?|boots?|sneakers?|footwear|loafers?|heels?|sandals?)\b/i.test((FILES.piece?.name||name)+' '+(FILES.piece?.category||'')))picker.dataset.mayaSemantic='non-fabric';else delete picker.dataset.mayaSemantic;}
+  if($('operation-fabrics'))$('operation-fabrics').disabled=!FILES.saved||!_operationInputContext?.submissionId;
   selectOperationGarment(FILES.front||'');
   if($('test-view')) $('test-view').value='front';
   showView('front');
+  if(FILES.piece?._pattern){PASSES=[{img:FILES.piece._pattern,badge:'saved'}];CUR={kind:'grounded',idx:0};applyView();}
 }
 // Show one of the test's images on the left; non-answer views also become the pipeline input.
 function showView(which){
   if(RUNNING)return;
   if(!ACTIVE_TEST) return;
   const data=FILES[which]; if(!data){ toast('No "'+which+'" image in this test.'); return; }
+  closeOperationFabrics();
   $('hero-img').src=data; $('hero-img').style.display='block'; $('hero-empty').style.display='none';
   if(which!=='answer') HERO=data;
 }

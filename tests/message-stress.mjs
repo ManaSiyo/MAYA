@@ -16,7 +16,7 @@ const AUTH = 'fixture-only-signature-secret', HOST = 'maya-stress.invalid';
 const checks = [], timings = [], providerCalls = [], routeLogs = [];
 const counters = {signedInbound:0, signedStatuses:0, adminSends:0, storageReads:0, storageWrites:0, generationConflicts:0, transientRetries:0, ownerEffects:0, ownerDelegateCalls:0};
 const objects = new Map(), servers = [];
-let generation = 0, failArchiveWrites = false, failLiveWrites = 0, failLiveReads = 0, readGate = null, rateLimited = false;
+let generation = 0, failArchiveWrites = false, failArchiveReads = false, failLiveWrites = 0, failLiveReads = 0, readGate = null, claimGate = null, failAfterClaim = false, rateLimited = false;
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return {promise, resolve}; };
 const pause = ms => new Promise(r => setTimeout(r, ms));
 const problem = (message, status=503) => Object.assign(new Error(message), {status});
@@ -26,6 +26,7 @@ function check(name, condition, detail={}) {
 }
 async function read(key) {
   counters.storageReads++;
+  if (key.startsWith('private/messages-archive/') && failArchiveReads) return {ok:false,status:503};
   if (key === THREADS_PATH && failLiveReads) { failLiveReads--; return {ok:false,status:503}; }
   const item = objects.get(key);
   // A read really returns its captured generation, including when held in flight.
@@ -41,7 +42,11 @@ async function write(key, buf, _type, expected) {
   if (key === THREADS_PATH && failLiveWrites) { failLiveWrites--; throw problem('injected live write outage'); }
   const current = objects.get(key)?.generation || '0';
   if (String(expected) !== current) { counters.generationConflicts++; throw problem('generation conflict',412); }
+  const previous=objects.get(key);
   objects.set(key, {buf:Buffer.from(buf), generation:String(++generation)}); counters.storageWrites++;
+  const isClaim=key===THREADS_PATH && Object.keys(JSON.parse(buf).sendRequests||{}).length>Object.keys(JSON.parse(previous?.buf||'{}').sendRequests||{}).length;
+  if(isClaim&&failAfterClaim){failAfterClaim=false;failLiveReads=1;}
+  if(isClaim&&claimGate){const gate=claimGate;claimGate=null;gate.entered.resolve();await gate.release.promise;}
 }
 const archive = createMessageArchive({read,write});
 const storeDeps = {
@@ -188,6 +193,27 @@ try {
   ownerHistory=await stores[0].history(OWNER);
   const reconciled=ownerHistory.messages.find(m=>m.id==='SMActualOwnerReply');
   check('a late owner-reply callback reconciles its archived synthetic ID',reconciled?.status==='delivered' && reconciled.replyTo===sid('Owner',0) && !ownerHistory.messages.some(m=>m.id==='owner-reply-'+sid('Owner',0)),{actualCarrierRecord:reconciled||null,syntheticRecord:ownerHistory.messages.find(m=>m.id==='owner-reply-'+sid('Owner',0))});
+  await archive.append(OWNER,(await stores[0].get(OWNER)).historyEpoch,[{id:'owner-reply-'+sid('Owner',0),dir:'out',status:'accepted',text:reconciled?.text,ts:reconciled?.ts}]);
+  const conflictingAlias=await status('SMDifferentOwnerReply','sent',0,{},sid('Owner',0));
+  const stableReply=(await stores[0].history(OWNER)).messages.filter(m=>m.replyTo===sid('Owner',0)||m.id==='owner-reply-'+sid('Owner',0));
+  check('stale archive appends and conflicting carrier aliases preserve one terminal owner reply',conflictingAlias.status>=400&&stableReply.length===1&&stableReply[0].id==='SMActualOwnerReply'&&stableReply[0].status==='delivered');
+
+  // The START has left the live window; replaying it must not undo a newer STOP.
+  const consentTarget='+14155550800';
+  await inbound(consentTarget,'SMOldStart','START');
+  for(const i of range(401))await stores[0].outbound({to:consentTarget,text:'archive filler',sid:sid('ConsentFill',i)});
+  await inbound(consentTarget,'SMNewStop','STOP');
+  const beforeOldStart=await stores[0].get(consentTarget);
+  await inbound(consentTarget,'SMOldStart','START',1);
+  check('an archived START retry cannot reverse a newer STOP or add unread',(await stores[0].get(consentTarget)).consent==='stop'&&(await stores[0].get(consentTarget)).unread===beforeOldStart.unread);
+  failArchiveReads=true;
+  const archiveReadFailure=await inbound(consentTarget,'SMUnverifiedStart','START');
+  failArchiveReads=false;
+  check('unavailable archived dedup fails closed before applying consent',archiveReadFailure.status===503&&(await stores[0].get(consentTarget)).consent==='stop');
+  await stores[0].remove(consentTarget);
+  await inbound(consentTarget,'SMOldStart','START',1);
+  const afterDeleteReplay=await stores[0].get(consentTarget);
+  check('history deletion preserves STOP and durable inbound identity across archive epochs',afterDeleteReplay.consent==='stop'&&afterDeleteReplay.unread===0&&afterDeleteReplay.messages.length===0&&afterDeleteReplay.deleted);
 
   // Archive-before-trim is a real failure boundary, with the same SID retried.
   const archiveThreadBefore=await stores[0].get(CLIENT);
@@ -249,6 +275,10 @@ try {
   const blocked=await admin('send',{to:target,text:'do not send',requestId:'stress-block-send-00001'});
   await admin('block',{number:target,blocked:false});
   check('blocking survives START and unblocking preserves STOP',blocked.status===409 && (await stores[0].get(target)).consent==='stop' && providerCalls.length===beforeSafeguards);
+  await inbound(target,'SMStopAfterUnblock','STOP');
+  const beforeBlockedReplay=await stores[0].get(target);
+  await inbound(target,'SMBlockedStart','START',1,{OptOutType:'START'});
+  check('a START received while blocked stays ignored after unblock and a later STOP',(await stores[0].get(target)).consent==='stop'&&(await stores[0].get(target)).unread===beforeBlockedReplay.unread);
   await inbound(target,'SMStart','START');
   check('explicit START re-enables a reviewed send',(await admin('send',{to:target,text:'reviewed after START',requestId:'stress-restart-000001'})).status===200);
 
@@ -276,6 +306,41 @@ try {
   gate.release.resolve();
   const racingResult=await racingSend;
   check('a STOP persisted before the durable claim prevents a stale-contact send',raceStop.status===200 && racingResult.status===409 && providerCalls.length===raceStart,{response:racingResult.status,providerDelta:providerCalls.length-raceStart,providerObservations:providerCalls.slice(raceStart)});
+
+  for(const action of ['stop','block']){
+    const number=action==='stop'?'+14155550601':'+14155550602';
+    await inbound(number,'SMClaimStart'+action,'START');
+    const gate={entered:deferred(),release:deferred()};claimGate=gate;
+    const before=providerCalls.length,body={to:number,text:'must recheck after claim',requestId:'stress-after-claim-'+action};
+    const pending=admin('send',body);await gate.entered.promise;
+    if(action==='stop')await inbound(number,'SMClaimStop','STOP',1);else await stores[1].block(number,true);
+    gate.release.resolve();const first=await pending;
+    if(action==='stop')await inbound(number,'SMClaimRestart','START',1);else await stores[1].block(number,false);
+    const replay=await admin('send',body,1);
+    check(action+' arriving while claim acknowledgement is held prevents dispatch and replay',first.status===409&&replay.status===409&&providerCalls.length===before);
+  }
+  const freshReadBody={to:target,text:'must read consent before dispatch',requestId:'stress-fresh-read-00001'},beforeFreshRead=providerCalls.length;
+  failAfterClaim=true;
+  const freshFailure=await admin('send',freshReadBody),freshReplay=await admin('send',freshReadBody,1);
+  check('failed consent revalidation sends nothing and leaves a non-retryable receipt',freshFailure.status===503&&freshReplay.status===409&&providerCalls.length===beforeFreshRead);
+
+  // Capacity is deliberately seeded at the boundary; never spend ten thousand
+  // provider events to prove that accepted ignored IDs are not evicted.
+  let capacityRecord={threads:{[target]:{number:target,blocked:true,consent:'yes',messages:[],inboundReceipts:Object.fromEntries(range(10000).map(i=>[sid('Ignored',i),true]))}}};
+  const capacityStore=createMessageStore({load:async()=>structuredClone(capacityRecord),save:async rec=>{capacityRecord=structuredClone(rec);}});
+  await assert.rejects(capacityStore.inbound({from:target,sid:'SMOverCapacity',text:'START'}),/receipt capacity/);
+  check('ignored-SID capacity fails closed without evicting any accepted receipt',Object.keys(capacityRecord.threads[target].inboundReceipts).length===10000&&capacityRecord.threads[target].inboundReceipts[sid('Ignored',0)]===true&&!capacityRecord.threads[target].inboundReceipts.SMOverCapacity);
+  await assert.rejects(capacityStore.inbound({from:target,sid:'SMCapacityStop',text:'STOP'}),/receipt capacity/);
+  await capacityStore.block(target,false);await capacityStore.inbound({from:target,sid:sid('Ignored',0),text:'START'});
+  check('STOP still persists at ignored-SID capacity and an old START stays deduplicated',capacityRecord.threads[target].consent==='stop'&&capacityRecord.threads[target].messages.length===0);
+  await capacityStore.inbound({from:target,sid:'SMRetainedAtCapacity',text:'A retained question'});
+  const beforeCapacityDelete=JSON.stringify(capacityRecord);
+  await assert.rejects(capacityStore.remove(target),/receipt capacity/);
+  check('deletion at receipt capacity preserves the retained history instead of losing event identity',JSON.stringify(capacityRecord)===beforeCapacityDelete);
+  const beforeIgnoredOwner=counters.ownerEffects;
+  await stores[0].block(OWNER,true);await inbound(OWNER,'SMIgnoredOwnerCommand','owner command');
+  await stores[0].block(OWNER,false);await inbound(OWNER,'SMIgnoredOwnerCommand','owner command',1);
+  check('an ignored blocked owner command never executes when its SID is replayed after unblock',counters.ownerEffects===beforeIgnoredOwner);
 
   const unsignedStatus=await request(0,'/api/phone/sms/status',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({MessageSid:'SMUnsignedStatus',MessageStatus:'delivered'})},'auth');
   check('unsigned callbacks cannot change delivery state',unsignedStatus.status===403 && !persisted().pendingStatuses?.SMUnsignedStatus);

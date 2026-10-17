@@ -1,11 +1,14 @@
 import {fields} from './surface-editors.js';
 import {addRestore} from './restore-controls.js';
 import {Pill} from '/aesthetics/ui/components/components.js';
+import {setupWorkspacePreviews} from './workspace-previews.js';
 export function setupPresentation({buttons,preview,colors,design,controlSizes}){
  const shared=window.MayaPresentationControls;
  const statusStyles=Object.fromEntries(shared.statuses.map(({key})=>[key,{...shared.defaults.statusStyles[key],...design.statusStyles?.[key]}]));
  const sectionSpacing={...shared.defaults.sectionSpacing,...design.sectionSpacing};
- const settings=()=>({statusStyles,sectionSpacing});
+ const layoutSpacing={...shared.defaults.layoutSpacing,...design.layoutSpacing};
+ const semanticStyles={nonFabric:{...shared.defaults.semanticStyles.nonFabric,...design.semanticStyles?.nonFabric}};
+ const settings=()=>({statusStyles,sectionSpacing,layoutSpacing,semanticStyles});
  const render=()=>shared.apply({...design,...controlSizes,...settings()});
  function editor(parent,label,value,spec){
   const edit=document.createElement('details');edit.className='type-editor';
@@ -42,5 +45,18 @@ export function setupPresentation({buttons,preview,colors,design,controlSizes}){
   const heading=document.createElement('h3');heading.dataset.mayaType=heading.dataset.previewCategory='H3';heading.dataset.previewHeading='';heading.textContent=name;if(before)heading.dataset.spacing=before;
   const content=document.createElement('div');content.dataset.headingGap='';content.className='spacing-preview-content';content.dataset.mayaType=content.dataset.previewCategory='P1';content.textContent=text;sample.append(heading,content);
  }
- spacing.append(sample);render();return {settings,render};
+ spacing.append(sample);
+ const layout=document.createElement('section');layout.className='layout-spacing-controls';
+ const layoutRow=document.createElement('div');layoutRow.className='surface-edit-row';
+ const layoutTitle=document.createElement('h3');layoutTitle.dataset.mayaType=layoutTitle.dataset.previewCategory='H3';layoutTitle.textContent='Fields and drawer spacing';layoutRow.append(layoutTitle);layout.append(layoutRow);preview.append(layout);
+ editor(layoutRow,'field and drawer spacing',layoutSpacing,[['labelGap','Label → field',{min:0,max:64}],['fieldGap','Between fields',{min:0,max:64}],['drawerDockInset','Voice dock → bottom',{min:0,max:32}]]);
+ const layoutHelp=document.createElement('p');layoutHelp.dataset.mayaType=layoutHelp.dataset.previewCategory='P1';layoutHelp.textContent='Label → field is the space from Trigger to its selected value. Between fields separates Trigger, wait and earliest-time groups. A smaller dock inset moves Hey Maya closer to the bottom.';layout.append(layoutHelp);
+ const semantic=document.createElement('section');semantic.className='semantic-style-controls';
+ const semanticRow=document.createElement('div');semanticRow.className='surface-edit-row';
+ const semanticTitle=document.createElement('h3');semanticTitle.dataset.mayaType=semanticTitle.dataset.previewCategory='H3';semanticTitle.textContent='Non-fabric pieces';semanticRow.append(semanticTitle);semantic.append(semanticRow);preview.append(semantic);
+ const semanticEdit=editor(semanticRow,'non-fabric pieces',semanticStyles.nonFabric,[['color','Text color',{type:'color'}],['opacity','Color strength',{min:0,max:100}]]);
+ const shoe=Pill({label:'Black leather boots',onClick:event=>{event.stopPropagation();semanticEdit.open=true;semanticEdit.querySelector('input').focus();}});shoe.dataset.mayaSemantic='non-fabric';semantic.append(shoe);
+ const semanticHelp=document.createElement('p');semanticHelp.dataset.mayaType=semanticHelp.dataset.previewCategory='P1';semanticHelp.textContent='Shoes in the Brief garment list and Operation Room are marked in pale yellow. Their text size, font and pill material still use the shared controls.';semantic.append(semanticHelp);
+ setupWorkspacePreviews({parent:layout,preview,render});
+ render();return {settings,render};
 }

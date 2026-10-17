@@ -11,17 +11,22 @@
     {key:'pending',label:'Pending',alias:'pending',matches:['pending','ready','follow_up_due'],color:'#fbbf24',weight:400,meaning:'Ready or waiting for the next action; yellow.',usage:[['Outbound','/outbound.html','Lead lists · Ready']]},
     {key:'rejected',label:'Rejected',alias:'rejected',matches:['rejected','suppressed','passed'],color:'#f87171',weight:400,meaning:'Declined or excluded from contact; red.',usage:[['Admin','/status.html','Leads · Passed (previous)'],['Outbound','/outbound.html','Lead lists · Do not contact']]}
   ];
-  const defaults={sectionSpacing:{submissions:24,leads:16,ads:40,insights:16,headingGap:10},statusStyles:Object.fromEntries(statuses.map(s=>[s.key,{color:s.color,opacity:100,weight:s.weight}]))};
+  const defaults={sectionSpacing:{submissions:24,leads:16,ads:40,insights:16,headingGap:10},layoutSpacing:{labelGap:4,fieldGap:10,drawerDockInset:4},semanticStyles:{nonFabric:{color:'#fde68a',opacity:100}},statusStyles:Object.fromEntries(statuses.map(s=>[s.key,{color:s.color,opacity:100,weight:s.weight}]))};
   const hex=(value,fallback)=>/^#[0-9a-f]{6}$/i.test(value)?value:fallback;
   const number=(value,min,max,fallback)=>Number.isInteger(value)&&value>=min&&value<=max?value:fallback;
   function apply(value={}){
     const states=Object.fromEntries(statuses.map(s=>{const saved=value.statusStyles?.[s.key]||{},base=defaults.statusStyles[s.key];return [s.key,{color:hex(saved.color,base.color),opacity:number(saved.opacity,0,100,base.opacity),weight:number(saved.weight,200,500,base.weight)}];}));
     const sp=Object.fromEntries(Object.entries(defaults.sectionSpacing).map(([key,fallback])=>[key,number(value.sectionSpacing?.[key],0,160,fallback)]));
+    const layout=Object.fromEntries(Object.entries(defaults.layoutSpacing).map(([key,fallback])=>[key,number(value.layoutSpacing?.[key],0,key==='drawerDockInset'?32:64,fallback)]));
+    const nonFabric={color:hex(value.semanticStyles?.nonFabric?.color,defaults.semanticStyles.nonFabric.color),opacity:number(value.semanticStyles?.nonFabric?.opacity,0,100,100)};
     const iconColor=hex(value.iconColor,'#aab5c4'),iconOpacity=number(value.iconOpacity,0,100,100),iconStroke=number(value.iconStroke,1,3,2);
     let css=':root{';
     for(const s of statuses){const state=states[s.key],rgb=[1,3,5].map(i=>parseInt(state.color.slice(i,i+2),16)).join(' ');css+=`--maya-${s.alias}:rgb(${rgb} / ${state.opacity/100});`;}
     // Historical page aliases must retain success/warning semantics independently of CRM stages.
-    css+=`--green:var(--maya-completed);--mint:var(--maya-completed);--amber:var(--maya-pending);--rose:var(--maya-cancelled);--maya-icon-color:${iconColor};--maya-icon-opacity:${iconOpacity/100};--maya-icon-stroke:${iconStroke};--maya-section-heading-gap:${sp.headingGap}px;}`;
+    css+=`--green:var(--maya-completed);--mint:var(--maya-completed);--amber:var(--maya-pending);--rose:var(--maya-cancelled);--maya-icon-color:${iconColor};--maya-icon-opacity:${iconOpacity/100};--maya-icon-stroke:${iconStroke};--maya-section-heading-gap:${sp.headingGap}px;--maya-form-label-gap:${layout.labelGap}px;--maya-form-field-gap:${layout.fieldGap}px;--maya-drawer-dock-inset:${layout.drawerDockInset}px;}`;
+    const semanticRGB=[1,3,5].map(i=>parseInt(nonFabric.color.slice(i,i+2),16)).join(' ');
+    css+=`html body [data-maya-semantic="non-fabric"],html body [data-maya-semantic="non-fabric"] [data-maya-type]{color:rgb(${semanticRGB} / ${nonFabric.opacity/100})!important}`;
+    css+=`html body [data-maya-field-row]{display:grid;row-gap:var(--maya-form-label-gap)!important}html body [data-maya-field-stack]{display:grid;row-gap:var(--maya-form-field-gap)!important}html body :is([data-maya-field-row],[data-maya-field-stack])[hidden]{display:none!important}`;
     for(const s of statuses){
       const state=states[s.key],selectors=s.matches.flatMap(key=>[`.status-pill[data-status="${key}"]`,`.status-word[data-status="${key}"]`,`.status-pill:has(option[value="${key}"]:checked)`,`.lead-stage-menu [data-status="${key}"]`]);
       css+=`html body :is(${selectors.join(',')}){--maya-status-weight:${state.weight};--status-color:var(--maya-${s.alias})!important;color:var(--maya-${s.alias})!important;font-weight:${state.weight}!important}`;

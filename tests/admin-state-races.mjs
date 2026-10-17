@@ -16,7 +16,16 @@ await page.addInitScript(()=>{
  if(window===window.top){localStorage.setItem('maya_mkt_cache',JSON.stringify({ts:Date.now(),d:{leads:{connected:true,list:[{id:'cached-secret',name:'Private cached client'}]}}}));
  localStorage.setItem('maya_admin_tok','present-but-invalid');}
  window.google={accounts:{id:{initialize(){},prompt(){},renderButton(){}}}};
- window.fixtureMicCalls=0;Object.defineProperty(navigator,'mediaDevices',{value:{getUserMedia:async()=>{window.fixtureMicCalls++;throw Error('No fixture microphone');}}});
+ window.fixtureMicCalls=0;window.fixtureVoiceTracks=[];window.fixtureVoicePCs=[];
+ window.Audio=class{setAttribute(){}play(){return Promise.resolve();}pause(){}};
+ window.RTCPeerConnection=class{
+  constructor(){fixtureVoicePCs.push(this);this.connectionState='new';this.sender={track:null,replaceTrack:async track=>{this.sender.track=track;}};}
+  addTransceiver(){return {sender:this.sender};}createDataChannel(){return this.dc={send(){},close(){this.closed=true;}};}
+  async createOffer(){return {type:'offer',sdp:'fake offer'};}async setLocalDescription(){}
+  async setRemoteDescription(){this.remoteDescriptionSet=true;}
+  close(){this.connectionState='closed';}
+ };
+ Object.defineProperty(navigator,'mediaDevices',{value:{getUserMedia:async()=>{window.fixtureMicCalls++;const track={stopped:false,stop(){this.stopped=true;}};fixtureVoiceTracks.push(track);return {getTracks:()=>[track],getAudioTracks:()=>[track]};}}});
 });
 const bodyFor=url=>({ok:true,connected:true,list:feed,leads:{connected:true,list:feed},threads:[],folders:[],total:0,items:[],notes:[],briefing:[],attention:[],ranges:{},accounts:{total:0},models:[],thread:{number:url.searchParams.get('number'),name:'',consent:'yes',messages:[],transcripts:[]}});
 await page.route('**/*',async route=>{
@@ -98,7 +107,8 @@ try{
  await page.evaluate(b=>_adoptToken(b),b);const newMkt=await take('/api/admin/marketing');
  assert.equal(await page.evaluate(()=>_mayaActions.length),0);assert.equal(await page.locator('#msg-input').inputValue(),'');assert.equal(await page.locator('#adm-mkt').isVisible(),false);
  await page.evaluate(()=>oldVoiceMessage({data:JSON.stringify({type:'response.audio_transcript.done',transcript:'Late private transcript'})}));assert.equal(await page.locator('#maya-chat').textContent(),'');
- await voiceToken.fulfill({json:{value:'not-a-real-provider-key',model:'fixture'}});await page.waitForTimeout(30);assert.equal(await page.evaluate(()=>fixtureMicCalls),0,'Session switch cancels voice before microphone access');
+ await voiceToken.fulfill({json:{value:'not-a-real-provider-key',model:'fixture'}});await page.waitForTimeout(30);
+ assert.deepEqual(await page.evaluate(()=>({micCalls:fixtureMicCalls,tracksStopped:fixtureVoiceTracks.every(t=>t.stopped),connectionsClosed:fixtureVoicePCs.every(pc=>pc.connectionState==='closed'),noAttachedTrack:fixtureVoicePCs.every(pc=>pc.sender.track===null),noRemoteDescription:fixtureVoicePCs.every(pc=>!pc.remoteDescriptionSet),current:_adminVoiceLine.current,active:!!_voice,starting:_voiceStarting})),{micCalls:1,tracksStopped:true,connectionsClosed:true,noAttachedTrack:true,noRemoteDescription:true,current:null,active:false,starting:false},'Immediate capture is cancelled before audio or voice can continue under the new account');
  await newMkt.fulfill({json:{ok:true,leads:{connected:true,list:[{id:'b-only',name:'Owner B client',stage:'new'}]}}});await page.getByText('Owner B client',{exact:true}).waitFor();
  await oldMkt.fulfill({status:401,json:{error:'expired'}});await page.waitForTimeout(30);assert.equal(await page.evaluate(()=>_idTok),b,'Old 401 never signs out the newer account');assert.equal(await page.locator('#leads-table tbody').textContent().then(t=>t.includes('Owner B client')),true);
  // Two same-account refreshes resolve out of order; only the newest paints.

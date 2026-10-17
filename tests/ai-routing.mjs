@@ -142,6 +142,22 @@ await test('a timed out primary route is aborted before fallback', async () => {
   assert.equal(routed.route.provider, 'two');
 });
 
+await test('foreground ranking can disable paid fallback and tighten its timeout', async () => {
+  let fallback=0,aborted=false;
+  const router=createTaskRouter({tasks:tasksWith([{provider:'one',model:'a',timeoutMs:1000},{provider:'two',model:'b',timeoutMs:1000}]),providers:{
+    one:{execute:({signal})=>new Promise((resolve,reject)=>signal.addEventListener('abort',()=>{aborted=true;reject(Object.assign(Error('aborted'),{name:'AbortError'}));},{once:true}))},
+    two:{execute:async()=>{fallback++;return {};}}
+  }});
+  await assert.rejects(router.run('test',{}, {maxAttempts:1,timeoutMs:10}),error=>error.category==='timeout');
+  assert.equal(aborted,true);assert.equal(fallback,0);
+});
+
+await test('an already-cancelled search makes no provider call', async () => {
+  let calls=0;const controller=new AbortController();controller.abort();
+  const router=createTaskRouter({tasks:tasksWith([{provider:'one',model:'a',timeoutMs:1000}]),providers:{one:{execute:async()=>{calls++;return {};}}}});
+  await assert.rejects(router.run('test',{}, {signal:controller.signal}),error=>error.category==='cancelled');assert.equal(calls,0);
+});
+
 await test('eval summaries expose grades and timing, not fixtures', async () => {
   const summary = await runTaskEvaluation({
     cases: [

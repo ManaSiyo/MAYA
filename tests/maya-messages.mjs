@@ -57,7 +57,9 @@ const sent = await sendSms(tdeps, { to: '646 996 6115', text: 'Great. We will ca
 ok('a text goes out from the studio number', sent.ok === true && twRest[0].url === '/2010-04-01/Accounts/ACtest/Messages.json' && twRest[0].form.From === '+15109909223' && twRest[0].form.To === '+16469966115');
 const blocked = await sendSms(tdeps, { to: '+14155559999', text: 'x' });
 ok('an unregistered number failure directs the owner to approval and sender assignment', blocked.ok === false && /carrier registration/.test(blocked.why) && /approval and sender assignment/.test(blocked.why) && !/still in review/.test(blocked.why));
-ok('a foreign or bad number is refused before Twilio', (await sendSms(tdeps, { to: '+44 20 1234', text: 'x' })).ok === false);
+ok('an invalid country-coded number is refused before Twilio', (await sendSms(tdeps, { to: '+44 20', text: 'x' })).ok === false);
+ok('formatted explicit international SMS is normalized', e164('+44 (7700) 900-123') === '+447700900123');
+ok('implicit foreign digits and letters are refused', e164('447700900123') === '' && e164('+44abc7700900123') === '');
 
 // the routes
 const app = express();

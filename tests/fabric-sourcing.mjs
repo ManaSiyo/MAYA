@@ -4,6 +4,7 @@ import {
   applyVisualRankings,
   buildVisualRankingRequest,
   collectRetailerResults,
+  fabricProductMatch,
 } from '../docs/server/fabric-sourcing.js';
 
 let passed = 0;
@@ -80,6 +81,50 @@ test('an invalid model response triggers the fallback condition', () => {
   const built = buildVisualRankingRequest({ garmentImage, traits: {}, products });
   assert.throws(() => applyVisualRankings({ choices: [] }, built.candidates),
     error => error.status === 502);
+});
+
+test('tools are excluded before ranking and low-confidence materials stay absent',()=>{
+  const scissors={...products[0],title:'Professional fabric scissors'};
+  assert.equal(collectRetailerResults([[scissors,...products]]).products.length,2);
+  const built=buildVisualRankingRequest({garmentImage,traits:{},products:[scissors,...products]});
+  assert.equal(built.candidates.length,2);
+  assert.equal(built.candidates[0].etaDays,undefined,'No invented seven-day delivery');
+  const result=applyVisualRankings({choices:[{message:{content:JSON.stringify({rankings:[{id:'fabric-1',score:35,reason:'Only the shop is similar'}]})}}]},built.candidates);
+  assert.deepEqual(result,[],'A valid empty recommendation set must not trigger unrelated fallback');
+});
+test('saved denim excludes leather and tools while multi-piece captions use the matching garment',()=>{
+  const pieces=[{name:'Denim top',fabric:'indigo cotton denim'},{name:'White shirt',fabric:'white cotton poplin'},{name:'Black leather boots',fabric:'black leather'}];
+  const match=product=>fabricProductMatch({image:'https://cdn.example/fabric.jpg',evidence:'seller_listing',...product},{automatic:true,pieces});
+  assert.deepEqual(match({title:'Indigo cotton denim',description:'Sold by the yard'}),{garment:'Denim top'});
+  assert.deepEqual(match({title:'White cotton poplin',description:'Sold by the yard'}),{garment:'White shirt'});
+  assert.equal(match({title:'Black leather',description:'Leather hides'}),null);
+  assert.equal(match({title:'Fabric scissors',description:'Cut denim, cotton or wool'}),null);
+  assert.equal(match({title:'Red cotton poplin',description:'Sold by the yard'}),null);
+  assert.equal(match({title:'White cotton poplin',image:'',description:'No actual product photo'}),null);
+});
+
+test('latest positive, negative, construction and color constraints remain independent',()=>{
+  const cotton={title:'White cotton poplin fabric',description:'100% cotton, sold by the yard.',image:'https://cdn.example/cotton.jpg'};
+  const wool={title:'White wool twill fabric',description:'100% wool, sold by the yard.',image:'https://cdn.example/wool.jpg'};
+  assert.ok(fabricProductMatch(cotton,{request:'cotton, no wool'}));
+  assert.ok(fabricProductMatch(cotton,{request:'Use cotton instead',piece:{fabric:'white wool'}}));
+  assert.equal(fabricProductMatch(wool,{request:'cotton, no wool'}),null);
+  assert.equal(fabricProductMatch({...cotton,description:'60% cotton 40% polyester, sold by the yard.'},{request:'white cotton poplin',preferences:'no polyester'}),null);
+  assert.ok(fabricProductMatch(cotton,{request:'less shiny',history:[{request:'white cotton poplin, no polyester'}]}));
+  assert.ok(fabricProductMatch({...cotton,description:cotton.description+' Matte surface.'},{request:'less shiny',history:[{request:'white cotton poplin, no polyester'}]}));
+  assert.equal(fabricProductMatch({...cotton,description:cotton.description+' Shiny surface.'},{request:'less shiny',history:[{request:'white cotton poplin, no polyester'}]}),null,'Less shiny must not become a positive shiny constraint');
+  assert.equal(fabricProductMatch({...cotton,title:'White cotton jersey fabric'},{automatic:true,piece:{fabric:'white cotton poplin'}}),null);
+  assert.equal(fabricProductMatch({...cotton,title:'Red cotton poplin fabric'},{automatic:true,piece:{fabric:'white cotton poplin'}}),null);
+  assert.equal(fabricProductMatch({...cotton,title:'Cotton shirt, size M',description:'Ready-to-wear cotton garment.'},{request:'cotton'}),null);
+  assert.equal(fabricProductMatch({...cotton,title:'Indigo denim jacket',description:'Cotton denim, ready-to-wear.'},{automatic:true,piece:{fabric:'indigo denim'}}),null);
+  assert.ok(fabricProductMatch({...cotton,title:'Cotton shirting fabric for shirts'},{request:'cotton'}));
+  assert.ok(fabricProductMatch({...cotton,description:"100% cotton fabric, suitable for a women's shirt."},{request:'cotton'}),'Suggested garment use does not make yardage ready-to-wear');
+});
+test('visual ranking carries sourced facts and explicit words without treating guesses as facts',()=>{
+  const built=buildVisualRankingRequest({garmentImage,traits:{request:'Matte denim, no polyester',preferences:'Natural fibers',garments:[{id:'denim-1',name:'Jacket',fabric:'blue denim'},{id:'shirt-2',name:'Shirt',fabric:'white cotton poplin'}]},products:[{...products[0],description:'100% cotton, brushed denim',composition:'100% cotton',garment:'Jacket',garmentId:'denim-1'}]});
+  const prompt=JSON.stringify(built.requestBody.messages);
+  assert.match(prompt,/Matte denim, no polyester/);assert.match(prompt,/Natural fibers/);assert.match(prompt,/100% cotton, brushed denim/);assert.match(prompt,/Jacket/);
+  assert.match(prompt,/denim-1/);assert.match(prompt,/shirt-2/);assert.match(prompt,/white cotton poplin/);
 });
 
 console.log('\n' + (process.exitCode ? 'FAILED' : passed + ' passed') + '\n');

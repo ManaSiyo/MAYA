@@ -7,6 +7,9 @@ import {validDesign} from '../docs/server/design-config.mjs';
 // A real served-page fixture with an in-memory design API. No live provider or
 // personal Chrome access; even the remote-looking hostname is intercepted.
 const root=new URL('../',import.meta.url).pathname,origin='https://maya.manasiyo.com';
+const briefPhoto=readFileSync(resolve(root,'aesthetics/ui/logo-circle.png'));
+const briefToken='fixture.'+Buffer.from(JSON.stringify({sub:'pill-owner',exp:Math.floor(Date.now()/1000)+3600})).toString('base64url')+'.fixture';
+const briefPieces={pieces:[{id:'pill-jacket',name:'Denim jacket',fabric:'indigo cotton denim',_image:'data:image/png;base64,'+briefPhoto.toString('base64')}]};
 const browser=await chromium.launch({executablePath:process.env.PW_CHROMIUM||process.env.CHROMIUM_PATH});
 const context=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
 const page=await context.newPage(),failures=[],pageErrors=[],posts=[];
@@ -16,7 +19,7 @@ const marketing={leads:{connected:true,list:[{id:'pill-person',name:'Example Per
 const outbound={campaigns:[{id:'ceremonial',name:'Ceremonial',status:'active'}],contacts:[{id:'person',campaignId:'ceremonial',name:'Example Person',company:'Example Studio',email:'example@example.com',stage:'contacted',notes:'Fixture'}],companies:[],settings:{}};
 const routes={'/':'/frontend/index.html','/status.html':'/backend/status.html','/outbound.html':'/backend/outbound.html','/backend.html':'/backend/backend.html','/operations.html':'/backend/operations.html','/playground.html':'/playground/index.html'};
 page.on('pageerror',error=>pageErrors.push({path:new URL(page.url()).pathname,message:error.message}));
-await context.addInitScript(()=>{window.setInterval=()=>0;localStorage.setItem('maya_admin_tok','fixture-admin');});
+await context.addInitScript(token=>{window.setInterval=()=>0;localStorage.setItem('maya_admin_tok',['/backend.html','/operations.html'].includes(location.pathname)?token:'fixture-admin');},briefToken);
 await context.route('**/*',async route=>{
  const req=route.request(),url=new URL(req.url());if(url.origin!==origin)return route.abort();
  if(url.pathname==='/api/design')return route.fulfill({json:savedDesign});
@@ -28,6 +31,13 @@ await context.route('**/*',async route=>{
   savedDesign=structuredClone(body);return route.fulfill({json:{ok:true,savedAt:'2026-10-07T12:00:00Z'}});
  }
  if(url.pathname==='/api/admin/marketing')return route.fulfill({json:marketing});
+ if(url.pathname==='/api/admin/submissions')return route.fulfill({json:{folders:[{id:'pill-brief',name:'Pill fixture',files:[{id:'pill-summary',name:'summary.json'},{id:'pill-photo',name:'dream-garment.png'},{id:'pill-pieces',name:'pieces.json'}]}]}});
+ if(url.pathname==='/api/admin/subfile'){
+  if(url.searchParams.get('id')==='pill-summary')return route.fulfill({json:{client:{name:'Pill fixture'},fabric_preferences:'No polyester'}});
+  if(url.searchParams.get('id')==='pill-pieces')return route.fulfill({json:briefPieces});
+  return route.fulfill({body:briefPhoto,contentType:'image/png'});
+ }
+ if(url.pathname==='/api/admin/subthumb')return route.fulfill({body:briefPhoto,contentType:'image/png'});
  if(url.pathname==='/api/admin/messages/thread')return route.fulfill({json:{ok:true,thread:{number:'+14155550123',name:'Example Person',consent:'yes',messages:[],hasArchive:false}}});
  if(url.pathname.startsWith('/api/admin/outbound'))return route.fulfill({json:{ok:true,state:outbound,capabilities:{sheets:true},mailboxes:[],crm:{},accountId:'fixture'}});
  if(url.pathname.startsWith('/api/'))return route.fulfill({json:{ok:true,threads:[],models:{},headline:'Fixture',items:[],folders:[]}});
@@ -47,7 +57,7 @@ async function measure(selector){
   return {width:r.width,height:r.height,x:r.x,right:r.right,paddingX:parseFloat(s.paddingLeft),paddingY:parseFloat(s.paddingTop),paddingRight:parseFloat(s.paddingRight),paddingBottom:parseFloat(s.paddingBottom),border:parseFloat(s.borderLeftWidth),borderTop:parseFloat(s.borderTopWidth),borderColor:s.borderColor,background:s.backgroundColor,shadow:s.boxShadow,blur:s.backdropFilter,image:s.backgroundImage,opacity:s.opacity,line:parseFloat(s.lineHeight),fontSize:parseFloat(s.fontSize),textWidth:tr.width,textHeight:tr.height,display:s.display,overflow:el.scrollWidth-el.clientWidth,flowHeight:Math.max(0,...flow.map(r=>r.height)),flowWidth:flow.reduce((n,r)=>n+r.width,0)+(parseFloat(s.columnGap)||0)*Math.max(0,flow.length-1),glyph:glyph?{width:glyph.width,height:glyph.height,left:glyph.left-r.left,top:glyph.top-r.top,right:r.right-glyph.right,bottom:r.bottom-glyph.bottom,stroke:getComputedStyle(svg).stroke,fill:getComputedStyle(svg).fill,path:svg.querySelector('path')?.getAttribute('d')}:null,before:{width:parseFloat(before.width)||0,content:before.content,position:before.position},after:{width:parseFloat(after.width)||0,height:parseFloat(after.height)||0,content:after.content,position:after.position},gap:parseFloat(s.columnGap)||0};
  });
 }
-function geometry(box,label,x,y,{kind='text',regular=false}={}){
+function geometry(box,label,x,y,{kind='text',regular=false,disabled=false}={}){
  if(!box)return;
  check(box.width>0&&box.height>0,label+' is rendered',box);
  check(box.paddingX===x&&box.paddingY===y,label+' uses saved X/Y padding',{actual:[box.paddingX,box.paddingY],expected:[x,y]});
@@ -59,6 +69,7 @@ function geometry(box,label,x,y,{kind='text',regular=false}={}){
   check(Math.abs(box.width-contentWidth-box.paddingX-box.paddingRight-box.border*2)<1.2,label+' width is content + padding + border',{actual:box.width,expected:contentWidth+box.paddingX+box.paddingRight+box.border*2});
  }
  if(regular)check(box.blur==='none'&&box.shadow==='none'&&box.image==='none',label+' is regular material',box);
+ else if(disabled)check(box.border===1&&box.shadow==='none'&&box.blur!=='none'&&Number(box.opacity)<=.5,label+' retains disabled glass material',{border:box.border,shadow:box.shadow,blur:box.blur,opacity:box.opacity});
  else check(box.border===1&&box.shadow!=='none'&&box.blur!=='none',label+' retains glass enclosure',{border:box.border,shadow:box.shadow,blur:box.blur});
  if(box.glyph){check(box.glyph.width>8&&box.glyph.height>8,label+' SVG glyph has a visible size',box.glyph);check(box.glyph.left>=x-.6&&box.glyph.right>=x-.6&&box.glyph.top>=y-.6&&box.glyph.bottom>=y-.6,label+' glyph stays inside padding',box.glyph);check(box.glyph.path&&box.glyph.stroke!=='none',label+' uses a stroked SVG glyph',box.glyph);}
 }
@@ -127,9 +138,13 @@ try{
  for(const [width,suffix] of [[1440,'desktop'],[390,'phone']]){await page.setViewportSize({width,height:1000});await page.locator('#buttons').evaluate(e=>e.scrollIntoView({block:'start'}));await page.screenshot({path:'/private/tmp/maya-pill-gallery-'+suffix+'.png'});}
  const adminSaved=await adminChecks('saved',22,12);
  for(const [selector,before] of Object.entries(adminDefault)){const after=adminSaved[selector];check(Math.abs(after.width-before.width-16)<1.2,selector+' live width follows saved X padding',{before:before.width,after:after.width});check(Math.abs(after.height-before.height-12)<1.2,selector+' live height follows saved Y padding',{before:before.height,after:after.height});}
+ // No saved dissection deliberately disables Fabrics. Its disabled shadow is
+ // a separate state, not evidence that the enabled Glass material was lost.
+ await ready('/backend.html');check(await page.locator('#brief-fabrics-button').isDisabled(),'Brief Fabrics is disabled before a saved dissection exists');
+ geometry(await measure('#brief-fabrics-button'),'Brief Fabrics disabled',22,12,{disabled:true});
  // Existing page controls, including legacy span pills, must share the formula.
- for(const [path,selector,label,kind] of [['/','#voice-bar','App listen','mixed'],['/outbound.html','#sync-sheet','Outbound refresh','text'],['/backend.html','#fabric-workspace-actions .maya-pill','Brief Fabrics','text'],['/operations.html','#start-test','Operation Room Start','text']]){
-  await ready(path);if(path==='/outbound.html')await page.locator('.people-table [data-person="person"]').waitFor();for(const width of widths){await page.setViewportSize({width,height:1000});const box=await measure(selector);geometry(box,label+' saved '+width,22,12,{kind});check(box.background==='rgba(3, 15, 29, 0.55)'&&box.blur==='blur(9px) saturate(1.4)',label+' saved material '+width,{background:box.background,blur:box.blur});if(path==='/outbound.html')geometry(await measure('#new-campaign'),'Outbound new campaign glyph '+width,22,12,{kind:'icon'});}
+ for(const [path,selector,label,kind] of [['/','#voice-bar','App listen','mixed'],['/outbound.html','#sync-sheet','Outbound refresh','text'],['/backend.html?submission=pill-brief','#brief-fabrics-button','Brief Fabrics','text'],['/operations.html','#start-test','Operation Room Start','text']]){
+  await ready(path);if(path==='/outbound.html')await page.locator('.people-table [data-person="person"]').waitFor();if(path.startsWith('/backend.html?'))await page.waitForFunction(()=>!document.getElementById('brief-fabrics-button').disabled);for(const width of widths){await page.setViewportSize({width,height:1000});const box=await measure(selector);geometry(box,label+' saved '+width,22,12,{kind});check(box.background==='rgba(3, 15, 29, 0.55)'&&box.blur==='blur(9px) saturate(1.4)',label+' saved material '+width,{background:box.background,blur:box.blur});if(path==='/outbound.html')geometry(await measure('#new-campaign'),'Outbound new campaign glyph '+width,22,12,{kind:'icon'});}
  }
  check(pageErrors.length===0,'All representative pages have no page errors',pageErrors);
  assert.deepEqual(failures,[]);

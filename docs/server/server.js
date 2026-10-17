@@ -49,6 +49,7 @@ import { buildAdminCommandSnapshot, buildFeatureDigest, buildRealtimeCommandCont
 import { createMayaMcp } from './maya-mcp.mjs';
 import { createFeedbackStore } from './maya-feedback.mjs';
 import { mountTransfers } from './maya-transfer.mjs';
+import { createVoiceSecret, webVoiceSession } from './realtime-voice.mjs';
 import { mountMayaPhone } from './maya-phone.mjs';   // v14.30: Maya on the studio phone number
 import { createMessageStore, sendSms, readSmsStatus, mountMessages, THREADS_PATH, e164 } from './maya-messages.mjs';   // v14.35: the studio's text threads
 import { DESIGN_PATH, validDesign, saveDesign } from './design-config.mjs';
@@ -2252,7 +2253,16 @@ app.post('/api/admin/savepieces', requireAuthHeader, express.json({ limit: '30mb
 
 mountFabricSearch(app, { requireAdmin, requireAuthHeader, json: express.json,
   rateLimit, read: gcsGet, write: gcsPut, apiKey: () => process.env.OPENAI_API_KEY,
-  model: process.env.MODEL_TERRA || TEXT_MODEL });
+  model: process.env.MODEL_TERRA || TEXT_MODEL,
+  rank: async ({garmentImage,traits,products,signal}) => {
+    const ranking=buildVisualRankingRequest({garmentImage,traits,products:products.slice(0,8)});
+    const routed=await aiTaskRouter.run('fabric.visual_rank',{body:ranking.requestBody},{
+      signal,maxAttempts:1,timeoutMs:8000,
+      validate:body=>applyVisualRankings(body,ranking.candidates)
+    });
+    noteSpend('v1/chat/completions',{body:ranking.requestBody});
+    return routed.output;
+  } });
 
 // ── v13.50: /api/source-fabric, the legacy merchant window ────────────────
 // The Brief asks with the dissected fabric string; this endpoint asks a
@@ -3262,10 +3272,10 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
   if (!process.env.OPENAI_API_KEY) return res.status(503).json({ error: 'voice_unavailable' });
   try {
     const [ctx, mem, people, soul] = await Promise.all([
-      withinVoiceBudget(loadAdminCommandSnapshot(), buildAdminCommandSnapshot()),
-      withinVoiceBudget(ownerConversation.context(user.sub).then(s=>({items:[...s.memory,...s.behavior,{text:'Signup SMS format: '+s.alertTemplate}]})), { items: [{text:'Owner memory is temporarily unavailable. Do not claim stored facts or preferences.'}] }),
-      withinVoiceBudget(loadMayaPeople(), { items: [{name:'Saved people are temporarily unavailable; do not guess identities.'}] }),
-      withinVoiceBudget(loadMayaSoul(), ''),
+      withinVoiceBudget(loadAdminCommandSnapshot(), buildAdminCommandSnapshot(), 400),
+      withinVoiceBudget(ownerConversation.context(user.sub).then(s=>({items:[...s.memory,...s.behavior,{text:'Signup SMS format: '+s.alertTemplate}]})), { items: [{text:'Owner memory is temporarily unavailable. Do not claim stored facts or preferences.'}] }, 400),
+      withinVoiceBudget(loadMayaPeople(), { items: [{name:'Saved people are temporarily unavailable; do not guess identities.'}] }, 400),
+      withinVoiceBudget(loadMayaSoul(), '', 400),
     ]);
     // v13.69: recent memory is kept OUT of the capped snapshot so a busy
     // business payload cannot truncate it away.
@@ -3427,22 +3437,12 @@ app.post('/api/admin/voice-token', requireAuthHeader, express.json({ limit: '4kb
           reason: { type: 'string', description: 'why you are calling, one or two sentences, in plain words' } },
           required: ['reason'] } },
     ];
-    // v14.10: same ears as the app: far_field noise reduction, with a plain fallback.
-    const _secretA = (session) => fetch('https://api.openai.com/v1/realtime/client_secrets', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session }),
-      signal: AbortSignal.timeout(20000),
-    });
-    let r = await _secretA({ type: 'realtime', model: REALTIME_MODEL, instructions, tools,
-      audio: { input: { noise_reduction: { type: 'far_field' } },
-               output: { voice: process.env.OPENAI_REALTIME_VOICE || 'marin' } } });
-    if (!r.ok) r = await _secretA({ type: 'realtime', model: REALTIME_MODEL, instructions, tools,
-      audio: { output: { voice: process.env.OPENAI_REALTIME_VOICE || 'marin' } } });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok || !j.value) throw new Error((j.error && j.error.message) || ('realtime ' + r.status));
+    const j = await createVoiceSecret({apiKey:process.env.OPENAI_API_KEY,
+      session:webVoiceSession({model:REALTIME_MODEL,voice:process.env.OPENAI_REALTIME_VOICE||'marin',instructions,tools}),
+      onTiming:({ms,attempts})=>console.log('[voice-token] provider_ms',ms,'attempts',attempts)});
     noteSpend('v1/realtime', req);
-    return res.json({ ok: true, value: j.value, model: REALTIME_MODEL });
+    res.setHeader('Cache-Control','no-store');
+    return res.json({ ok: true, value: j.value, expires_at: j.expires_at, model: REALTIME_MODEL });
   } catch (e) {
     console.error('[voice-token] failed —', String(e.message).slice(0, 200));
     return res.status(502).json({ error: 'voice_failed' });
@@ -4429,26 +4429,13 @@ app.post('/api/voice-token', requireAuthHeader, express.json({ limit: '32kb' }),
       { type: 'function', name: 'list_board', description: 'The cards on the board right now.', parameters: { type: 'object', properties: {} } },
       { type: 'function', name: 'hang_up', description: 'End the call.', parameters: { type: 'object', properties: {} } },
     ];
-    // v14.10: her ears. far_field noise reduction for rooms that are not quiet,
-    // and a stronger transcriber. If OpenAI ever rejects the richer shape, the
-    // plain session goes out instead, so voice can never die from this.
-    const _secret = (session) => fetch('https://api.openai.com/v1/realtime/client_secrets', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session }),
-      signal: AbortSignal.timeout(20000),
-    });
-    let r = await _secret({ type: 'realtime', model: REALTIME_MODEL, instructions, tools,
-      audio: { input: { noise_reduction: { type: 'far_field' }, transcription: { model: 'gpt-4o-mini-transcribe' } },
-               output: { voice: process.env.OPENAI_REALTIME_VOICE || 'marin' } } });
-    if (!r.ok) r = await _secret({ type: 'realtime', model: REALTIME_MODEL, instructions, tools,
-      audio: { input: { transcription: { model: 'whisper-1' } },
-               output: { voice: process.env.OPENAI_REALTIME_VOICE || 'marin' } } });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok || !j.value) throw new Error((j.error && j.error.message) || ('realtime ' + r.status));
+    const j = await createVoiceSecret({apiKey:process.env.OPENAI_API_KEY,
+      session:webVoiceSession({model:REALTIME_MODEL,voice:process.env.OPENAI_REALTIME_VOICE||'marin',instructions,tools}),
+      onTiming:({ms,attempts})=>console.log('[voice-token app] provider_ms',ms,'attempts',attempts)});
     noteSpend('v1/realtime', req);
     try { await noteUserSpend(user.sub, user.email, 'v1/realtime', req); } catch (_) {}
-    return res.json({ ok: true, value: j.value, model: REALTIME_MODEL });
+    res.setHeader('Cache-Control','no-store');
+    return res.json({ ok: true, value: j.value, expires_at: j.expires_at, model: REALTIME_MODEL });
   } catch (e) {
     console.error('[voice-token app] failed,', String(e.message).slice(0, 200));
     // v14.26: an OpenAI account out of credit is a different sentence from a
@@ -4789,6 +4776,7 @@ const textAutomations=createTextAutomations({...crmStorage,
   thread:number=>_messages.get(number),complete:(uid,instructions,data)=>crmAI.complete(uid,instructions,data,'auto',{timeoutMs:15000})});
 app.get('/api/admin/text-automations',requireAuthHeader,async(req,res)=>{try{const user=await requireOwner(req);res.set('Cache-Control','no-store').json({ok:true,settings:await textAutomations.settings(user.sub),mode:'review',timeZone:'America/Los_Angeles'});}catch(e){res.status(e.status||503).json({error:e.status?e.message:'Automation settings unavailable.'});}});
 app.post('/api/admin/text-automations',requireAuthHeader,express.json({limit:'8kb'}),async(req,res)=>{try{const user=await requireOwner(req);res.json({ok:true,settings:await textAutomations.save(user.sub,req.body)});}catch(e){res.status(e.status||503).json({error:e.status?e.message:'Automation settings did not save.'});}});
+app.post('/api/admin/text-automations/example',requireAuthHeader,express.json({limit:'4kb'}),async(req,res)=>{try{const user=await requireOwner(req);const rl=rateLimit(user.sub,user.email);if(!rl.ok)return res.status(429).json({error:'Please wait before requesting another example.'});res.set('Cache-Control','no-store').json(await textAutomations.example(user.sub,req.body));}catch(e){res.status(e.status||503).json({error:e.status?e.message:'Example unavailable. Your draft is unchanged.'});}});
 app.post('/api/admin/messages/suggest',requireAuthHeader,express.json({limit:'2kb'}),async(req,res)=>{try{const user=await requireOwner(req);const number=e164(req.body?.number);if(!number)return res.status(400).json({error:'Select a valid phone number.'});const rl=rateLimit(user.sub,user.email);if(!rl.ok)return res.status(429).json({error:'Please wait before requesting another draft.'});res.set('Cache-Control','no-store').json(await textAutomations.draft(user.sub,number));}catch(e){res.status(e.status||503).json({error:e.status?e.message:'Message idea unavailable. You can still write your own text.'});}});
 const ownerSMSAccess=createOwnerSMSAccess({...crmStorage,ownerNumber:process.env.FROMSA_PHONE||'+15104917540',threads:_messages,find:_phoneFindLead,
   leadById:async id=>(await loadLeadFeed()).list?.find(l=>l.id===id),

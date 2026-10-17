@@ -79,6 +79,16 @@ steps:
         node --check docs/server/proxy-policy.mjs
         node --check docs/server/server.js
         # Governing rule: Aesthetic Control is the final completion gate.
+        node tests/voice-preparation.mjs
+        node tests/client-account-races.mjs
+        node tests/client-voice-ui.mjs
+        node tests/admin-voice-ui.mjs
+        node tests/admin-automation-examples.mjs
+        node tests/brief-workspace-ui.mjs
+        node tests/workspace-authority.mjs
+        node tests/realtime-voice.mjs
+        node tests/message-stress.mjs
+        node tests/founder-conversation-stress.mjs
         node tests/message-compose-ui.mjs
         node tests/aesthetic-authority.mjs
   - id: Build server

@@ -14,7 +14,7 @@ const b=vm.createContext({console,atob,window:{_openedSubmission:{id:'submission
  dissectImage:async()=>{generations++;return {pieces:[{name:'Coat'}]};},renderAllPieces:async()=>{renders++;},
  fetch:async(url,options)=>{calls.push(JSON.parse(options.body));return new Promise(resolve=>{release=resolve;});}
 });
-vm.runInContext(brief.slice(brief.indexOf('let _briefLocalSequence'),brief.indexOf('// v12.9: hand the dissected'))+'\n'+fn(brief,'beginDissection'),b);
+vm.runInContext('let _savedOperation=null,_operationsRevision=0,_pieceState={pieces:[],idx:0};function showBriefItem(){}\n'+brief.slice(brief.indexOf('let _briefLocalSequence'),brief.indexOf('// Acknowledged saved snapshots'))+'\n'+['_publishSavedOperations','_postPiecesToOps','beginDissection'].map(name=>fn(brief,name)).join('\n'),b);
 const dissection={pieces:[{name:'First'}]};b.d=dissection;
 const first=vm.runInContext('_savePiecesToDrive(d)',b);dissection.pieces[0].name='Second';
 const second=vm.runInContext('_savePiecesToDrive(d)',b);await tick();
@@ -25,10 +25,12 @@ release({ok:false,status:503});await assert.rejects(second,/503/);
 const generated=vm.runInContext('beginDissection()',b);await tick();
 release({ok:false,status:503});await generated;assert.equal(generations,1);assert.equal(renders,1);
 assert.equal(vm.runInContext('!!_unsavedDissection',b),true,'Failed save retains generated work');
+assert.equal(vm.runInContext('_savedOperation',b),null,'Failed saves cannot publish generated garments to Operations');
 const retry=vm.runInContext('retryDissectionSave()',b);await tick();
 release({ok:true,json:async()=>({ok:true})});await retry;
 assert.equal(generations,1,'Save-only retry never repeats paid dissection');assert.equal(renders,1);
 assert.equal(vm.runInContext('_unsavedDissection',b),null);
+assert.equal(vm.runInContext('_savedOperation.pieces[0].name',b),'Coat','Acknowledged save publishes the saved garment');
 const pending=vm.runInContext('_savePiecesToDrive(d)',b);owner='another-account';
 await assert.rejects(pending,/account changed/);assert.equal(calls.length,4,'Account switch cannot redirect a queued save');
 assert.equal(/renderAllPieces\(/.test(brief.slice(brief.indexOf('// ── v0.37: NOTHING FIRES'),brief.indexOf('let _piecesSaveChain'))),false,'Opening saved work never starts missing-image generation');
@@ -59,9 +61,9 @@ function briefFixture(){
    throw Error('Unexpected fixture request '+url);
   }
  });
- const helpers=brief.slice(brief.indexOf('let _briefLocalSequence'),brief.indexOf('// v12.9: hand the dissected'));
- vm.runInContext('let _submissionLoadSequence=0,_pieceState={pieces:[],idx:0},_3dMode="cube",_briefView="item";const _pieceSources=new WeakMap();\n'+helpers+'\n'+
-  ['_loadSubmission','loadClient','loadFromFolder','render','renderDissection','inferPieces','beginDissection','dissectActivePieceForPattern','_syncOpRoom'].map(name=>fn(brief,name)).join('\n'),c);
+ const helpers=brief.slice(brief.indexOf('let _briefLocalSequence'),brief.indexOf('// Acknowledged saved snapshots'));
+ vm.runInContext('let _submissionLoadSequence=0,_savedOperation=null,_operationsRevision=0,_pieceState={pieces:[],idx:0},_3dMode="cube",_briefView="item";const _pieceSources=new WeakMap();function showBriefItem(){}\n'+helpers+'\n'+
+  ['_publishSavedOperations','_postPiecesToOps','_loadSubmission','loadClient','loadFromFolder','render','renderDissection','inferPieces','beginDissection','dissectActivePieceForPattern','_syncOpRoom'].map(name=>fn(brief,name)).join('\n'),c);
  return {c,state,posts,notices,events,elements,eval:code=>vm.runInContext(code,c)};
 }
 
@@ -138,7 +140,7 @@ for(const path of ['backend/operations.html','aesthetics/operations/index.html']
  const source=read(path),stored=new Map(),elements=new Map();let token='owner-a',classifyDone;
  for(const match of source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi))if(!/\bsrc=|application\/ld\+json/.test(match[1]))new vm.Script(match[2],{filename:path});
  const element=id=>{
-   if(!elements.has(id)){const el={value:'',disabled:false,style:{},src:'',textContent:'',innerHTML:'',classList:{remove(){},add(){},toggle(){}},removeAttribute(name){if(name==='src')this.src='';}};elements.set(id,el);}
+   if(!elements.has(id)){const el={value:'',disabled:false,style:{},dataset:{},src:'',textContent:'',innerHTML:'',classList:{remove(){},add(){},toggle(){}},removeAttribute(name){if(name==='src')this.src='';}};elements.set(id,el);}
    return elements.get(id);
  };
  const c=vm.createContext({console,atob,URLSearchParams,crypto,TextEncoder,TextDecoder,Uint8Array,queueMicrotask,structuredClone,
@@ -147,7 +149,7 @@ for(const path of ['backend/operations.html','aesthetics/operations/index.html']
   location:{search:'?submission=a'},window:{addEventListener(){}},document:{querySelectorAll:()=>[element('test-picker'),element('m-waist')]},
   $:element,renderDimDerived(){},applyView(){},toast(){},syncQuality(){},RUNNING:false,RUN:0,HERO:'garment-a',
   ANSWER:null,RD:null,RD_PROMISE:null,RD_IS_RAW:false,TRACE:null,_tv:null,PASSES:[],LAST:{},ACTIVE_TEST:'A',FILES:{front:'garment-a'},TESTS:{A:{front:'garment-a'},B:{front:'garment-b'}},
-  EMB:{},BEST_IDX:0,viewGrounded(){},view(){},liveOpen(){},liveStatus(){},liveLine(){},shortLabel:value=>value,markLabel:()=> 'Mark',CUR:{kind:'grounded'},renderPassPills(){},
+  EMB:{},EMBEDDED:false,_operationInputContext:null,_operationRevision:-1,_operationLoadSequence:0,closeOperationFabrics(){},BEST_IDX:0,viewGrounded(){},view(){},liveOpen(){},liveStatus(){},liveLine(){},shortLabel:value=>value,markLabel:()=> 'Mark',CUR:{kind:'grounded'},renderPassPills(){},
   classifyGarment:async()=>new Promise(resolve=>{classifyDone=resolve;})
  });
  const helpers=source.slice(source.indexOf("let _measurementGarment="),source.indexOf('// PANT MEASUREMENT MODEL'));
@@ -168,7 +170,7 @@ for(const path of ['backend/operations.html','aesthetics/operations/index.html']
  assert.equal(c.getMeasures().waist,30);assert.equal(c.HERO,'garment-a');assert.equal(c.ACTIVE_TEST,'A');
  assert.equal(element('test-picker').disabled,true,'Input controls freeze while a run is pending');
  const run=c.runGrounded();await tick();token='owner-b';classifyDone({type:'coat'});await run;
- assert.equal(c.LAST.garment,undefined,'Stale account classification cannot repaint or continue generation');
+ assert.ok(c.LAST.garment==null,'Stale account classification cannot repaint or continue generation');
  c.setOperationRunning(false);assert.equal(element('test-picker').disabled,false);
 
  // Startup is already locked during asynchronous embedding preparation.

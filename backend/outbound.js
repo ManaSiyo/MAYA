@@ -49,12 +49,19 @@ function leaveDraft(){return !hasUnsavedDraft()||confirm('Discard your unsaved d
 window.addEventListener('beforeunload',e=>{if(hasUnsavedDraft()){e.preventDefault();e.returnValue='';}});
 function notice(message,error=false){$('notice').textContent=message;$('notice').classList.toggle('error',error);}
 function token(){return localStorage.getItem('maya_admin_tok')||'';}
+// The signed subject owns the workspace; rotating its bearer token is not a
+// new account. An unparseable token can only match itself, never another token.
+function sessionAccount(value){
+ if(!value)return '';
+ try{const part=value.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');const sub=JSON.parse(atob(part)).sub;if(typeof sub==='string'&&sub)return 'sub:'+sub;}catch(_){}
+ return 'token:'+value;
+}
 async function api(path='',body){
  const auth=token(),epoch=authEpoch;if(!auth)throw Error('Sign in to Maya Admin first.');
  let r;try{r=await fetch('/api/admin/outbound'+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+auth,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(70000)});}catch(e){if(e.name==='TimeoutError')throw Error(path==='/send'?'Send unconfirmed. Check Gmail Sent before retrying.':'Request timed out. Check the latest state before retrying.');throw e;}
  let j;try{j=await r.json();}catch{j={error:r.status===504?'Update is still running. Check again shortly.':'The server could not respond. Try again.'};}
- if(token()!==auth||epoch!==authEpoch)throw Error('Your account changed. Reloading.');
- if(!r.ok){if([401,403].includes(r.status)){authEpoch++;clearWorkspace();notice('Sign in to Maya Admin again.',true);}throw Error(j.error||'Request failed.');}
+ if(sessionAccount(token())!==sessionAccount(auth)||epoch!==authEpoch)throw Error('Your account changed. Reloading.');
+ if(!r.ok){if([401,403].includes(r.status)&&token()===auth){authEpoch++;clearWorkspace();notice('Sign in to Maya Admin again.',true);}throw Error(j.error||'Request failed.');}
  if(j.error&&!j.ok)throw Error(j.error);return j;
 }
 async function run(fn){
@@ -180,7 +187,9 @@ $('import').onclick=()=>{if(!leaveDraft())return;if(master||!campaign())return n
 $('discover').onclick=()=>{if(!leaveDraft())return;if(master||!campaign())return notice('Choose a campaign first.',true);modal('Discover companies',field('query','Describe your target companies',campaign()?.audience,'textarea')+field('offset','Result offset (0 for first page)','0'),async data=>{const j=await api('/hunter',{action:'discover',query:data.get('query'),offset:Number(data.get('offset')),campaignId});state=j.state;view='companies';render();notice(`${j.found} companies returned.`);},'Search Hunter');};
 $('close-modal').onclick=$('cancel-modal').onclick=()=>$('modal').close();$('reload').onclick=()=>{if(leaveDraft())run(load);};
 window.addEventListener('storage',e=>{if((e.key==='maya_admin_tok'||e.key===null)&&token()!==session){
- authEpoch++;session=token();clearWorkspace();notice(token()?'Loading your workspace...':'Sign in to Maya Admin first.');
+ const next=token(),sameAccount=!!next&&sessionAccount(next)===sessionAccount(session);session=next;
+ if(sameAccount)return;
+ authEpoch++;clearWorkspace();notice(token()?'Loading your workspace...':'Sign in to Maya Admin first.');
  if(busy)reloadPending=true;else run(load);
 }});
 run(load);

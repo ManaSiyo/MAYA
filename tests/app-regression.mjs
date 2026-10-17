@@ -26,6 +26,7 @@ import {assertContainer} from './container-contract.mjs';
 // the pre-push loop: smoke.mjs, then this, then the push is prepared.
 import { rowsToContacts, mergeContacts } from '../docs/server/outbound.mjs';
 import { cleanLeadPatch } from '../docs/server/lead-store.mjs';
+import { webVoiceSession, voiceTurnDetection } from '../docs/server/realtime-voice.mjs';
 import { chromium } from 'playwright';
 import http from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
@@ -50,8 +51,11 @@ const AT = {
 const INDEX_SOURCE = readFileSync(join(ROOT, AT.index), 'utf8');
 const RULES_SOURCE = readFileSync(join(ROOT, 'docs/server/firestore.rules'), 'utf8');
 const SERVER_SOURCE = readFileSync(join(ROOT, AT.server), 'utf8');
+const REALTIME_VOICE_SOURCE = readFileSync(join(ROOT, 'docs/server/realtime-voice.mjs'), 'utf8');
+const VOICE_PREPARATION_SOURCE = readFileSync(join(ROOT, 'aesthetics/ui/voice-preparation.js'), 'utf8');
+const SHARED_VOICE_AUDIO = webVoiceSession({model:'gpt-realtime-2.1-mini',instructions:'Fixture',tools:[]}).audio;
 const LEAD_STORE_SOURCE = readFileSync(join(ROOT, 'docs/server/lead-store.mjs'), 'utf8');
-if (!SERVER_SOURCE.includes('withinVoiceBudget(loadAdminCommandSnapshot(), buildAdminCommandSnapshot())')) throw Error('Admin voice must bound optional analytics context without inventing data.');
+if (!SERVER_SOURCE.includes('withinVoiceBudget(loadAdminCommandSnapshot(), buildAdminCommandSnapshot(), 400)')) throw Error('Admin voice must bound optional analytics context to 400ms without inventing data.');
 const FABRIC_SOURCE = readFileSync(join(ROOT, 'docs/server/fabric-sourcing.js'), 'utf8');
 const AI_ROUTER_SOURCE = readFileSync(join(ROOT, 'docs/server/ai-router.js'), 'utf8');
 const ADMIN_COMMAND_SOURCE = readFileSync(join(ROOT, 'docs/server/admin-command.mjs'), 'utf8');
@@ -642,13 +646,14 @@ ok('v13.72: the voice line fails in plain words, not a raw error code',
   MAP_SOURCE.includes('Maya is resting a moment') &&
   !MAP_SOURCE.includes("mayaCommandState('voice unavailable: '"));
 
-// v13.73: the backend Brief is a single slide, and Design Studio has a home.
-ok('v13.73: the backend Brief dropped its Operations Room screen and page dots',
-  !BACKEND_SOURCE.includes('id="screen-operating"') &&
-  !BACKEND_SOURCE.includes('id="operations-embed"') &&
+// October 17: the saved Brief embeds Operations below it, without page dots.
+ok('the Brief embeds Operations vertically and navigates by actual section offsets without page dots',
+  BACKEND_SOURCE.includes('id="screen-operating" data-screen="1"') &&
+  BACKEND_SOURCE.includes('id="operations-embed" src="/operations.html?embedded=brief"') &&
   !BACKEND_SOURCE.includes('id="page-indicator"') &&
   BACKEND_SOURCE.includes('id="screen-onepager"') &&
-  BACKEND_SOURCE.includes('const count = host.querySelectorAll'));
+  BACKEND_SOURCE.includes("host.querySelectorAll('section[data-screen]')") &&
+  BACKEND_SOURCE.includes("host.scrollTo({top:target.offsetTop,behavior:'smooth'})"));
 ok('v13.73: MANA SIYO Design Studio opens manasiyo.com/design',
   MAP_SOURCE.includes('href="https://manasiyo.com/design"'));
 
@@ -660,7 +665,8 @@ ok('v13.74: the top-left logo is a circle that pulses when Maya is live',
 // v13.77 superseded the hover chip: the logo itself is the voice trigger now.
 ok('v13.77: tapping the Admin logo wakes Maya and shows Connecting',
   /<button class="maya-logo-wrap" onclick="toggleMayaVoice\(\)"/.test(MAP_SOURCE) &&
-  MAP_SOURCE.includes("cw.textContent='Connecting'"));
+  MAP_SOURCE.includes("if(word)word.textContent='Connecting'") &&
+  MAP_SOURCE.includes('const manager=_adminVoiceManager(),pending=manager.start()'));
 ok('v13.74: the admin nav is just MANA SIYO and MAYA, Marketing removed',
   !MAP_SOURCE.includes('href="/marketing.html"') &&
   MAP_SOURCE.includes('>MANA SIYO</b>') &&
@@ -1187,10 +1193,12 @@ ok('the paid chart has axes and an All three chip',
   MKT_SOURCE.includes('id="ad-ylabels"') &&
   MKT_SOURCE.includes('id="ad-xaxis"') &&
   MKT_SOURCE.includes('each line scaled to its own peak'));
-ok('the fabric wall fits its frame and cannot stretch the canvas',
+ok('the inline fabric results fit a usable shared viewport without stretching the Brief canvas',
   BACKEND_SOURCE.includes('grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr)') &&
-  BACKEND_SOURCE.includes('grid-template-rows: repeat(3, minmax(0, 1fr))') &&
-  BACKEND_SOURCE.includes('height: 70vh; max-height: 70vh; min-width: 0;'));
+  BACKEND_SOURCE.includes('height:max(540px,70dvh); max-height:none; min-width:0; min-height:0;') &&
+  BACKEND_SOURCE.includes('window.MayaFabricAssistant.open({host,automatic:true,submissionId:context.sid') &&
+  readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('.fa-body{flex:1;min-height:0;overflow-y:auto;') &&
+  readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr))'));
 ok('a sourcing card wears the color the client asked for',
   BACKEND_SOURCE.includes("'crimson':[153,27,42]") &&
   BACKEND_SOURCE.includes('function _targetFabricRgb(') &&
@@ -1564,7 +1572,8 @@ ok('v13.78: Operations Room beta sits to the right',
 ok('v13.79: the drawer shows Maya\'s conversation as copyable text',
   MAP_SOURCE.includes('id="maya-chat"') &&
   MAP_SOURCE.includes('function _mayaChatAdd(') &&
-  MAP_SOURCE.includes("m.type==='response.audio_transcript.done'") &&
+  MAP_SOURCE.includes("['response.audio_transcript.done','response.output_audio_transcript.done'].includes(m.type)") &&
+  MAP_SOURCE.includes("_mayaChatAdd('maya', m.transcript)") &&
   MAP_SOURCE.includes('navigator.clipboard.writeText'));
 ok('v13.80: Maya can log feature requests as a relay to Claude',
   SERVER_SOURCE.includes("name: 'log_feature'") &&
@@ -1652,7 +1661,9 @@ ok('the voice lives at the floor of the Admin drawer and drives the command laye
   MAP_SOURCE.includes('function toggleMayaVoice(') &&
   MAP_SOURCE.includes('function _voiceTool(') &&
   MAP_SOURCE.includes('response.function_call_arguments.done') &&
-  MAP_SOURCE.includes("https://api.openai.com/v1/realtime/calls?model="));
+  MAP_SOURCE.includes('window.MayaVoicePreparation.create(') &&
+  MAP_SOURCE.includes('/aesthetics/ui/voice-preparation.js') &&
+  VOICE_PREPARATION_SOURCE.includes('https://api.openai.com/v1/realtime/calls?model='));
 ok('voice has read tools plus confirmation-gated memory and lead actions',
   SERVER_SOURCE.includes("app.post('/api/admin/maya-remember'") &&
   SERVER_SOURCE.includes("app.post('/api/admin/maya-forget'") &&
@@ -1662,7 +1673,8 @@ ok('voice has read tools plus confirmation-gated memory and lead actions',
   SERVER_SOURCE.includes("name: 'find_lead'") &&
   SERVER_SOURCE.includes("name: 'note_lead'") &&
   SERVER_SOURCE.includes("name: 'draft_email'") &&
-  SERVER_SOURCE.includes('instructions, tools,') &&
+  SERVER_SOURCE.includes("session:webVoiceSession({model:REALTIME_MODEL,voice:process.env.OPENAI_REALTIME_VOICE||'marin',instructions,tools})") &&
+  MAP_SOURCE.includes("if(!current())return {ok:false,error:'session_changed'}") &&
   MAP_SOURCE.includes('_mayaQueueLeadAction') &&
   MAP_SOURCE.includes('_mayaQueueAction') &&
   MAP_SOURCE.includes('Waiting for your confirmation'));
@@ -1703,8 +1715,11 @@ ok('voice startup is single-flight and failed starts release the microphone',
   MAP_SOURCE.includes('let _voice = null;') &&
   MAP_SOURCE.includes('let _voiceStarting = false;') &&
   MAP_SOURCE.includes('if(_voiceStarting){') &&
-  // v13.72: match the guarded release form the code actually uses.
-  MAP_SOURCE.includes('(pendingMic&&pendingMic.getTracks()||[]).forEach(t=>t.stop())'));
+  MAP_SOURCE.includes('const manager=_adminVoiceManager(),pending=manager.start()') &&
+  VOICE_PREPARATION_SOURCE.includes('if (s.starting) return s.starting;') &&
+  VOICE_PREPARATION_SOURCE.includes("stop(error.name === 'AbortError' ? 'cancelled' : 'failed')") &&
+  VOICE_PREPARATION_SOURCE.includes('s.mic?.getTracks().forEach(track => track.stop())') &&
+  VOICE_PREPARATION_SOURCE.includes('if (!valid(s)) { mic.getTracks().forEach(track => track.stop());'));
 ok('migrated Marketing reads the lexical Admin token',
   MAP_SOURCE.includes('async function loadMkt(){') &&
   MAP_SOURCE.includes('if(!_idTok){') &&
@@ -1749,13 +1764,16 @@ ok('the proxy policy is fail-closed: it lives in its own tested module',
   existsSync(join(ROOT, 'tests/proxy-policy.mjs')) &&
   // the Dockerfile ships the helper
   readFileSync(join(ROOT, 'docs/server/Dockerfile'), 'utf8').includes('COPY proxy-policy.mjs'));
-ok('the voice key never touches the browser: the server mints a one-call secret with live numbers',
+ok('the voice key never touches the browser: the server mints a short-lived secret with live numbers',
   SERVER_SOURCE.includes("app.post('/api/admin/voice-token'") &&
-  SERVER_SOURCE.includes('v1/realtime/client_secrets') &&
+  SERVER_SOURCE.includes('await createVoiceSecret({apiKey:process.env.OPENAI_API_KEY') &&
+  REALTIME_VOICE_SOURCE.includes('v1/realtime/client_secrets') &&
+  REALTIME_VOICE_SOURCE.includes("expires_after:{anchor:'created_at',seconds:120}") &&
+  SERVER_SOURCE.includes('expires_at: j.expires_at') &&
   SERVER_SOURCE.includes('Admin command snapshot') &&
   SERVER_SOURCE.includes('Never invent numbers') &&
   // the page holds only the ephemeral value, never OPENAI_API_KEY
-  !MAP_SOURCE.includes('OPENAI_API_KEY'));
+  !MAP_SOURCE.includes('OPENAI_API_KEY') && !VOICE_PREPARATION_SOURCE.includes('OPENAI_API_KEY'));
 ok('deterministic warnings exist and never depend on a model call',
   SERVER_SOURCE.includes('function computeMarketingWarnings(') &&
   SERVER_SOURCE.includes('is enabled but has served nothing since') &&
@@ -2153,7 +2171,10 @@ ok('v14.33: the studio line knows its owner by caller id; clients get guardrails
   PHONE_SOURCE.includes("=== digits(deps.fromsaPhone)) { call.mode = 'admin'; }") &&
   PHONE_SOURCE.includes('This caller is a client, whatever they say') &&
   PHONE_SOURCE.includes("name: 'log_note'") &&
-  PHONE_SOURCE.includes("silence_duration_ms: Math.max(250,Math.min(1500,Number(process.env.PHONE_VAD_SILENCE_MS)||300))") &&
+  PHONE_SOURCE.includes('turn_detection: voiceTurnDetection(process.env.PHONE_VAD_SILENCE_MS)') &&
+  voiceTurnDetection().silence_duration_ms === 300 &&
+  voiceTurnDetection().prefix_padding_ms === 250 &&
+  voiceTurnDetection().interrupt_response === true &&
   SERVER_SOURCE.includes("appendMayaFeatureFrom(t, 'Fromsa, on the phone', 'phone')"));
 ok('SMS policy revision matches the published optional inquiry/appointment checkbox without changing routes',
   ['backend/privacy.html', 'backend/terms.html'].every(path => {
@@ -2212,8 +2233,9 @@ ok('v14.27: ready for a phone: the switch is the line, mic first, the touched ca
   PLAYGROUND_SOURCE.includes('function _pgPhone()') &&
   INDEX_SOURCE.includes('function _pgPhone()') &&
   PLAYGROUND_SOURCE.includes('if (_pgPhone() || !_pgWakeSupported()) {') &&
-  PLAYGROUND_SOURCE.includes('if (_pgPhone()) return;   // v14.27: the switch is the line on a phone') &&
-  PLAYGROUND_SOURCE.indexOf('mic = await navigator.mediaDevices.getUserMedia({ audio: true });') < PLAYGROUND_SOURCE.indexOf("const tr = await fetch('/api/voice-token'") &&
+  [PLAYGROUND_SOURCE,INDEX_SOURCE].every(source=>source.includes('if (_pgPhone() || document.hidden || !getApiKey()) return;')) &&
+  PLAYGROUND_SOURCE.includes('_pgVoiceManager().start()') &&
+  readFileSync(join(ROOT,'aesthetics/ui/voice-preparation.js'),'utf8').includes('microphone = navigator.mediaDevices.getUserMedia({ audio: true })') &&
   PLAYGROUND_SOURCE.includes(".item-card.touched .fav-btn,") &&
   INDEX_SOURCE.includes(".item-card.touched .fav-btn,") &&
   PLAYGROUND_SOURCE.includes('style="text-align:center;max-width:min(520px, 94vw)"') &&
@@ -2443,8 +2465,11 @@ ok('v14.10: her legs and ears: go_to_screen and scroll on both sides, five-truth
   PLAYGROUND_SOURCE.includes('P.bio, P.aesthetic, P.silhouette, P.color, P.era,') &&
   SERVER_SOURCE.includes("name: 'go_to_screen'") &&
   SERVER_SOURCE.includes("name: 'scroll'") &&
-  SERVER_SOURCE.includes("noise_reduction: { type: 'far_field' }") &&
-  SERVER_SOURCE.includes('gpt-4o-mini-transcribe') &&
+  SERVER_SOURCE.includes('session:webVoiceSession({model:REALTIME_MODEL') &&
+  SHARED_VOICE_AUDIO.input.noise_reduction.type === 'far_field' &&
+  SHARED_VOICE_AUDIO.input.transcription.model === 'gpt-4o-mini-transcribe' &&
+  REALTIME_VOICE_SOURCE.includes("current.audio.input.transcription={model:'whisper-1'}") &&
+  REALTIME_VOICE_SOURCE.includes('attempt===0&&response.status===400') &&
   SERVER_SOURCE.includes('repeat the few words you caught and ask.') &&
   existsSync(join(ROOT, 'tests/maya-hands-smoke.mjs')));
 ok('v14.09: the autonomous observer: Maya logs her own limits and the wishes she hears, and the studio reads both',
@@ -2457,12 +2482,18 @@ ok('v14.09: the autonomous observer: Maya logs her own limits and the wishes she
   SERVER_SOURCE.includes("const source = (req.body || {}).source === 'maya' ? 'maya' : 'app';") &&
   SERVER_SOURCE.includes('YOUR OWN LIMITS ARE LOGGED FOR YOU.') &&
   MAP_SOURCE.includes("i.source==='app'||i.source==='maya'"));
-ok('v14.07: the second audit pass: digest answered, wake survives 402 and the viewer listen, look before greet, dedupe, zoom trues',
+ok('digest and dedupe persist; wake survives 402 and viewer listen; fresh workspace precedes greeting without screenshot delay',
   MAP_SOURCE.includes("if(name==='get_feature_digest'){") &&
   MAP_SOURCE.includes('const inboxTexts=new Set(items.map(i=>norm(i.text)));') &&
   PLAYGROUND_SOURCE.includes('_pgChip(false); _pgWakeResume();') &&
   PLAYGROUND_SOURCE.includes('startVisualizeListen = function () { _pgWakePause();') &&
-  PLAYGROUND_SOURCE.includes('_pgLook(dc).then(greet).catch(greet);') &&
+  [PLAYGROUND_SOURCE,INDEX_SOURCE].every(source=>{
+    const active=source.slice(source.indexOf('onActive: voice => {'),source.indexOf('onMessage: (event, voice) => {'));
+    return active.includes('Current workspace data at wake') &&
+      active.includes("type: 'conversation.item.create'") &&
+      active.indexOf("type: 'conversation.item.create'") < active.indexOf("type: 'response.create'") &&
+      active.includes('_pgBoardSnapshot(), drawer: _pgDrawerState()') && !active.includes('_pgLook(');
+  }) &&
   PLAYGROUND_SOURCE.includes('pinchW0 = el.offsetWidth;') &&
   PLAYGROUND_SOURCE.includes('#garment-modal[data-photo="full"] #garment-image-wrap .submit-wrap { display: none !important; }') &&
   PLAYGROUND_SOURCE.includes('@media (hover: none) { #garment-image-wrap .submit-wrap { opacity: 1; } }') &&
@@ -2728,7 +2759,7 @@ ok('Aesthetic Control exposes centered alignment with a populated table preview'
 ok('Aesthetic Control saves the settings housing separately from section glass',compactGallery.includes('editor:editorSettings') && compactGallery.includes('renderEditor()'));
 const ownerConversationSource=readFileSync(join(ROOT,'docs/server/owner-conversation.mjs'),'utf8');
 ok('Owner texts support normal conversation and runtime preferences instead of lead-only extraction',SERVER_SOURCE.includes('converse:(uid,text)=>ownerConversation.decide(uid,text)') && ownerConversationSource.includes('You are not just a lead extractor') && ownerConversationSource.includes('private/owner-conversation/'));
-ok('Owner calls share saved text memory and can apply verified owner preferences',PHONE_SOURCE.includes('ownerContext=await Promise.race') && PHONE_SOURCE.includes("if(m.name==='owner_control')") && SERVER_SOURCE.includes('ownerConversation.phoneControl(from,decision,id)'));
+ok('Owner calls share bounded saved text memory and can apply verified owner preferences',PHONE_SOURCE.includes('ownerContext=await Promise.race') && PHONE_SOURCE.includes('deps.contextTimeoutMs??400') && PHONE_SOURCE.includes('Owner memory is unavailable. Do not claim any stored preference or saved change.') && PHONE_SOURCE.includes("if(m.name==='owner_control')") && SERVER_SOURCE.includes('ownerConversation.phoneControl(from,decision,id)'));
 ok('Signup texts render live owner format with actual contact details',SERVER_SOURCE.includes('formatText:lead=>ownerConversation.alert(lead)') && ownerConversationSource.includes("phone:clean(lead.phone||'Phone unavailable'"));
 const smsAccessSource=readFileSync(join(ROOT,'docs/server/owner-sms-access.mjs'),'utf8');
 ok('Owner can read client texts/calls and recorded actions over SMS without AI',SERVER_SOURCE.includes('direct:(uid,text,id)=>ownerSMSAccess.direct(uid,text,id)') && smsAccessSource.includes("d.action==='client_history'") && smsAccessSource.includes("d.action==='sms_actions'") && smsAccessSource.includes('Next: MORE'));
@@ -2814,6 +2845,10 @@ ok('Owner conversation requests structured output and diagnoses failures without
 await import('./owner-conversation.mjs');
 await import('./founder-conversation-stress.mjs');
 ok('Founder SMS audit executes at least 50 intents and 1000 variants with honest fake-provider scope',true);
+await import('./realtime-voice.mjs');
+ok('Voice sessions preserve auth and trial gates, expose expiry and bound provider/context waits without automatic paid retries',true);
+await import('./message-stress.mjs');
+ok('Messaging stress preserves STOP at dispatch, durable SID identity, archive delivery and international SMS parity',true);
 await import('./owner-sms-access.mjs');
 ok('Full status reports survive restarts, preserve account isolation and never bypass client SEND',true);
 await import('./verify-release.mjs');
@@ -2846,6 +2881,19 @@ ok('Saved aesthetic status colors, icon weight and section spacing have active p
 const presentationRuntimeSource=readFileSync(join(ROOT,'aesthetics/ui/presentation-runtime.js'),'utf8');
 const authoredStatuses=[...presentationRuntimeSource.matchAll(/\{key:'([^']+)',label:/g)].map(m=>m[1]);
 ok('Nine governed semantic statuses retain source usage and truthful ad delivery labels',JSON.stringify(authoredStatuses)===JSON.stringify(['new','contacted','in_progress','booked','completed','canceled','delivering','pending','rejected'])&&presentationRuntimeSource.includes('Impressions recorded in the selected D/W/M window. This does not confirm that the campaign is enabled now.')&&readFileSync(join(ROOT,'aesthetics/aesthetic-control/presentation-controls.js'),'utf8').includes("locations.className='status-usage'"));
+await import('./voice-preparation.mjs');
+ok('Prepared voice never transmits ambient audio, waits for server readiness and releases cancelled microphones',true);
+await import('./client-account-races.mjs');
+ok('Community unpublish pins identity across awaits and Outbound renewal preserves draft context',true);
+await import('./client-voice-ui.mjs');
+await import('./admin-voice-ui.mjs');
+ok('Actual client, Playground and Admin wake paths reuse a ready connection and recover playback without crossing accounts',true);
+await import('./admin-automation-examples.mjs');
+ok('Automation failure hides unusable controls, Example and Save preserve drafts, and Admin spacing fits phones',true);
+await import('./brief-workspace-ui.mjs');
+ok('Brief and Operations preserve selected garment, private resets, image failures and usable inline fabric geometry',true);
+await import('./workspace-authority.mjs');
+ok('Workspace previews expose active saved styling and actual label, field and dock geometry',true);
 await import('./message-compose-ui.mjs');
 await import('./aesthetic-authority.mjs');
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');

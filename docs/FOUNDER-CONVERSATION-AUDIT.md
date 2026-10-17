@@ -1,22 +1,36 @@
 # Founder conversation and Messages stress audit — October 8, 2026
 
-MAYA cannot yet support a single, consistently capable founder conversation across SMS and Admin. The audit found four reproducible Messages defects, seven owner-SMS parsing misses even with a correct scripted model decision available, and 22 requested capabilities without an owner-SMS tool in this 60-intent corpus.
+## Repair status — October 17, 2026
 
-Baseline: `2af5039` on `maya-v2`, matching the local remote-tracking branch at audit start. This identifies the audited code, not a newly verified production deployment. This change adds tests and documentation only. No application runtime, credentials, production settings, real messages or personal Chrome sessions were changed. No visible UI is added; all existing shared aesthetic authority remains in force.
+All four transport defects below are repaired in the current working tree: STOP/block is revalidated during the durable send claim and before dispatch; archived inbound SIDs deduplicate before consent/unread changes; archived owner replies reconcile synthetic IDs with carrier delivery callbacks; explicit international SMS reaches the adapter while calls retain their separate US-only restriction. Send claims remain non-retryable after an uncertain outcome.
 
-## What was actually exercised
+The strict [Messages stress fixture](../tests/message-stress.mjs) now passes **44/44 checks**, exercising **1,293 signed inbound requests, 242 callbacks and 84 Admin Send requests**. It also covers blocked START replay, history deletion, receipt capacity, failed consent reads and STOP/block arriving after a claim. These are **synthetic local tests only**, using fake providers and storage; they establish neither deployed behavior nor live carrier delivery, model reasoning, audio quality or production latency. No live messages were sent.
+
+Content-free inbound receipts survive blocking and history deletion, with a **10,000-receipt limit per contact and no eviction**. At capacity, receipt-dependent operations fail closed; STOP still persists. Private receipt archival remains future operational work. Previously deleted or ignored identities that were never stored cannot be reconstructed by this repair.
+
+The transport fixture is now a **mandatory passing release gate** in Cloud Build and app-regression; its original strict assertions remain intact. The founder corpus is also retained. **Seven parsing misses and 22 unavailable owner-SMS capabilities remain open gaps.** Scripted tool routing is not a measure of live model understanding, and these repairs do not give Maya access to every business surface. The original observations and all 60 canonical cases below are preserved as historical evidence.
+
+## Original audit scope — October 8, 2026
+
+MAYA could not support a single, consistently capable founder conversation across SMS and Admin. The original audit found four reproducible Messages defects, seven owner-SMS parsing misses even with a correct scripted model decision available, and 22 requested capabilities without an owner-SMS tool in this 60-intent corpus.
+
+Historical baseline: `2af5039` on `maya-v2`, matching the local remote-tracking branch at audit start. This identifies the originally audited code, not a verified production deployment. The October 8 audit added tests and documentation only; it changed no runtime, credentials, production settings, real messages or personal Chrome sessions. The October 17 repairs described above change runtime behavior. They add no visible UI and preserve the shared aesthetic authority requirement.
+
+## What was actually exercised on October 8
 
 - **60 distinct founder intents × 20 phrasing variants = 1,200 inputs**, each run twice through the actual owner CRM, conversation and paged-report engines: **2,400 executions**.
 - Mode A deliberately disables AI to measure deterministic fallback. Mode B supplies a hand-authored expected action to test execution. It does not ask a language model to understand the question.
 - **10 multi-turn sessions, 31 exchanges** check supplied recent context, durable memory/restart, account isolation, lead corrections, reviewed client sends, duplicate requests, full report pagination, response preferences, signup format, unsupported requests and malformed responses.
 - Actual Express Messages routes, signature verification, SMS adapter, message store and archive: **1,280 signed inbound events, 241 callbacks and 78 Admin Send requests**. Synthetic Twilio accepted 46 local submissions; **zero real messages** were sent. Owner-command delegation in this transport fixture is a disclosed stub; the separate founder fixture executes the real owner handlers.
-- Transport audit: **28 checks passed; 4 failed**, reproduced on two runs. It intentionally exits nonzero while those defects remain. It is a diagnostic suite, not a passing release gate.
+- Historical transport audit: **28 checks passed; 4 failed**, reproduced on two runs. It intentionally exited nonzero then. The October 17 repair status supersedes this result: the expanded fixture is now a mandatory passing release gate.
 - Owner-SMS corpus: 34 tool intents, 4 scripted conversational examples, 22 missing-tool probes. Of 680 supported-tool variants, 673 matched their procedural/data oracle under scripted routing and 7 did not. All 440 missing-tool executions correctly rejected the injected unavailable action; those are NOT successful answers to the founder's request. The 80 scripted chat replies do not measure intelligence.
 - With AI unavailable, 34 of the 680 supported-tool variants matched. Most variants deliberately add greetings/context to expose fallback limits. This is a stress corpus, not a representative success-rate estimate. General conversation still requires available inference.
 
 The service-level lead readers are supplied synthetic fixtures. They intentionally do not claim coverage of the production feed adapters, the current owner's live binding, live account data, provider reasoning, carrier delivery or production latency. The source audit below separately identifies adapter and channel gaps.
 
-## Messages / Admin: fix these first
+## Historical Messages / Admin failures — repaired October 17
+
+This table preserves the original failing reproductions and requested acceptance criteria. Current execution must satisfy those criteria; the failures are no longer expected diagnostic outcomes.
 
 | Priority | Reproduction and observed result | Required change and acceptance test |
 | --- | --- | --- |
@@ -62,9 +76,9 @@ SMS has no callable reader for Outbound prioritization/email history, Gmail revi
 
 The CRM AI meter is already available through SMS STATUS, including spend, reserved amount and the $1 daily limit. It should be routed and summarized rather than implemented twice. SMS uses the configured CRM provider-selection adapter; it is not guaranteed to use OpenAI. Outbound and owner SMS share that daily allowance. This audit neither changed that budget nor tested the live providers.
 
-## Responsiveness and real-model acceptance
+## Historical synthetic timings and real-model acceptance
 
-Measured synthetic fixture timings are below. They establish local execution behavior only. Memory storage and loopback HTTP exclude real auth/GCS/model/carrier latency; they are not a promised reply SLA.
+October 8 synthetic fixture timings are below. They establish local execution behavior only. Memory storage and loopback HTTP exclude real auth/GCS/model/carrier latency; they are not a promised reply SLA.
 
 - Owner engine corpus: p50 0.028 ms, p95 0.088 ms.
 - Signed inbound HTTP: p95 9.53 ms; Admin Send: p95 34.92 ms; maximum measured request 37.96 ms.
@@ -79,9 +93,9 @@ MAYA_FOUNDER_STRESS_REPORT=/tmp/maya-founder-stress-results.json node tests/foun
 MAYA_MESSAGE_STRESS_RESULTS=/tmp/maya-message-stress-results.json node tests/message-stress.mjs
 ```
 
-The first runs safety/data contracts and prints open audit observations. The second intentionally exits 1 on the four reproduced defects. Do not weaken those assertions to obtain a green result. Exact counts/timing may vary with scheduling; the identified failures reproduced twice. The founder corpus is included in app-regression; the failing transport diagnostic remains separate until fixes are implemented.
+Both commands now run mandatory passing safety/data contracts. The founder fixture also prints the unresolved parsing and capability observations; a passing execution does not mean those requests were successfully answered. The Messages fixture must pass all 44 strict transport checks. On October 8 it intentionally exited 1 on four reproduced defects; that historical outcome is now a release failure. Do not weaken the assertions to obtain a green result. Timing and contention counts may vary with scheduling. Both fixtures are included in app-regression and the Cloud Build release gates.
 
-The broader release sweep also exposed an obsolete circle-only assertion for Outbound campaign icons. The approved design uses independent X/Y padding and permits oval capsules. Only that test was corrected to verify glyph + padding + border dimensions, centering and capsule radius at all seven existing widths. No runtime styling was changed. Final verification status is recorded in AI-HANDOFF.md and COMMIT-REVIEW.txt.
+The original October 8 release sweep also exposed an obsolete circle-only assertion for Outbound campaign icons. The approved design uses independent X/Y padding and permits oval capsules. That audit corrected only the test to verify glyph + padding + border dimensions, centering and capsule radius at all seven existing widths; it changed no runtime styling. Current release verification status belongs in AI-HANDOFF.md and COMMIT-REVIEW.txt.
 
 ## All 60 canonical requests and observed fixture replies
 

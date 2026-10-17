@@ -5,13 +5,15 @@ const DESIGN_ROLES_V2 = new Set(['H0','H1','H2','H3','H4','H5','P1','P2','P3']);
 const BACKGROUNDS = ['black','gray','blue','yellow','green','pink'];
 export function validDesign(body) {
   if (!body || typeof body !== 'object' || !body.type || typeof body.type!=='object' || Array.isArray(body.type) || !body.glass || !body.overlay) return false;
-  if (Object.keys(body).some(k => !['type','typeVersion','glass','regularPill','overlay','finish','pillX','pillY','editor','inner','filter','table','iconSize','dropdownHeight','iconPillGap','iconTextGap','statusStyles','sectionSpacing','iconColor','iconOpacity','iconStroke'].includes(k))) return false;
+  if (Object.keys(body).some(k => !['type','typeVersion','glass','regularPill','overlay','finish','pillX','pillY','editor','inner','filter','table','iconSize','dropdownHeight','iconPillGap','iconTextGap','statusStyles','sectionSpacing','layoutSpacing','semanticStyles','iconColor','iconOpacity','iconStroke'].includes(k))) return false;
   if(Object.hasOwn(body,'typeVersion')&&body.typeVersion!==2)return false;
   for(const k of ['iconSize','dropdownHeight'])if(body[k]!==undefined&&(!Number.isInteger(body[k])||body[k]<24||body[k]>48))return false;
   for(const k of ['iconPillGap','iconTextGap'])if(body[k]!==undefined&&(!Number.isInteger(body[k])||body[k]<0||body[k]>32))return false;
   if(body.iconColor!==undefined&&!/^#[0-9a-f]{6}$/i.test(body.iconColor))return false;
   for(const [key,min,max] of [['iconOpacity',0,100],['iconStroke',1,3]])if(body[key]!==undefined&&(!Number.isInteger(body[key])||body[key]<min||body[key]>max))return false;
   if(body.sectionSpacing!==undefined){if(!body.sectionSpacing||Array.isArray(body.sectionSpacing)||typeof body.sectionSpacing!=='object'||Object.entries(body.sectionSpacing).some(([k,v])=>!['submissions','leads','ads','insights','headingGap'].includes(k)||!Number.isInteger(v)||v<0||v>160))return false;}
+  if(body.layoutSpacing!==undefined){if(!body.layoutSpacing||Array.isArray(body.layoutSpacing)||typeof body.layoutSpacing!=='object'||Object.entries(body.layoutSpacing).some(([k,v])=>!['labelGap','fieldGap','drawerDockInset'].includes(k)||!Number.isInteger(v)||v<0||v>(k==='drawerDockInset'?32:64)))return false;}
+  if(body.semanticStyles!==undefined){const s=body.semanticStyles;if(!s||Array.isArray(s)||typeof s!=='object'||Object.keys(s).some(k=>k!=='nonFabric'))return false;for(const v of Object.values(s))if(!v||Array.isArray(v)||typeof v!=='object'||Object.keys(v).some(k=>!['color','opacity'].includes(k))||!/^#[0-9a-f]{6}$/i.test(v.color)||!Number.isInteger(v.opacity)||v.opacity<0||v.opacity>100)return false;}
   if(body.statusStyles!==undefined){if(!body.statusStyles||Array.isArray(body.statusStyles)||typeof body.statusStyles!=='object'||Object.entries(body.statusStyles).some(([k,v])=>!['new','contacted','in_progress','booked','completed','canceled','delivering','pending','rejected'].includes(k)||!v||Array.isArray(v)||typeof v!=='object'||Object.keys(v).some(f=>!['color','opacity','weight'].includes(f))||!/^#[0-9a-f]{6}$/i.test(v.color)||!Number.isInteger(v.opacity)||v.opacity<0||v.opacity>100||!Number.isInteger(v.weight)||v.weight<200||v.weight>500))return false;}
   if(body.regularPill!==undefined){
     const p=body.regularPill,keys=['fill','rim','borderColor','background','paddingX','paddingY'];

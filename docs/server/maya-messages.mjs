@@ -33,8 +33,18 @@ function applyStatus(message, update) {
 
 export const digits = (v) => String(v || '').replace(/\D/g, '').replace(/^1(\d{10})$/, '$1');
 export function e164(v) {
-  const d = digits(v);
-  return d.length === 10 ? '+1' + d : (String(v || '').trim().startsWith('+') ? String(v).trim() : (d ? '+' + d : ''));
+  const raw=String(v||'').trim();
+  if(!/^\+?[\d\s().-]+$/.test(raw))return '';
+  const d=raw.replace(/\D/g,'');
+  if(raw.startsWith('+'))return /^[1-9]\d{7,14}$/.test(d)?'+'+d:'';
+  return d.length===10?'+1'+d:/^1\d{10}$/.test(d)?'+'+d:'';
+}
+const sendBlocked = contact => contact?.blocked ? 'This contact is blocked.' : contact?.consent==='stop' ? 'they asked for no more texts' : '';
+const MAX_INBOUND_RECEIPTS=10000;
+function retainInboundIds(thread,ids){
+  const retained=new Set([...Object.keys(thread.inboundReceipts||{}),...ids.filter(Boolean)]);
+  if(retained.size>MAX_INBOUND_RECEIPTS)throw new Error('Inbound receipt capacity reached; private receipt archival is required.');
+  thread.inboundReceipts=Object.fromEntries([...retained].map(id=>[id,true]));
 }
 export function isNo(text) {
   const t = String(text || '').trim().toLowerCase();
@@ -104,11 +114,16 @@ export function createMessageStore(deps) {
     return {...t,messages};
   }
   return {
-    async claimSend(key, fingerprint) {
+    async claimSend(key, fingerprint, to) {
       return locked(async()=>{const rec=await read();rec.sendRequests||={};
         if(rec.sendRequests[key])return {claimed:false,...rec.sendRequests[key]};
+        const number=e164(to);if(!number)throw new Error('Invalid send recipient');
+        // Every CAS retry rechecks consent against the revision being claimed.
+        // Provider calls stay outside this retrying transaction.
+        const why=sendBlocked(rec.threads[number]);
+        if(why)return {claimed:false,fingerprint,result:{ok:false,why}};
         if(Object.keys(rec.sendRequests).length>=10000)throw new Error('Send ledger needs archival; nothing was sent.');
-        rec.sendRequests[key]={fingerprint,result:{ok:false,why:'This send was already attempted. Check delivery before sending again.'}};
+        rec.sendRequests[key]={fingerprint,to:number,result:{ok:false,why:'This send was already attempted. Check delivery before sending again.'}};
         await write(rec);return {claimed:true};
       });
     },
@@ -121,10 +136,21 @@ export function createMessageStore(deps) {
         const rec = await read();
         const t = thread(rec, from);
         if (!t) return null;
-        if (sid && t.messages.some(m => m.id === sid)) return { number: t.number, duplicate: true,consent:t.consent,blocked:!!t.blocked };
+        if(sid&&Object.hasOwn(t.inboundReceipts||{},sid))return {number:t.number,duplicate:true,ignored:true,consent:t.consent,blocked:!!t.blocked};
+        // The archive is durable retained history, including old START/STOP SIDs.
+        // Fail closed if it cannot be read; an old START must not reverse a newer STOP.
+        if (sid && (t.messages.some(m => m.id === sid) ||
+          (deps.archive && t.hasArchive && (await deps.archive.read(t.number,t.historyEpoch)).some(m=>m.id===sid)))) {
+          return { number: t.number, duplicate: true,consent:t.consent,blocked:!!t.blocked };
+        }
         if (t.blocked) {
           // Blocking hides incoming conversation, but must never discard opt-out.
-          if (optOutType === 'STOP' || (!optOutType && isNo(text))) { t.consent='stop'; await write(rec); }
+          const stop=optOutType === 'STOP' || (!optOutType && isNo(text));
+          if(stop)t.consent='stop';
+          // Keep only identity, never blocked content. Capacity fails closed:
+          // silently evicting an old START would let its retry change consent.
+          try{retainInboundIds(t,[sid]);}catch(e){if(stop)await write(rec);throw e;}
+          await write(rec);
           return { number: t.number, blocked: true, consent:t.consent };
         }
         if (t.nameSource !== 'manual' && (!t.name || /^caller$/i.test(t.name))) {
@@ -183,20 +209,24 @@ export function createMessageStore(deps) {
       return locked(async () => { const rec = await read(); const t = thread(rec, number); if (!t) throw new Error('invalid number'); t.blocked = blocked; await write(rec); });
     },
     async remove(number) {
-      return locked(async () => { const rec = await read(); const t = thread(rec, number); if (!t) throw new Error('invalid number'); t.messages = []; t.hasArchive=false; t.historyEpoch=crypto.randomBytes(12).toString('hex'); t.unread = 0; t.deleted = true; await write(rec); });
+      return locked(async () => { const rec = await read(); const t = thread(rec, number); if (!t) throw new Error('invalid number');
+        // Deleting visible history starts a fresh archive epoch, not a fresh
+        // provider event identity. Retain content-free dedup across deletion.
+        const history=await expandHistory(t,rec);retainInboundIds(t,history.messages.filter(m=>m.dir==='in'&&m.kind==='sms').map(m=>m.id));
+        t.messages = []; t.hasArchive=false; t.historyEpoch=crypto.randomBytes(12).toString('hex'); t.unread = 0; t.deleted = true; await write(rec); });
     },
     async status({ sid, status, errorCode, replyTo }) {
       if (!Object.hasOwn(STATUS_RANK, status) || !/^SM[a-zA-Z0-9]+$/.test(String(sid || ''))) return;
       return locked(async () => { const rec = await read();
         for (const t of Object.values(rec.threads)) {
           const m = t.messages.find(m => m.dir === 'out' && (m.id === sid || (replyTo && (m.id === 'owner-reply-'+replyTo || m.replyTo === replyTo))));
-          if(m&&replyTo){if(m.replyTo&&m.id!==sid)throw new Error('Reply SID mismatch');m.replyTo=replyTo;m.id=sid;}
+          if(m&&replyTo){if(m.replyTo&&(m.id!==sid||m.replyTo!==replyTo))throw new Error('Reply SID mismatch');m.replyTo=replyTo;m.id=sid;}
           if (!m) continue;
           applyStatus(m, { status, errorCode });
           await write(rec);
           return;
         }
-        if(deps.archive)for(const t of Object.values(rec.threads))if(t.hasArchive&&await deps.archive.status(t.number,t.historyEpoch,{sid,status,errorCode}))return;
+        if(deps.archive)for(const t of Object.values(rec.threads))if(t.hasArchive&&await deps.archive.status(t.number,t.historyEpoch,{sid,status,errorCode,replyTo}))return;
         const pending = rec.pendingStatuses || {};
         const update = pending[sid] || { ts: Date.now() };
         applyStatus(update, { status, errorCode });
@@ -252,7 +282,7 @@ export function createMessageStore(deps) {
 export async function sendSms(deps, { to, text }) {
   if (!deps.accountSid || !deps.authToken || !(deps.fromNumber || deps.messagingSid)) return { ok: false, why: 'texting needs TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and the studio number' };
   const dest = e164(to);
-  if (!/^\+1\d{10}$/.test(dest)) return { ok: false, why: 'that is not a US mobile number' };
+  if (!/^\+[1-9]\d{7,14}$/.test(dest)) return { ok: false, why: 'Enter a valid phone number with its country code.' };
   const body = String(text || '').trim();
   if (!body) return { ok: false, why: 'nothing to send' };
   const api = (deps.twilioApi || 'https://api.twilio.com') + '/2010-04-01/Accounts/' + encodeURIComponent(deps.accountSid) + '/Messages.json';
@@ -306,7 +336,7 @@ export function mountMessages(app, deps) {
     let incoming,reply='';
     try {
       incoming=await deps.store.inbound({ from: params.From, text: params.Body, sid: params.MessageSid, optOutType: params.OptOutType });
-      if(deps.ownerCommand&&incoming&&!incoming.blocked&&incoming.consent!=='stop'&&!params.OptOutType&&!/^(?:STOP|STOPALL|CANCEL|END|QUIT|UNSUBSCRIBE|REVOKE|OPTOUT|HELP|INFO|START|UNSTOP)$/i.test(String(params.Body||'').trim())) {
+      if(deps.ownerCommand&&incoming&&!incoming.blocked&&!incoming.ignored&&incoming.consent!=='stop'&&!params.OptOutType&&!/^(?:STOP|STOPALL|CANCEL|END|QUIT|UNSUBSCRIBE|REVOKE|OPTOUT|HELP|INFO|START|UNSTOP)$/i.test(String(params.Body||'').trim())) {
         reply=await deps.ownerCommand({from:params.From,text:params.Body,sid:params.MessageSid});
         if(reply&&!incoming.duplicate)await deps.store.outbound({to:params.From,text:reply,sid:'owner-reply-'+params.MessageSid,status:'accepted',by:'maya-owner'});
       }
@@ -389,7 +419,7 @@ export function mountMessages(app, deps) {
     let contact;
     try { contact = await deps.store.get(to); } catch(e) { return res.status(503).json({error:'messages_unavailable'}); }
     if (contact && contact.blocked) return res.status(409).json({ok:false,why:'This contact is blocked.'});
-    const consent = contact ? contact.consent : 'none';
+    let consent = contact ? contact.consent : 'none';
     if (consent === 'stop') return res.status(409).json({ ok: false, why: 'they asked for no more texts' });
     // An arbitrary admin message is not automatically a consent question.
     const asks = false;
@@ -397,16 +427,24 @@ export function mountMessages(app, deps) {
     if(!/^[a-zA-Z0-9-]{16,80}$/.test(requestId))return res.status(400).json({ok:false,why:'Reload Messages before sending. A send request ID is required.'});
     const key=crypto.createHash('sha256').update(String(user.sub||user.email)+'\0'+requestId).digest('hex');
     const fingerprint=crypto.createHash('sha256').update(to+'\0'+text).digest('hex');
-    let claim;try{claim=await deps.store.claimSend(key,fingerprint);}catch{return res.status(503).json({ok:false,why:'Send could not be safely recorded; nothing was sent.'});}
+    let claim;try{claim=await deps.store.claimSend(key,fingerprint,to);}catch{return res.status(503).json({ok:false,why:'Send could not be safely recorded; nothing was sent.'});}
     if(!claim.claimed){if(claim.fingerprint!==fingerprint)return res.status(409).json({ok:false,why:'Send ID belongs to a different draft.'});return res.status(claim.result.ok?200:409).json(claim.result);}
-    let result;
+    let result, failureStatus=502;
     try {
-      const r = await deps.sendSms(to, text);
-      result=r.ok?{ok:true,sid:r.sid,status:r.status,consent}:r;
-      if(r.ok)try{await deps.store.outbound({to,text,sid:r.sid,status:r.status,asks,name,by:user.email||'fromsa'});}catch(e){log('outbound store failed',e.message);result.warning='Text accepted by carrier, but history could not be saved. Do not resend.';}
+      // STOP/block may arrive while the durable claim is being acknowledged.
+      // This read is never raced against dispatch, and a failed read sends nothing.
+      let fresh;try{fresh=await deps.store.get(to);}catch{failureStatus=503;result={ok:false,why:'Consent could not be verified; nothing was sent.'};}
+      const why=sendBlocked(fresh);
+      if(why){failureStatus=409;result={ok:false,why};}
+      if(!result){
+        consent=fresh?.consent||'none';
+        const r = await deps.sendSms(to, text);
+        result=r.ok?{ok:true,sid:r.sid,status:r.status,consent}:r;
+        if(r.ok)try{await deps.store.outbound({to,text,sid:r.sid,status:r.status,asks,name,by:user.email||'fromsa'});}catch(e){log('outbound store failed',e.message);result.warning='Text accepted by carrier, but history could not be saved. Do not resend.';}
+      }
     } catch(e) {log('send outcome unknown',e.message);result={ok:false,why:'The send outcome is unknown. Check delivery before sending again.'};}
     try{await deps.store.finishSend(key,result);}catch(e){log('send result storage failed',e.message);if(result.ok)result.warning='Text accepted by carrier; its send receipt could not be saved. Do not resend.';}
-    res.status(result.ok?200:502).json(result);
+    res.status(result.ok?200:failureStatus).json(result);
   });
   // v14.35: the phone icon in the station: Maya calls the client.
   app.post('/api/admin/phone/call-client', deps.json, async (req, res) => {

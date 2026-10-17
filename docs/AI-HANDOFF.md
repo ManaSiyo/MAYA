@@ -1,259 +1,117 @@
-# Current handoff — October 8, 2026
+# Current handoff — October 17, 2026
 
-## Current request — Founder conversation and Messages stress audit
+## Request and release authority
 
-Audit/test-only work on 2af5039, which matched origin/maya-v2 at task start.
-No application runtime or production configuration changed. No new visible UI;
-existing shared Aesthetic Control authority and account boundaries are preserved.
-No real model calls, provider sends, personal Chrome access or Push.
+Fromsa explicitly requested implementation of the latest audit findings, with
+Brief/Operation Room fabric relevance first, voice responsiveness across web and
+phone, Outbound secondary, a documented commit and automatic GitHub Push.
+Started on maya-v2 at 1b3f0df, matching origin. Included the interrupted October 8
+workspace/fabric/automation changes already in this checkout. No unrelated files,
+credentials, billing, production environment changes or personal Chrome access.
 
-Read docs/FOUNDER-CONVERSATION-AUDIT.md for the grouped findings, prepared fixes,
-all 60 founder prompts and observed fixture replies. tests/fixtures/founder-conversation-cases.mjs
-and tests/founder-conversation-stress.mjs execute 60 intents x 20 variants in
-AI-unavailable and scripted-action modes (2,400 real owner-handler executions),
-plus ten multi-turn sessions / 31 exchanges. This proves context/action/data
-contracts, not actual model semantic quality. The corpus is in app-regression.
-34 intents have tools, four are scripted chat, 22 have no SMS tool. Seven supported
-variants miss their oracle even with correct scripted routing available; direct
-commands absorb polite suffixes as contact identities. Plain chat can relay
-unverified completion/fact claims; conversational cancellation does not revoke
-pending approvals. Independent message previews intentionally remain separate.
+## Implemented behavior
 
-Standalone tests/message-stress.mjs uses real Messages HTTP/store/archive/SMS
-adapters with fake Twilio, auth and CAS memory storage. It intentionally exits 1:
-28 checks pass, four fail, reproduced twice across 1,280 inbound events, 241
-callbacks and 78 Admin sends. Failures: STOP/send race, archived inbound replay
-changing unread/chronology, archived owner reply missing delivered reconciliation,
-and UI-accepted international SMS rejected by sendSms. These remain OPEN; do not
-add the diagnostic to green release gates or weaken its assertions.
+Fabrics: Brief and Operation Room use the same inline viewer, optional expansion,
+Sourceable/In House/Favorites and store filter. Search requires acknowledged saved
+dissection; reading never generates missing pieces. Stable garment IDs distinguish
+duplicate names and preserve selection when returning from Operations. A legacy
+saved piece uses its original index as a read-only identity until explicit Save.
+The selected canonical saved crop is the visual ranking target; original photo
+and client words remain discovery context. Hard exclusions/latest replacements
+are independent of positive traits. Finished clothing, tools/notions, swatches
+and unrelated materials are rejected. Seller-backed URLs/images/facts remain
+separate from visual interpretation. Missing images no longer become invented
+URLs, and valid later JSON-LD/metadata images are tried. At most8 verified products
+enter one 8-second fabric.visual_rank attempt; weak/failed comparison returns no
+recommendations with an explicit warning. Image/CDN failures can still prevent
+comparison; no automatic paid retry or quality/ChatGPT-equivalence claim.
 
-Admin has voice transcripts but no founder text composer, and its conversation
-history/tools differ from owner SMS/phone. Worldofsiyo is a default permitted email,
-not proof of the production owner binding or sole Admin. New Admin founder chat
-must match the authenticated UID to that binding before reading owner-phone history.
-Full reports vs 60-row individual lookup, missing SMS service adapters, date/source
-filters, result synthesis, cancellation/continuation and partial-data reporting
-need separate bounded implementation. Real-provider intelligence and total reply
-latency remain unverified; local sub-millisecond/loopback timings are not a live SLA.
+Brief/Operations: usable inline result height, responsive standalone heading,
+submission-only Brief loading, saved-only bridge, no stale garment repost during
+navigation, and private summary/reference/Operations prompt clearing. A broken
+favorite photo retains Remove/Use controls. Existing grounded pattern generation
+and purchase scope are unchanged.
 
-Changed files: three stress/corpus test files, app-regression hook, this handoff,
-requests/fixes/commit review, AGENTS audit instructions and the detailed audit.
-Also corrected only the stale circle assertion in tests/outbound-priority-ui.mjs
-for approved content + independent X/Y padding capsule geometry. Runtime unchanged.
-The narrow Outbound suite passes after that test correction.
+Admin/aesthetics: explicit typography beats generic inference without coupling
+table styles; phone Feature Requests put owner/date above request; hidden settings
+failure forms stay hidden; saved dock inset changes actual geometry. Automations
+Example/Save completion orders preserve drafts and disclose later unsaved changes.
+Active linked workspace previews expose shared roles, Inner/Outer/fields/pills,
+semantic nonFabric color and label/field/dock spacing. All changed presentation
+uses saved Aesthetic Control settings, including new keyboard Glass/P3 recovery
+buttons on Admin, client and Playground. Admin recovery lives outside transformed
+horizontal panes so the drawer cannot scroll it offscreen.
 
-Validation: the 46 existing Cloud Build test commands, full app-regression,
-server smoke, syntax and diff checks pass after correcting the stale Outbound
-test. The standalone final Aesthetic Control check passed last, including
-default/saved computed styles and visual review of phone, desktop and Messages
-fixtures. The Outbound retest also passed at all seven widths.
-The four red transport diagnostics are known application defects, not repaired
-or a claim of release readiness. Exact next step: review the audit, fix the four
-transport defects first, then implement a bound owner capability/continuity layer
-and run the same synthetic corpus against the actual configured model. Preserve
-reviewed sends, fixed owner identity and sealed project/account data throughout.
+Voice: shared bounded silent standby, only for enabled wake/visible authorized
+scope; no microphone track or response until wake/tap. Both channel and server
+session acknowledgment establish readiness. Activation requests microphone access
+immediately and sends fresh page context before attaching it. No timer-driven
+paid reconnection. Standby expires after 120s; the next interaction may prepare
+again. Setup 20s, active idle 120s and maximum 15min cleanup; off/hidden/page-exit or
+account/project changes release resources. Same-account token renewal preserves
+session. Blocked autoplay exposes Tap to hear Maya. Disconnect/idle invalidates
+queued tools and pending approval creation; already reviewed approvals survive.
+Shared server/phone delivery keeps the configured voice, defaults to Marin,
+concise natural replies, 1.05 speed, 300ms VAD and 250ms prefix. Optional context is
+bounded to 400ms; token mint has one total 10s deadline including compatibility
+retry. Auth/spend-ledger persistence remains outside these budgets. This is not a
+measured production latency SLA or proof of sharper live audio.
 
-## Previous request — Late October 7 presentation and owner SMS review
+Messages: STOP/block is checked inside durable claim and before dispatch;
+uncertain sends remain non-retryable. Archived inbound identities deduplicate
+before consent/unread/chronology. Archived owner-reply aliases reconcile carrier
+states monotonically. Explicit-country-code SMS matches Admin; calls remain
+US-only. Content-free inbound receipts survive explicit history deletion and fail
+closed at 10000 without eviction; STOP still persists at capacity. Legacy deleted/
+blocked events predating these receipts cannot be reconstructed. The unchanged
+strict diagnostic now passes 44/44 and is a mandatory release gate.
 
-Implemented and verified locally, based on shipped 707592d. The other task's
-changes are included in that baseline. Public release.json, App/Admin stamps and
-API health matched 707592d5b5b59e688d2ff31935224c3dfb3d1442 at October 7 23:27
-Pacific; published October 7 14:16:58 Pacific, all endpoints HTTP 200.
+Accounts/Outbound: unpublish pins UID and generation through every awaited delete
+and fallback query, including A→B→A. Same-account token renewal preserves Outbound
+drafts and request identity; actual account changes clear private state.
 
-Admin: all nine heading→content gaps now measure from the visible heading to the
-first content, including Submissions empty state and Ad campaigns' D/W/M row.
-Redundant range copy is hidden. Nine status editors show meanings and consumers;
-Delivering is independently green by default and describes impressions in the
-selected range, not current provider enablement. Explicit saved colors survive.
+## Source and verification
 
-Shared aesthetics: Glass and Regular pills have independent saved padding/material
-and usage links. Real capsule dimensions follow content/glyph plus X/Y padding;
-fixed listen width and icon box conflicts are removed. Every Edit is Regular,
-Save/icons use Glass, and glyph dimensions cannot collapse inside their wrapper.
-Typography v2 merges names into H4, dates into H5, captions into P3. Old designs
-normalize without writes; validators accept legacy schemas. All served pages
-load presentation-runtime/pill-runtime before typography v24; gallery is v34.
+Primary changed paths: backend/{status,backend,operations}.html, backend/outbound.js;
+frontend/index.html, playground/index.html; shared fabric/presentation/typography/
+voice runtime and gallery previews; server fabric-search/fabric-sourcing/ai-router,
+realtime-voice/server/maya-phone, Messages/archive, automation/design validation;
+Docker packaging, cloudbuild, generated role inventory, associated tests and docs.
 
-Owner SMS: natural all/status/count reads bypass AI, traverse retained callback
-and manual leads, filter before durable account-bound MORE reports and identify
-partial source/history results. The default Admin feed remains 60 rows with parallel note reads. Full owner
-reads have a six-second read-only deadline; late reads cannot create reports or
-sends. Slow auth/storage can still delay the overall SMS webhook. Provider
-JSON mode and typed response diagnostics replace opaque parse failures; paid
-retries are not added. Verified owner binding/client SEND gates remain intact.
-The screenshot proves a parser miss, not the underlying live AI failure reason.
+Release gates include all new workspace/Brief/Admin/voice/account/stress fixtures.
+app-regression adds behavior assertions and final aesthetic-authority re-executes
+actual changed-surface UI checks even if imported earlier. Disabled/enabled Brief
+Fabrics material fixtures use a real synthetic saved dissection; styling is not
+weakened to fit obsolete fixtures. Admin account-race coverage verifies immediate
+microphone capture is stopped and never attached after cancellation.
 
-Changed areas: backend/status.html; shared UI runtime/components; Aesthetic
-Control modules, schema and generated role inventory; served runtime includes and
-Hosting cache headers; owner conversation/SMS access, CRM AI and server feed;
-regression fixtures and docs. No new server module or container copy needed.
+Validation: pinned root npm ci completed with the checked-in lockfile. The 55
+functional Cloud Build suites plus server smoke passed after focused fixture/
+regression repairs; full integrated app-regression passes, including the gallery,
+both actual client surfaces, Admin, Brief/Operations and the founder corpus. Both
+frontend/Playground hands batteries passed. Messages stress is 44/44 across 1293
+signed inbounds, 242 callbacks and 84 Admin requests. Six exact Cloud Build syntax
+checks, shared runtime syntax and git diff checks pass. Role inventory regenerated.
+Default/changed saved settings, actual Save/failure/Restore, focus/errors and six
+responsive widths are covered. Phone/desktop and saved-style screenshots were
+visually inspected. Final standalone Aesthetic Control authority is the last check
+before commit; its successful result is required by COMMIT-REVIEW. Isolated
+browsers/fake auth, storage, merchants, OpenAI and Twilio are used; no actual SMS,
+paid model calls, private client images or personal Chrome.
 
-Validation: all 46 exact Cloud Build suites, full app-regression, server smoke,
-syntax and diff checks pass; root npm ci used the pinned lockfile. Final authority
-imports presentation-consistency and pill-consistency for actual geometry/materials,
-role mappings, defaults/saved settings, usage and six responsive widths. Gallery
-checks eleven widths. Default/saved, open editor, Save error and mobile screenshots
-were visually reviewed. The shared aesthetic gate is the final completion check. No live
-provider sends, personal Chrome, credentials, billing or environment changes.
+## Limits and exact next step
 
-Cleanup recommendation only: aesthetics/ui/ai-meter.js (5,898 bytes) is unloaded
-by served pages. Remove it and obsolete test/usage-map references together when
-requested; retain server /api/admin/ai-meter accounting. No files deleted here.
+FOUNDER-CONVERSATION-AUDIT.md preserves the 60-intent synthetic corpus and historical
+findings. Seven parser misses, 22 missing SMS capabilities, channel/history parity,
+real model comprehension and owner binding remain separate open work. These
+repairs do not make MAYA omniscient. CDN availability can still fail visual
+comparison honestly. Receipt capacity needs an owner-approved archival design
+before any future relaxation; never evict accepted IDs to make a test pass.
 
-Exact next step: owner reviews/Pushes the prepared local commit, then verify the
-exact release with tests/verify-live.mjs --wait and test
-owner SMS 'Text me all the contacted leads' plus general conversation and live
-Aesthetic Control Save. Local checks do not prove deployed behavior.
-
-## Previous request — Repository-wide governing rule (October 7)
-
-Owner requires Aesthetic Control to be the last check for every new addition.
-AGENTS.md, docs/README.md and docs/design.md now explicitly govern every folder,
-including backend-generated UI and shared aesthetics on functionally excluded
-pages. New visible components require active previews and saved-setting coverage;
-new settings extend controls, validation, runtime and tests together. Functional
-checks precede the final aesthetic check. Later presentation edits invalidate it;
-unresolved mismatches block completion. Backend/docs-only work records no visible
-impact and still runs the shared authority gate.
-
-cloudbuild.yaml and app-regression run aesthetic-authority last. release-contract
-asserts release ordering and rule presence; app-regression asserts the owner
-request. REPO-MAP and the historical CODEX-MAYA-BRIEF point to the governing rule.
-This follow-up changes instructions and verification ordering, with no UI/runtime
-behavior change. Validation: release/design contracts and full app-regression
-passed, ending with the aesthetic authority gate. No Chrome or push.
-Next: owner review/Push both local commits, verify exact deployment, then confirm
-live Admin Save. Previous implementation and open risks remain below.
-
-## Previous request — Aesthetic Control enforcement (October 7)
-
-Fromsa asked why Automations bypasses Aesthetic Control, requested removal of
-conflicts and a mandatory internal final aesthetic check. Repaired locally:
-- backend/status.html: explicit H2/H3/P1/P3 Automations roles; shared field and
-  Inner material; removed duplicated form styling and forced blue drawer headings.
-- typography-controls.js v22: explicit role/field/inner contracts; all heading
-  colors follow saved roles. Semantic status colors and table settings retained.
-- maya-canon.css v14: legacy fixed field font yields to explicit roles. Active
-  adapters remain necessary; no migration paths or served files were deleted.
-- tests/aesthetic-authority.mjs: computed-style mutation checks typography,
-  field backing/border/radius/X-Y padding, Inner material and six viewport widths.
-  Required in app-regression and Cloud Build. Role inventory regenerated; runtime
-  and adapter cache versions updated on served pages. Retired the obsolete
-  v13.77 assertion requiring fixed blue headings. AGENTS.md/design.md define
-  the last aesthetic completion check and require extending coverage for new UI.
-
-Validation: 45 Cloud Build test suites passed; isolated Automations screenshot
-reviewed. Full app regression, smoke, required syntax and diff checks passed.
-No personal Chrome access, production changes or push. Exact next step: owner
-Push, then verify the exact release with tests/verify-live.mjs --wait and confirm
-saved settings on authenticated live Admin. Local verification is not deployment.
-Previous audit/open provider and migration risks below remain applicable.
-
-## Previous request
-
-Fromsa first requested a parallel read-only audit, grouped by area and prioritizing
-Admin, then explicitly asked to wait for the other agent and implement the fixes.
-Wait completed: Backend and fabrics — Fabrics and design finished at deb7081;
-implementation began from its clean tree, preserving c09328e and deb7081.
-No push, production configuration, credentials, billing, live provider call or
-personal Chrome access occurred.
-
-## Prepared locally, by area
-
-- **Admin (backend/status.html):** async requests and approvals bind to account/
-  session and stable lead IDs. Same-account token renewal preserves drafts,
-  pending send IDs and notes; actual account changes clear private state and
-  cancel stale voice/results. Remove persisted customer-data marketing cache.
-  Invoices retain created links when lead attachment fails, offer save-only
-  retry, survive dialog reopen and insert internal unsent Text drafts. Missing
-  phone feedback is visible. tests/admin-state-races.mjs covers interleavings.
-- **Backend storage/communications:** docs/server/lead-store.mjs shares validated,
-  generation-checked lead/note writes across Admin, phone and owner commands;
-  unreadable storage fails instead of becoming an empty overwrite. Admin lead-add
-  retries retain account-bound receipts, phone updates return the complete lead,
-  and owner notes carry timestamps. Submission uploads deny unknown ownership;
-  feeds finish pagination before limiting. Blocked STOP persists consent and
-  archived delivery statuses survive overflow retries. New lead-store/admin-storage
-  fixtures and existing communications suites cover these paths.
-- **Outbound:** reviewed sends include expectedEmail in the confirmation/request
-  fingerprint and revalidate the current recipient at the durable claim. A changed
-  address requires fresh review. Missing Sheet history/baselines no longer
-  double-count locally recorded sends. Four primary lists remain unchanged.
-- **Client projects (frontend + Playground):** account generation and UID pin async
-  reads/writes, migrations and share publication. Initial saves/queued edits retain
-  dirty work; pending uploads cannot replace newer pictures/summary. Shares own
-  independent image copies. Project-face copies for avatar lifetime remain
-  Playground-only. tests/project-lifecycle.mjs executes these races.
-- **Brief / Operation Room:** queued immutable dissection saves require server
-  acknowledgement, preserve generated work on failure and offer save-only retry.
-  Opening saved work does not trigger paid missing-image generation. Operations
-  measurements bind to account/submission/exact garment, run inputs freeze, and
-  startup, CLO, redraw, scoring, SVG and streaming reject stale contexts. The new
-  fabric assistant/lookbooks from deb7081 are preserved. tests/brief-operation-races.mjs
-  covers save/context and run interleavings. Local folder reads cannot adopt old
-  cloud pieces; same-submission reloads retain pending work and generated patterns
-  save on their original raw pieces. Invalid folders preserve the prior save target.
-- **Aesthetic Control:** snapshot before async Save; lock preview editing until
-  acknowledgement; keep the prior Restore baseline after failure. Runtime v21 /
-  gallery v32 preserve the approved visual canon. Correct active documentation
-  conflicts about category badges, H5/H6/H3, note blur/dictation and Inner toolbar
-  material. Regenerate the authored typography usage inventory after final code.
-- **Release:** pinned root/server lockfiles and mandatory Chromium/communications
-  dependency installation. No release gate may be silently skipped. Docker bakes
-  the commit without production environment changes; public health reports it.
-  verify-live requires the site and API to match HEAD; old-API rejection is tested.
-  New gates run in cloudbuild.yaml and app-regression.
-
-## Validation
-
-All 44 suites listed in cloudbuild.yaml pass, plus full app-regression and server
-smoke (46 suite invocations), required syntax checks and git diff --check. The
-final Outbound UI fixture was rerun after replacing an unauthenticated/stubbed
-status setup with a fake authenticated session and the real refresh path; it
-passes populated filtering, saved statuses and seven viewport widths. Gallery
-covers eleven widths and immutable Save, Admin races cover identity/drafts/
-approvals, project lifecycle covers delayed cloud writes, and Brief/Operations
-cover local transitions and stale paid-work continuations. The authored typography
-inventory was regenerated. Local Node 24.19.0 with pinned installed dependencies,
-isolated headless Chromium and fake providers only; no personal Chrome or live
-sends. Actual Cloud Build/Node 20 deployment remains an owner Push step.
-
-## Live evidence / exact next step
-
-Public read-only checks on October 7 at 08:49 Pacific: release.json, Admin
-and API health returned HTTP 200. Hosting still reported
-`e82b2072dd7b203acbc870a6de0863a19559ad8b`, published October 7 00:44:24 UTC;
-the old API health response had no commit field. Availability does not prove the
-pending local code is live. The Google Cloud Build check for pushed 71c9ce9 failed
-at Test release contracts before deployment; available evidence did not identify
-its exact failing assertion. Vercel success is not Firebase/Cloud Run success.
-
-1. Owner reviews the prepared local commit and Pushes when ready. c09328e and
-   deb7081 were already local and unpushed when implementation began. Never push
-   automatically. After deployment run `node tests/verify-live.mjs --wait` for
-   the exact pushed HEAD, including its API commit.
-2. Verify authenticated Admin renewal/account changes, a reviewed invoice link,
-   design Save, and fabric search/lookbook round trip. Real provider acceptance,
-   delivery, voice and live AI relevance/latency still need owner verification.
-   Use FABRIC-SEARCH.md for the ten owner-approved comparison cases; no claim of
-   ChatGPT parity or production-ready pattern fit/sewability/laser output.
-3. Avatar behavior remains in Playground until Fromsa approves promotion. Existing
-   already-broken avatar references are not repaired by the forward-looking fix.
-   Legacy migration/Storage cleanup remains; no data migration was run.
-4. Admin invoice recovery is retained in the page session. An unknown provider
-   creation outcome requires checking Wix before creating another link; this is
-   not an exactly-once invoice ledger. Admin lead-add receipts fail closed at
-   10,000 entries and need a future archival path. Lead history is preserved
-   rather than silently dropping old records; monitor its eventual object size.
-5. Existing event/Tasks/Gmail/Scheduler setup remains owner-only. Prior open work:
-   archived synthetic owner reply SID reconciliation, 10,000-send ledger archival
-   and scoped legacy memory migration. Amazon remains web discovery; blocked
-   merchants show unknown facts and Britex store-only inventory is unavailable.
-
-## Standing boundaries
-
-Only Fromsa handles production credentials, billing and environment settings.
-Fresh explicit permission is required for each personal Chrome session; none was
-used. Private accounts/projects, explicit SMS SEND gates, STOP/block rules,
-archives and legacy migration paths remain intact. Local verified commits are
-authorized; pushes are not. docs/COMMIT-REVIEW.txt describes the new commit.
+After successful gates, commit only this task with the prepared summary/body in
+COMMIT-REVIEW.txt, then Push maya-v2 as explicitly authorized. Verify the exact
+code commit via tests/verify-live.mjs, release.json, App/Admin maya-build stamps
+and API health; GitHub/Vercel success alone is insufficient. Public checks cannot
+prove signed-in Realtime bootstrap, live fabric quality or carrier/audio delivery.
+Finish with owner acceptance of the ten FABRIC-SEARCH cases, real warm/cold wake
+timings and a small SMS/phone round trip using the existing owner binding.
