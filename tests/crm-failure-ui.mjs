@@ -7,17 +7,18 @@ const root=resolve('.'),browser=await chromium.launch({headless:true,executableP
 try {
  const page=await browser.newPage({viewport:{width:390,height:720}}),errors=[];
  page.on('pageerror',e=>errors.push(e.message));
- let pendingSave,pendingLoad,pauseLoad=false,crmStamp='',expire=false,meterFail=false,meterCalls=0;
- let loadStarted;const waitingLoad=new Promise(resolve=>{loadStarted=resolve;});
- const stateFor=owner=>({campaigns:[{id:'c',name:owner+' campaign',status:'active'}],contacts:[{id:'p',campaignId:'c',name:owner+' person',notes:'',subject:'',body:'',stage:'new',email:'person@example.com'}],companies:[],settings:{}});
+ let pendingSave,pendingLoad,pauseLoad=false,crmStamp='',expire=false,meterFail=false,meterCalls=0,intelligenceCalls=0;
+ let loadStarted;const holdLoad=()=>{pauseLoad=true;return new Promise(resolve=>{loadStarted=resolve;});};
+ const savedContacts=new Map();
+ const stateFor=owner=>({campaigns:[{id:'c',name:owner+' campaign',status:'active'}],contacts:[{id:'p',campaignId:'c',name:owner+' person',notes:'',subject:'',body:'',stage:'new',email:'person@example.com',...savedContacts.get(owner)}],companies:[],settings:{},crm:{lastRunAt:crmStamp}});
  await page.addInitScript(()=>{localStorage.setItem('maya_admin_tok','First');const interval=window.setInterval;window.setInterval=(fn,ms,...args)=>{if(ms===60000)window.auditRefresh=fn;return interval(fn,ms,...args);};});
  await page.route('**/*',async route=>{
   const u=new URL(route.request().url());if(u.hostname!=='maya.test')return route.abort();
   const owner=(route.request().headers().authorization||'').replace('Bearer ','');
   if(u.pathname==='/api/admin/ai-meter'){meterCalls++;return route.fulfill({status:meterFail?503:200,json:{ok:!meterFail,spentUsd:.12,reservedUsd:0,limitUsd:1,scope:'Outbound AI',models:[{provider:'openai',connected:true}],providers:{openai:.12}}});}
-  if(u.pathname.endsWith('/intelligence'))return route.fulfill({status:expire?401:200,json:{ok:!expire,mailboxes:[{id:owner,email:owner+'@example.com'}],crm:{lastRunAt:crmStamp},gmailReady:false}});
-  if(u.pathname.endsWith('/save')){pendingSave=()=>route.fulfill({json:{ok:true,state:stateFor(owner)}});return;}
-  if(u.pathname==='/api/admin/outbound'&&pauseLoad){pauseLoad=false;pendingLoad=()=>route.fulfill({json:{ok:true,state:stateFor(owner),accountId:owner,capabilities:{}}});loadStarted();return;}
+  if(u.pathname.endsWith('/intelligence')){intelligenceCalls++;return route.fulfill({status:expire?401:200,json:{ok:!expire,mailboxes:[{id:owner,email:owner+'@example.com'}],crm:{lastRunAt:crmStamp},gmailReady:false}});}
+  if(u.pathname.endsWith('/save')){const body=route.request().postDataJSON();pendingSave=()=>{savedContacts.set(owner,body);return route.fulfill({json:{ok:true,state:stateFor(owner)}});};return;}
+  if(u.pathname==='/api/admin/outbound'&&pauseLoad){pauseLoad=false;const snapshot=stateFor(owner);pendingLoad=()=>route.fulfill({json:{ok:true,state:snapshot,accountId:owner,capabilities:{}}});loadStarted();return;}
   if(u.pathname.startsWith('/api/'))return route.fulfill({json:{ok:true,state:stateFor(owner),accountId:owner,capabilities:{}}});
   const path=u.pathname==='/outbound.html'?'/backend/outbound.html':u.pathname;
   try{return route.fulfill({body:readFileSync(root+path),contentType:({'.js':'text/javascript','.css':'text/css','.html':'text/html','.png':'image/png'})[extname(path)]||'text/plain'});}catch{return route.abort();}
@@ -41,7 +42,18 @@ try {
  await page.keyboard.press('Escape');assert.ok(await page.locator('#modal').isHidden());assert.ok(await page.locator('#outbound-drawer').isVisible(),'Escape closes only the top layer');
  assert.equal(await page.locator('maya-ai-meter').count(),0,'Retired meter cannot display stale spending');assert.equal(meterCalls,0,'Drawer does not request retired meter');
  await page.keyboard.press('Escape');
- crmStamp='2026-09-27T18:00:00Z';pauseLoad=true;await page.evaluate(()=>window.auditRefresh());await waitingLoad;await page.locator('#notes').fill('Keep this note');await pendingLoad();await page.waitForFunction(()=>document.querySelector('#automation-status').textContent.includes('Last run'));assert.equal(await page.locator('#notes').inputValue(),'Keep this note','Background refresh preserves a draft started during its request');await page.locator('#save-draft').click();
+ crmStamp='2026-09-27T18:00:00Z';let waitingLoad=holdLoad();await page.evaluate(()=>window.auditRefresh());await waitingLoad;await page.locator('#notes').fill('Keep this note');await pendingLoad();await page.waitForFunction(()=>document.querySelector('#automation-status').textContent.includes('Last run'));assert.equal(await page.locator('#notes').inputValue(),'Keep this note','Background refresh preserves a draft started during its request');await page.locator('#save-draft').click();
+ await page.waitForFunction(()=>document.querySelector('#notes').disabled);await pendingSave();await page.waitForFunction(()=>!document.querySelector('#notes').disabled);
+ // Capture an old server snapshot, finish a newer save, then release the old read.
+ // No dirty draft remains at this point, so a dirty-field check alone is insufficient.
+ crmStamp='2026-09-27T18:01:00Z';waitingLoad=holdLoad();const checksBefore=intelligenceCalls;await page.evaluate(()=>window.auditRefresh());await waitingLoad;
+ await page.evaluate(()=>{window.auditRefresh();window.auditRefresh();window.auditRefresh();});
+ await page.locator('#notes').fill('Saved while the old read was waiting');await page.locator('#save-draft').click();
+ await page.waitForFunction(()=>document.querySelector('#notes').disabled);await pendingSave();await page.waitForFunction(()=>!document.querySelector('#notes').disabled);
+ const catchup=page.waitForResponse(r=>new URL(r.url()).pathname.endsWith('/intelligence'));await pendingLoad();await catchup;
+ assert.equal(await page.locator('#notes').inputValue(),'Saved while the old read was waiting','An earlier background snapshot cannot undo an acknowledged save');
+ assert.equal(intelligenceCalls-checksBefore,2,'Overlapping refresh requests coalesce into one catch-up read');
+ await page.locator('#notes').fill('Keep the next account-switch draft');await page.locator('#save-draft').click();
  await page.waitForFunction(()=>document.querySelector('#notes').disabled);assert.ok(await page.locator('#view-menu').isDisabled(),'Navigation cannot change the edited contact during a save');
  await page.evaluate(()=>{localStorage.setItem('maya_admin_tok','Second');dispatchEvent(new StorageEvent('storage',{key:'maya_admin_tok'}));});
  assert.equal(await page.getByText('First person',{exact:true}).count(),0,'Account switch immediately removes private contact');
@@ -51,5 +63,5 @@ try {
  await page.locator('#signin').waitFor();await page.waitForFunction(()=>!document.querySelector('#mailboxes').textContent.trim());
  assert.equal(await page.locator('[data-person]').count(),0,'Expired authorization clears contacts');
  assert.equal(await page.locator('#mail-sender').count(),0,'Expired authorization clears senders');
- assert.deepEqual(errors,[]);console.log('Dialog layering, compact type, retired meter absence, busy controls and account/expiry isolation passed.');
+ assert.deepEqual(errors,[]);console.log('Dialog layering, compact type, retired meter absence, save/refresh ordering, refresh coalescing, busy controls and account/expiry isolation passed.');
 } finally {await browser.close();}

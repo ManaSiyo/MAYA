@@ -18,7 +18,7 @@ await page.route('**/*',async route=>{
  if(u.pathname==='/api/admin/submissions')return route.fulfill({json:{folders}});
  if(u.pathname==='/api/admin/subfile'){
   const id=u.searchParams.get('id');
-  if(id==='A-pieces')return route.fulfill({json:pieces});
+  if(id==='A-pieces')return route.fulfill({json:pieces,headers:{'X-Maya-Generation':'1','Cache-Control':'private, no-store'}});
   if(id?.endsWith('-summary'))return route.fulfill({json:{client:{name:'Client '+id[0]},fabric_preferences:'Natural fibers'}});
   return route.fulfill({body:png,contentType:'image/png'});
  }

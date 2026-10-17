@@ -2220,7 +2220,8 @@ app.get('/api/admin/subfile', async (req, res) => {
     if (!o.ok) return res.status(o.status === 404 ? 404 : 502).json({ error: 'not_found' });
     if (o.buf.length > 30 * 1024 * 1024) return res.status(413).json({ error: 'too_large' });
     res.setHeader('Content-Type', o.type);
-    res.setHeader('Cache-Control', 'private, max-age=300');
+    res.setHeader('Cache-Control', /\.json$/i.test(path) || /json/i.test(o.type) ? 'private, no-store' : 'private, max-age=300');
+    if(o.generation)res.setHeader('X-Maya-Generation',String(o.generation));
     res.end(o.buf);
   } catch (e) {
     console.error('[admin] subfile failed,', e.message);
@@ -2231,21 +2232,43 @@ app.get('/api/admin/subfile', async (req, res) => {
 // POST /api/admin/savepieces — save the dissection (rendered pieces and
 // patterns) as pieces.json inside the submission, so the Brief loads it next
 // time instead of paying for the dissection again. v13.27: MAYA's own bucket.
+function validDissection(data,legacy=false){
+  if(!data||typeof data!=='object'||Array.isArray(data)||!Array.isArray(data.pieces)||data.pieces.length>100)return false;
+  const ids=new Set();
+  return data.pieces.every(piece=>{
+    if(!piece||typeof piece!=='object'||Array.isArray(piece))return false;
+    if(!legacy&&!/^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$/.test(piece.id||''))return false;
+    if(piece.id!==undefined){if(typeof piece.id!=='string'||!/^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$/.test(piece.id)||ids.has(piece.id))return false;ids.add(piece.id);}
+    return ['name','label','fabric','fabric_hex','_image','_pattern'].every(key=>piece[key]===undefined||piece[key]===null||typeof piece[key]==='string')&&
+      (piece.fabric_spec===undefined||piece.fabric_spec!==null&&typeof piece.fabric_spec==='object'&&!Array.isArray(piece.fabric_spec));
+  });
+}
 app.post('/api/admin/savepieces', requireAuthHeader, express.json({ limit: '30mb' }), async (req, res) => {
   try { await requireAdmin(req); }
   catch (e) { return res.status(e.status || 401).json({ error: 'unauthorized', detail: e.message }); }
   const subId = String((req.body || {}).folderId || '');
   const data = (req.body || {}).data;
-  if (!SUB_ID.test(subId) || !data) return res.status(400).json({ error: 'bad_request' });
+  const generation=req.body?.generation;
+  if(typeof generation!=='string'||!/^(?:0|[1-9]\d*)$/.test(generation))return res.status(428).json({error:'review_required',detail:'Reload this submission to review its saved version before saving.'});
+  if (!SUB_ID.test(subId) || !validDissection(data)) return res.status(400).json({ error: 'bad_dissection',detail:'Save a valid dissection with unique garment IDs.' });
   try {
     const body = Buffer.from(JSON.stringify(data), 'utf8');
     if (body.length > 25 * 1024 * 1024) return res.status(413).json({ error: 'too_large' });
     const path = SUB_PREFIX + subId + '/pieces.json';
-    await gcsPut(path, body, 'application/json');   // one object, overwrite in place
+    const marker=await gcsGet(SUB_PREFIX+subId+'/submission.json');
+    if(!marker.ok)return res.status(marker.status===404?404:503).json({error:'submission_unavailable'});
+    try{const value=JSON.parse(marker.buf.toString('utf8'));if(!value||typeof value!=='object'||Array.isArray(value))throw Error();}catch{return res.status(503).json({error:'submission_unreadable'});}
+    const previous=await gcsGet(path);
+    if(!previous.ok&&previous.status!==404)return res.status(503).json({error:'saved_dissection_unavailable'});
+    if(previous.ok){try{if(!validDissection(JSON.parse(previous.buf.toString('utf8')),true)||!/^\d+$/.test(String(previous.generation||'')))throw Error();}catch{return res.status(503).json({error:'saved_dissection_unreadable'});}}
+    if(generation!==(previous.ok?String(previous.generation):'0'))return res.status(409).json({error:'dissection_conflict',detail:'Saved work changed in another window. Keep this draft and review the latest submission before saving.'});
+    const saved=await gcsPut(path, body, 'application/json',generation);
     _subsCache = { ts: 0, body: null };
+    if(!/^[1-9]\d*$/.test(String(saved?.generation||'')))return res.status(503).json({error:'save_unconfirmed',detail:'Storage did not confirm the saved version. Keep this draft and reload to check the saved work.'});
     console.log('[admin] pieces.json saved for', subId, Math.round(body.length / 1024) + 'kb');
-    res.json({ ok: true, id: pathToId(path) });
+    res.json({ ok: true, id: pathToId(path),generation:String(saved.generation) });
   } catch (e) {
+    if(e.status===412)return res.status(409).json({error:'dissection_conflict',detail:'Saved work changed in another window. Keep this draft and review the latest submission before saving.'});
     console.error('[admin] savepieces failed,', e.message);
     res.status(500).json({ error: 'savepieces_failed', detail: e.message });
   }

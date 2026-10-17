@@ -119,12 +119,47 @@ test('latest positive, negative, construction and color constraints remain indep
   assert.equal(fabricProductMatch({...cotton,title:'Indigo denim jacket',description:'Cotton denim, ready-to-wear.'},{automatic:true,piece:{fabric:'indigo denim'}}),null);
   assert.ok(fabricProductMatch({...cotton,title:'Cotton shirting fabric for shirts'},{request:'cotton'}));
   assert.ok(fabricProductMatch({...cotton,description:"100% cotton fabric, suitable for a women's shirt."},{request:'cotton'}),'Suggested garment use does not make yardage ready-to-wear');
+  assert.equal(fabricProductMatch({...cotton,title:'Cotton socks',description:'Made from cotton fabric. Sold by the manufacturer.'},{request:'cotton'}),null);
+  assert.equal(fabricProductMatch({...cotton,title:'Wool yarn skein',description:'Wool for knitting.'},{request:'wool'}),null);
+  assert.ok(fabricProductMatch({...cotton,description:'Cotton fabric suitable for ready-to-wear shirts. Sold by the yard.'},{request:'cotton'}));
+  assert.ok(fabricProductMatch({...cotton,title:'Metallic thread cotton fabric'},{request:'cotton'}),'A woven metallic thread is not a sewing notion');
 });
 test('visual ranking carries sourced facts and explicit words without treating guesses as facts',()=>{
   const built=buildVisualRankingRequest({garmentImage,traits:{request:'Matte denim, no polyester',preferences:'Natural fibers',garments:[{id:'denim-1',name:'Jacket',fabric:'blue denim'},{id:'shirt-2',name:'Shirt',fabric:'white cotton poplin'}]},products:[{...products[0],description:'100% cotton, brushed denim',composition:'100% cotton',garment:'Jacket',garmentId:'denim-1'}]});
   const prompt=JSON.stringify(built.requestBody.messages);
   assert.match(prompt,/Matte denim, no polyester/);assert.match(prompt,/Natural fibers/);assert.match(prompt,/100% cotton, brushed denim/);assert.match(prompt,/Jacket/);
   assert.match(prompt,/denim-1/);assert.match(prompt,/shirt-2/);assert.match(prompt,/white cotton poplin/);
+});
+test('whole-look garment preferences cannot turn a faux-fur coat into the pants leather',()=>{
+  const coat={id:'coat',name:'Fur coat',fabric:'Brown faux fur',fabric_spec:{fiber:'acrylic',texture:'long pile'}};
+  const pants={id:'pants',name:'Green alligator pants',fabric:'Green embossed leather',fabric_spec:{fiber:'leather'}};
+  const fur={title:'Brown faux fur fabric',description:'100% acrylic long pile fabric. Sold by the yard.',composition:'100% acrylic',image:'https://cdn.example/fur.jpg'};
+  const leather={title:'Emerald green alligator embossed leather fabric',description:'Green leather. Sold by the yard.',composition:'leather',image:'https://cdn.example/leather.jpg'};
+  for(const preferences of ['Brown faux fur for the coat; green alligator leather for the pants',['Brown faux fur for the coat','green alligator leather for the pants'],{coat:'Brown faux fur',pants:'green alligator leather'},JSON.stringify({coat:'Brown faux fur',pants:'green alligator leather'})]){
+    const full={automatic:true,pieces:[coat,pants],preferences,allowVisualOnly:true};
+    assert.equal(fabricProductMatch(fur,full)?.garmentId,'coat');assert.equal(fabricProductMatch(leather,full)?.garmentId,'pants');
+    const selected={...full,pieces:[coat],piece:coat,allPieces:[coat,pants]};
+    assert.equal(fabricProductMatch(fur,selected)?.garmentId,'coat');assert.equal(fabricProductMatch(leather,selected),null);
+    assert.equal(fabricProductMatch(fur,{...full,pieces:[pants],piece:pants,allPieces:[coat,pants]}),null);
+  }
+  const global={automatic:true,pieces:[coat,pants],preferences:{coat:'Brown faux fur',pants:'green leather',exclude:['polyester']},allowVisualOnly:true};
+  assert.equal(fabricProductMatch({...fur,composition:'70% acrylic 30% polyester'},global),null,'Global exclusions survive each scoped positive clause');
+  assert.equal(fabricProductMatch({...fur,composition:'70% acrylic 30% polyester'},{...global,preferences:'No polyester, green leather for pants'}),null,'A following garment clause does not swallow a global exclusion');
+  assert.equal(fabricProductMatch({...fur,composition:'70% acrylic 30% wool'},{...global,preferences:'No polyester, wool or nylon'}),null,'Comma-separated exclusions stay exclusions');
+  assert.equal(fabricProductMatch({...fur,title:'Faux Fur - Chocolate'},global)?.garmentId,'coat','Real acrylic faux-fur yardage does not need the literal word fabric in its title');
+  assert.equal(fabricProductMatch(leather,{...global,pieces:[coat],allPieces:[coat,pants],request:'green leather',automatic:false}),null,'A new generic material request does not remove incompatible saved construction');
+});
+test('scoped latest refinements and qualified inferred fibers preserve garment intent',()=>{
+  const coat={id:'coat',name:'Coat',fabric:'Brown faux fur',fabric_spec:{fiber:'possibly wool; exact fiber unknown'}};
+  const pants={id:'pants',name:'Pants',fabric:'Green leather'};
+  const fur={title:'Brown acrylic faux fur fabric',description:'Acrylic long pile. Sold by the yard.',image:'https://cdn.example/fur.jpg'};
+  assert.equal(fabricProductMatch(fur,{automatic:true,pieces:[coat,pants],preferences:'Brown faux fur for the coat; green leather for pants',allowVisualOnly:true})?.garmentId,'coat','Qualified wool inference does not become an exact fiber requirement');
+  const blue={...fur,title:'Blue acrylic faux fur fabric'};
+  assert.equal(fabricProductMatch(blue,{piece:coat,pieces:[coat],allPieces:[coat,pants],preferences:'Brown for the coat; green leather for pants',history:[{request:'Use blue for the coat'}],request:'less shiny'})?.garmentId,'coat');
+  assert.equal(fabricProductMatch({...fur,description:'Acrylic and polyester long pile.'},{piece:coat,preferences:'No polyester',request:'brown faux fur'}),null);
+  const generic={id:'coat',name:'Coat',fabric:'unknown'};
+  assert.equal(fabricProductMatch({title:'Green leather fabric',image:fur.image},{automatic:true,pieces:[generic,pants],allowVisualOnly:true})?.garmentId,'pants','Concrete material evidence wins over a generic first garment');
+  assert.equal(fabricProductMatch(fur,{automatic:true,pieces:[{id:'one',name:'Coat',fabric:'Brown faux fur'},{id:'two',name:'Coat',fabric:'Brown faux fur'}]}),null,'An ambiguous full-look attribution is not assigned to the first garment');
 });
 
 console.log('\n' + (process.exitCode ? 'FAILED' : passed + ' passed') + '\n');

@@ -6762,17 +6762,24 @@ function cleanReferences() {
 // canvas, and then the next client's work, straight over the old project.
 // Everything saved before New stays exactly as it was.
 async function newConsultation() {
+  const ctx = projectStore._accountContext(), board = _boardEpoch;
+  const turn = ++projectStore._openSeq;
+  const current = () => turn === projectStore._openSeq && board === _boardEpoch &&
+    ctx.uid === projectStore._uid() && ctx.auth === _authSeq;
   // v13.14: a failed save STOPS New. "New" must never cost the old project.
   try {
     if (typeof projectStore !== 'undefined') {
       const ok = await projectStore.flush();
+      if (!current()) return;
       if (ok === false && !confirm('Your last changes are not saved. Start a new project anyway?')) return;
     }
-  } catch (_) {}
+  } catch (_) { return; }
+  if (!current()) return;
   if (typeof projectStore !== 'undefined') projectStore.detach();
   _activeSessionId = null;
-  await _hydrate(async () => { _doClear(); });
-  currentClientName = null;          // project label resets; avatar name stays
+  let clearedBoard;
+  await _hydrate(async () => { _doClear(); currentClientName = null; clearedBoard = _boardEpoch; });
+  if (turn !== projectStore._openSeq || ctx.uid !== projectStore._uid() || ctx.auth !== _authSeq || _boardEpoch !== clearedBoard) return;
   if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
   if (typeof _renderAvatarBody === 'function') _renderAvatarBody();
   if (typeof _renderSessionsDropdown === 'function') _renderSessionsDropdown();
@@ -14654,12 +14661,12 @@ document.addEventListener('visibilitychange', () => {
 // visibilitychange, pagehide is the reliable last-gasp save on that path.
 window.addEventListener('pagehide', () => { clearTimeout(_persistTimer); _persistNow(true); });
 // v13.14: while there are unsaved changes, closing the tab asks first. The
-// last gasp save above usually wins the race, but on a dead connection it
-// cannot, and silently losing the work would break the honest save rule.
+// last gasp save is best-effort, even while online. Warn until its write is
+// acknowledged instead of assuming connectivity guarantees durability.
 window.addEventListener('beforeunload', (e) => {
   try {
     const pendingEdit = !!_persistTimer || (typeof projectStore !== 'undefined' && projectStore._dirty);
-    if (pendingEdit && navigator.onLine === false) { e.preventDefault(); e.returnValue = ''; }
+    if (pendingEdit) { e.preventDefault(); e.returnValue = ''; }
   } catch (_) {}
 });
 
@@ -14671,6 +14678,7 @@ let _persistAgain = false;
 let _flushNow = false;
 async function _persistNow(flush) {
     _flushNow = !!flush;
+    if (flush) { clearTimeout(_persistTimer); _persistTimer = null; }
     // v12.5: cloud projects are the only writable store. Nothing is written to
     // this device, ever. If the designer is signed out there is nothing to
     // write to, so the canvas simply stays unsaved until they sign in.
@@ -15245,16 +15253,18 @@ async function _autosaveTick() {
   if (document.visibilityState !== 'visible') return;
   if (typeof projectStore === 'undefined' || !projectStore.currentId) return;
   if (!projectStore._dirty) return;
+  const ctx = projectStore._accountContext(), id = projectStore.currentId, board = _boardEpoch;
+  const current = () => projectStore._accountValid(ctx) && projectStore.currentId === id && _boardEpoch === board;
   try {
     const res = await projectStore.save();
-    if (!res || !res.written) return;            // v12.5: never flash Autosaved on a non write
+    if (!current() || !res || !res.written || projectStore._dirty) return;
     _autosaveDirty = false;
     _flashAutosaved();
     // v12.7: no list repaint here. Redrawing the project list on every autosave
     // was pure churn, nobody is looking at it while they work.
   } catch (e) {
     console.warn('[Maya autosave]', e && e.message);
-    _notifySyncOffline && _notifySyncOffline();
+    if (current()) _notifySyncOffline && _notifySyncOffline();
   }
 }
 
@@ -15387,9 +15397,11 @@ async function saveSessionNow() {
     showError('Not signed in, so there is nowhere to save. Sign in and press Save again.');
     return;
   }
+  const ctx = projectStore._accountContext(), board = _boardEpoch, request = {};
+  const current = () => projectStore._accountValid(ctx) && _boardEpoch === board;
   const btn = document.getElementById('save-session-btn');
-  const wasLabel = btn ? btn.textContent : null;
-  if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
+  const wasLabel = btn ? (btn._saveLabel ?? btn.textContent) : null;
+  if (btn) { btn._saveLabel = wasLabel; btn._saveRequest = request; btn.textContent = 'Saving…'; btn.disabled = true; }
   try {
     let res;
     if (projectStore.currentId) {
@@ -15399,6 +15411,12 @@ async function saveSessionNow() {
       await projectStore.createFromCanvas(currentClientName);
       res = { written: true };
     }
+    if (!current()) return;
+    // Acknowledging an earlier snapshot must not imply later edits were saved.
+    if (res && res.written && projectStore._dirty) {
+      if (!(await projectStore.flush())) res = { written: false, reason: 'unsaved' };
+      if (!current()) return;
+    }
     // v12.5: "Saved" is only ever said when Firestore actually took the write.
     if (res && res.written) showToast('Saved: ' + (currentClientName || 'project'));
     else if (res && res.reason === 'stale') showError('Another device saved this project first. Your changes are still on this screen and were NOT overwritten; reload only after deciding which copy to keep.');
@@ -15407,10 +15425,10 @@ async function saveSessionNow() {
     _renderSessionsDropdown();
   } catch (e) {
     console.warn('[Maya saveSessionNow]', e);
-    showError('Save failed, your work is still on this screen. ' +
+    if (current()) showError('Save failed, your work is still on this screen. ' +
               (navigator.onLine === false ? 'You are offline.' : (e && e.message) || 'Try again in a moment.'));
   } finally {
-    if (btn) { btn.textContent = wasLabel || 'Save'; btn.disabled = false; }
+    if (btn && btn._saveRequest === request) { btn.textContent = wasLabel || 'Save'; btn.disabled = false; delete btn._saveRequest; delete btn._saveLabel; }
   }
 }
 
@@ -15563,7 +15581,7 @@ const projectStore = {
         s.add(d.id);
         const value = d.data() || {};
         if (!value.cleanupComplete && Array.isArray(value.cleanupPaths) && value.cleanupPaths.length) {
-          this._cleanupDeletedAssets(d.id, value.cleanupPaths, uid).catch(() => {});
+          this._cleanupDeletedAssets(d.id, value.cleanupPaths, uid, ctx).catch(() => {});
         }
       });
       return s;
@@ -15615,29 +15633,29 @@ const projectStore = {
     ))).slice(0, 450);
   },
 
-  async _cleanupDeletedAssets(projectId, paths, expectedUid) {
+  async _cleanupDeletedAssets(projectId, paths, expectedUid, ctx = this._accountContext()) {
     const uid = expectedUid || this._uid();
-    if (!uid || this._uid() !== uid) return false;
+    if (!uid || uid !== ctx.uid || !this._accountValid(ctx)) return false;
     const owned = this._ownedDeletePaths(projectId, paths, uid);
     let complete = true;
     for (const path of owned) {
-      if (this._uid() !== uid) return false;
+      if (!this._accountValid(ctx)) return false;
       // v13.29: a path ending in / is a share's folder of copied pictures.
       if (path.endsWith('/')) {
         try {
           const dir = await firebase.storage().ref(path).listAll();
-          for (const f of dir.items) { if (!(await this.deleteAsset(f.fullPath))) complete = false; }
+          for (const f of dir.items) { if (!this._accountValid(ctx)) return false; if (!(await this.deleteAsset(f.fullPath))) complete = false; }
         } catch (e) { if (!e || e.code !== 'storage/object-not-found') complete = false; }
         continue;
       }
       if (!(await this.deleteAsset(path))) complete = false;
     }
     try {
-      if (this._uid() !== uid) return false;
+      if (!this._accountValid(ctx)) return false;
       const dir = firebase.storage().ref('users/' + uid + '/projects/' + projectId + '/images');
       const list = await dir.listAll();
       for (const file of list.items) {
-        if (this._uid() !== uid) return false;
+        if (!this._accountValid(ctx)) return false;
         if (!(await this.deleteAsset(file.fullPath))) complete = false;
       }
     } catch (e) {
@@ -15645,8 +15663,8 @@ const projectStore = {
     }
     if (complete) {
       try {
-        if (this._uid() !== uid) return false;
-        await this._tombs().doc(projectId).update({ cleanupComplete: true, cleanedAtMs: Date.now() });
+        if (!this._accountValid(ctx)) return false;
+        await this._tombs(uid).doc(projectId).update({ cleanupComplete: true, cleanedAtMs: Date.now() });
       } catch (e) { complete = false; }
     }
     return complete;
@@ -15769,10 +15787,10 @@ const projectStore = {
   // the error travels only to the caller.
   save() {
     if (!this.currentId || !this.ready()) return Promise.resolve({ written: false, reason: 'no-project' });
-    this._dirty = true; // Explicit saves must also remain retryable after failure.
+    this._markDirty(); // Explicit saves may include edits made without a debounce.
     const myId = this.currentId;
     const expectedUid = this.ownerUid;
-    const ctx = this._accountContext();
+    const ctx = { ...this._accountContext(), board: _boardEpoch };
     const run = this._chain.then(() => this._commit(myId, expectedUid, ctx));
     this._chain = run.then(() => {}, () => {});
     return run;
@@ -15780,10 +15798,13 @@ const projectStore = {
 
   async _commit(myId, expectedUid, ctx = this._accountContext()) {
     {
+      const sameProject = () => this.currentId === myId && (ctx.board == null || ctx.board === _boardEpoch);
       if (!this._accountValid(ctx) || !expectedUid || this.ownerUid !== expectedUid || this._uid() !== expectedUid) {
         return { written: false, reason: 'auth-changed' };
       }
-      if (this.currentId !== myId) return { written: false, reason: 'switched' };
+      if (!sameProject()) return { written: false, reason: 'switched' };
+      // An earlier queued write may already include this request's edits.
+      if (!this._dirty) return { written: true, reason: 'already-saved' };
       const generation = this._editGeneration;
       // v13.8: SPEED. This tombstone check was a full network round trip
       // before EVERY save. A tombstone can never be removed once written
@@ -15794,42 +15815,35 @@ const projectStore = {
       if (!this._tombChecked[tombKey]) {
         const tomb = await firebase.firestore().collection('users').doc(expectedUid)
           .collection('projectTombstones').doc(myId).get();
-        if (!this._accountValid(ctx) || this.currentId !== myId) return { written: false, reason: 'auth-changed' };
+        if (!this._accountValid(ctx) || !sameProject()) return { written: false, reason: 'auth-changed' };
         if (tomb.exists) { this.detach(); return { written: false, reason: 'deleted' }; }
         this._tombChecked[tombKey] = true;
       }
       const snapItems  = await this._snapshotForCloud(myId, expectedUid);
-      if (!this._accountValid(ctx) || this.currentId !== myId) return { written: false, reason: 'switched' };
+      if (!this._accountValid(ctx) || !sameProject()) return { written: false, reason: 'switched' };
       const cloudSum   = await this._summaryForCloud(myId, expectedUid);
       if (!this._accountValid(ctx)) return { written: false, reason: 'auth-changed' };
-      if (this.currentId !== myId) return { written: false, reason: 'switched' };
+      if (!sameProject()) return { written: false, reason: 'switched' };
       const docRef = firebase.firestore().collection('users').doc(expectedUid).collection('projects').doc(myId);
       const base = this.revision;
       const name = this.displayName();
       const twoWord = _twoWordFromItems(items);
-      // v12.9: Firestore refuses a document over one megabyte and there was no
-      // check at all, so a big project simply stopped saving without a word.
-      // Measure first, and if it is close, drop the transcript (the least
-      // valuable part, and it is in the summary anyway) rather than lose
-      // everything.
-      let payloadItems = snapItems;
-      let payloadNotes = lastTranscript || '';
-      const _size = () => JSON.stringify({ items: payloadItems, lastSummary: cloudSum, lastTranscript: payloadNotes }).length;
-      if (_size() > 900000) {
-        payloadNotes = '';
-        if (_size() > 900000) {
-          const e = new Error('This project is too large to save. Remove a few cards and try again.');
-          e.tooBig = true;
-          throw e;
-        }
-        console.warn('[projectStore] transcript dropped to fit the size limit');
+      // Reject an oversized draft without dropping the client's notes. A
+      // successful acknowledgement must include everything being saved.
+      const payloadItems = snapItems;
+      const payloadNotes = lastTranscript || '';
+      const payloadSize = new TextEncoder().encode(JSON.stringify({ items: payloadItems, lastSummary: cloudSum, lastTranscript: payloadNotes })).length;
+      if (payloadSize > 900000) {
+        const e = new Error('This project is too large to save. Shorten the notes or remove a few cards and try again.');
+        e.tooBig = true;
+        throw e;
       }
       let createdAtMs = Date.now();
       try {
         await firebase.firestore().runTransaction(async tx => {
         const cur = await tx.get(docRef);
         this._requireAccount(ctx);
-        if (this.currentId !== myId) throw new Error('project-changed');
+        if (!sameProject()) throw new Error('project-changed');
         const rev = (cur.data() || {}).revision || 0;
         if (cur.exists && rev !== base) throw new Error('stale-revision');
         createdAtMs = (cur.data() || {}).createdAtMs || Date.now();
@@ -15860,7 +15874,7 @@ const projectStore = {
           // again, which saved again, which lost again, forever. And when we
           // are on our way OUT of this project there is nothing to reload
           // into, so just stop.
-          if (this._accountValid(ctx) && this.currentId === myId) this._dirty = true;
+          if (this._accountValid(ctx) && sameProject()) this._dirty = true;
           // A conflict must never quietly become a successful exit. Keep the
           // local board intact and dirty; the caller blocks navigation until
           // the designer explicitly chooses to discard it.
@@ -15872,7 +15886,7 @@ const projectStore = {
       // The write may have finished at the same instant an account/project
       // transition began. It is safely stored under expectedUid, but no
       // follow-up metadata may touch whichever account is current now.
-      if (!this._accountValid(ctx) || this.ownerUid !== expectedUid || this.currentId !== myId) {
+      if (!this._accountValid(ctx) || this.ownerUid !== expectedUid || !sameProject()) {
         return { written: true, reason: 'saved-before-context-change' };
       }
       this.revision = base + 1;
@@ -15920,13 +15934,23 @@ const projectStore = {
     if (_saved === false) {
       if (!confirm('This project is not saved yet. Open the other one anyway?')) return false;
     }
+    const leavingId = this.currentId, leavingBoard = _boardEpoch, generation = this._editGeneration;
+    const stillCurrent = () => _my === this._openSeq && this._accountValid(ctx) &&
+      this.currentId === leavingId && _boardEpoch === leavingBoard;
     const userRoot = firebase.firestore().collection('users').doc(expectedUid);
     const dead = await userRoot.collection('projectTombstones').doc(id).get();
-    if (_my !== this._openSeq || !this._accountValid(ctx)) return false;
+    if (!stillCurrent()) return false;
     if (dead.exists) { showToast('That project was deleted.'); return false; }
     const doc = await userRoot.collection('projects').doc(id).get();
-    if (_my !== this._openSeq || !this._accountValid(ctx)) return false;
+    if (!stillCurrent()) return false;
     if (!doc.exists) { showToast('That project is gone.'); return false; }
+    // Target reads can be slow. Preserve edits made after the first flush,
+    // and let New or another selection cancel this pending navigation.
+    if (this._editGeneration !== generation) {
+      const saved = await this.flush();
+      if (!stillCurrent()) return false;
+      if (saved === false && !confirm('This project is not saved yet. Open the other one anyway?')) return false;
+    }
     const v = doc.data() || {};
     this.detach();
     await _hydrate(async () => {
@@ -16116,10 +16140,11 @@ const projectStore = {
   // so the delete was denied and the project stayed alive while the screen
   // said it was gone everywhere.
   async remove(id) {
-    const uid = this._uid();
+    const ctx = this._accountContext(), uid = ctx.uid;
     if (!uid || !/^[\w-]{2,120}$/.test(String(id))) throw new Error('invalid project');
-    const projectRef = this._col().doc(id);
+    const projectRef = this._col(uid).doc(id);
     const projectSnap = await projectRef.get();
+    this._requireAccount(ctx);
     const value = projectSnap.exists ? (projectSnap.data() || {}) : {};
     const legacySource = typeof value.recoveredFrom === 'string' ? value.recoveredFrom : '';
     let paths = (value.items || []).map(saved => saved && saved.card && saved.card.storagePath).filter(Boolean);
@@ -16130,6 +16155,7 @@ const projectStore = {
     // The project, tombstone, wall posts and share links then change together.
     const communityDocs = new Map();
     const mine = await firebase.firestore().collection('community').where('uid', '==', uid).get();
+    this._requireAccount(ctx);
     mine.forEach(doc => {
       const post = doc.data() || {};
       if (post.pid !== id) return;
@@ -16141,6 +16167,7 @@ const projectStore = {
       if (!communityId || communityDocs.has(communityId)) continue;
       const ref = firebase.firestore().collection('community').doc(communityId);
       const doc = await ref.get();
+      this._requireAccount(ctx);
       const post = doc.exists ? (doc.data() || {}) : {};
       if (doc.exists && post.uid === uid) {
         communityDocs.set(doc.id, ref);
@@ -16150,6 +16177,7 @@ const projectStore = {
     const shareDocs = [];
     const shareTokens = [];
     const shares = await firebase.firestore().collection('shares').where('ownerUid', '==', uid).get();
+    this._requireAccount(ctx);
     shares.forEach(doc => {
       if ((doc.data() || {}).pid !== id) return;
       shareDocs.push(doc.ref);
@@ -16162,14 +16190,14 @@ const projectStore = {
     paths = this._ownedDeletePaths(id, paths, uid);
     const batch = firebase.firestore().batch();
     batch.delete(projectRef);
-    batch.set(this._tombs().doc(id), {
+    batch.set(this._tombs(uid).doc(id), {
       deletedAtMs: Date.now(), cleanupPaths: paths, cleanupComplete: false,
     });
     // If this was rescued from the retired sessions collection, permanently
     // block that source too. Otherwise a lost migration flag could copy the
     // deleted project back under a new id on a later load.
     if (legacySource && legacySource !== id) {
-      batch.set(this._tombs().doc(legacySource), {
+      batch.set(this._tombs(uid).doc(legacySource), {
         deletedAtMs: Date.now(), cleanupPaths: [], cleanupComplete: true,
       });
     }
@@ -16179,15 +16207,16 @@ const projectStore = {
 
     // Storage is not transactional with Firestore. Its retry list lives on the
     // permanent tombstone, so an offline deletion resumes on the next load.
-    const cleanupOk = await this._cleanupDeletedAssets(id, paths, uid);
-    await this._touchIndex(id, null, uid);
-    if (this.currentId === id) {
+    const cleanupOk = await this._cleanupDeletedAssets(id, paths, uid, ctx);
+    if (!this._accountValid(ctx)) return { ok: true, tombOk: true, cleanupOk: false };
+    await this._touchIndex(id, null, uid, ctx);
+    if (!this._accountValid(ctx)) return { ok: true, tombOk: true, cleanupOk };
+    if (this.currentId === id && this.ownerUid === uid) {
       this.detach();
-      await _hydrate(async () => { _doClear(); });
-      currentClientName = null;
-      if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
+      await _hydrate(async () => { _doClear(); currentClientName = null; });
+      if (this._accountValid(ctx) && !this.currentId && typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
     }
-    if (_activeSessionId === id) _activeSessionId = null;
+    if (this._accountValid(ctx) && _activeSessionId === id && !this.currentId) _activeSessionId = null;
     return { ok: true, tombOk: true, cleanupOk };
   },
 
@@ -16281,16 +16310,27 @@ function _projectRows(sessions) {
 async function renameProjectById(id, name) {
   name = String(name || '').trim().slice(0, 60);
   if (!name || typeof projectStore === 'undefined') return false;
-  if (projectStore.currentId === id) {
-    currentClientName = name;
-    projectStore.autoName = null;
-    try { await projectStore.save(); } catch (e) { console.warn('[maya rename]', e && e.message); }
-  } else {
-    try {
-      await projectStore._col().doc(id).update({ name, revision: firebase.firestore.FieldValue.increment(1) });
-      await projectStore._touchIndex(id, { name, updatedAt: Date.now() });
-    } catch (e) { showError('Could not rename that project. ' + ((e && e.message) || '')); return false; }
+  const ctx = projectStore._accountContext(), active = projectStore.currentId === id, board = _boardEpoch;
+  const current = () => projectStore._accountValid(ctx) && (!active || (projectStore.currentId === id && _boardEpoch === board));
+  if (!current()) return false;
+  try {
+    if (active) {
+      currentClientName = name;
+      projectStore.autoName = null;
+      projectStore._markDirty();
+      const res = await projectStore.save();
+      if (!current()) return false;
+      if (!res || !res.written || (projectStore._dirty && !(await projectStore.flush()))) throw new Error('The name is not saved yet. Please try again.');
+    } else {
+      await projectStore._col(ctx.uid).doc(id).update({ name, revision: firebase.firestore.FieldValue.increment(1) });
+      if (!current()) return false;
+      await projectStore._touchIndex(id, { name, updatedAt: Date.now() }, ctx.uid, ctx);
+    }
+  } catch (e) {
+    if (current()) { showError('Could not rename that project. ' + ((e && e.message) || '')); if (!active) _renderSessionsDropdown(); }
+    return false;
   }
+  if (!current()) return false;
   projectStore._idxTs = 0;
   if (typeof refreshDrawerClientName === 'function') refreshDrawerClientName();
   if (typeof _renderSessionsDropdown === 'function') _renderSessionsDropdown();

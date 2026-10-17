@@ -81,6 +81,8 @@ console.log('Aesthetic authority passed: shared roles/materials, all Admin headi
 await import('./workspace-authority.mjs?authority');
 await import('./admin-automation-examples.mjs?authority');
 await import('./brief-workspace-ui.mjs?authority');
+await import('./fabric-workflow-ui.mjs?authority');
+await import('./operation-save-failures.mjs?authority');
 await import('./client-voice-ui.mjs?authority');
 await import('./admin-voice-ui.mjs?authority');
 console.log('Changed workspace, fabric and three voice surfaces passed the final shared authority gate.');

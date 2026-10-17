@@ -36,7 +36,7 @@ await page.route('**/*',async route=>{
     return route.fulfill({json:{ok:true,...book}});
   }
   if(u.pathname==='/api/admin/submissions')return route.fulfill({json:{folders:[{id:'project-A',files:[{id:'summary-A',name:'summary.json'},{id:'image-A',name:'dream-garment.png'},{id:'pieces-A',name:'pieces.json'}]}]}});
-  if(u.pathname==='/api/admin/subfile')return u.searchParams.get('id')==='pieces-A'?route.fulfill({json:{pieces}}):u.searchParams.get('id')==='summary-A'?route.fulfill({json:{fabric_preferences:'100% wool, no polyester'}}):route.fulfill({body:png,contentType:'image/png'});
+  if(u.pathname==='/api/admin/subfile')return u.searchParams.get('id')==='pieces-A'?route.fulfill({json:{pieces},headers:{'X-Maya-Generation':'1'}}):u.searchParams.get('id')==='summary-A'?route.fulfill({json:{fabric_preferences:'100% wool, no polyester'}}):route.fulfill({body:png,contentType:'image/png'});
   if(u.pathname.startsWith('/api/'))return route.fulfill({json:{ok:true}});
   const path=u.pathname==='/backend.html'?'/backend/backend.html':u.pathname==='/operations.html'?'/backend/operations.html':u.pathname;
   try{return route.fulfill({body:readFileSync(root+decodeURIComponent(path)),contentType:({'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp'})[extname(path).toLowerCase()]||'text/plain'});}catch{return route.abort();}

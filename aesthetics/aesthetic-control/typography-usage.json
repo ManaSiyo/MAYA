@@ -483,7 +483,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 427,
+          "line": 426,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -529,7 +529,7 @@
           "class": "",
           "reason": "subheadline",
           "role": "subheadline",
-          "snippet": "<h3>How it works</h3><p class=\"small\">Your Sheet is the master list. Refresh it to update pros"
+          "snippet": "<h3>How it works</h3><p class=\"small\">Your Sheet is the master list. Refresh to update prospec"
         },
         {
           "page": "backend/outbound.html",
@@ -543,7 +543,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 94,
+          "line": 95,
           "tag": "h2",
           "id": null,
           "class": "",
@@ -553,7 +553,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 102,
+          "line": 103,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -563,7 +563,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 113,
+          "line": 114,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -573,7 +573,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "h2",
           "id": null,
           "class": "",
@@ -583,7 +583,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 175,
+          "line": 176,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -593,7 +593,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 178,
+          "line": 179,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -913,7 +913,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3149,
+          "line": 3211,
           "tag": "h4",
           "id": "inv-title",
           "class": "",
@@ -923,7 +923,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4291,
+          "line": 4353,
           "tag": "h2",
           "id": "maya-confirmation-title",
           "class": "",
@@ -1500,7 +1500,7 @@
             },
             {
               "page": "backend/operations.html",
-              "line": 427
+              "line": 426
             },
             {
               "page": "backend/outbound.html",
@@ -1524,27 +1524,27 @@
             },
             {
               "page": "backend/outbound.js",
-              "line": 94
+              "line": 95
             },
             {
               "page": "backend/outbound.js",
-              "line": 102
+              "line": 103
             },
             {
               "page": "backend/outbound.js",
-              "line": 113
+              "line": 114
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 175
+              "line": 176
             },
             {
               "page": "backend/outbound.js",
-              "line": 178
+              "line": 179
             },
             {
               "page": "backend/privacy.html",
@@ -1640,11 +1640,11 @@
             },
             {
               "page": "backend/status.html",
-              "line": 3149
+              "line": 3211
             },
             {
               "page": "backend/status.html",
-              "line": 4291
+              "line": 4353
             },
             {
               "page": "backend/terms.html",
@@ -1922,7 +1922,7 @@
       "locations": [
         {
           "page": "backend/outbound.js",
-          "line": 92,
+          "line": 93,
           "tag": "strong",
           "id": null,
           "class": "",
@@ -1972,7 +1972,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2796,
+          "line": 2858,
           "tag": "div",
           "id": null,
           "class": "v",
@@ -1982,7 +1982,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2998,
+          "line": 3060,
           "tag": "span",
           "id": null,
           "class": "lead-identity",
@@ -1992,7 +1992,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2832,
+          "line": 2894,
           "tag": "div",
           "id": null,
           "class": "bl-tile v",
@@ -2007,7 +2007,7 @@
           "locations": [
             {
               "page": "backend/outbound.js",
-              "line": 92
+              "line": 93
             },
             {
               "page": "backend/status.html",
@@ -2027,11 +2027,11 @@
             },
             {
               "page": "backend/status.html",
-              "line": 2796
+              "line": 2858
             },
             {
               "page": "backend/status.html",
-              "line": 2832
+              "line": 2894
             }
           ]
         },
@@ -2040,7 +2040,7 @@
           "locations": [
             {
               "page": "backend/status.html",
-              "line": 2998
+              "line": 3060
             }
           ]
         }
@@ -2051,7 +2051,7 @@
       "locations": [
         {
           "page": "backend/status.html",
-          "line": 2998,
+          "line": 3060,
           "tag": "time",
           "id": null,
           "class": "lead-signup",
@@ -2066,7 +2066,7 @@
           "locations": [
             {
               "page": "backend/status.html",
-              "line": 2998
+              "line": 3060
             }
           ]
         }
@@ -2303,7 +2303,7 @@
           "class": "small",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<p class=\"small\">Your Sheet is the master list. Refresh it to update prospects.</p><p class=\"small\">Choose "
+          "snippet": "<p class=\"small\">Your Sheet is the master list. Refresh to update prospects.</p><p class=\"small\">Choose a c"
         },
         {
           "page": "backend/outbound.html",
@@ -2313,7 +2313,7 @@
           "class": "small",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<p class=\"small\">Choose a campaign \u2192 pick a prospect \u2192 write an email. Connect up to two Gmail accounts to "
+          "snippet": "<p class=\"small\">Choose a campaign \u2192 prospect \u2192 draft. Connect up to two Gmail accounts to send and track r"
         },
         {
           "page": "backend/outbound.html",
@@ -2323,7 +2323,7 @@
           "class": "small muted",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<p id=\"competitors\" class=\"small muted\" style=\"white-space:pre-wrap;margin-top:12px\">Add a campaign to define your audience and competitors.</p><button id=\"edit"
+          "snippet": "<p id=\"competitors\" class=\"small muted\" style=\"white-space:pre-wrap;margin-top:12px\">Add a campaign to define audience and competitors.</p><button id=\"edit-camp"
         },
         {
           "page": "backend/outbound.html",
@@ -2337,17 +2337,17 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 87,
+          "line": 88,
           "tag": "p",
           "id": null,
           "class": "muted small",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<p class=\"muted small\" style=\"margin-top:18px\">Start with a campaign for your ideal customers.</p>';"
+          "snippet": "<p class=\"muted small\" style=\"margin-top:18px\">Start a campaign for your ideal customers.</p>';"
         },
         {
           "page": "backend/outbound.js",
-          "line": 102,
+          "line": 103,
           "tag": "p",
           "id": null,
           "class": "small muted",
@@ -2357,7 +2357,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 113,
+          "line": 114,
           "tag": "p",
           "id": null,
           "class": "history-detail",
@@ -2367,7 +2367,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 132,
+          "line": 133,
           "tag": "p",
           "id": null,
           "class": "small",
@@ -2377,7 +2377,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 139,
+          "line": 140,
           "tag": "th",
           "id": null,
           "class": "",
@@ -2387,7 +2387,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 141,
+          "line": 142,
           "tag": "th",
           "id": null,
           "class": "",
@@ -2397,7 +2397,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 141,
+          "line": 142,
           "tag": "th",
           "id": null,
           "class": "",
@@ -2407,7 +2407,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 141,
+          "line": 142,
           "tag": "p",
           "id": null,
           "class": "empty",
@@ -2417,7 +2417,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 148,
+          "line": 149,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2427,7 +2427,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 148,
+          "line": 149,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2437,7 +2437,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 148,
+          "line": 149,
           "tag": "td",
           "id": null,
           "class": "date-cell",
@@ -2447,7 +2447,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 148,
+          "line": 149,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2457,7 +2457,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 148,
+          "line": 149,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2467,7 +2467,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 148,
+          "line": 149,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2477,7 +2477,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 148,
+          "line": 149,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2487,7 +2487,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 148,
+          "line": 149,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2497,7 +2497,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 148,
+          "line": 149,
           "tag": "td",
           "id": null,
           "class": "sheet-subject",
@@ -2507,7 +2507,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 148,
+          "line": 149,
           "tag": "td",
           "id": null,
           "class": "sheet-status",
@@ -2517,7 +2517,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 148,
+          "line": 149,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2527,7 +2527,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 148,
+          "line": 149,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2537,7 +2537,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 148,
+          "line": 149,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2547,7 +2547,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 148,
+          "line": 149,
           "tag": "td",
           "id": null,
           "class": "",
@@ -2557,7 +2557,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "p",
           "id": null,
           "class": "muted",
@@ -2567,7 +2567,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2577,7 +2577,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2587,7 +2587,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "p",
           "id": null,
           "class": "",
@@ -2597,17 +2597,17 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "p",
           "id": null,
           "class": "small muted",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<p class=\"small muted\" style=\"margin-top:14px\">${blocked?'This person is suppressed. Outreach is disabled.':'Emails send only after your "
+          "snippet": "<p class=\"small muted\" style=\"margin-top:14px\">${blocked?'This person is suppressed. Outreach is disabled.':'Emails require your confirma"
         },
         {
           "page": "backend/outbound.js",
-          "line": 175,
+          "line": 176,
           "tag": "p",
           "id": null,
           "class": "muted small",
@@ -2617,7 +2617,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 177,
+          "line": 178,
           "tag": "p",
           "id": null,
           "class": "muted small",
@@ -2627,7 +2627,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 178,
+          "line": 179,
           "tag": "p",
           "id": null,
           "class": "muted",
@@ -2637,7 +2637,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 178,
+          "line": 179,
           "tag": "p",
           "id": null,
           "class": "small muted",
@@ -2647,17 +2647,17 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 178,
+          "line": 179,
           "tag": "p",
           "id": null,
           "class": "muted small",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<p class=\"muted small\" style=\"margin-bottom:14px\">Results combine recorded stages with synchronized contact activity. AI recommendations do "
+          "snippet": "<p class=\"muted small\" style=\"margin-bottom:14px\">Results combine recorded stages and synchronized activity. AI recommendations never change"
         },
         {
           "page": "backend/outbound.js",
-          "line": 184,
+          "line": 185,
           "tag": "p",
           "id": null,
           "class": "small muted",
@@ -2667,17 +2667,17 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 186,
+          "line": 187,
           "tag": "p",
           "id": null,
           "class": "muted small",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<p class=\"muted small\">Sheet import reads up to 10,000 rows. Existing emails gain campaign membership without ano"
+          "snippet": "<p class=\"muted small\">Sheet import reads up to 10,000 rows. Existing emails join campaigns without duplicate pro"
         },
         {
           "page": "backend/outbound.js",
-          "line": 268,
+          "line": 270,
           "tag": "p",
           "id": null,
           "class": "small muted",
@@ -2687,7 +2687,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 268,
+          "line": 270,
           "tag": "p",
           "id": null,
           "class": "small muted",
@@ -2697,7 +2697,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 268,
+          "line": 270,
           "tag": "p",
           "id": null,
           "class": "small muted",
@@ -2707,7 +2707,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 284,
+          "line": 286,
           "tag": "p",
           "id": null,
           "class": "small muted",
@@ -2717,7 +2717,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 284,
+          "line": 286,
           "tag": "p",
           "id": null,
           "class": "template-preview",
@@ -2727,17 +2727,17 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 288,
+          "line": 290,
           "tag": "p",
           "id": null,
           "class": "empty",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<p class=\"empty\">No synchronized activity yet. Connect Gmail and update the CRM from the menu.</p>');mountC"
+          "snippet": "<p class=\"empty\">No activity yet. Connect Gmail and update CRM from the menu.</p>');mountCollection(events,"
         },
         {
           "page": "backend/outbound.js",
-          "line": 288,
+          "line": 290,
           "tag": "p",
           "id": null,
           "class": "",
@@ -3403,7 +3403,7 @@
           "class": "",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<p data-maya-type=\"P1\">Every image MAYA generates is built from four layers: the <b>design specification</b> from"
+          "snippet": "<p data-maya-type=\"P1\">Every MAYA image combines four layers: the <b>design specification</b> from the consultati"
         },
         {
           "page": "backend/status.html",
@@ -3443,7 +3443,7 @@
           "class": "",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<p data-maya-type=\"P1\"><b>Your three fields:</b> saved here, stored in Firestore, read by the live app at sign in"
+          "snippet": "<p data-maya-type=\"P1\"><b>Your four fields:</b> stored in Firestore, read at sign in, and added to every render a"
         },
         {
           "page": "backend/status.html",
@@ -3503,7 +3503,7 @@
           "class": "it",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<div class=\"it\" data-maya-type=\"P1\">index.html, status.html, backend.html<small data-maya-type=\"P3\">The three pages. Published"
+          "snippet": "<div class=\"it\" data-maya-type=\"P1\">index.html, status.html, backend.html<small data-maya-type=\"P3\">The three pages. Visitors "
         },
         {
           "page": "backend/status.html",
@@ -3513,7 +3513,7 @@
           "class": "it",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<div class=\"it\" data-maya-type=\"P1\">aesthetics/<small data-maya-type=\"P3\">ui, fabrics, headshots, the operations engine. All p"
+          "snippet": "<div class=\"it\" data-maya-type=\"P1\">aesthetics/<small data-maya-type=\"P3\">ui, fabrics, headshots and operations engine. Publis"
         },
         {
           "page": "backend/status.html",
@@ -3593,7 +3593,7 @@
           "class": "note",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<div class=\"note\">Nothing asked yet. Everything anyone asks Maya for lands here.</div>';"
+          "snippet": "<div class=\"note\">No requests yet. Requests to Maya appear here.</div>';"
         },
         {
           "page": "backend/status.html",
@@ -3617,7 +3617,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2745,
+          "line": 2807,
           "tag": "th",
           "id": null,
           "class": "",
@@ -3627,7 +3627,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2745,
+          "line": 2807,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -3637,7 +3637,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2745,
+          "line": 2807,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -3647,7 +3647,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2752,
+          "line": 2814,
           "tag": "td",
           "id": null,
           "class": "",
@@ -3657,7 +3657,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2752,
+          "line": 2814,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -3667,7 +3667,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2753,
+          "line": 2815,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -3677,7 +3677,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2912,
+          "line": 2974,
           "tag": "td",
           "id": null,
           "class": "",
@@ -3687,7 +3687,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2918,
+          "line": 2980,
           "tag": "td",
           "id": null,
           "class": "",
@@ -3697,7 +3697,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2952,
+          "line": 3014,
           "tag": "th",
           "id": null,
           "class": "' + cls + '",
@@ -3707,7 +3707,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2963,
+          "line": 3025,
           "tag": "td",
           "id": null,
           "class": "' + cls + '",
@@ -3717,17 +3717,17 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3150,
+          "line": 3212,
           "tag": "p",
           "id": null,
           "class": "inv-lede",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<p class=\"inv-lede\">One click builds a real Wix pay link: single use, service tax, the Mana Siyo logo as the i"
+          "snippet": "<p class=\"inv-lede\">Create builds a single-use Wix pay link with service tax and the Mana Siyo logo until a MA"
         },
         {
           "page": "backend/status.html",
-          "line": 3476,
+          "line": 3538,
           "tag": "p",
           "id": null,
           "class": "",
@@ -3737,7 +3737,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3476,
+          "line": 3538,
           "tag": "p",
           "id": null,
           "class": "note",
@@ -3747,7 +3747,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3512,
+          "line": 3574,
           "tag": "div",
           "id": null,
           "class": "msg-main",
@@ -3757,7 +3757,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3658,
+          "line": 3720,
           "tag": "p",
           "id": null,
           "class": "",
@@ -3767,7 +3767,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3767,
+          "line": 3829,
           "tag": "p",
           "id": null,
           "class": "",
@@ -3777,7 +3777,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3799,
+          "line": 3861,
           "tag": "p",
           "id": "lead-note-feedback",
           "class": "",
@@ -3787,7 +3787,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3952,
+          "line": 4014,
           "tag": "code",
           "id": null,
           "class": "",
@@ -3797,7 +3797,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4117,
+          "line": 4179,
           "tag": "td",
           "id": null,
           "class": "",
@@ -3807,7 +3807,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4125,
+          "line": 4187,
           "tag": "th",
           "id": null,
           "class": "",
@@ -3817,7 +3817,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4125,
+          "line": 4187,
           "tag": "th",
           "id": null,
           "class": "",
@@ -3827,7 +3827,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4125,
+          "line": 4187,
           "tag": "th",
           "id": null,
           "class": "",
@@ -3837,7 +3837,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4126,
+          "line": 4188,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -3847,7 +3847,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4126,
+          "line": 4188,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -3857,7 +3857,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4126,
+          "line": 4188,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -3867,7 +3867,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4126,
+          "line": 4188,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -3877,7 +3877,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4126,
+          "line": 4188,
           "tag": "th",
           "id": null,
           "class": "num",
@@ -3887,7 +3887,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4130,
+          "line": 4192,
           "tag": "td",
           "id": null,
           "class": "",
@@ -3897,7 +3897,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4132,
+          "line": 4194,
           "tag": "td",
           "id": null,
           "class": "",
@@ -3907,7 +3907,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4133,
+          "line": 4195,
           "tag": "td",
           "id": null,
           "class": "",
@@ -3917,7 +3917,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4134,
+          "line": 4196,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -3927,7 +3927,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4135,
+          "line": 4197,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -3937,7 +3937,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4136,
+          "line": 4198,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -3947,7 +3947,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4137,
+          "line": 4199,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -3957,7 +3957,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4138,
+          "line": 4200,
           "tag": "td",
           "id": null,
           "class": "num",
@@ -4407,7 +4407,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 17103,
+          "line": 17143,
           "tag": "p",
           "id": null,
           "class": "",
@@ -4417,7 +4417,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 17109,
+          "line": 17149,
           "tag": "p",
           "id": null,
           "class": "",
@@ -4667,7 +4667,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 17172,
+          "line": 17212,
           "tag": "p",
           "id": null,
           "class": "",
@@ -4677,7 +4677,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 17178,
+          "line": 17218,
           "tag": "p",
           "id": null,
           "class": "",
@@ -4720,7 +4720,7 @@
             },
             {
               "page": "backend/status.html",
-              "line": 3952
+              "line": 4014
             }
           ]
         },
@@ -4809,51 +4809,47 @@
             },
             {
               "page": "backend/outbound.js",
-              "line": 87
+              "line": 88
             },
             {
               "page": "backend/outbound.js",
-              "line": 102
+              "line": 103
             },
             {
               "page": "backend/outbound.js",
-              "line": 113
+              "line": 114
             },
             {
               "page": "backend/outbound.js",
-              "line": 132
+              "line": 133
             },
             {
               "page": "backend/outbound.js",
-              "line": 141
+              "line": 142
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 175
-            },
-            {
-              "page": "backend/outbound.js",
-              "line": 177
+              "line": 176
             },
             {
               "page": "backend/outbound.js",
@@ -4861,47 +4857,51 @@
             },
             {
               "page": "backend/outbound.js",
-              "line": 178
+              "line": 179
             },
             {
               "page": "backend/outbound.js",
-              "line": 178
+              "line": 179
             },
             {
               "page": "backend/outbound.js",
-              "line": 184
+              "line": 179
             },
             {
               "page": "backend/outbound.js",
-              "line": 186
+              "line": 185
             },
             {
               "page": "backend/outbound.js",
-              "line": 268
+              "line": 187
             },
             {
               "page": "backend/outbound.js",
-              "line": 268
+              "line": 270
             },
             {
               "page": "backend/outbound.js",
-              "line": 268
+              "line": 270
             },
             {
               "page": "backend/outbound.js",
-              "line": 284
+              "line": 270
             },
             {
               "page": "backend/outbound.js",
-              "line": 284
+              "line": 286
             },
             {
               "page": "backend/outbound.js",
-              "line": 288
+              "line": 286
             },
             {
               "page": "backend/outbound.js",
-              "line": 288
+              "line": 290
+            },
+            {
+              "page": "backend/outbound.js",
+              "line": 290
             },
             {
               "page": "backend/privacy.html",
@@ -5193,27 +5193,27 @@
             },
             {
               "page": "backend/status.html",
-              "line": 3150
+              "line": 3212
             },
             {
               "page": "backend/status.html",
-              "line": 3476
+              "line": 3538
             },
             {
               "page": "backend/status.html",
-              "line": 3476
+              "line": 3538
             },
             {
               "page": "backend/status.html",
-              "line": 3658
+              "line": 3720
             },
             {
               "page": "backend/status.html",
-              "line": 3767
+              "line": 3829
             },
             {
               "page": "backend/status.html",
-              "line": 3799
+              "line": 3861
             },
             {
               "page": "backend/terms.html",
@@ -5393,11 +5393,11 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 17103
+              "line": 17143
             },
             {
               "page": "frontend/index.html",
-              "line": 17109
+              "line": 17149
             },
             {
               "page": "playground/index.html",
@@ -5497,11 +5497,11 @@
             },
             {
               "page": "playground/index.html",
-              "line": 17172
+              "line": 17212
             },
             {
               "page": "playground/index.html",
-              "line": 17178
+              "line": 17218
             }
           ]
         },
@@ -5571,179 +5571,179 @@
           "locations": [
             {
               "page": "backend/outbound.js",
-              "line": 139
+              "line": 140
             },
             {
               "page": "backend/outbound.js",
-              "line": 141
+              "line": 142
             },
             {
               "page": "backend/outbound.js",
-              "line": 141
+              "line": 142
             },
             {
               "page": "backend/outbound.js",
-              "line": 148
+              "line": 149
             },
             {
               "page": "backend/outbound.js",
-              "line": 148
+              "line": 149
             },
             {
               "page": "backend/outbound.js",
-              "line": 148
+              "line": 149
             },
             {
               "page": "backend/outbound.js",
-              "line": 148
+              "line": 149
             },
             {
               "page": "backend/outbound.js",
-              "line": 148
+              "line": 149
             },
             {
               "page": "backend/outbound.js",
-              "line": 148
+              "line": 149
             },
             {
               "page": "backend/outbound.js",
-              "line": 148
+              "line": 149
             },
             {
               "page": "backend/outbound.js",
-              "line": 148
+              "line": 149
             },
             {
               "page": "backend/outbound.js",
-              "line": 148
+              "line": 149
             },
             {
               "page": "backend/outbound.js",
-              "line": 148
+              "line": 149
             },
             {
               "page": "backend/outbound.js",
-              "line": 148
+              "line": 149
             },
             {
               "page": "backend/outbound.js",
-              "line": 148
+              "line": 149
             },
             {
               "page": "backend/outbound.js",
-              "line": 148
+              "line": 149
             },
             {
               "page": "backend/outbound.js",
-              "line": 148
+              "line": 149
             },
             {
               "page": "backend/status.html",
-              "line": 2745
+              "line": 2807
             },
             {
               "page": "backend/status.html",
-              "line": 2745
+              "line": 2807
             },
             {
               "page": "backend/status.html",
-              "line": 2745
+              "line": 2807
             },
             {
               "page": "backend/status.html",
-              "line": 2752
+              "line": 2814
             },
             {
               "page": "backend/status.html",
-              "line": 2752
+              "line": 2814
             },
             {
               "page": "backend/status.html",
-              "line": 2753
+              "line": 2815
             },
             {
               "page": "backend/status.html",
-              "line": 2912
+              "line": 2974
             },
             {
               "page": "backend/status.html",
-              "line": 2918
+              "line": 2980
             },
             {
               "page": "backend/status.html",
-              "line": 2952
+              "line": 3014
             },
             {
               "page": "backend/status.html",
-              "line": 2963
+              "line": 3025
             },
             {
               "page": "backend/status.html",
-              "line": 4117
+              "line": 4179
             },
             {
               "page": "backend/status.html",
-              "line": 4125
+              "line": 4187
             },
             {
               "page": "backend/status.html",
-              "line": 4125
+              "line": 4187
             },
             {
               "page": "backend/status.html",
-              "line": 4125
+              "line": 4187
             },
             {
               "page": "backend/status.html",
-              "line": 4126
+              "line": 4188
             },
             {
               "page": "backend/status.html",
-              "line": 4126
+              "line": 4188
             },
             {
               "page": "backend/status.html",
-              "line": 4126
+              "line": 4188
             },
             {
               "page": "backend/status.html",
-              "line": 4126
+              "line": 4188
             },
             {
               "page": "backend/status.html",
-              "line": 4126
+              "line": 4188
             },
             {
               "page": "backend/status.html",
-              "line": 4130
+              "line": 4192
             },
             {
               "page": "backend/status.html",
-              "line": 4132
+              "line": 4194
             },
             {
               "page": "backend/status.html",
-              "line": 4133
+              "line": 4195
             },
             {
               "page": "backend/status.html",
-              "line": 4134
+              "line": 4196
             },
             {
               "page": "backend/status.html",
-              "line": 4135
+              "line": 4197
             },
             {
               "page": "backend/status.html",
-              "line": 4136
+              "line": 4198
             },
             {
               "page": "backend/status.html",
-              "line": 4137
+              "line": 4199
             },
             {
               "page": "backend/status.html",
-              "line": 4138
+              "line": 4200
             }
           ]
         },
@@ -5752,7 +5752,7 @@
           "locations": [
             {
               "page": "backend/status.html",
-              "line": 3512
+              "line": 3574
             }
           ]
         }
@@ -5763,7 +5763,7 @@
       "locations": [
         {
           "page": "backend/outbound.js",
-          "line": 92,
+          "line": 93,
           "tag": "span",
           "id": null,
           "class": "",
@@ -5818,7 +5818,7 @@
           "locations": [
             {
               "page": "backend/outbound.js",
-              "line": 92
+              "line": 93
             },
             {
               "page": "backend/status.html",
@@ -6365,7 +6365,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 2173,
+          "line": 2178,
           "tag": "button",
           "id": null,
           "class": "client-item",
@@ -6375,7 +6375,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 2190,
+          "line": 2195,
           "tag": "button",
           "id": null,
           "class": "client-item' + active + '",
@@ -6385,7 +6385,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 3003,
+          "line": 3017,
           "tag": "button",
           "id": null,
           "class": "' + cls + (nonFabric?' piece-non-fabric':'') + '",
@@ -6395,7 +6395,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 3008,
+          "line": 3022,
           "tag": "button",
           "id": "dissect-start-pill",
           "class": "piece-pill dissect-start",
@@ -6405,7 +6405,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 3009,
+          "line": 3023,
           "tag": "button",
           "id": "dissect-missing-pill",
           "class": "piece-pill",
@@ -6415,7 +6415,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 3010,
+          "line": 3024,
           "tag": "button",
           "id": "dissect-save-pill",
           "class": "piece-pill",
@@ -6425,7 +6425,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 3330,
+          "line": 3344,
           "tag": "button",
           "id": null,
           "class": "",
@@ -6505,7 +6505,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 424,
+          "line": 423,
           "tag": "button",
           "id": null,
           "class": "icon-btn hamburger drawer-burger",
@@ -6515,7 +6515,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 448,
+          "line": 447,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6525,7 +6525,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 449,
+          "line": 448,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6535,7 +6535,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 452,
+          "line": 451,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6545,7 +6545,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 453,
+          "line": 452,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6555,7 +6555,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 456,
+          "line": 455,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6565,7 +6565,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 967,
+          "line": 1001,
           "tag": "button",
           "id": null,
           "class": "pill sm ${CUR.kind==='rd'?'active':''}",
@@ -6575,7 +6575,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 970,
+          "line": 1004,
           "tag": "button",
           "id": null,
           "class": "pill sm ${act}",
@@ -6585,7 +6585,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 972,
+          "line": 1006,
           "tag": "button",
           "id": null,
           "class": "pill sm ${CUR.kind==='grounded'?'active':''}",
@@ -6595,7 +6595,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 974,
+          "line": 1008,
           "tag": "button",
           "id": null,
           "class": "pill sm ${CUR.kind==='svg'?'active':''}",
@@ -6845,7 +6845,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 45,
+          "line": 46,
           "tag": "span",
           "id": null,
           "class": "status-pill",
@@ -6855,7 +6855,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 77,
+          "line": 78,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6865,7 +6865,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 78,
+          "line": 79,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6875,7 +6875,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 87,
+          "line": 88,
           "tag": "button",
           "id": null,
           "class": "campaign ${!master&&c.id===campaignId?'active':''}",
@@ -6885,7 +6885,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 102,
+          "line": 103,
           "tag": "button",
           "id": null,
           "class": "person ${p.id===selected?'active':''}",
@@ -6895,7 +6895,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 132,
+          "line": 133,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6905,7 +6905,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 132,
+          "line": 133,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6915,7 +6915,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 139,
+          "line": 140,
           "tag": "button",
           "id": null,
           "class": "column-filter ${columnFilters[key]?'filtered':''}",
@@ -6925,7 +6925,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 148,
+          "line": 149,
           "tag": "button",
           "id": null,
           "class": "person-link",
@@ -6935,7 +6935,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 148,
+          "line": 149,
           "tag": "button",
           "id": null,
           "class": "write-email",
@@ -6945,7 +6945,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "button",
           "id": "find-email",
           "class": "",
@@ -6955,7 +6955,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "button",
           "id": "verify-email",
           "class": "",
@@ -6965,7 +6965,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "button",
           "id": "generate",
           "class": "primary",
@@ -6975,7 +6975,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6985,7 +6985,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "small",
           "id": null,
           "class": "",
@@ -6995,7 +6995,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "label",
           "id": null,
           "class": "",
@@ -7005,7 +7005,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "label",
           "id": null,
           "class": "",
@@ -7015,7 +7015,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "label",
           "id": null,
           "class": "",
@@ -7025,7 +7025,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "label",
           "id": null,
           "class": "",
@@ -7035,7 +7035,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "label",
           "id": null,
           "class": "",
@@ -7045,7 +7045,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "button",
           "id": "save-draft",
           "class": "",
@@ -7055,7 +7055,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "button",
           "id": "sample-email",
           "class": "",
@@ -7065,7 +7065,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "button",
           "id": "send-email",
           "class": "primary",
@@ -7075,7 +7075,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 160,
+          "line": 161,
           "tag": "button",
           "id": "compose",
           "class": "",
@@ -7085,7 +7085,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 175,
+          "line": 176,
           "tag": "button",
           "id": null,
           "class": "",
@@ -7095,7 +7095,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 186,
+          "line": 187,
           "tag": "label",
           "id": null,
           "class": "",
@@ -7105,7 +7105,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 242,
+          "line": 243,
           "tag": "label",
           "id": null,
           "class": "",
@@ -7115,7 +7115,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 254,
+          "line": 256,
           "tag": "button",
           "id": null,
           "class": "",
@@ -7125,7 +7125,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 268,
+          "line": 270,
           "tag": "label",
           "id": null,
           "class": "",
@@ -7135,7 +7135,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 268,
+          "line": 270,
           "tag": "label",
           "id": null,
           "class": "",
@@ -7145,7 +7145,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 288,
+          "line": 290,
           "tag": "small",
           "id": null,
           "class": "",
@@ -7155,7 +7155,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 289,
+          "line": 291,
           "tag": "small",
           "id": null,
           "class": "",
@@ -7165,7 +7165,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 289,
+          "line": 291,
           "tag": "button",
           "id": null,
           "class": "",
@@ -7175,7 +7175,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 289,
+          "line": 291,
           "tag": "label",
           "id": null,
           "class": "",
@@ -7185,7 +7185,7 @@
         },
         {
           "page": "backend/outbound.js",
-          "line": 289,
+          "line": 291,
           "tag": "label",
           "id": null,
           "class": "",
@@ -7971,7 +7971,7 @@
           "class": "",
           "reason": "caption",
           "role": "caption",
-          "snippet": "<small data-maya-type=\"P3\">The three pages. Published copies are what the world sees.</small></div>"
+          "snippet": "<small data-maya-type=\"P3\">The three pages. Visitors see the published copies.</small></div>"
         },
         {
           "page": "backend/status.html",
@@ -7981,7 +7981,7 @@
           "class": "",
           "reason": "caption",
           "role": "caption",
-          "snippet": "<small data-maya-type=\"P3\">ui, fabrics, headshots, the operations engine. All published on deploy.</small></div>"
+          "snippet": "<small data-maya-type=\"P3\">ui, fabrics, headshots and operations engine. Published on deploy.</small></div>"
         },
         {
           "page": "backend/status.html",
@@ -8125,7 +8125,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2726,
+          "line": 2788,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -8135,7 +8135,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2796,
+          "line": 2858,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -8145,7 +8145,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2832,
+          "line": 2894,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -8155,7 +8155,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2955,
+          "line": 3017,
           "tag": "label",
           "id": null,
           "class": "",
@@ -8165,7 +8165,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2998,
+          "line": 3060,
           "tag": "button",
           "id": null,
           "class": "lead-open",
@@ -8175,7 +8175,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3001,
+          "line": 3063,
           "tag": "span",
           "id": null,
           "class": "status-pill lead-status",
@@ -8185,7 +8185,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3003,
+          "line": 3065,
           "tag": "button",
           "id": null,
           "class": "lead-note-vp lead-note-edit",
@@ -8195,7 +8195,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3148,
+          "line": 3210,
           "tag": "button",
           "id": null,
           "class": "inv-close",
@@ -8205,7 +8205,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3151,
+          "line": 3213,
           "tag": "label",
           "id": null,
           "class": "inv-label",
@@ -8215,7 +8215,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3153,
+          "line": 3215,
           "tag": "label",
           "id": null,
           "class": "inv-label",
@@ -8225,7 +8225,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3155,
+          "line": 3217,
           "tag": "label",
           "id": null,
           "class": "inv-label",
@@ -8235,7 +8235,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3157,
+          "line": 3219,
           "tag": "button",
           "id": "inv-create",
           "class": "inv-btn primary",
@@ -8245,7 +8245,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3160,
+          "line": 3222,
           "tag": "button",
           "id": "inv-email",
           "class": "inv-btn",
@@ -8255,7 +8255,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3161,
+          "line": 3223,
           "tag": "button",
           "id": "inv-text",
           "class": "inv-btn",
@@ -8265,7 +8265,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3163,
+          "line": 3225,
           "tag": "label",
           "id": null,
           "class": "inv-label",
@@ -8275,7 +8275,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3165,
+          "line": 3227,
           "tag": "button",
           "id": "inv-save",
           "class": "inv-btn",
@@ -8285,7 +8285,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3476,
+          "line": 3538,
           "tag": "small",
           "id": null,
           "class": "",
@@ -8295,7 +8295,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3512,
+          "line": 3574,
           "tag": "small",
           "id": null,
           "class": "",
@@ -8305,7 +8305,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3658,
+          "line": 3720,
           "tag": "small",
           "id": null,
           "class": "",
@@ -8315,7 +8315,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3659,
+          "line": 3721,
           "tag": "div",
           "id": null,
           "class": "bub-when",
@@ -8325,7 +8325,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3767,
+          "line": 3829,
           "tag": "button",
           "id": "'+esc(p.id)+'",
           "class": "msg-call",
@@ -8335,7 +8335,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3799,
+          "line": 3861,
           "tag": "button",
           "id": "lead-note-cancel",
           "class": "msg-call",
@@ -8345,7 +8345,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 3799,
+          "line": 3861,
           "tag": "button",
           "id": "lead-note-save",
           "class": "msg-call",
@@ -8355,7 +8355,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4290,
+          "line": 4352,
           "tag": "button",
           "id": "voice-chip",
           "class": "maya-pill",
@@ -8365,7 +8365,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 4291,
+          "line": 4353,
           "tag": "button",
           "id": null,
           "class": "",
@@ -8375,7 +8375,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2210,
+          "line": 2272,
           "tag": "button",
           "id": null,
           "class": "",
@@ -8385,7 +8385,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2271,
+          "line": 2333,
           "tag": "button",
           "id": null,
           "class": "",
@@ -8395,7 +8395,7 @@
         },
         {
           "page": "backend/status.html",
-          "line": 2274,
+          "line": 2336,
           "tag": "button",
           "id": null,
           "class": "",
@@ -9365,7 +9365,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 7839,
+          "line": 7846,
           "tag": "button",
           "id": "mmp-go",
           "class": "mmp-go",
@@ -9375,7 +9375,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 7840,
+          "line": 7847,
           "tag": "button",
           "id": "mmp-later",
           "class": "mmp-later",
@@ -9385,7 +9385,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 8393,
+          "line": 8400,
           "tag": "button",
           "id": null,
           "class": "drawer-action",
@@ -9395,7 +9395,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 8396,
+          "line": 8403,
           "tag": "button",
           "id": null,
           "class": "drawer-action",
@@ -9405,7 +9405,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 8411,
+          "line": 8418,
           "tag": "label",
           "id": null,
           "class": "",
@@ -9415,7 +9415,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 8565,
+          "line": 8572,
           "tag": "button",
           "id": null,
           "class": "avatar-switch-rename",
@@ -9425,7 +9425,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 8566,
+          "line": 8573,
           "tag": "button",
           "id": null,
           "class": "avatar-switch-delete",
@@ -9435,7 +9435,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 8573,
+          "line": 8580,
           "tag": "button",
           "id": null,
           "class": "drawer-action",
@@ -9445,7 +9445,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 8574,
+          "line": 8581,
           "tag": "button",
           "id": null,
           "class": "drawer-action",
@@ -9455,7 +9455,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 8575,
+          "line": 8582,
           "tag": "button",
           "id": null,
           "class": "drawer-action",
@@ -9465,7 +9465,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 8578,
+          "line": 8585,
           "tag": "button",
           "id": null,
           "class": "avatar-switch-row avatar-switch-new",
@@ -9475,7 +9475,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 9822,
+          "line": 9829,
           "tag": "button",
           "id": "tvf-cancel",
           "class": "",
@@ -9485,7 +9485,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 9823,
+          "line": 9830,
           "tag": "button",
           "id": "tvf-send",
           "class": "",
@@ -9495,7 +9495,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 10614,
+          "line": 10621,
           "tag": "button",
           "id": null,
           "class": "pin-cta",
@@ -9505,23 +9505,13 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 10620,
+          "line": 10627,
           "tag": "button",
           "id": null,
           "class": "pin-cta",
           "reason": "pill",
           "role": "pill",
           "snippet": "<button class=\"pin-cta\" onclick=\"closePinterestDrawer();openLinkImport()\">Paste addresses</button>');"
-        },
-        {
-          "page": "frontend/index.html",
-          "line": 10632,
-          "tag": "button",
-          "id": null,
-          "class": "pin-cta",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"pin-cta\" onclick=\"_pinDrawerSignIn()\">Connect Pinterest</button>');"
         },
         {
           "page": "frontend/index.html",
@@ -9531,11 +9521,21 @@
           "class": "pin-cta",
           "reason": "pill",
           "role": "pill",
+          "snippet": "<button class=\"pin-cta\" onclick=\"_pinDrawerSignIn()\">Connect Pinterest</button>');"
+        },
+        {
+          "page": "frontend/index.html",
+          "line": 10646,
+          "tag": "button",
+          "id": null,
+          "class": "pin-cta",
+          "reason": "pill",
+          "role": "pill",
           "snippet": "<button class=\"pin-cta\" onclick=\"_pinDrawerConnect()\">Cancel</button>');"
         },
         {
           "page": "frontend/index.html",
-          "line": 10672,
+          "line": 10679,
           "tag": "button",
           "id": null,
           "class": "pin-cta",
@@ -9545,7 +9545,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 10710,
+          "line": 10717,
           "tag": "button",
           "id": null,
           "class": "pin-tile",
@@ -9555,7 +9555,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 10724,
+          "line": 10731,
           "tag": "button",
           "id": null,
           "class": "pin-pic",
@@ -9565,7 +9565,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 10733,
+          "line": 10740,
           "tag": "button",
           "id": "pin-load-more",
           "class": "drawer-action",
@@ -9575,7 +9575,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 12140,
+          "line": 12147,
           "tag": "button",
           "id": null,
           "class": "chip-x",
@@ -9585,7 +9585,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 12272,
+          "line": 12279,
           "tag": "button",
           "id": null,
           "class": "vn-pill-x",
@@ -9595,7 +9595,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 12322,
+          "line": 12329,
           "tag": "button",
           "id": null,
           "class": "chip-x",
@@ -9605,7 +9605,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 13366,
+          "line": 13373,
           "tag": "button",
           "id": null,
           "class": "top-btn violet",
@@ -9615,7 +9615,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 13376,
+          "line": 13383,
           "tag": "button",
           "id": null,
           "class": "top-btn subtle",
@@ -9625,7 +9625,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 13614,
+          "line": 13621,
           "tag": "button",
           "id": "share-copy-btn",
           "class": "upload-choose-btn",
@@ -9635,7 +9635,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 13615,
+          "line": 13622,
           "tag": "button",
           "id": null,
           "class": "upload-choose-btn",
@@ -9645,7 +9645,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 13994,
+          "line": 14001,
           "tag": "button",
           "id": null,
           "class": "top-btn violet",
@@ -9655,7 +9655,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 14023,
+          "line": 14030,
           "tag": "button",
           "id": null,
           "class": "fabrics-back",
@@ -9665,7 +9665,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 14189,
+          "line": 14196,
           "tag": "button",
           "id": null,
           "class": "staged-x",
@@ -9675,7 +9675,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 14197,
+          "line": 14204,
           "tag": "button",
           "id": null,
           "class": "staged-x",
@@ -9685,7 +9685,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 15068,
+          "line": 15076,
           "tag": "button",
           "id": null,
           "class": "tip-amt",
@@ -9695,7 +9695,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 15073,
+          "line": 15081,
           "tag": "button",
           "id": null,
           "class": "modal-text-btn violet",
@@ -9705,7 +9705,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 15074,
+          "line": 15082,
           "tag": "button",
           "id": null,
           "class": "modal-text-btn",
@@ -9715,7 +9715,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 16188,
+          "line": 16217,
           "tag": "button",
           "id": null,
           "class": "session-item session-item-new",
@@ -9725,7 +9725,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 16198,
+          "line": 16227,
           "tag": "button",
           "id": null,
           "class": "session-item-share",
@@ -9735,7 +9735,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 16201,
+          "line": 16230,
           "tag": "button",
           "id": null,
           "class": "session-item-delete",
@@ -9745,7 +9745,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 16202,
+          "line": 16231,
           "tag": "button",
           "id": null,
           "class": "session-item-rename",
@@ -9755,7 +9755,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 17563,
+          "line": 17603,
           "tag": "button",
           "id": "mcp-upgrade",
           "class": "mcp-upgrade",
@@ -9765,7 +9765,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 17564,
+          "line": 17604,
           "tag": "button",
           "id": "mcp-later",
           "class": "mcp-later",
@@ -9775,7 +9775,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 18127,
+          "line": 18167,
           "tag": "button",
           "id": "pg-maya-chip",
           "class": "maya-pill",
@@ -9785,7 +9785,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 18461,
+          "line": 18501,
           "tag": "button",
           "id": null,
           "class": "pin-pic",
@@ -9795,7 +9795,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 7670,
+          "line": 7677,
           "tag": "button",
           "id": null,
           "class": "",
@@ -9805,7 +9805,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 17951,
+          "line": 17991,
           "tag": "button",
           "id": null,
           "class": "",
@@ -9815,7 +9815,7 @@
         },
         {
           "page": "frontend/index.html",
-          "line": 18474,
+          "line": 18514,
           "tag": "button",
           "id": null,
           "class": "",
@@ -10775,7 +10775,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 7905,
+          "line": 7912,
           "tag": "button",
           "id": "mmp-go",
           "class": "mmp-go",
@@ -10785,7 +10785,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 7906,
+          "line": 7913,
           "tag": "button",
           "id": "mmp-later",
           "class": "mmp-later",
@@ -10795,7 +10795,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 8459,
+          "line": 8466,
           "tag": "button",
           "id": null,
           "class": "drawer-action",
@@ -10805,7 +10805,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 8462,
+          "line": 8469,
           "tag": "button",
           "id": null,
           "class": "drawer-action",
@@ -10815,7 +10815,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 8477,
+          "line": 8484,
           "tag": "label",
           "id": null,
           "class": "",
@@ -10825,7 +10825,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 8634,
+          "line": 8641,
           "tag": "button",
           "id": null,
           "class": "avatar-switch-rename",
@@ -10835,7 +10835,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 8635,
+          "line": 8642,
           "tag": "button",
           "id": null,
           "class": "avatar-switch-delete",
@@ -10845,7 +10845,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 8642,
+          "line": 8649,
           "tag": "button",
           "id": null,
           "class": "drawer-action",
@@ -10855,7 +10855,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 8643,
+          "line": 8650,
           "tag": "button",
           "id": null,
           "class": "drawer-action",
@@ -10865,7 +10865,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 8644,
+          "line": 8651,
           "tag": "button",
           "id": null,
           "class": "drawer-action",
@@ -10875,7 +10875,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 8647,
+          "line": 8654,
           "tag": "button",
           "id": null,
           "class": "avatar-switch-row avatar-switch-new",
@@ -10885,7 +10885,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 9891,
+          "line": 9898,
           "tag": "button",
           "id": "tvf-cancel",
           "class": "",
@@ -10895,7 +10895,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 9892,
+          "line": 9899,
           "tag": "button",
           "id": "tvf-send",
           "class": "",
@@ -10905,7 +10905,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 10683,
+          "line": 10690,
           "tag": "button",
           "id": null,
           "class": "pin-cta",
@@ -10915,23 +10915,13 @@
         },
         {
           "page": "playground/index.html",
-          "line": 10689,
+          "line": 10696,
           "tag": "button",
           "id": null,
           "class": "pin-cta",
           "reason": "pill",
           "role": "pill",
           "snippet": "<button class=\"pin-cta\" onclick=\"closePinterestDrawer();openLinkImport()\">Paste addresses</button>');"
-        },
-        {
-          "page": "playground/index.html",
-          "line": 10701,
-          "tag": "button",
-          "id": null,
-          "class": "pin-cta",
-          "reason": "pill",
-          "role": "pill",
-          "snippet": "<button class=\"pin-cta\" onclick=\"_pinDrawerSignIn()\">Connect Pinterest</button>');"
         },
         {
           "page": "playground/index.html",
@@ -10941,11 +10931,21 @@
           "class": "pin-cta",
           "reason": "pill",
           "role": "pill",
+          "snippet": "<button class=\"pin-cta\" onclick=\"_pinDrawerSignIn()\">Connect Pinterest</button>');"
+        },
+        {
+          "page": "playground/index.html",
+          "line": 10715,
+          "tag": "button",
+          "id": null,
+          "class": "pin-cta",
+          "reason": "pill",
+          "role": "pill",
           "snippet": "<button class=\"pin-cta\" onclick=\"_pinDrawerConnect()\">Cancel</button>');"
         },
         {
           "page": "playground/index.html",
-          "line": 10741,
+          "line": 10748,
           "tag": "button",
           "id": null,
           "class": "pin-cta",
@@ -10955,7 +10955,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 10779,
+          "line": 10786,
           "tag": "button",
           "id": null,
           "class": "pin-tile",
@@ -10965,7 +10965,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 10793,
+          "line": 10800,
           "tag": "button",
           "id": null,
           "class": "pin-pic",
@@ -10975,7 +10975,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 10802,
+          "line": 10809,
           "tag": "button",
           "id": "pin-load-more",
           "class": "drawer-action",
@@ -10985,7 +10985,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 12209,
+          "line": 12216,
           "tag": "button",
           "id": null,
           "class": "chip-x",
@@ -10995,7 +10995,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 12341,
+          "line": 12348,
           "tag": "button",
           "id": null,
           "class": "vn-pill-x",
@@ -11005,7 +11005,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 12391,
+          "line": 12398,
           "tag": "button",
           "id": null,
           "class": "chip-x",
@@ -11015,7 +11015,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 13435,
+          "line": 13442,
           "tag": "button",
           "id": null,
           "class": "top-btn violet",
@@ -11025,7 +11025,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 13445,
+          "line": 13452,
           "tag": "button",
           "id": null,
           "class": "top-btn subtle",
@@ -11035,7 +11035,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 13683,
+          "line": 13690,
           "tag": "button",
           "id": "share-copy-btn",
           "class": "upload-choose-btn",
@@ -11045,7 +11045,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 13684,
+          "line": 13691,
           "tag": "button",
           "id": null,
           "class": "upload-choose-btn",
@@ -11055,7 +11055,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 14063,
+          "line": 14070,
           "tag": "button",
           "id": null,
           "class": "top-btn violet",
@@ -11065,7 +11065,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 14092,
+          "line": 14099,
           "tag": "button",
           "id": null,
           "class": "fabrics-back",
@@ -11075,7 +11075,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 14258,
+          "line": 14265,
           "tag": "button",
           "id": null,
           "class": "staged-x",
@@ -11085,7 +11085,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 14266,
+          "line": 14273,
           "tag": "button",
           "id": null,
           "class": "staged-x",
@@ -11095,7 +11095,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 15137,
+          "line": 15145,
           "tag": "button",
           "id": null,
           "class": "tip-amt",
@@ -11105,7 +11105,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 15142,
+          "line": 15150,
           "tag": "button",
           "id": null,
           "class": "modal-text-btn violet",
@@ -11115,7 +11115,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 15143,
+          "line": 15151,
           "tag": "button",
           "id": null,
           "class": "modal-text-btn",
@@ -11125,7 +11125,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 16257,
+          "line": 16286,
           "tag": "button",
           "id": null,
           "class": "session-item session-item-new",
@@ -11135,7 +11135,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 16267,
+          "line": 16296,
           "tag": "button",
           "id": null,
           "class": "session-item-share",
@@ -11145,7 +11145,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 16270,
+          "line": 16299,
           "tag": "button",
           "id": null,
           "class": "session-item-delete",
@@ -11155,7 +11155,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 16271,
+          "line": 16300,
           "tag": "button",
           "id": null,
           "class": "session-item-rename",
@@ -11165,7 +11165,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 17632,
+          "line": 17672,
           "tag": "button",
           "id": "mcp-upgrade",
           "class": "mcp-upgrade",
@@ -11175,7 +11175,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 17633,
+          "line": 17673,
           "tag": "button",
           "id": "mcp-later",
           "class": "mcp-later",
@@ -11185,7 +11185,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 18208,
+          "line": 18248,
           "tag": "button",
           "id": "pg-maya-chip",
           "class": "maya-pill",
@@ -11195,7 +11195,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 18542,
+          "line": 18582,
           "tag": "button",
           "id": null,
           "class": "pin-pic",
@@ -11205,7 +11205,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 7736,
+          "line": 7743,
           "tag": "button",
           "id": null,
           "class": "",
@@ -11215,7 +11215,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 18020,
+          "line": 18060,
           "tag": "button",
           "id": null,
           "class": "",
@@ -11225,7 +11225,7 @@
         },
         {
           "page": "playground/index.html",
-          "line": 18555,
+          "line": 18595,
           "tag": "button",
           "id": null,
           "class": "",
@@ -11432,31 +11432,31 @@
             },
             {
               "page": "backend/backend.html",
-              "line": 2173
+              "line": 2178
             },
             {
               "page": "backend/backend.html",
-              "line": 2190
+              "line": 2195
             },
             {
               "page": "backend/backend.html",
-              "line": 3003
+              "line": 3017
             },
             {
               "page": "backend/backend.html",
-              "line": 3008
+              "line": 3022
             },
             {
               "page": "backend/backend.html",
-              "line": 3009
+              "line": 3023
             },
             {
               "page": "backend/backend.html",
-              "line": 3010
+              "line": 3024
             },
             {
               "page": "backend/backend.html",
-              "line": 3330
+              "line": 3344
             },
             {
               "page": "backend/operations.html",
@@ -11472,7 +11472,11 @@
             },
             {
               "page": "backend/operations.html",
-              "line": 424
+              "line": 423
+            },
+            {
+              "page": "backend/operations.html",
+              "line": 447
             },
             {
               "page": "backend/operations.html",
@@ -11480,7 +11484,7 @@
             },
             {
               "page": "backend/operations.html",
-              "line": 449
+              "line": 451
             },
             {
               "page": "backend/operations.html",
@@ -11488,27 +11492,23 @@
             },
             {
               "page": "backend/operations.html",
-              "line": 453
+              "line": 455
             },
             {
               "page": "backend/operations.html",
-              "line": 456
+              "line": 1001
             },
             {
               "page": "backend/operations.html",
-              "line": 967
+              "line": 1004
             },
             {
               "page": "backend/operations.html",
-              "line": 970
+              "line": 1006
             },
             {
               "page": "backend/operations.html",
-              "line": 972
-            },
-            {
-              "page": "backend/operations.html",
-              "line": 974
+              "line": 1008
             },
             {
               "page": "backend/outbound.html",
@@ -11608,11 +11608,7 @@
             },
             {
               "page": "backend/outbound.js",
-              "line": 45
-            },
-            {
-              "page": "backend/outbound.js",
-              "line": 77
+              "line": 46
             },
             {
               "page": "backend/outbound.js",
@@ -11620,119 +11616,123 @@
             },
             {
               "page": "backend/outbound.js",
-              "line": 87
+              "line": 79
             },
             {
               "page": "backend/outbound.js",
-              "line": 102
+              "line": 88
             },
             {
               "page": "backend/outbound.js",
-              "line": 132
+              "line": 103
             },
             {
               "page": "backend/outbound.js",
-              "line": 132
+              "line": 133
             },
             {
               "page": "backend/outbound.js",
-              "line": 139
+              "line": 133
             },
             {
               "page": "backend/outbound.js",
-              "line": 148
+              "line": 140
             },
             {
               "page": "backend/outbound.js",
-              "line": 148
+              "line": 149
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 149
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 175
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 186
+              "line": 176
             },
             {
               "page": "backend/outbound.js",
-              "line": 242
+              "line": 187
             },
             {
               "page": "backend/outbound.js",
-              "line": 254
+              "line": 243
             },
             {
               "page": "backend/outbound.js",
-              "line": 268
+              "line": 256
             },
             {
               "page": "backend/outbound.js",
-              "line": 268
+              "line": 270
             },
             {
               "page": "backend/outbound.js",
-              "line": 289
+              "line": 270
             },
             {
               "page": "backend/outbound.js",
-              "line": 289
+              "line": 291
             },
             {
               "page": "backend/outbound.js",
-              "line": 289
+              "line": 291
+            },
+            {
+              "page": "backend/outbound.js",
+              "line": 291
             },
             {
               "page": "backend/status.html",
@@ -11940,87 +11940,87 @@
             },
             {
               "page": "backend/status.html",
-              "line": 2955
+              "line": 3017
             },
             {
               "page": "backend/status.html",
-              "line": 2998
+              "line": 3060
             },
             {
               "page": "backend/status.html",
-              "line": 3001
+              "line": 3063
             },
             {
               "page": "backend/status.html",
-              "line": 3003
+              "line": 3065
             },
             {
               "page": "backend/status.html",
-              "line": 3148
+              "line": 3210
             },
             {
               "page": "backend/status.html",
-              "line": 3151
+              "line": 3213
             },
             {
               "page": "backend/status.html",
-              "line": 3153
+              "line": 3215
             },
             {
               "page": "backend/status.html",
-              "line": 3155
+              "line": 3217
             },
             {
               "page": "backend/status.html",
-              "line": 3157
+              "line": 3219
             },
             {
               "page": "backend/status.html",
-              "line": 3160
+              "line": 3222
             },
             {
               "page": "backend/status.html",
-              "line": 3161
+              "line": 3223
             },
             {
               "page": "backend/status.html",
-              "line": 3163
+              "line": 3225
             },
             {
               "page": "backend/status.html",
-              "line": 3165
+              "line": 3227
             },
             {
               "page": "backend/status.html",
-              "line": 3767
+              "line": 3829
             },
             {
               "page": "backend/status.html",
-              "line": 3799
+              "line": 3861
             },
             {
               "page": "backend/status.html",
-              "line": 3799
+              "line": 3861
             },
             {
               "page": "backend/status.html",
-              "line": 4290
+              "line": 4352
             },
             {
               "page": "backend/status.html",
-              "line": 4291
+              "line": 4353
             },
             {
               "page": "backend/status.html",
-              "line": 2210
+              "line": 2272
             },
             {
               "page": "backend/status.html",
-              "line": 2271
+              "line": 2333
             },
             {
               "page": "backend/status.html",
-              "line": 2274
+              "line": 2336
             },
             {
               "page": "backend/verify.html",
@@ -12404,31 +12404,27 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 7839
+              "line": 7846
             },
             {
               "page": "frontend/index.html",
-              "line": 7840
+              "line": 7847
             },
             {
               "page": "frontend/index.html",
-              "line": 8393
+              "line": 8400
             },
             {
               "page": "frontend/index.html",
-              "line": 8396
+              "line": 8403
             },
             {
               "page": "frontend/index.html",
-              "line": 8411
+              "line": 8418
             },
             {
               "page": "frontend/index.html",
-              "line": 8565
-            },
-            {
-              "page": "frontend/index.html",
-              "line": 8566
+              "line": 8572
             },
             {
               "page": "frontend/index.html",
@@ -12436,35 +12432,35 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 8574
+              "line": 8580
             },
             {
               "page": "frontend/index.html",
-              "line": 8575
+              "line": 8581
             },
             {
               "page": "frontend/index.html",
-              "line": 8578
+              "line": 8582
             },
             {
               "page": "frontend/index.html",
-              "line": 9822
+              "line": 8585
             },
             {
               "page": "frontend/index.html",
-              "line": 9823
+              "line": 9829
             },
             {
               "page": "frontend/index.html",
-              "line": 10614
+              "line": 9830
             },
             {
               "page": "frontend/index.html",
-              "line": 10620
+              "line": 10621
             },
             {
               "page": "frontend/index.html",
-              "line": 10632
+              "line": 10627
             },
             {
               "page": "frontend/index.html",
@@ -12472,119 +12468,123 @@
             },
             {
               "page": "frontend/index.html",
-              "line": 10672
+              "line": 10646
             },
             {
               "page": "frontend/index.html",
-              "line": 10710
+              "line": 10679
             },
             {
               "page": "frontend/index.html",
-              "line": 10724
+              "line": 10717
             },
             {
               "page": "frontend/index.html",
-              "line": 10733
+              "line": 10731
             },
             {
               "page": "frontend/index.html",
-              "line": 12140
+              "line": 10740
             },
             {
               "page": "frontend/index.html",
-              "line": 12272
+              "line": 12147
             },
             {
               "page": "frontend/index.html",
-              "line": 12322
+              "line": 12279
             },
             {
               "page": "frontend/index.html",
-              "line": 13366
+              "line": 12329
             },
             {
               "page": "frontend/index.html",
-              "line": 13376
+              "line": 13373
             },
             {
               "page": "frontend/index.html",
-              "line": 13614
+              "line": 13383
             },
             {
               "page": "frontend/index.html",
-              "line": 13615
+              "line": 13621
             },
             {
               "page": "frontend/index.html",
-              "line": 13994
+              "line": 13622
             },
             {
               "page": "frontend/index.html",
-              "line": 14023
+              "line": 14001
             },
             {
               "page": "frontend/index.html",
-              "line": 14189
+              "line": 14030
             },
             {
               "page": "frontend/index.html",
-              "line": 14197
+              "line": 14196
             },
             {
               "page": "frontend/index.html",
-              "line": 15068
+              "line": 14204
             },
             {
               "page": "frontend/index.html",
-              "line": 15073
+              "line": 15076
             },
             {
               "page": "frontend/index.html",
-              "line": 15074
+              "line": 15081
             },
             {
               "page": "frontend/index.html",
-              "line": 16188
+              "line": 15082
             },
             {
               "page": "frontend/index.html",
-              "line": 16198
+              "line": 16217
             },
             {
               "page": "frontend/index.html",
-              "line": 16201
+              "line": 16227
             },
             {
               "page": "frontend/index.html",
-              "line": 16202
+              "line": 16230
             },
             {
               "page": "frontend/index.html",
-              "line": 17563
+              "line": 16231
             },
             {
               "page": "frontend/index.html",
-              "line": 17564
+              "line": 17603
             },
             {
               "page": "frontend/index.html",
-              "line": 18127
+              "line": 17604
             },
             {
               "page": "frontend/index.html",
-              "line": 18461
+              "line": 18167
             },
             {
               "page": "frontend/index.html",
-              "line": 7670
+              "line": 18501
             },
             {
               "page": "frontend/index.html",
-              "line": 17951
+              "line": 7677
             },
             {
               "page": "frontend/index.html",
-              "line": 18474
+              "line": 17991
+            },
+            {
+              "page": "frontend/index.html",
+              "line": 18514
             },
             {
               "page": "playground/index.html",
@@ -12964,31 +12964,27 @@
             },
             {
               "page": "playground/index.html",
-              "line": 7905
+              "line": 7912
             },
             {
               "page": "playground/index.html",
-              "line": 7906
+              "line": 7913
             },
             {
               "page": "playground/index.html",
-              "line": 8459
+              "line": 8466
             },
             {
               "page": "playground/index.html",
-              "line": 8462
+              "line": 8469
             },
             {
               "page": "playground/index.html",
-              "line": 8477
+              "line": 8484
             },
             {
               "page": "playground/index.html",
-              "line": 8634
-            },
-            {
-              "page": "playground/index.html",
-              "line": 8635
+              "line": 8641
             },
             {
               "page": "playground/index.html",
@@ -12996,35 +12992,35 @@
             },
             {
               "page": "playground/index.html",
-              "line": 8643
+              "line": 8649
             },
             {
               "page": "playground/index.html",
-              "line": 8644
+              "line": 8650
             },
             {
               "page": "playground/index.html",
-              "line": 8647
+              "line": 8651
             },
             {
               "page": "playground/index.html",
-              "line": 9891
+              "line": 8654
             },
             {
               "page": "playground/index.html",
-              "line": 9892
+              "line": 9898
             },
             {
               "page": "playground/index.html",
-              "line": 10683
+              "line": 9899
             },
             {
               "page": "playground/index.html",
-              "line": 10689
+              "line": 10690
             },
             {
               "page": "playground/index.html",
-              "line": 10701
+              "line": 10696
             },
             {
               "page": "playground/index.html",
@@ -13032,119 +13028,123 @@
             },
             {
               "page": "playground/index.html",
-              "line": 10741
+              "line": 10715
             },
             {
               "page": "playground/index.html",
-              "line": 10779
+              "line": 10748
             },
             {
               "page": "playground/index.html",
-              "line": 10793
+              "line": 10786
             },
             {
               "page": "playground/index.html",
-              "line": 10802
+              "line": 10800
             },
             {
               "page": "playground/index.html",
-              "line": 12209
+              "line": 10809
             },
             {
               "page": "playground/index.html",
-              "line": 12341
+              "line": 12216
             },
             {
               "page": "playground/index.html",
-              "line": 12391
+              "line": 12348
             },
             {
               "page": "playground/index.html",
-              "line": 13435
+              "line": 12398
             },
             {
               "page": "playground/index.html",
-              "line": 13445
+              "line": 13442
             },
             {
               "page": "playground/index.html",
-              "line": 13683
+              "line": 13452
             },
             {
               "page": "playground/index.html",
-              "line": 13684
+              "line": 13690
             },
             {
               "page": "playground/index.html",
-              "line": 14063
+              "line": 13691
             },
             {
               "page": "playground/index.html",
-              "line": 14092
+              "line": 14070
             },
             {
               "page": "playground/index.html",
-              "line": 14258
+              "line": 14099
             },
             {
               "page": "playground/index.html",
-              "line": 14266
+              "line": 14265
             },
             {
               "page": "playground/index.html",
-              "line": 15137
+              "line": 14273
             },
             {
               "page": "playground/index.html",
-              "line": 15142
+              "line": 15145
             },
             {
               "page": "playground/index.html",
-              "line": 15143
+              "line": 15150
             },
             {
               "page": "playground/index.html",
-              "line": 16257
+              "line": 15151
             },
             {
               "page": "playground/index.html",
-              "line": 16267
+              "line": 16286
             },
             {
               "page": "playground/index.html",
-              "line": 16270
+              "line": 16296
             },
             {
               "page": "playground/index.html",
-              "line": 16271
+              "line": 16299
             },
             {
               "page": "playground/index.html",
-              "line": 17632
+              "line": 16300
             },
             {
               "page": "playground/index.html",
-              "line": 17633
+              "line": 17672
             },
             {
               "page": "playground/index.html",
-              "line": 18208
+              "line": 17673
             },
             {
               "page": "playground/index.html",
-              "line": 18542
+              "line": 18248
             },
             {
               "page": "playground/index.html",
-              "line": 7736
+              "line": 18582
             },
             {
               "page": "playground/index.html",
-              "line": 18020
+              "line": 7743
             },
             {
               "page": "playground/index.html",
-              "line": 18555
+              "line": 18060
+            },
+            {
+              "page": "playground/index.html",
+              "line": 18595
             }
           ]
         },
@@ -13185,15 +13185,15 @@
             },
             {
               "page": "backend/outbound.js",
-              "line": 160
+              "line": 161
             },
             {
               "page": "backend/outbound.js",
-              "line": 288
+              "line": 290
             },
             {
               "page": "backend/outbound.js",
-              "line": 289
+              "line": 291
             },
             {
               "page": "backend/status.html",
@@ -13301,31 +13301,31 @@
             },
             {
               "page": "backend/status.html",
-              "line": 2726
+              "line": 2788
             },
             {
               "page": "backend/status.html",
-              "line": 2796
+              "line": 2858
             },
             {
               "page": "backend/status.html",
-              "line": 2832
+              "line": 2894
             },
             {
               "page": "backend/status.html",
-              "line": 3476
+              "line": 3538
             },
             {
               "page": "backend/status.html",
-              "line": 3512
+              "line": 3574
             },
             {
               "page": "backend/status.html",
-              "line": 3658
+              "line": 3720
             },
             {
               "page": "backend/status.html",
-              "line": 3659
+              "line": 3721
             },
             {
               "page": "frontend/index.html",

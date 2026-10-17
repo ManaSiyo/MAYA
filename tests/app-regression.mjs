@@ -57,6 +57,8 @@ const SHARED_VOICE_AUDIO = webVoiceSession({model:'gpt-realtime-2.1-mini',instru
 const LEAD_STORE_SOURCE = readFileSync(join(ROOT, 'docs/server/lead-store.mjs'), 'utf8');
 if (!SERVER_SOURCE.includes('withinVoiceBudget(loadAdminCommandSnapshot(), buildAdminCommandSnapshot(), 400)')) throw Error('Admin voice must bound optional analytics context to 400ms without inventing data.');
 const FABRIC_SOURCE = readFileSync(join(ROOT, 'docs/server/fabric-sourcing.js'), 'utf8');
+const FABRIC_SEARCH_SOURCE = readFileSync(join(ROOT, 'docs/server/fabric-search.mjs'), 'utf8');
+const FABRIC_UI_SOURCE = readFileSync(join(ROOT, 'aesthetics/ui/fabric-assistant.js'), 'utf8');
 const AI_ROUTER_SOURCE = readFileSync(join(ROOT, 'docs/server/ai-router.js'), 'utf8');
 const ADMIN_COMMAND_SOURCE = readFileSync(join(ROOT, 'docs/server/admin-command.mjs'), 'utf8');
 const SERVER_DOCKER = readFileSync(join(ROOT, 'docs/server/Dockerfile'), 'utf8');
@@ -172,7 +174,7 @@ ok('Lead status filter has an isolated readable layer and scoped section carets'
  ok('Outbound data and dialogs use compact functional type',CANON_SOURCE.includes('.people-table :is(th,td,.person-link) {font-size:var(--maya-text-table);}') && CANON_SOURCE.includes('#modal-title,.empty h2) {font-size:16px;'));
  ok('Drawer settings stay within the Brief and out of focus when closed',CANON_SOURCE.includes('#drawer-settings {transform:none;visibility:hidden;'));
  ok('Late account responses and expired sessions cannot restore another workspace',ui.includes('epoch!==authEpoch') && ui.includes('authEpoch++;clearWorkspace();'));
- ok('Pending requests lock edits and background reloads preserve drafts',ui.includes("querySelectorAll('button,input,select,textarea')") && ui.includes('const fresh=await api();if(!hasUnsavedDraft()&&!busy)'));
+ ok('Pending requests lock edits and background reloads preserve drafts',ui.includes("querySelectorAll('button,input,select,textarea')") && ui.includes('const fresh=await api();if(!current()){intelligencePending=true;return;}if(!hasUnsavedDraft()&&!busy)'));
  ok('Meter requests have cancellation and clear stale values on failure',meter.includes('this.request?.abort()') && meter.includes("if(current())this.reset("));
  ok('Independent CRM sources continue when Gmail listing fails',crm.includes("await runPart('Gmail connections'"));
  ok('CRM fault recovery is checked in the release gate',BUILD_SOURCE.includes('node tests/crm-failure-ui.mjs'));
@@ -330,10 +332,20 @@ ok('frontend and Admin detect new commits even when the display version stays un
   MAP_SOURCE.includes('build[1] !== RUN_BUILD') &&
   [INDEX_SOURCE, MAP_SOURCE].every(source => source.includes('<meta name="maya-build" content="local">')));
 ok('project deletion batches wall posts before Storage cleanup',
-  INDEX_SOURCE.indexOf('communityDocs.forEach(ref => batch.delete(ref))') < INDEX_SOURCE.indexOf('this._cleanupDeletedAssets(id, paths, uid)'));
+  [INDEX_SOURCE, PLAYGROUND_SOURCE].every(source => {
+    const start = source.indexOf('  async remove(id) {');
+    const wall = source.indexOf('communityDocs.forEach(ref => batch.delete(ref))', start);
+    const committed = source.indexOf('await batch.commit()', wall);
+    const cleanup = source.indexOf('this._cleanupDeletedAssets(id, paths, uid, ctx)', committed);
+    return start >= 0 && wall > start && committed > wall && cleanup > committed;
+  }));
 ok('Storage cleanup is pinned to the deleting account',
-  INDEX_SOURCE.includes('this._cleanupDeletedAssets(id, paths, uid)') &&
-  INDEX_SOURCE.includes("firebase.storage().ref('users/' + uid + '/projects/' + projectId + '/images')"));
+  [INDEX_SOURCE, PLAYGROUND_SOURCE].every(source =>
+    source.includes('const ctx = this._accountContext(), uid = ctx.uid;') &&
+    source.includes('this._cleanupDeletedAssets(id, paths, uid, ctx)') &&
+    source.includes('if (!uid || uid !== ctx.uid || !this._accountValid(ctx)) return false;') &&
+    source.includes("firebase.storage().ref('users/' + uid + '/projects/' + projectId + '/images')") &&
+    source.includes('await this._tombs(uid).doc(projectId).update({ cleanupComplete: true')));
 // v13.24 FIX: these four used to read projectStore, _cardState, communityBoard
 // and scanFabricsFromAssets straight from Node, where they do not exist. The
 // suite died with a ReferenceError before reaching the stack and Systems Map
@@ -354,8 +366,10 @@ const p = await pg.evaluate(() => ({
 ok('queued project saves are pinned to their starting account',
   p.savesPinned && INDEX_SOURCE.includes('await firebase.auth().signOut()'));
 ok('legacy recovery is idempotent and deletion blocks its source',
-  INDEX_SOURCE.includes('dead.has(id) || recovered.has(id)') &&
-  INDEX_SOURCE.includes("batch.set(this._tombs().doc(legacySource)"));
+  [INDEX_SOURCE, PLAYGROUND_SOURCE].every(source =>
+    source.includes('dead.has(id) || recovered.has(id)') &&
+    source.includes('const ctx = this._accountContext(), uid = ctx.uid;') &&
+    source.includes('batch.set(this._tombs(uid).doc(legacySource)')));
 ok('remote equality covers complete visible card state', p.cardStateComplete);
 ok('share rules bound the item list and schema',
   RULES_SOURCE.includes('request.resource.data.items.size() <= 200') && RULES_SOURCE.includes("request.resource.data.schema == 'v13.15'"));
@@ -1199,16 +1213,16 @@ ok('the inline fabric results fit a usable shared viewport without stretching th
   BACKEND_SOURCE.includes('window.MayaFabricAssistant.open({host,automatic:true,submissionId:context.sid') &&
   readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('.fa-body{flex:1;min-height:0;overflow-y:auto;') &&
   readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr))'));
-ok('a sourcing card wears the color the client asked for',
-  BACKEND_SOURCE.includes("'crimson':[153,27,42]") &&
-  BACKEND_SOURCE.includes('function _targetFabricRgb(') &&
-  BACKEND_SOURCE.includes('function _tintSwatch(') &&
-  BACKEND_SOURCE.includes('swatch: searchSwatch, _search:true'));
+ok('Sourceable carries the original reference and client words without tinting seller photos',
+  BACKEND_SOURCE.includes('referenceImage:saved.referenceImage') &&
+  BACKEND_SOURCE.includes("preferences:typeof saved.preferences==='string'?saved.preferences:JSON.stringify(saved.preferences)") &&
+  FABRIC_UI_SOURCE.includes('context.referenceImage=reference; image=originalImage=reference') &&
+  FABRIC_UI_SOURCE.includes('img.src=p.image') && !FABRIC_UI_SOURCE.includes('_tintSwatch'));
 // ── v13.49: the model that sees the picture names the color ────────────────
-ok('the dissection returns each fabric color as a hex read from the image',
-  BACKEND_SOURCE.includes('"fabric_hex"') &&
-  BACKEND_SOURCE.includes('function _hexToRgb(') &&
-  BACKEND_SOURCE.includes('_hexToRgb(piece.fabric_hex)'));
+ok('Dissection color metadata reaches shared sourcing as a qualified visual observation',
+  BACKEND_SOURCE.includes('"fabric_hex"') && BACKEND_SOURCE.includes('use null for unknown facts') &&
+  FABRIC_UI_SOURCE.includes("['fabric_hex',7]") && FABRIC_SEARCH_SOURCE.includes("fabric_hex:/^#[a-f\\d]{6}$/i") &&
+  FABRIC_SEARCH_SOURCE.includes('never claim an exact fiber, GSM or stretch from a photo'));
 ok('the sourcing study lives in docs',
   existsSync(join(ROOT, 'docs/fabric-sourcing-study.md')) &&
   readFileSync(join(ROOT, 'docs/fabric-sourcing-study.md'), 'utf8').includes('SWATCHON'));
@@ -1218,42 +1232,38 @@ ok('legacy merchant searches retain real feeds without sharing private queries',
   SERVER_SOURCE.includes('const SOURCE_MERCHANTS') &&
   SERVER_SOURCE.includes('search/suggest.json') &&
   !SERVER_SOURCE.includes("gcsPut('catalog/queries/") && SERVER_SOURCE.includes("user.sub + '|' + q.toLowerCase()"));
-// v13.76: the sourceable wall fills from live merchant photos, not color
-// swatches; the static color wall was dropped per Fromsa.
-ok('the sourceable wall fills from live merchant photos',
-  BACKEND_SOURCE.includes('function _fetchLiveSourcing(') &&
-  BACKEND_SOURCE.includes('/api/source-fabric?q=') &&
-  BACKEND_SOURCE.includes('live.filter(c => c.img)') &&
-  !BACKEND_SOURCE.includes('live.concat(staticCards)'));
-ok('the dissection speaks the full material sentence',
-  BACKEND_SOURCE.includes('"fabric_spec"') &&
-  BACKEND_SOURCE.includes('weight_gsm') &&
-  BACKEND_SOURCE.includes('function _sourcingQuery('));
+// Shared sourcing replaced the legacy Brief wall; verify the active provider/UI handoff.
+ok('Sourceable streams verified merchant photographs through the active shared assistant',
+  BACKEND_SOURCE.includes('window.MayaFabricAssistant.open({host,automatic:true') &&
+  FABRIC_UI_SOURCE.includes("fetch('/api/admin/fabrics/search'") && FABRIC_UI_SOURCE.includes('if(event.products){products=event.products;paint();}') &&
+  FABRIC_SEARCH_SOURCE.includes('.map(c => verify(c, signal))') && FABRIC_SOURCE.includes("product.evidence==='search_link'||!product.image"));
+ok('Dissection material context preserves client preferences and qualified garment traits',
+  BACKEND_SOURCE.includes('"fabric_spec"') && BACKEND_SOURCE.includes('Only fill weight_gsm from an explicit client specification') &&
+  FABRIC_UI_SOURCE.includes('piece:pieceMetadata(context.piece)') &&
+  FABRIC_SEARCH_SOURCE.includes('clientFabricPreferences: input.preferences, garment: input.piece, garments:input.pieces'));
 // ── v13.51: vision-led fabric sourcing ────────────────────────────────────
-ok('the garment and inferred traits drive thumbnail ranking',
-  SERVER_SOURCE.includes("app.post('/api/rank-fabric'") &&
-  SERVER_SOURCE.includes('buildVisualRankingRequest') &&
-  SERVER_DOCKER.includes('COPY fabric-sourcing.js ./') &&
-  FABRIC_SOURCE.includes("detail: 'high'") &&
+ok('Saved garment references and qualified traits drive seller-thumbnail ranking',
+  SERVER_SOURCE.includes("app.post('/api/rank-fabric'") && SERVER_SOURCE.includes('buildVisualRankingRequest') &&
+  SERVER_DOCKER.includes('COPY fabric-sourcing.js ./') && FABRIC_SOURCE.includes("detail: 'high'") &&
   FABRIC_SOURCE.includes('visible color, texture, weave, sheen, print') &&
-  BACKEND_SOURCE.includes('garment_image: garmentImage') &&
-  BACKEND_SOURCE.includes('fiber: spec.fiber'));
-ok('ranked retailer cards show every promised buying detail',
-  BACKEND_SOURCE.includes('class="fab-match-score"') &&
-  BACKEND_SOURCE.includes('class="fab-reason"') &&
-  BACKEND_SOURCE.includes('matchScore: p.matchScore') &&
-  BACKEND_SOURCE.includes('reason: p.reason') &&
-  BACKEND_SOURCE.includes("price: p.price ?") &&
-  BACKEND_SOURCE.includes('img: p.image'));
-ok('fabric results are called closest visual matches, never exact matches',
-  BACKEND_SOURCE.includes("'Closest visual matches'") &&
-  SERVER_SOURCE.includes("label: 'closest visual matches'") &&
-  !/exact matches/i.test(BACKEND_SOURCE));
-// v13.76: a failed visual ranking no longer hides the real products; they are
-// painted unranked instead of collapsing to the color-swatch wall.
-ok('ranking failures still show the real retailer photos, unranked',
-  BACKEND_SOURCE.includes('paint(matches.length ? matches : products)') &&
-  BACKEND_SOURCE.includes('function _fetchLiveSourcing('));
+  FABRIC_SEARCH_SOURCE.includes('rank({garmentImage:selectedReference||input.image,traits:{...input.piece.fabric_spec') &&
+  FABRIC_SEARCH_SOURCE.includes('garmentId:input.piece.id,garment:input.piece.name'));
+ok('Compact fabric cards retain source-backed buying facts and uncertainty in accessible titles',
+  FABRIC_UI_SOURCE.includes("const knownPrice=p.price&&p.unit?") &&
+  FABRIC_UI_SOURCE.includes('link.title=[p.title,p.description,knownPrice,p.reason]') &&
+  FABRIC_UI_SOURCE.includes("const use=p.garment?'For '+p.garment:''") &&
+  FABRIC_UI_SOURCE.includes("p.availability==='in_stock'?'Seller lists in stock':'Availability unconfirmed'") &&
+  FABRIC_UI_SOURCE.includes("'Delivery unconfirmed'"));
+ok('Fabric ranking describes closest visual matches and never claims exact image-derived facts',
+  FABRIC_SOURCE.includes('These are closest visual matches, never exact matches.') &&
+  FABRIC_SOURCE.includes('Do not infer exact fiber, stock or price from images.') &&
+  FABRIC_SEARCH_SOURCE.includes('Fabric photos have not been compared. These listings match the material words only.'));
+// A failed comparison cannot be presented as a confirmed visual match.
+ok('Failed visual comparison is explicit and cannot promote unchecked products as confirmed matches',
+  FABRIC_SEARCH_SOURCE.includes("products=[];warning='Fabric photo comparison was unavailable.") &&
+  FABRIC_SEARCH_SOURCE.includes("send({ type: 'products', products, preliminary: false })") &&
+  FABRIC_UI_SOURCE.includes('if(event.products){products=event.products;paint();}') &&
+  FABRIC_UI_SOURCE.includes('status(event.warning || event.message)'));
 ok('only real retailer thumbnails enter visual comparison',
   FABRIC_SOURCE.includes("filter(product => product.image && product.url && product.title)") &&
   FABRIC_SOURCE.includes("error.status = 422") &&
@@ -1312,12 +1322,11 @@ ok('marketing draws both networks on one chart with a campaign table',
   // v13.54: each network is asked in its own words now, not through /all.
   SERVER_SOURCE.includes("'date,campaign,campaign_status,ad_group_name,ad_group_status,impressions,clicks,spend'") &&
   SERVER_SOURCE.includes("'date,campaign,impressions,clicks,link_clicks,spend'"));
-ok('fabric sourcing looks across the world, four wide, swiped sideways',
-  BACKEND_SOURCE.includes('const WORLD_MERCHANTS') &&
-  BACKEND_SOURCE.includes('repeat(4, minmax(0, 1fr))') &&
-  BACKEND_SOURCE.includes('scroll-snap-type: x mandatory') &&
-  BACKEND_SOURCE.includes('function _buildFullViewCards()') &&
-  BACKEND_SOURCE.includes('_loadInhouseFabrics().then(items =>'));
+ok('Shared sourcing offers real store filters alongside independently loaded atelier inventory',
+  FABRIC_UI_SOURCE.includes("['The Fabric Store','thefabricstore.com']") && FABRIC_UI_SOURCE.includes("['Tessuti Fabrics','www.tessuti.com.au']") &&
+  FABRIC_UI_SOURCE.includes("const inhouse=action('In House'") && FABRIC_UI_SOURCE.includes('void loadInventory().catch') &&
+  FABRIC_SEARCH_SOURCE.includes('stores:list(body.stores).filter(host=>FABRIC_SHOPS.some(shop=>shop.host===host))') &&
+  FABRIC_SEARCH_SOURCE.includes('allowed.includes(merchantURL(product.url,true)?.shop)'));
 // ── v13.53: the tier upgrade, guarded, with Nano Banana ────────────────────
 ok('the proxy holds a model allowlist and upgrades legacy names by tier',
   SERVER_SOURCE.includes('const MODEL_UPGRADES') &&
@@ -1360,11 +1369,11 @@ ok('Nano Banana visualizes traits inside our own cloud, admin only, labeled',
   SERVER_SOURCE.includes('aiplatform.googleapis.com') &&
   SERVER_SOURCE.includes("label: 'GENERATED'") &&
   /visualize-fabric', requireAuthHeader[\s\S]{0,200}requireAdmin/.test(SERVER_SOURCE));
-ok('a gradient-only fabric card offers Visualize and wears Generated after',
-  BACKEND_SOURCE.includes('class="fab-visualize"') &&
-  BACKEND_SOURCE.includes('function visualizeFabricCard(') &&
-  BACKEND_SOURCE.includes("lbl.textContent = 'Generated'") &&
-  BACKEND_SOURCE.includes("'/api/visualize-fabric'"));
+ok('Active fabric results never substitute generated swatches for seller or atelier photographs',
+  FABRIC_UI_SOURCE.includes("evidence:'atelier_inventory',price:'',unit:'',availability:'unknown'") &&
+  FABRIC_UI_SOURCE.includes('img.src=p.image') && !FABRIC_UI_SOURCE.includes('/api/visualize-fabric') &&
+  !BACKEND_SOURCE.includes('function visualizeFabricCard(') &&
+  FABRIC_SEARCH_SOURCE.includes("!verified.image||!isFabricProduct(verified)"));
 // ── v13.54: marketing tells the truth and counts what matters ──────────────
 ok('Meta and Google compare link clicks, never all interactions',
   SERVER_SOURCE.includes('inline_link_clicks') &&
@@ -1599,11 +1608,11 @@ ok('v13.87: server can update or delete any lead, Wix via override/tombstone',
   MAP_SOURCE.includes("name==='update_lead'") &&
   MAP_SOURCE.includes("name==='delete_lead'"));
 
-ok('v13.76: fabrics show real photos and survive a failed rank',
-  !BACKEND_SOURCE || (
-    BACKEND_SOURCE.includes('paint(matches.length ? matches : products)') &&
-    BACKEND_SOURCE.includes('live.filter(c => c.img)') &&
-    !BACKEND_SOURCE.includes('live.concat(staticCards)')));
+ok('Shared fabric photo failures retain saved records and remove unusable unsaved results',
+  FABRIC_UI_SOURCE.includes("if(view==='saved'){img.remove();") &&
+  FABRIC_UI_SOURCE.includes("'Photo unavailable'") &&
+  FABRIC_UI_SOURCE.includes("'Fabric photos could not load. Refresh or try another store.'") &&
+  !BACKEND_SOURCE.includes('live.concat(staticCards)'));
 // ── v13.61 · Operations Room joins the family ────────────────────────
 ok('ops: the hamburger offset is computed from the live layout, family curve everywhere',
   !OPS_SOURCE || (
@@ -1833,10 +1842,11 @@ ok('Lead Station header says Status, submissions are "Submissions", fabric spec 
   INDEX_SOURCE.includes('!nm.includes(String(t).toLowerCase())'));
 
 // ── v13.88 ──
-ok('v13.88: fabric cards show arrival in days and prices in USD',
-  BACKEND_SOURCE.includes("'Arrives in ' + _eta + ' day'") &&
-  BACKEND_SOURCE.includes('function _priceUSD(') &&
-  BACKEND_SOURCE.includes('escapeHtml(_priceUSD(c.price))'));
+ok('Fabric prices retain seller currency and units; unknown delivery never becomes an estimated date',
+  FABRIC_UI_SOURCE.includes('`${p.price} ${p.currency} / ${p.unit}`') &&
+  FABRIC_UI_SOURCE.includes("'Delivery unconfirmed'") &&
+  FABRIC_SEARCH_SOURCE.includes('Currency comes from seller structured data') &&
+  !BACKEND_SOURCE.includes('function _priceUSD(') && !FABRIC_UI_SOURCE.includes('_FX_USD'));
 ok('v13.88: the community wall centers every line',
   INDEX_SOURCE.includes('/* v13.88: center every line on the community wall. */'));
 ok('v13.88: admin has a "Hey Maya" wake word',
@@ -2294,7 +2304,13 @@ ok('v14.24: the 403 healed, the wall never reloads, uploads file the client, Con
   MAP_SOURCE.includes("label:'Status'") &&
   /<details\b(?=[^>]*\bclass="[^\"]*\bfold\b)(?=[^>]*\bid="pe-fold")[^>]*>/.test(MAP_SOURCE) &&
   MAP_SOURCE.includes('id="pe-body"') &&
-  MAP_SOURCE.includes("body: document.getElementById('pe-body').value.trim(),"));
+  MAP_SOURCE.includes("const _peKeys = ['character', 'background', 'style', 'body'];") &&
+  MAP_SOURCE.includes("_peKeys.map(k => [k, document.getElementById('pe-' + k).value])") &&
+  MAP_SOURCE.includes('const values = _peValues(), snapshot = JSON.stringify(values)') &&
+  MAP_SOURCE.includes('...Object.fromEntries(_peKeys.map(k => [k, values[k].trim()]))') &&
+  MAP_SOURCE.includes('const { live, draft } = _peRefs(context.uid);') &&
+  MAP_SOURCE.includes("draft: db.collection('users').doc(uid).collection('settings').doc('prompting')") &&
+  MAP_SOURCE.includes('const current = () => _peSaving === save && _peCurrent(context);'));
 ok('v14.23: the pencil beside the name, Randomize repaints, white notes, all of Pinterest as the third room',
   PLAYGROUND_SOURCE.includes('id="drawer-avatar-rename"') &&
   INDEX_SOURCE.includes('id="drawer-avatar-rename"') &&
@@ -2859,6 +2875,23 @@ ok('Messages keeps its original heading; contact is plain and pencil is hover-on
 await import('./lead-note-persistence.mjs');
 await import('./lead-notes-ui.mjs');
 await import('./admin-state-races.mjs');
+await import('./admin-prompt-saves.mjs');
+ok('Prompt Save serializes reviewed snapshots, preserves edits and fails closed before initial reads',
+  MAP_SOURCE.includes('if (_peSaving) return;') && MAP_SOURCE.includes('if (!_peReady) {') &&
+  MAP_SOURCE.includes('const values = _peValues(), snapshot = JSON.stringify(values), save = {};') &&
+  MAP_SOURCE.includes('context.uid === firebase.auth().currentUser?.uid') &&
+  MAP_SOURCE.includes('Your newer changes are unsaved.') && BUILD_SOURCE.includes('node tests/admin-prompt-saves.mjs'));
+ok('Outbound coalesces refreshes and rejects older workspace snapshots after a save',
+  outboundJS.includes('workspaceRevision++;busy=true;') &&
+  outboundJS.includes('if(intelligenceLoading){intelligencePending=true;return;}') &&
+  outboundJS.includes('revision===workspaceRevision') &&
+  outboundJS.includes('const fresh=await api();if(!current()){intelligencePending=true;return;}'));
+ok('Client and Playground saves and navigation persist edits made during pending writes and reads',
+  [INDEX_SOURCE,PLAYGROUND_SOURCE].every(source=>
+    source.includes('if (res && res.written && projectStore._dirty) {') &&
+    source.includes("if (!(await projectStore.flush())) res = { written: false, reason: 'unsaved' };") &&
+    source.includes('if (this._editGeneration !== generation) {') &&
+    source.includes('const leavingId = this.currentId, leavingBoard = _boardEpoch, generation = this._editGeneration;')));
 ok('Latest Notes offers Save/Cancel and outside-click discard without Dictate or blur-save', !MAP_SOURCE.includes('lead-note-dictate') && MAP_SOURCE.includes("document.addEventListener('pointerdown',outside,true)") && !MAP_SOURCE.includes("input.addEventListener('blur'"));
 ok('Leads: persisted note edits, Contact/H4/H5 and booking composer drafts',true);
 await import('./message-races.mjs');
@@ -2866,9 +2899,36 @@ ok('Messaging preserves names, newer drafts, session privacy and unseen arrivals
 ok('Hidden drawer polling cannot mark unseen messages read',MAP_SOURCE.includes('if (_msgOpen&&visible) loadThread'));
 ok('Messages shares typography and popup styling',ownerDesignRuntime.includes(':where(#msg-share-menu)')&&ownerDesignRuntime.includes('.bub,:where(#msg-input)'));
 ok('Messages exposes archived history',MAP_SOURCE.includes('async function msgLoadOlder()'));
+await import('./fabric-sourcing.mjs');
+ok('Material qualification, garment-scoped refinements and grounded ranking pass synthetic sourcing contracts',!process.exitCode);
 await import('./fabric-search.mjs');
 await import('./fabric-search-ui.mjs');
+await import('./fabric-workflow-ui.mjs');
+await import('./operation-save-failures.mjs');
+ok('Operation storage failures retain reviewed drafts and current measurement prompts within account/submission/garment scope',
+  OPS_SOURCE.includes("LOGIC_PREFIX+'v2:'+encodeURIComponent(account)") &&
+  OPS_SOURCE.includes('_measurementDrafts.set(key,state)') &&
+  OPS_SOURCE.includes('Pattern Logic was not saved. Your draft is kept; retry Save.') &&
+  OPS_SOURCE.includes('requireOperationSettings();') && BUILD_SOURCE.includes('node tests/operation-save-failures.mjs'));
 ok('Fabric search preserves material context, streams products, and seals saved lookbooks',true);
+ok('Fabric lookbook saves serialize acknowledged generations and preserve account, submission and garment identity',
+  FABRIC_UI_SOURCE.includes('queue.tail=queue.tail.catch(()=>{}).then(task)') &&
+  FABRIC_UI_SOURCE.includes('if(!projectCurrent(ticket))return;') &&
+  FABRIC_UI_SOURCE.includes('submissionId,generation:book.generation,action:actionName,garmentId,product:payload') &&
+  FABRIC_SEARCH_SOURCE.includes("return 'private/fabrics/' + encodeURIComponent(user.sub) + '/' + submissionId + '/lookbook.json'") &&
+  FABRIC_SEARCH_SOURCE.includes('selectedByGarment[targetGarment.id]=product.url') &&
+  FABRIC_SEARCH_SOURCE.includes("app.post('/api/admin/fabrics/lookbook', requireAuthHeader") &&
+  /app\.post\('\/api\/admin\/fabrics\/lookbook'[\s\S]{0,200}const user = await requireAdmin\(req\);[\s\S]{0,150}await service\.saveBook\(user, req\.body \|\| \{\}\)/.test(FABRIC_SEARCH_SOURCE));
+ok('Fabric requests carry bounded garment metadata instead of generated piece images and patterns',
+  FABRIC_UI_SOURCE.includes('function pieceMetadata(piece={})') &&
+  FABRIC_UI_SOURCE.includes("[['id',100],['name',80],['category',80],['fabric',180],['fabric_hex',7]]") &&
+  FABRIC_UI_SOURCE.includes('pieces:(context.pieces||[]).slice(0,12).map(pieceMetadata)') &&
+  BUILD_SOURCE.includes('node tests/fabric-workflow-ui.mjs'));
+ok('Sourceable starts independently of optional atelier inventory without adding paid polling',
+  FABRIC_UI_SOURCE.includes('void loadInventory().catch') &&
+  FABRIC_UI_SOURCE.includes('autoStarted=true;await run();') &&
+  !FABRIC_UI_SOURCE.includes('await loadInventory();') &&
+  (FABRIC_UI_SOURCE.match(/setInterval[^\n]*/g)||[]).every(timer=>timer==='setInterval(()=>{if(dialog)guardAccount();},1000);'));
 ok('Design Save freezes the submitted snapshot and restore baseline',ownerDesignRuntime.includes('value=structuredClone(value)')&&compactGallery.includes('editors.forEach(el=>el.inert=true)'));
 ok('Outbound confirms the reviewed recipient in its atomic send claim',readFileSync(join(ROOT,'docs/server/crm-intelligence.mjs'),'utf8').includes('c.email.trim().toLowerCase()!==expectedEmail'));
 ok('Brief save retry preserves generated work without paid regeneration',BACKEND_SOURCE.includes('async function retryDissectionSave()')&&BACKEND_SOURCE.includes('id="dissect-missing-pill"'));

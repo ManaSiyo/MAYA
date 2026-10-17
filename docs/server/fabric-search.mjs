@@ -1,6 +1,7 @@
 // Fabric discovery uses web evidence; seller facts come only from fetched listings.
 // No private image, request, conversation or lookbook is stored in a shared cache.
 import {isFabricProduct, isFabricPiece, fabricProductMatch} from './fabric-sourcing.js';
+import {createHash} from 'node:crypto';
 export const FABRIC_SHOPS = Object.freeze([
   { name: 'Britex Fabrics', host: 'britexfabrics.com', place: 'San Francisco', shopify: true },
   { name: 'Stonemountain & Daughter', host: 'stonemountainfabric.com', place: 'Berkeley' },
@@ -49,7 +50,10 @@ function publicImage(value, base) {
 }
 
 export function fabricPreferences(summary) {
-  return plain(summary?.fabric_preferences);
+  const value=summary?.fabric_preferences;if(value==null)return '';
+  const serialized=typeof value==='string'?value:typeof value==='object'?JSON.stringify(value):'';
+  if(serialized.length>12000)throw fail('Fabric preferences are too long to check safely. Shorten them before searching.');
+  return serialized;
 }
 function mentionsShop(q, shop) {
   const aliases = { 'Britex Fabrics':['britex','brightex'], 'Stonemountain & Daughter':['stonemountain','stone mountain'], 'Harts Fabric':['harts'], 'Amazon':['amazon'], 'Mood Fabrics':['mood'], 'Blackbird Fabrics':['blackbird'], 'The Fabric Store':['the fabric store'], 'Tessuti Fabrics':['tessuti'] };
@@ -72,9 +76,15 @@ export function requestedShops(input) {
 }
 
 function garmentPiece(piece={}) {
-  return {id:text(piece.id,100),name:text(piece.name,80),fabric:text(piece.fabric,180),skip:!!piece.skip,
+  return {id:text(piece.id,100),name:text(piece.name,80),category:text(piece.category,60),fabric:text(piece.fabric,180),skip:!!piece.skip,
     fabric_hex:/^#[a-f\d]{6}$/i.test(piece.fabric_hex||'')?piece.fabric_hex:'',
     fabric_spec:Object.fromEntries(['fiber','weave','stretch','sheen','texture'].map(k=>[k,text(piece.fabric_spec?.[k],80)]))};
+}
+function garmentFingerprint(piece) {
+  // Stable identity excludes regenerated images and production work. A material/name
+  // change still requires review even if a legacy writer reuses its index-based ID.
+  const {id,skip,...identity}=garmentPiece(piece);
+  return 'v1:'+createHash('sha256').update(JSON.stringify(identity)).digest('hex');
 }
 
 export function normalizeFabricRequest(body = {}) {
@@ -86,7 +96,7 @@ export function normalizeFabricRequest(body = {}) {
   if (!request && !image && !body.automatic) throw fail('Describe a fabric or add a photo.');
   const history = list(body.history).slice(-6).map(h => ({ request: text(h.request, 1200), query: text(h.query, 180) }));
   const piece = body.piece || {};
-  return { submissionId, request, image, history, preferences: text(body.preferences, 1200),automatic:body.automatic===true,
+  return { submissionId, request, image, history, preferences:fabricPreferences({fabric_preferences:body.preferences}),automatic:body.automatic===true,
     stores:list(body.stores).filter(host=>FABRIC_SHOPS.some(shop=>shop.host===host)),piece:garmentPiece(piece),
     pieces:list(body.pieces).filter(isFabricPiece).slice(0,12).map(garmentPiece) };
 }
@@ -278,17 +288,61 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     const marker = await read('submissions/' + id + '/submission.json');
     if (!marker.ok) throw fail(marker.status === 404 ? 'Submission not found.' : 'Submission unavailable.', marker.status === 404 ? 404 : 503);
   }
-  async function loadBook(user, id) {
+  async function savedGarments(id,required=false){
+    const saved=await read('submissions/'+id+'/pieces.json');
+    if(!saved.ok){if(saved.status===404&&!required)return {pieces:[],images:new Map()};throw fail(saved.status===404?'Dissect and save this look before finding its fabrics.':'Saved dissection could not be loaded.',saved.status===404?409:503);}
+    try{
+      const dissection=JSON.parse(saved.buf.toString('utf8')),images=new Map(),ids=new Set();
+      if(!Array.isArray(dissection.pieces))throw Error();
+      const pieces=dissection.pieces.flatMap((piece,index)=>{
+        if(!isFabricPiece(piece))return [];
+        const normalized=garmentPiece({...piece,id:piece.id||'saved-piece-'+index,name:piece.name||piece.label||'Item '+(index+1),fabric:piece.fabric||dissection.fabric_type||''});
+        if(!/^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$/.test(normalized.id)||ids.has(normalized.id))throw Error();ids.add(normalized.id);
+        if(typeof piece._image==='string'&&/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(piece._image)&&piece._image.length<=4*1024*1024)images.set(normalized.id,piece._image);
+        return [normalized];
+      });
+      return {pieces,images};
+    }catch{throw fail('Saved dissection could not be read.',503);}
+  }
+  function existingSelections(data,pieces){
+    const urls=new Set(data.items.map(product=>product?.url));
+    if(Object.hasOwn(data,'selectedUrl')&&(typeof data.selectedUrl!=='string'||data.selectedUrl&&!urls.has(data.selectedUrl)))throw Error();
+    const map=data.selectedByGarment;
+    const hasFingerprints=Object.hasOwn(data,'selectedGarmentFingerprints'),fingerprints=data.selectedGarmentFingerprints;
+    if(hasFingerprints&&(!Object.hasOwn(data,'selectedByGarment')||!fingerprints||typeof fingerprints!=='object'||Array.isArray(fingerprints)||Object.values(fingerprints).some(value=>typeof value!=='string'||!/^v1:[a-f0-9]{64}$/.test(value))))throw Error();
+    const legacyPiece=product=>{
+      // Old product attribution has no material snapshot. A reused index or a
+      // duplicated name alone cannot establish which garment was selected.
+      const matches=pieces.filter(piece=>product?.garment&&piece.name===product.garment);
+      return matches.length===1&&(!product.garmentId||product.garmentId===matches[0].id)?matches[0]:null;
+    };
+    if(Object.hasOwn(data,'selectedByGarment')){
+      if(!map||typeof map!=='object'||Array.isArray(map)||Object.values(map).some(url=>typeof url!=='string'||!urls.has(url))||Object.keys(map).some(id=>!/^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$/.test(id)))throw Error();
+      if(hasFingerprints&&(Object.keys(fingerprints).length!==Object.keys(map).length||Object.keys(map).some(id=>!Object.hasOwn(fingerprints,id))))throw Error();
+      return Object.fromEntries(Object.entries(map).filter(([id,url])=>{
+        const piece=pieces.find(piece=>piece.id===id);
+        return piece&&(hasFingerprints?fingerprints[id]===garmentFingerprint(piece):legacyPiece(data.items.find(product=>product.url===url))?.id===id);
+      }));
+    }
+    const selected=data.items.find(product=>product.url===data.selectedUrl);
+    if(!selected)return {};
+    const piece=legacyPiece(selected);
+    return piece?{[piece.id]:selected.url}:{};
+  }
+  async function loadBook(user, id,readGarments=()=>savedGarments(id)) {
     await requireSubmission(id);
     const path = scopeKey(user, id), found = await read(path);
-    if (!found.ok) { if (found.status === 404) return { items: [], selectedUrl: '', generation: '0' }; throw fail('Lookbook unavailable.', 503); }
+    if (!found.ok) { if (found.status === 404) return { items: [], selectedUrl: '', selectedByGarment:{}, generation: '0' }; throw fail('Lookbook unavailable.', 503); }
+    const {pieces}=await readGarments();
     try {
       const data = JSON.parse(found.buf.toString('utf8'));
-      if (!Array.isArray(data.items) || !found.generation) throw Error();
-      return { items: data.items, selectedUrl: data.selectedUrl || '', generation: found.generation };
+      if (!Array.isArray(data.items)||data.items.length>100||data.items.some(item=>!item||typeof item!=='object'||typeof item.url!=='string')||new Set(data.items.map(item=>item.url)).size!==data.items.length||!found.generation) throw Error();
+      const selectedByGarment=existingSelections(data,pieces);
+      return { items: data.items, selectedUrl: data.selectedUrl || '',selectedByGarment, generation: found.generation };
     } catch { throw fail('Lookbook could not be read.', 503); }
   }
   function savedProduct(input) {
+    if(!input||typeof input!=='object'||Array.isArray(input))throw fail('Choose a supported fabric product.');
     const inventory=String(input?.url||'');
     if (/^\/aesthetics\/fabrics\/[A-Za-z0-9_% -]+\.(?:png|jpe?g|webp)$/i.test(inventory) && !/\.\.|%2f|%5c|%2e/i.test(inventory)) {
       return {url:inventory,image:inventory,title:text(input.title,180),merchant:'Atelier',description:text(input.description,1400),garment:text(input.garment,80),garmentId:text(input.garmentId,100),evidence:'atelier_inventory',availability:'unknown',savedAt:new Date(now()).toISOString()};
@@ -303,18 +357,42 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
   }
   async function saveBook(user, body) {
     const id = text(body.submissionId, 121);
-    const book = await loadBook(user, id);
+    let garments;
+    const readGarments=()=>garments||=(savedGarments(id));
+    const book = await loadBook(user, id,readGarments);
     if (String(body.generation) !== book.generation) throw fail('Lookbook changed in another window. Reload it before saving.', 409);
     if (!['save','remove','select'].includes(body.action)) throw fail('Choose a lookbook action.');
-    const product = savedProduct(body.product);
+    const submitted=savedProduct(body.product),existing=book.items.find(product=>product.url===submitted.url);
+    if(body.action!=='remove'&&!existing&&book.items.length>=100)throw fail('This lookbook has 100 fabrics. Remove one before adding another.');
+    let targetGarment;
+    const explicitId=body.garmentId??'',attributedId=submitted.garmentId||'';
+    if(body.action!=='remove'&&(explicitId||attributedId)){
+      if(typeof explicitId!=='string'||explicitId&&!/^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$/.test(explicitId))throw fail('Choose a valid saved garment.');
+      if(explicitId&&attributedId&&explicitId!==attributedId)throw fail('This fabric was recommended for a different garment. Choose its garment before selecting it.',409);
+      const {pieces}=await readGarments();targetGarment=pieces.find(piece=>piece.id===(explicitId||attributedId));
+      if(!targetGarment)throw fail('This garment is not in the saved dissection. Save it first.',409);
+    }
+    let product=existing?{...existing}:submitted;
+    if(body.action!=='remove'&&!existing&&!submitted.url.startsWith('/aesthetics/fabrics/')){
+      const verified=await verify({url:submitted.url});
+      if(!verified||verified.evidence==='search_link'||!verified.image||!isFabricProduct(verified))throw fail('This fabric listing could not be verified. Refresh its source before saving.',422);
+      product={...verified,garment:submitted.garment,garmentId:submitted.garmentId,savedAt:new Date(now()).toISOString()};
+    }
     let items = book.items.filter(p => p.url !== product.url);
     let selectedUrl = book.selectedUrl;
+    const selectedByGarment={...book.selectedByGarment};
+    if(targetGarment){
+      if(!existing){product.garmentId=targetGarment.id;product.garment=targetGarment.name;}
+      if(body.action==='select')selectedByGarment[targetGarment.id]=product.url;
+    }
     if (body.action !== 'remove') { items.unshift(product); if (items.length > 100) throw fail('This lookbook has 100 fabrics. Remove one before adding another.'); }
     if (body.action === 'select') selectedUrl = product.url;
-    if (body.action === 'remove' && selectedUrl === product.url) selectedUrl = '';
-    try { await write(scopeKey(user, id), Buffer.from(JSON.stringify({ items, selectedUrl })), 'application/json', book.generation); }
+    if (body.action === 'remove'){if(selectedUrl===product.url)selectedUrl='';for(const garment of Object.keys(selectedByGarment))if(selectedByGarment[garment]===product.url)delete selectedByGarment[garment];}
+    const selectedGarmentFingerprints={};
+    if(Object.keys(selectedByGarment).length){const {pieces}=await readGarments();for(const garmentId of Object.keys(selectedByGarment))selectedGarmentFingerprints[garmentId]=garmentFingerprint(pieces.find(piece=>piece.id===garmentId));}
+    try { await write(scopeKey(user, id), Buffer.from(JSON.stringify({ items, selectedUrl, selectedByGarment,selectedGarmentFingerprints })), 'application/json', book.generation); }
     catch (e) { throw fail(e.status === 412 ? 'Lookbook changed in another window. Reload it before saving.' : 'Fabric did not save. Try again.', e.status === 412 ? 409 : 503); }
-    return loadBook(user, id);
+    return loadBook(user, id,readGarments);
   }
   async function direct(input, signal) {
     // A quick literal pass is supplementary. The web search resolves natural-language refinements.
@@ -334,7 +412,8 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
         return list(data.resources?.results?.products).filter(p => p.available !== false).slice(0, 2).map(p => ({ url: new URL(p.url, 'https://' + shop.host).href, reason: 'Initial keyword result; checking closer matches.' }));
       } catch { return []; }
     }));
-    return (await Promise.all(results.flat().slice(0, 5).map(c => verify(c, signal)))).flatMap(product=>{const match=product&&fabricProductMatch(product,input);return match?[{...product,...match}]:[];});
+    const unique=[...new Map(results.flat().map(candidate=>[merchantURL(candidate.url,true)?.url,candidate])).values()];
+    return (await Promise.all(unique.slice(0, 5).map(c => verify(c, signal)))).flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,input);return match?[{...product,...match}]:[];});
   }
   async function search(user, body, emit, signal = new AbortController().signal) {
     const input = normalizeFabricRequest(body);
@@ -342,31 +421,21 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     if (input.submissionId) {
       await requireSubmission(input.submissionId);
       const summary = await read('submissions/' + input.submissionId + '/summary.json');
-      if (summary.ok) { try { input.preferences = fabricPreferences(JSON.parse(summary.buf.toString('utf8'))) || input.preferences; } catch { /* older summaries may be absent */ } }
+      if (summary.ok) { try { input.preferences = fabricPreferences(JSON.parse(summary.buf.toString('utf8'))) || input.preferences; } catch { throw fail('Saved fabric preferences could not be read safely.',503); } }
       else if (summary.status !== 404) throw fail('Submission preferences could not be loaded.', 503);
     }
     if (input.automatic) {
       if (!input.submissionId) throw fail('Open a saved, dissected submission first.');
-      const saved=await read('submissions/'+input.submissionId+'/pieces.json');
-      if (!saved.ok) throw fail(saved.status===404?'Dissect and save this look before finding its fabrics.':'Saved dissection could not be loaded.',saved.status===404?409:503);
-      let pieces;const savedImages=new Map();
-      try {
-        const dissection=JSON.parse(saved.buf.toString('utf8'));
-        pieces=list(dissection.pieces).flatMap((piece,index)=>{
-          if(!isFabricPiece(piece))return [];
-          const normalized=garmentPiece({...piece,id:piece.id||'saved-piece-'+index,name:piece.name||piece.label||'Item '+(index+1),fabric:piece.fabric||dissection.fabric_type||''});
-          if(typeof piece._image==='string'&&/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(piece._image)&&piece._image.length<=4*1024*1024)savedImages.set(normalized.id,piece._image);
-          return [normalized];
-        }).slice(0,12);
-      } catch { throw fail('Saved dissection could not be read.',503); }
+      const {pieces,images:savedImages}=await savedGarments(input.submissionId,true);
       if (!pieces.length) throw fail('This dissection has no garment fabrics to source.',409);
+      input.allPieces=pieces;
       if (input.piece.id || input.piece.name) {
         const candidates=pieces.filter(piece=>input.piece.id?piece.id===input.piece.id:piece.name===input.piece.name);
         if(candidates.length>1)throw fail('Choose this garment again so its saved identity can be checked.',409);
         const selected=candidates[0];
         if (!selected) throw fail('This garment is not in the saved dissection. Save it first.',409);
         input.piece=selected; input.pieces=[selected];selectedReference=savedImages.get(selected.id)||'';
-      } else { input.piece={}; input.pieces=pieces; }
+      } else { input.piece={}; input.pieces=pieces.slice(0,12); }
       input.request='Find apparel fabric for these saved garments: '+input.pieces.map(piece=>piece.name+': '+piece.fabric).join('; ');
       input.history=[];
     }
@@ -391,7 +460,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     if (discovery) {
       const allowed = requestedShops(input);
       const checked = await Promise.all(discovery.candidates.filter(c => allowed.includes(merchantURL(c.url, true)?.shop)).map(c => verify(c, signal)));
-      products = checked.flatMap(product=>{const match=product && fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];}).slice(0,8);
+      products = checked.flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];}).slice(0,8);
     }
     if(products.length&&input.image&&rank){
       send({type:'status',message:'Checking fabric photos against this look…'});

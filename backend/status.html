@@ -1370,9 +1370,9 @@ if (IS_AFFILIATES) {
   <div data-maya-section-content class="fold-body">
   <div class="pe-live" data-maya-panel="inner">
     <h4 data-maya-type="H3">Fixed, baked into every render (not editable here)</h4>
-    <p data-maya-type="P1">Every image MAYA generates is built from four layers: the <b>design specification</b> from the consultation,
-       the <b>client's body</b>, the <b>client's face</b>, and the <b>framing mandate</b> below. Your three fields
-       further down are appended on top as atelier directions.</p>
+    <p data-maya-type="P1">Every MAYA image combines four layers: the <b>design specification</b> from the consultation,
+       the <b>client's body</b>, the <b>client's face</b>, and the <b>framing mandate</b> below. Your four fields
+       add atelier directions.</p>
     <pre data-maya-type="P1" data-maya-control="field" id="pe-framing">FRAMING, NON NEGOTIABLE: one continuous horizontal photograph of the SAME model standing THREE times across a single seamless studio set, SIDE view on the left, FRONT view in the center (dominant hero), BACK view on the right. ONE unbroken backdrop and ONE continuous floor run edge to edge behind and beneath all three figures. NO panel dividers, NO seams, NO borders, NO collage or grid look. FULL BODY for each figure, head to soles inside the frame. Same model, same pose category, same height for all three. Plain clean seamless studio backdrop, soft even lighting, fashion editorial photography. No text, no labels, no captions, no measurement marks.</pre>
     <p data-maya-type="P1"><b>The body layer:</b> when measurements are captured in the Profile fold, the prompt adds
        "The model has these proportions: approximately H inches tall, S inch shoulders, C inch chest, W inch waist, H inch hips."
@@ -1382,10 +1382,10 @@ if (IS_AFFILIATES) {
        sent, and the image model guesses; image models treat height as a weak suggestion unless the words reinforce it.
        The Body field below is appended right after that sentence as "BODY, atelier direction", so this is where
        "long legs, elongated proportions, a small head" goes.</p>
-    <p data-maya-type="P1"><b>The face layer:</b> gender presentation, age range, skin tone, face shape, eyes and hair are extracted once
-       from the face photo and repeated verbatim in every render so the person stays the same across views.</p>
-    <p data-maya-type="P1"><b>Your three fields:</b> saved here, stored in Firestore, read by the live app at sign in, and appended to
-       every render as "CHARACTER atelier direction", "BACKGROUND atelier direction", "STYLE atelier direction".</p>
+    <p data-maya-type="P1"><b>The face layer:</b> gender presentation, age range, skin tone, face shape, eyes and hair are extracted
+       from the face photo once and repeated verbatim to keep the person consistent across views.</p>
+    <p data-maya-type="P1"><b>Your four fields:</b> stored in Firestore, read at sign in, and added to every render as
+       CHARACTER, BACKGROUND, STYLE and BODY atelier directions.</p>
   </div>
   <h4 data-maya-type="H3">Modifiable, appended to every render</h4>
   <div class="pe-panel" data-maya-panel="inner">
@@ -1408,8 +1408,8 @@ if (IS_AFFILIATES) {
   <div class="arch">
     <div class="col" data-maya-panel="inner">
       <h4 data-maya-type="H3">Your Mac, Desktop/MAYA-new</h4>
-      <div class="it" data-maya-type="P1">index.html, status.html, backend.html<small data-maya-type="P3">The three pages. Published copies are what the world sees.</small></div>
-      <div class="it" data-maya-type="P1">aesthetics/<small data-maya-type="P3">ui, fabrics, headshots, the operations engine. All published on deploy.</small></div>
+      <div class="it" data-maya-type="P1">index.html, status.html, backend.html<small data-maya-type="P3">The three pages. Visitors see the published copies.</small></div>
+      <div class="it" data-maya-type="P1">aesthetics/<small data-maya-type="P3">ui, fabrics, headshots and operations engine. Published on deploy.</small></div>
       <div class="it" data-maya-type="P1">docs/<small data-maya-type="P3">Never published. Operations Room R&amp;D, the server source, the deploy config.</small></div>
     </div>
     <div class="col" data-maya-panel="inner">
@@ -1419,8 +1419,8 @@ if (IS_AFFILIATES) {
       <div class="it" data-maya-type="P1">Firestore + Storage + Drive<small data-maya-type="P3">Sessions, projects, images, client PDFs. Lives only online.</small></div>
     </div>
     <div class="arch-deploy" data-maya-type="P1">
-      Publishing is one action: press <code>Push origin</code> in GitHub Desktop.
-      Google then builds and deploys the website and the server by itself, about 4 minutes.
+      To publish, press <code>Push origin</code> in GitHub Desktop.
+      Google builds and deploys the website and server automatically.
     </div>
   </div>
   </div>
@@ -1469,7 +1469,7 @@ async function loadFeatureRequests(){
       '<span data-maya-type="P3" class="who">'+esc(i.who||'someone')+'</span><span data-maya-type="P1" class="ask">'+esc(short(i.text))+'</span>'+
       '<span data-maya-type="P3" class="when">'+esc(day(i.ts))+(i.id?'<button class="fr-done maya-icon-button" aria-label="Mark shipped" title="Mark shipped" onclick="markFeatureDone(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>':'')+'</span></div>';
     const section=(t,arr)=>arr.length?('<section class="fr-room"><div class="fr-sec" data-maya-type="H3">'+esc(t)+'</div>'+arr.map(row).join('')+'</section>'):'';
-    host.innerHTML=(section('Front end, what users ask',front)+section('Admin side, what we ask',adminSide))||'<div class="note">Nothing asked yet. Everything anyone asks Maya for lands here.</div>';
+    host.innerHTML=(section('Front end, what users ask',front)+section('Admin side, what we ask',adminSide))||'<div class="note">No requests yet. Requests to Maya appear here.</div>';
     const f=document.getElementById('features-fold');
     const newest=front[0]||adminSide[0];
     if(f&&newest){ const latest=String(newest.id||newest.ts||''); let seen=''; try{ seen=localStorage.getItem('maya_features_seen')||''; }catch(_){}
@@ -2083,51 +2083,113 @@ const FIREBASE_CONFIG = {
   appId: "1:53947659283:web:4779127af7d5b229867be6",
 };
 let _fbUser = null;
+const _peKeys = ['character', 'background', 'style', 'body'];
+let _peBaseline = '', _peEdit = 0, _peLoadSeq = 0, _peBridgeSeq = 0, _peSaving = null, _peLoading = null, _peReady = false;
+const _peEditedFields = new Set();
+function _peValues() { return Object.fromEntries(_peKeys.map(k => [k, document.getElementById('pe-' + k).value])); }
+function _peDirty() { return JSON.stringify(_peValues()) !== _peBaseline; }
 function _peState(t) { const el = document.getElementById('pe-state'); if (el) el.textContent = t; }
+function _peContext() { return { admin: _adminContext(), uid: _fbUser?.uid }; }
+function _peCurrent(context) {
+  return !!context.uid && _adminContextCurrent(context.admin) && context.uid === _fbUser?.uid &&
+    context.uid === firebase.auth().currentUser?.uid;
+}
+_peBaseline = JSON.stringify(_peValues());
+for (const k of _peKeys) document.getElementById('pe-' + k).addEventListener('input', () => {
+  _peEdit++; _peEditedFields.add(k);
+  if (!_peSaving) _peState('Unsaved changes.');
+});
+window.addEventListener('maya-owner-session-changed', () => {
+  ++_peBridgeSeq; ++_peLoadSeq; ++_peEdit; _fbUser = null; _peSaving = null; _peLoading = null; _peReady = false; _peEditedFields.clear();
+  for (const k of _peKeys) document.getElementById('pe-' + k).value = '';
+  _peBaseline = JSON.stringify(_peValues());
+  document.getElementById('pe-save').disabled = false;
+  _peState('Sign in above to load this account.');
+});
 function _fbBridge(idToken) {
+  const admin = _adminContext(), sequence = ++_peBridgeSeq;
+  const current = () => sequence === _peBridgeSeq && _adminContextCurrent(admin);
   try {
     if (!window.firebase || !firebase.auth) return;
     if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     const cred = firebase.auth.GoogleAuthProvider.credential(idToken);
     firebase.auth().signInWithCredential(cred)
-      .then(u => { _fbUser = u.user; loadPrompting(); })
-      .catch(() => { _peState('could not link to the vault, sign in again'); });
-  } catch (_) {}
+      .then(u => {
+        if (!current()) return;
+        const google = u.user?.providerData?.find(p => p.providerId === 'google.com');
+        if (!u.user?.uid || (google && google.uid !== admin.subject)) throw Error('account_mismatch');
+        _fbUser = u.user;
+        if (!_peCurrent(_peContext())) throw Error('account_mismatch');
+        return loadPrompting();
+      })
+      .catch(() => { if (current()) _peState('Could not link to the vault. Sign in again.'); });
+  } catch (_) { if (current()) _peState('Could not link to the vault. Sign in again.'); }
 }
-function _peRefs() {
+function _peRefs(uid) {
   const db = firebase.firestore();
   return { live: db.collection('config').doc('prompting'),
-           draft: db.collection('users').doc(_fbUser.uid).collection('settings').doc('prompting') };
+           draft: db.collection('users').doc(uid).collection('settings').doc('prompting') };
 }
 async function loadPrompting() {
-  if (!_fbUser) return;
-  const { live, draft } = _peRefs();
-  let d = null, from = '';
-  try { const snap = await live.get(); if (snap.exists) { d = snap.data(); from = 'live'; } } catch (_) {}
-  if (!d) { try { const snap = await draft.get(); if (snap.exists) { d = snap.data(); from = 'draft'; } } catch (_) {} }
-  ['character', 'background', 'style', 'body'].forEach(k => {
-    const el = document.getElementById('pe-' + k);
-    if (el && d && typeof d[k] === 'string') el.value = d[k];
-  });
-  _peState(from === 'live' ? 'live, the app reads these words' :
-           from === 'draft' ? 'draft saved on this account' :
-           'nothing saved yet: MAYA currently draws with only the baked layers above, write here to add words');
+  const context = _peContext();
+  if (!_peCurrent(context) || _peSaving || (_peReady && _peDirty())) return;
+  if (_peLoading) return _peLoading.promise;
+  const loading = {}; _peLoading = loading;
+  loading.promise = _peRead(context);
+  try { await loading.promise; } finally { if (_peLoading === loading) _peLoading = null; }
+}
+async function _peRead(context) {
+  const sequence = ++_peLoadSeq, edit = _peEdit, { live, draft } = _peRefs(context.uid);
+  const current = () => sequence === _peLoadSeq && !_peSaving && _peCurrent(context);
+  const results = await Promise.allSettled([live.get(), draft.get()]);
+  if (!current() || (_peReady && (edit !== _peEdit || _peDirty()))) return;
+  const data = result => result.status === 'fulfilled' && result.value.exists ? result.value.data() : null;
+  const liveWords = data(results[0]), draftWords = data(results[1]);
+  const stamp = words => Date.parse(words?.updatedAt) || 0;
+  const from = draftWords && (!liveWords || stamp(draftWords) > stamp(liveWords)) ? 'draft' : liveWords ? 'live' : '';
+  const d = from === 'draft' ? draftWords : liveWords;
+  if (!d && results.some(r => r.status === 'rejected')) { _peState('Saved words could not be loaded. Your current words are kept.'); return; }
+  const words = Object.fromEntries(_peKeys.map(k => [k, typeof d?.[k] === 'string' ? d[k] : '']));
+  for (const k of _peKeys) if (_peReady || !_peEditedFields.has(k)) document.getElementById('pe-' + k).value = words[k];
+  _peBaseline = JSON.stringify(words); _peReady = true;
+  if (_peDirty()) { _peState('Saved words loaded. Your edits remain unsaved.'); return; }
+  _peState((from === 'live' ? 'live, the app reads these words' :
+           from === 'draft' ? 'Private draft restored. Live app unchanged; retry Save to publish.' :
+           'nothing saved yet: MAYA currently draws with only the baked layers above, write here to add words') +
+           (from === 'live' && results[1].status === 'rejected' ? ' Private draft could not be checked.' : ''));
 }
 async function savePrompting() {
-  if (!_fbUser) { _peState('sign in above first'); return; }
+  const context = _peContext();
+  if (!_peCurrent(context)) { _peState('Sign in above before saving.'); return; }
+  if (_peSaving) return;
+  if (!_peReady) {
+    _peState('Loading saved words before saving…');
+    try { await loadPrompting(); } catch (_) { if (_peCurrent(context)) _peState('Saved words could not be loaded. Your current words are kept.'); }
+    if (_peCurrent(context) && _peReady) _peState('Saved words loaded. Review them, then press Save.');
+    return;
+  }
+  const values = _peValues(), snapshot = JSON.stringify(values), save = {};
   const body = {
-    character: document.getElementById('pe-character').value.trim(),
-    background: document.getElementById('pe-background').value.trim(),
-    style: document.getElementById('pe-style').value.trim(),
-    body: document.getElementById('pe-body').value.trim(),
+    ...Object.fromEntries(_peKeys.map(k => [k, values[k].trim()])),
     updatedAt: new Date().toISOString(),
     updatedBy: _fbUser.email || ''
   };
+  _peSaving = save; ++_peLoadSeq;
+  const button = document.getElementById('pe-save'); button.disabled = true;
+  const current = () => _peSaving === save && _peCurrent(context);
+  const saved = text => {
+    if (!current()) return;
+    _peBaseline = snapshot;
+    _peState(text + (_peDirty() ? ' Your newer changes are unsaved.' : ''));
+  };
   _peState('saving…');
-  const { live, draft } = _peRefs();
-  try { await live.set(body); _peState('saved, live, the app reads these words'); return; } catch (_) {}
-  try { await draft.set(body); _peState('saved as a draft, goes live once the vault rules allow it'); }
-  catch (e) { _peState('could not save (' + ((e && e.code) || 'error') + ')'); }
+  try {
+    const { live, draft } = _peRefs(context.uid);
+    try { await live.set(body); saved('Saved live. The app reads these words.'); return; } catch (_) {}
+    if (!current()) return;
+    await draft.set(body); saved('Saved as a private draft. Live app unchanged; retry Save to publish.');
+  } catch (e) { if (current()) _peState('Could not save (' + (e?.code || 'error') + '). Your words are kept; retry Save.');
+  } finally { if (_peSaving === save) { _peSaving = null; button.disabled = false; } }
 }
 _gisBoot();
 loadSubmissions();
@@ -3147,7 +3209,7 @@ function _invModalEl(){
     '<div class="inv-card">' +
       '<button class="inv-close" onclick="_closeInvoiceModal()" aria-label="Close">&#215;</button>' +
       '<h4 id="inv-title">Invoice</h4>' +
-      '<p class="inv-lede">One click builds a real Wix pay link: single use, service tax, the Mana Siyo logo as the item image until a MAYA render is attached. Review the result below to confirm whether it was saved on the lead.</p>' +
+      '<p class="inv-lede">Create builds a single-use Wix pay link with service tax and the Mana Siyo logo until a MAYA render is attached. Review the result below to confirm whether the link was saved on the lead.</p>' +
       '<label class="inv-label">Link name</label>' +
       '<input id="inv-name" class="inv-input" type="text" maxlength="50" />' +
       '<label class="inv-label" style="margin-top:10px">Price, USD</label>' +

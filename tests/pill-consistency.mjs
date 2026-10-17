@@ -34,7 +34,7 @@ await context.route('**/*',async route=>{
  if(url.pathname==='/api/admin/submissions')return route.fulfill({json:{folders:[{id:'pill-brief',name:'Pill fixture',files:[{id:'pill-summary',name:'summary.json'},{id:'pill-photo',name:'dream-garment.png'},{id:'pill-pieces',name:'pieces.json'}]}]}});
  if(url.pathname==='/api/admin/subfile'){
   if(url.searchParams.get('id')==='pill-summary')return route.fulfill({json:{client:{name:'Pill fixture'},fabric_preferences:'No polyester'}});
-  if(url.searchParams.get('id')==='pill-pieces')return route.fulfill({json:briefPieces});
+  if(url.searchParams.get('id')==='pill-pieces')return route.fulfill({json:briefPieces,headers:{'X-Maya-Generation':'1'}});
   return route.fulfill({body:briefPhoto,contentType:'image/png'});
  }
  if(url.pathname==='/api/admin/subthumb')return route.fulfill({body:briefPhoto,contentType:'image/png'});

@@ -109,7 +109,7 @@ await test('empty/error searches retry and never populate a shared private query
   assert.equal([...s.records.keys()].some(k=>k.startsWith('catalog/')),false);
 });
 await test('lookbooks isolate accounts and submissions, persist selection and reject stale writes',async()=>{
-  const s=store(),service=createFabricSearch({...s,model:'configured'}),product=parseListing(seller(),url);
+  const s=store(),service=createFabricSearch({...s,model:'configured',fetchImpl:async()=>new Response(seller())}),product=parseListing(seller(),url);
   const b=await service.saveBook(user,{submissionId:'project-A',generation:'0',action:'select',product});assert.equal(b.selectedUrl,url);
   assert.equal((await service.loadBook(second,'project-A')).items.length,0);assert.equal((await service.loadBook(user,'project-B')).items.length,0);
   await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:'0',action:'save',product}),e=>e.status===409);
@@ -147,22 +147,26 @@ await test('local in-house photo favorites share the sealed book without invente
   assert.equal((await service.loadBook(second,'project-A')).items.length,0);
   await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'save',product:{...product,url:'/aesthetics/fabrics/%2e%2e/private.png'}}));
 });
-await test('real dissection handoff preserves all traits; original photo and early paint reach ranking',async()=>{
+await test('real dissection handoff preserves traits and active search uses saved material context',async()=>{
   const source=readFileSync(new URL('../backend/backend.html',import.meta.url),'utf8');
   const extract=(start,end)=>source.slice(source.indexOf(start),source.indexOf(end,source.indexOf(start)));
-  const code=extract('const _pieceSources = new WeakMap()', '// v0.9: focusPiece')+extract('function _sourcingQuery(piece, fabricStr)', '// ── v13.53: Nano Banana');
-  const paints=[],calls=[];let resolveRank;
-  const rank=new Promise(r=>resolveRank=r);
-  const piece={name:'Coat',fabric:'Crimson wool',fabric_hex:'#991b2a',fabric_spec:{fiber:'wool',weave:'twill',sheen:'matte',stretch:'none',texture:'brushed',weight_gsm:null},_image:'generated-piece',jacket_construction:'double-breasted'};
-  const sandbox={_pieceState:null,_COLOR_RGB:{crimson:[]},_liveSourceCache:{},_visualRankCache:{},_fabricSourceOverride:'sourceable',localStorage:{getItem:()=> 'fake'},window:{},_fabActivePiece:()=>normalized,_renderFabCards:v=>paints.push(v),fetch:async(u,o)=>{calls.push({u,o});return u.startsWith('/api/source-fabric')?{ok:true,json:async()=>({products:[{...parseListing(seller(),url),image:'https://cdn.shopify.com/wool.jpg'}]})}:rank;}};
-  vm.createContext(sandbox);vm.runInContext(code,sandbox);
+  const code=extract('const _pieceSources = new WeakMap()', '// v0.9: focusPiece');
+  const crop='data:image/png;base64,c2F2ZWQtY29hdA==';
+  const piece={name:'Coat',fabric:'Crimson wool',fabric_hex:'#991b2a',fabric_spec:{fiber:'wool',weave:'twill',sheen:'matte',stretch:'none',texture:'brushed',weight_gsm:null},fabric_source:{url},_image:crop,jacket_construction:'double-breasted'};
+  const sandbox={};vm.createContext(sandbox);vm.runInContext(code,sandbox);
   const normalized=sandbox.inferPieces({_dissection:{pieces:[piece]}})[0];
-  assert.equal(normalized.fabric_spec.weave,'twill');assert.equal(normalized.fabric_hex,'#991b2a');assert.equal(normalized.jacket_construction,'double-breasted');
-  sandbox._pieceState={heroImage:'original-photo',pieces:[normalized]};
-  const running=sandbox._fetchLiveSourcing('Crimson wool',normalized);
-  await new Promise(r=>setTimeout(r,0));assert.equal(paints.length,1);
-  const body=JSON.parse(calls[1].o.body);assert.equal(body.garment_image,'original-photo');assert.equal(body.traits.weave,'twill');assert.equal(body.traits.color,'#991b2a');
-  resolveRank({ok:true,json:async()=>({matches:[]})});await running;assert.equal(paints.length,2);
+  assert.equal(normalized.fabric_spec.weave,'twill');assert.equal(normalized.fabric_hex,'#991b2a');assert.equal(normalized.jacket_construction,'double-breasted');assert.equal(normalized.fabric_source.url,url);
+  const s=store(),events=[];let discovered,ranked;
+  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[normalized]})),generation:'1'});
+  const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async(u,o)=>{
+    if(u.includes('openai')){discovered=JSON.parse(o.body);return Response.json(response());}
+    return new Response(seller());
+  },rank:async input=>{ranked=input;return input.products;}});
+  await service.search(user,{submissionId:'project-A',automatic:true,image,piece:{id:normalized.id,fabric:'Forged polyester'},preferences:'Forged preference'},event=>events.push(event));
+  const context=JSON.parse(discovered.input[0].content[0].text);
+  assert.equal(discovered.input[0].content[1].image_url,image);assert.equal(context.garment.fabric_hex,'#991b2a');assert.equal(context.garment.fabric_spec.weave,'twill');assert.match(context.clientFabricPreferences,/100% wool, no polyester/);
+  assert.equal(ranked.garmentImage,crop);assert.equal(ranked.traits.weave,'twill');assert.equal(ranked.traits.texture,'brushed');assert.equal(ranked.traits.garments[0].fabric_hex,'#991b2a');assert.match(ranked.traits.preferences,/no polyester/);
+  assert.doesNotMatch(JSON.stringify([discovered,ranked]),/Forged/);assert.equal(events.at(-1).products[0].garmentId,normalized.id);
 });
 await test('routes authenticate before search or lookbook IO and limit search requests',async()=>{
   const routes=[];const app={post:(...a)=>routes.push(a),get:(...a)=>routes.push(a)};let reads=0;
@@ -218,5 +222,143 @@ await test('supplementary seller results cannot bypass a failed visual check whe
   await service.search(user,{request:'crimson wool',image},event=>events.push(event));
   assert.ok(events.some(event=>event.preliminary&&event.products.length));assert.equal(calls,1);
   assert.deepEqual(events.at(-1).products,[]);assert.match(events.at(-1).warning,/comparison was unavailable/);
+});
+await test('lookbook selections bind to canonical garments, preserve reuse and remove every assignment',async()=>{
+  const s=store(),pieces=[{id:'coat',name:'Coat',fabric:'wool'},{id:'pants',name:'Pants',fabric:'cotton'}];
+  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces})),generation:'1'});
+  let fetches=0,pieceReads=0;const service=createFabricSearch({...s,read:async key=>{if(key.endsWith('/pieces.json'))pieceReads++;return s.read(key);},fetchImpl:async()=>{fetches++;return new Response(seller());}});
+  const product={...parseListing(seller(),url),garmentId:'coat',garment:'Forged name'};
+  let book=await service.saveBook(user,{submissionId:'project-A',generation:'0',action:'select',garmentId:'coat',product});
+  assert.deepEqual(book.selectedByGarment,{coat:url});assert.equal(book.items[0].garment,'Coat');assert.equal(fetches,1);
+  assert.equal(pieceReads,1,'A mutation reads and parses the private dissection once, including its response');
+  await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'select',garmentId:'pants',product}),e=>e.status===409);
+  const before=pieceReads;book=await service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'select',garmentId:'pants',product:{url,title:'Client edit ignored',price:'0.01'}});
+  assert.deepEqual(book.selectedByGarment,{coat:url,pants:url});assert.equal(book.items[0].title,'Crimson wool twill');assert.equal(fetches,1,'Reselecting a stored URL needs no retailer or paid request');
+  assert.equal(pieceReads-before,1,'Lookbook read, validation and acknowledgement share one request-local dissection');
+  await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'select',garmentId:'unknown',product:{url}}),e=>e.status===409);
+  const otherAccount=await service.loadBook(second,'project-A');assert.deepEqual(otherAccount.selectedByGarment,{});
+  book=await service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'remove',product:{url}});
+  assert.deepEqual(book.selectedByGarment,{});assert.equal(book.selectedUrl,'');assert.equal(book.items.length,0);assert.equal(fetches,1);
+});
+await test('legacy lookbook reads only infer unambiguous garment selections and never write migrations',async()=>{
+  const s=store(),key='private/fabrics/owner-A/project-A/lookbook.json';let writes=0;
+  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{name:'Coat',fabric:'wool'},{name:'Shirt',fabric:'cotton'},{name:'Shirt',fabric:'linen'}]})),generation:'1'});
+  const service=createFabricSearch({...s,write:async()=>{writes++;}}),product=parseListing(seller(),url);
+  for(const [attribution,expected]of [[{garment:'Coat'},{'saved-piece-0':url}],[{garment:'Shirt'},{}],[{},{}],[{garmentId:'saved-piece-2',garment:'Shirt'},{}],[{garmentId:'saved-piece-0',garment:'Coat'},{'saved-piece-0':url}],[{garmentId:'saved-piece-0',garment:'Old jacket'},{}],[{garmentId:'saved-piece-0'},{}]]){
+    s.records.set(key,{buf:Buffer.from(JSON.stringify({items:[{...product,...attribution}],selectedUrl:url})),generation:'7'});
+    assert.deepEqual((await service.loadBook(user,'project-A')).selectedByGarment,expected);
+    if(attribution.garmentId){
+      const raw=JSON.stringify({items:[{...product,...attribution}],selectedUrl:url,selectedByGarment:{[attribution.garmentId]:url}});s.records.set(key,{buf:Buffer.from(raw),generation:'7'});
+      assert.deepEqual((await service.loadBook(user,'project-A')).selectedByGarment,expected);assert.equal(s.records.get(key).buf.toString(),raw,'Legacy maps obey the same identity evidence without migration writes');
+    }
+  }
+  assert.equal(writes,0);
+  for(const selectedByGarment of [null,[],{'bad id':url},{'saved-piece-0':other},{'saved-piece-0':null}]){
+    s.records.set(key,{buf:Buffer.from(JSON.stringify({items:[product],selectedUrl:url,selectedByGarment})),generation:'7'});
+    await assert.rejects(service.loadBook(user,'project-A'),e=>e.status===503);
+    await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:'7',action:'remove',product:{url}}),e=>e.status===503);
+  }
+  assert.equal(writes,0,'Malformed selection storage must not be silently replaced');
+});
+await test('redissection hides only orphan selections and prunes them on an explicit CAS mutation',async()=>{
+  const s=store(),key='private/fabrics/owner-A/project-A/lookbook.json',pieceKey='submissions/project-A/pieces.json',product={...parseListing(seller(),url),garment:'Coat',garmentId:'kept'};
+  s.records.set(pieceKey,{buf:Buffer.from(JSON.stringify({pieces:[{id:'kept',name:'Coat',fabric:'wool'}]})),generation:'2'});
+  const raw=JSON.stringify({items:[product],selectedUrl:url,selectedByGarment:{kept:url,removed:url}});
+  s.records.set(key,{buf:Buffer.from(raw),generation:'4'});
+  const service=createFabricSearch({...s,fetchImpl:async()=>{throw Error('Stored selections do not need retailer access');}});
+  const book=await service.loadBook(user,'project-A');assert.deepEqual(book.selectedByGarment,{kept:url});assert.equal(book.items.length,1);assert.equal(s.records.get(key).buf.toString(),raw,'Read does not write a migration');
+  await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:'3',action:'select',garmentId:'kept',product:{url}}),e=>e.status===409);assert.equal(s.records.get(key).buf.toString(),raw);
+  const updated=await service.saveBook(user,{submissionId:'project-A',generation:'4',action:'select',garmentId:'kept',product:{url}});
+  assert.deepEqual(updated.selectedByGarment,{kept:url});assert.deepEqual(JSON.parse(s.records.get(key).buf).selectedByGarment,{kept:url});
+});
+await test('selection fingerprints reject reused IDs but preserve stable garments through reorder and production work',async()=>{
+  const s=store(),key='private/fabrics/owner-A/project-A/lookbook.json',pieceKey='submissions/project-A/pieces.json';
+  const coat={id:'saved-piece-0',name:'Coat',fabric:'Crimson wool',fabric_spec:{fiber:'wool',weave:'twill'}},pants={id:'pants',name:'Pants',fabric:'cotton'};
+  const writePieces=pieces=>s.records.set(pieceKey,{buf:Buffer.from(JSON.stringify({pieces})),generation:'1'});
+  writePieces([coat,pants]);
+  const service=createFabricSearch({...s,fetchImpl:async()=>new Response(seller())});
+  let book=await service.saveBook(user,{submissionId:'project-A',generation:'0',action:'select',garmentId:coat.id,product:{url}});
+  book=await service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'select',garmentId:pants.id,product:{url}});
+  const raw=s.records.get(key).buf.toString(),stored=JSON.parse(raw);
+  assert.match(stored.selectedGarmentFingerprints[coat.id],/^v1:[a-f0-9]{64}$/);assert.equal(book.selectedGarmentFingerprints,undefined,'Fingerprint storage is server owned; client schema stays compatible');
+  writePieces([pants,{...coat,_image:image,_pattern:'new generated pattern',_technical:'production update'}]);
+  assert.deepEqual((await service.loadBook(user,'project-A')).selectedByGarment,{[coat.id]:url,pants:url});
+  for(const replacement of [{...coat,name:'New jacket'},{...coat,fabric:'White cotton'},{...coat,fabric_spec:{fiber:'cotton',weave:'poplin'}},{...coat,fabric_hex:'#ffffff'}]){
+    writePieces([replacement,pants]);const current=await service.loadBook(user,'project-A');
+    assert.deepEqual(current.selectedByGarment,{pants:url});assert.equal(current.items.length,1);assert.equal(s.records.get(key).buf.toString(),raw,'Changed identity is hidden without a migration write');
+  }
+  const replacement={...coat,name:'New jacket',fabric:'White cotton'};writePieces([replacement,pants]);
+  await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:'0',action:'select',garmentId:coat.id,product:{url}}),error=>error.status===409);assert.equal(s.records.get(key).buf.toString(),raw);
+  book=await service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'save',product:{url}});
+  assert.deepEqual(book.selectedByGarment,{pants:url});assert.deepEqual(Object.keys(JSON.parse(s.records.get(key).buf).selectedGarmentFingerprints),['pants'],'Explicit CAS mutation prunes stale identity and its fingerprint');
+  book=await service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'select',garmentId:replacement.id,product:{url}});
+  assert.deepEqual(book.selectedByGarment,{pants:url,[replacement.id]:url});assert.notEqual(JSON.parse(s.records.get(key).buf).selectedGarmentFingerprints[replacement.id],stored.selectedGarmentFingerprints[coat.id],'Explicit review binds the reused ID to its new garment');
+});
+await test('malformed garment identity storage cannot be silently overwritten',async()=>{
+  const s=store(),key='private/fabrics/owner-A/project-A/lookbook.json',product={...parseListing(seller(),url),garment:'Coat',garmentId:'coat'};
+  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{id:'coat',name:'Coat',fabric:'wool'}]})),generation:'1'});
+  const service=createFabricSearch({...s});
+  for(const selectedGarmentFingerprints of [null,[],{}, {coat:'invalid'}, {coat:'v1:'+'a'.repeat(64),extra:'v1:'+'b'.repeat(64)}]){
+    const raw=JSON.stringify({items:[product],selectedUrl:url,selectedByGarment:{coat:url},selectedGarmentFingerprints});s.records.set(key,{buf:Buffer.from(raw),generation:'5'});
+    await assert.rejects(service.loadBook(user,'project-A'),error=>error.status===503);
+    await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:'5',action:'remove',product:{url}}),error=>error.status===503);assert.equal(s.records.get(key).buf.toString(),raw);
+  }
+});
+await test('new saved seller facts are verified server-side; failures preserve the book and retries',async()=>{
+  const s=store(),key='private/fabrics/owner-A/project-A/lookbook.json';let calls=0;
+  const service=createFabricSearch({...s,fetchImpl:async target=>{calls++;assert.ok(!target.includes('openai'),'Saving never searches or ranks');return target===url?new Response(seller()):new Response('',{status:503});}});
+  const tampered={url,title:'Fake leather',price:'0.01',unit:'yard',currency:'USD',availability:'in_stock',evidence:'atelier_inventory',composition:'100% silk',image:'https://bad.example/fake.png'};
+  const book=await service.saveBook(user,{submissionId:'project-A',generation:'0',action:'save',product:tampered});
+  assert.equal(book.items[0].title,'Crimson wool twill');assert.equal(book.items[0].price,'69.99');assert.equal(book.items[0].composition,'100% wool');assert.equal(book.items[0].image,'https://cdn.shopify.com/wool.jpg');assert.equal(book.items[0].evidence,'seller_listing');
+  const previous=s.records.get(key).buf.toString();
+  await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'save',product:{...tampered,url:'https://evil.example/products/fabric'}}),e=>e.status===400);
+  await assert.rejects(service.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'save',product:{...tampered,url:other}}),e=>e.status===422);
+  assert.equal(s.records.get(key).buf.toString(),previous);assert.equal(calls,2);
+  const unavailable=createFabricSearch({...s,fetchImpl:async()=>{throw Error('Retailer offline');}});
+  const selected=await unavailable.saveBook(user,{submissionId:'project-A',generation:book.generation,action:'select',product:{url}});
+  assert.equal(selected.selectedUrl,url,'An already stored source remains selectable when its retailer is unavailable');
+});
+await test('canonical full-look preferences and selected scopes survive the service request boundary',async()=>{
+  const s=store(),furUrl='https://britexfabrics.com/products/faux-fur',leatherUrl='https://britexfabrics.com/products/leather';let discovery;
+  s.records.set('submissions/project-A/summary.json',{buf:Buffer.from(JSON.stringify({fabric_preferences:{coat:'Brown faux fur',pants:'Green alligator leather',exclude:['polyester']}})),generation:'1'});
+  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{id:'coat',name:'Fur coat',fabric:'Brown faux fur',fabric_spec:{fiber:'acrylic'}},{id:'pants',name:'Green pants',fabric:'Green leather'}]})),generation:'1'});
+  const pages={[furUrl]:{name:'Brown faux fur fabric',description:'100% acrylic long pile. Sold by the yard.',material:'100% acrylic'},[leatherUrl]:{name:'Green alligator leather fabric',description:'Green leather. Sold by the yard.',material:'Leather'}};
+  const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async(target,options)=>{if(target.includes('openai')){discovery=JSON.parse(options.body);return Response.json({output:[{type:'web_search_call',action:{sources:Object.keys(pages).map(url=>({url}))}},{type:'message',content:[{type:'output_text',text:JSON.stringify({candidates:Object.keys(pages).map(url=>({url}))})}]}]});}return new Response(seller({...pages[target],url:target}));}});
+  const full=[];await service.search(user,{automatic:true,submissionId:'project-A',image},event=>full.push(event));
+  assert.deepEqual(full.at(-1).products.map(p=>[p.url,p.garmentId]),[[furUrl,'coat'],[leatherUrl,'pants']]);
+  const selected=[];await service.search(user,{automatic:true,submissionId:'project-A',piece:{id:'coat'},image},event=>selected.push(event));
+  assert.deepEqual(selected.at(-1).products.map(p=>p.url),[furUrl]);assert.match(JSON.stringify(discovery),/Green alligator leather/,'Original client preferences remain in discovery');
+  const normalized=normalizeFabricRequest({request:'fabric',preferences:{coat:'brown faux fur',exclude:['polyester']}});assert.match(normalized.preferences,/brown faux fur/);assert.doesNotMatch(normalized.preferences,/object Object/);
+});
+await test('duplicate literal seller links are verified once and published once',async()=>{
+  let pages=0;const service=createFabricSearch({...store(),fetchImpl:async target=>{if(target.includes('suggest.json'))return Response.json({resources:{results:{products:[{url},{url}]}}});pages++;return new Response(seller());}});
+  const events=[];await service.search(user,{request:'crimson wool'},event=>events.push(event));
+  assert.equal(pages,1);assert.equal(events.at(-1).products.length,1);
+});
+await test('stored preference parse failures stop before providers and structured exclusions are not truncated',async()=>{
+  const s=store();let providers=0;const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async()=>{providers++;throw Error('must not call');}});
+  s.records.set('submissions/project-A/summary.json',{buf:Buffer.from('{broken'),generation:'1'});
+  await assert.rejects(service.search(user,{submissionId:'project-A',request:'wool',preferences:'client fallback'},()=>{}),e=>e.status===503);assert.equal(providers,0);
+  const preferences={notes:'neutral '.repeat(180),coat:'Brown faux fur',exclude:['polyester']};
+  assert.deepEqual(JSON.parse(normalizeFabricRequest({request:'fabric',preferences}).preferences),preferences,'Longer structured preferences keep their final exclusion and valid structure');
+  assert.throws(()=>normalizeFabricRequest({request:'fabric',preferences:'x'.repeat(12001)}),e=>e.status===400);
+});
+await test('store-only constraints survive a redirect to another approved merchant',async()=>{
+  const events=[],service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>{
+    if(target.includes('openai'))return Response.json(response());
+    if(target.includes('suggest.json'))return Response.json({resources:{results:{products:[{url}]}}});
+    if(target===url)return new Response('',{status:302,headers:{location:other}});
+    return new Response(seller({url:other}));
+  }});
+  await service.search(user,{request:'crimson wool, only Britex',stores:['britexfabrics.com'],image},event=>events.push(event));
+  assert.ok(events.every(event=>!event.products?.length),'Neither preliminary nor final results bypass the store filter after a redirect');
+});
+await test('concurrent garment selections cannot both acknowledge an overwrite',async()=>{
+  const s=store(),key='private/fabrics/owner-A/project-A/lookbook.json';
+  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{id:'coat',name:'Coat'},{id:'pants',name:'Pants'}]})),generation:'1'});
+  const service=createFabricSearch({...s,fetchImpl:async()=>new Response(seller())});
+  const results=await Promise.allSettled(['coat','pants'].map(garmentId=>service.saveBook(user,{submissionId:'project-A',generation:'0',garmentId,action:'select',product:{url}})));
+  assert.equal(results.filter(result=>result.status==='fulfilled').length,1);assert.equal(results.find(result=>result.status==='rejected').reason.status,409);
+  assert.equal(Object.keys(JSON.parse(s.records.get(key).buf).selectedByGarment).length,1);
 });
 console.log(`Fabric search: ${count} behavioral checks passed.`);

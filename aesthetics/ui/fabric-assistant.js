@@ -4,7 +4,8 @@
   let dialog, workspace, host, els, context = {}, identity = '', epoch = 0, controller, image = '', originalImage = '';
   let searchSeq=0, autoStarted=false, storeFilter='';
   let history = [], products = [], book = { items: [], selectedUrl: '', generation: null }, view = 'search', busy = false;
-  let bookSeq = 0, photoSeq = 0, saving = false;
+  let bookSeq = 0, photoSeq = 0, projectEpoch=0, projectIdentity='', reads=new AbortController(),projectReads=new AbortController();
+  let saves={tail:Promise.resolve(),pending:new Set()},inventoryRequest=null;
   const token = () => localStorage.getItem('maya_admin_tok') || localStorage.getItem('maya_google_token') || '';
   function account() {
     try { const p = JSON.parse(atob(token().split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); return p.exp * 1000 > Date.now() ? String(p.sub || '') : ''; }
@@ -12,13 +13,33 @@
   }
   const scope = () => account() + '|' + (context.submissionId || 'unsaved') + '|' + JSON.stringify([context.piece?.id||context.piece?.name||'',context.piece?.fabric||'',context.piece?.fabric_spec||{},context.pieces?.map(p=>[p.id,p.name,p.fabric,p.fabric_spec])||[]]);
   const current = stamp => stamp === epoch && identity === scope() && !!account();
+  const projectScope=()=>account()+'|'+(context.submissionId||'unsaved');
+  const projectTicket=()=>({epoch:projectEpoch,key:projectIdentity});
+  const projectCurrent=ticket=>ticket.epoch===projectEpoch&&ticket.key===projectIdentity&&ticket.key===projectScope()&&!!account();
+  function pieceMetadata(piece={}){
+    piece=piece&&typeof piece==='object'?piece:{};
+    if(!piece.id&&!piece.name&&!piece.fabric)return {};
+    const out={};for(const [key,max] of [['id',100],['name',80],['category',80],['fabric',180],['fabric_hex',7]])if(typeof piece[key]==='string')out[key]=piece[key].slice(0,max);
+    if(piece.skip)out.skip=true;
+    if(piece.fabric_spec){out.fabric_spec={};for(const key of ['fiber','weave','stretch','sheen','texture'])if(typeof piece.fabric_spec[key]==='string')out.fabric_spec[key]=piece.fabric_spec[key].slice(0,80);}
+    return out;
+  }
+  function selectedProduct(piece=context.piece){
+    const id=piece?.id||'',items=book.items||[];
+    let url=id&&book.selectedByGarment?.[id];
+    if(!url&&id&&!Object.hasOwn(book,'selectedByGarment')&&book.selectedUrl){const legacy=items.find(p=>p.url===book.selectedUrl);const names=(context.pieces||[]).filter(p=>p.name===piece.name);if(legacy&&(legacy.garmentId===id||(!legacy.garmentId&&legacy.garment===piece.name&&names.length===1)))url=legacy.url;}
+    if(!id&&!piece?.name)url=book.selectedUrl;
+    const product=items.find(p=>p.url===url);return product?{...product,...(id?{garmentId:id,garment:piece.name||product.garment}:{} )}:null;
+  }
+
   const node = (tag, className, value) => { const n = document.createElement(tag); if (className) n.className = className; if (value != null) n.textContent = value; if(['h2','h3','p','label','button','textarea','select'].includes(tag))n.dataset.mayaType=tag==='h2'?'H2':tag==='h3'?'H4':['button','label','select'].includes(tag)?'P3':'P1'; return n; };
   function action(label, fn) { const b = node('button','pill maya-pill',label); b.type = 'button'; b.addEventListener('click',fn); return b; }
   function status(message) { els.status.textContent = message || ''; }
   function reset() {
-    epoch++; bookSeq++; photoSeq++; searchSeq++; autoStarted=false; storeFilter=''; saving=false; controller?.abort(); recognition?.stop(); controller = null; busy = false; history = []; products = [];
-    book = { items: [], selectedUrl: '', generation: null }; image = ''; originalImage = ''; view = 'search';
-    if (els) { els.input.value = ''; els.observation.textContent = ''; els.transcript.replaceChildren(); els.results.replaceChildren(); els.photo.hidden = true; els.preview.removeAttribute('src'); els.file.value = ''; els.send.disabled = false; els.stop.hidden = true; els.saveStatus.textContent = ''; els.store.value=''; status(''); }
+    epoch++;photoSeq++;searchSeq++;autoStarted=false;storeFilter='';controller?.abort();recognition?.stop();reads.abort();reads=new AbortController();inventoryRequest=null;
+    const nextProject=projectScope();if(nextProject!==projectIdentity){bookSeq++;projectReads.abort();projectReads=new AbortController();projectEpoch++;projectIdentity=nextProject;saves={tail:Promise.resolve(),pending:new Set()};book={items:[],selectedUrl:'',selectedByGarment:{},generation:null};}
+    controller=null;busy=false;history=[];products=[];image='';originalImage='';view='search';
+    if(els){els.input.value='';els.observation.textContent='';els.transcript.replaceChildren();els.results.replaceChildren();els.photo.hidden=true;els.preview.removeAttribute('src');els.file.value='';els.send.disabled=false;els.stop.hidden=true;els.saveStatus.textContent='';els.store.value='';status('');}
   }
   function icon(label,path,fn) {
     const b=action('',fn);b.classList.add('maya-icon-button');b.setAttribute('aria-label',label);b.title=label;
@@ -99,14 +120,15 @@
   }
   function headers() { return { Authorization:'Bearer '+token(), 'Content-Type':'application/json' }; }
   async function json(url, options={}) {
-    const r = await fetch(url, { ...options, headers: headers(), cache:'no-store' });
+    const signal=options.signal||(!options.method||options.method==='GET'?AbortSignal.any([reads.signal,AbortSignal.timeout(10000)]):AbortSignal.timeout(15000));
+    const r = await fetch(url, { ...options, signal, headers: headers(), cache:'no-store' });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) throw Error(data.error || 'Request failed. Try again.');
     return data;
   }
   async function photoData(source) {
     if (!source) return '';
-    const blob = typeof source === 'string' ? await (await fetch(source)).blob() : source;
+    const blob = typeof source === 'string' ? await (await fetch(source,{signal:AbortSignal.any([reads.signal,AbortSignal.timeout(10000)])})).blob() : source;
     if (!/^image\/(jpeg|png|webp)$/.test(blob.type) || blob.size > 15*1024*1024) throw Error('Use a JPEG, PNG or WebP photo under 15 MB.');
     const bitmap = await createImageBitmap(blob);
     try {
@@ -126,13 +148,15 @@
   function paintPhoto() { els.photo.hidden=!image; if (image) els.preview.src=image; else els.preview.removeAttribute('src'); }
   async function loadInventory(force=false) {
     if(Array.isArray(context.inhouse)&&!force)return;
-    const stamp=epoch;
-    const response=await fetch('/aesthetics/fabrics/fabrics.json',{cache:force?'no-store':'default'});
-    if(!response.ok)throw Error('In-house fabric photos could not load.');
-    const data=await response.json();
-    if(!current(stamp))return;
-    context.inhouse=(data.items||[]).filter(p=>typeof p.fileName==='string'&&!/[\\/]/.test(p.fileName)&&/\.(?:png|jpe?g|webp)$/i.test(p.fileName)).map(p=>({title:p.name||p.fileName,image:'/aesthetics/fabrics/'+encodeURIComponent(p.fileName),description:[p.weave,p.weight,p.color].filter(Boolean).join(' · ')}));
-    paint();
+    if(inventoryRequest&&!force)return inventoryRequest;
+    const stamp=epoch,signal=AbortSignal.any([reads.signal,AbortSignal.timeout(6000)]);
+    const task=(async()=>{
+      const response=await fetch('/aesthetics/fabrics/fabrics.json',{cache:force?'no-store':'default',signal});
+      if(!response.ok)throw Error('In-house photos unavailable.');
+      const data=await response.json();if(!current(stamp))return;
+      context.inhouse=(data.items||[]).filter(p=>typeof p.fileName==='string'&&!/[\\/]/.test(p.fileName)&&/\.(?:png|jpe?g|webp)$/i.test(p.fileName)).map(p=>({title:p.name||p.fileName,image:'/aesthetics/fabrics/'+encodeURIComponent(p.fileName),description:[p.weave,p.weight,p.color].filter(Boolean).join(' · ')}));
+      paint();
+    })();inventoryRequest=task;try{await task;}finally{if(inventoryRequest===task)inventoryRequest=null;}
   }
   async function loadContext(stamp) {
     if (!context.submissionId || context.referenceImage) return;
@@ -144,38 +168,42 @@
     const hero=files.find(f=>/^dream-garment\.(png|jpe?g)$/i.test(f.name));
     const [preferences, reference] = await Promise.all([
       summary ? json('/api/admin/subfile?id='+encodeURIComponent(summary.id)).then(s=> typeof s.fabric_preferences==='string' ? s.fabric_preferences : JSON.stringify(s.fabric_preferences || '')) : '',
-      hero ? fetch('/api/admin/subfile?id='+encodeURIComponent(hero.id),{headers:headers()}).then(r=>{if(!r.ok)throw Error('Reference photo could not load.');return r.blob();}).then(photoData) : '',
+      hero ? fetch('/api/admin/subfile?id='+encodeURIComponent(hero.id),{headers:headers(),signal:AbortSignal.any([reads.signal,AbortSignal.timeout(10000)])}).then(r=>{if(!r.ok)throw Error('Reference photo could not load.');return r.blob();}).then(photoData) : '',
     ]);
     if (!current(stamp)) return;
     context.preferences=preferences; context.referenceImage=reference; image=originalImage=reference; paintPhoto();
     window.dispatchEvent(new CustomEvent('maya:fabric-context',{detail:{submissionId:context.submissionId,referenceImage:reference}}));
   }
-  async function loadBook() {
-    if(saving)return;
-    const stamp=epoch, sequence=++bookSeq;
-    if (!context.submissionId) { if(view==='saved')status('Open a submission to save and select fabrics.'); return; }
-    try {
-      const data=await json('/api/admin/fabrics/lookbook?submissionId='+encodeURIComponent(context.submissionId));
-      if (!current(stamp) || sequence!==bookSeq) return;
-      book=data; paint(); notifySelection();
-    } catch(e) { if(current(stamp))els.saveStatus.textContent=e.message; }
+  async function loadBook(forSave=false) {
+    if(saves.pending.size&&!forSave)return;
+    const ticket=projectTicket(),sequence=++bookSeq;
+    if(!context.submissionId){if(view==='saved')status('Open a submission to save fabrics.');return;}
+    try{
+      const data=await json('/api/admin/fabrics/lookbook?submissionId='+encodeURIComponent(context.submissionId),{signal:AbortSignal.any([projectReads.signal,AbortSignal.timeout(10000)])});
+      if(!projectCurrent(ticket)||(!forSave&&sequence!==bookSeq))return;
+      book=data;paint();notifySelection();
+    }catch(e){if(projectCurrent(ticket)&&sequence===bookSeq)els.saveStatus.textContent=e.message;}
   }
-  function notifySelection() {
-    const selected=book.items.find(p=>p.url===book.selectedUrl) || null;
-    window.dispatchEvent(new CustomEvent('maya:fabric-selected',{detail:{submissionId:context.submissionId,product:selected}}));
+  function notifySelection(){
+    window.dispatchEvent(new CustomEvent('maya:fabric-selected',{detail:{submissionId:context.submissionId,garmentId:context.piece?.id||'',product:selectedProduct()}}));
   }
-  async function save(product, actionName, button) {
-    const stamp=epoch;
-    if(saving)return;
-    if (!context.submissionId) return status('Open a submission to save this fabric.');
-    if (book.generation===null) { await loadBook(); if (!current(stamp) || book.generation===null) return; }
-    saving=true;bookSeq++;button.disabled=true;
-    try {
-      const data=await json('/api/admin/fabrics/lookbook',{method:'POST',body:JSON.stringify({submissionId:context.submissionId,generation:book.generation,action:actionName,product:{...product,garment:product.garment || context.piece?.name || '',garmentId:product.garmentId||context.piece?.id||''}})});
-      if (!current(stamp)) return;
-      book=data; paint(); notifySelection(); els.saveStatus.textContent=actionName==='remove'?'Removed from lookbook.':actionName==='select'?'Selected for this design.':'Saved to this submission’s lookbook.';
-    } catch(e) { if(current(stamp)){saving=false;els.saveStatus.textContent=e.message; await loadBook();} }
-    finally { if(current(stamp))saving=false;button.disabled=false; }
+  function save(product,actionName,button){
+    const ticket=projectTicket(),queue=saves,submissionId=context.submissionId;
+    if(!submissionId)return status('Open a submission to save this fabric.');
+    const snapshot=structuredClone(product),garmentId=context.piece?.id||product.garmentId||'',garmentName=context.piece?.name||product.garment||'';
+    const key=actionName+'|'+snapshot.url+'|'+garmentId;if(queue.pending.has(key))return;
+    queue.pending.add(key);bookSeq++;button.disabled=true;button.setAttribute('aria-busy','true');
+    const task=async()=>{
+      if(!projectCurrent(ticket))return;
+      if(book.generation===null){await loadBook(true);if(!projectCurrent(ticket)||book.generation===null)return;}
+      try{
+        const payload=book.items.some(p=>p.url===snapshot.url)?{url:snapshot.url}:{...snapshot,garment:snapshot.garment||garmentName,garmentId:snapshot.garmentId||garmentId};
+        const data=await json('/api/admin/fabrics/lookbook',{method:'POST',body:JSON.stringify({submissionId,generation:book.generation,action:actionName,garmentId,product:payload})});
+        if(!projectCurrent(ticket))return;
+        book=data;paint();notifySelection();els.saveStatus.textContent=actionName==='remove'?'Removed.':actionName==='select'?'Selected: '+(garmentName||'this look')+'.':'Saved'+(garmentName?': '+garmentName:'')+'.';
+      }catch(e){if(projectCurrent(ticket)){book.generation=null;els.saveStatus.textContent=e.name==='TimeoutError'?'Save not confirmed. Check Favorites before retrying.':e.message;await loadBook(true);}}
+    };
+    queue.tail=queue.tail.catch(()=>{}).then(task).finally(()=>{queue.pending.delete(key);button.removeAttribute('aria-busy');button.disabled=false;if(projectCurrent(ticket))paint();});return queue.tail;
   }
   function inventory() {
     return (context.inhouse||[]).map(p=>({...p,url:p.url&&p.url!=='#'?p.url:(p.image||p.img||''),image:p.image||p.img||'',evidence:'atelier_inventory',price:'',unit:'',availability:'unknown',garment:p.garment||''})).filter(p=>p.image && p.url);
@@ -194,15 +222,17 @@
     const caption=node('p','fa-card-caption',[use,local?'':p.merchant].filter(Boolean).join(' · ')||(local?'Availability not recorded':'Delivery unconfirmed'));caption.dataset.mayaType='P3';caption.title=[caption.textContent,knownPrice,p.availability==='in_stock'?'Seller lists in stock':'Availability unconfirmed','Delivery unconfirmed'].filter(Boolean).join(' · ');
     link.append(title,caption);item.append(link);
     const controls=node('div','fa-card-actions');const exists=book.items.some(v=>v.url===p.url);
-    const saveButton=action(exists?'Saved':'Save',()=>save(p,'save',saveButton));saveButton.disabled=exists||!context.submissionId||!/^https:|^\/aesthetics\/fabrics\//.test(p.url);
-    const choose=action(book.selectedUrl===p.url?'Selected':'Use',()=>save(p,'select',choose));choose.setAttribute('aria-label',book.selectedUrl===p.url?'Selected for design':'Use for design');choose.disabled=book.selectedUrl===p.url||saveButton.disabled&&!exists;
+    const pending=actionName=>saves.pending.has(actionName+'|'+p.url+'|'+(context.piece?.id||p.garmentId||''));
+    const saveButton=action(exists?'Saved':'Save',()=>save(p,'save',saveButton));saveButton.disabled=pending('save')||exists||!context.submissionId||!/^https:|^\/aesthetics\/fabrics\//.test(p.url);
+    const selected=selectedProduct()?.url===p.url;
+    const choose=action(selected?'Selected':'Use',()=>save(p,'select',choose));choose.setAttribute('aria-label',selected?'Selected for design':'Use for design');choose.disabled=pending('select')||selected||saveButton.disabled&&!exists;
     controls.append(saveButton,choose);
     if(view==='saved'){const remove=action('Remove',()=>save(p,'remove',remove));controls.append(remove);}
     item.append(controls);return item;
   }
   function paint() {
     els.search.setAttribute('aria-pressed',String(view==='search'));els.saved.setAttribute('aria-pressed',String(view==='saved'));els.inhouse.setAttribute('aria-pressed',String(view==='inhouse'));
-    els.inhouse.hidden=!context.inhouse;els.fresh.hidden=!!context.automatic;els.form.hidden=!!context.automatic;els.sub.hidden=!!context.automatic;
+    els.inhouse.hidden=false;els.fresh.hidden=!!context.automatic;els.form.hidden=!!context.automatic;els.sub.hidden=!!context.automatic;
     els.filter.hidden=view==='inhouse';if(view==='inhouse')els.storeWrap.hidden=true;
     const candidates=view==='saved'?book.items:view==='inhouse'?inventory():products;
     const items=candidates.filter(p=>!storeFilter||view==='inhouse'||(()=>{try{return new URL(p.url).hostname.replace(/^www\./,'')===storeFilter.replace(/^www\./,'');}catch{return false;}})());
@@ -234,7 +264,7 @@
     let finished=false;
     try {
       const r=await fetch('/api/admin/fabrics/search',{method:'POST',headers:headers(),signal:active.signal,
-        body:JSON.stringify({submissionId:context.submissionId || '',request:submitted,image,preferences:context.preferences || '',piece:context.piece || {},pieces:context.pieces||[],automatic:!!context.automatic,stores:storeFilter?[storeFilter]:[],history})});
+        body:JSON.stringify({submissionId:context.submissionId||'',request:submitted,image,preferences:context.preferences||'',piece:pieceMetadata(context.piece),pieces:(context.pieces||[]).slice(0,12).map(pieceMetadata),automatic:!!context.automatic,stores:storeFilter?[storeFilter]:[],history})});
       if(!r.ok){const data=await r.json().catch(()=>({}));throw Error(data.error || 'Fabric search failed. Try again.');}
       const reader=r.body.getReader(), decoder=new TextDecoder();let buffer='';
       const accept=raw=>{
@@ -273,12 +303,15 @@
     els.sub.textContent=next.submissionId?'This submission’s fabrics'+(next.piece?.name?' · '+next.piece.name:''):'Open a submission to save favorites';
     paint();
     if(!account()){status('Sign in to Admin to search fabrics.');return;}
+    // The book belongs to the project, so photo loading or garment changes must
+    // not cancel its only hydration request.
+    void loadBook();
     if(changed)status(context.automatic?'Loading the saved look…':'Describe what you need. A photo is optional.');
     els.send.disabled=true;
     try{
       if(changed&&next.referenceImage){const value=await photoData(next.referenceImage);if(!current(stamp))return;image=value;originalImage=next.referenceImage;paintPhoto();}
-      await loadContext(stamp);if(!current(stamp))return;await loadBook();
-      try{await loadInventory();}catch(e){if(current(stamp))els.saveStatus.textContent=e.message;}
+      await loadContext(stamp);if(!current(stamp))return;
+      void loadInventory().catch(e=>{if(current(stamp)&&view==='inhouse')status(e.name==='TimeoutError'?'In-house photos timed out. Refresh to retry.':e.message);});
       if(current(stamp)&&context.automatic&&!next.silent&&!autoStarted){autoStarted=true;await run();}
     }catch(e){if(current(stamp))status(e.message);}
     finally{if(current(stamp)&&!busy)els.send.disabled=false;}
@@ -286,12 +319,12 @@
   }
   function guardAccount(){if(dialog && identity!==scope()){
     const previousSubmission=context.submissionId;
-    reset();context={};identity=scope();paint();els.sub.textContent='Fabric search';
+    context={};reset();identity=scope();paint();els.sub.textContent='Fabric search';
     window.dispatchEvent(new CustomEvent('maya:fabric-selected',{detail:{submissionId:previousSubmission,product:null}}));
     window.dispatchEvent(new CustomEvent('maya:fabric-context',{detail:{submissionId:previousSubmission,referenceImage:''}}));
     status('Account changed. Start a new search.');
   }}
-  window.addEventListener('storage',guardAccount);window.addEventListener('focus',guardAccount);
+  window.addEventListener('storage',guardAccount);window.addEventListener('focus',guardAccount);window.addEventListener('maya-owner-session-changed',guardAccount);
   setInterval(()=>{if(dialog)guardAccount();},1000);
-  window.MayaFabricAssistant={open,close,expand,prepare:next=>open({...next,silent:true}),reset:()=>{reset();context={};identity=scope();if(els){els.sub.textContent='';paint();}},selection:()=>{guardAccount();return book.items.find(p=>p.url===book.selectedUrl)||null;}};
+  window.MayaFabricAssistant={open,close,expand,prepare:next=>open({...next,silent:true}),reset:()=>{context={};reset();identity=scope();if(els){els.sub.textContent='';paint();}},selection:piece=>{guardAccount();return selectedProduct(piece);},focusGarment:piece=>{guardAccount();if(!context.submissionId)return;context={...context,piece:pieceMetadata(piece)};if(identity!==scope()){reset();identity=scope();paint();notifySelection();}}};
 })();

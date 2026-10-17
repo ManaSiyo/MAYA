@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 const server=readFileSync(new URL('../docs/server/server.js',import.meta.url),'utf8');
 const extract=(start,end)=>server.slice(server.indexOf(start),server.indexOf(end,server.indexOf(start)));
-const response=()=>({code:200,status(code){this.code=code;return this;},json(body){this.body=body;return this;}});
+const response=()=>({code:200,headers:{},status(code){this.code=code;return this;},json(body){this.body=body;return this;},setHeader(key,value){this.headers[key]=value;},end(body){this.body=body;}});
 let stored={ok:false,status:404},writes=0;
 const routes=new Map(),ctx={app:{post:(path,...args)=>routes.set(path,args.at(-1))},requireAuthHeader(){},express:{json:()=>()=>{}},requireGoogleUser:async()=>({sub:'owner',email:'owner@example.com'}),rateLimit:()=>({ok:true}),console:{log(){},warn(){},error(){}},gcsGet:async()=>stored,gcsPut:async()=>{writes++;},SUBMISSIONS_BUCKET:'fake',SUB_PREFIX:'submissions/',SUB_ID:/^[A-Za-z0-9_-]{3,120}$/,Buffer,b64ToBytes:s=>Buffer.from(s,'base64'),pathToId:s=>s,_subsCache:{}};
 runInNewContext(extract('const _subOwners =','let _svcTok ='),ctx);
@@ -38,4 +38,40 @@ const addRoutes=new Map(),addContext={...invoiceContext,app:{post:(path,...args)
 runInNewContext(extract("app.post('/api/admin/lead-add'","app.post('/api/admin/lead-update'"),addContext);
 const added=response();await addRoutes.get('/api/admin/lead-add')({body:{name:'Reviewed lead',uid:'attacker',requestId:'approved-request-00001'}},added);
 assert.equal(added.body.ok,true);assert.equal(addOptions.uid,'owner');assert.equal(addOptions.requestId,'approved-request-00001');
-console.log('Admin storage: upload ownership fails closed, listing paginates completely and invoice creation preserves URLs with truthful save outcomes.');
+
+// The actual route must never acknowledge two stale full-document replacements.
+const piecePath='submissions/reviewed-project/pieces.json',markerPath='submissions/reviewed-project/submission.json',pieceRoutes=new Map();
+const documents=new Map([[markerPath,{ok:true,buf:Buffer.from('{}'),generation:'1',type:'application/json'}]]);
+let pieceWrites=0,unconfirmed=false,failedRead='';
+const pieceContext={...ctx,app:{post:(path,...args)=>pieceRoutes.set(path,args.at(-1)),get:(path,...args)=>pieceRoutes.set(path,args.at(-1))},requireAdmin:async()=>({sub:'owner'}),idToPath:id=>id.startsWith('submissions/')?id:null,
+ gcsGet:async path=>path===failedRead?{ok:false,status:503}:documents.get(path)||{ok:false,status:404},
+ gcsPut:async(path,buf,type,generation)=>{
+  assert.equal(typeof generation,'string','Every dissection write has a storage generation precondition');
+  if(generation!==(documents.get(path)?.generation||'0'))throw Object.assign(Error('conflict'),{status:412});
+  pieceWrites++;const next=String(Number(generation)+1);documents.set(path,{ok:true,buf,generation:next,type});return unconfirmed?{}:{generation:next};
+ }};
+runInNewContext(extract('function validDissection(', '\nmountFabricSearch('),pieceContext);
+runInNewContext(extract("app.get('/api/admin/subfile'", '// POST /api/admin/savepieces'),pieceContext);
+const savePieces=async(data,generation)=>{const res=response();await pieceRoutes.get('/api/admin/savepieces')({body:{folderId:'reviewed-project',data,generation}},res);return res;};
+const base={pieces:[{id:'coat',name:'Coat',fabric:'wool'}]};
+for(const generation of [undefined,null,0,'','garbled'])assert.equal((await savePieces(base,generation)).code,428);
+for(const data of [{},[],{pieces:[null]},{pieces:[{name:'Coat'}]},{pieces:[{id:'coat'},{id:'coat'}]},{pieces:[{id:'coat',_pattern:{invalid:true}}]}])assert.equal((await savePieces(data,'0')).code,400);
+assert.equal(pieceWrites,0);
+const initial=await savePieces(base,'0');assert.equal(initial.body.ok,true);assert.equal(initial.body.generation,'1');
+const [patternSave,imageSave]=await Promise.all([savePieces({pieces:[{...base.pieces[0],_pattern:'reviewed pattern'}]},'1'),savePieces({pieces:[{...base.pieces[0],_image:'stale tab image'}]},'1')]);
+assert.deepEqual([patternSave.code,imageSave.code].sort(),[200,409]);assert.equal(pieceWrites,2);
+const acceptedDocument=documents.get(piecePath).buf.toString();assert.match(acceptedDocument,/reviewed pattern/);
+assert.equal((await savePieces(base,'0')).code,409);assert.equal(documents.get(piecePath).buf.toString(),acceptedDocument,'Stale first-save claims cannot erase existing work');
+const healthy=documents.get(piecePath),before=pieceWrites;
+for(const broken of [{ok:true,buf:Buffer.from('{'),generation:'2'},{ok:true,buf:Buffer.from('{}'),generation:'2'},{ok:true,buf:Buffer.from(JSON.stringify(base))}]){
+ documents.set(piecePath,broken);assert.equal((await savePieces(base,'2')).code,503);assert.equal(pieceWrites,before);
+}
+documents.set(piecePath,healthy);failedRead=piecePath;assert.equal((await savePieces(base,'2')).code,503);failedRead=markerPath;assert.equal((await savePieces(base,'2')).code,503);failedRead='';
+documents.delete(markerPath);assert.equal((await savePieces(base,'2')).code,404);documents.set(markerPath,{ok:true,buf:Buffer.from('{}')});
+assert.equal(pieceWrites,before);
+const fileResponse=response();await pieceRoutes.get('/api/admin/subfile')({query:{id:piecePath}},fileResponse);assert.equal(fileResponse.headers['Cache-Control'],'private, no-store');assert.equal(fileResponse.headers['X-Maya-Generation'],'2');assert.equal(fileResponse.body,healthy.buf);
+documents.set(piecePath,{...healthy,buf:Buffer.from(JSON.stringify({pieces:[{name:'Legacy coat',_pattern:'old retained pattern'}]}))});
+const legacySave=await savePieces({pieces:[{id:'garment-stable',name:'Legacy coat',_pattern:'old retained pattern'}]},'2');assert.equal(legacySave.body.generation,'3','A reviewed legacy document can gain IDs on an explicit save');
+unconfirmed=true;const uncertain=await savePieces(base,'3');assert.equal(uncertain.code,503);assert.equal(uncertain.body.error,'save_unconfirmed');assert.equal(uncertain.body.ok,undefined);
+const sizeWrites=pieceWrites;assert.equal((await savePieces({pieces:[{...base.pieces[0],_pattern:'é'.repeat(13*1024*1024)}]},'4')).code,413);assert.equal(pieceWrites,sizeWrites);
+console.log('Admin storage: upload ownership, complete listing, truthful invoices and generation-checked dissection saves/cache headers passed.');

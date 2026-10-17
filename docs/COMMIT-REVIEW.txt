@@ -1,21 +1,38 @@
-[Codex] Refresh cached fabric assets for returning clients
+[Codex] Fix fabric scope, stale refreshes and durable saves
 
-Public fabric JS and CSS still returned a seven-day cache lifetime under their
-unchanged v3 URLs. A successful deployment could therefore leave returning
-clients on the old viewer/matching workflow. Brief and Operations now request v4
-for both assets, bypassing already-fresh cached files. Add exact no-cache Hosting
-rules for fabric-assistant.js/css and voice-preparation.js. Preserve image caching,
-existing security headers and all saved Aesthetic Control settings.
+Fabric preferences, lookbook selections and Operations prompts now retain canonical
+garment identity. Private selection fingerprints reject reused IDs after a material
+change; fresh dissections use UUIDs. Browser requests carry bounded metadata instead
+of embedded production images. Optional inventory no longer blocks Sourceable.
+New saved products use verified seller facts; garment switches, initial hydration,
+rapid saves, failures and uncertain writes preserve reviewed intent.
 
-This changes asset delivery only; no new visible UI, styling authority, auth or
-provider behavior. Release-contract and app-regression assertions guard both page
-references and the three runtime policies. Actual fabric-search and Brief UI
-fixtures pass, followed last by the standalone shared Aesthetic Control authority
-gate, including default/saved styles and six widths. Earlier full integrated
-regression, communications and voice checks passed with the recovery follow-up.
+Brief saves require the reviewed Storage generation and publish only acknowledged
+data. Concurrent tabs cannot overwrite each other silently; mutable JSON bypasses
+stale file-size cache keys. Oversized patterns and client transcripts remain drafts
+instead of disappearing. Client/Playground queues coalesce covered saves, flush late
+edits before switching and keep truthful Save/rename/delete acknowledgements.
+Prompt Engine pins live/private saves to account identity and preserves typing.
+Outbound rejects pre-save snapshots and coalesces overlapping refreshes.
 
-Push is explicitly authorized. Verify the final exact commit on Firebase and
-Cloud Run, deployed page/asset bytes and actual no-cache headers. A pushed branch
-or Vercel success does not prove production. Live model relevance, owner audio
-latency and carrier acceptance remain. No credentials, billing or environment
-changes; no personal Chrome access.
+Operations reports failed Logic Save/Reset/lock, isolates account settings and
+keeps current measurement values when session storage fails. Unsafe inputs stop
+before paid work. Remove 589 unreachable Brief sourcing lines, retaining migration
+paths. Shorten 30 helper passages from 597 to 486 words (18.6%); no styling/default changes.
+
+Validation: pinned npm ci; all 65 Cloud Build Node test commands; full integrated
+app-regression (636 named checks plus other imported suite assertions); real-server smoke; 32 inline
+scripts parse; diff checks. Current transport stress 44/44. Final standalone
+Aesthetic Control runs last, with actual default/saved responsive and error-state
+inspection. Existing legacy Operations fields still lack complete Editor/P1/P3
+authority: deliberately preserved because the owner forbids appearance changes.
+
+Limits: old open Brief clients must reload for reviewed-generation saves. Conflicts
+require review and never auto-rebase retained drafts. Unsaved Logic may be discarded
+on explicit garment/account navigation; measurement fallback is page-local. Saved
+garment measurement keys require re-entry rather than adopting ambiguous old keys.
+The private fur/green-pants demo and real model/carrier/audio quality remain unverified;
+no personal Chrome, provider sends, credentials, billing or environment changes.
+
+Fromsa explicitly authorized automatic Push. Verify the exact Git commit on both
+Firebase Hosting and Cloud Run after Cloud Build; GitHub/Vercel success is not proof.

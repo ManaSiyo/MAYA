@@ -442,3 +442,55 @@ references are v4 to bypass already-fresh week-cached v3 files. Preserve image
 caching/security headers and verify exact live asset bytes plus cache policy
 when shipping shared behavior. Config-only changes add no visible UI and still
 finish with the shared Aesthetic Control authority gate.
+
+October 17 deeper save/fabric audit: shared fabric requests carry bounded garment
+metadata, not nested rendered images/patterns/meshes. The server reads canonical
+saved crops. Inventory loads independently of photo/lookbook/search. Preserve
+project-bound lookbook hydration through garment focus changes and prepare the
+actual selected Operations garment. Save/Use/Remove serialize per account and
+submission, retaining explicit garment intent across picker changes and same-account
+renewal. Cancel unsent work on project/account changes. The 15-second write deadline
+requires read reconciliation after uncertainty, never automatic resend. Preserve
+generation preconditions, selectedByGarment and private stored-only
+selectedGarmentFingerprints; changed or ambiguous legacy garments must not inherit
+another material. New dissections use UUID IDs; keep legacy read/local-folder
+compatibility. First saves verify new seller listings; saved-URL reuse preserves
+seller facts. Do not restore the removed unreachable Brief sourcing implementation.
+Brief UTF-8 payload overflow must retain the full generated draft and report failure,
+never silently drop patterns. Run fabric-workflow-ui, fabric-search, fabric-sourcing,
+fabric-search-ui and brief-operation-races alongside the existing release gates.
+
+Project saves coalesce only already-covered requests from the same account/board;
+edits made while a target project loads require a second successful flush before
+detach. Save/rename acknowledge only persisted work; preserve later edits, failed
+drafts and oversized transcripts. Deletion continuations pin account generation.
+Dirty/pending online work also warns on refresh, but browser termination is best-
+effort. Run project-lifecycle, client-account-races and both hands batteries.
+Admin Prompt Engine uses account-bound live/private reads and fallback writes,
+protects typing, and requires review after an initial pending load. Outbound
+workspace revisions reject old reads after Save and coalesce overlapping refreshes.
+Run admin-prompt-saves and crm-failure-ui; both remain release/app-regression gates.
+The copy-only cleanup changes existing helper passages, with no CSS/role/material
+authority changes. Full functional validation and final aesthetic-authority are
+still required. Public release checks and synthetic fixtures do not substitute
+for the private fur/green-pants demo or owner/provider acceptance; fresh Chrome
+permission is required for each access session.
+
+October 17 dissection save audit: /api/admin/subfile exposes X-Maya-Generation
+and mutable JSON uses private,no-store. /api/admin/savepieces requires the reviewed
+generation, returns the acknowledged generation, rejects stale writes with 409 and
+missing review with 428. Brief pins raw-dissection lineage; never rebase a retained
+draft automatically, publish an unacknowledged snapshot or remove generated
+patterns to fit the 25 MiB UTF-8 limit. Legacy saved files remain readable; old
+open clients must reload before saving. Run admin-storage, brief-operation-races
+and brief-workspace-ui with the existing release and final aesthetic gates.
+
+October 17 Operations save failures: account-scoped Pattern Logic/Test lock keys
+must preserve legacy globals without adopting unknown-owner values. Save/Reset/lock
+failures retain reviewed state; unsaved/unreadable logic blocks paid work. Failed
+measurement writes retain current scoped page-memory values; unreadable initial
+values block generation. Saved piece ID plus image scopes measurements; legacy
+session keys remain intact and may require re-entry. Run operation-save-failures,
+brief-operation-races and final aesthetic-authority. Current owner constraint forbids
+appearance changes: legacy field/full-role authority gaps are explicitly documented
+in AI-HANDOFF and must not be claimed fixed by existing caption/pill/drawer checks.

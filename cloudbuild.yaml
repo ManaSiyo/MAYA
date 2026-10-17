@@ -47,6 +47,7 @@ steps:
         node tests/release-contract.mjs
         node tests/lead-store.mjs
         node tests/admin-storage.mjs
+        node tests/admin-prompt-saves.mjs
         node tests/project-lifecycle.mjs
         node tests/brief-operation-races.mjs
         node tests/release-stamp.mjs
@@ -82,6 +83,8 @@ steps:
         node tests/admin-state-races.mjs
         node tests/message-races.mjs
         node tests/fabric-search-ui.mjs
+        node tests/fabric-workflow-ui.mjs
+        node tests/operation-save-failures.mjs
         node tests/crm-ui.mjs
         node tests/crm-failure-ui.mjs
         node tests/canon-ui.mjs

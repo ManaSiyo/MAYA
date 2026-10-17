@@ -1866,25 +1866,30 @@ async function _loadSubmission(tok) {
     const imgFile = files.find(f => /dream-garment/i.test(f.name || '')) || files.find(f => /^image\//i.test(f.mime || ''));
     let summary = null, heroImage = null;
     if (sumFile) {
-      try { summary = await (await fetch('/api/admin/subfile?id=' + encodeURIComponent(sumFile.id), { headers: { 'Authorization': 'Bearer ' + tok } })).json(); } catch (_) {}
+      try { summary = await (await fetch('/api/admin/subfile?id=' + encodeURIComponent(sumFile.id), { headers: { 'Authorization': 'Bearer ' + tok },cache:'no-store' })).json(); } catch (_) {}
     }
     if (imgFile) {
       try {
-        const blob = await (await fetch('/api/admin/subfile?id=' + encodeURIComponent(imgFile.id), { headers: { 'Authorization': 'Bearer ' + tok } })).blob();
+        const blob = await (await fetch('/api/admin/subfile?id=' + encodeURIComponent(imgFile.id), { headers: { 'Authorization': 'Bearer ' + tok },cache:'no-store' })).blob();
         heroImage = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
       } catch (_) {}
     }
     // v0.35: a saved pieces.json means this submission was already dissected
     // and rendered once. Load it so nothing is paid for twice.
-    let loadedPieces = null;
+    let loadedPieces = null,reviewedGeneration='0';
     const pcsFile = files.find(f => /^pieces\.json$/i.test(f.name || ''));
     if (pcsFile) {
-      try {
-        const pj = await (await fetch('/api/admin/subfile?id=' + encodeURIComponent(pcsFile.id) + '&v=' + (pcsFile.size || 0), { headers: { 'Authorization': 'Bearer ' + tok } })).json();
-        if (pj && Array.isArray(pj.pieces)) loadedPieces = pj;
-      } catch (_) {}
+      const response=await fetch('/api/admin/subfile?id='+encodeURIComponent(pcsFile.id),{headers:{'Authorization':'Bearer '+tok},cache:'no-store'});
+      if(response.status!==404){
+        if(!response.ok)throw Error('Saved dissection could not be loaded. Existing work was not replaced.');
+        const pj=await response.json();reviewedGeneration=response.headers.get('X-Maya-Generation')||'';
+        if(!pj||!Array.isArray(pj.pieces)||!/^[1-9]\d*$/.test(reviewedGeneration))throw Error('Saved dissection could not be reviewed safely. Reload before saving.');
+        loadedPieces=pj;
+      }
     }
     if (!current() || (!summary && !heroImage)) return;
+    const review={sid,account,local:_briefLocalSequence,hero:heroImage,generation:reviewedGeneration};
+    _piecesReview=review;if(loadedPieces)_piecesRevisions.set(loadedPieces,review);
     const retained=_retainedDissection;
     window._cachedPieces=retained&&retained.context.sid===sid&&retained.context.account===account&&retained.context.hero===heroImage?retained.dissection:loadedPieces;
     const snap = {
@@ -1901,7 +1906,7 @@ async function _loadSubmission(tok) {
     const gate = document.getElementById('upload-gate');
     if (gate) gate.classList.add('hidden');
     document.body.classList.add('loaded');
-  } catch (e) { console.warn('[submission] load', e); }
+  } catch (e) { console.warn('[submission] load', e);if(current())showBackendToast(e.message); }
 }
 
 function _updateBrandSub() {
@@ -2300,7 +2305,7 @@ async function loadFromFolder(dir,loadSequence=++_briefFolderLoadSequence) {
   if (!moodboard && !summary) {
     if(loadSequence!==_briefFolderLoadSequence)return;
     const err = document.getElementById('upload-error');
-    if (err) { err.style.display = 'block'; err.textContent = 'This folder doesn\'t look like a Maya client folder (no moodboard.json or summary.json).'; }
+    if (err) { err.style.display = 'block'; err.textContent = 'This isn\'t a Maya client folder (missing moodboard.json or summary.json).'; }
     return;
   }
   const items = Array.isArray(moodboard) ? moodboard : [];
@@ -2318,7 +2323,7 @@ async function loadFromFolder(dir,loadSequence=++_briefFolderLoadSequence) {
   // Only a valid, current folder replaces the current brief and its save target.
   _briefLocalSequence++;_submissionLoadSequence++;
   window._openedSubmission=null;window._cachedPieces=null;window._dissectTarget=null;
-  _unsavedDissection=null;_retainedDissection=null;window._lastOpsPieces=[];
+  _unsavedDissection=null;_retainedDissection=null;_piecesReview=null;window._lastOpsPieces=[];
   const snap = {
     currentClientName: (summary && summary.client && summary.client.name) || (dir.name || 'Client').split(' ')[0],
     lastSummary: summary,
@@ -2491,33 +2496,41 @@ function _shrinkDataUrl(dataUrl, maxW) {
 let _briefLocalSequence = 0;
 let _briefFolderLoadSequence = 0;
 let _piecesSaveChain = Promise.resolve();
+let _piecesReview=null;
+const _piecesRevisions=new WeakMap();
 let _unsavedDissection = null;
 let _retainedDissection = null;
 let _dissectionBusy = false;
 function _piecesAccount(token) {
   try { return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub || token; } catch { return token; }
 }
-function _piecesContext() { return {sid:String(window._openedSubmission?.id||''),local:_briefLocalSequence,hero:String(window._dissectTarget?.hero||''),account:_piecesAccount(_subCachedTok()||'')}; }
+function _piecesContext() { return {sid:String(window._openedSubmission?.id||''),local:_briefLocalSequence,hero:String(window._dissectTarget?.hero||''),account:_piecesAccount(_subCachedTok()||''),review:_piecesReview}; }
 function _piecesContextCurrent(context) { const current=_piecesContext();return !!context.account && context.sid===current.sid && context.local===current.local && context.hero===current.hero && context.account===current.account; }
 function _savePiecesToDrive(dissection, context=_piecesContext()) {
   if (!context.sid || !context.account || !Array.isArray(dissection?.pieces)) return Promise.reject(Error('Sign in and open this submission before saving.'));
-  dissection.pieces.forEach((piece,index)=>{if(piece&&!piece.id)piece.id='saved-piece-'+index;});
+  const review=_piecesRevisions.get(dissection)||context.review;
+  if(!review||!['sid','account','local','hero'].every(key=>review[key]===context[key])||!/^(?:0|[1-9]\d*)$/.test(review.generation||''))return Promise.reject(Error('Reload this submission to review its saved version before saving. Your draft remains here.'));
+  _piecesRevisions.set(dissection,review);
+  dissection.pieces.forEach(piece=>{if(piece&&!piece.id)piece.id='garment-'+crypto.randomUUID();});
   const clean=JSON.parse(JSON.stringify(dissection,(k,v)=>(k==='_patternPending'||k==='_virtual')?undefined:v));
   // Every caller keeps its own snapshot/context. A simultaneous save queues instead
   // of returning an unacknowledged success or dropping the newer piece image.
   const task=_piecesSaveChain.catch(()=>{}).then(async()=>{
     if (!_piecesContextCurrent(context)) throw Error('Submission or account changed. Reopen the original submission to save.');
+    if(review.conflict)throw Error('Saved work changed in another window. Your draft remains here; review the latest submission in another tab before replacing it.');
     for (const piece of clean.pieces) {
       if (piece._image) piece._image=await _shrinkDataUrl(piece._image,1280);
       if (piece._pattern) piece._pattern=await _shrinkDataUrl(piece._pattern,1600);
     }
-    let body=JSON.stringify({folderId:context.sid,data:clean});
-    if(body.length>27*1024*1024){clean.pieces.forEach(piece=>delete piece._pattern);body=JSON.stringify({folderId:context.sid,data:clean});}
+    if(new TextEncoder().encode(JSON.stringify(clean)).byteLength>25*1024*1024)throw Error('Dissection exceeds the 25 MiB save limit. Generated work remains here; reduce image size and retry.');
+    const body=JSON.stringify({folderId:context.sid,data:clean,generation:review.generation});
     if (!_piecesContextCurrent(context)) throw Error('Submission or account changed before saving.');
-    const response=await fetch('/api/admin/savepieces',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_subCachedTok()},body});
-    if (!response.ok) throw Error('Could not save this dissection ('+response.status+').');
-    const result=await response.json();if(result.ok!==true)throw Error('The server did not confirm this save.');
-    return {saved:true,submissionId:context.sid};
+    const response=await fetch('/api/admin/savepieces',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+_subCachedTok()},body,signal:AbortSignal.timeout(90000)});
+    const result=await response.json().catch(()=>({}));
+    if (!response.ok){if(response.status===409)review.conflict=true;throw Error(result.detail||'Could not save this dissection ('+response.status+').');}
+    if(result.ok!==true||!/^[1-9]\d*$/.test(result.generation||''))throw Error('The server did not confirm the saved version. Keep this draft and reload to check it.');
+    review.generation=result.generation;
+    return {saved:true,submissionId:context.sid,data:clean,generation:result.generation};
   });
   _piecesSaveChain=task;return task;
 }
@@ -2525,7 +2538,7 @@ async function _persistDissection(dissection,context=_piecesContext()) {
   if(!_piecesContextCurrent(context))throw Error('Submission or account changed. Reopen the original submission to save.');
   if(!context.sid){_unsavedDissection=null;if(_piecesContextCurrent(context)&&window._dissectTarget)renderDissection({card:window._dissectTarget.card});return {saved:false,local:true};}
   const pending={dissection,context};_unsavedDissection=pending;_retainedDissection=pending;
-  try {const result=await _savePiecesToDrive(dissection,context);if(_unsavedDissection===pending)_unsavedDissection=null;if(_piecesContextCurrent(context)){(window._currentSnap||={})._savedDissection=JSON.parse(JSON.stringify(dissection));_publishSavedOperations(dissection,context);}return result;}
+  try {const result=await _savePiecesToDrive(dissection,context);if(_unsavedDissection===pending){_unsavedDissection=null;if(_retainedDissection===pending)_retainedDissection=null;}if(_piecesContextCurrent(context)){(window._currentSnap||={})._savedDissection=JSON.parse(JSON.stringify(result.data));_publishSavedOperations(result.data,context);}return result;}
   finally {if(_piecesContextCurrent(context)&&window._dissectTarget){window._dissectTarget.card._dissection=dissection;renderDissection({card:window._dissectTarget.card});}}
 }
 async function retryDissectionSave() {
@@ -2533,7 +2546,7 @@ async function retryDissectionSave() {
   const pending=_unsavedDissection;let notice='';
   _dissectionBusy=true;setDissectStatus(true,'Saving…');
   try{await _persistDissection(pending.dissection,pending.context);notice='Dissection saved.';}
-  catch(error){notice=error.message+' Generated pieces remain here; use Save dissection to retry.';}
+  catch(error){notice=error.message+' Pieces remain here; use Save dissection to retry.';}
   finally{_dissectionBusy=false;setDissectStatus(false);if(notice&&_piecesContextCurrent(pending.context))showBackendToast(notice);}
 }
 async function renderMissingPieces() {
@@ -2578,7 +2591,7 @@ document.addEventListener('DOMContentLoaded',()=>document.getElementById('operat
 let _briefAccount = _piecesAccount(_subCachedTok()||'');
 function _clearBriefPrivate() {
   window._cachedPieces=null;window._dissectTarget=null;window._currentSnap=null;window.lastSummary=null;currentClientName=null;
-  _unsavedDissection=null;_retainedDissection=null;_pieceState={pieces:[],idx:0};window._pieceState=_pieceState;
+  _unsavedDissection=null;_retainedDissection=null;_piecesReview=null;_pieceState={pieces:[],idx:0};window._pieceState=_pieceState;
   for(const id of ['op-date','op-hero-name','op-biography','op-vision','op-chips','op-measurements','op-image-frame','piece-pills']){const el=document.getElementById(id);if(el){el.innerHTML='';el.textContent='';}}
   for(const id of ['op-chips-section','op-measurements-section','piece-swiper']){const el=document.getElementById(id);if(el)el.style.display='none';}
   const selection=document.querySelector('#brand .sub');if(selection)selection.textContent='Brief';
@@ -2695,6 +2708,7 @@ async function beginDissection() {
     const d = await dissectImage(t.hero, (window._currentSnap && window._currentSnap.lastSummary) || window.lastSummary || {});
     if (!d || !Array.isArray(d.pieces) || !d.pieces.length) throw new Error('nothing came back');
     if(!_piecesContextCurrent(context))return;
+    d.pieces.forEach(piece=>{if(piece)piece.id='garment-'+crypto.randomUUID();});
     t.card._dissection = d;
     _unsavedDissection={dissection:d,context};_retainedDissection=_unsavedDissection;
     renderDissection({ card: t.card });          // pills appear, Dissect disappears
@@ -2703,7 +2717,7 @@ async function beginDissection() {
     if(!_piecesContextCurrent(context))return;
     renderDissection({ card: t.card });          // repaint with the piece pictures
     const saved=await _persistDissection(d,context);
-    notice=saved.saved?'Dissection saved. Missing piece images can be rendered when you choose.':'Generated in this page only. Open a saved submission to save online.';
+    notice=saved.saved?'Dissection saved. Render missing piece images when you choose.':'Generated in this page only. Open a saved submission to save online.';
   } catch (e) {
     console.warn('[dissect]', e);
     notice=(t.card._dissection?'Generated pieces remain here. Use Save dissection to retry. ':'Dissection failed: ')+((e&&e.message)||'Try again');
@@ -3392,11 +3406,11 @@ function _sync3DPills() {
   const meta   = document.getElementById('po-3d-meta');
   if (_3dMode === 'rendered') {
     if (title)  title.textContent  = 'fal.ai · Hyper3D Rodin · multi-view image-to-3D';
-    if (detail) detail.textContent = 'The dream-garment three-view sheet is sliced into front, side, and back. All three are uploaded to fal.storage, then submitted to Rodin in multi-view mode (condition_mode "concat"). Rodin fuses the three views into ONE textured PBR mesh, returned as GLB and loaded into the viewer.';
+    if (detail) detail.textContent = 'The dream-garment sheet is sliced into front, side, and back views, uploaded to fal.storage and submitted to Rodin in multi-view mode (condition_mode "concat"). Rodin combines them into one textured PBR mesh, returned as GLB and displayed here.';
     if (meta)   meta.textContent   = 'API: fal.ai · model: fal-ai/hyper3d/rodin · ~$0.40 per generation · cached on piece._mesh after';
   } else {
     if (title)  title.textContent  = 'Three.js four-plane turntable (cube)';
-    if (detail) detail.textContent = 'The three-view atelier sheet from gpt-image-2 is sliced into four UV-mapped planes around a vertical axis. Drag to orbit. Press "Render in 3D" to swap this placeholder for a real photoreal mesh from fal.ai\'s Hyper3D Rodin.';
+    if (detail) detail.textContent = 'The gpt-image-2 atelier sheet forms four UV-mapped planes around a vertical axis. Drag to orbit. Press "Render in 3D" to replace this placeholder with a photoreal mesh from fal.ai\'s Hyper3D Rodin.';
     if (meta)   meta.textContent   = 'Library: Three.js · v0.160 · OrbitControls · GLTFLoader for the real mesh';
   }
 }
@@ -3854,328 +3868,8 @@ async function renderTo3D() {
 // v0.12: setPatternPage now handles three pages (0 Pattern / 1 Nest /
 // 2 Information). All three pills stay visible; the active one brightens.
 // ════════════════════════════════════════════════════════════════
-// v0.28: FABRIC SOURCING (Fabrics page, index 0, before Pattern).
-//
-// The dissection tags each fabric in-house | sourceable. In-house =
-// cut from the atelier's standing library (no sourcing). Sourceable =
-// Maya finds the closest match by the yard on Mood / Etsy / Amazon and
-// shows price + a delivery estimate to the atelier (655 Bryant St, SF).
-//
-// "real links now": per-merchant search URLs are generated from the
-// exact dissected fabric string (always valid, never 404), layered with
-// curated concrete picks for common families (e.g. denim selvedge).
-// Upgrade path: swap the static catalog for a live /api/source-fabric
-// serverless search.
-// ════════════════════════════════════════════════════════════════
-const ATELIER_ADDR = '655 Bryant St, San Francisco';
-
-// v0.31: EXACT-PRODUCT catalog with REAL product photos.
-// Each Mood pick carries a verified product URL (200) + its real og:image
-// from the Shopify CDN. Etsy/Amazon supplementary searches have no stable
-// hotlink image, so they fall back to the family gradient swatch.
-const _MOODIMG = 'https://www.moodfabrics.com/cdn/shop/files/';
-const FABRIC_FAMILIES = [
-  { key:'denim', kw:['denim','jean'], swatch:'linear-gradient(135deg,#243a5e,#4a6a99)',
-    picks:[
-      { merchant:'Mood Fabrics', title:'Parisian Night 10 oz Cotton Denim', color:'navy', price:'$13.96', etaDays:5, img:_MOODIMG+'428090.jpg', url:'https://www.moodfabrics.com/parisian-night-10-oz-cotton-denim-428090' },
-      { merchant:'Mood Fabrics', title:'Night Sky 10.5 oz Cotton Denim', color:'dark indigo', price:'$15.96', etaDays:5, img:_MOODIMG+'428091.jpg', url:'https://www.moodfabrics.com/night-sky-10-5-oz-cotton-denim-428091' },
-      { merchant:'Mood Fabrics', title:'Indigo Stretch Cotton Denim 12 oz', color:'indigo', price:'$23.00', etaDays:5, img:_MOODIMG+'437229.jpg', url:'https://www.moodfabrics.com/products/indigo-stretch-cotton-denim-12oz-437229' },
-      { merchant:'Mood Fabrics', title:'Heavyweight Cotton Denim, Dark Indigo', color:'dark indigo', price:'$17.96', etaDays:5, img:_MOODIMG+'440661.jpg', url:'https://www.moodfabrics.com/products/heavyweight-cotton-denim-dark-indigo-deadstock-made-in-america-440661' },
-      { merchant:'Mood Fabrics', title:'Italian Muted Indigo Lightweight Denim', color:'muted indigo', price:'$17.96', etaDays:5, img:_MOODIMG+'430821.jpg', url:'https://www.moodfabrics.com/products/italian-muted-indigo-striated-lightweight-cotton-denim-430821' },
-      { merchant:'Mood Fabrics', title:'Durable Indigo Cotton Denim Twill', price:'$13.96', etaDays:5, color:'indigo', img:_MOODIMG+'420611.jpg', url:'https://www.moodfabrics.com/products/durable-indigo-cotton-denim-twill-420611' },
-      { merchant:'Mood Fabrics', title:'Indigo Cotton Denim Twill', price:'$13.96', etaDays:5, color:'indigo', img:_MOODIMG+'420606.jpg', url:'https://www.moodfabrics.com/products/indigo-cotton-denim-twill-420606' },
-      { merchant:'Mood Fabrics', title:'Heavyweight Mood Indigo Denim Twill', price:'$13.96', etaDays:5, color:'indigo', img:_MOODIMG+'420761.jpg', url:'https://www.moodfabrics.com/products/heavyweight-mood-indigo-cotton-denim-twill-420761' },
-      { merchant:'Mood Fabrics', title:'Italian Dark Indigo Cotton Twill Denim', price:'$17.96', etaDays:5, color:'dark indigo', img:_MOODIMG+'430313.jpg', url:'https://www.moodfabrics.com/products/italian-dark-indigo-cotton-twill-denim-430313' },
-      { merchant:'Etsy · Cone Mills', title:'USA Red-Line Selvedge, 12 oz Raw', price:'~$30', etaDays:9, color:'indigo', img:_MOODIMG+'420611.jpg', url:'https://www.etsy.com/listing/1095797911/indigo-cone-usa-red-selvedge-denim-12-oz' },
-    ]},
-  { key:'wool', kw:['wool','suiting','flannel','tweed','gabardine','worsted','cashmere','melton'], swatch:'linear-gradient(135deg,#474750,#7a7a86)',
-    picks:[
-      { merchant:'Mood Fabrics', title:'Super 120 Merino Wool Twill, Navy', price:'$89.96', etaDays:5, img:_MOODIMG+'313411.jpg', url:'https://www.moodfabrics.com/products/navy-super-120-merino-wool-twill-suiting-313411' },
-      { merchant:'Mood Fabrics', title:'Super 120 Merino Wool Twill, Charcoal', price:'$89.96', etaDays:5, img:_MOODIMG+'317124.jpg', url:'https://www.moodfabrics.com/products/charcoal-super-120-merino-wool-twill-suiting-317124' },
-    ]},
-  { key:'linen', kw:['linen'], swatch:'linear-gradient(135deg,#cabfa4,#a8996f)',
-    picks:[
-      { merchant:'Mood Fabrics', title:'Italian Atmosphere Medium-Weight Linen', price:'$17.96', etaDays:5, img:_MOODIMG+'328344.jpg', url:'https://www.moodfabrics.com/products/italian-atmosphere-medium-weight-linen-woven-328344' },
-    ]},
-  { key:'silk', kw:['silk','charmeuse','crepe','crêpe','satin','chiffon','organza','habotai'], swatch:'linear-gradient(135deg,#c39bbf,#9778ad)',
-    picks:[
-      { merchant:'Mood Fabrics', title:'Silk Charmeuse 44", Antique White', price:'$38.96', etaDays:5, img:_MOODIMG+'PV1000-103_cf58a250-a0b9-45df-b0af-f270deae1a54.jpg', url:'https://www.moodfabrics.com/products/premium-antique-white-silk-charmeuse-pv1000-103' },
-      { merchant:'Mood Fabrics', title:'Silk 4-Ply Crepe 54", Bright White', price:'$89.96', etaDays:5, img:_MOODIMG+'PV7000W-101_60f40981-6800-4440-8cd3-58f941454dc9.jpg', url:'https://www.moodfabrics.com/products/premium-bright-white-wide-silk-4-ply-crepe-pv7000w-101' },
-    ]},
-  { key:'cotton', kw:['cotton','poplin','shirting','twill','canvas','corduroy','sateen','chambray','muslin'], swatch:'linear-gradient(135deg,#c8d0d8,#9fb0bf)',
-    picks:[
-      { merchant:'Mood Fabrics', title:'Off-White Cotton Poplin Shirting', price:'$9.96', etaDays:5, img:_MOODIMG+'328320.jpg', url:'https://www.moodfabrics.com/products/off-white-cotton-poplin-shirting-328320' },
-      { merchant:'Mood Fabrics', title:'Mermaid Cotton Poplin', price:'$13.96', etaDays:5, img:_MOODIMG+'424164.jpg', url:'https://www.moodfabrics.com/products/mermaid-cotton-poplin-424164' },
-    ]},
-  { key:'knit', kw:['knit','jersey','ponte','rib','interlock','french terry'], swatch:'linear-gradient(135deg,#536353,#86997f)',
-    picks:[
-      { merchant:'Mood Fabrics', title:'Italian Meteorite & Red Ponte Knit', price:'$15.96', etaDays:5, img:_MOODIMG+'327015.jpg', url:'https://www.moodfabrics.com/products/italian-meteorite-and-red-printed-ponte-knit-327015' },
-    ]},
-  { key:'leather', kw:['leather','suede','hide'], swatch:'linear-gradient(135deg,#352318,#6b4a36)',
-    picks:[
-      { merchant:'Mood Fabrics', title:'Lamb Leather Hides, by the hide', price:'see page', etaDays:6, url:'https://www.moodfabrics.com/leather/leather/lamb' },
-    ]},
-];
-const FABRIC_DEFAULT = { key:'default', swatch:'linear-gradient(135deg,#3a3f4a,#6a7280)', picks:[] };
-
-function _fabFamily(fabricStr) {
-  const t = (fabricStr || '').toLowerCase();
-  for (const fam of FABRIC_FAMILIES) {
-    if (fam.kw.some(k => t.includes(k))) return fam;
-  }
-  return FABRIC_DEFAULT;
-}
-
-const _INHOUSE_FAMILIES = ['wool','linen','cotton','denim'];
-function _autoFabricSource(piece) {
-  if (piece && (piece.fabric_source === 'in-house' || piece.fabric_source === 'sourceable')) {
-    return piece.fabric_source;
-  }
-  const fam = _fabFamily(piece && piece.fabric);
-  return _INHOUSE_FAMILIES.includes(fam.key) ? 'in-house' : 'sourceable';
-}
-
-let _fabricSourceOverride = null;   // designer override for the active piece
-let _briefView = 'item';            // 'item' | 'fabrics', which left-frame is shown
-
-function _addBusinessDays(n) {
-  const d = new Date();
-  let added = 0;
-  while (added < n) {
-    d.setDate(d.getDate() + 1);
-    const day = d.getDay();
-    if (day !== 0 && day !== 6) added++;
-  }
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
-// Source the fabric from the active GARMENT piece. If the swiper is on the
-// virtual "Full view" (or a base layer), fall back to the first real
-// garment item, the client always wears the black tank/shorts base, which
-// we never source. This is why fabrics can populate as soon as a real item
-// is identified, without waiting on the 3D render.
-function _fabActivePiece() {
-  const ps = _pieceState && _pieceState.pieces;
-  if (!ps || !ps.length) return null;
-  const cur = ps[_pieceState.idx];
-  if (cur && !cur._virtual && !cur.skip) return cur;
-  return ps.find(p => p && !p._virtual && !p.skip) || null;
-}
-
-// ── Color helpers ─────────────────────────────────────────────────────
-// Named colors → RGB, so a product's color word can be compared to the
-// average color sampled from the actual garment image. Color carries ~50%
-// of the match weight (text family carries the other ~50%).
-const _COLOR_RGB = {
-  'indigo':[37,58,94],'dark indigo':[28,42,72],'muted indigo':[60,72,98],
-  'navy':[31,45,74],'blue':[40,70,130],'sky blue':[120,160,200],
-  'black':[18,18,22],'charcoal':[48,50,56],'gray':[120,124,130],'grey':[120,124,130],
-  'dark grey with flecks':[70,72,78],'white':[238,240,243],'off-white':[228,226,216],
-  'antique white':[228,224,210],'bright white':[245,247,250],'ivory':[235,231,214],
-  'red':[150,40,46],'burgundy':[88,28,40],'green':[60,96,64],'orange':[200,110,40],
-  'beige':[200,188,160],'brown':[90,66,48],'tan':[180,150,110],
-  // v13.48: the words a dissection actually uses. Crimson wool suiting was
-  // being shown in navy because crimson meant nothing here.
-  'crimson':[153,27,42],'scarlet':[176,32,38],'maroon':[96,26,34],'wine':[100,30,48],
-  'rust':[164,78,38],'gold':[190,150,60],'silver':[176,180,188],'cream':[238,230,206],
-  'khaki':[150,140,100],'olive':[100,102,58],'teal':[38,108,110],'emerald':[36,120,84],
-  'lavender':[168,152,200],'pink':[214,140,164],'magenta':[172,50,120],
-  'purple':[104,62,140],'violet':[122,80,164],'yellow':[208,180,70],'mustard':[196,158,52],
-};
-function _colorToRgb(name){
-  const t=(name||'').toLowerCase().trim();
-  if(_COLOR_RGB[t]) return _COLOR_RGB[t];
-  for(const k in _COLOR_RGB){ if(t.includes(k)) return _COLOR_RGB[k]; }
-  return null;
-}
-// Average color of the active garment render (cached per image src).
-let _garmentAvgRgb = null, _garmentAvgSrc = null;
-function _sampleGarmentColor(cb){
-  const piece=_fabActivePiece();
-  const src=(piece && piece._image) || (_pieceState && _pieceState.heroImage);
-  if(!src){ _garmentAvgRgb=null; cb&&cb(); return; }
-  if(src===_garmentAvgSrc){ cb&&cb(); return; }
-  const img=new Image();
-  img.crossOrigin='anonymous';
-  img.onload=()=>{
-    try{
-      const c=document.createElement('canvas'); const S=40; c.width=S; c.height=S;
-      const x=c.getContext('2d'); x.drawImage(img,0,0,S,S);
-      const d=x.getImageData(0,0,S,S).data;
-      let r=0,g=0,b=0,n=0;
-      for(let i=0;i<d.length;i+=4){
-        const a=d[i+3]; if(a<200) continue;
-        const lum=Math.max(d[i],d[i+1],d[i+2]);
-        if(lum<14) continue;            // skip the pure-black void
-        r+=d[i]; g+=d[i+1]; b+=d[i+2]; n++;
-      }
-      _garmentAvgRgb = n? [Math.round(r/n),Math.round(g/n),Math.round(b/n)] : null;
-    }catch(_){ _garmentAvgRgb=null; }   // tainted canvas (CORS), skip silently
-    _garmentAvgSrc=src; cb&&cb();
-  };
-  img.onerror=()=>{ _garmentAvgRgb=null; _garmentAvgSrc=src; cb&&cb(); };
-  img.src=src;
-}
-function _rgbDist(a,b){ return Math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2); }
-// 0..1 closeness of a card's color to the wanted color: the dissected
-// fabric string's own color word when there is one, else the sampled
-// garment picture. v13.48: callers can pass the target explicitly.
-function _colorScore(card, target){
-  const want = target || _garmentAvgRgb;
-  if(!want) return 0.5;                     // nothing to compare to → neutral
-  const rgb=_colorToRgb(card.color);
-  if(!rgb) return 0.4;                      // unknown color → slight penalty
-  const dist=_rgbDist(rgb,want);            // 0..~441
-  return Math.max(0, 1 - dist/300);
-}
-
-// ── Favorites (persisted in localStorage by URL) ──────────────────────
-const _FAV_KEY='maya-fabric-favorites';
-function _loadFavs(){ try{ return JSON.parse(localStorage.getItem(_FAV_KEY)||'{}'); }catch(_){ return {}; } }
-function _saveFavs(o){ try{ localStorage.setItem(_FAV_KEY, JSON.stringify(o)); }catch(_){} }
-let _favs=_loadFavs();
-function toggleFavorite(ev, url){
-  if(ev){ ev.preventDefault(); ev.stopPropagation(); }
-  url=decodeURIComponent(url);
-  if(_favs[url]) delete _favs[url]; else {
-    const c=_lastCardsByUrl[url]; if(c) _favs[url]=c;
-  }
-  _saveFavs(_favs);
-  renderFabricsPage();
-}
-let _lastCardsByUrl={};
-
-// v13.44: the world, not just three shops. Each merchant search lands on a
-// real results page for the exact fabric string; the prices shown on search
-// cards say "varies" because only the listing itself can speak for its
-// price. Curated picks keep the listed price they were verified at.
-const WORLD_MERCHANTS = [
-  { name:'Mood Fabrics', place:'New York',  eta:5,  q:t=>'https://www.moodfabrics.com/search?q='+t },
-  { name:'The Fabric Store', place:'New Zealand', eta:10, q:t=>'https://thefabricstore.com/search?q='+t },
-  { name:'Blackbird Fabrics', place:'Vancouver', eta:7, q:t=>'https://www.blackbirdfabrics.com/search?q='+t },
-  { name:'Merchant & Mills', place:'England', eta:9, q:t=>'https://merchantandmills.com/search?q='+t },
-  { name:'Tessuti Fabrics', place:'Sydney', eta:11, q:t=>'https://www.tessuti.com.au/search?q='+t },
-  { name:'Miss Matatabi', place:'Tokyo', eta:9, q:t=>'https://shop.missmatatabi.com/search?q='+t },
-  { name:'The Fabric Sales', place:'Antwerp, designer deadstock', eta:8, q:t=>'https://www.thefabricsales.com/search?q='+t },
-  { name:'Stonemountain & Daughter', place:'Berkeley', eta:4, q:t=>'https://stonemountainfabric.com/search?q='+t },
-  { name:'Etsy', place:'artisan, worldwide', eta:8, q:t=>'https://www.etsy.com/search?q='+t+'%20fabric%20by%20the%20yard' },
-  { name:'Amazon', place:'fastest', eta:2, q:t=>'https://www.amazon.com/s?k='+t+'%20fabric%20by%20the%20yard' },
-];
-// v13.48: the color the client is actually asking for. v13.49: the
-// dissection now returns the piece's fabric color as an exact hex, READ
-// FROM THE IMAGE by the same gpt-4.1 call that names the fabric; that is
-// the first authority. The fabric string's color word is second, the
-// sampled garment picture last.
-function _hexToRgb(h) {
-  const m = /^#?([0-9a-f]{6})$/i.exec(String(h || '').trim());
-  if (!m) return null;
-  const n = parseInt(m[1], 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-function _targetFabricRgb(fabricStr) {
-  const piece = _fabActivePiece();
-  return (piece && _hexToRgb(piece.fabric_hex)) || _colorToRgb(fabricStr) || _garmentAvgRgb || null;
-}
-function _tintSwatch(rgb) {
-  if (!rgb) return null;
-  const lift = (v, k) => Math.max(0, Math.min(255, Math.round(v * k)));
-  const a = 'rgb(' + lift(rgb[0], 1.18) + ',' + lift(rgb[1], 1.18) + ',' + lift(rgb[2], 1.18) + ')';
-  const b = 'rgb(' + lift(rgb[0], 0.62) + ',' + lift(rgb[1], 0.62) + ',' + lift(rgb[2], 0.62) + ')';
-  return 'linear-gradient(135deg,' + a + ',' + b + ')';
-}
-function _buildFabricCards(fabricStr) {
-  const fam  = _fabFamily(fabricStr);
-  const term = encodeURIComponent((fabricStr || 'apparel fabric').trim());
-  const target = _targetFabricRgb(fabricStr);
-  // v13.48: a merchant SEARCH card no longer borrows a product photo (a
-  // navy wool wearing a crimson caption was a lie). It wears a swatch in
-  // the fabric's own color, so the wall reads true at a glance.
-  const searchSwatch = _tintSwatch(target) || fam.swatch;
-  const cards = (fam.picks || []).map(p => Object.assign({ swatch: fam.swatch }, p));
-  for (const m of WORLD_MERCHANTS) {
-    cards.push({ merchant: m.name + ' · ' + m.place, title: (fabricStr || 'Apparel fabric') + ', matches',
-      price:'varies', etaDays: m.eta, color:(fabricStr||''),
-      url: m.q(term), swatch: searchSwatch, _search:true });
-  }
-  // Ranking: when the asked-for color is KNOWN, color truth dominates
-  // (0.35 relevance, 0.65 color), so a navy pick cannot outrank a crimson
-  // search for a crimson garment. Without a known color, relevance leads.
-  const wc = target ? 0.65 : 0.5;
-  cards.forEach((c,i)=>{
-    c._base = 1 - i/cards.length;
-    c._color = c._search ? 1 : _colorScore(c, target);
-    c._score = (1-wc)*c._base + wc*c._color;
-  });
-  cards.sort((a,b)=> b._score - a._score);
-  return cards.slice(0, 24);
-}
-// v13.44: sourcing works straight from the full view. No dissection means
-// no exact fabric string, so the wall shows the best of every family,
-// color-ranked against the garment picture itself.
-function _buildFullViewCards() {
-  const cards = [];
-  for (const fam of FABRIC_FAMILIES) {
-    for (const p of (fam.picks || []).slice(0, 3)) {
-      cards.push(Object.assign({ swatch: fam.swatch }, p));
-    }
-  }
-  const term = encodeURIComponent('apparel fabric by the yard');
-  for (const m of WORLD_MERCHANTS.slice(0, 6)) {
-    cards.push({ merchant: m.name + ' · ' + m.place, title:'Browse the whole shop',
-      price:'varies', etaDays: m.eta, url: m.q(term),
-      swatch:'linear-gradient(135deg,#3a3f4a,#6a7280)', _search:true });
-  }
-  cards.forEach((c,i)=>{ c._base = 1 - i/cards.length; c._color = _colorScore(c); c._score = 0.35*c._base + 0.65*c._color; });
-  cards.sort((a,b)=> b._score - a._score);
-  return cards.slice(0, 24);
-}
-
-// v13.88: fabric prices come back in the merchant's own currency (JPY, EUR…).
-// Show them all in dollars so the wall is comparable at a glance. Rates are
-// approximate and easy to update; the exact original price stays on hover.
-const _FX_USD = { USD:1, EUR:1.08, GBP:1.27, JPY:0.0068, CAD:0.73, AUD:0.66,
-  CNY:0.14, KRW:0.00075, CHF:1.12, SEK:0.095, DKK:0.145, NOK:0.093, INR:0.012 };
-function _priceUSD(priceStr) {
-  if (!priceStr) return '';
-  const m = String(priceStr).match(/([\d][\d.,]*)\s*([A-Za-z]{3}|[$€£¥])/);
-  if (!m) return String(priceStr);                 // 'varies', 'see listing', unknown
-  const amt = parseFloat(m[1].replace(/,/g, ''));
-  const symMap = { '$':'USD', '€':'EUR', '£':'GBP', '¥':'JPY' };
-  const cur = (symMap[m[2]] || m[2]).toUpperCase();
-  const r = _FX_USD[cur];
-  if (!r || !isFinite(amt)) return String(priceStr);
-  return '$' + (amt * r).toFixed(2);
-}
-function _fabCardHtml(c) {
-  // v13.88: relative "arrives in N days" reads faster than a calendar date.
-  const _eta = Math.round(Number(c.etaDays));
-  const arrive = Number.isFinite(_eta) && _eta > 0
-    ? 'Arrives in ' + _eta + ' day' + (_eta === 1 ? '' : 's')
-    : 'Arrives ' + _addBusinessDays(c.etaDays);
-  _lastCardsByUrl[c.url]=c;
-  const fav = !!_favs[c.url];
-  const fallback = c.swatch || ('linear-gradient(135deg, rgba(120,140,190,0.45), rgba(30,40,70,0.9))');
-  const score = Number.isFinite(Number(c.matchScore))
-    ? '<span class="fab-match-score">' + Math.round(Number(c.matchScore)) + '% match</span>' : '';
-  const reason = c.reason ? '<div class="fab-reason">' + escapeHtml(c.reason) + '</div>' : '';
-  // v13.53: a card with no real photograph offers Visualize, a Nano Banana
-  // illustration of the dissected traits. The result is always labeled
-  // GENERATED because it is an illustration, never the merchant's fabric.
-  const vis = (!c.img && !c._inhouse)
-    ? '<span class="fab-visualize" onclick="visualizeFabricCard(event,&quot;' + encodeURIComponent(c.url) + '&quot;)">Visualize</span>' : '';
-  const swatch = c.img
-    ? '<div class="fab-swatch" style="background:' + fallback + '">' + score + '<img loading="lazy" src="' + c.img + '" alt="" onerror="this.style.display=&quot;none&quot;"></div>'
-    : '<div class="fab-swatch" style="background:' + fallback + '">' + vis + '</div>';
-  return '<a class="fab-card" href="' + c.url + '" target="_blank" rel="noopener noreferrer" title="' + escapeHtml(c.merchant + ', ' + c.title) + '">' +
-    '<span class="fab-heart' + (fav?' on':'') + '" onclick="toggleFavorite(event,&quot;' + encodeURIComponent(c.url) + '&quot;)" title="Favorite">' +'<svg class="heart-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"/></svg>' +'</span>' +
-    swatch +
-    '<div class="fab-card-body">' +
-      '<div class="fab-title">' + escapeHtml(c.title) + '</div>' +
-      '<div class="fab-meta-line"><span class="fab-mch">' + escapeHtml(c.merchant) + '</span>' +
-        '<span class="fab-price" title="' + escapeHtml(String(c.price || '')) + '">' + escapeHtml(_priceUSD(c.price)) + '</span></div>' +
-      '<div class="fab-arrive">' + escapeHtml(arrive) + '</div>' + reason +
-    '</div></a>';
-}
+// Shared fabric recommendations live in fabric-assistant.js.
+let _briefView='item';
 
 // ── In-house library: read MAYA/Front End/assets/fabrics + fabrics.json ──
 let _inhouseCache = null;
@@ -4224,29 +3918,6 @@ async function _loadInhouseFabrics(){
   }catch(e){ console.warn('[fabrics] in-house load', e); return []; }
 }
 
-function setFabricSourceOverride(src) {
-  _fabricSourceOverride = src;
-  renderFabricsPage();
-}
-
-function refreshFabricSourcing(){
-  const btn=document.getElementById('fab-refresh');
-  if(btn){ btn.classList.add('spinning'); setTimeout(()=>btn.classList.remove('spinning'),700); }
-  // Visibly re-scan: clear the grid + caches, re-sample the garment color,
-  // then repopulate the current tab. (Catalog is static today, so the value
-  // is a fresh color re-rank + in-house re-read; the loading flash makes the
-  // action legible. Upgrade path: a live /api/source-fabric call here.)
-  _garmentAvgSrc=null;        // force a fresh color sample
-  _garmentAvgRgb=null;
-  _inhouseCache=null;         // re-read the in-house folder
-  Object.keys(_liveSourceCache).forEach(k=>delete _liveSourceCache[k]);
-  Object.keys(_visualRankCache).forEach(k=>delete _visualRankCache[k]);
-  _lastCardsByUrl={};
-  const listEl=document.getElementById('fab-list');
-  if(listEl){ listEl.style.display='flex'; listEl.innerHTML='<div class="fab-page"><div class="fab-empty-msg">Re-scanning…</div></div>'; }
-  setTimeout(()=>{ _sampleGarmentColor(()=>renderFabricsPage()); }, 280);
-}
-
 // v0.31: toggle the Brief left frame between the item image and fabrics.
 function showBriefItem() {
   _briefView = 'item';
@@ -4269,248 +3940,8 @@ async function showBriefFabrics() {
   _briefView='fabrics';
   document.getElementById('op-image-frame').style.display='none';
   const host=document.getElementById('brief-fabrics');host.style.display='flex';
-  const inhouse=await _loadInhouseFabrics();
-  if(!_piecesContextCurrent(context)||_briefView!=='fabrics'||saved!==_savedOperation)return;
-  return window.MayaFabricAssistant.open({host,automatic:true,submissionId:context.sid,referenceImage:saved.referenceImage,preferences:typeof saved.preferences==='string'?saved.preferences:JSON.stringify(saved.preferences),piece:piece||{},pieces:saved.pieces,inhouse,loadInhouse:()=>{_inhouseCache=null;return _loadInhouseFabrics();}});
+  return window.MayaFabricAssistant.open({host,automatic:true,submissionId:context.sid,referenceImage:saved.referenceImage,preferences:typeof saved.preferences==='string'?saved.preferences:JSON.stringify(saved.preferences),piece:piece||{},pieces:saved.pieces});
 }
-function showLegacyFabrics() {
-  _briefView = 'fabrics';
-  const frame = document.getElementById('op-image-frame');
-  const fab   = document.getElementById('brief-fabrics');
-  if (frame) frame.style.display = 'none';
-  if (fab)   fab.style.display = 'flex';
-  document.querySelectorAll('#piece-pills .piece-pill').forEach(n => n.classList.remove('active'));
-  const fp = document.getElementById('fab-tab-pill');
-  if (fp) fp.classList.add('active');
-  _sampleGarmentColor(()=>renderFabricsPage());
-}
-
-function _renderFabCards(cards){
-  const listEl=document.getElementById('fab-list');
-  if(!listEl) return;
-  const dots=document.getElementById('fab-page-dots');
-  listEl.style.display='flex';
-  if(!cards.length){
-    listEl.innerHTML='<div class="fab-page"><div class="fab-empty-msg">Nothing here yet.</div></div>';
-    if(dots) dots.innerHTML='';
-    return;
-  }
-  // v13.44: pages of twelve, 4 wide by 3 deep, swiped sideways.
-  const PER=12, pages=[];
-  for(let i=0;i<cards.length;i+=PER) pages.push(cards.slice(i,i+PER));
-  listEl.innerHTML = pages.map(p=>'<div class="fab-page">'+p.map(_fabCardHtml).join('')+'</div>').join('');
-  listEl.scrollLeft=0;
-  if(dots){
-    dots.innerHTML = pages.length>1
-      ? pages.map((_,i)=>'<span class="fpd'+(i===0?' on':'')+'"></span>').join('') : '';
-    listEl.onscroll = ()=>{
-      const idx=Math.round(listEl.scrollLeft/Math.max(1,listEl.clientWidth));
-      dots.querySelectorAll('.fpd').forEach((d,i)=>d.classList.toggle('on',i===idx));
-    };
-  }
-}
-
-function renderFabricsPage() {
-  const listEl = document.getElementById('fab-list');
-  const fabEl  = document.getElementById('fab-head-fabric');
-  const labelEl = document.getElementById('fab-head-label');
-  if (!listEl) return;
-
-  const piece = _fabActivePiece();
-  const fabricStr = piece && piece.fabric;
-  if (fabEl) fabEl.textContent = fabricStr || '…';
-
-  const source = _fabricSourceOverride || 'sourceable';
-  if (labelEl) labelEl.textContent = source === 'sourceable' ? 'Closest visual matches' : 'Fabric';
-  const ids={sourceable:'fab-src-sourceable','in-house':'fab-src-inhouse',favorites:'fab-src-favorites'};
-  Object.keys(ids).forEach(k=>{
-    const el=document.getElementById(ids[k]); if(el) el.classList.toggle('active', source===k);
-  });
-
-  if (source === 'favorites') {
-    _renderFabCards(Object.values(_favs));
-    return;
-  }
-  if (source === 'in-house') {
-    listEl.style.display='flex';
-    listEl.innerHTML='<div class="fab-page"><div class="fab-empty-msg">Loading in-house library…</div></div>';
-    _loadInhouseFabrics().then(items=>{
-      // color-rank the in-house swatches against the garment too
-      items.forEach(it=>{ it._color=_colorScore(it); });
-      items.sort((a,b)=> b._color - a._color);
-      _renderFabCards(items);
-    });
-    return;
-  }
-  // sourceable
-  // v13.44: no dissection needed. Without an exact fabric string the wall
-  // still fills, ranked by the garment picture's own color.
-  // v13.76: per Fromsa, the sourceable wall shows only real retailer photos,
-  // never a color-swatch placeholder. The static wall (color fills) is dropped;
-  // a "searching" line holds the space until the live merchant photos arrive.
-  if (!fabricStr) {
-    if (fabEl) fabEl.textContent = 'From the full view';
-    listEl.style.display = 'flex';
-    listEl.innerHTML = '<div class="fab-page"><div class="fab-empty-msg">Searching the shelves…</div></div>';
-    _fetchLiveSourcing('apparel fabric', null);
-    return;
-  }
-  const cards = _buildFabricCards(fabricStr).filter(c => c.img);
-  if (cards.length) _renderFabCards(cards);
-  else { listEl.style.display = 'flex'; listEl.innerHTML = '<div class="fab-page"><div class="fab-empty-msg">Searching the shelves…</div></div>'; }
-  // v13.50: then the REAL shelves, with photos, from the live merchant feeds.
-  _fetchLiveSourcing(fabricStr, piece);
-}
-
-// ── v13.50: live merchant sourcing ────────────────────────────────────
-// One request to MAYA's own server, which asks the merchants' public
-// product feeds in parallel and caches for a day. Live products carry
-// real titles, real prices in their own currency, real photos, and open
-// the actual listing. Failures leave the static wall untouched.
-const _liveSourceCache = {};
-const _visualRankCache = {};
-function _sourcingQuery(piece, fabricStr) {
-  // The dissected spec makes a better shop query than the raw sentence:
-  // "crimson wool twill" finds shelves; "gothic ode in crimson" does not.
-  const spec = piece && piece.fabric_spec;
-  const colorWord = (function () {
-    const t = (fabricStr || '').toLowerCase();
-    for (const k in _COLOR_RGB) { if (k.length > 3 && t.includes(k)) return k; }
-    return '';
-  })();
-  if (spec && spec.fiber) {
-    return [colorWord, spec.fiber, spec.weave].filter(Boolean).join(' ').trim();
-  }
-  return fabricStr;
-}
-async function _fetchLiveSourcing(fabricStr, piece) {
-  const q = _sourcingQuery(piece, fabricStr);
-  if (!q) return;
-  const sourceState = _pieceState;
-  const sourceToken = localStorage.getItem('maya_admin_tok') || '';
-  const cacheKey = [sourceToken, (window._openedSubmission || {}).id || '', q].join('|');
-  const paint = (matches) => {
-    if (_pieceState !== sourceState || (localStorage.getItem('maya_admin_tok') || '') !== sourceToken) return;
-    // still on the Sourceable tab, same fabric? then repaint.
-    if ((_fabricSourceOverride || 'sourceable') !== 'sourceable') return;
-    const now = _fabActivePiece();
-    const nowStr = (now && now.fabric) || '';
-    if (fabricStr !== 'apparel fabric' && nowStr && nowStr !== fabricStr) return;
-    const live = matches.map(p => ({
-      merchant: p.merchant + ' · ' + p.place,
-      title: p.title,
-      price: p.price ? (p.price + ' ' + (p.currency || '')) : 'see listing',
-      etaDays: p.etaDays || 7,
-      color: p.title,
-      url: p.url, img: p.image, matchScore: p.matchScore,
-      reason: p.reason, _live: true,
-    }));
-    // v13.76: only real retailer photos survive; the color-swatch search
-    // cards are dropped, per Fromsa. If nothing has a photo, show nothing.
-    _renderFabCards(live.filter(c => c.img).slice(0, 24));
-  };
-  try {
-    const tok = localStorage.getItem('maya_admin_tok') || '';
-    let products = _liveSourceCache[cacheKey];
-    if (!products) {
-      const r = await fetch('/api/source-fabric?q=' + encodeURIComponent(q),
-        { headers: { 'Authorization': 'Bearer ' + tok }, cache: 'no-store' });
-      if (!r.ok) return;                    // static wall stands
-      const j = await r.json();
-      products = (j && j.products) || [];
-      if (products.length) _liveSourceCache[cacheKey] = products;
-    }
-    if (!products.length) return;
-    paint(products); // First useful products never wait for optional visual ranking.
-    const garmentImage = (_pieceState && _pieceState.heroImage) || (window._dissectTarget && window._dissectTarget.hero) || '';
-    const spec = (piece && piece.fabric_spec) || {};
-    const rankKey = [cacheKey, piece && piece.name, piece && piece.fabric_hex, garmentImage].join('|');
-    if (!_visualRankCache[rankKey]) {
-      _visualRankCache[rankKey] = fetch('/api/rank-fabric', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          garment_image: garmentImage,
-          traits: {
-            fabric: fabricStr === 'apparel fabric' ? '' : fabricStr,
-            color: (piece && piece.fabric_hex) || '',
-            fiber: spec.fiber || '', weave: spec.weave || '',
-            weight_gsm: spec.weight_gsm || 0, stretch: spec.stretch || '',
-            sheen: spec.sheen || '', texture: spec.texture || '',
-          },
-          products,
-        }),
-        cache: 'no-store',
-      }).then(async r => {
-        if (!r.ok) return [];
-        const j = await r.json();
-        return (j && j.matches) || [];
-      }).catch(() => []);
-    }
-    const matches = await _visualRankCache[rankKey];
-    // v13.76: when the visual ranking is unavailable (a failure, or no OpenAI
-    // credits), still show the real retailer products with their photos, just
-    // unranked. Only the color-swatch search cards are ever dropped.
-    paint(matches.length ? matches : products);
-  } catch (_) { /* leave whatever is on screen */ }
-}
-
-// ── v13.53: Nano Banana fabric visualization ──────────────────────────
-// A gradient-only card carries no real photograph. Visualize asks MAYA's
-// server to illustrate the dissected traits with Google's image model.
-// The picture is decoration for the eye, labeled GENERATED, and the card
-// still opens the merchant's real search; it is never sourcing truth.
-const _visualizeCache = {};
-async function visualizeFabricCard(ev, encUrl) {
-  ev.preventDefault(); ev.stopPropagation();
-  const chip = ev.target;
-  const card = chip.closest('.fab-card');
-  const sw = card && card.querySelector('.fab-swatch');
-  if (!sw || chip.dataset.busy) return;
-  const piece = _fabActivePiece();
-  const spec = (piece && piece.fabric_spec) || {};
-  const c = _lastCardsByUrl[decodeURIComponent(encUrl)] || {};
-  const fabric = {
-    color: (c.color || (piece && piece.fabric) || '').toString().slice(0, 40),
-    hex: (piece && piece.fabric_hex) || '',
-    fiber: spec.fiber || '', weave: spec.weave || '',
-    texture: spec.texture || '', sheen: spec.sheen || '',
-    weight_gsm: spec.weight_gsm || 0,
-  };
-  if (!fabric.color && !fabric.fiber && !fabric.weave) {
-    chip.textContent = 'Dissect first'; setTimeout(() => { chip.textContent = 'Visualize'; }, 1800);
-    return;
-  }
-  const key = JSON.stringify(fabric);
-  const apply = (img) => {
-    sw.style.background = '#0b0e16 url(' + img + ') center / cover no-repeat';
-    chip.remove();
-    if (!sw.querySelector('.fab-gen-label')) {
-      const lbl = document.createElement('span');
-      lbl.className = 'fab-gen-label'; lbl.textContent = 'Generated';
-      sw.appendChild(lbl);
-    }
-  };
-  if (_visualizeCache[key]) { apply(_visualizeCache[key]); return; }
-  chip.dataset.busy = '1'; chip.textContent = 'Weaving';
-  try {
-    const tok = localStorage.getItem('maya_admin_tok') || '';
-    const r = await fetch('/api/visualize-fabric', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fabric }),
-    });
-    const j = await r.json().catch(() => ({}));
-    if (r.ok && j.image) { _visualizeCache[key] = j.image; apply(j.image); return; }
-    chip.textContent = (j.error === 'vertex_not_enabled') ? 'Not enabled yet' : 'Try again';
-  } catch (_) {
-    chip.textContent = 'Try again';
-  } finally {
-    delete chip.dataset.busy;
-    if (chip.isConnected) setTimeout(() => { if (chip.isConnected) chip.textContent = 'Visualize'; }, 2200);
-  }
-}
-
 function setPatternPage(page) {
   const swiper = document.getElementById('op-pattern-swiper');
   if (!swiper) return;

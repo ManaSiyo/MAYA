@@ -3,25 +3,63 @@ const MAX_VISUAL_CANDIDATES = 12;
 
 // A seller being a fabric shop does not make every item in its feed fabric.
 // Use listing facts, never the model's reason, to qualify a recommendation.
-const MATERIALS = /\b(?:fabric|yardage|denim|chambray|wool|cashmere|cotton|linen|silk|satin|velvet|twill|poplin|canvas|chiffon|organza|crepe|crêpe|viscose|rayon|polyester|jersey|knit|woven|tweed|flannel|corduroy|suiting|shirting|lace|tulle|fleece|leather|suede)\b/i;
-const NOT_FABRIC = /\b(?:scissors?|shears?|rotary cutters?|cutting mats?|seam rippers?|sewing machines?|needles?|rulers?|zippers?|buttons?|patterns?|sewing kits?|thread spools?|boots?|shoes?|sandals?|sneakers?|handbags?)\b/i;
+const MATERIALS = /\b(?:fabric|yardage|denim|chambray|wool|cashmere|cotton|linen|silk|satin|velvet|twill|poplin|canvas|chiffon|organza|crepe|crêpe|viscose|rayon|polyester|acrylic|modacrylic|fur|jersey|knit|woven|tweed|flannel|corduroy|suiting|shirting|lace|tulle|fleece|leather|suede)\b/i;
+const NOT_FABRIC = /\b(?:scissors?|shears?|rotary cutters?|cutting mats?|seam rippers?|sewing machines?|needles?|rulers?|zippers?|buttons?|patterns?|sewing kits?|thread spools?|(?:sewing|embroidery) threads?|yarns?|skeins?|boots?|shoes?|sandals?|sneakers?|handbags?)\b/i;
 export function isFabricProduct(product) {
   const title=String(product?.title||''),facts=[title,product?.description,product?.composition].join(' ');
   if(!title||NOT_FABRIC.test(title)||/\b(?:swatch|sample)\b/i.test(title)||!MATERIALS.test(facts))return false;
-  const yardage=/\b(?:fabric|yardage|by the yard|per yard|per metre|per meter|sold by|fabric width)\b/i.test(facts);
+  const yardage=/\b(?:fabric|yardage|shirting|suiting)\b/i.test(title)||/\b(?:by the yard|per yard|per metre|per meter|sold (?:by|in) (?:the )?(?:yard|metre|meter)|fabric width)\b/i.test(facts);
   // "Cotton shirt fabric" is yardage; "cotton shirt, size M" is apparel.
-  const apparel=/\b(?:ready[ -]to[ -]wear|size\s+(?:xs|s|m|l|xl|xxl|\d+))\b/i.test(facts);
-  const garment=/\b(?:jackets?|shirts?|dresses?|trousers?|pants?|skirts?|coats?|blouses?|curtains?|cushions?|duvets?|pillowcases?)\b/i.test(title);
+  const apparel=/\bsize\s+(?:xs|s|m|l|xl|xxl|\d+)\b/i.test(facts)||(!yardage&&/\bready[ -]to[ -]wear\b/i.test(facts));
+  const garment=/\b(?:jackets?|shirts?|dresses?|trousers?|pants?|skirts?|coats?|blouses?|socks?|gloves?|hoodies?|sweaters?|cardigans?|leggings?|shorts?|suits?|scarves|blankets?|curtains?|cushions?|duvets?|pillowcases?)\b/i.test(title);
   return !apparel && (!garment || yardage);
 }
 export function isFabricPiece(piece) {
   return !!piece && !piece.skip && !piece._virtual && !/\b(?:footwear|boots?|shoes?|sandals?|sneakers?|loafers?|heels?|bags?|belts?|jewelry|jewellery|accessor(?:y|ies))\b/i.test([piece.name,piece.category].join(' '));
 }
-const fibers=[['leather','leather|suede'],['wool','wool|cashmere|merino|worsted'],['silk','silk'],['linen','linen|flax'],['cotton','cotton'],['viscose','viscose|rayon|lyocell|tencel'],['polyester','polyester|poly'],['nylon','nylon|polyamide']];
-const constructions=[['denim','denim|chambray'],['velvet','velvet|velveteen'],['corduroy','corduroy'],['twill','twill|gabardine|denim'],['poplin','poplin|broadcloth'],['satin','satin'],['chiffon','chiffon'],['organza','organza'],['crepe','crepe|crêpe'],['jersey','jersey|knit'],['tweed','tweed'],['flannel','flannel'],['lace','lace'],['tulle','tulle'],['fleece','fleece'],['canvas','canvas|duck']];
+const fibers=[['leather','leather|suede'],['wool','wool|cashmere|merino|worsted'],['silk','silk'],['linen','linen|flax'],['cotton','cotton'],['viscose','viscose|rayon|lyocell|tencel'],['polyester','polyester|poly'],['nylon','nylon|polyamide'],['acrylic','acrylic|modacrylic']];
+const constructions=[['faux_fur','faux[ -]fur|fake[ -]fur|imitation[ -]fur'],['fur','fur'],['denim','denim|chambray'],['velvet','velvet|velveteen'],['corduroy','corduroy'],['twill','twill|gabardine|denim'],['poplin','poplin|broadcloth'],['satin','satin'],['chiffon','chiffon'],['organza','organza'],['crepe','crepe|crêpe'],['jersey','jersey|knit'],['tweed','tweed'],['flannel','flannel'],['lace','lace'],['tulle','tulle'],['fleece','fleece'],['canvas','canvas|duck']];
 const colors=[['blue','blue|navy|indigo'],['white','white|ivory|cream|ecru'],['red','red|crimson|burgundy|wine|maroon'],['black','black'],['gray','gray|grey|charcoal|silver'],['green','green|olive|emerald|sage'],['brown','brown|tan|beige|camel'],['yellow','yellow|gold|mustard'],['pink','pink|rose|magenta'],['purple','purple|violet|lavender']];
 const textures=[['matte','matte|matt'],['shiny','shiny|glossy|lustrous'],['brushed','brushed'],['ribbed','ribbed'],['smooth','smooth'],['textured','textured|slub']];
 const has=(value,pattern)=>new RegExp('\\b(?:'+pattern+')\\b','i').test(value);
+const garmentKinds=['coats?','jackets?|blazers?','pants|trousers|jeans','shirts?|blouses?|tops?','dresses|dress|gowns?','skirts?','vests?|waistcoats?','shorts?','suits?','sweaters?|pullovers?|hoodies?','shoes?|boots?|footwear','bags?|belts?|accessories'];
+const escaped=value=>String(value).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+function scopeFor(value,pieces){
+  const hits=pieces.flatMap(piece=>[piece.id,piece.name].filter(Boolean).flatMap(name=>[...String(value).matchAll(new RegExp('\\b'+escaped(name)+'\\b','gi'))].map(match=>({piece,start:match.index,end:match.index+match[0].length}))));
+  const exact=[...new Set(hits.filter(hit=>!hits.some(other=>other.start<=hit.start&&other.end>=hit.end&&other.end-other.start>hit.end-hit.start)).map(hit=>hit.piece))];
+  const kinds=garmentKinds.filter(kind=>has(value,kind));
+  const matches=new Set(exact);
+  for(const kind of kinds)if(!exact.some(piece=>has([piece.name,piece.category].join(' '),kind)))for(const piece of pieces)if(has([piece.name,piece.category].join(' '),kind))matches.add(piece);
+  return {named:!!hits.length||!!kinds.length,pieces:[...matches]};
+}
+// Preferences may be legacy prose, an array, or garment-keyed records. Keep
+// their scopes rather than interpreting every noun in the outfit as one fabric.
+function preferenceClauses(value,pieces,scope='',depth=0){
+  if(depth>6||value==null)return [];
+  if(typeof value==='string'){
+    if(/^[\[{]/.test(value.trim()))try{return preferenceClauses(JSON.parse(value),pieces,scope,depth+1);}catch{}
+    const clauses=[];
+    for(const sentence of value.split(/[;\n]|\.(?=\s|$)/)){
+      let denyList=false;
+      for(let text of sentence.split(',')){
+        if(!text.trim())continue;
+        const rest=[...fibers,...constructions,...colors,...textures].reduce((s,[,pattern])=>s.replace(new RegExp('\\b(?:'+pattern+')\\b','gi'),''),text).replace(/\b(?:or|and)\b/gi,'').trim();
+        if(denyList&&!rest)text='no '+text;
+        denyList=/^\s*(?:no|without|avoid|exclude|excluding)\b/i.test(text);
+        clauses.push({text,scope});
+      }
+    }
+    return clauses;
+  }
+  if(Array.isArray(value))return value.flatMap(v=>preferenceClauses(v,pieces,scope,depth+1));
+  if(typeof value!=='object')return [];
+  const named=value.garmentId||value.garment||value.pieceId||value.piece;
+  const nextScope=typeof named==='string'?named:scope;
+  return Object.entries(value).filter(([key])=>!['garmentId','garment','pieceId','piece'].includes(key)).flatMap(([key,v])=>{
+    if(/^(?:avoid|exclude|excluded|exclusions|without)$/i.test(key))return preferenceClauses(v,pieces,nextScope,depth+1).map(clause=>({...clause,text:'no '+clause.text}));
+    return preferenceClauses(v,pieces,scopeFor(key,pieces).named?key:nextScope,depth+1);
+  });
+}
 function terms(value,definitions){
   const positive=new Set(),negative=new Set();
   for(const [key,pattern]of definitions)for(const match of String(value||'').matchAll(new RegExp('\\b(?:'+pattern+')\\b','gi'))){
@@ -33,27 +71,41 @@ function terms(value,definitions){
 }
 function constraints(piece,input,definitions){
   let required=new Set(),excluded=new Set();
-  const layers=[[piece.fabric,...Object.values(piece.fabric_spec||{})].join(' '),input.preferences,...(input.history||[]).map(h=>h.request),input.automatic?'':input.request];
-  for(const layer of layers){const found=terms(layer,definitions);if(found.positive.size){required=found.positive;for(const key of required)excluded.delete(key);}for(const key of found.negative){excluded.add(key);required.delete(key);}}
+  const pieces=(input.allPieces?.length?input.allPieces:input.pieces?.length?input.pieces:[piece]).filter(isFabricPiece);
+  const apply=(value,positive=true,inferred=false)=>{const found=terms(value,definitions);if(positive&&found.positive.size&&!(inferred&&definitions===fibers&&/\b(?:likely|possibly|appears?|unknown|uncertain|unconfirmed|may|might|could|suggests?)\b|\b\w+[ -]like\b/i.test(value)))required=found.positive;for(const key of found.negative)excluded.add(key);};
+  for(const value of [piece.fabric,...Object.values(piece.fabric_spec||{})])apply(value,true,true);
+  const layers=[{value:input.preferences,wholeLook:true},...(input.history||[]).map(h=>({value:h.request})),{value:input.automatic?'':input.request}];
+  for(const layer of layers)for(const clause of preferenceClauses(layer.value,pieces)){
+    const scope=scopeFor(clause.scope||clause.text,pieces),matches=scope.pieces.some(candidate=>candidate===piece||candidate.id&&candidate.id===piece.id),all=/\b(?:all|every|whole look|entire outfit)\b/i.test(clause.text);
+    if(scope.named&&!matches)continue;
+    // Ambiguous garment mentions and whole-look positive lists remain discovery
+    // hints. They cannot rewrite a different saved garment's material.
+    const positive=scope.named?(scope.pieces.length===1||all):(!layer.wholeLook||pieces.length<=1||all);
+    apply(clause.text,positive);
+  }
+  for(const key of excluded)required.delete(key);
   return {required,excluded};
 }
 export function fabricProductMatch(product,input={}){
   if(!isFabricProduct(product)||product.isSwatch||product.availability==='out_of_stock'||product.evidence==='search_link'||!product.image)return null;
   const facts=[product.title,product.description,product.composition].join(' ');
   const pieces=(input.pieces?.length?input.pieces:[input.piece||{}]).filter(isFabricPiece),targets=pieces.length?pieces:[{}];
+  const matches=[];
   for(const piece of targets){
-    let rejected=false,materialEvidence=false;
+    let rejected=false,materialEvidence=false,strength=0;
     for(const definitions of [fibers,constructions,colors,textures]){
       const {required,excluded}=constraints(piece,input,definitions);
       const actual=terms(facts,definitions).positive;
       if([...excluded].some(key=>actual.has(key))){rejected=true;break;}
       if(definitions===fibers||definitions===constructions){
-        if(required.size){materialEvidence=true;if(![...required].every(key=>actual.has(key))){rejected=true;break;}}
-      }else if(required.size&&actual.size&&![...required].some(key=>actual.has(key))){rejected=true;break;}
+        if(required.size){materialEvidence=true;if(![...required].every(key=>actual.has(key))){rejected=true;break;}strength+=required.size*2;}
+      }else if(required.size&&actual.size){if(![...required].some(key=>actual.has(key))){rejected=true;break;}strength++;}
     }
-    if(!rejected&&(!input.automatic||materialEvidence||input.allowVisualOnly===true))return {garment:cleanText(piece.name,80),...(piece.id?{garmentId:cleanText(piece.id,100)}:{})};
+    if(!rejected&&(!input.automatic||materialEvidence||input.allowVisualOnly===true))matches.push({piece,strength});
   }
-  return null;
+  matches.sort((a,b)=>b.strength-a.strength);
+  if(!matches.length||(matches[1]&&matches[0].strength===matches[1].strength))return null;
+  const piece=matches[0].piece;return {garment:cleanText(piece.name,80),...(piece.id?{garmentId:cleanText(piece.id,100)}:{})};
 }
 
 function cleanText(value, limit = 160) {

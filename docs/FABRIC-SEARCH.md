@@ -1,5 +1,10 @@
 # Conversational fabric sourcing — October 17, 2026
 
+Release state: 7015b99 was verified on Firebase and Cloud Run before the current
+deeper audit. The follow-up below is implemented locally; full release/regression,
+final Aesthetic Control, commit, Push and new exact deployment verification are
+pending. The private fur/green-pants owner demonstration has not run.
+
 From the Brief or Operation Room, choose Fabrics after a dissection has been
 saved successfully. The selected garment, original look and client preferences
 start the search automatically; Full view uses all saved garments. A failed or
@@ -10,8 +15,9 @@ Sourceable, In House and Favorites use the same inline viewer. Refresh reruns
 the current garment request; Filter stores restricts merchants. Expand enlarges
 that same DOM/view into an optional dialog and Escape/Collapse returns it intact,
 without another search. Cards have a larger photo and two concise caption rows.
-Stable saved garment IDs keep duplicate garment names distinct. Refinements
-separate positive requirements, exclusions and the latest replacement; “no wool”
+Stable saved garment IDs keep duplicate garment names distinct. Fresh dissections
+use UUIDs; legacy saved pieces without IDs retain compatible index-based reads.
+Refinements separate positive requirements, exclusions and the latest replacement; “no wool”
 never requests wool. Missing retailer images never become invented image URLs,
 and a failed favorite thumbnail keeps its management actions. Cards
 show garment purpose and available seller facts, not duplicate inventory
@@ -39,6 +45,12 @@ never calls image generation. No purchase capability is added.
   Weak, invalid or failed comparisons return an explicit empty result, not
   unrelated alternatives. Missing or inaccessible retailer images can prevent
   comparison; the UI reports that limit rather than claiming a match.
+- Requests contain bounded garment metadata instead of nested piece images,
+  patterns or meshes. The integrated large-piece fixture sends 6,012 bytes rather
+  than more than 5.6 MB; the server obtains canonical saved pieces/crops itself.
+  Original reference photo and structured client preferences remain separate
+  inputs. In House inventory loads independently, so reference or lookbook failure
+  does not prevent available inventory photos from appearing.
 - Britex, Stonemountain, Harts, Amazon, Mood, Blackbird, The Fabric Store and
   Tessuti are the allowed discovery domains. Amazon is web discovery, NOT a
   Creators API integration or a promise of exhaustive Amazon inventory.
@@ -71,15 +83,39 @@ two authorized admins can open the same client submission. Browser Storage rules
 do not expose these private objects. Generation preconditions prevent another
 window from overwriting a newer selection. A book holds at most 100 fabrics.
 
+The browser serializes Save/Use/Remove for each account/submission. Clicking Save
+for garment A keeps that intent if the user selects B before the request runs.
+Same-account token renewal preserves work; account/submission changes cancel
+unsent actions and reject late UI updates. Writes have a 15-second deadline.
+An unconfirmed response invalidates the cached generation and reloads the book;
+it never automatically repeats the uncertain write. A failure retains retryable
+controls. A new seller listing is verified before its first Save/Use; choosing an
+already saved URL for another garment reuses the stored seller facts.
+
+selectedByGarment maps saved garment IDs to product URLs. A private, stored-only
+selectedGarmentFingerprints map binds each selection to its saved garment
+metadata; it is not returned by the API. Changed garments or reused legacy IDs
+cannot silently inherit another material. Legacy selections are inferred only
+when unambiguous, without migration writes during reads. Removing a fabric clears
+every assignment to it. Fresh dissection IDs do not reuse array positions. Brief
+rejects a dissection above 27 MiB by UTF-8 byte size and keeps the full generated
+draft, including patterns, rather than claiming a save after dropping output.
+
 The Brief embeds Operation Room below it and also retains the standalone route.
 A same-origin, exact-source, account/submission/revision-bound bridge carries only
-acknowledged saved pieces. Opening Fabrics in that room loads the same
-account/submission lookbook. Use for design supplies the
-chosen seller description to the existing grounded pattern prompt. This is
+acknowledged saved pieces. Operations prepares the actual selected garment and
+full saved piece list. Lookbook hydration survives a picker change while its
+first read is pending; the selection label and pattern context use that garment's
+assignment. Opening Fabrics loads the same account/submission lookbook. Use for
+design supplies the chosen seller description to the existing grounded pattern prompt. This is
 material context, not proof of sewability, fit, shrinkage or laser readiness.
 Programmatic standalone searches work without a submission; saving requires opening one.
 In-house inventory uses the same shared cards; its source URLs remain traceable. Old browser favorites are not
 silently imported into a client's private lookbook.
+
+The superseded Brief sourcing implementation lost 589 unreachable JavaScript
+lines. Its removal does not retire local-folder/legacy migration support, active
+CSS, the shared viewer or saved dissection loading.
 
 Switching account or submission clears conversation, photo and results; stale
 search/save/load responses cannot paint into the next context. Nothing private
@@ -89,14 +125,26 @@ and durations only. Client upload is resized to 1200 px, up to 3 MB on the serve
 
 ## Verification and owner evaluation
 
-Run `node tests/fabric-search.mjs`, `node tests/fabric-search-ui.mjs`, the existing
-fabric/AI routing suites, container-contract, app-regression and smoke. All three UI/service
-suites, including brief-workspace-ui, are mandatory Cloud Build gates. UI tests use isolated Chromium and fake services,
+Run `node tests/fabric-search.mjs`, `node tests/fabric-search-ui.mjs`,
+`node tests/fabric-workflow-ui.mjs`, `node tests/brief-operation-races.mjs`, the
+existing fabric/AI routing suites, container-contract, app-regression and smoke.
+The fabric suites and brief-workspace-ui are mandatory Cloud Build gates. UI tests use isolated Chromium and fake services,
 covering saved-look automatic search, selected/whole garment context, same-view
 inline/expanded tabs and store filtering, image+text refinement, saved selection
 across screens, failures, stale accounts/submissions, default/changed shared styles
 and six viewport sizes. tests/brief-workspace-ui.mjs checks the saved-only bridge. Real page parser checks used public
 Britex and Stonemountain listings, not private client inputs or paid model calls.
+
+The workflow fixture uses deferred responses and realistically large nested
+piece data. It checks request bytes, independent inventory, Save A followed by a
+garment switch, serial writes, generation conflicts, failure/retry, same-account
+renewal, account/project cancellation and selection persistence across reloads.
+These gaps were missed by small images, immediate acknowledgements and a fixture
+with only one global selected URL. Server fixtures cover private selection maps,
+changed garment fingerprints, seller re-verification and legacy compatibility.
+These are behavior checks, not live product-quality evidence. Finish all functional
+checks before Aesthetic Control authority; current helper-copy edits reuse existing
+roles/settings and introduce no new presentation authority.
 
 Before calling the live result quality equivalent to ChatGPT, run the same ten
 owner-approved cases through each after deployment:
@@ -118,8 +166,28 @@ Record first-useful-result time, total time, useful options among the first five
 number of user actions, and factual errors. The server reports firstResultsMs and
 totalMs, not a promised latency. Automated fixtures prove behavior, not live
 search relevance, live OpenAI entitlement, microphone behavior or ChatGPT parity.
+The requested real private fur/green-pants demonstration still needs fresh,
+specific permission before accessing an owner's Chrome window/profile. Neither a
+passing fixture nor an exact public release check completes that acceptance.
 
 Sources checked: [OpenAI web search](https://developers.openai.com/api/docs/guides/tools-web-search),
 [Britex swatches](https://britexfabrics.com/pages/swatch),
 [Stonemountain FAQ](https://stonemountainfabric.com/faq/),
 [Amazon Creators API](https://affiliate-program.amazon.com/creatorsapi/docs/en-us/introduction).
+
+Lifecycle/persistence references checked in this audit:
+[MDN AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController),
+[MDN Page Visibility](https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API),
+[Cloud Storage request preconditions](https://docs.cloud.google.com/storage/docs/request-preconditions).
+Aborting a client request does not prove the server rolled back a write. Hidden
+page scheduling can be throttled; use identity checks and generation preconditions
+with explicit reconciliation rather than relying on timer order or blind retries.
+
+October 17 dissection save audit: /api/admin/subfile exposes X-Maya-Generation
+and mutable JSON uses private,no-store. /api/admin/savepieces requires the reviewed
+generation, returns the acknowledged generation, rejects stale writes with 409 and
+missing review with 428. Brief pins raw-dissection lineage; never rebase a retained
+draft automatically, publish an unacknowledged snapshot or remove generated
+patterns to fit the 25 MiB UTF-8 limit. Legacy saved files remain readable; old
+open clients must reload before saving. Run admin-storage, brief-operation-races
+and brief-workspace-ui with the existing release and final aesthetic gates.
