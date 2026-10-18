@@ -429,3 +429,10 @@ Admin retains Feature Requests and Recent Changes. Prompting/Architecture folds,
 previews and usage links retire; active client rendering configuration stays intact.
 Checks exercise populated scroll lists and a bright pattern under open Settings,
 with visibly different saved material/type and six viewport widths.
+
+Standalone Operations' temporary Settings layer paints above its page header,
+including phone widths, and exposes its actual Close menu control. The background
+hamburger hides while open. Its material still follows the active Settings Drawer
+preview. Repeated open requests preserve current field focus; closing restores the
+visible opener. Verify painted stacking with hit-testing and visual inspection,
+not only bounding rectangles. Embedded room header ownership remains unchanged.

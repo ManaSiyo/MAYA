@@ -1,3 +1,5 @@
+October 17, 2026 — a624311 deployed: Admin remembers account-specific status filters; shared checkbox/scrollbar controls and real usage previews; redundant dashboard editors retire without deleting live prompting settings. Brief/Operations uses one screen-aware header, garment-local Fabrics and readable Settings. Remove ~24MB unused startup downloads. All 68 Cloud Build gates and exact Firebase/Cloud Run release verification pass. A final standalone phone layer correction is tracked separately in fixes and AI-HANDOFF.
+
 MAYA RECENT HISTORY
 
 October 2, 2026 — Shipped f436f37: shared Aesthetic Control runtime, inner/outer padding previews, icon/dropdown sizing, ten-column Outbound parity, Model Snapshot/meter grouping and private design-save audit. Google Cloud Build passed; public release marker and editor v19/v5 confirm deployment. Final filter-margin/campaign-rename fixes remain local; live Admin Save/log review remains.

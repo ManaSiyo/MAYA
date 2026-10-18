@@ -1161,15 +1161,12 @@ ok('the Admin doors are plain words, MANA SIYO among them',
 ok('the Admin drawer is the second pane of the scroll-snap host, full height',
   MAP_SOURCE.includes('class="hpane hpane-drawer"') &&
   /\.hpane-drawer\{order:2;width:378px/.test(MAP_SOURCE));
-// v13.45: no button inside the drawer any more; the top bar pill slides out
-// with the drawer on every page and stays visible, and a click anywhere
-// outside the drawer closes it.
-ok('the hamburger slides out with the drawer on every page',
+// Client/Admin/Brief retain header motion; Operations uses a top-layer Settings
+// close control verified separately with real paint, pointer and keyboard tests.
+ok('Client, Admin and Brief keep their existing drawer hamburger motion',
   INDEX_SOURCE.includes("hb.style.transform = 'translateX(") &&
   MAP_SOURCE.includes("hb.style.transform = 'translateX(") &&
-  BACKEND_SOURCE.includes('body.drawer-open #top-actions .top-btn.hamburger { transform: translateX(') &&
-  // v13.61: ops computes the offset live instead of a fixed translateX
-  (!OPS_SOURCE || OPS_SOURCE.includes('function _placeHamburger(')));
+  BACKEND_SOURCE.includes('body.drawer-open #top-actions .top-btn.hamburger { transform: translateX('));
 // ── v13.46 ─────────────────────────────────────────────────────────────────
 ok('the Backend drawer keeps the shared slide duration and curve',
   BACKEND_SOURCE.includes('transition: transform 0.42s cubic-bezier(0.16,1,0.3,1)'));
@@ -1613,11 +1610,13 @@ ok('Shared fabric photo failures retain saved records and remove unusable unsave
   FABRIC_UI_SOURCE.includes("'Fabric photos could not load. Refresh or try another store.'") &&
   !BACKEND_SOURCE.includes('live.concat(staticCards)'));
 // ── v13.61 · Operations Room joins the family ────────────────────────
-ok('ops: the hamburger offset is computed from the live layout, family curve everywhere',
+ok('Operations Settings paints above its header with a shared close control and no obsolete offsets',
   !OPS_SOURCE || (
-    OPS_SOURCE.includes('function _placeHamburger(') &&
-    !OPS_SOURCE.includes('transform:translateX(-360px)') &&
-    OPS_SOURCE.split('transition:transform .42s cubic-bezier(0.16,1,0.3,1)').length >= 3));
+    OPS_SOURCE.includes('width:378px;z-index:60;') &&
+    OPS_SOURCE.includes('body.drawer-open header .icon-btn.hamburger{visibility:hidden}') &&
+    OPS_SOURCE.includes('class="maya-icon-button drawer-burger"') &&
+    !OPS_SOURCE.includes('function _placeHamburger(') &&
+    OPS_SOURCE.includes('transition:transform .42s cubic-bezier(0.16,1,0.3,1)')));
 ok('ops: the trace waits with ellipses, and its folds carry arrows beside the title',
   !OPS_SOURCE || (
     OPS_SOURCE.includes('id="t-type">&#8230;<') &&

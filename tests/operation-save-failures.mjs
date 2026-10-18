@@ -95,7 +95,7 @@ try{
  // Actual Settings fields and warnings follow saved typography and Editor material.
  await account('visual-owner');await choose();const defaults=await ev(()=>structuredClone(MayaTypographyControls.defaults));
  const saved=structuredClone(defaults);for(const role of ['P1','P3'])Object.assign(saved.type[role],{font:'cormorant',size:role==='P1'?12:12,weight:500,style:'italic'});
- Object.assign(saved.editor,{background:'green',fill:70,paddingX:15,paddingY:11,radius:16,borderColor:'gray',rim:73});Object.assign(saved.overlay,{background:'green',fill:65,blur:13,saturation:140});saved.pillX=8;saved.pillY=8;
+ Object.assign(saved.editor,{background:'green',fill:70,paddingX:15,paddingY:11,radius:16,borderColor:'gray',rim:73});Object.assign(saved.overlay,{background:'green',fill:65,blur:13,saturation:140});saved.pillX=8;saved.pillY=8;saved.iconColor='#123abc';saved.iconOpacity=65;saved.iconStroke=3;
  assert.equal(validDesign(defaults),true);assert.equal(validDesign(saved),true);
  for(const [mode,value] of [['default',defaults],['saved',saved]]){
   design=value;await ev(()=>MayaTypographyControls.load());
@@ -112,6 +112,8 @@ try{
    await page.waitForFunction(size=>getComputedStyle(document.getElementById('toast')).fontSize===size,mode==='saved'?'12px':'10px');
    assert.match(notice.font,mode==='saved'?/Cormorant/:/Jost/);assert.equal(notice.weight,mode==='saved'?'500':'300');
    assert.equal(await page.locator('#drawer').evaluate(e=>getComputedStyle(e).backdropFilter),mode==='saved'?'blur(13px) saturate(1.4)':'blur(22px) saturate(1.8)');
+   const close=await page.locator('.drawer-burger').evaluate(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect(),g=e.querySelector('svg'),gs=getComputedStyle(g),gr=g.getBoundingClientRect();return {x:s.paddingLeft,y:s.paddingTop,background:s.backgroundColor,width:r.width,height:r.height,glyphWidth:gr.width,glyphHeight:gr.height,color:gs.color,opacity:gs.opacity,stroke:gs.strokeWidth};});
+   assert.equal(close.x,mode==='saved'?'8px':'14px');assert.equal(close.y,mode==='saved'?'8px':'6px');assert.equal(close.background,'rgba(3, 15, 29, 0.18)');assert.equal(close.color,mode==='saved'?'rgb(18, 58, 188)':'rgb(170, 181, 196)');assert.equal(close.opacity,mode==='saved'?'0.65':'1');assert.equal(close.stroke,mode==='saved'?'3px':'2px');assert.ok(Math.abs(close.width-close.glyphWidth-2*parseFloat(close.x)-2)<1&&Math.abs(close.height-close.glyphHeight-2*parseFloat(close.y)-2)<1,'Close follows the active Glass/icon preview geometry');
    for(const selector of ['#logic-edit','#logic-save-btn','#logic-reset-btn','#toast']){
     await page.locator(selector).scrollIntoViewIfNeeded();const box=await page.locator(selector).boundingBox();assert.ok(box&&box.x>=-1&&box.x+box.width<=width+1,mode+' '+width+' reachable '+selector);
     assert.ok(await page.locator(selector).evaluate(e=>e.scrollWidth<=e.clientWidth+1),mode+' '+width+' no clipped text '+selector);

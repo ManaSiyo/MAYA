@@ -1,3 +1,6 @@
+OCTOBER 18 final live review — standalone Settings layering
+[follow-up] The main screenshot repair a624311 is deployed and verified. Live phone inspection caught the standalone page title painting above Settings; repair the layer/visible close control and preserve active field/opener focus. New paint hit-testing and actual Close menu clicks extend the keyboard/embedded coverage. Exact release/final authority and new deployment verification required before completion.
+
 OCTOBER 17 screenshot review — Admin controls and full workspace
 [implemented] Remember Leads status selections per authenticated account, including none; reload/renewal and account switches are tested. Add shared dark centered checkbox and scrollbar settings/previews/usage with legacy-save compatibility. Keep native keyboard/focus/forced-colors behavior and hidden navigation tracks.
 [implemented] Remove Prompting/Architecture dashboard folds and obsolete gallery previews; keep Feature Requests/Recent Changes. Active App/Playground config/prompting consumers/settings remain; retired editor code is backed up under Hosting-excluded _to_delete.

@@ -86,18 +86,10 @@ if (self !== top) document.documentElement.classList.add('embedded');
     box-shadow:inset 0 1px 1px rgba(255,255,255,0.28),inset 0 -1px 1px rgba(0,0,0,0.18),0 4px 16px rgba(0,0,0,0.22)}
   .hamburger-icon{display:inline-flex;flex-direction:column;gap:3px;width:14px}
   .hamburger-icon span{display:block;height:1px;width:100%;background:currentColor;border-radius:1px}
-  /* v13.45: the hamburger never disappears. It slides left with the drawer
-     and rests hanging just outside the drawer's left edge. Embedded mode
-     has no header pill, so there the drawer keeps a small burger of its
-     own; standalone hides it. */
-  /* v13.61: the offset is computed in toggleDrawer from the live layout
-     (the header is width constrained, so a fixed -360px landed the pill far
-     from the drawer on wide screens). Same duration and curve as the whole
-     drawer family. */
-  header .icon-btn.hamburger{transition:transform .42s cubic-bezier(0.16,1,0.3,1)}
-  html:not(.embedded) .drawer .drawer-burger{visibility:hidden}
-  .drawer .drawer-burger{opacity:.85}
-  .drawer .drawer-burger:hover{opacity:1}
+  /* The temporary drawer sits above the page header and provides its own close
+     control. The fixed workspace hamburger still belongs to the embedding page. */
+  header .icon-btn.hamburger{transition:none}
+  body.drawer-open header .icon-btn.hamburger{visibility:hidden}
   /* plan button, same capsule glass as the hamburger, same height */
   .plan-btn{height:28px;padding:0 14px;display:inline-flex;align-items:center}
 
@@ -238,7 +230,7 @@ if (self !== top) document.documentElement.classList.add('embedded');
      (was horizontal scroll-snap, unreliable with a mouse on wide monitors) ── */
   #hscroll{display:block}
   .hpane-main{width:auto}
-  .hpane-drawer{position:fixed;top:0;right:0;bottom:0;width:378px;z-index:40;
+  .hpane-drawer{position:fixed;top:0;right:0;bottom:0;width:378px;z-index:60;
     transform:translateX(105%);transition:transform .42s cubic-bezier(0.16,1,0.3,1);
     pointer-events:none}
   .hpane-drawer.open{transform:none;pointer-events:auto}
@@ -417,9 +409,8 @@ if (self !== top) document.documentElement.classList.add('embedded');
 <div class="hpane hpane-drawer" inert>
 <div class="drawer" id="drawer" data-maya-popup role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="operation-settings-title" data-maya-scrollbar="visible">
   <div class="drawer-head">
-    <!-- v13.44: the hamburger slides over with the drawer, top-left corner. -->
-    <button class="icon-btn hamburger drawer-burger" onclick="toggleDrawer(false)" title="Close menu" aria-label="Close menu" style="border:0;background:none;box-shadow:none">
-      <span class="hamburger-icon"><span></span><span></span><span></span></span>
+    <button class="maya-icon-button drawer-burger" onclick="toggleDrawer(false)" title="Close settings" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
     </button>
     <h2 id="operation-settings-title" data-maya-type="H2">Settings</h2>
     <span style="width:32px"></span>
@@ -826,35 +817,20 @@ function toggleDrawer(force,focusId=''){
   d.classList.toggle('open', open);
   d.inert=!open;$('drawer').setAttribute('aria-hidden',String(!open));
   document.querySelectorAll('header .hamburger,#operation-settings').forEach(button=>button.setAttribute('aria-expanded',String(open)));
-  if(!open&&_drawerFocus?.isConnected)_drawerFocus.focus({preventScroll:true});
   // v13.44: the top bar hamburger fades while the drawer's own takes over.
   document.body.classList.toggle('drawer-open', open);
-  _placeHamburger(open);
+  if(!open&&_drawerFocus?.isConnected)_drawerFocus.focus({preventScroll:true});
   if(open){
     refreshKbStatus();
-    if(focusId||!d.contains(document.activeElement))requestAnimationFrame(()=>{
-      if(!d.classList.contains('open'))return;
+    const requestedFrom=document.activeElement;
+    if(focusId||!d.contains(requestedFrom))requestAnimationFrame(()=>{
+      if(!d.classList.contains('open')||(document.activeElement!==requestedFrom&&d.contains(document.activeElement)))return;
       const focusable=_drawerFocusable();
-      (focusable.find(el=>el.id===focusId)||focusable[0]||$('drawer')).focus();
+      (focusable.find(el=>el.id===(focusId||'m-waist'))||focusable[0]||$('drawer')).focus();
     });
   }
   if(EMBEDDED)window.parent.postMessage({maya:'ops-settings-state',open},location.origin);
 }
-/* v13.61: the pill rests just outside the drawer's left edge, computed from
-   the live layout. The header is width constrained, so a fixed offset landed
-   the pill far from the drawer on wide screens. Measure only while the pill
-   is untransformed (it always is when the drawer is closed). */
-function _placeHamburger(open){
-  const pill=document.querySelector('header .icon-btn.hamburger'); if(!pill) return;
-  if(!open || window.innerWidth<=640){ pill.style.transform=''; return; }
-  const had=pill.style.transform; pill.style.transform='';
-  const r=pill.getBoundingClientRect();
-  const drawerLeft=window.innerWidth-378;             // .hpane-drawer left edge (inner panel starts at its left:0)
-  const shift=Math.min(0,(drawerLeft-8)-r.right);     // 8px breath between pill and glass
-  pill.style.transform=had; // restore before the frame paints, then set the target
-  requestAnimationFrame(()=>{ pill.style.transform='translateX('+shift+'px)'; });
-}
-window.addEventListener('resize',()=>{ if(document.body.classList.contains('drawer-open')) _placeHamburger(true); });
 // click outside the drawer (and not on the hamburger) closes it; Escape too
 document.addEventListener('pointerdown',(e)=>{
   const d=document.querySelector('.hpane-drawer');

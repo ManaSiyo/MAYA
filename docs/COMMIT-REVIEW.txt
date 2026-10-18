@@ -1,41 +1,30 @@
-[Codex] Repair Admin controls and the Brief operations workspace
+[Codex] Keep standalone Settings above the page header
 
-Leads remembers validated status filters per authenticated account, including
-empty choices. Add shared saved checkbox and scrollbar settings, active previews,
-usage links, keyboard/forced-colors behavior and backward-compatible schema.
-Keep intentionally hidden navigation tracks hidden while content follows controls.
-Keep the open Leads filter a single vertical list; final visual checks and focused
-input/preferences/Outbound tests cover that row geometry.
+The final deployed phone screenshot exposed a stacking issue that rectangle and
+computed-style checks missed: standalone Operations had a higher header than its
+Settings drawer, so the page title painted over Settings. The standalone drawer
+also hid its own close control and depended on the header hamburger.
 
-Retire redundant Architecture/Prompting dashboard folds and their unused editor
-startup/SDK. Preserve live Firestore prompting config, private drafts, rules and
-App/Playground rendering consumers; archive exact retired code in Hosting-excluded
-_to_delete. Keep Feature Requests and Recent Changes with updated usage inventory.
+Raise the drawer above the page header, keep its actual close control visible,
+and hide the background hamburger while open. Reuse the active shared Glass/Close
+icon preview, saved glyph color/stroke and content-plus-padding geometry. Remove
+obsolete header-slide code.
+Initial entry focuses Measurements; repeated or delayed open requests preserve
+newer input focus. Restore the opener after it becomes visible again. Preserve the embedded
+parent toggle, shared dropdown material and existing saved field/pill styles.
 
-Use one fixed Backend/Operation Room H1, full-width embedded room and source-checked
-Settings toggle/focus bridge. Remove duplicate title/Brief action. Restore Fabrics
-beside garment/view controls. Shared dropdown backing keeps Settings readable over
-bright patterns; measurement/Logic fields and warnings follow saved P1/P3/Editor.
-Closed settings are inert; keyboard and Escape restore usable focus. Late sample
-completion cannot replace pending uploads, active runs or changed accounts; the
-focus loop excludes hidden standalone controls and has an all-disabled fallback.
+Add actual paint hit-testing, visible Close settings click and focus restoration to the
+standalone/embedded keyboard fixture, including phone and desktop. Retain upload,
+account/run, save failure and all-disabled fallback coverage. Regenerate source
+usage locations and document the deployed a624311 baseline and this correction.
 
-Remove unused full-size fabric photo warming and sandbox samples from saved work.
-Controlled cold-load test at 4Mbps/50ms: 27.15MB/54.45s -> 2.76MB/5.65s, with Brief
-first paint ~0.3s unchanged. Not a live model/voice latency promise. Assets/loaders,
-private data, provider settings, original photos and seller-fact rules remain.
+Validation: all 68 exact Cloud Build Node commands pass locally, including
+operation-controls, operation-save-failures and six-width Brief/default/saved
+material/icon checks. Full integrated regression passes all 639 named checks plus imported assertions
+with updated interaction contracts. Gallery passes eleven widths; standalone
+Aesthetic Control runs last before commit. The main a624311 repair also passed smoke and exact deployed-byte/public
+page checks. This follow-up changes only Operations layering/close/focus behavior.
 
-Validation: all 68 exact Cloud Build Node commands, full integrated app-regression
-(639 named checks plus imported assertions), real-server smoke, pinned npm ci,
-component-gallery across eleven widths, syntax and diff checks passed locally.
-Aesthetic Control verifies defaults/different valid saved styles and bright-pattern
-Settings at six widths; standalone authority runs last before commit. UI fixtures
-now render the real garment row; persistent missing-photo HTTP failures replace a
-one-off DOM event that raced async lookbook repaint. Strict save/privacy assertions
-remain. Operation-controls covers deferred samples, real upload/run/account changes
-and standalone/embedded keyboard loops. Publish under existing owner authorization;
-production success requires Cloud Build and exact Firebase/Cloud Run verification.
-
-Limitations: isolated Chromium/fake providers; no private logged-in demo, live model,
-carrier or audio acceptance. Firefox/Safari not run; native thin/auto fallback.
-No personal Chrome, credentials or production configuration accessed.
+No new visual authority, live settings writes, credentials, paid providers or
+personal Chrome access. Publish under existing owner authorization and verify the
+new exact Firebase/Cloud Run release and final live screenshot before handoff.

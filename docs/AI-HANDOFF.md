@@ -1,4 +1,4 @@
-# Current handoff — October 17, 2026
+# Current handoff — October 18, 2026
 
 ## Current task and release state
 
@@ -8,15 +8,23 @@ embedded Brief/Operations navigation and Fabrics placement, repair Settings
 readability, and investigate slow loading. This supersedes the earlier prohibition
 on aesthetic changes for these requested surfaces.
 
-Starting release 7533e384d43a017cc0f6ad8fbb4b3bb911667668 was verified on Firebase
-and Cloud Run after Cloud Build 2b0e2211 succeeded. The earlier 1b3c01a build failure
-was a test timeout leaking into later scenarios; 7533e38 fixed only that fixture.
-The screenshot-review source below is release-prepared: all 68 exact Cloud Build
-Node commands, full integrated regression (639 named checks plus imported suites),
-real-server smoke, pinned npm ci and gallery/syntax/diff checks passed. Standalone
-Aesthetic Control runs last before commit. Push is explicitly authorized. This
-pre-commit manifest does not establish deployment; read release.json/page stamps
-and /api/healthz against the published HEAD. Vercel success is insufficient.
+Main screenshot repair a62431164cdb0d7fc319c39dd516bbfb446eb0ab deployed successfully:
+Cloud Build fe6e037d passed all 68 gates; exact Firebase/page/API SHA, 11 assets,
+six pages and signed-out phone/desktop checks passed. Local full regression had
+639 named checks plus imported assertions. Initial baseline was 7533e38.
+
+Final live visual inspection then caught a standalone phone stacking issue:
+page header (z50) painted over Settings (z40), despite passing computed styles and
+bounds. The current follow-up raises Settings above the header, exposes its shared
+Glass Close settings control, hides the background hamburger and removes obsolete slide logic.
+It preserves active input focus on repeated/delayed open requests and restores focus only
+after the opener is visible. Paint hit-tests and real close-click/keyboard checks
+now cover the actual overlap, including the existing embedded workspace.
+All 68 exact release commands and full integrated regression (639 named checks
+plus imported assertions) pass locally for this follow-up. Gallery passes eleven
+widths; final standalone authority precedes commit/authorized Push. Do not infer deployed
+state from this preparation record: compare published HEAD with release.json/page
+stamps and /api/healthz. Vercel success is insufficient.
 
 ## Implemented screenshot repairs
 

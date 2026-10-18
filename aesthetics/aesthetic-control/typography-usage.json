@@ -89,7 +89,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 305,
+          "line": 297,
           "tag": "h1",
           "id": null,
           "class": "",
@@ -218,7 +218,7 @@
             },
             {
               "page": "backend/operations.html",
-              "line": 305
+              "line": 297
             },
             {
               "page": "backend/outbound.html",
@@ -306,7 +306,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 424,
+          "line": 415,
           "tag": "h2",
           "id": "operation-settings-title",
           "class": "",
@@ -424,7 +424,7 @@
           "locations": [
             {
               "page": "backend/operations.html",
-              "line": 424
+              "line": 415
             },
             {
               "page": "backend/status.html",
@@ -469,7 +469,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 443,
+          "line": 434,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -1795,7 +1795,7 @@
           "locations": [
             {
               "page": "backend/operations.html",
-              "line": 443
+              "line": 434
             },
             {
               "page": "backend/status.html",
@@ -2117,7 +2117,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 315,
+          "line": 307,
           "tag": "p",
           "id": "operation-fabric-selection",
           "class": "",
@@ -2127,7 +2127,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 322,
+          "line": 314,
           "tag": "select",
           "id": "test-picker",
           "class": "head-select",
@@ -2137,7 +2137,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 366,
+          "line": 358,
           "tag": "pre",
           "id": "live-log",
           "class": "",
@@ -2147,7 +2147,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 381,
+          "line": 373,
           "tag": "pre",
           "id": "t-prompt",
           "class": "",
@@ -2157,7 +2157,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 445,
+          "line": 436,
           "tag": "input",
           "id": "m-waist",
           "class": "",
@@ -2167,7 +2167,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 446,
+          "line": 437,
           "tag": "input",
           "id": "m-hip",
           "class": "",
@@ -2177,7 +2177,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 449,
+          "line": 440,
           "tag": "input",
           "id": "m-crotch",
           "class": "",
@@ -2187,7 +2187,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 450,
+          "line": 441,
           "tag": "input",
           "id": "m-inseam",
           "class": "",
@@ -2197,7 +2197,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 453,
+          "line": 444,
           "tag": "input",
           "id": "m-length",
           "class": "",
@@ -2207,7 +2207,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 464,
+          "line": 455,
           "tag": "textarea",
           "id": "logic-edit",
           "class": "",
@@ -4510,11 +4510,11 @@
             },
             {
               "page": "backend/operations.html",
-              "line": 366
+              "line": 358
             },
             {
               "page": "backend/operations.html",
-              "line": 381
+              "line": 373
             },
             {
               "page": "backend/outbound.html",
@@ -4571,7 +4571,7 @@
             },
             {
               "page": "backend/operations.html",
-              "line": 315
+              "line": 307
             },
             {
               "page": "backend/outbound.html",
@@ -5264,31 +5264,31 @@
           "locations": [
             {
               "page": "backend/operations.html",
-              "line": 322
+              "line": 314
             },
             {
               "page": "backend/operations.html",
-              "line": 445
+              "line": 436
             },
             {
               "page": "backend/operations.html",
-              "line": 446
+              "line": 437
             },
             {
               "page": "backend/operations.html",
-              "line": 449
+              "line": 440
             },
             {
               "page": "backend/operations.html",
-              "line": 450
+              "line": 441
             },
             {
               "page": "backend/operations.html",
-              "line": 453
+              "line": 444
             },
             {
               "page": "backend/operations.html",
-              "line": 464
+              "line": 455
             },
             {
               "page": "backend/status.html",
@@ -6187,7 +6187,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 307,
+          "line": 299,
           "tag": "button",
           "id": null,
           "class": "icon-btn hamburger",
@@ -6197,7 +6197,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 314,
+          "line": 306,
           "tag": "button",
           "id": "operation-settings",
           "class": "pill maya-pill",
@@ -6207,7 +6207,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 333,
+          "line": 325,
           "tag": "button",
           "id": "operation-fabrics",
           "class": "pill maya-pill",
@@ -6217,7 +6217,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 375,
+          "line": 367,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -6227,7 +6227,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 376,
+          "line": 368,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -6237,7 +6237,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 377,
+          "line": 369,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -6247,7 +6247,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 378,
+          "line": 370,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -6257,17 +6257,17 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 421,
+          "line": 412,
           "tag": "button",
           "id": null,
-          "class": "icon-btn hamburger drawer-burger",
+          "class": "maya-icon-button drawer-burger",
           "reason": "pill",
           "role": "pill",
-          "snippet": "<button class=\"icon-btn hamburger drawer-burger\" onclick=\"toggleDrawer(false)\" title=\"Close menu\" aria-label=\"Close menu\" style=\"border:0;background:none;box-sh"
+          "snippet": "<button class=\"maya-icon-button drawer-burger\" onclick=\"toggleDrawer(false)\" title=\"Close settings\" aria-label=\"Close settings\">"
         },
         {
           "page": "backend/operations.html",
-          "line": 445,
+          "line": 436,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6277,7 +6277,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 446,
+          "line": 437,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6287,7 +6287,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 449,
+          "line": 440,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6297,7 +6297,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 450,
+          "line": 441,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6307,7 +6307,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 453,
+          "line": 444,
           "tag": "label",
           "id": null,
           "class": "",
@@ -6317,7 +6317,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 456,
+          "line": 447,
           "tag": "div",
           "id": "dim-derived",
           "class": "kb-status",
@@ -6327,7 +6327,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 497,
+          "line": 488,
           "tag": "div",
           "id": "toast",
           "class": "",
@@ -6337,7 +6337,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 1032,
+          "line": 1008,
           "tag": "button",
           "id": null,
           "class": "pill sm ${CUR.kind==='rd'?'active':''}",
@@ -6347,7 +6347,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 1035,
+          "line": 1011,
           "tag": "button",
           "id": null,
           "class": "pill sm ${act}",
@@ -6357,7 +6357,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 1037,
+          "line": 1013,
           "tag": "button",
           "id": null,
           "class": "pill sm ${CUR.kind==='grounded'?'active':''}",
@@ -6367,7 +6367,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 1039,
+          "line": 1015,
           "tag": "button",
           "id": null,
           "class": "pill sm ${CUR.kind==='svg'?'active':''}",
@@ -11118,35 +11118,35 @@
             },
             {
               "page": "backend/operations.html",
-              "line": 307
+              "line": 299
             },
             {
               "page": "backend/operations.html",
-              "line": 314
+              "line": 306
             },
             {
               "page": "backend/operations.html",
-              "line": 333
+              "line": 325
             },
             {
               "page": "backend/operations.html",
-              "line": 421
+              "line": 412
             },
             {
               "page": "backend/operations.html",
-              "line": 1032
+              "line": 1008
             },
             {
               "page": "backend/operations.html",
-              "line": 1035
+              "line": 1011
             },
             {
               "page": "backend/operations.html",
-              "line": 1037
+              "line": 1013
             },
             {
               "page": "backend/operations.html",
-              "line": 1039
+              "line": 1015
             },
             {
               "page": "backend/outbound.html",
@@ -12803,19 +12803,19 @@
             },
             {
               "page": "backend/operations.html",
-              "line": 375
+              "line": 367
             },
             {
               "page": "backend/operations.html",
-              "line": 376
+              "line": 368
             },
             {
               "page": "backend/operations.html",
-              "line": 377
+              "line": 369
             },
             {
               "page": "backend/operations.html",
-              "line": 378
+              "line": 370
             },
             {
               "page": "backend/outbound.js",
@@ -12952,23 +12952,23 @@
           "locations": [
             {
               "page": "backend/operations.html",
-              "line": 445
+              "line": 436
             },
             {
               "page": "backend/operations.html",
-              "line": 446
+              "line": 437
             },
             {
               "page": "backend/operations.html",
-              "line": 449
+              "line": 440
             },
             {
               "page": "backend/operations.html",
-              "line": 450
+              "line": 441
             },
             {
               "page": "backend/operations.html",
-              "line": 453
+              "line": 444
             },
             {
               "page": "backend/status.html",
@@ -13013,11 +13013,11 @@
           "locations": [
             {
               "page": "backend/operations.html",
-              "line": 456
+              "line": 447
             },
             {
               "page": "backend/operations.html",
-              "line": 497
+              "line": 488
             },
             {
               "page": "backend/status.html",

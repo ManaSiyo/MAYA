@@ -32,13 +32,21 @@ try{
  for(const width of [390,1440]){
   await first.setViewportSize({width,height:1000});const header=first.locator('header .hamburger');await header.focus();await first.keyboard.press('Enter');await first.waitForFunction(()=>document.activeElement.id==='m-waist');
   await first.keyboard.press('Tab');assert.equal(await first.evaluate(()=>document.activeElement.id),'m-hip');
-  await first.locator('#m-length').focus();await first.keyboard.press('Tab');assert.equal(await first.evaluate(()=>document.activeElement.id),'m-waist','Last field wraps to a visible first target');
+  await first.waitForFunction(()=>{const r=document.getElementById('drawer').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1;});
+  assert.equal(await first.locator('.drawer-burger').isVisible(),true,'Open Settings always offers a real close control');
+  assert.ok(await first.locator('#operation-settings-title').evaluate(el=>{const r=el.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('#drawer');}),'Settings title paints above the standalone page header');
+  if(width===390)await first.screenshot({path:'/private/tmp/maya-standalone-settings-layer-390.png'});
+  await first.locator('#m-length').focus();await first.keyboard.press('Tab');assert.equal(await first.locator('.drawer-burger').evaluate(e=>e===document.activeElement),true,'Last field wraps to the visible close control');
   await first.keyboard.press('Shift+Tab');assert.equal(await first.evaluate(()=>document.activeElement.id),'m-length','First field wraps backward to last');
   await first.keyboard.press('Escape');assert.equal(await header.evaluate(e=>e===document.activeElement),true);assert.equal(await first.locator('.hpane-drawer').evaluate(e=>e.inert),true);
   await first.locator('#operation-settings').focus();await first.keyboard.press('Enter');await first.waitForFunction(()=>document.activeElement.id==='m-waist');await first.keyboard.press('Escape');assert.equal(await first.evaluate(()=>document.activeElement.id),'operation-settings');
+  await header.click();await first.locator('.drawer-burger').click();assert.equal(await header.evaluate(e=>e===document.activeElement),true,'Visible close control restores the real opener');
  }
+ // A queued opening focus must not overwrite a newer user focus inside Settings.
+ await first.evaluate(()=>{const native=requestAnimationFrame,queued=[];window.requestAnimationFrame=fn=>queued.push(fn);toggleDrawer(true);document.getElementById('m-hip').focus();window.requestAnimationFrame=native;for(const fn of queued)fn();});
+ assert.equal(await first.evaluate(()=>document.activeElement.id),'m-hip','A late open callback preserves newer field focus');await first.keyboard.press('Escape');
  // A running operation disables every field; the focusable dialog is the safe fallback.
- await first.evaluate(()=>setOperationRunning(true));await first.locator('header .hamburger').focus();await first.keyboard.press('Enter');await first.waitForFunction(()=>document.activeElement.id==='drawer');await first.keyboard.press('Tab');assert.equal(await first.evaluate(()=>document.activeElement.id),'drawer');await first.keyboard.press('Escape');await first.evaluate(()=>setOperationRunning(false));await first.close();
+ await first.evaluate(()=>{setOperationRunning(true);document.querySelector('.drawer-burger').disabled=true;});await first.locator('header .hamburger').focus();await first.keyboard.press('Enter');await first.waitForFunction(()=>document.activeElement.id==='drawer');await first.keyboard.press('Tab');assert.equal(await first.evaluate(()=>document.activeElement.id),'drawer');await first.keyboard.press('Escape');await first.evaluate(()=>setOperationRunning(false));await first.close();
  // An upload intent already wins while FileReader is still waiting.
  const pending=await open();await pending.evaluate(()=>{EMB={};window.nativeRead=FileReader.prototype.readAsDataURL;FileReader.prototype.readAsDataURL=function(blob){window.pendingFile={reader:this,blob};};});await upload(pending);await pending.waitForFunction(()=>!!window.pendingFile);
  await releaseSamples(pending);assert.deepEqual(await pending.evaluate(()=>({hero:HERO,active:ACTIVE_TEST,keys:Object.keys(TESTS)})),{hero:null,active:null,keys:[]});

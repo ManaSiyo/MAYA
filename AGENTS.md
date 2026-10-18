@@ -520,3 +520,10 @@ and P3 notices. Closed settings are inert; Escape restores focus. Do not restore
 the unused ~24MB fabric-original warmup or download sandbox samples with saved
 submissions/embeds. Run brief-workspace-ui, operation-controls and operation-save-failures, full release
 gates, then standalone aesthetic-authority last.
+
+Standalone Operations Settings must paint above its page header and expose its own
+visible shared Glass/Close control; the background hamburger hides while open. Check real paint
+hit-testing as well as rectangles, especially phone widths. Preserve active field
+focus on repeated opens, and restore the opener only after it becomes visible.
+Embedded parent focus/toggle remains source-checked. Run operation-controls,
+operation-save-failures, brief-workspace-ui, exact release and final authority.

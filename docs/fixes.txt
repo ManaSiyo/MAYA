@@ -1,3 +1,7 @@
+OCTOBER 18 final live visual incident — Settings header overlap
+[confirmed live] Standalone Operations header z50 painted above drawer z40 on phones; its own close icon was intentionally hidden. Bounds/type/material assertions passed while the screenshot remained wrong.
+[fixed locally] Settings paints above the header and keeps its close control; the background hamburger hides. Retire obsolete slide offsets; initial focus goes to Measurements, repeated opens preserve active inputs, close restores the now-visible opener. Add hit-test and real close-click regression; preserve account/upload/save tests. Main a624311 deployment remains healthy while this follow-up is prepared.
+
 OCTOBER 17 screenshot regressions — filter resets, native controls and workspace layers
 [causes] Lead filters lived only in memory; checkboxes and unstyled feature-list scroll tracks used native chrome. Brief and embedded Operations both owned headings/padding; translucent Settings over white patterns was not covered by empty fixtures. Old Brief warmup fetched ~23.77MB of fabric originals before use.
 [repairs] Account-keyed validated preferences, shared optional Checkbox/Scrollbar settings and real previews, retired redundant dashboard sections with active config retained/backup, one screen-aware fixed title/full-width room, garment-local Fabrics actions, shared dropdown Settings backing and explicit P1/P3/Editor fields/notices. Closed settings are inert. Remove original-image warmup and saved-work sample downloads; preserve actual sourcing/local loaders.
