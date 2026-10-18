@@ -1,30 +1,10 @@
-[Codex] Keep standalone Settings above the page header
+[Codex] Align the repair handoff with the published follow-up
 
-The final deployed phone screenshot exposed a stacking issue that rectangle and
-computed-style checks missed: standalone Operations had a higher header than its
-Settings drawer, so the page title painted over Settings. The standalone drawer
-also hid its own close control and depended on the header hamburger.
+Record the verified local authority result and published b621e50 follow-up, and
+replace obsolete instructions about the hidden Settings close control and pending
+backup commit. Runtime behavior and visible UI are unchanged. The final deployed
+commit and phone/desktop screenshot still require verification after Cloud Build.
 
-Raise the drawer above the page header, keep its actual close control visible,
-and hide the background hamburger while open. Reuse the active shared Glass/Close
-icon preview, saved glyph color/stroke and content-plus-padding geometry. Remove
-obsolete header-slide code.
-Initial entry focuses Measurements; repeated or delayed open requests preserve
-newer input focus. Restore the opener after it becomes visible again. Preserve the embedded
-parent toggle, shared dropdown material and existing saved field/pill styles.
-
-Add actual paint hit-testing, visible Close settings click and focus restoration to the
-standalone/embedded keyboard fixture, including phone and desktop. Retain upload,
-account/run, save failure and all-disabled fallback coverage. Regenerate source
-usage locations and document the deployed a624311 baseline and this correction.
-
-Validation: all 68 exact Cloud Build Node commands pass locally, including
-operation-controls, operation-save-failures and six-width Brief/default/saved
-material/icon checks. Full integrated regression passes all 639 named checks plus imported assertions
-with updated interaction contracts. Gallery passes eleven widths; standalone
-Aesthetic Control runs last before commit. The main a624311 repair also passed smoke and exact deployed-byte/public
-page checks. This follow-up changes only Operations layering/close/focus behavior.
-
-No new visual authority, live settings writes, credentials, paid providers or
-personal Chrome access. Publish under existing owner authorization and verify the
-new exact Firebase/Cloud Run release and final live screenshot before handoff.
+Validation: the unchanged runtime passed all 68 release commands and 639 named
+regression checks. Run the shared Aesthetic Control authority last for this
+documentation-only correction; retain the existing explicit Push authorization.

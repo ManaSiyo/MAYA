@@ -22,9 +22,10 @@ after the opener is visible. Paint hit-tests and real close-click/keyboard check
 now cover the actual overlap, including the existing embedded workspace.
 All 68 exact release commands and full integrated regression (639 named checks
 plus imported assertions) pass locally for this follow-up. Gallery passes eleven
-widths; final standalone authority precedes commit/authorized Push. Do not infer deployed
-state from this preparation record: compare published HEAD with release.json/page
-stamps and /api/healthz. Vercel success is insufficient.
+widths; final standalone authority passed. Follow-up b621e5051c04d128eb4f010a17f8df139c153a7b
+is pushed; its Cloud Build is running. This documentation-only follow-up adds no
+visible UI. Verify the eventual published HEAD against release.json, page stamps
+and /api/healthz; Vercel success is insufficient.
 
 ## Implemented screenshot repairs
 
@@ -54,7 +55,7 @@ stamps and /api/healthz. Vercel success is insufficient.
   border/radius/padding, retaining overlay blur/saturation. Measurement/Logic fields
   explicitly follow P1/Editor and warnings P3. Closed Settings is inert; its source-checked state bridge toggles the fixed hamburger; Escape restores
   focus and Tab wraps actual native focusable controls. Deferred samples cannot replace pending uploads or active runs; actual visible
-  keyboard targets exclude the hidden standalone close button. Bright pattern fixtures cover
+  keyboard targets include the visible shared Close settings button. Bright pattern fixtures cover
   the previously missed contrast failure.
 - Removed obsolete full-size fabric-photo warmup (~23.77 MB of originals). Sandbox
   sample images load asynchronously with run/account/upload-intent guards only on standalone non-submission Operations;
@@ -110,11 +111,13 @@ corpus is not model semantic accuracy. No private production messages/calls were
 
 ## Open limits and exact next step
 
-Functional/release/smoke and default/saved screenshot checks have passed. Run
-standalone aesthetic-authority last, commit only task files (force-add exact backup
-files), then Push under existing explicit owner authorization. Verify Cloud Build success,
-release.json/page stamps/API SHA and changed public asset bytes. Update release state
-only from evidence; local fixtures do not prove deployment.
+Functional/release/smoke and default/saved screenshot checks have passed. The
+behavioral repairs and retired-editor backups are committed and pushed. Run the
+shared Aesthetic Control authority last for this documentation-only correction,
+commit and Push under existing authorization, then await Cloud Build success for
+the resulting HEAD. Verify release.json, page stamps, API SHA and public asset
+bytes, then repeat the live authority and inspect the phone/desktop Settings
+screenshots. Update deployment state only from evidence; fixtures do not prove it.
 
 No personal Chrome access this session. Private fur/green-pants demo, actual logged-in
 production acceptance, owner/carrier delivery and live audio/model quality remain
