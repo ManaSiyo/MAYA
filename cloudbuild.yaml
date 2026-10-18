@@ -48,6 +48,8 @@ steps:
         node tests/lead-store.mjs
         node tests/admin-storage.mjs
         node tests/admin-prompt-saves.mjs
+        node tests/admin-status-preferences.mjs
+        node tests/input-controls-ui.mjs
         node tests/project-lifecycle.mjs
         node tests/brief-operation-races.mjs
         node tests/release-stamp.mjs
@@ -85,6 +87,7 @@ steps:
         node tests/fabric-search-ui.mjs
         node tests/fabric-workflow-ui.mjs
         node tests/operation-save-failures.mjs
+        node tests/operation-controls.mjs
         node tests/crm-ui.mjs
         node tests/crm-failure-ui.mjs
         node tests/canon-ui.mjs

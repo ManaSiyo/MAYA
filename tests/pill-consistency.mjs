@@ -140,7 +140,7 @@ try{
  for(const [selector,before] of Object.entries(adminDefault)){const after=adminSaved[selector];check(Math.abs(after.width-before.width-16)<1.2,selector+' live width follows saved X padding',{before:before.width,after:after.width});check(Math.abs(after.height-before.height-12)<1.2,selector+' live height follows saved Y padding',{before:before.height,after:after.height});}
  // No saved dissection deliberately disables Fabrics. Its disabled shadow is
  // a separate state, not evidence that the enabled Glass material was lost.
- await ready('/backend.html');check(await page.locator('#brief-fabrics-button').isDisabled(),'Brief Fabrics is disabled before a saved dissection exists');
+ await ready('/backend.html');await page.evaluate(image=>renderDissection({card:{image}}),'data:image/png;base64,'+briefPhoto.toString('base64'));check(await page.locator('#brief-fabrics-button').isDisabled(),'Brief Fabrics is disabled before a saved dissection exists');
  geometry(await measure('#brief-fabrics-button'),'Brief Fabrics disabled',22,12,{disabled:true});
  // Existing page controls, including legacy span pills, must share the formula.
  for(const [path,selector,label,kind] of [['/','#voice-bar','App listen','mixed'],['/outbound.html','#sync-sheet','Outbound refresh','text'],['/backend.html?submission=pill-brief','#brief-fabrics-button','Brief Fabrics','text'],['/operations.html','#start-test','Operation Room Start','text']]){

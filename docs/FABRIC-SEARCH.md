@@ -1,9 +1,9 @@
 # Conversational fabric sourcing — October 17, 2026
 
-Release state: 7015b99 was verified on Firebase and Cloud Run before the current
-deeper audit. The follow-up below is implemented locally; full release/regression,
-final Aesthetic Control, commit, Push and new exact deployment verification are
-pending. The private fur/green-pants owner demonstration has not run.
+Release baseline: 7533e38 was verified on Firebase and Cloud Run. The October 17
+screenshot review restores Fabrics beside the garment controls and removes unused
+full-resolution startup warming. See AI-HANDOFF.md for the current release state.
+The private fur/green-pants owner demonstration has not run.
 
 From the Brief or Operation Room, choose Fabrics after a dissection has been
 saved successfully. The selected garment, original look and client preferences
@@ -98,7 +98,7 @@ metadata; it is not returned by the API. Changed garments or reused legacy IDs
 cannot silently inherit another material. Legacy selections are inferred only
 when unambiguous, without migration writes during reads. Removing a fabric clears
 every assignment to it. Fresh dissection IDs do not reuse array positions. Brief
-rejects a dissection above 27 MiB by UTF-8 byte size and keeps the full generated
+rejects a dissection above 25 MiB by UTF-8 byte size and keeps the full generated
 draft, including patterns, rather than claiming a save after dropping output.
 
 The Brief embeds Operation Room below it and also retains the standalone route.

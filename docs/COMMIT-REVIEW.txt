@@ -1,23 +1,41 @@
-[Codex] Isolate the fabric timeout probe between save scenarios
+[Codex] Repair Admin controls and the Brief operations workspace
 
-Cloud Build 6c4d5797 rejected the new fabric workflow test before deployment.
-Its hung-write probe permanently shortened subsequent 15-second write deadlines
-to 150ms. On slower interaction, a held write timed out and reconciliation drained
-a legitimate next Save while the original project was still active, producing 10
-requests instead of 9. A 250ms delay reproduces the exact failure locally.
+Leads remembers validated status filters per authenticated account, including
+empty choices. Add shared saved checkbox and scrollbar settings, active previews,
+usage links, keyboard/forced-colors behavior and backward-compatible schema.
+Keep intentionally hidden navigation tracks hidden while content follows controls.
+Keep the open Leads filter a single vertical list; final visual checks and focused
+input/preferences/Outbound tests cover that row geometry.
 
-Make the timeout override single-use and restore the native API. Keep every strict
-request-count and private-storage assertion. Include the slow interaction, await
-the exact released acknowledgement and settle isolated network activity before
-checking cancellation. Add optional CPU throttling for repeatable stress probes.
-No runtime, presentation, provider, authorization or build-gate change.
+Retire redundant Architecture/Prompting dashboard folds and their unused editor
+startup/SDK. Preserve live Firestore prompting config, private drafts, rules and
+App/Playground rendering consumers; archive exact retired code in Hosting-excluded
+_to_delete. Keep Feature Requests and Recent Changes with updated usage inventory.
 
-Validation: the reproduced failure becomes a pass at normal, 4x and 8x CPU rates.
-The unchanged application previously passed all 65 local Cloud Build test commands,
-full integrated regression, real-server smoke and shared authority. Repeat standalone
-Aesthetic Control last before this follow-up commit, then Push under Fromsa's
-existing authorization. The previous production release remains 7015b99 until
-Cloud Build succeeds and exact Firebase/Cloud Run verification confirms otherwise.
+Use one fixed Backend/Operation Room H1, full-width embedded room and source-checked
+Settings toggle/focus bridge. Remove duplicate title/Brief action. Restore Fabrics
+beside garment/view controls. Shared dropdown backing keeps Settings readable over
+bright patterns; measurement/Logic fields and warnings follow saved P1/P3/Editor.
+Closed settings are inert; keyboard and Escape restore usable focus. Late sample
+completion cannot replace pending uploads, active runs or changed accounts; the
+focus loop excludes hidden standalone controls and has an all-disabled fallback.
 
-Existing Operations field styling gaps and private model/carrier/audio acceptance
-remain documented in AI-HANDOFF. No personal Chrome or production settings touched.
+Remove unused full-size fabric photo warming and sandbox samples from saved work.
+Controlled cold-load test at 4Mbps/50ms: 27.15MB/54.45s -> 2.76MB/5.65s, with Brief
+first paint ~0.3s unchanged. Not a live model/voice latency promise. Assets/loaders,
+private data, provider settings, original photos and seller-fact rules remain.
+
+Validation: all 68 exact Cloud Build Node commands, full integrated app-regression
+(639 named checks plus imported assertions), real-server smoke, pinned npm ci,
+component-gallery across eleven widths, syntax and diff checks passed locally.
+Aesthetic Control verifies defaults/different valid saved styles and bright-pattern
+Settings at six widths; standalone authority runs last before commit. UI fixtures
+now render the real garment row; persistent missing-photo HTTP failures replace a
+one-off DOM event that raced async lookbook repaint. Strict save/privacy assertions
+remain. Operation-controls covers deferred samples, real upload/run/account changes
+and standalone/embedded keyboard loops. Publish under existing owner authorization;
+production success requires Cloud Build and exact Firebase/Cloud Run verification.
+
+Limitations: isolated Chromium/fake providers; no private logged-in demo, live model,
+carrier or audio acceptance. Firefox/Safari not run; native thin/auto fallback.
+No personal Chrome, credentials or production configuration accessed.

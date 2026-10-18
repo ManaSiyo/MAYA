@@ -13,10 +13,6 @@ export function setupWorkspacePreviews({parent,preview,render}){
  function editButton(type){return Pill({label:'Edit '+type,onClick:event=>{event.stopPropagation();openRole(type);}});}
  const feature=card('Admin · Feature requests','/status.html#features-fold','H2 section title · P1 request · P3 name/date · Inner panel');
  const row=document.createElement('div');row.className='fr workspace-feature-row';row.append(role('span','Owner name','P3'),role('p','Preview request: make fabric choices easier to compare.','P1'),role('span','Date','P3'));feature.append(row,editButton('P1'),Pill({label:'Edit Inner panel',onClick:openInner}));
- const prompt=card('Admin · Prompting Engine','/status.html#pe-fold','H2 section title · H3 supporting title · P1 field · P3 label · Inner panel · Dropdown field');
- const stack=document.createElement('div');stack.dataset.mayaFieldStack='';
- const label=role('label','Prompt label','P3');label.dataset.mayaFieldRow='';const textarea=role('textarea','','P1');textarea.value='Preview prompt. Editing this sample changes no live prompt.';textarea.dataset.mayaControl='field';textarea.rows=2;label.append(textarea);stack.append(label);prompt.append(stack,editButton('H3'));
- const architecture=card('Admin · Architecture','/status.html#architecture','H2 section title · H3 group title · P1 description · Inner panel');architecture.append(role('h3','Fabric search','H3'),role('p','Seller sources and submission-scoped lookbooks.','P1'),editButton('H3'));
  const automation=card('Admin · Text Automations','/status.html','H3 title · P3 labels · P1 fields · saved label/field gaps');
  const timing=document.createElement('div');timing.dataset.mayaFieldStack='';timing.className='workspace-timing-preview';
  for(const [name,value] of [['Trigger','No reply after first text'],['Earliest draft time','09:00']]){const l=role('label',name,'P3');l.dataset.mayaFieldRow='';const field=role('input','','P1');field.dataset.mayaControl='field';field.value=value;field.readOnly=true;l.append(field);timing.append(l);}

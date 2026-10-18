@@ -17,7 +17,7 @@ const page=await browser.newPage({viewport:{width:1280,height:900}});const error
 await page.addInitScript(t=>localStorage.setItem('maya_admin_tok',t),jwt('owner-A'));
 await page.route('**/*',async route=>{
   const u=new URL(route.request().url());
-  if(u.hostname==='cdn.shopify.com')return route.fulfill({body:png,contentType:'image/png'});
+  if(u.hostname==='cdn.shopify.com')return u.searchParams.has('fixture-unavailable')?route.fulfill({status:404,body:'Missing fixture image'}):route.fulfill({body:png,contentType:'image/png'});
   if(u.hostname!=='maya-fabric.test')return route.abort();
   const body=route.request().postDataJSON?.();
   if(u.pathname==='/api/design')return route.fulfill({json:savedDesign});
@@ -48,7 +48,7 @@ try{
   await page.evaluate(({reference,pieces})=>{
     window._openedSubmission={id:'project-A'};window._currentSnap={lastSummary:{fabric_preferences:'100% wool, no polyester'}};
     window._dissectTarget={hero:reference,card:{_dissection:{pieces}}};
-    _pieceState={pieces:[{name:'Full view',_virtual:true},...pieces],idx:0,heroImage:reference};window._pieceState=_pieceState;
+    renderDissection({card:{image:reference,_dissection:{pieces}}});
     _publishSavedOperations({pieces});
   },{reference,pieces});
   await page.locator('#brief-fabrics-button').click();
@@ -145,7 +145,10 @@ try{
   await page.locator('.fa-tabs').getByRole('button',{name:'Favorites',exact:true}).click();assert.match(await page.locator('.fa-results').textContent(),/Midnight Velvet/);
   await page.evaluate(()=>MayaTypographyControls.ready);assert.equal((await readStyle('.fa-header h2')).size,28,'Saved design propagates on the Operations page reload');assert.equal((await readStyle('.fa-product')).background,'rgba(35, 76, 125, 0.7)');
   const savedProductCard=page.locator('.fa-product').filter({hasText:'Crimson wool twill'});
-  await savedProductCard.locator('img').dispatchEvent('error');
+  // A persistent provider-photo failure survives async lookbook repaint. A one-off
+  // synthetic DOM error could be erased by the in-flight Favorites refresh.
+  for(const book of books.values())for(const item of book.items)if(item.url===product.url)item.image=product.image+'?fixture-unavailable=1';
+  await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();
   await savedProductCard.getByText('Photo unavailable',{exact:true}).waitFor();
   assert.ok(await savedProductCard.getByRole('button',{name:'Remove',exact:true}).isVisible(),'A broken favorite stays manageable');
   await savedProductCard.getByRole('button',{name:'Remove',exact:true}).click();

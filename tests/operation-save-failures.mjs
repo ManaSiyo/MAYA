@@ -74,7 +74,7 @@ try{
  await page.locator('#m-waist').fill('30');const keyA=await ev(()=>measurementKey());
  await fault({measureSet:true});await page.locator('#m-waist').fill('42');assert.match(await toast(),/kept for this session.*could not be saved/);
  assert.equal(await ev(()=>JSON.parse(sessionStorage.getItem(measurementKey())).waist),'30');assert.equal(await ev(()=>getMeasures().waist),42);
- await ev(()=>syncMeasures());assert.equal(await page.locator('#m-waist').inputValue(),'42');assert.match(await page.locator('#dim-derived').innerText(),/waist 42/);
+ await ev(()=>syncMeasures());assert.equal(await page.locator('#m-waist').inputValue(),'42');assert.match(await page.locator('#dim-derived').textContent(),/waist 42/);
  const prompt=await ev(()=>{setOperationRunning(true);const result={waist:getMeasures().waist,prompt:composeGroundedPrompt({type:'pants'},'pants',KB.grammar.types.pants,[]),disabled:$('logic-edit').disabled};setOperationRunning(false);return result;});
  assert.equal(prompt.waist,42);assert.match(prompt.prompt,/waist 42/);assert.equal(prompt.disabled,true,'Running freezes the Pattern Logic textarea too');
  await account('owner-a',4);assert.equal(await ev(()=>getMeasures().waist),42,'Renewal retains unsaved current measurements');
@@ -92,9 +92,7 @@ try{
  await fault({logicSet:false});await ev(()=>saveLogic());assert.match(await toast(),/^Pattern logic saved/);assert.equal(await ev(()=>getLogic('pants')[0].label),'REVIEWED REPLACEMENT');
  await fault({logicGet:false,lockGet:true});await account('unreadable-lock');await choose();await ev(()=>startTest());assert.match(await toast(),/Injected lock Get|Test lock could not be read/);assert.equal(paid.length,0);
  await fault({lockGet:false});await ev(()=>renderLogic());await draft('shape before project switch x1');await choose('other-garment');await ev(()=>saveLogic());assert.match(await toast(),/account changed/);
- // Existing error controls preserve their default appearance. Saved caption size,
- // pills and drawer material still apply. Legacy fields lack full Editor/P1 hooks;
- // this fixture records that existing gap without changing the owner's aesthetic.
+ // Actual Settings fields and warnings follow saved typography and Editor material.
  await account('visual-owner');await choose();const defaults=await ev(()=>structuredClone(MayaTypographyControls.defaults));
  const saved=structuredClone(defaults);for(const role of ['P1','P3'])Object.assign(saved.type[role],{font:'cormorant',size:role==='P1'?12:12,weight:500,style:'italic'});
  Object.assign(saved.editor,{background:'green',fill:70,paddingX:15,paddingY:11,radius:16,borderColor:'gray',rim:73});Object.assign(saved.overlay,{background:'green',fill:65,blur:13,saturation:140});saved.pillX=8;saved.pillY=8;
@@ -105,12 +103,14 @@ try{
    await page.setViewportSize({width,height:1000});await ev(()=>toggleDrawer(true));await draft('kept after quota failure x2\nreviewed waistband x1');await fault({logicSet:true});await ev(()=>saveLogic());
    assert.match(await toast(),/not saved/);await page.locator('#logic-edit').focus();
    assert.equal(await page.locator('#logic-edit').evaluate(e=>document.activeElement===e),true);
+   await page.waitForFunction(weight=>getComputedStyle(document.getElementById('logic-edit')).fontWeight===weight,mode==='saved'?'500':'300');
+   await page.waitForFunction(weight=>['logic-save-btn','toast'].every(id=>getComputedStyle(document.getElementById(id)).fontWeight===weight),mode==='saved'?'500':'300');
    const field=await styles('#logic-edit'),button=await styles('#logic-save-btn'),notice=await styles('#toast');
-   assert.equal(field.paddingX,'12px');assert.equal(field.paddingY,'10px');assert.equal(field.background,'rgba(255, 255, 255, 0.04)');
-   assert.match(field.font,/Jost/);assert.equal(field.weight,'400');assert.equal(field.size,mode==='saved'?'12px':'10px');
+   assert.equal(field.paddingX,mode==='saved'?'15px':'8px');assert.equal(field.paddingY,mode==='saved'?'11px':'8px');assert.equal(field.background,mode==='saved'?'rgba(23, 91, 59, 0.7)':'rgb(0, 0, 0)');
+   assert.match(field.font,mode==='saved'?/Cormorant/:/Jost/);assert.equal(field.weight,mode==='saved'?'500':'300');assert.equal(field.size,'12px');
    assert.match(button.font,mode==='saved'?/Cormorant/:/Jost/);assert.equal(button.weight,mode==='saved'?'500':'300');assert.equal(button.paddingX,mode==='saved'?'8px':'14px');
    await page.waitForFunction(size=>getComputedStyle(document.getElementById('toast')).fontSize===size,mode==='saved'?'12px':'10px');
-   assert.match(notice.font,/Jost/);assert.equal(notice.weight,'400');
+   assert.match(notice.font,mode==='saved'?/Cormorant/:/Jost/);assert.equal(notice.weight,mode==='saved'?'500':'300');
    assert.equal(await page.locator('#drawer').evaluate(e=>getComputedStyle(e).backdropFilter),mode==='saved'?'blur(13px) saturate(1.4)':'blur(22px) saturate(1.8)');
    for(const selector of ['#logic-edit','#logic-save-btn','#logic-reset-btn','#toast']){
     await page.locator(selector).scrollIntoViewIfNeeded();const box=await page.locator(selector).boundingBox();assert.ok(box&&box.x>=-1&&box.x+box.width<=width+1,mode+' '+width+' reachable '+selector);
@@ -125,5 +125,4 @@ try{
  }
  assert.equal(paid.length,0);assert.deepEqual(errors,[]);
  console.log('Operation saves: quota/security failures retain reviewed logic and current measurement prompts; retry/reset/lock, legacy retention, account renewal/round trips, submission/garment isolation and default/saved error controls at six widths passed.');
- console.log('Existing presentation limitation preserved: Pattern Logic field remains Jost/400 with 12×10 padding and translucent backing; measurement fields remain 14×8. Full saved Editor material and P1/P3 font/weight do not govern these legacy fields/warnings. Caption size, pills and drawer material still respond. No default styles changed.');
 }finally{await browser.close();}

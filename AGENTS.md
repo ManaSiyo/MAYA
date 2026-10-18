@@ -364,7 +364,7 @@ without migration writes. presentation-runtime.js and pill-runtime.js load befor
 typography runtime v24 (gallery v34). Capsules size from content/glyph + saved X/Y
 padding. Glass and Regular pills have independent material/padding and usage
 previews; all Edit triggers are Regular, Save/icons are Glass. Nine semantic status
-editors list consumers; saved colors remain explicit overrides. All nine Admin
+editors list consumers; saved colors remain explicit overrides. All seven active Admin
 heading gaps include empty states and Ad campaigns' D/W/M row; redundant range
 copy stays hidden. Final aesthetic-authority imports presentation-consistency and
 pill-consistency, after functional gates and before commit/handoff.
@@ -466,8 +466,9 @@ detach. Save/rename acknowledge only persisted work; preserve later edits, faile
 drafts and oversized transcripts. Deletion continuations pin account generation.
 Dirty/pending online work also warns on refresh, but browser termination is best-
 effort. Run project-lifecycle, client-account-races and both hands batteries.
-Admin Prompt Engine uses account-bound live/private reads and fallback writes,
-protects typing, and requires review after an initial pending load. Outbound
+The retired Admin Prompt Engine editor is backed up under
+_to_delete/admin-dashboard-retired-2026-10-17; active client/Playground Firestore
+config/prompting readers and stored settings remain intact. Outbound
 workspace revisions reject old reads after Save and coalesce overlapping refreshes.
 Run admin-prompt-saves and crm-failure-ui; both remain release/app-regression gates.
 The copy-only cleanup changes existing helper passages, with no CSS/role/material
@@ -491,12 +492,31 @@ failures retain reviewed state; unsaved/unreadable logic blocks paid work. Faile
 measurement writes retain current scoped page-memory values; unreadable initial
 values block generation. Saved piece ID plus image scopes measurements; legacy
 session keys remain intact and may require re-entry. Run operation-save-failures,
-brief-operation-races and final aesthetic-authority. Current owner constraint forbids
-appearance changes: legacy field/full-role authority gaps are explicitly documented
-in AI-HANDOFF and must not be claimed fixed by existing caption/pill/drawer checks.
+brief-operation-races and final aesthetic-authority. The later screenshot review explicitly authorizes visual repairs: Operations
+measurement/Logic fields declare shared Editor/P1, warnings use P3, and Settings
+uses shared dropdown backing, verified over a bright pattern.
 
 October 17 CI fixture isolation: shorten a timeout only for its intended request
 and restore the native API before independent scenarios. fabric-workflow-ui keeps
 its strict unsent-action counts/storage assertions with a 250ms slow interaction,
 explicit acknowledgement settling and optional MAYA_FABRIC_CPU_RATE for 4x/8x
 probes. Test-only fixes still run final aesthetic-authority before commit.
+
+October 17 screenshot review: Leads status preferences are local, validated and
+keyed by authenticated subject; empty selections persist, account changes reload
+that account's choices. Retired Prompting/Architecture dashboard sections do not
+remove live prompting configuration or client readers. Their code backup remains
+Hosting-excluded. Run admin-status-preferences and active admin-prompt-saves.
+Checkbox and scrollbar objects are optional backward-compatible design keys with
+active Dropdown previews, usage links and actual runtime consumers; run
+input-controls-ui and design-config/design-contract. Keep native labels/keyboard
+and forced-colors behavior. Hidden navigation tracks stay hidden; annotate actual
+content scrollers with data-maya-scrollbar="visible" when needed.
+Brief's fixed H1 switches Backend/Operation Room; no duplicate inner title/Brief
+button. The hamburger opens the active room settings through same-origin/source-
+checked messages. Fabrics stays by garment/view controls inside the viewer column.
+Operations Settings follows data-maya-popup Editor material, declared P1 fields
+and P3 notices. Closed settings are inert; Escape restores focus. Do not restore
+the unused ~24MB fabric-original warmup or download sandbox samples with saved
+submissions/embeds. Run brief-workspace-ui, operation-controls and operation-save-failures, full release
+gates, then standalone aesthetic-authority last.

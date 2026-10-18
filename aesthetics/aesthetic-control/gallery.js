@@ -1,4 +1,5 @@
 import {setupPresentation} from './presentation-controls.js';
+import {setupInputControls} from './input-controls.js';
 import {formatTools,formatIcon,formatIcons} from './format-tools.js';
 import {addRestore,highlightPadding} from './restore-controls.js';
 import {setupSurfaceEditors,setupDismissal,fields,backgrounds,borders} from './surface-editors.js';
@@ -43,7 +44,8 @@ const divider=document.createElement('hr');divider.className='visual-divider';pr
 const panels=document.createElement('div');panels.id='panels';preview.append(panels);heading(panels,'Panels');
 const surfaces=document.createElement('div');surfaces.className='context-grid';const outer=surfaces;outer.classList.add('panel-preview');panels.append(outer);
 for(const title of ['Lead Station','Campaign details']){const h=document.createElement('h3');h.textContent=title;h.dataset.previewCategory='H3';const metric=Metric({label:'Contacts',value:12});const inner=document.createElement('div');inner.className='inner-panel';inner.append(h,metric);surfaces.append(inner);}
-const drawer=Drawer({title:'Systems',content:[Pill({label:'Aesthetic Control',onClick:()=>drawer.close()})]});
+const drawerHelp=document.createElement('p');drawerHelp.dataset.mayaType='P1';drawerHelp.textContent='Operation Room Settings uses the saved dropdown backing.';
+const drawer=Drawer({title:'Settings',content:[drawerHelp,Pill({label:'Edit dropdown',onClick:event=>{event.stopPropagation();drawer.addEventListener('close',()=>{const edit=document.querySelector('.popup-editor');edit.open=true;edit.scrollIntoView({block:'center'});edit.querySelector('input')?.focus();},{once:true});drawer.close();}})]});
 let openDrawer;openDrawer=Pill({label:'Drawer',onClick:()=>drawer.showFrom(openDrawer)});row(panels).append(openDrawer);
 const guide=document.createElement('div');guide.id='table-preview';guide.tabIndex=0;guide.setAttribute('role','region');guide.setAttribute('aria-label','Lead Station table preview');panels.append(guide);
 const table=document.createElement('table');table.className='text-guide';table.innerHTML='<thead><tr><th data-col="name">Full name</th><th data-col="contact">Contact</th><th data-col="stage">Status</th><th data-col="note">Latest Notes</th></tr></thead><tbody></tbody>';guide.append(table);
@@ -83,6 +85,7 @@ const outerControl=document.createElement('div');outerControl.className='surface
 panelToolbar.append(outerControl,...panels.querySelectorAll(':scope > .surface-edit-row'));outer.before(panelToolbar);
 const panelUsage=document.createElement('p');panelUsage.className='panel-usage';panelUsage.append(document.createTextNode('Inner panels — '));for(const [label,url] of [['Aesthetic previews','#panels'],['Outbound cards and detail','/outbound.html'],['Operation Room cards','/operations.html'],['Pattern Operations cards','/aesthetics/operations/index.html']]){const link=document.createElement('a');link.textContent=label;link.href=url;panelUsage.append(link,document.createTextNode(', '));}panelUsage.append(document.createTextNode('tables use Table settings.'));panelToolbar.after(panelUsage);
 const popupEdit=document.createElement('details');popupEdit.className='type-editor popup-editor';popupEdit.innerHTML='<summary>Edit dropdown</summary><div class="type-editor-fields"></div>';const popupRow=row(buttons);popupRow.append(popupEdit);fields(popupEdit.lastChild,editorSettings,[['background','Background',backgrounds],['fill','Opacity',{max:100}],['rim','Border',{max:100}],['borderColor','Border color',borders],['radius','Corners',{max:24}],['paddingX','Padding X',{max:40}],['paddingY','Padding Y',{max:40}]],renderEditor);highlightPadding(popupEdit,()=>[popupEdit.querySelector('.type-editor-fields')],()=>({x:editorSettings.paddingX,y:editorSettings.paddingY}));addRestore(popupEdit,{label:'dropdown',read:()=>editorSettings,write:v=>{Object.assign(editorSettings,v);for(const input of popupEdit.querySelectorAll('[data-field]'))input.value=editorSettings[input.dataset.field];renderEditor();}});
+const inputControls=setupInputControls({design:storedDesign,dropdownRow:dropdown.parentElement,popupRow});
 const form=document.createElement('div');form.id='tokens';buttons.querySelector('.finish-controls .type-editor-fields').append(form);
 if(storedDesign?.glass)finishes.set({finish:storedDesign.finish,...storedDesign.glass});if(storedDesign?.overlay)overlay.set(storedDesign.overlay);
 addRestore(document.querySelector('.overlay-controls'),{label:'outer panel',read:overlay.settings,write:overlay.set});
@@ -110,7 +113,7 @@ document.querySelector('#save').addEventListener('click',async()=>{
  if(sizes.slice(0,4).some((n,i)=>i&&n>=sizes[i-1])||sizes.slice(4).some((n,i)=>i&&n>sizes[i+3])){say('Headlines must descend in size; paragraphs must not grow down the list.');return;}
  const pillX=pillPadding.paddingX,pillY=pillPadding.paddingY;
  if(!Number.isInteger(pillX)||pillX<4||pillX>32||!Number.isInteger(pillY)||pillY<2||pillY>16){say('Pill padding must stay within 4–32px sideways and 2–16px vertically.');return;}
- const glass=finishes.settings();const value={...controlSizes,...presentation.settings(),typeVersion:2,type:typeSettings,regularPill,finish:glass.finish,glass:Object.fromEntries(['fill','tint','rim','highlight','blur','saturation','borderColor'].map(k=>[k,glass[k]])),overlay:overlay.settings(),editor:editorSettings,...surfacesEditor.settings(),pillX:pillPadding.paddingX,pillY:pillPadding.paddingY};
+ const glass=finishes.settings();const value={...controlSizes,...presentation.settings(),...inputControls.settings(),typeVersion:2,type:typeSettings,regularPill,finish:glass.finish,glass:Object.fromEntries(['fill','tint','rim','highlight','blur','saturation','borderColor'].map(k=>[k,glass[k]])),overlay:overlay.settings(),editor:editorSettings,...surfacesEditor.settings(),pillX:pillPadding.paddingX,pillY:pillPadding.paddingY};
  const button=document.querySelector('#save'),editors=[gallery,document.querySelector('#cell-format-toolbar')].filter(Boolean);
  const previousInert=editors.map(el=>el.inert);button.disabled=true;editors.forEach(el=>el.inert=true);say('Saving…');
  try{say(await window.MayaTypographyControls.save(structuredClone(value)));document.dispatchEvent(new Event('maya-gallery-saved'));}

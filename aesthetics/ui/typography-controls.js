@@ -28,9 +28,12 @@
   defaults.statusStyles=structuredClone(window.MayaPresentationControls.defaults.statusStyles);
   defaults.layoutSpacing=structuredClone(window.MayaPresentationControls.defaults.layoutSpacing);
   defaults.semanticStyles=structuredClone(window.MayaPresentationControls.defaults.semanticStyles);
+  defaults.checkbox=structuredClone(window.MayaPresentationControls.defaults.checkbox);
+  defaults.scrollbar=structuredClone(window.MayaPresentationControls.defaults.scrollbar);
   function applyPresentation(value){window.MayaPresentationControls.apply(normalizeSurfaces(structuredClone(value)));}
   function normalizeSurfaces(v){
     v.regularPill={...defaults.regularPill,...v.regularPill};
+    v.checkbox={...defaults.checkbox,...v.checkbox};v.scrollbar={...defaults.scrollbar,...v.scrollbar};
     v.layoutSpacing={...defaults.layoutSpacing,...v.layoutSpacing};v.semanticStyles={nonFabric:{...defaults.semanticStyles.nonFabric,...v.semanticStyles?.nonFabric}};
     for(const key of ['iconColor','iconOpacity','iconStroke'])v[key]??=defaults[key];v.sectionSpacing={...defaults.sectionSpacing,...v.sectionSpacing};v.statusStyles=Object.fromEntries(Object.entries(defaults.statusStyles).map(([key,state])=>[key,{...state,...v.statusStyles?.[key]}]));
     v.iconPillGap ??= defaults.iconPillGap;v.iconTextGap ??= defaults.iconTextGap;v.iconSize ??= defaults.iconSize;v.dropdownHeight ??= defaults.dropdownHeight;v.inner={...defaults.inner,...v.inner};v.filter={...defaults.filter,...v.filter};
@@ -160,6 +163,7 @@ html body #adm-mkt #leads-table .lead-stage:has(option[value="completed"]:checke
     if(Number.isInteger(o.paddingX)&&Number.isInteger(o.paddingY))style.textContent+=`html body :is(.preview-section,.maya-surface,.stat,#adm-mkt .bl-tile,html[data-maya-surface="dense"] .layout>aside,html[data-maya-surface="dense"] .layout>main){padding:var(--review-panel-paddingY,${o.paddingY}px) var(--review-panel-paddingX,${o.paddingX}px)!important}`;
     applySurfaces(v);
     applyPresentation(v);
+    window.MayaPresentationControls.previewInputs(v);
     window.MayaPillControls.apply(v);
     previewEditor(v.editor);
     document.dispatchEvent(new CustomEvent('maya-design-applied',{detail:v}));
@@ -167,7 +171,7 @@ html body #adm-mkt #leads-table .lead-stage:has(option[value="completed"]:checke
   function previewEditor(e){
     const palette={black:'0 0 0',gray:'13 17 32',blue:'35 76 125',yellow:'120 91 15',green:'23 91 59',pink:'115 46 70'};
     let node=document.getElementById('maya-editor-control-style');if(!node){node=document.createElement('style');node.id='maya-editor-control-style';document.head.append(node);}
-    node.textContent=`html body :is(.type-editor-fields,.maya-model-popover,.lead-status-menu,.maya-filter-popover,.lead-stage-menu,:where(#msg-share-menu),:where([data-maya-control="field"])){background:rgb(${palette[e.background]||palette.black} / ${e.fill/100})!important;border:1px solid rgb(${e.borderColor==='black'?'0 0 0':e.borderColor==='gray'?'170 181 196':'255 255 255'} / ${e.rim/100})!important;border-radius:${e.radius}px!important;padding:${e.paddingY??e.padding??8}px ${e.paddingX??e.padding??8}px!important;}`;
+    node.textContent=`html body :is(.type-editor-fields,.maya-model-popover,.lead-status-menu,.maya-filter-popover,.lead-stage-menu,:where(#msg-share-menu),:where([data-maya-control="field"]),:where([data-maya-popup])){background:rgb(${palette[e.background]||palette.black} / ${e.fill/100})!important;border:1px solid rgb(${e.borderColor==='black'?'0 0 0':e.borderColor==='gray'?'170 181 196':'255 255 255'} / ${e.rim/100})!important;border-radius:${e.radius}px!important;padding:${e.paddingY??e.padding??8}px ${e.paddingX??e.padding??8}px!important;}`;
   }
   let revision=0,currentDesign;
   async function load(){const started=revision;if(local){let value;try{value=JSON.parse(localStorage.getItem(key)||'null')||defaults;}catch{value=defaults;}value=normalize(value);apply(value);return value;}

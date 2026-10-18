@@ -17,7 +17,7 @@ function overlay(name,{title,content,footer,intensity='overlay'}={}){
  el.addEventListener('click',e=>{const r=el.getBoundingClientRect();if(e.target===el&&(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom))el.close();});
  el.addEventListener('close',()=>{if(trigger?.isConnected)trigger.focus();});return el;
 }
-export function Drawer(options={}){return overlay('drawer',options);}
+export function Drawer(options={}){const el=overlay('drawer',options);el.dataset.mayaPopup='';el.querySelector('.maya-component-title').dataset.mayaType='H2';return el;}
 export function FilterPopover({title='Filter',values=[],selected=values,onApply=()=>{}}={}){
  const content=document.createElement('div');content.className='maya-component-body';const boxes=[];
  for(const value of values){const label=document.createElement('label'),box=document.createElement('input');box.type='checkbox';box.value=value;box.checked=selected.includes(value);label.append(box,document.createTextNode(value));content.append(label);boxes.push(box);}

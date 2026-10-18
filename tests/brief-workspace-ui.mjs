@@ -10,11 +10,11 @@ const jwt=(sub,version=1)=>'fixture.'+Buffer.from(JSON.stringify({sub,version,ex
 const pieces={fabric_type:'cotton denim',pieces:[{name:'Denim jacket',category:'jacket',_image:image,fabric_spec:{fiber:'cotton',weave:'denim'}},{name:'White shirt',category:'shirt',fabric:'white cotton poplin',_image:image},{name:'Black boots',category:'shoes',fabric:'black leather',_image:image}]};
 const folders=['A','B'].map(id=>({id,name:'Client '+id,files:[{id:id+'-summary',name:'summary.json'},{id:id+'-image',name:'dream-garment.png'},...(id==='A'?[{id:'A-pieces',name:'pieces.json'}]:[])]}));
 const browser=await chromium.launch({headless:true,executablePath:process.env.PW_CHROMIUM});
-const page=await browser.newPage({viewport:{width:1280,height:900}}),errors=[],searches=[],paid=[];
+const page=await browser.newPage({viewport:{width:1280,height:900}}),errors=[],searches=[],paid=[],assets=[];
 page.setDefaultTimeout(15000);page.on('pageerror',error=>errors.push(error.message));
 await page.addInitScript(token=>localStorage.setItem('maya_admin_tok',token),jwt('owner-A'));
 await page.route('**/*',async route=>{
- const u=new URL(route.request().url());if(u.hostname!=='maya.test')return route.abort();
+ const u=new URL(route.request().url());if(u.hostname!=='maya.test')return route.abort();if(!u.pathname.startsWith('/api/'))assets.push(u.pathname);
  if(u.pathname==='/api/admin/submissions')return route.fulfill({json:{folders}});
  if(u.pathname==='/api/admin/subfile'){
   const id=u.searchParams.get('id');
@@ -40,6 +40,9 @@ try{
  const roomFrame=page.frames().find(frame=>frame.url().includes('/operations.html'));
  assert.equal(await page.locator('#screens > section[data-screen]').count(),2);
  assert.equal(await page.locator('#fab-tab-pill').count(),0,'No redundant bottom Fabrics action');
+ assert.equal(await page.locator('#piece-swiper > #brief-fabrics-button').count(),1,'Fabrics sits beside Full view and the saved garment controls');
+ assert.equal(await page.locator('#operations-heading,.operations-heading').count(),0,'Only the fixed workspace title names Operation Room');
+ assert.equal(await page.locator('#workspace-title').textContent(),'Backend');
  assert.equal(await page.locator('#piece-pills [data-maya-semantic="non-fabric"]').textContent(),'Black boots');
  assert.equal(await room.locator('#test-picker option').count(),3,'Only the three saved pieces are offered');
  assert.equal(await room.locator('header.top').isVisible(),false,'The embedded room has no duplicate fixed header');
@@ -122,10 +125,11 @@ try{
   assert.deepEqual(await style(embedded.locator('#test-picker'),Object.keys(field)),field,'Actual garment field uses '+mode+' saved editor style');
   const capsule={paddingLeft:mode==='saved'?'22px':'14px',paddingTop:mode==='saved'?'10px':'6px',backgroundColor:mode==='saved'?'rgba(3, 15, 29, 0.55)':'rgba(3, 15, 29, 0.18)'};
   for(const control of [page.locator('#brief-fabrics-button'),embedded.locator('#operation-fabrics')])assert.deepEqual(await style(control,Object.keys(capsule)),capsule,'Fabrics actions share '+mode+' pill geometry/material');
-  assert.equal((await style(page.locator('#operations-heading'),['fontSize'])).fontSize,mode==='saved'?'24px':'20px');
-  if(mode==='saved')for(const control of [page.locator('#operations-heading'),page.locator('#brief-fabrics-button'),embedded.locator('#test-picker'),embedded.locator('#operation-fabrics')]){
+  assert.equal((await style(page.locator('#workspace-title'),['fontSize'])).fontSize,mode==='saved'?'28px':'24px');
+  if(mode==='saved')for(const control of [page.locator('#workspace-title'),page.locator('#brief-fabrics-button'),embedded.locator('#test-picker'),embedded.locator('#operation-fabrics')]){
    const type=await style(control,['fontFamily','fontWeight','fontStyle']);assert.match(type.fontFamily,/Cormorant/);assert.equal(type.fontWeight,'500');assert.equal(type.fontStyle,'italic');
   }
+  await liveFrame.evaluate(()=>{const svg='<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1200"><rect width="1000" height="1200" fill="white"/><path d="M40 40h400v1000H40zM500 40h400v1000H500z" fill="none" stroke="black" stroke-width="5"/></svg>';PASSES=[{img:'data:image/svg+xml,'+encodeURIComponent(svg),badge:'saved review'}];viewGrounded(0);});
   for(const width of widths){
    await page.setViewportSize({width,height:width<768?844:1000});
    await page.evaluate(()=>goToScreen(0));await page.waitForFunction(()=>document.getElementById('screens').scrollTop<20);
@@ -133,6 +137,19 @@ try{
    if(width<=768)assert.ok(await page.locator('.op-image-col').evaluate(e=>e.clientWidth>=innerWidth-34),'Mobile Brief gives the viewer the full content width');
    if(width===390||width===1440)await page.screenshot({path:'/private/tmp/maya-brief-'+mode+'-'+width+'.png'});
    await page.evaluate(()=>goToScreen(1));
+   await page.waitForFunction(()=>document.getElementById('workspace-title').textContent==='Operation Room'&&Math.abs(document.getElementById('screens').scrollTop-document.getElementById('screen-operating').offsetTop)<2);
+   assert.ok(await page.locator('#operations-embed').evaluate(e=>Math.abs(e.getBoundingClientRect().width-innerWidth)<2),'Room spans the whole workspace at '+width);
+   await page.locator('#top-actions .hamburger').click();
+   await liveFrame.waitForFunction(()=>document.body.classList.contains('drawer-open'));
+   await embedded.locator('#m-waist').waitFor({state:'visible'});
+   await liveFrame.waitForFunction(()=>{const r=document.getElementById('drawer').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1;});
+   assert.equal(await embedded.locator('#drawer').evaluate(e=>getComputedStyle(e).backgroundColor),mode==='saved'?'rgba(35, 76, 125, 0.8)':'rgb(0, 0, 0)','Readable saved Settings backing above white pattern');
+   assert.equal(await embedded.locator('#m-waist').evaluate(e=>e===document.activeElement),true,'Hamburger opens usable Settings');
+   if(width===390||width===1440)await page.screenshot({path:'/private/tmp/maya-room-settings-'+mode+'-'+width+'.png'});
+   await embedded.locator('#m-waist').press('Escape');
+   assert.equal(await embedded.locator('.hpane-drawer').evaluate(e=>e.inert),true,'Closed Settings cannot trap keyboard focus');
+   await page.waitForFunction(()=>document.activeElement===document.querySelector('#top-actions .hamburger'));
+   assert.equal(await page.locator('#top-actions .hamburger').getAttribute('aria-expanded'),'false','Child Escape restores the real fixed hamburger');
    await page.waitForFunction(()=>Math.abs(document.getElementById('screens').scrollTop-document.getElementById('screen-operating').offsetTop)<2);
    const box=await page.locator('#operations-embed').boundingBox();assert.ok(box.width>200&&box.height>200&&box.x>=0&&box.x+box.width<=width+1,'Embedded '+mode+' workspace fits '+width);
    assert.equal(await liveFrame.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'Embedded '+mode+' content fits '+width);
@@ -177,6 +194,8 @@ try{
  await page.evaluate(token=>localStorage.setItem('maya_admin_tok',token),jwt('owner-A'));
  await page.goto('https://maya.test/operations.html?submission=A');await page.locator('#test-picker option').nth(1).waitFor({state:'attached'});
  for(const width of widths){await page.setViewportSize({width,height:1000});const heading=await page.locator('.brand h1').boundingBox();assert.ok(heading.y>=0&&heading.x>=0&&heading.x+heading.width<=width+1,'Standalone heading contained at '+width);if(width===320)await page.screenshot({path:'/private/tmp/maya-operation-heading-320.png'});}
+ assert.ok(!assets.some(path=>path.endsWith('/tests-data.js')||/^\/aesthetics\/fabrics\/(?!thumbs\/).+\.(?:png|jpe?g)$/i.test(path)),'Saved client work avoids unused samples and full-size fabric preloads');
  assert.deepEqual(errors,[]);assert.deepEqual(paid,[]);
+ assert.equal(await page.locator('script[src*="tests-data"]').count(),0,'Saved work never downloads sandbox samples');
  console.log('Brief workspace: saved-piece embedding, inline garment/whole-look sourcing, legacy context, no generation on read, scoped messages, token renewal, standalone route and default/saved aesthetic authority at six widths passed.');
-}catch(error){console.error('Brief fixture state',errors,await page.locator('#piece-pills').allTextContents());await page.screenshot({path:'/private/tmp/maya-brief-workspace-failure.png'});throw error;}finally{await browser.close();}
+}catch(error){console.error('Brief fixture state',errors,await page.locator('#piece-pills').allTextContents(),await page.evaluate(()=>({screen:_currentScreen,title:document.getElementById('workspace-title').textContent,top:document.getElementById('screens').scrollTop,room:document.getElementById('screen-operating').offsetTop,drawer:document.body.className})),await page.frames().find(f=>f.url().includes('/operations.html'))?.evaluate(()=>({body:document.body.className,inert:document.querySelector('.hpane-drawer').inert}))); await page.screenshot({path:'/private/tmp/maya-brief-workspace-failure.png'});throw error;}finally{await browser.close();}

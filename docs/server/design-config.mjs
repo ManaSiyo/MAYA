@@ -5,7 +5,16 @@ const DESIGN_ROLES_V2 = new Set(['H0','H1','H2','H3','H4','H5','P1','P2','P3']);
 const BACKGROUNDS = ['black','gray','blue','yellow','green','pink'];
 export function validDesign(body) {
   if (!body || typeof body !== 'object' || !body.type || typeof body.type!=='object' || Array.isArray(body.type) || !body.glass || !body.overlay) return false;
-  if (Object.keys(body).some(k => !['type','typeVersion','glass','regularPill','overlay','finish','pillX','pillY','editor','inner','filter','table','iconSize','dropdownHeight','iconPillGap','iconTextGap','statusStyles','sectionSpacing','layoutSpacing','semanticStyles','iconColor','iconOpacity','iconStroke'].includes(k))) return false;
+  if (Object.keys(body).some(k => !['type','typeVersion','glass','regularPill','overlay','finish','pillX','pillY','editor','inner','filter','table','iconSize','dropdownHeight','iconPillGap','iconTextGap','statusStyles','sectionSpacing','layoutSpacing','semanticStyles','iconColor','iconOpacity','iconStroke','checkbox','scrollbar'].includes(k))) return false;
+  for(const [kind,ranges,colors,extra] of [
+    ['checkbox',{size:[12,28],radius:[0,14],fill:[0,100],rim:[0,100]},['checkedColor','checkColor'],['background','borderColor']],
+    ['scrollbar',{width:[6,20],radius:[0,16],thumbOpacity:[0,100],trackOpacity:[0,100]},['thumbColor','trackColor'],[]]
+  ])if(body[kind]!==undefined){
+    const v=body[kind],keys=[...Object.keys(ranges),...colors,...extra];
+    if(!v||typeof v!=='object'||Array.isArray(v)||Object.keys(v).length!==keys.length||Object.keys(v).some(k=>!keys.includes(k)))return false;
+    if(Object.entries(ranges).some(([key,[min,max]])=>!Number.isInteger(v[key])||v[key]<min||v[key]>max)||colors.some(key=>typeof v[key]!=='string'||!/^#[0-9a-f]{6}$/i.test(v[key])))return false;
+    if(kind==='checkbox'&&(!BACKGROUNDS.includes(v.background)||!['black','white','gray'].includes(v.borderColor)))return false;
+  }
   if(Object.hasOwn(body,'typeVersion')&&body.typeVersion!==2)return false;
   for(const k of ['iconSize','dropdownHeight'])if(body[k]!==undefined&&(!Number.isInteger(body[k])||body[k]<24||body[k]>48))return false;
   for(const k of ['iconPillGap','iconTextGap'])if(body[k]!==undefined&&(!Number.isInteger(body[k])||body[k]<0||body[k]>32))return false;

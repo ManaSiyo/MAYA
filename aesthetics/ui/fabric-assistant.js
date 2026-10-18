@@ -84,7 +84,7 @@
     for(const[name,value]of [['All stores',''],['Britex Fabrics','britexfabrics.com'],['Stonemountain & Daughter','stonemountainfabric.com'],['Harts Fabric','hartsfabric.com'],['Amazon','amazon.com'],['Mood Fabrics','www.moodfabrics.com'],['Blackbird Fabrics','www.blackbirdfabrics.com'],['The Fabric Store','thefabricstore.com'],['Tessuti Fabrics','www.tessuti.com.au']]){const option=node('option','',name);option.value=value;store.append(option);}
     store.addEventListener('change',()=>{storeFilter=store.value;paint();if(context.automatic&&view==='search')run(true);});storeWrap.append(store);
     tabs.append(inhouse,search,saved,filter,fresh);
-    const body=node('div','fa-body');
+    const body=node('div','fa-body');body.dataset.mayaScrollbar='visible';body.tabIndex=0;body.setAttribute('aria-label','Fabric results');
     const transcript=node('div','fa-transcript');transcript.setAttribute('aria-label','Your requests');
     const observation=node('p','fa-observation'),results=node('div','fa-results'),saveStatus=node('p','fa-save-status');saveStatus.setAttribute('role','status');body.append(transcript,observation,results,saveStatus);
     const form=node('form','fa-composer');

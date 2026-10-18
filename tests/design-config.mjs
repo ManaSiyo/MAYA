@@ -144,3 +144,19 @@ unavailable=false;
 await saveDesign(store,{...canonical,layoutSpacing:{labelGap:19,fieldGap:27,drawerDockInset:0},semanticStyles:{nonFabric:{color:'#123abc',opacity:65}}},'owner@example.com');
 assert.deepEqual(saved.layoutSpacing,{labelGap:19,fieldGap:27,drawerDockInset:0});assert.deepEqual(saved.semanticStyles,{nonFabric:{color:'#123abc',opacity:65}});assert.match(saved._history.at(-1).text,/layoutSpacing/);
 console.log('Workspace spacing and non-fabric semantic colors validate, preserve legacy saves and persist in the atomic design audit.');
+
+const checkbox={size:16,radius:3,background:'black',fill:100,rim:55,borderColor:'gray',checkedColor:'#aab5c4',checkColor:'#000000'};
+const scrollbar={width:8,radius:8,thumbColor:'#aab5c4',thumbOpacity:55,trackColor:'#000000',trackOpacity:0};
+for(const design of [canonical,compact])assert.equal(validDesign({...design,checkbox,scrollbar}),true,'Native controls preserve both design generations');
+for(const [kind,value,ranges] of [['checkbox',checkbox,{size:[12,28],radius:[0,14],fill:[0,100],rim:[0,100]}],['scrollbar',scrollbar,{width:[6,20],radius:[0,16],thumbOpacity:[0,100],trackOpacity:[0,100]}]]){
+ for(const [key,[min,max]] of Object.entries(ranges)){
+  for(const n of [min,max])assert.equal(validDesign({...canonical,[kind]:{...value,[key]:n}}),true,kind+' '+key+' boundary');
+  for(const n of [min-1,max+1,min+.5,String(min),null])assert.equal(validDesign({...canonical,[kind]:{...value,[key]:n}}),false,kind+' '+key+' invalid');
+ }
+ for(const key of Object.keys(value)){const partial={...value};delete partial[key];assert.equal(validDesign({...canonical,[kind]:partial}),false,kind+' requires '+key);}
+ for(const bad of [null,[],false,'custom',{...value,unknown:1}])assert.equal(validDesign({...canonical,[kind]:bad}),false,kind+' rejects invalid shape');
+ for(const key of Object.keys(value).filter(k=>k.endsWith('Color')&&k!=='borderColor'))for(const color of ['red','#fff','url(evil)',7,null])assert.equal(validDesign({...canonical,[kind]:{...value,[key]:color}}),false,'Bounded color '+key);
+}
+assert.equal(validDesign({...canonical,checkbox:{...checkbox,background:'purple'}}),false);assert.equal(validDesign({...canonical,checkbox:{...checkbox,borderColor:'blue'}}),false);
+await saveDesign(store,{...canonical,checkbox,scrollbar},'owner@example.com');assert.deepEqual(saved.checkbox,checkbox);assert.deepEqual(saved.scrollbar,scrollbar);assert.match(saved._history.at(-1).text,/checkbox/);
+console.log('Checkbox and scrollbar controls: optional legacy-compatible complete objects, bounds, colors and atomic persistence passed.');

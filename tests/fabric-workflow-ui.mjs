@@ -56,7 +56,7 @@ const waitUntil=async predicate=>{for(let i=0;i<500&&!predicate();i++)await new 
 const open=async(options={})=>page.evaluate(({reference,pieces,options})=>MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,automatic:true,...options}),{reference,pieces,options});
 try{
  await page.goto('https://maya-workflow.test/backend.html');await page.waitForFunction(()=>!!window.MayaFabricAssistant);
- await page.evaluate(({reference,pieces})=>{window._openedSubmission={id:'project-A'};window._currentSnap={lastSummary:{}};window._dissectTarget={hero:reference,card:{_dissection:{pieces}}};_pieceState={pieces:[{name:'Full view',_virtual:true},...pieces],idx:0,heroImage:reference};window._pieceState=_pieceState;_publishSavedOperations({pieces});},{reference,pieces});
+ await page.evaluate(({reference,pieces})=>{window._openedSubmission={id:'project-A'};window._currentSnap={lastSummary:{}};window._dissectTarget={hero:reference,card:{_dissection:{pieces}}};renderDissection({card:{image:reference,_dissection:{pieces}}});_publishSavedOperations({pieces});},{reference,pieces});
  await page.locator('#brief-fabrics-button').click();await card(fur).waitFor();
  assert.ok(catalogRoutes.length,'Catalog is still deliberately held');assert.equal(searches.length,1,'Sourceable starts without optional inventory');
  holdCatalog=false;await Promise.all(catalogRoutes.map(route=>route.fallback().catch(()=>{})));catalogRoutes=[];

@@ -31,7 +31,10 @@ const change=async(host,key,value)=>{const input=page.locator(host+' [data-field
 try{
  await page.setViewportSize({width:1440,height:1000});await page.goto('https://maya-authority.test/aesthetics/aesthetic-control.html');
  await page.locator('#workspace-previews .workspace-preview-card').last().waitFor();
- assert.equal(await page.locator('#workspace-previews .workspace-preview-card').count(),8,'Each requested workspace has a linked shared-style inventory preview');
+ assert.equal(await page.locator('#workspace-previews .workspace-preview-card').count(),6,'Each active workspace has a linked shared-style inventory preview');
+ assert.equal(await page.locator('#workspace-previews a[href$="#pe-fold"],#workspace-previews a[href$="#architecture"]').count(),0,'Retired Admin sections have no misleading live-usage links');
+ assert.equal(await page.locator('.spacing-preview [data-preview-heading]').count(),7,'Heading-gap previews match the seven active Admin sections');
+ assert.doesNotMatch(await page.locator('#workspace-previews,.spacing-preview').allTextContents().then(v=>v.join(' ')),/Prompting Engine|Architecture/);
  await page.locator('.workspace-fabric-preview img').evaluate(image=>image.decode());
  assert.ok(await page.locator('.workspace-fabric-preview img').evaluate(image=>image.complete&&image.naturalWidth>0),'The active inventory preview loads its real fabric photograph');
  for(const link of await page.locator('#workspace-previews .workspace-preview-card>a').all())assert.match(await link.getAttribute('href'),/^\/(?:status\.html|backend\.html|$)/);
@@ -89,9 +92,10 @@ try{
  await page.keyboard.press('Escape');
  if(process.env.MAYA_WORKSPACE_SCREENSHOT){await page.setViewportSize({width:1440,height:1100});await page.locator('#workspace-previews').screenshot({path:process.env.MAYA_WORKSPACE_SCREENSHOT+'-desktop.png'});await page.setViewportSize({width:390,height:844});await page.locator('#workspace-previews').screenshot({path:process.env.MAYA_WORKSPACE_SCREENSHOT+'-phone.png'});}
  await page.goto('https://maya-authority.test/status.html');await page.waitForFunction(()=>typeof admTab==='function'&&window.MayaTypographyControls);
- await page.evaluate(async()=>{await MayaTypographyControls.ready;_idTok='fixture';await loadFeatureRequests();for(const id of ['features-fold','pe-fold','arch-fold'])document.getElementById(id).open=true;toggleDrawer(true);admTab('automations');});
+ assert.equal(await page.locator('#pe-fold,#arch-fold,.pe-live,.pe-panel,.arch .col').count(),0,'Retired Prompting and Architecture have no visible controls');
+ await page.evaluate(async()=>{await MayaTypographyControls.ready;_idTok='fixture';await loadFeatureRequests();document.getElementById('features-fold').open=true;toggleDrawer(true);admTab('automations');});
  await page.locator('#automation-first-text').waitFor();
- for(const selector of ['.fr','.pe-live','.pe-panel','.arch .col','.automation-rule'])assert.deepEqual(await css(selector,['paddingLeft','paddingTop','backgroundColor']),{paddingLeft:'23px',paddingTop:'17px',backgroundColor:'rgba(23, 91, 59, 0.65)'},selector+' loads saved Inner material');
+ for(const selector of ['.fr','.automation-rule'])assert.deepEqual(await css(selector,['paddingLeft','paddingTop','backgroundColor']),{paddingLeft:'23px',paddingTop:'17px',backgroundColor:'rgba(23, 91, 59, 0.65)'},selector+' loads saved Inner material');
  assert.equal((await css('.automation-timing',['rowGap'])).rowGap,'27px');
  assert.equal((await css('[data-maya-field-row]',['rowGap'])).rowGap,'19px');
  assert.match((await css('#automation-first-text',['fontFamily'])).fontFamily,/Cormorant/);

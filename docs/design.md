@@ -343,7 +343,7 @@ native select input overlays. Save's glyph has explicit dimensions independent
 of its wrapper. Padding highlights are temporary overlays, never fills or saves.
 
 Section spacing's “All headings → content” means the vertical distance from an
-Admin section's heading box to its first visible content. All nine Admin groups,
+Admin section's heading box to its first visible content. All seven active Admin groups,
 including Submissions empty states and Ad campaigns' D/W/M row, use that gap.
 Remove the redundant long date-range label. Panels retain independent padding.
 
@@ -358,11 +358,11 @@ includes presentation-consistency and pill-consistency geometry fixtures.
 
 
 October 8 workspace controls: Feature requests use H2 section titles, P1 request
-text, P3 owner/date and Inner rows. Prompting Engine uses H2/H3 headings, P1
-body/fields, P3 labels, shared field material and Inner panels. Architecture uses
-H2/H3 headings, P1 descriptions, P3 captions and Inner groups. Aesthetic Control
-contains active linked presentation samples for these areas, Automations, Logs,
-Brief/Operation Room, fabric cards and the existing frontend. These are style
+text, P3 owner/date and Inner rows. The later owner review retires Prompting
+Engine and Architecture dashboard UI and their previews; stored live rendering
+settings and client consumers remain. Aesthetic Control contains six active linked
+presentation samples for Feature Requests, Automations, Logs, Brief/Operation Room,
+fabric cards and the existing frontend. These are style
 samples with no account data or provider activity; their Edit actions open the
 actual shared role/material editors. This inventory does not add section hiding
 or ordering controls.
@@ -401,3 +401,31 @@ Fabrics retain usable inline/expanded geometry, a readable responsive Operation
 Room heading, and management buttons when a saved image fails. Default and
 materially different saved settings on these actual surfaces are re-executed by
 the final aesthetic-authority gate at six viewport widths.
+
+## October 17 screenshot review
+
+Leads remembers visible statuses locally for each authenticated owner, including
+an empty selection. Native checkboxes use a dark empty default, centered glyph,
+keyboard focus and disabled state. Dropdown and checkboxes has active checked,
+unchecked, mixed and disabled previews. Optional saved checkbox geometry,
+background/border and checked/check colors apply to Admin and Outbound consumers.
+Scrollbars has a real two-axis keyboard-scrollable preview and linked consumers.
+Its optional saved width, corners, thumb/track colors and opacity govern content
+scroll regions; the default track is transparent. Intentionally hidden navigation
+tracks remain hidden. Exact pixel width/radius uses the WebKit pseudo-element
+fallback; Firefox uses native thin/auto sizing. Forced colors retain native controls.
+
+The shared Settings Drawer preview and Operations drawer use the same Edit
+dropdown backing, border, corners and X/Y padding. The default black backing keeps
+controls readable over bright patterns; overlay blur/saturation remain independent.
+Measurements and Logic explicitly use P1/Editor; notices use P3. Closed settings
+are inert and Escape restores focus. The existing shared H1 controls the fixed
+Backend/Operation Room title, which changes on vertical navigation. Remove the
+second title and redundant Brief pill; the fixed hamburger opens the active room.
+Fabrics stays beside Full view/garment controls in Brief and beside view controls
+in Operations. Embedded Operations fills the available viewport width.
+
+Admin retains Feature Requests and Recent Changes. Prompting/Architecture folds,
+previews and usage links retire; active client rendering configuration stays intact.
+Checks exercise populated scroll lists and a bright pattern under open Settings,
+with visibly different saved material/type and six viewport widths.

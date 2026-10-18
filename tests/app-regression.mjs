@@ -137,7 +137,7 @@ ok('Lead status filter has an isolated readable layer and scoped section carets'
 // September 27: compact Systems and master-sheet menu contracts.
 {
  const admin=readFileSync(join(ROOT,'backend/status.html'),'utf8');
- if(!admin.includes('>Submissions <span') || !admin.includes('_fbBridge(t); window.loadModelSnapshot?.();')) throw Error('Submissions/initial model snapshot regression');
+ if(!admin.includes('>Submissions <span') || !admin.includes('loadSubmissions(); window.loadModelSnapshot?.();')) throw Error('Submissions/initial model snapshot regression');
  const outbound=readFileSync(join(ROOT,'backend/outbound.html'),'utf8');
  const chrome=readFileSync(join(ROOT,'aesthetics/ui/maya-canon.css'),'utf8');
  if(!chrome.includes('#voice-btn {width:42px;height:42px;')) throw Error('Footer logo size regression');
@@ -410,7 +410,7 @@ await pg.goto(PAGE_ROOT + AT.status, { waitUntil: 'domcontentloaded' });
 await pg.waitForTimeout(1500);
 const s = await pg.evaluate(() => ({
   order: [...document.querySelectorAll('details.fold')].map(d => d.id).join(','),
-  archFold: (document.getElementById('arch-fold') || {}).tagName === 'DETAILS',
+  retiredFoldsAbsent: !document.getElementById('arch-fold') && !document.getElementById('pe-fold'),
   arrows: document.querySelectorAll('.card .go').length,
   warnBanner: !!document.querySelector('.warn'),
   footerFolds: document.querySelectorAll('.map-footer details.fold').length,
@@ -589,9 +589,8 @@ ok('an image costs more of the budget than a chat call',
 
 ok('the map light reads Submissions', s.lights.includes('Submissions') && !s.lights.includes('Drive'));
 
-ok('Admin folds: users, the migrated marketing modules, then changes/feature requests/architecture (the prompting engine back since v14.24)',
-  s.order === 'users-fold,leads-fold,ads-fold,bottom-fold,changes-fold,features-fold,pe-fold,arch-fold' &&
-  /<details\b(?=[^>]*\bclass="[^\"]*\bfold\b)(?=[^>]*\bid="pe-fold")[^>]*>/.test(MAP_SOURCE));
+ok('Admin retains users, Leads, Ads, Insights, shipped changes and feature requests without retired folds',
+  s.order === 'users-fold,leads-fold,ads-fold,bottom-fold,changes-fold,features-fold' && s.retiredFoldsAbsent);
 ok('the marketing modules are migrated into Admin under Users and traffic',
   MAP_SOURCE.includes('id="adm-mkt"') &&
   MAP_SOURCE.includes('id="campaigns-table"') &&
@@ -618,10 +617,10 @@ ok('embedded Marketing keeps the standalone chart and refresh interactions',
   MAP_SOURCE.includes('_syncRangeChips();') &&
   MAP_SOURCE.includes('Existing numbers remain on screen') &&
   MAP_SOURCE.includes('r.status===401'));
-ok('Architecture is collapsible', s.archFold);
+ok('Redundant architecture dashboard is retired', s.retiredFoldsAbsent);
 ok('door cards have no arrows', s.arrows === 0);
 ok('"Never delete" banner removed', !s.warnBanner);
-ok('folds live in the bottom footer (changes, feature requests, the hidden prompting engine, architecture)', s.footerFolds === 4);
+ok('Footer retains Recent Changes and Feature Requests', s.footerFolds === 2);
 ok('all door texts share one font size', s.doorSizes === 1);
 ok('Systems Map checks have request timeouts', s.healthUsesTimeouts);
 ok('submission thumbnails load in parallel', s.thumbnailsParallel);
@@ -1310,7 +1309,7 @@ ok('phones get smaller cards and smaller type',
   INDEX_SOURCE.includes('max-width: min(200px, calc(100vw - 48px))') &&
   /max-width: 640px[\s\S]{0,3000}\.item-title \{ font-size: 13px; \}/.test(INDEX_SOURCE));
 ok('the Backend calls itself Backend and its drawer says Submissions',
-  BACKEND_SOURCE.includes('Backend</a>') &&
+  BACKEND_SOURCE.includes('id="workspace-title" data-maya-type="H1">Backend</span>') &&
   BACKEND_SOURCE.includes('<div class="drawer-title">Submissions</div>') &&
   !BACKEND_SOURCE.includes('<div class="drawer-title">Clients</div>') &&
   BACKEND_SOURCE.includes("'no submissions yet'"));
@@ -2289,7 +2288,7 @@ ok('v14.25: feedback submitted, plain logs with a retry, stop means stop, refere
   SERVER_SOURCE.includes('GARMENT FIRST.') &&
   SERVER_SOURCE.includes("references: { type: 'string'") &&
   SERVER_SOURCE.includes('Never on "stop".'));
-ok('v14.24: the 403 healed, the wall never reloads, uploads file the client, Contact and the Prompting Engine on Admin, Maya sees the pins',
+ok('v14.24: client rendering keeps prompting words after the redundant Admin editor retires',
   PLAYGROUND_SOURCE.includes("if (stored && stored !== 'gpt-4.1' && stored !== 'gpt-4o-mini')") &&
   INDEX_SOURCE.includes("if (stored && stored !== 'gpt-4.1' && stored !== 'gpt-4o-mini')") &&
   PLAYGROUND_SOURCE.includes("let _pinBoardsCache = '';") &&
@@ -2302,15 +2301,7 @@ ok('v14.24: the 403 healed, the wall never reloads, uploads file the client, Con
   SERVER_SOURCE.includes("'gpt-4o':       MODEL_TERRA,") &&
   SERVER_SOURCE.includes('Never invent a card or a pin.') &&
   MAP_SOURCE.includes("label:'Status'") &&
-  /<details\b(?=[^>]*\bclass="[^\"]*\bfold\b)(?=[^>]*\bid="pe-fold")[^>]*>/.test(MAP_SOURCE) &&
-  MAP_SOURCE.includes('id="pe-body"') &&
-  MAP_SOURCE.includes("const _peKeys = ['character', 'background', 'style', 'body'];") &&
-  MAP_SOURCE.includes("_peKeys.map(k => [k, document.getElementById('pe-' + k).value])") &&
-  MAP_SOURCE.includes('const values = _peValues(), snapshot = JSON.stringify(values)') &&
-  MAP_SOURCE.includes('...Object.fromEntries(_peKeys.map(k => [k, values[k].trim()]))') &&
-  MAP_SOURCE.includes('const { live, draft } = _peRefs(context.uid);') &&
-  MAP_SOURCE.includes("draft: db.collection('users').doc(uid).collection('settings').doc('prompting')") &&
-  MAP_SOURCE.includes('const current = () => _peSaving === save && _peCurrent(context);'));
+  !MAP_SOURCE.includes('id="pe-fold"') && INDEX_SOURCE.includes("let _promptCfg = null;") && PLAYGROUND_SOURCE.includes("let _promptCfg = null;"));
 ok('v14.23: the pencil beside the name, Randomize repaints, white notes, all of Pinterest as the third room',
   PLAYGROUND_SOURCE.includes('id="drawer-avatar-rename"') &&
   INDEX_SOURCE.includes('id="drawer-avatar-rename"') &&
@@ -2876,11 +2867,12 @@ await import('./lead-note-persistence.mjs');
 await import('./lead-notes-ui.mjs');
 await import('./admin-state-races.mjs');
 await import('./admin-prompt-saves.mjs');
-ok('Prompt Save serializes reviewed snapshots, preserves edits and fails closed before initial reads',
-  MAP_SOURCE.includes('if (_peSaving) return;') && MAP_SOURCE.includes('if (!_peReady) {') &&
-  MAP_SOURCE.includes('const values = _peValues(), snapshot = JSON.stringify(values), save = {};') &&
-  MAP_SOURCE.includes('context.uid === firebase.auth().currentUser?.uid') &&
-  MAP_SOURCE.includes('Your newer changes are unsaved.') && BUILD_SOURCE.includes('node tests/admin-prompt-saves.mjs'));
+ok('Retired Admin editor preserves live account-bound prompting consumers',
+  !MAP_SOURCE.includes('function savePrompting') && BUILD_SOURCE.includes('node tests/admin-prompt-saves.mjs'));
+await import('./admin-status-preferences.mjs');
+ok('Leads status filters persist per owner through reload and isolate account switches',true);
+await import('./input-controls-ui.mjs');
+ok('Shared checkbox, scrollbar and Settings previews govern saved and actual controls',true);
 ok('Outbound coalesces refreshes and rejects older workspace snapshots after a save',
   outboundJS.includes('workspaceRevision++;busy=true;') &&
   outboundJS.includes('if(intelligenceLoading){intelligencePending=true;return;}') &&
@@ -2955,6 +2947,8 @@ ok('Held playback recovery clicks preserve open drawers and exact button bounds 
 await import('./admin-automation-examples.mjs');
 ok('Automation failure hides unusable controls, Example and Save preserve drafts, and Admin spacing fits phones',true);
 await import('./brief-workspace-ui.mjs');
+await import('./operation-controls.mjs');
+ok('Operations late sample loads preserve uploads and Settings keyboard focus stays usable',true);
 ok('Brief and Operations preserve selected garment, private resets, image failures and usable inline fabric geometry',true);
 await import('./workspace-authority.mjs');
 ok('Workspace previews expose active saved styling and actual label, field and dock geometry',true);

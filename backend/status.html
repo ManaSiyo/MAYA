@@ -444,26 +444,11 @@ try {
   .chg b{color:var(--ink);font-weight:400;margin-right:8px;font-family:var(--maya-font-ui);font-size:9.5px;
          letter-spacing:0.14em;text-transform:uppercase}
 
-  /* Prompting engine */
-  .pe-panel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--maya-form-field-gap,10px);margin-bottom:10px}
-  .pe-field{min-width:0}.pe-field label{display:block;text-align:center;margin:0}
-  .pe-field textarea{width:100%;box-sizing:border-box;min-height:70px;resize:vertical;line-height:1.45}
-  .pe-row{grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .pe-live{margin-bottom:6px}.pe-live h4{margin-bottom:9px}.pe-live p{line-height:1.65;margin-bottom:10px}
-  .pe-live pre{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;margin-bottom:10px}
-
-  /* Architecture */
   /* v13.5: the fold sections and the credits line live at the BOTTOM of the
      screen, per Fromsa. The wrap is a full-height column and the footer is
      pushed down by the space above it. */
   .wrap{min-height:100vh;display:flex;flex-direction:column}
   .map-footer{margin-top:auto;padding-top:34px}
-  .arch{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .arch .col{min-width:0}.arch h4{margin-bottom:10px}
-  .arch .it{text-align:center;padding:7px 0;overflow-wrap:anywhere}
-  .arch .it small{display:block;line-height:1.5}
-  .arch-deploy{grid-column:1/-1;line-height:1.9;text-align:center}
-
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
   /* v13.44: the doors are plain words. Fromsa liked how MAYA looked without
      the pill, so all four match it now: no border, no glass, just the names,
@@ -524,8 +509,6 @@ try {
     .grid.doors{gap:18px}
     .grid.doors .card b{font-size:16px}
     .tiles{grid-template-columns:1fr 1fr}
-    .pe-panel{grid-template-columns:1fr}
-    .arch{grid-template-columns:1fr}
   }
 
   /* v13.68: MIGRATED FROM MARKETING. The ad campaigns, lead station, sources
@@ -1108,7 +1091,7 @@ if (IS_AFFILIATES) {
     <p id="affiliate-status" role="status" aria-live="polite">Sign in with your admin account to load leads.</p>
   </section>
   <div id="signin-panel" class="status-bar" style="margin-top:0">
-    <span style="font-size:14.5px;color:var(--dim)">Sign in once and everything unlocks: submissions, traffic, and the prompting engine.</span>
+    <span style="font-size:14.5px;color:var(--dim)">Sign in once to open submissions, traffic and Leads.</span>
     <span id="gsi-slot" style="margin:0 0 0 auto"></span>
   </div>
 
@@ -1363,68 +1346,6 @@ if (IS_AFFILIATES) {
   </div>
   </details>
 
-  <!-- v14.03: the Prompting Engine stepped off the page. v14.24: back, per
-       Fromsa, with a fourth field for the body (height, head size). -->
-  <details class="fold" data-maya-section id="pe-fold">
-  <summary><h2 data-maya-type="H2" class="grp">MAYA Prompting Engine</h2></summary>
-  <div data-maya-section-content class="fold-body">
-  <div class="pe-live" data-maya-panel="inner">
-    <h4 data-maya-type="H3">Fixed, baked into every render (not editable here)</h4>
-    <p data-maya-type="P1">Every MAYA image combines four layers: the <b>design specification</b> from the consultation,
-       the <b>client's body</b>, the <b>client's face</b>, and the <b>framing mandate</b> below. Your four fields
-       add atelier directions.</p>
-    <pre data-maya-type="P1" data-maya-control="field" id="pe-framing">FRAMING, NON NEGOTIABLE: one continuous horizontal photograph of the SAME model standing THREE times across a single seamless studio set, SIDE view on the left, FRONT view in the center (dominant hero), BACK view on the right. ONE unbroken backdrop and ONE continuous floor run edge to edge behind and beneath all three figures. NO panel dividers, NO seams, NO borders, NO collage or grid look. FULL BODY for each figure, head to soles inside the frame. Same model, same pose category, same height for all three. Plain clean seamless studio backdrop, soft even lighting, fashion editorial photography. No text, no labels, no captions, no measurement marks.</pre>
-    <p data-maya-type="P1"><b>The body layer:</b> when measurements are captured in the Profile fold, the prompt adds
-       "The model has these proportions: approximately H inches tall, S inch shoulders, C inch chest, W inch waist, H inch hips."
-       Since v14.20 every render also carries, measurements or not: "Natural adult photographic proportions: the head is about
-       one eighth of the standing height and is never enlarged, the neck, shoulders, torso and legs are in realistic scale to it,
-       and the face reference sets likeness only, never the size of the head." If a measurement was never typed in, it is not
-       sent, and the image model guesses; image models treat height as a weak suggestion unless the words reinforce it.
-       The Body field below is appended right after that sentence as "BODY, atelier direction", so this is where
-       "long legs, elongated proportions, a small head" goes.</p>
-    <p data-maya-type="P1"><b>The face layer:</b> gender presentation, age range, skin tone, face shape, eyes and hair are extracted
-       from the face photo once and repeated verbatim to keep the person consistent across views.</p>
-    <p data-maya-type="P1"><b>Your four fields:</b> stored in Firestore, read at sign in, and added to every render as
-       CHARACTER, BACKGROUND, STYLE and BODY atelier directions.</p>
-  </div>
-  <h4 data-maya-type="H3">Modifiable, appended to every render</h4>
-  <div class="pe-panel" data-maya-panel="inner">
-    <div class="pe-field" data-maya-field-row><label data-maya-type="P3" for="pe-character">The character</label>
-      <textarea data-maya-type="P1" data-maya-control="field" id="pe-character" placeholder="How the person wearing the design is described&#8230;"></textarea></div>
-    <div class="pe-field" data-maya-field-row><label data-maya-type="P3" for="pe-background">The background</label>
-      <textarea data-maya-type="P1" data-maya-control="field" id="pe-background" placeholder="The world behind them&#8230;"></textarea></div>
-    <div class="pe-field" data-maya-field-row><label data-maya-type="P3" for="pe-style">The style</label>
-      <textarea data-maya-type="P1" data-maya-control="field" id="pe-style" placeholder="Lens, light, finish, the rendering style&#8230;"></textarea></div>
-    <div class="pe-field" data-maya-field-row><label data-maya-type="P3" for="pe-body">The body</label>
-      <textarea data-maya-type="P1" data-maya-control="field" id="pe-body" placeholder="Height, build, head size, legs&#8230; e.g. long legs, elongated proportions, a small head on a tall frame"></textarea></div>
-    <div class="pe-row" style="justify-content:center"><button data-maya-type="P3" id="pe-save" class="top-btn" onclick="savePrompting()">Save to the live app</button><span data-maya-type="P1" id="pe-state">waiting for the one sign in at the top of the page</span></div>
-  </div>
-  </div>
-  </details>
-
-  <details class="fold" data-maya-section id="arch-fold">
-  <summary><h2 data-maya-type="H2" class="grp" id="architecture">Architecture, local and online</h2></summary>
-  <div data-maya-section-content class="fold-body">
-  <div class="arch">
-    <div class="col" data-maya-panel="inner">
-      <h4 data-maya-type="H3">Your Mac, Desktop/MAYA-new</h4>
-      <div class="it" data-maya-type="P1">index.html, status.html, backend.html<small data-maya-type="P3">The three pages. Visitors see the published copies.</small></div>
-      <div class="it" data-maya-type="P1">aesthetics/<small data-maya-type="P3">ui, fabrics, headshots and operations engine. Published on deploy.</small></div>
-      <div class="it" data-maya-type="P1">docs/<small data-maya-type="P3">Never published. Operations Room R&amp;D, the server source, the deploy config.</small></div>
-    </div>
-    <div class="col" data-maya-panel="inner">
-      <h4 data-maya-type="H3">Google, project pro-maya</h4>
-      <div class="it" data-maya-type="P1">Firebase Hosting<small data-maya-type="P3">Serves the last deployed snapshot at maya.manasiyo.com.</small></div>
-      <div class="it" data-maya-type="P1">Cloud Run, maya-api<small data-maya-type="P3">OpenAI proxy, Drive submit, admin feeds. Keys live here.</small></div>
-      <div class="it" data-maya-type="P1">Firestore + Storage + Drive<small data-maya-type="P3">Sessions, projects, images, client PDFs. Lives only online.</small></div>
-    </div>
-    <div class="arch-deploy" data-maya-type="P1">
-      To publish, press <code>Push origin</code> in GitHub Desktop.
-      Google builds and deploys the website and server automatically.
-    </div>
-  </div>
-  </div>
-  </details>
 
   </div><!-- /map-footer -->
 </div>
@@ -1468,7 +1389,7 @@ async function loadFeatureRequests(){
     const row=i=>'<div data-maya-panel="inner" class="fr'+(i.done?' done':'')+'" title="'+esc(i.text)+'"'+(i.id?' data-fid="'+esc(i.id)+'"':'')+'>'+
       '<span data-maya-type="P3" class="who">'+esc(i.who||'someone')+'</span><span data-maya-type="P1" class="ask">'+esc(short(i.text))+'</span>'+
       '<span data-maya-type="P3" class="when">'+esc(day(i.ts))+(i.id?'<button class="fr-done maya-icon-button" aria-label="Mark shipped" title="Mark shipped" onclick="markFeatureDone(this)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>':'')+'</span></div>';
-    const section=(t,arr)=>arr.length?('<section class="fr-room"><div class="fr-sec" data-maya-type="H3">'+esc(t)+'</div>'+arr.map(row).join('')+'</section>'):'';
+    const section=(t,arr)=>arr.length?('<section class="fr-room" data-maya-scrollbar="visible" tabindex="0" aria-label="Feature requests"><div class="fr-sec" data-maya-type="H3">'+esc(t)+'</div>'+arr.map(row).join('')+'</section>'):'';
     host.innerHTML=(section('Front end, what users ask',front)+section('Admin side, what we ask',adminSide))||'<div class="note">No requests yet. Requests to Maya appear here.</div>';
     const f=document.getElementById('features-fold');
     const newest=front[0]||adminSide[0];
@@ -1667,9 +1588,6 @@ runChecks();
 </script>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
 const _CLIENT_ID = '90396949475-7cen4909qftr8hf4la86nuhus38isid1.apps.googleusercontent.com';
 // v13.42: the setup box under the numbers is gone. What it used to say goes
@@ -1735,11 +1653,10 @@ function _adoptToken(t, firstLoad) {
   _showSignin(false);
   _scheduleRenew(t);
   if (IS_AFFILIATES) {
-    _fbBridge(t);
     if (window.loadAffiliateLeads) window.loadAffiliateLeads();
     return;
   }
-  runChecks(); loadTraffic(); loadSubmissions(); _fbBridge(t); window.loadModelSnapshot?.();
+  runChecks(); loadTraffic(); loadSubmissions(); window.loadModelSnapshot?.();
   try{ if(window.loadMkt) window.loadMkt(); }catch(_){}
   try{ loadFeatureRequests(); }catch(_){}
   try{ if(window.loadMayaCommand) window.loadMayaCommand(); }catch(_){}
@@ -2071,126 +1988,6 @@ function _wireUsersPop() {
   });
 }
 
-// Prompting engine. Live copy: Firestore config/prompting, the app reads it at boot.
-// If the vault rules deny the shared doc, falls back to a per-account draft at
-// users/{uid}/settings/prompting so nothing typed here is lost.
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyD2rCqPDjiyS1yfZj8ghtDc-mepz3LY634",
-  authDomain: "pro-maya.firebaseapp.com",
-  projectId: "pro-maya",
-  storageBucket: "pro-maya.firebasestorage.app",
-  messagingSenderId: "53947659283",
-  appId: "1:53947659283:web:4779127af7d5b229867be6",
-};
-let _fbUser = null;
-const _peKeys = ['character', 'background', 'style', 'body'];
-let _peBaseline = '', _peEdit = 0, _peLoadSeq = 0, _peBridgeSeq = 0, _peSaving = null, _peLoading = null, _peReady = false;
-const _peEditedFields = new Set();
-function _peValues() { return Object.fromEntries(_peKeys.map(k => [k, document.getElementById('pe-' + k).value])); }
-function _peDirty() { return JSON.stringify(_peValues()) !== _peBaseline; }
-function _peState(t) { const el = document.getElementById('pe-state'); if (el) el.textContent = t; }
-function _peContext() { return { admin: _adminContext(), uid: _fbUser?.uid }; }
-function _peCurrent(context) {
-  return !!context.uid && _adminContextCurrent(context.admin) && context.uid === _fbUser?.uid &&
-    context.uid === firebase.auth().currentUser?.uid;
-}
-_peBaseline = JSON.stringify(_peValues());
-for (const k of _peKeys) document.getElementById('pe-' + k).addEventListener('input', () => {
-  _peEdit++; _peEditedFields.add(k);
-  if (!_peSaving) _peState('Unsaved changes.');
-});
-window.addEventListener('maya-owner-session-changed', () => {
-  ++_peBridgeSeq; ++_peLoadSeq; ++_peEdit; _fbUser = null; _peSaving = null; _peLoading = null; _peReady = false; _peEditedFields.clear();
-  for (const k of _peKeys) document.getElementById('pe-' + k).value = '';
-  _peBaseline = JSON.stringify(_peValues());
-  document.getElementById('pe-save').disabled = false;
-  _peState('Sign in above to load this account.');
-});
-function _fbBridge(idToken) {
-  const admin = _adminContext(), sequence = ++_peBridgeSeq;
-  const current = () => sequence === _peBridgeSeq && _adminContextCurrent(admin);
-  try {
-    if (!window.firebase || !firebase.auth) return;
-    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-    const cred = firebase.auth.GoogleAuthProvider.credential(idToken);
-    firebase.auth().signInWithCredential(cred)
-      .then(u => {
-        if (!current()) return;
-        const google = u.user?.providerData?.find(p => p.providerId === 'google.com');
-        if (!u.user?.uid || (google && google.uid !== admin.subject)) throw Error('account_mismatch');
-        _fbUser = u.user;
-        if (!_peCurrent(_peContext())) throw Error('account_mismatch');
-        return loadPrompting();
-      })
-      .catch(() => { if (current()) _peState('Could not link to the vault. Sign in again.'); });
-  } catch (_) { if (current()) _peState('Could not link to the vault. Sign in again.'); }
-}
-function _peRefs(uid) {
-  const db = firebase.firestore();
-  return { live: db.collection('config').doc('prompting'),
-           draft: db.collection('users').doc(uid).collection('settings').doc('prompting') };
-}
-async function loadPrompting() {
-  const context = _peContext();
-  if (!_peCurrent(context) || _peSaving || (_peReady && _peDirty())) return;
-  if (_peLoading) return _peLoading.promise;
-  const loading = {}; _peLoading = loading;
-  loading.promise = _peRead(context);
-  try { await loading.promise; } finally { if (_peLoading === loading) _peLoading = null; }
-}
-async function _peRead(context) {
-  const sequence = ++_peLoadSeq, edit = _peEdit, { live, draft } = _peRefs(context.uid);
-  const current = () => sequence === _peLoadSeq && !_peSaving && _peCurrent(context);
-  const results = await Promise.allSettled([live.get(), draft.get()]);
-  if (!current() || (_peReady && (edit !== _peEdit || _peDirty()))) return;
-  const data = result => result.status === 'fulfilled' && result.value.exists ? result.value.data() : null;
-  const liveWords = data(results[0]), draftWords = data(results[1]);
-  const stamp = words => Date.parse(words?.updatedAt) || 0;
-  const from = draftWords && (!liveWords || stamp(draftWords) > stamp(liveWords)) ? 'draft' : liveWords ? 'live' : '';
-  const d = from === 'draft' ? draftWords : liveWords;
-  if (!d && results.some(r => r.status === 'rejected')) { _peState('Saved words could not be loaded. Your current words are kept.'); return; }
-  const words = Object.fromEntries(_peKeys.map(k => [k, typeof d?.[k] === 'string' ? d[k] : '']));
-  for (const k of _peKeys) if (_peReady || !_peEditedFields.has(k)) document.getElementById('pe-' + k).value = words[k];
-  _peBaseline = JSON.stringify(words); _peReady = true;
-  if (_peDirty()) { _peState('Saved words loaded. Your edits remain unsaved.'); return; }
-  _peState((from === 'live' ? 'live, the app reads these words' :
-           from === 'draft' ? 'Private draft restored. Live app unchanged; retry Save to publish.' :
-           'nothing saved yet: MAYA currently draws with only the baked layers above, write here to add words') +
-           (from === 'live' && results[1].status === 'rejected' ? ' Private draft could not be checked.' : ''));
-}
-async function savePrompting() {
-  const context = _peContext();
-  if (!_peCurrent(context)) { _peState('Sign in above before saving.'); return; }
-  if (_peSaving) return;
-  if (!_peReady) {
-    _peState('Loading saved words before saving…');
-    try { await loadPrompting(); } catch (_) { if (_peCurrent(context)) _peState('Saved words could not be loaded. Your current words are kept.'); }
-    if (_peCurrent(context) && _peReady) _peState('Saved words loaded. Review them, then press Save.');
-    return;
-  }
-  const values = _peValues(), snapshot = JSON.stringify(values), save = {};
-  const body = {
-    ...Object.fromEntries(_peKeys.map(k => [k, values[k].trim()])),
-    updatedAt: new Date().toISOString(),
-    updatedBy: _fbUser.email || ''
-  };
-  _peSaving = save; ++_peLoadSeq;
-  const button = document.getElementById('pe-save'); button.disabled = true;
-  const current = () => _peSaving === save && _peCurrent(context);
-  const saved = text => {
-    if (!current()) return;
-    _peBaseline = snapshot;
-    _peState(text + (_peDirty() ? ' Your newer changes are unsaved.' : ''));
-  };
-  _peState('saving…');
-  try {
-    const { live, draft } = _peRefs(context.uid);
-    try { await live.set(body); saved('Saved live. The app reads these words.'); return; } catch (_) {}
-    if (!current()) return;
-    await draft.set(body); saved('Saved as a private draft. Live app unchanged; retry Save to publish.');
-  } catch (e) { if (current()) _peState('Could not save (' + (e?.code || 'error') + '). Your words are kept; retry Save.');
-  } finally { if (_peSaving === save) { _peSaving = null; button.disabled = false; } }
-}
 _gisBoot();
 loadSubmissions();
 setInterval(() => { if (_idTok && document.visibilityState === 'visible') loadTraffic(); }, 120000);
@@ -2962,6 +2759,7 @@ async function fetchBrief(d) {
 }
 
 function paintLeads(l) {
+  _restoreLeadStatusFilter();
   if(document.getElementById('lead-note-input'))return; // Keep an active or failed inline draft intact during refresh.
   _leadList = l.connected ? (l.list || []) : [];
   const tb = document.querySelector('#leads-table tbody');
@@ -3068,6 +2866,20 @@ function _leadColDefs(){
 }
 const LEAD_STAGES={new:'Not contacted',contacted:'Contacted',in_progress:'In progress',booked:'Booked',completed:'Completed',canceled:'Cancelled'};
 let leadStatusFilter=new Set(Object.keys(LEAD_STAGES));
+let _leadStatusFilterAccount=null;
+function _leadStatusFilterKey(account){return 'maya_admin_lead_status_v1:'+encodeURIComponent(account);}
+function _restoreLeadStatusFilter(){
+  const account=_adminSubject(_idTok);
+  if(account===_leadStatusFilterAccount)return;
+  _leadStatusFilterAccount=account;
+  let keys=Object.keys(LEAD_STAGES);
+  if(account)try{
+    const saved=JSON.parse(localStorage.getItem(_leadStatusFilterKey(account))||'null');
+    if(Array.isArray(saved)&&saved.length<=keys.length&&saved.every(key=>typeof key==='string'&&Object.hasOwn(LEAD_STAGES,key)))keys=saved;
+  }catch(_){}
+  leadStatusFilter=new Set(keys);
+}
+window.addEventListener('maya-owner-session-changed',()=>{_restoreLeadStatusFilter();closeLeadFilter();});
 function leadStage(x){if(LEAD_STAGES[x.stage])return x.stage;if(['closed','passed'].includes(x.stage))return x.stage;if(x.stage==='in_process')return 'in_progress';if(x.stage==='meeting')return 'booked';if(/^cancel(?:led|ed)[.!]?$/i.test(String(x.note||'').trim()))return 'canceled';return x.lastContact?'contacted':'new';}
 // Keep temporary menus outside the sticky table's clipping/backdrop context.
 // Popover supplies the top layer; the body portal also works without Popover support.
@@ -3144,7 +2956,13 @@ document.addEventListener('scroll',scheduleLeadFilterPosition,true);
 window.addEventListener('resize',scheduleLeadFilterPosition);
 document.addEventListener('maya-design-applied',scheduleLeadFilterPosition);
 function leadSummary(x){let value=String(x.wrote||x.note||'').replace(/^(?:Signature|Help me decide)\s*[·,:-]?\s*(?:\$[\d,.]+)?\s*[,·:]?\s*/i,'').replace(/\s+/g,' ').trim();if(/^(?:cancel(?:led|ed)|in progress|passed|not contacted)[.!]?$/i.test(value))return 'Request details not recorded';return value.length>120?value.slice(0,117).replace(/\s+\S*$/,'')+'...':value||'Request details not recorded';}
-function filterLeadStatus(key,checked){if(checked)leadStatusFilter.add(key);else leadStatusFilter.delete(key);paintLeads({connected:true,list:_leadList});}
+function filterLeadStatus(key,checked){
+  if(!Object.hasOwn(LEAD_STAGES,key))return;
+  _restoreLeadStatusFilter();
+  if(checked)leadStatusFilter.add(key);else leadStatusFilter.delete(key);
+  if(_leadStatusFilterAccount)try{localStorage.setItem(_leadStatusFilterKey(_leadStatusFilterAccount),JSON.stringify([...leadStatusFilter]));}catch(_){}
+  paintLeads({connected:true,list:_leadList});
+}
 const LEAD_COLS_DEFAULT = ['name', 'contact', 'stage', 'note'];   // Name/date, stored phone, status and reviewed latest note.
 function _loadLeadColOrder(){
   try {

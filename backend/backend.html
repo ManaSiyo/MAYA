@@ -361,7 +361,11 @@
     gap: 12px;
   }
   #operations-embed { width:100%; flex:1; min-height:0; border:0; background:transparent; }
-  .operations-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  #screen-operating { padding:64px 0 0; gap:0; }
+  #brand a { min-width:0; }
+  #workspace-title { overflow-wrap:anywhere; letter-spacing:inherit; }
+  #brand { min-width:0; max-width:calc(100% - 50px); }
+  .piece-swiper { flex-direction:row; flex-wrap:wrap; justify-content:center; }
   @media(max-width:768px) {
     .screen { padding-inline:16px; }
     #screen-onepager { height:auto; overflow:visible; }
@@ -1467,12 +1471,12 @@
     <!-- v13.35: the logo is the way back to the Systems Map. -->
     <a href="/status.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit" title="Back to Admin">
       <img src="/aesthetics/ui/logo-circle.png" alt="" style="width:44px;height:44px;object-fit:contain;opacity:0.92;-webkit-user-drag:none" />
-      Backend</a>
+      <span id="workspace-title" data-maya-type="H1">Backend</span></a>
     <span class="status-pill" id="dissect-status" style="display:none">Dissecting…</span>
   </div>
   <div id="top-actions">
     <!-- v10.15: hamburger drawer toggle, same as Maya. -->
-    <button class="top-btn hamburger" onclick="toggleClientsDrawer()" title="Submissions menu" aria-expanded="false" aria-controls="clients-drawer">
+    <button class="top-btn hamburger" onclick="toggleWorkspaceDrawer()" title="Workspace menu" aria-expanded="false" aria-controls="clients-drawer">
       <span class="hamburger-icon"><span></span><span></span><span></span></span>
     </button>
   </div>
@@ -1486,7 +1490,6 @@
     <!-- v10.12: client name pill row removed. Top-right date only. -->
     <div class="op-header" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
       <nav class="fabric-workspace-actions" id="fabric-workspace-actions" aria-label="Design workspace">
-        <button class="pill maya-pill" id="brief-fabrics-button" onclick="showBriefFabrics()" disabled>Fabrics</button>
         <button class="pill maya-pill" onclick="openOperationRoom()">Operation Room</button>
       </nav>
       <div class="op-meta" id="op-date"></div>
@@ -1506,9 +1509,10 @@
              deliberately; once a client is dissected it never runs again. -->
         <div class="piece-swiper" id="piece-swiper" style="display:none">
           <div class="piece-pills" id="piece-pills"></div>
+          <button class="pill maya-pill" id="brief-fabrics-button" data-maya-type="P3" onclick="showBriefFabrics()" disabled>Fabrics</button>
         </div>
       </div>
-      <div class="op-info-col">
+      <div class="op-info-col" data-maya-scrollbar="visible" tabindex="0" aria-label="Client details">
         <!-- v10.12: hero is the CLIENT name (was hard-coded MAYA). -->
         <div class="op-hero" id="op-hero-name" data-maya-type="H1">Client</div>
         <div class="op-section">
@@ -1533,8 +1537,7 @@
       </div>
     </div>
   </section>
-  <section class="screen" id="screen-operating" data-screen="1" aria-labelledby="operations-heading">
-    <div class="operations-heading"><h2 id="operations-heading" data-maya-type="H2">Operation Room</h2><button class="pill maya-pill" data-maya-type="P3" onclick="goToScreen(0)">Brief</button></div>
+  <section class="screen" id="screen-operating" data-screen="1" aria-label="Operation Room">
     <iframe id="operations-embed" src="/operations.html?embedded=brief" title="Operation Room for this submission"></iframe>
   </section>
 </div>
@@ -1741,7 +1744,12 @@ function goToScreen(n) {
 //   Brief (0) → "<client> · Brief"
 //   Operations Room (1) → "<client> · Operations Room"
 let _currentScreen = 0;
-const SCREEN_LABELS = ['Brief', 'Operations Room'];
+const SCREEN_LABELS = ['Backend', 'Operation Room'];
+let _operationsSettingsOpen=false;
+function toggleWorkspaceDrawer(){
+  if(_currentScreen===1){document.getElementById('operations-embed')?.contentWindow?.postMessage({maya:'ops-settings',open:!_operationsSettingsOpen},location.origin);return;}
+  toggleClientsDrawer();
+}
 // v12.8: arriving from a Systems Map submission card. Instant paint from the
 // URL params, then the full brief (summary.json + garment) loads from Drive
 // through the admin API and fires the complete render + auto dissect.
@@ -1910,6 +1918,8 @@ async function _loadSubmission(tok) {
 }
 
 function _updateBrandSub() {
+  const title=document.getElementById('workspace-title');if(title)title.textContent=SCREEN_LABELS[_currentScreen]||'Backend';
+  const menu=document.querySelector('#top-actions .hamburger');if(menu){menu.title=_currentScreen===1?'Operation Room settings':'Submissions menu';menu.setAttribute('aria-controls',_currentScreen===1?'operations-embed':'clients-drawer');}
   const brandSub = document.querySelector('#brand .sub');
   if (!brandSub) return;
   const name = (window._currentSnap && _currentSnap.currentClientName) || '';
@@ -1921,6 +1931,7 @@ function _updateBrandSub() {
   const host = document.getElementById('screens');
   if (!host) return;
   const sections = host.querySelectorAll('section[data-screen]');
+  let titleFrame=0;host.addEventListener('scroll',()=>{if(titleFrame)return;titleFrame=requestAnimationFrame(()=>{titleFrame=0;const position=host.scrollTop+host.clientHeight*.35;_currentScreen=position>=sections[1].offsetTop?1:0;_updateBrandSub();});},{passive:true});
   const io = new IntersectionObserver((entries) => {
     let best = null;
     for (const e of entries) {
@@ -2585,6 +2596,7 @@ window.addEventListener('message',event=>{
   const frame=document.getElementById('operations-embed');
   if(event.origin!==location.origin||event.source!==frame?.contentWindow)return;
   if(event.data?.maya==='ops-ready')_postPiecesToOps();
+  if(event.data?.maya==='ops-settings-state'){const wasOpen=_operationsSettingsOpen;_operationsSettingsOpen=event.data.open===true;const menu=document.querySelector('#top-actions .hamburger');if(_currentScreen===1&&menu){menu.setAttribute('aria-expanded',String(_operationsSettingsOpen));if(wasOpen&&!_operationsSettingsOpen)menu.focus({preventScroll:true});}}
   if(event.data?.maya==='ops-brief')goToScreen(0);
 });
 document.addEventListener('DOMContentLoaded',()=>document.getElementById('operations-embed')?.addEventListener('load',_postPiecesToOps));
@@ -4874,19 +4886,6 @@ function backendLogout() {
   // Hard reload so the upload gate shows fresh.
   location.reload();
 }
-
-// v13.44: warm the in-house library early, so the In-house tab is instant:
-// the manifest is fetched and the first sixteen swatches enter the browser
-// cache while the designer is still reading the brief.
-setTimeout(() => {
-  try {
-    _loadInhouseFabrics().then(items => {
-      (items || []).slice(0, 16).forEach(it => {
-        if (it.img && !String(it.img).startsWith('data:')) { const im = new Image(); im.src = it.img; }
-      });
-    }).catch(() => {});
-  } catch (_) {}
-}, 1200);
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', _bootBackend);

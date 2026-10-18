@@ -39,7 +39,7 @@ export function setupPresentation({buttons,preview,colors,design,controlSizes}){
  const sections=[
   ['Submissions','submissions','Latest submission'],['Users and traffic','','Users · 12'],['Leads','leads','Full name · Angela | Status · Not contacted'],
   ['Ad campaigns','ads','D / W / M · Campaign preview'],['Insights','insights','Lead and campaign totals'],['Recent changes','','Latest change'],
-  ['Feature requests','','Latest request'],['MAYA Prompting Engine','','Reviewed prompt fields'],['Architecture','','Local and online services']
+  ['Feature requests','','Latest request']
  ];
  for(const [name,before,text] of sections){
   const heading=document.createElement('h3');heading.dataset.mayaType=heading.dataset.previewCategory='H3';heading.dataset.previewHeading='';heading.textContent=name;if(before)heading.dataset.spacing=before;

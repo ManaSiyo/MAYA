@@ -139,7 +139,7 @@ html[data-maya-surface] .lead-status-menu {
 }
 html[data-maya-surface] .lead-status-menu[hidden] {display:none;}
 html[data-maya-surface] .lead-status-menu label {
-  display:flex;align-items:center;gap:8px;min-height:28px;padding:2px 8px;
+  display:flex;width:100%;align-items:center;gap:8px;min-height:28px;padding:2px 8px;
   border-radius:8px;white-space:nowrap;cursor:pointer;
 }
 html[data-maya-surface] .lead-status-menu label:hover {background:var(--maya-hover);}

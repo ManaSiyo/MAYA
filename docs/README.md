@@ -97,7 +97,7 @@ the marketing charts and lead station.
 | `playground/index.html` | Private staging copy; never promote a design without Fromsa's approval. | Admins only |
 
 `aesthetics/` holds everything visual, including the legacy Operations bench.
-The Brief links to the standalone Operation Room with its submission ID.
+The Brief embeds Operation Room as its second vertical screen; the fixed brand switches with the screen and its hamburger opens the active workspace settings. The standalone route remains available.
 `docs/` holds everything else: the server source,
 `firebase.json`, `design.md`, current runbooks, `Vision.pdf`, and `Strategy-A.md`.
 Retired reports and prototype research are in root `_to_delete/`, excluded from Hosting.

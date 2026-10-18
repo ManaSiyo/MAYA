@@ -12,8 +12,34 @@
     {key:'rejected',label:'Rejected',alias:'rejected',matches:['rejected','suppressed','passed'],color:'#f87171',weight:400,meaning:'Declined or excluded from contact; red.',usage:[['Admin','/status.html','Leads · Passed (previous)'],['Outbound','/outbound.html','Lead lists · Do not contact']]}
   ];
   const defaults={sectionSpacing:{submissions:24,leads:16,ads:40,insights:16,headingGap:10},layoutSpacing:{labelGap:4,fieldGap:10,drawerDockInset:4},semanticStyles:{nonFabric:{color:'#fde68a',opacity:100}},statusStyles:Object.fromEntries(statuses.map(s=>[s.key,{color:s.color,opacity:100,weight:s.weight}]))};
+  defaults.checkbox={size:16,radius:3,background:'black',fill:100,rim:55,borderColor:'gray',checkedColor:'#aab5c4',checkColor:'#000000'};
+  defaults.scrollbar={width:8,radius:8,thumbColor:'#aab5c4',thumbOpacity:55,trackColor:'#000000',trackOpacity:0};
   const hex=(value,fallback)=>/^#[0-9a-f]{6}$/i.test(value)?value:fallback;
   const number=(value,min,max,fallback)=>Number.isInteger(value)&&value>=min&&value<=max?value:fallback;
+  const rgba=(color,opacity)=>`rgb(${[1,3,5].map(i=>parseInt(color.slice(i,i+2),16)).join(' ')} / ${opacity/100})`;
+  function inputCSS(value){
+    const c={...defaults.checkbox,...value.checkbox},s={...defaults.scrollbar,...value.scrollbar};
+    for(const [key,min,max] of [['size',12,28],['radius',0,14],['fill',0,100],['rim',0,100]])c[key]=number(c[key],min,max,defaults.checkbox[key]);
+    for(const [key,min,max] of [['width',6,20],['radius',0,16],['thumbOpacity',0,100],['trackOpacity',0,100]])s[key]=number(s[key],min,max,defaults.scrollbar[key]);
+    for(const key of ['checkedColor','checkColor'])c[key]=hex(c[key],defaults.checkbox[key]);
+    for(const key of ['thumbColor','trackColor'])s[key]=hex(s[key],defaults.scrollbar[key]);
+    const palette={black:'#000000',gray:'#0d1120',blue:'#234c7d',yellow:'#785b0f',green:'#175b3b',pink:'#732e46'},borders={black:'#000000',white:'#ffffff',gray:'#aab5c4'};
+    const checkbox='html body input[type="checkbox"]',scroll='html,html body,html body *',visible='html body :is(textarea,[data-maya-scrollbar="visible"])';
+    const glyph=path=>'url("data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="${c.checkColor}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="${path}"/></svg>`)+'")';
+    let css=`:root{--maya-checkbox-size:${c.size}px;--maya-scrollbar-width:${s.width}px;--maya-scrollbar-thumb:${rgba(s.thumbColor,s.thumbOpacity)};--maya-scrollbar-track:${rgba(s.trackColor,s.trackOpacity)};}`;
+    css+=`${checkbox}{appearance:none!important;-webkit-appearance:none!important;box-sizing:border-box!important;display:inline-block!important;flex:0 0 ${c.size}px!important;inline-size:${c.size}px!important;block-size:${c.size}px!important;min-width:0!important;min-height:0!important;margin:0!important;padding:0!important;align-self:center!important;vertical-align:middle!important;border:1px solid ${rgba(borders[c.borderColor]||borders.gray,c.rim)}!important;border-radius:${c.radius}px!important;background:${rgba(palette[c.background]||palette.black,c.fill)}!important;background-position:center!important;background-repeat:no-repeat!important;background-size:75% 75%!important;box-shadow:none!important;cursor:pointer;}`;
+    css+=`${checkbox}:is(:checked,:indeterminate){background-color:${c.checkedColor}!important;border-color:${c.checkedColor}!important}${checkbox}:checked{background-image:${glyph('M5 12l4 4L19 6')}!important}${checkbox}:indeterminate{background-image:${glyph('M5 12h14')}!important}${checkbox}:focus-visible{outline:2px solid ${c.checkedColor}!important;outline-offset:3px!important}${checkbox}:disabled{opacity:.45!important;cursor:not-allowed}`;
+    css+='html body label:has(>input[type="checkbox"]){display:inline-flex!important;align-items:center!important;column-gap:var(--maya-form-label-gap,4px)!important}html body :is(td,th):has(>input[type="checkbox"]){text-align:center!important;vertical-align:middle!important}';
+    // Preserve page-owned hidden navigation tracks. Textareas and annotated
+    // scroll regions explicitly opt into the visible, shared controls.
+    css+=`${scroll}{scrollbar-color:var(--maya-scrollbar-thumb) var(--maya-scrollbar-track)!important}${visible}{scrollbar-width:${s.width<=10?'thin':'auto'}!important}`;
+    css+=`@supports selector(::-webkit-scrollbar){${scroll}{scrollbar-color:auto!important}${scroll.split(',').map(x=>x+'::-webkit-scrollbar').join(',')}{width:${s.width}px!important;height:${s.width}px!important;background:transparent!important}${scroll.split(',').map(x=>x+'::-webkit-scrollbar-track').join(',')}{background:var(--maya-scrollbar-track)!important;border:0!important;box-shadow:none!important}${scroll.split(',').map(x=>x+'::-webkit-scrollbar-thumb').join(',')}{background:var(--maya-scrollbar-thumb)!important;border:0!important;border-radius:${s.radius}px!important;box-shadow:none!important}${scroll.split(',').map(x=>x+'::-webkit-scrollbar-thumb:hover').join(',')}{background:${rgba(s.thumbColor,Math.min(100,s.thumbOpacity+20))}!important}${scroll.split(',').map(x=>x+'::-webkit-scrollbar-corner').join(',')}{background:var(--maya-scrollbar-track)!important}${visible}::-webkit-scrollbar{display:block!important}${visible}{scrollbar-width:auto!important}}`;
+    css+=`@media(forced-colors:active){${checkbox}{appearance:auto!important;-webkit-appearance:auto!important;forced-color-adjust:auto}${checkbox},${checkbox}:is(:checked,:indeterminate){background-image:none!important}${scroll}{scrollbar-color:auto!important}}`;
+    return css;
+  }
+  function previewInputs(value={}){
+    let node=document.getElementById('maya-input-control-style');if(!node){node=document.createElement('style');node.id='maya-input-control-style';document.head.append(node);}node.textContent=inputCSS(value);
+  }
   function apply(value={}){
     const states=Object.fromEntries(statuses.map(s=>{const saved=value.statusStyles?.[s.key]||{},base=defaults.statusStyles[s.key];return [s.key,{color:hex(saved.color,base.color),opacity:number(saved.opacity,0,100,base.opacity),weight:number(saved.weight,200,500,base.weight)}];}));
     const sp=Object.fromEntries(Object.entries(defaults.sectionSpacing).map(([key,fallback])=>[key,number(value.sectionSpacing?.[key],0,160,fallback)]));
@@ -45,5 +71,5 @@
     let node=document.getElementById('maya-presentation-control-style');if(!node){node=document.createElement('style');node.id='maya-presentation-control-style';document.head.append(node);}node.textContent=css;
     document.querySelectorAll('.spacing-preview [data-spacing]').forEach(e=>e.style.setProperty('--preview-spacing',sp[e.dataset.spacing]+'px'));
   }
-  window.MayaPresentationControls={apply,defaults,statuses};
+  window.MayaPresentationControls={apply,previewInputs,defaults,statuses};
 })();

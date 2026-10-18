@@ -31,7 +31,7 @@ if (self !== top) document.documentElement.classList.add('embedded');
 <title>MAYA · Operation Room</title>
 <script src="/aesthetics/operations/kb/kb.js"></script>
 <!-- test images embedded as data URLs → loads on a plain double-click (file://), no fetch/server needed -->
-<script src="/aesthetics/operations/tests-data.js"></script>
+<!-- Sample images load only in the standalone sandbox, never with saved client work. -->
 <!-- Plan B: the CLO reference manifest, empty until real projects are listed -->
 <script src="/aesthetics/operations/clo-library.js"></script>
 <!-- raster→vector tracer for the Trace → SVG button (MIT, single file) -->
@@ -131,8 +131,7 @@ if (self !== top) document.documentElement.classList.add('embedded');
   .logic-head .lty{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:.2em;text-transform:uppercase;color:var(--faint)}
   .logic-sub{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:.18em;text-transform:uppercase;color:var(--faint);text-align:center;margin-bottom:10px}
   .logic-chips{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-bottom:10px}
-  .logic textarea{width:100%;background:transparent;border:var(--maya-hairline) solid var(--hair);border-radius:14px;
-    padding:10px 12px;color:rgba(245,250,255,0.92);font-family:ui-monospace,Menlo,monospace;font-size:var(--maya-text-caption);line-height:1.7;resize:vertical;min-height:96px;display:none}
+  .logic textarea{width:100%;line-height:1.7;resize:vertical;min-height:96px;display:none}
   .logic.editing textarea{display:block}
   .logic.editing .logic-chips{display:none}
   .logic-actions{display:flex;gap:8px;justify-content:center;margin-top:10px}
@@ -251,7 +250,7 @@ if (self !== top) document.documentElement.classList.add('embedded');
     backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
     box-shadow:inset 0 1px 1px rgba(255,255,255,0.30),0 4px 28px rgba(0,0,0,0.4)}
   .drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-  .drawer-head h3{font-family:var(--maya-font-ui);font-weight:400;font-size:var(--maya-text-section);letter-spacing:.18em;
+  .drawer-head h2{font-family:var(--maya-font-ui);font-weight:400;font-size:var(--maya-text-section);letter-spacing:.18em;
     text-transform:uppercase;color:rgba(245,250,255,0.95);margin:0}
   .sec{margin-top:8px;padding-top:14px;border-top:0.25px solid rgba(255,255,255,0.18)}
   .sec:first-of-type{border-top:none;padding-top:0}
@@ -259,11 +258,9 @@ if (self !== top) document.documentElement.classList.add('embedded');
     color:var(--faint);margin-bottom:10px;text-align:center}
   .drawer label{display:block;font-family:var(--maya-font-ui);font-style:italic;font-size:var(--maya-text-caption);
     color:rgba(245,250,255,0.65);margin:0 0 6px}
-  .drawer input{width:100%;background:transparent;border:var(--maya-hairline) solid var(--hair);border-radius:var(--maya-radius-pill);
-    padding:8px 14px;color:rgba(245,250,255,0.95);font-family:ui-monospace,'SF Mono',monospace;font-size:var(--maya-text-caption)}
-  .drawer input:focus{outline:none;border-color:rgba(255,255,255,0.55)}
+  .drawer input{width:100%;min-width:0}
   .row2{display:flex;gap:10px}
-  .row2>div{flex:1}
+  .row2>div{flex:1;min-width:0}
   .kb-status{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:.04em;color:var(--dim);margin-top:8px;line-height:1.65;text-align:center}
   .bar{height:4px;border-radius:var(--maya-radius-pill);background:rgba(255,255,255,0.06);overflow:hidden;margin-top:8px}
   .bar i{display:block;height:100%;width:0;background:rgba(255,255,255,0.7);transition:.2s}
@@ -281,7 +278,7 @@ if (self !== top) document.documentElement.classList.add('embedded');
      hamburger are the only branding, hide the inner duplicates. The Plan
      chip stays (it still opens the drawer with settings + plan switch). */
   html.embedded .top{display:none}
-  html.embedded .wrap{padding:0 12px 24px}
+  html.embedded #hscroll>.hpane-main>.wrap{max-width:none;padding:0 16px 24px}
   html.embedded .room-title{margin:0 0 16px}
   html.embedded .pill.sm.plan-btn{display:none}
   /* one background for the whole Backend: when embedded the outer page owns it */
@@ -314,7 +311,7 @@ if (self !== top) document.documentElement.classList.add('embedded');
   </header>
   <!-- v13.64: the room's name lives top left with the logo now; this line is
        the PLAN, and clicking it switches to the other one. -->
-  <div class="room-title fabric-room-tools"><span class="cs" id="room-sub" onclick="setPlan(getPlan()==='A'?'B':'A')" style="cursor:pointer" title="Click to switch plan">Plan A · Grounded Pattern Pipeline</span><button class="pill maya-pill" id="operation-fabrics" onclick="openOperationFabrics()" disabled>Fabrics</button><button class="pill maya-pill" data-maya-type="P3" onclick="toggleDrawer(true)">Measurements</button></div>
+  <div class="room-title fabric-room-tools"><span class="cs" id="room-sub" onclick="setPlan(getPlan()==='A'?'B':'A')" style="cursor:pointer" title="Click to switch plan">Plan A · Grounded Pattern Pipeline</span><button class="pill maya-pill" id="operation-settings" data-maya-type="P3" onclick="openMeasurements()">Measurements</button></div>
   <p id="operation-fabric-selection" hidden></p>
 
   <div id="plan-a-view">
@@ -333,6 +330,7 @@ if (self !== top) document.documentElement.classList.add('embedded');
         <div id="operation-fabrics-host" hidden aria-label="Fabrics for the selected garment"></div>
       </div>
       <div class="left-actions">
+        <button class="pill maya-pill" id="operation-fabrics" data-maya-type="P3" onclick="openOperationFabrics()" disabled>Fabrics</button>
         <select id="test-view" class="pill-select" onchange="showView(this.value)" title="which view to show / use">
           <option value="front">Front</option>
           <option value="side">Side</option>
@@ -365,7 +363,7 @@ if (self !== top) document.documentElement.classList.add('embedded');
       </div>
       <div class="live" id="live">
         <div class="lh"><span class="dot"></span> Pipeline · live <span class="lstatus" id="live-status">idle</span></div>
-        <pre id="live-log"></pre>
+        <pre id="live-log" data-maya-scrollbar="visible" tabindex="0"></pre>
       </div>
     </div>
   </div>
@@ -416,14 +414,14 @@ if (self !== top) document.documentElement.classList.add('embedded');
 </div><!-- /hpane-main -->
 
 <!-- SETTINGS · drawer pane (Front End scroll-snap swipe drawer) -->
-<div class="hpane hpane-drawer">
-<div class="drawer" id="drawer">
+<div class="hpane hpane-drawer" inert>
+<div class="drawer" id="drawer" data-maya-popup role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="operation-settings-title" data-maya-scrollbar="visible">
   <div class="drawer-head">
     <!-- v13.44: the hamburger slides over with the drawer, top-left corner. -->
     <button class="icon-btn hamburger drawer-burger" onclick="toggleDrawer(false)" title="Close menu" aria-label="Close menu" style="border:0;background:none;box-shadow:none">
       <span class="hamburger-icon"><span></span><span></span><span></span></span>
     </button>
-    <h3>Settings</h3>
+    <h2 id="operation-settings-title" data-maya-type="H2">Settings</h2>
     <span style="width:32px"></span>
   </div>
 
@@ -442,20 +440,20 @@ if (self !== top) document.documentElement.classList.add('embedded');
   </div>
 
   <div class="sec">
-    <div class="sec-title">Measurements · inches</div>
+    <div class="sec-title" data-maya-type="H3">Measurements · inches</div>
     <div class="row2">
-      <div><label>Waist</label><input id="m-waist" type="number" min="0" step="0.25" placeholder="30" oninput="saveMeasures()"></div>
-      <div><label>Hip</label><input id="m-hip" type="number" min="0" step="0.25" placeholder="40" oninput="saveMeasures()"></div>
+      <div><label for="m-waist" data-maya-type="P3">Waist</label><input data-maya-control="field" data-maya-type="P1" id="m-waist" type="number" min="0" step="0.25" placeholder="30" oninput="saveMeasures()"></div>
+      <div><label for="m-hip" data-maya-type="P3">Hip</label><input data-maya-control="field" data-maya-type="P1" id="m-hip" type="number" min="0" step="0.25" placeholder="40" oninput="saveMeasures()"></div>
     </div>
     <div class="row2" style="margin-top:10px">
-      <div><label>Crotch length</label><input id="m-crotch" type="number" min="0" step="0.25" placeholder="27" oninput="saveMeasures()"></div>
-      <div><label>Inseam</label><input id="m-inseam" type="number" min="0" step="0.25" placeholder="30" oninput="saveMeasures()"></div>
+      <div><label for="m-crotch" data-maya-type="P3">Crotch length</label><input data-maya-control="field" data-maya-type="P1" id="m-crotch" type="number" min="0" step="0.25" placeholder="27" oninput="saveMeasures()"></div>
+      <div><label for="m-inseam" data-maya-type="P3">Inseam</label><input data-maya-control="field" data-maya-type="P1" id="m-inseam" type="number" min="0" step="0.25" placeholder="30" oninput="saveMeasures()"></div>
     </div>
     <div class="row2" style="margin-top:10px">
-      <div><label>Pant length</label><input id="m-length" type="number" min="0" step="0.25" placeholder="40" oninput="saveMeasures()"></div>
+      <div><label for="m-length" data-maya-type="P3">Pant length</label><input data-maya-control="field" data-maya-type="P1" id="m-length" type="number" min="0" step="0.25" placeholder="40" oninput="saveMeasures()"></div>
       <div></div>
     </div>
-    <div class="kb-status" id="dim-derived">Enter measurements for the derived dimensions.</div>
+    <div class="kb-status" id="dim-derived" data-maya-type="P3">Enter measurements for the derived dimensions.</div>
   </div>
 
   <div class="sec">
@@ -463,7 +461,7 @@ if (self !== top) document.documentElement.classList.add('embedded');
     <div class="logic" id="logic">
       <div class="logic-head"><span class="lt">required shapes in every render</span><span class="lty" id="logic-type">pants</span></div>
       <div class="logic-chips" id="logic-chips"></div>
-      <textarea id="logic-edit" spellcheck="false" placeholder="front leg x2&#10;back leg x2&#10;waistband x1"></textarea>
+      <textarea data-maya-control="field" data-maya-type="P1" id="logic-edit" spellcheck="false" placeholder="front leg x2&#10;back leg x2&#10;waistband x1"></textarea>
       <div class="logic-actions">
         <span class="pill sm" id="logic-edit-btn" onclick="editLogic()">Edit</span>
         <span class="pill sm" id="logic-save-btn" onclick="saveLogic()" style="display:none">Save</span>
@@ -496,7 +494,7 @@ if (self !== top) document.documentElement.classList.add('embedded');
 </div><!-- /hpane-drawer -->
 </div><!-- /hscroll -->
 
-<div id="toast"></div>
+<div id="toast" data-maya-type="P3"></div>
 
 <script>
 /* ============================ state & helpers ============================ */
@@ -514,6 +512,7 @@ const YOKE_DEPTH  = 3;     // back yoke height (in)
 const KB = { chunks: window.MAYA_KB_CHUNKS?.chunks || [], grammar: window.MAYA_KB_GRAMMAR || {types:{}},
              chapters: window.MAYA_KB_CHAPTERS || {} };
 let HERO = null;                 // dataURL of the loaded garment
+let _sampleLoadSuperseded=false;  // A chosen upload takes precedence even while FileReader is pending.
 let _operationInputContext=null,_operationRevision=-1,_operationLoadSequence=0;
 function openOperationFabrics() {
   const context=_operationInputContext,piece=FILES.piece;
@@ -639,6 +638,7 @@ function receiveOperationContext(event){
   _operationRevision=revision;installOperationContext(context,selected);
 }
 window.addEventListener('message',receiveOperationContext);
+window.addEventListener('message',event=>{if(EMBEDDED&&event.origin===location.origin&&event.source===window.parent&&event.data?.maya==='ops-settings'){toggleDrawer(event.data.open===true,event.data.open===true?'m-waist':'');}});
 async function loadSavedOperationSubmission(){
   const submissionId=new URLSearchParams(location.search).get('submission')||'';
   if(EMBEDDED||!submissionId)return;
@@ -811,14 +811,34 @@ function requireOperationSettings(){
 
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),3200); }
 
-function toggleDrawer(force){
+let _drawerFocus=null;
+function _drawerFocusable(){
+  return [...$('drawer').querySelectorAll('button,input,textarea,select,a[href],[tabindex]')].filter(el=>{
+    const visibility=getComputedStyle(el).visibility;
+    return !el.disabled&&el.tabIndex>=0&&el.getClientRects().length&&visibility!=='hidden'&&visibility!=='collapse'&&!el.closest('[inert]');
+  });
+}
+function openMeasurements(){toggleDrawer(true,'m-waist');}
+function toggleDrawer(force,focusId=''){
   const d=document.querySelector('.hpane-drawer'); if(!d) return;
   const open = force===true ? true : force===false ? false : !d.classList.contains('open');
+  if(open&&!d.classList.contains('open'))_drawerFocus=document.activeElement;
   d.classList.toggle('open', open);
+  d.inert=!open;$('drawer').setAttribute('aria-hidden',String(!open));
+  document.querySelectorAll('header .hamburger,#operation-settings').forEach(button=>button.setAttribute('aria-expanded',String(open)));
+  if(!open&&_drawerFocus?.isConnected)_drawerFocus.focus({preventScroll:true});
   // v13.44: the top bar hamburger fades while the drawer's own takes over.
   document.body.classList.toggle('drawer-open', open);
   _placeHamburger(open);
-  if(open) refreshKbStatus();
+  if(open){
+    refreshKbStatus();
+    if(focusId||!d.contains(document.activeElement))requestAnimationFrame(()=>{
+      if(!d.classList.contains('open'))return;
+      const focusable=_drawerFocusable();
+      (focusable.find(el=>el.id===focusId)||focusable[0]||$('drawer')).focus();
+    });
+  }
+  if(EMBEDDED)window.parent.postMessage({maya:'ops-settings-state',open},location.origin);
 }
 /* v13.61: the pill rests just outside the drawer's left edge, computed from
    the live layout. The header is width constrained, so a fixed offset landed
@@ -842,7 +862,17 @@ document.addEventListener('pointerdown',(e)=>{
   if(d.contains(e.target) || e.target.closest('.hamburger')) return;
   toggleDrawer(false);
 });
-document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') toggleDrawer(false); });
+document.addEventListener('keydown',e=>{
+  if(!document.body.classList.contains('drawer-open'))return;
+  if(e.key==='Escape'){e.preventDefault();toggleDrawer(false);return;}
+  if(e.key==='Tab'){
+    const focusable=_drawerFocusable(),first=focusable[0],last=focusable.at(-1),active=document.activeElement;
+    if(!first){e.preventDefault();$('drawer').focus();return;}
+    if(!focusable.includes(active)){e.preventDefault();(e.shiftKey?last:first).focus();}
+    else if(e.shiftKey&&active===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&active===last){e.preventDefault();first.focus();}
+  }
+});
 /* ---- plan switcher · Plan A = photo → pattern (this dashboard), Plan B = CLO route ---- */
 const PLAN_NAME='maya_plan';
 const PLAN_SUBS={ A:'Plan A · Grounded Pattern Pipeline', B:'Plan B · CLO Route' };
@@ -961,6 +991,7 @@ window.addEventListener('DOMContentLoaded',()=>{
 function onFile(e){
   const f=e.target.files[0]; if(!f) return;
   if(RUNNING){ toast('A run is already going, let it finish.'); return; }
+  _sampleLoadSuperseded=true;
   const r=new FileReader();
   const fileContext=operationContext();
   r.onload=async()=>{
@@ -1048,6 +1079,16 @@ function applyView(){
 /* Test images live in tests-data.js as data URLs (window.MAYA_TESTS), so everything loads on a plain
    double-click (file://) with no fetch, no folder picker, no server. */
 window.MAYA_TESTS = window.MAYA_TESTS || {}; const TESTS = window.MAYA_TESTS;
+if(self===top&&!new URLSearchParams(location.search).get('submission')){
+  const sampleContext=operationContext(),samples=document.createElement('script');samples.src='/aesthetics/operations/tests-data.js';
+  samples.onload=()=>{
+    const loaded=window.MAYA_TESTS;window.MAYA_TESTS=TESTS;
+    if(_sampleLoadSuperseded||!operationCurrent(sampleContext)||RUNNING||HERO||_operationInputContext)return;
+    Object.assign(TESTS,loaded||{});initTests();
+  };
+  samples.onerror=()=>{if(!_sampleLoadSuperseded&&operationCurrent(sampleContext)&&!HERO)toast('Samples could not load. Upload a garment to continue.');};
+  document.head.append(samples);
+}
 const EMBEDDED = (function(){ try { return self !== top; } catch(_) { return false; } })();
 let ACTIVE_TEST = null;   // current test key
 let FILES = {};           // { front, side, back, answer } → data URLs

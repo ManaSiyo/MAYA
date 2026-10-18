@@ -85,4 +85,9 @@ await import('./fabric-workflow-ui.mjs?authority');
 await import('./operation-save-failures.mjs?authority');
 await import('./client-voice-ui.mjs?authority');
 await import('./admin-voice-ui.mjs?authority');
-console.log('Changed workspace, fabric and three voice surfaces passed the final shared authority gate.');
+
+await import('./input-controls-ui.mjs?authority');
+
+await import('./operation-controls.mjs?authority');
+
+console.log('Final Aesthetic Control authority passed: active previews, saved settings, actual Admin/Brief/Operations/fabric controls and voice surfaces across responsive widths.');

@@ -28,7 +28,7 @@ const gap=async(heading,content)=>page.evaluate(({heading,content})=>{
  const h=document.querySelector(heading),c=document.querySelector(content);
  return {gap:c.getBoundingClientRect().top-h.getBoundingClientRect().bottom,display:getComputedStyle(c).display};
 },{heading,content});
-const sections=['users-fold','leads-fold','ads-fold','bottom-fold','changes-fold','features-fold','pe-fold','arch-fold'];
+const sections=['users-fold','leads-fold','ads-fold','bottom-fold','changes-fold','features-fold'];
 const colors={new:'rgb(181, 189, 200)',contacted:'rgb(74, 222, 128)',in_progress:'rgb(134, 239, 172)',booked:'rgb(251, 191, 36)',completed:'rgb(34, 197, 94)',canceled:'rgb(248, 113, 113)'};
 try{
  await page.goto('https://maya.test/backend/status.html');
@@ -96,7 +96,7 @@ try{
  const spacing=page.locator('.spacing-controls');
  await spacing.locator('summary').click();
  await spacing.locator('[data-field="headingGap"]').fill('37');
- assert.equal(await spacing.locator('[data-heading-gap]').count(),9,'Every Admin group has a spacing preview');
+ assert.equal(await spacing.locator('[data-heading-gap]').count(),7,'Every Admin group has a spacing preview');
  for(const sample of await spacing.locator('[data-heading-gap]').all())assert.ok(Math.abs(await sample.evaluate(e=>e.getBoundingClientRect().top-e.previousElementSibling.getBoundingClientRect().bottom)-37)<1,'Preview visibly applies heading distance');
  for(const [key,color] of [['delivering','#13579b'],['pending','#2468ac'],['rejected','#97531b']]){
   const group=page.locator('.status-style-preview').filter({has:page.locator('[data-status="'+key+'"]')});
@@ -108,5 +108,5 @@ try{
   assert.equal(await group.locator('.status-pill').evaluate(e=>getComputedStyle(e).color),({delivering:colors.completed,pending:colors.booked,rejected:colors.canceled})[key],key+' restore returns saved preview');
  }
  assert.deepEqual(errors,[]);assert.deepEqual(writes,[],'Presentation verification must not perform account mutations');
- console.log('Presentation consistency passed: all nine Admin heading/content boundaries, empty/populated submissions, D/W/M, current and retained status colors, saved overrides and functional gallery previews.');
+ console.log('Presentation consistency passed: all seven Admin heading/content boundaries, empty/populated submissions, D/W/M, current and retained status colors, saved overrides and functional gallery previews.');
 }finally{await browser.close();}
