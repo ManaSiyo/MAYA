@@ -1,31 +1,19 @@
-[Codex] Standardize MAYA drawers and clean up the Brief fabric workspace
+[Codex] Use the installed Playwright browser in release checks
 
-Apply the October 18 owner review across the active pages and Aesthetic Control.
-Use MAYA's shared drawer material and a full-viewport embedded Settings layer;
-remove duplicate pipeline/measurement/navigation/date UI. Keep actual saved Brief
-measurements authoritative and preserve standalone manual uploads.
+Cloud Build 937bfddb rejected release 024d049 before deployment because the newly
+mandatory component-gallery test defaulted to /opt/pw-browsers/chromium, which
+is absent in node:20 after the pinned Playwright browser installation.
 
-Restore identical garment/Fabrics frames, five explicit merchant groups with free
-filtering and reviewed Refresh, seller-backed Swatchon parsing, concise wrapped
-facts, and no card Save/Use or automatic hover snapshots. Keep historical private
-lookbooks, assignments, safe removal, account/project scope and generation guards.
-Retire Playground/Affiliates and the duplicate legacy Operations page without
-promoting experiments; preserve legacy URL
-redirects, active client workflows and legal/migration data paths.
+Remove fixed machine/application executable fallbacks from the gallery and
+integrated regression launchers. Keep explicit isolated PW_CHROMIUM/CHROMIUM_PATH
+overrides; otherwise use Playwright's installed browser. Add release-contract
+assertions preventing those fixed paths from returning. Preserve every gate and
+all existing functional and visual assertions. No visible UI or production
+configuration is changed; the shared Aesthetic Control rule remains applicable.
 
-Make Drawer, segmented and thinner idle-hide scrollbar previews real saved
-controls. Repair selected-state specificity, editor opening/Restore, unsaved
-preview retention and narrow keyboard focus overflow. Keep panel/table/Editor
-materials independent and refresh source-role usage/documentation.
-
-Validation: all 71 exact Cloud Build Node commands passed locally. Full
-integrated regression passed all 607 named checks plus imported assertions.
-Pinned npm ci, smoke, schema/contract checks and gallery checks at eleven widths
-passed. Actual default/different saved surfaces are checked at six widths,
-including parent-scroll restoration and native keyboard controls. Default/saved
-phone/desktop screenshots were inspected. Standalone Aesthetic Control authority
-runs last after these records, before committing.
-No personal Chrome, private production actions, paid generation, credentials,
-billing/provider settings or production environment changes. Push remains
-explicitly authorized; exact deployed release/asset/redirect and visual checks
-must follow Cloud Build success. Real private fabric/audio acceptance is separate.
+Validation: release-contract, gallery and full integrated regression passed with
+both executable overrides unset and the isolated installed-browser cache selected.
+Standalone aesthetic-authority runs last after this record, before commit. The main
+change already passed all 71 exact local release commands and 607 named integrated
+checks. This follow-up must pass Google Cloud Build before exact live verification.
+The deployed baseline remains 4b4867f until the production pipeline succeeds.

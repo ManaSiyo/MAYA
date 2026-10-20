@@ -178,7 +178,7 @@ ok('Lead status filter has an isolated readable layer and scoped section carets'
  ok('CRM fault recovery is checked in the release gate',BUILD_SOURCE.includes('node tests/crm-failure-ui.mjs'));
 }
 
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium' });
+const browser = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || process.env.CHROMIUM_PATH });
 const pg = await browser.newPage();
 const errs = [];
 pg.on('pageerror', e => errs.push(String(e).split('\n')[0]));

@@ -2,12 +2,18 @@
 
 ## Current task and release state
 
-Implement the October 18 owner screenshot review. The deployed baseline is
-4b4867f5f8d310ca32467414eedbf8b1d03d7c63: its Cloud Build 8e6a9a47 succeeded
-October 18, and exact Firebase release/page/API commit, assets and live screenshots
-were verified. This release candidate contains the cleanup below. Its deployment
-state must be established from the exact current commit and live markers, not
-from a pending/success label in this preparation record.
+The October 18 owner review was committed and pushed as
+024d04983a506df5bd1ecd3be14e322a545da9d2. Cloud Build 937bfddb failed in
+Test release contracts before any image/server/website/rules deployment: the newly
+mandatory component-gallery launcher required /opt/pw-browsers/chromium instead of
+the pinned Playwright-installed browser. The deployed baseline remains
+4b4867f5f8d310ca32467414eedbf8b1d03d7c63 (verified October 18).
+
+The follow-up removes machine-specific executable fallbacks from component-gallery
+and integrated app-regression. Explicit PW_CHROMIUM/CHROMIUM_PATH overrides remain;
+otherwise Playwright resolves its isolated installed browser. release-contract
+rejects a reintroduced fixed machine/application path. This adds no visible UI.
+The shared authority rule and every release gate remain intact.
 Existing explicit owner authorization covers local commits and automatic Push.
 A push can deploy production; never infer success from Vercel.
 
@@ -83,8 +89,11 @@ The exact Cloud Build list now has 71 Node commands.
 
 ## Open limits and exact next step
 
-Preserve strict assertions. Run standalone aesthetic-authority last after these
-final records, commit only task files and Push under existing authorization. Wait for the exact Cloud Build, then verify
+The launcher correction passed gallery, release-contract and full integrated
+regression with both executable overrides unset and PLAYWRIGHT_BROWSERS_PATH
+pointing to the isolated installed browser cache. Run final aesthetic-authority
+after these records; commit the follow-up and Push under existing authorization.
+Wait for the exact Cloud Build, then verify
 release.json, page stamps, API commit, changed asset bytes and retired redirects.
 Run final live shared-surface authority and inspect actual phone/desktop images.
 

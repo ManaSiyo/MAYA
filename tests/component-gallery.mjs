@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {extname,resolve} from 'node:path';
 const root=resolve(new URL('..',import.meta.url).pathname);
 const canonicalRoles=['H0','H1','H2','H3','H4','H5','P1','P2','P3'];
-const browser=await chromium.launch({executablePath:process.env.PW_CHROMIUM||process.env.CHROMIUM_PATH||(process.platform==='darwin'?'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome':'/opt/pw-browsers/chromium')});
+const browser=await chromium.launch({executablePath:process.env.PW_CHROMIUM||process.env.CHROMIUM_PATH});
 const context=await browser.newContext({viewport:{width:1440,height:1000}});const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));let savedPost=null;
 await page.route('**/*',async r=>{const u=new URL(r.request().url());if(!['maya.test','maya.manasiyo.com'].includes(u.hostname))return r.abort();if(u.pathname==='/api/design')return r.fulfill({json:{}});if(u.pathname==='/api/admin/design'){savedPost={header:r.request().headers()['authorization'],body:r.request().postDataJSON()};return r.fulfill({json:{ok:true}});}try{const p=resolve(root,'.'+u.pathname);if(!p.startsWith(root+'/'))return r.abort();await r.fulfill({body:readFileSync(p),contentType:({'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.png':'image/png','.svg':'image/svg+xml'})[extname(p)]||'text/plain'});}catch{await r.abort();}});
 try{

@@ -690,3 +690,5 @@ active adapters and independent table/semantic status styling. No files deleted
 or production/push performed. Broader 45 release suites passed.
 An obsolete v13.77 regression also REQUIRED forced blue headings; replaced that
 assertion with the saved-role authority rule instead of retaining the conflict.
+
+2026-10-20 — Release 024d049 stopped safely before deployment: the newly mandatory component-gallery gate used a fixed /opt Chromium path. Gallery and integrated regression now default to the pinned Playwright-installed isolated browser, preserve explicit overrides, and have a release-contract guard. No visible UI or production configuration change. Gallery, release-contract and the full integrated regression passed with both executable overrides unset and the isolated Playwright cache selected. Final shared authority runs last before the follow-up push.
