@@ -7,7 +7,7 @@ import {validDesign} from '../docs/server/design-config.mjs';
 const root=resolve('.'),browser=await chromium.launch({headless:true,executablePath:process.env.PW_CHROMIUM});
 const jwt=(sub,version=1)=>'fixture.'+Buffer.from(JSON.stringify({sub,version})).toString('base64url')+'.fixture';
 try{
- for(const surface of ['frontend','playground']){
+ for(const surface of ['frontend']){
   const page=await browser.newPage({viewport:{width:1280,height:900}}),requests=[];
   await page.addInitScript(()=>{
    localStorage.setItem('maya_admin_tok','fixture-admin');
@@ -50,13 +50,14 @@ try{
   await page.evaluate(()=>{fixture.blocked=true;return _pgVoiceLine.resumePlayback();});assert.equal(await page.locator('#pg-maya-chip-word').textContent(),'Tap to hear Maya');
   await page.evaluate(()=>MayaTypographyControls.ready);
   for(const saved of [false,true]){
-   if(saved)await page.evaluate(()=>{const d=structuredClone(MayaTypographyControls.defaults);for(const [role,size]of Object.entries({H1:32,H2:28,H3:24,H4:20,P1:18,P2:16,P3:14}))d.type[role].size=size;Object.assign(d.type.P3,{size:14,color:'gray',font:'cormorant',weight:500,style:'italic'});Object.assign(d.glass,{fill:65,rim:70,blur:9,saturation:120});d.pillX=24;d.pillY=12;return MayaTypographyControls.save(d);});
+   if(saved)await page.evaluate(()=>{const d=structuredClone(MayaTypographyControls.defaults);for(const [role,size]of Object.entries({H1:32,H2:28,H3:24,H4:20,P1:18,P2:16,P3:14}))d.type[role].size=size;Object.assign(d.type.P3,{size:14,color:'gray',font:'cormorant',weight:500,style:'italic'});Object.assign(d.glass,{fill:65,rim:70,blur:9,saturation:120});Object.assign(d.drawer,{background:'green',fill:75,rim:70,blur:13,saturation:140,radius:22,paddingX:23,paddingY:17});d.pillX=24;d.pillY=12;return MayaTypographyControls.save(d);});
    for(const width of [320,390,768,1024,1440,1920]){
     await page.setViewportSize({width,height:900});await page.locator('#pg-maya-chip').focus();
     const actual=await page.locator('#pg-maya-chip').evaluate(el=>{const s=getComputedStyle(el),r=el.getBoundingClientRect();return {size:s.fontSize,color:s.color,x:s.paddingLeft,y:s.paddingTop,background:s.backgroundColor,blur:s.backdropFilter,left:r.left,right:r.right,bottom:r.bottom,focused:el===document.activeElement,reachable:el.contains(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)),overlapsListen:(()=>{const b=document.getElementById('voice-bar').getBoundingClientRect();return r.left<b.right&&r.right>b.left&&r.top<b.bottom&&r.bottom>b.top;})()};});
     if(width===390||width===1440)await page.screenshot({path:'/private/tmp/maya-voice-'+surface+'-'+(saved?'saved':'default')+'-'+width+'.png'});
     assert.equal(actual.size,saved?'14px':'10px');assert.equal(actual.color,saved?'rgb(170, 181, 196)':'rgb(255, 255, 255)');assert.equal(actual.x,saved?'24px':'14px');assert.equal(actual.y,saved?'12px':'6px');assert.equal(actual.background,saved?'rgba(3, 15, 29, 0.65)':'rgba(3, 15, 29, 0.18)');assert.ok(actual.left>=0&&actual.right<=width&&actual.bottom<=900);assert.ok(actual.focused);assert.ok(actual.reachable,'live chip is not covered by another overlay');assert.equal(actual.overlapsListen,false,'voice recovery never covers Tap to listen');
     await page.evaluate(()=>toggleNotesDrawer(true));await page.waitForFunction(()=>{const h=document.getElementById('hscroll');return document.body.classList.contains('drawer-open')&&Math.abs(h.scrollLeft-(h.scrollWidth-h.clientWidth))<.5;});
+    assert.deepEqual(await page.locator('#notes-drawer').evaluate(e=>{const s=getComputedStyle(e);return [s.backgroundColor,s.backdropFilter,s.borderRadius,s.paddingLeft,s.paddingTop];}),saved?['rgba(23, 91, 59, 0.75)','blur(13px) saturate(1.4)','22px','23px','17px']:['rgba(3, 15, 29, 0.9)','blur(28px) saturate(1.8)','18px','12px','16px'],'MAYA uses the active shared Drawer material at '+width);
     await page.evaluate(()=>{fixture.blocked=false;});const before=await page.locator('#pg-maya-chip').boundingBox();
     await page.mouse.move(before.x+before.width/2,before.y+before.height/2);await page.mouse.down();await page.waitForTimeout(300);
     const label=surface+' '+(saved?'saved':'default')+' '+width;

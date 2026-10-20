@@ -25,7 +25,7 @@ export function setupWorkspacePreviews({parent,preview,render}){
  const material=document.createElement('article');material.className='fa-product workspace-fabric-preview';material.dataset.mayaPanel='inner';const image=document.createElement('img');image.src='/aesthetics/fabrics/thumbs/Midnight%20Velvet.jpg';image.alt='In-house Midnight Velvet presentation sample';image.className='fa-product-image';material.append(image,role('h4','Midnight Velvet','H4'),role('p','For the selected garment · inventory preview','P3'));fabrics.append(material,editButton('H4'));
  const operations=card('Brief → Operation Room','/backend.html','H2 screen title · H3 garment · P1 instructions · shared fields/pills');operations.append(role('h2','Operation Room','H2'),role('h3','Saved dissected garment','H3'),role('p','Front, back and side stay in the same submission workspace.','P1'),editButton('P3'));
  const frontend=card('Frontend · Moodboard and Favorites','/','H1 brand · H3 section · P3 pills · shared Glass and panels');frontend.append(role('h3','Favorites','H3'),Pill({label:'Tap to listen',onClick:event=>{event.stopPropagation();const edit=document.querySelector('.finish-controls .type-editor');if(edit){edit.closest('.review-fold').open=true;edit.open=true;edit.scrollIntoView({block:'center'});}}}),editButton('P3'));
- // The same Glass/P3 recovery chip is used by Admin, Frontend and Playground.
+ // The same Glass/P3 recovery chip is used by Admin and Frontend.
  const voice=role('button','Tap to hear Maya','P3');voice.type='button';voice.className='maya-pill workspace-voice-preview';voice.addEventListener('click',()=>openRole('P3'));logs.append(voice);
  render();
 }

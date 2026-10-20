@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {chromium} from 'playwright';
 const browser=await chromium.launch({headless:true,executablePath:process.env.PW_CHROMIUM});
 try {
- for(const file of ['frontend/index.html','playground/index.html']) {
+ for(const file of ['frontend/index.html']) {
   const source=readFileSync(file,'utf8');
   assert.ok(!source.includes('id="pin-search-scope"'));
   assert.ok(source.includes("const scope = 'everywhere'"));
@@ -37,5 +37,5 @@ try {
   assert.deepEqual(await page.evaluate(()=>searches),[{q:'velvet',scope:'everywhere'}]);
   await page.close();
  }
- console.log('Pinterest: automatic pages, deduplication, repeated-cursor stop, retry, account guard and global search passed on both surfaces.');
+ console.log('Pinterest: automatic pages, deduplication, repeated-cursor stop, retry, account guard and global search passed on the client app.');
 } finally {await browser.close();}

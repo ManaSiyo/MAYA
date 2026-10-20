@@ -6,7 +6,6 @@
 | `backend/` | Admin, Outbound, Brief, Operations and supporting pages. |
 | `aesthetics/` | Served imagery, shared UI, and [Aesthetic Control](../aesthetics/aesthetic-control.html). The control's scripts, CSS and generated inventories are in `aesthetics/aesthetic-control/`. |
 | `docs/` | Current design rules, runbooks, requests, fixes, Hosting map and Cloud Run source. Not served by Firebase Hosting. |
-| `playground/` | Active client staging app, served at `/playground.html`. Kept separate so changes are not silently promoted to clients. |
 | `tests/` | Release tests invoked by `cloudbuild.yaml`. Its root location is part of the current build contract. |
 | `_to_delete/` | Local, Git-ignored recovery area. Firebase Hosting ignores it. |
 
@@ -32,3 +31,5 @@ A byte-for-byte hash scan of the active product and documentation folders found 
 Governing completion rule for every folder: Aesthetic Control is the final
 completion gate. Follow root AGENTS.md and docs/design.md; no folder-specific
 workflow overrides that requirement.
+
+Playground and Affiliates were retired by the October 18 owner review. Their old URLs redirect to MAYA/Admin; no staged experiments are promoted.

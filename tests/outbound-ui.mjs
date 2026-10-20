@@ -61,9 +61,7 @@ await page.evaluate(()=>document.querySelector('#leads-fold').scrollIntoView());
 await page.screenshot({path:join(tmpdir(),'maya-admin-compact.png')});
 await page.setViewportSize({width:390,height:844});
 assert.equal(await page.locator('.lead-stage').evaluate(el=>getComputedStyle(el).fontSize),'12px');
-await page.evaluate(()=>document.body.classList.add('affiliates-view'));
 assert.equal(await page.locator('#lead-tr-0 td').first().evaluate(el=>getComputedStyle(el).paddingTop),'4px');
-await page.evaluate(()=>document.body.classList.remove('affiliates-view'));
 await page.setViewportSize({width:1440,height:1000});
 
 assert.deepEqual(report.options,['Not contacted','Contacted','In progress','Booked','Completed','Cancelled']);assert.equal(report.size,report.noteSize);assert.equal(report.color,'rgb(181, 189, 200)');assert.equal(report.actions,0);

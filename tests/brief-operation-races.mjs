@@ -199,7 +199,7 @@ for(const failure of ['missingGeneration','invalidPieces','piecesStatus']){
  assert.equal(f.eval('_savedOperation.pieces.length'),0,'Unconfirmed saves never publish generated work');
 }
 
-for(const path of ['backend/operations.html','aesthetics/operations/index.html']){
+for(const path of ['backend/operations.html']){
  const source=read(path),stored=new Map(),elements=new Map();let token='owner-a',classifyDone;
  for(const match of source.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi))if(!/\bsrc=|application\/ld\+json/.test(match[1]))new vm.Script(match[2],{filename:path});
  const element=id=>{
@@ -218,6 +218,14 @@ for(const path of ['backend/operations.html','aesthetics/operations/index.html']
  const helpers=source.slice(source.indexOf("let _measurementGarment="),source.indexOf('// PANT MEASUREMENT MODEL'));
  const names=['pickTest','showView','setHero','runGrounded','startTest','runRD','rdCacheKey','gptImageEdit','scoreGrounded','buildSVGfromGrounded','streamChat'];
  vm.runInContext(helpers+'\n'+names.map(name=>fn(source,name)).join('\n'),c);
+ if(path==='backend/operations.html'){
+  c._operationInputContext={submissionId:'reviewed',measurements:{waist_narrowest:'91.44 cm',hip:40,crotch_f_to_b:'685.8 mm',inseam:'30 inches',pant_length:42,bust_chest:38}};
+  assert.deepEqual(JSON.parse(JSON.stringify(c.storedMeasures())),{waist:36,hip:40,crotch:27,inseam:30,length:42},'Canonical Brief facts normalize explicit units');
+  element('m-waist').value='99';c.saveMeasures();assert.equal(c.getMeasures().waist,36,'Hidden/manual fields cannot overwrite recorded Brief values');
+  c._operationInputContext={submissionId:'unmeasured',measurements:{}};assert.equal(c.getMeasures().waist,null,'No default or other submission dimensions');
+  c._operationInputContext.measurements=[];assert.equal(c.measurementState().unavailable,true,'Malformed recorded measurements fail closed');
+  c._operationInputContext=null;
+ }
  const pick=async name=>{c.pickTest(name);await vm.runInContext('_garmentReady',c);};
  await pick('A');element('m-waist').value='30';c.saveMeasures();
  assert.equal(c.getMeasures().waist,30);

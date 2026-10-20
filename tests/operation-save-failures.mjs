@@ -40,6 +40,11 @@ const choose=async(id='pants-a',submission='submission-a')=>ev(async({id,submiss
  installOperationContext({account:operationAccount(),submissionId:submission,local:0,pieces:[{id,name:'Reviewed pants',_image:image}]},id);
  await _garmentReady;LAST={type:'pants',garment:{type:'pants'},garmentGram:KB.grammar.types.pants};LOGIC_TYPE='pants';renderLogic();toggleDrawer(true);
 },{id,submission,image});
+const chooseStandalone=async(id='upload-a')=>ev(async({id,image})=>{
+ _operationInputContext=null;invalidateOperation();for(const name of Object.keys(TESTS))delete TESTS[name];
+ TESTS[id]={front:image,piece:{id,name:id}};initTests();pickTest(id);await _garmentReady;
+ LAST={type:'pants',garment:{type:'pants'},garmentGram:KB.grammar.types.pants};LOGIC_TYPE='pants';renderLogic();toggleDrawer(false);
+},{id,image});
 const account=async(sub,revision=1)=>ev(value=>{const oldValue=localStorage.getItem('maya_admin_tok');localStorage.setItem('maya_admin_tok',value);window.dispatchEvent(new StorageEvent('storage',{key:'maya_admin_tok',oldValue,newValue:value}));},token(sub,revision));
 const fault=async(value)=>ev(value=>Object.assign(storageFaults,value),value);
 const toast=()=>page.locator('#toast').textContent();
@@ -70,8 +75,8 @@ try{
  await account('owner-b');await choose();assert.deepEqual(await ev(()=>getLogic('pants')),base);assert.equal(await ev(()=>logicLocked()),false);
  assert.ok(!(await page.locator('#logic').innerText()).includes('owner a'));await ev(()=>saveLogic());assert.match(await toast(),/account changed/);
  await account('owner-a',3);await choose();assert.equal(await ev(()=>getLogic('pants')[0].label),'OWNER A PRIVATE SHAPE');assert.ok(!(await page.locator('#logic-edit').inputValue()).includes('unsaved'));
- // Saving stays per account/type; measurements are additionally submission/garment bound.
- await page.locator('#m-waist').fill('30');const keyA=await ev(()=>measurementKey());
+ // Standalone uploads retain explicit dimensions and truthful browser-storage failures.
+ await chooseStandalone();await page.locator('#m-waist').fill('30');const keyA=await ev(()=>measurementKey());
  await fault({measureSet:true});await page.locator('#m-waist').fill('42');assert.match(await toast(),/kept for this session.*could not be saved/);
  assert.equal(await ev(()=>JSON.parse(sessionStorage.getItem(measurementKey())).waist),'30');assert.equal(await ev(()=>getMeasures().waist),42);
  await ev(()=>syncMeasures());assert.equal(await page.locator('#m-waist').inputValue(),'42');assert.match(await page.locator('#dim-derived').textContent(),/waist 42/);
@@ -79,23 +84,23 @@ try{
  assert.equal(prompt.waist,42);assert.match(prompt.prompt,/waist 42/);assert.equal(prompt.disabled,true,'Running freezes the Pattern Logic textarea too');
  await account('owner-a',4);assert.equal(await ev(()=>getMeasures().waist),42,'Renewal retains unsaved current measurements');
  await fault({measureSet:false});await page.locator('#m-waist').fill('42.5');assert.equal(await ev(()=>JSON.parse(sessionStorage.getItem(measurementKey())).waist),'42.5');
- await choose('pants-b');assert.notEqual(await ev(()=>measurementKey()),keyA,'Distinct saved IDs sharing an image do not share measurements');assert.equal(await ev(()=>getMeasures().waist),null);
- await choose('pants-a','submission-b');assert.equal(await ev(()=>getMeasures().waist),null);
- await choose();assert.equal(await ev(()=>getMeasures().waist),42.5);
- await account('owner-b',2);await choose();assert.equal(await ev(()=>getMeasures().waist),null);
- await account('owner-a',5);await choose();assert.equal(await ev(()=>getMeasures().waist),42.5);
+ await chooseStandalone('upload-b');assert.notEqual(await ev(()=>measurementKey()),keyA,'Distinct saved IDs sharing an image do not share measurements');assert.equal(await ev(()=>getMeasures().waist),null);
+ await choose('pants-a','submission-b');assert.equal(await ev(()=>getMeasures().waist),null,'Unmeasured saved submission cannot inherit standalone dimensions');assert.equal(await page.locator('#standalone-measurements').isVisible(),false);
+ await chooseStandalone();assert.equal(await ev(()=>getMeasures().waist),42.5);
+ await account('owner-b',2);await chooseStandalone();assert.equal(await ev(()=>getMeasures().waist),null);
+ await account('owner-a',5);await chooseStandalone();assert.equal(await ev(()=>getMeasures().waist),42.5);
  // Security failures cannot silently authorize seed logic or empty measurements.
- await fault({measureGet:true});await choose('unreadable-measurement');await ev(()=>startTest());assert.match(await toast(),/measurements could not be read/);assert.equal(paid.length,0);
+ await fault({measureGet:true});await chooseStandalone('unreadable-measurement');await ev(()=>startTest());assert.match(await toast(),/measurements could not be read/);assert.equal(paid.length,0);
  await fault({measureSet:true});await page.locator('#m-waist').fill('46');assert.equal(await ev(()=>getMeasures().waist),46);assert.equal(await ev(()=>measurementState().unavailable),false);
  await fault({measureGet:false,measureSet:false,logicGet:true});await account('unreadable-owner');await choose();await ev(()=>startTest());assert.match(await toast(),/Injected logic Get|Pattern Logic could not be read/);assert.equal(paid.length,0);
  await draft('reviewed replacement x2');await fault({logicSet:true});await ev(()=>saveLogic());assert.match(await toast(),/not saved/);assert.equal(await page.locator('#logic-edit').inputValue(),'reviewed replacement x2');
  await fault({logicSet:false});await ev(()=>saveLogic());assert.match(await toast(),/^Pattern logic saved/);assert.equal(await ev(()=>getLogic('pants')[0].label),'REVIEWED REPLACEMENT');
  await fault({logicGet:false,lockGet:true});await account('unreadable-lock');await choose();await ev(()=>startTest());assert.match(await toast(),/Injected lock Get|Test lock could not be read/);assert.equal(paid.length,0);
  await fault({lockGet:false});await ev(()=>renderLogic());await draft('shape before project switch x1');await choose('other-garment');await ev(()=>saveLogic());assert.match(await toast(),/account changed/);
- // Actual Settings fields and warnings follow saved typography and Editor material.
+ // Actual Settings fields follow Editor material; the drawer follows shared Overlay material.
  await account('visual-owner');await choose();const defaults=await ev(()=>structuredClone(MayaTypographyControls.defaults));
  const saved=structuredClone(defaults);for(const role of ['P1','P3'])Object.assign(saved.type[role],{font:'cormorant',size:role==='P1'?12:12,weight:500,style:'italic'});
- Object.assign(saved.editor,{background:'green',fill:70,paddingX:15,paddingY:11,radius:16,borderColor:'gray',rim:73});Object.assign(saved.overlay,{background:'green',fill:65,blur:13,saturation:140});saved.pillX=8;saved.pillY=8;saved.iconColor='#123abc';saved.iconOpacity=65;saved.iconStroke=3;
+ Object.assign(saved.editor,{background:'green',fill:70,paddingX:15,paddingY:11,radius:16,borderColor:'gray',rim:73});Object.assign(saved.drawer,{background:'green',fill:65,blur:13,saturation:140,paddingX:20,paddingY:18,radius:22});saved.pillX=8;saved.pillY=8;saved.iconColor='#123abc';saved.iconOpacity=65;saved.iconStroke=3;
  assert.equal(validDesign(defaults),true);assert.equal(validDesign(saved),true);
  for(const [mode,value] of [['default',defaults],['saved',saved]]){
   design=value;await ev(()=>MayaTypographyControls.load());
@@ -111,14 +116,14 @@ try{
    assert.match(button.font,mode==='saved'?/Cormorant/:/Jost/);assert.equal(button.weight,mode==='saved'?'500':'300');assert.equal(button.paddingX,mode==='saved'?'8px':'14px');
    await page.waitForFunction(size=>getComputedStyle(document.getElementById('toast')).fontSize===size,mode==='saved'?'12px':'10px');
    assert.match(notice.font,mode==='saved'?/Cormorant/:/Jost/);assert.equal(notice.weight,mode==='saved'?'500':'300');
-   assert.equal(await page.locator('#drawer').evaluate(e=>getComputedStyle(e).backdropFilter),mode==='saved'?'blur(13px) saturate(1.4)':'blur(22px) saturate(1.8)');
+   assert.equal(await page.locator('#drawer').evaluate(e=>getComputedStyle(e).backdropFilter),mode==='saved'?'blur(13px) saturate(1.4)':'blur(28px) saturate(1.8)');
    const close=await page.locator('.drawer-burger').evaluate(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect(),g=e.querySelector('svg'),gs=getComputedStyle(g),gr=g.getBoundingClientRect();return {x:s.paddingLeft,y:s.paddingTop,background:s.backgroundColor,width:r.width,height:r.height,glyphWidth:gr.width,glyphHeight:gr.height,color:gs.color,opacity:gs.opacity,stroke:gs.strokeWidth};});
    assert.equal(close.x,mode==='saved'?'8px':'14px');assert.equal(close.y,mode==='saved'?'8px':'6px');assert.equal(close.background,'rgba(3, 15, 29, 0.18)');assert.equal(close.color,mode==='saved'?'rgb(18, 58, 188)':'rgb(170, 181, 196)');assert.equal(close.opacity,mode==='saved'?'0.65':'1');assert.equal(close.stroke,mode==='saved'?'3px':'2px');assert.ok(Math.abs(close.width-close.glyphWidth-2*parseFloat(close.x)-2)<1&&Math.abs(close.height-close.glyphHeight-2*parseFloat(close.y)-2)<1,'Close follows the active Glass/icon preview geometry');
    for(const selector of ['#logic-edit','#logic-save-btn','#logic-reset-btn','#toast']){
     await page.locator(selector).scrollIntoViewIfNeeded();const box=await page.locator(selector).boundingBox();assert.ok(box&&box.x>=-1&&box.x+box.width<=width+1,mode+' '+width+' reachable '+selector);
     assert.ok(await page.locator(selector).evaluate(e=>e.scrollWidth<=e.clientWidth+1),mode+' '+width+' no clipped text '+selector);
    }
-   await fault({measureSet:true});await page.locator('#m-waist').fill('42');assert.match(await toast(),/could not be saved/);
+   await chooseStandalone();await fault({measureSet:true});await page.locator('#m-waist').fill('42');assert.match(await toast(),/could not be saved/);
    assert.equal(await page.locator('#m-waist').evaluate(e=>document.activeElement===e),true);assert.equal(await ev(()=>getMeasures().waist),42);
    const warning=await page.locator('#toast').boundingBox();assert.ok(warning&&warning.x>=0&&warning.x+warning.width<=width+1);assert.ok(await page.locator('#toast').evaluate(e=>e.scrollHeight<=e.clientHeight+1),'Measurement warning remains fully readable');
    if(process.env.MAYA_OPERATION_SAVE_SCREENSHOT){await page.screenshot({path:process.env.MAYA_OPERATION_SAVE_SCREENSHOT+'-'+mode+'-'+width+'.png'});}

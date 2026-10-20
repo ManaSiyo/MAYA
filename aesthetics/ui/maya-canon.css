@@ -79,7 +79,7 @@ html[data-maya-surface="dense"] :is(#drawer,#outbound-drawer,#clients-drawer,dia
   background:var(--maya-drawer-glass);border:var(--maya-hairline) solid var(--maya-line);
   border-radius:18px;box-shadow:var(--maya-drawer-shadow);backdrop-filter:var(--maya-drawer-frost);-webkit-backdrop-filter:var(--maya-drawer-frost);
 }
-html[data-maya-surface="dense"] :is(.panel,.tile,.stat,.affiliate-stat,.detail,.metric-row,.person,.empty,.layout>aside,main,.people-scroll,.model-group,.chart-wrap) {
+html[data-maya-surface="dense"] :is(.panel,.tile,.stat,.detail,.metric-row,.person,.empty,.layout>aside,main,.people-scroll,.model-group,.chart-wrap) {
   background:var(--maya-surface);border-width:var(--maya-hairline);border-color:var(--maya-line);
   box-shadow:none;backdrop-filter:var(--maya-quiet-frost);-webkit-backdrop-filter:var(--maya-quiet-frost);
 }
@@ -88,12 +88,12 @@ html[data-maya-surface="dense"] :is(th,td) { border-color:rgba(255,255,255,.1);b
 /* Table headers inherit their panel; sticky Lead Station headers keep their own fill. */
 html[data-maya-surface="dense"] tbody tr:hover { background:var(--maya-hover); }
 /* Metrics use weight and alignment rather than a decorative typeface. */
-html[data-maya-surface] :is(.tile .v,.money,.bl-step .v,.bl-tile .v,.stat strong,.affiliate-stat strong,.pg-stat-num,.pg-plan-num,.pg-plan-price,.funnel .v) {
+html[data-maya-surface] :is(.tile .v,.money,.bl-step .v,.bl-tile .v,.stat strong,.pg-stat-num,.pg-plan-num,.pg-plan-price,.funnel .v) {
   font-family:var(--maya-font-ui);font-weight:400;font-style:normal;
   font-variant-numeric:tabular-nums;letter-spacing:0;color:var(--maya-ink);
   text-shadow:none;animation:none;
 }
-html[data-maya-surface="dense"] :is(.affiliate-stat strong,.stat strong,.money) {font-size:var(--maya-text-metric);}
+html[data-maya-surface="dense"] :is(.stat strong,.money) {font-size:var(--maya-text-metric);}
 html[data-maya-surface="dense"] :is(#adm-tabtitle,#drawer h3,#outbound-drawer h3,.model-group strong,h2,h3,h4) {
   font-family:var(--maya-font-ui);font-weight:400;font-style:normal;color:var(--maya-ink);
 }
@@ -145,7 +145,6 @@ html[data-maya-surface] .lead-status-menu label {
 html[data-maya-surface] .lead-status-menu label:hover {background:var(--maya-hover);}
 html[data-maya-surface] .lead-status-menu input {margin:0;accent-color:var(--maya-accent);}
 html[data-maya-surface] .lead-status-menu::backdrop {background:transparent;}
-html[data-maya-surface] .affiliate-avatar {background:transparent;border-color:var(--maya-line);box-shadow:none;}
 html[data-maya-surface="dense"] :is(.sdot,.new-dot,.model-group) {box-shadow:none;}
 /* Legacy unclassified fields use the UI font; explicit saved roles take precedence. */
 html[data-maya-surface] :is(table,input,select,textarea,.pg-stat-num,.model-group,.msg-number):not([data-maya-type]) {font-family:var(--maya-font-ui)!important;}
@@ -359,8 +358,6 @@ html[data-maya-surface="dense"] body:has(#plan-a-view) .drawer-head h3 {font:400
 @media(max-width:420px) {
  html[data-maya-surface="dense"] body:has(#plan-a-view) .trace-grid {grid-template-columns:minmax(0,1fr);}
  html[data-maya-surface="dense"] body:has(#plan-a-view) .brand h1 {font-size:16px;letter-spacing:.12em;}
- html[data-maya-surface="dense"] body:has(#plan-a-view) .hpane-drawer {width:calc(100vw - 16px);right:8px;}
- html[data-maya-surface="dense"] body:has(#plan-a-view) .drawer {left:0;right:0;top:8px;bottom:8px;padding:16px;}
 }
 
 /* Outbound priority workspace: compact source rows, quiet follow-up chart. */

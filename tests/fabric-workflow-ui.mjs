@@ -51,6 +51,8 @@ await page.route('**/*',async route=>{
  const path=url.pathname==='/backend.html'?'/backend/backend.html':url.pathname==='/operations.html'?'/backend/operations.html':url.pathname;
  try{return route.fulfill({body:readFileSync(root+decodeURIComponent(path)),contentType:({'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp'})[extname(path)]||'application/octet-stream'});}catch{return route.abort();}
 });
+const seed=async(product,action='save')=>{const book=await service.loadBook(user,'project-A');return service.saveBook(user,{submissionId:'project-A',generation:book.generation,action,garmentId:product.garmentId,product});};
+const favorites=async()=>{await page.locator('.fa-tabs').getByRole('button',{name:'Favorites',exact:true}).click();await page.waitForLoadState('networkidle');};
 const card=p=>page.locator('.fa-product').filter({has:page.locator('.fa-card-title',{hasText:p.title})});
 const waitUntil=async predicate=>{for(let i=0;i<500&&!predicate();i++)await new Promise(r=>setTimeout(r,10));assert.ok(predicate());};
 const open=async(options={})=>page.evaluate(({reference,pieces,options})=>MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,automatic:true,...options}),{reference,pieces,options});
@@ -68,21 +70,24 @@ try{
  assert.ok(bytes<512*1024,'Metadata-only request, got '+bytes+' bytes');
  assert.ok(payload.pieces.every(p=>!Object.keys(p).some(key=>key.startsWith('_'))));assert.equal(payload.piece.id,'coat');assert.equal(JSON.stringify(payload).includes('PRIVATE_PATTERN'),false);
 
- // Every explicit rapid Save is queued against the next acknowledged generation.
- await open({piece:{},forceReset:true});holdAck=true;
- await card(fur).getByRole('button',{name:'Save',exact:true}).click();await waitUntil(()=>!!releaseAck);
- await card(leather).getByRole('button',{name:'Save',exact:true}).click();await page.waitForTimeout(100);
+ // Existing books remain manageable; browsing never silently saves or selects.
+ await seed(fur);await seed(leather);
+ await open({piece:{},forceReset:true});assert.equal(await page.locator('.fa-card-actions').count(),0);
+ assert.equal(saves.length,0,'No new writes from opening/searching');await favorites();holdAck=true;
+ const startGeneration=(await service.loadBook(user,'project-A')).generation;
+ await card(fur).getByRole('button',{name:'Remove',exact:true}).click();await waitUntil(()=>!!releaseAck);
+ await card(leather).getByRole('button',{name:'Remove',exact:true}).click();await page.waitForTimeout(100);
  assert.equal(saves.length,1,'Second mutation waits for the first acknowledgement');releaseAck();releaseAck=null;
- await card(leather).getByRole('button',{name:'Saved',exact:true}).waitFor();
- assert.equal(saves.length,2);assert.equal(saves[0].generation,'0');assert.equal(saves[1].generation,'1');
- await card(fur).getByRole('button',{name:'Use for design',exact:true}).click();await card(fur).getByRole('button',{name:'Selected for design',exact:true}).waitFor();
+ await card(leather).waitFor({state:'detached'});
+ assert.equal(saves.length,2);assert.equal(saves[0].generation,startGeneration);assert.equal(saves[1].generation,String(Number(startGeneration)+1));
+ await seed(fur,'select');
 
  // Actual Operations picker/prompt cannot inherit coat material for pants.
  await page.goto('https://maya-workflow.test/operations.html?submission=project-A');await page.waitForFunction(()=>FILES.saved&&MayaFabricAssistant.selection(FILES.piece)?.garmentId==='coat');
  await page.locator('#test-picker').selectOption('Green alligator pants');
  assert.equal(await page.evaluate(()=>MayaFabricAssistant.selection(FILES.piece)),null);
  assert.doesNotMatch(await page.evaluate(()=>composeGroundedPrompt({type:'pants'},'pants',null,[])),/Brown faux fur|SELECTED FABRIC/);
- await page.locator('#operation-fabrics').click();await card(leather).waitFor();await card(leather).getByRole('button',{name:'Use for design',exact:true}).click();await card(leather).getByRole('button',{name:'Selected for design',exact:true}).waitFor();
+ await seed(leather,'select');await page.locator('#operation-fabrics').click();await card(leather).waitFor();await page.waitForFunction(()=>MayaFabricAssistant.selection(FILES.piece)?.url.endsWith('/green-leather'));assert.equal(await page.locator('.fa-card-actions').count(),0);
  let book=await service.loadBook(user,'project-A');assert.equal(book.selectedByGarment.coat,fur.url);assert.equal(book.selectedByGarment.pants,leather.url);
  assert.match(await page.evaluate(()=>composeGroundedPrompt({type:'pants'},'pants',null,[])),/Green embossed leather/);
  await page.locator('#test-picker').selectOption('Fur coat');assert.equal(await page.evaluate(()=>MayaFabricAssistant.selection(FILES.piece)?.url),fur.url);
@@ -94,44 +99,44 @@ try{
  await page.waitForFunction(()=>MayaFabricAssistant.selection(FILES.piece)?.url.endsWith('/green-leather'));
  assert.match(await page.evaluate(()=>composeGroundedPrompt({type:'pants'},'pants',null,[])),/Green embossed leather/,'Switching during hydration preserves the saved fabric without opening Fabrics');
 
- // A pending Save stays bound to its reviewed garment through same-project switching and renewal.
- searchProducts=[lining];await open({piece:pieces[0],forceReset:true});holdAck=true;
- await card(lining).getByRole('button',{name:'Save',exact:true}).click();await waitUntil(()=>!!releaseAck);
+ // A pending Remove stays bound to its reviewed garment through same-project switching and renewal.
+ await seed(lining);searchProducts=[lining];await open({piece:pieces[0],forceReset:true});await favorites();holdAck=true;
+ await card(lining).getByRole('button',{name:'Remove',exact:true}).click();await waitUntil(()=>!!releaseAck);
  await page.evaluate(({piece,t})=>{MayaFabricAssistant.focusGarment(piece);localStorage.setItem('maya_admin_tok',t);dispatchEvent(new StorageEvent('storage',{key:'maya_admin_tok'}));},{piece:pieces[1],t:token(user.sub,100)});
- releaseAck();releaseAck=null;await page.getByText('Saved: Fur coat.',{exact:true}).waitFor();
- book=await service.loadBook(user,'project-A');assert.ok(book.items.some(p=>p.url===lining.url));assert.equal(await page.evaluate(piece=>MayaFabricAssistant.selection(piece)?.url, pieces[1]),leather.url);
+ releaseAck();releaseAck=null;await page.getByText('Removed.',{exact:true}).waitFor();
+ book=await service.loadBook(user,'project-A');assert.ok(!book.items.some(p=>p.url===lining.url));assert.equal(await page.evaluate(piece=>MayaFabricAssistant.selection(piece)?.url, pieces[1]),leather.url);
 
- // Failed writes do not invent Saved state and remain explicitly retryable.
- searchProducts=[extra];await open({piece:pieces[0],forceReset:true});failSave=true;
- await card(extra).getByRole('button',{name:'Save',exact:true}).click();await page.getByText('Fixture save failed.',{exact:true}).waitFor();
- assert.equal((await service.loadBook(user,'project-A')).items.some(p=>p.url===extra.url),false);
- await card(extra).getByRole('button',{name:'Save',exact:true}).click();await card(extra).getByRole('button',{name:'Saved',exact:true}).waitFor();
+ // Failed removals retain the saved fabric and remain explicitly retryable.
+ await seed(extra);searchProducts=[extra];await open({piece:pieces[0],forceReset:true});await favorites();failSave=true;
+ await card(extra).getByRole('button',{name:'Remove',exact:true}).click();await page.getByText('Fixture save failed.',{exact:true}).waitFor();
+ assert.equal((await service.loadBook(user,'project-A')).items.some(p=>p.url===extra.url),true);
+ await card(extra).getByRole('button',{name:'Remove',exact:true}).click();await card(extra).waitFor({state:'detached'});
 
  // A hung transport has a deadline; uncertain writes are reconciled, never replayed automatically.
  const stalled=makeProduct('stalled-fur','Stalled fur fabric','Brown acrylic fur fabric. Sold by the yard.','coat','Fur coat');products.push(stalled);searchProducts=[stalled];
- await open({piece:pieces[0],forceReset:true});
+ await seed(stalled);await open({piece:pieces[0],forceReset:true});await favorites();
  await page.evaluate(()=>{const native=AbortSignal.timeout;AbortSignal.timeout=ms=>{if(ms===15000){AbortSignal.timeout=native;return native.call(AbortSignal,150);}return native.call(AbortSignal,ms);};const original=window.fetch;window.fetch=(url,options)=>{if(String(url).endsWith('/fabrics/lookbook')&&options?.method==='POST'){window.fetch=original;return new Promise((resolve,reject)=>options.signal.addEventListener('abort',()=>reject(options.signal.reason),{once:true}));}return original(url,options);};});
- const attempts=saves.length;await card(stalled).getByRole('button',{name:'Save',exact:true}).click();
- await page.getByText('Save not confirmed. Check Favorites before retrying.',{exact:true}).waitFor();
+ const attempts=saves.length;await card(stalled).getByRole('button',{name:'Remove',exact:true}).click();
+ await page.getByText('Change not confirmed. Check Favorites before retrying.',{exact:true}).waitFor();
  await page.waitForTimeout(250);assert.equal(saves.length,attempts,'No automatic replay after an uncertain write');
- await card(stalled).getByRole('button',{name:'Save',exact:true}).click();await card(stalled).getByRole('button',{name:'Saved',exact:true}).waitFor();
+ await card(stalled).getByRole('button',{name:'Remove',exact:true}).click();await card(stalled).waitFor({state:'detached'});
 
  // Switching submissions cancels unsent actions; the already accepted action remains in A.
  const late=makeProduct('late-fur','Late fur fabric','Brown acrylic faux fur fabric. Sold by the yard.','coat','Fur coat');
  const unsent=makeProduct('unsent-fur','Unsent fur fabric','Brown acrylic faux fur fabric. Sold by the yard.','coat','Fur coat');products.push(late,unsent);searchProducts=[late,unsent];
- await open({piece:pieces[0],forceReset:true});holdAck=true;const before=saves.length;
- await card(late).getByRole('button',{name:'Save',exact:true}).click();await waitUntil(()=>!!releaseAck);await card(unsent).getByRole('button',{name:'Save',exact:true}).click();
+ await seed(late);await seed(unsent);await open({piece:pieces[0],forceReset:true});await favorites();holdAck=true;const before=saves.length;
+ await card(late).getByRole('button',{name:'Remove',exact:true}).click();await waitUntil(()=>!!releaseAck);await card(unsent).getByRole('button',{name:'Remove',exact:true}).click();
  await page.waitForTimeout(250); // Exercise a slow interaction after the independent timeout probe.
  const acknowledgement=page.waitForResponse(response=>response.url().endsWith('/fabrics/lookbook')&&response.request().method()==='POST'&&response.request().postDataJSON().product.url===late.url);
  await open({submissionId:'project-B',piece:pieces[0],forceReset:true});releaseAck();releaseAck=null;
  await (await acknowledgement).finished();await page.waitForLoadState('networkidle');
- assert.equal(saves.length,before+1);assert.equal((await service.loadBook(user,'project-A')).items.some(p=>p.url===unsent.url),false);assert.equal((await service.loadBook(user,'project-B')).items.length,0);
+ assert.equal(saves.length,before+1);assert.equal((await service.loadBook(user,'project-A')).items.some(p=>p.url===unsent.url),true);assert.equal((await service.loadBook(user,'project-B')).items.length,0);
  assert.equal(await page.evaluate(piece=>MayaFabricAssistant.selection(piece),pieces[0]),null);
  // Newly reachable saved/error states retain the same live typography authority.
  await page.evaluate(()=>MayaTypographyControls.ready);
  for(const mode of ['default','saved']){
   await page.evaluate(mode=>{const d=structuredClone(MayaTypographyControls.defaults);if(mode==='saved'){Object.assign(d.type.P1,{font:'cormorant',size:16,weight:450,color:'white'});d.pillX=22;d.pillY=10;}MayaTypographyControls.apply(d);},mode);
-  await page.evaluate(()=>{document.querySelector('.fa-save-status').textContent='Save not confirmed. Check Favorites before retrying.';});
+  await page.evaluate(()=>{document.querySelector('.fa-save-status').textContent='Change not confirmed. Check Favorites before retrying.';});
   for(const width of [320,390,768,1024,1440,1920]){
    await page.setViewportSize({width,height:1000});
    assert.ok(await page.locator('#fabric-assistant').evaluate(el=>el.scrollWidth<=el.clientWidth+1),mode+' queued/save error fits '+width);
@@ -142,5 +147,5 @@ try{
   }
  }
  assert.deepEqual(errors,[]);
- console.log('Fabric workflow: bounded metadata ('+bytes+' bytes), independent inventory, queued/CAS saves, retry, per-garment material/prompt/reload, renewal and submission cancellation passed. Synthetic records only.');
+ console.log('Fabric workflow: bounded metadata ('+bytes+' bytes), independent inventory, queued/CAS historical-favorite removals, retry, per-garment material/prompt/reload, renewal and submission cancellation passed. Synthetic records only.');
 }finally{for(const route of catalogRoutes)await route.abort().catch(()=>{});releaseAck?.();releaseBook?.();await browser.close();}

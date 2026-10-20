@@ -78,7 +78,7 @@ function harness(page) {
   return {ctx,store,records,assets,writes,reads,notices,timers,hooks,assetURL,board,saveButton,switchUser(next){user=next;ctx._authSeq++;},user:()=>user};
 }
 
-for(const page of ['frontend/index.html','playground/index.html']) {
+for(const page of ['frontend/index.html']) {
   for(const operation of ['index','list','reconcile','migration','boot']) {
     for(const returnToA of [false,true]) {
       const h=harness(page),gate=deferred();let blocked=false;
@@ -304,15 +304,4 @@ for(const page of ['frontend/index.html','playground/index.html']) {
     assert.equal(h.assets.size,0);assert.equal(h.writes.length,0);
   }
   console.log(`${page}: account/session races, dirty/create/flush barriers and independent share copies passed.`);
-}
-{
-  // Avatar preservation is staged in Playground only, per the promotion rule.
-  const h=harness('playground/index.html');h.board();const project=h.store.currentId,original='users/A/projects/'+project+'/images/face.jpg';
-  h.assets.set(original,{type:'image/jpeg',content:'Portrait'});h.ctx.lastSummary={client:{name:'Client'},_face_photo:h.assetURL(original)};
-  h.ctx.lastSummary.client.name='Avery';await h.ctx._saveCurrentAvatarToLibrary(true);
-  const saved=h.records.get('users/A/settings/avatars').list[0];assert.ok(saved.face.includes(encodeURIComponent('users/A/projects/avatars/images/')));
-  await h.store.remove(project);assert.equal(h.assets.has(original),false);assert.ok(h.assets.has(decodeURIComponent(saved.face.split('/').at(-1))));
-  const failed=harness('playground/index.html');failed.ctx.lastSummary={client:{name:'Avery'},_face_photo:'https://source.invalid/face'};failed.hooks.upload=async()=>{throw Error('Upload failed');};
-  await assert.rejects(failed.ctx._saveCurrentAvatarToLibrary(true),/Upload failed/);assert.equal(failed.records.has('users/A/settings/avatars'),false);
-  console.log('Playground avatar: HTTPS face owns a library copy, survives source-project deletion, and failed upload never saves a roster entry.');
 }

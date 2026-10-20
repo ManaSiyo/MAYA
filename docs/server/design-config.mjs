@@ -5,16 +5,18 @@ const DESIGN_ROLES_V2 = new Set(['H0','H1','H2','H3','H4','H5','P1','P2','P3']);
 const BACKGROUNDS = ['black','gray','blue','yellow','green','pink'];
 export function validDesign(body) {
   if (!body || typeof body !== 'object' || !body.type || typeof body.type!=='object' || Array.isArray(body.type) || !body.glass || !body.overlay) return false;
-  if (Object.keys(body).some(k => !['type','typeVersion','glass','regularPill','overlay','finish','pillX','pillY','editor','inner','filter','table','iconSize','dropdownHeight','iconPillGap','iconTextGap','statusStyles','sectionSpacing','layoutSpacing','semanticStyles','iconColor','iconOpacity','iconStroke','checkbox','scrollbar'].includes(k))) return false;
+  if (Object.keys(body).some(k => !['type','typeVersion','glass','regularPill','overlay','finish','pillX','pillY','editor','inner','filter','table','iconSize','dropdownHeight','iconPillGap','iconTextGap','statusStyles','sectionSpacing','layoutSpacing','semanticStyles','iconColor','iconOpacity','iconStroke','checkbox','scrollbar','drawer'].includes(k))) return false;
   for(const [kind,ranges,colors,extra] of [
     ['checkbox',{size:[12,28],radius:[0,14],fill:[0,100],rim:[0,100]},['checkedColor','checkColor'],['background','borderColor']],
-    ['scrollbar',{width:[6,20],radius:[0,16],thumbOpacity:[0,100],trackOpacity:[0,100]},['thumbColor','trackColor'],[]]
+    ['scrollbar',{width:[2,20],radius:[0,16],thumbOpacity:[0,100],trackOpacity:[0,100]},['thumbColor','trackColor'],[]]
   ])if(body[kind]!==undefined){
-    const v=body[kind],keys=[...Object.keys(ranges),...colors,...extra];
-    if(!v||typeof v!=='object'||Array.isArray(v)||Object.keys(v).length!==keys.length||Object.keys(v).some(k=>!keys.includes(k)))return false;
+    const v=body[kind],optional=kind==='scrollbar'?['version','length','hideAfter','autoHide']:[],keys=[...Object.keys(ranges),...colors,...extra];
+    if(!v||typeof v!=='object'||Array.isArray(v)||keys.some(k=>!Object.hasOwn(v,k))||Object.keys(v).some(k=>!keys.includes(k)&&!optional.includes(k)))return false;
     if(Object.entries(ranges).some(([key,[min,max]])=>!Number.isInteger(v[key])||v[key]<min||v[key]>max)||colors.some(key=>typeof v[key]!=='string'||!/^#[0-9a-f]{6}$/i.test(v[key])))return false;
+    if(kind==='scrollbar'&&(v.version!==undefined&&v.version!==2||v.autoHide!==undefined&&typeof v.autoHide!=='boolean'||v.length!==undefined&&(!Number.isInteger(v.length)||v.length<25||v.length>100)||v.hideAfter!==undefined&&(!Number.isInteger(v.hideAfter)||v.hideAfter<200||v.hideAfter>3000)))return false;
     if(kind==='checkbox'&&(!BACKGROUNDS.includes(v.background)||!['black','white','gray'].includes(v.borderColor)))return false;
   }
+  if(body.drawer!==undefined){const d=body.drawer,ranges={fill:100,rim:100,blur:40,saturation:200,radius:24,paddingX:40,paddingY:40};if(!d||typeof d!=='object'||Array.isArray(d)||Object.keys(d).length!==9||!['navy',...BACKGROUNDS].includes(d.background)||!['black','white','gray'].includes(d.borderColor)||Object.entries(ranges).some(([k,max])=>!Number.isInteger(d[k])||d[k]<0||d[k]>max)||Object.keys(d).some(k=>!Object.hasOwn(ranges,k)&&!['background','borderColor'].includes(k)))return false;}
   if(Object.hasOwn(body,'typeVersion')&&body.typeVersion!==2)return false;
   for(const k of ['iconSize','dropdownHeight'])if(body[k]!==undefined&&(!Number.isInteger(body[k])||body[k]<24||body[k]>48))return false;
   for(const k of ['iconPillGap','iconTextGap'])if(body[k]!==undefined&&(!Number.isInteger(body[k])||body[k]<0||body[k]>32))return false;

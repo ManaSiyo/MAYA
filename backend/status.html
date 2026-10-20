@@ -9,12 +9,6 @@
 <!-- Keep the display version in step with the app. Cloud Build stamps
      maya-build with the published commit so same-number pushes are visible. -->
 <script>
-const IS_AFFILIATES = location.pathname === '/affiliates.html';
-if (IS_AFFILIATES) {
-  document.documentElement.classList.add('affiliates-view');
-  document.title = 'Affiliates | MAYA';
-}
-
 try {
   const _buildNow = (document.querySelector('meta[name="maya-build"]') || {}).content || '';
   const _vNow = ((document.querySelector('meta[name="maya-version"]') || {}).content || '') +
@@ -352,17 +346,13 @@ try {
               width:100vw;margin-left:calc(50% - 50vw);
               height:34vh;min-height:260px;scrollbar-width:none}
   #subs-strip::-webkit-scrollbar{display:none}
-  .sub-tile{position:relative;flex:0 0 auto;height:100%;aspect-ratio:3/2;border-radius:22px;overflow:hidden;
+  .sub-tile{position:relative;flex:0 0 auto;height:100%;aspect-ratio:3/2;max-inline-size:calc(100vw - 56px);border-radius:22px;overflow:hidden;
             border:var(--maya-hairline) solid rgba(255,255,255,0.28);background:rgba(4,7,16,0.75);text-decoration:none;color:var(--ink);
             box-shadow:0 10px 34px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12);
             transition:border-color .2s, transform .2s, box-shadow .2s}
   .sub-tile:hover{border-color:rgba(255,255,255,0.55);transform:scale(1.012);box-shadow:0 14px 48px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.12)}
   .sub-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0.95}
-  .sub-tile .veil{position:absolute;inset:auto 0 0 0;padding:18px 10px 7px;text-align:center;
-                  background:linear-gradient(transparent, rgba(0,4,12,0.85));opacity:0;transition:opacity .25s}
-  .sub-tile:hover .veil{opacity:1}
-  .sub-tile .nm{display:block;font-size:12.5px;line-height:1.15}
-  .sub-tile .tm{display:block;font-family:var(--maya-font-ui);font-size:7.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--dim);margin-top:1px}
+  @media(max-width:640px){.sub-tile{flex-basis:calc(100vw - 56px);width:calc(100vw - 56px);min-inline-size:0;aspect-ratio:auto}}
   .sub-tile .badge{position:absolute;top:10px;left:10px;font-family:var(--maya-font-ui);font-size:8.5px;
                    letter-spacing:0.16em;text-transform:uppercase;color:#0b1408;background:var(--green);
                    border-radius:20px;padding:3px 9px}
@@ -491,7 +481,10 @@ try {
     opacity:0;visibility:hidden;transition:opacity .18s ease 1s,visibility 0s linear 1.18s}
   .card-mana:hover .mana-chips,.card-mana:focus-within .mana-chips,.card-mana .mana-chips:hover{
     opacity:1;visibility:visible;transition-delay:0s}
-  @media(max-width:640px){.card-mana .mana-chips{flex-direction:column;align-items:flex-end;gap:4px}}
+  @media(max-width:640px){
+    .card-maya .pg-chips,.card-mana .mana-chips{left:50%;right:auto;top:100%;bottom:auto;transform:translateX(-50%);flex-direction:column;align-items:center;gap:4px;max-width:calc(100vw - 28px)}
+    .card-maya:focus-within .pg-chips{opacity:1;pointer-events:auto}
+  }
   .warn{margin-top:22px;border:var(--maya-hairline) solid rgba(253,164,175,0.3);border-radius:12px;padding:11px 15px;
         font-size:var(--maya-text-caption);color:var(--rose);background:rgba(253,164,175,0.06)}
   .money{margin-top:14px;font-size:var(--maya-text-caption);color:var(--dim);line-height:1.8}
@@ -768,7 +761,7 @@ try {
 #adm-mkt #leads-table .lead-h-stage{width:160px}.lead-stage{max-width:145px;}
 #model-snapshot{font-size:11px;text-align:left;padding:12px;overflow-wrap:anywhere}#drawer.msgs #model-snapshot{display:none}
 
-/* Shared Admin/Affiliates CRM typography and translucent controls. */
+/* Shared Admin CRM typography and translucent controls. */
 #adm-mkt #leads-table td,#adm-mkt #leads-table .lead-note-vp,#adm-mkt #leads-table .lead-stage,#adm-mkt #leads-table .lead-open{font:400 13px/1.55 var(--maya-font-ui);color:#fff;font-variant-numeric:tabular-nums}
 #adm-mkt #leads-table th{font:400 11px var(--maya-font-ui);letter-spacing:.12em;vertical-align:middle;color:#fff}
 #adm-mkt #leads-table .lead-stage{max-width:none;width:150px;text-align:center;text-align-last:center;padding:6px;background:transparent;border:0}
@@ -786,7 +779,6 @@ try {
 #adm-mkt #leads-table .lead-open time,#adm-mkt #leads-table .category-badge{flex:none}
 #adm-mkt #leads-table .lead-identity{display:block!important;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
 #adm-mkt #leads-table .category-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;border:1px solid var(--line);border-radius:100px;color:var(--dim);font:10px var(--maya-font-ui)}
-.affiliate-reload{border:1px solid var(--line);border-radius:100px;background:transparent;color:var(--ink);cursor:pointer}
 
   #adm-mkt #leads-table .lead-open{flex-direction:column;align-items:stretch!important;gap:3px;white-space:normal}
   .lead-note-edit{display:block;width:100%;text-align:inherit;font:inherit;color:inherit;border:0;background:none;cursor:text;padding:0}
@@ -820,26 +812,9 @@ try {
   .lead-note-inline{width:100%;text-align:left}.lead-note-inline textarea{box-sizing:border-box;width:100%;resize:vertical;font:inherit;color:inherit;background:transparent;border:1px solid var(--maya-line);border-radius:6px;padding:6px;min-height:60px}.lead-note-inline p{margin:4px 0}.lead-note-inline .dialog-actions{display:flex;justify-content:flex-end;gap:4px;flex-wrap:wrap}
 </style>
 <style>
-  #affiliate-profile{display:none}
-  .affiliates-view #affiliate-profile{display:block;text-align:center;margin:12px auto 32px;max-width:900px}
-  .affiliates-view #adm-scroll > .wrap > :not(#affiliate-profile):not(#signin-panel):not(#adm-mkt),
-  .affiliates-view #adm-mkt > :not(#leads-fold),.affiliates-view #ticker-bar{display:none!important}
-  .affiliates-view #adm-scroll{padding-top:100px}
-  .affiliate-avatar{width:116px;height:116px;border-radius:50%;margin:20px auto 12px;display:grid;place-items:center;border:var(--maya-hairline) solid rgba(169,201,255,.6);background:radial-gradient(circle at 35% 25%,#294c75,#091527);color:#dbe8ff;font:var(--maya-text-metric) var(--maya-font-ui);box-shadow:0 0 40px #5f9fe51c}
-  #affiliate-profile h1{font-weight:400;font-size:36px;margin:6px 0}
-  .affiliate-beta{font:10px var(--maya-font-ui);letter-spacing:.18em;color:var(--amber);text-transform:uppercase}
-  .affiliate-caption,#affiliate-status{font:var(--maya-text-caption)/1.7 var(--maya-font-ui);color:var(--dim)}
-  #affiliate-status:empty{display:none}
-  .affiliate-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0 10px}
-  .affiliate-stat{padding:18px 8px;border:var(--maya-hairline) solid var(--line);border-radius:18px;}
-  .affiliate-stat strong{display:block;font:var(--maya-text-metric) var(--maya-font-ui);color:var(--ink)}
-  .affiliate-stat span{font:9px var(--maya-font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
-  .affiliates-view #adm-mkt{margin-top:0}
-  .affiliates-view #top-left-brand .brand-chips,.affiliates-view #adm-tab-systems,.affiliates-view #adm-tab-logs{display:none!important}
   #leads-bar button.lead-tool{font-size:12.5px;line-height:1;width:32px;height:26px;padding:0}
   .lead-stage{background:transparent;border:0;max-width:86px}
   .lead-stage option{background:#0d1120}
-  @media(max-width:640px){.affiliate-stats{grid-template-columns:repeat(2,1fr)}.affiliates-view #adm-scroll{padding-top:80px}.affiliate-avatar{width:96px;height:96px}}
 #admin-design{outline:none!important;box-sizing:border-box;position:fixed;inset:0;width:100vw;height:100dvh!important;max-width:100vw!important;max-height:100dvh!important;margin:0!important;padding:0!important;border:0!important;background:#000}#admin-design::backdrop{background:#000}#admin-design iframe{display:block;width:100%;height:100%;border:0;outline:none}
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=14">
@@ -872,22 +847,7 @@ try {
   </button>
 </div>
 
-<script>
-// Affiliates is a separate workspace. Its brand returns home, never starts voice.
-if (IS_AFFILIATES) {
-  const brand = document.querySelector('#top-left-brand .brand-title');
-  brand.textContent = 'Affiliates';
-  brand.closest('a').title = 'Back to Admin';
-  const logo = document.querySelector('#top-left-brand .maya-logo-wrap');
-  const home = document.createElement('a');
-  home.className = logo.className;
-  home.href = '/status.html';
-  home.title = 'Back to Admin';
-  home.setAttribute('aria-label', 'Back to Admin');
-  home.innerHTML = logo.innerHTML;
-  logo.replaceWith(home);
-}
-</script>
+
 <!-- v14.02: the day reads itself out on its own strip UNDER the panes, between
      the wordmark and the menu, so the drawer slides over it. -->
 <div id="ticker-bar" aria-hidden="false">
@@ -913,7 +873,7 @@ if (IS_AFFILIATES) {
      copy of the frontend app. Pane 2 is the drawer; pane 1 is everything else. -->
 <div id="adm-hscroll">
 <div class="hpane hpane-drawer">
-<div id="drawer">
+<div id="drawer" data-maya-drawer>
   <h3 class="tint">Systems</h3>
   <div id="top-lights" onclick="runChecks()" title="Tap to check again">
     <span class="status-item"><span class="sdot wait" id="d-site"></span><span class="lgt-lbl">Site</span></span>
@@ -984,21 +944,21 @@ if (IS_AFFILIATES) {
   <div class="systems-tools"><a data-maya-type="P3" class="maya-glass-button design-quicklink" href="/aesthetics/aesthetic-control.html">Aesthetic Control</a>
   <button data-maya-type="P3" class="maya-glass-button design-quicklink" onclick="admTab('automations')">Automations</button></div>
   <h3>Vault</h3>
-  <a href="/outbound.html#gmail">Gmail<small>Account mailboxes</small></a>
-  <a href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank" rel="noopener">Firebase<small>Data and hosting</small></a>
+  <a data-maya-type="P2" href="/outbound.html#gmail">Gmail<small data-maya-type="P1">Account mailboxes</small></a>
+  <a data-maya-type="P2" href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank" rel="noopener">Firebase<small data-maya-type="P1">Data and hosting</small></a>
   <h3>Behind the scenes</h3>
-  <a href="https://console.cloud.google.com/run/detail/us-west1/maya-api/metrics?project=pro-maya" target="_blank" rel="noopener">Cloud Run<small>API logs and revisions</small></a>
-  <a href="https://console.cloud.google.com/vertex-ai?project=pro-maya" target="_blank" rel="noopener">Vertex AI<small>Google model console</small></a>
-  <a href="https://platform.openai.com/settings/organization/usage" target="_blank" rel="noopener">OpenAI usage<small>Tokens and usage</small></a>
-  <a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener">OpenAI billing<small>Invoices and credits</small></a>
-  <a href="https://aistudio.google.com/usage" target="_blank" rel="noopener">Gemini usage<small>Google model usage</small></a>
-  <a href="https://console.cloud.google.com/billing?project=pro-maya" target="_blank" rel="noopener">Google Cloud billing<small>Cloud costs</small></a>
+  <a data-maya-type="P2" href="https://console.cloud.google.com/run/detail/us-west1/maya-api/metrics?project=pro-maya" target="_blank" rel="noopener">Cloud Run<small data-maya-type="P1">API logs and revisions</small></a>
+  <a data-maya-type="P2" href="https://console.cloud.google.com/vertex-ai?project=pro-maya" target="_blank" rel="noopener">Vertex AI<small data-maya-type="P1">Google model console</small></a>
+  <a data-maya-type="P2" href="https://platform.openai.com/settings/organization/usage" target="_blank" rel="noopener">OpenAI usage<small data-maya-type="P1">Tokens and usage</small></a>
+  <a data-maya-type="P2" href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener">OpenAI billing<small data-maya-type="P1">Invoices and credits</small></a>
+  <a data-maya-type="P2" href="https://aistudio.google.com/usage" target="_blank" rel="noopener">Gemini usage<small data-maya-type="P1">Google model usage</small></a>
+  <a data-maya-type="P2" href="https://console.cloud.google.com/billing?project=pro-maya" target="_blank" rel="noopener">Google Cloud billing<small data-maya-type="P1">Cloud costs</small></a>
   <h3>Outside tools</h3>
-  <a href="https://ads.google.com/aw/overview" target="_blank" rel="noopener">Google Ads Manager<small>Search campaigns</small></a>
-  <a href="https://adsmanager.facebook.com/adsmanager" target="_blank" rel="noopener">Meta Ads Manager<small>Social campaigns</small></a>
-  <a href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/home" target="_blank" rel="noopener">Wix<small>Website and forms</small></a>
+  <a data-maya-type="P2" href="https://ads.google.com/aw/overview" target="_blank" rel="noopener">Google Ads Manager<small data-maya-type="P1">Search campaigns</small></a>
+  <a data-maya-type="P2" href="https://adsmanager.facebook.com/adsmanager" target="_blank" rel="noopener">Meta Ads Manager<small data-maya-type="P1">Social campaigns</small></a>
+  <a data-maya-type="P2" href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/home" target="_blank" rel="noopener">Wix<small data-maya-type="P1">Website and forms</small></a>
   <h3>Privacy</h3>
-  <a href="/privacy.html">Privacy policy<small>Data privacy terms</small></a>
+  <a data-maya-type="P2" href="/privacy.html">Privacy policy<small data-maya-type="P1">Data privacy terms</small></a>
   </div>
 
   <div id="drawer-automations" hidden>
@@ -1046,16 +1006,13 @@ if (IS_AFFILIATES) {
 
   <!-- v13.72: the health lights moved into the drawer, per Fromsa, so the top
        of the page is the marquee row and nothing sits above the three doors. -->
-  <!-- v13.45: three doors, in Fromsa's order: Mana, Marketing, MAYA.
-       Hovering MAYA reveals the two back rooms, Operations Room Beta and
-       the Playground, as small chips to its right. -->
+  <!-- The studio and MAYA doors retain links to active workspaces. -->
   <div class="grid doors" style="margin:8px 0 2px">
     <!-- v13.46: everything in caps, per Fromsa: MANA SIYO, MARKETING, MAYA. -->
     <span class="card card-mana" role="link" tabindex="0"
           onclick="window.open('https://manasiyo.com','_blank')"
           onkeydown="if(event.key==='Enter')window.open('https://manasiyo.com','_blank')">
       <span class="mana-chips">
-        <a class="pg-chip" href="/affiliates.html" target="_blank" rel="noopener" onclick="event.stopPropagation()" onkeydown="event.stopPropagation()" title="Open Affiliates in a new tab">affiliates</a>
         <a class="pg-chip" href="https://manasiyo.com/design" target="_blank"
            onclick="event.stopPropagation()" title="The manasiyo.com design studio.">design studio</a>
         <a class="pg-chip" href="https://manage.wix.com/dashboard/a4ad1a21-d8dc-4986-8ac2-9db20fbf366f/home?referralInfo=my-sites" target="_blank"
@@ -1070,26 +1027,11 @@ if (IS_AFFILIATES) {
       <span class="pg-chips">
         <a class="pg-chip" href="/operations.html" target="_blank"
            onclick="event.stopPropagation()" title="The test bench.">operation room</a>
-        <a class="pg-chip" href="/playground.html" target="_blank"
-           onclick="event.stopPropagation()" title="Your private copy for trying new things. The live app never sees it.">playground</a>
         <a class="pg-chip" href="/outbound.html" target="_blank" rel="noopener" onclick="event.stopPropagation()" onkeydown="event.stopPropagation()">outbound</a>
       </span></span>
   </div>
 
 
-  <section id="affiliate-profile" aria-label="Affiliates dashboard">
-<button class="affiliate-reload" onclick="reloadLeads()" title="Reload leads" aria-label="Reload leads">&#8635;</button>
-    <div class="affiliate-avatar" aria-label="Fromsa profile">F</div>
-    <div class="affiliate-beta">Affiliates</div>
-    <h1>Fromsa</h1>
-    <div class="affiliate-stats">
-      <div class="affiliate-stat"><strong id="affiliate-total">&#183;</strong><span>Total leads</span></div>
-      <div class="affiliate-stat"><strong id="affiliate-week">&#183;</strong><span>New this week</span></div>
-      <div class="affiliate-stat"><strong id="affiliate-contacted">&#183;</strong><span>Contacted</span></div>
-      <div class="affiliate-stat"><strong id="affiliate-closed">&#183;</strong><span>Closed</span></div>
-    </div>
-    <p id="affiliate-status" role="status" aria-live="polite">Sign in with your admin account to load leads.</p>
-  </section>
   <div id="signin-panel" class="status-bar" style="margin-top:0">
     <span style="font-size:14.5px;color:var(--dim)">Sign in once to open submissions, traffic and Leads.</span>
     <span id="gsi-slot" style="margin:0 0 0 auto"></span>
@@ -1455,7 +1397,6 @@ async function markFeatureDone(btn){
 // keeps the browser back-swipe from ever firing. Maya can call this too, so
 // "open the drawer" / "close the drawer" and an auto-open on a confirm both work.
 function toggleDrawer(force) {
-  if (IS_AFFILIATES) admTab('messages');
   const hs = document.getElementById('adm-hscroll');
   if (!hs) return;
   const max = hs.scrollWidth - hs.clientWidth;
@@ -1464,7 +1405,7 @@ function toggleDrawer(force) {
   if (force === true) target = max;
   else if (force === false) target = 0;
   else target = isOpen ? 0 : max;
-  if (target > 0 && !IS_AFFILIATES && document.getElementById('adm-tab-systems')?.classList.contains('on')) window.loadModelSnapshot?.();
+  if (target > 0 && document.getElementById('adm-tab-systems')?.classList.contains('on')) window.loadModelSnapshot?.();
   hs.scrollTo({ left: target, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   const btn = document.querySelector('.top-btn.hamburger');
   if (btn) btn.setAttribute('aria-expanded', target > 0 ? 'true' : 'false');
@@ -1652,10 +1593,6 @@ function _adoptToken(t, firstLoad) {
   _cacheTok(t);
   _showSignin(false);
   _scheduleRenew(t);
-  if (IS_AFFILIATES) {
-    if (window.loadAffiliateLeads) window.loadAffiliateLeads();
-    return;
-  }
   runChecks(); loadTraffic(); loadSubmissions(); window.loadModelSnapshot?.();
   try{ if(window.loadMkt) window.loadMkt(); }catch(_){}
   try{ loadFeatureRequests(); }catch(_){}
@@ -1690,7 +1627,6 @@ function _cmdBlock(label) {
 let _expiredAt = 0;
 function _expired(expectedToken) {
   if(expectedToken&&expectedToken!==_idTok)return;
-  if (IS_AFFILIATES && window.clearAffiliateLeads) window.clearAffiliateLeads('Sign in again to load leads.');
   _idTok = null;
   _adminSession++;window.dispatchEvent(new Event('maya-owner-session-changed'));
   delete window.MAYA_MODEL_SNAPSHOT;window.dispatchEvent(new CustomEvent("maya-model-clear"));
@@ -1719,7 +1655,6 @@ function _subsNote(html) {
 }
 let _subsSeq = 0;
 async function loadSubmissions() {
-  if (IS_AFFILIATES) return;
   const requestSeq = ++_subsSeq,context=_adminContext(),auth=_idTok;
   const strip = document.getElementById('subs-strip');
   if (!_idTok) {
@@ -1762,7 +1697,6 @@ async function loadSubmissions() {
   window.MAYA_ADMIN_DATA.submissions = data;
   document.getElementById('subs-count').textContent = data.total ? data.total + ' total' : '';
   const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const when = iso => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   const prettyName = n => { const m = String(n).match(/^(.*?)-\d{2}-\d{2}-\d{4}\s*$/); const r = (m ? m[1] : String(n)).trim();
     return r.charAt(0).toUpperCase() + r.slice(1); };
   // Newest first: API already returns createdTime desc, so the latest lands leftmost.
@@ -1808,9 +1742,9 @@ async function loadSubmissions() {
     const img = thumbId
       ? '<img loading="lazy" data-thumb="' + esc(thumbId) + '" alt="" onerror="this.remove()">'
       : '<img src="/aesthetics/ui/logo-circle.png" alt="" style="position:absolute;inset:0;margin:auto;width:44px;height:44px;object-fit:contain;opacity:0.3">';
-    return '<a class="sub-tile" target="_blank" rel="noopener" href="/backend.html?submission=' + encodeURIComponent(f.id) + '&name=' + encodeURIComponent(f.name) + (thumbId ? '&img=' + encodeURIComponent(thumbId) : '') + '" title="Open the Brief">' +
+    return '<a class="sub-tile" target="_blank" rel="noopener" href="/backend.html?submission=' + encodeURIComponent(f.id) + '&name=' + encodeURIComponent(f.name) + (thumbId ? '&img=' + encodeURIComponent(thumbId) : '') + '" aria-label="Open Brief for ' + esc(prettyName(f.name)) + '">' +
       img + (state ? '<span class="badge' + (state === 'arriving' ? '' : ' stale') + '">' + state + '</span>' : '') +
-      '<span class="veil"><span class="nm">' + esc(prettyName(f.name)) + '</span><span class="tm">' + when(f.createdTime) + '</span></span></a>';
+      '</a>';
   }).join('') +
   '';
   _paintThumbs();
@@ -1871,7 +1805,6 @@ document.addEventListener('visibilitychange', () => {
 
 let _trafficSeq = 0;
 async function loadTraffic() {
-  if (IS_AFFILIATES) return;
   const requestSeq = ++_trafficSeq,context=_adminContext(),auth=_idTok;
   const tiles = document.getElementById('traffic-tiles');
   if (!_idTok) { _note('Waiting for the one sign in at the top of the page.'); return; }
@@ -2205,8 +2138,8 @@ async function _mayaQueueLeadAction(query,kind,note,request,contact,context=_adm
   return _mayaQueueAction({kind,lead:found.lead,note:_mayaEscText(note).slice(0,2000),
     request:_mayaEscText(request).slice(0,400),contact:contact||''},context);
 }
-if(!IS_AFFILIATES && _idTok) loadMayaCommand();
-setInterval(()=>{ if(!IS_AFFILIATES && _idTok&&document.visibilityState==='visible') loadMayaCommand(); },120000);
+if(_idTok) loadMayaCommand();
+setInterval(()=>{ if(_idTok&&document.visibilityState==='visible') loadMayaCommand(); },120000);
 </script>
 <script>
 // ═══ v13.71: MAYA'S VOICE. Voice to voice over WebRTC, admin only. The
@@ -2233,7 +2166,7 @@ function _voiceLive(on, word){
   // v13.82: but tapping the voice logo must NOT pull the drawer open. The drawer
   // stays closed unless Fromsa opens it himself (or asks Maya to, via show_drawer).
   document.body.classList.toggle('maya-live', on);
-  if(on && !IS_AFFILIATES)admTab('logs');
+  if(on)admTab('logs');
 }
 function _voiceStop(){
   ++_voiceGeneration;_voiceStarting=false;
@@ -2242,7 +2175,7 @@ function _voiceStop(){
   mayaCommandState(_mayaActions.length?'action waiting for confirmation':'ready',_mayaActions.length?'waiting':'');
   window.dispatchEvent(new Event('maya-voice-ended'));
 }
-function _adminVoiceScope(){return _idTok&&!document.hidden&&!IS_AFFILIATES?JSON.stringify([_adminSession,_adminSubject(_idTok)||_idTok]):null;}
+function _adminVoiceScope(){return _idTok&&!document.hidden?JSON.stringify([_adminSession,_adminSubject(_idTok)||_idTok]):null;}
 function _adminVoiceManager(){
   if(_adminVoiceLine)return _adminVoiceLine;
   _adminVoiceLine=window.MayaVoicePreparation.create({
@@ -3240,10 +3173,10 @@ async function deleteLeadRow(i) {
     if (!r.ok) throw new Error('delete ' + r.status);
   } catch (_) { reloadLeads(); }
 }
-function reloadLeads() { if (IS_AFFILIATES) return window.loadAffiliateLeads(); try { if (window.loadMkt) loadMkt(); } catch (_) {} try { loadMayaCommand(); } catch (_) {} }
+function reloadLeads() { try { if (window.loadMkt) loadMkt(); } catch (_) {} try { loadMayaCommand(); } catch (_) {} }
 let _callbackStatusBusy=false;
 async function loadLeadAlertStatus(){
-  if(IS_AFFILIATES||!_idTok||_callbackStatusBusy)return;
+  if(!_idTok||_callbackStatusBusy)return;
   const note=document.getElementById('callback-alert-note');if(!note)return;
   _callbackStatusBusy=true;const auth=_idTok;
   try{
@@ -3276,7 +3209,7 @@ async function checkLeadAlerts(quiet=false){
 window.reloadLeads = reloadLeads;
 // The server scheduler works without an open browser. This owner-only check
 // shortens the delay while Admin is in the foreground and remains deduplicated.
-setInterval(()=>{if(!IS_AFFILIATES&&_idTok&&document.visibilityState==='visible')checkLeadAlerts(true);},300000);
+setInterval(()=>{if(_idTok&&document.visibilityState==='visible')checkLeadAlerts(true);},300000);
 async function addLeadManual() {
   const name = prompt('New lead. Name:'); if (name == null || !name.trim()) return;
   const email = prompt('Email (optional):') || '';
@@ -3297,7 +3230,6 @@ window.addLeadManual = addLeadManual;
 let _msgSending = false;
 let _msgTab = 'systems', _msgOpen = null, _msgTimer = null, _msgThreads = [];
 function admTab(t) {
-  if (IS_AFFILIATES) t = 'messages';
   if (!['systems','messages','logs','automations'].includes(t)) return;
   _msgTab = t;
   document.getElementById('adm-tabtitle').textContent = t === 'messages' ? 'Messages' : t === 'logs' ? 'Logs' : t === 'automations' ? 'Automations' : 'Systems';
@@ -4019,50 +3951,6 @@ function paintCampaigns() {
     }).join('');
 }
 
-// The beta uses the admin-authorized lead feed, never cached account data.
-let _affiliateRequest = 0;
-function clearAffiliateLeads(message) {
-  _affiliateRequest++;
-  _leadList = [];
-  if (window.MAYA_ADMIN_DATA?.marketing) delete window.MAYA_ADMIN_DATA.marketing.leads;
-  document.querySelector('#leads-table tbody').replaceChildren();
-  document.getElementById('leads-note').style.display = 'none';
-  loadLeadAlertStatus();
-  for (const key of ['total','week','contacted','closed']) document.getElementById('affiliate-'+key).textContent = '·';
-  document.getElementById('affiliate-status').textContent = message;
-}
-async function loadAffiliateLeads() {
-  if (!IS_AFFILIATES) return;
-  if (!_idTok) { clearAffiliateLeads('Sign in with your admin account to load leads.'); return; }
-  const token = _idTok, request = ++_affiliateRequest;
-  const status = document.getElementById('affiliate-status');
-  status.textContent = 'Loading your leads';
-  try {
-    const response = await fetch('/api/admin/leads', {headers:{Authorization:'Bearer '+token},cache:'no-store'});
-    if (request !== _affiliateRequest || token !== _idTok) return;
-    if (response.status === 401) { _expired(); _showSignin(true); return; }
-    if (response.status === 403) { clearAffiliateLeads('This beta is available to studio admins only.'); _showSignin(true); return; }
-    if (!response.ok) throw new Error('Leads could not load. Try Reload.');
-    const data = await response.json();
-    if (request !== _affiliateRequest || token !== _idTok) return;
-    if (!data.ok || !data.connected) throw new Error('Lead source unavailable. Check Systems, then try Reload.');
-    const leads = Array.isArray(data.list) ? data.list : [];
-    window.MAYA_ADMIN_DATA = window.MAYA_ADMIN_DATA || {};
-    window.MAYA_ADMIN_DATA.marketing = {leads:{...data,list:leads}};
-    document.getElementById('adm-mkt').hidden=false;
-    paintLeads({...data,list:leads});
-    const weekAgo = Date.now()-7*86400000;
-    const stats = {total:leads.length,week:leads.filter(l=>new Date(l.ts).getTime()>=weekAgo && new Date(l.ts).getTime()<=Date.now()).length,
-      contacted:leads.filter(l=>l.lastContact || ['contacted','closed','passed','in_process','in_progress','booked','completed'].includes(l.stage)).length,closed:leads.filter(l=>['closed','passed','completed'].includes(l.stage)).length};
-    for (const [key,value] of Object.entries(stats)) document.getElementById('affiliate-'+key).textContent = value;
-    status.textContent = data.why ? 'Some lead sources are unavailable.' : '';
-  } catch (error) {
-    if (request === _affiliateRequest && token === _idTok) clearAffiliateLeads(error.message || 'Leads could not load. Try Reload.');
-  }
-}
-window.loadAffiliateLeads=loadAffiliateLeads;
-window.clearAffiliateLeads=clearAffiliateLeads;
-
 let _marketingSequence=0;
 function _clearMarketing(){
   ++_marketingSequence;_leadList=[];_adData=null;_brief=null;_briefHour='';
@@ -4074,7 +3962,6 @@ function _clearMarketing(){
 }
 window.addEventListener('maya-owner-session-changed',_clearMarketing);
 async function loadMkt(){
-  if(IS_AFFILIATES)return loadAffiliateLeads();
   const status=document.getElementById('mkt-status'),context=_adminContext(),auth=_idTok,sequence=++_marketingSequence;
   const current=()=>sequence===_marketingSequence&&_adminContextCurrent(context);
   if(!auth){if(status)status.textContent='Sign in to load Marketing.';return;}

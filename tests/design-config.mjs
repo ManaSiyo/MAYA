@@ -148,7 +148,7 @@ console.log('Workspace spacing and non-fabric semantic colors validate, preserve
 const checkbox={size:16,radius:3,background:'black',fill:100,rim:55,borderColor:'gray',checkedColor:'#aab5c4',checkColor:'#000000'};
 const scrollbar={width:8,radius:8,thumbColor:'#aab5c4',thumbOpacity:55,trackColor:'#000000',trackOpacity:0};
 for(const design of [canonical,compact])assert.equal(validDesign({...design,checkbox,scrollbar}),true,'Native controls preserve both design generations');
-for(const [kind,value,ranges] of [['checkbox',checkbox,{size:[12,28],radius:[0,14],fill:[0,100],rim:[0,100]}],['scrollbar',scrollbar,{width:[6,20],radius:[0,16],thumbOpacity:[0,100],trackOpacity:[0,100]}]]){
+for(const [kind,value,ranges] of [['checkbox',checkbox,{size:[12,28],radius:[0,14],fill:[0,100],rim:[0,100]}],['scrollbar',scrollbar,{width:[2,20],radius:[0,16],thumbOpacity:[0,100],trackOpacity:[0,100]}]]){
  for(const [key,[min,max]] of Object.entries(ranges)){
   for(const n of [min,max])assert.equal(validDesign({...canonical,[kind]:{...value,[key]:n}}),true,kind+' '+key+' boundary');
   for(const n of [min-1,max+1,min+.5,String(min),null])assert.equal(validDesign({...canonical,[kind]:{...value,[key]:n}}),false,kind+' '+key+' invalid');
@@ -160,3 +160,13 @@ for(const [kind,value,ranges] of [['checkbox',checkbox,{size:[12,28],radius:[0,1
 assert.equal(validDesign({...canonical,checkbox:{...checkbox,background:'purple'}}),false);assert.equal(validDesign({...canonical,checkbox:{...checkbox,borderColor:'blue'}}),false);
 await saveDesign(store,{...canonical,checkbox,scrollbar},'owner@example.com');assert.deepEqual(saved.checkbox,checkbox);assert.deepEqual(saved.scrollbar,scrollbar);assert.match(saved._history.at(-1).text,/checkbox/);
 console.log('Checkbox and scrollbar controls: optional legacy-compatible complete objects, bounds, colors and atomic persistence passed.');
+
+const drawer={background:'navy',fill:90,rim:22,borderColor:'white',blur:28,saturation:180,radius:18,paddingX:12,paddingY:16};
+const thinScrollbar={...scrollbar,version:2,width:4,length:50,hideAfter:800,autoHide:true};
+assert.equal(validDesign({...canonical,drawer,scrollbar:thinScrollbar}),true);
+for(const [key,max]of Object.entries({fill:100,rim:100,blur:40,saturation:200,radius:24,paddingX:40,paddingY:40})){for(const value of [0,max])assert.equal(validDesign({...canonical,drawer:{...drawer,[key]:value}}),true);for(const value of [-1,max+1,1.5,'1',null])assert.equal(validDesign({...canonical,drawer:{...drawer,[key]:value}}),false);}
+for(const key of Object.keys(drawer)){const partial={...drawer};delete partial[key];assert.equal(validDesign({...canonical,drawer:partial}),false);}
+for(const bad of [null,[],{...drawer,background:'url(evil)'},{...drawer,borderColor:'blue'},{...drawer,extra:1}])assert.equal(validDesign({...canonical,drawer:bad}),false);
+for(const [key,valid,bad]of [['length',[25,50,100],[24,101,'50',null]],['hideAfter',[200,800,3000],[199,3001,'800',null]],['autoHide',[false,true],['true',0,null]],['version',[2],[1,3,'2',null]]]){for(const value of valid)assert.equal(validDesign({...canonical,scrollbar:{...thinScrollbar,[key]:value}}),true);for(const value of bad)assert.equal(validDesign({...canonical,scrollbar:{...thinScrollbar,[key]:value}}),false);}
+await saveDesign(store,{...canonical,drawer,scrollbar:thinScrollbar},'owner@example.com');assert.deepEqual(saved.drawer,drawer);assert.deepEqual(saved.scrollbar,thinScrollbar);
+console.log('Shared drawer and auto-hide scrollbar schema: legacy compatibility, bounded saved settings and atomic persistence passed.');

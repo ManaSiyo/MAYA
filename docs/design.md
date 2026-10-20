@@ -114,8 +114,8 @@ client's Messages thread, including clicks in cell padding. A keyboard-accessibl
 name button preserves normal Tab activation. The H4 name appears above its H5
 signup date, with independent role settings and no category badge. Contact is a
 separate stored phone column; calls remain available inside Messages. A lead
-with no phone opens Messages and states the missing number. Affiliates retains
-its own reload within its profile, outside Admin's Lead Station toolbar.
+with no phone opens Messages and states the missing number. Affiliates is retired;
+its legacy URLs redirect to Admin.
 
 ## Frontend
 
@@ -415,9 +415,9 @@ scroll regions; the default track is transparent. Intentionally hidden navigatio
 tracks remain hidden. Exact pixel width/radius uses the WebKit pseudo-element
 fallback; Firefox uses native thin/auto sizing. Forced colors retain native controls.
 
-The shared Settings Drawer preview and Operations drawer use the same Edit
-dropdown backing, border, corners and X/Y padding. The default black backing keeps
-controls readable over bright patterns; overlay blur/saturation remain independent.
+The later owner review replaces the temporary Editor-backed drawer with the
+shared MAYA Drawer material described below. Editor remains independent for fields
+and temporary Edit popups; it no longer controls hamburger drawers.
 Measurements and Logic explicitly use P1/Editor; notices use P3. Closed settings
 are inert and Escape restores focus. The existing shared H1 controls the fixed
 Backend/Operation Room title, which changes on vertical navigation. Remove the
@@ -436,3 +436,57 @@ hamburger hides while open. Its material still follows the active Settings Drawe
 preview. Repeated open requests preserve current field focus; closing restores the
 visible opener. Verify painted stacking with hit-testing and visual inspection,
 not only bounding rectangles. Embedded room header ownership remains unchanged.
+
+## October 20 — one MAYA drawer and working previews
+
+Every actual hamburger drawer (MAYA, Admin, Outbound, Brief, standalone and
+embedded Operation Room) declares data-maya-drawer. The saved optional drawer
+object owns background, opacity, border/color, corners, blur, saturation and X/Y
+padding. Defaults match MAYA: navy RGB3/15/29 at90%, white rim22%, 28px blur,
+180% saturation, 18px corners, X12/Y16px padding, frontend gradient and shadow.
+The active Drawer button/Edit/Restore preview uses that exact runtime; its usage
+links show the consumers. Panel/table and popup Editor materials stay independent.
+The desktop Operations drawer is360px wide with top/bottom10px and right18px;
+phones use viewport minus24px/right12px. Embedded Settings temporarily fills the
+actual parent viewport without reparenting/reloading the iframe, and closes back
+to the exact garment/run and parent scroll. The old pipeline subtitle, duplicate
+Measurements action, Brief scroll-to-room pill and Saved date copy are removed.
+
+Brief names and dates share H3 on one row. Biography/Vision labels and Vault
+link titles use P2 (white); descriptions use P1 (gray). Both remain editable in
+Typography. Measurements stay in the Brief for saved submissions and feed the
+pattern context canonically. Standalone manual uploads retain a separate entry
+panel, not a duplicate Settings subsection.
+
+Segments is an interactive preview of the same Sourceable/In House/Favorites
+Glass buttons. Selecting changes actual aria-pressed state/content. Glass material,
+state emphasis, X/Y padding, P3 typography and focus remain shared. Editing another
+control cannot reset an unsaved Drawer or input preview. Every Edit opens its
+actual editor, keeps an adjacent Restore and respects the last successful Save.
+
+Scrollbar version2 defaults: width4px on both axes, painted handle length50%,
+transparent track, autoHide true, idle delay800ms, corners8px. Aesthetic Control
+exposes width2–20, length25–100%, auto-hide, delay200–3000ms, colors/opacity and
+corners in the real two-axis scroll preview. Old saved widths halve once when
+normalized, without mutation/write; version2 prevents repeated scaling. Native
+thumb hit areas, dragging, wheel and keyboard behavior remain native. Chromium/
+WebKit paint the shorter handle; Firefox retains its native thin/auto handle
+length. Forced colors restore a native high-contrast handle. Hidden navigation
+tracks remain hidden. Scrolling reveals the handle; idle makes it disappear.
+
+The Full view, garment and inline Fabrics frames have identical dimensions.
+Fabric tabs use the same segmented contract and saved settings. Exactly five
+store filters start enabled: Local (Bay Area: Britex/Stonemountain/Harts), Mood,
+Swatchon, Amazon and Others. Toggling filters is free; Refresh searches the chosen
+scope. Cards have no Save/Use actions or hover metadata. Verified price/unit text
+wraps in P3 instead of requiring a tooltip; historic Favorites remain removable.
+No saved project/material migration or automatic selection is performed.
+
+Playground, Affiliates and the duplicate legacy Operations HTML are deleted.
+Legacy Operations URLs redirect to the current room; shared knowledge/CLO assets
+remain. The retired client/admin workspaces have redirects and no experiment
+promotion. Submission imagery has no hover metadata/native title tooltip; named
+links and visible keyboard focus still open the scoped Brief. Automatic model
+snapshots are gone; explicit API/Image configuration actions remain. Phone
+shortcut menus and submission frames are bounded so keyboard focus cannot pan
+the whole Admin page.

@@ -2,7 +2,7 @@
 from pathlib import Path
 import re,json
 root=Path(__file__).resolve().parent.parent
-files=sorted(p for folder in ['frontend','backend','playground','aesthetics'] for p in (root/folder).rglob('*') if p.suffix in ['.html','.js'] and 'aesthetics/aesthetic-control' not in str(p) and p.name!='aesthetic-control.html' and 'aesthetics/ui/components' not in str(p))
+files=sorted(p for folder in ['frontend','backend','aesthetics'] for p in (root/folder).rglob('*') if p.suffix in ['.html','.js'] and 'aesthetics/aesthetic-control' not in str(p) and p.name!='aesthetic-control.html' and 'aesthetics/ui/components' not in str(p))
 categories={k:{'count':0,'locations':[],'roles':{}} for k in ['H0','H1','H2','H3','H4','H5','P1','P2','P3']}
 def canonical_explicit(role,classes):
  # Semantic identities disambiguate old H5 lead names from canonical H5 dates.
@@ -30,8 +30,8 @@ for path in files:
   elif cls & {'grp','section-title'}:category,role='H3','adminsection'
   elif tag in ['h2','h3','h4','h5','h6']:category,role='H3','subheadline'
   elif path.name=='status.html' and tag=='div' and 'v' in cls and ('bl-step' in context or 'bl-tile' in context):category,role='H4','dashboard'
-  elif tag=='strong' and ('class="stat"' in context or 'class="affiliate-stat"' in context):category,role='H4','dashboard'
-  elif tag=='span' and ('class="stat"' in context or 'class="affiliate-stat"' in context):category,role='P2','label'
+  elif tag=='strong' and ('class="stat"' in context):category,role='H4','dashboard'
+  elif tag=='span' and ('class="stat"' in context):category,role='P2','label'
   elif tag in ['code','pre']:category,role='P1','technical'
   elif tag=='small' or cls & {'k','caption','bub-when','brand-status'}:category,role='P3','caption'
   elif tag in ['button','label'] or cls & {'status-pill','top-btn','caps'}:category,role='P3','pill'

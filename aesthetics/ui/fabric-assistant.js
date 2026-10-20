@@ -2,7 +2,15 @@
 (function () {
   'use strict';
   let dialog, workspace, host, els, context = {}, identity = '', epoch = 0, controller, image = '', originalImage = '';
-  let searchSeq=0, autoStarted=false, storeFilter='';
+  const storeGroups=[
+    {id:'local',label:'Local (Bay Area)',hosts:['britexfabrics.com','stonemountainfabric.com','hartsfabric.com']},
+    {id:'mood',label:'Mood',hosts:['moodfabrics.com']},
+    {id:'swatchon',label:'Swatchon',hosts:['swatchon.com']},
+    {id:'amazon',label:'Amazon',hosts:['amazon.com']},
+    {id:'others',label:'Others',hosts:['blackbirdfabrics.com','thefabricstore.com','tessuti.com.au']},
+  ];
+  let searchSeq=0, autoStarted=false, activeStores=new Set(storeGroups.map(group=>group.id)),filterTouched=false,submittedRequest='',lastSearchStores='',completedStatus='';
+  const storeKey=()=>[...activeStores].sort().join('|');
   let history = [], products = [], book = { items: [], selectedUrl: '', generation: null }, view = 'search', busy = false;
   let bookSeq = 0, photoSeq = 0, projectEpoch=0, projectIdentity='', reads=new AbortController(),projectReads=new AbortController();
   let saves={tail:Promise.resolve(),pending:new Set()},inventoryRequest=null;
@@ -36,10 +44,10 @@
   function action(label, fn) { const b = node('button','pill maya-pill',label); b.type = 'button'; b.addEventListener('click',fn); return b; }
   function status(message) { els.status.textContent = message || ''; }
   function reset() {
-    epoch++;photoSeq++;searchSeq++;autoStarted=false;storeFilter='';controller?.abort();recognition?.stop();reads.abort();reads=new AbortController();inventoryRequest=null;
+    epoch++;photoSeq++;searchSeq++;autoStarted=false;activeStores=new Set(storeGroups.map(group=>group.id));filterTouched=false;submittedRequest='';lastSearchStores='';completedStatus='';controller?.abort();recognition?.stop();reads.abort();reads=new AbortController();inventoryRequest=null;
     const nextProject=projectScope();if(nextProject!==projectIdentity){bookSeq++;projectReads.abort();projectReads=new AbortController();projectEpoch++;projectIdentity=nextProject;saves={tail:Promise.resolve(),pending:new Set()};book={items:[],selectedUrl:'',selectedByGarment:{},generation:null};}
     controller=null;busy=false;history=[];products=[];image='';originalImage='';view='search';
-    if(els){els.input.value='';els.observation.textContent='';els.transcript.replaceChildren();els.results.replaceChildren();els.photo.hidden=true;els.preview.removeAttribute('src');els.file.value='';els.send.disabled=false;els.stop.hidden=true;els.saveStatus.textContent='';els.store.value='';status('');}
+    if(els){els.input.value='';els.observation.textContent='';els.transcript.replaceChildren();els.results.replaceChildren();els.photo.hidden=true;els.preview.removeAttribute('src');els.file.value='';els.send.disabled=false;els.stop.hidden=true;els.saveStatus.textContent='';els.storeWrap.hidden=true;els.filter.setAttribute('aria-expanded','false');status('');}
   }
   function icon(label,path,fn) {
     const b=action('',fn);b.classList.add('maya-icon-button');b.setAttribute('aria-label',label);b.title=label;
@@ -73,16 +81,21 @@
     const expandButton=action('Expand',()=>host?expand():close());expandButton.setAttribute('aria-expanded','false');
     toolbar.append(refresh,expandButton);header.append(title,toolbar);
     const sub=node('p','fa-context');
-    const tabs=node('nav','fa-tabs');tabs.setAttribute('aria-label','Fabric views');
+    const tabs=node('nav','fa-tabs');tabs.setAttribute('aria-label','Fabric views');tabs.dataset.mayaControl='segmented';
     const inhouse=action('In House',()=>{view='inhouse';paint();});
     const search=action('Sourceable',()=>{view='search';paint();});
     const saved=action('Favorites',async()=>{view='saved';paint();await loadBook();});
     const fresh=action('New search',()=>open({...context,forceReset:true}));
-    const filter=icon('Filter stores','M4 5h16M7 12h10M10 19h4',()=>{storeWrap.hidden=!storeWrap.hidden;filter.setAttribute('aria-expanded',String(!storeWrap.hidden));if(!storeWrap.hidden)store.focus();});filter.setAttribute('aria-expanded','false');
-    const storeWrap=node('label','fa-store-wrap','Store');storeWrap.hidden=true;
-    const store=node('select','fa-store-filter');store.dataset.mayaControl='field';store.setAttribute('aria-label','Fabric store');
-    for(const[name,value]of [['All stores',''],['Britex Fabrics','britexfabrics.com'],['Stonemountain & Daughter','stonemountainfabric.com'],['Harts Fabric','hartsfabric.com'],['Amazon','amazon.com'],['Mood Fabrics','www.moodfabrics.com'],['Blackbird Fabrics','www.blackbirdfabrics.com'],['The Fabric Store','thefabricstore.com'],['Tessuti Fabrics','www.tessuti.com.au']]){const option=node('option','',name);option.value=value;store.append(option);}
-    store.addEventListener('change',()=>{storeFilter=store.value;paint();if(context.automatic&&view==='search')run(true);});storeWrap.append(store);
+    for(const button of [inhouse,search,saved])button.dataset.mayaSegment='';
+    const filter=icon('Filter stores','M4 5h16M7 12h10M10 19h4',()=>{storeWrap.hidden=!storeWrap.hidden;filter.setAttribute('aria-expanded',String(!storeWrap.hidden));if(!storeWrap.hidden)storeButtons[0].focus();});filter.setAttribute('aria-expanded','false');
+    const storeWrap=node('div','fa-store-wrap');storeWrap.hidden=true;storeWrap.setAttribute('role','group');storeWrap.setAttribute('aria-label','Fabric stores');
+    const storeButtons=storeGroups.map(group=>{const button=action(group.label,()=>{
+      activeStores.has(group.id)?activeStores.delete(group.id):activeStores.add(group.id);filterTouched=true;paint();
+      // Filtering is free. Refresh is the explicit new provider request; cancel
+      // an obsolete stream so it cannot overwrite the changed scope or its hint.
+      if(busy){controller?.abort();searchSeq++;busy=false;els.send.disabled=false;els.stop.hidden=true;lastSearchStores='';}
+      status(!activeStores.size?'Choose at least one store group.':submittedRequest&&lastSearchStores!==storeKey()?'Refresh to search these stores.':completedStatus);
+    });button.classList.add('fa-store-filter');button.dataset.storeGroup=group.id;return button;});storeWrap.append(...storeButtons);
     tabs.append(inhouse,search,saved,filter,fresh);
     const body=node('div','fa-body');body.dataset.mayaScrollbar='visible';body.tabIndex=0;body.setAttribute('aria-label','Fabric results');
     const transcript=node('div','fa-transcript');transcript.setAttribute('aria-label','Your requests');
@@ -103,7 +116,7 @@
     input.addEventListener('paste',e=>{const f=[...(e.clipboardData?.files||[])].find(f=>f.type.startsWith('image/'));if(f){e.preventDefault();attach(f);}});
     workspace.append(header,sub,tabs,storeWrap,body,form,live);dialog.append(workspace);
     dialog.addEventListener('close',()=>{if(host?.isConnected){host.append(workspace);workspace.classList.add('is-inline');els.expand.textContent='Expand';els.expand.setAttribute('aria-expanded','false');}else{controller?.abort();recognition?.stop();}});
-    els={sub,search,saved,inhouse,fresh,store,storeWrap,filter,refresh,expand:expandButton,form,input,file,send,stop,status:live,observation,results,transcript,photo,preview,saveStatus,mic,body};
+    els={sub,search,saved,inhouse,fresh,storeButtons,storeWrap,filter,refresh,expand:expandButton,form,input,file,send,stop,status:live,observation,results,transcript,photo,preview,saveStatus,mic,body};
   }
   let recognition;
   function dictate() {
@@ -201,7 +214,7 @@
         const data=await json('/api/admin/fabrics/lookbook',{method:'POST',body:JSON.stringify({submissionId,generation:book.generation,action:actionName,garmentId,product:payload})});
         if(!projectCurrent(ticket))return;
         book=data;paint();notifySelection();els.saveStatus.textContent=actionName==='remove'?'Removed.':actionName==='select'?'Selected: '+(garmentName||'this look')+'.':'Saved'+(garmentName?': '+garmentName:'')+'.';
-      }catch(e){if(projectCurrent(ticket)){book.generation=null;els.saveStatus.textContent=e.name==='TimeoutError'?'Save not confirmed. Check Favorites before retrying.':e.message;await loadBook(true);}}
+      }catch(e){if(projectCurrent(ticket)){book.generation=null;els.saveStatus.textContent=e.name==='TimeoutError'?'Change not confirmed. Check Favorites before retrying.':e.message;await loadBook(true);}}
     };
     queue.tail=queue.tail.catch(()=>{}).then(task).finally(()=>{queue.pending.delete(key);button.removeAttribute('aria-busy');button.disabled=false;if(projectCurrent(ticket))paint();});return queue.tail;
   }
@@ -213,29 +226,27 @@
     const local=p.evidence==='atelier_inventory';
     const link=node('a','fa-product-link');link.href=p.url;link.target='_blank';link.rel='noopener noreferrer';
     const knownPrice=p.price&&p.unit?`${p.price} ${p.currency} / ${p.unit}`:'';
-    link.title=[p.title,p.description,knownPrice,p.reason].filter(Boolean).join(' — ');
     if(p.image && /^(?:https:\/\/|\/aesthetics\/fabrics\/|data:image\/)/.test(p.image)){
       const img=node('img','fa-product-image');img.src=p.image;img.alt=p.title;img.loading='lazy';img.referrerPolicy='no-referrer';img.addEventListener('error',()=>{if(view==='saved'){img.remove();const unavailable=node('p','fa-image-unavailable','Photo unavailable');unavailable.dataset.mayaType='P3';link.prepend(unavailable);item.classList.add('has-missing-photo');}else{item.remove();if(!els.results.querySelector('.fa-product'))els.results.append(node('p','fa-empty','Fabric photos could not load. Refresh or try another store.'));}},{once:true});link.append(img);
     }
-    const title=node('h3','fa-card-title',p.title);title.title=p.title;
+    const title=node('h3','fa-card-title',p.title);
     const use=p.garment?'For '+p.garment:'';
-    const caption=node('p','fa-card-caption',[use,local?'':p.merchant].filter(Boolean).join(' · ')||(local?'Availability not recorded':'Delivery unconfirmed'));caption.dataset.mayaType='P3';caption.title=[caption.textContent,knownPrice,p.availability==='in_stock'?'Seller lists in stock':'Availability unconfirmed','Delivery unconfirmed'].filter(Boolean).join(' · ');
+    const caption=node('p','fa-card-caption',[use,local?'':p.merchant,knownPrice].filter(Boolean).join(' · ')||(local?'Availability not recorded':'Delivery unconfirmed'));caption.dataset.mayaType='P3';
     link.append(title,caption);item.append(link);
-    const controls=node('div','fa-card-actions');const exists=book.items.some(v=>v.url===p.url);
-    const pending=actionName=>saves.pending.has(actionName+'|'+p.url+'|'+(context.piece?.id||p.garmentId||''));
-    const saveButton=action(exists?'Saved':'Save',()=>save(p,'save',saveButton));saveButton.disabled=pending('save')||exists||!context.submissionId||!/^https:|^\/aesthetics\/fabrics\//.test(p.url);
-    const selected=selectedProduct()?.url===p.url;
-    const choose=action(selected?'Selected':'Use',()=>save(p,'select',choose));choose.setAttribute('aria-label',selected?'Selected for design':'Use for design');choose.disabled=pending('select')||selected||saveButton.disabled&&!exists;
-    controls.append(saveButton,choose);
-    if(view==='saved'){const remove=action('Remove',()=>save(p,'remove',remove));controls.append(remove);}
-    item.append(controls);return item;
+    if(view==='saved'){
+      const controls=node('div','fa-card-actions'),remove=action('Remove',()=>save(p,'remove',remove));
+      remove.disabled=saves.pending.has('remove|'+p.url+'|'+(context.piece?.id||p.garmentId||''));controls.append(remove);item.append(controls);
+    }
+    return item;
   }
   function paint() {
     els.search.setAttribute('aria-pressed',String(view==='search'));els.saved.setAttribute('aria-pressed',String(view==='saved'));els.inhouse.setAttribute('aria-pressed',String(view==='inhouse'));
     els.inhouse.hidden=false;els.fresh.hidden=!!context.automatic;els.form.hidden=!!context.automatic;els.sub.hidden=!!context.automatic;
-    els.filter.hidden=view==='inhouse';if(view==='inhouse')els.storeWrap.hidden=true;
+    els.filter.hidden=view!=='search';if(view!=='search'){els.storeWrap.hidden=true;els.filter.setAttribute('aria-expanded','false');}
+    for(const button of els.storeButtons)button.setAttribute('aria-pressed',String(activeStores.has(button.dataset.storeGroup)));
     const candidates=view==='saved'?book.items:view==='inhouse'?inventory():products;
-    const items=candidates.filter(p=>!storeFilter||view==='inhouse'||(()=>{try{return new URL(p.url).hostname.replace(/^www\./,'')===storeFilter.replace(/^www\./,'');}catch{return false;}})());
+    const allowed=new Set(storeGroups.filter(group=>activeStores.has(group.id)).flatMap(group=>group.hosts));
+    const items=candidates.filter(p=>view!=='search'||(()=>{try{return allowed.has(new URL(p.url).hostname.replace(/^www\./,''));}catch{return false;}})());
     els.results.replaceChildren(...items.map(card));
     if(!items.length)els.results.append(node('p','fa-empty',view==='saved'?'Saved fabrics for this submission will appear here.':view==='inhouse'?'No in-house fabric photos are available.':context.automatic?'No relevant fabric products confirmed yet.':'Describe a fabric or add a reference photo.'));
     els.transcript.hidden=view!=='search'||!!context.automatic;els.observation.hidden=view!=='search'||!!context.automatic;
@@ -243,14 +254,15 @@
   async function refreshView(){
     if(view==='saved')return loadBook();
     if(view==='inhouse'){try{if(context.loadInhouse){const stamp=epoch;const items=await context.loadInhouse();if(current(stamp)){context.inhouse=items;paint();}}else await loadInventory(true);}catch(e){status(e.message);}return;}
-    return run(true);
+    return run(true,!!submittedRequest);
   }
-  async function run(force=false) {
+  async function run(force=false,filterOnly=false) {
     if(busy&&!force)return;
     if(force)controller?.abort();
     if (!account()) { reset(); paint(); return status('Sign in to Admin to search fabrics.'); }
     if (identity!==scope()) { reset(); identity=scope(); paint(); return status('Account changed. Start a new search.'); }
-    const request=context.automatic?'Find fabrics for this saved look.':els.input.value.trim()||(force?history.at(-1)?.request||'':'');
+    if(!activeStores.size)return status('Choose at least one store group.');
+    const request=context.automatic?'Find fabrics for this saved look.':filterOnly?submittedRequest:els.input.value.trim()||(force?submittedRequest:'');
     if (!request && !image) return status('Describe a fabric or add a photo.');
     recognition?.stop();
     const stamp=epoch, sequence=++searchSeq; controller=new AbortController(); const active=controller;
@@ -258,13 +270,14 @@
     busy=true; els.send.disabled=true; els.stop.hidden=false; view='search'; els.saveStatus.textContent='';
     products=[]; paint(); status('Searching fabric shops…');
     const submitted=request || 'Find fabrics like this photo';
+    submittedRequest=submitted;
     const line=node('p','fa-request',submitted); els.transcript.append(line);
     while(els.transcript.children.length>6)els.transcript.firstElementChild.remove();
-    els.input.value='';
+    if(!filterOnly)els.input.value='';
     let finished=false;
     try {
       const r=await fetch('/api/admin/fabrics/search',{method:'POST',headers:headers(),signal:active.signal,
-        body:JSON.stringify({submissionId:context.submissionId||'',request:submitted,image,preferences:context.preferences||'',piece:pieceMetadata(context.piece),pieces:(context.pieces||[]).slice(0,12).map(pieceMetadata),automatic:!!context.automatic,stores:storeFilter?[storeFilter]:[],history})});
+        body:JSON.stringify({submissionId:context.submissionId||'',request:submitted,image,preferences:context.preferences||'',piece:pieceMetadata(context.piece),pieces:(context.pieces||[]).slice(0,12).map(pieceMetadata),automatic:!!context.automatic,...(filterTouched?{storeGroups:[...activeStores]}:{}),history})});
       if(!r.ok){const data=await r.json().catch(()=>({}));throw Error(data.error || 'Fabric search failed. Try again.');}
       const reader=r.body.getReader(), decoder=new TextDecoder();let buffer='';
       const accept=raw=>{
@@ -277,14 +290,14 @@
         if(event.type==='done'){
           finished=true;history.push({request:submitted,query:event.query});history=history.slice(-6);
           els.observation.textContent=event.observation?'Reference interpretation: '+event.observation:'';
-          status(event.warning || event.message);
+          lastSearchStores=storeKey();completedStatus=event.warning || event.message || '';status(completedStatus);
         }
       };
       while(true){const{value,done}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});if(buffer.length>512*1024)throw Error('Search response was too large.');let n;while((n=buffer.indexOf('\n'))>=0){accept(buffer.slice(0,n));buffer=buffer.slice(n+1);}}
       buffer+=decoder.decode();if(buffer.trim())accept(buffer);
       if(!finished)throw Error('Search ended early. You can retry your request.');
     } catch(e) {
-      if(valid()){ status(active.signal.aborted?'Search stopped.':e.message); if(!els.input.value)els.input.value=request; }
+      if(valid()){ status(active.signal.aborted?'Search stopped.':e.message); if(!filterOnly&&!els.input.value)els.input.value=request; }
     } finally { if(valid()){busy=false;els.send.disabled=false;els.stop.hidden=true;controller=null;} }
   }
   async function open(next={}) {

@@ -31,7 +31,7 @@
       },
       {
         "source": "/operations{,/**}",
-        "destination": "/aesthetics/operations/",
+        "destination": "/operations.html",
         "type": 301
       },
       {
@@ -53,6 +53,51 @@
         "source": "/backend/marketing.html",
         "destination": "/status.html",
         "type": 301
+      },
+      {
+        "source": "/playground.html",
+        "destination": "/",
+        "type": 301
+      },
+      {
+        "source": "/playground{,/**}",
+        "destination": "/",
+        "type": 301
+      },
+      {
+        "source": "/affiliates.html",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/affiliates{,/**}",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/backend/affiliates.html",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/backend/affiliates{,/**}",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/aesthetics/operations",
+        "destination": "/operations.html",
+        "type": 301
+      },
+      {
+        "source": "/aesthetics/operations/",
+        "destination": "/operations.html",
+        "type": 301
+      },
+      {
+        "source": "/aesthetics/operations/index.html",
+        "destination": "/operations.html",
+        "type": 301
       }
     ],
     "rewrites": [
@@ -73,18 +118,6 @@
       {
         "source": "/outbound.html",
         "destination": "/backend/outbound.html"
-      },
-      {
-        "source": "/playground.html",
-        "destination": "/playground/index.html"
-      },
-      {
-        "source": "/playground/components/index.html",
-        "destination": "/aesthetics/aesthetic-control.html"
-      },
-      {
-        "source": "/affiliates.html",
-        "destination": "/backend/status.html"
       },
       {
         "source": "/status.html",

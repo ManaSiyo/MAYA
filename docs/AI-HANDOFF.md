@@ -1,127 +1,95 @@
-# Current handoff — October 18, 2026
+# Current handoff — October 20, 2026
 
 ## Current task and release state
 
-Owner screenshot review: persist Leads filters, govern checkbox/scrollbar styles,
-retire redundant dashboard sections without losing prompting settings, restore
-embedded Brief/Operations navigation and Fabrics placement, repair Settings
-readability, and investigate slow loading. This supersedes the earlier prohibition
-on aesthetic changes for these requested surfaces.
+Implement the October 18 owner screenshot review. The deployed baseline is
+4b4867f5f8d310ca32467414eedbf8b1d03d7c63: its Cloud Build 8e6a9a47 succeeded
+October 18, and exact Firebase release/page/API commit, assets and live screenshots
+were verified. This release candidate contains the cleanup below. Its deployment
+state must be established from the exact current commit and live markers, not
+from a pending/success label in this preparation record.
+Existing explicit owner authorization covers local commits and automatic Push.
+A push can deploy production; never infer success from Vercel.
 
-Main screenshot repair a62431164cdb0d7fc319c39dd516bbfb446eb0ab deployed successfully:
-Cloud Build fe6e037d passed all 68 gates; exact Firebase/page/API SHA, 11 assets,
-six pages and signed-out phone/desktop checks passed. Local full regression had
-639 named checks plus imported assertions. Initial baseline was 7533e38.
+## Current implementation
 
-Final live visual inspection then caught a standalone phone stacking issue:
-page header (z50) painted over Settings (z40), despite passing computed styles and
-bounds. The current follow-up raises Settings above the header, exposes its shared
-Glass Close settings control, hides the background hamburger and removes obsolete slide logic.
-It preserves active input focus on repeated/delayed open requests and restores focus only
-after the opener is visible. Paint hit-tests and real close-click/keyboard checks
-now cover the actual overlap, including the existing embedded workspace.
-All 68 exact release commands and full integrated regression (639 named checks
-plus imported assertions) pass locally for this follow-up. Gallery passes eleven
-widths; final standalone authority passed. Follow-up b621e5051c04d128eb4f010a17f8df139c153a7b
-is pushed; its Cloud Build is running. This documentation-only follow-up adds no
-visible UI. Verify the eventual published HEAD against release.json, page stamps
-and /api/healthz; Vercel success is insufficient.
+- Deleted Playground's served implementation and all Affiliates view/loader/nav.
+  Permanent legacy-path redirects go to MAYA/Admin. No staged experiment is
+  promoted; active client pg* filing-cabinet functions and shared APIs remain.
+  Old tests now exercise the active frontend. The duplicate legacy Operations HTML
+  is also removed; its aliases redirect to /operations.html and shared knowledge/
+  CLO/sample assets remain intact. Historical docs are labeled;
+  third-party legal references and legacy migration/data paths remain.
+- Every real hamburger drawer is governed by data-maya-drawer and independent
+  validated shared drawer settings. Defaults follow MAYA's navy/gradient material,
+  with active Drawer Edit/Restore/usage preview. Field Editor, panels and tables
+  stay independent. All hamburgers share glyph color/weight/size settings.
+- Removed Operations pipeline subtitle and duplicate Measurements trigger/form
+  from Settings, plus the Brief Operation Room scroll pill and Saved metadata.
+  Saved projects read actual Brief measurements (inch/cm/mm normalization), never
+  browser drafts or example numbers. Standalone uploads keep a separate manual
+  entry panel. Brief name/date share H3 on one row; Biography/Vision use white P2.
+- Embedded Settings temporarily fills the actual parent viewport, including a
+  partly scrolled room, without reloading/reparenting its iframe. Close restores
+  exact scroll, selected garment, run/results and focus. Shared material is tested
+  over a white pattern. Remove obsolete mobile adapter geometry overrides.
+- Full view, dissected view and inline Fabrics retain identical dimensions. Five
+  initially enabled filters: Local (Bay Area: Britex/Stonemountain/Harts), Mood,
+  Swatchon, Amazon and Others. Filtering is free and preserves drafts; Refresh
+  explicitly searches the current group scope. No new paid calls on toggles.
+- Fabric cards have no Save/Use actions or verbose hover text. Verified price/unit
+  captions wrap. Private historical Favorites/material assignments remain readable;
+  Remove preserves serialized/CAS/account/submission/fingerprint guards. Swatchon
+  product links/photos are seller-backed; missing price units/stock stay unknown.
+- Scrollbars use shared v2 settings: 4px both axes, half-length painted native
+  handle, transparent track and 800ms idle hiding. Earlier saved widths halve
+  once on read, without a migration write. Native drag/keyboard behavior remains;
+  forced colors restore a native handle. Firefox keeps its native handle length.
+- Active segmented preview changes its real selected state/content and opens the
+  Glass editor. Fixed preset specificity, immediate editor dismissal and a
+  detached Restore. Editing another control preserves an unsaved Drawer preview.
+- Removed automatic hover snapshots and submission metadata overlays/native
+  title tooltips. Named keyboard links still open the scoped Brief. API/Image
+  configuration remains an explicit authenticated click/keyboard action. Gmail
+  titles use white P2 and Account mailboxes gray P1. Narrow shortcut menus and
+  submission tiles cannot pan the whole Admin page on keyboard focus.
 
-## Implemented screenshot repairs
+## Files and verification
 
-- backend/status.html: validated local Leads status preferences keyed by authenticated
-  Google subject, including an empty filter. Reload and same-account renewal retain
-  choices; account changes restore that account's choices. The six status choices remain one vertical list. Storage denial retains
-  immediate filtering but cannot promise persistence.
-- Prompting and Architecture dashboard folds, dead editor SDK/startup/CSS and obsolete
-  gallery usage previews retire. Feature Requests and Recent Changes remain. Complete
-  retired editor fragments/logic are backed up in _to_delete/admin-dashboard-retired-
-  2026-10-17 (Hosting-excluded). Live config/prompting and private draft documents,
-  Firestore rules and App/Playground rendering readers remain unchanged. There is no
-  replacement Admin prompt editor; current live rendering directions remain active.
-- Shared optional checkbox/scrollbar schema: design-config.mjs, presentation-runtime.js,
-  typography-controls.js, gallery/input-controls.js and component previews. Old saves
-  normalize without writes. Dark empty unchecked boxes, centered indicators, keyboard,
-  mixed/disabled and forced-colors states; saved geometry/colors. Scrollbars default
-  to transparent tracks. Explicit content scrollers use data-maya-scrollbar=visible;
-  intentionally hidden navigation retains its native hidden-width/display contract.
-- backend/backend.html: fixed shared H1 changes Backend/Operation Room with scrolling.
-  Remove duplicate Operation Room subheading and Brief pill; active-room hamburger
-  opens Settings via same-origin/source-checked bridge. Embedded room fills viewport
-  width; preserve selection/results across navigation. Fabrics sits next to Full view
-  and garment controls, opening the same inline viewer.
-- backend/operations.html: Fabrics beside view controls; Measurements opens/focuses
-  actual Settings. Settings and shared gallery Drawer use Edit dropdown backing,
-  border/radius/padding, retaining overlay blur/saturation. Measurement/Logic fields
-  explicitly follow P1/Editor and warnings P3. Closed Settings is inert; its source-checked state bridge toggles the fixed hamburger; Escape restores
-  focus and Tab wraps actual native focusable controls. Deferred samples cannot replace pending uploads or active runs; actual visible
-  keyboard targets include the visible shared Close settings button. Bright pattern fixtures cover
-  the previously missed contrast failure.
-- Removed obsolete full-size fabric-photo warmup (~23.77 MB of originals). Sandbox
-  sample images load asynchronously with run/account/upload-intent guards only on standalone non-submission Operations;
-  saved work/embedded Operations never downloads these unused samples. Actual loader,
-  original assets and legacy/local-folder compatibility remain intact.
+Shared runtime/components/gallery: presentation-runtime.js, typography-controls.js,
+pill-runtime.js, maya-canon.css, components.*, gallery.js, shared-surfaces.js,
+input-controls.js, finishes.js, surface-editors.js and workspace-previews.js.
+Pages: frontend/index.html and backend/{status,backend,operations,outbound}.html.
+Fabrics: shared fabric-assistant.js/css and docs/server/fabric-search.mjs.
+Routing: docs/firebase.json. Retired playground/index.html is deleted. Role usage
+is regenerated with typography-role-usage.py; retired uses are no longer counted.
 
-## Verification and evidence
+Focused checks passed: fabric search 34, sourcing 12, AI routing 9, browser fabric
+and historical-favorite workflow; real Brief/embedded Settings geometry and saved
+material; standalone save failures/keyboard; actual no-hover Admin configuration;
+retired-page navigation/submission keyboard; shared input Save/failure/Restore and
+idle scroll behavior; client voice with default/saved actual Drawer material.
+All browser work uses isolated Chromium, fake accounts/providers and local files.
+Pinned npm ci and smoke passed. Full integrated regression passes all 607 named
+checks plus imported behavior assertions. All 71 exact Cloud Build Node commands
+pass locally. Default/different saved phone/desktop screenshots were inspected.
+Run standalone Aesthetic Control authority last after final documentation, before
+commit/Push; do not infer deployment from this preparation record.
 
-Focused checks pass: account/reload filter, active prompting readers/races, new
-checkbox/scrollbar and Settings Save/Restore/propagation, component gallery, workspace
-previews, design schema, Brief/Operations six widths/default and different saved
-settings, scoped storage failures and no paid generation on reads. Full integrated
-and all 68 exact release checks pass; standalone aesthetic-authority must run last
-before commit/handoff. See COMMIT-REVIEW.txt for recorded validation.
-
-New gates: tests/operation-controls.mjs, tests/admin-status-preferences.mjs and tests/input-controls-ui.mjs in
-Cloud Build/app-regression; input-controls is also imported by final authority.
-Existing admin-prompt-saves now executes active App/Playground readers, never backup
-code. Changed role inventory regenerated with typography-role-usage.py (15 H1 uses).
-
-Isolated cold-load comparison, 4 Mbps/50 ms, baseline 7533e38 vs actual repaired tree:
-27.15 MB / 54.45 s full load -> 2.76 MB / 5.65 s. Embedded Operations first contentful
-paint ~7.62 s -> 1.48 s. Brief first paint remains ~0.3 s. Public CDN modules mirrored
-locally; fonts/GSI/API/analytics blocked, no real account/providers. This proves
-bandwidth waste, not a universal production latency promise. Traces:
-/private/tmp/maya-load-waterfall-results.json, maya-load-variants-results.json and
-maya-ui-current-load.json. Bright Settings/phone/desktop screenshots are in
-/private/tmp/maya-room-settings-{default,saved}-{390,1440}.png.
-
-Platform references: MDN scrollbar-color documents that a non-auto inherited
-standard color disables WebKit pseudo-element styling; runtime resets color for
-that branch. scrollbar-width exposes native thin/auto fallback. Exact pixel width/
-thumb radius uses Chromium/WebKit. Firefox/Safari engines were not run. MDN inert
-supports excluding closed settings from interaction/accessibility.
-https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scrollbar-color
-https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/scrollbar-width
-https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/inert
-
-## Preserved safety and prior repairs
-
-Sealed account/submission/garment scope, original photo/client words, source-backed
-seller facts, qualified matching and private generation-checked lookbooks remain.
-Per-garment fabric fingerprints prevent a coat's material entering pants. New
-pieces have UUIDs; legacy IDs remain readable. No uncertain mutation is replayed
-automatically. Serialized writes/reconciliation and cancellation remain intact.
-Brief saves require reviewed generation, reject stale/missing reviews (409/428),
-fail on unreadable state, retain oversize 25 MiB drafts and publish exact acknowledgements.
-Project saves coalesce only covered versions, preserve later edits and account identity.
-Operations Logic/measurements keep scoped memory/keys and truthful storage errors.
-Owner SMS SEND gates, STOP/recipient revalidation, non-retryable claims and archives
-remain. Current message-stress has 44 passing transport invariants; synthetic founder
-corpus is not model semantic accuracy. No private production messages/calls were sent.
+New release gates: retired-workspaces.mjs, retired-workspaces-ui.mjs and
+component-gallery.mjs. Final aesthetic-authority re-executes changed visible
+fixtures, including retired UI and explicit model details, after functional gates.
+The exact Cloud Build list now has 71 Node commands.
 
 ## Open limits and exact next step
 
-Functional/release/smoke and default/saved screenshot checks have passed. The
-behavioral repairs and retired-editor backups are committed and pushed. Run the
-shared Aesthetic Control authority last for this documentation-only correction,
-commit and Push under existing authorization, then await Cloud Build success for
-the resulting HEAD. Verify release.json, page stamps, API SHA and public asset
-bytes, then repeat the live authority and inspect the phone/desktop Settings
-screenshots. Update deployment state only from evidence; fixtures do not prove it.
+Preserve strict assertions. Run standalone aesthetic-authority last after these
+final records, commit only task files and Push under existing authorization. Wait for the exact Cloud Build, then verify
+release.json, page stamps, API commit, changed asset bytes and retired redirects.
+Run final live shared-surface authority and inspect actual phone/desktop images.
 
-No personal Chrome access this session. Private fur/green-pants demo, actual logged-in
-production acceptance, owner/carrier delivery and live audio/model quality remain
-unverified. Never borrow browser credentials. Credentials, billing, provider setup,
-production environment and stored prompting configuration were untouched. Remaining
-cold-load costs include the ~2 MB shared background and eager 3D/export modules;
-these were measured but not redesigned in this focused screenshot repair.
+No personal Chrome, credentials, provider/billing settings, production environment,
+private owner data, live SMS/calls or paid generation were accessed. Private
+fur/green-pants matching and real audio/provider acceptance remain unverified.
+Public live appearance checks cannot substitute for private matching quality.
+See FABRIC-SEARCH.md for source-backed merchant facts and retained data guarantees.

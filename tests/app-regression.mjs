@@ -12,6 +12,7 @@ import './admin-storage.mjs';
 import './project-lifecycle.mjs';
 import './brief-operation-races.mjs';
 import './release-contract.mjs';
+import './retired-workspaces.mjs';
 import {assertOutboundPriority} from './outbound-priority.mjs';
 import {assertCanon} from './canon-contract.mjs';
 import {assertContainer} from './container-contract.mjs';
@@ -43,7 +44,6 @@ const AT = {
   operations:'backend/operations.html',
   privacy:   'backend/privacy.html',
   verify:    'backend/verify.html',
-  playground:'playground/index.html',
   server:    'docs/server/server.js',
   build:     'cloudbuild.yaml',
   hosting:   'docs/firebase.json',
@@ -71,8 +71,6 @@ const STORAGE_RULES = existsSync(join(ROOT, 'docs/server/storage.rules'))
   ? readFileSync(join(ROOT, 'docs/server/storage.rules'), 'utf8') : '';
 const BACKEND_SOURCE = existsSync(join(ROOT, AT.backend))
   ? readFileSync(join(ROOT, AT.backend), 'utf8') : '';
-const PLAYGROUND_SOURCE = existsSync(join(ROOT, AT.playground))
-  ? readFileSync(join(ROOT, AT.playground), 'utf8') : '';
 // Marketing UI now lives only inside Admin. Keep coverage on the active modules.
 const MKT_SOURCE = MAP_SOURCE;
 const HOSTING = JSON.parse(readFileSync(join(ROOT, AT.hosting), 'utf8'));
@@ -332,7 +330,7 @@ ok('frontend and Admin detect new commits even when the display version stays un
   MAP_SOURCE.includes('build[1] !== RUN_BUILD') &&
   [INDEX_SOURCE, MAP_SOURCE].every(source => source.includes('<meta name="maya-build" content="local">')));
 ok('project deletion batches wall posts before Storage cleanup',
-  [INDEX_SOURCE, PLAYGROUND_SOURCE].every(source => {
+  [INDEX_SOURCE].every(source => {
     const start = source.indexOf('  async remove(id) {');
     const wall = source.indexOf('communityDocs.forEach(ref => batch.delete(ref))', start);
     const committed = source.indexOf('await batch.commit()', wall);
@@ -340,7 +338,7 @@ ok('project deletion batches wall posts before Storage cleanup',
     return start >= 0 && wall > start && committed > wall && cleanup > committed;
   }));
 ok('Storage cleanup is pinned to the deleting account',
-  [INDEX_SOURCE, PLAYGROUND_SOURCE].every(source =>
+  [INDEX_SOURCE].every(source =>
     source.includes('const ctx = this._accountContext(), uid = ctx.uid;') &&
     source.includes('this._cleanupDeletedAssets(id, paths, uid, ctx)') &&
     source.includes('if (!uid || uid !== ctx.uid || !this._accountValid(ctx)) return false;') &&
@@ -366,7 +364,7 @@ const p = await pg.evaluate(() => ({
 ok('queued project saves are pinned to their starting account',
   p.savesPinned && INDEX_SOURCE.includes('await firebase.auth().signOut()'));
 ok('legacy recovery is idempotent and deletion blocks its source',
-  [INDEX_SOURCE, PLAYGROUND_SOURCE].every(source =>
+  [INDEX_SOURCE].every(source =>
     source.includes('dead.has(id) || recovered.has(id)') &&
     source.includes('const ctx = this._accountContext(), uid = ctx.uid;') &&
     source.includes('batch.set(this._tombs(uid).doc(legacySource)')));
@@ -640,7 +638,7 @@ ok('v13.72/v14.02: the day ticker rides its own strip under the drawer, colored,
   MAP_SOURCE.includes('.tk-green{color:var(--green)') &&
   !MAP_SOURCE.includes('#adm-mkt #mkt-ticker{'));
 ok('v13.72: the five health lights moved into the drawer',
-  /<div id="drawer">[\s\S]{0,200}id="top-lights"/.test(MAP_SOURCE) &&
+  /<div id="drawer"[^>]*>[\s\S]{0,200}id="top-lights"/.test(MAP_SOURCE) &&
   MAP_SOURCE.includes('#drawer #top-lights{'));
 ok('v13.72: Maya command left the page center and became the drawer voice line',
   !MAP_SOURCE.includes('<section id="maya-command"') &&
@@ -765,8 +763,8 @@ const mapVer = await pg.evaluate(() =>
   (document.querySelector('meta[name="maya-version"]') || {}).content || 'missing');
 ok('index and map carry the same maya-version (' + r.version + ')', mapVer === r.version);
 const versionOf = source => (source.match(/name="maya-version" content="([0-9.]+)"/) || [])[1];
-ok('app, Playground, Admin and standalone Marketing share one release version',
-  [INDEX_SOURCE, PLAYGROUND_SOURCE, MAP_SOURCE]
+ok('app and Admin share one release version',
+  [INDEX_SOURCE, MAP_SOURCE]
     .every(source => versionOf(source) === r.version));
 await pg.evaluate(() => {
   localStorage.setItem('maya_admin_tok', 'FAKE.TOKEN.x');
@@ -967,7 +965,7 @@ ok('one row, five numbers, users first, each window paired manasiyo | MAYA',
   MAP_SOURCE.includes('#head-tiles .pair-b') && MAP_SOURCE.includes('d.wixSite') &&
   SERVER_SOURCE.includes('ranges, countries, accounts: accounts || null, wixSite'));
 ok('the map hamburger links the privacy policy',
-  MAP_SOURCE.includes('<a href="/privacy.html">Privacy policy'));
+  /<a[^>]*href="\/privacy\.html"[^>]*>Privacy policy/.test(MAP_SOURCE));
 ok('unique accounts are counted by MAYA itself',
   SERVER_SOURCE.includes("const USERS_PREFIX = 'metrics/users/'") &&
   SERVER_SOURCE.includes('function noteUser(sub, email)') &&
@@ -1010,7 +1008,7 @@ ok('nothing hangs below the row of five',
 // ── v13.35, Aug 20 ─────────────────────────────────────────────────────────
 // v13.72: the five health lights moved off the wordmark line and into the drawer.
 ok('the health lights live inside the drawer now',
-  /<div id="drawer">[\s\S]{0,260}id="top-lights"/.test(MAP_SOURCE) &&
+  /<div id="drawer"[^>]*>[\s\S]{0,260}id="top-lights"/.test(MAP_SOURCE) &&
   MAP_SOURCE.includes('#drawer #top-lights{') &&
   !/id="top-bar"[\s\S]{0,80}id="top-lights"/.test(MAP_SOURCE));
 ok('the logo goes home to the Systems Map',
@@ -1038,10 +1036,10 @@ ok('the app is still what the front door serves',
   (_rw[_rw.length - 1] || {}).source === '**' &&
   (_rw[_rw.length - 1] || {}).destination === '/frontend/index.html');
 ok('the API rewrite still comes first', (_rw[0] || {}).source === '/api/**' && !!(_rw[0] || {}).run);
-ok('the playground is its own copy behind its own address',
-  _dest('/playground.html') === '/playground/index.html' &&
-  existsSync(join(ROOT, 'playground/index.html')) &&
-  readFileSync(join(ROOT, 'playground/index.html'), 'utf8').includes('>Playground</div>'));
+ok('retired Playground and Affiliates addresses redirect before the live client fallback',
+  !existsSync(join(ROOT, 'playground/index.html')) &&
+  HOSTING.hosting.redirects.some(r => r.source === '/playground.html' && r.destination === '/' && r.type === 301) &&
+  HOSTING.hosting.redirects.some(r => r.source === '/affiliates.html' && r.destination === '/status.html' && r.type === 301));
 ok('pictures still deploy: aesthetics is not inside the ignored folder',
   existsSync(join(ROOT, 'aesthetics')) &&
   !(HOSTING.hosting.ignore || []).some(g => g === 'aesthetics/**'));
@@ -1053,12 +1051,12 @@ ok('aesthetics holds only what the web serves',
   !existsSync(join(ROOT, 'aesthetics/Aesthetics.pdf')) &&
   !existsSync(join(ROOT, 'aesthetics/one-pager-preview.html')) &&
   existsSync(join(ROOT, 'aesthetics/ui/maya-canon.css')));
-ok('Aesthetic Control is the single served design entry, with the old preview URL preserved',
+ok('Aesthetic Control remains the single served design entry after staging retirement',
   existsSync(join(ROOT, 'aesthetics/aesthetic-control.html')) &&
   existsSync(join(ROOT, 'docs/design.md')) &&
   !existsSync(join(ROOT, 'playground/components/index.html')) &&
   !existsSync(join(ROOT, 'design.md')) &&
-  HOSTING.hosting.rewrites.some(r => r.source === '/playground/components/index.html' && r.destination === '/aesthetics/aesthetic-control.html') &&
+  HOSTING.hosting.redirects.some(r => r.source === '/playground{,/**}' && r.destination === '/' && r.type === 301) &&
   readFileSync(join(ROOT, 'backend/status.html'), 'utf8').includes('href="/aesthetics/aesthetic-control.html"'));
 ok('the handoff lives where both agents look',
   existsSync(join(ROOT, 'AGENTS.md')) && existsSync(join(ROOT, 'docs/design.md')) &&
@@ -1205,7 +1203,7 @@ ok('the paid chart has axes and an All three chip',
   MKT_SOURCE.includes('each line scaled to its own peak'));
 ok('the inline fabric results fit a usable shared viewport without stretching the Brief canvas',
   BACKEND_SOURCE.includes('grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr)') &&
-  BACKEND_SOURCE.includes('height:max(540px,70dvh); max-height:none; min-width:0; min-height:0;') &&
+  BACKEND_SOURCE.includes('width:100%; height:70dvh; max-height:70dvh; min-width:0; min-height:0;') &&
   BACKEND_SOURCE.includes('window.MayaFabricAssistant.open({host,automatic:true,submissionId:context.sid') &&
   readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('.fa-body{flex:1;min-height:0;overflow-y:auto;') &&
   readFileSync(join(ROOT,'aesthetics/ui/fabric-assistant.css'),'utf8').includes('grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr))'));
@@ -1244,12 +1242,11 @@ ok('Saved garment references and qualified traits drive seller-thumbnail ranking
   FABRIC_SOURCE.includes('visible color, texture, weave, sheen, print') &&
   FABRIC_SEARCH_SOURCE.includes('rank({garmentImage:selectedReference||input.image,traits:{...input.piece.fabric_spec') &&
   FABRIC_SEARCH_SOURCE.includes('garmentId:input.piece.id,garment:input.piece.name'));
-ok('Compact fabric cards retain source-backed buying facts and uncertainty in accessible titles',
+ok('Compact fabric cards show source-backed price units inline without hover metadata',
   FABRIC_UI_SOURCE.includes("const knownPrice=p.price&&p.unit?") &&
-  FABRIC_UI_SOURCE.includes('link.title=[p.title,p.description,knownPrice,p.reason]') &&
+  !FABRIC_UI_SOURCE.includes('link.title=') &&
   FABRIC_UI_SOURCE.includes("const use=p.garment?'For '+p.garment:''") &&
-  FABRIC_UI_SOURCE.includes("p.availability==='in_stock'?'Seller lists in stock':'Availability unconfirmed'") &&
-  FABRIC_UI_SOURCE.includes("'Delivery unconfirmed'"));
+  FABRIC_UI_SOURCE.includes("[use,local?'':p.merchant,knownPrice]"));
 ok('Fabric ranking describes closest visual matches and never claims exact image-derived facts',
   FABRIC_SOURCE.includes('These are closest visual matches, never exact matches.') &&
   FABRIC_SOURCE.includes('Do not infer exact fiber, stock or price from images.') &&
@@ -1259,7 +1256,7 @@ ok('Failed visual comparison is explicit and cannot promote unchecked products a
   FABRIC_SEARCH_SOURCE.includes("products=[];warning='Fabric photo comparison was unavailable.") &&
   FABRIC_SEARCH_SOURCE.includes("send({ type: 'products', products, preliminary: false })") &&
   FABRIC_UI_SOURCE.includes('if(event.products){products=event.products;paint();}') &&
-  FABRIC_UI_SOURCE.includes('status(event.warning || event.message)'));
+  FABRIC_UI_SOURCE.includes("completedStatus=event.warning || event.message || '';status(completedStatus)"));
 ok('only real retailer thumbnails enter visual comparison',
   FABRIC_SOURCE.includes("filter(product => product.image && product.url && product.title)") &&
   FABRIC_SOURCE.includes("error.status = 422") &&
@@ -1280,11 +1277,9 @@ ok('AI route telemetry records metadata only and the build gates its contracts',
   BUILD_SOURCE.includes('node tests/fabric-sourcing.mjs'));
 ok('GPT Image 1.5 is retired from every active image path and picker',
   !INDEX_SOURCE.includes('gpt-image-1.5') &&
-  !PLAYGROUND_SOURCE.includes('gpt-image-1.5') &&
   !BACKEND_SOURCE.includes('gpt-image-1.5') &&
   BACKEND_SOURCE.includes("form.append('model', 'gpt-image-2.5-flare')") &&
-  INDEX_SOURCE.includes("stored !== 'gpt-image-2.5-flare'") &&
-  PLAYGROUND_SOURCE.includes("stored !== 'gpt-image-2.5-flare'"));
+  INDEX_SOURCE.includes("stored !== 'gpt-image-2.5-flare'"));
 ok('piece render quality, size and parallel behavior stayed unchanged',
   /async function renderPiece[\s\S]{0,3000}form\.append\('size', '1536x1024'\)[\s\S]{0,120}form\.append\('quality', 'medium'\)/.test(BACKEND_SOURCE) &&
   BACKEND_SOURCE.includes('const promises = targets.map(p =>') &&
@@ -1294,10 +1289,11 @@ ok('a click anywhere outside the drawer closes it, on every page',
   /pointerdown[\s\S]{0,400}toggleDrawer\(false\)/.test(MAP_SOURCE) &&
   /pointerdown[\s\S]{0,500}toggleClientsDrawer\(false\)/.test(BACKEND_SOURCE) &&
   /pointerdown[\s\S]{0,400}toggleDrawer\(false\)/.test(MKT_SOURCE));
-ok('MAYA hover on Admin reveals both back rooms',
+ok('MAYA Admin navigation keeps Operations and Outbound without retired staging',
   MAP_SOURCE.includes('pg-chips') &&
   /pg-chip" href="\/operations\.html"/.test(MAP_SOURCE) &&
-  /pg-chip" href="\/playground\.html"/.test(MAP_SOURCE));
+  /pg-chip" href="\/outbound\.html"/.test(MAP_SOURCE) &&
+  !MAP_SOURCE.includes('href="/playground.html"'));
 ok('a two finger pinch resizes a card on a phone',
   INDEX_SOURCE.includes("e.touches.length !== 2") &&
   INDEX_SOURCE.includes('el._pinching = true;') &&
@@ -1318,10 +1314,13 @@ ok('marketing draws both networks on one chart with a campaign table',
   // v13.54: each network is asked in its own words now, not through /all.
   SERVER_SOURCE.includes("'date,campaign,campaign_status,ad_group_name,ad_group_status,impressions,clicks,spend'") &&
   SERVER_SOURCE.includes("'date,campaign,impressions,clicks,link_clicks,spend'"));
-ok('Shared sourcing offers real store filters alongside independently loaded atelier inventory',
-  FABRIC_UI_SOURCE.includes("['The Fabric Store','thefabricstore.com']") && FABRIC_UI_SOURCE.includes("['Tessuti Fabrics','www.tessuti.com.au']") &&
-  FABRIC_UI_SOURCE.includes("const inhouse=action('In House'") && FABRIC_UI_SOURCE.includes('void loadInventory().catch') &&
-  FABRIC_SEARCH_SOURCE.includes('stores:list(body.stores).filter(host=>FABRIC_SHOPS.some(shop=>shop.host===host))') &&
+ok('Shared sourcing offers exactly five free store filters and explicit scoped Refresh',
+  ['local','mood','swatchon','amazon','others'].every(id=>FABRIC_UI_SOURCE.includes("id:'"+id+"'")) &&
+  FABRIC_UI_SOURCE.includes('activeStores=new Set(storeGroups.map(group=>group.id))') &&
+  FABRIC_UI_SOURCE.includes('Refresh to search these stores.') &&
+  FABRIC_UI_SOURCE.includes('void loadInventory().catch') &&
+  FABRIC_SEARCH_SOURCE.includes('currentStoreFilter:input.storeGroups') &&
+  FABRIC_SEARCH_SOURCE.includes('Choose at least one supported store group.') &&
   FABRIC_SEARCH_SOURCE.includes('allowed.includes(merchantURL(product.url,true)?.shop)'));
 // ── v13.53: the tier upgrade, guarded, with Nano Banana ────────────────────
 ok('the proxy holds a model allowlist and upgrades legacy names by tier',
@@ -1397,10 +1396,9 @@ ok('Admin: the lead list shows their notes, what they actually wrote',
 // ── v13.63 · centered terms, AI and face disclosures ─────────────────────
 ok('the terms read centered, in the popup and on the page',
   INDEX_SOURCE.includes('color: rgba(238,242,255,0.86); text-align: center;') &&
-  PLAYGROUND_SOURCE.includes('color: rgba(238,242,255,0.86); text-align: center;') &&
   readFileSync(join(ROOT, 'backend/terms.html'), 'utf8').includes('text-align: center;'));
 ok('MAYA discloses that it is built on AI and how face photographs are treated, everywhere the terms live',
-  [INDEX_SOURCE, PLAYGROUND_SOURCE, readFileSync(join(ROOT, 'backend/terms.html'), 'utf8')].every(t =>
+  [INDEX_SOURCE, readFileSync(join(ROOT, 'backend/terms.html'), 'utf8')].every(t =>
     t.includes('Built on artificial intelligence') &&
     t.includes('face photograph') &&
     t.includes('facial recognition') &&
@@ -1409,8 +1407,7 @@ ok('MAYA discloses that it is built on AI and how face photographs are treated, 
   readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').includes('does not run facial recognition') &&
   readFileSync(join(ROOT, 'backend/privacy.html'), 'utf8').includes('AI generated content') &&
   // a terms change means everyone agrees again
-  INDEX_SOURCE.includes("MAYA_TOS_VERSION = '2026-08-24'") &&
-  PLAYGROUND_SOURCE.includes("MAYA_TOS_VERSION = '2026-08-24'"));
+  INDEX_SOURCE.includes("MAYA_TOS_VERSION = '2026-08-24'"));
 // ── v13.62 · the Lead Station ─────────────────────────────────────────────
 ok('the notes column is a summary of what they want and which tier',
   SERVER_SOURCE.includes('async function summarizeLead(') &&
@@ -1482,12 +1479,11 @@ ok('the terms ship as a page, succinct, and the wall rule is in them',
 // v13.58: the checkbox became a popup, per Fromsa: sign in first, then the
 // terms open on screen, and Agree wakes only at the end of the text.
 ok('the terms open as a popup and Agree wakes at the end of the text',
-  INDEX_SOURCE.includes('id="tos-modal"') &&
   INDEX_SOURCE.includes('function _maybeShowTerms()') &&
   INDEX_SOURCE.includes('sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 12') &&
   INDEX_SOURCE.includes("MAYA_TOS_KEY = 'maya_tos_accepted'") &&
   INDEX_SOURCE.includes('href="/terms.html"') &&
-  PLAYGROUND_SOURCE.includes('id="tos-modal"'));
+  INDEX_SOURCE.includes('id="tos-modal"'));
 ok('unhearting sweeps every post this account made for that garment',
   INDEX_SOURCE.includes("where('uid', '==', uid).where('fp', '==', fp)") &&
   /_unpublishNow[\s\S]{0,2500}where\('fp', '==', fp\)/.test(INDEX_SOURCE));
@@ -1496,20 +1492,14 @@ ok('every sign in says hello so the Users count is complete',
   SERVER_SOURCE.includes('tosVersion') &&
   INDEX_SOURCE.includes('function _sayHello()') &&
   INDEX_SOURCE.includes("fetch('/api/hello'"));
-// ── v13.58: BACKEND in caps, the circles drawer staged on the playground ───
+// ── v13.58: BACKEND in caps, the approved circles drawer ───
 ok('the Backend corner speaks in caps',
   /#brand \{[\s\S]{0,260}text-transform: uppercase/.test(BACKEND_SOURCE));
 // v13.60 staged the tabs; v13.71 promotes the approved cabinet unchanged.
-ok('the approved cabinet drawer ships in both Playground and the real app',
-  PLAYGROUND_SOURCE.includes('class="pg-tabrow"') &&
-  PLAYGROUND_SOURCE.includes('id="pg-folder"') &&
-  PLAYGROUND_SOURCE.includes('id="pg-pane-fabrics"') &&
-  PLAYGROUND_SOURCE.includes('id="pg-pane-pinterest"') &&
-  PLAYGROUND_SOURCE.includes('function pgShow(') &&
+ok('the approved cabinet drawer remains in the live app',
   // the circles are circles, not pills, and the size of the hamburger
-  /\.pg-tab \{[\s\S]{0,200}border-radius: 50%/.test(PLAYGROUND_SOURCE) &&
-  !PLAYGROUND_SOURCE.includes('class="drawer-tabs"') &&
-  !PLAYGROUND_SOURCE.includes('class="drawer-top-row"') &&
+  /\.pg-tab \{[\s\S]{0,200}border-radius: 50%/.test(INDEX_SOURCE) &&
+  !INDEX_SOURCE.includes('class="drawer-tabs"') &&
   INDEX_SOURCE.includes('class="pg-tabrow"') &&
   INDEX_SOURCE.includes('id="pg-folder"') &&
   INDEX_SOURCE.includes('id="pg-pane-fabrics"') &&
@@ -1517,7 +1507,7 @@ ok('the approved cabinet drawer ships in both Playground and the real app',
   INDEX_SOURCE.includes('function pgShow(') &&
   !INDEX_SOURCE.includes('class="drawer-top-row"'));
 ok('the shipped cabinet moves live panels inside the folder without duplicating them',
-  [PLAYGROUND_SOURCE, INDEX_SOURCE].every(source =>
+  [INDEX_SOURCE].every(source =>
     source.includes("fabPane.appendChild(fab)") &&
     source.includes("pinPane.appendChild(pin)") &&
     source.includes('.pg-pane .fabrics-back { display: none; }') &&
@@ -1529,9 +1519,8 @@ ok('the shipped cabinet moves live panels inside the folder without duplicating 
     source.includes('id="pg-meas"') &&
     source.includes("host.appendChild(body)") &&
     source.includes('pgUpdatePill')) &&
-  // v13.98: the Playground is a live copy of the app now, avatar dropdown and
-  // all, so both sources carry the same working switcher.
-  PLAYGROUND_SOURCE.includes('id="drawer-avatar-switcher"') &&
+  // The approved avatar switcher remains in the live client.
+  INDEX_SOURCE.includes('id="drawer-avatar-switcher"') &&
   INDEX_SOURCE.includes("pgShow('fabrics')") &&
   INDEX_SOURCE.includes("pgShow('pinterest')") &&
   INDEX_SOURCE.includes('try { toggleNotesDrawer(true);'));
@@ -1633,13 +1622,13 @@ ok('ops: Plan B mirrors Plan A, photo left, closest CLO reference right, honest 
     existsSync(join(ROOT, 'aesthetics/operations/clo-library.js')) &&
     readFileSync(join(ROOT, 'aesthetics/operations/clo-library.js'), 'utf8').includes('window.CLO_LIBRARY')));
 // ── v13.64 · the room joins the family for real, and the numbers tell the day ─
-ok('ops: family header with the logo, the plan line switches plans, no dead pill',
+ok('ops: family header with the logo and explicit plan settings without a duplicate subtitle',
   !OPS_SOURCE || (
     OPS_SOURCE.includes('logo-circle.png') &&
     OPS_SOURCE.includes('<h1>Operation Room</h1>') &&
     !OPS_SOURCE.includes('<span class="sub">Beta</span>') &&
     !OPS_SOURCE.includes('id="plan-btn"') &&
-    OPS_SOURCE.includes(`onclick="setPlan(getPlan()==='A'?'B':'A')"`) &&
+    OPS_SOURCE.includes('data-plan="A" onclick="setPlan(\'A\')"') && !OPS_SOURCE.includes('id="room-sub"') &&
     /#toast\{[^}]*visibility:hidden/.test(OPS_SOURCE)));
 ok('the CLO route asks the real CLO-SET library through the server',
   SERVER_SOURCE.includes("app.post('/api/admin/clo-search'") &&
@@ -1653,8 +1642,7 @@ ok('today counts in the site timezone, so the evening is never empty',
   SERVER_SOURCE.includes('at 6pm Pacific, UTC is already'));
 // Retired standalone Marketing layout assertion; active Admin coverage is in admin-ui-contract.mjs.
 ok('the cabinet consumes the drawer: circles at the bezel, panes edge to edge, Pinterest in the middle',
-  PLAYGROUND_SOURCE.includes('>Playground</div>') &&
-  [PLAYGROUND_SOURCE, INDEX_SOURCE].every(source =>
+  [INDEX_SOURCE].every(source =>
     /pg-folder \{[^}]*border: none/.test(source) &&
     source.indexOf('id="pg-tab-pinterest"') < source.indexOf('id="pg-tab-fabrics"') &&
     source.includes(">Projects</div>")));
@@ -2040,34 +2028,32 @@ ok('v13.98: fabric captions are half-height and centered',
   INDEX_SOURCE.includes('outline: none; padding: 0; text-align: center;'));
 ok('v13.98/99: the Projects pill is centered and a little smaller (16px)',
   INDEX_SOURCE.includes('.pg-project-beside .pg-project-beside-caret { position: absolute; right: 9px') &&
-  /pg-project-beside \{[^}]*font-size: 16px/.test(INDEX_SOURCE) &&
-  /pg-project-beside \{[^}]*font-size: 16px/.test(PLAYGROUND_SOURCE));
+  /pg-project-beside \{[^}]*font-size: 16px/.test(INDEX_SOURCE));
 ok('v13.98: Randomize downscales the 2MB headshots at fetch, before anything paints',
   INDEX_SOURCE.includes('createImageBitmap(blob)') &&
   INDEX_SOURCE.includes("c.toDataURL('image/jpeg', 0.85)"));
 ok('v13.98/v14.00: the credits copy carries no dashes and the honest render count',
   INDEX_SOURCE.includes('about 75 more for $5') &&
   !INDEX_SOURCE.includes('visualizing —'));
-ok('v13.98/99: the Playground is a live copy of the app; order inspo, favorites, wall',
-  PLAYGROUND_SOURCE.includes('>Playground</div>') &&
-  PLAYGROUND_SOURCE.includes('#screen-inspo { order: 1; }') &&
-  PLAYGROUND_SOURCE.includes('#screen-favorites { order: 2; }') &&
-  PLAYGROUND_SOURCE.includes('#screen-community { order: 3; }') &&
-  PLAYGROUND_SOURCE.includes('window._pgScreenPos = { 1: 0, 2: 1, 0: 2 }') &&
-  PLAYGROUND_SOURCE.includes('host.scrollTop = 0;'));
-ok('v13.98/99: Playground zoom fires ONLY on pinch or Cmd/Ctrl scroll, never plain scroll',
-  PLAYGROUND_SOURCE.includes('const MINZ = 0.40') &&
-  PLAYGROUND_SOURCE.includes('window.pgZoomReset') &&
-  PLAYGROUND_SOURCE.includes('if (!(e.ctrlKey || e.metaKey)) return;') &&
-  PLAYGROUND_SOURCE.includes('body.pg-zoomed #maya-canvas'));
-ok('v13.98/99: Playground backgrounds are fabric-sized cards with names underneath',
-  PLAYGROUND_SOURCE.includes('id="pg-bg-fold"') &&
-  PLAYGROUND_SOURCE.includes('>Birth of a Star<') &&
-  PLAYGROUND_SOURCE.includes("'Generated background'") &&
-  PLAYGROUND_SOURCE.includes('pg-bg-cardname') &&
-  PLAYGROUND_SOURCE.includes('aspect-ratio: 16 / 10') &&
-  PLAYGROUND_SOURCE.includes('window.pgGenerateBackground') &&
-  PLAYGROUND_SOURCE.includes('Tap it to apply'));
+ok('v13.98/99: the live client orders inspo, favorites, wall',
+  INDEX_SOURCE.includes('#screen-inspo { order: 1; }') &&
+  INDEX_SOURCE.includes('#screen-favorites { order: 2; }') &&
+  INDEX_SOURCE.includes('#screen-community { order: 3; }') &&
+  INDEX_SOURCE.includes('window._pgScreenPos = { 1: 0, 2: 1, 0: 2 }') &&
+  INDEX_SOURCE.includes('host.scrollTop = 0;'));
+ok('v13.98/99: client zoom fires ONLY on pinch or Cmd/Ctrl scroll, never plain scroll',
+  INDEX_SOURCE.includes('const MINZ = 0.40') &&
+  INDEX_SOURCE.includes('window.pgZoomReset') &&
+  INDEX_SOURCE.includes('if (!(e.ctrlKey || e.metaKey)) return;') &&
+  INDEX_SOURCE.includes('body.pg-zoomed #maya-canvas'));
+ok('v13.98/99: client backgrounds are fabric-sized cards with names underneath',
+  INDEX_SOURCE.includes('id="pg-bg-fold"') &&
+  INDEX_SOURCE.includes('>Birth of a Star<') &&
+  INDEX_SOURCE.includes("'Generated background'") &&
+  INDEX_SOURCE.includes('pg-bg-cardname') &&
+  INDEX_SOURCE.includes('aspect-ratio: 16 / 10') &&
+  INDEX_SOURCE.includes('window.pgGenerateBackground') &&
+  INDEX_SOURCE.includes('Tap it to apply'));
 ok('v13.98: one click creates a real Wix pay link server-side, the skill recipe',
   SERVER_SOURCE.includes("app.post('/api/admin/invoice-create'") &&
   SERVER_SOURCE.includes("INVOICE_TAX_GROUP = '13d21c63-b5ec-5912-8397-c3a5ddb27a97'") &&
@@ -2080,19 +2066,18 @@ ok('v14.01/v14.02: the circle carries the price over a thinner, bluer ring; visu
   INDEX_SOURCE.includes('const cardsLeft = Math.max(0, Math.floor(left / perCard') &&
   INDEX_SOURCE.includes('>Visualizations left</span>') &&
   INDEX_SOURCE.includes('stroke: rgba(128,176,255,0.95); stroke-width: 5.2') &&
-  PLAYGROUND_SOURCE.includes('stroke: rgba(128,176,255,0.95); stroke-width: 5.2') &&
   INDEX_SOURCE.includes('>Projects</span>'));
 ok('v14.00: /api/usage reports the per-card price so the gauge stays honest',
   SERVER_SOURCE.includes('perCardUsd: Number((PRICE_IMAGE * 0.5).toFixed(3))'));
-ok('v14.02: playground zoom v5 scales the canvas only, rAF-eased, floor 0.40 or the fit, never pins the screens',
-  PLAYGROUND_SOURCE.includes('function measure()') &&
-  PLAYGROUND_SOURCE.includes('zfloor = Math.min(MINZ, Math.max(0.12, fit))') &&
-  PLAYGROUND_SOURCE.includes('raf = requestAnimationFrame(tick)') &&
-  PLAYGROUND_SOURCE.includes('if (zoomIn && next > 0.98) next = 1') &&
-  PLAYGROUND_SOURCE.includes('body.pg-zoomed #maya-canvas { overflow: visible') &&
-  !PLAYGROUND_SOURCE.includes('function parkVoiceBar(') &&
-  !PLAYGROUND_SOURCE.includes("host.style.overflowY = zoomed ? 'hidden' : ''") &&
-  !PLAYGROUND_SOURCE.includes('#screen-inspo { transition: transform'));
+ok('v14.02: client zoom v5 scales the canvas only, rAF-eased, floor 0.40 or the fit, never pins the screens',
+  INDEX_SOURCE.includes('function measure()') &&
+  INDEX_SOURCE.includes('zfloor = Math.min(MINZ, Math.max(0.12, fit))') &&
+  INDEX_SOURCE.includes('raf = requestAnimationFrame(tick)') &&
+  INDEX_SOURCE.includes('if (zoomIn && next > 0.98) next = 1') &&
+  INDEX_SOURCE.includes('body.pg-zoomed #maya-canvas { overflow: visible') &&
+  !INDEX_SOURCE.includes('function parkVoiceBar(') &&
+  !INDEX_SOURCE.includes("host.style.overflowY = zoomed ? 'hidden' : ''") &&
+  !INDEX_SOURCE.includes('#screen-inspo { transition: transform'));
 ok('v14.02: the money counter never restarts on an update (trial epoch frozen)',
   SERVER_SOURCE.includes('THE EPOCH IS FROZEN') &&
   SERVER_SOURCE.includes("const TRIAL_EPOCH = String(process.env.TRIAL_EPOCH || 'v14.00')"));
@@ -2101,15 +2086,13 @@ ok('v14.02: admin drawer lines are centered; Hey Maya is a switch; the divider s
   MAP_SOURCE.includes('#maya-toggle.live .mt-knob{transform:translateX(12px)}') &&
   MAP_SOURCE.includes('role="switch"') &&
   !MAP_SOURCE.includes("'Turn on Hey Maya'"));
-ok('v14.00: playground backgrounds persist and can be uploaded',
-  PLAYGROUND_SOURCE.includes("const LIST = 'maya_pg_bgs'") &&
-  PLAYGROUND_SOURCE.includes('window.pgUploadBackground') &&
-  PLAYGROUND_SOURCE.includes('id="pg-bg-file"') &&
-  PLAYGROUND_SOURCE.includes('keepBg(dataUrl'));
-ok('v14.00: the Playground label rides beside the wordmark; the halo is quieter',
-  PLAYGROUND_SOURCE.includes('id="pg-badge"') &&
-  PLAYGROUND_SOURCE.includes('brand.appendChild(b)') &&
-  PLAYGROUND_SOURCE.includes('rgba(200,222,255,0.40)'));
+ok('v14.00: client backgrounds persist and can be uploaded',
+  INDEX_SOURCE.includes("const LIST = 'maya_pg_bgs'") &&
+  INDEX_SOURCE.includes('window.pgUploadBackground') &&
+  INDEX_SOURCE.includes('id="pg-bg-file"') &&
+  INDEX_SOURCE.includes('keepBg(dataUrl'));
+ok('the live client has no retired staging badge',
+  !INDEX_SOURCE.includes('id="pg-badge"') && !existsSync(join(ROOT,'playground/index.html')));
 ok('v14.00: invoice actions draft email or internal Messages by lead name',
   MAP_SOURCE.includes('function _invEmailLead') &&
   MAP_SOURCE.includes('function _invTextLead') &&
@@ -2138,20 +2121,19 @@ ok('September 22: Mana links sit left, lead tools grow, gear stays square',
   MAP_SOURCE.includes('.card-mana .mana-chips{position:absolute;left:auto;right:100%;top:50%;') &&
   MAP_SOURCE.includes('font-size:12.5px;line-height:1;width:32px;height:26px') &&
   MAP_SOURCE.includes('flex:none;aspect-ratio:1'));
-ok('September 22: standalone Affiliates removes extra admin navigation and records real stages',
-  !MAP_SOURCE.includes('class="affiliate-back"') && MAP_SOURCE.includes('.affiliates-view #top-left-brand .brand-chips') &&
-  MAP_SOURCE.includes('id="affiliate-contacted"') && MAP_SOURCE.includes('id="affiliate-closed"') &&
+ok('Admin keeps real lead stages after Affiliates retirement',
+  !MAP_SOURCE.includes('affiliates-view') && !MAP_SOURCE.includes('id="affiliate-profile"') &&
   MAP_SOURCE.includes('aria-label="Lead status"') && cleanLeadPatch({stage:'completed'}).stage==='completed');
-ok('September 22: frontend and Playground share explicit new-avatar Save, slower zoom and Pinterest scopes',
-  [INDEX_SOURCE, PLAYGROUND_SOURCE].every(source =>
+ok('September 22: frontend retains explicit new-avatar Save, slower zoom and Pinterest scopes',
+  [INDEX_SOURCE].every(source =>
     source.includes('id:crypto.randomUUID()') && source.includes('runTransaction(async transaction') &&
     source.includes('const merged = [record, ...list]') && source.includes('enumerable:false') &&
     source.includes('pg-avatar-nameline:hover #drawer-avatar-rename') &&
     source.includes('const step = 0.025') && source.includes('(d / pinchD - 1) * 0.5') &&
     !source.includes('id="pin-search-scope"') && source.includes('Open Pinterest search')));
-ok('Playground: avatar Save awaits cloud write; name edits in place',
-  PLAYGROUND_SOURCE.includes('saveAvatarFromDrawer(this)') && PLAYGROUND_SOURCE.includes('await _saveCurrentAvatarToLibrary(true)') &&
-  PLAYGROUND_SOURCE.includes('id="drawer-avatar-name" role="button" tabindex="0" onclick="pgRenameClient()"'));
+ok('Client: avatar Save awaits cloud write; name edits in place',
+  INDEX_SOURCE.includes('saveAvatarFromDrawer(this)') && INDEX_SOURCE.includes('await _saveCurrentAvatarToLibrary(true)') &&
+  INDEX_SOURCE.includes('id="drawer-avatar-name" role="button" tabindex="0" onclick="pgRenameClient()"'));
 // ── v14.03 ──
 ok('v14.36: the audit: a lead is found by phone too, the thread learns the name Maya heard',
   ADMIN_COMMAND_SOURCE.includes('phoneDigits') && SERVER_SOURCE.includes('resolveLeadExact') &&
@@ -2221,112 +2203,87 @@ ok('v14.30: Maya on the phone and a year of leads: the phone module, the station
   !/[\u2014\u2013]/.test(PHONE_SOURCE));
 ok('v14.29: the iPad fits: dvh panes at every width, the pills follow the visible board, lighter glass on touch',
   INDEX_SOURCE.includes('#screen-community, #screen-inspo, #screen-favorites { height: 100dvh; min-height: 100dvh; }\n    .hpane { height: 100dvh; }\n  }') &&
-  INDEX_SOURCE.includes('@media (min-width: 641px) and (max-width: 1279px) {') &&
   INDEX_SOURCE.includes("if (w > 640 && w < 1280 && hscroll.scrollLeft > 0) vw.style.transform = 'translateX(calc(-50% + ' + Math.round(hscroll.scrollLeft / 2) + 'px))';") &&
-  INDEX_SOURCE.includes("window.addEventListener('resize', updateDrawerState, { passive: true });") &&
   INDEX_SOURCE.includes('@media (pointer: coarse) {\n    .item-card { backdrop-filter: blur(12px) saturate(160%);') &&
-  PLAYGROUND_SOURCE.includes('@media (min-width: 641px) and (max-width: 1279px) {') &&
-  PLAYGROUND_SOURCE.includes("window.addEventListener('resize', updateDrawerState, { passive: true });"));
-ok('v14.28: the pencil hides until hover, the consent line is gone, the playground flips its cards to the notes',
-  PLAYGROUND_SOURCE.includes('#notes-drawer .avatar-switch-row:hover .avatar-switch-rename { opacity: 1; }') &&
+  INDEX_SOURCE.includes('@media (min-width: 641px) and (max-width: 1279px) {') &&
+  INDEX_SOURCE.includes("window.addEventListener('resize', updateDrawerState, { passive: true });"));
+ok('v14.28: the pencil hides until hover, consent stays hidden and unapproved card flipping stays absent',
   INDEX_SOURCE.includes('#notes-drawer .avatar-switch-row:hover .avatar-switch-rename { opacity: 1; }') &&
   !INDEX_SOURCE.includes('#notes-drawer .session-item:hover .session-item-rename, #notes-drawer .session-item.active .session-item-rename { opacity: 1; }') &&
   INDEX_SOURCE.includes('id="fb-consent" onclick="_fbConsentToggle()" style="display:none"') &&
-  PLAYGROUND_SOURCE.includes('id="pg-callouts"') &&
-  PLAYGROUND_SOURCE.includes('function pgFlipCard(ev)') &&
-  PLAYGROUND_SOURCE.includes('function _pgViewerExtras(item)') &&
   !INDEX_SOURCE.includes('id="pg-callouts"') &&
   !INDEX_SOURCE.includes('function pgFlipCard(ev)'));
 ok('v14.27: ready for a phone: the switch is the line, mic first, the touched card carries the controls, the feedback box fits',
-  PLAYGROUND_SOURCE.includes('function _pgPhone()') &&
   INDEX_SOURCE.includes('function _pgPhone()') &&
-  PLAYGROUND_SOURCE.includes('if (_pgPhone() || !_pgWakeSupported()) {') &&
-  [PLAYGROUND_SOURCE,INDEX_SOURCE].every(source=>source.includes('if (_pgPhone() || document.hidden || !getApiKey()) return;')) &&
-  PLAYGROUND_SOURCE.includes('_pgVoiceManager().start()') &&
+  INDEX_SOURCE.includes('if (_pgPhone() || !_pgWakeSupported()) {') &&
+  [INDEX_SOURCE].every(source=>source.includes('if (_pgPhone() || document.hidden || !getApiKey()) return;')) &&
+  INDEX_SOURCE.includes('_pgVoiceManager().start()') &&
   readFileSync(join(ROOT,'aesthetics/ui/voice-preparation.js'),'utf8').includes('microphone = navigator.mediaDevices.getUserMedia({ audio: true })') &&
-  PLAYGROUND_SOURCE.includes(".item-card.touched .fav-btn,") &&
   INDEX_SOURCE.includes(".item-card.touched .fav-btn,") &&
-  PLAYGROUND_SOURCE.includes('style="text-align:center;max-width:min(520px, 94vw)"') &&
   INDEX_SOURCE.includes('style="text-align:center;max-width:min(520px, 94vw)"') &&
-  PLAYGROUND_SOURCE.includes('bottom: calc(18px + env(safe-area-inset-bottom, 0px))'));
+  INDEX_SOURCE.includes('bottom: calc(18px + env(safe-area-inset-bottom, 0px))'));
 ok('v14.26: demo readiness: fabric thumbnails, Pinterest answers in words, the voice line out of credit says so',
-  PLAYGROUND_SOURCE.includes('function _fabricThumb(f)') &&
   INDEX_SOURCE.includes('function _fabricThumb(f)') &&
-  PLAYGROUND_SOURCE.includes('/aesthetics/fabrics/thumbs/Orange%20Cheetah.jpg') &&
   INDEX_SOURCE.includes('/aesthetics/fabrics/thumbs/Orange%20Cheetah.jpg') &&
-  !PLAYGROUND_SOURCE.includes("'the wider search could not run: ' + msg.slice(0, 80)") &&
-  PLAYGROUND_SOURCE.includes('Pinterest took too long to answer') &&
-  PLAYGROUND_SOURCE.includes("OpenAI credit has run out") &&
+  !INDEX_SOURCE.includes("'the wider search could not run: ' + msg.slice(0, 80)") &&
+  INDEX_SOURCE.includes('Pinterest took too long to answer') &&
+  INDEX_SOURCE.includes("OpenAI credit has run out") &&
   SERVER_SOURCE.includes("e.code = (err && err.name === 'TimeoutError') ? 'pinterest_timeout' : 'pinterest_unreachable';") &&
   SERVER_SOURCE.includes("code === 'pinterest_timeout' ? 504") &&
   SERVER_SOURCE.includes("? 'voice_credit' : 'voice_failed'") &&
-  PLAYGROUND_SOURCE.includes('#notes-drawer #drawer-avatar-rename { display: inline-flex; }') &&
-  PLAYGROUND_SOURCE.includes('#notes-drawer .avatar-switch-row.active .avatar-switch-rename { opacity: 1; }') &&
-  PLAYGROUND_SOURCE.includes("if (!strict) return;") &&
-  PLAYGROUND_SOURCE.includes('.note-group-title { color: rgba(255,255,255,0.98); font-weight: 400; margin: 0 0 3px; }') &&
-  PLAYGROUND_SOURCE.includes("if (a.confirm !== true) return { ok: false, needsConfirmation: true, change: t.slice(0, 140),") &&
+  INDEX_SOURCE.includes('#notes-drawer #drawer-avatar-rename { display: inline-flex; }') &&
+  INDEX_SOURCE.includes('#notes-drawer .avatar-switch-row.active .avatar-switch-rename { opacity: 1; }') &&
+  INDEX_SOURCE.includes("if (!strict) return;") &&
+  INDEX_SOURCE.includes('.note-group-title { color: rgba(255,255,255,0.98); font-weight: 400; margin: 0 0 3px; }') &&
   INDEX_SOURCE.includes("if (a.confirm !== true) return { ok: false, needsConfirmation: true, change: t.slice(0, 140),") &&
-  PLAYGROUND_SOURCE.includes('} else if (typeof _zCounter !== \'undefined\') {') &&
-  PLAYGROUND_SOURCE.includes('#feedback-modal { z-index: 260; }') &&
-  PLAYGROUND_SOURCE.includes('async function _pgPictureData(src)') &&
+  INDEX_SOURCE.includes('} else if (typeof _zCounter !== \'undefined\') {') &&
+  INDEX_SOURCE.includes('#feedback-modal { z-index: 260; }') &&
+  INDEX_SOURCE.includes('async function _pgPictureData(src)') &&
   SERVER_SOURCE.includes("confirm: { type: 'boolean', description: 'true only after they said yes to this change (or said go with it)' }") &&
   SERVER_SOURCE.includes('You get a real photograph of it'));
 ok('v14.25: feedback submitted, plain logs with a retry, stop means stop, references by voice, the wall in her picture',
-  PLAYGROUND_SOURCE.includes("showToast('Feedback submitted.');") &&
   INDEX_SOURCE.includes("showToast('Feedback submitted.');") &&
-  !PLAYGROUND_SOURCE.includes("'Maya could not ' + String(name)") &&
-  PLAYGROUND_SOURCE.includes('function _pgLogSend(body, attempt)') &&
+  !INDEX_SOURCE.includes("'Maya could not ' + String(name)") &&
   INDEX_SOURCE.includes('function _pgLogSend(body, attempt)') &&
-  PLAYGROUND_SOURCE.includes('window._pgRefIntent = { ts: Date.now(), refs:') &&
-  PLAYGROUND_SOURCE.includes('const intent = window._pgRefIntent;') &&
-  PLAYGROUND_SOURCE.includes('async function _pgPinThumbs()') &&
+  INDEX_SOURCE.includes('window._pgRefIntent = { ts: Date.now(), refs:') &&
+  INDEX_SOURCE.includes('const intent = window._pgRefIntent;') &&
   INDEX_SOURCE.includes('async function _pgPinThumbs()') &&
-  PLAYGROUND_SOURCE.includes("fetch('/api/pinterest/thumbs'") &&
+  INDEX_SOURCE.includes("fetch('/api/pinterest/thumbs'") &&
   SERVER_SOURCE.includes("app.post('/api/pinterest/thumbs'") &&
   SERVER_SOURCE.includes('STOP MEANS STOP.') &&
   SERVER_SOURCE.includes('GARMENT FIRST.') &&
   SERVER_SOURCE.includes("references: { type: 'string'") &&
   SERVER_SOURCE.includes('Never on "stop".'));
 ok('v14.24: client rendering keeps prompting words after the redundant Admin editor retires',
-  PLAYGROUND_SOURCE.includes("if (stored && stored !== 'gpt-4.1' && stored !== 'gpt-4o-mini')") &&
   INDEX_SOURCE.includes("if (stored && stored !== 'gpt-4.1' && stored !== 'gpt-4o-mini')") &&
-  PLAYGROUND_SOURCE.includes("let _pinBoardsCache = '';") &&
-  PLAYGROUND_SOURCE.includes('_pinSetFoot(_pinPicked.size > 0);') &&
-  PLAYGROUND_SOURCE.includes('function _pgPinsOnScreen()') &&
+  INDEX_SOURCE.includes("let _pinBoardsCache = '';") &&
+  INDEX_SOURCE.includes('_pinSetFoot(_pinPicked.size > 0);') &&
   INDEX_SOURCE.includes('function _pgPinsOnScreen()') &&
-  PLAYGROUND_SOURCE.includes('function _pgPinsByPlace(place)') &&
-  PLAYGROUND_SOURCE.includes("' BODY, atelier direction: '") &&
+  INDEX_SOURCE.includes('function _pgPinsByPlace(place)') &&
   INDEX_SOURCE.includes("' BODY, atelier direction: '") &&
   SERVER_SOURCE.includes("'gpt-4o':       MODEL_TERRA,") &&
   SERVER_SOURCE.includes('Never invent a card or a pin.') &&
   MAP_SOURCE.includes("label:'Status'") &&
-  !MAP_SOURCE.includes('id="pe-fold"') && INDEX_SOURCE.includes("let _promptCfg = null;") && PLAYGROUND_SOURCE.includes("let _promptCfg = null;"));
+  !MAP_SOURCE.includes('id="pe-fold"') && INDEX_SOURCE.includes("let _promptCfg = null;") && INDEX_SOURCE.includes("let _promptCfg = null;"));
 ok('v14.23: the pencil beside the name, Randomize repaints, white notes, all of Pinterest as the third room',
-  PLAYGROUND_SOURCE.includes('id="drawer-avatar-rename"') &&
   INDEX_SOURCE.includes('id="drawer-avatar-rename"') &&
-  PLAYGROUND_SOURCE.includes('async function renameAvatarById(id, name)') &&
   INDEX_SOURCE.includes('async function renameAvatarById(id, name)') &&
-  !PLAYGROUND_SOURCE.includes('title="Remove the face photo">Remove photo</button>') &&
-  PLAYGROUND_SOURCE.includes('try { _renderAvatarBody(); } catch (_) {}\n  try { refreshDrawerClientName(); } catch (_) {}') &&
-  PLAYGROUND_SOURCE.includes("groups.push({ t: '', b: '<div class=\"vn-profile\">'") &&
-  PLAYGROUND_SOURCE.includes('#viewer-notes .vn-profile .note-item .note-detail') &&
-  PLAYGROUND_SOURCE.includes('async function _pinWideSearch(q, scope)') &&
+  !INDEX_SOURCE.includes('title="Remove the face photo">Remove photo</button>') &&
+  INDEX_SOURCE.includes('try { _renderAvatarBody(); } catch (_) {}\n  try { refreshDrawerClientName(); } catch (_) {}') &&
+  INDEX_SOURCE.includes("groups.push({ t: '', b: '<div class=\"vn-profile\">'") &&
+  INDEX_SOURCE.includes('#viewer-notes .vn-profile .note-item .note-detail') &&
   INDEX_SOURCE.includes('async function _pinWideSearch(q, scope)') &&
-  PLAYGROUND_SOURCE.includes('function _pinSearchAllPill(q, hide)') &&
+  INDEX_SOURCE.includes('function _pinSearchAllPill(q, hide)') &&
   SERVER_SOURCE.includes("app.get('/api/pinterest/everywhere'") &&
   SERVER_SOURCE.includes('/search/partner/pins?') &&
   SERVER_SOURCE.includes('GOOGLE_CSE_KEY') &&
   SERVER_SOURCE.includes("enum: ['saved', 'everywhere']"));
 ok('v14.22: a face the image filter refuses still renders, on a fit model, and says so',
-  PLAYGROUND_SOURCE.includes('let faceSkipped = false;') &&
   INDEX_SOURCE.includes('let faceSkipped = false;') &&
-  PLAYGROUND_SOURCE.includes("window._mayaRenderNote = 'the image filter would not accept the face photo") &&
   INDEX_SOURCE.includes("window._mayaRenderNote = 'the image filter would not accept the face photo") &&
-  PLAYGROUND_SOURCE.includes('if (!dataUrl && refsSnap.length) {') &&
   INDEX_SOURCE.includes('if (!dataUrl && refsSnap.length) {') &&
-  PLAYGROUND_SOURCE.includes("Also say this plainly: ' + window._mayaRenderNote") &&
   INDEX_SOURCE.includes("Also say this plainly: ' + window._mayaRenderNote"));
-ok('v14.21: the Playground promoted whole into the app: Maya, zoom, backgrounds, captions, glass, search, Improve Maya; no badge; Tip stays',
+ok('v14.21: approved client Maya, zoom, backgrounds, captions, glass, search and Improve Maya remain; no staging badge; Tip stays',
   INDEX_SOURCE.includes('PLAYGROUND ONLY: survey zoom') &&
   INDEX_SOURCE.includes('async function pgMayaStart()') &&
   INDEX_SOURCE.includes('async function _pgTool(name, a, dc)') &&
@@ -2338,62 +2295,48 @@ ok('v14.21: the Playground promoted whole into the app: Maya, zoom, backgrounds,
   INDEX_SOURCE.includes('async function _pgCaptionOne()') &&
   !INDEX_SOURCE.includes('id="pg-badge"') &&
   INDEX_SOURCE.includes('onclick="openTip()"') &&
-  !PLAYGROUND_SOURCE.includes('onclick="openTip()"') &&
-  PLAYGROUND_SOURCE.includes('id="pg-badge"'));
+  !existsSync(join(ROOT,'playground/index.html')));
 ok('v14.20: Profile, the Projects fold, renaming in place, the dropdown actions, the wider finger search, natural proportions',
-  PLAYGROUND_SOURCE.includes('id="pg-tabtitle">Profile</span>') &&
   INDEX_SOURCE.includes('id="pg-tabtitle">Profile</span>') &&
-  PLAYGROUND_SOURCE.includes('id="pg-projects" open>') &&
   INDEX_SOURCE.includes('id="pg-projects" open>') &&
-  PLAYGROUND_SOURCE.includes('async function renameProjectById(id, name)') &&
   INDEX_SOURCE.includes('async function renameProjectById(id, name)') &&
-  PLAYGROUND_SOURCE.includes('class="avatar-switch-actions"') &&
   INDEX_SOURCE.includes('class="avatar-switch-actions"') &&
-  PLAYGROUND_SOURCE.includes('one eighth of the standing height') &&
   INDEX_SOURCE.includes('one eighth of the standing height') &&
-  PLAYGROUND_SOURCE.includes('async function _pinWideSearch(q, scope)') &&
-  PLAYGROUND_SOURCE.includes('<button class="pin-search-btn" id="pin-search-btn" onclick="_pinSearchToggle()" title="Search Pinterest" aria-label="Search Pinterest"><svg'));
+  INDEX_SOURCE.includes('async function _pinWideSearch(q, scope)') &&
+  INDEX_SOURCE.includes('<button class="pin-search-btn" id="pin-search-btn" onclick="_pinSearchToggle()" title="Search Pinterest" aria-label="Search Pinterest"><svg'));
 ok('v14.19: the drawer untangled: the open project highlighted, clients and projects independent, the photo opens the list',
-  PLAYGROUND_SOURCE.includes('id="drawer-avatar-button" onclick="toggleAvatarSwitcher()"') &&
   INDEX_SOURCE.includes('id="drawer-avatar-button" onclick="toggleAvatarSwitcher()"') &&
-  PLAYGROUND_SOURCE.includes("beside.classList.toggle('on', has);") &&
   INDEX_SOURCE.includes("beside.classList.toggle('on', has);") &&
-  PLAYGROUND_SOURCE.includes('function pgRenameClient()') &&
   INDEX_SOURCE.includes('function pgRenameClient()') &&
-  PLAYGROUND_SOURCE.includes('function _wearClient(a)') &&
   INDEX_SOURCE.includes('function _wearClient(a)') &&
-  PLAYGROUND_SOURCE.includes('async function deleteAvatar(id)') &&
   INDEX_SOURCE.includes('async function deleteAvatar(id)') &&
-  !PLAYGROUND_SOURCE.includes('{ client: { name: currentClientName || null } }') &&
   !INDEX_SOURCE.includes('{ client: { name: currentClientName || null } }') &&
-  PLAYGROUND_SOURCE.includes("case 'switch_client': {") &&
+  INDEX_SOURCE.includes("case 'switch_client': {") &&
   SERVER_SOURCE.includes("name: 'switch_client'") &&
   SERVER_SOURCE.includes("name: 'list_clients'"));
 ok('v14.18: every voice scroll glides, and search reaches everything saved on Pinterest',
-  PLAYGROUND_SOURCE.includes('function _pgGlideStart(els, dir, axis)') &&
-  PLAYGROUND_SOURCE.includes("axis === 'x' ? 'scrollLeft' : 'scrollTop'") &&
-  PLAYGROUND_SOURCE.includes("_pgGlideStart(el, dir, 'x')") &&
-  PLAYGROUND_SOURCE.includes("_pgGlideStart(rows, dir, 'x')") &&
-  PLAYGROUND_SOURCE.includes('window._pinWiderActive = true;') &&
-  PLAYGROUND_SOURCE.includes("'/api/pinterest/search?q='") &&
+  INDEX_SOURCE.includes('function _pgGlideStart(els, dir, axis)') &&
+  INDEX_SOURCE.includes("axis === 'x' ? 'scrollLeft' : 'scrollTop'") &&
+  INDEX_SOURCE.includes("_pgGlideStart(el, dir, 'x')") &&
+  INDEX_SOURCE.includes("_pgGlideStart(rows, dir, 'x')") &&
+  INDEX_SOURCE.includes('window._pinWiderActive = true;') &&
+  INDEX_SOURCE.includes("'/api/pinterest/search?q='") &&
   SERVER_SOURCE.includes("app.get('/api/pinterest/search'") &&
   SERVER_SOURCE.includes("wider: { type: 'boolean'") &&
   SERVER_SOURCE.includes('EVERY scroll you perform is a continuous glide'));
 ok('v14.17: Pinterest search for fingers and voice, the continuous glide, and position words on every card',
-  PLAYGROUND_SOURCE.includes('id="pin-search-btn"') &&
-  PLAYGROUND_SOURCE.includes('function _pinSearch(') &&
-  PLAYGROUND_SOURCE.includes("case 'search_pins': {") &&
-  PLAYGROUND_SOURCE.includes("case 'clear_pin_search': {") &&
-  PLAYGROUND_SOURCE.includes('function _pgGlideStart(') &&
-  PLAYGROUND_SOURCE.includes('function _pgPosWord(') &&
-  PLAYGROUND_SOURCE.includes('pos: (typeof _pgPosWord') &&
+  INDEX_SOURCE.includes('id="pin-search-btn"') &&
+  INDEX_SOURCE.includes('function _pinSearch(') &&
+  INDEX_SOURCE.includes("case 'search_pins': {") &&
+  INDEX_SOURCE.includes("case 'clear_pin_search': {") &&
+  INDEX_SOURCE.includes('function _pgGlideStart(') &&
+  INDEX_SOURCE.includes('function _pgPosWord(') &&
+  INDEX_SOURCE.includes('pos: (typeof _pgPosWord') &&
   SERVER_SOURCE.includes("name: 'search_pins'") &&
   SERVER_SOURCE.includes("'down', 'up', 'stop'") &&
   SERVER_SOURCE.includes("pos: String(c.pos || '').slice(0, 24)"));
 ok('v14.16: the studio gauge is truthful; private Marketing stays in the authenticated session',
-  PLAYGROUND_SOURCE.includes("setA('pg-gauge-value', 'Studio');") &&
   INDEX_SOURCE.includes("setA('pg-gauge-value', 'Studio');") &&
-  PLAYGROUND_SOURCE.includes('admin: !!j.admin,') &&
   INDEX_SOURCE.includes('admin: !!j.admin,') &&
   MAP_SOURCE.includes('function _paintMkt(d, alsoBrief)') &&
   !MAP_SOURCE.includes("localStorage.setItem('maya_mkt_cache'") &&
@@ -2403,17 +2346,17 @@ ok('v14.16: the studio gauge is truthful; private Marketing stays in the authent
 ok('v14.15: the feedback round: brevity, live feedback typing, plural tolerant pins, honest dissect',
   SERVER_SOURCE.includes('never recap what you just did') &&
   SERVER_SOURCE.includes('typed live while you keep talking') &&
-  PLAYGROUND_SOURCE.includes("alt.includes(w + 's')") &&
-  PLAYGROUND_SOURCE.includes('only garment visions open into pieces'));
+  INDEX_SOURCE.includes("alt.includes(w + 's')") &&
+  INDEX_SOURCE.includes('only garment visions open into pieces'));
 ok('v14.14: the release blockers: no silent fallback, confirm gated delete, timeouts, honest outcomes, scoped door, locked stores',
-  PLAYGROUND_SOURCE.includes('no card matches those words') &&
-  PLAYGROUND_SOURCE.includes('needsConfirmation: true') &&
-  PLAYGROUND_SOURCE.includes('_PG_TOOL_TIMEOUT_MS') &&
-  PLAYGROUND_SOURCE.includes('_pgToolChain = Promise.resolve();') &&
-  PLAYGROUND_SOURCE.includes('function _pgWatchRender(dc)') &&
-  PLAYGROUND_SOURCE.includes('function _pgClassifyFail(out)') &&
-  PLAYGROUND_SOURCE.includes('Every note lands in the studio inbox.') &&
-  PLAYGROUND_SOURCE.includes('function _fbConsentToggle()') &&
+  INDEX_SOURCE.includes('no card matches those words') &&
+  INDEX_SOURCE.includes('needsConfirmation: true') &&
+  INDEX_SOURCE.includes('_PG_TOOL_TIMEOUT_MS') &&
+  INDEX_SOURCE.includes('_pgToolChain = Promise.resolve();') &&
+  INDEX_SOURCE.includes('function _pgWatchRender(dc)') &&
+  INDEX_SOURCE.includes('function _pgClassifyFail(out)') &&
+  INDEX_SOURCE.includes('Every note lands in the studio inbox.') &&
+  INDEX_SOURCE.includes('function _fbConsentToggle()') &&
   MAP_SOURCE.includes('Nothing has been sent yet.') &&
   SERVER_SOURCE.includes('function mcpAuthScope(req)') &&
   SERVER_SOURCE.includes('MCP_HEADER_ONLY_TOOLS') &&
@@ -2422,14 +2365,14 @@ ok('v14.14: the release blockers: no silent fallback, confirm gated delete, time
   SERVER_SOURCE.includes('function withLock(key, fn)') &&
   BUILD_SOURCE.includes('tests/maya-hands-smoke.mjs'));
 ok('v14.13: the card editor understands: modify without popups, versions not cards, deictic and positional matching, spoken failures',
-  PLAYGROUND_SOURCE.includes("case 'modify_garment': {") &&
-  PLAYGROUND_SOURCE.includes("case 'card_version': {") &&
-  PLAYGROUND_SOURCE.includes("case 'render_status': {") &&
-  PLAYGROUND_SOURCE.includes('function _pgFindCardDetailed(') &&
-  PLAYGROUND_SOURCE.includes('const _PG_DEICTIC =') &&
-  PLAYGROUND_SOURCE.includes('function _pgStep(d)') &&
-  PLAYGROUND_SOURCE.includes('window._pgLastRenderError = String(msg') &&
-  !PLAYGROUND_SOURCE.includes("next: () => { try { _favStep(1); return true; }") &&
+  INDEX_SOURCE.includes("case 'modify_garment': {") &&
+  INDEX_SOURCE.includes("case 'card_version': {") &&
+  INDEX_SOURCE.includes("case 'render_status': {") &&
+  INDEX_SOURCE.includes('function _pgFindCardDetailed(') &&
+  INDEX_SOURCE.includes('const _PG_DEICTIC =') &&
+  INDEX_SOURCE.includes('function _pgStep(d)') &&
+  INDEX_SOURCE.includes('window._pgLastRenderError = String(msg') &&
+  !INDEX_SOURCE.includes("next: () => { try { _favStep(1); return true; }") &&
   SERVER_SOURCE.includes('THE CARD EDITOR.') &&
   SERVER_SOURCE.includes('UNDERSTANDING THEM.') &&
   SERVER_SOURCE.includes("name: 'modify_garment'") &&
@@ -2437,38 +2380,38 @@ ok('v14.13: the card editor understands: modify without popups, versions not car
   SERVER_SOURCE.includes("name: 'render_status'") &&
   existsSync(join(ROOT, 'docs/CODEX-MAYA-BRIEF.md')));
 ok('v14.12: the second pass: honest scroll and credits, moving hands, favorites by name, quality by voice',
-  PLAYGROUND_SOURCE.includes("if (!body || !body.offsetParent) return { ok: false, reason: 'Pinterest is not open' };") &&
-  PLAYGROUND_SOURCE.includes("area = (pb && pb.offsetParent) ? 'pins'") &&
-  PLAYGROUND_SOURCE.includes("if (j.admin) return { ok: true, admin: true, note: 'studio account, no cap'") &&
-  PLAYGROUND_SOURCE.includes("return { ok: true, note: 'that reference was already on the canvas' };") &&
-  PLAYGROUND_SOURCE.includes("reason: 'that control is not on screen right now'") &&
-  PLAYGROUND_SOURCE.includes("case 'move_card': {") &&
-  PLAYGROUND_SOURCE.includes("case 'resize_card': {") &&
-  PLAYGROUND_SOURCE.includes("case 'open_favorite': {") &&
-  PLAYGROUND_SOURCE.includes("case 'set_quality': {") &&
+  INDEX_SOURCE.includes("if (!body || !body.offsetParent) return { ok: false, reason: 'Pinterest is not open' };") &&
+  INDEX_SOURCE.includes("area = (pb && pb.offsetParent) ? 'pins'") &&
+  INDEX_SOURCE.includes("if (j.admin) return { ok: true, admin: true, note: 'studio account, no cap'") &&
+  INDEX_SOURCE.includes("return { ok: true, note: 'that reference was already on the canvas' };") &&
+  INDEX_SOURCE.includes("reason: 'that control is not on screen right now'") &&
+  INDEX_SOURCE.includes("case 'move_card': {") &&
+  INDEX_SOURCE.includes("case 'resize_card': {") &&
+  INDEX_SOURCE.includes("case 'open_favorite': {") &&
+  INDEX_SOURCE.includes("case 'set_quality': {") &&
   SERVER_SOURCE.includes("name: 'move_card'") &&
   SERVER_SOURCE.includes("name: 'open_favorite'") &&
   SERVER_SOURCE.includes("name: 'set_quality'"));
 ok('v14.11: thirteen new hands from walking the interface: zoom, organize, dissect, references, projects, credits, fabric, avatar',
-  PLAYGROUND_SOURCE.includes("case 'zoom': {") &&
-  PLAYGROUND_SOURCE.includes("case 'organize_board': {") &&
-  PLAYGROUND_SOURCE.includes("case 'dissect_card': {") &&
-  PLAYGROUND_SOURCE.includes("case 'add_reference': {") &&
-  PLAYGROUND_SOURCE.includes("case 'card_details': {") &&
-  PLAYGROUND_SOURCE.includes("case 'open_project': {") &&
-  PLAYGROUND_SOURCE.includes("case 'check_credits': {") &&
-  PLAYGROUND_SOURCE.includes("case 'set_measurement': {") &&
-  PLAYGROUND_SOURCE.includes("case 'pick_fabric': {") &&
-  PLAYGROUND_SOURCE.includes('window.pgZoomTo = function (v)') &&
-  PLAYGROUND_SOURCE.includes('heart: () => { try { viewerToggleHeart(); return true; }') &&
+  INDEX_SOURCE.includes("case 'zoom': {") &&
+  INDEX_SOURCE.includes("case 'organize_board': {") &&
+  INDEX_SOURCE.includes("case 'dissect_card': {") &&
+  INDEX_SOURCE.includes("case 'add_reference': {") &&
+  INDEX_SOURCE.includes("case 'card_details': {") &&
+  INDEX_SOURCE.includes("case 'open_project': {") &&
+  INDEX_SOURCE.includes("case 'check_credits': {") &&
+  INDEX_SOURCE.includes("case 'set_measurement': {") &&
+  INDEX_SOURCE.includes("case 'pick_fabric': {") &&
+  INDEX_SOURCE.includes('window.pgZoomTo = function (v)') &&
+  INDEX_SOURCE.includes('heart: () => { try { viewerToggleHeart(); return true; }') &&
   SERVER_SOURCE.includes("name: 'card_details'") &&
   SERVER_SOURCE.includes("name: 'set_measurement'") &&
   SERVER_SOURCE.includes("name: 'pick_fabric'") &&
   SERVER_SOURCE.includes("'heart', 'photo', 'attributes'"));
 ok('v14.10: her legs and ears: go_to_screen and scroll on both sides, five-truths card matching, far_field hearing with a plain fallback',
-  PLAYGROUND_SOURCE.includes("case 'go_to_screen': {") &&
-  PLAYGROUND_SOURCE.includes("case 'scroll': {") &&
-  PLAYGROUND_SOURCE.includes('P.bio, P.aesthetic, P.silhouette, P.color, P.era,') &&
+  INDEX_SOURCE.includes("case 'go_to_screen': {") &&
+  INDEX_SOURCE.includes("case 'scroll': {") &&
+  INDEX_SOURCE.includes('P.bio, P.aesthetic, P.silhouette, P.color, P.era,') &&
   SERVER_SOURCE.includes("name: 'go_to_screen'") &&
   SERVER_SOURCE.includes("name: 'scroll'") &&
   SERVER_SOURCE.includes('session:webVoiceSession({model:REALTIME_MODEL') &&
@@ -2479,41 +2422,41 @@ ok('v14.10: her legs and ears: go_to_screen and scroll on both sides, five-truth
   SERVER_SOURCE.includes('repeat the few words you caught and ask.') &&
   existsSync(join(ROOT, 'tests/maya-hands-smoke.mjs')));
 ok('v14.09: the autonomous observer: Maya logs her own limits and the wishes she hears, and the studio reads both',
-  PLAYGROUND_SOURCE.includes('function _pgAutoLog(') &&
-  PLAYGROUND_SOURCE.includes('const _PG_CANT =') &&
-  PLAYGROUND_SOURCE.includes('const _PG_WISH =') &&
-  PLAYGROUND_SOURCE.includes('id="fb-tabs"') &&
-  PLAYGROUND_SOURCE.includes('function _fbRenderMayaLogs()') &&
-  PLAYGROUND_SOURCE.includes("window._pgAutoLog('Tool ' + String(name) + ' failed' +") &&   // v14.25: plain words
+  INDEX_SOURCE.includes('function _pgAutoLog(') &&
+  INDEX_SOURCE.includes('const _PG_CANT =') &&
+  INDEX_SOURCE.includes('const _PG_WISH =') &&
+  INDEX_SOURCE.includes('id="fb-tabs"') &&
+  INDEX_SOURCE.includes('function _fbRenderMayaLogs()') &&
+  INDEX_SOURCE.includes("window._pgAutoLog('Tool ' + String(name) + ' failed' +") &&   // v14.25: plain words
   SERVER_SOURCE.includes("const source = (req.body || {}).source === 'maya' ? 'maya' : 'app';") &&
   SERVER_SOURCE.includes('YOUR OWN LIMITS ARE LOGGED FOR YOU.') &&
   MAP_SOURCE.includes("i.source==='app'||i.source==='maya'"));
 ok('digest and dedupe persist; wake survives 402 and viewer listen; fresh workspace precedes greeting without screenshot delay',
   MAP_SOURCE.includes("if(name==='get_feature_digest'){") &&
   MAP_SOURCE.includes('const inboxTexts=new Set(items.map(i=>norm(i.text)));') &&
-  PLAYGROUND_SOURCE.includes('_pgChip(false); _pgWakeResume();') &&
-  PLAYGROUND_SOURCE.includes('startVisualizeListen = function () { _pgWakePause();') &&
-  [PLAYGROUND_SOURCE,INDEX_SOURCE].every(source=>{
+  INDEX_SOURCE.includes('_pgChip(false); _pgWakeResume();') &&
+  INDEX_SOURCE.includes('startVisualizeListen = function () { _pgWakePause();') &&
+  [INDEX_SOURCE].every(source=>{
     const active=source.slice(source.indexOf('onActive: voice => {'),source.indexOf('onMessage: (event, voice) => {'));
     return active.includes('Current workspace data at wake') &&
       active.includes("type: 'conversation.item.create'") &&
       active.indexOf("type: 'conversation.item.create'") < active.indexOf("type: 'response.create'") &&
       active.includes('_pgBoardSnapshot(), drawer: _pgDrawerState()') && !active.includes('_pgLook(');
   }) &&
-  PLAYGROUND_SOURCE.includes('pinchW0 = el.offsetWidth;') &&
-  PLAYGROUND_SOURCE.includes('#garment-modal[data-photo="full"] #garment-image-wrap .submit-wrap { display: none !important; }') &&
-  PLAYGROUND_SOURCE.includes('@media (hover: none) { #garment-image-wrap .submit-wrap { opacity: 1; } }') &&
-  PLAYGROUND_SOURCE.includes('addManualRef = function (text, xy)') &&
-  PLAYGROUND_SOURCE.includes('it.card._capTries') &&
-  !PLAYGROUND_SOURCE.includes("wrap.classList.remove('open')"));
+  INDEX_SOURCE.includes('pinchW0 = el.offsetWidth;') &&
+  INDEX_SOURCE.includes('#garment-modal[data-photo="full"] #garment-image-wrap .submit-wrap { display: none !important; }') &&
+  INDEX_SOURCE.includes('@media (hover: none) { #garment-image-wrap .submit-wrap { opacity: 1; } }') &&
+  INDEX_SOURCE.includes('addManualRef = function (text, xy)') &&
+  INDEX_SOURCE.includes('it.card._capTries') &&
+  !INDEX_SOURCE.includes("wrap.classList.remove('open')"));
 ok('v14.06: every card carries the five-line profile, centered; the viewer and toast sit lower; canon arrows; rounded rise',
-  PLAYGROUND_SOURCE.includes("const it = (items || []).find(i => i && i.card && i.card.image && !i.card.profile") &&
-  PLAYGROUND_SOURCE.includes("row('Bio', P.bio) + row('Aesthetic', P.aesthetic) + row('Silhouette', P.silhouette)") &&
-  PLAYGROUND_SOURCE.includes('text-align: center; display: none;') &&
-  PLAYGROUND_SOURCE.includes('border-radius: 0 0 16px 16px; }') &&
-  PLAYGROUND_SOURCE.includes('#garment-modal:not([data-photo="full"]) #garment-image-wrap { margin-top: 30px; }') &&
-  PLAYGROUND_SOURCE.includes('position: fixed; bottom: 72px; left: 50%;') &&
-  PLAYGROUND_SOURCE.includes("b.style[d < 0 ? 'left' : 'right'] = '42px';"));
+  INDEX_SOURCE.includes("const it = (items || []).find(i => i && i.card && i.card.image && !i.card.profile") &&
+  INDEX_SOURCE.includes("row('Bio', P.bio) + row('Aesthetic', P.aesthetic) + row('Silhouette', P.silhouette)") &&
+  INDEX_SOURCE.includes('text-align: center; display: none;') &&
+  INDEX_SOURCE.includes('border-radius: 0 0 16px 16px; }') &&
+  INDEX_SOURCE.includes('#garment-modal:not([data-photo="full"]) #garment-image-wrap { margin-top: 30px; }') &&
+  INDEX_SOURCE.includes('position: fixed; bottom: 72px; left: 50%;') &&
+  INDEX_SOURCE.includes("b.style[d < 0 ? 'left' : 'right'] = '42px';"));
 ok('v14.05: the door is reachable from the public domain: /mcp is rewritten to Cloud Run and /api/mcp always was',
   JSON.stringify(HOSTING.hosting.rewrites).includes('"source":"/mcp"') &&
   SERVER_SOURCE.includes("app.post(['/mcp', '/api/mcp']") &&
@@ -2535,49 +2478,49 @@ ok('v14.03: Feature requests fold reads Maya\'s inbox; Sources of traffic is gon
   MAP_SOURCE.includes('id="features-fold"') && MAP_SOURCE.includes('async function loadFeatureRequests()') &&
   MAP_SOURCE.includes("fetch('/api/admin/maya-features'") &&
   MAP_SOURCE.includes('<table id="sources-table" hidden>') && !MAP_SOURCE.includes('<div class="bl-sub">Sources of traffic'));
-ok('v14.03: playground cards drag and resize while zoomed (pointer deltas divided by the scale)',
-  PLAYGROUND_SOURCE.includes('_curDx = (me.clientX - startX) / _zs') &&
-  PLAYGROUND_SOURCE.includes("const dx = (me.clientX - startX) / _zs") &&
-  !PLAYGROUND_SOURCE.includes('body.pg-zoomed #maya-canvas * { pointer-events: none; }'));
-ok('v14.03: playground floor reads Logout, Feedback, Hey Maya; Tip is gone; backgrounds say Upload and Generate side by side',
-  !PLAYGROUND_SOURCE.includes('onclick="openTip()" title="MAYA is free') &&
-  PLAYGROUND_SOURCE.includes('id="pg-maya-toggle"') && PLAYGROUND_SOURCE.includes('onclick="pgToggleWake()"') &&
-  /onclick="mayaSignOut\(\)"[\s\S]{0,600}onclick="openFeedback\(\)"[\s\S]{0,400}id="pg-maya-toggle"/.test(PLAYGROUND_SOURCE) &&
-  PLAYGROUND_SOURCE.includes('id="pg-bg-pills"') && PLAYGROUND_SOURCE.includes('onclick="pgUploadBackground()">Upload</button>') &&
-  PLAYGROUND_SOURCE.includes('onclick="pgGenerateBackground()">Generate</button>'));
+ok('v14.03: client cards drag and resize while zoomed (pointer deltas divided by the scale)',
+  INDEX_SOURCE.includes('_curDx = (me.clientX - startX) / _zs') &&
+  INDEX_SOURCE.includes("const dx = (me.clientX - startX) / _zs") &&
+  !INDEX_SOURCE.includes('body.pg-zoomed #maya-canvas * { pointer-events: none; }'));
+ok('v14.03: client floor keeps Logout, Feedback, Hey Maya and Tip; backgrounds offer Upload and Generate',
+  INDEX_SOURCE.includes('onclick="openTip()" title="MAYA is free') &&
+  INDEX_SOURCE.includes('id="pg-maya-toggle"') && INDEX_SOURCE.includes('onclick="pgToggleWake()"') &&
+  /onclick="mayaSignOut\(\)"[\s\S]{0,600}onclick="openFeedback\(\)"[\s\S]{0,400}id="pg-maya-toggle"/.test(INDEX_SOURCE) &&
+  INDEX_SOURCE.includes('id="pg-bg-pills"') && INDEX_SOURCE.includes('onclick="pgUploadBackground()">Upload</button>') &&
+  INDEX_SOURCE.includes('onclick="pgGenerateBackground()">Generate</button>'));
 ok('v14.03: Maya on the user side: the voice line, her hands, the wake word, the feedback notes',
   SERVER_SOURCE.includes("app.post('/api/voice-token'") && SERVER_SOURCE.includes("app.post('/api/feature'") &&
   SERVER_SOURCE.includes("name: 'bring_in_pins'") && SERVER_SOURCE.includes("name: 'describe_garment'") &&
   SERVER_SOURCE.includes("name: 'write_feedback'") && SERVER_SOURCE.includes('const PRICE_REALTIME') &&
-  PLAYGROUND_SOURCE.includes('async function pgMayaStart()') && PLAYGROUND_SOURCE.includes("fetch('/api/voice-token'") &&
-  PLAYGROUND_SOURCE.includes("case 'bring_in_pins':") && PLAYGROUND_SOURCE.includes('processConsultation(t)') &&
-  PLAYGROUND_SOURCE.includes('function _pgWakeStart()') && PLAYGROUND_SOURCE.includes("startListening = function () { _pgWakePause();"));
+  INDEX_SOURCE.includes('async function pgMayaStart()') && INDEX_SOURCE.includes("fetch('/api/voice-token'") &&
+  INDEX_SOURCE.includes("case 'bring_in_pins':") && INDEX_SOURCE.includes('processConsultation(t)') &&
+  INDEX_SOURCE.includes('function _pgWakeStart()') && INDEX_SOURCE.includes("startListening = function () { _pgWakePause();"));
 ok('v14.04: the popup is Improve Maya: one box, one Submit, one stream into her inbox',
-  PLAYGROUND_SOURCE.includes('class="modal-close icon pg-fb-x"') &&
-  PLAYGROUND_SOURCE.includes('>Improve Maya</h2>') &&
-  !PLAYGROUND_SOURCE.includes('id="feedback-kind"') &&
-  !PLAYGROUND_SOURCE.includes('id="feedback-listen"') &&
-  !PLAYGROUND_SOURCE.includes('>Talk to Maya</button>') &&
-  PLAYGROUND_SOURCE.includes("fetch('/api/feature'"));
+  INDEX_SOURCE.includes('class="modal-close icon pg-fb-x"') &&
+  INDEX_SOURCE.includes('>Improve Maya</h2>') &&
+  !INDEX_SOURCE.includes('id="feedback-kind"') &&
+  !INDEX_SOURCE.includes('id="feedback-listen"') &&
+  !INDEX_SOURCE.includes('>Talk to Maya</button>') &&
+  INDEX_SOURCE.includes("fetch('/api/feature'"));
 ok('v14.04: every popup wears the drawer glass over a translucent overlay (the drawer is the Bible)',
-  PLAYGROUND_SOURCE.includes('background: rgba(8,12,24,0.38);') &&
-  !PLAYGROUND_SOURCE.includes('background: rgba(8,10,18,0.93);') &&
-  !PLAYGROUND_SOURCE.includes('background: rgba(20,26,40,0.92);') &&
-  /\.modal-card \{[^}]*linear-gradient\(180deg/.test(PLAYGROUND_SOURCE) &&
-  /mmp-card \{[\s\S]{0,400}linear-gradient\(180deg/.test(PLAYGROUND_SOURCE));
+  INDEX_SOURCE.includes('background: rgba(8,12,24,0.38);') &&
+  !INDEX_SOURCE.includes('background: rgba(8,10,18,0.93);') &&
+  !INDEX_SOURCE.includes('background: rgba(20,26,40,0.92);') &&
+  /\.modal-card \{[^}]*linear-gradient\(180deg/.test(INDEX_SOURCE) &&
+  /mmp-card \{[\s\S]{0,400}linear-gradient\(180deg/.test(INDEX_SOURCE));
 ok('v14.04: Maya sees and acts: look, cards by words, the viewer pills, Pinterest boards and scrolling',
   SERVER_SOURCE.includes("name: 'look'") && SERVER_SOURCE.includes("name: 'open_card'") &&
   SERVER_SOURCE.includes("name: 'viewer'") && SERVER_SOURCE.includes("name: 'open_board'") &&
-  PLAYGROUND_SOURCE.includes('async function _pgLook(') &&
-  PLAYGROUND_SOURCE.includes('html2canvas/1.4.1/html2canvas.min.js') &&
-  PLAYGROUND_SOURCE.includes("case 'delete_card':") && PLAYGROUND_SOURCE.includes("case 'scroll_pins':") &&
-  PLAYGROUND_SOURCE.includes('function _pgFindCard('));
+  INDEX_SOURCE.includes('async function _pgLook(') &&
+  INDEX_SOURCE.includes('html2canvas/1.4.1/html2canvas.min.js') &&
+  INDEX_SOURCE.includes("case 'delete_card':") && INDEX_SOURCE.includes("case 'scroll_pins':") &&
+  INDEX_SOURCE.includes('function _pgFindCard('));
 ok('v14.04: her transcript whispers above the pill and the pictures learn to speak',
-  PLAYGROUND_SOURCE.includes('#pg-maya-lines { position: absolute;') &&
-  PLAYGROUND_SOURCE.includes('pgMayaBreathe') &&
-  PLAYGROUND_SOURCE.includes('async function _pgCaptionOne()') &&
-  PLAYGROUND_SOURCE.includes('if (item.card.caption && String(item.card.caption).trim()) return String(item.card.caption).trim();') &&
-  PLAYGROUND_SOURCE.includes('#garment-image-wrap:hover .submit-wrap { opacity: 1; }'));
+  INDEX_SOURCE.includes('#pg-maya-lines { position: absolute;') &&
+  INDEX_SOURCE.includes('pgMayaBreathe') &&
+  INDEX_SOURCE.includes('async function _pgCaptionOne()') &&
+  INDEX_SOURCE.includes('if (item.card.caption && String(item.card.caption).trim()) return String(item.card.caption).trim();') &&
+  INDEX_SOURCE.includes('#garment-image-wrap:hover .submit-wrap { opacity: 1; }'));
 ok('v14.04: the Admin fold reads in two rooms with a shipped check; the stale css override is dead',
   MAP_SOURCE.includes("section('Front end, what users ask'") &&
   MAP_SOURCE.includes("section('Admin side, what we ask'") &&
@@ -2587,13 +2530,12 @@ ok('v14.04: the Admin fold reads in two rooms with a shipped check; the stale cs
   MAP_SOURCE.includes('/aesthetics/ui/maya-canon.css?v='));
 
 ok('v14.01: the wall mirrors the hearts by force (reconcile sweep on entry)',
-  INDEX_SOURCE.includes('async reconcile()') &&
   INDEX_SOURCE.includes("where('pid', '==', pid)") &&
   INDEX_SOURCE.includes('communityBoard.reconcile()') &&
-  PLAYGROUND_SOURCE.includes('async reconcile()'));
+  INDEX_SOURCE.includes('async reconcile()'));
 
-await pg.goto(PAGE_ROOT + AT.playground, { waitUntil: 'domcontentloaded' });
-const stagedBehavior = await pg.evaluate(async () => {
+await pg.goto(PAGE_ROOT + AT.index, { waitUntil: 'domcontentloaded' });
+const clientBehavior = await pg.evaluate(async () => {
   projectStore._uid = () => 'test-account'; projectStore.ready = () => true; projectStore.currentId = null;
   let saved = null; const notices = [];
   showToast = message => notices.push(message);
@@ -2628,72 +2570,19 @@ const stagedBehavior = await pg.evaluate(async () => {
   await _pinSearchEnter('velvet');
   return {avatarSaved,actions,editableName,failureHonest,pagination,globalSearch,savedSearch:noScopeMenu && scope==='everywhere'};
 });
-ok('Playground avatar behavior: cloud Save, three buttons, direct name editing, honest save errors',
-  stagedBehavior.avatarSaved && stagedBehavior.actions === 'Randomize,Save,Replace' && stagedBehavior.editableName && stagedBehavior.failureHonest);
-ok('Playground Pinterest behavior: next-page cursor, deduplicated pins, explicit global/saved search',
-  stagedBehavior.pagination && stagedBehavior.globalSearch && stagedBehavior.savedSearch);
+ok('Client avatar behavior: cloud Save, three buttons, direct name editing, honest save errors',
+  clientBehavior.avatarSaved && clientBehavior.actions === 'Randomize,Save,Replace' && clientBehavior.editableName && clientBehavior.failureHonest);
+ok('Client Pinterest behavior: next-page cursor, deduplicated pins, explicit global/saved search',
+  clientBehavior.pagination && clientBehavior.globalSearch && clientBehavior.savedSearch);
 
-// Affiliates is a separate, admin-only workspace backed by the same Lead Station.
-ok('Affiliates has an explicit hosting route and a Mana hover entry',
-  HOSTING.hosting.rewrites.some(r=>r.source==='/affiliates.html' && r.destination==='/backend/status.html') &&
-  /class="mana-chips">[\s\S]*?href="\/affiliates.html"/.test(MAP_SOURCE));
-const affiliatePage = await browser.newPage({viewport:{width:1440,height:1000}});
-const affiliateErrors=[];
-affiliatePage.on('pageerror',e=>affiliateErrors.push(e.message));
-const affiliateRequests=[];
-await affiliatePage.route('**/*', async route => {
-  const url=route.request().url();
-  if(url.endsWith('/affiliates.html')) return route.fulfill({contentType:'text/html',body:MAP_SOURCE});
-  if(url.includes('/api/')) {affiliateRequests.push(url); return route.fulfill({status:401,contentType:'application/json',body:'{}'});}
-  return url.startsWith(PAGE_ROOT) ? route.continue() : route.abort();
-});
-await affiliatePage.goto(PAGE_ROOT+'affiliates.html',{waitUntil:'domcontentloaded'});
-const affiliateBehavior=await affiliatePage.evaluate(async()=>{
-  const shown=id=>getComputedStyle(document.getElementById(id)).display!=='none';
-  const layout=shown('affiliate-profile') && shown('leads-fold') && !shown('ads-fold') && !shown('ticker-bar');
-  let mode='ok'; let resolveSlow; const calls=[];
-  window.fetch=async(url,options)=>{
-    calls.push({url,auth:options?.headers?.Authorization});
-    if(mode==='slow') return new Promise(resolve=>{resolveSlow=resolve;});
-    if(mode==='denied') return {status:403,ok:false};
-    return {status:200,ok:true,json:async()=>({ok:true,connected:true,list:[
-      {id:'w_test',source:'wix',name:'Mary Example',phone:'4155550123',tier:'Signature',stage:'closed',note:'A custom jacket',ts:new Date().toISOString()},
-      {id:'m_test',source:'maya',name:'Alex Example',phone:'',note:'',ts:'2020-01-01'}]})};
-  };
-  _idTok='fictional-admin'; await loadAffiliateLeads();
-  const populated=document.querySelector('#leads-table').textContent.includes('Mary Example') &&
-    document.getElementById('affiliate-total').textContent==='2' && document.getElementById('affiliate-week').textContent==='1' &&
-    document.getElementById('affiliate-contacted').textContent==='1' && document.getElementById('affiliate-closed').textContent==='1';
-  const actions=!document.querySelector('#leads-table .category-badge')&&!document.querySelector('#leads-table [aria-label="Call"],#leads-table [aria-label="Invoice"]');
-  mode='denied'; await loadAffiliateLeads();
-  const denied=!document.querySelector('#leads-table').textContent.includes('Mary Example') && document.getElementById('affiliate-status').textContent.includes('admins only');
-  mode='slow'; const pending=loadAffiliateLeads();
-  _idTok=null; clearAffiliateLeads('Signed out');
-  resolveSlow({status:200,ok:true,json:async()=>({ok:true,connected:true,list:[{name:'Late private lead'}]})}); await pending;
-  const stale=!document.querySelector('#leads-table').textContent.includes('Late private lead');
-  await loadTraffic();await loadSubmissions();
-  return {layout,populated,actions,denied,stale,onlyLeads:calls.every(c=>c.url==='/api/admin/leads' && c.auth==='Bearer fictional-admin')};
-});
-ok('Affiliates displays profile, real loaded stats and shared category badge',affiliateBehavior.layout && affiliateBehavior.populated && affiliateBehavior.actions);
-ok('Affiliates clears denied data, ignores stale responses and skips unrelated reports',affiliateBehavior.denied && affiliateBehavior.stale && affiliateBehavior.onlyLeads && !affiliateRequests.some(u=>/marketing|submissions|traffic|maya-command/.test(u)));
-ok('Affiliates boots without JavaScript errors',affiliateErrors.length===0);
-const affiliateChrome=await affiliatePage.evaluate(()=>({
-  brand:document.querySelector('#top-left-brand .brand-title').textContent,
-  home:document.querySelector('#top-left-brand a.maya-logo-wrap')?.getAttribute('href'),
-  voice:document.querySelector('#top-left-brand .maya-logo-wrap')?.getAttribute('onclick'),
-  preview:document.getElementById('affiliate-profile').textContent.includes('Admin preview.'),
-  open:document.querySelector('a[href="/affiliates.html"]').target,
-  reload:document.querySelector('[aria-label="Reload leads"]').textContent.trim()
-}));
-ok('Affiliates opens separately, has its own heading and a home logo without voice action',affiliateChrome.brand==='Affiliates' && affiliateChrome.home==='/status.html' && !affiliateChrome.voice && affiliateChrome.open==='_blank');
-ok('Affiliates removes preview copy and uses an accessible icon-only reload',!affiliateChrome.preview && affiliateChrome.reload===String.fromCodePoint(8635));
-await affiliatePage.goto(PAGE_ROOT+AT.status,{waitUntil:'domcontentloaded'});
-await affiliatePage.locator('.card-mana').hover();
-await affiliatePage.mouse.move(5,5);
-await affiliatePage.waitForTimeout(400);
-const manaMenu = await affiliatePage.locator('.mana-chips').evaluate(el=>({visible:getComputedStyle(el).visibility,pointer:getComputedStyle(el).pointerEvents}));
-ok('Mana menu stays visible and clickable while moving toward Affiliates',manaMenu.visible==='visible' && manaMenu.pointer!=='none');
-const leadAlignment = await affiliatePage.evaluate(()=>{
+// The retired view cannot remove shared Admin lead behavior.
+await pg.goto(PAGE_ROOT+AT.status,{waitUntil:'domcontentloaded'});
+await pg.locator('.card-mana').hover();
+await pg.mouse.move(5,5);
+await pg.waitForTimeout(400);
+const manaMenu = await pg.locator('.mana-chips').evaluate(el=>({visible:getComputedStyle(el).visibility,pointer:getComputedStyle(el).pointerEvents}));
+ok('Mana menu stays visible and clickable while moving toward its active links',manaMenu.visible==='visible' && manaMenu.pointer!=='none');
+const leadAlignment = await pg.evaluate(()=>{
   paintLeads({connected:true,list:[{id:'fixture',name:'Example',phone:'4155550123',tier:'Signature',note:'A long form response that should start on the left',ts:new Date().toISOString()}]});
   const panel=document.querySelector('#leads-fold .panel');
   return {scroll:getComputedStyle(panel).overflowX,focus:panel.tabIndex,
@@ -2706,7 +2595,6 @@ const leadAlignment = await affiliatePage.evaluate(()=>{
     badge:document.querySelector('.category-badge')?.textContent||''};
 });
 ok('Lead rows left-align names/actions/notes and retain keyboard horizontal scrolling',leadAlignment.name==='flex-start' && leadAlignment.actions==='flex-start' && leadAlignment.note==='left' && leadAlignment.middle==='middle' && leadAlignment.header==='sticky' && leadAlignment.fixed==='fixed' && leadAlignment.scroll==='auto' && leadAlignment.focus===0 && leadAlignment.badge==='');
-await affiliatePage.close();
 const smsSource=readFileSync(join(ROOT,'docs/server/maya-messages.mjs'),'utf8');
 ok('SMS audit fixes preserve opt-in, carrier reasons and trusted-host signature checks',
   smsSource.includes("optOutType === 'START'") && smsSource.includes('message.status === update.status && update.errorCode') &&
@@ -2830,7 +2718,7 @@ ok('Save shares governed glass, padding and glyph sizing while the logo/title al
 
 // Icon Save, independent sign-in role and immediate cross-page presentation updates.
 ok('Aesthetic Save is icon-only',readFileSync(join(ROOT,'aesthetics/aesthetic-control.html'),'utf8').includes('aria-label="Save"><svg'));
-ok('H0 is scoped to main sign-in',INDEX_SOURCE.includes('signin-wordmark maya-signin-h0')&&!PLAYGROUND_SOURCE.includes('maya-signin-h0'));
+ok('H0 is scoped to main sign-in',INDEX_SOURCE.includes('signin-wordmark maya-signin-h0')&&![MAP_SOURCE,BACKEND_SOURCE,OPS_SOURCE].some(source=>source.includes('maya-signin-h0')));
 ok('Saved aesthetics propagate without refreshing',readFileSync(join(ROOT,'aesthetics/ui/typography-controls.js'),'utf8').includes("window.addEventListener('storage'")&&readFileSync(join(ROOT,'aesthetics/ui/typography-controls.js'),'utf8').includes("window.addEventListener('focus',revalidate)"));
 
 
@@ -2841,7 +2729,7 @@ ok('Panel materials share dropdowns; table selection formatting stays separate',
 ok('Table columns resize with persisted semantic widths',cellEditorSource.includes("handle.addEventListener('pointerdown'")&&cellEditorSource.includes('settings.columnWidths[cell.dataset.col]')&&readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8').includes('t.columnWidths'));
 ok('Lead notes edit inline; Messages uses circular Share and phone actions',MAP_SOURCE.includes("dialog.id='lead-note-editor'")&&MAP_SOURCE.includes('cell.replaceChildren(dialog)')&&MAP_SOURCE.includes('id="msg-share"')&&MAP_SOURCE.includes('class="msg-call maya-icon-button" id="msg-call"'));
 
-ok('Model hover dismissal separates pointer exit from keyboard focus',readFileSync(join(ROOT,'aesthetics/ui/admin-systems.js'),'utf8').includes("interaction==='pointer'||!focused"));
+ok('Model configuration requires an explicit click or keyboard action, never a hover snapshot',!readFileSync(join(ROOT,'aesthetics/ui/admin-systems.js'),'utf8').includes("addEventListener('mouseenter'")&&readFileSync(join(ROOT,'aesthetics/ui/admin-systems.js'),'utf8').includes("trigger.addEventListener('keydown'"));
 ok('Owner lead SMS reads bypass AI and phone reports use live numeric contacts',ownerConversationSource.includes('const direct=ownerLeadRead(text);if(direct)return direct;')&&ownerConversationSource.includes("decision.report==='leads'")&&PHONE_SOURCE.includes("enum:['leads','contact']"));
 const {ownerLeadRead}=await import('../docs/server/owner-conversation.mjs');
 ok('Natural owner status requests route to full live reports before AI',JSON.stringify(ownerLeadRead('Text me all the contacted leads'))===JSON.stringify({action:'list_leads',all:true,stage:'contacted'})&&JSON.stringify(ownerLeadRead('How many contacted leads do we have?'))===JSON.stringify({action:'count_leads',stage:'contacted'})&&SERVER_SOURCE.includes('listAll:()=>loadLeadFeed({all:true})')&&ownerConversationSource.includes('leads.filter(lead=>!stage||ownerLeadStage(lead)===stage)')&&ownerConversationSource.includes('leads=all?matches:matches.slice(0,count)'));
@@ -2877,8 +2765,8 @@ ok('Outbound coalesces refreshes and rejects older workspace snapshots after a s
   outboundJS.includes('if(intelligenceLoading){intelligencePending=true;return;}') &&
   outboundJS.includes('revision===workspaceRevision') &&
   outboundJS.includes('const fresh=await api();if(!current()){intelligencePending=true;return;}'));
-ok('Client and Playground saves and navigation persist edits made during pending writes and reads',
-  [INDEX_SOURCE,PLAYGROUND_SOURCE].every(source=>
+ok('Client saves and navigation persist edits made during pending writes and reads',
+  [INDEX_SOURCE].every(source=>
     source.includes('if (res && res.written && projectStore._dirty) {') &&
     source.includes("if (!(await projectStore.flush())) res = { written: false, reason: 'unsaved' };") &&
     source.includes('if (this._editGeneration !== generation) {') &&
@@ -2929,6 +2817,10 @@ ok('Brief and Operations bypass week-cached fabric v3 assets on reload',
   [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=4'))));
 ok('Repository-wide additions finish with the governing Aesthetic Control gate',
   ['AGENTS.md','docs/README.md','docs/design.md'].every(path=>readFileSync(join(ROOT,path),'utf8').includes('Aesthetic Control is the final completion gate.')));
+ok('Owner retirement removes Playground and Affiliates without promoting staged experiments',!existsSync(join(ROOT,'playground/index.html'))&&!MAP_SOURCE.includes('IS_AFFILIATES')&&HOSTING.hosting.redirects.some(r=>r.source==='/playground.html'&&r.destination==='/'));
+ok('Brief removes redundant navigation/date metadata and uses one name/date typography',!BACKEND_SOURCE.includes('id="fabric-workspace-actions"')&&!BACKEND_SOURCE.includes('Saved August')&&BACKEND_SOURCE.includes('class="op-identity"'));
+ok('Operations uses recorded Brief measurements without duplicate drawer inputs or dead Measurements action',OPS_SOURCE.includes('measurements:summary._measurements||{}')&&!OPS_SOURCE.includes('id="operation-settings"')&&!OPS_SOURCE.includes('id="room-sub"')&&OPS_SOURCE.includes('id="standalone-measurements"'));
+ok('Fabrics browsing removes card Save and Use while retaining private historical selections',!FABRIC_UI_SOURCE.includes("action('Save'")&&!FABRIC_UI_SOURCE.includes("action('Use'")&&FABRIC_SEARCH_SOURCE.includes('selectedByGarment'));
 // Keep this last: functional checks precede the governing aesthetic verification.
 ok('Messages accepts typed numbers through reviewed Send and confirmed Call',readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('function msgBegin')&&readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('msgTypedNumber'));
 ok('Saved aesthetic status colors, icon weight and section spacing have active previews',readFileSync(join(ROOT,'aesthetics/aesthetic-control/presentation-controls.js'),'utf8').includes('statusStyles')&&readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8').includes('sectionSpacing'));
@@ -2939,9 +2831,11 @@ await import('./voice-preparation.mjs');
 ok('Prepared voice never transmits ambient audio, waits for server readiness and releases cancelled microphones',true);
 await import('./client-account-races.mjs');
 ok('Community unpublish pins identity across awaits and Outbound renewal preserves draft context',true);
+await import('./retired-workspaces-ui.mjs');
+ok('Retired navigation stays absent and clean submission images retain named keyboard access to the scoped Brief',true);
 await import('./client-voice-ui.mjs');
 await import('./admin-voice-ui.mjs');
-ok('Actual client, Playground and Admin wake paths reuse a ready connection and recover playback without crossing accounts',true);
+ok('Actual client and Admin wake paths reuse a ready connection and recover playback without crossing accounts',true);
 ok('Held playback recovery clicks preserve open drawers and exact button bounds under default/saved styles at six widths',true);
 await import('./admin-automation-examples.mjs');
 ok('Automation failure hides unusable controls, Example and Save preserve drafts, and Admin spacing fits phones',true);

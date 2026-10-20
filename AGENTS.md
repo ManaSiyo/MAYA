@@ -61,7 +61,6 @@ address onto its new file, so every URL that ever worked still works.
 ```
 frontend/index.html        the app            → served at /
 backend/status.html        Systems Map        → /status.html
-                           Affiliates Beta    → /affiliates.html (admin-only route view)
 backend/operations.html    Operation Room     → /operations.html
 backend/outbound.html      Outbound           → /outbound.html
 backend/outbound.js        Outbound UI logic (served alongside its page)
@@ -75,9 +74,9 @@ docs/server/               Cloud Run: server.js, Dockerfile, rules,
                            maya-mcp.mjs (Maya's MCP door) and
                            maya-character.md (who Maya is, read per call)
 docs/firebase.json         the hosting map. Moving a page starts HERE.
-playground/index.html      Fromsa's private copy → /playground.html. New or
-                           risky features land HERE first and are promoted to
-                           frontend/index.html only when he approves.
+Retired routes            /playground* → /; /affiliates* → /status.html
+                           No staging or Affiliates implementation remains. Legacy Operations
+                           URLs redirect to /operations.html; its shared library assets stay.
 robots.txt                 a real file, so a crawler is not handed the app
 cloudbuild.yaml            Cloud Build reads it at the root, leave it there
 tests/                     the suite resolves the repo root from its own folder
@@ -111,8 +110,8 @@ The retired Claude duplicate is in `_to_delete/`.
 Communications changes also run `tests/maya-phone.mjs`, `tests/maya-messages.mjs`,
 `tests/maya-transfer.mjs` and `tests/maya-feedback.mjs`. These use fake providers;
 live call audio, SMS delivery and owner transfer acceptance still need an owner
-verification after deployment. Avatar/Pinterest changes stay in Playground until
-Fromsa approves promotion.
+verification after deployment. Unapproved Avatar/Pinterest experiments were removed with Playground; never
+promote that retired code without explicit approval.
 
 Outbound implementation: docs/server/outbound.mjs plus crm-intelligence.mjs,
 crm-gmail.mjs, crm-ai.mjs and crm-store.mjs in docs/server. Admin provider hover
@@ -211,7 +210,7 @@ backings and validated Black table/header/first-column background choices. Inner
 panel previews contain heading and metric together; outer padding surrounds them.
 Panel/table controls share desktop rows; Leads uses the later H4/H5 hierarchy below. Wake changes
 run tests/admin-wake.mjs (fake recognition; no microphone) in the release gate,
-plus the existing communications and both frontend/Playground hands batteries.
+plus the existing communications and the frontend hands battery.
 
 Admin Systems changes run tests/admin-systems-ui.mjs (also in app-regression).
 Provider hover cards expose authenticated configuration, not inference verification.
@@ -292,7 +291,7 @@ tests/lead-store.mjs, tests/admin-storage.mjs and all communications suites.
 
 Client project async writes pin UID/account generation and preserve edits newer
 than an initial save/upload. Shared images require independent Storage copies;
-avatar lifetime fixes remain Playground-only pending promotion. Run
+the retired Playground avatar lifetime patch was not promoted. Run
 tests/project-lifecycle.mjs. Brief generation/save retry and Operations account,
 garment and run identity are covered by tests/brief-operation-races.mjs. Reading
 a saved dissection must never generate missing pieces automatically.
@@ -314,8 +313,7 @@ health reports it. Run tests/release-contract.mjs and tests/verify-release.mjs.
 Aesthetic Control is the final completion gate.
 
 This governing rule applies to every addition or change anywhere in MAYA-new,
-including Admin, frontend, backend-generated UI, Outbound, Playground, Affiliates
-and supporting pages. Functional exclusions never exempt shared aesthetics.
+including Admin, frontend, backend-generated UI, Outbound and supporting pages. Functional exclusions never exempt shared aesthetics.
 Backend-only or documentation-only work must record that it adds no visible UI;
 it still preserves this rule and runs the shared authority gate.
 
@@ -402,7 +400,7 @@ candidates, one attempt and eight seconds; weak/failed comparison stays empty.
 Run fabric-search, fabric-sourcing, fabric-search-ui and brief-workspace-ui.
 
 Shared web voice preparation is aesthetics/ui/voice-preparation.js, used by
-Frontend, Playground and Admin. Silent standby is opt-in, visible/account/project
+Frontend and Admin. Silent standby is opt-in, visible/account/project
 bound and capped at 120 seconds, without timer-driven reconnection or mic audio.
 Activation requests microphone permission immediately, waits for channel plus
 server session readiness, sends current context before attaching audio, and
@@ -465,9 +463,9 @@ edits made while a target project loads require a second successful flush before
 detach. Save/rename acknowledge only persisted work; preserve later edits, failed
 drafts and oversized transcripts. Deletion continuations pin account generation.
 Dirty/pending online work also warns on refresh, but browser termination is best-
-effort. Run project-lifecycle, client-account-races and both hands batteries.
+effort. Run project-lifecycle, client-account-races and the frontend hands battery.
 The retired Admin Prompt Engine editor is backed up under
-_to_delete/admin-dashboard-retired-2026-10-17; active client/Playground Firestore
+_to_delete/admin-dashboard-retired-2026-10-17; active client Firestore
 config/prompting readers and stored settings remain intact. Outbound
 workspace revisions reject old reads after Save and coalesce overlapping refreshes.
 Run admin-prompt-saves and crm-failure-ui; both remain release/app-regression gates.
@@ -527,3 +525,36 @@ hit-testing as well as rectangles, especially phone widths. Preserve active fiel
 focus on repeated opens, and restore the opener only after it becomes visible.
 Embedded parent focus/toggle remains source-checked. Run operation-controls,
 operation-save-failures, brief-workspace-ui, exact release and final authority.
+
+## October 20 owner cleanup
+
+Playground and Affiliates are removed, with permanent legacy-route redirects and
+no experiment promotion. The frontend is the sole client implementation. Keep
+shared Leads APIs, legal uses of the word affiliates and legacy data paths.
+
+All actual hamburger drawers use data-maya-drawer and the optional validated
+drawer settings (MAYA/navy material by default). They do not use popup Editor
+material. Aesthetic Control has an active Drawer preview/Edit/Restore and
+interactive Glass segments. Preserve independent panel/table/Editor settings.
+Operations has no pipeline subtitle or duplicate Measurements action; saved
+projects use canonical Brief measurements. Standalone uploads retain their own
+manual entry panel. The embedded Settings iframe temporarily fills the actual
+viewport without reloading, changing a garment/run or losing parent scroll.
+
+Scrollbar version 2 defaults to 4px on both axes, a half-length painted native
+handle, transparent track and 800ms idle hiding. Earlier saved widths halve once
+on read, without modifying stored settings. Native drag/keyboard behavior stays
+intact; forced colors keep a native high-contrast handle.
+
+Fabric groups are Local (Bay Area), Mood, Swatchon, Amazon and Others, initially
+all enabled. Toggling only filters results; explicit Refresh searches the selected
+scope. No visible Save/Use actions or automatic replacements are added. Historical
+private lookbooks and assignments remain readable, and Favorites Remove retains
+CAS/account/submission guards. Never invent Swatchon price units, photos or stock.
+
+Image/submission hover metadata and automatic model snapshots are removed. API
+and Images configuration remains an explicit authenticated click/keyboard action.
+P2 titles (Biography/Vision and Gmail) and P1 descriptions remain editable roles.
+Run retired-workspaces/UI, admin-systems-ui, fabric and Brief/Operations suites,
+input-controls-ui, design-config/contract and exact release gates; final
+aesthetic-authority re-executes these changed visible surfaces and stays last.

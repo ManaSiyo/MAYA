@@ -13,14 +13,16 @@
   ];
   const defaults={sectionSpacing:{submissions:24,leads:16,ads:40,insights:16,headingGap:10},layoutSpacing:{labelGap:4,fieldGap:10,drawerDockInset:4},semanticStyles:{nonFabric:{color:'#fde68a',opacity:100}},statusStyles:Object.fromEntries(statuses.map(s=>[s.key,{color:s.color,opacity:100,weight:s.weight}]))};
   defaults.checkbox={size:16,radius:3,background:'black',fill:100,rim:55,borderColor:'gray',checkedColor:'#aab5c4',checkColor:'#000000'};
-  defaults.scrollbar={width:8,radius:8,thumbColor:'#aab5c4',thumbOpacity:55,trackColor:'#000000',trackOpacity:0};
+  defaults.scrollbar={version:2,width:4,length:50,hideAfter:800,autoHide:true,radius:8,thumbColor:'#aab5c4',thumbOpacity:55,trackColor:'#000000',trackOpacity:0};
+  defaults.drawer={background:'navy',fill:90,rim:22,borderColor:'white',blur:28,saturation:180,radius:18,paddingX:12,paddingY:16};
   const hex=(value,fallback)=>/^#[0-9a-f]{6}$/i.test(value)?value:fallback;
   const number=(value,min,max,fallback)=>Number.isInteger(value)&&value>=min&&value<=max?value:fallback;
   const rgba=(color,opacity)=>`rgb(${[1,3,5].map(i=>parseInt(color.slice(i,i+2),16)).join(' ')} / ${opacity/100})`;
   function inputCSS(value){
     const c={...defaults.checkbox,...value.checkbox},s={...defaults.scrollbar,...value.scrollbar};
     for(const [key,min,max] of [['size',12,28],['radius',0,14],['fill',0,100],['rim',0,100]])c[key]=number(c[key],min,max,defaults.checkbox[key]);
-    for(const [key,min,max] of [['width',6,20],['radius',0,16],['thumbOpacity',0,100],['trackOpacity',0,100]])s[key]=number(s[key],min,max,defaults.scrollbar[key]);
+    for(const [key,min,max] of [['width',2,20],['length',25,100],['hideAfter',200,3000],['radius',0,16],['thumbOpacity',0,100],['trackOpacity',0,100]])s[key]=number(s[key],min,max,defaults.scrollbar[key]);
+    s.autoHide=s.autoHide!==false;scrollSettings=s;
     for(const key of ['checkedColor','checkColor'])c[key]=hex(c[key],defaults.checkbox[key]);
     for(const key of ['thumbColor','trackColor'])s[key]=hex(s[key],defaults.scrollbar[key]);
     const palette={black:'#000000',gray:'#0d1120',blue:'#234c7d',yellow:'#785b0f',green:'#175b3b',pink:'#732e46'},borders={black:'#000000',white:'#ffffff',gray:'#aab5c4'};
@@ -30,12 +32,32 @@
     css+=`${checkbox}{appearance:none!important;-webkit-appearance:none!important;box-sizing:border-box!important;display:inline-block!important;flex:0 0 ${c.size}px!important;inline-size:${c.size}px!important;block-size:${c.size}px!important;min-width:0!important;min-height:0!important;margin:0!important;padding:0!important;align-self:center!important;vertical-align:middle!important;border:1px solid ${rgba(borders[c.borderColor]||borders.gray,c.rim)}!important;border-radius:${c.radius}px!important;background:${rgba(palette[c.background]||palette.black,c.fill)}!important;background-position:center!important;background-repeat:no-repeat!important;background-size:75% 75%!important;box-shadow:none!important;cursor:pointer;}`;
     css+=`${checkbox}:is(:checked,:indeterminate){background-color:${c.checkedColor}!important;border-color:${c.checkedColor}!important}${checkbox}:checked{background-image:${glyph('M5 12l4 4L19 6')}!important}${checkbox}:indeterminate{background-image:${glyph('M5 12h14')}!important}${checkbox}:focus-visible{outline:2px solid ${c.checkedColor}!important;outline-offset:3px!important}${checkbox}:disabled{opacity:.45!important;cursor:not-allowed}`;
     css+='html body label:has(>input[type="checkbox"]){display:inline-flex!important;align-items:center!important;column-gap:var(--maya-form-label-gap,4px)!important}html body :is(td,th):has(>input[type="checkbox"]){text-align:center!important;vertical-align:middle!important}';
-    // Preserve page-owned hidden navigation tracks. Textareas and annotated
-    // scroll regions explicitly opt into the visible, shared controls.
-    css+=`${scroll}{scrollbar-color:var(--maya-scrollbar-thumb) var(--maya-scrollbar-track)!important}${visible}{scrollbar-width:${s.width<=10?'thin':'auto'}!important}`;
-    css+=`@supports selector(::-webkit-scrollbar){${scroll}{scrollbar-color:auto!important}${scroll.split(',').map(x=>x+'::-webkit-scrollbar').join(',')}{width:${s.width}px!important;height:${s.width}px!important;background:transparent!important}${scroll.split(',').map(x=>x+'::-webkit-scrollbar-track').join(',')}{background:var(--maya-scrollbar-track)!important;border:0!important;box-shadow:none!important}${scroll.split(',').map(x=>x+'::-webkit-scrollbar-thumb').join(',')}{background:var(--maya-scrollbar-thumb)!important;border:0!important;border-radius:${s.radius}px!important;box-shadow:none!important}${scroll.split(',').map(x=>x+'::-webkit-scrollbar-thumb:hover').join(',')}{background:${rgba(s.thumbColor,Math.min(100,s.thumbOpacity+20))}!important}${scroll.split(',').map(x=>x+'::-webkit-scrollbar-corner').join(',')}{background:var(--maya-scrollbar-track)!important}${visible}::-webkit-scrollbar{display:block!important}${visible}{scrollbar-width:auto!important}}`;
-    css+=`@media(forced-colors:active){${checkbox}{appearance:auto!important;-webkit-appearance:auto!important;forced-color-adjust:auto}${checkbox},${checkbox}:is(:checked,:indeterminate){background-image:none!important}${scroll}{scrollbar-color:auto!important}}`;
+    // Keep native scrolling, drag targets and keyboard behavior. Only the painted
+    // handle shrinks; reserving a stable gutter avoids a layout jump on idle.
+    const image='url("data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"><rect width="100%" height="100%" rx="${s.radius}" fill="${s.thumbColor}" fill-opacity="${s.thumbOpacity/100}"/></svg>`)+'")';
+    const active='html.maya-scroll-active,html body.maya-scroll-active,html body .maya-scroll-active';
+    css+=`${scroll}{--maya-scroll-thumb-image:${s.autoHide?'none':image};--maya-scroll-active-thumb:${s.autoHide?'transparent':rgba(s.thumbColor,s.thumbOpacity)};--maya-scroll-active-track:${s.autoHide?'transparent':rgba(s.trackColor,s.trackOpacity)};scrollbar-color:var(--maya-scroll-active-thumb) var(--maya-scroll-active-track)!important}${active}{--maya-scroll-thumb-image:${image};--maya-scroll-active-thumb:${rgba(s.thumbColor,s.thumbOpacity)};--maya-scroll-active-track:${rgba(s.trackColor,s.trackOpacity)}}${visible}{scrollbar-width:${s.width<=10?'thin':'auto'}!important}`;
+    css+=`@supports selector(::-webkit-scrollbar){${scroll}{scrollbar-color:auto!important}${scroll.split(',').map(x=>x+'::-webkit-scrollbar').join(',')}{width:${s.width}px!important;height:${s.width}px!important;background:transparent!important}${scroll.split(',').map(x=>x+'::-webkit-scrollbar-track').join(',')}{background:var(--maya-scroll-active-track)!important;border:0!important;box-shadow:none!important}${scroll.split(',').map(x=>x+'::-webkit-scrollbar-thumb').join(',')}{background-color:transparent!important;background-image:var(--maya-scroll-thumb-image)!important;background-position:center!important;background-size:100% ${s.length}%!important;background-repeat:no-repeat!important;border:0!important;border-radius:${s.radius}px!important;box-shadow:none!important}${scroll.split(',').map(x=>x+'::-webkit-scrollbar-thumb:horizontal').join(',')}{background-size:${s.length}% 100%!important}${scroll.split(',').map(x=>x+'::-webkit-scrollbar-corner').join(',')}{background:var(--maya-scroll-active-track)!important}${visible}::-webkit-scrollbar{display:block!important}${visible}{scrollbar-width:auto!important}}`;
+    css+=`@media(forced-colors:active){${checkbox}{appearance:auto!important;-webkit-appearance:auto!important;forced-color-adjust:auto}${checkbox},${checkbox}:is(:checked,:indeterminate){background-image:none!important}${scroll}{scrollbar-color:auto!important}${scroll.split(',').map(x=>x+'::-webkit-scrollbar-thumb').join(',')}{background:CanvasText!important;background-image:none!important}}`;
     return css;
+  }
+  let scrollSettings=defaults.scrollbar;
+  const scrollTimers=new Map();
+  function showScroll(target){
+    const el=target===document?document.scrollingElement:target;
+    if(!(el instanceof Element))return;
+    el.classList.add('maya-scroll-active');clearTimeout(scrollTimers.get(el));
+    scrollTimers.set(el,setTimeout(()=>{el.classList.remove('maya-scroll-active');scrollTimers.delete(el);},scrollSettings.hideAfter));
+  }
+  document.addEventListener('scroll',event=>showScroll(event.target),{capture:true,passive:true});
+  document.addEventListener('keydown',event=>{if(['ArrowDown','ArrowUp','ArrowLeft','ArrowRight','PageDown','PageUp','Home','End',' '].includes(event.key))showScroll(event.target);},{passive:true});
+  window.addEventListener('pagehide',()=>{for(const [el,timer]of scrollTimers){clearTimeout(timer);el.classList.remove('maya-scroll-active');}scrollTimers.clear();});
+  function previewDrawer(value={}){
+    const d={...defaults.drawer,...value},palette={navy:'3 15 29',black:'0 0 0',gray:'13 17 32',blue:'35 76 125',yellow:'120 91 15',green:'23 91 59',pink:'115 46 70'};
+    for(const [key,min,max]of [['fill',0,100],['rim',0,100],['blur',0,40],['saturation',0,200],['radius',0,24],['paddingX',0,40],['paddingY',0,40]])d[key]=number(d[key],min,max,defaults.drawer[key]);
+    const selector='html body [data-maya-drawer]';
+    let node=document.getElementById('maya-drawer-control-style');if(!node){node=document.createElement('style');node.id='maya-drawer-control-style';document.head.append(node);}
+    node.textContent=`${selector}{box-sizing:border-box;background-color:rgb(${palette[d.background]||palette.navy} / ${d.fill/100})!important;background-image:linear-gradient(180deg,rgb(255 255 255 / .10),rgb(255 255 255 / .03) 25%,rgb(255 255 255 / .02) 65%,rgb(255 255 255 / .07))!important;border:.5px solid rgb(${d.borderColor==='black'?'0 0 0':d.borderColor==='gray'?'170 181 196':'255 255 255'} / ${d.rim/100})!important;border-radius:${d.radius}px!important;backdrop-filter:blur(${d.blur}px) saturate(${d.saturation}%)!important;-webkit-backdrop-filter:blur(${d.blur}px) saturate(${d.saturation}%)!important;box-shadow:inset 0 1px 1px rgb(255 255 255 / .30),inset 0 -1px 1px rgb(0 0 0 / .18),0 12px 48px rgb(0 0 0 / .38)!important;padding:${d.paddingY}px ${d.paddingX}px!important}${selector}::backdrop{background:transparent}@media(forced-colors:active){${selector}{background:Canvas!important;color:CanvasText!important;border:1px solid CanvasText!important;box-shadow:none!important;backdrop-filter:none!important}}`;
   }
   function previewInputs(value={}){
     let node=document.getElementById('maya-input-control-style');if(!node){node=document.createElement('style');node.id='maya-input-control-style';document.head.append(node);}node.textContent=inputCSS(value);
@@ -63,6 +85,7 @@
     css+=`html body :is(select,.type-editor-fields select,.dropdown-preview){background-image:url("data:image/svg+xml,${arrow}")!important}`;
     const mask=encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="${iconStroke}" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`);
     css+=`html body :is(.type-editor,.review-fold,.owner-settings,.outbound-more,.model-provider,details.fold)>summary::after{mask-image:url("data:image/svg+xml,${mask}");-webkit-mask-image:url("data:image/svg+xml,${mask}");color:var(--maya-icon-color)!important;opacity:var(--maya-icon-opacity)!important}`;
+    css+=`html body .hamburger-icon{display:inline-flex!important;flex-direction:column!important;gap:calc(var(--maya-icon-stroke)*1.5px)!important;width:calc(var(--maya-control-icon-size,28px)*.5)!important;color:var(--maya-icon-color)!important;opacity:var(--maya-icon-opacity)!important}html body .hamburger-icon span{display:block!important;width:100%!important;height:calc(var(--maya-icon-stroke)*.5px)!important;background:currentColor!important;border-radius:1px}`;
     css+=`html body :is(.maya-icon-button,.maya-inline-icon,.maya-pill,.adm-tab,#msg-begin,summary) svg{color:var(--maya-icon-color)!important;opacity:var(--maya-icon-opacity)!important;stroke-width:var(--maya-icon-stroke)!important}`;
     css+=`html body #submissions-heading{margin-top:${sp.submissions}px!important}html body #adm-mkt #leads-fold{margin-top:${sp.leads}px!important}html body #adm-mkt #ads-fold{margin-top:${sp.ads}px!important}html body #adm-mkt #bottom-fold{margin-top:${sp.insights}px!important}`;
     // Explicit content markers include the visible empty-state fallback after a hidden feed.
@@ -71,5 +94,5 @@
     let node=document.getElementById('maya-presentation-control-style');if(!node){node=document.createElement('style');node.id='maya-presentation-control-style';document.head.append(node);}node.textContent=css;
     document.querySelectorAll('.spacing-preview [data-spacing]').forEach(e=>e.style.setProperty('--preview-spacing',sp[e.dataset.spacing]+'px'));
   }
-  window.MayaPresentationControls={apply,previewInputs,defaults,statuses};
+  window.MayaPresentationControls={apply,previewInputs,previewDrawer,defaults,statuses};
 })();

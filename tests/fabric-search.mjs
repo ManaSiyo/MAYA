@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-import { FABRIC_SHOPS, merchantURL, normalizeFabricRequest, requestedShops, webSearchBody, readDiscovery, parseListing, applyShopifyVariant, createFabricSearch, mountFabricSearch } from '../docs/server/fabric-search.mjs';
+import { FABRIC_SHOPS, FABRIC_STORE_GROUPS, merchantURL, normalizeFabricRequest, requestedShops, webSearchBody, readDiscovery, parseListing, applyShopifyVariant, createFabricSearch, mountFabricSearch } from '../docs/server/fabric-search.mjs';
 
 const user={sub:'owner-A',email:'owner@example.test'}, second={sub:'owner-B',email:'other@example.test'};
 const url='https://britexfabrics.com/products/crimson-wool';
@@ -37,9 +37,46 @@ await test('photo, words and refinements use one search with bounded tools and n
   const broad=webSearchBody(normalizeFabricRequest({request:'red wool'}),'configured-model');
   assert.ok(broad.tools[0].filters.allowed_domains.includes('amazon.com'));assert.ok(broad.tools[0].filters.allowed_domains.includes('stonemountainfabric.com'));
   assert.equal(requestedShops(normalizeFabricRequest({request:'less shiny',history:[{request:'only Brightex'}]}))[0].name,'Britex Fabrics');
-  assert.deepEqual(requestedShops(normalizeFabricRequest({request:'only local'})).map(s=>s.place),['San Francisco','Berkeley']);
+  assert.deepEqual(requestedShops(normalizeFabricRequest({request:'only local'})).map(s=>s.place),['San Francisco','Berkeley','Santa Cruz']);
   assert.throws(()=>normalizeFabricRequest({request:'x',image:'https://private.test/photo'}));
   assert.throws(()=>normalizeFabricRequest({request:'x',submissionId:'../project'}));
+});
+await test('five explicit store groups replace stale merchant-only history without broadening invalid filters',()=>{
+  assert.deepEqual(FABRIC_STORE_GROUPS.map(group=>group.label),['Local (Bay Area)','Mood','Swatchon','Amazon','Others']);
+  const ui=readFileSync(new URL('../aesthetics/ui/fabric-assistant.js',import.meta.url),'utf8');
+  const browserGroups=JSON.parse(vm.runInNewContext(ui.slice(ui.indexOf('const storeGroups='),ui.indexOf('let searchSeq='))+'JSON.stringify(storeGroups)'));
+  assert.deepEqual(browserGroups,FABRIC_STORE_GROUPS.map(group=>({...group,hosts:group.hosts.map(host=>host.replace(/^www\./,''))})),'Browser and server classify every approved merchant identically');
+  for(const group of FABRIC_STORE_GROUPS){
+    const input=normalizeFabricRequest({request:'less shiny, only Britex',history:[{request:'only Britex red wool'}],storeGroups:[group.id]});
+    assert.deepEqual(requestedShops(input).map(shop=>shop.host).sort(),[...group.hosts].sort());
+    const payload=webSearchBody(input,'fixture');assert.match(payload.input[0].content[0].text,/less shiny/);assert.match(payload.instructions,/never confirms pickup/);
+  }
+  assert.deepEqual(requestedShops(normalizeFabricRequest({request:'red wool',stores:['moodfabrics.com']})).map(shop=>shop.name),['Mood Fabrics']);
+  for(const storeGroups of [[],['unknown'],['local','unknown'],'mood'])assert.throws(()=>normalizeFabricRequest({request:'wool',storeGroups}),/supported store/);
+  assert.throws(()=>normalizeFabricRequest({request:'wool',stores:['evil.test']}),/supported fabric store/);
+  assert.equal(requestedShops(normalizeFabricRequest({request:'wool'})).length,FABRIC_SHOPS.length,'No silent local-only default');
+});
+await test('Swatchon uses exact sourced product paths and SKU photos, never aggregate or swatch prices',()=>{
+  const link='https://www.swatchon.com/fabric/QL-061078';
+  for(const good of [link,'https://swatchon.com/wholesale-fabric/14620'])assert.equal(merchantURL(good,true).shop.name,'Swatchon');
+  for(const bad of ['https://www.swatchon.com/fabric','https://www.swatchon.com/products/invented','https://www.swatchon.com/fabric/wool','https://www.swatchon.com/help/articles/how-swatchon-works','https://swatchon.com.evil.test/fabric/QL-061078'])assert.equal(merchantURL(bad,true),null);
+  const html=seller({name:'Enzyme Cotton Twill',url:link,sku:'QL-061078',image:[],description:'Cotton 100%. Order from 1 yard, ships from Korea.',offers:{'@type':'AggregateOffer',lowPrice:7.48,highPrice:12.47,priceCurrency:'USD',url:link}})+'<meta property="og:image" content="https://www.swatchon.com/images/og-default.png"><img src="https://seller.test/unrelated.jpg" alt="QL-000001 1"><img src="https://seller.test/QL-061078.jpg" alt="QL-061078 1">';
+  const p=parseListing(html,link);assert.equal(p.image,'https://seller.test/QL-061078.jpg');assert.equal(p.price,'');assert.equal(p.unit,'');assert.equal(p.availability,'unknown');assert.equal(p.place,'Online');
+  assert.equal(parseListing(html.replace(/<img[^>]+>/g,''),link).image,'','A site logo cannot become a fabric photo');
+  assert.equal(parseListing(seller({name:'Cotton Swatch',url:link,description:'Sold by the yard.'}),link).isSwatch,true);
+});
+await test('Swatchon-only discovery keeps refinements, verifies seller facts and rejects other approved merchants',async()=>{
+  const link='https://www.swatchon.com/fabric/QL-061078',events=[],visits=[];
+  const discovery=response({candidates:[{url:link,price:'1.00',reason:'Wool twill.'},{url}]});discovery.output[0].action.sources.push({url:link});
+  const service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>{
+    if(target.includes('openai.com'))return Response.json(discovery);
+    visits.push(target);assert.equal(target,link);return new Response(seller({url:link,offers:{'@type':'AggregateOffer',lowPrice:7,highPrice:20,priceCurrency:'USD'}}));
+  }});
+  await service.search(user,{request:'less shiny crimson wool',history:[{request:'only Britex wool'}],storeGroups:['swatchon']},event=>events.push(event));
+  assert.deepEqual(visits,[link]);assert.deepEqual(events.at(-1).products.map(p=>p.url),[link]);assert.equal(events.at(-1).products[0].price,'');
+  const redirected=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>target.includes('openai.com')?Response.json(discovery):target===link?new Response('',{status:302,headers:{location:url}}):new Response(seller())});
+  const redirectedEvents=[];await redirected.search(user,{request:'crimson wool',storeGroups:['swatchon'],history:[{request:'wool'}]},event=>redirectedEvents.push(event));
+  assert.deepEqual(redirectedEvents.at(-1).products,[],'An approved host redirect must still respect the selected group');
 });
 await test('ungrounded URLs, invented prices and unapproved sellers from AI are discarded',()=>{
   const found=readDiscovery(response({candidates:[{url,price:'1.00',reason:'Close texture'},{url:'https://britexfabrics.com/products/invented'},{url:'https://evil.test/p'},{url}]}));

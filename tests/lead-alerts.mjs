@@ -77,7 +77,7 @@ const {readFile}=await import('node:fs/promises');const {runInNewContext}=await 
 const admin=await readFile(new URL('../backend/status.html',import.meta.url),'utf8');
 const statusFunction=admin.slice(admin.indexOf('let _callbackStatusBusy=false;'),admin.indexOf('async function checkLeadAlerts('));
 const note={style:{},textContent:''};let resolveStatus;
-const context={IS_AFFILIATES:false,_idTok:'owner-a',document:{getElementById:()=>note},Date,fetch:async()=>({ok:true,json:async()=>({ok:true,readiness:{schedulerConfigured:false,smsConfigured:true,voiceConfigured:true,ownerNumberConfigured:true},feed:{connected:true},items:[{name:'Julia',text:'failed',textError:'provider refused',call:'accepted'}]})})};
+const context={_idTok:'owner-a',document:{getElementById:()=>note},Date,fetch:async()=>({ok:true,json:async()=>({ok:true,readiness:{schedulerConfigured:false,smsConfigured:true,voiceConfigured:true,ownerNumberConfigured:true},feed:{connected:true},items:[{name:'Julia',text:'failed',textError:'provider refused',call:'accepted'}]})})};
 runInNewContext(statusFunction,context);await context.loadLeadAlertStatus();assert.match(note.textContent,/Immediate Wix callback trigger is not configured/);assert.match(note.textContent,/Julia: text failed/);assert.equal(note.style.display,'block');
 context.fetch=()=>new Promise(resolve=>{resolveStatus=resolve;});const late=context.loadLeadAlertStatus();context._idTok='owner-b';const oldText=note.textContent;resolveStatus({ok:true,json:async()=>({ok:true,readiness:{},feed:{},items:[{name:'Other account'}]})});await late;assert.equal(note.textContent,oldText);
 console.log('Concurrent claims, storage failure, persistent uncertainty and account-safe Admin warnings passed.');

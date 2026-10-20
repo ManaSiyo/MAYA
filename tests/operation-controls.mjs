@@ -30,21 +30,21 @@ try{
  const first=await open();await releaseSamples(first);await first.waitForFunction(()=>ACTIVE_TEST==='Fixture trousers');assert.equal(await first.locator('#test-picker option').count(),1);
  // Actual keyboard entry, forward/backward boundary loops and Escape focus restoration.
  for(const width of [390,1440]){
-  await first.setViewportSize({width,height:1000});const header=first.locator('header .hamburger');await header.focus();await first.keyboard.press('Enter');await first.waitForFunction(()=>document.activeElement.id==='m-waist');
-  await first.keyboard.press('Tab');assert.equal(await first.evaluate(()=>document.activeElement.id),'m-hip');
-  await first.waitForFunction(()=>{const r=document.getElementById('drawer').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1;});
+  await first.setViewportSize({width,height:1000});const header=first.locator('header .hamburger');await header.focus();await first.keyboard.press('Enter');await first.waitForFunction(()=>document.activeElement.classList.contains('drawer-burger'));
+  await first.keyboard.press('Tab');assert.equal(await first.locator('[data-plan="A"]').evaluate(e=>e===document.activeElement),true);
+  await first.waitForFunction(()=>{const r=document.getElementById('drawer').getBoundingClientRect();return getComputedStyle(document.querySelector('.hpane-drawer')).transform==='none'&&r.left>=0&&r.right<=innerWidth+1;});
   assert.equal(await first.locator('.drawer-burger').isVisible(),true,'Open Settings always offers a real close control');
   assert.ok(await first.locator('#operation-settings-title').evaluate(el=>{const r=el.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('#drawer');}),'Settings title paints above the standalone page header');
   if(width===390)await first.screenshot({path:'/private/tmp/maya-standalone-settings-layer-390.png'});
-  await first.locator('#m-length').focus();await first.keyboard.press('Tab');assert.equal(await first.locator('.drawer-burger').evaluate(e=>e===document.activeElement),true,'Last field wraps to the visible close control');
-  await first.keyboard.press('Shift+Tab');assert.equal(await first.evaluate(()=>document.activeElement.id),'m-length','First field wraps backward to last');
+  await first.locator('[onclick="clearEmbeddings()"]').focus();await first.keyboard.press('Tab');assert.equal(await first.locator('.drawer-burger').evaluate(e=>e===document.activeElement),true,'Last field wraps to the visible close control');
+  await first.keyboard.press('Shift+Tab');assert.equal(await first.locator('[onclick="clearEmbeddings()"]').evaluate(e=>e===document.activeElement),true,'First control wraps backward to last');
   await first.keyboard.press('Escape');assert.equal(await header.evaluate(e=>e===document.activeElement),true);assert.equal(await first.locator('.hpane-drawer').evaluate(e=>e.inert),true);
-  await first.locator('#operation-settings').focus();await first.keyboard.press('Enter');await first.waitForFunction(()=>document.activeElement.id==='m-waist');await first.keyboard.press('Escape');assert.equal(await first.evaluate(()=>document.activeElement.id),'operation-settings');
+
   await header.click();await first.locator('.drawer-burger').click();assert.equal(await header.evaluate(e=>e===document.activeElement),true,'Visible close control restores the real opener');
  }
  // A queued opening focus must not overwrite a newer user focus inside Settings.
- await first.evaluate(()=>{const native=requestAnimationFrame,queued=[];window.requestAnimationFrame=fn=>queued.push(fn);toggleDrawer(true);document.getElementById('m-hip').focus();window.requestAnimationFrame=native;for(const fn of queued)fn();});
- assert.equal(await first.evaluate(()=>document.activeElement.id),'m-hip','A late open callback preserves newer field focus');await first.keyboard.press('Escape');
+ await first.evaluate(()=>{const native=requestAnimationFrame,queued=[];window.requestAnimationFrame=fn=>queued.push(fn);toggleDrawer(true);document.getElementById('logic-edit-btn').focus();window.requestAnimationFrame=native;for(const fn of queued)fn();});
+ assert.equal(await first.evaluate(()=>document.activeElement.id),'logic-edit-btn','A late open callback preserves newer field focus');await first.keyboard.press('Escape');
  // A running operation disables every field; the focusable dialog is the safe fallback.
  await first.evaluate(()=>{setOperationRunning(true);document.querySelector('.drawer-burger').disabled=true;});await first.locator('header .hamburger').focus();await first.keyboard.press('Enter');await first.waitForFunction(()=>document.activeElement.id==='drawer');await first.keyboard.press('Tab');assert.equal(await first.evaluate(()=>document.activeElement.id),'drawer');await first.keyboard.press('Escape');await first.evaluate(()=>setOperationRunning(false));await first.close();
  // An upload intent already wins while FileReader is still waiting.
@@ -57,9 +57,9 @@ try{
  // An account round trip invalidates a sample result even if the original account returns.
  const switched=await open();await switched.evaluate(tokens=>{for(const value of tokens){localStorage.setItem('maya_admin_tok',value);operationAuthChanged();}},[token('owner-b'),token('owner-a',2)]);await releaseSamples(switched);assert.deepEqual(await switched.evaluate(()=>({hero:HERO,active:ACTIVE_TEST,keys:Object.keys(TESTS)})),{hero:null,active:null,keys:[]});await switched.close();
  // Embedded parent settings requests focus the real fields; visible close button participates in both loops.
- const host=await open('/fixture-host');await host.waitForFunction(()=>document.querySelector('iframe')?.contentWindow?.location.pathname.includes('operations.html'));const frame=host.frames().find(frame=>frame.url().includes('operations.html'));await frame.waitForFunction(()=>typeof toggleDrawer==='function');await host.locator('#settings').click();await frame.waitForFunction(()=>document.activeElement.id==='m-waist');
- await frame.locator('#m-length').focus();await host.keyboard.press('Tab');assert.equal(await frame.locator('.drawer-burger').evaluate(e=>e===document.activeElement),true);
- await host.keyboard.press('Shift+Tab');assert.equal(await frame.evaluate(()=>document.activeElement.id),'m-length');await frame.locator('#m-waist').focus();await host.keyboard.press('Shift+Tab');assert.equal(await frame.locator('.drawer-burger').evaluate(e=>e===document.activeElement),true);await host.keyboard.press('Tab');assert.equal(await frame.evaluate(()=>document.activeElement.id),'m-waist');
+ const host=await open('/fixture-host');await host.waitForFunction(()=>document.querySelector('iframe')?.contentWindow?.location.pathname.includes('operations.html'));const frame=host.frames().find(frame=>frame.url().includes('operations.html'));await frame.waitForFunction(()=>typeof toggleDrawer==='function');await host.locator('#settings').click();await frame.waitForFunction(()=>document.activeElement.classList.contains('drawer-burger'));
+ await frame.locator('[onclick="clearEmbeddings()"]').focus();await host.keyboard.press('Tab');assert.equal(await frame.locator('.drawer-burger').evaluate(e=>e===document.activeElement),true);
+ await host.keyboard.press('Shift+Tab');assert.equal(await frame.locator('[onclick="clearEmbeddings()"]').evaluate(e=>e===document.activeElement),true);await frame.locator('[data-plan="A"]').focus();await host.keyboard.press('Shift+Tab');assert.equal(await frame.locator('.drawer-burger').evaluate(e=>e===document.activeElement),true);await host.keyboard.press('Tab');assert.equal(await frame.locator('[data-plan="A"]').evaluate(e=>e===document.activeElement),true);
  await host.keyboard.press('Escape');await host.waitForFunction(()=>window.settingsState===false);assert.equal(await frame.locator('.hpane-drawer').evaluate(e=>e.inert),true);assert.equal(samples.has(host),false,'Embedded work never requests standalone samples');await host.close();
  assert.deepEqual(calls,['/api/openai/v1/chat/completions','/api/openai/v1/chat/completions']);assert.deepEqual(errors,[]);
  console.log('Operation controls: lazy samples preserve pending uploads, active runs and account changes; standalone/embedded keyboard entry, forward/backward loops, Escape and all-disabled fallback passed. Local fake providers only.');

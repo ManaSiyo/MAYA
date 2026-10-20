@@ -1,9 +1,24 @@
-# Conversational fabric sourcing — October 17, 2026
+# Conversational fabric sourcing — October 18, 2026
 
-Release baseline: 7533e38 was verified on Firebase and Cloud Run. The October 17
-screenshot review restores Fabrics beside the garment controls and removes unused
-full-resolution startup warming. See AI-HANDOFF.md for the current release state.
-The private fur/green-pants owner demonstration has not run.
+October 18 owner review: Sourceable exposes exactly five independent filters:
+**Local (Bay Area), Mood, Swatchon, Amazon, Others**. All start enabled. Local
+contains only Britex (also recognized as “Brightex”), Stonemountain and Harts;
+Others contains the existing Blackbird, The Fabric Store and Tessuti sources.
+These are merchant groups, not a live pickup or stock promise. Filter changes
+only narrow the displayed results and cancel stale searches. **Refresh** explicitly
+searches the selected groups; filter clicks and expansion make no paid calls.
+An empty selection never falls back to an unrestricted search. Explicit filters
+replace earlier merchant-only constraints while retaining material refinements
+and any unsent draft. Favorites and In House are independent of Sourceable filters.
+
+Fabric cards no longer expose Save or Use. Existing private favorites and garment
+assignments remain readable; Favorites retains explicit Remove. Browsing never
+creates or changes assignments. Product links keep their real destinations and
+verified unit price when known, without long duplicate hover copy. View tabs use
+the shared segmented-control contract. The inline workspace fills the same host
+as the garment; small viewports scroll its content rather than enlarging that host.
+The private fur/green-pants owner demonstration has not run. See AI-HANDOFF.md
+for the current release state.
 
 From the Brief or Operation Room, choose Fabrics after a dissection has been
 saved successfully. The selected garment, original look and client preferences
@@ -46,12 +61,12 @@ never calls image generation. No purchase capability is added.
   unrelated alternatives. Missing or inaccessible retailer images can prevent
   comparison; the UI reports that limit rather than claiming a match.
 - Requests contain bounded garment metadata instead of nested piece images,
-  patterns or meshes. The integrated large-piece fixture sends 6,012 bytes rather
+  patterns or meshes. The integrated large-piece fixture sends 6,000 bytes rather
   than more than 5.6 MB; the server obtains canonical saved pieces/crops itself.
   Original reference photo and structured client preferences remain separate
   inputs. In House inventory loads independently, so reference or lookbook failure
   does not prevent available inventory photos from appearing.
-- Britex, Stonemountain, Harts, Amazon, Mood, Blackbird, The Fabric Store and
+- Britex, Stonemountain, Harts, Amazon, Mood, Swatchon, Blackbird, The Fabric Store and
   Tessuti are the allowed discovery domains. Amazon is web discovery, NOT a
   Creators API integration or a promise of exhaustive Amazon inventory.
 - An initial literal Shopify pass runs alongside web reasoning for text input.
@@ -75,7 +90,7 @@ never calls image generation. No purchase capability is added.
 
 ## Sealed lookbook and production handoff
 
-Save and Use for design persist under
+Historical Save/Use records and the compatible authenticated API persist under
 `private/fabrics/<encoded authenticated Google sub>/<submissionId>/lookbook.json`.
 Submission existence is checked using its marker; Admin access to submissions
 follows the existing atelier authorization. Lookbooks remain separate even when
@@ -83,14 +98,13 @@ two authorized admins can open the same client submission. Browser Storage rules
 do not expose these private objects. Generation preconditions prevent another
 window from overwriting a newer selection. A book holds at most 100 fabrics.
 
-The browser serializes Save/Use/Remove for each account/submission. Clicking Save
-for garment A keeps that intent if the user selects B before the request runs.
+The current browser serializes explicit Remove actions for each account/submission.
+A reviewed removal keeps its identity if the user selects another garment before it runs.
 Same-account token renewal preserves work; account/submission changes cancel
 unsent actions and reject late UI updates. Writes have a 15-second deadline.
 An unconfirmed response invalidates the cached generation and reloads the book;
-it never automatically repeats the uncertain write. A failure retains retryable
-controls. A new seller listing is verified before its first Save/Use; choosing an
-already saved URL for another garment reuses the stored seller facts.
+it never automatically repeats the uncertain write. A failure retains retryable controls. The retained API still verifies a new seller
+listing before its first Save/Use; this is compatibility, not a newly exposed card action.
 
 selectedByGarment maps saved garment IDs to product URLs. A private, stored-only
 selectedGarmentFingerprints map binds each selection to its saved garment
@@ -106,10 +120,9 @@ A same-origin, exact-source, account/submission/revision-bound bridge carries on
 acknowledged saved pieces. Operations prepares the actual selected garment and
 full saved piece list. Lookbook hydration survives a picker change while its
 first read is pending; the selection label and pattern context use that garment's
-assignment. Opening Fabrics loads the same account/submission lookbook. Use for
-design supplies the chosen seller description to the existing grounded pattern prompt. This is
+assignment. Opening Fabrics loads the same account/submission lookbook. An existing saved selection supplies its seller description to the existing grounded pattern prompt. This is
 material context, not proof of sewability, fit, shrinkage or laser readiness.
-Programmatic standalone searches work without a submission; saving requires opening one.
+Programmatic standalone searches work without a submission; private lookbook operations require one.
 In-house inventory uses the same shared cards; its source URLs remain traceable. Old browser favorites are not
 silently imported into a client's private lookbook.
 
@@ -130,14 +143,16 @@ Run `node tests/fabric-search.mjs`, `node tests/fabric-search-ui.mjs`,
 existing fabric/AI routing suites, container-contract, app-regression and smoke.
 The fabric suites and brief-workspace-ui are mandatory Cloud Build gates. UI tests use isolated Chromium and fake services,
 covering saved-look automatic search, selected/whole garment context, same-view
-inline/expanded tabs and store filtering, image+text refinement, saved selection
+inline/expanded tabs, exact five filters with free toggles/explicit Refresh,
+empty groups and stale streams, image+text refinement, historical saved selection
 across screens, failures, stale accounts/submissions, default/changed shared styles
 and six viewport sizes. tests/brief-workspace-ui.mjs checks the saved-only bridge. Real page parser checks used public
-Britex and Stonemountain listings, not private client inputs or paid model calls.
+Britex, Stonemountain and Swatchon listings, not private client inputs or paid model calls.
 
 The workflow fixture uses deferred responses and realistically large nested
-piece data. It checks request bytes, independent inventory, Save A followed by a
-garment switch, serial writes, generation conflicts, failure/retry, same-account
+piece data. It seeds historical favorites through the real local service and checks
+request bytes, independent inventory, Remove followed by a garment switch, serial
+writes, generation conflicts, failure/retry, same-account
 renewal, account/project cancellation and selection persistence across reloads.
 These gaps were missed by small images, immediate acknowledgements and a fixture
 with only one global selected URL. Server fixtures cover private selection maps,
@@ -169,6 +184,19 @@ search relevance, live OpenAI entitlement, microphone behavior or ChatGPT parity
 The requested real private fur/green-pants demonstration still needs fresh,
 specific permission before accessing an owner's Chrome window/profile. Neither a
 passing fixture nor an exact public release check completes that acceptance.
+
+October 18 Swatchon evidence: the official [catalog](https://www.swatchon.com/fabric)
+links current `/fabric/QL-061078` product pages; legacy
+[`/wholesale-fabric/14620`](https://swatchon.com/wholesale-fabric/14620) remains
+recognized. [How Swatchon works](https://www.swatchon.com/help/articles/how-swatchon-works)
+distinguishes swatches, sample yardage and wholesale quantity pricing. The checked
+[Enzyme Cotton Twill listing](https://www.swatchon.com/fabric/QL-061078) exposes an
+AggregateOffer range and omits JSON-LD photos. The parser leaves that range/unit
+and unconfirmed stock blank; a seller-authored thumbnail naming the exact SKU can
+supply the photo, but the generic site logo cannot. No private endpoint or supplier
+API is guessed, and no shipping/availability is inferred from an operator address.
+Local merchant locations were rechecked on [Britex](https://britexfabrics.com/),
+[Stonemountain](https://stonemountainfabric.com/) and [Harts](https://hartsfabric.com/).
 
 Sources checked: [OpenAI web search](https://developers.openai.com/api/docs/guides/tools-web-search),
 [Britex swatches](https://britexfabrics.com/pages/swatch),

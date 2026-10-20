@@ -24,10 +24,10 @@ try{
  assert.equal(await page.locator('maya-owner-crm').count(),0);assert.ok(await page.locator('#drawer-systems a small').evaluateAll(es=>es.every(e=>e.textContent.split(/\s+/).length<=4)));
 
  for(const width of [320,390,650,768,1024,1440,1920]){
-  await page.setViewportSize({width,height:844});await page.waitForTimeout(30);await page.evaluate(()=>{admTab('systems');toggleDrawer(true);});
-  await page.getByRole('button',{name:'API model details',exact:true}).focus();
+  await page.setViewportSize({width,height:844});await page.waitForTimeout(30);await page.evaluate(()=>{admTab('systems');toggleDrawer(true);});await page.waitForFunction(()=>{const h=document.getElementById('adm-hscroll');return Math.abs(h.scrollLeft-(h.scrollWidth-h.clientWidth))<1;});
+  await page.getByRole('button',{name:'API model details',exact:true}).press('Enter');
   await page.waitForFunction(()=>document.querySelector('#model-snapshot').textContent.includes('GPT-5 Nano'));
-  assert.equal(await page.locator('.model-provider[open]').count(),0,'Hover stays compact until details are clicked');assert.match(await page.locator('#model-snapshot').textContent(),/GPT-6 Luna · Frontend, Admin, Fast/);await page.waitForFunction(()=>document.querySelector('#model-snapshot').textContent.includes('1 mailbox connected to this account'));
+  assert.equal(await page.locator('.model-provider[open]').count(),0,'Explicit details stay compact until expanded');assert.match(await page.locator('#model-snapshot').textContent(),/GPT-6 Luna · Frontend, Admin, Fast/);await page.waitForFunction(()=>document.querySelector('#model-snapshot').textContent.includes('1 mailbox connected to this account'));
   assert.doesNotMatch(await page.locator('#model-snapshot').textContent(),/GPT-image-2.5 Flare/);
   await page.locator('.model-provider summary').filter({hasText:'Gemini'}).click();assert.match(await page.locator('#model-snapshot').textContent(),/aiplatform.googleapis.com/);
   if(width===1440)await page.screenshot({path:'/private/tmp/maya-admin-systems-preview.png'});
@@ -45,23 +45,26 @@ try{
   await page.getByRole('button',{name:'Dismiss',exact:true}).click();assert.equal(await page.locator('#maya-confirmation').evaluate(e=>e.open),false);
  }
  for(const [width,height] of [[320,568],[844,390],[1024,600]]){
-  await page.setViewportSize({width,height});await page.waitForTimeout(30);await page.evaluate(()=>{admTab('systems');toggleDrawer(true);});
+  await page.setViewportSize({width,height});await page.waitForTimeout(30);await page.evaluate(()=>{admTab('systems');toggleDrawer(true);});await page.waitForFunction(()=>{const h=document.getElementById('adm-hscroll');return Math.abs(h.scrollLeft-(h.scrollWidth-h.clientWidth))<1;});
   await page.getByRole('button',{name:'API model details',exact:true}).focus();
   await page.getByRole('button',{name:'API model details',exact:true}).press('Enter');
   await page.locator('.model-provider summary').filter({hasText:'Gemini'}).click();
   await page.waitForTimeout(30);const b=await page.locator('#model-snapshot').boundingBox();
-  assert.ok(b.x>=0&&b.y>=0&&b.x+b.width<=width+1&&b.y+b.height<=height+1,'Expanded model hover fits landscape');
+  assert.ok(b.x>=0&&b.y>=0&&b.x+b.width<=width+1&&b.y+b.height<=height+1,'Expanded model details fit landscape');
   await page.keyboard.press('Escape');
  }
- await page.setViewportSize({width:1440,height:1000});await page.waitForTimeout(30);await page.evaluate(()=>{admTab('systems');toggleDrawer(true);});
+ await page.setViewportSize({width:1440,height:1000});await page.waitForTimeout(30);await page.evaluate(()=>{admTab('systems');toggleDrawer(true);});await page.waitForFunction(()=>{const h=document.getElementById('adm-hscroll');return Math.abs(h.scrollLeft-(h.scrollWidth-h.clientWidth))<1;});
  const api=page.getByRole('button',{name:'API model details',exact:true}),popup=page.locator('#model-snapshot');
- await api.click();await popup.waitFor({state:'visible'});await page.mouse.move(1,1);await popup.waitFor({state:'hidden',timeout:500});assert.equal(await api.getAttribute('aria-expanded'),'false','Clicked trigger focus cannot pin mouse hover');
- await api.hover();await popup.waitFor({state:'visible'});await page.locator('.model-provider summary').first().click();await page.mouse.move(1,1);await popup.waitFor({state:'hidden',timeout:500});
- await api.focus();await api.press('Enter');await page.waitForTimeout(150);assert.ok(await popup.isVisible(),'Keyboard interaction stays available');await page.keyboard.press('Escape');
- await api.hover();await popup.waitFor({state:'visible'});await page.evaluate(()=>document.dispatchEvent(new Event('wheel')));await popup.waitFor({state:'hidden',timeout:500});
- await page.mouse.move(1,1);await api.hover();await popup.waitFor({state:'visible'});await page.setViewportSize({width:1300,height:1000});await popup.waitFor({state:'hidden',timeout:500});
+ await api.hover();await page.waitForTimeout(150);assert.ok(await popup.isHidden(),'Hover does not open a snapshot');
+ await api.focus();await page.waitForTimeout(150);assert.ok(await popup.isHidden(),'Focus does not open a snapshot');
+ for(const selector of ['#d-drive','#adm-tab-systems','#adm-tabtitle']){await page.locator(selector).hover();await page.waitForTimeout(50);assert.ok(await popup.isHidden(),'No automatic snapshot for '+selector);}
+ await api.click();await popup.waitFor({state:'visible'});await page.mouse.move(1,1);assert.ok(await popup.isVisible(),'Explicit details remain available while reading');await page.mouse.click(1,1);await popup.waitFor({state:'hidden'});
+ await api.focus();await api.press('Enter');await popup.waitFor({state:'visible'});await page.keyboard.press('Escape');assert.ok(await api.evaluate(el=>document.activeElement===el),'Escape restores the explicit opener without reopening');
+ await api.click();await popup.waitFor({state:'visible'});await page.evaluate(()=>document.dispatchEvent(new Event('wheel')));await popup.waitFor({state:'hidden'});
+ await api.click();await popup.waitFor({state:'visible'});await page.setViewportSize({width:1300,height:1000});await popup.waitFor({state:'hidden'});
+ const gmail=page.locator('#drawer-systems a[href="/outbound.html#gmail"]');assert.equal(await gmail.evaluate(el=>getComputedStyle(el).color),'rgb(255, 255, 255)');assert.equal(await gmail.locator('small').evaluate(el=>getComputedStyle(el).color),'rgb(170, 181, 196)');
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('maya-model-error',{detail:'Configuration request failed'})));await page.waitForTimeout(30);await page.getByRole('button',{name:'API model details',exact:true}).press('Enter');assert.match(await page.locator('#model-snapshot').textContent(),/Configuration request failed.*Last configuration shown/);await page.keyboard.press('Escape');
- assert.equal(writes,0,'Hover and dismiss never perform an owner action');
+ assert.equal(writes,0,'Reading and dismissing configuration never performs an owner action');
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('maya-model-clear')));assert.ok(await page.locator('#model-snapshot').isHidden());assert.equal(await page.locator('#model-snapshot').textContent(),'');
- assert.deepEqual(errors,[]);console.log('Admin hierarchy, provider hover details, Vault, Logs conversation and dashboard approvals passed at seven widths.');
+ assert.deepEqual(errors,[]);console.log('Admin hierarchy, explicit provider details and no hover snapshots, Vault, Logs conversation and dashboard approvals passed at seven widths.');
 }finally{await browser.close();}

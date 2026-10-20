@@ -1,3 +1,10 @@
+# Historical brief — MAYA voice agent
+
+This August 29 brief is historical, not active implementation instructions.
+Playground was deleted in the October 18 owner review. Current client code is
+frontend/index.html; use AGENTS.md, AI-HANDOFF.md and the current tests.
+Do not recreate or promote the retired experiments from this document.
+
 # MAYA voice agent: the understanding problem
 ### A brief for Codex (or any second engineer), written Aug 29 2026
 

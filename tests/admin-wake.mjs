@@ -22,11 +22,11 @@ f.run('const _testStart=toggleMayaVoice;let _testWakePromise;toggleMayaVoice=()=
 await f.run('_testWakePromise');assert.equal(f.run('_voice'),null);assert.equal(f.run('_voiceStarting'),false);assert.equal(f.timers.size,1,'Failed token must restart wake');
 f.run('_wakeStop()');f.Recognition.throws=true;f.run('_wakeStart()');assert.equal(f.run('_wakeRec'),null);assert.equal(f.timers.size,1,'Synchronous start error retries');
 f.Recognition.throws=false;f.run('_wakeStop();_wakeStart();_wakeRec.onerror({error:"not-allowed"})');assert.equal(f.run('_wakeWantOn'),false);assert.equal(f.timers.size,0,'Permission refusal never loops');
-for(const path of ['frontend/index.html','playground/index.html']){
+for(const path of ['frontend/index.html']){
  const h=read(path),wake=h.slice(h.indexOf('let _pgWakeRec = null'),h.indexOf('window.pgMayaStart =',h.indexOf('let _pgWakeRec = null')));
  const p=fixture(wake);p.run('_pgWakeWant=true;_pgWakeStart()');assert.equal(p.run('_pgWakeOn'),true,path);
  p.run('_pgWakeRec.onerror({error:"network"})');assert.equal(p.run('_pgWakeRec'),null);assert.equal(p.timers.size,1,path);
  p.Recognition.throws=true;p.run('_pgWakeStart()');assert.equal(p.timers.size,1,path+' start failure has one retry');
  p.Recognition.throws=false;p.run('_pgWakeStart();_pgWakeRec.onerror({error:"not-allowed"})');assert.equal(p.run('_pgWakeWant'),false);assert.equal(p.timers.size,0,path);
 }
-console.log('Wake recovery passed: actual listening status, failed voice connection, network/start recovery and permission refusal on Admin/app/Playground. No live provider or microphone used.');
+console.log('Wake recovery passed: actual listening status, failed voice connection, network/start recovery and permission refusal on Admin/app. No live provider or microphone used.');

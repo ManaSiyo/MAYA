@@ -1,3 +1,5 @@
+October 20 — Implement October 18 screenshot review: one MAYA drawer material; full-viewport embedded Settings; no pipeline subtitle, duplicate Measurements/Operation Room button or Saved copy; inline name/date; fixed garment/Fabrics footprint; editable thinner idle-hide scrollbars; white P2 Biography/Vision/Gmail with gray P1 descriptions; five free fabric filters, no card Save/Use or hover snapshots; retire Playground/Affiliates. Implementation and all 71 local release gates/607 integrated named checks pass; final standalone authority precedes the authorized commit/Push and exact live verification.
+
 OCTOBER 18 final live review — standalone Settings layering
 [follow-up] The main screenshot repair a624311 is deployed and verified. Live phone inspection caught the standalone page title painting above Settings; repair the layer/visible close control and preserve active field/opener focus. New paint hit-testing and actual Close menu clicks extend the keyboard/embedded coverage. Exact release/final authority and new deployment verification required before completion.
 

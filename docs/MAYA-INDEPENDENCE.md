@@ -55,7 +55,7 @@ her soul so she knows next time. Fromsa's only job is the yes.
 2. Live transcription on screen while she listens (the chat box already shows
    turns; add the interim line, faint, under the logo).
 3. Navigation by voice, full: open and close the drawer, open any panel (done),
-   scroll to a section, open the playground, open a lead's invoice. These are
+   scroll to a section, open MAYA, open a lead's invoice. These are
    pure client tools (no server), the same `show_panel` family.
 4. Proposals: once a day Maya reads her own inbox and the analytics and offers
    one improvement in one sentence; Fromsa says "log it" or "no". This is the
@@ -63,7 +63,7 @@ her soul so she knows next time. Fromsa's only job is the yes.
 
 ### Stage 3: Maya on the user side (maya.manasiyo.com)
 
-STARTED in v14.03 on the Playground: `/api/voice-token`, the wake word switch
+Historical start in v14.03 on the since-retired Playground; the active frontend now owns `/api/voice-token`, the wake word switch
 at the drawer floor, and her hands (drawer, Pinterest bring in, describe,
 visualize, feedback notes, feature log). Promotion to the app is Fromsa's call.
 

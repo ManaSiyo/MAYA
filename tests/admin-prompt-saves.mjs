@@ -11,7 +11,7 @@ const rules=read('docs/server/firestore.rules');assert.match(rules,/match \/conf
 const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};};
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 let checks=0;
-for(const path of ['frontend/index.html','playground/index.html']){
+for(const path of ['frontend/index.html']){
  const html=read(path),start=html.indexOf('let _promptCfg = null;'),end=html.indexOf('// v9.9: render the cached face descriptors',start);
  assert.ok(start>=0&&end>start);const source=html.slice(start,end);
  assert.ok((html.match(/_promptTuning\(\)/g)||[]).length>2,path+' retains active rendering calls');
@@ -42,4 +42,4 @@ for(const path of ['frontend/index.html','playground/index.html']){
   const f=fixture(),delayed=deferred();f.state.get=()=>delayed.promise;const pending=f.begin('a');await tick();const out=f.begin(null);delayed.resolve({exists:true,data:()=>({style:'Late signed-out setting'})});await Promise.all([pending,out]);assert.equal(f.tuning(),'');checks++;
  }
 }
-console.log(`Admin retirement: both retired sections/startup absent; ${checks} active App/Playground prompting read, rendering and account-race checks passed without writes.`);
+console.log(`Admin retirement: both retired sections/startup absent; ${checks} active App prompting read, rendering and account-race checks passed without writes.`);

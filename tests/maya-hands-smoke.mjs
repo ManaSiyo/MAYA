@@ -1,4 +1,4 @@
-// MAYA hands smoke test. Boots the playground headless, seeds a fake board,
+// MAYA hands smoke test. Boots the client app headless, seeds a fake board,
 // then fires the battery of tool calls Maya herself makes on a live call,
 // straight through _pgTool. Every call must come back with a shape (ok:true,
 // or ok:false with a reason). A thrown exception, a hang, or a missing
@@ -12,19 +12,8 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-// v14.21: the app IS the Playground now, so the battery fires on both. With no
-// MAYA_SURFACE set it runs itself once per surface and fails if either fails.
-if (!process.env.MAYA_SURFACE) {
-  const { spawnSync } = await import('node:child_process');
-  let bad = 0;
-  for (const s of (process.env.MAYA_SURFACES || 'playground,frontend').split(',')) {
-    console.log('\n══════ surface: ' + s + ' ══════');
-    const r = spawnSync(process.execPath, [fileURLToPath(import.meta.url)], { stdio: 'inherit', env: { ...process.env, MAYA_SURFACE: s } });
-    if (r.status !== 0) bad++;
-  }
-  process.exit(bad ? 1 : 0);
-}
-const SURFACE = process.env.MAYA_SURFACE;
+// The retired staging page is never booted; exercise the shipped client only.
+const SURFACE = 'frontend';
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.css': 'text/css', '.png': 'image/png' };
 const srv = http.createServer((req, res) => {
   let p = decodeURIComponent(req.url.split('?')[0]);
@@ -441,7 +430,7 @@ const fold = await page.evaluate(async () => {
   (0, eval)("currentClientName = 'Rudy the Presley';");
   pgUpdatePill();
   out.summary = (document.getElementById('pg-projects-current') || {}).textContent;
-  // Check the approved controls, including Playground's staged Save button.
+  // Check the approved client controls.
   (0, eval)("projectStore.ready = () => true; projectStore._uid = () => 'avatar-fixture'; _avatarsDoc = () => ({set:async()=>{},get:async()=>({exists:false})}); _avatarLibCacheUid = 'avatar-fixture'; _avatarLibCache = []; lastSummary = { client: { name: 'Rudy' } }; _avatarSwitcherOpen = false;");
   await toggleAvatarSwitcher();
   const panel = document.getElementById('drawer-avatar-switcher');
@@ -810,37 +799,14 @@ ok('on touch the controls ride on the card the finger touched, one card at a tim
 ok('the phone CSS scopes the card controls to the touched card', c12.phoneCss === true);
 ok('the feedback box never runs off a phone screen', /min\(520px, 94vw\)/.test(c12.fbMax || ''), JSON.stringify(c12.fbMax));
 
-// ── 3c13. v14.28: the notes on the picture and the flip (playground); the consent line gone (both) ──
-const c13 = await page.evaluate(async () => {
-  const out = { surface: location.pathname.includes('/playground/') ? 'playground' : 'frontend' };
-  out.consentHidden = getComputedStyle(document.getElementById('fb-consent')).display === 'none';
-  out.hasExtras = typeof window._pgViewerExtras === 'function' && typeof window.pgFlipCard === 'function';
-  if (out.hasExtras) {
-    const seed = { id: 'flip-1', card: { kind: 'inspo', image: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=', title: 'flip test', caption: 'flip test', profile: { bio: 'A crisp look', aesthetic: 'Fresh', silhouette: 'A line', color: 'White', era: 'Now' }, refs: [{ tag: 'detail', title: 'metal chains' }] }, el: document.createElement('div') };
-    window._pgViewerExtras(seed);
-    out.callouts = document.querySelectorAll('#pg-callouts .pgc-label').length;
-    out.dots = document.querySelectorAll('#pg-callouts .pgc-dot').length;
-    out.backRows = document.querySelectorAll('#pg-card-back-body .pgb-row').length;
-    out.backChips = document.querySelectorAll('#pg-card-back-body .pgb-chip').length;
-    const wrap = document.getElementById('garment-image-wrap');
-    window.pgFlipCard();
-    await new Promise(r => setTimeout(r, 950));
-    out.flipped = wrap.classList.contains('flipped') && getComputedStyle(document.getElementById('pg-card-back')).display === 'flex';
-    window.pgFlipCard();
-    await new Promise(r => setTimeout(r, 950));
-    out.unflipped = !wrap.classList.contains('flipped') && getComputedStyle(document.getElementById('pg-card-back')).display === 'none';
-    out.flipBtn = !!document.getElementById('pg-flip') && getComputedStyle(document.getElementById('pg-flip')).position === 'absolute';
-  }
-  return out;
-});
+// ── 3c13. Retiring staging does not promote its unapproved card-flip experiment. ──
+const c13 = await page.evaluate(() => ({
+  consentHidden:getComputedStyle(document.getElementById('fb-consent')).display === 'none',
+  hasExtras:typeof window._pgViewerExtras === 'function' || typeof window.pgFlipCard === 'function',
+  hasExperimentalMarkup:!!document.querySelector('#pg-callouts,#pg-card-back,#pg-flip')
+}));
 ok('the Improve Maya box has lost its second paragraph', c13.consentHidden === true);
-if (c13.surface === 'playground') {
-  ok('playground: the design notes point at the figure and the back of the card carries them all',
-    c13.callouts === 4 && c13.dots === 4 && c13.backRows === 5 && c13.backChips === 1, JSON.stringify(c13));
-  ok('playground: the card flips to its notes and back, smoothly, from the corner', c13.flipped === true && c13.unflipped === true && c13.flipBtn === true, JSON.stringify([c13.flipped, c13.unflipped, c13.flipBtn]));
-} else {
-  ok('the app is untouched by the playground flip experiment', c13.hasExtras === false);
-}
+ok('the app has no retired unpromoted card-flip experiment', !c13.hasExtras && !c13.hasExperimentalMarkup);
 
 // ── 3c14. v14.29: an iPad fits. Portrait 820 wide: the drawer opens, the pills stay in the visible board, the floor stays on screen ──
 await page.evaluate(() => { toggleNotesDrawer(false); try { document.getElementById('screens').scrollTo({ top: window.innerHeight, behavior: 'auto' }); } catch (_) {} });

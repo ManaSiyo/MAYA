@@ -17,7 +17,7 @@ let savedDesign={},saveMode='fail',heldSave;
 const widths=[320,390,768,1024,1440,1920];
 const marketing={leads:{connected:true,list:[{id:'pill-person',name:'Example Person',phone:'+14155550123',stage:'completed',createdAt:'2026-10-07',wrote:'A reviewed note.'}]},adCombined:{campaigns:[{source:'google',campaign:'Example campaign',impressions:75,linkClicks:4,spend:3.2},{source:'meta',campaign:'Waiting campaign',impressions:0,linkClicks:0,spend:0}]}};
 const outbound={campaigns:[{id:'ceremonial',name:'Ceremonial',status:'active'}],contacts:[{id:'person',campaignId:'ceremonial',name:'Example Person',company:'Example Studio',email:'example@example.com',stage:'contacted',notes:'Fixture'}],companies:[],settings:{}};
-const routes={'/':'/frontend/index.html','/status.html':'/backend/status.html','/outbound.html':'/backend/outbound.html','/backend.html':'/backend/backend.html','/operations.html':'/backend/operations.html','/playground.html':'/playground/index.html'};
+const routes={'/':'/frontend/index.html','/status.html':'/backend/status.html','/outbound.html':'/backend/outbound.html','/backend.html':'/backend/backend.html','/operations.html':'/backend/operations.html'};
 page.on('pageerror',error=>pageErrors.push({path:new URL(page.url()).pathname,message:error.message}));
 await context.addInitScript(token=>{window.setInterval=()=>0;localStorage.setItem('maya_admin_tok',['/backend.html','/operations.html'].includes(location.pathname)?token:'fixture-admin');},briefToken);
 await context.route('**/*',async route=>{

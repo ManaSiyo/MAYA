@@ -6,7 +6,7 @@ import {createLeadStore} from '../docs/server/lead-store.mjs';
 const root = new URL('../', import.meta.url);
 const read = file => readFileSync(new URL(file, root), 'utf8');
 let checks = 0;
-for (const file of ['frontend/index.html','playground/index.html']) {
+for (const file of ['frontend/index.html']) {
  const source = read(file);
  const extract = (start,end) => source.slice(source.indexOf(start),source.indexOf(end,source.indexOf(start)));
  let uid='owner', list=[{id:'existing',name:'Taylor',face:'original'}], fail=false, upload;

@@ -142,29 +142,8 @@
   /* ───────── screen 1, one-pager horizontal ─────────
      Same vocabulary as the one-pager PDF: glass pills, Cormorant
      headings, Jost labels, white-alpha hairlines on cosmos. */
-  #screen-onepager:has(#brief-fabrics[style*="flex"]) {height:auto;min-height:100dvh;overflow:visible;}
   #screen-onepager {
     display: flex; flex-direction: column; gap: 18px;
-  }
-  .op-header {
-    display: flex; justify-content: space-between; align-items: flex-end;
-    padding-bottom: 14px;
-    border-bottom:var(--maya-hairline) solid rgba(255,255,255,0.22);
-  }
-  .op-hero {
-    font-family:var(--maya-font-ui);
-    font-weight:400;
-    font-size:var(--maya-text-metric);
-    letter-spacing: 0.22em;
-    color: #ffffff;
-    text-shadow:
-      0 0 32px rgba(180,210,255,0.55),
-      0 0 64px rgba(180,210,255,0.28);
-  }
-  .op-meta {
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.15em; text-transform: uppercase;
-    color: rgba(245,250,255,0.85);
   }
   .op-row {
     display: grid;
@@ -179,7 +158,7 @@
     display: flex; align-items: center; justify-content: center;
   }
   .op-image-frame {
-    width: 100%; max-height: 70vh;
+    width: 100%; height:70dvh; max-height:70dvh;
     padding: 12px;
     background: rgba(255,255,255,0.02);
     border:var(--maya-hairline) solid rgba(255,255,255,0.22);
@@ -193,7 +172,7 @@
     display: flex; align-items: center; justify-content: center;
   }
   .op-image-frame img {
-    width: 100%; height: auto; max-height: calc(70vh - 24px);
+    width: 100%; height:100%; max-height:100%;
     object-fit: contain; border-radius:8px;
   }
   /* v0.9: right column gains its own vertical scroll if content overflows
@@ -361,7 +340,12 @@
     gap: 12px;
   }
   #operations-embed { width:100%; flex:1; min-height:0; border:0; background:transparent; }
-  #screen-operating { padding:64px 0 0; gap:0; }
+  #screen-operating { padding:64px 0 0; gap:0; transform:none; }
+  body.operations-settings-open #screens { z-index:300; overflow:hidden; }
+  body.operations-settings-open #screen-operating { overflow:visible; }
+  body.operations-settings-open #operations-embed { position:fixed; inset:0; width:100%; height:100dvh; z-index:100; }
+  .op-identity { display:flex; align-items:baseline; flex-wrap:wrap; gap:8px 16px; }
+  .op-identity .op-hero { margin:0; }
   #brand a { min-width:0; }
   #workspace-title { overflow-wrap:anywhere; letter-spacing:inherit; }
   #brand { min-width:0; max-width:calc(100% - 50px); }
@@ -372,6 +356,7 @@
     #screen-onepager .op-row { display:flex; flex-direction:column; gap:24px; }
     #screen-onepager .op-info-col { overflow:visible; padding-right:0; }
     #screen-onepager .op-hero { overflow-wrap:anywhere; }
+    #screen-onepager .op-image-frame, #screen-onepager .brief-fabrics { height:min(70dvh,calc((100vw - 32px)*4/3)); }
   }
   .op-room-eyebrow {
     font-family:var(--maya-font-ui); font-weight:400;
@@ -588,7 +573,7 @@
   /* ───────── v0.31: Fabrics sourcing, lives in the Brief, clean glass frame ───────── */
   .brief-fabrics {
     /* The shared inline widget owns material and padding; this is only its viewer footprint. */
-    width:100%; height:max(540px,70dvh); max-height:none; min-width:0; min-height:0;
+    width:100%; height:70dvh; max-height:70dvh; min-width:0; min-height:0;
     display:flex; flex-direction:column; box-sizing:border-box;
   }
   .fab-head {
@@ -832,55 +817,6 @@
   }
   .op-dissect-btn:hover { border-color: rgba(255,255,255,0.55); color: rgba(255,255,255,1); }
   .op-dissect-btn.busy { opacity: 0.6; cursor: wait; }
-
-  /* ───────── v0.25: process overlay, hover bottom-third ─────────
-     Each Op Room window can carry a "process card", a transparent
-     black gradient covering the bottom third of the window, only
-     visible on hover. Tells the designer what API/prompt is driving
-     that view. Sits inside the window frame so it doesn't escape. */
-  .process-overlay {
-    position: absolute;
-    left: 0; right: 0; bottom: 0;
-    padding: 18px 24px 20px;
-    background: linear-gradient(to top,
-      rgba(0,0,0,0.78) 0%,
-      rgba(0,0,0,0.55) 55%,
-      rgba(0,0,0,0) 100%);
-    color: rgba(245,250,255,0.92);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-    border-bottom-left-radius: 16px;
-    border-bottom-right-radius: 16px;
-    z-index: 5;
-  }
-  .op-pattern-page:hover .process-overlay,
-  .op-room-3d-frame:hover .process-overlay {
-    opacity: 1;
-  }
-  .process-overlay .po-eyebrow {
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.32em; text-transform: uppercase;
-    color: rgba(245,250,255,0.55);
-    margin-bottom: 6px;
-  }
-  .process-overlay .po-title {
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-body); letter-spacing: 0.08em;
-    color: rgba(255,255,255,0.95);
-    margin-bottom: 4px;
-  }
-  .process-overlay .po-detail {
-    font-family:var(--maya-font-ui); font-style: italic;
-    font-size:var(--maya-text-caption); line-height: 1.45;
-    color: rgba(245,250,255,0.78);
-  }
-  .process-overlay .po-meta {
-    font-family:var(--maya-font-ui); font-weight:400;
-    font-size:var(--maya-text-caption); letter-spacing: 0.15em;
-    color: rgba(245,250,255,0.55);
-    margin-top: 6px;
-  }
 
   /* ───────── v0.25: Drawer Settings sub-panel ─────────
      A second pane lives inside #clients-drawer and slides over the
@@ -1487,14 +1423,6 @@
 <div id="screens">
   <!-- Screen 1: One-pager in horizontal view -->
   <section class="screen" id="screen-onepager" data-screen="0">
-    <!-- v10.12: client name pill row removed. Top-right date only. -->
-    <div class="op-header" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-      <nav class="fabric-workspace-actions" id="fabric-workspace-actions" aria-label="Design workspace">
-        <button class="pill maya-pill" onclick="openOperationRoom()">Operation Room</button>
-      </nav>
-      <div class="op-meta" id="op-date"></div>
-    </div>
-
     <div class="op-row">
       <div class="op-image-col">
         <div class="op-image-frame" id="op-image-frame">
@@ -1514,13 +1442,13 @@
       </div>
       <div class="op-info-col" data-maya-scrollbar="visible" tabindex="0" aria-label="Client details">
         <!-- v10.12: hero is the CLIENT name (was hard-coded MAYA). -->
-        <div class="op-hero" id="op-hero-name" data-maya-type="H1">Client</div>
+        <div class="op-identity"><div class="op-hero" id="op-hero-name" data-maya-type="H3">Client</div><time id="op-date" data-maya-type="H3"></time></div>
         <div class="op-section">
-          <div class="op-eyebrow">Biography</div>
+          <div class="op-eyebrow" data-maya-type="P2">Biography</div>
           <p class="op-text italic" id="op-biography">…</p>
         </div>
         <div class="op-section">
-          <div class="op-eyebrow">Vision</div>
+          <div class="op-eyebrow" data-maya-type="P2">Vision</div>
           <p class="op-text" id="op-vision">…</p>
         </div>
         <div class="op-section" id="op-chips-section" style="display:none">
@@ -1558,7 +1486,7 @@
      v0.12: nest configuration (sheet width / spacing / add panels / run nest /
      download) lives in this drawer as its own section, so the Op Room can
      stay focused on Item · 3D · Pattern. -->
-<div id="clients-drawer">
+<div id="clients-drawer" data-maya-drawer>
   <!-- v13.45: no button inside the drawer. The top bar hamburger slides out
        with it and closes it; a click anywhere outside closes it too. -->
   <div class="drawer-title">Submissions</div>
@@ -2365,7 +2293,7 @@ function render(snap) {
   // _currentScreen, both already set by this point.
   if (typeof _updateBrandSub === 'function') _updateBrandSub();
   const dateEl = document.getElementById('op-date');
-  if (dateEl) dateEl.textContent = 'Saved ' + today;
+  if (dateEl) dateEl.textContent = today;
 
   const summary = snap.lastSummary || {};
   const paras = summary._paragraphs || {};
@@ -2579,7 +2507,7 @@ let _savedOperation = null, _operationsRevision = 0;
 function _publishSavedOperations(dissection, context=_piecesContext()) {
   const summary=window._currentSnap?.lastSummary||{};
   const pieces=(dissection?.pieces||[]).flatMap((p,index)=>p&&!p.skip?[{...p,id:p.id||'saved-piece-'+index,name:p.name||p.label||'Item '+(index+1),fabric:p.fabric||dissection.fabric_type||'',fabric_spec:p.fabric_spec||{}}]:[]);
-  const next={account:context.account,submissionId:context.sid,local:context.local,referenceImage:context.hero,preferences:summary.fabric_preferences||'',pieces};
+  const next={account:context.account,submissionId:context.sid,local:context.local,referenceImage:context.hero,preferences:summary.fabric_preferences||'',measurements:summary._measurements||{},pieces};
   if(JSON.stringify(next)!==JSON.stringify(_savedOperation)){_savedOperation=JSON.parse(JSON.stringify(next));_operationsRevision++;window.MayaFabricAssistant?.reset();showBriefItem();}
   window._lastOpsPieces=pieces;
   const button=document.getElementById('brief-fabrics-button');if(button)button.disabled=!context.sid||!context.account||!pieces.length;
@@ -2590,13 +2518,13 @@ function _postPiecesToOps(selectionChanged=false) {
   if(!frame?.contentWindow||!_savedOperation)return;
   const valid=_savedOperation.account===context.account&&_savedOperation.submissionId===context.sid&&_savedOperation.local===context.local&&_savedOperation.referenceImage===context.hero;
   const selected=_pieceState.pieces[_pieceState.idx];
-  frame.contentWindow.postMessage({maya:'ops-pieces',revision:_operationsRevision,selectionChanged:selectionChanged===true,selected:selected&&!selected._virtual?(selected.id||selected.name):'',context:valid?_savedOperation:{account:context.account,submissionId:context.sid,local:context.local,referenceImage:'',preferences:'',pieces:[]}},location.origin);
+  frame.contentWindow.postMessage({maya:'ops-pieces',revision:_operationsRevision,selectionChanged:selectionChanged===true,selected:selected&&!selected._virtual?(selected.id||selected.name):'',context:valid?_savedOperation:{account:context.account,submissionId:context.sid,local:context.local,referenceImage:'',preferences:'',measurements:{},pieces:[]}},location.origin);
 }
 window.addEventListener('message',event=>{
   const frame=document.getElementById('operations-embed');
   if(event.origin!==location.origin||event.source!==frame?.contentWindow)return;
   if(event.data?.maya==='ops-ready')_postPiecesToOps();
-  if(event.data?.maya==='ops-settings-state'){const wasOpen=_operationsSettingsOpen;_operationsSettingsOpen=event.data.open===true;const menu=document.querySelector('#top-actions .hamburger');if(_currentScreen===1&&menu){menu.setAttribute('aria-expanded',String(_operationsSettingsOpen));if(wasOpen&&!_operationsSettingsOpen)menu.focus({preventScroll:true});}}
+  if(event.data?.maya==='ops-settings-state'){const wasOpen=_operationsSettingsOpen;_operationsSettingsOpen=event.data.open===true;document.body.classList.toggle('operations-settings-open',_operationsSettingsOpen);const menu=document.querySelector('#top-actions .hamburger');if(_currentScreen===1&&menu){menu.setAttribute('aria-expanded',String(_operationsSettingsOpen));if(wasOpen&&!_operationsSettingsOpen)menu.focus({preventScroll:true});}}
   if(event.data?.maya==='ops-brief')goToScreen(0);
 });
 document.addEventListener('DOMContentLoaded',()=>document.getElementById('operations-embed')?.addEventListener('load',_postPiecesToOps));
@@ -3411,20 +3339,7 @@ function _sync3DPills() {
   const rend  = document.getElementById('op-rendered-pill');
   if (cube) cube.classList.toggle('active', _3dMode === 'cube');
   if (rend) rend.classList.toggle('active', _3dMode === 'rendered');
-  // v0.25: swap the process-overlay copy to describe whatever's currently
-  // mounted in the viewer.
-  const title  = document.getElementById('po-3d-title');
-  const detail = document.getElementById('po-3d-detail');
-  const meta   = document.getElementById('po-3d-meta');
-  if (_3dMode === 'rendered') {
-    if (title)  title.textContent  = 'fal.ai · Hyper3D Rodin · multi-view image-to-3D';
-    if (detail) detail.textContent = 'The dream-garment sheet is sliced into front, side, and back views, uploaded to fal.storage and submitted to Rodin in multi-view mode (condition_mode "concat"). Rodin combines them into one textured PBR mesh, returned as GLB and displayed here.';
-    if (meta)   meta.textContent   = 'API: fal.ai · model: fal-ai/hyper3d/rodin · ~$0.40 per generation · cached on piece._mesh after';
-  } else {
-    if (title)  title.textContent  = 'Three.js four-plane turntable (cube)';
-    if (detail) detail.textContent = 'The gpt-image-2 atelier sheet forms four UV-mapped planes around a vertical axis. Drag to orbit. Press "Render in 3D" to replace this placeholder with a photoreal mesh from fal.ai\'s Hyper3D Rodin.';
-    if (meta)   meta.textContent   = 'Library: Three.js · v0.160 · OrbitControls · GLTFLoader for the real mesh';
-  }
+
 }
 
 // v0.19: two-finger horizontal swipe inside the 3D viewer toggles

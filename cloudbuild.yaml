@@ -48,6 +48,8 @@ steps:
         node tests/lead-store.mjs
         node tests/admin-storage.mjs
         node tests/admin-prompt-saves.mjs
+        node tests/retired-workspaces.mjs
+        node tests/retired-workspaces-ui.mjs
         node tests/admin-status-preferences.mjs
         node tests/input-controls-ui.mjs
         node tests/project-lifecycle.mjs
@@ -55,6 +57,7 @@ steps:
         node tests/release-stamp.mjs
         node tests/verify-release.mjs
         node tests/design-config.mjs
+        node tests/component-gallery.mjs
         node tests/design-contract.mjs
         node tests/lead-note-persistence.mjs
         node tests/text-automations.mjs

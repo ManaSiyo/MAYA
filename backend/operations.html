@@ -236,11 +236,8 @@ if (self !== top) document.documentElement.classList.add('embedded');
   .hpane-drawer.open{transform:none;pointer-events:auto}
   /* the drawer is a floating glass panel inside its pane (top 60 · right 18 · bottom 22) */
   /* v13.44: full height, like every drawer in MAYA now. */
-  .drawer{position:absolute;top:10px;right:10px;bottom:10px;left:0;width:auto;border-radius:18px;
-    background:linear-gradient(180deg,rgba(255,255,255,0.10) 0%,rgba(255,255,255,0.03) 25%,rgba(255,255,255,0.02) 65%,rgba(255,255,255,0.07) 100%),rgba(6,8,16,0.45);
-    border:var(--maya-hairline) solid var(--hair);padding:22px 22px 28px;overflow-y:auto;
-    backdrop-filter:var(--maya-frost);-webkit-backdrop-filter:var(--maya-frost);
-    box-shadow:inset 0 1px 1px rgba(255,255,255,0.30),0 4px 28px rgba(0,0,0,0.4)}
+  /* Shared Drawer material/padding comes from Aesthetic Control. This page owns placement. */
+  .drawer{position:absolute;top:10px;right:18px;bottom:10px;left:0;width:auto;overflow-y:auto}
   .drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
   .drawer-head h2{font-family:var(--maya-font-ui);font-weight:400;font-size:var(--maya-text-section);letter-spacing:.18em;
     text-transform:uppercase;color:rgba(245,250,255,0.95);margin:0}
@@ -250,7 +247,12 @@ if (self !== top) document.documentElement.classList.add('embedded');
     color:var(--faint);margin-bottom:10px;text-align:center}
   .drawer label{display:block;font-family:var(--maya-font-ui);font-style:italic;font-size:var(--maya-text-caption);
     color:rgba(245,250,255,0.65);margin:0 0 6px}
-  .drawer input{width:100%;min-width:0}
+  .drawer input,.standalone-measurements input{width:100%;min-width:0}
+  .standalone-measurements label{display:block}
+  .standalone-measurements{margin-top:var(--maya-form-field-gap,14px)}
+  .standalone-measurements[hidden]{display:none}
+  @media(max-width:600px){.hpane-drawer{width:calc(100vw - 12px)}.drawer{right:12px}}
+  html.embedded body.drawer-open{overflow:hidden}
   .row2{display:flex;gap:10px}
   .row2>div{flex:1;min-width:0}
   .kb-status{font-family:var(--maya-font-ui);font-size:var(--maya-text-caption);letter-spacing:.04em;color:var(--dim);margin-top:8px;line-height:1.65;text-align:center}
@@ -275,8 +277,8 @@ if (self !== top) document.documentElement.classList.add('embedded');
   html.embedded .pill.sm.plan-btn{display:none}
   /* one background for the whole Backend: when embedded the outer page owns it */
   html.embedded body{background:#0000 !important}
-  .hero-frame:has(#operation-fabrics-host:not([hidden])){aspect-ratio:auto;height:max(540px,70dvh);align-items:stretch}
-  #operation-fabrics-host{width:100%;min-width:0;min-height:0;height:100%;overflow:hidden}
+  .hero-frame:has(#operation-fabrics-host:not([hidden])){align-items:stretch}
+  #operation-fabrics-host{position:absolute;inset:0;width:100%;min-width:0;min-height:0;height:100%;overflow:hidden}
   #operation-fabrics-host[hidden]{display:none}
 </style>
 <link rel="stylesheet" href="/aesthetics/ui/maya-canon.css?v=14">
@@ -301,9 +303,6 @@ if (self !== top) document.documentElement.classList.add('embedded');
       </button>
     </div>
   </header>
-  <!-- v13.64: the room's name lives top left with the logo now; this line is
-       the PLAN, and clicking it switches to the other one. -->
-  <div class="room-title fabric-room-tools"><span class="cs" id="room-sub" onclick="setPlan(getPlan()==='A'?'B':'A')" style="cursor:pointer" title="Click to switch plan">Plan A · Grounded Pattern Pipeline</span><button class="pill maya-pill" id="operation-settings" data-maya-type="P3" onclick="openMeasurements()">Measurements</button></div>
   <p id="operation-fabric-selection" hidden></p>
 
   <div id="plan-a-view">
@@ -332,6 +331,22 @@ if (self !== top) document.documentElement.classList.add('embedded');
         <span class="pill primary" id="start-test" onclick="startTest()">Start</span>
         <span class="pill" onclick="document.getElementById('file').click()">Upload</span>
       </div>
+  <section class="standalone-measurements" id="standalone-measurements" hidden>
+    <div class="sec-title" data-maya-type="H3">Measurements · inches</div>
+    <div class="row2">
+      <div><label for="m-waist" data-maya-type="P3">Waist</label><input data-maya-control="field" data-maya-type="P1" id="m-waist" type="number" min="0" step="0.25" placeholder="Not recorded" oninput="saveMeasures()"></div>
+      <div><label for="m-hip" data-maya-type="P3">Hip</label><input data-maya-control="field" data-maya-type="P1" id="m-hip" type="number" min="0" step="0.25" placeholder="Not recorded" oninput="saveMeasures()"></div>
+    </div>
+    <div class="row2" style="margin-top:10px">
+      <div><label for="m-crotch" data-maya-type="P3">Crotch length</label><input data-maya-control="field" data-maya-type="P1" id="m-crotch" type="number" min="0" step="0.25" placeholder="Not recorded" oninput="saveMeasures()"></div>
+      <div><label for="m-inseam" data-maya-type="P3">Inseam</label><input data-maya-control="field" data-maya-type="P1" id="m-inseam" type="number" min="0" step="0.25" placeholder="Not recorded" oninput="saveMeasures()"></div>
+    </div>
+    <div class="row2" style="margin-top:10px">
+      <div><label for="m-length" data-maya-type="P3">Pant length</label><input data-maya-control="field" data-maya-type="P1" id="m-length" type="number" min="0" step="0.25" placeholder="Not recorded" oninput="saveMeasures()"></div>
+      <div></div>
+    </div>
+    <div class="kb-status" id="dim-derived" data-maya-type="P3">Enter measurements for the derived dimensions.</div>
+  </section>
       <input type="file" id="file" accept="image/*" style="display:none" onchange="onFile(event)">
     </div>
 
@@ -407,7 +422,7 @@ if (self !== top) document.documentElement.classList.add('embedded');
 
 <!-- SETTINGS · drawer pane (Front End scroll-snap swipe drawer) -->
 <div class="hpane hpane-drawer" inert>
-<div class="drawer" id="drawer" data-maya-popup role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="operation-settings-title" data-maya-scrollbar="visible">
+<div class="drawer" id="drawer" data-maya-drawer role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="operation-settings-title" data-maya-scrollbar="visible">
   <div class="drawer-head">
     <button class="maya-icon-button drawer-burger" onclick="toggleDrawer(false)" title="Close settings" aria-label="Close settings">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
@@ -417,67 +432,51 @@ if (self !== top) document.documentElement.classList.add('embedded');
   </div>
 
   <div class="sec">
-    <div class="sec-title">Plan</div>
+    <div class="sec-title" data-maya-type="P2">Plan</div>
     <div class="pillrow">
-      <span class="pill sm" data-plan="A" onclick="setPlan('A')">Plan A · Photo → Pattern</span>
-      <span class="pill sm" data-plan="B" onclick="setPlan('B')">Plan B · CLO Route</span>
+      <button type="button" class="pill sm" data-plan="A" onclick="setPlan('A')">Plan A · Photo → Pattern</button>
+      <button type="button" class="pill sm" data-plan="B" onclick="setPlan('B')">Plan B · CLO Route</button>
     </div>
-    <div class="kb-status">A generates the pattern from the photo. B matches the photo to the CLO library and grades it.</div>
+    <div class="kb-status" data-maya-type="P1">A generates the pattern from the photo. B matches the photo to the CLO library and grades it.</div>
   </div>
 
   <div class="sec">
-    <div class="sec-title">Key</div>
-    <div class="kb-status">Keys stay on MAYA's server. Google sign in authorises calls; this browser stores no keys.</div>
+    <div class="sec-title" data-maya-type="P2">Key</div>
+    <div class="kb-status" data-maya-type="P1">Keys stay on MAYA's server. Google sign in authorises calls; this browser stores no keys.</div>
   </div>
 
-  <div class="sec">
-    <div class="sec-title" data-maya-type="H3">Measurements · inches</div>
-    <div class="row2">
-      <div><label for="m-waist" data-maya-type="P3">Waist</label><input data-maya-control="field" data-maya-type="P1" id="m-waist" type="number" min="0" step="0.25" placeholder="30" oninput="saveMeasures()"></div>
-      <div><label for="m-hip" data-maya-type="P3">Hip</label><input data-maya-control="field" data-maya-type="P1" id="m-hip" type="number" min="0" step="0.25" placeholder="40" oninput="saveMeasures()"></div>
-    </div>
-    <div class="row2" style="margin-top:10px">
-      <div><label for="m-crotch" data-maya-type="P3">Crotch length</label><input data-maya-control="field" data-maya-type="P1" id="m-crotch" type="number" min="0" step="0.25" placeholder="27" oninput="saveMeasures()"></div>
-      <div><label for="m-inseam" data-maya-type="P3">Inseam</label><input data-maya-control="field" data-maya-type="P1" id="m-inseam" type="number" min="0" step="0.25" placeholder="30" oninput="saveMeasures()"></div>
-    </div>
-    <div class="row2" style="margin-top:10px">
-      <div><label for="m-length" data-maya-type="P3">Pant length</label><input data-maya-control="field" data-maya-type="P1" id="m-length" type="number" min="0" step="0.25" placeholder="40" oninput="saveMeasures()"></div>
-      <div></div>
-    </div>
-    <div class="kb-status" id="dim-derived" data-maya-type="P3">Enter measurements for the derived dimensions.</div>
-  </div>
 
   <div class="sec">
-    <div class="sec-title">Pattern Logic</div>
+    <div class="sec-title" data-maya-type="P2">Pattern Logic</div>
     <div class="logic" id="logic">
       <div class="logic-head"><span class="lt">required shapes in every render</span><span class="lty" id="logic-type">pants</span></div>
       <div class="logic-chips" id="logic-chips"></div>
       <textarea data-maya-control="field" data-maya-type="P1" id="logic-edit" spellcheck="false" placeholder="front leg x2&#10;back leg x2&#10;waistband x1"></textarea>
       <div class="logic-actions">
-        <span class="pill sm" id="logic-edit-btn" onclick="editLogic()">Edit</span>
-        <span class="pill sm" id="logic-save-btn" onclick="saveLogic()" style="display:none">Save</span>
-        <span class="pill sm" id="logic-reset-btn" onclick="resetLogic()">Reset</span>
-        <span class="pill sm" id="logic-lock-btn" onclick="toggleLogicLock()" title="Ignore user-edited logic, cut-list from the book grammar only, for credible eval runs">Test lock</span>
+        <button type="button" class="pill sm" data-maya-pill="regular" id="logic-edit-btn" onclick="editLogic()">Edit</button>
+        <button type="button" class="pill sm" id="logic-save-btn" onclick="saveLogic()" style="display:none">Save</button>
+        <button type="button" class="pill sm" id="logic-reset-btn" onclick="resetLogic()">Reset</button>
+        <button type="button" class="pill sm" id="logic-lock-btn" onclick="toggleLogicLock()" title="Ignore user-edited logic, cut-list from the book grammar only, for credible eval runs">Test lock</button>
       </div>
     </div>
   </div>
 
   <div class="sec">
-    <div class="sec-title">Raster quality</div>
+    <div class="sec-title" data-maya-type="P2">Raster quality</div>
     <div class="pillrow">
-      <span class="pill sm" data-q="low" onclick="setQuality('low')">low</span>
-      <span class="pill sm" data-q="medium" onclick="setQuality('medium')">medium</span>
-      <span class="pill sm" data-q="high" onclick="setQuality('high')">high</span>
+      <button type="button" class="pill sm" data-q="low" onclick="setQuality('low')">low</button>
+      <button type="button" class="pill sm" data-q="medium" onclick="setQuality('medium')">medium</button>
+      <button type="button" class="pill sm" data-q="high" onclick="setQuality('high')">high</button>
     </div>
   </div>
 
   <div class="sec">
-    <div class="sec-title">Knowledge base</div>
+    <div class="sec-title" data-maya-type="P2">Knowledge base</div>
     <div class="kb-status" id="kb-status">,</div>
     <div class="bar"><i id="kb-bar"></i></div>
     <div class="pillrow" style="margin-top:12px">
-      <span class="pill sm" onclick="buildEmbeddings()">Build</span>
-      <span class="pill sm" onclick="clearEmbeddings()">Clear</span>
+      <button type="button" class="pill sm" onclick="buildEmbeddings()">Build</button>
+      <button type="button" class="pill sm" onclick="clearEmbeddings()">Clear</button>
     </div>
   </div>
 </div>
@@ -544,7 +543,23 @@ function operationGarmentCurrent(context){return context.account===operationAcco
 function operationCurrent(context){return context.run===RUN&&operationGarmentCurrent(context);}
 function requireOperation(context){if(!operationCurrent(context))throw Error('The operation changed. Start again with the current garment.');}
 function measurementKey(){const account=operationAccount();return account&&_measurementGarment?'maya_measures_v2:'+encodeURIComponent(account)+':'+encodeURIComponent(operationSubmission())+':'+_measurementGarment:'';}
+function briefMeasurementInches(value){
+  if(typeof value==='number')return num(value);
+  if(typeof value!=='string')return null;
+  const match=value.trim().match(/^(\d+(?:\.\d+)?)\s*(in(?:ch(?:es)?)?|["″]|cm|mm)?$/i);
+  if(!match)return null;
+  const n=Number(match[1]),unit=(match[2]||'in').toLowerCase();return n>0?n/(unit==='cm'?2.54:unit==='mm'?25.4:1):null;
+}
+function briefMeasures(){
+  const raw=_operationInputContext?.measurements;
+  if(raw==null)return {};
+  if(typeof raw!=='object'||Array.isArray(raw))return null;
+  const aliases={waist:['waist_narrowest','waist_natural','narrow_waist','waist'],hip:['hip','low_hip_widest'],crotch:['crotch_f_to_b','crotch'],inseam:['inseam'],length:['pant_length','hip_to_ankle','length']};
+  return Object.fromEntries(Object.entries(aliases).map(([key,names])=>[key,names.map(name=>briefMeasurementInches(raw[name])).find(value=>value!==null)??null]));
+}
 function measurementState(){
+  // Saved Brief facts are authoritative. Browser drafts belong only to standalone uploads/tests.
+  if(_operationInputContext){const values=briefMeasures();return {values:values||{},unavailable:values===null,unsaved:false};}
   const key=measurementKey();if(!key)return {values:{},unavailable:false,unsaved:false};
   if(_measurementDrafts.has(key))return _measurementDrafts.get(key);
   let state;try{const values=JSON.parse(sessionStorage.getItem(key)||'{}');if(!values||typeof values!=='object'||Array.isArray(values))throw Error('invalid measurements');state={values,unavailable:false,unsaved:false};}
@@ -565,11 +580,12 @@ function selectOperationGarment(image){
     _measurementGarment=Array.from(new Uint8Array(digest),value=>value.toString(16).padStart(2,'0')).join('');
     if(RUNNING)_runMeasures=storedMeasures();
     syncMeasures();
-    if(measurementState().unavailable)toast('Saved measurements could not be read. Enter the current measurements before starting.');
+    if(measurementState().unavailable)toast(_operationInputContext?'Brief measurements could not be read. Review the saved Brief before starting.':'Saved measurements could not be read. Enter the current measurements before starting.');
   })().catch(error=>{if(operationGarmentCurrent(context))toast('Measurements could not be loaded: '+error.message);});
   return _garmentReady;
 }
 function saveMeasures(){
+  if(_operationInputContext){syncMeasures();return;}
   if(RUNNING){syncMeasures();return;}
   const key=measurementKey();if(!key)return;
   const values=Object.fromEntries(['waist','length','hip','crotch','inseam'].map(key=>[key,$('m-'+key).value]));
@@ -578,11 +594,11 @@ function saveMeasures(){
   catch{toast('Measurements are kept for this session, but could not be saved. Edit a field to retry.');}
   renderDimDerived();
 }
-function syncMeasures(){const measures=getMeasures();for(const key of ['waist','length','hip','crotch','inseam'])if($('m-'+key))$('m-'+key).value=measures[key]??'';renderDimDerived();}
+function syncMeasures(){const panel=$('standalone-measurements');if(panel)panel.hidden=EMBEDDED||!!_operationInputContext;const measures=getMeasures();for(const key of ['waist','length','hip','crotch','inseam'])if($('m-'+key))$('m-'+key).value=measures[key]??'';renderDimDerived();}
 function setOperationRunning(on){
   if(on){_runMeasures=getMeasures();_runQuality=getQuality();}
   RUNNING=on;
-  if(on){_lockedOperationInputs=[...document.querySelectorAll('input,select,textarea,[data-q],#logic-save-btn,#logic-reset-btn,#operation-fabrics')].map(el=>[el,el.disabled]);_lockedOperationInputs.forEach(([el])=>el.disabled=true);}
+  if(on){_lockedOperationInputs=[...document.querySelectorAll('input,select,textarea,[data-q],#logic-save-btn,#logic-reset-btn,#operation-fabrics,#drawer button:not(.drawer-burger)')].map(el=>[el,el.disabled]);_lockedOperationInputs.forEach(([el])=>el.disabled=true);}
   else{_lockedOperationInputs.forEach(([el,disabled])=>el.disabled=disabled);_lockedOperationInputs=[];_runMeasures=null;_runQuality=null;}
 }
 function invalidateOperation(){
@@ -629,7 +645,7 @@ function receiveOperationContext(event){
   _operationRevision=revision;installOperationContext(context,selected);
 }
 window.addEventListener('message',receiveOperationContext);
-window.addEventListener('message',event=>{if(EMBEDDED&&event.origin===location.origin&&event.source===window.parent&&event.data?.maya==='ops-settings'){toggleDrawer(event.data.open===true,event.data.open===true?'m-waist':'');}});
+window.addEventListener('message',event=>{if(EMBEDDED&&event.origin===location.origin&&event.source===window.parent&&event.data?.maya==='ops-settings'){toggleDrawer(event.data.open===true);}});
 async function loadSavedOperationSubmission(){
   const submissionId=new URLSearchParams(location.search).get('submission')||'';
   if(EMBEDDED||!submissionId)return;
@@ -648,7 +664,7 @@ async function loadSavedOperationSubmission(){
     const referenceImage=imageResponse?await new Promise(async(resolve,reject)=>{try{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(await imageResponse.blob());}catch(error){reject(error);}}):'';
     if(!current())return;
     const pieces=(dissection.pieces||[]).flatMap((p,i)=>p&&!p.skip?[{...p,id:p.id||'saved-piece-'+i,name:p.name||p.label||'Item '+(i+1),fabric:p.fabric||dissection.fabric_type||'',fabric_spec:p.fabric_spec||{}}]:[]);
-    installOperationContext({account,submissionId,local:0,referenceImage,preferences:summary.fabric_preferences||'',pieces});
+    installOperationContext({account,submissionId,local:0,referenceImage,preferences:summary.fabric_preferences||'',measurements:summary._measurements||{},pieces});
   }catch(error){if(current())$('hero-empty').textContent=error.message;}
 }
 window.addEventListener('DOMContentLoaded',()=>{if(EMBEDDED)window.parent.postMessage({maya:'ops-ready'},location.origin);else loadSavedOperationSubmission();});
@@ -698,8 +714,11 @@ function topstitchNote(g){
 
 // dimension block injected into prompts so the model draws to scale
 function buildDimensionBlock(typeKey){
-  const d=computeDims(); if(!d) return '';
-  let s=`\nTARGET DIMENSIONS, draw every panel TRUE TO THESE on the 1-inch grid (origin BOTTOM-LEFT):\n`;
+  const facts=_operationInputContext?.measurements;
+  const recorded=facts&&typeof facts==='object'&&!Array.isArray(facts)?Object.entries(facts).flatMap(([key,value])=>{const inches=briefMeasurementInches(value);return inches===null?[]:[key.replaceAll('_',' ')+': '+fmt(inches)+' in'];}):[];
+  const source=recorded.length?'\nRECORDED BRIEF MEASUREMENTS (body dimensions; use only those relevant to this garment):\n'+recorded.join('\n')+'\nMissing dimensions are unrecorded; do not invent a fitted measurement.\n':'';
+  const d=computeDims(); if(!d||!['pants','skirt'].includes(typeKey))return source||'\nNo relevant body measurements are recorded. Do not invent fitted dimensions.\n';
+  let s=source+`\nTARGET DIMENSIONS, draw every panel TRUE TO THESE on the 1-inch grid (origin BOTTOM-LEFT):\n`;
   if(d.waist!=null){
     s+=`• WAISTBAND = ${fmt(d.waistbandLen)} in long (waist ${fmt(d.waist)} + ${WB_UNDERLAP} underlap) × ${fmt(d.waistbandDepth)} in deep, lay it FLAT and FLUSH along the bottom-left so its length reads on the grid. Longest, thinnest strip.\n`;
     if(typeKey==='pants'||typeKey==='skirt')
@@ -795,7 +814,7 @@ function toggleLogicLock(){ if(RUNNING){toast('Finish the current run before cha
     : 'Test lock off, your Pattern Logic is the cut-list authority again.');
 }
 function requireOperationSettings(){
-  if(measurementState().unavailable)throw Error('Saved measurements could not be read. Enter the current measurements before starting.');
+  if(measurementState().unavailable)throw Error(_operationInputContext?'Brief measurements could not be read. Review the saved Brief before starting.':'Saved measurements could not be read. Enter the current measurements before starting.');
   if(logicEditorCurrent()&&$('logic-edit').value!==_logicEditor.initial)throw Error('Pattern Logic has unsaved changes. Save it or Reset before starting.');
   logicLocked();getLogic(LOGIC_TYPE);
 }
@@ -809,14 +828,14 @@ function _drawerFocusable(){
     return !el.disabled&&el.tabIndex>=0&&el.getClientRects().length&&visibility!=='hidden'&&visibility!=='collapse'&&!el.closest('[inert]');
   });
 }
-function openMeasurements(){toggleDrawer(true,'m-waist');}
 function toggleDrawer(force,focusId=''){
   const d=document.querySelector('.hpane-drawer'); if(!d) return;
   const open = force===true ? true : force===false ? false : !d.classList.contains('open');
   if(open&&!d.classList.contains('open'))_drawerFocus=document.activeElement;
   d.classList.toggle('open', open);
   d.inert=!open;$('drawer').setAttribute('aria-hidden',String(!open));
-  document.querySelectorAll('header .hamburger,#operation-settings').forEach(button=>button.setAttribute('aria-expanded',String(open)));
+  const main=document.querySelector('.hpane-main');if(main)main.inert=open;
+  document.querySelectorAll('header .hamburger').forEach(button=>button.setAttribute('aria-expanded',String(open)));
   // v13.44: the top bar hamburger fades while the drawer's own takes over.
   document.body.classList.toggle('drawer-open', open);
   if(!open&&_drawerFocus?.isConnected)_drawerFocus.focus({preventScroll:true});
@@ -826,7 +845,7 @@ function toggleDrawer(force,focusId=''){
     if(focusId||!d.contains(requestedFrom))requestAnimationFrame(()=>{
       if(!d.classList.contains('open')||(document.activeElement!==requestedFrom&&d.contains(document.activeElement)))return;
       const focusable=_drawerFocusable();
-      (focusable.find(el=>el.id===(focusId||'m-waist'))||focusable[0]||$('drawer')).focus();
+      (focusable.find(el=>el.id===(focusId))||focusable[0]||$('drawer')).focus();
     });
   }
   if(EMBEDDED)window.parent.postMessage({maya:'ops-settings-state',open},location.origin);
@@ -851,14 +870,12 @@ document.addEventListener('keydown',e=>{
 });
 /* ---- plan switcher · Plan A = photo → pattern (this dashboard), Plan B = CLO route ---- */
 const PLAN_NAME='maya_plan';
-const PLAN_SUBS={ A:'Plan A · Grounded Pattern Pipeline', B:'Plan B · CLO Route' };
 function getPlan(){ try{ return localStorage.getItem(PLAN_NAME)||'A'; }catch{ return 'A'; } }
 function setPlan(p){ if(RUNNING){toast('Finish the current run before changing its inputs.');return;} try{ localStorage.setItem(PLAN_NAME,p); }catch{} syncPlan(); toggleDrawer(false); }
 function syncPlan(){
   const p=getPlan();
   document.querySelectorAll('[data-plan]').forEach(el=>el.classList.toggle('active',el.dataset.plan===p));
   if($('plan-btn')) $('plan-btn').textContent='Plan '+p;
-  if($('room-sub')) $('room-sub').textContent=PLAN_SUBS[p]||PLAN_SUBS.A;
   if($('plan-a-view')) $('plan-a-view').style.display = p==='A' ? '' : 'none';
   if($('plan-b-view')) $('plan-b-view').style.display = p==='B' ? '' : 'none';
   if(p==='B') _syncPlanB();

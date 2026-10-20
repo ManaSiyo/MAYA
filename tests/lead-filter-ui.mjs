@@ -86,9 +86,6 @@ export async function auditLeadFilter(page){
   await page.locator('#leads-fold .panel').evaluate(el=>el.scrollLeft=el.scrollWidth);
   await menu.waitFor({state:'hidden'}); // A frozen column must not hide the open filter's anchor.
   await page.setViewportSize({width:1440,height:1000});
-  await page.evaluate(()=>document.body.classList.add('affiliates-view'));
-  await open();await bounds();await page.keyboard.press('Escape');
-  await page.evaluate(()=>document.body.classList.remove('affiliates-view'));
 
   // One row exposes clipping below the short scroll panel. Keep the last option usable.
   await paint(1);await open();await bounds();

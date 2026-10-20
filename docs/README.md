@@ -22,6 +22,13 @@ status colors/weights with usage links, icon color/stroke and all Admin section 
 Pills size from content plus saved X/Y padding; H4 covers names, H5 dates and P3 captions.
 Owner SMS understands all/status-filtered lead lists and counts with durable MORE pages.
 
+Current drawer/scrollbar/segment controls: every hamburger uses the MAYA drawer
+material, with its own shared Edit/Restore preview. Scrollbars default to 4px,
+half-length painted handles and idle hiding. Brief and Fabrics keep one viewport.
+Fabric filters: Local (Bay Area), Mood, Swatchon, Amazon, Others; filter toggles
+do not call paid search. Refresh searches explicitly. Card Save/Use is removed;
+historical Favorites remain readable/removable.
+
 Owner design controls: [Aesthetic Control](../aesthetics/aesthetic-control.html), linked from Admin → Systems.
 Aesthetic Control groups Visuals (Glass and Regular pills, Panels and Tables) before single-preview
 Typography. Each role can select Jost/Cormorant and Normal/ALL CAPS. See docs/design.md.
@@ -84,19 +91,20 @@ plan. A tip button exists purely as proof that payment plumbing works.
 
 ## 2. The served screens
 
-Standalone Marketing is retired. Its old URLs redirect to Admin, which owns
-the marketing charts and lead station.
+Standalone Marketing, Playground and Affiliates are retired. Marketing/Affiliates
+URLs redirect to Admin; Playground URLs redirect to MAYA. No staged experiments
+were promoted. Admin owns the marketing charts and lead station.
 
 | File | What it is | Who sees it |
 |---|---|---|
 | `frontend/index.html` | The MAYA app. Moodboard, community wall, favorites and the approved filing cabinet. | Clients |
-| `backend/status.html` | Admin. Command briefing, health, traffic, Marketing, submissions, prompting and changelog. | Admins only |
+| `backend/status.html` | Admin. Command briefing, health, traffic, Marketing, submissions, feature requests and changelog. | Admins only |
 | `backend/backend.html` | The Brief, fabric assistant and a submission-preserving link to the Operation Room. | Admins only |
 | `backend/outbound.html` | Outbound campaigns, Hunter/Sheets imports, research and drafts. | Admins, account-scoped |
 | `backend/operations.html` | The standalone Operation Room, the beta bench for pattern experiments. | Admins only |
-| `playground/index.html` | Private staging copy; never promote a design without Fromsa's approval. | Admins only |
 
-`aesthetics/` holds everything visual, including the legacy Operations bench.
+`aesthetics/` holds everything visual, including shared pattern knowledge and CLO library assets. Legacy Operations
+page URLs redirect to the one current Operation Room.
 The Brief embeds Operation Room as its second vertical screen; the fixed brand switches with the screen and its hamburger opens the active workspace settings. The standalone route remains available.
 `docs/` holds everything else: the server source,
 `firebase.json`, `design.md`, current runbooks, `Vision.pdf`, and `Strategy-A.md`.

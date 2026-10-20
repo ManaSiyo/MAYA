@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 const deferred=()=>{let resolve;const promise=new Promise(r=>resolve=r);return {promise,resolve};};
 const cut=(s,a,b)=>s.slice(s.indexOf(a),s.indexOf(b,s.indexOf(a)));
-for(const file of ['frontend/index.html','playground/index.html']){
+for(const file of ['frontend/index.html']){
  const source=readFileSync(file,'utf8');
  for(const boundary of ['queued','read','delete','query','duplicate','normal'])for(const returnToA of [false,true]){
   let user='A',waited=false,queued;const gate=deferred(),deleted=[],queried=[],assets=[];

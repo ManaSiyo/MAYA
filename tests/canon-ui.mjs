@@ -23,7 +23,7 @@ await page.route('**/*',async r=>{
 for(const path of canonPages){
  await page.goto('https://maya.test/'+path);await page.evaluate(()=>document.fonts.ready);
  const brand=page.locator('#top-left-brand .brand-title,.brand h1,#brand,.brand-title').first();if(await brand.count())assert.match(await brand.evaluate(el=>getComputedStyle(el).fontFamily),/Cormorant/,path);
- if(!path.startsWith('frontend/')&&!path.startsWith('playground/')) {
+ if(!path.startsWith('frontend/')) {
  const result=await page.evaluate(()=>{
   const box=document.createElement('div');box.innerHTML='<div class="stat"><strong>12,345</strong></div><button class="pill">Maya action</button><table><tbody><tr><td>Data 12,345</td></tr></tbody></table>';document.body.append(box);
   const metric=getComputedStyle(box.querySelector('strong')),button=getComputedStyle(box.querySelector('button')),data=getComputedStyle(box.querySelector('td'));
@@ -39,7 +39,7 @@ for(const path of canonPages){
  const overflow=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}));
  assert.ok(overflow.scroll<=overflow.width+1,path+' horizontal page overflow at '+width+': '+JSON.stringify(overflow));
  await page.screenshot({animations:'disabled',timeout:60000,path:join(dir,path.replaceAll('/','-')+'-'+page.viewportSize().width+'.png')});
- if(!path.startsWith('frontend/')&&!path.startsWith('playground/')){
+ if(!path.startsWith('frontend/')){
   const drawer=await page.evaluate(()=>{
    const el=document.querySelector('#drawer,#outbound-drawer,#clients-drawer');if(!el)return null;
    el.hidden=false;el.classList.add('open');el.closest('.hpane-drawer')?.classList.add('open');

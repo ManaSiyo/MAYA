@@ -8,7 +8,6 @@ const read = path => readFileSync(join(root, path), 'utf8');
 const admin = read('backend/status.html');
 
 const app = read('frontend/index.html');
-const playground = read('playground/index.html');
 
 let passed = 0;
 let failed = 0;
@@ -55,18 +54,18 @@ await test('Admin refresh and command actions fail visibly and writes wait for c
   assert.ok(admin.includes('output:JSON.stringify(modelOut)'));
 });
 
-await test('the approved filing cabinet is promoted without removing Playground', () => {
-  for (const source of [app, playground]) {
+await test('the approved filing cabinet remains in MAYA after Playground retirement', () => {
+  for (const source of [app]) {
     for (const token of ['class="pg-tabrow"', 'id="pg-folder"', 'id="pg-pane-fabrics"',
       'id="pg-pane-pinterest"', 'function pgShow(', 'fabPane.appendChild(fab)',
       'pinPane.appendChild(pin)']) assert.ok(source.includes(token), token);
   }
-  assert.ok(playground.includes('>Playground</div>'));
+  assert.ok(!existsSync(join(root,'playground/index.html')));
 });
 
-await test('all three release surfaces carry v14.40', () => {
+await test('client and Admin release surfaces carry v14.40', () => {
   const version = source => (source.match(/name="maya-version" content="([0-9.]+)"/) || [])[1];
-  assert.deepEqual([app, playground, admin].map(version), ['14.40', '14.40', '14.40']);
+  assert.deepEqual([app, admin].map(version), ['14.40', '14.40']);
 });
 
 await test('v14.01 drawer floor: circular logo, Hey Maya toggle beside it', () => {
