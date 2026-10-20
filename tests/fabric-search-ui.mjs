@@ -12,12 +12,13 @@ const reference='data:image/png;base64,'+png.toString('base64');
 const pieces=[{name:'Crimson coat',fabric:'Crimson wool twill',fabric_spec:{fiber:'wool',weave:'twill'},_image:reference},{name:'White shirt',fabric:'White cotton poplin',_image:reference},{name:'Black leather boots',category:'footwear',fabric:'Black leather',_image:reference}];
 let savedDesign={};const designWrites=[];
 const requests=[],bookWrites=[],books=new Map();let delayed=null,delayNext=false,failNext=false;
-const jwt=sub=>'test.'+Buffer.from(JSON.stringify({sub,exp:Math.floor(Date.now()/1000)+3600})).toString('base64url')+'.test';
+const jwt=(sub,lifetime=3600)=>'test.'+Buffer.from(JSON.stringify({sub,exp:Math.floor(Date.now()/1000)+lifetime})).toString('base64url')+'.test';
 const inventoryFavorite={url:'/aesthetics/fabrics/midnight-velvet.webp',image:'https://cdn.shopify.com/inventory.png',title:'Midnight Velvet',evidence:'atelier_inventory'};
-books.set('Bearer '+jwt('owner-A')+'|project-A',{items:[product,inventoryFavorite],selectedUrl:product.url,generation:'2'});
+books.set('owner-A|project-A',{items:[product,inventoryFavorite],selectedUrl:product.url,generation:'2'});
 const groups=[['local','Local (Bay Area)','https://britexfabrics.com/products/crimson-wool'],['mood','Mood','https://www.moodfabrics.com/products/crimson-wool'],['swatchon','Swatchon','https://www.swatchon.com/fabric/QL-061078'],['amazon','Amazon','https://amazon.com/dp/B000000001'],['others','Others','https://www.blackbirdfabrics.com/products/crimson-wool']];
 const page=await browser.newPage({viewport:{width:1280,height:900}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
-await page.addInitScript(t=>localStorage.setItem('maya_admin_tok',t),jwt('owner-A'));
+// Distinct initial/renewed expiries prove token text is not store identity.
+await page.addInitScript(t=>localStorage.setItem('maya_admin_tok',t),jwt('owner-A',7200));
 await page.route('**/*',async route=>{
   const u=new URL(route.request().url());
   if(u.hostname==='cdn.shopify.com')return u.searchParams.has('fixture-unavailable')?route.fulfill({status:404,body:'Missing fixture image'}):route.fulfill({body:png,contentType:'image/png'});
@@ -35,9 +36,12 @@ await page.route('**/*',async route=>{
     return complete();
   }
   if(u.pathname==='/api/admin/fabrics/lookbook'){
-    const key=route.request().headers().authorization+'|'+(body?.submissionId || u.searchParams.get('submissionId'));
+    const account=JSON.parse(Buffer.from(route.request().headers().authorization.split('.')[1],'base64url').toString()).sub;
+    const key=account+'|'+(body?.submissionId || u.searchParams.get('submissionId'));
     let book=books.get(key)||{items:[],selectedUrl:'',generation:'0'};
     if(body){bookWrites.push(body);assert.equal(body.generation,book.generation);book={items:body.action==='remove'?book.items.filter(p=>p.url!==body.product.url):[body.product,...book.items.filter(p=>p.url!==body.product.url)],selectedUrl:body.action==='select'?body.product.url:body.action==='remove'?'':book.selectedUrl,generation:String(Number(book.generation)+1)};books.set(key,book);}
+    // Model a slower independent lookbook read than the streamed search.
+    if(!body)await new Promise(resolve=>setTimeout(resolve,120));
     return route.fulfill({json:{ok:true,...book}});
   }
   if(u.pathname==='/api/admin/submissions')return route.fulfill({json:{folders:[{id:'project-A',files:[{id:'summary-A',name:'summary.json'},{id:'image-A',name:'dream-garment.png'},{id:'pieces-A',name:'pieces.json'}]}]}});
@@ -46,6 +50,13 @@ await page.route('**/*',async route=>{
   const path=u.pathname==='/backend.html'?'/backend/backend.html':u.pathname==='/operations.html'?'/backend/operations.html':u.pathname;
   try{return route.fulfill({body:readFileSync(root+decodeURIComponent(path)),contentType:({'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp'})[extname(path).toLowerCase()]||'text/plain'});}catch{return route.abort();}
 });
+const openFavorites=async()=>{
+  await page.locator('.fa-tabs').getByRole('button',{name:'Favorites',exact:true}).click();
+  await page.waitForFunction(()=>{
+    const cards=[...document.querySelectorAll('.fa-product')];
+    return cards.length===2&&cards.some(e=>e.textContent.includes('Crimson wool twill'))&&cards.some(e=>e.textContent.includes('Midnight Velvet'));
+  });
+};
 try{
   await page.goto('https://maya-fabric.test/backend.html');
   await page.waitForFunction(()=>!!window.MayaFabricAssistant);
@@ -68,8 +79,10 @@ try{
   assert.equal(await page.locator('.fa-card-actions').count(),0,'Sourceable cards have no Save or Use controls');
   assert.equal(await page.locator('.fa-product [title]').count(),0,'Cards do not repeat verbose hover copy');
   assert.match(await page.locator('.fa-card-caption').textContent(),/69.99 USD \/ yard/,'Verified price remains accessible inline');
-  await page.locator('.fa-tabs').getByRole('button',{name:'Favorites',exact:true}).click();assert.equal(await page.locator('.fa-product').count(),2);
+  await openFavorites();assert.equal(await page.locator('.fa-product').count(),2);
   assert.deepEqual(await page.locator('.fa-card-actions button').allTextContents(),['Remove','Remove']);
+  await page.evaluate(t=>{localStorage.setItem('maya_admin_tok',t);dispatchEvent(new StorageEvent('storage',{key:'maya_admin_tok'}));},jwt('owner-A',10800));
+  await openFavorites();assert.equal(await page.locator('.fa-product').count(),2,'Same-account renewal retains the saved lookbook');assert.equal(books.size,1,'Fixture storage is account/submission scoped, never token scoped');
   await page.locator('.fa-tabs').getByRole('button',{name:'In House',exact:true}).click();await page.locator('.fa-card-title').filter({hasText:'Midnight Velvet'}).waitFor();
   assert.equal(await page.locator('#brief-fabrics #fabric-assistant').count(),1,'In House stays in the same inline window');
   assert.doesNotMatch(await page.locator('.fa-results').textContent(),/in.house.*atelier|in stock|arrives/i);
@@ -105,7 +118,7 @@ try{
   await page.setViewportSize({width:390,height:844});await page.screenshot({path:'/private/tmp/maya-fabrics-phone.png'});
   await page.keyboard.press('Escape');await page.locator('#brief-fabrics #fabric-assistant').waitFor();assert.equal(await page.locator('#brief-fabrics #fabric-assistant').count(),1,'Escape returns the same view inline');
   assert.equal(await page.locator('[data-store-group=local]').getAttribute('aria-pressed'),'true','Expansion preserves store choice');assert.equal(await page.locator('.fa-store-filter[aria-pressed=true]').count(),1);
-  await page.locator('.fa-tabs').getByRole('button',{name:'Favorites',exact:true}).click();assert.equal(await page.locator('.fa-product').count(),2,'Sourceable filters never hide historical favorites');assert.match(await page.locator('.fa-results').textContent(),/Midnight Velvet/);
+  await openFavorites();assert.equal(await page.locator('.fa-product').count(),2,'Sourceable filters never hide historical favorites');assert.match(await page.locator('.fa-results').textContent(),/Midnight Velvet/);
   await page.locator('.fa-tabs').getByRole('button',{name:'Sourceable',exact:true}).click();
   await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.locator('.fa-card-title').filter({hasText:'Crimson wool twill'}).waitFor();
   // Actual saved authority, not merely CSS variables: all roles/materials, inline
@@ -166,7 +179,7 @@ try{
   assert.equal(await page.locator('#test-picker option').count(),pieces.length,'Operation Room receives only saved pieces');
   const beforeOperationSearch=requests.length;await page.locator('#operation-fabrics').click();await page.locator('#operation-fabrics-host #fabric-assistant').waitFor();
   await page.locator('.fa-card-title').filter({hasText:'Crimson wool twill'}).waitFor();assert.equal(requests.length,beforeOperationSearch+1);assert.equal(requests.at(-1).piece.name,'Crimson coat');
-  await page.locator('.fa-tabs').getByRole('button',{name:'Favorites',exact:true}).click();assert.match(await page.locator('.fa-results').textContent(),/Midnight Velvet/);
+  await openFavorites();assert.match(await page.locator('.fa-results').textContent(),/Midnight Velvet/);
   await page.evaluate(()=>MayaTypographyControls.ready);assert.equal((await readStyle('.fa-header h2')).size,28,'Saved design propagates on the Operations page reload');assert.equal((await readStyle('.fa-product')).background,'rgba(35, 76, 125, 0.7)');
   const savedProductCard=page.locator('.fa-product').filter({hasText:'Crimson wool twill'});
   // A persistent provider-photo failure survives async lookbook repaint. A one-off

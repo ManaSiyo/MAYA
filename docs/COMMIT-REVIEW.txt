@@ -1,18 +1,20 @@
-[Codex] Read fabric card styles from the current connected element
+[Codex] Scope fake fabric lookbooks by account and await independent reads
 
-Cloud Build 9d763d1d passed the installed-browser correction and 43 release gates,
-then stopped before deployment when a fabric saved-color assertion observed an
-empty string. Favorites refresh replaces card nodes asynchronously; a locator
-handle can detach between resolution and the computed-style call.
+Build 435074eb stopped before deployment on an empty Favorites assertion. Delayed
+fake reads reproduced the deeper fixture defect locally: the fake store used the
+whole JWT, including exp, so seeding and initialization across a second boundary
+could become different stores. Production storage already uses account/submission.
 
-Resolve the current connected card and inspect its style in one browser task.
-Keep every expected color, geometry, Save/reload and account/project assertion
-unchanged. This corrects test observation without changing application behavior,
-visible UI, production configuration or release gates.
+Key fake lookbooks by test subject plus submission. Deliberately use different
+initial/renewed token expiries and assert the same two saved cards and one store.
+Delay fake reads 120ms and await exact rendered Favorites titles/counts instead of
+assuming they load with the faster sourceable stream. Preserve atomic connected
+style reads and all existing material, Save/reload, removal and isolation checks.
+No application behavior, visible UI, configuration or release gate changes.
 
-Validation: fabric-search-ui passed ten consecutive runs using the isolated
-installed Playwright browser with executable overrides unset. Standalone final
-aesthetic-authority runs last after this record. The preceding full integrated suite passed all 607 named checks plus
-imported assertions. Both failed CI runs stopped before deployment; public health
-and release markers still identify healthy baseline 4b4867f. Verify the next Cloud
-Build and exact deployed assets/pages/API plus live authority after this Push.
+Validation: the final delayed fixture and explicit renewal checks passed ten
+consecutive runs using isolated installed Playwright discovery. Standalone final
+aesthetic-authority runs last after this record. Earlier full integrated regression passed all 607 named
+checks plus imported assertions. Three builds stopped before deployment; public
+site/API remain on healthy 4b4867f. Verify the next production build, exact release/
+pages/assets/API and final live shared authority after Push.

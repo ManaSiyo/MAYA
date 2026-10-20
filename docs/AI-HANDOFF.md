@@ -2,20 +2,21 @@
 
 ## Current task and release state
 
-The October 18 owner review is committed as 024d049, followed by CI launcher
-correction 35d61af25d55769c37f056b45d0f024c41e2ee47. Cloud Build 937bfddb
-stopped on a fixed browser path; build 9d763d1d passed that correction and the first
-43 gates, then stopped on fabric-search-ui's saved card color observation. Neither
-build reached image/server/website/rules deployment. The deployed baseline remains
-4b4867f5f8d310ca32467414eedbf8b1d03d7c63 and public health/release stayed healthy.
+The October 18 owner review is committed as 024d049, with test-only CI follow-ups
+35d61af and df4b390a4a87943ce617ee1fbc1d7e7ea21b0de3. Builds 937bfddb,
+9d763d1d and 435074eb stopped in release checks; none reached image/server/website/
+rules deployment. Public health/release still identify healthy baseline 4b4867f.
 
-The launcher now defaults to pinned Playwright's isolated installed browser with
-explicit executable overrides preserved. The second failure was a stale test DOM
-handle: Favorites asynchronously refreshes/replaces cards between locator lookup
-and computed-style evaluation, and disconnected nodes return an empty color. The
-style helper now queries and inspects the current connected node atomically in one
-browser task. All expected colors, geometry, Save/reload and scope assertions stay
-strict; no application behavior or visible UI is changed by either follow-up.
+Test follow-ups: use the pinned Playwright-installed isolated browser rather than
+fixed executable paths; resolve/read connected card styles in one browser task;
+await actual Favorites cards rather than assuming streamed search and independent
+lookbook reads complete together. Delaying fake lookbook reads exposed the deeper
+fixture defect locally: it keyed books by full JWT, including exp, so tokens minted
+across a second boundary could see an empty book. The fake store now mirrors the
+server's stable account/submission key. Initial and renewed tokens deliberately use
+different expiries; same-account renewal retains both exact saved cards and one
+store. Reads deliberately wait 120ms. No application behavior, visible UI,
+production configuration, expected color/count/content or release gate is changed.
 Existing explicit owner authorization covers local commits and automatic Push.
 A push can deploy production; never infer success from Vercel.
 
@@ -92,11 +93,11 @@ The exact Cloud Build list now has 71 Node commands.
 ## Open limits and exact next step
 
 The launcher correction passed gallery, release-contract and full integrated
-regression with explicit executable overrides unset and the isolated installed
-browser cache selected. The corrected fabric style observation passed ten
-consecutive runs with that same browser discovery. Run final aesthetic-authority
-after these records; commit and Push the follow-up
-under existing authorization. Wait for the exact Cloud Build, then verify
+regression with executable overrides unset and isolated installed-browser discovery.
+The delayed fixture reproduced the token-key defect locally; the corrected
+account/submission fixture with delayed reads and explicit renewal assertions
+passed ten consecutive runs. Run final aesthetic-authority after these records. Commit and Push under existing
+authorization. Wait for the exact Cloud Build, then verify
 release.json, page stamps, API commit, changed asset bytes and retired redirects.
 Run final live shared-surface authority and inspect actual phone/desktop images.
 
