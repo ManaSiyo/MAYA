@@ -1,19 +1,18 @@
-[Codex] Use the installed Playwright browser in release checks
+[Codex] Read fabric card styles from the current connected element
 
-Cloud Build 937bfddb rejected release 024d049 before deployment because the newly
-mandatory component-gallery test defaulted to /opt/pw-browsers/chromium, which
-is absent in node:20 after the pinned Playwright browser installation.
+Cloud Build 9d763d1d passed the installed-browser correction and 43 release gates,
+then stopped before deployment when a fabric saved-color assertion observed an
+empty string. Favorites refresh replaces card nodes asynchronously; a locator
+handle can detach between resolution and the computed-style call.
 
-Remove fixed machine/application executable fallbacks from the gallery and
-integrated regression launchers. Keep explicit isolated PW_CHROMIUM/CHROMIUM_PATH
-overrides; otherwise use Playwright's installed browser. Add release-contract
-assertions preventing those fixed paths from returning. Preserve every gate and
-all existing functional and visual assertions. No visible UI or production
-configuration is changed; the shared Aesthetic Control rule remains applicable.
+Resolve the current connected card and inspect its style in one browser task.
+Keep every expected color, geometry, Save/reload and account/project assertion
+unchanged. This corrects test observation without changing application behavior,
+visible UI, production configuration or release gates.
 
-Validation: release-contract, gallery and full integrated regression passed with
-both executable overrides unset and the isolated installed-browser cache selected.
-Standalone aesthetic-authority runs last after this record, before commit. The main
-change already passed all 71 exact local release commands and 607 named integrated
-checks. This follow-up must pass Google Cloud Build before exact live verification.
-The deployed baseline remains 4b4867f until the production pipeline succeeds.
+Validation: fabric-search-ui passed ten consecutive runs using the isolated
+installed Playwright browser with executable overrides unset. Standalone final
+aesthetic-authority runs last after this record. The preceding full integrated suite passed all 607 named checks plus
+imported assertions. Both failed CI runs stopped before deployment; public health
+and release markers still identify healthy baseline 4b4867f. Verify the next Cloud
+Build and exact deployed assets/pages/API plus live authority after this Push.

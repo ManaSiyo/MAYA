@@ -2,18 +2,20 @@
 
 ## Current task and release state
 
-The October 18 owner review was committed and pushed as
-024d04983a506df5bd1ecd3be14e322a545da9d2. Cloud Build 937bfddb failed in
-Test release contracts before any image/server/website/rules deployment: the newly
-mandatory component-gallery launcher required /opt/pw-browsers/chromium instead of
-the pinned Playwright-installed browser. The deployed baseline remains
-4b4867f5f8d310ca32467414eedbf8b1d03d7c63 (verified October 18).
+The October 18 owner review is committed as 024d049, followed by CI launcher
+correction 35d61af25d55769c37f056b45d0f024c41e2ee47. Cloud Build 937bfddb
+stopped on a fixed browser path; build 9d763d1d passed that correction and the first
+43 gates, then stopped on fabric-search-ui's saved card color observation. Neither
+build reached image/server/website/rules deployment. The deployed baseline remains
+4b4867f5f8d310ca32467414eedbf8b1d03d7c63 and public health/release stayed healthy.
 
-The follow-up removes machine-specific executable fallbacks from component-gallery
-and integrated app-regression. Explicit PW_CHROMIUM/CHROMIUM_PATH overrides remain;
-otherwise Playwright resolves its isolated installed browser. release-contract
-rejects a reintroduced fixed machine/application path. This adds no visible UI.
-The shared authority rule and every release gate remain intact.
+The launcher now defaults to pinned Playwright's isolated installed browser with
+explicit executable overrides preserved. The second failure was a stale test DOM
+handle: Favorites asynchronously refreshes/replaces cards between locator lookup
+and computed-style evaluation, and disconnected nodes return an empty color. The
+style helper now queries and inspects the current connected node atomically in one
+browser task. All expected colors, geometry, Save/reload and scope assertions stay
+strict; no application behavior or visible UI is changed by either follow-up.
 Existing explicit owner authorization covers local commits and automatic Push.
 A push can deploy production; never infer success from Vercel.
 
@@ -90,10 +92,11 @@ The exact Cloud Build list now has 71 Node commands.
 ## Open limits and exact next step
 
 The launcher correction passed gallery, release-contract and full integrated
-regression with both executable overrides unset and PLAYWRIGHT_BROWSERS_PATH
-pointing to the isolated installed browser cache. Run final aesthetic-authority
-after these records; commit the follow-up and Push under existing authorization.
-Wait for the exact Cloud Build, then verify
+regression with explicit executable overrides unset and the isolated installed
+browser cache selected. The corrected fabric style observation passed ten
+consecutive runs with that same browser discovery. Run final aesthetic-authority
+after these records; commit and Push the follow-up
+under existing authorization. Wait for the exact Cloud Build, then verify
 release.json, page stamps, API commit, changed asset bytes and retired redirects.
 Run final live shared-surface authority and inspect actual phone/desktop images.
 
