@@ -105,7 +105,9 @@ try{
  for(const [mode,value] of [['default',defaults],['saved',saved]]){
   design=value;await ev(()=>MayaTypographyControls.load());
   for(const width of [320,390,768,1024,1440,1920]){
-   await page.setViewportSize({width,height:1000});await ev(()=>toggleDrawer(true));await draft('kept after quota failure x2\nreviewed waistband x1');await fault({logicSet:true});await ev(()=>saveLogic());
+   await page.setViewportSize({width,height:1000});await ev(()=>toggleDrawer(true));
+   await page.waitForFunction(()=>{const drawer=document.getElementById('drawer'),r=drawer.getBoundingClientRect();return getComputedStyle(document.querySelector('.hpane-drawer')).transform==='none'&&r.left>=0&&r.right<=innerWidth+1;});
+   await draft('kept after quota failure x2\nreviewed waistband x1');await fault({logicSet:true});await ev(()=>saveLogic());
    assert.match(await toast(),/not saved/);await page.locator('#logic-edit').focus();
    assert.equal(await page.locator('#logic-edit').evaluate(e=>document.activeElement===e),true);
    await page.waitForFunction(weight=>getComputedStyle(document.getElementById('logic-edit')).fontWeight===weight,mode==='saved'?'500':'300');

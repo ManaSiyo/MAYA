@@ -2782,6 +2782,8 @@ ok('Messages exposes archived history',MAP_SOURCE.includes('async function msgLo
 await import('./fabric-sourcing.mjs');
 ok('Brocade and jacquard yardage remain eligible without accepting unrelated weaves or fabric tools',true);
 ok('Base cloth excludes applied trims and whole-look choices without weakening explicit requirements or visual checks',true);
+ok('Saved dominant fabric color rejects opposite seller colors while explicit latest refinements remain authoritative',!process.exitCode);
+ok('Bounded fabric seeds retain reptile/long-pile texture and discard known notions before seller verification',!process.exitCode);
 ok('Material qualification, garment-scoped refinements and grounded ranking pass synthetic sourcing contracts',!process.exitCode);
 await import('./fabric-search.mjs');
 await import('./domain-boundaries.mjs');

@@ -1,6 +1,59 @@
 # Current handoff — October 21, 2026
 
-## Current work — live base-cloth qualification repair
+## Current work — live dominant-color and retailer-seed follow-up
+
+24d84f4d27c49be8728b968ec3a3f31b423c1fb6 deployed successfully: Cloud Build
+fa83abfc-88a1-4d99-9ff2-16dc28eb6dae, 17m52s, all 72 release gates. Exact public
+release/page/API commit, changed asset bytes/cache and synthetic deployed Fabrics/
+SMS browser fixtures pass. The live saved wool coat now returns three black wool
+listings. The August crocodile trousers returned no confirmed visual match; the
+publicly checked closest Britex vinyl describes stiff upholstery, not confirmed
+trouser suitability. Do not force a weak visual fallback.
+
+The same outfit's burgundy shag jacket exposed a real false positive: white/ivory
+faux fur passed. The canonical dissection already stores dominant fabric_hex,
+but matching and public retailer seeds ignored it. New regression fails original
+code. Use clearly chromatic saved color families only when saved words lack color;
+neutral/dark/boundary hints remain uncertain. Explicit latest color instructions
+still override them. Opposite known seller colors fail before ranking. Qualified discovery base-color
+families are validated and bound to canonical garment IDs; they cover legacy
+garments without hex. Repeated/ambiguous IDs are omitted, and explicit latest
+colors remain authoritative. Requalify direct candidates after discovery too. Pass the
+resolved search/qualified observation into the existing single visual review and
+make obvious dominant-color mismatches ineligible there.
+
+Retain bounded crocodile/snakeskin/long-pile base descriptors in public seeds.
+Real Britex generic leather/smooth feed first returned buttons; filter known
+notions before its two-item budget so a third fabric survives. Missing metadata
+still reaches seller verification. Include vinyl/leatherette as eligible materials,
+without establishing apparel suitability. Web discovery starts across allowed
+merchants rather than spending all three calls one local shop at a time. Respect
+explicit store scope, all exclusions, source evidence, 8-candidate/one-visual-pass
+and existing deadlines. No additional request/cost budget or retry is introduced.
+
+Changed runtime: docs/server/fabric-sourcing.js, fabric-search.mjs and
+fabric-discovery.mjs only. Tests: fabric-sourcing, fabric-search and integrated
+app-regression assertions. A Brief fixture also captured a still-moving smooth
+scroll as its baseline; set the deliberate position instantly, await its actual
+destination and retain the exact restoration assertion. No Brief runtime change.
+The Operations save fixture now awaits the drawer animation endpoint before
+asserting reachability; its existing bounds/content assertions remain.
+Docs: FABRIC-SEARCH, MODULE-BOUNDARIES, this state,
+requests/fixes and COMMIT-REVIEW. No visible UI, CSS, shared design/model/dependency,
+SMS/voice, server entry point, credential or production environment changes.
+Existing H4/P3/Inner/Glass Sourceable preview remains the presentation authority.
+
+Validation: sourcing (15), search (39), all 72 exact release gates, full integrated
+app-regression and final server smoke pass. Corrected Brief/Operations geometry
+fixtures also pass independently; existing assertions remain intact. The first
+integrated attempts exposed the original malformed-traits test snapshot and
+unsettled drawer geometry, not communications/runtime failures. Final standalone
+Aesthetic Control runs
+last after final state records, then commit and authorized Push. Exact deployed
+release/assets plus actual owner jacket/trouser acceptance are the next step;
+passing synthetic providers alone does not prove semantic matching quality.
+
+## Previous base-cloth qualification repair
 
 23b905504a87c229edfd06dacd7cdd7cb1763e73 deployed successfully through Cloud
 Build dbe8380d (19m25s), with all 72 gates. The test-only 302cf18 build b468fd55

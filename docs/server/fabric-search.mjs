@@ -335,7 +335,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
         const r = await fetchImpl(url, { redirect: 'error', signal: AbortSignal.any([signal, AbortSignal.timeout(4500)]) });
         if (!r.ok) return [];
         const data = JSON.parse(await limitedText(r, 256 * 1024));
-        return list(data.resources?.results?.products).filter(p => p.available !== false).slice(0, 2).map(p => ({ url: new URL(p.url, 'https://' + shop.host).href, reason: 'Initial keyword result; checking closer matches.' }));
+        return list(data.resources?.results?.products).filter(p => p.available !== false&&(!p.title||isFabricProduct({...p,description:p.body||p.description||''}))).slice(0, 2).map(p => ({ url: new URL(p.url, 'https://' + shop.host).href, reason: 'Initial keyword result; checking closer matches.' }));
       } catch { return []; }
     })));
     const groups=shops.map(shop=>results.flat().filter(c=>merchantURL(c.url,true)?.shop===shop)),balanced=[];
@@ -392,16 +392,20 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     if (signal.aborted) return;
     if (discovery) {
       const allowed = requestedShops(input);
+      // Qualified base colors belong only to canonical saved garment IDs. They
+      // cannot replace explicit words or flow to another garment/account.
+      input.visualColors=Object.fromEntries(discovery.garmentColors.filter(hint=>input.pieces.some(piece=>piece.id===hint.garmentId)).map(hint=>[hint.garmentId,hint.colors]));
       const checked = await Promise.all(discovery.candidates.filter(c => allowed.includes(merchantURL(c.url, true)?.shop)).map(c => verify(c, signal)));
       const discovered = checked.flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];});
       products=[...new Map([...discovered,...products].map(p=>[p.url,p])).values()].slice(0,8);
+      products=products.filter(product=>fabricProductMatch(product,{...input,pieces:input.pieces.filter(piece=>piece.id===product.garmentId),allowVisualOnly:!!rank&&!!input.image}));
     }
     const eligibleCount=products.length;
     if(products.length&&input.image&&rank){
       send({type:'status',message:'Checking fabric photos against this look…'});
       const eligible=products;
       try{
-        const matches=await rank({garmentImage:selectedReference||input.image,traits:{...input.piece.fabric_spec,garmentId:input.piece.id,garment:input.piece.name,fabric:input.pieces.map(p=>p.name+': '+p.fabric).join('; '),garments:input.pieces,request:input.request,preferences:input.preferences},products:eligible,signal});
+        const matches=await rank({garmentImage:selectedReference||input.image,traits:{...input.piece.fabric_spec,garmentId:input.piece.id,garment:input.piece.name,fabric:input.pieces.map(p=>p.name+': '+p.fabric).join('; '),garments:input.pieces,request:input.request,preferences:input.preferences,resolvedSearch:discovery?.query||'',referenceObservation:discovery?.observation||''},products:eligible,signal});
         if(signal.aborted)return;
         products=list(matches).flatMap(match=>{const source=eligible.find(p=>p.url===match.url);return source?[{...source,reason:text(match.reason,220)}]:[];});
       }catch(e){if(signal.aborted)return;products=[];warning='Fabric photo comparison was unavailable. Refresh to check these materials again.';}

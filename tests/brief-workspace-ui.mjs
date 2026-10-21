@@ -161,7 +161,9 @@ try{
    assert.ok(await page.locator('#operations-embed').evaluate(e=>Math.abs(e.getBoundingClientRect().width-innerWidth)<2),'Room spans the whole workspace at '+width);
    // The iframe must cover the actual top viewport even when its section is partly scrolled.
    const beforeSettings=await liveFrame.evaluate(()=>({run:RUN,active:ACTIVE_TEST,hero:HERO,passes:PASSES}));
-   const beforeScroll=await page.evaluate(()=>{const s=document.getElementById('screens');s.style.scrollSnapType='none';s.scrollTop-=41;return s.scrollTop;});
+   const scrollTarget=await page.evaluate(()=>{const s=document.getElementById('screens');s.style.scrollSnapType='none';const target=s.scrollTop-41;s.scrollTo({top:target,behavior:'instant'});return target;});
+   await page.waitForFunction(target=>Math.abs(document.getElementById('screens').scrollTop-target)<2,scrollTarget);
+   const beforeScroll=await page.locator('#screens').evaluate(e=>e.scrollTop);
    await page.locator('#top-actions .hamburger').click();
    await liveFrame.waitForFunction(()=>document.body.classList.contains('drawer-open'));
    await embedded.locator('.drawer-burger').waitFor({state:'visible'});

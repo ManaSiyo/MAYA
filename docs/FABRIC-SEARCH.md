@@ -46,6 +46,21 @@ never calls image generation. No purchase capability is added.
 
 ## Runtime
 
+Saved dominant fabric_hex contributes only a clearly chromatic color-family hint
+when saved words do not already name a color. Ambiguous hues/neutrals stay with
+visual comparison; explicit latest color instructions override the hint. Seller
+facts with an opposite known color fail qualification even if an AI likes the
+texture. Validated discovery color families are scoped to canonical garment IDs;
+ambiguous repeats are omitted, and legacy garments without hex can use these
+qualified hints. Requalify initial retailer candidates after discovery. Ranking receives the resolved search and qualified reference observation
+alongside the selected crop, and rejects a visibly wrong dominant color. No exact
+fiber, shade, stock or price is inferred from the image. Bounded public seeds keep
+crocodile/snakeskin/long-pile vocabulary from the base cloth, never secondary trim
+or private prose. Known notions are filtered before the two-item feed budget;
+missing feed metadata still reaches normal seller verification. Search begins
+across the allowed merchant scope rather than consuming all calls on local shops
+unless the owner actually selected that scope.
+
 - `aesthetics/ui/fabric-assistant.{js,css}` is shared by both served screens.
 - `docs/server/fabric-search.mjs` owns `/api/admin/fabrics/search` (NDJSON),
   `/api/admin/fabrics/lookbook` (GET/POST), seller parsing and storage.

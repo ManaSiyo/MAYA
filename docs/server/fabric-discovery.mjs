@@ -21,9 +21,11 @@ Use the latest request to refine the earlier requests. Explicit user requirement
 When currentStoreFilter is supplied, it is the latest explicit merchant scope and replaces older named-shop restrictions. Preserve all material, color and texture refinements. Local (Bay Area) means only Britex, Stonemountain and Harts; it never confirms pickup, stock or delivery. Swatchon is its own online group, never local pickup.
 Use the original photo AND words when both exist. Describe visible color, texture, weave-like appearance and drape, but never claim an exact fiber, GSM or stretch from a photo. Garment images can be generated concepts. Keep uncertainty explicit.
 Source the base cloth separately from applied beads, chains, embroidery, zips and garment construction. Do not require a ready-made textile to contain every bespoke embellishment unless the client explicitly asks. Describe those distinctions in the observation.
+Unless a local-only or named-store scope is requested, begin with a material/color search across the allowed domains. Do not spend the whole three-call budget checking one local shop per call. Reserve remaining calls for synonyms or the most promising apparel-fabric source.
 Search real fabric PRODUCT pages (yardage, not garments, shoes, scissors, tools, patterns, notions or swatches). For saved dissected garments, find materials for each garment and label its intended use; never source footwear or accessories. Match the actual requested material and color; unrelated or weak matches must be omitted. Search Britex San Francisco, Stonemountain Berkeley, Harts Santa Cruz, Amazon and the other allowed retailers. Respect a named-shop-only or local-only request; prefer local when requested. Brightex means Britex. Local defaults to the San Francisco Bay Area unless the user specifies another place. Try a synonym or broader fabric term if the first search is poor; at most three search calls.
 Do not put client names, measurements, contact details or private image URLs into a public search query. Search using material requirements only. Do not invent a product, URL, price, stock, composition or delivery date.
-Return ONLY a JSON object: {"query":"short resolved fabric search, retaining refinements","observation":"brief qualified description of the reference; no product stock or prices","candidates":[{"url":"a product URL actually returned by search","garment":"exact saved garment name this material is for, if provided","reason":"short explanation of why it may match, qualified where uncertain"}]}.
+Return ONLY a JSON object: {"query":"short resolved fabric search, retaining refinements","observation":"brief qualified description of the reference; no product stock or prices","garmentColors":[{"garmentId":"exact saved garment id","colors":["red"]}],"candidates":[{"url":"a product URL actually returned by search","garment":"exact saved garment name this material is for, if provided","reason":"short explanation of why it may match, qualified where uncertain"}]}.
+garmentColors contains only clearly visible dominant BASE-cloth color families per saved garment: red, blue, green, brown, black, white, gray, yellow, pink or purple. Omit uncertain colors and trim/lining colors. This is a qualified visual hint, never an exact shade or composition claim. Preserve exact saved IDs; never assign one garment's color to another.
 Return up to 8 candidates in relevance order. All candidate URLs must appear in your web search sources. An empty list is better than fabricated results. No markdown fences.`,
     input: [{ role: 'user', content }],
   };
@@ -52,6 +54,10 @@ export function readDiscovery(response) {
     seen.add(merchantIdentity(u.url));
     return [{ url: u.url, reason: text(c.reason, 220),garment:text(c.garment,80) }];
   }).slice(0, 8);
-  return { query: text(data.query, 180), observation: text(data.observation, 650), webQueries:webQueries.slice(0,6), candidates };
+  const garmentColors=list(data.garmentColors).slice(0,12).flatMap(item=>{
+    const garmentId=typeof item?.garmentId==='string'?text(item.garmentId,100):'';
+    const colors=[...new Set(list(item?.colors).filter(c=>typeof c==='string'&&/^(?:red|blue|green|brown|black|white|gray|yellow|pink|purple)$/.test(c)))].slice(0,2);
+    return garmentId&&colors.length?[{garmentId,colors}]:[];
+  });
+  return { query: text(data.query, 180), observation: text(data.observation, 650), webQueries:webQueries.slice(0,6), garmentColors:garmentColors.filter(item=>garmentColors.filter(other=>other.garmentId===item.garmentId).length===1),candidates };
 }
-

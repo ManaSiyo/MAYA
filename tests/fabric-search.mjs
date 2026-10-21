@@ -415,6 +415,9 @@ await test('saved garment retailer results survive an empty web answer and still
 await test('discovery exposes actual tool queries and rejects malformed result objects',()=>{
   const body=response();body.output[0].action.queries=['burgundy wool fabric site:britexfabrics.com'];
   assert.deepEqual(readDiscovery(body).webQueries,body.output[0].action.queries);
+  const colored=response({garmentColors:[{garmentId:'jacket',colors:['red','red','not a color',{},'white','blue']},null,{garmentId:{},colors:['red']}]});
+  assert.deepEqual(readDiscovery(colored).garmentColors,[{garmentId:'jacket',colors:['red','white']}]);
+  assert.deepEqual(readDiscovery(response({garmentColors:[{garmentId:'jacket',colors:['red']},{garmentId:'jacket',colors:['white']}]})).garmentColors,[],'Ambiguous repeated garment observations cannot pick an arbitrary last color');
   for(const value of [null,[],{}, {candidates:'invalid'}]){
     const broken=response();broken.output[1].content[0].text=JSON.stringify(value);
     assert.throws(()=>readDiscovery(broken),/unreadable|invalid|incomplete/i);
@@ -444,5 +447,22 @@ await test('canonical mixed-material garments keep original words but qualify th
     assert.doesNotMatch(events.at(-1).searchDetails.retailerQueries.join(' '),/denim|leather/);
     const context=JSON.parse(sent.input[0].content[0].text);assert.match(context.garment.fabric,/leather appliqué/);assert.equal(context.clientFabricPreferences,JSON.stringify(['Denim','Leather']),'Original words remain intact for discovery');
   }
+});
+await test('saved burgundy fur rejects ivory and retailer notions cannot crowd out the third fabric listing',async()=>{
+  const s=store(),piece={id:'jacket',name:'Shag jacket',fabric:'Long-pile faux fur',fabric_hex:'#991b2a',fabric_spec:{fiber:'polyester',texture:'long-pile'},_image:image};
+  s.records.set('submissions/project-A/summary.json',{buf:Buffer.from(JSON.stringify({fabric_preferences:['Leather','Denim']})),generation:'1'});
+  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[piece]})),generation:'1'});
+  const ivory='https://britexfabrics.com/products/ivory-fur',red='https://britexfabrics.com/products/burgundy-fur',events=[],visited=[];let ranked=0;
+  const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async(target,options)=>{
+    if(target.includes('openai')){const answer=response({garmentColors:[{garmentId:'jacket',colors:['red']}],candidates:[{url:ivory}]});answer.output[0].action.sources.push({url:ivory});return Response.json(answer);}
+    if(target.includes('suggest.json'))return Response.json({resources:{results:{products:[{title:'Leather button',url:'https://britexfabrics.com/products/button-a'},{title:'Sewing needles',url:'https://britexfabrics.com/products/needles'},{title:'Burgundy long pile polyester faux fur',url:red}]}}});
+    visited.push(target);return new Response(seller(target.includes('burgundy-fur')?{name:'Burgundy long pile polyester faux fur',description:'Burgundy polyester faux fur. Sold by the yard.',url:red,material:'polyester'}:{name:'Ivory polyester faux fur',description:'Creamy eggshell ivory polyester. Sold by the yard.',url:ivory,material:'polyester'}));
+  },rank:async({products})=>{ranked++;assert.deepEqual(products.map(p=>p.url),[red]);return products;}});
+  await service.search(user,{automatic:true,submissionId:'project-A',piece:{id:'jacket'},image},e=>events.push(e));
+  assert.equal(ranked,1);assert.deepEqual(events.at(-1).products.map(p=>p.url),[red]);assert.match(events.at(-1).searchDetails.retailerQueries[0],/red/);
+  assert.ok(!visited.some(u=>/button-a|needles/.test(u)),'Known notions are discarded before the bounded verification budget');
+  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{...piece,fabric_hex:''}]})),generation:'2'});
+  const legacy=[];await service.search(user,{automatic:true,submissionId:'project-A',piece:{id:'jacket'},image},e=>legacy.push(e));
+  assert.equal(ranked,2);assert.deepEqual(legacy.at(-1).products.map(p=>p.url),[red],'Legacy garments without hex use the scoped qualified observation, never accept opposite seller colors on a high rank alone');
 });
 console.log(`Fabric search: ${count} behavioral checks passed.`);

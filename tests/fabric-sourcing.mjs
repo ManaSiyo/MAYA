@@ -31,6 +31,26 @@ const products = [
 
 console.log('\nMAYA fabric sourcing test\n');
 
+test('saved dominant color and reptile texture inform bounded retailer seeds without accepting opposite colors',()=>{
+  const jacket={id:'jacket',name:'Shag jacket',fabric:'Long-pile faux fur',fabric_hex:'#991b2a',fabric_spec:{fiber:'polyester',texture:'long-pile'}};
+  const input={automatic:true,pieces:[jacket],preferences:['Leather','Denim'],allowVisualOnly:true};
+  const ivory={title:'Plush Reversible Rabbit & Suede Polyester Faux Fur',description:'Both sides in creamy eggshell ivory. 100% polyester. Sold by the yard.',image:'https://seller.example/fur.jpg',evidence:'seller_listing'};
+  assert.equal(fabricProductMatch(ivory,input),null,'White fur cannot satisfy a saved burgundy target just because texture matches');
+  assert.equal(fabricProductMatch(ivory,{...input,pieces:[{...jacket,fabric_hex:''}],visualColors:{jacket:['red']}}),null,'Qualified color observation also covers legacy garments without a saved hex');
+  assert.equal(fabricProductMatch(ivory,{...input,request:'Use ivory instead',automatic:false,visualColors:{jacket:['red']}})?.garmentId,'jacket');
+  assert.equal(fabricProductMatch({...ivory,title:'Burgundy long pile faux fur',description:'Burgundy polyester faux fur, sold by the yard.'},input)?.garmentId,'jacket');
+  assert.match(fabricSeedQueries(input)[0],/red/);assert.match(fabricSeedQueries(input)[0],/long pile/);
+  assert.equal(fabricProductMatch(ivory,{...input,automatic:false,request:'Use ivory instead'})?.garmentId,'jacket','Explicit latest color replaces the saved hint');
+  const built=buildVisualRankingRequest({garmentImage,traits:{garmentId:'jacket',garments:[jacket],resolvedSearch:'burgundy faux fur',referenceObservation:'The target appears deep berry red.'},products:[{...ivory,url:'https://seller.example/fur'}]});
+  const context=JSON.parse(built.requestBody.messages[1].content[0].text.replace('TARGET GARMENT. Inferred fabric traits: ',''));
+  assert.equal(context.savedColorHint,'red');assert.equal(context.referenceObservation,'The target appears deep berry red.');assert.equal(context.resolvedSearch,'burgundy faux fur');
+  for(const garments of [null,{},[null]])assert.doesNotThrow(()=>buildVisualRankingRequest({garmentImage,traits:{garments},products:[{...ivory,url:'https://seller.example/fur'}]}));
+  for(const hex of ['#gggggg','not a color','#888888','#333333'])assert.doesNotMatch(fabricSeedQueries({...input,pieces:[{...jacket,fabric_hex:hex}]}).join(' '),/red|white|black|gray/,'Invalid or ambiguous neutral hints do not invent a color requirement');
+  const pants={id:'pants',name:'Private client trousers',fabric:'Crocodile-embossed coated leather',fabric_spec:{fiber:'leather',weave:'smooth grain',texture:'embossed'}};
+  const queries=fabricSeedQueries({automatic:true,pieces:[pants]});assert.match(queries[0],/crocodile/);assert.doesNotMatch(queries.join(' '),/private|client|trousers/i);assert.ok(queries.length<=2);
+  assert.doesNotMatch(fabricSeedQueries({automatic:true,pieces:[{...jacket,fabric:'Wool with crocodile leather appliqué'}]}).join(' '),/crocodile/,'Secondary applique does not become the base texture');
+});
+
 test('brocade and jacquard yardage remain eligible while unrelated weaves and tools fail',()=>{
   const base={url:'https://www.moodfabrics.com/products/metallic-black-and-gold-abstract-luxury-brocade-329451',title:'Metallic Black and Gold Abstract Luxury Brocade',description:'Metallic decorative cloth. Sold by the yard.',image:'https://seller.example/brocade.jpg',evidence:'seller_listing',availability:'unknown'};
   assert.equal(isFabricProduct(base),true);

@@ -122,6 +122,20 @@ worker/billing/credential change.
 
 ## Live evidence and limits
 
+**October 21 latest acceptance:** 24d84f4 Cloud Build fa83abfc succeeded in 17m52s;
+release/page/API identity, exact asset bytes/cache and isolated live-served Fabric
+and SMS fixtures passed. The real wool coat returned three black wool listings.
+The crocodile trousers returned no confirmed visual matches; the closest publicly
+checked Britex crocodile vinyl is described as stiff upholstery material, not an
+established trouser equivalent. The actual burgundy shag jacket then exposed a
+false positive: ivory faux fur passed despite the visibly red target. This follow-up
+uses saved dominant color plus qualified per-garment observations to reject
+opposite known seller colors, retains reptile/
+long-pile seed terms, filters notions before the feed limit and carries discovery
+context into ranking. Original code fails the new color regression. This is
+backend-only: no new visible UI or independent aesthetic setting. Current next
+step and validation are in AI-HANDOFF; semantic acceptance still follows deployment.
+
 Before the fix, the owner's crocodile-trouser search returned a relevant Britex
 crocodile-backed vinyl listing. The newer embellished-coat search returned no
 confirmed products and no visible interpretation. Snapshots were taken about

@@ -1,25 +1,29 @@
-[Codex] Qualify the base fabric separately from trim and outfit preferences
+[Codex] Reject opposite-color fabrics and preserve garment texture in retailer searches
 
-Live acceptance still returned no coat fabrics. Search details exposed the cause:
-a wool body with leather appliqué was qualified as if one fabric had to contain
-its trim and the outfit-wide denim/leather directions. Separate base matching
-without changing original saved/client words or garment fingerprints. Keep
-explicit/named requirements and exclusions strict, and require the single visual
-check for unknown inferred traits. Missing/failed comparison never confirms them.
+Live acceptance caught ivory faux fur offered for the burgundy saved shag jacket.
+Use the canonical saved dominant color as a conservative chromatic family hint
+when words lack color; explicit latest color changes still win. Opposite known
+seller colors fail qualification. Qualified discovery color families are validated,
+scoped to canonical garment IDs and also cover legacy garments without hex;
+requalify initial retailer results after discovery. Pass the resolved search and qualified visual
+observation into the existing bounded rank request; reject clear color mismatches.
 
-Add a broader material-only seed within the same two-query/four-store budget,
-balance retailers and retain grounded web priority. Details expose original client
-preferences and focus the existing scrollable H4/P3/Inner/Glass surface; the actual
-Aesthetic Control preview shares the change. No new presentation setting.
+Keep reptile/long-pile base vocabulary in bounded public queries. Filter known
+notions before the feed limit; metadata-poor results still receive seller checks.
+Treat vinyl/leatherette as materials without claiming garment suitability. Search
+across allowed merchants first unless the owner requested a narrower scope.
+Preserve source evidence, exclusions, private boundaries and one visual review.
 
-Preserve every release gate; allow 30 minutes after a successful 19m25 build and
-a following 20m timeout. Add start/elapsed diagnostics without changing failure
-status or full logs. No worker, billing settings, credential, production environment,
-shared model/dependency or communications implementation changes.
+Correct a test-only Brief scroll baseline: await the actual deliberate destination
+before testing exact restoration; retain the assertion and change no Brief runtime.
+The Operations save fixture likewise awaits the actual drawer animation endpoint
+before its unchanged reachability/content checks.
 
-Validation: original qualification fails the new matching/service cases. Focused
-sourcing (14), search (38), actual UI and real public retailer qualification pass.
-All 72 exact release commands, integrated regression and smoke pass. The updated
-release wrapper/deadline probe and long-context keyboard/scroll/trigger hit-tests
-pass. Final standalone Aesthetic Control runs last after this record before commit; exact latest deployment and owner visual acceptance
-follow Push. A qualified seller listing alone does not establish visual equivalence.
+No visible UI, CSS, Aesthetic Control settings, communications implementation,
+shared model/dependency, production environment, credentials or billing changes.
+
+Validation: original code fails the new opposite-color regression. Sourcing (15)
+and search (39), all 72 exact release commands, full integrated app-regression
+and final server smoke pass. Settled geometry fixtures pass independently. Final
+standalone Aesthetic Control runs last after these records before commit. Actual owner semantic
+acceptance follows exact deployment; no physical inventory/voice/carrier claim.
