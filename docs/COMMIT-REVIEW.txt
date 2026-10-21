@@ -1,21 +1,20 @@
-[Codex] Repair dated Brief identity and reduce fabric preview transfers
+[Codex] Keep the SMS composer reachable in crowded Messages
 
-A dated submission URL still injected a legacy date after the client name,
-duplicating the new H3 time element and leaving metadata visible after sign-out.
-Write first-paint metadata into the existing shared slot; cover real dated URLs,
-every identity child and full account cleanup.
+Pending booking previews, long message ideas and carrier errors could push the
+SMS field and Send below the drawer's voice dock. Reserve the composer row and
+give previews, thread content and feedback their own bounded scroll regions.
+Hide the inbox Begin texting action during a conversation and restore it on
+Back or account reset. Keep recipient drafts and explicit reviewed sending.
 
-In House displayed full-size originals in small cards (23.77 MB across eight
-swatches). Declare the existing 0.84 MB thumbnails in catalog v2, use them for
-previews and retain original photo links, including failed-preview states.
-Keep older catalogs compatible; version/revalidate metadata without changing
-photograph caching, materials, geometry or provider facts.
+Validation: the old code fails a 320x400 pointer hit-test. The repaired fixture
+passes six widths, three heights, crowded/normal threads, expanded drafts and
+default/larger valid saved settings. It checks real clicks, keyboard access,
+draft retention and zero automatic sends; existing STOP/send/call gates remain.
+All 71 release commands, full integrated regression and smoke passed locally.
+Current public saved design with real fonts and short-screen screenshots were
+visually inspected. Role counts remain unchanged; usage source lines regenerated.
+Final standalone Aesthetic Control runs last after this record before commit.
 
-Validation: realistic Brief regression failed before the fix and passed afterward.
-All 71 exact release gates, 609 named integrated checks plus imported assertions,
-smoke and separate owner UI/Pinterest/role-usage checks passed. Real-font/public
-saved-design fixtures were inspected. Legacy catalogs, failed previews and original
-links pass. Final Aesthetic Control authority, including fabric-search-ui, runs
-last after this final record before commit. No private production
-data, personal Chrome, credentials, provider settings or environment changes.
-Live authenticated fabric/voice/SMS acceptance still requires separate verification.
+No provider configuration, credentials, environment or private data changes.
+Fake providers and synthetic records do not prove carrier delivery. Deployment
+and exact live UI verification follow Push; personal Chrome was not accessed.

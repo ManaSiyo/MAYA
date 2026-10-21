@@ -92,5 +92,6 @@ await import('./input-controls-ui.mjs?authority');
 await import('./operation-controls.mjs?authority');
 await import('./retired-workspaces-ui.mjs?authority');
 await import('./admin-systems-ui.mjs?authority');
+await import('./message-compose-ui.mjs?authority');
 
 console.log('Final Aesthetic Control authority passed: active previews, saved settings, actual Admin/Brief/Operations/fabric controls and voice surfaces across responsive widths.');

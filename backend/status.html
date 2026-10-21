@@ -176,6 +176,11 @@ try {
   .msg-empty{font-family:var(--maya-font-ui);font-style:italic;color:var(--dim);text-align:center;padding:26px 10px;font-size:var(--maya-text-body)}
   #msg-thread{flex:1;min-height:0;display:flex;flex-direction:column}
   #msg-thread[hidden]{display:none}
+  #booking-pending{flex:0 1 auto;min-height:0;max-height:25%;overflow-y:auto}
+  #msg-content{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column}
+  #msg-content .msg-scroll{flex:1 0 80px}
+  #msg-content #msg-idea{flex:none}
+  #msg-status{flex:0 1 auto;min-height:0;max-height:20%;overflow-y:auto}
   .msg-head{display:flex;align-items:center;gap:8px;padding:0 0 8px;border-bottom:var(--maya-hairline) solid var(--line);flex:none}
   .msg-back{width:28px;height:28px;border-radius:50%;border:var(--maya-hairline) solid var(--line);background:transparent;color:var(--ink);font-size:var(--maya-text-section);line-height:1;cursor:pointer}
   .msg-who{flex:1;min-width:0}
@@ -926,6 +931,7 @@ try {
     <div id="booking-pending" aria-live="polite"></div>
     <div id="msg-list"></div>
     <div id="msg-thread" hidden>
+      <div id="msg-content">
       <div class="msg-head">
         <button class="msg-back" onclick="msgBack()" title="All threads">&#8249;</button>
         <div class="msg-who"><div class="msg-name-edit"><input class="msg-name" id="msg-name" aria-label="Contact name" placeholder="Contact name" title="Click to name this contact; Enter saves" maxlength="120" onblur="msgRename()" onkeydown="if(event.key==='Enter')this.blur()"><button class="msg-rename" aria-label="Edit contact name" onclick="document.getElementById('msg-name').focus()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 16-1 5 5-1L21 7l-4-4zM14 6l4 4"/></svg></button></div><div class="msg-number" id="msg-number" hidden></div></div>
@@ -933,11 +939,12 @@ try {
       </div>
       <div class="msg-controls"><button id="msg-suggest" onclick="msgSuggest()">Message idea</button><button onclick="msgCheckDelivery()" title="Check the last five outgoing texts with the carrier">Check delivery</button><button id="msg-block" onclick="msgBlock()">Block</button><button onclick="msgDelete()">Delete conversation</button></div><button id="msg-older" class="msg-call" hidden onclick="msgLoadOlder()">Earlier messages</button><div class="msg-scroll" id="msg-scroll"></div>
       <div id="msg-idea" hidden><small id="msg-idea-status" role="status" aria-live="polite"></small><p id="msg-idea-text"></p><button class="maya-glass-button" id="msg-idea-use" onclick="msgUseIdea()" hidden>Use draft</button></div>
+      </div>
       <div class="msg-compose">
         <textarea id="msg-input" oninput="this.style.height='auto';this.style.height=Math.min(96,this.scrollHeight+2)+'px'" rows="1" placeholder="Text them as Mana Siyo" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();msgSend();}"></textarea>
         <button class="msg-send" onclick="msgSend()" title="Send">Send</button>
       </div>
-      <div id="msg-feedback" role="status" aria-live="polite"></div><div class="msg-consent" id="msg-consent"></div>
+      <div id="msg-status"><div id="msg-feedback" role="status" aria-live="polite"></div><div class="msg-consent" id="msg-consent"></div></div>
     </div>
   </div>
   <div id="drawer-systems">
@@ -3385,7 +3392,7 @@ function msgUseIdea(){
  if(!_msgIdea||_msgIdea.number!==_msgOpen?.number)return;const inp=document.getElementById('msg-input');if(inp.disabled)return;
  inp.value=[inp.value.trim(),_msgIdea.text].filter(Boolean).join('\n');inp.dispatchEvent(new Event('input'));inp.focus();document.getElementById('msg-idea').hidden=true;_msgIdea=null;
 }
-window.addEventListener('maya-owner-session-changed',()=>{++_msgNewSequence;document.getElementById('msg-new').reset();delete document.getElementById('msg-new').dataset.busy;document.getElementById('msg-new').querySelectorAll('button').forEach(b=>b.disabled=false);msgNewToggle(false);document.getElementById('msg-new-feedback').textContent='';++_msgListSequence;++_msgThreadSequence;_msgThreads=[];document.getElementById('adm-unread').hidden=true;++_ideaSequence;++_automationSequence;_automationLoadedContext=null;for(const stage of ['first','second']){++_automationExamples[stage];++_automationEdits[stage];document.getElementById('automation-'+stage+'-example-status').textContent='';for(const key of ['example','refresh'])document.getElementById('automation-'+stage+'-'+key).disabled=false;}_msgIdea=null;_msgDrafts.clear();_msgAttempts.clear();_msgSending=false;_msgOpen=null;document.getElementById('msg-list-feedback').textContent='';document.getElementById('booking-pending').replaceChildren();document.getElementById('msg-input').value='';document.getElementById('msg-thread').hidden=true;document.getElementById('msg-list').hidden=false;document.getElementById('msg-idea').hidden=true;document.getElementById('text-automations-form').hidden=true;document.getElementById('msg-name').value='';document.getElementById('msg-scroll').replaceChildren();document.getElementById('msg-scroll')._messageMarkup=null;document.getElementById('msg-list').replaceChildren();document.getElementById('msg-idea-text').textContent='';document.getElementById('automation-status').textContent='';document.getElementById('text-automations-form').reset();});
+window.addEventListener('maya-owner-session-changed',()=>{++_msgNewSequence;document.getElementById('msg-new').reset();delete document.getElementById('msg-new').dataset.busy;document.getElementById('msg-new').querySelectorAll('button').forEach(b=>b.disabled=false);msgNewToggle(false);document.getElementById('msg-new-feedback').textContent='';++_msgListSequence;++_msgThreadSequence;_msgThreads=[];document.getElementById('adm-unread').hidden=true;++_ideaSequence;++_automationSequence;_automationLoadedContext=null;for(const stage of ['first','second']){++_automationExamples[stage];++_automationEdits[stage];document.getElementById('automation-'+stage+'-example-status').textContent='';for(const key of ['example','refresh'])document.getElementById('automation-'+stage+'-'+key).disabled=false;}_msgIdea=null;_msgDrafts.clear();_msgAttempts.clear();_msgSending=false;_msgOpen=null;document.getElementById('msg-list-feedback').textContent='';document.getElementById('booking-pending').replaceChildren();document.getElementById('msg-input').value='';document.getElementById('msg-thread').hidden=true;document.getElementById('msg-begin').hidden=false;document.getElementById('msg-list').hidden=false;document.getElementById('msg-idea').hidden=true;document.getElementById('text-automations-form').hidden=true;document.getElementById('msg-name').value='';document.getElementById('msg-scroll').replaceChildren();document.getElementById('msg-scroll')._messageMarkup=null;document.getElementById('msg-list').replaceChildren();document.getElementById('msg-idea-text').textContent='';document.getElementById('automation-status').textContent='';document.getElementById('text-automations-form').reset();});
 function _msgKnownName(number, ...names) {
   const named=value=>{const text=String(value||'').trim();return text&&!/^(caller|unknown|unnamed contact)$/i.test(text)&&!/^\+?[\d\s().-]+$/.test(text);};
   const supplied=names.find(named);if(supplied)return String(supplied).trim();
@@ -3419,6 +3426,7 @@ async function openThread(number, name, newSequence) {
   document.getElementById('drawer').classList.add('contact-open');msgShare(false);
   document.getElementById('msg-feedback').textContent = '';
   document.getElementById('msg-list').hidden = true;
+  document.getElementById('msg-begin').hidden = true;
   document.getElementById('msg-thread').hidden = false;
   document.getElementById('msg-name').value = _msgOpen.name;
   document.getElementById('msg-number').textContent = number;
@@ -3426,7 +3434,7 @@ async function openThread(number, name, newSequence) {
   const inp = document.getElementById('msg-input'); if (inp) {inp.dispatchEvent(new Event('input'));inp.focus();}
   if(_msgOpen?.number===number&&!inp.value&&!inp.disabled)msgSuggest();
 }
-function msgBack() { msgNewToggle(false);++_ideaSequence;if(_msgOpen)_msgDrafts.set(_msgOpen.number,document.getElementById('msg-input').value);_msgIdea=null; document.getElementById('drawer').classList.remove('contact-open');msgShare(false);_msgOpen = null; document.getElementById('msg-thread').hidden = true; document.getElementById('msg-list').hidden = false; loadThreads(); }
+function msgBack() { msgNewToggle(false);++_ideaSequence;if(_msgOpen)_msgDrafts.set(_msgOpen.number,document.getElementById('msg-input').value);_msgIdea=null; document.getElementById('drawer').classList.remove('contact-open');msgShare(false);_msgOpen = null; document.getElementById('msg-thread').hidden = true; document.getElementById('msg-begin').hidden = false; document.getElementById('msg-list').hidden = false; loadThreads(); }
 async function loadThread(number, quiet) {
   const box = document.getElementById('msg-scroll'); if (!box || !_idTok) return;
   const auth=_idTok,sequence=++_msgThreadSequence;

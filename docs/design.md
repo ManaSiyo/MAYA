@@ -497,3 +497,12 @@ unstyled identity child. In-house fabric previews use catalog-declared existing
 thumbnail photographs with the same card geometry/material; opening a card keeps
 the original photo URL. Missing previews keep a P3 unavailable message and the
 original link. These reuse existing H3/P3/Inner/Glass controls, not a new authority.
+
+October 21 SMS composer repair: Messages keeps its fixed H2 and bottom voice
+dock. Pending booking previews have a bounded scroll region; the contact,
+history and message idea scroll inside the thread's available space. The
+composer reserves its own row and delivery feedback scrolls below it, so neither
+long content nor larger saved typography can cover the text field or Send.
+Inbox-only Begin texting is hidden during a conversation and restored on Back
+or account change. Existing P1 text, Glass actions and Drawer settings remain
+the presentation authority; the added containers own layout only.

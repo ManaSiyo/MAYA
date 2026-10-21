@@ -565,3 +565,12 @@ Inventory catalog v2 declares existing thumbnail paths for card previews, with
 original photo links retained through preview failure. Keep legacy catalog reads
 compatible and metadata revalidating independently of cached photographs. Run
 brief-workspace-ui, fabric-search-ui/workflow, release-contract and final authority.
+
+October 21 SMS composer: reserve the text field/Send row above the voice dock.
+Pending previews, thread content/ideas and delivery feedback must scroll within
+their available regions. Never rely on element existence or width alone: run
+message-compose-ui, including center-point hit testing and expanded drafts at
+six widths/three heights under default and changed valid shared settings. Keep
+the inbox Begin texting action synchronized on open/Back/account reset. Final
+aesthetic-authority reexecutes message-compose-ui; communications gates still use
+fake providers and cannot establish carrier delivery.
