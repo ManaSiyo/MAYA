@@ -1,16 +1,18 @@
-[Codex] Recognize brocade and jacquard fabric listings
+[Codex] Await send refresh before the independent STOP fixture
 
-A read-only real-retailer check found a genuine Mood brocade listing excluded
-before visual review because the material vocabulary omitted brocade. Recognize
-brocade/jacquard in eligibility and weave constraints. Explicit brocade requests
-still reject unrelated twill, and fabric scissors remain excluded. Unknown seller
-price/unit stays unknown. No visible UI, SMS/voice implementation, global model,
-shared dependency, credential or environment changes.
+Cloud Build stopped before deployment when the composer fixture counted an extra
+write. A held-response reproduction gives the same 3-versus-2 failure: the test
+painted STOP after draft clearing while the prior reviewed send still awaited an
+older fake consent-none thread refresh. That response could overwrite the direct
+synthetic paint before the next evaluation.
 
-Validation: the new sourcing case fails on f177f7a before the repair. Sourcing
-(13 cases), search (37), UI/workflow through full integrated regression, AI
-routing, container/domain contracts and smoke pass. The real public listing
-now passes eligibility. Standalone Aesthetic Control runs last after this record
-before commit. Actual seller parsing proves eligibility, not visual equivalence
-or apparel suitability. Exact latest-commit deployment and owner-browser matching
-checks follow Push; both Cloud Build runs must settle before final acceptance.
+Deliberately hold that refresh, assert Send remains busy, release it and await
+final carrier-acceptance feedback/enabled Send before testing STOP independently.
+Retain the exact no-extra-write assertion and verify both controls are disabled.
+No runtime SMS, provider, auth, credential, dependency or visible UI change.
+
+Validation: deterministic old ordering fails; corrected normal and eight-times
+slow browser runs and communications contracts pass. Final standalone shared
+Aesthetic Control runs last after this record before commit. This repairs fixture phase isolation; it does not claim
+live carrier delivery. Latest Cloud Build and exact deployed commit remain the
+post-Push acceptance gate.

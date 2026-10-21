@@ -591,3 +591,10 @@ October 21 real-retailer follow-up: brocade/jacquard are recognized fabric
 constructions; never reject real yardage solely because older material vocabulary
 omits a weave. Keep explicit weave constraints, seller-only facts and tool/garment
 exclusions. Run fabric-sourcing/search plus regression/final authority.
+
+October 21 CI STOP fixture: clearing the composer follows send acceptance but
+precedes its awaited thread refresh. Before an independent direct paint/STOP
+proof, await the final completion feedback and enabled Send. message-compose-ui
+deliberately holds/releases that refresh and retains exact no-extra-write plus
+both disabled-control assertions. Never mask this with a delay or remove STOP
+coverage. Runtime SMS is unchanged by this fixture-only repair.

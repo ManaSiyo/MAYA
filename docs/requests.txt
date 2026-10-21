@@ -1,3 +1,5 @@
+October 21 — Fabric release acceptance follow-up: fix the deterministic SMS fixture ordering that blocked Cloud Build before deployment; preserve every STOP/send assertion and leave runtime SMS untouched. Validate slow execution and final shared authority before another Push.
+
 October 21 — Fabric accuracy follow-up: real retailer verification found brocade rejected before ranking. Add brocade/jacquard vocabulary and negative weave/tool coverage in a separate fabric-only commit. Preserve seller facts and the single visual gate. Focused/full regression and smoke pass; final standalone authority precedes commit. See AI-HANDOFF for deployment acceptance.
 
 October 21 — Repair Fabrics search and expose Sourceable search context; audit department boundaries.

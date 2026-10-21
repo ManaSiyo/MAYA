@@ -1,3 +1,7 @@
+October 21 — Release blocked by an overlapping SMS fixture phase
+[reproduced] Cloud Build 7dbc2c19 failed before deployment at message-compose-ui STOP: 3 writes versus 2. A deliberately held prior send refresh reproduces the identical failure without any SMS runtime change. The old fixture used draft clearing as completion, then directly painted STOP before its fake consent-none refresh settled.
+[test-only repair] Deliberately hold that refresh, verify Send remains busy, release it and await actual completion feedback/enabled state before the independent STOP case. Retain exact no-extra-write and disabled-field/button assertions. No runtime, provider, credentials or visible UI change. Normal/8x CPU plus communications and final shared authority validate the repair; production acceptance follows the latest build.
+
 October 21 — Real Mood brocade rejected before visual review
 [reproduced] Public retailer HTML parsed to a real product/photo, but isFabricProduct returned false because brocade was absent from the material vocabulary. The new sourcing fixture fails on f177f7a.
 [fixed] Recognize brocade/jacquard as textile constructions and enforce requested weave matches; reject unrelated twill and scissors. No UI, communications or shared dependency changes. Sourcing/search/routing/container/domain, full integrated regression and smoke pass; the real page now passes eligibility. Final authority precedes a separate follow-up commit.

@@ -2853,6 +2853,7 @@ await import('./workspace-authority.mjs');
 ok('Workspace previews expose active saved styling and actual label, field and dock geometry',true);
 await import('./message-compose-ui.mjs');
 ok('SMS composer remains reachable above the voice dock with crowded previews and suggestions',true);
+ok('The reviewed send refresh settles before the independent STOP no-send proof',true);
 await import('./aesthetic-authority.mjs');
 console.log('\n' + (failed ? failed + ' FAILED' : 'all passed') + '\n');
 process.exit(failed ? 1 : 0);

@@ -6,6 +6,7 @@ import {validDesign} from '../docs/server/design-config.mjs';
 const root=resolve(new URL('..',import.meta.url).pathname);
 const browser=await chromium.launch({executablePath:process.env.PW_CHROMIUM||process.env.CHROMIUM_PATH});
 const context=await browser.newContext({viewport:{width:1440,height:900}}),page=await context.newPage();
+let releaseSendRefresh,holdSendRefresh=false;
 const errors=[],writes=[];let fail=false,pending=0,suggestion='Hi Angela, would you like to discuss your green suit?';
 page.on('pageerror',e=>errors.push(e.message));
 await page.addInitScript(()=>{window.setInterval=()=>0;window.fixtureRecognition=[];class Recognition{constructor(){window.fixtureRecognition.push(this);}start(){}abort(){this.aborted=true;}}window.SpeechRecognition=Recognition;});
@@ -15,7 +16,8 @@ await page.route('**/*',async route=>{const req=route.request(),u=new URL(req.ur
   if(u.pathname==='/api/admin/messages/suggest')return route.fulfill({json:{ok:true,eligible:true,stage:'first',text:suggestion}});
   if(u.pathname==='/api/admin/booking/pending')return route.fulfill({json:{ok:true,items:Array.from({length:pending},(_,i)=>({id:'preview-'+i,name:'Synthetic contact '+i,to:'+14155550123',text:'Review this booking invitation. '+ 'Consultation details and availability. '.repeat(8)}))}});
   if(u.pathname==='/api/admin/text-automations'&&req.method()==='GET')return route.fulfill({json:{ok:true,settings:{first:{enabled:true,text:'Hi {name}',trigger:'new_lead',time:'10:00'},second:{enabled:false,text:'Hi {name}',trigger:'no_reply',time:'10:00',days:3}}}});
-  if(req.method()==='POST'){writes.push({path:u.pathname,body:req.postDataJSON(),auth:req.headers().authorization});return route.fulfill({status:fail?503:200,json:fail?{error:'Save unavailable'}:{ok:true}});}
+  if(u.pathname==='/api/admin/messages/thread'&&holdSendRefresh){holdSendRefresh=false;await new Promise(resolve=>releaseSendRefresh=resolve);}
+  if(req.method()==='POST'){if(u.pathname==='/api/admin/messages/send'&&req.postDataJSON().text==='Reviewed first message')holdSendRefresh=true;writes.push({path:u.pathname,body:req.postDataJSON(),auth:req.headers().authorization});return route.fulfill({status:fail?503:200,json:fail?{error:'Save unavailable'}:{ok:true}});}
   return route.fulfill({json:{ok:true,connected:true,threads:[],thread:{number:u.searchParams.get('number'),name:'',consent:'none',messages:[],transcripts:[]}}});
  }
  try{return route.fulfill({body:readFileSync(resolve(root,'.'+u.pathname)),contentType:({'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.png':'image/png'})[extname(u.pathname)]||'application/octet-stream'});}catch{return route.abort();}
@@ -26,8 +28,17 @@ try{
  await page.locator('#msg-begin').click();await page.locator('#msg-new-number').fill('not a phone');await page.locator('#msg-new-start').click();assert.equal(writes.length,0);assert.match(await page.locator('#msg-new-feedback').textContent(),/valid number/);
  await page.locator('#msg-new-number').fill('(415) 555-0123');await page.locator('#msg-new-name').fill('New Person');await page.locator('#msg-new-start').click();await page.locator('#msg-input').waitFor({state:'visible'});await page.waitForFunction(()=>!document.getElementById('msg-new').dataset.busy);
  assert.deepEqual(writes.map(w=>w.path),['/api/admin/messages/name']);assert.deepEqual(writes[0].body,{number:'+14155550123',name:'New Person'});assert.equal(writes[0].auth,'Bearer fixture-owner');assert.equal(await page.locator('#msg-name').inputValue(),'New Person');assert.equal(await page.locator('#msg-input').inputValue(),'');
- await page.locator('#msg-input').fill('Reviewed first message');await page.locator('.msg-send').click();await page.waitForFunction(()=>document.getElementById('msg-input').value==='');assert.equal(writes.at(-1).path,'/api/admin/messages/send');assert.equal(writes.at(-1).body.to,'+14155550123');assert.equal(writes.at(-1).body.text,'Reviewed first message');assert.ok(writes.at(-1).body.requestId);
- await page.evaluate(()=>{_msgPaintThread({consent:'stop',messages:[]});document.getElementById('msg-input').value='Must not send';});const stopWrites=writes.length;await page.evaluate(()=>msgSend());assert.equal(writes.length,stopWrites,'STOP cannot send even through direct handler');
+ await page.locator('#msg-input').fill('Reviewed first message');await page.locator('.msg-send').click();await page.waitForFunction(()=>document.getElementById('msg-input').value==='');
+ // Clearing the field acknowledges the POST, but the send still awaits its
+ // thread refresh. Deliberately hold that read so the independent STOP case
+ // cannot race an older fixture response whose consent is still 'none'.
+ for(let i=0;i<500&&!releaseSendRefresh;i++)await new Promise(resolve=>setTimeout(resolve,10));
+ assert.equal(typeof releaseSendRefresh,'function','A reviewed send refreshes its thread');assert.equal(await page.locator('.msg-send').isDisabled(),true,'Send remains busy until its refresh settles');
+ releaseSendRefresh();releaseSendRefresh=null;
+ await page.getByText('Accepted by carrier. Delivery is not yet confirmed; use Check delivery.',{exact:true}).waitFor();
+ await page.waitForFunction(()=>!document.querySelector('.msg-send').disabled);
+ assert.equal(writes.at(-1).path,'/api/admin/messages/send');assert.equal(writes.at(-1).body.to,'+14155550123');assert.equal(writes.at(-1).body.text,'Reviewed first message');assert.ok(writes.at(-1).body.requestId);
+ await page.evaluate(()=>{_msgPaintThread({consent:'stop',messages:[]});document.getElementById('msg-input').value='Must not send';});assert.equal(await page.locator('#msg-input').isDisabled(),true);assert.equal(await page.locator('.msg-send').isDisabled(),true);const stopWrites=writes.length;await page.evaluate(()=>msgSend());assert.equal(writes.length,stopWrites,'STOP cannot send even through direct handler');
  await page.evaluate(()=>msgBack());await page.locator('#msg-begin').click();await page.locator('#msg-new-name').fill('');await page.locator('#msg-new-number').fill('+44 7700 900123');await page.locator('#msg-new-call').click();assert.match(await page.locator('#msg-new-feedback').textContent(),/US numbers/);assert.equal(writes.length,stopWrites);
  await page.locator('#msg-new-start').click();await page.locator('#msg-input').waitFor({state:'visible'});await page.waitForFunction(()=>!document.getElementById('msg-new').dataset.busy);assert.equal(await page.locator('#msg-number').textContent(),'+447700900123');assert.equal(writes.length,stopWrites,'Opening international text does not send');
  await page.locator('#msg-input').fill('Keep this draft');await page.evaluate(()=>msgBack());await page.locator('#msg-begin').click();await page.locator('#msg-new-number').fill('4155550124');
@@ -59,4 +70,4 @@ try{
  const beforeReview=writes.length;const retainedDraft=await page.locator('#msg-input').inputValue();await page.locator('#booking-pending [data-booking-id="preview-2"]').scrollIntoViewIfNeeded();await page.locator('#msg-idea-use').focus();assert.ok(await page.locator('#msg-idea-use').evaluate(e=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),'Keyboard focus reveals the full suggestion action');await page.evaluate(()=>msgBack());assert.equal(await page.locator('#msg-begin').isVisible(),true);await page.evaluate(()=>openThread('+14155550123','New Person'));assert.equal(await page.locator('#msg-input').inputValue(),retainedDraft);assert.equal(writes.length,beforeReview,'Opening crowded threads and typing never sends');
  await page.evaluate(()=>window.dispatchEvent(new Event('maya-owner-session-changed')));assert.equal(await page.locator('#msg-begin').isVisible(),true,'Account reset restores the inbox action');assert.equal(await page.locator('#msg-thread').isVisible(),false);
  assert.deepEqual(errors,[]);console.log('SMS composer stays visible and clickable across six widths, three heights, long previews/ideas/errors and expanded drafts under default/changed saved styles. Reviewed sends, STOP, calls, recipient drafts and account resets passed with fake providers.');
-}finally{await browser.close();}
+}finally{releaseSendRefresh?.();await browser.close();}

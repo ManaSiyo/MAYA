@@ -1,5 +1,26 @@
 # Current handoff — October 21, 2026
 
+## CI fixture repair — current next step
+
+The first push's Cloud Build 7dbc2c19 failed before deployment after 7m48s:
+all fabric and other preceding gates passed, but message-compose-ui counted
+3 writes instead of 2 at its STOP assertion. A held-response reproduction gives
+exactly that failure on unchanged Admin runtime. The fixture cleared the draft,
+then directly painted STOP while the reviewed send still awaited an older fake
+thread response with consent none. That response could overwrite the synthetic
+STOP before the next evaluation. Draft clearing is not send-workflow completion.
+
+The fixture now deliberately holds the reviewed send's refresh, asserts Send is
+still busy, releases it, waits for the final carrier-acceptance feedback and enabled
+button, then independently paints/checks STOP. Both disabled controls and the exact
+zero-extra-write assertion remain. No Admin/SMS/server implementation, provider,
+authentication or visible presentation changed. Normal and eight-times-slow browser
+runs plus phone/messages/transfer/feedback/race/stress contracts pass. Run final
+standalone authority last after these state/commit records.
+The second push 23b9055 includes the brocade fix and was already building when this
+fixture issue was diagnosed. Read the latest Cloud Build/release/API identity;
+neither a push nor a Vercel success establishes production acceptance.
+
 ## Follow-up after first push
 
 f177f7a49d38240a33de5764bda0dc56c6deea3b contains the primary fabric repair,
