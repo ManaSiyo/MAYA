@@ -13,6 +13,7 @@
   const storeKey=()=>[...activeStores].sort().join('|');
   let history = [], products = [], book = { items: [], selectedUrl: '', generation: null }, view = 'search', busy = false;
   let bookSeq = 0, photoSeq = 0, projectEpoch=0, projectIdentity='', reads=new AbortController(),projectReads=new AbortController();
+  let searchDetails=null;
   let saves={tail:Promise.resolve(),pending:new Set()},inventoryRequest=null;
   const token = () => localStorage.getItem('maya_admin_tok') || localStorage.getItem('maya_google_token') || '';
   function account() {
@@ -47,6 +48,7 @@
     epoch++;photoSeq++;searchSeq++;autoStarted=false;activeStores=new Set(storeGroups.map(group=>group.id));filterTouched=false;submittedRequest='';lastSearchStores='';completedStatus='';controller?.abort();recognition?.stop();reads.abort();reads=new AbortController();inventoryRequest=null;
     const nextProject=projectScope();if(nextProject!==projectIdentity){bookSeq++;projectReads.abort();projectReads=new AbortController();projectEpoch++;projectIdentity=nextProject;saves={tail:Promise.resolve(),pending:new Set()};book={items:[],selectedUrl:'',selectedByGarment:{},generation:null};}
     controller=null;busy=false;history=[];products=[];image='';originalImage='';view='search';
+    searchDetails=null;els?.details.set(null);
     if(els){els.input.value='';els.observation.textContent='';els.transcript.replaceChildren();els.results.replaceChildren();els.photo.hidden=true;els.preview.removeAttribute('src');els.file.value='';els.send.disabled=false;els.stop.hidden=true;els.saveStatus.textContent='';els.storeWrap.hidden=true;els.filter.setAttribute('aria-expanded','false');status('');}
   }
   function icon(label,path,fn) {
@@ -68,7 +70,7 @@
     if(busy)autoStarted=false;
     controller?.abort();recognition?.stop();searchSeq++;busy=false;
     if(!workspace)return;
-    collapse();workspace.hidden=true;els.send.disabled=false;els.stop.hidden=true;
+    collapse();workspace.hidden=true;els.details.close();els.send.disabled=false;els.stop.hidden=true;
   }
   function make() {
     if (dialog) return;
@@ -94,6 +96,7 @@
       // Filtering is free. Refresh is the explicit new provider request; cancel
       // an obsolete stream so it cannot overwrite the changed scope or its hint.
       if(busy){controller?.abort();searchSeq++;busy=false;els.send.disabled=false;els.stop.hidden=true;lastSearchStores='';}
+      if(searchDetails){searchDetails={...searchDetails,stage:'Store filter changed; Refresh to search this selection'};els.details.set(searchDetails);}
       status(!activeStores.size?'Choose at least one store group.':submittedRequest&&lastSearchStores!==storeKey()?'Refresh to search these stores.':completedStatus);
     });button.classList.add('fa-store-filter');button.dataset.storeGroup=group.id;return button;});storeWrap.append(...storeButtons);
     tabs.append(inhouse,search,saved,filter,fresh);
@@ -115,8 +118,9 @@
     input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();if(!busy)run();}});
     input.addEventListener('paste',e=>{const f=[...(e.clipboardData?.files||[])].find(f=>f.type.startsWith('image/'));if(f){e.preventDefault();attach(f);}});
     workspace.append(header,sub,tabs,storeWrap,body,form,live);dialog.append(workspace);
+    const details=window.MayaFabricSearchDetails.create({parent:workspace,hoverTargets:[body,search]});tabs.append(details.trigger);details.set(null);
     dialog.addEventListener('close',()=>{if(host?.isConnected){host.append(workspace);workspace.classList.add('is-inline');els.expand.textContent='Expand';els.expand.setAttribute('aria-expanded','false');}else{controller?.abort();recognition?.stop();}});
-    els={sub,search,saved,inhouse,fresh,storeButtons,storeWrap,filter,refresh,expand:expandButton,form,input,file,send,stop,status:live,observation,results,transcript,photo,preview,saveStatus,mic,body};
+    els={details,sub,search,saved,inhouse,fresh,storeButtons,storeWrap,filter,refresh,expand:expandButton,form,input,file,send,stop,status:live,observation,results,transcript,photo,preview,saveStatus,mic,body};
   }
   let recognition;
   function dictate() {
@@ -246,13 +250,14 @@
   function paint() {
     els.search.setAttribute('aria-pressed',String(view==='search'));els.saved.setAttribute('aria-pressed',String(view==='saved'));els.inhouse.setAttribute('aria-pressed',String(view==='inhouse'));
     els.inhouse.hidden=false;els.fresh.hidden=!!context.automatic;els.form.hidden=!!context.automatic;els.sub.hidden=!!context.automatic;
+    els.details.setEnabled(view==='search');
     els.filter.hidden=view!=='search';if(view!=='search'){els.storeWrap.hidden=true;els.filter.setAttribute('aria-expanded','false');}
     for(const button of els.storeButtons)button.setAttribute('aria-pressed',String(activeStores.has(button.dataset.storeGroup)));
     const candidates=view==='saved'?book.items:view==='inhouse'?inventory():products;
     const allowed=new Set(storeGroups.filter(group=>activeStores.has(group.id)).flatMap(group=>group.hosts));
     const items=candidates.filter(p=>view!=='search'||(()=>{try{return allowed.has(new URL(p.url).hostname.replace(/^www\./,''));}catch{return false;}})());
     els.results.replaceChildren(...items.map(card));
-    if(!items.length)els.results.append(node('p','fa-empty',view==='saved'?'Saved fabrics for this submission will appear here.':view==='inhouse'?'No in-house fabric photos are available.':context.automatic?'No relevant fabric products confirmed yet.':'Describe a fabric or add a reference photo.'));
+    if(!items.length)els.results.append(node('p','fa-empty',view==='saved'?'Saved fabrics for this submission will appear here.':view==='inhouse'?'No in-house fabric photos are available.':busy?'Searching fabric shops…':context.automatic?'No relevant fabric products confirmed yet.':'Describe a fabric or add a reference photo.'));
     els.transcript.hidden=view!=='search'||!!context.automatic;els.observation.hidden=view!=='search'||!!context.automatic;
   }
   async function refreshView(){
@@ -272,7 +277,7 @@
     const stamp=epoch, sequence=++searchSeq; controller=new AbortController(); const active=controller;
     const valid=()=>current(stamp)&&sequence===searchSeq;
     busy=true; els.send.disabled=true; els.stop.hidden=false; view='search'; els.saveStatus.textContent='';
-    products=[]; paint(); status('Searching fabric shops…');
+    products=[]; searchDetails=null;els.details.set(null);paint(); status('Searching fabric shops…');
     const submitted=request || 'Find fabrics like this photo';
     submittedRequest=submitted;
     const line=node('p','fa-request',submitted); els.transcript.append(line);
@@ -280,7 +285,7 @@
     if(!filterOnly)els.input.value='';
     let finished=false;
     try {
-      const r=await fetch('/api/admin/fabrics/search',{method:'POST',headers:headers(),signal:active.signal,
+      const r=await fetch('/api/admin/fabrics/search',{method:'POST',headers:headers(),signal:AbortSignal.any([active.signal,AbortSignal.timeout(60000)]),
         body:JSON.stringify({submissionId:context.submissionId||'',request:submitted,image,preferences:context.preferences||'',piece:pieceMetadata(context.piece),pieces:(context.pieces||[]).slice(0,12).map(pieceMetadata),automatic:!!context.automatic,...(filterTouched?{storeGroups:[...activeStores]}:{}),history})});
       if(!r.ok){const data=await r.json().catch(()=>({}));throw Error(data.error || 'Fabric search failed. Try again.');}
       const reader=r.body.getReader(), decoder=new TextDecoder();let buffer='';
@@ -288,9 +293,10 @@
         if(!raw.trim() || !valid())return;
         const event=JSON.parse(raw);
         if(event.type==='error')throw Error(event.message);
+        if(event.searchDetails){searchDetails=event.searchDetails;els.details.set(searchDetails);}
         if(event.products){products=event.products;paint();}
         if(event.type==='status')status(event.message);
-        if(event.type==='products' && event.preliminary)status('Initial retailer results. Finding closer matches…');
+        if(event.type==='products' && event.preliminary)status('Retailer candidates. Photo comparison pending…');
         if(event.type==='done'){
           finished=true;history.push({request:submitted,query:event.query});history=history.slice(-6);
           els.observation.textContent=event.observation?'Reference interpretation: '+event.observation:'';
@@ -301,8 +307,8 @@
       buffer+=decoder.decode();if(buffer.trim())accept(buffer);
       if(!finished)throw Error('Search ended early. You can retry your request.');
     } catch(e) {
-      if(valid()){ status(active.signal.aborted?'Search stopped.':e.message); if(!filterOnly&&!els.input.value)els.input.value=request; }
-    } finally { if(valid()){busy=false;els.send.disabled=false;els.stop.hidden=true;controller=null;} }
+      if(valid()){ const message=active.signal.aborted?'Search stopped.':e.name==='TimeoutError'?'Search timed out. Refresh to retry.':e.message;status(message);if(searchDetails){searchDetails={...searchDetails,stage:message};els.details.set(searchDetails);}if(!filterOnly&&!els.input.value)els.input.value=request; }
+    } finally { if(valid()){busy=false;els.send.disabled=false;els.stop.hidden=true;controller=null;paint();} }
   }
   async function open(next={}) {
     make();
@@ -323,12 +329,13 @@
     // The book belongs to the project, so photo loading or garment changes must
     // not cancel its only hydration request.
     void loadBook();
+    // Inventory must remain usable even if the private reference photo fails.
+    void loadInventory().catch(e=>{if(current(stamp)&&view==='inhouse')status(e.name==='TimeoutError'?'In-house photos timed out. Refresh to retry.':e.message);});
     if(changed)status(context.automatic?'Loading the saved look…':'Describe what you need. A photo is optional.');
     els.send.disabled=true;
     try{
       if(changed&&next.referenceImage){const value=await photoData(next.referenceImage);if(!current(stamp))return;image=value;originalImage=next.referenceImage;paintPhoto();}
       await loadContext(stamp);if(!current(stamp))return;
-      void loadInventory().catch(e=>{if(current(stamp)&&view==='inhouse')status(e.name==='TimeoutError'?'In-house photos timed out. Refresh to retry.':e.message);});
       if(current(stamp)&&context.automatic&&!next.silent&&!autoStarted){autoStarted=true;await run();}
     }catch(e){if(current(stamp))status(e.message);}
     finally{if(current(stamp)&&!busy)els.send.disabled=false;}

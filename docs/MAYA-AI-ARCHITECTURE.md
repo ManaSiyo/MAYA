@@ -1,3 +1,13 @@
+## Current fabric contract — October 21, 2026
+
+The active Brief/Operations path is fabric-search.mjs with fabric-retailers.mjs,
+fabric-discovery.mjs and fabric-sourcing.js. Saved garment material queries run
+alongside bounded web discovery; eligible results merge before one visual check.
+The original photo and selected canonical crop remain distinct inputs. Hover/focus
+Sourceable details expose query evidence without starting another search.
+See FABRIC-SEARCH.md and MODULE-BOUNDARIES.md. The versioned descriptions below
+are historical and must not be used to infer today's model defaults or feed path.
+
 # MAYA AI architecture
 
 ## October 7: conversational fabric search
@@ -19,7 +29,8 @@ pattern-ready and fabric-sourced production decisions. Mana Siyo is the
 physical manufacturing workflow that carries approved decisions into CLO,
 SVG, LightBurn, laser cutting and sewing.
 
-This file is the canonical model and routing map. It describes what is live,
+The current-contract notes above and runtime configuration identify what is live;
+the versioned model and routing map below describes its historical baseline,
 what is only a foundation, and what evidence is required before a model moves
 into production.
 

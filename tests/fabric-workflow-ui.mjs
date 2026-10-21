@@ -146,6 +146,18 @@ try{
    if(width===390||width===1440)await page.screenshot({path:'/private/tmp/maya-fabric-save-'+mode+'-'+width+'.png'});
   }
  }
+ // A slow/failed private photo must not delay public In House inventory.
+ await page.evaluate(()=>{const native=window.fetch;window.releaseReference=null;window.fetch=(url,options)=>String(url).endsWith('/held-reference.png')?new Promise(resolve=>{window.releaseReference=()=>resolve(new Response('unavailable',{status:503,headers:{'Content-Type':'text/plain'}}));}):native(url,options);window.referenceOpen=MayaFabricAssistant.open({submissionId:'project-A',referenceImage:'/held-reference.png',piece:{id:'coat'},automatic:true,forceReset:true});});
+ await page.waitForFunction(()=>!!window.releaseReference);
+ await page.locator('.fa-tabs').getByRole('button',{name:'In House',exact:true}).click();
+ await page.locator('.fa-card-title').filter({hasText:'Midnight Velvet'}).waitFor();
+ assert.equal(await page.locator('.fa-product').count(),8,'Inventory loads while reference conversion is still pending');
+ await page.evaluate(async()=>{releaseReference();await referenceOpen;});
+ assert.equal(await page.locator('.fa-product').count(),8,'Reference failure retains available inventory');
+ // A stalled read-only search has its own deadline and never resends itself.
+ await page.evaluate(({reference,pieces})=>{const nativeTimeout=AbortSignal.timeout;AbortSignal.timeout=ms=>ms===60000?nativeTimeout.call(AbortSignal,150):nativeTimeout.call(AbortSignal,ms);const nativeFetch=window.fetch;window.fabricTimeoutAttempts=0;window.fetch=(url,options)=>{if(String(url).endsWith('/fabrics/search')){fabricTimeoutAttempts++;return new Promise((resolve,reject)=>options.signal.addEventListener('abort',()=>reject(options.signal.reason),{once:true}));}return nativeFetch(url,options);};window.timeoutSearch=MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});},{reference,pieces});
+ await page.getByText('Search timed out. Refresh to retry.',{exact:true}).waitFor();
+ assert.equal(await page.evaluate(()=>fabricTimeoutAttempts),1);assert.equal(await page.locator('.fa-empty').textContent(),'No relevant fabric products confirmed yet.','A finished timeout cannot retain a Searching empty-state label');assert.equal(await page.locator('.fa-composer button[type=submit]').isDisabled(),false);
  assert.deepEqual(errors,[]);
  console.log('Fabric workflow: bounded metadata ('+bytes+' bytes), independent inventory, queued/CAS historical-favorite removals, retry, per-garment material/prompt/reload, renewal and submission cancellation passed. Synthetic records only.');
 }finally{for(const route of catalogRoutes)await route.abort().catch(()=>{});releaseAck?.();releaseBook?.();await browser.close();}

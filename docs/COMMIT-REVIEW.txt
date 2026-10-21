@@ -1,20 +1,27 @@
-[Codex] Keep the SMS composer reachable in crowded Messages
+[Codex] Repair fabric discovery and expose its search context
 
-Pending booking previews, long message ideas and carrier errors could push the
-SMS field and Send below the drawer's voice dock. Reserve the composer row and
-give previews, thread content and feedback their own bounded scroll regions.
-Hide the inbox Begin texting action during a conversation and restore it on
-Back or account reset. Keep recipient drafts and explicit reviewed sending.
+Saved-look searches skipped retailer lookup, and an empty later web answer could
+erase valid candidates. Run bounded material-only seeds, merge eligible results
+before one visual check, preserve original/canonical crop context and load public
+inventory independently of reference conversion. Validate provider shapes/source
+aliases and bound stalled browser search reads without automatic paid retries.
 
-Validation: the old code fails a 320x400 pointer hit-test. The repaired fixture
-passes six widths, three heights, crowded/normal threads, expanded drafts and
-default/larger valid saved settings. It checks real clicks, keyboard access,
-draft retention and zero automatic sends; existing STOP/send/call gates remain.
-All 71 release commands, full integrated regression and smoke passed locally.
-Current public saved design with real fonts and short-screen screenshots were
-visually inspected. Role counts remain unchanged; usage source lines regenerated.
+Show Sourceable search details on hover, keyboard focus or tap: saved traits,
+actual retailer queries, provider-exposed web queries, qualified interpretation,
+stores and stage. Reuse the actual presenter in Aesthetic Control with existing
+H4/P3, Inner and Glass settings; preserve private identity resets and concise cards.
+
+Separate retailer policy and discovery contract from fabric orchestration. Add
+release-enforced import/route/asset/style boundaries and an architecture audit.
+No SMS/voice implementation, shared model default, credentials or production
+environment change. Shared process/deployment coupling remains documented.
+
+Validation: retained-candidate test fails on the original; 37 server cases and
+focused real-page browser checks pass, including held/failed photos, timeout,
+sealed accounts/projects, hover/focus/tap, paint hit-testing, six widths, changed
+valid saved settings and active preview/real Save propagation. All 72 exact release commands,
+full integrated regression and smoke passed locally. Root/server npm ci passed.
 Final standalone Aesthetic Control runs last after this record before commit.
-
-No provider configuration, credentials, environment or private data changes.
-Fake providers and synthetic records do not prove carrier delivery. Deployment
-and exact live UI verification follow Push; personal Chrome was not accessed.
+Live semantic matches and deployed assets are checked separately after Push;
+mocked providers do not prove external delivery or matching quality. Existing
+ws/qs dependency advisories remain documented for a separate shared upgrade.

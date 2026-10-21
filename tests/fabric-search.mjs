@@ -162,7 +162,7 @@ await test('automatic searches require saved dissection and trust saved garment 
   const pages=new Map([[denim,{name:'Indigo cotton denim',description:'Cotton denim, sold by the yard.'}],[shirt,{name:'White cotton poplin',description:'100% cotton, sold by the yard.'}],[scissors,{name:'Fabric scissors',description:'Scissors for denim and cotton fabric.'}],[leather,{name:'Black leather',description:'Black leather, sold by the hide.'}]]);
   const service=createFabricSearch({...s,apiKey:()=> 'fake',model:'configured',fetchImpl:async(u,o)=>{
     if(u.includes('api.openai.com')){sent=JSON.parse(o.body);return Response.json({output:[{type:'web_search_call',action:{sources:[...pages.keys()].map(url=>({url}))}},{type:'message',content:[{type:'output_text',text:JSON.stringify({candidates:[...pages.keys()].map(url=>({url,reason:'model suggestion',garment:'Incorrect model garment'}))})}]}]});}
-    assert.ok(!u.includes('suggest.json'),'Automatic multi-garment search cannot publish a weak literal fallback');
+    if(u.includes('suggest.json'))return Response.json({resources:{results:{products:[]}}});
     return new Response(seller({...pages.get(u),url:u}));
   }});
   await assert.rejects(service.search(user,{submissionId:'project-A',automatic:true},()=>{}),e=>e.status===409);
@@ -397,5 +397,34 @@ await test('concurrent garment selections cannot both acknowledge an overwrite',
   const results=await Promise.allSettled(['coat','pants'].map(garmentId=>service.saveBook(user,{submissionId:'project-A',generation:'0',garmentId,action:'select',product:{url}})));
   assert.equal(results.filter(result=>result.status==='fulfilled').length,1);assert.equal(results.find(result=>result.status==='rejected').reason.status,409);
   assert.equal(Object.keys(JSON.parse(s.records.get(key).buf).selectedByGarment).length,1);
+});
+await test('saved garment retailer results survive an empty web answer and still pass visual review',async()=>{
+  const s=store(),feeds=[],events=[];let ranks=0;
+  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{id:'coat',name:'PRIVATE PERSON coat',fabric:'Crimson wool twill'}]})),generation:'1'});
+  const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async(target,options)=>{
+    if(target.includes('openai'))return Response.json(response({candidates:[]}));
+    if(target.includes('suggest.json')){feeds.push(new URL(target).searchParams.get('q'));return Response.json({resources:{results:{products:[{url}]}}});}
+    return new Response(seller());
+  },rank:async({products})=>{ranks++;return products;}});
+  await service.search(user,{automatic:true,submissionId:'project-A',piece:{id:'coat'},image},e=>events.push(e));
+  assert.ok(feeds.length&&feeds.length<=8,'Automatic saved garments get bounded direct retailer queries');
+  assert.ok(feeds.every(q=>/wool|twill/.test(q)&&!q.includes('PRIVATE')),'Public queries contain material vocabulary only');
+  assert.equal(ranks,1);assert.deepEqual(events.at(-1).products.map(p=>p.url),[url]);
+  assert.ok(events.find(e=>e.type==='context')?.searchDetails.retailerQueries.length);
+});
+await test('discovery exposes actual tool queries and rejects malformed result objects',()=>{
+  const body=response();body.output[0].action.queries=['burgundy wool fabric site:britexfabrics.com'];
+  assert.deepEqual(readDiscovery(body).webQueries,body.output[0].action.queries);
+  for(const value of [null,[],{}, {candidates:'invalid'}]){
+    const broken=response();broken.output[1].content[0].text=JSON.stringify(value);
+    assert.throws(()=>readDiscovery(broken),/unreadable|invalid|incomplete/i);
+  }
+});
+await test('www source aliases retain evidence identity without accepting unrelated source paths',()=>{
+  const result=response({candidates:[{url:'https://www.britexfabrics.com/products/crimson-wool'},null,{url:'https://britexfabrics.com/products/uncited'}]});
+  assert.deepEqual(readDiscovery(result).candidates.map(c=>c.url),['https://www.britexfabrics.com/products/crimson-wool']);
+  const input=normalizeFabricRequest({request:'black wool fabric',image});
+  assert.deepEqual(webSearchBody(input,'gpt-6-luna').reasoning,{effort:'low'});
+  assert.equal(webSearchBody(input,'configured-legacy').reasoning,undefined);assert.equal(webSearchBody(input,'gpt-5-pro').reasoning,undefined);
 });
 console.log(`Fabric search: ${count} behavioral checks passed.`);

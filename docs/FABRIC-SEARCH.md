@@ -1,4 +1,4 @@
-# Conversational fabric sourcing — October 18, 2026
+# Conversational fabric sourcing — October 21, 2026
 
 October 18 owner review: Sourceable exposes exactly five independent filters:
 **Local (Bay Area), Mood, Swatchon, Amazon, Others**. All start enabled. Local
@@ -17,7 +17,7 @@ creates or changes assignments. Product links keep their real destinations and
 verified unit price when known, without long duplicate hover copy. View tabs use
 the shared segmented-control contract. The inline workspace fills the same host
 as the garment; small viewports scroll its content rather than enlarging that host.
-The private fur/green-pants owner demonstration has not run. See AI-HANDOFF.md
+An authorized live crocodile-trouser search returned a relevant listing; a newer embellished-coat search returned no confirmed products before the October 21 repair. See AI-HANDOFF.md
 for the current release state.
 
 From the Brief or Operation Room, choose Fabrics after a dissection has been
@@ -69,9 +69,23 @@ never calls image generation. No purchase capability is added.
 - Britex, Stonemountain, Harts, Amazon, Mood, Swatchon, Blackbird, The Fabric Store and
   Tessuti are the allowed discovery domains. Amazon is web discovery, NOT a
   Creators API integration or a promise of exhaustive Amazon inventory.
-- An initial literal Shopify pass runs alongside web reasoning for text input.
-  Verified and visually compared products are streamed before the full search finishes. Refinements bypass this
-  literal pass, so an old literal query cannot override the new request.
+- A bounded material-vocabulary Shopify pass runs alongside web discovery for
+  saved looks and initial text requests (at most two seeds/four eligible stores).
+  It never sends client names or free-form private prose to retailer feeds.
+  Early cards are explicitly provisional candidates pending photo comparison;
+  final matches require the same visual gate. Empty later web discovery cannot
+  erase eligible direct candidates. Refinements bypass seeds rather than replay
+  stale literal terms. The browser search stream has a 60-second read deadline.
+- Sourceable hover/focus/tap details show saved descriptions, retailer queries,
+  provider-exposed web queries, resolved search, qualified interpretation, stores
+  and stage. Missing provider query metadata remains explicit. Hover is free.
+  The actual presenter is also an active Aesthetic Control preview using H4/P3,
+  Inner material and Glass; no separate presentation settings are introduced.
+- fabric-retailers.mjs owns public merchant policy, fabric-discovery.mjs owns
+  the fabric-only Responses contract; low reasoning effort is confined to that
+  request for supported GPT-5/6 models. Both original photo and selected crop
+  inform discovery; base cloth is distinguished from applied embellishments.
+  domain-boundaries is a release gate; see MODULE-BOUNDARIES.md for limits.
 - Only product URLs present in web source evidence become web candidates.
   Server reads are restricted to exact approved merchant hosts, HTTPS, bounded
   response sizes and revalidated redirects. Source links are preserved on cards.

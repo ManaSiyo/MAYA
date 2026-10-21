@@ -574,3 +574,15 @@ six widths/three heights under default and changed valid shared settings. Keep
 the inbox Begin texting action synchronized on open/Back/account reset. Final
 aesthetic-authority reexecutes message-compose-ui; communications gates still use
 fake providers and cannot establish carrier delivery.
+
+October 21 fabric search audit: fabric-retailers.mjs owns merchant policy and
+fabric-discovery.mjs owns the fabric-only provider contract. Saved material seeds
+run alongside web discovery; empty web results must not erase eligible retailer
+candidates before the single visual check. Keep original look and canonical crop,
+qualified traits and seller-only facts. In House loads independently of reference
+conversion. Sourceable search details use the shared presenter also active in
+Aesthetic Control: H4/P3, Inner and Glass. Hover/focus/tap never start paid work;
+account/project/garment resets clear private context. Fabric assets are v5 and
+search-details.js revalidates. Run domain-boundaries, all fabric suites and exact
+release gates, then aesthetic-authority last. Import boundaries do not imply
+separate Cloud Run deployments; see docs/MODULE-BOUNDARIES.md.

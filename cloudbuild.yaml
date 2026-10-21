@@ -43,6 +43,7 @@ steps:
         npm ci --ignore-scripts --no-audit --no-fund
         # Keep dependency chatter out of GitHub's bounded build-log excerpt.
         npx --no-install playwright install --with-deps chromium > /tmp/maya-browser-install.log 2>&1 || { tail -80 /tmp/maya-browser-install.log; exit 1; }
+        node tests/domain-boundaries.mjs
         node tests/container-contract.mjs
         node tests/release-contract.mjs
         node tests/lead-store.mjs

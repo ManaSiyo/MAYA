@@ -506,3 +506,12 @@ long content nor larger saved typography can cover the text field or Send.
 Inbox-only Begin texting is hidden during a conversation and restored on Back
 or account change. Existing P1 text, Glass actions and Drawer settings remain
 the presentation authority; the added containers own layout only.
+
+October 21 Sourceable search details: hover the sourceable result area or focus/tap
+Search details to inspect the saved description, sent retailer queries, available
+web queries and qualified interpretation. This is search context, not a verbose
+per-product tooltip. The shared fabric-search-details presenter is an active
+Fabrics preview in Aesthetic Control. It uses H4/P3, an Inner surface and Glass
+trigger; viewport anchoring owns layout only. Preserve saved material/borders/X/Y
+padding and typography at phone/tablet/desktop, including open/focus/error states.
+Hover is read-only and makes no search request. Clear private data on identity reset.

@@ -42,9 +42,9 @@ try{
  await page.locator('#workspace-previews').getByRole('button',{name:'Edit P1',exact:true}).click();
  assert.equal(await page.locator('[data-category="P1"] .type-editor').getAttribute('open'),'');
  await page.keyboard.press('Escape');
- await page.locator('#workspace-previews').getByRole('button',{name:'Edit Inner panel',exact:true}).click();
- assert.equal(await page.locator('[data-editor="inner"] .type-editor').getAttribute('open'),'');
- await page.keyboard.press('Escape');
+ for(const edit of await page.locator('#workspace-previews').getByRole('button',{name:'Edit Inner panel',exact:true}).all()){
+  await edit.click();assert.equal(await page.locator('[data-editor="inner"] .type-editor').getAttribute('open'),'');await page.keyboard.press('Escape');
+ }
  const initial=await css('.workspace-preview-card',['paddingLeft','paddingTop','backgroundColor']);
  assert.deepEqual(initial,{paddingLeft:'16px',paddingTop:'12px',backgroundColor:'rgba(0, 0, 0, 0.18)'});
  assert.equal((await css('.workspace-timing-preview',['rowGap'])).rowGap,'10px');

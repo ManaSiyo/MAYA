@@ -18,7 +18,7 @@ const jwt=(sub,lifetime=3600)=>'test.'+Buffer.from(JSON.stringify({sub,exp:Math.
 const inventoryFavorite={url:'/aesthetics/fabrics/midnight-velvet.webp',image:'https://cdn.shopify.com/inventory.png',title:'Midnight Velvet',evidence:'atelier_inventory'};
 books.set('owner-A|project-A',{items:[product,inventoryFavorite],selectedUrl:product.url,generation:'2'});
 const groups=[['local','Local (Bay Area)','https://britexfabrics.com/products/crimson-wool'],['mood','Mood','https://www.moodfabrics.com/products/crimson-wool'],['swatchon','Swatchon','https://www.swatchon.com/fabric/QL-061078'],['amazon','Amazon','https://amazon.com/dp/B000000001'],['others','Others','https://www.blackbirdfabrics.com/products/crimson-wool']];
-const page=await browser.newPage({viewport:{width:1280,height:900}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
+const page=await browser.newPage({viewport:{width:1280,height:900},hasTouch:true});const errors=[];page.on('pageerror',e=>errors.push(e.message));
 // Distinct initial/renewed expiries prove token text is not store identity.
 await page.addInitScript(t=>localStorage.setItem('maya_admin_tok',t),jwt('owner-A',7200));
 await page.route('**/*',async route=>{
@@ -36,7 +36,8 @@ await page.route('**/*',async route=>{
     if(failNext){failNext=false;return route.fulfill({status:503,json:{error:'Search temporarily unavailable.'}});}
     const resultProduct={...product,url:groups.find(g=>body.storeGroups?.includes(g[0]))?.[2]||product.url};
     const fixtureProducts=[{...resultProduct,garment:body.piece?.name||'Crimson coat'},...(body.storeGroups?.length===1?[{...product,url:groups.find(g=>g[0]!==body.storeGroups[0])[2],title:'Wrong merchant fixture'}]:[])];
-    const complete=()=>route.fulfill({contentType:'application/x-ndjson',body:[{type:'products',products:fixtureProducts,preliminary:true},{type:'done',products:fixtureProducts,query:'matte burgundy wool',observation:'Matte, burgundy and twill-like; fiber cannot be confirmed visually.',message:'Refine these with another message.'}].map(v=>JSON.stringify(v)).join('\n')+'\n'});
+    const searchDetails={garments:[{name:body.piece?.name||'Crimson coat',fabric:'Burgundy wool twill',traits:{texture:'matte'}}],retailerQueries:['red wool twill'],webQueries:['burgundy matte wool fabric'],query:'matte burgundy wool',observation:'Matte, burgundy and twill-like; fiber cannot be confirmed visually.',stores:['Britex Fabrics'],stage:'Verified matches'};
+    const complete=()=>route.fulfill({contentType:'application/x-ndjson',body:[{type:'context',searchDetails},{type:'products',products:fixtureProducts,preliminary:true},{type:'done',products:fixtureProducts,searchDetails,query:'matte burgundy wool',observation:'Matte, burgundy and twill-like; fiber cannot be confirmed visually.',message:'Refine these with another message.'}].map(v=>JSON.stringify(v)).join('\n')+'\n'});
     if(delayNext){delayNext=false;delayed=complete;return;}
     return complete();
   }
@@ -84,7 +85,23 @@ try{
   assert.equal(await page.locator('.fa-card-actions').count(),0,'Sourceable cards have no Save or Use controls');
   assert.equal(await page.locator('.fa-product [title]').count(),0,'Cards do not repeat verbose hover copy');
   assert.match(await page.locator('.fa-card-caption').textContent(),/69.99 USD \/ yard/,'Verified price remains accessible inline');
-  await openFavorites();assert.equal(await page.locator('.fa-product').count(),2);
+  const details=page.locator('#fabric-assistant .fa-search-details'),detailsTrigger=page.getByRole('button',{name:'Search details',exact:true});
+  const checkDetails=async(saved=false)=>{
+    const before=requests.length,wasExpanded=await page.locator('#fabric-assistant-dialog').getAttribute('open');
+    await page.locator('.fa-body').focus();await detailsTrigger.focus();await details.waitFor({state:'visible'});
+    assert.match(await details.textContent(),/burgundy matte wool fabric/,'Shows actual web query metadata');
+    assert.match(await details.textContent(),/fiber cannot be confirmed visually/);
+    const style=await details.evaluate(e=>{const s=getComputedStyle(e.querySelector('[data-maya-panel=inner]')),r=e.getBoundingClientRect(),p=getComputedStyle(e.querySelector('p'));return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:innerWidth,height:innerHeight,paddingX:s.paddingLeft,paddingY:s.paddingTop,bg:s.backgroundColor,size:p.fontSize,font:p.fontFamily,overflow:e.scrollWidth<=e.clientWidth+1};});
+    assert.ok(style.x>=0&&style.y>=0&&style.right<=style.width+1&&style.bottom<=style.height+1,'Details stay in the viewport');assert.ok(style.overflow);
+    if(saved)assert.deepEqual([style.paddingX,style.paddingY,style.bg,style.size],['12px','10px','rgba(35, 76, 125, 0.7)','14px']);
+    else assert.equal(style.size,'10px');
+    assert.equal(await details.evaluate(e=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+Math.min(r.height/2,40)));}),true,'Details paint above the inline/dialog surface');
+    await page.keyboard.press('Escape');await details.waitFor({state:'hidden'});assert.equal(await page.locator('#fabric-assistant-dialog').getAttribute('open'),wasExpanded,'Escape closes details without collapsing the fabric workspace');
+    assert.equal(requests.length,before,'Hover/focus details are free');
+  };
+  await checkDetails();
+  await page.locator('.fa-body').hover();await details.waitFor({state:'visible'});await page.keyboard.press('Escape');
+  await openFavorites();assert.equal(await page.locator('.fa-product').count(),2);assert.equal(await detailsTrigger.isVisible(),false);
   assert.deepEqual(await page.locator('.fa-card-actions button').allTextContents(),['Remove','Remove']);
   await page.evaluate(t=>{localStorage.setItem('maya_admin_tok',t);dispatchEvent(new StorageEvent('storage',{key:'maya_admin_tok'}));},jwt('owner-A',10800));
   await openFavorites();assert.equal(await page.locator('.fa-product').count(),2,'Same-account renewal retains the saved lookbook');assert.equal(books.size,1,'Fixture storage is account/submission scoped, never token scoped');
@@ -118,7 +135,7 @@ try{
   }
   const beforeEmpty=requests.length;await chooseGroups([]);assert.equal(await page.locator('.fa-product').count(),0);await page.getByText('Choose at least one store group.',{exact:true}).waitFor();await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();assert.equal(requests.length,beforeEmpty,'Empty selection never becomes an unrestricted provider call');
   await chooseGroups(['local']);await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('.fa-composer button[type=submit]').disabled);
-  for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1000});assert.ok(await page.locator('#fabric-assistant').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'default inline view fits '+width);assert.ok((await page.locator('.fa-body').boundingBox()).height>=100,'Default inline results usable '+width);const field=await page.locator('.fa-store-filter').first().boundingBox();assert.ok(field.width>80,'default inline filter remains usable '+width+' '+JSON.stringify(field));}
+  for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1000});await checkDetails();assert.ok(await page.locator('#fabric-assistant').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'default inline view fits '+width);assert.ok((await page.locator('.fa-body').boundingBox()).height>=100,'Default inline results usable '+width);const field=await page.locator('.fa-store-filter').first().boundingBox();assert.ok(field.width>80,'default inline filter remains usable '+width+' '+JSON.stringify(field));}
   await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'/private/tmp/maya-fabrics-inline-default.png'});
   await page.locator('.fa-toolbar').getByRole('button',{name:'Expand',exact:true}).click();await page.locator('#fabric-assistant-dialog[open]').waitFor();
   const searchesBeforeResize=requests.length;
@@ -152,7 +169,7 @@ try{
   for(const mode of ['inline','expanded']){
     if(mode==='expanded')await page.locator('.fa-toolbar').getByRole('button',{name:'Expand',exact:true}).click();
     for(const width of [320,390,768,1024,1440,1920]){
-      await page.setViewportSize({width,height:1000});
+      await page.setViewportSize({width,height:1000});await checkDetails(true);
       assert.ok((await page.locator('.fa-body').boundingBox()).height>=100,mode+' saved results usable '+width);
       for(const[selector,size,color]of [['.fa-header h2',28,'rgb(170, 181, 196)'],['.fa-card-title',20,'rgb(170, 181, 196)'],['.fa-card-caption',14,'rgb(170, 181, 196)'],['.fa-status',16,'rgb(255, 255, 255)']]){const actual=await readStyle(selector);assert.equal(actual.size,size,mode+' '+width+' '+selector+' saved size');assert.equal(actual.color,color,mode+' '+width+' '+selector+' saved color');}
       const outer=await readStyle('#fabric-assistant'),inner=await readStyle('.fa-product'),field=await readStyle('.fa-store-filter'),pill=await readStyle('.fa-toolbar button'),glyph=await readStyle('.fa-toolbar button svg');
@@ -171,6 +188,7 @@ try{
   }
   failNext=true;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.getByText('Search temporarily unavailable.',{exact:true}).waitFor();assert.equal((await readStyle('.fa-status')).size,16,'Failure stays governed');await page.screenshot({path:'/private/tmp/maya-fabrics-error-saved.png'});
   await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.locator('.fa-card-title').waitFor();await page.setViewportSize({width:390,height:844});await page.screenshot({path:'/private/tmp/maya-fabrics-phone-saved.png'});
+  await detailsTrigger.tap();await details.waitFor({state:'visible'});await page.screenshot({path:'/private/tmp/maya-fabric-details-saved-phone.png'});await page.keyboard.press('Escape');
   // Generic standalone conversations remain available when no dissected-look mode is supplied.
   await page.evaluate(({reference})=>window.MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,forceReset:true}),{reference});
   await page.locator('#fabric-assistant-dialog[open]').waitFor();await page.locator('#fabric-request').fill('Find burgundy wool, preferably local');await page.locator('.fa-composer button[type=submit]').click();
@@ -188,6 +206,7 @@ try{
   delayNext=true;await page.locator('.fa-composer button[type=submit]').click();while(!delayed)await new Promise(r=>setTimeout(r,5));
   await page.evaluate(t=>{localStorage.setItem('maya_admin_tok',t);dispatchEvent(new StorageEvent('storage',{key:'maya_admin_tok'}));},jwt('owner-B'));await delayed().catch(()=>{});
   assert.equal(await page.locator('.fa-product').count(),0,'stale account results never repaint');assert.equal(await page.locator('#fabric-request').inputValue(),'');
+  assert.equal(await details.textContent(),'','Account reset clears private search details from hidden DOM');
   assert.equal(await page.locator('.fa-photo img').getAttribute('src'),null,'Account reset removes the private reference from hidden DOM too');
   await page.evaluate(({reference})=>window.MayaFabricAssistant.open({submissionId:'project-B',referenceImage:reference}),{reference});assert.equal(await page.locator('.fa-product').count(),0,'different submission has no previous fabric');
   await page.evaluate(t=>localStorage.setItem('maya_admin_tok',t),jwt('owner-A'));
@@ -209,6 +228,13 @@ try{
   await savedProductCard.getByRole('button',{name:'Remove',exact:true}).click();
   await page.waitForFunction(()=>![...document.querySelectorAll('.fa-card-title')].some(e=>e.textContent==='Crimson wool twill'));
   assert.ok([...books.values()].some(book=>book.items.some(p=>p.title==='Midnight Velvet')&&!book.items.some(p=>p.title==='Crimson wool twill')),'Removal persisted, instead of merely hiding a broken card');
+  await page.goto('https://maya-fabric.test/aesthetics/aesthetic-control.html');
+  const previewTrigger=page.locator('#workspace-previews').getByRole('button',{name:'Search details',exact:true});
+  await previewTrigger.focus();const previewDetails=page.locator('#workspace-previews .fa-search-details');await previewDetails.waitFor({state:'visible'});
+  assert.match(await previewDetails.textContent(),/Presentation sample; no search is sent/);
+  assert.deepEqual(await previewDetails.locator('[data-maya-panel=inner]').evaluate(e=>{const s=getComputedStyle(e);return [s.paddingLeft,s.paddingTop,s.backgroundColor];}),['12px','10px','rgba(35, 76, 125, 0.7)'],'Active preview follows the same saved Inner material');
+  assert.equal(await previewDetails.locator('p').first().evaluate(e=>getComputedStyle(e).fontSize),'14px');
+  await page.screenshot({path:'/private/tmp/maya-fabric-details-gallery.png'});
   assert.deepEqual(errors,[]);
   console.log('Fabric UI: saved-look automatic inline search, optional same-view expansion, three shared tabs, store filter, concise sourced cards, sealed favorites/refinements/failures, and six widths passed.');
 }catch(e){console.error('Fabric UI state:',await page.locator('.fa-status').allTextContents());await page.screenshot({path:'/private/tmp/maya-fabrics-test-failure.png'}).catch(()=>{});throw e;}finally{await browser.close();}

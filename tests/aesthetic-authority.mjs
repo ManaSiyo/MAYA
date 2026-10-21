@@ -82,6 +82,7 @@ await import('./workspace-authority.mjs?authority');
 await import('./admin-automation-examples.mjs?authority');
 await import('./brief-workspace-ui.mjs?authority');
 await import('./fabric-workflow-ui.mjs?authority');
+// Reexecutes Sourceable hover/focus details and the shared active preview after real Save.
 await import('./fabric-search-ui.mjs?authority');
 await import('./operation-save-failures.mjs?authority');
 await import('./client-voice-ui.mjs?authority');

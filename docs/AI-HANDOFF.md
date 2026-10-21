@@ -1,62 +1,92 @@
 # Current handoff — October 21, 2026
 
-## Release and owner request
+## Baseline and request
 
-Baseline 34e3464ff039e8c0390a81ae2b190e4cafeeb965 is deployed. Cloud Build
-f2b89d83 succeeded in 17m33s with all 71 gates, server, Hosting and rules.
-Exact production release/page/API commits, public asset bytes/cache headers,
-retired redirects and final live served-code authority passed. That release
-repaired duplicated dated Brief identity and oversized fabric card downloads.
+718f404ab1fefe24329988aeef8510e979a4125d is deployed. Cloud Build
+dd26cb72-8fa1-4de5-a241-25a1643faca3 succeeded in 13m35s with all 71 gates.
+Exact page/API/release commits, public bytes/cache and synthetic live-served SMS
+layout checks passed. That release repaired the Messages composer clipping.
 
-Owner then reported a disappearing text box and clarified “sms.” Fresh personal
-Chrome permission is still unanswered. No personal Chrome was accessed. The
-current task reproduces and repairs Admin → Messages composer clipping with
-isolated fake accounts/providers, without real sends or production data writes.
-Existing owner authorization covers verified commits and automatic Push.
+The owner now reports broken/slow Fabrics, asks for Sourceable hover search
+context and an architecture audit that separates departments. Existing owner
+authorization covers verified local commits and automatic Push. Fresh permission
+was explicitly granted for this MAYA Chrome session only; the approved profile
+was idle. No other profile/Gmail, credentials, production environment, client
+sends/calls, saved project mutation or dissection generation was accessed.
 
-## Reproduced problem and repair
+## Before-change live evidence
 
-Pending booking previews had no height bound. Long message ideas and diagnostics
-could exhaust the thread's space inside the hidden-overflow drawer and push its
-composer below/under the voice dock. The old UI failed a center-point pointer
-hit-test at 320x400. Synthetic three-preview and long-idea cases reproduced the
-same failure with current public saved design and real Google fonts.
+The saved crocodile trousers returned a relevant Britex crocodile-backed vinyl
+listing. The newer embellished long coat returned no confirmed products and no
+visible interpretation. The snapshots occurred about 28/24 seconds after opening;
+these are observation times, not first-result latency measurements. The automatic
+UI hid its description and did not render the resolved/provider search terms.
 
-Reserve the composer row. Bound/scroll pending previews, the contact/history/idea
-region and delivery feedback independently above the voice dock. Begin texting
-uses the shared hidden contract while a conversation is open and restores on
-Back or actual account change. Preserve drafts, STOP, explicit Send, confirmation
-and account/recipient guards. No server, provider, credentials or environment
-changes. Existing P1, Glass and Drawer controls retain presentation authority;
-new containers own layout only and introduce no new visible component or setting.
+## Repair and architecture
 
-## Changed files
+- Automatic saved garments now receive bounded material-vocabulary retailer
+  seeds alongside web discovery. Eligible direct results survive an empty web
+  answer; every final photo match still passes one bounded visual comparison.
+- Discovery receives original look plus canonical selected crop and distinguishes
+  base cloth from applied embellishments. Low reasoning effort is fabric-request
+  specific for supported models; shared SMS/voice/model defaults are untouched.
+- Validate provider result shape, reconcile www evidence aliases without changing
+  fetch/redirect URLs, and give the browser read-only stream a 60-second deadline.
+- In House starts independently of failed/held private reference loading.
+- Sourceable hover/focus/tap details expose saved descriptions/traits, retailer
+  queries, provider-exposed web queries, resolved query/interpretation, stores and
+  stage. Missing provider metadata remains explicit. Hover never calls providers;
+  identity resets clear hidden private details. Cards still omit Save/Use/tooltips.
+- fabric-retailers.mjs separates merchant policy; fabric-discovery.mjs separates
+  the provider contract. domain-boundaries inspects all 31 current server modules,
+  limits fabric imports/routes and CSS, and excludes fabric assets from client,
+  Messages/Admin and Outbound entry points. It is a Cloud Build/regression gate.
+  MODULE-BOUNDARIES.md maps every department and records remaining coupling.
 
-backend/status.html; tests/message-compose-ui.mjs, app-regression.mjs,
-aesthetic-authority.mjs; regenerated typography-usage.json source locations
-(role counts unchanged); AGENTS.md and related design/request/fix/commit records.
+Changed paths: the fabric server/UI modules and Dockerfile; Brief/Operations asset
+references (v5); new shared search-details presenter; Aesthetic Control active
+Fabrics preview and stylesheet reference; Hosting no-cache rule; focused tests,
+release/regression/authority contracts and related documentation/usage records.
+No communications implementation or shared model/design runtime was edited.
 
-## Verification
+Presentation uses existing H4/P3, Inner material and Glass controls. The popup's
+viewport placement is layout only; its actual inner surface follows saved geometry,
+material, borders, X/Y padding and typography. The same presenter runs in the active
+Aesthetic Control preview. No independent visual setting was introduced.
 
-All 71 exact Cloud Build Node commands, full integrated app-regression and smoke
-passed locally. Communications gates use fake providers. The expanded composer
-fixture uses six widths (320–1920), three heights (400/560/900), default and
-materially larger valid saved settings, long previews/ideas/carrier diagnostics,
-expanded drafts and pointer hit-testing of the actual field and Send button.
-It verifies keyboard access to offscreen actions, draft retention, inbox/actual
-account resets and zero automatic sends. Existing Send/STOP/call tests remain.
-Final aesthetic-authority reexecutes the fixture even after its functional run.
-Current public saved-design/real-font screenshots and default/changed short-screen
-fixtures were visually inspected. Authored role counts remain unchanged.
+## Validation state
 
-Run standalone aesthetic-authority last after this state/commit record before
-committing. Local checks do not establish deployed UI or carrier delivery.
+The original server fails the new retained-direct-candidate regression. The repair
+passes 37 behavioral server checks, sourcing/routing/container contracts, actual
+Brief/Operations browser fixtures, held/failed reference inventory, one-attempt
+stream timeout, sealed books and search metadata cleanup. Search details have
+keyboard/hover/tap, paint hit-testing, six responsive widths, default and genuinely
+changed valid saved settings, real Save propagation and active preview checks.
+Default/saved phone and gallery screenshots were visually inspected.
 
-## Remaining limits and exact next step
+All 72 exact Cloud Build commands, full integrated app-regression and smoke
+passed locally, including communications, Wix/CRM, founder stress, voice and
+shared presentation gates. Locked root/server npm ci completed. The active-preview
+fixture caught a duplicate unscoped editor locator and missing unsaved-preview
+role binding; both were corrected and reverified without weakening its checks.
+Run standalone aesthetic-authority last after these final state/commit records.
+No local fixture establishes live semantic quality, carrier delivery or voice.
 
-Commit only task files, Push under existing authorization and follow the Google
-Cloud Build check. After success verify release/page/API commit, exact Admin bytes
-and final live served-code SMS layout at six widths with synthetic private APIs.
-Keep actual owner/private SMS delivery, voice quality and private fabric matching
-unverified until their live acceptance checks occur. Chrome inspection still needs
-the explicit fresh session answer; silence is not permission.
+## Remaining risk and exact next step
+
+The application still shares one Cloud Run process, large legacy composition root,
+shared infrastructure and deployment. Domain contracts reduce accidental coupling;
+they do not create independent deployments or prove all external integrations.
+Approved merchant coverage is nine shops, not the whole market. Unavailable seller
+images or strict matching may correctly produce no results. No broad unrelated
+rewrite or unconfirmed legacy cleanup was attempted. Locked npm ci completed;
+audit also identified existing ws/qs advisories (including high-severity ws DoS).
+See MODULE-BOUNDARIES for exact affected/fixed versions and the separate shared
+infrastructure upgrade recommendation; manifests/locks were not changed here.
+
+Finish the standalone final authority, commit task files using
+COMMIT-REVIEW.txt, then Push under existing authorization. Follow Cloud Build and
+verify exact release/page/API commits plus new asset bytes/cache headers. Re-run
+the two owner-browser fabric searches and hover details, and synthetic live-served
+SMS composer checks. Record actual post-deployment outcomes without treating fake
+providers as production acceptance.

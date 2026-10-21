@@ -57,6 +57,7 @@ const SHARED_VOICE_AUDIO = webVoiceSession({model:'gpt-realtime-2.1-mini',instru
 const LEAD_STORE_SOURCE = readFileSync(join(ROOT, 'docs/server/lead-store.mjs'), 'utf8');
 if (!SERVER_SOURCE.includes('withinVoiceBudget(loadAdminCommandSnapshot(), buildAdminCommandSnapshot(), 400)')) throw Error('Admin voice must bound optional analytics context to 400ms without inventing data.');
 const FABRIC_SOURCE = readFileSync(join(ROOT, 'docs/server/fabric-sourcing.js'), 'utf8');
+const FABRIC_DISCOVERY_SOURCE=readFileSync(join(ROOT,'docs/server/fabric-discovery.mjs'),'utf8');
 const FABRIC_SEARCH_SOURCE = readFileSync(join(ROOT, 'docs/server/fabric-search.mjs'), 'utf8');
 const FABRIC_UI_SOURCE = readFileSync(join(ROOT, 'aesthetics/ui/fabric-assistant.js'), 'utf8');
 const AI_ROUTER_SOURCE = readFileSync(join(ROOT, 'docs/server/ai-router.js'), 'utf8');
@@ -1216,7 +1217,7 @@ ok('Sourceable carries the original reference and client words without tinting s
 ok('Dissection color metadata reaches shared sourcing as a qualified visual observation',
   BACKEND_SOURCE.includes('"fabric_hex"') && BACKEND_SOURCE.includes('use null for unknown facts') &&
   FABRIC_UI_SOURCE.includes("['fabric_hex',7]") && FABRIC_SEARCH_SOURCE.includes("fabric_hex:/^#[a-f\\d]{6}$/i") &&
-  FABRIC_SEARCH_SOURCE.includes('never claim an exact fiber, GSM or stretch from a photo'));
+  FABRIC_DISCOVERY_SOURCE.includes('never claim an exact fiber, GSM or stretch from a photo'));
 ok('the sourcing study lives in docs',
   existsSync(join(ROOT, 'docs/fabric-sourcing-study.md')) &&
   readFileSync(join(ROOT, 'docs/fabric-sourcing-study.md'), 'utf8').includes('SWATCHON'));
@@ -1234,7 +1235,7 @@ ok('Sourceable streams verified merchant photographs through the active shared a
 ok('Dissection material context preserves client preferences and qualified garment traits',
   BACKEND_SOURCE.includes('"fabric_spec"') && BACKEND_SOURCE.includes('Only fill weight_gsm from an explicit client specification') &&
   FABRIC_UI_SOURCE.includes('piece:pieceMetadata(context.piece)') &&
-  FABRIC_SEARCH_SOURCE.includes('clientFabricPreferences: input.preferences, garment: input.piece, garments:input.pieces'));
+  FABRIC_DISCOVERY_SOURCE.includes('clientFabricPreferences: input.preferences, garment: input.piece, garments:input.pieces'));
 // ── v13.51: vision-led fabric sourcing ────────────────────────────────────
 ok('Saved garment references and qualified traits drive seller-thumbnail ranking',
   SERVER_SOURCE.includes("app.post('/api/rank-fabric'") && SERVER_SOURCE.includes('buildVisualRankingRequest') &&
@@ -1319,7 +1320,7 @@ ok('Shared sourcing offers exactly five free store filters and explicit scoped R
   FABRIC_UI_SOURCE.includes('activeStores=new Set(storeGroups.map(group=>group.id))') &&
   FABRIC_UI_SOURCE.includes('Refresh to search these stores.') &&
   FABRIC_UI_SOURCE.includes('void loadInventory().catch') &&
-  FABRIC_SEARCH_SOURCE.includes('currentStoreFilter:input.storeGroups') &&
+  FABRIC_DISCOVERY_SOURCE.includes('currentStoreFilter:input.storeGroups') &&
   FABRIC_SEARCH_SOURCE.includes('Choose at least one supported store group.') &&
   FABRIC_SEARCH_SOURCE.includes('allowed.includes(merchantURL(product.url,true)?.shop)'));
 // ── v13.53: the tier upgrade, guarded, with Nano Banana ────────────────────
@@ -2781,6 +2782,8 @@ ok('Messages exposes archived history',MAP_SOURCE.includes('async function msgLo
 await import('./fabric-sourcing.mjs');
 ok('Material qualification, garment-scoped refinements and grounded ranking pass synthetic sourcing contracts',!process.exitCode);
 await import('./fabric-search.mjs');
+await import('./domain-boundaries.mjs');
+ok('Fabric policy, provider imports, routes, styles and served assets stay separate from communications and CRM',true);
 await import('./fabric-search-ui.mjs');
 await import('./fabric-workflow-ui.mjs');
 await import('./operation-save-failures.mjs');
@@ -2815,7 +2818,7 @@ ok('Brief save retry preserves generated work without paid regeneration',BACKEND
 ok('Release gates verify the API commit as well as Hosting',readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8').includes('h.commit===WANT_COMMIT'));
 ok('CI retains every gate and exposes failing exits and earlier surface errors',BUILD_SOURCE.includes('command node "$$@"')&&BUILD_SOURCE.includes('return "$$maya_check_status"')&&BUILD_SOURCE.includes("grep -E 'FAIL|THREW|HANG|Error:'")&&readFileSync(join(ROOT,'tests/lead-notes-ui.mjs'),'utf8').includes('await drawerSettled()'));
 ok('Brief and Operations bypass week-cached fabric v3 assets on reload',
-  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=4'))));
+  [BACKEND_SOURCE,OPS_SOURCE].every(html=>['js','css'].every(ext=>html.includes('/aesthetics/ui/fabric-assistant.'+ext+'?v=5'))));
 ok('Repository-wide additions finish with the governing Aesthetic Control gate',
   ['AGENTS.md','docs/README.md','docs/design.md'].every(path=>readFileSync(join(ROOT,path),'utf8').includes('Aesthetic Control is the final completion gate.')));
 ok('Owner retirement removes Playground and Affiliates without promoting staged experiments',!existsSync(join(ROOT,'playground/index.html'))&&!MAP_SOURCE.includes('IS_AFFILIATES')&&HOSTING.hosting.redirects.some(r=>r.source==='/playground.html'&&r.destination==='/'));

@@ -10,3 +10,7 @@
 @media(max-height:500px){.fabric-assistant{gap:4px}.fa-context,.fa-photo{display:none}.fa-composer textarea{min-height:36px;height:36px}.fa-product-image{aspect-ratio:2/1}}
 
 .fa-image-unavailable{display:grid;place-items:center;min-height:100px;white-space:normal}.fa-product.has-missing-photo .fa-card-actions{position:static;margin-top:var(--maya-form-label-gap,6px)}
+
+/* Layout only: the shared Inner material and H4/P3 roles govern this panel. */
+.fa-search-details{border:0;padding:0;background:transparent;box-sizing:border-box;position:fixed;inset:auto;margin:0;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain;z-index:20;text-align:left}
+.fa-search-details h3,.fa-search-details p{margin:0 0 var(--maya-form-label-gap,6px);overflow-wrap:anywhere}.fa-search-details p:last-child{margin-bottom:0}.fa-search-details strong{font-weight:inherit}.fa-search-details-trigger{max-width:100%;align-self:flex-start}

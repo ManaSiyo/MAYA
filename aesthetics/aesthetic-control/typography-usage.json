@@ -8,6 +8,7 @@
     "aesthetics/ui/admin-systems.js",
     "aesthetics/ui/ai-meter.js",
     "aesthetics/ui/fabric-assistant.js",
+    "aesthetics/ui/fabric-search-details.js",
     "aesthetics/ui/lead-stage-menu.js",
     "aesthetics/ui/owner-crm.js",
     "aesthetics/ui/pill-runtime.js",
@@ -57,7 +58,7 @@
       "locations": [
         {
           "page": "backend/backend.html",
-          "line": 1410,
+          "line": 1411,
           "tag": "span",
           "id": "workspace-title",
           "class": "",
@@ -67,7 +68,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 299,
+          "line": 300,
           "tag": "h1",
           "id": null,
           "class": "",
@@ -152,7 +153,7 @@
           "locations": [
             {
               "page": "backend/backend.html",
-              "line": 1410
+              "line": 1411
             }
           ]
         },
@@ -161,7 +162,7 @@
           "locations": [
             {
               "page": "backend/operations.html",
-              "line": 299
+              "line": 300
             },
             {
               "page": "backend/outbound.html",
@@ -210,7 +211,7 @@
       "locations": [
         {
           "page": "backend/backend.html",
-          "line": 1492,
+          "line": 1493,
           "tag": "div",
           "id": null,
           "class": "drawer-title",
@@ -220,7 +221,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 430,
+          "line": 431,
           "tag": "h2",
           "id": "operation-settings-title",
           "class": "",
@@ -285,7 +286,7 @@
           "locations": [
             {
               "page": "backend/backend.html",
-              "line": 1492
+              "line": 1493
             },
             {
               "page": "backend/outbound.html",
@@ -310,7 +311,7 @@
           "locations": [
             {
               "page": "backend/operations.html",
-              "line": 430
+              "line": 431
             },
             {
               "page": "backend/status.html",
@@ -321,7 +322,7 @@
       }
     },
     "H3": {
-      "count": 79,
+      "count": 80,
       "locations": [
         {
           "page": "aesthetics/ui/ai-meter.js",
@@ -344,8 +345,18 @@
           "snippet": "<h3>AI meter</h3><svg viewBox=\"0 0 220 126\" aria-hidden=\"true\"><path class=\"ai-track\" d=\"M25 1"
         },
         {
+          "page": "aesthetics/ui/fabric-search-details.js",
+          "line": 22,
+          "tag": "h3",
+          "id": null,
+          "class": "",
+          "reason": "JavaScript-created h3",
+          "role": "subheadline",
+          "snippet": "createElement('h3')"
+        },
+        {
           "page": "backend/backend.html",
-          "line": 1445,
+          "line": 1446,
           "tag": "div",
           "id": "op-hero-name",
           "class": "op-hero",
@@ -355,7 +366,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1445,
+          "line": 1446,
           "tag": "time",
           "id": "op-date",
           "class": "",
@@ -365,7 +376,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 335,
+          "line": 336,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -1116,7 +1127,7 @@
       ],
       "roles": {
         "subheadline": {
-          "count": 67,
+          "count": 68,
           "locations": [
             {
               "page": "aesthetics/ui/ai-meter.js",
@@ -1125,6 +1136,10 @@
             {
               "page": "aesthetics/ui/ai-meter.js",
               "line": 6
+            },
+            {
+              "page": "aesthetics/ui/fabric-search-details.js",
+              "line": 22
             },
             {
               "page": "backend/outbound.html",
@@ -1393,15 +1408,15 @@
           "locations": [
             {
               "page": "backend/backend.html",
-              "line": 1445
+              "line": 1446
             },
             {
               "page": "backend/backend.html",
-              "line": 1445
+              "line": 1446
             },
             {
               "page": "backend/operations.html",
-              "line": 335
+              "line": 336
             },
             {
               "page": "backend/status.html",
@@ -1553,7 +1568,7 @@
       }
     },
     "P1": {
-      "count": 234,
+      "count": 235,
       "locations": [
         {
           "page": "aesthetics/ui/admin-systems.js",
@@ -1606,6 +1621,16 @@
           "snippet": "<p class=\"ai-meter-checked\" role=\"status\"></p><ul class=\"ai-meter-providers\"></ul><button class=\"ai-meter-refresh\" type=\"button\">Ref"
         },
         {
+          "page": "aesthetics/ui/fabric-search-details.js",
+          "line": 9,
+          "tag": "p",
+          "id": null,
+          "class": "",
+          "reason": "JavaScript-created p",
+          "role": "paragraph",
+          "snippet": "createElement('p')"
+        },
+        {
           "page": "aesthetics/ui/owner-crm.js",
           "line": 3,
           "tag": "p",
@@ -1627,7 +1652,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1448,
+          "line": 1449,
           "tag": "p",
           "id": "op-biography",
           "class": "op-text italic",
@@ -1637,7 +1662,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1452,
+          "line": 1453,
           "tag": "p",
           "id": "op-vision",
           "class": "op-text",
@@ -1647,7 +1672,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 306,
+          "line": 307,
           "tag": "p",
           "id": "operation-fabric-selection",
           "class": "",
@@ -1657,7 +1682,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 313,
+          "line": 314,
           "tag": "select",
           "id": "test-picker",
           "class": "head-select",
@@ -1667,7 +1692,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 337,
+          "line": 338,
           "tag": "input",
           "id": "m-waist",
           "class": "",
@@ -1677,7 +1702,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 338,
+          "line": 339,
           "tag": "input",
           "id": "m-hip",
           "class": "",
@@ -1687,7 +1712,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 341,
+          "line": 342,
           "tag": "input",
           "id": "m-crotch",
           "class": "",
@@ -1697,7 +1722,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 342,
+          "line": 343,
           "tag": "input",
           "id": "m-inseam",
           "class": "",
@@ -1707,7 +1732,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 345,
+          "line": 346,
           "tag": "input",
           "id": "m-length",
           "class": "",
@@ -1717,7 +1742,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 373,
+          "line": 374,
           "tag": "pre",
           "id": "live-log",
           "class": "",
@@ -1727,7 +1752,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 388,
+          "line": 389,
           "tag": "pre",
           "id": "t-prompt",
           "class": "",
@@ -1737,7 +1762,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 440,
+          "line": 441,
           "tag": "div",
           "id": null,
           "class": "kb-status",
@@ -1747,7 +1772,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 445,
+          "line": 446,
           "tag": "div",
           "id": null,
           "class": "kb-status",
@@ -1757,7 +1782,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 454,
+          "line": 455,
           "tag": "textarea",
           "id": "logic-edit",
           "class": "",
@@ -3898,7 +3923,7 @@
       ],
       "roles": {
         "paragraph": {
-          "count": 156,
+          "count": 157,
           "locations": [
             {
               "page": "aesthetics/ui/admin-systems.js",
@@ -3921,6 +3946,10 @@
               "line": 6
             },
             {
+              "page": "aesthetics/ui/fabric-search-details.js",
+              "line": 9
+            },
+            {
               "page": "aesthetics/ui/owner-crm.js",
               "line": 3
             },
@@ -3930,23 +3959,23 @@
             },
             {
               "page": "backend/backend.html",
-              "line": 1448
+              "line": 1449
             },
             {
               "page": "backend/backend.html",
-              "line": 1452
+              "line": 1453
             },
             {
               "page": "backend/operations.html",
-              "line": 306
+              "line": 307
             },
             {
               "page": "backend/operations.html",
-              "line": 440
+              "line": 441
             },
             {
               "page": "backend/operations.html",
-              "line": 445
+              "line": 446
             },
             {
               "page": "backend/outbound.html",
@@ -4531,11 +4560,7 @@
           "locations": [
             {
               "page": "backend/operations.html",
-              "line": 313
-            },
-            {
-              "page": "backend/operations.html",
-              "line": 337
+              "line": 314
             },
             {
               "page": "backend/operations.html",
@@ -4543,7 +4568,7 @@
             },
             {
               "page": "backend/operations.html",
-              "line": 341
+              "line": 339
             },
             {
               "page": "backend/operations.html",
@@ -4551,11 +4576,15 @@
             },
             {
               "page": "backend/operations.html",
-              "line": 345
+              "line": 343
             },
             {
               "page": "backend/operations.html",
-              "line": 454
+              "line": 346
+            },
+            {
+              "page": "backend/operations.html",
+              "line": 455
             },
             {
               "page": "backend/status.html",
@@ -4600,11 +4629,11 @@
           "locations": [
             {
               "page": "backend/operations.html",
-              "line": 373
+              "line": 374
             },
             {
               "page": "backend/operations.html",
-              "line": 388
+              "line": 389
             },
             {
               "page": "backend/outbound.html",
@@ -4870,7 +4899,7 @@
       "locations": [
         {
           "page": "backend/backend.html",
-          "line": 1447,
+          "line": 1448,
           "tag": "div",
           "id": null,
           "class": "op-eyebrow",
@@ -4880,7 +4909,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1451,
+          "line": 1452,
           "tag": "div",
           "id": null,
           "class": "op-eyebrow",
@@ -4890,7 +4919,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 435,
+          "line": 436,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -4900,7 +4929,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 444,
+          "line": 445,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -4910,7 +4939,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 450,
+          "line": 451,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -4920,7 +4949,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 465,
+          "line": 466,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -4930,7 +4959,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 474,
+          "line": 475,
           "tag": "div",
           "id": null,
           "class": "sec-title",
@@ -5075,31 +5104,31 @@
           "locations": [
             {
               "page": "backend/backend.html",
-              "line": 1447
+              "line": 1448
             },
             {
               "page": "backend/backend.html",
-              "line": 1451
+              "line": 1452
             },
             {
               "page": "backend/operations.html",
-              "line": 435
+              "line": 436
             },
             {
               "page": "backend/operations.html",
-              "line": 444
+              "line": 445
             },
             {
               "page": "backend/operations.html",
-              "line": 450
+              "line": 451
             },
             {
               "page": "backend/operations.html",
-              "line": 465
+              "line": 466
             },
             {
               "page": "backend/operations.html",
-              "line": 474
+              "line": 475
             },
             {
               "page": "backend/status.html",
@@ -5163,7 +5192,7 @@
       }
     },
     "P3": {
-      "count": 368,
+      "count": 369,
       "locations": [
         {
           "page": "aesthetics/ui/ai-meter.js",
@@ -5174,6 +5203,16 @@
           "reason": "pill",
           "role": "pill",
           "snippet": "<button class=\"ai-meter-refresh\" type=\"button\">Refresh meter</button></section>`;"
+        },
+        {
+          "page": "aesthetics/ui/fabric-search-details.js",
+          "line": 6,
+          "tag": "button",
+          "id": null,
+          "class": "",
+          "reason": "JavaScript-created button",
+          "role": "pill",
+          "snippet": "createElement('button')"
         },
         {
           "page": "aesthetics/ui/lead-stage-menu.js",
@@ -5217,7 +5256,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1411,
+          "line": 1412,
           "tag": "span",
           "id": "dissect-status",
           "class": "status-pill",
@@ -5227,7 +5266,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1415,
+          "line": 1416,
           "tag": "button",
           "id": null,
           "class": "top-btn hamburger",
@@ -5237,7 +5276,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1440,
+          "line": 1441,
           "tag": "button",
           "id": "brief-fabrics-button",
           "class": "pill maya-pill",
@@ -5247,7 +5286,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1479,
+          "line": 1480,
           "tag": "button",
           "id": null,
           "class": "upload-btn",
@@ -5257,7 +5296,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1506,
+          "line": 1507,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5267,7 +5306,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1511,
+          "line": 1512,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5277,7 +5316,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1516,
+          "line": 1517,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5287,7 +5326,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1524,
+          "line": 1525,
           "tag": "button",
           "id": "drawer-nest-download",
           "class": "piece-pill",
@@ -5297,7 +5336,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1529,
+          "line": 1530,
           "tag": "button",
           "id": "unit-in",
           "class": "piece-pill active",
@@ -5307,7 +5346,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1530,
+          "line": 1531,
           "tag": "button",
           "id": "unit-mm",
           "class": "piece-pill",
@@ -5317,7 +5356,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1537,
+          "line": 1538,
           "tag": "button",
           "id": null,
           "class": "drawer-settings-link",
@@ -5327,7 +5366,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1538,
+          "line": 1539,
           "tag": "button",
           "id": null,
           "class": "drawer-settings-link",
@@ -5337,7 +5376,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1547,
+          "line": 1548,
           "tag": "button",
           "id": null,
           "class": "settings-back",
@@ -5347,7 +5386,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1553,
+          "line": 1554,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5357,7 +5396,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1557,
+          "line": 1558,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5367,7 +5406,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1561,
+          "line": 1562,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5377,7 +5416,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1571,
+          "line": 1572,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5387,7 +5426,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1573,
+          "line": 1574,
           "tag": "button",
           "id": "q-extralow",
           "class": "quality-pill",
@@ -5397,7 +5436,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1574,
+          "line": 1575,
           "tag": "button",
           "id": "q-low",
           "class": "quality-pill",
@@ -5407,7 +5446,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1575,
+          "line": 1576,
           "tag": "button",
           "id": "q-medium",
           "class": "quality-pill",
@@ -5417,7 +5456,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1576,
+          "line": 1577,
           "tag": "button",
           "id": "q-high",
           "class": "quality-pill",
@@ -5427,7 +5466,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1580,
+          "line": 1581,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5437,7 +5476,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1582,
+          "line": 1583,
           "tag": "button",
           "id": "t-sketch",
           "class": "quality-pill",
@@ -5447,7 +5486,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1583,
+          "line": 1584,
           "tag": "button",
           "id": "t-regular",
           "class": "quality-pill",
@@ -5457,7 +5496,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1587,
+          "line": 1588,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5467,7 +5506,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1589,
+          "line": 1590,
           "tag": "button",
           "id": "q-hyper",
           "class": "quality-pill",
@@ -5477,7 +5516,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1593,
+          "line": 1594,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5487,7 +5526,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1595,
+          "line": 1596,
           "tag": "button",
           "id": "p-medium",
           "class": "quality-pill",
@@ -5497,7 +5536,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 1596,
+          "line": 1597,
           "tag": "button",
           "id": "p-high",
           "class": "quality-pill",
@@ -5507,7 +5546,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 2117,
+          "line": 2118,
           "tag": "button",
           "id": null,
           "class": "client-item",
@@ -5517,7 +5556,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 2134,
+          "line": 2135,
           "tag": "button",
           "id": null,
           "class": "client-item' + active + '",
@@ -5527,7 +5566,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 2957,
+          "line": 2958,
           "tag": "button",
           "id": null,
           "class": "' + cls + (nonFabric?' piece-non-fabric':'') + '",
@@ -5537,7 +5576,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 2962,
+          "line": 2963,
           "tag": "button",
           "id": "dissect-start-pill",
           "class": "piece-pill dissect-start",
@@ -5547,7 +5586,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 2963,
+          "line": 2964,
           "tag": "button",
           "id": "dissect-missing-pill",
           "class": "piece-pill",
@@ -5557,7 +5596,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 2964,
+          "line": 2965,
           "tag": "button",
           "id": "dissect-save-pill",
           "class": "piece-pill",
@@ -5567,7 +5606,7 @@
         },
         {
           "page": "backend/backend.html",
-          "line": 3284,
+          "line": 3285,
           "tag": "button",
           "id": null,
           "class": "",
@@ -5577,7 +5616,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 301,
+          "line": 302,
           "tag": "button",
           "id": null,
           "class": "icon-btn hamburger",
@@ -5587,7 +5626,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 324,
+          "line": 325,
           "tag": "button",
           "id": "operation-fabrics",
           "class": "pill maya-pill",
@@ -5597,7 +5636,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 337,
+          "line": 338,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5607,7 +5646,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 338,
+          "line": 339,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5617,7 +5656,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 341,
+          "line": 342,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5627,7 +5666,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 342,
+          "line": 343,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5637,7 +5676,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 345,
+          "line": 346,
           "tag": "label",
           "id": null,
           "class": "",
@@ -5647,7 +5686,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 348,
+          "line": 349,
           "tag": "div",
           "id": "dim-derived",
           "class": "kb-status",
@@ -5657,7 +5696,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 382,
+          "line": 383,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5667,7 +5706,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 383,
+          "line": 384,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5677,7 +5716,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 384,
+          "line": 385,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5687,7 +5726,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 385,
+          "line": 386,
           "tag": "div",
           "id": null,
           "class": "k",
@@ -5697,7 +5736,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 427,
+          "line": 428,
           "tag": "button",
           "id": null,
           "class": "maya-icon-button drawer-burger",
@@ -5707,7 +5746,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 437,
+          "line": 438,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5717,7 +5756,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 438,
+          "line": 439,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5727,7 +5766,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 456,
+          "line": 457,
           "tag": "button",
           "id": "logic-edit-btn",
           "class": "pill sm",
@@ -5737,7 +5776,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 457,
+          "line": 458,
           "tag": "button",
           "id": "logic-save-btn",
           "class": "pill sm",
@@ -5747,7 +5786,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 458,
+          "line": 459,
           "tag": "button",
           "id": "logic-reset-btn",
           "class": "pill sm",
@@ -5757,7 +5796,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 459,
+          "line": 460,
           "tag": "button",
           "id": "logic-lock-btn",
           "class": "pill sm",
@@ -5767,7 +5806,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 467,
+          "line": 468,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5777,7 +5816,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 468,
+          "line": 469,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5787,7 +5826,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 469,
+          "line": 470,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5797,7 +5836,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 478,
+          "line": 479,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5807,7 +5846,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 479,
+          "line": 480,
           "tag": "button",
           "id": null,
           "class": "pill sm",
@@ -5817,7 +5856,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 487,
+          "line": 488,
           "tag": "div",
           "id": "toast",
           "class": "",
@@ -5827,7 +5866,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 1025,
+          "line": 1026,
           "tag": "button",
           "id": null,
           "class": "pill sm ${CUR.kind==='rd'?'active':''}",
@@ -5837,7 +5876,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 1028,
+          "line": 1029,
           "tag": "button",
           "id": null,
           "class": "pill sm ${act}",
@@ -5847,7 +5886,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 1030,
+          "line": 1031,
           "tag": "button",
           "id": null,
           "class": "pill sm ${CUR.kind==='grounded'?'active':''}",
@@ -5857,7 +5896,7 @@
         },
         {
           "page": "backend/operations.html",
-          "line": 1032,
+          "line": 1033,
           "tag": "button",
           "id": null,
           "class": "pill sm ${CUR.kind==='svg'?'active':''}",
@@ -8848,10 +8887,14 @@
       ],
       "roles": {
         "pill": {
-          "count": 326,
+          "count": 327,
           "locations": [
             {
               "page": "aesthetics/ui/ai-meter.js",
+              "line": 6
+            },
+            {
+              "page": "aesthetics/ui/fabric-search-details.js",
               "line": 6
             },
             {
@@ -8872,39 +8915,35 @@
             },
             {
               "page": "backend/backend.html",
-              "line": 1411
+              "line": 1412
             },
             {
               "page": "backend/backend.html",
-              "line": 1415
+              "line": 1416
             },
             {
               "page": "backend/backend.html",
-              "line": 1440
+              "line": 1441
             },
             {
               "page": "backend/backend.html",
-              "line": 1479
+              "line": 1480
             },
             {
               "page": "backend/backend.html",
-              "line": 1506
+              "line": 1507
             },
             {
               "page": "backend/backend.html",
-              "line": 1511
+              "line": 1512
             },
             {
               "page": "backend/backend.html",
-              "line": 1516
+              "line": 1517
             },
             {
               "page": "backend/backend.html",
-              "line": 1524
-            },
-            {
-              "page": "backend/backend.html",
-              "line": 1529
+              "line": 1525
             },
             {
               "page": "backend/backend.html",
@@ -8912,7 +8951,7 @@
             },
             {
               "page": "backend/backend.html",
-              "line": 1537
+              "line": 1531
             },
             {
               "page": "backend/backend.html",
@@ -8920,27 +8959,27 @@
             },
             {
               "page": "backend/backend.html",
-              "line": 1547
+              "line": 1539
             },
             {
               "page": "backend/backend.html",
-              "line": 1553
+              "line": 1548
             },
             {
               "page": "backend/backend.html",
-              "line": 1557
+              "line": 1554
             },
             {
               "page": "backend/backend.html",
-              "line": 1561
+              "line": 1558
             },
             {
               "page": "backend/backend.html",
-              "line": 1571
+              "line": 1562
             },
             {
               "page": "backend/backend.html",
-              "line": 1573
+              "line": 1572
             },
             {
               "page": "backend/backend.html",
@@ -8956,11 +8995,11 @@
             },
             {
               "page": "backend/backend.html",
-              "line": 1580
+              "line": 1577
             },
             {
               "page": "backend/backend.html",
-              "line": 1582
+              "line": 1581
             },
             {
               "page": "backend/backend.html",
@@ -8968,19 +9007,19 @@
             },
             {
               "page": "backend/backend.html",
-              "line": 1587
+              "line": 1584
             },
             {
               "page": "backend/backend.html",
-              "line": 1589
+              "line": 1588
             },
             {
               "page": "backend/backend.html",
-              "line": 1593
+              "line": 1590
             },
             {
               "page": "backend/backend.html",
-              "line": 1595
+              "line": 1594
             },
             {
               "page": "backend/backend.html",
@@ -8988,19 +9027,19 @@
             },
             {
               "page": "backend/backend.html",
-              "line": 2117
+              "line": 1597
             },
             {
               "page": "backend/backend.html",
-              "line": 2134
+              "line": 2118
             },
             {
               "page": "backend/backend.html",
-              "line": 2957
+              "line": 2135
             },
             {
               "page": "backend/backend.html",
-              "line": 2962
+              "line": 2958
             },
             {
               "page": "backend/backend.html",
@@ -9012,23 +9051,23 @@
             },
             {
               "page": "backend/backend.html",
-              "line": 3284
+              "line": 2965
+            },
+            {
+              "page": "backend/backend.html",
+              "line": 3285
             },
             {
               "page": "backend/operations.html",
-              "line": 301
+              "line": 302
             },
             {
               "page": "backend/operations.html",
-              "line": 324
+              "line": 325
             },
             {
               "page": "backend/operations.html",
-              "line": 427
-            },
-            {
-              "page": "backend/operations.html",
-              "line": 437
+              "line": 428
             },
             {
               "page": "backend/operations.html",
@@ -9036,7 +9075,7 @@
             },
             {
               "page": "backend/operations.html",
-              "line": 456
+              "line": 439
             },
             {
               "page": "backend/operations.html",
@@ -9052,7 +9091,7 @@
             },
             {
               "page": "backend/operations.html",
-              "line": 467
+              "line": 460
             },
             {
               "page": "backend/operations.html",
@@ -9064,7 +9103,7 @@
             },
             {
               "page": "backend/operations.html",
-              "line": 478
+              "line": 470
             },
             {
               "page": "backend/operations.html",
@@ -9072,19 +9111,23 @@
             },
             {
               "page": "backend/operations.html",
-              "line": 1025
+              "line": 480
             },
             {
               "page": "backend/operations.html",
-              "line": 1028
+              "line": 1026
             },
             {
               "page": "backend/operations.html",
-              "line": 1030
+              "line": 1029
             },
             {
               "page": "backend/operations.html",
-              "line": 1032
+              "line": 1031
+            },
+            {
+              "page": "backend/operations.html",
+              "line": 1033
             },
             {
               "page": "backend/outbound.html",
@@ -10161,15 +10204,11 @@
           "locations": [
             {
               "page": "backend/operations.html",
-              "line": 337
-            },
-            {
-              "page": "backend/operations.html",
               "line": 338
             },
             {
               "page": "backend/operations.html",
-              "line": 341
+              "line": 339
             },
             {
               "page": "backend/operations.html",
@@ -10177,7 +10216,11 @@
             },
             {
               "page": "backend/operations.html",
-              "line": 345
+              "line": 343
+            },
+            {
+              "page": "backend/operations.html",
+              "line": 346
             },
             {
               "page": "backend/status.html",
@@ -10222,11 +10265,11 @@
           "locations": [
             {
               "page": "backend/operations.html",
-              "line": 348
+              "line": 349
             },
             {
               "page": "backend/operations.html",
-              "line": 487
+              "line": 488
             },
             {
               "page": "backend/status.html",
@@ -10247,10 +10290,6 @@
           "locations": [
             {
               "page": "backend/operations.html",
-              "line": 382
-            },
-            {
-              "page": "backend/operations.html",
               "line": 383
             },
             {
@@ -10260,6 +10299,10 @@
             {
               "page": "backend/operations.html",
               "line": 385
+            },
+            {
+              "page": "backend/operations.html",
+              "line": 386
             },
             {
               "page": "backend/outbound.js",
