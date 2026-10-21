@@ -1,18 +1,25 @@
-[Codex] Await send refresh before the independent STOP fixture
+[Codex] Qualify the base fabric separately from trim and outfit preferences
 
-Cloud Build stopped before deployment when the composer fixture counted an extra
-write. A held-response reproduction gives the same 3-versus-2 failure: the test
-painted STOP after draft clearing while the prior reviewed send still awaited an
-older fake consent-none thread refresh. That response could overwrite the direct
-synthetic paint before the next evaluation.
+Live acceptance still returned no coat fabrics. Search details exposed the cause:
+a wool body with leather appliqué was qualified as if one fabric had to contain
+its trim and the outfit-wide denim/leather directions. Separate base matching
+without changing original saved/client words or garment fingerprints. Keep
+explicit/named requirements and exclusions strict, and require the single visual
+check for unknown inferred traits. Missing/failed comparison never confirms them.
 
-Deliberately hold that refresh, assert Send remains busy, release it and await
-final carrier-acceptance feedback/enabled Send before testing STOP independently.
-Retain the exact no-extra-write assertion and verify both controls are disabled.
-No runtime SMS, provider, auth, credential, dependency or visible UI change.
+Add a broader material-only seed within the same two-query/four-store budget,
+balance retailers and retain grounded web priority. Details expose original client
+preferences and focus the existing scrollable H4/P3/Inner/Glass surface; the actual
+Aesthetic Control preview shares the change. No new presentation setting.
 
-Validation: deterministic old ordering fails; corrected normal and eight-times
-slow browser runs and communications contracts pass. Final standalone shared
-Aesthetic Control runs last after this record before commit. This repairs fixture phase isolation; it does not claim
-live carrier delivery. Latest Cloud Build and exact deployed commit remain the
-post-Push acceptance gate.
+Preserve every release gate; allow 30 minutes after a successful 19m25 build and
+a following 20m timeout. Add start/elapsed diagnostics without changing failure
+status or full logs. No worker, billing settings, credential, production environment,
+shared model/dependency or communications implementation changes.
+
+Validation: original qualification fails the new matching/service cases. Focused
+sourcing (14), search (38), actual UI and real public retailer qualification pass.
+All 72 exact release commands, integrated regression and smoke pass. The updated
+release wrapper/deadline probe and long-context keyboard/scroll/trigger hit-tests
+pass. Final standalone Aesthetic Control runs last after this record before commit; exact latest deployment and owner visual acceptance
+follow Push. A qualified seller listing alone does not establish visual equivalence.

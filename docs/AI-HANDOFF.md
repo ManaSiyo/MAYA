@@ -1,6 +1,47 @@
 # Current handoff — October 21, 2026
 
-## CI fixture repair — current next step
+## Current work — live base-cloth qualification repair
+
+23b905504a87c229edfd06dacd7cdd7cb1763e73 deployed successfully through Cloud
+Build dbe8380d (19m25s), with all 72 gates. The test-only 302cf18 build b468fd55
+hit the 20-minute deadline while running tests and never deployed. Its fixed
+STOP fixture passes normal and 8x local checks; this work retains that repair.
+
+Authorized live owner acceptance then found the newer coat still empty. Its
+visible context showed a black brushed wool body with cognac leather appliqué,
+but retailer seeds required denim/leather. The client schema's outfit-wide
+fabric_preferences list was promoted into hard single-garment criteria; secondary
+appliqué also became a required fiber of the base cloth. Both are independently
+reproduced in new matching/service fixtures.
+
+Reduce only qualification text to its base part; preserve original saved/client
+words, images and garment fingerprints. Treat unscoped summary directions as
+hints in automatic saved-look mode; named requirements, explicit only/must/blend/
+percentages and all exclusions stay strict. Unknown inferred material/weave can
+reach the one visual check, with no bypass of explicit exclusions or failed
+comparison. No comparison means no confirmation. Add a broader material-only
+retailer seed within the existing two-query/four-store budget, balance stores and
+prioritize grounded web candidates before supplements. A real Britex black wool
+twill listing now passes qualification; this is not a visual-equivalence claim.
+
+Search details now include the original client preferences and identify Store
+scope correctly. Activation focuses the scrollable region; the existing shared
+H4/P3/Inner/Glass preview is extended, not a new presentation authority.
+
+The previous successful build used almost its entire 20-minute budget. Keep all
+72 commands and final authority; extend the bounded Cloud Build deadline to
+30 minutes and print each gate's start/elapsed time for diagnostics. No worker,
+provider, production environment, credentials, billing settings or dependency
+versions changed. Sourcing (14), search (38), all 72 exact release commands,
+full integrated regression and smoke pass locally. The updated deadline/logger
+contract was rechecked after its change. Long preference context caught a hover
+panel covering its own trigger; anchor-side bounded height repairs that, with
+actual pointer hit-testing, keyboard PageDown, governed 4px scrollbar, default/
+saved responsive checks and zero reading-triggered provider calls. Final standalone
+authority follows these final state/commit records, then commit/Push and exact
+latest-commit/live owner acceptance.
+
+## CI fixture repair
 
 The first push's Cloud Build 7dbc2c19 failed before deployment after 7m48s:
 all fabric and other preceding gates passed, but message-compose-ui counted

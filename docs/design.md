@@ -515,3 +515,10 @@ Fabrics preview in Aesthetic Control. It uses H4/P3, an Inner surface and Glass
 trigger; viewport anchoring owns layout only. Preserve saved material/borders/X/Y
 padding and typography at phone/tablet/desktop, including open/focus/error states.
 Hover is read-only and makes no search request. Clear private data on identity reset.
+
+Sourceable details include original client preferences as P3 and label allowed
+merchants Store scope. Activating the Glass trigger focuses its scrollable region
+for keyboard reading; Escape returns to its trigger without collapsing Fabrics.
+The same active preview and existing H4/P3/Inner/Glass settings remain authoritative.
+Place long details on the available side of their trigger, never over it; preserve
+keyboard scrolling and the governed thin/idle-hide scrollbar.

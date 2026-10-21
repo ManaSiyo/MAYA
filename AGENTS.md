@@ -598,3 +598,13 @@ proof, await the final completion feedback and enabled Send. message-compose-ui
 deliberately holds/releases that refresh and retains exact no-extra-write plus
 both disabled-control assertions. Never mask this with a delay or remove STOP
 coverage. Runtime SMS is unchanged by this fixture-only repair.
+
+October 21 live fabric criteria: preserve full saved descriptions/client words
+and identity fingerprints, while qualifying the base cloth separately from
+appliqué/trim. Automatic whole-look preference directions must not overwrite one
+saved garment's base material. Preserve explicit/named requirements, blends and
+all exclusions; unknown inferred traits require the single successful visual
+comparison. Client preferences/Store scope remain in the shared active details
+preview. Keep the two-query/four-store seed budget and balance merchants.
+Cloud Build retains every gate and final authority with a bounded 1800s deadline;
+START/PASS elapsed diagnostics do not change exit handling or log preservation.

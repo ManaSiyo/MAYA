@@ -102,6 +102,24 @@ MAYA. Upgrade both lockfiles in a separate shared-infrastructure change, rerun
 transport/ingress/auth regressions and verify voice/SMS after deployment. They
 were not silently upgraded in this fabric-specific change.
 
+**P1, Fabrics criteria — live follow-up:** the deployed coat context exposed
+`black denim twill leather brushed` as a retailer query even though the saved
+body was wool with leather appliqué. The client schema stores fabric_preferences
+as outfit-wide directions; a single saved garment incorrectly promoted every
+positive direction, and its secondary appliqué, into one cloth's requirements.
+Reduce matching text to the base part without mutating saved data; retain original
+words for discovery and display. Keep explicit requirements/exclusions strict,
+require the visual gate for unknown inferred traits, broaden a bounded retailer
+seed and balance candidates across stores. Service fixtures cover failed visual
+comparison and original-input retention. Real Britex wool-twill facts now qualify;
+actual owner visual acceptance still follows deployment.
+
+**P2, release headroom — repaired:** a complete 72-gate build took 19m25s;
+the following test-only build exceeded the old 20-minute cap before deployment.
+The deadline becomes 30 minutes, with unchanged checks and start/elapsed logging.
+This is bounded test headroom, not skipped checks, a faster production claim or a
+worker/billing/credential change.
+
 ## Live evidence and limits
 
 Before the fix, the owner's crocodile-trouser search returned a relevant Britex

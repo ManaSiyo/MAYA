@@ -247,3 +247,13 @@ October 21 real-retailer follow-up: brocade and jacquard are recognized textile
 constructions in both eligibility and matching constraints. Their omission could
 reject actual source-backed listings before visual review. Unknown seller price
 or unit stays unknown; unrelated weaves/tools remain excluded.
+
+October 21 live criteria follow-up: the saved base cloth and applied trims are not
+one required compound fabric. Matching strips secondary clauses for qualification
+only; original descriptions, client words and fingerprints remain intact. In
+saved-look mode, unscoped whole-look directions do not override the selected
+base cloth. Explicit/named requirements, blends/percentages and exclusions remain
+strict. Unknown inferred traits may only proceed to the single visual comparison;
+failed/missing comparison never confirms them. Search details include original
+client preferences and store scope. Material seeds include a bounded broader
+query, with balanced stores and grounded web candidates before supplements.

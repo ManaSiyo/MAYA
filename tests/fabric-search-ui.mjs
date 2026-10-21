@@ -11,7 +11,7 @@ const product={url:'https://britexfabrics.com/products/crimson-wool',merchant:'B
 const reference='data:image/png;base64,'+png.toString('base64');
 const pieces=[{name:'Crimson coat',fabric:'Crimson wool twill',fabric_spec:{fiber:'wool',weave:'twill'},_image:reference},{name:'White shirt',fabric:'White cotton poplin',_image:reference},{name:'Black leather boots',category:'footwear',fabric:'Black leather',_image:reference}];
 let savedDesign={};const designWrites=[];
-const requests=[],bookWrites=[],books=new Map(),inventoryImages=[];let delayed=null,delayNext=false,failNext=false,failInventoryPreview=false,legacyCatalog=false;
+const requests=[],bookWrites=[],books=new Map(),inventoryImages=[];let longPreferences=false,delayed=null,delayNext=false,failNext=false,failInventoryPreview=false,legacyCatalog=false;
 const catalog=JSON.parse(readFileSync(root+'/aesthetics/fabrics/fabrics.json','utf8'));
 let originalBytes=0,previewBytes=0;for(const item of catalog.items){assert.match(item.thumbnail,/^thumbs\/[^\\/]+\.jpg$/);originalBytes+=statSync(root+'/aesthetics/fabrics/'+item.fileName).size;previewBytes+=statSync(root+'/aesthetics/fabrics/'+item.thumbnail).size;}assert.ok(previewBytes<originalBytes,'Existing thumbnail files reduce the actual inventory payload');
 const jwt=(sub,lifetime=3600)=>'test.'+Buffer.from(JSON.stringify({sub,exp:Math.floor(Date.now()/1000)+lifetime})).toString('base64url')+'.test';
@@ -36,7 +36,7 @@ await page.route('**/*',async route=>{
     if(failNext){failNext=false;return route.fulfill({status:503,json:{error:'Search temporarily unavailable.'}});}
     const resultProduct={...product,url:groups.find(g=>body.storeGroups?.includes(g[0]))?.[2]||product.url};
     const fixtureProducts=[{...resultProduct,garment:body.piece?.name||'Crimson coat'},...(body.storeGroups?.length===1?[{...product,url:groups.find(g=>g[0]!==body.storeGroups[0])[2],title:'Wrong merchant fixture'}]:[])];
-    const searchDetails={garments:[{name:body.piece?.name||'Crimson coat',fabric:'Burgundy wool twill',traits:{texture:'matte'}}],retailerQueries:['red wool twill'],webQueries:['burgundy matte wool fabric'],query:'matte burgundy wool',observation:'Matte, burgundy and twill-like; fiber cannot be confirmed visually.',stores:['Britex Fabrics'],stage:'Verified matches'};
+    const searchDetails={preferences:JSON.stringify(longPreferences?['Wool','Detailed reference direction. '.repeat(200),'No polyester']:['Wool','No polyester']),garments:[{name:body.piece?.name||'Crimson coat',fabric:'Burgundy wool twill',traits:{texture:'matte'}}],retailerQueries:['red wool twill'],webQueries:['burgundy matte wool fabric'],query:'matte burgundy wool',observation:'Matte, burgundy and twill-like; fiber cannot be confirmed visually.',stores:['Britex Fabrics'],stage:'Verified matches'};
     const complete=()=>route.fulfill({contentType:'application/x-ndjson',body:[{type:'context',searchDetails},{type:'products',products:fixtureProducts,preliminary:true},{type:'done',products:fixtureProducts,searchDetails,query:'matte burgundy wool',observation:'Matte, burgundy and twill-like; fiber cannot be confirmed visually.',message:'Refine these with another message.'}].map(v=>JSON.stringify(v)).join('\n')+'\n'});
     if(delayNext){delayNext=false;delayed=complete;return;}
     return complete();
@@ -90,9 +90,9 @@ try{
     const before=requests.length,wasExpanded=await page.locator('#fabric-assistant-dialog').getAttribute('open');
     await page.locator('.fa-body').focus();await detailsTrigger.focus();await details.waitFor({state:'visible'});
     assert.match(await details.textContent(),/burgundy matte wool fabric/,'Shows actual web query metadata');
-    assert.match(await details.textContent(),/fiber cannot be confirmed visually/);
+    assert.match(await details.textContent(),/fiber cannot be confirmed visually/);assert.match(await details.textContent(),/Client preferences: Wool · No polyester/);
     const style=await details.evaluate(e=>{const s=getComputedStyle(e.querySelector('[data-maya-panel=inner]')),r=e.getBoundingClientRect(),p=getComputedStyle(e.querySelector('p'));return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:innerWidth,height:innerHeight,paddingX:s.paddingLeft,paddingY:s.paddingTop,bg:s.backgroundColor,size:p.fontSize,font:p.fontFamily,overflow:e.scrollWidth<=e.clientWidth+1};});
-    assert.ok(style.x>=0&&style.y>=0&&style.right<=style.width+1&&style.bottom<=style.height+1,'Details stay in the viewport');assert.ok(style.overflow);
+    assert.ok(style.x>=0&&style.y>=0&&style.right<=style.width+1&&style.bottom<=style.height+1,'Details stay in the viewport');assert.ok(style.overflow);assert.equal(await detailsTrigger.evaluate(e=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),true,'Hover details never cover their own activation target');
     if(saved)assert.deepEqual([style.paddingX,style.paddingY,style.bg,style.size],['12px','10px','rgba(35, 76, 125, 0.7)','14px']);
     else assert.equal(style.size,'10px');
     assert.equal(await details.evaluate(e=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+Math.min(r.height/2,40)));}),true,'Details paint above the inline/dialog surface');
@@ -188,7 +188,7 @@ try{
   }
   failNext=true;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.getByText('Search temporarily unavailable.',{exact:true}).waitFor();assert.equal((await readStyle('.fa-status')).size,16,'Failure stays governed');await page.screenshot({path:'/private/tmp/maya-fabrics-error-saved.png'});
   await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.locator('.fa-card-title').waitFor();await page.setViewportSize({width:390,height:844});await page.screenshot({path:'/private/tmp/maya-fabrics-phone-saved.png'});
-  await detailsTrigger.tap();await details.waitFor({state:'visible'});await page.screenshot({path:'/private/tmp/maya-fabric-details-saved-phone.png'});await page.keyboard.press('Escape');
+  await detailsTrigger.tap();await details.waitFor({state:'visible'});assert.equal(await details.evaluate(e=>document.activeElement===e),true,'Tap/activation focuses the scrollable search details');await page.screenshot({path:'/private/tmp/maya-fabric-details-saved-phone.png'});await page.keyboard.press('Escape');
   // Generic standalone conversations remain available when no dissected-look mode is supplied.
   await page.evaluate(({reference})=>window.MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,forceReset:true}),{reference});
   await page.locator('#fabric-assistant-dialog[open]').waitFor();await page.locator('#fabric-request').fill('Find burgundy wool, preferably local');await page.locator('.fa-composer button[type=submit]').click();
@@ -228,6 +228,12 @@ try{
   await savedProductCard.getByRole('button',{name:'Remove',exact:true}).click();
   await page.waitForFunction(()=>![...document.querySelectorAll('.fa-card-title')].some(e=>e.textContent==='Crimson wool twill'));
   assert.ok([...books.values()].some(book=>book.items.some(p=>p.title==='Midnight Velvet')&&!book.items.some(p=>p.title==='Crimson wool twill')),'Removal persisted, instead of merely hiding a broken card');
+  longPreferences=true;await page.setViewportSize({width:390,height:844});
+  await page.locator('.fa-tabs').getByRole('button',{name:'Sourceable',exact:true}).click();await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('.fa-composer button[type=submit]').disabled);
+  const beforeDetails=requests.length;await detailsTrigger.click();await details.waitFor({state:'visible'});
+  assert.ok(await details.evaluate(e=>e.scrollHeight>e.clientHeight),'Long original preferences remain fully available in a bounded scroller');
+  assert.equal(await details.evaluate(e=>document.activeElement===e),true);await details.press('PageDown');await page.waitForFunction(()=>document.querySelector('.fa-search-details').scrollTop>0);
+  assert.equal(await details.evaluate(e=>getComputedStyle(e,'::-webkit-scrollbar').width),'4px','Details use the saved shared thin scrollbar');assert.equal(requests.length,beforeDetails,'Keyboard reading makes no provider calls');await page.keyboard.press('Escape');
   await page.goto('https://maya-fabric.test/aesthetics/aesthetic-control.html');
   const previewTrigger=page.locator('#workspace-previews').getByRole('button',{name:'Search details',exact:true});
   await previewTrigger.focus();const previewDetails=page.locator('#workspace-previews .fa-search-details');await previewDetails.waitFor({state:'visible'});

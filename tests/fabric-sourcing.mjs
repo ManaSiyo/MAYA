@@ -6,6 +6,7 @@ import {
   collectRetailerResults,
   fabricProductMatch,
   isFabricProduct,
+  fabricSeedQueries,
 } from '../docs/server/fabric-sourcing.js';
 
 let passed = 0;
@@ -39,6 +40,23 @@ test('brocade and jacquard yardage remain eligible while unrelated weaves and to
     assert.equal(fabricProductMatch({...base,title:'Black cotton twill',description:'Sold by the yard.'},{automatic:true,pieces:[piece],allowVisualOnly:true}),null,'Visual review cannot bypass the requested weave');
     assert.equal(isFabricProduct({...base,title:weave+' fabric scissors'}),false);
   }
+});
+
+test('a wool base is not required to contain its leather applique or every whole-look preference',()=>{
+  const coat={id:'coat',name:'Embellished coat',fabric:'Black brushed wool blend with cognac suede leather appliqué',fabric_spec:{fiber:'wool blend with leather appliqué',weave:'dense brushed twill',texture:'brushed, embellished'}};
+  const wool={title:'Black brushed wool coating',description:'80% wool 20% nylon, sold by the yard.',composition:'80% wool 20% nylon',image:'https://seller.example/wool.jpg',evidence:'seller_listing'};
+  for(const preferences of [['Denim','Leather'],JSON.stringify(['Denim','Leather']),['Denim or leather'],['Denim and leather'],'Denim, leather']){
+    const input={automatic:true,pieces:[coat],piece:coat,preferences,allowVisualOnly:true};
+    assert.equal(fabricProductMatch(wool,input)?.garmentId,'coat','Unknown inferred weave can be checked visually; base cloth need not contain its appliqué');
+    const queries=fabricSeedQueries(input);assert.match(queries.join(' '),/wool/);assert.doesNotMatch(queries.join(' '),/denim|leather/);
+    assert.equal(fabricProductMatch({...wool,title:'Black cotton jersey',composition:'100% cotton',description:'Cotton knit sold by the yard.'},input),null,'A known contradictory material is still excluded');
+    for(const strict of [['Only denim'],['100% leather'],['No wool','Leather'],{coat:'Leather only'},{required:['Leather']}])assert.equal(fabricProductMatch(wool,{...input,preferences:strict}),null,'Explicit requirements and exclusions stay strict');
+  }
+  assert.equal(fabricProductMatch(wool,{automatic:true,pieces:[coat],preferences:['Denim','Leather']}),null,'Missing weave evidence is not silently confirmed without visual comparison');
+  assert.equal(fabricProductMatch({...wool,title:'Black coating fabric',description:'Cloth sold by the yard.',composition:''},{automatic:true,pieces:[coat],preferences:'No polyester',allowVisualOnly:true}),null,'Unknown inferred fiber cannot bypass an explicit fiber exclusion');
+  const blend={...coat,fabric:'Black wool blended with nylon',fabric_spec:{fiber:'wool and nylon',weave:'twill'}};
+  assert.doesNotMatch(fabricSeedQueries({automatic:true,pieces:[blend]}).join(' '),/leather/);assert.match(fabricSeedQueries({automatic:true,pieces:[blend]}).join(' '),/nylon/,'A real blended fiber is preserved');
+  assert.equal(fabricProductMatch(wool,{automatic:true,pieces:[coat],preferences:'Only wool with leather appliqué, no nylon',allowVisualOnly:true}),null,'Exclusions after a secondary material are retained');
 });
 
 test('ranking success returns ordered scores and reasons', () => {

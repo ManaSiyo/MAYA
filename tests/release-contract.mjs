@@ -12,7 +12,8 @@ assert.ok(rawWrapper,'Every Node release check must keep a full temporary log an
 assert.doesNotMatch(rawWrapper,/(?<!\$)\$(?!\$)/,'Shell dollars must survive Cloud Build substitution');
 const wrapper=rawWrapper.replace(/^ {8}/gm,'').replace(/\$\$/g,'$');
 const run=code=>spawnSync('bash',['-ceu',wrapper+'\nnode -e "$MAYA_RELEASE_PROBE"'],{encoding:'utf8',env:{...process.env,MAYA_RELEASE_PROBE:code,PATH:dirname(process.execPath)+':'+(process.env.PATH||'')}});
-const success=run('console.log("noisy-success")');assert.equal(success.status,0);assert.match(success.stdout,/PASS node/);assert.doesNotMatch(success.stdout,/noisy-success/);
+assert.match(build,/^timeout: 1800s$/m,'Full cold-browser release checks retain 30 minutes of bounded headroom');
+const success=run('console.log("noisy-success")');assert.equal(success.status,0);assert.match(success.stdout,/START node -e/);assert.match(success.stdout,/PASS node -e \(\d+s\)/);assert.ok(success.stdout.indexOf('START node')<success.stdout.indexOf('PASS node'));assert.doesNotMatch(success.stdout,/noisy-success/);
 const failure=run('console.error("specific-failure");process.exit(7)');assert.equal(failure.status,7,'Release wrapper must preserve a failing child exit');assert.match(failure.stdout,/FAIL node/);assert.match(failure.stdout,/specific-failure/,'The actual failing tail must reach the build log');
 const early=run('console.log("FAIL early surface");for(let i=0;i<200;i++)console.log("later pass "+i);process.exit(1)');assert.equal(early.status,1);assert.match(early.stdout,/FAIL early surface/,'An earlier surface failure cannot be hidden by a later passing tail');
 assert.doesNotMatch(build,/if npm install|checks skipped|maya-phone skipped/,'Required gates cannot fail open on dependency installation');

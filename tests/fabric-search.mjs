@@ -427,4 +427,22 @@ await test('www source aliases retain evidence identity without accepting unrela
   assert.deepEqual(webSearchBody(input,'gpt-6-luna').reasoning,{effort:'low'});
   assert.equal(webSearchBody(input,'configured-legacy').reasoning,undefined);assert.equal(webSearchBody(input,'gpt-5-pro').reasoning,undefined);
 });
+await test('canonical mixed-material garments keep original words but qualify their base cloth independently',async()=>{
+  const s=store(),piece={id:'coat',name:'Embellished coat',fabric:'Black brushed wool blend with cognac suede leather appliqué',fabric_spec:{fiber:'wool blend with leather appliqué',weave:'Dense brushed twill',texture:'brushed'},_image:image};
+  s.records.set('submissions/project-A/summary.json',{buf:Buffer.from(JSON.stringify({fabric_preferences:['Denim','Leather']})),generation:'1'});
+  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[piece]})),generation:'1'});
+  for(const comparisonAvailable of [true,false]){
+    const events=[];let ranked=0,sent;
+    const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async(target,options)=>{
+      if(target.includes('openai')){sent=JSON.parse(options.body);return Response.json(response());}
+      if(target.includes('suggest.json'))return Response.json({resources:{results:{products:[{url}]}}});
+      return new Response(seller({name:'Black brushed wool coating',description:'100% wool coating, sold by the yard.'}));
+    },rank:async({products})=>{ranked++;assert.equal(products.length,1);if(!comparisonAvailable)throw Error('unavailable');return products;}});
+    await service.search(user,{automatic:true,submissionId:'project-A',piece:{id:'coat'},image},e=>events.push(e));
+    assert.equal(ranked,1);assert.equal(events.at(-1).products.length,comparisonAvailable?1:0);
+    assert.equal(events.at(-1).searchDetails.preferences,JSON.stringify(['Denim','Leather']));
+    assert.doesNotMatch(events.at(-1).searchDetails.retailerQueries.join(' '),/denim|leather/);
+    const context=JSON.parse(sent.input[0].content[0].text);assert.match(context.garment.fabric,/leather appliqué/);assert.equal(context.clientFabricPreferences,JSON.stringify(['Denim','Leather']),'Original words remain intact for discovery');
+  }
+});
 console.log(`Fabric search: ${count} behavioral checks passed.`);

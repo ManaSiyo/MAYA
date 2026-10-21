@@ -346,7 +346,7 @@
         },
         {
           "page": "aesthetics/ui/fabric-search-details.js",
-          "line": 22,
+          "line": 26,
           "tag": "h3",
           "id": null,
           "class": "",
@@ -1139,7 +1139,7 @@
             },
             {
               "page": "aesthetics/ui/fabric-search-details.js",
-              "line": 22
+              "line": 26
             },
             {
               "page": "backend/outbound.html",

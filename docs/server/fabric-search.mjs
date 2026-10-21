@@ -338,8 +338,10 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
         return list(data.resources?.results?.products).filter(p => p.available !== false).slice(0, 2).map(p => ({ url: new URL(p.url, 'https://' + shop.host).href, reason: 'Initial keyword result; checking closer matches.' }));
       } catch { return []; }
     })));
-    const unique=[...new Map(results.flat().map(candidate=>[merchantURL(candidate.url,true)?.url,candidate])).values()];
-    return (await Promise.all(unique.slice(0, 5).map(c => verify(c, signal)))).flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,input);return match?[{...product,...match}]:[];});
+    const groups=shops.map(shop=>results.flat().filter(c=>merchantURL(c.url,true)?.shop===shop)),balanced=[];
+    for(let index=0;index<queries.length*2;index++)for(const group of groups)if(group[index])balanced.push(group[index]);
+    const unique=[...new Map(balanced.map(candidate=>[merchantURL(candidate.url,true)?.url,candidate])).values()];
+    return (await Promise.all(unique.slice(0, 5).map(c => verify(c, signal)))).flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];});
   }
   async function search(user, body, emit, signal = new AbortController().signal) {
     const input = normalizeFabricRequest(body);
@@ -367,7 +369,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     }
     const started = now(); let firstAt = null; let products = [];
     const send = event => { if (!signal.aborted) emit(event); };
-    const searchDetails={garments:input.pieces.map(p=>({name:p.name,fabric:p.fabric,traits:p.fabric_spec})),
+    const searchDetails={preferences:input.preferences,garments:input.pieces.map(p=>({name:p.name,fabric:p.fabric,traits:p.fabric_spec})),
       retailerQueries:requestedShops(input).some(s=>s.shopify)?fabricSeedQueries(input):[],stores:requestedShops(input).map(s=>s.name),webQueries:[],query:'',observation:'',stage:'Searching retailers'};
     send({type:'context',searchDetails});
     send({ type: 'status', message: 'Searching fabric shops…' });
@@ -392,7 +394,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
       const allowed = requestedShops(input);
       const checked = await Promise.all(discovery.candidates.filter(c => allowed.includes(merchantURL(c.url, true)?.shop)).map(c => verify(c, signal)));
       const discovered = checked.flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];});
-      products=[...new Map([...products,...discovered].map(p=>[p.url,p])).values()].slice(0,8);
+      products=[...new Map([...discovered,...products].map(p=>[p.url,p])).values()].slice(0,8);
     }
     const eligibleCount=products.length;
     if(products.length&&input.image&&rank){

@@ -51,11 +51,18 @@ function preferenceClauses(value,pieces,scope='',depth=0){
     }
     return clauses;
   }
-  if(Array.isArray(value))return value.flatMap(v=>preferenceClauses(v,pieces,scope,depth+1));
+  if(Array.isArray(value)){
+    const clauses=value.flatMap(v=>preferenceClauses(v,pieces,scope,depth+1));
+    // The client summary stores an outfit-wide list of fabric directions. It
+    // is not a demand that one yardage listing contain every listed material.
+    const choices=clauses.filter(c=>!scopeFor(c.scope||c.text,pieces).named&&terms(c.text,[...fibers,...constructions]).positive.size).length>1;
+    return clauses.map(c=>({...c,choice:c.choice||choices}));
+  }
   if(typeof value!=='object')return [];
   const named=value.garmentId||value.garment||value.pieceId||value.piece;
   const nextScope=typeof named==='string'?named:scope;
   return Object.entries(value).filter(([key])=>!['garmentId','garment','pieceId','piece'].includes(key)).flatMap(([key,v])=>{
+    if(/^(?:required|requirements|must|only)$/i.test(key))return preferenceClauses(v,pieces,nextScope,depth+1).map(clause=>({...clause,text:'required '+clause.text}));
     if(/^(?:avoid|exclude|excluded|exclusions|without)$/i.test(key))return preferenceClauses(v,pieces,nextScope,depth+1).map(clause=>({...clause,text:'no '+clause.text}));
     return preferenceClauses(v,pieces,scopeFor(key,pieces).named?key:nextScope,depth+1);
   });
@@ -69,28 +76,38 @@ function terms(value,definitions){
   }
   return {positive,negative};
 }
+// Only matching hints are reduced to the base cloth. Keep the original saved
+// description/client words intact for discovery, display and garment identity.
+function primaryFabricText(value){
+  const raw=String(value||'');
+  const secondary=/\s+(?:with|plus|and)\s+(?=[^.;]*(?:\bappliqu[eé]s?(?=\W|$)|\b(?:trims?|lining|accents?|embellishments?|contrast panels?)\b))[^.;]*/i.exec(raw);
+  return secondary&&secondary.index>0?raw.slice(0,secondary.index):raw;
+}
 function constraints(piece,input,definitions){
-  let required=new Set(),excluded=new Set();
+  let required=new Set(),excluded=new Set(),inferredRequired=false;
   const pieces=(input.allPieces?.length?input.allPieces:input.pieces?.length?input.pieces:[piece]).filter(isFabricPiece);
-  const apply=(value,positive=true,inferred=false)=>{const found=terms(value,definitions);if(positive&&found.positive.size&&!(inferred&&definitions===fibers&&/\b(?:likely|possibly|appears?|unknown|uncertain|unconfirmed|may|might|could|suggests?)\b|\b\w+[ -]like\b/i.test(value)))required=found.positive;for(const key of found.negative)excluded.add(key);};
+  const apply=(value,positive=true,inferred=false)=>{const source=primaryFabricText(value),found=terms(source,definitions),negative=terms(value,definitions).negative;if(positive&&found.positive.size&&!(inferred&&definitions===fibers&&/\b(?:likely|possibly|appears?|unknown|uncertain|unconfirmed|may|might|could|suggests?)\b|\b\w+[ -]like\b/i.test(source))){required=found.positive;inferredRequired=inferred;}for(const key of negative)excluded.add(key);};
   for(const value of [piece.fabric,...Object.values(piece.fabric_spec||{})])apply(value,true,true);
   const layers=[{value:input.preferences,wholeLook:true},...(input.history||[]).map(h=>({value:h.request})),{value:input.automatic?'':input.request}];
   for(const layer of layers)for(const clause of preferenceClauses(layer.value,pieces)){
     const scope=scopeFor(clause.scope||clause.text,pieces),matches=scope.pieces.some(candidate=>candidate===piece||candidate.id&&candidate.id===piece.id),all=/\b(?:all|every|whole look|entire outfit)\b/i.test(clause.text);
     if(scope.named&&!matches)continue;
     // Ambiguous garment mentions and whole-look positive lists remain discovery
-    // hints. They cannot rewrite a different saved garment's material.
-    const positive=scope.named?(scope.pieces.length===1||all):(!layer.wholeLook||pieces.length<=1||all);
+    // hints. They cannot rewrite a different saved garment's base material;
+    // focusing a single garment does not turn general preferences into mandates.
+    const explicit=/\b(?:only|must|required|require|exclusively|every|all|blend|blended)\b|\d\s*%/i.test(clause.text);
+    const direction=layer.wholeLook&&!scope.named&&!all&&!explicit&&(input.automatic||clause.choice);
+    const positive=!direction&&(scope.named?(scope.pieces.length===1||all):(!layer.wholeLook||pieces.length<=1||all));
     apply(clause.text,positive);
   }
   for(const key of excluded)required.delete(key);
-  return {required,excluded};
+  return {required,excluded,inferredRequired};
 }
 // Supplementary retailer seeds use only known textile vocabulary. No free-form
 // client text or garment names can enter a public suggest endpoint.
 export function fabricSeedQueries(input={}){
   if(input.history?.length)return [];
-  const pieces=(input.pieces?.length?input.pieces:[input.piece||{}]).filter(isFabricPiece),queries=[];
+  const pieces=(input.pieces?.length?input.pieces:[input.piece||{}]).filter(isFabricPiece),queries=[],broader=[];
   for(const piece of pieces){
     const selected=[];
     for(const definitions of [colors,constructions,fibers,textures]){
@@ -103,8 +120,12 @@ export function fabricSeedQueries(input={}){
     if(!selected.length)continue;
     const q=[...new Set(selected)].slice(0,6).join(' ');
     if(!queries.includes(q))queries.push(q);
+    const color=[...constraints(piece,input,colors).required].slice(0,2),fiber=[...constraints(piece,input,fibers).required],construction=[...constraints(piece,input,constructions).required];
+    const broad=[...color,...(fiber.length?fiber:construction.filter(k=>k!=='fur'||!construction.includes('faux_fur')).slice(0,1))].map(k=>k.replaceAll('_',' ')).join(' ');
+    if(broad&&!broader.includes(broad))broader.push(broad);
     if(queries.length===2)break;
   }
+  for(const q of broader)if(queries.length<2&&!queries.includes(q))queries.push(q);
   return queries;
 }
 
@@ -116,11 +137,11 @@ export function fabricProductMatch(product,input={}){
   for(const piece of targets){
     let rejected=false,materialEvidence=false,strength=0;
     for(const definitions of [fibers,constructions,colors,textures]){
-      const {required,excluded}=constraints(piece,input,definitions);
+      const {required,excluded,inferredRequired}=constraints(piece,input,definitions);
       const actual=terms(facts,definitions).positive;
       if([...excluded].some(key=>actual.has(key))){rejected=true;break;}
       if(definitions===fibers||definitions===constructions){
-        if(required.size){materialEvidence=true;if(![...required].every(key=>actual.has(key))){rejected=true;break;}strength+=required.size*2;}
+        if(required.size){if(!actual.size&&inferredRequired&&!excluded.size&&input.allowVisualOnly===true)continue;materialEvidence=true;if(![...required].every(key=>actual.has(key))){rejected=true;break;}strength+=required.size*2;}
       }else if(required.size&&actual.size){if(![...required].some(key=>actual.has(key))){rejected=true;break;}strength++;}
     }
     if(!rejected&&(!input.automatic||materialEvidence||input.allowVisualOnly===true))matches.push({piece,strength});

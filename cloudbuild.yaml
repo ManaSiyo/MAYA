@@ -28,10 +28,11 @@ steps:
         # A failed late suite must remain visible in GitHub's bounded excerpt.
         # Each command keeps its full local log and its original exit status.
         node() {
-          local maya_check_log
+          local maya_check_log maya_check_started=$$SECONDS
+          printf 'START node %s\n' "$$1"
           maya_check_log=$$(mktemp /tmp/maya-release-check.XXXXXX)
           if command node "$$@" >"$$maya_check_log" 2>&1; then
-            printf 'PASS node %s\n' "$$1"
+            printf 'PASS node %s (%ss)\n' "$$1" "$$((SECONDS-maya_check_started))"
           else
             local maya_check_status=$$?
             printf 'FAIL node %s (exit %s)\n' "$$1" "$$maya_check_status"
@@ -158,6 +159,6 @@ steps:
     args:
       - '-c'
       - 'cp docs/firebase.json ./firebase.json && npx -y firebase-tools@latest deploy --only firestore:rules,storage --project pro-maya --non-interactive'
-timeout: 1200s
+timeout: 1800s
 options:
   logging: CLOUD_LOGGING_ONLY
