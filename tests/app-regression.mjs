@@ -2780,6 +2780,7 @@ ok('Hidden drawer polling cannot mark unseen messages read',MAP_SOURCE.includes(
 ok('Messages shares typography and popup styling',ownerDesignRuntime.includes(':where(#msg-share-menu)')&&ownerDesignRuntime.includes('.bub,:where(#msg-input)'));
 ok('Messages exposes archived history',MAP_SOURCE.includes('async function msgLoadOlder()'));
 await import('./fabric-sourcing.mjs');
+ok('Brocade and jacquard yardage remain eligible without accepting unrelated weaves or fabric tools',true);
 ok('Material qualification, garment-scoped refinements and grounded ranking pass synthetic sourcing contracts',!process.exitCode);
 await import('./fabric-search.mjs');
 await import('./domain-boundaries.mjs');

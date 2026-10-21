@@ -3,7 +3,7 @@ const MAX_VISUAL_CANDIDATES = 12;
 
 // A seller being a fabric shop does not make every item in its feed fabric.
 // Use listing facts, never the model's reason, to qualify a recommendation.
-const MATERIALS = /\b(?:fabric|yardage|denim|chambray|wool|cashmere|cotton|linen|silk|satin|velvet|twill|poplin|canvas|chiffon|organza|crepe|crêpe|viscose|rayon|polyester|acrylic|modacrylic|fur|jersey|knit|woven|tweed|flannel|corduroy|suiting|shirting|lace|tulle|fleece|leather|suede)\b/i;
+const MATERIALS = /\b(?:fabric|yardage|brocade|jacquard|denim|chambray|wool|cashmere|cotton|linen|silk|satin|velvet|twill|poplin|canvas|chiffon|organza|crepe|crêpe|viscose|rayon|polyester|acrylic|modacrylic|fur|jersey|knit|woven|tweed|flannel|corduroy|suiting|shirting|lace|tulle|fleece|leather|suede)\b/i;
 const NOT_FABRIC = /\b(?:scissors?|shears?|rotary cutters?|cutting mats?|seam rippers?|sewing machines?|needles?|rulers?|zippers?|buttons?|patterns?|sewing kits?|thread spools?|(?:sewing|embroidery) threads?|yarns?|skeins?|boots?|shoes?|sandals?|sneakers?|handbags?)\b/i;
 export function isFabricProduct(product) {
   const title=String(product?.title||''),facts=[title,product?.description,product?.composition].join(' ');
@@ -18,7 +18,7 @@ export function isFabricPiece(piece) {
   return !!piece && !piece.skip && !piece._virtual && !/\b(?:footwear|boots?|shoes?|sandals?|sneakers?|loafers?|heels?|bags?|belts?|jewelry|jewellery|accessor(?:y|ies))\b/i.test([piece.name,piece.category].join(' '));
 }
 const fibers=[['leather','leather|suede'],['wool','wool|cashmere|merino|worsted'],['silk','silk'],['linen','linen|flax'],['cotton','cotton'],['viscose','viscose|rayon|lyocell|tencel'],['polyester','polyester|poly'],['nylon','nylon|polyamide'],['acrylic','acrylic|modacrylic']];
-const constructions=[['faux_fur','faux[ -]fur|fake[ -]fur|imitation[ -]fur'],['fur','fur'],['denim','denim|chambray'],['velvet','velvet|velveteen'],['corduroy','corduroy'],['twill','twill|gabardine|denim'],['poplin','poplin|broadcloth'],['satin','satin'],['chiffon','chiffon'],['organza','organza'],['crepe','crepe|crêpe'],['jersey','jersey|knit'],['tweed','tweed'],['flannel','flannel'],['lace','lace'],['tulle','tulle'],['fleece','fleece'],['canvas','canvas|duck']];
+const constructions=[['brocade','brocade'],['jacquard','jacquard'],['faux_fur','faux[ -]fur|fake[ -]fur|imitation[ -]fur'],['fur','fur'],['denim','denim|chambray'],['velvet','velvet|velveteen'],['corduroy','corduroy'],['twill','twill|gabardine|denim'],['poplin','poplin|broadcloth'],['satin','satin'],['chiffon','chiffon'],['organza','organza'],['crepe','crepe|crêpe'],['jersey','jersey|knit'],['tweed','tweed'],['flannel','flannel'],['lace','lace'],['tulle','tulle'],['fleece','fleece'],['canvas','canvas|duck']];
 const colors=[['blue','blue|navy|indigo'],['white','white|ivory|cream|ecru'],['red','red|crimson|burgundy|wine|maroon'],['black','black'],['gray','gray|grey|charcoal|silver'],['green','green|olive|emerald|sage'],['brown','brown|tan|beige|camel'],['yellow','yellow|gold|mustard'],['pink','pink|rose|magenta'],['purple','purple|violet|lavender']];
 const textures=[['matte','matte|matt'],['shiny','shiny|glossy|lustrous'],['brushed','brushed'],['ribbed','ribbed'],['smooth','smooth'],['textured','textured|slub']];
 const has=(value,pattern)=>new RegExp('\\b(?:'+pattern+')\\b','i').test(value);

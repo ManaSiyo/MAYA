@@ -586,3 +586,8 @@ account/project/garment resets clear private context. Fabric assets are v5 and
 search-details.js revalidates. Run domain-boundaries, all fabric suites and exact
 release gates, then aesthetic-authority last. Import boundaries do not imply
 separate Cloud Run deployments; see docs/MODULE-BOUNDARIES.md.
+
+October 21 real-retailer follow-up: brocade/jacquard are recognized fabric
+constructions; never reject real yardage solely because older material vocabulary
+omits a weave. Keep explicit weave constraints, seller-only facts and tool/garment
+exclusions. Run fabric-sourcing/search plus regression/final authority.

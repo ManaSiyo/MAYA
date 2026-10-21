@@ -1,27 +1,16 @@
-[Codex] Repair fabric discovery and expose its search context
+[Codex] Recognize brocade and jacquard fabric listings
 
-Saved-look searches skipped retailer lookup, and an empty later web answer could
-erase valid candidates. Run bounded material-only seeds, merge eligible results
-before one visual check, preserve original/canonical crop context and load public
-inventory independently of reference conversion. Validate provider shapes/source
-aliases and bound stalled browser search reads without automatic paid retries.
+A read-only real-retailer check found a genuine Mood brocade listing excluded
+before visual review because the material vocabulary omitted brocade. Recognize
+brocade/jacquard in eligibility and weave constraints. Explicit brocade requests
+still reject unrelated twill, and fabric scissors remain excluded. Unknown seller
+price/unit stays unknown. No visible UI, SMS/voice implementation, global model,
+shared dependency, credential or environment changes.
 
-Show Sourceable search details on hover, keyboard focus or tap: saved traits,
-actual retailer queries, provider-exposed web queries, qualified interpretation,
-stores and stage. Reuse the actual presenter in Aesthetic Control with existing
-H4/P3, Inner and Glass settings; preserve private identity resets and concise cards.
-
-Separate retailer policy and discovery contract from fabric orchestration. Add
-release-enforced import/route/asset/style boundaries and an architecture audit.
-No SMS/voice implementation, shared model default, credentials or production
-environment change. Shared process/deployment coupling remains documented.
-
-Validation: retained-candidate test fails on the original; 37 server cases and
-focused real-page browser checks pass, including held/failed photos, timeout,
-sealed accounts/projects, hover/focus/tap, paint hit-testing, six widths, changed
-valid saved settings and active preview/real Save propagation. All 72 exact release commands,
-full integrated regression and smoke passed locally. Root/server npm ci passed.
-Final standalone Aesthetic Control runs last after this record before commit.
-Live semantic matches and deployed assets are checked separately after Push;
-mocked providers do not prove external delivery or matching quality. Existing
-ws/qs dependency advisories remain documented for a separate shared upgrade.
+Validation: the new sourcing case fails on f177f7a before the repair. Sourcing
+(13 cases), search (37), UI/workflow through full integrated regression, AI
+routing, container/domain contracts and smoke pass. The real public listing
+now passes eligibility. Standalone Aesthetic Control runs last after this record
+before commit. Actual seller parsing proves eligibility, not visual equivalence
+or apparel suitability. Exact latest-commit deployment and owner-browser matching
+checks follow Push; both Cloud Build runs must settle before final acceptance.

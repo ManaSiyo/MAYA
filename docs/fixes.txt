@@ -1,3 +1,7 @@
+October 21 — Real Mood brocade rejected before visual review
+[reproduced] Public retailer HTML parsed to a real product/photo, but isFabricProduct returned false because brocade was absent from the material vocabulary. The new sourcing fixture fails on f177f7a.
+[fixed] Recognize brocade/jacquard as textile constructions and enforce requested weave matches; reject unrelated twill and scissors. No UI, communications or shared dependency changes. Sourcing/search/routing/container/domain, full integrated regression and smoke pass; the real page now passes eligibility. Final authority precedes a separate follow-up commit.
+
 October 21 — Fabric search candidates erased / opaque empty searches
 [reproduced] Automatic saved looks skipped direct retailer queries; successful but empty web discovery overwrote valid supplementary results. Reference-photo conversion also preceded public inventory loading. Automatic mode hid reference interpretation and had no visible query evidence or overall stalled-read deadline. A live crocodile-trouser search returned a relevant listing; a newer coat returned empty, so this was not a universal outage.
 [repair] Bounded material-only seeds, merged eligible candidates before one visual review, original + canonical crop, fabric-only provider contract, www evidence identity, malformed-answer validation, independent inventory and 60-second read timeout. Sourceable hover/focus/tap context and actual shared active preview; account/garment resets clear hidden data. No paid retry, weak visual fallback or new card Save/Use.

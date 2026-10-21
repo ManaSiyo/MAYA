@@ -1,5 +1,20 @@
 # Current handoff — October 21, 2026
 
+## Follow-up after first push
+
+f177f7a49d38240a33de5764bda0dc56c6deea3b contains the primary fabric repair,
+with a tree identical to verified local 03df329. Cloud Build
+7dbc2c19-0240-4eaa-b2bd-6f0751ef7bea was running when a read-only real-retailer
+check exposed another concrete bug: a genuine Mood brocade listing was rejected
+because the fabric vocabulary omitted brocade. Add brocade/jacquard eligibility
+and strict weave constraints; the original fails the new focused case. Unrelated
+weaves and tools still fail. No UI, SMS/voice or shared dependency changes in this
+follow-up. Sourcing (13 cases), search (37), routing/container/boundaries, full
+integrated browser regression and smoke pass. The real public Mood listing now
+passes eligibility with no invented price/unit. Run standalone Aesthetic Control
+last after these state/commit records before the separate commit.
+Both pushes need completed Cloud Build and exact latest-commit live verification.
+
 ## Baseline and request
 
 718f404ab1fefe24329988aeef8510e979a4125d is deployed. Cloud Build

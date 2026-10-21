@@ -5,6 +5,7 @@ import {
   buildVisualRankingRequest,
   collectRetailerResults,
   fabricProductMatch,
+  isFabricProduct,
 } from '../docs/server/fabric-sourcing.js';
 
 let passed = 0;
@@ -28,6 +29,17 @@ const products = [
 ];
 
 console.log('\nMAYA fabric sourcing test\n');
+
+test('brocade and jacquard yardage remain eligible while unrelated weaves and tools fail',()=>{
+  const base={url:'https://www.moodfabrics.com/products/metallic-black-and-gold-abstract-luxury-brocade-329451',title:'Metallic Black and Gold Abstract Luxury Brocade',description:'Metallic decorative cloth. Sold by the yard.',image:'https://seller.example/brocade.jpg',evidence:'seller_listing',availability:'unknown'};
+  assert.equal(isFabricProduct(base),true);
+  for(const weave of ['brocade','jacquard']){
+    const piece={id:'coat',name:'Embellished coat',fabric:'Black '+weave,fabric_spec:{weave}};
+    assert.equal(fabricProductMatch({...base,title:'Black '+weave,description:'Sold by the yard.'},{automatic:true,pieces:[piece]})?.garmentId,'coat');
+    assert.equal(fabricProductMatch({...base,title:'Black cotton twill',description:'Sold by the yard.'},{automatic:true,pieces:[piece],allowVisualOnly:true}),null,'Visual review cannot bypass the requested weave');
+    assert.equal(isFabricProduct({...base,title:weave+' fabric scissors'}),false);
+  }
+});
 
 test('ranking success returns ordered scores and reasons', () => {
   const built = buildVisualRankingRequest({ garmentImage, traits: { fiber: 'wool', weave: 'twill' }, products });

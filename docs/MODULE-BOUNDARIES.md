@@ -77,6 +77,14 @@ workspace without changing shared Aesthetic Control. Separate deployments only
 after contracts, health checks and rollback ownership are explicit. A broad
 rewrite during a fabric incident would introduce unnecessary regression risk.
 
+**P1, Fabrics vocabulary — follow-up fixed:** a read-only check against a real
+Mood brocade page reproduced a seller product rejected by isFabricProduct: the
+fabric vocabulary omitted brocade. Include brocade/jacquard in eligibility and
+weave constraints, with an original-code failure and negative unrelated-weave/tool
+fixtures. Price/unit stay unknown when the seller parser cannot establish them;
+this change never invents those facts. This was found after the first repair push,
+so it is a separate focused commit with its own validation.
+
 **P2, architecture — corrected documentation:** the old AI architecture document
 mixed historical feed/model descriptions with current behavior. The current
 fabric path is now stated explicitly; old version sections remain historical.

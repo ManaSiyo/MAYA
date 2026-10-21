@@ -242,3 +242,8 @@ items without a thumbnail retain their original image behavior. Metadata uses a
 versioned fetch and exact no-cache Hosting rule so an old week-cached manifest
 cannot hide this repair; photograph caching stays unchanged. This is a transfer
 reduction, not a measured live AI latency or matching-quality claim.
+
+October 21 real-retailer follow-up: brocade and jacquard are recognized textile
+constructions in both eligibility and matching constraints. Their omission could
+reject actual source-backed listings before visual review. Unknown seller price
+or unit stays unknown; unrelated weaves/tools remain excluded.
