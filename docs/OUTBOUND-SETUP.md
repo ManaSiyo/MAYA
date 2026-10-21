@@ -1,0 +1,206 @@
+# Mana Siyo's Outbound: activation
+
+Prepared locally on September 27, 2026. Not deployed or connected to live Gmail by
+this change. Consumer MAYA and Playground are unchanged.
+
+## Included
+
+- A master list of up to 10,000 contacts, 250-record scrolling batches, reusable campaign
+  membership, campaign-specific drafting and explicit reviewed sending.
+- Two independently authorized Gmail mailboxes in the same signed-in admin
+  workspace. Connect worldofsiyo@gmail.com and fromsa@manasiyo.com there; signing
+  into Admin as a different Google account still opens a separate workspace.
+- Hourly Sheet, Gmail, existing Twilio activity and bounded Hunter reconciliation.
+  New Gmail correspondents require review before becoming prospects. No automatic
+  email sends, automatic bookings or automatic changes to closed/suppressed stages.
+- Shared Admin/Outbound AI meter: a combined $1/day **Outbound text AI** allowance,
+  resetting at midnight America/Los_Angeles. This does not cap consumer generation,
+  images, voice, other MAYA AI calls, Hunter, Twilio or Google infrastructure.
+- Green person, blue company and yellow offer fields in the editable sample email.
+
+## Owner-only setup
+
+Repository instructions reserve credentials and production environment changes to
+Fromsa. No secrets were read or changed during implementation.
+
+1. **Deploy:** Push the prepared commit from GitHub Desktop and wait for Cloud
+   Build to pass. Keep all private credentials in your existing secret manager.
+2. **Google Sheet:** Outbound → Connections → save the workbook → Refresh from
+   Google Sheet. Share Viewer access with the Cloud Run service account shown by
+   a denied-access error. The three supported tabs are `9/23 Ceremonial`,
+   `9/23 Corporates`, and `9/23 Fashion Houses`. This is read-only: local edits win,
+   drafts remain, bounced contacts are suppressed, source deletions aren't erased.
+3. **Gmail API:** In [Google Cloud](https://console.cloud.google.com/apis/library/gmail.googleapis.com?project=pro-maya),
+   enable Gmail API and configure a Web application OAuth client. Authorized
+   redirect URI: `https://maya.manasiyo.com/api/outbound/gmail/callback`.
+   Required scopes are `https://www.googleapis.com/auth/gmail.readonly` and
+   `https://www.googleapis.com/auth/gmail.send`. Complete the Google consent-screen
+   requirements applicable to your app. External testing-mode authorization can
+   expire; production use needs the appropriate publishing/verification status.
+4. **Server configuration:** Attach `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`,
+   `GMAIL_REDIRECT_URI` and a dedicated `GMAIL_TOKEN_ENCRYPTION_KEY` (32 random bytes
+   represented as 64 hexadecimal characters). Keep that encryption key stable;
+   replacing it requires reconnecting mailboxes. Optional provider credentials:
+   `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `HUNTER_API_KEY`.
+   On Cloud Run, Gemini uses Vertex AI through the existing service identity,
+   without GEMINI_API_KEY. Vertex API must be enabled and the service identity
+   must have model invocation permission. Text uses global (override only via
+   CRM_VERTEX_LOCATION when required). The key path remains for non-Cloud-Run
+   deployments. Configured availability is not a successful inference check.
+5. **Connect both:** In the Outbound drawer, use Connect Gmail mailbox once per
+   mailbox and approve the scopes. This application authorization is separate
+   from Gmail access granted to ChatGPT/Codex. Disconnect removes MAYA's stored
+   refresh token; Google account access can also be revoked in Google settings.
+6. **Hourly worker:** Create one [Cloud Scheduler](https://console.cloud.google.com/cloudscheduler?project=pro-maya)
+   HTTP POST job for this workspace. Use cron `0 * * * *`, timezone
+   `America/Los_Angeles`, URL
+   `https://maya-api-53947659283.us-west1.run.app/api/tasks/outbound-sync`,
+   `Content-Type: application/json`, and body `{"accountId":"WORKSPACE_REFERENCE"}`.
+   Copy the workspace reference from Outbound → Hourly updates & spending.
+   Use an owner-selected service account and OIDC authentication. Set its exact
+   email as `OUTBOUND_SCHEDULER_EMAIL` and set `OUTBOUND_SCHEDULER_AUDIENCE` to the
+   exact OIDC audience configured on the job (normally the target URL). Use the
+   direct Cloud Run URL, not Firebase Hosting, for long-running scheduled work.
+   Allow a 900-second attempt deadline and compatible Cloud Run request timeout.
+   The endpoint verifies Google's signature, audience, expiry and service-account
+   email. It rejects browser/admin tokens. Enable hourly updates in the drawer.
+   The UI reports awaiting, running or overdue based on actual scheduled runs.
+7. **Hunter:** Default automatic lookup allowance is zero until selected. A run
+   can discover up to 25 people from one saved active-campaign company domain;
+   configure 0–20 lookups/day. Failed/uncertain calls retain their daily claim.
+   Hunter credits are separate from the AI allowance. Manual Hunter actions are
+   explicit. No unsupported automated company-discovery prompt is invented.
+
+## Verify after activation
+
+- Refresh the master Sheet and compare campaign counts with the workbook.
+- Connect both mailboxes; run Update CRM now. Send a message from each mailbox to
+  your own test address through reviewed send, reply, and update again. Also send
+  a message directly in Gmail and verify it is reconciled. Do not use a prospect
+  as a delivery test. Gmail accepting a send is not proof of recipient delivery.
+- Make a separately approved test call/SMS. Existing stored Twilio events match
+  contacts by exact normalized phone number; this does not change consent or
+  repair Twilio webhooks. Live incoming SMS remains a separate verification item.
+- Run the Scheduler job once and inspect its HTTP response plus the drawer's last
+  scheduled run. After an hour, verify another run. Turning the UI switch on alone
+  cannot create a Cloud Scheduler job.
+- Request one AI draft with each connected provider; verify the meter changes.
+  Exhausted/uncertain allowance blocks new AI calls while deterministic sync works.
+
+## Cost basis and limits
+
+Meter amounts are provider-reported token counts multiplied by checked text rates,
+not billing-account totals or provider invoices. Reservations are taken before
+requests using a conservative input bound and a fixed output-token limit; parallel
+requests share the same account/day ledger. Unknown completion/usage keeps its
+reservation for the day. There is no paid automatic fallback/retry.
+
+| Provider | Economy model | Input / output per million tokens | 2,000 input + 500 output |
+|---|---|---|---|
+| OpenAI | gpt-5-nano | $0.05 / $0.40 | $0.00030 |
+| Claude | claude-haiku-4-5-20251001 | $1 / $5 | $0.00450 |
+| Gemini | gemini-2.5-flash-lite | $0.10 / $0.40 | $0.00040 |
+
+Examples exclude tax, provider price changes and unrelated API use. Actual token
+usage varies; reservations reduce usable headroom temporarily. Auto chooses the
+lowest estimated-cost configured model. Provider access must be verified live.
+A $1 allowance is not a promise of a fixed number of successful messages.
+
+Gmail backfill covers the last 30 days, up to 100 messages per mailbox per run,
+with bounded batches and resumable history cursors. Large inboxes may need several
+runs. Only metadata/snippets are summarized, not entire threads or attachments.
+AI briefs process up to eight changed contacts per run. The dashboard retains
+2,000 recent matched events and 100 unmatched review items; source mail remains
+in Gmail. Legacy campaign copies are retained to avoid losing notes or drafts;
+new imports reuse a master identity. This is not an archival migration tool.
+
+Sources checked September 27, 2026:
+[Gmail incremental sync](https://developers.google.com/workspace/gmail/api/guides/sync),
+[Google OAuth](https://developers.google.com/identity/protocols/oauth2/web-server),
+[Scheduler OIDC](https://docs.cloud.google.com/scheduler/docs/http-target-auth),
+[Firebase cookie forwarding](https://firebase.google.com/docs/hosting/manage-cache#using_cookies),
+[OpenAI rates](https://developers.openai.com/api/docs/models/gpt-5-nano),
+[Claude rates](https://platform.claude.com/docs/en/about-claude/pricing),
+[Gemini rates](https://ai.google.dev/gemini-api/docs/pricing).
+
+Vertex setup inspected September 28 in pro-maya: API enabled; default compute
+service identity has Editor already. No permissions or secrets changed.
+[Cloud Run identity](https://docs.cloud.google.com/run/docs/securing/service-identity),
+[Vertex text pricing](https://cloud.google.com/vertex-ai/generative-ai/pricing).
+
+
+## Owner conversation by phone and SMS
+
+Once the owner conversation handler is deployed, enable owner text commands
+in Admin once to bind the allowlisted Admin account to the configured owner
+number. The signed sender, not a number or UID written in a message, authorizes
+owner controls. Existing enabled bindings work without another activation.
+
+Text normally. Ask Maya to remember a fact, keep replies brief, or use a signup
+notification format. These supported preferences save immediately without a
+new deployment. Calls use the same owner memory and recent Messages history.
+During an owner call, asking for a summary by text sends to the configured owner
+number only. Carrier acceptance does not prove delivery; check Messages status.
+
+Signup text fields are {name}, {phone}, {category} and {request}. Example names
+and numbers describe layout; the actual lead supplies the values. The default
+includes the callback name, phone and request. Phone detection/linking is up to
+the receiving SMS app. Existing calls, scheduler requirements and alert
+idempotency remain. Changing format does not resend old alerts.
+
+Lead edits and client booking texts retain their existing confirmations.
+New tools, arbitrary functionality and schedules are feature inbox requests,
+not capabilities created by memory. SMS conversation uses the existing shared
+$1/day CRM text AI allowance and provider availability; voice keeps its own
+meter. This implementation needs one deployment before live owner texts/calls
+can use it. No credentials or production environment changes are required.
+
+
+## SMS access without a laptop or mobile internet
+
+After deploying the owner SMS access handler, use the studio number from the
+already-bound owner number. Carrier SMS service is sufficient on the owner's
+phone; MAYA's server and messaging carrier must still be reachable. No browser,
+new login or internet connection on the owner's device is needed per command.
+
+- MAYA HELP or COMMANDS: available controls. Standalone HELP remains reserved
+  for carrier consent/help behavior.
+- THREAD Nick, CONVERSATION Nick, or "Where did you text Nick?": retained text
+  exchanges in both directions, actual recipient number, timestamps, recorded
+  delivery states and full stored call transcript. Records are newest first.
+- INBOX: contacts, latest recorded activity and unread count. Reading an SMS
+  report does not mark a client's messages read in Admin.
+- ACTIONS: recorded client communications, booking proposals/outcomes, signup
+  alert outcomes, owner reply drafts/results, preferences and feature requests.
+  ACTIONS Nick restricts to that contact's recorded communications/reply drafts.
+  This is recorded activity, not an exhaustive trace of every internal operation.
+- FEATURES: request text and recorded completion state.
+- STATUS: initialized/configured services and the current text AI meter; it
+  does not infer real delivery from configuration.
+- LEAD Nick: identify the contact and phone.
+- REPLY Nick: Thursday works for your fitting. Returns the exact recipient and
+  message preview. SEND <displayed code> within 10 minutes sends that exact text.
+  Blocks/STOP are checked again. A changed lead phone invalidates the preview.
+  No model action or voice argument can invoke this SEND confirmation.
+- MORE <report code> <page>: copy the next command displayed. Reports expire
+  after 24 hours, retain their snapshot across new messages/service restarts,
+  and can be restarted from source history with THREAD/INBOX/ACTIONS.
+
+These explicit commands require no paid text AI, so history remains available
+when the shared AI limit is reached or inference is unavailable. Normal chat,
+natural wording outside the recognized read aliases, and lead-change extraction
+still require a working AI provider. Existing YES and BOOK confirmations remain.
+
+Long reports are paged rather than silently clipped. Missing transcripts and
+unavailable data are stated. Carrier acceptance is separate from delivery.
+Repeated confirmations never resend; uncertain outcomes require a read/check,
+not an automatic retry. All replies return through the signed owner SMS request;
+voice-requested reports can use the existing fixed-owner text tool.
+
+Archive overflow now persists before messages leave the 400-entry live window.
+Retention begins with this handler: records already discarded cannot be
+reconstructed. An explicit Delete history starts a new archive epoch; prior
+messages are not exposed again when that contact texts anew. Existing report
+snapshots are private to the bound owner and expire after 24 hours.
+No feature promises access during a server/carrier outage or to activity that
+was never recorded. Live owner SMS/call verification remains necessary.

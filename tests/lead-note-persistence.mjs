@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {Script,createContext} from 'node:vm';
+import {createLeadStore} from '../docs/server/lead-store.mjs';
+const source=readFileSync(new URL('../docs/server/server.js',import.meta.url),'utf8');
+const context=createContext({Buffer,Date,JSON,MAYA_LEADS_PATH:'fixture',record:{items:[{id:'m_1',name:'Example',note:'Original'}],overrides:{}},written:null});
+let generation=1;
+context._leadStore=createLeadStore({read:async()=>({ok:true,generation:String(generation),buf:Buffer.from(JSON.stringify(context.record))}),write:async(_key,body,_type,expected)=>{assert.equal(expected,String(generation));generation++;context.written=JSON.parse(body.toString());context.record=context.written;}});
+new Script(source.slice(source.indexOf('async function updateLead('),source.indexOf('// v13.87: delete ANY lead.'))).runInContext(context);
+const helper=source.slice(source.indexOf('function applyLatestLeadNote('),source.indexOf('async function loadLeadFeed('));new Script(helper).runInContext(context);
+await new Script("updateLead('m_1',{note:'Reviewed note'})").runInContext(context);
+assert.equal(context.written.items[0].wrote,'Reviewed note');assert.ok(context.written.items[0].noteUpdatedAt);
+await new Script("updateLead('wix_1',{note:'Reviewed Wix note'})").runInContext(context);assert.equal(context.written.overrides.wix_1.note,'Reviewed Wix note');
+const lead={...context.written.overrides.wix_1};context.lead=lead;context.note={text:'Older recorded note',ts:'2020-01-01'};new Script('applyLatestLeadNote(lead,note)').runInContext(context);assert.equal(lead.note,'Reviewed Wix note');assert.equal(lead.wrote,'Reviewed Wix note');
+context.note={text:'Newer recorded note',ts:'2099-01-01'};new Script('applyLatestLeadNote(lead,note)').runInContext(context);assert.equal(lead.note,'Newer recorded note');assert.equal(lead.wrote,'Newer recorded note');
+context.lead={wrote:'Original form'};context.note={text:'Recorded note',ts:'2026-10-05'};new Script('applyLatestLeadNote(lead,note)').runInContext(context);assert.equal(context.lead.wrote,'Recorded note');
+console.log('Reviewed manual/Wix note replacements persist and survive older notes; newer touchpoints update the shared feed.');

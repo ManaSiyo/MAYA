@@ -1,0 +1,85 @@
+<!-- Historical fragments only; see README.md. Not a served page. -->
+<style>
+  /* Prompting engine */
+  .pe-panel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--maya-form-field-gap,10px);margin-bottom:10px}
+  .pe-field{min-width:0}.pe-field label{display:block;text-align:center;margin:0}
+  .pe-field textarea{width:100%;box-sizing:border-box;min-height:70px;resize:vertical;line-height:1.45}
+  .pe-row{grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .pe-live{margin-bottom:6px}.pe-live h4{margin-bottom:9px}.pe-live p{line-height:1.65;margin-bottom:10px}
+  .pe-live pre{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;margin-bottom:10px}
+
+  /* Architecture */
+  /* v13.5: the fold sections and the credits line live at the BOTTOM of the
+     screen, per Fromsa. The wrap is a full-height column and the footer is
+     pushed down by the space above it. */
+  .wrap{min-height:100vh;display:flex;flex-direction:column}
+  .map-footer{margin-top:auto;padding-top:34px}
+  .arch{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .arch .col{min-width:0}.arch h4{margin-bottom:10px}
+  .arch .it{text-align:center;padding:7px 0;overflow-wrap:anywhere}
+  .arch .it small{display:block;line-height:1.5}
+  .arch-deploy{grid-column:1/-1;line-height:1.9;text-align:center}
+
+
+@media(max-width:640px){.pe-panel,.arch{grid-template-columns:1fr}}
+</style>
+  <details class="fold" data-maya-section id="pe-fold">
+  <summary><h2 data-maya-type="H2" class="grp">MAYA Prompting Engine</h2></summary>
+  <div data-maya-section-content class="fold-body">
+  <div class="pe-live" data-maya-panel="inner">
+    <h4 data-maya-type="H3">Fixed, baked into every render (not editable here)</h4>
+    <p data-maya-type="P1">Every MAYA image combines four layers: the <b>design specification</b> from the consultation,
+       the <b>client's body</b>, the <b>client's face</b>, and the <b>framing mandate</b> below. Your four fields
+       add atelier directions.</p>
+    <pre data-maya-type="P1" data-maya-control="field" id="pe-framing">FRAMING, NON NEGOTIABLE: one continuous horizontal photograph of the SAME model standing THREE times across a single seamless studio set, SIDE view on the left, FRONT view in the center (dominant hero), BACK view on the right. ONE unbroken backdrop and ONE continuous floor run edge to edge behind and beneath all three figures. NO panel dividers, NO seams, NO borders, NO collage or grid look. FULL BODY for each figure, head to soles inside the frame. Same model, same pose category, same height for all three. Plain clean seamless studio backdrop, soft even lighting, fashion editorial photography. No text, no labels, no captions, no measurement marks.</pre>
+    <p data-maya-type="P1"><b>The body layer:</b> when measurements are captured in the Profile fold, the prompt adds
+       "The model has these proportions: approximately H inches tall, S inch shoulders, C inch chest, W inch waist, H inch hips."
+       Since v14.20 every render also carries, measurements or not: "Natural adult photographic proportions: the head is about
+       one eighth of the standing height and is never enlarged, the neck, shoulders, torso and legs are in realistic scale to it,
+       and the face reference sets likeness only, never the size of the head." If a measurement was never typed in, it is not
+       sent, and the image model guesses; image models treat height as a weak suggestion unless the words reinforce it.
+       The Body field below is appended right after that sentence as "BODY, atelier direction", so this is where
+       "long legs, elongated proportions, a small head" goes.</p>
+    <p data-maya-type="P1"><b>The face layer:</b> gender presentation, age range, skin tone, face shape, eyes and hair are extracted
+       from the face photo once and repeated verbatim to keep the person consistent across views.</p>
+    <p data-maya-type="P1"><b>Your four fields:</b> stored in Firestore, read at sign in, and added to every render as
+       CHARACTER, BACKGROUND, STYLE and BODY atelier directions.</p>
+  </div>
+  <h4 data-maya-type="H3">Modifiable, appended to every render</h4>
+  <div class="pe-panel" data-maya-panel="inner">
+    <div class="pe-field" data-maya-field-row><label data-maya-type="P3" for="pe-character">The character</label>
+      <textarea data-maya-type="P1" data-maya-control="field" id="pe-character" placeholder="How the person wearing the design is described&#8230;"></textarea></div>
+    <div class="pe-field" data-maya-field-row><label data-maya-type="P3" for="pe-background">The background</label>
+      <textarea data-maya-type="P1" data-maya-control="field" id="pe-background" placeholder="The world behind them&#8230;"></textarea></div>
+    <div class="pe-field" data-maya-field-row><label data-maya-type="P3" for="pe-style">The style</label>
+      <textarea data-maya-type="P1" data-maya-control="field" id="pe-style" placeholder="Lens, light, finish, the rendering style&#8230;"></textarea></div>
+    <div class="pe-field" data-maya-field-row><label data-maya-type="P3" for="pe-body">The body</label>
+      <textarea data-maya-type="P1" data-maya-control="field" id="pe-body" placeholder="Height, build, head size, legs&#8230; e.g. long legs, elongated proportions, a small head on a tall frame"></textarea></div>
+    <div class="pe-row" style="justify-content:center"><button data-maya-type="P3" id="pe-save" class="top-btn" onclick="savePrompting()">Save to the live app</button><span data-maya-type="P1" id="pe-state">waiting for the one sign in at the top of the page</span></div>
+  </div>
+  </div>
+  </details>
+
+  <details class="fold" data-maya-section id="arch-fold">
+  <summary><h2 data-maya-type="H2" class="grp" id="architecture">Architecture, local and online</h2></summary>
+  <div data-maya-section-content class="fold-body">
+  <div class="arch">
+    <div class="col" data-maya-panel="inner">
+      <h4 data-maya-type="H3">Your Mac, Desktop/MAYA-new</h4>
+      <div class="it" data-maya-type="P1">index.html, status.html, backend.html<small data-maya-type="P3">The three pages. Visitors see the published copies.</small></div>
+      <div class="it" data-maya-type="P1">aesthetics/<small data-maya-type="P3">ui, fabrics, headshots and operations engine. Published on deploy.</small></div>
+      <div class="it" data-maya-type="P1">docs/<small data-maya-type="P3">Never published. Operations Room R&amp;D, the server source, the deploy config.</small></div>
+    </div>
+    <div class="col" data-maya-panel="inner">
+      <h4 data-maya-type="H3">Google, project pro-maya</h4>
+      <div class="it" data-maya-type="P1">Firebase Hosting<small data-maya-type="P3">Serves the last deployed snapshot at maya.manasiyo.com.</small></div>
+      <div class="it" data-maya-type="P1">Cloud Run, maya-api<small data-maya-type="P3">OpenAI proxy, Drive submit, admin feeds. Keys live here.</small></div>
+      <div class="it" data-maya-type="P1">Firestore + Storage + Drive<small data-maya-type="P3">Sessions, projects, images, client PDFs. Lives only online.</small></div>
+    </div>
+    <div class="arch-deploy" data-maya-type="P1">
+      To publish, press <code>Push origin</code> in GitHub Desktop.
+      Google builds and deploys the website and server automatically.
+    </div>
+  </div>
+  </div>
+  </details>

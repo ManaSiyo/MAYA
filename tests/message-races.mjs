@@ -1,0 +1,55 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
+import {createMessageStore,mountMessages} from '../docs/server/maya-messages.mjs';
+const source=readFileSync(new URL('../backend/status.html',import.meta.url),'utf8');
+let bucket=null;const store=createMessageStore({load:async()=>bucket,save:async r=>{bucket=structuredClone(r);}}),number='+14155550123';
+await store.inbound({from:number,text:'Visible',sid:'SM1'});const snapshot=await store.get(number);
+await store.inbound({from:number,text:'Not displayed',sid:'SM2'});await store.markRead(number,snapshot);
+assert.equal((await store.get(number)).unread,1,'New inbound messages remain unread');
+const routes=new Map();let sends=0;
+mountMessages({get:(path,...h)=>routes.set(path,h.at(-1)),post:(path,...h)=>routes.set(path,h.at(-1))},{store,requireAdmin:async()=>({email:'test'}),sendSms:async()=>{sends++;return{ok:true};}});
+const response={setHeader(){},status(code){this.code=code;return this;},json(value){this.body=value;}};
+await routes.get('/api/admin/messages/send')({body:{to:number,text:'x'.repeat(1601)}},response);
+assert.equal(response.code,400);assert.equal(sends,0,'Overlong reviewed text is never silently truncated');
+let release,painted=[];const ctx={_msgListSequence:0,_idTok:'A',document:{getElementById:()=>({})},fetch:()=>new Promise(r=>release=r),paintThreads:t=>painted.push(t),esc:s=>s};
+runInNewContext(source.slice(source.indexOf('async function loadThreads()'),source.indexOf('function paintThreads(')),ctx);
+const pending=ctx.loadThreads();ctx._idTok='B';release({ok:true,json:async()=>({threads:[{name:'Private A'}]})});await pending;assert.equal(painted.length,0);
+const input={value:'Sent draft'},button={},feedback={};
+const sendCtx={crypto:{randomUUID:()=> 'fixture-send-00002'},_msgAttempts:new Map(),_idTok:'A',_msgOpen:{number,name:'Person'},_msgSending:false,_msgDrafts:new Map(),document:{querySelector:()=>button,getElementById:id=>id==='msg-input'?input:id==='msg-feedback'?feedback:{}},fetch:()=>new Promise(r=>release=r),loadThread:async()=>{}};
+sendCtx._adminContext=()=>({token:sendCtx._idTok});sendCtx._adminContextCurrent=context=>context.token===sendCtx._idTok;
+runInNewContext(source.slice(source.indexOf('async function msgSend()'),source.indexOf('async function msgUpdate(')),sendCtx);
+const sending=sendCtx.msgSend();input.value='New unsent draft';release({ok:true,json:async()=>({ok:true})});await sending;assert.equal(input.value,'New unsent draft');
+const nameCtx={_leadList:[{name:'Angela Example',phone:number}]};runInNewContext(source.slice(source.indexOf('function _msgKnownName('),source.indexOf('async function openThread(')),nameCtx);
+for(const name of ['Caller',number,'(415) 555-0123','Unknown',''])assert.equal(nameCtx._msgKnownName(number,name),'Angela Example');
+assert.equal(nameCtx._msgKnownName('+14155550199','Caller'),'');
+console.log('Messaging race regressions: unread snapshot, size rejection, session isolation, draft preservation and contact names passed.');
+const server=readFileSync(new URL('../docs/server/server.js',import.meta.url),'utf8');
+const memorySource=server.slice(server.indexOf('const MAYA_MEM_PATH ='),server.indexOf("app.post('/api/admin/maya-forget'"));
+let writes=0,generation;
+const memory=new Function('gcsGet','gcsPut','withLock','Buffer',memorySource+';return {appendMayaMemory,forgetMayaMemory};')(async()=>{throw Error('Storage unavailable');},async()=>writes++,(_,fn)=>fn(),Buffer);
+await assert.rejects(memory.appendMayaMemory('New fact'),/Storage unavailable/);await assert.rejects(memory.forgetMayaMemory('Old fact'),/Storage unavailable/);assert.equal(writes,0);
+const versioned=new Function('gcsGet','gcsPut','withLock','Buffer',memorySource+';return appendMayaMemory;')(async()=>({ok:true,generation:'42',buf:Buffer.from(JSON.stringify({items:[{text:'Existing fact'}]}))}),async(_,buf,__,g)=>{generation=g;assert.equal(JSON.parse(buf).items.length,2);},(_,fn)=>fn(),Buffer);
+await versioned('New fact');assert.equal(generation,'42');
+const {createOwnerConversation}=await import('../docs/server/owner-conversation.mjs');let modelCalled=false;
+const conversation=createOwnerConversation({contextBudgetMs:10,read:async()=>({ok:false,status:404}),history:async()=>[],list:()=>new Promise(()=>{}),complete:async(_,__,body)=>{modelCalled=true;assert.equal(body.leads?.available??JSON.parse(body).leads.available,false);return {action:'chat',reply:'Hello'};}});
+await conversation.decide('owner','How are you?');assert.ok(modelCalled);
+console.log('Memory fails closed with versioned writes; stalled optional lead context cannot block conversation.');
+
+const req={body:{to:number,text:'Reviewed draft',requestId:'fixture-send-00003'}};
+await routes.get('/api/admin/messages/send')(req,response);await routes.get('/api/admin/messages/send')(req,response);assert.equal(sends,1,'Replayed send uses the durable receipt');
+console.log('Durable send claims prevent duplicate provider sends.');
+
+await store.inbound({from:number,text:'Unread newest',sid:'SM3'});
+const unread=(await store.get(number)).unread;
+await routes.get('/api/admin/messages/thread')({query:{number,before:'SM3'}},response);
+assert.ok(response.body.messages.some(m=>m.id==='SM1'));assert.equal((await store.get(number)).unread,unread,'Earlier-history reads do not mark messages read');
+
+assert.ok(server.includes('ownerConversation.context(user.sub).then'));
+assert.ok(server.includes("action:'remember',text:(req.body||{}).text"));
+assert.ok(server.includes("action:'forget',text:(req.body||{}).text"));
+
+await store.outbound({to:number,text:'Owner response',sid:'owner-reply-SMincoming',status:'accepted'});
+await store.status({sid:'SMactualreply',replyTo:'SMincoming',status:'delivered'});
+const reply=(await store.get(number)).messages.find(m=>m.id==='SMactualreply');assert.equal(reply.status,'delivered');
+await assert.rejects(store.status({sid:'SMdifferent',replyTo:'SMincoming',status:'sent'}),/mismatch/);
