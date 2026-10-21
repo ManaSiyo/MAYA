@@ -55,3 +55,7 @@ for(const page of ['backend/backend.html','backend/operations.html']){
  assert.doesNotMatch(html,/fabric-assistant\.(?:js|css)\?v=3/);
 }
 console.log('Fabric asset URLs bypass retained v3 caches; shared fabric and voice runtime revalidate.');
+
+const inventoryRule=hostingHeaders.find(r=>r.source==='/aesthetics/fabrics/fabrics.json');
+assert.ok(inventoryRule?.headers.some(h=>h.key==='Cache-Control'&&h.value==='no-cache'),'Inventory metadata must revalidate independently of week-cached images');
+console.log('Inventory metadata revalidates without changing photograph caching.');

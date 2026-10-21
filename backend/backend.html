@@ -1698,9 +1698,9 @@ function toggleWorkspaceDrawer(){
       const heroName = document.getElementById('op-hero-name');
       if (heroName) {
         heroName.textContent = pretty;
-        if (dateCap) heroName.insertAdjacentHTML('afterend',
-          '<div style="font-family:\'Jost\',sans-serif;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(238,242,255,0.4);margin-top:4px">' + dateCap + '</div>');
       }
+      const date = document.getElementById('op-date');
+      if (date) date.textContent = dateCap;
       // v13.27: submissions live in MAYA's own store, not Drive, and the
       // picture is read with the admin sign in rather than a public Drive
       // thumbnail address (which never rendered private files anyway). The

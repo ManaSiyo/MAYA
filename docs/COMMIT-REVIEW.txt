@@ -1,20 +1,21 @@
-[Codex] Scope fake fabric lookbooks by account and await independent reads
+[Codex] Repair dated Brief identity and reduce fabric preview transfers
 
-Build 435074eb stopped before deployment on an empty Favorites assertion. Delayed
-fake reads reproduced the deeper fixture defect locally: the fake store used the
-whole JWT, including exp, so seeding and initialization across a second boundary
-could become different stores. Production storage already uses account/submission.
+A dated submission URL still injected a legacy date after the client name,
+duplicating the new H3 time element and leaving metadata visible after sign-out.
+Write first-paint metadata into the existing shared slot; cover real dated URLs,
+every identity child and full account cleanup.
 
-Key fake lookbooks by test subject plus submission. Deliberately use different
-initial/renewed token expiries and assert the same two saved cards and one store.
-Delay fake reads 120ms and await exact rendered Favorites titles/counts instead of
-assuming they load with the faster sourceable stream. Preserve atomic connected
-style reads and all existing material, Save/reload, removal and isolation checks.
-No application behavior, visible UI, configuration or release gate changes.
+In House displayed full-size originals in small cards (23.77 MB across eight
+swatches). Declare the existing 0.84 MB thumbnails in catalog v2, use them for
+previews and retain original photo links, including failed-preview states.
+Keep older catalogs compatible; version/revalidate metadata without changing
+photograph caching, materials, geometry or provider facts.
 
-Validation: the final delayed fixture and explicit renewal checks passed ten
-consecutive runs using isolated installed Playwright discovery. Standalone final
-aesthetic-authority runs last after this record. Earlier full integrated regression passed all 607 named
-checks plus imported assertions. Three builds stopped before deployment; public
-site/API remain on healthy 4b4867f. Verify the next production build, exact release/
-pages/assets/API and final live shared authority after Push.
+Validation: realistic Brief regression failed before the fix and passed afterward.
+All 71 exact release gates, 609 named integrated checks plus imported assertions,
+smoke and separate owner UI/Pinterest/role-usage checks passed. Real-font/public
+saved-design fixtures were inspected. Legacy catalogs, failed previews and original
+links pass. Final Aesthetic Control authority, including fabric-search-ui, runs
+last after this final record before commit. No private production
+data, personal Chrome, credentials, provider settings or environment changes.
+Live authenticated fabric/voice/SMS acceptance still requires separate verification.

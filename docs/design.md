@@ -490,3 +490,10 @@ links and visible keyboard focus still open the scoped Brief. Automatic model
 snapshots are gone; explicit API/Image configuration actions remain. Phone
 shortcut menus and submission frames are bounded so keyboard focus cannot pan
 the whole Admin page.
+
+October 21 audit: the Brief URL first paint writes its date into the existing
+H3 time element; loading or clearing a submission must never leave a second
+unstyled identity child. In-house fabric previews use catalog-declared existing
+thumbnail photographs with the same card geometry/material; opening a card keeps
+the original photo URL. Missing previews keep a P3 unavailable message and the
+original link. These reuse existing H3/P3/Inner/Glass controls, not a new authority.

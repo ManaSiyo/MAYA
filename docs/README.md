@@ -131,7 +131,7 @@ separate horizontal scroll-snap pane, not an overlay.
 ## 3. How a deploy happens
 
 **One action: push `maya-v2` to origin.** Google reads `cloudbuild.yaml` at the
-repo root and runs seven steps, taking about four minutes:
+repo root and runs seven steps. The latest full release took about 18 minutes:
 
 1. Refuse the build unless the branch is exactly `maya-v2`
 2. Install pinned test dependencies and Chromium, then run every release contract;

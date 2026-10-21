@@ -2844,3 +2844,5 @@ new UI must extend it. Owner Push/live Save confirmation remains next.
 addition/change in MAYA-new. README/AGENTS/design and supporting engineer entry
 points now require it as the final completion check; tests and release ordering
 enforce it. Backend/docs-only work records no visible UI impact and runs the gate.
+
+2026-10-21 — Owner requested a full post-push functionality audit and asked why regressions keep escaping. Reproduced duplicate/stale Brief dates from real dated submission URLs despite 71 green checks, and 23.77 MB of original inventory photos used as small previews. Local repairs reuse shared identity roles and existing 0.84 MB thumbnails; original photos remain reachable. Add real URL/account-clear/resource-transfer assertions. Authenticated live audit awaits fresh Chrome session approval; no production data/provider changes.

@@ -219,3 +219,12 @@ draft automatically, publish an unacknowledged snapshot or remove generated
 patterns to fit the 25 MiB UTF-8 limit. Legacy saved files remain readable; old
 open clients must reload before saving. Run admin-storage, brief-operation-races
 and brief-workspace-ui with the existing release and final aesthetic gates.
+
+October 21 inventory payload audit: the eight source JPGs total 23,769,818 bytes;
+the existing thumbnail JPGs total 835,190 bytes (96.49% less). Catalog v2 declares
+thumbnail paths. The shared assistant displays these photographs, keeps each
+original as the card link and retains that link if a preview fails. Legacy catalog
+items without a thumbnail retain their original image behavior. Metadata uses a
+versioned fetch and exact no-cache Hosting rule so an old week-cached manifest
+cannot hide this repair; photograph caching stays unchanged. This is a transfer
+reduction, not a measured live AI latency or matching-quality claim.

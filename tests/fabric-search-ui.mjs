@@ -1,6 +1,6 @@
 // Real pages, isolated Chromium, fake providers. Never opens a personal Chrome profile.
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { resolve, extname } from 'node:path';
 import { chromium } from 'playwright';
 import {validDesign} from '../docs/server/design-config.mjs';
@@ -11,7 +11,9 @@ const product={url:'https://britexfabrics.com/products/crimson-wool',merchant:'B
 const reference='data:image/png;base64,'+png.toString('base64');
 const pieces=[{name:'Crimson coat',fabric:'Crimson wool twill',fabric_spec:{fiber:'wool',weave:'twill'},_image:reference},{name:'White shirt',fabric:'White cotton poplin',_image:reference},{name:'Black leather boots',category:'footwear',fabric:'Black leather',_image:reference}];
 let savedDesign={};const designWrites=[];
-const requests=[],bookWrites=[],books=new Map();let delayed=null,delayNext=false,failNext=false;
+const requests=[],bookWrites=[],books=new Map(),inventoryImages=[];let delayed=null,delayNext=false,failNext=false,failInventoryPreview=false,legacyCatalog=false;
+const catalog=JSON.parse(readFileSync(root+'/aesthetics/fabrics/fabrics.json','utf8'));
+let originalBytes=0,previewBytes=0;for(const item of catalog.items){assert.match(item.thumbnail,/^thumbs\/[^\\/]+\.jpg$/);originalBytes+=statSync(root+'/aesthetics/fabrics/'+item.fileName).size;previewBytes+=statSync(root+'/aesthetics/fabrics/'+item.thumbnail).size;}assert.ok(previewBytes<originalBytes,'Existing thumbnail files reduce the actual inventory payload');
 const jwt=(sub,lifetime=3600)=>'test.'+Buffer.from(JSON.stringify({sub,exp:Math.floor(Date.now()/1000)+lifetime})).toString('base64url')+'.test';
 const inventoryFavorite={url:'/aesthetics/fabrics/midnight-velvet.webp',image:'https://cdn.shopify.com/inventory.png',title:'Midnight Velvet',evidence:'atelier_inventory'};
 books.set('owner-A|project-A',{items:[product,inventoryFavorite],selectedUrl:product.url,generation:'2'});
@@ -23,6 +25,9 @@ await page.route('**/*',async route=>{
   const u=new URL(route.request().url());
   if(u.hostname==='cdn.shopify.com')return u.searchParams.has('fixture-unavailable')?route.fulfill({status:404,body:'Missing fixture image'}):route.fulfill({body:png,contentType:'image/png'});
   if(u.hostname!=='maya-fabric.test')return route.abort();
+  if(u.pathname==='/aesthetics/fabrics/fabrics.json'&&failInventoryPreview)return route.fulfill({json:{...catalog,items:catalog.items.map((item,i)=>i?item:{...item,thumbnail:'thumbs/Unavailable preview.jpg'})}});
+  if(u.pathname==='/aesthetics/fabrics/fabrics.json'&&legacyCatalog)return route.fulfill({json:{version:1,items:catalog.items.map(({thumbnail,...item})=>item)}});
+  if(u.pathname.startsWith('/aesthetics/fabrics/')&&/\.(?:jpg|png|webp)$/i.test(u.pathname)){inventoryImages.push(u.pathname);if(u.pathname.endsWith('/thumbs/Unavailable%20preview.jpg'))return route.fulfill({status:404,body:'Missing fixture thumbnail'});if(legacyCatalog)return route.fulfill({body:png,contentType:'image/png'});}
   const body=route.request().postDataJSON?.();
   if(u.pathname==='/api/design')return route.fulfill({json:savedDesign});
   if(u.pathname==='/api/admin/design'){assert.ok(validDesign(body),'Saved design is server-valid');designWrites.push(body);savedDesign=structuredClone(body);return route.fulfill({json:{ok:true,savedAt:'2026-10-08T00:00:00Z'}});}
@@ -87,6 +92,18 @@ try{
   assert.equal(await page.locator('#brief-fabrics #fabric-assistant').count(),1,'In House stays in the same inline window');
   assert.doesNotMatch(await page.locator('.fa-results').textContent(),/in.house.*atelier|in stock|arrives/i);
   assert.equal(await page.locator('.fa-card-actions').count(),0,'In House has no Save or Use controls');assert.equal(bookWrites.length,0,'Browsing never mutates old favorites');
+  await page.waitForFunction(()=>document.querySelectorAll('.fa-product').length===8);
+  assert.ok(await page.locator('.fa-product-image').evaluateAll(es=>es.every(e=>e.getAttribute('src').startsWith('/aesthetics/fabrics/thumbs/'))),'Inventory cards display the existing thumbnails');
+  assert.equal(await page.locator('.fa-product-link').first().getAttribute('href'),'/aesthetics/fabrics/Burgundy%20Lace.JPG','Opening a swatch retains the original full-resolution photo');
+  assert.ok(!inventoryImages.some(path=>!path.includes('/thumbs/')),'Browsing inventory never downloads full-size originals');
+  legacyCatalog=true;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelector('.fa-product-image')?.getAttribute('src')==='/aesthetics/fabrics/Burgundy%20Lace.JPG');
+  assert.equal(await page.locator('.fa-product').count(),8,'Older catalogs without thumbnail metadata remain usable');
+  legacyCatalog=false;
+  failInventoryPreview=true;await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();
+  const missing=page.locator('.fa-product').filter({has:page.getByText('Burgundy Lace',{exact:true})});await missing.getByText('Photo unavailable',{exact:true}).waitFor();
+  assert.equal(await missing.locator('a').getAttribute('href'),'/aesthetics/fabrics/Burgundy%20Lace.JPG','A failed preview keeps the original photo reachable');assert.equal(await page.locator('.fa-product').count(),8);assert.equal(await missing.locator('.fa-image-unavailable').evaluate(e=>getComputedStyle(e).fontSize),'10px','Missing inventory photos keep the shared P3 default');failInventoryPreview=false;
+
   await page.locator('.fa-tabs').getByRole('button',{name:'Sourceable',exact:true}).click();
   await page.getByRole('button',{name:'Filter stores',exact:true}).click();
   assert.deepEqual(await page.locator('.fa-store-filter').allTextContents(),groups.map(g=>g[1]));
@@ -187,6 +204,7 @@ try{
   for(const book of books.values())for(const item of book.items)if(item.url===product.url)item.image=product.image+'?fixture-unavailable=1';
   await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();
   await savedProductCard.getByText('Photo unavailable',{exact:true}).waitFor();
+  assert.equal((await readStyle('.fa-image-unavailable')).size,14,'Unavailable-photo copy follows the changed saved P3 role');assert.equal((await readStyle('.fa-image-unavailable')).color,'rgb(170, 181, 196)');
   assert.ok(await savedProductCard.getByRole('button',{name:'Remove',exact:true}).isVisible(),'A broken favorite stays manageable');
   await savedProductCard.getByRole('button',{name:'Remove',exact:true}).click();
   await page.waitForFunction(()=>![...document.querySelectorAll('.fa-card-title')].some(e=>e.textContent==='Crimson wool twill'));

@@ -1593,8 +1593,8 @@ ok('v13.87: server can update or delete any lead, Wix via override/tombstone',
   MAP_SOURCE.includes("name==='update_lead'") &&
   MAP_SOURCE.includes("name==='delete_lead'"));
 
-ok('Shared fabric photo failures retain saved records and remove unusable unsaved results',
-  FABRIC_UI_SOURCE.includes("if(view==='saved'){img.remove();") &&
+ok('Shared fabric photo failures retain saved/in-house records and remove unusable sourceable results',
+  FABRIC_UI_SOURCE.includes("if(view==='saved'||local){img.remove();") &&
   FABRIC_UI_SOURCE.includes("'Photo unavailable'") &&
   FABRIC_UI_SOURCE.includes("'Fabric photos could not load. Refresh or try another store.'") &&
   !BACKEND_SOURCE.includes('live.concat(staticCards)'));
@@ -2790,6 +2790,7 @@ ok('Operation storage failures retain reviewed drafts and current measurement pr
   OPS_SOURCE.includes('Pattern Logic was not saved. Your draft is kept; retry Save.') &&
   OPS_SOURCE.includes('requireOperationSettings();') && BUILD_SOURCE.includes('node tests/operation-save-failures.mjs'));
 ok('Fabric search preserves material context, streams products, and seals saved lookbooks',true);
+ok('In House uses real thumbnail assets, keeps original photo links and retains cards after preview failure',true);
 ok('Fabric lookbook saves serialize acknowledged generations and preserve account, submission and garment identity',
   FABRIC_UI_SOURCE.includes('queue.tail=queue.tail.catch(()=>{}).then(task)') &&
   FABRIC_UI_SOURCE.includes('if(!projectCurrent(ticket))return;') &&
@@ -2843,6 +2844,7 @@ await import('./brief-workspace-ui.mjs');
 await import('./operation-controls.mjs');
 ok('Operations late sample loads preserve uploads and Settings keyboard focus stays usable',true);
 ok('Brief and Operations preserve selected garment, private resets, image failures and usable inline fabric geometry',true);
+ok('Dated Brief links use one shared name/date row and clear every identity value on sign-out',true);
 await import('./workspace-authority.mjs');
 ok('Workspace previews expose active saved styling and actual label, field and dock geometry',true);
 await import('./message-compose-ui.mjs');

@@ -164,10 +164,14 @@
     if(inventoryRequest&&!force)return inventoryRequest;
     const stamp=epoch,signal=AbortSignal.any([reads.signal,AbortSignal.timeout(6000)]);
     const task=(async()=>{
-      const response=await fetch('/aesthetics/fabrics/fabrics.json',{cache:force?'no-store':'default',signal});
+      const response=await fetch('/aesthetics/fabrics/fabrics.json?v=2',{cache:force?'no-store':'default',signal});
       if(!response.ok)throw Error('In-house photos unavailable.');
       const data=await response.json();if(!current(stamp))return;
-      context.inhouse=(data.items||[]).filter(p=>typeof p.fileName==='string'&&!/[\\/]/.test(p.fileName)&&/\.(?:png|jpe?g|webp)$/i.test(p.fileName)).map(p=>({title:p.name||p.fileName,image:'/aesthetics/fabrics/'+encodeURIComponent(p.fileName),description:[p.weave,p.weight,p.color].filter(Boolean).join(' · ')}));
+      context.inhouse=(data.items||[]).filter(p=>typeof p.fileName==='string'&&!/[\\/]/.test(p.fileName)&&/\.(?:png|jpe?g|webp)$/i.test(p.fileName)).map(p=>{
+        const original='/aesthetics/fabrics/'+encodeURIComponent(p.fileName);
+        const thumbnail=typeof p.thumbnail==='string'&&p.thumbnail.match(/^thumbs\/([^\\/]+\.(?:png|jpe?g|webp))$/i);
+        return {title:p.name||p.fileName,url:original,image:thumbnail?'/aesthetics/fabrics/thumbs/'+encodeURIComponent(thumbnail[1]):original,description:[p.weave,p.weight,p.color].filter(Boolean).join(' · ')};
+      });
       paint();
     })();inventoryRequest=task;try{await task;}finally{if(inventoryRequest===task)inventoryRequest=null;}
   }
@@ -227,7 +231,7 @@
     const link=node('a','fa-product-link');link.href=p.url;link.target='_blank';link.rel='noopener noreferrer';
     const knownPrice=p.price&&p.unit?`${p.price} ${p.currency} / ${p.unit}`:'';
     if(p.image && /^(?:https:\/\/|\/aesthetics\/fabrics\/|data:image\/)/.test(p.image)){
-      const img=node('img','fa-product-image');img.src=p.image;img.alt=p.title;img.loading='lazy';img.referrerPolicy='no-referrer';img.addEventListener('error',()=>{if(view==='saved'){img.remove();const unavailable=node('p','fa-image-unavailable','Photo unavailable');unavailable.dataset.mayaType='P3';link.prepend(unavailable);item.classList.add('has-missing-photo');}else{item.remove();if(!els.results.querySelector('.fa-product'))els.results.append(node('p','fa-empty','Fabric photos could not load. Refresh or try another store.'));}},{once:true});link.append(img);
+      const img=node('img','fa-product-image');img.src=p.image;img.alt=p.title;img.loading='lazy';img.referrerPolicy='no-referrer';img.addEventListener('error',()=>{if(view==='saved'||local){img.remove();const unavailable=node('p','fa-image-unavailable','Photo unavailable');unavailable.dataset.mayaType='P3';link.prepend(unavailable);item.classList.add('has-missing-photo');}else{item.remove();if(!els.results.querySelector('.fa-product'))els.results.append(node('p','fa-empty','Fabric photos could not load. Refresh or try another store.'));}},{once:true});link.append(img);
     }
     const title=node('h3','fa-card-title',p.title);
     const use=p.garment?'For '+p.garment:'';

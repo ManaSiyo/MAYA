@@ -1,108 +1,68 @@
-# Current handoff — October 20, 2026
+# Current handoff — October 21, 2026
 
-## Current task and release state
+## Release and owner request
 
-The October 18 owner review is committed as 024d049, with test-only CI follow-ups
-35d61af and df4b390a4a87943ce617ee1fbc1d7e7ea21b0de3. Builds 937bfddb,
-9d763d1d and 435074eb stopped in release checks; none reached image/server/website/
-rules deployment. Public health/release still identify healthy baseline 4b4867f.
+Owner asked for a broad post-push audit, independent identification of what is
+broken, and functional verification. Baseline 8ccc4f13fb457a7d08fe0a63f583f9953042c2ff
+is deployed: Cloud Build 427a051e succeeded with all 71 gates and server/Hosting/
+rules steps. Exact release/page/API hashes, changed assets, redirects and final
+live authority were verified October 20 and public release/health checked again
+October 21. Local and origin maya-v2 matched at audit start; no unrelated edits.
+Existing owner authorization covers completed verified commits and automatic Push.
 
-Test follow-ups: use the pinned Playwright-installed isolated browser rather than
-fixed executable paths; resolve/read connected card styles in one browser task;
-await actual Favorites cards rather than assuming streamed search and independent
-lookbook reads complete together. Delaying fake lookbook reads exposed the deeper
-fixture defect locally: it keyed books by full JWT, including exp, so tokens minted
-across a second boundary could see an empty book. The fake store now mirrors the
-server's stable account/submission key. Initial and renewed tokens deliberately use
-different expiries; same-account renewal retains both exact saved cards and one
-store. Reads deliberately wait 120ms. No application behavior, visible UI,
-production configuration, expected color/count/content or release gate is changed.
-Existing explicit owner authorization covers local commits and automatic Push.
-A push can deploy production; never infer success from Vercel.
+## Reproduced problems and repairs
 
-## Current implementation
+1. Brief dated URLs injected an old inline-styled date into the new shared H3
+   name/time row. The extra child survived sign-out. A realistic dated submission
+   fixture reproduced [H3, undefined, H3] even while all 71 baseline gates passed.
+   First paint now updates the existing time element. Tests inspect every child,
+   use dated URLs, known folder creation times and verify complete identity cleanup.
+2. In House used 23,769,818 bytes of full-resolution JPGs for small cards. Existing
+   thumbnail files total 835,190 bytes, a 96.49% transfer reduction. Catalog v2
+   explicitly identifies those files; shared inventory reads use them as previews
+   and keep originals as card links. Preview failure keeps the card/original link.
+   Old catalog items without thumbnail metadata remain compatible. A versioned
+   metadata request and exact no-cache Hosting rule bypass retained catalog copies;
+   caching of photographs is unchanged.
 
-- Deleted Playground's served implementation and all Affiliates view/loader/nav.
-  Permanent legacy-path redirects go to MAYA/Admin. No staged experiment is
-  promoted; active client pg* filing-cabinet functions and shared APIs remain.
-  Old tests now exercise the active frontend. The duplicate legacy Operations HTML
-  is also removed; its aliases redirect to /operations.html and shared knowledge/
-  CLO/sample assets remain intact. Historical docs are labeled;
-  third-party legal references and legacy migration/data paths remain.
-- Every real hamburger drawer is governed by data-maya-drawer and independent
-  validated shared drawer settings. Defaults follow MAYA's navy/gradient material,
-  with active Drawer Edit/Restore/usage preview. Field Editor, panels and tables
-  stay independent. All hamburgers share glyph color/weight/size settings.
-- Removed Operations pipeline subtitle and duplicate Measurements trigger/form
-  from Settings, plus the Brief Operation Room scroll pill and Saved metadata.
-  Saved projects read actual Brief measurements (inch/cm/mm normalization), never
-  browser drafts or example numbers. Standalone uploads keep a separate manual
-  entry panel. Brief name/date share H3 on one row; Biography/Vision use white P2.
-- Embedded Settings temporarily fills the actual parent viewport, including a
-  partly scrolled room, without reloading/reparenting its iframe. Close restores
-  exact scroll, selected garment, run/results and focus. Shared material is tested
-  over a white pattern. Remove obsolete mobile adapter geometry overrides.
-- Full view, dissected view and inline Fabrics retain identical dimensions. Five
-  initially enabled filters: Local (Bay Area: Britex/Stonemountain/Harts), Mood,
-  Swatchon, Amazon and Others. Filtering is free and preserves drafts; Refresh
-  explicitly searches the current group scope. No new paid calls on toggles.
-- Fabric cards have no Save/Use actions or verbose hover text. Verified price/unit
-  captions wrap. Private historical Favorites/material assignments remain readable;
-  Remove preserves serialized/CAS/account/submission/fingerprint guards. Swatchon
-  product links/photos are seller-backed; missing price units/stock stay unknown.
-- Scrollbars use shared v2 settings: 4px both axes, half-length painted native
-  handle, transparent track and 800ms idle hiding. Earlier saved widths halve
-  once on read, without a migration write. Native drag/keyboard behavior remains;
-  forced colors restore a native handle. Firefox keeps its native handle length.
-- Active segmented preview changes its real selected state/content and opens the
-  Glass editor. Fixed preset specificity, immediate editor dismissal and a
-  detached Restore. Editing another control preserves an unsaved Drawer preview.
-- Removed automatic hover snapshots and submission metadata overlays/native
-  title tooltips. Named keyboard links still open the scoped Brief. API/Image
-  configuration remains an explicit authenticated click/keyboard action. Gmail
-  titles use white P2 and Account mailboxes gray P1. Narrow shortcut menus and
-  submission tiles cannot pan the whole Admin page on keyboard focus.
+Presentation uses existing H3, P3, Inner and Glass roles/settings. No CSS/layout,
+provider settings, credentials, production environment or private data is changed.
+Aesthetic Control remains the completion gate; final authority now also reexecutes
+fabric-search-ui so thumbnail/error states receive the real saved-style checks.
 
-## Files and verification
+## Files
 
-Shared runtime/components/gallery: presentation-runtime.js, typography-controls.js,
-pill-runtime.js, maya-canon.css, components.*, gallery.js, shared-surfaces.js,
-input-controls.js, finishes.js, surface-editors.js and workspace-previews.js.
-Pages: frontend/index.html and backend/{status,backend,operations,outbound}.html.
-Fabrics: shared fabric-assistant.js/css and docs/server/fabric-search.mjs.
-Routing: docs/firebase.json. Retired playground/index.html is deleted. Role usage
-is regenerated with typography-role-usage.py; retired uses are no longer counted.
+backend/backend.html; aesthetics/ui/fabric-assistant.js;
+aesthetics/fabrics/fabrics.json; docs/firebase.json; tests/brief-workspace-ui.mjs,
+fabric-search-ui.mjs, release-contract.mjs, app-regression.mjs,
+aesthetic-authority.mjs; role-usage inventory and the related owner/design/docs.
 
-Focused checks passed: fabric search 34, sourcing 12, AI routing 9, browser fabric
-and historical-favorite workflow; real Brief/embedded Settings geometry and saved
-material; standalone save failures/keyboard; actual no-hover Admin configuration;
-retired-page navigation/submission keyboard; shared input Save/failure/Restore and
-idle scroll behavior; client voice with default/saved actual Drawer material.
-All browser work uses isolated Chromium, fake accounts/providers and local files.
-Pinned npm ci and smoke passed. Full integrated regression passes all 607 named
-checks plus imported behavior assertions. All 71 exact Cloud Build Node commands
-pass locally. Default/different saved phone/desktop screenshots were inspected.
-Run standalone Aesthetic Control authority last after final documentation, before
-commit/Push; do not infer deployment from this preparation record.
+## Audit evidence and remaining limits
 
-New release gates: retired-workspaces.mjs, retired-workspaces-ui.mjs and
-component-gallery.mjs. Final aesthetic-authority re-executes changed visible
-fixtures, including retired UI and explicit model details, after functional gates.
-The exact Cloud Build list now has 71 Node commands.
+Baseline: all 71 mandatory local gates passed. Public live page audit found no
+uncaught script errors, failed same-origin resources, duplicate IDs, missing inline
+handler functions, broken labelled-control references or desktop overflow across
+App/Admin/Brief/Operations/Outbound/Aesthetic Control. Smoke and exact-commit
+verify-live passed. These are signed-out live checks, not private workflow proof.
 
-## Open limits and exact next step
+Repaired Brief, fabric-search-ui and fabric-workflow-ui passed with fake accounts/
+services, including older catalogs and genuine missing-thumbnail responses. All 71
+exact release commands and 609 named integrated checks plus imported assertions
+passed on the frozen tree. Separate owner-crm-ui, Pinterest pagination and authored
+typography-usage checks passed too. Inspected actual public saved-design/real-font
+Brief fixtures and default/changed shared surfaces. Run standalone
+aesthetic-authority last after these records before committing.
 
-The launcher correction passed gallery, release-contract and full integrated
-regression with executable overrides unset and isolated installed-browser discovery.
-The delayed fixture reproduced the token-key defect locally; the corrected
-account/submission fixture with delayed reads and explicit renewal assertions
-passed ten consecutive runs. Run final aesthetic-authority after these records. Commit and Push under existing
-authorization. Wait for the exact Cloud Build, then verify
-release.json, page stamps, API commit, changed asset bytes and retired redirects.
-Run final live shared-surface authority and inspect actual phone/desktop images.
+Fresh permission for a read-only MAYA Chrome inspection was requested through the
+input notification; no answer has been received. No personal Chrome was accessed.
+Authenticated owner screens, real private fur/green-pants matching, actual OpenAI
+responses/audio, Twilio delivery and owner-only event activation remain unverified.
+Never claim all functionality works because scripted/fake-provider checks pass.
 
-No personal Chrome, credentials, provider/billing settings, production environment,
-private owner data, live SMS/calls or paid generation were accessed. Private
-fur/green-pants matching and real audio/provider acceptance remain unverified.
-Public live appearance checks cannot substitute for private matching quality.
-See FABRIC-SEARCH.md for source-backed merchant facts and retained data guarantees.
+## Exact next step
+
+Functional verification is complete. Run standalone aesthetic-authority last
+after these records, commit only task files and Push under existing authorization. Verify exact production release/page/API
+SHA, catalog/runtime bytes, cache headers and final live authority after Cloud
+Build succeeds. For private live coverage, wait for explicit Chrome session
+approval; never treat silence as permission or mutate production client records.

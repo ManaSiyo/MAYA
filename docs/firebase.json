@@ -304,6 +304,15 @@
             "value": "no-cache"
           }
         ]
+      },
+      {
+        "source": "/aesthetics/fabrics/fabrics.json",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
       }
     ]
   },

@@ -8,7 +8,7 @@ const root=resolve('.'),png=readFileSync(root+'/aesthetics/ui/logo-circle.png');
 const image='data:image/png;base64,'+png.toString('base64');
 const jwt=(sub,version=1)=>'fixture.'+Buffer.from(JSON.stringify({sub,version,exp:Math.floor(Date.now()/1000)+3600})).toString('base64url')+'.fixture';
 const pieces={fabric_type:'cotton denim',pieces:[{name:'Denim jacket',category:'jacket',_image:image,fabric_spec:{fiber:'cotton',weave:'denim'}},{name:'White shirt',category:'shirt',fabric:'white cotton poplin',_image:image},{name:'Black boots',category:'shoes',fabric:'black leather',_image:image}]};
-const folders=['A','B'].map(id=>({id,name:'Client '+id,files:[{id:id+'-summary',name:'summary.json'},{id:id+'-image',name:'dream-garment.png'},...(id==='A'?[{id:'A-pieces',name:'pieces.json'}]:[])]}));
+const folders=['A','B'].map(id=>({id,name:'Client '+id,createdTime:'2026-08-27T18:00:00Z',files:[{id:id+'-summary',name:'summary.json'},{id:id+'-image',name:'dream-garment.png'},...(id==='A'?[{id:'A-pieces',name:'pieces.json'}]:[])]}));
 const browser=await chromium.launch({headless:true,executablePath:process.env.PW_CHROMIUM});
 const page=await browser.newPage({viewport:{width:1280,height:900}}),errors=[],searches=[],paid=[],assets=[];
 page.setDefaultTimeout(15000);page.on('pageerror',error=>errors.push(error.message));
@@ -33,7 +33,7 @@ await page.route('**/*',async route=>{
  try{return route.fulfill({body:readFileSync(root+path),contentType:({'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.png':'image/png'})[extname(path)]||'text/plain'});}catch{return route.abort();}
 });
 try{
- await page.goto('https://maya.test/backend.html?submission=A&name=ClientA');
+ await page.goto('https://maya.test/backend.html?submission=A&name=client-a-08-27-2026');
  await page.locator('#piece-pills').getByRole('button',{name:'Denim jacket',exact:true}).waitFor();
  const room=page.frameLocator('#operations-embed');
  await room.locator('#test-picker option').filter({hasText:'Denim jacket'}).waitFor({state:'attached'});
@@ -45,7 +45,7 @@ try{
  assert.equal(await page.locator('#workspace-title').textContent(),'Backend');
  assert.equal(await page.locator('#fabric-workspace-actions,#operation-settings,#room-sub').count(),0);
  assert.doesNotMatch(await page.locator('#op-date').textContent(),/Saved/);
- assert.deepEqual(await page.locator('.op-identity [data-maya-type]').evaluateAll(nodes=>nodes.map(e=>e.dataset.mayaType)),['H3','H3']);
+ assert.deepEqual(await page.locator('.op-identity > *').evaluateAll(nodes=>nodes.map(e=>e.dataset.mayaType)),['H3','H3']);
  assert.equal(await page.locator('#piece-pills [data-maya-semantic="non-fabric"]').textContent(),'Black boots');
  assert.equal(await room.locator('#test-picker option').count(),3,'Only the three saved pieces are offered');
  assert.equal(await room.locator('header.top').isVisible(),false,'The embedded room has no duplicate fixed header');
@@ -121,7 +121,7 @@ try{
  const style=async(locator,keys)=>locator.evaluate((e,keys)=>Object.fromEntries(keys.map(k=>[k,getComputedStyle(e)[k]])),keys);
  for(const mode of ['default','saved']){
   if(mode==='saved')await page.evaluate(value=>MayaTypographyControls.save(value),saved);
-  await page.goto('https://maya.test/backend.html?submission=A&name=ClientA');
+  await page.goto('https://maya.test/backend.html?submission=A&name=client-a-08-27-2026');
   await page.locator('#piece-pills').getByRole('button',{name:'Black boots',exact:true}).waitFor();
   const embedded=page.frameLocator('#operations-embed');
   const liveFrame=page.frames().find(frame=>frame.url().includes('/operations.html'));
@@ -211,7 +211,7 @@ try{
  }
  // Duplicate labels select the second stable saved piece in both real pages.
  pieces.pieces.push({name:'White shirt',fabric:'blue linen poplin',_image:image});
- await page.goto('https://maya.test/backend.html?submission=A');
+ await page.goto('https://maya.test/backend.html?submission=A&name=client-a-08-27-2026');
  await page.locator('#piece-pills').getByRole('button',{name:'White shirt',exact:true}).nth(1).waitFor();
  await page.locator('#piece-pills').getByRole('button',{name:'White shirt',exact:true}).nth(1).click();await page.locator('#brief-fabrics-button').click();
  await page.waitForFunction(()=>document.querySelector('.fa-status')?.textContent==='No verified matches in this fixture.');
@@ -222,6 +222,7 @@ try{
  await duplicateRoom.evaluate(()=>document.getElementById('t-prompt').textContent='PRIVATE PATTERN PROMPT');
  await page.evaluate(()=>{localStorage.removeItem('maya_admin_tok');window.dispatchEvent(new StorageEvent('storage',{key:'maya_admin_tok'}));});
  await page.waitForFunction(()=>window._currentSnap===null&&window.lastSummary===null);
+ assert.equal((await page.locator('.op-identity').textContent()).trim(),'','Sign-out clears every identity child, including the dated URL first paint');
  for(const id of ['op-hero-name','op-biography','op-vision','op-measurements','op-chips'])assert.equal(await page.locator('#'+id).textContent(),'','Sign-out clears '+id);
  await duplicateRoom.waitForFunction(()=>document.getElementById('t-prompt').textContent==='');
  assert.equal(await duplicateRoom.evaluate(()=>PASSES.length),0);

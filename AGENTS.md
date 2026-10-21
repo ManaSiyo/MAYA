@@ -558,3 +558,10 @@ P2 titles (Biography/Vision and Gmail) and P1 descriptions remain editable roles
 Run retired-workspaces/UI, admin-systems-ui, fabric and Brief/Operations suites,
 input-controls-ui, design-config/contract and exact release gates; final
 aesthetic-authority re-executes these changed visible surfaces and stays last.
+
+October 21 audit repairs: dated Brief URL first paint uses the existing shared H3
+name/time row; no injected date sibling may survive load or account cleanup.
+Inventory catalog v2 declares existing thumbnail paths for card previews, with
+original photo links retained through preview failure. Keep legacy catalog reads
+compatible and metadata revalidating independently of cached photographs. Run
+brief-workspace-ui, fabric-search-ui/workflow, release-contract and final authority.
