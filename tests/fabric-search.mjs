@@ -372,6 +372,19 @@ await test('duplicate literal seller links are verified once and published once'
   const events=[];await service.search(user,{request:'crimson wool'},event=>events.push(event));
   assert.equal(pages,1);assert.equal(events.at(-1).products.length,1);
 });
+await test('collection and direct Shopify aliases produce one ranked card without rewriting sources or variants',async()=>{
+  const alias='https://britexfabrics.com/collections/fabrics/products/crimson-wool',seen=[],events=[];let ranks=0;
+  const service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>{
+    if(target.includes('openai'))return Response.json(response());
+    if(target.includes('suggest.json'))return Response.json({resources:{results:{products:[{url:alias}]}}});
+    seen.push(target);return new Response(seller());
+  },rank:async({products})=>{ranks++;assert.equal(products.length,1,'Retailer and web aliases consume one visual slot');return products;}});
+  await service.search(user,{request:'crimson wool',image},e=>events.push(e));
+  assert.equal(ranks,1);assert.equal(events.at(-1).products.length,1);
+  assert.ok([url,alias].includes(events.at(-1).products[0].url));assert.ok(seen.includes(alias),'Identity normalization must preserve actual fetch/source destinations');
+  const answer=response({candidates:[{url:alias},{url},{url:url+'?variant=2'}]});answer.output[0].action.sources.push({url:alias},{url:url+'?variant=2'});
+  assert.deepEqual(readDiscovery(answer).candidates.map(p=>p.url),[alias,url+'?variant=2'],'Aliases deduplicate while distinct selected variants remain distinct');
+});
 await test('stored preference parse failures stop before providers and structured exclusions are not truncated',async()=>{
   const s=store();let providers=0;const service=createFabricSearch({...s,apiKey:()=> 'fake',fetchImpl:async()=>{providers++;throw Error('must not call');}});
   s.records.set('submissions/project-A/summary.json',{buf:Buffer.from('{broken'),generation:'1'});

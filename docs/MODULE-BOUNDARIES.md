@@ -122,6 +122,15 @@ worker/billing/credential change.
 
 ## Live evidence and limits
 
+**Latest live follow-up:** 87f2712 deployed in 18m41s with exact public/API
+identity and served-code Fabrics/SMS checks passing. The jacket now uses red
+long-pile seeds and no longer offers ivory; no confirmed match remained on that
+run. Trousers return a crocodile listing, but collection/direct URL aliases made
+two cards for one product. A focused search-identity repair deduplicates Shopify
+aliases before visual review, preserving source/fetch URLs, selected variants and
+private historical books. Original service fails its new fixture; fixed search
+has 40 behavioral checks. Exact final validation/deployment is in AI-HANDOFF.
+
 **October 21 latest acceptance:** 24d84f4 Cloud Build fa83abfc succeeded in 17m52s;
 release/page/API identity, exact asset bytes/cache and isolated live-served Fabric
 and SMS fixtures passed. The real wool coat returned three black wool listings.

@@ -61,6 +61,6 @@ export function requestedShops(input) {
 }
 
 
-// Evidence identity treats the www alias as the same merchant, without changing
-// fetch destinations or redirect handling.
-export function merchantIdentity(value){const found=merchantURL(value,true);if(!found)return '';const u=new URL(found.url);u.hostname=u.hostname.replace(/^www\./,'');return u.href;}
+// Shopify collection and direct product routes identify the same listing. Keep
+// actual fetch/source destinations and selected variants intact.
+export function merchantIdentity(value){const found=merchantURL(value,true);if(!found)return '';const u=new URL(found.url);u.hostname=u.hostname.replace(/^www\./,'');if(found.shop.shopify)u.pathname=u.pathname.replace(/^\/collections\/[^/]+(\/products\/[^/]+)\/?$/i,'$1').replace(/^(\/products\/[^/]+)\/$/i,'$1');return u.href;}

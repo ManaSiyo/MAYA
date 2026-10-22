@@ -1,7 +1,7 @@
 // Fabric discovery uses web evidence; seller facts come only from fetched listings.
 // No private image, request, conversation or lookbook is stored in a shared cache.
 import {isFabricProduct, isFabricPiece, fabricProductMatch, fabricSeedQueries} from './fabric-sourcing.js';
-import {FABRIC_SHOPS,FABRIC_STORE_GROUPS,merchantURL,requestedShops} from './fabric-retailers.mjs';
+import {FABRIC_SHOPS,FABRIC_STORE_GROUPS,merchantURL,merchantIdentity,requestedShops} from './fabric-retailers.mjs';
 import {webSearchBody,readDiscovery} from './fabric-discovery.mjs';
 export {FABRIC_SHOPS,FABRIC_STORE_GROUPS,merchantURL,requestedShops} from './fabric-retailers.mjs';
 export {webSearchBody,readDiscovery} from './fabric-discovery.mjs';
@@ -340,7 +340,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     })));
     const groups=shops.map(shop=>results.flat().filter(c=>merchantURL(c.url,true)?.shop===shop)),balanced=[];
     for(let index=0;index<queries.length*2;index++)for(const group of groups)if(group[index])balanced.push(group[index]);
-    const unique=[...new Map(balanced.map(candidate=>[merchantURL(candidate.url,true)?.url,candidate])).values()];
+    const unique=[...new Map(balanced.map(candidate=>[merchantIdentity(candidate.url),candidate])).values()];
     return (await Promise.all(unique.slice(0, 5).map(c => verify(c, signal)))).flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];});
   }
   async function search(user, body, emit, signal = new AbortController().signal) {
@@ -397,7 +397,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
       input.visualColors=Object.fromEntries(discovery.garmentColors.filter(hint=>input.pieces.some(piece=>piece.id===hint.garmentId)).map(hint=>[hint.garmentId,hint.colors]));
       const checked = await Promise.all(discovery.candidates.filter(c => allowed.includes(merchantURL(c.url, true)?.shop)).map(c => verify(c, signal)));
       const discovered = checked.flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];});
-      products=[...new Map([...discovered,...products].map(p=>[p.url,p])).values()].slice(0,8);
+      products=[...new Map([...discovered,...products].map(p=>[merchantIdentity(p.url),p])).values()].slice(0,8);
       products=products.filter(product=>fabricProductMatch(product,{...input,pieces:input.pieces.filter(piece=>piece.id===product.garmentId),allowVisualOnly:!!rank&&!!input.image}));
     }
     const eligibleCount=products.length;

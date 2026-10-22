@@ -1,6 +1,42 @@
 # Current handoff — October 21, 2026
 
-## Current work — live dominant-color and retailer-seed follow-up
+## Current work — remove duplicate Shopify search cards
+
+87f27120b7556b3671c3d1f31004f9840eb98960 deployed successfully via Cloud Build
+3780db4e-ffa2-4571-867a-59e2794ac690 (18m41s), with all 72 gates. Exact public
+release/page/API and asset/cache checks pass. Deployed-code Fabrics and SMS UI
+fixtures pass with synthetic private APIs and intercepted writes. Communications
+implementation, shared model/design and lockfiles remain unchanged.
+
+Real owner acceptance: the burgundy jacket now searches red long-pile faux fur
+and does not offer the previous ivory fur. No suitable visual match was confirmed
+on that run. The crocodile trousers now return the public Britex crocodile-backed
+vinyl, but the same product appears under both collection and direct product URLs.
+Seller facts describe stiff upholstery; this is a closest visual listing, not a
+claim of physical trouser suitability. Never force a weak/failed visual fallback.
+
+Fix only fabric identity: Shopify /collections/<collection>/products/<slug> and
+/products/<slug> share an identity, retaining selected variant query parameters.
+Use identity for direct-feed and final search deduplication, before the one visual
+pass. Keep actual fetch/source URLs, seller facts, redirects, private historical
+lookbooks and non-Shopify routes intact. Original service fails the new duplicate
+fixture; fixed search passes 40 cases. No visible UI, CSS, independent aesthetic
+setting, communications/entry-point/shared model/environment/dependency change.
+
+Changed: docs/server/fabric-retailers.mjs, fabric-search.mjs, tests/fabric-search.mjs,
+tests/app-regression.mjs and required handoff/request/fix/commit records. All 72
+exact release commands, full integrated regression and smoke pass; sourcing has
+15 and search 40 behavioral cases. Final standalone Aesthetic Control runs last
+after these final records before the authorized commit/Push. Then verify exact deployment and
+that the actual crocodile result renders once. The prior live owner Chrome
+permission still covers this same active session; no records/messages/calls were
+written and no other profile was accessed.
+
+A separate post-release audit receipt, including five unchanged dependency
+advisory entries and their exposure limits, is at:
+/Users/fromsa/.codex/visualizations/2026/10/07/01a114f6-f388-7040-af18-3ff9b537ae54/MAYA-fabric-release-audit-2026-10-21.txt
+
+## Previous dominant-color and retailer-seed follow-up
 
 24d84f4d27c49be8728b968ec3a3f31b423c1fb6 deployed successfully: Cloud Build
 fa83abfc-88a1-4d99-9ff2-16dc28eb6dae, 17m52s, all 72 release gates. Exact public
