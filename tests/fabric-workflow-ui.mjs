@@ -152,12 +152,107 @@ try{
  await page.locator('.fa-tabs').getByRole('button',{name:'In House',exact:true}).click();
  await page.locator('.fa-card-title').filter({hasText:'Midnight Velvet'}).waitFor();
  assert.equal(await page.locator('.fa-product').count(),8,'Inventory loads while reference conversion is still pending');
+ await page.locator('.fa-tabs').getByRole('button',{name:'Sourceable',exact:true}).click();
+ assert.doesNotMatch(await page.locator('.fa-results').textContent(),/No relevant|confirmed yet/,'Preparing a reference is not a completed empty search');
+ await page.locator('.fa-tabs').getByRole('button',{name:'In House',exact:true}).click();
  await page.evaluate(async()=>{releaseReference();await referenceOpen;});
  assert.equal(await page.locator('.fa-product').count(),8,'Reference failure retains available inventory');
+ // Closing while reference preparation is pending must not start a hidden paid search.
+ const beforeClosedPreparation=searches.length;
+ await page.evaluate(({reference,pieces})=>{
+  const native=window.fetch;window.releaseClosedReference=null;
+  window.fetch=(url,options)=>{
+   if(!String(url).endsWith('/closing-reference.png'))return native(url,options);
+   window.fetch=native;
+   return new Promise(resolve=>window.releaseClosedReference=async()=>resolve(await native(reference)));
+  };
+  window.closedPreparation=MayaFabricAssistant.open({submissionId:'project-A',referenceImage:'/closing-reference.png',pieces,piece:pieces[0],automatic:true,forceReset:true});
+ },{reference,pieces});
+ await page.waitForFunction(()=>!!window.releaseClosedReference);
+ await page.evaluate(async()=>{MayaFabricAssistant.close();await releaseClosedReference();await closedPreparation;});
+ assert.equal(searches.length,beforeClosedPreparation,'A late photo cannot launch a search after leaving Fabrics');
+ await open({piece:pieces[0]});await card(late).waitFor();
+ assert.equal(searches.length,beforeClosedPreparation+1,'Explicit reopening can start a fresh visible search');
+ // A terminal NDJSON result completes immediately, even if a proxy holds EOF.
+ await page.evaluate(({reference,pieces,product})=>{
+  const native=window.fetch;window.releaseFabricStream=null;
+  window.fetch=(url,options)=>{
+   if(!String(url).endsWith('/fabrics/search'))return native(url,options);
+   window.fetch=native;
+   return Promise.resolve(new Response(new ReadableStream({start(controller){
+    window.releaseFabricStream=()=>{try{controller.close();}catch{}};
+    controller.enqueue(new TextEncoder().encode(JSON.stringify({type:'done',products:[product],message:'Confirmed fixture result.'})+'\n'));
+   }}),{headers:{'Content-Type':'application/x-ndjson'}}));
+  };
+  window.terminalSearch=MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});
+ },{reference,pieces,product:fur});
+ await page.getByText('Confirmed fixture result.',{exact:true}).waitFor();
+ assert.equal(await page.locator('.fa-composer button[type=submit]').isDisabled(),false,'Done completes without waiting for stream EOF');
+ await page.evaluate(async()=>{releaseFabricStream();await terminalSearch;});
+ // Provisional retailer candidates cannot survive a truncated visual review as confirmed matches.
+ await page.evaluate(({reference,pieces,product})=>{
+  const native=window.fetch;
+  window.fetch=(url,options)=>{
+   if(!String(url).endsWith('/fabrics/search'))return native(url,options);
+   window.fetch=native;return Promise.resolve(new Response(JSON.stringify({type:'products',preliminary:true,products:[product]})+'\n',{headers:{'Content-Type':'application/x-ndjson'}}));
+  };
+  return MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});
+ },{reference,pieces,product:fur});
+ await page.getByText('Search ended early. You can retry your request.',{exact:true}).waitFor();
+ assert.equal(await page.locator('.fa-product').count(),0,'Interrupted search clears unconfirmed candidates');
+ assert.doesNotMatch(await page.locator('.fa-results').textContent(),/No relevant|confirmed yet/,'Transport failure is not an honest completed no-match result');
+ // A queued close notification from the previous dialog cannot cancel a reopened search.
+ await page.evaluate(({reference,pieces,product})=>{
+  const native=window.fetch;window.finishReopenedStream=null;
+  window.fetch=(url,options)=>{
+   if(!String(url).endsWith('/fabrics/search'))return native(url,options);window.fetch=native;
+   window.reopenedSearchSignal=options.signal;
+   return Promise.resolve(new Response(new ReadableStream({start(controller){
+    window.finishReopenedStream=()=>{controller.enqueue(new TextEncoder().encode(JSON.stringify({type:'done',products:[product],message:'Reopened result.'})+'\n'));controller.close();};
+    options.signal.addEventListener('abort',()=>controller.error(options.signal.reason),{once:true});
+   }}),{headers:{'Content-Type':'application/x-ndjson'}}));
+  };
+  window.reopenedSearch=MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});
+ },{reference,pieces,product:fur});
+ await page.waitForFunction(()=>!!window.finishReopenedStream);
+ await page.evaluate(()=>document.getElementById('fabric-assistant-dialog').dispatchEvent(new Event('close')));
+ assert.equal(await page.evaluate(()=>reopenedSearchSignal.aborted),false,'Queued close for a prior opening must not abort the active stream');
+ assert.equal(await page.locator('#fabric-assistant-dialog').getAttribute('open'),'');
+ await page.evaluate(async()=>{finishReopenedStream();await reopenedSearch;});await card(fur).waitFor();
+ // The same deadline covers a stream that started but stopped producing data.
+ await page.evaluate(({reference,pieces,product})=>{
+  const nativeTimeout=AbortSignal.timeout,nativeFetch=window.fetch;
+  AbortSignal.timeout=ms=>{if(ms===60000){AbortSignal.timeout=nativeTimeout;return nativeTimeout.call(AbortSignal,150);}return nativeTimeout.call(AbortSignal,ms);};
+  window.fetch=(url,options)=>{
+   if(!String(url).endsWith('/fabrics/search'))return nativeFetch(url,options);
+   window.fetch=nativeFetch;
+   return Promise.resolve(new Response(new ReadableStream({start(controller){
+    controller.enqueue(new TextEncoder().encode(JSON.stringify({type:'products',preliminary:true,products:[product]})+'\n'));
+    if(options.signal.aborted)controller.error(options.signal.reason);else options.signal.addEventListener('abort',()=>controller.error(options.signal.reason),{once:true});
+   }}),{headers:{'Content-Type':'application/x-ndjson'}}));
+  };
+  window.partialSearch=MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});
+ },{reference,pieces,product:fur});
+ try{await page.getByText('Search timed out. Refresh to retry.',{exact:true}).waitFor();}catch(error){console.error('Partial-stream fixture state:',await page.locator('#fabric-assistant').innerText());throw error;}
+ await page.evaluate(()=>partialSearch);
+ assert.equal(await page.locator('.fa-product').count(),0,'Timed-out streams remove provisional candidates');
+ await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await card(late).waitFor();
+ assert.equal(await page.locator('.fa-status').textContent(),'Fabrics found.','Explicit Refresh recovers without a stuck busy flag');
  // A stalled read-only search has its own deadline and never resends itself.
- await page.evaluate(({reference,pieces})=>{const nativeTimeout=AbortSignal.timeout;AbortSignal.timeout=ms=>ms===60000?nativeTimeout.call(AbortSignal,150):nativeTimeout.call(AbortSignal,ms);const nativeFetch=window.fetch;window.fabricTimeoutAttempts=0;window.fetch=(url,options)=>{if(String(url).endsWith('/fabrics/search')){fabricTimeoutAttempts++;return new Promise((resolve,reject)=>options.signal.addEventListener('abort',()=>reject(options.signal.reason),{once:true}));}return nativeFetch(url,options);};window.timeoutSearch=MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});},{reference,pieces});
+ await page.evaluate(({reference,pieces})=>{const nativeTimeout=AbortSignal.timeout;AbortSignal.timeout=ms=>ms===60000?nativeTimeout.call(AbortSignal,150):nativeTimeout.call(AbortSignal,ms);const nativeFetch=window.fetch;window.fabricTimeoutAttempts=0;window.fetch=(url,options)=>{if(String(url).endsWith('/fabrics/search')){fabricTimeoutAttempts++;if(options.signal.aborted)return Promise.reject(options.signal.reason);return new Promise((resolve,reject)=>options.signal.addEventListener('abort',()=>reject(options.signal.reason),{once:true}));}return nativeFetch(url,options);};window.timeoutSearch=MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});},{reference,pieces});
  await page.getByText('Search timed out. Refresh to retry.',{exact:true}).waitFor();
- assert.equal(await page.evaluate(()=>fabricTimeoutAttempts),1);assert.equal(await page.locator('.fa-empty').textContent(),'No relevant fabric products confirmed yet.','A finished timeout cannot retain a Searching empty-state label');assert.equal(await page.locator('.fa-composer button[type=submit]').isDisabled(),false);
+ assert.equal(await page.evaluate(()=>fabricTimeoutAttempts),1);assert.match(await page.locator('.fa-empty').textContent(),/not completed/i,'Timeout is distinguished from a completed no-match search');assert.equal(await page.locator('.fa-composer button[type=submit]').isDisabled(),false);
+ // Loading/error copy uses the existing P1 authority under both saved and default designs.
+ for(const mode of ['default','saved']){
+  await page.evaluate(mode=>{const d=structuredClone(MayaTypographyControls.defaults);if(mode==='saved')Object.assign(d.type.P1,{font:'cormorant',size:16,weight:450,color:'white'});MayaTypographyControls.apply(d);},mode);
+  for(const width of [320,390,768,1024,1440,1920]){
+   await page.setViewportSize({width,height:1000});
+   const style=await page.locator('.fa-empty').evaluate(el=>{const s=getComputedStyle(el);return {size:s.fontSize,color:s.color,font:s.fontFamily};});
+   assert.equal(style.size,mode==='saved'?'16px':'12px');assert.equal(style.color,mode==='saved'?'rgb(255, 255, 255)':'rgb(170, 181, 196)');if(mode==='saved')assert.match(style.font,/Cormorant/);
+   assert.ok(await page.locator('#fabric-assistant').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Interrupted search fits '+mode+' '+width);
+   if(width===390||width===1440)await page.screenshot({path:'/private/tmp/maya-fabric-interrupted-'+mode+'-'+width+'.png'});
+  }
+ }
  assert.deepEqual(errors,[]);
  console.log('Fabric workflow: bounded metadata ('+bytes+' bytes), independent inventory, queued/CAS historical-favorite removals, retry, per-garment material/prompt/reload, renewal and submission cancellation passed. Synthetic records only.');
 }finally{for(const route of catalogRoutes)await route.abort().catch(()=>{});releaseAck?.();releaseBook?.();await browser.close();}

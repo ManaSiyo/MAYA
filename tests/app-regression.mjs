@@ -2791,6 +2791,7 @@ await import('./domain-boundaries.mjs');
 ok('Fabric policy, provider imports, routes, styles and served assets stay separate from communications and CRM',true);
 await import('./fabric-search-ui.mjs');
 await import('./fabric-workflow-ui.mjs');
+ok('Fabrics distinguishes preparation, interrupted searches and true empty results; terminal streams finish without EOF',true);
 await import('./operation-save-failures.mjs');
 ok('Operation storage failures retain reviewed drafts and current measurement prompts within account/submission/garment scope',
   OPS_SOURCE.includes("LOGIC_PREFIX+'v2:'+encodeURIComponent(account)") &&

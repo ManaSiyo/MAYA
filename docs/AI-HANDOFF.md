@@ -1,6 +1,54 @@
 # Current handoff — October 21, 2026
 
-## Current work — remove duplicate Shopify search cards
+## Current work — Fabrics loading and interrupted search lifecycle
+
+Production is 5298c07ad4d705cbb4fc359dfed004b108f746f4 (public release checked).
+The owner reports the August 26 displayed submission remaining on Searching while
+also showing an empty-results message. Fresh Chrome permission is pending; do not
+reuse the prior completed session's approval. No owner browser, record or message
+has been accessed in this turn. The actual provider failure is not established.
+
+Reproduced locally: reference preparation paints a completed no-match placeholder;
+NDJSON done waits unnecessarily for EOF; a truncated stream retains provisional
+candidates. Distinguish preparing/searching/interrupted/completed states, complete
+at done and cancel the reader, clear unconfirmed candidates after failure or scope
+cancellation, and permit explicit retry. Late reference preparation cannot start a hidden search
+after close; a queued native close event cannot abort a reopened dialog. Removing
+only this guard in a temporary fixture deterministically fails the new assertion.
+Never relabel a timeout as a completed
+no-match. Seller redirects and optional variant facts now share eight seconds;
+the route has a total 55-second read-only deadline, before the browser's existing
+60 seconds. Late provider output is suppressed. No retry or extra paid call.
+
+Changed runtime: aesthetics/ui/fabric-assistant.js and docs/server/fabric-search.mjs
+only. Existing P1/Glass/Inner controls and active Fabrics preview remain authoritative;
+no CSS, new aesthetic setting, matching threshold, model, dependency, SMS/voice,
+credential or production environment change. Original images/client words and
+sealed lookbook CAS behavior are preserved. No new server module/package change.
+
+Targeted search passes 43 behavioral cases. Workflow covers held EOF, truncated
+and stalled streams, explicit recovery, private reference loading, existing save
+and isolation contracts; interrupted copy checks default/changed saved P1 at six
+widths. Normal and 8x CPU workflow runs pass. An early full run exposed Search stopped
+in the accelerated stream fixture; queued-close cancellation is now independently
+reproduced and fixed, and fake transports honor already-aborted signals.
+All 72 exact local release gates and full integrated regression pass, including
+final changed-surface authority. Search passes 43 cases after the last test refinement.
+Run server smoke and standalone Aesthetic Control last after these final records,
+then commit/authorized Push.
+Then verify exact release/assets/API and the actual owner submission, when Chrome
+is explicitly approved and idle. Synthetic providers cannot prove live relevance
+or that this is the cause of the owner's current stalled request.
+
+## Previous duplicate listing release
+
+5298c07 deployed through Cloud Build 1482a3fe-3eab-4eda-b2b0-34a99912f403,
+all 72 gates. Exact release/page/API/assets/cache and deployed synthetic UI checks
+passed. The real crocodile listing appeared once after Shopify alias deduplication.
+The burgundy jacket still had no confirmed visual match. The seller's crocodile
+vinyl is stiff upholstery; physical trouser suitability is unconfirmed.
+
+## Historical preparation — duplicate Shopify search cards
 
 87f27120b7556b3671c3d1f31004f9840eb98960 deployed successfully via Cloud Build
 3780db4e-ffa2-4571-867a-59e2794ac690 (18m41s), with all 72 gates. Exact public

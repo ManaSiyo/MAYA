@@ -11,6 +11,14 @@ const text = (v, max = 1000) => String(v ?? '').replace(/\s+/g, ' ').trim().slic
 const fail = (message, status = 400) => Object.assign(new Error(message), { status });
 const list = v => Array.isArray(v) ? v : v ? [v] : [];
 const plain = v => typeof v === 'string' ? text(v) : v && typeof v === 'object' ? text(JSON.stringify(v)) : '';
+function untilAborted(promise,signal) {
+  return new Promise((resolve,reject)=>{
+    const abort=()=>reject(signal.reason);
+    if(signal.aborted){reject(signal.reason);return;}
+    signal.addEventListener('abort',abort,{once:true});
+    Promise.resolve(promise).then(resolve,reject).finally(()=>signal.removeEventListener('abort',abort));
+  });
+}
 const strip = v => decode(String(v || '').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' '));
 function decode(v) {
   return text(String(v).replace(/&(?:amp|quot|apos|lt|gt|nbsp);/g, m => ({ '&amp;':'&','&quot;':'"','&apos;':"'",'&lt;':'<','&gt;':'>','&nbsp;':' ' })[m]).replace(/&#(x[\da-f]+|\d+);/gi, (_, n) => {
@@ -189,13 +197,16 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
       availability: 'unknown', evidence: 'search_link', checkedAt: '', reason: candidate.reason || '' });
     const hit = listings.get(target.url);
     if (hit && now() - hit.at < 5 * 60 * 1000) return { ...hit.product, reason: candidate.reason || '' };
+    // Redirects, response bodies and the optional Shopify facts share one budget.
+    // A fresh timeout at each hop could consume the browser's entire search window.
+    const listingSignal=signal?AbortSignal.any([signal,AbortSignal.timeout(8000)]):AbortSignal.timeout(8000);
     try {
-      const page = await getPage(target.url, signal);
+      const page = await getPage(target.url, listingSignal);
       let product = parseListing(page.body, page.url, now());
       if (product && target.shop.shopify && !product.price) {
         try {
           const variantUrl = new URL(product.url); variantUrl.search=''; variantUrl.pathname=variantUrl.pathname.replace(/\/$/,'')+'.js';
-          const variantPage = await getPage(variantUrl.href, signal);
+          const variantPage = await getPage(variantUrl.href, listingSignal);
           product = applyShopifyVariant(product, JSON.parse(variantPage.body), page.body);
         } catch { /* unknown variant or unit remains unknown */ }
       }
@@ -367,6 +378,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
       input.request='Find apparel fabric for these saved garments: '+input.pieces.map(piece=>piece.name+': '+piece.fabric).join('; ');
       input.history=[];
     }
+    signal.throwIfAborted();
     const started = now(); let firstAt = null; let products = [];
     const send = event => { if (!signal.aborted) emit(event); };
     const searchDetails={preferences:input.preferences,garments:input.pieces.map(p=>({name:p.name,fabric:p.fabric,traits:p.fabric_spec})),
@@ -387,6 +399,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
       discovery = readDiscovery(await r.json());
       Object.assign(searchDetails,{query:discovery.query,observation:discovery.observation,webQueries:discovery.webQueries,stage:'Checking seller listings'});
       send({type:'context',searchDetails});
+      send({type:'status',message:'Checking seller listings…'});
     } catch (e) { warning = e.status ? e.message : 'Web search took too long or was interrupted. You can retry.'; }
     await quick;
     if (signal.aborted) return;
@@ -396,6 +409,7 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
       // cannot replace explicit words or flow to another garment/account.
       input.visualColors=Object.fromEntries(discovery.garmentColors.filter(hint=>input.pieces.some(piece=>piece.id===hint.garmentId)).map(hint=>[hint.garmentId,hint.colors]));
       const checked = await Promise.all(discovery.candidates.filter(c => allowed.includes(merchantURL(c.url, true)?.shop)).map(c => verify(c, signal)));
+      if(signal.aborted)return;
       const discovered = checked.flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];});
       products=[...new Map([...discovered,...products].map(p=>[merchantIdentity(p.url),p])).values()].slice(0,8);
       products=products.filter(product=>fabricProductMatch(product,{...input,pieces:input.pieces.filter(piece=>piece.id===product.garmentId),allowVisualOnly:!!rank&&!!input.image}));
@@ -428,22 +442,26 @@ export function mountFabricSearch(app, { requireAdmin, requireAuthHeader, json, 
   const service = createFabricSearch(deps);
   app.post('/api/admin/fabrics/search', requireAuthHeader, json({ limit: '5mb' }), async (req, res) => {
     const controller = new AbortController();
+    const signal=AbortSignal.any([controller.signal,AbortSignal.timeout(55000)]);
     res.on('close', () => controller.abort());
     try {
-      const user = await requireAdmin(req);
-      const rl = rateLimit(user.sub, user.email);
-      if (!rl.ok) throw fail('Please wait before searching again.', 429);
-      normalizeFabricRequest(req.body);
-      const stats = await service.search(user, req.body, event => {
-        if (res.destroyed) return;
-        if (!res.headersSent) { res.set({ 'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-store', 'X-Accel-Buffering': 'no' }); res.flushHeaders(); }
-        res.write(JSON.stringify(event) + '\n');
-      }, controller.signal);
+      const stats=await untilAborted((async()=>{
+        const user = await requireAdmin(req);
+        signal.throwIfAborted();
+        const rl = rateLimit(user.sub, user.email);
+        if (!rl.ok) throw fail('Please wait before searching again.', 429);
+        normalizeFabricRequest(req.body);
+        return service.search(user, req.body, event => {
+          if (res.destroyed) return;
+          if (!res.headersSent) { res.set({ 'Content-Type': 'application/x-ndjson', 'Cache-Control': 'no-store', 'X-Accel-Buffering': 'no' }); res.flushHeaders(); }
+          res.write(JSON.stringify(event) + '\n');
+        }, signal);
+      })(),signal);
       if (stats) console.log('[fabric.search]', JSON.stringify(stats));
       res.end();
     } catch (e) {
       if (res.destroyed) return;
-      const error = e.status ? e.message : 'Fabric search is unavailable. Try again.';
+      const error = e.name==='TimeoutError'?'Fabric search timed out. Refresh to retry.':e.status ? e.message : 'Fabric search is unavailable. Try again.';
       if (res.headersSent) res.end(JSON.stringify({ type: 'error', message: error }) + '\n');
       else res.status(e.status || 503).json({ error });
     }

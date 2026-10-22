@@ -1,19 +1,25 @@
-[Codex] Deduplicate Shopify fabric collection and direct product aliases
+[Codex] Repair Fabrics loading, stream completion and dialog cancellation
 
-Live owner acceptance returned the same crocodile listing twice, once through a
-collection route and once through its direct product route. Treat those Shopify
-paths as one evidence/search identity before the bounded visual comparison.
-Keep actual fetch/source URLs, selected variants, seller facts, redirect policy,
-non-Shopify routes and private historical lookbooks unchanged.
+Fabrics could show a completed no-match placeholder during reference preparation,
+wait for EOF after receiving done, or retain unconfirmed retailer candidates after
+a truncated search. Separate preparation/search/interrupted/completed states,
+finish on the terminal event, discard unconfirmed results on failure/cancellation
+and preserve explicit retry. A late photo cannot start a hidden search after close;
+a queued native close event cannot abort a reopened dialog. The new regression
+fails when only that guard is removed. No automatic paid retries.
 
-The original service fails the new duplicate regression; fixed search passes
-40 cases, including preserved source URLs and distinct selected variants. All 72
-exact release commands, full integrated regression and smoke pass; final standalone
-Aesthetic Control runs last after final records before commit. Deployed owner
-acceptance must then show one card for the real crocodile listing.
+Seller redirects and optional Shopify facts share eight seconds. The read-only
+route ends at 55 seconds before the browser's existing 60-second deadline; late
+private reads cannot start providers and late results cannot append to the stream.
+Keep source facts, images, original client words, relevance checks and sealed
+lookbook CAS behavior intact. No SMS/voice, shared model/dependency, credentials,
+billing or production environment changes. Existing shared P1/Glass/Inner styling
+and active Fabrics preview govern the changed states; no CSS or new design setting.
 
-Backend-only: no visible UI/CSS/independent design settings, communications
-implementation, shared models/dependencies, credentials, billing or production
-environment changes. Matching remains a closest visual comparison; the seller's
-stiff upholstery description does not establish trouser suitability. The jacket
-currently has no confirmed match; ivory is no longer offered as burgundy.
+Search passes 43 behavioral cases; normal and 8x CPU workflow tests pass, including
+held EOF, interrupted/mid-stream timeouts, explicit recovery and queued close.
+All 72 exact local release commands and full integrated regression pass. Server
+smoke and standalone Aesthetic Control run last after final records before commit. Owner browser access is awaiting fresh idle
+permission; synthetic tests do not establish the actual live provider failure or
+matching quality on the reported August submission. Verify exact deployed release
+and that submission after Push when owner access is approved.

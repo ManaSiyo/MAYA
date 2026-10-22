@@ -478,4 +478,47 @@ await test('saved burgundy fur rejects ivory and retailer notions cannot crowd o
   const legacy=[];await service.search(user,{automatic:true,submissionId:'project-A',piece:{id:'jacket'},image},e=>legacy.push(e));
   assert.equal(ranked,2);assert.deepEqual(legacy.at(-1).products.map(p=>p.url),[red],'Legacy garments without hex use the scoped qualified observation, never accept opposite seller colors on a high rank alone');
 });
+await test('a stalled streamed search terminates before the browser deadline and cannot publish late products',async()=>{
+  const nativeTimeout=AbortSignal.timeout,routes=[],events=[];let release,lateSignal;
+  const app={post:(...args)=>routes.push(args),get(){}};
+  AbortSignal.timeout=ms=>nativeTimeout.call(AbortSignal,ms===55000?40:ms);
+  const keepAlive=setInterval(()=>{},1000);
+  try{
+    mountFabricSearch(app,{...store(),requireAdmin:async()=>user,requireAuthHeader(){},json:()=>()=>{},rateLimit:()=>({ok:true}),apiKey:()=> 'fake',fetchImpl:async(target,options)=>{
+      if(target.includes('suggest.json'))return Response.json({resources:{results:{products:[]}}});
+      assert.ok(target.includes('openai.com'));lateSignal=options.signal;
+      return new Promise(resolve=>{release=()=>resolve(Response.json(response()));});
+    }});
+    let ended=false,code;
+    const res={on(){},set(){return this;},flushHeaders(){this.headersSent=true;},write(raw){events.push(JSON.parse(raw));},end(raw){if(raw)events.push(JSON.parse(raw));ended=true;},status(n){code=n;return this;},json(value){events.push(value);ended=true;}};
+    await routes[0].at(-1)({body:{request:'crimson wool'},query:{}},res);
+    assert.equal(ended,true);assert.equal(code,undefined,'Already-streamed failures use a terminal error event');
+    assert.equal(events.at(-1).type,'error');assert.match(events.at(-1).message,/timed out/);assert.equal(lateSignal.aborted,true);
+    const finalCount=events.length;release();await new Promise(resolve=>setTimeout(resolve,20));assert.equal(events.length,finalCount,'Late provider completion cannot append after terminal timeout');
+  }finally{AbortSignal.timeout=nativeTimeout;clearInterval(keepAlive);release?.();}
+});
+await test('a late private storage read cannot launch providers after the route deadline',async()=>{
+  const nativeTimeout=AbortSignal.timeout,routes=[];let release,providers=0;
+  AbortSignal.timeout=ms=>nativeTimeout.call(AbortSignal,ms===55000?40:ms);
+  const keepAlive=setInterval(()=>{},1000);
+  try{
+    const storage=store();mountFabricSearch({post:(...args)=>routes.push(args),get(){}},{...storage,read:async key=>{if(key.endsWith('/submission.json'))await new Promise(resolve=>release=resolve);return storage.read(key);},requireAdmin:async()=>user,requireAuthHeader(){},json:()=>()=>{},rateLimit:()=>({ok:true}),apiKey:()=> 'fake',fetchImpl:async()=>{providers++;throw Error('Late provider request');}});
+    let error,code;const res={on(){},status(value){code=value;return this;},json(value){error=value.error;}};
+    await routes[0].at(-1)({body:{submissionId:'project-A',request:'crimson wool'}},res);
+    assert.equal(code,503);assert.match(error,/timed out/);release();await new Promise(resolve=>setTimeout(resolve,20));assert.equal(providers,0);
+  }finally{AbortSignal.timeout=nativeTimeout;clearInterval(keepAlive);release?.();}
+});
+await test('seller redirects and variant facts share one total verification budget',async()=>{
+  const nativeTimeout=AbortSignal.timeout;let attempts=0,budget;
+  AbortSignal.timeout=ms=>{const signal=nativeTimeout.call(AbortSignal,ms===8000?55:ms);if(ms===8000)budget=signal;return signal;};
+  const keepAlive=setInterval(()=>{},1000);
+  try{
+    const service=createFabricSearch({...store(),fetchImpl:async(target,options)=>{
+      attempts++;
+      if(attempts===2)await new Promise((resolve,reject)=>{if(options.signal.aborted)reject(options.signal.reason);else options.signal.addEventListener('abort',()=>reject(options.signal.reason),{once:true});});
+      return new Response('',{status:302,headers:{location:url+'?variant='+attempts}});
+    }});
+    const result=await service.verify({url});assert.equal(result.evidence,'search_link');assert.equal(budget?.aborted,true,'The shared budget expires before a fresh six-second hop deadline');assert.equal(attempts,2,'No fresh third-hop timeout after the listing budget expires');
+  }finally{AbortSignal.timeout=nativeTimeout;clearInterval(keepAlive);}
+});
 console.log(`Fabric search: ${count} behavioral checks passed.`);

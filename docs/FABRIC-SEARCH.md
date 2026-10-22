@@ -90,7 +90,15 @@ unless the owner actually selected that scope.
   Early cards are explicitly provisional candidates pending photo comparison;
   final matches require the same visual gate. Empty later web discovery cannot
   erase eligible direct candidates. Refinements bypass seeds rather than replay
-  stale literal terms. The browser search stream has a 60-second read deadline.
+  stale literal terms. The browser search stream has a 60-second read deadline. Seller redirects and
+  optional variant facts share one eight-second verification budget; the route
+  terminates at 55 seconds even if private reads or a provider never settle.
+  Preparation, active search, interruption and completed no-match are distinct
+  states. A terminal done event completes without waiting for EOF; interrupted
+  streams discard provisional candidates and explicit Refresh can retry. Late
+  reference completion after leaving Fabrics never starts a hidden search; queued
+  native dialog-close events cannot abort an already reopened search. No
+  automatic paid retry is introduced.
 - Sourceable hover/focus/tap details show saved descriptions, retailer queries,
   provider-exposed web queries, resolved search, qualified interpretation, stores
   and stage. Missing provider query metadata remains explicit. Hover is free.
