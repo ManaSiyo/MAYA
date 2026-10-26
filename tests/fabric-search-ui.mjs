@@ -135,6 +135,7 @@ try{
   }
   const beforeEmpty=requests.length;await chooseGroups([]);assert.equal(await page.locator('.fa-product').count(),0);await page.getByText('Choose at least one store group.',{exact:true}).waitFor();await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();assert.equal(requests.length,beforeEmpty,'Empty selection never becomes an unrestricted provider call');
   await chooseGroups(['local']);await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('.fa-composer button[type=submit]').disabled);
+  assert.notEqual(await page.locator('[data-store-group=local]').evaluate(e=>getComputedStyle(e).backgroundColor),await page.locator('[data-store-group=mood]').evaluate(e=>getComputedStyle(e).backgroundColor),'Selected stores use the shared selected pill material');
   for(const width of [320,390,768,1024,1440,1920]){await page.setViewportSize({width,height:1000});await checkDetails();assert.ok(await page.locator('#fabric-assistant').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'default inline view fits '+width);assert.ok((await page.locator('.fa-body').boundingBox()).height>=100,'Default inline results usable '+width);const field=await page.locator('.fa-store-filter').first().boundingBox();assert.ok(field.width>80,'default inline filter remains usable '+width+' '+JSON.stringify(field));}
   await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:'/private/tmp/maya-fabrics-inline-default.png'});
   await page.locator('.fa-toolbar').getByRole('button',{name:'Expand',exact:true}).click();await page.locator('#fabric-assistant-dialog[open]').waitFor();
@@ -175,7 +176,8 @@ try{
       const outer=await readStyle('#fabric-assistant'),inner=await readStyle('.fa-product'),field=await readStyle('.fa-store-filter'),pill=await readStyle('.fa-toolbar button'),glyph=await readStyle('.fa-toolbar button svg');
       assert.deepEqual([outer.paddingX,outer.paddingY,outer.radius,outer.background],[24,18,20,'rgba(115, 46, 70, 0.65)'],mode+' outer material '+width);
       assert.deepEqual([inner.paddingX,inner.paddingY,inner.radius,inner.background],[12,10,16,'rgba(35, 76, 125, 0.7)'],mode+' inner material '+width);
-      assert.deepEqual([field.paddingX,field.paddingY,field.radius,field.background],[18,9,100,'rgba(3, 15, 29, 0.65)'],mode+' filter Glass material '+width);
+      assert.deepEqual([field.paddingX,field.paddingY,field.radius,field.background],[18,9,100,'rgba(3, 15, 29, 0.81)'],mode+' selected filter Glass material '+width);
+      assert.equal((await readStyle('[data-store-group=mood]')).background,'rgba(3, 15, 29, 0.65)',mode+' unselected filter keeps Glass material '+width);
       assert.deepEqual([pill.paddingX,pill.paddingY,pill.blur],[18,9,'blur(7px) saturate(1.2)'],mode+' glass material '+width);
       assert.equal(outer.blur,'blur(9px) saturate(1.3)');assert.equal(inner.blur,'blur(12px) saturate(1.1)');assert.equal(pill.background,'rgba(3, 15, 29, 0.65)');assert.match((await readStyle('.fa-card-title')).font,/Cormorant/);assert.equal((await readStyle('.fa-card-title')).weight,'450');assert.equal(await page.locator('.fa-store-wrap').evaluate(el=>getComputedStyle(el).gap),'12px');assert.equal(await page.locator('#fabric-assistant').evaluate(el=>getComputedStyle(el).gap),'18px');
       assert.ok(await page.locator('.fa-card-caption').first().evaluate(el=>el.scrollWidth<=el.clientWidth+1&&el.scrollHeight<=el.clientHeight+1),'Seller facts wrap without losing the unit '+width);

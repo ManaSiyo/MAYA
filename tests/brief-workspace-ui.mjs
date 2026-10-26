@@ -123,6 +123,19 @@ try{
   if(mode==='saved')await page.evaluate(value=>MayaTypographyControls.save(value),saved);
   await page.goto('https://maya.test/backend.html?submission=A&name=client-a-08-27-2026');
   await page.locator('#piece-pills').getByRole('button',{name:'Black boots',exact:true}).waitFor();
+  const fullView=page.locator('#piece-pills').getByRole('button',{name:'Full view',exact:true});
+  const shirt=page.locator('#piece-pills').getByRole('button',{name:'White shirt',exact:true});
+  assert.equal(await fullView.getAttribute('aria-pressed'),'true','Full view starts selected');
+  assert.equal(await shirt.getAttribute('aria-pressed'),'false');
+  assert.notEqual((await style(fullView,['backgroundColor'])).backgroundColor,(await style(shirt,['backgroundColor'])).backgroundColor,'Full view has the shared selected pill material');
+  await shirt.click();assert.equal(await fullView.getAttribute('aria-pressed'),'false');assert.equal(await shirt.getAttribute('aria-pressed'),'true');
+  assert.notEqual((await style(fullView,['backgroundColor'])).backgroundColor,(await style(shirt,['backgroundColor'])).backgroundColor,'Selected garment has the shared selected pill material');
+  await fullView.click();assert.equal(await fullView.getAttribute('aria-pressed'),'true');assert.equal(await shirt.getAttribute('aria-pressed'),'false');
+  for(const width of [1024,1280,1366,1440,1600,1920,2560,3440]){
+   await page.setViewportSize({width,height:900});
+   assert.notEqual((await style(fullView,['backgroundColor'])).backgroundColor,(await style(shirt,['backgroundColor'])).backgroundColor,mode+' selected Full view remains visible at '+width);
+   if(width===1440||width===3440)await page.screenshot({path:'/private/tmp/maya-brief-selection-'+mode+'-'+width+'.png'});
+  }
   const embedded=page.frameLocator('#operations-embed');
   const liveFrame=page.frames().find(frame=>frame.url().includes('/operations.html'));
   await embedded.locator('#test-picker option').filter({hasText:'Black boots'}).waitFor({state:'attached'});

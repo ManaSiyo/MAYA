@@ -522,3 +522,13 @@ for keyboard reading; Escape returns to its trigger without collapsing Fabrics.
 The same active preview and existing H4/P3/Inner/Glass settings remain authoritative.
 Place long details on the available side of their trigger, never over it; preserve
 keyboard scrolling and the governed thin/idle-hide scrollbar.
+
+
+## October 26 — garment and store selection
+
+Brief garment pills, including Full view, and the Sourceable store filters use
+the existing Glass segmented selected state and `aria-pressed`; no third pill
+family or independent visual setting is introduced. The active Segments preview
+governs their selection appearance. Sourceable seller cards keep their original
+link and show the existing P3 “Photo unavailable” fallback if a browser cannot
+load a verified image. No new search or save action is added.

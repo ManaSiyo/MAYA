@@ -1437,7 +1437,7 @@
              anything. The Dissect pill sits beside Full view and starts it
              deliberately; once a client is dissected it never runs again. -->
         <div class="piece-swiper" id="piece-swiper" style="display:none">
-          <div class="piece-pills" id="piece-pills"></div>
+          <div class="piece-pills" id="piece-pills" data-maya-control="segmented"></div>
           <button class="pill maya-pill" id="brief-fabrics-button" data-maya-type="P3" onclick="showBriefFabrics()" disabled>Fabrics</button>
         </div>
       </div>
@@ -2816,8 +2816,9 @@ function setActivePiece(idx) {
   if (!_pieceState.pieces.length) return;
   if (typeof showBriefItem === 'function') showBriefItem();
   _pieceState.idx = Math.max(0, Math.min(_pieceState.pieces.length - 1, idx));
-  document.querySelectorAll('#piece-pills .piece-pill').forEach((node, i) => {
+  document.querySelectorAll('#piece-pills [data-maya-segment]').forEach((node, i) => {
     node.classList.toggle('active', i === _pieceState.idx);
+    node.setAttribute('aria-pressed', String(i === _pieceState.idx));
   });
   // v0.6: swap to the rendered per-piece image when one exists. Falls
   // back to the zoom-into-region behavior for pieces still pending render.
@@ -2955,7 +2956,7 @@ function renderDissection(visionItem) {
     pills.innerHTML = swiperPieces.map((p, i) => {
       const cls = 'piece-pill' + (i === 0 ? ' active' : '');
       const nonFabric=/\b(shoes?|boots?|sneakers?|footwear|loafers?|heels?|sandals?)\b/i.test([p.name,p.category].join(' '));
-      return '<button class="' + cls + (nonFabric?' piece-non-fabric':'') + '"'+(nonFabric?' data-maya-semantic="non-fabric"':'')+' onclick="setActivePiece(' + i + ')">' + escapeHtml(p.name) + '</button>';
+      return '<button class="' + cls + (nonFabric?' piece-non-fabric':'') + '" data-maya-segment aria-pressed="'+String(i===0)+'"'+(nonFabric?' data-maya-semantic="non-fabric"':'')+' onclick="setActivePiece(' + i + ')">' + escapeHtml(p.name) + '</button>';
     }).join('') +
       // v0.37: Dissect sits right beside Full view. It is only here when this
       // client has never been dissected, and it removes itself the moment it

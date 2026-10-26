@@ -280,3 +280,12 @@ strict. Unknown inferred traits may only proceed to the single visual comparison
 failed/missing comparison never confirms them. Search details include original
 client preferences and store scope. Material seeds include a bounded broader
 query, with balanced stores and grounded web candidates before supplements.
+
+October 26: A reviewed Sourceable listing remains visible with “Photo unavailable”
+and its source link if the browser cannot load its seller image. This does not
+allow listings without a source-backed image through server verification, or
+guarantee a seller match. Store filters use the shared selected Glass pill state.
+
+The browser independently observes the existing 60-second search abort while
+waiting for response headers and streamed reads, including transports that do not
+reject promptly on cancellation. This is recovery, not proof of faster matching.

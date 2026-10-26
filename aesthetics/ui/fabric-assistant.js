@@ -42,6 +42,14 @@
   }
 
   const node = (tag, className, value) => { const n = document.createElement(tag); if (className) n.className = className; if (value != null) n.textContent = value; if(['h2','h3','p','label','button','textarea','select'].includes(tag))n.dataset.mayaType=tag==='h2'?'H2':tag==='h3'?'H4':['button','label','select'].includes(tag)?'P3':'P1'; return n; };
+  function waitForSignal(promise,signal) {
+    return new Promise((resolve,reject)=>{
+      const abort=()=>reject(signal.reason);
+      if(signal.aborted){reject(signal.reason);return;}
+      signal.addEventListener('abort',abort,{once:true});
+      Promise.resolve(promise).then(resolve,reject).finally(()=>signal.removeEventListener('abort',abort));
+    });
+  }
   function action(label, fn) { const b = node('button','pill maya-pill',label); b.type = 'button'; b.addEventListener('click',fn); return b; }
   function status(message) { els.status.textContent = message || ''; }
   function reset() {
@@ -100,7 +108,7 @@
       paint();
       if(searchDetails){searchDetails={...searchDetails,stage:'Store filter changed; Refresh to search this selection'};els.details.set(searchDetails);}
       status(!activeStores.size?'Choose at least one store group.':submittedRequest&&lastSearchStores!==storeKey()?'Refresh to search these stores.':completedStatus);
-    });button.classList.add('fa-store-filter');button.dataset.storeGroup=group.id;return button;});storeWrap.append(...storeButtons);
+    });button.classList.add('fa-store-filter');button.dataset.mayaSegment='';button.dataset.storeGroup=group.id;return button;});storeWrap.append(...storeButtons);
     tabs.append(inhouse,search,saved,filter,fresh);
     const body=node('div','fa-body');body.dataset.mayaScrollbar='visible';body.tabIndex=0;body.setAttribute('aria-label','Fabric results');
     const transcript=node('div','fa-transcript');transcript.setAttribute('aria-label','Your requests');
@@ -239,7 +247,7 @@
     const link=node('a','fa-product-link');link.href=p.url;link.target='_blank';link.rel='noopener noreferrer';
     const knownPrice=p.price&&p.unit?`${p.price} ${p.currency} / ${p.unit}`:'';
     if(p.image && /^(?:https:\/\/|\/aesthetics\/fabrics\/|data:image\/)/.test(p.image)){
-      const img=node('img','fa-product-image');img.src=p.image;img.alt=p.title;img.loading='lazy';img.referrerPolicy='no-referrer';img.addEventListener('error',()=>{if(view==='saved'||local){img.remove();const unavailable=node('p','fa-image-unavailable','Photo unavailable');unavailable.dataset.mayaType='P3';link.prepend(unavailable);item.classList.add('has-missing-photo');}else{item.remove();if(!els.results.querySelector('.fa-product'))els.results.append(node('p','fa-empty','Fabric photos could not load. Refresh or try another store.'));}},{once:true});link.append(img);
+      const img=node('img','fa-product-image');img.src=p.image;img.alt=p.title;img.loading='lazy';img.referrerPolicy='no-referrer';img.addEventListener('error',()=>{img.remove();const unavailable=node('p','fa-image-unavailable','Photo unavailable');unavailable.dataset.mayaType='P3';link.prepend(unavailable);item.classList.add('has-missing-photo');},{once:true});link.append(img);
     }
     const title=node('h3','fa-card-title',p.title);
     const use=p.garment?'For '+p.garment:'';
@@ -281,6 +289,7 @@
     if (!request && !image) return status('Describe a fabric or add a photo.');
     recognition?.stop();
     const stamp=epoch, sequence=++searchSeq; controller=new AbortController(); const active=controller;
+    const signal=AbortSignal.any([active.signal,AbortSignal.timeout(60000)]);
     const valid=()=>current(stamp)&&sequence===searchSeq;
     busy=true;searchState='searching';completedStatus=''; els.send.disabled=true; els.stop.hidden=false; view='search'; els.saveStatus.textContent='';
     products=[]; searchDetails=null;els.details.set(null);paint(); status('Searching fabric shops…');
@@ -291,9 +300,9 @@
     if(!filterOnly)els.input.value='';
     let finished=false;
     try {
-      const r=await fetch('/api/admin/fabrics/search',{method:'POST',headers:headers(),signal:AbortSignal.any([active.signal,AbortSignal.timeout(60000)]),
-        body:JSON.stringify({submissionId:context.submissionId||'',request:submitted,image,preferences:context.preferences||'',piece:pieceMetadata(context.piece),pieces:(context.pieces||[]).slice(0,12).map(pieceMetadata),automatic:!!context.automatic,...(filterTouched?{storeGroups:[...activeStores]}:{}),history})});
-      if(!r.ok){const data=await r.json().catch(()=>({}));throw Error(data.error || 'Fabric search failed. Try again.');}
+      const r=await waitForSignal(fetch('/api/admin/fabrics/search',{method:'POST',headers:headers(),signal,
+        body:JSON.stringify({submissionId:context.submissionId||'',request:submitted,image,preferences:context.preferences||'',piece:pieceMetadata(context.piece),pieces:(context.pieces||[]).slice(0,12).map(pieceMetadata),automatic:!!context.automatic,...(filterTouched?{storeGroups:[...activeStores]}:{}),history})}),signal);
+      if(!r.ok){const data=await waitForSignal(r.json().catch(()=>({})),signal);throw Error(data.error || 'Fabric search failed. Try again.');}
       const reader=r.body.getReader(), decoder=new TextDecoder();let buffer='';
       const accept=raw=>{
         if(!raw.trim() || !valid())return;
@@ -310,7 +319,7 @@
         }
       };
       try {
-        while(!finished){const{value,done}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});if(buffer.length>512*1024)throw Error('Search response was too large.');let n;while(!finished&&(n=buffer.indexOf('\n'))>=0){accept(buffer.slice(0,n));buffer=buffer.slice(n+1);}}
+        while(!finished){const{value,done}=await waitForSignal(reader.read(),signal);if(done)break;buffer+=decoder.decode(value,{stream:true});if(buffer.length>512*1024)throw Error('Search response was too large.');let n;while(!finished&&(n=buffer.indexOf('\n'))>=0){accept(buffer.slice(0,n));buffer=buffer.slice(n+1);}}
         if(!finished){buffer+=decoder.decode();if(buffer.trim())accept(buffer);}
       } finally { void reader.cancel().catch(()=>{}); }
       if(!finished)throw Error('Search ended early. You can retry your request.');

@@ -1,10 +1,15 @@
-[Codex] Document MAYA architecture and file associations
+[Codex] Preserve fabric results and clarify selected pills
 
-Map the current pages, shared UI, backend services, data boundaries and deployment
-flow so the repository is easier to navigate. Correct the outdated statement that
-Fabrics displays candidates before visual review; completed results alone appear.
-This documentation adds no visible UI and makes no runtime or configuration changes.
+Keep an already-reviewed Sourceable listing visible with its original seller link
+when its photo fails in the browser. Use the shared Glass segmented selected state
+for Full view, garment and store pills, with accessible pressed states. Ensure
+stalled browser fetch and stream reads observe the existing search deadline even
+when their transport ignores cancellation. No seller
+verification, ranking, provider budget or saved data behavior changes.
 
-Verify the mapped paths and shared Aesthetic Control authority. The broader manual
-audit and dead-code cleanup remain incomplete; local tests do not prove live provider
-behavior. Fromsa will push the prepared local commits and verify deployment.
+Browser fixtures cover several reviewed listings, one broken photo and selected
+pills across desktop widths, with default and changed saved designs; non-cooperative
+fetch and stream fixtures verify timeout recovery. All 71 other release checks, integrated regression and smoke passed; final
+standalone Aesthetic Control runs after these records before commit. An authorized live search remained pending beyond 130 seconds; its cause requires
+further diagnosis and the local recovery change is not yet deployed; local fixtures do not
+prove live match quality. Fromsa retains the final push.

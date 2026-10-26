@@ -1,5 +1,35 @@
 # Current handoff — October 26, 2026
 
+## Current work — desktop audit and Sourceable selection
+
+Owner reports Sourceable disappearing, one result and slow search, plus unclear
+Full view/garment selection. Brief garment pills now use the existing Glass
+segmented aria-pressed state, as do store filters. A browser image failure on an
+already-reviewed Sourceable listing retains the seller link and shows the existing
+P3 unavailable-photo fallback. Server sourcing, source evidence, image requirements,
+matching, single visual check and provider budgets are unchanged. Search fetch and
+stream reads now independently observe the existing 60-second abort signal even
+if a transport ignores cancellation. This fixes reproduced disappearing-card and
+non-cooperative transport paths, not necessarily the reported live cause.
+
+The isolated desktop sweep checked initial Client, Admin, Brief, Operations,
+Outbound and Aesthetic Control layouts at 1024–3440px (eight widths); it found
+no page-level horizontal overflow. It does not establish every populated or live
+state. The multiple-result fixture tests three loaded seller cards and a failed
+photo; selected garment and store styles use existing active segmented previews
+and are tested under default and changed saved settings. Earlier live release is
+cee701a; later local changes are not yet deployed. With explicit owner permission,
+one live refresh remained at Searching for more than 130 seconds; the cause is not
+established. No live result or verified latency improvement was demonstrated. No new aesthetic settings or provider calls.
+
+Changed: backend/backend.html, aesthetics/ui/fabric-assistant.js,
+tests/brief-workspace-ui.mjs, tests/fabric-search-ui.mjs,
+tests/fabric-workflow-ui.mjs, tests/app-regression.mjs, tests/aesthetic-authority.mjs,
+docs/design.md, docs/FABRIC-SEARCH.md and handoff/request/fix/commit records.
+All 71 other release checks, integrated regression and server smoke pass. Run the
+final standalone Aesthetic Control authority after these records, then commit if
+it passes; Fromsa performs any push and live deployment verification.
+
 ## Current work — architecture map and owner push
 
 Added `docs/ARCHITECTURE-MAP.md`, linked from `docs/README.md`, showing the

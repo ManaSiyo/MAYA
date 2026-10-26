@@ -1594,11 +1594,18 @@ ok('v13.87: server can update or delete any lead, Wix via override/tombstone',
   MAP_SOURCE.includes("name==='update_lead'") &&
   MAP_SOURCE.includes("name==='delete_lead'"));
 
-ok('Shared fabric photo failures retain saved/in-house records and remove unusable sourceable results',
-  FABRIC_UI_SOURCE.includes("if(view==='saved'||local){img.remove();") &&
+ok('Shared fabric photo failures retain reviewed seller links and saved/in-house records',
+  FABRIC_UI_SOURCE.includes("img.addEventListener('error',()=>{img.remove();") &&
   FABRIC_UI_SOURCE.includes("'Photo unavailable'") &&
-  FABRIC_UI_SOURCE.includes("'Fabric photos could not load. Refresh or try another store.'") &&
+  !FABRIC_UI_SOURCE.includes("item.remove();if(!els.results.querySelector('.fa-product'))") &&
   !BACKEND_SOURCE.includes('live.concat(staticCards)'));
+ok('Brief garment and store selections use shared segmented pill state',
+  BACKEND_SOURCE.includes("node.setAttribute('aria-pressed', String(i === _pieceState.idx))") &&
+  BACKEND_SOURCE.includes('data-maya-segment aria-pressed=') &&
+  FABRIC_UI_SOURCE.includes("button.dataset.mayaSegment='';button.dataset.storeGroup"));
+ok('Stalled fabric transport cannot indefinitely hold the UI on a pending read',
+  FABRIC_UI_SOURCE.includes("waitForSignal(fetch('/api/admin/fabrics/search'") &&
+  FABRIC_UI_SOURCE.includes('waitForSignal(reader.read(),signal)'));
 // ── v13.61 · Operations Room joins the family ────────────────────────
 ok('Operations Settings paints above its header with a shared close control and no obsolete offsets',
   !OPS_SOURCE || (

@@ -27,7 +27,7 @@ if(Number(process.env.MAYA_FABRIC_CPU_RATE)>1)await (await page.context().newCDP
 await page.addInitScript(t=>localStorage.setItem('maya_admin_tok',t),token(user.sub));
 await page.route('**/*',async route=>{
  const request=route.request(),url=new URL(request.url());
- if(url.hostname==='cdn.shopify.com')return route.fulfill({body:png,contentType:'image/png'});
+ if(url.hostname==='cdn.shopify.com')return url.searchParams.has('fixture-unavailable')?route.fulfill({status:404,body:'Missing fixture image'}):route.fulfill({body:png,contentType:'image/png'});
  if(url.hostname!=='maya-workflow.test')return route.abort();
  const body=request.postDataJSON();
  if(url.pathname==='/api/admin/fabrics/search'){searches.push(body);return route.fulfill({contentType:'application/x-ndjson',body:JSON.stringify({type:'done',products:searchProducts,message:'Fabrics found.'})+'\n'});}
@@ -217,6 +217,44 @@ try{
  }
  await page.evaluate(async()=>{finishVisualReview();await visualReview;});
  assert.equal(await page.locator('.fa-product-link').count(),0,'A rejected visual match never appears as a product link');
+ // Several reviewed matches must remain independently visible and usable.
+ await page.evaluate(({reference,pieces,reviewed})=>{
+  const native=window.fetch;
+  window.fetch=(url,options)=>{
+   if(!String(url).endsWith('/fabrics/search'))return native(url,options);
+   window.fetch=native;
+   return Promise.resolve(new Response(JSON.stringify({type:'done',products:reviewed,message:'Reviewed matches.'})+'\n',{headers:{'Content-Type':'application/x-ndjson'}}));
+  };
+  return MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});
+ },{reference,pieces,reviewed:[fur,leather,lining]});
+ await page.getByText('Reviewed matches.',{exact:true}).waitFor();
+ await page.waitForFunction(()=>[...document.querySelectorAll('.fa-product-image')].length===3&&[...document.querySelectorAll('.fa-product-image')].every(img=>img.complete&&img.naturalWidth>0));
+ for(const width of [1024,1280,1366,1440,1600,1920,2560,3440]){
+  await page.setViewportSize({width,height:900});
+  assert.equal(await page.locator('.fa-product-link').count(),3,'Every reviewed match stays visible at '+width);
+  assert.equal(await page.locator('.fa-product-image').count(),3,'Each reviewed match retains its photo at '+width);
+  assert.ok(await page.locator('.fa-product-link').evaluateAll(links=>links.every(link=>{const r=link.getBoundingClientRect();return r.width>80&&r.height>80;})),'Reviewed links have usable geometry at '+width);
+  assert.ok(await page.locator('#fabric-assistant').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Reviewed results fit '+width);
+  if(width===1440||width===3440)await page.screenshot({path:'/private/tmp/maya-fabric-reviewed-'+width+'.png'});
+ }
+ const broken={...fur,title:'Reviewed fabric with unavailable photo',image:fur.image+'?fixture-unavailable=1'};
+ await page.evaluate(({reference,pieces,reviewed})=>{
+  const native=window.fetch;
+  window.fetch=(url,options)=>{if(!String(url).endsWith('/fabrics/search'))return native(url,options);window.fetch=native;return Promise.resolve(new Response(JSON.stringify({type:'done',products:reviewed,message:'Reviewed matches.'})+'\n',{headers:{'Content-Type':'application/x-ndjson'}}));};
+  return MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});
+ },{reference,pieces,reviewed:[broken,leather,lining]});
+ const missing=page.locator('.fa-product').filter({hasText:broken.title});await missing.getByText('Photo unavailable',{exact:true}).waitFor();
+ assert.equal(await page.locator('.fa-product-link').count(),3,'One browser image failure does not remove a reviewed listing');
+ assert.equal(await missing.locator('a').getAttribute('href'),broken.url,'The reviewed seller link remains available');
+ for(const mode of ['default','saved']){
+  await page.evaluate(mode=>{const d=structuredClone(MayaTypographyControls.defaults);if(mode==='saved')Object.assign(d.type.P3,{font:'cormorant',size:14,weight:450,color:'gray'});MayaTypographyControls.apply(d);},mode);
+  for(const width of [320,390,768,1024,1440,1920]){
+   await page.setViewportSize({width,height:900});const fallback=await missing.locator('.fa-image-unavailable').evaluate(e=>{const s=getComputedStyle(e);return {size:s.fontSize,color:s.color};});
+   assert.equal(fallback.size,mode==='saved'?'14px':'10px');assert.equal(fallback.color,mode==='saved'?'rgb(170, 181, 196)':'rgb(255, 255, 255)');
+   assert.ok(await page.locator('#fabric-assistant').evaluate(el=>el.scrollWidth<=el.clientWidth+1),'Missing photo fallback fits '+mode+' '+width);
+   if(width===390||width===1440)await page.screenshot({path:'/private/tmp/maya-fabric-missing-'+mode+'-'+width+'.png'});
+  }
+ }
  // Provisional retailer candidates cannot survive a truncated visual review as confirmed matches.
  await page.evaluate(({reference,pieces,product})=>{
   const native=window.fetch;
@@ -256,7 +294,8 @@ try{
    window.fetch=nativeFetch;
    return Promise.resolve(new Response(new ReadableStream({start(controller){
     controller.enqueue(new TextEncoder().encode(JSON.stringify({type:'products',preliminary:true,products:[product]})+'\n'));
-    if(options.signal.aborted)controller.error(options.signal.reason);else options.signal.addEventListener('abort',()=>controller.error(options.signal.reason),{once:true});
+    // Deliberately ignore abort: the UI must stop waiting even when a stream
+    // or intermediary does not reject its pending read on cancellation.
    }}),{headers:{'Content-Type':'application/x-ndjson'}}));
   };
   window.partialSearch=MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});
@@ -266,8 +305,16 @@ try{
  assert.equal(await page.locator('.fa-product').count(),0,'Timed-out streams remove provisional candidates');
  await page.getByRole('button',{name:'Refresh fabrics',exact:true}).click();await card(late).waitFor();
  assert.equal(await page.locator('.fa-status').textContent(),'Fabrics found.','Explicit Refresh recovers without a stuck busy flag');
+ // A response with error headers but a stalled body must also release the UI.
+ await page.evaluate(({reference,pieces})=>{
+  const nativeTimeout=AbortSignal.timeout,nativeFetch=window.fetch;
+  AbortSignal.timeout=ms=>{if(ms===60000){AbortSignal.timeout=nativeTimeout;return nativeTimeout.call(AbortSignal,150);}return nativeTimeout.call(AbortSignal,ms);};
+  window.fetch=(url,options)=>{if(!String(url).endsWith('/fabrics/search'))return nativeFetch(url,options);window.fetch=nativeFetch;return Promise.resolve(new Response(new ReadableStream({start(){}}),{status:503,headers:{'Content-Type':'application/json'}}));};
+  window.errorBodySearch=MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});
+ },{reference,pieces});
+ await page.getByText('Search timed out. Refresh to retry.',{exact:true}).waitFor();await page.evaluate(()=>errorBodySearch);
  // A stalled read-only search has its own deadline and never resends itself.
- await page.evaluate(({reference,pieces})=>{const nativeTimeout=AbortSignal.timeout;AbortSignal.timeout=ms=>ms===60000?nativeTimeout.call(AbortSignal,150):nativeTimeout.call(AbortSignal,ms);const nativeFetch=window.fetch;window.fabricTimeoutAttempts=0;window.fetch=(url,options)=>{if(String(url).endsWith('/fabrics/search')){fabricTimeoutAttempts++;if(options.signal.aborted)return Promise.reject(options.signal.reason);return new Promise((resolve,reject)=>options.signal.addEventListener('abort',()=>reject(options.signal.reason),{once:true}));}return nativeFetch(url,options);};window.timeoutSearch=MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});},{reference,pieces});
+ await page.evaluate(({reference,pieces})=>{const nativeTimeout=AbortSignal.timeout;AbortSignal.timeout=ms=>ms===60000?nativeTimeout.call(AbortSignal,150):nativeTimeout.call(AbortSignal,ms);const nativeFetch=window.fetch;window.fabricTimeoutAttempts=0;window.fetch=(url,options)=>{if(String(url).endsWith('/fabrics/search')){fabricTimeoutAttempts++;return new Promise(()=>{});}return nativeFetch(url,options);};window.timeoutSearch=MayaFabricAssistant.open({submissionId:'project-A',referenceImage:reference,pieces,piece:pieces[0],automatic:true,forceReset:true});},{reference,pieces});
  await page.getByText('Search timed out. Refresh to retry.',{exact:true}).waitFor();
  assert.equal(await page.evaluate(()=>fabricTimeoutAttempts),1);assert.match(await page.locator('.fa-empty').textContent(),/not completed/i,'Timeout is distinguished from a completed no-match search');assert.equal(await page.locator('.fa-composer button[type=submit]').isDisabled(),false);
  // Loading/error copy uses the existing P1 authority under both saved and default designs.

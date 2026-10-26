@@ -1,3 +1,5 @@
+October 26 — Check desktop layouts and Sourceable: garment/Full view and store selections now use the shared selected Glass pill; a failed browser image no longer removes a reviewed listing. Local fixtures cover multiple results and desktop widths. Live Sourceable timing and relevance need separate confirmation; do not infer a cause from the image fallback alone.
+
 October 26 — Fromsa retains the final GitHub push. Document the current architecture and file associations, and prepare accurate local commit comments for review. Architecture is a repository map, not live-deployment or exhaustive audit evidence.
 
 October 26 — Fix Fabrics exposing candidates before visual review; audit the project and clean up confirmed dead code. Product links now wait for completed results; broad release checks and focused review do not constitute an exhaustive manual audit. Retain the retired meter while release and typography references remain; no migration paths removed. See AI-HANDOFF for verification and remaining work.
