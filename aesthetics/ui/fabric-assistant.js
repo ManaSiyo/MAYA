@@ -300,10 +300,10 @@
         const event=JSON.parse(raw);
         if(event.type==='error')throw Error(event.message);
         if(event.searchDetails){searchDetails=event.searchDetails;els.details.set(searchDetails);}
-        if(event.products){products=event.products;paint();}
         if(event.type==='status')status(event.message);
         if(event.type==='products' && event.preliminary)status('Retailer candidates. Photo comparison pending…');
         if(event.type==='done'){
+          products=Array.isArray(event.products)?event.products:[];
           finished=true;searchState='complete';history.push({request:submitted,query:event.query});history=history.slice(-6);
           els.observation.textContent=event.observation?'Reference interpretation: '+event.observation:'';
           lastSearchStores=storeKey();completedStatus=event.warning || event.message || '';status(completedStatus);

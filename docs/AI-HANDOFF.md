@@ -1,4 +1,33 @@
-# Current handoff — October 21, 2026
+# Current handoff — October 26, 2026
+
+## Current work — Fabrics reviewed results and fresh audit
+
+The shared Fabrics viewer now waits for the terminal done event before rendering
+product links. Preliminary and intermediate products never become actionable;
+a failed or interrupted stream cannot briefly expose an unreviewed match. No
+CSS or presentation setting changed: pending copy uses the existing P1 authority.
+The delayed-comparison browser fixture checks pending and rejected links, and
+checks default/changed P1 settings at six widths. The shared authority imports
+that fixture. Search, retailer data, visual ranking and sealed lookbooks are
+unchanged.
+
+A broad local audit ran 71 Cloud Build checks plus server smoke and reviewed module boundaries,
+retired references and recent Fabrics behavior. These checks do not amount to a
+manual audit of every feature or proof of live behavior. The retired AI meter is
+not loaded by active pages, but remains referenced by release verification and
+the typography inventory; retain it until those contracts are deliberately
+reconciled. No migration or cleanup path was removed. The actual reported live
+search failure and visual relevance remain unverified; no owner Chrome session
+was accessed. Local tests use fake providers.
+
+Changed: aesthetics/ui/fabric-assistant.js, tests/fabric-workflow-ui.mjs,
+tests/aesthetic-authority.mjs, tests/app-regression.mjs, docs/FABRIC-SEARCH.md,
+and handoff/request/fix/commit records. The first integrated run exposed two stale
+source assertions expecting provisional cards; these were corrected and the suite
+rerun successfully. All 71 other release checks and smoke passed; run the final
+standalone Aesthetic Control check after these records, then commit if it passes.
+Fromsa may then push. After deployment verify the exact release and owner-approved real cases.
+
 
 ## Current work — Fabrics loading and interrupted search lifecycle
 

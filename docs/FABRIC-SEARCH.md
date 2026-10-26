@@ -87,8 +87,8 @@ unless the owner actually selected that scope.
 - A bounded material-vocabulary Shopify pass runs alongside web discovery for
   saved looks and initial text requests (at most two seeds/four eligible stores).
   It never sends client names or free-form private prose to retailer feeds.
-  Early cards are explicitly provisional candidates pending photo comparison;
-  final matches require the same visual gate. Empty later web discovery cannot
+  Early retailer candidates remain hidden while photo comparison is pending;
+  only completed matches appear as cards. Empty later web discovery cannot
   erase eligible direct candidates. Refinements bypass seeds rather than replay
   stale literal terms. The browser search stream has a 60-second read deadline. Seller redirects and
   optional variant facts share one eight-second verification budget; the route

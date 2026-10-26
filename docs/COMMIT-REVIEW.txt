@@ -1,25 +1,13 @@
-[Codex] Repair Fabrics loading, stream completion and dialog cancellation
+[Codex] Hold fabric results until visual review completes
 
-Fabrics could show a completed no-match placeholder during reference preparation,
-wait for EOF after receiving done, or retain unconfirmed retailer candidates after
-a truncated search. Separate preparation/search/interrupted/completed states,
-finish on the terminal event, discard unconfirmed results on failure/cancellation
-and preserve explicit retry. A late photo cannot start a hidden search after close;
-a queued native close event cannot abort a reopened dialog. The new regression
-fails when only that guard is removed. No automatic paid retries.
+The Fabrics viewer showed clickable retailer candidates before photo comparison
+finished. Publish product cards only from the terminal done event, keeping rejected
+or interrupted candidates inaccessible. Retain existing search, source evidence,
+lookbook isolation and presentation controls.
 
-Seller redirects and optional Shopify facts share eight seconds. The read-only
-route ends at 55 seconds before the browser's existing 60-second deadline; late
-private reads cannot start providers and late results cannot append to the stream.
-Keep source facts, images, original client words, relevance checks and sealed
-lookbook CAS behavior intact. No SMS/voice, shared model/dependency, credentials,
-billing or production environment changes. Existing shared P1/Glass/Inner styling
-and active Fabrics preview govern the changed states; no CSS or new design setting.
-
-Search passes 43 behavioral cases; normal and 8x CPU workflow tests pass, including
-held EOF, interrupted/mid-stream timeouts, explicit recovery and queued close.
-All 72 exact local release commands and full integrated regression pass. Server
-smoke and standalone Aesthetic Control run last after final records before commit. Owner browser access is awaiting fresh idle
-permission; synthetic tests do not establish the actual live provider failure or
-matching quality on the reported August submission. Verify exact deployed release
-and that submission after Push when owner access is approved.
+The delayed browser fixture verifies pending and rejected candidates, including
+shared P1 defaults and changed settings at six widths. The final aesthetic
+authority re-runs the fixture. All 71 other release checks, integrated regression and smoke passed; the final
+standalone Aesthetic Control check runs after these records before commit. This local audit is not an exhaustive manual review;
+retired AI-meter references remain a follow-up, as do live owner acceptance and
+exact deployment verification. No push or production changes are included.

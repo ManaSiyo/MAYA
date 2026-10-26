@@ -1230,7 +1230,7 @@ ok('legacy merchant searches retain real feeds without sharing private queries',
 // Shared sourcing replaced the legacy Brief wall; verify the active provider/UI handoff.
 ok('Sourceable streams verified merchant photographs through the active shared assistant',
   BACKEND_SOURCE.includes('window.MayaFabricAssistant.open({host,automatic:true') &&
-  FABRIC_UI_SOURCE.includes("fetch('/api/admin/fabrics/search'") && FABRIC_UI_SOURCE.includes('if(event.products){products=event.products;paint();}') &&
+  FABRIC_UI_SOURCE.includes("fetch('/api/admin/fabrics/search'") && FABRIC_UI_SOURCE.includes('products=Array.isArray(event.products)?event.products:[];') &&
   FABRIC_SEARCH_SOURCE.includes('.map(c => verify(c, signal))') && FABRIC_SOURCE.includes("product.evidence==='search_link'||!product.image"));
 ok('Dissection material context preserves client preferences and qualified garment traits',
   BACKEND_SOURCE.includes('"fabric_spec"') && BACKEND_SOURCE.includes('Only fill weight_gsm from an explicit client specification') &&
@@ -1256,7 +1256,7 @@ ok('Fabric ranking describes closest visual matches and never claims exact image
 ok('Failed visual comparison is explicit and cannot promote unchecked products as confirmed matches',
   FABRIC_SEARCH_SOURCE.includes("products=[];warning='Fabric photo comparison was unavailable.") &&
   FABRIC_SEARCH_SOURCE.includes("send({ type: 'products', products, preliminary: false })") &&
-  FABRIC_UI_SOURCE.includes('if(event.products){products=event.products;paint();}') &&
+  FABRIC_UI_SOURCE.includes('products=Array.isArray(event.products)?event.products:[];') &&
   FABRIC_UI_SOURCE.includes("completedStatus=event.warning || event.message || '';status(completedStatus)"));
 ok('only real retailer thumbnails enter visual comparison',
   FABRIC_SOURCE.includes("filter(product => product.image && product.url && product.title)") &&
@@ -2831,6 +2831,7 @@ ok('Owner retirement removes Playground and Affiliates without promoting staged 
 ok('Brief removes redundant navigation/date metadata and uses one name/date typography',!BACKEND_SOURCE.includes('id="fabric-workspace-actions"')&&!BACKEND_SOURCE.includes('Saved August')&&BACKEND_SOURCE.includes('class="op-identity"'));
 ok('Operations uses recorded Brief measurements without duplicate drawer inputs or dead Measurements action',OPS_SOURCE.includes('measurements:summary._measurements||{}')&&!OPS_SOURCE.includes('id="operation-settings"')&&!OPS_SOURCE.includes('id="room-sub"')&&OPS_SOURCE.includes('id="standalone-measurements"'));
 ok('Fabrics browsing removes card Save and Use while retaining private historical selections',!FABRIC_UI_SOURCE.includes("action('Save'")&&!FABRIC_UI_SOURCE.includes("action('Use'")&&FABRIC_SEARCH_SOURCE.includes('selectedByGarment'));
+ok('Fabrics publishes product cards only from a completed search',FABRIC_UI_SOURCE.includes("products=Array.isArray(event.products)?event.products:[];") && !FABRIC_UI_SOURCE.includes('if(event.products){products=event.products;paint();}'));
 // Keep this last: functional checks precede the governing aesthetic verification.
 ok('Messages accepts typed numbers through reviewed Send and confirmed Call',readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('function msgBegin')&&readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('msgTypedNumber'));
 ok('Saved aesthetic status colors, icon weight and section spacing have active previews',readFileSync(join(ROOT,'aesthetics/aesthetic-control/presentation-controls.js'),'utf8').includes('statusStyles')&&readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8').includes('sectionSpacing'));

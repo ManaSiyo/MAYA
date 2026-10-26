@@ -81,7 +81,8 @@ console.log('Aesthetic authority passed: shared roles/materials, all Admin headi
 await import('./workspace-authority.mjs?authority');
 await import('./admin-automation-examples.mjs?authority');
 await import('./brief-workspace-ui.mjs?authority');
-// Includes real preparing/interrupted/terminal-stream states with shared P1 copy at six widths.
+// Includes pending visual review without product cards, preparing/interrupted/terminal
+// states, and default/changed shared P1 copy at six widths.
 await import('./fabric-workflow-ui.mjs?authority');
 // Reexecutes Sourceable hover/focus details and the shared active preview after real Save.
 await import('./fabric-search-ui.mjs?authority');
