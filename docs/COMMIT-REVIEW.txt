@@ -1,13 +1,10 @@
-[Codex] Hold fabric results until visual review completes
+[Codex] Document MAYA architecture and file associations
 
-The Fabrics viewer showed clickable retailer candidates before photo comparison
-finished. Publish product cards only from the terminal done event, keeping rejected
-or interrupted candidates inaccessible. Retain existing search, source evidence,
-lookbook isolation and presentation controls.
+Map the current pages, shared UI, backend services, data boundaries and deployment
+flow so the repository is easier to navigate. Correct the outdated statement that
+Fabrics displays candidates before visual review; completed results alone appear.
+This documentation adds no visible UI and makes no runtime or configuration changes.
 
-The delayed browser fixture verifies pending and rejected candidates, including
-shared P1 defaults and changed settings at six widths. The final aesthetic
-authority re-runs the fixture. All 71 other release checks, integrated regression and smoke passed; the final
-standalone Aesthetic Control check runs after these records before commit. This local audit is not an exhaustive manual review;
-retired AI-meter references remain a follow-up, as do live owner acceptance and
-exact deployment verification. No push or production changes are included.
+Verify the mapped paths and shared Aesthetic Control authority. The broader manual
+audit and dead-code cleanup remain incomplete; local tests do not prove live provider
+behavior. Fromsa will push the prepared local commits and verify deployment.

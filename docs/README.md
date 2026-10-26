@@ -15,6 +15,8 @@ Backend/docs-only work records no visible UI impact and runs the shared gate.
 Unresolved mismatches block completion. See [AGENTS.md](../AGENTS.md) for the
 mandatory workflow and [design.md](design.md) for the sole presentation canon.
 
+Current screen, file and backend architecture: [ARCHITECTURE-MAP.md](ARCHITECTURE-MAP.md).
+
 Conversational fabric search and sealed lookbooks: [FABRIC-SEARCH.md](FABRIC-SEARCH.md).
 Messages → Begin texting accepts a typed number and optional saved name. Send is
 reviewed; phone actions are confirmed. Aesthetic Control also governs individual

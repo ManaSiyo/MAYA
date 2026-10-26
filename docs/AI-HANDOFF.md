@@ -1,5 +1,17 @@
 # Current handoff — October 26, 2026
 
+## Current work — architecture map and owner push
+
+Added `docs/ARCHITECTURE-MAP.md`, linked from `docs/README.md`, showing the
+served pages, associated source files, backend modules, storage and deployment
+boundaries. Corrected the stale early-card statement in `MAYA-AI-ARCHITECTURE.md`.
+This documentation-only change adds no visible UI; Aesthetic Control remains the
+final local gate. The earlier Fabrics fix is locally committed as f7b6341 and its
+71 other release gates, integrated regression, smoke and final standalone aesthetic
+authority passed. The wider audit and dead-code cleanup remain incomplete.
+Fromsa retains the final push; never push on his behalf. After push, verify the
+exact deployed release and owner-approved live cases.
+
 ## Current work — Fabrics reviewed results and fresh audit
 
 The shared Fabrics viewer now waits for the terminal done event before rendering
@@ -24,9 +36,9 @@ Changed: aesthetics/ui/fabric-assistant.js, tests/fabric-workflow-ui.mjs,
 tests/aesthetic-authority.mjs, tests/app-regression.mjs, docs/FABRIC-SEARCH.md,
 and handoff/request/fix/commit records. The first integrated run exposed two stale
 source assertions expecting provisional cards; these were corrected and the suite
-rerun successfully. All 71 other release checks and smoke passed; run the final
-standalone Aesthetic Control check after these records, then commit if it passes.
-Fromsa may then push. After deployment verify the exact release and owner-approved real cases.
+rerun successfully. All 71 other release checks, smoke, integrated regression and the final
+standalone Aesthetic Control check passed; f7b6341 is committed locally.
+Fromsa may push. After deployment verify the exact release and owner-approved real cases.
 
 
 ## Current work — Fabrics loading and interrupted search lifecycle

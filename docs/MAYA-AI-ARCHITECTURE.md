@@ -18,8 +18,8 @@ request on the configured Terra/text tier while eligible direct retailer queries
 run in parallel. Source-backed URLs are deterministically verified against seller
 pages; the model does not supply authoritative prices, stock or composition.
 `store:false`, no private query cache, account/submission lookbooks and abort/stale
-response guards preserve the production boundary. The legacy visual-rank route
-remains compatible and now paints products before ranking. See FABRIC-SEARCH.md.
+response guards preserve the production boundary. The legacy visual-rank route remains compatible. The shared viewer shows
+products only after the search completes its visual review. See FABRIC-SEARCH.md.
 The v13.x model/routing descriptions below are historical; model-config.mjs and
 current runtime modules remain authoritative. No model default changed here.
 
