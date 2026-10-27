@@ -1,5 +1,32 @@
 # Current handoff — October 26, 2026
 
+## Current work — Sourceable throughput and bounded waits
+
+The public live release remains cee701a and local commits f7b6341, 324b6e8 and
+b56b0ee are not deployed. A generic public retailer feed check found a long-haired
+faux-fur listing in a third result slot that the old two-product cutoff would drop.
+The bounded Shopify feed now considers three candidates per query and verifies at
+most eight balanced distinct seller listings, still capped at one eight-candidate
+visual pass. This can add up to three concurrent public seller reads; it adds no
+AI call or paid retry. It never relaxes image, seller, color, exclusion or relevance
+requirements. Optional feed, web and listing reads now independently enforce their
+existing timeouts even when the underlying transport ignores cancellation; late
+responses cannot initiate redirects or replace completed results. After the marker
+check, canonical dissection and preferences read in parallel, with providers gated
+on both succeeding. No visible UI or shared design changes.
+
+Synthetic search cases cover third results, independent storage reads and
+non-cooperative providers and the eight-listing budget (48 cases); public generic feeds returned within roughly
+0.4–1.2 seconds in one local check, not the private live request. The previously
+observed multi-minute hang and real relevance/latency remain unproven; no fresh
+owner Chrome session was accessed without approval. The code cannot guarantee more
+matching stock. Changed docs/server/fabric-search.mjs, tests/fabric-search.mjs,
+tests/app-regression.mjs, docs/FABRIC-SEARCH.md and handoff/request/fix/commit
+records. All 71 other release checks, integrated regression and server smoke pass.
+Run the final standalone Aesthetic Control check after these records, then commit.
+Fromsa performs the push; verify exact deployed release and
+owner-approved search after deployment.
+
 ## Current work — desktop audit and Sourceable selection
 
 Owner reports Sourceable disappearing, one result and slow search, plus unclear

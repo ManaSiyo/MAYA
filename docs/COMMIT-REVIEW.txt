@@ -1,15 +1,14 @@
-[Codex] Preserve fabric results and clarify selected pills
+[Codex] Improve fabric candidate discovery and bounded search waits
 
-Keep an already-reviewed Sourceable listing visible with its original seller link
-when its photo fails in the browser. Use the shared Glass segmented selected state
-for Full view, garment and store pills, with accessible pressed states. Ensure
-stalled browser fetch and stream reads observe the existing search deadline even
-when their transport ignores cancellation. No seller
-verification, ranking, provider budget or saved data behavior changes.
+Consider the third seller-feed product and verify up to eight balanced listings,
+so relevant items are not discarded before visual review. Overlap the two
+saved-submission reads and independently enforce existing web, feed and seller
+timeouts even when transports ignore cancellation. Preserve seller evidence,
+private context boundaries, exclusions and the single visual comparison; no
+additional AI call or paid retry is introduced.
 
-Browser fixtures cover several reviewed listings, one broken photo and selected
-pills across desktop widths, with default and changed saved designs; non-cooperative
-fetch and stream fixtures verify timeout recovery. All 71 other release checks, integrated regression and smoke passed; final
-standalone Aesthetic Control runs after these records before commit. An authorized live search remained pending beyond 130 seconds; its cause requires
-further diagnosis and the local recovery change is not yet deployed; local fixtures do not
-prove live match quality. Fromsa retains the final push.
+The fake-provider suite covers third-result qualification, concurrent context
+reads, non-cooperative transports and late responses. All 71 other release checks, integrated regression and smoke passed; the final
+standalone Aesthetic Control check runs after these records before commit. A generic
+public feed check is not live acceptance: the earlier live hang and actual speed
+or match quality still need owner-approved verification after Fromsa pushes.

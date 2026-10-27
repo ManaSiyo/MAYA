@@ -182,7 +182,9 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
   async function getPage(url, signal) {
     let target = merchantURL(url)?.url;
     for (let hop = 0; target && hop < 3; hop++) {
+      signal?.throwIfAborted();
       const response = await fetchImpl(target, { redirect: 'manual', signal: AbortSignal.any([signal || new AbortController().signal, AbortSignal.timeout(6000)]), headers: { 'User-Agent': 'MAYA fabric sourcing (maya.manasiyo.com)', Accept: 'text/html,application/json' } });
+      signal?.throwIfAborted();
       if ([301,302,303,307,308].includes(response.status)) { target = merchantURL(new URL(response.headers.get('location'), target).href)?.url; await response.body?.cancel?.(); continue; }
       if (!response.ok) throw fail('Retailer did not answer.', 502);
       return { body: await limitedText(response), url: target };
@@ -201,12 +203,12 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     // A fresh timeout at each hop could consume the browser's entire search window.
     const listingSignal=signal?AbortSignal.any([signal,AbortSignal.timeout(8000)]):AbortSignal.timeout(8000);
     try {
-      const page = await getPage(target.url, listingSignal);
+      const page = await untilAborted(getPage(target.url, listingSignal),listingSignal);
       let product = parseListing(page.body, page.url, now());
       if (product && target.shop.shopify && !product.price) {
         try {
           const variantUrl = new URL(product.url); variantUrl.search=''; variantUrl.pathname=variantUrl.pathname.replace(/\/$/,'')+'.js';
-          const variantPage = await getPage(variantUrl.href, listingSignal);
+          const variantPage = await untilAborted(getPage(variantUrl.href, listingSignal),listingSignal);
           product = applyShopifyVariant(product, JSON.parse(variantPage.body), page.body);
         } catch { /* unknown variant or unit remains unknown */ }
       }
@@ -343,29 +345,34 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
       try {
         const url = 'https://' + shop.host + '/search/suggest.json?q=' + encodeURIComponent(q) + '&resources[type]=product&resources[limit]=3';
         // The feed query is intentional and must not pass through product URL canonicalization.
-        const r = await fetchImpl(url, { redirect: 'error', signal: AbortSignal.any([signal, AbortSignal.timeout(4500)]) });
+        const feedSignal=AbortSignal.any([signal,AbortSignal.timeout(4500)]);
+        const r = await untilAborted(fetchImpl(url, { redirect: 'error', signal: feedSignal }),feedSignal);
         if (!r.ok) return [];
-        const data = JSON.parse(await limitedText(r, 256 * 1024));
-        return list(data.resources?.results?.products).filter(p => p.available !== false&&(!p.title||isFabricProduct({...p,description:p.body||p.description||''}))).slice(0, 2).map(p => ({ url: new URL(p.url, 'https://' + shop.host).href, reason: 'Initial keyword result; checking closer matches.' }));
+        const data = JSON.parse(await untilAborted(limitedText(r, 256 * 1024),feedSignal));
+        return list(data.resources?.results?.products).filter(p => p.available !== false&&(!p.title||isFabricProduct({...p,description:p.body||p.description||''}))).slice(0, 3).map(p => ({ url: new URL(p.url, 'https://' + shop.host).href, reason: 'Initial keyword result; checking closer matches.' }));
       } catch { return []; }
     })));
     const groups=shops.map(shop=>results.flat().filter(c=>merchantURL(c.url,true)?.shop===shop)),balanced=[];
-    for(let index=0;index<queries.length*2;index++)for(const group of groups)if(group[index])balanced.push(group[index]);
+    for(let index=0;index<queries.length*3;index++)for(const group of groups)if(group[index])balanced.push(group[index]);
     const unique=[...new Map(balanced.map(candidate=>[merchantIdentity(candidate.url),candidate])).values()];
-    return (await Promise.all(unique.slice(0, 5).map(c => verify(c, signal)))).flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];});
+    return (await Promise.all(unique.slice(0, 8).map(c => verify(c, signal)))).flatMap(product=>{const match=product&&allowed.includes(merchantURL(product.url,true)?.shop)&&fabricProductMatch(product,{...input,allowVisualOnly:!!rank&&!!input.image});return match?[{...product,...match}]:[];});
   }
   async function search(user, body, emit, signal = new AbortController().signal) {
     const input = normalizeFabricRequest(body);
-    let selectedReference='';
+    let selectedReference='',savedDissection=null;
     if (input.submissionId) {
       await requireSubmission(input.submissionId);
-      const summary = await read('submissions/' + input.submissionId + '/summary.json');
+      const [summary,dissection] = await Promise.all([
+        read('submissions/' + input.submissionId + '/summary.json'),
+        input.automatic?savedGarments(input.submissionId,true):Promise.resolve(null),
+      ]);
+      savedDissection=dissection;
       if (summary.ok) { try { input.preferences = fabricPreferences(JSON.parse(summary.buf.toString('utf8'))) || input.preferences; } catch { throw fail('Saved fabric preferences could not be read safely.',503); } }
       else if (summary.status !== 404) throw fail('Submission preferences could not be loaded.', 503);
     }
     if (input.automatic) {
       if (!input.submissionId) throw fail('Open a saved, dissected submission first.');
-      const {pieces,images:savedImages}=await savedGarments(input.submissionId,true);
+      const {pieces,images:savedImages}=savedDissection;
       if (!pieces.length) throw fail('This dissection has no garment fabrics to source.',409);
       input.allPieces=pieces;
       if (input.piece.id || input.piece.name) {
@@ -391,12 +398,13 @@ export function createFabricSearch({ fetchImpl = fetch, read, write, apiKey = ()
     let discovery = null, warning = '';
     try {
       if (!apiKey()) throw fail('Web search is unavailable. Showing retailer results where available.', 503);
-      const r = await fetchImpl('https://api.openai.com/v1/responses', {
+      const webSignal=AbortSignal.any([signal,AbortSignal.timeout(35000)]);
+      const r = await untilAborted(fetchImpl('https://api.openai.com/v1/responses', {
         method: 'POST', headers: { Authorization: 'Bearer ' + apiKey(), 'Content-Type': 'application/json' },
-        signal: AbortSignal.any([signal, AbortSignal.timeout(35000)]), body: JSON.stringify(webSearchBody({...input,selectedReference}, model)),
-      });
+        signal: webSignal, body: JSON.stringify(webSearchBody({...input,selectedReference}, model)),
+      }),webSignal);
       if (!r.ok) throw fail('Web search is temporarily unavailable. Try again shortly.', 502);
-      discovery = readDiscovery(await r.json());
+      discovery = readDiscovery(await untilAborted(r.json(),webSignal));
       Object.assign(searchDetails,{query:discovery.query,observation:discovery.observation,webQueries:discovery.webQueries,stage:'Checking seller listings'});
       send({type:'context',searchDetails});
       send({type:'status',message:'Checking seller listings…'});

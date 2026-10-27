@@ -56,7 +56,7 @@ qualified hints. Requalify initial retailer candidates after discovery. Ranking 
 alongside the selected crop, and rejects a visibly wrong dominant color. No exact
 fiber, shade, stock or price is inferred from the image. Bounded public seeds keep
 crocodile/snakeskin/long-pile vocabulary from the base cloth, never secondary trim
-or private prose. Known notions are filtered before the two-item feed budget;
+or private prose. Known notions are filtered before the three-item feed budget;
 missing feed metadata still reaches normal seller verification. Search begins
 across the allowed merchant scope rather than consuming all calls on local shops
 unless the owner actually selected that scope.
@@ -86,6 +86,8 @@ unless the owner actually selected that scope.
   Creators API integration or a promise of exhaustive Amazon inventory.
 - A bounded material-vocabulary Shopify pass runs alongside web discovery for
   saved looks and initial text requests (at most two seeds/four eligible stores).
+  Up to three feed products per query are eligible for balanced selection; at
+  most eight distinct seller listings are verified concurrently.
   It never sends client names or free-form private prose to retailer feeds.
   Early retailer candidates remain hidden while photo comparison is pending;
   only completed matches appear as cards. Empty later web discovery cannot
@@ -289,3 +291,11 @@ guarantee a seller match. Store filters use the shared selected Glass pill state
 The browser independently observes the existing 60-second search abort while
 waiting for response headers and streamed reads, including transports that do not
 reject promptly on cancellation. This is recovery, not proof of faster matching.
+
+October 26 search latency: after checking the submission marker, saved preferences
+and the canonical dissection are read concurrently. No provider starts before
+both are validated. The existing web, feed and seller deadlines are enforced even
+when a transport ignores abort; a late result cannot initiate a redirect or
+replace completed output. Verified direct results still pass the one bounded
+visual review. This reduces avoidable waits in the reproduced fixtures, but does
+not establish the cause or measured duration of the live stalled search.

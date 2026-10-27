@@ -2839,6 +2839,9 @@ ok('Brief removes redundant navigation/date metadata and uses one name/date typo
 ok('Operations uses recorded Brief measurements without duplicate drawer inputs or dead Measurements action',OPS_SOURCE.includes('measurements:summary._measurements||{}')&&!OPS_SOURCE.includes('id="operation-settings"')&&!OPS_SOURCE.includes('id="room-sub"')&&OPS_SOURCE.includes('id="standalone-measurements"'));
 ok('Fabrics browsing removes card Save and Use while retaining private historical selections',!FABRIC_UI_SOURCE.includes("action('Save'")&&!FABRIC_UI_SOURCE.includes("action('Use'")&&FABRIC_SEARCH_SOURCE.includes('selectedByGarment'));
 ok('Fabrics publishes product cards only from a completed search',FABRIC_UI_SOURCE.includes("products=Array.isArray(event.products)?event.products:[];") && !FABRIC_UI_SOURCE.includes('if(event.products){products=event.products;paint();}'));
+ok('Fabrics checks a balanced set of seller candidates and overlaps saved-context reads',
+  FABRIC_SEARCH_SOURCE.includes('unique.slice(0, 8).map(c => verify(c, signal))') &&
+  FABRIC_SEARCH_SOURCE.includes('const [summary,dissection] = await Promise.all(['));
 // Keep this last: functional checks precede the governing aesthetic verification.
 ok('Messages accepts typed numbers through reviewed Send and confirmed Call',readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('function msgBegin')&&readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('msgTypedNumber'));
 ok('Saved aesthetic status colors, icon weight and section spacing have active previews',readFileSync(join(ROOT,'aesthetics/aesthetic-control/presentation-controls.js'),'utf8').includes('statusStyles')&&readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8').includes('sectionSpacing'));

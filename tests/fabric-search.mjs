@@ -138,6 +138,38 @@ await test('early seller results arrive while web reasoning is still pending',as
   assert.match(sent.input[0].content[0].text,/100% wool, no polyester/);assert.doesNotMatch(JSON.stringify(sent),/PRIVATE NAME/);
   finish();await run;assert.equal(events.at(-1).products.length,1);assert.ok(events.at(-1).timings.firstResultsMs!==null);assert.match(events.at(-1).warning,/photos have not been compared/);
 });
+await test('saved dissection and preferences load in parallel after submission validation',async()=>{
+  const s=store(),started=[],events=[];let release,providerCalls=0;
+  const gate=new Promise(resolve=>release=resolve);
+  s.records.set('submissions/project-A/pieces.json',{buf:Buffer.from(JSON.stringify({pieces:[{id:'coat',name:'Coat',fabric:'crimson wool'}]})),generation:'1'});
+  const service=createFabricSearch({...s,read:async key=>{if(key.endsWith('/summary.json')||key.endsWith('/pieces.json')){started.push(key);await gate;}return s.read(key);},fetchImpl:async()=>{providerCalls++;return new Response('',{status:503});}});
+  const run=service.search(user,{submissionId:'project-A',automatic:true,piece:{id:'coat'},image},e=>events.push(e));
+  for(let i=0;i<30&&started.length<2;i++)await new Promise(resolve=>setTimeout(resolve,5));
+  assert.equal(started.length,2,'Both private reads start before either completes');assert.equal(providerCalls,0,'No provider starts before saved context is validated');
+  release();await run;assert.ok(events.some(event=>event.type==='done'));
+});
+await test('third seller-feed result reaches verification and visual review',async()=>{
+  const links=['https://www.moodfabrics.com/products/white-faux-fur','https://www.moodfabrics.com/products/blue-faux-fur','https://www.moodfabrics.com/products/red-faux-fur'];
+  const events=[],visited=[];let ranks=0;
+  const service=createFabricSearch({...store(),fetchImpl:async target=>{
+    if(target.includes('suggest.json'))return Response.json({resources:{results:{products:links.map((url,i)=>({url,title:['White faux fur fabric','Blue faux fur fabric','Red faux fur fabric'][i]}))}}});
+    visited.push(target);const i=links.indexOf(target);assert.ok(i>=0);return new Response(seller({url:target,name:['White faux fur fabric','Blue faux fur fabric','Red faux fur fabric'][i],description:['White faux fur sold by the yard.','Blue faux fur sold by the yard.','Red faux fur sold by the yard.'][i]}));
+  },rank:async({products})=>{ranks++;return products;}});
+  await service.search(user,{request:'red faux fur',piece:{name:'Coat',fabric:'red faux fur'},storeGroups:['mood'],image},event=>events.push(event));
+  assert.ok(visited.includes(links[2]),'The third feed item is verified');assert.equal(ranks,1);
+  assert.deepEqual(events.at(-1).products.map(p=>p.url),[links[2]],'Only the matching third item survives qualification and visual review');
+});
+await test('retailer expansion stays balanced and capped at eight visual candidates',async()=>{
+  const events=[],visited=[];let ranks=0;
+  const service=createFabricSearch({...store(),fetchImpl:async target=>{
+    const host=new URL(target).hostname;
+    if(target.includes('suggest.json'))return Response.json({resources:{results:{products:[1,2,3].map(n=>({url:'https://'+host+'/products/red-wool-'+n,title:'Red wool fabric '+n}))}}});
+    visited.push(target);return new Response(seller({url:target,name:'Red wool fabric',description:'Red wool fabric sold by the yard.'}));
+  },rank:async({products})=>{ranks++;assert.equal(products.length,8);return products;}});
+  await service.search(user,{request:'red wool',piece:{name:'Coat',fabric:'red wool'},image},event=>events.push(event));
+  assert.equal(visited.length,8);assert.equal(new Set(visited.map(link=>new URL(link).hostname)).size,4,'One seller cannot occupy the whole verification budget');
+  assert.equal(ranks,1);assert.equal(events.at(-1).products.length,8);
+});
 await test('empty/error searches retry and never populate a shared private query cache',async()=>{
   const s=store();let calls=0;const events=[];
   const service=createFabricSearch({...s,apiKey:()=> 'fake',model:'configured',fetchImpl:async u=>{if(u.includes('openai')){calls++;return new Response('',{status:503});}return new Response('',{status:503});}});
@@ -520,5 +552,37 @@ await test('seller redirects and variant facts share one total verification budg
     }});
     const result=await service.verify({url});assert.equal(result.evidence,'search_link');assert.equal(budget?.aborted,true,'The shared budget expires before a fresh six-second hop deadline');assert.equal(attempts,2,'No fresh third-hop timeout after the listing budget expires');
   }finally{AbortSignal.timeout=nativeTimeout;clearInterval(keepAlive);}
+});
+await test('a non-cooperative web search cannot block reviewed retailer results',async()=>{
+  const nativeTimeout=AbortSignal.timeout,events=[];let release,ranks=0;
+  const keepAlive=setInterval(()=>{},1000);
+  AbortSignal.timeout=ms=>nativeTimeout.call(AbortSignal,ms===35000?40:ms);
+  try{
+    const service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>{
+      if(target.includes('api.openai.com'))return new Promise(resolve=>release=()=>resolve(Response.json(response())));
+      if(target.includes('suggest.json'))return Response.json({resources:{results:{products:[{url,title:'Crimson wool fabric'}]}}});
+      return new Response(seller());
+    },rank:async({products})=>{ranks++;return products;}});
+    await service.search(user,{request:'crimson wool',image},event=>events.push(event));
+    assert.equal(ranks,1);assert.deepEqual(events.at(-1).products.map(product=>product.url),[url]);assert.match(events.at(-1).warning,/interrupted|too long/i);
+    const n=events.length;release();await new Promise(resolve=>setTimeout(resolve,15));assert.equal(events.length,n,'Late discovery cannot replace completed results');
+  }finally{AbortSignal.timeout=nativeTimeout;clearInterval(keepAlive);release?.();}
+});
+await test('non-cooperative retailer responses respect their independent budgets',async()=>{
+  const nativeTimeout=AbortSignal.timeout,events=[];let release,attempts=0;
+  const keepAlive=setInterval(()=>{},1000);
+  AbortSignal.timeout=ms=>nativeTimeout.call(AbortSignal,ms===4500||ms===8000?40:ms);
+  try{
+    const service=createFabricSearch({...store(),apiKey:()=> 'fake',fetchImpl:async target=>{
+      if(target.includes('api.openai.com'))return Response.json(response());
+      if(target.includes('suggest.json'))return new Promise(()=>{});
+      return new Response(seller());
+    }});
+    await service.search(user,{request:'crimson wool'},event=>events.push(event));
+    assert.deepEqual(events.at(-1).products.map(product=>product.url),[url],'A stalled feed does not block a verified web result');
+    const redirecting=createFabricSearch({...store(),fetchImpl:async()=>{attempts++;return new Promise(resolve=>{release=()=>resolve(new Response('',{status:302,headers:{location:url}}));});}});
+    const result=await redirecting.verify({url});assert.equal(result.evidence,'search_link');release();await new Promise(resolve=>setTimeout(resolve,15));
+    assert.equal(attempts,1,'A late response cannot launch another redirect after the budget');
+  }finally{AbortSignal.timeout=nativeTimeout;clearInterval(keepAlive);release?.();}
 });
 console.log(`Fabric search: ${count} behavioral checks passed.`);

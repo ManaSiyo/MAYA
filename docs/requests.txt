@@ -1,3 +1,5 @@
+October 26 — Investigate slow live Sourceable and improve relevant choices. Public generic retailer checks found a plausible fabric in a third feed slot that the old two-item cap discarded. Verify up to eight balanced seller listings and overlap saved-context reads; enforce existing optional-provider deadlines even when cancellation is ignored. No live cause or speed claim is established, and owner push/deployed evaluation remain necessary.
+
 October 26 — Check desktop layouts and Sourceable: garment/Full view and store selections now use the shared selected Glass pill; a failed browser image no longer removes a reviewed listing. Local fixtures cover multiple results and desktop widths. Live Sourceable timing and relevance need separate confirmation; do not infer a cause from the image fallback alone.
 
 October 26 — Fromsa retains the final GitHub push. Document the current architecture and file associations, and prepare accurate local commit comments for review. Architecture is a repository map, not live-deployment or exhaustive audit evidence.
