@@ -98,6 +98,16 @@
         "source": "/aesthetics/operations/index.html",
         "destination": "/operations.html",
         "type": 301
+      },
+      {
+        "source": "/outbound.html",
+        "destination": "/status.html",
+        "type": 301
+      },
+      {
+        "source": "/backend/outbound.html",
+        "destination": "/status.html",
+        "type": 301
       }
     ],
     "rewrites": [
@@ -114,10 +124,6 @@
           "serviceId": "maya-api",
           "region": "us-west1"
         }
-      },
-      {
-        "source": "/outbound.html",
-        "destination": "/backend/outbound.html"
       },
       {
         "source": "/status.html",

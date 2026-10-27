@@ -46,20 +46,4 @@ export function mountEventTriggers(app,deps){
       const result=await service.run({source:'wix-event',submissionId:req.body.submissionId});res.status(result.failed.length?503:200).json({ok:!result.failed.length});}
     catch(e){res.status(e.status||503).json({ok:false,error:e.status?e.message:'Callback event failed; retry.'});}
   });
-  app.post('/api/admin/outbound/gmail/watch',deps.requireAuth,deps.json,async(req,res)=>{
-    try{const user=await deps.requireOwner(req);if(!c.gmailTopic||!c.gmailSubscription)throw problem('Gmail push setup is incomplete.',503);res.json({ok:true,...await deps.gmail.watch(user.sub,req.body?.id,c.gmailTopic)});}
-    catch(e){res.status(e.status||503).json({ok:false,error:e.status?e.message:'Gmail watch could not be registered.'});}
-  });
-  app.post('/api/events/gmail',deps.json,async(req,res)=>{
-    try{if(!c.gmailSubscription)throw problem('Gmail push setup is incomplete.',503);await deps.verifyWorker(req);
-      if(req.body?.subscription!==c.gmailSubscription||typeof req.body.message?.data!=='string'||req.body.message.data.length>8192)throw problem('Invalid Gmail notification.');
-      let event;try{event=JSON.parse(Buffer.from(req.body.message.data,'base64url'));}catch{throw problem('Invalid Gmail notification.');}
-      if(typeof event.emailAddress!=='string'||!/^\d+$/.test(event.historyId||''))throw problem('Invalid Gmail notification.');
-      // The private binding is written by authenticated watch registration.
-      // Notification data contains no authority to choose another account.
-      const bindings=await deps.gmail.watchBindings(event.emailAddress);
-      for(const binding of bindings){const result=await deps.syncMailbox(binding.uid,binding.id);if(result.errors?.length||result.pending)throw problem('Mailbox update incomplete; retry.',503);}
-      res.status(204).end();
-    }catch(e){res.status(e.status===409?503:e.status||503).json({ok:false,error:e.status?e.message:'Gmail notification failed; retry.'});}
-  });
 }

@@ -19,7 +19,7 @@ for(const name of modules.filter(name=>name!=='server.js'&&!fabric.includes(name
 const routeSource=read('fabric-search.mjs');
 assert.ok(!/app\.use\s*\(/.test(routeSource),'Fabric mounting may not install application-wide middleware');
 for(const route of routeSource.matchAll(/app\.(?:get|post|put|patch|delete)\(\s*['"]([^'"]+)/g))assert.ok(route[1].startsWith('/api/admin/fabrics/'),route[1]);
-for(const page of ['frontend/index.html','backend/status.html','backend/outbound.html'])assert.doesNotMatch(readFileSync(resolve(root,page),'utf8'),/\/(?:fabric-assistant|fabric-search-details)\.(?:js|css)/,page+' must not load fabric assets');
+for(const page of ['frontend/index.html','backend/status.html'])assert.doesNotMatch(readFileSync(resolve(root,page),'utf8'),/\/(?:fabric-assistant|fabric-search-details)\.(?:js|css)/,page+' must not load fabric assets');
 for(const page of ['backend/backend.html','backend/operations.html']){
  const source=readFileSync(resolve(root,page),'utf8');assert.match(source,/fabric-search-details\.js\?v=1/);assert.match(source,/fabric-assistant\.js\?v=5/);
 }

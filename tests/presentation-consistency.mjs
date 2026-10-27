@@ -40,6 +40,7 @@ try{
   await loadMkt();
   setAdRange('W');
  });
+ assert.equal(await page.locator('#range-chips [data-r=W]').getAttribute('aria-pressed'),'true');await page.evaluate(()=>{setAdRange('D');setAdMetric('cpc');});assert.equal(await page.locator('#range-chips [data-r=D]').getAttribute('aria-pressed'),'true');assert.equal(await page.locator('#metric-chips [data-m=cpc]').getAttribute('aria-pressed'),'true');assert.equal(await page.locator('#range-chips [aria-pressed=true]').count(),1);assert.equal(await page.locator('#metric-chips [aria-pressed=true]').count(),1);await page.evaluate(()=>{setAdRange('W');setAdMetric('clicks');});
  assert.equal(await page.locator('[data-maya-section]').count(),sections.length,'Every main Admin fold declares its heading/content boundary');
  // Test visible geometry, not only the margin property. An old heading margin or
  // a hidden feed sibling must not swallow or add to the saved distance.
@@ -91,7 +92,7 @@ try{
  await page.goto('https://maya.test/aesthetics/aesthetic-control.html');
  await page.locator('.type-group .type-row').first().waitFor();
  assert.equal(await page.locator('#pill-colors .status-style-preview').count(),9);
- assert.equal(await page.locator('#pill-colors .status-style-preview').filter({has:page.locator('.status-usage a')}).count(),9,'Every semantic status names its actual page usage');
+ assert.equal(await page.locator('#pill-colors .status-style-preview').filter({has:page.locator('.status-usage a')}).count(),8,'Active semantic statuses name their page usage');
  assert.match(await page.locator('.status-style-preview').filter({has:page.locator('[data-status="delivering"]')}).innerText(),/Impressions recorded.*D\/W\/M.*does not confirm/s);
  const spacing=page.locator('.spacing-controls');
  await spacing.locator('summary').click();
@@ -100,7 +101,7 @@ try{
  for(const sample of await spacing.locator('[data-heading-gap]').all())assert.ok(Math.abs(await sample.evaluate(e=>e.getBoundingClientRect().top-e.previousElementSibling.getBoundingClientRect().bottom)-37)<1,'Preview visibly applies heading distance');
  for(const [key,color] of [['delivering','#13579b'],['pending','#2468ac'],['rejected','#97531b']]){
   const group=page.locator('.status-style-preview').filter({has:page.locator('[data-status="'+key+'"]')});
-  await group.locator('summary').click();
+  await group.locator('.type-editor > summary').click();
   await group.locator('[data-field="color"]').fill(color);
   const expected=await page.evaluate(color=>{const e=document.createElement('span');e.style.color=color;document.body.append(e);const value=getComputedStyle(e).color;e.remove();return value;},color);
   assert.equal(await group.locator('.status-pill').evaluate(e=>getComputedStyle(e).color),expected,key+' editor updates actual preview');

@@ -70,10 +70,8 @@ ok('wall details stay hidden until hover', /\.community-card\s+\.cc-meta\s*\{[^}
 ok('the deploy signs everyone out on the next load',
   app.text.includes('maya_seen_version_app') && map.text.includes('maya_seen_version_map'));
 
-const outbound = await get('/outbound.html');
-const outboundScript = await get('/backend/outbound.js');
-ok('Outbound is the real page, not the app fallback',outbound.status===200 && versionOf(outbound.text)===WANT && outbound.text.includes('id="campaigns"') && outbound.text.includes('/backend/outbound.js'));
-ok('Outbound module is served as JavaScript',outboundScript.status===200 && /javascript/.test(outboundScript.contentType) && outboundScript.text.includes('/api/admin/outbound'));
+const retired = await get('/outbound.html');
+ok('retired Outbound URL returns to Admin',retired.status===200 && retired.text.includes('id="adm-tabtitle"') && !retired.text.includes('id="campaigns"'));
 
 const health = await get('/api/healthz');
 let h = {};
@@ -86,9 +84,7 @@ console.log('  note   configuration does not prove authenticated provider access
 
 const css = await get('/aesthetics/ui/maya-canon.css');
 ok('shared canon CSS is served, not an HTML fallback', css.status === 200 && /text\/css/.test(css.contentType) && css.text.includes('--maya-font-ui'));
-const meter = await get('/aesthetics/ui/ai-meter.js');
-ok('AI meter module is served', meter.status === 200 && /javascript/.test(meter.contentType) && meter.text.includes('class MayaAIMeter'));
-for(const path of ['/api/admin/outbound','/api/admin/outbound/intelligence','/api/admin/ai-meter']){const route=await get(path);ok(path+' exists and requires sign-in',route.status===401 && /json/.test(route.contentType));}
+{const route=await get('/api/admin/outbound');ok('retired Outbound API is gone',route.status===410 && /json/.test(route.contentType));}
 const rules = await get('/docs/server/firestore.rules');
 ok('internal files are NOT published', rules.status === 404 || rules.text.includes('<!DOCTYPE'));
 

@@ -1,13 +1,15 @@
-[Codex] Arrange pill controls side by side
+[Codex] Retire Outbound and simplify Aesthetic Control
 
-Group the existing Glass and Regular pill previews, editors, Restore buttons and
-usage links in two columns on wider screens, stacking on narrow screens. Simplify
-the headings and usage labels while retaining both independent saved settings and
-the shared presentation authority. Pair typography roles at wide widths and move
-their page links into the existing locations disclosures.
+Remove the Outbound page, dedicated outreach and Gmail integrations, and retire
+its URLs and API. Keep shared Leads, Messages, owner text, callback alerts and
+text AI. Stored Outbound data, grants and cloud jobs are unchanged.
 
-Component gallery and pill consistency fixtures cover layout, real editors,
-Restore, saved styles and responsive widths. Fabric search and browser fixtures
-were rechecked locally. All other Cloud Build release gates passed; integrated regression and the final
-standalone Aesthetic Control check run before this commit. Live Fabrics still requires deployment and owner-approved
-verification; Fromsa retains the final push.
+Keep one fabric preview, place pill states next to Glass and Regular, pair dropdown
+and checkbox controls on desktop, remove duplicated editor shortcuts, and give
+selected Glass pills a clear shared state. Admin traffic metrics use Glass too.
+
+Cloud Build checks, integrated regression, smoke and responsive browser fixtures
+passed locally. The final standalone Aesthetic Control authority runs before commit.
+Local npm ci was unavailable; Cloud Build retains the pinned install. Live provider behavior is not established by fixtures. After push,
+verify the release and the separate callback Scheduler/Wix trigger; the retired
+Outbound Scheduler no longer triggers callbacks. Owner manages external cleanup.

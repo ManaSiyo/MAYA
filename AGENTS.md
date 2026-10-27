@@ -1,5 +1,12 @@
 # MAYA assistant instructions
 
+## October 27: Outbound retired
+
+Outbound is removed at Fromsa's request. `/outbound.html` and `/backend/outbound.html` redirect to Admin, and its API returns 410. Never restore its Gmail outreach, Sheets imports, provider events or page without a new request. Previous Outbound-specific notes below are historical and superseded. Keep the independent Leads, owner SMS/phone, Wix callback alerts and text AI services. Legacy private Outbound objects, OAuth grants and Scheduler settings are not deleted or changed; the owner must manage external cleanup. `OUTBOUND_SCHEDULER_*` still authenticates the independent callback worker and must not be removed as dead configuration. Run `tests/leads-ui.mjs`, `tests/retired-workspaces.mjs`, event/communications and smoke checks.
+
+Aesthetic Control: Glass and Regular own pill materials; selected Glass uses the shared visibly blue state. Admin traffic metrics use Glass. Pill states sit beside their families; dropdown and checkbox previews pair on desktop. The sole page-style usage sample is Fabrics; typography is edited in Typography. Preserve semantic status colors and legacy design saves.
+
+
 Conversational fabric sourcing: docs/server/fabric-search.mjs and the shared
 aesthetics/ui/fabric-assistant.{js,css}, used by Brief and Operation Room. Read
 docs/FABRIC-SEARCH.md. Preserve original photo + client words, qualified visual
@@ -62,9 +69,6 @@ address onto its new file, so every URL that ever worked still works.
 frontend/index.html        the app            → served at /
 backend/status.html        Systems Map        → /status.html
 backend/operations.html    Operation Room     → /operations.html
-backend/outbound.html      Outbound           → /outbound.html
-backend/outbound.js        Outbound UI logic (served alongside its page)
-backend/outbound-priority.js  Pure priority/follow-up calculations (public, no secrets)
 backend/backend.html       the Brief          → /backend.html
 backend/privacy.html       privacy policy     → /privacy.html
 backend/verify.html        deploy check       → /verify.html
@@ -113,16 +117,7 @@ live call audio, SMS delivery and owner transfer acceptance still need an owner
 verification after deployment. Unapproved Avatar/Pinterest experiments were removed with Playground; never
 promote that retired code without explicit approval.
 
-Outbound implementation: docs/server/outbound.mjs plus crm-intelligence.mjs,
-crm-gmail.mjs, crm-ai.mjs and crm-store.mjs in docs/server. Admin provider hover
-cards are aesthetics/ui/admin-systems.{js,css}; live pages no longer load the legacy
-ai-meter.js component. Mailbox secrets and cost ledgers are server-only
-private/outbound/<kind>/<account> objects; never expose them via client Storage rules.
-Run tests/crm-intelligence.mjs, tests/crm-ui.mjs and tests/crm-failure-ui.mjs for
-these paths; all are release gates. The failure suite covers account isolation,
-pending edits, drawer dialogs and retired-meter absence with fake providers.
-Hourly updates require owner-configured Cloud Scheduler, not a browser timer.
-The $1 cap covers CRM text AI (Outbound plus owner SMS parsing), not voice, images or provider invoices.
+Shared text AI remains in docs/server/crm-ai.mjs and crm-store.mjs, used by owner SMS and text automations. Its existing private usage ledger path remains compatible and its $1 cap does not cover voice, images or provider invoices.
 Owner SMS access: docs/server/owner-sms-access.mjs provides AI-free history,
 inbox, recorded actions, help/status and exact client-reply previews. Only raw
 owner SMS SEND code authorizes a previewed client send; model/voice tools cannot
@@ -143,18 +138,9 @@ communications suites. It is also a Cloud Build release gate.
 Owner commands: docs/server/owner-crm.mjs and aesthetics/ui/owner-crm.js. Run
 tests/owner-crm.mjs and tests/owner-crm-ui.mjs. Owner activation binds a verified
 allowlisted Admin account to the configured phone; never accept a phone or UID
-from SMS text. Gmail candidates stay account scoped until the owner adds a lead.
+from SMS text. The retired Outbound mailbox-review feature is no longer available.
 
-Model defaults and chat
-compatibility: docs/server/model-config.mjs. Outbound stores each admin's
-workspace under maya/outbound/<encoded Google sub>.json with GCS generation
-preconditions. Never replace that account-scoped key with a shared file.
-Run tests/outbound.mjs for Outbound/model changes; it uses fake providers.
-Run tests/outbound-ui.mjs for Outbound/shared CRM UI changes; its browser routes
-use local files and fake data. It includes tests/lead-filter-ui.mjs for populated
-open status menus, clipping, scrolling and keyboard focus. Both are in the Cloud
-Build release gate.
-See docs/OUTBOUND-SETUP.md for owner-only connection and launch steps.
+Model defaults and chat compatibility: docs/server/model-config.mjs. Run tests/leads-ui.mjs for the Admin Lead Station and its shared filters.
 
 ## Visual canon
 
@@ -174,25 +160,7 @@ Aesthetic Control opens within Admin through aesthetics/ui/admin-design.js; same
 /api/design must strip _history and /api/admin/design-history must stay Admin-gated.
 Padding debug highlights are preview-only, never saved.
 
-Outbound source-of-truth columns and priority rules are regression-tested in
-`tests/outbound-priority.mjs` (invoked by outbound/app-regression) and populated
-`tests/outbound-priority-ui.mjs` (invoked by outbound-ui). Keep unknown follow-up
-history explicit. Refreshing a Sheet must not erase draft edits or re-count a
-recorded send. No automatic email sending is part of the priority workflow.
-
-Outbound September 29: four primary lists (All, Ceremonial, Corporate, Fashion House);
-Email History dial in sidebar; all source columns use sort/contains/value filters
-before batching. To Do and the global filter/action rows were retired.
-
-Admin/Outbound compact workspace: Lead Station includes Contacted as a distinct
-persisted status. Outbound uses 250-record continuous batches and a compact view
-menu, never page-switch navigation. Keep full-dataset filters ahead of batching.
-The full regression HTTP fixture must serve CSS as text/css so the shared canon
-is actually tested. tests/crm-ui.mjs covers append identity, selection and search.
-
-Container packaging: tests/container-contract.mjs checks local runtime imports
-against docs/server/Dockerfile COPY sources before the image is built. Run it
-when adding server modules or changing the Dockerfile.
+Lead Station includes Contacted as a distinct persisted status. The regression HTTP fixture must serve CSS as text/css; tests/leads-ui.mjs covers Lead Station and its filters.
 
 Standalone Marketing was retired September 29. `/marketing.html` and
 `/backend/marketing.html` redirect to Admin; keep its embedded marketing modules
@@ -202,7 +170,7 @@ Aesthetic Control live surface editors: aesthetics/aesthetic-control/surface-edi
 Runtime v14 saves independent inner/filter geometry and three Lead Station column
 styles, top-row and first-column materials via validated optional design keys.
 Keep preview/live table data-col keys in sync so drag reordering preserves column
-settings. Run component-gallery, design-config/design-contract and outbound-ui
+settings. Run component-gallery, design-config/design-contract and leads-ui
 (including lead-filter-ui) for these controls and Lead Station interactions.
 
 October 2 controls: temporary editors anchor to their own trigger, with black popup
@@ -224,7 +192,7 @@ navigation. The native select remains the authenticated save source. Systems no
 longer loads Owner tools; underlying SMS access stays intact. Provider hover cards
 load authenticated models independently of mailbox status and show explicit errors.
 Vault restores compact grouping and descriptions of at most four words. Run
-component-gallery, admin-systems-ui, outbound-ui/lead-filter-ui, design-config,
+component-gallery, admin-systems-ui, leads-ui/lead-filter-ui, design-config,
 design-contract, CRM suites and app-regression for these changes.
 
 Owner lead SMS reads: owner-conversation.mjs routes common newest-lead/count and
@@ -253,11 +221,11 @@ proves tests/verify-live.mjs rejects an older commit even when maya-version is
 unchanged. Verify release.json, page build stamps and /api/healthz commit after the owner's Push;
 Vercel success does not establish Firebase/Cloud Run deployment success.
 
-October 5 inline Leads and drawer, updated by the October 6 review: Latest Notes edits within its cell; Enter/Save persist, blur/outside/Escape/Cancel discard and failed saves keep the draft. Active edits resist refresh and release the frozen first column to keep controls reachable. Notes have no Dictate control. Messages keeps its H2 heading above the plain H3 contact name, hides duplicate numbers, and uses circular Phone/Share icons. Share contains booking drafts and reviewed invoices; never send automatically. Drawer scroll regions flex above its bottom voice dock. Run lead-notes-ui, component-gallery, outbound-ui, design-config/design-contract, communications and the exact Cloud Build test list before handoff.
+October 5 inline Leads and drawer, updated by the October 6 review: Latest Notes edits within its cell; Enter/Save persist, blur/outside/Escape/Cancel discard and failed saves keep the draft. Active edits resist refresh and release the frozen first column to keep controls reachable. Notes have no Dictate control. Messages keeps its H2 heading above the plain H3 contact name, hides duplicate numbers, and uses circular Phone/Share icons. Share contains booking drafts and reviewed invoices; never send automatically. Drawer scroll regions flex above its bottom voice dock. Run lead-notes-ui, component-gallery, leads-ui, design-config/design-contract, communications and the exact Cloud Build test list before handoff.
 
 Messages hierarchy: keep #adm-tabtitle (H2) fixed and visible when opening contacts; #msg-name is plain H3 with a hover/focus pencil. Systems Automations opens the drawer view, not a browser tab. docs/server/text-automations.mjs stores owner-account draft rules, uses the shared CRM AI budget, and has no send/timer capability. Only explicit Messages Send submits texts. Run tests/text-automations.mjs and tests/lead-notes-ui.mjs plus communications suites. Opening suggestions must not overwrite composer drafts; ignore stale account/recipient responses.
 
-October 5 icon/status controls: icons always center vertically on their assigned rows; saved text vertical alignment must not move row icons. Optional iconPillGap/iconTextGap (0–32px, defaults 6/8) are shared saved design keys. Gallery samples open their actual settings and may not invent live metrics. Leads supports Completed through Admin and owner CRM with existing green semantic status styling. Run component-gallery, profile-crm, owner-crm, outbound-ui/lead-filter-ui and communications gates for these paths.
+October 5 icon/status controls: icons always center vertically on their assigned rows; saved text vertical alignment must not move row icons. Optional iconPillGap/iconTextGap (0–32px, defaults 6/8) are shared saved design keys. Gallery samples open their actual settings and may not invent live metrics. Leads supports Completed through Admin and owner CRM with existing green semantic status styling. Run component-gallery, profile-crm, owner-crm, leads-ui/lead-filter-ui and communications gates for these paths.
 
 Callback notifications: docs/server/lead-alerts.mjs owns durable independent SMS
 and call claims plus health. /api/tasks/lead-alerts is Scheduler-authenticated
@@ -296,8 +264,6 @@ tests/project-lifecycle.mjs. Brief generation/save retry and Operations account,
 garment and run identity are covered by tests/brief-operation-races.mjs. Reading
 a saved dissection must never generate missing pieces automatically.
 
-Outbound sends include the reviewed expectedEmail in the request fingerprint and
-revalidate it at the durable claim; a changed recipient requires fresh review.
 Design Save snapshots its payload before awaiting and locks preview editing until
 acknowledgement; failed saves must not replace the Restore baseline.
 
@@ -468,7 +434,7 @@ The retired Admin Prompt Engine editor is backed up under
 _to_delete/admin-dashboard-retired-2026-10-17; active client Firestore
 config/prompting readers and stored settings remain intact. Outbound
 workspace revisions reject old reads after Save and coalesce overlapping refreshes.
-Run admin-prompt-saves and crm-failure-ui; both remain release/app-regression gates.
+Run admin-prompt-saves and leads-ui; both remain release/app-regression gates.
 The copy-only cleanup changes existing helper passages, with no CSS/role/material
 authority changes. Full functional validation and final aesthetic-authority are
 still required. Public release checks and synthetic fixtures do not substitute

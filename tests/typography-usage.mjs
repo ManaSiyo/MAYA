@@ -12,7 +12,7 @@ for(const bucket of Object.values(report.categories)){
  for(const l of bucket.locations){const lines=readFileSync(new URL(l.page,root),'utf8').split('\n');assert.ok(lines[l.line-1].includes('<'+l.tag)||lines[l.line-1].includes('createElement')||lines[l.line-1].includes('const tile ='),l.page+':'+l.line);}
 }
 for(const id of ['brand-title','client-name-modal-title'])assert.ok(report.categories.H1.locations.some(l=>l.page==='frontend/index.html'&&l.id===id));
-assert.ok(report.categories.H1.locations.some(l=>l.page==='backend/outbound.html'&&l.snippet.includes('OUTBOUND')));
+assert.ok(!report.files.includes('backend/outbound.html'),'Retired Outbound is absent from role usage');
 assert.ok(report.categories.H4.roles.dashboard.count>=2,'Admin number templates must be included');
 assert.ok(report.categories.P2.count>0,'No empty typography groups');
 console.log('Role audit passed: source evidence, unique locations, H1 roles and dynamic number templates.');

@@ -71,8 +71,6 @@ steps:
         node tests/admin-ui-contract.mjs
         node tests/admin-wake.mjs
         node tests/proxy-policy.mjs
-        node tests/outbound.mjs
-        node tests/crm-intelligence.mjs
         node tests/owner-crm.mjs
         node tests/owner-conversation.mjs
         node tests/owner-sms-access.mjs
@@ -85,7 +83,7 @@ steps:
         node tests/maya-feedback.mjs
         # Browser and communications contracts are mandatory release gates.
         node tests/maya-hands-smoke.mjs
-        node tests/outbound-ui.mjs
+        node tests/leads-ui.mjs
         node tests/lead-notes-ui.mjs
         node tests/admin-state-races.mjs
         node tests/message-races.mjs
@@ -93,8 +91,6 @@ steps:
         node tests/fabric-workflow-ui.mjs
         node tests/operation-save-failures.mjs
         node tests/operation-controls.mjs
-        node tests/crm-ui.mjs
-        node tests/crm-failure-ui.mjs
         node tests/canon-ui.mjs
         node tests/maya-phone.mjs
         node tests/maya-messages.mjs

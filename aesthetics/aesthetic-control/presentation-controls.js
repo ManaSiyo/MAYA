@@ -24,9 +24,9 @@ export function setupPresentation({buttons,preview,colors,design,controlSizes}){
   const edit=editor(controls,label,statusStyles[key],[['color','Color',{type:'color'}],['opacity','Color strength',{min:0,max:100}],['weight','Weight',[200,250,300,350,400,450,500].map(n=>[String(n),String(n)])]]);
   const pill=Pill({label,onClick:event=>{event.stopPropagation();edit.open=true;edit.querySelector('input')?.focus();}});pill.classList.add('status-pill');pill.dataset.status=key;controls.prepend(pill);
   const description=document.createElement('p');description.className='status-meaning';description.dataset.mayaType='P1';description.textContent=meaning;wrap.append(description);
-  const locations=document.createElement('div');locations.className='status-usage';
+  const locations=document.createElement('details');locations.className='status-usage';const usageSummary=document.createElement('summary');usageSummary.dataset.mayaType='P3';usageSummary.textContent=usage.length?'Where used':'Not currently used';locations.append(usageSummary);
   for(const [page,href,text] of usage){const row=document.createElement('div'),link=document.createElement('a');row.dataset.mayaType=link.dataset.mayaType='P3';link.href=href;link.textContent=page;row.append(link,document.createTextNode(' · '+text));locations.append(row);}
-  wrap.append(locations);
+  controls.append(locations);
  }
  const spacing=document.createElement('section');spacing.className='spacing-controls';
  const row=document.createElement('div');row.className='surface-edit-row';
@@ -51,12 +51,15 @@ export function setupPresentation({buttons,preview,colors,design,controlSizes}){
  const layoutTitle=document.createElement('h3');layoutTitle.dataset.mayaType=layoutTitle.dataset.previewCategory='H3';layoutTitle.textContent='Fields and drawer spacing';layoutRow.append(layoutTitle);layout.append(layoutRow);preview.append(layout);
  editor(layoutRow,'field and drawer spacing',layoutSpacing,[['labelGap','Label → field',{min:0,max:64}],['fieldGap','Between fields',{min:0,max:64}],['drawerDockInset','Voice dock → bottom',{min:0,max:32}]]);
  const layoutHelp=document.createElement('p');layoutHelp.dataset.mayaType=layoutHelp.dataset.previewCategory='P1';layoutHelp.textContent='Label → field is the space from Trigger to its selected value. Between fields separates Trigger, wait and earliest-time groups. A smaller dock inset moves Hey Maya closer to the bottom.';layout.append(layoutHelp);
+ const spacingExample=document.createElement('div');spacingExample.className='workspace-timing-preview';spacingExample.dataset.mayaFieldStack='';
+ for(const [labelText,value] of [['Trigger','No reply after first text'],['Earliest draft time','09:00']]){const label=document.createElement('label');label.dataset.mayaType='P3';label.dataset.mayaFieldRow='';label.textContent=labelText;const field=document.createElement('input');field.dataset.mayaType='P1';field.dataset.mayaControl='field';field.value=value;field.readOnly=true;label.append(field);spacingExample.append(label);}
+ const dockExample=document.createElement('div');dockExample.className='workspace-dock-preview';dockExample.append(Pill({label:'Hey Maya'}));layout.append(spacingExample,dockExample);
  const semantic=document.createElement('section');semantic.className='semantic-style-controls';
  const semanticRow=document.createElement('div');semanticRow.className='surface-edit-row';
  const semanticTitle=document.createElement('h3');semanticTitle.dataset.mayaType=semanticTitle.dataset.previewCategory='H3';semanticTitle.textContent='Non-fabric pieces';semanticRow.append(semanticTitle);semantic.append(semanticRow);preview.append(semantic);
  const semanticEdit=editor(semanticRow,'non-fabric pieces',semanticStyles.nonFabric,[['color','Text color',{type:'color'}],['opacity','Color strength',{min:0,max:100}]]);
  const shoe=Pill({label:'Black leather boots',onClick:event=>{event.stopPropagation();semanticEdit.open=true;semanticEdit.querySelector('input').focus();}});shoe.dataset.mayaSemantic='non-fabric';semantic.append(shoe);
  const semanticHelp=document.createElement('p');semanticHelp.dataset.mayaType=semanticHelp.dataset.previewCategory='P1';semanticHelp.textContent='Shoes in the Brief garment list and Operation Room are marked in pale yellow. Their text size, font and pill material still use the shared controls.';semantic.append(semanticHelp);
- setupWorkspacePreviews({parent:layout,preview,render});
+ setupWorkspacePreviews({parent:preview,render});
  render();return {settings,render};
 }

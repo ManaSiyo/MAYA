@@ -1,3 +1,5 @@
+<!-- October 27: Outbound and the multi-page usage gallery are retired. Earlier references to them describe historical layouts. Only the fabric usage preview remains. Glass/Regular are the two pill materials; Glass also governs Admin traffic metrics, and selected Glass has a clear blue fill and accent border. Pill states are beside their families; dropdown and checkbox examples pair above 700px and stack below. -->
+
 # Aesthetic Control — MAYA design standard
 
 This is the **sole active design specification** for the client app, Admin,

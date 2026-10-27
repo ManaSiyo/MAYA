@@ -57,39 +57,13 @@ provider request time. These do not prove handset ringing or SMS delivery.
 GET `/api/admin/lead-alerts/status` requires owner auth and exposes readiness,
 claims and timings. Configuration alone does not prove event delivery.
 
-## Gmail inbound path
+## Gmail inbound path retired
 
-Gmail INBOX watch → authenticated Pub/Sub push → private mailbox binding →
-mailbox-only CRM history sync. No AI, phone scan, Sheet scan or outgoing message
-is part of this push. A notification never supplies authority to select a UID.
-
-Owner setup:
-
-1. Create a Pub/Sub topic in the same Google project as the Gmail OAuth app.
-   Grant `gmail-api-push@system.gserviceaccount.com` publisher access to it.
-   Set `GMAIL_PUSH_TOPIC` to `projects/<project>/topics/<topic>`.
-2. Create an authenticated push subscription targeting the direct Cloud Run
-   `/api/events/gmail` route, using the configured worker account/audience
-   above. Set `GMAIL_PUSH_SUBSCRIPTION` to its full resource name. Match the
-   exact subscription; configure Pub/Sub's OIDC service-agent permissions.
-3. Sign in to MAYA as the owner. Get the actual connected mailbox ID from
-   authenticated `/api/admin/owner-crm` or Outbound's mailbox list. POST JSON
-   `{ "id": "<that mailbox id>" }` to `/api/admin/outbound/gmail/watch` with
-   the existing signed Admin session. No UID, accountId, topic, recipient or
-   token should be copied into the body. A different owner's mailbox ID fails.
-4. Keep hourly Outbound Scheduler reconciliation enabled. Sync renews an
-   existing watch when less than 24 hours remain, meeting Google's recommended
-   daily renewal; without periodic sync an idle watch eventually expires.
-5. Send an owner-approved test email into that connected mailbox. Verify
-   Pub/Sub delivery and the CRM event without refreshing or sending a reply.
-   A live connected mailbox and real provider delivery were not tested here.
-
-Bindings live in private server-only hashed mailbox keys and are revalidated
-against connected owner credentials on every push. Disconnected/stale bindings
-are ignored. Watch registration preserves the existing history cursor and writes
-the binding before Gmail can send its initial notification. Incomplete syncs
-request retries; existing leases, IDs and generation checks prevent replayed
-notifications from double-counting history.
+Outbound Gmail watch and Pub/Sub handlers were removed at the owner's request.
+Old mailbox credentials, OAuth grants, watch bindings and cloud subscriptions were
+not changed or deleted. The owner should review and disable any retired Gmail
+subscription or Outbound Scheduler job, and revoke grants if desired. Keep the
+independent callback Scheduler and its existing `OUTBOUND_SCHEDULER_*` identity.
 
 ## OpenAI audit and recommendation
 

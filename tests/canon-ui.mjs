@@ -81,8 +81,6 @@ const adminTab=await chromeStyle('.adm-tab.on');assert.equal(adminTab.radius,mas
 await page.locator('#drawer').evaluate(el=>{document.body.append(el);Object.assign(el.style,{position:'fixed',left:'auto',width:'360px',zIndex:'999'});});
 await page.screenshot({animations:'disabled',path:join(dir,'backend-drawer-parity.png')});
 assert.equal(await page.locator('#maya-toggle .mt-switch').evaluate(el=>getComputedStyle(el).width),'34px');
-await page.goto('https://maya.test/backend/outbound.html');
-assert.deepEqual(await chromeStyle('#outbound-drawer'),adminGlass,'Outbound and Admin share the same quiet glass');
 await page.goto('https://maya.test/backend/backend.html');
 assert.deepEqual(await chromeStyle('#clients-drawer'),master,'Brief drawer matches frontend');
 await page.emulateMedia({reducedMotion:'reduce'});

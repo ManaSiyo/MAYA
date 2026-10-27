@@ -12,13 +12,13 @@ const commit = 'a'.repeat(40);
 try {
   mkdirSync(join(dir, 'frontend'));
   mkdirSync(join(dir, 'backend'));
-  for (const path of ['frontend/index.html', 'backend/status.html', 'backend/outbound.html'])
+  for (const path of ['frontend/index.html', 'backend/status.html'])
     writeFileSync(join(dir, path), '<meta name="maya-build" content="local">');
   execFileSync(process.execPath, [script, commit], { cwd: dir });
   const release = JSON.parse(readFileSync(join(dir, 'release.json'), 'utf8'));
   assert.equal(release.commit, commit);
   assert.ok(!Number.isNaN(Date.parse(release.publishedAt)));
-  for (const path of ['frontend/index.html', 'backend/status.html', 'backend/outbound.html'])
+  for (const path of ['frontend/index.html', 'backend/status.html'])
     assert.equal(readFileSync(join(dir, path), 'utf8'), `<meta name="maya-build" content="${commit}">`);
   assert.throws(() => execFileSync(process.execPath, [script, 'not-a-commit'], { cwd: dir, stdio: 'ignore' }));
   assert.equal(JSON.parse(readFileSync(join(dir, 'release.json'), 'utf8')).commit, commit);

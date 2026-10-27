@@ -79,7 +79,7 @@ reconciles a claim. Never clear claims blindly. Accepted means accepted by the
 provider, not delivered or answered. Read Messages delivery receipts and Twilio
 call logs for the actual result.
 
-The dedicated and legacy Outbound task return HTTP 503 for notification failures.
+The dedicated callback task returns HTTP 503 for notification failures. The retired Outbound task returns 410 and no longer triggers alerts; confirm the independent callback job is configured before relying on scheduled reconciliation.
 Admin also exposes unresolved historical attempts, missing provider setup and
 stale scheduling; quiet fallback errors are visible. The five-minute Admin
 fallback remains deduplicated, but is not the autonomous worker.

@@ -9,8 +9,9 @@ const server=createServer((req,res)=>{
  const path=new URL(req.url,'http://fixture.test').pathname;
  if(path==='/release.json'){res.setHeader('Content-Type','application/json');return res.end(JSON.stringify({commit:published,publishedAt:'2026-10-06T00:00:00Z'}));}
  if(path==='/api/healthz'){res.setHeader('Content-Type','application/json');return res.end(JSON.stringify({ok:true,commit:apiCommit,configured:{openai:true,submissions:true}}));}
+ if(path.startsWith('/api/admin/outbound')){res.statusCode=410;res.setHeader('Content-Type','application/json');return res.end('{"error":"retired"}');}
  if(path.startsWith('/api/admin/')){res.statusCode=401;res.setHeader('Content-Type','application/json');return res.end('{"error":"Sign in"}');}
- const aliases={'/index.html':'frontend/index.html','/status.html':'backend/status.html','/outbound.html':'backend/outbound.html'};
+ const aliases={'/index.html':'frontend/index.html','/status.html':'backend/status.html','/outbound.html':'backend/status.html'};
  try{const file=aliases[path]||path.slice(1);if(file.startsWith('docs/'))throw Error('private');let body=readFileSync(resolve(root,file),'utf8');body=body.replace('name="maya-build" content="local"','name="maya-build" content="'+published+'"');res.setHeader('Content-Type',path.endsWith('.js')?'text/javascript':path.endsWith('.css')?'text/css':'text/html');res.end(body);}catch{res.statusCode=404;res.end('<!DOCTYPE html>');}
 });
 await new Promise(r=>server.listen(0,'127.0.0.1',r));

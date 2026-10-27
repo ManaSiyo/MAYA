@@ -13,7 +13,6 @@ import './project-lifecycle.mjs';
 import './brief-operation-races.mjs';
 import './release-contract.mjs';
 import './retired-workspaces.mjs';
-import {assertOutboundPriority} from './outbound-priority.mjs';
 import {assertCanon} from './canon-contract.mjs';
 import {assertContainer} from './container-contract.mjs';
 // MAYA app regression test. Companion to smoke.mjs (which covers the server).
@@ -25,7 +24,6 @@ import {assertContainer} from './container-contract.mjs';
 //
 // Needs Playwright + Chromium. Claude runs this in its workspace as part of
 // the pre-push loop: smoke.mjs, then this, then the push is prepared.
-import { rowsToContacts, mergeContacts } from '../docs/server/outbound.mjs';
 import { cleanLeadPatch } from '../docs/server/lead-store.mjs';
 import { webVoiceSession, voiceTurnDetection } from '../docs/server/realtime-voice.mjs';
 import { chromium } from 'playwright';
@@ -116,68 +114,12 @@ ok('Lead status filter has an isolated readable layer and scoped section carets'
 // September 28: Gemini uses the existing Cloud Run identity; meter refresh is visible.
 {
  const ai=readFileSync(join(ROOT,'docs/server/crm-ai.mjs'),'utf8');
- const meter=readFileSync(join(ROOT,'aesthetics/ui/ai-meter.js'),'utf8');
  ok('Gemini supports Vertex without a browser API key',ai.includes('aiplatform.googleapis.com/v1/projects/') && SERVER_SOURCE.includes('vertex:(process.env.K_SERVICE||process.env.VERTEX_PROJECT)'));
- ok('AI meter confirms refresh and names the Vertex transport',meter.includes("button.textContent='Refreshing…'") && meter.includes("textContent='Checked '") && meter.includes('Gemini') && meter.includes('Vertex AI'));
 }
 
 // September 28: compact source-data workspace and distinct Contacted status.
-{
- const ui=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');
- const html=readFileSync(join(ROOT,'backend/outbound.html'),'utf8');
- ok('Contacted is a distinct selectable Lead Station status',MAP_SOURCE.includes("contacted:'Contacted'") && !MAP_SOURCE.includes("['in_process','contacted'].includes(x.stage)"));
- ok('Outbound appends 250-record batches without page switches',ui.includes('const BATCH_SIZE=250') && ui.includes('function mountCollection') && !ui.includes('renderPager'));
- ok('Every former Outbound view remains in a compact menu',html.includes('id="view-menu"') && ['people','companies','emails','results','activity'].every(v=>html.includes('value="'+v+'"')) && !html.includes('data-view='));
- ok('Full-record searching precedes incremental rendering',ui.includes('searchText(p).includes(q)') && ui.includes('mountCollection(list,document.querySelector'));
- ok('Admin and Outbound share dark semantic status pills',MAP_SOURCE.includes('status-pill lead-status') && ui.includes('function statusPill') && CANON_SOURCE.includes('--maya-contacted:'));
- ok('Compact table rows and content-width metrics share central styling',CANON_SOURCE.includes('.people-table td {height:44px') && CANON_SOURCE.includes('flex:0 0 auto;') && CANON_SOURCE.includes('.workspace-actions,.toolbar,.people-actions'));
-}
-
-// September 27: compact Systems and master-sheet menu contracts.
-{
- const admin=readFileSync(join(ROOT,'backend/status.html'),'utf8');
- if(!admin.includes('>Submissions <span') || !admin.includes('loadSubmissions(); window.loadModelSnapshot?.();')) throw Error('Submissions/initial model snapshot regression');
- const outbound=readFileSync(join(ROOT,'backend/outbound.html'),'utf8');
- const chrome=readFileSync(join(ROOT,'aesthetics/ui/maya-canon.css'),'utf8');
- if(!chrome.includes('#voice-btn {width:42px;height:42px;')) throw Error('Footer logo size regression');
- if(!chrome.includes('.model-group strong {font-size:12px;')) throw Error('Model typography regression');
- if(!chrome.includes('.bl-step .v) {font-size:20px;')) throw Error('Bottom Line size regression');
- if(!chrome.includes('font-size:11px;padding:6px 10px;min-height:30px;')) throw Error('Compact pills regression');
- if(!outbound.includes('Refresh Sheet') || !outbound.includes('id="drawer-help"')) throw Error('Outbound menu regression');
-}
-
-// September 27: Outbound CRM and shared meter contracts (run before browser fixtures).
-{
- const crm=readFileSync(join(ROOT,'docs/server/crm-intelligence.mjs'),'utf8');
- const gmail=readFileSync(join(ROOT,'docs/server/crm-gmail.mjs'),'utf8');
- const ai=readFileSync(join(ROOT,'docs/server/crm-ai.mjs'),'utf8');
- const ui=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');
- const css=readFileSync(join(ROOT,'aesthetics/ui/maya-canon.css'),'utf8');
- ok('Outbound supports two encrypted account-scoped Gmail connections',gmail.includes('length>=2') && gmail.includes('aes-256-gcm') && gmail.includes('setAAD(Buffer.from(uid))'));
- ok('Hourly CRM sync is authenticated and checkpoints incremental mail with contact activity',crm.includes('/api/tasks/outbound-sync') && crm.includes('await deps.verifyScheduler(req)') && gmail.includes('startHistoryId:next.historyId'));
- ok('Master prospects use bounded rendering and reusable campaign membership',ui.includes('const BATCH_SIZE=250') && crm.includes("api+'/segment'") && crm.includes('c.campaignIds='));
- ok('Reviewed mail sends have durable duplicate protection',crm.includes('b.confirm!==true') && crm.includes('crm.deliveries[b.requestId]') && crm.includes("status='unknown'"));
- ok('Daily AI allowance combines OpenAI Claude Gemini without paid retries',ai.includes('anthropic:') && ai.includes('gemini:') && ai.includes('sum.spentUsd+sum.reservedUsd+reserve>1') && ai.includes('No automatic paid retry'));
- ok('Admin and Outbound retire the AI meter UI',!MAP_SOURCE.includes('<maya-ai-meter') && !readFileSync(join(ROOT,'backend/outbound.html'),'utf8').includes('<maya-ai-meter'));
- ok('Mailbox privacy explains scope and processors without changing its URL',readFileSync(join(ROOT,'backend/privacy.html'),'utf8').includes('Connected business mailboxes and Outbound') && readFileSync(join(ROOT,'backend/privacy.html'),'utf8').includes('Anthropic Claude or Google Gemini'));
- ok('Sample emails distinguish editable name company and offer',ui.includes('template-person') && ui.includes('template-company') && ui.includes('template-offer'));
- ok('Gemini audit keeps histories bounded while preserving compact controls',css.includes('max-height:420px') && css.includes('max-height:380px') && css.includes('font-size:11px;padding:6px 10px;min-height:30px;'));
-}
-
-// September 27 follow-up audit: keep the actual responsive and failure paths gated.
-{
- const ui=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');
- const meter=readFileSync(join(ROOT,'aesthetics/ui/ai-meter.js'),'utf8');
- const crm=readFileSync(join(ROOT,'docs/server/crm-intelligence.mjs'),'utf8');
- ok('Operation Room stacks narrow columns and contains pattern labels',CANON_SOURCE.includes('.cols {grid-template-columns:minmax(0,1fr);}') && CANON_SOURCE.includes('.stage-badge {position:static;'));
- ok('Outbound data and dialogs use compact functional type',CANON_SOURCE.includes('.people-table :is(th,td,.person-link) {font-size:var(--maya-text-table);}') && CANON_SOURCE.includes('#modal-title,.empty h2) {font-size:16px;'));
- ok('Drawer settings stay within the Brief and out of focus when closed',CANON_SOURCE.includes('#drawer-settings {transform:none;visibility:hidden;'));
- ok('Late account responses and expired sessions cannot restore another workspace',ui.includes('epoch!==authEpoch') && ui.includes('authEpoch++;clearWorkspace();'));
- ok('Pending requests lock edits and background reloads preserve drafts',ui.includes("querySelectorAll('button,input,select,textarea')") && ui.includes('const fresh=await api();if(!current()){intelligencePending=true;return;}if(!hasUnsavedDraft()&&!busy)'));
- ok('Meter requests have cancellation and clear stale values on failure',meter.includes('this.request?.abort()') && meter.includes("if(current())this.reset("));
- ok('Independent CRM sources continue when Gmail listing fails',crm.includes("await runPart('Gmail connections'"));
- ok('CRM fault recovery is checked in the release gate',BUILD_SOURCE.includes('node tests/crm-failure-ui.mjs'));
-}
+ok('Contacted is a distinct selectable Lead Station status',MAP_SOURCE.includes("contacted:'Contacted'") && !MAP_SOURCE.includes("['in_process','contacted'].includes(x.stage)"));
+ok('Outbound code is retired and old links return to Admin',!MAP_SOURCE.includes('href="/outbound.html"') && HOSTING.hosting.redirects.some(r=>r.source==='/outbound.html'&&r.destination==='/status.html') && !SERVER_SOURCE.includes('mountOutbound(app,'));
 
 const browser = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || process.env.CHROMIUM_PATH });
 const pg = await browser.newPage();
@@ -1290,10 +1232,10 @@ ok('a click anywhere outside the drawer closes it, on every page',
   /pointerdown[\s\S]{0,400}toggleDrawer\(false\)/.test(MAP_SOURCE) &&
   /pointerdown[\s\S]{0,500}toggleClientsDrawer\(false\)/.test(BACKEND_SOURCE) &&
   /pointerdown[\s\S]{0,400}toggleDrawer\(false\)/.test(MKT_SOURCE));
-ok('MAYA Admin navigation keeps Operations and Outbound without retired staging',
+ok('MAYA Admin navigation keeps Operations without retired pages',
   MAP_SOURCE.includes('pg-chips') &&
   /pg-chip" href="\/operations\.html"/.test(MAP_SOURCE) &&
-  /pg-chip" href="\/outbound\.html"/.test(MAP_SOURCE) &&
+  !MAP_SOURCE.includes('href="/outbound.html"') &&
   !MAP_SOURCE.includes('href="/playground.html"'));
 ok('a two finger pinch resizes a card on a phone',
   INDEX_SOURCE.includes("e.touches.length !== 2") &&
@@ -2120,11 +2062,6 @@ ok('CRM: obsolete Forms/Add toolbar is removed and compact scrolling remains',
 ok('Messages: names use bound events; carrier errors and history warnings are visible',
   MAP_SOURCE.includes('data-thread-index') && MAP_SOURCE.includes('row.onclick = () => openThread') &&
   MAP_SOURCE.includes('m.errorCode') && MAP_SOURCE.includes('if (j.warning)'));
-ok('Outbound: separate served page, real authenticated API and bounded provider actions',
-  HOSTING.hosting.rewrites.some(r=>r.source==='/outbound.html'&&r.destination==='/backend/outbound.html') &&
-  MAP_SOURCE.includes('href="/outbound.html" target="_blank"') &&
-  SERVER_SOURCE.includes('mountOutbound(app,') && SERVER_DOCKER.includes('COPY outbound.mjs ./') &&
-  BUILD_SOURCE.includes('node tests/outbound.mjs'));
 ok('September 22: Mana links sit left, lead tools grow, gear stays square',
   MAP_SOURCE.includes('.card-mana .mana-chips{position:absolute;left:auto;right:100%;top:50%;') &&
   MAP_SOURCE.includes('font-size:12.5px;line-height:1;width:32px;height:26px') &&
@@ -2608,24 +2545,12 @@ ok('SMS audit fixes preserve opt-in, carrier reasons and trusted-host signature 
   smsSource.includes("optOutType === 'START'") && smsSource.includes('message.status === update.status && update.errorCode') &&
   smsSource.includes('signedWebhook(req, params)') && SERVER_SOURCE.includes("webhookHosts: ['maya.manasiyo.com', 'maya-api-53947659283.us-west1.run.app']"));
 
-const importedCorporate=rowsToContacts([['Summary'],['Company','Contact','Email address','Role','Status'],['Example','Person','person@example.com','Director','Sent']])[0];
-ok('Outbound imports summary-prefixed corporate sheets without losing names or status',importedCorporate.name==='Person' && importedCorporate.title==='Director' && importedCorporate.stage==='contacted');
-
-const outboundUI=readFileSync(join(ROOT,'backend/outbound.html'),'utf8');
-const outboundJS=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');
-ok('Outbound matches Maya fonts/logo and guards unsaved drafts',outboundUI.includes('/aesthetics/ui/logo-circle.png') && outboundUI.includes('Cormorant+Garamond') && outboundUI.includes('Jost:') && outboundUI.includes(':focus-visible') && outboundJS.includes('function hasUnsavedDraft()') && outboundJS.includes("if(!leaveDraft())return;\n selected=id;view='emails'"));
-const suppressionState={campaigns:[{id:'audit'}],contacts:[{campaignId:'audit',email:'a@example.com',stage:'contacted'}]};
-mergeContacts(suppressionState,rowsToContacts([['Email','Status'],['a@example.com','Bounced']]),'audit');
-ok('Reimported bounced contacts suppress existing outreach',suppressionState.contacts[0].stage==='suppressed');
-const liveVerifier=readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8');
-ok('Live verifier checks moved pages and Outbound module type',liveVerifier.includes("localVersion('frontend/index.html')") && liveVerifier.includes('outboundScript.contentType'));
 ok('CRM has a separate Contact column and opens the thread by name',MAP_SOURCE.includes("['name', 'contact', 'stage', 'note']") && MAP_SOURCE.includes('function leadStage(x)') && MAP_SOURCE.includes('function leadSummary(x)') && MAP_SOURCE.includes('function msgInvoice()'));
 ok('Model snapshot uses authenticated server config',MAP_SOURCE.includes('/api/admin/models') && SERVER_SOURCE.includes("app.get('/api/admin/models', requireAuthHeader"));
 ok('Owner CRM uses an authenticated setup and confirmation-only SMS lead writes', !MAP_SOURCE.includes('<maya-owner-crm>') && SERVER_SOURCE.includes('ownerCommand: input => ownerCRM.handle(input)') && readFileSync(join(ROOT,'docs/server/owner-crm.mjs'),'utf8').includes('pending.code.toLowerCase()'));
-ok('Dead Owner tools removed; Gmail connection remains account-scoped',!MAP_SOURCE.includes('<maya-owner-crm>')&&MAP_SOURCE.includes("fetch('/api/admin/owner-crm'"));
+ok('Retired Outbound Gmail integration no longer appears in Admin',!MAP_SOURCE.includes('href="/outbound.html#gmail"')&&!SERVER_SOURCE.includes('gmail-review'));
 ok('A new Wix Call back lead can alert the owner through the scheduled check and Admin',
   SERVER_SOURCE.includes("fetchLeads:submissionId=>wixLeads({fresh:true,summaries:false,submissionId})") &&
-  SERVER_SOURCE.includes("return _leadAlerts.run({source:'scheduled'})") &&
   MAP_SOURCE.includes("/api/admin/lead-alerts/check") &&
   MAP_SOURCE.includes('checkLeadAlerts(true);},300000)'));
 ok('Callback alerts have independent authenticated scheduling and visible failures',
@@ -2641,17 +2566,11 @@ ok('Phone calls show their transcript in the Messages drawer',
   MAP_SOURCE.includes('<details><summary>Transcript</summary>') &&
   PHONE_SOURCE.includes('transcript:call.transcript') &&
   readFileSync(join(ROOT,'docs/server/maya-messages.mjs'),'utf8').includes('Array.isArray(transcript)?transcript.map'));
-assertOutboundPriority();
-ok('Outbound preserves Sheet columns and filters all campaigns with recorded F1/F2 history',!outboundUI.includes('id="todo-list"') && outboundJS.includes('filterColumns') && outboundUI.includes('id="followups"') && outboundJS.includes('Write an email') && outboundJS.includes('renderFollowups(people)'));
-ok('Outbound preserves campaign pain and criteria and provides a people table',outboundJS.includes("field('pain'") && outboundJS.includes("field('criteria'") && outboundJS.includes('function renderPeople()'));
 await browser.close(); if (served) srv.close();
 ok('CRM uses six owner statuses and dismisses the filter outside or on Escape',MAP_SOURCE.includes("booked:'Booked'") && MAP_SOURCE.includes("completed:'Completed'") && MAP_SOURCE.includes("canceled:'Cancelled'") && MAP_SOURCE.includes("!_leadFilterOwner.contains(e.target) && !_leadFilterMenu.contains(e.target)") && MAP_SOURCE.includes("if(e.key==='Escape' && _leadFilterOwner)") && MAP_SOURCE.includes('window.filterLeadStatus = filterLeadStatus'));
 const activeTypeSource=readFileSync(join(ROOT,'aesthetics/ui/typography-controls.js'),'utf8');
 ok('Lead rows show H4 names above H5 dates without category badges',MAP_SOURCE.includes('class="lead-signup"')&&MAP_SOURCE.includes('flex-direction:column;align-items:stretch')&&!MAP_SOURCE.includes('function leadCategory')&&activeTypeSource.includes("H4:'.lead-identity,")&&activeTypeSource.includes("H5:'.lead-signup'"));
 ok('Model snapshot shows server roles through accessible hover cards',MAP_SOURCE.includes("new CustomEvent('maya-model-snapshot'") && readFileSync(join(ROOT,'aesthetics/ui/admin-systems.js'),'utf8').includes('Object.entries(snapshot.models'));
-const outboundRevampUI=readFileSync(join(ROOT,'backend/outbound.html'),'utf8'),outboundRevampJS=readFileSync(join(ROOT,'backend/outbound.js'),'utf8');
-ok('Outbound uses the Admin background and functioning drawer',outboundRevampUI.includes('birth-of-a-star.png')&&outboundRevampUI.includes('outbound-drawer')&&outboundRevampJS.includes('function closeDrawer'));
-ok('Outbound syncs real workbook campaigns and reviews drafts in Gmail',outboundRevampJS.includes("api('/sheets/sync'")&&outboundRevampJS.includes('mail.google.com/mail/?view=cm'));
 const typeUsage=JSON.parse(readFileSync(join(ROOT,'aesthetics/aesthetic-control/typography-usage.json'),'utf8'));
 ok('Typography role counts include real H1 and generated Admin numbers',typeUsage.categories.H1.locations.some(x=>x.id==='client-name-modal-title') && typeUsage.categories.H1.locations.some(x=>x.id==='brand-title') && typeUsage.categories.H4.roles.dashboard.count>=2 && typeUsage.categories.P2.count>0);
 const compactGallery=readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.js'),'utf8');
@@ -2669,6 +2588,7 @@ ok('SMS client replies require an exact confirmation code and retained consent',
 ok('Messages archive overflow before trimming the live inbox',SERVER_SOURCE.includes('archive:createMessageArchive') && readFileSync(join(ROOT,'docs/server/maya-messages.mjs'),'utf8').includes('await deps.archive.append'));
 ok('Aesthetic Control groups buttons/icons and panels/tables before single-row typography',compactGallery.includes("section('Glass, Panels and Tables'") && compactGallery.includes("divider.className='visual-divider'") && !compactGallery.includes('glossary') && !compactGallery.includes('addStyleReference'));
 ok('Aesthetic Control groups the Glass and Regular pill editors in a responsive pair',compactGallery.includes("pillFamilies.className='pill-families'") && readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.css'),'utf8').includes('.pill-families{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))'));
+ok('Aesthetic Control keeps one fabric preview and selected pill states beside their families',compactGallery.includes('pillFamilies.after(states)') && readFileSync(join(ROOT,'aesthetics/aesthetic-control/workspace-previews.js'),'utf8').includes("title.textContent='Fabric preview'") && MAP_SOURCE.includes('data-maya-pill=\"glass\"') && BACKEND_SOURCE.includes('data-maya-segment aria-pressed'));
 ok('Typography exposes saved font family and capitalization per role',compactGallery.includes('data-field="font"') && compactGallery.includes('data-field="case"') && readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8').includes("['none','uppercase']"));
 
 const galleryCss=readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.css'),'utf8');
@@ -2689,10 +2609,8 @@ ok('Aesthetic Control owns saved icon and dropdown dimensions',ownerDesignConfig
 ok('Saved design settings and audit entries commit atomically',ownerDesignConfig.includes('_history:history') && ownerDesignConfig.includes("found.ok ? found.generation : '0'") && readFileSync(join(ROOT,'docs/server/server.js'),'utf8').includes('/api/admin/design-history'));
 ok('Admin Logs include successful Aesthetic Control saves',readFileSync(join(ROOT,'backend/status.html'),'utf8').includes('/api/admin/design-history') && readFileSync(join(ROOT,'backend/status.html'),'utf8').includes("item.state==='saved'"));
 ok('Model Snapshot is a hover card with provider usage in Vault',MAP_SOURCE.includes('admin-systems.js') && MAP_SOURCE.includes('https://platform.openai.com/settings/organization/usage') && !MAP_SOURCE.includes('<maya-ai-meter>'));
-ok('Outbound uses the owner ten-column Sheet schema including Reason',readFileSync(join(ROOT,'backend/outbound-priority.js'),'utf8').includes("['Last email','Category','Company','Full name','Email','Job title','Subject','Status','Reason','Relevance']") && readFileSync(join(ROOT,'docs/server/outbound.mjs'),'utf8').includes('A1:J10001'));
 
 ok('Lead Station navigation leaves room for the fixed top bar',MAP_SOURCE.includes('#adm-scroll{scroll-padding-top:76px}') && MAP_SOURCE.includes('#leads-fold{scroll-margin-top:76px}'));
-ok('Renamed source tabs preserve campaign identities and draft membership',readFileSync(join(ROOT,'docs/server/outbound.mjs'),'utf8').includes('!campaignTabs.includes(c.sheetTab)') && readFileSync(join(ROOT,'tests/outbound.mjs'),'utf8').includes('rebound.id,c.id'));
 // October 2: editor anchors, panel content padding and wake recovery.
 const surfaceEditorSource=readFileSync(join(ROOT,'aesthetics/aesthetic-control/surface-editors.js'),'utf8');
 const galleryScript=readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.js'),'utf8');
@@ -2769,11 +2687,6 @@ await import('./admin-status-preferences.mjs');
 ok('Leads status filters persist per owner through reload and isolate account switches',true);
 await import('./input-controls-ui.mjs');
 ok('Shared checkbox, scrollbar and Settings previews govern saved and actual controls',true);
-ok('Outbound coalesces refreshes and rejects older workspace snapshots after a save',
-  outboundJS.includes('workspaceRevision++;busy=true;') &&
-  outboundJS.includes('if(intelligenceLoading){intelligencePending=true;return;}') &&
-  outboundJS.includes('revision===workspaceRevision') &&
-  outboundJS.includes('const fresh=await api();if(!current()){intelligencePending=true;return;}'));
 ok('Client saves and navigation persist edits made during pending writes and reads',
   [INDEX_SOURCE].every(source=>
     source.includes('if (res && res.written && projectStore._dirty) {') &&
@@ -2827,7 +2740,6 @@ ok('Sourceable starts independently of optional atelier inventory without adding
   !FABRIC_UI_SOURCE.includes('await loadInventory();') &&
   (FABRIC_UI_SOURCE.match(/setInterval[^\n]*/g)||[]).every(timer=>timer==='setInterval(()=>{if(dialog)guardAccount();},1000);'));
 ok('Design Save freezes the submitted snapshot and restore baseline',ownerDesignRuntime.includes('value=structuredClone(value)')&&compactGallery.includes('editors.forEach(el=>el.inert=true)'));
-ok('Outbound confirms the reviewed recipient in its atomic send claim',readFileSync(join(ROOT,'docs/server/crm-intelligence.mjs'),'utf8').includes('c.email.trim().toLowerCase()!==expectedEmail'));
 ok('Brief save retry preserves generated work without paid regeneration',BACKEND_SOURCE.includes('async function retryDissectionSave()')&&BACKEND_SOURCE.includes('id="dissect-missing-pill"'));
 ok('Release gates verify the API commit as well as Hosting',readFileSync(join(ROOT,'tests/verify-live.mjs'),'utf8').includes('h.commit===WANT_COMMIT'));
 ok('CI retains every gate and exposes failing exits and earlier surface errors',BUILD_SOURCE.includes('command node "$$@"')&&BUILD_SOURCE.includes('return "$$maya_check_status"')&&BUILD_SOURCE.includes("grep -E 'FAIL|THREW|HANG|Error:'")&&readFileSync(join(ROOT,'tests/lead-notes-ui.mjs'),'utf8').includes('await drawerSettled()'));
@@ -2852,7 +2764,7 @@ ok('Nine governed semantic statuses retain source usage and truthful ad delivery
 await import('./voice-preparation.mjs');
 ok('Prepared voice never transmits ambient audio, waits for server readiness and releases cancelled microphones',true);
 await import('./client-account-races.mjs');
-ok('Community unpublish pins identity across awaits and Outbound renewal preserves draft context',true);
+ok('Community unpublish pins identity across awaits',true);
 await import('./retired-workspaces-ui.mjs');
 ok('Retired navigation stays absent and clean submission images retain named keyboard access to the scoped Brief',true);
 await import('./client-voice-ui.mjs');

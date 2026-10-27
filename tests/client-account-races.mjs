@@ -27,15 +27,4 @@ for(const file of ['frontend/index.html']){
   else{assert.deepEqual(deleted,['A/main','A/legacy']);assert.deepEqual(assets,['A/main','A/legacy']);assert.equal(item.card._communityId,undefined);}
  }
 }
-const source=readFileSync('backend/outbound.js','utf8'),jwt=(sub,n)=>'x.'+Buffer.from(JSON.stringify({sub,n})).toString('base64url')+'.x';
-for(const result of [200,401]){
- let bearer=jwt('A',1),handler,cleared=0,loads=0;const gate=deferred();
- const ctx={console,atob,AbortSignal,localStorage:{getItem:()=>bearer},window:{addEventListener:(name,fn)=>handler=fn},fetch:async()=>{await gate.promise;return {ok:result===200,status:result,json:async()=>result===200?{ok:true,saved:'draft'}:{error:'old token expired'}};},clearWorkspace:()=>cleared++,notice(){},run:()=>loads++,load(){}};
- runInNewContext("let session=localStorage.getItem('maya_admin_tok'),authEpoch=0,busy=false,reloadPending=false;"+cut(source,'function token(){','async function run(fn)')+cut(source,"window.addEventListener('storage',",'\nrun(load);'),ctx);
- const pending=ctx.api('/save',{subject:'Reviewed draft'}).catch(e=>e);
- bearer=jwt('A',2);handler({key:'maya_admin_tok'});gate.resolve();const value=await pending;
- assert.equal(cleared,0,'same subject renewal preserves modal/drafts');assert.equal(loads,0,'same subject does not reload');
- if(result===200)assert.equal(value.saved,'draft');else assert.match(value.message,/expired/,'old token error remains explicit without clearing draft');
- bearer=jwt('B',1);handler({key:'maya_admin_tok'});assert.equal(cleared,1);assert.equal(loads,1);
-}
-console.log('Client account races: queued/read/delete/legacy cleanup boundaries, A→B→A, normal cleanup and Outbound same-account renewal passed.');
+console.log('Client account races: queued/read/delete/legacy cleanup boundaries, A→B→A and normal cleanup passed.');

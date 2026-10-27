@@ -31,20 +31,14 @@ const change=async(host,key,value)=>{const input=page.locator(host+' [data-field
 try{
  await page.setViewportSize({width:1440,height:1000});await page.goto('https://maya-authority.test/aesthetics/aesthetic-control.html');
  await page.locator('#workspace-previews .workspace-preview-card').last().waitFor();
- assert.equal(await page.locator('#workspace-previews .workspace-preview-card').count(),6,'Each active workspace has a linked shared-style inventory preview');
+ assert.equal(await page.locator('#workspace-previews .workspace-preview-card').count(),1,'Only the requested fabric preview remains');
  assert.equal(await page.locator('#workspace-previews a[href$="#pe-fold"],#workspace-previews a[href$="#architecture"]').count(),0,'Retired Admin sections have no misleading live-usage links');
  assert.equal(await page.locator('.spacing-preview [data-preview-heading]').count(),7,'Heading-gap previews match the seven active Admin sections');
  assert.doesNotMatch(await page.locator('#workspace-previews,.spacing-preview').allTextContents().then(v=>v.join(' ')),/Prompting Engine|Architecture/);
  await page.locator('.workspace-fabric-preview img').evaluate(image=>image.decode());
  assert.ok(await page.locator('.workspace-fabric-preview img').evaluate(image=>image.complete&&image.naturalWidth>0),'The active inventory preview loads its real fabric photograph');
  for(const link of await page.locator('#workspace-previews .workspace-preview-card>a').all())assert.match(await link.getAttribute('href'),/^\/(?:status\.html|backend\.html|$)/);
- // A preview must open the real editor and retain it until dismissed.
- await page.locator('#workspace-previews').getByRole('button',{name:'Edit P1',exact:true}).click();
- assert.equal(await page.locator('[data-category="P1"] .type-editor').getAttribute('open'),'');
- await page.keyboard.press('Escape');
- for(const edit of await page.locator('#workspace-previews').getByRole('button',{name:'Edit Inner panel',exact:true}).all()){
-  await edit.click();assert.equal(await page.locator('[data-editor="inner"] .type-editor').getAttribute('open'),'');await page.keyboard.press('Escape');
- }
+ assert.equal(await page.locator('#workspace-previews button').filter({hasText:'Edit'}).count(),0,'Typography and material edits remain in their own sections');
  const initial=await css('.workspace-preview-card',['paddingLeft','paddingTop','backgroundColor']);
  assert.deepEqual(initial,{paddingLeft:'16px',paddingTop:'12px',backgroundColor:'rgba(0, 0, 0, 0.18)'});
  assert.equal((await css('.workspace-timing-preview',['rowGap'])).rowGap,'10px');
@@ -75,10 +69,6 @@ try{
  for(const role of ['H2','H3','H4','P1','P3'])for(const e of await page.locator('#workspace-previews [data-maya-type="'+role+'"]').all()){
   const style=await e.evaluate(e=>{const s=getComputedStyle(e);return [s.fontFamily,s.fontWeight,s.fontStyle];});const label=await e.evaluate(e=>e.outerHTML.slice(0,300));assert.match(style[0],/Cormorant/,label);assert.equal(style[1],'500',label);assert.equal(style[2],'italic',label);
  }
- const output=page.locator('.workspace-example-output'),before=await output.innerText();
- const refresh=await page.locator('#workspace-previews [aria-label="Another preview example"] svg').evaluate(svg=>{const r=svg.getBoundingClientRect(),s=getComputedStyle(svg),p=svg.querySelector('path').getBoundingClientRect();return {width:r.width,height:r.height,stroke:s.stroke,opacity:s.opacity,pathWidth:p.width,pathHeight:p.height};});
- assert.ok(refresh.width>8&&refresh.height>8&&refresh.pathWidth>4&&refresh.pathHeight>4&&refresh.stroke!=='none'&&Number(refresh.opacity)>0,'Refresh remains a visible shared SVG: '+JSON.stringify(refresh));
- await page.locator('#workspace-previews').getByRole('button',{name:'Example',exact:true}).click();assert.notEqual(await output.innerText(),before);assert.equal(writes.length,0,'Presentation examples make no model/provider calls');
  for(const width of [320,390,768,1024,1440,1920]){
   await page.setViewportSize({width,height:1000});assert.ok(await page.locator('body').evaluate(e=>e.scrollWidth<=innerWidth+1),'Gallery fits '+width);
   for(const e of await page.locator('.workspace-preview-card').all())assert.ok(await e.evaluate(e=>e.scrollWidth<=e.clientWidth+1),'Inventory content fits '+width);
@@ -90,7 +80,7 @@ try{
  await page.locator(edit+' summary').click();await page.locator(edit+' .restore-editor').click();
  assert.equal((await css('.workspace-timing-preview label',['rowGap'])).rowGap,'19px','Failed Save cannot replace Restore baseline');
  await page.keyboard.press('Escape');
- if(process.env.MAYA_WORKSPACE_SCREENSHOT){await page.setViewportSize({width:1440,height:1100});await page.locator('#workspace-previews').screenshot({path:process.env.MAYA_WORKSPACE_SCREENSHOT+'-desktop.png'});await page.setViewportSize({width:390,height:844});await page.locator('#workspace-previews').screenshot({path:process.env.MAYA_WORKSPACE_SCREENSHOT+'-phone.png'});}
+ if(process.env.MAYA_WORKSPACE_SCREENSHOT){await page.setViewportSize({width:1440,height:1100});await page.locator('#workspace-previews').screenshot({path:process.env.MAYA_WORKSPACE_SCREENSHOT+'-desktop.png'});await page.setViewportSize({width:390,height:844});await page.locator('.workspace-fabric-preview img').scrollIntoViewIfNeeded();await page.locator('.workspace-fabric-preview img').evaluate(image=>image.decode());await page.waitForTimeout(100);await page.locator('#workspace-previews').screenshot({path:process.env.MAYA_WORKSPACE_SCREENSHOT+'-phone.png'});}
  await page.goto('https://maya-authority.test/status.html');await page.waitForFunction(()=>typeof admTab==='function'&&window.MayaTypographyControls);
  assert.equal(await page.locator('#pe-fold,#arch-fold,.pe-live,.pe-panel,.arch .col').count(),0,'Retired Prompting and Architecture have no visible controls');
  await page.evaluate(async()=>{await MayaTypographyControls.ready;_idTok='fixture';await loadFeatureRequests();document.getElementById('features-fold').open=true;toggleDrawer(true);admTab('automations');});

@@ -17,7 +17,7 @@ let savedDesign={},saveMode='fail',heldSave;
 const widths=[320,390,768,1024,1440,1920];
 const marketing={leads:{connected:true,list:[{id:'pill-person',name:'Example Person',phone:'+14155550123',stage:'completed',createdAt:'2026-10-07',wrote:'A reviewed note.'}]},adCombined:{campaigns:[{source:'google',campaign:'Example campaign',impressions:75,linkClicks:4,spend:3.2},{source:'meta',campaign:'Waiting campaign',impressions:0,linkClicks:0,spend:0}]}};
 const outbound={campaigns:[{id:'ceremonial',name:'Ceremonial',status:'active'}],contacts:[{id:'person',campaignId:'ceremonial',name:'Example Person',company:'Example Studio',email:'example@example.com',stage:'contacted',notes:'Fixture'}],companies:[],settings:{}};
-const routes={'/':'/frontend/index.html','/status.html':'/backend/status.html','/outbound.html':'/backend/outbound.html','/backend.html':'/backend/backend.html','/operations.html':'/backend/operations.html'};
+const routes={'/':'/frontend/index.html','/status.html':'/backend/status.html','/backend.html':'/backend/backend.html','/operations.html':'/backend/operations.html'};
 page.on('pageerror',error=>pageErrors.push({path:new URL(page.url()).pathname,message:error.message}));
 await context.addInitScript(token=>{window.setInterval=()=>0;localStorage.setItem('maya_admin_tok',['/backend.html','/operations.html'].includes(location.pathname)?token:'fixture-admin');},briefToken);
 await context.route('**/*',async route=>{
@@ -74,12 +74,12 @@ function geometry(box,label,x,y,{kind='text',regular=false,disabled=false}={}){
  if(box.glyph){check(box.glyph.width>8&&box.glyph.height>8,label+' SVG glyph has a visible size',box.glyph);check(box.glyph.left>=x-.6&&box.glyph.right>=x-.6&&box.glyph.top>=y-.6&&box.glyph.bottom>=y-.6,label+' glyph stays inside padding',box.glyph);check(box.glyph.path&&box.glyph.stroke!=='none',label+' uses a stroked SVG glyph',box.glyph);}
 }
 const galleryTargets=[['.glass-pill-preview > .maya-pill','Gallery glass text','text'],['#save','Gallery Save','icon'],['.icon-row [aria-label="Save"]','Leftmost Save icon','icon']];
-const adminTargets=[['#range-chips [data-r="D"]','Admin D','text'],['#range-chips [data-r="W"]','Admin W','text'],['#range-chips [data-r="M"]','Admin M','text'],['#metric-chips [data-m="clicks"]','Admin chart clicks','text'],['#metric-chips [data-m="cpc"]','Admin chart cost','text'],['#leads-table .lead-status','Admin lead status','status']];
-async function populateAdmin(){await page.evaluate(async()=>{_idTok='fixture-admin';await loadMkt();});}
+const adminTargets=[['#head-tiles .tile.live','Admin live traffic','mixed'],['#range-chips [data-r="D"]','Admin D','text'],['#range-chips [data-r="W"]','Admin W','text'],['#range-chips [data-r="M"]','Admin M','text'],['#metric-chips [data-m="clicks"]','Admin chart clicks','text'],['#metric-chips [data-m="cpc"]','Admin chart cost','text'],['#leads-table .lead-status','Admin lead status','status']];
+async function populateAdmin(){await page.evaluate(async()=>{_idTok='fixture-admin';await loadMkt();_paintHeadTiles({accounts:{total:10},live:1,ranges:{},wixSite:{}});});}
 async function adminChecks(label,x,y){
  await ready('/status.html');await populateAdmin();
  const snapshots={};
- for(const width of widths){await page.setViewportSize({width,height:1000});for(const [selector,name,kind] of adminTargets){const box=await measure(selector);geometry(box,`${label} ${name} ${width}`,x,y,{kind});check(box.background===(label==='saved'?'rgba(3, 15, 29, 0.55)':'rgba(3, 15, 29, 0.18)')&&box.blur===(label==='saved'?'blur(9px) saturate(1.4)':'blur(22px) saturate(1.8)'),label+' '+name+' actual material '+width,{background:box.background,blur:box.blur});if(width===1440)snapshots[selector]=box;}
+ for(const width of widths){await page.setViewportSize({width,height:1000});for(const [selector,name,kind] of adminTargets){const box=await measure(selector);geometry(box,`${label} ${name} ${width}`,x,y,{kind});const selected=await page.locator(selector).first().getAttribute('aria-pressed')==='true';check(box.background===(selected?(label==='saved'?'rgba(35, 76, 125, 0.97)':'rgba(35, 76, 125, 0.6)'):(label==='saved'?'rgba(3, 15, 29, 0.55)':'rgba(3, 15, 29, 0.18)'))&&box.blur===(label==='saved'?'blur(9px) saturate(1.4)':'blur(22px) saturate(1.8)'),label+' '+name+' actual material '+width,{background:box.background,blur:box.blur});if(width===1440)snapshots[selector]=box;}
   check(await page.locator('#metric-chips').evaluate(e=>e.scrollWidth<=e.clientWidth+1),label+' Admin chart controls fit '+width);
  }
  await page.setViewportSize({width:1440,height:1000});await page.locator('#ads-fold').evaluate(e=>e.scrollIntoView({block:'start'}));await page.screenshot({path:'/private/tmp/maya-pill-admin-ads-'+label+'.png'});
@@ -125,6 +125,7 @@ try{
  await page.locator('.regular-pill-editor>summary').press('Enter');check(await page.locator('.regular-pill-editor').evaluate(e=>e.open),'Keyboard opens regular editor');
  check(await page.locator('.regular-pill-editor .type-editor-fields').evaluate(e=>{const r=e.getBoundingClientRect();return r.width>0&&r.left>=0&&r.right<=innerWidth+1;}),'Open editor stays in viewport');await page.screenshot({path:'/private/tmp/maya-pill-gallery-open.png'});await page.keyboard.press('Escape');
  await page.locator('.state-sample').first().evaluate(e=>e.closest('details').open=true);
+ const selectedPreview=page.locator('.state-sample').filter({has:page.locator('[aria-pressed=true]')}).locator('.maya-pill');check(await selectedPreview.evaluate(e=>getComputedStyle(e).backgroundColor)!==await page.locator('.state-sample').first().locator('.maya-pill').evaluate(e=>getComputedStyle(e).backgroundColor),'Selected preview visibly differs from default');
  const disabled=page.locator('.state-sample').filter({has:page.locator('.maya-pill:disabled')});check(await disabled.count()===2,'Disabled and loading states are available');
  for(const item of await disabled.locator('.maya-pill').all())check(await item.evaluate(e=>e.disabled&&Number(getComputedStyle(e).opacity)<=.5),'Disabled state is visibly disabled');
  await page.locator('#save').click();await page.waitForFunction(()=>document.getElementById('feedback').textContent.includes('Save failed'));
@@ -143,10 +144,10 @@ try{
  await ready('/backend.html');await page.evaluate(image=>renderDissection({card:{image}}),'data:image/png;base64,'+briefPhoto.toString('base64'));check(await page.locator('#brief-fabrics-button').isDisabled(),'Brief Fabrics is disabled before a saved dissection exists');
  geometry(await measure('#brief-fabrics-button'),'Brief Fabrics disabled',22,12,{disabled:true});
  // Existing page controls, including legacy span pills, must share the formula.
- for(const [path,selector,label,kind] of [['/','#voice-bar','App listen','mixed'],['/outbound.html','#sync-sheet','Outbound refresh','text'],['/backend.html?submission=pill-brief','#brief-fabrics-button','Brief Fabrics','text'],['/operations.html','#start-test','Operation Room Start','text']]){
-  await ready(path);if(path==='/outbound.html')await page.locator('.people-table [data-person="person"]').waitFor();if(path.startsWith('/backend.html?'))await page.waitForFunction(()=>!document.getElementById('brief-fabrics-button').disabled);for(const width of widths){await page.setViewportSize({width,height:1000});const box=await measure(selector);geometry(box,label+' saved '+width,22,12,{kind});check(box.background==='rgba(3, 15, 29, 0.55)'&&box.blur==='blur(9px) saturate(1.4)',label+' saved material '+width,{background:box.background,blur:box.blur});if(path==='/outbound.html')geometry(await measure('#new-campaign'),'Outbound new campaign glyph '+width,22,12,{kind:'icon'});}
+ for(const [path,selector,label,kind] of [['/','#voice-bar','App listen','mixed'],['/backend.html?submission=pill-brief','#brief-fabrics-button','Brief Fabrics','text'],['/operations.html','#start-test','Operation Room Start','text']]){
+  await ready(path);if(path.startsWith('/backend.html?'))await page.waitForFunction(()=>!document.getElementById('brief-fabrics-button').disabled);for(const width of widths){await page.setViewportSize({width,height:1000});const box=await measure(selector);geometry(box,label+' saved '+width,22,12,{kind});check(box.background==='rgba(3, 15, 29, 0.55)'&&box.blur==='blur(9px) saturate(1.4)',label+' saved material '+width,{background:box.background,blur:box.blur});}
  }
  check(pageErrors.length===0,'All representative pages have no page errors',pageErrors);
  assert.deepEqual(failures,[]);
- console.log('Pill consistency passed: content + padding geometry, glass/regular materials, Save glyphs, Edit/focus/disabled/save failure/retry, authenticated save and reload, Admin/App/Outbound/Brief/Operation Room and six widths.');
+ console.log('Pill consistency passed: content + padding geometry, glass/regular materials, Save glyphs, Edit/focus/disabled/save failure/retry, authenticated save and reload, Admin/App/Brief/Operation Room and six widths.');
 }finally{if(heldSave)await heldSave.route.abort();await browser.close();}

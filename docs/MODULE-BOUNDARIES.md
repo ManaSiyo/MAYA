@@ -1,3 +1,5 @@
+> October 27 update: Outbound and its Gmail ingress were retired. Shared Leads, Messages, callback alerts and text AI remain; the original audit below is historical where it mentions Outbound.
+
 # MAYA department audit — October 21, 2026
 
 Baseline: 718f404 (deployed before this work). This is a source/dependency audit
@@ -14,7 +16,7 @@ not a claim that every production integration or provider account was exercised.
 | SMS / Messages / owner text | maya-messages.mjs, message-archive.mjs, owner-sms-access.mjs, owner-conversation.mjs, owner-crm.mjs; Admin Messages | Explicit send claims, STOP, authenticated owner identity, account-scoped history; communications and owner suites |
 | Phone / web voice | maya-phone.mjs, maya-transfer.mjs, realtime-voice.mjs; ui/voice-preparation.js | Shared authenticated context and reviewed tool authority; phone/transfer/voice suites |
 | Wix lead ingress / alerts | event-triggers.mjs, lead-alerts.mjs, lead-store.mjs | Signed ingress, durable tasks, independent claimed SMS/call notifications; event-triggers, lead-alerts, lead-store |
-| Outbound / Gmail / Ads | outbound.mjs, crm-{intelligence,gmail,ai,store}.mjs, server marketing routes; backend/outbound.* | Account-scoped storage, provider adapters, budget; CRM/outbound tests |
+| Text AI / Ads | crm-{ai,store}.mjs and server marketing routes | Account-scoped budget and owner messaging; owner-conversation, text-automations and lead tests |
 | Aesthetic Control | aesthetics/aesthetic-control/, ui/{typography-controls,presentation-runtime,pill-runtime}, server/design-config.mjs | One validated saved schema, active previews and final aesthetic-authority |
 | Client MAYA | frontend/index.html | Sealed projects, shared presentation/voice; client/project/hands suites |
 | Hosting / container / release | docs/firebase.json, server/Dockerfile, cloudbuild.yaml | Exact shipped imports/assets, branch guard, API/page commit identity; container/release/live checks |
@@ -66,7 +68,7 @@ SMS composer clipping; that incident was a drawer layout defect.
 
 The new domain-boundaries release gate inspects all current server JS modules,
 restricts Fabrics imports/routes, forbids reverse dependencies outside server
-composition, checks that client/Admin/Outbound do not load fabric assets, and
+composition, checks that client/Admin do not load fabric assets, and
 rejects unscoped fabric CSS. It does not prove network isolation, protect against
 all dynamic code or make Cloud Run deployments independent.
 

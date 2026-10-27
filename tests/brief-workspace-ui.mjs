@@ -127,10 +127,11 @@ try{
   const shirt=page.locator('#piece-pills').getByRole('button',{name:'White shirt',exact:true});
   assert.equal(await fullView.getAttribute('aria-pressed'),'true','Full view starts selected');
   assert.equal(await shirt.getAttribute('aria-pressed'),'false');
+  assert.equal((await style(fullView,['borderTopColor'])).borderTopColor,'rgb(173, 205, 248)','Selected garment has the visible shared accent border');
   assert.notEqual((await style(fullView,['backgroundColor'])).backgroundColor,(await style(shirt,['backgroundColor'])).backgroundColor,'Full view has the shared selected pill material');
-  await shirt.click();assert.equal(await fullView.getAttribute('aria-pressed'),'false');assert.equal(await shirt.getAttribute('aria-pressed'),'true');
+  await shirt.click();assert.equal(await fullView.getAttribute('aria-pressed'),'false');assert.equal(await shirt.getAttribute('aria-pressed'),'true');await page.waitForFunction(()=>getComputedStyle(document.querySelector('#piece-pills [aria-pressed=true]')).borderTopColor==='rgb(173, 205, 248)');assert.equal((await style(shirt,['borderTopColor'])).borderTopColor,'rgb(173, 205, 248)');
   assert.notEqual((await style(fullView,['backgroundColor'])).backgroundColor,(await style(shirt,['backgroundColor'])).backgroundColor,'Selected garment has the shared selected pill material');
-  await fullView.click();assert.equal(await fullView.getAttribute('aria-pressed'),'true');assert.equal(await shirt.getAttribute('aria-pressed'),'false');
+  await fullView.click();assert.equal(await fullView.getAttribute('aria-pressed'),'true');assert.equal(await shirt.getAttribute('aria-pressed'),'false');await page.waitForFunction(()=>{const a=document.querySelector('#piece-pills [aria-pressed=true]'),b=document.querySelector('#piece-pills [aria-pressed=false]');return getComputedStyle(a).backgroundColor!==getComputedStyle(b).backgroundColor&&getComputedStyle(a).borderTopColor==='rgb(173, 205, 248)';});
   for(const width of [1024,1280,1366,1440,1600,1920,2560,3440]){
    await page.setViewportSize({width,height:900});
    assert.notEqual((await style(fullView,['backgroundColor'])).backgroundColor,(await style(shirt,['backgroundColor'])).backgroundColor,mode+' selected Full view remains visible at '+width);

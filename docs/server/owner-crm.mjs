@@ -4,18 +4,6 @@ import {createHash,randomBytes} from 'node:crypto';
 import {jsonStore,problem,clip} from './crm-store.mjs';
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const number=s=>String(s||'').replace(/\D/g,'').replace(/^1(?=\d{10}$)/,'');
-export function gmailCandidates(events,existing=[]){
- const byEmail=new Map(existing.map(x=>[x.email,x]));
- for(const e of events){
-  if(e.direction!=='in'||e.automated)continue;
-  for(const email of e.peers||[]){
-   if(/(?:no[._-]?reply|mailer-daemon|notifications?)@/i.test(email))continue;
-   const candidate={id:hash(email).slice(0,24),email,subject:clip(e.subject,300),note:clip(e.summary,800),ts:e.ts};
-   if(!byEmail.has(email)||String(byEmail.get(email).ts)<String(e.ts))byEmail.set(email,candidate);
-  }
- }
- return [...byEmail.values()].sort((a,b)=>String(b.ts).localeCompare(String(a.ts))).slice(0,100);
-}
 export const OWNER_BINDING='private/owner-crm/binding.json';
 export function cleanCommand(value){
   if(!value||!['add','update'].includes(value.action))throw problem('Tell me whether to add a lead or update an existing lead.');

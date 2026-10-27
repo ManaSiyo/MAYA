@@ -93,7 +93,7 @@ plan. A tip button exists purely as proof that payment plumbing works.
 
 ## 2. The served screens
 
-Standalone Marketing, Playground and Affiliates are retired. Marketing/Affiliates
+Standalone Marketing, Playground, Affiliates and Outbound are retired. Marketing/Affiliates/Outbound
 URLs redirect to Admin; Playground URLs redirect to MAYA. No staged experiments
 were promoted. Admin owns the marketing charts and lead station.
 
@@ -102,7 +102,6 @@ were promoted. Admin owns the marketing charts and lead station.
 | `frontend/index.html` | The MAYA app. Moodboard, community wall, favorites and the approved filing cabinet. | Clients |
 | `backend/status.html` | Admin. Command briefing, health, traffic, Marketing, submissions, feature requests and changelog. | Admins only |
 | `backend/backend.html` | The Brief, fabric assistant and a submission-preserving link to the Operation Room. | Admins only |
-| `backend/outbound.html` | Outbound campaigns, Hunter/Sheets imports, research and drafts. | Admins, account-scoped |
 | `backend/operations.html` | The standalone Operation Room, the beta bench for pattern experiments. | Admins only |
 
 `aesthetics/` holds everything visual, including shared pattern knowledge and CLO library assets. Legacy Operations

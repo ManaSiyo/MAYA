@@ -7,6 +7,7 @@ const hosting=JSON.parse(read('docs/firebase.json')).hosting;
 const absent=(source,pattern,label)=>assert.equal(pattern.test(source),false,label);
 for(const [source,destination] of [
  ['/operations{,/**}','/operations.html'],['/aesthetics/operations','/operations.html'],['/aesthetics/operations/','/operations.html'],['/aesthetics/operations/index.html','/operations.html'],
+ ['/outbound.html','/status.html'],['/backend/outbound.html','/status.html'],
  ['/playground.html','/'],['/playground{,/**}','/'],
  ['/affiliates.html','/status.html'],['/affiliates{,/**}','/status.html'],
  ['/backend/affiliates.html','/status.html'],['/backend/affiliates{,/**}','/status.html']
@@ -18,6 +19,7 @@ assert.ok(!hosting.rewrites.some(route=>/playground|affiliates/i.test(route.sour
 assert.ok(!existsSync(resolve(root,'aesthetics/operations/index.html')),'No alternate Operation Room implementation remains');
 for(const asset of ['clo-library.js','tests-data.js','kb/kb.js'])assert.ok(existsSync(resolve(root,'aesthetics/operations/'+asset)),'Shared pattern asset remains: '+asset);
 assert.ok(!existsSync(resolve(root,'playground/index.html')),'The staging implementation is deleted');
+for(const file of ['backend/outbound.html','backend/outbound.js','backend/outbound-priority.js','docs/server/outbound.mjs','docs/server/crm-gmail.mjs','docs/server/crm-intelligence.mjs'])assert.ok(!existsSync(resolve(root,file)),'Retired Outbound code removed: '+file);
 assert.ok(!existsSync(resolve(root,'backend/affiliates.html')),'No Affiliates served file remains');
 assert.equal(hosting.rewrites.find(route=>route.source==='**')?.destination,'/frontend/index.html','The live client fallback remains');
 assert.equal(hosting.rewrites.find(route=>route.source==='/status.html')?.destination,'/backend/status.html','Admin remains independently reachable');
@@ -25,7 +27,7 @@ assert.equal(hosting.rewrites.find(route=>route.source==='/api/**')?.run?.servic
 
 function walk(directory){return readdirSync(resolve(root,directory),{withFileTypes:true}).flatMap(entry=>entry.isDirectory()?walk(directory+'/'+entry.name):[directory+'/'+entry.name]);}
 const served=['frontend','backend','aesthetics'].flatMap(walk).filter(file=>['.html','.js'].includes(extname(file)));
-for(const file of served){const source=read(file);absent(source,/(?:href|src)\s*=\s*["']\/(?:playground|affiliates)(?:[/.#?"'])/i,file+' has no active link to a retired workspace');absent(source,/["']\/(?:playground|affiliates)\.html["']/i,file+' has no generated retired route');}
+for(const file of served){const source=read(file);absent(source,/(?:href|src)\s*=\s*[\"']\/outbound(?:[\\/.#?\"'])/i,file+' has no active Outbound link');absent(source,/(?:href|src)\s*=\s*["']\/(?:playground|affiliates)(?:[/.#?"'])/i,file+' has no active link to a retired workspace');absent(source,/["']\/(?:playground|affiliates)\.html["']/i,file+' has no generated retired route');}
 const admin=read('backend/status.html');absent(admin,/IS_AFFILIATES|loadAffiliateLeads|clearAffiliateLeads|affiliate-profile|affiliates-view/,'Admin has no retired alternate boot or private loader');
 const app=read('frontend/index.html');absent(app,/id=["'](?:pg-callouts|pg-card-back|pg-flip)["']|function pgFlipCard\(/,'Retirement does not promote the unapproved flip experiment');
 assert.ok(/function pgShow\(/.test(app),'The approved shared filing cabinet remains');assert.ok(/async function _saveCurrentAvatarToLibrary\(/.test(app),'The existing client avatar workflow remains');

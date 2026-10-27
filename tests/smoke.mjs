@@ -43,8 +43,8 @@ const AUTH = { headers: { Authorization: 'Bearer not-a-real-token' } };
 console.log('\nMAYA smoke test\n');
 await check('Wix event refuses missing signature setup',post('/api/events/wix',{headers:{'Content-Type':'text/plain'},body:'fake'}),503);
 await check('Immediate callback worker refuses missing identity setup',post('/api/tasks/wix-callback',{headers:{'Content-Type':'application/json'},body:'{}'}),503);
-await check('Gmail event refuses missing push setup',post('/api/events/gmail',{headers:{'Content-Type':'application/json'},body:'{}'}),503);
-await check('Gmail watch requires owner authentication',post('/api/admin/outbound/gmail/watch',{headers:{'Content-Type':'application/json'},body:'{}'}),401);
+await check('Retired Gmail ingress is absent',post('/api/events/gmail',{headers:{'Content-Type':'application/json'},body:'{}'}),404);
+await check('Retired Gmail watch is unavailable',post('/api/admin/outbound/gmail/watch',{headers:{'Content-Type':'application/json'},body:'{}'}),410);
 await check('Callback status rejects unauthenticated reads',get('/api/admin/lead-alerts/status'),401);
 await check('Callback worker refuses incomplete Scheduler setup',post('/api/tasks/lead-alerts'),503);
 await check('Automation settings reject unauthenticated reads',get('/api/admin/text-automations'),401);
@@ -80,8 +80,8 @@ await check('mcp scopes: header token reaches everything', async () => {
   if (process.env.MAYA_MCP_TOKEN) { const j = await r.json(); assert.ok(j.result, 'expected a result'); }
   return r;
 }, process.env.MAYA_MCP_TOKEN ? 200 : 503);
-await check('outbound workspace needs an admin', get('/api/admin/outbound'), 401);
-await check('outbound writes need an admin', post('/api/admin/outbound/save', {headers:{'Content-Type':'application/json'},body:'{}'}), 401);
+await check('retired Outbound workspace is unavailable', get('/api/admin/outbound'), 410);
+await check('retired Outbound writes are unavailable', post('/api/admin/outbound/save', {headers:{'Content-Type':'application/json'},body:'{}'}), 410);
 await check('telemetry needs a token',             post('/api/telemetry', { headers: { 'Content-Type': 'application/json' }, body: '{}' }), 401);
 await check('the digest needs an admin',           get('/api/admin/maya-digest'), 401);
 await check('pinterest search needs a token',      get('/api/pinterest/search?q=corsets'), 401);

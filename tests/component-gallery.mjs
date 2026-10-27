@@ -111,12 +111,12 @@ try{
  assert.ok(await page.locator('.restore-editor').first().evaluate(e=>e.querySelector('svg')?.querySelector('path')?.getAttribute('d')===document.querySelector('.icon-row [aria-label="Refresh"] path').getAttribute('d')),'Restore uses the previewed Refresh SVG');
  assert.equal(await page.locator('#save').evaluate(e=>getComputedStyle(e).backgroundColor),await page.locator('.glass-pill-preview .maya-pill').first().evaluate(e=>getComputedStyle(e).backgroundColor));
  assert.equal(await page.locator('#gallery > section').first().getAttribute('id'),'pill-preview');
- const completed=page.locator('.status-style-preview').filter({has:page.locator('[data-status="completed"]')});await completed.locator('summary').click();await completed.locator('[data-field=color]').fill('#123abc');await completed.locator('[data-field=opacity]').fill('65');await completed.locator('[data-field=weight]').selectOption('450');
+ const completed=page.locator('.status-style-preview').filter({has:page.locator('[data-status="completed"]')});await completed.locator('.type-editor > summary').click();await completed.locator('[data-field=color]').fill('#123abc');await completed.locator('[data-field=opacity]').fill('65');await completed.locator('[data-field=weight]').selectOption('450');
  assert.equal(await completed.locator('.status-pill').evaluate(e=>getComputedStyle(e).fontWeight),'450');assert.match(await completed.locator('.status-pill').evaluate(e=>getComputedStyle(e).color),/0.65/);await page.locator('.gallery-header h1').click();
  await page.locator('.spacing-controls summary').click();await page.locator('.spacing-controls [data-field=leads]').fill('38');assert.equal(await page.locator('.spacing-preview [data-spacing=leads]').evaluate(e=>getComputedStyle(e).marginTop),'38px');await page.locator('.gallery-header h1').click();
  assert.equal(await page.locator('#pill-colors .status-pill').count(),9);
  assert.deepEqual(await page.locator('#pill-colors .status-pill').evaluateAll(es=>es.map(e=>e.dataset.status)),['new','contacted','in_progress','booked','completed','canceled','delivering','pending','rejected']);
- assert.ok(await page.locator('.status-style-preview').evaluateAll(es=>es.every(e=>e.querySelector('.status-meaning')?.textContent.trim()&&e.querySelector('.status-usage a[href]'))),'Every semantic status explains its meaning and links its actual usage');
+ assert.ok(await page.locator('.status-style-preview').evaluateAll(es=>es.every(e=>e.querySelector('.status-meaning')?.textContent.trim()&&(e.querySelector('.status-usage a[href]')||e.querySelector('.status-usage summary')?.textContent==='Not currently used'))),'Every semantic status explains its meaning and links its actual usage');
  assert.equal(await page.locator('#status-reference,#source-styles,#pages,#icons').count(),0);
  assert.ok(!(await page.locator('body').innerText()).includes('glossary'));
  assert.equal(await page.locator('[data-category="H1"] .type-example').evaluate(e=>getComputedStyle(e).textTransform),'uppercase');
@@ -175,7 +175,7 @@ try{
  await cell('td[data-col="stage"]','align','right');assert.equal(await page.locator('#cell-selection').innerText(),'Third column');assert.equal(await page.locator('#table-preview .cell-selected').count(),2);assert.equal(await page.locator('#table-preview td[data-col="stage"]').nth(1).evaluate(e=>getComputedStyle(e).textAlign),'right');
  await cell('td[data-col="stage"]','align','center');await cell('td[data-col="stage"]','background','green');await cell('td[data-col="stage"]','opacity','50');assert.match(await page.locator('#table-preview td[data-col="stage"]').nth(1).evaluate(e=>getComputedStyle(e).backgroundColor),/0.5/);
  assert.equal(await page.locator('#panels .maya-surface').count(),0,'No intermediate outer wrapper');
- assert.equal(await page.locator('[data-category="H1"] .role-locations > a').count(),9,'Every authored H1, including the workspace and client titles, is listed');
+ assert.equal(await page.locator('[data-category="H1"] .role-locations > a').count(),8,'Every authored H1, including the workspace and client titles, is listed');
  await page.locator('[data-category="H1"] .role-locations > summary').click();
  assert.ok(await page.locator('[data-category="H1"] .role-pages').innerText().then(text=>text.toLowerCase().includes('app')&&text.toLowerCase().includes('status')),'Linked pages remain available in locations');
  await page.locator('[data-category="H1"] .role-locations > summary').click();
@@ -221,9 +221,6 @@ try{
  await page.goto('https://maya.test/frontend/index.html',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>!!document.getElementById('maya-typography-control-style'));
  assert.equal(await page.locator('#brand-title').evaluate(e=>getComputedStyle(e).fontSize),'24px');
- await page.goto('https://maya.test/backend/outbound.html',{waitUntil:'domcontentloaded'});
- await page.waitForFunction(()=>!!document.getElementById('maya-typography-control-style'));
- assert.equal(await page.evaluate(()=>{const n=document.createElement('div');n.className='stat';n.innerHTML='<strong>262</strong>';document.body.append(n);const size=getComputedStyle(n.firstChild).fontSize;n.remove();return size;}),'12px');
  await page.goto('https://maya.test/aesthetics/aesthetic-control.html');await page.locator('#save').waitFor();
  await page.evaluate(()=>localStorage.clear());await page.reload();await page.locator('#save').waitFor();
  // Negative left overflow does not increase scrollWidth: inspect actual bounds.

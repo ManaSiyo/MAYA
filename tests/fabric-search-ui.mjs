@@ -176,7 +176,7 @@ try{
       const outer=await readStyle('#fabric-assistant'),inner=await readStyle('.fa-product'),field=await readStyle('.fa-store-filter'),pill=await readStyle('.fa-toolbar button'),glyph=await readStyle('.fa-toolbar button svg');
       assert.deepEqual([outer.paddingX,outer.paddingY,outer.radius,outer.background],[24,18,20,'rgba(115, 46, 70, 0.65)'],mode+' outer material '+width);
       assert.deepEqual([inner.paddingX,inner.paddingY,inner.radius,inner.background],[12,10,16,'rgba(35, 76, 125, 0.7)'],mode+' inner material '+width);
-      assert.deepEqual([field.paddingX,field.paddingY,field.radius,field.background],[18,9,100,'rgba(3, 15, 29, 0.81)'],mode+' selected filter Glass material '+width);
+      assert.deepEqual([field.paddingX,field.paddingY,field.radius,field.background],[18,9,100,'rgb(35, 76, 125)'],mode+' selected filter Glass material '+width);
       assert.equal((await readStyle('[data-store-group=mood]')).background,'rgba(3, 15, 29, 0.65)',mode+' unselected filter keeps Glass material '+width);
       assert.deepEqual([pill.paddingX,pill.paddingY,pill.blur],[18,9,'blur(7px) saturate(1.2)'],mode+' glass material '+width);
       assert.equal(outer.blur,'blur(9px) saturate(1.3)');assert.equal(inner.blur,'blur(12px) saturate(1.1)');assert.equal(pill.background,'rgba(3, 15, 29, 0.65)');assert.match((await readStyle('.fa-card-title')).font,/Cormorant/);assert.equal((await readStyle('.fa-card-title')).weight,'450');assert.equal(await page.locator('.fa-store-wrap').evaluate(el=>getComputedStyle(el).gap),'12px');assert.equal(await page.locator('#fabric-assistant').evaluate(el=>getComputedStyle(el).gap),'18px');

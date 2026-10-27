@@ -951,7 +951,6 @@ try {
   <div class="systems-tools"><a data-maya-type="P3" class="maya-glass-button design-quicklink" href="/aesthetics/aesthetic-control.html">Aesthetic Control</a>
   <button data-maya-type="P3" class="maya-glass-button design-quicklink" onclick="admTab('automations')">Automations</button></div>
   <h3>Vault</h3>
-  <a data-maya-type="P2" href="/outbound.html#gmail">Gmail<small data-maya-type="P1">Account mailboxes</small></a>
   <a data-maya-type="P2" href="https://console.firebase.google.com/project/pro-maya/overview" target="_blank" rel="noopener">Firebase<small data-maya-type="P1">Data and hosting</small></a>
   <h3>Behind the scenes</h3>
   <a data-maya-type="P2" href="https://console.cloud.google.com/run/detail/us-west1/maya-api/metrics?project=pro-maya" target="_blank" rel="noopener">Cloud Run<small data-maya-type="P1">API logs and revisions</small></a>
@@ -1034,7 +1033,6 @@ try {
       <span class="pg-chips">
         <a class="pg-chip" href="/operations.html" target="_blank"
            onclick="event.stopPropagation()" title="The test bench.">operation room</a>
-        <a class="pg-chip" href="/outbound.html" target="_blank" rel="noopener" onclick="event.stopPropagation()" onkeydown="event.stopPropagation()">outbound</a>
       </span></span>
   </div>
 
@@ -1080,18 +1078,18 @@ try {
   <div class="metric-chips" id="ad-range-controls" data-maya-section-content style="margin:0 0 8px">
     <span id="range-word" hidden>last 7 days</span>
     <span style="margin-left:auto;display:inline-flex;gap:3px" id="range-chips">
-      <button class="range-chip" data-r="D" onclick="setAdRange('D')" title="Today against yesterday">D</button>
-      <button class="range-chip on" data-r="W" onclick="setAdRange('W')" title="Last 7 days">W</button>
-      <button class="range-chip" data-r="M" onclick="setAdRange('M')" title="Last 30 days">M</button>
+      <button class="range-chip" aria-pressed="false" data-r="D" onclick="setAdRange('D')" title="Today against yesterday">D</button>
+      <button class="range-chip on" aria-pressed="true" data-r="W" onclick="setAdRange('W')" title="Last 7 days">W</button>
+      <button class="range-chip" aria-pressed="false" data-r="M" onclick="setAdRange('M')" title="Last 30 days">M</button>
     </span>
   </div>
   <div class="panel" style="margin-bottom:12px"><table id="campaigns-table"><tbody></tbody></table></div>
   <div class="panel" id="ad-combined-panel">
     <div class="metric-chips" id="metric-chips">
-      <button class="metric-chip on" data-m="clicks" onclick="setAdMetric('clicks')" title="Link clicks: people who actually left for the site.">Link clicks</button>
-      <button class="metric-chip" data-m="impressions" onclick="setAdMetric('impressions')">Impressions</button>
-      <button class="metric-chip" data-m="cpc" onclick="setAdMetric('cpc')" title="Dollars per link click, on both networks">Cost per click</button>
-      <button class="metric-chip" data-m="all" onclick="setAdMetric('all')" title="Link clicks, impressions and cost per click at once">All three</button>
+      <button class="metric-chip on" aria-pressed="true" data-m="clicks" onclick="setAdMetric('clicks')" title="Link clicks: people who actually left for the site.">Link clicks</button>
+      <button class="metric-chip" aria-pressed="false" data-m="impressions" onclick="setAdMetric('impressions')">Impressions</button>
+      <button class="metric-chip" aria-pressed="false" data-m="cpc" onclick="setAdMetric('cpc')" title="Dollars per link click, on both networks">Cost per click</button>
+      <button class="metric-chip" aria-pressed="false" data-m="all" onclick="setAdMetric('all')" title="Link clicks, impressions and cost per click at once">All three</button>
     </div>
     <div style="position:relative" id="ad-chart-wrap">
       <svg id="ad-chart" viewBox="0 0 700 190" preserveAspectRatio="none"></svg>
@@ -1871,13 +1869,13 @@ function _paintHeadTiles(d) {
   if (head.dataset.sig === sig) { head.classList.remove('hidden'); return; }
   head.dataset.sig = sig;
   head.innerHTML =
-    '<div class="tile" id="users-tile" title="Separate Google accounts that have signed in to MAYA."><div class="k">users</div>' +
+    '<div class="tile" data-maya-pill="glass" id="users-tile" title="Separate Google accounts that have signed in to MAYA."><div class="k">users</div>' +
       '<div class="v">' + (acc ? acc.total : em) + '</div></div>' +
-    '<div class="tile live" title="Browsers on maya.manasiyo.com this minute, from Analytics"><div class="k">&#9679; live now</div>' +
+    '<div class="tile live" data-maya-pill="glass" title="Browsers on maya.manasiyo.com this minute, from Analytics"><div class="k">&#9679; live now</div>' +
       '<div class="v"><span class="pair-b">' + (live === null ? em : live) + '</span></div></div>' +
-    '<div class="tile" title="manasiyo.com | MAYA, today"><div class="k">today</div><div class="v">' + pair(wn('today'), n('today')) + '</div></div>' +
-    '<div class="tile" title="manasiyo.com | MAYA, last 7 days"><div class="k">7 days</div><div class="v">' + pair(wn('d7'), n('d7')) + '</div></div>' +
-    '<div class="tile" title="manasiyo.com | MAYA, last 28 days"><div class="k">28 days</div><div class="v">' + pair(wn('d28'), n('d28')) + '</div></div>';
+    '<div class="tile" data-maya-pill="glass" title="manasiyo.com | MAYA, today"><div class="k">today</div><div class="v">' + pair(wn('today'), n('today')) + '</div></div>' +
+    '<div class="tile" data-maya-pill="glass" title="manasiyo.com | MAYA, last 7 days"><div class="k">7 days</div><div class="v">' + pair(wn('d7'), n('d7')) + '</div></div>' +
+    '<div class="tile" data-maya-pill="glass" title="manasiyo.com | MAYA, last 28 days"><div class="k">28 days</div><div class="v">' + pair(wn('d28'), n('d28')) + '</div></div>';
   head.classList.remove('hidden');
   _wireUsersPop();
 }
@@ -3266,12 +3264,9 @@ async function loadModelSnapshot(){
  const auth=_idTok;
  try{
   const headers={Authorization:'Bearer '+auth};
-  const ownerRequest=fetch('/api/admin/owner-crm',{headers,cache:'no-store',signal:AbortSignal.timeout(10000)}).then(async r=>r.ok?await r.json():null).catch(()=>null);
-  const r=await fetch('/api/admin/models',{headers,cache:'no-store',signal:AbortSignal.timeout(10000)}),j=await r.json();
+   const r=await fetch('/api/admin/models',{headers,cache:'no-store',signal:AbortSignal.timeout(10000)}),j=await r.json();
   if(auth!==_idTok)return;if(!r.ok)throw Error('Model snapshot unavailable.');
   _modelsAuth=auth;_modelsChecked=Date.now();window.MAYA_MODEL_SNAPSHOT=j;window.dispatchEvent(new CustomEvent('maya-model-snapshot',{detail:j}));
-  const owner=await ownerRequest;if(auth!==_idTok)return;
-  j.integrations=[{provider:'Gmail',status:owner?owner.mailboxes?.length?owner.mailboxes.length+' mailbox'+(owner.mailboxes.length===1?'':'es')+' connected to this account':owner.gmailReady?'No mailbox connected to this account':'OAuth setup incomplete':'Mailbox status unavailable',endpoint:'/outbound.html#gmail'}];
   window.dispatchEvent(new CustomEvent('maya-model-snapshot',{detail:j}));
  }
 
@@ -3730,16 +3725,14 @@ async function saveLeadNote(i) {
 
 function setAdMetric(m) {
   _adMetric = m;
-  document.querySelectorAll('.metric-chip').forEach(c =>
-    c.classList.toggle('on', c.getAttribute('data-m') === m));
+  document.querySelectorAll('.metric-chip').forEach(c => {const selected=c.getAttribute('data-m') === m;c.classList.toggle('on',selected);c.setAttribute('aria-pressed',String(selected));});
   paintAdCombined();
 }
 
 function setAdRange(r) {
   _adRange = r;
   try { localStorage.setItem('maya_mkt_range', r); } catch (_) {}
-  document.querySelectorAll('.range-chip').forEach(c =>
-    c.classList.toggle('on', c.getAttribute('data-r') === r));
+  document.querySelectorAll('.range-chip').forEach(c => {const selected=c.getAttribute('data-r') === r;c.classList.toggle('on',selected);c.setAttribute('aria-pressed',String(selected));});
   // v13.59: one window for the whole fold: the word, the table, the chart.
   const word = document.getElementById('range-word');
   if (word) word.textContent = r === 'M' ? 'last 30 days' : r === 'D' ? 'today and yesterday' : 'last 7 days';
@@ -3748,8 +3741,7 @@ function setAdRange(r) {
 }
 
 function _syncRangeChips() {
-  document.querySelectorAll('#adm-mkt .range-chip').forEach(c =>
-    c.classList.toggle('on', c.getAttribute('data-r') === _adRange));
+  document.querySelectorAll('#adm-mkt .range-chip').forEach(c => {const selected=c.getAttribute('data-r') === _adRange;c.classList.toggle('on',selected);c.setAttribute('aria-pressed',String(selected));});
   const word = document.getElementById('range-word');
   if (word) word.textContent = _adRange === 'M' ? 'last 30 days' : _adRange === 'D' ? 'today and yesterday' : 'last 7 days';
 }

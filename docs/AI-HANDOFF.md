@@ -1,4 +1,35 @@
-# Current handoff — October 26, 2026
+# Current handoff — October 27, 2026
+
+## Current work — Aesthetic Control and Outbound retirement
+
+Fromsa requested Outbound removal and a more compact, single-authority Aesthetic
+Control. Outbound's UI, dedicated server/Gmail/Sheets integration and obsolete
+fixtures were removed; its old page URLs redirect to Admin and its API returns
+410. Shared Leads, Messages, owner text, text AI, Wix callbacks and the private
+ledger compatibility path remain. Old stored Outbound workspaces, encrypted
+mailbox credentials, OAuth grants, Scheduler jobs and Pub/Sub subscriptions were
+not changed or deleted. The retired Outbound Scheduler no longer triggers callback
+alerts. The owner must confirm the separate callback Scheduler/Wix trigger works,
+and can disable retired jobs/subscriptions and revoke grants if desired. Existing
+`OUTBOUND_SCHEDULER_*` values are still used by independent callback identity.
+
+Aesthetic Control retains one Fabric workspace sample, moves Pill states beside
+Glass/Regular, pairs dropdown and checkbox controls above 700px, removes scrollbar
+usage inventory and duplicate typography shortcuts, and shows Admin traffic as
+Glass. Glass selection now uses a stronger shared blue fill and accent; Brief
+pieces and Admin chart controls update their selected/pressed semantics. Settings,
+legacy schemas, semantic status colors, and saved typography remain shared.
+
+Local validation: the Cloud Build checks other than the final authority gate,
+integrated app regression, smoke, retirement, selected-pill, Admin, fabric and
+responsive saved-style fixtures passed. The final standalone Aesthetic Control
+authority runs last before commit. npm is unavailable locally; Cloud Build still
+runs its pinned npm ci. Live release remains 076fd31;
+no changes have been pushed. The private live fabric search remains unverified.
+Next: finish verification and local commit; Fromsa pushes and verifies deployment.
+
+Earlier "Current work" entries below describe previous work and are historical;
+the deployed release was verified at 076fd31 on October 26.
 
 ## Current work — compact Aesthetic Control
 

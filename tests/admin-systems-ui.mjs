@@ -27,7 +27,7 @@ try{
   await page.setViewportSize({width,height:844});await page.waitForTimeout(30);await page.evaluate(()=>{admTab('systems');toggleDrawer(true);});await page.waitForFunction(()=>{const h=document.getElementById('adm-hscroll');return Math.abs(h.scrollLeft-(h.scrollWidth-h.clientWidth))<1;});
   await page.getByRole('button',{name:'API model details',exact:true}).press('Enter');
   await page.waitForFunction(()=>document.querySelector('#model-snapshot').textContent.includes('GPT-5 Nano'));
-  assert.equal(await page.locator('.model-provider[open]').count(),0,'Explicit details stay compact until expanded');assert.match(await page.locator('#model-snapshot').textContent(),/GPT-6 Luna · Frontend, Admin, Fast/);await page.waitForFunction(()=>document.querySelector('#model-snapshot').textContent.includes('1 mailbox connected to this account'));
+  assert.equal(await page.locator('.model-provider[open]').count(),0,'Explicit details stay compact until expanded');assert.match(await page.locator('#model-snapshot').textContent(),/GPT-6 Luna · Frontend, Admin, Fast/);
   assert.doesNotMatch(await page.locator('#model-snapshot').textContent(),/GPT-image-2.5 Flare/);
   await page.locator('.model-provider summary').filter({hasText:'Gemini'}).click();assert.match(await page.locator('#model-snapshot').textContent(),/aiplatform.googleapis.com/);
   if(width===1440)await page.screenshot({path:'/private/tmp/maya-admin-systems-preview.png'});
@@ -62,7 +62,7 @@ try{
  await api.focus();await api.press('Enter');await popup.waitFor({state:'visible'});await page.keyboard.press('Escape');assert.ok(await api.evaluate(el=>document.activeElement===el),'Escape restores the explicit opener without reopening');
  await api.click();await popup.waitFor({state:'visible'});await page.evaluate(()=>document.dispatchEvent(new Event('wheel')));await popup.waitFor({state:'hidden'});
  await api.click();await popup.waitFor({state:'visible'});await page.setViewportSize({width:1300,height:1000});await popup.waitFor({state:'hidden'});
- const gmail=page.locator('#drawer-systems a[href="/outbound.html#gmail"]');assert.equal(await gmail.evaluate(el=>getComputedStyle(el).color),'rgb(255, 255, 255)');assert.equal(await gmail.locator('small').evaluate(el=>getComputedStyle(el).color),'rgb(170, 181, 196)');
+ assert.equal(await page.locator('#drawer-systems a[href*=outbound]').count(),0,'Retired Outbound has no Vault link');
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('maya-model-error',{detail:'Configuration request failed'})));await page.waitForTimeout(30);await page.getByRole('button',{name:'API model details',exact:true}).press('Enter');assert.match(await page.locator('#model-snapshot').textContent(),/Configuration request failed.*Last configuration shown/);await page.keyboard.press('Escape');
  assert.equal(writes,0,'Reading and dismissing configuration never performs an owner action');
  await page.evaluate(()=>window.dispatchEvent(new CustomEvent('maya-model-clear')));assert.ok(await page.locator('#model-snapshot').isHidden());assert.equal(await page.locator('#model-snapshot').textContent(),'');

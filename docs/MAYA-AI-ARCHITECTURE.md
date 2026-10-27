@@ -34,21 +34,9 @@ the versioned model and routing map below describes its historical baseline,
 what is only a foundation, and what evidence is required before a model moves
 into production.
 
-## Outbound economy adapter (September 27, locally prepared)
+## Shared text AI adapter
 
-Outbound alone now uses `crm-ai.mjs` to choose among configured OpenAI gpt-5-nano,
-Claude Haiku 4.5 and Gemini 2.5 Flash-Lite for text summaries/drafts. It reserves
-estimated cost before calling, settles from token usage and enforces a combined
-$1 per admin account per Los Angeles calendar day. There is no paid retry or web
-tool use in this adapter. Existing consumer, image, voice and other Admin model
-routing is unchanged and outside this allowance. Cloud Run Gemini now supports Vertex with its existing service identity;
-non-Cloud-Run deployments retain the API-key path. Configured availability does
-not certify a successful live inference. Providers without either mechanism
-are unavailable. The original global routing sections below are historical;
-`model-config.mjs` remains the authority for those current defaults.
-
-See [Outbound activation and verified rate sources](OUTBOUND-SETUP.md). Provider
-entitlement and live cost reporting still require owner configuration and testing.
+`crm-ai.mjs` remains in use for owner SMS and Messages draft suggestions. It reserves estimated cost, settles token usage and retains the account-scoped $1 daily text limit. Outbound and its Gmail outreach have been retired; stored ledger paths remain compatible. Voice, image and other Admin routing remain outside this allowance. Configured provider availability does not establish successful live inference.
 
 ## The production boundary
 

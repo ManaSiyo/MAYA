@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {createOwnerCRM,cleanCommand,gmailCandidates} from '../docs/server/owner-crm.mjs';
+import {createOwnerCRM,cleanCommand} from '../docs/server/owner-crm.mjs';
 const files=new Map();let generation=0,parses=0,commits=0,clock=Date.now();const saved=new Map();
 const deps={ownerNumber:'+15105550100',ownerEmails:['owner@example.com'],now:()=>clock,
  read:async key=>files.has(key)?{ok:true,buf:Buffer.from(JSON.stringify(files.get(key).value)),generation:files.get(key).generation}:{ok:false,status:404},
@@ -34,10 +34,5 @@ assert.match(booking,/wix.to\/wT2lSqE/);assert.match(booking,/Nothing has gone t
 assert.match(await crm.handle({from:deps.ownerNumber,text:'BOOK a1b2c3',sid:'SMbookYes'}),/accepted by carrier/);
 assert.equal(await crm.handle({from:'+15105550101',text:'BOOK a1b2c3',sid:'SMstrangerBook'}),'');
 console.log('Owner CRM: identity, account binding, preview, confirmation, expiry, duplicate and validation checks passed.');
-
-const candidates=gmailCandidates([{direction:'in',peers:['pat@example.com'],subject:'Suit inquiry',summary:'Blue suit',ts:'2026-09-28'}, {direction:'out',peers:['out@example.com']},{direction:'in',automated:true,peers:['bot@example.com']}]);
-assert.equal(candidates.length,1);assert.equal(candidates[0].email,'pat@example.com');
-assert.equal(gmailCandidates([{direction:'in',peers:['pat@example.com'],subject:'Updated',ts:'2026-09-29'}],candidates).length,1);
-console.log('Gmail review excludes outgoing/automated messages and deduplicates correspondents.');
 
 assert.equal(cleanCommand({action:'update',query:'Exact client',stage:'completed'}).stage,'completed');

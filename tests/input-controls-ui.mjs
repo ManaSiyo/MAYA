@@ -74,7 +74,7 @@ try{
    for(const selector of ['#input-controls-preview>h3','#input-controls-preview>p','.checkbox-preview-states label','.checkbox-editor summary'])assert.match(await page.locator(selector).first().evaluate(e=>getComputedStyle(e).fontFamily),/Cormorant/,selector+' uses shared typography');
    assert.equal((await style('.checkbox-editor summary')).background,'rgba(23, 91, 59, 0.7)','New Edit follows Regular pill material');
   }
-  const segments=page.locator('#segmented-controls-preview');await segments.getByRole('button',{name:'Favorites',exact:true}).click();assert.equal(await segments.locator('[aria-pressed=true]').count(),1);assert.match(await segments.locator('[aria-live]').textContent(),/Favorites preview/);assert.notEqual(await segments.getByRole('button',{name:'Favorites',exact:true}).evaluate(e=>getComputedStyle(e).backgroundColor),await segments.getByRole('button',{name:'Sourceable',exact:true}).evaluate(e=>getComputedStyle(e).backgroundColor),'Active segments use a real shared state');await segments.getByRole('button',{name:'Edit glass pill',exact:true}).click();assert.equal(await page.locator('.finish-controls>.type-editor').evaluate(e=>e.open),true);await page.keyboard.press('Escape');
+  const segments=page.locator('#segmented-controls-preview');await segments.getByRole('button',{name:'Favorites',exact:true}).click();assert.equal(await segments.locator('[aria-pressed=true]').count(),1);assert.match(await segments.locator('[aria-live]').textContent(),/Favorites preview/);assert.notEqual(await segments.getByRole('button',{name:'Favorites',exact:true}).evaluate(e=>getComputedStyle(e).backgroundColor),await segments.getByRole('button',{name:'Sourceable',exact:true}).evaluate(e=>getComputedStyle(e).backgroundColor),'Active segments use a real shared state');assert.equal(await segments.getByRole('button',{name:'Edit glass pill',exact:true}).count(),0,'Glass is edited only in its own section');
   for(const width of widths){
    await page.setViewportSize({width,height:1100});await page.locator('#input-controls-preview').scrollIntoViewIfNeeded();
    assert.ok(await page.locator('#input-controls-preview').evaluate(e=>e.scrollWidth<=e.clientWidth+1),phase+' preview fits '+width);
@@ -85,7 +85,7 @@ try{
    const material=await drawer.evaluate(e=>{const s=getComputedStyle(e),r=e.getBoundingClientRect();return {background:s.backgroundColor,padding:s.padding,blur:s.backdropFilter,left:r.left,right:r.right,top:r.top,bottom:r.bottom};});
    assert.equal(material.background,phase==='saved'?'rgba(23, 91, 59, 0.8)':'rgba(3, 15, 29, 0.9)','Settings preview follows the shared Drawer backing');assert.equal(material.padding,phase==='saved'?'12px 18px':'16px 12px');assert.equal(material.blur,phase==='saved'?'blur(10px) saturate(1.3)':'blur(28px) saturate(1.8)','Drawer blur and saturation are independent of panel/popup controls');assert.ok(material.left>=0&&material.right<=width&&material.top>=0&&material.bottom<=1100,'Settings preview fits '+width);
    if(width===390||width===1440)await drawer.screenshot({path:'/private/tmp/maya-settings-preview-'+phase+'-'+width+'.png'});
-   if(width===320){await drawer.getByRole('button',{name:'Edit drawer',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.drawer-editor').open);assert.equal(await page.locator('.drawer-editor').evaluate(e=>e.open),true,'Settings preview opens its actual saved material editor');await page.keyboard.press('Escape');}else await drawer.getByRole('button',{name:'Close Settings',exact:true}).click();
+   await drawer.getByRole('button',{name:'Close Settings',exact:true}).click();
   }
  }
  await page.emulateMedia({forcedColors:'active'});control=await style('#checkbox-preview-checked');assert.equal(control.appearance,'auto');assert.equal(control.image,'none','High contrast returns to the native checked indicator');await page.emulateMedia({forcedColors:'none'});
@@ -110,11 +110,6 @@ try{
  await page.screenshot({path:'/private/tmp/maya-leads-filter-saved-390.png'});
  await page.keyboard.press('Escape');
 
- // Actual Outbound row selection is centered and still keyboard-operable.
- await page.goto('https://maya.manasiyo.com/backend/outbound.html');await page.locator('.people-table [data-person="person"]').waitFor();await page.evaluate(()=>MayaTypographyControls.ready);
- for(const width of widths){await page.setViewportSize({width,height:1100});await page.locator('#menu-toggle').click();assert.equal(await page.locator('#outbound-drawer').evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(23, 91, 59, 0.8)');assert.equal(await page.locator('#outbound-drawer').evaluate(e=>getComputedStyle(e).padding),'12px 18px');await page.keyboard.press('Escape');}
- const contact=page.locator('.people-table input[data-select]').first();assert.equal(await contact.evaluate(e=>getComputedStyle(e).width),'24px');
- assert.ok(await contact.evaluate(e=>{const a=e.getBoundingClientRect(),b=e.closest('td').getBoundingClientRect();return Math.abs(a.x+a.width/2-b.x-b.width/2)<1&&Math.abs(a.y+a.height/2-b.y-b.height/2)<1;}),'Outbound selection centers within its cell');
- const before=await contact.isChecked();await contact.focus();await page.keyboard.press('Space');assert.equal(await contact.isChecked(),!before);assert.deepEqual(errors,[]);
- console.log('Input controls passed: idle hide/half-length native handle, one-time legacy-width normalization, shared Drawer Save propagation,  native checkbox states/keyboard, transparent default scrollbar, saved geometry/colors, legacy compatibility, Save/failure/Restore, forced colors, six widths, and real Admin/Outbound consumers.');
+ assert.deepEqual(errors,[]);
+ console.log('Input controls passed: idle hide/half-length native handle, one-time legacy-width normalization, shared Drawer Save propagation,  native checkbox states/keyboard, transparent default scrollbar, saved geometry/colors, legacy compatibility, Save/failure/Restore, forced colors, six widths, and real Admin consumers.');
 }catch(error){await page.screenshot({path:'/private/tmp/maya-input-controls-failure.png',fullPage:true});console.error('Input-control fixture errors:',errors);throw error;}finally{await browser.close();}
