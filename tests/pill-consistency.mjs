@@ -73,7 +73,7 @@ function geometry(box,label,x,y,{kind='text',regular=false,disabled=false}={}){
  else check(box.border===1&&box.shadow!=='none'&&box.blur!=='none',label+' retains glass enclosure',{border:box.border,shadow:box.shadow,blur:box.blur});
  if(box.glyph){check(box.glyph.width>8&&box.glyph.height>8,label+' SVG glyph has a visible size',box.glyph);check(box.glyph.left>=x-.6&&box.glyph.right>=x-.6&&box.glyph.top>=y-.6&&box.glyph.bottom>=y-.6,label+' glyph stays inside padding',box.glyph);check(box.glyph.path&&box.glyph.stroke!=='none',label+' uses a stroked SVG glyph',box.glyph);}
 }
-const galleryTargets=[['#buttons > .preview-row > .maya-pill','Gallery glass text','text'],['#save','Gallery Save','icon'],['.icon-row [aria-label="Save"]','Leftmost Save icon','icon']];
+const galleryTargets=[['.glass-pill-preview > .maya-pill','Gallery glass text','text'],['#save','Gallery Save','icon'],['.icon-row [aria-label="Save"]','Leftmost Save icon','icon']];
 const adminTargets=[['#range-chips [data-r="D"]','Admin D','text'],['#range-chips [data-r="W"]','Admin W','text'],['#range-chips [data-r="M"]','Admin M','text'],['#metric-chips [data-m="clicks"]','Admin chart clicks','text'],['#metric-chips [data-m="cpc"]','Admin chart cost','text'],['#leads-table .lead-status','Admin lead status','status']];
 async function populateAdmin(){await page.evaluate(async()=>{_idTok='fixture-admin';await loadMkt();});}
 async function adminChecks(label,x,y){

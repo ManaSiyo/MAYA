@@ -2668,6 +2668,7 @@ ok('Owner can read client texts/calls and recorded actions over SMS without AI',
 ok('SMS client replies require an exact confirmation code and retained consent',smsAccessSource.includes('Nothing sent. Reply SEND') && smsAccessSource.includes("contact?.consent==='stop'") && smsAccessSource.includes("p.status='attempted'"));
 ok('Messages archive overflow before trimming the live inbox',SERVER_SOURCE.includes('archive:createMessageArchive') && readFileSync(join(ROOT,'docs/server/maya-messages.mjs'),'utf8').includes('await deps.archive.append'));
 ok('Aesthetic Control groups buttons/icons and panels/tables before single-row typography',compactGallery.includes("section('Glass, Panels and Tables'") && compactGallery.includes("divider.className='visual-divider'") && !compactGallery.includes('glossary') && !compactGallery.includes('addStyleReference'));
+ok('Aesthetic Control groups the Glass and Regular pill editors in a responsive pair',compactGallery.includes("pillFamilies.className='pill-families'") && readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.css'),'utf8').includes('.pill-families{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))'));
 ok('Typography exposes saved font family and capitalization per role',compactGallery.includes('data-field="font"') && compactGallery.includes('data-field="case"') && readFileSync(join(ROOT,'docs/server/design-config.mjs'),'utf8').includes("['none','uppercase']"));
 
 const galleryCss=readFileSync(join(ROOT,'aesthetics/aesthetic-control/gallery.css'),'utf8');

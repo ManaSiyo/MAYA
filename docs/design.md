@@ -532,3 +532,16 @@ family or independent visual setting is introduced. The active Segments preview
 governs their selection appearance. Sourceable seller cards keep their original
 link and show the existing P3 “Photo unavailable” fallback if a browser cannot
 load a verified image. No new search or save action is added.
+
+
+## October 26 — compact pill controls
+
+Aesthetic Control presents the existing Glass and Regular pill previews, Edit,
+Restore and usage links together in two columns above 700px, and stacks them on
+smaller screens. The concise headings are Glass and Regular; usage details are
+under “Where used.” This rearranges the existing controls without creating new
+materials, saved keys, previews or overrides. Both editors retain independent
+settings, anchored popups and last-Save Restore. At 1100px and wider, typography
+roles share two columns, with the large H0 preview spanning both. Smaller layouts
+remain single-column. Page links move into the existing locations disclosure;
+authored counts and individual source links remain available.

@@ -1,5 +1,24 @@
 # Current handoff — October 26, 2026
 
+## Current work — compact Aesthetic Control
+
+Glass and Regular pill previews, Edit/Restore and usage links share a two-column
+layout above 700px and stack at narrower widths. Their existing independent saved
+settings, previews, material authority and anchored editors remain intact; headings
+and usage labels are shorter. Typography roles pair above 1100px, with H0 spanning
+the row; linked pages and source locations remain inside each disclosure. Changed aesthetics/aesthetic-control/{gallery.js,
+finishes.js,gallery.css}, tests/{component-gallery,pill-consistency,
+aesthetic-authority,app-regression}.mjs and design/handoff/request/commit records.
+No client or server styling, storage schema or provider behavior changed.
+
+Local component-gallery and pill-consistency pass, including real Edit/Restore and
+responsive layout. Fabric search (48 cases) and Fabric UI passed using fake
+providers. The public live release is still cee701a; prior local Fabric fixes are
+not yet deployed. Owner is using Chrome, so no owner browser was accessed and live
+search quality or latency remain unverified. All other exact Cloud Build release gates passed locally; integrated regression
+and the final standalone Aesthetic Control check run before the local commit.
+Next: Fromsa pushes, then verify the deployed release and live Fabric search.
+
 ## Current work — Sourceable throughput and bounded waits
 
 The public live release remains cee701a and local commits f7b6341, 324b6e8 and

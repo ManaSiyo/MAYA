@@ -10,11 +10,30 @@ await page.route('**/*',async r=>{const u=new URL(r.request().url());if(!['maya.
 try{
  await page.goto('https://maya.test/aesthetics/aesthetic-control.html');await page.locator('[data-category="H4"] .type-row').first().waitFor();
  assert.match(await page.title(),/MAYA Aesthetic Control/);
- assert.equal(await page.locator('.type-group').count(),canonicalRoles.length);assert.equal(await page.locator('#save').innerText(),'');assert.equal(await page.locator('#save svg').count(),1);assert.ok(await page.locator('#admin-back').evaluate(e=>e.getBoundingClientRect().left<30));assert.equal(await page.locator('[data-category="H0"] .role-locations a').count(),1);
+ assert.deepEqual(await page.locator('.pill-families > * > h3').allTextContents(),['Glass','Regular']);
+ assert.deepEqual(await page.locator('.pill-families .pill-usage > summary').allTextContents(),['Where used','Where used']);
+ for(const width of [320,390,700,701,1024,1440,1920]){
+  await page.setViewportSize({width,height:900});
+  const geometry=await page.locator('.pill-families').evaluate(el=>{const [glass,regular]=[...el.children].map(e=>e.getBoundingClientRect()),wrap=el.getBoundingClientRect();return {glass:{left:glass.left,right:glass.right,top:glass.top,bottom:glass.bottom},regular:{left:regular.left,right:regular.right,top:regular.top,bottom:regular.bottom},wrap:{left:wrap.left,right:wrap.right}};});
+  assert.ok(geometry.glass.left>=geometry.wrap.left-1&&geometry.regular.right<=geometry.wrap.right+1,'Pill families fit the section at '+width);
+  if(width>700)assert.ok(geometry.glass.right<=geometry.regular.left+1&&Math.abs(geometry.glass.top-geometry.regular.top)<2,'Pill families share a row at '+width);
+  else assert.ok(geometry.glass.bottom<=geometry.regular.top+1,'Pill families stack without overlap at '+width);
+  if(width===390||width===1440)await page.locator('.pill-families').screenshot({path:'/private/tmp/maya-pill-families-'+width+'.png'});
+ }
+ await page.setViewportSize({width:1440,height:1000});
+ for(const width of [768,1024,1100,1440,1920]){
+  await page.setViewportSize({width,height:900});
+  const layout=await page.locator('.type-hierarchy').evaluate(el=>{const a=el.querySelector('[data-category=H1]').getBoundingClientRect(),b=el.querySelector('[data-category=H2]').getBoundingClientRect(),h0=el.querySelector('[data-category=H0]').getBoundingClientRect(),p=el.getBoundingClientRect();return {a:{left:a.left,right:a.right,top:a.top,bottom:a.bottom},b:{left:b.left,top:b.top},h0:{left:h0.left,right:h0.right},parent:{left:p.left,right:p.right}};});
+  if(width>=1100){assert.ok(layout.a.right<=layout.b.left+1&&Math.abs(layout.a.top-layout.b.top)<2,'Typography roles share a row at '+width);assert.ok(Math.abs(layout.h0.left-layout.parent.left)<2&&Math.abs(layout.h0.right-layout.parent.right)<2,'Large H0 preview spans both columns');}
+  else assert.ok(layout.a.bottom<=layout.b.top+1,'Typography roles stack at '+width);
+  if(width===1440)await page.locator('.type-hierarchy').screenshot({path:'/private/tmp/maya-typography-compact.png'});
+ }
+ await page.setViewportSize({width:1440,height:1000});
+ assert.equal(await page.locator('.type-group').count(),canonicalRoles.length);assert.equal(await page.locator('#save').innerText(),'');assert.equal(await page.locator('#save svg').count(),1);assert.ok(await page.locator('#admin-back').evaluate(e=>e.getBoundingClientRect().left<30));assert.equal(await page.locator('[data-category="H0"] .role-locations > a').count(),1);
  assert.ok(await page.locator('.type-category').evaluateAll(es=>es.every(e=>/^(?:H[0-5]|P[1-3]) \(\d+\)$/.test(e.textContent))),'Every role shows an authored usage count');
  assert.equal(await page.locator('input[type="range"]').count(),0,'Every Edit uses numeric controls, never sliders');
  await page.locator('.icon-row [aria-label=Settings]').click();assert.equal(await page.locator('.control-size-editor').evaluate(e=>e.open),true,'Preview icons open their actual saved settings');await page.locator('.gallery-header h1').click();
- await page.locator('#buttons>.preview-row .maya-pill').first().click();assert.equal(await page.locator('.finish-controls>.type-editor').evaluate(e=>e.open),true,'Pill preview opens its glass settings');await page.locator('.gallery-header h1').click();
+ await page.locator('.glass-pill-preview .maya-pill').first().click();assert.equal(await page.locator('.finish-controls>.type-editor').evaluate(e=>e.open),true,'Pill preview opens its glass settings');await page.locator('.gallery-header h1').click();
  assert.equal(await page.locator('.popup-editor [data-field="padding"]').count(),0,'Popup padding has separate axes');
  assert.equal(await page.locator('#save').evaluate(e=>getComputedStyle(e).borderWidth),'1px');assert.notEqual(await page.locator('#save').evaluate(e=>getComputedStyle(e).boxShadow),'none','Save retains the shared glass enclosure');
  assert.equal(await page.locator('.finish-controls>.type-editor>summary').textContent(),'Edit glass pill');
@@ -36,12 +55,12 @@ try{
  assert.equal(legacy.type.P3.weight,350,'Five-role legacy P4 pill settings migrate to canonical P3');assert.equal(legacy.type.P4,undefined);assert.equal(legacy.type.P5,undefined);assert.equal(legacy.type.H6,undefined);
  assert.equal(await page.locator('.type-row').count(),canonicalRoles.length);
  const regularSample=page.locator('[data-pill-family=regular] [data-maya-pill=regular]');
- await page.waitForFunction(()=>getComputedStyle(document.querySelector('#buttons>.preview-row .maya-pill')).borderColor==='rgba(255, 255, 255, 0.22)');
- const glassBeforeRegular=await page.locator('#buttons>.preview-row .maya-pill').first().evaluate(e=>{const s=getComputedStyle(e);return {background:s.backgroundColor,padding:s.padding,border:s.borderColor};});
+ await page.waitForFunction(()=>getComputedStyle(document.querySelector('.glass-pill-preview .maya-pill')).borderColor==='rgba(255, 255, 255, 0.22)');
+ const glassBeforeRegular=await page.locator('.glass-pill-preview .maya-pill').first().evaluate(e=>{const s=getComputedStyle(e);return {background:s.backgroundColor,padding:s.padding,border:s.borderColor};});
  await page.locator('.regular-pill-editor>summary').click();await page.locator('.regular-pill-editor [data-field=background]').selectOption('blue');await page.locator('.regular-pill-editor [data-field=fill]').fill('65');await page.locator('.regular-pill-editor [data-field=paddingX]').fill('22');await page.locator('.regular-pill-editor [data-field=paddingY]').fill('10');
  await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-pill-family=regular] [data-maya-pill=regular]')).backgroundColor==='rgba(35, 76, 125, 0.65)');
  assert.match(await regularSample.evaluate(e=>getComputedStyle(e).backgroundColor),/35, 76, 125, 0.65/);assert.equal(await regularSample.evaluate(e=>getComputedStyle(e).padding),'10px 22px');assert.equal(await regularSample.evaluate(e=>getComputedStyle(e).backdropFilter),'none');
- assert.deepEqual(await page.locator('#buttons>.preview-row .maya-pill').first().evaluate(e=>{const s=getComputedStyle(e);return {background:s.backgroundColor,padding:s.padding,border:s.borderColor};}),glassBeforeRegular,'Regular pill edits do not change glass materials or geometry');
+ assert.deepEqual(await page.locator('.glass-pill-preview .maya-pill').first().evaluate(e=>{const s=getComputedStyle(e);return {background:s.backgroundColor,padding:s.padding,border:s.borderColor};}),glassBeforeRegular,'Regular pill edits do not change glass materials or geometry');
  await page.locator('.regular-pill-editor + .restore-editor').click();assert.equal(await regularSample.evaluate(e=>getComputedStyle(e).padding),'6px 14px');await page.locator('.gallery-header h1').click();
  await page.locator('.finish-choice').filter({hasText:'Liquid'}).click();
  assert.equal(await page.locator('.finish-choice[aria-pressed=true]').innerText(),'LIQUID ✓');
@@ -90,7 +109,7 @@ try{
  assert.match(await page.locator('.control-size-editor>summary').evaluate(e=>getComputedStyle(e,'::after').maskImage),/data:image\/svg/,'Edit and preview use the shared dropdown chevron');
  await page.locator('.gallery-header h1').click();await page.locator('.icon-spacing-preview').screenshot({path:'/private/tmp/maya-icon-spacing-preview.png'});
  assert.ok(await page.locator('.restore-editor').first().evaluate(e=>e.querySelector('svg')?.querySelector('path')?.getAttribute('d')===document.querySelector('.icon-row [aria-label="Refresh"] path').getAttribute('d')),'Restore uses the previewed Refresh SVG');
- assert.equal(await page.locator('#save').evaluate(e=>getComputedStyle(e).backgroundColor),await page.locator('#buttons>.preview-row .maya-pill').first().evaluate(e=>getComputedStyle(e).backgroundColor));
+ assert.equal(await page.locator('#save').evaluate(e=>getComputedStyle(e).backgroundColor),await page.locator('.glass-pill-preview .maya-pill').first().evaluate(e=>getComputedStyle(e).backgroundColor));
  assert.equal(await page.locator('#gallery > section').first().getAttribute('id'),'pill-preview');
  const completed=page.locator('.status-style-preview').filter({has:page.locator('[data-status="completed"]')});await completed.locator('summary').click();await completed.locator('[data-field=color]').fill('#123abc');await completed.locator('[data-field=opacity]').fill('65');await completed.locator('[data-field=weight]').selectOption('450');
  assert.equal(await completed.locator('.status-pill').evaluate(e=>getComputedStyle(e).fontWeight),'450');assert.match(await completed.locator('.status-pill').evaluate(e=>getComputedStyle(e).color),/0.65/);await page.locator('.gallery-header h1').click();
@@ -156,8 +175,10 @@ try{
  await cell('td[data-col="stage"]','align','right');assert.equal(await page.locator('#cell-selection').innerText(),'Third column');assert.equal(await page.locator('#table-preview .cell-selected').count(),2);assert.equal(await page.locator('#table-preview td[data-col="stage"]').nth(1).evaluate(e=>getComputedStyle(e).textAlign),'right');
  await cell('td[data-col="stage"]','align','center');await cell('td[data-col="stage"]','background','green');await cell('td[data-col="stage"]','opacity','50');assert.match(await page.locator('#table-preview td[data-col="stage"]').nth(1).evaluate(e=>getComputedStyle(e).backgroundColor),/0.5/);
  assert.equal(await page.locator('#panels .maya-surface').count(),0,'No intermediate outer wrapper');
- assert.equal(await page.locator('[data-category="H1"] .role-locations a').count(),9,'Every authored H1, including the workspace and client titles, is listed');
- assert.ok(await page.locator('[data-category="H1"] .type-setting').innerText().then(text=>text.toLowerCase().includes('app')&&text.toLowerCase().includes('status')));
+ assert.equal(await page.locator('[data-category="H1"] .role-locations > a').count(),9,'Every authored H1, including the workspace and client titles, is listed');
+ await page.locator('[data-category="H1"] .role-locations > summary').click();
+ assert.ok(await page.locator('[data-category="H1"] .role-pages').innerText().then(text=>text.toLowerCase().includes('app')&&text.toLowerCase().includes('status')),'Linked pages remain available in locations');
+ await page.locator('[data-category="H1"] .role-locations > summary').click();
  await page.locator('.gallery-header h1').click();
  await page.locator('#cell-format-toolbar [aria-label="Increase font size"]').click();assert.equal(await page.locator('#table-preview td[data-col="stage"]').first().evaluate(e=>getComputedStyle(e).fontSize),'13px');await page.locator('#cell-format-toolbar [aria-label="Decrease font size"]').click();assert.equal(await page.locator('#table-preview td[data-col="stage"]').first().evaluate(e=>getComputedStyle(e).fontSize),'12px');await page.locator('#cell-format-toolbar [aria-label="Bold"]').click();assert.equal(await page.locator('#table-preview td[data-col="stage"]').first().evaluate(e=>getComputedStyle(e).fontWeight),'500');await page.locator('#cell-format-toolbar [aria-label="Bold"]').click();
  await page.locator('#cell-format-toolbar [aria-label="Italic"]').click();assert.equal(await page.locator('#table-preview td[data-col="stage"]').first().evaluate(e=>getComputedStyle(e).fontStyle),'italic');
