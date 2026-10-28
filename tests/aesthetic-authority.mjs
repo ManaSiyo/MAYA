@@ -103,3 +103,5 @@ console.log('Final Aesthetic Control authority passed: active previews, saved se
 
 // WR follows the shared form and panel controls at six widths.
 await import('./wr-ui.mjs?authority');
+
+await import('./avatar-camera-ui.mjs?authority');

@@ -1,6 +1,27 @@
 # Current handoff — October 27, 2026
 
-## Current work — WR and CLO research
+## Current work — frontend avatar camera
+
+Profile's avatar switcher now includes Camera alongside Replace. The camera
+requests front-facing video without audio, previews a mirrored photo, and requires
+Use photo before the existing avatar upload/analysis flow runs. Cancel, Escape,
+page hiding, project/account/client changes, or a late permission response stop
+the stream; Retake requests a new one. The ordinary file picker and photo read
+are pinned to the original client/project, and later photo processing cannot
+replace a newer choice. `aesthetics/ui/avatar-camera.js` owns the camera lifecycle;
+`frontend/index.html` owns the integration and layout. The preview uses shared
+popup, typography and pill settings; its collapsible sample lives beside the
+dropdown preview in Aesthetic Control.
+
+Local synthetic-video coverage is in `tests/avatar-camera-ui.mjs`, integrated in
+app-regression, Cloud Build and final aesthetic-authority; no real camera or
+Chrome profile was accessed. The Cloud Build test commands, app regression and smoke passed using installed
+dependencies; npm ci is unavailable locally. The final standalone Aesthetic
+Control gate passed after functional verification. Live camera permission and phone/desktop hardware
+remain unverified until deployment and owner testing. Next: Fromsa pushes the prepared local commit, then verifies the deployed build
+and camera behavior on real phone and desktop hardware.
+
+## Previous work — WR and CLO research
 
 WR is a single new internal Admin-linked page at `/wr.html` (`backend/wr.html`,
 `aesthetics/ui/wr.{js,css}`). It shows the existing Admin submissions and a new

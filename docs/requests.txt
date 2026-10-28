@@ -2879,3 +2879,6 @@ enforce it. Backend/docs-only work records no visible UI impact and runs the gat
 OCTOBER 27, 2026 — WR and CLO research
 [x] Build one WR page, linked from Admin, showing Admin submissions and a new private lead form (name, #, numeric wave, color and look).
 [x] Research CLO 3D pattern and 2D options; leave Operation Room unchanged.
+
+OCTOBER 27, 2026 — FRONTEND AVATAR CAMERA
+[x] Add an explicit front-facing camera option to the frontend avatar on phone and computer, with preview, retake and confirmation.

@@ -469,7 +469,7 @@ ok('the tab reads Profile', fold.title === 'Profile', fold.title);
 ok('Projects is a fold above Stats holding the list', fold.foldAboveStats === true && fold.listInFold === true);
 ok('the placeholder pills and the beside pill are gone', fold.pillHidden === true && fold.actionsHidden === true);
 ok('the fold summary carries the open project name', fold.summary === 'Rudy the Presley' && fold.summaryIdle === '', JSON.stringify([fold.summary, fold.summaryIdle]));
-const expectedAvatarActions = ['Randomize', 'Save', 'Replace'];
+const expectedAvatarActions = ['Randomize', 'Save', 'Replace', 'Camera'];
 ok('the client dropdown carries the approved actions for ' + SURFACE + ', even when empty',
   JSON.stringify(fold.actionButtons) === JSON.stringify(expectedAvatarActions) && fold.newClient === true, JSON.stringify(fold.actionButtons));
 ok('a project is renamed where it sits', fold.renameBox === true && fold.renamed === 'Gala 2026' && fold.summaryAfter === 'Gala 2026', JSON.stringify([fold.renamed, fold.titleAfter, fold.summaryAfter]));

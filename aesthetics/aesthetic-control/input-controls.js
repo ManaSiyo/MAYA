@@ -9,6 +9,7 @@ export function setupInputControls({design,dropdownRow,popupRow}){
  const host=node('section');host.id='input-controls-preview';popupRow.before(host);
  host.append(node('h3','Dropdown and checkboxes','H3'));
  const pair=node('div');pair.className='input-control-pair';const dropdownGroup=node('section'),checkboxGroup=node('section');dropdownGroup.className='input-control-group';checkboxGroup.className='input-control-group';pair.append(dropdownGroup,checkboxGroup);host.append(pair);dropdownGroup.append(dropdownRow,popupRow);
+ const cameraDetails=node('details');cameraDetails.className='input-control-usage';cameraDetails.append(node('summary','Camera preview','P3'));const cameraPreview=node('div');cameraPreview.dataset.mayaPopup='';cameraPreview.className='camera-style-preview';cameraPreview.append(node('h3','Take a photo','H3'),node('p','Position your face, then take a photo.','P1'));const cameraActions=node('div');cameraActions.className='camera-preview-actions';for(const label of ['Take photo','Cancel']){const button=node('button',label,'P3');button.type='button';button.className='drawer-action';cameraActions.append(button);}cameraPreview.append(cameraActions);cameraDetails.append(cameraPreview);dropdownGroup.append(cameraDetails);
  const render=()=>window.MayaPresentationControls.previewInputs({checkbox,scrollbar});
  function editor(kind,values,specs,parent=host){
   const row=node('div');row.className='surface-edit-row';row.dataset.editor=kind;

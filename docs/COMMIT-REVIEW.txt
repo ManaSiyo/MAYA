@@ -1,16 +1,9 @@
-Title: [Codex] Add private WR workspace and document CLO integration options
+Title: [Codex] Add front-facing avatar camera
 
-WR is one Admin-linked internal page with existing submissions and a new private,
-account-scoped lead form for name, #, numeric wave, color and look. Lead writes
-are generation checked and retried idempotently. Shared Aesthetic Control governs
-the page, with a compact lead-form preview and responsive layouts.
+Add an explicit Camera option in frontend Profile, with preview, capture, retake,
+confirmation and shared Aesthetic Control styles. Stop camera tracks when the
+session closes or its account, project or client changes. Guard avatar file reads
+and processing against stale clients and newer photo selections.
 
-Research documents CLO desktop SDK, DXF interchange and 2D snapshots; Operation
-Room remains unchanged.
-
-Validation: Cloud Build test commands, integrated app-regression and smoke ran
-locally with installed dependencies and synthetic providers. Initial gallery and
-workspace tests were fixed and rerun successfully. Final Aesthetic Control
-verification covers real local Save propagation and six viewport widths. npm ci
-was unavailable locally. Live deployment and private live fabric search were not
-verified. Fromsa performs the GitHub push and subsequent deployment check.
+Validation: local synthetic camera fixtures cover permission errors, cancellation,
+late permission, retake, client switch, shared style Save and six widths. Cloud Build checks, app regression and smoke passed; the final aesthetic authority passed after functional verification. npm ci and real hardware/live deployment remain unverified. Fromsa pushes.

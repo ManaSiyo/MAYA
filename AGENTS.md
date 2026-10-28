@@ -585,3 +585,14 @@ per authenticated Admin. WR reads the existing Admin submission feed. Never mix
 accounts or expose private lead records. Run `tests/wr-store.mjs`,
 `tests/wr-ui.mjs`, container-contract, app-regression and the final
 aesthetic-authority gate. `docs/CLO3D-RESEARCH.md` is research only.
+
+
+## Avatar camera
+
+`aesthetics/ui/avatar-camera.js` provides the frontend's explicit front-camera
+flow; the avatar picker and image processing live in `frontend/index.html`. Camera
+streams stop on dismissal, hidden page and account/project/client changes. Preserve
+client-bound picker/read guards, explicit Use photo and the existing upload path.
+Run `tests/avatar-camera-ui.mjs`, frontend hands/account/project tests, component
+gallery, app-regression and the final aesthetic-authority check. Its camera is a
+synthetic fixture and cannot establish real-device behavior.

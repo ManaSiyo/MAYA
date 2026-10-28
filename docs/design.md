@@ -554,3 +554,9 @@ WR reuses Admin’s background and shared typography, field, inner-panel and pil
 settings. Its compact lead form previews those existing controls in Fields and
 drawer spacing. Page CSS sets only responsive layout. WR uses the same Admin
 submission feed; its new lead list is private to each authenticated Admin account.
+
+### Avatar camera
+
+The frontend camera dialog uses the shared popup material, H3/P1 typography and
+Glass pills. The collapsible camera sample beside dropdown controls previews the
+same settings. Page CSS owns only placement and video layout.

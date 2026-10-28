@@ -1985,7 +1985,7 @@
   #notes-drawer .pg-fold-current:empty { display: none; }
   #notes-drawer .avatar-switch-actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px;
     border-bottom: 0.5px solid rgba(255,255,255,0.08); }
-  #notes-drawer .avatar-switch-actions .drawer-action { flex:1; font-size: 8px; padding: 3px 9px; letter-spacing: 0.1em; }
+  #notes-drawer .avatar-switch-actions .drawer-action { flex:1 1 95px; white-space:nowrap; font-size: 8px; padding: 3px 9px; letter-spacing: 0.1em; }
   #notes-drawer .session-item-rename { position: absolute; top: 8px; right: 60px;
     width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
     background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.2);
@@ -4179,6 +4179,11 @@
   #notes-drawer #drawer-avatar-rename{border:0;background:transparent;color:var(--dim);cursor:pointer;opacity:0;transition:opacity .15s}
   #notes-drawer .pg-avatar-nameline:hover #drawer-avatar-rename,#notes-drawer .pg-avatar-nameline:focus-within #drawer-avatar-rename{opacity:1}
   @media(hover:none){#notes-drawer #drawer-avatar-rename{opacity:1}}
+/* Avatar camera uses shared popup and pill materials; layout stays local. */
+#avatar-camera{position:fixed;inset:0;margin:auto;width:min(520px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto;color:inherit}
+#avatar-camera::backdrop{background:rgba(0,0,0,.72)}
+#avatar-camera h2,#avatar-camera p{margin:0 0 12px}#avatar-camera video,#avatar-camera img{display:block;width:100%;max-height:55dvh;object-fit:contain;background:#000}#avatar-camera video{transform:scaleX(-1)}
+#avatar-camera .camera-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px}#avatar-camera [hidden]{display:none!important}
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-ETTJ6PXEMM"></script>
@@ -7970,6 +7975,8 @@ let _firebaseAuthTransitionPending = false;
       const nextUid = u ? u.uid : null;
       const previousUid = _firebaseAuthUid;
       const transitionSeq = ++_authSeq;
+      if (nextUid !== previousUid) window.MayaAvatarCamera?.close();
+      else window.MayaAvatarCamera?.renew();
       _firebaseAuthUid = nextUid;
       if (nextUid !== previousUid) { _firebaseAuthTransitionPending = true; try { _pgVoiceScopeChanged(); } catch (_) {} }
       // v13.22: Firebase can report sign-out and the next sign-in close
@@ -8305,10 +8312,17 @@ const MEASUREMENT_SCHEMA = [
 // just don't feed any image prompt for now.
 
 // v5.23: face photo upload, stored as data URL on lastSummary._face_photo.
-async function onFacePhotoSelected(ev) {
+let _facePhotoVersion = 0;
+let _facePickerGuard = null;
+async function onFacePhotoSelected(ev, cameraContext) {
   const file = ev.target.files && ev.target.files[0];
   ev.target.value = '';
-  if (!file) return;
+  if (!file) { if (!cameraContext) _facePickerGuard = null; return; }
+  const pickerGuard = cameraContext ? null : _facePickerGuard;
+  _facePickerGuard = null;
+  if (pickerGuard && (!_opStillValid(pickerGuard.context) || pickerGuard.summary !== lastSummary || pickerGuard.version !== _facePhotoVersion)) return;
+  const photoContext = cameraContext || pickerGuard?.context || _opContext(), photoSummary = lastSummary, photoVersion = ++_facePhotoVersion;
+  const current = () => _opStillValid(photoContext) && lastSummary === photoSummary && photoVersion === _facePhotoVersion;
   if (!file.type.startsWith('image/')) {
     showError('Pick an image file.');
     return;
@@ -8320,6 +8334,7 @@ async function onFacePhotoSelected(ev) {
       fr.onerror = () => rej(fr.error);
       fr.readAsDataURL(file);
     });
+    if (!current()) return;
     if (!lastSummary) lastSummary = { client: { name: null } };
     lastSummary._face_photo = dataUrl;
     // v12.5: new bytes, so the copy in Storage is stale. Clearing these forces
@@ -8330,7 +8345,7 @@ async function onFacePhotoSelected(ev) {
     // stall you feel a second after letting go of a card.
     const _faceCtx = _opContext();      // v13.0: whose face is this?
     _shrinkFace(dataUrl).then(small => {
-      if (!_opStillValid(_faceCtx)) return;   // a different client is open now
+      if (!_opStillValid(_faceCtx) || photoVersion !== _facePhotoVersion) return;   // a different client is open now
       if (small && lastSummary) {
         lastSummary._face_photo = small;
         if (typeof _refreshActiveAvatarView === 'function') _refreshActiveAvatarView();
@@ -8346,7 +8361,7 @@ async function onFacePhotoSelected(ev) {
     // v9.2: still cache face descriptors for future use. No closet refresh.
     analyzeFacePhoto(dataUrl).then(d => {
         // v13.0: do not write one client's face onto another's project
-        if (!_opStillValid(_faceCtx)) return;
+        if (!_opStillValid(_faceCtx) || photoVersion !== _facePhotoVersion) return;
         if (lastSummary) lastSummary._face_descriptors = d;
         // v10.4: persist so we don't re-call gpt-4.1 on next reload.
         if (typeof _persistSession === 'function') _persistSession();
@@ -8360,6 +8375,8 @@ async function onFacePhotoSelected(ev) {
 }
 
 function clearFacePhoto() {
+  _facePhotoVersion++;
+  window.MayaAvatarCamera?.close();
   // v9.2: no more locked-avatar state, just clear the face photo +
   // cached descriptors. v10.4: persist the cleared state.
   if (lastSummary) {
@@ -8397,7 +8414,7 @@ function _renderAvatarBody() {
         ? '<div class="face-thumb" style="background-image:url(\'' + facePhoto + '\')"></div>'
         : '<div class="face-thumb empty">·</div>') +
       '<div class="avatar-face-buttons">' +
-        '<button class="drawer-action" onclick="document.getElementById(\'face-photo-input-avatar\').click()">' +
+        '<button class="drawer-action" onclick="pgReplaceFace()">' +
           (facePhoto ? 'Replace' : 'Upload') +
         '</button>' +
         (facePhoto ? '<button class="drawer-action" onclick="clearFacePhoto()">Remove</button>' : '') +
@@ -8580,6 +8597,7 @@ async function toggleAvatarSwitcher() {
     '<button class="drawer-action" type="button" onclick="randomizeAvatar()" title="Random measurements and a random face">Randomize</button>' +
     '<button class="drawer-action" type="button" onclick="saveAvatarFromDrawer(this)" title="Save as a new avatar">Save</button>' +
     '<button class="drawer-action" type="button" onclick="pgReplaceFace()" title="Upload a face photo">Replace</button>' +
+    '<button class="drawer-action" data-maya-type="P3" type="button" onclick="MayaAvatarCamera.open()">Camera</button>' +
     '</div>';
   panel.innerHTML = actions + preview + (rows || '<div class="avatar-switch-empty">Name this avatar, then press Save.</div>') +
     '<button class="avatar-switch-row avatar-switch-new" onclick="newAvatar()">+ New avatar</button>';
@@ -8600,6 +8618,8 @@ function _closeAvatarSwitcher() {
 // It used to wipe the canvas and start a blank project, which read as losing
 // your work the moment you picked a person.
 function _wearClient(a) {
+  _facePhotoVersion++;
+  window.MayaAvatarCamera?.close();
   if (!lastSummary) lastSummary = {};
   lastSummary.client = Object.assign({}, lastSummary.client || {}, { name: a ? a.name : null });
   lastSummary._face_photo = (a && a.face) || null;
@@ -8906,9 +8926,13 @@ async function pickRandomHeadshot() {
   });
 }
 async function randomizeAvatar() {
+  _facePhotoVersion++;
+  window.MayaAvatarCamera?.close();
   // v9.2: fill-only, populate measurements + face photo, then refresh the
   // sub-menu in place. No closet render (closet screen is gone).
   if (!lastSummary) lastSummary = { client: { name: null } };
+  const randomContext = _opContext(), randomSummary = lastSummary, randomVersion = _facePhotoVersion;
+  const currentRandom = () => _opStillValid(randomContext) && lastSummary === randomSummary && _facePhotoVersion === randomVersion;
   if (!lastSummary._measurements) lastSummary._measurements = {};
   const gender = lastSummary._face_descriptors && lastSummary._face_descriptors.gender_presentation;
   for (const [key, range] of Object.entries(RANDOM_RANGES)) {
@@ -8917,6 +8941,7 @@ async function randomizeAvatar() {
   }
   try {
     const dataUrl = await pickRandomHeadshot();
+    if (!currentRandom()) return;
     if (dataUrl) {
       lastSummary._face_photo = dataUrl;
     // v12.5: new bytes, so the copy in Storage is stale. Clearing these forces
@@ -8927,7 +8952,7 @@ async function randomizeAvatar() {
     // stall you feel a second after letting go of a card.
     const _faceCtx = _opContext();      // v13.0: whose face is this?
     _shrinkFace(dataUrl).then(small => {
-      if (!_opStillValid(_faceCtx)) return;   // a different client is open now
+      if (!_opStillValid(_faceCtx) || !currentRandom()) return;   // a different client is open now
       if (small && lastSummary) {
         lastSummary._face_photo = small;
         if (typeof _refreshActiveAvatarView === 'function') _refreshActiveAvatarView();
@@ -8937,7 +8962,7 @@ async function randomizeAvatar() {
       lastSummary._face_descriptors = null;
       analyzeFacePhoto(dataUrl).then(d => {
           // v13.0: do not write one client's face onto another's project
-          if (!_opStillValid(_faceCtx)) return;
+          if (!_opStillValid(_faceCtx) || !currentRandom()) return;
           if (lastSummary) lastSummary._face_descriptors = d;
         })
         .catch(e => console.warn('[Maya face analysis]', e));
@@ -9322,6 +9347,7 @@ function _doClear() {
     document.body.classList.remove('has-favorites');
   } catch (_) {}
   _boardEpoch++;
+  window.MayaAvatarCamera?.close();
   try { _pgVoiceScopeChanged(); } catch (_) {}
   try { _pendingTitles.length = 0; } catch (_) {}
   try { _lastFaded = []; } catch (_) {}   // v13.0: never restore one project's references into another
@@ -17672,7 +17698,7 @@ closeAvatarSubMenu = function () {
 function pgReplaceFace() {
   try { _renderAvatarBody(); } catch (_) {}
   const i = document.getElementById('face-photo-input-avatar');
-  if (i) i.click();
+  if (i) { _facePickerGuard = {context:_opContext(), summary:lastSummary, version:_facePhotoVersion}; i.click(); }
 }
 function pgRemoveFace() {
   try { if (typeof clearFacePhoto === 'function') clearFacePhoto(); } catch (_) {}
@@ -19653,5 +19679,13 @@ if (typeof openFeedback === 'function') {
   openFeedback = function () { const r = _oOF.apply(this, arguments); try { _fbRenderMayaLogs(); _fbTab('note'); _fbConsentRender(); } catch (_) {} return r; };
 }
 </script>
+<dialog id="avatar-camera" data-maya-popup aria-labelledby="avatar-camera-title">
+  <h2 id="avatar-camera-title" data-maya-type="H3">Take a photo</h2>
+  <p id="avatar-camera-status" data-maya-type="P1" role="status">Allow camera access to take a photo.</p>
+  <video id="avatar-camera-video" playsinline muted autoplay hidden></video>
+  <img id="avatar-camera-preview" alt="Your captured photo" hidden>
+  <div class="camera-actions"><button class="drawer-action" data-maya-type="P3" type="button" id="avatar-camera-capture" disabled>Take photo</button><button class="drawer-action" data-maya-type="P3" type="button" id="avatar-camera-retake" hidden>Retake</button><button class="maya-glass-button" data-maya-type="P3" type="button" id="avatar-camera-use" hidden>Use photo</button><button class="drawer-action" data-maya-type="P3" type="button" id="avatar-camera-cancel">Cancel</button></div>
+</dialog>
+<script src="/aesthetics/ui/avatar-camera.js?v=1"></script>
 </body>
 </html>

@@ -115,6 +115,7 @@ steps:
         node tests/message-compose-ui.mjs
         node tests/wr-store.mjs
         node tests/wr-ui.mjs
+        node tests/avatar-camera-ui.mjs
         node tests/aesthetic-authority.mjs
   - id: Build server
     name: gcr.io/cloud-builders/docker

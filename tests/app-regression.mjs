@@ -1,3 +1,4 @@
+import './avatar-camera-ui.mjs';
 import './wr-store.mjs';
 import './wr-ui.mjs';
 import './admin-models.mjs';
@@ -2517,8 +2518,8 @@ const clientBehavior = await pg.evaluate(async () => {
   await _pinSearchEnter('velvet');
   return {avatarSaved,actions,editableName,failureHonest,pagination,globalSearch,savedSearch:noScopeMenu && scope==='everywhere'};
 });
-ok('Client avatar behavior: cloud Save, three buttons, direct name editing, honest save errors',
-  clientBehavior.avatarSaved && clientBehavior.actions === 'Randomize,Save,Replace' && clientBehavior.editableName && clientBehavior.failureHonest);
+ok('Client avatar behavior: cloud Save, camera action, direct name editing, honest save errors',
+  clientBehavior.avatarSaved && clientBehavior.actions === 'Randomize,Save,Replace,Camera' && clientBehavior.editableName && clientBehavior.failureHonest);
 ok('Client Pinterest behavior: next-page cursor, deduplicated pins, explicit global/saved search',
   clientBehavior.pagination && clientBehavior.globalSearch && clientBehavior.savedSearch);
 
