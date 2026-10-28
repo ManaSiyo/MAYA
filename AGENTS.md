@@ -580,8 +580,11 @@ START/PASS elapsed diagnostics do not change exit handling or log preservation.
 
 `backend/wr.html` is the single WR page, served at `/wr.html` and linked from
 Admin Systems. `aesthetics/ui/wr.{js,css}` holds its layout and client logic;
-`docs/server/wr-store.mjs` stores idempotent, generation-checked leads privately
-per authenticated Admin. WR reads the existing Admin submission feed. Never mix
+`docs/server/wr-store.mjs` stores idempotent, generation-checked applicants privately
+per authenticated Admin; legacy records without Email remain valid. WR reads the
+existing Admin submission feed; its newest-first thumbnails are bounded to four
+concurrent requests. WR mirrors Admin card/table proportions and uses shared table
+settings. Never mix
 accounts or expose private lead records. Run `tests/wr-store.mjs`,
 `tests/wr-ui.mjs`, container-contract, app-regression and the final
 aesthetic-authority gate. `docs/CLO3D-RESEARCH.md` is research only.

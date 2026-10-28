@@ -550,10 +550,12 @@ authored counts and individual source links remain available.
 
 ### WR
 
-WR reuses Admin’s background and shared typography, field, inner-panel and pill
-settings. Its compact lead form previews those existing controls in Fields and
-drawer spacing. Page CSS sets only responsive layout. WR uses the same Admin
-submission feed; its new lead list is private to each authenticated Admin account.
+WR reuses Admin’s background, horizontal submissions strip and centered table
+width. Submission cards are slightly taller (36vh versus 34vh). The Applicants
+form and table use shared typography, field, inner-panel, table and pill settings;
+the existing Fields and drawer spacing sample previews the form. Page CSS owns
+responsive layout. WR reads the Admin submission feed and stores Applicants
+privately per authenticated Admin account.
 
 ### Avatar camera
 

@@ -108,6 +108,9 @@ assertContainer(); // Missing runtime files must fail before deploying Cloud Run
 if(MAP_SOURCE.includes('<maya-owner-crm>'))throw Error('Retired Owner tools must not appear in Systems');
 const ok = (name, cond) => { console.log((cond ? '  ok   ' : '  FAIL ') + name); if (!cond) failed++; };
 
+// WR retains Admin-sized submissions and an isolated Applicants form.
+{const wr=readFileSync(join(ROOT,'backend/wr.html'),'utf8');ok('WR exposes Applicants with one Wave and Number and an Email field',wr.includes('>Applicants</h2>')&&(wr.match(/name="wave"/g)||[]).length===1&&(wr.match(/name="phone"/g)||[]).length===1&&wr.includes('name="email"'));}
+
 // September 28: populated status popovers must escape the table's clipping layer.
 ok('Lead status filter has an isolated readable layer and scoped section carets',
   MAP_SOURCE.includes('document.body.append(menu)') && MAP_SOURCE.includes('menu.showPopover()') &&

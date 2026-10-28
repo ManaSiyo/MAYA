@@ -1,6 +1,26 @@
 # Current handoff — October 27, 2026
 
-## Current work — frontend avatar camera
+## Current work — WR Admin layout and applicants
+
+WR now uses the Admin-style horizontal submissions strip, with cards slightly
+larger (36vh versus Admin's 34vh), and an Applicants table and form constrained
+to Admin's width. The six ordered fields are Wave (number), Number, Name, Look,
+Color and Email. Existing private WR records without Email remain readable and
+idempotent retries remain compatible. Thumbnail reads start newest-first with a
+four-request concurrency bound; this limits competition but local fixtures do not
+prove live latency improvement. Same-account and account-change boundaries and
+private storage are unchanged.
+
+Changes are in `backend/wr.html`, `aesthetics/ui/wr.{css,js}`,
+`docs/server/wr-store.mjs`, shared preview and WR tests. Local fixtures compare
+Admin and WR geometry at six widths, synthetic loading concurrency, old/new
+records and saved table/panel/field settings. The exact Cloud Build test commands, integrated app regression, smoke, WR
+store/UI, gallery and container checks passed with installed dependencies; npm ci
+was unavailable. The final `tests/aesthetic-authority.mjs` gate passed after functional checks. Next: Fromsa pushes the prepared local commit, then verifies live layout,
+existing applicants and loading performance. The existing thumbnail API returns
+original image bytes, so improvement on a slow connection is not established.
+
+## Previous work — frontend avatar camera
 
 Profile's avatar switcher now includes Camera alongside Replace. The camera
 requests front-facing video without audio, previews a mirrored photo, and requires

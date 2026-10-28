@@ -1,9 +1,10 @@
-Title: [Codex] Add front-facing avatar camera
+Title: [Codex] Align WR submissions and applicants with Admin
 
-Add an explicit Camera option in frontend Profile, with preview, capture, retake,
-confirmation and shared Aesthetic Control styles. Stop camera tracks when the
-session closes or its account, project or client changes. Guard avatar file reads
-and processing against stale clients and newer photo selections.
+Match Admin's full-width horizontal submissions strip and centered table width,
+with slightly taller cards. Rename Leads to Applicants and add an Email field;
+Wave, Number, Name, Look and Color remain. Existing private records and idempotent
+retries remain compatible. Prioritize newest thumbnail reads and limit concurrent
+image requests to four.
 
-Validation: local synthetic camera fixtures cover permission errors, cancellation,
-late permission, retake, client switch, shared style Save and six widths. Cloud Build checks, app regression and smoke passed; the final aesthetic authority passed after functional verification. npm ci and real hardware/live deployment remain unverified. Fromsa pushes.
+Validation: WR fixtures compare Admin geometry across six widths, exercise old and
+new records, test thumbnail concurrency and Aesthetic Control propagation. Local release checks, app regression and smoke passed; final aesthetic authority passed after functional checks. npm ci and real deployed performance are not verified; the existing thumbnail API still returns original image bytes. Fromsa pushes.

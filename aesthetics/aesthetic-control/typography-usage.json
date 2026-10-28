@@ -192,7 +192,7 @@
       }
     },
     "H2": {
-      "count": 8,
+      "count": 6,
       "locations": [
         {
           "page": "backend/backend.html",
@@ -233,26 +233,6 @@
           "reason": "subheadline",
           "role": "subheadline",
           "snippet": "<h2 data-maya-type=\"H2\" class=\"grp\">Feature requests <span class=\"new-dot\"></span></h2></summary>"
-        },
-        {
-          "page": "backend/wr.html",
-          "line": 18,
-          "tag": "h2",
-          "id": "submissions-title",
-          "class": "",
-          "reason": "subheadline",
-          "role": "subheadline",
-          "snippet": "<h2 data-maya-type=\"H2\" id=\"submissions-title\">Submissions</h2><p data-maya-type=\"P1\" id=\"submissions-message\" role=\"status\">Loading subm"
-        },
-        {
-          "page": "backend/wr.html",
-          "line": 19,
-          "tag": "h2",
-          "id": "leads-title",
-          "class": "",
-          "reason": "subheadline",
-          "role": "subheadline",
-          "snippet": "<h2 data-maya-type=\"H2\" id=\"leads-title\">Leads</h2><div data-maya-panel=\"inner\" class=\"wr-panel\"><form id=\"lead-form\" data-maya-fie"
         },
         {
           "page": "frontend/index.html",
@@ -298,7 +278,7 @@
           ]
         },
         "subheadline": {
-          "count": 4,
+          "count": 2,
           "locations": [
             {
               "page": "backend/operations.html",
@@ -307,21 +287,13 @@
             {
               "page": "backend/status.html",
               "line": 1290
-            },
-            {
-              "page": "backend/wr.html",
-              "line": 18
-            },
-            {
-              "page": "backend/wr.html",
-              "line": 19
             }
           ]
         }
       }
     },
     "H3": {
-      "count": 67,
+      "count": 69,
       "locations": [
         {
           "page": "aesthetics/ui/fabric-search-details.js",
@@ -774,6 +746,26 @@
           "snippet": "<div class=\"grp\">' + g + '</div>' + list.map(r =>"
         },
         {
+          "page": "backend/wr.html",
+          "line": 18,
+          "tag": "h2",
+          "id": "submissions-title",
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h2 data-maya-type=\"H3\" id=\"submissions-title\">Submissions</h2><p data-maya-type=\"P1\" id=\"submissions-message\" role=\"status\">Loading subm"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 19,
+          "tag": "h2",
+          "id": "leads-title",
+          "class": "",
+          "reason": "subheadline",
+          "role": "subheadline",
+          "snippet": "<h2 data-maya-type=\"H3\" id=\"leads-title\">Applicants</h2><div data-maya-panel=\"inner\" class=\"wr-panel\"><form id=\"lead-form\" data-may"
+        },
+        {
           "page": "frontend/index.html",
           "line": 4544,
           "tag": "h3",
@@ -996,7 +988,7 @@
       ],
       "roles": {
         "subheadline": {
-          "count": 55,
+          "count": 57,
           "locations": [
             {
               "page": "aesthetics/ui/fabric-search-details.js",
@@ -1129,6 +1121,14 @@
             {
               "page": "backend/terms.html",
               "line": 109
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 18
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 19
             },
             {
               "page": "frontend/index.html",
@@ -1371,7 +1371,7 @@
       }
     },
     "P1": {
-      "count": 184,
+      "count": 187,
       "locations": [
         {
           "page": "aesthetics/ui/admin-systems.js",
@@ -1405,13 +1405,23 @@
         },
         {
           "page": "aesthetics/ui/wr.js",
-          "line": 19,
-          "tag": "p",
+          "line": 8,
+          "tag": "td",
           "id": null,
           "class": "",
-          "reason": "JavaScript-created p",
+          "reason": "JavaScript-created td",
           "role": "paragraph",
-          "snippet": "createElement('p')"
+          "snippet": "createElement('td')"
+        },
+        {
+          "page": "aesthetics/ui/wr.js",
+          "line": 9,
+          "tag": "th",
+          "id": null,
+          "class": "",
+          "reason": "JavaScript-created th",
+          "role": "paragraph",
+          "snippet": "createElement('th')"
         },
         {
           "page": "backend/backend.html",
@@ -2871,7 +2881,7 @@
           "class": "",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<p data-maya-type=\"P1\">Sign in through Admin to view submissions and work with leads.</p><a class=\"maya-glass-but"
+          "snippet": "<p data-maya-type=\"P1\">Sign in through Admin to view submissions and work with applicants.</p><a class=\"maya-glas"
         },
         {
           "page": "backend/wr.html",
@@ -2881,7 +2891,7 @@
           "class": "",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<p data-maya-type=\"P1\" id=\"submissions-message\" role=\"status\">Loading submissions\u2026</p><div class=\"wr-submissions\" id=\"submissions\"></div></section>"
+          "snippet": "<p data-maya-type=\"P1\" id=\"submissions-message\" role=\"status\">Loading submissions\u2026</p><div class=\"wr-submissions\" id=\"submissions\" aria-label=\"Submissio"
         },
         {
           "page": "backend/wr.html",
@@ -2891,7 +2901,7 @@
           "class": "",
           "reason": "field",
           "role": "field",
-          "snippet": "<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"name\" maxlength=\"120\" required autocomplete=\"name\"></label><label data-maya-type=\"P3\" data-maya-field"
+          "snippet": "<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"wave\" type=\"number\" step=\"any\"></label><label data-maya-type=\"P3\" data-maya-field-row>Number<input da"
         },
         {
           "page": "backend/wr.html",
@@ -2911,7 +2921,7 @@
           "class": "",
           "reason": "field",
           "role": "field",
-          "snippet": "<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"wave\" type=\"number\" step=\"any\"></label><label data-maya-type=\"P3\" data-maya-field-row>Color<input dat"
+          "snippet": "<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"name\" maxlength=\"120\" required autocomplete=\"name\"></label><label data-maya-type=\"P3\" data-maya-field"
         },
         {
           "page": "backend/wr.html",
@@ -2921,7 +2931,7 @@
           "class": "",
           "reason": "field",
           "role": "field",
-          "snippet": "<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"color\" maxlength=\"120\"></label><label data-maya-type=\"P3\" data-maya-field-row>Look<input data-maya-co"
+          "snippet": "<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"look\" maxlength=\"240\"></label><label data-maya-type=\"P3\" data-maya-field-row>Color<input data-maya-co"
         },
         {
           "page": "backend/wr.html",
@@ -2931,7 +2941,17 @@
           "class": "",
           "reason": "field",
           "role": "field",
-          "snippet": "<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"look\" maxlength=\"240\"></label></div>"
+          "snippet": "<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"color\" maxlength=\"120\"></label><label data-maya-type=\"P3\" data-maya-field-row>Email<input data-maya-c"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 20,
+          "tag": "input",
+          "id": null,
+          "class": "",
+          "reason": "field",
+          "role": "field",
+          "snippet": "<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"email\" type=\"email\" maxlength=\"254\" autocomplete=\"email\"></label></div>"
         },
         {
           "page": "backend/wr.html",
@@ -2941,7 +2961,17 @@
           "class": "",
           "reason": "paragraph",
           "role": "paragraph",
-          "snippet": "<span data-maya-type=\"P1\" id=\"lead-message\" role=\"status\"></span></div></form><div id=\"leads\"></div></div></section>"
+          "snippet": "<span data-maya-type=\"P1\" id=\"lead-message\" role=\"status\"></span></div></form></div><div class=\"panel applicants-table-wrap\" tabindex=\"0\" role=\"regi"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 21,
+          "tag": "p",
+          "id": "applicants-empty",
+          "class": "",
+          "reason": "paragraph",
+          "role": "paragraph",
+          "snippet": "<p id=\"applicants-empty\" data-maya-type=\"P1\" hidden>No applicants yet.</p></section>"
         },
         {
           "page": "frontend/index.html",
@@ -3216,7 +3246,7 @@
       ],
       "roles": {
         "paragraph": {
-          "count": 120,
+          "count": 122,
           "locations": [
             {
               "page": "aesthetics/ui/admin-systems.js",
@@ -3232,7 +3262,11 @@
             },
             {
               "page": "aesthetics/ui/wr.js",
-              "line": 19
+              "line": 8
+            },
+            {
+              "page": "aesthetics/ui/wr.js",
+              "line": 9
             },
             {
               "page": "backend/backend.html",
@@ -3591,6 +3625,10 @@
               "line": 21
             },
             {
+              "page": "backend/wr.html",
+              "line": 21
+            },
+            {
               "page": "frontend/index.html",
               "line": 4545
             },
@@ -3701,7 +3739,7 @@
           ]
         },
         "field": {
-          "count": 21,
+          "count": 22,
           "locations": [
             {
               "page": "backend/operations.html",
@@ -3766,6 +3804,10 @@
             {
               "page": "backend/status.html",
               "line": 989
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 20
             },
             {
               "page": "backend/wr.html",
@@ -4248,7 +4290,7 @@
       }
     },
     "P3": {
-      "count": 321,
+      "count": 322,
       "locations": [
         {
           "page": "aesthetics/ui/fabric-search-details.js",
@@ -5958,6 +6000,26 @@
           "class": "",
           "reason": "label",
           "role": "label",
+          "snippet": "<label data-maya-type=\"P3\" data-maya-field-row>Wave<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"wave\" type=\"number\" step=\"a"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 20,
+          "tag": "label",
+          "id": null,
+          "class": "",
+          "reason": "label",
+          "role": "label",
+          "snippet": "<label data-maya-type=\"P3\" data-maya-field-row>Number<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"phone\" type=\"tel\" maxleng"
+        },
+        {
+          "page": "backend/wr.html",
+          "line": 20,
+          "tag": "label",
+          "id": null,
+          "class": "",
+          "reason": "label",
+          "role": "label",
           "snippet": "<label data-maya-type=\"P3\" data-maya-field-row>Name<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"name\" maxlength=\"120\" requi"
         },
         {
@@ -5968,17 +6030,7 @@
           "class": "",
           "reason": "label",
           "role": "label",
-          "snippet": "<label data-maya-type=\"P3\" data-maya-field-row>#<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"phone\" type=\"tel\" maxlength=\"4"
-        },
-        {
-          "page": "backend/wr.html",
-          "line": 20,
-          "tag": "label",
-          "id": null,
-          "class": "",
-          "reason": "label",
-          "role": "label",
-          "snippet": "<label data-maya-type=\"P3\" data-maya-field-row>Wave<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"wave\" type=\"number\" step=\"a"
+          "snippet": "<label data-maya-type=\"P3\" data-maya-field-row>Look<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"look\" maxlength=\"240\"></lab"
         },
         {
           "page": "backend/wr.html",
@@ -5998,7 +6050,7 @@
           "class": "",
           "reason": "label",
           "role": "label",
-          "snippet": "<label data-maya-type=\"P3\" data-maya-field-row>Look<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"look\" maxlength=\"240\"></lab"
+          "snippet": "<label data-maya-type=\"P3\" data-maya-field-row>Email<input data-maya-control=\"field\" data-maya-type=\"P1\" name=\"email\" type=\"email\" maxlen"
         },
         {
           "page": "backend/wr.html",
@@ -6008,7 +6060,7 @@
           "class": "maya-glass-button",
           "reason": "pill",
           "role": "pill",
-          "snippet": "<button class=\"maya-glass-button\" data-maya-type=\"P3\" type=\"submit\">Add lead</button><span data-maya-type=\"P1\" id=\"lead-message\" role=\"status\"></span></div></"
+          "snippet": "<button class=\"maya-glass-button\" data-maya-type=\"P3\" type=\"submit\">Add applicant</button><span data-maya-type=\"P1\" id=\"lead-message\" role=\"status\"></span></d"
         },
         {
           "page": "frontend/index.html",
@@ -8564,7 +8616,7 @@
           ]
         },
         "label": {
-          "count": 19,
+          "count": 20,
           "locations": [
             {
               "page": "backend/operations.html",
@@ -8621,6 +8673,10 @@
             {
               "page": "backend/status.html",
               "line": 989
+            },
+            {
+              "page": "backend/wr.html",
+              "line": 20
             },
             {
               "page": "backend/wr.html",
